@@ -30,6 +30,7 @@ int Tau_plugin_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *
 
   RtsLayer::UnLockDB();
 
+  return 0;
 }
 
 int Tau_plugin_event_function_entry(Tau_plugin_event_function_entry_data_t* data) {
@@ -52,6 +53,8 @@ int Tau_plugin_event_post_init(Tau_plugin_event_post_init_data_t *data) {
       TauTraceInit(tid);
     }
     RtsLayer::UnLockDB();
+
+    return 0;
 }
 
 int Tau_plugin_event_function_exit(Tau_plugin_event_function_exit_data_t* data) {
