@@ -79,7 +79,7 @@ tau_plugin_example_atomic_trigger.o: Tau_plugin_example_atomic_trigger.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_atomic_trigger.cpp -o tau_plugin_example_atomic_trigger.o
 
 tau_plugin_example_memory_usage_async.o: Tau_plugin_example_memory_usage_async.cpp
-	$(CXX) $(CFLAGS) -c Tau_plugin_example_memory_usage_async.cpp -o tau_plugin_example_memory_usage_async.o
+	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) -c Tau_plugin_example_memory_usage_async.cpp -o tau_plugin_example_memory_usage_async.o
 
 tau_plugin_example_emulate_profile_snapshots_analysis_async.o: Tau_plugin_example_emulate_profile_snapshots_analysis_async.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_emulate_profile_snapshots_analysis_async.cpp -o tau_plugin_example_emulate_profile_snapshots_analysis_async.o
@@ -103,7 +103,7 @@ tau_plugin_example_analyze_profile_snapshots.o: Tau_plugin_example_analyze_profi
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_analyze_profile_snapshots.cpp -o tau_plugin_example_analyze_profile_snapshots.o
 
 tau_plugin_example_load_balance_async.o: Tau_plugin_example_load_balance_async.cpp
-	$(CXX) $(CFLAGS) -c Tau_plugin_example_load_balance_async.cpp -o tau_plugin_example_load_balance_async.o
+	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) -c Tau_plugin_example_load_balance_async.cpp -o tau_plugin_example_load_balance_async.o
 
 tau_plugin_example_load_balance.o: Tau_plugin_example_load_balance.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_load_balance.cpp -o tau_plugin_example_load_balance.o
