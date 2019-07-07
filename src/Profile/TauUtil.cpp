@@ -24,18 +24,14 @@
 #include <stdarg.h>
 #include <string.h>
 
-#if __cplusplus > 2010000L
 #include <thread>
-#endif
 
 #include <Profile/Profiler.h>
 #include <TauMetaData.h>
 #include <Profiler.h>
 
 #include <tr1/functional>
-#if __cplusplus > 2010000L
 #include <regex>
-#endif
 
 #ifndef TAU_WINDOWS
 #include <dlfcn.h>
@@ -685,14 +681,12 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
 extern "C" const char* Tau_check_for_matching_regex(const char * input)
 {
 
-#if __cplusplus > 2010000L
   TauInternalFunctionGuard protects_this_function;
   for(std::list< std::string >::iterator it = regex_list.begin(); it != regex_list.end(); it++) {
     if(regex_match(input, std::regex(*it))) {
       return (*it).c_str();
     }
   }
-#endif
   return NULL;
 }
 
@@ -925,18 +919,6 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_exit_data_t* data, Plugin
     if (plugin_callback_map[*it]->PhaseExit != 0)
       plugin_callback_map[*it]->PhaseExit(data);
   }
-}
-
-/**************************************************************************************************************************
- *  Invokes callback for the async event
- *******************************************************************************************************************************/
-extern "C" void Tau_util_invoke_async_callback(unsigned int id, void *data) {
-   if (plugin_callback_map[id]->StartAsyncPlugin != 0) {
-#if __cplusplus > 2010000L
-     std::thread t(plugin_callback_map[id]->StartAsyncPlugin, data);
-     t.detach();
-#endif
-   }
 }
 
 /* Actually do the invocation */
