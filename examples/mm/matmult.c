@@ -217,6 +217,8 @@ void * threaded_func(void *data)
 int main (int argc, char *argv[]) 
 {
 
+  size_t id = TAU_CREATE_TRIGGER("iteration");
+
 #ifdef PTHREADS
   int ret;
   pthread_attr_t  attr;
@@ -321,8 +323,11 @@ int main (int argc, char *argv[])
 /* On thread 0: */
   int i;
   for (i = 0 ; i < ITERATIONS ; i++) {
+  void * data = NULL;
   printf("%d.", i);fflush(stdout);
   do_work();
+
+  TAU_TRIGGER(id, data);
   
   #ifdef TAU_MPI
   usleep(rank*10000);
