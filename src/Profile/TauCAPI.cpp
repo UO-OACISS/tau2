@@ -1106,7 +1106,7 @@ extern "C" int Tau_invoke_plugin_phase_exit(void *functionInfo) {
 
 }
 
-////NPD
+/* Plugin API */
 extern "C" size_t Tau_create_trigger(const char *name) {
   static size_t trigger_counter = -1;
   TauInternalFunctionGuard protects_this_function;
@@ -1218,7 +1218,7 @@ extern "C" void Tau_add_regex(const char * r)
   RtsLayer::UnLockDB();
 }
 
-////
+/* Plugin API */
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix(const char *prefix) {

@@ -192,13 +192,13 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 				   &(s_buffer[index].sExcl), &(s_buffer[index].sIncl), 
                                    &(s_buffer[index].sNumCalls), &(s_buffer[index].sNumSubr), MPI_COMM_WORLD);
 
-    /*if(rank == 0) {
+    if(rank == 0) {
       for (int m=0; m<Tau_Global_numCounters; m++)  {
         for(int n=0; n<numEvents; n++) {
           fprintf(stderr, "Counter %d: The min exclusive, max exclusive, min inclusive, max inclusive values for event %d are located on processes %d, %d, %d and %d with values %f, %f, %f, %f\n", m, n, s_buffer[index].gExcl_min[m][n].index, s_buffer[index].gExcl_max[m][n].index, s_buffer[index].gIncl_min[m][n].index, s_buffer[index].gIncl_max[m][n].index, s_buffer[index].gExcl_min[m][n].value, s_buffer[index].gExcl_max[m][n].value, s_buffer[index].gIncl_min[m][n].value, s_buffer[index].gIncl_max[m][n].value);
         }
       }
-    }*/
+    }
 
     /* End  interval event calculations */
     /* Start atomic statistic calculations */
@@ -273,10 +273,10 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
      disable_instrumentation_if_necessary(index, rank);
 #endif
     
-   /* if(rank == 0) {
+   if(rank == 0) {
       for(int i=0; i<numAtomicEvents; i++)
         fprintf(stderr, "The min and max for atomic event %d lies with processes %d and %d with values %f and %f\n", i, s_buffer[index].gAtomicMin_min[i].index, s_buffer[index].gAtomicMax_max[i].index, s_buffer[index].gAtomicMin_min[i].value, s_buffer[index].gAtomicMax_max[i].value);
-    }*/
+    }
   }
 
   index++;

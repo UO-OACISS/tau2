@@ -202,7 +202,7 @@
 
 #define TAU_SET_USER_CLOCK(value)
 
-////NPD
+/* Plugin API */
 
 #define TAU_ENABLE_PLUGIN_FOR_SPECIFIC_EVENT(ev, name, id)
 #define TAU_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT(ev, name, id)
@@ -216,7 +216,8 @@
 #define TAU_CHECK_FOR_MATCHING_REGEX(input)
 #define TAU_CREATE_TRIGGER(name)
 #define TAU_TRIGGER(id, data)
-////
+
+/* Plugin API */
 
 /* Old/Dead API calls */
 #define TAU_ENABLE_TRACKING_MUSE_EVENTS()

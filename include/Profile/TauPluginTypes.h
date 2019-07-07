@@ -216,6 +216,8 @@ typedef struct Tau_plugin_callbacks_active {
     unsigned int trigger;
 } Tau_plugin_callbacks_active_t;
 
+/*Deprecated*/
+
 /*Define data structures to hold information about currently loaded plugins. 
  * Only relevant for TAU internals - not a concern to plugins themselves*/
 typedef struct Tau_plugin {
@@ -242,7 +244,7 @@ typedef struct PluginManager {
    Tau_plugin_callback_list_t * callback_list;
 } PluginManager_t;
 
-////NPD
+/* Deprecated */
 
 typedef struct Tau_plugin_new {
    char plugin_name[1024];
@@ -251,8 +253,6 @@ typedef struct Tau_plugin_new {
 } Tau_plugin_new_t; 
 
 typedef int (*PluginInitFunc) (int argc, char **argv, unsigned int plugin_id);
-////
-
 
 #ifdef __cplusplus
 }

@@ -39,17 +39,21 @@
 #define strtok_r(a,b,c) strtok(a,b)
 #endif /* TAU_WINDOWS */
 
-Tau_plugin_callbacks_active_t Tau_plugins_enabled;
-
-////NPD
+/* Plugin Declarations */
 std::map < PluginKey, std::set<unsigned int> > plugins_for_named_specific_event;
 std::map < unsigned int, Tau_plugin_new_t*> plugin_map;
 std::map < unsigned int, Tau_plugin_callbacks_t* > plugin_callback_map;
+
 std::list < std::string > regex_list;
+
 unsigned int plugin_id_counter = 0;
 size_t star_hash; 
+
 extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *name);
-////
+
+Tau_plugin_callbacks_active_t Tau_plugins_enabled;
+/* Plugin Declarations */
+
 
 #define TAU_NAME_LENGTH 1024
 
@@ -498,7 +502,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
       if(!handle) return -1;
       TAU_VERBOSE("TAU: Successfully called the init func of plugin: %s\n", token);
 
-      ////NPD
+      /* Plugin API */
       Tau_plugin_new_t * plugin_; 
       plugin_ = (Tau_plugin_new_t *)malloc(sizeof(Tau_plugin_new_t));
 
@@ -507,7 +511,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
       plugin_->handle = handle;
       plugin_map[plugin_id_counter] = plugin_;
       plugin_id_counter++;
-      ////
+      /* Plugin API */
 
     } else {
       /*Plugin loading failed for some reason*/
@@ -645,11 +649,11 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
   callback->next = (plugin_manager->callback_list)->head;
   (plugin_manager->callback_list)->head = callback;
 
-  ////NPD
+  /* Plugin API */
   Tau_plugin_callbacks_t * cb_ = (Tau_plugin_callbacks_t *)malloc(sizeof(Tau_plugin_callbacks_t));
   Tau_util_make_callback_copy(cb_, cb);
   plugin_callback_map[plugin_id] = cb_;
-  ////
+  /* Plugin API */
 
   /* Set some flags to make runtime conditional processing more efficient */
   if (cb->FunctionRegistrationComplete != 0) { Tau_plugins_enabled.function_registration = 1; }
@@ -1010,7 +1014,6 @@ extern "C" void Tau_util_invoke_callbacks_for_trigger_event(Tau_plugin_event eve
 extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * specific_event_name, const void * data) {
 
 
-  ////NPD
   size_t hash_ = Tau_util_return_hash_of_string(specific_event_name);
   size_t hash;
   const char * matching_regex = Tau_check_for_matching_regex(specific_event_name);
