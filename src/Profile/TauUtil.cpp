@@ -400,6 +400,8 @@ int Tau_util_parse_plugin_token(char * token, char ** plugin_name, char *** plug
   length_of_arg_string = (pos_right - pos_left) - 1;
 
   strncpy(arg_string, pos_left+1, length_of_arg_string);
+  // null terminate the string after copying it. 
+  arg_string[length_of_arg_string] = '\0';
   strncpy(*plugin_name, token, (pos_left-token));
 
   arg_token = strtok_r(arg_string, ",", &save_ptr);
