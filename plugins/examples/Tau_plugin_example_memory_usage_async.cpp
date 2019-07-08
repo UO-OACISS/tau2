@@ -41,8 +41,16 @@
 
 using namespace std;
 std::vector<std::thread> thread_vec;
-extern "C" int Tau_open_system_file(const char *filename);
-extern "C" int Tau_read_load_event(int fd, double *value);
+
+int Tau_open_system_file(const char *filename)
+{
+  return 0;
+}
+
+int Tau_read_load_event(int fd, double *value)
+{
+ return 0;
+}
 
 pthread_t tid1;
 
