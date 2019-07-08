@@ -205,7 +205,7 @@ int Tau_read_cray_power_events(int fd, long long int *value)  {
   return ret;
 }
 
-extern "C" int Tau_read_load_event(int fd, double *value)  {
+int Tau_read_load_event(int fd, double *value)  {
   char buf[2048];
   int ret, bytesread;
   if (fd > 0) {
@@ -230,7 +230,7 @@ extern "C" int Tau_read_load_event(int fd, double *value)  {
   return ret;
 }
 
-extern "C" int Tau_open_system_file(const char *filename) {
+int Tau_open_system_file(const char *filename) {
   
   int fd = open(filename, O_RDONLY);
   return fd; 
