@@ -1058,13 +1058,14 @@ extern "C" int Tau_get_thread(void) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump(void) {
   TauInternalFunctionGuard protects_this_function;
-  TauProfiler_DumpData();
 
   /*Invoke plugins only if both plugin path and plugins are specified*/
   if(Tau_plugins_enabled.dump) {
     Tau_plugin_event_dump_data_t plugin_data;
     plugin_data.tid = RtsLayer::myThread();
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, &plugin_data);
+  } else { 
+    TauProfiler_DumpData();
   }
 
   return 0;
