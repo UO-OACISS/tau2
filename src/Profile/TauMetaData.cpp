@@ -267,7 +267,7 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
     Tau_plugin_event_metadata_registration_data_t plugin_data;
     plugin_data.name = name;
     plugin_data.value = tmv;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, name, &plugin_data);
   }
 #endif
 }
@@ -286,7 +286,7 @@ void Tau_metadata_push_to_plugins(void) {
           Tau_plugin_event_metadata_registration_data_t plugin_data;
           plugin_data.name = it->first.name;
           plugin_data.value = it->second;
-          Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, &plugin_data);
+          Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, it->first.name, &plugin_data);
         }
 	}
 }

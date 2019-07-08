@@ -2097,7 +2097,7 @@ int  MPI_Finalize(  )
   if(Tau_plugins_enabled.pre_end_of_execution) {
     Tau_plugin_event_pre_end_of_execution_data_t plugin_data;
     plugin_data.tid = Tau_get_local_tid();
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, "*", &plugin_data);
   }
 
 #ifdef TAU_OTF2
@@ -2224,6 +2224,8 @@ char *** argv;
   if(Tau_get_usesMPI() == 0)
   {
 
+  /* Initialize the plugin system */
+  Tau_initialize_plugin_system();
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
   Tau_create_top_level_timer_if_necessary();
@@ -2259,9 +2261,6 @@ char *** argv;
     Tau_handle_spawned_init(parent);
   }
 
-  /* Initialize the plugin system */
-  Tau_initialize_plugin_system();
-
 #ifndef TAU_WINDOWS
 #ifndef _AIX 
   if (TauEnv_get_ebs_enabled()) {
@@ -2269,6 +2268,9 @@ char *** argv;
   }
 #endif /* _AIX */
 #endif /* TAU_WINDOWS */
+
+  /* Initialize the plugin system */
+  Tau_initialize_plugin_system();
 
   Tau_signal_initialization(); 
 

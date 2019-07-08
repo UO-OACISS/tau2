@@ -27,12 +27,13 @@ extern "C" {
 int Tau_initialize_plugin_system();
 int Tau_util_load_and_register_plugins(PluginManager_t* plugin_manager);
 void* Tau_util_load_plugin(const char *name, const char *path, PluginManager_t* plugin_manager);
-void* Tau_util_register_plugin(const char *name, char **args, int num_args, void* handle, PluginManager_t* plugin_manager);
+void* Tau_util_register_plugin(const char *name, char **args, int num_args, void* handle, PluginManager_t* plugin_manager, unsigned int plugin_id);
 
 int Tau_util_cleanup_all_plugins();
 
 PluginManager_t* Tau_util_get_plugin_manager();
-void Tau_util_invoke_callbacks(Tau_plugin_event_t event, const void * data);
+void Tau_util_invoke_callbacks(Tau_plugin_event_t event, const char * specific_event_name, const void * data);
+void Tau_util_invoke_callbacks_for_trigger_event(Tau_plugin_event_t event, size_t hash, void * data);
 
 extern Tau_plugin_callbacks_active_t Tau_plugins_enabled;
 

@@ -205,7 +205,7 @@ int Tau_read_cray_power_events(int fd, long long int *value)  {
   return ret;
 }
 
-int Tau_read_load_event(int fd, double *value)  {
+extern "C" int Tau_read_load_event(int fd, double *value)  {
   char buf[2048];
   int ret, bytesread;
   if (fd > 0) {
@@ -230,7 +230,7 @@ int Tau_read_load_event(int fd, double *value)  {
   return ret;
 }
 
-int Tau_open_system_file(const char *filename) {
+extern "C" int Tau_open_system_file(const char *filename) {
   
   int fd = open(filename, O_RDONLY);
   return fd; 
@@ -335,7 +335,8 @@ void TauAlarmHandler(int signum) {
   if(Tau_plugins_enabled.interrupt_trigger) {
     Tau_plugin_event_interrupt_trigger_data_t plugin_data;
     plugin_data.signum = signum;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER, &plugin_data);
+    plugin_data.tid = Tau_get_thread();
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER, "*", &plugin_data);
   }
 }
 

@@ -887,7 +887,7 @@ int Tau_track_mpi_t_here(void) {
             plugin_data.pvar_index = j;
             plugin_data.pvar_value = mydata;
             dprintf("MPI-T invoke callback\n"); 
-            Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_MPIT, &plugin_data);
+            Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_MPIT, plugin_data.pvar_name, &plugin_data);
           }
  
         }

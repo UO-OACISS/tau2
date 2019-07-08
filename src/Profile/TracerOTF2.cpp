@@ -1733,6 +1733,9 @@ void TauTraceOTF2ShutdownComms(int tid) {
   fprintf(stderr, "%u: TauTraceOTF2ShutdownComms(%d)\n", my_node(), tid);
 #endif
     TauInternalFunctionGuard protects_this_function;
+
+    fprintf(stderr, "% d %d %d\n", otf2_initialized, otf2_finished, otf2_comms_shutdown);
+
     if(!otf2_initialized || otf2_finished || otf2_comms_shutdown) {
         return;
     }
@@ -1750,7 +1753,7 @@ void TauTraceOTF2ShutdownComms(int tid) {
     TauTraceOTF2ExchangeEventsWritten();
     TauTraceOTF2ExchangeRegions();
     TauTraceOTF2ExchangeMetrics();
-    TauTraceOTF2ExchangeRmaWins();
+    //TauTraceOTF2ExchangeRmaWins();
     if(TauEnv_get_set_node()==-1){
       TauCollectives_Finalize();
     }

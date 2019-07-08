@@ -2628,6 +2628,23 @@ for arg in "$@"; do
 	      fixmakeargs="$fixmakeargs roctracerdir=$roctracerdir ROCTRACER"
               roctracer=yes
               tauoptions="${tauoptions}-roctracer"
+              # Check the roctracerlib directory. Is it in build or lib? Source/installed package?
+              tryroctracerlib=$roctracerdir/lib
+              if [ -r $tryroctracerlib/libroctracer64.so ]; then
+                fixmakeargs="$fixmakeargs roctracerlibdir=$tryroctracerlib"
+              else
+                tryroctracerlib=$roctracerdir/build
+                if [ -r $tryroctracerlib/libroctracer64.so ]; then
+                  fixmakeargs="$fixmakeargs roctracerlibdir=$tryroctracerlib"
+                fi
+              fi
+              # Check the hsa header in roctracer. Sometimes it is not installed correctly.
+              if [ -r $roctracerdir/inc/roctracer_hsa.h -o -r $roctracerdir/include/roctracer/roctracer_hsa.h ]; then
+                  fixmakeargs="$fixmakeargs ROCTRACER_HSA"
+              fi
+           
+            
+
             fi
 	    shift
 	    ;;

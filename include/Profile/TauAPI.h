@@ -377,6 +377,21 @@
 
 #endif /* TAU_FAPI */
 
+/* Plugin API */
+#define TAU_ENABLE_PLUGIN_FOR_SPECIFIC_EVENT Tau_enable_plugin_for_specific_event
+#define TAU_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT Tau_disable_plugin_for_specific_event
+#define TAU_ENABLE_ALL_PLUGINS_FOR_SPECIFIC_EVENT Tau_enable_all_plugins_for_specific_event
+#define TAU_DISABLE_ALL_PLUGINS_FOR_SPECIFIC_EVENT Tau_disable_all_plugins_for_specific_event
+#define TAU_ENABLE_PLUGIN_FOR_TRIGGER_EVENT Tau_enable_plugin_for_trigger_event
+#define TAU_DISABLE_PLUGIN_FOR_TRIGGER_EVENT Tau_disable_plugin_for_trigger_event
+#define TAU_ENABLE_ALL_PLUGINS_FOR_TRIGGER_EVENT Tau_enable_all_plugins_for_trigger_event
+#define TAU_DISABLE_ALL_PLUGINS_FOR_TRIGGER_EVENT Tau_disable_all_plugins_for_trigger_event
+#define TAU_ADD_REGEX Tau_add_regex
+#define TAU_CHECK_FOR_MATCHING_REGEX Tau_check_for_matching_regex
+#define TAU_CREATE_TRIGGER Tau_create_trigger
+#define TAU_TRIGGER Tau_trigger
+/* Plugin API */
+
 #endif /* TAU_ENABLED */
 
 /* TAU_PLUGIN API */
@@ -498,6 +513,21 @@ void TAUDECL Tau_start_timer(void *profiler, int phase, int tid);
 void TAUDECL Tau_stop_timer(void *profiler, int tid);
 int TAUDECL Tau_invoke_plugin_phase_entry(void *profiler);
 int TAUDECL Tau_invoke_plugin_phase_exit(void *profiler);
+
+/* Plugin API */
+void TAUDECL Tau_add_regex(const char * r);
+void TAUDECL Tau_enable_all_plugins_for_specific_event(int ev, const char *name);
+void TAUDECL Tau_disable_all_plugins_for_specific_event(int ev, const char *name);
+void TAUDECL Tau_disable_plugin_for_specific_event(int ev, const char *name, unsigned int id);
+void TAUDECL Tau_enable_plugin_for_specific_event(int ev, const char *name, unsigned int id);
+void TAUDECL Tau_enable_all_plugins_for_trigger_event(int ev, size_t hash);
+void TAUDECL Tau_disable_all_plugins_for_trigger_event(int ev, size_t hash);
+void TAUDECL Tau_disable_plugin_for_trigger_event(int ev, size_t hash, unsigned int id);
+void TAUDECL Tau_enable_plugin_for_trigger_event(int ev, size_t hash, unsigned int id);
+size_t TAUDECL Tau_create_trigger(const char *name);
+void TAUDECL Tau_trigger(size_t id, void * data);
+/* Plugin API */
+
 void TAUDECL Tau_lite_start_timer(void *profiler, int phase);
 void TAUDECL Tau_lite_stop_timer(void *profiler);
 void TAUDECL Tau_pure_start(const char *name);

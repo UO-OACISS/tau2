@@ -35,6 +35,7 @@ typedef struct Tau_plugin_event_metadata_registration_data {
 
 typedef struct Tau_plugin_event_post_init_data {
    int dummy;
+   int tid;
 } Tau_plugin_event_post_init_data_t;
 
 typedef struct Tau_plugin_event_dump_data {
@@ -50,6 +51,7 @@ typedef struct Tau_plugin_event_mpit_data {
 typedef struct Tau_plugin_event_function_entry_data {
    const char * timer_name;
    const char * timer_group;
+   unsigned int func_id;
    int tid;
    long unsigned int timestamp;
 } Tau_plugin_event_function_entry_data_t;
@@ -57,6 +59,7 @@ typedef struct Tau_plugin_event_function_entry_data {
 typedef struct Tau_plugin_event_function_exit_data {
    const char * timer_name;
    const char * timer_group;
+   unsigned int func_id;
    int tid;
    long unsigned int timestamp;
 } Tau_plugin_event_function_exit_data_t;
@@ -91,6 +94,7 @@ typedef struct Tau_plugin_event_recv_data {
 
 typedef struct Tau_plugin_event_atomic_event_registration_data {
    void * user_event_ptr;
+   int tid;
 } Tau_plugin_event_atomic_event_registration_data_t;
 
 typedef struct Tau_plugin_event_atomic_event_trigger_data {
@@ -114,7 +118,12 @@ typedef struct Tau_plugin_event_function_finalize_data {
 
 typedef struct Tau_plugin_event_interrupt_trigger_data {
    int signum;
+   int tid;
 } Tau_plugin_event_interrupt_trigger_data_t ;
+
+typedef struct Tau_plugin_event_trigger_data {
+   void *data;
+} Tau_plugin_event_trigger_data_t;
 
 /*Define callbacks for specific events*/
 typedef int (*Tau_plugin_function_registration_complete)(Tau_plugin_event_function_registration_data_t*);
@@ -135,6 +144,8 @@ typedef int (*Tau_plugin_pre_end_of_execution)(Tau_plugin_event_pre_end_of_execu
 typedef int (*Tau_plugin_end_of_execution)(Tau_plugin_event_end_of_execution_data_t*);
 typedef int (*Tau_plugin_function_finalize)(Tau_plugin_event_function_finalize_data_t*);
 typedef int (*Tau_plugin_interrupt_trigger)(Tau_plugin_event_interrupt_trigger_data_t*);
+typedef int (*Tau_plugin_trigger)(Tau_plugin_event_trigger_data_t*);
+
 
 /*Define the callback structure*/
 typedef struct Tau_plugin_callbacks {
@@ -156,6 +167,7 @@ typedef struct Tau_plugin_callbacks {
    Tau_plugin_end_of_execution EndOfExecution;
    Tau_plugin_function_finalize FunctionFinalize;
    Tau_plugin_interrupt_trigger InterruptTrigger;
+   Tau_plugin_trigger Trigger;
 } Tau_plugin_callbacks_t;
 
 /*Define all the events currently supported*/
@@ -177,7 +189,8 @@ typedef enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION,
    TAU_PLUGIN_EVENT_END_OF_EXECUTION,
    TAU_PLUGIN_EVENT_FUNCTION_FINALIZE,
-   TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER
+   TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER,
+   TAU_PLUGIN_EVENT_TRIGGER,
 } Tau_plugin_event_t;
 
 /* Is the event registered with a callback? */
@@ -200,7 +213,10 @@ typedef struct Tau_plugin_callbacks_active {
     unsigned int end_of_execution;
     unsigned int function_finalize;
     unsigned int interrupt_trigger;
+    unsigned int trigger;
 } Tau_plugin_callbacks_active_t;
+
+/*Deprecated*/
 
 /*Define data structures to hold information about currently loaded plugins. 
  * Only relevant for TAU internals - not a concern to plugins themselves*/
@@ -228,8 +244,15 @@ typedef struct PluginManager {
    Tau_plugin_callback_list_t * callback_list;
 } PluginManager_t;
 
-typedef int (*PluginInitFunc) (int argc, char **argv);
+/* Deprecated */
 
+typedef struct Tau_plugin_new {
+   char plugin_name[1024];
+   void* handle;
+   unsigned int id;
+} Tau_plugin_new_t; 
+
+typedef int (*PluginInitFunc) (int argc, char **argv, unsigned int plugin_id);
 
 #ifdef __cplusplus
 }

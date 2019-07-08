@@ -739,6 +739,7 @@ if [ ! "x$isTBB" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
+
 isPthread=`echo $theBinding | grep pthread`
 if [ ! "x$isPthread" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX ]; then
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX:$TAUEX_LD_PRELOAD
@@ -866,8 +867,13 @@ if [ $track_openacc = "true" ] ; then
   export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
 fi
 if [ $track_rocm = "true" ] ; then
-  export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU.so
-  export HSA_TOOLS_LIB=librocprofiler64.so.1
+  export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+  export TAU_HSA_TOOLS_LIB=librocprofiler64.so.1
+fi
+
+isRoctracer=`echo $theBinding | grep roctracer`
+if [ ! "x$isRoctracer" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX ]; then
+  export TAU_HSA_TOOLS_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
 fi
 
 if [ $track_armci = "true" ] ; then
@@ -1092,12 +1098,14 @@ else
     $dryrun export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
     $dryrun export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD
     $dryrun export DYLD_FORCE_FLAT_NAMESPACE=1
+    $dryrun export HSA_TOOLS_LIB=$TAU_HSA_TOOLS_LIB
   else
     ORIG_LIBRARY_PATH=$LD_LIBRARY_PATH
     ORIG_AUDIT_AUDIT=$LD_AUDIT
     ORIG_LD_PRELOAD=$LD_PRELOAD
     $dryrun export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
     $dryrun export LD_AUDIT=$TAUEX_LD_AUDITOR
+    $dryrun export HSA_TOOLS_LIB=$TAU_HSA_TOOLS_LIB
     #$dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
     if [ $track_rocm = "true" ] ; then
       if [ `echo $TAU_METRICS | grep "TIME"` ]; then

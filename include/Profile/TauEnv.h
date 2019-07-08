@@ -74,6 +74,8 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_message();
   int  TAUDECL TauEnv_get_lite_enabled();
   int  TAUDECL TauEnv_get_compensate();
+ 
+  int  TAUDECL TauEnv_get_track_load();
   int  TAUDECL TauEnv_get_track_memory_heap();
   int  TAUDECL TauEnv_get_track_memory_leaks();
   int  TAUDECL TauEnv_get_track_memory_headroom();
