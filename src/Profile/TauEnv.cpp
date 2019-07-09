@@ -2214,11 +2214,20 @@ void TauEnv_initialize()
     TAU_METADATA("OMP_CHUNK_SIZE", tmpstr);
 #endif
 
+    /* TODO: Bugs with when called during Tau_initialize with LLVM and Intel runtime. (Deadlock because the runtime try to initialize twice). Remove Ifdef once the issue is resolved */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    int value = -1;
+#else /*  defined TAU_USE_OMPT TR6-5_0 */
     int value = omp_get_max_threads();
+#endif /*  defined TAU_USE_OMPT TR6-5_0 */
     sprintf(tmpstr,"%d",value);
     TAU_METADATA("OMP_MAX_THREADS", tmpstr);
 
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    value = -1;
+#else /*  defined TAU_USE_OMPT TR6-5_0 */
     value = omp_get_num_procs();
+#endif /*  defined TAU_USE_OMPT TR6-5_0 */
     sprintf(tmpstr,"%d",value);
     TAU_METADATA("OMP_NUM_PROCS", tmpstr);
 

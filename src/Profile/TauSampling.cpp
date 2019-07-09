@@ -124,7 +124,7 @@ extern FunctionInfo * Tau_create_thread_state_if_necessary_string(const string &
 extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address);
 extern "C" int Tau_get_usesMPI();
 
-#if defined(TAU_OPENMP) && !defined (TAU_USE_OMPT_TR6) && (defined(TAU_USE_OMPT) || defined (TAU_IBM_OMPT))
+#if defined(TAU_OPENMP) && !defined (TAU_USE_OMPT_TR6) && !defined (TAU_USE_OMPT_TR7) && !defined (TAU_USE_OMPT_5_0) && (defined(TAU_USE_OMPT) || defined (TAU_IBM_OMPT))
 extern "C" int Tau_get_thread_omp_state(int tid);
 #endif
 

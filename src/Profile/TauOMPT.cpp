@@ -1,12 +1,18 @@
 #define _BSD_SOURCE
 
-#ifdef TAU_USE_OMPT_TR6
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
 
 #include <stdio.h>
 #include <sstream>
 #include <inttypes.h>
 #include <omp.h>
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+#include <omp-tools.h>
+#endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
+#if defined (TAU_USE_OMPT_TR6)
 #include <ompt.h>
+#endif /* TAU_USE_OMPT_TR6 */
+
 #include <Profile/TauBfd.h>
 #include <Profile/Profiler.h>
 #include <tau_internal.h>
@@ -119,10 +125,21 @@ extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * re
 static void
 on_ompt_callback_parallel_begin(
   ompt_data_t *parent_task_data,
+#if defined (TAU_USE_OMPT_TR7)
+  const omp_frame_t *parent_task_frame,
+#endif /* defined (TAU_USE_OMPT_TR7) */
+  /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
   const ompt_frame_t *parent_task_frame,
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
   ompt_data_t* parallel_data,
   uint32_t requested_team_size,
+#if defined (TAU_USE_OMPT_TR6)
   ompt_invoker_t invoker,
+#endif /* TAU_USE_OMPT_TR6 */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+  int flags,
+#endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
   const void *codeptr_ra)
 {
   char timerName[10240];
@@ -151,14 +168,39 @@ on_ompt_callback_parallel_begin(
   }
 }
 
+/* TODO: Remove this and Remove changes to TauEnv.cpp once Intel and LLVM runtime stop causing a deadlock on initialisazion */
+static void tau_fix_initialize()
+{
+    char tmpstr[512];
+    int value = omp_get_max_threads();
+    sprintf(tmpstr,"%d",value);
+    TAU_METADATA("OMP_MAX_THREADS", tmpstr);
+
+    value = omp_get_num_procs();
+    sprintf(tmpstr,"%d",value);
+    TAU_METADATA("OMP_NUM_PROCS", tmpstr);
+}
+
 static void
 on_ompt_callback_parallel_end(
   ompt_data_t *parallel_data,
   ompt_data_t *task_data,
+#if defined (TAU_USE_OMPT_TR6)
   ompt_invoker_t invoker,
+#endif /* TAU_USE_OMPT_TR6 */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+  int flags,
+#endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
   const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
+  static int once = 1;
+
+  if(once)
+  {
+      tau_fix_initialize();
+      once = 0;
+  }
 
   if(codeptr_ra) {
     //TAU_PROFILER_STOP(parallel_data->ptr);
@@ -171,7 +213,12 @@ on_ompt_callback_parallel_end(
 static void
 on_ompt_callback_task_create(
     ompt_data_t *parent_task_data,     /* id of parent task            */
+#if defined (TAU_USE_OMPT_TR7)
+    const omp_frame_t *parent_frame,   /* frame data for parent task   */
+#endif /* defined (TAU_USE_OMPT_TR7) */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
     const ompt_frame_t *parent_frame,  /* frame data for parent task   */
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     ompt_data_t* new_task_data,        /* id of created task           */
     int type,
     int has_dependences,
@@ -297,7 +344,12 @@ on_ompt_callback_master(
  *  Tested with Intel/17 compilers. Works OK.*/
 static void
 on_ompt_callback_work(
+#if defined (TAU_USE_OMPT_TR6)
   ompt_work_type_t wstype,
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+  ompt_work_t wstype,
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
   ompt_scope_endpoint_t endpoint,
   ompt_data_t *parallel_data,
   ompt_data_t *task_data,
@@ -384,7 +436,12 @@ on_ompt_callback_work(
  * runtime overheads. Use with care. */
 static void
 on_ompt_callback_thread_begin(
+#if defined (TAU_USE_OMPT_TR6)
   ompt_thread_type_t thread_type,
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+  ompt_thread_t thread_type,
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
   ompt_data_t *thread_data)
 {
   TauInternalFunctionGuard protects_this_function;
@@ -462,7 +519,12 @@ on_ompt_callback_implicit_task(
 
 static void
 on_ompt_callback_sync_region(
+#if defined (TAU_USE_OMPT_TR6)
     ompt_sync_region_kind_t kind,
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    ompt_sync_region_t kind,
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
     ompt_scope_endpoint_t endpoint,
     ompt_data_t *parallel_data,
     ompt_data_t *task_data,
@@ -490,6 +552,20 @@ on_ompt_callback_sync_region(
         case ompt_sync_region_taskgroup:
           sprintf(timerName, "OpenMP_Sync_Region_Taskgroup %s", resolved_address);
           break;
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+        case ompt_sync_region_barrier_implicit:
+          sprintf(timerName, "OpenMP_Sync_Region_Barrier_Implicit %s", resolved_address);
+          break;
+        case ompt_sync_region_barrier_explicit:
+          sprintf(timerName, "OpenMP_Sync_Region_Barrier_Explicit %s", resolved_address);
+          break;
+        case ompt_sync_region_barrier_implementation:
+          sprintf(timerName, "OpenMP_Sync_Region_Barrier_Implementation %s", resolved_address);
+          break;
+        case ompt_sync_region_reduction:
+          sprintf(timerName, "OpenMP_Sync_Region_Reduction %s", resolved_address);
+          break;
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
       }
     } else {
       switch(kind)
@@ -503,6 +579,20 @@ on_ompt_callback_sync_region(
         case ompt_sync_region_taskgroup:
           sprintf(timerName, "OpenMP_Sync_Region_Taskgroup ADDR <%lx>", addr);
           break;
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+        case ompt_sync_region_barrier_implicit:
+          sprintf(timerName, "OpenMP_Sync_Region_Barrier_Implicit ADDR <%lx>", addr);
+          break;
+        case ompt_sync_region_barrier_explicit:
+          sprintf(timerName, "OpenMP_Sync_Region_Barrier_Explicit ADDR <%lx>", addr);
+          break;
+        case ompt_sync_region_barrier_implementation:
+          sprintf(timerName, "OpenMP_Sync_Region_Barrier_Implementation ADDR <%lx>", addr);
+          break;
+        case ompt_sync_region_reduction:
+          sprintf(timerName, "OpenMP_Sync_Region_Reduction ADDR <%lx>", addr);
+          break;
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
       }
     }
     switch(endpoint)
@@ -522,6 +612,7 @@ on_ompt_callback_sync_region(
 }
 
 /* Idle event - optional event that has low overhead and does not need context) */
+#if defined (TAU_USE_OMPT_TR6)
 static void
 on_ompt_callback_idle(
     ompt_scope_endpoint_t endpoint)
@@ -543,6 +634,7 @@ on_ompt_callback_idle(
 
   return;
 }
+#endif /* defined (TAU_USE_OMPT_TR6) */
 
 /* Mutex event - optional event with context */ 
 /* Currently with the LLVM-openmp implementation it seems these mutex events
@@ -564,10 +656,21 @@ on_ompt_callback_idle(
 
 static void
 on_ompt_callback_mutex_acquire(
+#if defined (TAU_USE_OMPT_TR6)
     ompt_mutex_kind_t kind,
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    ompt_mutex_t kind,
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
     unsigned int hint,
     unsigned int impl,
+#if defined (TAU_USE_OMPT_TR7)
+    omp_wait_id_t wait_id,
+#endif /* defined (TAU_USE_OMPT_TR7) */
+    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
     ompt_wait_id_t wait_id,
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     const void *codeptr_ra) 
 {
   TauInternalFunctionGuard protects_this_function;
@@ -584,15 +687,25 @@ on_ompt_callback_mutex_acquire(
       Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
       switch(kind)
       {
+#if defined (TAU_USE_OMPT_TR6)
         case ompt_mutex:
           sprintf(timerName, "OpenMP_Mutex_Waiting %s", resolved_address);
           break;
+#endif /* defined (TAU_USE_OMPT_TR6) */
         case ompt_mutex_lock:
           sprintf(timerName, "OpenMP_Mutex_Waiting_Lock %s", resolved_address);
           break;
         case ompt_mutex_nest_lock:
           sprintf(timerName, "OpenMP_Mutex_Waiting_Nest_Lock %s", resolved_address);
           break;
+#if defined (TAU_USE_OMPT_5_0)
+        case ompt_mutex_test_lock:
+          sprintf(timerName, "OpenMP_Mutex_Waiting_Test_Lock %s", resolved_address);
+          break;
+        case ompt_mutex_test_nest_lock:
+          sprintf(timerName, "OpenMP_Mutex_Waiting_Test_Nest_Lock %s", resolved_address);
+          break;
+#endif /* defined (TAU_USE_OMPT_5_0) */
         case ompt_mutex_critical:
           sprintf(timerName, "OpenMP_Mutex_Waiting_Critical %s", resolved_address);
           break;
@@ -606,15 +719,25 @@ on_ompt_callback_mutex_acquire(
     } else {
       switch(kind)
       {
+#if defined (TAU_USE_OMPT_TR6)
         case ompt_mutex:
           sprintf(timerName, "OpenMP_Mutex_Waiting ADDR <%lx>", addr);
           break;
+#endif /* defined (TAU_USE_OMPT_TR6) */
         case ompt_mutex_lock:
           sprintf(timerName, "OpenMP_Mutex_Waiting_Lock ADDR <%lx>", addr);
           break;
         case ompt_mutex_nest_lock:
           sprintf(timerName, "OpenMP_Mutex_Waiting_Nest_Lock ADDR <%lx>", addr);
           break;
+#if defined (TAU_USE_OMPT_5_0)
+        case ompt_mutex_test_lock:
+          sprintf(timerName, "OpenMP_Mutex_Waiting_Test_Lock ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_test_nest_lock:
+          sprintf(timerName, "OpenMP_Mutex_Waiting_Test_Nest_Lock ADDR <%lx>", addr);
+          break;
+#endif /* defined (TAU_USE_OMPT_5_0) */
         case ompt_mutex_critical:
           sprintf(timerName, "OpenMP_Mutex_Waiting_Critical ADDR <%lx>", addr);
           break;
@@ -635,8 +758,19 @@ on_ompt_callback_mutex_acquire(
 
 static void
 on_ompt_callback_mutex_acquired(
+#if defined (TAU_USE_OMPT_TR6)
     ompt_mutex_kind_t kind,
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    ompt_mutex_t kind,
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
+#if defined (TAU_USE_OMPT_TR7)
+    omp_wait_id_t wait_id,
+#endif /* defined (TAU_USE_OMPT_TR7) */
+    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
     ompt_wait_id_t wait_id,
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
@@ -653,15 +787,25 @@ on_ompt_callback_mutex_acquired(
       Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
       switch(kind)
       {
+#if defined (TAU_USE_OMPT_TR6)
         case ompt_mutex:
           sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired %s", resolved_address);
           break;
+#endif /* defined (TAU_USE_OMPT_TR6) */
         case ompt_mutex_lock:
           sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Lock %s", resolved_address);
           break;
         case ompt_mutex_nest_lock:
           sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Nest_Lock %s", resolved_address);
           break;
+#if defined (TAU_USE_OMPT_5_0)
+        case ompt_mutex_test_lock:
+          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Test_Lock %s", resolved_address);
+          break;
+        case ompt_mutex_test_nest_lock:
+          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Test_Nest_Lock %s", resolved_address);
+          break;
+#endif /* defined (TAU_USE_OMPT_5_0) */
         case ompt_mutex_critical:
           sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Critical %s", resolved_address);
           break;
@@ -675,15 +819,25 @@ on_ompt_callback_mutex_acquired(
     } else {
       switch(kind)
       {
+#if defined (TAU_USE_OMPT_TR6)
         case ompt_mutex:
           sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired ADDR <%lx>", addr);
           break;
+#endif /* defined (TAU_USE_OMPT_TR6) */
         case ompt_mutex_lock:
           sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Lock ADDR <%lx>", addr);
           break;
         case ompt_mutex_nest_lock:
           sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Nest_Lock ADDR <%lx>", addr);
           break;
+#if defined (TAU_USE_OMPT_5_0)
+        case ompt_mutex_test_lock:
+          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Test_Lock ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_test_nest_lock:
+          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Test_Nest_Lock ADDR <%lx>", addr);
+          break;
+#endif /* defined (TAU_USE_OMPT_5_0) */
         case ompt_mutex_critical:
           sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Critical ADDR <%lx>", addr);
           break;
@@ -708,8 +862,19 @@ on_ompt_callback_mutex_acquired(
 
 static void
 on_ompt_callback_mutex_released(
+#if defined (TAU_USE_OMPT_TR6)
     ompt_mutex_kind_t kind,
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    ompt_mutex_t kind,
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
+#if defined (TAU_USE_OMPT_TR7)
+    omp_wait_id_t wait_id,
+#endif /* defined (TAU_USE_OMPT_TR7) */
+    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
     ompt_wait_id_t wait_id,
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
@@ -736,13 +901,13 @@ inline static void register_callback(ompt_callbacks_t name, ompt_callback_t cb) 
       fprintf(stderr, "TAU: WARNING: Callback for event %d could not be registered\n", name); 
       break; 
     case ompt_set_sometimes: 
-      TAU_VERBOSE("TAU: Callback for event %s registered with return value %s\n", name, "ompt_set_sometimes");
+      TAU_VERBOSE("TAU: Callback for event %d registered with return value %s\n", name, "ompt_set_sometimes");
       break;
     case ompt_set_sometimes_paired:
-      TAU_VERBOSE("TAU: Callback for event %s registered with return value %s\n", name, "ompt_set_sometimes_paired");
+      TAU_VERBOSE("TAU: Callback for event %d registered with return value %s\n", name, "ompt_set_sometimes_paired");
       break;
     case ompt_set_always:
-      TAU_VERBOSE("TAU: Callback for event %s registered with return value %s\n", name, "ompt_set_always");
+      TAU_VERBOSE("TAU: Callback for event %d registered with return value %s\n", name, "ompt_set_always");
       break;
   }
 }
@@ -813,6 +978,9 @@ void Tau_force_ompt_env_initialization() {
 /* Register callbacks for all events that we are interested in / have to support */
 extern "C" int ompt_initialize(
   ompt_function_lookup_t lookup,
+#if  defined (TAU_USE_OMPT_5_0)
+  int initial_device_num,
+#endif /* defined (TAU_USE_OMPT_5_0) */
   ompt_data_t* tool_data)
 {
   int ret;
@@ -821,6 +989,7 @@ extern "C" int ompt_initialize(
   initializing = true;
   TauInternalFunctionGuard protects_this_function;
   if (!TauEnv_get_openmp_runtime_enabled()) return 0;
+  TAU_PROFILE_SET_NODE(0);
 
 #if defined (TAU_USE_TLS)
   is_master = true;
@@ -865,7 +1034,9 @@ extern "C" int ompt_initialize(
   if(TauEnv_get_ompt_support_level() >= 1) { /* Only support this when "lowoverhead" mode is enabled. Turns on all required events + other low overhead */
     register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
     register_callback(ompt_callback_master, cb_t(on_ompt_callback_master));
+#if defined (TAU_USE_OMPT_TR6)
     register_callback(ompt_callback_idle, cb_t(on_ompt_callback_idle));
+#endif /* TAU_USE_OMPT_TR6 */
   }
 
   if(TauEnv_get_ompt_support_level() == 2) { /* Only support this when "full" is enabled. This is a high overhead call */
@@ -900,4 +1071,4 @@ extern "C" ompt_start_tool_result_t * ompt_start_tool(
   result.tool_data.ptr = NULL;
   return &result;
 }
-#endif /* TAU_USE_OMPT_TR6 */
+#endif /*  defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
