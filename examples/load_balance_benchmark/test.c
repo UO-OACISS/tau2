@@ -50,7 +50,6 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Rebalancing...\n");
         WORK_ITER = 5000;
       } else {
-        //srand((unsigned) world_rank);
         x = (rand() % 100)*((-1*(world_rank)%2)^1);
         WORK_ITER = WORK_ITER + x;
         fprintf(stderr, "Work for iteration %d\n", WORK_ITER);
