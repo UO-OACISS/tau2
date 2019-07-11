@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
     // Initialize the MPI environment
     #ifdef TAU_MPI
     MPI_Init(&argc, &argv);
-    int data;
+    int data, i, t, w;
     size_t load_balance_module = TAU_CREATE_TRIGGER("load balance module");
     int x;
    
@@ -32,9 +32,10 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
     Tau_enable_plugin_for_trigger_event(TAU_PLUGIN_EVENT_TRIGGER, load_balance_module, 0);
     TAU_PROFILE_TIMER(timer, "trigger_timer", "", TAU_DEFAULT);
+    srand((unsigned) world_rank);
 
-    for(int t=0; t < T; t++) {
-      for(int w=0; w < WORK_ITER; w++) {
+    for(t=0; t < T; t++) {
+      for(w=0; w < WORK_ITER; w++) {
         do_work();
       }
 
@@ -49,7 +50,7 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Rebalancing...\n");
         WORK_ITER = 5000;
       } else {
-        srand((unsigned) world_rank);
+        //srand((unsigned) world_rank);
         x = (rand() % 100)*((-1*(world_rank)%2)^1);
         WORK_ITER = WORK_ITER + x;
         fprintf(stderr, "Work for iteration %d\n", WORK_ITER);
