@@ -24,14 +24,18 @@
 #include <stdarg.h>
 #include <string.h>
 
+#ifdef TAU_USE_STDCXX11
 #include <thread>
+#include <regex>
+#endif 
 
 #include <Profile/Profiler.h>
 #include <TauMetaData.h>
 #include <Profiler.h>
 
+#ifdef HAVE_TR1_HASH_MAP
 #include <tr1/functional>
-#include <regex>
+#endif /* HAVE_TR1_HASH_MAP */
 
 #ifndef TAU_WINDOWS
 #include <dlfcn.h>
