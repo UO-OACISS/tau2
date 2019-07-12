@@ -10129,6 +10129,9 @@ if [ $opari = yes ] ; then
 	if [ "x$fortran_compiler" = "xpathscale" ] ; then
 	    oparicomp="$fortran_compiler"
 	fi
+	if [ "x$fortran_compiler" = "xxlf90_r" ] ; then
+	    oparicomp="ibm"
+	fi
 	if [ "x$fortran_compiler" = "xpgi" ] ; then
 	    oparicomp="$fortran_compiler"
 	fi
@@ -10142,7 +10145,6 @@ if [ $opari = yes ] ; then
     fixmakeargs="$fixmakeargs oparicomp=$oparicomp"
     tauoptions="${tauoptions}-opari"
 fi
-
 
 if [ $vampirtrace = yes ] ; then
     fixmakeargs="$fixmakeargs VAMPIRTRACE vampirtracedir=$vampirtracedir"
