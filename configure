@@ -7126,11 +7126,11 @@ fi
 # Install Scalable Observation System (SOS) if requested
 ######################################################################
 
-if [ "x$download_ompt" = xyes ] ; then
+if [ "x$download_ompt" = xyes -a $sos = yes ] ; then
   echo "SOS (Scalable Observation System) installation requested"
 fi
 
-if [ "x$download_legacy_ompt" = xyes ] ; then
+if [ "x$download_legacy_ompt" = xyes -a $sos = yes ] ; then
   echo "SOS (Scalable Observation System) installation requested"
 fi
 
@@ -11784,7 +11784,7 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_static}/lib${libom
     echo "ompt_dir=$ompt_dir"
 
     # also put them in the "disable" directory for later builds - but only do it once
-    if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes"] ; then
+    if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
       ompt_instdir=${targetdir}/${architecture}/lib/static-disable-tr6
     else 
       ompt_instdir=${targetdir}/${architecture}/lib/static-disable
