@@ -689,11 +689,16 @@ extern "C" const char* Tau_check_for_matching_regex(const char * input)
 {
 
   TauInternalFunctionGuard protects_this_function;
+#ifdef TAU_USE_STDCXX11
   for(std::list< std::string >::iterator it = regex_list.begin(); it != regex_list.end(); it++) {
     if(regex_match(input, std::regex(*it))) {
       return (*it).c_str();
     }
   }
+#else 
+  // implement C style regex here! 
+  return input; 
+#endif 
   return NULL;
 }
 
