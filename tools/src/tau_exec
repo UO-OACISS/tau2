@@ -732,6 +732,9 @@ if [ $adios2 = "true" ]; then
 fi
 
 export KOKKOS_PROFILE_LIBRARY=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+if [ $track_ompt = "true" ]; then
+  export OMP_TOOL_LIBRARIES=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+fi
 
 
 isTBB=`echo $theBinding | grep tbb`
