@@ -1087,6 +1087,7 @@ omptlibrary=-lomp
 omptenabled=no
 download_ompt=no
 download_ompt_tr6=no
+ompt_compiler_support=no
 install_ompt=no
 ompt_use_tr6_version=no
 ompt_use_tr7_version=no
@@ -7040,7 +7041,6 @@ if [ "$pgi" = "yes" ]; then openmp_flag=-mp; fi
 if [ "$fujitsu" = "yes" ]; then openmp_flag=-kopenmp; fi
 if [ "$default_fortran" = "cray" ]; then openmp_flag=-h#omp; fi
 if [ "$intel" = "yes" ]; then openmp_flag=-qopenmp; fi
-ompt_support_found=no
 
 if [ $ompt_use_tr6_version = "no" ] ; then
 
@@ -7051,7 +7051,7 @@ if [ $ompt_use_tr6_version = "no" ] ; then
     result=$?
     if [ $result = "0" ]; then
         echo " yes"
-        ompt_support_found=yes
+        ompt_compiler_support=yes
         download_ompt=no
         download_ompt_tr6=no
         ompt_use_v5_version=yes
@@ -7061,7 +7061,7 @@ if [ $ompt_use_tr6_version = "no" ] ; then
     rm -f ./ompt_ver_test
 fi
 
-if [ $ompt_support_found = no -a $ompt_use_tr6_version = no ] ; then
+if [ $ompt_compiler_support = no -a $ompt_use_tr6_version = no ] ; then
     #checking for OMPT Version TR7
     echo -ne "\t Checking for version TR7 ..."
     $c_compiler $openmp_flag $orig_useropt -DVERTEST_OMPT_TR7 ompt_ver_test.c -o ompt_ver_test 1>/dev/null 2>&1
@@ -7069,7 +7069,7 @@ if [ $ompt_support_found = no -a $ompt_use_tr6_version = no ] ; then
     result=$?
     if [ $result = "0" ]; then
         echo " yes"
-        ompt_support_found=yes
+        ompt_compiler_support=yes
         download_ompt=no
         download_ompt_tr6=no
         ompt_use_tr7_version=yes
@@ -7079,7 +7079,7 @@ if [ $ompt_support_found = no -a $ompt_use_tr6_version = no ] ; then
     rm -f ./ompt_ver_test
 fi
 
-if [ $ompt_support_found = no ] ; then
+if [ $ompt_compiler_support = no ] ; then
     #checking for OMPT Version TR6
     echo -ne "\t Checking for version TR6 ..."
     $c_compiler $openmp_flag $orig_useropt -DVERTEST_OMPT_TR6 ompt_ver_test.c -o ompt_ver_test 1>/dev/null 2>&1
@@ -7087,7 +7087,7 @@ if [ $ompt_support_found = no ] ; then
     result=$?
     if [ $result = "0" ]; then
         echo " yes"
-        ompt_support_found=yes
+        ompt_compiler_support=yes
         download_ompt=no
         download_ompt_tr6=no
     else
@@ -7097,7 +7097,7 @@ if [ $ompt_support_found = no ] ; then
 fi
 
 rm -f ./ompt_ver_test.c
-if [ $ompt_support_found = no ] ; then
+if [ $ompt_compiler_support = no ] ; then
     if [ $ompt_use_tr6_version = no ] ; then
         echo -n "Compiler does not support OMPT ... "
         if [ $gnu = yes -o $llvm = yes -o $intel = yes ] ; then
@@ -7308,7 +7308,7 @@ if [ "x$download_ompt" = "xyes" -o "x$download_ompt_tr6" = "xyes" ] ; then
   omptlib=${libomp_ossdir_shared}
   omptlibrary=-l${libomp_oss_name}
   cd $preomptdir
-else
+elif [ $ompt_compiler_support = no ] ; then
   # not building OMPT, but...
   install_ompt=yes
   if [ $ompt = "yes" -a ! -f ${START_DIR}/include/ompt.h ] ; then
@@ -11769,6 +11769,27 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
 	mkdir -p ${targetdir}/${architecture}/include
     cp ${START_DIR}/include/omp*.h ${targetdir}/${architecture}/include
   fi
+elif [ $ompt = yes -a $ompt_compiler_support = yes ] ; then
+    # Remove previously copied shared openmp libraries
+    ompt_instdir=${targetdir}/${architecture}/lib
+    ompt_instdir_=${targetdir}/${architecture}/lib/shared${tauoptions}
+
+    rm -f ${ompt_instdir}/lib${libomp_oss_name}.so
+    rm -f ${ompt_instdir}/libomp.so
+    rm -f ${ompt_instdir_}/lib${libomp_oss_name}.so
+    rm -f ${ompt_instdir_}/libomp.so
+
+    ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr6
+
+    rm -f ${ompt_instdir}/libomp.so
+    rm -f ${ompt_instdir}/libgomp.so
+    rm -f ${ompt_instdir}/libiomp5.so
+
+    ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
+
+    rm -f ${ompt_instdir}/libomp.so
+    rm -f ${ompt_instdir}/libgomp.so
+    rm -f ${ompt_instdir}/libiomp5.so
 fi
 
 # Install the Static object library for LLVM-OMPT
