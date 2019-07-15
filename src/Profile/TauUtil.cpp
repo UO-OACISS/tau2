@@ -27,6 +27,8 @@
 #ifdef TAU_USE_STDCXX11
 #include <thread>
 #include <regex>
+#else
+#include <regex.h>
 #endif 
 
 #include <Profile/Profiler.h>
@@ -684,6 +686,35 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
   
 }
 
+#ifndef TAU_USE_STDCXX11
+/* C version of regex_match in case compiler doesn't support C++11 featues */
+/* Credit for logic: Laurence Gonsalves on stackoverflow.com */
+extern "C" int Tau_C_regex_match(const char * input, const char * rege)
+{
+  TauInternalFunctionGuard protects_this_function;
+
+  regex_t regex;
+  int reti;
+  char msgbuf[100];
+
+  /* Compile regular expression */
+  reti = regcomp(&regex, rege, 0);
+  if (reti) {
+      fprintf(stderr, "Could not compile regex\n");
+      return 0;
+  }
+
+  /* Execute regular expression */
+  reti = regexec(&regex, input, 0, NULL, 0);
+  if (!reti) {
+      return 1;
+  }
+
+  else {
+      return 0;
+  }
+}
+#endif
 
 extern "C" const char* Tau_check_for_matching_regex(const char * input)
 {
@@ -696,8 +727,11 @@ extern "C" const char* Tau_check_for_matching_regex(const char * input)
     }
   }
 #else 
-  // implement C style regex here! 
-  return input; 
+  for(std::list< std::string >::iterator it = regex_list.begin(); it != regex_list.end(); it++) {
+    if(Tau_C_regex_match(input, (*it).c_str())) {
+      return (*it).c_str();
+    }
+  }
 #endif 
   return NULL;
 }
