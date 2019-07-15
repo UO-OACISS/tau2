@@ -43,13 +43,13 @@ libTAU-thread-summary-plugin.so: tau_plugin_thread_summary.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-thread-summary-plugin.so tau_plugin_thread_summary.o
 
 libTAU-memory-usage-async.so: tau_plugin_example_memory_usage_async.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS)  libTAU-memory-usage-async.so tau_plugin_example_memory_usage_async.o
+	$(CXX) $(TAU_STDCXX11_FLAG) $(LDFLAGS) $(TAU_SHFLAGS)  libTAU-memory-usage-async.so tau_plugin_example_memory_usage_async.o
 
 libTAU-emulate-profiles-analysis-async.so: tau_plugin_example_emulate_profile_snapshots_analysis_async.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-emulate-profiles-analysis-async.so tau_plugin_example_emulate_profile_snapshots_analysis_async.o
+	$(CXX) $(TAU_STDCXX11_FLAG) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-emulate-profiles-analysis-async.so tau_plugin_example_emulate_profile_snapshots_analysis_async.o
 
 libTAU-analyze-node-profiles-async.so: tau_plugin_example_analyze_node_profile_snapshots_async.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-analyze-node-profiles-async.so tau_plugin_example_analyze_node_profile_snapshots_async.o
+	$(CXX) $(TAU_STDCXX11_FLAG) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-analyze-node-profiles-async.so tau_plugin_example_analyze_node_profile_snapshots_async.o
 
 libTAU-analyze-node-profiles.so: tau_plugin_example_analyze_node_profile_snapshots.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-analyze-node-profiles.so tau_plugin_example_analyze_node_profile_snapshots.o
@@ -70,7 +70,7 @@ libTAU-analyze-profiles.so: tau_plugin_example_analyze_profile_snapshots.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-analyze-profiles.so tau_plugin_example_analyze_profile_snapshots.o 
 
 libTAU-load-balance-async.so: tau_plugin_example_load_balance_async.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-load-balance-async.so tau_plugin_example_load_balance_async.o
+	$(CXX) $(TAU_STDCXX11_FLAG) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-load-balance-async.so tau_plugin_example_load_balance_async.o
 
 libTAU-load-balance.so: tau_plugin_example_load_balance.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-load-balance.so tau_plugin_example_load_balance.o

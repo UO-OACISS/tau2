@@ -11,6 +11,8 @@
 #include <fstream>
 #include <string>
 
+#ifdef TAU_USE_STDCXX11
+
 #include <Profile/TauEnv.h>
 #include <Profile/UserEvent.h>
 #include <Profile/TauMetrics.h>
@@ -137,4 +139,5 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   return 0;
 }
 
+#endif
 #endif

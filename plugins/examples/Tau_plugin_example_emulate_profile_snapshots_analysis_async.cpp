@@ -12,6 +12,8 @@
 #include <string>
 #include <utility>
 
+#ifdef TAU_USE_STDCXX11
+
 #include <Profile/TauEnv.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/TauCollate.h>
@@ -159,4 +161,4 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
 }
 
 #endif
-
+#endif
