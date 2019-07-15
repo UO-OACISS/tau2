@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <thread>
 #include <fstream>
 #include <string>
 
@@ -40,7 +39,6 @@
 #include <unistd.h>
 
 using namespace std;
-std::vector<std::thread> thread_vec;
 
 int Tau_open_system_file(const char *filename)
 {
@@ -135,8 +133,6 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   void * data = NULL;
 
   int ret = pthread_create(&tid1, NULL, Tau_plugin_do_work, NULL);
-
-  //thread_vec.push_back(std::thread(Tau_plugin_do_work, data));
 
   return 0;
 }
