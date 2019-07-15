@@ -7319,6 +7319,9 @@ if [ "x$download_ompt" = "xyes" -o "x$download_ompt_tr6" = "xyes" ] ; then
 		exit 1;
       fi
     fi
+  else #Still need to copy the header to be sure it's not from the wrong version
+      echo cp $libomp_oss/build-${ompt_cxx_compiler}/include/*.h ${START_DIR}/include/.
+      cp $libomp_oss/build-${ompt_cxx_compiler}/include/*.h ${START_DIR}/include/.
   fi
   omptlib=${libomp_ossdir_shared}
   omptlibrary=-l${libomp_oss_name}
@@ -7326,7 +7329,7 @@ if [ "x$download_ompt" = "xyes" -o "x$download_ompt_tr6" = "xyes" ] ; then
 elif [ $ompt_compiler_support = no -o $install_ompt = yes ] ; then
   # not building OMPT, but...
   install_ompt=yes
-  if [ $ompt = "yes" -a ! -f ${START_DIR}/include/${ompt_header} ] ; then
+  if [ "$ompt" = "yes" ] ; then
     # we need the ompt header for building TAU
     echo cp ${omptlib}/../include/${ompt_header} ${START_DIR}/include/.
     cp ${omptlib}/../include/${ompt_header} ${START_DIR}/include/.
