@@ -2266,7 +2266,8 @@ void TauEnv_initialize()
     }
 
     tmp = getconf("TAU_SAMPLING");
-    if (parse_bool(tmp, TAU_EBS_DEFAULT)) {
+    // We should disable sampling if tracing has been enabled! 
+    if (parse_bool(tmp, TAU_EBS_DEFAULT) && (env_tracing == 0)) {
 #ifdef TAU_DISABLE_MEM_MANAGER
       env_ebs_enabled = 0;
       TAU_VERBOSE("TAU: Sampling Disabled - memory management was disabled at configuration!\n");
