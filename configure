@@ -10161,7 +10161,8 @@ if [ $opari = yes ] ; then
 	fi
     fi
     if [ $oparicomp = no ] ; then
-	oparicomp=
+	oparicomp="gcc"
+# some sane default to prevent it from giving an error in the Opari build. 
     fi
     fixmakeargs="$fixmakeargs oparicomp=$oparicomp"
     tauoptions="${tauoptions}-opari"
