@@ -457,6 +457,7 @@ on_ompt_callback_thread_begin(
   sprintf(timerName, "OpenMP_Thread_Type_%s", ompt_thread_type_t_values[thread_type]);
   TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
   thread_data->ptr = (void*)handle;
+  RtsLayer::RegisterThread();
   TAU_PROFILER_START(handle); 
 }
 
