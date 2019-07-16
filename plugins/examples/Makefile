@@ -112,7 +112,7 @@ tau_plugin_sos.o: Tau_plugin_sos.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_sos.cpp -o tau_plugin_sos.o
 
 tau_plugin_thread_summary.o: Tau_plugin_thread_summary.cpp
-	$(CXX) $(CFLAGS) -std=c++11 -c Tau_plugin_thread_summary.cpp -o tau_plugin_thread_summary.o
+	$(CXX) $(CFLAGS) $(TAU_STDCXX11_FLAG) -c Tau_plugin_thread_summary.cpp -o tau_plugin_thread_summary.o
 
 TauSOS.o: TauSOS.cpp
 	$(CXX) $(CFLAGS) -c TauSOS.cpp -o TauSOS.o
