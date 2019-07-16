@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.28.1                        *
+ *                           Version 2.28.2                        *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -63,17 +63,17 @@ the files from the external third party library directory.
 % ./configure -bfd=download -dwarf=download -unwind=download -iowrapper -pdt=<dir> 
 % make install
 
+OpenMP Support in TAU
+---------------------
+TAU supports OMPT v5.0 with Clang 8.x compilers and TR7 with Intel 19 compilers.
+To use this support, simply configure TAU with -ompt. 
+NOTE: If these compilers are not used, -ompt automatically downloads the appropriate TR6 or TR4 downloads depending on the compiler. GNU does not currently support OMPT but it will in the future. 
 
 To use MPI compilers and OpenMP, please specify the appropriate compilers as:
-% ./configure -c++=mpicxx -cc=mpicc -fortran=mpif90 -mpi -ompt=download -iowrapper -bfd=download -dwarf=download -unwind=download -pdt=<path_to_pdt_dir>
+% ./configure -c++=mpicxx -cc=mpicc -fortran=mpif90 -mpi -ompt -iowrapper -bfd=download -dwarf=download -otf=download -unwind=download -pdt=<path_to_pdt_dir>
 % make install 
 
-It is important to note that if the OMPT package needs a newer cmake (3.3+) and a recent GCC backend for compilers (gcc 4.6+). If you are building for an IBM BGQ or a Cray system a KNC Linux system, please add the appropriate -arch option (typically, bgq, craycnl, mic_linux, or ibm64linux for Power 8/9 with Linux):
-% ./configure -arch=craycnl  -bfd=download -ompt=download-tr6 -dwarf=download  -iowrapper -unwind=download -mpi; make install
-
-There is no need to specify compilers for standard architectures such as 
--arch=bgq or -arch=craycnl. If you are using a MIC node on Cray XC40, please 
-use the appropriate module to generate MIC code and simply use -arch=craycnl. 
+It is important to note that if the OMPT package needs a newer cmake (3.3+) and a recent GCC backend for compilers (gcc 4.6+). 
 
 To use other packages such as PAPI [http://icl.cs.utk.edu/papi] to access 
 hardware performance counters or Score-P [http://www.score-p.org] to generate
@@ -86,9 +86,9 @@ We typically use TAU by choosing a specific configuration by setting the
 TAU_MAKEFILE environment variable to point to the desired configuration. 
 
 e.g.,
-% export TAU_MAKEFILE=/path/to/tau-2.28/craycnl/lib/Makefile.tau-cray-papi-mpi-pdt
+% export TAU_MAKEFILE=/path/to/tau-2.x/craycnl/lib/Makefile.tau-cray-papi-mpi-pdt
 and then after putting TAU in the path:
-% export PATH=/path/to/tau-2.28/craycnl/bin:$PATH
+% export PATH=/path/to/tau-2.x/craycnl/bin:$PATH
 we substitute the compiler used with the TAU compiler scripts:
 
 % make CC=tau_cc.sh CXX=tau_cxx.sh F90=tau_f90.sh 
