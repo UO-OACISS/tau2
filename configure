@@ -10154,7 +10154,7 @@ if [ $opari = yes ] ; then
 	    oparicomp="ibm"
 	fi
 	if [ "x$fortran_compiler" = "xpgi" -o "x$fortran_compiler" = "xpgfortran" ] ; then
-	    oparicomp="pgi"
+	    oparicomp="gcc"
 	fi
 	if [ "x$fortran_compiler" = "xgfortran" -o x$fortran_compiler" = "xgfortran-5" -o x$fortran_compiler" = "xgfortran-6" -o x$fortran_compiler" = "xgfortran-7" -o x$fortran_compiler" = "xgfortran-8" ] ; then
 	    oparicomp="gcc"
