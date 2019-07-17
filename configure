@@ -7109,7 +7109,7 @@ if [ $ompt_compiler_support = no ] ; then
     rm -f ./ompt_ver_test
 fi
 
-#rm -f ./ompt_ver_test.c
+rm -f ./ompt_ver_test.c
 if [ $ompt_compiler_support = no ] ; then
     if [ $ompt_use_tr6_version = no ] ; then
         echo -n "Compiler does not support OMPT ... "
