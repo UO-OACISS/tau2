@@ -286,7 +286,7 @@ static int env_ibm_bg_hwp_counters = 0;
 static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
-static int env_ompt_resolve_address_eagerly = 0;
+static int env_ompt_resolve_address_eagerly = 1;
 static int env_ompt_support_level = 0;
 static int env_openmp_runtime_enabled = 1;
 static int env_openmp_runtime_states_enabled = 0;
@@ -625,9 +625,9 @@ static int TauConf_read()
 }
 
 /*********************************************************************
- * Local getconf routine
+ * TAU's getconf routine
  ********************************************************************/
-static const char *getconf(const char *key) {
+const char *getconf(const char *key) {
   const char *val = TauConf_getval(key);
   //TAU_VERBOSE("%s=%s\n", key, val);
   if (val) {
@@ -1407,6 +1407,7 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Resolving OMPT addresses eagerly\n");
 #endif
     } else {
+      env_ompt_resolve_address_eagerly = 0;
       TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "off");
     } 
     

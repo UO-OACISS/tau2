@@ -943,9 +943,11 @@ static int parse_bool(const char *str, int default_value = 0) {
   }
 }
 
+const char *getconf(const char *key);
 void Tau_force_ompt_env_initialization() {
 
-    const char* tmp = getenv("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY");
+    TAU_VERBOSE("Inside Tau_force_ompt_env_initialization\n");
+    const char* tmp = getconf("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY");
 
     if (parse_bool(tmp, 0)) {
       TauEnv_set_ompt_resolve_address_eagerly(1);
@@ -953,11 +955,13 @@ void Tau_force_ompt_env_initialization() {
       TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "on");
       TAU_VERBOSE("TAU: Resolving OMPT addresses eagerly\n");
     } else {
+      TauEnv_set_ompt_resolve_address_eagerly(0);
       TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "off");
+      TAU_VERBOSE("TAU: NOT Resolving OMPT addresses eagerly\n");
     } 
     
-    TauEnv_set_ompt_support_level(0); // Basic OMPT support is the default
-    const char *omptSupportLevel = getenv("TAU_OMPT_SUPPORT_LEVEL");
+    TauEnv_set_ompt_support_level(0); // basic OMPT support is the default
+    const char *omptSupportLevel = getconf("TAU_OMPT_SUPPORT_LEVEL");
     if (omptSupportLevel != NULL && 0 == strcasecmp(omptSupportLevel, "basic")) {
       TauEnv_set_ompt_support_level(0);
       TAU_VERBOSE("TAU: OMPT support will be basic - only required events supported\n");
@@ -970,6 +974,9 @@ void Tau_force_ompt_env_initialization() {
       TauEnv_set_ompt_support_level(2);
       TAU_VERBOSE("TAU: OMPT support will be full - all events will be supported\n");
       TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "full");
+    } else {
+      TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "basic");
+      TAU_VERBOSE("TAU: OMPT support will be basic - TAU_OMPT_SUPPORT_LEVEL runtime variable is not set");
     }
 //#endif/* TAU_OMPT */
 } 
