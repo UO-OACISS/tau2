@@ -452,12 +452,12 @@ on_ompt_callback_thread_begin(
 #elif defined (TAU_USE_PGS)
   if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
 #endif
+  RtsLayer::RegisterThread();
   void *handle = NULL;
   char timerName[100];
   sprintf(timerName, "OpenMP_Thread_Type_%s", ompt_thread_type_t_values[thread_type]);
   TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
   thread_data->ptr = (void*)handle;
-  RtsLayer::RegisterThread();
   TAU_PROFILER_START(handle); 
 }
 
