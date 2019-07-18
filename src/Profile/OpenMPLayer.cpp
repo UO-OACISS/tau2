@@ -207,6 +207,9 @@ int OpenMPLayer::GetTauThreadId(void)
   return tmp->threadID;
 #else // TAU_USE_TLS
 
+  /* This part contain duplicate code from OpenMPLayer::RegisterThread().
+   * Is there a way to not repeat this process without being able to use thread
+   * private variables ? */
   int omp_thread_id = omp_get_thread_num();
 
 #ifdef TAU_OPENMP_NESTED
@@ -233,15 +236,19 @@ int OpenMPLayer::GetTauThreadId(void)
     OpenMPMap & ompMap = TheOMPMap();
     OpenMPMap::iterator it = ompMap.find(omp_thread_id);
     if (it == ompMap.end()) {
-        if (initialized) omp_unset_lock(&OpenMPLayer::tauRegistermutex);
-        tau_thread_id = OpenMPLayer::RegisterThread();
-        if (initialized) omp_set_lock(&OpenMPLayer::tauRegistermutex);
+      /* Using OpenMPLayer::RegisterThread() instead of
+       * RtsLayer::RegisterThread() because we need to get back the thread
+       * id, and RtsLayer::RegisterThread() returns the number of threads */
+      if (initialized) omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+      tau_thread_id = OpenMPLayer::RegisterThread();
+      if (initialized) omp_set_lock(&OpenMPLayer::tauRegistermutex);
       ompMap[omp_thread_id] = tau_thread_id;
-    /* Activating Sampling here since we had to use OpenMPLayer::RegisterThread instead of RtsLayer::RegisterThread. */
+      /* Activating Sampling here since we had to use
+       * OpenMPLayer::RegisterThread instead of RtsLayer::RegisterThread. */
 #ifndef TAU_WINDOWS
 #ifndef _AIX
       if (TauEnv_get_ebs_enabled()) {
-          Tau_sampling_init_if_necessary();
+        Tau_sampling_init_if_necessary();
       }
 #endif /* _AIX */
 #endif /* TAU_WINDOWS */
