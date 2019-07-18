@@ -85,6 +85,10 @@ int OpenMPLayer::RegisterThread(void)
 {
 #ifdef TAU_OPENMP
 
+  /* We have to lock here and use the unsafe thread creation routine
+   * Using the safe creation routine generates a call to GetTauThreadId()
+   * which would still detect _tau_thread_id as being -1 and try to create
+   * the thread again */
 #if defined (TAU_USE_TLS) || defined (TAU_USE_DTLS)
   // if this thread has not been registered, then it does not have a TLS value for the ID
   if (_tau_thread_id == -1) {
