@@ -7053,6 +7053,8 @@ if [ "$ompt_dir" != "" ]; then
     openmp_INC="-I$ompt_dir/include"
 fi
 
+#This deletion is here in case the file was left behind from a previous call to configure
+rm -f ./ompt_ver_test
 if [ $ompt_use_tr6_version = "no" ] ; then
 
     #checking for OMPT Version 5.0
