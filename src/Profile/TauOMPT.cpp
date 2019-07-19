@@ -146,6 +146,7 @@ on_ompt_callback_parallel_begin(
   char resolved_address[1024];
 
   TauInternalFunctionGuard protects_this_function; 	
+  if(!Tau_init_check_initialized()) return;
   if(codeptr_ra) {
       void * codeptr_ra_copy = (void*) codeptr_ra;
       unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
@@ -194,6 +195,7 @@ on_ompt_callback_parallel_end(
   const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
+  if(!Tau_init_check_initialized()) return;
   static int once = 1;
 
   if(once)
@@ -230,6 +232,7 @@ on_ompt_callback_task_create(
   char resolved_address[1024];
 
   TauInternalFunctionGuard protects_this_function; 	
+  if(!Tau_init_check_initialized()) return;
   if(codeptr_ra) {
       void * codeptr_ra_copy = (void*) codeptr_ra;
       unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
@@ -271,6 +274,7 @@ on_ompt_callback_task_schedule(
     ompt_task_status_t prior_task_status,
     ompt_data_t *next_task_data)
 {
+  if(!Tau_init_check_initialized()) return;
   if(prior_task_data->ptr) {
     //TAU_PROFILER_STOP(prior_task_data->ptr);
     Tau_global_stop();
@@ -296,6 +300,7 @@ on_ompt_callback_master(
   const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
+  if(!Tau_init_check_initialized()) return;
   char timerName[10240];
   char resolved_address[1024];
   void * codeptr_ra_copy;
@@ -357,6 +362,7 @@ on_ompt_callback_work(
   const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
+  if(!Tau_init_check_initialized()) return;
   void *handle = NULL;
   char timerName[10240];
   char resolved_address[1024];
@@ -445,6 +451,7 @@ on_ompt_callback_thread_begin(
   ompt_data_t *thread_data)
 {
   TauInternalFunctionGuard protects_this_function;
+  if(!Tau_init_check_initialized()) return;
 #if defined (TAU_USE_TLS)
   if (is_master) return; // master thread can't be a new worker.
 #elif defined (TAU_USE_DTLS)
@@ -473,6 +480,7 @@ on_ompt_callback_thread_end(
   if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
 #endif
   TauInternalFunctionGuard protects_this_function;
+  if(!Tau_init_check_initialized()) return;
   //TAU_PROFILER_STOP(thread_data->ptr);
   Tau_global_stop();
 }
@@ -491,6 +499,7 @@ on_ompt_callback_implicit_task(
     unsigned int thread_num)
 {
   TauInternalFunctionGuard protects_this_function;
+  if(!Tau_init_check_initialized()) return;
   char timerName[100];
   sprintf(timerName, "OpenMP_Implicit_Task");
   void *handle = NULL;
@@ -532,6 +541,7 @@ on_ompt_callback_sync_region(
     const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
+  if(!Tau_init_check_initialized()) return;
   void *handle = NULL;
   char timerName[10240];
   char resolved_address[1024];
@@ -619,6 +629,7 @@ on_ompt_callback_idle(
     ompt_scope_endpoint_t endpoint)
 {
   TauInternalFunctionGuard protects_this_function;
+  if(!Tau_init_check_initialized()) return;
   const char *timerName= "OpenMP_Idle";
 
   TAU_PROFILE_TIMER(handle, timerName, " ", TAU_OPENMP);
@@ -675,6 +686,7 @@ on_ompt_callback_mutex_acquire(
     const void *codeptr_ra) 
 {
   TauInternalFunctionGuard protects_this_function;
+  if(!Tau_init_check_initialized()) return;
   char timerName[10240];
   char resolved_address[1024];
   void* mutex_waiting_handle=NULL;
@@ -775,6 +787,7 @@ on_ompt_callback_mutex_acquired(
     const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
+  if(!Tau_init_check_initialized()) return;
   char acquiredtimerName[10240];
   char waitingtimerName[10240];
   char resolved_address[1024];
@@ -879,6 +892,7 @@ on_ompt_callback_mutex_released(
     const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
+  if(!Tau_init_check_initialized()) return;
   char timerName[10240];
   char resolved_address[1024];
 
