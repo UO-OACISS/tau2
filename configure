@@ -7162,8 +7162,14 @@ fi
 
 if [ $ompt = yes ]; then
   tauoptions="${tauoptions}-ompt"
-  if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ]; then
-    tauoptions="${tauoptions}-tr6"
+  if [ "x$download_ompt" = "xyes" ] ; then
+      tauoptions="${tauoptions}-tr4"
+  elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
+      tauoptions="${tauoptions}-tr6"
+  elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
+      tauoptions="${tauoptions}-tr7"
+  elif [ "x$ompt_use_v5_version" = "xyes" ] ; then
+      tauoptions="${tauoptions}-v5"
   fi
   if [ "x$CRAY_CPU_TARGET" != "x" -a "x$PE_ENV" = "xINTEL" ] ; then
     fixmakeargs="$fixmakeargs INTEL_CRAY_MIC_KNL_OMPT"
@@ -7187,9 +7193,18 @@ if [ "${omptlib}" = "" ] ; then
     # TODO: Please remove this check once TR6 (and newer) become the only supported OMPT version(s).
     # If we do not have separate directories for OMPT (legacy) and OMPT-TR6, then there are issues
     # in installing both together for comparison purposes.
-    if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
+    if [ "x$download_ompt" = "xyes" ] ; then
+        libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable-tr4
+        libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable-tr4
+    elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
         libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable-tr6
         libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable-tr6
+    elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
+        libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable-tr7
+        libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable-tr7
+    elif [ "x$ompt_use_v5_version" = "xyes" ] ; then
+        libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable-v5
+        libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable-v5
     else
         libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable
         libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable
@@ -11777,8 +11792,14 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
     fi 
     # also put them in the "disable" directory for later builds - but only do it once
     
-    if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
-       ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr6
+    if [ "x$download_ompt" = "xyes" ] ; then
+        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr4
+    elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
+        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr6
+    elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
+        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr7
+    elif [ "x$ompt_use_v5_version" = "xyes" ] ; then
+        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-v5
     else
        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
     fi
@@ -11803,13 +11824,17 @@ elif [ $ompt = yes -a $ompt_compiler_support = yes ] ; then
     rm -f ${ompt_instdir_}/lib${libomp_oss_name}.so
     rm -f ${ompt_instdir_}/libomp.so
 
-    ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr6
-
-    rm -f ${ompt_instdir}/libomp.so
-    rm -f ${ompt_instdir}/libgomp.so
-    rm -f ${ompt_instdir}/libiomp5.so
-
-    ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
+    if [ "x$download_ompt" = "xyes" ] ; then
+        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr4
+    elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
+        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr6
+    elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
+        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr7
+    elif [ "x$ompt_use_v5_version" = "xyes" ] ; then
+        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-v5
+    else
+        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
+    fi
 
     rm -f ${ompt_instdir}/libomp.so
     rm -f ${ompt_instdir}/libgomp.so
