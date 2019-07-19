@@ -452,12 +452,12 @@ on_ompt_callback_thread_begin(
 #elif defined (TAU_USE_PGS)
   if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
 #endif
+  RtsLayer::RegisterThread();
   void *handle = NULL;
   char timerName[100];
   sprintf(timerName, "OpenMP_Thread_Type_%s", ompt_thread_type_t_values[thread_type]);
   TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
   thread_data->ptr = (void*)handle;
-  RtsLayer::RegisterThread();
   TAU_PROFILER_START(handle); 
 }
 
@@ -949,7 +949,7 @@ void Tau_force_ompt_env_initialization() {
     TAU_VERBOSE("Inside Tau_force_ompt_env_initialization\n");
     const char* tmp = getconf("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY");
 
-    if (parse_bool(tmp, 0)) {
+    if (parse_bool(tmp, 1)) {
       TauEnv_set_ompt_resolve_address_eagerly(1);
       TAU_VERBOSE("TAU: OMPT resolving addresses eagerly Enabled\n");
       TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "on");
@@ -978,7 +978,6 @@ void Tau_force_ompt_env_initialization() {
       TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "basic");
       TAU_VERBOSE("TAU: OMPT support will be basic - TAU_OMPT_SUPPORT_LEVEL runtime variable is not set");
     }
-//#endif/* TAU_OMPT */
 } 
 
 #define cb_t(name) (ompt_callback_t)&name

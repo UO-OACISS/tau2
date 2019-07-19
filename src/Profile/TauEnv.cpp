@@ -1394,7 +1394,7 @@ void TauEnv_initialize()
 
 #endif /* TAU_MPI_T */
 
-#ifdef TAU_OMPT_TR6
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
     tmp = getconf("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY");
     if (parse_bool(tmp, env_ompt_resolve_address_eagerly)) {
 #ifdef TAU_DISABLE_MEM_MANAGER
@@ -1405,7 +1405,7 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: OMPT resolving addresses eagerly Enabled\n");
       TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "on");
       TAU_VERBOSE("TAU: Resolving OMPT addresses eagerly\n");
-#endif
+#endif /*  TAU_DISABLE_MEM_MANAGER */
     } else {
       env_ompt_resolve_address_eagerly = 0;
       TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "off");
@@ -1426,7 +1426,7 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: OMPT support will be full - all events will be supported\n");
       TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "full");
     }
-#endif/* TAU_OMPT_TR6 */
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
 
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {
