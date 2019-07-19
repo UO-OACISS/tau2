@@ -65,7 +65,7 @@ the files from the external third party library directory.
 
 OpenMP Support in TAU
 ---------------------
-TAU supports OMPT v5.0 with Clang 8.x compilers and TR7 with Intel 19 compilers.
+TAU supports OMPT v5.0 with Clang 8.x compilers and Intel 19.0.4+ and TR7 with Intel 19.0.1 compilers.
 To use this support, simply configure TAU with -ompt. 
 NOTE: If these compilers are not used, -ompt automatically downloads the appropriate TR6 or TR4 downloads depending on the compiler. GNU does not currently support OMPT but it will in the future. 
 
@@ -73,7 +73,16 @@ To use MPI compilers and OpenMP, please specify the appropriate compilers as:
 % ./configure -c++=mpicxx -cc=mpicc -fortran=mpif90 -mpi -ompt -iowrapper -bfd=download -dwarf=download -otf=download -unwind=download -pdt=<path_to_pdt_dir>
 % make install 
 
-It is important to note that if the OMPT package needs a newer cmake (3.3+) and a recent GCC backend for compilers (gcc 4.6+). 
+To use this new OMPT capability using tau_exec to preload the libTAU.so library from <taudir>/x86_64/lib/shared-icpc-ompt-v5-... directory, please use:
+
+% export TAU_OMPT_SUPPORT_LEVEL=full
+% export OMP_NUM_THREADS=4
+% mpirun -np 4 tau_exec -T mpi,openmp,ompt,v5,pdt -ompt ./a.out
+% pprof -a | more
+% paraprof
+
+By default the OMPT support level is basic (which generates events on thread 0, but not on threads 1.. N-1. With full
+it generates events on all 0..N-1 threads. 
 
 To use other packages such as PAPI [http://icl.cs.utk.edu/papi] to access 
 hardware performance counters or Score-P [http://www.score-p.org] to generate
