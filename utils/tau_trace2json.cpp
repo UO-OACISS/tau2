@@ -159,8 +159,8 @@ int ClockPeriod( void*  userData, double clkPeriod )
 std::string escape_json(const char *unescaped) {
 	  std::string s(unescaped);
     std::ostringstream o;
-    for (auto c = s.cbegin(); c != s.cend(); c++) {
-        switch (*c) {
+    for (char const &c:s){ //(auto c = s.cbegin(); c != s.cend(); c++) {
+        switch (c) {
         //case '"': o << "\\\""; break; //This catches the leading and trailing quote and internal quotes should already be escaped. Revisit if needed.
         case '\\': o << "\\\\"; break;
         case '\b': o << "\\b"; break;
@@ -169,11 +169,11 @@ std::string escape_json(const char *unescaped) {
         case '\r': o << "\\r"; break;
         case '\t': o << "\\t"; break;
         default:
-            if ('\x00' <= *c && *c <= '\x1f') {
+            if ('\x00' <= c && c <= '\x1f') {
                 o << "\\u"
-                  << std::hex << std::setw(4) << std::setfill('0') << (int)*c;
+                  << std::hex << std::setw(4) << std::setfill('0') << (int)c;
             } else {
-                o << *c;
+                o << c;
             }
         }
     }
