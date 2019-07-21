@@ -1542,7 +1542,7 @@ void Tau_plugin_adios2_dump_history(void) {
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
  * Every plugin MUST implement this function to register callbacks for various events 
  * that the plugin is interested in listening to*/
-extern "C" int Tau_plugin_init_func(int argc, char **argv) {
+extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
     fprintf(stdout, "TAU PLUGIN ADIOS2 Init\n"); fflush(stdout);
     tau_plugin::Tau_ADIOS2_parse_environment_variables();
@@ -1567,7 +1567,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     cb->AtomicEventTrigger = Tau_plugin_adios2_atomic_trigger;
 
     /* Register the callback object */
-    TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
+    TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
 
     /* Open the ADIOS archive */
     my_adios = new tau_plugin::adios();
