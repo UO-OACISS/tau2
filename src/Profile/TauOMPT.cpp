@@ -15,6 +15,7 @@
 
 #include <Profile/TauBfd.h>
 #include <Profile/Profiler.h>
+#include <Profile/TauPluginInternals.h>
 #include <tau_internal.h>
 //#include "kmp.h"
 #include <execinfo.h>
@@ -167,6 +168,23 @@ on_ompt_callback_parallel_begin(
       parallel_data->ptr = (void*)handle;
       TAU_PROFILER_START(handle); 
   }
+
+  if(Tau_plugins_enabled.ompt_parallel_begin) {
+    Tau_plugin_event_ompt_parallel_begin_data_t plugin_data;
+
+    plugin_data.parent_task_data = parent_task_data;
+    plugin_data.parent_task_frame = parent_task_frame;
+    plugin_data.parallel_data = parallel_data;
+    plugin_data.requested_team_size = requested_team_size;
+#if defined (TAU_USE_OMPT_TR6)
+    plugin_data.invoker = invoker;
+#endif /* TAU_USE_OMPT_TR6 */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    plugin_data.flags = flags;
+#endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
+    plugin_data.codeptr_ra = codeptr_ra;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_PARALLEL_BEGIN, "*", &plugin_data);
+  }
 }
 
 /* TODO: Remove this and Remove changes to TauEnv.cpp once Intel and LLVM runtime stop causing a deadlock on initialisazion */
@@ -207,6 +225,22 @@ on_ompt_callback_parallel_end(
   if(codeptr_ra) {
     //TAU_PROFILER_STOP(parallel_data->ptr);
     Tau_global_stop();
+  }
+
+  if(Tau_plugins_enabled.ompt_parallel_end) {
+    Tau_plugin_event_ompt_parallel_end_data_t plugin_data;
+
+    plugin_data.parallel_data = parallel_data;
+    plugin_data.task_data = task_data;
+#if defined (TAU_USE_OMPT_TR6)
+    plugin_data.invoker = invoker;
+#endif /* TAU_USE_OMPT_TR6 */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    plugin_data.flags = flags;
+#endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_PARALLEL_END, "*", &plugin_data);
   }
 }
 
@@ -263,6 +297,19 @@ on_ompt_callback_task_create(
       TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
       new_task_data->ptr = (void*)handle;
   }
+
+  if(Tau_plugins_enabled.ompt_task_create) {
+    Tau_plugin_event_ompt_task_create_data_t plugin_data;
+
+    plugin_data.parent_task_data = parent_task_data;
+    plugin_data.parent_frame = parent_frame;
+    plugin_data.new_task_data = new_task_data;
+    plugin_data.type = type;
+    plugin_data.has_dependences = has_dependences;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_TASK_CREATE, "*", &plugin_data);
+  }
 }
 
 /* Callback for task schedule.
@@ -282,6 +329,16 @@ on_ompt_callback_task_schedule(
 
   if(next_task_data->ptr) {
     TAU_PROFILER_START(next_task_data->ptr);
+  }
+
+  if(Tau_plugins_enabled.ompt_task_schedule) {
+    Tau_plugin_event_ompt_task_schedule_data_t plugin_data;
+
+    plugin_data.prior_task_data = prior_task_data;
+    plugin_data.prior_task_status = prior_task_status;
+    plugin_data.next_task_data = next_task_data;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_TASK_SCHEDULE, "*", &plugin_data);
   }
 }
 
@@ -333,6 +390,17 @@ on_ompt_callback_master(
         Tau_global_stop();
         break;
     }
+  }
+
+  if(Tau_plugins_enabled.ompt_master) {
+    Tau_plugin_event_ompt_master_data_t plugin_data;
+
+    plugin_data.endpoint = endpoint;
+    plugin_data.parallel_data = parallel_data;
+    plugin_data.task_data =  task_data;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_MASTER, "*", &plugin_data);
   }
 }
 
@@ -435,6 +503,19 @@ on_ompt_callback_work(
 	break;
     }
   }
+
+  if(Tau_plugins_enabled.ompt_work) {
+    Tau_plugin_event_ompt_work_data_t plugin_data;
+
+    plugin_data.wstype = wstype;
+    plugin_data.endpoint = endpoint;
+    plugin_data.parallel_data = parallel_data;
+    plugin_data.task_data =  task_data;
+    plugin_data.count = count;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_WORK, "*", &plugin_data);
+  }
 }
 
 /*Thread begin/end callbacks. We do NOT need context information for these. If the user wants more context, 
@@ -466,6 +547,15 @@ on_ompt_callback_thread_begin(
   TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
   thread_data->ptr = (void*)handle;
   TAU_PROFILER_START(handle); 
+
+  if(Tau_plugins_enabled.ompt_thread_begin) {
+    Tau_plugin_event_ompt_thread_begin_data_t plugin_data;
+
+    plugin_data.thread_type = thread_type;
+    plugin_data.thread_data = thread_data;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_THREAD_BEGIN, "*", &plugin_data);
+  }
 }
 
 static void
@@ -483,6 +573,14 @@ on_ompt_callback_thread_end(
   if(!Tau_init_check_initialized()) return;
   //TAU_PROFILER_STOP(thread_data->ptr);
   Tau_global_stop();
+
+  if(Tau_plugins_enabled.ompt_thread_end) {
+    Tau_plugin_event_ompt_thread_end_data_t plugin_data;
+
+    plugin_data.thread_data = thread_data;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_THREAD_END, "*", &plugin_data);
+  }
 }
 
 /*Implicit task creation. This is a required event, but we do NOT need context.
@@ -518,6 +616,18 @@ on_ompt_callback_implicit_task(
           Tau_global_stop();
       }
       break;
+  }
+
+  if(Tau_plugins_enabled.ompt_implicit_task) {
+    Tau_plugin_event_ompt_implicit_task_data_t plugin_data;
+
+    plugin_data.endpoint = endpoint;
+    plugin_data.parallel_data = parallel_data;
+    plugin_data.task_data = task_data;
+    plugin_data.team_size = team_size;
+    plugin_data.thread_num = thread_num;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_IMPLICIT_TASK, "*", &plugin_data);
   }
 }
 
@@ -620,6 +730,18 @@ on_ompt_callback_sync_region(
     }
 
   }
+
+  if(Tau_plugins_enabled.ompt_sync_region) {
+    Tau_plugin_event_ompt_sync_region_data_t plugin_data;
+
+    plugin_data.kind = kind;
+    plugin_data.endpoint = endpoint;
+    plugin_data.parallel_data = parallel_data;
+    plugin_data.task_data = task_data;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_SYNC_REGION, "*", &plugin_data);
+  }
 }
 
 /* Idle event - optional event that has low overhead and does not need context) */
@@ -645,6 +767,14 @@ on_ompt_callback_idle(
   }
 
   return;
+
+  if(Tau_plugins_enabled.ompt_idle) {
+    Tau_plugin_event_ompt_idle_data_t plugin_data;
+
+    plugin_data.endpoint = endpoint;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_IDLE, "*", &plugin_data);
+  }
 }
 #endif /* defined (TAU_USE_OMPT_TR6) */
 
@@ -767,6 +897,18 @@ on_ompt_callback_mutex_acquire(
     TAU_PROFILER_CREATE(mutex_waiting_handle, timerName, " ", TAU_OPENMP);
     TAU_PROFILER_START(mutex_waiting_handle);
   }
+
+  if(Tau_plugins_enabled.ompt_mutex_acquire) {
+    Tau_plugin_event_ompt_mutex_acquire_data_t plugin_data;
+
+    plugin_data.kind = kind;
+    plugin_data.hint = hint;
+    plugin_data.impl = impl;
+    plugin_data.wait_id = wait_id;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRE, "*", &plugin_data);
+  }
 }
 
 static void
@@ -872,6 +1014,15 @@ on_ompt_callback_mutex_acquired(
     TAU_PROFILER_START(mutex_acquired_handle);
   }
 
+  if(Tau_plugins_enabled.ompt_mutex_acquired) {
+    Tau_plugin_event_ompt_mutex_acquired_data_t plugin_data;
+
+    plugin_data.kind = kind;
+    plugin_data.wait_id = wait_id;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRED, "*", &plugin_data);
+  }
 }
 
 static void
@@ -904,6 +1055,16 @@ on_ompt_callback_mutex_released(
     Tau_global_stop();
   }
 
+
+  if(Tau_plugins_enabled.ompt_mutex_released) {
+    Tau_plugin_event_ompt_mutex_released_data_t plugin_data;
+
+    plugin_data.kind = kind;
+    plugin_data.wait_id = wait_id;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_MUTEX_RELEASED, "*", &plugin_data);
+  }
 }
 
 /* Register callbacks. This function is invoked only from the ompt_start_tool routine.

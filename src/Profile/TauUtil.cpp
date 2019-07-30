@@ -447,6 +447,17 @@ void Tau_enable_plugins_for_all_events() {
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, "*");
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER, "*");
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_TRIGGER, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_PARALLEL_BEGIN, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_PARALLEL_END, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_TASK_CREATE, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_TASK_SCHEDULE, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_IMPLICIT_TASK, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_THREAD_BEGIN, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_THREAD_END, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_WORK, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_MASTER, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_IDLE, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_SYNC_REGION, "*");
 }
 
 
@@ -619,6 +630,20 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->FunctionFinalize = 0;
   cb->PhaseEntry = 0;
   cb->PhaseExit = 0;
+  cb->OmptParallelBegin = 0;
+  cb->OmptParallelEnd = 0;
+  cb->OmptTaskCreate = 0;
+  cb->OmptTaskSchedule = 0;
+  cb->OmptImplicitTask = 0;
+  cb->OmptThreadBegin = 0;
+  cb->OmptThreadEnd = 0;
+  cb->OmptWork = 0;
+  cb->OmptMaster = 0;
+  cb->OmptIdle = 0;
+  cb->OmptSyncRegion = 0;
+  cb->OmptMutexAcquire = 0;
+  cb->OmptMutexAcquired = 0;
+  cb->OmptMutexReleased = 0;
 }
 
 /**************************************************************************************************************************
@@ -644,6 +669,20 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->FunctionFinalize = src->FunctionFinalize;
   dest->PhaseEntry = src->PhaseEntry;
   dest->PhaseExit = src->PhaseExit;
+  dest->OmptParallelBegin = src->OmptParallelBegin;
+  dest->OmptParallelEnd = src->OmptParallelEnd;
+  dest->OmptTaskCreate = src->OmptTaskCreate;
+  dest->OmptTaskSchedule = src->OmptTaskSchedule;
+  dest->OmptImplicitTask = src->OmptImplicitTask;
+  dest->OmptThreadBegin = src->OmptThreadBegin;
+  dest->OmptThreadEnd = src->OmptThreadEnd;
+  dest->OmptWork = src->OmptWork;
+  dest->OmptMaster = src->OmptMaster;
+  dest->OmptIdle = src->OmptIdle;
+  dest->OmptSyncRegion = src->OmptSyncRegion;
+  dest->OmptMutexAcquire = src->OmptMutexAcquire;
+  dest->OmptMutexAcquired = src->OmptMutexAcquired;
+  dest->OmptMutexReleased = src->OmptMutexReleased;
 }
 
 /**************************************************************************************************************************
@@ -683,6 +722,20 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
   if (cb->Trigger != 0) { Tau_plugins_enabled.trigger = 1; }
   if (cb->PhaseEntry != 0) { Tau_plugins_enabled.phase_entry = 1; }
   if (cb->PhaseExit != 0) { Tau_plugins_enabled.phase_exit = 1; }
+  if (cb->OmptParallelBegin != 0) { Tau_plugins_enabled.ompt_parallel_begin = 1; }
+  if (cb->OmptParallelEnd != 0) { Tau_plugins_enabled.ompt_parallel_end = 1; }
+  if (cb->OmptTaskSchedule != 0) { Tau_plugins_enabled.ompt_task_create = 1; }
+  if (cb->OmptTaskSchedule != 0) { Tau_plugins_enabled.ompt_task_schedule = 1; }
+  if (cb->OmptImplicitTask != 0) { Tau_plugins_enabled.ompt_implicit_task = 1; }
+  if (cb->OmptThreadBegin != 0) { Tau_plugins_enabled.ompt_thread_begin = 1; }
+  if (cb->OmptThreadEnd != 0) { Tau_plugins_enabled.ompt_thread_end = 1; }
+  if (cb->OmptWork != 0) { Tau_plugins_enabled.ompt_work = 1; }
+  if (cb->OmptMaster != 0) { Tau_plugins_enabled.ompt_master = 1; }
+  if (cb->OmptIdle != 0) { Tau_plugins_enabled.ompt_idle = 1; }
+  if (cb->OmptSyncRegion != 0) { Tau_plugins_enabled.ompt_sync_region = 1; }
+  if (cb->OmptMutexAcquire != 0) { Tau_plugins_enabled.ompt_mutex_acquire = 1; }
+  if (cb->OmptMutexAcquired != 0) { Tau_plugins_enabled.ompt_mutex_acquired = 1; }
+  if (cb->OmptMutexReleased != 0) { Tau_plugins_enabled.ompt_mutex_released = 1; }
   
 }
 
@@ -870,6 +923,160 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_trigger_data_t* da
 }
 
 /**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_parallel_begin event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_parallel_begin_data_t* data, PluginKey key) {
+
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->OmptParallelBegin != 0)
+      plugin_callback_map[*it]->OmptParallelBegin(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_parallel_end event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_parallel_end_data_t* data, PluginKey key) {
+
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->OmptParallelEnd != 0)
+      plugin_callback_map[*it]->OmptParallelEnd(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_task_create event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_task_create_data_t* data, PluginKey key) {
+
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->OmptTaskCreate != 0)
+      plugin_callback_map[*it]->OmptTaskCreate(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_task_schedule event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_task_schedule_data_t* data, PluginKey key) {
+
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->OmptTaskSchedule != 0)
+      plugin_callback_map[*it]->OmptTaskSchedule(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_implicit_task event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_implicit_task_data_t* data, PluginKey key) {
+
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->OmptImplicitTask != 0)
+      plugin_callback_map[*it]->OmptImplicitTask(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_thread_begin event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_thread_begin_data_t* data, PluginKey key) {
+
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->OmptThreadBegin != 0)
+      plugin_callback_map[*it]->OmptThreadBegin(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_thread_end event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_thread_end_data_t* data, PluginKey key) {
+
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->OmptThreadEnd != 0)
+      plugin_callback_map[*it]->OmptThreadEnd(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_work event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_work_data_t* data, PluginKey key) {
+
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->OmptWork != 0)
+      plugin_callback_map[*it]->OmptWork(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_master event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_master_data_t* data, PluginKey key) {
+
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->OmptMaster != 0)
+      plugin_callback_map[*it]->OmptMaster(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_idle event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_idle_data_t* data, PluginKey key) {
+
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->OmptIdle != 0)
+      plugin_callback_map[*it]->OmptIdle(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_sync_region event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_sync_region_data_t* data, PluginKey key) {
+
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->OmptSyncRegion != 0)
+      plugin_callback_map[*it]->OmptSyncRegion(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_mutex_acquire event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_mutex_acquire_data_t* data, PluginKey key) {
+
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->OmptMutexAcquire != 0)
+      plugin_callback_map[*it]->OmptMutexAcquire(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_mutex_acquired event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_mutex_acquired_data_t* data, PluginKey key) {
+
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->OmptMutexAcquired != 0)
+      plugin_callback_map[*it]->OmptMutexAcquired(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_mutex_released event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_mutex_released_data_t* data, PluginKey key) {
+
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->OmptMutexReleased != 0)
+      plugin_callback_map[*it]->OmptMutexReleased(data);
+  }
+}
+
+/**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the pre end of execution event
  ******************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_pre_end_of_execution_data_t* data, PluginKey key) {
@@ -1026,6 +1233,62 @@ void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const v
     }
     case TAU_PLUGIN_EVENT_PHASE_EXIT: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_phase_exit_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_PARALLEL_BEGIN: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_parallel_begin_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_PARALLEL_END: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_parallel_end_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_TASK_CREATE: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_task_create_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_TASK_SCHEDULE: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_task_schedule_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_IMPLICIT_TASK: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_implicit_task_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_THREAD_BEGIN: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_thread_begin_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_THREAD_END: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_thread_end_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_WORK: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_work_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_MASTER: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_master_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_IDLE: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_idle_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_SYNC_REGION: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_sync_region_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRE: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_mutex_acquire_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRED: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_mutex_acquired_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_MUTEX_RELEASED: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_mutex_released_data_t*)data, key);
       break;
     }
    default: {
