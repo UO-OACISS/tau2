@@ -2224,9 +2224,6 @@ char *** argv;
   if(Tau_get_usesMPI() == 0)
   {
 
-  /* Initialize the plugin system */
-  Tau_initialize_plugin_system();
-
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
