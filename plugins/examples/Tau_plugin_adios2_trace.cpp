@@ -473,22 +473,10 @@ void adios::initialize() {
     if (thePluginOptions().env_one_file) {
         PMPI_Comm_dup(MPI_COMM_WORLD, &adios_comm);
     } else {
-        // Get the group of processes in MPI_COMM_WORLD
-        MPI_Group world_group;
-        PMPI_Comm_group(MPI_COMM_WORLD, &world_group);
-
-        int n = 1;
-        const int ranks[1] = {world_rank};
-
-        MPI_Group adios_group;
-        PMPI_Group_incl(world_group, 1, ranks, &adios_group);
-        PMPI_Comm_create_group(MPI_COMM_WORLD, adios_group, 0, &adios_comm);
-        PMPI_Group_free(&world_group);
-        PMPI_Group_free(&adios_group);
+        PMPI_Comm_dup(MPI_COMM_SELF, &adios_comm);
     }
     Tau_global_incr_insideTAU();
-    //ad = adios2::ADIOS(adios_comm, true);
-    ad = adios2::ADIOS(MPI_COMM_SELF, true);
+    ad = adios2::ADIOS(adios_comm, true);
 #else
     /** ADIOS class factory of IO class objects, DebugON is recommended */
     ad = adios2::ADIOS(true);
