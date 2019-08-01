@@ -21,10 +21,10 @@ int provided;
 This is not a parallel implementation */
 #endif /* TAU_MPI */
 
-#define ITERATIONS 10
+#define ITERATIONS 1000
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 512
+#define MATRIX_SIZE 128
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
@@ -144,14 +144,16 @@ double do_work(void) {
   initialize(b, NCA, NCB);
   initialize(c, NRA, NCB);
 
+#ifdef TAU_MPI
+  //MPI_Barrier(MPI_COMM_WORLD);
+#endif /* TAU_MPI */
+
   compute(a, b, c, NRA, NCA, NCB);
-#if defined(TAU_OPENMP)
-#if 0
-  //if (omp_get_nested()) {
-    compute_nested(a, b, c, NRA, NCA, NCB);
-  //}
-#endif
-#endif
+
+#ifdef TAU_MPI
+  //MPI_Barrier(MPI_COMM_WORLD);
+#endif /* TAU_MPI */
+
   compute_interchange(a, b, c, NRA, NCA, NCB);
 
   double result = c[0][1];
@@ -159,6 +161,10 @@ double do_work(void) {
   freeMatrix(a, NRA, NCA);
   freeMatrix(b, NCA, NCB);
   freeMatrix(c, NCA, NCB);
+
+#ifdef TAU_MPI
+  //MPI_Barrier(MPI_COMM_WORLD);
+#endif /* TAU_MPI */
 
   return result;
 }
@@ -181,6 +187,7 @@ int main (int argc, char *argv[])
     exit(1);
   }
   MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif /* TAU_MPI */
 
 #ifdef TAU_MPI
@@ -223,7 +230,7 @@ int main (int argc, char *argv[])
 /* On thread 0: */
   int i;
   for (i = 0 ; i < ITERATIONS ; i++) {
-    printf("Iteration %d\n", i);
+    if(rank == 0) { printf("Iteration %d\n", i); }
     do_work();
     //Tau_dump();
   }
