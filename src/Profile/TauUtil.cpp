@@ -58,6 +58,8 @@ size_t star_hash;
 extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *name);
 
 Tau_plugin_callbacks_active_t Tau_plugins_enabled;
+
+extern void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugins_enabled);
 /* Plugin Declarations */
 
 
@@ -737,6 +739,8 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
   if (cb->OmptMutexAcquired != 0) { Tau_plugins_enabled.ompt_mutex_acquired = 1; }
   if (cb->OmptMutexReleased != 0) { Tau_plugins_enabled.ompt_mutex_released = 1; }
   
+  /* Register needed OMPT callback if they are not already registered */
+  Tau_ompt_register_plugin_callbacks(&Tau_plugins_enabled);
 }
 
 #ifndef TAU_USE_STDCXX11
