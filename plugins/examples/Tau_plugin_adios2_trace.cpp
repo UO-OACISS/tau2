@@ -875,6 +875,7 @@ void init_lock(pthread_mutex_t * _mutex) {
 }
 
 int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
+    fprintf(stdout, "TAU PLUGIN ADIOS2 Dump\n"); fflush(stdout);
     if (!enabled) return 0;
     if (dump_history) {
         Tau_plugin_adios2_dump_history();
@@ -1188,7 +1189,11 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     unsigned long ts = data->timestamp;
 #endif
     // pop this timer off the stack for provenance output
-    my_adios->current_primer_stack[tmparray[2]].pop_back();
+	// For some reason, at the end of execution we are popping too many.
+	// This is a safety check, but not great for performance.
+	if (my_adios->current_primer_stack[tmparray[2]].size() > 0) {
+        my_adios->current_primer_stack[tmparray[2]].pop_back();
+	}
     tmp.push_back(
         std::make_pair(
             ts,
