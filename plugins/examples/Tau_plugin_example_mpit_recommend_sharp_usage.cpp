@@ -69,7 +69,7 @@ extern "C" int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_en
   }
 
   //Get the mean MPI_Allreduce message size  
-  std::vector<tau::TauUserEvent*, TauSignalSafeAllocator<tau::TauUserEvent*> >::iterator it2;
+  tau::AtomicEventDB::iterator it2;
   int numEvents;
   std::stringstream tmp_str;
   std::stringstream all_reduce_event_name("Message size for all-reduce");
@@ -101,11 +101,11 @@ extern "C" int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_en
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
  *  * Every plugin MUST implement this function to register callbacks for various events 
  *   * that the plugin is interested in listening to*/
-extern "C" int Tau_plugin_init_func(int argc, char **argv) {
+extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   cb->EndOfExecution = Tau_plugin_example_mpit_recommend_sharp_usage;
-  TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
+  TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
 
   return 0;
 }

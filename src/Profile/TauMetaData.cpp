@@ -267,7 +267,7 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
     Tau_plugin_event_metadata_registration_data_t plugin_data;
     plugin_data.name = name;
     plugin_data.value = tmv;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, name, &plugin_data);
   }
 #endif
 }
@@ -286,7 +286,7 @@ void Tau_metadata_push_to_plugins(void) {
           Tau_plugin_event_metadata_registration_data_t plugin_data;
           plugin_data.name = it->first.name;
           plugin_data.value = it->second;
-          Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, &plugin_data);
+          Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, it->first.name, &plugin_data);
         }
 	}
 }
@@ -723,7 +723,6 @@ int Tau_metadata_fillMetaData()
   bzero(buffer, 4096);
   uint32_t size = sizeof(buffer);
   int rc = _NSGetExecutablePath(buffer, &size);
-  printf("%s\n",buffer);
   if (rc == 0) {
     Tau_metadata_register("Executable", buffer);
   }
@@ -943,11 +942,15 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
   }
 
 // can't do full delete, because the aggregation does not do deep copies. :(
+/* Don't delete the repo now! If Tau_dump() is called before exit, this will
+ * erase all the metadata. */
+#if 0
   if (tid == 0) {
     localRepo->emptyRepo();
   } else {
   	delete localRepo;
   }
+#endif 
 
 #ifndef TAU_SCOREP
   Tau_util_output (out, "</metadata>%s", endl);

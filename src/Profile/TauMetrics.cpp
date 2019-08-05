@@ -809,6 +809,9 @@ int TauMetrics_getEventIndex(int eventid) {
  ********************************************************************/
 extern "C" bool TauCompensateInitialized(void);
 void TauMetrics_getMetrics(int tid, double values[], int reversed) {
+        if (!functionsInitialized) {
+	       TauMetrics_init();
+        }
 	if (functionsInitialized) {
 	    if (reversed) {
             for (int i=nfunctions-1; i >= 0; --i) {
@@ -823,9 +826,14 @@ void TauMetrics_getMetrics(int tid, double values[], int reversed) {
 		// *CWL* - Safe only if Compensation is safely initialized. Otherwise
 		//         we would be in the middle of re-entrant behavior and
 		//         would be re-initializing metrics each time.
+		fprintf(stderr,"TAU: ERROR: TauMetrics not initialized!\n");
 		if (TauCompensateInitialized()) {
 			TauMetrics_init();
 		}
+		// we need to give some value to the tracer or it will take 0
+		// as the default value which will mess up traces. This is 
+		// seen in roctracer (AMD). 
+                metric_read_gettimeofday(tid, 0, &values[0]);
 	}
 }
 

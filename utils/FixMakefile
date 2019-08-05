@@ -978,6 +978,10 @@ case $1 in
 	echo "s@^TAU_ROCTRACER=\(.*\)@TAU_ROCTRACER=$roctracerdir@g" >> $sedout
         ;;
 
+     roctracerlibdir=*)
+        roctracerlibdir=`echo $1 | sed -e 's/^roctracerlibdir=//' -e 's/#/ /g'`
+	echo "s@^TAU_ROCTRACER_LIB_DIR=\(.*\)@TAU_ROCTRACER_LIB_DIR=$roctracerlibdir@g" >> $sedout
+        ;;
      hipdir=*)
         hipdir=`echo $1 | sed -e 's/^hipdir=//' -e 's/#/ /g'`
 	echo "s@^TAU_HIP=\(.*\)@TAU_HIP=$hipdir@g" >> $sedout
@@ -1018,6 +1022,10 @@ case $1 in
         ;;
      ROCTRACER)
         echo "NOTE: Using the TAU's ROCm ROCTRACER Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     ROCTRACER_HSA)
+        echo "NOTE: Using the TAU's ROCm ROCTRACER HSA Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      ROCM)
@@ -1153,6 +1161,14 @@ case $1 in
 	;;
      TAU_OMPT_TR6)
 	echo NOTE: Using OMPT OpenMP options for OMPT TR6 specification
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     TAU_OMPT_TR7)
+	echo NOTE: Using OMPT OpenMP options for OMPT TR7 specification
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     TAU_OMPT_5_0)
+	echo NOTE: Using OMPT OpenMP options for OMPT 5.0 specification
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      IBMOMPT)

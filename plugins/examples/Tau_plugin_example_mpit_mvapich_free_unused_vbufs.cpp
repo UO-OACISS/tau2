@@ -108,7 +108,7 @@ int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_interrupt_tri
  * that the plugin is interested in listening to.
  * In addition, this init function stores the index of the PVARs it is interested in for future use inside the tuning routine*/
 
-int Tau_plugin_init_func(int argc, char **argv) {
+int Tau_plugin_init_func(int argc, char **argv, int id) {
 
   int return_val = Tau_mpi_t_initialize();
 
@@ -120,7 +120,7 @@ int Tau_plugin_init_func(int argc, char **argv) {
   Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   cb->InterruptTrigger = Tau_plugin_example_mpit_recommend_sharp_usage;
-  TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
+  TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
 
   int i, namelen, verb, varclass, bind, threadsup;
   int readonly, continuous, atomic;

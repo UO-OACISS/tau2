@@ -69,7 +69,8 @@ usage()
   echo "        -ebs_resolution=<file|function|line> Choose sampling granularity."
   echo "        -um          Enable Unified Memory events via CUPTI"
   echo "        -sass=<level> Track GPU events via CUDA with Source Code Locator activity (kernel level or source level)"
-  echo "        -csv          Outputs sass profile in CSV"
+  echo "        -csv         Outputs sass profile in CSV"
+  echo "        -env         Track GPU environment activity (power utilization, SM, memory frequency, temperature)"
   options=`tau-config --list-options`
   echo "        -T <$options> : Specify TAU tags"
   echo "        -loadlib=<file.so>   : Specify additional load library"
@@ -78,6 +79,8 @@ usage()
 if [ $python_wrapper = "true" ] ; then
   echo "        -tau-python-args=<\"arguments\"> Arguments to the python interpreter"
   echo "        -tau-python-interpreter=<\"python\"> name of python interpreter (e.g, python, python3.6)"
+  echo "        -adios2       Write output to ADIOS2 archive"
+  echo "        -adios2_trace Write trace output to ADIOS2 archive"
 fi
   echo ""
   echo "Notes:"
@@ -94,6 +97,7 @@ fi
   echo "    $scriptname -T serial -opencl (OPENCL)"
   echo "    $scriptname -T serial,cupti -cupti -um ./unified_memory (Unified Virtual Memory)"
   echo "    $scriptname -T serial,cupti -cupti -sass=kernel -csv ./sass_source (Metrics Intensity)"
+  echo "    $scriptname -T serial,cupti -cupti -env ./matmult (GPU Environment)"
   echo ""
   echo "qsub mode (IBM BG/P only):"
   echo "    Original:"
@@ -290,6 +294,7 @@ track_sass=false
 sass_type=""
 csv_output=false
 binary_exe=""
+track_env=false
 track_opencl=false
 track_rocm=false
 track_openacc=false
@@ -314,6 +319,8 @@ ptts_num=""
 py_interp_args=""
 ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
 ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
+adios2=false
+adios2_trace=false
 
 # This saves the args to tau_exec so they can be reused later.
 # This is used for MPI_Comm_spawn support, in which TAU spawns the child
@@ -383,6 +390,14 @@ for arg in "$@" ; do
         save_arg $arg
         shift
         ;;
+      -adios2)
+        adios2=true
+        shift
+        ;;
+      -adios2_trace)
+        adios2_trace=true
+        shift
+        ;;
       -power)
         track_power=true
         save_arg $arg
@@ -410,6 +425,11 @@ for arg in "$@" ; do
         save_arg $arg
         shift
         ;;
+      -env)
+        track_env=true
+	save_arg $arg
+	shift
+	;;
       -opencl)
         track_opencl=true
         save_arg $arg
@@ -712,13 +732,27 @@ else
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX:$LD_PRELOAD
 fi
 
+if [ $adios2 = "true" ]; then
+    export TAU_PLUGINS=libTAU-adios2-plugin.so
+    export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+fi
+
+if [ $adios2_trace = "true" ]; then
+    export TAU_PLUGINS=libTAU-adios2-trace-plugin.so
+    export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+fi
+
 export KOKKOS_PROFILE_LIBRARY=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+if [ $track_ompt = "true" ]; then
+  export OMP_TOOL_LIBRARIES=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+fi
 
 
 isTBB=`echo $theBinding | grep tbb`
 if [ ! "x$isTBB" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX ]; then
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
+
 
 isPthread=`echo $theBinding | grep pthread`
 if [ ! "x$isPthread" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX ]; then
@@ -822,7 +856,10 @@ if [ $track_cupti = "true" ] ; then
     if [ "x$sass_type" != "x" ] ; then
       export TAU_SASS_TYPE=$sass_type
     fi
-    export TAU_CUDA_BINARY_EXE=$binary_exe
+    export TAU_CUDA_BINARY_EXE=$arg
+  fi
+  if [ $track_env = "true" ] ; then
+      export TAU_TRACK_CUDA_ENV=1
   fi
   #echo "api found: $TAU_CUPTI_API"
   if [ $python_wrapper = "true" ] ; then
@@ -844,8 +881,13 @@ if [ $track_openacc = "true" ] ; then
   export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
 fi
 if [ $track_rocm = "true" ] ; then
-  export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU.so
-  export HSA_TOOLS_LIB=librocprofiler64.so.1
+  export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+  export TAU_HSA_TOOLS_LIB=librocprofiler64.so.1
+fi
+
+isRoctracer=`echo $theBinding | grep roctracer`
+if [ ! "x$isRoctracer" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX ]; then
+  export TAU_HSA_TOOLS_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
 fi
 
 if [ $track_armci = "true" ] ; then
@@ -1070,12 +1112,14 @@ else
     $dryrun export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
     $dryrun export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD
     $dryrun export DYLD_FORCE_FLAT_NAMESPACE=1
+    $dryrun export HSA_TOOLS_LIB=$TAU_HSA_TOOLS_LIB
   else
     ORIG_LIBRARY_PATH=$LD_LIBRARY_PATH
     ORIG_AUDIT_AUDIT=$LD_AUDIT
     ORIG_LD_PRELOAD=$LD_PRELOAD
     $dryrun export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
     $dryrun export LD_AUDIT=$TAUEX_LD_AUDITOR
+    $dryrun export HSA_TOOLS_LIB=$TAU_HSA_TOOLS_LIB
     #$dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
     if [ $track_rocm = "true" ] ; then
       if [ `echo $TAU_METRICS | grep "TIME"` ]; then

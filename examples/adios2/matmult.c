@@ -160,19 +160,6 @@ double do_work(void) {
   //}
 #endif
 #endif
-#ifdef TAU_MPI
-  int rank = 0;
-  int comm_size = 0;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-  if (rank == 0) {
-      if (provided == MPI_THREAD_MULTIPLE) { 
-        printf("provided is MPI_THREAD_MULTIPLE\n");
-      } else if (provided == MPI_THREAD_FUNNELED) { 
-        printf("provided is MPI_THREAD_FUNNELED\n");
-      }
-  }
-#endif /* TAU_MPI */
   compute_interchange(a, b, c, NRA, NCA, NCB);
 
   double result = c[0][1];
@@ -226,7 +213,7 @@ void * threaded_func(void *data)
 }
 #endif // PTHREADS
 
-int Tau_dump(void);
+//int Tau_dump(void);
 
 int main (int argc, char *argv[]) 
 {
@@ -337,7 +324,7 @@ int main (int argc, char *argv[])
   for (i = 0 ; i < ITERATIONS ; i++) {
     printf("Iteration %d\n", i);
     do_work();
-    Tau_dump();
+    //Tau_dump();
   }
 
 #ifdef PTHREADS

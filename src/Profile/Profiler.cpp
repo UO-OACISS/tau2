@@ -283,7 +283,7 @@ void Profiler::Start(int tid)
     TauMetrics_getDefaults(tid, StartTime, 1);
     TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
     if (TimeStamp == 0L) {
-      fprintf(stderr, "Got a bogus start! %d %s\n", tid, ThisFunction->GetName());
+      fprintf(stderr, "Still got a bogus start! %d %s\n", tid, ThisFunction->GetName());
       abort();
     }
   }
@@ -391,10 +391,11 @@ void Profiler::Start(int tid)
   if(Tau_plugins_enabled.function_entry) {
     Tau_plugin_event_function_entry_data_t plugin_data;
     plugin_data.timer_name = ThisFunction->GetName();
+    plugin_data.func_id = ThisFunction->GetFunctionId();
     plugin_data.timer_group = ThisFunction->GetAllGroups();
     plugin_data.tid = tid;
     plugin_data.timestamp = TimeStamp;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_ENTRY, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_ENTRY, ThisFunction->GetName(), &plugin_data);
   }
 }
 
@@ -500,27 +501,33 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   // It's ok if CurrentTime is 0, because that means StartTime is too.
   // However, if CurrentTime is not 0, we need to fix a timer that was read
   // before we were done initializing metrics.
-  // This code SHOULDN'T be needed any more.  but things slip through the cracks.
+//   // This code SHOULDN'T be needed any more.  but things slip through the cracks.
+//   if (CurrentTime[0] != 0.0 && StartTime[0] == 0.0) { 
+//     abort();
+//     // get the CurrentTime again, but use the thread 0 context
+//     double CurrentTime_0[TAU_MAX_COUNTERS] = { 0 };
+//     RtsLayer::getUSecD(0, CurrentTime_0);
+//     // ...because the default values were captured by thread 0
+//     TauMetrics_getDefaults(tid, StartTime, 0);
+//     // ...and what we really care about is that the delta is correct.
+//     for (int k = 0; k < Tau_Global_numCounters; k++) {
+//       TotalTime[k] = CurrentTime_0[k] - StartTime[k];
+//     }
+//   } else {
+//     for (int k = 0; k < Tau_Global_numCounters; k++) {
+//       TotalTime[k] = CurrentTime[k] - StartTime[k];
+// #ifdef DEBUG_PROF
+//       printf("CurrentTime[%d] = %f\n", k, CurrentTime[k]);
+//       printf("StartTime[%d]   = %f\n", k, StartTime[k]);
+//       printf("TotalTime[%d]   = %f\n", k, TotalTime[k]);
+// #endif /* DEBUG_PROF */
+//     }
+//   }
   if (CurrentTime[0] != 0.0 && StartTime[0] == 0.0) { 
-    abort();
-	// get the CurrentTime again, but use the thread 0 context
-    double CurrentTime_0[TAU_MAX_COUNTERS] = { 0 };
-    RtsLayer::getUSecD(0, CurrentTime_0);
-	// ...because the default values were captured by thread 0
     TauMetrics_getDefaults(tid, StartTime, 0);
-	// ...and what we really care about is that the delta is correct.
-    for (int k = 0; k < Tau_Global_numCounters; k++) {
-      TotalTime[k] = CurrentTime_0[k] - StartTime[k];
-    }
-  } else {
-    for (int k = 0; k < Tau_Global_numCounters; k++) {
-      TotalTime[k] = CurrentTime[k] - StartTime[k];
-#ifdef DEBUG_PROF
-      printf("CurrentTime[%d] = %f\n", k, CurrentTime[k]);
-      printf("StartTime[%d]   = %f\n", k, StartTime[k]);
-      printf("TotalTime[%d]   = %f\n", k, TotalTime[k]);
-#endif /* DEBUG_PROF */
-    }
+  }
+  for (int k = 0; k < Tau_Global_numCounters; k++) {
+    TotalTime[k] = CurrentTime[k] - StartTime[k];
   }
 
   x_uint64 TimeStamp = 0L;
@@ -754,10 +761,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   if(Tau_plugins_enabled.function_exit) {
     Tau_plugin_event_function_exit_data_t plugin_data;
     plugin_data.timer_name = ThisFunction->GetName();
+    plugin_data.func_id = ThisFunction->GetFunctionId();
     plugin_data.timer_group = ThisFunction->GetAllGroups();
     plugin_data.tid = tid;
     plugin_data.timestamp = TimeStamp;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_EXIT, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_EXIT, ThisFunction->GetName(), &plugin_data);
   }
 }
 
@@ -785,6 +793,9 @@ void TauProfiler_theFunctionList(const char ***inPtr, int *numFuncs, bool addNam
 void TauProfiler_dumpFunctionNames()
 {
   TauInternalFunctionGuard protects_this_function;
+  if(!TheSafeToDumpData()) {
+    return;
+  }
 
   int numFuncs;
   const char ** functionList;
@@ -1527,6 +1538,9 @@ extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
+  if(!TheSafeToDumpData()) {
+    return -1;
+  }
 #ifdef TAU_ENABLE_ROCM
   TauFlushRocmEventsIfNecessary(tid); 
 #endif /* TAU_ENABLE_ROCM */
@@ -1540,7 +1554,7 @@ int TauProfiler_StoreData(int tid)
   if(Tau_plugins_enabled.pre_end_of_execution) {
     Tau_plugin_event_pre_end_of_execution_data_t plugin_data;
     plugin_data.tid = tid;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, "*", &plugin_data);
   }
 #endif
 
@@ -1612,10 +1626,8 @@ int TauProfiler_StoreData(int tid)
 #if defined(PTHREADS) || defined(TAU_OPENMP)
   if (RtsLayer::myThread() == 0 && tid == 0) {
     /* clean up other threads? */
-    for (int i = 1; i < TAU_MAX_THREADS; i++) {
-      if (TauInternal_ParentProfiler(i) != (Profiler *)NULL) {
-        TauProfiler_StoreData(i);
-      }
+    for (int i = 1; i < RtsLayer::getTotalThreads(); i++) {
+      TauProfiler_StoreData(i);
     }
 #ifndef TAU_MPI
 #ifndef TAU_SHMEM
@@ -1650,7 +1662,7 @@ int TauProfiler_StoreData(int tid)
   if(Tau_plugins_enabled.end_of_execution) {
     Tau_plugin_event_end_of_execution_data_t plugin_data;
     plugin_data.tid = tid;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, "*", &plugin_data);
   }
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 6\n", RtsLayer::myNode(), tid);
 /* static dtors cause a crash. This could fix it */
@@ -1707,6 +1719,9 @@ static int getProfileLocation(int metric, char *str)
 int TauProfiler_DumpData(bool increment, int tid, const char *prefix)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_DumpData\n", RtsLayer::myNode(), tid);
+  if(!TheSafeToDumpData()) {
+    return -1;
+  }
 
   int rc = TauProfiler_writeData(tid, prefix, increment);
 
@@ -1721,6 +1736,9 @@ void getMetricHeader(int i, char *header)
 // Stores profile data
 int TauProfiler_writeData(int tid, const char *prefix, bool increment, const char **inFuncs, int numFuncs)
 {
+  if(!TheSafeToDumpData()) {
+    return -1;
+  }
 
   TauProfiler_updateIntermediateStatistics(tid);
 
@@ -1927,6 +1945,9 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 int TauProfiler_dumpFunctionValues(const char **inFuncs, int numFuncs, bool increment, int tid, const char *prefix)
 {
   TauInternalFunctionGuard protects_this_function;
+  if(!TheSafeToDumpData()) {
+    return -1;
+  }
 
   TAU_PROFILE("TAU_DUMP_FUNC_VALS()", " ", TAU_IO);
 

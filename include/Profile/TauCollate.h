@@ -19,7 +19,11 @@
 #define _TAU_COLLATE_H_
 
 // To allow the use of Tau_unify_object_t in the interface.
-#include <TauUnify.h>
+#include "TauUnify.h"
+
+#ifdef TAU_MPI
+  #include <mpi.h>
+#endif
 
 #define NUM_COLLATE_OP_TYPES 2
 #define COLLATE_OP_BASIC 0
@@ -44,6 +48,11 @@ typedef enum {
   stat_min_exist,
   stat_max_exist  
 } stat_derived_type;
+
+typedef struct {
+  double value;
+  int index;
+} double_int;
 
 extern "C" const int collate_num_op_items[NUM_COLLATE_OP_TYPES];
 extern "C" const char *collate_step_names[NUM_COLLATE_STEPS];
@@ -101,6 +110,30 @@ void Tau_collate_compute_atomicStatistics_MPI(Tau_unify_object_t *atomicUnifier,
 					  double ***sAtomicMin, double ***sAtomicMax,
 					  double ***sAtomicSum, double ***sAtomicMean,
 					  double ***sAtomicSumSqr);
+
+void Tau_collate_compute_atomicStatistics_MPI_with_minmaxloc(Tau_unify_object_t *atomicUnifier,
+                                          int *globalEventMap, int numItems,
+                                          int globalNumThreads,
+                                          int *numEventThreads,
+                                          double ***gAtomicMin,
+                                          double ***gAtomicMax,
+                                          double_int **gAtomicMin_min,
+                                          double_int **gAtomicMax_max,
+                                          double ***gAtomicCalls,
+                                          double ***gAtomicMean,
+                                          double ***gAtomicSumSqr,
+                                          double ***sAtomicMin,
+                                          double ***sAtomicMax,
+                                          double ***sAtomicCalls,
+                                          double ***sAtomicMean,
+                                          double ***sAtomicSumSqr
+
+#ifdef TAU_MPI
+  , MPI_Comm comm);
+#else
+  );
+#endif
+
 void Tau_collate_compute_atomicStatistics_SHMEM(Tau_unify_object_t *atomicUnifier,
 					  int *globalEventMap, int numItems,
 					  int globalNumThreads, int *numEventThreads,
@@ -110,6 +143,23 @@ void Tau_collate_compute_atomicStatistics_SHMEM(Tau_unify_object_t *atomicUnifie
 					  double ***sAtomicMin, double ***sAtomicMax,
 					  double ***sAtomicSum, double ***sAtomicMean,
 					  double ***sAtomicSumSqr);
+
+void Tau_collate_compute_statistics_MPI_with_minmaxloc(Tau_unify_object_t *functionUnifier,
+				    int *globalEventMap, int numItems,
+				    int globalNumThreads, int *numEventThreads,
+				    double ****gExcl, double ****gIncl,
+                                    double_int ***gExcl_min, double_int ***gIncl_min,
+                                    double_int ***gExcl_max, double_int ***gIncl_max,
+				    double ***gNumCalls, double ***gNumSubr,
+				    double ****sExcl, double ****sIncl,
+				    double ***sNumCalls, double ***sNumSubr
+#ifdef TAU_MPI
+  , MPI_Comm comm);
+#else
+  );
+#endif
+
+
 void Tau_collate_compute_statistics_MPI(Tau_unify_object_t *functionUnifier,
 				    int *globalmap, int numItems, 
 				    int globalNumThreads, 

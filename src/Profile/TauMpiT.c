@@ -310,7 +310,7 @@ void Tau_mpi_t_add_vector_element(VectorControlVariable *vectors, char *vector_n
   ListStringPair *current_string_pair;
 
   for(iter = 0; iter < *current_vector; iter++) {
-    //Found a vector with the same name that already exits
+    //Found a vector with the same name that already exists
     if(strcmp(vectors[iter].name, vector_name) == 0) {
       counter = 0;
       current_string_pair = vectors[iter].list;
@@ -887,7 +887,7 @@ int Tau_track_mpi_t_here(void) {
             plugin_data.pvar_index = j;
             plugin_data.pvar_value = mydata;
             dprintf("MPI-T invoke callback\n"); 
-            Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_MPIT, &plugin_data);
+            Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_MPIT, plugin_data.pvar_name, &plugin_data);
           }
  
         }
@@ -899,6 +899,111 @@ int Tau_track_mpi_t_here(void) {
   dprintf("Finished!!\n");
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+int Tau_set_mpi_t_cvar_value_for_communicator(char* cname, int value, void* comm, const char *comm_name){
+  MPI_T_cvar_handle handle;
+  int err = MPI_SUCCESS;
+  int read_value, count, cvar_index = 0;
+  
+
+  printf("TAU: rank [%d] Tau_set_mpi_t_cvar_value_for_communicator: CVAR name=%s, value = %d, comm_name=%s, comm = %p\n", Tau_get_node(), cname, value, comm_name, comm);
+  err = MPI_T_cvar_get_index( cname , &cvar_index);
+  if(err!=MPI_SUCCESS) {
+    fprintf(stderr,"\nTAU: Error: cvar_get_index err=%d\n",err);
+  }
+  else {
+    dprintf("Comm_name = %s, cvar = %s, value = %d, cvar index = %d, comm = %p\n", 
+      comm_name, cname, value, cvar_index, comm); 
+  } 
+  err = MPI_T_cvar_handle_alloc(cvar_index, comm, &handle, &count);
+  if(err!=MPI_SUCCESS) {
+    fprintf(stderr, "\nTAU: Error: cvar_handle_alloc err=%d\n", err);
+  }
+  
+  err = MPI_T_cvar_read(handle, &read_value);
+  if(err!=MPI_SUCCESS) {
+    fprintf(stderr, "\nTAU: Error cvar_read error err=%d\n", err);
+  }
+
+  err = MPI_T_cvar_write(handle, &value);
+  if(err!=MPI_SUCCESS) {
+    fprintf(stderr,"\nTAU: Error: cvar_write err=%d\n",err);
+  }
+
+  /* check if the cvar can be read properly - it is the same as what we wrote above. */
+  err = MPI_T_cvar_read(handle, &read_value);
+  if(err!=MPI_SUCCESS) {
+    fprintf(stderr, "\nTAU: Error: cvar_read err=%d\n", err);
+  }
+
+
+  /* free the handle. */
+  MPI_T_cvar_handle_free(&handle);    
+  return 0;
+}
+
+void Tau_show_mpi_t_usage() {
+  if (Tau_get_node() == 0) {
+    printf("TAU: Error: Please set TAU_MPI_T_COMM_METRIC_VALUES environment variable to <comm_name,cvar_name,cvar_value>,<...>\n");
+    return;  
+  }
+}
+//////////////////////////////////////////////////////////////////////
+void Tau_mpi_t_check_communicator(void *comm, const char *comm_name) {
+  const char *communicator;
+  const char *cvar_metric;
+  const char *cvar_value;
+  const char *comm_metric_values = TauEnv_get_mpi_t_comm_metric_values(); 
+  
+  dprintf("TAU_MPI_T_Check_communicator: comm: %p, name = %s\n", comm, comm_name);
+  if (TauEnv_get_track_mpi_t_comm_metric_values) {
+    //comm_metric_values = TauEnv_get_mpi_t_comm_metric_values();
+    char *cvar_copy = Tau_MemMgr_malloc(Tau_get_thread(), (strlen(comm_metric_values)+1)*sizeof(char));
+    char *save_ptr, *token, *start;
+    char *comm_extracted, *metric;
+    char *value;
+
+    strcpy(cvar_copy, comm_metric_values);
+    dprintf("TAU: cvar_copy = %s\n comm=%s\n", cvar_copy, comm_name); 
+    
+    while(cvar_copy) {
+      dprintf("TAU:Tau_mpi_t_check_communicator: In loop: rank=%d: cvar_copy=%s\n", Tau_get_node(), cvar_copy);
+      start = strstr(cvar_copy, comm_name);
+      save_ptr = NULL;
+      if(start) {
+        dprintf("cvar_copy = %s, start=%s\n", cvar_copy, start); 
+        comm_extracted = strtok_r(start, ",", &save_ptr);
+        if(comm_extracted) { 
+          dprintf("CVAR Communicator Name = %s\n", comm_extracted);
+        } else {
+          Tau_show_mpi_t_usage();  
+          return;
+        } 
+        metric = strtok_r(NULL, ",", &save_ptr);
+        if(metric) {
+          dprintf("CVAR METRIC = %s\n", metric);
+        } else {
+          Tau_show_mpi_t_usage();  
+          return;
+        } 
+        value = strtok_r(NULL, ",", &save_ptr);
+        if(value) {
+          dprintf("CVAR VALUE = %s\n", value);
+          TAU_METADATA(metric, value);
+        } else {
+          Tau_show_mpi_t_usage();
+          return;
+        }
+        int intvalue;
+        sscanf(value, "%d", &intvalue); 
+        // We now have the metric, integer value, and the communicator address:
+        Tau_set_mpi_t_cvar_value_for_communicator(metric, intvalue, comm, comm_name);
+        //printf("save_ptr = %s\n", save_ptr);
+      }
+      cvar_copy = save_ptr; 
+    }
+  }
+}
 //////////////////////////////////////////////////////////////////////
 // EOF : TauMpiT.c
 //////////////////////////////////////////////////////////////////////

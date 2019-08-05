@@ -74,6 +74,8 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_message();
   int  TAUDECL TauEnv_get_lite_enabled();
   int  TAUDECL TauEnv_get_compensate();
+ 
+  int  TAUDECL TauEnv_get_track_load();
   int  TAUDECL TauEnv_get_track_memory_heap();
   int  TAUDECL TauEnv_get_track_memory_leaks();
   int  TAUDECL TauEnv_get_track_memory_headroom();
@@ -124,6 +126,8 @@ extern "C" {
   const char* TAUDECL TauEnv_get_plugins_path();
   const char* TAUDECL TauEnv_get_plugins();
   int TAUDECL TauEnv_get_plugins_enabled();
+  int TAUDECL TauEnv_get_track_mpi_t_comm_metric_values();
+  const char  TAUDECL *TauEnv_get_mpi_t_comm_metric_values();
   int TAUDECL TauEnv_get_set_node();
   const char* TAUDECL TauEnv_get_cupti_api();
   const char* TAUDECL TauEnv_get_cuda_device_name();
@@ -133,6 +137,7 @@ extern "C" {
   int TAUDECL TauEnv_get_cuda_track_sass();
   const char* TAUDECL TauEnv_get_cuda_sass_type();
   int TAUDECL TauEnv_get_cuda_csv_output();
+  int TAUDECL TauEnv_get_cuda_track_env();
   const char* TAUDECL TauEnv_get_cuda_binary_exe();
   int  TAUDECL TauEnv_get_cudaTotalThreads();
   void  TAUDECL TauEnv_set_cudaTotalThreads(int value);

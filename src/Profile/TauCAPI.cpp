@@ -75,13 +75,18 @@ void esd_exit (elg_ui4 rid);
 
 #include <Profile/TauPin.h>
 #include <Profile/TauPluginInternals.h>
+#include <Profile/TauPluginCPPTypes.h>
 
 using namespace tau;
 
 extern "C" void Tau_shutdown(void);
 //extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
+extern "C" size_t Tau_util_return_hash_of_string(const char *name);
+extern "C" void Tau_util_invoke_async_callback(unsigned int id, void * data);
 
+extern unsigned int plugin_id_counter;
+extern std::list < std::string > regex_list;
 #ifdef TAU_UNWIND
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses);
 #endif
@@ -913,6 +918,9 @@ extern "C" void Tau_stop_all_timers(int tid)
 
 inline void Tau_profile_exit_threads(int begin_index)
 {
+  if(!TheSafeToDumpData()) {
+    return;
+  }
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
   // Stop the collector API. The main thread may exit with running
@@ -971,7 +979,7 @@ extern "C" void Tau_exit(const char * msg) {
   if(Tau_plugins_enabled.function_finalize) {
     Tau_plugin_event_function_finalize_data_t plugin_data;
     plugin_data.junk = -1;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, "*", &plugin_data);
   }
 
 #if defined(TAU_OPENMP)
@@ -1008,7 +1016,8 @@ extern "C" void Tau_post_init(void) {
   /*Invoke plugins only if both plugin path and plugins are specified*/
   if(Tau_plugins_enabled.post_init) {
     Tau_plugin_event_post_init_data_t plugin_data;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_POST_INIT, &plugin_data);
+    plugin_data.tid = Tau_get_thread();
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_POST_INIT, "*", &plugin_data);
   }
 }
 
@@ -1061,7 +1070,7 @@ extern "C" int Tau_dump(void) {
   if(Tau_plugins_enabled.dump) {
     Tau_plugin_event_dump_data_t plugin_data;
     plugin_data.tid = RtsLayer::myThread();
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, "*", &plugin_data);
   }
 
   return 0;
@@ -1075,7 +1084,7 @@ extern "C" int Tau_invoke_plugin_phase_entry(void *functionInfo) {
   if(Tau_plugins_enabled.phase_entry) {
     Tau_plugin_event_phase_entry_data_t plugin_data;
     plugin_data.phase_name = fi->GetName();
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PHASE_ENTRY, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PHASE_ENTRY, fi->GetName(), &plugin_data);
   }
 
   return 0;
@@ -1090,12 +1099,126 @@ extern "C" int Tau_invoke_plugin_phase_exit(void *functionInfo) {
   if(Tau_plugins_enabled.phase_exit) {
     Tau_plugin_event_phase_exit_data_t plugin_data;
     plugin_data.phase_name = fi->GetName();
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PHASE_EXIT, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PHASE_EXIT, fi->GetName(), &plugin_data);
   }
 
   return 0;
 
 }
+
+/* Plugin API */
+extern "C" size_t Tau_create_trigger(const char *name) {
+  static size_t trigger_counter = -1;
+  TauInternalFunctionGuard protects_this_function;
+
+  RtsLayer::LockDB();
+  trigger_counter++;
+  RtsLayer::UnLockDB();
+  
+  return trigger_counter;
+}
+
+extern "C" void Tau_trigger(size_t id, void * data) {
+  TauInternalFunctionGuard protects_this_function;
+  Tau_util_invoke_callbacks_for_trigger_event(TAU_PLUGIN_EVENT_TRIGGER, id, data); 
+}
+
+extern "C" void Tau_enable_plugin_for_specific_event(int ev, const char *name, unsigned int id)
+{
+  TauInternalFunctionGuard protects_this_function;
+  size_t hash = Tau_util_return_hash_of_string(name);
+  PluginKey key(ev, hash);
+  RtsLayer::LockDB();
+  plugins_for_named_specific_event[key].insert(id);
+  RtsLayer::UnLockDB();
+
+}
+ 
+extern "C" void Tau_disable_plugin_for_specific_event(int ev, const char *name, unsigned int id)
+{
+  TauInternalFunctionGuard protects_this_function;
+  size_t hash = Tau_util_return_hash_of_string(name);
+  PluginKey key(ev, hash);
+  RtsLayer::LockDB();
+  plugins_for_named_specific_event[key].erase(id);
+  RtsLayer::UnLockDB();
+
+}
+
+extern "C" void Tau_disable_all_plugins_for_specific_event(int ev, const char *name)
+{
+  TauInternalFunctionGuard protects_this_function;
+  size_t hash = Tau_util_return_hash_of_string(name);
+  PluginKey key(ev, hash);
+  RtsLayer::LockDB();
+  plugins_for_named_specific_event[key].clear();
+  RtsLayer::UnLockDB();
+}
+
+extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *name)
+{
+  TauInternalFunctionGuard protects_this_function;
+  size_t hash = Tau_util_return_hash_of_string(name);
+  PluginKey key(ev, hash);
+
+  RtsLayer::LockDB();
+  for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
+    plugins_for_named_specific_event[key].insert(i);
+  }
+  RtsLayer::UnLockDB();
+}
+
+extern "C" void Tau_enable_plugin_for_trigger_event(int ev, size_t hash, unsigned int id)
+{
+  TauInternalFunctionGuard protects_this_function;
+  PluginKey key(ev, hash);
+  RtsLayer::LockDB();
+  plugins_for_named_specific_event[key].insert(id);
+  RtsLayer::UnLockDB();
+
+}
+ 
+extern "C" void Tau_disable_plugin_for_trigger_event(int ev, size_t hash, unsigned int id)
+{
+  TauInternalFunctionGuard protects_this_function;
+  PluginKey key(ev, hash);
+  RtsLayer::LockDB();
+  plugins_for_named_specific_event[key].erase(id);
+  RtsLayer::UnLockDB();
+
+}
+
+extern "C" void Tau_disable_all_plugins_for_trigger_event(int ev, size_t hash)
+{
+  TauInternalFunctionGuard protects_this_function;
+  PluginKey key(ev, hash);
+  RtsLayer::LockDB();
+  plugins_for_named_specific_event[key].clear();
+  RtsLayer::UnLockDB();
+}
+
+extern "C" void Tau_enable_all_plugins_for_trigger_event(int ev, size_t hash)
+{
+  TauInternalFunctionGuard protects_this_function;
+  PluginKey key(ev, hash);
+
+  RtsLayer::LockDB();
+  for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
+    plugins_for_named_specific_event[key].insert(i);
+  }
+  RtsLayer::UnLockDB();
+}
+
+extern "C" void Tau_add_regex(const char * r)
+{
+  TauInternalFunctionGuard protects_this_function;
+  std::string s(r);
+  RtsLayer::LockDB();
+  regex_list.push_back(s);
+  RtsLayer::UnLockDB();
+}
+
+/* Plugin API */
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix(const char *prefix) {
@@ -2710,11 +2833,12 @@ extern "C" void Tau_dynamic_stop(char const * name, int isPhase)
   if(Tau_plugins_enabled.dump) {
     Tau_plugin_event_dump_data_t plugin_data;
     plugin_data.tid = RtsLayer::myThread();
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, "*", &plugin_data);
   }
 
 }
 
+////
 
 #if (!defined(TAU_WINDOWS))
 extern "C" pid_t tau_fork() {
@@ -2841,6 +2965,7 @@ void Tau_destructor_trigger() {
 //#ifndef JAVA
   Tau_stop_top_level_timer_if_necessary();
   Tau_global_setLightsOut();
+  TheSafeToDumpData() = 0;
 //#endif
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
 #ifndef TAU_VAMPIRTRACE

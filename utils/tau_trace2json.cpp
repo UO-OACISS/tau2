@@ -23,6 +23,8 @@
 #include <map>
 #include <set>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 int debugPrint = 0;
@@ -154,6 +156,30 @@ int ClockPeriod( void*  userData, double clkPeriod )
   return 0;
 }
 
+std::string escape_json(const char *unescaped) {
+	  std::string s(unescaped);
+    std::ostringstream o;
+    for (char const &c:s){ //(auto c = s.cbegin(); c != s.cend(); c++) {
+        switch (c) {
+        //case '"': o << "\\\""; break; //This catches the leading and trailing quote and internal quotes should already be escaped. Revisit if needed.
+        case '\\': o << "\\\\"; break;
+        case '\b': o << "\\b"; break;
+        case '\f': o << "\\f"; break;
+        case '\n': o << "\\n"; break;
+        case '\r': o << "\\r"; break;
+        case '\t': o << "\\t"; break;
+        default:
+            if ('\x00' <= c && c <= '\x1f') {
+                o << "\\u"
+                  << std::hex << std::setw(4) << std::setfill('0') << (int)c;
+            } else {
+                o << c;
+            }
+        }
+    }
+    return o.str();
+}
+
 int DefThread(void *userData, unsigned int nodeToken, unsigned int threadToken,
 const char *threadName )
 {
@@ -206,9 +232,14 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
 int DefUserEvent( void *userData, unsigned int userEventToken,
 		const char *userEventName, int monotonicallyIncreasing )
 {
+  const char *escapedName = escape_json(userEventName).c_str();
+
   dprintf("DefUserEvent event id %d user event name %s, monotonically increasing = %d\n", userEventToken,
 		  userEventName, monotonicallyIncreasing);
-  my_user_event *ue = new my_user_event(userEventToken, userEventName, monotonicallyIncreasing);
+
+			//printf("Orig name: %s, escaped name: %s\n",userEventName,escapedName);
+
+  my_user_event *ue = new my_user_event(userEventToken, escape_json(userEventName).c_str(), monotonicallyIncreasing);
   my_user_event_set[userEventToken] = ue;
   return 0;
 }
@@ -266,7 +297,7 @@ int SendMessage( void *userData, double time,
 		  messageSize, messageTag);
 			if(chromeFormat){
 				json_event_out << "{ ";
-				json_event_out << "\"name\": \"Send\", ";
+				json_event_out << "\"name\": \"MPI\", ";
 			  json_event_out << "\"cat\": \"Message\", ";
 			  json_event_out << "\"ts\": \"" << time << "\", ";
 			  json_event_out << "\"pid\": \"" << sourceNodeToken << "\", ";
@@ -309,7 +340,7 @@ int RecvMessage( void *userData, double time,
 		  messageSize, messageTag);
 			if(chromeFormat){
 				json_event_out << "{ ";
-				json_event_out << "\"name\": \"Recv\", ";
+				json_event_out << "\"name\": \"MPI\", ";
 			  json_event_out << "\"cat\": \"Message\", ";
 			  json_event_out << "\"ts\": \"" << time << "\", ";
 			  json_event_out << "\"pid\": \"" << destinationNodeToken << "\", ";
@@ -436,7 +467,7 @@ int main(int argc, char **argv)
   /* main program: Usage app <trc> <edf> [-nostate] [-nomessage] */
   if (argc < 3)
   {
-    printf("Usage: %s <TAU trace> <edf file> [-nostate] [-nomessage] [-v] [-nojson] [-chrome] [-o filename.json] [-print]\n",
+    printf("Usage: %s <TAU trace> <edf file> [-nostate] [-nomessage] [-v] [-nojson] [-chrome] [-ignoreatomic] [-o filename.json] [-print]\n",
 		    argv[0]);
     return 1;
   }

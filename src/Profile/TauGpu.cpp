@@ -31,8 +31,6 @@
 // Moved from header file
 using namespace std;
 
-// #define TAU_DEBUG_SASS 1
-
 static TauContextUserEvent *MemoryCopyEventHtoD;
 static TauContextUserEvent *MemoryCopyEventDtoH;
 static TauContextUserEvent *MemoryCopyEventDtoD;
@@ -43,10 +41,12 @@ static TauContextUserEvent *UnifiedMemoryEventPageFault;
 static TauContextUserEvent *FloatingPointOps;
 static TauContextUserEvent *MemoryOps;
 static TauContextUserEvent *ControlOps;
+static TauContextUserEvent *SMClockEvent;
+static TauContextUserEvent *MemoryClockEvent;
+static TauContextUserEvent *PowerUtilizationEvent;
 
 static uint32_t recentKernelId = -1;
 static uint32_t recentCorrelationId = -1;
-static int curr_device_id = 0;
 
 int number_of_tasks = 0;
 int number_of_top_level_task_events = 0;
@@ -344,108 +344,6 @@ void stop_gpu_event(const char *name, int gpuTask)
   TAU_STOP_TASK(name, gpuTask);
 }
 
-// FunctionInfo* Tau_make_cupti_sample_timer(const char * filename, const char * function, int lineno);
-
-// void stop_gpu_event(const char *name, int gpuTask)
-// {
-// #ifdef DEBUG_PROF
-// 	TAU_VERBOSE("stopping %s event.\n", name);
-// #endif
-
-// 	TAU_STOP_TASK(name, gpuTask);
-
-// 	if (!instrSrcMap.empty()) {
-// 	  // build profile
-
-// 	  // filename, function, lineno
-// 	  int tid = gpuTask;
-
-// 	  // 0 is time, eventually want to index by stall reasons
-// 	  int counter = 0;
-// 	  char sass_level[] = "kernel";
-// 	  // check if we're displaying at kernel level or source level:
-// 	  if(strcmp(TauEnv_get_cuda_sass_type(), sass_level) == 0) {
-// 	    // kernel level
-// 	    for (std::map<uint32_t, FuncSampling>::iterator it=funcMap.begin(); 
-// 		 it != funcMap.end(); ++it) {
-// 	      FuncSampling fTemp = it->second;
-// #ifdef TAU_DEBUG_SASS
-// 	      printf("fTemp.fid: %i, fTemp.name: %s\n", fTemp.fid, fTemp.name);
-// #endif
-// 	      double kernel_exec_time;
-// 	      uint32_t kernel_samples;
-// 	      uint32_t kernel_launches;
-// 	      const char* filename;
-// 	      uint32_t lineno;
-// 	      kernel_exec_time = getKernelExecutionTimes(fTemp.fid);
-// 	      kernel_samples = getKernelSamples(fTemp.fid);
-// 	      kernel_launches = getUniqueKernelLaunches(fTemp.fid);
-// 	      filename = getKernelFilePath(fTemp.fid);
-// 	      lineno = getKernelLineNo(fTemp.fid);
-// 	      FunctionInfo* fi = Tau_make_cupti_sample_timer(filename, 
-// 							     fTemp.demangled, 
-// 							     lineno);	      
-// #if TAU_DEBUG_SASS
-// 	      printf("[TauGPU]:  Created filePath: %s, demangled: %s, lineno: %u\n", 
-// 		     filename, fTemp.demangled, lineno);
-// 	      // need samples, tstamp_delta
-// 	      printf("[TauGPU]:  kernel_exec_time: %f, kernel_samples: %u, kernel_launches: %u\n", 
-// 		     kernel_exec_time, kernel_samples, kernel_launches);
-// 	      printf("[TauGPU]:  fi->GetCalls(tid): %u\n", fi->GetCalls(tid));	      
-// #endif
-// 	      // where tid is the gpu task/thread ID
-// 	      // TODO:  Need to verify whether to include samples?
-// 	      // fi->SetCalls(tid, kernel_launches+fi->GetCalls(tid)); // including samples
-// 	      fi->SetCalls(tid, kernel_launches); // actual # kernel launches (MOST ACCURATE)
-// 	      // where counter is the index of the metric (already in 1e3 scale)
-// 	      // TODO:  Get time from kernelMap (CuptiActivity)
-// 	      fi->AddInclTimeForCounter(kernel_exec_time, tid, counter); 
-// 	      // where counter is the index of the metric
-// 	      fi->AddExclTimeForCounter(kernel_exec_time, tid, counter); 
-// 	      // resetKernelExecutionTimes(fTemp.fid); // verify whether needed??
-// 	    }
-// 	  }
-// 	  else {
-// 	    // source level
-// 	    for (std::map<uint32_t, SourceSampling>::iterator it=srcLocMap.begin(); 
-// 		 it != srcLocMap.end(); ++it) {
-// 	      SourceSampling sTemp = it->second;
-	    
-// 	      if (funcMap.count(sTemp.fid)) {
-// 		// lookup
-// 		FuncSampling fTemp = funcMap.find(sTemp.fid)->second;
-		
-// // 		FunctionInfo* fi = Tau_make_cupti_sample_timer(sTemp.fileName, 
-// // 							       fTemp.demangled, 
-// // 							       sTemp.lineNumber);
-		
-// // #if TAU_DEBUG_SASS
-// // 		// prepare fi object
-// // 		printf("Created FunctionInfo, filePath: %s, demangled: %s, lineNumber: %i\n", sTemp.fileName, fTemp.demangled, sTemp.lineNumber);
-// // 	      // need samples, tstamp_delta
-// // 		printf("timestamp_delta: %f, samples: %u\n", 
-// // 		       sTemp.timestamp_delta, sTemp.samples);
-// // 		printf(" fi->GetCalls(tid): %u\n", fi->GetCalls(tid));
-		
-// // #endif
-// 		// // where tid is the gpu task/thread ID
-// 		// // fi->SetCalls(tid, sTemp.samples+fi->GetCalls(tid));
-// 		// fi->SetCalls(tid, sTemp.samples);
-// 		// // where counter is the index of the metric (already in 1e3 scale)
-// 		// fi->AddInclTimeForCounter(sTemp.timestamp_recentacc, tid, counter); 
-// 		// // where counter is the index of the metric
-// 		// fi->AddExclTimeForCounter(sTemp.timestamp_recentacc, tid, counter); 
-// 		// it->second.timestamp_recentacc=0; // reset
-// 	      }
-// 	    }
-// 	  } // source level
-// 	}
-// 	else {
-// 	  // srcLocMap is empty, can't build profile.
-// 	}
-// }
-
-
 void break_gpu_event(const char *name, int gpuTask, double stop_time, FunctionInfo* parent)
 {
 #ifdef DEBUG_PROF
@@ -498,13 +396,7 @@ int get_task(GpuEvent *new_task)
 
 void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
 {
-  // for (int i=0; i < TauEnv_get_cudaTotalThreads(); i++) {
-  //   GpuThread gTemp = gThreads[i];
-  //   printf("[TauGpu]: systid %u, gputid %i, parentid %u, nodeid %i\n",
-  // 	   gTemp.sys_tid, gTemp.gpu_tid, gTemp.parent_tid, gTemp.node_id);    
-  // }
-
-#if defined(PTHREADS) && defined(TAU_GPU)
+#if defined(PTHREADS)
   int task = id->getTaskId(); 
 #else
   int task = get_task(id);
@@ -544,12 +436,7 @@ void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
 void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTime, int transferSize, int memcpyType,
 				   int direction)
 {
-  // for (int i=0; i < TauEnv_get_cudaTotalThreads(); i++) {
-  //   GpuThread gTemp = gThreads[i];
-  //   printf("[TauGpu]: systid %u, gputid %i, parentid %u, nodeid %i\n",
-  // 	   gTemp.sys_tid, gTemp.gpu_tid, gTemp.parent_tid, gTemp.node_id);    
-  // }
-#if defined(PTHREADS) && defined(TAU_GPU)
+#if defined(PTHREADS)
   int task = id->getTaskId();
 #else
   int task = get_task(id);  
@@ -640,12 +527,62 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 
 }
 
+void Tau_gpu_register_envt_event(GpuEvent *event, double startTime, double endTime, int transferSize, int dataType)
+{
+#if defined(PTHREADS)
+  int task = event->getTaskId();
+#else
+  int task = get_task(event);  
+#endif
+	const char* functionName = event->getName();
+	if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
+	{
+		if (dataType == SMClock) {
+			functionName = "SM Frequency (MHz)";
+		}
+		else if (dataType == MemoryClock)
+		{
+			functionName = "Memory Frequency (MHz)";
+		}
+		else if (dataType == GPUTemperature)
+		{
+			functionName = "GPU Temperature";
+		}
+		else if (dataType == PowerUtilization)
+		  {
+		    functionName = "Power Utilization (% mW)";
+		  }
+		else if (dataType == FanSpeed)
+		  {
+		    functionName == "Fan Speed";
+		  }
+	}
+
+#ifdef DEBUG_PROF	
+	TAU_VERBOSE("recording environment event.\n");
+	TAU_VERBOSE("time is: %f:%f.\n", startTime, endTime);
+	TAU_VERBOSE("kind is: %d.\n", dataType);
+	TAU_VERBOSE("id is: %s.\n", event->gpuIdentifier());
+#endif
+	if (dataType == SMClock) {
+	  TAU_CONTEXT_EVENT(SMClockEvent, transferSize);
+	}
+	else if (dataType == MemoryClock) {
+	  TAU_CONTEXT_EVENT(MemoryClockEvent, transferSize);
+	}
+	else if (dataType == PowerUtilization) {
+	  TAU_CONTEXT_EVENT(PowerUtilizationEvent, transferSize);
+	}
+}
+
 void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTime, int transferSize, int unifmemType,
     int direction)
 {
-  int task = get_task(id);
-  //printf("in Tau_gpu.\n");
-  //printf("Memcpy type is %d.\n", memcpyType);
+#if defined(PTHREADS)
+  int task = id->getTaskId();
+#else
+  int task = get_task(id);  
+#endif
   const char* functionName = id->getName();
   if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0) {
     if (unifmemType == BytesHtoD) {
@@ -655,7 +592,6 @@ void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTi
     } else {
       functionName = "Unified Memory CPU Page Fault";
     }
-    //printf("using default name: %s.\n", functionName);
   }
 
 #ifdef DEBUG_PROF		
@@ -740,8 +676,11 @@ void Tau_gpu_register_gpu_atomic_event(GpuEvent *event)
 #ifdef DEBUG_PROF		
   TAU_VERBOSE("registering atomic event.\n");
 #endif //DEBUG_PROF
-  int task = get_task(event);
-
+#if defined(PTHREADS)
+  int task = event->getTaskId();
+#else
+  int task = get_task(event);  
+#endif
   GpuEventAttributes *attr;
   int number_of_attributes;
   event->getAttributes(attr, number_of_attributes);
@@ -755,9 +694,11 @@ void Tau_gpu_register_gpu_atomic_event(GpuEvent *event)
 
 void Tau_gpu_register_imix_event(GpuEvent *event, double startTime, double endTime, int transferSize, int dataType)
 {
-  int task = get_task(event);
-  //task = contextId;
-  
+#if defined(PTHREADS)
+  int task = event->getTaskId();
+#else
+  int task = get_task(event);  
+#endif
   printf("IMIX type is %d, contextId: %i.\n", dataType, task);
   const char* functionName = event->getName();
   if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
@@ -810,111 +751,11 @@ void Tau_gpu_register_imix_event(GpuEvent *event, double startTime, double endTi
   }
 }
 
-
-// // Make samples based on function/file/line:
-// // 1) Read each instruction_event sample
-// // 2) Check if existing source entry / line no (sid) in srcLocMap available. 
-// // --- If so, samples+=1. Otherwise, ignore (return).
-// // 3) Calculate timestamp_delta
-// // --- Need to keep track of time spent in routine
-
-// void Tau_gpu_register_instruction_event(GpuEvent *id, double start, double stop, double delta_tstamp, const char* name, uint32_t correlationId, uint32_t sourceLocatorId, uint32_t functionId, uint32_t pcOffset, uint32_t executed, uint32_t threadsExecuted) {
-
-//   int task = get_task(id);
-
-//   if (correlationId != 0) { // jibberish
-//     // add to each
-//     InstrSampling is;
-//     is.sourceLocatorId = sourceLocatorId;
-//     is.functionId = functionId;
-//     is.pcOffset = pcOffset;
-//     is.correlationId = correlationId;
-//     is.executed = executed;
-//     is.threadsExecuted = threadsExecuted;
-//     is.timestamp_delta = delta_tstamp;
-//     is.timestamp_current = stop;
-//     is.timestamp_recent = start;
-//     instrSrcMap[sourceLocatorId].push_back(is);
-//     instrFuncMap[functionId].push_back(is);
-//   }
-//   else {
-// #ifdef TAU_DEBUG_SASS
-//     printf("[TauGpu]:  Jibberish\n");
-// #endif
-//   }
-// }
-
-// void Tau_gpu_register_source_event(GpuEvent *event, double timestamp, const char* name, uint32_t sourceId, const char *fileName, uint32_t lineNumber) {
-
-//   int task = get_task(event);
-
-//   SourceSampling sourcesamp;
-
-//   // check if doesn't exist
-//   if(!srcLocMap.count(sourceId)) {
-// 	sourcesamp.fid = -1;	
-//   }
-//   sourcesamp.sid = sourceId;
-//   sourcesamp.fileName = (char *)fileName;
-//   sourcesamp.lineNumber = lineNumber;
-//   sourcesamp.timestamp_delta = 1;
-//   sourcesamp.samples = 1;
-//   srcLocMap[sourceId] = sourcesamp;
-
-// #if TAU_DEBUG_SASS
-//   printf("In TauGpu.cpp, Tau_gpu_register_source_event\n");
-//     printf("id->syncOffset(): %d\n", event->syncOffset());
-//   //printf("SOURCE_MAP: srcLocMap[%i].filename: %s\n", sourceId, srcLocMap[sourceId].fileName);
-//   printSourceMap();
-// #endif
-
-
-// }
-
-// void Tau_gpu_register_func_event(GpuEvent *event, int deviceId, double timestamp, const char* name, uint32_t contextId, 
-// 				 uint32_t functionIndex, uint32_t id, uint32_t moduleid, const char *kname, const char *demangled)
-// {
-// #if TAU_DEBUG_SASS
-//   printf("[TauGpu]:  contextId: %i, functionIndex: %i, id: %i\n", contextId, functionIndex, id);
-// #endif
-//   // blank funcId=1
-//   if (contextId == 0)
-//     return;
-//   curr_device_id = deviceId;
-//   // printf("curr_device_id: %i\n", curr_device_id);
-
-//   FuncSampling fs;
-
-//   if(!funcMap.count(functionIndex)) {
-//     fs.calls = 0;
-//     fs.kernel_launches = 0;
-//   }
-//   fs.fid = id;
-//   fs.contextId = contextId;
-//   fs.moduleId = moduleid;
-//   fs.functionIndex = functionIndex;
-//   fs.name = strdup(kname);
-//   fs.demangled = strdup(demangled);
-//   fs.funcinfo_created = false;
-//   funcMap[id] = fs;
-
-// #if TAU_DEBUG_SASS
-//   printf("In TauGpu.cpp, Tau_gpu_register_func_event\n");
-//     printf("id->syncOffset(): %d\n", event->syncOffset());
-//   printFuncMap();
-// #endif
-
-// }
-
 /*
  Initialization routine for TAU
  */
 void Tau_gpu_init(void)
 {
-  // #if not defined(PTHREADS) && not defined(TAU_GPU)
-#if not defined(PTHREADS)
-  Tau_create_top_level_timer_if_necessary();
-#endif
 
   //init context event.
   Tau_get_context_userevent((void **)&MemoryCopyEventHtoD, "Bytes copied from Host to Device");
@@ -939,9 +780,8 @@ void Tau_gpu_exit(void)
     cerr << "TAU: warning not all bytes tranfered between CPU and GPU were recorded, some data maybe be incorrect." << endl;
   }
   cerr << "stopping first gpu event.\n" << endl;
-  // #if not defined(PTHREADS) && not defined(TAU_GPU)
 #if not defined(PTHREADS)
-  printf("stopping level %d tasks.\n", number_of_tasks);
+  TAU_VERBOSE("stopping level %d tasks.\n", number_of_tasks);
   map<GpuEvent*, int>::iterator it;
   for (it = TheGpuEventMap().begin(); it != TheGpuEventMap().end(); it++) {
     Tau_stop_top_level_timer_if_necessary_task(it->second);
@@ -958,115 +798,3 @@ void Tau_gpu_exit(void)
   TAU_VERBOSE("stopping level 1.\n");
 }
 
-// // SASS Helper Functions
-// double getKernelExecutionTimes(uint32_t functionIndex)
-// {
-//   double kernel_exec_time;
-//   kernel_exec_time = 0;
-  
-//   std::list<InstrSampling> instrFunc_list = instrFuncMap.find(functionIndex)->second;
-
-//   for (std::list<InstrSampling>::iterator it2 = instrFunc_list.begin();
-//        it2 != instrFunc_list.end(); ++it2) {
-//     kernel_exec_time += it2->timestamp_delta;
-//   }
-
-//   return kernel_exec_time;	
-// }
-
-// void resetKernelExecutionTimes(uint32_t functionIndex)
-// {
-// #ifdef TAU_DEBUG_SASS
-//   printf("[TauGpu]:  About to remove items on list\n");
-// #endif
-//   //InstrSampling is_temp = instrFuncMap.find(functionIndex)->second.back();
-//   instrFuncMap.find(functionIndex)->second.clear();
-//   //instrFuncMap[functionIndex].push_back(is_temp);
-
-// }
-
-
-// uint32_t getKernelSamples(uint32_t functionIndex) 
-// {
-//   std::list<InstrSampling> instrFunc_list = instrFuncMap.find(functionIndex)->second;
-//   return instrFunc_list.size();	
-// }
-
-// uint32_t getUniqueKernelLaunches(uint32_t functionIndex)
-// {
-//   std::list<InstrSampling> instrFunc_list = instrFuncMap.find(functionIndex)->second;
-//   std::set<uint32_t> corrIdFromInstr_set;
-//   for (std::list<InstrSampling>::iterator it=instrFunc_list.begin(); 
-//        it != instrFunc_list.end(); ++it) {
-//     InstrSampling is = *it;
-//     corrIdFromInstr_set.insert(is.correlationId);
-//   }
-//   return corrIdFromInstr_set.size();
-// }
-
-
-// const char* getKernelFilePath(uint32_t functionIndex)
-// {
-//   // assuming first entry's filepath is same for all
-//   uint32_t srcId_temp = instrFuncMap.find(functionIndex)->second.front().sourceLocatorId;
-//   return srcLocMap.find(srcId_temp)->second.fileName;
-// }
-
-// uint32_t getKernelLineNo(uint32_t functionIndex)
-// {
-//   uint32_t lineNumber;
-//   lineNumber = 99999999;
-//   std::list<InstrSampling> instrFunc_list = instrFuncMap.find(functionIndex)->second;
-
-//   std::set<uint32_t> srcIdFromInstr_set;
-//   for (std::list<InstrSampling>::iterator it=instrFunc_list.begin(); 
-//        it != instrFunc_list.end(); ++it) {
-//     InstrSampling is = *it;
-//     srcIdFromInstr_set.insert(is.sourceLocatorId);
-//   }
-//   for (std::set<uint32_t>::iterator it2=srcIdFromInstr_set.begin();
-//        it2 != srcIdFromInstr_set.end(); it2++) { 
-//     uint32_t srcId = *it2;
-//     SourceSampling ss = srcLocMap.find(srcId)->second;
-//     if (lineNumber > ss.lineNumber) {
-//       lineNumber = ss.lineNumber;
-//     }
-//   }
-
-//   return lineNumber;	
-
-// }
-
-// void printInstrMap(void)
-// {
-//   // we only care about each kernel, get lowest number line of source code reference
-//   for(std::map<uint32_t, InstrSampling>::iterator iter = instrSamplingMap.begin();
-//       iter != instrSamplingMap.end(); ++iter) {
-//     InstrSampling instrTemp = iter->second;
-    
-//     printf("~~~ Instr Sampling MAP ~~~\n  tstamp_delta: %lu%, SourceLocatorID: %i\n  FunctionID: %i, UniqueKernels: %i, samples: %i\n~~~~~~\n",
-// 	   instrTemp.timestamp_delta, instrTemp.sourceLocatorId, instrTemp.functionId, instrTemp.uniqueKernels, instrTemp.samples);
-//   }
-// }
-
-// void printSourceMap(void)
-// {
-//   for (std::map<uint32_t, SourceSampling>::iterator it=srcLocMap.begin(); 
-//        it != srcLocMap.end(); ++it) {
-//     SourceSampling sTemp = it->second;
-//     printf("~~~ srcLocMap ~~~\n  id %u, fileName %s, lineNumber %u\n  timestamp_delta %f, timestamp_recent %f, samples %i, functionId %i\n~~~~~~\n",
-// 	   sTemp.sid, sTemp.fileName, sTemp.lineNumber, sTemp.timestamp_delta, 
-// 	   sTemp.timestamp_recentacc, sTemp.samples, sTemp.fid);
-//   }
-// }
-
-// void printFuncMap(void)
-// {
-//   // iterate map, print out
-//   for (std::map<uint32_t, FuncSampling>::iterator it=funcMap.begin(); it != funcMap.end(); ++it) {
-//     FuncSampling fTemp = it->second;
-//     printf("~~~ funcMap ~~~\n  id %u, ctx %u, moduleId %u\n  functionIndex %u, name %s, demangled %s\n~~~~~~\n",
-// 	   fTemp.fid, fTemp.contextId, fTemp.moduleId,fTemp.functionIndex, fTemp.name,
-// 	   fTemp.demangled);
-//   }
-// }

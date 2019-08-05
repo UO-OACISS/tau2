@@ -24,6 +24,17 @@
 #include <Profile/TauRocm.h>
 #include <hip/hip_runtime.h>
 #include <roctracer.h>
+#include <stdlib.h>
+
+#ifdef TAU_ENABLE_ROCTRACER_HSA
+#ifndef TAU_HSA_TASK_ID
+#define TAU_HSA_TASK_ID 501
+#endif /* TAU_HSA_TASK_ID */
+#include <roctracer_hsa.h>
+#include <roctracer_hip.h>
+#include <roctracer_hcc.h>
+#include <ext/hsa_rt_utils.hpp>
+#endif /* TAU_ENABLE_ROCTRACER_HSA */
 
 #ifdef TAU_BFD
 #define HAVE_DECL_BASENAME 1
@@ -141,11 +152,13 @@ void Tau_roctracer_api_callback(
 void Tau_roctracer_hip_event(const roctracer_record_t *record, int task_id) {
   const char *event_name = roctracer_op_string(record->domain, record->op, record->kind);
   const char *name = event_name;
+  bool dealloc_name = false;
   if (strcmp(name, "hipModuleLaunchKernel") == 0) {
+    dealloc_name = true;
     const char * kernel_name = TauRocTracerNameDB[record->correlation_id].c_str();
     const char *demangled_name;
     TAU_INTERNAL_DEMANGLE_NAME(kernel_name, demangled_name);
-    name = (event_name + string(" ") + demangled_name).c_str();
+    name = strdup((event_name + string(" ") + demangled_name).c_str());
     TAU_VERBOSE("Tau_roctracer_hip_event: name = %s\n", name);
   }
  
@@ -159,6 +172,9 @@ void Tau_roctracer_hip_event(const roctracer_record_t *record, int task_id) {
   Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(record->end_ns)/1e3)); // convert to microseconds
   TAU_STOP_TASK(name, task_id);
   TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", name, task_id, record->end_ns);
+  if (dealloc_name) {
+    free((void*)name);
+  }
   Tau_set_last_timestamp_ns(record->end_ns);
 }
 
@@ -306,6 +322,95 @@ extern "C" PUBLIC_API void OnLoadTool() {
   TAU_VERBOSE("Inside OnLoadTool\n");
 }
 
+
+#ifdef TAU_ENABLE_ROCTRACER_HSA
+void Tau_roctracer_hsa_activity_callback(
+  uint32_t op,
+  activity_record_t* record,
+  void* arg)
+{
+  TAU_VERBOSE("%lu:%lu async-copy%lu\n", record->begin_ns, record->end_ns, record->correlation_id);
+  //printf("%lu:%lu async-copy%lu\n", record->begin_ns, record->end_ns, record->correlation_id);
+}
+
+typedef hsa_rt_utils::Timer::timestamp_t timestamp_t;
+hsa_rt_utils::Timer* timer = NULL;
+thread_local timestamp_t hsa_begin_timestamp = 0;
+thread_local timestamp_t hip_begin_timestamp = 0;
+
+// HSA API callback function
+void Tau_roctracer_hsa_api_callback(
+    uint32_t domain,
+    uint32_t cid,
+    const void* callback_data,
+    void* arg)
+{
+  (void)arg;
+  const hsa_api_data_t* data = reinterpret_cast<const hsa_api_data_t*>(callback_data);
+  const char *activity_name = roctracer_op_string(ACTIVITY_DOMAIN_HSA_API, cid, 0); 
+
+
+  hsa_begin_timestamp = timer->timestamp_fn_ns();
+  int task_id = Tau_get_initialized_queues(TAU_HSA_TASK_ID);
+  if (task_id == -1) {
+    TAU_VERBOSE("ACTIVITY_DOMAIN_HSA_API: creating task\n");
+    TAU_CREATE_TASK(task_id);
+    Tau_set_initialized_queues(TAU_HSA_TASK_ID, task_id);
+    Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(hsa_begin_timestamp)/1e3));
+    Tau_create_top_level_timer_if_necessary_task(task_id);
+    Tau_add_metadata_for_task("TAU_TASK_ID", task_id, task_id);
+  }
+
+  if (data->phase == ACTIVITY_API_PHASE_ENTER) {
+    Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(hsa_begin_timestamp)/1e3)); // convert to microseconds
+    TAU_VERBOSE("Start: %s on tid=%d timestamp=%llu\n", activity_name, task_id,hsa_begin_timestamp);
+    TAU_START_TASK(activity_name, task_id);
+  } else {
+    if (data->phase == ACTIVITY_API_PHASE_EXIT) {
+      //const timestamp_t end_timestamp = (cid == HSA_API_ID_hsa_shut_down) ? hsa_begin_timestamp : timer->timestamp_fn_ns();
+      const timestamp_t end_timestamp = timer->timestamp_fn_ns();
+      Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(end_timestamp)/1e3)); // convert to microseconds
+      TAU_VERBOSE("Stop : %s on tid=%d timestamp=%llu\n", activity_name, task_id, end_timestamp);
+      TAU_STOP_TASK(activity_name, task_id);
+    }
+  }
+}
+
+
+extern "C" PUBLIC_API bool OnLoad(HsaApiTable* table, uint64_t runtime_version, uint64_t failed_tool_count, const char* const* failed_tool_names) {
+  timer = new hsa_rt_utils::Timer(table->core_->hsa_system_get_info_fn);
+
+  // API trace vector
+  std::vector<std::string> hsa_api_vec;
+
+  // initialize HSA tracing
+  roctracer_set_properties(ACTIVITY_DOMAIN_HSA_API, (void*)table);
+  roctracer::hsa_ops_properties_t ops_properties{
+    reinterpret_cast<activity_async_callback_t>(Tau_roctracer_hsa_activity_callback),
+    NULL};
+  roctracer_set_properties(ACTIVITY_DOMAIN_HSA_OPS, &ops_properties);
+  TAU_VERBOSE("TAU: HSA TRACING ENABLED\n");
+
+  if (hsa_api_vec.size() != 0) {
+    for (unsigned i = 0; i < hsa_api_vec.size(); ++i) {
+      uint32_t cid = HSA_API_ID_NUMBER;
+      const char* api = hsa_api_vec[i].c_str();
+      ROCTRACER_CALL(roctracer_op_code(ACTIVITY_DOMAIN_HSA_API, api, &cid));
+      ROCTRACER_CALL(roctracer_enable_op_callback(ACTIVITY_DOMAIN_HSA_API, cid, Tau_roctracer_hsa_api_callback, NULL));
+      TAU_VERBOSE(" %s", api);
+    }
+  } else {
+    ROCTRACER_CALL(roctracer_enable_domain_callback(ACTIVITY_DOMAIN_HSA_API, Tau_roctracer_hsa_api_callback, NULL));
+  }
+  ROCTRACER_CALL(roctracer_enable_domain_activity(ACTIVITY_DOMAIN_HSA_OPS));
+  return true;
+}
+
+extern "C" PUBLIC_API void OnUnload() {
+  printf("Inside OnUnload\n");
+  TAU_VERBOSE("Inside OnUnload\n");
+}
+#endif /* TAU_ENABLE_ROCTRACER_HSA */
 
 
 

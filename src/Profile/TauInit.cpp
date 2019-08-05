@@ -300,7 +300,7 @@ int Tau_init_check_dl_initialized()
 extern "C"
 int Tau_profile_exit_scorep()
 {
-  Tau_profile_exit_all_threads();
+//  Tau_profile_exit_all_threads();
   return 0;
 }
 

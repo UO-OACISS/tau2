@@ -30,9 +30,8 @@ pthread_mutex_t mutexsum;
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 512
+#define MATRIX_SIZE 1024
 #endif
-#define ITERATIONS 3
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
 #define NCA MATRIX_SIZE                 /* number of columns in matrix A */
@@ -61,7 +60,7 @@ __inline double multiply(double a, double b) {
 }
 #endif /* APP_USE_INLINE_MULTIPLY */
 
-#if 0
+#if APP_USE_OMP_NESTED
 // cols_a and rows_b are the same value
 void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
   int i,j,k;
@@ -83,7 +82,7 @@ void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, 
               c[i][j] += multiply(a[i][k], b[k][j]);
 #else 
               tmp = a[i][k];
-			  tmp = tmp * b[k][j];
+              tmp = tmp * b[k][j];
               c[i][j] += tmp;
 #endif 
             }
@@ -92,45 +91,44 @@ void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, 
     }
   }   /*** End of parallel region ***/
 }
-#endif
+#endif /* APP_USE_OMP_NESTED */
 
+/////////////////////////////////////////////////////////////////////
+// compute multiplies a and b and returns the result in c using ijk. 
 // cols_a and rows_b are the same value
+/////////////////////////////////////////////////////////////////////
 void compute(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
   int i,j,k;
 #pragma omp parallel private(i,j,k) shared(a,b,c)
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
-#pragma omp for schedule(dynamic) nowait
+#pragma omp for nowait
     for (i=0; i<rows_a; i++) {
       for(j=0; j<cols_b; j++) {
         for (k=0; k<cols_a; k++) {
-#ifdef APP_USE_INLINE_MULTIPLY
-          c[i][j] += multiply(a[i][k], b[k][j]);
-#else /* APP_USE_INLINE_MULTIPLY */
           c[i][j] += a[i][k] * b[k][j];
-#endif /* APP_USE_INLINE_MULTIPLY */
         }
       }
     }
   }   /*** End of parallel region ***/
 }
 
+///////////////////////////////////////////////////////////////////////
+// compute_interchange multiplies a and b and returns the result in c 
+// using ikj loop.  cols_a and rows_b are the same value
+///////////////////////////////////////////////////////////////////////
 void compute_interchange(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
   int i,j,k;
 #pragma omp parallel private(i,j,k) shared(a,b,c)
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
-#pragma omp for schedule(dynamic) nowait
+#pragma omp for nowait
     for (i=0; i<rows_a; i++) {
       for (k=0; k<cols_a; k++) {
         for(j=0; j<cols_b; j++) {
-#ifdef APP_USE_INLINE_MULTIPLY
-          c[i][j] += multiply(a[i][k], b[k][j]);
-#else /* APP_USE_INLINE_MULTIPLY */
           c[i][j] += a[i][k] * b[k][j];
-#endif /* APP_USE_INLINE_MULTIPLY */
         }
       }
     }
@@ -153,12 +151,23 @@ double do_work(void) {
 
   compute(a, b, c, NRA, NCA, NCB);
 #if defined(TAU_OPENMP)
-#if 0
-  //if (omp_get_nested()) {
+#if APP_USE_OMP_NESTED
+  if (omp_get_nested()) {
     compute_nested(a, b, c, NRA, NCA, NCB);
-  //}
-#endif
-#endif
+  }
+#endif /* APP_USE_OMP_NESTED */
+#endif /* TAU_OPENMP */
+#ifdef TAU_MPI
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  if (rank == 0) {
+      if (provided == MPI_THREAD_MULTIPLE) { 
+        printf("provided is MPI_THREAD_MULTIPLE\n");
+      } else if (provided == MPI_THREAD_FUNNELED) { 
+        printf("provided is MPI_THREAD_FUNNELED\n");
+      }
+  }
+#endif /* TAU_MPI */
   compute_interchange(a, b, c, NRA, NCA, NCB);
 
   double result = c[0][1];
@@ -185,7 +194,7 @@ void * threaded_func(void *data)
   int sum = 0;
   // compute
   int i;
-  for (i = 0 ; i < ITERATIONS ; i++) {
+  for (i = 0 ; i < 1 ; i++) {
   do_work();
   }
 
@@ -232,7 +241,6 @@ int main (int argc, char *argv[])
 #ifdef TAU_MPI
   int rc = MPI_SUCCESS;
   int rank = 0;
-  int comm_size = 0;
 #if defined(PTHREADS)
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -255,7 +263,6 @@ int main (int argc, char *argv[])
     printf("Error: MPI_Init failed, rc = %d\n%s\n", rc, errorstring);
     exit(1);
   }
-  MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 #endif /* TAU_MPI */
 
 #ifdef PTHREADS
@@ -279,47 +286,9 @@ int main (int argc, char *argv[])
 
 #endif /* PTHREADS */
 
-#ifdef TAU_MPI
-    // create a communicator
-    /* The code above only works with 4 or more processes!! */
-    if (comm_size >=4 ) {
-      MPI_Group group_world, odd_group, even_group, diff_group, 
-                union_group, inter_group, re_group, ri_group;
-      int j, Neven, Nodd, members[8], ierr;
-
-      MPI_Comm_group(MPI_COMM_WORLD, &group_world);
-      MPI_Comm world_comm;
-      MPI_Comm_create(MPI_COMM_WORLD, group_world, &world_comm);
-
-      Neven = (comm_size+1)/2;    /* processes of MPI_COMM_WORLD are divided */
-      Nodd = comm_size - Neven;   /* into odd- and even-numbered groups */
-      for (j=0; j < Neven; j++) {   /* "members" determines members of even_group */
-        members[j] = 2*j;
-      };
-    
-      MPI_Group_incl(group_world, Neven, members, &even_group);
-      MPI_Group_excl(group_world, Neven, members, &odd_group);
-      MPI_Comm even_comm;
-      MPI_Comm odd_comm;
-      MPI_Comm_create(MPI_COMM_WORLD, even_group, &even_comm);
-      MPI_Comm_create(MPI_COMM_WORLD, odd_group, &odd_comm);
-      MPI_Group_difference(group_world, even_group, &diff_group);
-      MPI_Group_intersection(group_world, odd_group, &inter_group);
-      MPI_Group_union(group_world, odd_group, &union_group);
-      int range[2][3] = {{0,1,1},{2,3,1}};
-      MPI_Group_range_excl(group_world, 2, range, &re_group);
-      MPI_Group_range_incl(group_world, 2, range, &ri_group);
-      int ranks[2] = {0,1};
-      int ranks_out[2] = {0};
-      MPI_Group_translate_ranks(group_world, 2, ranks, union_group, ranks_out);
-    } 
-
-#endif /* TAU_MPI */
-
 /* On thread 0: */
   int i;
-  for (i = 0 ; i < ITERATIONS ; i++) {
-  printf("%d.", i);fflush(stdout);
+  for (i = 0 ; i < 1 ; i++) {
   do_work();
   }
 

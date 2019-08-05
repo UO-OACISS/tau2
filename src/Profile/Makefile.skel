@@ -314,8 +314,13 @@ BITS = 32
 #IBMMPI#POELIB = libmpi_r.a #ENDIF#
 #IBMMPI#POELIB_INSTALL = $(INSTALLDEST)/libmpi_r.a #ENDIF#
 
+#TAU_OMPT#OMPT_EXTENSION=-tr4 #ENDIF#
+#TAU_OMPT_TR6#OMPT_EXTENSION=-tr6 #ENDIF#
+#TAU_OMPT_TR7#OMPT_EXTENSION=-tr7 #ENDIF#
+#TAU_OMPT_5_0#OMPT_EXTENSION=-v5 #ENDIF#
+
 TAU_SHAREDDIR = $(INSTALLDEST)/shared$(TAU_CONFIG)
-TAU_DISABLE_SHAREDDIR = $(INSTALLDEST)/shared-disable
+TAU_DISABLE_SHAREDDIR = $(INSTALLDEST)/shared-disable${OMPT_EXTENSION}
 
 # MPI Wrappers
 #MPI#TAU_FORCE_MPI_OBJECT=TauForceMPI.o #ENDIF#
@@ -678,7 +683,7 @@ TauXML.o 	: TauXML.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauUtil.o 	: TauUtil.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(TAU_STDCXX11_FLAG) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauIoWrap.o 	: TauIoWrap.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)

@@ -99,6 +99,8 @@ void Tau_sampling_resume(int tid);
 */
 void Tau_sampling_init_if_necessary(void);
 
+void Tau_sampling_defer_init(void);
+
 /* For TauMpi.c to invoke sampling finalization at MPI_Finalize */
 void Tau_sampling_finalize_if_necessary(int tid);
 #ifdef __cplusplus
