@@ -157,6 +157,9 @@ typedef struct Tau_plugin_event_ompt_parallel_begin_data {
   int flags;
 #endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
   const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+  /* This is here for the sole purpose of preventing warnings */
+  bool null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_parallel_begin_data_t;
 
@@ -171,6 +174,9 @@ typedef struct Tau_plugin_event_ompt_parallel_end_data {
   int flags;
 #endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
   const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+  /* This is here for the sole purpose of preventing warnings */
+  bool null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_parallel_end_data_t;
 
@@ -187,6 +193,9 @@ typedef struct Tau_plugin_event_ompt_task_create_data {
     int type;
     int has_dependences;
     const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_task_create_data_t;
 
@@ -195,6 +204,9 @@ typedef struct Tau_plugin_event_ompt_task_schedule_data {
     ompt_data_t *prior_task_data;
     ompt_task_status_t prior_task_status;
     ompt_data_t *next_task_data;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_task_schedule_data_t;
 
@@ -205,6 +217,9 @@ typedef struct Tau_plugin_event_ompt_implicit_task_data {
     ompt_data_t *task_data;
     unsigned int team_size;
     unsigned int thread_num;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_implicit_task_data_t;
 
@@ -217,12 +232,18 @@ typedef struct Tau_plugin_event_ompt_thread_begin_data {
   ompt_thread_t thread_type;
 #endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
   ompt_data_t *thread_data;
+#else /* TAU_PLUGIN_OMPT_ON */
+  /* This is here for the sole purpose of preventing warnings */
+  bool null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_thread_begin_data_t;
 
 typedef struct Tau_plugin_event_ompt_thread_end_data {
 #ifdef TAU_PLUGIN_OMPT_ON
   ompt_data_t *thread_data;
+#else /* TAU_PLUGIN_OMPT_ON */
+  /* This is here for the sole purpose of preventing warnings */
+  bool null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_thread_end_data_t;
 
@@ -239,6 +260,9 @@ typedef struct Tau_plugin_event_ompt_work_data {
   ompt_data_t *task_data;
   uint64_t count;
   const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+  /* This is here for the sole purpose of preventing warnings */
+  bool null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_work_data_t;
 
@@ -248,12 +272,18 @@ typedef struct Tau_plugin_event_ompt_master_data {
   ompt_data_t *parallel_data;
   ompt_data_t *task_data;
   const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+  /* This is here for the sole purpose of preventing warnings */
+  bool null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_master_data_t;
 
 typedef struct Tau_plugin_event_ompt_idle_data {
 #ifdef TAU_PLUGIN_OMPT_ON
     ompt_scope_endpoint_t endpoint;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_idle_data_t;
 
@@ -269,6 +299,9 @@ typedef struct Tau_plugin_event_ompt_sync_region_data {
     ompt_data_t *parallel_data;
     ompt_data_t *task_data;
     const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_sync_region_data_t;
 
@@ -290,6 +323,9 @@ typedef struct Tau_plugin_event_ompt_mutex_acquire_data {
     ompt_wait_id_t wait_id;
 #endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_mutex_acquire_data_t;
 
@@ -309,6 +345,9 @@ typedef struct Tau_plugin_event_ompt_mutex_acquired_data {
     ompt_wait_id_t wait_id;
 #endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_mutex_acquired_data_t;
 
@@ -328,6 +367,9 @@ typedef struct Tau_plugin_event_ompt_mutex_released_data {
     ompt_wait_id_t wait_id;
 #endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_mutex_released_data_t;
 
