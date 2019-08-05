@@ -17,6 +17,7 @@
 #define _TAU_PLUGIN_INTERNALS_H_
 
 #include <Profile/TauPluginTypes.h>
+#include <stddef.h> /* size_t */
 
 #ifdef __cplusplus
 extern "C" {
