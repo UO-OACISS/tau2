@@ -1323,6 +1323,7 @@ extern "C" ompt_start_tool_result_t * ompt_start_tool(
   return &result;
 }
 #else /*  defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
+#include <Profile/TauPluginInternals.h>
 
 void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugins_enabled) {
   return;
