@@ -17,6 +17,20 @@
 #define _TAU_PLUGIN_TYPES_H_
 
 #include "TauMetaDataTypes.h"
+#include <stdbool.h>
+
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+#define TAU_PLUGIN_OMPT_ON
+#endif /*  defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
+
+#ifdef TAU_PLUGIN_OMPT_ON
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+#include <omp-tools.h>
+#endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
+#if defined (TAU_USE_OMPT_TR6)
+#include <ompt.h>
+#endif /* TAU_USE_OMPT_TR6 */
+#endif /* TAU_PLUGIN_OMPT_ON */
 
 #ifdef __cplusplus
 extern "C" {
@@ -125,6 +139,241 @@ typedef struct Tau_plugin_event_trigger_data {
    void *data;
 } Tau_plugin_event_trigger_data_t;
 
+typedef struct Tau_plugin_event_ompt_parallel_begin_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+  ompt_data_t *parent_task_data;
+#if defined (TAU_USE_OMPT_TR7)
+  const omp_frame_t *parent_task_frame;
+#endif /* defined (TAU_USE_OMPT_TR7) */
+  /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
+  const ompt_frame_t *parent_task_frame;
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
+  ompt_data_t* parallel_data;
+  uint32_t requested_team_size;
+#if defined (TAU_USE_OMPT_TR6)
+  ompt_invoker_t invoker;
+#endif /* TAU_USE_OMPT_TR6 */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+  int flags;
+#endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
+  const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+  /* This is here for the sole purpose of preventing warnings */
+  bool null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_parallel_begin_data_t;
+
+typedef struct Tau_plugin_event_ompt_parallel_end_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+  ompt_data_t *parallel_data;
+  ompt_data_t *task_data;
+#if defined (TAU_USE_OMPT_TR6)
+  ompt_invoker_t invoker;
+#endif /* TAU_USE_OMPT_TR6 */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+  int flags;
+#endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
+  const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+  /* This is here for the sole purpose of preventing warnings */
+  bool null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_parallel_end_data_t;
+
+typedef struct Tau_plugin_event_ompt_task_create_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+    ompt_data_t *parent_task_data;
+#if defined (TAU_USE_OMPT_TR7)
+    const omp_frame_t *parent_frame;
+#endif /* defined (TAU_USE_OMPT_TR7) */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
+    const ompt_frame_t *parent_frame;
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
+    ompt_data_t* new_task_data;
+    int type;
+    int has_dependences;
+    const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_task_create_data_t;
+
+typedef struct Tau_plugin_event_ompt_task_schedule_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+    ompt_data_t *prior_task_data;
+    ompt_task_status_t prior_task_status;
+    ompt_data_t *next_task_data;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_task_schedule_data_t;
+
+typedef struct Tau_plugin_event_ompt_implicit_task_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+    ompt_scope_endpoint_t endpoint;
+    ompt_data_t *parallel_data;
+    ompt_data_t *task_data;
+    unsigned int team_size;
+    unsigned int thread_num;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_implicit_task_data_t;
+
+typedef struct Tau_plugin_event_ompt_thread_begin_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+#if defined (TAU_USE_OMPT_TR6)
+  ompt_thread_type_t thread_type;
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+  ompt_thread_t thread_type;
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
+  ompt_data_t *thread_data;
+#else /* TAU_PLUGIN_OMPT_ON */
+  /* This is here for the sole purpose of preventing warnings */
+  bool null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_thread_begin_data_t;
+
+typedef struct Tau_plugin_event_ompt_thread_end_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+  ompt_data_t *thread_data;
+#else /* TAU_PLUGIN_OMPT_ON */
+  /* This is here for the sole purpose of preventing warnings */
+  bool null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_thread_end_data_t;
+
+typedef struct Tau_plugin_event_ompt_work_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+#if defined (TAU_USE_OMPT_TR6)
+  ompt_work_type_t wstype;
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+  ompt_work_t wstype;
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
+  ompt_scope_endpoint_t endpoint;
+  ompt_data_t *parallel_data;
+  ompt_data_t *task_data;
+  uint64_t count;
+  const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+  /* This is here for the sole purpose of preventing warnings */
+  bool null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_work_data_t;
+
+typedef struct Tau_plugin_event_ompt_master_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+  ompt_scope_endpoint_t endpoint;
+  ompt_data_t *parallel_data;
+  ompt_data_t *task_data;
+  const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+  /* This is here for the sole purpose of preventing warnings */
+  bool null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_master_data_t;
+
+typedef struct Tau_plugin_event_ompt_idle_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+    ompt_scope_endpoint_t endpoint;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_idle_data_t;
+
+typedef struct Tau_plugin_event_ompt_sync_region_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+#if defined (TAU_USE_OMPT_TR6)
+    ompt_sync_region_kind_t kind;
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    ompt_sync_region_t kind;
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
+    ompt_scope_endpoint_t endpoint;
+    ompt_data_t *parallel_data;
+    ompt_data_t *task_data;
+    const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_sync_region_data_t;
+
+typedef struct Tau_plugin_event_ompt_mutex_acquire_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+#if defined (TAU_USE_OMPT_TR6)
+    ompt_mutex_kind_t kind;
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    ompt_mutex_t kind;
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
+    unsigned int hint;
+    unsigned int impl;
+#if defined (TAU_USE_OMPT_TR7)
+    omp_wait_id_t wait_id;
+#endif /* defined (TAU_USE_OMPT_TR7) */
+    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
+    ompt_wait_id_t wait_id;
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
+    const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_mutex_acquire_data_t;
+
+typedef struct Tau_plugin_event_ompt_mutex_acquired_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+#if defined (TAU_USE_OMPT_TR6)
+    ompt_mutex_kind_t kind;
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    ompt_mutex_t kind;
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
+#if defined (TAU_USE_OMPT_TR7)
+    omp_wait_id_t wait_id;
+#endif /* defined (TAU_USE_OMPT_TR7) */
+    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
+    ompt_wait_id_t wait_id;
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
+    const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_mutex_acquired_data_t;
+
+typedef struct Tau_plugin_event_ompt_mutex_released_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+#if defined (TAU_USE_OMPT_TR6)
+    ompt_mutex_kind_t kind;
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    ompt_mutex_t kind;
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
+#if defined (TAU_USE_OMPT_TR7)
+    omp_wait_id_t wait_id;
+#endif /* defined (TAU_USE_OMPT_TR7) */
+    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
+    ompt_wait_id_t wait_id;
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
+    const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+    /* This is here for the sole purpose of preventing warnings */
+    bool null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_mutex_released_data_t;
+
 /*Define callbacks for specific events*/
 typedef int (*Tau_plugin_function_registration_complete)(Tau_plugin_event_function_registration_data_t*);
 typedef int (*Tau_plugin_metadata_registration_complete)(Tau_plugin_event_metadata_registration_data_t*);
@@ -145,6 +394,20 @@ typedef int (*Tau_plugin_end_of_execution)(Tau_plugin_event_end_of_execution_dat
 typedef int (*Tau_plugin_function_finalize)(Tau_plugin_event_function_finalize_data_t*);
 typedef int (*Tau_plugin_interrupt_trigger)(Tau_plugin_event_interrupt_trigger_data_t*);
 typedef int (*Tau_plugin_trigger)(Tau_plugin_event_trigger_data_t*);
+typedef int (*Tau_plugin_ompt_parallel_begin)(Tau_plugin_event_ompt_parallel_begin_data_t*);
+typedef int (*Tau_plugin_ompt_parallel_end)(Tau_plugin_event_ompt_parallel_end_data_t*);
+typedef int (*Tau_plugin_ompt_task_create)(Tau_plugin_event_ompt_task_create_data_t*);
+typedef int (*Tau_plugin_ompt_task_schedule)(Tau_plugin_event_ompt_task_schedule_data_t*);
+typedef int (*Tau_plugin_ompt_implicit_task)(Tau_plugin_event_ompt_implicit_task_data_t*);
+typedef int (*Tau_plugin_ompt_thread_begin)(Tau_plugin_event_ompt_thread_begin_data_t*);
+typedef int (*Tau_plugin_ompt_thread_end)(Tau_plugin_event_ompt_thread_end_data_t*);
+typedef int (*Tau_plugin_ompt_work)(Tau_plugin_event_ompt_work_data_t*);
+typedef int (*Tau_plugin_ompt_master)(Tau_plugin_event_ompt_master_data_t*);
+typedef int (*Tau_plugin_ompt_idle)(Tau_plugin_event_ompt_idle_data_t*);
+typedef int (*Tau_plugin_ompt_sync_region)(Tau_plugin_event_ompt_sync_region_data_t*);
+typedef int (*Tau_plugin_ompt_mutex_acquire)(Tau_plugin_event_ompt_mutex_acquire_data_t*);
+typedef int (*Tau_plugin_ompt_mutex_acquired)(Tau_plugin_event_ompt_mutex_acquired_data_t*);
+typedef int (*Tau_plugin_ompt_mutex_released)(Tau_plugin_event_ompt_mutex_released_data_t*);
 
 
 /*Define the callback structure*/
@@ -168,6 +431,20 @@ typedef struct Tau_plugin_callbacks {
    Tau_plugin_function_finalize FunctionFinalize;
    Tau_plugin_interrupt_trigger InterruptTrigger;
    Tau_plugin_trigger Trigger;
+   Tau_plugin_ompt_parallel_begin OmptParallelBegin;
+   Tau_plugin_ompt_parallel_end OmptParallelEnd;
+   Tau_plugin_ompt_task_create OmptTaskCreate;
+   Tau_plugin_ompt_task_schedule OmptTaskSchedule;
+   Tau_plugin_ompt_implicit_task OmptImplicitTask;
+   Tau_plugin_ompt_thread_begin OmptThreadBegin;
+   Tau_plugin_ompt_thread_end OmptThreadEnd;
+   Tau_plugin_ompt_work OmptWork;
+   Tau_plugin_ompt_master OmptMaster;
+   Tau_plugin_ompt_idle OmptIdle;
+   Tau_plugin_ompt_sync_region OmptSyncRegion;
+   Tau_plugin_ompt_mutex_acquire OmptMutexAcquire;
+   Tau_plugin_ompt_mutex_acquired OmptMutexAcquired;
+   Tau_plugin_ompt_mutex_released OmptMutexReleased;
 } Tau_plugin_callbacks_t;
 
 /*Define all the events currently supported*/
@@ -191,6 +468,20 @@ typedef enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_FUNCTION_FINALIZE,
    TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER,
    TAU_PLUGIN_EVENT_TRIGGER,
+   TAU_PLUGIN_EVENT_OMPT_PARALLEL_BEGIN,
+   TAU_PLUGIN_EVENT_OMPT_PARALLEL_END,
+   TAU_PLUGIN_EVENT_OMPT_TASK_CREATE,
+   TAU_PLUGIN_EVENT_OMPT_TASK_SCHEDULE,
+   TAU_PLUGIN_EVENT_OMPT_IMPLICIT_TASK,
+   TAU_PLUGIN_EVENT_OMPT_THREAD_BEGIN,
+   TAU_PLUGIN_EVENT_OMPT_THREAD_END,
+   TAU_PLUGIN_EVENT_OMPT_WORK,
+   TAU_PLUGIN_EVENT_OMPT_MASTER,
+   TAU_PLUGIN_EVENT_OMPT_IDLE,
+   TAU_PLUGIN_EVENT_OMPT_SYNC_REGION,
+   TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRE,
+   TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRED,
+   TAU_PLUGIN_EVENT_OMPT_MUTEX_RELEASED
 } Tau_plugin_event_t;
 
 /* Is the event registered with a callback? */
@@ -214,6 +505,20 @@ typedef struct Tau_plugin_callbacks_active {
     unsigned int function_finalize;
     unsigned int interrupt_trigger;
     unsigned int trigger;
+    unsigned int ompt_parallel_begin;
+    unsigned int ompt_parallel_end;
+    unsigned int ompt_task_create;
+    unsigned int ompt_task_schedule;
+    unsigned int ompt_implicit_task;
+    unsigned int ompt_thread_begin;
+    unsigned int ompt_thread_end;
+    unsigned int ompt_work;
+    unsigned int ompt_master;
+    unsigned int ompt_idle;
+    unsigned int ompt_sync_region;
+    unsigned int ompt_mutex_acquire;
+    unsigned int ompt_mutex_acquired;
+    unsigned int ompt_mutex_released;
 } Tau_plugin_callbacks_active_t;
 
 /*Deprecated*/

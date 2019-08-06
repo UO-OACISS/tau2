@@ -35,6 +35,7 @@
 #include <roctracer_hcc.h>
 #include <ext/hsa_rt_utils.hpp>
 #endif /* TAU_ENABLE_ROCTRACER_HSA */
+#include <sys/syscall.h> 
 
 #ifdef TAU_BFD
 #define HAVE_DECL_BASENAME 1
@@ -359,6 +360,9 @@ void Tau_roctracer_hsa_api_callback(
     Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(hsa_begin_timestamp)/1e3));
     Tau_create_top_level_timer_if_necessary_task(task_id);
     Tau_add_metadata_for_task("TAU_TASK_ID", task_id, task_id);
+    int tid = syscall(__NR_gettid);
+    Tau_add_metadata_for_task("TAU_ROCM_THREAD_ID", tid, task_id);
+    //printf("TAU_ROCM_THREAD_ID: %d on task id %d \n", tid, task_id);
   }
 
   if (data->phase == ACTIVITY_API_PHASE_ENTER) {
