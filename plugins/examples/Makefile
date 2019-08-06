@@ -19,7 +19,7 @@ LDFLAGS = $(TAU_MPI_LIB)
 
 OBJS = libTAU-atomic-trigger.so libTAU-memory-usage-async.so libTAU-emulate-profiles-analysis-async.so libTAU-load-balance-async.so ibTAU-analyze-node-profiles.so libTAU-analyze-node-profiles-async.so libTAU-filter-plugin.so libTAU-mpit-recommend-sharp-usage-plugin.so libTAU-mpit-mvapich-free_unused_vbufs.so libTAU-selective-tracing.so libTAU-snapshot-trigger.so libTAU-mpit-exchange-data.so libTAU-analyze-profiles.so libTAU-load-balance.so tau_plugin_example_disable_instrumentation_runtime.o tau_plugin_example_mpit_recommend_sharp_usage.o tau_plugin_example_free_unused_vbufs.o tau_plugin_sos.o tau_plugin_thread_summary.o tau_plugin_example_selective_tracing.o tau_plugin_example_profile_snapshot_trigger.o tau_plugin_example_mpit_exchange_pvar_data.o tau_plugin_example_analyze_profile_snapshots.o tau_plugin_example_load_balance_async.o tau_plugin_example_load_balance.o tau_plugin_example_analyze_node_profile_snapshots.o tau_plugin_example_analyze_node_profile_snapshots_async.o tau_plugin_example_emulate_profile_snapshots_analysis_async.o tau_plugin_example_memory_usage_async.o tau_plugin_example_atomic_trigger.o
 
-SHAREDLIBS = libTAU-memory-usage-async.so libTAU-emulate-profiles-analysis-async.so libTAU-load-balance-async.so libTAU-analyze-node-profiles.so libTAU-analyze-node-profiles-async.so libTAU-filter-plugin.so libTAU-mpit-recommend-sharp-usage-plugin.so libTAU-mpit-mvapich-free_unused_vbufs.so libTAU-sos-plugin.so libTAU-thread-summary-plugin.so libTAU-selective-tracing.so libTAU-snapshot-trigger.so libTAU-mpit-exchange-data.so libTAU-analyze-profiles.so libTAU-load-balance.so libTAU-memory-usage-async.so libTAU-adios2-plugin.so libTAU-adios2-trace-plugin.so libTAU-atomic-trigger.so libTAU-adios2-trace-plugin.so
+SHAREDLIBS = libTAU-memory-usage-async.so libTAU-emulate-profiles-analysis-async.so libTAU-load-balance-async.so libTAU-analyze-node-profiles.so libTAU-analyze-node-profiles-async.so libTAU-filter-plugin.so libTAU-mpit-recommend-sharp-usage-plugin.so libTAU-mpit-mvapich-free_unused_vbufs.so libTAU-sos-plugin.so libTAU-thread-summary-plugin.so libTAU-selective-tracing.so libTAU-snapshot-trigger.so libTAU-mpit-exchange-data.so libTAU-analyze-profiles.so libTAU-load-balance.so libTAU-memory-usage-async.so libTAU-adios2-plugin.so libTAU-adios2-trace-plugin.so libTAU-atomic-trigger.so libTAU-adios2-trace-plugin.so libTAU-null-plugin.so
 
 all: install
 	@echo
@@ -39,6 +39,10 @@ libTAU-adios2-plugin.so: tau_plugin_adios2.o
 
 libTAU-adios2-trace-plugin.so: tau_plugin_adios2_trace.o
 	$(CXX) $(TAU_STDCXX11_FLAG) tau_plugin_adios2_trace.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-adios2-trace-plugin.so
+
+libTAU-null-plugin.so: tau_plugin_example_null.o
+	$(CXX) $(TAU_STDCXX11_FLAG) tau_plugin_example_null.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-null-plugin.so
+
 libTAU-thread-summary-plugin.so: tau_plugin_thread_summary.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-thread-summary-plugin.so tau_plugin_thread_summary.o
 
@@ -122,6 +126,9 @@ tau_plugin_adios2.o: Tau_plugin_adios2.cpp
 
 tau_plugin_adios2_trace.o: Tau_plugin_adios2_trace.cpp
 	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) $(TAU_ADIOS2_INCLUDE_OPTS) -c Tau_plugin_adios2_trace.cpp -o tau_plugin_adios2_trace.o
+
+tau_plugin_example_null.o: Tau_plugin_example_null.cpp
+	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) $(TAU_ADIOS2_INCLUDE_OPTS) -c Tau_plugin_example_null.cpp -o tau_plugin_example_null.o
 
 tau_plugin_example_disable_instrumentation_runtime.o: Tau_plugin_example_disable_instrumentation_runtime.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_disable_instrumentation_runtime.cpp -o tau_plugin_example_disable_instrumentation_runtime.o

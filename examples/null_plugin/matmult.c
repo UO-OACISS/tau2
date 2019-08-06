@@ -230,7 +230,7 @@ int main (int argc, char *argv[])
 /* On thread 0: */
   int i;
   for (i = 0 ; i < ITERATIONS ; i++) {
-    if(rank == 0) { printf("Iteration %d\n", i); }
+    if(rank == 0 && i % 100 == 0) { printf("Iteration %d\n", i); }
     do_work();
     //Tau_dump();
   }
