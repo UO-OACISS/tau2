@@ -83,7 +83,17 @@ int LikwidLayer::initializeLikwidLayer() //Tau_initialize_likwid_library(void)
 		    }
 	    }
 	    //perfmon_setVerbosity(3);
-        setenv("LIKWID_FORCE", "1", 1); // Overwrite already running counters because currently there are no stopCounters() or finalize() calls
+            setenv("LIKWID_FORCE", "1", 1); // Overwrite already running counters because currently there are no stopCounters() or finalize() calls
+            {
+                char foo[100];
+                int ret = snprintf(foo, 99, "%lu", getpid());
+                if (ret > 0)
+                {
+                   foo[ret] = '\0';
+                   setenv("LIKWID_PERF_PID", foo, 1);
+                }
+            }
+
 	    LikwidLayer::err = perfmon_init(topo->activeHWThreads, LikwidLayer::cpus);
 	    num_cpus = topo->activeHWThreads; // Store the number of CPUs to use it later in LikwidLayer::getAllCounters
 	    LikwidLayer::likwidInitialized = true; // we initialized it, so set this to true
