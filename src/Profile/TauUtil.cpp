@@ -740,7 +740,9 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
   if (cb->OmptMutexReleased != 0) { Tau_plugins_enabled.ompt_mutex_released = 1; }
   
   /* Register needed OMPT callback if they are not already registered */
+#if defined(TAU_USE_OMPT) || defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
   Tau_ompt_register_plugin_callbacks(&Tau_plugins_enabled);
+#endif /* TAU_OMPT */
 }
 
 #ifndef TAU_USE_STDCXX11
