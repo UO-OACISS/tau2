@@ -37,5 +37,4 @@ if __name__ == '__main__':
    pool = Pool()
    for filename in files:
       process_file(filename)
-#   pool.map(process_file, files)
 

@@ -24,7 +24,7 @@ This is not a parallel implementation */
 #define ITERATIONS 1000
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 128
+#define MATRIX_SIZE 256
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
@@ -190,7 +190,7 @@ int main (int argc, char *argv[])
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif /* TAU_MPI */
 
-#ifdef TAU_MPI
+#ifdef TAU_MPI_disabled
     // create a communicator
     /* The code above only works with 4 or more processes!! */
     if (comm_size >=4 ) {
