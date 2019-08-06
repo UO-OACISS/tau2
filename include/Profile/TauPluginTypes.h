@@ -17,6 +17,7 @@
 #define _TAU_PLUGIN_TYPES_H_
 
 #include "TauMetaDataTypes.h"
+#include <stdbool.h>
 
 #if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
 #define TAU_PLUGIN_OMPT_ON
