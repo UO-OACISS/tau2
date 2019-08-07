@@ -404,7 +404,7 @@ void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev)
 }
 
 /* read all the counters. */
-void Tau_CuptiLayer_read_counters(int device, uint64_t * counterDataBuffer)
+void Tau_CuptiLayer_read_counters(int device, int task, uint64_t * counterDataBuffer)
 {
   //cuCtxGetDevice(&device);
 	//uint64_t * counterDataBuffer = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
@@ -588,7 +588,7 @@ uint64_t Tau_CuptiLayer_read_counter(int id)
 	uint64_t * counterDataBuffer = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
   CUdevice device;
   cuDeviceGet(&device, 0);
-  Tau_CuptiLayer_read_counters(device, counterDataBuffer);
+  Tau_CuptiLayer_read_counters(device, device, counterDataBuffer);
   uint64_t cb;
   if (counterDataBuffer != NULL) {
     cb = counterDataBuffer[internal_id_map[id]];

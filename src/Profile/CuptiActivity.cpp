@@ -2189,12 +2189,12 @@ void record_gpu_counters(int device_id, const char *name, uint32_t correlationId
   taskId = get_task_from_id(correlationId, taskId);
 #endif
   if (Tau_CuptiLayer_get_num_events() > 0 &&
-      !counters_bounded_warning_issued[device_id] && 
+      !counters_bounded_warning_issued[taskId] && 
       last_recorded_kernel_name != NULL && 
       strcmp(last_recorded_kernel_name, name) != 0) 
   {
     TAU_VERBOSE("TAU Warning: CUPTI events will be bounded, multiple different kernel deteched between synchronization points.\n");
-    counters_bounded_warning_issued[device_id] = true;
+    counters_bounded_warning_issued[taskId] = true;
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
       Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_BOUNDED); 
     }
@@ -2206,24 +2206,24 @@ void record_gpu_counters(int device_id, const char *name, uint32_t correlationId
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
 #ifdef TAU_DEBUG_CUPTI_COUNTERS
       std::cout << "at record: "<< name << " ====> " << std::endl;
-      std::cout << "\tstart: " << counters_at_last_launch[device_id][n] << std::endl;
-      std::cout << "\t stop: " << current_counters[device_id][n] << std::endl;
+      std::cout << "\tstart: " << counters_at_last_launch[taskId][n] << std::endl;
+      std::cout << "\t stop: " << current_counters[taskId][n] << std::endl;
 #endif
       TauContextUserEvent* c;
       const char *name = Tau_CuptiLayer_get_event_name(n);
-      if (n >= counterEvents[device_id].size()) {
+      if (n >= counterEvents[taskId].size()) {
         c = (TauContextUserEvent *) Tau_return_context_userevent(name);
-        counterEvents[device_id].push_back(c);
+        counterEvents[taskId].push_back(c);
       } else {
-        c = counterEvents[device_id][n];
+        c = counterEvents[taskId][n];
       }
       Tau_set_context_event_name(c, name);
-      if (counters_averaged_warning_issued[device_id] == true)
+      if (counters_averaged_warning_issued[taskId] == true)
       {
-        eventMap[taskId][c] = (current_counters[device_id][n] - counters_at_last_launch[device_id][n]);
+        eventMap[taskId][c] = (current_counters[taskId][n] - counters_at_last_launch[taskId][n]);
       }
       else {
-        eventMap[taskId][c] = (current_counters[device_id][n] - counters_at_last_launch[device_id][n]) * kernels_encountered[device_id];
+        eventMap[taskId][c] = (current_counters[taskId][n] - counters_at_last_launch[taskId][n]) * kernels_encountered[taskId];
       }
       
     }
@@ -2834,23 +2834,23 @@ FILE* createFileFuncSass(int task_id)
 { 
   kernels_encountered[task]++;
   if (Tau_CuptiLayer_get_num_events() > 0 &&
-      !counters_averaged_warning_issued[device] && 
+      !counters_averaged_warning_issued[task] && 
       kernels_encountered[task] > 1) {
     TAU_VERBOSE("TAU Warning: CUPTI events will be avereged, multiple kernel deteched between synchronization points.\n");
-    counters_averaged_warning_issued[device] = true;
+    counters_averaged_warning_issued[task] = true;
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
       Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_AVERAGED); 
     }
   }
   int n_counters = Tau_CuptiLayer_get_num_events();
-  if (n_counters > 0 && counters_at_last_launch[device][0] == ULONG_MAX) {
-    Tau_CuptiLayer_read_counters(device, counters_at_last_launch[device]);
+  if (n_counters > 0 && counters_at_last_launch[task][0] == ULONG_MAX) {
+    Tau_CuptiLayer_read_counters(device, task, counters_at_last_launch[task]);
   }
 #ifdef TAU_CUPTI_DEBUG_COUNTERS
   std::cout << "at launch (" << device << ") ====> " << std::endl;
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
-      std::cout << "\tlast launch:      " << counters_at_last_launch[device][n] << std::endl;
-      std::cout << "\tcurrent counters: " << current_counters[device][n] << std::endl;
+      std::cout << "\tlast launch:      " << counters_at_last_launch[task][n] << std::endl;
+      std::cout << "\tcurrent counters: " << current_counters[task][n] << std::endl;
     }
 #endif
 }
@@ -2860,12 +2860,12 @@ FILE* createFileFuncSass(int task_id)
   if (kernels_encountered[task] == 0) {
    return;
   }
-  Tau_CuptiLayer_read_counters(device, current_counters[device]);
+  Tau_CuptiLayer_read_counters(device, task, current_counters[task]);
 #ifdef TAU_CUPTI_DEBUG_COUNTERS
   std::cout << "at sync (" << device << ") ====> " << std::endl;
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
-      std::cout << "\tlast launch:      " << counters_at_last_launch[device][n] << std::endl;
-      std::cout << "\tcurrent counters: " << current_counters[device][n] << std::endl;
+      std::cout << "\tlast launch:      " << counters_at_last_launch[task][n] << std::endl;
+      std::cout << "\tcurrent counters: " << current_counters[task][n] << std::endl;
     }
 #endif
 }

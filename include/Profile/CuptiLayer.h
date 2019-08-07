@@ -222,7 +222,7 @@ extern "C" int Tau_CuptiLayer_get_cupti_event_id(int metric_n);
 
 extern "C" int Tau_CuptiLayer_get_metric_event_id(int metric_n);
 
-extern "C" void Tau_CuptiLayer_read_counters(int d, uint64_t *cb);
+extern "C" void Tau_CuptiLayer_read_counters(int d, int t, uint64_t *cb);
 
 extern "C" uint64_t Tau_CuptiLayer_read_counter(int metric_n);
 
