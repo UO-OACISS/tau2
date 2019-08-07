@@ -2191,9 +2191,13 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 
 #endif
 }
+#ifdef CUPTI
+int vtid_to_ttid[TAU_MAX_THREADS];
+int vtid_to_corrid[TAU_MAX_THREADS];
+std::map<uint32_t, uint32_t> map_cuptiThread;
+std::map<uint32_t, CudaThread> map_cudaThread;
+#endif
 
-// struct GpuThread gThreads[TAU_MAX_THREADS];
-//
 #ifdef TAU_ROCTRACER
 extern void Tau_roctracer_start_tracing(void); 
 extern void Tau_roctracer_stop_tracing(void); 
@@ -3274,46 +3278,62 @@ extern "C" void Tau_disable_tracking_mpi_t(void) {
   TauEnv_set_track_mpi_t_pvars(0); 
 }
 
-// extern "C" void register_gpu_thread(unsigned int sys_tid, int gpu_tid, unsigned int parent_tid, int nodeid) {
-//   TAU_VERBOSE("[TauCAPI]: Inside register_gpu_thread\n");
-//   // base case
-//   if (TauEnv_get_cudaTotalThreads() == 0) {
-//     GpuThread gt;
-//     gt.sys_tid = sys_tid;
-//     gt.gpu_tid = gpu_tid;
-//     gt.parent_tid = parent_tid;
-//     gt.node_id = nodeid;
-//     gThreads[TauEnv_get_cudaTotalThreads()] = gt;
-//     TauEnv_set_cudaTotalThreads(TauEnv_get_cudaTotalThreads() + 1);
-//     TAU_VERBOSE("[TauCAPI]: registered systid %u, gputid %i, parentid %u, total threads %i nodeid %i\n", 
-// 	   sys_tid, gpu_tid, parent_tid, TauEnv_get_cudaTotalThreads(), nodeid);
-//   }
-//   else {
-//     bool found = false;
-//     // loop through to see if entry exists
-//     for (int i=0; i<TauEnv_get_cudaTotalThreads(); i++) {
-//       GpuThread gt2 = gThreads[i];
-//       if (gt2.sys_tid == sys_tid) {
-// 	TAU_VERBOSE("[TauCAPI]: found duplicate entry, systid: %i\n", sys_tid);
-// 	found = true;
-//       }
-//     }
-//     if (!found) {
-//       GpuThread gt;
-//       gt.sys_tid = sys_tid;
-//       gt.gpu_tid = gpu_tid;
-//       gt.parent_tid = parent_tid;    
-//       gt.node_id = nodeid;
-//       gThreads[TauEnv_get_cudaTotalThreads()] = gt;
-//       TauEnv_set_cudaTotalThreads(TauEnv_get_cudaTotalThreads() + 1);
-//       TAU_VERBOSE("[TauCAPI]: registered systid %u, gputid %i, parentid %u, total threads %i, nodeid %i\n",
-// 	     sys_tid, gpu_tid, parent_tid, TauEnv_get_cudaTotalThreads(), nodeid);
-//     }
-//     else {
-//       TAU_VERBOSE("[TauCAPI]: systid %i already exists!\n", sys_tid);      
-//     }
-//   }
-// }
+extern "C" int register_cuda_thread(unsigned int sys_tid, unsigned int parent_tid, int tau_vtid, unsigned int corr_id, unsigned int context_id, const char* func_name, unsigned int device_id) {
+  CudaThread ct;
+  ct.sys_tid = sys_tid;
+  ct.parent_tid = parent_tid;
+  ct.tau_vtid = tau_vtid;
+  ct.correlation_id = corr_id;
+  ct.context_id = context_id;
+  ct.function_name = func_name;
+  ct.device_id = device_id;
+  map_cudaThread[corr_id] = ct;
+  return 1;
+}
+
+extern "C" cuda_thread_device_t* get_cuda_thread_device(int* size) {
+  *size = map_cuptiThread.size();
+  cuda_thread_device_t* ctd;
+  ctd = new cuda_thread_device_t[*size];
+  int i = 0;
+  
+  for(std::map<uint32_t, uint32_t>::iterator it = map_cuptiThread.begin(); it != map_cuptiThread.end(); it++) {
+    int vtid = it->first;
+    int corrid1 = get_corrid_from_vtid(vtid);
+    CudaThread ct = map_cudaThread[corrid1];
+    ctd[i].threadid = it->second;
+    ctd[i].deviceid = ct.device_id;
+    ctd[i].tau_vtid = vtid;
+    i++;
+  }
+  return ctd;
+}
+extern "C" void set_cupti_thread(int vtid, int threadid) {
+  map_cuptiThread[vtid] = threadid;
+}
+extern "C" int get_task_from_id(int id, int task) {
+   return (map_cudaThread.find(id) != map_cudaThread.end()) ? map_cuptiThread[map_cudaThread[id].tau_vtid] : task;
+}
+extern "C" int get_corrid_from_vtid(int vtid) {
+  int retval = 0;
+  for(std::map<uint32_t, CudaThread>::iterator it = map_cudaThread.begin(); it != map_cudaThread.end(); it++) {
+    int corrid = it->first;
+    CudaThread ct = it->second;
+    if (ct.tau_vtid == vtid) {
+      retval = ct.correlation_id;
+      break;
+    }
+  }
+  return retval;
+}
+
+extern "C" int get_vtid_from_corrid(int corrid) {
+  return map_cudaThread[corrid].tau_vtid;
+}
+
+extern "C" int lookup_thread_from_corrid(int corrid) {
+  return map_cudaThread.find(corrid) == map_cudaThread.end();
+}
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
