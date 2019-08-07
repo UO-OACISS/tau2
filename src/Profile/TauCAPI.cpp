@@ -3278,6 +3278,7 @@ extern "C" void Tau_disable_tracking_mpi_t(void) {
   TauEnv_set_track_mpi_t_pvars(0); 
 }
 
+#ifdef CUPTI
 extern "C" int register_cuda_thread(unsigned int sys_tid, unsigned int parent_tid, int tau_vtid, unsigned int corr_id, unsigned int context_id, const char* func_name, unsigned int device_id) {
   CudaThread ct;
   ct.sys_tid = sys_tid;
@@ -3334,6 +3335,7 @@ extern "C" int get_vtid_from_corrid(int corrid) {
 extern "C" int lookup_thread_from_corrid(int corrid) {
   return map_cudaThread.find(corrid) == map_cudaThread.end();
 }
+#endif
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
