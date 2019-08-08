@@ -48,18 +48,6 @@ printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n", __F
 extern "C" int Tau_init_initializeTAU();
 extern "C" void Tau_destructor_trigger();
 
-struct CudaThread
-{
- public:
-  unsigned int sys_tid;     // pthread
-  int parent_tid;
-  int tau_vtid;    // virtual tid, write profiles
-    // callback info
-  const char* function_name;
-  unsigned int context_id;
-  unsigned int correlation_id;
-};
-
 struct CuptiCounterEvent
 {
     static void printHeader();
@@ -234,7 +222,7 @@ extern "C" int Tau_CuptiLayer_get_cupti_event_id(int metric_n);
 
 extern "C" int Tau_CuptiLayer_get_metric_event_id(int metric_n);
 
-extern "C" void Tau_CuptiLayer_read_counters(int d, uint64_t *cb);
+extern "C" void Tau_CuptiLayer_read_counters(int d, int t, uint64_t *cb);
 
 extern "C" uint64_t Tau_CuptiLayer_read_counter(int metric_n);
 

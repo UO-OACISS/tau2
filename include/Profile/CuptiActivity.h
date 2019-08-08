@@ -211,8 +211,6 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
 						int number_of_attributes,
 						int taskId);
 
-extern "C" bool register_cuda_thread(unsigned int sys_tid, unsigned int parent_tid, int tau_vtid, unsigned int corr_id, unsigned int context_id, const char* func_name);
-
 /* extern "C" void Tau_cupti_register_func_event( */
 /*                                               const char *name, */
 /*                                               uint32_t deviceId, */
@@ -286,8 +284,6 @@ bool cupti_api_driver();
 
 typedef std::map<TauContextUserEvent *, TAU_EVENT_DATATYPE> eventMap_t;
 static std::set<uint32_t> set_gpuThread;
-static std::map<uint32_t, CudaThread> map_cudaThread;
-static std::map<uint32_t, uint32_t> map_cuptiThread;
 
 int gpu_occupancy_available(int deviceId);
 
@@ -359,9 +355,9 @@ typedef struct RuntimeApiTrace_st {
 typedef std::map<uint32_t, CUpti_ActivityDevice> device_map_t;
 //static std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 
-void record_gpu_counters_at_launch(int device);
-  
-void record_gpu_counters_at_sync(int device);
+void record_gpu_counters_at_launch(int device, int task);
+void record_gpu_counters_at_sync();  
+void record_gpu_counters_at_sync(int device, int task);
 
 void clear_counters(int device);
 

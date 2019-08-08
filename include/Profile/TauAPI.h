@@ -648,7 +648,16 @@ void Tau_track_class_deallocation(const char * name, size_t size);
 void Tau_start_class_allocation(const char * name, size_t size, int include_in_parent);
 void Tau_stop_class_allocation(const char * name, int record);
 
-  // void register_gpu_thread(unsigned int sys_tid, int gpu_tid, unsigned int parent_tid, int nodeid);
+#ifdef CUPTI
+  #include <Profile/CudaThread.h>
+  int register_cuda_thread(unsigned int sys_tid, unsigned int parent_tid, int tau_vtid, unsigned int corr_id, unsigned int context_id, const char* func_name, unsigned int device_id);
+  void set_cupti_thread(int vtid, int threadid);
+  int get_task_from_id(int id, int task);
+  int get_vtid_from_corrid(int corrid);
+  int get_corrid_from_vtid(int vtid);
+  int lookup_thread_from_corrid(int corrid);
+  cuda_thread_device_t* get_cuda_thread_device(int* size);
+#endif
 
 #ifdef __cplusplus
 /* Include the C++ API header */
