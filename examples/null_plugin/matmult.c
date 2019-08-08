@@ -21,7 +21,7 @@ int provided;
 This is not a parallel implementation */
 #endif /* TAU_MPI */
 
-#define ITERATIONS 1000
+#define ITERATIONS 100
 
 #ifndef MATRIX_SIZE
 #define MATRIX_SIZE 256
