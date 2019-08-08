@@ -2505,7 +2505,7 @@ MPI_Aint * address;
 #endif //OMPI_MAJOR_VERSION
 
 int  MPI_Bsend( buf, count, datatype, dest, tag, comm )
-TAU_MPICH3_CONST TAU_MPICH3_CONST void * buf;
+TAU_MPICH3_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -2536,7 +2536,7 @@ MPI_Comm comm;
 }
 
 int  MPI_Bsend_init( buf, count, datatype, dest, tag, comm, request )
-TAU_MPICH3_CONST TAU_MPICH3_CONST void * buf;
+TAU_MPICH3_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -4188,7 +4188,7 @@ int TauGetCpuSite(int *node, int *core, int *rank) {
   
   strcpy(host_names[*rank], host_name);
   for (n=0; n<nprocs; n++) {
-    PMPI_Bcast(&(host_names[n]),MPI_MAX_PROCESSOR_NAME, MPI_CHAR, n, MPI_COMM_WORLD); 
+    PMPI_Bcast(host_names[n],MPI_MAX_PROCESSOR_NAME, MPI_CHAR, n, MPI_COMM_WORLD); 
   }
   
   unsigned int color;
