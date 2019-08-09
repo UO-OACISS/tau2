@@ -257,9 +257,12 @@ extern "C" PUBLIC_API void OnLoadToolProp(rocprofiler_settings_t* settings)
   }
   TAU_VERBOSE("Successfully loaded libTAU-pthread.so\n");
 */
+/* No need to do this now that we use iterators */
+/*
   for (int i=0; i < TAU_MAX_ROCM_QUEUES; i++) {
     Tau_set_initialized_queues(i, -1); // set it explicitly
   }
+*/
 #if (!(defined (TAU_MPI) || (TAU_SHMEM)))
   TAU_PROFILE_SET_NODE(0);
 #endif /* TAU_MPI || TAU_SHMEM */
