@@ -12,7 +12,7 @@
 #######################################################################
  
 
-TAU_MAKEFILE ?=../../include/Makefile
+TAU_MAKEFILE ?=../../../include/Makefile
 
 include $(TAU_MAKEFILE)
 
@@ -27,9 +27,9 @@ PRINT	      	= pr
 
 RM 	      	= /bin/rm -rf
 
-TARGET	      	= matmult
+TARGET	      	= malloc_free
 
-OBJS     	= matmult.o matmult_initialize.o
+OBJS     	= malloc_free.o
 CFLAGS=-g -O3 $(TAU_OPENMP_OPTION)
 LDFLAGS=-g -O3 $(TAU_OPENMP_OPTION)
 
@@ -40,12 +40,9 @@ all:		$(TARGET)
 install: 	$(TARGET)
 
 $(TARGET):	$(OBJS) 
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS) -Wl,-rpath,/Users/khuck/src/tau2/apple/lib
+	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
-matmult.o: matmult.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-matmult_initialize.o: matmult_initialize.c matmult_initialize.h
+malloc_free.o: malloc_free.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean: 	

@@ -1,13 +1,14 @@
 #!/bin/bash -e
 
 export TAU_PROFILE_FORMAT=merged
-export TAU_SAMPLING=1
-export TAU_MEASURE_TAU=1
+#export TAU_SAMPLING=1
+#export TAU_MEASURE_TAU=1
+nprocs=4
 
 # launch the writer without plugin
 echo "Without plugin"
 T="$(date +%s)"
-mpirun -np 8 ./matmult
+mpirun -np ${nprocs} ./matmult
 A="$(($(date +%s)-T))"
 mv tauprofile.xml tauprofile-without-plugin.xml
 
@@ -17,7 +18,7 @@ source ./sourceme.sh
 # Launch the writer with null plugin
 echo "Null plugin"
 T="$(date +%s)"
-mpirun -np 8 ./matmult
+mpirun -np ${nprocs} ./matmult
 B="$(($(date +%s)-T))"
 mv tauprofile.xml tauprofile-with-plugin.xml
 
