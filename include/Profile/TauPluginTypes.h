@@ -17,7 +17,6 @@
 #define _TAU_PLUGIN_TYPES_H_
 
 #include "TauMetaDataTypes.h"
-#include <stdbool.h>
 
 #if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
 #define TAU_PLUGIN_OMPT_ON
@@ -141,236 +140,264 @@ typedef struct Tau_plugin_event_trigger_data {
 
 typedef struct Tau_plugin_event_ompt_parallel_begin_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-  ompt_data_t *parent_task_data;
+   ompt_data_t *parent_task_data;
 #if defined (TAU_USE_OMPT_TR7)
-  const omp_frame_t *parent_task_frame;
+   const omp_frame_t *parent_task_frame;
 #endif /* defined (TAU_USE_OMPT_TR7) */
-  /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+   /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
 #if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
-  const ompt_frame_t *parent_task_frame;
+   const ompt_frame_t *parent_task_frame;
 #endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
-  ompt_data_t* parallel_data;
-  uint32_t requested_team_size;
+   ompt_data_t* parallel_data;
+   uint32_t requested_team_size;
 #if defined (TAU_USE_OMPT_TR6)
-  ompt_invoker_t invoker;
+   ompt_invoker_t invoker;
 #endif /* TAU_USE_OMPT_TR6 */
 #if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
-  int flags;
+   int flags;
 #endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
-  const void *codeptr_ra;
+   const void *codeptr_ra;
 #else /* TAU_PLUGIN_OMPT_ON */
-  /* This is here for the sole purpose of preventing warnings */
-  bool null;
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_parallel_begin_data_t;
 
 typedef struct Tau_plugin_event_ompt_parallel_end_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-  ompt_data_t *parallel_data;
-  ompt_data_t *task_data;
+   ompt_data_t *parallel_data;
+   ompt_data_t *task_data;
 #if defined (TAU_USE_OMPT_TR6)
-  ompt_invoker_t invoker;
+   ompt_invoker_t invoker;
 #endif /* TAU_USE_OMPT_TR6 */
 #if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
-  int flags;
+   int flags;
 #endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
-  const void *codeptr_ra;
+   const void *codeptr_ra;
 #else /* TAU_PLUGIN_OMPT_ON */
-  /* This is here for the sole purpose of preventing warnings */
-  bool null;
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_parallel_end_data_t;
 
 typedef struct Tau_plugin_event_ompt_task_create_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-    ompt_data_t *parent_task_data;
+   ompt_data_t *parent_task_data;
 #if defined (TAU_USE_OMPT_TR7)
-    const omp_frame_t *parent_frame;
+   const omp_frame_t *parent_frame;
 #endif /* defined (TAU_USE_OMPT_TR7) */
 #if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
-    const ompt_frame_t *parent_frame;
+   const ompt_frame_t *parent_frame;
 #endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
-    ompt_data_t* new_task_data;
-    int type;
-    int has_dependences;
-    const void *codeptr_ra;
+   ompt_data_t* new_task_data;
+   int type;
+   int has_dependences;
+   const void *codeptr_ra;
 #else /* TAU_PLUGIN_OMPT_ON */
-    /* This is here for the sole purpose of preventing warnings */
-    bool null;
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_task_create_data_t;
 
 typedef struct Tau_plugin_event_ompt_task_schedule_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-    ompt_data_t *prior_task_data;
-    ompt_task_status_t prior_task_status;
-    ompt_data_t *next_task_data;
+   ompt_data_t *prior_task_data;
+   ompt_task_status_t prior_task_status;
+   ompt_data_t *next_task_data;
 #else /* TAU_PLUGIN_OMPT_ON */
-    /* This is here for the sole purpose of preventing warnings */
-    bool null;
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_task_schedule_data_t;
 
 typedef struct Tau_plugin_event_ompt_implicit_task_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-    ompt_scope_endpoint_t endpoint;
-    ompt_data_t *parallel_data;
-    ompt_data_t *task_data;
-    unsigned int team_size;
-    unsigned int thread_num;
+   ompt_scope_endpoint_t endpoint;
+   ompt_data_t *parallel_data;
+   ompt_data_t *task_data;
+   unsigned int team_size;
+   unsigned int thread_num;
 #else /* TAU_PLUGIN_OMPT_ON */
-    /* This is here for the sole purpose of preventing warnings */
-    bool null;
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_implicit_task_data_t;
 
 typedef struct Tau_plugin_event_ompt_thread_begin_data {
 #ifdef TAU_PLUGIN_OMPT_ON
 #if defined (TAU_USE_OMPT_TR6)
-  ompt_thread_type_t thread_type;
+   ompt_thread_type_t thread_type;
 #endif /* defined (TAU_USE_OMPT_TR6) */
 #if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
-  ompt_thread_t thread_type;
+   ompt_thread_t thread_type;
 #endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
-  ompt_data_t *thread_data;
+   ompt_data_t *thread_data;
 #else /* TAU_PLUGIN_OMPT_ON */
-  /* This is here for the sole purpose of preventing warnings */
-  bool null;
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_thread_begin_data_t;
 
 typedef struct Tau_plugin_event_ompt_thread_end_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-  ompt_data_t *thread_data;
+   ompt_data_t *thread_data;
 #else /* TAU_PLUGIN_OMPT_ON */
-  /* This is here for the sole purpose of preventing warnings */
-  bool null;
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_thread_end_data_t;
 
 typedef struct Tau_plugin_event_ompt_work_data {
 #ifdef TAU_PLUGIN_OMPT_ON
 #if defined (TAU_USE_OMPT_TR6)
-  ompt_work_type_t wstype;
+   ompt_work_type_t wstype;
 #endif /* defined (TAU_USE_OMPT_TR6) */
 #if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
-  ompt_work_t wstype;
+   ompt_work_t wstype;
 #endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
-  ompt_scope_endpoint_t endpoint;
-  ompt_data_t *parallel_data;
-  ompt_data_t *task_data;
-  uint64_t count;
-  const void *codeptr_ra;
+   ompt_scope_endpoint_t endpoint;
+   ompt_data_t *parallel_data;
+   ompt_data_t *task_data;
+   uint64_t count;
+   const void *codeptr_ra;
 #else /* TAU_PLUGIN_OMPT_ON */
-  /* This is here for the sole purpose of preventing warnings */
-  bool null;
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_work_data_t;
 
 typedef struct Tau_plugin_event_ompt_master_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-  ompt_scope_endpoint_t endpoint;
-  ompt_data_t *parallel_data;
-  ompt_data_t *task_data;
-  const void *codeptr_ra;
+   ompt_scope_endpoint_t endpoint;
+   ompt_data_t *parallel_data;
+   ompt_data_t *task_data;
+   const void *codeptr_ra;
 #else /* TAU_PLUGIN_OMPT_ON */
-  /* This is here for the sole purpose of preventing warnings */
-  bool null;
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_master_data_t;
 
 typedef struct Tau_plugin_event_ompt_idle_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-    ompt_scope_endpoint_t endpoint;
+   ompt_scope_endpoint_t endpoint;
 #else /* TAU_PLUGIN_OMPT_ON */
-    /* This is here for the sole purpose of preventing warnings */
-    bool null;
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_idle_data_t;
 
 typedef struct Tau_plugin_event_ompt_sync_region_data {
 #ifdef TAU_PLUGIN_OMPT_ON
 #if defined (TAU_USE_OMPT_TR6)
-    ompt_sync_region_kind_t kind;
+   ompt_sync_region_kind_t kind;
 #endif /* defined (TAU_USE_OMPT_TR6) */
 #if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
-    ompt_sync_region_t kind;
+   ompt_sync_region_t kind;
 #endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
-    ompt_scope_endpoint_t endpoint;
-    ompt_data_t *parallel_data;
-    ompt_data_t *task_data;
-    const void *codeptr_ra;
+   ompt_scope_endpoint_t endpoint;
+   ompt_data_t *parallel_data;
+   ompt_data_t *task_data;
+   const void *codeptr_ra;
 #else /* TAU_PLUGIN_OMPT_ON */
-    /* This is here for the sole purpose of preventing warnings */
-    bool null;
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_sync_region_data_t;
 
 typedef struct Tau_plugin_event_ompt_mutex_acquire_data {
 #ifdef TAU_PLUGIN_OMPT_ON
 #if defined (TAU_USE_OMPT_TR6)
-    ompt_mutex_kind_t kind;
+   ompt_mutex_kind_t kind;
 #endif /* defined (TAU_USE_OMPT_TR6) */
 #if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
-    ompt_mutex_t kind;
+   ompt_mutex_t kind;
 #endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
-    unsigned int hint;
-    unsigned int impl;
+   unsigned int hint;
+   unsigned int impl;
 #if defined (TAU_USE_OMPT_TR7)
-    omp_wait_id_t wait_id;
+   omp_wait_id_t wait_id;
 #endif /* defined (TAU_USE_OMPT_TR7) */
-    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+   /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
 #if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
-    ompt_wait_id_t wait_id;
+   ompt_wait_id_t wait_id;
 #endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
-    const void *codeptr_ra;
+   const void *codeptr_ra;
 #else /* TAU_PLUGIN_OMPT_ON */
-    /* This is here for the sole purpose of preventing warnings */
-    bool null;
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_mutex_acquire_data_t;
 
 typedef struct Tau_plugin_event_ompt_mutex_acquired_data {
 #ifdef TAU_PLUGIN_OMPT_ON
 #if defined (TAU_USE_OMPT_TR6)
-    ompt_mutex_kind_t kind;
+   ompt_mutex_kind_t kind;
 #endif /* defined (TAU_USE_OMPT_TR6) */
 #if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
-    ompt_mutex_t kind;
+   ompt_mutex_t kind;
 #endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
 #if defined (TAU_USE_OMPT_TR7)
-    omp_wait_id_t wait_id;
+   omp_wait_id_t wait_id;
 #endif /* defined (TAU_USE_OMPT_TR7) */
-    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+   /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
 #if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
-    ompt_wait_id_t wait_id;
+   ompt_wait_id_t wait_id;
 #endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
-    const void *codeptr_ra;
+   const void *codeptr_ra;
 #else /* TAU_PLUGIN_OMPT_ON */
-    /* This is here for the sole purpose of preventing warnings */
-    bool null;
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_mutex_acquired_data_t;
 
 typedef struct Tau_plugin_event_ompt_mutex_released_data {
 #ifdef TAU_PLUGIN_OMPT_ON
 #if defined (TAU_USE_OMPT_TR6)
-    ompt_mutex_kind_t kind;
+   ompt_mutex_kind_t kind;
 #endif /* defined (TAU_USE_OMPT_TR6) */
 #if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
-    ompt_mutex_t kind;
+   ompt_mutex_t kind;
 #endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
 #if defined (TAU_USE_OMPT_TR7)
-    omp_wait_id_t wait_id;
+   omp_wait_id_t wait_id;
 #endif /* defined (TAU_USE_OMPT_TR7) */
-    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+   /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
 #if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
-    ompt_wait_id_t wait_id;
+   ompt_wait_id_t wait_id;
 #endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
-    const void *codeptr_ra;
+   const void *codeptr_ra;
 #else /* TAU_PLUGIN_OMPT_ON */
-    /* This is here for the sole purpose of preventing warnings */
-    bool null;
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_mutex_released_data_t;
 
