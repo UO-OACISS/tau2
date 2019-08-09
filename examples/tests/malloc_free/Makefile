@@ -30,8 +30,8 @@ RM 	      	= /bin/rm -rf
 TARGET	      	= malloc_free
 
 OBJS     	= malloc_free.o
-CFLAGS=-g -O3 $(TAU_OPENMP_OPTION)
-LDFLAGS=-g -O3 $(TAU_OPENMP_OPTION)
+CFLAGS=-g -Og $(TAU_OPENMP_OPTION)
+LDFLAGS=-g -Og $(TAU_OPENMP_OPTION)
 
 ##############################################
 
@@ -47,4 +47,6 @@ malloc_free.o: malloc_free.c
 
 clean: 	
 	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog dump.* tauprofile*.bp.dir tau-metrics* tauprofile*.bp* tauprofile*.xml
+
+remake: clean all
 ##############################################

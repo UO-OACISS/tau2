@@ -16,7 +16,7 @@
 #include <mpi.h>
 #endif /* TAU_MPI */
 
-#define ITERATIONS 1000
+#define ITERATIONS 10000
 #ifndef MATRIX_SIZE
 #define MATRIX_SIZE 1024
 #endif
@@ -42,6 +42,15 @@ void freeMatrix(double** matrix, int rows, int cols) {
   free(matrix);
 }
 
+void Tau_track_memory_here(void);
+void Tau_track_power_here(void);
+void Tau_track_load_here(void);
+void Tau_track_memory_rss_and_hwm_here(void);
+void Tau_track_memory(void);
+void Tau_track_power(void);
+void Tau_track_load(void);
+void Tau_track_memory_rss_and_hwm(void);
+
 double do_work(void) {
   double **a,           /* matrix A to be multiplied */
          **b,           /* matrix B to be multiplied */
@@ -53,6 +62,16 @@ double do_work(void) {
   freeMatrix(a, NRA, NCA);
   freeMatrix(b, NCA, NCB);
   freeMatrix(c, NCA, NCB);
+
+  Tau_track_memory_here();
+  Tau_track_power_here();
+  Tau_track_load_here();
+  Tau_track_memory_rss_and_hwm_here();
+
+  Tau_track_memory();
+  Tau_track_power();
+  Tau_track_load();
+  Tau_track_memory_rss_and_hwm();
 
   return 1.0;
 }
@@ -72,7 +91,7 @@ int main (int argc, char *argv[])
 
   int i;
   for (i = 0 ; i < ITERATIONS ; i++) {
-    if(i % 100 == 0) { printf("Iteration %d\n", i); }
+    if(i % 1000 == 0) { printf("Iteration %d\n", i); }
     do_work();
   }
 

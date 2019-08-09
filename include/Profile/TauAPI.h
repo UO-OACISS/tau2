@@ -593,6 +593,7 @@ void Tau_get_context_userevent(void **ptr, const char *name);
 void Tau_trigger_context_event(const char *name, double data);
 void Tau_trigger_context_event_thread(const char *name, double data, int tid);
 void Tau_trigger_userevent(const char *name, double data);
+void Tau_trigger_userevent_thread(const char *name, double data, int tid);
 void Tau_userevent(void *event, double data);
 void Tau_userevent_thread(void *event, double data, int tid);
 void Tau_context_userevent(void *event, double data);

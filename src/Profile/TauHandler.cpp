@@ -247,7 +247,7 @@ void TauTriggerCrayPowerEvent(int fd, const char *event_name)  {
   }
 }
 
-void TauTriggerCrayPowerEvents(void) {
+void TauTriggerCrayPowerEvents() {
 /*
   static int power_fd=Tau_open_cray_file("/sys/cray/pm_counters/power");
   static int accel_power_fd=Tau_open_cray_file("/sys/cray/pm_counters/accel_power");
@@ -262,7 +262,7 @@ void TauTriggerCrayPowerEvents(void) {
 */
 }
 
-void TauTriggerPowerEvent(void) {
+void TauTriggerPowerEvent() {
   //printf("Inside TauTriggerPowerEvent\n");
 #ifdef TAU_CRAYCNL
   TauTriggerCrayPowerEvents();
@@ -276,47 +276,73 @@ void TauTriggerPowerEvent(void) {
 //////////////////////////////////////////////////////////////////////
 // TAU's trigger load
 //////////////////////////////////////////////////////////////////////
-void TauTriggerLoadEvent(void) {
+
+/* Assume the first call comes from initialization, not the handler.
+ * This function is used only once, to initialize the user event,
+ * so that we don't have to allocate memory during the signal
+ * handler. */
+void * TauTriggerLoadEvent_helper(void) {
+  if (TauEnv_get_tracing()) {
+    return Tau_get_userevent("System load (x100)");
+  } else {
+    return Tau_get_userevent("System load");
+  }
+}
+
+void TauTriggerLoadEvent(bool use_context) {
   double value;
+  /* maintain this from call-to-call so we don't have to
+   * allocate during a signal handler */
+  static void *ue = TauTriggerLoadEvent_helper();
   static int fd = Tau_open_system_file("/proc/loadavg");
   if (fd) {
     Tau_read_load_event(fd, &value);
-    
     //Do not bother with recording the load if TAU is uninitialized. 
     if (Tau_init_check_initialized() && TheSafeToDumpData()) {
       if (TauEnv_get_tracing()) {
-        Tau_trigger_context_event_thread("System load (x100)", value*100, 0);
-        TAU_VERBOSE("Triggered System load (x100) with %g value \n", value*100);
+          if(use_context) {
+            Tau_trigger_context_event_thread("System load (x100)", value*100, 0);
+          } else {
+            Tau_userevent_thread(ue, value*100, 0);
+          }
       }
       else  {
-        Tau_trigger_context_event_thread("System load", value, 0);
-        TAU_VERBOSE("Triggered System load with %g value \n", value);
+          if(use_context) {
+            Tau_trigger_context_event_thread("System load", value, 0);
+          } else {
+            Tau_userevent_thread(ue, value, 0);
+          }
       }
     }
   }
 }
 
-extern "C" int Tau_trigger_memory_rss_hwm(void);
+extern "C" int Tau_trigger_memory_rss_hwm(bool use_context);
 //////////////////////////////////////////////////////////////////////
 // TAU's alarm signal handler
 //////////////////////////////////////////////////////////////////////
 void TauAlarmHandler(int signum) {
+    printf("In %s\n", __func__);
+
+  // these are never safe!  It's not signal safe...
 
    /* Check and see if we're tracking memory events */
+/*
   if (TheIsTauTrackingMemory()) {
-    TauAllocation::TriggerHeapMemoryUsageEvent();
+      TauAllocation::TriggerHeapMemoryUsageEvent();
   }
 
   if (TheIsTauTrackingMemoryHeadroom()) {
     TauAllocation::TriggerMemoryHeadroomEvent();
   }
+*/
 
   if (TheIsTauTrackingPower()) {
     TauTriggerPowerEvent();
   }
 
   if (TheIsTauTrackingLoad()) {
-    TauTriggerLoadEvent();
+    TauTriggerLoadEvent(false);
   }
 
   if (TauEnv_get_track_mpi_t_pvars()) {
@@ -324,7 +350,7 @@ void TauAlarmHandler(int signum) {
   }
 
   if (TheIsTauTrackingMemoryRSSandHWM()) {
-    Tau_trigger_memory_rss_hwm();
+    Tau_trigger_memory_rss_hwm(false);
   }
 
   /* Set alarm for the next interrupt */
@@ -426,7 +452,7 @@ void TauTrackMemoryFootPrintHere(void) {
  
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingMemoryRSSandHWM()) {
-    Tau_trigger_memory_rss_hwm();
+    Tau_trigger_memory_rss_hwm(true);
   }
 }
 
@@ -487,7 +513,7 @@ void TauTrackLoadHere(void) {
  
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingLoad()) {
-    TauTriggerLoadEvent();
+    TauTriggerLoadEvent(true);
   }
 }
   
