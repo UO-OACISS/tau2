@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef TAU_USE_STDCXX11
+
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
 #include <Profile/TauMetrics.h>
@@ -181,4 +183,5 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   return 0;
 }
 
+#endif
 #endif

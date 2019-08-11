@@ -496,7 +496,7 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
 
         RtsLayer::LockDB();
         ContextEventMap::const_iterator it = contextMap.find(comparison);
-#ifdef TAU_GPU
+#if 0
 	bool cuda_ctx_seen = true;
 	if (it != contextMap.end()) {
 	  FunctionInfo* fi;

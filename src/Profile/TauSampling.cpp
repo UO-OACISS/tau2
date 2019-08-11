@@ -124,7 +124,7 @@ extern FunctionInfo * Tau_create_thread_state_if_necessary_string(const string &
 extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address);
 extern "C" int Tau_get_usesMPI();
 
-#if defined(TAU_OPENMP) && !defined (TAU_USE_OMPT_TR6) && (defined(TAU_USE_OMPT) || defined (TAU_IBM_OMPT))
+#if defined(TAU_OPENMP) && !defined (TAU_USE_OMPT_TR6) && !defined (TAU_USE_OMPT_TR7) && !defined (TAU_USE_OMPT_5_0) && (defined(TAU_USE_OMPT) || defined (TAU_IBM_OMPT))
 extern "C" int Tau_get_thread_omp_state(int tid);
 #endif
 
@@ -1389,7 +1389,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
     //printf("tid = %d, sampling previousTimestamp = %llu, period = %d\n", tid, tau_sampling_flags()->previousTimestamp[i], ebsPeriod); fflush(stdout);
   }
   //printf("tid = %d, Delta = %f, period = %d\n", tid, deltaValues[0], ebsPeriod); fflush(stdout);
-#if defined(TAU_OPENMP) && !defined(TAU_USE_OMPT_TR6)
+#if defined(TAU_OPENMP) && !defined(TAU_USE_OMPT_TR6) && !defined(TAU_USE_OMPT_TR7) && !defined(TAU_USE_OMPT_5_0)
   if (TauEnv_get_openmp_runtime_states_enabled() == 1) {
     // get the thread state, too!
 #if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)

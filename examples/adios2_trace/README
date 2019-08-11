@@ -1,0 +1,7 @@
+This example shows how to generate a CODAR/Chimbuko trace output to ADIOS2.
+
+Configure TAU with -adios=/path/to/adios2 -useropt=-g#-O2#-DTAU_DISABLE_SIGUSR
+
+To signal the plugin and tell it to dump a window from the trace, do:
+kill -s USR1 `ps | grep matmult | grep -v grep | awk '{print $1}'`
+

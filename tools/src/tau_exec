@@ -79,7 +79,8 @@ usage()
 if [ $python_wrapper = "true" ] ; then
   echo "        -tau-python-args=<\"arguments\"> Arguments to the python interpreter"
   echo "        -tau-python-interpreter=<\"python\"> name of python interpreter (e.g, python, python3.6)"
-  echo "        -adios2      Write output to ADIOS2 archive"
+  echo "        -adios2       Write output to ADIOS2 archive"
+  echo "        -adios2_trace Write trace output to ADIOS2 archive"
 fi
   echo ""
   echo "Notes:"
@@ -319,6 +320,7 @@ py_interp_args=""
 ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
 ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 adios2=false
+adios2_trace=false
 
 # This saves the args to tau_exec so they can be reused later.
 # This is used for MPI_Comm_spawn support, in which TAU spawns the child
@@ -390,6 +392,10 @@ for arg in "$@" ; do
         ;;
       -adios2)
         adios2=true
+        shift
+        ;;
+      -adios2_trace)
+        adios2_trace=true
         shift
         ;;
       -power)
@@ -731,7 +737,15 @@ if [ $adios2 = "true" ]; then
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
 fi
 
+if [ $adios2_trace = "true" ]; then
+    export TAU_PLUGINS=libTAU-adios2-trace-plugin.so
+    export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+fi
+
 export KOKKOS_PROFILE_LIBRARY=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+if [ $track_ompt = "true" ]; then
+  export OMP_TOOL_LIBRARIES=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+fi
 
 
 isTBB=`echo $theBinding | grep tbb`

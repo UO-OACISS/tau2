@@ -36,6 +36,10 @@
 #define strcasecmp stricmp
 #endif
 
+#ifdef TAU_LIKWID
+#include <likwid.h>
+#endif /* TAU_LIKWID */
+
 //using namespace std;
 using namespace tau;
 
@@ -521,9 +525,45 @@ static void initialize_functionArray() {
 
 	int likwid_available = 0;
 #ifdef TAU_LIKWID
-	int usingLIKWID = 0;
-	likwid_available = 1;
+    int usingLIKWID = 0;
+    likwid_available = 1;
+    int add = 0;
+    int temp[1] = {0};
+    TAU_VERBOSE("Before perfmon_init\n");
+    int ret = perfmon_init(1, (int*)temp);
+    TAU_VERBOSE("perfmon_init %d\n", ret);
+    for (int i = 0; i < nmetrics; i++) {
+        if (is_likwid_metric(metricv[i]) && (!strstr(metricv[i], ":"))) {
+            TAU_VERBOSE("Adding %s temporarily\n", &metricv[i][7]);
+            int gid = perfmon_addEventSet(&metricv[i][7]);
+            TAU_VERBOSE("GID %d numEvents %d\n", gid, perfmon_getNumberOfEvents(gid));
+            for (int j = 0; j < perfmon_getNumberOfEvents(gid); j++)
+            {
+                char foo[1024];
+                int ret = snprintf(foo, 1023, "LIKWID_%s:%s", perfmon_getEventName(gid, j), perfmon_getCounterName(gid, j));
+                if (ret > 0)
+                {
+                    foo[ret] = '\0';
+
+                    TAU_VERBOSE("Adding %s at %d\n", foo, nmetrics + add);
+                    metricv[nmetrics + add] = strdup(foo);
+                    add++;
+                }
+            }
+            free(metricv[i]);
+            metricv[i] = metricv[nmetrics];
+            for (int j = nmetrics; j < nmetrics+add-1; j++)
+            {
+                metricv[j] = metricv[j+1];
+            }
+            add--;
+        }
+    }
+    perfmon_finalize();
+    TAU_VERBOSE("Expand metrics list from %d to %d\n", nmetrics, nmetrics + add);
+    nmetrics += add;
 #endif
+
 
 	for (int i = 0; i < nmetrics; i++) {
 		found = 1;

@@ -573,7 +573,7 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
  * Every plugin MUST implement this function to register callbacks for various events 
  * that the plugin is interested in listening to*/
-extern "C" int Tau_plugin_init_func(int argc, char **argv) {
+extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
     fprintf(stdout, "TAU PLUGIN ADIOS2 Init\n"); fflush(stdout);
     Tau_ADIOS2_parse_environment_variables();
@@ -590,7 +590,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     cb->EndOfExecution = Tau_plugin_adios2_end_of_execution;
 
     /* Register the callback object */
-    TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
+    TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
     enabled = true;
     return 0;
 }

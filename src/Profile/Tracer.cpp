@@ -324,7 +324,7 @@ int TauTraceInit(int tid)
    encountered for a multi-threaded program */ 
 void TauTraceReinitialize(int oldid, int newid, int tid) {
 #ifndef TAU_SETNODE0
-  printf("Inside TauTraceReinitialize : oldid = %d, newid = %d, tid = %d\n",
+  TAU_VERBOSE("Inside TauTraceReinitialize : oldid = %d, newid = %d, tid = %d\n",
 	oldid, newid, tid);
 #endif
   /* We should put a record in the trace that says that oldid is mapped to newid this 

@@ -109,7 +109,7 @@ inline void Tau_plugin_trace_current_timer(const char * name) {
     if(TauEnv_get_plugins_enabled() && TAU_inside_ADIOS() == 0) {
         Tau_plugin_event_current_timer_exit_data_t plugin_data;
         plugin_data.name_prefix = name;
-        Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
+        Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, name, &plugin_data);
     }
 #endif
 }
@@ -2224,9 +2224,6 @@ char *** argv;
   if(Tau_get_usesMPI() == 0)
   {
 
-  /* Initialize the plugin system */
-  Tau_initialize_plugin_system();
-
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
@@ -2508,7 +2505,7 @@ MPI_Aint * address;
 #endif //OMPI_MAJOR_VERSION
 
 int  MPI_Bsend( buf, count, datatype, dest, tag, comm )
-TAU_MPICH3_CONST TAU_MPICH3_CONST void * buf;
+TAU_MPICH3_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -2539,7 +2536,7 @@ MPI_Comm comm;
 }
 
 int  MPI_Bsend_init( buf, count, datatype, dest, tag, comm, request )
-TAU_MPICH3_CONST TAU_MPICH3_CONST void * buf;
+TAU_MPICH3_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -4191,7 +4188,7 @@ int TauGetCpuSite(int *node, int *core, int *rank) {
   
   strcpy(host_names[*rank], host_name);
   for (n=0; n<nprocs; n++) {
-    PMPI_Bcast(&(host_names[n]),MPI_MAX_PROCESSOR_NAME, MPI_CHAR, n, MPI_COMM_WORLD); 
+    PMPI_Bcast(host_names[n],MPI_MAX_PROCESSOR_NAME, MPI_CHAR, n, MPI_COMM_WORLD); 
   }
   
   unsigned int color;

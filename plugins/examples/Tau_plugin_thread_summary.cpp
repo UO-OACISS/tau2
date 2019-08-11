@@ -11,6 +11,7 @@
 #include <Profile/TauMetrics.h>
 #include <Profile/TauAPI.h>
 #include <Profile/TauPlugin.h>
+#include <stdint.h>
 #include <string>
 #include <vector>
 #include <set>

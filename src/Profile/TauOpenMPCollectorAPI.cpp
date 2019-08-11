@@ -10,7 +10,7 @@
 //but we do not want issues with symbol re-definitions, etc during linking. So we keep
 //a dummy object file to save ourselves the headache.
 
-#if !defined(TAU_USE_OMPT_TR6)
+#if !defined (TAU_USE_OMPT_TR6) && !defined (TAU_USE_OMPT_TR7) && !defined (TAU_USE_OMPT_5_0)
  
 // set some macros, so we get implementation-dependent differences.
 // Right now, there are 3 different interpretations of the OMPT "standard"
@@ -1847,4 +1847,4 @@ extern __attribute__ ((weak))
 extern "C" __attribute__ ((weak))
 void * Tau_get_gomp_proxy_address(void);
 
-#endif /* !defined(TAU_USE_OMPT_TR6) */
+#endif /* !defined (TAU_USE_OMPT_TR6) && !defined (TAU_USE_OMPT_TR7) && !defined (TAU_USE_OMPT_5_0) */

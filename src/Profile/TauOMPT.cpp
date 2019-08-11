@@ -1,14 +1,21 @@
 #define _BSD_SOURCE
 
-#ifdef TAU_USE_OMPT_TR6
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
 
 #include <stdio.h>
 #include <sstream>
 #include <inttypes.h>
 #include <omp.h>
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+#include <omp-tools.h>
+#endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
+#if defined (TAU_USE_OMPT_TR6)
 #include <ompt.h>
+#endif /* TAU_USE_OMPT_TR6 */
+
 #include <Profile/TauBfd.h>
 #include <Profile/Profiler.h>
+#include <Profile/TauPluginInternals.h>
 #include <tau_internal.h>
 //#include "kmp.h"
 #include <execinfo.h>
@@ -69,6 +76,13 @@ static const char* ompt_cancel_flag_t_values[] = {
   "ompt_cancel_discarded_task"
 };
 
+/* This is used to be able to register a callback for a plugin and still
+ * prevent TAU from executing it's part of the callback.
+ * The size is updated manually for now as I believe there is no way to get the
+ * number of callbacks from an OMPT implementation.
+ * The current number of callbacks is around 32 depending on the OMPT version. */
+static bool Tau_ompt_callbacks_enabled[128] = {0};
+
 static void format_task_type(int type, char* buffer)
 {
   char* progress = buffer;
@@ -119,17 +133,29 @@ extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * re
 static void
 on_ompt_callback_parallel_begin(
   ompt_data_t *parent_task_data,
+#if defined (TAU_USE_OMPT_TR7)
+  const omp_frame_t *parent_task_frame,
+#endif /* defined (TAU_USE_OMPT_TR7) */
+  /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
   const ompt_frame_t *parent_task_frame,
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
   ompt_data_t* parallel_data,
   uint32_t requested_team_size,
+#if defined (TAU_USE_OMPT_TR6)
   ompt_invoker_t invoker,
+#endif /* TAU_USE_OMPT_TR6 */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+  int flags,
+#endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
   const void *codeptr_ra)
 {
-  char timerName[10240];
-  char resolved_address[1024];
-
   TauInternalFunctionGuard protects_this_function; 	
-  if(codeptr_ra) {
+  if(Tau_ompt_callbacks_enabled[ompt_callback_parallel_begin] && Tau_init_check_initialized()) {
+    char timerName[10240];
+    char resolved_address[1024];
+
+    if(codeptr_ra) {
       void * codeptr_ra_copy = (void*) codeptr_ra;
       unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
 
@@ -148,21 +174,81 @@ on_ompt_callback_parallel_begin(
       TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
       parallel_data->ptr = (void*)handle;
       TAU_PROFILER_START(handle); 
+    }
   }
+
+  if(Tau_plugins_enabled.ompt_parallel_begin) {
+    Tau_plugin_event_ompt_parallel_begin_data_t plugin_data;
+
+    plugin_data.parent_task_data = parent_task_data;
+    plugin_data.parent_task_frame = parent_task_frame;
+    plugin_data.parallel_data = parallel_data;
+    plugin_data.requested_team_size = requested_team_size;
+#if defined (TAU_USE_OMPT_TR6)
+    plugin_data.invoker = invoker;
+#endif /* TAU_USE_OMPT_TR6 */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    plugin_data.flags = flags;
+#endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
+    plugin_data.codeptr_ra = codeptr_ra;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_PARALLEL_BEGIN, "*", &plugin_data);
+  }
+}
+
+/* TODO: Remove this and Remove changes to TauEnv.cpp once Intel and LLVM runtime stop causing a deadlock on initialisazion */
+static void tau_fix_initialize()
+{
+    char tmpstr[512];
+    int value = omp_get_max_threads();
+    sprintf(tmpstr,"%d",value);
+    TAU_METADATA("OMP_MAX_THREADS", tmpstr);
+
+    value = omp_get_num_procs();
+    sprintf(tmpstr,"%d",value);
+    TAU_METADATA("OMP_NUM_PROCS", tmpstr);
 }
 
 static void
 on_ompt_callback_parallel_end(
   ompt_data_t *parallel_data,
   ompt_data_t *task_data,
+#if defined (TAU_USE_OMPT_TR6)
   ompt_invoker_t invoker,
+#endif /* TAU_USE_OMPT_TR6 */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+  int flags,
+#endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
   const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
+  if(Tau_ompt_callbacks_enabled[ompt_callback_parallel_end] && Tau_init_check_initialized()) {
+    static int once = 1;
 
-  if(codeptr_ra) {
-    //TAU_PROFILER_STOP(parallel_data->ptr);
-    Tau_global_stop();
+    if(once) {
+      tau_fix_initialize();
+      once = 0;
+    }
+
+    if(codeptr_ra) {
+      //TAU_PROFILER_STOP(parallel_data->ptr);
+      Tau_global_stop();
+    }
+  }
+
+  if(Tau_plugins_enabled.ompt_parallel_end) {
+    Tau_plugin_event_ompt_parallel_end_data_t plugin_data;
+
+    plugin_data.parallel_data = parallel_data;
+    plugin_data.task_data = task_data;
+#if defined (TAU_USE_OMPT_TR6)
+    plugin_data.invoker = invoker;
+#endif /* TAU_USE_OMPT_TR6 */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    plugin_data.flags = flags;
+#endif /* defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_PARALLEL_END, "*", &plugin_data);
   }
 }
 
@@ -171,24 +257,30 @@ on_ompt_callback_parallel_end(
 static void
 on_ompt_callback_task_create(
     ompt_data_t *parent_task_data,     /* id of parent task            */
+#if defined (TAU_USE_OMPT_TR7)
+    const omp_frame_t *parent_frame,   /* frame data for parent task   */
+#endif /* defined (TAU_USE_OMPT_TR7) */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
     const ompt_frame_t *parent_frame,  /* frame data for parent task   */
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     ompt_data_t* new_task_data,        /* id of created task           */
     int type,
     int has_dependences,
     const void *codeptr_ra)               /* pointer to outlined function */
 {
-  char contextEventName[2058];
-  char buffer[2048];
-  char timerName[10240];
-  char resolved_address[1024];
+  TauInternalFunctionGuard protects_this_function;
+  if(Tau_ompt_callbacks_enabled[ompt_callback_task_create] && Tau_init_check_initialized()) {
+    char contextEventName[2058];
+    char buffer[2048];
+    char timerName[10240];
+    char resolved_address[1024];
 
-  TauInternalFunctionGuard protects_this_function; 	
-  if(codeptr_ra) {
+    if(codeptr_ra) {
       void * codeptr_ra_copy = (void*) codeptr_ra;
       unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
       format_task_type(type, buffer);
 
-       /* TODO: Nick's advice: The ThreadTaskCreate/ThreadTaskSwitch/ThreadTaskComplete events are used in OTF2 to indicate creation of a task, 
+      /* TODO: Nick's advice: The ThreadTaskCreate/ThreadTaskSwitch/ThreadTaskComplete events are used in OTF2 to indicate creation of a task,
        * execution of a task, or completion of a task. The events are identified solely by a location and a uint64_t taskID. 
        * There’s no region associated with it, so there’s no way within that event type, as I can tell, to specify that the task 
        * corresponds to a particular region of code. 
@@ -197,9 +289,9 @@ on_ompt_callback_task_create(
        * I would recommend that you use Score-P to generate a trace using those event types and then look at the trace using otf2_print to figure out how it’s using the events.*/
 
       /* Srinivasan: IMPT - We do NOT start a timer for the task here. We merely create the task. The specification leaves the option
-	 of (not) starting a task as soon as it is created upto the implementation. 
-	 The LLVM runtime does not start it when it is created. 
-	 We assume this behavior in our implementation of the tool support.*/
+         of (not) starting a task as soon as it is created upto the implementation.
+         The LLVM runtime does not start it when it is created.
+         We assume this behavior in our implementation of the tool support.*/
 
       /*Create a timer for the task, and store handle in new_task_data*/
       if (TauEnv_get_ompt_resolve_address_eagerly()) {
@@ -212,6 +304,20 @@ on_ompt_callback_task_create(
       void *handle = NULL;
       TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
       new_task_data->ptr = (void*)handle;
+    }
+  }
+
+  if(Tau_plugins_enabled.ompt_task_create) {
+    Tau_plugin_event_ompt_task_create_data_t plugin_data;
+
+    plugin_data.parent_task_data = parent_task_data;
+    plugin_data.parent_frame = parent_frame;
+    plugin_data.new_task_data = new_task_data;
+    plugin_data.type = type;
+    plugin_data.has_dependences = has_dependences;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_TASK_CREATE, "*", &plugin_data);
   }
 }
 
@@ -224,13 +330,25 @@ on_ompt_callback_task_schedule(
     ompt_task_status_t prior_task_status,
     ompt_data_t *next_task_data)
 {
-  if(prior_task_data->ptr) {
-    //TAU_PROFILER_STOP(prior_task_data->ptr);
-    Tau_global_stop();
+  if(Tau_ompt_callbacks_enabled[ompt_callback_task_schedule] && Tau_init_check_initialized()) {
+    if(prior_task_data->ptr) {
+      //TAU_PROFILER_STOP(prior_task_data->ptr);
+      Tau_global_stop();
+    }
+
+    if(next_task_data->ptr) {
+      TAU_PROFILER_START(next_task_data->ptr);
+    }
   }
 
-  if(next_task_data->ptr) {
-    TAU_PROFILER_START(next_task_data->ptr);
+  if(Tau_plugins_enabled.ompt_task_schedule) {
+    Tau_plugin_event_ompt_task_schedule_data_t plugin_data;
+
+    plugin_data.prior_task_data = prior_task_data;
+    plugin_data.prior_task_status = prior_task_status;
+    plugin_data.next_task_data = next_task_data;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_TASK_SCHEDULE, "*", &plugin_data);
   }
 }
 
@@ -249,38 +367,51 @@ on_ompt_callback_master(
   const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
-  char timerName[10240];
-  char resolved_address[1024];
-  void * codeptr_ra_copy;
-  unsigned long addr;
-  void *handle = NULL;
+  if(Tau_ompt_callbacks_enabled[ompt_callback_master] && Tau_init_check_initialized()) {
+    char timerName[10240];
+    char resolved_address[1024];
+    void * codeptr_ra_copy;
+    unsigned long addr;
+    void *handle = NULL;
 
-  if(codeptr_ra) {
-    switch(endpoint)
-    {
-      case ompt_scope_begin:
-        codeptr_ra_copy = (void*) codeptr_ra;
-        addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
-        /*Resolve addresses at runtime in case the user really wants to pay the price of doing so.
-         *Enabling eager resolving of addresses is only useful in situations where 
-         *OpenMP routines are instrumented in shared libraries that get unloaded
-         *before TAU has a chance to resolve addresses*/
-        if (TauEnv_get_ompt_resolve_address_eagerly()) {
-          Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
-          sprintf(timerName, "OpenMP_Master %s", resolved_address);
-        } else {
-          sprintf(timerName, "OpenMP_Master ADDR <%lx>", addr);
-        }
+    if(codeptr_ra) {
+      switch(endpoint)
+      {
+        case ompt_scope_begin:
+          codeptr_ra_copy = (void*) codeptr_ra;
+          addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
+          /*Resolve addresses at runtime in case the user really wants to pay the price of doing so.
+           *Enabling eager resolving of addresses is only useful in situations where
+           *OpenMP routines are instrumented in shared libraries that get unloaded
+           *before TAU has a chance to resolve addresses*/
+          if (TauEnv_get_ompt_resolve_address_eagerly()) {
+            Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
+            sprintf(timerName, "OpenMP_Master %s", resolved_address);
+          } else {
+            sprintf(timerName, "OpenMP_Master ADDR <%lx>", addr);
+          }
 
-        TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
-        task_data->ptr = (void*)handle;
-        TAU_PROFILER_START(handle); 
-        break;
-      case ompt_scope_end:
-        //TAU_PROFILER_STOP(task_data->ptr);
-        Tau_global_stop();
-        break;
+          TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
+          task_data->ptr = (void*)handle;
+          TAU_PROFILER_START(handle);
+          break;
+        case ompt_scope_end:
+          //TAU_PROFILER_STOP(task_data->ptr);
+          Tau_global_stop();
+          break;
+      }
     }
+  }
+
+  if(Tau_plugins_enabled.ompt_master) {
+    Tau_plugin_event_ompt_master_data_t plugin_data;
+
+    plugin_data.endpoint = endpoint;
+    plugin_data.parallel_data = parallel_data;
+    plugin_data.task_data =  task_data;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_MASTER, "*", &plugin_data);
   }
 }
 
@@ -297,7 +428,12 @@ on_ompt_callback_master(
  *  Tested with Intel/17 compilers. Works OK.*/
 static void
 on_ompt_callback_work(
+#if defined (TAU_USE_OMPT_TR6)
   ompt_work_type_t wstype,
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+  ompt_work_t wstype,
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
   ompt_scope_endpoint_t endpoint,
   ompt_data_t *parallel_data,
   ompt_data_t *task_data,
@@ -305,77 +441,92 @@ on_ompt_callback_work(
   const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
-  void *handle = NULL;
-  char timerName[10240];
-  char resolved_address[1024];
-  if(codeptr_ra) {
-    
-   void * codeptr_ra_copy = (void*) codeptr_ra;
-   unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
-   if(TauEnv_get_ompt_resolve_address_eagerly()) {
-     Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
-     switch(wstype)
-     {
-       case ompt_work_loop:
-         sprintf(timerName, "OpenMP_Work_Loop %s", resolved_address);
-         break;
-       case ompt_work_sections:
-         sprintf(timerName, "OpenMP_Work_Sections %s", resolved_address);
-         break;
-       case ompt_work_single_executor:
-         sprintf(timerName, "OpenMP_Work_Single_Executor %s", resolved_address);
-         break; /* WARNING: The ompt_scope_begin for this work type is triggered, but the corresponding ompt_scope_end is not triggered when using GNU to compile the tool code*/ 
-       case ompt_work_single_other:
-         sprintf(timerName, "OpenMP_Work_Single_Other %s", resolved_address);
-         break;
-       case ompt_work_workshare:
-         sprintf(timerName, "OpenMP_Work_Workshare %s", resolved_address);
-         break;
-       case ompt_work_distribute:
-         sprintf(timerName, "OpenMP_Work_Distribute %s", resolved_address);
-         break;
-       case ompt_work_taskloop:
-         sprintf(timerName, "OpenMP_Work_Taskloop %s", resolved_address);
-         break;
-     }
-   } else {
-       switch(wstype)
-       {
-         case ompt_work_loop:
-           sprintf(timerName, "OpenMP_Work_Loop ADDR <%lx>", addr);
-           break;
-         case ompt_work_sections:
-           sprintf(timerName, "OpenMP_Work_Sections ADDR <%lx>", addr);
-           break;
-         case ompt_work_single_executor:
-           sprintf(timerName, "OpenMP_Work_Single_Executor ADDR <%lx>", addr);
-           break; /* The ompt_scope_begin for this work type is triggered, but the corresponding ompt_scope_end is not triggered when using GNU to compile the tool code*/ 
-         case ompt_work_single_other:
+  if(Tau_ompt_callbacks_enabled[ompt_callback_work] && Tau_init_check_initialized()) {
+    void *handle = NULL;
+    char timerName[10240];
+    char resolved_address[1024];
+    if(codeptr_ra) {
+
+      void * codeptr_ra_copy = (void*) codeptr_ra;
+      unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
+      if(TauEnv_get_ompt_resolve_address_eagerly()) {
+        Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
+        switch(wstype)
+        {
+          case ompt_work_loop:
+            sprintf(timerName, "OpenMP_Work_Loop %s", resolved_address);
+            break;
+          case ompt_work_sections:
+            sprintf(timerName, "OpenMP_Work_Sections %s", resolved_address);
+            break;
+          case ompt_work_single_executor:
+            sprintf(timerName, "OpenMP_Work_Single_Executor %s", resolved_address);
+            break; /* WARNING: The ompt_scope_begin for this work type is triggered, but the corresponding ompt_scope_end is not triggered when using GNU to compile the tool code*/
+          case ompt_work_single_other:
+            sprintf(timerName, "OpenMP_Work_Single_Other %s", resolved_address);
+            break;
+          case ompt_work_workshare:
+            sprintf(timerName, "OpenMP_Work_Workshare %s", resolved_address);
+            break;
+          case ompt_work_distribute:
+            sprintf(timerName, "OpenMP_Work_Distribute %s", resolved_address);
+            break;
+          case ompt_work_taskloop:
+            sprintf(timerName, "OpenMP_Work_Taskloop %s", resolved_address);
+            break;
+        }
+      } else {
+        switch(wstype)
+        {
+          case ompt_work_loop:
+            sprintf(timerName, "OpenMP_Work_Loop ADDR <%lx>", addr);
+            break;
+          case ompt_work_sections:
+            sprintf(timerName, "OpenMP_Work_Sections ADDR <%lx>", addr);
+            break;
+          case ompt_work_single_executor:
+            sprintf(timerName, "OpenMP_Work_Single_Executor ADDR <%lx>", addr);
+            break; /* The ompt_scope_begin for this work type is triggered, but the corresponding ompt_scope_end is not triggered when using GNU to compile the tool code*/
+          case ompt_work_single_other:
             sprintf(timerName, "OpenMP_Work_Single_Other ADDR <%lx>", addr);
-         break;
-         case ompt_work_workshare:
+            break;
+          case ompt_work_workshare:
             sprintf(timerName, "OpenMP_Work_Workshare ADDR <%lx>", addr);
             break;
-         case ompt_work_distribute:
+          case ompt_work_distribute:
             sprintf(timerName, "OpenMP_Work_Distribute ADDR <%lx>", addr);
             break;
-         case ompt_work_taskloop:
+          case ompt_work_taskloop:
             sprintf(timerName, "OpenMP_Work_Taskloop ADDR <%lx>", addr);
             break;
-       }
-   }
-    switch(endpoint)
-    {
-      case ompt_scope_begin:
-        TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
-        TAU_PROFILER_START(handle);
-        break;
-      case ompt_scope_end: 
-        Tau_global_stop();
-        //TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
-	//TAU_PROFILER_STOP(handle);
-	break;
+        }
+      }
+      switch(endpoint)
+      {
+        case ompt_scope_begin:
+          TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
+          TAU_PROFILER_START(handle);
+          break;
+        case ompt_scope_end:
+          Tau_global_stop();
+          //TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
+          //TAU_PROFILER_STOP(handle);
+          break;
+      }
     }
+  }
+
+  if(Tau_plugins_enabled.ompt_work) {
+    Tau_plugin_event_ompt_work_data_t plugin_data;
+
+    plugin_data.wstype = wstype;
+    plugin_data.endpoint = endpoint;
+    plugin_data.parallel_data = parallel_data;
+    plugin_data.task_data =  task_data;
+    plugin_data.count = count;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_WORK, "*", &plugin_data);
   }
 }
 
@@ -384,39 +535,66 @@ on_ompt_callback_work(
  * runtime overheads. Use with care. */
 static void
 on_ompt_callback_thread_begin(
+#if defined (TAU_USE_OMPT_TR6)
   ompt_thread_type_t thread_type,
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+  ompt_thread_t thread_type,
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
   ompt_data_t *thread_data)
 {
   TauInternalFunctionGuard protects_this_function;
+  if(Tau_ompt_callbacks_enabled[ompt_callback_thread_begin] && Tau_init_check_initialized()) {
 #if defined (TAU_USE_TLS)
-  if (is_master) return; // master thread can't be a new worker.
+    if (is_master) return; // master thread can't be a new worker.
 #elif defined (TAU_USE_DTLS)
-  if (is_master) return; // master thread can't be a new worker.
+    if (is_master) return; // master thread can't be a new worker.
 #elif defined (TAU_USE_PGS)
-  if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
+    if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
 #endif
-  void *handle = NULL;
-  char timerName[100];
-  sprintf(timerName, "OpenMP_Thread_Type_%s", ompt_thread_type_t_values[thread_type]);
-  TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
-  thread_data->ptr = (void*)handle;
-  TAU_PROFILER_START(handle); 
+    RtsLayer::RegisterThread();
+    void *handle = NULL;
+    char timerName[100];
+    sprintf(timerName, "OpenMP_Thread_Type_%s", ompt_thread_type_t_values[thread_type]);
+    TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
+    thread_data->ptr = (void*)handle;
+    TAU_PROFILER_START(handle);
+  }
+
+  if(Tau_plugins_enabled.ompt_thread_begin) {
+    Tau_plugin_event_ompt_thread_begin_data_t plugin_data;
+
+    plugin_data.thread_type = thread_type;
+    plugin_data.thread_data = thread_data;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_THREAD_BEGIN, "*", &plugin_data);
+  }
 }
 
 static void
 on_ompt_callback_thread_end(
   ompt_data_t *thread_data)
 {
-#if defined (TAU_USE_TLS)
-  if (is_master) return; // master thread can't be a new worker.
-#elif defined (TAU_USE_DTLS)
-  if (is_master) return; // master thread can't be a new worker.
-#elif defined (TAU_USE_PGS)
-  if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
-#endif
   TauInternalFunctionGuard protects_this_function;
-  //TAU_PROFILER_STOP(thread_data->ptr);
-  Tau_global_stop();
+  if(Tau_ompt_callbacks_enabled[ompt_callback_thread_end] && Tau_init_check_initialized()) {
+#if defined (TAU_USE_TLS)
+    if (is_master) return; // master thread can't be a new worker.
+#elif defined (TAU_USE_DTLS)
+    if (is_master) return; // master thread can't be a new worker.
+#elif defined (TAU_USE_PGS)
+    if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
+#endif
+    //TAU_PROFILER_STOP(thread_data->ptr);
+    Tau_global_stop();
+  }
+
+  if(Tau_plugins_enabled.ompt_thread_end) {
+    Tau_plugin_event_ompt_thread_end_data_t plugin_data;
+
+    plugin_data.thread_data = thread_data;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_THREAD_END, "*", &plugin_data);
+  }
 }
 
 /*Implicit task creation. This is a required event, but we do NOT need context.
@@ -433,24 +611,38 @@ on_ompt_callback_implicit_task(
     unsigned int thread_num)
 {
   TauInternalFunctionGuard protects_this_function;
-  char timerName[100];
-  sprintf(timerName, "OpenMP_Implicit_Task");
-  void *handle = NULL;
+  if(Tau_ompt_callbacks_enabled[ompt_callback_implicit_task] && Tau_init_check_initialized()) {
+    char timerName[100];
+    sprintf(timerName, "OpenMP_Implicit_Task");
+    void *handle = NULL;
 
 
-  switch(endpoint)
-  {
-    case ompt_scope_begin:
-      TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
-      TAU_PROFILER_START(handle); 
-      task_data->ptr = (void*)handle;
-      break;
-    case ompt_scope_end:
-      if(task_data->ptr != NULL) {
+    switch(endpoint)
+    {
+      case ompt_scope_begin:
+        TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
+        TAU_PROFILER_START(handle);
+        task_data->ptr = (void*)handle;
+        break;
+      case ompt_scope_end:
+        if(task_data->ptr != NULL) {
           //TAU_PROFILER_STOP(task_data->ptr);
           Tau_global_stop();
-      }
-      break;
+        }
+        break;
+    }
+  }
+
+  if(Tau_plugins_enabled.ompt_implicit_task) {
+    Tau_plugin_event_ompt_implicit_task_data_t plugin_data;
+
+    plugin_data.endpoint = endpoint;
+    plugin_data.parallel_data = parallel_data;
+    plugin_data.task_data = task_data;
+    plugin_data.team_size = team_size;
+    plugin_data.thread_num = thread_num;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_IMPLICIT_TASK, "*", &plugin_data);
   }
 }
 
@@ -462,87 +654,143 @@ on_ompt_callback_implicit_task(
 
 static void
 on_ompt_callback_sync_region(
+#if defined (TAU_USE_OMPT_TR6)
     ompt_sync_region_kind_t kind,
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    ompt_sync_region_t kind,
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
     ompt_scope_endpoint_t endpoint,
     ompt_data_t *parallel_data,
     ompt_data_t *task_data,
     const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
-  void *handle = NULL;
-  char timerName[10240];
-  char resolved_address[1024];
+  if(Tau_ompt_callbacks_enabled[ompt_callback_sync_region] && Tau_init_check_initialized()) {
+    void *handle = NULL;
+    char timerName[10240];
+    char resolved_address[1024];
 
-  if(codeptr_ra) {
-    void * codeptr_ra_copy = (void*) codeptr_ra;
-    unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
+    if(codeptr_ra) {
+      void * codeptr_ra_copy = (void*) codeptr_ra;
+      unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
 
-    if(TauEnv_get_ompt_resolve_address_eagerly()) {
-      Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
-      switch(kind)
-      {
-        case ompt_sync_region_barrier:
-          sprintf(timerName, "OpenMP_Sync_Region_Barrier %s", resolved_address);
-          break;
-        case ompt_sync_region_taskwait:
-          sprintf(timerName, "OpenMP_Sync_Region_Taskwait %s", resolved_address);
-          break;
-        case ompt_sync_region_taskgroup:
-          sprintf(timerName, "OpenMP_Sync_Region_Taskgroup %s", resolved_address);
-          break;
+      if(TauEnv_get_ompt_resolve_address_eagerly()) {
+        Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
+        switch(kind)
+        {
+          case ompt_sync_region_barrier:
+            sprintf(timerName, "OpenMP_Sync_Region_Barrier %s", resolved_address);
+            break;
+          case ompt_sync_region_taskwait:
+            sprintf(timerName, "OpenMP_Sync_Region_Taskwait %s", resolved_address);
+            break;
+          case ompt_sync_region_taskgroup:
+            sprintf(timerName, "OpenMP_Sync_Region_Taskgroup %s", resolved_address);
+            break;
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+          case ompt_sync_region_barrier_implicit:
+            sprintf(timerName, "OpenMP_Sync_Region_Barrier_Implicit %s", resolved_address);
+            break;
+          case ompt_sync_region_barrier_explicit:
+            sprintf(timerName, "OpenMP_Sync_Region_Barrier_Explicit %s", resolved_address);
+            break;
+          case ompt_sync_region_barrier_implementation:
+            sprintf(timerName, "OpenMP_Sync_Region_Barrier_Implementation %s", resolved_address);
+            break;
+          case ompt_sync_region_reduction:
+            sprintf(timerName, "OpenMP_Sync_Region_Reduction %s", resolved_address);
+            break;
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
+        }
+      } else {
+        switch(kind)
+        {
+          case ompt_sync_region_barrier:
+            sprintf(timerName, "OpenMP_Sync_Region_Barrier ADDR <%lx>", addr);
+            break;
+          case ompt_sync_region_taskwait:
+            sprintf(timerName, "OpenMP_Sync_Region_Taskwait ADDR <%lx>", addr);
+            break;
+          case ompt_sync_region_taskgroup:
+            sprintf(timerName, "OpenMP_Sync_Region_Taskgroup ADDR <%lx>", addr);
+            break;
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+          case ompt_sync_region_barrier_implicit:
+            sprintf(timerName, "OpenMP_Sync_Region_Barrier_Implicit ADDR <%lx>", addr);
+            break;
+          case ompt_sync_region_barrier_explicit:
+            sprintf(timerName, "OpenMP_Sync_Region_Barrier_Explicit ADDR <%lx>", addr);
+            break;
+          case ompt_sync_region_barrier_implementation:
+            sprintf(timerName, "OpenMP_Sync_Region_Barrier_Implementation ADDR <%lx>", addr);
+            break;
+          case ompt_sync_region_reduction:
+            sprintf(timerName, "OpenMP_Sync_Region_Reduction ADDR <%lx>", addr);
+            break;
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
+        }
       }
-    } else {
-      switch(kind)
+      switch(endpoint)
       {
-        case ompt_sync_region_barrier:
-          sprintf(timerName, "OpenMP_Sync_Region_Barrier ADDR <%lx>", addr);
+        case ompt_scope_begin:
+          TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
+          TAU_PROFILER_START(handle);
           break;
-        case ompt_sync_region_taskwait:
-          sprintf(timerName, "OpenMP_Sync_Region_Taskwait ADDR <%lx>", addr);
-          break;
-        case ompt_sync_region_taskgroup:
-          sprintf(timerName, "OpenMP_Sync_Region_Taskgroup ADDR <%lx>", addr);
+        case ompt_scope_end:
+          //TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
+          //TAU_PROFILER_STOP(task_data->ptr);
+          Tau_global_stop();
           break;
       }
     }
-    switch(endpoint)
-    {
-      case ompt_scope_begin:
-        TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
-        TAU_PROFILER_START(handle);
-        break;
-      case ompt_scope_end:
-        //TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
-        //TAU_PROFILER_STOP(task_data->ptr);
-        Tau_global_stop();
-        break;
-    }
+  }
 
+  if(Tau_plugins_enabled.ompt_sync_region) {
+    Tau_plugin_event_ompt_sync_region_data_t plugin_data;
+
+    plugin_data.kind = kind;
+    plugin_data.endpoint = endpoint;
+    plugin_data.parallel_data = parallel_data;
+    plugin_data.task_data = task_data;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_SYNC_REGION, "*", &plugin_data);
   }
 }
 
 /* Idle event - optional event that has low overhead and does not need context) */
+#if defined (TAU_USE_OMPT_TR6)
 static void
 on_ompt_callback_idle(
     ompt_scope_endpoint_t endpoint)
 {
   TauInternalFunctionGuard protects_this_function;
-  const char *timerName= "OpenMP_Idle";
+  if(Tau_ompt_callbacks_enabled[ompt_callback_idle] && Tau_init_check_initialized()) {
+    const char *timerName= "OpenMP_Idle";
 
-  TAU_PROFILE_TIMER(handle, timerName, " ", TAU_OPENMP);
+    TAU_PROFILE_TIMER(handle, timerName, " ", TAU_OPENMP);
 
-  switch(endpoint)
-  {
-    case ompt_scope_begin:
-      TAU_PROFILE_START(handle);
-      break;
-    case ompt_scope_end:
-      TAU_PROFILE_STOP(handle);
-      break;
+    switch(endpoint)
+    {
+      case ompt_scope_begin:
+        TAU_PROFILE_START(handle);
+        break;
+      case ompt_scope_end:
+        TAU_PROFILE_STOP(handle);
+        break;
+    }
   }
 
-  return;
+  if(Tau_plugins_enabled.ompt_idle) {
+    Tau_plugin_event_ompt_idle_data_t plugin_data;
+
+    plugin_data.endpoint = endpoint;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_IDLE, "*", &plugin_data);
+  }
 }
+#endif /* defined (TAU_USE_OMPT_TR6) */
 
 /* Mutex event - optional event with context */ 
 /* Currently with the LLVM-openmp implementation it seems these mutex events
@@ -564,171 +812,281 @@ on_ompt_callback_idle(
 
 static void
 on_ompt_callback_mutex_acquire(
+#if defined (TAU_USE_OMPT_TR6)
     ompt_mutex_kind_t kind,
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    ompt_mutex_t kind,
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
     unsigned int hint,
     unsigned int impl,
+#if defined (TAU_USE_OMPT_TR7)
+    omp_wait_id_t wait_id,
+#endif /* defined (TAU_USE_OMPT_TR7) */
+    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
     ompt_wait_id_t wait_id,
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     const void *codeptr_ra) 
 {
   TauInternalFunctionGuard protects_this_function;
-  char timerName[10240];
-  char resolved_address[1024];
-  void* mutex_waiting_handle=NULL;
+  if(Tau_ompt_callbacks_enabled[ompt_callback_mutex_acquire] && Tau_init_check_initialized()) {
+    char timerName[10240];
+    char resolved_address[1024];
+    void* mutex_waiting_handle=NULL;
 
-  if(codeptr_ra) {
+    if(codeptr_ra) {
 
-    void * codeptr_ra_copy = (void*) codeptr_ra;
-    unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
+      void * codeptr_ra_copy = (void*) codeptr_ra;
+      unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
 
-    if(TauEnv_get_ompt_resolve_address_eagerly()) {
-      Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
-      switch(kind)
-      {
-        case ompt_mutex:
-          sprintf(timerName, "OpenMP_Mutex_Waiting %s", resolved_address);
-          break;
-        case ompt_mutex_lock:
-          sprintf(timerName, "OpenMP_Mutex_Waiting_Lock %s", resolved_address);
-          break;
-        case ompt_mutex_nest_lock:
-          sprintf(timerName, "OpenMP_Mutex_Waiting_Nest_Lock %s", resolved_address);
-          break;
-        case ompt_mutex_critical:
-          sprintf(timerName, "OpenMP_Mutex_Waiting_Critical %s", resolved_address);
-          break;
-        case ompt_mutex_atomic:
-          sprintf(timerName, "OpenMP_Mutex_Waiting_Atomic %s", resolved_address);
-          break;
-        case ompt_mutex_ordered:
-          sprintf(timerName, "OpenMP_Mutex_Waiting_Ordered %s", resolved_address);
-          break;
+      if(TauEnv_get_ompt_resolve_address_eagerly()) {
+        Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
+        switch(kind)
+        {
+#if defined (TAU_USE_OMPT_TR6)
+          case ompt_mutex:
+            sprintf(timerName, "OpenMP_Mutex_Waiting %s", resolved_address);
+            break;
+#endif /* defined (TAU_USE_OMPT_TR6) */
+          case ompt_mutex_lock:
+            sprintf(timerName, "OpenMP_Mutex_Waiting_Lock %s", resolved_address);
+            break;
+          case ompt_mutex_nest_lock:
+            sprintf(timerName, "OpenMP_Mutex_Waiting_Nest_Lock %s", resolved_address);
+            break;
+#if defined (TAU_USE_OMPT_5_0)
+          case ompt_mutex_test_lock:
+            sprintf(timerName, "OpenMP_Mutex_Waiting_Test_Lock %s", resolved_address);
+            break;
+          case ompt_mutex_test_nest_lock:
+            sprintf(timerName, "OpenMP_Mutex_Waiting_Test_Nest_Lock %s", resolved_address);
+            break;
+#endif /* defined (TAU_USE_OMPT_5_0) */
+          case ompt_mutex_critical:
+            sprintf(timerName, "OpenMP_Mutex_Waiting_Critical %s", resolved_address);
+            break;
+          case ompt_mutex_atomic:
+            sprintf(timerName, "OpenMP_Mutex_Waiting_Atomic %s", resolved_address);
+            break;
+          case ompt_mutex_ordered:
+            sprintf(timerName, "OpenMP_Mutex_Waiting_Ordered %s", resolved_address);
+            break;
+        }
+      } else {
+        switch(kind)
+        {
+#if defined (TAU_USE_OMPT_TR6)
+          case ompt_mutex:
+            sprintf(timerName, "OpenMP_Mutex_Waiting ADDR <%lx>", addr);
+            break;
+#endif /* defined (TAU_USE_OMPT_TR6) */
+          case ompt_mutex_lock:
+            sprintf(timerName, "OpenMP_Mutex_Waiting_Lock ADDR <%lx>", addr);
+            break;
+          case ompt_mutex_nest_lock:
+            sprintf(timerName, "OpenMP_Mutex_Waiting_Nest_Lock ADDR <%lx>", addr);
+            break;
+#if defined (TAU_USE_OMPT_5_0)
+          case ompt_mutex_test_lock:
+            sprintf(timerName, "OpenMP_Mutex_Waiting_Test_Lock ADDR <%lx>", addr);
+            break;
+          case ompt_mutex_test_nest_lock:
+            sprintf(timerName, "OpenMP_Mutex_Waiting_Test_Nest_Lock ADDR <%lx>", addr);
+            break;
+#endif /* defined (TAU_USE_OMPT_5_0) */
+          case ompt_mutex_critical:
+            sprintf(timerName, "OpenMP_Mutex_Waiting_Critical ADDR <%lx>", addr);
+            break;
+          case ompt_mutex_atomic:
+            sprintf(timerName, "OpenMP_Mutex_Waiting_Atomic ADDR <%lx>", addr);
+            break;
+          case ompt_mutex_ordered:
+            sprintf(timerName, "OpenMP_Mutex_Waiting_Ordered ADDR <%lx>", addr);
+            break;
+        }
       }
-    } else {
-      switch(kind)
-      {
-        case ompt_mutex:
-          sprintf(timerName, "OpenMP_Mutex_Waiting ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_lock:
-          sprintf(timerName, "OpenMP_Mutex_Waiting_Lock ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_nest_lock:
-          sprintf(timerName, "OpenMP_Mutex_Waiting_Nest_Lock ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_critical:
-          sprintf(timerName, "OpenMP_Mutex_Waiting_Critical ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_atomic:
-          sprintf(timerName, "OpenMP_Mutex_Waiting_Atomic ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_ordered:
-          sprintf(timerName, "OpenMP_Mutex_Waiting_Ordered ADDR <%lx>", addr);
-          break;
-      }
-    } 
 
-    // Start lock-wait timer
-    TAU_PROFILER_CREATE(mutex_waiting_handle, timerName, " ", TAU_OPENMP);
-    TAU_PROFILER_START(mutex_waiting_handle);
+      // Start lock-wait timer
+      TAU_PROFILER_CREATE(mutex_waiting_handle, timerName, " ", TAU_OPENMP);
+      TAU_PROFILER_START(mutex_waiting_handle);
+    }
+  }
+
+  if(Tau_plugins_enabled.ompt_mutex_acquire) {
+    Tau_plugin_event_ompt_mutex_acquire_data_t plugin_data;
+
+    plugin_data.kind = kind;
+    plugin_data.hint = hint;
+    plugin_data.impl = impl;
+    plugin_data.wait_id = wait_id;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRE, "*", &plugin_data);
   }
 }
 
 static void
 on_ompt_callback_mutex_acquired(
+#if defined (TAU_USE_OMPT_TR6)
     ompt_mutex_kind_t kind,
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    ompt_mutex_t kind,
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
+#if defined (TAU_USE_OMPT_TR7)
+    omp_wait_id_t wait_id,
+#endif /* defined (TAU_USE_OMPT_TR7) */
+    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
     ompt_wait_id_t wait_id,
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
-  char acquiredtimerName[10240];
-  char waitingtimerName[10240];
-  char resolved_address[1024];
-  void* mutex_acquired_handle=NULL;
+  if(Tau_ompt_callbacks_enabled[ompt_callback_mutex_acquired] && Tau_init_check_initialized()) {
+    char acquiredtimerName[10240];
+    char waitingtimerName[10240];
+    char resolved_address[1024];
+    void* mutex_acquired_handle=NULL;
 
-  if(codeptr_ra) {
-    void * codeptr_ra_copy = (void*) codeptr_ra;
-    unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
+    if(codeptr_ra) {
+      void * codeptr_ra_copy = (void*) codeptr_ra;
+      unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
 
-    if(TauEnv_get_ompt_resolve_address_eagerly()) {
-      Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
-      switch(kind)
-      {
-        case ompt_mutex:
-          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired %s", resolved_address);
-          break;
-        case ompt_mutex_lock:
-          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Lock %s", resolved_address);
-          break;
-        case ompt_mutex_nest_lock:
-          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Nest_Lock %s", resolved_address);
-          break;
-        case ompt_mutex_critical:
-          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Critical %s", resolved_address);
-          break;
-        case ompt_mutex_atomic:
-          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Atomic %s", resolved_address);
-          break;
-        case ompt_mutex_ordered:
-          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Ordered %s", resolved_address);
-          break;
+      if(TauEnv_get_ompt_resolve_address_eagerly()) {
+        Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
+        switch(kind)
+        {
+#if defined (TAU_USE_OMPT_TR6)
+          case ompt_mutex:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired %s", resolved_address);
+            break;
+#endif /* defined (TAU_USE_OMPT_TR6) */
+          case ompt_mutex_lock:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Lock %s", resolved_address);
+            break;
+          case ompt_mutex_nest_lock:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Nest_Lock %s", resolved_address);
+            break;
+#if defined (TAU_USE_OMPT_5_0)
+          case ompt_mutex_test_lock:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Test_Lock %s", resolved_address);
+            break;
+          case ompt_mutex_test_nest_lock:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Test_Nest_Lock %s", resolved_address);
+            break;
+#endif /* defined (TAU_USE_OMPT_5_0) */
+          case ompt_mutex_critical:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Critical %s", resolved_address);
+            break;
+          case ompt_mutex_atomic:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Atomic %s", resolved_address);
+            break;
+          case ompt_mutex_ordered:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Ordered %s", resolved_address);
+            break;
+        }
+      } else {
+        switch(kind)
+        {
+#if defined (TAU_USE_OMPT_TR6)
+          case ompt_mutex:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired ADDR <%lx>", addr);
+            break;
+#endif /* defined (TAU_USE_OMPT_TR6) */
+          case ompt_mutex_lock:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Lock ADDR <%lx>", addr);
+            break;
+          case ompt_mutex_nest_lock:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Nest_Lock ADDR <%lx>", addr);
+            break;
+#if defined (TAU_USE_OMPT_5_0)
+          case ompt_mutex_test_lock:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Test_Lock ADDR <%lx>", addr);
+            break;
+          case ompt_mutex_test_nest_lock:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Test_Nest_Lock ADDR <%lx>", addr);
+            break;
+#endif /* defined (TAU_USE_OMPT_5_0) */
+          case ompt_mutex_critical:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Critical ADDR <%lx>", addr);
+            break;
+          case ompt_mutex_atomic:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Atomic ADDR <%lx>", addr);
+            break;
+          case ompt_mutex_ordered:
+            sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Ordered ADDR <%lx>", addr);
+            break;
+        }
       }
-    } else {
-      switch(kind)
-      {
-        case ompt_mutex:
-          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_lock:
-          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Lock ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_nest_lock:
-          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Nest_Lock ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_critical:
-          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Critical ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_atomic:
-          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Atomic ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_ordered:
-          sprintf(acquiredtimerName, "OpenMP_Mutex_Acquired_Ordered ADDR <%lx>", addr);
-          break;
-      }
+
+      // Stop lock-wait timer
+      Tau_global_stop();
+
+      // Start lock timer
+      TAU_PROFILER_CREATE(mutex_acquired_handle, acquiredtimerName, " ", TAU_OPENMP);
+      TAU_PROFILER_START(mutex_acquired_handle);
     }
-
-    // Stop lock-wait timer
-    Tau_global_stop();
-
-    // Start lock timer
-    TAU_PROFILER_CREATE(mutex_acquired_handle, acquiredtimerName, " ", TAU_OPENMP);
-    TAU_PROFILER_START(mutex_acquired_handle);
   }
 
+  if(Tau_plugins_enabled.ompt_mutex_acquired) {
+    Tau_plugin_event_ompt_mutex_acquired_data_t plugin_data;
+
+    plugin_data.kind = kind;
+    plugin_data.wait_id = wait_id;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRED, "*", &plugin_data);
+  }
 }
 
 static void
 on_ompt_callback_mutex_released(
+#if defined (TAU_USE_OMPT_TR6)
     ompt_mutex_kind_t kind,
+#endif /* defined (TAU_USE_OMPT_TR6) */
+#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    ompt_mutex_t kind,
+#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
+#if defined (TAU_USE_OMPT_TR7)
+    omp_wait_id_t wait_id,
+#endif /* defined (TAU_USE_OMPT_TR7) */
+    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
     ompt_wait_id_t wait_id,
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
-  char timerName[10240];
-  char resolved_address[1024];
+  if(Tau_ompt_callbacks_enabled[ompt_callback_mutex_released] && Tau_init_check_initialized()) {
+    char timerName[10240];
+    char resolved_address[1024];
 
-  if(codeptr_ra) {
-    void * codeptr_ra_copy = (void*) codeptr_ra;
-    unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
-    // Stop lock timer
-    //TAU_PROFILER_STOP(mutex_acquired_handle);
-    Tau_global_stop();
+    if(codeptr_ra) {
+      void * codeptr_ra_copy = (void*) codeptr_ra;
+      unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
+      // Stop lock timer
+      //TAU_PROFILER_STOP(mutex_acquired_handle);
+      Tau_global_stop();
+    }
   }
 
+  if(Tau_plugins_enabled.ompt_mutex_released) {
+    Tau_plugin_event_ompt_mutex_released_data_t plugin_data;
+
+    plugin_data.kind = kind;
+    plugin_data.wait_id = wait_id;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_MUTEX_RELEASED, "*", &plugin_data);
+  }
 }
 
-/* Register callbacks. This function is invoked only from the ompt_start_tool routine.
+/* Register callbacks. This function is invoked only from the ompt_start_tool
+ * routine and the Tau_ompt_register_plugin_callbacks routine.
  * Callbacks that only have "ompt_set_always" are the required events that we HAVE to support */
-inline static void register_callback(ompt_callbacks_t name, ompt_callback_t cb) {
+inline static int register_callback(ompt_callbacks_t name, ompt_callback_t cb) {
   int ret = ompt_set_callback(name, cb);
 
   switch(ret) { 
@@ -736,15 +1094,26 @@ inline static void register_callback(ompt_callbacks_t name, ompt_callback_t cb) 
       fprintf(stderr, "TAU: WARNING: Callback for event %d could not be registered\n", name); 
       break; 
     case ompt_set_sometimes: 
-      TAU_VERBOSE("TAU: Callback for event %s registered with return value %s\n", name, "ompt_set_sometimes");
+      TAU_VERBOSE("TAU: Callback for event %d registered with return value %s\n", name, "ompt_set_sometimes");
       break;
     case ompt_set_sometimes_paired:
-      TAU_VERBOSE("TAU: Callback for event %s registered with return value %s\n", name, "ompt_set_sometimes_paired");
+      TAU_VERBOSE("TAU: Callback for event %d registered with return value %s\n", name, "ompt_set_sometimes_paired");
       break;
     case ompt_set_always:
-      TAU_VERBOSE("TAU: Callback for event %s registered with return value %s\n", name, "ompt_set_always");
+      TAU_VERBOSE("TAU: Callback for event %d registered with return value %s\n", name, "ompt_set_always");
       break;
   }
+
+  return ret;
+}
+
+/* Call the register_callback routine and set a flag indicating that TAU
+ * requested this callback, and not just a plugin */
+inline static void Tau_register_callback(ompt_callbacks_t name, ompt_callback_t cb) {
+  int ret = register_callback(name, cb);
+
+  if(ret != ompt_set_never)
+    Tau_ompt_callbacks_enabled[name] = 1;
 }
 
 
@@ -777,21 +1146,25 @@ static int parse_bool(const char *str, int default_value = 0) {
   }
 }
 
+const char *getconf(const char *key);
 void Tau_force_ompt_env_initialization() {
 
-    const char* tmp = getenv("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY");
+    TAU_VERBOSE("Inside Tau_force_ompt_env_initialization\n");
+    const char* tmp = getconf("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY");
 
-    if (parse_bool(tmp, 0)) {
+    if (parse_bool(tmp, 1)) {
       TauEnv_set_ompt_resolve_address_eagerly(1);
       TAU_VERBOSE("TAU: OMPT resolving addresses eagerly Enabled\n");
       TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "on");
       TAU_VERBOSE("TAU: Resolving OMPT addresses eagerly\n");
     } else {
+      TauEnv_set_ompt_resolve_address_eagerly(0);
       TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "off");
+      TAU_VERBOSE("TAU: NOT Resolving OMPT addresses eagerly\n");
     } 
     
-    TauEnv_set_ompt_support_level(0); // Basic OMPT support is the default
-    const char *omptSupportLevel = getenv("TAU_OMPT_SUPPORT_LEVEL");
+    TauEnv_set_ompt_support_level(0); // basic OMPT support is the default
+    const char *omptSupportLevel = getconf("TAU_OMPT_SUPPORT_LEVEL");
     if (omptSupportLevel != NULL && 0 == strcasecmp(omptSupportLevel, "basic")) {
       TauEnv_set_ompt_support_level(0);
       TAU_VERBOSE("TAU: OMPT support will be basic - only required events supported\n");
@@ -804,8 +1177,10 @@ void Tau_force_ompt_env_initialization() {
       TauEnv_set_ompt_support_level(2);
       TAU_VERBOSE("TAU: OMPT support will be full - all events will be supported\n");
       TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "full");
+    } else {
+      TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "basic");
+      TAU_VERBOSE("TAU: OMPT support will be basic - TAU_OMPT_SUPPORT_LEVEL runtime variable is not set");
     }
-//#endif/* TAU_OMPT */
 } 
 
 #define cb_t(name) (ompt_callback_t)&name
@@ -813,6 +1188,9 @@ void Tau_force_ompt_env_initialization() {
 /* Register callbacks for all events that we are interested in / have to support */
 extern "C" int ompt_initialize(
   ompt_function_lookup_t lookup,
+#if  defined (TAU_USE_OMPT_5_0)
+  int initial_device_num,
+#endif /* defined (TAU_USE_OMPT_5_0) */
   ompt_data_t* tool_data)
 {
   int ret;
@@ -821,6 +1199,7 @@ extern "C" int ompt_initialize(
   initializing = true;
   TauInternalFunctionGuard protects_this_function;
   if (!TauEnv_get_openmp_runtime_enabled()) return 0;
+  TAU_PROFILE_SET_NODE(0);
 
 #if defined (TAU_USE_TLS)
   is_master = true;
@@ -852,29 +1231,31 @@ extern "C" int ompt_initialize(
   ompt_enumerate_mutex_impls = (ompt_enumerate_mutex_impls_t) lookup("ompt_enumerate_mutex_impls");
 
 /* Required events */
-  register_callback(ompt_callback_parallel_begin, cb_t(on_ompt_callback_parallel_begin));
-  register_callback(ompt_callback_parallel_end, cb_t(on_ompt_callback_parallel_end));
-  register_callback(ompt_callback_task_create, cb_t(on_ompt_callback_task_create));
-  register_callback(ompt_callback_task_schedule, cb_t(on_ompt_callback_task_schedule));
-  register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); //Sometimes high-overhead, but unfortunately we cannot avoid this as it is a required event 
-  register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
-  register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
+  Tau_register_callback(ompt_callback_parallel_begin, cb_t(on_ompt_callback_parallel_begin));
+  Tau_register_callback(ompt_callback_parallel_end, cb_t(on_ompt_callback_parallel_end));
+  Tau_register_callback(ompt_callback_task_create, cb_t(on_ompt_callback_task_create));
+  Tau_register_callback(ompt_callback_task_schedule, cb_t(on_ompt_callback_task_schedule));
+  Tau_register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); //Sometimes high-overhead, but unfortunately we cannot avoid this as it is a required event
+  Tau_register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
+  Tau_register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
 
 /* Optional events */
 
   if(TauEnv_get_ompt_support_level() >= 1) { /* Only support this when "lowoverhead" mode is enabled. Turns on all required events + other low overhead */
-    register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
-    register_callback(ompt_callback_master, cb_t(on_ompt_callback_master));
-    register_callback(ompt_callback_idle, cb_t(on_ompt_callback_idle));
+    Tau_register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
+    Tau_register_callback(ompt_callback_master, cb_t(on_ompt_callback_master));
+#if defined (TAU_USE_OMPT_TR6)
+    Tau_register_callback(ompt_callback_idle, cb_t(on_ompt_callback_idle));
+#endif /* TAU_USE_OMPT_TR6 */
   }
 
   if(TauEnv_get_ompt_support_level() == 2) { /* Only support this when "full" is enabled. This is a high overhead call */
-    register_callback(ompt_callback_sync_region, cb_t(on_ompt_callback_sync_region)); 
+    Tau_register_callback(ompt_callback_sync_region, cb_t(on_ompt_callback_sync_region));
     // TODO: Overheads unclear currently. Also, causing a hang with TAU mm example (other task-based examples also lead to the application becoming 
     // unresponsive possibly due to extremely high overheads*/
-    /*register_callback(ompt_callback_mutex_acquire, cb_t(on_ompt_callback_mutex_acquire));
-    register_callback(ompt_callback_mutex_acquired, cb_t(on_ompt_callback_mutex_acquired));
-    register_callback(ompt_callback_mutex_released, cb_t(on_ompt_callback_mutex_released));*/
+    /*Tau_register_callback(ompt_callback_mutex_acquire, cb_t(on_ompt_callback_mutex_acquire));
+    Tau_register_callback(ompt_callback_mutex_acquired, cb_t(on_ompt_callback_mutex_acquired));
+    Tau_register_callback(ompt_callback_mutex_released, cb_t(on_ompt_callback_mutex_released));*/
   }
 
   // Overheads unclear currently
@@ -882,6 +1263,47 @@ extern "C" int ompt_initialize(
   initialized = true;
   initializing = false;
   return 1; //success
+}
+
+/* Register callbacks for plugins in the case that they are not already registered for TAU */
+void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugins_enabled) {
+  if(!initialized)
+  {
+    fprintf(stderr, "TAU: WARNING: Could not register OMPT plugin callbacks as OMPT was not initialized.\n");
+    return;
+  }
+
+
+  if (Tau_plugins_enabled->ompt_parallel_begin > Tau_ompt_callbacks_enabled[ompt_callback_parallel_begin])
+    register_callback(ompt_callback_parallel_begin, cb_t(on_ompt_callback_parallel_begin));
+  if (Tau_plugins_enabled->ompt_parallel_end > Tau_ompt_callbacks_enabled[ompt_callback_parallel_end])
+    register_callback(ompt_callback_parallel_end, cb_t(on_ompt_callback_parallel_end));
+  if (Tau_plugins_enabled->ompt_task_create > Tau_ompt_callbacks_enabled[ompt_callback_task_create])
+    register_callback(ompt_callback_task_create, cb_t(on_ompt_callback_task_create));
+  if (Tau_plugins_enabled->ompt_task_schedule > Tau_ompt_callbacks_enabled[ompt_callback_task_schedule])
+    register_callback(ompt_callback_task_schedule, cb_t(on_ompt_callback_task_schedule));
+  if (Tau_plugins_enabled->ompt_implicit_task > Tau_ompt_callbacks_enabled[ompt_callback_implicit_task])
+    register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task));
+  if (Tau_plugins_enabled->ompt_thread_begin > Tau_ompt_callbacks_enabled[ompt_callback_thread_begin])
+    register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
+  if (Tau_plugins_enabled->ompt_thread_end > Tau_ompt_callbacks_enabled[ompt_callback_thread_end])
+    register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
+  if (Tau_plugins_enabled->ompt_work > Tau_ompt_callbacks_enabled[ompt_callback_work])
+    register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
+  if (Tau_plugins_enabled->ompt_master > Tau_ompt_callbacks_enabled[ompt_callback_master])
+    register_callback(ompt_callback_master, cb_t(on_ompt_callback_master));
+#if defined (TAU_USE_OMPT_TR6)
+  if (Tau_plugins_enabled->ompt_idle > Tau_ompt_callbacks_enabled[ompt_callback_idle])
+    register_callback(ompt_callback_idle, cb_t(on_ompt_callback_idle));
+#endif /* defined (TAU_USE_OMPT_TR6) */
+  if (Tau_plugins_enabled->ompt_sync_region > Tau_ompt_callbacks_enabled[ompt_callback_sync_region])
+    register_callback(ompt_callback_sync_region, cb_t(on_ompt_callback_sync_region));
+  if (Tau_plugins_enabled->ompt_mutex_acquire > Tau_ompt_callbacks_enabled[ompt_callback_mutex_acquire])
+    register_callback(ompt_callback_mutex_acquire, cb_t(on_ompt_callback_mutex_acquire));
+  if (Tau_plugins_enabled->ompt_mutex_acquired > Tau_ompt_callbacks_enabled[ompt_callback_mutex_acquired])
+    register_callback(ompt_callback_mutex_acquired, cb_t(on_ompt_callback_mutex_acquired));
+  if (Tau_plugins_enabled->ompt_mutex_released > Tau_ompt_callbacks_enabled[ompt_callback_mutex_released])
+    register_callback(ompt_callback_mutex_released, cb_t(on_ompt_callback_mutex_released));
 }
 
 extern "C" void ompt_finalize(ompt_data_t* tool_data)
@@ -900,4 +1322,10 @@ extern "C" ompt_start_tool_result_t * ompt_start_tool(
   result.tool_data.ptr = NULL;
   return &result;
 }
-#endif /* TAU_USE_OMPT_TR6 */
+#else /*  defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
+#include <Profile/TauPluginInternals.h>
+
+void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugins_enabled) {
+  return;
+}
+#endif /*  defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */

@@ -11,6 +11,8 @@
 #include <string>
 #include <utility>
 
+#ifdef TAU_USE_STDCXX11
+
 #include <Profile/TauEnv.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/TauCollate.h>
@@ -41,7 +43,7 @@ int period_microseconds = 2000000;
 bool _threaded = true;
 
 int analytics_complete = 1;
-sem_t mutex;
+sem_t snapshot_mutex;
 
 typedef struct snapshot_buffer {
   double ***gExcl, ***gIncl;
@@ -120,7 +122,7 @@ void Tau_stop_worker(void) {
 
 int Tau_plugin_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *data) {
 
-  //sem_destroy(&mutex);
+  //sem_destroy(&snapshot_mutex);
 
   return 0;
 }
@@ -172,7 +174,7 @@ void * Tau_plugin_threaded_analytics(void* data) {
 
  while(!done && flag) {
 
-  sem_wait(&mutex); //Block on semaphore
+  sem_wait(&snapshot_mutex); //Block on semaphore
   fprintf(stderr, "Performing analytics...\n");
   //PMPI_Barrier(newcomm);
 
@@ -338,7 +340,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 
    if(analytics_complete) {
       Tau_unify_unifyDefinitions_MPI();
-      sem_post(&mutex); //release semaphore
+      sem_post(&snapshot_mutex); //release semaphore
    }
 
    return 0;
@@ -351,7 +353,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
 
-  sem_init(&mutex, 0, 0);
+  sem_init(&snapshot_mutex, 0, 0);
 
   cb->Trigger = Tau_plugin_event_trigger;
   cb->EndOfExecution = Tau_plugin_event_end_of_execution;
@@ -376,4 +378,4 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
 }
 
 #endif
-
+#endif

@@ -1,0 +1,24 @@
+This is an example illustrating the integration of SOS with 
+MPI via TAU's plugin architecture.
+
+
+Steps to build and run the example:
+1.TAU should be configured using the following options:
+./configure -bdf=download -pthread -mpi -sos=$SOS_INSTALL_PATH -pdt=$PDTOOLKIT_PATH
+2.SOS_flow should be installed, compatibility with Python in SOS is not needed. 
+Install SOS_flow using the following steps:
+2a.Instal EVPATH from:
+https://www.cc.gatech.edu/systems/projects/EVPath/
+2b.Download SOS_flow from:
+https://github.com/cdwdirect/sos_flow
+3b.Install SOS_flow with:
+cmake -DEVPath_DIR=$EVPATH_DIR -DCMAKE_INSTALL_PREFIX=$SOS_INSTALL_DIR ../sos_flow
+3.Compile the matmult application with the provided Makefile using make.
+4.In another terminal load the SOS daemon with:
+./simple-sos.sh
+When the daemon is running, it will show you the Version, the machine it is being 
+executed on and other information.
+5. Once the daemon is running, execute your application with:
+./simple-app.sh
+6.Once the application finished, the daemon will close and the database will be 
+queried to check code related performance data.

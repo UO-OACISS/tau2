@@ -83,25 +83,12 @@ int _thread_count = 0;
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::RegisterThread(void)
 {
-  return RtsLayer::createThread();
-}
-
-int OpenMPLayer::numThreads()
-{
-  return omp_get_max_threads();
-}
-
-////////////////////////////////////////////////////////////////////////
-// GetThreadId maps the id in the thread specific data to the acutal TAU thread
-// ID. Since a getspecific has to be preceeded by a 
-// setspecific (that all threads besides main do), we get a null for the
-// main thread that lets us identify it as thread 0. It is the only 
-// thread that doesn't do a OpenMPLayer::RegisterThread(). 
-////////////////////////////////////////////////////////////////////////
-int OpenMPLayer::GetTauThreadId(void)
-{
 #ifdef TAU_OPENMP
 
+  /* We have to lock here and use the unsafe thread creation routine
+   * Using the safe creation routine generates a call to GetTauThreadId()
+   * which would still detect _tau_thread_id as being -1 and try to create
+   * the thread again */
 #if defined (TAU_USE_TLS) || defined (TAU_USE_DTLS)
   // if this thread has not been registered, then it does not have a TLS value for the ID
   if (_tau_thread_id == -1) {
@@ -174,6 +161,97 @@ int OpenMPLayer::GetTauThreadId(void)
     /* Process is already locked, call the unsafe thread creation routine. */
       tau_thread_id = RtsLayer::_createThread();
       ompMap[omp_thread_id] = tau_thread_id;
+    } else {
+      tau_thread_id = it->second;
+    }
+    if (initialized) omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+
+    Tau_create_top_level_timer_if_necessary_task(tau_thread_id);
+  }
+
+  return tau_thread_id;
+#endif // TAU_USE_TLS
+#else
+  return 0;
+#endif /* TAU_OPENMP */
+}
+
+int OpenMPLayer::numThreads()
+{
+  return omp_get_max_threads();
+}
+
+////////////////////////////////////////////////////////////////////////
+// GetThreadId maps the id in the thread specific data to the acutal TAU thread
+// ID. Since a getspecific has to be preceeded by a 
+// setspecific (that all threads besides main do), we get a null for the
+// main thread that lets us identify it as thread 0. It is the only 
+// thread that doesn't do a OpenMPLayer::RegisterThread(). 
+////////////////////////////////////////////////////////////////////////
+int OpenMPLayer::GetTauThreadId(void)
+{
+#ifdef TAU_OPENMP
+
+#if defined (TAU_USE_TLS) || defined (TAU_USE_DTLS)
+  // if this thread has not been registered, then it does not have a TLS value for the ID
+  if (_tau_thread_id == -1) {
+      RtsLayer::RegisterThread();
+  }
+  return _tau_thread_id;
+#elif defined (TAU_USE_PGS)
+  struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
+  // if this thread has not been registered, then it does not have a TLS value for the ID
+  if (tmp->threadID == -1) {
+      RtsLayer::RegisterThread();
+  }
+  return tmp->threadID;
+#else // TAU_USE_TLS
+
+  /* This part contain duplicate code from OpenMPLayer::RegisterThread().
+   * Is there a way to not repeat this process without being able to use thread
+   * private variables ? */
+  int omp_thread_id = omp_get_thread_num();
+
+#ifdef TAU_OPENMP_NESTED
+  int level = omp_get_level();
+  int width = omp_get_team_size(level);
+  for (--level; level >= 0; --level) {
+    omp_thread_id += omp_get_ancestor_thread_num(level) * width;
+    width *= omp_get_team_size(level);
+  }
+#else
+  if (omp_get_nested()) {
+    //OpenMP thread identification not supported by compiler.
+    printf("ERROR: OpenMP nesting not supported. Please use a compiler that supports OMP specification >= 3.0 or rerun with OMP_NESTED=FALSE.\n");
+    exit(1);
+  }
+#endif /* TAU_OPENMP_NESTED */
+
+  int tau_thread_id;
+  if (omp_thread_id == 0) {
+    tau_thread_id = omp_thread_id;
+  } else {
+    Initialize();
+    if (initialized) omp_set_lock(&OpenMPLayer::tauRegistermutex);
+    OpenMPMap & ompMap = TheOMPMap();
+    OpenMPMap::iterator it = ompMap.find(omp_thread_id);
+    if (it == ompMap.end()) {
+      /* Using OpenMPLayer::RegisterThread() instead of
+       * RtsLayer::RegisterThread() because we need to get back the thread
+       * id, and RtsLayer::RegisterThread() returns the number of threads */
+      if (initialized) omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+      tau_thread_id = OpenMPLayer::RegisterThread();
+      if (initialized) omp_set_lock(&OpenMPLayer::tauRegistermutex);
+      ompMap[omp_thread_id] = tau_thread_id;
+      /* Activating Sampling here since we had to use
+       * OpenMPLayer::RegisterThread instead of RtsLayer::RegisterThread. */
+#ifndef TAU_WINDOWS
+#ifndef _AIX
+      if (TauEnv_get_ebs_enabled()) {
+        Tau_sampling_init_if_necessary();
+      }
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
     } else {
       tau_thread_id = it->second;
     }

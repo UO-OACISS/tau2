@@ -286,7 +286,7 @@ static int env_ibm_bg_hwp_counters = 0;
 static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
-static int env_ompt_resolve_address_eagerly = 0;
+static int env_ompt_resolve_address_eagerly = 1;
 static int env_ompt_support_level = 0;
 static int env_openmp_runtime_enabled = 1;
 static int env_openmp_runtime_states_enabled = 0;
@@ -625,9 +625,9 @@ static int TauConf_read()
 }
 
 /*********************************************************************
- * Local getconf routine
+ * TAU's getconf routine
  ********************************************************************/
-static const char *getconf(const char *key) {
+const char *getconf(const char *key) {
   const char *val = TauConf_getval(key);
   //TAU_VERBOSE("%s=%s\n", key, val);
   if (val) {
@@ -1394,7 +1394,7 @@ void TauEnv_initialize()
 
 #endif /* TAU_MPI_T */
 
-#ifdef TAU_OMPT_TR6
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
     tmp = getconf("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY");
     if (parse_bool(tmp, env_ompt_resolve_address_eagerly)) {
 #ifdef TAU_DISABLE_MEM_MANAGER
@@ -1405,8 +1405,9 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: OMPT resolving addresses eagerly Enabled\n");
       TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "on");
       TAU_VERBOSE("TAU: Resolving OMPT addresses eagerly\n");
-#endif
+#endif /*  TAU_DISABLE_MEM_MANAGER */
     } else {
+      env_ompt_resolve_address_eagerly = 0;
       TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "off");
     } 
     
@@ -1425,7 +1426,7 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: OMPT support will be full - all events will be supported\n");
       TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "full");
     }
-#endif/* TAU_OMPT_TR6 */
+#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
 
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {
@@ -2214,11 +2215,20 @@ void TauEnv_initialize()
     TAU_METADATA("OMP_CHUNK_SIZE", tmpstr);
 #endif
 
+    /* TODO: Bugs with when called during Tau_initialize with LLVM and Intel runtime. (Deadlock because the runtime try to initialize twice). Remove Ifdef once the issue is resolved */
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    int value = -1;
+#else /*  defined TAU_USE_OMPT TR6-5_0 */
     int value = omp_get_max_threads();
+#endif /*  defined TAU_USE_OMPT TR6-5_0 */
     sprintf(tmpstr,"%d",value);
     TAU_METADATA("OMP_MAX_THREADS", tmpstr);
 
+#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+    value = -1;
+#else /*  defined TAU_USE_OMPT TR6-5_0 */
     value = omp_get_num_procs();
+#endif /*  defined TAU_USE_OMPT TR6-5_0 */
     sprintf(tmpstr,"%d",value);
     TAU_METADATA("OMP_NUM_PROCS", tmpstr);
 
@@ -2257,7 +2267,8 @@ void TauEnv_initialize()
     }
 
     tmp = getconf("TAU_SAMPLING");
-    if (parse_bool(tmp, TAU_EBS_DEFAULT)) {
+    // We should disable sampling if tracing has been enabled! 
+    if (parse_bool(tmp, TAU_EBS_DEFAULT) && (env_tracing == 0)) {
 #ifdef TAU_DISABLE_MEM_MANAGER
       env_ebs_enabled = 0;
       TAU_VERBOSE("TAU: Sampling Disabled - memory management was disabled at configuration!\n");

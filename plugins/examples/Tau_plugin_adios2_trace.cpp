@@ -473,22 +473,10 @@ void adios::initialize() {
     if (thePluginOptions().env_one_file) {
         PMPI_Comm_dup(MPI_COMM_WORLD, &adios_comm);
     } else {
-        // Get the group of processes in MPI_COMM_WORLD
-        MPI_Group world_group;
-        PMPI_Comm_group(MPI_COMM_WORLD, &world_group);
-
-        int n = 1;
-        const int ranks[1] = {world_rank};
-
-        MPI_Group adios_group;
-        PMPI_Group_incl(world_group, 1, ranks, &adios_group);
-        PMPI_Comm_create_group(MPI_COMM_WORLD, adios_group, 0, &adios_comm);
-        PMPI_Group_free(&world_group);
-        PMPI_Group_free(&adios_group);
+        PMPI_Comm_dup(MPI_COMM_SELF, &adios_comm);
     }
     Tau_global_incr_insideTAU();
-    //ad = adios2::ADIOS(adios_comm, true);
-    ad = adios2::ADIOS(MPI_COMM_SELF, true);
+    ad = adios2::ADIOS(adios_comm, true);
 #else
     /** ADIOS class factory of IO class objects, DebugON is recommended */
     ad = adios2::ADIOS(true);
@@ -887,6 +875,7 @@ void init_lock(pthread_mutex_t * _mutex) {
 }
 
 int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
+    fprintf(stdout, "TAU PLUGIN ADIOS2 Dump\n"); fflush(stdout);
     if (!enabled) return 0;
     if (dump_history) {
         Tau_plugin_adios2_dump_history();
@@ -1200,7 +1189,11 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     unsigned long ts = data->timestamp;
 #endif
     // pop this timer off the stack for provenance output
-    my_adios->current_primer_stack[tmparray[2]].pop_back();
+	// For some reason, at the end of execution we are popping too many.
+	// This is a safety check, but not great for performance.
+	if (my_adios->current_primer_stack[tmparray[2]].size() > 0) {
+        my_adios->current_primer_stack[tmparray[2]].pop_back();
+	}
     tmp.push_back(
         std::make_pair(
             ts,
@@ -1542,7 +1535,7 @@ void Tau_plugin_adios2_dump_history(void) {
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
  * Every plugin MUST implement this function to register callbacks for various events 
  * that the plugin is interested in listening to*/
-extern "C" int Tau_plugin_init_func(int argc, char **argv) {
+extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
     fprintf(stdout, "TAU PLUGIN ADIOS2 Init\n"); fflush(stdout);
     tau_plugin::Tau_ADIOS2_parse_environment_variables();
@@ -1567,7 +1560,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     cb->AtomicEventTrigger = Tau_plugin_adios2_atomic_trigger;
 
     /* Register the callback object */
-    TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
+    TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
 
     /* Open the ADIOS archive */
     my_adios = new tau_plugin::adios();
