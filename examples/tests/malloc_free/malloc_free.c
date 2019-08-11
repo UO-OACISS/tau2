@@ -63,15 +63,23 @@ double do_work(void) {
   freeMatrix(b, NCA, NCB);
   freeMatrix(c, NCA, NCB);
 
-  Tau_track_memory_here();
-  Tau_track_power_here();
-  Tau_track_load_here();
-  Tau_track_memory_rss_and_hwm_here();
+  /* records the heap, with no context, even though it says "here". */
+  //Tau_track_memory_here();
+  /* records the power, with context. */
+  //Tau_track_power_here();
+  /* records the load, with context. */
+  //Tau_track_load_here();
+  /* records the rss/hwm, with context. */
+  //Tau_track_memory_rss_and_hwm_here();
 
-  Tau_track_memory();
-  Tau_track_power();
-  Tau_track_load();
-  Tau_track_memory_rss_and_hwm();
+  /* does nothing - just enables heap tracking  */
+  //Tau_track_memory();
+  /* records the load, without context */
+  //Tau_track_load();
+  /* records the power, without context */
+  //Tau_track_power();
+  /* records the rss/hwm, without context. */
+  //Tau_track_memory_rss_and_hwm();
 
   return 1.0;
 }

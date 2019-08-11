@@ -30,8 +30,8 @@ RM 	      	= /bin/rm -rf
 TARGET	      	= malloc_free
 
 OBJS     	= malloc_free.o
-CFLAGS=-g -Og $(TAU_OPENMP_OPTION)
-LDFLAGS=-g -Og $(TAU_OPENMP_OPTION)
+CFLAGS=-g -O0 $(TAU_OPENMP_OPTION)
+LDFLAGS=-g -O0 $(TAU_OPENMP_OPTION)
 
 ##############################################
 

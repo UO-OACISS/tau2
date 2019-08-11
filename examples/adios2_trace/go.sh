@@ -3,7 +3,7 @@
 # launch the writer without plugin
 echo "Without plugin"
 T="$(date +%s)"
-mpirun -np 8 ./matmult >& matmult.log
+#mpirun -np 8 ./matmult >& matmult.log
 A="$(($(date +%s)-T))"
 printf "Time to run tau: %02d hours %02d minutes %02d seconds.\n" "$((A/3600))" "$((A/60%60))" "$((A%60))"
 

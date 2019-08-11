@@ -262,13 +262,13 @@ void TauTriggerCrayPowerEvents() {
 */
 }
 
-void TauTriggerPowerEvent() {
+void TauTriggerPowerEvent(bool in_signal_handler) {
   //printf("Inside TauTriggerPowerEvent\n");
 #ifdef TAU_CRAYCNL
   TauTriggerCrayPowerEvents();
 #else 
 #ifdef TAU_PAPI
-  PapiLayer::triggerRAPLPowerEvents();
+  PapiLayer::triggerRAPLPowerEvents(in_signal_handler);
 #endif /* TAU_PAPI */
 #endif /* TAU_CRAYCNL */
 }
@@ -324,9 +324,9 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context);
 void TauAlarmHandler(int signum) {
     printf("In %s\n", __func__);
 
-  // these are never safe!  It's not signal safe...
 
    /* Check and see if we're tracking memory events */
+  // these are never safe!  It's not signal safe...
 /*
   if (TheIsTauTrackingMemory()) {
       TauAllocation::TriggerHeapMemoryUsageEvent();
@@ -338,10 +338,12 @@ void TauAlarmHandler(int signum) {
 */
 
   if (TheIsTauTrackingPower()) {
-    TauTriggerPowerEvent();
+    // yes, we are in a signal handler
+    TauTriggerPowerEvent(true);
   }
 
   if (TheIsTauTrackingLoad()) {
+    // no, don't use the context (not signal safe)
     TauTriggerLoadEvent(false);
   }
 
@@ -350,6 +352,7 @@ void TauAlarmHandler(int signum) {
   }
 
   if (TheIsTauTrackingMemoryRSSandHWM()) {
+    // no, don't use the context (not signal safe)
     Tau_trigger_memory_rss_hwm(false);
   }
 
@@ -415,16 +418,32 @@ void TauTrackMemoryUtilization(bool allocated) {
 // Track Power
 //////////////////////////////////////////////////////////////////////
 void TauTrackPower(void) {
-  // Are we tracking memory or headroom. Check the allocated argument. 
-  TheIsTauTrackingPower() = true;
+  /* Enable tracking power by default */
+  static int flag = TauEnableTrackingPower();
+  // use the variable to prevent compiler complaints
+  if (!flag) {};
+ 
+  /* Check and see if we're *still* tracking memory events */
+  if (TheIsTauTrackingPower()) {
+    // not in a signal handler, but don't use context
+    TauTriggerPowerEvent(true);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
 // Track Load
 //////////////////////////////////////////////////////////////////////
 void TauTrackLoad(void) {
-  // Are we tracking memory or headroom. Check the allocated argument. 
-  TheIsTauTrackingLoad() = true;
+  /* Enable tracking power by default */
+  static int flag = TauEnableTrackingLoad();
+  // use the variable to prevent compiler complaints
+  if (!flag) {};
+
+  /* Check and see if we're *still* tracking memory events */
+  if (TheIsTauTrackingLoad()) {
+    // don't use context
+    TauTriggerLoadEvent(false);
+  }
 }
 //////////////////////////////////////////////////////////////////////
 // Track MPI_T
@@ -438,7 +457,15 @@ extern "C" void Tau_track_mpi_t(void) {
 // Track memory resident set size (RSS) and high water mark (hwm)
 //////////////////////////////////////////////////////////////////////
 void TauTrackMemoryFootPrint(void) {
-  TauEnableTrackingMemoryRSSandHWM();
+  /* Enable tracking memory by default */
+  static int flag = TauEnableTrackingMemoryRSSandHWM();
+  // use the variable to prevent compiler complaints
+  if (!flag) {};
+ 
+  /* Check and see if we're *still* tracking memory events */
+  if (TheIsTauTrackingMemoryRSSandHWM()) {
+    Tau_trigger_memory_rss_hwm(false);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -498,7 +525,8 @@ void TauTrackPowerHere(void) {
  
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingPower()) {
-    TauTriggerPowerEvent();
+    // no, not in a signal handler
+    TauTriggerPowerEvent(false);
   }
 }
 
@@ -513,6 +541,7 @@ void TauTrackLoadHere(void) {
  
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingLoad()) {
+    // use context
     TauTriggerLoadEvent(true);
   }
 }

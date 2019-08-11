@@ -1341,7 +1341,7 @@ void TauEnv_initialize()
 #else
       TAU_VERBOSE("TAU: Power tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_POWER", "on");
-      TAU_TRACK_POWER();
+      TauEnableTrackingPower();
 #endif
     } 
 
@@ -1353,7 +1353,7 @@ void TauEnv_initialize()
 #else
       TAU_VERBOSE("TAU: system load tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_LOAD", "on");
-      TAU_TRACK_LOAD();
+      TauEnableTrackingLoad();
 #endif
     } 
 
