@@ -18,6 +18,8 @@ mpirun -np 8 ./matmult >& matmult.log
 B="$(($(date +%s)-T))"
 printf "Time to run tau+bp: %02d hours %02d minutes %02d seconds.\n" "$((B/3600))" "$((B/60%60))" "$((B%60))"
 
+return
+
 # cleanup
 rm -rf *.bp *.bp.dir
 

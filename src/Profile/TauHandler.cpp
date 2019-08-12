@@ -322,7 +322,7 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context);
 // TAU's alarm signal handler
 //////////////////////////////////////////////////////////////////////
 void TauAlarmHandler(int signum) {
-    printf("In %s\n", __func__);
+    //printf("In %s\n", __func__);
 
 
    /* Check and see if we're tracking memory events */
