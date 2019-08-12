@@ -14,20 +14,18 @@ source ./sourceme.sh
 export TAU_ADIOS2_ENGINE=BP
 echo "BP plugin"
 T="$(date +%s)"
-mpirun -np 8 ./matmult >& matmult.log
+#mpirun -np 8 ./matmult >& matmult.log
 B="$(($(date +%s)-T))"
 printf "Time to run tau+bp: %02d hours %02d minutes %02d seconds.\n" "$((B/3600))" "$((B/60%60))" "$((B%60))"
-
-return
 
 # cleanup
 rm -rf *.bp *.bp.dir
 
 # Launch the writer with plugin - SST writer and reader
 # launch the reader - it will sleep 2 seconds and wait for files
-#export TAU_ADIOS2_FILENAME=tau-metrics
-#python3 ./reader.py &
-#unset TAU_ADIOS2_FILENAME
+export TAU_ADIOS2_FILENAME=tau-metrics
+python3 ./reader.py &
+unset TAU_ADIOS2_FILENAME
 
 export TAU_ADIOS2_ENGINE=SST
 echo "SST plugin"

@@ -975,6 +975,8 @@ void PapiLayer::triggerRAPLPowerEvents(bool in_signal_handler) {
   long long curtime; 
   char ename[1024];
 
+  /* Have we initialized on this thread yet? */
+  if (ThreadList[tid] == 0) return;
   for (i=0; i<numCounters; i++) {
     tmpCounters[i] = 0;
     dmesg(1,"Tau_rapl_event_names = %s, Tau_rapl_units=%s, numCounters=%d\n",

@@ -703,7 +703,9 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TriggerHeapMemoryUsageEvent() {
   TAU_REGISTER_EVENT(evt, "Heap Memory Used (KB)");
-  TAU_EVENT(evt, Tau_max_RSS());
+  /* Make the measurement on thread 0, because we are 
+   * recording the heap for the process. */
+  Tau_userevent_thread(evt, Tau_max_RSS(), 0);
 }
 
 //////////////////////////////////////////////////////////////////////
