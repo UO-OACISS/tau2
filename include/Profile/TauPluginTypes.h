@@ -31,6 +31,25 @@
 #endif /* TAU_USE_OMPT_TR6 */
 #endif /* TAU_PLUGIN_OMPT_ON */
 
+/* Using typedefs here to avoid having too many #ifdef this file */
+#ifdef TAU_PLUGIN_OMPT_ON
+#ifdef TAU_USE_OMPT_TR7
+typedef omp_frame_t ompt_frame_t;
+typedef omp_wait_id_t ompt_wait_id_t;
+#endif /* TAU_USE_OMPT_TR7 */
+
+#ifdef TAU_USE_OMPT_TR6
+typedef ompt_thread_type_t ompt_thread_t;
+/* This should be un-commented for TR6 but needs to be commented for the TR6
+ * lib that TAU downloads, and the TR6 support of llvm 7.0.1 */
+/* typedef omp_frame_t ompt_frame_t; */
+/* typedef omp_wait_id_t ompt_wait_id_t; */
+typedef ompt_sync_region_kind_t ompt_sync_region_t;
+typedef ompt_mutex_kind_t ompt_mutex_t;
+typedef ompt_work_type_t ompt_work_t;
+#endif /*TAU_USE_OMPT_TR6 */
+#endif /* TAU_PLUGIN_OMPT_ON */
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -141,13 +160,7 @@ typedef struct Tau_plugin_event_trigger_data {
 typedef struct Tau_plugin_event_ompt_parallel_begin_data {
 #ifdef TAU_PLUGIN_OMPT_ON
    ompt_data_t *parent_task_data;
-#if defined (TAU_USE_OMPT_TR7)
-   const omp_frame_t *parent_task_frame;
-#endif /* defined (TAU_USE_OMPT_TR7) */
-   /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
-#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
    const ompt_frame_t *parent_task_frame;
-#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
    ompt_data_t* parallel_data;
    uint32_t requested_team_size;
 #if defined (TAU_USE_OMPT_TR6)
@@ -187,12 +200,7 @@ typedef struct Tau_plugin_event_ompt_parallel_end_data {
 typedef struct Tau_plugin_event_ompt_task_create_data {
 #ifdef TAU_PLUGIN_OMPT_ON
    ompt_data_t *parent_task_data;
-#if defined (TAU_USE_OMPT_TR7)
-   const omp_frame_t *parent_frame;
-#endif /* defined (TAU_USE_OMPT_TR7) */
-#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
    const ompt_frame_t *parent_frame;
-#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
    ompt_data_t* new_task_data;
    int type;
    int has_dependences;
@@ -235,12 +243,7 @@ typedef struct Tau_plugin_event_ompt_implicit_task_data {
 
 typedef struct Tau_plugin_event_ompt_thread_begin_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-#if defined (TAU_USE_OMPT_TR6)
-   ompt_thread_type_t thread_type;
-#endif /* defined (TAU_USE_OMPT_TR6) */
-#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
    ompt_thread_t thread_type;
-#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
    ompt_data_t *thread_data;
 #else /* TAU_PLUGIN_OMPT_ON */
    /* This is here for the sole purpose of preventing a warning saying that
@@ -263,12 +266,7 @@ typedef struct Tau_plugin_event_ompt_thread_end_data {
 
 typedef struct Tau_plugin_event_ompt_work_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-#if defined (TAU_USE_OMPT_TR6)
-   ompt_work_type_t wstype;
-#endif /* defined (TAU_USE_OMPT_TR6) */
-#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
    ompt_work_t wstype;
-#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
    ompt_scope_endpoint_t endpoint;
    ompt_data_t *parallel_data;
    ompt_data_t *task_data;
@@ -309,12 +307,7 @@ typedef struct Tau_plugin_event_ompt_idle_data {
 
 typedef struct Tau_plugin_event_ompt_sync_region_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-#if defined (TAU_USE_OMPT_TR6)
-   ompt_sync_region_kind_t kind;
-#endif /* defined (TAU_USE_OMPT_TR6) */
-#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
    ompt_sync_region_t kind;
-#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
    ompt_scope_endpoint_t endpoint;
    ompt_data_t *parallel_data;
    ompt_data_t *task_data;
@@ -329,21 +322,10 @@ typedef struct Tau_plugin_event_ompt_sync_region_data {
 
 typedef struct Tau_plugin_event_ompt_mutex_acquire_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-#if defined (TAU_USE_OMPT_TR6)
-   ompt_mutex_kind_t kind;
-#endif /* defined (TAU_USE_OMPT_TR6) */
-#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
    ompt_mutex_t kind;
-#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
    unsigned int hint;
    unsigned int impl;
-#if defined (TAU_USE_OMPT_TR7)
-   omp_wait_id_t wait_id;
-#endif /* defined (TAU_USE_OMPT_TR7) */
-   /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
-#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
    ompt_wait_id_t wait_id;
-#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
    const void *codeptr_ra;
 #else /* TAU_PLUGIN_OMPT_ON */
    /* This is here for the sole purpose of preventing a warning saying that
@@ -355,19 +337,8 @@ typedef struct Tau_plugin_event_ompt_mutex_acquire_data {
 
 typedef struct Tau_plugin_event_ompt_mutex_acquired_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-#if defined (TAU_USE_OMPT_TR6)
-   ompt_mutex_kind_t kind;
-#endif /* defined (TAU_USE_OMPT_TR6) */
-#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
    ompt_mutex_t kind;
-#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
-#if defined (TAU_USE_OMPT_TR7)
-   omp_wait_id_t wait_id;
-#endif /* defined (TAU_USE_OMPT_TR7) */
-   /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
-#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
    ompt_wait_id_t wait_id;
-#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
    const void *codeptr_ra;
 #else /* TAU_PLUGIN_OMPT_ON */
    /* This is here for the sole purpose of preventing a warning saying that
@@ -379,19 +350,8 @@ typedef struct Tau_plugin_event_ompt_mutex_acquired_data {
 
 typedef struct Tau_plugin_event_ompt_mutex_released_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-#if defined (TAU_USE_OMPT_TR6)
-   ompt_mutex_kind_t kind;
-#endif /* defined (TAU_USE_OMPT_TR6) */
-#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
    ompt_mutex_t kind;
-#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
-#if defined (TAU_USE_OMPT_TR7)
-   omp_wait_id_t wait_id;
-#endif /* defined (TAU_USE_OMPT_TR7) */
-   /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
-#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
    ompt_wait_id_t wait_id;
-#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
    const void *codeptr_ra;
 #else /* TAU_PLUGIN_OMPT_ON */
    /* This is here for the sole purpose of preventing a warning saying that
