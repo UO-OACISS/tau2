@@ -1811,6 +1811,7 @@ extern "C" int Tau_close_status(int fd) {
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
   static int fd=Tau_open_status();
+  if (fd == -1) return 0; // failure
 
   long long vmrss, vmhwm; 
   TAU_REGISTER_CONTEXT_EVENT(proc_vmhwm, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
