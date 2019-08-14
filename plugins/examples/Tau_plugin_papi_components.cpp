@@ -49,13 +49,29 @@ namespace tau {
                 int id;
                 const PAPI_component_info_t *info;
         };
+
+        class CPUStat {
+            public:
+                char name[32];
+                long long user;
+                long long nice;
+                long long system;
+                long long idle;
+                long long iowait;
+                long long irq;
+                long long softirq;
+                long long steal;
+                long long guest;
+        };
     }
 }
 
 typedef tau::papi_plugin::papi_component ppc;
 typedef tau::papi_plugin::papi_event ppe;
-
+typedef tau::papi_plugin::CPUStat cpustats_t;
 std::vector<ppc*> components;
+
+cpustats_t * previous_stats;
 
 pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_cond_t _my_cond; // for timer
@@ -163,6 +179,32 @@ void initialize_papi_events(void) {
     }
 }
 
+cpustats_t * read_cpu_stats() {
+    cpustats_t * cpu_stat = new(cpustats_t);
+    /*  Reading proc/stat as a file  */
+    FILE * pFile;
+    char line[128];
+    char dummy[32];
+    pFile = fopen ("/proc/stat","r");
+    if (pFile == nullptr) {
+        perror ("Error opening file");
+        return NULL;
+    } else {
+        while ( fgets( line, 128, pFile)) {
+            if ( strncmp (line, "cpu", 3) == 0 ) {
+                /*  Note, this will only work on linux 2.6.24 through 3.5  */
+                sscanf(line, "%s %lld %lld %lld %lld %lld %lld %lld %lld %lld\n",
+                       cpu_stat->name, &cpu_stat->user, &cpu_stat->nice,
+                       &cpu_stat->system, &cpu_stat->idle,
+                       &cpu_stat->iowait, &cpu_stat->irq, &cpu_stat->softirq,
+                       &cpu_stat->steal, &cpu_stat->guest);
+                break; // only the total for now
+            }
+        }
+    }
+    return cpu_stat;
+}
+
 int choose_volunteer_rank() {
 #ifdef TAU_MPI
     // figure out who should get system stats for this node
@@ -203,6 +245,41 @@ int choose_volunteer_rank() {
 #endif
 }
 
+void sample_value(const char * name, const double value) {
+    void * ue = Tau_get_userevent(name);
+    Tau_userevent_thread(ue, value*100.0, 0);
+}
+
+void update_cpu_stats(void) {
+    /* get the current stats */
+    cpustats_t * new_stats = read_cpu_stats();
+    /* we need to take the difference from the last read */
+    cpustats_t * diff = new cpustats_t();
+    diff->user = new_stats->user - previous_stats->user;
+    diff->nice = new_stats->nice - previous_stats->nice;
+    diff->system = new_stats->system - previous_stats->system;
+    diff->idle = new_stats->idle - previous_stats->idle;
+    diff->iowait = new_stats->iowait - previous_stats->iowait;
+    diff->irq = new_stats->irq - previous_stats->irq;
+    diff->softirq = new_stats->softirq - previous_stats->softirq;
+    diff->steal = new_stats->steal - previous_stats->steal;
+    diff->guest = new_stats->guest - previous_stats->guest;
+    double total = (double)(diff->user + diff->nice + diff->system +
+            diff->idle + diff->iowait + diff->irq + diff->softirq +
+            diff->steal + diff->guest);
+    sample_value("CPU User %",     ((double)(diff->user))    / total);
+    sample_value("CPU Nice %",     ((double)(diff->nice))    / total);
+    sample_value("CPU System %",   ((double)(diff->system))  / total);
+    sample_value("CPU Idle %",     ((double)(diff->idle))    / total);
+    sample_value("CPU I/O Wait %", ((double)(diff->iowait))  / total);
+    sample_value("CPU IRQ %",      ((double)(diff->irq))     / total);
+    sample_value("CPU soft IRQ %", ((double)(diff->softirq)) / total);
+    sample_value("CPU Steal %",    ((double)(diff->steal))   / total);
+    sample_value("CPU Guest %",    ((double)(diff->guest))   / total);
+    delete(previous_stats);
+    previous_stats = new_stats;
+}
+
 void read_papi_components(void) {
     Tau_pure_start(__func__);
     for (size_t index = 0; index < components.size() ; index++) {
@@ -234,6 +311,8 @@ void read_papi_components(void) {
         Tau_track_load();
         /* records the power, without context */
         Tau_track_power();
+        /* Get the current CPU statistics for the node */
+        update_cpu_stats();
     }
 
     Tau_pure_stop(__func__);
@@ -395,6 +474,7 @@ int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t*
     if (my_rank == rank_getting_system_data) {
         /* get ready to read metrics! */
         initialize_papi_events();
+        previous_stats = read_cpu_stats();
     }
     /* spawn the worker thread to do the reading */
     init_lock(&_my_mutex);
