@@ -18,6 +18,10 @@
 #include <Profile/TauPlugin.h>
 #include <pthread.h>
 
+#ifdef TAU_MPI
+#include "mpi.h"
+#endif
+
 #ifdef TAU_PAPI
 #include "papi.h"
 
@@ -57,6 +61,8 @@ pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_cond_t _my_cond; // for timer
 pthread_t worker_thread;
 bool done;
+int rank_getting_system_data;
+int my_rank = 0;
 
 void initialize_papi_events(void) {
     PapiLayer::initializePapiLayer();
@@ -157,7 +163,48 @@ void initialize_papi_events(void) {
     }
 }
 
+int choose_volunteer_rank() {
+#ifdef TAU_MPI
+    // figure out who should get system stats for this node
+    int i;
+    my_rank = 0;
+    int comm_size = 1;
+    PMPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    PMPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+
+    // get my hostname
+    const int hostlength = 128;
+    char hostname[hostlength] = {0};
+    gethostname(hostname, sizeof(char)*hostlength);
+    // make array for all hostnames
+    char * allhostnames = (char*)calloc(hostlength * comm_size, sizeof(char));
+    // copy my name into the big array
+    char * host_index = allhostnames + (hostlength * my_rank);
+    strncpy(host_index, hostname, hostlength);
+    // get all hostnames
+    PMPI_Allgather(hostname, hostlength, MPI_CHAR, allhostnames, 
+                   hostlength, MPI_CHAR, MPI_COMM_WORLD);
+    int volunteer = 0;
+    // point to the head of the array
+    host_index = allhostnames;
+    // find the lowest rank with my hostname
+    for (i = 0 ; i < comm_size ; i++) {
+        //printf("%d:%d comparing '%s' to '%s'\n", rank, size, hostname, host_index);
+        if (strncmp(hostname, host_index, hostlength) == 0) {
+            volunteer = i;
+            break;
+        }
+        host_index = host_index + hostlength;
+    }
+    free(allhostnames);
+    return volunteer;
+#else
+    return 0;
+#endif
+}
+
 void read_papi_components(void) {
+    Tau_pure_start(__func__);
     for (size_t index = 0; index < components.size() ; index++) {
         if (components[index]->initialized) {
             ppc * comp = components[index];
@@ -179,14 +226,48 @@ void read_papi_components(void) {
 
     /* records the heap, with no context, even though it says "here". */
     Tau_track_memory_here();
-    /* records the load, without context */
-    Tau_track_load();
-    /* records the power, without context */
-    Tau_track_power();
     /* records the rss/hwm, without context. */
     Tau_track_memory_rss_and_hwm();
 
+    if (my_rank == rank_getting_system_data) {
+        /* records the load, without context */
+        Tau_track_load();
+        /* records the power, without context */
+        Tau_track_power();
+    }
+
+    Tau_pure_stop(__func__);
     return;
+}
+
+void free_papi_components(void) {
+    for (size_t index = 0; index < components.size() ; index++) {
+        ppc * comp = components[index];
+        if (comp->initialized) {
+            long long * values = (long long *)calloc(comp->events.size(), sizeof(long long));
+            int retval = PAPI_stop(comp->event_set, values);
+            if (retval != PAPI_OK) {
+                TAU_VERBOSE("Error: Error reading PAPI RAPL eventset.\n");
+                return;
+            }
+            free(values);
+            /* Done, clean up */
+            retval = PAPI_cleanup_eventset(comp->event_set);
+            if (retval != PAPI_OK) {
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__, __LINE__,
+                        "PAPI_cleanup_eventset()",retval);
+            }
+
+            retval = PAPI_destroy_eventset(&(comp->event_set));
+            if (retval != PAPI_OK) {
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__, __LINE__,
+                        "PAPI_destroy_eventset()",retval);
+            }
+            comp->initialized = false;
+        }
+        delete(comp);
+    }
+    components.clear();
 }
 
 void stop_worker(void) {
@@ -281,6 +362,11 @@ void init_lock(pthread_mutex_t * _mutex) {
 int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_execution_data_t *data) {
     TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     stop_worker();
+    /* clean up papi */
+    if (my_rank == rank_getting_system_data) {
+        free_papi_components();
+    }
+    /* Why do these deadlock on exit? */
     //pthread_cond_destroy(&_my_cond);
     //pthread_mutex_destroy(&_my_mutex);
     return 0;
@@ -303,8 +389,13 @@ int Tau_plugin_metadata_registration_complete_papi_component(Tau_plugin_event_me
 
 int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t* data) {
     TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    /* get ready to read metrics! */
-    initialize_papi_events();
+
+    rank_getting_system_data = choose_volunteer_rank();
+
+    if (my_rank == rank_getting_system_data) {
+        /* get ready to read metrics! */
+        initialize_papi_events();
+    }
     /* spawn the worker thread to do the reading */
     init_lock(&_my_mutex);
     TAU_VERBOSE("Spawning thread.\n");

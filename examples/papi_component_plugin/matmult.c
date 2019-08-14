@@ -201,7 +201,7 @@ int main (int argc, char *argv[])
 #ifdef TAU_MPI
   MPI_Finalize();
 #endif /* TAU_MPI */
-  printf ("Done.\n");
+  if(rank == 0) { printf ("Done.\n"); }
 
   return 0;
 }
