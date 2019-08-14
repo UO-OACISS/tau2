@@ -71,7 +71,7 @@ typedef tau::papi_plugin::papi_event ppe;
 typedef tau::papi_plugin::CPUStat cpustats_t;
 std::vector<ppc*> components;
 
-cpustats_t * previous_stats;
+std::vector<cpustats_t*> * previous_stats;
 
 pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_cond_t _my_cond; // for timer
@@ -179,8 +179,8 @@ void initialize_papi_events(void) {
     }
 }
 
-cpustats_t * read_cpu_stats() {
-    cpustats_t * cpu_stat = new(cpustats_t);
+std::vector<cpustats_t*> * read_cpu_stats() {
+    std::vector<cpustats_t*> * cpu_stats = new std::vector<cpustats_t*>();
     /*  Reading proc/stat as a file  */
     FILE * pFile;
     char line[128];
@@ -192,17 +192,18 @@ cpustats_t * read_cpu_stats() {
     } else {
         while ( fgets( line, 128, pFile)) {
             if ( strncmp (line, "cpu", 3) == 0 ) {
+                cpustats_t * cpu_stat = new(cpustats_t);
                 /*  Note, this will only work on linux 2.6.24 through 3.5  */
                 sscanf(line, "%s %lld %lld %lld %lld %lld %lld %lld %lld %lld\n",
                        cpu_stat->name, &cpu_stat->user, &cpu_stat->nice,
                        &cpu_stat->system, &cpu_stat->idle,
                        &cpu_stat->iowait, &cpu_stat->irq, &cpu_stat->softirq,
                        &cpu_stat->steal, &cpu_stat->guest);
-                break; // only the total for now
+                cpu_stats->push_back(cpu_stat);
             }
         }
     }
-    return cpu_stat;
+    return cpu_stats;
 }
 
 int choose_volunteer_rank() {
@@ -245,37 +246,41 @@ int choose_volunteer_rank() {
 #endif
 }
 
-void sample_value(const char * name, const double value) {
-    void * ue = Tau_get_userevent(name);
+void sample_value(const char * cpu, const char * name, const double value) {
+    std::stringstream ss;
+    ss << cpu << ":" << name;
+    void * ue = Tau_get_userevent(ss.str().c_str());
     Tau_userevent_thread(ue, value*100.0, 0);
 }
 
 void update_cpu_stats(void) {
     /* get the current stats */
-    cpustats_t * new_stats = read_cpu_stats();
-    /* we need to take the difference from the last read */
-    cpustats_t * diff = new cpustats_t();
-    diff->user = new_stats->user - previous_stats->user;
-    diff->nice = new_stats->nice - previous_stats->nice;
-    diff->system = new_stats->system - previous_stats->system;
-    diff->idle = new_stats->idle - previous_stats->idle;
-    diff->iowait = new_stats->iowait - previous_stats->iowait;
-    diff->irq = new_stats->irq - previous_stats->irq;
-    diff->softirq = new_stats->softirq - previous_stats->softirq;
-    diff->steal = new_stats->steal - previous_stats->steal;
-    diff->guest = new_stats->guest - previous_stats->guest;
-    double total = (double)(diff->user + diff->nice + diff->system +
-            diff->idle + diff->iowait + diff->irq + diff->softirq +
-            diff->steal + diff->guest);
-    sample_value("CPU User %",     ((double)(diff->user))    / total);
-    sample_value("CPU Nice %",     ((double)(diff->nice))    / total);
-    sample_value("CPU System %",   ((double)(diff->system))  / total);
-    sample_value("CPU Idle %",     ((double)(diff->idle))    / total);
-    sample_value("CPU I/O Wait %", ((double)(diff->iowait))  / total);
-    sample_value("CPU IRQ %",      ((double)(diff->irq))     / total);
-    sample_value("CPU soft IRQ %", ((double)(diff->softirq)) / total);
-    sample_value("CPU Steal %",    ((double)(diff->steal))   / total);
-    sample_value("CPU Guest %",    ((double)(diff->guest))   / total);
+    std::vector<cpustats_t*> * new_stats = read_cpu_stats();
+    for (int i = 0 ; i < new_stats->size() ; i++) {
+        /* we need to take the difference from the last read */
+        cpustats_t diff;
+        diff.user = (*new_stats)[i]->user - (*previous_stats)[i]->user;
+        diff.nice = (*new_stats)[i]->nice - (*previous_stats)[i]->nice;
+        diff.system = (*new_stats)[i]->system - (*previous_stats)[i]->system;
+        diff.idle = (*new_stats)[i]->idle - (*previous_stats)[i]->idle;
+        diff.iowait = (*new_stats)[i]->iowait - (*previous_stats)[i]->iowait;
+        diff.irq = (*new_stats)[i]->irq - (*previous_stats)[i]->irq;
+        diff.softirq = (*new_stats)[i]->softirq - (*previous_stats)[i]->softirq;
+        diff.steal = (*new_stats)[i]->steal - (*previous_stats)[i]->steal;
+        diff.guest = (*new_stats)[i]->guest - (*previous_stats)[i]->guest;
+        double total = (double)(diff.user + diff.nice + diff.system +
+                diff.idle + diff.iowait + diff.irq + diff.softirq +
+                diff.steal + diff.guest);
+        sample_value((*new_stats)[i]->name, " User %",     ((double)(diff.user))    / total);
+        sample_value((*new_stats)[i]->name, " Nice %",     ((double)(diff.nice))    / total);
+        sample_value((*new_stats)[i]->name, " System %",   ((double)(diff.system))  / total);
+        sample_value((*new_stats)[i]->name, " Idle %",     ((double)(diff.idle))    / total);
+        sample_value((*new_stats)[i]->name, " I/O Wait %", ((double)(diff.iowait))  / total);
+        sample_value((*new_stats)[i]->name, " IRQ %",      ((double)(diff.irq))     / total);
+        sample_value((*new_stats)[i]->name, " soft IRQ %", ((double)(diff.softirq)) / total);
+        sample_value((*new_stats)[i]->name, " Steal %",    ((double)(diff.steal))   / total);
+        sample_value((*new_stats)[i]->name, " Guest %",    ((double)(diff.guest))   / total);
+    }
     delete(previous_stats);
     previous_stats = new_stats;
 }
