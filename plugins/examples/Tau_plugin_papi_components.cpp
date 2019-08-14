@@ -67,7 +67,7 @@ void initialize_papi_events(void) {
     for (int component_id = 0 ; component_id < num_components ; component_id++) {
         comp_info = PAPI_get_component_info(component_id);
         if (comp_info == NULL) {
-            fprintf(stderr, "PAPI component info unavailable, no power measurements will be done.\n");
+            TAU_VERBOSE("Error: PAPI component info unavailable, no power measurements will be done.\n");
             return;
         }
         ppc * comp = new ppc(component_id, comp_info);
@@ -75,19 +75,19 @@ void initialize_papi_events(void) {
         if (strstr(comp_info->name, "perf_event") != NULL) {
             continue;
         }
-        printf("Found %s component...\n", comp_info->name);
+        TAU_VERBOSE("Found %s component...\n", comp_info->name);
         /* Does this component have available events? */
         if (comp_info->num_native_events == 0) {
-            fprintf(stderr, "No %s events found.\n", comp_info->name);
+            TAU_VERBOSE("Error: No %s events found.\n", comp_info->name);
             if (comp_info->disabled != 0) {
-                fprintf(stderr, "%s.\n", comp_info->disabled_reason);
+                TAU_VERBOSE("Error: %s.\n", comp_info->disabled_reason);
             }        
             continue;
         }
         /* Construct the event set and populate it */
         retval = PAPI_create_eventset(&comp->event_set);
         if (retval != PAPI_OK) {
-            fprintf(stderr, "Error creating PAPI eventset for %s component.\n", comp_info->name);
+            TAU_VERBOSE("Error: Error creating PAPI eventset for %s component.\n", comp_info->name);
             continue;
         }
         int code = PAPI_NATIVE_MASK;
@@ -97,7 +97,7 @@ void initialize_papi_events(void) {
             retval = PAPI_enum_cmp_event( &code, event_modifier, component_id );
             event_modifier = PAPI_ENUM_EVENTS;
             if ( retval != PAPI_OK ) {
-                fprintf( stderr, "%s %d %s %d\n", __FILE__,
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__,
                         __LINE__, "PAPI_event_code_to_name", retval );
                 continue;
             }
@@ -105,7 +105,7 @@ void initialize_papi_events(void) {
             char event_name[PAPI_MAX_STR_LEN];
             retval = PAPI_event_code_to_name( code, event_name );
             if (retval != PAPI_OK) {
-                fprintf(stderr, "%s %d %s %d\n", __FILE__,
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__,
                         __LINE__, "Error getting event name\n",retval);
                 continue;
             }
@@ -115,7 +115,7 @@ void initialize_papi_events(void) {
             PAPI_event_info_t evinfo;
             retval = PAPI_get_event_info(code,&evinfo);
             if (retval != PAPI_OK) {
-                fprintf(stderr, "%s %d %s %d\n", __FILE__,
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__,
                         __LINE__, "Error getting event info\n",retval);
                 continue;
             }
@@ -123,7 +123,7 @@ void initialize_papi_events(void) {
             char unit[PAPI_MAX_STR_LEN] = {0};
             strncpy(unit,evinfo.units,PAPI_MAX_STR_LEN);
             // save the event info
-            //printf("Found event '%s (%s)'\n", event_name, unit);
+            TAU_VERBOSE("Found event '%s (%s)'\n", event_name, unit);
             ppe this_event(event_name, unit, code, evinfo.data_type);
             if(strcmp(unit, "nJ") == 0) {
                 this_event.units = "J";
@@ -141,7 +141,7 @@ void initialize_papi_events(void) {
             }
             retval = PAPI_add_event(comp->event_set, code);
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error adding RAPL event.\n");
+                TAU_VERBOSE("Error: Error adding PAPI %s event %s.\n", comp_info->name, event_name);
                 return;
             }
             comp->events.push_back(std::move(this_event));
@@ -149,7 +149,7 @@ void initialize_papi_events(void) {
         /* Start the event set */
         retval = PAPI_start(comp->event_set);
         if (retval != PAPI_OK) {
-            fprintf(stderr, "Error starting PAPI eventset.\n");
+            TAU_VERBOSE("Error: Error starting PAPI eventset.\n");
             return;
         }
         comp->initialized = true;
@@ -164,7 +164,7 @@ void read_papi_components(void) {
             long long * values = (long long *)calloc(comp->events.size(), sizeof(long long));
             int retval = PAPI_read(comp->event_set, values);
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error reading PAPI RAPL eventset.\n");
+                TAU_VERBOSE("Error: Error reading PAPI RAPL eventset.\n");
                 return;
             }
             for (size_t i = 0 ; i < comp->events.size() ; i++) {
@@ -193,7 +193,7 @@ void stop_worker(void) {
     pthread_mutex_lock(&_my_mutex);
     done = true;
     pthread_mutex_unlock(&_my_mutex);
-    printf("TAU ADIOS2 thread joining...\n"); fflush(stderr);
+    TAU_VERBOSE("TAU ADIOS2 thread joining...\n"); fflush(stderr);
     pthread_cond_signal(&_my_cond);
     int ret = pthread_join(worker_thread, NULL);
     if (ret != 0) {
@@ -216,7 +216,7 @@ void stop_worker(void) {
 }
 
 int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_execution_data_t *data) {
-    printf("PAPI Component PLUGIN %s\n", __func__);
+    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     stop_worker();
     //pthread_cond_destroy(&_my_cond);
     //pthread_mutex_destroy(&_my_mutex);
@@ -224,47 +224,47 @@ int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_exe
 }
 
 int Tau_plugin_event_trigger_papi_component(Tau_plugin_event_trigger_data_t* data) {
-    printf("PAPI Component PLUGIN %s\n", __func__);
+    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     return 0;
 }
 
 int Tau_plugin_event_dump_papi_component(Tau_plugin_event_dump_data_t* data) {
-    printf("PAPI Component PLUGIN %s\n", __func__);
+    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     return 0;
 }
 
 int Tau_plugin_metadata_registration_complete_papi_component(Tau_plugin_event_metadata_registration_data_t* data) {
-    //printf("PAPI Component PLUGIN %s\n", __func__);
+    //TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     return 0;
 }
 
 int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t* data) {
-    printf("PAPI Component PLUGIN %s\n", __func__);
+    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     return 0;
 }  
 
 int Tau_plugin_event_send_papi_component(Tau_plugin_event_send_data_t* data) {
-    printf("PAPI Component PLUGIN %s\n", __func__);
+    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     return 0;
 }
 
 int Tau_plugin_event_recv_papi_component(Tau_plugin_event_recv_data_t* data) {
-    printf("PAPI Component PLUGIN %s\n", __func__);
+    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     return 0;
 }
 
 int Tau_plugin_event_function_entry_papi_component(Tau_plugin_event_function_entry_data_t* data) {
-    //printf("PAPI Component PLUGIN %s\n", __func__);
+    //TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     return 0;
 }
 
 int Tau_plugin_event_function_exit_papi_component(Tau_plugin_event_function_exit_data_t* data) {
-    //printf("PAPI Component PLUGIN %s\n", __func__);
+    //TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     return 0;
 }
 
 int Tau_plugin_event_atomic_trigger_papi_component(Tau_plugin_event_atomic_event_trigger_data_t* data) {
-    //printf("PAPI Component PLUGIN %s\n", __func__);
+    //TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     return 0;
 }
 
@@ -290,12 +290,12 @@ void * Tau_papi_component_plugin_threaded_function(void* data) {
         pthread_mutex_lock(&_my_mutex);
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
         if (rc == ETIMEDOUT) {
-            printf("%d Timeout from plugin.\n", RtsLayer::myNode()); fflush(stderr);
+            TAU_VERBOSE("%d Timeout from plugin.\n", RtsLayer::myNode()); fflush(stderr);
             read_papi_components();
         } else if (rc == EINVAL) {
-            printf("Invalid timeout!\n"); fflush(stderr);
+            TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
         } else if (rc == EPERM) {
-            printf("Mutex not locked!\n"); fflush(stderr);
+            TAU_VERBOSE("Mutex not locked!\n"); fflush(stderr);
         }
     }
     // unlock after being signalled.
@@ -334,7 +334,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
 
     done = false;
     init_lock(&_my_mutex);
-    printf("Spawning thread.\n");
+    TAU_VERBOSE("Spawning thread.\n");
     int ret = pthread_create(&worker_thread, NULL,
         &Tau_papi_component_plugin_threaded_function, NULL);
     if (ret != 0) {
