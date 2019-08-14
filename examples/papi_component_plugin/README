@@ -5,5 +5,5 @@ Configure PAPI with component support - as many or as few as you like
 (i.e. --with-components="rapl nvml lmsensors net")
 
 Configure TAU with:
-./configure -pthread -bfd=download -mpi -papi=/usr/local/packages/papi-5.7.0/install
+./configure -pthread -bfd=download -mpi -papi=/usr/local/packages/papi/5.7.0
 
