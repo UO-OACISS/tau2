@@ -1,0 +1,9 @@
+This example shows how to use the PAPI component plugin to read from all 
+available PAPI components (except for perf_event).
+
+Configure PAPI with component support
+(i.e. -with-components="rapl nvml lmsensors")
+
+Configure TAU with:
+./configure -pthread -bfd=download -mpi -papi=/home/users/khuck/src/papi-5.7.0/install
+
