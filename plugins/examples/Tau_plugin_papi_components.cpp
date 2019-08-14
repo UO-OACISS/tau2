@@ -215,6 +215,69 @@ void stop_worker(void) {
     }
 }
 
+void * Tau_papi_component_plugin_threaded_function(void* data) {
+    /* Set the wakeup time (ts) to 2 seconds in the future. */
+    struct timespec ts;
+    struct timeval  tp;
+    Tau_pure_start(__func__);
+
+    /* Get a baseline reading */
+    read_papi_components();
+
+    while (!done) {
+        // wait x microseconds for the next batch.
+        gettimeofday(&tp, NULL);
+        const int one_second = 1000000;
+        // first, add the period to the current microseconds
+        int tmp_usec = tp.tv_usec + one_second;
+        int flow_sec = 0;
+        if (tmp_usec > one_second) { // did we overflow?
+            flow_sec = tmp_usec / one_second; // how many seconds?
+            tmp_usec = tmp_usec % one_second; // get the remainder
+        }
+        ts.tv_sec  = (tp.tv_sec + flow_sec);
+        ts.tv_nsec = (1000 * tmp_usec);
+        pthread_mutex_lock(&_my_mutex);
+        int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
+        if (rc == ETIMEDOUT) {
+            TAU_VERBOSE("%d Timeout from plugin.\n", RtsLayer::myNode()); fflush(stderr);
+            if (!done) {
+                read_papi_components();
+            }
+        } else if (rc == EINVAL) {
+            TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
+        } else if (rc == EPERM) {
+            TAU_VERBOSE("Mutex not locked!\n"); fflush(stderr);
+        }
+    }
+
+    /* Get an exit reading */
+    read_papi_components();
+
+    // unlock after being signalled.
+    pthread_mutex_unlock(&_my_mutex);
+    Tau_pure_start(__func__);
+    pthread_exit((void*)0L);
+	return(NULL);
+}
+
+void init_lock(pthread_mutex_t * _mutex) {
+    pthread_mutexattr_t Attr;
+    pthread_mutexattr_init(&Attr);
+    pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_ERRORCHECK);
+    int rc;
+    if ((rc = pthread_mutex_init(_mutex, &Attr)) != 0) {
+        errno = rc;
+        perror("pthread_mutex_init error");
+        exit(1);
+    }
+    if ((rc = pthread_cond_init(&_my_cond, NULL)) != 0) {
+        errno = rc;
+        perror("pthread_cond_init error");
+        exit(1);
+    }
+}
+
 int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_execution_data_t *data) {
     TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     stop_worker();
@@ -240,6 +303,18 @@ int Tau_plugin_metadata_registration_complete_papi_component(Tau_plugin_event_me
 
 int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t* data) {
     TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+    /* get ready to read metrics! */
+    initialize_papi_events();
+    /* spawn the worker thread to do the reading */
+    init_lock(&_my_mutex);
+    TAU_VERBOSE("Spawning thread.\n");
+    int ret = pthread_create(&worker_thread, NULL,
+        &Tau_papi_component_plugin_threaded_function, NULL);
+    if (ret != 0) {
+        errno = ret;
+        perror("Error: pthread_create (1) fails\n");
+        exit(1);
+    }
     return 0;
 }  
 
@@ -268,60 +343,6 @@ int Tau_plugin_event_atomic_trigger_papi_component(Tau_plugin_event_atomic_event
     return 0;
 }
 
-void * Tau_papi_component_plugin_threaded_function(void* data) {
-    /* Set the wakeup time (ts) to 2 seconds in the future. */
-    struct timespec ts;
-    struct timeval  tp;
-    Tau_pure_start(__func__);
-
-    while (!done) {
-        // wait x microseconds for the next batch.
-        gettimeofday(&tp, NULL);
-        const int one_second = 1000000;
-        // first, add the period to the current microseconds
-        int tmp_usec = tp.tv_usec + one_second;
-        int flow_sec = 0;
-        if (tmp_usec > one_second) { // did we overflow?
-            flow_sec = tmp_usec / one_second; // how many seconds?
-            tmp_usec = tmp_usec % one_second; // get the remainder
-        }
-        ts.tv_sec  = (tp.tv_sec + flow_sec);
-        ts.tv_nsec = (1000 * tmp_usec);
-        pthread_mutex_lock(&_my_mutex);
-        int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
-        if (rc == ETIMEDOUT) {
-            TAU_VERBOSE("%d Timeout from plugin.\n", RtsLayer::myNode()); fflush(stderr);
-            read_papi_components();
-        } else if (rc == EINVAL) {
-            TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
-        } else if (rc == EPERM) {
-            TAU_VERBOSE("Mutex not locked!\n"); fflush(stderr);
-        }
-    }
-    // unlock after being signalled.
-    pthread_mutex_unlock(&_my_mutex);
-    Tau_pure_start(__func__);
-    pthread_exit((void*)0L);
-	return(NULL);
-}
-
-void init_lock(pthread_mutex_t * _mutex) {
-    pthread_mutexattr_t Attr;
-    pthread_mutexattr_init(&Attr);
-    pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_ERRORCHECK);
-    int rc;
-    if ((rc = pthread_mutex_init(_mutex, &Attr)) != 0) {
-        errno = rc;
-        perror("pthread_mutex_init error");
-        exit(1);
-    }
-    if ((rc = pthread_cond_init(&_my_cond, NULL)) != 0) {
-        errno = rc;
-        perror("pthread_cond_init error");
-        exit(1);
-    }
-}
-
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
  * Every plugin MUST implement this function to register callbacks for various events 
  * that the plugin is interested in listening to*/
@@ -329,19 +350,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
 
-    /* get ready to read metrics! */
-    initialize_papi_events();
-
     done = false;
-    init_lock(&_my_mutex);
-    TAU_VERBOSE("Spawning thread.\n");
-    int ret = pthread_create(&worker_thread, NULL,
-        &Tau_papi_component_plugin_threaded_function, NULL);
-    if (ret != 0) {
-        errno = ret;
-        perror("Error: pthread_create (1) fails\n");
-        exit(1);
-    }
 
     /* Required event support */
     cb->Trigger = Tau_plugin_event_trigger_papi_component;
