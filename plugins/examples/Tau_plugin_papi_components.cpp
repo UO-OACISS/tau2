@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <string>
 #include <sstream>
+#include <map>
+#include <vector>
 
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
@@ -24,6 +26,9 @@
 
 #ifdef TAU_PAPI
 #include "papi.h"
+#else
+#define PAPI_NULL -1
+#endif
 
 namespace tau {
     namespace papi_plugin {
@@ -41,17 +46,19 @@ namespace tau {
         /* Simple class to aid in processing PAPI components */
         class papi_component {
             public:
-                papi_component(int cid, const PAPI_component_info_t *cinfo) : 
-                    event_set(PAPI_NULL), initialized(false), id(cid), info(cinfo) {}
+                papi_component(int cid) : 
+                    event_set(PAPI_NULL), initialized(false), id(cid) {}
                 std::vector<papi_event> events;
                 int event_set;
                 bool initialized;
                 int id;
-                const PAPI_component_info_t *info;
         };
 
         class CPUStat {
             public:
+                CPUStat() : user(0LL), nice(0LL), system(0LL),
+                    idle(0LL), iowait(0LL), irq(0LL), softirq(0LL),
+                    steal(0LL), guest(0LL) {}
                 char name[32];
                 long long user;
                 long long nice;
@@ -80,6 +87,21 @@ bool done;
 int rank_getting_system_data;
 int my_rank = 0;
 
+void * find_user_event(const std::string& name) {
+    void * ue = NULL;
+    /* I can't believe I need a local map to do this... */
+    static std::map<std::string, void*> event_map;
+    auto search = event_map.find(name);
+    if (search == event_map.end()) {
+        ue = Tau_get_userevent(name.c_str());
+        event_map.insert({name, ue});
+    } else {
+        ue = search->second;
+    }
+    return ue;
+}
+
+#ifdef TAU_PAPI
 void initialize_papi_events(void) {
     PapiLayer::initializePapiLayer();
     int num_components = PAPI_num_components();
@@ -92,7 +114,7 @@ void initialize_papi_events(void) {
             TAU_VERBOSE("Error: PAPI component info unavailable, no power measurements will be done.\n");
             return;
         }
-        ppc * comp = new ppc(component_id, comp_info);
+        ppc * comp = new ppc(component_id);
         /* Skip the perf_event component, that's standard PAPI */
         if (strstr(comp_info->name, "perf_event") != NULL) {
             continue;
@@ -178,6 +200,7 @@ void initialize_papi_events(void) {
         components.push_back(comp);
     }
 }
+#endif
 
 std::vector<cpustats_t*> * read_cpu_stats() {
     std::vector<cpustats_t*> * cpu_stats = new std::vector<cpustats_t*>();
@@ -246,11 +269,18 @@ int choose_volunteer_rank() {
 #endif
 }
 
-void sample_value(const char * cpu, const char * name, const double value) {
+void sample_value(const char * cpu, const char * name, const double value, const long long total) {
     std::stringstream ss;
     ss << cpu << ":" << name;
-    void * ue = Tau_get_userevent(ss.str().c_str());
-    Tau_userevent_thread(ue, value*100.0, 0);
+    void * ue = find_user_event(ss.str());
+    // double-check the value...
+    double tmp;
+    if (total == 0LL) {
+        tmp = 0.0;
+    } else {
+        tmp = (value / (double)(total)) * 100.0;
+    }
+    Tau_userevent_thread(ue, tmp, 0);
 }
 
 void update_cpu_stats(void) {
@@ -271,15 +301,18 @@ void update_cpu_stats(void) {
         double total = (double)(diff.user + diff.nice + diff.system +
                 diff.idle + diff.iowait + diff.irq + diff.softirq +
                 diff.steal + diff.guest);
-        sample_value((*new_stats)[i]->name, " User %",     ((double)(diff.user))    / total);
-        sample_value((*new_stats)[i]->name, " Nice %",     ((double)(diff.nice))    / total);
-        sample_value((*new_stats)[i]->name, " System %",   ((double)(diff.system))  / total);
-        sample_value((*new_stats)[i]->name, " Idle %",     ((double)(diff.idle))    / total);
-        sample_value((*new_stats)[i]->name, " I/O Wait %", ((double)(diff.iowait))  / total);
-        sample_value((*new_stats)[i]->name, " IRQ %",      ((double)(diff.irq))     / total);
-        sample_value((*new_stats)[i]->name, " soft IRQ %", ((double)(diff.softirq)) / total);
-        sample_value((*new_stats)[i]->name, " Steal %",    ((double)(diff.steal))   / total);
-        sample_value((*new_stats)[i]->name, " Guest %",    ((double)(diff.guest))   / total);
+        long long lltotal = (diff.user + diff.nice + diff.system +
+                diff.idle + diff.iowait + diff.irq + diff.softirq +
+                diff.steal + diff.guest);
+        sample_value((*new_stats)[i]->name, " User %",     (double)(diff.user), total);
+        sample_value((*new_stats)[i]->name, " Nice %",     (double)(diff.nice), total);
+        sample_value((*new_stats)[i]->name, " System %",   (double)(diff.system), total);
+        sample_value((*new_stats)[i]->name, " Idle %",     (double)(diff.idle), total);
+        sample_value((*new_stats)[i]->name, " I/O Wait %", (double)(diff.iowait), total);
+        sample_value((*new_stats)[i]->name, " IRQ %",      (double)(diff.irq), total);
+        sample_value((*new_stats)[i]->name, " soft IRQ %", (double)(diff.softirq), total);
+        sample_value((*new_stats)[i]->name, " Steal %",    (double)(diff.steal), total);
+        sample_value((*new_stats)[i]->name, " Guest %",    (double)(diff.guest), total);
     }
     delete(previous_stats);
     previous_stats = new_stats;
@@ -287,6 +320,7 @@ void update_cpu_stats(void) {
 
 void read_papi_components(void) {
     Tau_pure_start(__func__);
+#ifdef TAU_PAPI
     for (size_t index = 0; index < components.size() ; index++) {
         if (components[index]->initialized) {
             ppc * comp = components[index];
@@ -297,13 +331,13 @@ void read_papi_components(void) {
                 return;
             }
             for (size_t i = 0 ; i < comp->events.size() ; i++) {
-                void * ue = Tau_get_userevent(comp->events[i].name.c_str());
+                void * ue = find_user_event(comp->events[i].name);
                 Tau_userevent_thread(ue, ((double)values[i]) * comp->events[i].conversion, 0);
             }
             free(values);
         }
     }
-
+#endif
     /* Also read some OS level metrics. */
 
     /* records the heap, with no context, even though it says "here". */
@@ -324,6 +358,7 @@ void read_papi_components(void) {
     return;
 }
 
+#ifdef TAU_PAPI
 void free_papi_components(void) {
     for (size_t index = 0; index < components.size() ; index++) {
         ppc * comp = components[index];
@@ -353,6 +388,7 @@ void free_papi_components(void) {
     }
     components.clear();
 }
+#endif
 
 void stop_worker(void) {
     pthread_mutex_lock(&_my_mutex);
@@ -385,9 +421,6 @@ void * Tau_papi_component_plugin_threaded_function(void* data) {
     struct timespec ts;
     struct timeval  tp;
     Tau_pure_start(__func__);
-
-    /* Get a baseline reading */
-    read_papi_components();
 
     while (!done) {
         // wait x microseconds for the next batch.
@@ -446,10 +479,12 @@ void init_lock(pthread_mutex_t * _mutex) {
 int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_execution_data_t *data) {
     TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     stop_worker();
+#ifdef TAU_PAPI
     /* clean up papi */
     if (my_rank == rank_getting_system_data) {
         free_papi_components();
     }
+#endif
     /* Why do these deadlock on exit? */
     //pthread_cond_destroy(&_my_cond);
     //pthread_mutex_destroy(&_my_mutex);
@@ -477,8 +512,10 @@ int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t*
     rank_getting_system_data = choose_volunteer_rank();
 
     if (my_rank == rank_getting_system_data) {
+#ifdef TAU_PAPI
         /* get ready to read metrics! */
         initialize_papi_events();
+#endif
         previous_stats = read_cpu_stats();
     }
     /* spawn the worker thread to do the reading */
@@ -547,4 +584,3 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     return 0;
 }
 
-#endif // ifdef TAU_PAPI
