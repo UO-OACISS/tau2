@@ -958,7 +958,7 @@ int PapiLayer::initializeRAPL(int tid) {
 
 
 /////////////////////////////////////////////////
-void PapiLayer::triggerRAPLPowerEvents(void) {
+void PapiLayer::triggerRAPLPowerEvents(bool in_signal_handler) {
 #if  (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 5) 
   int tid = Tau_get_thread();
 #ifdef TAU_PAPI_PERF_RAPL
@@ -975,6 +975,8 @@ void PapiLayer::triggerRAPLPowerEvents(void) {
   long long curtime; 
   char ename[1024];
 
+  /* Have we initialized on this thread yet? */
+  if (ThreadList[tid] == 0) return;
   for (i=0; i<numCounters; i++) {
     tmpCounters[i] = 0;
     dmesg(1,"Tau_rapl_event_names = %s, Tau_rapl_units=%s, numCounters=%d\n",
@@ -1015,7 +1017,12 @@ void PapiLayer::triggerRAPLPowerEvents(void) {
 	dmesg(1,"Counter: %s: value %.9f, units = W\n", Tau_rapl_event_names[i], value);
 	if (value > 1e-5) {
 	  sprintf(ename,"%s (CPU Socket Power in Watts)", Tau_rapl_event_names[i]);
-          TAU_TRIGGER_EVENT(ename, value);
+      if (in_signal_handler) {
+          TAU_REGISTER_EVENT(ue, ename);
+          Tau_userevent_thread(ue, value, 0);
+      } else {
+          TAU_TRIGGER_CONTEXT_EVENT(ename, value);
+          }
 #ifdef TAU_BEACON
           TauBeaconPublish(value, "Watts", "NODE_POWER", ename);
 #endif /* TAU_BEACON */
