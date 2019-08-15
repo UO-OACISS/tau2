@@ -337,6 +337,7 @@ void sample_value(const char * cpu, const char * name, const double value, const
 void update_cpu_stats(void) {
     /* get the current stats */
     std::vector<cpustats_t*> * new_stats = read_cpu_stats();
+    if (new_stats == NULL) return;
     for (int i = 0 ; i < new_stats->size() ; i++) {
         /* we need to take the difference from the last read */
         cpustats_t diff;
@@ -393,16 +394,22 @@ void read_papi_components(void) {
 
     /* records the heap, with no context, even though it says "here". */
     Tau_track_memory_here();
+#if !defined(__APPLE__)
     /* records the rss/hwm, without context. */
     Tau_track_memory_rss_and_hwm();
+#endif
 
     if (my_rank == rank_getting_system_data) {
+#if !defined(__APPLE__)
         /* records the load, without context */
         Tau_track_load();
+#endif
         /* records the power, without context */
         Tau_track_power();
+#if !defined(__APPLE__)
         /* Get the current CPU statistics for the node */
         update_cpu_stats();
+#endif
     }
 
     Tau_pure_stop(__func__);
@@ -567,7 +574,9 @@ int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t*
         /* get ready to read metrics! */
         initialize_papi_events();
 #endif
+#if !defined(__APPLE__)
         previous_stats = read_cpu_stats();
+#endif
     }
     /* spawn the worker thread to do the reading */
     init_lock(&_my_mutex);
