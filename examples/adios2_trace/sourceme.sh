@@ -7,10 +7,10 @@ export TAU_ADIOS2_ENGINE=BP
 
 export TAU_PLUGINS=libTAU-adios2-trace-plugin.so
 #export TAU_PLUGINS=libTAU-adios2-plugin.so
-export TAU_PLUGINS_PATH=../../x86_64/lib/shared-mpi-pthread-adios2
+export TAU_PLUGINS_PATH=../../x86_64/lib/shared-papi-mpi-pthread-adios2
 
 ADIOS_PATH=/home/khuck/src/ADIOS2.upstream/install_mpi
 export PYTHONPATH=${ADIOS_PATH}/lib/python3.5/site-packages
-export LD_LIBRARY_PATH=${ADIOS_PATH}/lib
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ADIOS_PATH}/lib
 
 

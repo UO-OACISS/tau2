@@ -30,7 +30,7 @@ rm -rf *.bp *.bp.dir
 export TAU_ADIOS2_ENGINE=SST
 echo "SST plugin"
 T="$(date +%s)"
-mpirun -np 8 ./matmult >& matmult.log
+#mpirun -np 8 ./matmult >& matmult.log
 C="$(($(date +%s)-T))"
 printf "Time to run tau+sst: %02d hours %02d minutes %02d seconds.\n" "$((C/3600))" "$((C/60%60))" "$((C%60))"
 

@@ -39,6 +39,23 @@ __declspec(thread) bool is_master = false;
 pthread_key_t thr_id_key;
 #endif
 
+/* Using typedefs here to avoid having too many #ifdef this file */
+#ifdef TAU_USE_OMPT_TR7
+typedef omp_frame_t ompt_frame_t;
+typedef omp_wait_id_t ompt_wait_id_t;
+#endif /* TAU_USE_OMPT_TR7 */
+
+#ifdef TAU_USE_OMPT_TR6
+typedef ompt_thread_type_t ompt_thread_t;
+/* This should be un-commented for TR6 but needs to be commented for the TR6
+ * lib that TAU downloads, and the TR6 support of llvm 7.0.1 */
+/* typedef omp_frame_t ompt_frame_t; */
+/* typedef omp_wait_id_t ompt_wait_id_t; */
+typedef ompt_sync_region_kind_t ompt_sync_region_t;
+typedef ompt_mutex_kind_t ompt_mutex_t;
+typedef ompt_work_type_t ompt_work_t;
+#endif /*TAU_USE_OMPT_TR6 */
+
 int get_ompt_tid(void) {
 #if defined (TAU_USE_TLS)
   if (is_master) return 0;
@@ -133,13 +150,7 @@ extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * re
 static void
 on_ompt_callback_parallel_begin(
   ompt_data_t *parent_task_data,
-#if defined (TAU_USE_OMPT_TR7)
-  const omp_frame_t *parent_task_frame,
-#endif /* defined (TAU_USE_OMPT_TR7) */
-  /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
-#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
   const ompt_frame_t *parent_task_frame,
-#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
   ompt_data_t* parallel_data,
   uint32_t requested_team_size,
 #if defined (TAU_USE_OMPT_TR6)
@@ -257,12 +268,7 @@ on_ompt_callback_parallel_end(
 static void
 on_ompt_callback_task_create(
     ompt_data_t *parent_task_data,     /* id of parent task            */
-#if defined (TAU_USE_OMPT_TR7)
-    const omp_frame_t *parent_frame,   /* frame data for parent task   */
-#endif /* defined (TAU_USE_OMPT_TR7) */
-#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
     const ompt_frame_t *parent_frame,  /* frame data for parent task   */
-#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     ompt_data_t* new_task_data,        /* id of created task           */
     int type,
     int has_dependences,
@@ -428,12 +434,7 @@ on_ompt_callback_master(
  *  Tested with Intel/17 compilers. Works OK.*/
 static void
 on_ompt_callback_work(
-#if defined (TAU_USE_OMPT_TR6)
-  ompt_work_type_t wstype,
-#endif /* defined (TAU_USE_OMPT_TR6) */
-#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
   ompt_work_t wstype,
-#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
   ompt_scope_endpoint_t endpoint,
   ompt_data_t *parallel_data,
   ompt_data_t *task_data,
@@ -535,12 +536,7 @@ on_ompt_callback_work(
  * runtime overheads. Use with care. */
 static void
 on_ompt_callback_thread_begin(
-#if defined (TAU_USE_OMPT_TR6)
-  ompt_thread_type_t thread_type,
-#endif /* defined (TAU_USE_OMPT_TR6) */
-#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
   ompt_thread_t thread_type,
-#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
   ompt_data_t *thread_data)
 {
   TauInternalFunctionGuard protects_this_function;
@@ -654,12 +650,7 @@ on_ompt_callback_implicit_task(
 
 static void
 on_ompt_callback_sync_region(
-#if defined (TAU_USE_OMPT_TR6)
-    ompt_sync_region_kind_t kind,
-#endif /* defined (TAU_USE_OMPT_TR6) */
-#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
     ompt_sync_region_t kind,
-#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
     ompt_scope_endpoint_t endpoint,
     ompt_data_t *parallel_data,
     ompt_data_t *task_data,
@@ -812,21 +803,10 @@ on_ompt_callback_idle(
 
 static void
 on_ompt_callback_mutex_acquire(
-#if defined (TAU_USE_OMPT_TR6)
-    ompt_mutex_kind_t kind,
-#endif /* defined (TAU_USE_OMPT_TR6) */
-#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
     ompt_mutex_t kind,
-#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
     unsigned int hint,
     unsigned int impl,
-#if defined (TAU_USE_OMPT_TR7)
-    omp_wait_id_t wait_id,
-#endif /* defined (TAU_USE_OMPT_TR7) */
-    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
-#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
     ompt_wait_id_t wait_id,
-#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     const void *codeptr_ra) 
 {
   TauInternalFunctionGuard protects_this_function;
@@ -928,19 +908,8 @@ on_ompt_callback_mutex_acquire(
 
 static void
 on_ompt_callback_mutex_acquired(
-#if defined (TAU_USE_OMPT_TR6)
-    ompt_mutex_kind_t kind,
-#endif /* defined (TAU_USE_OMPT_TR6) */
-#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
     ompt_mutex_t kind,
-#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
-#if defined (TAU_USE_OMPT_TR7)
-    omp_wait_id_t wait_id,
-#endif /* defined (TAU_USE_OMPT_TR7) */
-    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
-#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
     ompt_wait_id_t wait_id,
-#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
@@ -1043,19 +1012,8 @@ on_ompt_callback_mutex_acquired(
 
 static void
 on_ompt_callback_mutex_released(
-#if defined (TAU_USE_OMPT_TR6)
-    ompt_mutex_kind_t kind,
-#endif /* defined (TAU_USE_OMPT_TR6) */
-#if defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
     ompt_mutex_t kind,
-#endif /* defined (TAU_USE_OMPt_TR7) || defined (TAU_USE_OMPT_5_0) */
-#if defined (TAU_USE_OMPT_TR7)
-    omp_wait_id_t wait_id,
-#endif /* defined (TAU_USE_OMPT_TR7) */
-    /* FIXME: This is wrong for TR6 but right for the TR6 lib that TAU downloads */
-#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0)
     ompt_wait_id_t wait_id,
-#endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_5_0) */
     const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;

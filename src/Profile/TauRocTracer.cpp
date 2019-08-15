@@ -228,11 +228,12 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
       TAU_VERBOSE(" ACTIVITY_DOMAIN_HIP_API: my_pid=%d\n", my_pid);
       //if ((record->process_id == my_pid) && (record->thread_id == my_pid)) {
         // We need to record events on this host thread. Check if it is created already. 
-        task_id = Tau_get_initialized_queues(TAU_ROCTRACER_HOST_TASKID);
+        int mytid = syscall(__NR_gettid);
+        task_id = Tau_get_initialized_queues(mytid);
         if (task_id == -1) {
           TAU_VERBOSE(" ACTIVITY_DOMAIN_HIP_API: creating task\n");
           TAU_CREATE_TASK(task_id); 
-          Tau_set_initialized_queues(TAU_ROCTRACER_HOST_TASKID, task_id);
+          Tau_set_initialized_queues(mytid, task_id);
           Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)record->begin_ns/1e3));
           Tau_create_top_level_timer_if_necessary_task(task_id);
           Tau_add_metadata_for_task("TAU_TASK_ID", task_id, task_id);
@@ -278,9 +279,12 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
 // Init tracing routine
 int Tau_roctracer_init_tracing() {
   TAU_VERBOSE("# START #############################\n");
+/*
   for (int i=0; i < TAU_MAX_ROCM_QUEUES; i++) {
     Tau_set_initialized_queues(i, -1); // set it explicitly
   }
+  No need to do this. We use iterators now. 
+*/
 #if (!(defined (TAU_MPI) || (TAU_SHMEM)))
   TAU_PROFILE_SET_NODE(0);
 #endif /* TAU_MPI || TAU_SHMEM */
@@ -351,16 +355,16 @@ void Tau_roctracer_hsa_api_callback(
   const char *activity_name = roctracer_op_string(ACTIVITY_DOMAIN_HSA_API, cid, 0); 
 
 
+  int tid = syscall(__NR_gettid);
   hsa_begin_timestamp = timer->timestamp_fn_ns();
-  int task_id = Tau_get_initialized_queues(TAU_HSA_TASK_ID);
+  int task_id = Tau_get_initialized_queues(tid);
   if (task_id == -1) {
     TAU_VERBOSE("ACTIVITY_DOMAIN_HSA_API: creating task\n");
     TAU_CREATE_TASK(task_id);
-    Tau_set_initialized_queues(TAU_HSA_TASK_ID, task_id);
+    Tau_set_initialized_queues(tid, task_id);
     Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(hsa_begin_timestamp)/1e3));
     Tau_create_top_level_timer_if_necessary_task(task_id);
     Tau_add_metadata_for_task("TAU_TASK_ID", task_id, task_id);
-    int tid = syscall(__NR_gettid);
     Tau_add_metadata_for_task("TAU_ROCM_THREAD_ID", tid, task_id);
     //printf("TAU_ROCM_THREAD_ID: %d on task id %d \n", tid, task_id);
   }
