@@ -6,12 +6,14 @@
 
 
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
 #include <sstream>
 #include <map>
 #include <vector>
+#include <regex>
 
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
@@ -29,6 +31,10 @@
 #else
 #define PAPI_NULL -1
 #endif
+
+#include "json.h"
+using json = nlohmann::json;
+json configuration;
 
 namespace tau {
     namespace papi_plugin {
@@ -101,6 +107,47 @@ void * find_user_event(const std::string& name) {
     return ue;
 }
 
+bool include_event(const char * component, const char * event_name) {
+    if (configuration.count(component)) {
+        auto json_component = configuration[component];
+        if (json_component.count("include")) {
+            bool found = false;
+            auto json_include = json_component["include"];
+            for (auto i : json_include) {
+                try {
+                    std::string needle(i);
+                    std::regex re(needle);
+                    std::string haystack(event_name);
+                    if (std::regex_search(haystack, re)) {
+                        //std::cout << "including " << event_name << std::endl;
+                        return true;
+                    }
+                } catch (std::regex_error& e) {
+                    std::cerr << "Error in regular expression: " << i << std::endl;
+                }
+            }
+            if (!found) { return false; }
+        }
+        if (json_component.count("exclude")) {
+            auto json_include = json_component["exclude"];
+            for (auto i : json_include) {
+                try {
+                    std::string needle(i);
+                    std::regex re(needle);
+                    std::string haystack(event_name);
+                    if (std::regex_search(haystack, re)) {
+                        //std::cout << "excluding " << event_name << std::endl;
+                        return false;
+                    }
+                } catch (std::regex_error& e) {
+                    std::cerr << "Error in regular expression: " << i << std::endl;
+                }
+            }
+        }
+    }
+    return true;
+}
+
 #ifdef TAU_PAPI
 void initialize_papi_events(void) {
     PapiLayer::initializePapiLayer();
@@ -153,8 +200,9 @@ void initialize_papi_events(void) {
                         __LINE__, "Error getting event name\n",retval);
                 continue;
             }
-            // skip the counter events...
-            // if (strstr(event_name, "_CNT") != NULL) { continue; }
+            if (!include_event(comp_info->name, event_name)) {
+                continue;
+            }
             // get the event info
             PAPI_event_info_t evinfo;
             retval = PAPI_get_event_info(code,&evinfo);
@@ -222,6 +270,9 @@ std::vector<cpustats_t*> * read_cpu_stats() {
                        &cpu_stat->system, &cpu_stat->idle,
                        &cpu_stat->iowait, &cpu_stat->irq, &cpu_stat->softirq,
                        &cpu_stat->steal, &cpu_stat->guest);
+                if (!include_event("/proc/stat", cpu_stat->name)) {
+                    continue;
+                }
                 cpu_stats->push_back(cpu_stat);
             }
         }
@@ -556,6 +607,16 @@ int Tau_plugin_event_atomic_trigger_papi_component(Tau_plugin_event_atomic_event
     return 0;
 }
 
+void read_config_file(void) {
+    try {
+            std::ifstream cfg("components.json");
+            cfg >> configuration;
+            cfg.close();
+        } catch (...) {
+            // fail silently, nothing to do
+        }
+}
+
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
  * Every plugin MUST implement this function to register callbacks for various events 
  * that the plugin is interested in listening to*/
@@ -564,6 +625,8 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
 
     done = false;
+
+    read_config_file();
 
     /* Required event support */
     cb->Trigger = Tau_plugin_event_trigger_papi_component;
