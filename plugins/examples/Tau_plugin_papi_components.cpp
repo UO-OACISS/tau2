@@ -111,7 +111,7 @@ void * find_user_event(const std::string& name) {
  * code.  Apple implementations will never use this function, because
  * they don't have PAPI support or /proc filesystem.  So it's safe
  * to just give it a dummy implementation. */
-#if !defined(__APPLE__)
+#if defined(__APPLE__)
 bool include_event(const char * component, const char * event_name) {
     return true;
 }
