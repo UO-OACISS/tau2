@@ -977,10 +977,18 @@ initctau_impl(void)
   module = Py_InitModule3("ctau_impl", moduleMethods, "TAU Fast profiler");
 #endif
   if (module == NULL)
+#ifdef __APPLE__
+    return ;
+#else
     return NULL;
+#endif /* __APPLE__ */
   d = PyModule_GetDict(module);
   if (PyType_Ready(&PyProfiler_Type) < 0)
+#ifdef __APPLE__
+    return ;
+#else
     return NULL;
+#endif /* __APPLE__ */
   PyDict_SetItemString(d, "Profiler", (PyObject *)&PyProfiler_Type);
 
   if (!initialized) {
