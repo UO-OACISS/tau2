@@ -108,6 +108,15 @@ void * find_user_event(const std::string& name) {
     return ue;
 }
 
+/* Older versions of Clang++ won't compile this regular expression
+ * code.  Apple implementations will never use this function, because
+ * they don't have PAPI support or /proc filesystem.  So it's safe
+ * to just give it a dummy implementation. */
+#if defined(__APPLE__)
+bool include_event(const char * component, const char * event_name) {
+    return true;
+}
+#else
 bool include_event(const char * component, const char * event_name) {
     if (configuration.count(component)) {
         auto json_component = configuration[component];
@@ -148,6 +157,7 @@ bool include_event(const char * component, const char * event_name) {
     }
     return true;
 }
+#endif
 
 #ifdef TAU_PAPI
 void initialize_papi_events(void) {
