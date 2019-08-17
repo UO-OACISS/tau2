@@ -416,11 +416,6 @@ class adios {
             initialize();
             open();
             define_variables();
-            for(int i = 0 ; i < TAU_MAX_THREADS ; i++) {
-                timer_values_array[i].reserve(1024);
-                counter_values_array[i].reserve(1024);
-                comm_values_array[i].reserve(1024);
-            }
         };
         ~adios() {
             close();
@@ -890,11 +885,13 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     Tau_track_power();
     /* records the rss/hwm, without context. */
     Tau_track_memory_rss_and_hwm();
+    Tau_pure_start(__func__);
     Tau_global_incr_insideTAU();
     pthread_mutex_lock(&_my_mutex);
     my_adios->write_variables();
     pthread_mutex_unlock(&_my_mutex);
     Tau_global_decr_insideTAU();
+    Tau_pure_stop(__func__);
     return 0;
 }
 
@@ -1000,6 +997,7 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
 }
 
 void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid) {
+    if (!enabled) return;
     //int tid = RtsLayer::myThread();
     int nodeid = TAU_PROFILE_GET_NODE();
     Tau_global_incr_insideTAU();
@@ -1245,6 +1243,8 @@ void * Tau_ADIOS2_thread_function(void* data) {
     /* Set the wakeup time (ts) to 2 seconds in the future. */
     struct timespec ts;
     struct timeval  tp;
+	//Tau_create_top_level_timer_if_necessary();
+	Tau_register_thread();
 
     while (!done) {
         // wait x microseconds for the next batch.

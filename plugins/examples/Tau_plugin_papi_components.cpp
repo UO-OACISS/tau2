@@ -52,8 +52,9 @@ namespace tau {
         /* Simple class to aid in processing PAPI components */
         class papi_component {
             public:
-                papi_component(int cid) : 
-                    event_set(PAPI_NULL), initialized(false), id(cid) {}
+                papi_component(const char * cname, int cid) : 
+                    name(cname), event_set(PAPI_NULL), initialized(false), id(cid) {}
+                std::string name;
                 std::vector<papi_event> events;
                 int event_set;
                 bool initialized;
@@ -171,7 +172,6 @@ void initialize_papi_events(void) {
             TAU_VERBOSE("Error: PAPI component info unavailable, no power measurements will be done.\n");
             return;
         }
-        ppc * comp = new ppc(component_id);
         /* Skip the perf_event component, that's standard PAPI */
         if (strstr(comp_info->name, "perf_event") != NULL) {
             continue;
@@ -185,6 +185,7 @@ void initialize_papi_events(void) {
             }        
             continue;
         }
+        ppc * comp = new ppc(comp_info->name, component_id);
         /* Construct the event set and populate it */
         retval = PAPI_create_eventset(&comp->event_set);
         if (retval != PAPI_OK) {
@@ -389,7 +390,7 @@ void read_papi_components(void) {
             long long * values = (long long *)calloc(comp->events.size(), sizeof(long long));
             int retval = PAPI_read(comp->event_set, values);
             if (retval != PAPI_OK) {
-                TAU_VERBOSE("Error: Error reading PAPI RAPL eventset.\n");
+                TAU_VERBOSE("Error: Error reading PAPI %s eventset.\n", comp->name);
                 return;
             }
             for (size_t i = 0 ; i < comp->events.size() ; i++) {
@@ -434,7 +435,7 @@ void free_papi_components(void) {
             long long * values = (long long *)calloc(comp->events.size(), sizeof(long long));
             int retval = PAPI_stop(comp->event_set, values);
             if (retval != PAPI_OK) {
-                TAU_VERBOSE("Error: Error reading PAPI RAPL eventset.\n");
+                TAU_VERBOSE("Error: Error reading PAPI %s eventset.\n", comp->name);
                 return;
             }
             free(values);
@@ -491,6 +492,8 @@ void * Tau_papi_component_plugin_threaded_function(void* data) {
     Tau_pure_start(__func__);
 
     while (!done) {
+		// take a reading...
+        read_papi_components();
         // wait x microseconds for the next batch.
         gettimeofday(&tp, NULL);
         const int one_second = 1000000;
@@ -504,21 +507,16 @@ void * Tau_papi_component_plugin_threaded_function(void* data) {
         ts.tv_sec  = (tp.tv_sec + flow_sec);
         ts.tv_nsec = (1000 * tmp_usec);
         pthread_mutex_lock(&_my_mutex);
+		// wait the time period.
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
         if (rc == ETIMEDOUT) {
             TAU_VERBOSE("%d Timeout from plugin.\n", RtsLayer::myNode()); fflush(stderr);
-            if (!done) {
-                read_papi_components();
-            }
         } else if (rc == EINVAL) {
             TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
         } else if (rc == EPERM) {
             TAU_VERBOSE("Mutex not locked!\n"); fflush(stderr);
         }
     }
-
-    /* Get an exit reading */
-    read_papi_components();
 
     // unlock after being signalled.
     pthread_mutex_unlock(&_my_mutex);

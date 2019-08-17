@@ -29,13 +29,8 @@ def process_file(filename):
          print(filename, "Step = ", step)
 
 if __name__ == '__main__':
-   #time.sleep(2)
-   regex=filename + '*.bp*'
-   print (regex)
-   files=(glob.glob(regex))
-   print (files)
-   pool = Pool()
-   for filename in files:
-      process_file(filename)
-#   pool.map(process_file, files)
+   comm = MPI.COMM_WORLD
+   rank = comm.Get_rank()
+   filename='tau-metrics-' + str(rank) + '.bp'
+   process_file(filename)
 
