@@ -126,6 +126,18 @@ namespace tau {
         {
             return ltrim(rtrim(s, t), t);
         }
+
+        class ScopedTimer {
+            public:
+                ScopedTimer(const char * name) {
+                    _name = strdup(name);
+                    Tau_pure_start(_name);
+                }
+                ~ScopedTimer() {
+                    Tau_pure_stop(_name);
+                }
+                const char * _name;
+        };
     }
 }
 
@@ -169,6 +181,9 @@ void * find_user_event(const std::string& name) {
 bool include_event(const char * component, const char * event_name) {
     return true;
 }
+bool include_component(const char * component) {
+    return true;
+}
 #else
 bool include_event(const char * component, const char * event_name) {
     if (configuration.count(component)) {
@@ -210,6 +225,17 @@ bool include_event(const char * component, const char * event_name) {
     }
     return true;
 }
+bool include_component(const char * component) {
+    if (configuration.count(component)) {
+        auto json_component = configuration[component];
+        if (json_component.count("disable")) {
+            if(json_component["disable"]) { 
+                return false; 
+            }
+        }
+    }
+    return true;
+}
 #endif
 
 #ifdef TAU_PAPI
@@ -230,6 +256,7 @@ void initialize_papi_events(void) {
             continue;
         }
         TAU_VERBOSE("Found %s component...\n", comp_info->name);
+        if (!include_component(comp_info->name)) { return; }
         /* Does this component have available events? */
         if (comp_info->num_native_events == 0) {
             TAU_VERBOSE("Error: No %s events found.\n", comp_info->name);
@@ -315,6 +342,8 @@ void initialize_papi_events(void) {
 #endif
 
 std::vector<cpustats_t*> * read_cpu_stats() {
+    tau::papi_plugin::ScopedTimer(__func__);
+    if (!include_component("/proc/stat")) { return NULL; }
     std::vector<cpustats_t*> * cpu_stats = new std::vector<cpustats_t*>();
     /*  Reading proc/stat as a file  */
     FILE * pFile;
@@ -334,11 +363,9 @@ std::vector<cpustats_t*> * read_cpu_stats() {
                        &cpu_stat->system, &cpu_stat->idle,
                        &cpu_stat->iowait, &cpu_stat->irq, &cpu_stat->softirq,
                        &cpu_stat->steal, &cpu_stat->guest);
-/*
                 if (!include_event("/proc/stat", cpu_stat->name)) {
                     continue;
                 }
-*/
                 cpu_stats->push_back(cpu_stat);
             }
         }
@@ -348,6 +375,8 @@ std::vector<cpustats_t*> * read_cpu_stats() {
 }
 
 std::vector<netstats_t*> * read_net_stats() {
+    tau::papi_plugin::ScopedTimer(__func__);
+    if (!include_component("/proc/net/dev")) { return NULL; }
     std::vector<netstats_t*> * net_stats = new std::vector<netstats_t*>();
     /*  Reading proc/stat as a file  */
     FILE * pFile;
@@ -395,6 +424,8 @@ std::vector<netstats_t*> * read_net_stats() {
 }
 
 iostats_t * read_io_stats() {
+    tau::papi_plugin::ScopedTimer(__func__);
+    if (!include_component("/proc/self/io")) { return NULL; }
     iostats_t * io_stats = new iostats_t();
     /*  Reading proc/stat as a file  */
     FILE * pFile;
@@ -460,7 +491,9 @@ int choose_volunteer_rank() {
 #endif
 }
 
-bool parse_proc_meminfo() {
+void parse_proc_meminfo() {
+  tau::papi_plugin::ScopedTimer(__func__);
+  if (!include_component("/proc/meminfo")) { return; }
   FILE *f = fopen("/proc/meminfo", "r");
   if (f) {
     char line[4096] = {0};
@@ -491,10 +524,8 @@ bool parse_proc_meminfo() {
         }
     }
     fclose(f);
-  } else {
-    return false;
   }
-  return true;
+  return;
 }
 
 void sample_value(const char * component, const char * cpu, const char * name,
@@ -517,6 +548,8 @@ void sample_value(const char * component, const char * cpu, const char * name,
 }
 
 void update_cpu_stats(void) {
+    tau::papi_plugin::ScopedTimer(__func__);
+    if (!include_component("/proc/stat")) { return; }
     /* get the current stats */
     std::vector<cpustats_t*> * new_stats = read_cpu_stats();
     if (new_stats == NULL) return;
@@ -553,6 +586,8 @@ void update_cpu_stats(void) {
 }
 
 void update_net_stats(void) {
+    tau::papi_plugin::ScopedTimer(__func__);
+    if (!include_component("/proc/stat")) { return; }
     /* get the current stats */
     std::vector<netstats_t*> * new_stats = read_net_stats();
     if (new_stats == NULL) return;
@@ -597,6 +632,8 @@ void update_net_stats(void) {
 }
 
 void update_io_stats(void) {
+    tau::papi_plugin::ScopedTimer(__func__);
+    if (!include_component("/proc/self/io")) { return; }
     /* get the current stats */
     iostats_t * new_stats = read_io_stats();
     if (new_stats == NULL) return;
@@ -613,7 +650,7 @@ void update_io_stats(void) {
 }
 
 void read_papi_components(void) {
-    Tau_pure_start(__func__);
+    tau::papi_plugin::ScopedTimer(__func__);
 #ifdef TAU_PAPI
     for (size_t index = 0; index < components.size() ; index++) {
         if (components[index]->initialized) {
@@ -660,7 +697,6 @@ void read_papi_components(void) {
 #endif
     }
 
-    Tau_pure_stop(__func__);
     return;
 }
 
@@ -729,22 +765,18 @@ void * Tau_papi_component_plugin_threaded_function(void* data) {
     Tau_pure_start(__func__);
 
     while (!done) {
-		// take a reading...
+        // take a reading...
         read_papi_components();
         // wait x microseconds for the next batch.
         gettimeofday(&tp, NULL);
-        const int one_second = 1000000;
-        // first, add the period to the current microseconds
-        int tmp_usec = tp.tv_usec + one_second;
-        int flow_sec = 0;
-        if (tmp_usec > one_second) { // did we overflow?
-            flow_sec = tmp_usec / one_second; // how many seconds?
-            tmp_usec = tmp_usec % one_second; // get the remainder
+        int seconds = 1;
+        if (configuration.count("periodicity seconds")) {
+            seconds = configuration["periodicity seconds"];
         }
-        ts.tv_sec  = (tp.tv_sec + flow_sec);
-        ts.tv_nsec = (1000 * tmp_usec);
+        ts.tv_sec  = (tp.tv_sec + seconds);
+        ts.tv_nsec = (1000 * tp.tv_usec);
         pthread_mutex_lock(&_my_mutex);
-		// wait the time period.
+        // wait the time period.
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
         if (rc == ETIMEDOUT) {
             TAU_VERBOSE("%d Timeout from plugin.\n", RtsLayer::myNode()); fflush(stderr);
@@ -759,7 +791,7 @@ void * Tau_papi_component_plugin_threaded_function(void* data) {
     pthread_mutex_unlock(&_my_mutex);
     Tau_pure_start(__func__);
     pthread_exit((void*)0L);
-	return(NULL);
+    return(NULL);
 }
 
 void init_lock(pthread_mutex_t * _mutex) {

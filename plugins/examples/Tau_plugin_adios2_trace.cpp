@@ -518,7 +518,7 @@ void adios::open() {
             ss << "-" << global_comm_rank;
         }
         ss << ".bp";
-        printf("Writing %s\n", ss.str().c_str());
+        TAU_VERBOSE("Writing %s\n", ss.str().c_str());
         bpWriter = _bpIO.Open(ss.str(), adios2::Mode::Write);
         opened = true;
         Tau_global_decr_insideTAU();
@@ -870,7 +870,7 @@ void init_lock(pthread_mutex_t * _mutex) {
 }
 
 int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
-    fprintf(stdout, "TAU PLUGIN ADIOS2 Dump\n"); fflush(stdout);
+    TAU_VERBOSE("TAU PLUGIN ADIOS2 Dump\n"); fflush(stdout);
     if (!enabled) return 0;
     if (dump_history) {
         Tau_plugin_adios2_dump_history();
@@ -929,7 +929,7 @@ void Tau_ADIOS2_stop_worker(void) {
 /* This happens from MPI_Finalize, before MPI is torn down. */
 int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t* data) {
     if (!enabled || data->tid != 0) return 0;
-    fprintf(stdout, "TAU PLUGIN ADIOS2 Pre-Finalize\n"); fflush(stdout);
+    TAU_VERBOSE("TAU PLUGIN ADIOS2 Pre-Finalize\n"); fflush(stdout);
     Tau_ADIOS2_stop_worker();
     Tau_plugin_event_function_exit_data_t exit_data;
     // safe to assume 0?
@@ -976,7 +976,7 @@ int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
 /* This happens from Profiler.cpp, when data is written out. */
 int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t* data) {
     if (!enabled || data->tid != 0) return 0;
-    fprintf(stdout, "TAU PLUGIN ADIOS2 Finalize\n"); fflush(stdout);
+    TAU_VERBOSE("TAU PLUGIN ADIOS2 Finalize\n"); fflush(stdout);
     Tau_ADIOS2_stop_worker();
     Tau_plugin_event_dump_data_t* dummy_data;
     Tau_plugin_adios2_dump(dummy_data);
@@ -1298,7 +1298,7 @@ void Tau_plugin_adios2_dump_history(void) {
     ss << tau_plugin::thePluginOptions().env_filename << "-window";
     ss << "-" << global_comm_rank;
     ss << ".bp";
-    printf("Writing %s\n", ss.str().c_str());
+    TAU_VERBOSE("Writing %s\n", ss.str().c_str());
     adios2::Engine bpWriter = bpIO.Open(ss.str(), adios2::Mode::Write);
     adios2::Variable<int> program_count = bpIO.DefineVariable<int>("program_count");
     adios2::Variable<int> comm_size = bpIO.DefineVariable<int>("comm_rank_count");
@@ -1545,7 +1545,7 @@ void Tau_plugin_adios2_dump_history(void) {
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
-    fprintf(stdout, "TAU PLUGIN ADIOS2 Init\n"); fflush(stdout);
+    TAU_VERBOSE("TAU PLUGIN ADIOS2 Init\n"); fflush(stdout);
     tau_plugin::Tau_ADIOS2_parse_environment_variables();
 #if TAU_MPI
     PMPI_Comm_size(MPI_COMM_WORLD, &global_comm_size);
