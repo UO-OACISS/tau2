@@ -44,7 +44,7 @@ libTAU-null-plugin.so: tau_plugin_example_null.o
 	$(CXX) $(TAU_STDCXX11_FLAG) tau_plugin_example_null.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-null-plugin.so
 
 libTAU-papi-components-plugin.so: tau_plugin_papi_components.o
-	$(CXX) $(TAU_STDCXX11_FLAG) tau_plugin_papi_components.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-papi-components-plugin.so
+	$(CXX) $(TAU_STDCXX11_FLAG) tau_plugin_papi_components.o $(TAU_PAPI_EXTRA_FLAGS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-papi-components-plugin.so
 
 libTAU-thread-summary-plugin.so: tau_plugin_thread_summary.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-thread-summary-plugin.so tau_plugin_thread_summary.o
