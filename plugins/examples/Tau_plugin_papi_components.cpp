@@ -331,6 +331,43 @@ int choose_volunteer_rank() {
 #endif
 }
 
+bool parse_proc_meminfo() {
+  FILE *f = fopen("/proc/meminfo", "r");
+  if (f) {
+    char line[4096] = {0};
+    while ( fgets( line, 4096, f)) {
+        std::string tmp(line);
+        std::istringstream iss(tmp);
+        std::vector<std::string> results(std::istream_iterator<std::string>{iss},
+                                         std::istream_iterator<std::string>());
+        std::string& value = results[1];
+        char* pEnd;
+        double d1 = strtod (value.c_str(), &pEnd);
+        if (pEnd) { 
+            std::stringstream ss;
+            /* trim the trailing : */
+            ss << "meminfo:" << results[0].substr(0,results[0].size()-1);
+            if (results.size() == 3) {
+                if(results[2].compare("kB") == 0 && d1 > 10000.0) {
+                    ss << " (MB)";
+                    d1 = d1 * 1.0e-3;
+                } else {
+                    ss << " (" << results[2] << ")";
+                }
+            }
+            if (include_event("/proc/meminfo", ss.str().c_str())) {
+                void * ue = find_user_event(ss.str());
+                Tau_userevent_thread(ue, d1, 0);
+            }
+        }
+    }
+    fclose(f);
+  } else {
+    return false;
+  }
+  return true;
+}
+
 void sample_value(const char * cpu, const char * name, const double value, const long long total) {
     std::stringstream ss;
     ss << cpu << ":" << name;
@@ -420,6 +457,8 @@ void read_papi_components(void) {
 #if !defined(__APPLE__)
         /* Get the current CPU statistics for the node */
         update_cpu_stats();
+        /* Get current meminfo stats for the node */
+        parse_proc_meminfo();
 #endif
     }
 
@@ -626,7 +665,7 @@ int Tau_plugin_event_atomic_trigger_papi_component(Tau_plugin_event_atomic_event
 
 void read_config_file(void) {
     try {
-            std::ifstream cfg("components.json");
+            std::ifstream cfg("tau_components.json");
             cfg >> configuration;
             cfg.close();
         } catch (...) {
