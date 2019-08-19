@@ -2641,7 +2641,7 @@ void TauEnv_initialize()
     /* Now that we have set all the options, start the one signal
      * handler that will handle load, power, memory, headroom, etc.
      */
-    TauSetupHandler();
+    //TauSetupHandler();
   }
 
   TAU_VERBOSE("Calling TAU_ROCTRACER...\n");
