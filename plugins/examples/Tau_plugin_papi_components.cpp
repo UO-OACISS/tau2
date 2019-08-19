@@ -106,6 +106,7 @@ namespace tau {
                 long long transmit_compressed;
         };
 
+
         // trim from left
         inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
         {
@@ -132,10 +133,12 @@ typedef tau::papi_plugin::papi_component ppc;
 typedef tau::papi_plugin::papi_event ppe;
 typedef tau::papi_plugin::CPUStat cpustats_t;
 typedef tau::papi_plugin::NetStat netstats_t;
+typedef std::vector<std::pair<std::string, long long> > iostats_t;
 std::vector<ppc*> components;
 
 std::vector<cpustats_t*> * previous_cpu_stats;
 std::vector<netstats_t*> * previous_net_stats;
+iostats_t * previous_io_stats;
 
 pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_cond_t _my_cond; // for timer
@@ -391,6 +394,32 @@ std::vector<netstats_t*> * read_net_stats() {
     return net_stats;
 }
 
+iostats_t * read_io_stats() {
+    iostats_t * io_stats = new iostats_t();
+    /*  Reading proc/stat as a file  */
+    FILE * pFile;
+    char line[256] = {0};
+    /* Do we want per-process readings? */
+    //pFile = fopen ("/proc/self/io/dev","r");
+    pFile = fopen ("/proc/self/io","r");
+    if (pFile == nullptr) {
+        perror ("Error opening file");
+        return NULL;
+    }
+    /* Read each line */
+    while (fgets(line, 4096, pFile)) {
+        char dummy[32] = {0};
+        long long tmplong = 0LL;
+        int nf = sscanf( line, "%s %lld\n", dummy, &tmplong);
+        // strip the colon
+        dummy[strlen(dummy)-1] = '\0';
+        std::string name(dummy);
+        io_stats->push_back(make_pair(name, tmplong));
+    }
+    fclose(pFile);
+    return io_stats;
+}
+
 int choose_volunteer_rank() {
 #ifdef TAU_MPI
     // figure out who should get system stats for this node
@@ -531,40 +560,56 @@ void update_net_stats(void) {
         /* we need to take the difference from the last read */
         netstats_t diff;
         diff.recv_bytes = (*new_stats)[i]->recv_bytes - (*previous_net_stats)[i]->recv_bytes;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:bytes",     (double)(diff.recv_bytes), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:bytes",     (double)(diff.recv_bytes), 1LL);
         diff.recv_packets = (*new_stats)[i]->recv_packets - (*previous_net_stats)[i]->recv_packets;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:packets",     (double)(diff.recv_packets), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:packets",     (double)(diff.recv_packets), 1LL);
         diff.recv_errors = (*new_stats)[i]->recv_errors - (*previous_net_stats)[i]->recv_errors;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:errors",     (double)(diff.recv_errors), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:errors",     (double)(diff.recv_errors), 1LL);
         diff.recv_drops = (*new_stats)[i]->recv_drops - (*previous_net_stats)[i]->recv_drops;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:drops",     (double)(diff.recv_drops), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:drops",     (double)(diff.recv_drops), 1LL);
         diff.recv_fifo = (*new_stats)[i]->recv_fifo - (*previous_net_stats)[i]->recv_fifo;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:fifo",     (double)(diff.recv_fifo), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:fifo",     (double)(diff.recv_fifo), 1LL);
         diff.recv_frame = (*new_stats)[i]->recv_frame - (*previous_net_stats)[i]->recv_frame;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:frames",     (double)(diff.recv_frame), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:frames",     (double)(diff.recv_frame), 1LL);
         diff.recv_compressed = (*new_stats)[i]->recv_compressed - (*previous_net_stats)[i]->recv_compressed;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:compressed",     (double)(diff.recv_compressed), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:compressed",     (double)(diff.recv_compressed), 1LL);
         diff.recv_multicast = (*new_stats)[i]->recv_multicast - (*previous_net_stats)[i]->recv_multicast;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:multicast",     (double)(diff.recv_multicast), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:multicast",     (double)(diff.recv_multicast), 1LL);
         diff.transmit_bytes = (*new_stats)[i]->transmit_bytes - (*previous_net_stats)[i]->transmit_bytes;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:bytes",     (double)(diff.transmit_bytes), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:bytes",     (double)(diff.transmit_bytes), 1LL);
         diff.transmit_packets = (*new_stats)[i]->transmit_packets - (*previous_net_stats)[i]->transmit_packets;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:packets",     (double)(diff.transmit_packets), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:packets",     (double)(diff.transmit_packets), 1LL);
         diff.transmit_errors = (*new_stats)[i]->transmit_errors - (*previous_net_stats)[i]->transmit_errors;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:errors",     (double)(diff.transmit_errors), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:errors",     (double)(diff.transmit_errors), 1LL);
         diff.transmit_drops = (*new_stats)[i]->transmit_drops - (*previous_net_stats)[i]->transmit_drops;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:drops",     (double)(diff.transmit_drops), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:drops",     (double)(diff.transmit_drops), 1LL);
         diff.transmit_fifo = (*new_stats)[i]->transmit_fifo - (*previous_net_stats)[i]->transmit_fifo;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:fifo",     (double)(diff.transmit_fifo), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:fifo",     (double)(diff.transmit_fifo), 1LL);
         diff.transmit_collisions = (*new_stats)[i]->transmit_collisions - (*previous_net_stats)[i]->transmit_collisions;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:collisions",     (double)(diff.transmit_collisions), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:collisions",     (double)(diff.transmit_collisions), 1LL);
         diff.transmit_carrier = (*new_stats)[i]->transmit_carrier - (*previous_net_stats)[i]->transmit_carrier;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:carrier",     (double)(diff.transmit_carrier), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:carrier",     (double)(diff.transmit_carrier), 1LL);
         diff.transmit_compressed = (*new_stats)[i]->transmit_compressed - (*previous_net_stats)[i]->transmit_compressed;
-        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:compressed",     (double)(diff.transmit_compressed), 1.0);
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:compressed",     (double)(diff.transmit_compressed), 1LL);
     }
     delete(previous_net_stats);
     previous_net_stats = new_stats;
+}
+
+void update_io_stats(void) {
+    /* get the current stats */
+    iostats_t * new_stats = read_io_stats();
+    if (new_stats == NULL) return;
+    for (int i = 0 ; i < new_stats->size() ; i++) {
+        /* we need to take the difference from the last read */
+        iostats_t diff;
+        for (int i = 0 ; i < new_stats->size() ; i++) {
+            long long tmplong = (*new_stats)[i].second - (*previous_io_stats)[i].second;
+            sample_value("/proc/self/io", "io", (*new_stats)[i].first.c_str(), (double)(tmplong), 1LL);
+        }
+    }
+    delete(previous_io_stats);
+    previous_io_stats = new_stats;
 }
 
 void read_papi_components(void) {
@@ -594,6 +639,8 @@ void read_papi_components(void) {
 #if !defined(__APPLE__)
     /* records the rss/hwm, without context. */
     Tau_track_memory_rss_and_hwm();
+    /* Get current io stats for the process */
+    update_io_stats();
 #endif
 
     if (my_rank == rank_getting_system_data) {
@@ -777,6 +824,9 @@ int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t*
         previous_net_stats = read_net_stats();
 #endif
     }
+#if !defined(__APPLE__)
+    previous_io_stats = read_io_stats();
+#endif
     /* spawn the worker thread to do the reading */
     init_lock(&_my_mutex);
     TAU_VERBOSE("Spawning thread.\n");
