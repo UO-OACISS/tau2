@@ -3,6 +3,10 @@
     "comment": "This will exclude all core-specific readings.",
     "exclude": ["^cpu[0-9]+.*"]
   },
+  "/proc/meminfo": {
+    "comment": "This will include three readings.",
+    "include": [".*MemAvailable.*", ".*MemFree.*", ".*MemTotal.*"]
+  },
   "lmsensors": {
     "comment": "This will include all power readings.",
     "include": [".*power.*"]
