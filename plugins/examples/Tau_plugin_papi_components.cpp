@@ -66,7 +66,7 @@ namespace tau {
                 CPUStat() : user(0LL), nice(0LL), system(0LL),
                     idle(0LL), iowait(0LL), irq(0LL), softirq(0LL),
                     steal(0LL), guest(0LL) {}
-                char name[32];
+                char name[32] = {0};
                 long long user;
                 long long nice;
                 long long system;
@@ -77,15 +77,65 @@ namespace tau {
                 long long steal;
                 long long guest;
         };
+
+        class NetStat {
+            public:
+                NetStat() : recv_bytes(0LL), recv_packets(0LL),
+                    recv_errors(0LL), recv_drops(0LL), recv_fifo(0LL),
+                    recv_frame(0LL), recv_compressed(0LL), recv_multicast(0LL), 
+                    transmit_bytes(0LL), transmit_packets(0LL),
+                    transmit_errors(0LL), transmit_drops(0LL),
+                    transmit_fifo(0LL), transmit_collisions(0LL),
+                    transmit_carrier(0LL), transmit_compressed(0LL) {}
+                char name[32] = {0};
+                long long recv_bytes;
+                long long recv_packets;
+                long long recv_errors;
+                long long recv_drops;
+                long long recv_fifo;
+                long long recv_frame;
+                long long recv_compressed;
+                long long recv_multicast; 
+                long long transmit_bytes;
+                long long transmit_packets;
+                long long transmit_errors;
+                long long transmit_drops;
+                long long transmit_fifo;
+                long long transmit_collisions;
+                long long transmit_carrier;
+                long long transmit_compressed;
+        };
+
+        // trim from left
+        inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
+        {
+            s.erase(0, s.find_first_not_of(t));
+            return s;
+        }
+
+        // trim from right
+        inline std::string& rtrim(std::string& s, const char* t = " \t\n\r\f\v")
+        {
+            s.erase(s.find_last_not_of(t) + 1);
+            return s;
+        }
+
+        // trim from left & right
+        inline std::string& trim(std::string& s, const char* t = " \t\n\r\f\v")
+        {
+            return ltrim(rtrim(s, t), t);
+        }
     }
 }
 
 typedef tau::papi_plugin::papi_component ppc;
 typedef tau::papi_plugin::papi_event ppe;
 typedef tau::papi_plugin::CPUStat cpustats_t;
+typedef tau::papi_plugin::NetStat netstats_t;
 std::vector<ppc*> components;
 
-std::vector<cpustats_t*> * previous_stats;
+std::vector<cpustats_t*> * previous_cpu_stats;
+std::vector<netstats_t*> * previous_net_stats;
 
 pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_cond_t _my_cond; // for timer
@@ -265,8 +315,8 @@ std::vector<cpustats_t*> * read_cpu_stats() {
     std::vector<cpustats_t*> * cpu_stats = new std::vector<cpustats_t*>();
     /*  Reading proc/stat as a file  */
     FILE * pFile;
-    char line[128];
-    char dummy[32];
+    char line[128] = {0};
+    char dummy[32] = {0};
     pFile = fopen ("/proc/stat","r");
     if (pFile == nullptr) {
         perror ("Error opening file");
@@ -281,14 +331,64 @@ std::vector<cpustats_t*> * read_cpu_stats() {
                        &cpu_stat->system, &cpu_stat->idle,
                        &cpu_stat->iowait, &cpu_stat->irq, &cpu_stat->softirq,
                        &cpu_stat->steal, &cpu_stat->guest);
+/*
                 if (!include_event("/proc/stat", cpu_stat->name)) {
                     continue;
                 }
+*/
                 cpu_stats->push_back(cpu_stat);
             }
         }
     }
+    fclose(pFile);
     return cpu_stats;
+}
+
+std::vector<netstats_t*> * read_net_stats() {
+    std::vector<netstats_t*> * net_stats = new std::vector<netstats_t*>();
+    /*  Reading proc/stat as a file  */
+    FILE * pFile;
+    char line[256] = {0};
+    char dummy[32] = {0};
+    /* Do we want per-process readings? */
+    //pFile = fopen ("/proc/self/net/dev","r");
+    pFile = fopen ("/proc/net/dev","r");
+    if (pFile == nullptr) {
+        perror ("Error opening file");
+        return NULL;
+    }
+    char * rc = fgets(line, 4096, pFile); // skip this line
+    if (rc == nullptr) {
+        fclose(pFile);
+        return NULL;
+    }
+    rc = fgets(line, 4096, pFile); // skip this line
+    if (rc == nullptr) {
+        fclose(pFile);
+        return NULL;
+    }
+    /* Read each device */
+    while (fgets(line, 4096, pFile)) {
+        std::string outer_tmp(line);
+        outer_tmp = tau::papi_plugin::trim(outer_tmp);
+        netstats_t * net_stat = new(netstats_t);
+        int nf = sscanf( line,
+            "%s %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld\n",
+            net_stat->name, &net_stat->recv_bytes,
+            &net_stat->recv_packets, &net_stat->recv_errors,
+            &net_stat->recv_drops, &net_stat->recv_fifo,
+            &net_stat->recv_frame, &net_stat->recv_compressed,
+            &net_stat->recv_multicast, &net_stat->transmit_bytes,
+            &net_stat->transmit_packets, &net_stat->transmit_errors,
+            &net_stat->transmit_drops, &net_stat->transmit_fifo,
+            &net_stat->transmit_collisions, &net_stat->transmit_carrier,
+            &net_stat->transmit_compressed);
+        // strip the colon
+        net_stat->name[strlen(net_stat->name)-1] = '\0';
+        net_stats->push_back(net_stat);
+    }
+    fclose(pFile);
+    return net_stats;
 }
 
 int choose_volunteer_rank() {
@@ -368,9 +468,14 @@ bool parse_proc_meminfo() {
   return true;
 }
 
-void sample_value(const char * cpu, const char * name, const double value, const long long total) {
+void sample_value(const char * component, const char * cpu, const char * name,
+        const double value, const long long total) {
     std::stringstream ss;
     ss << cpu << ":" << name;
+    /* If we are not including this event, continue */
+    if (!include_event(component, ss.str().c_str())) {
+        return;
+    }
     void * ue = find_user_event(ss.str());
     // double-check the value...
     double tmp;
@@ -389,33 +494,77 @@ void update_cpu_stats(void) {
     for (int i = 0 ; i < new_stats->size() ; i++) {
         /* we need to take the difference from the last read */
         cpustats_t diff;
-        diff.user = (*new_stats)[i]->user - (*previous_stats)[i]->user;
-        diff.nice = (*new_stats)[i]->nice - (*previous_stats)[i]->nice;
-        diff.system = (*new_stats)[i]->system - (*previous_stats)[i]->system;
-        diff.idle = (*new_stats)[i]->idle - (*previous_stats)[i]->idle;
-        diff.iowait = (*new_stats)[i]->iowait - (*previous_stats)[i]->iowait;
-        diff.irq = (*new_stats)[i]->irq - (*previous_stats)[i]->irq;
-        diff.softirq = (*new_stats)[i]->softirq - (*previous_stats)[i]->softirq;
-        diff.steal = (*new_stats)[i]->steal - (*previous_stats)[i]->steal;
-        diff.guest = (*new_stats)[i]->guest - (*previous_stats)[i]->guest;
+        diff.user = (*new_stats)[i]->user - (*previous_cpu_stats)[i]->user;
+        diff.nice = (*new_stats)[i]->nice - (*previous_cpu_stats)[i]->nice;
+        diff.system = (*new_stats)[i]->system - (*previous_cpu_stats)[i]->system;
+        diff.idle = (*new_stats)[i]->idle - (*previous_cpu_stats)[i]->idle;
+        diff.iowait = (*new_stats)[i]->iowait - (*previous_cpu_stats)[i]->iowait;
+        diff.irq = (*new_stats)[i]->irq - (*previous_cpu_stats)[i]->irq;
+        diff.softirq = (*new_stats)[i]->softirq - (*previous_cpu_stats)[i]->softirq;
+        diff.steal = (*new_stats)[i]->steal - (*previous_cpu_stats)[i]->steal;
+        diff.guest = (*new_stats)[i]->guest - (*previous_cpu_stats)[i]->guest;
         double total = (double)(diff.user + diff.nice + diff.system +
                 diff.idle + diff.iowait + diff.irq + diff.softirq +
                 diff.steal + diff.guest);
         long long lltotal = (diff.user + diff.nice + diff.system +
                 diff.idle + diff.iowait + diff.irq + diff.softirq +
                 diff.steal + diff.guest);
-        sample_value((*new_stats)[i]->name, " User %",     (double)(diff.user), total);
-        sample_value((*new_stats)[i]->name, " Nice %",     (double)(diff.nice), total);
-        sample_value((*new_stats)[i]->name, " System %",   (double)(diff.system), total);
-        sample_value((*new_stats)[i]->name, " Idle %",     (double)(diff.idle), total);
-        sample_value((*new_stats)[i]->name, " I/O Wait %", (double)(diff.iowait), total);
-        sample_value((*new_stats)[i]->name, " IRQ %",      (double)(diff.irq), total);
-        sample_value((*new_stats)[i]->name, " soft IRQ %", (double)(diff.softirq), total);
-        sample_value((*new_stats)[i]->name, " Steal %",    (double)(diff.steal), total);
-        sample_value((*new_stats)[i]->name, " Guest %",    (double)(diff.guest), total);
+        sample_value("/proc/stat", (*new_stats)[i]->name, " User %",     (double)(diff.user), total);
+        sample_value("/proc/stat", (*new_stats)[i]->name, " Nice %",     (double)(diff.nice), total);
+        sample_value("/proc/stat", (*new_stats)[i]->name, " System %",   (double)(diff.system), total);
+        sample_value("/proc/stat", (*new_stats)[i]->name, " Idle %",     (double)(diff.idle), total);
+        sample_value("/proc/stat", (*new_stats)[i]->name, " I/O Wait %", (double)(diff.iowait), total);
+        sample_value("/proc/stat", (*new_stats)[i]->name, " IRQ %",      (double)(diff.irq), total);
+        sample_value("/proc/stat", (*new_stats)[i]->name, " soft IRQ %", (double)(diff.softirq), total);
+        sample_value("/proc/stat", (*new_stats)[i]->name, " Steal %",    (double)(diff.steal), total);
+        sample_value("/proc/stat", (*new_stats)[i]->name, " Guest %",    (double)(diff.guest), total);
     }
-    delete(previous_stats);
-    previous_stats = new_stats;
+    delete(previous_cpu_stats);
+    previous_cpu_stats = new_stats;
+}
+
+void update_net_stats(void) {
+    /* get the current stats */
+    std::vector<netstats_t*> * new_stats = read_net_stats();
+    if (new_stats == NULL) return;
+    for (int i = 0 ; i < new_stats->size() ; i++) {
+        /* we need to take the difference from the last read */
+        netstats_t diff;
+        diff.recv_bytes = (*new_stats)[i]->recv_bytes - (*previous_net_stats)[i]->recv_bytes;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:bytes",     (double)(diff.recv_bytes), 1.0);
+        diff.recv_packets = (*new_stats)[i]->recv_packets - (*previous_net_stats)[i]->recv_packets;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:packets",     (double)(diff.recv_packets), 1.0);
+        diff.recv_errors = (*new_stats)[i]->recv_errors - (*previous_net_stats)[i]->recv_errors;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:errors",     (double)(diff.recv_errors), 1.0);
+        diff.recv_drops = (*new_stats)[i]->recv_drops - (*previous_net_stats)[i]->recv_drops;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:drops",     (double)(diff.recv_drops), 1.0);
+        diff.recv_fifo = (*new_stats)[i]->recv_fifo - (*previous_net_stats)[i]->recv_fifo;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:fifo",     (double)(diff.recv_fifo), 1.0);
+        diff.recv_frame = (*new_stats)[i]->recv_frame - (*previous_net_stats)[i]->recv_frame;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:frames",     (double)(diff.recv_frame), 1.0);
+        diff.recv_compressed = (*new_stats)[i]->recv_compressed - (*previous_net_stats)[i]->recv_compressed;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:compressed",     (double)(diff.recv_compressed), 1.0);
+        diff.recv_multicast = (*new_stats)[i]->recv_multicast - (*previous_net_stats)[i]->recv_multicast;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "rx:multicast",     (double)(diff.recv_multicast), 1.0);
+        diff.transmit_bytes = (*new_stats)[i]->transmit_bytes - (*previous_net_stats)[i]->transmit_bytes;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:bytes",     (double)(diff.transmit_bytes), 1.0);
+        diff.transmit_packets = (*new_stats)[i]->transmit_packets - (*previous_net_stats)[i]->transmit_packets;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:packets",     (double)(diff.transmit_packets), 1.0);
+        diff.transmit_errors = (*new_stats)[i]->transmit_errors - (*previous_net_stats)[i]->transmit_errors;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:errors",     (double)(diff.transmit_errors), 1.0);
+        diff.transmit_drops = (*new_stats)[i]->transmit_drops - (*previous_net_stats)[i]->transmit_drops;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:drops",     (double)(diff.transmit_drops), 1.0);
+        diff.transmit_fifo = (*new_stats)[i]->transmit_fifo - (*previous_net_stats)[i]->transmit_fifo;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:fifo",     (double)(diff.transmit_fifo), 1.0);
+        diff.transmit_collisions = (*new_stats)[i]->transmit_collisions - (*previous_net_stats)[i]->transmit_collisions;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:collisions",     (double)(diff.transmit_collisions), 1.0);
+        diff.transmit_carrier = (*new_stats)[i]->transmit_carrier - (*previous_net_stats)[i]->transmit_carrier;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:carrier",     (double)(diff.transmit_carrier), 1.0);
+        diff.transmit_compressed = (*new_stats)[i]->transmit_compressed - (*previous_net_stats)[i]->transmit_compressed;
+        sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:compressed",     (double)(diff.transmit_compressed), 1.0);
+    }
+    delete(previous_net_stats);
+    previous_net_stats = new_stats;
 }
 
 void read_papi_components(void) {
@@ -459,6 +608,8 @@ void read_papi_components(void) {
         update_cpu_stats();
         /* Get current meminfo stats for the node */
         parse_proc_meminfo();
+        /* Get current net stats for the node */
+        update_net_stats();
 #endif
     }
 
@@ -622,7 +773,8 @@ int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t*
         initialize_papi_events();
 #endif
 #if !defined(__APPLE__)
-        previous_stats = read_cpu_stats();
+        previous_cpu_stats = read_cpu_stats();
+        previous_net_stats = read_net_stats();
 #endif
     }
     /* spawn the worker thread to do the reading */
