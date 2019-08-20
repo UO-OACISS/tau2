@@ -733,6 +733,7 @@ void free_papi_components(void) {
 #endif
 
 void stop_worker(void) {
+    if (done) return;
     pthread_mutex_lock(&_my_mutex);
     done = true;
     pthread_mutex_unlock(&_my_mutex);
@@ -762,7 +763,6 @@ void * Tau_papi_component_plugin_threaded_function(void* data) {
     /* Set the wakeup time (ts) to 2 seconds in the future. */
     struct timespec ts;
     struct timeval  tp;
-    Tau_pure_start(__func__);
 
     while (!done) {
         // take a reading...
@@ -789,7 +789,6 @@ void * Tau_papi_component_plugin_threaded_function(void* data) {
 
     // unlock after being signalled.
     pthread_mutex_unlock(&_my_mutex);
-    Tau_pure_start(__func__);
     pthread_exit((void*)0L);
     return(NULL);
 }
@@ -809,6 +808,18 @@ void init_lock(pthread_mutex_t * _mutex) {
         perror("pthread_cond_init error");
         exit(1);
     }
+}
+
+int Tau_plugin_event_pre_end_of_execution_papi_component(Tau_plugin_event_pre_end_of_execution_data_t *data) {
+    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+    stop_worker();
+#ifdef TAU_PAPI
+    /* clean up papi */
+    if (my_rank == rank_getting_system_data) {
+        free_papi_components();
+    }
+#endif
+    return 0;
 }
 
 int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_execution_data_t *data) {
@@ -923,6 +934,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     cb->Dump = Tau_plugin_event_dump_papi_component;
     cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_papi_component;
     cb->PostInit = Tau_plugin_event_post_init_papi_component;
+    cb->PreEndOfExecution = Tau_plugin_event_pre_end_of_execution_papi_component;
     cb->EndOfExecution = Tau_plugin_event_end_of_execution_papi_component;
 
     /* Trace events */

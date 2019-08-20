@@ -310,9 +310,16 @@ void Tau_plugin_adios2_open_file(void) {
         ss << "-" << world_comm_rank;
     }
     ss << ".bp";
-    printf("Writing %s\n", ss.str().c_str());
+    TAU_VERBOSE("Writing %s\n", ss.str().c_str());
     bpWriter = bpIO.Open(ss.str(), adios2::Mode::Write);
     opened = true;
+}
+
+void shorten_timer_name(std::string& name) {
+    std::size_t index = name.find(" [{");
+    if (index != std::string::npos) {
+        name = name.substr(0,index);
+    }
 }
 
 void Tau_plugin_adios2_define_variables(int numThreads, int numCounters,
@@ -333,7 +340,9 @@ void Tau_plugin_adios2_define_variables(int numThreads, int numCounters,
         FunctionInfo *fi = *it;
 
         stringstream ss;
-        ss << fi->GetName() << " / Calls";
+        std::string shortName(fi->GetName());
+        shorten_timer_name(shortName);
+        ss << shortName << " / Calls";
         timer_map_it = timers.find(ss.str());
         if (timer_map_it == timers.end()) {
             // add the timer to the map
@@ -343,14 +352,14 @@ void Tau_plugin_adios2_define_variables(int numThreads, int numCounters,
                 ss.str(), shape, start, count, adios2::ConstantDims);
             for (int i = 0 ; i < numCounters ; i++) {
                 ss.str(std::string());
-                ss << fi->GetName() << " / Inclusive " << counterNames[i];
+                ss << shortName << " / Inclusive " << counterNames[i];
                 // add the timer to the map
                 timers.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads)));
                 // define the variable for ADIOS
                 bpIO.DefineVariable<double>(
                     ss.str(), shape, start, count, adios2::ConstantDims);
                 ss.str(std::string());
-                ss << fi->GetName() << " / Exclusive " << counterNames[i];
+                ss << shortName << " / Exclusive " << counterNames[i];
                 // add the timer to the map
                 timers.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads)));
                 // define the variable for ADIOS
@@ -377,7 +386,9 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
         int tid = 0; // todo: get ALL thread data.
 
         stringstream ss;
-        ss << fi->GetName() << " / Calls";
+        std::string shortName(fi->GetName());
+        shorten_timer_name(shortName);
+        ss << shortName << " / Calls";
 
         // Check if a timer showed up since we last defined variables.
         timer_map_it = timers.find(ss.str());
@@ -395,8 +406,8 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
             for (int m = 0 ; m < numCounters ; m++) {
                 stringstream incl;
                 stringstream excl;
-                incl << fi->GetName() << " / Inclusive " << counterNames[m];
-                excl << fi->GetName() << " / Exclusive " << counterNames[m];
+                incl << shortName << " / Inclusive " << counterNames[m];
+                excl << shortName << " / Exclusive " << counterNames[m];
                 for (tid = 0; tid < numThreads; tid++) {
                     timers[incl.str()][tid] = fi->getDumpInclusiveValues(tid)[m];
                     timers[excl.str()][tid] = fi->getDumpExclusiveValues(tid)[m];
@@ -424,7 +435,7 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
 
 int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     if (!enabled) return 0;
-    printf("TAU PLUGIN ADIOS2: dump\n");
+    TAU_VERBOSE("TAU PLUGIN ADIOS2: dump\n");
 
 	if (!initialized) {
        Tau_plugin_adios2_init_adios();
@@ -515,7 +526,7 @@ int Tau_plugin_finalize(Tau_plugin_event_function_finalize_data_t* data) {
 /* This happens from MPI_Finalize, before MPI is torn down. */
 int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t* data) {
     if (!enabled) return 0;
-    fprintf(stdout, "TAU PLUGIN ADIOS2 Pre-Finalize\n"); fflush(stdout);
+    TAU_VERBOSE("TAU PLUGIN ADIOS2 Pre-Finalize\n"); fflush(stdout);
     Tau_ADIOS2_stop_worker();
     Tau_plugin_event_dump_data_t * dummy;
     Tau_plugin_adios2_dump(dummy);
@@ -555,7 +566,7 @@ int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
 int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t* data) {
     if (!enabled || data->tid != 0) return 0;
     enabled = false;
-    fprintf(stdout, "TAU PLUGIN ADIOS2 Finalize\n"); fflush(stdout);
+    TAU_VERBOSE("TAU PLUGIN ADIOS2 Finalize\n"); fflush(stdout);
     Tau_ADIOS2_stop_worker();
     if (opened) {
         Tau_plugin_event_dump_data_t * dummy;
@@ -575,7 +586,7 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
-    fprintf(stdout, "TAU PLUGIN ADIOS2 Init\n"); fflush(stdout);
+    TAU_VERBOSE("TAU PLUGIN ADIOS2 Init\n"); fflush(stdout);
     Tau_ADIOS2_parse_environment_variables();
 #if TAU_MPI
     PMPI_Comm_size(MPI_COMM_WORLD, &world_comm_size);
