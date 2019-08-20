@@ -29,6 +29,7 @@
 #define TAU_ADIOS2_PERIOD_DEFAULT 2000000 // microseconds
 #define TAU_ADIOS2_ONE_FILE_DEFAULT true
 #define TAU_ADIOS2_ENGINE "BPFile"
+#define TAU_ADIOS2_FILENAME "tauprofile"
 
 static bool enabled{false};
 static bool initialized{false};
@@ -58,13 +59,15 @@ class plugin_options {
             env_periodic(TAU_ADIOS2_PERIODIC_DEFAULT),
             env_period(TAU_ADIOS2_PERIOD_DEFAULT),
             env_one_file(TAU_ADIOS2_ONE_FILE_DEFAULT),
-            env_engine(TAU_ADIOS2_ENGINE)
+            env_engine(TAU_ADIOS2_ENGINE),
+            env_filename(TAU_ADIOS2_FILENAME)
             {}
     public:
         int env_periodic;
         int env_period;
         int env_one_file;
         std::string env_engine;
+        std::string env_filename;
         static plugin_options& thePluginOptions() {
             static plugin_options tpo;
             return tpo;
@@ -305,7 +308,7 @@ void Tau_plugin_adios2_open_file(void) {
     if (prefix != NULL) {
         ss << TauEnv_get_profile_prefix() << "-";
     }
-    ss << "tauprofile";
+    ss << thePluginOptions().env_filename;
     if (!thePluginOptions().env_one_file) {
         ss << "-" << world_comm_rank;
     }
