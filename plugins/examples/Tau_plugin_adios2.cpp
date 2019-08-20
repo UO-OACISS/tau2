@@ -430,15 +430,6 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
        Tau_plugin_adios2_init_adios();
     }
 
-    /* records the heap, with no context, even though it says "here". */
-    Tau_track_memory_here();
-    /* records the load, without context */
-    Tau_track_load();
-    /* records the power, without context */
-    Tau_track_power();
-    /* records the rss/hwm, without context. */
-    Tau_track_memory_rss_and_hwm();
-    
     Tau_global_incr_insideTAU();
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
