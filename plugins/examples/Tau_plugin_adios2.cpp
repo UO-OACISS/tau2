@@ -53,6 +53,27 @@ std::map<std::string, std::vector<double> > timers;
 adios2::Variable<int> num_threads_var;
 adios2::Variable<int> num_metrics_var;
 
+char *_program_path()
+{
+#if defined(__APPLE__)
+    return NULL;
+#else
+    char *path = (char*)malloc(PATH_MAX);
+    if (path != NULL) {
+        if (readlink("/proc/self/exe", path, PATH_MAX) == -1) {
+            free(path);
+            path = NULL;
+        }
+        std::string tmp(path);
+        size_t i = tmp.rfind('/', tmp.length());
+        if (i != string::npos) {
+            sprintf(path, "%s", tmp.substr(i+1, tmp.length() - i).c_str());
+        }
+    }
+    return path;
+#endif
+}
+
 class plugin_options {
     private:
         plugin_options(void) :
@@ -309,6 +330,11 @@ void Tau_plugin_adios2_open_file(void) {
         ss << TauEnv_get_profile_prefix() << "-";
     }
     ss << thePluginOptions().env_filename;
+    char * program = _program_path();
+    if (program != NULL) {
+        ss << "-" << program; 
+        free(program);
+    }
     if (!thePluginOptions().env_one_file) {
         ss << "-" << world_comm_rank;
     }

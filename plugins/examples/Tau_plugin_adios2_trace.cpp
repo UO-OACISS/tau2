@@ -75,6 +75,27 @@ static atomic<bool> dump_history{false};
 
 namespace tau_plugin {
 
+char *_program_path()
+{
+#if defined(__APPLE__)
+    return NULL;
+#else
+    char *path = (char*)malloc(PATH_MAX);
+    if (path != NULL) {
+        if (readlink("/proc/self/exe", path, PATH_MAX) == -1) {
+            free(path);
+            path = NULL;
+        }
+        std::string tmp(path);
+        size_t i = tmp.rfind('/', tmp.length());
+        if (i != string::npos) {
+            sprintf(path, "%s", tmp.substr(i+1, tmp.length() - i).c_str());
+        }
+    }
+    return path;
+#endif
+}
+
 class plugin_options {
     private:
         plugin_options(void) :
@@ -513,7 +534,12 @@ void adios::open() {
     if (!opened) {
         Tau_global_incr_insideTAU();
         std::stringstream ss;
-        ss << thePluginOptions().env_filename; 
+        ss << thePluginOptions().env_filename;
+        char * program = _program_path();
+        if (program != NULL) {
+            ss << "-" << program; 
+            free(program);
+        }
         if (!thePluginOptions().env_one_file) {
             ss << "-" << global_comm_rank;
         }
