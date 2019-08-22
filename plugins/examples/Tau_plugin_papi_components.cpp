@@ -528,6 +528,48 @@ void parse_proc_meminfo() {
   return;
 }
 
+void parse_proc_self_statm() {
+  tau::papi_plugin::ScopedTimer(__func__);
+  if (!include_component("/proc/self/statm")) { return; }
+  FILE *f = fopen("/proc/self/statm", "r");
+  if (f) {
+    char line[4096] = {0};
+    while ( fgets( line, 4096, f)) {
+        std::string tmp(line);
+        std::istringstream iss(tmp);
+        std::vector<std::string> results(std::istream_iterator<std::string>{iss},
+                                         std::istream_iterator<std::string>());
+        std::string& value = results[0];
+        char* pEnd;
+        double d1 = strtod (value.c_str(), &pEnd);
+        if (pEnd) { 
+            if (include_event("/proc/self/statm", "program size (kB)")) {
+                void * ue = find_user_event("program size (kB)");
+                Tau_userevent_thread(ue, d1, 0);
+            }
+        }
+        value = results[1];
+        d1 = strtod (value.c_str(), &pEnd);
+        if (pEnd) { 
+            if (include_event("/proc/self/statm", "resident set size (kB)")) {
+                void * ue = find_user_event("resident set size (kB)");
+                Tau_userevent_thread(ue, d1, 0);
+            }
+        }
+        value = results[2];
+        d1 = strtod (value.c_str(), &pEnd);
+        if (pEnd) { 
+            if (include_event("/proc/self/statm", "resident shared pages")) {
+                void * ue = find_user_event("resident shared pages");
+                Tau_userevent_thread(ue, d1, 0);
+            }
+        }
+    }
+    fclose(f);
+  }
+  return;
+}
+
 void sample_value(const char * component, const char * cpu, const char * name,
         const double value, const long long total) {
     std::stringstream ss;
@@ -639,11 +681,8 @@ void update_io_stats(void) {
     if (new_stats == NULL) return;
     for (int i = 0 ; i < new_stats->size() ; i++) {
         /* we need to take the difference from the last read */
-        iostats_t diff;
-        for (int i = 0 ; i < new_stats->size() ; i++) {
-            long long tmplong = (*new_stats)[i].second - (*previous_io_stats)[i].second;
-            sample_value("/proc/self/io", "io", (*new_stats)[i].first.c_str(), (double)(tmplong), 1LL);
-        }
+        long long tmplong = (*new_stats)[i].second - (*previous_io_stats)[i].second;
+        sample_value("/proc/self/io", "io", (*new_stats)[i].first.c_str(), (double)(tmplong), 1LL);
     }
     delete(previous_io_stats);
     previous_io_stats = new_stats;
@@ -658,7 +697,7 @@ void read_papi_components(void) {
             long long * values = (long long *)calloc(comp->events.size(), sizeof(long long));
             int retval = PAPI_read(comp->event_set, values);
             if (retval != PAPI_OK) {
-                TAU_VERBOSE("Error: Error reading PAPI %s eventset.\n", comp->name);
+                TAU_VERBOSE("Error: Error reading PAPI %s eventset.\n", comp->name.c_str());
                 return;
             }
             for (size_t i = 0 ; i < comp->events.size() ; i++) {
@@ -678,6 +717,8 @@ void read_papi_components(void) {
     Tau_track_memory_rss_and_hwm();
     /* Get current io stats for the process */
     update_io_stats();
+    /* Parse memory stats */
+    parse_proc_self_statm();
 #endif
 
     if (my_rank == rank_getting_system_data) {
@@ -708,7 +749,7 @@ void free_papi_components(void) {
             long long * values = (long long *)calloc(comp->events.size(), sizeof(long long));
             int retval = PAPI_stop(comp->event_set, values);
             if (retval != PAPI_OK) {
-                TAU_VERBOSE("Error: Error reading PAPI %s eventset.\n", comp->name);
+                TAU_VERBOSE("Error: Error reading PAPI %s eventset.\n", comp->name.c_str());
                 return;
             }
             free(values);
