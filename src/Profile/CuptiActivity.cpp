@@ -302,6 +302,10 @@ void Tau_cupti_subscribe()
 
 void Tau_cupti_onload()
 {
+  // only visit this function once!
+  static bool once = false;
+  if (once) { return; } else { once = true; }
+
   CUptiResult err = CUPTI_SUCCESS;
 	CUresult err2 = CUDA_SUCCESS;
 #ifdef TAU_DEBUG_CUPTI 

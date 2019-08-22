@@ -25,6 +25,10 @@
 
 #include <stdlib.h>
 
+#ifdef TAU_GPU
+#include <Profile/TauGpu.h>
+#endif
+
 // FIXME: Duplicated in pthread_wrap.c
 #if !defined(__APPLE__)
 #define TAU_PTHREAD_BARRIER_AVAILABLE
@@ -270,7 +274,13 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
   }
 
   int retval;
-  if(*wrapped || Tau_global_getLightsOut() || !Tau_init_check_initialized()) {
+  bool ignore_thread = false;
+#ifdef TAU_GPU
+  ignore_thread = !Tau_gpu_initialized();
+  printf("ignore_thread = %d\n", ignore_thread);
+#endif
+  if(*wrapped || Tau_global_getLightsOut() ||
+     !Tau_init_check_initialized() || ignore_thread) {
     // Another wrapper has already intercepted the call so just pass through
     retval = pthread_create_call(threadp, attr, start_routine, arg);
   } else {

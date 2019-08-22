@@ -97,6 +97,9 @@ public:
 /* Initialization to be executed at the start of the application */
 extern "C" void Tau_gpu_init(void);
 
+/* Check if initialization is done */
+bool& Tau_gpu_initialized(void);
+
 /* Initialization of each gpu/device. */
 extern "C" void Tau_gpu_device_init(GpuEvent *gpu);
 
