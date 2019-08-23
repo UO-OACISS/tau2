@@ -2447,7 +2447,7 @@ map<string, int *>& TheIterationMap() {
   return iterationMap;
 }
 
-extern "C" void *Tau_pure_search_for_function(const char *name)
+extern "C" void *Tau_pure_search_for_function(const char *name, int create)
 {
   FunctionInfo *fi = 0;
   RtsLayer::LockDB();
@@ -2455,6 +2455,11 @@ extern "C" void *Tau_pure_search_for_function(const char *name)
   PureMap::iterator it = pure.find(name);
   if (it != pure.end()) {
     fi = it->second;
+  } else {
+    if (create != 0) {
+      tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
+      pure[name] = fi;
+    }
   }
   RtsLayer::UnLockDB();
   return (void *) fi;

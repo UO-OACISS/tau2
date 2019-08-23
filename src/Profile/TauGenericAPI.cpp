@@ -115,20 +115,16 @@ void perftool_dump_data(void) {
     Tau_dump();
 }
 
-void perftool_timer_start(const char * name) {
-    Tau_pure_start(name);
+void * perftool_timer_create(const char * name) {
+    return Tau_pure_search_for_function(name, 1);
 }
 
-void perftool_timer_stop(const char * name) {
-    Tau_pure_stop(name);
+void perftool_timer_start(const void * timer) {
+    Tau_start_timer((FunctionInfo*)timer, 0, Tau_get_thread());
 }
 
-void perftool_static_phase_start(const char * name) {
-    Tau_static_phase_start(name);
-}
-
-void perftool_static_phase_stop(const char * name) {
-    Tau_static_phase_stop(name);
+void perftool_timer_stop(const void * timer) {
+    Tau_stop_timer((FunctionInfo*)timer, Tau_get_thread());
 }
 
 void perftool_dynamic_phase_start(const char * name, int index) {
@@ -139,8 +135,12 @@ void perftool_dynamic_phase_stop(const char * name, int index) {
     Tau_dynamic_stop(name, index);
 }
 
-void perftool_sample_counter(const char * name, double value) {
-    Tau_trigger_context_event(name, value);
+void * perftool_create_counter(const char * name) {
+    return Tau_get_userevent(name);
+}
+
+void perftool_sample_counter(const void * counter, double value) {
+    Tau_userevent((void*)counter, value);
 }
 
 void perftool_metadata(const char * name, const char * value) {
