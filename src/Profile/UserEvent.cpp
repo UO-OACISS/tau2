@@ -435,7 +435,6 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
       FunctionInfo * fi;
       if (depth > 0) {
           Profiler ** path = new Profiler*[depth];
-
           // Reverse the callpath to avoid string copies
           int i=depth-1;
           for (; current && i >= 0; --i) {
@@ -460,7 +459,7 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
           if (strlen(fi->GetType()) > 0)
             buff << " " << fi->GetType();
 
-          delete[] path;
+          //delete[] path;
       } else {
           fi = current->ThisFunction;
           buff << " : " << fi->GetName();
