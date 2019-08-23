@@ -553,6 +553,7 @@ for arg in "$@"; do
 	    echo ""
 	    echo "Other Options:"
 	    echo "-iowrapper .................................... Build POSIX IO Wrapper."
+	    echo "-tfiowrapper ............................. Build TensorFlow IO Wrapper."
 	    echo "-dmapp ...................................... Build Cray DMAPP Wrapper."
 	    echo "-pthread .................................. Use pthread thread package."
 	    echo "-papithread .................................. Use PAPI thread package."
@@ -665,6 +666,7 @@ for arg in "$@"; do
 	echo "           nec-sx-aurora|crayxmt|solaris2-64|mips32|sgin32|sgi64|sgio32"
         echo "                                                 arm_linux|arm_android]"
         echo "-iowrapper .................................... Build POSIX IO Wrapper."
+        echo "-tfiowrapper ............................. Build TensorFlow IO Wrapper."
         echo "-pthread .................................. Use pthread thread package."
         echo "-papithread .................................. Use PAPI thread package."
         echo "-charm=<dir> .............................. Use charm++ thread package."
@@ -1113,6 +1115,7 @@ sddf=no
 sddfdir=
 tau_uselm=yes
 iowrapper=no
+tfiowrapper=no
 dmapp=no
 zepto=no
 zeptodir=
@@ -1299,6 +1302,11 @@ for arg in "$@"; do
 
 	-iowrapper)
 	    iowrapper=yes
+	    shift
+	    ;;
+
+	-tfiowrapper)
+	    tfiowrapper=yes
 	    shift
 	    ;;
 
@@ -3952,6 +3960,10 @@ if [ $iowrapper = yes ] ; then
     else
         fixmakeargs="$fixmakeargs IOWRAPPER"
     fi
+fi
+
+if [ $tfiowrapper = yes ] ; then
+    fixmakeargs="$fixmakeargs TFIOWRAPPER"
 fi
 
 if [ "x$PE_ENV" = "xCRAY" -o $dmapp = yes ]; then
