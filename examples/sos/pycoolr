@@ -1,0 +1,66 @@
+#!/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+tool=
+config=
+
+usage()
+{
+ echo "Usage: $0 [REQUIRED] [-tool <beacon|sos>] [OPTIONAL] [-config=full-path-to-config-file]" 1>&2;
+ exit 1;
+}
+
+if [ $# -eq 0 ]
+  then
+    echo "No arguments supplied"
+    usage
+fi
+
+for arg in "$@"; do
+  echo $arg
+  case $arg in
+    -tool=*)
+       tool=`echo $arg | sed -e 's/-tool=//'`
+       echo "Selected tool: " $tool
+       ;;
+    -config=*)
+       config=`echo $arg | sed -e 's/-config=//'`
+       echo "User supplied config file: " $config
+       ;;
+    *)
+       echo "usage"
+       usage
+       ;;
+  esac
+done
+
+PYCOOLR_TOOL=$tool
+CONFIG_FILE=$config
+
+export PYCOOLR_NODE=`hostname`
+
+if [[ $PYCOOLR_TOOL = "beacon" ]];
+then
+   export CVARS_COMM_MODE="pub"
+   [ -z "$BEACON" ] && echo "Please set the BEACON environment variable to point to the beacon installation" && exit 1;
+   export PYCOOLR_INST_PATH=$BEACON
+   export PYCOOLR_LIBPATH=$BEACON/lib
+   if [[ $CONFIG_FILE = "" ]];
+   then 
+     $DIR/pycoolrgui/pycoolr-plot/coolr.py $DIR/pycoolrgui/pycoolr-plot/configs/beacon_mpit.cfg
+   else
+     $DIR/pycoolrgui/pycoolr-plot/coolr.py $CONFIG_FILE
+   fi
+
+elif [[ $PYCOOLR_TOOL = "sos" ]];
+  then
+   [ -z "$SOS_WORK" ] && echo "Please set the SOS_WORK environment variable" && exit 1;
+   if [[ $CONFIG_FILE = "" ]];
+   then
+      echo "$DIR/pycoolrgui/pycoolr-plot/coolr.py $DIR/pycoolrgui/pycoolr-plot/configs/sos_mpit.cfg"
+      $DIR/pycoolrgui/pycoolr-plot/coolr.py $DIR/pycoolrgui/pycoolr-plot/configs/sos_mpit.cfg
+   else
+      echo "$DIR/pycoolrgui/pycoolr-plot/coolr.py $CONFIG_FILE"
+      $DIR/pycoolrgui/pycoolr-plot/coolr.py $CONFIG_FILE
+   fi
+fi
