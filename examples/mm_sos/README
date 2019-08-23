@@ -2,23 +2,43 @@ This is an example illustrating the integration of SOS with
 MPI via TAU's plugin architecture.
 
 
+
 Steps to build and run the example:
-1.TAU should be configured using the following options:
-./configure -bdf=download -pthread -mpi -sos=$SOS_INSTALL_PATH -pdt=$PDTOOLKIT_PATH
-2.SOS_flow should be installed, compatibility with Python in SOS is not needed. 
+
+1.SOS_flow should be installed, compatibility with Python in SOS is not needed.
 Install SOS_flow using the following steps:
-2a.Instal EVPATH from:
+1-a.Instal EVPATH from:
 https://www.cc.gatech.edu/systems/projects/EVPath/
-2b.Download SOS_flow from:
+1-b.Download SOS_flow from:
 https://github.com/cdwdirect/sos_flow
-3b.Install SOS_flow with:
+1-c.Install SOS_flow with:
 cmake -DEVPath_DIR=$EVPATH_DIR -DCMAKE_INSTALL_PREFIX=$SOS_INSTALL_DIR ../sos_flow
+
+2.TAU should be configured using the following options:
+./configure -dwarf=download -bdf=download -pthread -mpi -sos=$SOS_INSTALL_PATH -pdt=$PDTOOLKIT_PATH
+
 3.Compile the matmult application with the provided Makefile using make.
+make
+
+IMPORTANT: before compiling, check the number of iterations in matmult.c:
+* for simple-app.sh use a low number, i.e.: 3
+* for simple-pycoolr.sh use a big number, i.e.: 100 to have time to select metrics,
+and see how the values change.
+
+
 4.In another terminal load the SOS daemon with:
 ./simple-sos.sh
 When the daemon is running, it will show you the Version, the machine it is being 
 executed on and other information.
-5. Once the daemon is running, execute your application with:
+
+5.Once the daemon is running, execute your application with:
 ./simple-app.sh
-6.Once the application finished, the daemon will close and the database will be 
+
+6.Once the application finishes, the daemon will close and the database will be 
 queried to check code related performance data.
+
+7.Also, it is possible to see how TAU metrics change over time using pycoolr
+to do this, execute the following command and when pycoolr opens.
+./simple-pycoolr.sh
+You can select the metrics. The number after the metric name means the
+process number in which that counter is measured.
