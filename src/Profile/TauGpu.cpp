@@ -48,6 +48,10 @@ static TauContextUserEvent *PowerUtilizationEvent;
 static uint32_t recentKernelId = -1;
 static uint32_t recentCorrelationId = -1;
 
+static bool _initialized = false;
+
+bool& Tau_gpu_initialized(void) { printf("initialized: %d\n", _initialized); return _initialized; }
+
 int number_of_tasks = 0;
 int number_of_top_level_task_events = 0;
 
@@ -123,7 +127,7 @@ void Tau_gpu_enter_event(const char* name)
 #ifdef DEBUG_PROF
   TAU_VERBOSE("entering cu event: %s.\n", name);
 #endif
-  TAU_START(name);
+  Tau_pure_start(name);
 }
 void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent *device, int transferSize, int memcpyType)
 {
@@ -142,7 +146,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent *device, int 
     //printf("using default name: %s.\n", functionName);
   }
 
-  TAU_START(functionName);
+  Tau_pure_start(functionName);
 
   //Inorder to capture the entire memcpy transaction time start the send/recived
   //at the start of the event
@@ -200,7 +204,7 @@ void Tau_gpu_enter_unifmem_event(const char *functionName, GpuEvent *device, int
     //printf("using default name: %s.\n", functionName);
   }
 
-  TAU_START(functionName);
+  Tau_pure_start(functionName);
 
   //Inorder to capture the entire memcpy transaction time start the send/recived
   //at the start of the event
@@ -263,7 +267,7 @@ void Tau_gpu_exit_memcpy_event(const char * functionName, GpuEvent *device, int 
   // This is too make the message lines in the trace to always point forward in
   // time.
 
-  TAU_STOP(functionName);
+  Tau_pure_stop(functionName);
 
 }
 
@@ -289,7 +293,7 @@ void Tau_gpu_exit_unifmem_event(const char * functionName, GpuEvent *device, int
   // This is too make the message lines in the trace to always point forward in
   // time.
 
-  TAU_STOP(functionName);
+  Tau_pure_stop(functionName);
 
 }
 
@@ -298,14 +302,14 @@ void Tau_gpu_exit_event(const char *name)
 #ifdef DEBUG_PROF
   TAU_VERBOSE("exit cu event: %s.\n", name);
 #endif
-  TAU_STOP(name);
+  Tau_pure_stop(name);
 }
 void start_gpu_event(const char *name, int gpuTask)
 {
 #ifdef DEBUG_PROF
   TAU_VERBOSE("staring %s event.\n", name);
 #endif
-  TAU_START_TASK(name, gpuTask);
+  Tau_pure_start_task(name, gpuTask);
 }
 void stage_gpu_event(const char *name, int gpuTask, double start_time, FunctionInfo* parent)
 {
@@ -341,7 +345,7 @@ void stop_gpu_event(const char *name, int gpuTask)
    TAU_PROFILER_STOP_TASK(ptr, gpuTask);
    }
    */
-  TAU_STOP_TASK(name, gpuTask);
+  Tau_pure_stop_task(name, gpuTask);
 }
 
 void break_gpu_event(const char *name, int gpuTask, double stop_time, FunctionInfo* parent)
@@ -768,7 +772,7 @@ void Tau_gpu_init(void)
   Tau_get_context_userevent((void **) &MemoryOps, "Memory Operations");
   Tau_get_context_userevent((void **) &ControlOps, "Control Operations");
 
-  
+  _initialized = true;
 }
 
 /*

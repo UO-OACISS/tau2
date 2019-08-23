@@ -7,6 +7,10 @@
     "comment": "This will include three readings.",
     "include": [".*MemAvailable.*", ".*MemFree.*", ".*MemTotal.*"]
   },
+  "/proc/net/dev": {
+    "comment": "This will include only the first ethernet device.",
+    "include": [".*eno1.*"]
+  },
   "lmsensors": {
     "comment": "This will include all power readings.",
     "include": [".*power.*"]

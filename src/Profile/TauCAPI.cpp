@@ -1349,8 +1349,8 @@ extern "C" void Tau_dump_function_values_incr(const char **functionList, int num
 extern "C" void Tau_register_thread(void) {
 //#if defined(PTHREADS)
   if (RtsLayer::myNode() != -1) {
-    TAU_VERBOSE("[TauCAPI]: Tau_register_thread, mynode %i, tid %i\n", RtsLayer::myNode(), RtsLayer::getTid());
-    RtsLayer::RegisterThread();
+    int tmp = RtsLayer::RegisterThread();
+    TAU_VERBOSE("[TauCAPI]: Tau_register_thread, mynode %d, tid %d of %d\n", RtsLayer::myNode(), RtsLayer::myThread(), tmp);
   }
   else {
     TAU_VERBOSE("[TauCAPI]: Tau_register_thread, do not register thread, mynode %i, tid %i\n", RtsLayer::myNode(), RtsLayer::getTid());    
@@ -2227,9 +2227,10 @@ extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid)
 #endif /* TAU_SCOREP */
   TauInternalFunctionGuard protects_this_function;
 
-  if (TauInternal_CurrentProfiler(tid)
-      && TauInternal_CurrentProfiler(tid)->ParentProfiler == NULL
-      && strcmp(TauInternal_CurrentProfiler(tid)->ThisFunction->GetName(), ".TAU application") == 0)
+  Profiler * current = TauInternal_CurrentProfiler(tid);
+  if (current
+      && current->ParentProfiler == NULL
+      && strcmp(current->ThisFunction->GetName(), ".TAU application") == 0)
   {
     DEBUGPROFMSG("Found top level .TAU application timer"<<endl;);
     TAU_GLOBAL_TIMER_STOP();
@@ -2963,6 +2964,8 @@ extern "C" int Tau_get_local_tid(void) {
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
+// First, make sure all thread timers have stopped
+  Tau_profile_exit_all_threads();
 #ifdef TAU_OPENMP
   //Tau_finalize_collector_api();
 #endif
