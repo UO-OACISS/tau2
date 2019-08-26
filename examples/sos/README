@@ -1,17 +1,44 @@
 This is an example illustrating the integration of SOS with 
-MPI_T via TAU's plugin architecture.
-The example can be run as is, or optionally, a python-based PYCOOLR
-GUI can be used to monitor MPI_T PVARs as they get written out to disk
-through the SOS framework.
+MPI via TAU's plugin architecture.
 
-Steps to build the example and run it using PYCOOLR:
-1. One should have an MPI_T compliant MPI implementation in their path. 
-   For this example, we require using MVAPICH2 configured using: 
-   ./configure CC=gcc CXX=g++ F77=gfortran -L/lib -L/lib64 FC=gfortran --enable-mpit-pvars=all --disable-mcast
-2. TAU should be configured using the following minimum options: 
-   ./configure -bfd=download -unwind=download -mpit -mpi -sos=download -mpiinc=<> -mpilib=<>
-3. Within this directory, locate the "go.sh" script, and change the paths under the "Update" heading at the top of the script.
-4. Run "make"
-5. ./go.sh
-6. You should be able to see the PYCOOLR GUI popup on the screen. Select the MPI_T PVAR metric that you want:
-   "num_malloc_calls" is a PVAR that should have non-zero values for this example.
+
+
+Steps to build and run the example:
+
+1.SOS_flow should be installed, compatibility with Python in SOS is not needed.
+Install SOS_flow using the following steps:
+1-a.Instal EVPATH from:
+https://www.cc.gatech.edu/systems/projects/EVPath/
+1-b.Download SOS_flow from:
+https://github.com/cdwdirect/sos_flow
+1-c.Install SOS_flow with:
+cmake -DEVPath_DIR=$EVPATH_DIR -DCMAKE_INSTALL_PREFIX=$SOS_INSTALL_DIR ../sos_flow
+
+2.TAU should be configured using the following options:
+./configure -dwarf=download -bdf=download -pthread -mpi -sos=$SOS_INSTALL_PATH -pdt=$PDTOOLKIT_PATH
+
+3.Compile the matmult application with the provided Makefile using make.
+make
+
+IMPORTANT: before compiling, check the number of iterations in matmult.c:
+* for simple-app.sh use a low number, i.e.: 3
+* for simple-pycoolr.sh use a big number, i.e.: 100 to have time to select metrics,
+and see how the values change.
+
+
+4.In another terminal load the SOS daemon with:
+./simple-sos.sh
+When the daemon is running, it will show you the Version, the machine it is being 
+executed on and other information.
+
+5.Once the daemon is running, execute your application with:
+./simple-app.sh
+
+6.Once the application finishes, the daemon will close and the database will be 
+queried to check code related performance data.
+
+7.Also, it is possible to see how TAU metrics change over time using pycoolr
+to do this, execute the following command and when pycoolr opens.
+./simple-pycoolr.sh
+You can select the metrics. The number after the metric name means the
+process number in which that counter is measured.

@@ -323,6 +323,7 @@ ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 adios2=false
 papi_components=false
 adios2_trace=false
+sos=false
 
 # This saves the args to tau_exec so they can be reused later.
 # This is used for MPI_Comm_spawn support, in which TAU spawns the child
@@ -402,6 +403,10 @@ for arg in "$@" ; do
         ;;
       -adios2_trace)
         adios2_trace=true
+        shift
+        ;;
+      -sos)
+        sos=true
         shift
         ;;
       -power)
@@ -750,6 +755,11 @@ fi
 
 if [ $adios2_trace = "true" ]; then
     export TAU_PLUGINS=$TAU_PLUGINS:libTAU-adios2-trace-plugin.so
+    export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+fi
+
+if [ $sos = "true" ]; then
+    export TAU_PLUGINS=libTAU-sos-plugin.so
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
 fi
 
