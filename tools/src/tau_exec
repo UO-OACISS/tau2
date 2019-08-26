@@ -82,7 +82,6 @@ if [ $python_wrapper = "true" ] ; then
   echo "        -adios2       Write output to ADIOS2 archive"
   echo "        -adios2_trace Write trace output to ADIOS2 archive"
   echo "        -papi_components Periodically read from available PAPI components (requires PAPI configuration)"
-  echo "        -tfio         Track TensorFlow I/O"
 fi
   echo ""
   echo "Notes:"
@@ -285,7 +284,6 @@ verbose=false
 binding_specified=""
 binding_options=""
 track_io=false
-track_tfio=false
 track_memory=false
 memory_debug=false
 track_cuda=false
@@ -366,11 +364,6 @@ for arg in "$@" ; do
         ;;
       -io)
         track_io=true
-        save_arg $arg
-        shift
-        ;;
-      -tfio)
-        track_tfio=true
         save_arg $arg
         shift
         ;;
@@ -788,11 +781,6 @@ if [ $track_io = "true" ] ; then
   TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
   #Needed for the auditor
   export LD_BIND_NOW=1
-fi
-
-if [ $track_tfio = "true" ] ; then
-  # Add the io wrapper library to the LD_PRELOAD list
-  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-tfiowrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
 if [ $track_numa = "true" ]; then

@@ -21,6 +21,8 @@
 #include <Profile/TauPin.h>
 #include <stdio.h>
 #include <vector>
+#include <deque>
+#include <utility>
 
 using namespace std;
 using namespace tau;
@@ -203,4 +205,14 @@ extern "C" void *Tau_iowrap_getEvent(event_type type, unsigned int fid)
     fid = 0;    // use the "unknown" descriptor
   }
   return iowrap_events[(int)type][fid];
+}
+
+
+extern "C" void Tau_app_report_file_read_start(const char * name, size_t bytes) {
+        
+}
+
+
+extern "C" void Tau_app_report_file_read_start(const char * name, size_t bytes) {
+
 }
