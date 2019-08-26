@@ -249,6 +249,68 @@ static inline tau_io_wrapper_event  * tau_get_io_event_record(void)
 }
 #endif
 
+typedef std::map<std::string, void*> tfio_write_bytes_map_t;
+
+#if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER) // Intel compiler doesn't like __thread for non-POD object
+// thread local storage
+static tfio_write_bytes_map_t * tau_tfio_write_bytes_map(void)
+{ 
+  static __thread tfio_write_bytes_map_t * tfio_write_bytes_map_tls = NULL;
+  if(tfio_write_bytes_map_tls == NULL) {
+    tfio_write_bytes_map_tls = new tfio_write_bytes_map_t();
+  }
+  return tfio_write_bytes_map_tls; 
+}
+#elif defined(TAU_USE_DTLS) && !defined(__INTEL_COMPILER)
+// thread local storage
+static tfio_write_bytes_map_t * tau_tfio_write_bytes_map(void)
+{ 
+  static __declspec(thread) tfio_write_bytes_map_t tfio_write_bytes_map_tls; 
+  return &tfio_write_bytes_map_tls; 
+}
+#else
+// worst case - array of flags, one for each thread.
+static inline tfio_write_bytes_map_t  * tau_tfio_write_bytes_map(void)
+{ 
+  static tfio_write_bytes_map_t * tfio_write_bytes_map_arr[TAU_MAX_threadS] = {NULL};
+  if(tfio_write_bytes_map_arr[Tau_get_local_tid()] == NULL) {
+    tfio_write_bytes_map_arr[Tau_get_local_tid()] = new tfio_write_bytes_map_t();
+  }
+  return tfio_write_bytes_map_arr[Tau_get_local_tid()];
+}
+#endif
+
+
+typedef std::map<std::string, void*> tfio_write_bw_map_t;
+
+#if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER) // Intel compiler doesn't like __thread for non-POD object
+// thread local storage
+static tfio_write_bw_map_t * tau_tfio_write_bw_map(void)
+{ 
+  static __thread tfio_write_bw_map_t * tfio_write_bw_map_tls = NULL;
+  if(tfio_write_bw_map_tls == NULL) {
+    tfio_write_bw_map_tls = new tfio_write_bw_map_t();
+  }
+  return tfio_write_bw_map_tls; 
+}
+#elif defined(TAU_USE_DTLS) && !defined(__INTEL_COMPILER)
+// thread local storage
+static tfio_write_bw_map_t * tau_tfio_write_bw_map(void)
+{ 
+  static __declspec(thread) tfio_write_bw_map_t tfio_write_bw_map_tls; 
+  return &tfio_write_bw_map_tls; 
+}
+#else
+// worst case - array of flags, one for each thread.
+static inline tfio_write_bw_map_t  * tau_tfio_write_bw_map(void)
+{ 
+  static tfio_write_bw_map_t * tfio_write_bw_map_arr[TAU_MAX_threadS] = {NULL};
+  if(tfio_write_bw_map_arr[Tau_get_local_tid()] == NULL) {
+    tfio_write_bw_map_arr[Tau_get_local_tid()] = new tfio_write_bw_map_t();
+  }
+  return tfio_write_bw_map_arr[Tau_get_local_tid()];
+}
+#endif
 
 typedef std::map<std::string, void*> tfio_read_bytes_map_t;
 
@@ -374,10 +436,56 @@ void Tau_app_report_file_read_stop(const char * name, size_t size) {
 
 void Tau_app_report_file_write_start(const char * name, size_t size) {
     TAU_START("TensorFlow File Write");
+    tau_io_wrapper_event * tau_io_event_record_arr = tau_get_io_event_record();
+    gettimeofday(&(tau_io_event_record_arr[TAU_IO_EVENT_KIND_WRITE].t1), 0);
+    tfio_write_bytes_map_t * tfio_write_bytes_map = tau_tfio_write_bytes_map();
+    std::string nameStr = std::string(name);
+    if(tfio_write_bytes_map->find(nameStr) == tfio_write_bytes_map->end()) {
+        void *event = 0;
+        char ename[4096];
+        sprintf(ename,"TensorFlow File Write Bytes <file=%s>", name);
+        Tau_pure_context_userevent(&event, ename);
+        tfio_write_bytes_map->insert(std::pair<std::string, void *>(nameStr, event));
+    }
+    tfio_write_bw_map_t * tfio_write_bw_map = tau_tfio_write_bw_map();
+    if(tfio_write_bw_map->find(nameStr) == tfio_write_bw_map->end()) {
+        void *event = 0;
+        char ename[4096];
+        sprintf(ename,"TensorFlow File Write Bandwidth <file=%s>", name);
+        Tau_pure_context_userevent(&event, ename);
+        tfio_write_bw_map->insert(std::pair<std::string, void *>(nameStr, event));
+    }
 }
 
 void Tau_app_report_file_write_stop(const char * name, size_t size) {
     TAU_STOP("TensorFlow File Write");
+    tau_io_wrapper_event * tau_io_event_record_arr = tau_get_io_event_record();
+    gettimeofday(&(tau_io_event_record_arr[TAU_IO_EVENT_KIND_WRITE].t2), 0);
+    
+    tfio_write_bytes_map_t * tfio_write_bytes_map = tau_tfio_write_bytes_map();
+    std::string nameStr = std::string(name);
+    tfio_write_bytes_map_t::const_iterator it = tfio_write_bytes_map->find(nameStr);
+    if(it == tfio_write_bytes_map->end()) {
+        fprintf(stderr, "TAU: ERROR: File write stop seen for %s without start!\n", name);
+        return;
+    } 
+    void * bytesEvent = it->second;
+    
+    tfio_write_bw_map_t * tfio_write_bw_map = tau_tfio_write_bw_map();
+    tfio_write_bw_map_t::const_iterator it2 = tfio_write_bw_map->find(nameStr);
+    if(it == tfio_write_bw_map->end()) {
+        fprintf(stderr, "TAU: ERROR: File write stop seen for %s without start!\n", name);
+        return;
+    }
+    void * bwEvent = it2->second;
+    
+    struct timeval t1 = tau_io_event_record_arr[TAU_IO_EVENT_KIND_WRITE].t1;
+    struct timeval t2 = tau_io_event_record_arr[TAU_IO_EVENT_KIND_WRITE].t2;
+    double writeTime = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+    double bw = size/writeTime;
+    
+    TAU_CONTEXT_EVENT(bytesEvent, size);
+    TAU_CONTEXT_EVENT(bwEvent, bw);
 }
 
 void Tau_app_report_file_open_start(const char * name) {
