@@ -220,7 +220,7 @@ struct tau_io_wrapper_event {
     struct timeval t2;
 };
 
-#if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER) // Intel compiler doesn't like __thread for non-POD object
+#if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER)
 // thread local storage
 static tau_io_wrapper_event * tau_get_io_event_record(void)
 { 
@@ -230,28 +230,9 @@ static tau_io_wrapper_event * tau_get_io_event_record(void)
   }
   return io_wrapper_event_tls; 
 }
-#elif defined(TAU_USE_DTLS) && !defined(__INTEL_COMPILER)
-// thread local storage
-static tau_io_wrapper_event * tau_get_io_event_record(void)
-{ 
-  static __declspec(thread) tau_io_wrapper_event io_wrapper_event_tls[TAU_IO_NUM_EVENT_KINDS]; 
-  return &io_wrapper_event_tls; 
-}
-#else
-// worst case - array of flags, one for each thread.
-static inline tau_io_wrapper_event  * tau_get_io_event_record(void)
-{ 
-  static tau_io_wrapper_event io_wrapper_event_arr[TAU_MAX_THREADS][TAU_IO_NUM_EVENT_KINDS] = {NULL};
-  if(io_wrapper_event_arr[Tau_get_local_tid()] == NULL) {
-    io_wrapper_event_arr[Tau_get_local_tid()] = new tau_io_wrapper_event();
-  }
-  return io_wrapper_event_arr[Tau_get_local_tid()];
-}
-#endif
 
 typedef std::map<std::string, void*> tfio_write_bytes_map_t;
 
-#if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER) // Intel compiler doesn't like __thread for non-POD object
 // thread local storage
 static tfio_write_bytes_map_t * tau_tfio_write_bytes_map(void)
 { 
@@ -261,29 +242,10 @@ static tfio_write_bytes_map_t * tau_tfio_write_bytes_map(void)
   }
   return tfio_write_bytes_map_tls; 
 }
-#elif defined(TAU_USE_DTLS) && !defined(__INTEL_COMPILER)
-// thread local storage
-static tfio_write_bytes_map_t * tau_tfio_write_bytes_map(void)
-{ 
-  static __declspec(thread) tfio_write_bytes_map_t tfio_write_bytes_map_tls; 
-  return &tfio_write_bytes_map_tls; 
-}
-#else
-// worst case - array of flags, one for each thread.
-static inline tfio_write_bytes_map_t  * tau_tfio_write_bytes_map(void)
-{ 
-  static tfio_write_bytes_map_t * tfio_write_bytes_map_arr[TAU_MAX_threadS] = {NULL};
-  if(tfio_write_bytes_map_arr[Tau_get_local_tid()] == NULL) {
-    tfio_write_bytes_map_arr[Tau_get_local_tid()] = new tfio_write_bytes_map_t();
-  }
-  return tfio_write_bytes_map_arr[Tau_get_local_tid()];
-}
-#endif
 
 
 typedef std::map<std::string, void*> tfio_write_bw_map_t;
 
-#if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER) // Intel compiler doesn't like __thread for non-POD object
 // thread local storage
 static tfio_write_bw_map_t * tau_tfio_write_bw_map(void)
 { 
@@ -293,28 +255,9 @@ static tfio_write_bw_map_t * tau_tfio_write_bw_map(void)
   }
   return tfio_write_bw_map_tls; 
 }
-#elif defined(TAU_USE_DTLS) && !defined(__INTEL_COMPILER)
-// thread local storage
-static tfio_write_bw_map_t * tau_tfio_write_bw_map(void)
-{ 
-  static __declspec(thread) tfio_write_bw_map_t tfio_write_bw_map_tls; 
-  return &tfio_write_bw_map_tls; 
-}
-#else
-// worst case - array of flags, one for each thread.
-static inline tfio_write_bw_map_t  * tau_tfio_write_bw_map(void)
-{ 
-  static tfio_write_bw_map_t * tfio_write_bw_map_arr[TAU_MAX_threadS] = {NULL};
-  if(tfio_write_bw_map_arr[Tau_get_local_tid()] == NULL) {
-    tfio_write_bw_map_arr[Tau_get_local_tid()] = new tfio_write_bw_map_t();
-  }
-  return tfio_write_bw_map_arr[Tau_get_local_tid()];
-}
-#endif
 
 typedef std::map<std::string, void*> tfio_read_bytes_map_t;
 
-#if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER) // Intel compiler doesn't like __thread for non-POD object
 // thread local storage
 static tfio_read_bytes_map_t * tau_tfio_read_bytes_map(void)
 { 
@@ -324,29 +267,10 @@ static tfio_read_bytes_map_t * tau_tfio_read_bytes_map(void)
   }
   return tfio_read_bytes_map_tls; 
 }
-#elif defined(TAU_USE_DTLS) && !defined(__INTEL_COMPILER)
-// thread local storage
-static tfio_read_bytes_map_t * tau_tfio_read_bytes_map(void)
-{ 
-  static __declspec(thread) tfio_read_bytes_map_t tfio_read_bytes_map_tls; 
-  return &tfio_read_bytes_map_tls; 
-}
-#else
-// worst case - array of flags, one for each thread.
-static inline tfio_read_bytes_map_t  * tau_tfio_read_bytes_map(void)
-{ 
-  static tfio_read_bytes_map_t * tfio_read_bytes_map_arr[TAU_MAX_THREADS] = {NULL};
-  if(tfio_read_bytes_map_arr[Tau_get_local_tid()] == NULL) {
-    tfio_read_bytes_map_arr[Tau_get_local_tid()] = new tfio_read_bytes_map_t();
-  }
-  return tfio_read_bytes_map_arr[Tau_get_local_tid()];
-}
-#endif
 
 
 typedef std::map<std::string, void*> tfio_read_bw_map_t;
 
-#if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER) // Intel compiler doesn't like __thread for non-POD object
 // thread local storage
 static tfio_read_bw_map_t * tau_tfio_read_bw_map(void)
 { 
@@ -356,24 +280,6 @@ static tfio_read_bw_map_t * tau_tfio_read_bw_map(void)
   }
   return tfio_read_bw_map_tls; 
 }
-#elif defined(TAU_USE_DTLS) && !defined(__INTEL_COMPILER)
-// thread local storage
-static tfio_read_bw_map_t * tau_tfio_read_bw_map(void)
-{ 
-  static __declspec(thread) tfio_read_bw_map_t tfio_read_bw_map_tls; 
-  return &tfio_read_bw_map_tls; 
-}
-#else
-// worst case - array of flags, one for each thread.
-static inline tfio_read_bw_map_t  * tau_tfio_read_bw_map(void)
-{ 
-  static tfio_read_bw_map_t * tfio_read_bw_map_arr[TAU_MAX_THREADS] = {NULL};
-  if(tfio_read_bw_map_arr[Tau_get_local_tid()] == NULL) {
-    tfio_read_bw_map_arr[Tau_get_local_tid()] = new tfio_read_bw_map_t();
-  }
-  return tfio_read_bw_map_arr[Tau_get_local_tid()];
-}
-#endif
 
 
 
@@ -514,3 +420,4 @@ void Tau_app_report_file_flush_stop(const char * name) {
  
 
 }
+#endif // TAU_USE_TLS
