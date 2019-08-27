@@ -1,2 +1,0 @@
-tau_exec -ebs -ebs_resolution=function -T mpi,pthread,sos,pdt -sos ./mm
-tau_exec -ebs -ebs_resolution=line -T mpi,pthread,sos,pdt -sos ./mm

@@ -1,1 +1,0 @@
-mpicc -DTAU_MPI *.c -g -O2 -o mm
