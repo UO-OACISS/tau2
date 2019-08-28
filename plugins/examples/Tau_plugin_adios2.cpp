@@ -62,19 +62,35 @@ char *_program_path()
 #if defined(__APPLE__)
     return NULL;
 #else
-    char *path = (char*)malloc(PATH_MAX);
-    if (path != NULL) {
-        if (readlink("/proc/self/exe", path, PATH_MAX) == -1) {
-            free(path);
-            path = NULL;
-        }
-        std::string tmp(path);
-        size_t i = tmp.rfind('/', tmp.length());
-        if (i != string::npos) {
-            sprintf(path, "%s", tmp.substr(i+1, tmp.length() - i).c_str());
-        }
+    char path[PATH_MAX] = {0};
+    if (readlink("/proc/self/exe", path, PATH_MAX) == -1) {
+        return(NULL);
     }
-    return path;
+    std::string tmp(path);
+    size_t i = tmp.rfind('/', tmp.length());
+    if (i != string::npos) {
+        //sprintf(path, "%s", tmp.substr(i+1, tmp.length() - i).c_str());
+        path[i] = '\0';
+    }
+    return strdup(path);
+#endif
+}
+
+char *_program_name()
+{
+#if defined(__APPLE__)
+    return NULL;
+#else
+    char path[PATH_MAX] = {0};
+    if (readlink("/proc/self/exe", path, PATH_MAX) == -1) {
+        return(NULL);
+    }
+    std::string tmp(path);
+    size_t i = tmp.rfind('/', tmp.length());
+    if (i != string::npos) {
+        sprintf(path, "%s", tmp.substr(i+1, tmp.length() - i).c_str());
+    }
+    return strdup(path);
 #endif
 }
 
@@ -156,6 +172,19 @@ void Tau_ADIOS2_parse_environment_variables(void) {
     tmp = getenv("TAU_ADIOS2_ENGINE");
     if (tmp != NULL) {
       thePluginOptions().env_engine = strdup(tmp);
+    }
+    tmp = getenv("TAU_ADIOS2_FILENAME");
+    if (tmp != NULL) {
+      thePluginOptions().env_filename = strdup(tmp);
+    } else {
+        // add the program name to make it unique
+        char * program = _program_name();
+        if (program != NULL && strlen(program) > 0) {
+            std::stringstream ss;
+            ss << thePluginOptions().env_filename << "-" << program; 
+            free(program);
+            thePluginOptions().env_filename = std::string(ss.str());
+        }
     }
 }
 
@@ -331,19 +360,14 @@ void Tau_plugin_adios2_open_file(void) {
     const char * prefix = TauEnv_get_profile_prefix();
     ss << TauEnv_get_profiledir() << "/";
     if (prefix != NULL) {
-        ss << TauEnv_get_profile_prefix() << "-";
+        ss << TauEnv_get_profile_prefix();
     }
     ss << thePluginOptions().env_filename;
-    char * program = _program_path();
-    if (program != NULL) {
-        ss << "-" << program; 
-        free(program);
-    }
     if (!thePluginOptions().env_one_file) {
         ss << "-" << world_comm_rank;
     }
     ss << ".bp";
-    TAU_VERBOSE("Writing %s\n", ss.str().c_str());
+    printf("Writing %s\n", ss.str().c_str());
     bpWriter = bpIO.Open(ss.str(), adios2::Mode::Write);
     opened = true;
 }
@@ -487,8 +511,13 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
         }
 
         try {
-            for (int tid = 0; tid < numThreads; tid++) {
+            // assign real data
+            for (int tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
                 timers[ss.str()][tid] = (double)(fi->GetCalls(tid));
+            }
+            // pad with zeroes - all ranks may not have the same num threads
+            for (int tid = RtsLayer::getTotalThreads(); tid < numThreads; tid++) {
+                timers[ss.str()][tid] = 0.0;
             }
 
             bpWriter.Put<double>(ss.str(), timers[ss.str()].data());
@@ -498,9 +527,15 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
                 stringstream excl;
                 incl << shortName << " / Inclusive " << counterNames[m];
                 excl << shortName << " / Exclusive " << counterNames[m];
-                for (int tid = 0; tid < numThreads; tid++) {
+                // assign real data
+                for (int tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
                     timers[incl.str()][tid] = fi->getDumpInclusiveValues(tid)[m];
                     timers[excl.str()][tid] = fi->getDumpExclusiveValues(tid)[m];
+                }
+                // pad with zeroes - all ranks may not have the same num threads
+                for (int tid = RtsLayer::getTotalThreads(); tid < numThreads; tid++) {
+                    timers[incl.str()][tid] = 0.0;
+                    timers[excl.str()][tid] = 0.0;
                 }
                 bpWriter.Put<double>(incl.str(), timers[incl.str()].data());
                 bpWriter.Put<double>(excl.str(), timers[excl.str()].data());
@@ -543,12 +578,21 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
         }
 
         try {
-            for (int tid = 0; tid < numThreads; tid++) {
+            // assign real data
+            for (int tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
                 counters[ss.str()][tid] = (double)(ue->GetNumEvents(tid));
                 counters[mean.str()][tid] = ue->GetMean(tid);
                 counters[max.str()][tid] = ue->GetMax(tid);
                 counters[min.str()][tid] = ue->GetMin(tid);
                 counters[sumsqr.str()][tid] = ue->GetSumSqr(tid);
+            }
+            // pad with zeroes - all ranks may not have the same num threads
+            for (int tid = RtsLayer::getTotalThreads(); tid < numThreads; tid++) {
+                counters[ss.str()][tid] = 0.0;
+                counters[mean.str()][tid] = 0.0;
+                counters[max.str()][tid] = 0.0;
+                counters[min.str()][tid] = 0.0;
+                counters[sumsqr.str()][tid] = 0.0;
             }
             bpWriter.Put<double>(ss.str(), counters[ss.str()].data());
             bpWriter.Put<double>(mean.str(), counters[mean.str()].data());
@@ -597,6 +641,7 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
             int t = atoi(reply);
             //printf("%d rank %d has %d threads.\n", world_comm_rank, i, t);
             max_threads = t > max_threads ? t : max_threads;
+            free(reply);
         }
     }
     numThreads[0] = max_threads;
@@ -748,7 +793,7 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
  * Every plugin MUST implement this function to register callbacks for various events 
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
-    Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
+    Tau_plugin_callbacks_t cb;
     TAU_VERBOSE("TAU PLUGIN ADIOS2 Init\n"); fflush(stdout);
     Tau_ADIOS2_parse_environment_variables();
 #if TAU_MPI
@@ -757,15 +802,15 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     tau::plugins::Sockets::GetHostInfo(12345);
 #endif
     /* Create the callback object */
-    TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
+    TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(&cb);
     /* Required event support */
-    cb->Dump = Tau_plugin_adios2_dump;
-    cb->PostInit = Tau_plugin_adios2_post_init;
-    cb->PreEndOfExecution = Tau_plugin_adios2_pre_end_of_execution;
-    cb->EndOfExecution = Tau_plugin_adios2_end_of_execution;
+    cb.Dump = Tau_plugin_adios2_dump;
+    cb.PostInit = Tau_plugin_adios2_post_init;
+    cb.PreEndOfExecution = Tau_plugin_adios2_pre_end_of_execution;
+    cb.EndOfExecution = Tau_plugin_adios2_end_of_execution;
 
     /* Register the callback object */
-    TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
+    TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(&cb, id);
     enabled = true;
     return 0;
 }

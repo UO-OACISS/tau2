@@ -16,7 +16,7 @@
 #include "mpi.h"
 #endif
 
-static std::unordered_map<int, tau::plugins::HostInfo*> hosts;
+static std::unordered_map<int, tau::plugins::HostInfo> hosts;
 
 // Server side C/C++ program to demonstrate Socket programming 
 void tau::plugins::Sockets::Run(int rank, tau::plugins::CallbackFunctionType * cb)
@@ -45,7 +45,7 @@ void tau::plugins::Sockets::Run(int rank, tau::plugins::CallbackFunctionType * c
     address.sin_family = AF_INET; 
     address.sin_addr.s_addr = INADDR_ANY; 
     //printf("%d Binding to port %d\n", rank, hosts[rank]->_port);fflush(stdout);
-    address.sin_port = htons( hosts[rank]->_port ); 
+    address.sin_port = htons( hosts[rank]._port ); 
     
     // Forcefully attaching socket to the port
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0) 
@@ -78,7 +78,9 @@ void tau::plugins::Sockets::Run(int rank, tau::plugins::CallbackFunctionType * c
             send(new_socket , reply , strlen(reply) , 0 ); 
             free(reply);
         }
+        close (new_socket);
     }
+    close(server_fd);
     return;
 } 
 
@@ -96,7 +98,7 @@ char * tau::plugins::Sockets::send_message(int rank, const char * message)
     } 
 
     serv_addr.sin_family = AF_INET; 
-    serv_addr.sin_port = htons(hosts[rank]->_port); 
+    serv_addr.sin_port = htons(hosts[rank]._port); 
     
     // Convert IPv4 and IPv6 addresses from text to binary form 
     if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) 
@@ -175,9 +177,10 @@ void tau::plugins::Sockets::GetHostInfo(int port) {
         } else {
             port_index = 0;
         }
-        tau::plugins::HostInfo * info = 
-            new tau::plugins::HostInfo(host_index, addr_index, port_index + port);
-        hosts[i] = info;
+        //tau::plugins::HostInfo * info = 
+        //    new tau::plugins::HostInfo(host_index, addr_index, port_index + port);
+        tau::plugins::HostInfo info(host_index, addr_index, port_index + port);
+        hosts.insert(std::make_pair(i, info));
         // advance to next
         previous_host = host_index;
         host_index = host_index + hostlength;
@@ -190,5 +193,4 @@ void tau::plugins::Sockets::GetHostInfo(int port) {
     return;
 #endif
 }
-
 

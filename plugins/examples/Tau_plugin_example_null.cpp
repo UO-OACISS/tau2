@@ -16,6 +16,7 @@
 #include <Profile/TauAPI.h>
 #include <Profile/TauPlugin.h>
 #include <pthread.h>
+#include <errno.h>
 
 #ifdef TAU_MPI
 #include <mpi.h>

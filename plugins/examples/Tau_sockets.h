@@ -13,6 +13,7 @@ namespace tau {
 
         class HostInfo {
             public:
+                HostInfo() {};
                 HostInfo(const char * hostname, const char * address, int portnum) :
                     _hostname(hostname), _address(address), _port(portnum) {
                 }
@@ -31,9 +32,11 @@ namespace tau {
                     // tell the server to exit
                     send_message(_rank, "");
                     _server.join();
+                    //ClearHostInfo();
                 }
                 static void Run(int rank, CallbackFunctionType * cb);
                 static void GetHostInfo(int port);
+                //void ClearHostInfo();
                 char * send_message(int rank, const char * message);
             private:
                 int _rank;
@@ -48,8 +51,9 @@ namespace tau {
                 }
                 ~ScopedTimer() {
                     Tau_pure_stop(_name);
+                    free(_name);
                 }
-                const char * _name;
+                char * _name;
         };
     }
 }

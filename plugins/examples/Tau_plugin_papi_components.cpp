@@ -135,8 +135,9 @@ namespace tau {
                 }
                 ~ScopedTimer() {
                     Tau_pure_stop(_name);
+                    free(_name);
                 }
-                const char * _name;
+                char * _name;
         };
     }
 }
@@ -148,9 +149,9 @@ typedef tau::papi_plugin::NetStat netstats_t;
 typedef std::vector<std::pair<std::string, long long> > iostats_t;
 std::vector<ppc*> components;
 
-std::vector<cpustats_t*> * previous_cpu_stats;
-std::vector<netstats_t*> * previous_net_stats;
-iostats_t * previous_io_stats;
+std::vector<cpustats_t*> * previous_cpu_stats = nullptr;
+std::vector<netstats_t*> * previous_net_stats = nullptr;
+iostats_t * previous_io_stats = nullptr;
 
 pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_cond_t _my_cond; // for timer
@@ -623,7 +624,10 @@ void update_cpu_stats(void) {
         sample_value("/proc/stat", (*new_stats)[i]->name, " Steal %",    (double)(diff.steal), total);
         sample_value("/proc/stat", (*new_stats)[i]->name, " Guest %",    (double)(diff.guest), total);
     }
-    delete(previous_cpu_stats);
+    for (auto it : *previous_cpu_stats) {
+        delete it;
+    }
+    delete previous_cpu_stats;
     previous_cpu_stats = new_stats;
 }
 
@@ -669,7 +673,10 @@ void update_net_stats(void) {
         diff.transmit_compressed = (*new_stats)[i]->transmit_compressed - (*previous_net_stats)[i]->transmit_compressed;
         sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:compressed",     (double)(diff.transmit_compressed), 1LL);
     }
-    delete(previous_net_stats);
+    for (auto it : *previous_net_stats) {
+        delete it;
+    }
+    delete previous_net_stats;
     previous_net_stats = new_stats;
 }
 
@@ -684,7 +691,7 @@ void update_io_stats(void) {
         long long tmplong = (*new_stats)[i].second - (*previous_io_stats)[i].second;
         sample_value("/proc/self/io", "io", (*new_stats)[i].first.c_str(), (double)(tmplong), 1LL);
     }
-    delete(previous_io_stats);
+    delete previous_io_stats;
     previous_io_stats = new_stats;
 }
 
@@ -872,6 +879,21 @@ int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_exe
         free_papi_components();
     }
 #endif
+    if (previous_cpu_stats != nullptr) {
+        for (auto it : *previous_cpu_stats) {
+            delete it;
+        }
+        delete previous_cpu_stats;
+    }
+    if (previous_net_stats != nullptr) {
+        for (auto it : *previous_net_stats) {
+            delete it;
+        }
+        delete previous_net_stats;
+    }
+    if (previous_io_stats != nullptr) {
+        delete previous_io_stats;
+    }
     /* Why do these deadlock on exit? */
     //pthread_cond_destroy(&_my_cond);
     //pthread_mutex_destroy(&_my_mutex);
@@ -986,6 +1008,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     cb->AtomicEventTrigger = Tau_plugin_event_atomic_trigger_papi_component;
 
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
+    free (cb);
 
     return 0;
 }
