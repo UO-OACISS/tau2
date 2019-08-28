@@ -206,7 +206,7 @@ int Tau_read_cray_power_events(int fd, long long int *value)  {
 }
 
 int Tau_read_load_event(int fd, double *value)  {
-  char buf[2048];
+  char buf[2048] = {0};
   int ret, bytesread;
   if (fd > 0) {
     ret = lseek(fd, 0, SEEK_SET);
