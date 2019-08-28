@@ -24,6 +24,7 @@
 #endif
 
 #include <adios2.h>
+#include "Tau_sockets.h"
 
 #define TAU_ADIOS2_PERIODIC_DEFAULT false
 #define TAU_ADIOS2_PERIOD_DEFAULT 2000000 // microseconds
@@ -50,8 +51,11 @@ adios2::IO bpIO;
 adios2::Engine bpWriter;
 //std::map<std::string, adios2::Variable<double> > timers;
 std::map<std::string, std::vector<double> > timers;
+std::map<std::string, std::vector<double> > counters;
 adios2::Variable<int> num_threads_var;
 adios2::Variable<int> num_metrics_var;
+
+tau::plugins::Sockets * my_sockets;
 
 char *_program_path()
 {
@@ -353,19 +357,22 @@ void shorten_timer_name(std::string& name) {
 
 void Tau_plugin_adios2_define_variables(int numThreads, int numCounters,
     const char** counterNames) {
-    // get the FunctionInfo database, and iterate over it
-    std::vector<FunctionInfo*>::const_iterator it;
-    RtsLayer::LockDB();
-
-    std::map<std::string, std::vector<double> >::iterator timer_map_it;
-
     const std::size_t Nx = numThreads;
     const adios2::Dims shape{static_cast<size_t>(Nx * adios_comm_size)};
     const adios2::Dims start{static_cast<size_t>(Nx * adios_comm_rank)};
     const adios2::Dims count{Nx};
 
+    // get the FunctionInfo database, and iterate over it
+    std::vector<FunctionInfo*>::const_iterator it;
+    RtsLayer::LockDB();
+    /* Copy the function info database so we can release the lock */
+    std::vector<FunctionInfo*> tmpTimers(TheFunctionDB());
+    RtsLayer::UnLockDB();
+
+    std::map<std::string, std::vector<double> >::iterator timer_map_it;
+
     //foreach: TIMER
-    for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+    for (it = tmpTimers.begin(); it != tmpTimers.end(); it++) {
         FunctionInfo *fi = *it;
 
         stringstream ss;
@@ -398,6 +405,58 @@ void Tau_plugin_adios2_define_variables(int numThreads, int numCounters,
         }
     }
 
+    RtsLayer::LockDB();
+    tau::AtomicEventDB::const_iterator it2;
+    std::map<std::string, std::vector<double> >::iterator counter_map_it;
+
+    // do the same with counters.
+    int numEvents;
+    double max, min, mean, sumsqr;
+    std::stringstream tmp_str;
+    for (it2 = tau::TheEventDB().begin(); it2 != tau::TheEventDB().end(); it2++) {
+        tau::TauUserEvent *ue = (*it2);
+        if (ue == NULL) continue;
+        stringstream ss;
+	    std::string counter_name(ue->GetName().c_str());
+        ss << counter_name << " / Num Events";
+        counter_map_it = counters.find(ss.str());
+        if (counter_map_it == counters.end()) {
+            // add the counter to the map
+            counters.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads)));
+            // define the variable for ADIOS
+            bpIO.DefineVariable<double>(
+                ss.str(), shape, start, count, adios2::ConstantDims);
+            ss.str(std::string());
+            ss << counter_name << " / Min";
+            // add the counter to the map
+            counters.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads)));
+            // define the variable for ADIOS
+            bpIO.DefineVariable<double>(
+                ss.str(), shape, start, count, adios2::ConstantDims);
+            ss.str(std::string());
+            ss << counter_name << " / Max";
+            // add the counter to the map
+            counters.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads)));
+            // define the variable for ADIOS
+            bpIO.DefineVariable<double>(
+                ss.str(), shape, start, count, adios2::ConstantDims);
+            ss.str(std::string());
+            ss << counter_name << " / Mean";
+            // add the counter to the map
+            counters.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads)));
+            // define the variable for ADIOS
+            bpIO.DefineVariable<double>(
+                ss.str(), shape, start, count, adios2::ConstantDims);
+            ss.str(std::string());
+            ss << counter_name << " / Sum Squares";
+            // add the counter to the map
+            counters.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads)));
+            // define the variable for ADIOS
+            bpIO.DefineVariable<double>(
+                ss.str(), shape, start, count, adios2::ConstantDims);
+        }
+    }
+
     RtsLayer::UnLockDB();
 }
 
@@ -406,13 +465,15 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
     // get the FunctionInfo database, and iterate over it
     std::vector<FunctionInfo*>::const_iterator it;
     RtsLayer::LockDB();
+    /* Copy the function info database so we can release the lock */
+    std::vector<FunctionInfo*> tmpTimers(TheFunctionDB());
+    RtsLayer::UnLockDB();
 
     std::map<std::string, std::vector<double> >::iterator timer_map_it;
 
     //foreach: TIMER
-    for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+    for (it = tmpTimers.begin(); it != tmpTimers.end(); it++) {
         FunctionInfo *fi = *it;
-        int tid = 0; // todo: get ALL thread data.
 
         stringstream ss;
         std::string shortName(fi->GetName());
@@ -426,7 +487,7 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
         }
 
         try {
-            for (tid = 0; tid < numThreads; tid++) {
+            for (int tid = 0; tid < numThreads; tid++) {
                 timers[ss.str()][tid] = (double)(fi->GetCalls(tid));
             }
 
@@ -437,7 +498,7 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
                 stringstream excl;
                 incl << shortName << " / Inclusive " << counterNames[m];
                 excl << shortName << " / Exclusive " << counterNames[m];
-                for (tid = 0; tid < numThreads; tid++) {
+                for (int tid = 0; tid < numThreads; tid++) {
                     timers[incl.str()][tid] = fi->getDumpInclusiveValues(tid)[m];
                     timers[excl.str()][tid] = fi->getDumpExclusiveValues(tid)[m];
                 }
@@ -459,12 +520,62 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
         }
     }
 
+    RtsLayer::LockDB();
+    tau::AtomicEventDB::const_iterator it2;
+    std::map<std::string, std::vector<double> >::iterator counter_map_it;
+
+    // do the same with counters.
+    for (it2 = tau::TheEventDB().begin(); it2 != tau::TheEventDB().end(); it2++) {
+        tau::TauUserEvent *ue = (*it2);
+        if (ue == NULL) continue;
+	    std::string counter_name(ue->GetName().c_str());
+        std::stringstream ss, mean, min, max, sumsqr;
+        ss << counter_name << " / Num Events";
+        mean << counter_name << " / Mean";
+        min << counter_name << " / Min";
+        max << counter_name << " / Max";
+        sumsqr << counter_name << " / Sum Squares";
+
+        // Check if a counter showed up since we last defined variables.
+        counter_map_it = counters.find(ss.str());
+        if (counter_map_it == counters.end()) {
+            continue;
+        }
+
+        try {
+            for (int tid = 0; tid < numThreads; tid++) {
+                counters[ss.str()][tid] = (double)(ue->GetNumEvents(tid));
+                counters[mean.str()][tid] = ue->GetMean(tid);
+                counters[max.str()][tid] = ue->GetMax(tid);
+                counters[min.str()][tid] = ue->GetMin(tid);
+                counters[sumsqr.str()][tid] = ue->GetSumSqr(tid);
+            }
+            bpWriter.Put<double>(ss.str(), counters[ss.str()].data());
+            bpWriter.Put<double>(mean.str(), counters[mean.str()].data());
+            bpWriter.Put<double>(min.str(), counters[min.str()].data());
+            bpWriter.Put<double>(max.str(), counters[max.str()].data());
+            bpWriter.Put<double>(sumsqr.str(), counters[sumsqr.str()].data());
+        } catch (std::invalid_argument &e) {
+            std::cout << "Invalid argument exception, STOPPING PROGRAM from rank "
+                    << world_comm_rank << "\n";
+            std::cout << e.what() << "\n";
+        } catch (std::ios_base::failure &e) {
+            std::cout << "IO System base failure exception, STOPPING PROGRAM "
+                        "from rank "
+                    << world_comm_rank << "\n";
+            std::cout << e.what() << "\n";
+        } catch (std::exception &e) {
+            std::cout << "Exception, STOPPING PROGRAM from rank " << world_comm_rank << "\n";
+            std::cout << e.what() << "\n";
+         }
+    }
     RtsLayer::UnLockDB();
 }
 
 int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     if (!enabled) return 0;
     TAU_VERBOSE("TAU PLUGIN ADIOS2: dump\n");
+    tau::plugins::ScopedTimer(__func__);
 
 	if (!initialized) {
        Tau_plugin_adios2_init_adios();
@@ -478,6 +589,18 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     std::vector<int> numCounters = {0};
     TauMetrics_getCounterList(&counterNames, &(numCounters[0]));
  
+    // Ask all ranks for their num threads
+    int max_threads = 0;
+    for (int i = 0 ; i < world_comm_size ; i++) {
+        char * reply = my_sockets->send_message(i, "Get num threads");
+        if (reply != nullptr) {
+            int t = atoi(reply);
+            //printf("%d rank %d has %d threads.\n", world_comm_rank, i, t);
+            max_threads = t > max_threads ? t : max_threads;
+        }
+    }
+    numThreads[0] = max_threads;
+
     Tau_plugin_adios2_define_variables(numThreads[0], numCounters[0], counterNames);
     Tau_global_decr_insideTAU();
 
@@ -566,12 +689,23 @@ int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution
     return 0;
 }
 
+char * handle_socket_message(char * message) {
+    std::stringstream reply;
+    if (strcmp(message, "Get num threads") == 0) {
+        reply << RtsLayer::getTotalThreads();
+    }
+    //free (message);
+    return strdup(reply.str().c_str());
+}
+
 /* This happens after MPI_Init, and after all TAU metadata variables have been
  * read */
 int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
     if (!enabled) return 0;
     Tau_plugin_adios2_init_adios();
     Tau_plugin_adios2_open_file();
+
+    my_sockets = new tau::plugins::Sockets(world_comm_rank, &handle_socket_message);
 
     /* spawn the thread if doing periodic */
     if (thePluginOptions().env_periodic) {
@@ -620,6 +754,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
 #if TAU_MPI
     PMPI_Comm_size(MPI_COMM_WORLD, &world_comm_size);
     PMPI_Comm_rank(MPI_COMM_WORLD, &world_comm_rank);
+    tau::plugins::Sockets::GetHostInfo(12345);
 #endif
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
