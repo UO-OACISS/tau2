@@ -7027,6 +7027,7 @@ int main (int argc, char * argv[])
     {
         printf ("Hi from thread %d\n", omp_get_thread_num());
     }
+    return 0;
 }
 EOF
 
