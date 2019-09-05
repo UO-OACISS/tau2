@@ -6,6 +6,7 @@ MPI via TAU's plugin architecture.
 Steps to build and run the example:
 
 1.SOS_flow should be installed, compatibility with Python in SOS is not needed.
+Python can be disabled with -DSOS_ENABLE_PYTHON=OFF
 Install SOS_flow using the following steps:
 1-a.Instal EVPATH from:
 https://www.cc.gatech.edu/systems/projects/EVPath/
