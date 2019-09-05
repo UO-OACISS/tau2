@@ -8,13 +8,9 @@ export SOS_WORK=${DIR}
 export SOS_EVPATH_MEETUP=${DIR}
 export SOS_DISCOVERY_DIR=${DIR}
 
-export SOS_IN_MEMORY_DATABASE=FALSE
-export SOS_EXPORT_DB_AT_EXIT=FALSE
-
-
 export TAU_PLUGINS=libTAU-sos-plugin.so
-export TAU_PLUGINS_PATH=../../x86_64/lib/shared-mpi-pthread-pdt-sos
-#export TAU_PLUGINS_PATH=../../ibm64linux/lib/shared-mpi-pthread-pdt-sos
+#export TAU_PLUGINS_PATH=../../x86_64/lib/shared-mpi-pthread-pdt-sos
+export TAU_PLUGINS_PATH=../../ibm64linux/lib/shared-mpi-pthread-pdt-sos
 
 
 start_sos_daemon()
@@ -25,7 +21,7 @@ start_sos_daemon()
     rm -rf sosd.00000.* profile.* dump.*
     #export SOS_IN_MEMORY_DATABASE=1
     #daemon="sosd -l 0 -a 1 -k 0 -r aggregator -w ${SOS_WORK}"
-    daemon="mpirun -np 1 sosd -l 0 -a 1 -k 0 -r aggregator -w ${SOS_WORK}"
+    daemon="sosd -l 0 -a 1 -k 0 -r aggregator -w ${SOS_WORK}"
     echo ${daemon}
     ${daemon} >& sosd.log &
     sleep 1
@@ -36,7 +32,7 @@ stop_sos_daemon()
     # shut down the daemon.
     if pgrep -x "sosd" > /dev/null; then
         #sosd_stop
-	mpirun -np 1 sosd_stop
+	sosd_stop >& /dev/null
     fi
     sleep 5
 }
@@ -57,8 +53,7 @@ export TAU_SOS_PERIODIC=1
 
 
 #unset TAU_SOS_PERIODIC
-mpirun -np 2 tau_exec -T pdt,mpi,sos,pthread -sos ./matmult &
-
+mpirun -np 2 tau_exec -T pdt,mpi,sos,pthread -sos ./matmult 
 
 
 echo "sleep 5"
