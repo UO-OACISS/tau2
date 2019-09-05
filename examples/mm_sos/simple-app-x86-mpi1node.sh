@@ -9,6 +9,14 @@ export SOS_CMD_PORT=22501
 export TAU_SOS_PERIODIC=1
 export TAU_PLUGINS=libTAU-sos-plugin.so
 export TAU_PLUGINS_PATH=../../x86_64/lib/shared-mpi-pthread-pdt-sos
+#export TAU_PLUGINS_PATH=../../x86_64/lib/shared-icpc-mpi-pthread-pdt-sos
+
+
+export SOS_IN_MEMORY_DATABASE=TRUE
+export SOS_EXPORT_DB_AT_EXIT=VERBOSE
+
+
+
 
 #export TAU_VERBOSE=1
 unset TAU_VERBOSE
@@ -16,15 +24,13 @@ unset TAU_VERBOSE
 
 #Execute tau with sos and use ebs to get code performance data
 #tau_exec -ebs -T likwid,mpi,pthread,sos,pdt -sos ./matmult
-tau_exec -ebs -T mpi,pthread,sos,pdt -sos ./matmult
 
-#Wait a bit for the data to be saved to disk
+
+
+mpirun \
+	  -np 1 env SOS_CMD_PORT=22501 tau_exec -vv -T mpi,pthread,sos,pdt  -papi_components ./matmult \
+	: -np 1 env SOS_CMD_PORT=22502 tau_exec -vv -T mpi,pthread,sos,pdt  -papi_components ./matmult &
+
 sleep 2
 
-#Stop SOS daemon--Only one process
-mpirun -np 1 sosd_stop
-
-sleep 2
-
-#Check the code related performance data
-sqlite3 sosd.00000.db "SELECT frame,value_name,value FROM viewCombined WHERE value_name LIKE '%[SAMPLE]%' ORDER by frame, value_name"
+env SOS_CMD_PORT=20690 ./report

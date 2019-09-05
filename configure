@@ -96,64 +96,68 @@ installsosdeps()
  make install
  cd ..
 
- wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
- #export FLEXPATH_DIR=$currdir/inst
- perl ./chaos_bootstrap.pl adios-1.13 $currdir/inst
- #perl ./chaos_build.pl
- mkdir build_area
- cd build_area 
 
- echo "Download SOS dependencies: $2 $3"
- download "$2" "$3" 
- echo "Extract SOS dependencies: $3"
- tar -xvf "$3"
- rm -f "$3"
+ if [ $sos_comm = evpath ]
+ then
+	wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
+	#export FLEXPATH_DIR=$currdir/inst
+	perl ./chaos_bootstrap.pl adios-1.13 $currdir/inst
+	#perl ./chaos_build.pl
+	mkdir build_area
+	cd build_area 
 
- set -x
- #Install dill
- cd dill/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/dill/source
- make all install
- cd ../..
+	echo "Download SOS dependencies: $2 $3"
+	download "$2" "$3" 
+	echo "Extract SOS dependencies: $3"
+	tar -xvf "$3"
+	rm -f "$3"
 
- #Install cercs_env
- cd cercs_env/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/cercs_env/source
- make all install
- cd ../..
+	set -x
+	#Install dill
+	cd dill/source
+	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/dill/source
+	make all install
+	cd ../..
 
- #Install atl
- cd atl/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/atl/source
- make all install
- cd ../..
+	#Install cercs_env
+	cd cercs_env/source
+	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/cercs_env/source
+	make all install
+	cd ../..
 
- #Install ffs
- cd ffs/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/ffs/source
- make all install
- cd ../..
+	#Install atl
+	cd atl/source
+	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/atl/source
+	make all install
+	cd ../..
 
- #Install enet
- cd enet/source
- $currdir/build_area/enet/source/configure  CFLAGS='-g -O0' CPPFLAGS='-g -O0' --prefix=$currdir/inst
- make install
- cd ../..
+	#Install ffs
+	cd ffs/source
+	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/ffs/source
+	make all install
+	cd ../..
 
- #Install evpath
- cd evpath/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/evpath/source
- make all install
- cd ../../..
+	#Install enet
+	cd enet/source
+	$currdir/build_area/enet/source/configure  CFLAGS='-g -O0' CPPFLAGS='-g -O0' --prefix=$currdir/inst
+	make install
+	cd ../..
 
- # set path to Flexpath/EVPath (see above)
- export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
+	#Install evpath
+	cd evpath/source
+	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/evpath/source
+	make all install
+	cd ../../..
 
- # Copy EVPath cmake file to its inst directory
- cd inst/lib/cmake/EVPath
- cp EVPathConfig.cmake ../../../
- cp EVPathTargets.cmake ../../../
- cd ../../../.. 
+	 # set path to Flexpath/EVPath (see above)
+	 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
+
+	 # Copy EVPath cmake file to its inst directory
+	 cd inst/lib/cmake/EVPath
+	 cp EVPathConfig.cmake ../../../
+	 cp EVPathTargets.cmake ../../../
+	 cd ../../../.. 
+ fi
 
  echo "Install libfabric"
  git clone https://github.com/ofiwg/libfabric.git
@@ -195,8 +199,29 @@ installsos()
 
  export sosdir=$currdir/$dst/inst
  echo "EVPath Inst dir: $targetdir/$architecture/sos/chaos/inst"
+ echo "$sos_comm"
+ case $sos_comm in
 
- cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_EVPATH=TRUE ..
+    sockets)
+	echo "Compile SOS with sockets"
+	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=ON -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
+	;;
+    mpi)
+        echo "Compile SOS with mpi"
+	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=ON -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
+        ;;
+    evpath)
+        echo "Compile SOS with EVPath"
+	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=ON ..
+        ;;
+#    zeromq)
+#        echo "Compile SOS with zeromq"
+#	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=ON -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
+#        ;;
+ esac
+
+
+# cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_EVPATH=TRUE ..
  
  make ; make install
 }
@@ -771,6 +796,7 @@ for arg in "$@"; do
 	    echo "-stff=<dir> .... Location of RENCI Scalable Time-series filter library."
 	    echo "-sddf=<dir> ...... SDDF library location; Only required for RENCI STFF."
 	    echo "-sos=<dir> ........................... Use Scalable Observation System."
+	    echo "-soscomm=<comm>...........Defines the communicatiors betwen SOS daemons"
 	    #    echo "-TRACE ..................................... Generate TAU event traces."
 	    #    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
 	    #    echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
@@ -1067,6 +1093,7 @@ sos=no
 sosdir=
 download_sos=no
 install_sos=no
+sos_comm=mpi
 adios=no
 adiosdir=
 adios2=no
@@ -1901,6 +1928,19 @@ for arg in "$@"; do
 	    sosdir=`echo $arg | sed -e 's/-sos=//'`
 	    shift
 	    ;;
+
+	-soscomm=*)
+            myarg=`echo $arg | sed -e 's/-soscomm=//'`
+	    #if [ $myarg = sockets -o $myarg = mpi -o $myarg = evpath -o $myarg = zeromq ]
+	    if [ $myarg = sockets -o $myarg = mpi -o $myarg = evpath ]
+	    then
+		sos_comm=$myarg
+	    else
+		echo "WARNING: valid options for soscomm are 'sockets', 'mpi', 'evpath'"
+	    fi	
+            shift
+            ;;
+
 
 	-adios=*)
 	    adiosdir=`echo $arg | sed -e 's/-adios=//'`
@@ -8735,7 +8775,7 @@ sosrepo=sos_flow
 echo "$sosdir"
 if [ "x$sos" = "xyes" ] ; then
   if [ "x$sosdir" = xdownload ] ; then
-    echo "Install SOS"
+    echo "Install SOS with communication $sos_comm"
     p=`pwd`
     cd $targetdir/$architecture/; installsosdeps "$sosmaindir" "$sosdepsurl" "$sosdepstgz"; download "$sosurl" "$sostgz" ; tar zxf "$sostgz"; rm -f "$sostgz" ; installsos "$sosrepo"
     #cd $targetdir/$architecture/; installsosdeps "$sosmaindir" "$sosdepsurl" "$sosdepstgz"; clone "$sosurl" "$sosrepo"; installsos "$sosrepo"
@@ -11825,6 +11865,16 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
     cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir_}/libomp.so ;
 
     echo "ompt_dir=$ompt_dir"
+    omptlinking="-Wl,-rpath=${ompt_instdir}#-L${ompt_instdir}#$omptlibrary"
+    if [ "x$download_ompt_tr4" = "xyes" ] ; then
+      fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
+    elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
+      fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
+    elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
+      fixmakeargs="$fixmakeargs TAU_OMPT_TR7 omptlib=$omptlinking"
+    elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
+      fixmakeargs="$fixmakeargs TAU_OMPT_5_0 omptlib=$omptlinking"
+    fi  
     # also put them in the "disable" directory for later builds - but only do it once
     
     if [ "x$download_ompt_tr4" = "xyes" ] ; then

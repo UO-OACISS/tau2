@@ -9,7 +9,8 @@ export SOS_EVPATH_MEETUP=${DIR}
 export SOS_DISCOVERY_DIR=${DIR}
 
 export TAU_PLUGINS=libTAU-sos-plugin.so
-export TAU_PLUGINS_PATH=../../x86_64/lib/shared-mpi-pthread-pdt-sos
+#export TAU_PLUGINS_PATH=../../x86_64/lib/shared-mpi-pthread-pdt-sos
+export TAU_PLUGINS_PATH=../../ibm64linux/lib/shared-mpi-pthread-pdt-sos
 
 
 start_sos_daemon()
@@ -19,6 +20,7 @@ start_sos_daemon()
     echo "Work directory is: $SOS_WORK"
     rm -rf sosd.00000.* profile.* dump.*
     #export SOS_IN_MEMORY_DATABASE=1
+    #daemon="sosd -l 0 -a 1 -k 0 -r aggregator -w ${SOS_WORK}"
     daemon="sosd -l 0 -a 1 -k 0 -r aggregator -w ${SOS_WORK}"
     echo ${daemon}
     ${daemon} >& sosd.log &
@@ -29,7 +31,8 @@ stop_sos_daemon()
 {
     # shut down the daemon.
     if pgrep -x "sosd" > /dev/null; then
-        sosd_stop
+        #sosd_stop
+	sosd_stop >& /dev/null
     fi
     sleep 5
 }
@@ -50,16 +53,14 @@ export TAU_SOS_PERIODIC=1
 
 
 #unset TAU_SOS_PERIODIC
-mpirun -np 2 tau_exec -T pdt,mpi,sos,pthread -sos ./matmult   &
-
+mpirun -np 2 tau_exec -T pdt,mpi,sos,pthread -sos ./matmult 
 
 
 echo "sleep 5"
 sleep 5
 
 echo "Launch PyCOOLR"
-./pycoolr -tool=sos 
-#>& /dev/null
+./pycoolr -tool=sos >& /dev/null
 
 pkill mpirun
 

@@ -6,13 +6,28 @@ MPI via TAU's plugin architecture.
 Steps to build and run the example:
 
 1.SOS_flow should be installed, compatibility with Python in SOS is not needed.
+Python can be disabled with -DSOS_ENABLE_PYTHON=OFF
 Install SOS_flow using the following steps:
 1-a.Instal EVPATH from:
 https://www.cc.gatech.edu/systems/projects/EVPath/
 1-b.Download SOS_flow from:
 https://github.com/cdwdirect/sos_flow
-1-c.Install SOS_flow with:
-cmake -DEVPath_DIR=$EVPATH_DIR -DCMAKE_INSTALL_PREFIX=$SOS_INSTALL_DIR ../sos_flow
+1-c.Create two directories, one to build and another for the installation:
+mkdir build
+mkdir install
+cd  build
+1-d.Install SOS_flow(modify the paths as necessary):
+cmake -DEVPath_DIR=../../EVPath -DCMAKE_INSTALL_PREFIX=../install ../sos_flow
+IMPORTANT:
+If you want to install SOS_flow without EVPath, you can use another communication methods,
+like openmpi: 
+cmake -DCMAKE_INSTALL_PREFIX=$SOS_INSTALL_DIR \
+	-DSOS_CLOUD_SYNC_WITH_SOCKET=OFF \
+        -DSOS_CLOUD_SYNC_WITH_MPI=ON \
+        -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF \
+        -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF \
+	 ../sos_flow
+
 
 2.TAU should be configured using the following options:
 ./configure -dwarf=download -bdf=download -pthread -mpi -sos=$SOS_INSTALL_PATH -pdt=$PDTOOLKIT_PATH
@@ -21,24 +36,29 @@ cmake -DEVPath_DIR=$EVPATH_DIR -DCMAKE_INSTALL_PREFIX=$SOS_INSTALL_DIR ../sos_fl
 make
 
 IMPORTANT: before compiling, check the number of iterations in matmult.c:
-* for simple-app.sh use a low number, i.e.: 3
+* for simple-app* use a low number, i.e.: 10
 * for simple-pycoolr.sh use a big number, i.e.: 100 to have time to select metrics,
 and see how the values change.
 
+4.Compile the report script with:
+./report_compile.sh
 
-4.In another terminal load the SOS daemon with:
-./simple-sos.sh
+5.First remove the files from previous executions and then load the SOS daemon with:
+./clean.sh; 
+Load the enviromental variables and execute SOS:
+source sosd.env.sourceme && ./simple-sos.sh
 When the daemon is running, it will show you the Version, the machine it is being 
 executed on and other information.
 
-5.Once the daemon is running, execute your application with:
-./simple-app.sh
+6.Once the daemon is running, execute your application with:
+./simple-app-x86-mpi1node.sh
+if you are using another architecture look for the ibm or arm script,
+if the target architecture is not available, change the line
+	export TAU_PLUGINS_PATH=
+inside the script.
 
-6.Once the application finishes, the daemon will close and the database will be 
-queried to check code related performance data.
-
-7.Also, it is possible to see how TAU metrics change over time using pycoolr
-to do this, execute the following command and when pycoolr opens.
+7.Also, it is possible to see how TAU metrics change over time in a GUI using 
+pycoolr, to do this, execute the following command:
 ./simple-pycoolr.sh
-You can select the metrics. The number after the metric name means the
-process number in which that counter is measured.
+and when pycoolr opens, you can select the metrics. The number after the metric 
+name is the process number in which that counter is measured.
