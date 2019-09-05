@@ -11865,6 +11865,16 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
     cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir_}/libomp.so ;
 
     echo "ompt_dir=$ompt_dir"
+    omptlinking="-Wl,-rpath=${ompt_instdir}#-L${ompt_instdir}#$omptlibrary"
+    if [ "x$download_ompt_tr4" = "xyes" ] ; then
+      fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
+    elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
+      fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
+    elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
+      fixmakeargs="$fixmakeargs TAU_OMPT_TR7 omptlib=$omptlinking"
+    elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
+      fixmakeargs="$fixmakeargs TAU_OMPT_5_0 omptlib=$omptlinking"
+    fi  
     # also put them in the "disable" directory for later builds - but only do it once
     
     if [ "x$download_ompt_tr4" = "xyes" ] ; then
