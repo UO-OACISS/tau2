@@ -85,6 +85,10 @@ struct HashTable : public TAU_HASH_MAP<unsigned long, HashNode*>
     Tau_init_initializeTAU();
   }
   virtual ~HashTable() {
+    for (auto it = this->cbegin(); it != this->cend() /* not hoisted */; /* no increment */)
+    {
+        this->erase(it++);
+    }
     Tau_destructor_trigger();
   }
 };

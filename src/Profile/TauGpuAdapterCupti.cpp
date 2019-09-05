@@ -1,6 +1,6 @@
 #include <Profile/TauGpuAdapterCupti.h>
 
-extern void *Tau_pure_search_for_function(const char *name);
+extern void *Tau_pure_search_for_function(const char *name, int create);
 
 extern "C" void Tau_cupti_set_offset(double cpu_gpu_offset) {
     // printf("setting offset to %f.\n", cpu_gpu_offset);
@@ -28,7 +28,7 @@ extern "C" void Tau_cupti_register_host_calling_site(
         uint32_t correlationId,
         const char *name) {	
     //find thread with launch event.
-    FunctionInfo* launch = (FunctionInfo *) Tau_pure_search_for_function(name);
+    FunctionInfo* launch = (FunctionInfo *) Tau_pure_search_for_function(name, 0);
     for (int i=0; i<TAU_MAX_THREADS; i++)
     {
         if (TauInternal_CurrentProfiler(i) != NULL && 
@@ -52,7 +52,7 @@ extern "C" void Tau_cupti_register_device_calling_site(
         const char *name) {
     // lock required to prevent multithreaded access to the tree
     RtsLayer::LockDB();
-    functionInfoMap_deviceLaunch()[correlationId] = (FunctionInfo *) Tau_pure_search_for_function(name);
+    functionInfoMap_deviceLaunch()[correlationId] = (FunctionInfo *) Tau_pure_search_for_function(name, 0);
     RtsLayer::UnLockDB();
 }	
 extern "C" void Tau_cupti_register_sync_site(

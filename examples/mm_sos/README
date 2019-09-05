@@ -16,7 +16,7 @@ mkdir build
 mkdir install
 cd  build
 1-d.Install SOS_flow(modify the paths as necessary):
-cmake -DEVPath_DIR=../../EVPath -DCMAKE_INSTALL_PREFIX=../ ../sos_flow
+cmake -DEVPath_DIR=../../EVPath -DCMAKE_INSTALL_PREFIX=../install ../sos_flow
 IMPORTANT:
 If you want to install SOS_flow without EVPath, you can use another communication methods,
 like openmpi: 

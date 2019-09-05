@@ -12,9 +12,11 @@ export TAU_PLUGINS_PATH=../../x86_64/lib/shared-mpi-pthread-pdt-sos
 
 #export TAU_VERBOSE=1
 unset TAU_VERBOSE
+#export TAU_METRICS=TIME,LIKWID_L1D_REPLACEMENT:PMC0
 
 #Execute tau with sos and use ebs to get code performance data
-mpirun -np 1 tau_exec -ebs -T mpi,pthread,sos,pdt -sos ./matmult
+#tau_exec -ebs -T likwid,mpi,pthread,sos,pdt -sos ./matmult
+tau_exec -ebs -T mpi,pthread,sos,pdt -sos ./matmult
 
 #Wait a bit for the data to be saved to disk
 sleep 2
