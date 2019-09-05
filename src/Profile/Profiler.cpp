@@ -680,7 +680,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   /*** Throttling Code ***/
   /********************************************************************************/
 
-#if !defined(TAU_RECYCLE_THREADS) // don't write profile if recycling threads!
+#if defined(TAU_RECYCLE_THREADS) // don't write profile if recycling threads!
   if (!ParentProfiler && tid == 0) {
 #else
   if (!ParentProfiler) {
