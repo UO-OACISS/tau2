@@ -1475,7 +1475,7 @@ for arg in "$@"; do
 		echo "Error: Cannot access PAPI directory $papidir"
 		exit 1
 	    fi
-            if [ $papidir = "/usr" ]; then
+            if [ "$papidir" = "/usr" ]; then
 		  fixmakeargs="$fixmakeargs PAPINOINC"
             fi
             if [ -r /sys/devices/power/events/energy-pkg.scale ] ; then
