@@ -2613,6 +2613,13 @@ for arg in "$@"; do
 	-prefix=*)
 	    tauprefix=`echo $arg | sed -e 's/-prefix=//' -e 's/ /_/g'`
 	    fixmakeargs="$fixmakeargs tauprefix=$tauprefix"
+        echo "Testing directory $tauprefix "
+        mkdir -p ${tauprefix}
+        rc=$?
+        if [ $rc -ne 0 ] ; then
+            echo "Failed to create installation directory: ${tauprefix}"
+            exit $rc
+        fi
 	    shift
 	    ;;
 
