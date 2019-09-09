@@ -96,64 +96,68 @@ installsosdeps()
  make install
  cd ..
 
- wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
- #export FLEXPATH_DIR=$currdir/inst
- perl ./chaos_bootstrap.pl adios-1.13 $currdir/inst
- #perl ./chaos_build.pl
- mkdir build_area
- cd build_area 
 
- echo "Download SOS dependencies: $2 $3"
- download "$2" "$3" 
- echo "Extract SOS dependencies: $3"
- tar -xvf "$3"
- rm -f "$3"
+ if [ $sos_comm = evpath ]
+ then
+	wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
+	#export FLEXPATH_DIR=$currdir/inst
+	perl ./chaos_bootstrap.pl adios-1.13 $currdir/inst
+	#perl ./chaos_build.pl
+	mkdir build_area
+	cd build_area 
 
- set -x
- #Install dill
- cd dill/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/dill/source
- make all install
- cd ../..
+	echo "Download SOS dependencies: $2 $3"
+	download "$2" "$3" 
+	echo "Extract SOS dependencies: $3"
+	tar -xvf "$3"
+	rm -f "$3"
 
- #Install cercs_env
- cd cercs_env/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/cercs_env/source
- make all install
- cd ../..
+	set -x
+	#Install dill
+	cd dill/source
+	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/dill/source
+	make all install
+	cd ../..
 
- #Install atl
- cd atl/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/atl/source
- make all install
- cd ../..
+	#Install cercs_env
+	cd cercs_env/source
+	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/cercs_env/source
+	make all install
+	cd ../..
 
- #Install ffs
- cd ffs/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/ffs/source
- make all install
- cd ../..
+	#Install atl
+	cd atl/source
+	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/atl/source
+	make all install
+	cd ../..
 
- #Install enet
- cd enet/source
- $currdir/build_area/enet/source/configure  CFLAGS='-g -O0' CPPFLAGS='-g -O0' --prefix=$currdir/inst
- make install
- cd ../..
+	#Install ffs
+	cd ffs/source
+	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/ffs/source
+	make all install
+	cd ../..
 
- #Install evpath
- cd evpath/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/evpath/source
- make all install
- cd ../../..
+	#Install enet
+	cd enet/source
+	$currdir/build_area/enet/source/configure  CFLAGS='-g -O0' CPPFLAGS='-g -O0' --prefix=$currdir/inst
+	make install
+	cd ../..
 
- # set path to Flexpath/EVPath (see above)
- export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
+	#Install evpath
+	cd evpath/source
+	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/evpath/source
+	make all install
+	cd ../../..
 
- # Copy EVPath cmake file to its inst directory
- cd inst/lib/cmake/EVPath
- cp EVPathConfig.cmake ../../../
- cp EVPathTargets.cmake ../../../
- cd ../../../.. 
+	 # set path to Flexpath/EVPath (see above)
+	 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
+
+	 # Copy EVPath cmake file to its inst directory
+	 cd inst/lib/cmake/EVPath
+	 cp EVPathConfig.cmake ../../../
+	 cp EVPathTargets.cmake ../../../
+	 cd ../../../.. 
+ fi
 
  echo "Install libfabric"
  git clone https://github.com/ofiwg/libfabric.git
@@ -195,8 +199,29 @@ installsos()
 
  export sosdir=$currdir/$dst/inst
  echo "EVPath Inst dir: $targetdir/$architecture/sos/chaos/inst"
+ echo "$sos_comm"
+ case $sos_comm in
 
- cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_EVPATH=TRUE ..
+    sockets)
+	echo "Compile SOS with sockets"
+	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=ON -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
+	;;
+    mpi)
+        echo "Compile SOS with mpi"
+	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=ON -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
+        ;;
+    evpath)
+        echo "Compile SOS with EVPath"
+	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=ON ..
+        ;;
+#    zeromq)
+#        echo "Compile SOS with zeromq"
+#	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=ON -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
+#        ;;
+ esac
+
+
+# cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_EVPATH=TRUE ..
  
  make ; make install
 }
@@ -771,6 +796,7 @@ for arg in "$@"; do
 	    echo "-stff=<dir> .... Location of RENCI Scalable Time-series filter library."
 	    echo "-sddf=<dir> ...... SDDF library location; Only required for RENCI STFF."
 	    echo "-sos=<dir> ........................... Use Scalable Observation System."
+	    echo "-soscomm=<comm>...........Defines the communicatiors betwen SOS daemons"
 	    #    echo "-TRACE ..................................... Generate TAU event traces."
 	    #    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
 	    #    echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
@@ -1067,6 +1093,7 @@ sos=no
 sosdir=
 download_sos=no
 install_sos=no
+sos_comm=mpi
 adios=no
 adiosdir=
 adios2=no
@@ -1082,12 +1109,15 @@ java=no
 asmdex=download
 openmp=no
 ompt=no
-ompt_header=ompt.h
+ompt_header=omp-tools.h
 omptlib=
 omptlibrary=-lomp
 omptenabled=no
 download_ompt=no
+download_ompt_5_0=no
 download_ompt_tr6=no
+download_ompt_tr4=no
+ompt_version_selected=no
 ompt_compiler_support=no
 install_ompt=no
 ompt_use_tr6_version=no
@@ -1445,7 +1475,7 @@ for arg in "$@"; do
 		echo "Error: Cannot access PAPI directory $papidir"
 		exit 1
 	    fi
-            if [ $papidir = "/usr" ]; then
+            if [ "$papidir" = "/usr" ]; then
 		  fixmakeargs="$fixmakeargs PAPINOINC"
             fi
             if [ -r /sys/devices/power/events/energy-pkg.scale ] ; then
@@ -1899,6 +1929,19 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-soscomm=*)
+            myarg=`echo $arg | sed -e 's/-soscomm=//'`
+	    #if [ $myarg = sockets -o $myarg = mpi -o $myarg = evpath -o $myarg = zeromq ]
+	    if [ $myarg = sockets -o $myarg = mpi -o $myarg = evpath ]
+	    then
+		sos_comm=$myarg
+	    else
+		echo "WARNING: valid options for soscomm are 'sockets', 'mpi', 'evpath'"
+	    fi	
+            shift
+            ;;
+
+
 	-adios=*)
 	    adiosdir=`echo $arg | sed -e 's/-adios=//'`
 	    if [ ! -d $adiosdir ] ; then
@@ -2036,13 +2079,17 @@ for arg in "$@"; do
 	    openmp=yes
 	    ompt=yes
 	    download_ompt=yes
+      ompt_use_tr4_version=yes
+      ompt_header=ompt.h
 	    shift
 	    ;;
 	-ompt=download-tr6)
             echo "ompt=download-tr6"
 	    openmp=yes
 	    ompt=yes
-	    download_ompt_tr6=yes
+	    download_ompt=yes
+      ompt_use_tr6_version=yes
+      ompt_header=ompt.h
 	    shift
 	    ;;
 
@@ -2053,13 +2100,17 @@ for arg in "$@"; do
     -ompt-tr6=download)
 	    openmp=yes
 	    ompt=yes
-	    download_ompt_tr6=yes
+	    download_ompt=yes
+      ompt_use_tr6_version=yes
+      ompt_header=ompt.h
         shift
         ;;
 
     -ompt-tr6=*)
         openmp=yes
         ompt=yes
+        ompt_use_tr6_version=yes
+        ompt_header=ompt.h
         ompt_dir=`echo $arg | sed -e 's/-ompt-tr6=//'`
         if [ ! -d $ompt_dir ]
         then
@@ -2067,7 +2118,6 @@ for arg in "$@"; do
           exit 1
         fi
 	    omptlib="${ompt_dir}/lib"
-        ompt_use_tr6_version=yes
         shift
         ;;
 
@@ -2075,6 +2125,7 @@ for arg in "$@"; do
         openmp=yes
         ompt=yes
         ompt_use_tr6_version=yes
+        ompt_header=ompt.h
         shift
         ;;
 
@@ -2562,6 +2613,13 @@ for arg in "$@"; do
 	-prefix=*)
 	    tauprefix=`echo $arg | sed -e 's/-prefix=//' -e 's/ /_/g'`
 	    fixmakeargs="$fixmakeargs tauprefix=$tauprefix"
+        echo "Testing directory $tauprefix "
+        mkdir -p ${tauprefix}
+        rc=$?
+        if [ $rc -ne 0 ] ; then
+            echo "Failed to create installation directory: ${tauprefix}"
+            exit $rc
+        fi
 	    shift
 	    ;;
 
@@ -6944,7 +7002,7 @@ if [ "x$download_unwind" = xyes ] ; then
   cd $prebfddir
 fi #unwind=download
 
-if [ $ompt = yes -a $download_ompt_tr6 = no -a $download_ompt = no ] ; then
+if [ $ompt = yes -a $download_ompt = no ] ; then
 #checking OMP compiler OMPT support
 echo "Checking Compiler OMPT support : "
 touch ompt_ver_test.c
@@ -7027,6 +7085,7 @@ int main (int argc, char * argv[])
     {
         printf ("Hi from thread %d\n", omp_get_thread_num());
     }
+    return 0;
 }
 EOF
 
@@ -7069,9 +7128,7 @@ if [ $ompt_use_tr6_version = "no" ] ; then
         echo " yes"
         ompt_compiler_support=yes
         download_ompt=no
-        download_ompt_tr6=no
         ompt_use_v5_version=yes
-        ompt_header=omp-tools.h
     else
         echo " no"
     fi
@@ -7091,9 +7148,7 @@ if [ $ompt_compiler_support = no -a $ompt_use_tr6_version = no ] ; then
         echo " yes"
         ompt_compiler_support=yes
         download_ompt=no
-        download_ompt_tr6=no
         ompt_use_tr7_version=yes
-        ompt_header=omp-tools.h
     else
         echo " no"
     fi
@@ -7113,7 +7168,8 @@ if [ $ompt_compiler_support = no ] ; then
         echo " yes"
         ompt_compiler_support=yes
         download_ompt=no
-        download_ompt_tr6=no
+        ompt_use_tr6_version=yes
+        ompt_header=ompt.h
     else
         echo " no"
     fi
@@ -7164,20 +7220,37 @@ fi
 # Install Clang/LLVM OpenMP runtime with OMPT if requested
 ######################################################################
 
-if [ "x$download_ompt" = "xyes" -a "x$ompt_use_tr6_version" = "xyes" ] ; then
-  download_ompt=no
-  download_ompt_tr6=yes
+if [ "x$download_ompt" = "xyes" -a "x$ompt_use_5_0_version" = "xyes" ] ; then
+  download_ompt_5_0=yes
+  ompt_version_selected=yes
 fi
+
+if [ "x$download_ompt" = "xyes" -a "x$ompt_use_tr6_version" = "xyes" ] ; then
+  download_ompt_tr6=yes
+  ompt_version_selected=yes
+fi
+
+if [ "x$download_ompt" = "xyes" -a "x$ompt_use_tr4_version" = "xyes" ] ; then
+  download_ompt_tr4=yes
+  ompt_version_selected=yes
+fi
+
+#Default to ompt 5.0
+if [ "x$download_ompt" = "xyes" -a "x$ompt_version_selected" = "xno" ] ; then
+  ompt_use_5_0_version=yes
+  download_ompt_5_0=yes
+fi
+
 
 if [ $ompt = yes ]; then
   tauoptions="${tauoptions}-ompt"
-  if [ "x$download_ompt" = "xyes" ] ; then
+  if [ "x$download_ompt_tr4" = "xyes" ] ; then
       tauoptions="${tauoptions}-tr4"
   elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
       tauoptions="${tauoptions}-tr6"
   elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
       tauoptions="${tauoptions}-tr7"
-  elif [ "x$ompt_use_v5_version" = "xyes" ] ; then
+  elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
       tauoptions="${tauoptions}-v5"
   fi
   if [ "x$CRAY_CPU_TARGET" != "x" -a "x$PE_ENV" = "xINTEL" ] ; then
@@ -7191,18 +7264,25 @@ if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; the
   libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
 fi
 
-if [ "x$download_ompt" = "xyes" ] ; then 
+if [ "x$download_ompt_tr4" = "xyes" ] ; then 
   libomp_oss=LLVM-openmp-0.2
   libomp_osstgz=${libomp_oss}.tar.gz
   libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
 fi
+
+if [ "x$download_ompt_5_0" = "xyes" ] ; then 
+  libomp_oss=LLVM-openmp-8.0
+  libomp_osstgz=${libomp_oss}.tar.gz
+  libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
+fi
+
 
   libomp_oss_name=iomp5
 if [ "${omptlib}" = "" ] ; then
     # TODO: Please remove this check once TR6 (and newer) become the only supported OMPT version(s).
     # If we do not have separate directories for OMPT (legacy) and OMPT-TR6, then there are issues
     # in installing both together for comparison purposes.
-    if [ "x$download_ompt" = "xyes" ] ; then
+    if [ "x$download_ompt_tr4" = "xyes" ] ; then
         libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable-tr4
         libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable-tr4
     elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
@@ -7211,7 +7291,7 @@ if [ "${omptlib}" = "" ] ; then
     elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
         libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable-tr7
         libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable-tr7
-    elif [ "x$ompt_use_v5_version" = "xyes" ] ; then
+    elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
         libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable-v5
         libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable-v5
     else
@@ -7260,7 +7340,7 @@ fi
       fi
     fi
 
-if [ "x$download_ompt" = "xyes" -o "x$download_ompt_tr6" = "xyes" ] ; then
+if [ "x$download_ompt" = "xyes" ] ; then
   install_ompt=yes
   if [ ! -f "${libomp_ossdir_shared}/lib${libomp_oss_name}.so" -o  "${libomp_ossdir_shared}/lib${libomp_oss_name}.so" -ot "${libomp_oss}"  ]; then
     preomptdir=`pwd`
@@ -7268,8 +7348,8 @@ if [ "x$download_ompt" = "xyes" -o "x$download_ompt_tr6" = "xyes" ] ; then
     #check Cmake exists
     cmake_cmd=`which cmake`
     if [ "x$cmake_cmd" = "x" ] ; then
-        echo 'ERROR: cmake version 2.8 or higher required to build OMPT support.'
-        exit 1;
+      echo 'ERROR: cmake version 2.8 or higher required to build OMPT support.'
+      exit 1;
     fi
 
     echo "Note: Building LLVM-OpenMP with ${ompt_c_compiler} and ${ompt_cxx_compiler}"
@@ -7396,18 +7476,18 @@ if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
 else # intel OMPT support
     if [ $ompt = yes ]; then
 	    omptlinking="-Wl,-rpath,$omptlib#$omptlibrary"
-        if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
-          echo "Using OMPT TR6"
-	      fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
-        elif [ "x$download_ompt" = "xyes" ] ; then
-            echo "Using OMPT"
+        if [ "x$download_ompt_tr4" = "xyes" ] ; then
+            echo "Using OMPT TR4"
             fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
-        elif [ "$ompt_use_v5_version" = yes ] ; then
-            echo "Using OMPT 5"
-            fixmakeargs="$fixmakeargs TAU_OMPT_5_0 omptlib=$omptlinking"
-        elif [ "$ompt_use_tr7_version" = yes ] ; then
+        elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
+            echo "Using OMPT TR6"
+            fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
+        elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
             echo "Using OMPT TR7"
             fixmakeargs="$fixmakeargs TAU_OMPT_TR7 omptlib=$omptlinking"
+        elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
+            echo "Using OMPT 5"
+            fixmakeargs="$fixmakeargs TAU_OMPT_5_0 omptlib=$omptlinking"
         fi  
     fi 
 fi
@@ -8702,7 +8782,7 @@ sosrepo=sos_flow
 echo "$sosdir"
 if [ "x$sos" = "xyes" ] ; then
   if [ "x$sosdir" = xdownload ] ; then
-    echo "Install SOS"
+    echo "Install SOS with communication $sos_comm"
     p=`pwd`
     cd $targetdir/$architecture/; installsosdeps "$sosmaindir" "$sosdepsurl" "$sosdepstgz"; download "$sosurl" "$sostgz" ; tar zxf "$sostgz"; rm -f "$sostgz" ; installsos "$sosrepo"
     #cd $targetdir/$architecture/; installsosdeps "$sosmaindir" "$sosdepsurl" "$sosdepstgz"; clone "$sosurl" "$sosrepo"; installsos "$sosrepo"
@@ -10094,7 +10174,7 @@ if [ $apex = yes ] ; then
 		echo 'TAUCXXFLAGS=-DCMAKE_CXX_FLAGS="-xMIC-AVX512 -DBOOST_NO_CXX11_ALLOCATOR"' >> ${apex_include_file}
 	fi
 	if [ ! "x${omptlib}" = "x" ] ; then
-		if [ "${download_ompt}" = "yes" ] ; then
+		if [ "${download_ompt_tr4}" = "yes" ] ; then
         	echo "TAUOMPT=-DUSE_OMPT=TRUE -DOMPT_ROOT=${targetdir}/${architecture}" >> ${apex_include_file}
 		else
         	echo "TAUOMPT=-DUSE_OMPT=TRUE -DOMPT_ROOT=${omptlib}" >> ${apex_include_file}
@@ -11793,20 +11873,24 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
 
     echo "ompt_dir=$ompt_dir"
     omptlinking="-Wl,-rpath=${ompt_instdir}#-L${ompt_instdir}#$omptlibrary"
-    if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then 
-      fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
-    else
+    if [ "x$download_ompt_tr4" = "xyes" ] ; then
       fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
-    fi 
+    elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
+      fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
+    elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
+      fixmakeargs="$fixmakeargs TAU_OMPT_TR7 omptlib=$omptlinking"
+    elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
+      fixmakeargs="$fixmakeargs TAU_OMPT_5_0 omptlib=$omptlinking"
+    fi  
     # also put them in the "disable" directory for later builds - but only do it once
     
-    if [ "x$download_ompt" = "xyes" ] ; then
+    if [ "x$download_ompt_tr4" = "xyes" ] ; then
         ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr4
     elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
         ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr6
     elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
         ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr7
-    elif [ "x$ompt_use_v5_version" = "xyes" ] ; then
+    elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
         ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-v5
     else
        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
@@ -11832,13 +11916,13 @@ elif [ $ompt = yes -a $ompt_compiler_support = yes ] ; then
     rm -f ${ompt_instdir_}/lib${libomp_oss_name}.so
     rm -f ${ompt_instdir_}/libomp.so
 
-    if [ "x$download_ompt" = "xyes" ] ; then
+    if [ "x$download_ompt_tr4" = "xyes" ] ; then
         ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr4
     elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
         ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr6
     elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
         ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr7
-    elif [ "x$ompt_use_v5_version" = "xyes" ] ; then
+    elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
         ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-v5
     else
         ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
@@ -11862,10 +11946,16 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_static}/lib${libom
     echo "ompt_dir=$ompt_dir"
 
     # also put them in the "disable" directory for later builds - but only do it once
-    if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
-      ompt_instdir=${targetdir}/${architecture}/lib/static-disable-tr6
-    else 
-      ompt_instdir=${targetdir}/${architecture}/lib/static-disable
+    if [ "x$download_ompt_tr4" = "xyes" ] ; then
+        ompt_instdir=${targetdir}/${architecture}/lib/static-disable-tr4
+    elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
+        ompt_instdir=${targetdir}/${architecture}/lib/static-disable-tr6
+    elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
+        ompt_instdir=${targetdir}/${architecture}/lib/static-disable-tr7
+    elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
+        ompt_instdir=${targetdir}/${architecture}/lib/static-disable-v5
+    else
+        ompt_instdir=${targetdir}/${architecture}/lib/static-disable
     fi
 
     if [ ! ${libomp_ossdir_static} = ${ompt_instdir} ] ; then

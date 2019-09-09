@@ -1000,19 +1000,19 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         if (found != std::string::npos) { paradigm = OTF2_PARADIGM_OPENMP; }
         // no paradigm for IO? That's odd.
         found = uppercase.find(string("ADIOS"));
-        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_NONE; }
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_USER; }
         found = uppercase.find(string("HDF5"));
-        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_NONE; }
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_USER; }
         found = uppercase.find(string("NETCDF"));
-        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_NONE; }
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_USER; }
         found = uppercase.find(string("CUDA"));
         if (found != std::string::npos) { paradigm = OTF2_PARADIGM_CUDA; }
         found = uppercase.find(string("OPENACC"));
         if (found != std::string::npos) { paradigm = OTF2_PARADIGM_OPENACC; }
         found = uppercase.find(string("OPENCL"));
         if (found != std::string::npos) { paradigm = OTF2_PARADIGM_OPENCL; }
-        found = uppercase.find(string(".TAU APPLICATION"));
-        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_UNKNOWN; }
+        found = uppercase.find(string("TAU APPLICATION"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_COMPILER; }
         OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, thisFuncName, region_name.c_str()));
         OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, it->second, thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, paradigm, OTF2_REGION_FLAG_NONE, 0, 0, 0));
     }
@@ -1734,12 +1734,29 @@ void TauTraceOTF2ShutdownComms(int tid) {
 #endif
     TauInternalFunctionGuard protects_this_function;
 
+#ifdef TAU_OTF2_DEBUG
     fprintf(stderr, "% d %d %d\n", otf2_initialized, otf2_finished, otf2_comms_shutdown);
+#endif
 
     if(!otf2_initialized || otf2_finished || otf2_comms_shutdown) {
         return;
     }
 
+#if defined(TAU_MPI) || defined(TAU_SHMEM)                                           
+  // The event file for a thread needs to be written by that thread, so we write
+  // the temporary buffers the first time we get an event from that thread after
+  // intialization has completed.
+  // We need to do this check here, because some threads may start before MPI/OTF2
+  // initialization, and end after MPI/OTF2 finalization.  We want to capture them.
+  // The progress threads in Open MPI 4 are such threads.
+  if(TauEnv_get_set_node()==-1){
+    for (int tid = 0; tid < TAU_MAX_THREADS; tid++) {
+      if(!buffers_written[tid]) {
+        TauTraceOTF2WriteTempBuffer(tid, my_node());
+      }
+    }
+  }
+#endif
     const int nodes = tau_totalnodes(0, 0);
     if(TauEnv_get_set_node()==-1){
       TauCollectives_Barrier(TauCollectives_Get_World());
