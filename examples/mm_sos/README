@@ -10,14 +10,27 @@ Python can be disabled with -DSOS_ENABLE_PYTHON=OFF
 Install SOS_flow using the following steps:
 1-a.Instal EVPATH from:
 https://www.cc.gatech.edu/systems/projects/EVPath/
+IMPORTANT:
+It can also be downloaded from:
+xxxxxxxxxxxxxxxxxx.tar.gz
+Inside it, an scri[t called install.sh can be used to install EVPATH.
 1-b.Download SOS_flow from:
 https://github.com/cdwdirect/sos_flow
+IMPORTANT:
+A copy can be found in:
+xxxxxxxxxxxxxxxxxx.tar.gz
 1-c.Create two directories, one to build and another for the installation:
 mkdir build
 mkdir install
 cd  build
 1-d.Install SOS_flow(modify the paths as necessary):
-cmake -DEVPath_DIR=../../EVPath -DCMAKE_INSTALL_PREFIX=../install ../sos_flow
+cmake -DEVPath_DIR=../../EVPath \
+	-DCMAKE_INSTALL_PREFIX=../install \
+	-DSOS_CLOUD_SYNC_WITH_SOCKET=OFF \
+        -DSOS_CLOUD_SYNC_WITH_MPI=OFF \
+        -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF \
+        -DSOS_CLOUD_SYNC_WITH_EVPATH=ON \
+	../sos_flow
 IMPORTANT:
 If you want to install SOS_flow without EVPath, you can use another communication methods,
 like openmpi: 
