@@ -26,7 +26,7 @@ unset TAU_VERBOSE
 #tau_exec -ebs -T likwid,mpi,pthread,sos,pdt -sos ./matmult
 mpirun \
   	  -np 1 env SOS_CMD_PORT=22501 tau_exec -T mpi,pthread,sos,pdt -sos ./matmult \
-	: -np 1 env SOS_CMD_PORT=22502 tau_exec -T mpi,pthread,sos,pdt -sos ./matmult
+	: -np 1 env SOS_CMD_PORT=22502 tau_exec -T mpi,pthread,sos,pdt -sos ./matmult &
 
 
 #sleep 2
