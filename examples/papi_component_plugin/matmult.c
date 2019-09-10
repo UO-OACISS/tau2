@@ -169,7 +169,7 @@ double do_work(void) {
   return result;
 }
 
-//int Tau_dump(void);
+int Tau_dump(void);
 
 int main (int argc, char *argv[]) 
 {
@@ -195,7 +195,7 @@ int main (int argc, char *argv[])
   for (i = 0 ; i < ITERATIONS ; i++) {
     if(rank == 0) { printf("Iteration %d\n", i); }
     do_work();
-    //Tau_dump();
+    if (i % (ITERATIONS/10) == 0) { Tau_dump(); }
   }
 
 #ifdef TAU_MPI
