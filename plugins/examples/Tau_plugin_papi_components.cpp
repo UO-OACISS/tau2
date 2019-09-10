@@ -519,8 +519,12 @@ void parse_proc_meminfo() {
                 }
             }
             if (include_event("/proc/meminfo", ss.str().c_str())) {
-                void * ue = find_user_event(ss.str());
-                Tau_userevent_thread(ue, d1, 0);
+                if (TauEnv_get_tracing()) {
+                    Tau_trigger_userevent(ss.str().c_str(), d1);
+                } else {
+                    void * ue = find_user_event(ss.str());
+                    Tau_userevent_thread(ue, d1, 0);
+                }
             }
         }
     }
@@ -545,24 +549,36 @@ void parse_proc_self_statm() {
         double d1 = strtod (value.c_str(), &pEnd);
         if (pEnd) { 
             if (include_event("/proc/self/statm", "program size (kB)")) {
-                void * ue = find_user_event("program size (kB)");
-                Tau_userevent_thread(ue, d1, 0);
+                if (TauEnv_get_tracing()) {
+                    Tau_trigger_userevent("program size (kB)", d1);
+                } else {
+                    void * ue = find_user_event("program size (kB)");
+                    Tau_userevent_thread(ue, d1, 0);
+                }
             }
         }
         value = results[1];
         d1 = strtod (value.c_str(), &pEnd);
         if (pEnd) { 
             if (include_event("/proc/self/statm", "resident set size (kB)")) {
-                void * ue = find_user_event("resident set size (kB)");
-                Tau_userevent_thread(ue, d1, 0);
+                if (TauEnv_get_tracing()) {
+                    Tau_trigger_userevent("resident set size (kB)", d1);
+                } else {
+                    void * ue = find_user_event("resident set size (kB)");
+                    Tau_userevent_thread(ue, d1, 0);
+                }
             }
         }
         value = results[2];
         d1 = strtod (value.c_str(), &pEnd);
         if (pEnd) { 
             if (include_event("/proc/self/statm", "resident shared pages")) {
-                void * ue = find_user_event("resident shared pages");
-                Tau_userevent_thread(ue, d1, 0);
+                if (TauEnv_get_tracing()) {
+                    Tau_trigger_userevent("resident shared pages", d1);
+                } else {
+                    void * ue = find_user_event("resident shared pages");
+                    Tau_userevent_thread(ue, d1, 0);
+                }
             }
         }
     }
@@ -579,7 +595,6 @@ void sample_value(const char * component, const char * cpu, const char * name,
     if (!include_event(component, ss.str().c_str())) {
         return;
     }
-    void * ue = find_user_event(ss.str());
     // double-check the value...
     double tmp;
     if (total == 0LL) {
@@ -587,7 +602,12 @@ void sample_value(const char * component, const char * cpu, const char * name,
     } else {
         tmp = (value / (double)(total)) * 100.0;
     }
-    Tau_userevent_thread(ue, tmp, 0);
+    if (TauEnv_get_tracing()) {
+        Tau_trigger_userevent(ss.str().c_str(), tmp);
+    } else {
+        void * ue = find_user_event(ss.str());
+        Tau_userevent_thread(ue, tmp, 0);
+    }
 }
 
 void update_cpu_stats(void) {
@@ -708,8 +728,14 @@ void read_papi_components(void) {
                 return;
             }
             for (size_t i = 0 ; i < comp->events.size() ; i++) {
-                void * ue = find_user_event(comp->events[i].name);
-                Tau_userevent_thread(ue, ((double)values[i]) * comp->events[i].conversion, 0);
+                if (TauEnv_get_tracing()) {
+                    Tau_trigger_userevent(comp->events[i].name.c_str(),
+                        ((double)values[i]) * comp->events[i].conversion);
+                } else {
+                    void * ue = find_user_event(comp->events[i].name);
+                    Tau_userevent_thread(ue,
+                        ((double)values[i]) * comp->events[i].conversion, 0);
+                }
             }
             free(values);
         }
