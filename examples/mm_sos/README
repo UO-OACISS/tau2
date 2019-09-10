@@ -64,7 +64,7 @@ compile the report script with:
 5.First remove the files from previous executions and then load the SOS daemon with:
 ./clean.sh; 
 Load the enviromental variables and execute SOS:
-source sosd.env.sourceme && ./simple-sos.sh
+source sosd.env.sourceme && ./simple-sos.sh &
 When the daemon is running, it will show you the Version, the machine it is being 
 executed on and other information.
 
