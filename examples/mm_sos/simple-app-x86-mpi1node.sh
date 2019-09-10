@@ -28,8 +28,8 @@ unset TAU_VERBOSE
 
 
 mpirun \
-	  -np 1 env SOS_CMD_PORT=22501 tau_exec -vv -T mpi,pthread,sos,pdt  -papi_components ./matmult \
-	: -np 1 env SOS_CMD_PORT=22502 tau_exec -vv -T mpi,pthread,sos,pdt  -papi_components ./matmult &
+	  -np 1 env SOS_CMD_PORT=22501 tau_exec -T mpi,pthread,sos,pdt  ./matmult \
+	: -np 1 env SOS_CMD_PORT=22502 tau_exec -T mpi,pthread,sos,pdt  ./matmult &
 
 sleep 2
 

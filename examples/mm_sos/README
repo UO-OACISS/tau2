@@ -7,6 +7,11 @@ Steps to build and run the example:
 
 1.SOS_flow should be installed, compatibility with Python in SOS is not needed.
 Python can be disabled with -DSOS_ENABLE_PYTHON=OFF
+
+----- IMPORTANT: You can skip to step "2" if you use tau's options
+-sos=download -soscomm={evpath,mpi,sockets}
+
+
 Install SOS_flow using the following steps:
 1-a.Instal EVPATH from:
 https://www.cc.gatech.edu/systems/projects/EVPath/
@@ -17,8 +22,14 @@ mkdir build
 mkdir install
 cd  build
 1-d.Install SOS_flow(modify the paths as necessary):
-cmake -DEVPath_DIR=../../EVPath -DCMAKE_INSTALL_PREFIX=../install ../sos_flow
-IMPORTANT:
+cmake -DEVPath_DIR=../../EVPath \
+	-DCMAKE_INSTALL_PREFIX=../install \
+	-DSOS_CLOUD_SYNC_WITH_SOCKET=OFF \
+        -DSOS_CLOUD_SYNC_WITH_MPI=OFF \
+        -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF \
+        -DSOS_CLOUD_SYNC_WITH_EVPATH=ON \
+	../sos_flow
+------ IMPORTANT:
 If you want to install SOS_flow without EVPath, you can use another communication methods,
 like openmpi: 
 cmake -DCMAKE_INSTALL_PREFIX=$SOS_INSTALL_DIR \
@@ -29,24 +40,31 @@ cmake -DCMAKE_INSTALL_PREFIX=$SOS_INSTALL_DIR \
 	 ../sos_flow
 
 
+
 2.TAU should be configured using the following options:
 ./configure -dwarf=download -bdf=download -pthread -mpi -sos=$SOS_INSTALL_PATH -pdt=$PDTOOLKIT_PATH
+If you skipped step 1., use
+./configure -dwarf=download -bdf=download -pthread -mpi -sos=download --soscomm=mpi -pdt=$PDTOOLKIT_PATH
+You can also use sockets or evpath instead of mpi.
+You should add sos_flow binaries to your path:
+export PATH=$PATH:$TAU/$architecture/sos/sos_flow_master/inst/bin/
 
 3.Compile the matmult application with the provided Makefile using make.
 make
 
-IMPORTANT: before compiling, check the number of iterations in matmult.c:
+------- IMPORTANT: before compiling, check the number of iterations in matmult.c:
 * for simple-app* use a low number, i.e.: 10
 * for simple-pycoolr.sh use a big number, i.e.: 100 to have time to select metrics,
 and see how the values change.
 
-4.Compile the report script with:
+4.Now, modify the first line of report_compile.sh with the PATH to SOS and
+compile the report script with:
 ./report_compile.sh
 
 5.First remove the files from previous executions and then load the SOS daemon with:
 ./clean.sh; 
 Load the enviromental variables and execute SOS:
-source sosd.env.sourceme && ./simple-sos.sh
+source sosd.env.sourceme && ./simple-sos.sh &
 When the daemon is running, it will show you the Version, the machine it is being 
 executed on and other information.
 
@@ -56,6 +74,14 @@ if you are using another architecture look for the ibm or arm script,
 if the target architecture is not available, change the line
 	export TAU_PLUGINS_PATH=
 inside the script.
+After the application finishes, to stop the daemons you should execute:
+     if you are using MPI as the communicator
+	env SOS_CMD_PORT=22501 sosd_stop
+     if you are using another communicator
+	./simple_stop.sh
+
+
+
 
 7.Also, it is possible to see how TAU metrics change over time in a GUI using 
 pycoolr, to do this, execute the following command:

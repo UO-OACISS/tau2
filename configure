@@ -90,11 +90,13 @@ installsosdeps()
  mkdir sqlite3
  wget https://www.sqlite.org/2017/sqlite-autoconf-3210000.tar.gz
  tar -xvzf sqlite-autoconf-3210000.tar.gz
+ rm sqlite-autoconf-3210000.tar.gz
  cd sqlite-autoconf-3210000
  ./configure --prefix=$currdir/sqlite3
- make
- make install
+ make -j
+ make install 
  cd ..
+ rm -rf sqlite-autoconf-3210000
 
 
  if [ $sos_comm = evpath ]
@@ -116,37 +118,37 @@ installsosdeps()
 	#Install dill
 	cd dill/source
 	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/dill/source
-	make all install
+	make all install -j
 	cd ../..
 
 	#Install cercs_env
 	cd cercs_env/source
 	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/cercs_env/source
-	make all install
+	make all install -j
 	cd ../..
 
 	#Install atl
 	cd atl/source
 	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/atl/source
-	make all install
+	make all install -j
 	cd ../..
 
 	#Install ffs
 	cd ffs/source
 	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/ffs/source
-	make all install
+	make all install -j
 	cd ../..
 
 	#Install enet
 	cd enet/source
 	$currdir/build_area/enet/source/configure  CFLAGS='-g -O0' CPPFLAGS='-g -O0' --prefix=$currdir/inst
-	make install
+	make install -j
 	cd ../..
 
 	#Install evpath
 	cd evpath/source
 	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/evpath/source
-	make all install
+	make all install -j
 	cd ../../..
 
 	 # set path to Flexpath/EVPath (see above)
@@ -165,7 +167,7 @@ installsosdeps()
  ./autogen.sh
  currdir=`pwd`
  ./configure --prefix=$currdir/inst
- make install
+ make install -j
  cd inst/lib
  cp libfabric.* ../../../inst/lib
  cd ../../../..
@@ -185,12 +187,12 @@ installsos()
  currdir=`pwd`
 
  # Check if SQLITE3 is available 
- sqlite3_cmd=`which sqlite3`
+ #sqlite3_cmd=`which sqlite3`
 
- if [ "x$sqlite3_cmd" = "x" ] ; then
-   echo 'ERROR: SQLITE3 required to build SOS, exiting.'
-   exit 1;
- fi
+ #if [ "x$sqlite3_cmd" = "x" ] ; then
+ #  echo 'ERROR: SQLITE3 required to build SOS, exiting.'
+ #  exit 1;
+ #fi
 
  cd $dst
  #git checkout merge_of_doom
@@ -204,26 +206,27 @@ installsos()
 
     sockets)
 	echo "Compile SOS with sockets"
-	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=ON -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
+	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DSOS_ENABLE_PYTHON=OFF -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=ON -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
 	;;
     mpi)
         echo "Compile SOS with mpi"
-	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=ON -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
+	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DSOS_ENABLE_PYTHON=OFF -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=ON -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
         ;;
     evpath)
         echo "Compile SOS with EVPath"
-	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=ON ..
+	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DSOS_ENABLE_PYTHON=OFF -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=ON ..
         ;;
+
 #    zeromq)
 #        echo "Compile SOS with zeromq"
-#	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=ON -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
+#	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DSOS_ENABLE_PYTHON=OFF -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=ON -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
 #        ;;
  esac
 
 
 # cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_EVPATH=TRUE ..
  
- make ; make install
+ make -j ; make install 
 }
 
 
@@ -1936,7 +1939,8 @@ for arg in "$@"; do
 	    then
 		sos_comm=$myarg
 	    else
-		echo "WARNING: valid options for soscomm are 'sockets', 'mpi', 'evpath'"
+		echo "ERROR: valid options for soscomm are 'sockets', 'mpi', 'evpath'"
+		exit 1
 	    fi	
             shift
             ;;
@@ -8769,7 +8773,7 @@ fi
 ######################################################################
 #sostgz=sos.tgz
 #sostgz=sos_021318.tgz
-sostgz=sos_041918.tgz
+sostgz=sos_flow.tar.gz
 sosdepstgz=sosdeps.tgz
 #sosdepsurl=http://tau.uoregon.edu/$sosdepstgz
 sosdepsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$sosdepstgz
@@ -8777,7 +8781,7 @@ sosurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/sos/$sost
 #sosurl=http://tau.uoregon.edu/$sostgz
 #sosurl=https://github.com/cdwdirect/sos_flow.git
 sosmaindir=sos
-sosrepo=sos_flow
+sosrepo=sos_flow_master
 
 echo "$sosdir"
 if [ "x$sos" = "xyes" ] ; then
