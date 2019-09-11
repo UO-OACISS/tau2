@@ -25,10 +25,11 @@ unset TAU_VERBOSE
 #Execute tau with sos and use ebs to get code performance data
 #tau_exec -ebs -T likwid,mpi,pthread,sos,pdt -sos ./matmult
 mpirun \
-          -np 1 env SOS_CMD_PORT=22501 tau_exec -T mpi,pthread,sos,pdt -sos ./matmult \
-        : -np 1 env SOS_CMD_PORT=22502 tau_exec -T mpi,pthread,sos,pdt -sos ./matmult
+  	  -np 1 env SOS_CMD_PORT=22501 tau_exec -T mpi,pthread,sos,pdt -sos ./matmult \
+	: -np 1 env SOS_CMD_PORT=22502 tau_exec -T mpi,pthread,sos,pdt -sos ./matmult &
 
-sleep 2
-
+#Wait a bit for the data to be saved to disk
+#sleep 1
 env SOS_CMD_PORT=20690 ./report
+
 
