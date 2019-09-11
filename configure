@@ -163,21 +163,24 @@ installsosdeps()
 	 cp EVPathConfig.cmake ../../../
 	 cp EVPathTargets.cmake ../../../
 	 cd ../../../.. 
+
+
+    echo "Install libfabric"
+     #git clone https://github.com/ofiwg/libfabric.git
+     download http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/sos/libfabric.zip libfabric.zip
+     unzip libfabric.zip 
+     cd libfabric
+     chmod +x autogen.sh
+     ./autogen.sh
+     currdir=`pwd`
+     ./configure --prefix=$currdir/inst
+     make install -j
+     cd inst/lib
+     cp libfabric.* ../../../inst/lib
+     cd ../../../..
  fi
 
- echo "Install libfabric"
- #git clone https://github.com/ofiwg/libfabric.git
- download http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/sos/libfabric.zip libfabric.zip
- unzip libfabric.zip 
- cd libfabric
- chmod +x autogen.sh
- ./autogen.sh
- currdir=`pwd`
- ./configure --prefix=$currdir/inst
- make install -j
- cd inst/lib
- cp libfabric.* ../../../inst/lib
- cd ../../../..
+
 
  set +x
 
