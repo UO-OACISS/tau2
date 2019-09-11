@@ -65,6 +65,9 @@ clone()
 installsosdeps()
 {
  installdir="$1"
+ if [ -d $installdir ]; then
+ 	rm -rf $installdir
+ fi
  mkdir $installdir
  cd $installdir
  P=`pwd`
@@ -88,7 +91,8 @@ installsosdeps()
 
  echo "Install Sqlite3"
  mkdir sqlite3
- wget https://www.sqlite.org/2017/sqlite-autoconf-3210000.tar.gz
+ #wget https://www.sqlite.org/2017/sqlite-autoconf-3210000.tar.gz
+ download https://www.sqlite.org/2017/sqlite-autoconf-3210000.tar.gz sqlite-autoconf-3210000.tar.gz 
  tar -xvzf sqlite-autoconf-3210000.tar.gz
  rm sqlite-autoconf-3210000.tar.gz
  cd sqlite-autoconf-3210000
@@ -205,16 +209,20 @@ installsos()
  case $sos_comm in
 
     sockets)
-	echo "Compile SOS with sockets"
-	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DSOS_ENABLE_PYTHON=OFF -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=ON -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
-	;;
+	     echo "Compile SOS with sockets"
+	     cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DSOS_ENABLE_PYTHON=OFF -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=ON -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
+       retval=$?
+	       ;;
     mpi)
-        echo "Compile SOS with mpi"
-	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DSOS_ENABLE_PYTHON=OFF -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=ON -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
+       echo "Compile SOS with mpi"
+	     cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DSOS_ENABLE_PYTHON=OFF -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=ON -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF ..
+       retval=$?
         ;;
     evpath)
-        echo "Compile SOS with EVPath"
-	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DSOS_ENABLE_PYTHON=OFF -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=ON ..
+       echo "Compile SOS with EVPath"
+	     cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DSOS_ENABLE_PYTHON=OFF -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_SOCKET=OFF -DSOS_CLOUD_SYNC_WITH_MPI=OFF -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF -DSOS_CLOUD_SYNC_WITH_EVPATH=ON ..
+       retval=$?
+
         ;;
 
 #    zeromq)
@@ -224,9 +232,27 @@ installsos()
  esac
 
 
+  if [ $retval -eq 0 ]; 
+  then
+      echo "Compiling sos_flow..."
+  else
+      echo "Error cmake SOS_FLOW"
+      exit 1
+  fi
+
+
 # cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_EVPATH=TRUE ..
  
- make -j ; make install 
+  make -j ; 
+  retval=$?
+  if [ $retval -eq 0 ]; 
+  then
+      echo "Compiled sos_flow"
+  else
+      echo "Error compiling SOS_FLOW"
+      exit 1
+  fi
+ make install 
 }
 
 
@@ -8788,7 +8814,12 @@ if [ "x$sos" = "xyes" ] ; then
   if [ "x$sosdir" = xdownload ] ; then
     echo "Install SOS with communication $sos_comm"
     p=`pwd`
-    cd $targetdir/$architecture/; installsosdeps "$sosmaindir" "$sosdepsurl" "$sosdepstgz"; download "$sosurl" "$sostgz" ; tar zxf "$sostgz"; rm -f "$sostgz" ; installsos "$sosrepo"
+    cd $targetdir/$architecture/; 
+    installsosdeps "$sosmaindir" "$sosdepsurl" "$sosdepstgz"; 
+    download "$sosurl" "$sostgz" ; 
+    tar zxf "$sostgz"; 
+    rm -f "$sostgz" ; 
+    installsos "$sosrepo"
     #cd $targetdir/$architecture/; installsosdeps "$sosmaindir" "$sosdepsurl" "$sosdepstgz"; clone "$sosurl" "$sosrepo"; installsos "$sosrepo"
   else
     if [ ! -d "$sosdir" ] ; then
