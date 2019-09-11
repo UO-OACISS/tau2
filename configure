@@ -92,7 +92,7 @@ installsosdeps()
  echo "Install Sqlite3"
  mkdir sqlite3
  #wget https://www.sqlite.org/2017/sqlite-autoconf-3210000.tar.gz
- download https://www.sqlite.org/2017/sqlite-autoconf-3210000.tar.gz sqlite-autoconf-3210000.tar.gz 
+ download http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/sos/sqlite-autoconf-3210000.tar.gz sqlite-autoconf-3210000.tar.gz 
  tar -xvzf sqlite-autoconf-3210000.tar.gz
  rm sqlite-autoconf-3210000.tar.gz
  cd sqlite-autoconf-3210000
@@ -167,7 +167,7 @@ installsosdeps()
 
  echo "Install libfabric"
  #git clone https://github.com/ofiwg/libfabric.git
- download https://www.cs.uoregon.edu/research/tau/sos/libfabric.zip libfabric.zip
+ download http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/sos/libfabric.zip libfabric.zip
  unzip libfabric.zip 
  cd libfabric
  chmod +x autogen.sh
@@ -8805,7 +8805,7 @@ fi
 sostgz=sos_flow.tar.gz
 sosdepstgz=sosdeps.tgz
 #sosdepsurl=http://tau.uoregon.edu/$sosdepstgz
-sosdepsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$sosdepstgz
+sosdepsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/sos/$sosdepstgz
 sosurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/sos/$sostgz
 #sosurl=http://tau.uoregon.edu/$sostgz
 #sosurl=https://github.com/cdwdirect/sos_flow.git
