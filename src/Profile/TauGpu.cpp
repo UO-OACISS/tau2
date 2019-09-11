@@ -50,7 +50,12 @@ static uint32_t recentCorrelationId = -1;
 
 static bool _initialized = false;
 
-bool& Tau_gpu_initialized(void) { printf("initialized: %d\n", _initialized); return _initialized; }
+bool& Tau_gpu_initialized(void) {
+#ifdef DEBUG_PROF
+    printf("initialized: %d\n", _initialized);
+#endif
+    return _initialized; 
+}
 
 int number_of_tasks = 0;
 int number_of_top_level_task_events = 0;

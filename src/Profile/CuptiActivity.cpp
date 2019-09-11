@@ -466,7 +466,11 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	  if (cur_tid != parent_tid) {
 	    // Register GPU thread count here
 	    CUdevice device;
+        RtsLayer::LockDB();
+        disable_callbacks = 1;
 	    cuCtxGetDevice(&device);
+        disable_callbacks = 0;
+        RtsLayer::UnLockDB();
 	    unsigned int systid = cur_tid;
 	    RtsLayer::LockEnv();
 	    if (lookup_thread_from_corrid(corrid)) {
