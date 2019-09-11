@@ -66,6 +66,7 @@ int main(int argc, char **argv) {
 		new_frame = 1;
 	    	printf("manifest (max frame: %d)\n", max_frame_overall);
 	    }
+	    SOSA_results_destroy(manifest);
 	}while(!new_frame);
 
 
