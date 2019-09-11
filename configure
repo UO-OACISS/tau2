@@ -105,9 +105,9 @@ installsosdeps()
 
  if [ $sos_comm = evpath ]
  then
-	wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
+	#wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
 	#export FLEXPATH_DIR=$currdir/inst
-	perl ./chaos_bootstrap.pl adios-1.13 $currdir/inst
+	#perl ./chaos_bootstrap.pl adios-1.13 $currdir/inst
 	#perl ./chaos_build.pl
 	mkdir build_area
 	cd build_area 
@@ -166,8 +166,11 @@ installsosdeps()
  fi
 
  echo "Install libfabric"
- git clone https://github.com/ofiwg/libfabric.git
+ #git clone https://github.com/ofiwg/libfabric.git
+ download https://www.cs.uoregon.edu/research/tau/sos/libfabric.zip libfabric.zip
+ unzip libfabric.zip 
  cd libfabric
+ chmod +x autogen.sh
  ./autogen.sh
  currdir=`pwd`
  ./configure --prefix=$currdir/inst
