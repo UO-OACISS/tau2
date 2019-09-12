@@ -246,6 +246,9 @@ void * tau_pthread_function(void *arg)
   return ret;
 }
 
+/* Forward declaration to see if TAU thinks GPU initialization is done */
+bool& Tau_gpu_initialized(void);
+
 extern "C"
 int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
     pthread_t * threadp, const pthread_attr_t * attr,

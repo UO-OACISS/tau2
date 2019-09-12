@@ -91,6 +91,14 @@ extern std::list < std::string > regex_list;
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses);
 #endif
 
+/* These are needed so that TauGpu.cpp can let the rest of TAU know that
+ * it has been initialized.  PthreadLayer.cpp needs to know whether a
+ * CUDA/CUPTI thread should be monitored - if it starts before TAU is
+ * initialized, then we could have problems.  This prevents that. */
+bool _tau_gpu_initialized = false;
+bool& Tau_gpu_initialized(void) { return _tau_gpu_initialized; }
+void Tau_gpu_initialized(bool init) { _tau_gpu_initialized = init; }
+
 #define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
 	static TauContextUserEvent ce(msg); return &ce; } 
 
@@ -1790,20 +1798,7 @@ extern "C" void Tau_trace_rma_collective_end(int tag, int type, int start, int s
 extern "C" void * Tau_get_userevent(char const * name) {
   TauInternalFunctionGuard protects_this_function;
   TauUserEvent *ue;
-    /* KAH - Whoops!! We can't call "new" here, because malloc is not
-     * safe in signal handling. therefore, use the special memory
-     * allocation routines */
-#if (!(defined (TAU_WINDOWS) || defined(_AIX)))
-    ue = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
-    /*  now, use the pacement new function to create a object in
-     *  pre-allocated memory. NOTE - this memory needs to be explicitly
-     *  deallocated by explicitly calling the destructor. 
-     *  I think the best place for that is in the destructor for
-     *  the hash table. */
-  new(ue) TauUserEvent(name);
-#else
   ue = new TauUserEvent(name);
-#endif
   return (void *) ue;
 }
 
@@ -1894,21 +1889,8 @@ extern "C" void Tau_pure_context_userevent(void **ptr, const char* name)
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
      * allocation routines */
-#if (!(defined (TAU_WINDOWS) || defined(_AIX)))
-    ue = (TauContextUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauContextUserEvent));
-    /*  now, use the pacement new function to create a object in
-     *  pre-allocated memory. NOTE - this memory needs to be explicitly
-     *  deallocated by explicitly calling the destructor. 
-     *  I think the best place for that is in the destructor for
-     *  the hash table. */
-    new(ue) TauContextUserEvent(name);
-    //ThePureAtomicMap().insert(std::pair<const TauSafeString, TauContextUserEvent *>(ue->GetName(), ue));
-    TauSafeString tmp = ue->GetName();
-    ThePureAtomicMap()[tmp] = ue;
-#else
     ue = new TauContextUserEvent(name); 
     ThePureAtomicMap()[ue->GetName()] = ue;
-#endif
   } else {
     //printf("Found %s in the map.\n", name); fflush(stdout);
     ue = (*it).second;
@@ -1941,19 +1923,8 @@ extern "C" void Tau_pure_userevent_signal_safe(void **ptr, const char* name)
   /* KAH - Whoops!! We can't call "new" here, because malloc is not
    * safe in signal handling. therefore, use the special memory
    * allocation routines */
-#ifndef TAU_WINDOWS
-  //string *tmp = (string*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(string));
-  /*  now, use the pacement new function to create a object in
-   *  pre-allocated memory. NOTE - this memory needs to be explicitly
-   *  deallocated by explicitly calling the destructor. 
-   *  I think the best place for that is in the destructor for
-   *  the hash table. */
-  //new(tmp) string(name);
   static string tmp = string(4096,0);
   tmp.assign(name);
-#else
-  string tmp(name);
-#endif
   pure_userevent_atomic_map_t::const_iterator it = ThePureUserEventAtomicMap().find(tmp);
   if (it == ThePureUserEventAtomicMap().end()) {
 #ifndef TAU_WINDOWS
