@@ -6,7 +6,7 @@ config=
 
 usage()
 {
- echo "Usage: $0 [REQUIRED] [-tool <beacon|sos>] [OPTIONAL] [-config=full-path-to-config-file]" 1>&2;
+ echo "Usage: $0 [REQUIRED] [-tool=<beacon|sos>] [OPTIONAL] [-config=full-path-to-config-file]" 1>&2;
  exit 1;
 }
 
