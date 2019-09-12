@@ -518,32 +518,16 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
 #else
         if (it == contextMap.end()) {
 #endif
-          //printf("****  NEW  **** \n"); fflush(stdout);
-    /* KAH - Whoops!! We can't call "new" here, because malloc is not
-     * safe in signal handling. therefore, use the special memory
-     * allocation routines */
-#if (!(defined (TAU_WINDOWS) || defined(_AIX)))
-    contextEvent = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
-    /*  now, use the pacement new function to create a object in
-     *  pre-allocated memory. NOTE - this memory needs to be explicitly
-     *  deallocated by explicitly calling the destructor. 
-     *  I think the best place for that is in the destructor for
-     *  the hash table. */
-          new(contextEvent) TauUserEvent(
-              FormulateContextNameString(current).c_str(),
-              userEvent->IsMonotonicallyIncreasing());
-#else
           contextEvent = new TauUserEvent(
               FormulateContextNameString(current).c_str(),
               userEvent->IsMonotonicallyIncreasing());
-#endif
           // need to make a heap copy of our comparison array. Otherwise it gets
           // corrupted, because right now this is a stack variable.
           // It needs to be a stack variable so that searching each time we have
           // a counter doesn't eat up the whole memory map.
           int depth = comparison[0];
           int size = sizeof(long)*(depth+2);
-          long * ary = (long*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), size);
+          long * ary = (long*)malloc(size);
           int i;
           for (i = 0 ; i <= depth ; i++) {
               ary[i] = comparison[i];
