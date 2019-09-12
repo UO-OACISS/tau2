@@ -180,7 +180,7 @@ installsosdeps()
      cd ../../../..
  fi
 
-
+ cd $P
 
  set +x
 
