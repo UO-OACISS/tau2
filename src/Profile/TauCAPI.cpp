@@ -91,6 +91,14 @@ extern std::list < std::string > regex_list;
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses);
 #endif
 
+/* These are needed so that TauGpu.cpp can let the rest of TAU know that
+ * it has been initialized.  PthreadLayer.cpp needs to know whether a
+ * CUDA/CUPTI thread should be monitored - if it starts before TAU is
+ * initialized, then we could have problems.  This prevents that. */
+bool _tau_gpu_initialized = false;
+bool& Tau_gpu_initialized(void) { return _tau_gpu_initialized; }
+void Tau_gpu_initialized(bool init) { _tau_gpu_initialized = init; }
+
 #define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
 	static TauContextUserEvent ce(msg); return &ce; } 
 
