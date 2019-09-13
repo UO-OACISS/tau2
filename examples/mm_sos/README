@@ -74,7 +74,8 @@ if you are using another architecture look for the ibm or arm script,
 if the target architecture is not available, change the line
 	export TAU_PLUGINS_PATH=
 inside the script.
-After the application finishes, to stop the daemons you should execute:
+After the application finishes, you should stop the report with control+c as
+it doesn't know when the application ends, to stop the daemons you should execute:
      if you are using MPI as the communicator
 	env SOS_CMD_PORT=22501 sosd_stop
      if you are using another communicator
