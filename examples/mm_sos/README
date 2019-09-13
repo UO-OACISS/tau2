@@ -44,7 +44,7 @@ cmake -DCMAKE_INSTALL_PREFIX=$SOS_INSTALL_DIR \
 2.TAU should be configured using the following options:
 ./configure -dwarf=download -bdf=download -pthread -mpi -sos=$SOS_INSTALL_PATH -pdt=$PDTOOLKIT_PATH
 If you skipped step 1., use
-./configure -dwarf=download -bdf=download -pthread -mpi -sos=download --soscomm=mpi -pdt=$PDTOOLKIT_PATH
+./configure -dwarf=download -bdf=download -pthread -mpi -sos=download -soscomm=mpi -pdt=$PDTOOLKIT_PATH
 You can also use sockets or evpath instead of mpi.
 You should add sos_flow binaries to your path:
 export PATH=$PATH:$TAU/$architecture/sos/sos_flow_master/inst/bin/
@@ -64,7 +64,7 @@ compile the report script with:
 5.First remove the files from previous executions and then load the SOS daemon with:
 ./clean.sh; 
 Load the enviromental variables and execute SOS:
-source sosd.env.sourceme && ./simple-sos.sh &
+source sosd.env.sourceme && ./simple-sosmpi1node.sh &
 When the daemon is running, it will show you the Version, the machine it is being 
 executed on and other information.
 

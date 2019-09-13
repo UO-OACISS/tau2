@@ -53,6 +53,18 @@ download()
   fi
 }
 
+
+my_fail_check()
+{
+	retval=$?
+	if [ $retval -ne 0 ]; 
+  	then
+  		echo "Command failed"
+      	exit 1      
+  	fi
+}
+
+
 clone()
 {
   src="$1"
@@ -65,11 +77,18 @@ clone()
 installsosdeps()
 {
  installdir="$1"
+ 
+
  if [ -d $installdir ]; then
- 	rm -rf $installdir
+ 	echo "sos install directory exists, trying to remove sos_flow to compile it again"
+ 	if [ -d $installdir/sos_flow_master ]; then
+ 		rm -rf $installdir/sos_flow_master
+ 	fi
+ else
+ 	mkdir $installdir
  fi
- mkdir $installdir
- cd $installdir
+
+ cd $installdir 
  P=`pwd`
 
  #check if CMake exists
@@ -85,24 +104,35 @@ installsosdeps()
  fi
 
  echo "Install SOS deps"
- mkdir chaos
+ if [ -d chaos ]; then
+ 	echo "chaos directory exists"
+ else
+ 	mkdir chaos
+ fi
  cd chaos
  currdir=`pwd`
 
- echo "Install Sqlite3"
- mkdir sqlite3
+
  #wget https://www.sqlite.org/2017/sqlite-autoconf-3210000.tar.gz
- download http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/sos/sqlite-autoconf-3210000.tar.gz sqlite-autoconf-3210000.tar.gz 
- tar -xvzf sqlite-autoconf-3210000.tar.gz
- rm sqlite-autoconf-3210000.tar.gz
- cd sqlite-autoconf-3210000
- ./configure --prefix=$currdir/sqlite3
- make -j
- make install 
- cd ..
- rm -rf sqlite-autoconf-3210000
 
-
+ if [ -f sqlite3/bin/sqlite3 ]  &&  [ -f sqlite3/include/sqlite3.h ] &&  [ -f sqlite3/lib/libsqlite3.a ] ; then
+ 	echo "sqlite3 already installed"
+ else
+ 	echo "Install Sqlite3"
+ 	mkdir sqlite3
+ 	download http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/sos/sqlite-autoconf-3210000.tar.gz sqlite-autoconf-3210000.tar.gz 
+ 	tar -xvzf sqlite-autoconf-3210000.tar.gz
+ 	rm sqlite-autoconf-3210000.tar.gz
+ 	cd sqlite-autoconf-3210000
+ 	./configure --prefix=$currdir/sqlite3
+ 	my_fail_check
+ 	make -j
+ 	make install
+ 	my_fail_check 
+ 	cd ..
+ 	rm -rf sqlite-autoconf-3210000
+ fi
+ 
  if [ $sos_comm = evpath ]
  then
 	#wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
@@ -122,37 +152,49 @@ installsosdeps()
 	#Install dill
 	cd dill/source
 	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/dill/source
+	my_fail_check
 	make all install -j
+	my_fail_check
 	cd ../..
 
 	#Install cercs_env
 	cd cercs_env/source
 	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/cercs_env/source
+	my_fail_check
 	make all install -j
+	my_fail_check
 	cd ../..
 
 	#Install atl
 	cd atl/source
 	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/atl/source
+	my_fail_check
 	make all install -j
+	my_fail_check
 	cd ../..
 
 	#Install ffs
 	cd ffs/source
 	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/ffs/source
+	my_fail_check
 	make all install -j
+	my_fail_check
 	cd ../..
 
 	#Install enet
 	cd enet/source
 	$currdir/build_area/enet/source/configure  CFLAGS='-g -O0' CPPFLAGS='-g -O0' --prefix=$currdir/inst
+	my_fail_check
 	make install -j
+	my_fail_check
 	cd ../..
 
 	#Install evpath
 	cd evpath/source
 	cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/evpath/source
+	my_fail_check
 	make all install -j
+	my_fail_check
 	cd ../../..
 
 	 # set path to Flexpath/EVPath (see above)
@@ -174,7 +216,9 @@ installsosdeps()
      ./autogen.sh
      currdir=`pwd`
      ./configure --prefix=$currdir/inst
+     my_fail_check
      make install -j
+     my_fail_check
      cd inst/lib
      cp libfabric.* ../../../inst/lib
      cd ../../../..
