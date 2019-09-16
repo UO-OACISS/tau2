@@ -40,11 +40,14 @@ cmake -DCMAKE_INSTALL_PREFIX=$SOS_INSTALL_DIR \
 	 ../sos_flow
 
 
-
+./configure -dwarf=download -bfd=download -pthread -mpi -sos=download -soscomm=mpi -pdt=/usr/local/packages/pdtoolkit-3.25 -pdt_c++=g++ -c++=icpc -cc=icc
 2.TAU should be configured using the following options:
-./configure -dwarf=download -bdf=download -pthread -mpi -sos=$SOS_INSTALL_PATH -pdt=$PDTOOLKIT_PATH
+./configure -dwarf=download -bdf=download -pthread -mpi -sos=$SOS_INSTALL_PATH -pdt=$PDTOOLKIT_PATH 
 If you skipped step 1., use
 ./configure -dwarf=download -bdf=download -pthread -mpi -sos=download -soscomm=mpi -pdt=$PDTOOLKIT_PATH
+------ IMPORTANT: To select a compiler, like intel, add the flags -pdt_c++=g++ -c++=icpc -cc=icc 
+------ You do not need to recompile pdt, if it was compiled with g++, use -pdt_c++=g++
+
 You can also use sockets or evpath instead of mpi.
 You should add sos_flow binaries to your path:
 export PATH=$PATH:$TAU/$architecture/sos/sos_flow_master/inst/bin/
