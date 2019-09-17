@@ -9,6 +9,26 @@
 
 #include <Profile/TauGpuAdapterOpenCL.h>
 
+#ifdef TAU_BFD
+#define HAVE_DECL_BASENAME 1
+#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#    include <demangle.h>
+#  endif /* HAVE_GNU_DEMANGLE */
+// Add these definitions because the Binutils comedians think all the world uses autotools
+#ifndef PACKAGE
+#define PACKAGE TAU
+#endif
+#ifndef PACKAGE_VERSION
+#define PACKAGE_VERSION 2.25
+#endif
+#  include <bfd.h>
+#endif /* TAU_BFD */
+
+#define TAU_INTERNAL_DEMANGLE_NAME(name, dem_name)  dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES); \
+        if (dem_name == NULL) { \
+          dem_name = name; \
+        } \
+
 
 void MemoryCopyEventHtoD(size_t bytes)
 {
@@ -632,8 +652,18 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
     name = new char[len+1];
     strncpy(const_cast<char*>(name), buf, len+1);
   }
+  const char *dem_name = 0;
+#if defined(TAU_BFD) && defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+  TAU_INTERNAL_DEMANGLE_NAME(name, dem_name);
+  const char * typeinfo_prefix = "typeinfo name for ";
+  if(strncmp(dem_name, typeinfo_prefix, strlen(typeinfo_prefix)) == 0) {
+    dem_name = dem_name + strlen(typeinfo_prefix);
+  }
+#else
+  dem_name = name; 
+#endif /* HAVE_GNU_DEMANGLE */
 
-  OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, name, -1);
+  OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, dem_name, -1);
   if (!gId) {
     return clEnqueueNDRangeKernel_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   }
