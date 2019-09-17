@@ -106,6 +106,63 @@ cl_command_queue clCreateCommandQueue(cl_context a1, cl_device_id a2, cl_command
   return clCreateCommandQueue_h(a1,  a2,  a3,  a4);
 }
 
+cl_command_queue clCreateCommandQueueWithProperties(cl_context a1, cl_device_id a2, const cl_queue_properties * a3, cl_int * a4) {
+  // OpenCL 2.0 replaces clCreateCommandQueue with clCreateCommandQueueWithProperties.
+  // The difference is that while clCreateCommandQueue allows a bitmask for cl_command_queue_properties,
+  // clCreateCommandQueueWithProperties has a list of cl_queue_properties (which is actually an unsigned long).
+  // The a3 arguemnt can be:
+  //   - NULL, in which case the defaults are used; or,
+  //   - a list specifying the properties.
+  // If a list is used, the list is:
+  //   - Any number of [property ID, property value]
+  //   - followed by 0
+  // Where the old cl_command_queue_properties bitmask is provided by CL_QUEUE_PROPERTIES and then the bitmask.
+  // So there are three cases that have to be handled:
+  //   - If NULL was provided, instead provide {CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0}.
+  //   - If a list was provided that has CL_QUEUE_PROPERTIES, add CL_QUEUE_PROFILING_ENABLE to the bitmask
+  //     (the next entry) by logical OR that entry with CL_QUEUE_PROFILING_ENABLE.
+  //   - If a list was provided, but it doesn't have CL_QUEUE_PROPERTIES, extend the list to add
+  //     {CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE} before the 0 terminating the list.
+  HANDLE_AND_AUTOTIMER(cl_command_queue, clCreateCommandQueueWithProperties, cl_context, cl_device_id, const cl_command_queue_properties *, cl_int *);
+  if(a3 == NULL) {
+    // If no properties were provided, create a new list that specifies CL_QUEUE_PROFILING_ENABLE.
+    cl_queue_properties props[] = {CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0};
+    return clCreateCommandQueueWithProperties_h(a1, a2, props, a4);
+  } else {
+    // If a property list was specified, determine if it already has CL_QUEUE_PROPERTIES in it.
+    size_t size;
+    ssize_t prop_bitmask_index = -1;
+    for(size = 0; a3[size] != 0; ++size) {
+      if(a3[size] == CL_QUEUE_PROPERTIES) {
+        prop_bitmask_index = size+1;
+      }
+    }
+    // If so, change the corresponding value to include CL_QUEUE_PROFILING_ENABLE.
+    if(prop_bitmask_index != -1) {
+      cl_queue_properties props[size+1];
+      for(size_t i = 0; i < size; ++i) {
+        if(i == prop_bitmask_index) {
+          props[i] = a3[i] | CL_QUEUE_PROFILING_ENABLE;
+        } else {
+          props[i] = a3[i];
+        }
+      }
+      props[size] = 0;
+      return clCreateCommandQueueWithProperties_h(a1, a2, props, a4);
+    } else {
+      // If not, extend the list and add CL_QUEUE_PROPERTIES CL_QUEUE_PROFILING_ENABLE to the end.
+      cl_queue_properties props[size+3];  
+      for(size_t i = 0; i < size; ++i) {
+          props[i] = a3[i];
+      }
+      props[size] = CL_QUEUE_PROPERTIES;
+      props[size+1] = CL_QUEUE_PROFILING_ENABLE;
+      props[size+2] = 0;
+      return clCreateCommandQueueWithProperties_h(a1, a2, props, a4);
+    }
+  }
+}
+
 cl_int clRetainCommandQueue(cl_command_queue a1) 
 {
   HANDLE_AND_AUTOTIMER(cl_int, clRetainCommandQueue, cl_command_queue);
