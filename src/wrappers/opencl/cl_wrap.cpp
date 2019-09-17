@@ -126,6 +126,7 @@ cl_command_queue clCreateCommandQueue(cl_context a1, cl_device_id a2, cl_command
   return clCreateCommandQueue_h(a1,  a2,  a3,  a4);
 }
 
+#ifdef CL_VERSION_2_0
 cl_command_queue clCreateCommandQueueWithProperties(cl_context a1, cl_device_id a2, const cl_queue_properties * a3, cl_int * a4) {
   // OpenCL 2.0 replaces clCreateCommandQueue with clCreateCommandQueueWithProperties.
   // The difference is that while clCreateCommandQueue allows a bitmask for cl_command_queue_properties,
@@ -182,6 +183,7 @@ cl_command_queue clCreateCommandQueueWithProperties(cl_context a1, cl_device_id 
     }
   }
 }
+#endif
 
 cl_int clRetainCommandQueue(cl_command_queue a1) 
 {
