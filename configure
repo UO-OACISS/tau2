@@ -8937,6 +8937,7 @@ sosurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/sos/$sost
 sosmaindir=sos
 sosrepo=sos_flow_master
 
+
 echo "$sosdir"
 if [ "x$sos" = "xyes" ] ; then
   if [ "x$sosdir" = xdownload ] ; then
@@ -8949,6 +8950,7 @@ if [ "x$sos" = "xyes" ] ; then
     rm -f "$sostgz" ; 
     installsos "$sosrepo"
     #cd $targetdir/$architecture/; installsosdeps "$sosmaindir" "$sosdepsurl" "$sosdepstgz"; clone "$sosurl" "$sosrepo"; installsos "$sosrepo"
+    cd $p
   else
     if [ ! -d "$sosdir" ] ; then
       echo "Error: Cannot access SOS directory $sosdir"
@@ -8956,7 +8958,6 @@ if [ "x$sos" = "xyes" ] ; then
     fi
   fi
 fi
-
 ######################################################################
 # Install BFD if requested
 ######################################################################
