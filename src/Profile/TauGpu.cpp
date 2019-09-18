@@ -396,7 +396,7 @@ int get_task(GpuEvent *new_task)
 
 void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
 {
-#if defined(PTHREADS)
+#if defined(PTHREADS) || defined(TAU_OPENMP)
   int task = id->getTaskId(); 
 #else
   int task = get_task(id);
