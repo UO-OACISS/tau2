@@ -1282,10 +1282,10 @@ for arg in "$@"; do
 
 	-c++=*)
 	    myarg=`echo $arg | sed 's/-c++=//'`
-	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = g++-5 -o $myarg = g++-6 -o $myarg = g++-7 -o $myarg = g++-8 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = clang++ -o $myarg = hcc -o $myarg = hipcc -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx  -o $myarg = armclang++ ]
+	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = g++-5 -o $myarg = g++-6 -o $myarg = g++-7 -o $myarg = g++-8 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = icpx -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiicpx -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = mpc_icpx -o $myarg = clang++ -o $myarg = hcc -o $myarg = hipcc -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx  -o $myarg = armclang++ ]
 	    then
 		cxx_compiler=$myarg
-                if [  $cxx_compiler = mpc_cxx -o $cxx_compiler = mpc_icpc  ]
+                if [  $cxx_compiler = mpc_cxx -o $cxx_compiler = mpc_icpc  -o $cxx_compiler = mpc_icpx  ]
                 then
                   mpc_include=`mpc_cxx -show | grep -o '[^ ]*include/mpcframework[^ ]*'`
 	 	  mpc_cxx_compiler=`$myarg -show | awk '{ print $1; }'`
@@ -1296,7 +1296,7 @@ for arg in "$@"; do
 		testmp=`echo $myarg | sed -e 's/^mp//'`
 		if [ "y$testxlc" = "y$myarg" -a "y$testmp" = "y$myarg" ]
 		then
-		    echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', 'mpiFCC', 'mpiFCCpx', 'orCC', 'openCC', 'mpc_cxx',  'mpc_icpc', 'clang++', 'hcc', 'hipcc', 'bgclang++', 'mpicxx', 'mcxx', 'oshCC', oshcxx, 'oshc++', or 'armclang++' "
+		    echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'icpx', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', 'mpiicpx', 'mpiFCC', 'mpiFCCpx', 'orCC', 'openCC', 'mpc_cxx',  'mpc_icpc', 'mpc_icpx', 'clang++', 'hcc', 'hipcc', 'bgclang++', 'mpicxx', 'mcxx', 'oshCC', oshcxx, 'oshc++', or 'armclang++' "
 		    #       exit 1
 		else
 		    if [ "y$testxlc" != "y$myarg" ]
@@ -4225,7 +4225,7 @@ if [ $machine = mic_linux ] ; then
 fi
 
 if [ $machine = apple ] ; then
-    if [ $cxx_compiler = g++ -o $cxx_compiler = g++-5 -o $cxx_compiler = g++-6 -o $cxx_compiler = g++-7 -o $cxx_compiler = g++-8 -o $cxx_compiler = c++  -o $cxx_compiler = icpc ] ; then
+    if [ $cxx_compiler = g++ -o $cxx_compiler = g++-5 -o $cxx_compiler = g++-6 -o $cxx_compiler = g++-7 -o $cxx_compiler = g++-8 -o $cxx_compiler = c++  -o $cxx_compiler = icpc  -o $cxx_compiler = icpx ] ; then
 	fixmakeargs="$fixmakeargs APPLECXX"
     fi
     if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp ] ; then
@@ -4762,10 +4762,45 @@ case $cxx_compiler in
 	fi
 
 	;;
+    icpx)
+	echo "Default C++ compiler will be Intel icpx C++ compiler"
+	fixmakeargs="$fixmakeargs USE_INTELCXX COMPINST_INTEL9"
+	tauoptions="${tauoptions}-icpx"
+	intel=yes
+	if [ $fortran_compiler = no ]
+	then
+            intelifort=`which ifort 2>/dev/null`
+            if [ "y$intelifort" != "y"  -a -x "$intelifort" ] ; then
+		fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
+		fortran_compiler=intel
+		extradir=`which ifort | sed -e 's/\/bin\/ifort$//'`
+            fi
+	fi
+	if [ $intelcxxlibicc = yes ]
+	then
+            fixmakeargs="$fixmakeargs INTELCXXLIBICC"
+	fi
+
+	;;
     mpiicpc)
 	echo "Default C++ compiler will be Intel mpiicpc C++ compiler"
 	fixmakeargs="$fixmakeargs MPIICPC USE_INTELCXX"
 	tauoptions="${tauoptions}-icpc"
+	intel=yes
+	if [ $fortran_compiler = no  -o $fortran_compiler = mpiifort -o $fortran_compiler = intel ]
+	then
+            intelifort=`which mpiifort 2>/dev/null`
+            if [ "y$intelifort" != "y"  -a -x "$intelifort" ] ; then
+		fortran_compiler=intel
+		extradir=`which mpiifort | sed -e 's/\/bin\/mpiifort$//'`
+		fixmakeargs="$fixmakeargs MPIIFORT"
+            fi
+	fi
+	;;
+    mpiicp)
+	echo "Default C++ compiler will be Intel mpiicpx C++ compiler"
+	fixmakeargs="$fixmakeargs MPIICPC USE_INTELCXX"
+	tauoptions="${tauoptions}-icpx"
 	intel=yes
 	if [ $fortran_compiler = no  -o $fortran_compiler = mpiifort -o $fortran_compiler = intel ]
 	then
@@ -4833,6 +4868,23 @@ case $cxx_compiler in
             fixmakeargs="tau_build_cc=$full_cc_compiler tau_build_cxx=$full_cxx_compiler $fixmakeargs"
             mpilibrary=`mpc_icpc -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g"`
             full_cxx_compiler=`mpc_icpc -show -Dmain=mpc_user_main__ | sed -e "s@-mSYMTAB_mpc_privatize @@g" -e "s/ /#/g"`
+            full_cc_compiler=`mpc_icc -show -Dmain=mpc_user_main__ | sed -e "s@-mSYMTAB_mpc_privatize @@g" -e "s/ /#/g"`
+        #echo "CC=$cc_compiler"
+        #echo "CXX=$cxx_compiler"
+        #echo "mpilibrary=$mpilibrary"
+        tauoptions="${tauoptions}-mpc-intel"
+            fixmakeargs="$fixmakeargs MPC MPCINTEL"
+            mpc=yes
+        fi
+        ;;
+
+    mpc_icpx)
+    if [ $machine = x86_64 -o $machine = mic_linux ] ; then
+            full_cxx_compiler=`mpc_icpx -show | awk '{print $1;}'`
+            full_cc_compiler=`mpc_icc -show | awk '{ print $1;}'`
+            fixmakeargs="tau_build_cc=$full_cc_compiler tau_build_cxx=$full_cxx_compiler $fixmakeargs"
+            mpilibrary=`mpc_icpx -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g"`
+            full_cxx_compiler=`mpc_icpx -show -Dmain=mpc_user_main__ | sed -e "s@-mSYMTAB_mpc_privatize @@g" -e "s/ /#/g"`
             full_cc_compiler=`mpc_icc -show -Dmain=mpc_user_main__ | sed -e "s@-mSYMTAB_mpc_privatize @@g" -e "s/ /#/g"`
         #echo "CC=$cc_compiler"
         #echo "CXX=$cxx_compiler"
@@ -11450,7 +11502,7 @@ fi
 
 
 # CHECK if Intel 8.0 compilers are available.
-if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
+if [ $cxx_compiler = icpc -o $cxx_compiler = icpx  -o $cxx_compiler = mpiicpc  -o $cxx_compiler = mpiicpx ] ; then
     echo "Checking version (8.0/8.1+) of Intel compilers"
     # Intel compilers changed from -cxxlib-icc to -cxxlib-gcc (default) in 8.1
     cat << EOF > f1.cpp
@@ -11507,12 +11559,12 @@ EOF
 fi
 
 
-if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
+if [ $cxx_compiler = icpc -o $cxx_compiler = icpx -o $cxx_compiler = mpiicpc -o $cxx_compiler = mpiicpx ] ; then
     echo "Checking version (10.0+) of Intel compilers"
-    version=`icpc -v 2>&1`
+    version=`${cxx_compiler} -v 2>&1`
     t="Version 1"
-    t1="icpc version 1"
-    t2="icpc.orig version 1"
+    t1="${cxx_compiler} version 1"
+    t2="${cxx_compiler}.orig version 1"
     testarg=${version#$t}
     testarg1=${version#$t1}
     testarg2=${version#$t2}
@@ -11562,11 +11614,11 @@ if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
     fixmakeargs="$fixmakeargs ifortlibdir=$libdir"
 fi
 
-if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
+if [ $cxx_compiler = icpc -o $cxx_compiler = icpx -o $cxx_compiler = mpiicpc -o $cxx_compiler = mpiicpx ] ; then
     echo "Checking version (12.x) of Intel compilers"
-    version=`icpc -v 2>&1`
+    version=`${cxx_compiler} -v 2>&1`
     t="Version 12"
-    t1="icpc version 12"
+    t1="${cxx_compiler} version 12"
     testarg=${version#$t}
     testarg1=${version#$t1}
 

@@ -9,6 +9,26 @@
 
 #include <Profile/TauGpuAdapterOpenCL.h>
 
+#ifdef TAU_BFD
+#define HAVE_DECL_BASENAME 1
+#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#    include <demangle.h>
+#  endif /* HAVE_GNU_DEMANGLE */
+// Add these definitions because the Binutils comedians think all the world uses autotools
+#ifndef PACKAGE
+#define PACKAGE TAU
+#endif
+#ifndef PACKAGE_VERSION
+#define PACKAGE_VERSION 2.25
+#endif
+#  include <bfd.h>
+#endif /* TAU_BFD */
+
+#define TAU_INTERNAL_DEMANGLE_NAME(name, dem_name)  dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES); \
+        if (dem_name == NULL) { \
+          dem_name = name; \
+        } \
+
 
 void MemoryCopyEventHtoD(size_t bytes)
 {
@@ -105,6 +125,65 @@ cl_command_queue clCreateCommandQueue(cl_context a1, cl_device_id a2, cl_command
   a3 |= CL_QUEUE_PROFILING_ENABLE;
   return clCreateCommandQueue_h(a1,  a2,  a3,  a4);
 }
+
+#ifdef CL_VERSION_2_0
+cl_command_queue clCreateCommandQueueWithProperties(cl_context a1, cl_device_id a2, const cl_queue_properties * a3, cl_int * a4) {
+  // OpenCL 2.0 replaces clCreateCommandQueue with clCreateCommandQueueWithProperties.
+  // The difference is that while clCreateCommandQueue allows a bitmask for cl_command_queue_properties,
+  // clCreateCommandQueueWithProperties has a list of cl_queue_properties (which is actually an unsigned long).
+  // The a3 arguemnt can be:
+  //   - NULL, in which case the defaults are used; or,
+  //   - a list specifying the properties.
+  // If a list is used, the list is:
+  //   - Any number of [property ID, property value]
+  //   - followed by 0
+  // Where the old cl_command_queue_properties bitmask is provided by CL_QUEUE_PROPERTIES and then the bitmask.
+  // So there are three cases that have to be handled:
+  //   - If NULL was provided, instead provide {CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0}.
+  //   - If a list was provided that has CL_QUEUE_PROPERTIES, add CL_QUEUE_PROFILING_ENABLE to the bitmask
+  //     (the next entry) by logical OR that entry with CL_QUEUE_PROFILING_ENABLE.
+  //   - If a list was provided, but it doesn't have CL_QUEUE_PROPERTIES, extend the list to add
+  //     {CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE} before the 0 terminating the list.
+  HANDLE_AND_AUTOTIMER(cl_command_queue, clCreateCommandQueueWithProperties, cl_context, cl_device_id, const cl_command_queue_properties *, cl_int *);
+  if(a3 == NULL) {
+    // If no properties were provided, create a new list that specifies CL_QUEUE_PROFILING_ENABLE.
+    cl_queue_properties props[] = {CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0};
+    return clCreateCommandQueueWithProperties_h(a1, a2, props, a4);
+  } else {
+    // If a property list was specified, determine if it already has CL_QUEUE_PROPERTIES in it.
+    size_t size;
+    ssize_t prop_bitmask_index = -1;
+    for(size = 0; a3[size] != 0; ++size) {
+      if(a3[size] == CL_QUEUE_PROPERTIES) {
+        prop_bitmask_index = size+1;
+      }
+    }
+    // If so, change the corresponding value to include CL_QUEUE_PROFILING_ENABLE.
+    if(prop_bitmask_index != -1) {
+      cl_queue_properties props[size+1];
+      for(size_t i = 0; i < size; ++i) {
+        if(i == prop_bitmask_index) {
+          props[i] = a3[i] | CL_QUEUE_PROFILING_ENABLE;
+        } else {
+          props[i] = a3[i];
+        }
+      }
+      props[size] = 0;
+      return clCreateCommandQueueWithProperties_h(a1, a2, props, a4);
+    } else {
+      // If not, extend the list and add CL_QUEUE_PROPERTIES CL_QUEUE_PROFILING_ENABLE to the end.
+      cl_queue_properties props[size+3];  
+      for(size_t i = 0; i < size; ++i) {
+          props[i] = a3[i];
+      }
+      props[size] = CL_QUEUE_PROPERTIES;
+      props[size+1] = CL_QUEUE_PROFILING_ENABLE;
+      props[size+2] = 0;
+      return clCreateCommandQueueWithProperties_h(a1, a2, props, a4);
+    }
+  }
+}
+#endif
 
 cl_int clRetainCommandQueue(cl_command_queue a1) 
 {
@@ -575,8 +654,18 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
     name = new char[len+1];
     strncpy(const_cast<char*>(name), buf, len+1);
   }
+  const char *dem_name = 0;
+#if defined(TAU_BFD) && defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+  TAU_INTERNAL_DEMANGLE_NAME(name, dem_name);
+  const char * typeinfo_prefix = "typeinfo name for ";
+  if(strncmp(dem_name, typeinfo_prefix, strlen(typeinfo_prefix)) == 0) {
+    dem_name = dem_name + strlen(typeinfo_prefix);
+  }
+#else
+  dem_name = name; 
+#endif /* HAVE_GNU_DEMANGLE */
 
-  OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, name, -1);
+  OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, dem_name, -1);
   if (!gId) {
     return clEnqueueNDRangeKernel_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   }
