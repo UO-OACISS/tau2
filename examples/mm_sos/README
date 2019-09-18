@@ -40,17 +40,20 @@ cmake -DCMAKE_INSTALL_PREFIX=$SOS_INSTALL_DIR \
 	 ../sos_flow
 
 
-./configure -dwarf=download -bfd=download -pthread -mpi -sos=download -soscomm=mpi -pdt=/usr/local/packages/pdtoolkit-3.25 -pdt_c++=g++ -c++=icpc -cc=icc
 2.TAU should be configured using the following options:
 ./configure -dwarf=download -bdf=download -pthread -mpi -sos=$SOS_INSTALL_PATH -pdt=$PDTOOLKIT_PATH 
-If you skipped step 1., use
+If you skipped step 1., use -sos=download, the flag -soscomm allows to change communicators, MPI 
+is used by default. The options are evpath, sockets and mpi.
 ./configure -dwarf=download -bdf=download -pthread -mpi -sos=download -soscomm=mpi -pdt=$PDTOOLKIT_PATH
 ------ IMPORTANT: To select a compiler, like intel, add the flags -pdt_c++=g++ -c++=icpc -cc=icc 
 ------ You do not need to recompile pdt, if it was compiled with g++, use -pdt_c++=g++
+------ In this case python for SOS_flow will be disabled to increase compatibility.
 
 You can also use sockets or evpath instead of mpi.
 You should add sos_flow binaries to your path:
 export PATH=$PATH:$TAU/$architecture/sos/sos_flow_master/inst/bin/
+You may need to also add sqlite3:
+export PATH=$PATH:$TAU/$architecture/sos/chaos/sqlite3/bin/
 
 3.Compile the matmult application with the provided Makefile using make.
 make
@@ -63,11 +66,16 @@ and see how the values change.
 4.Now, modify the first line of report_compile.sh with the PATH to SOS and
 compile the report script with:
 ./report_compile.sh
+------- IMPORTANT: check SOS_PATH modify it, it should be the full path of 
+------- $TAU/$architecture/sos/sos_flow_master/inst/ , it can be obtained with
+------- cd $TAU/$architecture/sos/sos_flow_master/inst/ && pwd
 
 5.First remove the files from previous executions and then load the SOS daemon with:
-./clean.sh; 
-Load the enviromental variables and execute SOS:
-source sosd.env.sourceme && ./simple-sosmpi1node.sh &
+First load the enviromental variables of SOS and then clean the directory to remove
+the data of previous executions:
+source sosd.env.sourceme && ./clean.sh
+Now, execute SOS:
+./simple-sosmpi1node.sh &
 When the daemon is running, it will show you the Version, the machine it is being 
 executed on and other information.
 
@@ -92,3 +100,13 @@ pycoolr, to do this, execute the following command:
 ./simple-pycoolr.sh
 and when pycoolr opens, you can select the metrics. The number after the metric 
 name is the process number in which that counter is measured.
+
+There is another difference between simple-sos+simple-app and simple-pycoolr. 
+In simple-sos+simple-app, the database is generated in memory and it is written to 
+disk after SOS_flow is stopped with sosd_stop or simple_stop.sh. In the case of
+simple-pycoolr, the dabatase is created in disk at the beginning and when data is 
+added to the database, it is written to disk. This cahnge is due to the flags
+SOS_IN_MEMORY_DATABASE=FALSE
+SOS_EXPORT_DB_AT_EXIT=FALSE
+in simple-pycoolr.sh, as pycoolr can be used with other tools, it needs reads
+a database stored in disk.

@@ -74,7 +74,8 @@ cfg["figheight"] = 12
 cfg["ncols"] = 3
 cfg["nrows"] = 2
 
-
+def usage():
+	print("Usage: coolr.py $CONFIG_FILE")
 shortopt = "h"
 # XXX: keep enclave= for compatibility
 longopt = ['output=','node=', 'enclave=', 'enclaves=', 'width=', 'height=', 'list', 'mods=', 'ncols=', 'nrows=', 'appcfg=' ]
@@ -232,7 +233,7 @@ class Coolrsub:
         # Create 2 buttons
         #self.button_left = Tkinter.Button(frame,text="< Decrease Slope",
         #                               command=self.decrease)
-
+        self.selected_list = []
         self.pubpid = -1
         self.subpid = -1
 
@@ -300,12 +301,12 @@ class Coolrsub:
         params['cfg']['units'] = ["#Events" if (metric[0].find("NumEvents") > -1)  else units for metric,units in zip(self.metrics,params['cfg']['units'])]
         print("---------------------------------------------------------------------------------------------------------")
         print("self.nbsamples",self.nbsamples)
-        print("self.listmetrics",self.listmetrics)
+        #print("self.listmetrics",self.listmetrics)
 
 
 
         #self.metrics = params['cfg']['metrics']
-        print("self.metrics", self.metrics)
+        #print("self.metrics", self.metrics)
         #self.ranks = params['cfg']['ranks']
         self.ranks = [None] * self.nbsamples
         self.procs = [None] * self.nbsamples
@@ -426,23 +427,49 @@ class Coolrsub:
         self.ybot = [1 for i in range(self.nbsamples)]
 
         #self.subSpawn()
-
+        
         self.root = master
-
+        
         self.canvas = FigureCanvasTkAgg(fig,master=master)
         self.canvas.show()
         self.canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
         #self.canvas._tkcanvas.pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
         self.canvas._tkcanvas.pack(side='top', fill='both', expand=1)
-        master.wm_title("COOLR Beacon")
+        master.wm_title("COOLR "+self.tool)
         #frame.pack(fill=X, padx=5, pady=5)
         self.frame.pack()
-
+        
         menubar = Tk.Menu(root)
         filemenu = Tk.Menu(menubar, tearoff=0)
+        metricmenu = Tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Preferences", menu=filemenu)
+        menubar.add_command(label = "||", activebackground = menubar.cget("background"))
+        menubar.add_command (label="Metric 0", command=lambda: self.select_metric(0))
+        menubar.add_command(label = "||", activebackground = menubar.cget("background"))
+        menubar.add_command (label="Metric 1", command=lambda: self.select_metric(1))
+        menubar.add_command(label = "||", activebackground = menubar.cget("background"))
+        menubar.add_command (label="Metric 2", command=lambda: self.select_metric(2))
+        menubar.add_command(label = "||", activebackground = menubar.cget("background"))
+        menubar.add_command (label="Metric 3", command=lambda: self.select_metric(3))
+        menubar.add_command(label = "||", activebackground = menubar.cget("background"))
+        menubar.add_command (label="Metric 4", command=lambda: self.select_metric(4))
+        menubar.add_command(label = "||", activebackground = menubar.cget("background"))
+        menubar.add_command (label="Metric 5", command=lambda: self.select_metric(5))
+        menubar.add_command(label = "||", activebackground = menubar.cget("background"))
 
-        filemenu.add_command(label="Metrics", command=self.metricsmenu)
+        #for i in range(self.ngraphs):
+        #  selected_list.append(i)
+        #print selected_list
+        self.selected_list= [-1] * self.nbGraphs
+        print self.selected_list
+
+
+
+       
+        #menubar.add_cascade(label='Metric 0000', menu=metricmenu)
+        #for c in self.listmetrics:
+        #   metricmenu.add_command(label=c, command=lambda c=c: self.print_dropdown((c, 'metric')))    
+        
   
         if self.tool == "beacon":
           filemenu.add_command(label="CVARS", command=self.cvarsmenu)
@@ -454,15 +481,18 @@ class Coolrsub:
           root.config(menu=menubar)
         except AttributeError as attErr:
           print('menu Exception: ', type(attErr), attErr)
-
+         
         #self.winPvars()
         #self.winCvars()
-  
+
         self.subSpawn()
+  def print_dropdown(*args):
+    print( tkvar.get() )
+
 
   def try_execute(self, c, statement, parameters=None):
-    print ("statement: ", statement)
-    print ("parameters: ", parameters)
+    #print ("statement: ", statement)
+    #print ("parameters: ", parameters)
     try:
         if parameters:
             c.execute(statement,parameters);
@@ -612,7 +642,47 @@ class Coolrsub:
         #fparams.pack()
  
   #def winPvars(self):
-  def metricsmenu(self):
+  def select_metric(self, fig_num):
+        print "Selected metric for figure: " + str(fig_num)
+    	# this is the child window
+        self.pvarswin = Tk.Tk()
+        str_metric_title = "Select Metric: "+ str(fig_num)
+        self.pvarswin.title(str_metric_title) 
+        #pvarswin = Tk.Tk()
+        #pvarswin.title("PVARS") 
+        #RWidth = 150
+        #RHeight = 100
+        w = 290
+        h = 150
+        RWidth = self.pvarswin.winfo_screenwidth()
+        RHeight = self.pvarswin.winfo_screenheight()
+        x = (RWidth - w)/2
+        y = (RHeight - h)/2
+
+        self.f1 = Tk.Frame(self.pvarswin, width=200, height=100) 
+        self.l1 = Tk.Listbox(self.f1,selectmode='single',width=100,height=40)
+
+        #self.pvarswin.geometry("%dx%d" % (RWidth,RHeight))
+        #pvarswin.geometry('%dx%d+%d+%d' % (w,h,x,y)) 
+        #f1 = Tk.Frame(pvarswin) 
+        #f1 = Tk.Frame(pvarswin,width=150,height=100) 
+        s1 = Tk.Scrollbar(self.f1) 
+	#l1 = Tk.Listbox(f1,selectmode='multiple',width=80,height=40)
+        #print("self.listmetrics",self.listmetrics)
+        #print("len(self.listmetrics)",len(self.listmetrics))
+
+
+        for i in range(self.nbsamples): 
+        	self.l1.insert(i, self.listmetrics[i]) 
+        s1.config(command = self.l1.yview) 
+        self.l1.config(yscrollcommand = s1.set) 
+        self.l1.bind('<<ListboxSelect>>', lambda event : self.onselectmetric(event,fig_num))
+        self.l1.pack(side = Tk.LEFT, fill = Tk.Y) 
+        s1.pack(side = Tk.RIGHT, fill = Tk.Y) 
+        self.f1.pack()
+
+  
+  '''def metricsmenu(self):
     	# this is the child window
         self.pvarswin = Tk.Tk()
         self.pvarswin.title("metrics") 
@@ -636,8 +706,8 @@ class Coolrsub:
         #f1 = Tk.Frame(pvarswin,width=150,height=100) 
         s1 = Tk.Scrollbar(self.f1) 
 	#l1 = Tk.Listbox(f1,selectmode='multiple',width=80,height=40)
-        print("self.listmetrics",self.listmetrics)
-        print("len(self.listmetrics)",len(self.listmetrics))
+        #print("self.listmetrics",self.listmetrics)
+        #print("len(self.listmetrics)",len(self.listmetrics))
 
 
         for i in range(self.nbsamples): 
@@ -647,7 +717,7 @@ class Coolrsub:
         self.l1.bind('<<ListboxSelect>>', self.onselectmetrics)
         self.l1.pack(side = Tk.LEFT, fill = Tk.Y) 
         s1.pack(side = Tk.RIGHT, fill = Tk.Y) 
-        self.f1.pack()
+        self.f1.pack()'''
 
   def cvarsmenu(self):
         # this is the child window
@@ -935,7 +1005,7 @@ class Coolrsub:
 
         #print 'parse graphs'
         metric_value = max(sample[1],0)
-        print("metric_value",metric_value)
+        #print("metric_value",metric_value)
         numeric = re.search(r'\d+', metric_value)
         metric_value_num = numeric.group()
         metric_value_float = float(metric_value_num)
@@ -1383,7 +1453,7 @@ class Coolrsub:
 
 
   def req_sql_db(self, c, ranks, ranks2, group_column, metric):
-    print('req_sql_db entering')
+    #print('req_sql_db entering')
     for r in ranks:
         sql_statement = ("SELECT distinct tbldata.name, tblvals.val, tblvals.time_pack, tblpubs.comm_rank FROM tblvals INNER JOIN tbldata ON tblvals.guid = tbldata.guid INNER JOIN tblpubs ON tblpubs.guid = tbldata.pub_guid WHERE tblvals.guid IN (SELECT guid FROM tbldata WHERE tbldata.name LIKE '" + metric + "') AND tblpubs." + group_column)
         """
@@ -1411,7 +1481,7 @@ class Coolrsub:
 
   # Call demo with SQL statement given as argument and store standard output
   def req_sql2(self, c, metric):
-    print('req_sql2 entering')
+    #print('req_sql2 entering')
     self.res_sql = ""
     sql_statement = ("SELECT value_name, value, time_pack FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
     #sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
@@ -1445,11 +1515,11 @@ class Coolrsub:
  
   # Call demo with SQL statement given as argument and store standard output
   def req_sql(self, c, metric):
-    print('req_sql entering')
+    #print('req_sql entering')
     self.res_sql = ""
-    for elem in metric:
-        print("elem: ", elem)
-    print("metric",metric[0])
+    #for elem in metric:
+    #    print("elem: ", elem)
+    #print("metric",metric[0])
     sql_statement = ("SELECT value_name, value, time_pack, max(frame) FROM viewCombined WHERE value_name LIKE '" + metric[0]+ "' AND comm_rank="+ str(metric[1]) +" group by value_name;")
     #sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
    
@@ -1473,14 +1543,14 @@ class Coolrsub:
     while self.ranks.size == 0:
         time.sleep(1)
         self.ranks,self.procs = self.get_ranks(self.conn)
-    print ("ranks: ", self.ranks)
+    #print ("ranks: ", self.ranks)
 
     # get the number of nodes
     self.nodes,self.noderanks = self.get_nodes(self.conn)
     while self.nodes.size == 0:
         time.sleep(1)
         nodes,self.noderanks = self.get_nodes(self.conn)
-    print ("nodes: ", self.nodes)
+    #print ("nodes: ", self.nodes)
 
     self.get_min_timestamp_db(self.conn)
     #resize the figure
@@ -1494,7 +1564,7 @@ class Coolrsub:
     #docharts(c,nodes,noderanks,ranks,procs)
     #pl.tight_layout()
 
-    print("Done.")
+    print("opendb Done.")
 
   def closedb(self):
     print("Closing connection to database.")
@@ -1519,7 +1589,7 @@ class Coolrsub:
 
     self.opendb()
 
-    print("metrics: ", self.metrics)
+    #print("metrics: ", self.metrics)
     #self.get_min_timestamp()  
  
     while True:  
@@ -1555,7 +1625,7 @@ class Coolrsub:
            countsamples = 0
            for sample in self.rows[j]:
              params['ts'] = 0
-             print 'PYCOOLR sample: ', sample
+             #print 'PYCOOLR sample: ', sample
              #self.req_sql(self.conn, self.ranks, self.rows)
              profile_t2 = time.time()
              self.lock.acquire()
@@ -1980,37 +2050,44 @@ class Coolrsub:
         #self.cvarsentry.insert(0,str(self.dictcvars[self.selectedcvar]))
 
         #self.cvarswin.after(1000, self.onselectcvars)
+  def onselectmetric(self,evt,fig_num):
+        #print self.selected_list, evt.widget.curselection()
+        self.selected_list[fig_num] = evt.widget.curselection()[0]
+        #print self.selected_list, evt.widget.curselection()
+        self.onselectmetrics(self.selected_list,fig_num)
+        
 
-  def onselectmetrics(self,evt):
-        w = evt.widget
-        selection = w.curselection()
-        for i in range(len(selection)):
-          value = w.get(selection[i])
+
+  #def onselectmetrics(self,evt):
+  def onselectmetrics(self, selection, fig_num):
+        #w = evt.widget
+        #selection = w.curselection()
+        #for i in range(len(selection)):
+        #  value = w.get(selection[i])
           #print "selection:", selection, ": '%s'" % value
          
         listintselection = [int (i) for i in selection]
         print('listintselection: ', listintselection)
-        print('listSamplesAllocated: ', self.listSamplesAllocated)
-        print('nbsamples', self.nbsamples)
-        print('len(self.listSamplesAllocated)', len(self.listSamplesAllocated))
+        #print('listSamplesAllocated: ', self.listSamplesAllocated)
+        #print('nbsamples', self.nbsamples)
+        #print('len(self.listSamplesAllocated)', len(self.listSamplesAllocated))
 
         for i in range(self.nbsamples):
           if (self.listSamplesAllocated[i] > -1) and (i not in listintselection):
             self.listSamplesAllocated[i] = -1
 
-        for i in range(self.ngraphs):
-         
-          if (self.listUsedGraphs[i] not in listintselection) or (self.listUsedGraphs[i] == -1):
+        #for i in range(self.ngraphs):
+        #print("self.listUsedGraphs[fig_num] != listintselection[fig_num] ", self.listUsedGraphs[fig_num] != listintselection[fig_num]) 
+        if (self.listUsedGraphs[fig_num] != listintselection[fig_num]):# or (self.listUsedGraphs[i] == -1):
             
-            for j in listintselection:
-        
-              if self.listSamplesAllocated[j] == -1:    
+            #for j in listintselection:
+            #print("self.listSamplesAllocated[fig_num] == -1 :", self.listSamplesAllocated[fig_num] == -1)
+            if self.listSamplesAllocated[fig_num] == -1:    
                 #index = int(j)
-                self.listUsedGraphs[i] = j
-                print('graph %d allocated to sample %d' % (i, j))
-                self.listRecordSample[i] = j
-                self.listSamplesAllocated[j] = i
-                break
+                self.listUsedGraphs[fig_num] = listintselection[fig_num]
+                print('graph %d allocated to sample %d' % (fig_num, listintselection[fig_num]))
+                self.listRecordSample[fig_num] = listintselection[fig_num]
+                self.listSamplesAllocated[listintselection[fig_num]] = fig_num
 
   def onselectpvars2(self,evt):
 	# Note here that Tkinter passes an event object to onselect()

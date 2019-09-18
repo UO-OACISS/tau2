@@ -61,15 +61,23 @@ mpirun -np 2 tau_exec -T pdt,mpi,sos,pthread -sos ./matmult &
 
 
 
-echo "sleep 5"
-sleep 5
+echo "sleep 1"
+sleep 1
 
 echo "Launch PyCOOLR"
-./pycoolr -tool=sos >& /dev/null
-
-pkill mpirun
-
+./pycoolr -tool=sos 
+#>& /dev/null
 
 stop_sos_daemon
+
+if pgrep -x "matmult" > /dev/null; then
+        #sosd_stop
+        pkill mpirun
+fi
+
+#pkill mpirun
+
+
+
 showdb
 
