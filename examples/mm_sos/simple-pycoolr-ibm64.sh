@@ -60,7 +60,7 @@ echo "sleep 5"
 sleep 5
 
 echo "Launch PyCOOLR"
-./pycoolr -tool=sos >& /dev/null
+../../tools/src/pycoolr/bin/pycoolr -tool=sos
 
 pkill mpirun
 
