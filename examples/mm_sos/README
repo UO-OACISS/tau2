@@ -66,9 +66,9 @@ and see how the values change.
 4.Now, modify the first line of report_compile.sh with the PATH to SOS and
 compile the report script with:
 ./report_compile.sh
-------- IMPORTANT: check SOS_PATH modify it, it should be the full path of 
-------- $TAU/$architecture/sos/sos_flow_master/inst/ , it can be obtained with
-------- cd $TAU/$architecture/sos/sos_flow_master/inst/ && pwd
+------- IMPORTANT: if it fails to compile, change the PATH references so SOS_PATH
+------- points to the full path of the installation of SOS: $TAU_PATH/$architecture/
+------- sos/sos_flow_master/inst
 
 5.First remove the files from previous executions and then load the SOS daemon with:
 First load the enviromental variables of SOS and then clean the directory to remove
