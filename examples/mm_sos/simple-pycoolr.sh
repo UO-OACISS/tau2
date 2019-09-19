@@ -65,7 +65,7 @@ echo "sleep 1"
 sleep 1
 
 echo "Launch PyCOOLR"
-./pycoolr -tool=sos 
+../../tools/src//pycoolr/bin/pycoolr -tool=sos 
 #>& /dev/null
 
 stop_sos_daemon

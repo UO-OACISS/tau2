@@ -393,13 +393,15 @@ class Coolrsub:
         self.subSpawn(sos_db_file)
 
   def try_execute(self, c, statement, parameters=None):
+    print ("statement: ", statement)
+    print ("parameters: ", parameters)
     try:
         if parameters:
             c.execute(statement,parameters);
         else:
             c.execute(statement);
     except sqlite3.Error as e:
-        print("database error...", e.args[0])
+        print("database error.....", e.args[0])
 
   def open_connection(self,sqlite_file):
     global conn

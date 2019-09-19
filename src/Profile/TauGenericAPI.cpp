@@ -127,6 +127,10 @@ void perftool_timer_stop(const void * timer) {
     Tau_stop_timer((FunctionInfo*)timer, Tau_get_thread());
 }
 
+void perftool_set_parameter(const char * parameter_name, int64_t parameter_value) {
+    Tau_profile_param1l(parameter_value, parameter_name);
+}
+
 void perftool_dynamic_phase_start(const char * name, int index) {
     Tau_dynamic_start(name, index);
 }
