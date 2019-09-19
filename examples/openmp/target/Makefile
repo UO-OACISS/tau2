@@ -19,8 +19,10 @@ CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/
 PRINT	      	= pr
 RM 	      	= /bin/rm -rf
 TARGET	      	= matmult
-OBJS     	= matmult.o matmult_initialize.o
-TARGET_FLAGS =-fopenmp -Xopenmp-target -march=sm_50 -fopenmp-targets=nvptx64-nvidia-cuda --cuda-path=${CUDA}
+OBJS     	= matmult.o
+#TARGET_FLAGS =-fopenmp -Xopenmp-target -march=sm_50 -fopenmp-targets=nvptx64-nvidia-cuda --cuda-path=${CUDA}
+#TARGET_FLAGS =-fopenmp -fopenmp-targets=nvptx64-nvidia-cuda --cuda-path=${CUDA}
+TARGET_FLAGS =-fopenmp -fopenmp-targets=nvptx64-nvidia-cuda,x86_64
 #TARGET_FLAGS =-fopenmp -lomptarget
 CFLAGS=-g -O2 $(TARGET_FLAGS)
 LDFLAGS=-g $(TARGET_FLAGS)
@@ -35,10 +37,7 @@ install: 	$(TARGET)
 $(TARGET):	$(OBJS) 
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
-matmult.o: matmult.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-matmult_initialize.o: matmult_initialize.c matmult_initialize.h
+matmult.o: matmult.c Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean: 	
