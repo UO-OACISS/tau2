@@ -53,7 +53,7 @@ report:
 
 
 clean: 	
-	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog
+	$(RM) $(OBJS) $(TARGET) report profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog
 
 clean-sos:
 	$(RM) sosd.00*  profile.* profile.0.0* multinodes.json *.btr sosd.log

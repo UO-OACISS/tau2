@@ -3,8 +3,8 @@ set -x
 
 DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-export TAU_PLUGINS=libTAU-sos-plugin.so
-export TAU_PLUGINS_PATH=../../x86_64/lib/shared-mpi-pthread-pdt-sos
+#export TAU_PLUGINS=libTAU-sos-plugin.so
+#export TAU_PLUGINS_PATH=../../x86_64/lib/shared-mpi-pthread-pdt-sos
 
 export SOS_IN_MEMORY_DATABASE=FALSE
 export SOS_EXPORT_DB_AT_EXIT=FALSE
@@ -49,7 +49,6 @@ echo "Launch PyCOOLR"
 stop_sos_daemon
 
 if pgrep -x "matmult" > /dev/null; then
-        #sosd_stop
         pkill mpirun
 fi
 
