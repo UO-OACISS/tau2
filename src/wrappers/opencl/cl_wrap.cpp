@@ -147,9 +147,15 @@ cl_command_queue clCreateCommandQueueWithProperties(cl_context a1, cl_device_id 
   HANDLE_AND_AUTOTIMER(cl_command_queue, clCreateCommandQueueWithProperties, cl_context, cl_device_id, const cl_command_queue_properties *, cl_int *);
   if(a3 == NULL) {
     // If no properties were provided, create a new list that specifies CL_QUEUE_PROFILING_ENABLE.
+#ifdef TAU_DEBUG_OPENCL
+    fprintf(stderr, "clCreateCommandQueueWithProperties with NULL list\n");
+#endif
     cl_queue_properties props[] = {CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0};
     return clCreateCommandQueueWithProperties_h(a1, a2, props, a4);
   } else {
+#ifdef TAU_DEBUG_OPENCL
+    fprintf(stderr, "clCreateCommandQueueWithProperties with non-NULL list\n");
+#endif
     // If a property list was specified, determine if it already has CL_QUEUE_PROPERTIES in it.
     size_t size;
     ssize_t prop_bitmask_index = -1;
@@ -160,6 +166,9 @@ cl_command_queue clCreateCommandQueueWithProperties(cl_context a1, cl_device_id 
     }
     // If so, change the corresponding value to include CL_QUEUE_PROFILING_ENABLE.
     if(prop_bitmask_index != -1) {
+#ifdef TAU_DEBUG_OPENCL
+    fprintf(stderr, "clCreateCommandQueueWithProperties list contained CL_QUEUE_PROFILING_EVENT\n");
+#endif
       cl_queue_properties props[size+1];
       for(size_t i = 0; i < size; ++i) {
         if(i == prop_bitmask_index) {
@@ -171,6 +180,9 @@ cl_command_queue clCreateCommandQueueWithProperties(cl_context a1, cl_device_id 
       props[size] = 0;
       return clCreateCommandQueueWithProperties_h(a1, a2, props, a4);
     } else {
+#ifdef TAU_DEBUG_OPENCL
+    fprintf(stderr, "clCreateCommandQueueWithProperties list did NOT contain CL_QUEUE_PROFILING_EVENT\n");
+#endif
       // If not, extend the list and add CL_QUEUE_PROPERTIES CL_QUEUE_PROFILING_ENABLE to the end.
       cl_queue_properties props[size+3];  
       for(size_t i = 0; i < size; ++i) {
