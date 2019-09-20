@@ -357,17 +357,17 @@ otf2_get_parameters( int    argc,
 
 static void
 check_pointer( void* pointer,
-               char* description,
+               const char* description,
                ... );
 
 static void
 check_status( OTF2_ErrorCode status,
-              char*          description,
+              const char*          description,
               ... );
 
 static void
 check_condition( bool  condition,
-                 char* description,
+                 const char* description,
                  ... );
 
 static void
@@ -1579,7 +1579,7 @@ otf2_print_thumbnails( OTF2_Reader* reader )
  */
 void
 check_pointer( void* pointer,
-               char* description,
+               const char* description,
                ... )
 {
     va_list va;
@@ -1618,7 +1618,7 @@ check_pointer( void* pointer,
  */
 void
 check_status( OTF2_ErrorCode status,
-              char*          description,
+              const char*          description,
               ... )
 {
     va_list va;
@@ -1657,7 +1657,7 @@ check_status( OTF2_ErrorCode status,
  */
 void
 check_condition( bool  condition,
-                 char* description,
+                 const char* description,
                  ... )
 {
     va_list va;
