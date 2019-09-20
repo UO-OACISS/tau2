@@ -52,8 +52,7 @@ is used by default. The options are evpath, sockets and mpi.
 You can also use sockets or evpath instead of mpi.
 You should add sos_flow binaries to your path:
 export PATH=$PATH:$TAU/$architecture/sos/sos_flow_master/inst/bin/
-You may need to also add sqlite3:
-export PATH=$PATH:$TAU/$architecture/sos/chaos/sqlite3/bin/
+
 
 3.Compile the matmult application with the provided Makefile using make.
 make
