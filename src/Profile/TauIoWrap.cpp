@@ -21,6 +21,10 @@
 #include <Profile/TauPin.h>
 #include <stdio.h>
 #include <vector>
+#include <deque>
+#include <utility>
+#include <sys/time.h>
+
 
 using namespace std;
 using namespace tau;
@@ -204,3 +208,216 @@ extern "C" void *Tau_iowrap_getEvent(event_type type, unsigned int fid)
   }
   return iowrap_events[(int)type][fid];
 }
+
+enum io_event_kind {
+    TAU_IO_EVENT_KIND_READ,
+    TAU_IO_EVENT_KIND_WRITE,
+    TAU_IO_NUM_EVENT_KINDS
+};
+
+struct tau_io_wrapper_event {
+    struct timeval t1;
+    struct timeval t2;
+};
+
+#if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER)
+// thread local storage
+static tau_io_wrapper_event * tau_get_io_event_record(void)
+{ 
+  static __thread tau_io_wrapper_event * io_wrapper_event_tls = NULL;
+  if(io_wrapper_event_tls == NULL) {
+    io_wrapper_event_tls = new tau_io_wrapper_event[TAU_IO_NUM_EVENT_KINDS];
+  }
+  return io_wrapper_event_tls; 
+}
+
+typedef std::map<std::string, void*> tfio_write_bytes_map_t;
+
+// thread local storage
+static tfio_write_bytes_map_t * tau_tfio_write_bytes_map(void)
+{ 
+  static __thread tfio_write_bytes_map_t * tfio_write_bytes_map_tls = NULL;
+  if(tfio_write_bytes_map_tls == NULL) {
+    tfio_write_bytes_map_tls = new tfio_write_bytes_map_t();
+  }
+  return tfio_write_bytes_map_tls; 
+}
+
+
+typedef std::map<std::string, void*> tfio_write_bw_map_t;
+
+// thread local storage
+static tfio_write_bw_map_t * tau_tfio_write_bw_map(void)
+{ 
+  static __thread tfio_write_bw_map_t * tfio_write_bw_map_tls = NULL;
+  if(tfio_write_bw_map_tls == NULL) {
+    tfio_write_bw_map_tls = new tfio_write_bw_map_t();
+  }
+  return tfio_write_bw_map_tls; 
+}
+
+typedef std::map<std::string, void*> tfio_read_bytes_map_t;
+
+// thread local storage
+static tfio_read_bytes_map_t * tau_tfio_read_bytes_map(void)
+{ 
+  static __thread tfio_read_bytes_map_t * tfio_read_bytes_map_tls = NULL;
+  if(tfio_read_bytes_map_tls == NULL) {
+    tfio_read_bytes_map_tls = new tfio_read_bytes_map_t();
+  }
+  return tfio_read_bytes_map_tls; 
+}
+
+
+typedef std::map<std::string, void*> tfio_read_bw_map_t;
+
+// thread local storage
+static tfio_read_bw_map_t * tau_tfio_read_bw_map(void)
+{ 
+  static __thread tfio_read_bw_map_t * tfio_read_bw_map_tls = NULL;
+  if(tfio_read_bw_map_tls == NULL) {
+    tfio_read_bw_map_tls = new tfio_read_bw_map_t();
+  }
+  return tfio_read_bw_map_tls; 
+}
+
+
+
+extern "C" {
+
+void Tau_app_report_file_read_start(const char * name, size_t size) {
+    TAU_START("TensorFlow File Read");
+    tau_io_wrapper_event * tau_io_event_record_arr = tau_get_io_event_record();
+    gettimeofday(&(tau_io_event_record_arr[TAU_IO_EVENT_KIND_READ].t1), 0);
+    tfio_read_bytes_map_t * tfio_read_bytes_map = tau_tfio_read_bytes_map();
+    std::string nameStr = std::string(name);
+    if(tfio_read_bytes_map->find(nameStr) == tfio_read_bytes_map->end()) {
+        void *event = 0;
+        char ename[4096];
+        sprintf(ename,"TensorFlow File Read Bytes <file=%s>", name);
+        Tau_pure_context_userevent(&event, ename);
+        tfio_read_bytes_map->insert(std::pair<std::string, void *>(nameStr, event));
+    }
+    tfio_read_bw_map_t * tfio_read_bw_map = tau_tfio_read_bw_map();
+    if(tfio_read_bw_map->find(nameStr) == tfio_read_bw_map->end()) {
+        void *event = 0;
+        char ename[4096];
+        sprintf(ename,"TensorFlow File Read Bandwidth <file=%s>", name);
+        Tau_pure_context_userevent(&event, ename);
+        tfio_read_bw_map->insert(std::pair<std::string, void *>(nameStr, event));
+    }
+}
+
+void Tau_app_report_file_read_stop(const char * name, size_t size) {
+    TAU_STOP("TensorFlow File Read");
+    tau_io_wrapper_event * tau_io_event_record_arr = tau_get_io_event_record();
+    gettimeofday(&(tau_io_event_record_arr[TAU_IO_EVENT_KIND_READ].t2), 0);
+    
+    tfio_read_bytes_map_t * tfio_read_bytes_map = tau_tfio_read_bytes_map();
+    std::string nameStr = std::string(name);
+    tfio_read_bytes_map_t::const_iterator it = tfio_read_bytes_map->find(nameStr);
+    if(it == tfio_read_bytes_map->end()) {
+        fprintf(stderr, "TAU: ERROR: File read stop seen for %s without start!\n", name);
+        return;
+    } 
+    void * bytesEvent = it->second;
+    
+    tfio_read_bw_map_t * tfio_read_bw_map = tau_tfio_read_bw_map();
+    tfio_read_bw_map_t::const_iterator it2 = tfio_read_bw_map->find(nameStr);
+    if(it == tfio_read_bw_map->end()) {
+        fprintf(stderr, "TAU: ERROR: File read stop seen for %s without start!\n", name);
+        return;
+    }
+    void * bwEvent = it2->second;
+    
+    struct timeval t1 = tau_io_event_record_arr[TAU_IO_EVENT_KIND_READ].t1;
+    struct timeval t2 = tau_io_event_record_arr[TAU_IO_EVENT_KIND_READ].t2;
+    double readTime = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+    double bw = size/readTime;
+    
+    TAU_CONTEXT_EVENT(bytesEvent, size);
+    TAU_CONTEXT_EVENT(bwEvent, bw);
+
+}
+
+void Tau_app_report_file_write_start(const char * name, size_t size) {
+    TAU_START("TensorFlow File Write");
+    tau_io_wrapper_event * tau_io_event_record_arr = tau_get_io_event_record();
+    gettimeofday(&(tau_io_event_record_arr[TAU_IO_EVENT_KIND_WRITE].t1), 0);
+    tfio_write_bytes_map_t * tfio_write_bytes_map = tau_tfio_write_bytes_map();
+    std::string nameStr = std::string(name);
+    if(tfio_write_bytes_map->find(nameStr) == tfio_write_bytes_map->end()) {
+        void *event = 0;
+        char ename[4096];
+        sprintf(ename,"TensorFlow File Write Bytes <file=%s>", name);
+        Tau_pure_context_userevent(&event, ename);
+        tfio_write_bytes_map->insert(std::pair<std::string, void *>(nameStr, event));
+    }
+    tfio_write_bw_map_t * tfio_write_bw_map = tau_tfio_write_bw_map();
+    if(tfio_write_bw_map->find(nameStr) == tfio_write_bw_map->end()) {
+        void *event = 0;
+        char ename[4096];
+        sprintf(ename,"TensorFlow File Write Bandwidth <file=%s>", name);
+        Tau_pure_context_userevent(&event, ename);
+        tfio_write_bw_map->insert(std::pair<std::string, void *>(nameStr, event));
+    }
+}
+
+void Tau_app_report_file_write_stop(const char * name, size_t size) {
+    TAU_STOP("TensorFlow File Write");
+    tau_io_wrapper_event * tau_io_event_record_arr = tau_get_io_event_record();
+    gettimeofday(&(tau_io_event_record_arr[TAU_IO_EVENT_KIND_WRITE].t2), 0);
+    
+    tfio_write_bytes_map_t * tfio_write_bytes_map = tau_tfio_write_bytes_map();
+    std::string nameStr = std::string(name);
+    tfio_write_bytes_map_t::const_iterator it = tfio_write_bytes_map->find(nameStr);
+    if(it == tfio_write_bytes_map->end()) {
+        fprintf(stderr, "TAU: ERROR: File write stop seen for %s without start!\n", name);
+        return;
+    } 
+    void * bytesEvent = it->second;
+    
+    tfio_write_bw_map_t * tfio_write_bw_map = tau_tfio_write_bw_map();
+    tfio_write_bw_map_t::const_iterator it2 = tfio_write_bw_map->find(nameStr);
+    if(it == tfio_write_bw_map->end()) {
+        fprintf(stderr, "TAU: ERROR: File write stop seen for %s without start!\n", name);
+        return;
+    }
+    void * bwEvent = it2->second;
+    
+    struct timeval t1 = tau_io_event_record_arr[TAU_IO_EVENT_KIND_WRITE].t1;
+    struct timeval t2 = tau_io_event_record_arr[TAU_IO_EVENT_KIND_WRITE].t2;
+    double writeTime = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+    double bw = size/writeTime;
+    
+    TAU_CONTEXT_EVENT(bytesEvent, size);
+    TAU_CONTEXT_EVENT(bwEvent, bw);
+}
+
+void Tau_app_report_file_open_start(const char * name) {
+    TAU_START("TensorFlow File Open");
+}
+
+void Tau_app_report_file_open_stop(const char * name) {
+    TAU_STOP("TensorFlow File Open");
+}
+
+void Tau_app_report_file_close_start(const char * name) {
+    TAU_START("TensorFlow File Close");
+}
+
+void Tau_app_report_file_close_stop(const char * name) {
+    TAU_STOP("TensorFlow File Close");
+}
+
+void Tau_app_report_file_flush_start(const char * name) {
+    TAU_START("TensorFlow File Flush");
+}
+
+void Tau_app_report_file_flush_stop(const char * name) {
+    TAU_STOP("TensorFlow File Flush");
+}
+ 
+
+}
+#endif // TAU_USE_TLS

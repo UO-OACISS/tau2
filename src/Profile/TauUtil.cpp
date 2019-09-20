@@ -85,6 +85,10 @@ struct HashTable : public TAU_HASH_MAP<unsigned long, HashNode*>
     Tau_init_initializeTAU();
   }
   virtual ~HashTable() {
+    for (auto it = this->cbegin(); it != this->cend() /* not hoisted */; /* no increment */)
+    {
+        this->erase(it++);
+    }
     Tau_destructor_trigger();
   }
 };
@@ -138,7 +142,7 @@ extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_addr
       if(node && node->info.filename && node->info.funcname && node->info.lineno) {
         sprintf(resolved_address, "%s %s [{%s} {%d, 0}]", region_type, node->info.funcname, node->info.filename, node->info.lineno);
       } else if(node && node->info.filename && node->info.funcname) {
-        sprintf(resolved_address, "%s %s [{%s}]", region_type, node->info.funcname, node->info.filename);
+        sprintf(resolved_address, "%s %s [{%s} {0, 0}]", region_type, node->info.funcname, node->info.filename);
       } else if(node && node->info.funcname) {
         sprintf(resolved_address, "%s %s", region_type, node->info.funcname);
       } else {
@@ -175,7 +179,7 @@ extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * res
       if(node && node->info.filename && node->info.funcname && node->info.lineno) {
         sprintf(resolved_address, "%s [{%s} {%d, 0}]", node->info.funcname, node->info.filename, node->info.lineno);
       } else if(node && node->info.filename && node->info.funcname) {
-        sprintf(resolved_address, "%s [{%s}]", node->info.funcname, node->info.filename);
+        sprintf(resolved_address, "%s [{%s} {0, 0}]", node->info.funcname, node->info.filename);
       } else if(node && node->info.funcname) {
         sprintf(resolved_address, "%s", node->info.funcname);
       } else {

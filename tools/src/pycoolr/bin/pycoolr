@@ -1,12 +1,12 @@
 #!/bin/bash
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+DIR="$( cd "$( dirname "$(dirname "${BASH_SOURCE[0]}")" )" >/dev/null && pwd )"/src
+echo $DIR
 tool=
 config=
 
 usage()
 {
- echo "Usage: $0 [REQUIRED] [-tool <beacon|sos>] [OPTIONAL] [-config=full-path-to-config-file]" 1>&2;
+ echo "Usage: $0 [REQUIRED] [-tool=<beacon|sos>] [OPTIONAL] [-config=full-path-to-config-file]" 1>&2;
  exit 1;
 }
 
@@ -57,8 +57,10 @@ elif [[ $PYCOOLR_TOOL = "sos" ]];
    [ -z "$SOS_WORK" ] && echo "Please set the SOS_WORK environment variable" && exit 1;
    if [[ $CONFIG_FILE = "" ]];
    then
+      echo "$DIR/pycoolrgui/pycoolr-plot/coolr.py $DIR/pycoolrgui/pycoolr-plot/configs/sos_mpit.cfg"
       $DIR/pycoolrgui/pycoolr-plot/coolr.py $DIR/pycoolrgui/pycoolr-plot/configs/sos_mpit.cfg
    else
+      echo "$DIR/pycoolrgui/pycoolr-plot/coolr.py $CONFIG_FILE"
       $DIR/pycoolrgui/pycoolr-plot/coolr.py $CONFIG_FILE
    fi
 fi

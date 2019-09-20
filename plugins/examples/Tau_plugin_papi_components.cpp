@@ -131,12 +131,13 @@ namespace tau {
             public:
                 ScopedTimer(const char * name) {
                     _name = strdup(name);
-                    Tau_pure_start(_name);
+                    //Tau_pure_start(_name);
                 }
                 ~ScopedTimer() {
-                    Tau_pure_stop(_name);
+                    //Tau_pure_stop(_name);
+                    free(_name);
                 }
-                const char * _name;
+                char * _name;
         };
     }
 }
@@ -148,9 +149,9 @@ typedef tau::papi_plugin::NetStat netstats_t;
 typedef std::vector<std::pair<std::string, long long> > iostats_t;
 std::vector<ppc*> components;
 
-std::vector<cpustats_t*> * previous_cpu_stats;
-std::vector<netstats_t*> * previous_net_stats;
-iostats_t * previous_io_stats;
+std::vector<cpustats_t*> * previous_cpu_stats = nullptr;
+std::vector<netstats_t*> * previous_net_stats = nullptr;
+iostats_t * previous_io_stats = nullptr;
 
 pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_cond_t _my_cond; // for timer
@@ -229,7 +230,8 @@ bool include_component(const char * component) {
     if (configuration.count(component)) {
         auto json_component = configuration[component];
         if (json_component.count("disable")) {
-            if(json_component["disable"]) { 
+            bool tmp = json_component["disable"];
+            if(tmp) { 
                 return false; 
             }
         }
@@ -248,20 +250,20 @@ void initialize_papi_events(void) {
     for (int component_id = 0 ; component_id < num_components ; component_id++) {
         comp_info = PAPI_get_component_info(component_id);
         if (comp_info == NULL) {
-            TAU_VERBOSE("Error: PAPI component info unavailable, no power measurements will be done.\n");
+            fprintf(stderr, "Warning: PAPI component info unavailable, no measurements will be done.\n");
             return;
         }
         /* Skip the perf_event component, that's standard PAPI */
         if (strstr(comp_info->name, "perf_event") != NULL) {
             continue;
         }
-        TAU_VERBOSE("Found %s component...\n", comp_info->name);
         if (!include_component(comp_info->name)) { return; }
+        TAU_VERBOSE("Found %s component...\n", comp_info->name);
         /* Does this component have available events? */
         if (comp_info->num_native_events == 0) {
-            TAU_VERBOSE("Error: No %s events found.\n", comp_info->name);
+            fprintf(stderr, "Error: No %s events found.\n", comp_info->name);
             if (comp_info->disabled != 0) {
-                TAU_VERBOSE("Error: %s.\n", comp_info->disabled_reason);
+                fprintf(stderr, "Error: %s.\n", comp_info->disabled_reason);
             }        
             continue;
         }
@@ -269,7 +271,7 @@ void initialize_papi_events(void) {
         /* Construct the event set and populate it */
         retval = PAPI_create_eventset(&comp->event_set);
         if (retval != PAPI_OK) {
-            TAU_VERBOSE("Error: Error creating PAPI eventset for %s component.\n", comp_info->name);
+            fprintf(stderr, "Error: Error creating PAPI eventset for %s component.\n", comp_info->name);
             continue;
         }
         int code = PAPI_NATIVE_MASK;
@@ -279,7 +281,7 @@ void initialize_papi_events(void) {
             retval = PAPI_enum_cmp_event( &code, event_modifier, component_id );
             event_modifier = PAPI_ENUM_EVENTS;
             if ( retval != PAPI_OK ) {
-                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__,
+                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__,
                         __LINE__, "PAPI_event_code_to_name", retval );
                 continue;
             }
@@ -287,7 +289,7 @@ void initialize_papi_events(void) {
             char event_name[PAPI_MAX_STR_LEN];
             retval = PAPI_event_code_to_name( code, event_name );
             if (retval != PAPI_OK) {
-                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__,
+                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__,
                         __LINE__, "Error getting event name\n",retval);
                 continue;
             }
@@ -298,7 +300,7 @@ void initialize_papi_events(void) {
             PAPI_event_info_t evinfo;
             retval = PAPI_get_event_info(code,&evinfo);
             if (retval != PAPI_OK) {
-                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__,
+                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__,
                         __LINE__, "Error getting event info\n",retval);
                 continue;
             }
@@ -324,7 +326,7 @@ void initialize_papi_events(void) {
             }
             retval = PAPI_add_event(comp->event_set, code);
             if (retval != PAPI_OK) {
-                TAU_VERBOSE("Error: Error adding PAPI %s event %s.\n", comp_info->name, event_name);
+                fprintf(stderr, "Error: Error adding PAPI %s event %s.\n", comp_info->name, event_name);
                 return;
             }
             comp->events.push_back(std::move(this_event));
@@ -332,7 +334,7 @@ void initialize_papi_events(void) {
         /* Start the event set */
         retval = PAPI_start(comp->event_set);
         if (retval != PAPI_OK) {
-            TAU_VERBOSE("Error: Error starting PAPI eventset.\n");
+            fprintf(stderr, "Error: Error starting PAPI eventset.\n");
             return;
         }
         comp->initialized = true;
@@ -518,8 +520,66 @@ void parse_proc_meminfo() {
                 }
             }
             if (include_event("/proc/meminfo", ss.str().c_str())) {
-                void * ue = find_user_event(ss.str());
-                Tau_userevent_thread(ue, d1, 0);
+                if (TauEnv_get_tracing()) {
+                    Tau_trigger_userevent(ss.str().c_str(), d1);
+                } else {
+                    void * ue = find_user_event(ss.str());
+                    Tau_userevent_thread(ue, d1, 0);
+                }
+            }
+        }
+    }
+    fclose(f);
+  }
+  return;
+}
+
+void parse_proc_self_statm() {
+  tau::papi_plugin::ScopedTimer(__func__);
+  if (!include_component("/proc/self/statm")) { return; }
+  FILE *f = fopen("/proc/self/statm", "r");
+  if (f) {
+    char line[4096] = {0};
+    while ( fgets( line, 4096, f)) {
+        std::string tmp(line);
+        std::istringstream iss(tmp);
+        std::vector<std::string> results(std::istream_iterator<std::string>{iss},
+                                         std::istream_iterator<std::string>());
+        std::string& value = results[0];
+        char* pEnd;
+        double d1 = strtod (value.c_str(), &pEnd);
+        if (pEnd) { 
+            if (include_event("/proc/self/statm", "program size (kB)")) {
+                if (TauEnv_get_tracing()) {
+                    Tau_trigger_userevent("program size (kB)", d1);
+                } else {
+                    void * ue = find_user_event("program size (kB)");
+                    Tau_userevent_thread(ue, d1, 0);
+                }
+            }
+        }
+        value = results[1];
+        d1 = strtod (value.c_str(), &pEnd);
+        if (pEnd) { 
+            if (include_event("/proc/self/statm", "resident set size (kB)")) {
+                if (TauEnv_get_tracing()) {
+                    Tau_trigger_userevent("resident set size (kB)", d1);
+                } else {
+                    void * ue = find_user_event("resident set size (kB)");
+                    Tau_userevent_thread(ue, d1, 0);
+                }
+            }
+        }
+        value = results[2];
+        d1 = strtod (value.c_str(), &pEnd);
+        if (pEnd) { 
+            if (include_event("/proc/self/statm", "resident shared pages")) {
+                if (TauEnv_get_tracing()) {
+                    Tau_trigger_userevent("resident shared pages", d1);
+                } else {
+                    void * ue = find_user_event("resident shared pages");
+                    Tau_userevent_thread(ue, d1, 0);
+                }
             }
         }
     }
@@ -536,7 +596,6 @@ void sample_value(const char * component, const char * cpu, const char * name,
     if (!include_event(component, ss.str().c_str())) {
         return;
     }
-    void * ue = find_user_event(ss.str());
     // double-check the value...
     double tmp;
     if (total == 0LL) {
@@ -544,7 +603,12 @@ void sample_value(const char * component, const char * cpu, const char * name,
     } else {
         tmp = (value / (double)(total)) * 100.0;
     }
-    Tau_userevent_thread(ue, tmp, 0);
+    if (TauEnv_get_tracing()) {
+        Tau_trigger_userevent(ss.str().c_str(), tmp);
+    } else {
+        void * ue = find_user_event(ss.str());
+        Tau_userevent_thread(ue, tmp, 0);
+    }
 }
 
 void update_cpu_stats(void) {
@@ -581,13 +645,16 @@ void update_cpu_stats(void) {
         sample_value("/proc/stat", (*new_stats)[i]->name, " Steal %",    (double)(diff.steal), total);
         sample_value("/proc/stat", (*new_stats)[i]->name, " Guest %",    (double)(diff.guest), total);
     }
-    delete(previous_cpu_stats);
+    for (auto it : *previous_cpu_stats) {
+        delete it;
+    }
+    delete previous_cpu_stats;
     previous_cpu_stats = new_stats;
 }
 
 void update_net_stats(void) {
     tau::papi_plugin::ScopedTimer(__func__);
-    if (!include_component("/proc/stat")) { return; }
+    if (!include_component("/proc/net/dev")) { return; }
     /* get the current stats */
     std::vector<netstats_t*> * new_stats = read_net_stats();
     if (new_stats == NULL) return;
@@ -627,7 +694,10 @@ void update_net_stats(void) {
         diff.transmit_compressed = (*new_stats)[i]->transmit_compressed - (*previous_net_stats)[i]->transmit_compressed;
         sample_value("/proc/net/dev",(*new_stats)[i]->name, "tx:compressed",     (double)(diff.transmit_compressed), 1LL);
     }
-    delete(previous_net_stats);
+    for (auto it : *previous_net_stats) {
+        delete it;
+    }
+    delete previous_net_stats;
     previous_net_stats = new_stats;
 }
 
@@ -639,13 +709,10 @@ void update_io_stats(void) {
     if (new_stats == NULL) return;
     for (int i = 0 ; i < new_stats->size() ; i++) {
         /* we need to take the difference from the last read */
-        iostats_t diff;
-        for (int i = 0 ; i < new_stats->size() ; i++) {
-            long long tmplong = (*new_stats)[i].second - (*previous_io_stats)[i].second;
-            sample_value("/proc/self/io", "io", (*new_stats)[i].first.c_str(), (double)(tmplong), 1LL);
-        }
+        long long tmplong = (*new_stats)[i].second - (*previous_io_stats)[i].second;
+        sample_value("/proc/self/io", "io", (*new_stats)[i].first.c_str(), (double)(tmplong), 1LL);
     }
-    delete(previous_io_stats);
+    delete previous_io_stats;
     previous_io_stats = new_stats;
 }
 
@@ -658,12 +725,18 @@ void read_papi_components(void) {
             long long * values = (long long *)calloc(comp->events.size(), sizeof(long long));
             int retval = PAPI_read(comp->event_set, values);
             if (retval != PAPI_OK) {
-                TAU_VERBOSE("Error: Error reading PAPI %s eventset.\n", comp->name);
+                fprintf(stderr, "Error: Error reading PAPI %s eventset.\n", comp->name.c_str());
                 return;
             }
             for (size_t i = 0 ; i < comp->events.size() ; i++) {
-                void * ue = find_user_event(comp->events[i].name);
-                Tau_userevent_thread(ue, ((double)values[i]) * comp->events[i].conversion, 0);
+                if (TauEnv_get_tracing()) {
+                    Tau_trigger_userevent(comp->events[i].name.c_str(),
+                        ((double)values[i]) * comp->events[i].conversion);
+                } else {
+                    void * ue = find_user_event(comp->events[i].name);
+                    Tau_userevent_thread(ue,
+                        ((double)values[i]) * comp->events[i].conversion, 0);
+                }
             }
             free(values);
         }
@@ -678,6 +751,8 @@ void read_papi_components(void) {
     Tau_track_memory_rss_and_hwm();
     /* Get current io stats for the process */
     update_io_stats();
+    /* Parse memory stats */
+    parse_proc_self_statm();
 #endif
 
     if (my_rank == rank_getting_system_data) {
@@ -708,20 +783,20 @@ void free_papi_components(void) {
             long long * values = (long long *)calloc(comp->events.size(), sizeof(long long));
             int retval = PAPI_stop(comp->event_set, values);
             if (retval != PAPI_OK) {
-                TAU_VERBOSE("Error: Error reading PAPI %s eventset.\n", comp->name);
+                fprintf(stderr, "Error: Error reading PAPI %s eventset.\n", comp->name.c_str());
                 return;
             }
             free(values);
             /* Done, clean up */
             retval = PAPI_cleanup_eventset(comp->event_set);
             if (retval != PAPI_OK) {
-                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__, __LINE__,
+                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__, __LINE__,
                         "PAPI_cleanup_eventset()",retval);
             }
 
             retval = PAPI_destroy_eventset(&(comp->event_set));
             if (retval != PAPI_OK) {
-                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__, __LINE__,
+                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__, __LINE__,
                         "PAPI_destroy_eventset()",retval);
             }
             comp->initialized = false;
@@ -831,6 +906,21 @@ int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_exe
         free_papi_components();
     }
 #endif
+    if (previous_cpu_stats != nullptr) {
+        for (auto it : *previous_cpu_stats) {
+            delete it;
+        }
+        delete previous_cpu_stats;
+    }
+    if (previous_net_stats != nullptr) {
+        for (auto it : *previous_net_stats) {
+            delete it;
+        }
+        delete previous_net_stats;
+    }
+    if (previous_io_stats != nullptr) {
+        delete previous_io_stats;
+    }
     /* Why do these deadlock on exit? */
     //pthread_cond_destroy(&_my_cond);
     //pthread_mutex_destroy(&_my_mutex);
@@ -945,6 +1035,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     cb->AtomicEventTrigger = Tau_plugin_event_atomic_trigger_papi_component;
 
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
+    free (cb);
 
     return 0;
 }

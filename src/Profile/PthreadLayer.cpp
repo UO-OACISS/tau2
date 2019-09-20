@@ -219,14 +219,22 @@ struct tau_pthread_pack
   void * arg;
 };
 
+extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address);
+
 extern "C"
 void * tau_pthread_function(void *arg)
 {
   tau_pthread_pack * pack = (tau_pthread_pack*)arg;
   TAU_REGISTER_THREAD();
   Tau_create_top_level_timer_if_necessary();
-
+  /* Create a timer that will measure this spawned thread */
+  char timerName[1024] = {0};
+  Tau_ompt_resolve_callsite_eagerly((unsigned long)(pack->start_routine), timerName);
+  void *handle = NULL;
+  TAU_PROFILER_CREATE(handle, timerName, "", TAU_DEFAULT);
+  TAU_PROFILER_START(handle);
   void * ret = pack->start_routine(pack->arg);
+  TAU_PROFILER_STOP(handle);
 #ifndef TAU_TBB_SUPPORT
   // Thread 0 in TBB will not wait for the other threads to finish
   // (it does not join). DO NOT stop the timer for this thread, but
@@ -237,6 +245,9 @@ void * tau_pthread_function(void *arg)
   delete pack;
   return ret;
 }
+
+/* Forward declaration to see if TAU thinks GPU initialization is done */
+bool& Tau_gpu_initialized(void);
 
 extern "C"
 int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
@@ -277,7 +288,7 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
   bool ignore_thread = false;
 #ifdef TAU_GPU
   ignore_thread = !Tau_gpu_initialized();
-  printf("ignore_thread = %d\n", ignore_thread);
+  //printf("ignore_thread = %d\n", ignore_thread);
 #endif
   if(*wrapped || Tau_global_getLightsOut() ||
      !Tau_init_check_initialized() || ignore_thread) {

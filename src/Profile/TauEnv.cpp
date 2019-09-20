@@ -2236,9 +2236,14 @@ void TauEnv_initialize()
     sprintf(tmpstr,"%s",value?"on":"off");
     TAU_METADATA("OMP_DYNAMIC", tmpstr);
 
-    value = omp_get_nested();
-    sprintf(tmpstr,"%s",value?"on":"off");
+#if TAU_OPENMP_NESTED
+    //value = omp_get_nested();
+    value = omp_get_max_active_levels();
+    sprintf(tmpstr,"%s",value>1?"on":"off");
     TAU_METADATA("OMP_NESTED", tmpstr);
+#else
+    TAU_METADATA("OMP_NESTED", "off");
+#endif
 
 #if defined(omp_get_thread_limit)
     value = omp_get_thread_limit();

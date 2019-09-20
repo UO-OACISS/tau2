@@ -48,10 +48,6 @@ static TauContextUserEvent *PowerUtilizationEvent;
 static uint32_t recentKernelId = -1;
 static uint32_t recentCorrelationId = -1;
 
-static bool _initialized = false;
-
-bool& Tau_gpu_initialized(void) { printf("initialized: %d\n", _initialized); return _initialized; }
-
 int number_of_tasks = 0;
 int number_of_top_level_task_events = 0;
 
@@ -400,7 +396,7 @@ int get_task(GpuEvent *new_task)
 
 void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
 {
-#if defined(PTHREADS)
+#if defined(PTHREADS) || defined(TAU_OPENMP)
   int task = id->getTaskId(); 
 #else
   int task = get_task(id);
@@ -755,6 +751,9 @@ void Tau_gpu_register_imix_event(GpuEvent *event, double startTime, double endTi
   }
 }
 
+/* Forward declaration of function to let TAU know we are done initializing */
+void Tau_gpu_initialized(bool init);
+
 /*
  Initialization routine for TAU
  */
@@ -772,7 +771,7 @@ void Tau_gpu_init(void)
   Tau_get_context_userevent((void **) &MemoryOps, "Memory Operations");
   Tau_get_context_userevent((void **) &ControlOps, "Control Operations");
 
-  _initialized = true;
+  Tau_gpu_initialized(true);
 }
 
 /*

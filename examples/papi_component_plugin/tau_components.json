@@ -20,6 +20,7 @@
     "include": [".*eno1.*"]
   },
   "nvml": {
+    "disable": true,
     "comment": "This will include only the utilization metrics.",
     "include": [".*utilization.*"]
   }

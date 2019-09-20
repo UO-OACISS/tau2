@@ -28,7 +28,7 @@ TAGS
 .configure_env
 .active_stub
 .active_stubs
-
+.nfs*
 # Ignore build files
 tools/src/android/dexInjector/*.jar
 tools/src/android/dexInjector/edu

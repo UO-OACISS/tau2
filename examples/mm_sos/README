@@ -2,23 +2,111 @@ This is an example illustrating the integration of SOS with
 MPI via TAU's plugin architecture.
 
 
+
 Steps to build and run the example:
-1.TAU should be configured using the following options:
-./configure -bdf=download -pthread -mpi -sos=$SOS_INSTALL_PATH -pdt=$PDTOOLKIT_PATH
-2.SOS_flow should be installed, compatibility with Python in SOS is not needed. 
+
+1.SOS_flow should be installed, compatibility with Python in SOS is not needed.
+Python can be disabled with -DSOS_ENABLE_PYTHON=OFF
+
+----- IMPORTANT: You can skip to step "2" if you use tau's options
+-sos=download -soscomm={evpath,mpi,sockets}
+
+
 Install SOS_flow using the following steps:
-2a.Instal EVPATH from:
+1-a.Instal EVPATH from:
 https://www.cc.gatech.edu/systems/projects/EVPath/
-2b.Download SOS_flow from:
+1-b.Download SOS_flow from:
 https://github.com/cdwdirect/sos_flow
-3b.Install SOS_flow with:
-cmake -DEVPath_DIR=$EVPATH_DIR -DCMAKE_INSTALL_PREFIX=$SOS_INSTALL_DIR ../sos_flow
+1-c.Create two directories, one to build and another for the installation:
+mkdir build
+mkdir install
+cd  build
+1-d.Install SOS_flow(modify the paths as necessary):
+cmake -DEVPath_DIR=../../EVPath \
+	-DCMAKE_INSTALL_PREFIX=../install \
+	-DSOS_CLOUD_SYNC_WITH_SOCKET=OFF \
+        -DSOS_CLOUD_SYNC_WITH_MPI=OFF \
+        -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF \
+        -DSOS_CLOUD_SYNC_WITH_EVPATH=ON \
+	../sos_flow
+------ IMPORTANT:
+If you want to install SOS_flow without EVPath, you can use another communication methods,
+like openmpi: 
+cmake -DCMAKE_INSTALL_PREFIX=$SOS_INSTALL_DIR \
+	-DSOS_CLOUD_SYNC_WITH_SOCKET=OFF \
+        -DSOS_CLOUD_SYNC_WITH_MPI=ON \
+        -DSOS_CLOUD_SYNC_WITH_ZEROMQ=OFF \
+        -DSOS_CLOUD_SYNC_WITH_EVPATH=OFF \
+	 ../sos_flow
+
+
+2.TAU should be configured using the following options:
+./configure -dwarf=download -bdf=download -pthread -mpi -sos=$SOS_INSTALL_PATH -pdt=$PDTOOLKIT_PATH 
+If you skipped step 1., use -sos=download, the flag -soscomm allows to change communicators, MPI 
+is used by default. The options are evpath, sockets and mpi.
+./configure -dwarf=download -bdf=download -pthread -mpi -sos=download -soscomm=mpi -pdt=$PDTOOLKIT_PATH
+------ IMPORTANT: To select a compiler, like intel, add the flags -pdt_c++=g++ -c++=icpc -cc=icc 
+------ You do not need to recompile pdt, if it was compiled with g++, use -pdt_c++=g++
+------ In this case python for SOS_flow will be disabled to increase compatibility.
+
+You can also use sockets or evpath instead of mpi.
+You should add sos_flow binaries to your path:
+export PATH=$PATH:$TAU/$architecture/sos/sos_flow_master/inst/bin/
+You may need to also add sqlite3:
+export PATH=$PATH:$TAU/$architecture/sos/chaos/sqlite3/bin/
+
 3.Compile the matmult application with the provided Makefile using make.
-4.In another terminal load the SOS daemon with:
-./simple-sos.sh
+make
+
+------- IMPORTANT: before compiling, check the number of iterations in matmult.c:
+* for simple-app* use a low number, i.e.: 10
+* for simple-pycoolr.sh use a big number, i.e.: 100 to have time to select metrics,
+and see how the values change.
+
+4.Now, modify the first line of report_compile.sh with the PATH to SOS and
+compile the report script with:
+./report_compile.sh
+------- IMPORTANT: if it fails to compile, change the PATH references so SOS_PATH
+------- points to the full path of the installation of SOS: $TAU_PATH/$architecture/
+------- sos/sos_flow_master/inst
+
+5.First remove the files from previous executions and then load the SOS daemon with:
+First load the enviromental variables of SOS and then clean the directory to remove
+the data of previous executions:
+source sosd.env.sourceme && ./clean.sh
+Now, execute SOS:
+./simple-sosmpi1node.sh &
 When the daemon is running, it will show you the Version, the machine it is being 
 executed on and other information.
-5. Once the daemon is running, execute your application with:
-./simple-app.sh
-6.Once the application finished, the daemon will close and the database will be 
-queried to check code related performance data.
+
+6.Once the daemon is running, execute your application with:
+./simple-app-x86-mpi1node.sh
+if you are using another architecture look for the ibm or arm script,
+if the target architecture is not available, change the line
+	export TAU_PLUGINS_PATH=
+inside the script.
+After the application finishes, you should stop the report with control+c as
+it doesn't know when the application ends, to stop the daemons you should execute:
+     if you are using MPI as the communicator
+	env SOS_CMD_PORT=22501 sosd_stop
+     if you are using another communicator
+	./simple_stop.sh
+
+
+
+
+7.Also, it is possible to see how TAU metrics change over time in a GUI using 
+pycoolr, to do this, execute the following command:
+./simple-pycoolr.sh
+and when pycoolr opens, you can select the metrics. The number after the metric 
+name is the process number in which that counter is measured.
+
+There is another difference between simple-sos+simple-app and simple-pycoolr. 
+In simple-sos+simple-app, the database is generated in memory and it is written to 
+disk after SOS_flow is stopped with sosd_stop or simple_stop.sh. In the case of
+simple-pycoolr, the dabatase is created in disk at the beginning and when data is 
+added to the database, it is written to disk. This cahnge is due to the flags
+SOS_IN_MEMORY_DATABASE=FALSE
+SOS_EXPORT_DB_AT_EXIT=FALSE
+in simple-pycoolr.sh, as pycoolr can be used with other tools, it needs reads
+a database stored in disk.

@@ -33,6 +33,11 @@ if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_linux" ] || [ "$MACHINE" = 
 	fi
 fi
 
+if [ "$MACHINE" = "craycnl"  -a "`uname -m`" = "aarch64" ]; then
+        if [ "$FLAGJOGL1" != "1" ]; then
+                FLAGJOGL2=1
+        fi
+fi
 
 JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
 
@@ -44,7 +49,7 @@ fi
 
 # If 3D window has problems, please uncomment
 #if [ $MACHINE = bgq -o $MACHINE = arm_linux ]; then
-#export LIBGL_ALWAYS_INDIRECT=1
+export LIBGL_ALWAYS_INDIRECT=1
 #fi
 
 APPLE_OPTIONS=""
@@ -199,4 +204,5 @@ fi
 $BINDIR/tau_user_setup.sh
 
 # Launch!
-java $MEMORY  -Dsun.java2d.opengl=true  -Dderby.system.home=${HOME}/.ParaProf -Dpython.home=$JAR_HOME/jython -Dpython.verbose=error -Djava.library.path=${LIBDIR}:${javaLocation} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf -j $JARDIR -c $SCHEMADIR $*	
+# Removed: -Dsun.java2d.opengl=true
+java $MEMORY  -Dderby.system.home=${HOME}/.ParaProf -Dpython.home=$JAR_HOME/jython -Dpython.verbose=error -Djava.library.path=${LIBDIR}:${javaLocation} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf -j $JARDIR -c $SCHEMADIR $*	
