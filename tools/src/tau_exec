@@ -759,7 +759,7 @@ if [ $adios2_trace = "true" ]; then
 fi
 
 if [ $sos = "true" ]; then
-    export TAU_PLUGINS=libTAU-sos-plugin.so
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-sos-plugin.so
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
 fi
 
