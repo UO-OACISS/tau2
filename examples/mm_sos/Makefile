@@ -48,6 +48,15 @@ matmult.o: matmult.c
 matmult_initialize.o: matmult_initialize.c matmult_initialize.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+report:
+	mpicc report.c -L$(SOSDIR)/lib -lsos -Wl,-rpath,$(SOSDIR)/lib -I$(SOSDIR)/include/ -o report
+
+
 clean: 	
 	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog
+
+clean-sos:
+	$(RM) sosd.00*  profile.* profile.0.0* multinodes.json *.btr sosd.log
+
+
 ##############################################

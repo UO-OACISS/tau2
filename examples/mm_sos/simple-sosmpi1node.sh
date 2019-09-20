@@ -45,5 +45,5 @@ stop_sos_daemon()
 }
 
 #stop_sos_daemon
-./clean.sh
+make clean-sos
 start_sos_daemon
