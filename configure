@@ -876,7 +876,7 @@ for arg in "$@"; do
 	    echo "                                                          Symbol Table."
 	    echo "-stff=<dir> .... Location of RENCI Scalable Time-series filter library."
 	    echo "-sddf=<dir> ...... SDDF library location; Only required for RENCI STFF."
-	    echo "-sos=<dir> ........................... Use Scalable Observation System."
+	    echo "-sos=<dir | download>................. Use Scalable Observation System."
 	    echo "-soscomm=<comm>..communicatiors between SOS daemons[mpi,sockets,evpath]"
 	    #    echo "-TRACE ..................................... Generate TAU event traces."
 	    #    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
