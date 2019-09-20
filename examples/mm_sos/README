@@ -63,28 +63,20 @@ make
 * for simple-pycoolr.sh use a big number, i.e.: 100 to have time to select metrics,
 and see how the values change.
 
-4.Now, modify the first line of report_compile.sh with the PATH to SOS and
-compile the report script with:
-./report_compile.sh
-------- IMPORTANT: if it fails to compile, change the PATH references so SOS_PATH
-------- points to the full path of the installation of SOS: $TAU_PATH/$architecture/
-------- sos/sos_flow_master/inst
+4.Compile the report script with:
+make report
 
 5.First remove the files from previous executions and then load the SOS daemon with:
 First load the enviromental variables of SOS and then clean the directory to remove
 the data of previous executions:
-source sosd.env.sourceme && ./clean.sh
+source sosd.env.sourceme && make clean-sos
 Now, execute SOS:
 ./simple-sosmpi1node.sh &
 When the daemon is running, it will show you the Version, the machine it is being 
 executed on and other information.
 
 6.Once the daemon is running, execute your application with:
-./simple-app-x86-mpi1node.sh
-if you are using another architecture look for the ibm or arm script,
-if the target architecture is not available, change the line
-	export TAU_PLUGINS_PATH=
-inside the script.
+./simple-app-mpi1node.sh
 After the application finishes, you should stop the report with control+c as
 it doesn't know when the application ends, to stop the daemons you should execute:
      if you are using MPI as the communicator
