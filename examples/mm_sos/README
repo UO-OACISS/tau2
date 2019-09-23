@@ -50,6 +50,8 @@ is used by default. The options are evpath, sockets and mpi.
 ------ In this case python for SOS_flow will be disabled to increase compatibility.
 
 You can also use sockets or evpath instead of mpi.
+
+------ IMPORTANT:
 You should add sos_flow binaries to your path:
 export PATH=$PATH:$TAU/$architecture/sos/sos_flow_master/inst/bin/
 
@@ -91,6 +93,10 @@ pycoolr, to do this, execute the following command:
 ./simple-pycoolr.sh
 and when pycoolr opens, you can select the metrics. The number after the metric 
 name is the process number in which that counter is measured.
+------ IMPORTANT: There is an sleep between the application executed with tau and
+the execution of pycoolr, this sleep is important to give tau enough time to
+publish the necessary data to know which metrics are available.
+
 
 There is another difference between simple-sos+simple-app and simple-pycoolr. 
 In simple-sos+simple-app, the database is generated in memory and it is written to 
