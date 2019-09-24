@@ -880,18 +880,12 @@ void TAU_SOS_send_data(bool finalizing) {
     }
     // Make sure we have a pub handle */
     assert(tau_sos_pub);
-    // Update these now, WITHOUT a signal. Signals are TROUBLE.
-    // However, that means we have to duplicate code, because we don't want
-    // the measurement on *this* thread, but on thread 0.
-    Tau_trigger_context_event_thread("Heap Memory Used (KB)", Tau_max_RSS(), 0);
-  	static int fd=Tau_open_status();
-    long long vmrss, vmhwm;
-    Tau_read_status(fd, &vmrss, &vmhwm);
-    if (vmrss > 0)
-    	Tau_trigger_context_event_thread("Memory Footprint (VmRSS) (KB)", (double)vmrss, 0);
-    if (vmhwm > 0)
-    	Tau_trigger_context_event_thread("Peak Memory Usage Resident Set Size (VmHWM) (KB)", (double)vmhwm, 0);
-    TauTrackLoadHere();
+    /* records the heap, with no context, even though it says "here". */
+    Tau_track_memory_here();
+    /* records the rss/hwm, without context. */
+    Tau_track_memory_rss_and_hwm();
+    /* records the load, without context */
+    Tau_track_load();
     /* Only send a profile update if we aren't tracing */
     if (finalizing || 
         (!thePluginOptions().env_sos_tracing && 
