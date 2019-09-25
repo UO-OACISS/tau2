@@ -51,38 +51,40 @@ int main(int argc, char **argv) {
             printf("== test.c: Sending query to SOS @ port %d...\n", sos_port_env);
         }
 
-	int new_frame;
-	do
-	{
-	    SOSA_results *manifest = NULL;
- 	    new_frame = 0;
-	    int max_frame_overall = 0;
+    	int new_frame;
+    	do
+    	{
+    	    SOSA_results *manifest = NULL;
+     	    new_frame = 0;
+    	    int max_frame_overall = 0;
             char pub_title_filter[2048] = {0};	    
-	    manifest = NULL;
-     	    SOSA_request_pub_manifest( sos, (SOSA_results **) &manifest, &max_frame_overall,
+    	    manifest = NULL;
+         	SOSA_request_pub_manifest( sos, (SOSA_results **) &manifest, &max_frame_overall,
             pub_title_filter, sos->daemon->remote_host, atoi(sos->daemon->remote_port));
-	    if(max_frame_overall > frame )
-	    {
-		new_frame = 1;
-	    	printf("manifest (max frame: %d)\n", max_frame_overall);
-	    }
-	    SOSA_results_destroy(manifest);
-	}while(!new_frame);
+    	    if(max_frame_overall > frame )
+    	    {
+    		    new_frame = 1;
+    	    	//printf("manifest (max frame: %d)\n", max_frame_overall);
+                printf("\nNew frame published, requesting data:\n");
+    	    }
+    	    SOSA_results_destroy(manifest);
+    	}while(!new_frame);
 
 
-	char my_query[1024];
-	snprintf(my_query, 1024, 
+	    char my_query[1024];
+	    snprintf(my_query, 1024, 
 		"SELECT node_id, comm_rank, frame, value_name, value " \
 		"FROM viewCombined WHERE (frame == %d ) " \
-		"AND (value_name like \"\%Mean:System load : .TAU application\"" \
-			" OR value_name like \"\%MAX:Memory Footprint (VmRSS) (KB) : .TAU application\")" \
+		"AND (value_name like \"\%Mean:Memory Footprint\%\"" \
+			" OR value_name like \"\%Mean:System load\")" \
 		" ORDER by frame, value_name;", frame);
-	//printf("%s\n", my_query);
+	    //printf("%s\n", my_query);
         SOSA_exec_query(sos, my_query, sos->config.daemon_host, sos_port_env);
-	frame++; 
+	    frame++; 
         while (!g_done) {
-   	    usleep(100000);
+       	    usleep(100000);
         }
+        g_done = 0;
     }
 
 

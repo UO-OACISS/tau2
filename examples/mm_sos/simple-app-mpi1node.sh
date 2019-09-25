@@ -25,3 +25,9 @@ mpirun \
 #Connect to the aggregator and report the selected metrics, the metrics can be changed 
 #in report.c
 env SOS_CMD_PORT=20690 ./report
+
+
+
+#Check database with
+#sqlite3 sosd.00000.db "SELECT frame, value_name, comm_rank,value from viewCombined WHERE (frame>0 )) ORDER BY value_name, frame, comm_rank ;"
+#SOS should be stopped before the command is executed
