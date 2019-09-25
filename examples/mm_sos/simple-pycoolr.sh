@@ -57,7 +57,7 @@ sleep 5
 
 #Execute pycoolr from tools directory
 echo "Launch PyCOOLR"
-../../tools/src//pycoolr/bin/pycoolr -tool=sos 
+pycoolr -tool=sos 
 
 #If pycoolr is close before the application finished, stop 
 #SOS daemon and the application
