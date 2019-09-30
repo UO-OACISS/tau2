@@ -1139,6 +1139,8 @@ extern "C" void Tau_enable_plugin_for_specific_event(int ev, const char *name, u
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
   plugins_for_named_specific_event[key].insert(id);
+  if(plugins_for_ompt_event[ev].is_ompt())
+    plugins_for_ompt_event[ev].insert(id);
   RtsLayer::UnLockDB();
 
 }
@@ -1150,6 +1152,8 @@ extern "C" void Tau_disable_plugin_for_specific_event(int ev, const char *name, 
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
   plugins_for_named_specific_event[key].erase(id);
+  if(plugins_for_ompt_event[ev].is_ompt())
+    plugins_for_ompt_event[ev].erase(id);
   RtsLayer::UnLockDB();
 
 }
@@ -1161,6 +1165,8 @@ extern "C" void Tau_disable_all_plugins_for_specific_event(int ev, const char *n
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
   plugins_for_named_specific_event[key].clear();
+  if(plugins_for_ompt_event[ev].is_ompt())
+    plugins_for_ompt_event[ev].clear();
   RtsLayer::UnLockDB();
 }
 
@@ -1174,6 +1180,13 @@ extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *na
   for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
     plugins_for_named_specific_event[key].insert(i);
   }
+
+  if(plugins_for_ompt_event[ev].is_ompt()) {
+    for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
+        plugins_for_ompt_event[ev].insert(i);
+    }
+  }
+
   RtsLayer::UnLockDB();
 }
 

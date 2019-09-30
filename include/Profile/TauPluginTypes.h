@@ -159,8 +159,8 @@ typedef struct Tau_plugin_event_trigger_data {
 
 typedef struct Tau_plugin_event_ompt_parallel_begin_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-   ompt_data_t *parent_task_data;
-   const ompt_frame_t *parent_task_frame;
+   ompt_data_t *encountering_task_data;
+   const ompt_frame_t *encountering_task_frame;
    ompt_data_t* parallel_data;
    uint32_t requested_team_size;
 #if defined (TAU_USE_OMPT_TR6)
@@ -181,7 +181,7 @@ typedef struct Tau_plugin_event_ompt_parallel_begin_data {
 typedef struct Tau_plugin_event_ompt_parallel_end_data {
 #ifdef TAU_PLUGIN_OMPT_ON
    ompt_data_t *parallel_data;
-   ompt_data_t *task_data;
+   ompt_data_t *encountering_task_data;
 #if defined (TAU_USE_OMPT_TR6)
    ompt_invoker_t invoker;
 #endif /* TAU_USE_OMPT_TR6 */
@@ -199,8 +199,8 @@ typedef struct Tau_plugin_event_ompt_parallel_end_data {
 
 typedef struct Tau_plugin_event_ompt_task_create_data {
 #ifdef TAU_PLUGIN_OMPT_ON
-   ompt_data_t *parent_task_data;
-   const ompt_frame_t *parent_frame;
+   ompt_data_t *encountering_task_data;
+   const ompt_frame_t *encountering_frame;
    ompt_data_t* new_task_data;
    int type;
    int has_dependences;
@@ -361,6 +361,13 @@ typedef struct Tau_plugin_event_ompt_mutex_released_data {
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_mutex_released_data_t;
 
+typedef struct Tau_plugin_event_ompt_finalize_data {
+   /* TODO: Give a custom tool_data to tools and give it back in this callback */
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++ */
+   int null;
+} Tau_plugin_event_ompt_finalize_data_t;
+
 /*Define callbacks for specific events*/
 typedef int (*Tau_plugin_function_registration_complete)(Tau_plugin_event_function_registration_data_t*);
 typedef int (*Tau_plugin_metadata_registration_complete)(Tau_plugin_event_metadata_registration_data_t*);
@@ -395,6 +402,7 @@ typedef int (*Tau_plugin_ompt_sync_region)(Tau_plugin_event_ompt_sync_region_dat
 typedef int (*Tau_plugin_ompt_mutex_acquire)(Tau_plugin_event_ompt_mutex_acquire_data_t*);
 typedef int (*Tau_plugin_ompt_mutex_acquired)(Tau_plugin_event_ompt_mutex_acquired_data_t*);
 typedef int (*Tau_plugin_ompt_mutex_released)(Tau_plugin_event_ompt_mutex_released_data_t*);
+typedef int (*Tau_plugin_ompt_finalize)(Tau_plugin_event_ompt_finalize_data_t*);
 
 
 /*Define the callback structure*/
@@ -432,6 +440,7 @@ typedef struct Tau_plugin_callbacks {
    Tau_plugin_ompt_mutex_acquire OmptMutexAcquire;
    Tau_plugin_ompt_mutex_acquired OmptMutexAcquired;
    Tau_plugin_ompt_mutex_released OmptMutexReleased;
+   Tau_plugin_ompt_finalize OmptFinalize;
 } Tau_plugin_callbacks_t;
 
 /*Define all the events currently supported*/
@@ -468,7 +477,11 @@ typedef enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_OMPT_SYNC_REGION,
    TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRE,
    TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRED,
-   TAU_PLUGIN_EVENT_OMPT_MUTEX_RELEASED
+   TAU_PLUGIN_EVENT_OMPT_MUTEX_RELEASED,
+   TAU_PLUGIN_EVENT_OMPT_FINALIZE,
+
+   /* Max for number of events */
+   NB_TAU_PLUGIN_EVENTS
 } Tau_plugin_event_t;
 
 /* Is the event registered with a callback? */
@@ -506,6 +519,7 @@ typedef struct Tau_plugin_callbacks_active {
     unsigned int ompt_mutex_acquire;
     unsigned int ompt_mutex_acquired;
     unsigned int ompt_mutex_released;
+    unsigned int ompt_finalize;
 } Tau_plugin_callbacks_active_t;
 
 /*Deprecated*/
