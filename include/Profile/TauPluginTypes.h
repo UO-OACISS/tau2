@@ -361,6 +361,54 @@ typedef struct Tau_plugin_event_ompt_mutex_released_data {
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_mutex_released_data_t;
 
+typedef struct Tau_plugin_event_ompt_target_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+   ompt_target_t kind;
+   ompt_scope_endpoint_t endpoint;
+   int device_num;
+   ompt_data_t * task_data;
+   ompt_id_t target_id;
+   const void * codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_target_data_t;
+
+typedef struct Tau_plugin_event_ompt_target_data_op_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+   ompt_id_t target_id;
+   ompt_id_t host_op_id;
+   ompt_target_data_op_t optype;
+   void * src_addr;
+   int src_device_num;
+   void * dest_addr;
+   int dest_device_num;
+   size_t bytes;
+   const void * codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_target_data_op_data_t;
+
+typedef struct Tau_plugin_event_ompt_target_submit_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+   ompt_id_t target_id;
+   ompt_id_t host_op_id;
+   unsigned int requested_num_teams;
+#else /* TAU_PLUGIN_OMPT_ON */
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_target_submit_data_t;
+
 typedef struct Tau_plugin_event_ompt_finalize_data {
    /* TODO: Give a custom tool_data to tools and give it back in this callback */
    /* This is here for the sole purpose of preventing a warning saying that
@@ -402,6 +450,9 @@ typedef int (*Tau_plugin_ompt_sync_region)(Tau_plugin_event_ompt_sync_region_dat
 typedef int (*Tau_plugin_ompt_mutex_acquire)(Tau_plugin_event_ompt_mutex_acquire_data_t*);
 typedef int (*Tau_plugin_ompt_mutex_acquired)(Tau_plugin_event_ompt_mutex_acquired_data_t*);
 typedef int (*Tau_plugin_ompt_mutex_released)(Tau_plugin_event_ompt_mutex_released_data_t*);
+typedef int (*Tau_plugin_ompt_target)(Tau_plugin_event_ompt_target_data_t*);
+typedef int (*Tau_plugin_ompt_target_data_op)(Tau_plugin_event_ompt_target_data_op_data_t*);
+typedef int (*Tau_plugin_ompt_target_submit)(Tau_plugin_event_ompt_target_submit_data_t*);
 typedef int (*Tau_plugin_ompt_finalize)(Tau_plugin_event_ompt_finalize_data_t*);
 
 
@@ -440,6 +491,9 @@ typedef struct Tau_plugin_callbacks {
    Tau_plugin_ompt_mutex_acquire OmptMutexAcquire;
    Tau_plugin_ompt_mutex_acquired OmptMutexAcquired;
    Tau_plugin_ompt_mutex_released OmptMutexReleased;
+   Tau_plugin_ompt_target OmptTarget;
+   Tau_plugin_ompt_target_data_op OmptTargetDataOp;
+   Tau_plugin_ompt_target_submit OmptTargetSubmit;
    Tau_plugin_ompt_finalize OmptFinalize;
 } Tau_plugin_callbacks_t;
 
@@ -478,6 +532,9 @@ typedef enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRE,
    TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRED,
    TAU_PLUGIN_EVENT_OMPT_MUTEX_RELEASED,
+   TAU_PLUGIN_EVENT_OMPT_TARGET,
+   TAU_PLUGIN_EVENT_OMPT_TARGET_DATA_OP,
+   TAU_PLUGIN_EVENT_OMPT_TARGET_SUBMIT,
    TAU_PLUGIN_EVENT_OMPT_FINALIZE,
 
    /* Max for number of events */
@@ -519,6 +576,9 @@ typedef struct Tau_plugin_callbacks_active {
     unsigned int ompt_mutex_acquire;
     unsigned int ompt_mutex_acquired;
     unsigned int ompt_mutex_released;
+    unsigned int ompt_target;
+    unsigned int ompt_target_data_op;
+    unsigned int ompt_target_submit;
     unsigned int ompt_finalize;
 } Tau_plugin_callbacks_active_t;
 

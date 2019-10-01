@@ -1041,6 +1041,87 @@ on_ompt_callback_mutex_released(
   }
 }
 
+
+/* TODO: These target callbacks strangely don't
+ * seem to be called when registered by TAU, but
+ * are called when registered by another tool. I
+ * did not have the time to figure out why. */
+static void
+on_ompt_callback_target(
+    ompt_target_t kind,
+    ompt_scope_endpoint_t endpoint,
+    int device_num,
+    ompt_data_t *task_data,
+    ompt_id_t target_id,
+    const void *codeptr_ra)
+{
+  TauInternalFunctionGuard protects_this_function;
+ 
+  if(Tau_plugins_enabled.ompt_target) {
+    Tau_plugin_event_ompt_target_data_t plugin_data;
+
+    plugin_data.kind = kind;
+    plugin_data.endpoint = endpoint;
+    plugin_data.device_num = device_num;
+    plugin_data.task_data = task_data;
+    plugin_data.target_id = target_id;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_TARGET, "*", &plugin_data);
+  }
+}
+
+static void
+on_ompt_callback_target_data_op(
+        ompt_id_t target_id,
+        ompt_id_t host_op_id,
+        ompt_target_data_op_t optype,
+        void *src_addr,
+        int src_device_num,
+        void *dest_addr,
+        int dest_device_num,
+        size_t bytes,
+        const void *codeptr_ra)
+{
+  TauInternalFunctionGuard protects_this_function;
+
+  if(Tau_plugins_enabled.ompt_target_data_op) {
+    Tau_plugin_event_ompt_target_data_op_data_t plugin_data;
+
+    plugin_data.target_id = target_id;
+    plugin_data.host_op_id = host_op_id;
+    plugin_data.optype = optype;
+    plugin_data.src_addr = src_addr;
+    plugin_data.src_device_num = src_device_num;
+    plugin_data.dest_addr = dest_addr;
+    plugin_data.dest_device_num = dest_device_num;
+    plugin_data.bytes = bytes;
+    plugin_data.codeptr_ra = codeptr_ra;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_TARGET_DATA_OP, "*", &plugin_data);
+  }
+}
+
+static void
+on_ompt_callback_target_submit(
+        ompt_id_t target_id,
+        ompt_id_t host_op_id,
+        unsigned int requested_num_teams)
+{
+  TauInternalFunctionGuard protects_this_function;
+
+  if(Tau_plugins_enabled.ompt_target_submit) {
+    Tau_plugin_event_ompt_target_submit_data_t plugin_data;
+
+    plugin_data.target_id = target_id;
+    plugin_data.host_op_id = host_op_id;
+    plugin_data.requested_num_teams = requested_num_teams;
+
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_TARGET_SUBMIT, "*", &plugin_data);
+  }
+}
+
+
 /* Register callbacks. This function is invoked only from the ompt_start_tool
  * routine and the Tau_ompt_register_plugin_callbacks routine.
  * Callbacks that only have "ompt_set_always" are the required events that we HAVE to support */
@@ -1196,6 +1277,11 @@ extern "C" int ompt_initialize(
   Tau_register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
   Tau_register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
 
+/* Target Events */
+  Tau_register_callback(ompt_callback_target, cb_t(on_ompt_callback_target));
+  Tau_register_callback(ompt_callback_target_data_op, cb_t(on_ompt_callback_target_data_op));
+  Tau_register_callback(ompt_callback_target_submit, cb_t(on_ompt_callback_target_submit));
+
 /* Optional events */
 
   if(TauEnv_get_ompt_support_level() >= 1) { /* Only support this when "lowoverhead" mode is enabled. Turns on all required events + other low overhead */
@@ -1261,6 +1347,12 @@ void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugi
     register_callback(ompt_callback_mutex_acquired, cb_t(on_ompt_callback_mutex_acquired));
   if (Tau_plugins_enabled->ompt_mutex_released > Tau_ompt_callbacks_enabled[ompt_callback_mutex_released])
     register_callback(ompt_callback_mutex_released, cb_t(on_ompt_callback_mutex_released));
+  if (Tau_plugins_enabled->ompt_target > Tau_ompt_callbacks_enabled[ompt_callback_target])
+    register_callback(ompt_callback_target, cb_t(on_ompt_callback_target));
+  if (Tau_plugins_enabled->ompt_target_data_op > Tau_ompt_callbacks_enabled[ompt_callback_target_data_op])
+    register_callback(ompt_callback_target_data_op, cb_t(on_ompt_callback_target_data_op));
+  if (Tau_plugins_enabled->ompt_target_submit > Tau_ompt_callbacks_enabled[ompt_callback_target_submit])
+    register_callback(ompt_callback_target_submit, cb_t(on_ompt_callback_target_submit));
 }
 
 extern "C" void ompt_finalize(ompt_data_t* tool_data)
