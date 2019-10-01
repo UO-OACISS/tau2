@@ -394,7 +394,9 @@ extern "C" PUBLIC_API bool OnLoad(HsaApiTable* table, uint64_t runtime_version, 
   // initialize HSA tracing
   roctracer_set_properties(ACTIVITY_DOMAIN_HSA_API, (void*)table);
   roctracer::hsa_ops_properties_t ops_properties{
+    table,
     reinterpret_cast<activity_async_callback_t>(Tau_roctracer_hsa_activity_callback),
+    NULL, 
     NULL};
   roctracer_set_properties(ACTIVITY_DOMAIN_HSA_OPS, &ops_properties);
   TAU_VERBOSE("TAU: HSA TRACING ENABLED\n");
