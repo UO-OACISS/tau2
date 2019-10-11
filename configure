@@ -11191,7 +11191,14 @@ if [ "x$elfdir" = "x" ]; then
   libelfdir=${targetdir}/${architecture}/${libelf_dirname}
 else
   libelfdir=$elfdir
+  if [ -r ${libelfdir}/lib64/libelf.so ]; then
+    libelflibdir=lib64
+  fi
+  if [ -r ${libelfdir}/lib/libelf.so ]; then
+    libelflibdir=lib
+  fi
 fi
+
 
 if [ "x$dwarfdir" = "x" ]; then
     libdwarfdir=${targetdir}/${architecture}
@@ -11344,7 +11351,13 @@ if [ $dwarf = yes ] ; then
     echo "Using libdwarf at $dwarfdir"
 	fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib"
     fixmakeargs="$fixmakeargs dwarfinc=-I$dwarfdir/include"
-    fixmakeargs="$fixmakeargs dwarflib=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib#-ldwarf#-lz#-lelf"
+    
+    if [ -r ${libelfdir}/${libelflibdir}/libelf.so ] ; then
+       echo "Using libelf at $libelfdir"
+       elfline="-L${libelfdir}/lib#-Wl\,-rpath\,${libelfdir}/lib#"
+    fi
+
+    fixmakeargs="$fixmakeargs dwarflib=$elfline-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib#-ldwarf#-lz#-lelf"
     fixmakeargs="$fixmakeargs TAU_DWARF"
     fi
 fi
