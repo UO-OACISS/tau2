@@ -133,28 +133,30 @@ public:
 	x_uint64 id_p2() const { 
 		return RtsLayer::myNode(); 
 	};
-	bool less_than(const GpuEvent *other) const
-	{	
-		if (deviceContainer || ((CuptiGpuEvent *)other)->deviceContainer) {
-			return deviceId < ((CuptiGpuEvent *)other)->deviceId;
-		}
-		else {
-			if (contextId == ((CuptiGpuEvent *)other)->context()) {
-        if (streamId == ((CuptiGpuEvent *)other)->stream()) {
-          return cdpId < ((CuptiGpuEvent *)other)->cdp();
-        } else {
-				  return streamId < ((CuptiGpuEvent *)other)->stream();
+    bool less_than(const GpuEvent *other) const
+    {	
+        /* First, check if we are running on different devices */
+        if (deviceContainer || ((CuptiGpuEvent *)other)->deviceContainer) {
+            if (deviceId != ((CuptiGpuEvent *)other)->deviceId) {
+                /* Devices are different, return */
+                return deviceId < ((CuptiGpuEvent *)other)->deviceId;
+            }
         }
-			} else {
-				return contextId < ((CuptiGpuEvent *)other)->context();
-			}
-		}
-		/*
-		if (ret) { printf("%s equals %s.\n", printId(), ((CuptiGpuEvent *)other)->printId()); }
-		else { printf("%s does not equal %s.\n", printId(), ((CuptiGpuEvent *)other)->printId());}
-		return ret;
-		*/
-	};
+        /* Either same device or no device container */
+        else {
+            /* Are we in the same context? */
+            if (contextId == ((CuptiGpuEvent *)other)->context()) {
+                /* Are we on different streams? */
+                if (streamId == ((CuptiGpuEvent *)other)->stream()) {
+                    return cdpId < ((CuptiGpuEvent *)other)->cdp();
+                } else {
+                    return streamId < ((CuptiGpuEvent *)other)->stream();
+                }
+            } else {
+                return contextId < ((CuptiGpuEvent *)other)->context();
+            }
+        }
+    };
 
 	void getAttributes(GpuEventAttributes *&gA, int &num) const
 	{
