@@ -3917,7 +3917,7 @@ case $machine in
         # MPI compilers of mpicc and mpicxx.
         # That way, we can use the -show option to get all
         # the correct MPI flags.
-        if [ $cxx_compiler = default ] ; then
+        if [ $cxx_compiler = default -o $cxx_compiler = "g++" ] ; then
             if [ $mpi = yes ] ; then
                 cxx_compiler=mpicxx
             else
@@ -3928,7 +3928,7 @@ case $machine in
             fi
         fi
 
-        if [ $c_compiler = default ] ; then
+        if [ $c_compiler = default -o $c_compiler = "gcc" ] ; then
             if [ $mpi = yes ] ; then
                 c_compiler=mpicc
             else
