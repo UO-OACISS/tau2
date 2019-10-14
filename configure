@@ -3912,19 +3912,30 @@ case $machine in
 	;;
 
     *)
-	if [ $cxx_compiler = default ]
-	then
-            cxx_compiler=g++
-            if [ $fortran_compiler = no ] ; then
-		fortran_compiler=gfortran
+        # If the user didn't specify a compiler, assume GCC.
+        # However, if they did specify -mpi, then assume
+        # MPI compilers of mpicc and mpicxx.
+        # That way, we can use the -show option to get all
+        # the correct MPI flags.
+        if [ $cxx_compiler = default ] ; then
+            if [ $mpi = yes ] ; then
+                cxx_compiler=mpicxx
+            else
+                cxx_compiler=g++
             fi
-	fi
+            if [ $fortran_compiler = no ] ; then
+                fortran_compiler=gfortran
+            fi
+        fi
 
-	if [ $c_compiler = default ]
-	then
-            c_compiler=gcc
-	fi
-	;;
+        if [ $c_compiler = default ] ; then
+            if [ $mpi = yes ] ; then
+                c_compiler=mpicc
+            else
+                c_compiler=gcc
+            fi
+        fi
+        ;;
 
 esac
 
@@ -8369,11 +8380,16 @@ if [ $mpi = yes ] ; then
 		    # Does MPI_Init have weak bindings for Fortran (Infiniband MPI)
 		    weakmpi=T
 		    # by default it has a T for defined symbol in nm output */
-		    weakmpi=`nm $mpilib/libfmpich.a | grep mpi_init | awk '{ print $2 ; }' | head -n 1 `
-		    if [ "x$weakmpi" = "xW" ]
-		    then
-			echo "MPI has weak bindings for mpi_init Fortran bindings..."
-			fixmakeargs="$fixmakeargs WEAKMPIINIT"
+            if [ -f $mpilib/libfmpich.a ] ; then
+              weakmpi=`nm $mpilib/libfmpich.a | grep mpi_init | awk '{ print $2 ; }' | head -n 1 `
+            else
+              if [ -f $mpilib/libfmpich.so ] ; then
+                weakmpi=`nm $mpilib/libfmpich.so | grep mpi_init | awk '{ print $2 ; }' | head -n 1 `
+              fi
+            fi
+		    if [ "x$weakmpi" = "xW" ] ; then
+			  echo "MPI has weak bindings for mpi_init Fortran bindings..."
+			  fixmakeargs="$fixmakeargs WEAKMPIINIT"
 		    fi
 		else
 		    if [ -f $mpilib/liblamf77mpi.a -o -f $mpilib/liblamf77mpi.so ] ; then
