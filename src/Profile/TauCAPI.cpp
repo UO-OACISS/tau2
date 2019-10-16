@@ -2176,7 +2176,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 
 #endif
 }
-#ifdef CUPTI
+#ifdef CUPTI_disabled
 int vtid_to_ttid[TAU_MAX_THREADS];
 int vtid_to_corrid[TAU_MAX_THREADS];
 std::map<uint32_t, uint32_t> map_cuptiThread;
@@ -3271,7 +3271,7 @@ extern "C" void Tau_disable_tracking_mpi_t(void) {
   TauEnv_set_track_mpi_t_pvars(0); 
 }
 
-#ifdef CUPTI
+#ifdef CUPTI_disabled
 extern "C" int register_cuda_thread(unsigned int sys_tid, unsigned int parent_tid, int tau_vtid, unsigned int corr_id, unsigned int context_id, const char* func_name, unsigned int device_id) {
   CudaThread ct;
   ct.sys_tid = sys_tid;

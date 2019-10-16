@@ -211,6 +211,9 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
 						int number_of_attributes,
 						int taskId);
 
+extern "C" void Tau_cupti_gpu_enter_event_from_cpu(const char* name, int tid);
+extern "C" void Tau_cupti_gpu_exit_event_from_cpu(const char* name, int tid);
+
 /* extern "C" void Tau_cupti_register_func_event( */
 /*                                               const char *name, */
 /*                                               uint32_t deviceId, */

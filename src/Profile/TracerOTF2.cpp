@@ -588,7 +588,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
 #ifdef TAU_OTF2_DEBUG
   fprintf(stderr, "node=%u, tid=%d, loc=%d: TauTraceEventWithNodeId(ev=%ld, par=%" PRId64 ", tid=%d, ts=%" PRIu64 ", use_ts=%d, node_id=%d, kind=%d)\n", my_node(), tid, my_real_location(node_id, tid), ev, par, tid, ts, use_ts, node_id, kind);
 #endif
-#ifdef CUPTI
+#ifdef CUPTI_disabled
   /* OK, this looks bad, but hear me out... CUDA events are in-order on a 
    * per-stream/context/device basis, but the one sided memory transfer 
    * events come in with no timestamp.  For those events only, we want to 
@@ -681,7 +681,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
 #ifdef CUPTI
     if (my_ts < previous_ts[tid]) {
       fprintf(stderr, "ERROR! Timestamps out of sequence. %lu < %lu on thread %d\nevent: node=%u, tid=%d, loc=%d: TauTraceEventWithNodeId(ev=%ld, par=%" PRId64 ", tid=%d, ts=%" PRIu64 ", use_ts=%d, node_id=%d, kind=%d)\n", my_ts, previous_ts[tid], tid, my_node(), tid, my_real_location(node_id, tid), ev, par, tid, ts, use_ts, node_id, kind);
-      my_ts = previous_ts[tid] + 1;
+      my_ts = previous_ts[tid];
     }
 #endif
   if(kind == TAU_TRACE_EVENT_KIND_FUNC || kind == TAU_TRACE_EVENT_KIND_CALLSITE) {
@@ -949,10 +949,20 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
             } else if(thread_num == 0) {
                 snprintf(namebuf, 256, "Rank");
             } else if(Tau_is_thread_fake(thread_num)) {
-                snprintf(namebuf, 256, "GPU thread %02d", thread_num);
+                if (strcmp(Tau_metadata_get("CUPTI Stream", thread_num), "0") == 0) {
+                    snprintf(namebuf, 256, "GPU dev%s:ctx%s", 
+                        Tau_metadata_get("CUPTI Device", thread_num),
+                        Tau_metadata_get("CUPTI Context", thread_num));
+                } else {
+                    snprintf(namebuf, 256, "GPU dev%s:ctx%s:str%s", 
+                        Tau_metadata_get("CUPTI Device", thread_num),
+                        Tau_metadata_get("CUPTI Context", thread_num),
+                        Tau_metadata_get("CUPTI Stream", thread_num));
+                }
 				thread_type = OTF2_LOCATION_TYPE_GPU;
             } else {
-                snprintf(namebuf, 256, "CPU thread %02d", thread_num);
+                static int cputhreads = 1;
+                snprintf(namebuf, 256, "CPU thread %02d", cputhreads++);
             }
 #ifdef TAU_ENABLE_ROCM
                 //snprintf(namebuf, 256, "Thread %d (ROCM GPU ID:%d, Queue ID:%d, Thread ID:%d)", thread_num, 1, 2, 3);

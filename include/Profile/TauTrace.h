@@ -109,7 +109,7 @@ extern "C" {
   void TAUDECL TauTraceRMACollectiveEnd(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root);
 #if TAU_GPU
 #ifdef __cplusplus
-  void TAUDECL TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int thread);
+  void TAUDECL TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int thread, x_uint64 ts);
 #endif //  __cplusplus
 #endif // TAU_GPU
   /* Returns a pointer to the (singleton) offset info struct */

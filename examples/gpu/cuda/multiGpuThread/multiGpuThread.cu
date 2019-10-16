@@ -3,7 +3,7 @@
 #include <pthread.h>
 
 #define ARR_SIZE    10
-#define NUM_THR  2
+#define NUM_THR  8
 
 typedef struct {
     int *arr;

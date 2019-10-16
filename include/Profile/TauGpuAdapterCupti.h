@@ -177,6 +177,16 @@ public:
 				Tau_metadata_task(gpu_metadata[i].name, gpu_metadata[i].value, id);
 			}
 		}
+
+        char tmpVal[32] = {0};
+        sprintf(tmpVal, "%u", deviceId);
+        Tau_metadata_task("CUPTI Device", tmpVal, id);
+        sprintf(tmpVal, "%u", contextId);
+        Tau_metadata_task("CUPTI Context", tmpVal, id);
+        sprintf(tmpVal, "%u", streamId);
+        Tau_metadata_task("CUPTI Stream", tmpVal, id);
+        sprintf(tmpVal, "%u", cdpId);
+        Tau_metadata_task("CUPTI Stream", tmpVal, id);
 	}
 
 	double syncOffset() const 
@@ -231,3 +241,4 @@ public:
 
 uint32_t CuptiGpuEvent::cdpCount = 0;
 double CuptiGpuEvent::beginTimestamp = 0;
+
