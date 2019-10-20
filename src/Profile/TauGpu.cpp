@@ -51,6 +51,8 @@ static uint32_t recentCorrelationId = -1;
 int number_of_tasks = 0;
 int number_of_top_level_task_events = 0;
 
+int get_task(GpuEvent *new_task);
+
 bool gpuComp(GpuEvent* a, GpuEvent* b)
 {
   return a->less_than(b);
@@ -204,10 +206,7 @@ void Tau_gpu_enter_unifmem_event(const char *functionName, GpuEvent *device, int
   //Inorder to capture the entire memcpy transaction time start the send/recived
   //at the start of the event
   if (TauEnv_get_tracing()) {
-    int threadId = 0;
-#if defined(PTHREADS_disabled)
-    threadId = device->getTaskId();
-#endif
+    int threadId = get_task(device);  
     if (unifmemType == BytesDtoH) {
       TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, threadId, 0UL);
     } else if (unifmemType == BytesHtoD) {
@@ -370,7 +369,7 @@ int get_task(GpuEvent *new_task)
     number_of_tasks++;
     Tau_set_thread_fake(task);
     //TAU_CREATE_TASK(task);
-    printf("new task: %s id: %d.\n", create_task->gpuIdentifier(), task);
+    //printf("new task: %s id: %d.\n", create_task->gpuIdentifier(), task);
   } else {
     task = (*it).second;
   }
@@ -407,11 +406,7 @@ void Tau_gpu_exit_event_from_cpu(const char* name, int tid, double end)
 
 void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
 {
-#if defined(PTHREADS_disabled) || defined(TAU_OPENMP)
-  int task = id->getTaskId(); 
-#else
   int task = get_task(id);
-#endif
   const double syncStartTime = startTime + id->syncOffset();
   const double syncEndTime = endTime + id->syncOffset();
   stage_gpu_event(id->getName(), task, syncStartTime, id->getCallingSite());
@@ -448,11 +443,7 @@ void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
 void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTime, int transferSize, int memcpyType,
 				   int direction)
 {
-#if defined(PTHREADS_disabled)
-  int task = id->getTaskId();
-#else
   int task = get_task(id);  
-#endif
   const char* functionName = id->getName();
   if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0) {
     if (memcpyType == MemcpyHtoD) {
@@ -542,11 +533,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 
 void Tau_gpu_register_envt_event(GpuEvent *event, double startTime, double endTime, int transferSize, int dataType)
 {
-#if defined(PTHREADS_disabled)
-  int task = event->getTaskId();
-#else
   int task = get_task(event);  
-#endif
 	const char* functionName = event->getName();
 	if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
 	{
@@ -591,11 +578,7 @@ void Tau_gpu_register_envt_event(GpuEvent *event, double startTime, double endTi
 void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTime, int transferSize, int unifmemType,
     int direction)
 {
-#if defined(PTHREADS_disabled)
-  int task = id->getTaskId();
-#else
   int task = get_task(id);  
-#endif
   const char* functionName = id->getName();
   if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0) {
     if (unifmemType == BytesHtoD) {
@@ -690,11 +673,7 @@ void Tau_gpu_register_gpu_atomic_event(GpuEvent *event)
 #ifdef DEBUG_PROF		
   TAU_VERBOSE("registering atomic event.\n");
 #endif //DEBUG_PROF
-#if defined(PTHREADS_disabled)
-  int task = event->getTaskId();
-#else
   int task = get_task(event);  
-#endif
   GpuEventAttributes *attr;
   int number_of_attributes;
   event->getAttributes(attr, number_of_attributes);
@@ -708,11 +687,7 @@ void Tau_gpu_register_gpu_atomic_event(GpuEvent *event)
 
 void Tau_gpu_register_imix_event(GpuEvent *event, double startTime, double endTime, int transferSize, int dataType)
 {
-#if defined(PTHREADS_disabled)
-  int task = event->getTaskId();
-#else
   int task = get_task(event);  
-#endif
   printf("IMIX type is %d, contextId: %i.\n", dataType, task);
   const char* functionName = event->getName();
   if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)

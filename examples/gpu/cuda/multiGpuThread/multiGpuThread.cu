@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <iostream>
+#include <unistd.h>
 
 #define ARR_SIZE    10
 #define NUM_THR  8
@@ -44,6 +46,13 @@ int main(void)
 	int count = 0;
 	err = cudaGetDeviceCount(&count);
 	printf("%d devices found.\n", count);
+
+    for(int i=0; i<count; i++) {
+        cudaSetDevice(i);
+        cudaDeviceProp deviceProp;
+        cudaGetDeviceProperties(&deviceProp, i);
+        std::cout << "Using device " << i << ", name: " << deviceProp.name << std::endl;
+    }
 
 // Make object
     cuda_st cuda[count][NUM_THR];
@@ -120,7 +129,7 @@ int main(void)
         }
     }
 
-    cudaDeviceReset();
+    cudaThreadExit();
     return 0;
 }
 
