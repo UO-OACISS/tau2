@@ -185,8 +185,10 @@ public:
         Tau_metadata_task("CUPTI Context", tmpVal, id);
         sprintf(tmpVal, "%u", streamId);
         Tau_metadata_task("CUPTI Stream", tmpVal, id);
-        sprintf(tmpVal, "%u", cdpId);
-        Tau_metadata_task("CUPTI Stream", tmpVal, id);
+        if (cdpId > 0) {
+            sprintf(tmpVal, "%u", cdpId);
+            Tau_metadata_task("CUPTI cdpId", tmpVal, id);
+        }
 	}
 
 	double syncOffset() const 

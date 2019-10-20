@@ -948,20 +948,31 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
                 snprintf(namebuf, 256, "Master thread 0");
             } else if(thread_num == 0) {
                 snprintf(namebuf, 256, "Rank");
-#ifdef CUPTI
             } else if(Tau_is_thread_fake(thread_num)) {
-                if (strcmp(Tau_metadata_get("CUPTI Stream", thread_num), "0") == 0) {
-                    snprintf(namebuf, 256, "GPU dev%s:ctx%s", 
-                        Tau_metadata_get("CUPTI Device", thread_num),
-                        Tau_metadata_get("CUPTI Context", thread_num));
+                /* Check for CUPTI */
+                char * test = Tau_metadata_get("CUPTI Device", thread_num);
+                if (test != NULL && strcmp(test, "") != 0) {
+                    if (strcmp(Tau_metadata_get("CUPTI Stream", thread_num), "0") == 0) {
+                        snprintf(namebuf, 256, "GPU dev%s:ctx%s", 
+                            Tau_metadata_get("CUPTI Device", thread_num),
+                            Tau_metadata_get("CUPTI Context", thread_num));
+                    } else {
+                        snprintf(namebuf, 256, "GPU dev%s:ctx%s:str%03d", 
+                            Tau_metadata_get("CUPTI Device", thread_num),
+                            Tau_metadata_get("CUPTI Context", thread_num),
+                            atoi(Tau_metadata_get("CUPTI Stream", thread_num)));
+                    }
                 } else {
-                    snprintf(namebuf, 256, "GPU dev%s:ctx%s:str%03d", 
-                        Tau_metadata_get("CUPTI Device", thread_num),
-                        Tau_metadata_get("CUPTI Context", thread_num),
-                        atoi(Tau_metadata_get("CUPTI Stream", thread_num)));
+                    test = Tau_metadata_get("OpenCL Device", thread_num);
+                    if (test != NULL && strcmp(test, "") != 0) {
+                        snprintf(namebuf, 256, "GPU dev%s:que%s", test,
+                                 Tau_metadata_get("OpenCL Command Queue", thread_num));
+                    } else {
+                        static int gputhreads = 0;
+                        snprintf(namebuf, 256, "GPU thread %02d", gputhreads++);
+                    }
                 }
 				thread_type = OTF2_LOCATION_TYPE_GPU;
-#endif
             } else {
                 static int cputhreads = 1;
                 snprintf(namebuf, 256, "CPU thread %02d", cputhreads++);
