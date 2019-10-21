@@ -107,7 +107,6 @@ FILE *fp_instr[TAU_MAX_THREADS];
 FILE *fp_func[TAU_MAX_THREADS];
 FILE *cubin;
 static int device_count_total = 0;
-static double recentTimestamp = 0;
 thread_local int disable_callbacks = 0;
 
 static uint32_t buffers_queued = 0;
@@ -721,7 +720,7 @@ void Tau_handle_driver_api_other (void *ud, CUpti_CallbackDomain domain,
             //cuCtxSynchronize();
             cudaDeviceSynchronize();
             //Tau_CuptiLayer_enable();
-            // KEVIN record_gpu_counters_at_sync();
+            record_gpu_counters_at_sync();
 
 #ifdef TAU_ASYNC_ACTIVITY_API
             Tau_cupti_activity_flush_all();
@@ -950,22 +949,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
 
     void Tau_cupti_record_activity(CUpti_Activity *record)
     {
-        // can't handle out-of-order events
-        // if (TauEnv_get_tracing()) { return; }
-        // currentTimestamp
-        uint64_t currentTimestamp;
-        double d_currentTimestamp;
         CUptiResult err = CUPTI_SUCCESS;
         CUresult err2 = CUDA_SUCCESS;
-        err = cuptiGetTimestamp(&currentTimestamp); // nanosec
-        ///////
-        // Within python,
-        //   seconds = (int)(cumsum / 1000) % 60
-        //   minutes = (int)(cumsum / (1000*60)) % 60
-        ///////
-        d_currentTimestamp = (double)currentTimestamp/1e3; // orig
-        // d_currentTimestamp = (double)currentTimestamp/1e6; 
-
 
         CUDA_CHECK_ERROR(err2, "Cannot get timestamp.\n");
 
@@ -1660,7 +1645,6 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
             }
 #endif //CUPTI_API_VERSION >= 3
         }
-        recentTimestamp = d_currentTimestamp;
     }
 
     //Helper function givens ceiling with given significance.
@@ -2186,7 +2170,33 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
                     id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyToArrayAsync_v3020 ||
                     id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyFromArrayAsync_v3020 ||
                     id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyToSymbolAsync_v3020 ||
-                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyFromSymbolAsync_v3020
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyFromSymbolAsync_v3020 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyPeer_v4000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyPeerAsync_v4000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy3DPeer_v4000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy3DPeerAsync_v4000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy_ptds_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy2D_ptds_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyToArray_ptds_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy2DToArray_ptds_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyFromArray_ptds_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy2DFromArray_ptds_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyArrayToArray_ptds_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy2DArrayToArray_ptds_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyToSymbol_ptds_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyFromSymbol_ptds_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyAsync_ptsz_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyToArrayAsync_ptsz_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyFromArrayAsync_ptsz_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy2DAsync_ptsz_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy2DToArrayAsync_ptsz_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy2DFromArrayAsync_ptsz_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyToSymbolAsync_ptsz_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyFromSymbolAsync_ptsz_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy3D_ptds_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy3DAsync_ptsz_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy3DPeer_ptds_v7000 ||
+                    id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy3DPeerAsync_ptsz_v7000
                    );
         }
         else if (domain == CUPTI_CB_DOMAIN_DRIVER_API)

@@ -2465,7 +2465,7 @@ void Tau_pure_start_task_string(const string name, int tid)
   PureMap & pure = ThePureMap();
   PureMap::iterator it = pure.find(name);
   if (it == pure.end()) {
-    tauCreateFI_signalSafe((void**)&fi, name, "", TAU_USER, "TAU_USER");
+    tauCreateFI_signalSafe((void**)&fi, name, "", TAU_DEFAULT, "TAU_DEFAULT");
     pure[name] = fi;
   } else {
     fi = it->second;
@@ -2475,7 +2475,7 @@ void Tau_pure_start_task_string(const string name, int tid)
 }
 
 
-extern "C" void Tau_pure_start_task(const char * n, int tid)
+extern "C" void Tau_pure_start_task_group(const char * n, int tid, const char * group)
 {
   TauInternalFunctionGuard protects_this_function;
   string name = n; // this is VERY bad if called from signalling! see above ^
@@ -2490,20 +2490,7 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
     RtsLayer::LockEnv();
     PureMap::iterator it = pure.find(name);
     if (it == pure.end()) {
-      // // check for paren
-      // if(name.find("(") != -1) { 
-      // 	stringstream ss;
-      // 	string filename = "/foo/bar.c";
-      // 	int lineno = 99;
-      // 	ss << name << " [{" << filename << "}{" << lineno << "}]";
-      // 	tauCreateFI((void**)&fi, ss.str(), "", TAU_USER, "TAU_USER");
-      // 	TAU_VERBOSE("[TauCAPI]:  just called tauCreateFI for %s,\n\tss.str(): %s\n", 
-      // 	       name.c_str(), ss.str().c_str());
-      // }
-      // else {
-      // tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
-      // }
-      tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
+      tauCreateFI((void**)&fi, name, "", TAU_USER, group);
       pure[name] = fi;
 
     } else {
@@ -2512,6 +2499,11 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
     RtsLayer::UnLockEnv();
   }
   Tau_start_timer(fi, 0, tid);
+}
+
+extern "C" void Tau_pure_start_task(const char * n, int tid)
+{
+    Tau_pure_start_task_group(n, tid, "TAU_USER");
 }
 
 FunctionInfo* Tau_make_cupti_sample_timer(const char * filename, const char * function, int lineno)

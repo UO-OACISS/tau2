@@ -127,7 +127,9 @@ void Tau_gpu_enter_event(const char* name)
 #ifdef DEBUG_PROF
   TAU_VERBOSE("entering cu event: %s.\n", name);
 #endif
-  Tau_pure_start(name);
+  //Tau_pure_start(name);
+  void* handle = Tau_get_function_info(name, "", TAU_USER, "TAU_GPU_API");
+  Tau_start_timer(handle, 0, Tau_get_thread());
 }
 
 void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent *device, int transferSize, int memcpyType)
@@ -147,7 +149,10 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent *device, int 
     //printf("using default name: %s.\n", functionName);
   }
 
-  Tau_pure_start(functionName);
+  //Tau_pure_start(functionName);
+  void* handle = Tau_get_function_info(functionName, "", TAU_USER, "TAU_GPU_MEMORY_COPY");
+  Tau_start_timer(handle, 0, Tau_get_thread());
+
 
   //Inorder to capture the entire memcpy transaction time start the send/recived
   //at the start of the event
@@ -201,7 +206,10 @@ void Tau_gpu_enter_unifmem_event(const char *functionName, GpuEvent *device, int
     //printf("using default name: %s.\n", functionName);
   }
 
-  Tau_pure_start(functionName);
+  //Tau_pure_start(functionName);
+  void* handle = Tau_get_function_info(functionName, "", TAU_USER, "TAU_GPU_UNIFIED_MEMORY");
+  Tau_start_timer(handle, 0, Tau_get_thread());
+
 
   //Inorder to capture the entire memcpy transaction time start the send/recived
   //at the start of the event
@@ -260,7 +268,9 @@ void Tau_gpu_exit_memcpy_event(const char * functionName, GpuEvent *device, int 
   // This is too make the message lines in the trace to always point forward in
   // time.
 
-  Tau_pure_stop(functionName);
+  //Tau_pure_stop(functionName);
+  void* handle = Tau_get_function_info(functionName, "", TAU_USER, "TAU_GPU_MEMORY_COPY");
+  Tau_stop_timer(handle, Tau_get_thread());
 
 }
 
@@ -286,7 +296,9 @@ void Tau_gpu_exit_unifmem_event(const char * functionName, GpuEvent *device, int
   // This is too make the message lines in the trace to always point forward in
   // time.
 
-  Tau_pure_stop(functionName);
+  //Tau_pure_stop(functionName);
+  void* handle = Tau_get_function_info(functionName, "", TAU_USER, "TAU_GPU_UNIFIED_MEMORY");
+  Tau_stop_timer(handle, Tau_get_thread());
 
 }
 
@@ -295,16 +307,12 @@ void Tau_gpu_exit_event(const char *name)
 #ifdef DEBUG_PROF
   TAU_VERBOSE("exit cu event: %s.\n", name);
 #endif
-  Tau_pure_stop(name);
+  //Tau_pure_stop(name);
+  void* handle = Tau_get_function_info(name, "", TAU_USER, "TAU_GPU_API");
+  Tau_stop_timer(handle, Tau_get_thread());
 }
-void start_gpu_event(const char *name, int gpuTask)
-{
-#ifdef DEBUG_PROF
-  TAU_VERBOSE("staring %s event.\n", name);
-#endif
-  Tau_pure_start_task(name, gpuTask);
-}
-void stage_gpu_event(const char *name, int gpuTask, double start_time, FunctionInfo* parent)
+
+void stage_gpu_event(const char *name, int gpuTask, double start_time, FunctionInfo* parent, const char * group)
 {
 #ifdef DEBUG_PROF
   cerr << "setting gpu timestamp for start " << setprecision(16) << start_time << endl;
@@ -318,27 +326,7 @@ void stage_gpu_event(const char *name, int gpuTask, double start_time, FunctionI
       Tau_start_timer(parent, 0, gpuTask);
     }
   }
-  start_gpu_event(name, gpuTask);
-}
-
-
-void stop_gpu_event(const char *name, int gpuTask)
-{
-#ifdef DEBUG_PROF
-  TAU_VERBOSE("stopping %s event.\n", name);
-#endif
-  /*
-   map<EventName,void*>::iterator it = events.find(name);
-   if (it == events.end())
-   {
-   printf("FATAL ERROR in stopping GPU event.\n");
-   } else
-   {
-   void *ptr = (*it).second;
-   TAU_PROFILER_STOP_TASK(ptr, gpuTask);
-   }
-   */
-  Tau_pure_stop_task(name, gpuTask);
+  Tau_pure_start_task_group(name, gpuTask, group);
 }
 
 void break_gpu_event(const char *name, int gpuTask, double stop_time, FunctionInfo* parent)
@@ -347,7 +335,7 @@ void break_gpu_event(const char *name, int gpuTask, double stop_time, FunctionIn
   cerr << "setting gpu timestamp for stop: " << setprecision(16) << stop_time << endl;
 #endif
   metric_set_gpu_timestamp(gpuTask, stop_time);
-  stop_gpu_event(name, gpuTask);
+  Tau_pure_stop_task(name, gpuTask);
   if (TauEnv_get_callpath()) {
     //printf("Profiler: %s \n", parent->GetName());
     double totalTime = 0;
@@ -394,7 +382,7 @@ int get_task(GpuEvent *new_task)
 /* Records a synchronous event on the GPU, as seen from CPU! */
 void Tau_gpu_enter_event_from_cpu(const char* name, int tid, double start)
 {
-  stage_gpu_event(name, tid, start, NULL);
+  stage_gpu_event(name, tid, start, NULL, "TAU_GPU_KERNEL");
 }
 
 /* Records a synchronous event on the GPU, as seen from CPU! */
@@ -409,7 +397,7 @@ void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
   int task = get_task(id);
   const double syncStartTime = startTime + id->syncOffset();
   const double syncEndTime = endTime + id->syncOffset();
-  stage_gpu_event(id->getName(), task, syncStartTime, id->getCallingSite());
+  stage_gpu_event(id->getName(), task, syncStartTime, id->getCallingSite(), "TAU_GPU_KERNEL");
   GpuEventAttributes *attr;
   int number_of_attributes;
   id->getAttributes(attr, number_of_attributes);
@@ -465,7 +453,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
   const double syncStartTime = startTime + id->syncOffset();
   const double syncEndTime = endTime + id->syncOffset();
   if (memcpyType == MemcpyHtoD) {
-    stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite());
+    stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite(), "TAU_GPU_MEMORY_COPY");
     //TAU_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
     if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE) {
       counted_memcpys++;
@@ -485,7 +473,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
       TauTraceOneSidedMsg(MESSAGE_RECV, id, transferSize, task, syncEndTime);
     }
   } else if (memcpyType == MemcpyDtoH) {
-    stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite());
+    stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite(), "TAU_GPU_MEMORY_COPY");
     //TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
     if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE) {
       counted_memcpys++;
@@ -506,7 +494,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
       TauTraceOneSidedMsg(MESSAGE_SEND, id, transferSize, task, syncEndTime);
     }
   } else {
-    stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite());
+    stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite(), "TAU_GPU_MEMORY_COPY");
     //TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
     if (TauEnv_get_tracing() && direction == MESSAGE_RECIPROCAL_SEND) {
       TauTraceOneSidedMsg(direction, id, transferSize, task, syncStartTime);
@@ -599,7 +587,7 @@ void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTi
   const double syncStartTime = startTime + id->syncOffset();
   const double syncEndTime = endTime + id->syncOffset();
   if (unifmemType == BytesHtoD) {
-    stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite());
+    stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite(), "TAU_GPU_MEMORY_COPY");
     //TAU_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
     if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE) {
       counted_unifmems++;
@@ -619,7 +607,7 @@ void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTi
       TauTraceOneSidedMsg(MESSAGE_RECV, id, transferSize, task, syncEndTime);
     }
   } else if (unifmemType == BytesDtoH) {
-    stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite());
+    stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite(), "TAU_GPU_MEMORY_COPY");
     //TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
     if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE) {
       counted_unifmems++;
@@ -640,7 +628,7 @@ void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTi
       TauTraceOneSidedMsg(MESSAGE_SEND, id, transferSize, task, syncEndTime);
     }
   } else {
-    stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite());
+    stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite(), "TAU_GPU_MEMORY_COPY");
     //TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
     if (TauEnv_get_tracing() && direction == MESSAGE_RECIPROCAL_SEND) {
       TauTraceOneSidedMsg(direction, id, transferSize, task, syncStartTime);
