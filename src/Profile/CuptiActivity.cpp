@@ -46,7 +46,7 @@ typedef struct tau_cupti_context {
     int v_threadId;
 } tau_cupti_context_t;
 
-// map from context to everything else
+// map from context/stream to everything else
 std::map<uint64_t, tau_cupti_context_t*> newContextMap;
 // map from correlation to context
 std::map<uint32_t, uint64_t> newCorrelationMap;
@@ -780,6 +780,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_RESOURCE event\n");
     } else if (domain == CUPTI_CB_DOMAIN_SYNCHRONIZE) {
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_SYNCHRONIZE event\n");
+        /* Todo: Count synchronization events? */
     } else if (domain == CUPTI_CB_DOMAIN_NVTX) {
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_NVTX event\n");
     } else if (domain == CUPTI_CB_DOMAIN_SIZE) {
