@@ -391,7 +391,6 @@ void Tau_gpu_exit_event_from_cpu(const char* name, int tid, double end)
   break_gpu_event(name, tid, end, NULL);
 }
 
-
 void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
 {
   int task = get_task(id);
@@ -401,7 +400,6 @@ void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
   GpuEventAttributes *attr;
   int number_of_attributes;
   id->getAttributes(attr, number_of_attributes);
-//#ifndef TAU_ENABLE_OPENCL
   for (int i = 0; i < number_of_attributes; i++) {
     TauContextUserEvent* e = attr[i].userEvent;
     if (e) { 
@@ -411,20 +409,15 @@ void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
       break;
     }
   }
-//#endif /* TAU_ENABLE_OPENCL: OpenCL crashes here! */
-  /*
-   if (id.contextEventMap != NULL)
-   {
-   for (TauGpuContextMap::iterator it = id.contextEventMap->begin();
-   it != id.contextEventMap->end();
-   it++)
-   {
-   TauContextUserEvent* e = it->first;
-   TAU_EVENT_DATATYPE event_data = it->second;
-   TAU_CONTEXT_EVENT_THREAD(e, event_data, task);
-   }
-   }
-   */
+  break_gpu_event(id->getName(), task, syncEndTime, id->getCallingSite());
+}
+
+void Tau_gpu_register_sync_event(GpuEvent *id, double startTime, double endTime)
+{
+  int task = get_task(id);
+  const double syncStartTime = startTime + id->syncOffset();
+  const double syncEndTime = endTime + id->syncOffset();
+  stage_gpu_event(id->getName(), task, syncStartTime, id->getCallingSite(), "TAU_GPU_SYNCHRONIZATION");
   break_gpu_event(id->getName(), task, syncEndTime, id->getCallingSite());
 }
 

@@ -201,6 +201,16 @@ extern "C" void Tau_cupti_register_gpu_event(
 						double stop,
 						int taskId);
 
+extern "C" void Tau_cupti_register_gpu_sync_event(
+						const char *name,
+						uint32_t deviceId,
+						uint32_t streamId,
+						uint32_t contextId,
+						uint32_t correlationId,
+						double start,
+						double stop,
+						int taskId);
+
 extern "C" void Tau_cupti_register_gpu_atomic_event(
 						const char *name,
 						uint32_t deviceId,

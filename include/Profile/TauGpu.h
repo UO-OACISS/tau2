@@ -148,6 +148,9 @@ extern "C" void Tau_gpu_register_unifmem_event(GpuEvent *event, double startTime
 
 extern "C" void Tau_gpu_register_envt_event(GpuEvent *event, double startTime, double endTime, int transferSize, int dataType);
 
+/* Callback for a GPU synchronization event */
+extern "C" void Tau_gpu_register_sync_event(GpuEvent *event, double startTime, double endTime);
+
 /* Callback for a GPU atomic event that is associated with this gpu event. */
 extern "C" void Tau_gpu_register_gpu_atomic_event(GpuEvent *event);
 

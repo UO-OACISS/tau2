@@ -158,6 +158,24 @@ extern "C" void Tau_cupti_register_gpu_event(
     Tau_gpu_register_gpu_event(&gpu_event, start, stop);
 }
 
+extern "C" void Tau_cupti_register_gpu_sync_event(
+        const char *name,
+        uint32_t deviceId,
+        uint32_t streamId,
+        uint32_t contextId,
+        uint32_t correlationId,
+        double start,
+        double stop,
+        int taskId) {
+    CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
+            deviceId,
+            streamId, 
+            contextId, 
+            correlationId, 
+            0, NULL, 0, taskId);
+    Tau_gpu_register_sync_event(&gpu_event, start, stop);
+}
+
 extern "C" void Tau_cupti_register_gpu_atomic_event(
         const char *name,
         uint32_t deviceId,

@@ -58,10 +58,14 @@ class sanity_check {
     public:
         unsigned long memory_out_of_order = 0UL;
         unsigned long kernel_out_of_order = 0UL;
+        unsigned long sync_out_of_order = 0UL;
         sanity_check(void) : memory_out_of_order(0L), kernel_out_of_order(0UL) {};
         ~sanity_check() {
-            if (TauEnv_get_tracing() && (memory_out_of_order > 0 || kernel_out_of_order > 0)) {
-                fprintf(stderr, "WARNING!  CUPTI delivered %lu memory and %lu kernel events out of order...\nTrace may be incomplete!\n", memory_out_of_order, kernel_out_of_order);
+            if (TauEnv_get_tracing() && 
+                (memory_out_of_order > 0 || 
+                 kernel_out_of_order > 0 ||
+                 sync_out_of_order > 0 )) {
+                fprintf(stderr, "WARNING!  CUPTI delivered %lu memory, %lu kernel, %lu sync events out of order...\nTrace may be incomplete!\n", memory_out_of_order, kernel_out_of_order, sync_out_of_order);
                 int driverVersion;
                 int runtimeVersion;
                 cudaDriverGetVersion(&driverVersion);
@@ -83,6 +87,7 @@ static sanity_check sanity;
  * and when asynchronous events happen, it is given.  However, when the context is
  * created, we don't have access to it.  So, keep track of them. */
 std::vector<uint32_t> context_null_streams;
+std::vector<uint32_t> context_devices;
 
 device_map_t & __deviceMap()
 {
@@ -431,6 +436,8 @@ void Tau_cupti_onload()
         err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_BRANCH);
         CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_BRANCH)");
     }
+    err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SYNCHRONIZATION);
+    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_SYNCHRONIZATION)");
 
     uint64_t gpu_timestamp;
     err = cuptiGetTimestamp(&gpu_timestamp);
@@ -510,6 +517,7 @@ int get_vthread_for_cupti_context(const CUpti_ResourceData *handle, bool stream)
         while (contextId > context_null_streams.size()) {
             context_null_streams.push_back(0);
         }
+        context_devices.push_back(deviceId);
     }
     return insert_context_into_map(contextId, deviceId, streamId);
 }
@@ -963,6 +971,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
                     TAU_DEBUG_PRINT("----> Found null stream %d for context %d, device %d\n",
                         context->nullStreamId, context->contextId, context->deviceId);
                     context_null_streams[context->contextId] = context->nullStreamId;
+                    context_devices[context->contextId] = context->deviceId;
                     break;
                 }
                 if (TauEnv_get_cuda_track_env()) {
@@ -1642,6 +1651,79 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
                     Tau_cupti_register_gpu_atomic_event(demangleName(kernel->name), kernel->deviceId,
                     kernel->streamId, kernel->contextId, id, map, map_size, taskId);
                 }
+            }
+            case CUPTI_ACTIVITY_KIND_SYNCHRONIZATION: {
+                CUpti_ActivitySynchronization *sync = (CUpti_ActivitySynchronization *)record;
+                uint32_t streamId = 0;
+                uint32_t deviceId = context_devices[sync->contextId];
+                uint64_t start = sync->start;
+                if (sync->streamId != CUPTI_SYNCHRONIZATION_INVALID_VALUE) {
+                    streamId = sync->streamId;
+                }
+                int taskId = get_taskid_from_context_id(sync->contextId, streamId);
+                if (start < previous_ts[taskId]) { 
+                    /* This is actually OK.  The synchronization could start before
+                     * the previous activity finished, that's the point.  We'll
+                     * move the start up to the previous end, and double check that
+                     * the synchronization end didn't exceed the previous activity.
+                     */
+                    start = previous_ts[taskId];
+                    if (sync->end < previous_ts[taskId]) { 
+                        sanity.sync_out_of_order++;
+                        TAU_DEBUG_PRINT("out of order: %f, previous %f\n", 
+                            (previous_ts[taskId] - sync->start)/1e3,
+                            previous_ts[taskId]/1e3); fflush(stdout);
+                        /* don't process this event? */
+                        break;
+                    }
+                }
+                switch (sync->type) {
+                    case CUPTI_ACTIVITY_SYNCHRONIZATION_TYPE_EVENT_SYNCHRONIZE: {
+                        TAU_DEBUG_PRINT("Event Synchronize! c%u s%u o%u e%u t%u %f %f\n",
+                            sync->contextId, streamId, sync->correlationId,
+                            sync->cudaEventId, sync->type, start/1e3, sync->end/1e3);
+                            fflush(stdout);
+                        Tau_cupti_register_gpu_sync_event("Event Synchronize", deviceId,
+                            streamId, sync->contextId, sync->correlationId,
+                            start / 1e3, sync->end / 1e3, taskId);
+                        break;
+                    }
+                    case CUPTI_ACTIVITY_SYNCHRONIZATION_TYPE_STREAM_WAIT_EVENT: {
+                        /* Stream wait event API. */
+                        TAU_DEBUG_PRINT("Stream Wait! c%u s%u o%u t%u %f %f\n",
+                            sync->contextId, sync->streamId, sync->correlationId,
+                            sync->type, start/1e3, sync->end/1e3);
+                            fflush(stdout);
+                        Tau_cupti_register_gpu_sync_event("Stream Wait", deviceId,
+                            streamId, sync->contextId, sync->correlationId,
+                            start / 1e3, sync->end / 1e3, taskId);
+                        break;
+                    }
+                    case CUPTI_ACTIVITY_SYNCHRONIZATION_TYPE_STREAM_SYNCHRONIZE: {
+                    /* Stream synchronize API. */
+                        TAU_DEBUG_PRINT("Stream Synchronize! c%u s%u o%u t%u %f %f\n",
+                            sync->contextId, sync->streamId, sync->correlationId,
+                            sync->type, start/1e3, sync->end/1e3);
+                            fflush(stdout);
+                        Tau_cupti_register_gpu_sync_event("Stream Synchronize", deviceId,
+                            streamId, sync->contextId, sync->correlationId,
+                            start / 1e3, sync->end / 1e3, taskId);
+                        break;
+                    }
+                    case CUPTI_ACTIVITY_SYNCHRONIZATION_TYPE_CONTEXT_SYNCHRONIZE: {
+                        /* Context synchronize API. */
+                        TAU_DEBUG_PRINT("Context Synchronize! c%u o%u t%u %f %f\n",
+                            sync->contextId, sync->correlationId,
+                            sync->type, start/1e3, sync->end/1e3);
+                        Tau_cupti_register_gpu_sync_event("Context Synchronize", deviceId,
+                            streamId, sync->contextId, sync->correlationId,
+                            start / 1e3, sync->end / 1e3, taskId);
+                        break;
+                    }
+                    default:
+                        break;
+                }
+                previous_ts[taskId] = sync->end;
             }
 #endif //CUPTI_API_VERSION >= 3
         }
