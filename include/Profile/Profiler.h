@@ -105,6 +105,8 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 #ifndef TAU_MAX_THREADS
 #if defined(TAU_CHARM) || defined(TAU_MIC_LINUX)
 #define TAU_MAX_THREADS 512
+#elif defined(__ppc64__) || defined(__powerpc64__)
+#define TAU_MAX_THREADS 256
 #else /* TAU_CHARM || TAU_MIC_LINUX */
 #define TAU_MAX_THREADS 128
 #endif
