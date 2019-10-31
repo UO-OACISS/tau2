@@ -213,6 +213,7 @@ typedef int (*pthread_barrier_wait_p)(pthread_barrier_t *);
 struct tau_pthread_pack
 {
   start_routine_p start_routine;
+  std::vector<void*> timer_context_stack;
   void * arg;
 };
 
@@ -224,6 +225,13 @@ void * tau_pthread_function(void *arg)
   tau_pthread_pack * pack = (tau_pthread_pack*)arg;
   TAU_REGISTER_THREAD();
   Tau_create_top_level_timer_if_necessary();
+  /* iterate over the stack and create a timer context */
+  if (TauEnv_get_threadContext() && pack->timer_context_stack.size() > 0) {
+    for (std::vector<void*>::iterator iter = pack->timer_context_stack.begin() ; 
+        iter != pack->timer_context_stack.end() ; iter++) {
+  	    TAU_PROFILER_START(*iter);
+    }
+  }
   /* Create a timer that will measure this spawned thread */
   char timerName[1024] = {0};
   Tau_ompt_resolve_callsite_eagerly((unsigned long)(pack->start_routine), timerName);
@@ -232,6 +240,15 @@ void * tau_pthread_function(void *arg)
   TAU_PROFILER_START(handle);
   void * ret = pack->start_routine(pack->arg);
   TAU_PROFILER_STOP(handle);
+  /* iterate over the stack and stop the timer context */
+  /*
+  if (pack->timer_context_stack.size() > 0) {
+    for (std::vector<void*>::iterator iter = pack->timer_context_stack.end() ; 
+        iter != pack->timer_context_stack.begin() ; iter--) {
+  	    TAU_PROFILER_STOP(*iter);
+    }
+  }
+  */
 #ifndef TAU_TBB_SUPPORT
   // Thread 0 in TBB will not wait for the other threads to finish
   // (it does not join). DO NOT stop the timer for this thread, but
@@ -245,6 +262,7 @@ void * tau_pthread_function(void *arg)
 
 /* Forward declaration to see if TAU thinks GPU initialization is done */
 bool& Tau_gpu_initialized(void);
+Profiler * Tau_get_timer_at_stack_depth(int pos);
 
 extern "C"
 int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
@@ -309,6 +327,17 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
 
     TAU_PROFILE_TIMER(timer, "pthread_create", "", TAU_DEFAULT);
     TAU_PROFILE_START(timer);
+
+	/* set up some context for the spawned thread */
+    if (TauEnv_get_threadContext()) {
+        int depth = Tau_get_current_stack_depth(Tau_get_thread());
+        for (int i = 1 ; i <= depth ; i++) {
+            tau::Profiler *profiler = Tau_get_timer_at_stack_depth(i);
+            printf("Pushing timer: %s\n", profiler->ThisFunction->GetName());
+            pack->timer_context_stack.push_back((void*)profiler->ThisFunction);
+        }    
+    }    
+
     retval = pthread_create_call(threadp, attr, tau_pthread_function, (void*)pack); // 0
     TAU_PROFILE_STOP(timer);
     *wrapped = false;
