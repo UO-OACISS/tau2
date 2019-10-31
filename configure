@@ -7310,8 +7310,13 @@ if [ $ompt_compiler_support = no -a $ompt_use_tr6_version = no ] ; then
     $c_compiler $openmp_flag $openmp_INC $openmp_LINK $orig_useropt -DVERTEST_OMPT_TR7 ompt_ver_test.c -o ompt_ver_test $openmp_lib 1>/dev/null 2>&1
     result=$?
     if [ $machine != craycnl ] ; then
+      OLD_LD_PRELOAD=$LD_PRELOAD
+      unset LD_PRELOAD
+      export LD_PRELOAD
       LD_LIBRARY_PATH=$omptlib:$LD_LIBRARY_PATH ./ompt_ver_test 1>/dev/null 2>&1
       result=$?
+      LD_PRELOAD=$OLD_LD_PRELOAD
+# OMPT test is sensitive to LD_PRELOADED libraries. Reset it. 
     fi
     if [ $result = "0" ]; then
         echo " yes"
