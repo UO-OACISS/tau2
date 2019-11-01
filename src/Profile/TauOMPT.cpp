@@ -1130,7 +1130,11 @@ inline static int register_callback(ompt_callbacks_t name, ompt_callback_t cb) {
 
   switch(ret) { 
     case ompt_set_never:
+#ifdef TAU_CLANG
+      TAU_VERBOSE("TAU: WARNING: OMPT Callback for event %d could not be registered\n", name); 
+#else /* TAU_CLANG */
       fprintf(stderr, "TAU: WARNING: OMPT Callback for event %d could not be registered\n", name); 
+#endif /* TAU_CLANG */
       break; 
     case ompt_set_sometimes: 
       TAU_VERBOSE("TAU: OMPT Callback for event %d registered with return value %s\n", name, "ompt_set_sometimes");
