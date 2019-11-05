@@ -678,7 +678,7 @@ void Tau_CuptiLayer_Initialize_Map(int off)
             currDomain = domainId[j];
 
             err = cuptiEventDomainGetNumEvents(currDomain, &eventCount);
-            CHECK_CUPTI_ERROR(err, "cuptiEventDomainGetEnumEvent");
+            CHECK_CUPTI_ERROR(err, "cuptiEventDomainGetEnumEvents");
 
             for (int k = 0; k < eventCount; k++) {
                 CuptiCounterEvent* ev = new CuptiCounterEvent(i, j, k);
