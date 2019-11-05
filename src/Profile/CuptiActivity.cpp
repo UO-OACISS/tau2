@@ -653,9 +653,11 @@ void Tau_handle_driver_api_memcpy (void *ud, CUpti_CallbackDomain domain,
             TAU_DEBUG_PRINT("sync function name: %s\n", cbInfo->functionName);
             //Disable counter tracking during the sync.
             cudaDeviceSynchronize();
-            // KEVIN record_gpu_counters_at_sync();
+            record_gpu_counters_at_sync();
 
-            Tau_cupti_activity_flush_all();
+            // Why do we need to flush activity after every
+            // synchronous memory transfer?
+            // Tau_cupti_activity_flush_all();
         }
     }
 }
@@ -733,9 +735,7 @@ void Tau_handle_driver_api_other (void *ud, CUpti_CallbackDomain domain,
             record_gpu_counters_at_sync();
 
 #ifdef TAU_ASYNC_ACTIVITY_API
-            Tau_cupti_activity_flush_all();
-            //cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
-            //cuptiActivityFlush(cbInfo->context, 0, CUPTI_ACTIVITY_FLAG_NONE);
+            cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
 #else
             Tau_cupti_register_sync_event(cbInfo->context, 0, NULL, 0, 0);
 #endif
@@ -804,7 +804,6 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         if((Tau_CuptiLayer_get_num_events() > 0) || (buffers_queued++ > ACTIVITY_ENTRY_LIMIT)) {
             buffers_queued = 0;
             cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
-            //cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_FLUSH_FORCED);
         }
     }
 
@@ -856,9 +855,9 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         if (err == CUPTI_SUCCESS)
         {
             //printf("succesfully dequeue'd buffer.\n");
-            TAU_START("next record loop");
-            TAU_PROFILE_TIMER(g, "getNextRecord", "", TAU_DEFAULT);
-            TAU_PROFILE_TIMER(r, "record_activity", "", TAU_DEFAULT);
+            //TAU_START("next record loop");
+            //TAU_PROFILE_TIMER(g, "getNextRecord", "", TAU_DEFAULT);
+            //TAU_PROFILE_TIMER(r, "record_activity", "", TAU_DEFAULT);
             do {
                 //TAU_PROFILE_START(g);
                 status = cuptiActivityGetNextRecord(activityBuffer, bufferSize, &record);
@@ -882,7 +881,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
                     break;
                 }
             } while (status != CUPTI_ERROR_MAX_LIMIT_REACHED);
-            TAU_STOP("next record loop");
+            //TAU_STOP("next record loop");
 
             size_t number_dropped;
             err = cuptiActivityGetNumDroppedRecords(NULL, 0, &number_dropped);

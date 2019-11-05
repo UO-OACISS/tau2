@@ -341,6 +341,4 @@ int main(int argc, char** argv)
 	cudaFree(d_a);
 	cudaFree(d_b);
 	cudaFree(d_c);
-
-	cudaThreadExit();
 }
