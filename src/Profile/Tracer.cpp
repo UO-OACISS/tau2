@@ -698,21 +698,26 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
 
 #ifdef TAU_GPU
 
-void TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int threadId)
+void TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int threadId, x_uint64 ts = 0UL)
 {
-		/* there are three user events that make up a one-sided msg */
-		if (type == MESSAGE_SEND)
-    	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_SEND, length, threadId, TAU_TRACE_EVENT_KIND_COMM); 
-		else if (type == MESSAGE_RECV)
-    	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, length, threadId, TAU_TRACE_EVENT_KIND_COMM); 
-		else if (type == MESSAGE_RECIPROCAL_SEND)
-    	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECIPROCAL_SEND, length, threadId, TAU_TRACE_EVENT_KIND_COMM); 
-		else if (type == MESSAGE_RECIPROCAL_RECV)
-    	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECIPROCAL_RECV, length, threadId, TAU_TRACE_EVENT_KIND_COMM); 
-		else
-    	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_UNKNOWN, length, threadId, TAU_TRACE_EVENT_KIND_COMM); 
-    TauTraceEventSimple(TAU_ONESIDED_MESSAGE_ID_1, gpu->id_p1(), threadId, TAU_TRACE_EVENT_KIND_COMM); 
-    TauTraceEventSimple(TAU_ONESIDED_MESSAGE_ID_2, gpu->id_p2(), threadId, TAU_TRACE_EVENT_KIND_COMM); 
+    int use_ts = 0;
+    if (ts > 0UL) {
+        use_ts = 1;
+    }
+    /* there are three user events that make up a one-sided msg */
+    if (type == MESSAGE_SEND) {
+        TauTraceEvent(TAU_ONESIDED_MESSAGE_SEND, length, threadId, ts, use_ts, TAU_TRACE_EVENT_KIND_COMM); 
+    } else if (type == MESSAGE_RECV) {
+        TauTraceEvent(TAU_ONESIDED_MESSAGE_RECV, length, threadId, ts, use_ts, TAU_TRACE_EVENT_KIND_COMM); 
+    } else if (type == MESSAGE_RECIPROCAL_SEND) {
+        TauTraceEvent(TAU_ONESIDED_MESSAGE_RECIPROCAL_SEND, length, threadId, ts, use_ts, TAU_TRACE_EVENT_KIND_COMM); 
+    } else if (type == MESSAGE_RECIPROCAL_RECV) {
+        TauTraceEvent(TAU_ONESIDED_MESSAGE_RECIPROCAL_RECV, length, threadId, ts, use_ts, TAU_TRACE_EVENT_KIND_COMM); 
+    } else {
+        TauTraceEvent(TAU_ONESIDED_MESSAGE_UNKNOWN, length, threadId, ts, use_ts, TAU_TRACE_EVENT_KIND_COMM);
+    }
+    TauTraceEvent(TAU_ONESIDED_MESSAGE_ID_1, gpu->id_p1(), threadId, ts, use_ts, TAU_TRACE_EVENT_KIND_COMM); 
+    TauTraceEvent(TAU_ONESIDED_MESSAGE_ID_2, gpu->id_p2(), threadId, ts, use_ts, TAU_TRACE_EVENT_KIND_COMM); 
 }
 
 #endif

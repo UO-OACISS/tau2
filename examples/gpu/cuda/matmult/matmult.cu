@@ -129,6 +129,8 @@ void multiply_by_block(dim3 grid, dim3 threads, float *d_a, float *d_b, float *d
 	}
 }
 
+#define STREAM_INDEX(_d,_i) ((_d*number_of_iterations) + _i)
+
 int main(int argc, char** argv)
 {
 	
@@ -183,6 +185,7 @@ int main(int argc, char** argv)
 			case 'i':
 				str << optarg;
 				str >> number_of_iterations;
+                cout << "Doing " << number_of_iterations << " iterations." << std::endl;
 				break;
 			case '?':
 				if (optopt == 'd')
@@ -224,7 +227,7 @@ int main(int argc, char** argv)
 	}
 	//cout << "finnished mapping devices." << endl;
 	float *d_a[nDevices], *d_b[nDevices], *d_c[nDevices];
-	cudaStream_t streams[nDevices];
+	cudaStream_t streams[nDevices * number_of_iterations];
 	for (int d=0;d<nDevices;d++)
 	{
 		cudaSetDevice(devices[d]);
@@ -237,13 +240,14 @@ int main(int argc, char** argv)
 		{
 			cout << "error setting device, #=" << cudaGetErrorString(err) << endl;
 		}
-		err = cudaStreamCreate(&streams[d]);
-		if (err != cudaSuccess)
-		{
-			cout << "error in stream creation, #=" << cudaGetErrorString(err) << endl;
+	    for (int i=0; i<number_of_iterations; i++)
+	    {
+		    err = cudaStreamCreate(&streams[STREAM_INDEX(d,i)]);
+		    if (err != cudaSuccess)
+		    {
+			    cout << "error in stream creation, #=" << cudaGetErrorString(err) << endl;
+		    }
 		}
-
-
 
 		err = cudaMalloc((void **) &d_a[d], matsize);
 		if (err != cudaSuccess)
@@ -263,50 +267,55 @@ int main(int argc, char** argv)
 		
 	}
 
-	for (int i=0; i<number_of_iterations*nDevices; i++)
-	{
-		int cDevice = i%nDevices;
-		cudaStream_t cStream = streams[cDevice];
-		cudaSetDevice(devices[cDevice]);
-		if (err != cudaSuccess)
-		{
-			cout << "error setting device: " << devices[i%nDevices] << " #=" << cudaGetErrorString(err) << endl;
-		}
+    for (int d=0; d<nDevices; d++)
+    {
+        for (int i=0; i<number_of_iterations; i++)
+        {
+            cout << "Running on device " << d << ", stream " << i << endl;
+            int cDevice = d;
+            cudaStream_t cStream = streams[STREAM_INDEX(d,i)];
+            cudaSetDevice(devices[cDevice]);
+            if (err != cudaSuccess) {
+                cout << "error setting device: " << devices[i%nDevices] << " #=" << cudaGetErrorString(err) << endl;
+            }
 
-		err = cudaMemcpyAsync(d_a[cDevice], a, matsize, cudaMemcpyHostToDevice, cStream);
-		if (err != cudaSuccess)
-		{
-			cout << "error in memcpy, #=" << cudaGetErrorString(err) << endl;
-		}
-		err = cudaMemcpyAsync(d_b[cDevice], b, matsize, cudaMemcpyHostToDevice, cStream);
-		if (err != cudaSuccess)
-		{
-			cout << "error in memcpy, #=" << cudaGetErrorString(err) << endl;
-		}
+            err = cudaMemcpyAsync(d_a[cDevice], a, matsize, cudaMemcpyHostToDevice, cStream);
+            if (err != cudaSuccess) {
+                cout << "error in memcpy, #=" << cudaGetErrorString(err) << endl;
+            }
+            err = cudaMemcpyAsync(d_b[cDevice], b, matsize, cudaMemcpyHostToDevice, cStream);
+            if (err != cudaSuccess) {
+                cout << "error in memcpy, #=" << cudaGetErrorString(err) << endl;
+            }
 
-		//cout << "running on device " << cDevice << endl;
+            //cout << "running on device " << cDevice << endl;
 
-		dim3 grid(number_of_blocks, number_of_blocks);
-		dim3 threads(number_of_threads, number_of_threads, 1);
+            dim3 grid(number_of_blocks, number_of_blocks);
+            dim3 threads(number_of_threads, number_of_threads, 1);
 
-		//multiply each element at a time.
-		multiply_by_element(grid, threads, d_a[cDevice], d_b[cDevice], d_c[cDevice], m, cStream);
+            //multiply each element at a time.
+            multiply_by_element(grid, threads, d_a[cDevice], d_b[cDevice], d_c[cDevice], m, cStream);
 
-		//multiply by first load a 16x16 submatrix into shared memory.
-		multiply_by_block(grid, threads, d_a[cDevice], d_b[cDevice], d_c[cDevice], m, cStream);
-	}
+            //multiply by first load a 16x16 submatrix into shared memory.
+            multiply_by_block(grid, threads, d_a[cDevice], d_b[cDevice], d_c[cDevice], m, cStream);
+        }
+    }
 
 	cout << "Finished " << number_of_iterations << " iterations on " << nDevices << " devices." << endl;
 
-	for (int d=0;d<nDevices;d++)
-	{
+	for (int d=0;d<nDevices;d++) {
 		cudaSetDevice(devices[d]);
-		cudaStreamSynchronize(streams[d]);
+	    for (int i=0; i<number_of_iterations; i++) {
+		    cudaStreamSynchronize(streams[STREAM_INDEX(d,i)]);
+        }
 	}
-	for (int d=0;d<nDevices;d++)
-	{
-		cudaStreamDestroy(streams[d]);
+
+	for (int d=0;d<nDevices;d++) {
+	    for (int i=0; i<number_of_iterations; i++) {
+		    cudaStreamDestroy(streams[STREAM_INDEX(d,i)]);
+        }
 	}
+
 	//print c	
 	/*
 	cout << " results: " << endl;

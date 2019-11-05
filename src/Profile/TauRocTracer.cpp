@@ -33,6 +33,8 @@
 #include <roctracer_hsa.h>
 #include <roctracer_hip.h>
 #include <roctracer_hcc.h>
+#include <src/core/loader.h>
+#include <src/core/trace_buffer.h>
 #include <ext/hsa_rt_utils.hpp>
 #endif /* TAU_ENABLE_ROCTRACER_HSA */
 #include <sys/syscall.h> 
@@ -65,6 +67,9 @@
 #define TAU_ROCTRACER_HOST_TASKID 500
 #endif /* TAU_ROCTRACER_HOST_TASKID */
 
+#define PUBLIC_API __attribute__((visibility("default")))
+#define CONSTRUCTOR_API __attribute__((constructor))
+#define DESTRUCTOR_API __attribute__((destructor))
 
 // Macro to check ROC-tracer calls status
 #define ROCTRACER_CALL(call)                                                                       \
@@ -75,6 +80,25 @@
       abort();                                                                                     \
     }                                                                                              \
   } while (0)
+
+  
+#ifndef onload_debug
+#define onload_debug false
+#endif
+
+typedef hsa_rt_utils::Timer::timestamp_t timestamp_t;
+hsa_rt_utils::Timer* timer = NULL;
+thread_local timestamp_t hsa_begin_timestamp = 0;
+thread_local timestamp_t hip_begin_timestamp = 0;
+bool trace_hsa_api = false;
+bool trace_hsa_activity = false;
+bool trace_hip = false;
+
+LOADER_INSTANTIATE();
+
+
+static inline uint32_t GetPid() { return syscall(__NR_getpid); }
+static inline uint32_t GetTid() { return syscall(__NR_gettid); }
 
 
 std::string TauRocTracerNameDB[TAU_ROCTRACER_BUFFER_SIZE]; 
@@ -276,9 +300,164 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
   }
 }
 
+
+
+struct hip_api_trace_entry_t {
+  uint32_t valid;
+  uint32_t type;
+  uint32_t domain;
+  uint32_t cid;
+  timestamp_t begin;
+  timestamp_t end;
+  uint32_t pid;
+  uint32_t tid;
+  hip_api_data_t data;
+  const char* name;
+  void* ptr;
+};
+
+void Tau_roctracer_hip_api_flush_cb(hip_api_trace_entry_t* entry);
+roctracer::TraceBuffer<hip_api_trace_entry_t>::flush_prm_t hip_flush_prm[1] = {{0, Tau_roctracer_hip_api_flush_cb}};
+roctracer::TraceBuffer<hip_api_trace_entry_t> hip_api_trace_buffer("HIP", 0x200000, hip_flush_prm, 1);
+
+/* Should we define our own Tau_hsa_kernel_handler? */
+/*
+void Tau_hsa_kernel_handler(::proxy::Tracker::entry_t* entry);
+TraceBuffer<trace_entry_t>::flush_prm_t Tau_roctracer_trace_buffer_prm[] = {
+  {roctracer::COPY_ENTRY_TYPE, hsa_async_copy_handler},
+  {roctracer::KERNEL_ENTRY_TYPE, Tau_hsa_kernel_handler}
+};
+TraceBuffer<trace_entry_t> trace_buffer("HSA GPU", 0x200000, Tau_roctracer_trace_buffer_prm, 2);
+
+*/
+
+
+
+void Tau_roctracer_hip_api_callback(
+    uint32_t domain,
+    uint32_t cid,
+    const void* callback_data,
+    void* arg)
+{
+  (void)arg;
+  const hip_api_data_t* data = reinterpret_cast<const hip_api_data_t*>(callback_data);
+
+  TAU_VERBOSE("Tau_roctracer_hip_api_callback\n");
+  if (data->phase == ACTIVITY_API_PHASE_ENTER) {
+    hip_begin_timestamp = timer->timestamp_fn_ns();
+  } else {
+    const timestamp_t end_timestamp = timer->timestamp_fn_ns();
+    hip_api_trace_entry_t* entry = hip_api_trace_buffer.GetEntry();
+    entry->valid = roctracer::TRACE_ENTRY_COMPL;
+    entry->type = 0;
+    entry->cid = cid;
+    entry->domain = domain;
+    entry->begin = hip_begin_timestamp;
+    entry->end = end_timestamp;
+    entry->pid = GetPid();
+    entry->tid = GetTid();
+    entry->data = *data;
+    entry->name = NULL;
+    entry->ptr = NULL;
+
+    switch (cid) {
+      case HIP_API_ID_hipMalloc:
+        entry->ptr = *(data->args.hipMalloc.ptr);
+        break;
+      case HIP_API_ID_hipModuleLaunchKernel:
+      case HIP_API_ID_hipExtModuleLaunchKernel:
+      case HIP_API_ID_hipHccModuleLaunchKernel:
+        const hipFunction_t f = data->args.hipModuleLaunchKernel.f;
+        if (f != NULL) {
+          entry->name = strdup(roctracer::HipLoader::Instance().KernelNameRef(f));
+          TAU_VERBOSE("Tau_roctracer_hip_api_callback: entry->name = %s\n", entry->name);
+        }
+    }
+  }
+}
+
+
+void Tau_roctracer_mark_api_callback(
+    uint32_t domain,
+    uint32_t cid,
+    const void* callback_data,
+    void* arg)
+{
+  (void)arg;
+  const char* name = reinterpret_cast<const char*>(callback_data);
+
+  const timestamp_t timestamp = timer->timestamp_fn_ns();
+  hip_api_trace_entry_t* entry = hip_api_trace_buffer.GetEntry();
+  entry->valid = roctracer::TRACE_ENTRY_COMPL;
+  entry->type = 0;
+  entry->cid = 0;
+  entry->domain = domain;
+  entry->begin = timestamp;
+  entry->end = timestamp + 1;
+  entry->pid = GetPid();
+  entry->tid = GetTid();
+  entry->data = {};
+  entry->name = name;
+  entry->ptr = NULL;
+}
+
+
+void Tau_roctracer_hip_api_flush_cb(hip_api_trace_entry_t* entry) {
+  const uint32_t domain = entry->domain;
+  const uint32_t cid = entry->cid;
+  const hip_api_data_t* data = &(entry->data);
+  const timestamp_t begin_timestamp = entry->begin;
+  const timestamp_t end_timestamp = entry->end;
+  std::ostringstream oss;                                                                        \
+
+  printf("Tau_roctracer_hip_api_flush_cb\n");
+  const char* str = (domain < ACTIVITY_DOMAIN_NUMBER) ? roctracer_op_string(domain, cid, 0) : strdup("MARK");
+  const char *demangled_name;
+  oss << std::dec <<
+    begin_timestamp << ":" << end_timestamp << " " << entry->pid << ":" << entry->tid << " " << str;
+
+  if (domain == ACTIVITY_DOMAIN_HIP_API) {
+    switch (cid) {
+      case HIP_API_ID_hipMemcpy:
+        TAU_VERBOSE("%s(dst(%p) src(%p) size(0x%x) kind(%u))\n",
+          oss.str().c_str(),
+          data->args.hipMemcpy.dst,
+          data->args.hipMemcpy.src,
+          (uint32_t)(data->args.hipMemcpy.sizeBytes),
+          (uint32_t)(data->args.hipMemcpy.kind));
+        break;
+      case HIP_API_ID_hipMalloc:
+        TAU_VERBOSE("%s(ptr(%p) size(0x%x))\n",
+          oss.str().c_str(),
+          entry->ptr,
+          (uint32_t)(data->args.hipMalloc.size));
+        break;
+      case HIP_API_ID_hipFree:
+        TAU_VERBOSE("%s(ptr(%p))\n",
+          oss.str().c_str(),
+          data->args.hipFree.ptr);
+        break;
+      case HIP_API_ID_hipModuleLaunchKernel:
+      case HIP_API_ID_hipExtModuleLaunchKernel:
+      case HIP_API_ID_hipHccModuleLaunchKernel:
+        TAU_INTERNAL_DEMANGLE_NAME(entry->name, demangled_name);
+        TAU_VERBOSE("%s(kernel(%s) stream(%p))\n",
+          oss.str().c_str(),
+          demangled_name,
+          data->args.hipModuleLaunchKernel.stream);
+        break;
+      default:
+        TAU_VERBOSE("%s()\n", oss.str().c_str());
+    }
+  } else {
+    TAU_VERBOSE("%s(name(%s))\n", oss.str().c_str(), entry->name);
+  }
+
+}
+
 // Init tracing routine
 int Tau_roctracer_init_tracing() {
-  TAU_VERBOSE("# START #############################\n");
+  TAU_VERBOSE("# START init_tracing: #############################\n");
 /*
   for (int i=0; i < TAU_MAX_ROCM_QUEUES; i++) {
     Tau_set_initialized_queues(i, -1); // set it explicitly
@@ -291,9 +470,22 @@ int Tau_roctracer_init_tracing() {
   // Allocating tracing pool
   roctracer_properties_t properties{};
   properties.buffer_size = TAU_ROCTRACER_BUFFER_SIZE; 
+
   properties.buffer_callback_fun = Tau_roctracer_activity_callback;
   ROCTRACER_CALL(roctracer_open_pool(&properties));
+
   return 0;
+
+/* DO WE NEED THESE? */
+/*
+  ROCTRACER_CALL(roctracer_enable_domain_activity(ACTIVITY_DOMAIN_HCC_OPS));
+  ROCTRACER_CALL(roctracer_enable_domain_activity(ACTIVITY_DOMAIN_HIP_API));
+  ROCTRACER_CALL(roctracer_enable_domain_callback(ACTIVITY_DOMAIN_HIP_API, Tau_roctracer_hip_api_callback, NULL));
+
+  roctracer_set_properties(ACTIVITY_DOMAIN_HIP_API, (void*)Tau_roctracer_mark_api_callback);
+  return 0;
+*/
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -317,8 +509,37 @@ extern "C" void Tau_roctracer_stop_tracing() {
   TAU_VERBOSE("# STOP  #############################\n");
 }
 
+// tool unload method
+/*
+void tool_unload(bool destruct) {
+  static bool is_unloaded = false;
 
-#define PUBLIC_API __attribute__((visibility("default")))
+  if (onload_debug) printf("TOOL tool_unload (%d, %d)\n", (int)destruct, (int)is_unloaded); fflush(stdout);
+  if (destruct == false) return;
+  if (is_unloaded == true) return;
+  is_unloaded = true;
+  roctracer_unload(destruct);
+
+  if (trace_hsa_api) {
+    ROCTRACER_CALL(roctracer_disable_domain_callback(ACTIVITY_DOMAIN_HSA_API));
+  }
+  if (trace_hsa_activity) {
+    ROCTRACER_CALL(roctracer_disable_domain_activity(ACTIVITY_DOMAIN_HSA_OPS));
+  }
+  if (trace_hip) {
+    ROCTRACER_CALL(roctracer_disable_domain_callback(ACTIVITY_DOMAIN_HIP_API));
+    ROCTRACER_CALL(roctracer_disable_domain_activity(ACTIVITY_DOMAIN_HIP_API));
+    ROCTRACER_CALL(roctracer_disable_domain_activity(ACTIVITY_DOMAIN_HCC_OPS));
+    ROCTRACER_CALL(roctracer_flush_activity());
+    ROCTRACER_CALL(roctracer_close_pool());
+
+  }
+  if (onload_debug) printf("TOOL tool_unload end\n"); fflush(stdout);
+}
+*/
+
+
+
 extern "C" PUBLIC_API void OnUnloadTool() {
   TAU_VERBOSE("Inside OnUnloadTool\n");
 }
@@ -338,10 +559,7 @@ void Tau_roctracer_hsa_activity_callback(
   //printf("%lu:%lu async-copy%lu\n", record->begin_ns, record->end_ns, record->correlation_id);
 }
 
-typedef hsa_rt_utils::Timer::timestamp_t timestamp_t;
-hsa_rt_utils::Timer* timer = NULL;
-thread_local timestamp_t hsa_begin_timestamp = 0;
-thread_local timestamp_t hip_begin_timestamp = 0;
+
 
 // HSA API callback function
 void Tau_roctracer_hsa_api_callback(
@@ -393,11 +611,6 @@ extern "C" PUBLIC_API bool OnLoad(HsaApiTable* table, uint64_t runtime_version, 
 
   // initialize HSA tracing
   roctracer_set_properties(ACTIVITY_DOMAIN_HSA_API, (void*)table);
-  roctracer::hsa_ops_properties_t ops_properties{
-    reinterpret_cast<activity_async_callback_t>(Tau_roctracer_hsa_activity_callback),
-    NULL};
-  roctracer_set_properties(ACTIVITY_DOMAIN_HSA_OPS, &ops_properties);
-  TAU_VERBOSE("TAU: HSA TRACING ENABLED\n");
 
   if (hsa_api_vec.size() != 0) {
     for (unsigned i = 0; i < hsa_api_vec.size(); ++i) {
@@ -410,12 +623,23 @@ extern "C" PUBLIC_API bool OnLoad(HsaApiTable* table, uint64_t runtime_version, 
   } else {
     ROCTRACER_CALL(roctracer_enable_domain_callback(ACTIVITY_DOMAIN_HSA_API, Tau_roctracer_hsa_api_callback, NULL));
   }
+
+  roctracer::hsa_ops_properties_t ops_properties{
+    table,
+    reinterpret_cast<activity_async_callback_t>(Tau_roctracer_hsa_activity_callback),
+    NULL, 
+    NULL};
+  roctracer_set_properties(ACTIVITY_DOMAIN_HSA_OPS, &ops_properties);
+  TAU_VERBOSE("TAU: HSA TRACING ENABLED\n");
+
   ROCTRACER_CALL(roctracer_enable_domain_activity(ACTIVITY_DOMAIN_HSA_OPS));
+
+  // Enable HCC tracing 
+  //Tau_roctracer_init_tracing();
   return true;
 }
 
 extern "C" PUBLIC_API void OnUnload() {
-  printf("Inside OnUnload\n");
   TAU_VERBOSE("Inside OnUnload\n");
 }
 #endif /* TAU_ENABLE_ROCTRACER_HSA */

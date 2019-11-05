@@ -3912,19 +3912,30 @@ case $machine in
 	;;
 
     *)
-	if [ $cxx_compiler = default ]
-	then
-            cxx_compiler=g++
-            if [ $fortran_compiler = no ] ; then
-		fortran_compiler=gfortran
+        # If the user didn't specify a compiler, assume GCC.
+        # However, if they did specify -mpi, then assume
+        # MPI compilers of mpicc and mpicxx.
+        # That way, we can use the -show option to get all
+        # the correct MPI flags.
+        if [ $cxx_compiler = default -o $cxx_compiler = "g++" ] ; then
+            if [ $mpi = yes ] ; then
+                cxx_compiler=mpicxx
+            else
+                cxx_compiler=g++
             fi
-	fi
+            if [ $fortran_compiler = no ] ; then
+                fortran_compiler=gfortran
+            fi
+        fi
 
-	if [ $c_compiler = default ]
-	then
-            c_compiler=gcc
-	fi
-	;;
+        if [ $c_compiler = default -o $c_compiler = "gcc" ] ; then
+            if [ $mpi = yes ] ; then
+                c_compiler=mpicc
+            else
+                c_compiler=gcc
+            fi
+        fi
+        ;;
 
 esac
 
@@ -4299,7 +4310,7 @@ if [ $cxx_compiler = mpicxx ] ; then
             if [ "x$fortran_compiler" = "xifort" ]; then
 		fortran_compiler=intel
 	    fi
-            if [ "x$fortran_compiler" = "xxlf_r" -o "x$fortran_compiler" = "xxlf90_r"  -o "x$fortran_compiler" = "xxlf90" ]; then
+            if [ "x$fortran_compiler" = "xxlf_r" -o "x$fortran_compiler" = "xxlf90_r"  -o "x$fortran_compiler" = "xxlf90" -o "x$fortran_compiler" = "xxlf2008_r" ]; then
                 fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
 	    fi
             if [ "x$fortran_compiler" = "xxlflang" ]; then
@@ -7299,8 +7310,13 @@ if [ $ompt_compiler_support = no -a $ompt_use_tr6_version = no ] ; then
     $c_compiler $openmp_flag $openmp_INC $openmp_LINK $orig_useropt -DVERTEST_OMPT_TR7 ompt_ver_test.c -o ompt_ver_test $openmp_lib 1>/dev/null 2>&1
     result=$?
     if [ $machine != craycnl ] ; then
+      OLD_LD_PRELOAD=$LD_PRELOAD
+      unset LD_PRELOAD
+      export LD_PRELOAD
       LD_LIBRARY_PATH=$omptlib:$LD_LIBRARY_PATH ./ompt_ver_test 1>/dev/null 2>&1
       result=$?
+      LD_PRELOAD=$OLD_LD_PRELOAD
+# OMPT test is sensitive to LD_PRELOADED libraries. Reset it. 
     fi
     if [ $result = "0" ]; then
         echo " yes"
@@ -8369,11 +8385,16 @@ if [ $mpi = yes ] ; then
 		    # Does MPI_Init have weak bindings for Fortran (Infiniband MPI)
 		    weakmpi=T
 		    # by default it has a T for defined symbol in nm output */
-		    weakmpi=`nm $mpilib/libfmpich.a | grep mpi_init | awk '{ print $2 ; }' | head -n 1 `
-		    if [ "x$weakmpi" = "xW" ]
-		    then
-			echo "MPI has weak bindings for mpi_init Fortran bindings..."
-			fixmakeargs="$fixmakeargs WEAKMPIINIT"
+            if [ -f $mpilib/libfmpich.a ] ; then
+              weakmpi=`nm $mpilib/libfmpich.a | grep mpi_init | awk '{ print $2 ; }' | head -n 1 `
+            else
+              if [ -f $mpilib/libfmpich.so ] ; then
+                weakmpi=`nm $mpilib/libfmpich.so | grep mpi_init | awk '{ print $2 ; }' | head -n 1 `
+              fi
+            fi
+		    if [ "x$weakmpi" = "xW" ] ; then
+			  echo "MPI has weak bindings for mpi_init Fortran bindings..."
+			  fixmakeargs="$fixmakeargs WEAKMPIINIT"
 		    fi
 		else
 		    if [ -f $mpilib/liblamf77mpi.a -o -f $mpilib/liblamf77mpi.so ] ; then
@@ -11191,7 +11212,14 @@ if [ "x$elfdir" = "x" ]; then
   libelfdir=${targetdir}/${architecture}/${libelf_dirname}
 else
   libelfdir=$elfdir
+  if [ -r ${libelfdir}/lib64/libelf.so ]; then
+    libelflibdir=lib64
+  fi
+  if [ -r ${libelfdir}/lib/libelf.so ]; then
+    libelflibdir=lib
+  fi
 fi
+
 
 if [ "x$dwarfdir" = "x" ]; then
     libdwarfdir=${targetdir}/${architecture}
@@ -11344,7 +11372,13 @@ if [ $dwarf = yes ] ; then
     echo "Using libdwarf at $dwarfdir"
 	fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib"
     fixmakeargs="$fixmakeargs dwarfinc=-I$dwarfdir/include"
-    fixmakeargs="$fixmakeargs dwarflib=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib#-ldwarf#-lz#-lelf"
+    
+    if [ -r ${libelfdir}/${libelflibdir}/libelf.so ] ; then
+       echo "Using libelf at $libelfdir"
+       elfline="-L${libelfdir}/lib#-Wl\,-rpath\,${libelfdir}/lib#"
+    fi
+
+    fixmakeargs="$fixmakeargs dwarflib=$elfline-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib#-ldwarf#-lz#-lelf"
     fixmakeargs="$fixmakeargs TAU_DWARF"
     fi
 fi

@@ -577,6 +577,7 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
     delete temp_buffers[tid];
 }
 
+extern "C" int Tau_is_thread_fake(int t);
 
 /* Write event to buffer */
 void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int node_id, int kind)
@@ -586,6 +587,19 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   }
 #ifdef TAU_OTF2_DEBUG
   fprintf(stderr, "node=%u, tid=%d, loc=%d: TauTraceEventWithNodeId(ev=%ld, par=%" PRId64 ", tid=%d, ts=%" PRIu64 ", use_ts=%d, node_id=%d, kind=%d)\n", my_node(), tid, my_real_location(node_id, tid), ev, par, tid, ts, use_ts, node_id, kind);
+#endif
+#ifdef CUPTI_disabled
+  /* OK, this looks bad, but hear me out... CUDA events are in-order on a 
+   * per-stream/context/device basis, but the one sided memory transfer 
+   * events come in with no timestamp.  For those events only, we want to 
+   * use the timestamp from the previous trace event for this thread. */
+  //if (ev >= 70000) {
+  /* Actually, any events on the virtual/fake thread that come in without
+   * a timestamp should use the previous event timestamp just in case. */
+  if (ts == 0 && Tau_is_thread_fake(tid)) {
+    use_ts = 1;
+    ts = previous_ts[tid];
+  }
 #endif
   TauInternalFunctionGuard protects_this_function;
   if(kind == TAU_TRACE_EVENT_KIND_TEMP_FUNC) {
@@ -663,9 +677,10 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     // OK...we get some counter values during a CUPTI callback that are
     // in between the start and the stop, but the counter will get a timestamp
     // that could (will?) be after the timer stop.  So, to prevent out-of-order
-    // events, make the counter timestamp the same as the previous timer timestamp.
+    // events, make the counter timestamp the previous timer timestamp + 1.
 #ifdef CUPTI
     if (my_ts < previous_ts[tid]) {
+      TAU_VERBOSE("ERROR! Timestamps out of sequence. %lu < %lu on thread %d\nevent: node=%u, tid=%d, loc=%d: TauTraceEventWithNodeId(ev=%ld, par=%" PRId64 ", tid=%d, ts=%" PRIu64 ", use_ts=%d, node_id=%d, kind=%d)\n", my_ts, previous_ts[tid], tid, my_node(), tid, my_real_location(node_id, tid), ev, par, tid, ts, use_ts, node_id, kind);
       my_ts = previous_ts[tid];
     }
 #endif
@@ -886,8 +901,6 @@ inline void convert_upper(const std::string& str, std::string& converted)
     }
 }
 
-extern "C" int Tau_is_thread_fake(int t);
-
 static void TauTraceOTF2WriteGlobalDefinitions() {
 #ifdef TAU_OTF2_DEBUG
   fprintf(stderr, "%u: TauTraceOTF2WriteGlobalDefinitions()\n", my_node());
@@ -897,9 +910,9 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     TAU_ASSERT(global_def_writer != NULL, "Failed to get global def writer");
     
     x_uint64 trace_len = end_time - global_start_time;
-    global_start_time -= trace_len * 0.02;
-    trace_len = end_time - global_start_time;
-    trace_len *= 1.02;
+    //global_start_time -= trace_len * 0.02;
+    //trace_len = end_time - global_start_time;
+    //trace_len *= 1.02;
     OTF2_GlobalDefWriter_WriteClockProperties(global_def_writer, TAU_OTF2_CLOCK_RES, global_start_time, trace_len);
 
     // Write a Location for each thread within each Node (which has a LocationGroup and SystemTreeNode)
@@ -916,7 +929,9 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         snprintf(namebuf, 256, "node %d", node);                                  
         int nodeName = nextString++;
         OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, nodeName, namebuf));
-        OTF2_EC(OTF2_GlobalDefWriter_WriteSystemTreeNode(global_def_writer, node, nodeName, emptyString, OTF2_UNDEFINED_SYSTEM_TREE_NODE));        
+        int nodeString = nextString++;
+        OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, nodeString, "node"));
+        OTF2_EC(OTF2_GlobalDefWriter_WriteSystemTreeNode(global_def_writer, node, nodeName, nodeString, OTF2_UNDEFINED_SYSTEM_TREE_NODE));        
 
         // Location Group
         snprintf(namebuf, 256, "group %d", node);
@@ -930,16 +945,37 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         for(int loc = start_loc; loc < end_loc; ++loc) {
 		    OTF2_LocationType_enum thread_type = OTF2_LOCATION_TYPE_CPU_THREAD;
             if(nodes < 2 && thread_num == 0) {
-                snprintf(namebuf, 256, "Master thread");
+                snprintf(namebuf, 256, "Master thread 0");
             } else if(thread_num == 0) {
                 snprintf(namebuf, 256, "Rank");
-#if 0 // this is a hack - we can't assume all threads are ordered like rank 0
             } else if(Tau_is_thread_fake(thread_num)) {
-                snprintf(namebuf, 256, "GPU Thread %d", thread_num);
+                /* Check for CUPTI */
+                char * test = Tau_metadata_get("CUPTI Device", thread_num);
+                if (test != NULL && strcmp(test, "") != 0) {
+                    if (strcmp(Tau_metadata_get("CUPTI Stream", thread_num), "0") == 0) {
+                        snprintf(namebuf, 256, "GPU dev%s:ctx%s", 
+                            Tau_metadata_get("CUPTI Device", thread_num),
+                            Tau_metadata_get("CUPTI Context", thread_num));
+                    } else {
+                        snprintf(namebuf, 256, "GPU dev%s:ctx%s:str%03d", 
+                            Tau_metadata_get("CUPTI Device", thread_num),
+                            Tau_metadata_get("CUPTI Context", thread_num),
+                            atoi(Tau_metadata_get("CUPTI Stream", thread_num)));
+                    }
+                } else {
+                    test = Tau_metadata_get("OpenCL Device", thread_num);
+                    if (test != NULL && strcmp(test, "") != 0) {
+                        snprintf(namebuf, 256, "GPU dev%s:que%s", test,
+                                 Tau_metadata_get("OpenCL Command Queue", thread_num));
+                    } else {
+                        static int gputhreads = 0;
+                        snprintf(namebuf, 256, "GPU thread %02d", gputhreads++);
+                    }
+                }
 				thread_type = OTF2_LOCATION_TYPE_GPU;
-#endif
             } else {
-                snprintf(namebuf, 256, "CPU Thread %d", thread_num);
+                static int cputhreads = 1;
+                snprintf(namebuf, 256, "CPU thread %02d", cputhreads++);
             }
 #ifdef TAU_ENABLE_ROCM
                 //snprintf(namebuf, 256, "Thread %d (ROCM GPU ID:%d, Queue ID:%d, Thread ID:%d)", thread_num, 1, 2, 3);
@@ -1049,6 +1085,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_WORLD, worldGroupName, OTF2_GROUP_TYPE_COMM_GROUP, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, ranks_list));
     OTF2_EC(OTF2_GlobalDefWriter_WriteComm(global_def_writer, TAU_OTF2_COMM_WORLD, commName, TAU_OTF2_GROUP_WORLD, OTF2_UNDEFINED_COMM));
     
+#if defined(KEVIN)
     // Write global RMA window
     const int commWinName = nextString++;
     OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, commWinName, "RMA_WIN_WORLD"));
@@ -1085,7 +1122,10 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         OTF2_EC(OTF2_GlobalDefWriter_WriteComm(global_def_writer, rmaCommID, rmaGroupName, rmaGroupID, OTF2_UNDEFINED_COMM));
         OTF2_EC(OTF2_GlobalDefWriter_WriteRmaWin(global_def_writer, rma_win_id, rmaGroupName, rmaCommID));
     }
-
+#else
+    OTF2_GroupRef next_group = TAU_OTF2_GROUP_FIRST_AVAILABLE;
+    OTF2_CommRef next_comm = TAU_OTF2_COMM_FIRST_AVAILABLE;
+#endif
 
     // Write function groups
     int thisGroup = next_group - 1;    
@@ -1764,7 +1804,9 @@ void TauTraceOTF2ShutdownComms(int tid) {
     otf2_disable = true;
     // Now everyone is at the beginning of MPI_Finalize()
     finalizeCallSites_if_necessary();
+#if defined(TAU_MPI) || defined(TAU_SHMEM)
     TauTraceOTF2DestroyRmaWins();
+#endif
     TauTraceOTF2ExchangeStartTime();
     TauTraceOTF2ExchangeLocations();
     TauTraceOTF2ExchangeEventsWritten();

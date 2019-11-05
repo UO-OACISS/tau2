@@ -242,11 +242,9 @@ class Coolrsub:
         params = {}
         params['cfg'] = cfg
         self.tool = params['cfg']['tool']
-
-
-
-
-
+        self.nbsamples = params['cfg']['nbsamples']
+        #self.nbcvars = params['cfg']['nbcvars']
+        self.listmetrics = params['cfg']['metrics']
         #self.listsamples = params['cfg']['appsamples']
         self.nbGraphs = params['cfg']['nbgraphs']
       
@@ -258,6 +256,35 @@ class Coolrsub:
           self.sos_bin_path = ""
           self.res_sql = [None]
           self.res_min_ts_sql = [None]
+                  #----JORDI
+          #Wait until frame 1 to know which elements are metrics
+          frame = 0
+          while (frame == 0):
+	        print("---------------------------------------------------------------------------------------------------------")
+	        self.conn = self.open_connection()
+	        sql_statement = ("SELECT MAX(frame) FROM tblVals;")
+	        self.try_execute(self.conn, sql_statement)
+	        query_result = self.conn.fetchall()
+	        print("query_result", query_result[0][0])
+	        if type(query_result[0][0]) == int:
+	        	frame = int(query_result[0][0])
+	        print("frame", frame)
+          self.metricsDB = ""
+          #Get the metric's names
+          #sql_statement = ("SELECT distinct(value_name), comm_rank FROM viewCombined where frame > 0 ORDER BY value_name, comm_rank;")
+          sql_statement = ("SELECT distinct(value_name), comm_rank FROM viewCombined where frame > 0 ORDER BY value_name;")
+          self.try_execute(self.conn, sql_statement)
+          self.metricsDB = self.conn.fetchall()
+          self.closedb()
+          #Save the metrics and modify the number of available metrics
+          self.listmetrics = self.metricsDB
+          self.metrics = self.metricsDB
+          self.nbsamples = len(self.listmetrics)
+          params['cfg']['units'] = params['cfg']['units'][0:self.nbsamples]
+          params['cfg']['units'] = ["KB" if (metric[0].find("KB") > -1) else "counts"  for metric in self.metrics]
+          params['cfg']['units'] = ["#Events" if (metric[0].find("NumEvents") > -1)  else units for metric,units in zip(self.metrics,params['cfg']['units'])]
+          print("---------------------------------------------------------------------------------------------------------")
+          print("self.nbsamples",self.nbsamples)
 
         if self.tool == "beacon":
           self.nbcvars = params['cfg']['nbcvars']
@@ -269,44 +296,8 @@ class Coolrsub:
           self.listlabelcvarsarrayindex = []
           self.listcvarsarrayindexentry = []
           self.btncvarsupdate = None
+          self.metrics = params['cfg']['metrics']
 
-
-
-        #----JORDI
-        #Wait until frame 1 to know which elements are metrics
-        frame = 0
-        while (frame == 0):
-	        print("---------------------------------------------------------------------------------------------------------")
-	        self.conn = self.open_connection()
-	        sql_statement = ("SELECT MAX(frame) FROM tblVals;")
-	        self.try_execute(self.conn, sql_statement)
-	        query_result = self.conn.fetchall()
-	        print("query_result", query_result[0][0])
-	        if type(query_result[0][0]) == int:
-	        	frame = int(query_result[0][0])
-	        print("frame", frame)
-        self.metricsDB = ""
-        #Get the metric's names
-    	#sql_statement = ("SELECT distinct(value_name), comm_rank FROM viewCombined where frame > 0 ORDER BY value_name, comm_rank;")
-    	sql_statement = ("SELECT distinct(value_name), comm_rank FROM viewCombined where frame > 0 ORDER BY value_name;")
-    	self.try_execute(self.conn, sql_statement)
-        self.metricsDB = self.conn.fetchall()
-        self.closedb()
-        #Save the metrics and modify the number of available metrics
-        self.listmetrics = self.metricsDB
-        self.metrics = self.metricsDB
-        self.nbsamples = len(self.listmetrics)
-        params['cfg']['units'] = params['cfg']['units'][0:self.nbsamples]
-        params['cfg']['units'] = ["KB" if (metric[0].find("KB") > -1) else "counts"  for metric in self.metrics]
-        params['cfg']['units'] = ["#Events" if (metric[0].find("NumEvents") > -1)  else units for metric,units in zip(self.metrics,params['cfg']['units'])]
-        print("---------------------------------------------------------------------------------------------------------")
-        print("self.nbsamples",self.nbsamples)
-        #print("self.listmetrics",self.listmetrics)
-
-
-
-        #self.metrics = params['cfg']['metrics']
-        #print("self.metrics", self.metrics)
         #self.ranks = params['cfg']['ranks']
         self.ranks = [None] * self.nbsamples
         self.procs = [None] * self.nbsamples

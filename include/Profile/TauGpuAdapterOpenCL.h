@@ -10,6 +10,7 @@
 #endif
 #include <string.h>
 
+extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
 
 #define TIMER_NAME(TYPE, NAME, ...) #TYPE " " #NAME "(" #__VA_ARGS__ ") C"
 
@@ -95,7 +96,27 @@ struct OpenCLGpuEvent : public GpuEvent
     gA = gpu_event_attr;
   }
 
-  void recordMetadata(int i) const {}
+  void recordMetadata(int id) const {
+      static std::map<uint64_t, int> devices;
+      static std::map<uint64_t, int> queues;
+      int device = 0;
+      if (devices.count(id_p1()) == 0) {
+        device = devices.size();
+        devices[id_p1()] = device;
+      }
+      device = devices[id_p1()];
+      int queue = 0;
+      if (queues.count(id_p2()) == 0) {
+        queue = queues.size();
+        queues[id_p2()] = queue;
+      }
+      queue = queues[id_p2()];
+      char tmpVal[32] = {0};
+      sprintf(tmpVal, "%d", device);
+      Tau_metadata_task("OpenCL Device", tmpVal, id);
+      sprintf(tmpVal, "%02d", queue);
+      Tau_metadata_task("OpenCL Command Queue", tmpVal, id);
+  }
 
   /* CUDA Event are uniquely identified as the pair of two other ids:
    * context and call (API).

@@ -12,27 +12,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// #define PROFILING_ON
+#include "TAU.h"
 #include "matmult_initialize.h"
 
-#ifdef TAU_MPI
-int provided;
 #include <mpi.h>
+int provided = MPI_THREAD_SINGLE;
 /* NOTE: MPI is just used to spawn multiple copies of the kernel to different ranks.
 This is not a parallel implementation */
-#endif /* TAU_MPI */
 
-#ifdef PTHREADS
+#ifdef PTHREADS_DISABLED
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
 /*** NOTE THE ATTR INITIALIZER HERE! ***/
 pthread_mutex_t mutexsum;
-#endif /* PTHREADS */
+static pthread_barrier_t barrier;
+#ifndef PTHREAD_MUTEX_ERRORCHECK
+#define PTHREAD_MUTEX_ERRORCHECK 0
+#endif
+#endif /* PTHREADS_DISABLED */
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 512
+#define MATRIX_SIZE 256
 #endif
-#define ITERATIONS 100
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
 #define NCA MATRIX_SIZE                 /* number of columns in matrix A */
@@ -61,39 +64,6 @@ __inline double multiply(double a, double b) {
 }
 #endif /* APP_USE_INLINE_MULTIPLY */
 
-#if 0
-// cols_a and rows_b are the same value
-void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
-  int i,j,k;
-  double tmp = 0.0;
-//num_threads(2)
-#pragma omp parallel private(i) shared(a,b,c) 
-  {
-    /*** Do matrix multiply sharing iterations on outer loop ***/
-    /*** Display who does which iterations for demonstration purposes ***/
-#pragma omp for nowait schedule(dynamic,1)
-    for (i=0; i<rows_a; i++) {
-//num_threads(2)
-#pragma omp parallel private(i,j,k) shared(a,b,c) 
-      {
-#pragma omp for nowait schedule(dynamic,1)
-        for (k=0; k<cols_a; k++) {
-          for(j=0; j<cols_b; j++) {
-#ifdef APP_USE_INLINE_MULTIPLY
-              c[i][j] += multiply(a[i][k], b[k][j]);
-#else 
-              tmp = a[i][k];
-			  tmp = tmp * b[k][j];
-              c[i][j] += tmp;
-#endif 
-            }
-          }
-      }
-    }
-  }   /*** End of parallel region ***/
-}
-#endif
-
 // cols_a and rows_b are the same value
 void compute(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
   int i,j,k;
@@ -101,7 +71,7 @@ void compute(double **a, double **b, double **c, int rows_a, int cols_a, int col
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
-#pragma omp for schedule(dynamic) nowait
+#pragma omp for nowait
     for (i=0; i<rows_a; i++) {
       for(j=0; j<cols_b; j++) {
         for (k=0; k<cols_a; k++) {
@@ -122,7 +92,7 @@ void compute_interchange(double **a, double **b, double **c, int rows_a, int col
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
-#pragma omp for schedule(dynamic) nowait
+#pragma omp for nowait
     for (i=0; i<rows_a; i++) {
       for (k=0; k<cols_a; k++) {
         for(j=0; j<cols_b; j++) {
@@ -152,13 +122,6 @@ double do_work(void) {
   initialize(c, NRA, NCB);
 
   compute(a, b, c, NRA, NCA, NCB);
-#if defined(TAU_OPENMP)
-#if 0
-  //if (omp_get_nested()) {
-    compute_nested(a, b, c, NRA, NCA, NCB);
-  //}
-#endif
-#endif
   compute_interchange(a, b, c, NRA, NCA, NCB);
 
   double result = c[0][1];
@@ -170,84 +133,39 @@ double do_work(void) {
   return result;
 }
 
-#ifdef PTHREADS
-int busy_sleep() {
-  int i, sum = 0;
-  for (i = 0 ; i < 100000000 ; i++) {
-    sum = sum+i;
-  }
-  return sum;
-}
-
 void * threaded_func(void *data)
 {
-  int rc;
-  int sum = 0;
-  // compute
+    int * maxi = (int *)(data);
   int i;
-  for (i = 0 ; i < ITERATIONS ; i++) {
-  do_work();
+  for (i = 0 ; i < *maxi ; i++) {
+#ifdef PTHREADS_DISABLED
+    int s = pthread_barrier_wait(&barrier);
+#endif
+    do_work();
   }
-
-#ifdef APP_DO_LOCK_TEST
-  // test locking - sampling should catch this
-  if ((rc = pthread_mutex_lock(&mutexsum)) != 0)
-  {
-    errno = rc;
-    perror("thread lock error");
-    exit(1);
-  }
-  fprintf(stderr,"Thread 'sleeping'...\n"); fflush(stderr);
-  sum += busy_sleep();
-  fprintf(stderr,"Thread 'awake'...\n"); fflush(stderr);
-  if ((rc = pthread_mutex_unlock(&mutexsum)) != 0)
-  {
-    errno = rc;
-    perror("thread unlock error");
-    exit(1);
-  }
-  pthread_exit((void*) 0);
-#endif // APP_DO_LOCK_TEST
+#ifdef PTHREADS_DISABLED
+  pthread_exit(NULL);
+#endif
   return NULL;
 }
-#endif // PTHREADS
 
 int main (int argc, char *argv[]) 
 {
-
-#ifdef PTHREADS
-  int ret;
-  pthread_attr_t  attr;
-  pthread_t       tid1, tid2, tid3;
-  pthread_mutexattr_t Attr;
-  pthread_mutexattr_init(&Attr);
-#ifndef TAU_CRAYCNL
-  pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_ERRORCHECK);
-#endif /* TAU_CRAYCNL */
-  if (pthread_mutex_init(&mutexsum, &Attr)) {
-   printf("Error while using pthread_mutex_init\n");
-  }
-#endif /* PTHREADS */
-
-#ifdef TAU_MPI
   int rc = MPI_SUCCESS;
-  int rank = 0;
-  int comm_size = 0;
-#if defined(PTHREADS)
+#if defined(PTHREADS_DISABLED)
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  if (rank == 0) {
-    printf("MPI_Init_thread: provided = %d, MPI_THREAD_MULTIPLE=%d\n", provided, MPI_THREAD_MULTIPLE);
-  }
+  printf("MPI_Init_thread: provided = %d, MPI_THREAD_MULTIPLE=%d\n", provided, MPI_THREAD_MULTIPLE);
 #elif defined(TAU_OPENMP)
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  if (rank == 0) {
-    printf("MPI_Init_thread: provided = %d, MPI_THREAD_FUNNELED=%d\n", provided, MPI_THREAD_FUNNELED);
-  }
+  printf("MPI_Init_thread: provided = %d, MPI_THREAD_FUNNELED=%d\n", provided, MPI_THREAD_FUNNELED);
 #else
-  rc = MPI_Init(&argc, &argv); 
+  rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 #endif /* THREADS */
+  if (provided == MPI_THREAD_MULTIPLE) { 
+    printf("provided is MPI_THREAD_MULTIPLE\n");
+  } else if (provided == MPI_THREAD_FUNNELED) { 
+    printf("provided is MPI_THREAD_FUNNELED\n");
+  }
   if (rc != MPI_SUCCESS) {
     char *errorstring;
     int length = 0;
@@ -255,101 +173,133 @@ int main (int argc, char *argv[])
     printf("Error: MPI_Init failed, rc = %d\n%s\n", rc, errorstring);
     exit(1);
   }
+
+#if 1
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  int comm_size = 0;
   MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-#endif /* TAU_MPI */
+    // get the number of cores
+    unsigned int ncores = sysconf(_SC_NPROCESSORS_ONLN);
+    unsigned int nthreads = (ncores / comm_size) -1;
+    // for debugging, use just one thread
+    nthreads = 1;
+    if (rank == 0) { printf("Running with %d processes, %d cores, %d threads per core\n", comm_size, ncores, nthreads+1); }
 
-#ifdef PTHREADS
-  ret = pthread_create(&tid1, NULL, threaded_func, NULL);
-  if (ret) {
-    printf("Error: pthread_create (1) fails ret = %d\n", ret);
-    exit(1);
-  }   
+    int number, count, tag;
+    count = 1;
+    tag = 1984;
+    if (comm_size > 1 && comm_size % 2 == 0) {
+    	if (rank % 2 == 0) {
+        	number = -1;
+        	MPI_Send(&number, count, MPI_INT, rank+1, tag, MPI_COMM_WORLD);
+        	printf("Process %d sent number     %d to process   %d\n", rank, number, rank+1);
+    	} else {
+        	MPI_Recv(&number, count, MPI_INT, rank-1, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        	printf("Process %d received number %d from process %d\n", rank, number, rank-1);
+    	}
+    }
 
-  ret = pthread_create(&tid2, NULL, threaded_func, NULL);
-  if (ret) {
-    printf("Error: pthread_create (2) fails ret = %d\n", ret);
-    exit(1);
-  }   
-
-  ret = pthread_create(&tid3, NULL, threaded_func, NULL);
-  if (ret) {
-    printf("Error: pthread_create (3) fails ret = %d\n", ret);
-    exit(1);
-  }   
-
-#endif /* PTHREADS */
-
-#ifdef TAU_MPI
     // create a communicator
-    /* The code above only works with 4 or more processes!! */
-    if (comm_size >=4 ) {
-      MPI_Group group_world, odd_group, even_group, diff_group, 
-                union_group, inter_group, re_group, ri_group;
-      int j, Neven, Nodd, members[8], ierr;
+    MPI_Group group_world, odd_group, even_group;;
+    int i, Neven, Nodd, members[8], ierr;
 
-      MPI_Comm_group(MPI_COMM_WORLD, &group_world);
-      MPI_Comm world_comm;
-      MPI_Comm_create(MPI_COMM_WORLD, group_world, &world_comm);
+    MPI_Comm_group(MPI_COMM_WORLD, &group_world);
 
-      Neven = (comm_size+1)/2;    /* processes of MPI_COMM_WORLD are divided */
-      Nodd = comm_size - Neven;   /* into odd- and even-numbered groups */
-      for (j=0; j < Neven; j++) {   /* "members" determines members of even_group */
-        members[j] = 2*j;
-      };
-    
-      MPI_Group_incl(group_world, Neven, members, &even_group);
-      MPI_Group_excl(group_world, Neven, members, &odd_group);
-      MPI_Comm even_comm;
-      MPI_Comm odd_comm;
-      MPI_Comm_create(MPI_COMM_WORLD, even_group, &even_comm);
-      MPI_Comm_create(MPI_COMM_WORLD, odd_group, &odd_comm);
-      MPI_Group_difference(group_world, even_group, &diff_group);
-      MPI_Group_intersection(group_world, odd_group, &inter_group);
-      MPI_Group_union(group_world, odd_group, &union_group);
-      int range[2][3] = {{0,1,1},{2,3,1}};
-      MPI_Group_range_excl(group_world, 2, range, &re_group);
-      MPI_Group_range_incl(group_world, 2, range, &ri_group);
-      int ranks[2] = {0,1};
-      int ranks_out[2] = {0};
-      MPI_Group_translate_ranks(group_world, 2, ranks, union_group, ranks_out);
-    } 
+    Neven = (comm_size+1)/2;    /* processes of MPI_COMM_WORLD are divided */
+    Nodd = comm_size - Neven;   /* into odd- and even-numbered groups */
+    for (i=0; i < Neven; i++) {   /* "members" determines members of even_group */
+      members[i] = 2*i;
+    };
 
-#endif /* TAU_MPI */
+    MPI_Group_incl(group_world, Neven, members, &even_group);
+    MPI_Group_excl(group_world, Neven, members, &odd_group);
+    MPI_Comm even_comm;
+    MPI_Comm odd_comm;
+    MPI_Comm new_comm;
+    MPI_Comm_create(MPI_COMM_WORLD, even_group, &new_comm);
+    MPI_Comm_create(MPI_COMM_WORLD, odd_group, &new_comm);
 
-/* On thread 0: */
-  int i;
-  for (i = 0 ; i < ITERATIONS ; i++) {
-  printf("%d.", i);fflush(stdout);
-  do_work();
+#ifdef PTHREADS_DISABLED
+  int ret;
+  pthread_attr_t  attr;
+  //pthread_t       tid1, tid2, tid3;
+  pthread_t * tid = (pthread_t*)(malloc(sizeof(pthread_t) * nthreads));
+  pthread_mutexattr_t Attr;
+  pthread_mutexattr_init(&Attr);
+  int s = pthread_barrier_init(&barrier, NULL, nthreads+1);
+  pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_ERRORCHECK);
+  if (pthread_mutex_init(&mutexsum, &Attr)) {
+   printf("Error while using pthread_mutex_init\n");
+  }
+#endif /* PTHREADS_DISABLED */
+
+  int maxi = 200;
+
+#ifdef PTHREADS_DISABLED
+  for (i = 0 ; i < nthreads ; i++) {
+    if (ret = pthread_create(&(tid[i]), NULL, threaded_func, &maxi) ) {
+      printf("Error: pthread_create (1) fails ret = %d\n", ret);
+      exit(1);
+    }   
+  }   
+#endif /* PTHREADS_DISABLED */
+
+  char * periodic_str = getenv("TAU_SOS_PERIODIC");
+  int do_dump = 1;
+  if (periodic_str != NULL) {
+    do_dump = 0;
   }
 
-#ifdef PTHREADS
-  ret = pthread_join(tid1, NULL);
-  if (ret) {
-    printf("Error: pthread_join (1) fails ret = %d\n", ret);
-    exit(1);
-  }   
+/* On thread 0: */
+  //int i;
+  TAU_REGISTER_CONTEXT_EVENT(event, "Iteration count");
+  for (i = 0 ; i < maxi ; i++) {
+    // for SOS testing purposes...
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (rank == 0) { printf("Iteration %d of %d working...", i, maxi); fflush(stdout); }
+    TAU_CONTEXT_EVENT(event, i);
+#ifdef PTHREADS_DISABLED 
+    int s = pthread_barrier_wait(&barrier);
+#endif
+    do_work();
+    if (do_dump) {
+        if (rank == 0) { printf("Iteration %d of %d Sending data over SOS....", i, maxi); fflush(stdout); }
+        Tau_dump();
+    }
+    if (rank == 0) { printf("Iteration %d of %d done.\n", i, maxi); fflush(stdout); }
+  }
 
-  ret = pthread_join(tid2, NULL);
-  if (ret) {
-    printf("Error: pthread_join (2) fails ret = %d\n", ret);
-    exit(1);
-  }   
+    MPI_Barrier(MPI_COMM_WORLD);
+    count = 1;
+    tag = 1984;
+    if (comm_size > 1 && comm_size % 2 == 0) {
+    	if (rank % 2 == 0) {
+        	number = -1;
+        	MPI_Send(&number, count, MPI_INT, rank+1, tag, MPI_COMM_WORLD);
+        	printf("Process %d sent number     %d to process   %d\n", rank, number, rank+1);
+    	} else {
+        	MPI_Recv(&number, count, MPI_INT, rank-1, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        	printf("Process %d received number %d from process %d\n", rank, number, rank-1);
+    	}
+    }
 
-  ret = pthread_join(tid3, NULL);
-  if (ret) {
-    printf("Error: pthread_join (3) fails ret = %d\n", ret);
-    exit(1);
-  }   
 
+#ifdef PTHREADS_DISABLED 
+  for (i = 0 ; i < nthreads ; i++) {
+    if (ret = pthread_join(tid[i], NULL) )
+    {
+        printf("Error: pthread_join (1) fails ret = %d\n", ret);
+        exit(1);
+    }   
+  }   
   pthread_mutex_destroy(&mutexsum);
-#endif /* PTHREADS */
+#endif /* PTHREADS_DISABLED */
 
-#ifdef TAU_MPI
   MPI_Finalize();
-#endif /* TAU_MPI */
   printf ("Done.\n");
+
+#endif
 
   return 0;
 }
-

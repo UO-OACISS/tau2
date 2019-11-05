@@ -1,4 +1,5 @@
 #include <Profile/TauGpuAdapterCupti.h>
+#include <Profile/TauMetrics.h>
 
 extern void *Tau_pure_search_for_function(const char *name, int create);
 
@@ -157,6 +158,24 @@ extern "C" void Tau_cupti_register_gpu_event(
     Tau_gpu_register_gpu_event(&gpu_event, start, stop);
 }
 
+extern "C" void Tau_cupti_register_gpu_sync_event(
+        const char *name,
+        uint32_t deviceId,
+        uint32_t streamId,
+        uint32_t contextId,
+        uint32_t correlationId,
+        double start,
+        double stop,
+        int taskId) {
+    CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
+            deviceId,
+            streamId, 
+            contextId, 
+            correlationId, 
+            0, NULL, 0, taskId);
+    Tau_gpu_register_sync_event(&gpu_event, start, stop);
+}
+
 extern "C" void Tau_cupti_register_gpu_atomic_event(
         const char *name,
         uint32_t deviceId,
@@ -172,76 +191,45 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
     Tau_gpu_register_gpu_atomic_event(&gpu_event);
 }
 
-// extern "C" void Tau_cupti_register_func_event(
-//                                               const char *name,
-//                                               uint32_t deviceId,
-//                                               uint32_t streamId,
-//                                               uint32_t contextId,
-//                                               uint32_t functionIndex,
-//                                               double timestamp,
-//                                               uint32_t id,
-//                                               uint32_t moduleId,
-// 					      const char *kname,
-//                                               const char *demangled) {
+/* The one and only way to get the virtual thread ID is to create a dummy
+ * GPU event and get the task with a lookup.  The lookup logic is defined
+ * in TauGpuAdapterCupti::less_than() */
+int get_task(GpuEvent *new_task); // defined in TauGpu.cpp
+int get_taskid_from_gpu_event(uint32_t deviceId, uint32_t streamId,
+    uint32_t contextId, bool cdp) {
+    CuptiGpuEvent gpu_event = CuptiGpuEvent("", deviceId, streamId,
+        contextId, 0, 0, NULL, 0, 0);
+    if (cdp) { gpu_event.setCdp(); }
+    return get_task(&gpu_event);
+}
 
-//   //Empty list of gpu attributes                         
-//   CuptiGpuEvent gpu_event = CuptiGpuEvent(name,
-// 					  deviceId, streamId, contextId, 0, 
-// 					  functionIndex, NULL, 0);
+/* Records a synchronous event on the GPU, as seen from CPU! */
+extern "C" void Tau_cupti_gpu_enter_event_from_cpu(const char* name, int tid)
+{
+#ifdef DEBUG_PROF
+  TAU_VERBOSE("entering cu event: %s on virtual thread %d.\n", name, tid);
+#endif
+  // get a timestamp from the CPU thread
+  double startTime = (double)TauMetrics_getTraceMetricValue(RtsLayer::myThread());
+  // adjust it.
+  CuptiGpuEvent gpu_event = CuptiGpuEvent("", 0, 0, 0, 0, 0, NULL, 0, 0);
+  const double syncStartTime = startTime + gpu_event.syncOffset();
+  Tau_gpu_enter_event_from_cpu(name, tid, syncStartTime);
+}
 
-//   Tau_gpu_register_func_event(&gpu_event, deviceId, timestamp, name,
-// 			      contextId, functionIndex, id,
-// 			      moduleId, kname, demangled);
-// }
+/* Records a synchronous event on the GPU, as seen from CPU! */
+extern "C" void Tau_cupti_gpu_exit_event_from_cpu(const char* name, int tid)
+{
+#ifdef DEBUG_PROF
+  TAU_VERBOSE("exiting cu event: %s on virtual thread %d.\n", name, tid);
+#endif
+  // get a timestamp from the CPU thread
+  double endTime = (double)TauMetrics_getTraceMetricValue(RtsLayer::myThread());
+  // adjust it.
+  CuptiGpuEvent gpu_event = CuptiGpuEvent("", 0, 0, 0, 0, 0, NULL, 0, 0);
+  const double syncEndTime = endTime + gpu_event.syncOffset();
+  Tau_gpu_exit_event_from_cpu(name, tid, syncEndTime);
+}
 
-// extern "C" void Tau_cupti_register_instruction_event(
-// 						     const char *name,
-// 						     uint32_t deviceId,
-// 						     uint32_t streamId,
-// 						     uint32_t contextId,
-// 						     uint32_t correlationId,
-// 						     double start,
-// 						     double stop,
-// 						     double delta_tstamp,
-// 						     uint32_t sourceLocatorId,
-// 						     uint32_t functionId,
-// 						     uint32_t pcOffset,
-// 						     uint32_t executed, uint32_t threadsExecuted
-// 						     ) {
-//   // printf("Tau_cupti_register_instruction_event: %f, %f\n", timestamp, delta_tstamp);
-//   // uint64_t t_stamp = timestamp/1e3;
-//   // double t_stamp2 = timestamp/1e3;
-//   // double t_stamp3 = timestamp;
-//   // printf("Tau_cupti_register_instruction_event: %u, t_stamp_orig: %u, t_stamp2: %f, t_stamp3: %f\n", 
-//   // 	 timestamp, t_stamp, t_stamp2, t_stamp3);
 
-// //Empty list of gpu attributes
-// CuptiGpuEvent gpu_event = CuptiGpuEvent(name,
-// 					deviceId, streamId, contextId, 0, correlationId, NULL, 0);
 
-//  Tau_gpu_register_instruction_event(&gpu_event, start,
-// 				   stop, delta_tstamp, name,
-// 				   correlationId, sourceLocatorId, functionId, 
-// 				   pcOffset, executed, threadsExecuted);
-// }
-
-// extern "C" void Tau_cupti_register_source_event(
-// 						const char *name,
-// 						uint32_t deviceId,
-// 						uint32_t streamId,
-// 						uint32_t contextId,
-// 						uint32_t sourceId,
-// 						double timestamp,
-// 						const char *fileName,
-// 						uint32_t lineNumber) {
-
-//   //  printf("@@ sourceLocatorId: %i, functionId: %i, samples: %i, stallReason: %s\n", sourceLocatorId, functionId, samples, stallReason);
-
-// //Empty list of gpu attributes
-// CuptiGpuEvent gpu_event = CuptiGpuEvent(name,
-// 					deviceId, streamId, contextId, 0, sourceId, NULL, 0);
-
-// Tau_gpu_register_source_event(&gpu_event,
-// 			      timestamp, name, sourceId,
-// 			      fileName, lineNumber);
-// }

@@ -1139,6 +1139,8 @@ extern "C" void Tau_enable_plugin_for_specific_event(int ev, const char *name, u
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
   plugins_for_named_specific_event[key].insert(id);
+  if(plugins_for_ompt_event[ev].is_ompt())
+    plugins_for_ompt_event[ev].insert(id);
   RtsLayer::UnLockDB();
 
 }
@@ -1150,6 +1152,8 @@ extern "C" void Tau_disable_plugin_for_specific_event(int ev, const char *name, 
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
   plugins_for_named_specific_event[key].erase(id);
+  if(plugins_for_ompt_event[ev].is_ompt())
+    plugins_for_ompt_event[ev].erase(id);
   RtsLayer::UnLockDB();
 
 }
@@ -1161,6 +1165,8 @@ extern "C" void Tau_disable_all_plugins_for_specific_event(int ev, const char *n
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
   plugins_for_named_specific_event[key].clear();
+  if(plugins_for_ompt_event[ev].is_ompt())
+    plugins_for_ompt_event[ev].clear();
   RtsLayer::UnLockDB();
 }
 
@@ -1174,6 +1180,13 @@ extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *na
   for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
     plugins_for_named_specific_event[key].insert(i);
   }
+
+  if(plugins_for_ompt_event[ev].is_ompt()) {
+    for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
+        plugins_for_ompt_event[ev].insert(i);
+    }
+  }
+
   RtsLayer::UnLockDB();
 }
 
@@ -2163,7 +2176,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 
 #endif
 }
-#ifdef CUPTI
+#ifdef CUPTI_disabled
 int vtid_to_ttid[TAU_MAX_THREADS];
 int vtid_to_corrid[TAU_MAX_THREADS];
 std::map<uint32_t, uint32_t> map_cuptiThread;
@@ -2452,7 +2465,7 @@ void Tau_pure_start_task_string(const string name, int tid)
   PureMap & pure = ThePureMap();
   PureMap::iterator it = pure.find(name);
   if (it == pure.end()) {
-    tauCreateFI_signalSafe((void**)&fi, name, "", TAU_USER, "TAU_USER");
+    tauCreateFI_signalSafe((void**)&fi, name, "", TAU_DEFAULT, "TAU_DEFAULT");
     pure[name] = fi;
   } else {
     fi = it->second;
@@ -2462,7 +2475,7 @@ void Tau_pure_start_task_string(const string name, int tid)
 }
 
 
-extern "C" void Tau_pure_start_task(const char * n, int tid)
+extern "C" void Tau_pure_start_task_group(const char * n, int tid, const char * group)
 {
   TauInternalFunctionGuard protects_this_function;
   string name = n; // this is VERY bad if called from signalling! see above ^
@@ -2477,20 +2490,7 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
     RtsLayer::LockEnv();
     PureMap::iterator it = pure.find(name);
     if (it == pure.end()) {
-      // // check for paren
-      // if(name.find("(") != -1) { 
-      // 	stringstream ss;
-      // 	string filename = "/foo/bar.c";
-      // 	int lineno = 99;
-      // 	ss << name << " [{" << filename << "}{" << lineno << "}]";
-      // 	tauCreateFI((void**)&fi, ss.str(), "", TAU_USER, "TAU_USER");
-      // 	TAU_VERBOSE("[TauCAPI]:  just called tauCreateFI for %s,\n\tss.str(): %s\n", 
-      // 	       name.c_str(), ss.str().c_str());
-      // }
-      // else {
-      // tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
-      // }
-      tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
+      tauCreateFI((void**)&fi, name, "", TAU_USER, group);
       pure[name] = fi;
 
     } else {
@@ -2499,6 +2499,11 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
     RtsLayer::UnLockEnv();
   }
   Tau_start_timer(fi, 0, tid);
+}
+
+extern "C" void Tau_pure_start_task(const char * n, int tid)
+{
+    Tau_pure_start_task_group(n, tid, "TAU_USER");
 }
 
 FunctionInfo* Tau_make_cupti_sample_timer(const char * filename, const char * function, int lineno)
@@ -3258,7 +3263,7 @@ extern "C" void Tau_disable_tracking_mpi_t(void) {
   TauEnv_set_track_mpi_t_pvars(0); 
 }
 
-#ifdef CUPTI
+#ifdef CUPTI_disabled
 extern "C" int register_cuda_thread(unsigned int sys_tid, unsigned int parent_tid, int tau_vtid, unsigned int corr_id, unsigned int context_id, const char* func_name, unsigned int device_id) {
   CudaThread ct;
   ct.sys_tid = sys_tid;

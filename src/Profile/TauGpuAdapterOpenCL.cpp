@@ -311,9 +311,9 @@ OpenCLGpuEvent * Tau_opencl_retrieve_gpu(cl_command_queue q)
   //err = clGetDeviceInfo(id, CL_DEVICE_VENDOR_ID, sizeof(cl_uint), &vendor, NULL);
 
 
-  //printf("device id: %d.\n", id);
-  //printf("command id: %lld.\n", q);
-  //printf("vendor id: %d.\n", vendor);
+  printf("device id: %d.\n", id);
+  printf("command id: %lld.\n", q);
+  printf("vendor id: %d.\n", vendor);
   double sync_offset = Tau_opencl_sync_clocks(q, context);
 #if defined(PTHREADS) || defined(TAU_OPENMP)
   // Create a virtual thread for this command queue

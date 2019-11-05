@@ -17,8 +17,8 @@ TAU_MAKEFILE ?=../../include/Makefile
 include $(TAU_MAKEFILE)
 
 #CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optKeepFiles -optNoCompInst
-#CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh
-CC		= mpicc -DTAU_MPI -g -O0
+CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh
+#CC		= mpicc -DTAU_MPI -g -O0
 #CC		= opencc -fopenmp
 #CC		= icc -pthread -DPTHREADS
 #CC      = $(TAU_CC) -fopenmp

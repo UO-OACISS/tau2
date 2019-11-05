@@ -960,7 +960,7 @@ TauGpuAdapterCupti40.o : TauGpuAdapterCupti40.cpp $(HDRS) ../../include/Profile/
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_PERMISSIVE_FLAG) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiActivity.o : CuptiActivity.cpp $(HDRS) ../../include/Profile/CuptiActivity.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUPTI_ACTIVITY_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_STDCXX11_FLAG) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUPTI_ACTIVITY_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CudaSass.o : CudaSass.cpp $(HDRS) ../../include/Profile/CudaSass.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)

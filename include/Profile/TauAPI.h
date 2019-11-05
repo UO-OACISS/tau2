@@ -419,6 +419,7 @@ void Tau_start(const char *name);
 void Tau_stop(const char *name);
 void *Tau_pure_search_for_function(const char *name, int create);
 void Tau_pure_start_task(const char *name, int tid);
+void Tau_pure_start_task_group(const char *name, int tid, const char * group);
 void Tau_pure_stop_task(const char *name, int tid);
 void Tau_stop_current_timer();
 void Tau_stop_current_timer_task(int tid);
