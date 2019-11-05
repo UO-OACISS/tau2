@@ -23,7 +23,9 @@ printf ("[%s:%d] Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n
 #define CHECK_CUPTI_ERROR(err, cuptifunc) \
 if (err != CUPTI_SUCCESS) \
 { \
-printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, err, cuptifunc); \
+const char * tmpstr;  \
+cuptiGetResultString(err, &tmpstr); \
+printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n%s\n", __FILE__, __LINE__, err, cuptifunc, tmpstr); \
 }
 
 #define TAU_CUPTI_MAX_NAME 40
