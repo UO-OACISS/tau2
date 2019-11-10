@@ -2,7 +2,7 @@
 **			TAU Performance System(R)                          **
 **			http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2019				   	   	   **
+**    Copyright 1997-2020				   	   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **
@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.28.2                        *
+ *                           Version 2.29                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -207,7 +207,7 @@ MPI Options:
 -mpilibrary=<library> ................ Specify a different MPI library.
             e.g., -mpilibrary=-lmpi#-lutil#-ldl  (# is used for a space)                                  
 OpenMP Options:
--ompt=<dir|download> .................. Use OpenMP Tools API instead of opari
+-ompt .................. Use OpenMP Tools API instead of opari
 (NOTE: -ompt is currently supported for GNU, Intel, MPC, and OpenUH compilers.)
 -openmp ........................................... Use OpenMP threads.
 -opari .................................................... Use Opari2.
