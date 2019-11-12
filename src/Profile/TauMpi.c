@@ -2229,6 +2229,10 @@ char *** argv;
   TAU_PROFILE_START(tautimer);
   
   tau_mpi_init_predefined_constants();
+#ifdef TAU_MPI_T
+  Tau_MPI_T_initialization();
+  Tau_track_mpi_t();
+#endif /* TAU_MPI_T */
 
 #ifdef TAU_ADIOS
   // this is only here to force the linker to resolve the adiost_tool symbol
@@ -2246,11 +2250,6 @@ char *** argv;
 #else
    returnVal = PMPI_Init( argc, argv );
 #endif
-
-#ifdef TAU_MPI_T
-  Tau_MPI_T_initialization();
-  Tau_track_mpi_t();
-#endif /* TAU_MPI_T */
 
   MPI_Comm parent;
   PMPI_Comm_get_parent(&parent);
@@ -2341,13 +2340,12 @@ int *provided;
   TAU_PROFILE_START(tautimer);
  
   tau_mpi_init_predefined_constants();
-
-  returnVal = PMPI_Init_thread( argc, argv, required, provided );
-
 #ifdef TAU_MPI_T
   returnVal = Tau_MPI_T_initialization();
   Tau_track_mpi_t();
 #endif /* TAU_MPI_T */
+
+  returnVal = PMPI_Init_thread( argc, argv, required, provided );
 
   MPI_Comm parent;
   MPI_Comm_get_parent(&parent);
