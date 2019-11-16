@@ -10075,6 +10075,9 @@ EOF
 		    cupti_event_path="$cudadir/extras/CUPTI/include/cupti_events.h"
 		else
 		    cupti_event_path="$cudadir/extras/CUPTI.orig/include/cupti_events.h"
+		    if [ -f "$cudadir/targets/aarch64-linux/include/cupti_events.h" ]; then 
+		      cupti_event_path="$cudadir/targets/aarch64-linux/include/cupti_events.h"
+	            fi
 		fi
 		if [ $cupti = no -a -f $cupti_event_path ] ; then
 		    tauoptions="${tauoptions}-cupti"
@@ -10084,6 +10087,9 @@ EOF
 			cupti="$cudadir/extras/CUPTI"
 		    else
 			cupti="$cudadir/extras/CUPTI.orig"
+		        if [ -f "$cudadir/targets/aarch64-linux/include/cupti_events.h" ]; then 
+			  cupti="$cudadir/targets/aarch64-linux"
+			fi
 		    fi
 		    fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 		    echo "Using CUPTI library found in $cupti."
