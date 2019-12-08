@@ -208,98 +208,61 @@ static void metricv_add(const char *name) {
 			fprintf(stderr, "cuptiMetricGetNumEvents failed on device %d\n", dev);
 			continue;
 		}
-		ScopedArray<CUpti_EventID> metricEvents(numMetricEvents);
-		result = cuptiMetricEnumEvents(metricID, &metricEvents.size, metricEvents);
+		CUpti_EventID metricEvents[numMetricEvents];
+		size_t metricEvents_size = numMetricEvents * sizeof(CUpti_EventID);
+		result = cuptiMetricEnumEvents(metricID, &metricEvents_size, metricEvents);
 		if (result != CUPTI_SUCCESS) {
 			fprintf(stderr, "cuptiMetricEnumEvents failed on device %d\n", dev);
 			continue;
 		}
 
-		// Get the list of domains on device so we can search for the required events
-		uint32_t numDomains;
-		if(cuptiDeviceGetNumEventDomains(device, &numDomains) != CUPTI_SUCCESS) {
-			fprintf(stderr, "cuptiDeviceGetNumEventDomains failed on device %d\n", dev);
-			continue;
-		}
-		if (!numDomains) {
-			fprintf(stderr, "No domain is exposed by device %d\n", device);
-			continue;
-		}
-		ScopedArray<CUpti_EventDomainID> domains(numDomains);
-		result = cuptiDeviceEnumEventDomains(device, &domains.size, domains);
-		if (result != CUPTI_SUCCESS) {
-			fprintf(stderr, "cuptiDeviceEnumEventDomains failed on device %d\n", dev);
-			continue;
-		}
+		// add events to metricv
 
-		// Search domains for required events and add events to TAU_METRICS
-		for (int dom=0; dom<numDomains; ++dom) {
-			CUpti_EventDomainID domain = domains[dom];
-			uint32_t numDomainEvents;
-			result = cuptiEventDomainGetNumEvents(domain, &numDomainEvents);
+		for (int i = 0; i < numMetricEvents; i++) {
+			CUpti_EventID event = metricEvents[i];
+			char buff[TAU_CUPTI_MAX_NAME];
+			size_t buff_size = sizeof(buff);
+			result = cuptiEventGetAttribute(event, CUPTI_EVENT_ATTR_NAME, &buff_size, buff);
 			if (result != CUPTI_SUCCESS) {
-				fprintf(stderr, "cuptiEventDomainGetNumEvents failed for domain %d on device %d\n", dom, dev);
+				fprintf(stderr, "cuptiEventGetAttribute failed for event %d on device %d\n", event, dev);
 				continue;
 			}
-			ScopedArray<CUpti_EventID> domainEvents(numDomainEvents);
-			result = cuptiEventDomainEnumEvents(domain, &domainEvents.size, domainEvents);
-			if (result != CUPTI_SUCCESS) {
-				fprintf(stderr, "cuptiEventDomainEnumEvents failed for domain %d on device %d\n", dom, dev);
-				continue;
+			if (buff_size == sizeof(buff)) {
+				fprintf(stderr, "TAU_CUPTI_MAX_NAME=%d is too small for event name!\n", TAU_CUPTI_MAX_NAME);
+				exit(EXIT_FAILURE);
 			}
-
-			// Compare metric event list to list of events in this domain
-			for (int i=0; i<numMetricEvents; ++i) {
-				CUpti_EventID event = metricEvents[i];
-				for (int j=0; j<numDomainEvents; ++j) {
-					if (event == domainEvents[j]) {
-						// Found an event that we'll need to measure, build the event name
-						char buff[TAU_CUPTI_MAX_NAME];
-						size_t buff_size = sizeof(buff);
-						result = cuptiEventDomainGetAttribute(domain, CUPTI_EVENT_DOMAIN_ATTR_NAME, &buff_size, buff);
-						if (result != CUPTI_SUCCESS) {
-							fprintf(stderr, "cuptiEventDomainGetAttribute failed for domain %d on device %d\n", dom, dev);
-							continue;
-						}
-						if (buff_size == sizeof(buff)) {
-							fprintf(stderr, "TAU_CUPTI_MAX_NAME=%d is too small for domain name!\n", TAU_CUPTI_MAX_NAME);
-							exit(EXIT_FAILURE);
-						}
-						std::string domain_name = buff;
-						buff_size = sizeof(buff); // reset buff_size before reusing buff
-						result = cuptiEventGetAttribute(event, CUPTI_EVENT_ATTR_NAME, &buff_size, buff);
-						if (result != CUPTI_SUCCESS) {
-							fprintf(stderr, "cuptiEventDomainGetAttribute failed for domain %d on device %d\n", dom, dev);
-							continue;
-						}
-						if (buff_size == sizeof(buff)) {
-							fprintf(stderr, "TAU_CUPTI_MAX_NAME=%d is too small for event name!\n", TAU_CUPTI_MAX_NAME);
-							exit(EXIT_FAILURE);
-						}
-						std::string event_name = "CUDA." + device_name + '.' + domain_name + '.' + std::string(buff);
-						TAU_VERBOSE("%s: %s\n", name, event_name.c_str());
-
-						// Add event to metricv if it's not already on the list.
-						bool found = false;
-						for (int k=0; k<nmetrics; ++k) {
-							if (strcasecmp(metricv[k], event_name.c_str()) == 0) {
-								found = true;
-								break;
-							}
-						}
-						if (!found) {
-							check_max_metrics();
-							metricv[nmetrics] = strdup(event_name.c_str());
-							eventsv[nmetrics] = event; // This looks weird... is this right?
-							cumetric[nmetrics] = TAU_METRIC_CUPTI_EVENT;
-							nmetrics++;
-						}
-						// Go to the next event needed for this metric
-						break;
-					} // if (event)
-				} // for (j)
-			} // for (i)
-		} // for (dom)
+			// some events don't have proper names, so just use event id instead
+			if (std::string(buff).compare("event_name") == 0) {
+				sprintf(buff, "CUpti_EventID:%d", event);
+			}
+		
+			std::string event_name = "CUDA." + device_name + '.' + std::string(buff);
+			
+			if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) { // check, maybe initialize counter map
+				if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) { // double check because it just got initialized
+					CuptiCounterEvent* ev = new CuptiCounterEvent(dev, event);
+                			Tau_CuptiLayer_Counter_Map().insert(std::make_pair(event_name, ev));
+				}
+			}
+			
+			TAU_VERBOSE("%s: %s\n", name, event_name.c_str());
+						
+			// Add event to metricv if it's not already on the list.
+			bool found = false;
+			for (int k=0; k<nmetrics; ++k) {
+				if (strcasecmp(metricv[k], event_name.c_str()) == 0) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				check_max_metrics();
+				metricv[nmetrics] = strdup(event_name.c_str());
+				eventsv[nmetrics] = event; // This looks weird... is this right?
+				cumetric[nmetrics] = TAU_METRIC_CUPTI_EVENT;
+				nmetrics++;
+			}
+		} // for (event)
 	} // for (dev)
 #endif //CUPTI
 
@@ -481,7 +444,7 @@ static int is_likwid_metric(char *str) {
 static int is_cupti_event(char const * str)
 {
 	if (strncmp("CUDA", str, 4) == 0 && Tau_CuptiLayer_is_cupti_counter(str)) {
-		return 1;
+		return 1;			
 	}
 	return 0;
 }

@@ -54,14 +54,12 @@ struct CuptiCounterEvent
 {
     static void printHeader();
 
-    CuptiCounterEvent(int device_n, int domain_n, int event_n);
+    CuptiCounterEvent(int device_n, int event_n);
 
     CUdevice device;
-	CUpti_EventDomainID domain;
 	CUpti_EventID event;
 
 	std::string device_name;
-	std::string domain_name;
 	std::string event_name;
 	std::string event_description;
 	std::string tag; // string presented to the user.
