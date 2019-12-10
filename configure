@@ -1664,6 +1664,9 @@ for arg in "$@"; do
         if [ $unwind_dir != "/usr" ]; then
 	      unwind_inc="$unwind_dir/include"
 	      unwind_lib="$unwind_dir/lib"
+	      if [ -d "$unwind_dir/lib64" ]; then
+		      unwind_lib="$unwind_dir/lib64"
+	      fi
         fi
 	    # So that the user doesn't have to specify the unwinder,
 	    # use libunwind as the default.
