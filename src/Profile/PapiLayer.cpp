@@ -858,7 +858,7 @@ int PapiLayer::initializePerfRAPL(int tid) {
 #endif /* PAPI_VERSION_MAJOR >= 5 */
 }
 int PapiLayer::initializeRAPL(int tid) {
-#if  (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 5) 
+#if ((PAPI_VERSION_MAJOR(PAPI_VERSION) >= 5) && (defined(__x86_64) || defined(__x86_64__)))
   int ncomponents, i, code, ret, rapl_cid = -1;
   PAPI_event_info_t evinfo;
   const PAPI_component_info_t *cinfo = NULL;
