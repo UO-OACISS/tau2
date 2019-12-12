@@ -107,10 +107,17 @@ char * tau::plugins::Sockets::send_message(int rank, const char * message)
         return nullptr;
     } 
 
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
+    int max_failures = 100;
+    while (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
     { 
-        printf("\nConnection Failed \n"); fflush(stdout);
-        return nullptr;
+        max_failures--;
+        perror("failed to connect. ");
+        printf("...%d attempts left\n", max_failures);
+
+        if (max_failures == 0) {
+            printf("\nConnection Failed \n"); fflush(stdout);
+            return nullptr;
+        }
     } 
     send(sock , message , strlen(message) , 0 ); 
     valread = read( sock , buffer, 1024); 
