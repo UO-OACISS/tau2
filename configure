@@ -4854,7 +4854,7 @@ case $cxx_compiler in
 	;;
 
     mpc_cxx)
-	if [ $machine = x86_64 -o $machine = mic_linux ] ; then
+	if [ $machine = x86_64 -o $machine = mic_linux -o $machine = arm64_linux ] ; then
             #mpc_include=`mpc_cxx -show | grep '-I'`
             #mpc_include=`mpc_cxx -show | grep -o '[^ ]-I[^ ]*'`
             mpc_include=`mpc_cxx -show | grep -o '[^ ]*include/mpcframework[^ ]*'`
@@ -4974,6 +4974,9 @@ case $cxx_compiler in
 
 esac
 
+if [ $mpc = yes ]; then 
+  plugins=no
+fi
 ######################################################################
 # Set default F90 compiler in all Makefiles
 echo "Setting F90 compiler based on requested: $fortran_compiler"
