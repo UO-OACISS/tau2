@@ -11609,11 +11609,12 @@ fi
 if [ $cxx_compiler = icpc -o $cxx_compiler = icpx -o $cxx_compiler = mpiicpc -o $cxx_compiler = mpiicpx ] ; then
     echo "Checking version (10.0+) of Intel compilers"
     version=`${cxx_compiler} -v 2>&1`
+    s="mpi"
     t="Version 1"
-    t1="${cxx_compiler} version 1"
-    t2="${cxx_compiler}.orig version 1"
-    testarg=${version#$t}
-    testarg1=${version#$t1}
+    t1="${cxx_compiler#$s} version 1"
+    t2="${cxx_compiler#$s}.orig version 1"
+    testarg=${version//$t/}
+    testarg1=${version//$t1/}
     testarg2=${version#$t2}
 
 
