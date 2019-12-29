@@ -478,7 +478,8 @@ TAU_OPENMP_OPTION =
 #OPEN64ORC_FORTRAN#TAU_F90     = orf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #OPEN64ORC_FORTRAN#TAU_F90     = openf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #NEC_FORTRAN#TAU_F90         = f90 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
-#NEC_COMPILERS#TAU_F90         = mpinfort 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#NEC_COMPILERS#TAU_F90         = nfort 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#NEC_SX_MPI_FORTRAN#TAU_F90  = mpinfort 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #CRAYCNL#TAU_F90         = ftn            $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #ZEPTO_GFORTRAN#TAU_F90         = /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gfortran    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #ZEPTO_GFORTRAN#TAU_F90         = /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gfortran    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -822,7 +823,8 @@ TAU_GCCLIB	= -lgcc_s
 #GNU#TAU_IBM_FORTRANLIBS	       =  -Wl,-bh:4 -Wl,-bpT:0x10000000 -Wl,-bpD:0x20000000 /lib/crt0.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
 #KAI#TAU_IBM_FORTRANLIBS	       =  --backend -bh:4 --backend -bpT:0x10000000 --backend -bpD:0x20000000 /lib/crt0.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
 #FX#TAU_FORTRANLIBS       = -Ntl_notrt -lmpi_f90 -lmpi_f77 #ENDIF#
-#NEC_COMPILERS#TAU_FORTRANLIBS               = -lpmpi  -lnc++  -lmpi++ #ENDIF#
+#NEC_SX_MPI_FORTRAN#TAU_NEC_MPI_LIBS               = -lpmpi  -lmpi++ #ENDIF#
+#NEC_COMPILERS#TAU_FORTRANLIBS               = -lpthread -lrt -L$(EXTRADIR) $(EXTRADIR)/f90_init.o $(EXTRADIR)/nousemmap.o $(EXTRADIR)/quickfit.o $(EXTRADIR)/async_noio.o -lnfmain -lnfort -Wl,-rpath,$(EXTRADIR) $(TAU_NEC_MPI_LIBS) #ENDIF#
 #IBM_FORTRAN#TAU_FORTRANLIBS = $(TAU_IBM_FORTRANLIBS) #ENDIF#
 
 #USE_IBMXLC#TAU_IBM64_FORTRANLIBS      =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 -b64 /lib/crt0_64.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
@@ -953,7 +955,8 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 # NOTE:  No -lmpi_cxx, -lmpi_f90, -lmpi_f77, and --linkfortran for Fujitsu
 # by default. See tau_compiler.sh $optFujitsu==true
 # Please add manually if needed
-#NEC_COMPILERS#TAU_CXXLIBS               = -lpmpi  -lnc++  -lmpi++ #ENDIF#
+##NEC_COMPILERS#TAU_CXXLIBS               = -lpmpi  -lnc++  -lmpi++ #ENDIF#
+#NEC_COMPILERS#TAU_CXXLIBS               = -lnc++  -lpthread -lrt $(TAU_NEC_MPI_LIBS) #ENDIF#
 
 
 #PPC64XLC#TAU_PPC64_LIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
@@ -1177,6 +1180,7 @@ BFDINCLUDE=
 #COMPINST_CRAYCC#TAU_COMPINST_CRAY_HACK="`ar x $(TAU_LIB_DIR)/libtau$(TAU_CONFIG).a Comp_gnu.o`" Comp_gnu.o #ENDIF#
 #CRAYCNL#TAU_COMPINST_LINKING=$(TAU_COMPINST_CRAY_HACK) #ENDIF#
 #COMPINST_XL#TAU_COMPINST_LINKING=$(UPCC_C_PREFIX)-qdebug=function_trace #ENDIF#
+#NEC_COMPILERS#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
 #MRNET#TAU_LINKER_OPT15=$(MRNET_LIBS) #ENDIF#
 TAU_FORTRAN_COMPINST_OPTION=$(TAU_COMPINST_OPTION)
 #NAGWARE_FORTRAN#TAU_FORTRAN_COMPINST_OPTION=-Wc,-finstrument-functions#ENDIF#
@@ -1324,6 +1328,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 #MMIC#TAU_INTERNAL_FLAG1    = -mmic #ENDIF#
 #BGQTIMERS#TAU_INTERNAL_FLAG1    = $(TAU_BGQ_INTERNAL_FLAG2) #ENDIF#
 #GNU#TAU_INTERNAL_FLAG1             = -fPIC #ENDIF#
+#NEC_COMPILERS#TAU_INTERNAL_FLAG1   = -fPIC #ENDIF#
 #CRAYXMT#TAU_INTERNAL_FLAG1             = #ENDIF#
 
 #USE_PATHCC#TAU_INTERNAL_FLAG1      = -fPIC #ENDIF#
