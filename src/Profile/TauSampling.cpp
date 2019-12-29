@@ -469,6 +469,8 @@ unsigned long get_pc(void *p)
   pc = (unsigned long)sc->arm_pc;
 # elif __aarch64__
   pc = (unsigned long)sc->pc;
+# elif __NEC__
+  pc = (unsigned long)sc->IC;
 #elif defined(TAU_FUJITSU)
   pc = ((struct sigcontext *)p)->sigc_regs.tpc; 
 # else
