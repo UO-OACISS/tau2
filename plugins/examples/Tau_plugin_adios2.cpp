@@ -367,7 +367,7 @@ void Tau_plugin_adios2_open_file(void) {
         ss << "-" << world_comm_rank;
     }
     ss << ".bp";
-    printf("Writing %s\n", ss.str().c_str());
+    //printf("Writing %s\n", ss.str().c_str());
     bpWriter = bpIO.Open(ss.str(), adios2::Mode::Write);
     opened = true;
 }

@@ -4873,7 +4873,7 @@ case $cxx_compiler in
 	;;
 
     mpc_cxx)
-	if [ $machine = x86_64 -o $machine = mic_linux ] ; then
+	if [ $machine = x86_64 -o $machine = mic_linux -o $machine = arm64_linux ] ; then
             #mpc_include=`mpc_cxx -show | grep '-I'`
             #mpc_include=`mpc_cxx -show | grep -o '[^ ]-I[^ ]*'`
             mpc_include=`mpc_cxx -show | grep -o '[^ ]*include/mpcframework[^ ]*'`
@@ -4993,6 +4993,9 @@ case $cxx_compiler in
 
 esac
 
+if [ $mpc = yes ]; then 
+  plugins=no
+fi
 ######################################################################
 # Set default F90 compiler in all Makefiles
 echo "Setting F90 compiler based on requested: $fortran_compiler"
@@ -11641,11 +11644,12 @@ fi
 if [ $cxx_compiler = icpc -o $cxx_compiler = icpx -o $cxx_compiler = mpiicpc -o $cxx_compiler = mpiicpx ] ; then
     echo "Checking version (10.0+) of Intel compilers"
     version=`${cxx_compiler} -v 2>&1`
+    s="mpi"
     t="Version 1"
-    t1="${cxx_compiler} version 1"
-    t2="${cxx_compiler}.orig version 1"
-    testarg=${version#$t}
-    testarg1=${version#$t1}
+    t1="${cxx_compiler#$s} version 1"
+    t2="${cxx_compiler#$s}.orig version 1"
+    testarg=${version//$t/}
+    testarg1=${version//$t1/}
     testarg2=${version#$t2}
 
 
