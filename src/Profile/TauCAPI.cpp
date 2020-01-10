@@ -82,6 +82,7 @@ using namespace tau;
 extern "C" void Tau_shutdown(void);
 //extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
+extern "C" long Tau_get_message_path(void); 
 extern "C" size_t Tau_util_return_hash_of_string(const char *name);
 extern "C" void Tau_util_invoke_async_callback(unsigned int id, void * data);
 
@@ -1591,7 +1592,11 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
 
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
+#ifdef TAU_PROFILE_PATHS
+  TAU_PROFILE_PARAM1L(Tau_get_message_path(), "message path");
+#else
   TAU_PROFILE_PARAM1L(length, "message size");
+#endif /* TAU_PROFILE_PATHS */
 #endif /* TAU_DISABLE_PROFILEPARAM_IN_MPI */
 #endif  /* TAU_PROFILEPARAM */
 
@@ -1629,7 +1634,11 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length)
 {
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
+#ifdef TAU_PROFILE_PATHS
+  TAU_PROFILE_PARAM1L(Tau_get_message_path(), "message path");
+#else
   TAU_PROFILE_PARAM1L(length, "message size");
+#endif /* TAU_PROFILE_PATHS */
 #endif /* TAU_DISABLE_PROFILEPARAM_IN_MPI */
 #endif  /* TAU_PROFILEPARAM */
 
@@ -3320,6 +3329,13 @@ extern "C" int get_vtid_from_corrid(int corrid) {
 extern "C" int lookup_thread_from_corrid(int corrid) {
   return map_cudaThread.find(corrid) == map_cudaThread.end();
 }
+
+#ifndef TAU_PROFILE_PATHS 
+// stub function when PROFILEPATHS is not defined. 
+extern "C" long Tau_get_message_path(void) {
+  return 0L;
+}
+#endif /* TAU_PROFILE_PATHS */
 #endif
 
 /***************************************************************************
