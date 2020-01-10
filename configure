@@ -1320,14 +1320,14 @@ for arg in "$@"; do
 
 	-fortran=*)
 	    myarg=`echo $arg | sed 's/-fortran=//'`
-	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran-5 -o $myarg = gfortran-6 -o $myarg = gfortran-7 -o $myarg = gfortran-8 -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf -o $myarg = armflang -o $myarg = xlflang -o $myarg = ftn -o $myarg = flang -o $myarg = nfort ] ; then
+	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran-5 -o $myarg = gfortran-6 -o $myarg = gfortran-7 -o $myarg = gfortran-8 -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf -o $myarg = armflang -o $myarg = xlflang -o $myarg = ftn -o $myarg = flang -o $myarg = nfort -o $myarg = mpinfort ] ; then
 		if [ $myarg = gnu ] ; then
 		    fortran_compiler=gfortran
 		else
 		    fortran_compiler=$myarg
 		fi
 	    else
-		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'pgf90', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'gfortran-*', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', 'oshfort', 'caf', 'ftn', 'armflang', 'flang', or 'nfort' "
+		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'pgf90', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'gfortran-*', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', 'oshfort', 'caf', 'ftn', 'armflang', 'flang', 'nfort' , or 'mpinfort'"
 		exit 1
 	    fi
 	    shift
@@ -4286,6 +4286,16 @@ if [ $machine = nec-sx-aurora ]; then
         if [ $fortran_compiler = mpinfort ]; then 
              fixmakeargs="$fixmakeargs NEC_SX_MPI_FORTRAN"
         fi
+    fi
+    
+    mpiinc_search=`which mpincc  | sed -e 's@//@/@g'| sed -e 's/\/bin\/mpincc$//' -e 's/\/bin64\/mpincc$//'`/include
+    if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]; then
+      echo "Checking $mpiinc_search/../lib/ve"
+      if [ $mpi = yes -a -d $mpiinc_search/../lib/ve -a -r $mpiinc_search/../lib/ve/libmpi.a ]; then 
+        mpilib=`echo $mpiinc_search | sed -e 's@include@lib/ve@'` 
+        echo "Using fixed MPI lib directory $mpilib"
+        fixmakeargs="$fixmakeargs mpilib=$mpilib"
+      fi
     fi
 fi
 
