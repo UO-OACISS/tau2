@@ -704,6 +704,7 @@ for arg in "$@"; do
 #    echo "-PROFILECALLPATH ......................... Generate call path profiles."
         echo "-mpit ............................... Enable MPI-T profiling interface."
         echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
+        echo "-PROFILEPATHS ........ Generate profiles with MPI path based profiling."
         echo "-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info."
         echo "-PROFILEPHASE .......................... Generate phase based profiles."
 #    echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
@@ -883,6 +884,7 @@ for arg in "$@"; do
 	    #    echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
 	    #    echo "-PROFILECALLPATH ......................... Generate call path profiles."
 	    echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
+            echo "-PROFILEPATHS ........ Generate profiles with MPI path based profiling."
 	    echo "-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info."
 	    echo "-PROFILEPHASE .......................... Generate phase based profiles."
 	    #    echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
@@ -1089,6 +1091,7 @@ profilememory=no
 profileheadroom=no
 callpath=no
 profileparam=no
+profilepaths=no
 profilecommunicators=no
 depthlimit=no
 phase=no
@@ -2505,9 +2508,18 @@ for arg in "$@"; do
 	    callpath=yes
 	    shift
 	    ;;
+
 	-PROFILEPARAM)
 	    profile=yes
 	    profileparam=yes
+	    shift
+	    ;;
+
+	-PROFILEPATHS)
+	    profile=yes
+	    profileparam=yes
+	    profilepaths=yes
+            mpit=yes
 	    shift
 	    ;;
 
@@ -2516,7 +2528,6 @@ for arg in "$@"; do
 	    profilecommunicators=yes
 	    shift
 	    ;;
-
 
 	-DEPTHLIMIT)
 	    depthlimit=yes
@@ -4093,6 +4104,11 @@ fi
 if [ $profileparam = yes ] ; then
     fixmakeargs="$fixmakeargs PROFILEPARAM"
     tauoptions="${tauoptions}-param"
+fi
+
+if [ $profilepaths = yes ] ; then
+    fixmakeargs="$fixmakeargs PROFILEPATHS"
+    tauoptions="${tauoptions}-paths"
 fi
 
 if [ $profilecommunicators = yes ] ; then
