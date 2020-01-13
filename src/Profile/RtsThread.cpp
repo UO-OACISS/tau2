@@ -142,7 +142,7 @@ int RtsLayer::createThread()
   int numThreads = getTotalThreads();
   if (numThreads > TAU_MAX_THREADS) {
     fprintf(stderr,
-        "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n",
+        "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit> or set the environment variable TAU_RECYCLE_THREADS=1\n",
         TAU_MAX_THREADS, numThreads);
     exit(-1);
   }
@@ -321,7 +321,7 @@ int RtsLayer::RegisterThread()
   int numThreads = getTotalThreads();
   if (numThreads > TAU_MAX_THREADS) {
     fprintf(stderr,
-        "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n",
+        "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit> or set the environment variable TAU_RECYCLE_THREADS=1\n",
         TAU_MAX_THREADS, numThreads);
     exit(-1);
   }

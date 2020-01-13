@@ -109,8 +109,9 @@ int PthreadLayer::GetThreadId(void)
 void PthreadLayer::delete_wrapper_flags_key(void* wrapped) {
   if (wrapped != NULL) {
     int * tmp = (int*)(wrapped);
-    //printf("Recycling %d\n", *tmp); fflush(stdout); 
-    RtsLayer::recycleThread(*tmp);
+    if (TauEnv_get_recycle_threads()) {
+        RtsLayer::recycleThread(*tmp);
+    }
     delete tmp;
   }
 }
@@ -118,11 +119,7 @@ void PthreadLayer::delete_wrapper_flags_key(void* wrapped) {
 extern "C"
 void pthread_init_once(void)
 {
-#if defined (TAU_RECYCLE_THREADS)
   pthread_key_create(&PthreadLayer::tauPthreadId, &PthreadLayer::delete_wrapper_flags_key);
-#else
-  pthread_key_create(&PthreadLayer::tauPthreadId, NULL);
-#endif
   pthread_mutex_init(&PthreadLayer::tauThreadcountMutex, NULL);
   pthread_mutex_init(&PthreadLayer::tauDBMutex, NULL);
   pthread_mutex_init(&PthreadLayer::tauEnvMutex, NULL);

@@ -680,11 +680,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   /*** Throttling Code ***/
   /********************************************************************************/
 
-#if defined(TAU_RECYCLE_THREADS) // don't write profile if recycling threads!
-  if (!ParentProfiler && tid == 0) {
-#else
-  if (!ParentProfiler) {
-#endif /* TAU_RECYCLE_THREADS */
+  if (( TauEnv_get_recycle_threads() && (!ParentProfiler && tid == 0)) ||
+      (!TauEnv_get_recycle_threads() && !ParentProfiler)) {
     /*** Profile Compensation ***/
     // If I am still compensating, I do not expect a top level timer. Just pretend
     // this never happened.
