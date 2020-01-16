@@ -16,6 +16,9 @@
 #ifndef PROFILER_H
 #define PROFILER_H
 
+#ifdef TAU_NEC_SX
+#include <stdlib.h>
+#endif /* TAU_NEC_SX */
 #if (defined(TAU_WINDOWS))
 #pragma warning( disable : 4786 )
 #define TAUDECL __cdecl

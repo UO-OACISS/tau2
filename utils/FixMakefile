@@ -1115,6 +1115,10 @@ case $1 in
 	echo NOTE: Using the NEC suite of compilers
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     NEC_SX_MPI_FORTRAN)
+	echo NOTE: Using the NEC mpinfort compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      USE_INTELCXX)
 	echo NOTE: Using the Intel C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -2057,6 +2061,10 @@ case $1 in
 	;;
      PROFILEPARAM)
 	echo "NOTE: Using Parameter Mapped Profiles"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PROFILEPATHS)
+	echo "NOTE: Using MPI Path Profiles for point-to-point messages"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PROFILECOMMUNICATORS)
