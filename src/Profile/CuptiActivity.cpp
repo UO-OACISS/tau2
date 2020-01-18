@@ -310,6 +310,88 @@ void Tau_cupti_setup_unified_memory() {
     CUDA_CHECK_ERROR(err2, "Cannot enqueue buffer.\n");
 }
 
+void Tau_cupti_set_device_props() {
+    CUptiResult cupti_err = CUPTI_SUCCESS;
+    cudaError cuda_err = cudaSuccess;
+
+    int num_devices;
+    int nMeta = 7;
+
+    cuda_err = cudaGetDeviceCount(&num_devices);
+
+    for (int dev = 0; dev < num_devices; dev++) {
+        cudaDeviceProp props; 
+        cuda_err = cudaGetDeviceProperties(&props, dev);
+
+	CUpti_ActivityDevice dev_record;
+
+	dev_record.computeCapabilityMajor = props.major;
+	dev_record.computeCapabilityMinor = props.minor;
+	dev_record.constantMemorySize = props.totalConstMem;
+	dev_record.coreClockRate = props.clockRate;
+	//dev_record->globalMemoryBandwidth = props.
+	dev_record.globalMemorySize = props.totalGlobalMem;
+	dev_record.l2CacheSize = props.l2CacheSize;
+	//dev_record->maxIPC = 
+	dev_record.maxRegistersPerBlock = props.regsPerBlock;
+	dev_record.maxSharedMemoryPerBlock = props.sharedMemPerBlock;
+	dev_record.maxThreadsPerBlock = props.maxThreadsPerBlock;
+	dev_record.maxWarpsPerMultiprocessor = props.maxThreadsPerMultiProcessor / props.warpSize;
+	dev_record.maxBlocksPerMultiprocessor = props.maxThreadsPerMultiProcessor / props.maxThreadsPerBlock;
+	dev_record.numMemcpyEngines = props.asyncEngineCount;
+	dev_record.numMultiprocessors = props.multiProcessorCount;
+	dev_record.numThreadsPerWarp = props.warpSize;
+
+	__deviceMap()[dev] = dev_record;
+
+	GpuMetadata* metadata = (GpuMetadata*) malloc(sizeof(GpuMetadata) * nMeta);
+
+	int n = 0;
+	metadata[n].name = (char*)("GPU Name");
+	metadata[n].value = props.name;
+	n++;
+
+	metadata[n].name = (char*)("Compute Capability Major");
+	metadata[n].value = (char*) malloc(sizeof(char)*256);
+	sprintf(metadata[n].value, "%d\n", props.major);
+	n++;
+
+	metadata[n].name = (char*)("Compute Capability Minor");
+	metadata[n].value = (char*) malloc(sizeof(char)*256);
+	sprintf(metadata[n].value, "%d\n", props.minor);
+	n++;
+	
+	metadata[n].name = (char*)("Clock Rate");
+	metadata[n].value = (char*) malloc(sizeof(char)*256);
+	sprintf(metadata[n].value, "%d\n", props.clockRate);
+	n++;
+
+	metadata[n].name = (char*)("Total Global Memory");
+	metadata[n].value = (char*) malloc(sizeof(char)*256);
+	sprintf(metadata[n].value, "%d\n", props.totalGlobalMem);
+	n++;
+
+	metadata[n].name = (char*)("Number of Multiprocessors");
+	metadata[n].value = (char*) malloc(sizeof(char)*256);
+	sprintf(metadata[n].value, "%d\n", props.multiProcessorCount);
+	n++;
+
+	metadata[n].name = (char*)("Number of Memcpy Engines");
+	metadata[n].value = (char*) malloc(sizeof(char)*256);
+	sprintf(metadata[n].value, "%d\n", props.asyncEngineCount);
+	n++;
+
+	Tau_cupti_register_metadata(dev, metadata, nMeta);
+    }
+
+#if CUDA_VERSION < 5000
+    if (__deviceMap().size() > 1 && Tau_CuptiLayer_get_num_events() > 0)
+    {
+        TAU_VERBOSE("TAU Warning: CUDA 5.0 or greater is needed to record counters on more that one GPU device at the same time.\n");
+    }
+#endif
+}
+
 CUresult cuInit(unsigned int a1)
 {
     TAU_DEBUG_PRINT("in cuInit\n");
@@ -454,6 +536,7 @@ void Tau_cupti_onload()
 
     Tau_gpu_init();
     Tau_cupti_setup_unified_memory();
+    Tau_cupti_set_device_props();
 }
 
 void Tau_cupti_onunload() {
@@ -1506,14 +1589,14 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 
             case CUPTI_ACTIVITY_KIND_DEVICE:
                 {
-                    CUpti_ActivityDevice *device = (CUpti_ActivityDevice *)record;
+                    /*CUpti_ActivityDevice *device = (CUpti_ActivityDevice *)record;
                     int nMeta = 17;
 
                     GpuMetadata *metadata = (GpuMetadata *) malloc(sizeof(GpuMetadata) * nMeta);
                     int id = 0;
                     //first the name.
                     metadata[id].name = (char*)("GPU Name");
-                    metadata[id].value = device->name;
+                    //metadata[id].value = device->name;
                     id++;
 
                     //the rest.
@@ -1542,7 +1625,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                         TAU_VERBOSE("TAU Warning: CUDA 5.0 or greater is needed to record counters on more that one GPU device at the same time.\n");
                     }
 #endif
-                    Tau_cupti_register_metadata(device->id, metadata, nMeta);
+                    Tau_cupti_register_metadata(device->id, metadata, nMeta);*/
                     break;
                 }
 #if CUPTI_API_VERSION >= 3
