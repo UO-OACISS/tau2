@@ -11,4 +11,5 @@ clean:
 	rm -rf matmult matmult.o
 
 run:
-	tau_exec -T serial -cuda ./matmult
+	rm -rf profile.* MULTI__*
+	tau_exec -T serial,cupti -cupti ./matmult
