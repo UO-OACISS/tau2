@@ -65,7 +65,8 @@ static bool use_perflib = false;   /* by default, do not insert calls for perfli
 static char const * exit_keyword = "\0"; /* You can define your own exit keyword */
 static char const * return_void_string = "return";
 static char const * return_nonvoid_string = "return";
-
+static bool use_min_block_size = false; /* set with -minsize */
+static int min_block_size = 0; /* the minimum lines a block needs to be to be instrumented */
 
 /* These variables should actually be defined here. However, tau_wrap should
    not depend on them (but it currently would). */
@@ -227,6 +228,22 @@ bool identicalBeginEnd(const pdbCRoutine *rit)
   }
   else 
   {
+    return false;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* -- Sometimes a routine is very short and we shouldn't    */
+/* -- instrument it. shortBeginEnd returns true if body begin/end line    */
+/* -- are less than N lines apart. */
+/* -------------------------------------------------------------------------- */
+bool shortBeginEnd(const pdbCRoutine *rit)
+{
+  if (rit && 
+      use_min_block_size &&
+      ((rit->bodyBegin().line() + min_block_size) > rit->bodyEnd().line())) {
+    return true;
+  } else {
     return false;
   }
 }
@@ -419,6 +436,10 @@ bool retval;
         continue;  
       }
 
+      /* SHould we skip this block because it is short? */
+      if (shortBeginEnd(*rit)) {
+        continue;  
+      }
         
 #ifdef DEBUG
 	cout <<"* Checking Routine: "<<(*rit)->fullName()<<endl;
@@ -4017,6 +4038,7 @@ int main(int argc, char **argv)
          << endl
          << "-noinline: disables the instrumentation of inline functions in C++ (default)" << endl
          << "-inline: enables the instrumentation of inline functions in C++" << endl
+         << "-minsize <size>: disables the instrumentation of small functions" << endl
          << "-noinit: does not call TAU_INIT(&argc,&argv). This disables a.out --profile <group[+<group>]> processing."
          << endl
          << "-memory: calls #include <malloc.h> at the beginning of each C/C++ file for malloc/free replacement and traps Fortran 90 allocate/deallocate statements."
@@ -4133,6 +4155,14 @@ int main(int argc, char **argv)
 #endif /* DEBUG */
         lang_specified = true;
         tau_language = tau_upc;
+      }
+      if (strcmp(argv[i], "-minsize") == 0) {
+        ++i;
+        use_min_block_size = true;
+        min_block_size = atoi(argv[i]);
+#ifdef DEBUG
+        printf("Minimum block size %s\n", min_block_size);
+#endif /* DEBUG */
       }
       if (strcmp(argv[i], "-g") == 0) {
         ++i;
