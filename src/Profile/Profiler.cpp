@@ -1630,8 +1630,7 @@ int TauProfiler_StoreData(int tid)
    * even in cases where CUDA is used without pthread or openmp
    * support.  For some reason, thread 0 is getting its myThread()
    * value changed from 0, still need to investigate that. */
-  if (RtsLayer::myThread() == 0 || 
-      (TauEnv_get_recycle_threads() && tid == 0)) {
+    if (RtsLayer::myThread() == 0 && tid == 0) {
     /* clean up other threads? */
     for (int i = 1; i < RtsLayer::getTotalThreads(); i++) {
       TauProfiler_StoreData(i);
