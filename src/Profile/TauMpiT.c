@@ -904,8 +904,8 @@ int Tau_set_mpi_t_cvar_value_for_communicator(char* cname, int value, void* comm
   MPI_T_cvar_handle handle;
   int err = MPI_SUCCESS;
   int read_value, count, cvar_index = 0;
-  
-
+ 
+#if (defined MVAPICH2_NUMVERSION && MVAPICH2_NUMVERSION > 20200300) || (!defined MVAPICH2_NUMVERSION)
   printf("TAU: rank [%d] Tau_set_mpi_t_cvar_value_for_communicator: CVAR name=%s, value = %d, comm_name=%s, comm = %p\n", Tau_get_node(), cname, value, comm_name, comm);
   err = MPI_T_cvar_get_index( cname , &cvar_index);
   if(err!=MPI_SUCCESS) {
@@ -938,7 +938,10 @@ int Tau_set_mpi_t_cvar_value_for_communicator(char* cname, int value, void* comm
 
 
   /* free the handle. */
-  MPI_T_cvar_handle_free(&handle);    
+  MPI_T_cvar_handle_free(&handle);
+#else
+  fprintf(stderr, "\nTAU: Warning: Communicator-based CVAR support not available for MVAPICH2.2 and older. Please use a newer MVAPICH2 version.\n");
+#endif
   return 0;
 }
 
