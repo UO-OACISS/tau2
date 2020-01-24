@@ -42,7 +42,7 @@ extern "C" {
 
 /* Data Structures */
 
-    typedef struct perftool_timer_data
+    typedef struct ps_tool_timer_data
     {
         unsigned int num_timers;
         unsigned int num_threads;
@@ -50,9 +50,9 @@ extern "C" {
         char **timer_names;
         char **metric_names;
         double *values;
-    } perftool_timer_data_t;
+    } ps_tool_timer_data_t;
 
-    typedef struct perftool_counter_data
+    typedef struct ps_tool_counter_data
     {
         unsigned int num_counters;
         unsigned int num_threads;
@@ -62,18 +62,18 @@ extern "C" {
         double *value_min;
         double *value_max;
         double *value_sumsqr;
-    } perftool_counter_data_t;
+    } ps_tool_counter_data_t;
 
-    typedef struct perftool_metadata
+    typedef struct ps_tool_metadata
     {
         unsigned int num_values;
         char **names;
         char **values;
-    } perftool_metadata_t;
+    } ps_tool_metadata_t;
 
 /* Function pointers */
 
-void perftool_init(void) {
+void ps_tool_initialize(void) {
 #ifndef TAU_MPI
     int _argc = 1;
     const char *_dummy = "";
@@ -85,20 +85,20 @@ void perftool_init(void) {
 #endif
 }
 
-void perftool_register_thread(void) {
+void ps_tool_register_thread(void) {
     Tau_register_thread();
     Tau_create_top_level_timer_if_necessary();
 }
 
 void Tau_profile_exit_all_threads();
 
-void perftool_exit(void) {
-    Tau_destructor_trigger();
-    Tau_profile_exit_all_threads();
+void ps_tool_finalize(void) {
+    //Tau_destructor_trigger();
+    //Tau_profile_exit_all_threads();
     Tau_exit("stub exiting");
 }
 
-void perftool_dump_data(void) {
+void ps_tool_dump_data(void) {
 #if 0
     const char **counterNames;
     int numCounters;
@@ -115,45 +115,45 @@ void perftool_dump_data(void) {
     Tau_dump();
 }
 
-void * perftool_timer_create(const char * name) {
+void * ps_tool_timer_create(const char * name) {
     return Tau_pure_search_for_function(name, 1);
 }
 
-void perftool_timer_start(const void * timer) {
+void ps_tool_timer_start(const void * timer) {
     Tau_start_timer((FunctionInfo*)timer, 0, Tau_get_thread());
 }
 
-void perftool_timer_stop(const void * timer) {
+void ps_tool_timer_stop(const void * timer) {
     Tau_stop_timer((FunctionInfo*)timer, Tau_get_thread());
 }
 
-void perftool_set_parameter(const char * parameter_name, int64_t parameter_value) {
+void ps_tool_set_parameter(const char * parameter_name, int64_t parameter_value) {
     Tau_profile_param1l(parameter_value, parameter_name);
 }
 
-void perftool_dynamic_phase_start(const char * name, int index) {
+void ps_tool_dynamic_phase_start(const char * name, int index) {
     Tau_dynamic_start(name, index);
 }
 
-void perftool_dynamic_phase_stop(const char * name, int index) {
+void ps_tool_dynamic_phase_stop(const char * name, int index) {
     Tau_dynamic_stop(name, index);
 }
 
-void * perftool_create_counter(const char * name) {
+void * ps_tool_create_counter(const char * name) {
     return Tau_get_userevent(name);
 }
 
-void perftool_sample_counter(const void * counter, double value) {
+void ps_tool_sample_counter(const void * counter, double value) {
     Tau_userevent((void*)counter, value);
 }
 
-void perftool_metadata(const char * name, const char * value) {
+void ps_tool_set_metadata(const char * name, const char * value) {
     Tau_metadata(name, value);
 }
 
-void perftool_get_timer_data(perftool_timer_data_t *timer_data)
+void ps_tool_get_timer_data(ps_tool_timer_data_t *timer_data)
 {
-    memset(timer_data, 0, sizeof(perftool_timer_data_t));
+    memset(timer_data, 0, sizeof(ps_tool_timer_data_t));
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
     RtsLayer::LockDB();
@@ -204,7 +204,7 @@ void perftool_get_timer_data(perftool_timer_data_t *timer_data)
     return;
 }
 
-    void perftool_free_timer_data(perftool_timer_data_t *timer_data)
+    void ps_tool_free_timer_data(ps_tool_timer_data_t *timer_data)
     {
         if (timer_data == NULL)
         {
@@ -227,9 +227,9 @@ void perftool_get_timer_data(perftool_timer_data_t *timer_data)
         }
     }
 
-void perftool_get_counter_data(perftool_counter_data_t *counter_data)
+void ps_tool_get_counter_data(ps_tool_counter_data_t *counter_data)
 {
-    memset(counter_data, 0, sizeof(perftool_counter_data_t));
+    memset(counter_data, 0, sizeof(ps_tool_counter_data_t));
     RtsLayer::LockDB();
     tau::AtomicEventDB tmpCounters(tau::TheEventDB());
     RtsLayer::UnLockDB();
@@ -267,7 +267,7 @@ void perftool_get_counter_data(perftool_counter_data_t *counter_data)
     return;
 }
 
-    void perftool_free_counter_data(perftool_counter_data_t *counter_data)
+    void ps_tool_free_counter_data(ps_tool_counter_data_t *counter_data)
     {
         if (counter_data == NULL)
         {
@@ -305,9 +305,9 @@ void perftool_get_counter_data(perftool_counter_data_t *counter_data)
         }
     }
 
-void perftool_get_metadata(perftool_metadata_t *metadata)
+void ps_tool_get_metadata(ps_tool_metadata_t *metadata)
 {
-    memset(metadata, 0, sizeof(perftool_metadata_t));
+    memset(metadata, 0, sizeof(ps_tool_metadata_t));
     metadata->num_values = 0;
     for (int tid = 0; tid < RtsLayer::getTotalThreads() ; tid++) {
         metadata->num_values = metadata->num_values +
@@ -353,7 +353,7 @@ void perftool_get_metadata(perftool_metadata_t *metadata)
     return;
 }
 
-    void perftool_free_metadata(perftool_metadata_t *metadata)
+    void ps_tool_free_metadata(ps_tool_metadata_t *metadata)
     {
         if (metadata == NULL)
         {
