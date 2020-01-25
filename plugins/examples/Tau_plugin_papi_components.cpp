@@ -38,6 +38,44 @@
 using json = nlohmann::json;
 json configuration;
 
+/* Provide a default configuration,
+ * to avoid collecting too much data by default */
+
+const char * default_configuration = R"(
+{
+  "/proc/stat": {
+    "disable": false,
+    "comment": "This will exclude all core-specific readings.",
+    "exclude": ["^cpu[0-9]+.*"]
+  },
+  "/proc/meminfo": {
+    "disable": false,
+    "comment": "This will include three readings.",
+    "include": [".*MemAvailable.*", ".*MemFree.*", ".*MemTotal.*"]
+  },
+  "/proc/net/dev": {
+    "disable": false,
+    "comment": "This will include only the first ethernet device.",
+    "include": [".*eno1.*"]
+  },
+  "lmsensors": {
+    "disable": true,
+    "comment": "This will include all power readings.",
+    "include": [".*power.*"]
+  },
+  "net": {
+    "disable": true,
+    "comment": "This will include only the first ethernet device.",
+    "include": [".*eno1.*"]
+  },
+  "nvml": {
+    "disable": false,
+    "comment": "This will include only the utilization metrics.",
+    "include": [".*utilization.*"]
+  }
+}
+)";
+
 namespace tau {
     namespace papi_plugin {
         /* Simple class to aid in converting/storing component event data */
@@ -923,20 +961,9 @@ void init_lock(pthread_mutex_t * _mutex) {
     }
 }
 
-int Tau_plugin_event_pre_end_of_execution_papi_component(Tau_plugin_event_pre_end_of_execution_data_t *data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    stop_worker();
-#ifdef TAU_PAPI
-    /* clean up papi */
-    if (my_rank == rank_getting_system_data) {
-        free_papi_components();
-    }
-#endif
-    return 0;
-}
-
-int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_execution_data_t *data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+static void do_cleanup() {
+    static bool clean = false;
+    if (clean) return;
     stop_worker();
 #ifdef TAU_PAPI
     /* clean up papi */
@@ -949,19 +976,34 @@ int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_exe
             delete it;
         }
         delete previous_cpu_stats;
+        previous_cpu_stats = nullptr;
     }
     if (previous_net_stats != nullptr) {
         for (auto it : *previous_net_stats) {
             delete it;
         }
         delete previous_net_stats;
+        previous_net_stats = nullptr;
     }
     if (previous_io_stats != nullptr) {
         delete previous_io_stats;
+        previous_io_stats = nullptr;
     }
     /* Why do these deadlock on exit? */
     //pthread_cond_destroy(&_my_cond);
     //pthread_mutex_destroy(&_my_mutex);
+    clean = true;
+}
+
+int Tau_plugin_event_pre_end_of_execution_papi_component(Tau_plugin_event_pre_end_of_execution_data_t *data) {
+    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+    do_cleanup();
+    return 0;
+}
+
+int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_execution_data_t *data) {
+    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+    do_cleanup();
     return 0;
 }
 
@@ -1043,6 +1085,7 @@ void read_config_file(void) {
             cfg.close();
         } catch (...) {
             // fail silently, nothing to do
+            configuration = json::parse(default_configuration);
         }
 }
 
