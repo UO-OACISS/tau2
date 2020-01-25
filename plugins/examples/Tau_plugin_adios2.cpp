@@ -633,8 +633,15 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     std::vector<int> numCounters = {0};
     TauMetrics_getCounterList(&counterNames, &(numCounters[0]));
  
-    // Ask all ranks for their num threads
     int max_threads = 0;
+#if TAU_MPI
+    // The easy way is if we are synchronously dumping, and using MPI
+    if (data->tid == 0) {
+        int my_threads = RtsLayer::getTotalThreads();
+        MPI_Allreduce(&my_threads, &max_threads, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+    } else {
+#endif
+    // Ask all ranks for their num threads
     for (int i = 0 ; i < world_comm_size ; i++) {
         char * reply = my_sockets->send_message(i, "Get num threads");
         if (reply != nullptr) {
@@ -644,6 +651,9 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
             free(reply);
         }
     }
+#if TAU_MPI
+    }
+#endif
     numThreads[0] = max_threads;
 
     Tau_plugin_adios2_define_variables(numThreads[0], numCounters[0], counterNames);
@@ -700,8 +710,9 @@ void * Tau_ADIOS2_thread_function(void* data) {
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
         if (rc == ETIMEDOUT) {
             TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
-            Tau_plugin_event_dump_data_t* dummy_data;
-            Tau_plugin_adios2_dump(dummy_data);
+            Tau_plugin_event_dump_data_t dummy_data;
+            dummy_data.tid = 1;
+            Tau_plugin_adios2_dump(&dummy_data);
             TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
         } else if (rc == EINVAL) {
             TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
@@ -725,8 +736,9 @@ int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution
     if (!enabled) return 0;
     TAU_VERBOSE("TAU PLUGIN ADIOS2 Pre-Finalize\n"); fflush(stdout);
     Tau_ADIOS2_stop_worker();
-    Tau_plugin_event_dump_data_t * dummy;
-    Tau_plugin_adios2_dump(dummy);
+    Tau_plugin_event_dump_data_t dummy;
+    dummy.tid = 0;
+    Tau_plugin_adios2_dump(&dummy);
     if (opened) {
         bpWriter.Close();
         opened = false;
@@ -777,8 +789,9 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
     TAU_VERBOSE("TAU PLUGIN ADIOS2 Finalize\n"); fflush(stdout);
     Tau_ADIOS2_stop_worker();
     if (opened) {
-        Tau_plugin_event_dump_data_t * dummy;
-        Tau_plugin_adios2_dump(dummy);
+        Tau_plugin_event_dump_data_t dummy;
+        dummy.tid = 0;
+        Tau_plugin_adios2_dump(&dummy);
         bpWriter.Close();
         opened = false;
     }
