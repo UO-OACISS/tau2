@@ -233,7 +233,7 @@ using namespace std;
 #define TAU_REGION_ADDRESSES_DEFAULT 0
 
 /* Thread recycling */
-#define TAU_RECYCLE_THREADS_DEFAULT 1
+#define TAU_RECYCLE_THREADS_DEFAULT 0
 
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
