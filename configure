@@ -2137,6 +2137,11 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-openacc)
+	    openacc=yes
+	    shift
+	    ;;
+
 	-omptlib=*)
 	    ompt=yes
 	    openmp=yes
@@ -6422,6 +6427,57 @@ fi
 
 
 ######################################################################
+
+if [ $openacc = yes ] ; then
+    echo -n "Checking OpenACC compiler support:"
+    touch openacc_test.c
+    cat <<EOF > openacc_test.c
+#include <stdio.h>
+#include <acc_prof.h>
+
+#define VERSION 0.1
+
+void prof_inc( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
+  printf( "line %d\n", __LINE__ );
+}
+
+void acc_register_library(acc_prof_reg reg, acc_prof_reg unreg,
+                          acc_prof_lookup lookup) {
+  reg( acc_ev_compute_construct_start, &prof_inc, acc_reg );
+}
+
+int main(){
+  int arr[2] = {10, 11};
+#pragma acc parallel copy(arr) num_gangs(1)
+  for( int j = 0; j < 2; ++j )
+    printf( "arr[%d]=%d\n", j, arr[j] );
+  return 0;
+}
+EOF
+
+    if [ "$llvm" == "yes" ]; then openacc_flag=-fopenacc; fi
+    if [ "$pgi" == "yes" ];  then openacc_flag=-acc; fi
+    
+    #This deletion is here in case the file was left behind from a previous call to configure
+    rm -f ./openacc_test
+    
+    $c_compiler $openacc_flag -o openacc_test openacc_test.c 1>/dev/null 2>&1
+    result=$?
+    
+    if [ $result = "0" ]; then
+	echo " yes"
+	openacc_compiler_support=yes
+	fixmakeargs="$fixmakeargs OPENACC"
+	use_openacc=yes
+	tauoptions="${tauoptions}-acc"
+    else
+	echo " no"
+    fi
+    rm -f ./openacc_test
+fi
+
+
+######################################################################
 if [ $cxx_compiler = pgCC -o $cxx_compiler = pgc++ -o $cxx_compiler = pgcpp -o "x$PE_ENV" = "xPGI" ]
 then
     cat <<EOF > pgitest.C
@@ -6484,9 +6540,9 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
 EOF
     if $cxx_compiler $orig_useropt -c pgiacc15.c 1> /dev/null 2>&1
     then
-      echo "PGI compiler supports PGI v15.x OpenACC API (acc_ev_implicit_wait_start)"
+      echo "PGI compiler supports PGI v15.x OpenACC API (acc_ev_implicit_wait_start)" 
       fixmakeargs="$fixmakeargs PGI_OPENACC_15x"
-    fi
+   fi
     /bin/rm -f pgiacc15.c pgiacc15.o
 
 fi

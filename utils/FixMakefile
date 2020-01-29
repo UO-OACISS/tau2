@@ -1371,6 +1371,10 @@ case $1 in
 	echo NOTE: Enabling PGI v15.x OpenACC profiling interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     OPENACC) 
+	echo NOTE: Enabling OpenACC profiling interface
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PGI_NO_LIBSTD) 
 	echo NOTE: Disabling linking with -lstd for PGI 16.+ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
