@@ -1,4 +1,4 @@
-/* This wrapper works for PGI 12.3+ */
+#ifndef TAU_PGI_OPENACC
 #include <stdio.h>
 #include <TAU.h>
 #include <stdlib.h>
@@ -216,3 +216,4 @@ void acc_register_library(acc_prof_reg reg, acc_prof_reg unreg,
      acc_ev_update_start
      acc_ev_update_end
   */  
+#endif // ndef TAU_PGI_OPENACC
