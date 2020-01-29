@@ -6459,7 +6459,7 @@ EOF
     if [ "$pgi" == "yes" ];  then openacc_flag=-acc; fi
     
     #This deletion is here in case the file was left behind from a previous call to configure
-    rm -f ./openacc_test
+    rm -f ./openacc_test 
     
     $c_compiler $openacc_flag -o openacc_test openacc_test.c 1>/dev/null 2>&1
     result=$?
@@ -6473,7 +6473,7 @@ EOF
     else
 	echo " no"
     fi
-    rm -f ./openacc_test
+    rm -f ./openacc_test openacc_test.c
 fi
 
 
