@@ -825,6 +825,7 @@ TAU_GCCLIB	= -lgcc_s
 #KAI#TAU_IBM_FORTRANLIBS	       =  --backend -bh:4 --backend -bpT:0x10000000 --backend -bpD:0x20000000 /lib/crt0.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
 #FX#TAU_FORTRANLIBS       = -Ntl_notrt -lmpi_f90 -lmpi_f77 #ENDIF#
 #NEC_SX_MPI_FORTRAN#TAU_NEC_MPI_LIBS               = -lpmpi  -lmpi++ #ENDIF#
+#NEC_SX_MPI_FORTRAN#TAU_NEC_MPI_LIBS               = -mpiprof -lmpi++ #ENDIF#
 #NEC_COMPILERS#TAU_FORTRANLIBS               = -lpthread -lrt -L$(EXTRADIR) $(EXTRADIR)/f90_init.o $(EXTRADIR)/nousemmap.o $(EXTRADIR)/quickfit.o $(EXTRADIR)/async_noio.o -lnfmain -lnfort -Wl,-rpath,$(EXTRADIR) $(TAU_NEC_MPI_LIBS) #ENDIF#
 #IBM_FORTRAN#TAU_FORTRANLIBS = $(TAU_IBM_FORTRANLIBS) #ENDIF#
 
