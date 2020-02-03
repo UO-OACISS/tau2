@@ -2139,6 +2139,7 @@ for arg in "$@"; do
 
 	-openacc)
 	    openacc=yes
+	    use_openacc=yes
 	    shift
 	    ;;
 
@@ -6428,7 +6429,7 @@ fi
 
 ######################################################################
 
-if [ $openacc = yes ] ; then
+if [ $use_openacc = yes ] ; then
     echo -n "Checking OpenACC compiler support:"
     touch openacc_test.c
     cat <<EOF > openacc_test.c
@@ -7203,13 +7204,14 @@ if [ "x$download_unwind" = xyes ] ; then
       tar -xzf $libunwindtgz
       echo "removing $libunwindtgz..."
       rm $libunwindtgz
-      if [ ${c_compiler}=mpc_cc -o ${c_compiler}=mpc_icc ]
+      if [ ${c_compiler} = mpc_cc -o ${c_compiler} = mpc_icc ]
       then
         unwind_c_compiler=gcc
         unwind_cxx_compiler=g++
       else
         unwind_c_compiler=${c_compiler}
         unwind_cxx_compiler=${cxx_compiler}
+        echo "NOTE: Using unwind_c_compiler=$unwind_c_compiler and $unwind_cxx_compiler=$unwind_cxx_compiler to compile libunwind"
       fi
 
       if [ $craymic = no -a $machine != mic_linux ]; then
@@ -11402,7 +11404,7 @@ if [ "x$download_dwarf" = xyes ] ; then
             tar -xzf $libdwarftgz
             echo "removing $libdwarftgz..."
             rm $libdwarftgz
-            if [ ${c_compiler}=mpc_cc -o ${c_compiler}=mpc_icc ]
+            if [ ${c_compiler} = mpc_cc -o ${c_compiler} = mpc_icc ]
             then
                 dwarf_c_compiler=gcc
                 dwarf_cxx_compiler=g++
