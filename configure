@@ -11453,10 +11453,12 @@ if [ "x$download_dwarf" = xyes ] ; then
             fi
 # End of libelf check. Continue with libdwarf build.
             if [ $elf=yes ]; then
-              orig_cflags=`echo $CFLAGS`
-              export CFLAGS="$orig_cflags -I${libelfdir}/include"
-              export DWARF_LIBS="-L${libelfdir}/lib64 -L${libelfdir}/lib"
-              echo "TAU: Using CFLAGS=$CFLAGS to compile libdwarf"
+              if [ $machine = x86_64 -o $machine = craycnl ]; then
+                orig_cflags=`echo $CFLAGS`
+                export CFLAGS="$orig_cflags -I${libelfdir}/include"
+                export DWARF_LIBS="-L${libelfdir}/lib64 -L${libelfdir}/lib"
+                echo "TAU: Using CFLAGS=$CFLAGS to compile libdwarf"
+              fi
             fi
             ./configure --prefix=${dwarfdir} --enable-static --enable-shared CC=${dwarf_c_compiler} CXX=${dwarf_cxx_compiler} > ${libdwarf_log} 2>&1
             configresult=$?
