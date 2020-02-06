@@ -82,6 +82,7 @@ if [ $python_wrapper = "true" ] ; then
   echo "        -adios2       Write output to ADIOS2 archive"
   echo "        -adios2_trace Write trace output to ADIOS2 archive"
   echo "        -papi_components Periodically read from available PAPI components (requires PAPI configuration)"
+  echo "        -sqlite       Write profile data to SQLite3 database"
 fi
   echo ""
   echo "Notes:"
@@ -322,6 +323,7 @@ ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars i
 ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 adios2=false
 papi_components=false
+sqlite=false
 adios2_trace=false
 sos=false
 
@@ -395,6 +397,10 @@ for arg in "$@" ; do
         ;;
       -papi_components)
         papi_components=true
+        shift
+        ;;
+      -sqlite)
+        sqlite=true
         shift
         ;;
       -adios2)
@@ -754,6 +760,14 @@ if [ $adios2 = "true" ]; then
     # Because we are writing the data to ADIOS, disable profile output
     export TAU_PROFILE=0
     unset TAU_PROFILE_FORMAT
+fi
+
+if [ $sqlite = "true" ]; then
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-sqlite-plugin.so
+    export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+    # Because we are writing the data to SQLite, disable profile output
+    #export TAU_PROFILE=0
+    #unset TAU_PROFILE_FORMAT
 fi
 
 if [ $adios2_trace = "true" ]; then
