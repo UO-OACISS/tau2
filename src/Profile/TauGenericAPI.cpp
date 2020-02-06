@@ -127,6 +127,18 @@ void ps_tool_timer_stop(const void * timer) {
     Tau_stop_timer((FunctionInfo*)timer, Tau_get_thread());
 }
 
+void ps_tool_start_string(const char * name) {
+    Tau_start(name);
+}
+
+void ps_tool_stop_string(const char * name) {
+    Tau_stop(name);
+}
+
+void ps_tool_stop_current(void) {
+    Tau_global_stop();
+}
+
 void ps_tool_set_parameter(const char * parameter_name, int64_t parameter_value) {
     Tau_profile_param1l(parameter_value, parameter_name);
 }
