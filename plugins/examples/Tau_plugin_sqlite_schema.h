@@ -64,6 +64,7 @@ DROP TABLE IF EXISTS `timer` ;
 CREATE TABLE IF NOT EXISTS `timer` (
   `id` INTEGER PRIMARY KEY AUTOINCREMENT,
   `trial` INTEGER UNSIGNED NOT NULL,
+  `parent` INTEGER UNSIGNED NULL DEFAULT NULL,
   `name` TEXT NOT NULL,
   `short_name` TEXT NOT NULL,
   `timergroup` TEXT NULL DEFAULT NULL,
@@ -72,7 +73,6 @@ CREATE TABLE IF NOT EXISTS `timer` (
   `line_number_end` INT NULL DEFAULT NULL,
   `column_number` INT NULL DEFAULT NULL,
   `column_number_end` INT NULL DEFAULT NULL,
-  `parent` INTEGER UNSIGNED NULL DEFAULT NULL,
   CONSTRAINT `timer_trial_key`
     FOREIGN KEY (`trial`)
     REFERENCES `trial` (`id`)
@@ -188,12 +188,17 @@ DROP TABLE IF EXISTS `metadata` ;
 
 CREATE TABLE IF NOT EXISTS `metadata` (
   `trial` INTEGER UNSIGNED NOT NULL,
+  `thread` INTEGER UNSIGNED NOT NULL,
   `name` TEXT NOT NULL,
   `value` TEXT NULL DEFAULT NULL,
-  `thread` INTEGER UNSIGNED NOT NULL,
   CONSTRAINT `metadata_trial_key`
     FOREIGN KEY (`trial`)
     REFERENCES `trial` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `metadata_thread_key`
+    FOREIGN KEY (`thread`)
+    REFERENCES `thread` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
 

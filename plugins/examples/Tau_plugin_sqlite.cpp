@@ -17,6 +17,7 @@
 #include <Profile/TauMetrics.h>
 #include <Profile/TauAPI.h>
 #include <Profile/TauPlugin.h>
+#include <Profile/TauMetaData.h>
 #include <pthread.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -151,6 +152,53 @@ void store_threads(size_t trial_id) {
             //fprintf(stdout, "Thread %lu inserted successfully\n", thread_id);
         }
         thread_map[t] = thread_id;
+    }
+}
+
+void store_metadata(size_t trial_id) {
+    int numThreads = RtsLayer::getTotalThreads();
+    for(int t = 0 ; t < numThreads ; t++) {
+        for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(t).begin();
+            it != Tau_metadata_getMetaData(t).end(); it++) {
+            std::string value;
+            switch(it->second->type) {
+                case TAU_METADATA_TYPE_STRING:
+                    value = std::string(it->second->data.cval);
+                    break;
+                case TAU_METADATA_TYPE_INTEGER:
+                    value = std::to_string(it->second->data.ival);
+                    break;
+                case TAU_METADATA_TYPE_DOUBLE:
+                    value = std::to_string(it->second->data.dval);
+                    break;
+                case TAU_METADATA_TYPE_TRUE:
+                    value = std::string("true");
+                    break;
+                case TAU_METADATA_TYPE_FALSE:
+                    value = std::string("false");
+                    break;
+                case TAU_METADATA_TYPE_NULL:
+                    value = std::string("(null)");
+                    break;
+                default:
+                    break;
+            }
+            std::stringstream sql;
+            size_t thread_id = thread_map[t];
+            sql << "insert into metadata (trial, thread, name, value) values ("
+            << trial_id << ","
+            << thread_id << ",'"
+            << it->first.name << "','"
+            << value << "');";
+            rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
+ 
+            if( rc != SQLITE_OK ){
+                fprintf(stderr, "SQL error: %s\n", zErrMsg);
+                sqlite3_free(zErrMsg);
+            } else {
+                fprintf(stdout, "Metadata %lu %s %s inserted successfully\n", thread_id, it->first.name, value.c_str());
+            }
+        }
     }
 }
 
@@ -317,7 +365,7 @@ void store_timers(size_t trial_id) {
             }
         }
     }
- }
+}
 
 size_t store_profile(size_t trial_id) {
     begin_transaction();
@@ -325,6 +373,7 @@ size_t store_profile(size_t trial_id) {
         trial_id = store_trial();
     }
     store_threads(trial_id);
+    store_metadata(trial_id);
     store_metrics(trial_id);
     store_timers(trial_id);
     end_transaction();
