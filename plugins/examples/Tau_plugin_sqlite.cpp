@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string>
 #include <sstream>
+#include <regex>
 
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
@@ -29,7 +30,7 @@
 #include <sqlite3.h>
 #include "Tau_plugin_sqlite_schema.h"
 
-bool done = false;;
+bool done = false;
 sqlite3 *db;
 char *zErrMsg = 0;
 int rc = SQLITE_OK;
@@ -37,6 +38,7 @@ int comm_rank = 0;
 int comm_size = 1;
 std::unordered_map<int,size_t> thread_map;
 std::unordered_map<std::string,size_t> metric_map;
+std::unordered_map<std::string,size_t> timer_map;
 
 inline bool file_exists (const char * name) {
   struct stat buffer;   
@@ -86,6 +88,32 @@ void create_database() {
     return;
 }
 
+void begin_transaction() {
+    std::stringstream sql;
+    sql << "begin transaction;";
+    rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
+ 
+    if( rc != SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    } else {
+        fprintf(stdout, "Begin Transaction\n");
+    }
+}
+
+void end_transaction() {
+    std::stringstream sql;
+    sql << "commit transaction;";
+    rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
+ 
+    if( rc != SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    } else {
+        fprintf(stdout, "Commit Transaction\n");
+    }
+}
+
 size_t store_trial() {
     std::stringstream sql;
     size_t trial_id = 0;
@@ -97,7 +125,7 @@ size_t store_trial() {
         sqlite3_free(zErrMsg);
     } else {
         trial_id = sqlite3_last_insert_rowid(db);
-        fprintf(stdout, "Trial %lu inserted successfully\n", trial_id);
+        //fprintf(stdout, "Trial %lu inserted successfully\n", trial_id);
     }
     return trial_id;
 }
@@ -120,7 +148,7 @@ void store_threads(size_t trial_id) {
             sqlite3_free(zErrMsg);
         } else {
             thread_id = sqlite3_last_insert_rowid(db);
-            fprintf(stdout, "Thread %lu inserted successfully\n", thread_id);
+            //fprintf(stdout, "Thread %lu inserted successfully\n", thread_id);
         }
         thread_map[t] = thread_id;
     }
@@ -139,7 +167,7 @@ void store_metric(size_t trial_id, const char * name) {
         sqlite3_free(zErrMsg);
     } else {
         metric_id = sqlite3_last_insert_rowid(db);
-        fprintf(stdout, "%s %lu inserted successfully\n", name, metric_id);
+        //fprintf(stdout, "Metric %s %lu inserted successfully\n", name, metric_id);
     }
     metric_map[std::string(name)] = metric_id;
 }
@@ -167,15 +195,27 @@ void shorten_timer_name(std::string& name) {
     }
 }
 
-size_t store_timer(size_t trial_id, FunctionInfo *fi) {
-    std::string longName(fi->GetName());
-    std::string shortName(fi->GetName());
+/* If the timer is a callpath:
+ *   - split the name into tokens
+ *   - lookup and/or store token[0] 
+ *   - lookup and/or store token[0] => token[1]
+ *   - etc.
+ */
+
+size_t store_timer(size_t trial_id, std::string longName, bool has_parent, size_t parent_timer) {
+    std::string shortName(longName.c_str());
     shorten_timer_name(shortName);
     std::stringstream sql;
-    sql << "insert into timer (trial, name, short_name) values ("
+    sql << "insert into timer (trial, name, short_name, parent) values ("
     << trial_id << ",'"
     << longName.c_str() << "','"
-    << shortName.c_str() << "');";
+    << shortName.c_str() << "',";
+    if (has_parent) {
+        sql << parent_timer;
+    } else {
+        sql << "NULL";
+    }
+    sql << ");";
     rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
 
     size_t timer_id = 0;
@@ -184,10 +224,59 @@ size_t store_timer(size_t trial_id, FunctionInfo *fi) {
         sqlite3_free(zErrMsg);
     } else {
         timer_id = sqlite3_last_insert_rowid(db);
-        fprintf(stdout, "%s %lu inserted successfully\n", shortName.c_str(), timer_id);
+        fprintf(stdout, "%s %lu %lu inserted successfully\n", longName.c_str(), parent_timer, timer_id);
     }
-    //metric_map[std::string(name)] = metric_id;
     return timer_id;
+}
+
+size_t get_or_store_timer(size_t trial_id, std::string tree_name, std::string name, bool has_parent, size_t parent_id) {
+    if (timer_map.count(tree_name) > 0) {
+        return timer_map[tree_name];
+    } else {
+        size_t timer_id = store_timer(trial_id, name, has_parent, parent_id);
+        timer_map[tree_name] = timer_id;
+        return timer_id;
+    }
+}
+
+size_t decompose_and_store_timer(size_t trial_id, FunctionInfo *fi) {
+    std::string longName(fi->GetName());
+    std::size_t index = longName.find(" => ");
+    if (index == std::string::npos) {
+        return get_or_store_timer(trial_id, longName, longName, false, 0);
+    } else {
+        std::regex separator(" => ");
+        std::sregex_token_iterator token(longName.begin(), longName.end(),
+            separator, -1);
+        std::sregex_token_iterator end;
+        std::string name = *token;
+        size_t parent_id = get_or_store_timer(trial_id, name, name, false, 0);
+        std::stringstream ss;
+        ss << name;
+        while(++token != end) {
+            std::string current = *token;
+            ss << " => " << current;
+            parent_id = get_or_store_timer(trial_id, ss.str(), current, true, parent_id);
+        }
+        return parent_id;
+    }
+}
+
+void store_timer_value(size_t timer_id, size_t metric_id, size_t thread_id,
+    double value) {
+    std::stringstream sql;
+    sql << "insert into timer_value (timer, metric, thread, value) values ("
+    << timer_id << ","
+    << metric_id << ","
+    << thread_id << ","
+    << value << ");";
+    rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    } else {
+        //fprintf(stdout, "timer_value inserted successfully\n");
+    }
 }
 
 void store_timers(size_t trial_id) {
@@ -200,20 +289,45 @@ void store_timers(size_t trial_id) {
 
     std::map<std::string, std::vector<double> >::iterator timer_map_it;
 
+    int numMetrics = 0; // Tau_Global_numCounters();
+    const char **counterNames;
+    TauMetrics_getCounterList(&counterNames, &numMetrics);
+
     //foreach: TIMER
     for (it = tmpTimers.begin(); it != tmpTimers.end(); it++) {
         FunctionInfo *fi = *it;
-        store_timer(trial_id, fi);
+        size_t timer_id = decompose_and_store_timer(trial_id, fi);
+        for(int t = 0 ; t < RtsLayer::getTotalThreads() ; t++) {
+            size_t thread_id = thread_map[t];
+            size_t metric_id = metric_map["Number of Calls"];
+            long value = fi->GetCalls(t);
+            if (value == 0L) { continue; } // this thread didn't call it
+            store_timer_value(timer_id, metric_id, thread_id, (double)value);
+            for(int m = 0 ; m < numMetrics ; m++) {
+                std::stringstream name;
+                name << "Inclusive " << counterNames[m];
+                metric_id = metric_map[name.str()];
+                store_timer_value(timer_id, metric_id, thread_id, 
+                    fi->getDumpInclusiveValues(t)[m]);
+                name.str(std::string());
+                name << "Exclusive " << counterNames[m];
+                metric_id = metric_map[name.str()];
+                store_timer_value(timer_id, metric_id, thread_id, 
+                    fi->getDumpExclusiveValues(t)[m]);
+            }
+        }
     }
  }
 
 size_t store_profile(size_t trial_id) {
+    begin_transaction();
     if (trial_id == 0UL) {
         trial_id = store_trial();
     }
     store_threads(trial_id);
     store_metrics(trial_id);
     store_timers(trial_id);
+    end_transaction();
     return trial_id;
 }
 
@@ -223,6 +337,7 @@ void close_database() {
 
 void write_profile_to_database() {
     if (done) { return; }
+    if (RtsLayer::myThread() != 0) { return; }
     size_t trial_id = 0;
     if (comm_rank == 0) {
         trial_id = store_profile(0UL);
@@ -280,8 +395,6 @@ int Tau_plugin_event_post_init_null(Tau_plugin_event_post_init_data_t* data) {
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
-
-    done = false;
 
     /* Required event support */
     /*
