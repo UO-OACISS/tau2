@@ -589,7 +589,7 @@ for arg in "$@"; do
             echo "         armclang|pathcc|orcc]."
 	    echo "-fortran=<compiler> ..................... specify the Fortran compiler."
 	    echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
-	    echo "   flang|xlflang|armflang|g95|open64|kai|nec|hitachi|intel|absoft|lahey|"
+	    echo "   flang|f18|xlflang|armflang|g95|open64|kai|nec|hitachi|intel|absoft|lahey|"
             echo "                       nagware|pathscale|gfortran|gfortran-*|gfortran4]"
 	    echo "-upc=<compiler> ............................. specify the UPC compiler."
 	    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
@@ -749,7 +749,7 @@ for arg in "$@"; do
         echo "-fortran=<compiler> ..................... specify the Fortran compiler."
         echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
         echo "   g95|open64|kai|nec|hitachi|intel|absoft|lahey|nag|nagware|pathscale|"  
-        echo "   flang|xlflang|armflang|gfortran|gfortran-*|gfortran4]"
+        echo "   flang|f18|xlflang|armflang|gfortran|gfortran-*|gfortran4]"
         echo "-upc=<compiler> ............................. specify the UPC compiler."
         echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
         echo "-host=<host-type> ................ the type of system on which TAU runs"
@@ -1323,14 +1323,14 @@ for arg in "$@"; do
 
 	-fortran=*)
 	    myarg=`echo $arg | sed 's/-fortran=//'`
-	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran-5 -o $myarg = gfortran-6 -o $myarg = gfortran-7 -o $myarg = gfortran-8 -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf -o $myarg = armflang -o $myarg = xlflang -o $myarg = ftn -o $myarg = flang -o $myarg = nfort -o $myarg = mpinfort ] ; then
+	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran-5 -o $myarg = gfortran-6 -o $myarg = gfortran-7 -o $myarg = gfortran-8 -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf -o $myarg = armflang -o $myarg = xlflang -o $myarg = ftn -o $myarg = flang -o $myarg = f18 -o $myarg = nfort -o $myarg = mpinfort ] ; then
 		if [ $myarg = gnu ] ; then
 		    fortran_compiler=gfortran
 		else
 		    fortran_compiler=$myarg
 		fi
 	    else
-		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'pgf90', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'gfortran-*', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', 'oshfort', 'caf', 'ftn', 'armflang', 'flang', 'nfort' , or 'mpinfort'"
+		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'pgf90', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'gfortran-*', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', 'oshfort', 'caf', 'ftn', 'armflang', 'flang', 'f18', 'nfort' , or 'mpinfort'"
 		exit 1
 	    fi
 	    shift
@@ -2134,6 +2134,12 @@ for arg in "$@"; do
 
 	-openmp)
 	    openmp=yes
+	    shift
+	    ;;
+
+	-openacc)
+	    openacc=yes
+	    use_openacc=yes
 	    shift
 	    ;;
 
@@ -3965,7 +3971,7 @@ if [ "x$fortran_compiler" = "xxlflang" ]; then
    fixmakeargs="$fixmakeargs XLFLANG"
 fi
 
-if [ "x$fortran_compiler" = "xflang" ]; then
+if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" ]; then
    fixmakeargs="$fixmakeargs FLANG"
 fi
 
@@ -4367,7 +4373,7 @@ if [ $cxx_compiler = mpicxx ] ; then
             if [ "x$fortran_compiler" = "xarmflang" ]; then
                 fixmakeargs="$fixmakeargs ARMFLANG"
             fi
-            if [ "x$fortran_compiler" = "xflang" ]; then
+            if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" ]; then
                 fixmakeargs="$fixmakeargs FLANG"
             fi
 	    if [ "x$orig_fortran_compiler" = "xcaf" ]; then 
@@ -6422,6 +6428,57 @@ fi
 
 
 ######################################################################
+
+if [ $use_openacc = yes ] ; then
+    echo -n "Checking OpenACC compiler support:"
+    touch openacc_test.c
+    cat <<EOF > openacc_test.c
+#include <stdio.h>
+#include <acc_prof.h>
+
+#define VERSION 0.1
+
+void prof_inc( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
+  printf( "line %d\n", __LINE__ );
+}
+
+void acc_register_library(acc_prof_reg reg, acc_prof_reg unreg,
+                          acc_prof_lookup lookup) {
+  reg( acc_ev_compute_construct_start, &prof_inc, acc_reg );
+}
+
+int main(){
+  int arr[2] = {10, 11};
+#pragma acc parallel copy(arr) num_gangs(1)
+  for( int j = 0; j < 2; ++j )
+    printf( "arr[%d]=%d\n", j, arr[j] );
+  return 0;
+}
+EOF
+
+    if [ "$llvm" == "yes" ]; then openacc_flag=-fopenacc; fi
+    if [ "$pgi" == "yes" ];  then openacc_flag=-acc; fi
+    
+    #This deletion is here in case the file was left behind from a previous call to configure
+    rm -f ./openacc_test 
+    
+    $c_compiler $openacc_flag -o openacc_test openacc_test.c 1>/dev/null 2>&1
+    result=$?
+    
+    if [ $result = "0" ]; then
+	echo " yes"
+	openacc_compiler_support=yes
+	fixmakeargs="$fixmakeargs OPENACC"
+	use_openacc=yes
+	tauoptions="${tauoptions}-acc"
+    else
+	echo " no"
+    fi
+    rm -f ./openacc_test openacc_test.c
+fi
+
+
+######################################################################
 if [ $cxx_compiler = pgCC -o $cxx_compiler = pgc++ -o $cxx_compiler = pgcpp -o "x$PE_ENV" = "xPGI" ]
 then
     cat <<EOF > pgitest.C
@@ -6484,9 +6541,9 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
 EOF
     if $cxx_compiler $orig_useropt -c pgiacc15.c 1> /dev/null 2>&1
     then
-      echo "PGI compiler supports PGI v15.x OpenACC API (acc_ev_implicit_wait_start)"
+      echo "PGI compiler supports PGI v15.x OpenACC API (acc_ev_implicit_wait_start)" 
       fixmakeargs="$fixmakeargs PGI_OPENACC_15x"
-    fi
+   fi
     /bin/rm -f pgiacc15.c pgiacc15.o
 
 fi
@@ -7147,13 +7204,14 @@ if [ "x$download_unwind" = xyes ] ; then
       tar -xzf $libunwindtgz
       echo "removing $libunwindtgz..."
       rm $libunwindtgz
-      if [ ${c_compiler}=mpc_cc -o ${c_compiler}=mpc_icc ]
+      if [ ${c_compiler} = mpc_cc -o ${c_compiler} = mpc_icc ]
       then
         unwind_c_compiler=gcc
         unwind_cxx_compiler=g++
       else
         unwind_c_compiler=${c_compiler}
         unwind_cxx_compiler=${cxx_compiler}
+        echo "NOTE: Using unwind_c_compiler=$unwind_c_compiler and $unwind_cxx_compiler=$unwind_cxx_compiler to compile libunwind"
       fi
 
       if [ $craymic = no -a $machine != mic_linux ]; then
@@ -11346,7 +11404,7 @@ if [ "x$download_dwarf" = xyes ] ; then
             tar -xzf $libdwarftgz
             echo "removing $libdwarftgz..."
             rm $libdwarftgz
-            if [ ${c_compiler}=mpc_cc -o ${c_compiler}=mpc_icc ]
+            if [ ${c_compiler} = mpc_cc -o ${c_compiler} = mpc_icc ]
             then
                 dwarf_c_compiler=gcc
                 dwarf_cxx_compiler=g++
@@ -11397,10 +11455,12 @@ if [ "x$download_dwarf" = xyes ] ; then
             fi
 # End of libelf check. Continue with libdwarf build.
             if [ $elf=yes ]; then
-              orig_cflags=`echo $CFLAGS`
-              export CFLAGS="$orig_cflags -I${libelfdir}/include"
-              export DWARF_LIBS="-L${libelfdir}/lib64 -L${libelfdir}/lib"
-              echo "TAU: Using CFLAGS=$CFLAGS to compile libdwarf"
+              if [ $machine = x86_64 -o $machine = craycnl ]; then
+                orig_cflags=`echo $CFLAGS`
+                export CFLAGS="$orig_cflags -I${libelfdir}/include"
+                export DWARF_LIBS="-L${libelfdir}/lib64 -L${libelfdir}/lib"
+                echo "TAU: Using CFLAGS=$CFLAGS to compile libdwarf"
+              fi
             fi
             ./configure --prefix=${dwarfdir} --enable-static --enable-shared CC=${dwarf_c_compiler} CXX=${dwarf_cxx_compiler} > ${libdwarf_log} 2>&1
             configresult=$?

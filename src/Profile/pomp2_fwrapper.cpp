@@ -37,6 +37,11 @@
 #ifndef _OPENMP
 #define _OPENMP
 #endif /* _OPENMP */
+
+#ifdef TAU_NEC_SX
+#include <stdlib.h>
+#endif /* TAU_NEC_SX */
+
  extern "C"{
 
 #include <config.h>

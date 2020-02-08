@@ -961,8 +961,13 @@ extern "C" void Tau_profile_exit_most_threads()
 
 extern "C" void Tau_profile_exit_all_threads()
 {
+  /* Set up a static flag to make sure we only do this once,
+   * as it gets called from many, many destructors. */
+  static bool done = false;
+  if (done) { return; }
   Tau_profile_exit_threads(0);
   Tau_shutdown();
+  done = true;
 }
 
 

@@ -1632,8 +1632,12 @@ int TauProfiler_StoreData(int tid)
       TauProfiler_DumpData(false, tid, "profile");
 	}
   }
-#if defined(PTHREADS) || defined(TAU_OPENMP)
-  if (RtsLayer::myThread() == 0 && tid == 0) {
+  /* If we have thread recycling enabled, threads won't write
+   * their profiles when they exit.  So thread 0 has to do it, 
+   * even in cases where CUDA is used without pthread or openmp
+   * support.  For some reason, thread 0 is getting its myThread()
+   * value changed from 0, still need to investigate that. */
+    if (RtsLayer::myThread() == 0 && tid == 0) {
     /* clean up other threads? */
     for (int i = 1; i < RtsLayer::getTotalThreads(); i++) {
       TauProfiler_StoreData(i);
@@ -1651,7 +1655,6 @@ int TauProfiler_StoreData(int tid)
 #endif
 #endif
   }
-#endif /* PTHREADS */
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 4\n", RtsLayer::myNode(), tid);
 
 #if defined(TAU_SHMEM) && !defined(TAU_MPI)

@@ -751,11 +751,17 @@ fi
 if [ $adios2 = "true" ]; then
     export TAU_PLUGINS=$TAU_PLUGINS:libTAU-adios2-plugin.so
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+    # Because we are writing the data to ADIOS, disable profile output
+    export TAU_PROFILE=0
+    unset TAU_PROFILE_FORMAT
 fi
 
 if [ $adios2_trace = "true" ]; then
     export TAU_PLUGINS=$TAU_PLUGINS:libTAU-adios2-trace-plugin.so
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+    # Because we are writing the data to ADIOS, disable profile output
+    export TAU_PROFILE=0
+    unset TAU_PROFILE_FORMAT
 fi
 
 if [ $sos = "true" ]; then
