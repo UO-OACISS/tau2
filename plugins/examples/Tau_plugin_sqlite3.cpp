@@ -40,6 +40,13 @@ int comm_size = 1;
 std::unordered_map<int,size_t> thread_map;
 std::unordered_map<std::string,size_t> metric_map;
 std::unordered_map<std::string,size_t> timer_map;
+std::unordered_map<std::string,size_t> counter_map;
+
+typedef struct context_event_index {
+    size_t counter_id;
+    bool has_context;
+    size_t timer_id;
+} context_event_index_t;
 
 inline bool file_exists (const char * name) {
   struct stat buffer;   
@@ -121,7 +128,11 @@ void end_transaction() {
 size_t store_trial() {
     std::stringstream sql;
     size_t trial_id = 0;
-    sql << "insert into trial (name) values ('foo');";
+    /* Get the executable name from the TAU metadata */
+    Tau_metadata_key key;
+    key.name = strdup("Executable");
+    const char * execname = Tau_metadata_getMetaData(0)[key]->data.cval;
+    sql << "insert into trial (name) values ('" << execname << "');";
     rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
  
     if( rc != SQLITE_OK ){
@@ -246,13 +257,6 @@ void shorten_timer_name(std::string& name) {
     }
 }
 
-/* If the timer is a callpath:
- *   - split the name into tokens
- *   - lookup and/or store token[0] 
- *   - lookup and/or store token[0] => token[1]
- *   - etc.
- */
-
 size_t store_timer(size_t trial_id, std::string longName, bool has_parent, size_t parent_timer) {
     std::string shortName(longName.c_str());
     shorten_timer_name(shortName);
@@ -290,8 +294,42 @@ size_t get_or_store_timer(size_t trial_id, std::string tree_name, std::string na
     }
 }
 
-size_t decompose_and_store_timer(size_t trial_id, FunctionInfo *fi) {
-    std::string longName(fi->GetName());
+size_t store_counter(size_t trial_id, std::string name) {
+    std::stringstream sql;
+    sql << "insert into counter (trial, name) values ("
+    << trial_id << ",'"
+    << name.c_str() << "');";
+    rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
+
+    size_t counter_id = 0;
+    if( rc != SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    } else {
+        counter_id = sqlite3_last_insert_rowid(db);
+        //TAU_VERBOSE("%s %lu %lu inserted successfully\n", name.c_str(), parent_timer, timer_id);
+    }
+    return counter_id;
+}
+
+size_t get_or_store_counter(size_t trial_id, std::string name) {
+    if (counter_map.count(name) > 0) {
+        return counter_map[name];
+    } else {
+        size_t counter_id = store_counter(trial_id, name);
+        counter_map[name] = counter_id;
+        return counter_id;
+    }
+}
+
+/* If the timer is a callpath:
+ *   - split the name into tokens
+ *   - lookup and/or store token[0] 
+ *   - lookup and/or store token[0] => token[1]
+ *   - etc.
+ */
+size_t decompose_and_store_timer(size_t trial_id, const char * name) {
+    std::string longName(name);
     std::size_t index = longName.find(" => ");
     if (index == std::string::npos) {
         return get_or_store_timer(trial_id, longName, longName, false, 0);
@@ -347,7 +385,7 @@ void store_timers(size_t trial_id) {
     //foreach: TIMER
     for (it = tmpTimers.begin(); it != tmpTimers.end(); it++) {
         FunctionInfo *fi = *it;
-        size_t timer_id = decompose_and_store_timer(trial_id, fi);
+        size_t timer_id = decompose_and_store_timer(trial_id, fi->GetName());
         for(int t = 0 ; t < RtsLayer::getTotalThreads() ; t++) {
             size_t thread_id = thread_map[t];
             size_t metric_id = metric_map["Number of Calls"];
@@ -370,6 +408,76 @@ void store_timers(size_t trial_id) {
     }
 }
 
+context_event_index_t * decompose_and_store_counter(size_t trial_id, tau::TauUserEvent *ue) {
+    std::string longName(ue->GetName());
+    std::size_t index = longName.find(" : ");
+    context_event_index_t * tmp = (context_event_index_t*)calloc(1, sizeof(context_event_index_t));
+    if (index == std::string::npos) {
+        tmp->counter_id = get_or_store_counter(trial_id, longName);
+        tmp->has_context = false;
+    } else {
+        std::regex separator(" : ");
+        std::sregex_token_iterator token(longName.begin(), longName.end(),
+            separator, -1);
+        std::sregex_token_iterator end;
+        std::string name = *token;
+        tmp->counter_id = get_or_store_counter(trial_id, name);
+        if(++token != end) {
+            std::string context = *token;
+            tmp->has_context = true;
+            tmp->timer_id = decompose_and_store_timer(trial_id, context.c_str());
+        }
+    }
+    return tmp;
+}
+
+void store_counter_value(context_event_index_t * context, size_t thread_id, tau::TauUserEvent * ue, int tid) {
+    std::stringstream sql;
+    sql << "insert into counter_value (counter, timer, thread, sample_count, maximum_value, minimum_value, mean_value, sum_of_squares) values ("
+    << context->counter_id << ",";
+    if (context->has_context) {
+        sql << context->timer_id << ",";
+    } else {
+        sql << "NULL" << ",";
+    }
+    sql << thread_id << ","
+    << ue->GetNumEvents(tid) << ","
+    << ue->GetMax(tid) << ","
+    << ue->GetMin(tid) << ","
+    << ue->GetMean(tid) << ","
+    << ue->GetSumSqr(tid) << ");";
+    rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
+    if( rc != SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    } else {
+        //TAU_VERBOSE("counter_value inserted successfully\n");
+    }
+}
+
+void store_counters(size_t trial_id) {
+    int numEvents = 0;
+    double max, min, mean, sumsqr;
+
+    RtsLayer::LockDB();
+    tau::AtomicEventDB::const_iterator it2;
+
+    //foreach: Counter
+    for (it2 = tau::TheEventDB().begin(); it2 != tau::TheEventDB().end(); it2++) {
+        tau::TauUserEvent *ue = (*it2);
+        if (ue == NULL) continue;
+        context_event_index_t * context = decompose_and_store_counter(trial_id, ue);
+        for(int t = 0 ; t < RtsLayer::getTotalThreads() ; t++) {
+            size_t thread_id = thread_map[t];
+            long value = ue->GetNumEvents(t);
+            if (value == 0L) { continue; } // this thread didn't call it
+            store_counter_value(context, thread_id, ue, t);
+        }
+        free(context);
+    }
+    RtsLayer::UnLockDB();
+}
+
 size_t store_profile(size_t trial_id) {
     begin_transaction();
     if (trial_id == 0UL) {
@@ -379,6 +487,7 @@ size_t store_profile(size_t trial_id) {
     store_metadata(trial_id);
     store_metrics(trial_id);
     store_timers(trial_id);
+    store_counters(trial_id);
     end_transaction();
     return trial_id;
 }

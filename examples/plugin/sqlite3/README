@@ -1,3 +1,5 @@
-This example can be used on one or more cores using MPI, pthread, OpenMP or with a hybrid MPI+<thread> runtime. It features a selective instrumentation file that uses outer-loop level instrumentation in two routines. 
 
-make
+This example shows how to use the SQLite3 plugin to store multiple trial runs
+in a file-based database on disk.
+
+To run the example, type "make", and then run the "go.sh" script.

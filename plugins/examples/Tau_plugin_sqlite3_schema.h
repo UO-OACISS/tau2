@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS `counter_value` (
   `maximum_value` DOUBLE NULL DEFAULT NULL,
   `minimum_value` DOUBLE NULL DEFAULT NULL,
   `mean_value` DOUBLE NULL DEFAULT NULL,
-  `standard_deviation` DOUBLE NULL DEFAULT NULL,
+  `sum_of_squares` DOUBLE NULL DEFAULT NULL,
   CONSTRAINT `counter_value_counter_key`
     FOREIGN KEY (`counter`)
     REFERENCES `counter` (`id`)
