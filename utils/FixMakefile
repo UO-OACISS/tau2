@@ -456,6 +456,11 @@ case $1 in
 	echo "s,^ADIOS2_LIBS=.*$,ADIOS2_LIBS=$adios2libs,g" >> $sedout
 	;;
 
+    sqlite3dir=*)
+        sqlite3dir=`echo $1 | sed -e 's/^sqlite3dir=//'`
+	echo "s,^SQLITE3DIR=.*$,SQLITE3DIR=$sqlite3dir,g" >> $sedout
+	;;
+
 #    caliperdir=*)
 #        caliperdir=`echo $1 | sed -e 's/^caliperdir=//'`
 #	echo "s,^CALIPERDIR=.*$,CALIPERDIR=$caliperdir,g" >> $sedout
@@ -1732,6 +1737,10 @@ case $1 in
 	;;
      ADIOS2)
 	echo "NOTE: Using ADIOS2 ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SQLITE3)
+	echo "NOTE: Using SQLITE3 ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 #     CALIPER)

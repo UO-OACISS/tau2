@@ -29,7 +29,7 @@
 #endif
 
 #include <sqlite3.h>
-#include "Tau_plugin_sqlite_schema.h"
+#include "Tau_plugin_sqlite3_schema.h"
 
 bool done = false;
 sqlite3 *db;
@@ -56,7 +56,9 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
 }
 
 bool open_database() {
-    const char * filename = "tauprofile.db";
+    std::stringstream ss;
+    ss << TauEnv_get_profiledir() << "/tauprofile.db";
+    char * filename = strdup(ss.str().c_str());
     /* check if file exists */
     bool exists = file_exists(filename);
     /* open the database */
@@ -66,15 +68,16 @@ bool open_database() {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         return false;
     } else {
-        //fprintf(stderr, "Opened database successfully\n");
+        TAU_VERBOSE("Opened database %s successfully\n", filename);
     }
+    free(filename);
     return (exists);
 }
 
 void create_database() {
     bool exists = open_database();
     if (exists) {
-        fprintf(stdout, "TAU database exists, adding trial to it\n");
+        TAU_VERBOSE("TAU database exists, adding trial to it\n");
     } else {
         rc = sqlite3_exec(db, database_schema, callback, 0, &zErrMsg);
    
@@ -83,7 +86,7 @@ void create_database() {
             sqlite3_free(zErrMsg);
             return;
         } else {
-            fprintf(stdout, "TAU database created successfully\n");
+            TAU_VERBOSE("TAU database created successfully\n");
         }
     }
     return;
@@ -98,7 +101,7 @@ void begin_transaction() {
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
     } else {
-        //fprintf(stdout, "Begin Transaction\n");
+        //TAU_VERBOSE("Begin Transaction\n");
     }
 }
 
@@ -111,7 +114,7 @@ void end_transaction() {
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
     } else {
-        //fprintf(stdout, "Commit Transaction\n");
+        //TAU_VERBOSE("Commit Transaction\n");
     }
 }
 
@@ -126,7 +129,7 @@ size_t store_trial() {
         sqlite3_free(zErrMsg);
     } else {
         trial_id = sqlite3_last_insert_rowid(db);
-        //fprintf(stdout, "Trial %lu inserted successfully\n", trial_id);
+        TAU_VERBOSE("Trial %lu inserted successfully\n", trial_id);
     }
     return trial_id;
 }
@@ -149,7 +152,7 @@ void store_threads(size_t trial_id) {
             sqlite3_free(zErrMsg);
         } else {
             thread_id = sqlite3_last_insert_rowid(db);
-            //fprintf(stdout, "Thread %lu inserted successfully\n", thread_id);
+            //TAU_VERBOSE("Thread %lu inserted successfully\n", thread_id);
         }
         thread_map[t] = thread_id;
     }
@@ -196,7 +199,7 @@ void store_metadata(size_t trial_id) {
                 fprintf(stderr, "SQL error: %s\n", zErrMsg);
                 sqlite3_free(zErrMsg);
             } else {
-                //fprintf(stdout, "Metadata %lu %s %s inserted successfully\n", thread_id, it->first.name, value.c_str());
+                //TAU_VERBOSE("Metadata %lu %s %s inserted successfully\n", thread_id, it->first.name, value.c_str());
             }
         }
     }
@@ -215,7 +218,7 @@ void store_metric(size_t trial_id, const char * name) {
         sqlite3_free(zErrMsg);
     } else {
         metric_id = sqlite3_last_insert_rowid(db);
-        //fprintf(stdout, "Metric %s %lu inserted successfully\n", name, metric_id);
+        //TAU_VERBOSE("Metric %s %lu inserted successfully\n", name, metric_id);
     }
     metric_map[std::string(name)] = metric_id;
 }
@@ -272,7 +275,7 @@ size_t store_timer(size_t trial_id, std::string longName, bool has_parent, size_
         sqlite3_free(zErrMsg);
     } else {
         timer_id = sqlite3_last_insert_rowid(db);
-        //fprintf(stdout, "%s %lu %lu inserted successfully\n", longName.c_str(), parent_timer, timer_id);
+        //TAU_VERBOSE("%s %lu %lu inserted successfully\n", longName.c_str(), parent_timer, timer_id);
     }
     return timer_id;
 }
@@ -323,7 +326,7 @@ void store_timer_value(size_t timer_id, size_t metric_id, size_t thread_id,
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
     } else {
-        //fprintf(stdout, "timer_value inserted successfully\n");
+        //TAU_VERBOSE("timer_value inserted successfully\n");
     }
 }
 

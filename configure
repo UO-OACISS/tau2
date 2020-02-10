@@ -1182,6 +1182,8 @@ adios=no
 adiosdir=
 adios2=no
 adios2dir=
+sqlite3=no
+sqlite3dir=
 #caliper=no
 #caliperdir=
 apex=no
@@ -2049,6 +2051,17 @@ for arg in "$@"; do
         pthread=yes
 	    shift
 	    ;;
+
+    -sqlite3=*)
+        sqlite3dir=`echo $arg | sed -e 's/-sqlite3=//'`
+        if [ ! -d $sqlite3dir ] ; then
+            echo "Error: Cannot access SQLite3 directory $sqlite3dir"
+            exit 1
+        else
+            sqlite3=yes
+        fi
+        shift
+        ;;
 
 #	-caliper=*)
 #	    caliper=yes
@@ -11285,6 +11298,12 @@ if [ $adios2 = yes ] ; then
     fixmakeargs="$fixmakeargs adios2dir=$adios2dir"
     fixmakeargs="$fixmakeargs adios2cxxflags=${adios2cxxflags}"
     fixmakeargs="$fixmakeargs adios2libs=${adios2libs}"
+fi
+
+if [ $sqlite3 = yes ] ; then
+	echo "Detected SQLITE3..."
+    fixmakeargs="$fixmakeargs SQLITE3 "
+    fixmakeargs="$fixmakeargs sqlite3dir=$sqlite3dir"
 fi
 
 #if [ $caliper = yes ] ; then
