@@ -66,7 +66,7 @@ bool open_database() {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         return false;
     } else {
-        fprintf(stderr, "Opened database successfully\n");
+        //fprintf(stderr, "Opened database successfully\n");
     }
     return (exists);
 }
@@ -74,7 +74,7 @@ bool open_database() {
 void create_database() {
     bool exists = open_database();
     if (exists) {
-        fprintf(stdout, "Database exists\n");
+        fprintf(stdout, "TAU database exists, adding trial to it\n");
     } else {
         rc = sqlite3_exec(db, database_schema, callback, 0, &zErrMsg);
    
@@ -83,7 +83,7 @@ void create_database() {
             sqlite3_free(zErrMsg);
             return;
         } else {
-            fprintf(stdout, "Table created successfully\n");
+            fprintf(stdout, "TAU database created successfully\n");
         }
     }
     return;
@@ -98,7 +98,7 @@ void begin_transaction() {
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
     } else {
-        fprintf(stdout, "Begin Transaction\n");
+        //fprintf(stdout, "Begin Transaction\n");
     }
 }
 
@@ -111,7 +111,7 @@ void end_transaction() {
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
     } else {
-        fprintf(stdout, "Commit Transaction\n");
+        //fprintf(stdout, "Commit Transaction\n");
     }
 }
 
@@ -196,7 +196,7 @@ void store_metadata(size_t trial_id) {
                 fprintf(stderr, "SQL error: %s\n", zErrMsg);
                 sqlite3_free(zErrMsg);
             } else {
-                fprintf(stdout, "Metadata %lu %s %s inserted successfully\n", thread_id, it->first.name, value.c_str());
+                //fprintf(stdout, "Metadata %lu %s %s inserted successfully\n", thread_id, it->first.name, value.c_str());
             }
         }
     }
@@ -272,7 +272,7 @@ size_t store_timer(size_t trial_id, std::string longName, bool has_parent, size_
         sqlite3_free(zErrMsg);
     } else {
         timer_id = sqlite3_last_insert_rowid(db);
-        fprintf(stdout, "%s %lu %lu inserted successfully\n", longName.c_str(), parent_timer, timer_id);
+        //fprintf(stdout, "%s %lu %lu inserted successfully\n", longName.c_str(), parent_timer, timer_id);
     }
     return timer_id;
 }
@@ -387,6 +387,7 @@ void close_database() {
 void write_profile_to_database() {
     if (done) { return; }
     if (RtsLayer::myThread() != 0) { return; }
+    Tau_metadata_writeEndingTimeStamp();
     size_t trial_id = 0;
     if (comm_rank == 0) {
         trial_id = store_profile(0UL);
@@ -409,25 +410,27 @@ void write_profile_to_database() {
     done = true;
 }
 
-int Tau_plugin_event_end_of_execution_null(Tau_plugin_event_end_of_execution_data_t *data) {
-    printf("NULL PLUGIN %s\n", __func__);
+int Tau_plugin_event_end_of_execution_sqlite3(Tau_plugin_event_end_of_execution_data_t *data) {
+    //printf("NULL PLUGIN %s\n", __func__);
     write_profile_to_database();
     return 0;
 }
 
-int Tau_plugin_event_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t* data) {
-    printf("NULL PLUGIN %s\n", __func__);
+int Tau_plugin_event_pre_end_of_execution_sqlite3(Tau_plugin_event_pre_end_of_execution_data_t* data) {
+    //printf("NULL PLUGIN %s\n", __func__);
+#ifdef TAU_MPI
     write_profile_to_database();
+#endif
     return 0;
 }
 
-int Tau_plugin_metadata_registration_complete_null(Tau_plugin_event_metadata_registration_data_t* data) {
-    printf("NULL PLUGIN %s\n", __func__);
+int Tau_plugin_metadata_registration_complete_sqlite3(Tau_plugin_event_metadata_registration_data_t* data) {
+    //printf("NULL PLUGIN %s\n", __func__);
     return 0;
 }
 
-int Tau_plugin_event_post_init_null(Tau_plugin_event_post_init_data_t* data) {
-    printf("NULL PLUGIN %s\n", __func__);
+int Tau_plugin_event_post_init_sqlite3(Tau_plugin_event_post_init_data_t* data) {
+    //printf("NULL PLUGIN %s\n", __func__);
 #ifdef TAU_MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
@@ -447,21 +450,21 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
 
     /* Required event support */
     /*
-    cb->Trigger = Tau_plugin_event_trigger_null;
-    cb->Dump = Tau_plugin_event_dump_null;
-    cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_null;
+    cb->Trigger = Tau_plugin_event_trigger_sqlite3;
+    cb->Dump = Tau_plugin_event_dump_sqlite3;
+    cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_sqlite3;
     */
-    cb->PostInit = Tau_plugin_event_post_init_null;
-    cb->PreEndOfExecution = Tau_plugin_event_pre_end_of_execution;
-    cb->EndOfExecution = Tau_plugin_event_end_of_execution_null;
+    cb->PostInit = Tau_plugin_event_post_init_sqlite3;
+    cb->PreEndOfExecution = Tau_plugin_event_pre_end_of_execution_sqlite3;
+    cb->EndOfExecution = Tau_plugin_event_end_of_execution_sqlite3;
 
     /* Trace events */
     /*
-    cb->Send = Tau_plugin_event_send_null;
-    cb->Recv = Tau_plugin_event_recv_null;
-    cb->FunctionEntry = Tau_plugin_event_function_entry_null;
-    cb->FunctionExit = Tau_plugin_event_function_exit_null;
-    cb->AtomicEventTrigger = Tau_plugin_event_atomic_trigger_null;
+    cb->Send = Tau_plugin_event_send_sqlite3;
+    cb->Recv = Tau_plugin_event_recv_sqlite3;
+    cb->FunctionEntry = Tau_plugin_event_function_entry_sqlite3;
+    cb->FunctionExit = Tau_plugin_event_function_exit_sqlite3;
+    cb->AtomicEventTrigger = Tau_plugin_event_atomic_trigger_sqlite3;
     */
 
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
