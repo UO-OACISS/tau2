@@ -1090,17 +1090,24 @@ void Profiler::SetPhase(bool flag) {
 }
 #endif /* TAU_PROFILEPHASE */
 
+bool startsWith(const char *pre, const char *str)
+{
+    size_t lenpre = strlen(pre),
+           lenstr = strlen(str);
+    return lenstr < lenpre ? false : memcmp(pre, str, lenpre) == 0;
+}
+
 // writes user events to the file
 static int writeUserEvents(FILE *fp, int tid)
 {
   AtomicEventDB::iterator it;
 
   fprintf(fp, "0 aggregates\n");    // For now there are no aggregates
-
+  
   // Print UserEvent Data if any
   int numEvents = 0;
   for (it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
-    if ((*it) && (*it)->GetNumEvents(tid) == 0) {    // skip user events with no calls
+    if ((*it) && (*it)->GetNumEvents(tid) == 0 && !startsWith("CUDA", (*it)->GetName().c_str())) {    // skip user events with no calls
       continue;
     }
     if ((*it)->GetWriteAsMetric()) { //skip events that are written out as metrics.
@@ -1120,7 +1127,7 @@ static int writeUserEvents(FILE *fp, int tid)
     fprintf(fp, "# eventname numevents max min mean sumsqr\n");
 
     for (it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
-      if ((*it) && (*it)->GetNumEvents(tid) == 0) continue;
+      if ((*it) && (*it)->GetNumEvents(tid) == 0 && !startsWith("CUDA", (*it)->GetName().c_str())) continue;
       if ((*it) && (*it)->GetWriteAsMetric()) continue;
       fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", (*it)->GetName().c_str(), (*it)->GetNumEvents(tid),
           (*it)->GetMax(tid), (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));

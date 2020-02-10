@@ -36,7 +36,7 @@ typedef struct {
 /* Struct to contain the metadata for each GPU. */
 typedef struct {
 	char *name;
-	const char *value;
+	char *value;
 
 } GpuMetadata;
 
