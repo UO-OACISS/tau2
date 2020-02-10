@@ -12,7 +12,7 @@
 #######################################################################
  
 
-TAU_MAKEFILE ?=../../include/Makefile
+TAU_MAKEFILE ?=../../../include/Makefile
 
 include $(TAU_MAKEFILE)
 
