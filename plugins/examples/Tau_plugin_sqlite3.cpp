@@ -409,7 +409,7 @@ void store_timers(size_t trial_id) {
 }
 
 context_event_index_t * decompose_and_store_counter(size_t trial_id, tau::TauUserEvent *ue) {
-    std::string longName(ue->GetName());
+    std::string longName(ue->GetName().c_str());
     std::size_t index = longName.find(" : ");
     context_event_index_t * tmp = (context_event_index_t*)calloc(1, sizeof(context_event_index_t));
     if (index == std::string::npos) {
