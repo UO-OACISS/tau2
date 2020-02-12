@@ -702,14 +702,12 @@ bool Tau_CuptiLayer_is_cupti_counter(char const * str)
   if (Tau_CuptiLayer_Counter_Map().empty()) {
 	  Tau_CuptiLayer_Initialize_Map(0);
 	}
-	fprintf(stderr, "counter map has %d strings\n", Tau_CuptiLayer_Counter_Map().size());
 	return Tau_CuptiLayer_Counter_Map().count(string(str)) > 0;
 }
 
 void Tau_CuptiLayer_register_all_counters()
 {
     for (int i = 0; i < number_of_added_strings; i++) {
-	fprintf(stderr,"we have added %d strings\n", number_of_added_strings);
         Tau_CuptiLayer_register_counter(Tau_CuptiLayer_Counter_Map().at(Tau_CuptiLayer_Added_strings[i]));
     }
 
