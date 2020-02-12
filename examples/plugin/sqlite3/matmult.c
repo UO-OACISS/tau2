@@ -34,7 +34,7 @@ pthread_mutex_t mutexsum;
 #ifndef MATRIX_SIZE
 #define MATRIX_SIZE 512
 #endif
-#define ITERATIONS 3
+#define ITERATIONS 1
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
 #define NCA MATRIX_SIZE                 /* number of columns in matrix A */
@@ -147,6 +147,8 @@ double do_work(void) {
   b = allocateMatrix(NCA, NCB);
   c = allocateMatrix(NRA, NCB);  
 
+  TAU_TRIGGER_CONTEXT_EVENT("Matrix Size", NRA);
+
 /*** Spawn a parallel region explicitly scoping all variables ***/
 
   initialize(a, NRA, NCA);
@@ -216,8 +218,6 @@ void * threaded_func(void *data)
 
 int main (int argc, char *argv[]) 
 {
-
-  size_t id = TAU_CREATE_TRIGGER("iteration");
 
 #ifdef PTHREADS
   int ret;
@@ -327,8 +327,6 @@ int main (int argc, char *argv[])
   printf("%d.", i);fflush(stdout);
   do_work();
 
-  TAU_TRIGGER(id, data);
-  
   #ifdef TAU_MPI
   usleep(rank*10000);
   MPI_Barrier(MPI_COMM_WORLD);

@@ -12,12 +12,11 @@
 #######################################################################
  
 
-TAU_MAKEFILE ?=../../include/Makefile
+TAU_MAKEFILE ?=../../../include/Makefile
 
 include $(TAU_MAKEFILE)
 
-#CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optKeepFiles -optNoCompInst -optLinkOnly
-CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optCompInst
+CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optRevert -optShared
 #CC		= mpicc
 #CC		= opencc -fopenmp
 #CC		= icc -pthread -DPTHREADS
@@ -49,5 +48,5 @@ matmult_initialize.o: matmult_initialize.c matmult_initialize.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean: 	
-	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog
+	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog tauprofile.db
 ##############################################
