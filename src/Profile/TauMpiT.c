@@ -38,6 +38,7 @@ static int *tau_pvar_count;
 static int *tau_cvar_num_vals;
 static int tau_initial_pvar_count = 0;
 static int tau_mpi_t_is_initialized = 0;
+static MPI_Comm default_comm = MPI_COMM_WORLD;
 int num_cvars = 0; //For now, we don't support case where number of CVARS changes dynamically at runtime
 
 //////////////////////////////////////////////////////////////////////
@@ -160,7 +161,12 @@ int Tau_mpi_t_initialize(void) {
     tau_mpi_datatype[i] = datatype;
 
   /* allocate a pvar handle that will be used later */
-  return_val = MPI_T_pvar_handle_alloc(tau_pvar_session, i, NULL, &tau_pvar_handles[i], &tau_pvar_count[i]);
+  if(bind == MPI_T_BIND_MPI_COMM) {
+    return_val = MPI_T_pvar_handle_alloc(tau_pvar_session, i, &default_comm, &tau_pvar_handles[i], &tau_pvar_count[i]);
+  } else {
+    return_val = MPI_T_pvar_handle_alloc(tau_pvar_session, i, NULL, &tau_pvar_handles[i], &tau_pvar_count[i]);
+  }
+  
   if (return_val != MPI_SUCCESS) {
     perror("MPI_T_pvar_handle_alloc ERROR:");
     return return_val;
