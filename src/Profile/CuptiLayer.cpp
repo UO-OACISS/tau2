@@ -294,7 +294,6 @@ void Tau_CuptiLayer_init()
 #ifdef TAU_DEBUG_CUPTI
             cerr << "Will add event " << evt.tag << " to GPU device: " << device_char << endl;
 #endif
-            RtsLayer::LockDB();
             CUpti_EventID evts[TAU_MAX_COUNTERS];
             size_t evts_size = TAU_MAX_COUNTERS*sizeof(CUpti_EventID);
             cuptiErr = cuptiEventGroupGetAttribute(eventGroup[device], CUPTI_EVENT_GROUP_ATTR_EVENTS, &evts_size, evts);
@@ -316,11 +315,9 @@ void Tau_CuptiLayer_init()
 			cerr << "TAU Warning: Cannot add event: " << evt.tag << " to GPU device: " << device_char << endl
 			     << "             Only counters for a single GPU device model can be collected at the same time."
 			     << endl;
-			RtsLayer::UnLockDB();
 			exit(EXIT_FAILURE);
 		    }
             }
-            RtsLayer::UnLockDB();
         } // for (it)
 
         //record the fact the events have been added.
@@ -724,16 +721,21 @@ void Tau_CuptiLayer_register_string(char const * str, int metric_n)
 
 void Tau_CuptiLayer_set_event_name(int metric_n, int type)
 {
+    RtsLayer::LockDB();
     counter_vec_t & added_counters = Tau_CuptiLayer_Added_counters();
     string counter_string = added_counters.at(metric_n)->tag;
     if (type == TAU_CUPTI_COUNTER_BOUNDED) {
-        counter_string += "_(upper bound)";
+        if (counter_string.find("_(upper bound)") == std::string::npos) {
+            counter_string += "_(upper bound)";
+        }
     } else if (type == TAU_CUPTI_COUNTER_AVERAGED) {
-        counter_string += "_(averaged)";
+        if (counter_string.find("_(averaged)") == std::string::npos) {
+            counter_string += "_(averaged)";
+        }
     }
     added_counters.at(metric_n)->tag = counter_string;
     added_counters[metric_n]->tag = counter_string;
-
+    RtsLayer::UnLockDB();
 }
 
 const char * Tau_CuptiLayer_get_event_name(int metric_n)

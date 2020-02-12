@@ -176,7 +176,10 @@ int get_taskid_from_context_id(uint32_t contextId, uint32_t streamId) {
         key = (key << 32);
         RtsLayer::LockDB();
         size_t c = newContextMap.count(key);
-        if (c == 0) { return 0; }
+        if (c == 0) { 
+            RtsLayer::UnLockDB();
+            return 0; 
+        }
         tau_cupti_context_t * baseContext = newContextMap[key];
         RtsLayer::UnLockDB();
         uint32_t deviceId = baseContext->deviceId;
@@ -775,7 +778,15 @@ void Tau_handle_driver_api_other (void *ud, CUpti_CallbackDomain domain,
         Tau_gpu_enter_event(cbInfo->functionName);
         if (function_is_launch(id))
         { // ENTRY to a launch function
-            Tau_CuptiLayer_init();
+            static bool do_this_once = false;
+            if (!do_this_once) {
+                RtsLayer::LockDB();
+                if (!do_this_once) {
+                    Tau_CuptiLayer_init();
+                    do_this_once = true;
+                }
+                RtsLayer::UnLockDB();
+            }
 
             TAU_DEBUG_PRINT("[at call (enter), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
             record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
@@ -939,18 +950,11 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         if (err == CUPTI_SUCCESS)
         {
             //printf("succesfully dequeue'd buffer.\n");
-            TAU_START("next record loop");
-            TAU_PROFILE_TIMER(g, "getNextRecord", "", TAU_DEFAULT);
-            TAU_PROFILE_TIMER(r, "record_activity", "", TAU_DEFAULT);
             do {
-                //TAU_PROFILE_START(g);
                 status = cuptiActivityGetNextRecord(activityBuffer, bufferSize, &record);
-                //TAU_PROFILE_STOP(g);
                 if (status == CUPTI_SUCCESS) {
-                    //TAU_PROFILE_START(r);
                     Tau_cupti_record_activity(record);
                     ++num_buffers;
-                    //TAU_PROFILE_STOP(r);
                 }
                 else if (status == CUPTI_ERROR_MAX_LIMIT_REACHED) {
                     //const char *str;
@@ -965,7 +969,6 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
                     break;
                 }
             } while (status != CUPTI_ERROR_MAX_LIMIT_REACHED);
-            TAU_STOP("next record loop");
 
             size_t number_dropped;
             err = cuptiActivityGetNumDroppedRecords(NULL, 0, &number_dropped);
@@ -2118,7 +2121,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                 last_recorded_kernel_name != NULL && 
                 strcmp(last_recorded_kernel_name, name) != 0) 
         {
-            TAU_VERBOSE("TAU Warning: CUPTI events will be bounded, multiple different kernel deteched between synchronization points.\n");
+            TAU_VERBOSE("TAU Warning: CUPTI events will be bounded, multiple different kernel detected between synchronization points.\n");
             counters_bounded_warning_issued[taskId] = true;
             for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
                 Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_BOUNDED); 
@@ -2685,7 +2688,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
         if (Tau_CuptiLayer_get_num_events() > 0 &&
                 !counters_averaged_warning_issued[task] && 
                 kernels_encountered[task] > 1) {
-            TAU_VERBOSE("TAU Warning: CUPTI events will be avereged, multiple kernel deteched between synchronization points.\n");
+            TAU_VERBOSE("TAU Warning: CUPTI events will be averaged, multiple kernel detected between synchronization points.\n");
             counters_averaged_warning_issued[task] = true;
             for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
                 Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_AVERAGED); 
