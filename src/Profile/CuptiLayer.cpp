@@ -316,6 +316,7 @@ void Tau_CuptiLayer_init()
 			cerr << "TAU Warning: Cannot add event: " << evt.tag << " to GPU device: " << device_char << endl
 			     << "             Only counters for a single GPU device model can be collected at the same time."
 			     << endl;
+			RtsLayer::UnLockDB();
 			exit(EXIT_FAILURE);
 		    }
             }
