@@ -392,17 +392,19 @@ void store_timers(size_t trial_id) {
             long value = fi->GetCalls(t);
             if (value == 0L) { continue; } // this thread didn't call it
             store_timer_value(timer_id, metric_id, thread_id, (double)value);
+            double inclusive[TAU_MAX_COUNTERS] = {0.0};
+            double exclusive[TAU_MAX_COUNTERS] = {0.0};
+            fi->getInclusiveValues(t, inclusive);
+            fi->getExclusiveValues(t, exclusive);
             for(int m = 0 ; m < numMetrics ; m++) {
                 std::stringstream name;
                 name << "Inclusive " << counterNames[m];
                 metric_id = metric_map[name.str()];
-                store_timer_value(timer_id, metric_id, thread_id, 
-                    fi->getDumpInclusiveValues(t)[m]);
+                store_timer_value(timer_id, metric_id, thread_id, inclusive[m]);
                 name.str(std::string());
                 name << "Exclusive " << counterNames[m];
                 metric_id = metric_map[name.str()];
-                store_timer_value(timer_id, metric_id, thread_id, 
-                    fi->getDumpExclusiveValues(t)[m]);
+                store_timer_value(timer_id, metric_id, thread_id, exclusive[m]);
             }
         }
     }
