@@ -12,6 +12,7 @@
 #include <string>
 #include <sstream>
 #include <map>
+#include <set>
 #include <vector>
 #include <regex>
 
@@ -20,6 +21,7 @@
 #include <Profile/TauMetrics.h>
 #include <Profile/TauAPI.h>
 #include <Profile/TauPlugin.h>
+#include <Profile/TauMetaData.h>
 #include <pthread.h>
 
 #ifdef TAU_MPI
@@ -35,6 +37,44 @@
 #include "json.h"
 using json = nlohmann::json;
 json configuration;
+
+/* Provide a default configuration,
+ * to avoid collecting too much data by default */
+
+const char * default_configuration = R"(
+{
+  "/proc/stat": {
+    "disable": false,
+    "comment": "This will exclude all core-specific readings.",
+    "exclude": ["^cpu[0-9]+.*"]
+  },
+  "/proc/meminfo": {
+    "disable": false,
+    "comment": "This will include three readings.",
+    "include": [".*MemAvailable.*", ".*MemFree.*", ".*MemTotal.*"]
+  },
+  "/proc/net/dev": {
+    "disable": false,
+    "comment": "This will include only the first ethernet device.",
+    "include": [".*eno1.*"]
+  },
+  "lmsensors": {
+    "disable": true,
+    "comment": "This will include all power readings.",
+    "include": [".*power.*"]
+  },
+  "net": {
+    "disable": true,
+    "comment": "This will include only the first ethernet device.",
+    "include": [".*eno1.*"]
+  },
+  "nvml": {
+    "disable": false,
+    "comment": "This will include only the utilization metrics.",
+    "include": [".*utilization.*"]
+  }
+}
+)";
 
 namespace tau {
     namespace papi_plugin {
@@ -463,9 +503,11 @@ int choose_volunteer_rank() {
     PMPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 
     // get my hostname
-    const int hostlength = 128;
+    const int hostlength = MPI_MAX_PROCESSOR_NAME;
     char hostname[hostlength] = {0};
-    gethostname(hostname, sizeof(char)*hostlength);
+    //gethostname(hostname, sizeof(char)*hostlength);
+    int namelength = 0;
+    MPI_Get_processor_name(hostname, &namelength);
     // make array for all hostnames
     char * allhostnames = (char*)calloc(hostlength * comm_size, sizeof(char));
     // copy my name into the big array
@@ -478,14 +520,22 @@ int choose_volunteer_rank() {
     // point to the head of the array
     host_index = allhostnames;
     // find the lowest rank with my hostname
+    std::set<std::string> hostnames;
+    bool found = false;
     for (i = 0 ; i < comm_size ; i++) {
         //printf("%d:%d comparing '%s' to '%s'\n", rank, size, hostname, host_index);
-        if (strncmp(hostname, host_index, hostlength) == 0) {
+        if (!found && (strncmp(hostname, host_index, hostlength) == 0)) {
             volunteer = i;
-            break;
+            found = true;
         }
+        hostnames.insert(std::string(hostname));
         host_index = host_index + hostlength;
     }
+    // Set some metadata to help with analysis later
+    Tau_metadata("MPI Comm World Size", std::to_string(comm_size).c_str());
+    Tau_metadata("MPI Unique Hosts", std::to_string(hostnames.size()).c_str());
+    Tau_metadata("MPI Host Name", hostname);
+    Tau_metadata("MPI Comm World Rank", std::to_string(my_rank).c_str());
     free(allhostnames);
     return volunteer;
 #else
@@ -527,6 +577,30 @@ void parse_proc_meminfo() {
                     Tau_userevent_thread(ue, d1, 0);
                 }
             }
+        }
+    }
+    fclose(f);
+  }
+  return;
+}
+
+extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
+
+void parse_proc_self_status() {
+  tau::papi_plugin::ScopedTimer(__func__);
+  if (!include_component("/proc/self/status")) { return; }
+  FILE *f = fopen("/proc/self/status", "r");
+  if (f) {
+    char line[4096] = {0};
+    while ( fgets( line, 4096, f)) {
+        std::string tmp(line);
+        std::istringstream iss(tmp);
+        std::vector<std::string> results(std::istream_iterator<std::string>{iss},
+                                         std::istream_iterator<std::string>());
+        std::string& value = results[1];
+        if (results[0].compare("Cpus_allowed_list") == 0) { 
+            Tau_metadata_task(const_cast<char*>(results[0].c_str()),
+                const_cast<char*>(results[1].c_str()), 0);
         }
     }
     fclose(f);
@@ -769,6 +843,8 @@ void read_papi_components(void) {
         parse_proc_meminfo();
         /* Get current net stats for the node */
         update_net_stats();
+        /* Parse status metadata */
+        parse_proc_self_status();
 #endif
     }
 
@@ -885,20 +961,9 @@ void init_lock(pthread_mutex_t * _mutex) {
     }
 }
 
-int Tau_plugin_event_pre_end_of_execution_papi_component(Tau_plugin_event_pre_end_of_execution_data_t *data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    stop_worker();
-#ifdef TAU_PAPI
-    /* clean up papi */
-    if (my_rank == rank_getting_system_data) {
-        free_papi_components();
-    }
-#endif
-    return 0;
-}
-
-int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_execution_data_t *data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+static void do_cleanup() {
+    static bool clean = false;
+    if (clean) return;
     stop_worker();
 #ifdef TAU_PAPI
     /* clean up papi */
@@ -911,19 +976,34 @@ int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_exe
             delete it;
         }
         delete previous_cpu_stats;
+        previous_cpu_stats = nullptr;
     }
     if (previous_net_stats != nullptr) {
         for (auto it : *previous_net_stats) {
             delete it;
         }
         delete previous_net_stats;
+        previous_net_stats = nullptr;
     }
     if (previous_io_stats != nullptr) {
         delete previous_io_stats;
+        previous_io_stats = nullptr;
     }
     /* Why do these deadlock on exit? */
     //pthread_cond_destroy(&_my_cond);
     //pthread_mutex_destroy(&_my_mutex);
+    clean = true;
+}
+
+int Tau_plugin_event_pre_end_of_execution_papi_component(Tau_plugin_event_pre_end_of_execution_data_t *data) {
+    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+    do_cleanup();
+    return 0;
+}
+
+int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_execution_data_t *data) {
+    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+    do_cleanup();
     return 0;
 }
 
@@ -1005,6 +1085,7 @@ void read_config_file(void) {
             cfg.close();
         } catch (...) {
             // fail silently, nothing to do
+            configuration = json::parse(default_configuration);
         }
 }
 

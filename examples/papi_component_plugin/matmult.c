@@ -21,15 +21,11 @@ int provided;
 This is not a parallel implementation */
 #endif /* TAU_MPI */
 
-#define ITERATIONS 100
+#define ITERATIONS 250
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 256
+#define MATRIX_SIZE 512
 #endif
-
-#define NRA MATRIX_SIZE                 /* number of rows in matrix A */
-#define NCA MATRIX_SIZE                 /* number of columns in matrix A */
-#define NCB MATRIX_SIZE                 /* number of columns in matrix B */
 
 double** allocateMatrix(int rows, int cols) {
   int i;
@@ -130,37 +126,37 @@ void compute_interchange(double **a, double **b, double **c, int rows_a, int col
   }   /*** End of parallel region ***/
 }
 
-double do_work(void) {
+double do_work(int matrix_size) {
   double **a,           /* matrix A to be multiplied */
   **b,           /* matrix B to be multiplied */
   **c;           /* result matrix C */
-  a = allocateMatrix(NRA, NCA);
-  b = allocateMatrix(NCA, NCB);
-  c = allocateMatrix(NRA, NCB);  
+  a = allocateMatrix(matrix_size, matrix_size);
+  b = allocateMatrix(matrix_size, matrix_size);
+  c = allocateMatrix(matrix_size, matrix_size);  
 
 /*** Spawn a parallel region explicitly scoping all variables ***/
 
-  initialize(a, NRA, NCA);
-  initialize(b, NCA, NCB);
-  initialize(c, NRA, NCB);
+  initialize(a, matrix_size, matrix_size);
+  initialize(b, matrix_size, matrix_size);
+  initialize(c, matrix_size, matrix_size);
 
 #ifdef TAU_MPI
   //MPI_Barrier(MPI_COMM_WORLD);
 #endif /* TAU_MPI */
 
-  compute(a, b, c, NRA, NCA, NCB);
+  compute(a, b, c, matrix_size, matrix_size, matrix_size);
 
 #ifdef TAU_MPI
   //MPI_Barrier(MPI_COMM_WORLD);
 #endif /* TAU_MPI */
 
-  compute_interchange(a, b, c, NRA, NCA, NCB);
+  compute_interchange(a, b, c, matrix_size, matrix_size, matrix_size);
 
   double result = c[0][1];
 
-  freeMatrix(a, NRA, NCA);
-  freeMatrix(b, NCA, NCB);
-  freeMatrix(c, NCA, NCB);
+  freeMatrix(a, matrix_size, matrix_size);
+  freeMatrix(b, matrix_size, matrix_size);
+  freeMatrix(c, matrix_size, matrix_size);
 
 #ifdef TAU_MPI
   //MPI_Barrier(MPI_COMM_WORLD);
@@ -194,8 +190,14 @@ int main (int argc, char *argv[])
   int i;
   for (i = 0 ; i < ITERATIONS ; i++) {
     if(rank == 0) { printf("Iteration %d\n", i); }
-    do_work();
-    if (i % (ITERATIONS/10) == 0) { Tau_dump(); }
+    double ratio = ((double)rand() / (double)RAND_MAX);
+    int matrix_size = (int)(ratio * (double)MATRIX_SIZE);
+    printf("Matrix size = %d\n", matrix_size);
+    do_work(matrix_size);
+    if (i % (ITERATIONS/25) == 0) { 
+        if(rank == 0) { printf("Dumping to ADIOS2...\n"); }
+        Tau_dump();
+    }
   }
 
 #ifdef TAU_MPI

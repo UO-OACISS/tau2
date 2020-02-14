@@ -17,6 +17,13 @@
 #  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 #    include <demangle.h>
 #  endif /* HAVE_GNU_DEMANGLE */
+// Add these definitions because the Binutils comedians think all the world uses autotools
+#ifndef PACKAGE
+#define PACKAGE TAU
+#endif
+#ifndef PACKAGE_VERSION
+#define PACKAGE_VERSION 2.25
+#endif
 #  include <bfd.h>
 #endif /* TAU_BFD */
 

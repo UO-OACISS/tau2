@@ -456,6 +456,11 @@ case $1 in
 	echo "s,^ADIOS2_LIBS=.*$,ADIOS2_LIBS=$adios2libs,g" >> $sedout
 	;;
 
+    sqlite3dir=*)
+        sqlite3dir=`echo $1 | sed -e 's/^sqlite3dir=//'`
+	echo "s,^SQLITE3DIR=.*$,SQLITE3DIR=$sqlite3dir,g" >> $sedout
+	;;
+
 #    caliperdir=*)
 #        caliperdir=`echo $1 | sed -e 's/^caliperdir=//'`
 #	echo "s,^CALIPERDIR=.*$,CALIPERDIR=$caliperdir,g" >> $sedout
@@ -1115,6 +1120,10 @@ case $1 in
 	echo NOTE: Using the NEC suite of compilers
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     NEC_SX_MPI_FORTRAN)
+	echo NOTE: Using the NEC mpinfort compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      USE_INTELCXX)
 	echo NOTE: Using the Intel C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1365,6 +1374,10 @@ case $1 in
 	;;
      PGI_OPENACC_15x) 
 	echo NOTE: Enabling PGI v15.x OpenACC profiling interface
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     OPENACC) 
+	echo NOTE: Enabling OpenACC profiling interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PGI_NO_LIBSTD) 
@@ -1726,6 +1739,10 @@ case $1 in
 	echo "NOTE: Using ADIOS2 ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     SQLITE3)
+	echo "NOTE: Using SQLITE3 ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
 #     CALIPER)
 #	echo "NOTE: Using CALIPER ***"
 #        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -2057,6 +2074,10 @@ case $1 in
 	;;
      PROFILEPARAM)
 	echo "NOTE: Using Parameter Mapped Profiles"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PROFILEPATHS)
+	echo "NOTE: Using MPI Path Profiles for point-to-point messages"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PROFILECOMMUNICATORS)

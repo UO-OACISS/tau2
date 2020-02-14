@@ -1,0 +1,13 @@
+This example shows what happens when an executable generates more threads
+than TAU can handle by default.  TAU will recycle threads when there are
+transient threads.  This is the new default behavior, but it can be disabled.
+
+To disable this behavior, set the environment variable TAU_RECYCLE_THREADS=0.
+
+To run this example:
+
+$ make
+$ ./thread_bomb
+$ export TAU_RECYCLE_THREADS=0
+$ ./thread_bomb
+(TAU will fail)

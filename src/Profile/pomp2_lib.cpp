@@ -172,7 +172,7 @@ static char const * omp_names[NUM_OMP_TYPES] = {
  * the POMP2_INIT_uuid_numRegions() function calls. Here we return the sum of
  * all numRegions.
  */
-extern size_t
+extern "C" size_t
 POMP2_Get_num_regions();
 
 /**
@@ -181,13 +181,13 @@ POMP2_Get_num_regions();
  * the POMP2_INIT_uuid_numRegions() function calls. The instrumentor then
  * defines this functions by calling all grepped functions.
  */
-extern void
+extern "C" void
 POMP2_Init_regions();
 
 /**
  * Returns the opari version.
  */
-extern const char*
+extern "C" const char*
 POMP2_Get_opari2_version();
 
 /*@}*/
@@ -240,7 +240,7 @@ POMP2_Task_handle pomp2_current_task = 0;
 POMP2_Task_handle pomp2_task_counter = 1;
 #pragma omp threadprivate(pomp2_task_counter)
 
-POMP2_Task_handle
+extern "C" POMP2_Task_handle
 POMP2_Get_new_task_handle()
 {
     return ( ( POMP2_Task_handle )omp_get_thread_num() << 32 ) + pomp2_task_counter++;
@@ -535,13 +535,13 @@ void POMP2_Init()
   }
 }
 
-void
+extern "C" void
 POMP2_Off()
 {
     pomp2_tracing = 0;
 }
 
-void
+extern "C" void
 POMP2_On()
 {
     pomp2_tracing = 1;
@@ -643,7 +643,7 @@ void POMP2_Assign_handle(POMP2_Region_handle* pomp2_handle, const char ctc_strin
   
 }
 
-void
+extern "C" void
 POMP2_USER_Assign_handle( POMP2_USER_Region_handle* pomp2_handle,
                           const char                ctc_string[] )
 {
@@ -794,14 +794,14 @@ void POMP2_Barrier_exit(POMP2_Region_handle* pomp2_handle, POMP2_Task_handle pom
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Implicit_barrier_enter( POMP2_Region_handle* pomp2_handle,POMP2_Task_handle*   pomp2_old_task )
 {
   TauInternalFunctionGuard protects_this_function;
   POMP2_Barrier_enter( pomp2_handle, pomp2_old_task,  "" );
 }
 
-extern void
+extern "C" void
 POMP2_Implicit_barrier_exit( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle   pomp2_old_task )
 {
   TauInternalFunctionGuard protects_this_function;
@@ -950,7 +950,7 @@ void POMP2_Critical_enter(POMP2_Region_handle* pomp2_handle, const char ctc_stri
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Critical_exit( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -983,7 +983,7 @@ POMP2_Critical_exit( POMP2_Region_handle* pomp2_handle )
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_For_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 {
   // Automatically increment and decrement insideTAU
@@ -1012,7 +1012,7 @@ POMP2_For_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_For_exit( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1042,7 +1042,7 @@ POMP2_For_exit( POMP2_Region_handle* pomp2_handle )
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Master_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 {
   // Automatically increment and decrement insideTAU
@@ -1073,7 +1073,7 @@ POMP2_Master_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Master_end( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1102,7 +1102,7 @@ POMP2_Master_end( POMP2_Region_handle* pomp2_handle )
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Parallel_begin( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1131,7 +1131,7 @@ POMP2_Parallel_begin( POMP2_Region_handle* pomp2_handle )
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Parallel_end( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1161,7 +1161,7 @@ POMP2_Parallel_end( POMP2_Region_handle* pomp2_handle )
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Parallel_fork( POMP2_Region_handle* pomp2_handle,
                      int                  if_clause, 
                      int                  num_threads,
@@ -1199,7 +1199,7 @@ POMP2_Parallel_fork( POMP2_Region_handle* pomp2_handle,
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Parallel_join( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle   pomp2_old_task )
 {
   // Automatically increment and decrement insideTAU
@@ -1230,7 +1230,7 @@ POMP2_Parallel_join( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle   pomp
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Section_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 {
   // Automatically increment and decrement insideTAU
@@ -1262,7 +1262,7 @@ POMP2_Section_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] 
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Section_end( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1291,7 +1291,7 @@ POMP2_Section_end( POMP2_Region_handle* pomp2_handle )
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Sections_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 {
   // Automatically increment and decrement insideTAU
@@ -1322,7 +1322,7 @@ POMP2_Sections_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[]
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Sections_exit( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1351,7 +1351,7 @@ POMP2_Sections_exit( POMP2_Region_handle* pomp2_handle )
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Single_begin( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1380,7 +1380,7 @@ POMP2_Single_begin( POMP2_Region_handle* pomp2_handle )
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Single_end( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1409,7 +1409,7 @@ POMP2_Single_end( POMP2_Region_handle* pomp2_handle )
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Single_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 {
   // Automatically increment and decrement insideTAU
@@ -1439,7 +1439,7 @@ POMP2_Single_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Single_exit( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1468,7 +1468,7 @@ POMP2_Single_exit( POMP2_Region_handle* pomp2_handle )
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Workshare_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 {
   // Automatically increment and decrement insideTAU
@@ -1498,7 +1498,7 @@ POMP2_Workshare_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Workshare_exit( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1527,7 +1527,7 @@ POMP2_Workshare_exit( POMP2_Region_handle* pomp2_handle )
 #endif /* DEBUG_PROF */
 }
 
-void
+extern "C" void
 POMP2_Ordered_begin( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1558,7 +1558,7 @@ POMP2_Ordered_begin( POMP2_Region_handle* pomp2_handle )
 #endif /*DEBUG_PROF*/
 }
 
-void
+extern "C" void
 POMP2_Ordered_end( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1589,7 +1589,7 @@ POMP2_Ordered_end( POMP2_Region_handle* pomp2_handle )
 #endif /*DEBUG_PROF*/
 }
 
-void
+extern "C" void
 POMP2_Ordered_enter( POMP2_Region_handle* pomp2_handle,
                     const char           ctc_string[] )
 {
@@ -1624,7 +1624,7 @@ POMP2_Ordered_enter( POMP2_Region_handle* pomp2_handle,
 #endif /*DEBUG_PROF*/
 }
 
-void
+extern "C" void
 POMP2_Ordered_exit( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1656,7 +1656,7 @@ POMP2_Ordered_exit( POMP2_Region_handle* pomp2_handle )
 }
 
 
-void
+extern "C" void
 POMP2_Task_create_begin( POMP2_Region_handle* pomp2_handle,
                          POMP2_Task_handle*   pomp2_old_task,
                          POMP2_Task_handle*   pomp2_new_task,
@@ -1687,7 +1687,7 @@ POMP2_Task_create_begin( POMP2_Region_handle* pomp2_handle,
 #endif /*DEBUG_PROF*/
 }
 
-void
+extern "C" void
 POMP2_Task_create_end( POMP2_Region_handle* pomp2_handle,
                        POMP2_Task_handle    pomp2_old_task )
 {
@@ -1715,7 +1715,7 @@ POMP2_Task_create_end( POMP2_Region_handle* pomp2_handle,
 #endif /*DEBUG_PROF*/
 }
 
-void
+extern "C" void
 POMP2_Task_begin( POMP2_Region_handle* pomp2_handle,
                   POMP2_Task_handle    pomp2_task )
 {
@@ -1744,7 +1744,7 @@ POMP2_Task_begin( POMP2_Region_handle* pomp2_handle,
 #endif /*DEBUG_PROF*/
 }
 
-void
+extern "C" void
 POMP2_Task_end( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1769,7 +1769,7 @@ POMP2_Task_end( POMP2_Region_handle* pomp2_handle )
 #endif /*DEBUG_PROF*/
 }
 
-void
+extern "C" void
 POMP2_Untied_task_create_begin( POMP2_Region_handle* pomp2_handle,
                                 POMP2_Task_handle*   pomp2_new_task,
                                 POMP2_Task_handle*   pomp2_old_task,
@@ -1803,7 +1803,7 @@ POMP2_Untied_task_create_begin( POMP2_Region_handle* pomp2_handle,
 #endif /*DEBUG_PROF*/
 }
 
-void
+extern "C" void
 POMP2_Untied_task_create_end( POMP2_Region_handle* pomp2_handle,
                               POMP2_Task_handle    pomp2_old_task )
 {
@@ -1833,7 +1833,7 @@ POMP2_Untied_task_create_end( POMP2_Region_handle* pomp2_handle,
 #endif /*DEBUG_PROF*/
 }
 
-void
+extern "C" void
 POMP2_Untied_task_begin( POMP2_Region_handle* pomp2_handle,
                          POMP2_Task_handle    pomp2_parent_task )
 {
@@ -1862,7 +1862,7 @@ POMP2_Untied_task_begin( POMP2_Region_handle* pomp2_handle,
 #endif /*DEBUG_PROF*/
 }
 
-void
+extern "C" void
 POMP2_Untied_task_end( POMP2_Region_handle* pomp2_handle )
 {
   // Automatically increment and decrement insideTAU
@@ -1887,7 +1887,7 @@ POMP2_Untied_task_end( POMP2_Region_handle* pomp2_handle )
 #endif /*DEBUG_PROF*/
 }
 
-void
+extern "C" void
 POMP2_Taskwait_begin( POMP2_Region_handle* pomp2_handle,
                       POMP2_Task_handle*   pomp2_old_task,
                       const char           ctc_string[] )
@@ -1918,7 +1918,7 @@ POMP2_Taskwait_begin( POMP2_Region_handle* pomp2_handle,
 #endif /*DEBUG_PROF*/
 }
 
-void
+extern "C" void
 POMP2_Taskwait_end( POMP2_Region_handle* pomp2_handle,
                     POMP2_Task_handle    pomp2_old_task )
 {
@@ -1955,7 +1955,7 @@ POMP2_Taskwait_end( POMP2_Region_handle* pomp2_handle,
  ******----------------------------------------------------------------
  */
 
-void
+extern "C" void
 POMP2_Init_lock( omp_lock_t* s )
 {
   // Automatically increment and decrement insideTAU
@@ -1972,7 +1972,7 @@ POMP2_Init_lock( omp_lock_t* s )
     omp_init_lock( s );
 }
 
-void
+extern "C" void
 POMP2_Destroy_lock( omp_lock_t* s )
 {
   // Automatically increment and decrement insideTAU
@@ -1989,7 +1989,7 @@ POMP2_Destroy_lock( omp_lock_t* s )
     omp_destroy_lock( s );
 }
 
-void
+extern "C" void
 POMP2_Set_lock( omp_lock_t* s )
 {
   // Automatically increment and decrement insideTAU
@@ -2006,7 +2006,7 @@ POMP2_Set_lock( omp_lock_t* s )
     omp_set_lock( s );
 }
 
-void
+extern "C" void
 POMP2_Unset_lock( omp_lock_t* s )
 {
   // Automatically increment and decrement insideTAU
@@ -2023,7 +2023,7 @@ POMP2_Unset_lock( omp_lock_t* s )
     omp_unset_lock( s );
 }
 
-int
+extern "C" int
 POMP2_Test_lock( omp_lock_t* s )
 {
   // Automatically increment and decrement insideTAU
@@ -2040,7 +2040,7 @@ POMP2_Test_lock( omp_lock_t* s )
     return omp_test_lock( s );
 }
 
-void
+extern "C" void
 POMP2_Init_nest_lock( omp_nest_lock_t* s )
 {
   // Automatically increment and decrement insideTAU
@@ -2057,7 +2057,7 @@ POMP2_Init_nest_lock( omp_nest_lock_t* s )
     omp_init_nest_lock( s );
 }
 
-void
+extern "C" void
 POMP2_Destroy_nest_lock( omp_nest_lock_t* s )
 {
   // Automatically increment and decrement insideTAU
@@ -2074,7 +2074,7 @@ POMP2_Destroy_nest_lock( omp_nest_lock_t* s )
     omp_destroy_nest_lock( s );
 }
 
-void
+extern "C" void
 POMP2_Set_nest_lock( omp_nest_lock_t* s )
 {
   // Automatically increment and decrement insideTAU
@@ -2091,7 +2091,7 @@ POMP2_Set_nest_lock( omp_nest_lock_t* s )
     omp_set_nest_lock( s );
 }
 
-void
+extern "C" void
 POMP2_Unset_nest_lock( omp_nest_lock_t* s )
 {
   // Automatically increment and decrement insideTAU
@@ -2108,7 +2108,7 @@ POMP2_Unset_nest_lock( omp_nest_lock_t* s )
     omp_unset_nest_lock( s );
 }
 
-int
+extern "C" int
 POMP2_Test_nest_lock( omp_nest_lock_t* s )
 {
   // Automatically increment and decrement insideTAU

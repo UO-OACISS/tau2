@@ -680,11 +680,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   /*** Throttling Code ***/
   /********************************************************************************/
 
-#if defined(TAU_RECYCLE_THREADS) // don't write profile if recycling threads!
-  if (!ParentProfiler && tid == 0) {
-#else
-  if (!ParentProfiler) {
-#endif /* TAU_RECYCLE_THREADS */
+  if (( TauEnv_get_recycle_threads() && (!ParentProfiler && tid == 0)) ||
+      (!TauEnv_get_recycle_threads() && !ParentProfiler)) {
     /*** Profile Compensation ***/
     // If I am still compensating, I do not expect a top level timer. Just pretend
     // this never happened.
@@ -1093,17 +1090,24 @@ void Profiler::SetPhase(bool flag) {
 }
 #endif /* TAU_PROFILEPHASE */
 
+bool startsWith(const char *pre, const char *str)
+{
+    size_t lenpre = strlen(pre),
+           lenstr = strlen(str);
+    return lenstr < lenpre ? false : memcmp(pre, str, lenpre) == 0;
+}
+
 // writes user events to the file
 static int writeUserEvents(FILE *fp, int tid)
 {
   AtomicEventDB::iterator it;
 
   fprintf(fp, "0 aggregates\n");    // For now there are no aggregates
-
+  
   // Print UserEvent Data if any
   int numEvents = 0;
   for (it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
-    if ((*it) && (*it)->GetNumEvents(tid) == 0) {    // skip user events with no calls
+    if ((*it) && (*it)->GetNumEvents(tid) == 0 && !startsWith("CUDA", (*it)->GetName().c_str())) {    // skip user events with no calls
       continue;
     }
     if ((*it)->GetWriteAsMetric()) { //skip events that are written out as metrics.
@@ -1123,7 +1127,7 @@ static int writeUserEvents(FILE *fp, int tid)
     fprintf(fp, "# eventname numevents max min mean sumsqr\n");
 
     for (it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
-      if ((*it) && (*it)->GetNumEvents(tid) == 0) continue;
+      if ((*it) && (*it)->GetNumEvents(tid) == 0 && !startsWith("CUDA", (*it)->GetName().c_str())) continue;
       if ((*it) && (*it)->GetWriteAsMetric()) continue;
       fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", (*it)->GetName().c_str(), (*it)->GetNumEvents(tid),
           (*it)->GetMax(tid), (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
@@ -1628,8 +1632,12 @@ int TauProfiler_StoreData(int tid)
       TauProfiler_DumpData(false, tid, "profile");
 	}
   }
-#if defined(PTHREADS) || defined(TAU_OPENMP)
-  if (RtsLayer::myThread() == 0 && tid == 0) {
+  /* If we have thread recycling enabled, threads won't write
+   * their profiles when they exit.  So thread 0 has to do it, 
+   * even in cases where CUDA is used without pthread or openmp
+   * support.  For some reason, thread 0 is getting its myThread()
+   * value changed from 0, still need to investigate that. */
+    if (RtsLayer::myThread() == 0 && tid == 0) {
     /* clean up other threads? */
     for (int i = 1; i < RtsLayer::getTotalThreads(); i++) {
       TauProfiler_StoreData(i);
@@ -1647,7 +1655,6 @@ int TauProfiler_StoreData(int tid)
 #endif
 #endif
   }
-#endif /* PTHREADS */
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 4\n", RtsLayer::myNode(), tid);
 
 #if defined(TAU_SHMEM) && !defined(TAU_MPI)

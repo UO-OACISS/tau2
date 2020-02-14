@@ -22486,6 +22486,7 @@ struct less< ::nlohmann::detail::value_t>
 
 @since version 1.0.0
 */
+#ifndef TAU_NEC_SX
 template<>
 inline void swap<nlohmann::json>(nlohmann::json& j1, nlohmann::json& j2) noexcept(
     is_nothrow_move_constructible<nlohmann::json>::value and
@@ -22494,6 +22495,7 @@ inline void swap<nlohmann::json>(nlohmann::json& j1, nlohmann::json& j2) noexcep
 {
     j1.swap(j2);
 }
+#endif /* TAU_NEC_SX */
 
 } // namespace std
 

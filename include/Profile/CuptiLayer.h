@@ -23,7 +23,9 @@ printf ("[%s:%d] Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n
 #define CHECK_CUPTI_ERROR(err, cuptifunc) \
 if (err != CUPTI_SUCCESS) \
 { \
-printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, err, cuptifunc); \
+const char * tmpstr;  \
+cuptiGetResultString(err, &tmpstr); \
+printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n%s\n", __FILE__, __LINE__, err, cuptifunc, tmpstr); \
 }
 
 #define TAU_CUPTI_MAX_NAME 40
@@ -52,14 +54,12 @@ struct CuptiCounterEvent
 {
     static void printHeader();
 
-    CuptiCounterEvent(int device_n, int domain_n, int event_n);
+    CuptiCounterEvent(int device_n, int event_n);
 
     CUdevice device;
-	CUpti_EventDomainID domain;
 	CUpti_EventID event;
 
 	std::string device_name;
-	std::string domain_name;
 	std::string event_name;
 	std::string event_description;
 	std::string tag; // string presented to the user.

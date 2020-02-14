@@ -1,0 +1,5 @@
+
+This example shows how to use the SQLite3 plugin to store multiple trial runs
+in a file-based database on disk.
+
+To run the example, type "make", and then run the "go.sh" script.

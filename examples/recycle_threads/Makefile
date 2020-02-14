@@ -11,27 +11,28 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
  
+include ../../include/Makefile 
+include ../Makefile
+include $(TAU_MAKEFILE_MPI)
 
-TAU_MAKEFILE ?=../../include/Makefile
 
-include $(TAU_MAKEFILE)
+CXX		= $(TAU_CXX)
 
-#CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optKeepFiles -optNoCompInst -optLinkOnly
-CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optCompInst
-#CC		= mpicc
-#CC		= opencc -fopenmp
-#CC		= icc -pthread -DPTHREADS
-#CC      = $(TAU_CC) -fopenmp
+CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE) -std=c++11 -g
+
+LIBS            = $(TAU_MPI_LIBS) $(TAU_LIBS) -lm
+
+LDFLAGS	      	= $(USER_OPT) $(TAU_LDFLAGS) -g
+
+MAKEFILE      	= Makefile
 
 PRINT	      	= pr
 
-RM 	      	= /bin/rm -rf
+RM 	      	= /bin/rm -fr
 
-TARGET	      	= matmult
+TARGET	      	= thread_bomb
 
-OBJS     	= matmult.o matmult_initialize.o
-CFLAGS=-g -O0 $(TAU_OPENMP_OPTION) 
-LDFLAGS=-g $(TAU_OPENMP_OPTION)
+EXTRAOBJS     	= 
 
 ##############################################
 
@@ -39,15 +40,12 @@ all:		$(TARGET)
 
 install: 	$(TARGET)
 
-$(TARGET):	$(OBJS) 
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
+$(TARGET):	$(TARGET).o
+	$(CXX) $(LDFLAGS) $(TARGET).o -o $@ $(LIBS)
 
-matmult.o: matmult.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-matmult_initialize.o: matmult_initialize.c matmult_initialize.h
-	$(CC) $(CFLAGS) -c $< -o $@
+$(TARGET).o : $(TARGET).cpp
+	$(CXX) $(CFLAGS) -c $(TARGET).cpp
 
 clean: 	
-	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog
+	$(RM) $(TARGET).o $(TARGET) profile.* traces*
 ##############################################

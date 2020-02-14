@@ -82,6 +82,7 @@ if [ $python_wrapper = "true" ] ; then
   echo "        -adios2       Write output to ADIOS2 archive"
   echo "        -adios2_trace Write trace output to ADIOS2 archive"
   echo "        -papi_components Periodically read from available PAPI components (requires PAPI configuration)"
+  echo "        -sqlite3      Write profile data to SQLite3 database"
 fi
   echo ""
   echo "Notes:"
@@ -322,6 +323,7 @@ ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars i
 ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 adios2=false
 papi_components=false
+sqlite3=false
 adios2_trace=false
 sos=false
 
@@ -395,6 +397,10 @@ for arg in "$@" ; do
         ;;
       -papi_components)
         papi_components=true
+        shift
+        ;;
+      -sqlite3)
+        sqlite3=true
         shift
         ;;
       -adios2)
@@ -744,22 +750,36 @@ else
 fi
 
 if [ $papi_components = "true" ]; then
-    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-papi-components-plugin.so
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-papi-components-plugin${TAU_SHLIBX}
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
 fi
 
 if [ $adios2 = "true" ]; then
-    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-adios2-plugin.so
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-adios2-plugin${TAU_SHLIBX}
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+    # Because we are writing the data to ADIOS, disable profile output
+    export TAU_PROFILE=0
+    unset TAU_PROFILE_FORMAT
+fi
+
+if [ $sqlite3 = "true" ]; then
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-sqlite3-plugin${TAU_SHLIBX}
+    export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+    # Because we are writing the data to SQLite, disable profile output
+    export TAU_PROFILE=0
+    unset TAU_PROFILE_FORMAT
 fi
 
 if [ $adios2_trace = "true" ]; then
-    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-adios2-trace-plugin.so
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-adios2-trace-plugin${TAU_SHLIBX}
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+    # Because we are writing the data to ADIOS, disable profile output
+    export TAU_PROFILE=0
+    unset TAU_PROFILE_FORMAT
 fi
 
 if [ $sos = "true" ]; then
-    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-sos-plugin.so
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-sos-plugin${TAU_SHLIBX}
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
 fi
 
@@ -898,8 +918,8 @@ if [ $track_opencl = "true" ] ; then
   fi
 fi
 if [ $track_openacc = "true" ] ; then
-  export PGI_ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
-  export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
+  export PGI_ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU${TAU_SHLIBX}
+  export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU${TAU_SHLIBX}
 fi
 if [ $track_rocm = "true" ] ; then
   export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
@@ -957,7 +977,7 @@ if [ $scorep = true ]; then
   if [ $verbose = "true" ]; then 
     echo "Score-P is specified"
   fi
-  scoreplib=`ldd $BASEDIR/lib/$theBinding/libTAU.so | grep scorep_adapter_mpi_event.so | awk ' { print $3;}'`
+  scoreplib=`ldd $BASEDIR/lib/$theBinding/libTAU${TAU_SHLIBX} | grep scorep_adapter_mpi_event.so | awk ' { print $3;}'`
   if [ -f $scoreplib -a $verbose = "true" ]; then 
     echo "Preloading: $scoreplib"
   fi
@@ -1033,7 +1053,7 @@ if $use_pin ; then
   if [ -r $mk ]; then
     PIN_ROOT=`grep "^PIN_ROOT=" $mk | sed -e 's@^PIN_ROOT=@@g' ` 
     #echo "PIN_ROOT=$PIN_ROOT"
-    $PIN_ROOT/pin -t $BASEDIR/lib/$theBinding/libTAU.so -- $@
+    $PIN_ROOT/pin -t $BASEDIR/lib/$theBinding/libTAU${TAU_SHLIBX} -- $@
     exit $?
   else 
     echo "$0: PIN configuration not found. Please use ./configure -pin=download; make install;  and retry"

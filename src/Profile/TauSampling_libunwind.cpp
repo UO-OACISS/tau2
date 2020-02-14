@@ -1,5 +1,9 @@
 #ifdef TAU_USE_LIBUNWIND
 
+#ifdef __NEC_IA64_ABI
+#define __x86_64__
+#endif
+
 #include "Profile/TauSampling_unwind.h"
 #include <ucontext.h>
 

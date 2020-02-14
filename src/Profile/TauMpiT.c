@@ -38,6 +38,7 @@ static int *tau_pvar_count;
 static int *tau_cvar_num_vals;
 static int tau_initial_pvar_count = 0;
 static int tau_mpi_t_is_initialized = 0;
+static MPI_Comm default_comm = MPI_COMM_WORLD;
 int num_cvars = 0; //For now, we don't support case where number of CVARS changes dynamically at runtime
 
 //////////////////////////////////////////////////////////////////////
@@ -160,7 +161,12 @@ int Tau_mpi_t_initialize(void) {
     tau_mpi_datatype[i] = datatype;
 
   /* allocate a pvar handle that will be used later */
-  return_val = MPI_T_pvar_handle_alloc(tau_pvar_session, i, NULL, &tau_pvar_handles[i], &tau_pvar_count[i]);
+  if(bind == MPI_T_BIND_MPI_COMM) {
+    return_val = MPI_T_pvar_handle_alloc(tau_pvar_session, i, &default_comm, &tau_pvar_handles[i], &tau_pvar_count[i]);
+  } else {
+    return_val = MPI_T_pvar_handle_alloc(tau_pvar_session, i, NULL, &tau_pvar_handles[i], &tau_pvar_count[i]);
+  }
+  
   if (return_val != MPI_SUCCESS) {
     perror("MPI_T_pvar_handle_alloc ERROR:");
     return return_val;
@@ -904,8 +910,8 @@ int Tau_set_mpi_t_cvar_value_for_communicator(char* cname, int value, void* comm
   MPI_T_cvar_handle handle;
   int err = MPI_SUCCESS;
   int read_value, count, cvar_index = 0;
-  
-
+ 
+#if (defined MVAPICH2_NUMVERSION && MVAPICH2_NUMVERSION > 20200300) || (!defined MVAPICH2_NUMVERSION)
   printf("TAU: rank [%d] Tau_set_mpi_t_cvar_value_for_communicator: CVAR name=%s, value = %d, comm_name=%s, comm = %p\n", Tau_get_node(), cname, value, comm_name, comm);
   err = MPI_T_cvar_get_index( cname , &cvar_index);
   if(err!=MPI_SUCCESS) {
@@ -938,7 +944,10 @@ int Tau_set_mpi_t_cvar_value_for_communicator(char* cname, int value, void* comm
 
 
   /* free the handle. */
-  MPI_T_cvar_handle_free(&handle);    
+  MPI_T_cvar_handle_free(&handle);
+#else
+  fprintf(stderr, "\nTAU: Warning: Communicator-based CVAR support not available for MVAPICH2.2 and older. Please use a newer MVAPICH2 version.\n");
+#endif
   return 0;
 }
 
@@ -1003,6 +1012,12 @@ void Tau_mpi_t_check_communicator(void *comm, const char *comm_name) {
       cvar_copy = save_ptr; 
     }
   }
+}
+
+//////////////////////////////////////////////////////////////////////
+long Tau_get_message_path(void) {
+  // Query MPI_T and return the path associated with the pvars. 
+  return 1L;  // return a default path for now. 
 }
 //////////////////////////////////////////////////////////////////////
 // EOF : TauMpiT.c

@@ -232,6 +232,9 @@ using namespace std;
 #define TAU_MEM_CALLPATH_DEFAULT 0
 #define TAU_REGION_ADDRESSES_DEFAULT 0
 
+/* Thread recycling */
+#define TAU_RECYCLE_THREADS_DEFAULT 0
+
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
 
@@ -371,6 +374,7 @@ static int env_mem_all = 0;
 static const char *env_mem_classes = NULL;
 static std::set<std::string> * env_mem_classes_set = NULL;
 static int env_region_addresses = TAU_REGION_ADDRESSES_DEFAULT;
+static int env_recycle_threads = TAU_RECYCLE_THREADS_DEFAULT;
 
 static const char *env_tau_exec_args = NULL;
 static const char *env_tau_exec_path = NULL;
@@ -947,6 +951,10 @@ int TauEnv_get_region_addresses() {
   return env_region_addresses;
 }
 
+int TauEnv_get_recycle_threads() {
+  return env_recycle_threads;
+}
+
 int TauEnv_get_track_io_params() {
   return env_track_io_params;
 }
@@ -1518,6 +1526,16 @@ void TauEnv_initialize()
     } else {
       TAU_METADATA("TAU_REGION_ADDRESSES", "off");
       env_region_addresses = 0;
+    }                                     
+
+    tmp = getconf("TAU_RECYCLE_THREADS");
+    if (parse_bool(tmp, TAU_RECYCLE_THREADS_DEFAULT)) {
+      TAU_VERBOSE("TAU: Region addresses Enabled\n");
+      TAU_METADATA("TAU_RECYCLE_THREADS", "on");
+      env_recycle_threads = 1;
+    } else {
+      TAU_METADATA("TAU_RECYCLE_THREADS", "off");
+      env_recycle_threads = 0;
     }                                     
 
     // Setting TAU_MEMDBG_PROTECT_{ABOVE,BELOW,FREE} enables memory debugging.
