@@ -3165,13 +3165,13 @@ void Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_
   
   // clean up description for non-ascii characters and new lines
   for (i=0; i < strlen(description); i++) {
-    if ((description[i] == '\n') || (description[i]>127)) {
+    if ((description[i] == '\n') || (!isprint(description[i]))) {
       description[i] = ' '; 
     }
   }
   // clean up event_name for non-ascii characters and new lines
   for (i=0; i < strlen(event_name); i++) {
-    if ((event_name[i] == '\n') || (event_name[i]>127)) {
+    if ((event_name[i] == '\n') || (!isprint(event_name[i]))) {
       event_name[i] = ' ';
     }
   }
