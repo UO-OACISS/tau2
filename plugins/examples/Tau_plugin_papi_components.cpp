@@ -297,6 +297,14 @@ void initialize_papi_events(void) {
         if (strstr(comp_info->name, "perf_event") != NULL) {
             continue;
         }
+        /* Skip the example component, that's worthless and will break things */
+        if (strstr(comp_info->name, "example") != NULL) {
+            continue;
+        }
+        /* Skip the perf_event_uncore component, it has security problems */
+        if (strstr(comp_info->name, "perf_event_uncore") != NULL) {
+            continue;
+        }
         if (!include_component(comp_info->name)) { return; }
         TAU_VERBOSE("Found %s component...\n", comp_info->name);
         /* Does this component have available events? */
