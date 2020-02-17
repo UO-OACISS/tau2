@@ -1820,7 +1820,12 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_PROFILE", "off");
     }
 
-    if (env_profiling) {
+    /* Switched this from env_profiling to !env_tracing.
+     * If we are using alternative outputs (ADIOS2, SQLITE, SOS)
+     * we want to disable profile wrting at the end of execution
+     * but we don't want to disable callpaths.
+     */
+    if (!env_tracing) {
       /* callpath */
       tmp = getconf("TAU_CALLPATH");
       if (parse_bool(tmp, TAU_CALLPATH_DEFAULT)) {
