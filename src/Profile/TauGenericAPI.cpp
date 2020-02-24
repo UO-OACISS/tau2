@@ -74,15 +74,19 @@ extern "C" {
 /* Function pointers */
 
 void ps_tool_initialize(void) {
-#ifndef TAU_MPI
     int _argc = 1;
     const char *_dummy = "";
     char *_argv[1];
     _argv[0] = (char *)(_dummy);
     Tau_init(_argc, _argv);
+#ifndef TAU_MPI
     Tau_set_node(0);
-    Tau_create_top_level_timer_if_necessary();
 #endif
+    /* Disable throttling, because if users use ps_tool_stop_current(), 
+     * throttling will cause Tau_start() to do nothing for throttled events,
+     * but Tau_global_stop() will stop the timer on the stop of the stack */
+    TauEnv_set_throttle(0);
+    Tau_create_top_level_timer_if_necessary();
 }
 
 void ps_tool_register_thread(void) {

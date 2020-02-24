@@ -828,6 +828,10 @@ int TauEnv_get_throttle() {
   return env_throttle;
 }
 
+void TauEnv_set_throttle(int throttle) {
+  env_throttle = throttle;
+}
+
 int TauEnv_get_disable_instrumentation() {
   return env_disable_instrumentation;
 }
