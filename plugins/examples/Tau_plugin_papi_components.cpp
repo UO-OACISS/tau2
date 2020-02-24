@@ -43,6 +43,7 @@ json configuration;
 
 const char * default_configuration = R"(
 {
+  "periodicity seconds": 10,
   "/proc/stat": {
     "disable": false,
     "comment": "This will exclude all core-specific readings.",
@@ -306,7 +307,7 @@ void initialize_papi_events(void) {
             continue;
         }
         if (!include_component(comp_info->name)) { return; }
-        TAU_VERBOSE("Found %s component...\n", comp_info->name);
+        if (my_rank == 0) TAU_VERBOSE("Found %s component...\n", comp_info->name);
         /* Does this component have available events? */
         if (comp_info->num_native_events == 0) {
             fprintf(stderr, "Error: No %s events found.\n", comp_info->name);
@@ -356,7 +357,7 @@ void initialize_papi_events(void) {
             char unit[PAPI_MAX_STR_LEN] = {0};
             strncpy(unit,evinfo.units,PAPI_MAX_STR_LEN);
             // save the event info
-            TAU_VERBOSE("Found event '%s (%s)'\n", event_name, unit);
+            if (my_rank == 0) TAU_VERBOSE("Found event '%s (%s)'\n", event_name, unit);
             ppe this_event(event_name, unit, code, evinfo.data_type);
             if(strcmp(unit, "nJ") == 0) {
                 this_event.units = "J";
@@ -896,7 +897,7 @@ void stop_worker(void) {
     pthread_mutex_lock(&_my_mutex);
     done = true;
     pthread_mutex_unlock(&_my_mutex);
-    TAU_VERBOSE("TAU ADIOS2 thread joining...\n"); fflush(stderr);
+    if (my_rank == 0) TAU_VERBOSE("TAU ADIOS2 thread joining...\n"); fflush(stderr);
     pthread_cond_signal(&_my_cond);
     int ret = pthread_join(worker_thread, NULL);
     if (ret != 0) {
@@ -938,7 +939,7 @@ void * Tau_papi_component_plugin_threaded_function(void* data) {
         // wait the time period.
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
         if (rc == ETIMEDOUT) {
-            TAU_VERBOSE("%d Timeout from plugin.\n", RtsLayer::myNode()); fflush(stderr);
+            //TAU_VERBOSE("%d Timeout from plugin.\n", RtsLayer::myNode()); fflush(stderr);
         } else if (rc == EINVAL) {
             TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
         } else if (rc == EPERM) {
@@ -1004,24 +1005,14 @@ static void do_cleanup() {
 }
 
 int Tau_plugin_event_pre_end_of_execution_papi_component(Tau_plugin_event_pre_end_of_execution_data_t *data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+    if (my_rank == 0) TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     do_cleanup();
     return 0;
 }
 
 int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_execution_data_t *data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+    if (my_rank == 0) TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     do_cleanup();
-    return 0;
-}
-
-int Tau_plugin_event_trigger_papi_component(Tau_plugin_event_trigger_data_t* data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    return 0;
-}
-
-int Tau_plugin_event_dump_papi_component(Tau_plugin_event_dump_data_t* data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     return 0;
 }
 
@@ -1031,7 +1022,7 @@ int Tau_plugin_metadata_registration_complete_papi_component(Tau_plugin_event_me
 }
 
 int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t* data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+    if (my_rank == 0) TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
 
     rank_getting_system_data = choose_volunteer_rank();
 
@@ -1050,7 +1041,7 @@ int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t*
 #endif
     /* spawn the worker thread to do the reading */
     init_lock(&_my_mutex);
-    TAU_VERBOSE("Spawning thread.\n");
+    if (my_rank == 0) TAU_VERBOSE("Spawning thread.\n");
     int ret = pthread_create(&worker_thread, NULL,
         &Tau_papi_component_plugin_threaded_function, NULL);
     if (ret != 0) {
@@ -1060,31 +1051,6 @@ int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t*
     }
     return 0;
 }  
-
-int Tau_plugin_event_send_papi_component(Tau_plugin_event_send_data_t* data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    return 0;
-}
-
-int Tau_plugin_event_recv_papi_component(Tau_plugin_event_recv_data_t* data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    return 0;
-}
-
-int Tau_plugin_event_function_entry_papi_component(Tau_plugin_event_function_entry_data_t* data) {
-    //TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    return 0;
-}
-
-int Tau_plugin_event_function_exit_papi_component(Tau_plugin_event_function_exit_data_t* data) {
-    //TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    return 0;
-}
-
-int Tau_plugin_event_atomic_trigger_papi_component(Tau_plugin_event_atomic_event_trigger_data_t* data) {
-    //TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    return 0;
-}
 
 void read_config_file(void) {
     try {
@@ -1109,19 +1075,10 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     read_config_file();
 
     /* Required event support */
-    cb->Trigger = Tau_plugin_event_trigger_papi_component;
-    cb->Dump = Tau_plugin_event_dump_papi_component;
     cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_papi_component;
     cb->PostInit = Tau_plugin_event_post_init_papi_component;
     cb->PreEndOfExecution = Tau_plugin_event_pre_end_of_execution_papi_component;
     cb->EndOfExecution = Tau_plugin_event_end_of_execution_papi_component;
-
-    /* Trace events */
-    cb->Send = Tau_plugin_event_send_papi_component;
-    cb->Recv = Tau_plugin_event_recv_papi_component;
-    cb->FunctionEntry = Tau_plugin_event_function_entry_papi_component;
-    cb->FunctionExit = Tau_plugin_event_function_exit_papi_component;
-    cb->AtomicEventTrigger = Tau_plugin_event_atomic_trigger_papi_component;
 
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
     free (cb);

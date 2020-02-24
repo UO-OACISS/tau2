@@ -1,6 +1,6 @@
 /***************************************************************************
  * *   Plugin Testing
- * *   This plugin will provide iterative output of TAU profile data to an 
+ * *   This plugin will provide iterative output of TAU profile data to an
  * *   ADIOS2 BP file.
  * *
  * *************************************************************************/
@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string>
 #include <sstream>
+#include <assert.h>
 
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
@@ -115,8 +116,8 @@ class plugin_options {
         }
 };
 
-inline plugin_options& thePluginOptions() { 
-    return plugin_options::thePluginOptions(); 
+inline plugin_options& thePluginOptions() {
+    return plugin_options::thePluginOptions();
 }
 
 void Tau_ADIOS2_parse_environment_variables(void);
@@ -181,7 +182,7 @@ void Tau_ADIOS2_parse_environment_variables(void) {
         char * program = _program_name();
         if (program != NULL && strlen(program) > 0) {
             std::stringstream ss;
-            ss << thePluginOptions().env_filename << "-" << program; 
+            ss << thePluginOptions().env_filename << "-" << program;
             free(program);
             thePluginOptions().env_filename = std::string(ss.str());
         }
@@ -323,7 +324,7 @@ void Tau_plugin_adios2_init_adios(void) {
         Tau_dump_ADIOS2_metadata(bpIO);
 
         /* Create some "always used" variables */
-    
+
         /** global array : name, { shape (total) }, { start (local) }, {
         * count (local) }, all are constant dimensions */
         const std::size_t Nx = 1;
@@ -632,15 +633,18 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     const char **counterNames;
     std::vector<int> numCounters = {0};
     TauMetrics_getCounterList(&counterNames, &(numCounters[0]));
- 
-    int max_threads = 0;
+
+    static int max_threads = 1;
 #if TAU_MPI
+    assert(data->tid == 0);
     // The easy way is if we are synchronously dumping, and using MPI
+    // We also want to do this once.
+    //if (data->tid == 0 && max_threads == 0) {
     if (data->tid == 0) {
         int my_threads = RtsLayer::getTotalThreads();
         MPI_Allreduce(&my_threads, &max_threads, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-    } else {
-#endif
+    }
+#else
     // Ask all ranks for their num threads
     for (int i = 0 ; i < world_comm_size ; i++) {
         char * reply = my_sockets->send_message(i, "Get num threads");
@@ -650,8 +654,6 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
             max_threads = t > max_threads ? t : max_threads;
             free(reply);
         }
-    }
-#if TAU_MPI
     }
 #endif
     numThreads[0] = max_threads;
@@ -762,7 +764,9 @@ int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
     Tau_plugin_adios2_init_adios();
     Tau_plugin_adios2_open_file();
 
+#ifndef TAU_MPI
     my_sockets = new tau::plugins::Sockets(world_comm_rank, &handle_socket_message);
+#endif
 
     /* spawn the thread if doing periodic */
     if (thePluginOptions().env_periodic) {
@@ -803,7 +807,7 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
 }
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
- * Every plugin MUST implement this function to register callbacks for various events 
+ * Every plugin MUST implement this function to register callbacks for various events
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_plugin_callbacks_t cb;
