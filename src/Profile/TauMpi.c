@@ -2486,7 +2486,7 @@ int MPI_Get_version( int *version, int *subversion )
 // OpenMPI 4 and later have removed some functions deleted in MPI 3.0
 #if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
 int  MPI_Address( location, address )
-#if (defined(TAU_SGI_MPT_MPI) || defined(TAU_NEC_SX))
+#if (defined(TAU_SGI_MPT_MPI) || defined(TAU_NEC_SX) || defined(TAU_NEC_MPI_VH_SX))
 void * location;
 #else 
 TAU_OPENMPI3_CONST void * location;

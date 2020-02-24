@@ -3954,7 +3954,7 @@ case $machine in
         # MPI compilers of mpicc and mpicxx.
         # That way, we can use the -show option to get all
         # the correct MPI flags.
-        if [ $cxx_compiler = default -o $cxx_compiler = "g++" ] ; then
+        if [ $cxx_compiler = default ] ; then
             if [ $mpi = yes ] ; then
                 cxx_compiler=mpicxx
             else
@@ -3965,7 +3965,7 @@ case $machine in
             fi
         fi
 
-        if [ $c_compiler = default -o $c_compiler = "gcc" ] ; then
+        if [ $c_compiler = default ] ; then
             if [ $mpi = yes ] ; then
                 c_compiler=mpicc
             else
@@ -4983,9 +4983,22 @@ case $cxx_compiler in
 	;;
 
     mpinc++ | nc++)
-	tauoptions="${tauoptions}-ncc"
-	echo "Using NEC Compilers"
-	fixmakeargs="$fixmakeargs NEC_COMPILERS"
+        if [ "$tauarch" = "unknown" -a "$machine" = "x86_64" ]; then
+	  echo "NOTE: Using GNU compilers for NEC VH. Please specify -arch=nec-sx-aurora if you wish to use VE."
+          c_compiler=gcc
+          cxx_compiler=g++
+	  fixmakeargs="$fixmakeargs GNU COMPINST_GNU GNU46PLUS TAU_NEC_MPI_VH_SX"
+          if [ "x$mpilib" = "x" ]; then 
+            mpilib_search=`mpincc -vh -show | sed -e 's@ @\n@g' | grep "^-L" | sed -e 's@-L@@'`
+            mpilib=$mpilib_search
+            echo "NOTE: Using NEC VH mode for x86_64 (as -arch=nec-sx-aurora was not specified) with mpilib=$mpilib"
+            echo "-------------------------------------------------------------------------------------------------"
+          fi
+        else
+	  tauoptions="${tauoptions}-ncc"
+	  echo "Using NEC Compilers"
+	  fixmakeargs="$fixmakeargs NEC_COMPILERS"
+        fi
 	;;
 
     *mpicxx)
