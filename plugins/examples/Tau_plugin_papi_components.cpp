@@ -82,7 +82,7 @@ namespace tau {
         /* Simple class to aid in converting/storing component event data */
         class papi_event {
             public:
-                papi_event(const char * ename, const char * eunits, int ecode, int data_type) : 
+                papi_event(const char * ename, const char * eunits, int ecode, int data_type) :
                     name(ename), units(eunits), code(ecode), type(data_type), conversion(1.0) {}
                 std::string name;
                 std::string units;
@@ -93,7 +93,7 @@ namespace tau {
         /* Simple class to aid in processing PAPI components */
         class papi_component {
             public:
-                papi_component(const char * cname, int cid) : 
+                papi_component(const char * cname, int cid) :
                     name(cname), event_set(PAPI_NULL), initialized(false), id(cid) {}
                 std::string name;
                 std::vector<papi_event> events;
@@ -123,7 +123,7 @@ namespace tau {
             public:
                 NetStat() : recv_bytes(0LL), recv_packets(0LL),
                     recv_errors(0LL), recv_drops(0LL), recv_fifo(0LL),
-                    recv_frame(0LL), recv_compressed(0LL), recv_multicast(0LL), 
+                    recv_frame(0LL), recv_compressed(0LL), recv_multicast(0LL),
                     transmit_bytes(0LL), transmit_packets(0LL),
                     transmit_errors(0LL), transmit_drops(0LL),
                     transmit_fifo(0LL), transmit_collisions(0LL),
@@ -136,7 +136,7 @@ namespace tau {
                 long long recv_fifo;
                 long long recv_frame;
                 long long recv_compressed;
-                long long recv_multicast; 
+                long long recv_multicast;
                 long long transmit_bytes;
                 long long transmit_packets;
                 long long transmit_errors;
@@ -231,11 +231,11 @@ bool include_event(const char * component, const char * event_name) {
     if (configuration.count(component)) {
         auto json_component = configuration[component];
         if (json_component.count("include")) {
-            bool found = false;
             auto json_include = json_component["include"];
             for (auto i : json_include) {
+                std::string needle(i);
+                needle.erase(std::remove(needle.begin(),needle.end(),'\"'),needle.end());
                 try {
-                    std::string needle(i);
                     std::regex re(needle);
                     std::string haystack(event_name);
                     if (std::regex_search(haystack, re)) {
@@ -243,16 +243,58 @@ bool include_event(const char * component, const char * event_name) {
                         return true;
                     }
                 } catch (std::regex_error& e) {
-                    std::cerr << "Error in regular expression: " << i << std::endl;
+                    std::cerr << "Error: '" << e.what() << "' in regular expression: " << needle << std::endl;
+                    switch (e.code()) {
+                        case std::regex_constants::error_collate:
+                            std::cerr << "collate" << std::endl;
+                            break;
+                        case std::regex_constants::error_ctype:
+                            std::cerr << "ctype" << std::endl;
+                            break;
+                        case std::regex_constants::error_escape:
+                            std::cerr << "escape" << std::endl;
+                            break;
+                        case std::regex_constants::error_backref:
+                            std::cerr << "backref" << std::endl;
+                            break;
+                        case std::regex_constants::error_brack:
+                            std::cerr << "brack" << std::endl;
+                            break;
+                        case std::regex_constants::error_paren:
+                            std::cerr << "paren" << std::endl;
+                            break;
+                        case std::regex_constants::error_brace:
+                            std::cerr << "brace" << std::endl;
+                            break;
+                        case std::regex_constants::error_badbrace:
+                            std::cerr << "badbrace" << std::endl;
+                            break;
+                        case std::regex_constants::error_range:
+                            std::cerr << "range" << std::endl;
+                            break;
+                        case std::regex_constants::error_space:
+                            std::cerr << "space" << std::endl;
+                            break;
+                        case std::regex_constants::error_badrepeat:
+                            std::cerr << "badrepeat" << std::endl;
+                            break;
+                        case std::regex_constants::error_complexity:
+                            std::cerr << "complexity" << std::endl;
+                            break;
+                        case std::regex_constants::error_stack:
+                            std::cerr << "stack" << std::endl;
+                            break;
+                     }
                 }
             }
-            if (!found) { return false; }
+            return false;
         }
         if (json_component.count("exclude")) {
-            auto json_include = json_component["exclude"];
-            for (auto i : json_include) {
+            auto json_exclude = json_component["exclude"];
+            for (auto i : json_exclude) {
+                std::string needle(i);
+                needle.erase(std::remove(needle.begin(),needle.end(),'\"'),needle.end());
                 try {
-                    std::string needle(i);
                     std::regex re(needle);
                     std::string haystack(event_name);
                     if (std::regex_search(haystack, re)) {
@@ -260,7 +302,48 @@ bool include_event(const char * component, const char * event_name) {
                         return false;
                     }
                 } catch (std::regex_error& e) {
-                    std::cerr << "Error in regular expression: " << i << std::endl;
+                    std::cerr << "Error: '" << e.what() << "' in regular expression: " << needle << std::endl;
+                    switch (e.code()) {
+                        case std::regex_constants::error_collate:
+                            std::cerr << "collate" << std::endl;
+                            break;
+                        case std::regex_constants::error_ctype:
+                            std::cerr << "ctype" << std::endl;
+                            break;
+                        case std::regex_constants::error_escape:
+                            std::cerr << "escape" << std::endl;
+                            break;
+                        case std::regex_constants::error_backref:
+                            std::cerr << "backref" << std::endl;
+                            break;
+                        case std::regex_constants::error_brack:
+                            std::cerr << "brack" << std::endl;
+                            break;
+                        case std::regex_constants::error_paren:
+                            std::cerr << "paren" << std::endl;
+                            break;
+                        case std::regex_constants::error_brace:
+                            std::cerr << "brace" << std::endl;
+                            break;
+                        case std::regex_constants::error_badbrace:
+                            std::cerr << "badbrace" << std::endl;
+                            break;
+                        case std::regex_constants::error_range:
+                            std::cerr << "range" << std::endl;
+                            break;
+                        case std::regex_constants::error_space:
+                            std::cerr << "space" << std::endl;
+                            break;
+                        case std::regex_constants::error_badrepeat:
+                            std::cerr << "badrepeat" << std::endl;
+                            break;
+                        case std::regex_constants::error_complexity:
+                            std::cerr << "complexity" << std::endl;
+                            break;
+                        case std::regex_constants::error_stack:
+                            std::cerr << "stack" << std::endl;
+                            break;
+                     }
                 }
             }
         }
@@ -272,8 +355,8 @@ bool include_component(const char * component) {
         auto json_component = configuration[component];
         if (json_component.count("disable")) {
             bool tmp = json_component["disable"];
-            if(tmp) { 
-                return false; 
+            if(tmp) {
+                return false;
             }
         }
     }
@@ -313,7 +396,7 @@ void initialize_papi_events(void) {
             fprintf(stderr, "Error: No %s events found.\n", comp_info->name);
             if (comp_info->disabled != 0) {
                 fprintf(stderr, "Error: %s.\n", comp_info->disabled_reason);
-            }        
+            }
             continue;
         }
         ppc * comp = new ppc(comp_info->name, component_id);
@@ -369,7 +452,7 @@ void initialize_papi_events(void) {
             }
             if(this_event.units.size() > 0) {
                 std::stringstream ss;
-                ss << this_event.name << " (" 
+                ss << this_event.name << " ("
                    << this_event.units << ")";
                 this_event.name = ss.str();
             }
@@ -414,11 +497,20 @@ std::vector<cpustats_t*> * read_cpu_stats() {
                        &cpu_stat->system, &cpu_stat->idle,
                        &cpu_stat->iowait, &cpu_stat->irq, &cpu_stat->softirq,
                        &cpu_stat->steal, &cpu_stat->guest);
+                /* PGI Compiler is non-standard.  It can't handle regular expressions
+                 * with range values, so we can't filter out the per-cpu results.
+                 * So, we'll just read the first line of the file and quit
+                 * for all cases. */
+                /*
                 if (!include_event("/proc/stat", cpu_stat->name)) {
+                    printf("Skipping %s\n", cpu_stat->name);
                     continue;
                 }
+                */
                 cpu_stats->push_back(cpu_stat);
             }
+            // only do the first line.
+            break;
         }
     }
     fclose(pFile);
@@ -523,7 +615,7 @@ int choose_volunteer_rank() {
     char * host_index = allhostnames + (hostlength * my_rank);
     strncpy(host_index, hostname, hostlength);
     // get all hostnames
-    PMPI_Allgather(hostname, hostlength, MPI_CHAR, allhostnames, 
+    PMPI_Allgather(hostname, hostlength, MPI_CHAR, allhostnames,
                    hostlength, MPI_CHAR, MPI_COMM_WORLD);
     int volunteer = 0;
     // point to the head of the array
@@ -566,7 +658,7 @@ void parse_proc_meminfo() {
         std::string& value = results[1];
         char* pEnd;
         double d1 = strtod (value.c_str(), &pEnd);
-        if (pEnd) { 
+        if (pEnd) {
             std::stringstream ss;
             /* trim the trailing : */
             ss << "meminfo:" << results[0].substr(0,results[0].size()-1);
@@ -607,7 +699,7 @@ void parse_proc_self_status() {
         std::vector<std::string> results(std::istream_iterator<std::string>{iss},
                                          std::istream_iterator<std::string>());
         std::string& value = results[1];
-        if (results[0].compare("Cpus_allowed_list") == 0) { 
+        if (results[0].compare("Cpus_allowed_list") == 0) {
             Tau_metadata_task(const_cast<char*>(results[0].c_str()),
                 const_cast<char*>(results[1].c_str()), 0);
         }
@@ -631,7 +723,7 @@ void parse_proc_self_statm() {
         std::string& value = results[0];
         char* pEnd;
         double d1 = strtod (value.c_str(), &pEnd);
-        if (pEnd) { 
+        if (pEnd) {
             if (include_event("/proc/self/statm", "program size (kB)")) {
                 if (TauEnv_get_tracing()) {
                     Tau_trigger_userevent("program size (kB)", d1);
@@ -643,7 +735,7 @@ void parse_proc_self_statm() {
         }
         value = results[1];
         d1 = strtod (value.c_str(), &pEnd);
-        if (pEnd) { 
+        if (pEnd) {
             if (include_event("/proc/self/statm", "resident set size (kB)")) {
                 if (TauEnv_get_tracing()) {
                     Tau_trigger_userevent("resident set size (kB)", d1);
@@ -655,7 +747,7 @@ void parse_proc_self_statm() {
         }
         value = results[2];
         d1 = strtod (value.c_str(), &pEnd);
-        if (pEnd) { 
+        if (pEnd) {
             if (include_event("/proc/self/statm", "resident shared pages")) {
                 if (TauEnv_get_tracing()) {
                     Tau_trigger_userevent("resident shared pages", d1);
@@ -676,9 +768,11 @@ void sample_value(const char * component, const char * cpu, const char * name,
     std::stringstream ss;
     ss << cpu << ":" << name;
     /* If we are not including this event, continue */
+    /*
     if (!include_event(component, ss.str().c_str())) {
         return;
     }
+    */
     // double-check the value...
     double tmp;
     if (total == 0LL) {
@@ -1050,7 +1144,7 @@ int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t*
         exit(1);
     }
     return 0;
-}  
+}
 
 void read_config_file(void) {
     try {
@@ -1064,7 +1158,7 @@ void read_config_file(void) {
 }
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
- * Every plugin MUST implement this function to register callbacks for various events 
+ * Every plugin MUST implement this function to register callbacks for various events
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
