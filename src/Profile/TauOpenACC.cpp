@@ -28,7 +28,9 @@
 #include "pgi_acc_prof.h"
 #endif /* TAU_PGI_OPENACC */
 #include <Profile/Profiler.h>
-
+//#include <cupti_openacc.h>
+#include <cupti.h>
+#include <cuda.h>
 
 #define TAU_SET_EVENT_NAME(event_name, str) strcpy(event_name, str); break 
 ////////////////////////////////////////////////////////////////////////////
@@ -181,6 +183,99 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
 
 }
 
+#define CUPTI_CALL(call)                                                \
+  do {                                                                  \
+    CUptiResult _status = call;                                         \
+    if (_status != CUPTI_SUCCESS) {                                     \
+      const char *errstr;                                               \
+      cuptiGetResultString(_status, &errstr);                           \
+      fprintf(stderr, "%s:%d: error: function %s failed with error %s.\n", \
+              __FILE__, __LINE__, #call, errstr);                       \
+      if(_status == CUPTI_ERROR_LEGACY_PROFILER_NOT_SUPPORTED)          \
+          exit(0);                                                      \
+      else                                                              \
+          exit(-1);                                                     \
+    }                                                                   \
+  } while (0)
+
+#define BUF_SIZE (32 * 1024)
+#define ALIGN_SIZE (8)
+#define ALIGN_BUFFER(buffer, align)                                            \
+  (((uintptr_t) (buffer) & ((align)-1)) ? ((buffer) + (align) - ((uintptr_t) (buffer) & ((align)-1))) : (buffer))
+
+
+static size_t openacc_records = 0;
+static void
+printActivity(CUpti_Activity *record)
+{                                                                                  
+    switch (record->kind) {
+        case CUPTI_ACTIVITY_KIND_OPENACC_DATA:                                        
+        case CUPTI_ACTIVITY_KIND_OPENACC_LAUNCH:
+        case CUPTI_ACTIVITY_KIND_OPENACC_OTHER:
+            {                                                                                    
+                CUpti_ActivityOpenAcc *oacc = (CUpti_ActivityOpenAcc *)record;
+                if (oacc->deviceType != acc_device_nvidia) { 
+                    printf("Error: OpenACC device type is %u, not %u (acc_device_nvidia)\n", oacc->deviceType, acc_device_nvidia);
+                  exit(-1);
+              }
+
+              openacc_records++;
+          }
+          break;
+
+      default:
+          ;
+  }
+}
+
+void CUPTIAPI bufferRequested(uint8_t **buffer, size_t *size, size_t *maxNumRecords)
+{
+  uint8_t *bfr = (uint8_t *) malloc(BUF_SIZE + ALIGN_SIZE);
+  if (bfr == NULL) {
+    printf("Error: out of memory\n");
+    exit(-1);
+  }
+
+  *size = BUF_SIZE;
+  *buffer = ALIGN_BUFFER(bfr, ALIGN_SIZE);
+  *maxNumRecords = 0;
+}
+
+void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer, size_t size, size_t validSize)
+{
+  CUptiResult status;
+  CUpti_Activity *record = NULL;
+
+  if (validSize > 0) {
+    do {
+      status = cuptiActivityGetNextRecord(buffer, validSize, &record);
+      if (status == CUPTI_SUCCESS) {
+        printActivity(record);
+      }
+      else if (status == CUPTI_ERROR_MAX_LIMIT_REACHED)
+        break;
+      else {
+        CUPTI_CALL(status);
+      }
+    } while (1);
+
+    // report any records dropped from the queue
+    size_t dropped;
+    CUPTI_CALL(cuptiActivityGetNumDroppedRecords(ctx, streamId, &dropped));
+    if (dropped != 0) {
+      printf("Dropped %u activity records\n", (unsigned int) dropped);
+    }
+  }
+
+  free(buffer);
+}
+
+void finalize()
+{
+  cuptiActivityFlushAll(0);
+  printf("Found %llu OpenACC records\n", (long long unsigned) openacc_records);
+}
+
 ////////////////////////////////////////////////////////////////////////////
 typedef void (*Tau_openacc_registration_routine_t)( acc_event_t, acc_prof_callback_t, int );
 #ifdef TAU_PGI_OPENACC_OLD 
@@ -268,6 +363,30 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
     reg( acc_ev_data_construct_exit_start, Tau_openacc_callback, 0 );
     reg( acc_ev_data_construct_exit_end, Tau_openacc_callback, 0 );
 */
+
+    if (cuptiOpenACCInitialize(reg, unreg, lookup) != CUPTI_SUCCESS) {
+        printf("ERROR: failed to initialize CUPTI OpenACC support\n");
+    }
+
+    printf("Initialized CUPTI for OpenACC\n");
+
+    CUptiResult cupti_err = CUPTI_SUCCESS;
+
+    cupti_err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_OPENACC_DATA);
+    cupti_err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_OPENACC_LAUNCH);
+    cupti_err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_OPENACC_OTHER);
+
+    if (cupti_err != CUPTI_SUCCESS) {
+        printf("ERROR: unable to enable some OpenACC CUPTI measurements\n");
+    }
+
+    cupti_err = cuptiActivityRegisterCallbacks(bufferRequested, bufferCompleted);
+
+    if (cupti_err != CUPTI_SUCCESS) {
+        printf("ERROR: unable to register buffers with CUPTI\n");
+    }
+
+    atexit(finalize);
 
 } // acc_register_library 
 
