@@ -637,6 +637,10 @@ for arg in "$@"; do
 	    echo "    Note: 'download' will download and build the library automatically."
 	    echo "    Note: 'download' only supports the LLVM/Intel OpenMP runtime."
 	    echo ""
+	    echo "OpenACC Options:"
+	    echo "-openacc ................................................... Use OpenACC"
+	    echo "-openacclib=<dir> ...... Specify location of the OpenACC library and use"
+	    echo "                            the TAU MPI Profiling and Tracing Interface."
 	    echo "SHMEM Options:"
 	    echo "-shmem[=pshmem]............... Specify use of TAU SHMEM wrapper library."
 	    echo "-shmeminc=<dir> ......... Specify location of SHMEM include dir and use"
@@ -822,6 +826,9 @@ for arg in "$@"; do
         echo "                           the TAU MPI Profiling and Tracing Interface."
         echo "-mpilibrary=<library> ................ Specify a different MPI library."
         echo "            e.g., -mpilibrary=-lmpi_r                                  "
+	echo "-openacc .................................................. Use OpenACC"
+	echo "-openacclib=<dir> ..... Specify location of the OpenACC library and use"
+	echo "                       the TAU OpenACC Profiling and Tracing Interface."
         echo "-shmem[=pshmem].............. Specify use of TAU SHMEM wrapper library."
         echo "-shmeminc=<dir> ......... Specify location of SHMEM include dir and use"
         echo "                         the TAU SHMEM Profiling and Tracing Interface."
@@ -1239,6 +1246,7 @@ roctracer=no
 hip=no
 use_opencl=no
 use_openacc=no
+openacc_opt=""
 cupti=no
 strsignal_ok=no
 android_version=4.4
@@ -2153,6 +2161,13 @@ for arg in "$@"; do
 	-openacc)
 	    openacc=yes
 	    use_openacc=yes
+	    shift
+	    ;;
+
+	-openacclib=*)
+	    openacc=yes
+	    use_openacc=yes
+	    openacc_opt="-L"`echo $arg | sed -e 's/-openacclib=//'`
 	    shift
 	    ;;
 
@@ -6488,7 +6503,7 @@ EOF
     #This deletion is here in case the file was left behind from a previous call to configure
     rm -f ./openacc_test 
     
-    $c_compiler $openacc_flag -o openacc_test openacc_test.c 1>/dev/null 2>&1
+    $c_compiler $openacc_opt $openacc_flag -o openacc_test openacc_test.c 1>/dev/null 2>&1
     result=$?
     
     if [ $result = "0" ]; then
