@@ -6,8 +6,8 @@ using namespace std;
 /* implementation of callback routines */
 /***************************************************************************
  * Description: DefThread is called when a new nodeid/threadid is encountered.
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int ThreadDef(unsigned int nodeToken, unsigned int threadToken, unsigned int processToken, const char *threadName )
 {
@@ -19,17 +19,17 @@ int ThreadDef(unsigned int nodeToken, unsigned int threadToken, unsigned int pro
 	local.lastState=-1;
 	local.currentState=-1;
 	local.finished=false;
-	
+
 	local.nextShot=-1;
 	local.thisShot=0;
 	local.lastTime=0;
-	
+
 	local.trigSeen=0;
-	
+
 	local.snapshot=-1;
 	local.processToken=processToken;
-	
-	
+
+
 	if(Converter::segmentInterval>0)
 	{
 		local.snapshot=0;
@@ -40,7 +40,7 @@ int ThreadDef(unsigned int nodeToken, unsigned int threadToken, unsigned int pro
 	{
 		local.snapshot=0;
 	}
-	
+
 	//int curid;
 	//EOF_Trace[pair<int,int> (nodeToken,threadToken) ] = pair<int,Thread>(0,local);
 	//Converter::ThreadID[pair<int,int>(nodeToken,threadToken)]= curid =Converter::ThreadID.size();
@@ -48,16 +48,16 @@ int ThreadDef(unsigned int nodeToken, unsigned int threadToken, unsigned int pro
 	Converter::ThreadMap[processToken]=&local;
 	//cout << "Printing Thread: " << processToken << endl;
 	//SnapshotThreadPrint(processToken,nodeToken,threadToken);
-	
+
 	return 0;
 }
 
 
 /***************************************************************************
  * Description: DefState is called to define a new symbol (event). It uses
- *		the token used to define the group identifier. 
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ *		the token used to define the group identifier.
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int StateDef(unsigned int stateToken, const char *stateName, unsigned int stateGroupToken )
 {
@@ -69,12 +69,12 @@ int StateDef(unsigned int stateToken, const char *stateName, unsigned int stateG
 	local.topTime=-1;
 	local.fullTime=-1;
 	local.countRec=0;
-	
+
 	/*These are all for monotonically increasing events*/
 	local.countMIE=0;
 	local.lastaction=0;
 	local.holdvalue=0;
-	
+
 	local.stateToken=stateToken;
 	local.stateGroupToken=stateGroupToken;
 	//local.stateName=stateName;
@@ -86,8 +86,8 @@ int StateDef(unsigned int stateToken, const char *stateName, unsigned int stateG
 
 /***************************************************************************
  * Description: DefStateGroup registers a profile group name with its id.
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int StateGroupDef(unsigned int stateGroupToken, const char *stateGroupName )
 {
@@ -98,11 +98,11 @@ int StateGroupDef(unsigned int stateGroupToken, const char *stateGroupName )
 /***************************************************************************
  * Description: DefUserEvent is called to register the name and a token of the
  *  		user defined event (or a sample event in Vampir terminology).
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int UserEventDef(unsigned int userEventToken,const char *userEventName , int monotonicallyIncreasing)
-{	
+{
 		char *name = strdup(userEventName);
 		int len = strlen(name);
 		if ((name[0] == '"' ) && (name[len-1] == '"'))
@@ -110,7 +110,7 @@ int UserEventDef(unsigned int userEventToken,const char *userEventName , int mon
 			name += 1;
 			name[len-2] = '\0';
 		}
-	
+
 	/* create a state record */
 	if (monotonicallyIncreasing)
 	{
@@ -140,31 +140,32 @@ int UserEventDef(unsigned int userEventToken,const char *userEventName , int mon
 		local.tricount=0;
 		local.userEventToken=userEventToken;
 		Converter::allevents.push_back(&local);
-	} 
+	}
 	return 0;
 }
 
 /***************************************************************************
- * Description: ClockPeriod (in microseconds) is specified here. 
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * Description: ClockPeriod (in microseconds) is specified here.
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int ClockPeriodDef(double clkPeriod )
 {
+    UNUSED(clkPeriod);
 	return 0;
 }
 
 /***************************************************************************
  * Description: EndTrace is called when an EOF is encountered in a tracefile.
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
-int EndTraceDef(unsigned int processToken)//unsigned int nodeToken, unsigned int threadToken, 
+int EndTraceDef(unsigned int processToken)//unsigned int nodeToken, unsigned int threadToken,
 {
 	//(EOF_Trace[pair<int,int> (nodeToken,threadToken) ]).first = 1; /* flag it as over */
 	(Converter::ThreadMap[processToken])->finished=true;
 	/* yes, it is over */
-	map <unsigned  int,Thread*>::iterator it;//pair<int, int>, pair<int,Thread>, less< pair<int,int> > 
+	map <unsigned  int,Thread*>::iterator it;//pair<int, int>, pair<int,Thread>, less< pair<int,int> >
 	Converter::EndOfTrace = 1; /* Lets assume that it is over */
 	for (it = Converter::ThreadMap.begin(); it != Converter::ThreadMap.end(); it++)
 	{/* cycle through all <nid,tid> pairs to see if it really over */
@@ -179,32 +180,32 @@ int EndTraceDef(unsigned int processToken)//unsigned int nodeToken, unsigned int
 
 /***************************************************************************
  * Description: EventTrigger is called when a user defined event is triggered.
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int EventTriggerDef(double time,
 		unsigned int pid,
 		unsigned int userEventToken,
 		long long userEventValue)//unsigned int nid,unsigned int tid,
-{ 
+{
 	if(time>Converter::lastTime)Converter::lastTime=time;
 	//unsigned int curid=pid;//Converter::ThreadID[pair<int,int>(nid,tid)];
-	
+
 	Thread &threadin=*(Converter::ThreadMap[pid]);
-	
+
 	threadin.lastTime=time;//Converter::ThreadMap[curid].lastTime=time;
 	//lastTime=time;
 	SnapshotControl(time,-2, threadin);
-	
+
 	/* write the sample data */
 	if(Converter::monincids.count(userEventToken)==0)
 	{	/*not monotonically increasing*/
 		/*Each NMI event is between two '0' events which are ignored. (every 2nd of 3 events is used)*/
 
 		//ThreadMap[curid] <- EOF_Trace[pair<int,int>(nid,tid)].second
-		
+
 		UserEvent &thisUE=*(threadin.allevents[userEventToken]);
-		
+
 		if(thisUE.tricount==0)
 		{
 			thisUE.tricount++;
@@ -233,17 +234,17 @@ int EventTriggerDef(double time,
 	}
 	else
 	{	/*monotonically increasing*/
-		
+
 		//cout << userEventToken << " entered " <<  pid << " with " << userEventValue << endl;
-		
+
 		int stateid=threadin.lastState;
 		if(stateid==-1)
 		{
 			cout << "State not set" << endl;
 		}
-		
+
 		State &thisState=*(threadin.allstate[stateid]);
-		
+
 		thisState.allmi[userEventToken]->holdvalue=userEventValue;
 		thisState.countMIE++;
 		/*If we have encountered every event associated with this state we can process all at once*/
@@ -275,10 +276,10 @@ int EventTriggerDef(double time,
 
 /***************************************************************************
  * Description: EnterState is called at routine entry by trace input library
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
-int EnterStateDef(double time, unsigned int pid, unsigned int stateid)//unsigned int nid, unsigned int tid, 
+int EnterStateDef(double time, unsigned int pid, unsigned int stateid)//unsigned int nid, unsigned int tid,
 {
 	if(time>Converter::lastTime)Converter::lastTime=time;
 	//unsigned int curid=pid;
@@ -294,7 +295,7 @@ int EnterStateDef(double time, unsigned int pid, unsigned int stateid)//unsigned
 	//int curid=ThreadID[pair<int,int>(nid,tid)];
 	if(Converter::monincids.size()>0)
 	{
-		
+
 		threadin.lastState=stateid;
 		thisState.lastaction=1;
 		thisState.holdvalue=time;
@@ -305,11 +306,11 @@ int EnterStateDef(double time, unsigned int pid, unsigned int stateid)//unsigned
 		thisState.countMIE++;
 		return 0;
 	}
-	
+
 	//ThreadMap[curid]=
-	
+
 	StateEnter(time,threadin,thisState);
-	
+
 	return 0;
 }
 
@@ -317,10 +318,10 @@ int EnterStateDef(double time, unsigned int pid, unsigned int stateid)//unsigned
 
 /***************************************************************************
  * Description: LeaveState is called at routine exit by trace input library
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
-int LeaveStateDef(double time,unsigned int pid)//, unsigned int stateid unsigned int nid, unsigned int tid, 
+int LeaveStateDef(double time,unsigned int pid)//, unsigned int stateid unsigned int nid, unsigned int tid,
 {
 	if(time>Converter::lastTime)Converter::lastTime=time;
 	//unsigned int curid=pid;//Converter::ThreadID[pair<int,int>(nid,tid)];
@@ -330,7 +331,7 @@ int LeaveStateDef(double time,unsigned int pid)//, unsigned int stateid unsigned
 	threadin.lastTime=time;
 	//lastTime=time;
 	SnapshotControl(time,stateid, threadin);
-	
+
 	/*
 	 * If we are recording user defined events, all state control is managed by 'EventTrigger'
 	 */
@@ -347,7 +348,7 @@ int LeaveStateDef(double time,unsigned int pid)//, unsigned int stateid unsigned
 		thisState.countMIE++;
 		return 0;
 	}
-	
+
 	//ThreadMap[curid]=
 	StateLeave(time,threadin,thisState);
 

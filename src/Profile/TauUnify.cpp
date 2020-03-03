@@ -68,11 +68,11 @@ typedef struct {
 /** unification merge object */
 typedef struct {
 
-  /** This is a vector of pointers to currently existing strings 
+  /** This is a vector of pointers to currently existing strings
    *  inside the contiguous buffers from child ranks */
   vector<char*> strings;
 
-  /* the number of entries, we can't use strings.size() because the merged 
+  /* the number of entries, we can't use strings.size() because the merged
      strings only exist on the parent */
   int numStrings;
 
@@ -170,7 +170,7 @@ Tau_util_outputDevice *Tau_unify_generateLocalDefinitionBuffer(int *sortMap, Eve
 
 /** Process a buffer from a given rank, return a unify_object_t */
 unify_object_t *Tau_unify_processBuffer(char *buffer, int rank) {
-  
+
   // create the unification object
   unify_object_t *unifyObject = (unify_object_t*) TAU_UTIL_MALLOC(sizeof(unify_object_t));
   unifyObject->buffer = buffer;
@@ -198,7 +198,7 @@ unify_object_t *Tau_unify_processBuffer(char *buffer, int rank) {
 }
 
 /** Generates a definition buffer from a unify_merge_object_t */
-Tau_util_outputDevice *Tau_unify_generateMergedDefinitionBuffer(unify_merge_object_t &mergedObject, 
+Tau_util_outputDevice *Tau_unify_generateMergedDefinitionBuffer(unify_merge_object_t &mergedObject,
 								EventLister *eventLister) {
   Tau_util_outputDevice *out = Tau_util_createBufferOutputDevice();
 
@@ -240,7 +240,7 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
         }
       }
     }
- 
+
     // the next string is given in nextString at this point
     if (nextString != NULL) {
       mergedObject->strings.push_back(nextString);
@@ -261,7 +261,7 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
 	}
       }
     }
-    
+
     if (nextString != NULL) {
       count++;
     }
@@ -318,13 +318,13 @@ Tau_unify_object_t *Tau_unify_unifyEvents_MPI(EventLister *eventLister) {
     if ((mask & rank) == 0) {
       int source = (rank | mask);
       if (source < numRanks) {
-	
+
 	int recv_buflen = 0;
 
 #ifdef TAU_MPI
 	// send ok-to-go
 	PMPI_Send(NULL, 0, MPI_INT, source, 0, MPI_COMM_WORLD);
-	
+
 	// receive buffer length
 	PMPI_Recv(&recv_buflen, 1, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
 #endif /* TAU_MPI */
@@ -334,12 +334,12 @@ Tau_unify_object_t *Tau_unify_unifyEvents_MPI(EventLister *eventLister) {
 	if (recv_buflen > 0) {
 	  // allocate buffer
 	  char *recv_buf = (char *) TAU_UTIL_MALLOC(recv_buflen);
-	  
+
 #ifdef TAU_MPI
 	  // receive buffer
 	  PMPI_Recv(recv_buf, recv_buflen, MPI_CHAR, source, 0, MPI_COMM_WORLD, &status);
 #endif /* TAU_MPI */
-	  
+
 	  // add unification object to array
 	  unifyObjects->push_back(Tau_unify_processBuffer(recv_buf, source));
 	}
@@ -351,7 +351,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents_MPI(EventLister *eventLister) {
       if (unifyObjects->size() > 1) {
 	// merge children
 	mergedObject = Tau_unify_mergeObjects(*unifyObjects);
-	
+
 	// generate buffer to send to parent
 	Tau_util_outputDevice *out = Tau_unify_generateMergedDefinitionBuffer(*mergedObject, eventLister);
 	defBuf = Tau_util_getOutputBuffer(out);
@@ -363,11 +363,11 @@ Tau_unify_object_t *Tau_unify_unifyEvents_MPI(EventLister *eventLister) {
 #ifdef TAU_MPI
       // recieve ok to go
       PMPI_Recv(NULL, 0, MPI_INT, parent, 0, MPI_COMM_WORLD, &status);
-      
+
       // send length
       PMPI_Send(&defBufSize, 1, MPI_INT, parent, 0, MPI_COMM_WORLD);
 #endif /* TAU_MPI */
-      
+
       // Send data only if the buffer size is greater than 0.
       //   This applies only to Atomic events.
       if (defBufSize > 0) {
@@ -401,9 +401,9 @@ Tau_unify_object_t *Tau_unify_unifyEvents_MPI(EventLister *eventLister) {
   // receive reverse mapping table from parent
   if (parent != -1) {
     mergedObject->mapping = (int *) TAU_UTIL_MALLOC(sizeof(int)* mergedObject->numStrings);
-    
+
 #ifdef TAU_MPI
-    PMPI_Recv(mergedObject->mapping, mergedObject->numStrings, 
+    PMPI_Recv(mergedObject->mapping, mergedObject->numStrings,
 	      MPI_INT, parent, 0, MPI_COMM_WORLD, &status);
 #endif /* TAU_MPI */
 
@@ -418,7 +418,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents_MPI(EventLister *eventLister) {
   // send tables to children
   for (unsigned int i=1; i<unifyObjects->size(); i++) {
 #ifdef TAU_MPI
-    PMPI_Send((*unifyObjects)[i]->mapping, (*unifyObjects)[i]->numEvents, 
+    PMPI_Send((*unifyObjects)[i]->mapping, (*unifyObjects)[i]->numEvents,
 	      MPI_INT, (*unifyObjects)[i]->rank, 0, MPI_COMM_WORLD);
 #endif /* TAU_MPI */
   }
@@ -435,7 +435,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents_MPI(EventLister *eventLister) {
     // finalize timing and write into metadata
     end = TauMetrics_getTimeOfDay();
     eventLister->setDuration(((double)(end-start))/1000000.0f);
-    TAU_VERBOSE("TAU: Unifying Complete, duration = %.4G seconds\n", 
+    TAU_VERBOSE("TAU: Unifying Complete, duration = %.4G seconds\n",
 		((double)(end-start))/1000000.0f);
     char tmpstr[256];
     sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
@@ -611,7 +611,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents_SHMEM(EventLister *eventLister) {
 
 #endif /* TAU_SHMEM */
 
-  int globalNumItems;
+  int globalNumItems = 0;
 
   if (rank == 0) {
     // rank 0 will now put together the final event id map
@@ -676,7 +676,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents_SHMEM(EventLister *eventLister) {
     // finalize timing and write into metadata
     end = TauMetrics_getTimeOfDay();
     eventLister->setDuration(((double)(end-start))/1000000.0f);
-    TAU_VERBOSE("TAU: Unifying Complete, duration = %.4G seconds\n", 
+    TAU_VERBOSE("TAU: Unifying Complete, duration = %.4G seconds\n",
 		((double)(end-start))/1000000.0f);
     char tmpstr[256];
     sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
@@ -772,7 +772,7 @@ extern "C" int Tau_unify_unifyDefinitions_SHMEM() {
 
 #ifdef TAU_MPC
 extern "C" int TauInitMpcThreads(int* rank) {
-  static bool firsttime = true; 
+  static bool firsttime = true;
   if (firsttime) {
     for (int i = 0; i < TAU_MAX_THREADS; i++) {
       rank[i] = -1;
@@ -787,11 +787,11 @@ extern "C" int TauGetMpiRank(void) {
   static int *rank = NULL;
   int retval;
 
-  RtsLayer::LockDB(); 
+  RtsLayer::LockDB();
   int tid = RtsLayer::myThread();
   if (firsttime) {
     if (rank == NULL) {
-      rank = new int[TAU_MAX_THREADS]; 
+      rank = new int[TAU_MAX_THREADS];
       firsttime = TauInitMpcThreads(rank);
     }
   }

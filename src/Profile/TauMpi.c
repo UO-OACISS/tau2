@@ -1485,12 +1485,12 @@ int MPI_Comm_spawn(TAU_NONMPC_CONST char *command, char *argv[], int maxprocs,
     }
     wordexp(tau_exec_args, &p, WRDE_NOCMD);
     argv = malloc((p.we_wordc + old_argc + 2) * sizeof(char*));
-    int offset;
+    size_t offset;
     for(offset = 0; offset < p.we_wordc; ++offset) {
       argv[offset] = p.we_wordv[offset];
     }
     argv[offset++] = (char*)old_command;
-    int i;
+    size_t i;
     for(i = 0; i < old_argc; ++i) {
       argv[offset++] = old_argv[i];
     }

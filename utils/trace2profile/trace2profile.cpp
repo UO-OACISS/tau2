@@ -642,7 +642,7 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 					countFunc++;
 			}
 			//for (map< int,Thread >:: iterator it = mainmap.begin(); it != mainmap.end(); it++)
-				char filename [32];
+				memset(filename, 0, 32);
 				sprintf(filename,"profile.%d.0.%d",finalizer.nodeToken,finalizer.threadToken);
 				s_prefix=s_out+filename;
 				profile.open(s_prefix.c_str());
@@ -734,13 +734,13 @@ void SnapshotControl(double time, int stateToken, Thread& threadin)
 {
 	//cout << time << endl;
 	double nextShot=threadin.nextShot;
-	int snapshot=threadin.snapshot;
-	while(snapshot>-1 && time>=nextShot)
+	int snapshot_index=threadin.snapshot;
+	while(snapshot_index>-1 && time>=nextShot)
 	{
 		//cout << "IN " << setprecision(8) << time << endl;
 		PrintSnapshot(nextShot, threadin,false);
 		nextShot+=Converter::segmentInterval;
-		snapshot++;
+		snapshot_index++;
 	}
 	threadin.nextShot=nextShot;
 
@@ -752,12 +752,12 @@ void SnapshotControl(double time, int stateToken, Thread& threadin)
 		if(trigSeen==Converter::trigCount)
 		{
 			PrintSnapshot(time, threadin,false);
-			snapshot++;
+			snapshot_index++;
 			trigSeen=0;
 		}
 		threadin.trigSeen=trigSeen;
 	}
-	threadin.snapshot=snapshot;
+	threadin.snapshot=snapshot_index;
 }
 
 /***************************************************************************

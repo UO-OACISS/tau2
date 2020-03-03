@@ -284,6 +284,9 @@ bool include_event(const char * component, const char * event_name) {
                         case std::regex_constants::error_stack:
                             std::cerr << "stack" << std::endl;
                             break;
+                        default:
+                            std::cerr << "unknown" << std::endl;
+                            break;
                      }
                 }
             }
@@ -342,6 +345,9 @@ bool include_event(const char * component, const char * event_name) {
                             break;
                         case std::regex_constants::error_stack:
                             std::cerr << "stack" << std::endl;
+                            break;
+                        default:
+                            std::cerr << "unknown" << std::endl;
                             break;
                      }
                 }
@@ -482,7 +488,6 @@ std::vector<cpustats_t*> * read_cpu_stats() {
     /*  Reading proc/stat as a file  */
     FILE * pFile;
     char line[128] = {0};
-    char dummy[32] = {0};
     pFile = fopen ("/proc/stat","r");
     if (pFile == nullptr) {
         perror ("Error opening file");
@@ -524,7 +529,6 @@ std::vector<netstats_t*> * read_net_stats() {
     /*  Reading proc/stat as a file  */
     FILE * pFile;
     char line[256] = {0};
-    char dummy[32] = {0};
     /* Do we want per-process readings? */
     //pFile = fopen ("/proc/self/net/dev","r");
     pFile = fopen ("/proc/net/dev","r");
@@ -558,6 +562,7 @@ std::vector<netstats_t*> * read_net_stats() {
             &net_stat->transmit_drops, &net_stat->transmit_fifo,
             &net_stat->transmit_collisions, &net_stat->transmit_carrier,
             &net_stat->transmit_compressed);
+        if (nf == 0) continue; // error!
         // strip the colon
         net_stat->name[strlen(net_stat->name)-1] = '\0';
         net_stats->push_back(net_stat);
@@ -585,6 +590,7 @@ iostats_t * read_io_stats() {
         char dummy[32] = {0};
         long long tmplong = 0LL;
         int nf = sscanf( line, "%s %lld\n", dummy, &tmplong);
+        if (nf == 0) continue; // error!
         // strip the colon
         dummy[strlen(dummy)-1] = '\0';
         std::string name(dummy);
@@ -698,7 +704,6 @@ void parse_proc_self_status() {
         std::istringstream iss(tmp);
         std::vector<std::string> results(std::istream_iterator<std::string>{iss},
                                          std::istream_iterator<std::string>());
-        std::string& value = results[1];
         if (results[0].compare("Cpus_allowed_list") == 0) {
             Tau_metadata_task(const_cast<char*>(results[0].c_str()),
                 const_cast<char*>(results[1].c_str()), 0);
@@ -794,7 +799,7 @@ void update_cpu_stats(void) {
     /* get the current stats */
     std::vector<cpustats_t*> * new_stats = read_cpu_stats();
     if (new_stats == NULL) return;
-    for (int i = 0 ; i < new_stats->size() ; i++) {
+    for (size_t i = 0 ; i < new_stats->size() ; i++) {
         /* we need to take the difference from the last read */
         cpustats_t diff;
         diff.user = (*new_stats)[i]->user - (*previous_cpu_stats)[i]->user;
@@ -807,9 +812,6 @@ void update_cpu_stats(void) {
         diff.steal = (*new_stats)[i]->steal - (*previous_cpu_stats)[i]->steal;
         diff.guest = (*new_stats)[i]->guest - (*previous_cpu_stats)[i]->guest;
         double total = (double)(diff.user + diff.nice + diff.system +
-                diff.idle + diff.iowait + diff.irq + diff.softirq +
-                diff.steal + diff.guest);
-        long long lltotal = (diff.user + diff.nice + diff.system +
                 diff.idle + diff.iowait + diff.irq + diff.softirq +
                 diff.steal + diff.guest);
         sample_value("/proc/stat", (*new_stats)[i]->name, " User %",     (double)(diff.user), total);
@@ -835,7 +837,7 @@ void update_net_stats(void) {
     /* get the current stats */
     std::vector<netstats_t*> * new_stats = read_net_stats();
     if (new_stats == NULL) return;
-    for (int i = 0 ; i < new_stats->size() ; i++) {
+    for (size_t i = 0 ; i < new_stats->size() ; i++) {
         /* we need to take the difference from the last read */
         netstats_t diff;
         diff.recv_bytes = (*new_stats)[i]->recv_bytes - (*previous_net_stats)[i]->recv_bytes;
@@ -884,7 +886,7 @@ void update_io_stats(void) {
     /* get the current stats */
     iostats_t * new_stats = read_io_stats();
     if (new_stats == NULL) return;
-    for (int i = 0 ; i < new_stats->size() ; i++) {
+    for (size_t i = 0 ; i < new_stats->size() ; i++) {
         /* we need to take the difference from the last read */
         long long tmplong = (*new_stats)[i].second - (*previous_io_stats)[i].second;
         sample_value("/proc/self/io", "io", (*new_stats)[i].first.c_str(), (double)(tmplong), 1LL);

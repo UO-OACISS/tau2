@@ -15,12 +15,13 @@ map<pair<int,int>,int> ThreadID;//NID/TID
 /* implementation of callback routines */
 /***************************************************************************
  * Description: DefThread is called when a new nodeid/threadid is encountered.
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int DefThread(void *userData, unsigned int nodeToken, unsigned int threadToken,
 const char *threadName )
 {
+    UNUSED(userData);
 	unsigned int processToken;
 	ThreadID[pair<int,int>(nodeToken,threadToken)]= processToken = ThreadID.size();
 	ThreadDef(nodeToken,threadToken,processToken,threadName);
@@ -29,13 +30,14 @@ const char *threadName )
 
 /***************************************************************************
  * Description: DefState is called to define a new symbol (event). It uses
- *		the token used to define the group identifier. 
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ *		the token used to define the group identifier.
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
-int DefState( void *userData, unsigned int stateToken, const char *stateName, 
+int DefState( void *userData, unsigned int stateToken, const char *stateName,
 		unsigned int stateGroupToken )
 {
+    UNUSED(userData);
 	char *name = strdup(stateName);
 	int len = strlen(name);
 	if ((name[0] == '"' ) && (name[len-1] == '"'))
@@ -49,12 +51,13 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
 
 /***************************************************************************
  * Description: DefStateGroup registers a profile group name with its id.
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
-int DefStateGroup( void *userData, unsigned int stateGroupToken, 
+int DefStateGroup( void *userData, unsigned int stateGroupToken,
 		const char *stateGroupName )
 {
+    UNUSED(userData);
 	StateGroupDef(stateGroupToken, stateGroupName );
 	return 0;
 }
@@ -62,12 +65,13 @@ int DefStateGroup( void *userData, unsigned int stateGroupToken,
 /***************************************************************************
  * Description: DefUserEvent is called to register the name and a token of the
  *  		user defined event (or a sample event in Vampir terminology).
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int DefUserEvent( void *userData, unsigned int userEventToken,
 		const char *userEventName , int monotonicallyIncreasing)
 {
+    UNUSED(userData);
 	char *name = strdup(userEventName);
 	int len = strlen(name);
 	if ((name[0] == '"' ) && (name[len-1] == '"'))
@@ -80,13 +84,14 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
 }
 
 /***************************************************************************
- * Description: ClockPeriod (in microseconds) is specified here. 
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * Description: ClockPeriod (in microseconds) is specified here.
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int ClockPeriod( void*  userData, double clkPeriod )
 {
-	#ifdef DEBUG 
+    UNUSED(userData);
+	#ifdef DEBUG
 	double x=1/clkPeriod;
 	cout << "Clock: " << x << endl;
 	#endif
@@ -96,40 +101,43 @@ int ClockPeriod( void*  userData, double clkPeriod )
 
 /***************************************************************************
  * Description: EndTrace is called when an EOF is encountered in a tracefile.
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int EndTrace( void *userData, unsigned int nodeToken, unsigned int threadToken)
 {
-	EndTraceDef(ThreadID[pair<int,int>(nodeToken,threadToken)]);//nodeToken, threadToken, 
+    UNUSED(userData);
+	EndTraceDef(ThreadID[pair<int,int>(nodeToken,threadToken)]);//nodeToken, threadToken,
 	return 0;
 }
 
 /***************************************************************************
  * Description: EventTrigger is called when a user defined event is triggered.
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
-int EventTrigger( void *userData, double time, 
+int EventTrigger( void *userData, double time,
 		unsigned int nid,
 		unsigned int tid,
 		unsigned int userEventToken,
 		long long userEventValue)
-{ 
+{
+    UNUSED(userData);
 	EventTriggerDef(time, ThreadID[pair<int,int>(nid,tid)], userEventToken,userEventValue);//nid,tid,
 	return 0;
 }
 
 /***************************************************************************
  * Description: EnterState is called at routine entry by trace input library
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
-int EnterState(void *userData, double time, 
+int EnterState(void *userData, double time,
 		unsigned int nid, unsigned int tid, unsigned int stateid)
 {
+    UNUSED(userData);
 	EnterStateDef(time,ThreadID[pair<int,int>(nid,tid)],stateid);//nid,tid,
-	
+
 	return 0;
 }
 
@@ -137,11 +145,13 @@ int EnterState(void *userData, double time,
 
 /***************************************************************************
  * Description: LeaveState is called at routine exit by trace input library
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, unsigned int stateid)
 {
+    UNUSED(userData);
+    UNUSED(stateid);
 	LeaveStateDef(time,ThreadID[pair<int,int>(nid,tid)]);// , stateid nid, tid,
 
 	return 0;
@@ -155,7 +165,7 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, 
 void ReadTraceFile()
 {
 	/* in the first pass, we determine the no. of cpus and other group related
-	* information. In the second pass, we look at the function entry/exits */ 
+	* information. In the second pass, we look at the function entry/exits */
 	int recs_read=0;
 	fh = Ttf_OpenFileForInput(Converter::trc, Converter::edf);
 	if (!fh)
@@ -163,11 +173,11 @@ void ReadTraceFile()
 		fprintf(stderr,"ERROR:Ttf_OpenFileForInput failed\n");
 		exit(1);
 	}
-	
-	
+
+
 	//char prefix [32];
 	//InitSnapshot();
-	
+
 	Ttf_CallbacksT firstpass;
 	/* In the first pass, we just look for node/thread ids and def records */
 	firstpass.UserData = 0;
@@ -187,27 +197,27 @@ void ReadTraceFile()
 	do
 	{
 		recs_read = Ttf_ReadNumEvents(fh,firstpass, 1024);
-		#ifdef DEBUG 
+		#ifdef DEBUG
 		if (recs_read != 0)
 		cout <<"Read "<<recs_read<<" records"<<endl;
-		#endif 
+		#endif
 	}
 	while ((recs_read >=0) && (!Converter::EndOfTrace));
-	
+
 	/* now reset the position of the trace to the first record */
 	Ttf_CloseFile(fh);
 	/* Re-open it for input */
 	fh = Ttf_OpenFileForInput(Converter::trc, Converter::edf);
-	
+
 	ProcessDefs();
-	
+
 	if (!fh)
 	{
 		printf("ERROR:Ttf_OpenFileForInput fails the second time");
 		//snapshot.close();
 		exit(1);
 	}
-	
+
 
 	Ttf_CallbacksT cb;
 	/* Fill the callback struct */
@@ -227,7 +237,7 @@ void ReadTraceFile()
 	do
 	{
 		recs_read = Ttf_ReadNumEvents(fh,cb, 1024);
-		#ifdef DEBUG  
+		#ifdef DEBUG
 		if (recs_read != 0)
 		cout <<"Read "<<recs_read<<" records"<<endl;
 		#endif /* DEBUG */
@@ -237,5 +247,5 @@ void ReadTraceFile()
 	/* dummy records */
 	Ttf_CloseFile(fh);
 	//thisShot=lastTime;
-	
+
 }

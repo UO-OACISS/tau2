@@ -81,7 +81,7 @@ int event_GetEv(Ttf_fileT *tFile, void *event, int index) {
   case FORMAT_NATIVE:
     nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].ev;
-    
+
   case FORMAT_32:
   case FORMAT_32_SWAP:
     event32 = (TAU_EV32*) event;
@@ -104,7 +104,7 @@ x_uint64 event_GetTi(Ttf_fileT *tFile, void *event, int index) {
   case FORMAT_NATIVE:
     nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].ti;
-    
+
   case FORMAT_32:
   case FORMAT_32_SWAP:
     event32 = (TAU_EV32*) event;
@@ -127,7 +127,7 @@ int event_GetNid(Ttf_fileT *tFile, void *event, int index) {
   case FORMAT_NATIVE:
     nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].nid;
-    
+
   case FORMAT_32:
   case FORMAT_32_SWAP:
     event32 = (TAU_EV32*) event;
@@ -150,7 +150,7 @@ int event_GetTid(Ttf_fileT *tFile, void *event, int index) {
   case FORMAT_NATIVE:
     nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].tid;
-    
+
   case FORMAT_32:
   case FORMAT_32_SWAP:
     event32 = (TAU_EV32*) event;
@@ -174,7 +174,7 @@ x_int64 event_GetPar(Ttf_fileT *tFile, void *event, int index) {
   case FORMAT_NATIVE:
     nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].par;
-    
+
   case FORMAT_32:
   case FORMAT_32_SWAP:
     event32 = (TAU_EV32*) event;
@@ -188,7 +188,7 @@ x_int64 event_GetPar(Ttf_fileT *tFile, void *event, int index) {
   return 0;
 }
 
- 
+
 
 /* determine the format of a trace file */
 void determineFormat(Ttf_fileT *tFile) {
@@ -298,7 +298,7 @@ Ttf_FileHandleT Ttf_OpenFileForInput( const char *filename, const char *EDF)
     perror("ERROR: memory allocation failed for tFile");
     return NULL;
   }
-  
+
   tFile->subtractFirstTimestamp = true;
   tFile->nonBlocking = false;
   tFile->forWriting = false;
@@ -310,7 +310,7 @@ Ttf_FileHandleT Ttf_OpenFileForInput( const char *filename, const char *EDF)
     return NULL;
   }
 
-  /* Open the EDF (event description file) to read the <name, id> event 
+  /* Open the EDF (event description file) to read the <name, id> event
    * tables*/
   if ((fp = fopen (EDF, "rb")) == NULL)
   {
@@ -318,10 +318,10 @@ Ttf_FileHandleT Ttf_OpenFileForInput( const char *filename, const char *EDF)
     perror("ERROR: opening edf file");
     return NULL;
   }
-  /* check that the file is OK. close it for now. It will be re-read when 
+  /* check that the file is OK. close it for now. It will be re-read when
    * the event map is filled */
-  fclose(fp); 
- 
+  fclose(fp);
+
   /* make a copy of the EDF file name */
   tFile->EdfFile = strdup(EDF);
 
@@ -365,7 +365,7 @@ Ttf_FileHandleT Ttf_OpenFileForInput( const char *filename, const char *EDF)
 /* close a trace file */
 Ttf_FileHandleT Ttf_CloseFile( Ttf_FileHandleT fileHandle )
 {
-  Ttf_fileT *tFile; 
+  Ttf_fileT *tFile;
 
   tFile = (Ttf_fileT *) fileHandle;
 
@@ -391,12 +391,12 @@ Ttf_FileHandleT Ttf_CloseFile( Ttf_FileHandleT fileHandle )
   delete tFile->GroupIdMap;
 
   /* return old file handle */
-  return fileHandle; 
+  return fileHandle;
 }
 
 
-/* Seek to an absolute event position. 
- *    A negative position indicates to start from the tail of the event stream. 
+/* Seek to an absolute event position.
+ *    A negative position indicates to start from the tail of the event stream.
  *       Returns the position */
 int  Ttf_AbsSeek( Ttf_FileHandleT handle, int eventPosition )
 {
@@ -408,13 +408,13 @@ int  Ttf_AbsSeek( Ttf_FileHandleT handle, int eventPosition )
     if (position)
     { /* success */
       return position/tFile->eventSize;
-    } 
+    }
     else
     { /* failure */
       return 0;
     }
-  } 
-  else 
+  }
+  else
   { /* start from the tail of the event stream */
     position = lseek(tFile->Fid, eventPosition*tFile->eventSize, SEEK_END);
     if (position)
@@ -426,11 +426,11 @@ int  Ttf_AbsSeek( Ttf_FileHandleT handle, int eventPosition )
     {
       /* failure */
       return 0;
-    }  
+    }
   }
 }
 
-/* seek to a event position relative to the current position 
+/* seek to a event position relative to the current position
  * (just for completeness!) */
 int Ttf_RelSeek( Ttf_FileHandleT handle, int plusMinusNumEvents )
 {
@@ -451,10 +451,10 @@ int Ttf_RelSeek( Ttf_FileHandleT handle, int plusMinusNumEvents )
   }
 }
 
-/* read n events and call appropriate handlers 
+/* read n events and call appropriate handlers
  * Returns the number of records read (can be 0).
  * Returns a -1 value when an error takes place. Check errno */
-int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks, 
+int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 		int numberOfEvents )
 {
   Ttf_fileT *tFile = (Ttf_fileT *) fileHandle;
@@ -477,10 +477,10 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
     if (*callbacks.DefClkPeriod)
       (*callbacks.DefClkPeriod)(callbacks.UserData, 1E-6);
     /* set flag to initialized */
-    tFile->ClkInitialized = TRUE; 
+    tFile->ClkInitialized = TRUE;
 
-    /* Read the first record and check its timestamp 
-     * For this we need to lseek to the beginning of the file, read one 
+    /* Read the first record and check its timestamp
+     * For this we need to lseek to the beginning of the file, read one
      * record and then lseek it back to where it was */
     int originalPosition, currentPosition;
     originalPosition = lseek(tFile->Fid, 0, SEEK_CUR);
@@ -507,7 +507,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
     }
     /* it now has exactly one record */
     /* FOR MONITORING, we disable this first timestamp check. Re-introduce it
-     * later! 
+     * later!
      * tFile->FirstTimestamp = traceBuffer[0].ti;
      * */
 
@@ -535,7 +535,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
     if ((bytesRead % tFile->eventSize) != 0)
     {
 #ifdef DEBUG
-      printf("ERROR reading trace data, bytes read = %d, rec size=%d, recs to read = %d\n", 
+      printf("ERROR reading trace data, bytes read = %d, rec size=%d, recs to read = %d\n",
 		      bytesRead, tFile->eventSize, recordsToRead);
       printf("READ Error: inconsistent trace file. \n");
       printf("Bytes read are not integer multiples of the trace record size.\n");
@@ -547,7 +547,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
     }
   }
   /* the number of records read */
-  recordsRead = bytesRead/tFile->eventSize; 
+  recordsRead = bytesRead/tFile->eventSize;
 
   /* See if the events are all present */
   for (i = 0; i < recordsRead; i++)
@@ -561,12 +561,12 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 	return -1;
       }
       if (!isEventIDRegistered(tFile, event_GetEv(tFile, traceBuffer, i)))
-      { /* even after reading the edf file, if we don't find the event id, 
+      { /* even after reading the edf file, if we don't find the event id,
 	   then there's an error */
 	return -1;
       }
       /* we did find the event id, process the trace file */
-		  
+
     }
     /* event is OK. Examine each event and invoke callbacks for Entry/Exit/Node*/
     /* first check nodeid, threadid */
@@ -582,7 +582,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
     {
       /* this pair of node and thread has not been encountered before */
       char nodename[32];
-      /* 
+      /*
       sprintf(nodename, "Node %d Thread %d", nid, tid);
       */
       sprintf(nodename, "process %d:%d", nid, tid);
@@ -624,28 +624,28 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 	  if (*callbacks.LeaveState)
             (*callbacks.LeaveState)(callbacks.UserData,ts, nid, tid,event_GetEv(tFile, traceBuffer, i));
 	}
-      } 
-	  
+      }
+
     } /* entry exit events *//* add message passing events here */
-    else 
+    else
     {
       if ((eventDescr.Param != NULL) && (strcmp(eventDescr.Param,"TriggerValue\n")==0))
       { /* User defined event */
-	
+
 	if (*callbacks.EventTrigger) {
-	  x_uint64 parameter = event_GetPar(tFile, traceBuffer, i);
-	  
+	  x_uint64 u_parameter = event_GetPar(tFile, traceBuffer, i);
+
 	  // to use as a double
 //	  double dparameter = *(reinterpret_cast<double*>(&parameter));
-// 	  (*callbacks.EventTrigger)(callbacks.UserData, ts, nid, tid, 
-// 				     event_GetEv(tFile, traceBuffer, i), 
+// 	  (*callbacks.EventTrigger)(callbacks.UserData, ts, nid, tid,
+// 				     event_GetEv(tFile, traceBuffer, i),
 // 				     dparameter);
-	  (*callbacks.EventTrigger)(callbacks.UserData, ts, nid, tid, 
-				     event_GetEv(tFile, traceBuffer, i), 
-				     parameter);
+	  (*callbacks.EventTrigger)(callbacks.UserData, ts, nid, tid,
+				     event_GetEv(tFile, traceBuffer, i),
+				     u_parameter);
 	}
       }
-      if (eventDescr.Tag == TAU_MESSAGE_SEND_EVENT) 
+      if (eventDescr.Tag == TAU_MESSAGE_SEND_EVENT)
       {
         /* send message */
         /* See RtsLayer::TraceSendMsg for documentation on the bit patterns of "parameter" */
@@ -666,7 +666,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 
 	/* If the application is multithreaded, insert call for matching sends/recvs here */
 	otherTid = 0;
-	if (*callbacks.SendMessage) 
+	if (*callbacks.SendMessage)
 	  (*callbacks.SendMessage)(callbacks.UserData, ts, event_GetNid(tFile,traceBuffer, i), tid, otherNid, otherTid, msgLen, msgTag, comm);
 	/* the args are user, time, source nid (my), source tid (my), dest nid (other), dest
 	 * tid (other), size, tag */
@@ -676,7 +676,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
       { /* Check if it is a message receive operation */
 
 	if (eventDescr.Tag == TAU_MESSAGE_RECV_EVENT)
-	{ 
+	{
 
         /* See RtsLayer::TraceSendMsg for documentation on the bit patterns of "parameter" */
 
@@ -691,7 +691,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 
 	  /* If the application is multithreaded, insert call for matching sends/recvs here */
 	  otherTid = 0;
-	  if (*callbacks.RecvMessage) 
+	  if (*callbacks.RecvMessage)
 	    (*callbacks.RecvMessage)(callbacks.UserData, ts, otherNid, otherTid, event_GetNid(tFile,traceBuffer, i), tid, msgLen, msgTag, comm);
 	  /* the args are user, time, source nid (my), source tid (my), dest nid (other), dest
 	   * tid (other), size, tag */
@@ -702,31 +702,31 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
     if ((parameter == 0) && (eventDescr.EventName != NULL) &&
 		    (strcmp(eventDescr.EventName, "\"FLUSH_CLOSE\"") == 0)) {
       /* reset the flag in NidTidMap to 0 (from 1) */
-      (*tFile->NidTidMap)[pair<int,int>(nid,tid)] = 0; 
-      /* setting this flag to 0 tells us that a flush close has taken place 
+      (*tFile->NidTidMap)[pair<int,int>(nid,tid)] = 0;
+      /* setting this flag to 0 tells us that a flush close has taken place
        * on this node, thread */
-    } else { 
+    } else {
       /* see if it is a WALL_CLOCK record */
-      if ((parameter != 1) && (parameter != -1) && (eventDescr.EventName != NULL) 
-        && (strcmp(eventDescr.EventName, "\"WALL_CLOCK\"") == 0)) { 
+      if ((parameter != 1) && (parameter != -1) && (eventDescr.EventName != NULL)
+        && (strcmp(eventDescr.EventName, "\"WALL_CLOCK\"") == 0)) {
 	/* ok, it is a wallclock event alright. But is it the *last* wallclock event?
-	 * We can confirm that it is if the NidTidMap flag has been set to 0 by a 
+	 * We can confirm that it is if the NidTidMap flag has been set to 0 by a
 	 * previous FLUSH_CLOSE call */
-	
+
 	if ((*tFile->NidTidMap)[pair<int,int>(nid,tid)] == 0 )
 	  {
 #ifdef DEBUG
 	    printf("LAST WALL_CLOCK! End of trace file detected \n");
 #endif /* DEBUG */
-	   /* see if an end of the trace callback is registered and 
+	   /* see if an end of the trace callback is registered and
 	    * if it is, invoke it.*/
-	   if (*callbacks.EndTrace) 
+	   if (*callbacks.EndTrace)
 	     (*callbacks.EndTrace)(callbacks.UserData, nid, tid);
 	 }
-      } 
+      }
     } /* is it a WALL_CLOCK record? */
 
-        
+
   } /* cycle through all records */
 
 
@@ -752,7 +752,7 @@ int isEventIDRegistered(Ttf_fileT *tFile, long int event)
   }
 }
 
-/* Event ID is not found in the event map. Re-read the event 
+/* Event ID is not found in the event map. Re-read the event
  * description file */
 int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 {
@@ -760,11 +760,11 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
   printf("Inside refreshTables! \n");
 #endif /* DEBUG */
 
-  int i,j,k; 
-  char linebuf[LINEMAX], eventname[LINEMAX], traceflag[32] = {0}; 
+  int i,j,k;
+  char linebuf[LINEMAX], eventname[LINEMAX], traceflag[32] = {0};
   char group[512], param[512];
-  int numevents = 0; 
-  int dynamictrace, tag, groupid; 
+  int numevents = 0;
+  int dynamictrace, tag, groupid;
   long localEventId;
   EventIdMapT::iterator it;
 
@@ -772,7 +772,7 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
   FILE *edf;
 
   dynamictrace = FALSE;
- 
+
   /* first, open the edf file */
   if ((edf = fopen (tFile->EdfFile, "rb")) == NULL )
   {
@@ -786,7 +786,7 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
   if (str != NULL) {
     sscanf (linebuf, "%d %s", &numevents, traceflag);
     if (strcmp(traceflag, "dynamic_trace_events") == 0)
-    { 
+    {
       dynamictrace = TRUE;
     }
   }
@@ -808,7 +808,7 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
     eventname[0]  = '\0';
     param[0] = '\0';
     if (dynamictrace) /* get eventname in quotes */
-    { 
+    {
       memset(group,0,sizeof(group));
       sscanf (linebuf, "%ld %s %d", &localEventId, group, &tag);
 #ifdef DEBUG
@@ -822,7 +822,7 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
       for (k=j; linebuf[k] != '"'; k++)
       {
 		eventname[k-j+1] = linebuf[k];
-      } 
+      }
       eventname[k-j+1] = '"';
       eventname[k-j+2] = '\0'; /* terminate eventname */
 
@@ -834,7 +834,7 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
  	param[strlen(param)-1] = 0;
       }
 
-#ifdef DEBUG 
+#ifdef DEBUG
       printf(" Got eventname=%s param=%s\n", eventname, param);
 #endif /* DEBUG */
       /* see if the event id exists in the map */
@@ -863,7 +863,7 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 	  if (strcmp(eventDescr->Param, "EntryExit\n") == 0)
 	  { /* it is not a user defined event */
 	    if (*cb.DefStateGroup)
-	      (*cb.DefStateGroup)(cb.UserData, groupid, eventDescr->Group); 
+	      (*cb.DefStateGroup)(cb.UserData, groupid, eventDescr->Group);
 	  }
 	}
 	else
@@ -879,17 +879,17 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 	else if (strcmp(eventDescr->Param, "EntryExit\n") == 0)
         { /* it is an entry/exit event */
 	  if (*cb.DefState)
-	    (*cb.DefState)(cb.UserData, localEventId, eventDescr->EventName, 
+	    (*cb.DefState)(cb.UserData, localEventId, eventDescr->EventName,
 		      groupid);
 	}
-	
+
       }
       /* else, do nothing, examine the next record */
 
-    } /* not dynamic trace- what is to be done? */ 
-    else 
-    {  
-      sscanf (linebuf, "%ld %s %d %s %s", &localEventId, 
+    } /* not dynamic trace- what is to be done? */
+    else
+    {
+      sscanf (linebuf, "%ld %s %d %s %s", &localEventId,
         group, &tag, eventname, param);
     }
 
@@ -899,7 +899,7 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
     }
   } /* for loop */
 
-  
+
 
   return TRUE;
 }
@@ -911,5 +911,5 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
  * $Revision: 1.20 $   $Date: 2009/02/19 22:30:03 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.20 2009/02/19 22:30:03 amorris Exp $ 
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.20 2009/02/19 22:30:03 amorris Exp $
  ***************************************************************************/
