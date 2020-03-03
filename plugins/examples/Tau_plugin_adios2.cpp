@@ -238,7 +238,7 @@ void Tau_ADIOS2_stop_worker(void) {
     _threaded = false;
 }
 
-void Tau_dump_ADIOS2_metadata(adios2::IO &bpIO) {
+void Tau_dump_ADIOS2_metadata() {
     int tid = RtsLayer::myThread();
     int nodeid = TAU_PROFILE_GET_NODE();
     for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).begin();
@@ -321,7 +321,7 @@ void Tau_plugin_adios2_init_adios(void) {
         bpIO.AddTransport("File", {{"Library", "POSIX"}});
 
         /* write the metadata as attributes */
-        Tau_dump_ADIOS2_metadata(bpIO);
+        Tau_dump_ADIOS2_metadata();
 
         /* Create some "always used" variables */
 
@@ -435,8 +435,6 @@ void Tau_plugin_adios2_define_variables(int numThreads, int numCounters,
     std::map<std::string, std::vector<double> >::iterator counter_map_it;
 
     // do the same with counters.
-    int numEvents;
-    double max, min, mean, sumsqr;
     std::stringstream tmp_str;
     for (it2 = tau::TheEventDB().begin(); it2 != tau::TheEventDB().end(); it2++) {
         tau::TauUserEvent *ue = (*it2);
