@@ -735,6 +735,7 @@ int Tau_plugin_finalize(Tau_plugin_event_function_finalize_data_t* data) {
 int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t* data) {
     if (!enabled) return 0;
     TAU_VERBOSE("TAU PLUGIN ADIOS2 Pre-Finalize\n"); fflush(stdout);
+#ifdef TAU_MPI
     Tau_ADIOS2_stop_worker();
     Tau_plugin_event_dump_data_t dummy;
     dummy.tid = 0;
@@ -743,6 +744,7 @@ int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution
         bpWriter.Close();
         opened = false;
     }
+#endif
     return 0;
 }
 
@@ -789,6 +791,7 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
     if (!enabled || data->tid != 0) return 0;
     enabled = false;
     TAU_VERBOSE("TAU PLUGIN ADIOS2 Finalize\n"); fflush(stdout);
+#ifndef TAU_MPI
     Tau_ADIOS2_stop_worker();
     if (opened) {
         Tau_plugin_event_dump_data_t dummy;
@@ -801,6 +804,7 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
         pthread_cond_destroy(&_my_cond);
         pthread_mutex_destroy(&_my_mutex);
     }
+#endif
     return 0;
 }
 
