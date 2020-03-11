@@ -896,7 +896,7 @@ void update_io_stats(void) {
     previous_io_stats = new_stats;
 }
 
-void read_papi_components(void) {
+void read_components(void) {
     tau::papi_plugin::ScopedTimer(__func__);
 #ifdef TAU_PAPI
     for (size_t index = 0; index < components.size() ; index++) {
@@ -1018,14 +1018,14 @@ void stop_worker(void) {
     }
 }
 
-void * Tau_papi_component_plugin_threaded_function(void* data) {
+void * Tau_monitoring_plugin_threaded_function(void* data) {
     /* Set the wakeup time (ts) to 2 seconds in the future. */
     struct timespec ts;
     struct timeval  tp;
 
     while (!done) {
         // take a reading...
-        read_papi_components();
+        read_components();
         // wait x microseconds for the next batch.
         gettimeofday(&tp, NULL);
         int seconds = 1;
@@ -1103,24 +1103,24 @@ static void do_cleanup() {
     clean = true;
 }
 
-int Tau_plugin_event_pre_end_of_execution_papi_component(Tau_plugin_event_pre_end_of_execution_data_t *data) {
+int Tau_plugin_event_pre_end_of_execution_monitoring(Tau_plugin_event_pre_end_of_execution_data_t *data) {
     if (my_rank == 0) TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     do_cleanup();
     return 0;
 }
 
-int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_execution_data_t *data) {
+int Tau_plugin_event_end_of_execution_monitoring(Tau_plugin_event_end_of_execution_data_t *data) {
     if (my_rank == 0) TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     do_cleanup();
     return 0;
 }
 
-int Tau_plugin_metadata_registration_complete_papi_component(Tau_plugin_event_metadata_registration_data_t* data) {
+int Tau_plugin_metadata_registration_complete_monitoring(Tau_plugin_event_metadata_registration_data_t* data) {
     //TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     return 0;
 }
 
-int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t* data) {
+int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* data) {
     if (my_rank == 0) TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
 
     rank_getting_system_data = choose_volunteer_rank();
@@ -1144,7 +1144,7 @@ int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t*
         init_lock(&_my_mutex);
         if (my_rank == 0) TAU_VERBOSE("Spawning thread.\n");
         int ret = pthread_create(&worker_thread, NULL,
-        &Tau_papi_component_plugin_threaded_function, NULL);
+        &Tau_monitoring_plugin_threaded_function, NULL);
         if (ret != 0) {
             errno = ret;
             perror("Error: pthread_create (1) fails\n");
@@ -1156,7 +1156,7 @@ int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t*
 
 void read_config_file(void) {
     try {
-            std::ifstream cfg("tau_components.json");
+            std::ifstream cfg("tau_monitoring.json");
             cfg >> configuration;
             cfg.close();
         } catch (...) {
@@ -1165,10 +1165,10 @@ void read_config_file(void) {
         }
 }
 
-int Tau_plugin_dump_papi_component(Tau_plugin_event_dump_data_t* data) {
-    printf("PAPI Component PLUGIN %s\n", __func__);
+int Tau_plugin_dump_monitoring(Tau_plugin_event_dump_data_t* data) {
+    //printf("PAPI Component PLUGIN %s\n", __func__);
     // take a reading...
-    read_papi_components();
+    read_components();
     return 0;
 }
 
@@ -1185,11 +1185,11 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     read_config_file();
 
     /* Required event support */
-    cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_papi_component;
-    cb->PostInit = Tau_plugin_event_post_init_papi_component;
-    cb->PreEndOfExecution = Tau_plugin_event_pre_end_of_execution_papi_component;
-    cb->EndOfExecution = Tau_plugin_event_end_of_execution_papi_component;
-    cb->Dump = Tau_plugin_dump_papi_component;
+    cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_monitoring;
+    cb->PostInit = Tau_plugin_event_post_init_monitoring;
+    cb->PreEndOfExecution = Tau_plugin_event_pre_end_of_execution_monitoring;
+    cb->EndOfExecution = Tau_plugin_event_end_of_execution_monitoring;
+    cb->Dump = Tau_plugin_dump_monitoring;
 
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
     free (cb);
