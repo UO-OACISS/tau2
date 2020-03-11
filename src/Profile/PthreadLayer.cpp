@@ -241,14 +241,12 @@ void * tau_pthread_function(void *arg)
   void * ret = pack->start_routine(pack->arg);
   TAU_PROFILER_STOP(handle);
   /* iterate over the stack and stop the timer context */
-  /*
   if (pack->timer_context_stack.size() > 0) {
     for (std::vector<void*>::iterator iter = pack->timer_context_stack.end() ;
         iter != pack->timer_context_stack.begin() ; iter--) {
   	    TAU_PROFILER_STOP(*iter);
     }
   }
-  */
 #ifndef TAU_TBB_SUPPORT
   // Thread 0 in TBB will not wait for the other threads to finish
   // (it does not join). DO NOT stop the timer for this thread, but
@@ -337,6 +335,17 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
 
     TAU_PROFILE_TIMER(timer, "pthread_create", "", TAU_DEFAULT);
     TAU_PROFILE_START(timer);
+
+	/* set up some context for the spawned thread */
+    if (TauEnv_get_threadContext()) {
+        int depth = Tau_get_current_stack_depth(Tau_get_thread());
+        for (int i = 1 ; i <= depth ; i++) {
+            tau::Profiler *profiler = Tau_get_timer_at_stack_depth(i);
+            printf("Pushing timer: %s\n", profiler->ThisFunction->GetName());
+            pack->timer_context_stack.push_back((void*)profiler->ThisFunction);
+        }
+    }
+
     retval = pthread_create_call(threadp, attr, tau_pthread_function, (void*)pack); // 0
     TAU_PROFILE_STOP(timer);
     *wrapped = false;
