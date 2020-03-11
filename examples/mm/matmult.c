@@ -1,13 +1,13 @@
 /******************************************************************************
 *   OpenMp Example - Matrix Multiply - C Version
-*   Demonstrates a matrix multiply using OpenMP. 
+*   Demonstrates a matrix multiply using OpenMP.
 *
 *   Modified from here:
 *   https://computing.llnl.gov/tutorials/openMP/samples/C/omp_mm.c
 *
-*   For  PAPI_FP_INS, the exclusive count for the event: 
+*   For  PAPI_FP_INS, the exclusive count for the event:
 *   for (null) [OpenMP location: file:matmult.c ]
-*   should be  2E+06 / Number of Threads 
+*   should be  2E+06 / Number of Threads
 ******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,7 +30,7 @@ pthread_mutex_t mutexsum;
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 128
+#define MATRIX_SIZE 512
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
@@ -66,25 +66,25 @@ void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, 
   int i,j,k;
   double tmp = 0.0;
 //num_threads(2)
-#pragma omp parallel private(i) shared(a,b,c) 
+#pragma omp parallel private(i) shared(a,b,c)
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
 #pragma omp for nowait schedule(dynamic,1)
     for (i=0; i<rows_a; i++) {
 //num_threads(2)
-#pragma omp parallel private(i,j,k) shared(a,b,c) 
+#pragma omp parallel private(i,j,k) shared(a,b,c)
       {
 #pragma omp for nowait schedule(dynamic,1)
         for (k=0; k<cols_a; k++) {
           for(j=0; j<cols_b; j++) {
 #ifdef APP_USE_INLINE_MULTIPLY
               c[i][j] += multiply(a[i][k], b[k][j]);
-#else 
+#else
               tmp = a[i][k];
               tmp = tmp * b[k][j];
               c[i][j] += tmp;
-#endif 
+#endif
             }
           }
       }
@@ -94,7 +94,7 @@ void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, 
 #endif /* APP_USE_OMP_NESTED */
 
 /////////////////////////////////////////////////////////////////////
-// compute multiplies a and b and returns the result in c using ijk. 
+// compute multiplies a and b and returns the result in c using ijk.
 // cols_a and rows_b are the same value
 /////////////////////////////////////////////////////////////////////
 void compute(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
@@ -115,7 +115,7 @@ void compute(double **a, double **b, double **c, int rows_a, int cols_a, int col
 }
 
 ///////////////////////////////////////////////////////////////////////
-// compute_interchange multiplies a and b and returns the result in c 
+// compute_interchange multiplies a and b and returns the result in c
 // using ikj loop.  cols_a and rows_b are the same value
 ///////////////////////////////////////////////////////////////////////
 void compute_interchange(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
@@ -141,7 +141,7 @@ double do_work(void) {
   **c;           /* result matrix C */
   a = allocateMatrix(NRA, NCA);
   b = allocateMatrix(NCA, NCB);
-  c = allocateMatrix(NRA, NCB);  
+  c = allocateMatrix(NRA, NCB);
 
 /*** Spawn a parallel region explicitly scoping all variables ***/
 
@@ -161,9 +161,9 @@ double do_work(void) {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   if (rank == 0) {
-      if (provided == MPI_THREAD_MULTIPLE) { 
+      if (provided == MPI_THREAD_MULTIPLE) {
         printf("provided is MPI_THREAD_MULTIPLE\n");
-      } else if (provided == MPI_THREAD_FUNNELED) { 
+      } else if (provided == MPI_THREAD_FUNNELED) {
         printf("provided is MPI_THREAD_FUNNELED\n");
       }
   }
@@ -221,7 +221,7 @@ void * threaded_func(void *data)
 }
 #endif // PTHREADS
 
-int main (int argc, char *argv[]) 
+int main (int argc, char *argv[])
 {
 
 #ifdef PTHREADS
@@ -254,7 +254,7 @@ int main (int argc, char *argv[])
     printf("MPI_Init_thread: provided = %d, MPI_THREAD_FUNNELED=%d\n", provided, MPI_THREAD_FUNNELED);
   }
 #else
-  rc = MPI_Init(&argc, &argv); 
+  rc = MPI_Init(&argc, &argv);
 #endif /* THREADS */
   if (rc != MPI_SUCCESS) {
     char *errorstring;
@@ -270,19 +270,19 @@ int main (int argc, char *argv[])
   if (ret) {
     printf("Error: pthread_create (1) fails ret = %d\n", ret);
     exit(1);
-  }   
+  }
 
   ret = pthread_create(&tid2, NULL, threaded_func, NULL);
   if (ret) {
     printf("Error: pthread_create (2) fails ret = %d\n", ret);
     exit(1);
-  }   
+  }
 
   ret = pthread_create(&tid3, NULL, threaded_func, NULL);
   if (ret) {
     printf("Error: pthread_create (3) fails ret = %d\n", ret);
     exit(1);
-  }   
+  }
 
 #endif /* PTHREADS */
 
@@ -297,19 +297,19 @@ int main (int argc, char *argv[])
   if (ret) {
     printf("Error: pthread_join (1) fails ret = %d\n", ret);
     exit(1);
-  }   
+  }
 
   ret = pthread_join(tid2, NULL);
   if (ret) {
     printf("Error: pthread_join (2) fails ret = %d\n", ret);
     exit(1);
-  }   
+  }
 
   ret = pthread_join(tid3, NULL);
   if (ret) {
     printf("Error: pthread_join (3) fails ret = %d\n", ret);
     exit(1);
-  }   
+  }
 
   pthread_mutex_destroy(&mutexsum);
 #endif /* PTHREADS */
