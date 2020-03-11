@@ -241,7 +241,7 @@ void * tau_pthread_function(void *arg)
   void * ret = pack->start_routine(pack->arg);
   TAU_PROFILER_STOP(handle);
   /* iterate over the stack and stop the timer context */
-  if (pack->timer_context_stack.size() > 0) {
+  if (TauEnv_get_threadContext() && pack->timer_context_stack.size() > 0) {
     for (std::vector<FunctionInfo*>::iterator iter = pack->timer_context_stack.end() ;
         iter != pack->timer_context_stack.begin() ; iter--) {
   	    Tau_stop_timer(*iter, Tau_get_thread());
