@@ -43,6 +43,7 @@ json configuration;
 
 const char * default_configuration = R"(
 {
+  "periodic": false,
   "periodicity seconds": 10,
   "/proc/stat": {
     "disable": false,
@@ -55,7 +56,7 @@ const char * default_configuration = R"(
     "include": [".*MemAvailable.*", ".*MemFree.*", ".*MemTotal.*"]
   },
   "/proc/net/dev": {
-    "disable": false,
+    "disable": true,
     "comment": "This will include only the first ethernet device.",
     "include": [".*eno1.*"]
   },
@@ -70,7 +71,7 @@ const char * default_configuration = R"(
     "include": [".*eno1.*"]
   },
   "nvml": {
-    "disable": false,
+    "disable": true,
     "comment": "This will include only the utilization metrics.",
     "include": [".*utilization.*"]
   }
@@ -990,6 +991,8 @@ void free_papi_components(void) {
 
 void stop_worker(void) {
     if (done) return;
+    // if no thread, return
+    if (configuration.count("periodic") == 0 || !configuration["periodic"]) return;
     pthread_mutex_lock(&_my_mutex);
     done = true;
     pthread_mutex_unlock(&_my_mutex);
@@ -1135,15 +1138,18 @@ int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t*
 #if !defined(__APPLE__)
     previous_io_stats = read_io_stats();
 #endif
-    /* spawn the worker thread to do the reading */
-    init_lock(&_my_mutex);
-    if (my_rank == 0) TAU_VERBOSE("Spawning thread.\n");
-    int ret = pthread_create(&worker_thread, NULL,
+    if (configuration.count("periodic") &&
+        configuration["periodic"]) {
+        /* spawn the worker thread to do the reading */
+        init_lock(&_my_mutex);
+        if (my_rank == 0) TAU_VERBOSE("Spawning thread.\n");
+        int ret = pthread_create(&worker_thread, NULL,
         &Tau_papi_component_plugin_threaded_function, NULL);
-    if (ret != 0) {
-        errno = ret;
-        perror("Error: pthread_create (1) fails\n");
-        exit(1);
+        if (ret != 0) {
+            errno = ret;
+            perror("Error: pthread_create (1) fails\n");
+            exit(1);
+        }
     }
     return 0;
 }
@@ -1158,6 +1164,14 @@ void read_config_file(void) {
             configuration = json::parse(default_configuration);
         }
 }
+
+int Tau_plugin_dump_papi_component(Tau_plugin_event_dump_data_t* data) {
+    printf("PAPI Component PLUGIN %s\n", __func__);
+    // take a reading...
+    read_papi_components();
+    return 0;
+}
+
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
  * Every plugin MUST implement this function to register callbacks for various events
@@ -1175,6 +1189,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     cb->PostInit = Tau_plugin_event_post_init_papi_component;
     cb->PreEndOfExecution = Tau_plugin_event_pre_end_of_execution_papi_component;
     cb->EndOfExecution = Tau_plugin_event_end_of_execution_papi_component;
+    cb->Dump = Tau_plugin_dump_papi_component;
 
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
     free (cb);
