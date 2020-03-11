@@ -55,6 +55,7 @@ std::map<std::string, std::vector<double> > timers;
 std::map<std::string, std::vector<double> > counters;
 adios2::Variable<int> num_threads_var;
 adios2::Variable<int> num_metrics_var;
+adios2::Variable<int> num_ranks_var;
 
 tau::plugins::Sockets * my_sockets;
 
@@ -310,15 +311,19 @@ void Tau_plugin_adios2_init_adios(void) {
 #endif
         /*** IO class object: settings and factory of Settings: Variables,
         * Parameters, Transports, and Execution: Engines */
-        bpIO = ad.DeclareIO("TAU_profiles");
-        // if not defined by user, we can change the default settings
-        // BPFile is the default engine
-        bpIO.SetEngine(thePluginOptions().env_engine);
-        bpIO.SetParameters({{"num_threads", "1"}});
+        bpIO = ad.DeclareIO("TAUProfileOutput");
 
-        // ISO-POSIX file output is the default transport (called "File")
-        // Passing parameters to the transport
-        bpIO.AddTransport("File", {{"Library", "POSIX"}});
+        /* If there was no adios2.xml file, set some reasonable defaults */
+        if (config == nullptr) {
+            // if not defined by user, we can change the default settings
+            // BPFile is the default engine
+            bpIO.SetEngine(thePluginOptions().env_engine);
+            bpIO.SetParameters({{"num_threads", "1"}});
+
+            // ISO-POSIX file output is the default transport (called "File")
+            // Passing parameters to the transport
+            bpIO.AddTransport("File", {{"Library", "POSIX"}});
+        }
 
         /* write the metadata as attributes */
         Tau_dump_ADIOS2_metadata();
@@ -335,6 +340,8 @@ void Tau_plugin_adios2_init_adios(void) {
             "num_threads", shape, start, count, adios2::ConstantDims);
         num_metrics_var = bpIO.DefineVariable<int>(
             "num_metrics", shape, start, count, adios2::ConstantDims);
+        num_ranks_var = bpIO.DefineVariable<int>(
+            "num_ranks", shape, start, count, adios2::ConstantDims);
     } catch (std::invalid_argument &e)
     {
         std::cout << "Invalid argument exception, STOPPING PROGRAM from rank "
@@ -631,6 +638,7 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     const char **counterNames;
     std::vector<int> numCounters = {0};
     TauMetrics_getCounterList(&counterNames, &(numCounters[0]));
+    std::vector<int> numRanks = {adios_comm_size};
 
     static int max_threads = 1;
 #if TAU_MPI
@@ -668,6 +676,7 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
             bpWriter.BeginStep();
             bpWriter.Put<int>(num_threads_var, numThreads.data());
             bpWriter.Put<int>(num_metrics_var, numCounters.data());
+            bpWriter.Put<int>(num_ranks_var, numRanks.data());
             Tau_plugin_adios2_write_variables(numThreads[0], numCounters[0], counterNames);
             bpWriter.EndStep();
         } catch (std::invalid_argument &e) {
