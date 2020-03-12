@@ -4321,10 +4321,11 @@ if [ $mpi = yes -a "x$mpiinc" = "x" ] ; then
 	c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
 	cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
 	f90loaded=`which mpif90 2>/dev/null | wc -l`
-	if [ $f90loaded = 1 -a "x$orig_fortran_compiler" = "xmpif90" ]
-	then
+	#if [ $f90loaded = 1 -a "x$orig_fortran_compiler" = "xmpif90" ]
+	if [ $f90loaded = 1 ] ; then
 	    echo "NOTE: Found mpif90 in the path...trying to auto-configure compilers and flags..."
             fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	    echo "NOTE: detected $fortran_compiler"
             if [ "x$fortran_compiler" = "xifort" ]; then
 		fortran_compiler=intel
 	    fi
