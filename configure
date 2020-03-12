@@ -4363,12 +4363,13 @@ if [ $mpi = yes -a "x$mpiinc" = "x" ] ; then
 		fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
             fi
             if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
+		mpiinc=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
 		mpilibargs=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
 		mpiflibargs=`mpif90 -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
 
 		mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
 		mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
-	        fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
+	        fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpiincargs=$mpiinc"
 	        mpilibargs_added_to_fixmakeargs=yes
 
             fi
