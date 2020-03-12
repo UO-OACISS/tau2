@@ -4301,21 +4301,29 @@ if [ $debugprof = yes ] ; then
     fixmakeargs="$fixmakeargs DEBUGPROF"
 fi
 
+####################################################################
+# FIRST TRY TO CONFIGURE MPI!
+# Check to see if mpicxx is in the user's path, and if so, use it to
+# auto-detect the MPI settings and the compiler to use.
+####################################################################
 
 orig_c_compiler=$c_compiler
 orig_cxx_compiler=$cxx_compiler
 orig_fortran_compiler=$fortran_compiler
 # mpicxx may change it.
-if [ $cxx_compiler = mpicxx ] ; then
+#if [ $cxx_compiler = mpicxx ] ; then
+if [ $mpi = yes -a "x$mpiinc" = "x" ] ; then
     cxxloaded=`which mpicxx 2>/dev/null | wc -l`
     mpi=yes
     if [ $cxxloaded = 1 ]
     then
+	echo "NOTE: Found mpicxx in the path...trying to auto-configure compilers and flags..."
 	c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
 	cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
 	f90loaded=`which mpif90 2>/dev/null | wc -l`
 	if [ $f90loaded = 1 -a "x$orig_fortran_compiler" = "xmpif90" ]
 	then
+	    echo "NOTE: Found mpif90 in the path...trying to auto-configure compilers and flags..."
             fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
             if [ "x$fortran_compiler" = "xifort" ]; then
 		fortran_compiler=intel
@@ -4335,13 +4343,21 @@ if [ $cxx_compiler = mpicxx ] ; then
 	    if [ "x$orig_fortran_compiler" = "xcaf" ]; then
 		fortran_compiler=caf
             fi
-	else
-            if [ "x$orig_fortran_compiler" = "xdefault" ]; then
-              fortran_compiler=no
+	    if [ "x$orig_fortran_compiler" = "xpgfortran" ]; then
+		fortran_compiler=pgfortran
             fi
+	else
+	    echo "Default fortran compiler was '$orig_fortran_compiler'..."
+	    if [ $f90loaded = 1 ] ; then
+                fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	    else 
+                if [ "x$orig_fortran_compiler" = "xdefault" ]; then
+                  fortran_compiler=no
+                fi
+            fi
+	    echo "Setting fortran compiler to '$fortran_compiler'..."
 	fi
 
-	echo "NOTE: Found mpicxx in the path"
 	if [ $machine = bgq -o $machine = bgp ]; then
             c_compiler=mpicc
             cxx_compiler=mpicxx
@@ -4360,12 +4376,13 @@ if [ $cxx_compiler = mpicxx ] ; then
 		fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
             fi
             if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
+		mpiinc=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
 		mpilibargs=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
 		mpiflibargs=`mpif90 -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
 
 		mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
 		mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
-	        fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
+	        fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpiincargs=$mpiinc"
 	        mpilibargs_added_to_fixmakeargs=yes
 
             fi
