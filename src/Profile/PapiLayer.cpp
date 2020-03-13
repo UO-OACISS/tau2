@@ -779,8 +779,9 @@ int PapiLayer::initializePerfRAPL(int tid) {
   int para_val;
   int scanned = fscanf(para, "%d", &para_val);
   if (para_val != -1 || scanned == EOF) {
-    fprintf(stderr, "Error: To use TAU's PAPI Perf interface please ensure that /proc/sys/kernel/perf_event_paranoid has a -1 in it.\n");
-    exit(1);
+    fprintf(stderr, "Error: To use TAU's PAPI RAPL Perf interface please ensure that /proc/sys/kernel/perf_event_paranoid has a -1 in it.\n");
+    // don't exit(1);
+    return -1;
   }
   fclose(para);
 

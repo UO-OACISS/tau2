@@ -7,205 +7,138 @@
 #define TAU_ACC_NAME_LEN 4096
 #define VERSION 0.1
 
-/* Init */
 
-void dev_init_start( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_device_init" );
-  TAU_START( sourceinfo );
-  //  printf( "dev init start\n " );
-}
 
-void dev_init_stop( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_device_init" );
-  //  printf( "dev init stop\n " );
-  TAU_STOP( sourceinfo );
-}
-
-/* Enter data */
-
-void enter_data_start( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_enter_data" );
-  TAU_START( sourceinfo );
-  //  printf( "enter data start\n " );
-}
-
-void enter_data_end( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_enter_data" );
-  //  printf( "enter data end\n " );
-  TAU_STOP( sourceinfo );
-}
-
-/* Exit data */
-
-void exit_data_start( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_exit_data" );
-  TAU_START( sourceinfo );
-  //  printf( "exit data start\n " );
-}
-
-void exit_data_end( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_exit_data" );
-  //  printf( "exit data end\n " );
-  TAU_STOP( sourceinfo );
-}
-
-/* Compute construct */
-
-void compute_construct_start( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_compute_construct" );
-  TAU_START( sourceinfo );
-  //  printf( "compute construct start\n " );
-}
-
-void compute_construct_end( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_compute_construct" );
-  //  printf( "compute construct end\n " );
-  TAU_STOP( sourceinfo );
-}
-
-/* Device shutdown */
-
-void device_shutdown_start( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_device_shutdown" );
-  TAU_START( sourceinfo );
-  //  printf( "device shutdown start\n " );
-}
-
-void device_shutdown_end( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_device_shutdown" );
-  //  printf( "device shutdown end\n " );
-  TAU_STOP( sourceinfo );
-}
-
-/* Enqueue launch */
-
-void ev_enqueue_launch_start( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_ev_enqueue_launch" );
-  TAU_START( sourceinfo );
-  //  printf( "ev enqueue launch start\n " );
-}
-
-void ev_enqueue_launch_end( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_ev_enqueue_launch" );
-  //  printf( "ev enqueue launch end\n " );
-  TAU_STOP( sourceinfo );
-}
-
-/* Enqueue upload */
-
-void ev_enqueue_upload_start( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_ev_enqueue_upload" );
-  TAU_START( sourceinfo );
-  //  printf( "ev enqueue upload start\n " );
-}
-
-void ev_enqueue_upload_end( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_ev_enqueue_upload" );
-  //  printf( "ev enqueue upload end\n " );
-  TAU_STOP( sourceinfo );
-}
-
-/* Enqueue download */
-
-void ev_enqueue_download_start( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_ev_enqueue_download" );
-  TAU_START( sourceinfo );
-  //  printf( "ev enqueue download start\n " );
-}
-
-void ev_enqueue_download_end( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_ev_enqueue_download" );
-  //  printf( "ev enqueue download end\n " );
-  TAU_STOP( sourceinfo );
-}
-
-/* Runtime shutdown */
-
-void runtime_shutdown( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_runtime_shutdown" );
-  TAU_START( sourceinfo );
-  //  printf( "runtime shutdown\n " );
-  TAU_STOP( sourceinfo );
-}
-
-/* Events */
-
-void ev_create( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_ev_create" );
-  TAU_START( sourceinfo );
-  //  printf( "ev create\n " );
-  TAU_STOP( sourceinfo );
-}
-
-void ev_delete( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_ev_delete" );
-  TAU_START( sourceinfo );
-  //  printf( "ev delete\n " );
-  TAU_STOP( sourceinfo );
-}
-
-void ev_alloc( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_ev_alloc" );
-  TAU_START( sourceinfo );
-  //  printf( "ev alloc\n " );
-  TAU_STOP( sourceinfo );
-}
-
-void ev_free( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info ){
-  char sourceinfo[TAU_ACC_NAME_LEN];
-  sprintf( sourceinfo, "openacc_ev_free" );
-  TAU_START( sourceinfo );
-  //  printf( "ev free\n " );
-  TAU_STOP( sourceinfo );
+#define TAU_SET_EVENT_NAME(event_name, str) strcpy(event_name, str); break 
+////////////////////////////////////////////////////////////////////////////
+/*extern "C" static*/ void
+Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info )
+{
+  char event_name[256], user_event_name[256];
+  
+  //acc_event_t *event_type_info = NULL; 
+  acc_data_event_info*   data_event_info = NULL;
+  acc_launch_event_info* launch_event_info = NULL;
+  //acc_other_event_info*  other_event_info = NULL;
+  
+  
+  switch (prof_info->event_type) {
+  case acc_ev_device_init_start 	            : Tau_create_top_level_timer_if_necessary(); TAU_SET_EVENT_NAME(event_name, ">openacc_init"); 
+  case acc_ev_device_init_end   	            : TAU_SET_EVENT_NAME(event_name, "<openacc_init");
+  case acc_ev_device_shutdown_start              : TAU_SET_EVENT_NAME(event_name, ">openacc_shutdown");
+  case acc_ev_device_shutdown_end                : TAU_SET_EVENT_NAME(event_name, "<openacc_shutdown");
+    // case acc_ev_done                        : TAU_SET_EVENT_NAME(event_name, "openacc_done");
+  case acc_ev_enter_data_start: 
+    TAU_SET_EVENT_NAME(event_name, ">openacc_enter_data");
+  case acc_ev_enter_data_end: TAU_SET_EVENT_NAME(event_name, "<openacc_enter_data");
+  case acc_ev_exit_data_start: TAU_SET_EVENT_NAME(event_name, ">openacc_exit_data");
+  case acc_ev_exit_data_end: TAU_SET_EVENT_NAME(event_name, "<openacc_exit_data");
+    
+  case acc_ev_enqueue_launch_start        : 
+    /* kernel_name is always set to NULL (permitted by OpenACC), num_gangs, num_workers, and vector_length are omitted */
+    if (event_info) {
+      launch_event_info = &(event_info->launch_event); 
+      sprintf(event_name, ">openacc_enqueue_launch>" );
+    }
+    break;
+  case acc_ev_enqueue_launch_end          : 
+    if (event_info) { /* same */
+      launch_event_info = &(event_info->launch_event); 
+      sprintf(event_name, "<openacc_enqueue_launch>" );
+    }
+    break;
+  case acc_ev_enqueue_upload_start        : 
+    if (event_info) {
+      data_event_info = &(event_info->data_event); 
+      TAU_VERBOSE("UPLOAD start: Var_name = %s, bytes=%d \n", data_event_info->var_name, 
+		  event_info->data_event.bytes);
+      if (data_event_info->var_name) {
+	sprintf(user_event_name, "Data transfer from host to device <variable=%s>", data_event_info->var_name);
+      } else {
+	sprintf(user_event_name, "Data transfer from host to device <other>");
+      }
+      TAU_TRIGGER_EVENT(user_event_name, event_info->data_event.bytes);
+    }
+    TAU_SET_EVENT_NAME(event_name, ">openacc_enqueue_upload");
+  case acc_ev_enqueue_upload_end          : 
+    TAU_SET_EVENT_NAME(event_name, "<openacc_enqueue_upload");
+  case acc_ev_enqueue_download_start      : 
+    if (event_info) {
+      data_event_info = &(event_info->data_event); 
+      TAU_VERBOSE("DOWNLOAD start: Var_name = %s, bytes=%d \n", data_event_info->var_name, 
+		  event_info->data_event.bytes);
+      if (data_event_info->var_name) {
+	sprintf(user_event_name, "Data transfer from device to host <variable=%s>", data_event_info->var_name);
+      } else {
+	sprintf(user_event_name, "Data transfer from device to host <other>");
+      }
+      TAU_TRIGGER_EVENT(user_event_name, event_info->data_event.bytes);
+    }
+    TAU_SET_EVENT_NAME(event_name, ">openacc_enqueue_download");
+  case acc_ev_enqueue_download_end        : TAU_SET_EVENT_NAME(event_name, "<openacc_enqueue_download");
+  case acc_ev_compute_construct_start     : TAU_SET_EVENT_NAME(event_name, ">openacc_compute_construct");
+  case acc_ev_compute_construct_end       : TAU_SET_EVENT_NAME(event_name, "<openacc_compute_construct");
+  case acc_ev_create                      : TAU_SET_EVENT_NAME(event_name, "openacc_create");
+  case acc_ev_delete                      : TAU_SET_EVENT_NAME(event_name, "openacc_delete");
+  case acc_ev_alloc                       : TAU_SET_EVENT_NAME(event_name, "openacc_alloc");
+  case acc_ev_free                        : TAU_SET_EVENT_NAME(event_name, "openacc_free");
+  default                                 : TAU_SET_EVENT_NAME(event_name, "default");
+  }
+  char srcinfo[1024]; 
+  char lineinfo[256]; 
+  
+  if (prof_info) {
+    TAU_VERBOSE("Device=%d ", prof_info->device_number);
+    TAU_VERBOSE("Thread=%d ", prof_info->thread_id); /* Seems to be always set to 0 */
+    sprintf(srcinfo, " %s [{%s:%d}", prof_info->func_name, prof_info->src_file, prof_info->line_no);
+    TAU_VERBOSE( "src info: %s\n", srcinfo );
+    TAU_VERBOSE( "Line nb %d\n", prof_info->line_no );
+    sprintf(lineinfo, " {%d,0}", prof_info->line_no); 
+    strcat(srcinfo,lineinfo);
+    if ((prof_info->end_line_no) && (prof_info->end_line_no > prof_info->line_no)) {
+      sprintf(lineinfo, "-{%d,0}", prof_info->end_line_no); 
+      strcat(srcinfo,lineinfo);
+    }
+    
+    strcat(srcinfo,"]");
+    strcat(event_name, srcinfo); 
+  }
+  if (event_name[0] == '>') {
+    TAU_VERBOSE("START>>%s\n", &event_name[1]);
+    TAU_START(&event_name[1]);
+  }  else if (event_name[0] == '<') {
+    TAU_VERBOSE("STOP <<%s\n", &event_name[1]);
+    TAU_STOP(&event_name[1]);
+  } else {
+    TAU_VERBOSE("event_name = %s\n", event_name);
+  }
 }
 
 /* Register the actions */
 
-void acc_register_library(acc_prof_reg reg, acc_prof_reg unreg,
-                          acc_prof_lookup lookup) {
-
-  reg( acc_ev_device_init_start, &dev_init_start, acc_reg );
-  reg( acc_ev_device_init_end, &dev_init_stop, acc_reg );
-  reg( acc_ev_device_shutdown_start, &device_shutdown_start, acc_reg );
-  reg( acc_ev_device_shutdown_end, &device_shutdown_end, acc_reg ); 
-  reg( acc_ev_runtime_shutdown, &runtime_shutdown, acc_reg );
-  reg( acc_ev_create, &ev_create, acc_reg );
-  reg( acc_ev_delete, &ev_delete, acc_reg );
-  reg( acc_ev_alloc, &ev_alloc, acc_reg ); 
-  reg( acc_ev_free, &ev_free, acc_reg );
-  reg( acc_ev_enter_data_start, &enter_data_start, acc_reg );
-  reg( acc_ev_enter_data_end, &enter_data_end, acc_reg );
-  reg( acc_ev_exit_data_start, &exit_data_start, acc_reg );
-  reg( acc_ev_exit_data_end, &exit_data_end, acc_reg ); 
-  reg( acc_ev_compute_construct_start, &compute_construct_start, acc_reg );
-  reg( acc_ev_compute_construct_end, &compute_construct_end, acc_reg );
-  reg( acc_ev_enqueue_launch_start, &ev_enqueue_launch_start, acc_reg );
-  reg( acc_ev_enqueue_launch_end, &ev_enqueue_launch_end, acc_reg );
-  reg( acc_ev_enqueue_upload_start, &ev_enqueue_upload_start, acc_reg );  
-  reg( acc_ev_enqueue_upload_end, &ev_enqueue_upload_end, acc_reg ); 
-  reg( acc_ev_enqueue_download_start, &ev_enqueue_download_start, acc_reg );  
-  reg( acc_ev_enqueue_download_end, &ev_enqueue_download_end, acc_reg ); 
-
+void acc_register_library( acc_prof_reg reg, acc_prof_reg unreg,
+                          acc_prof_lookup lookup ) {
+  reg( acc_ev_device_init_start, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_device_init_end, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_device_shutdown_start, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_device_shutdown_end, &Tau_openacc_callback, acc_reg ); 
+  reg( acc_ev_runtime_shutdown, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_create, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_delete, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_alloc, &Tau_openacc_callback, acc_reg ); 
+  reg( acc_ev_free, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_enter_data_start, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_enter_data_end, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_exit_data_start, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_exit_data_end, &Tau_openacc_callback, acc_reg ); 
+  reg( acc_ev_compute_construct_start, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_compute_construct_end, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_enqueue_launch_start, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_enqueue_launch_end, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_enqueue_upload_start, &Tau_openacc_callback, acc_reg );  
+  reg( acc_ev_enqueue_upload_end, &Tau_openacc_callback, acc_reg ); 
+  reg( acc_ev_enqueue_download_start, &Tau_openacc_callback, acc_reg );  
+  reg( acc_ev_enqueue_download_end, &Tau_openacc_callback, acc_reg ); 
 }
 
 

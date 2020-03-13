@@ -3162,6 +3162,19 @@ void Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_
     &continuous /*OUT*/,
     &atomic/*OUT*/); 
 
+  
+  // clean up description for non-ascii characters and new lines
+  for (i=0; i < strlen(description); i++) {
+    if ((description[i] == '\n') || (!isprint(description[i]))) {
+      description[i] = ' '; 
+    }
+  }
+  // clean up event_name for non-ascii characters and new lines
+  for (i=0; i < strlen(event_name); i++) {
+    if ((event_name[i] == '\n') || (!isprint(event_name[i]))) {
+      event_name[i] = ' ';
+    }
+  }
   if(pvar_count == 1) {
     sprintf(concat_event_name, "%s (%s)", event_name, description);
     TAU_VERBOSE("Concat Event name = %s\n", concat_event_name);

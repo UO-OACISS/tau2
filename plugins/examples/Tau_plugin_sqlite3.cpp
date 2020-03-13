@@ -502,6 +502,7 @@ void write_profile_to_database() {
     if (done) { return; }
     if (RtsLayer::myThread() != 0) { return; }
     Tau_metadata_writeEndingTimeStamp();
+    TauProfiler_updateAllIntermediateStatistics();
     size_t trial_id = 0;
     if (comm_rank == 0) {
         trial_id = store_profile(0UL);

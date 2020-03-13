@@ -1120,6 +1120,10 @@ case $1 in
 	echo NOTE: Using the NEC suite of compilers
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     TAU_NEC_MPI_VH_SX)
+	echo NOTE: Using the NEC VH options with gcc 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      NEC_SX_MPI_FORTRAN)
 	echo NOTE: Using the NEC mpinfort compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

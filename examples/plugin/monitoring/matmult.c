@@ -152,7 +152,7 @@ double do_work(int matrix_size) {
 
   compute_interchange(a, b, c, matrix_size, matrix_size, matrix_size);
 
-  double result = c[0][1];
+  double result = c[0][0];
 
   freeMatrix(a, matrix_size, matrix_size);
   freeMatrix(b, matrix_size, matrix_size);
@@ -192,6 +192,8 @@ int main (int argc, char *argv[])
     if(rank == 0) { printf("Iteration %d\n", i); }
     double ratio = ((double)rand() / (double)RAND_MAX);
     int matrix_size = (int)(ratio * (double)MATRIX_SIZE);
+    // make sure we have at least 1 cell
+    matrix_size = matrix_size > 32 ? matrix_size : 32;
     printf("Matrix size = %d\n", matrix_size);
     do_work(matrix_size);
     if (i % (ITERATIONS/25) == 0) { 

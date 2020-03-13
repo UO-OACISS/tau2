@@ -54,7 +54,7 @@ int Tau_read_load_event(int fd, double *value)
 
 pthread_t tid1;
 
-int done = 0; 
+int done = 0;
 
 int load_id, usage_id;
 
@@ -78,6 +78,21 @@ int Tau_plugin_event_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_
   done = 1;
 
   int ret = pthread_join(tid1, NULL);
+  if(ret != 0) {
+    switch (ret) {
+      case EINVAL:
+        fprintf(stderr, "The implementation has detected that the value specified by thread does not refer to a joinable thread.\n");
+        break;
+      case ESRCH:
+        fprintf(stderr, "No thread could be found corresponding to that specified by the given thread ID, thread.\n");
+        break;
+      case EDEADLK:
+        fprintf(stderr, "A deadlock was detected or the value of thread specifies the calling thread.\n");
+        break;
+      default:
+        fprintf(stderr, "Unknown error.\n");
+    }
+  }
 
   fprintf(stderr, "Asynchronous plugin exiting...\n");
 
@@ -96,8 +111,8 @@ void * Tau_plugin_do_work(void * data) {
       value = 0;
       if (fd) {
         Tau_read_load_event(fd, &value);
-    
-       //Do not bother with recording the load if TAU is uninitialized. 
+
+       //Do not bother with recording the load if TAU is uninitialized.
         if (Tau_init_check_initialized()) {
             value = value*100;
         } else {
@@ -107,17 +122,17 @@ void * Tau_plugin_do_work(void * data) {
       struct rusage r_usage;
       x_uint64 ts = getTimeStamp();
       getrusage(RUSAGE_SELF,&r_usage);
-      TauTraceEvent(load_id, (x_uint64)value, Tau_get_thread(), (x_uint64)ts, 1, TAU_TRACE_EVENT_KIND_USEREVENT); 
-      TauTraceEvent(usage_id, (x_uint64)r_usage.ru_maxrss, Tau_get_thread(), (x_uint64)ts, 1, TAU_TRACE_EVENT_KIND_USEREVENT); 
+      TauTraceEvent(load_id, (x_uint64)value, Tau_get_thread(), (x_uint64)ts, 1, TAU_TRACE_EVENT_KIND_USEREVENT);
+      TauTraceEvent(usage_id, (x_uint64)r_usage.ru_maxrss, Tau_get_thread(), (x_uint64)ts, 1, TAU_TRACE_EVENT_KIND_USEREVENT);
 
       fprintf(stderr, "Load and Max Memory usage = %lf, %ld\n", value, r_usage.ru_maxrss);
       sleep(2);
   }
-
+  return NULL;
 }
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
- * Every plugin MUST implement this function to register callbacks for various events 
+ * Every plugin MUST implement this function to register callbacks for various events
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
 
@@ -130,11 +145,26 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   load_id = ((tau::TauUserEvent *)load)->GetId();
   usage_id = ((tau::TauUserEvent *)usage)->GetId();
 
-  
+
   TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
   void * data = NULL;
 
-  int ret = pthread_create(&tid1, NULL, Tau_plugin_do_work, NULL);
+  int ret = pthread_create(&tid1, NULL, Tau_plugin_do_work, data);
+  if(ret != 0) {
+    switch (ret) {
+      case EAGAIN:
+        fprintf(stderr, ".The system lacked the necessary resources to create another thread, or the system-imposed limit on the total number of threads in a process [PTHREAD_THREADS_MAX] would be exceeded.\n");
+        break;
+      case EPERM:
+        fprintf(stderr, ".The caller does not have appropriate permission to set the required scheduling parameters or scheduling policy.\n");
+        break;
+      case EINVAL:
+        fprintf(stderr, "The value specified by attr is invalid..\n");
+        break;
+      default:
+        fprintf(stderr, "Unknown error.\n");
+    }
+  }
 
   return 0;
 }

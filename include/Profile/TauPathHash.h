@@ -1,6 +1,6 @@
 #ifndef TAU_PATH_HASH_H_
 #define TAU_PATH_HASH_H_
-#ifndef _AIX 
+#ifndef _AIX
 
 #include <utility>
 #include <cstdio>
@@ -26,11 +26,11 @@
 /* *CWL* - Each FI will host its own hash table for EBS. It is expected that the
    vast majority of FIs will encounter fewer than 63 unique unwind paths
    into any given sample. The memory cost of a resize is limited to
-   double the actual use. The trigger threshold for a resize-rehash 
+   double the actual use. The trigger threshold for a resize-rehash
    operation could be made conservative to keep these operations to a
    minimum.
 */
-#define TAU_PATHHASH_DEFAULT_SIZE 63 
+#define TAU_PATHHASH_DEFAULT_SIZE 63
 
 /* *CWL* - This is limited in scope for TAU path keys
    (EBS, CallSites) only. As such, the key will always be (unsigned long *).
@@ -106,7 +106,7 @@ template <class T> class TauPathHashTable {
   unsigned long *copyKey(int tid, const unsigned long *key);
 
   struct HashElement *createNewEntry(int tid, const unsigned long *key, T val) {
-    struct HashElement *newEntry = 
+    struct HashElement *newEntry =
       (struct HashElement *)Tau_MemMgr_malloc(tid, sizeof(struct HashElement));
     if (newEntry == NULL) {
       /* Memory allocation failed! */
@@ -154,8 +154,8 @@ template <class T> class TauPathHashTable {
   /* Only the constructor needs to know tid because the correct memory segments are needed */
   TauPathHashTable(int tid_, int size_=TAU_PATHHASH_DEFAULT_SIZE):tid(tid_),
     tableSize(size_),numElements(0),disableGrow(false),iterPtr(NULL),iterCount(0),iterTblIdx(0) {
-    
-    table = (struct HashElement **)Tau_MemMgr_malloc(tid, 
+
+    table = (struct HashElement **)Tau_MemMgr_malloc(tid,
 						     sizeof(struct HashElement *)*tableSize);
     //TAU_VERBOSE("Table created %p at size %d\n", table, tableSize);
     for (int i=0; i<tableSize; i++) {
@@ -173,14 +173,14 @@ template <class T> class TauPathHashTable {
 //         http://www.cs.hmc.edu/~geoff/classes/hmc.cs070.200101/homework10/hashfuncs.html
 //
 // The length of the sequence is found at keySequence[0]
-//         
-template <class T> 
+//
+template <class T>
 unsigned long TauPathHashTable<T>::hashSequence(const unsigned long *keySequence) {
   unsigned long h = 0;
   unsigned long g = 0; // temp
   int length = (int)keySequence[0];
   // Convert bytes to bits. For the 4-bit shifts.
-  int shiftOffset = sizeof(unsigned long)*2*HALF_SIZEOF_PTR - 2*HALF_SIZEOF_PTR; 
+  int shiftOffset = sizeof(unsigned long)*2*HALF_SIZEOF_PTR - 2*HALF_SIZEOF_PTR;
 
   for (int i=0; i<length; i++) {
     // The top 4 bits of h are all zero
@@ -195,7 +195,7 @@ unsigned long TauPathHashTable<T>::hashSequence(const unsigned long *keySequence
 }
 
 // Returns true if equal, false otherwise.
-template <class T> 
+template <class T>
 bool TauPathHashTable<T>::compareKey(const unsigned long *key1, const unsigned long *key2) {
   int l1, l2;
   // key1 and key2 cannot be NULL
@@ -215,7 +215,7 @@ bool TauPathHashTable<T>::compareKey(const unsigned long *key1, const unsigned l
   return true;
 }
 
-template <class T> 
+template <class T>
 unsigned long *TauPathHashTable<T>::copyKey(int tid, const unsigned long *key) {
   unsigned long *newKey = NULL;
   if (key != NULL) {
@@ -229,8 +229,9 @@ unsigned long *TauPathHashTable<T>::copyKey(int tid, const unsigned long *key) {
   return newKey;
 }
 
-template <class T> 
+template <class T>
 bool TauPathHashTable<T>::growThreshold(int tid) {
+  (void)(tid); // unused
   if (disableGrow) {
     return false;
   }
@@ -238,14 +239,14 @@ bool TauPathHashTable<T>::growThreshold(int tid) {
 }
 
 // Decision made to resize the table
-template <class T> 
+template <class T>
 void TauPathHashTable<T>::growTable(int tid) {
   int oldSize = tableSize;
   oldTable = table; // hang on to the old table for the rehash
 
   tableSize *= 2 + 1;
-  table = 
-    (struct HashElement **)Tau_MemMgr_malloc(tid, 
+  table =
+    (struct HashElement **)Tau_MemMgr_malloc(tid,
 					     sizeof(struct HashElement *)*tableSize);
   for (int i=0; i<tableSize; i++) {
     table[i] = NULL;
@@ -275,11 +276,12 @@ void TauPathHashTable<T>::growTable(int tid) {
   oldTable = NULL;
 }
 
-template <class T> 
+template <class T>
 void TauPathHashTable<T>::insertNoAllocate(int tid, struct HashElement *element) {
+  (void)(tid); // unused
   unsigned long bucket = hashSequence(element->pair->key);
   //  printf("INFO: tid=%d bucket %d\n", tid, bucket);
-  
+
   struct HashElement *currentElement = table[bucket];
   if (currentElement == NULL) {
     table[bucket] = element;
@@ -310,7 +312,7 @@ void TauPathHashTable<T>::printTable() {
 }
 
 // returns NULL or a reference to the element
-template <class T> 
+template <class T>
 T* TauPathHashTable<T>::get(const unsigned long *key) {
   unsigned long bucket = hashSequence(key);
   //  printf("INFO: tid=%d bucket %d\n", tid, bucket);
@@ -333,7 +335,7 @@ T* TauPathHashTable<T>::get(const unsigned long *key) {
 }
 
 // returns true if successful.
-template <class T> 
+template <class T>
 bool TauPathHashTable<T>::insert(const unsigned long *key, T val) {
   unsigned long bucket = hashSequence(key);
   //  printf("INFO: tid=%d bucket %d\n", tid, bucket);
@@ -359,7 +361,7 @@ bool TauPathHashTable<T>::insert(const unsigned long *key, T val) {
 	  numElements++;
 	  return true;
 	}
-      } 
+      }
       entryPtr = entryPtr->next;
     } while (entryPtr != NULL); // This condition is spurious
   } else { // ! entryPtr != NULL
@@ -377,14 +379,14 @@ bool TauPathHashTable<T>::insert(const unsigned long *key, T val) {
   return false;
 }
 
-template <class T> 
+template <class T>
 void TauPathHashTable<T>::resetIter() {
   iterPtr = NULL;
   iterCount = 0;
   iterTblIdx = 0;
 }
 
-template <class T> 
+template <class T>
 std::pair<unsigned long *, T> *TauPathHashTable<T>::nextIter()
 {
     typedef std::pair<unsigned long*, T> pair_t;
@@ -395,7 +397,7 @@ std::pair<unsigned long *, T> *TauPathHashTable<T>::nextIter()
     //    printf("Iteration count of %d has hit limit of %d\n", iterCount, numElements);
     return NULL ;
   }
-  // Need to search later table entries. 
+  // Need to search later table entries.
   //   This test relies on short-cicruiting.
   //   iterPtr == NULL means we just started.
   //   iterPtr->next == NULL means we are at the end of a chain.

@@ -3,3 +3,9 @@ This example shows how to use the SQLite3 plugin to store multiple trial runs
 in a file-based database on disk.
 
 To run the example, type "make", and then run the "go.sh" script.
+
+This example assumes that TAU was configured with:
+
+./configure -pthread -bfd=download -sqlite3=<path-to-SQLite>
+
+(typically sqlite is installed in /usr)

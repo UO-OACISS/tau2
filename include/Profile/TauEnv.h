@@ -60,10 +60,12 @@ extern "C" {
   int  TAUDECL TauEnv_get_synchronize_clocks();
   int  TAUDECL TauEnv_get_verbose();
   int  TAUDECL TauEnv_get_throttle();
+  void  TAUDECL TauEnv_set_throttle(int);
   int  TAUDECL TauEnv_get_profiling();
   int  TAUDECL TauEnv_get_tracing();
   int  TAUDECL TauEnv_get_trace_format();
   int  TAUDECL TauEnv_get_callpath();
+  int  TAUDECL TauEnv_get_threadContext();
   int  TAUDECL TauEnv_get_callpath_depth();
   int  TAUDECL TauEnv_get_callsite();
   int  TAUDECL TauEnv_get_callsite_depth();

@@ -24,6 +24,7 @@
 // Moved from header file
 using namespace std;
 
+#define UNUSED(x) (void)(x)
 
 extern "C" {
 #endif /* __cplusplus */
@@ -43,11 +44,11 @@ extern "C" {
     }
   }
 
-  /* This function is used to assign character pointers to 
+  /* This function is used to assign character pointers to
    * static constant strings. This prevents C++ compiler
-   * warnings. 
-     Note: This doesn't work. A new pointer is created so 
-     the struct that issued ptr doesn't get the new value 
+   * warnings.
+     Note: This doesn't work. A new pointer is created so
+     the struct that issued ptr doesn't get the new value
      use getNewStringPointer instead*/
 /*  static void assignStr(char* ptr, const char* instr) {
     ptr = (char*)(calloc((strlen(instr)+1), sizeof(char)));
@@ -72,7 +73,7 @@ extern "C" {
 
     int numEvents = tFile->EventIdMap->size();
 
-    fprintf(fp, "%d dynamic_trace_events\n", numEvents); 
+    fprintf(fp, "%d dynamic_trace_events\n", numEvents);
 
     fprintf(fp,"# FunctionId Group Tag \"Name Type\" Parameters\n");
 
@@ -94,7 +95,7 @@ extern "C" {
   Ttf_FileHandleT Ttf_OpenFileForOutput( const char *name, const char *edf) {
     Ttf_fileT *tFile;
     FILE *fp;
-    
+
     /* first, allocate space for the trace file id struct */
     tFile = new Ttf_fileT;
     if (tFile == NULL) {
@@ -118,7 +119,7 @@ extern "C" {
       return NULL;
     }
 
-    
+
     if ((fp = fopen (edf, "wb")) == NULL) {
       printf("EDF file = %s\n", edf);
       perror("ERROR: opening edf file");
@@ -129,20 +130,20 @@ extern "C" {
     /* make a copy of the EDF file name */
     tFile->EdfFile = strdup(edf);
 
-    
+
     tFile->NidTidMap = new NidTidMapT;
     if (tFile->NidTidMap == (NidTidMapT *) NULL) {
       perror("ERROR: memory allocation failed for NidTidMap");
       return NULL;
     }
-    
+
     /* Allocate space for event id map */
     tFile->EventIdMap = new EventIdMapT;
     if (tFile->EventIdMap == (EventIdMapT *) NULL) {
       perror("ERROR: memory allocation failed for EventIdMap");
       return NULL;
     }
-    
+
     /* Allocate space for group id map */
     tFile->GroupIdMap = new GroupIdMapT;
     if (tFile->GroupIdMap == (GroupIdMapT *) NULL) {
@@ -162,7 +163,7 @@ extern "C" {
 
     /* initialize clock */
     tFile->ClkInitialized = FALSE;
-    
+
     /* initialize the first timestamp for the trace */
     tFile->FirstTimestamp = 0.0;
 
@@ -171,7 +172,7 @@ extern "C" {
 
 
     Ttf_EventDescrT newEventDesc;
-    // prevent Compiler warnings by initializing these 
+    // prevent Compiler warnings by initializing these
     newEventDesc.Group = NULL;
     newEventDesc.EventName = NULL;
     newEventDesc.Param = NULL;
@@ -215,7 +216,7 @@ extern "C" {
     newEventDesc.Param=getNewStringPointer("par");
     (*tFile->EventIdMap)[TAU_MESSAGE_RECV] = newEventDesc;
 
-    
+
     /* return file handle */
     return (Ttf_FileHandleT) tFile;
   }
@@ -241,10 +242,11 @@ extern "C" {
     }
     return 0;
   }
-  
 
-  int Ttf_DefThread(Ttf_FileHandleT file, unsigned int nodeToken, unsigned int threadToken, 
+
+  int Ttf_DefThread(Ttf_FileHandleT file, unsigned int nodeToken, unsigned int threadToken,
 		    const char *threadName) {
+    UNUSED(threadName);
 
     Ttf_fileT *tFile = (Ttf_fileT*)file;
 
@@ -283,7 +285,7 @@ extern "C" {
     Ttf_EventDescrT newEventDesc;
 
     GroupNameMapT::iterator git = tFile->groupNameMap->find(stateGroupToken);
-    if (git == tFile->groupNameMap->end()) { 
+    if (git == tFile->groupNameMap->end()) {
       fprintf (stderr, "Ttf_DefState: Have not seen %d stateGroupToken before, please define it first\n", stateGroupToken);
     }
 
@@ -301,17 +303,17 @@ extern "C" {
     return 0;
   }
 
-  
+
 
   int Ttf_FlushTrace(Ttf_FileHandleT file) {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
-    
-    checkInitialized(file, tFile->traceBuffer[1].nid, 
+
+    checkInitialized(file, tFile->traceBuffer[1].nid,
 		     tFile->traceBuffer[1].tid, tFile->traceBuffer[1].ti);
 
     // compute size of write
     int size = tFile->tracePosition * sizeof(EVENT);
-    
+
     // reset trace position
     tFile->tracePosition = 0;
 
@@ -321,7 +323,7 @@ extern "C" {
 	return -1;
       }
     }
-    
+
     //printf ("flushing %d bytes\n", size);
     int ret = write (tFile->Fid, tFile->traceBuffer, size);
     if (ret != size) {
@@ -341,7 +343,7 @@ extern "C" {
 
     for (NidTidMapT::iterator it = tFile->NidTidMap->begin(); it != tFile->NidTidMap->end(); ++it) {
       pair<int, int> nidtid = (*it).first;
-      
+
 
       checkFlush(tFile);
       int pos = tFile->tracePosition;
@@ -351,7 +353,7 @@ extern "C" {
       tFile->traceBuffer[pos].ti = (x_uint64) tFile->lastTimestamp;
       tFile->traceBuffer[pos].par = 0;
       tFile->tracePosition++;
-      
+
       pos = tFile->tracePosition;
       tFile->traceBuffer[pos].ev = TAU_EV_WALL_CLOCK;
       tFile->traceBuffer[pos].nid = nidtid.first;
@@ -359,7 +361,7 @@ extern "C" {
       tFile->traceBuffer[pos].ti = (x_uint64) tFile->lastTimestamp;
       tFile->traceBuffer[pos].par = 0;
       tFile->tracePosition++;
-    
+
 
     }
     Ttf_FlushTrace(file);
@@ -370,8 +372,8 @@ extern "C" {
 
 
 
-  static int enterExit(Ttf_FileHandleT file, x_uint64 time, 
-		     unsigned int nodeToken, unsigned int threadToken, 
+  static int enterExit(Ttf_FileHandleT file, x_uint64 time,
+		     unsigned int nodeToken, unsigned int threadToken,
 		       unsigned int stateToken, int parameter) {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
 
@@ -388,18 +390,20 @@ extern "C" {
     return 0;
   }
 
-  int Ttf_EnterState(Ttf_FileHandleT file, x_uint64 time, 
-		     unsigned int nodeToken, unsigned int threadToken, 
+  int Ttf_EnterState(Ttf_FileHandleT file, x_uint64 time,
+		     unsigned int nodeToken, unsigned int threadToken,
 		     unsigned int stateToken) {
 	return enterExit(file, time, nodeToken, threadToken, stateToken, 1); // entry
   }
 
-  int Ttf_LeaveState(Ttf_FileHandleT file, x_uint64 time, 
+  int Ttf_LeaveState(Ttf_FileHandleT file, x_uint64 time,
 		     unsigned int nodeToken, unsigned int threadToken, unsigned int stateToken) {
     return enterExit(file, time, nodeToken, threadToken, stateToken, -1); // exit
   }
 
   int Ttf_DefClkPeriod(Ttf_FileHandleT file, double clkPeriod) {
+    UNUSED(file);
+    UNUSED(clkPeriod);
     return 0;
   }
 
@@ -412,12 +416,13 @@ extern "C" {
 		      unsigned int messageSize,
 		      unsigned int messageTag,
 		      unsigned int messageComm, int eventId) {
+    UNUSED(destinationThreadToken);
     Ttf_fileT *tFile = (Ttf_fileT*)file;
 
 
     x_int64 parameter;
     x_uint64 xother, xtype, xlength, xcomm;
-    
+
     xother = destinationNodeToken;
     xtype = messageTag;
     xlength = messageSize;
@@ -426,8 +431,8 @@ extern "C" {
     parameter = (xlength >> 16 << 54 >> 22) |
       ((xtype >> 8 & 0xFF) << 48) |
       ((xother >> 8 & 0xFF) << 56) |
-      (xlength & 0xFFFF) | 
-      ((xtype & 0xFF)  << 16) | 
+      (xlength & 0xFFFF) |
+      ((xtype & 0xFF)  << 16) |
       ((xother & 0xFF) << 24) |
       (xcomm << 58 >> 16);
 
@@ -452,7 +457,7 @@ extern "C" {
 		      unsigned int messageSize,
 		      unsigned int messageTag,
 		      unsigned int messageComm) {
-    return sendRecv(file, time, sourceNodeToken, sourceThreadToken, destinationNodeToken, 
+    return sendRecv(file, time, sourceNodeToken, sourceThreadToken, destinationNodeToken,
 		    destinationThreadToken, messageSize, messageTag, messageComm, TAU_MESSAGE_SEND);
 
   }
@@ -464,21 +469,21 @@ extern "C" {
 		      unsigned int messageSize,
 		      unsigned int messageTag,
 		      unsigned int messageComm) {
-    return sendRecv(file, time, destinationNodeToken, 
-		    destinationThreadToken, sourceNodeToken, sourceThreadToken, 
+    return sendRecv(file, time, destinationNodeToken,
+		    destinationThreadToken, sourceNodeToken, sourceThreadToken,
 		    messageSize, messageTag, messageComm, TAU_MESSAGE_RECV);
 
   }
 
 
 
-  int Ttf_DefUserEvent(Ttf_FileHandleT file, unsigned int userEventToken, 
+  int Ttf_DefUserEvent(Ttf_FileHandleT file, unsigned int userEventToken,
 			  const char *userEventName, int monotonicallyIncreasing) {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
 
 
     Ttf_EventDescrT newEventDesc;
-    // prevent Compiler warnings by initializing these 
+    // prevent Compiler warnings by initializing these
     newEventDesc.Group = NULL;
     newEventDesc.EventName = NULL;
     newEventDesc.Param = NULL;
@@ -495,18 +500,18 @@ extern "C" {
     return 0;
   }
 
-  int Ttf_EventTrigger(Ttf_FileHandleT file, double time, 
+  int Ttf_EventTrigger(Ttf_FileHandleT file, double time,
 			   unsigned int nodeToken,
 			   unsigned int threadToken,
 			   unsigned int userEventToken,
 			   double userEventValue
 			   ) {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
-    
-    
+
+
     checkFlush(tFile);
     int pos = tFile->tracePosition;
-    
+
     tFile->traceBuffer[pos].ev = userEventToken;
     tFile->traceBuffer[pos].nid = nodeToken;
     tFile->traceBuffer[pos].tid = threadToken;
@@ -519,20 +524,20 @@ extern "C" {
   }
 
   /*
-	This is a helper function to write out user defined events to the trace file. 
-	Trace writer APIs can not be directly used here as we need to use the entire 
-	bytes of the parameter. 
+	This is a helper function to write out user defined events to the trace file.
+	Trace writer APIs can not be directly used here as we need to use the entire
+	bytes of the parameter.
 */
 
-int  Ttf_LongEventTrigger(Ttf_FileHandleT file,  unsigned long long time, 
-				unsigned int nodeToken, 
-				unsigned int threadToken,  
-				unsigned int userEventToken, 
+int  Ttf_LongEventTrigger(Ttf_FileHandleT file,  unsigned long long time,
+				unsigned int nodeToken,
+				unsigned int threadToken,
+				unsigned int userEventToken,
 				 unsigned long long userEventValue)
 {
 	Ttf_fileT *tFile = (Ttf_fileT*)file;
 	checkFlush(tFile);
-    	int pos = tFile->tracePosition;		
+    	int pos = tFile->tracePosition;
     	tFile->traceBuffer[pos].ev = userEventToken;
     	tFile->traceBuffer[pos].nid = nodeToken;
     	tFile->traceBuffer[pos].tid = threadToken;
@@ -542,8 +547,8 @@ int  Ttf_LongEventTrigger(Ttf_FileHandleT file,  unsigned long long time,
     	tFile->lastTimestamp = time;
     	return 0;
 }
-  
-  
+
+
 
 #ifdef __cplusplus
 }

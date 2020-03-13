@@ -78,6 +78,8 @@ using namespace std;
 # define TAU_CALLPATH_DEFAULT 0
 #endif
 
+#define TAU_ENABLE_THREAD_CONTEXT_DEFAULT 0
+
 #define TAU_CALLSITE_DEFAULT 0
 #define TAU_CALLSITE_DEPTH_DEFAULT 1 /* default to be local */
 
@@ -258,6 +260,7 @@ static int env_interval = 0;
 static int env_disable_instrumentation = 0;
 static double env_max_records = 64*1024;
 static int env_callpath = 0;
+static int env_thread_context = 0;
 static int env_callsite = 0;
 static int env_callsite_depth = 0;
 static int env_callsite_offset = TAU_CALLSITE_OFFSET_DEFAULT;
@@ -828,6 +831,10 @@ int TauEnv_get_throttle() {
   return env_throttle;
 }
 
+void TauEnv_set_throttle(int throttle) {
+  env_throttle = throttle;
+}
+
 int TauEnv_get_disable_instrumentation() {
   return env_disable_instrumentation;
 }
@@ -846,6 +853,10 @@ int TauEnv_get_interval() {
 
 int TauEnv_get_callpath() {
   return env_callpath;
+}
+
+int TauEnv_get_threadContext() {
+  return env_thread_context;
 }
 
 int TauEnv_get_callsite() {
@@ -1820,7 +1831,12 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_PROFILE", "off");
     }
 
-    if (env_profiling) {
+    /* Switched this from env_profiling to !env_tracing.
+     * If we are using alternative outputs (ADIOS2, SQLITE, SOS)
+     * we want to disable profile wrting at the end of execution
+     * but we don't want to disable callpaths.
+     */
+    if (!env_tracing) {
       /* callpath */
       tmp = getconf("TAU_CALLPATH");
       if (parse_bool(tmp, TAU_CALLPATH_DEFAULT)) {
@@ -1831,6 +1847,18 @@ void TauEnv_initialize()
         env_callpath = 0;
         TAU_VERBOSE("TAU: Callpath Profiling Disabled\n");
         TAU_METADATA("TAU_CALLPATH", "off");
+      }
+
+      /* thread context */
+      tmp = getconf("TAU_ENABLE_THREAD_CONTEXT");
+      if (parse_bool(tmp, TAU_ENABLE_THREAD_CONTEXT_DEFAULT)) {
+        env_thread_context = 1;
+        TAU_VERBOSE("TAU: Thread Context Enabled\n");
+        TAU_METADATA("TAU_ENABLE_THREAD_CONTEXT", "on");
+      } else {
+        env_thread_context = 0;
+        TAU_VERBOSE("TAU: Thread Context Disabled\n");
+        TAU_METADATA("TAU_ENABLE_THREAD_CONTEXT", "off");
       }
 
       /* compensate */

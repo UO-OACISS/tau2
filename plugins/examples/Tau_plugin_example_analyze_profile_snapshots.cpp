@@ -66,7 +66,7 @@ bool sort_func(const std::pair<double, int>& first, const std::pair<double, int>
 void disable_instrumentation_if_necessary(int index, int rank) {
 
    int should_i_disable_instrumentation = 1;
-  
+
    if(rank == 0) {
      for(int i = 0 ; i < 5; i++) {
        if(s_buffer[index].top_5_excl_time_mean[i] != s_buffer[index-1].top_5_excl_time_mean[i]) {
@@ -79,8 +79,8 @@ void disable_instrumentation_if_necessary(int index, int rank) {
 
    if(should_i_disable_instrumentation) {
      fprintf(stderr, "Disabling instrumentation at index %d\n", index);
-     TAU_DISABLE_INSTRUMENTATION(); 
-     is_instrumentation_enabled = 0; 
+     TAU_DISABLE_INSTRUMENTATION();
+     is_instrumentation_enabled = 0;
    }
 }
 
@@ -91,7 +91,7 @@ int Tau_plugin_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *
 }
 
 int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
- 
+
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
@@ -113,12 +113,6 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
   TauProfiler_updateAllIntermediateStatistics();
   static int index = 0;
 
-  FILE *f;
-#ifdef TAU_MPI
-  MPI_Status status;
-#endif 
-  x_uint64 start, end;
-
   Tau_unify_unifyDefinitions_MPI();
 
   int rank = 0;
@@ -136,7 +130,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
   int globalNumThreads;
 
   int numAtomicEvents = 0;
-  
+
   if (TauEnv_get_stat_precompute() == 1) {
     // Unification must already be called.
     s_buffer[index].functionUnifier = Tau_unify_getFunctionUnifier();
@@ -144,9 +138,9 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
     s_buffer[index].numEventThreads = (int*)TAU_UTIL_MALLOC(numEvents*sizeof(int));
     s_buffer[index].globalEventMap = (int*)TAU_UTIL_MALLOC(numEvents*sizeof(int));
     // initialize all to -1
-    for (int i=0; i<s_buffer[index].functionUnifier->globalNumItems; i++) { 
+    for (int i=0; i<s_buffer[index].functionUnifier->globalNumItems; i++) {
       // -1 indicates that the event did not occur for this rank
-      s_buffer[index].globalEventMap[i] = -1; 
+      s_buffer[index].globalEventMap[i] = -1;
     }
     for (int i=0; i<s_buffer[index].functionUnifier->localNumItems; i++) {
       s_buffer[index].globalEventMap[s_buffer[index].functionUnifier->mapping[i]] = i; // set reverse mapping
@@ -171,7 +165,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
       s_buffer[index].gIncl_min[m] = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numEvents);
       s_buffer[index].gExcl_max[m] = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numEvents);
       s_buffer[index].gIncl_max[m] = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numEvents);
-      
+
     }
 
     if (rank == 0) {
@@ -182,14 +176,14 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 					  COLLATE_OP_DERIVED);
     }
 
-    Tau_collate_compute_statistics_MPI_with_minmaxloc(s_buffer[index].functionUnifier, s_buffer[index].globalEventMap, 
-				   numEvents, 
+    Tau_collate_compute_statistics_MPI_with_minmaxloc(s_buffer[index].functionUnifier, s_buffer[index].globalEventMap,
+				   numEvents,
 				   globalNumThreads, s_buffer[index].numEventThreads,
 				   &(s_buffer[index].gExcl), &(s_buffer[index].gIncl),
 				   &(s_buffer[index].gExcl_min), &(s_buffer[index].gIncl_min),
 				   &(s_buffer[index].gExcl_max), &(s_buffer[index].gIncl_max),
                                    &(s_buffer[index].gNumCalls), &(s_buffer[index].gNumSubr),
-				   &(s_buffer[index].sExcl), &(s_buffer[index].sIncl), 
+				   &(s_buffer[index].sExcl), &(s_buffer[index].sIncl),
                                    &(s_buffer[index].sNumCalls), &(s_buffer[index].sNumSubr), MPI_COMM_WORLD);
 
     if(rank == 0) {
@@ -206,14 +200,14 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
     s_buffer[index].atomicUnifier = Tau_unify_getAtomicUnifier();
     numAtomicEvents = s_buffer[index].atomicUnifier->globalNumItems;
 
-    s_buffer[index].numAtomicEventThreads = 
+    s_buffer[index].numAtomicEventThreads =
       (int*)TAU_UTIL_MALLOC(numAtomicEvents*sizeof(int));
     s_buffer[index].globalAtomicEventMap = (int*)TAU_UTIL_MALLOC(numAtomicEvents*sizeof(int));
 
     // initialize all to -1
-    for (int i=0; i<numAtomicEvents; i++) { 
+    for (int i=0; i<numAtomicEvents; i++) {
       // -1 indicates that the event did not occur for this rank
-      s_buffer[index].globalAtomicEventMap[i] = -1; 
+      s_buffer[index].globalAtomicEventMap[i] = -1;
     }
     for (int i=0; i<s_buffer[index].atomicUnifier->localNumItems; i++) {
       // set reverse mapping
@@ -222,7 +216,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 
     Tau_collate_get_total_threads_MPI(s_buffer[index].atomicUnifier, &globalNumThreads, &(s_buffer[index].numAtomicEventThreads),
 				  numAtomicEvents, s_buffer[index].globalAtomicEventMap,true);
-    
+
     Tau_collate_allocateAtomicBuffers(&(s_buffer[index].gAtomicMin), &(s_buffer[index].gAtomicMax),
 				      &(s_buffer[index].gAtomicCalls), &(s_buffer[index].gAtomicMean),
 				      &(s_buffer[index].gAtomicSumSqr),
@@ -230,7 +224,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 				      COLLATE_OP_BASIC);
    s_buffer[index].gAtomicMin_min = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numAtomicEvents);
    s_buffer[index].gAtomicMax_max = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numAtomicEvents);
-  
+
     if (rank == 0) {
       Tau_collate_allocateAtomicBuffers(&(s_buffer[index].sAtomicMin), &(s_buffer[index].sAtomicMax),
 					&(s_buffer[index].sAtomicCalls), &(s_buffer[index].sAtomicMean),
@@ -239,15 +233,15 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 					COLLATE_OP_DERIVED);
     }
 
-    Tau_collate_compute_atomicStatistics_MPI_with_minmaxloc(s_buffer[index].atomicUnifier, s_buffer[index].globalAtomicEventMap, 
-					 numAtomicEvents, 
-					 globalNumThreads, 
+    Tau_collate_compute_atomicStatistics_MPI_with_minmaxloc(s_buffer[index].atomicUnifier, s_buffer[index].globalAtomicEventMap,
+					 numAtomicEvents,
+					 globalNumThreads,
 					 s_buffer[index].numAtomicEventThreads,
-					 &(s_buffer[index].gAtomicMin), &(s_buffer[index].gAtomicMax), 
-					 &(s_buffer[index].gAtomicMin_min), &(s_buffer[index].gAtomicMax_max), 
+					 &(s_buffer[index].gAtomicMin), &(s_buffer[index].gAtomicMax),
+					 &(s_buffer[index].gAtomicMin_min), &(s_buffer[index].gAtomicMax_max),
 					 &(s_buffer[index].gAtomicCalls), &(s_buffer[index].gAtomicMean),
 					 &(s_buffer[index].gAtomicSumSqr),
-					 &(s_buffer[index].sAtomicMin), &(s_buffer[index].sAtomicMax), 
+					 &(s_buffer[index].sAtomicMin), &(s_buffer[index].sAtomicMax),
 					 &(s_buffer[index].sAtomicCalls), &(s_buffer[index].sAtomicMean),
 					 &(s_buffer[index].sAtomicSumSqr), MPI_COMM_WORLD);
 
@@ -272,7 +266,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
    if(index)
      disable_instrumentation_if_necessary(index, rank);
 #endif
-    
+
    if(rank == 0) {
       for(int i=0; i<numAtomicEvents; i++)
         fprintf(stderr, "The min and max for atomic event %d lies with processes %d and %d with values %f and %f\n", i, s_buffer[index].gAtomicMin_min[i].index, s_buffer[index].gAtomicMax_max[i].index, s_buffer[index].gAtomicMin_min[i].value, s_buffer[index].gAtomicMax_max[i].value);
@@ -284,7 +278,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 }
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
- * Every plugin MUST implement this function to register callbacks for various events 
+ * Every plugin MUST implement this function to register callbacks for various events
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));

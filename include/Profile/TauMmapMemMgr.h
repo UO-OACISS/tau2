@@ -13,13 +13,15 @@
 
 #define TAU_MEMMGR_ALIGN sizeof(long) /* In bytes */
 
+#define UNUSED(_x_) (void)(_x_)
+
 extern "C" bool Tau_MemMgr_initIfNecessary(void);
 extern "C" void *Tau_MemMgr_mmap(int tid, std::size_t size);
 extern "C" void *Tau_MemMgr_malloc(int tid, std::size_t size);
 extern "C" void Tau_MemMgr_free(int tid, void *addr, std::size_t size);
 extern "C" void Tau_MemMgr_finalizeIfNecessary(void);
 
-template <typename T> 
+template <typename T>
 class TauSignalSafeAllocator {
 public:
     typedef T value_type;
@@ -43,8 +45,8 @@ public:
     // destructor
     ~TauSignalSafeAllocator() {};
     // Copy methods
-    TauSignalSafeAllocator(const TauSignalSafeAllocator& other) {};
-    template <class U> TauSignalSafeAllocator(const TauSignalSafeAllocator<U>& other) {};
+    TauSignalSafeAllocator(const TauSignalSafeAllocator& other) {UNUSED(other);};
+    template <class U> TauSignalSafeAllocator(const TauSignalSafeAllocator<U>& other) {UNUSED(other);};
     // allocate method
     pointer allocate(size_type n, typename std::allocator<void>::const_pointer = 0) {
         //printf("Allocating %d of type %s\n", n, typeid(T).name()); fflush(stdout);
@@ -71,10 +73,16 @@ public:
     }
 
     template <class U>
-    bool operator==(TauSignalSafeAllocator<U> const & rhs) const {return true;}
+    bool operator==(TauSignalSafeAllocator<U> const & rhs) const {
+        UNUSED(rhs);
+        return true;
+    }
 
     template <class U>
-    bool operator!=(TauSignalSafeAllocator<U> const & rhs) const {return false;}
+    bool operator!=(TauSignalSafeAllocator<U> const & rhs) const {
+        UNUSED(rhs);
+        return false;
+    }
 };
 
 #endif /* TAU_MMAP_MEM_MGR_H */

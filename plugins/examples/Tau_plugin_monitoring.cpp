@@ -43,6 +43,8 @@ json configuration;
 
 const char * default_configuration = R"(
 {
+  "periodic": false,
+  "periodicity seconds": 10,
   "/proc/stat": {
     "disable": false,
     "comment": "This will exclude all core-specific readings.",
@@ -54,7 +56,7 @@ const char * default_configuration = R"(
     "include": [".*MemAvailable.*", ".*MemFree.*", ".*MemTotal.*"]
   },
   "/proc/net/dev": {
-    "disable": false,
+    "disable": true,
     "comment": "This will include only the first ethernet device.",
     "include": [".*eno1.*"]
   },
@@ -69,7 +71,7 @@ const char * default_configuration = R"(
     "include": [".*eno1.*"]
   },
   "nvml": {
-    "disable": false,
+    "disable": true,
     "comment": "This will include only the utilization metrics.",
     "include": [".*utilization.*"]
   }
@@ -81,7 +83,7 @@ namespace tau {
         /* Simple class to aid in converting/storing component event data */
         class papi_event {
             public:
-                papi_event(const char * ename, const char * eunits, int ecode, int data_type) : 
+                papi_event(const char * ename, const char * eunits, int ecode, int data_type) :
                     name(ename), units(eunits), code(ecode), type(data_type), conversion(1.0) {}
                 std::string name;
                 std::string units;
@@ -92,7 +94,7 @@ namespace tau {
         /* Simple class to aid in processing PAPI components */
         class papi_component {
             public:
-                papi_component(const char * cname, int cid) : 
+                papi_component(const char * cname, int cid) :
                     name(cname), event_set(PAPI_NULL), initialized(false), id(cid) {}
                 std::string name;
                 std::vector<papi_event> events;
@@ -122,7 +124,7 @@ namespace tau {
             public:
                 NetStat() : recv_bytes(0LL), recv_packets(0LL),
                     recv_errors(0LL), recv_drops(0LL), recv_fifo(0LL),
-                    recv_frame(0LL), recv_compressed(0LL), recv_multicast(0LL), 
+                    recv_frame(0LL), recv_compressed(0LL), recv_multicast(0LL),
                     transmit_bytes(0LL), transmit_packets(0LL),
                     transmit_errors(0LL), transmit_drops(0LL),
                     transmit_fifo(0LL), transmit_collisions(0LL),
@@ -135,7 +137,7 @@ namespace tau {
                 long long recv_fifo;
                 long long recv_frame;
                 long long recv_compressed;
-                long long recv_multicast; 
+                long long recv_multicast;
                 long long transmit_bytes;
                 long long transmit_packets;
                 long long transmit_errors;
@@ -230,11 +232,11 @@ bool include_event(const char * component, const char * event_name) {
     if (configuration.count(component)) {
         auto json_component = configuration[component];
         if (json_component.count("include")) {
-            bool found = false;
             auto json_include = json_component["include"];
             for (auto i : json_include) {
+                std::string needle(i);
+                needle.erase(std::remove(needle.begin(),needle.end(),'\"'),needle.end());
                 try {
-                    std::string needle(i);
                     std::regex re(needle);
                     std::string haystack(event_name);
                     if (std::regex_search(haystack, re)) {
@@ -242,16 +244,61 @@ bool include_event(const char * component, const char * event_name) {
                         return true;
                     }
                 } catch (std::regex_error& e) {
-                    std::cerr << "Error in regular expression: " << i << std::endl;
+                    std::cerr << "Error: '" << e.what() << "' in regular expression: " << needle << std::endl;
+                    switch (e.code()) {
+                        case std::regex_constants::error_collate:
+                            std::cerr << "collate" << std::endl;
+                            break;
+                        case std::regex_constants::error_ctype:
+                            std::cerr << "ctype" << std::endl;
+                            break;
+                        case std::regex_constants::error_escape:
+                            std::cerr << "escape" << std::endl;
+                            break;
+                        case std::regex_constants::error_backref:
+                            std::cerr << "backref" << std::endl;
+                            break;
+                        case std::regex_constants::error_brack:
+                            std::cerr << "brack" << std::endl;
+                            break;
+                        case std::regex_constants::error_paren:
+                            std::cerr << "paren" << std::endl;
+                            break;
+                        case std::regex_constants::error_brace:
+                            std::cerr << "brace" << std::endl;
+                            break;
+                        case std::regex_constants::error_badbrace:
+                            std::cerr << "badbrace" << std::endl;
+                            break;
+                        case std::regex_constants::error_range:
+                            std::cerr << "range" << std::endl;
+                            break;
+                        case std::regex_constants::error_space:
+                            std::cerr << "space" << std::endl;
+                            break;
+                        case std::regex_constants::error_badrepeat:
+                            std::cerr << "badrepeat" << std::endl;
+                            break;
+                        case std::regex_constants::error_complexity:
+                            std::cerr << "complexity" << std::endl;
+                            break;
+                        case std::regex_constants::error_stack:
+                            std::cerr << "stack" << std::endl;
+                            break;
+                        default:
+                            std::cerr << "unknown" << std::endl;
+                            break;
+                     }
                 }
             }
-            if (!found) { return false; }
+            return false;
         }
         if (json_component.count("exclude")) {
-            auto json_include = json_component["exclude"];
-            for (auto i : json_include) {
+            auto json_exclude = json_component["exclude"];
+            for (auto i : json_exclude) {
+                std::string needle(i);
+                needle.erase(std::remove(needle.begin(),needle.end(),'\"'),needle.end());
                 try {
-                    std::string needle(i);
                     std::regex re(needle);
                     std::string haystack(event_name);
                     if (std::regex_search(haystack, re)) {
@@ -259,7 +306,51 @@ bool include_event(const char * component, const char * event_name) {
                         return false;
                     }
                 } catch (std::regex_error& e) {
-                    std::cerr << "Error in regular expression: " << i << std::endl;
+                    std::cerr << "Error: '" << e.what() << "' in regular expression: " << needle << std::endl;
+                    switch (e.code()) {
+                        case std::regex_constants::error_collate:
+                            std::cerr << "collate" << std::endl;
+                            break;
+                        case std::regex_constants::error_ctype:
+                            std::cerr << "ctype" << std::endl;
+                            break;
+                        case std::regex_constants::error_escape:
+                            std::cerr << "escape" << std::endl;
+                            break;
+                        case std::regex_constants::error_backref:
+                            std::cerr << "backref" << std::endl;
+                            break;
+                        case std::regex_constants::error_brack:
+                            std::cerr << "brack" << std::endl;
+                            break;
+                        case std::regex_constants::error_paren:
+                            std::cerr << "paren" << std::endl;
+                            break;
+                        case std::regex_constants::error_brace:
+                            std::cerr << "brace" << std::endl;
+                            break;
+                        case std::regex_constants::error_badbrace:
+                            std::cerr << "badbrace" << std::endl;
+                            break;
+                        case std::regex_constants::error_range:
+                            std::cerr << "range" << std::endl;
+                            break;
+                        case std::regex_constants::error_space:
+                            std::cerr << "space" << std::endl;
+                            break;
+                        case std::regex_constants::error_badrepeat:
+                            std::cerr << "badrepeat" << std::endl;
+                            break;
+                        case std::regex_constants::error_complexity:
+                            std::cerr << "complexity" << std::endl;
+                            break;
+                        case std::regex_constants::error_stack:
+                            std::cerr << "stack" << std::endl;
+                            break;
+                        default:
+                            std::cerr << "unknown" << std::endl;
+                            break;
+                     }
                 }
             }
         }
@@ -271,8 +362,8 @@ bool include_component(const char * component) {
         auto json_component = configuration[component];
         if (json_component.count("disable")) {
             bool tmp = json_component["disable"];
-            if(tmp) { 
-                return false; 
+            if(tmp) {
+                return false;
             }
         }
     }
@@ -297,14 +388,22 @@ void initialize_papi_events(void) {
         if (strstr(comp_info->name, "perf_event") != NULL) {
             continue;
         }
+        /* Skip the example component, that's worthless and will break things */
+        if (strstr(comp_info->name, "example") != NULL) {
+            continue;
+        }
+        /* Skip the perf_event_uncore component, it has security problems */
+        if (strstr(comp_info->name, "perf_event_uncore") != NULL) {
+            continue;
+        }
         if (!include_component(comp_info->name)) { return; }
-        TAU_VERBOSE("Found %s component...\n", comp_info->name);
+        if (my_rank == 0) TAU_VERBOSE("Found %s component...\n", comp_info->name);
         /* Does this component have available events? */
         if (comp_info->num_native_events == 0) {
             fprintf(stderr, "Error: No %s events found.\n", comp_info->name);
             if (comp_info->disabled != 0) {
                 fprintf(stderr, "Error: %s.\n", comp_info->disabled_reason);
-            }        
+            }
             continue;
         }
         ppc * comp = new ppc(comp_info->name, component_id);
@@ -348,7 +447,7 @@ void initialize_papi_events(void) {
             char unit[PAPI_MAX_STR_LEN] = {0};
             strncpy(unit,evinfo.units,PAPI_MAX_STR_LEN);
             // save the event info
-            TAU_VERBOSE("Found event '%s (%s)'\n", event_name, unit);
+            if (my_rank == 0) TAU_VERBOSE("Found event '%s (%s)'\n", event_name, unit);
             ppe this_event(event_name, unit, code, evinfo.data_type);
             if(strcmp(unit, "nJ") == 0) {
                 this_event.units = "J";
@@ -360,7 +459,7 @@ void initialize_papi_events(void) {
             }
             if(this_event.units.size() > 0) {
                 std::stringstream ss;
-                ss << this_event.name << " (" 
+                ss << this_event.name << " ("
                    << this_event.units << ")";
                 this_event.name = ss.str();
             }
@@ -390,7 +489,6 @@ std::vector<cpustats_t*> * read_cpu_stats() {
     /*  Reading proc/stat as a file  */
     FILE * pFile;
     char line[128] = {0};
-    char dummy[32] = {0};
     pFile = fopen ("/proc/stat","r");
     if (pFile == nullptr) {
         perror ("Error opening file");
@@ -405,11 +503,20 @@ std::vector<cpustats_t*> * read_cpu_stats() {
                        &cpu_stat->system, &cpu_stat->idle,
                        &cpu_stat->iowait, &cpu_stat->irq, &cpu_stat->softirq,
                        &cpu_stat->steal, &cpu_stat->guest);
+                /* PGI Compiler is non-standard.  It can't handle regular expressions
+                 * with range values, so we can't filter out the per-cpu results.
+                 * So, we'll just read the first line of the file and quit
+                 * for all cases. */
+                /*
                 if (!include_event("/proc/stat", cpu_stat->name)) {
+                    printf("Skipping %s\n", cpu_stat->name);
                     continue;
                 }
+                */
                 cpu_stats->push_back(cpu_stat);
             }
+            // only do the first line.
+            break;
         }
     }
     fclose(pFile);
@@ -423,7 +530,6 @@ std::vector<netstats_t*> * read_net_stats() {
     /*  Reading proc/stat as a file  */
     FILE * pFile;
     char line[256] = {0};
-    char dummy[32] = {0};
     /* Do we want per-process readings? */
     //pFile = fopen ("/proc/self/net/dev","r");
     pFile = fopen ("/proc/net/dev","r");
@@ -457,6 +563,7 @@ std::vector<netstats_t*> * read_net_stats() {
             &net_stat->transmit_drops, &net_stat->transmit_fifo,
             &net_stat->transmit_collisions, &net_stat->transmit_carrier,
             &net_stat->transmit_compressed);
+        if (nf == 0) continue; // error!
         // strip the colon
         net_stat->name[strlen(net_stat->name)-1] = '\0';
         net_stats->push_back(net_stat);
@@ -484,6 +591,7 @@ iostats_t * read_io_stats() {
         char dummy[32] = {0};
         long long tmplong = 0LL;
         int nf = sscanf( line, "%s %lld\n", dummy, &tmplong);
+        if (nf == 0) continue; // error!
         // strip the colon
         dummy[strlen(dummy)-1] = '\0';
         std::string name(dummy);
@@ -514,7 +622,7 @@ int choose_volunteer_rank() {
     char * host_index = allhostnames + (hostlength * my_rank);
     strncpy(host_index, hostname, hostlength);
     // get all hostnames
-    PMPI_Allgather(hostname, hostlength, MPI_CHAR, allhostnames, 
+    PMPI_Allgather(hostname, hostlength, MPI_CHAR, allhostnames,
                    hostlength, MPI_CHAR, MPI_COMM_WORLD);
     int volunteer = 0;
     // point to the head of the array
@@ -557,7 +665,7 @@ void parse_proc_meminfo() {
         std::string& value = results[1];
         char* pEnd;
         double d1 = strtod (value.c_str(), &pEnd);
-        if (pEnd) { 
+        if (pEnd) {
             std::stringstream ss;
             /* trim the trailing : */
             ss << "meminfo:" << results[0].substr(0,results[0].size()-1);
@@ -597,8 +705,7 @@ void parse_proc_self_status() {
         std::istringstream iss(tmp);
         std::vector<std::string> results(std::istream_iterator<std::string>{iss},
                                          std::istream_iterator<std::string>());
-        std::string& value = results[1];
-        if (results[0].compare("Cpus_allowed_list") == 0) { 
+        if (results[0].compare("Cpus_allowed_list") == 0) {
             Tau_metadata_task(const_cast<char*>(results[0].c_str()),
                 const_cast<char*>(results[1].c_str()), 0);
         }
@@ -622,7 +729,7 @@ void parse_proc_self_statm() {
         std::string& value = results[0];
         char* pEnd;
         double d1 = strtod (value.c_str(), &pEnd);
-        if (pEnd) { 
+        if (pEnd) {
             if (include_event("/proc/self/statm", "program size (kB)")) {
                 if (TauEnv_get_tracing()) {
                     Tau_trigger_userevent("program size (kB)", d1);
@@ -634,7 +741,7 @@ void parse_proc_self_statm() {
         }
         value = results[1];
         d1 = strtod (value.c_str(), &pEnd);
-        if (pEnd) { 
+        if (pEnd) {
             if (include_event("/proc/self/statm", "resident set size (kB)")) {
                 if (TauEnv_get_tracing()) {
                     Tau_trigger_userevent("resident set size (kB)", d1);
@@ -646,7 +753,7 @@ void parse_proc_self_statm() {
         }
         value = results[2];
         d1 = strtod (value.c_str(), &pEnd);
-        if (pEnd) { 
+        if (pEnd) {
             if (include_event("/proc/self/statm", "resident shared pages")) {
                 if (TauEnv_get_tracing()) {
                     Tau_trigger_userevent("resident shared pages", d1);
@@ -667,9 +774,11 @@ void sample_value(const char * component, const char * cpu, const char * name,
     std::stringstream ss;
     ss << cpu << ":" << name;
     /* If we are not including this event, continue */
+    /*
     if (!include_event(component, ss.str().c_str())) {
         return;
     }
+    */
     // double-check the value...
     double tmp;
     if (total == 0LL) {
@@ -691,7 +800,7 @@ void update_cpu_stats(void) {
     /* get the current stats */
     std::vector<cpustats_t*> * new_stats = read_cpu_stats();
     if (new_stats == NULL) return;
-    for (int i = 0 ; i < new_stats->size() ; i++) {
+    for (size_t i = 0 ; i < new_stats->size() ; i++) {
         /* we need to take the difference from the last read */
         cpustats_t diff;
         diff.user = (*new_stats)[i]->user - (*previous_cpu_stats)[i]->user;
@@ -704,9 +813,6 @@ void update_cpu_stats(void) {
         diff.steal = (*new_stats)[i]->steal - (*previous_cpu_stats)[i]->steal;
         diff.guest = (*new_stats)[i]->guest - (*previous_cpu_stats)[i]->guest;
         double total = (double)(diff.user + diff.nice + diff.system +
-                diff.idle + diff.iowait + diff.irq + diff.softirq +
-                diff.steal + diff.guest);
-        long long lltotal = (diff.user + diff.nice + diff.system +
                 diff.idle + diff.iowait + diff.irq + diff.softirq +
                 diff.steal + diff.guest);
         sample_value("/proc/stat", (*new_stats)[i]->name, " User %",     (double)(diff.user), total);
@@ -732,7 +838,7 @@ void update_net_stats(void) {
     /* get the current stats */
     std::vector<netstats_t*> * new_stats = read_net_stats();
     if (new_stats == NULL) return;
-    for (int i = 0 ; i < new_stats->size() ; i++) {
+    for (size_t i = 0 ; i < new_stats->size() ; i++) {
         /* we need to take the difference from the last read */
         netstats_t diff;
         diff.recv_bytes = (*new_stats)[i]->recv_bytes - (*previous_net_stats)[i]->recv_bytes;
@@ -781,7 +887,7 @@ void update_io_stats(void) {
     /* get the current stats */
     iostats_t * new_stats = read_io_stats();
     if (new_stats == NULL) return;
-    for (int i = 0 ; i < new_stats->size() ; i++) {
+    for (size_t i = 0 ; i < new_stats->size() ; i++) {
         /* we need to take the difference from the last read */
         long long tmplong = (*new_stats)[i].second - (*previous_io_stats)[i].second;
         sample_value("/proc/self/io", "io", (*new_stats)[i].first.c_str(), (double)(tmplong), 1LL);
@@ -790,7 +896,7 @@ void update_io_stats(void) {
     previous_io_stats = new_stats;
 }
 
-void read_papi_components(void) {
+void read_components(void) {
     tau::papi_plugin::ScopedTimer(__func__);
 #ifdef TAU_PAPI
     for (size_t index = 0; index < components.size() ; index++) {
@@ -885,10 +991,12 @@ void free_papi_components(void) {
 
 void stop_worker(void) {
     if (done) return;
+    // if no thread, return
+    if (configuration.count("periodic") == 0 || !configuration["periodic"]) return;
     pthread_mutex_lock(&_my_mutex);
     done = true;
     pthread_mutex_unlock(&_my_mutex);
-    TAU_VERBOSE("TAU ADIOS2 thread joining...\n"); fflush(stderr);
+    if (my_rank == 0) TAU_VERBOSE("TAU ADIOS2 thread joining...\n"); fflush(stderr);
     pthread_cond_signal(&_my_cond);
     int ret = pthread_join(worker_thread, NULL);
     if (ret != 0) {
@@ -910,14 +1018,14 @@ void stop_worker(void) {
     }
 }
 
-void * Tau_papi_component_plugin_threaded_function(void* data) {
+void * Tau_monitoring_plugin_threaded_function(void* data) {
     /* Set the wakeup time (ts) to 2 seconds in the future. */
     struct timespec ts;
     struct timeval  tp;
 
     while (!done) {
         // take a reading...
-        read_papi_components();
+        read_components();
         // wait x microseconds for the next batch.
         gettimeofday(&tp, NULL);
         int seconds = 1;
@@ -930,7 +1038,7 @@ void * Tau_papi_component_plugin_threaded_function(void* data) {
         // wait the time period.
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
         if (rc == ETIMEDOUT) {
-            TAU_VERBOSE("%d Timeout from plugin.\n", RtsLayer::myNode()); fflush(stderr);
+            //TAU_VERBOSE("%d Timeout from plugin.\n", RtsLayer::myNode()); fflush(stderr);
         } else if (rc == EINVAL) {
             TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
         } else if (rc == EPERM) {
@@ -995,35 +1103,25 @@ static void do_cleanup() {
     clean = true;
 }
 
-int Tau_plugin_event_pre_end_of_execution_papi_component(Tau_plugin_event_pre_end_of_execution_data_t *data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+int Tau_plugin_event_pre_end_of_execution_monitoring(Tau_plugin_event_pre_end_of_execution_data_t *data) {
+    if (my_rank == 0) TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     do_cleanup();
     return 0;
 }
 
-int Tau_plugin_event_end_of_execution_papi_component(Tau_plugin_event_end_of_execution_data_t *data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+int Tau_plugin_event_end_of_execution_monitoring(Tau_plugin_event_end_of_execution_data_t *data) {
+    if (my_rank == 0) TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     do_cleanup();
     return 0;
 }
 
-int Tau_plugin_event_trigger_papi_component(Tau_plugin_event_trigger_data_t* data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    return 0;
-}
-
-int Tau_plugin_event_dump_papi_component(Tau_plugin_event_dump_data_t* data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    return 0;
-}
-
-int Tau_plugin_metadata_registration_complete_papi_component(Tau_plugin_event_metadata_registration_data_t* data) {
+int Tau_plugin_metadata_registration_complete_monitoring(Tau_plugin_event_metadata_registration_data_t* data) {
     //TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     return 0;
 }
 
-int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t* data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* data) {
+    if (my_rank == 0) TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
 
     rank_getting_system_data = choose_volunteer_rank();
 
@@ -1040,47 +1138,25 @@ int Tau_plugin_event_post_init_papi_component(Tau_plugin_event_post_init_data_t*
 #if !defined(__APPLE__)
     previous_io_stats = read_io_stats();
 #endif
-    /* spawn the worker thread to do the reading */
-    init_lock(&_my_mutex);
-    TAU_VERBOSE("Spawning thread.\n");
-    int ret = pthread_create(&worker_thread, NULL,
-        &Tau_papi_component_plugin_threaded_function, NULL);
-    if (ret != 0) {
-        errno = ret;
-        perror("Error: pthread_create (1) fails\n");
-        exit(1);
+    if (configuration.count("periodic") &&
+        configuration["periodic"]) {
+        /* spawn the worker thread to do the reading */
+        init_lock(&_my_mutex);
+        if (my_rank == 0) TAU_VERBOSE("Spawning thread.\n");
+        int ret = pthread_create(&worker_thread, NULL,
+        &Tau_monitoring_plugin_threaded_function, NULL);
+        if (ret != 0) {
+            errno = ret;
+            perror("Error: pthread_create (1) fails\n");
+            exit(1);
+        }
     }
-    return 0;
-}  
-
-int Tau_plugin_event_send_papi_component(Tau_plugin_event_send_data_t* data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    return 0;
-}
-
-int Tau_plugin_event_recv_papi_component(Tau_plugin_event_recv_data_t* data) {
-    TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    return 0;
-}
-
-int Tau_plugin_event_function_entry_papi_component(Tau_plugin_event_function_entry_data_t* data) {
-    //TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    return 0;
-}
-
-int Tau_plugin_event_function_exit_papi_component(Tau_plugin_event_function_exit_data_t* data) {
-    //TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    return 0;
-}
-
-int Tau_plugin_event_atomic_trigger_papi_component(Tau_plugin_event_atomic_event_trigger_data_t* data) {
-    //TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     return 0;
 }
 
 void read_config_file(void) {
     try {
-            std::ifstream cfg("tau_components.json");
+            std::ifstream cfg("tau_monitoring.json");
             cfg >> configuration;
             cfg.close();
         } catch (...) {
@@ -1089,8 +1165,16 @@ void read_config_file(void) {
         }
 }
 
+int Tau_plugin_dump_monitoring(Tau_plugin_event_dump_data_t* data) {
+    //printf("PAPI Component PLUGIN %s\n", __func__);
+    // take a reading...
+    read_components();
+    return 0;
+}
+
+
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
- * Every plugin MUST implement this function to register callbacks for various events 
+ * Every plugin MUST implement this function to register callbacks for various events
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
@@ -1101,19 +1185,11 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     read_config_file();
 
     /* Required event support */
-    cb->Trigger = Tau_plugin_event_trigger_papi_component;
-    cb->Dump = Tau_plugin_event_dump_papi_component;
-    cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_papi_component;
-    cb->PostInit = Tau_plugin_event_post_init_papi_component;
-    cb->PreEndOfExecution = Tau_plugin_event_pre_end_of_execution_papi_component;
-    cb->EndOfExecution = Tau_plugin_event_end_of_execution_papi_component;
-
-    /* Trace events */
-    cb->Send = Tau_plugin_event_send_papi_component;
-    cb->Recv = Tau_plugin_event_recv_papi_component;
-    cb->FunctionEntry = Tau_plugin_event_function_entry_papi_component;
-    cb->FunctionExit = Tau_plugin_event_function_exit_papi_component;
-    cb->AtomicEventTrigger = Tau_plugin_event_atomic_trigger_papi_component;
+    cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_monitoring;
+    cb->PostInit = Tau_plugin_event_post_init_monitoring;
+    cb->PreEndOfExecution = Tau_plugin_event_pre_end_of_execution_monitoring;
+    cb->EndOfExecution = Tau_plugin_event_end_of_execution_monitoring;
+    cb->Dump = Tau_plugin_dump_monitoring;
 
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
     free (cb);
