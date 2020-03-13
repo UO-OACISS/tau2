@@ -4307,24 +4307,42 @@ fi
 # auto-detect the MPI settings and the compiler to use.
 ####################################################################
 
+# mpicxx may change the compilers!
 orig_c_compiler=$c_compiler
 orig_cxx_compiler=$cxx_compiler
 orig_fortran_compiler=$fortran_compiler
-# mpicxx may change it.
-#if [ $cxx_compiler = mpicxx ] ; then
+
+# If Intel is detected, check for mpiicpc not mpicxx
+mpicxx_exe=mpicxx
+mpicc_exe=mpicc
+mpif90_exe=mpif90
+intel_cxx=`which mpiicpc 2>/dev/null | wc -l`
+if [ $intel_cxx = 1 ] ; then
+    echo "detected Intel in path"
+    if [ "x$cxx_compiler" = "xicpc" -o "x$cxx_compiler" = "xmpiicpc" ] ; then
+        echo "using Intel MPI wrappers (with Intel compilers)"
+        mpicxx_exe=mpiicpc
+        mpicc_exe=mpiicc
+        mpif90_exe=mpiifort
+    else
+        echo "WARNING: Intel compilers found in your path, but C++ compiler not specified.  Whatever is detected in mpicxx will be used as the compiler.  To force Intel compilers, please pass -c++=icpc or -c++=mpiicpc"
+        issue_intel_warning=yes
+    fi
+fi
+
 if [ $mpi = yes -a "x$mpiinc" = "x" ] ; then
-    cxxloaded=`which mpicxx 2>/dev/null | wc -l`
+    cxxloaded=`which $mpicxx_exe 2>/dev/null | wc -l`
     mpi=yes
     if [ $cxxloaded = 1 ]
     then
-	echo "NOTE: Found mpicxx in the path...trying to auto-configure compilers and flags..."
-	c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	f90loaded=`which mpif90 2>/dev/null | wc -l`
+	echo "NOTE: Found $mpicxx_exe in the path...trying to auto-configure compilers and flags..."
+	c_compiler=`$mpicc_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	f90loaded=`which $mpif90_exe 2>/dev/null | wc -l`
 	#if [ $f90loaded = 1 -a "x$orig_fortran_compiler" = "xmpif90" ]
 	if [ $f90loaded = 1 ] ; then
-	    echo "NOTE: Found mpif90 in the path...trying to auto-configure compilers and flags..."
-            fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	    echo "NOTE: Found $mpif90_exe in the path...trying to auto-configure compilers and flags..."
+            fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
 	    echo "NOTE: detected $fortran_compiler"
             if [ "x$fortran_compiler" = "xifort" ]; then
 		fortran_compiler=intel
@@ -4350,8 +4368,8 @@ if [ $mpi = yes -a "x$mpiinc" = "x" ] ; then
 	else
 	    echo "Default fortran compiler was '$orig_fortran_compiler'..."
 	    if [ $f90loaded = 1 ] ; then
-                fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	    else 
+                fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	    else
                 if [ "x$orig_fortran_compiler" = "xdefault" ]; then
                   fortran_compiler=no
                 fi
@@ -4372,14 +4390,14 @@ if [ $mpi = yes -a "x$mpiinc" = "x" ] ; then
             is_internal_compiler_loaded=`which $cxx_compiler 2>/dev/null | wc -l`
             if [ $is_internal_compiler_loaded = 0 ]; then
 		# Compiler is not loaded, use full path to it
-		c_compiler=`mpicc -show | awk '{ print $1;}' `
-		cxx_compiler=`mpicxx -show | awk '{ print $1;}' `
-		fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
+		c_compiler=`$mpicc_exe -show | awk '{ print $1;}' `
+		cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' `
+		fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' `
             fi
             if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
-		mpiinc=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
-		mpilibargs=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
-		mpiflibargs=`mpif90 -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
+		mpiinc=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+		mpilibargs=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+		mpiflibargs=`$mpif90_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
 
 		mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
 		mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
@@ -4387,8 +4405,8 @@ if [ $mpi = yes -a "x$mpiinc" = "x" ] ; then
 	        mpilibargs_added_to_fixmakeargs=yes
 
             fi
-            full_cxx_compiler=`mpicxx -show | tail -n 1 | awk '{ print $1; }'`
-            full_cc_compiler=`mpicc -show | tail -n 1 | awk '{ print $1; }'`
+            full_cxx_compiler=`$mpicxx_exe -show | tail -n 1 | awk '{ print $1; }'`
+            full_cc_compiler=`$mpicc_exe -show | tail -n 1 | awk '{ print $1; }'`
             fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
             mpi=yes
 	fi
@@ -12498,5 +12516,8 @@ then
    echo "NOTE: This system supports the Cray CNL platform. You may configure with -arch=craycnl to enable this option."
 fi
 
+if [ "x$issue_intel_warning" = "xyes" ] ; then
+    echo "NOTE: Intel compilers found in your path, but C++ compiler not specified.  Whatever was detected in 'mpicxx -show' will be used as the compiler.  To force Intel compilers, please pass -c++=icpc or -c++=mpiicpc"
+fi
 
 exit 0
