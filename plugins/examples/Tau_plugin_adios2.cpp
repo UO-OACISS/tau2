@@ -414,7 +414,7 @@ void Tau_plugin_adios2_define_variables(int numThreads, int numCounters,
         timer_map_it = timers.find(ss.str());
         if (timer_map_it == timers.end()) {
             // add the timer to the map
-            timers.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads)));
+            timers.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads,0)));
             // define the variable for ADIOS
             bpIO.DefineVariable<double>(
                 ss.str(), shape, start, count, adios2::ConstantDims);
@@ -422,14 +422,14 @@ void Tau_plugin_adios2_define_variables(int numThreads, int numCounters,
                 ss.str(std::string());
                 ss << shortName << " / Inclusive " << counterNames[i];
                 // add the timer to the map
-                timers.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads)));
+                timers.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads,0.0)));
                 // define the variable for ADIOS
                 bpIO.DefineVariable<double>(
                     ss.str(), shape, start, count, adios2::ConstantDims);
                 ss.str(std::string());
                 ss << shortName << " / Exclusive " << counterNames[i];
                 // add the timer to the map
-                timers.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads)));
+                timers.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads,0.0)));
                 // define the variable for ADIOS
                 bpIO.DefineVariable<double>(
                     ss.str(), shape, start, count, adios2::ConstantDims);
@@ -627,8 +627,8 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     TAU_VERBOSE("TAU PLUGIN ADIOS2: dump\n");
     tau::plugins::ScopedTimer(__func__);
 
-	if (!initialized) {
-       Tau_plugin_adios2_init_adios();
+    if (!initialized) {
+        Tau_plugin_adios2_init_adios();
     }
 
     Tau_global_incr_insideTAU();
@@ -640,28 +640,12 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     TauMetrics_getCounterList(&counterNames, &(numCounters[0]));
     std::vector<int> numRanks = {adios_comm_size};
 
-    static int max_threads = 1;
-#if TAU_MPI
-    assert(data->tid == 0);
-    // The easy way is if we are synchronously dumping, and using MPI
-    // We also want to do this once.
-    //if (data->tid == 0 && max_threads == 0) {
-    if (data->tid == 0) {
-        int my_threads = RtsLayer::getTotalThreads();
-        MPI_Allreduce(&my_threads, &max_threads, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-    }
-#else
-    // Ask all ranks for their num threads
-    for (int i = 0 ; i < world_comm_size ; i++) {
-        char * reply = my_sockets->send_message(i, "Get num threads");
-        if (reply != nullptr) {
-            int t = atoi(reply);
-            //printf("%d rank %d has %d threads.\n", world_comm_rank, i, t);
-            max_threads = t > max_threads ? t : max_threads;
-            free(reply);
-        }
-    }
-#endif
+    /* This logic breaks down if the number of threads changes during execution.
+     * So, we'll just assume a fixed number of threads, that makes things easier.
+     * ADIOS2 doesn't like it when different ranks have different numbers of
+     * threads, either. */
+    //int max_threads = RtsLayer::getTotalThreads();
+    const int max_threads = TAU_MAX_THREADS;
     numThreads[0] = max_threads;
 
     Tau_plugin_adios2_define_variables(numThreads[0], numCounters[0], counterNames);
@@ -753,6 +737,7 @@ int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution
         bpWriter.Close();
         opened = false;
     }
+    enabled = false;
 #endif
     return 0;
 }
@@ -798,7 +783,6 @@ int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
 /* This happens from Profiler.cpp, when data is written out. */
 int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t* data) {
     if (!enabled || data->tid != 0) return 0;
-    enabled = false;
     TAU_VERBOSE("TAU PLUGIN ADIOS2 Finalize\n"); fflush(stdout);
 #ifndef TAU_MPI
     Tau_ADIOS2_stop_worker();
@@ -813,6 +797,7 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
         pthread_cond_destroy(&_my_cond);
         pthread_mutex_destroy(&_my_mutex);
     }
+    enabled = false;
 #endif
     return 0;
 }
