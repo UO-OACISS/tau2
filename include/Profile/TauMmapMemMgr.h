@@ -46,7 +46,7 @@ public:
     ~TauSignalSafeAllocator() {};
     // Copy methods
     TauSignalSafeAllocator(const TauSignalSafeAllocator& other) {UNUSED(other);};
-    template <class U> TauSignalSafeAllocator(const TauSignalSafeAllocator<U>& other) {UNUSED(other);};
+    template <class U> TauSignalSafeAllocator(const TauSignalSafeAllocator<U>& other) {UNUSED(other);}
     // allocate method
     pointer allocate(size_type n, typename std::allocator<void>::const_pointer = 0) {
         //printf("Allocating %d of type %s\n", n, typeid(T).name()); fflush(stdout);

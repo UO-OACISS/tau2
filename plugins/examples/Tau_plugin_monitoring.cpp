@@ -16,6 +16,10 @@
 #include <vector>
 #include <regex>
 
+#ifdef TAU_MPI
+#include "mpi.h"
+#endif
+
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
 #include <Profile/TauMetrics.h>
@@ -23,10 +27,6 @@
 #include <Profile/TauPlugin.h>
 #include <Profile/TauMetaData.h>
 #include <pthread.h>
-
-#ifdef TAU_MPI
-#include "mpi.h"
-#endif
 
 #ifdef TAU_PAPI
 #include "papi.h"
