@@ -25,7 +25,7 @@
 #endif
 
 #include <adios2.h>
-#include "Tau_sockets.h"
+#include "Tau_scoped_timer.h"
 
 #define TAU_ADIOS2_PERIODIC_DEFAULT false
 #define TAU_ADIOS2_PERIOD_DEFAULT 2000000 // microseconds
@@ -56,8 +56,6 @@ std::map<std::string, std::vector<double> > counters;
 adios2::Variable<int> num_threads_var;
 adios2::Variable<int> num_metrics_var;
 adios2::Variable<int> num_ranks_var;
-
-tau::plugins::Sockets * my_sockets;
 
 char *_program_path()
 {
@@ -240,6 +238,7 @@ void Tau_ADIOS2_stop_worker(void) {
 }
 
 void Tau_dump_ADIOS2_metadata() {
+    tau::plugins::ScopedTimer(__func__);
     int tid = RtsLayer::myThread();
     int nodeid = TAU_PROFILE_GET_NODE();
     for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).begin();
@@ -499,6 +498,9 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
     std::vector<FunctionInfo*> tmpTimers(TheFunctionDB());
     RtsLayer::UnLockDB();
 
+    // don't try to read more threads than this node has seen
+    int numThreadsLocal = numThreads < RtsLayer::getTotalThreads() ? numThreads : RtsLayer::getTotalThreads();
+
     std::map<std::string, std::vector<double> >::iterator timer_map_it;
 
     //foreach: TIMER
@@ -518,12 +520,8 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
 
         try {
             // assign real data
-            for (int tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
+            for (int tid = 0; tid < numThreadsLocal; tid++) {
                 timers[ss.str()][tid] = (double)(fi->GetCalls(tid));
-            }
-            // pad with zeroes - all ranks may not have the same num threads
-            for (int tid = RtsLayer::getTotalThreads(); tid < numThreads; tid++) {
-                timers[ss.str()][tid] = 0.0;
             }
 
             bpWriter.Put<double>(ss.str(), timers[ss.str()].data());
@@ -534,12 +532,12 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
                 incl << shortName << " / Inclusive " << counterNames[m];
                 excl << shortName << " / Exclusive " << counterNames[m];
                 // assign real data
-                for (int tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
+                for (int tid = 0; tid < numThreadsLocal; tid++) {
                     timers[incl.str()][tid] = fi->getDumpInclusiveValues(tid)[m];
                     timers[excl.str()][tid] = fi->getDumpExclusiveValues(tid)[m];
                 }
                 // pad with zeroes - all ranks may not have the same num threads
-                for (int tid = RtsLayer::getTotalThreads(); tid < numThreads; tid++) {
+                for (int tid = numThreadsLocal; tid < numThreadsLocal; tid++) {
                     timers[incl.str()][tid] = 0.0;
                     timers[excl.str()][tid] = 0.0;
                 }
@@ -585,7 +583,7 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
 
         try {
             // assign real data
-            for (int tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
+            for (int tid = 0; tid < numThreadsLocal; tid++) {
                 counters[ss.str()][tid] = (double)(ue->GetNumEvents(tid));
                 counters[mean.str()][tid] = ue->GetMean(tid);
                 counters[max.str()][tid] = ue->GetMax(tid);
@@ -593,7 +591,7 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
                 counters[sumsqr.str()][tid] = ue->GetSumSqr(tid);
             }
             // pad with zeroes - all ranks may not have the same num threads
-            for (int tid = RtsLayer::getTotalThreads(); tid < numThreads; tid++) {
+            for (int tid = numThreadsLocal; tid < numThreadsLocal; tid++) {
                 counters[ss.str()][tid] = 0.0;
                 counters[mean.str()][tid] = 0.0;
                 counters[max.str()][tid] = 0.0;
@@ -645,7 +643,8 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
      * ADIOS2 doesn't like it when different ranks have different numbers of
      * threads, either. */
     //int max_threads = RtsLayer::getTotalThreads();
-    const int max_threads = TAU_MAX_THREADS;
+    //const int max_threads = TAU_MAX_THREADS;
+    const int max_threads = 1;
     numThreads[0] = max_threads;
 
     Tau_plugin_adios2_define_variables(numThreads[0], numCounters[0], counterNames);
@@ -758,10 +757,6 @@ int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
     Tau_plugin_adios2_init_adios();
     Tau_plugin_adios2_open_file();
 
-#ifndef TAU_MPI
-    my_sockets = new tau::plugins::Sockets(world_comm_rank, &handle_socket_message);
-#endif
-
     /* spawn the thread if doing periodic */
     if (thePluginOptions().env_periodic) {
         _threaded = true;
@@ -812,7 +807,6 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
 #if TAU_MPI
     PMPI_Comm_size(MPI_COMM_WORLD, &world_comm_size);
     PMPI_Comm_rank(MPI_COMM_WORLD, &world_comm_rank);
-    tau::plugins::Sockets::GetHostInfo(12345);
 #endif
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(&cb);

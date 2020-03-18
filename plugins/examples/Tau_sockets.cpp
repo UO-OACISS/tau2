@@ -1,5 +1,6 @@
 
 #include "Tau_sockets.h"
+#include "Tau_scoped_timer.h"
 #include <iostream>
 
 #include <arpa/inet.h>

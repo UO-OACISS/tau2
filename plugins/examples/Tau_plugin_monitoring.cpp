@@ -34,6 +34,7 @@
 #define PAPI_NULL -1
 #endif
 
+#include "Tau_scoped_timer.h"
 #include "json.h"
 using json = nlohmann::json;
 json configuration;
@@ -169,18 +170,6 @@ namespace tau {
             return ltrim(rtrim(s, t), t);
         }
 
-        class ScopedTimer {
-            public:
-                ScopedTimer(const char * name) {
-                    _name = strdup(name);
-                    //Tau_pure_start(_name);
-                }
-                ~ScopedTimer() {
-                    //Tau_pure_stop(_name);
-                    free(_name);
-                }
-                char * _name;
-        };
     }
 }
 
@@ -483,7 +472,6 @@ void initialize_papi_events(void) {
 #endif
 
 std::vector<cpustats_t*> * read_cpu_stats() {
-    tau::papi_plugin::ScopedTimer(__func__);
     if (!include_component("/proc/stat")) { return NULL; }
     std::vector<cpustats_t*> * cpu_stats = new std::vector<cpustats_t*>();
     /*  Reading proc/stat as a file  */
@@ -524,7 +512,6 @@ std::vector<cpustats_t*> * read_cpu_stats() {
 }
 
 std::vector<netstats_t*> * read_net_stats() {
-    tau::papi_plugin::ScopedTimer(__func__);
     if (!include_component("/proc/net/dev")) { return NULL; }
     std::vector<netstats_t*> * net_stats = new std::vector<netstats_t*>();
     /*  Reading proc/stat as a file  */
@@ -573,7 +560,6 @@ std::vector<netstats_t*> * read_net_stats() {
 }
 
 iostats_t * read_io_stats() {
-    tau::papi_plugin::ScopedTimer(__func__);
     if (!include_component("/proc/self/io")) { return NULL; }
     iostats_t * io_stats = new iostats_t();
     /*  Reading proc/stat as a file  */
@@ -652,7 +638,6 @@ int choose_volunteer_rank() {
 }
 
 void parse_proc_meminfo() {
-  tau::papi_plugin::ScopedTimer(__func__);
   if (!include_component("/proc/meminfo")) { return; }
   FILE *f = fopen("/proc/meminfo", "r");
   if (f) {
@@ -695,7 +680,6 @@ void parse_proc_meminfo() {
 extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
 
 void parse_proc_self_status() {
-  tau::papi_plugin::ScopedTimer(__func__);
   if (!include_component("/proc/self/status")) { return; }
   FILE *f = fopen("/proc/self/status", "r");
   if (f) {
@@ -716,7 +700,6 @@ void parse_proc_self_status() {
 }
 
 void parse_proc_self_statm() {
-  tau::papi_plugin::ScopedTimer(__func__);
   if (!include_component("/proc/self/statm")) { return; }
   FILE *f = fopen("/proc/self/statm", "r");
   if (f) {
@@ -795,7 +778,6 @@ void sample_value(const char * component, const char * cpu, const char * name,
 }
 
 void update_cpu_stats(void) {
-    tau::papi_plugin::ScopedTimer(__func__);
     if (!include_component("/proc/stat")) { return; }
     /* get the current stats */
     std::vector<cpustats_t*> * new_stats = read_cpu_stats();
@@ -833,7 +815,6 @@ void update_cpu_stats(void) {
 }
 
 void update_net_stats(void) {
-    tau::papi_plugin::ScopedTimer(__func__);
     if (!include_component("/proc/net/dev")) { return; }
     /* get the current stats */
     std::vector<netstats_t*> * new_stats = read_net_stats();
@@ -882,7 +863,6 @@ void update_net_stats(void) {
 }
 
 void update_io_stats(void) {
-    tau::papi_plugin::ScopedTimer(__func__);
     if (!include_component("/proc/self/io")) { return; }
     /* get the current stats */
     iostats_t * new_stats = read_io_stats();
@@ -897,7 +877,6 @@ void update_io_stats(void) {
 }
 
 void read_components(void) {
-    tau::papi_plugin::ScopedTimer(__func__);
 #ifdef TAU_PAPI
     for (size_t index = 0; index < components.size() ; index++) {
         if (components[index]->initialized) {
@@ -1166,6 +1145,7 @@ void read_config_file(void) {
 }
 
 int Tau_plugin_dump_monitoring(Tau_plugin_event_dump_data_t* data) {
+    tau::plugins::ScopedTimer(__func__);
     //printf("PAPI Component PLUGIN %s\n", __func__);
     // take a reading...
     read_components();
