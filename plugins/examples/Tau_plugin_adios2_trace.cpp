@@ -1,6 +1,6 @@
 /***************************************************************************
  * *   Plugin Testing
- * *   This plugin will provide iterative output of TAU profile data to an 
+ * *   This plugin will provide iterative output of TAU profile data to an
  * *   ADIOS2 BP file.
  * *
  * *************************************************************************/
@@ -13,6 +13,9 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#if TAU_MPI
+#include "mpi.h"
+#endif
 
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
@@ -20,9 +23,6 @@
 #include <Profile/TauAPI.h>
 #include <Profile/TauPlugin.h>
 #include <Profile/TauMetaData.h>
-#if TAU_MPI
-#include "mpi.h"
-#endif
 
 #include <adios2.h>
 #include <unordered_set>
@@ -129,13 +129,13 @@ class plugin_options {
         }
 };
 
-inline plugin_options& thePluginOptions() { 
-    return plugin_options::thePluginOptions(); 
+inline plugin_options& thePluginOptions() {
+    return plugin_options::thePluginOptions();
 }
 
 void Tau_ADIOS2_parse_environment_variables(void);
 void Tau_ADIOS2_parse_selection_file(const char * filename);
-bool Tau_ADIOS2_contains(std::set<std::string>& myset, 
+bool Tau_ADIOS2_contains(std::set<std::string>& myset,
         const char * key, bool if_empty);
 
 void * Tau_ADIOS2_thread_function(void* data);
@@ -274,14 +274,14 @@ void Tau_ADIOS2_parse_selection_file(const char * filename) {
     }
 }
 
-typedef std::vector< std::pair< unsigned long, 
-        std::array<unsigned long, 5> > > 
+typedef std::vector< std::pair< unsigned long,
+        std::array<unsigned long, 5> > >
         timer_values_array_t;
 typedef std::vector< std::pair< unsigned long,
-        std::array<unsigned long, 5> > > 
+        std::array<unsigned long, 5> > >
         counter_values_array_t;
 typedef std::vector< std::pair< unsigned long,
-        std::array<unsigned long, 7> > > 
+        std::array<unsigned long, 7> > >
         comm_values_array_t;
 
 class step_data_t {
@@ -317,7 +317,7 @@ public:
 class circular_buffer {
 public:
     explicit circular_buffer(size_t size) :
-        max_size_(size) { 
+        max_size_(size) {
             buf_.reserve(size);
             for(int i = 0 ; i < size ; i++) {
                 buf_[i] = nullptr;
@@ -423,7 +423,7 @@ class adios {
         std::unordered_map<std::string, int> counters;
         adios2::ADIOS ad;
         adios2::IO _bpIO;
-        adios() : 
+        adios() :
             opened(false),
             prog_name_index(-1),
             comm_rank_index(-1),
@@ -537,7 +537,7 @@ void adios::open() {
         ss << thePluginOptions().env_filename;
         char * program = _program_path();
         if (program != NULL) {
-            ss << "-" << program; 
+            ss << "-" << program;
             free(program);
         }
         if (!thePluginOptions().env_one_file) {
@@ -588,7 +588,7 @@ void adios::write_variables(void)
     /* sort into one big vector from all threads */
     pthread_mutex_lock(&_vector_mutex[0]);
     // make a list from the first thread of data - copying the data in!
-    std::list<std::pair<unsigned long, std::array<unsigned long, 5> > > 
+    std::list<std::pair<unsigned long, std::array<unsigned long, 5> > >
         merged_timers(timer_values_array[0].begin(),
                       timer_values_array[0].end());
     // this clear will empty the vector and destroy the objects!
@@ -599,7 +599,7 @@ void adios::write_variables(void)
     for (int t = 1 ; t < threads ; t++) {
         pthread_mutex_lock(&_vector_mutex[t]);
         // make a list from the next thread of data - copying the data in!
-        std::list<std::pair<unsigned long, std::array<unsigned long, 5> > > 
+        std::list<std::pair<unsigned long, std::array<unsigned long, 5> > >
             next_thread(timer_values_array[t].begin(),
                         timer_values_array[t].end());
         // this clear will empty the vector and destroy the objects!
@@ -659,7 +659,7 @@ void adios::write_variables(void)
 
     /* sort into one big vector from all threads */
     pthread_mutex_lock(&_vector_mutex[0]);
-    std::vector<std::pair<unsigned long, std::array<unsigned long, 5> > > 
+    std::vector<std::pair<unsigned long, std::array<unsigned long, 5> > >
         merged_counters(counter_values_array[0]);
     pthread_mutex_unlock(&_vector_mutex[0]);
     for (int t = 1 ; t < threads ; t++) {
@@ -691,7 +691,7 @@ void adios::write_variables(void)
 
     /* sort into one big vector from all threads */
     pthread_mutex_lock(&_vector_mutex[0]);
-    std::vector<std::pair<unsigned long, std::array<unsigned long, 7> > > 
+    std::vector<std::pair<unsigned long, std::array<unsigned long, 7> > >
         merged_comms(comm_values_array[0]);
     pthread_mutex_unlock(&_vector_mutex[0]);
     for (int t = 1 ; t < threads ; t++) {
@@ -751,7 +751,7 @@ void adios::write_variables(void)
         const adios2::Box<adios2::Dims> timer_selection{timer_start, timer_count};
         event_timestamps.SetSelection(timer_selection);
         bpWriter.Put(event_timestamps, all_timers->data());
-    }    
+    }
 
     /* save the current set of events in this step */
     this_step->step_of_events = all_timers;
@@ -792,32 +792,32 @@ void adios::write_variables(void)
     /* Keep a map of program names to indexes */
     int adios::check_prog_name(char * prog_name) {
         if (prog_names.count(prog_name) == 0) {
-            std::stringstream ss; 
+            std::stringstream ss;
             int num = prog_names.size();
             ss << "program_name " << num;
             prog_names[prog_name] = num;
             define_attribute(ss.str(), prog_name, _bpIO, false);
-        }   
+        }
         return prog_names[prog_name];
-    }   
+    }
 
     /* Keep a map of event types to indexes */
     int adios::check_event_type(const std::string& event_type) {
         if (event_types.count(event_type) == 0) {
-            std::stringstream ss; 
+            std::stringstream ss;
             int num = event_types.size();
             ss << "event_type " << num;
             event_types[event_type] = num;
             define_attribute(ss.str(), event_type, _bpIO, false);
-        }   
+        }
         return event_types[event_type];
-    }   
+    }
 
     /* Keep a map of timers to indexes */
     int adios::check_timer(const char * timer) {
         std::string tmp(timer);
         if (timers.count(tmp) == 0) {
-            std::stringstream ss; 
+            std::stringstream ss;
             int num = timers.size();
             ss << "timer " << num;
             pthread_mutex_lock(&_my_mutex);
@@ -857,10 +857,10 @@ void adios::write_variables(void)
         }
     }
 
-/* Necessary to use const char * because UserEvents use TauSafeString objects, 
+/* Necessary to use const char * because UserEvents use TauSafeString objects,
  * not std::string. We use the "if_empty" parameter to tell us how to treat
  * an empty set.  For exclude lists, it's false, for include lists, it's true */
-bool Tau_ADIOS2_contains(std::set<std::string>& myset, 
+bool Tau_ADIOS2_contains(std::set<std::string>& myset,
         const char * key, bool if_empty) {
     // if the set has contents, and we are in the set, then return true.
     std::string _key(key);
@@ -1104,7 +1104,7 @@ int Tau_plugin_adios2_send(Tau_plugin_event_send_data_t* data) {
     auto &tmp = my_adios->comm_values_array[data->tid];
     tmp.push_back(
         std::make_pair(
-            data->timestamp, 
+            data->timestamp,
             std::move(tmparray)
         )
     );
@@ -1130,7 +1130,7 @@ int Tau_plugin_adios2_recv(Tau_plugin_event_recv_data_t* data) {
     auto &tmp = my_adios->comm_values_array[data->tid];
     tmp.push_back(
         std::make_pair(
-            data->timestamp, 
+            data->timestamp,
             std::move(tmparray)
         )
     );
@@ -1249,7 +1249,7 @@ int Tau_plugin_adios2_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data_
     auto &tmp = my_adios->counter_values_array[data->tid];
     tmp.push_back(
         std::make_pair(
-            data->timestamp, 
+            data->timestamp,
             std::move(tmparray)
         )
     );
@@ -1339,28 +1339,28 @@ void Tau_plugin_adios2_dump_history(void) {
     /* write the program name */
     for (auto iter : my_adios->prog_names) {
         auto prog_name = iter.first;
-        std::stringstream ss; 
+        std::stringstream ss;
         ss << "program_name " << my_adios->prog_names[prog_name];
         my_adios->define_attribute(ss.str(), prog_name, bpIO, true);
     }
     /* write the event types */
     for (auto iter : my_adios->event_types) {
         auto event_type = iter.first;
-        std::stringstream ss; 
+        std::stringstream ss;
         ss << "event_type " << my_adios->event_types[event_type];
         my_adios->define_attribute(ss.str(), event_type, bpIO, true);
     }
     /* write the timer names */
     for (auto iter : my_adios->timers) {
         auto timer = iter.first;
-        std::stringstream ss; 
+        std::stringstream ss;
         ss << "timer " << my_adios->timers[timer];
         my_adios->define_attribute(ss.str(), timer, bpIO, true);
     }
     /* write the counter names */
     for (auto iter : my_adios->counters) {
         auto counter = iter.first;
-        std::stringstream ss; 
+        std::stringstream ss;
         ss << "counter " << my_adios->counters[counter];
         my_adios->define_attribute(ss.str(), counter, bpIO, true);
     }
@@ -1373,12 +1373,12 @@ void Tau_plugin_adios2_dump_history(void) {
             first = false;
             /* sort into one big vector from all threads */
             // make a list from the first thread of data - copying the data in!
-            std::list<std::pair<unsigned long, std::array<unsigned long, 5> > > 
+            std::list<std::pair<unsigned long, std::array<unsigned long, 5> > >
                 merged_timers(step_data->primer_stacks[0]->begin(),
                             step_data->primer_stacks[0]->end());
             for (int t = 1 ; t < step_data->threads ; t++) {
                 // make a list from the next thread of data - copying the data in!
-                std::list<std::pair<unsigned long, std::array<unsigned long, 5> > > 
+                std::list<std::pair<unsigned long, std::array<unsigned long, 5> > >
                     next_thread(step_data->primer_stacks[t]->begin(),
                                 step_data->primer_stacks[t]->end());
                 // start at the head of the list
@@ -1402,7 +1402,7 @@ void Tau_plugin_adios2_dump_history(void) {
                 } while (head != tail);
             }
             size_t num_timer_values = merged_timers.size();
-        
+
             std::vector<unsigned long> all_timers(6,0);
             all_timers.reserve(6*merged_timers.size());
             int timer_value_index = 0;
@@ -1435,7 +1435,7 @@ void Tau_plugin_adios2_dump_history(void) {
                 const adios2::Box<adios2::Dims> timer_selection{timer_start, timer_count};
                 event_timestamps.SetSelection(timer_selection);
                 bpWriter.Put(event_timestamps, all_timers.data());
-            }    
+            }
             bpWriter.EndStep();
             // this is all we want from this frame, so advance to the next one.
             continue;
@@ -1460,7 +1460,7 @@ void Tau_plugin_adios2_dump_history(void) {
             const adios2::Box<adios2::Dims> timer_selection{timer_start, timer_count};
             event_timestamps.SetSelection(timer_selection);
             bpWriter.Put(event_timestamps, step_data->step_of_events->data());
-        }    
+        }
 
         if (step_data->num_counter_values > 0) {
             counter_values.SetShape({step_data->num_counter_values, 6});
@@ -1487,12 +1487,12 @@ void Tau_plugin_adios2_dump_history(void) {
         if (my_adios->step_history.empty()) {
             /* sort into one big vector from all threads */
             // make a list from the first thread of data - copying the data in!
-            std::list<std::pair<unsigned long, std::array<unsigned long, 5> > > 
+            std::list<std::pair<unsigned long, std::array<unsigned long, 5> > >
                 merged_timers(step_data->primer_stacks[0]->rbegin(),
                             step_data->primer_stacks[0]->rend());
             for (int t = 1 ; t < step_data->threads ; t++) {
                 // make a list from the next thread of data - copying the data in!
-                std::list<std::pair<unsigned long, std::array<unsigned long, 5> > > 
+                std::list<std::pair<unsigned long, std::array<unsigned long, 5> > >
                     next_thread(step_data->primer_stacks[t]->rbegin(),
                                 step_data->primer_stacks[t]->rend());
                 // start at the head of the list
@@ -1516,7 +1516,7 @@ void Tau_plugin_adios2_dump_history(void) {
                 } while (head != tail);
             }
             size_t num_timer_values = merged_timers.size();
-        
+
             std::vector<unsigned long> all_timers(6,0);
             all_timers.reserve(6*merged_timers.size());
             int timer_value_index = 0;
@@ -1549,7 +1549,7 @@ void Tau_plugin_adios2_dump_history(void) {
                 const adios2::Box<adios2::Dims> timer_selection{timer_start, timer_count};
                 event_timestamps.SetSelection(timer_selection);
                 bpWriter.Put(event_timestamps, all_timers.data());
-            }    
+            }
             bpWriter.EndStep();
          }
         delete step_data;
@@ -1559,7 +1559,7 @@ void Tau_plugin_adios2_dump_history(void) {
 }
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
- * Every plugin MUST implement this function to register callbacks for various events 
+ * Every plugin MUST implement this function to register callbacks for various events
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
@@ -1651,7 +1651,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
 #include <bits/stdc++.h>
 #endif
 using namespace std;
- 
+
 // Function that matches input str with
 // given wildcard pattern
 bool strmatch(const char str[], const char pattern[],
@@ -1661,7 +1661,7 @@ bool strmatch(const char str[], const char pattern[],
     // empty string
     if (m == 0)
         return (n == 0);
- 
+
     // lookup table for storing results of
     // subproblems
     bool lookup[n + 1][m + 1]; // = {false};
@@ -1671,18 +1671,18 @@ bool strmatch(const char str[], const char pattern[],
             lookup[i][j] = false;
 		}
 	}
- 
+
     // initailze lookup table to false
     //memset(lookup, false, sizeof(lookup));
- 
+
     // empty pattern can match with empty string
     lookup[0][0] = true;
- 
+
     // Only '#' can match with empty string
     for (int j = 1; j <= m; j++)
         if (pattern[j - 1] == '#')
             lookup[0][j] = lookup[0][j - 1];
- 
+
     // fill the table in bottom-up fashion
     for (int i = 1; i <= n; i++)
     {
@@ -1697,7 +1697,7 @@ bool strmatch(const char str[], const char pattern[],
             if (pattern[j - 1] == '#')
                 lookup[i][j] = lookup[i][j - 1] ||
                                lookup[i - 1][j];
- 
+
             // Current characters are considered as
             // matching in two cases
             // (a) current character of pattern is '?'
@@ -1705,12 +1705,12 @@ bool strmatch(const char str[], const char pattern[],
             else if (pattern[j - 1] == '?' ||
                     str[i - 1] == pattern[j - 1])
                 lookup[i][j] = lookup[i - 1][j - 1];
- 
+
             // If characters don't match
             else lookup[i][j] = false;
         }
     }
- 
+
     return lookup[n][m];
 }
 
@@ -1730,7 +1730,7 @@ bool skip_timer(const char * key) {
     } else {
         // check to see if it's in the excluded wildcards
         for (std::set<std::string>::iterator
-                it=thePluginOptions().excluded_timers_with_wildcards.begin(); 
+                it=thePluginOptions().excluded_timers_with_wildcards.begin();
              it!=thePluginOptions().excluded_timers_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
@@ -1740,7 +1740,7 @@ bool skip_timer(const char * key) {
         }
         // check to see if it's in the included wildcards
         for (std::set<std::string>::iterator
-                it=thePluginOptions().included_timers_with_wildcards.begin(); 
+                it=thePluginOptions().included_timers_with_wildcards.begin();
              it!=thePluginOptions().included_timers_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
@@ -1749,7 +1749,7 @@ bool skip_timer(const char * key) {
             }
         }
     }
-    // neither included nor excluded? 
+    // neither included nor excluded?
     // do we have an inclusion list? If so, then skip (because we didn't match it).
     if (!thePluginOptions().included_timers.empty() ||
         !thePluginOptions().included_timers_with_wildcards.empty()) {
@@ -1773,7 +1773,7 @@ bool skip_counter(const char * key) {
     } else {
         // check to see if it's in the excluded wildcards
         for (std::set<std::string>::iterator
-                it=thePluginOptions().excluded_counters_with_wildcards.begin(); 
+                it=thePluginOptions().excluded_counters_with_wildcards.begin();
              it!=thePluginOptions().excluded_counters_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
@@ -1783,7 +1783,7 @@ bool skip_counter(const char * key) {
         }
         // check to see if it's in the included wildcards
         for (std::set<std::string>::iterator
-                it=thePluginOptions().included_counters_with_wildcards.begin(); 
+                it=thePluginOptions().included_counters_with_wildcards.begin();
              it!=thePluginOptions().included_counters_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
@@ -1792,7 +1792,7 @@ bool skip_counter(const char * key) {
             }
         }
     }
-    // neither included nor excluded? 
+    // neither included nor excluded?
     // do we have an inclusion list? If so, then skip (because we didn't match it).
     if (!thePluginOptions().included_counters.empty() ||
         !thePluginOptions().included_counters_with_wildcards.empty()) {

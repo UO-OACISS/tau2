@@ -13,6 +13,9 @@
 #include <string>
 #include <sstream>
 #include <assert.h>
+#if TAU_MPI
+#include "mpi.h"
+#endif
 
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
@@ -20,9 +23,6 @@
 #include <Profile/TauAPI.h>
 #include <Profile/TauPlugin.h>
 #include <Profile/TauMetaData.h>
-#if TAU_MPI
-#include "mpi.h"
-#endif
 
 #include <adios2.h>
 #include "Tau_sockets.h"
