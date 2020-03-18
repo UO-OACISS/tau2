@@ -351,43 +351,76 @@ void Tau_cupti_set_device_props() {
 	dev_record.numMultiprocessors = props.multiProcessorCount;
 	dev_record.numThreadsPerWarp = props.warpSize;
 
+    /* save some metadata now */
+	char tmp_name[256];
+	sprintf(tmp_name, "GPU[%d] Total Constant Memory", dev);
+    char tmp_value[256];
+	sprintf(tmp_value, "%lu", props.totalGlobalMem);
+    Tau_metadata_register(tmp_name, tmp_value);
+	sprintf(tmp_name, "GPU[%d] L2 Cache Size", dev);
+    Tau_metadata_register(tmp_name, props.l2CacheSize);
+	sprintf(tmp_name, "GPU[%d] Registers per Block", dev);
+    Tau_metadata_register(tmp_name, props.regsPerBlock);
+	sprintf(tmp_name, "GPU[%d] Shared Memory per Block", dev);
+    Tau_metadata_register(tmp_name, props.sharedMemPerBlock);
+	sprintf(tmp_name, "GPU[%d] Max Threads per Block", dev);
+    Tau_metadata_register(tmp_name, props.maxThreadsPerBlock);
+	sprintf(tmp_name, "GPU[%d] Max Threads per Multiprocessor", dev);
+    Tau_metadata_register(tmp_name, props.maxThreadsPerMultiProcessor);
+	sprintf(tmp_name, "GPU[%d] Warp Size", dev);
+    Tau_metadata_register(tmp_name, props.warpSize);
+
 	__deviceMap()[dev] = dev_record;
 
 	GpuMetadata* metadata = (GpuMetadata*) malloc(sizeof(GpuMetadata) * nMeta);
 
 	int n = 0;
-	metadata[n].name = (char*)("GPU Name");
-	metadata[n].value = props.name;
+	metadata[n].name = (char*) malloc(sizeof(char)*256);
+	sprintf(metadata[n].name, "GPU[%d] Name", dev);
+	metadata[n].value = strdup(props.name);
+    Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*)("Compute Capability Major");
+	metadata[n].name = (char*) malloc(sizeof(char)*256);
+	sprintf(metadata[n].name, "GPU[%d] Compute Capability Major", dev);
 	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d\n", props.major);
+	sprintf(metadata[n].value, "%d", props.major);
+    Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*)("Compute Capability Minor");
+	metadata[n].name = (char*) malloc(sizeof(char)*256);
+	sprintf(metadata[n].name, "GPU[%d] Compute Capability Minor", dev);
 	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d\n", props.minor);
+	sprintf(metadata[n].value, "%d", props.minor);
+    Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*)("Clock Rate");
+	metadata[n].name = (char*) malloc(sizeof(char)*256);
+	sprintf(metadata[n].name, "GPU[%d] Clock Rate", dev);
 	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d\n", props.clockRate);
+	sprintf(metadata[n].value, "%d", props.clockRate);
+    Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*)("Total Global Memory");
+	metadata[n].name = (char*) malloc(sizeof(char)*256);
+	sprintf(metadata[n].name, "GPU[%d] Total Global Memory", dev);
 	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d\n", props.totalGlobalMem);
+	sprintf(metadata[n].value, "%lu", props.totalGlobalMem);
+    Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*)("Number of Multiprocessors");
+	metadata[n].name = (char*) malloc(sizeof(char)*256);
+	sprintf(metadata[n].name, "GPU[%d] Number of Multiprocessors", dev);
 	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d\n", props.multiProcessorCount);
+	sprintf(metadata[n].value, "%d", props.multiProcessorCount);
+    Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*)("Number of Memcpy Engines");
+	metadata[n].name = (char*) malloc(sizeof(char)*256);
+	sprintf(metadata[n].name, "GPU[%d] Number of Memcpy Engines", dev);
 	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d\n", props.asyncEngineCount);
+	sprintf(metadata[n].value, "%d", props.asyncEngineCount);
+    Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
 	Tau_cupti_register_metadata(dev, metadata, nMeta);
