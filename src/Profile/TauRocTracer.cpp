@@ -39,6 +39,10 @@
 #endif /* TAU_ENABLE_ROCTRACER_HSA */
 #include <sys/syscall.h> 
 
+#include <string>
+#include <sstream>
+#include <iostream>
+
 #ifdef TAU_BFD
 #define HAVE_DECL_BASENAME 1
 #  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
