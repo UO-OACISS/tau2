@@ -12208,7 +12208,7 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
     cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir_}/libomp.so ;
 
     echo "ompt_dir=$ompt_dir"
-    omptlinking="-Wl,-rpath=${ompt_instdir}#-L${ompt_instdir}#$omptlibrary"
+    omptlinking="-Wl,-rpath=${ompt_instdir_}#-L${ompt_instdir_}#$omptlibrary"
     if [ "x$download_ompt_tr4" = "xyes" ] ; then
       fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
     elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
