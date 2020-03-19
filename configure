@@ -2118,10 +2118,12 @@ for arg in "$@"; do
 	    ;;
 
 	-ompt=download)
-            echo "ompt=download"
+        # Don't download all the time - let the later check see
+        # if the compiler has OMPT support built-in
 	    openmp=yes
 	    ompt=yes
-	    download_ompt=yes
+        #echo "ompt=download"
+	    #download_ompt=yes
 	    shift
 	    ;;
 	-ompt=download-tr4)
@@ -12265,6 +12267,12 @@ elif [ $ompt = yes -a $ompt_compiler_support = yes ] ; then
     rm -f ${ompt_instdir}/libomp.so
     rm -f ${ompt_instdir}/libgomp.so
     rm -f ${ompt_instdir}/libiomp5.so
+fi
+# Regardless, remove the libomp.so from ${targetdir}/${architecture}/lib
+if [ $ompt = yes ] ; then
+    rm -f ${targetdir}/${architecture}/lib/libomp.so
+    rm -f ${targetdir}/${architecture}/lib/libgomp.so
+    rm -f ${targetdir}/${architecture}/lib/libiomp5.so
 fi
 
 # Install the Static object library for LLVM-OMPT
