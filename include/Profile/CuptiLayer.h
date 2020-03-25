@@ -1,3 +1,6 @@
+#ifndef CUPTI_LAYER_H
+#define CUPTI_LAYER_H
+
 #ifdef __GNUC__
 #include <cstdio>
 #include <iostream>
@@ -231,3 +234,5 @@ extern "C" bool Tau_CuptiLayer_is_cupti_counter(char const * str);
 extern "C" void Tau_CuptiLayer_register_string(char const * str, int metric_n);
 
 extern "C" void Tau_cuda_Event_Synchonize();
+
+#endif //CUPTI_LAYER_H

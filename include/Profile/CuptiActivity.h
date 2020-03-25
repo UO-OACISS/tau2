@@ -1,3 +1,6 @@
+#ifndef CUPTI_ACTIVITY_H
+#define CUPTI_ACTIVITY_H
+
 #include <Profile/TauGpu.h>
 #include <Profile/CuptiLayer.h>
 #include <Profile/CudaSass.h>
@@ -409,3 +412,4 @@ int get_task_from_id(int id, int task);
 
 	//Tau_metadata("GPU " SX(name), str_##name.str().c_str()); 
 
+#endif //CUPTI_ACTIVITY_H

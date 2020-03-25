@@ -1,3 +1,6 @@
+#ifndef TAU_MPIT_TYPES_H
+#define TAU_MPIT_TYPES_H
+
 struct StringPair {
   char first[TAU_NAME_LENGTH];
   char second[TAU_NAME_LENGTH];
@@ -26,3 +29,4 @@ struct VectorControlVariable {
 
 typedef struct VectorControlVariable VectorControlVariable;
 
+#endif //TAU_MPIT_TYPES_H

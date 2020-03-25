@@ -1,3 +1,6 @@
+#ifndef TAU_CUDA_THREAD_H
+#define TAU_CUDA_THREAD_H
+
 struct CudaThread
 {
   unsigned int sys_tid;     // pthread
@@ -15,3 +18,5 @@ typedef struct Cuda_thread_device {
   int deviceid;
   int tau_vtid;
 } cuda_thread_device_t;
+
+#endif //TAU_CUDA_THREAD_H

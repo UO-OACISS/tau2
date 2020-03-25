@@ -1,3 +1,6 @@
+#ifndef TAU_GPU_ADAPTER_CUPTI_H
+#define TAU_GPU_ADAPTER_CUPTI_H
+
 #include "Profile/CuptiLayer.h"
 #include <Profile/TauGpu.h>
 #include <stdlib.h>
@@ -244,3 +247,4 @@ public:
 uint32_t CuptiGpuEvent::cdpCount = 0;
 double CuptiGpuEvent::beginTimestamp = 0;
 
+#endif //TAU_GPU_ADAPTER_CUPTI_H

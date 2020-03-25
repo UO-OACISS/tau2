@@ -4,6 +4,9 @@
 /*  Description: upcalls from GASP profiling tool into UPC code */
 /*  Copyright 2005, Dan Bonachea <bonachea@cs.berkeley.edu> */
 
+#ifndef TAU_GASP_H
+#define TAU_GASP_H
+
 typedef uint64_t gasp_tick_t;
 
 void gaspu_init(int *pmythread, int *pthreads);
@@ -16,3 +19,5 @@ void gaspu_flags_to_string(int flags, char *str, int sz);
 void gaspu_collop_to_string(int op, char *str, int sz);
 
 int gaspu_upcall_threadof(void *ptr);
+
+#endif //TAU_GASP_H

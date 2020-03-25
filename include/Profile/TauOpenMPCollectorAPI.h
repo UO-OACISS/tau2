@@ -1,3 +1,6 @@
+#ifndef TAU_OPENMP_COLLECTOR_API_H
+#define TAU_OPENMP_COLLECTOR_API_H
+
 /* An array of this struct is shared by all threads. To make sure we don't have false
  * sharing, the struct is 64 bytes in size, so that it fits exactly in
  * one (or two) cache lines. That way, when one thread updates its data
@@ -35,3 +38,5 @@ extern TAU_CDECL void Tau_omp_stop_timer(const char * state, int tid, int use_co
 extern TAU_CDECL void Tau_profile_exit_most_threads();
 
 #undef TAU_CDECL
+
+#endif //TAU_OPENMP_COLLECTOR_API_H

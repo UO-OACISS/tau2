@@ -1,3 +1,6 @@
+#ifndef TAU_CUDA_SASS_H
+#define TAU_CUDA_SASS_H
+
 #include <stdio.h>
 #include <stdint.h>
 #include <iostream>
@@ -114,4 +117,4 @@ int get_instruction_mix_category(string instr);
 void insert_instructions(std::set<std::string> *s_set, std::string Ins[], int size);
 std::string sanitize_instruction(std::string instr);
 
-
+#endif //TAU_CUDA_SASS_H
