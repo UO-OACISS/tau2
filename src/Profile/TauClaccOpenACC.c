@@ -28,6 +28,10 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
   case acc_ev_device_shutdown_start              : TAU_SET_EVENT_NAME(event_name, ">openacc_shutdown");
   case acc_ev_device_shutdown_end                : TAU_SET_EVENT_NAME(event_name, "<openacc_shutdown");
     // case acc_ev_done                        : TAU_SET_EVENT_NAME(event_name, "openacc_done");
+    /*    case acc_ev_wait_start                  : TAU_SET_EVENT_NAME(event_name, ">openacc_wait");
+    case acc_ev_wait_end                    : TAU_SET_EVENT_NAME(event_name, "<openacc_wait");
+    case acc_ev_update_start                : TAU_SET_EVENT_NAME(event_name, ">openacc_update");
+    case acc_ev_update_end                  : TAU_SET_EVENT_NAME(event_name, "<openacc_update");*/
   case acc_ev_enter_data_start: 
     TAU_SET_EVENT_NAME(event_name, ">openacc_enter_data");
   case acc_ev_enter_data_end: TAU_SET_EVENT_NAME(event_name, "<openacc_enter_data");
@@ -93,10 +97,10 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
     sprintf(srcinfo, " %s [{%s:%d}", prof_info->func_name, prof_info->src_file, prof_info->line_no);
     TAU_VERBOSE( "src info: %s\n", srcinfo );
     TAU_VERBOSE( "Line nb %d\n", prof_info->line_no );
-    sprintf(lineinfo, " {%d,0}", prof_info->line_no); 
+    sprintf(lineinfo, " {%d,%d}", prof_info->line_no, prof_info->func_line_no); 
     strcat(srcinfo,lineinfo);
     if ((prof_info->end_line_no) && (prof_info->end_line_no > prof_info->line_no)) {
-      sprintf(lineinfo, "-{%d,0}", prof_info->end_line_no); 
+      sprintf(lineinfo, "-{%d,%d}", prof_info->end_line_no, prof_info->func_end_line_no); 
       strcat(srcinfo,lineinfo);
     }
     
@@ -123,6 +127,10 @@ void acc_register_library( acc_prof_reg reg, acc_prof_reg unreg,
   reg( acc_ev_device_shutdown_start, &Tau_openacc_callback, acc_reg );
   reg( acc_ev_device_shutdown_end, &Tau_openacc_callback, acc_reg ); 
   reg( acc_ev_runtime_shutdown, &Tau_openacc_callback, acc_reg );
+  /*  reg( acc_ev_update_start, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_update_end, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_wait_start, &Tau_openacc_callback, acc_reg );
+  reg( acc_ev_wait_end, &Tau_openacc_callback, acc_reg );*/
   reg( acc_ev_create, &Tau_openacc_callback, acc_reg );
   reg( acc_ev_delete, &Tau_openacc_callback, acc_reg );
   reg( acc_ev_alloc, &Tau_openacc_callback, acc_reg ); 
@@ -142,11 +150,4 @@ void acc_register_library( acc_prof_reg reg, acc_prof_reg unreg,
 }
 
 
-  /* Unimplemented:
-     
-     acc_ev_wait_start
-     acc_ev_wait_end
-     acc_ev_update_start
-     acc_ev_update_end
-  */  
 #endif // ndef TAU_PGI_OPENACC

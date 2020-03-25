@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#from mpi4py import MPI
+from mpi4py import MPI
 import numpy as np
 import adios2
 #import os
@@ -39,7 +39,7 @@ def SetupArgs():
     args.nx = 1
     args.ny = 1
     args.nz = 1
-    
+
     return args
 
 def dumperiod_valuesars(vars_info):
@@ -92,7 +92,7 @@ def get_utilization(is_cpu, fr_step, vars_info, components, previous_mean, previ
         # Convert to MB if necessary
         if not is_cpu and "KB" in c.upper():
             mean_values[0] = mean_values[0] / 1000.0
-        # Compute the total values seen 
+        # Compute the total values seen
         total_value = mean_values[0]*count_values[0]
         # What's the value from the current frame?
         if previous_count[c] < count_values[0]:
@@ -103,12 +103,14 @@ def get_utilization(is_cpu, fr_step, vars_info, components, previous_mean, previ
         period_values[c] = np.append(period_values[c], current_period[c])
 
 def get_top5(fr_step, vars_info):
-    num_ranks = 2
-    num_threads = 8
+    num_ranks = int(vars_info["num_threads"]["Shape"].split(',')[0])
+    num_threads = fr_step.read("num_threads")[0]
     timer_means = {}
     timer_values = {}
     for name, info in vars_info.items():
         if ".TAU application" in name:
+            continue
+        if "addr=" in name:
             continue
         if "Exclusive TIME" in name:
             shape_str = vars_info[name]["Shape"].split(',')
@@ -121,7 +123,7 @@ def get_top5(fr_step, vars_info):
             while index < shape[0]:
                 timer_values[shortname].append(mean_values[index])
                 index = index + num_threads
-            timer_means[shortname] = np.sum(timer_values[shortname]) / num_ranks   
+            timer_means[shortname] = np.sum(timer_values[shortname]) / num_ranks
     limit = 0
     others = len(timer_means) - 5
     timer_values["other"] = [0] * num_ranks
@@ -131,7 +133,7 @@ def get_top5(fr_step, vars_info):
             timer_values["other"] = list( map(add, timer_values["other"], timer_values[key]) )
             del timer_values[key]
     #print(timer_values)
-    return timer_values
+    return timer_values, num_ranks
 
 def plot_cpu_utilization(ax, x, fontsize):
     global cpu_components
@@ -209,7 +211,7 @@ def plot_timers(ax, x, fontsize, top5):
     fontP.set_size('small')
     ax.legend(bbox_to_anchor=(1.10,0.5), loc="center left", borderaxespad=0, prop=fontP)
 
-def plot_utilization(args, x, fontsize, step, top5):
+def plot_utilization(args, x, fontsize, step, top5, num_ranks):
     print("plotting", end='...', flush=True)
     fig = plt.figure(4, figsize=(8,8), constrained_layout=True)
     gs = gridspec.GridSpec(4, 1, figure=fig)
@@ -221,7 +223,7 @@ def plot_utilization(args, x, fontsize, step, top5):
     plot_cpu_utilization(cpu, x, fontsize)
     plot_mem_utilization(mem, x, fontsize)
     plot_io_utilization(io, x, fontsize)
-    plot_timers(timers, np.arange(2), fontsize, top5)
+    plot_timers(timers, np.arange(num_ranks), fontsize, top5)
     plt.tick_params(axis='both', which='both', labelsize = fontsize/2)
 
     print("writing", end='...', flush=True)
@@ -234,16 +236,16 @@ def plot_utilization(args, x, fontsize, step, top5):
         fig.savefig(imgfile)
 
     plt.clf()
-    print("done.") 
+    print("done.")
 
 def process_file(args):
     fontsize=12
     filename = args.instream
     print ("Opening:", filename)
     if not args.nompi:
-        fr = adios2.open(filename, "r", MPI.COMM_SELF, "adios.xml", "TAUProfileOutputPDF")
+        fr = adios2.open(filename, "r", MPI.COMM_SELF, "adios.xml", "TAUProfileOutput")
     else:
-        fr = adios2.open(filename, "r", "adios.xml", "TAUProfileOutputPDF")
+        fr = adios2.open(filename, "r", "adios2.xml", "TAUProfileOutput")
     initialize_globals()
     cur_step = 0
     for fr_step in fr:
@@ -256,10 +258,10 @@ def process_file(args):
         get_utilization(True, fr_step, vars_info, cpu_components, previous_mean, previous_count, current_period, period_values)
         get_utilization(False, fr_step, vars_info, mem_components, previous_mean, previous_count, current_period, period_values)
         get_utilization(False, fr_step, vars_info, io_components, previous_mean, previous_count, current_period, period_values)
-        top5 = get_top5(fr_step, vars_info)
+        top5, num_ranks = get_top5(fr_step, vars_info)
 
         x=range(0,cur_step+1)
-        plot_utilization(args, x, fontsize, cur_step, top5)
+        plot_utilization(args, x, fontsize, cur_step, top5, num_ranks)
 
 if __name__ == '__main__':
     args = SetupArgs()

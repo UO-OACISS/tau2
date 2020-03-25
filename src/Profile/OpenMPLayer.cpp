@@ -15,7 +15,7 @@
  ***************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 
 #ifdef TAU_DOT_H_LESS_HEADERS
@@ -36,7 +36,7 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////
-// Define the static private members of OpenMPLayer  
+// Define the static private members of OpenMPLayer
 /////////////////////////////////////////////////////////////////////////
 
 omp_lock_t OpenMPLayer::tauDBmutex;
@@ -77,12 +77,15 @@ int _thread_count = 0;
 ////////////////////////////////////////////////////////////////////////
 // RegisterThread() should be called before any profiling routines are
 // invoked. This routine sets the thread id that is used by the code in
-// FunctionInfo and Profiler classes. This should be the first routine a 
+// FunctionInfo and Profiler classes. This should be the first routine a
 // thread should invoke from its wrapper. Note: main() thread shouldn't
-// call this routine. 
+// call this routine.
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::RegisterThread(void)
 {
+  /* There's some circular recursion going on...*/
+  static bool avoid_reentry = false;
+  if (avoid_reentry == true) return 0;
 #ifdef TAU_OPENMP
 
   /* We have to lock here and use the unsafe thread creation routine
@@ -92,6 +95,16 @@ int OpenMPLayer::RegisterThread(void)
 #if defined (TAU_USE_TLS) || defined (TAU_USE_DTLS)
   // if this thread has not been registered, then it does not have a TLS value for the ID
   if (_tau_thread_id == -1) {
+    /* This is temporary, just in case we re-enter this function.
+     * Technically, it's a race condition on _thread_count, but this
+     * code only really matters when thread 0 is initializing.  The
+     * call two lines later to Initialize() will call this function,
+     * and a single thread can get registered twice. */
+    if (_thread_count == 0) {
+        _tau_thread_id = 0;
+        avoid_reentry = true;
+    }
+    /* end temporary settings */
     Tau_global_incr_insideTAU();
     Initialize();
     if (initialized) omp_set_lock(&OpenMPLayer::tauRegistermutex);
@@ -105,14 +118,25 @@ int OpenMPLayer::RegisterThread(void)
     if (initialized) omp_unset_lock(&OpenMPLayer::tauRegistermutex);
     Tau_global_decr_insideTAU();
 	// TAU may not be done initializing yet! So don't start the timer for thread 0
-	if (_tau_thread_id > 0) 
+	if (_tau_thread_id > 0)
       Tau_create_top_level_timer_if_necessary_task(_tau_thread_id);
   }
+  avoid_reentry = false;
   return _tau_thread_id;
 #elif defined (TAU_USE_PGS)
   struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
   // if this thread has not been registered, then it does not have a TLS value for the ID
   if (tmp->threadID == -1) {
+    /* This is temporary, just in case we re-enter this function.
+     * Technically, it's a race condition on _thread_count, but this
+     * code only really matters when thread 0 is initializing.  The
+     * call two lines later to Initialize() will call this function,
+     * and a single thread can get registered twice. */
+    if (_thread_count == 0) {
+      tmp->thread_id = 0;
+      avoid_reentry = true;
+    }
+    /* end temporary settings */
     Tau_global_incr_insideTAU();
     Initialize();
     if (initialized) omp_set_lock(&OpenMPLayer::tauRegistermutex);
@@ -129,6 +153,7 @@ int OpenMPLayer::RegisterThread(void)
 	if (tmp->threadID > 0)
       Tau_create_top_level_timer_if_necessary_task(tmp->threadID);
   }
+  avoid_reentry = false;
   return tmp->threadID;
 #else // TAU_USE_TLS
 
@@ -169,9 +194,11 @@ int OpenMPLayer::RegisterThread(void)
     Tau_create_top_level_timer_if_necessary_task(tau_thread_id);
   }
 
+  avoid_reentry = false;
   return tau_thread_id;
 #endif // TAU_USE_TLS
 #else
+  avoid_reentry = false;
   return 0;
 #endif /* TAU_OPENMP */
 }
@@ -183,10 +210,10 @@ int OpenMPLayer::numThreads()
 
 ////////////////////////////////////////////////////////////////////////
 // GetThreadId maps the id in the thread specific data to the acutal TAU thread
-// ID. Since a getspecific has to be preceeded by a 
+// ID. Since a getspecific has to be preceeded by a
 // setspecific (that all threads besides main do), we get a null for the
-// main thread that lets us identify it as thread 0. It is the only 
-// thread that doesn't do a OpenMPLayer::RegisterThread(). 
+// main thread that lets us identify it as thread 0. It is the only
+// thread that doesn't do a OpenMPLayer::RegisterThread().
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::GetTauThreadId(void)
 {
@@ -275,7 +302,7 @@ int OpenMPLayer::GetThreadId(void)
   if (_tau_thread_id == -1) {
 	// call the function above, which will register the thread
 	// and assign the TLS value which we will use henceforth
-    return GetTauThreadId();  
+    return GetTauThreadId();
   } else {
     return _tau_thread_id;
   }
@@ -284,7 +311,7 @@ int OpenMPLayer::GetThreadId(void)
   if (tmp->threadID == -1) {
 	// call the function above, which will register the thread
 	// and assign the TLS value which we will use henceforth
-    return GetTauThreadId();  
+    return GetTauThreadId();
   } else {
     return tmp->threadID;
   }
@@ -315,8 +342,8 @@ int OpenMPLayer::GetThreadId(void)
 }
 
 ////////////////////////////////////////////////////////////////////////
-// TotalThreads returns the total number of threads running 
-// The user typically sets this by setting the environment variable 
+// TotalThreads returns the total number of threads running
+// The user typically sets this by setting the environment variable
 // OMP_NUM_THREADS or by using the routine omp_set_num_threads(int);
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::TotalThreads(void)
@@ -331,8 +358,8 @@ int OpenMPLayer::TotalThreads(void)
 }
 
 ////////////////////////////////////////////////////////////////////////
-// InitializeThreadData is called before any thread operations are performed. 
-// It sets the default values for static private data members of the 
+// InitializeThreadData is called before any thread operations are performed.
+// It sets the default values for static private data members of the
 // OpenMPLayer class.
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::InitializeThreadData(void)
@@ -357,7 +384,7 @@ void OpenMPLayer::Initialize(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::InitializeDBMutexData(void)
 {
-  // For locking functionDB 
+  // For locking functionDB
   omp_init_lock(&OpenMPLayer::tauDBmutex);
   return 1;
 }
@@ -365,16 +392,16 @@ int OpenMPLayer::InitializeDBMutexData(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::InitializeRegisterMutexData(void)
 {
-  // For locking thread registration process 
+  // For locking thread registration process
   omp_init_lock(&OpenMPLayer::tauRegistermutex);
   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////
-// LockDB locks the mutex protecting TheFunctionDB() global database of 
-// functions. This is required to ensure that push_back() operation 
-// performed on this is atomic (and in the case of tracing this is 
-// followed by a GetFunctionID() ). This is used in 
+// LockDB locks the mutex protecting TheFunctionDB() global database of
+// functions. This is required to ensure that push_back() operation
+// performed on this is atomic (and in the case of tracing this is
+// followed by a GetFunctionID() ). This is used in
 // FunctionInfo::FunctionInfoInit().
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::LockDB(void)
@@ -396,16 +423,16 @@ int OpenMPLayer::UnLockDB(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::InitializeEnvMutexData(void)
 {
-  // For locking functionEnv 
+  // For locking functionEnv
   omp_init_lock(&OpenMPLayer::tauEnvmutex);
   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////
-// LockEnv locks the mutex protecting TheFunctionEnv() global database of 
-// functions. This is required to ensure that push_back() operation 
-// performed on this is atomic (and in the case of tracing this is 
-// followed by a GetFunctionID() ). This is used in 
+// LockEnv locks the mutex protecting TheFunctionEnv() global database of
+// functions. This is required to ensure that push_back() operation
+// performed on this is atomic (and in the case of tracing this is
+// followed by a GetFunctionID() ). This is used in
 // FunctionInfo::FunctionInfoInit().
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::LockEnv(void)

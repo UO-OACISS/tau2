@@ -34,7 +34,7 @@ extern "C" void Tau_profile_set_group(void *ptr, TauGroup_t group);
 #include <fstream>
 #include <list>
 #include <string>
-#include <vector> 
+#include <vector>
 
 //#include "tau_instrument.h"
 #ifdef TAU_WINDOWS
@@ -343,7 +343,8 @@ bool instrumentEntity(const string& function_name)
 /* -------------------------------------------------------------------------- */
 bool wildcardCompare(char *wild, char *string, char kleenestar)
 {
-  char *cp, *mp;
+  char *cp = NULL;
+  char *mp = NULL;
 
   // if the wildcard does not contain path information, strip it from the other string
   if (!strchr(wild, TAU_DIR_CHARACTER)) {
@@ -434,7 +435,7 @@ bool processFileForInstrumentation(const string& file_name)
 #endif /* DEBUG */
       }
     }
-    /* the name doesn't match any routine name in the include list. 
+    /* the name doesn't match any routine name in the include list.
      Do not instrument it. */
     return false;
   }
@@ -445,29 +446,29 @@ bool processFileForInstrumentation(const string& file_name)
 
 /* This function extracts the file name from the name of the routine */
 char *Tau_extract_filename_from_routine(const char *name) {
-  char *save_ptr = NULL; 
-  char *routine_name = strdup(name); 
-  char *tmp = strtok_r(routine_name, "{}",&save_ptr); 
+  char *save_ptr = NULL;
+  char *routine_name = strdup(name);
+  char *tmp = strtok_r(routine_name, "{}",&save_ptr);
   if (tmp) {
     tmp = strtok_r(NULL, "}", &save_ptr);
     if (tmp) {
-      TAU_VERBOSE("Extracted filename = %s\n", tmp); 
+      TAU_VERBOSE("Extracted filename = %s\n", tmp);
     }
-  } 
+  }
   free(routine_name);
   return tmp;
 }
 
 /*The string returned by FunctionInfo can contain contextual information
  * when -ebs is used to sample with/without instrumentation
- * This function preprocesses the FunctionInfo returned string to return the actual name that 
+ * This function preprocesses the FunctionInfo returned string to return the actual name that
  * then be used to compare against the string in the selective instrumentation file.
  * Based on the following assumptions/rationale:
  * 1. The actual function name that we are interested in is last in sequence of a string created during Event Based Sampling: [CONTEXT] func1 => [SAMPLE] func2 ..... => [SAMPLE] our_func
  * 2. There is exactly one space between every entity in the FunctionInfo name. This is used to skip over characters in the logic below.
  * TODO: Use an already existing function inside TAU utils to ensure that property(2) is satisfied */
 char *Tau_preprocess_function_info_name(const char *name) {
-  char *last_position = strdup(name); 
+  char *last_position = strdup(name);
   char *current_position = NULL;
   const char *arrows = "=>";
 
@@ -480,7 +481,7 @@ char *Tau_preprocess_function_info_name(const char *name) {
     last_position = current_position;
     current_position = strstr(current_position, arrows);
   }
-  
+
   if(last_position[0] == '[') {
     /*Find the actual name by removing any instances of [SAMPLE], or [CONTEXT] or [SUMMARY] prepended to the name*/
     last_position = strchr(last_position, ']') + 2;
@@ -494,18 +495,18 @@ char *Tau_preprocess_function_info_name(const char *name) {
  * and is so, sets the function group to TAU_DISABLE, effectively disabling function from getting instrumented*/
 int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_registration_data* data) {
 
-  const char * before_preprocessing = ((FunctionInfo *)data->function_info_ptr)->GetName(); 
+  const char * before_preprocessing = ((FunctionInfo *)data->function_info_ptr)->GetName();
   const char * name = Tau_preprocess_function_info_name(before_preprocessing);
 
   const char * pch = strchr(name, '[');
   int position;
 
 
-  if (pch) { 
-    position = (pch -1) - name; 
+  if (pch) {
+    position = (pch -1) - name;
 
     /*Handle case where name could be "[CONTEXT] .TAU application" which happens when ebs is turned on*/
-    if(position < 0) 
+    if(position < 0)
       position = strlen(name);
   }
   else {
@@ -519,10 +520,10 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
 
   /*Check if function is .TAU application. If not, proceed to check if function needs to be instrumented*/
     /*If function should not instrumented, set profile group to TAU_DISABLE*/
-    char *filename = Tau_extract_filename_from_routine(name); 
-    bool instrument_file = true; // processFileForInstrumentation(filename); 
-    if (filename) { 
-      instrument_file = processFileForInstrumentation(filename); 
+    char *filename = Tau_extract_filename_from_routine(name);
+    bool instrument_file = true; // processFileForInstrumentation(filename);
+    if (filename) {
+      instrument_file = processFileForInstrumentation(filename);
       TAU_VERBOSE("processFileForInstrumentation(%s) returns %d\n", filename, instrument_file);
     }
 
@@ -536,7 +537,7 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
 }
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
- * Every plugin MUST implement this function to register callbacks for various events 
+ * Every plugin MUST implement this function to register callbacks for various events
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks_t));

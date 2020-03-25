@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#ifdef TAU_DOT_H_LESS_HEADERS 
+#ifdef TAU_DOT_H_LESS_HEADERS
 #include <sstream>
 #include <iostream>
 using namespace std;
@@ -82,7 +82,7 @@ using namespace tau;
 extern "C" void Tau_shutdown(void);
 //extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
-extern "C" long Tau_get_message_path(void); 
+extern "C" long Tau_get_message_path(void);
 extern "C" size_t Tau_util_return_hash_of_string(const char *name);
 extern "C" void Tau_util_invoke_async_callback(unsigned int id, void * data);
 
@@ -101,7 +101,7 @@ bool& Tau_gpu_initialized(void) { return _tau_gpu_initialized; }
 void Tau_gpu_initialized(bool init) { _tau_gpu_initialized = init; }
 
 #define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
-	static TauContextUserEvent ce(msg); return &ce; } 
+	static TauContextUserEvent ce(msg); return &ce; }
 
 TAU_GEN_CONTEXT_EVENT(TheHeapMemoryEntryEvent,"Heap Memory Used (KB) at Entry")
 TAU_GEN_CONTEXT_EVENT(TheHeapMemoryExitEvent,"Heap Memory Used (KB) at Exit")
@@ -142,7 +142,7 @@ extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup
 #ifndef CRAYCC
 union Tau_thread_status_flags
 {
-  /* Padding structures is tricky because compilers pad unexpectedly 
+  /* Padding structures is tricky because compilers pad unexpectedly
    * and word sizes differ.
    *
    * You can see this in this example program:
@@ -199,7 +199,7 @@ struct Tau_thread_status_flags {
 /* This array is shared by all threads. To make sure we don't have false
  * sharing, the struct is 64 bytes in size, so that it fits exactly in
  * one (or two) cache lines. That way, when one thread updates its data
- * in the array, it won't invalidate the cache line for other threads. 
+ * in the array, it won't invalidate the cache line for other threads.
  * This is very important with timers, as all threads are entering timers
  * at the same time, and every thread will invalidate the cache line
  * otherwise. */
@@ -209,7 +209,7 @@ __declspec (align(64)) static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_T
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS];
 #elif defined(TAU_NEC_SX)
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
-#elif defined(__GNUC__) 
+#elif defined(__GNUC__)
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {{{0}}};
 #else  /* __GNUC__ */
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
@@ -419,7 +419,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   return;
 #endif // TAU_EPILOG
 
-#ifdef TAU_VAMPIRTRACE 
+#ifdef TAU_VAMPIRTRACE
   uint64_t TimeStamp = vt_pform_wtime();
 #ifdef TAU_VAMPIRTRACE_5_12_API
   vt_enter(VT_CURRENT_THREAD, (uint64_t *) &TimeStamp, fi->GetFunctionId());
@@ -447,7 +447,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   if (Tau_thread_flags[tid].Tau_global_stackpos >= Tau_thread_flags[tid].Tau_global_stackdepth) {
     int oldDepth = Tau_thread_flags[tid].Tau_global_stackdepth;
     int newDepth = oldDepth + STACK_DEPTH_INCREMENT;
-    //printf("%d: NEW STACK DEPTH: %d\n", tid, newDepth); 
+    //printf("%d: NEW STACK DEPTH: %d\n", tid, newDepth);
     //Profiler *newStack = (Profiler *) malloc(sizeof(Profiler)*newDepth);
 
     //A deep copy is necessary here to keep the profiler pointers up to date
@@ -479,7 +479,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   p->RecordEvent = false; /* by default, we don't record this event */
 #endif /* TAU_MPITRACE */
 
-  
+
 #ifdef TAU_PROFILEPHASE
   if (phase) {
     p->SetPhase(true);
@@ -491,15 +491,15 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #ifdef TAU_DEPTH_LIMIT
   static int userspecifieddepth = TauEnv_get_depth_limit();
   int mydepth = Tau_thread_flags[tid].Tau_global_stackpos;
-  if (mydepth >= userspecifieddepth) { 
+  if (mydepth >= userspecifieddepth) {
 #ifndef TAU_WINDOWS
-#ifndef _AIX 
+#ifndef _AIX
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume(tid);
     }
 #endif /* _AIX */
 #endif
-    return; 
+    return;
   }
 #endif /* TAU_DEPTH_LIMIT */
 
@@ -597,7 +597,7 @@ extern "C" void Tau_lite_start_timer(void *functionInfo, int phase)
     Tau_start_timer(functionInfo, phase, Tau_get_thread());
   }
 }
-    
+
 
 
 
@@ -689,12 +689,12 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
   return;
 #endif
 
-#ifdef TAU_VAMPIRTRACE 
+#ifdef TAU_VAMPIRTRACE
   uint64_t TimeStamp = vt_pform_wtime();
 
 #ifdef TAU_VAMPIRTRACE_5_12_API
   vt_exit(VT_CURRENT_THREAD, (uint64_t *)&TimeStamp);
-#else 
+#else
   vt_exit((uint64_t *)&TimeStamp);
 #endif /* TAU_VAMPIRTRACE_5_12_API */
 
@@ -737,22 +737,22 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
       profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
     } else {
 #ifdef __PIN__ /* PIN can't resolve exits very well - it is not guaranteed */
-      TAU_VERBOSE("[%d:%d] PIN: Stopping %s instead of %s\n", RtsLayer::myNode(), RtsLayer::myThread(), profiler->ThisFunction->GetName(), fi->GetName()); 
-      TAU_VERBOSE("[%d:%d] PIN: %s return not found by PIN, stopping it instead of %s\n", RtsLayer::myNode(), RtsLayer::myThread(), profiler->ThisFunction->GetName(), fi->GetName()); 
-      profiler->ThisFunction->SetType("[IGNORE - Return not found by PIN]"); 
-      profiler->Stop(); 
+      TAU_VERBOSE("[%d:%d] PIN: Stopping %s instead of %s\n", RtsLayer::myNode(), RtsLayer::myThread(), profiler->ThisFunction->GetName(), fi->GetName());
+      TAU_VERBOSE("[%d:%d] PIN: %s return not found by PIN, stopping it instead of %s\n", RtsLayer::myNode(), RtsLayer::myThread(), profiler->ThisFunction->GetName(), fi->GetName());
+      profiler->ThisFunction->SetType("[IGNORE - Return not found by PIN]");
+      profiler->Stop();
       Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
       profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-#else 
+#else
       reportOverlap(profiler->ThisFunction, fi);
-#endif 
+#endif
     }
   }
 
 #ifdef TAU_DEPTH_LIMIT
   static int userspecifieddepth = TauEnv_get_depth_limit();
   int mydepth = Tau_thread_flags[tid].Tau_global_stackpos;
-  if (mydepth >= userspecifieddepth) { 
+  if (mydepth >= userspecifieddepth) {
     Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
 #ifndef TAU_WINDOWS
 #ifndef _AIX
@@ -768,7 +768,7 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
   /* check memory */
   if (enableHeapTracking && profiler->heapmem) {
     double oldheap = profiler->heapmem;
-    double difference = currentHeap - oldheap; 
+    double difference = currentHeap - oldheap;
     if (difference > 0) {
       TAU_CONTEXT_EVENT(TheHeapMemoryIncreaseEvent(), difference);
     } else if (difference < 0) {
@@ -781,7 +781,7 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
   Tau_thread_flags[tid].Tau_global_stackpos--;
 
 #ifndef TAU_WINDOWS
-#ifndef _AIX 
+#ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume(tid);
   }
@@ -837,7 +837,7 @@ extern "C" void Tau_lite_stop_timer(void *function_info)
     if (pp) {
       pp->ThisFunction->ExcludeTime(delta, tid);
     } else {
-      //printf("Tau_lite_stop: parent profiler = 0x0: Function name = %s, StoreData?\n", fi->GetName()); 
+      //printf("Tau_lite_stop: parent profiler = 0x0: Function name = %s, StoreData?\n", fi->GetName());
       TauProfiler_StoreData(tid);
     }
     Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
@@ -1007,10 +1007,10 @@ extern "C" void Tau_exit(const char * msg) {
 #ifdef TAUKTAU
   KtauProfiler::PutKtauProfiler();
 #endif /* TAUKTAU */
-  
-#ifdef RENCI_STFF  
+
+#ifdef RENCI_STFF
   RenciSTFF::cleanup();
-#endif // RENCI_STFF  
+#endif // RENCI_STFF
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1084,7 +1084,7 @@ extern "C" int Tau_dump(void) {
     Tau_plugin_event_dump_data_t plugin_data;
     plugin_data.tid = RtsLayer::myThread();
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, "*", &plugin_data);
-  } else { 
+  } else {
     TauProfiler_DumpData();
   }
 
@@ -1095,7 +1095,7 @@ extern "C" int Tau_dump(void) {
 extern "C" int Tau_invoke_plugin_phase_entry(void *functionInfo) {
   TauInternalFunctionGuard protects_this_function;
   FunctionInfo *fi = (FunctionInfo *) functionInfo;
-  
+
   if(Tau_plugins_enabled.phase_entry) {
     Tau_plugin_event_phase_entry_data_t plugin_data;
     plugin_data.phase_name = fi->GetName();
@@ -1103,14 +1103,14 @@ extern "C" int Tau_invoke_plugin_phase_entry(void *functionInfo) {
   }
 
   return 0;
-  
+
 }
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_invoke_plugin_phase_exit(void *functionInfo) {
   TauInternalFunctionGuard protects_this_function;
   FunctionInfo *fi = (FunctionInfo *) functionInfo;
-  
+
   if(Tau_plugins_enabled.phase_exit) {
     Tau_plugin_event_phase_exit_data_t plugin_data;
     plugin_data.phase_name = fi->GetName();
@@ -1129,13 +1129,13 @@ extern "C" size_t Tau_create_trigger(const char *name) {
   RtsLayer::LockDB();
   trigger_counter++;
   RtsLayer::UnLockDB();
-  
+
   return trigger_counter;
 }
 
 extern "C" void Tau_trigger(size_t id, void * data) {
   TauInternalFunctionGuard protects_this_function;
-  Tau_util_invoke_callbacks_for_trigger_event(TAU_PLUGIN_EVENT_TRIGGER, id, data); 
+  Tau_util_invoke_callbacks_for_trigger_event(TAU_PLUGIN_EVENT_TRIGGER, id, data);
 }
 
 extern "C" void Tau_enable_plugin_for_specific_event(int ev, const char *name, unsigned int id)
@@ -1150,7 +1150,7 @@ extern "C" void Tau_enable_plugin_for_specific_event(int ev, const char *name, u
   RtsLayer::UnLockDB();
 
 }
- 
+
 extern "C" void Tau_disable_plugin_for_specific_event(int ev, const char *name, unsigned int id)
 {
   TauInternalFunctionGuard protects_this_function;
@@ -1205,7 +1205,7 @@ extern "C" void Tau_enable_plugin_for_trigger_event(int ev, size_t hash, unsigne
   RtsLayer::UnLockDB();
 
 }
- 
+
 extern "C" void Tau_disable_plugin_for_trigger_event(int ev, size_t hash, unsigned int id)
 {
   TauInternalFunctionGuard protects_this_function;
@@ -1260,7 +1260,7 @@ extern x_uint64 TauTraceGetTimeStamp(int tid);
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_get_current_stack_depth(int tid) {
-  return Tau_thread_flags[tid].Tau_global_stackpos; 
+  return Tau_thread_flags[tid].Tau_global_stackpos;
 }
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_callpaths() {
@@ -1327,7 +1327,7 @@ extern "C" void Tau_the_function_list(const char ***functionList, int *num) {
 extern "C" void Tau_dump_function_names() {
   TauProfiler_dumpFunctionNames();
 }
-  
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_get_counter_names(const char ***counterList, int *num) {
   TauProfiler_theCounterList(counterList, num);
@@ -1380,7 +1380,7 @@ extern "C" void Tau_register_thread(void) {
     TAU_VERBOSE("[TauCAPI]: Tau_register_thread, mynode %d, tid %d of %d\n", RtsLayer::myNode(), RtsLayer::myThread(), tmp);
   }
   else {
-    TAU_VERBOSE("[TauCAPI]: Tau_register_thread, do not register thread, mynode %i, tid %i\n", RtsLayer::myNode(), RtsLayer::getTid());    
+    TAU_VERBOSE("[TauCAPI]: Tau_register_thread, do not register thread, mynode %i, tid %i\n", RtsLayer::myNode(), RtsLayer::getTid());
   }
 
 // #else
@@ -1524,14 +1524,14 @@ extern "C" int tau_totalnodes(int set_or_get, int value)
 
 
 
-#ifdef TAU_SYSTEMWIDE_TRACK_MSG_SIZE_AS_CTX_EVENT 
+#ifdef TAU_SYSTEMWIDE_TRACK_MSG_SIZE_AS_CTX_EVENT
 #define TAU_GEN_EVENT(e, msg) TauContextUserEvent* e () { \
         static TauContextUserEvent ce(msg); return &ce; }
 #undef TAU_EVENT
 #define TAU_EVENT(event,data) Tau_context_userevent(event, data);
 #else
 #define TAU_GEN_EVENT(e, msg) TauUserEvent* e () { \
-	static TauUserEvent u(msg); return &u; } 
+	static TauUserEvent u(msg); return &u; }
 #endif /* TAU_SYSTEMWIDE_TRACK_MSG_SIZE_AS_CTX_EVENT */
 
 
@@ -1582,18 +1582,18 @@ TauContextUserEvent & TheMsgVolRecvContextEvent(int tid) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-#ifdef TAU_SHMEM 
+#ifdef TAU_SHMEM
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
 extern "C" int __real__num_pes(void);
 #else
-extern "C" int __real_shmem_n_pes(void); 
+extern "C" int __real_shmem_n_pes(void);
 #endif /* SHMEM_1_1 || SHMEM_1_2 */
 #endif /* TAU_SHMEM */
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_sendmsg(int type, int destination, int length) 
+extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
 {
-  if (!RtsLayer::TheEnableInstrumentation()) return; 
+  if (!RtsLayer::TheEnableInstrumentation()) return;
 
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
@@ -1616,10 +1616,10 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
       tau_totalnodes(1,__real_shmem_n_pes());
 #endif /* SHMEM_1_1 || SHMEM_1_2 */
 #else /* TAU_SHMEM */
-      fprintf(stderr, 
+      fprintf(stderr,
           "TAU Error: Comm Matrix destination %d exceeds node count %d. "
           "Was MPI_Init/shmem_init wrapper never called? "
-          "Please disable TAU_COMM_MATRIX or add calls to the init function in your source code.\n", 
+          "Please disable TAU_COMM_MATRIX or add calls to the init function in your source code.\n",
           destination, tau_totalnodes(0,0));
       exit(-1);
 #endif /* TAU_SHMEM */
@@ -1657,7 +1657,7 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid) 
+extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid)
 {
   if (RtsLayer::TheEnableInstrumentation() && TauEnv_get_tracing()) {
     if (source >= 0) {
@@ -1667,9 +1667,9 @@ extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int r
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, int remoteid) 
+extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, int remoteid)
 {
-  if (!RtsLayer::TheEnableInstrumentation()) return; 
+  if (!RtsLayer::TheEnableInstrumentation()) return;
 
   if (TauEnv_get_tracing()) {
     if (destination >= 0) {
@@ -1694,10 +1694,10 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
         tau_totalnodes(1,__real_shmem_n_pes());
 #endif /* SHMEM_1_1 || SHMEM_1_2 */
 #else /* TAU_SHMEM */
-        fprintf(stderr, 
+        fprintf(stderr,
             "TAU Error: Comm Matrix destination %d exceeds node count %d. "
             "Was MPI_Init/shmem_init wrapper never called? "
-            "Please disable TAU_COMM_MATRIX or add calls to the init function in your source code.\n", 
+            "Please disable TAU_COMM_MATRIX or add calls to the init function in your source code.\n",
             destination, tau_totalnodes(0,0));
         exit(-1);
 #endif /* TAU_SHMEM */
@@ -1709,7 +1709,7 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_barrier_all_start(int tag) 
+extern "C" void Tau_trace_barrier_all_start(int tag)
 {
   if (RtsLayer::TheEnableInstrumentation() && TauEnv_get_tracing()) {
       TauTraceBarrierAllStart(tag);
@@ -1717,7 +1717,7 @@ extern "C" void Tau_trace_barrier_all_start(int tag)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_barrier_all_end(int tag) 
+extern "C" void Tau_trace_barrier_all_end(int tag)
 {
   if (RtsLayer::TheEnableInstrumentation() && TauEnv_get_tracing()) {
       TauTraceBarrierAllEnd(tag);
@@ -1725,7 +1725,7 @@ extern "C" void Tau_trace_barrier_all_end(int tag)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_rma_collective_begin(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root) 
+extern "C" void Tau_trace_rma_collective_begin(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root)
 {
   if (RtsLayer::TheEnableInstrumentation() && TauEnv_get_tracing()) {
       TauTraceRMACollectiveBegin(tag, type, start, stride, size, data_in, data_out, root);
@@ -1733,7 +1733,7 @@ extern "C" void Tau_trace_rma_collective_begin(int tag, int type, int start, int
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_rma_collective_end(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root) 
+extern "C" void Tau_trace_rma_collective_end(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root)
 {
   if (RtsLayer::TheEnableInstrumentation() && TauEnv_get_tracing()) {
       TauTraceRMACollectiveEnd(tag, type, start, stride, size, data_in, data_out, root);
@@ -1806,13 +1806,13 @@ extern "C" void Tau_trace_barrier_all_start(int tag) {
 extern "C" void Tau_trace_barrier_all_end(int tag) {
   TauTraceBarrierAllEnd(tag);
 }
-extern "C" void Tau_trace_rma_collective_begin(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root) 
+extern "C" void Tau_trace_rma_collective_begin(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root)
 {
   TauTraceRMACollectiveBegin(tag, type, start, stride, size, data_in, data_out, root);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_rma_collective_end(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root) 
+extern "C" void Tau_trace_rma_collective_end(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root)
 {
   TauTraceRMACollectiveEnd(tag, type, start, stride, size, data_in, data_out, root);
 }
@@ -1820,7 +1820,7 @@ extern "C" void Tau_trace_rma_collective_end(int tag, int type, int start, int s
 #endif /* TAU_MPI || TAU_SHMEM*/
 
 ///////////////////////////////////////////////////////////////////////////
-// User Defined Events 
+// User Defined Events
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void * Tau_get_userevent(char const * name) {
   TauInternalFunctionGuard protects_this_function;
@@ -1834,7 +1834,7 @@ extern "C" void Tau_userevent(void *ue, double data) {
   TauInternalFunctionGuard protects_this_function;
   TauUserEvent *t = (TauUserEvent *) ue;
   t->TriggerEvent(data);
-} 
+}
 
 extern "C" void Tau_userevent_thread(void *ue, double data, int tid) {
   TauInternalFunctionGuard protects_this_function;
@@ -1850,7 +1850,7 @@ extern "C" void * Tau_return_context_userevent(const char *name) {
 
 ///////////////////////////////////////////////////////////////////////////
 // WARNING: the pointer passed into Tau_get_context_userevent must be declared
-// static or intialized to NULL otherwise it could end up pointing to a random 
+// static or intialized to NULL otherwise it could end up pointing to a random
 // piece of memory. See Tau_pure_context_userevent for a routine that does a
 // name lookup.
 ///////////////////////////////////////////////////////////////////////////
@@ -1916,7 +1916,7 @@ extern "C" void Tau_pure_context_userevent(void **ptr, const char* name)
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
      * allocation routines */
-    ue = new TauContextUserEvent(name); 
+    ue = new TauContextUserEvent(name);
     ThePureAtomicMap()[ue->GetName()] = ue;
   } else {
     //printf("Found %s in the map.\n", name); fflush(stdout);
@@ -1933,7 +1933,7 @@ extern "C" void Tau_pure_userevent(void **ptr, const char* name)
   RtsLayer::LockEnv();
   pure_userevent_atomic_map_t::iterator it = ThePureUserEventAtomicMap().find(string(name));
   if (it == ThePureUserEventAtomicMap().end()) {
-    ue = new TauUserEvent(name); 
+    ue = new TauUserEvent(name);
     ThePureUserEventAtomicMap()[string(name)] = ue;
   } else {
     ue = (*it).second;
@@ -1956,9 +1956,9 @@ extern "C" void Tau_pure_userevent_signal_safe(void **ptr, const char* name)
   if (it == ThePureUserEventAtomicMap().end()) {
 #ifndef TAU_WINDOWS
     ue = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
-    new(ue) TauUserEvent(name); 
+    new(ue) TauUserEvent(name);
 #else
-    ue = new TauUserEvent(name); 
+    ue = new TauUserEvent(name);
 #endif
     ThePureUserEventAtomicMap()[string(name)] = ue;
   } else {
@@ -1975,7 +1975,7 @@ extern "C" void Tau_context_userevent(void *ue, double data) {
   TauInternalFunctionGuard protects_this_function;
   TauContextUserEvent *t = (TauContextUserEvent *) ue;
   t->TriggerEvent(data);
-} 
+}
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2061,35 +2061,40 @@ extern "C" void Tau_report_thread_statistics(void) {
 extern "C" void Tau_event_disable_min(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetMinEnabled(false);
-} 
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_event_disable_max(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetMaxEnabled(false);
-} 
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_event_disable_mean(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetMeanEnabled(false);
-} 
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_event_disable_stddev(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetStdDevEnabled(false);
-} 
+}
 
 ///////////////////////////////////////////////////////////////////////////
 
-extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *type, 
-    TauGroup_t group, const char *group_name) 
+extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *type,
+    TauGroup_t group, const char *group_name)
 {
+  /* When PDT instruments a program, this is the FIRST TAU API call
+   * so we need to make sure that TAU is initialized.  Otherwise,
+   * race conditions can happen when requesting locks (i.e. in OpenMP)
+   */
+  static int do_this_once = Tau_init_initializeTAU();
   if (*ptr == 0) {
     TauInternalFunctionGuard protects_this_function;
     RtsLayer::LockDB();
-    if (*ptr == 0) {  
+    if (*ptr == 0) {
       // remove garbage characters from the end of name
       unsigned int len=0;
       while(isprint(name[len])) {
@@ -2198,12 +2203,12 @@ std::map<uint32_t, CudaThread> map_cudaThread;
 #endif
 
 #ifdef TAU_ROCTRACER
-extern void Tau_roctracer_start_tracing(void); 
-extern void Tau_roctracer_stop_tracing(void); 
+extern void Tau_roctracer_start_tracing(void);
+extern void Tau_roctracer_stop_tracing(void);
 #endif /* TAU_ROCTRACER */
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
-// #if defined(TAU_GPU) && defined(PTHREADS) 
+// #if defined(TAU_GPU) && defined(PTHREADS)
 //   TAU_VERBOSE("[TauCAPI]:  About to call register_gpu_thread\n");
 //   // register_gpu_thread(RtsLayer::getTid(), Tau_get_thread(), RtsLayer::getPid(), RtsLayer::myNode());
 //   register_gpu_thread(pthread_self(), Tau_get_thread(), RtsLayer::getPid(), RtsLayer::myNode());
@@ -2363,19 +2368,19 @@ extern "C" char * Tau_phase_enable(const char *group) {
 #else /* TAU_PROFILEPHASE */
   return (char *) group;
 #endif /* TAU_PROFILEPHASE */
-} 
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" char * Tau_phase_enable_once(const char *group, void **ptr) {
   /* We don't want to parse the group name string every time this is invoked.
-     we compare a pointer and if necessary, perform the string operations  
+     we compare a pointer and if necessary, perform the string operations
      on the group name (adding  | TAU_PHASE to it). */
   if (*ptr == 0) {
     return Tau_phase_enable(group);
   } else {
     return (char *) NULL;
   }
-} 
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_mark_group_as_phase(void *ptr)
@@ -2434,7 +2439,7 @@ struct PureMap : public TAU_HASH_MAP<string, FunctionInfo *> {
   }
 };
 
-PureMap & ThePureMap() 
+PureMap & ThePureMap()
 {
   static PureMap map;
   return map;
@@ -2463,7 +2468,7 @@ extern "C" void *Tau_pure_search_for_function(const char *name, int create)
   return (void *) fi;
 }
 
-/* DON'T REMOVE THIS FUNCTION! 
+/* DON'T REMOVE THIS FUNCTION!
  * When processing samples, you cannot allocate memory!
  * That means you can't create strings!
  * Some compilers call the std::string() constructor, which then calls malloc.
@@ -2643,7 +2648,7 @@ extern "C" void Tau_pure_start(const char *name)
 
 extern "C" void tau_print_entry(const char *name) {
   TAU_VERBOSE("TAU ENTRY: %s\n", name);
-  Tau_pure_start(name); 
+  Tau_pure_start(name);
 }
 
 extern "C" void Tau_pure_stop_task(char const * n, int tid)
@@ -2722,7 +2727,7 @@ extern "C" void * Tau_get_function_info(const char *fname, const char *type, Tau
   } else {
     fi = it->second;
   }
-  RtsLayer::UnLockDB(); 
+  RtsLayer::UnLockDB();
   return (void *) fi;
 }
 
@@ -2946,7 +2951,7 @@ extern "C" void Tau_get_counter_info(const char ***counterNames, int *numCounter
 
 //////////////////////////////////////////////////////////////////////
 //Fast but DO NOT use this call when calling the FunctionInfo DB
-//or Profiler stack. 
+//or Profiler stack.
 extern "C" int Tau_get_local_tid(void) {
   TauInternalFunctionGuard protects_this_function;
   return RtsLayer::unsafeLocalThreadId();
@@ -3000,7 +3005,7 @@ void Tau_clear_pure_map(void) {
 		delete fi;
     //mymap.erase(eraseme);
   }
-  mymap.clear(); 
+  mymap.clear();
 }
 */
 
@@ -3015,8 +3020,8 @@ extern "C" int Tau_create_task(void) {
   taskid = Tau_RtsLayer_createThread();
   // taskid= RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
   /* specify taskid is a fake thread used in the Task API */
-  
-  Tau_set_thread_fake(taskid); 
+
+  Tau_set_thread_fake(taskid);
   // Tau_thread_flags[taskid].Tau_is_thread_fake_for_task_api = 1; /* This thread is fake! */
   return taskid;
 }
@@ -3135,7 +3140,7 @@ extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[]
 
 #ifdef TAU_MPI_T
 
-#include <mpi.h> 
+#include <mpi.h>
 
 void Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_count) {
   int return_val, namelen, verb, varclass, bind, threadsup, i;
@@ -3160,13 +3165,13 @@ void Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_
     &bind /*OUT*/,
     &readonly /*OUT*/,
     &continuous /*OUT*/,
-    &atomic/*OUT*/); 
+    &atomic/*OUT*/);
 
-  
+
   // clean up description for non-ascii characters and new lines
   for (i=0; i < strlen(description); i++) {
     if ((description[i] == '\n') || (!isprint(description[i]))) {
-      description[i] = ' '; 
+      description[i] = ' ';
     }
   }
   // clean up event_name for non-ascii characters and new lines
@@ -3189,22 +3194,22 @@ void Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_
 
   /* Add a metadata field */
   sprintf(concat_event_name, "MPI_T PVAR[%d]: %s", pvar_index, event_name);
-  TAU_METADATA(concat_event_name, description); 
+  TAU_METADATA(concat_event_name, description);
 }
 
 //Static variables with file scope
 static TauUserEvent *** pvarEvents = NULL;
 static char pvarnamearray[300];
- 
+
 TauUserEvent & ThePVarsMPIEvents(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars) {
     /*All this routine does is to return the event at the current PVAR index and subindex*/
-    
+
     return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
 }
- 
+
 TauUserEvent & PvarName(const int current_pvar_index, const int current_pvar_subindex) {
     /*All this routine does is to return the event at the current PVAR index and subindex*/
-    
+
     return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
     //return 0;
 }
@@ -3238,7 +3243,7 @@ extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count
 }
 
 extern "C" char * Tau_get_pvar_name(const int current_pvar_index, const int current_pvar_subindex) {
- 
+
   char * pvarnamechar = const_cast<char*>(PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
 
   strcpy(pvarnamearray,pvarnamechar);
@@ -3247,7 +3252,7 @@ extern "C" char * Tau_get_pvar_name(const int current_pvar_index, const int curr
 }
 
 extern "C" void Tau_track_pvar_event(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars, double data) {
-  ThePVarsMPIEvents(current_pvar_index, current_pvar_subindex, tau_pvar_count, num_pvars).TriggerEvent(data, Tau_get_thread()); 
+  ThePVarsMPIEvents(current_pvar_index, current_pvar_subindex, tau_pvar_count, num_pvars).TriggerEvent(data, Tau_get_thread());
 #ifdef TAU_BEACON
   if(getenv("BEACON_TOPOLOGY_SERVER_ADDR") != NULL)
     TauBeaconPublish(data, "counts", "MPI_T_PVAR", (char *) (ThePVarsMPIEvents(current_pvar_index, current_pvar_subindex, tau_pvar_count, num_pvars).GetName().c_str()));
@@ -3255,7 +3260,7 @@ extern "C" void Tau_track_pvar_event(const int current_pvar_index, const int cur
 }
 
 /* Consider a situation where a user configures TAU with ONLY MPI/MPIT
- * options, but is linking in TAU statically to an application 
+ * options, but is linking in TAU statically to an application
  * that does NOT use MPI. Meaning only libtau-* gets linked in.
  * Such a situation would lead to a linking failure of undefined symbol: "Tau_track_mpi_t_here"
  * inside TauHandler.o that does get built into libtau-*
@@ -3267,13 +3272,13 @@ extern "C" int __attribute__ ((weak)) Tau_track_mpi_t_here(void) {
 
 #ifdef TAU_SCOREP
 /* If SCOREP is defined, there is TauMpi wrapper that typically contains this routine */
-extern "C" int Tau_track_mpi_t_here(void) { 
+extern "C" int Tau_track_mpi_t_here(void) {
  // do nothing when MPI_T is not enabled
 }
 #endif /* TAU_SCOREP */
 
 #else /* TAU_MPI_T */
-extern "C" int Tau_track_mpi_t_here(void) { 
+extern "C" int Tau_track_mpi_t_here(void) {
  // do nothing when MPI_T is not enabled
  return 0;
 }
@@ -3282,12 +3287,12 @@ extern "C" int Tau_track_mpi_t_here(void) {
 
 //////////////////////////////////////////////////////////////////////
 extern "C" void Tau_enable_tracking_mpi_t(void) {
-  TauEnv_set_track_mpi_t_pvars(1); 
+  TauEnv_set_track_mpi_t_pvars(1);
 }
 
 //////////////////////////////////////////////////////////////////////
 extern "C" void Tau_disable_tracking_mpi_t(void) {
-  TauEnv_set_track_mpi_t_pvars(0); 
+  TauEnv_set_track_mpi_t_pvars(0);
 }
 
 #ifdef CUPTI_disabled
@@ -3309,7 +3314,7 @@ extern "C" cuda_thread_device_t* get_cuda_thread_device(int* size) {
   cuda_thread_device_t* ctd;
   ctd = new cuda_thread_device_t[*size];
   int i = 0;
-  
+
   for(std::map<uint32_t, uint32_t>::iterator it = map_cuptiThread.begin(); it != map_cuptiThread.end(); it++) {
     int vtid = it->first;
     int corrid1 = get_corrid_from_vtid(vtid);
@@ -3348,8 +3353,8 @@ extern "C" int lookup_thread_from_corrid(int corrid) {
   return map_cudaThread.find(corrid) == map_cudaThread.end();
 }
 
-#ifndef TAU_PROFILE_PATHS 
-// stub function when PROFILEPATHS is not defined. 
+#ifndef TAU_PROFILE_PATHS
+// stub function when PROFILEPATHS is not defined.
 extern "C" long Tau_get_message_path(void) {
   return 0L;
 }

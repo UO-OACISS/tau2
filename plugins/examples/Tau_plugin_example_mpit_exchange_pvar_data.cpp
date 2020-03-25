@@ -35,21 +35,21 @@ int Tau_plugin_event_mpit(Tau_plugin_event_mpit_data_t* data) {
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   #endif
 
-  fprintf(stderr, "PVAR Name %s and value %d from rank %d\n", data->pvar_name, data->pvar_value, rank);
+  fprintf(stderr, "PVAR Name %s and value %lld from rank %d\n", data->pvar_name, data->pvar_value, rank);
 
-  local_val = data->pvar_value; 
+  local_val = data->pvar_value;
 
   #ifdef TAU_MPI
   PMPI_Allreduce(&local_val, &global_val, 1, MPI_LONG, MPI_MAX, MPI_COMM_WORLD);
   #endif
 
-  fprintf(stderr, "Max value: %d\n", global_val);
+  fprintf(stderr, "Max value: %lld\n", global_val);
 
   return 0;
 }
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
- * Every plugin MUST implement this function to register callbacks for various events 
+ * Every plugin MUST implement this function to register callbacks for various events
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
