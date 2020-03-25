@@ -32,6 +32,10 @@
 #include <cupti.h>
 #include <cuda.h>
 
+//#include <Profile/TauOpenACC.h>
+#include <Profile/TauGpuAdapterOpenACC.h>
+//#include <Profile/CuptiActivity.h> // solely for get_taskid_from_context_id
+
 #define TAU_SET_EVENT_NAME(event_name, str) strcpy(event_name, str); break 
 ////////////////////////////////////////////////////////////////////////////
 extern "C" static void
@@ -204,27 +208,75 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
   (((uintptr_t) (buffer) & ((align)-1)) ? ((buffer) + (align) - ((uintptr_t) (buffer) & ((align)-1))) : (buffer))
 
 
+//array enumerating CUpti_OpenAccEventKind strings
+char* openacc_event_names[] = {
+		"CUPTI_OPENACC_EVENT_KIND_INVALD",
+		"CUPTI_OPENACC_EVENT_KIND_DEVICE_INIT",
+		"CUPTI_OPENACC_EVENT_KIND_DEVICE_SHUTDOWN",
+		"CUPTI_OPENACC_EVENT_KIND_RUNTIME_SHUTDOWN",
+		"CUPTI_OPENACC_EVENT_KIND_ENQUEUE_LAUNCH",
+		"CUPTI_OPENACC_EVENT_KIND_ENQUEUE_UPLOAD",
+		"CUPTI_OPENACC_EVENT_KIND_ENQUEUE_DOWNLOAD",
+		"CUPTI_OPENACC_EVENT_KIND_WAIT",
+		"CUPTI_OPENACC_EVENT_KIND_IMPLICIT_WAIT",
+		"CUPTI_OPENACC_EVENT_KIND_COMPUTE_CONSTRUCT",
+		"CUPTI_OPENACC_EVENT_KIND_UPDATE",
+		"CUPTI_OPENACC_EVENT_KIND_ENTER_DATA",
+		"CUPTI_OPENACC_EVENT_KIND_EXIT_DATA",
+		"CUPTI_OPENACC_EVENT_KIND_CREATE",
+		"CUPTI_OPENACC_EVENT_KIND_DELETE",
+		"CUPTI_OPENACC_EVENT_KIND_ALLOC",
+		"CUPTI_OPENACC_EVENT_KIND_FREE"
+	};
+
 static size_t openacc_records = 0;
 static void
 printActivity(CUpti_Activity *record)
 {                                                                                  
-    switch (record->kind) {
+  switch (record->kind) {
+	//TODO: tau_cupti_register_gpu_event for each of these; could probably piggyback on existing code, or:
+	// write a tau_openacc_register_thingy for each type of event (more likely)
+	// make an event mappy thing a la CuptiActivity
+	// write a GpuEvent as seen in TauGpuAdapterCupti for each of these
+	// probably only events that matter are 11, 12, and 9
+	// find out what events are actually under LAUNCH
+	// https://docs.nvidia.com/cuda/cupti/structCUpti__ActivityOpenAcc.html#structCUpti__ActivityOpenAcc
+	// https://docs.nvidia.com/cuda/cupti/structCUpti__ActivityOpenAccData.html#structCUpti__ActivityOpenAccData
+	// https://docs.nvidia.com/cuda/cupti/group__CUPTI__ACTIVITY__API.html#group__CUPTI__ACTIVITY__API_1g0e638b0b6a210164345ab159bcba6717
         case CUPTI_ACTIVITY_KIND_OPENACC_DATA:                                        
         case CUPTI_ACTIVITY_KIND_OPENACC_LAUNCH:
         case CUPTI_ACTIVITY_KIND_OPENACC_OTHER:
-            {                                                                                    
-                CUpti_ActivityOpenAcc *oacc = (CUpti_ActivityOpenAcc *)record;
-                if (oacc->deviceType != acc_device_nvidia) { 
-                    printf("Error: OpenACC device type is %u, not %u (acc_device_nvidia)\n", oacc->deviceType, acc_device_nvidia);
-                  exit(-1);
-              }
+        {                                                                                    
+					CUpti_ActivityOpenAcc *oacc = (CUpti_ActivityOpenAcc *)record;
+					if (oacc->deviceType != acc_device_nvidia) { 
+						printf("Error: OpenACC device type is %u, not %u (acc_device_nvidia)\n", oacc->deviceType, acc_device_nvidia);
+						exit(-1);
+					}
+					
+					uint32_t context = oacc->cuContextId;
+					uint32_t device = oacc->cuDeviceId;
+					uint32_t stream = oacc->cuStreamId;
+					uint32_t corr_id = oacc->externalId; // pretty sure this is right
+					uint64_t start = oacc->start;
+					uint64_t end = oacc->end;
 
-              openacc_records++;
-          }
-          break;
+					int task = oacc->cuThreadId;
 
-      default:
-          ;
+					//TODO: empty for now
+					GpuEventAttributes* map;
+					int map_size = 0;
+
+					//TODO: could do better but this'll do for now
+					const char* name = openacc_event_names[oacc->eventKind];
+					
+					Tau_openacc_register_gpu_event(name, device, stream, context, task, corr_id, map, map_size, start/1e3, end/1e3);
+
+          openacc_records++;
+        }
+        break;
+
+		default:
+      ;
   }
 }
 
