@@ -197,9 +197,9 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
       cuptiGetResultString(_status, &errstr);                           \
       fprintf(stderr, "%s:%d: error: function %s failed with error %s.\n", \
               __FILE__, __LINE__, #call, errstr);                       \
-      if(_status == CUPTI_ERROR_LEGACY_PROFILER_NOT_SUPPORTED)          \
+      /*if(_status == CUPTI_ERROR_LEGACY_PROFILER_NOT_SUPPORTED)          \
           exit(0);                                                      \
-      else                                                              \
+      else*/                                                              \
           exit(-1);                                                     \
     }                                                                   \
   } while (0)
