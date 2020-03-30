@@ -14,7 +14,7 @@ e*			TAU Portable Profiling Package			   **
 ***************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 
 //#define DEBUG_PROF 1
@@ -29,7 +29,7 @@ using namespace std;
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
 
-#include <stdio.h> 
+#include <stdio.h>
 #include <fcntl.h>
 #include <time.h>
 #include <stdlib.h>
@@ -40,7 +40,7 @@ using namespace std;
   #include <vector>
 #endif //TAU_WINDOWS
 
-#ifdef TAU_VAMPIRTRACE 
+#ifdef TAU_VAMPIRTRACE
 #include <Profile/TauVampirTrace.h>
 #else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
@@ -66,7 +66,7 @@ using namespace std;
 // when running with fortran programs
 //////////////////////////////////////////////////////////////////////
 class FIvector : public vector<FunctionInfo*> {
-public: 
+public:
   ~FIvector() {
     Tau_destructor_trigger();
   }
@@ -94,11 +94,11 @@ vector<FunctionInfo*>& TheFunctionDB(void)
 }
 
 //////////////////////////////////////////////////////////////////////
-// It is not safe to call Profiler::StoreData() after 
+// It is not safe to call Profiler::StoreData() after
 // FunctionInfo::~FunctionInfo has been called as names are null
 //////////////////////////////////////////////////////////////////////
 int& TheSafeToDumpData()
-{ 
+{
   static int SafeToDumpData=1;
 
   return SafeToDumpData;
@@ -108,7 +108,7 @@ int& TheSafeToDumpData()
 // Set when uning Dyninst
 //////////////////////////////////////////////////////////////////////
 int& TheUsingDyninst()
-{ 
+{
   static int UsingDyninst=0;
   return UsingDyninst;
 }
@@ -117,7 +117,7 @@ int& TheUsingDyninst()
 // Set when uning Compiler Instrumentation
 //////////////////////////////////////////////////////////////////////
 int& TheUsingCompInst()
-{ 
+{
   static int UsingCompInst=0;
   return UsingCompInst;
 }
@@ -157,7 +157,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   if (flag) {
     flag = false;
     Tau_init_initializeTAU();
-#ifdef __PIN__ 
+#ifdef __PIN__
 #if (!(defined (TAU_MPI) || defined(TAU_SHMEM)))
   if (RtsLayer::myNode() == -1) {
     TAU_PROFILE_SET_NODE(getpid());
@@ -166,9 +166,9 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
 #endif /* __PIN__ */
   }
 #ifdef TAU_SCOREP
-  if (Tau_global_getLightsOut()) { 
+  if (Tau_global_getLightsOut()) {
     TAU_VERBOSE("TAU<%d,%d>: FunctionInfoInit: Lights out... \n",RtsLayer::myNode(), tid);
-    return; 
+    return;
   }
 #endif /* TAU_SCOREP */
 
@@ -189,7 +189,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   static bool mm_initialized = Tau_MemMgr_initIfNecessary();
   TAU_UNUSED(mm_initialized);
 #endif /* _AIX */
-#endif  
+#endif
 
   GroupName = strdup(RtsLayer::PrimaryGroup(AllGroups).c_str());
 
@@ -216,7 +216,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   MyProfileGroup_ = ProfileGroup;
 
   // While accessing the global function database, lock it to ensure
-  // an atomic operation in the push_back and size() operations. 
+  // an atomic operation in the push_back and size() operations.
   // Important in the presence of concurrent threads.
   TheFunctionDB().push_back(this);
   FunctionId = RtsLayer::GenerateUniqueId();
@@ -256,7 +256,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   //  callSiteKeyId = 0; // Any value works.
   firstSpecializedFunction = NULL;
 
-#endif // _AIX 
+#endif // _AIX
 #endif // TAU_WINDOWS
 
 #if defined(TAU_VAMPIRTRACE)
@@ -336,9 +336,9 @@ FunctionInfo::FunctionInfo(const char *name, const char *type, TauGroup_t Profil
     const char *ProfileGroupName, bool InitData, int tid)
 {
   DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << ProfileGroup << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
-  Name = strdup(name); 
-  Type = strdup(type); 
-  FullName = NULL; 
+  Name = strdup(name);
+  Type = strdup(type);
+  FullName = NULL;
   DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << ProfileGroup << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
   FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
@@ -356,26 +356,26 @@ FunctionInfo::FunctionInfo(const char *name, const string& type, TauGroup_t Prof
 
 //////////////////////////////////////////////////////////////////////
 
-FunctionInfo::FunctionInfo(const string& name, const char * type, 
+FunctionInfo::FunctionInfo(const string& name, const char * type,
 	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
 	int tid) {
   Name = strdup(name.c_str());
   Type = strdup(type);
   FullName = NULL;
-  
+
   FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
 
 //////////////////////////////////////////////////////////////////////
 
-FunctionInfo::FunctionInfo(const string& name, const string& type, 
+FunctionInfo::FunctionInfo(const string& name, const string& type,
 	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
 	int tid) {
-  
+
   Name = strdup(name.c_str());
   Type = strdup(type.c_str());
   FullName = NULL;
-  
+
   FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
 
@@ -384,7 +384,7 @@ FunctionInfo::FunctionInfo(const string& name, const string& type,
 FunctionInfo::~FunctionInfo()
 {
 // Don't delete Name, Type - if dtor of static object dumps the data
-// after all these function objects are destroyed, it can't get the 
+// after all these function objects are destroyed, it can't get the
 // name, and type.
 //  delete [] Name;
 //  delete [] Type;
@@ -457,10 +457,10 @@ x_uint64 FunctionInfo::GetFunctionId(void) {
   }
   return FunctionId;
 }
-	    
+
 
 //////////////////////////////////////////////////////////////////////
-void FunctionInfo::ResetExclTimeIfNegative(int tid) { 
+void FunctionInfo::ResetExclTimeIfNegative(int tid) {
   /* if exclusive time is negative (at Stop) we set it to zero during
      compensation. This function is used to reset it to zero for single
      and multiple counters */
@@ -470,7 +470,7 @@ void FunctionInfo::ResetExclTimeIfNegative(int tid) {
       ExclTime[tid][i] = 0.0; /* set each negative counter to zero */
     }
   }
-  return; 
+  return;
 }
 
 
@@ -478,6 +478,9 @@ void FunctionInfo::ResetExclTimeIfNegative(int tid) {
 //////////////////////////////////////////////////////////////////////
 void tauCreateFI(void **ptr, const char *name, const char *type, TauGroup_t ProfileGroup, const char *ProfileGroupName)
 {
+  /* This is the entry point into TAU from PDT-instrumented C++ codes, so
+   * make sure that TAU is ready to go before doing anything else! */
+  static int do_this_once = Tau_init_initializeTAU();
   if (*ptr == 0) {
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
@@ -504,6 +507,9 @@ void tauCreateFI(void **ptr, const char *name, const char *type, TauGroup_t Prof
 void tauCreateFI(void **ptr, const char *name, const string& type, TauGroup_t ProfileGroup,
     const char *ProfileGroupName)
 {
+  /* This is the entry point into TAU from PDT-instrumented C++ codes, so
+   * make sure that TAU is ready to go before doing anything else! */
+  static int do_this_once = Tau_init_initializeTAU();
   if (*ptr == 0) {
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
@@ -530,6 +536,9 @@ void tauCreateFI(void **ptr, const char *name, const string& type, TauGroup_t Pr
 void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, TauGroup_t ProfileGroup,
     const char *ProfileGroupName)
 {
+  /* This is the entry point into TAU from PDT-instrumented C++ codes, so
+   * make sure that TAU is ready to go before doing anything else! */
+  static int do_this_once = Tau_init_initializeTAU();
   if (*ptr == 0) {
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
@@ -548,7 +557,7 @@ void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, Ta
     *ptr = Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(FunctionInfo));
     /*  now, use the pacement new function to create a object in
      *  pre-allocated memory. NOTE - this memory needs to be explicitly
-     *  deallocated by explicitly calling the destructor. 
+     *  deallocated by explicitly calling the destructor.
      *  I think the best place for that is in the destructor for
      *  the hash table. */
     new(*ptr) FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
@@ -568,6 +577,9 @@ void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, Ta
 void tauCreateFI(void **ptr, const string& name, const char *type, TauGroup_t ProfileGroup,
     const char *ProfileGroupName)
 {
+  /* This is the entry point into TAU from PDT-instrumented C++ codes, so
+   * make sure that TAU is ready to go before doing anything else! */
+  static int do_this_once = Tau_init_initializeTAU();
   if (*ptr == 0) {
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
@@ -593,6 +605,9 @@ void tauCreateFI(void **ptr, const string& name, const char *type, TauGroup_t Pr
 void tauCreateFI(void **ptr, const string& name, const string& type, TauGroup_t ProfileGroup,
     const char *ProfileGroupName)
 {
+  /* This is the entry point into TAU from PDT-instrumented C++ codes, so
+   * make sure that TAU is ready to go before doing anything else! */
+  static int do_this_once = Tau_init_initializeTAU();
   if (*ptr == 0) {
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
@@ -667,11 +682,11 @@ void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[
     }
   }
 }
-#endif // _AIX 
+#endif // _AIX
 #endif // TAU_WINDOWS
 
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
  * $Revision: 1.84 $   $Date: 2010/04/27 23:13:55 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.84 2010/04/27 23:13:55 amorris Exp $ 
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.84 2010/04/27 23:13:55 amorris Exp $
  ***************************************************************************/

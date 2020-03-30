@@ -177,7 +177,7 @@ extern "C" void Tau_profile_exit_all_threads(void);
 static int executionFinished = 0;
 void runOnExit()
 {
-  executionFinished = 1; 
+  executionFinished = 1;
   Tau_profile_exit_all_threads();
 
   // clear the hash map to eliminate memory leaks
@@ -186,7 +186,7 @@ void runOnExit()
   	HashNode * node = it->second;
     if (node != NULL && node->fi) {
 #ifndef TAU_TBB_SUPPORT
-// At the end of a TBB program, it crashes here. 
+// At the end of a TBB program, it crashes here.
 		//delete node->fi;
 #endif /* TAU_TBB_SUPPORT */
 	}
@@ -249,6 +249,9 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 {
   static bool gnu_init = true;
   HashNode * node;
+  /* This is the entry point into TAU from PDT-instrumented C++ codes, so
+   * make sure that TAU is ready to go before doing anything else! */
+  static int do_this_once = Tau_init_initializeTAU();
 
   // Don't profile if we're done executing or still initializing
   if (executionFinished || Tau_init_initializingTAU()) return;
@@ -343,7 +346,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         if (!node->info.probeAddr) {
 #if defined(__APPLE__)
 #if defined(TAU_HAVE_CORESYMBOLICATION)
-         static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid()); 
+         static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid());
          CSSourceInfoRef source_info = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator, (vm_address_t)addr, kCSNow);
          if(!CSIsNull(source_info)) {
              CSSymbolRef symbol = CSSourceInfoGetSymbol(source_info);
@@ -371,7 +374,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         node->excluded = isExcluded(node->info.funcname);
 
 	// TBB: sometimes we get a null filename and function name. In that case
-	// exclude that routine. 
+	// exclude that routine.
 	if(!node->info.filename || !node->info.funcname) {
 		node->excluded = 1;
 		RtsLayer::UnLockDB();
@@ -499,7 +502,7 @@ void __cyg_profile_func_exit(void* func, void* callsite)
     hn->fi->StopAddr = addr;
   }
 #endif
-}   
+}
 
 
 void _cyg_profile_func_exit(void* func, void* callsite)
