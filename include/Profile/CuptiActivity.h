@@ -323,8 +323,8 @@ void record_gpu_launch(int cId, const char *name);
 void record_gpu_counters(int device_id, const char *name, uint32_t id, eventMap_t *m);
 void record_environment_counters(const char *name, uint32_t taskId, uint32_t device, uint32_t streamId, uint32_t contextId, uint32_t id, uint32_t end);
 void transport_environment_counters(std::vector<uint32_t> vec, EnvType envT, const char* name, uint32_t taskId, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent* tc);
-void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end);
-void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent * tc);
+void record_imix_counters(const char* name, uint32_t taskId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end);
+void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uint32_t taskId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent * tc);
 void dump_sass_to_csv(int task_id);
 
 int get_device_count();

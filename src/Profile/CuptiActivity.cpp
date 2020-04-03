@@ -54,8 +54,9 @@ typedef struct tau_cupti_context {
 
 // map from context/stream to everything else
 std::map<uint64_t, tau_cupti_context_t*> newContextMap;
-// map from correlation to context
-std::map<uint32_t, uint64_t> newCorrelationMap;
+// map context/correlation to virtual thread
+std::map<uint32_t, uint32_t> correlationContextMap;
+std::map<uint32_t, uint32_t> correlationStreamMap;
 // just a vector of stream-less device contexts, used to iterate over devices
 std::vector<int> deviceContextThreadVector;
 // Sanity check.  I (Kevin) Suspect that CUPTI is giving us asynchronous memory events out of order.
@@ -198,31 +199,38 @@ int get_taskid_from_context_id(uint32_t contextId, uint32_t streamId) {
     return tid;
 }
 
-/* get the context/stream key from the correlation ID, and then do the
- * lookup to get the virtual thread ID */
-int get_taskid_from_correlation_id(uint32_t correlationId) {
+int get_stream_from_correlation_id(uint32_t correlationId) {
     RtsLayer::LockDB();
-    size_t c = newCorrelationMap.count(correlationId);
+    size_t c = correlationStreamMap.count(correlationId);
     RtsLayer::UnLockDB();
     if (c == 0) { return 0; }
-    RtsLayer::LockDB();
-    int tid = get_taskid_from_key(newCorrelationMap[correlationId]);
-    RtsLayer::UnLockDB();
-    return tid;
+    return correlationStreamMap[correlationId];
 }
 
-/* map a correlation ID to a context/stream combination, so we can map
- * to the virtual thread  */
-void insert_correlation_id_map(uint32_t correlationId, uint32_t contextId, uint32_t streamId) {
-    uint32_t key = (contextId << 16) + streamId;
+int get_context_from_correlation_id(uint32_t correlationId) {
     RtsLayer::LockDB();
-    size_t c = newCorrelationMap.count(correlationId);
+    size_t c = correlationContextMap.count(correlationId);
+    RtsLayer::UnLockDB();
+    if (c == 0) { return 0; }
+    return correlationContextMap[correlationId];
+}
+
+// /* get the context/stream key from the correlation ID, and then do the
+//  * lookup to get the virtual thread ID */
+int get_taskid_from_correlation_id(uint32_t correlationId) {
+    uint32_t streamId = get_stream_from_correlation_id(correlationId);
+    uint32_t contextId = get_context_from_correlation_id(correlationId);
+    return get_taskid_from_context_id(contextId, streamId);
+}
+
+void insert_context_correlation_map(uint32_t correlationId, uint32_t contextId) {
+    RtsLayer::LockDB();
+    size_t c = correlationContextMap.count(correlationId);
     RtsLayer::UnLockDB();
     if (c == 0) {
         RtsLayer::LockDB();
-        newCorrelationMap[correlationId] = key;
-        RtsLayer::UnLockDB();
-        TAU_DEBUG_PRINT("Correlation: %u = key: %u\n", correlationId, key);
+	correlationContextMap[correlationId] = contextId;
+	RtsLayer::UnLockDB();
     }
 }
 
@@ -786,13 +794,17 @@ void Tau_handle_driver_api_memcpy (void *ud, CUpti_CallbackDomain domain,
 }
 
 void write_sass_counters() {
-    for (int i=0; i < device_count_total; i++) {
-        for (std::map<uint32_t, CUPTI_KERNEL_TYPE>::iterator it = kernelMap[i].begin();
-	     it != kernelMap[i].end(); it++) {
+    for(std::map<uint32_t, uint32_t>::iterator iter = correlationStreamMap.begin(); iter != correlationStreamMap.end(); iter++) {
+        uint32_t correlationId = iter->first;
+	uint32_t streamId = iter->second;
+	uint32_t contextId = correlationContextMap[correlationId];
+	int vtid = get_taskid_from_context_id(contextId, streamId);
+	for (std::map<uint32_t, CUPTI_KERNEL_TYPE>::iterator it = kernelMap[vtid].begin();
+	     it != kernelMap[vtid].end(); it++) {
 	    CUPTI_KERNEL_TYPE *kernel = &it->second;
 	    const char *kname = demangleName(kernel->name);
-	    record_imix_counters(kname, i, kernel->streamId, kernel->contextId, kernel->correlationId, kernel->end);
-	}
+	    record_imix_counters(kname, vtid, kernel->streamId, kernel->contextId, kernel->correlationId, kernel->end);	
+	}		
     }
 }
 
@@ -806,11 +818,9 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
         cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
 #endif
         //Stop collecting cupti counters.
-#if !defined(PTHREADS) // SASS is not thread safe?
 	if (TauEnv_get_cuda_track_sass()) {
 	  write_sass_counters();
 	}
-#endif     
         Tau_CuptiLayer_finalize();
     }
     if(strcmp(cbInfo->functionName, "cudaDeviceReset") == 0) {
@@ -912,7 +922,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
         TAU_DEBUG_PRINT("in Tau_cupti_callback_dispatch: %s\n", cbInfo->functionName);
         if (cbInfo->context != NULL) {
-            insert_correlation_id_map(cbInfo->correlationId, cbInfo->contextUid, 0);
+	    insert_context_correlation_map(cbInfo->correlationId, cbInfo->contextUid);
         }
         if (function_is_memcpy(id, domain)) {
             // BEGIN handling memcpy
@@ -1516,6 +1526,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                         int taskId = get_taskid_from_context_id(kernel->contextId, streamId);
                         kernelMap[taskId][kernel->correlationId] = *kernel;
                         correlDeviceMap[kernel->correlationId] = kernel->deviceId;
+			correlationStreamMap[kernel->correlationId] = kernel->streamId;
 #if CUDA_VERSION >= 5050
                     }
 #endif
@@ -1913,9 +1924,8 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
         return 1;
     }
 
-    void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent * tc)
+    void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uint32_t taskId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent * tc)
     {
-        int taskId = get_taskid_from_context_id(contextId, streamId);
         eventMap[taskId][tc] = vec;
 
         GpuEventAttributes *map;
@@ -1929,15 +1939,14 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
             i++;
         }
         // transport
-        Tau_cupti_register_gpu_event(name, deviceId,
+        Tau_cupti_register_gpu_event(name, taskId,
                 streamId, contextId, id, 0, false, map, map_size,
                 end / 1e3, end / 1e3, taskId);
     }
 
-    void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end) {
+    void record_imix_counters(const char* name, uint32_t taskId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end) {
         // check if data available
         bool update = false;
-        int taskId = get_taskid_from_context_id(contextId, streamId);
         if (instructionMap[taskId].find(id) == instructionMap[taskId].end()) {
             TAU_VERBOSE("[CuptiActivity] warning:  Instruction mix counters not recorded.\n");
         }
@@ -1965,9 +1974,9 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
             uint32_t v_ctrlops = is_runtime.totops_raw;
 
 
-            transport_imix_counters(v_flops, FlPtOps, name, deviceId, streamId, contextId, id, end, fp_ops);
-            transport_imix_counters(v_memops, MemOps, name, deviceId, streamId, contextId, id, end, mem_ops);
-            transport_imix_counters(v_ctrlops, CtrlOps, name, deviceId, streamId, contextId, id, end, ctrl_ops);
+            transport_imix_counters(v_flops, FlPtOps, name, taskId, streamId, contextId, id, end, fp_ops);
+            transport_imix_counters(v_memops, MemOps, name, taskId, streamId, contextId, id, end, mem_ops);
+            transport_imix_counters(v_ctrlops, CtrlOps, name, taskId, streamId, contextId, id, end, ctrl_ops);
 
             // Each time imix counters recorded, erase instructionMap.
             std::map<uint32_t, std::list<CUpti_ActivityInstructionExecution> >::iterator it_temp = instructionMap[taskId].find(id);
