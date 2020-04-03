@@ -785,95 +785,98 @@ void Tau_handle_driver_api_memcpy (void *ud, CUpti_CallbackDomain domain,
     }
 }
 
-void Tau_handle_driver_api_other (void *ud, CUpti_CallbackDomain domain,
-        CUpti_CallbackId id, const CUpti_CallbackData *cbInfo) {
-    if (cbInfo->callbackSite == CUPTI_API_ENTER)
-    {
-        if (function_is_exit(id))
-        {
-            //Do one last flush since this is our last opportunity.
-#ifdef TAU_ASYNC_ACTIVITY_API
-            cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
-#endif
-            //Stop collecting cupti counters.
-#if !defined(PTHREADS) // SASS is not thread safe?
-            if (TauEnv_get_cuda_track_sass()) {
-                for (int i = 0; i < device_count_total; i++) {
-                    for (std::map<uint32_t, CUPTI_KERNEL_TYPE>::iterator it = kernelMap[i].begin();
-                            it != kernelMap[i].end(); it++) {
-                        uint32_t correlId = it->first;
-                        CUPTI_KERNEL_TYPE *kernel = &it->second;
-                        const char *kname = demangleName(kernel->name);
-                        record_imix_counters(kname, i, kernel->streamId, kernel->contextId, kernel->correlationId, kernel->end);
-                    }
-                }
-            }
-#endif
-            Tau_CuptiLayer_finalize();
-        }
-        if(strcmp(cbInfo->functionName, "cudaDeviceReset") == 0) {
-            fprintf(stderr, "TAU: WARNING! cudaDeviceReset was called. CUPTI counters will not be measured from now on.\n");
-        }
-        Tau_gpu_enter_event(cbInfo->functionName);
-        if (function_is_launch(id))
-        { // ENTRY to a launch function
-            static bool do_this_once = false;
-            if (!do_this_once) {
-                RtsLayer::LockDB();
-                if (!do_this_once) {
-                    Tau_CuptiLayer_init();
-                    do_this_once = true;
-                }
-                RtsLayer::UnLockDB();
-            }
-
-            TAU_DEBUG_PRINT("[at call (enter), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
-            record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
-            CUdevice device;
-            cuCtxGetDevice(&device);
-            Tau_cuda_Event_Synchonize();
-            int taskId = get_taskid_from_context_id(cbInfo->contextUid, 0);
-            record_gpu_counters_at_launch(device, taskId);
-        }
-        TAU_DEBUG_PRINT("callback for %s, enter.\n", cbInfo->functionName);
+void write_sass_counters() {
+    for (int i=0; i < device_count_total; i++) {
+        for (std::map<uint32_t, CUPTI_KERNEL_TYPE>::iterator it = kernelMap[i].begin();
+	     it != kernelMap[i].end(); it++) {
+	    CUPTI_KERNEL_TYPE *kernel = &it->second;
+	    const char *kname = demangleName(kernel->name);
+	    record_imix_counters(kname, i, kernel->streamId, kernel->contextId, kernel->correlationId, kernel->end);
+	}
     }
-    else if (cbInfo->callbackSite == CUPTI_API_EXIT)
+}
+
+void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
+        CUpti_CallbackId id, const CUpti_CallbackData *cbInfo) {
+    TAU_DEBUG_PRINT("TAU: CUPTI API enter\n");
+    if (function_is_exit(id))
     {
-        if (function_is_launch(id)) // EXIT FROM a launch function
-        {
-            record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
-        }
+        //Do one last flush since this is our last opportunity.
+#ifdef TAU_ASYNC_ACTIVITY_API
+        cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+#endif
+        //Stop collecting cupti counters.
+#if !defined(PTHREADS) // SASS is not thread safe?
+	if (TauEnv_get_cuda_track_sass()) {
+	  write_sass_counters();
+	}
+#endif     
+        Tau_CuptiLayer_finalize();
+    }
+    if(strcmp(cbInfo->functionName, "cudaDeviceReset") == 0) {
+        fprintf(stderr, "TAU: WARNING! cudaDeviceReset was called. CUPTI counters will not be measured from now on.\n");
+    }
+    Tau_gpu_enter_event(cbInfo->functionName);
+    if (function_is_launch(id))
+    { // ENTRY to a launch function
+        static bool do_this_once = false;
+	if (!do_this_once) {
+	    RtsLayer::LockDB();
+	    if (!do_this_once) {
+	        Tau_CuptiLayer_init();
+	    do_this_once = true;
+	    }
+	    RtsLayer::UnLockDB();
+	}
+      
+	TAU_DEBUG_PRINT("[at call (enter), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
+	record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
+	CUdevice device;
+	cuCtxGetDevice(&device);
+	Tau_cuda_Event_Synchonize();
+	int taskId = get_taskid_from_context_id(cbInfo->contextUid, 0);
+	record_gpu_counters_at_launch(device, taskId);
+    }
+    TAU_DEBUG_PRINT("callback for %s, enter.\n", cbInfo->functionName);
+}
+
+void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
+        CUpti_CallbackId id, const CUpti_CallbackData *cbInfo) {
+    TAU_DEBUG_PRINT("TAU: CUPTI API exit\n");
+    if (function_is_launch(id)) // EXIT FROM a launch function
+    {
+        record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
+    }
 #ifdef TAU_DEBUG_CUPTI_FORCE_SYNC
-        //for testing only.
-        if (function_is_launch(id))
-        {
-            printf("synthetic sync point.\n");
-            cuCtxSynchronize();
-            FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-        }
+    //for testing only.
+    if (function_is_launch(id))
+    {
+        printf("synthetic sync point.\n");
+	cuCtxSynchronize();
+	FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
+    }
 #endif
 
-        TAU_DEBUG_PRINT("callback for %s, exit.\n", cbInfo->functionName);
-        TAU_DEBUG_PRINT("[at call (exit), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
-        Tau_gpu_exit_event(cbInfo->functionName);
-        if (function_is_sync(id))
-        {
-            TAU_DEBUG_PRINT("sync function name: %s\n", cbInfo->functionName);
-            //Tau_CuptiLayer_disable();
-            //cuCtxSynchronize();
-            cudaDeviceSynchronize();
-            //Tau_CuptiLayer_enable();
-            record_gpu_counters_at_sync();
+    TAU_DEBUG_PRINT("callback for %s, exit.\n", cbInfo->functionName);
+    TAU_DEBUG_PRINT("[at call (exit), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
+    Tau_gpu_exit_event(cbInfo->functionName);
+    if (function_is_sync(id))
+    {
+        TAU_DEBUG_PRINT("sync function name: %s\n", cbInfo->functionName);
+	//Tau_CuptiLayer_disable();
+	//cuCtxSynchronize();
+	cudaDeviceSynchronize();
+	//Tau_CuptiLayer_enable();
+	record_gpu_counters_at_sync();
 
 #ifdef TAU_ASYNC_ACTIVITY_API
-            Tau_cupti_activity_flush_all();
-            //cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
-            //cuptiActivityFlush(cbInfo->context, 0, CUPTI_ACTIVITY_FLAG_NONE);
+	Tau_cupti_activity_flush_all();
+	//cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+	//cuptiActivityFlush(cbInfo->context, 0, CUPTI_ACTIVITY_FLAG_NONE);
 #else
-            Tau_cupti_register_sync_event(cbInfo->context, 0, NULL, 0, 0);
+	Tau_cupti_register_sync_event(cbInfo->context, 0, NULL, 0, 0);
 #endif
-            //Tau_CuptiLayer_enable();
-        }
+	//Tau_CuptiLayer_enable();
     }
 }
 
@@ -916,7 +919,12 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
             Tau_handle_driver_api_memcpy (ud, domain, id, cbInfo);
         } else {
             // This is something other than memcpy
-            Tau_handle_driver_api_other (ud, domain, id, cbInfo);
+	    if (cbInfo->callbackSite == CUPTI_API_ENTER) {
+	        Tau_handle_cupti_api_enter(ud, domain, id, cbInfo);
+	    }
+	    else if (cbInfo->callbackSite == CUPTI_API_EXIT) {
+	        Tau_handle_cupti_api_exit(ud, domain, id, cbInfo);
+	    }
         }
     } else if (domain == CUPTI_CB_DOMAIN_INVALID) {
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_RESOURCE event\n");
