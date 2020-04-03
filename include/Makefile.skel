@@ -827,9 +827,9 @@ TAU_GCCLIB	= -lgcc_s
 #NAGWARE_FORTRAN#TAU_FORTRANLIBS		= $(EXTRADIR)/lib/quickfit.o $(EXTRADIR)/lib/f90_init.o $(EXTRADIR)/lib/libf??.so $(EXTRADIR)/lib/libf??.a -lm -Wl,-rpath,$(EXTRADIR)/lib  #ENDIF#
 #G95_FORTRAN#TAU_FORTRANLIBS	       = -L$(EXTRADIR) -lf95 #ENDIF#
 #GNU_FORTRAN#TAU_FORTRANLIBS	       = -lg2c       #ENDIF#
-#GNU_GFORTRAN#TAU_FORTRANLIBS	       = -L$(TAUGFORTRANLIBDIR) -lgfortran -lgfortranbegin       #ENDIF#
+#GNU_GFORTRAN#TAU_FORTRANLIBS	       = -L$(TAUGFORTRANLIBDIR) -lgfortran       #ENDIF#
 #APPLE_GFORTRAN#TAU_FORTRANLIBS	       = -L$(TAUGFORTRANLIBDIR) -lgfortran #ENDIF#
-#SC_GFORTRAN#TAU_FORTRANLIBS	       = -lgfortran -lgfortranbegin       #ENDIF#
+#SC_GFORTRAN#TAU_FORTRANLIBS	       = -lgfortran       #ENDIF#
 #SGI_FORTRAN#TAU_FORTRANLIBS	       = -lfortran -lftn       #ENDIF#
 #USE_IBMXLC#TAU_IBM_FORTRANLIBS	       =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 /lib/crt0.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
 #GNU#TAU_IBM_FORTRANLIBS	       =  -Wl,-bh:4 -Wl,-bpT:0x10000000 -Wl,-bpD:0x20000000 /lib/crt0.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
@@ -862,11 +862,11 @@ TAU_GCCLIB	= -lgcc_s
 #OPENMP#TAU_BGL_OMP_SERIAL= #ENDIF#
 #BGP#TAU_OMP_SERIAL=$(TAU_BGL_OMP_SERIAL) #ENDIF#
 #BGP#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90$(TAU_R) -lxlfmath $(TAU_OMP_SERIAL) #ENDIF#
-#BGP_GFORTRAN#TAU_FORTRANLIBS = -lgfortran -lgfortranbegin -lm #ENDIF#
+#BGP_GFORTRAN#TAU_FORTRANLIBS = -lgfortran  -lm #ENDIF#
 
 #IBMXLFAPPLE#TAU_FORTRANLIBS	       = -L$(EXTRADIR)/lib -lxlf90 -lxlfmath -lxl      #ENDIF#
 
-#ZEPTO_GFORTRAN#TAU_FORTRANLIBS = -lgfortran -lgfortranbegin -lm #ENDIF#
+#ZEPTO_GFORTRAN#TAU_FORTRANLIBS = -lgfortran -lm #ENDIF#
 #CRAY_FORTRAN#TAU_FORTRANLIBS	       =        #ENDIF#
 #CRAY_X1_FORTRAN#TAU_FORTRANLIBS	       =        #ENDIF#
 #PGI_FORTRAN#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902 -lpgftnrtl -lrt #ENDIF#
