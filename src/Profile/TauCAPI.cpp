@@ -3301,7 +3301,6 @@ extern "C" long Tau_get_message_path(void) {
   return 0L;
 }
 #endif /* TAU_PROFILE_PATHS */
-// #endif
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $

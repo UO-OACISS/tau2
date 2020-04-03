@@ -215,8 +215,8 @@ int get_context_from_correlation_id(uint32_t correlationId) {
     return correlationContextMap[correlationId];
 }
 
-// /* get the context/stream key from the correlation ID, and then do the
-//  * lookup to get the virtual thread ID */
+/* get the context/stream key from correlation ID, and then do the
+* lookup to get the virtual thread ID */
 int get_taskid_from_correlation_id(uint32_t correlationId) {
     uint32_t streamId = get_stream_from_correlation_id(correlationId);
     uint32_t contextId = get_context_from_correlation_id(correlationId);
