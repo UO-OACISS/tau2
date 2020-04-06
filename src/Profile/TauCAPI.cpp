@@ -2195,12 +2195,6 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 
 #endif
 }
-#ifdef CUPTI_disabled
-int vtid_to_ttid[TAU_MAX_THREADS];
-int vtid_to_corrid[TAU_MAX_THREADS];
-std::map<uint32_t, uint32_t> map_cuptiThread;
-std::map<uint32_t, CudaThread> map_cudaThread;
-#endif
 
 #ifdef TAU_ROCTRACER
 extern void Tau_roctracer_start_tracing(void);
@@ -2208,12 +2202,6 @@ extern void Tau_roctracer_stop_tracing(void);
 #endif /* TAU_ROCTRACER */
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
-// #if defined(TAU_GPU) && defined(PTHREADS)
-//   TAU_VERBOSE("[TauCAPI]:  About to call register_gpu_thread\n");
-//   // register_gpu_thread(RtsLayer::getTid(), Tau_get_thread(), RtsLayer::getPid(), RtsLayer::myNode());
-//   register_gpu_thread(pthread_self(), Tau_get_thread(), RtsLayer::getPid(), RtsLayer::myNode());
-//   // CudaThreadLayer::RegisterThread();
-// #endif
   if ((RtsLayer::myNode() == -1) && (Tau_get_thread() != 0)) {
     TauEnv_set_nodeNegOneSeen(TauEnv_get_nodeNegOneSeen()+1);
   }

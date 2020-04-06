@@ -321,11 +321,12 @@ void record_gpu_occupancy(int32_t blockX,
 
 void record_gpu_launch(int cId, const char *name);
 void record_gpu_counters(int device_id, const char *name, uint32_t id, eventMap_t *m);
-void record_environment_counters(const char *name, uint32_t taskId, uint32_t device, uint32_t streamId, uint32_t contextId, uint32_t id, uint32_t end);
-void transport_environment_counters(std::vector<uint32_t> vec, EnvType envT, const char* name, uint32_t taskId, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent* tc);
 void record_imix_counters(const char* name, uint32_t taskId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end);
 void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uint32_t taskId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent * tc);
-void dump_sass_to_csv(int task_id);
+ImixStats write_runtime_imix(uint32_t corrId, uint32_t taskId, std::map<std::pair<int, int>, CudaOps> map_disassem, std::string kernel);
+void write_sass_counters();
+void record_environment_counters(const char *name, uint32_t taskId, uint32_t device, uint32_t streamId, uint32_t contextId, uint32_t id, uint32_t end);
+void transport_environment_counters(std::vector<uint32_t> vec, EnvType envT, const char* name, uint32_t taskId, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent* tc);
 
 int get_device_count();
 int get_device_id();
@@ -353,10 +354,6 @@ void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceL
 #define TAU_MAX_GPU_DEVICES 16
 #endif
 
-// void createFilePointerSass(int device_count);
-FILE* createFileSourceSass(int task_id);
-FILE* createFileInstrSass(int task_id);
-FILE* createFileFuncSass(int task_id);
 
 #if CUDA_VERSION >= 6000
 static const char * getUvmCounterKindString(CUpti_ActivityUnifiedMemoryCounterKind kind);
@@ -383,10 +380,6 @@ void record_gpu_counters_at_sync();
 void record_gpu_counters_at_sync(int device, int task);
 
 void clear_counters(int device);
-
-ImixStats write_runtime_imix(uint32_t corrId, uint32_t taskId, std::map<std::pair<int, int>, CudaOps> map_disassem, std::string kernel);
-
-int get_device_from_id(int id);
 
 int get_task_from_id(int id, int task);
 
