@@ -938,15 +938,6 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
     {
         static int counter = 0;
         int thisloop = counter++;
-        // printf("------------> in %s, iteration %d\n", __func__, thisloop);
-        //   if(TauEnv_get_cuda_track_sass()) {
-        //     if(TauEnv_get_cuda_csv_output()) {
-        // #ifdef TAU_DEBUG_CUPTI_SASS
-        //       printf("[CuptiActivity]:  About to call createFilePointerSass, device_count: %i\n", device_count);
-        // #endif
-        //       createFilePointerSass(device_count);
-        //     }
-        //   }
         //Since we do not control the synchronization points this is only place where
         //we can record the gpu counters.
         int count_iter = TauEnv_get_cudaTotalThreads();
@@ -1675,7 +1666,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 #if CUDA_VERSION >= 5500
                     if(TauEnv_get_cuda_track_sass()) {
 
-#ifdef TAU_DEBUG_CUPTI_SASS
+#ifdef TAU_DEBUG_SASS
                         printf("SOURCE_LOCATOR SrcLctrId: %d, File: %s, Line: %d, Kind: %u\n",
                                 source->id, source->fileName, source->lineNumber, source->kind);
 #endif
@@ -1689,7 +1680,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                 if(TauEnv_get_cuda_track_sass()) {
                     CUpti_ActivityInstructionExecution *instrRecord = (CUpti_ActivityInstructionExecution *)record;
                     int taskId = get_taskid_from_correlation_id(instrRecord->correlationId);
-#ifdef TAU_DEBUG_CUPTI_SASS
+#ifdef TAU_DEBUG_SASS
                     printf("INSTRUCTION_EXECUTION corr: %u, executed: %u, flags: %u, functionId: %u, kind: %u, notPredOffThreadsExecuted: %u, pcOffset: %u, sourceLocatorId: %u, threadsExecuted: %u\n",
                     instrRecord->correlationId, instrRecord->executed,
                     instrRecord->flags, instrRecord->functionId,
@@ -1706,7 +1697,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
             case CUPTI_ACTIVITY_KIND_FUNCTION: {
                 if(TauEnv_get_cuda_track_sass()) {
                     CUpti_ActivityFunction *fResult = (CUpti_ActivityFunction *)record;
-#ifdef TAU_DEBUG_CUPTI_SASS
+#ifdef TAU_DEBUG_SASS
                     printf("FUCTION contextId: %u, functionIndex: %u, id %u, kind: %u, moduleId %u, name %s, device: %i\n",
                         fResult->contextId, fResult->functionIndex, fResult->id,
                         fResult->kind, fResult->moduleId, fResult->name);
