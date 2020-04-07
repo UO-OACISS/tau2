@@ -10,8 +10,8 @@ import os
 
 uniqID = 1
 
-serial_runner="./simple"
-parallel_runner=""
+serial_runner="TAU_SET_NODE=0 ./simple" #TAU_SET_NODE=0 allows serial tests to run with MPI builds
+parallel_runner="mpirun -np 2 ./simple"
 
 class TimeoutError(Exception):
    """Raised if the external process takes too much"""
@@ -282,8 +282,8 @@ class SimpleTest(Test):
             return
         chdir(TEST_ROOT + "/" + self.getActualTest())
         system("rm -rf " + self.buildpath)
-        system("TAU_TEST_MAKEFILE="+self.fullmakefile+" make clean")
-        retval = system("TAU_TEST_MAKEFILE="+self.fullmakefile+" make")
+        system("TAU_MAKEFILE="+self.fullmakefile + " TAU_TEST_MAKEFILE="+self.fullmakefile+" make clean")
+        retval = system("TAU_MAKEFILE="+self.fullmakefile + " TAU_TEST_MAKEFILE="+self.fullmakefile+" make")
         if retval != 0 or os.path.exists("simple") == False:
             self.error("Error: failed to build")
             self.buildresult = "fail"
@@ -319,8 +319,9 @@ class SimpleTest(Test):
     def runMPITest(self, timeout):
         outputHeader("MPITest("+self.getActualTest()+", run (" + self.fullmakefile + ")")
         if parallel_runner == "":
-          output ("Skipping Test (TAU_VALIDATE_PARALLEL is not set, can't run MPI)")
-          return
+          output ("Warning: Using default mpi launch: \"mpirun -np 2\". Set TAU_VALIDATE_PARALLEL to change")
+          #output ("Skipping Test (TAU_VALIDATE_PARALLEL is not set, can't run MPI)")
+          #return
         if self.checkApplicable() == False:
             return
 
@@ -509,9 +510,9 @@ class PdtTest(Test):
         chdir(TEST_ROOT + "/" + self.getActualTest())
         system("rm -rf " + self.buildpath)
 
-        system("TAU_TEST_MAKEFILE="+self.fullmakefile+" make clean")
+        system("TAU_MAKEFILE="+self.fullmakefile + " TAU_TEST_MAKEFILE="+self.fullmakefile+" make clean")
         system("rm -f *.inst.*")
-        retval = system("TAU_TEST_MAKEFILE="+self.fullmakefile+" make")
+        retval = system("TAU_MAKEFILE="+self.fullmakefile + " TAU_TEST_MAKEFILE="+self.fullmakefile+" make")
         if retval != 0:
             self.error("Error: failed to build")
             self.buildresult = "fail"
@@ -595,6 +596,12 @@ class PdtTestC(PdtTest):
         if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
             return False
         return True
+    def runTest(self, timeout):
+        if usesOption(self.makefile, "mpi"):
+            self.runMPITest(timeout)
+        else:
+            PdtTest.runTest(self,timeout)
+
     
 class PdtTestCPP(PdtTest):
     def __init__(self, makefile):
