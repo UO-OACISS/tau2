@@ -34,8 +34,9 @@
 #include <cuda.h>
 #endif
 
-//#include <Profile/TauOpenACC.h>
+#include <Profile/TauOpenACC.h>
 #include <Profile/TauGpuAdapterOpenACC.h>
+#include <Profile/TauGpu.h>
 //#include <Profile/CuptiActivity.h> // solely for get_taskid_from_context_id
 
 #define TAU_SET_EVENT_NAME(event_name, str) strcpy(event_name, str); break 
@@ -267,7 +268,19 @@ printActivity(CUpti_Activity *record)
 
 					//TODO: empty for now
 					GpuEventAttributes* map;
-					int map_size = 0;
+					int map_size = 2;
+					map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
+					
+					static TauContextUserEvent* event_kind;
+					Tau_get_context_userevent((void**) &event_kind, "OpenACC event kind");
+					map[0].userEvent = event_kind;
+					map[0].data = oacc->eventKind;
+
+					static TauContextUserEvent* parent_construct;
+					Tau_get_context_userevent((void**) &parent_construct, "OpenACC parent construct");
+					map[1].userEvent = parent_construct;
+					map[1].data = oacc->parentConstruct;
+					
 
 					//TODO: could do better but this'll do for now
 					const char* name = openacc_event_names[oacc->eventKind];

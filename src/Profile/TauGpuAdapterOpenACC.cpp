@@ -1,6 +1,9 @@
 #include <Profile/TauGpuAdapterOpenACC.h>
+#include <Profile/TauGpu.h>
 
-void Tau_openacc_register_gpu_event(
+double OpenACCGpuEvent::offset = 0;
+
+extern "C" void Tau_openacc_register_gpu_event(
 	const char* name,
 	uint32_t device,
 	uint32_t stream,

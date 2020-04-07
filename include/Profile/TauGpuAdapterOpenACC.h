@@ -6,26 +6,29 @@
 #include <stdint.h>
 
 //copy-pasta and rename from TauGpuAdapterCupti that I feel kind of bad about but including is worse
-struct HostMap : public std::map<uint32_t, FunctionInfo*> {
-    HostMap() {
-        Tau_init_initializeTAU();
-    }
 
-    ~HostMap() {
-        Tau_destructor_trigger();
-    }
-};
-
-HostMap &functionInfoMap_hostLaunch() {
-  static HostMap host_map;
-  return host_map;
-}
 
 class OpenACCGpuEvent : public GpuEvent
 {
 	private:
 		static double offset;
+		/*
+		struct HostMap : public std::map<uint32_t, FunctionInfo*> {
+				HostMap() {
+						Tau_init_initializeTAU();
+				}
 
+				~HostMap() {
+						Tau_destructor_trigger();
+				}	
+		};
+
+
+		HostMap &functionInfoMap_hostLaunch() {
+			static HostMap host_map;
+			return host_map;
+		}
+*/
 	public:
 		uint32_t stream_id;
 		uint32_t context_id;
@@ -88,7 +91,7 @@ class OpenACCGpuEvent : public GpuEvent
 		FunctionInfo* getCallingSite() const
 		{
 			FunctionInfo* funcInfo = NULL;
-			// mostly copy-pasta from the non-cdp case of TauGpuAdapaterCupti, no idea if it works
+			/*// mostly copy-pasta from the non-cdp case of TauGpuAdapaterCupti, this does not work
 			RtsLayer::LockDB();
 			std::map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap_hostLaunch().find(correlation_id);
       if (it != functionInfoMap_hostLaunch().end())
@@ -97,7 +100,7 @@ class OpenACCGpuEvent : public GpuEvent
         //printf("found host launch site: %s.\n", funcInfo->GetName());
       }
       RtsLayer::UnLockDB();
-
+*/
 			if (funcInfo != NULL) {
 				funcInfo->SetPrimaryGroupName("TAU_REMOTE");
 			}
@@ -140,12 +143,14 @@ class OpenACCGpuEvent : public GpuEvent
 
 		~OpenACCGpuEvent() 
 		{
-			free(event_attrs);
+			if (event_attrs) {
+				free(event_attrs);
+			}
 		}
 };
 
-double OpenACCGpuEvent::offset = 0;
-
+//double OpenACCGpuEvent::offset = 0;
+/*
 void Tau_openacc_register_gpu_event(                                                                                                     const char* name,
   uint32_t device,
   uint32_t stream,
@@ -156,5 +161,5 @@ void Tau_openacc_register_gpu_event(                                            
   int num_event_attrs,
   double start,
   double stop);
-
+*/
 #endif //TAU_GPU_ADAPTER_OPENACC_H
