@@ -191,6 +191,8 @@ int get_taskid_from_context_id(uint32_t contextId, uint32_t streamId) {
             tid = insert_context_into_map(contextId, deviceId, streamId);
         }
     }
+    TAU_DEBUG_PRINT("key: %u, Device: %u = Context: %u = Stream: %u = Thread %u\n",
+        key, 0, contextId, streamId, tid);
     return tid;
 }
 
@@ -575,8 +577,8 @@ void Tau_cupti_onload()
     //Tau_cupti_set_offset(0);
 
     Tau_gpu_init();
-    Tau_cupti_setup_unified_memory();
     Tau_cupti_set_device_props();
+    Tau_cupti_setup_unified_memory();
 }
 
 void Tau_cupti_onunload() {
@@ -813,7 +815,7 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
 	    }
 	    RtsLayer::UnLockDB();
 	}
-      
+
 	TAU_DEBUG_PRINT("[at call (enter), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
 	record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
 	CUdevice device;
@@ -1346,7 +1348,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                             uint64_t end;
                             uint64_t value;
                             int direction = MESSAGE_UNKNOWN;
-                            CUpti_ActivityUnifiedMemoryCounter *umemcpy = (CUpti_ActivityUnifiedMemoryCounter *)record;
+                            CUpti_ActivityUnifiedMemoryCounter2 *umemcpy = (CUpti_ActivityUnifiedMemoryCounter2 *)record;
 
 #ifdef TAU_DEBUG_CUPTI
 #if CUDA_VERSION >= 7000
@@ -1392,7 +1394,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                             //the CPU what type of copy we have so we need to register
                             //the bytes copied here. Be careful we only want to record
                             //the bytes copied once.
-                            int taskId = deviceId; // need to get correlation id from CUpti_ActivityStream
+                            int taskId = get_taskid_from_context_id(0,streamId);
                             Tau_cupti_register_unifmem_event(
                                     TAU_GPU_USE_DEFAULT_NAME,
                                     deviceId,
@@ -1656,7 +1658,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
             case CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR:
                 {
                     CUpti_ActivitySourceLocator *source = (CUpti_ActivitySourceLocator *)record;
-		    
+
                     sourceLocatorMap[source->id] = *source;
                     // uint32_t lineNumber;
 #ifdef TAU_DEBUG_CUPTI
@@ -2691,7 +2693,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 
     void write_sass_counters() {
         // same for all devices/threads
-        if (TauEnv_get_cuda_csv_output()) { 
+        if (TauEnv_get_cuda_csv_output()) {
 	    dump_function_map_to_csv();
 	    dump_source_map_to_csv();
 	}
@@ -2705,7 +2707,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 		     it != kernelMap[vtid].end(); it++) {
 		    CUPTI_KERNEL_TYPE *kernel = &it->second;
 		    const char *kname = demangleName(kernel->name);
-		    record_imix_counters(kname, vtid, kernel->streamId, kernel->contextId, kernel->correlationId, kernel->end);	
+		    record_imix_counters(kname, vtid, kernel->streamId, kernel->contextId, kernel->correlationId, kernel->end);
 		}
 		if (TauEnv_get_cuda_csv_output()) {
 		    dump_instruction_map_to_csv(vtid);

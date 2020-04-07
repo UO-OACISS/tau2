@@ -9,7 +9,7 @@ extern "C" void Tau_cupti_set_offset(double cpu_gpu_offset) {
 }
 
 extern "C" void Tau_cupti_find_context_event(
-        TauContextUserEvent** u, 
+        TauContextUserEvent** u,
         const char *name, bool context) {
     Tau_pure_context_userevent((void **) u, name);
     (*u)->SetContextEnabled(context);
@@ -18,35 +18,35 @@ extern "C" void Tau_cupti_find_context_event(
 
 extern "C" void Tau_cupti_register_metadata(
         uint32_t deviceId,
-        GpuMetadata *metadata, 
+        GpuMetadata *metadata,
         int metadata_size) {
-    metadata_struct m; 
+    metadata_struct m;
     m.list = metadata;
     m.length = metadata_size;
     TheDeviceInfoMap()[deviceId] = m;
 }
 extern "C" void Tau_cupti_register_host_calling_site(
         uint32_t correlationId,
-        const char *name) {	
+        const char *name) {
     //find thread with launch event.
     FunctionInfo* launch = (FunctionInfo *) Tau_pure_search_for_function(name, 0);
     for (int i=0; i<TAU_MAX_THREADS; i++)
     {
-        if (TauInternal_CurrentProfiler(i) != NULL && 
+        if (TauInternal_CurrentProfiler(i) != NULL &&
             launch == TauInternal_CurrentProfiler(i)->ThisFunction &&
             TauInternal_CurrentProfiler(i)->CallPathFunction != NULL)
         {
             // lock required to prevent multithreaded access to the tree
             RtsLayer::LockDB();
-            functionInfoMap_hostLaunch()[correlationId] = 
+            functionInfoMap_hostLaunch()[correlationId] =
                 TauInternal_CurrentProfiler(i)->CallPathFunction;
             RtsLayer::UnLockDB();
             break;
         }
     }
-    //functionInfoMap_hostLaunch()[correlationId] = 
+    //functionInfoMap_hostLaunch()[correlationId] =
     //  TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-}	
+}
 
 extern "C" void Tau_cupti_register_device_calling_site(
         int64_t correlationId,
@@ -55,13 +55,13 @@ extern "C" void Tau_cupti_register_device_calling_site(
     RtsLayer::LockDB();
     functionInfoMap_deviceLaunch()[correlationId] = (FunctionInfo *) Tau_pure_search_for_function(name, 0);
     RtsLayer::UnLockDB();
-}	
+}
 extern "C" void Tau_cupti_register_sync_site(
-        uint32_t correlationId, 
+        uint32_t correlationId,
         uint64_t *counters,
         int number_of_counters
         ) {
-}	
+}
 
 
 extern "C" void Tau_cupti_enter_memcpy_event(
@@ -74,7 +74,7 @@ extern "C" void Tau_cupti_enter_memcpy_event(
         int memcpy_type,
         int taskId) {
     //Empty list of gpu attributes
-    CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
+    CuptiGpuEvent gpu_event = CuptiGpuEvent(name,
             deviceId, streamId, contextId, 0, correlationId, NULL, 0, taskId);
     Tau_gpu_enter_memcpy_event(name, &gpu_event, bytes_copied, memcpy_type);
 }
@@ -89,7 +89,7 @@ extern "C" void Tau_cupti_exit_memcpy_event(
         int memcpy_type,
         int taskId) {
     //Empty list of gpu attributes
-    CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
+    CuptiGpuEvent gpu_event = CuptiGpuEvent(name,
             deviceId, streamId, contextId, 0, correlationId, NULL, 0, taskId);
     Tau_gpu_exit_memcpy_event(name, &gpu_event, memcpy_type);
 }
@@ -104,12 +104,12 @@ extern "C" void Tau_cupti_register_memcpy_event(
         double stop,
         int bytes_copied,
         int memcpy_type,
-        int direction, 
+        int direction,
         int taskId) {
     //Empty list of gpu attributes
-    CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
+    CuptiGpuEvent gpu_event = CuptiGpuEvent(name,
             deviceId, streamId, contextId, correlationId, correlationId, NULL, 0, taskId);
-    Tau_gpu_register_memcpy_event(&gpu_event, 
+    Tau_gpu_register_memcpy_event(&gpu_event,
             start, stop, bytes_copied, memcpy_type, direction);
 }
 
@@ -126,8 +126,8 @@ extern "C" void Tau_cupti_register_unifmem_event(
         int direction,
         int taskId) {
     //Empty list of gpu attributes
-    CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
-            deviceId, streamId, processId, 0, -1, NULL, 0, taskId);
+    CuptiGpuEvent gpu_event = CuptiGpuEvent(name,
+            deviceId, streamId, 0, 0, -1, NULL, 0, taskId);
     // start/stop times set to timestamp
     Tau_gpu_register_unifmem_event(&gpu_event, start, end, value, unifmem_type, direction);
 }
@@ -145,11 +145,11 @@ extern "C" void Tau_cupti_register_gpu_event(
         double start,
         double stop,
         int taskId) {
-    CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
+    CuptiGpuEvent gpu_event = CuptiGpuEvent(name,
             deviceId,
-            streamId, 
-            contextId, 
-            correlationId, 
+            streamId,
+            contextId,
+            correlationId,
             parentGridId, gpu_attributes, number_of_attributes, taskId);
     if (cdp) {
         //printf("setting CDP flag.\n");
@@ -167,11 +167,11 @@ extern "C" void Tau_cupti_register_gpu_sync_event(
         double start,
         double stop,
         int taskId) {
-    CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
+    CuptiGpuEvent gpu_event = CuptiGpuEvent(name,
             deviceId,
-            streamId, 
-            contextId, 
-            correlationId, 
+            streamId,
+            contextId,
+            correlationId,
             0, NULL, 0, taskId);
     Tau_gpu_register_sync_event(&gpu_event, start, stop);
 }
@@ -185,8 +185,8 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
         GpuEventAttributes *gpu_attributes,
         int number_of_attributes,
         int taskId) {
-    CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
-            deviceId, streamId, contextId, correlationId, 0, gpu_attributes, 
+    CuptiGpuEvent gpu_event = CuptiGpuEvent(name,
+            deviceId, streamId, contextId, correlationId, 0, gpu_attributes,
             number_of_attributes, taskId);
     Tau_gpu_register_gpu_atomic_event(&gpu_event);
 }
