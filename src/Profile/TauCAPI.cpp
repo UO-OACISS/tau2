@@ -77,6 +77,10 @@ void esd_exit (elg_ui4 rid);
 #include <Profile/TauPluginInternals.h>
 #include <Profile/TauPluginCPPTypes.h>
 
+#ifdef CUPTI
+void Tau_cupti_activity_flush_at_exit(void);
+#endif
+
 using namespace tau;
 
 extern "C" void Tau_shutdown(void);
@@ -2952,6 +2956,10 @@ extern "C" int Tau_get_local_tid(void) {
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
+#ifdef CUPTI
+  // flush all the cuda activity before we exit!
+  Tau_cupti_activity_flush_at_exit();
+#endif
 // First, make sure all thread timers have stopped
   Tau_profile_exit_all_threads();
 #ifdef TAU_OPENMP

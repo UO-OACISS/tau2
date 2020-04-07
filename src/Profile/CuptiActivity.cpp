@@ -779,9 +779,14 @@ void Tau_handle_driver_api_memcpy (void *ud, CUpti_CallbackDomain domain,
             //Disable counter tracking during the sync.
             cudaDeviceSynchronize();
             // KEVIN record_gpu_counters_at_sync();
-
             Tau_cupti_activity_flush_all();
         }
+    }
+}
+
+void CUPTIAPI Tau_cupti_activity_flush_at_exit() {
+    if (Tau_init_check_initialized() && !Tau_global_getLightsOut()) {
+        cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
     }
 }
 
@@ -792,7 +797,7 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
     {
         //Do one last flush since this is our last opportunity.
 #ifdef TAU_ASYNC_ACTIVITY_API
-        cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+        Tau_cupti_activity_flush_at_exit();
 #endif
         //Stop collecting cupti counters.
 	if (TauEnv_get_cuda_track_sass()) {
@@ -857,9 +862,7 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
 	record_gpu_counters_at_sync();
 
 #ifdef TAU_ASYNC_ACTIVITY_API
-	Tau_cupti_activity_flush_all();
-	//cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
-	//cuptiActivityFlush(cbInfo->context, 0, CUPTI_ACTIVITY_FLAG_NONE);
+	Tau_cupti_activity_flush_at_exit();
 #else
 	Tau_cupti_register_sync_event(cbInfo->context, 0, NULL, 0, 0);
 #endif
@@ -1341,6 +1344,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                         {
                             CUpti_ActivityUnifiedMemoryCounterKind counterKind;
                             uint32_t deviceId;
+                            uint32_t contextId;
                             uint32_t streamId;
                             uint32_t processId;
                             CUpti_ActivityUnifiedMemoryCounterScope scope;
@@ -1348,7 +1352,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                             uint64_t end;
                             uint64_t value;
                             int direction = MESSAGE_UNKNOWN;
-                            CUpti_ActivityUnifiedMemoryCounter2 *umemcpy = (CUpti_ActivityUnifiedMemoryCounter2 *)record;
+                            CUpti_ActivityUnifiedMemoryCounter *umemcpy = (CUpti_ActivityUnifiedMemoryCounter *)record;
 
 #ifdef TAU_DEBUG_CUPTI
 #if CUDA_VERSION >= 7000
@@ -1386,22 +1390,26 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 
                             if (getUnifmemType(counterKind) == BytesHtoD) {
                                 direction = MESSAGE_RECV;
+                                deviceId = umemcpy->dstId;
+                                contextId = deviceContextThreadVector[deviceId];
                             } else if (getUnifmemType(counterKind) == BytesDtoH) {
                                 direction = MESSAGE_SEND;
+                                deviceId = umemcpy->srcId;
+                                contextId = deviceContextThreadVector[deviceId];
                             }
+                            int taskId = get_taskid_from_context_id(contextId,0);
 
                             //We do not always know on the corresponding host event on
                             //the CPU what type of copy we have so we need to register
                             //the bytes copied here. Be careful we only want to record
                             //the bytes copied once.
-                            int taskId = get_taskid_from_context_id(0,streamId);
                             Tau_cupti_register_unifmem_event(
                                     TAU_GPU_USE_DEFAULT_NAME,
                                     deviceId,
                                     streamId,
                                     processId,
-                                    start,
-                                    end,
+                                    start/1e3,
+                                    end/1e3,
                                     value,
                                     getUnifmemType(counterKind),
                                     direction,
@@ -2090,7 +2098,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 
     }
 
-    void record_environment_counters(const char* name, uint32_t taskId, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint32_t end) {
+    void record_environment_counters(const char* name, uint32_t taskId, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end) {
         if (environmentMap.find(contextId) == environmentMap.end()) {
             TAU_VERBOSE("[CuptiActivity] warning:  GPU environment counters not recorded.\n");
         }
@@ -2517,6 +2525,12 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                     return "BYTES_TRANSFER_DTOH";
                 case CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_CPU_PAGE_FAULT_COUNT:
                     return "CPU_PAGE_FAULT_COUNT";
+                case CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_GPU_PAGE_FAULT:
+                    return "GPU_PAGE_FAULT";
+                case CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_THRASHING:
+                    return "THRASHING";
+                case CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_THROTTLING:
+                    return "THROTTLING";
                 default:
                     break;
             }
