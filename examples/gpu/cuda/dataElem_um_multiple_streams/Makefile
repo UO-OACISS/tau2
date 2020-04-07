@@ -7,7 +7,8 @@ EXE = dataElem_um
 all: $(EXE)
 
 % : %.cu
+	#nvcc $< $(CC_FLAGS) $(LIB_FLAGS) -o $@ -g -O0 -I$(CUDA)/extras/CUPTI/include -L $(CUDA)/extras/CUPTI/lib64 -lcupti
 	nvcc $< $(CC_FLAGS) $(LIB_FLAGS) -o $@ -g -O0
 
 clean:
-	rm -f $(EXE)
+	rm -f $(EXE) profile.*
