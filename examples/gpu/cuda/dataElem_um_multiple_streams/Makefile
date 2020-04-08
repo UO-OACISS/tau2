@@ -11,4 +11,4 @@ all: $(EXE)
 	nvcc $< $(CC_FLAGS) $(LIB_FLAGS) -o $@ -g -O0
 
 clean:
-	rm -f $(EXE) profile.*
+	rm -rf $(EXE) profile.* traces*

@@ -1,7 +1,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <iostream>
-//#include <cupti.h>
 
 struct DataElement
 {
@@ -19,7 +18,7 @@ void Kernel(DataElement *elem) {
 
 void launch(DataElement *elem, cudaStream_t &stream) {
   Kernel<<< 1, 1, 0, stream >>>(elem);
-  cudaDeviceSynchronize();
+  //cudaDeviceSynchronize();
 }
 
 void iteration(cudaStream_t &stream)
@@ -58,15 +57,14 @@ int main(void)
 			std::cout << "error getting device properties, #=" << cudaGetErrorString(err) << std::endl;
 		}
 		std::cout << "Using device " << d << ", name: " << deviceProp.name << std::endl;
-	    cudaStream_t stream;
-		err = cudaStreamCreate(&stream);
-	    if (err != cudaSuccess) {
-		    std::cout << "error in stream creation, #=" << cudaGetErrorString(err) << std::endl;
-	    }
-        iteration(stream);
-	    cudaStreamSynchronize(stream);
-		cudaStreamDestroy(stream);
-	    cudaDeviceSynchronize();
+        for (int s = 0 ; s < 10 ; s++) {
+	        cudaStream_t stream;
+		    err = cudaStreamCreate(&stream);
+	        if (err != cudaSuccess) {
+		        std::cout << "error in stream creation, #=" << cudaGetErrorString(err) << std::endl;
+	        }
+            iteration(stream);
+		    cudaStreamDestroy(stream);
+        }
     }
-	//cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
 }
