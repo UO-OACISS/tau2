@@ -9,7 +9,7 @@ using namespace std;
 #if CUPTI_API_VERSION >= 2
 #include <dlfcn.h>
 
-// #define TAU_DEBUG_CUPTI
+//#define TAU_DEBUG_CUPTI
 
 #ifdef TAU_DEBUG_CUPTI
 #define TAU_DEBUG_PRINT(...) do{ fprintf( stderr, __VA_ARGS__ ); } while( false )
@@ -57,9 +57,13 @@ std::map<uint64_t, tau_cupti_context_t*> newContextMap;
 // map context/correlation to virtual thread
 std::map<uint32_t, uint32_t> correlationContextMap;
 std::map<uint32_t, uint32_t> correlationStreamMap;
+// destryed streams that we can recycle
+std::set<uint32_t> streamsToRecycle;
 std::set<uint32_t> sass_written_tasks;
 // just a vector of stream-less device contexts, used to iterate over devices
 std::vector<int> deviceContextThreadVector;
+// just a vector of context IDs, one for each device
+std::vector<int> deviceContextVector;
 // Sanity check.  I (Kevin) Suspect that CUPTI is giving us asynchronous memory events out of order.
 uint64_t previous_ts[TAU_MAX_THREADS] = {0};
 class sanity_check {
@@ -163,7 +167,7 @@ int get_taskid_from_key(uint64_t key) {
     return tid;
 }
 
-int insert_context_into_map(uint32_t contextId, uint32_t deviceId, uint32_t streamId);
+int insert_context_into_map(uint32_t deviceId, uint32_t contextId, uint32_t streamId);
 
 /* construct a key, and do the lookup in the map.
  * If the lookup failed, then this could be an implicit stream,
@@ -188,11 +192,11 @@ int get_taskid_from_context_id(uint32_t contextId, uint32_t streamId) {
         if (context_null_streams[contextId] == streamId) {
             tid = baseContext->v_threadId;
         } else {
-            tid = insert_context_into_map(contextId, deviceId, streamId);
+            tid = insert_context_into_map(deviceId, contextId, streamId);
         }
     }
-    TAU_DEBUG_PRINT("key: %u, Device: %u = Context: %u = Stream: %u = Thread %u\n",
-        key, 0, contextId, streamId, tid);
+    TAU_DEBUG_PRINT("key: %llu, Context: %u, Stream: %u, Thread: %u\n",
+        key, contextId, streamId, tid);
     return tid;
 }
 
@@ -564,6 +568,8 @@ void Tau_cupti_onload()
         err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SYNCHRONIZATION);
         CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_SYNCHRONIZATION)");
     //}
+    err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_STREAM);
+    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_STREAM)");
 
     uint64_t gpu_timestamp;
     err = cuptiGetTimestamp(&gpu_timestamp);
@@ -595,7 +601,7 @@ extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
  *  - Stream
  *  This way, asynchronous events will happen on the virtual thread in
  *  monotonically increasing time order. */
-int insert_context_into_map(uint32_t contextId, uint32_t deviceId, uint32_t streamId) {
+int insert_context_into_map(uint32_t deviceId, uint32_t contextId, uint32_t streamId) {
     uint64_t key = (uint64_t)(contextId);
     key = (key << 32) + streamId;
     RtsLayer::LockDB();
@@ -610,7 +616,7 @@ int insert_context_into_map(uint32_t contextId, uint32_t deviceId, uint32_t stre
         tmp->streamId = streamId;
         tid = get_taskid_from_gpu_event(deviceId, streamId, contextId, false);
         tmp->v_threadId = tid;
-        TAU_DEBUG_PRINT("key: %u, Device: %u = Context: %u = Stream: %u = Thread %u\n",
+        TAU_DEBUG_PRINT("key: %llu, Device: %u, Context: %u, Stream: %u, Thread: %u\n",
             key, deviceId, contextId, streamId, tid);
         RtsLayer::LockDB();
         newContextMap[key] = tmp;
@@ -622,11 +628,13 @@ int insert_context_into_map(uint32_t contextId, uint32_t deviceId, uint32_t stre
     }
     char tmpVal[32] = {0};
     sprintf(tmpVal, "%u", deviceId);
-    Tau_metadata_task((char*)"CUPTI Device", tmpVal, tid);
+    Tau_metadata_task((char*)"CUDA Device", tmpVal, tid);
     sprintf(tmpVal, "%u", contextId);
-    Tau_metadata_task((char*)"CUPTI Context", tmpVal, tid);
-    sprintf(tmpVal, "%u", streamId);
-    Tau_metadata_task((char*)"CUPTI Stream", tmpVal, tid);
+    Tau_metadata_task((char*)"CUDA Context", tmpVal, tid);
+    if (TauEnv_get_thread_per_gpu_stream()) {
+        sprintf(tmpVal, "%u", streamId);
+        Tau_metadata_task((char*)"CUDA Stream", tmpVal, tid);
+    }
     return tid;
 }
 
@@ -646,7 +654,19 @@ int get_vthread_for_cupti_context(const CUpti_ResourceData *handle, bool stream)
         }
         context_devices.push_back(deviceId);
     }
-    return insert_context_into_map(contextId, deviceId, streamId);
+    // save the context Id for the current device
+    while (deviceId >= deviceContextVector.size()) {
+        deviceContextVector.push_back(0);
+    }
+    deviceContextVector[deviceId] = contextId;
+
+    return insert_context_into_map(deviceId, contextId, streamId);
+}
+
+void CUPTIAPI Tau_cupti_activity_flush_at_exit() {
+    if (Tau_init_check_initialized() && !Tau_global_getLightsOut()) {
+        cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+    }
 }
 
 /* Handler for Synchronous CUPTI_CB_DOMAIN_RESOURCE callbacks */
@@ -695,13 +715,13 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
             }
         case CUPTI_CBID_RESOURCE_STREAM_DESTROY_STARTING: {
             TAU_DEBUG_PRINT("CUPTI_CBID_RESOURCE_STREAM_DESTROY_STARTING\n");
-    uint32_t contextId = 0;
-    uint32_t deviceId = 0;
-    uint32_t streamId = 0;
-    cuptiGetDeviceId(handle->context, &deviceId);
-    cuptiGetContextId(handle->context, &contextId);
-        uint8_t perThreadStream = 1;
-        cuptiGetStreamIdEx(handle->context, handle->resourceHandle.stream, perThreadStream, &streamId);
+            uint32_t contextId = 0;
+            uint32_t deviceId = 0;
+            uint32_t streamId = 0;
+            cuptiGetDeviceId(handle->context, &deviceId);
+            cuptiGetContextId(handle->context, &contextId);
+            uint8_t perThreadStream = 1;
+            cuptiGetStreamIdEx(handle->context, handle->resourceHandle.stream, perThreadStream, &streamId);
             // printf("------------> Destroying Stream %d,%d,%d\n", deviceId, contextId, streamId);
             /*  I'd like to measure the lifetime of this stream,
              *  but the mixing of synchronous and asynchronous events
@@ -718,7 +738,10 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
              * should probably move to the async handler, so that we don't
              * give up the thread id until all the async events are in.
              */
-            RtsLayer::recycleThread(tid);
+            if (TauEnv_get_thread_per_gpu_stream()) {
+                //RtsLayer::recycleThread(tid);
+                streamsToRecycle.insert(streamId);
+            }
             break;
             }
         case CUPTI_CBID_RESOURCE_CU_INIT_FINISHED: {
@@ -777,16 +800,11 @@ void Tau_handle_driver_api_memcpy (void *ud, CUpti_CallbackDomain domain,
         if (function_is_sync(id)) {
             TAU_DEBUG_PRINT("sync function name: %s\n", cbInfo->functionName);
             //Disable counter tracking during the sync.
-            cudaDeviceSynchronize();
+            // KAH removed this synchronization because, why is is it needed?
+            //cudaDeviceSynchronize();
             // KEVIN record_gpu_counters_at_sync();
             Tau_cupti_activity_flush_all();
         }
-    }
-}
-
-void CUPTIAPI Tau_cupti_activity_flush_at_exit() {
-    if (Tau_init_check_initialized() && !Tau_global_getLightsOut()) {
-        cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
     }
 }
 
@@ -812,22 +830,23 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
     if (function_is_launch(id))
     { // ENTRY to a launch function
         static bool do_this_once = false;
-	if (!do_this_once) {
-	    RtsLayer::LockDB();
 	    if (!do_this_once) {
-	        Tau_CuptiLayer_init();
-	    do_this_once = true;
+	        RtsLayer::LockDB();
+	        if (!do_this_once) {
+	            Tau_CuptiLayer_init();
+	            do_this_once = true;
+	        }
+	        RtsLayer::UnLockDB();
 	    }
-	    RtsLayer::UnLockDB();
-	}
 
-	TAU_DEBUG_PRINT("[at call (enter), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
-	record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
-	CUdevice device;
-	cuCtxGetDevice(&device);
-	Tau_cuda_Event_Synchonize();
-	int taskId = get_taskid_from_context_id(cbInfo->contextUid, 0);
-	record_gpu_counters_at_launch(device, taskId);
+	    TAU_DEBUG_PRINT("[at call (enter), %d] name: %s.\n",
+            cbInfo->correlationId, cbInfo->functionName);
+	    record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
+	    CUdevice device;
+	    cuCtxGetDevice(&device);
+	    Tau_cuda_Event_Synchonize();
+	    int taskId = get_taskid_from_context_id(cbInfo->contextUid, 0);
+	    record_gpu_counters_at_launch(device, taskId);
     }
     TAU_DEBUG_PRINT("callback for %s, enter.\n", cbInfo->functionName);
 }
@@ -857,7 +876,8 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
         TAU_DEBUG_PRINT("sync function name: %s\n", cbInfo->functionName);
 	//Tau_CuptiLayer_disable();
 	//cuCtxSynchronize();
-	cudaDeviceSynchronize();
+    // KAH removed this synchronization because, why is is it needed?
+	//cudaDeviceSynchronize();
 	//Tau_CuptiLayer_enable();
 	record_gpu_counters_at_sync();
 
@@ -1100,6 +1120,15 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
         CUDA_CHECK_ERROR(err2, "Cannot get timestamp.\n");
 
         switch (record->kind) {
+        /*
+            case CUPTI_ACTIVITY_KIND_STREAM:
+            {
+                CUpti_ActivityStream *stream = (CUpti_ActivityStream *)record;
+                printf("STREAM ACTIVITY! context %lu, stream %lu, correlation %lu\n",
+                    stream->contextId, stream->streamId, stream->correlationId);
+                break;
+            }
+            */
             case CUPTI_ACTIVITY_KIND_CONTEXT:
                 {
                     CUpti_ActivityContext *context = (CUpti_ActivityContext *)record;
@@ -1391,13 +1420,14 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                             if (getUnifmemType(counterKind) == BytesHtoD) {
                                 direction = MESSAGE_RECV;
                                 deviceId = umemcpy->dstId;
-                                contextId = deviceContextThreadVector[deviceId];
                             } else if (getUnifmemType(counterKind) == BytesDtoH) {
                                 direction = MESSAGE_SEND;
                                 deviceId = umemcpy->srcId;
-                                contextId = deviceContextThreadVector[deviceId];
                             }
+                            contextId = deviceContextVector[deviceId];
                             int taskId = get_taskid_from_context_id(contextId,0);
+                            //printf("UM thread: %d from device %d, context %d, stream %d\n",
+                            //taskId, deviceId, contextId, streamId);
 
                             //We do not always know on the corresponding host event on
                             //the CPU what type of copy we have so we need to register
@@ -1407,7 +1437,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                                     TAU_GPU_USE_DEFAULT_NAME,
                                     deviceId,
                                     streamId,
-                                    processId,
+                                    contextId,
                                     start/1e3,
                                     end/1e3,
                                     value,
@@ -1617,6 +1647,15 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                     kernel->start / 1e3,
                     kernel->end / 1e3);
                     */
+
+                    /* Finally, check if this is activity on a stream that we know
+                     * has been destroyed by the synchronous callbacks.  We should
+                     * be able to safely recycle the thread now...? */
+                    if (streamsToRecycle.count(streamId) > 0 &&
+                        TauEnv_get_recycle_threads() &&
+                        TauEnv_get_thread_per_gpu_stream()) {
+                        RtsLayer::recycleThread(taskId);
+                    }
 
                     break;
                 }
@@ -2065,7 +2104,17 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
         return imix_stats;
     }
 
-    void transport_environment_counters(std::vector<uint32_t> vec, EnvType envT, const char* name, uint32_t taskId, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent* tc)
+    void transport_environment_counters(
+        std::vector<uint32_t> vec,
+        EnvType envT,
+        const char* name,
+        uint32_t taskId,
+        uint32_t deviceId,
+        uint32_t streamId,
+        uint32_t contextId,
+        uint32_t id,
+        uint64_t end,
+        TauContextUserEvent* tc)
     {
         if (vec.size()==0) {
             eventMap[taskId][tc] = 0;
@@ -2090,15 +2139,21 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                     map[i].data = it->second;
                     i++;
                 }
+                /* NO!  Don't write them out now.  They'll get written
+                 * when the kernel event gets processed. */
+                /*
                 Tau_cupti_register_gpu_event(name, deviceId,
                         streamId, contextId, id, 0, false, map, map_size,
                         end / 1e3, end / 1e3, taskId);
+                        */
             }
         }
 
     }
 
-    void record_environment_counters(const char* name, uint32_t taskId, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end) {
+    void record_environment_counters(const char* name,
+        uint32_t taskId, uint32_t deviceId, uint32_t streamId,
+        uint32_t contextId, uint32_t id, uint64_t end) {
         if (environmentMap.find(contextId) == environmentMap.end()) {
             TAU_VERBOSE("[CuptiActivity] warning:  GPU environment counters not recorded.\n");
         }
@@ -2122,11 +2177,16 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
             std::vector<uint32_t> v_gpuTemperature = ce.gpuTemperature;
             std::vector<uint32_t> v_fanSpeed = ce.fanSpeed;
 
-            transport_environment_counters(v_power, PowerUtilization, name, deviceId, taskId, streamId, contextId, id, end, power_t);
-            transport_environment_counters(v_smClock, SMClock, name, deviceId, taskId, streamId, contextId, id, end, sm_clock);
-            transport_environment_counters(v_memoryClock, MemoryClock, name, taskId, deviceId, streamId, contextId, id, end, memory_clock);
-            transport_environment_counters(v_gpuTemperature, GPUTemperature, name, taskId, deviceId, streamId, contextId, id, end, gpu_temperature);
-            transport_environment_counters(v_fanSpeed, FanSpeed, name, taskId, deviceId, streamId, contextId, id, end, fan_speed);
+            transport_environment_counters(v_power, PowerUtilization, name,
+                taskId, deviceId, streamId, contextId, id, end, power_t);
+            transport_environment_counters(v_smClock, SMClock, name,
+                taskId, deviceId, streamId, contextId, id, end, sm_clock);
+            transport_environment_counters(v_memoryClock, MemoryClock, name,
+                taskId, deviceId, streamId, contextId, id, end, memory_clock);
+            transport_environment_counters(v_gpuTemperature, GPUTemperature, name,
+                taskId, deviceId, streamId, contextId, id, end, gpu_temperature);
+            transport_environment_counters(v_fanSpeed, FanSpeed, name,
+                taskId, deviceId, streamId, contextId, id, end, fan_speed);
         }
     }
 

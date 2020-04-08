@@ -53,7 +53,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  
+
   void TAU_VERBOSE(const char *format, ...);
 
   void TAUDECL TauEnv_initialize();
@@ -63,6 +63,7 @@ extern "C" {
   void  TAUDECL TauEnv_set_throttle(int);
   int  TAUDECL TauEnv_get_profiling();
   int  TAUDECL TauEnv_get_tracing();
+  int  TAUDECL TauEnv_get_thread_per_gpu_stream();
   int  TAUDECL TauEnv_get_trace_format();
   int  TAUDECL TauEnv_get_callpath();
   int  TAUDECL TauEnv_get_threadContext();
@@ -76,7 +77,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_message();
   int  TAUDECL TauEnv_get_lite_enabled();
   int  TAUDECL TauEnv_get_compensate();
- 
+
   int  TAUDECL TauEnv_get_track_load();
   int  TAUDECL TauEnv_get_track_memory_heap();
   int  TAUDECL TauEnv_get_track_memory_leaks();
@@ -109,10 +110,10 @@ extern "C" {
   int  TAUDECL TauEnv_get_child_forkdirs();
   int  TAUDECL TauEnv_get_summary_only();
   int  TAUDECL TauEnv_get_ibm_bg_hwp_counters();
-  double TAUDECL TauEnv_get_max_records(); 
-  double TAUDECL TauEnv_get_evt_threshold(); 
-  int TAUDECL TauEnv_get_interval(); 
-  int TAUDECL TauEnv_get_disable_instrumentation(); 
+  double TAUDECL TauEnv_get_max_records();
+  double TAUDECL TauEnv_get_evt_threshold();
+  int TAUDECL TauEnv_get_interval();
+  int TAUDECL TauEnv_get_disable_instrumentation();
 
   const char* TAUDECL TauEnv_get_ebs_source();
   void TAUDECL TauEnv_override_ebs_source(const char *newName);
@@ -154,7 +155,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_profile_format();
   int  TAUDECL TauEnv_get_merge_metadata();
   int  TAUDECL TauEnv_get_sigusr1_action();
-  
+
   int TAUDECL TauEnv_get_memdbg();
   int TAUDECL TauEnv_get_memdbg_protect_above();
   void TAUDECL TauEnv_set_memdbg_protect_above(int);

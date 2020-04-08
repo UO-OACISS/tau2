@@ -127,7 +127,7 @@ extern "C" void Tau_cupti_register_unifmem_event(
         int taskId) {
     //Empty list of gpu attributes
     CuptiGpuEvent gpu_event = CuptiGpuEvent(name,
-            deviceId, streamId, 0, 0, -1, NULL, 0, taskId);
+            deviceId, streamId, processId, 0, -1, NULL, 0, taskId);
     // start/stop times set to timestamp
     Tau_gpu_register_unifmem_event(&gpu_event, start, end, value, unifmem_type, direction);
 }
