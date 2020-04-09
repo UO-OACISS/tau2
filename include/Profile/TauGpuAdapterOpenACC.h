@@ -64,7 +64,7 @@ class OpenACCGpuEvent : public GpuEvent
 
 		bool less_than(const GpuEvent* other) const
 		{
-			if (device_id != ((OpenACCGpuEvent*) other)->device_id) {
+			if (!TauEnv_get_thread_per_gpu_stream() || device_id != ((OpenACCGpuEvent*) other)->device_id) {
 				return device_id < ((OpenACCGpuEvent*) other)->device_id;
 			}
 			else if (context_id != ((OpenACCGpuEvent*) other)->context_id) {

@@ -236,64 +236,102 @@ static size_t openacc_records = 0;
 #ifdef CUPTI
 static void
 printActivity(CUpti_Activity *record)
-{                                                                                  
+{
+	GpuEventAttributes* map;
+	int map_size;                                              
   switch (record->kind) {
-	//TODO: tau_cupti_register_gpu_event for each of these; could probably piggyback on existing code, or:
-	// write a tau_openacc_register_thingy for each type of event (more likely)
+	//TODO:
 	// make an event mappy thing a la CuptiActivity
-	// write a GpuEvent as seen in TauGpuAdapterCupti for each of these
 	// probably only events that matter are 11, 12, and 9
 	// find out what events are actually under LAUNCH
 	// https://docs.nvidia.com/cuda/cupti/structCUpti__ActivityOpenAcc.html#structCUpti__ActivityOpenAcc
 	// https://docs.nvidia.com/cuda/cupti/structCUpti__ActivityOpenAccData.html#structCUpti__ActivityOpenAccData
 	// https://docs.nvidia.com/cuda/cupti/group__CUPTI__ACTIVITY__API.html#group__CUPTI__ACTIVITY__API_1g0e638b0b6a210164345ab159bcba6717
-        case CUPTI_ACTIVITY_KIND_OPENACC_DATA:                                        
+        case CUPTI_ACTIVITY_KIND_OPENACC_DATA:
+				{
+					CUpti_ActivityOpenAccData *oacc_data = (CUpti_ActivityOpenAccData*) record;
+					if (oacc_data->deviceType != acc_device_nvidia) {
+            printf("Error: OpenACC device type is %u, not %u (acc_device_nvidia)\n", oacc_data->deviceType, acc_device_nvidia);
+            exit(-1);
+          }
+
+					map_size = 2;
+					map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
+
+					static TauContextUserEvent* bytes;
+					Tau_get_context_userevent((void**) &bytes, "Bytes transfered");
+					map[0].userEvent = bytes;
+					map[0].data = oacc_data->bytes;
+					break;
+				}                                        
         case CUPTI_ACTIVITY_KIND_OPENACC_LAUNCH:
+				{
+					CUpti_ActivityOpenAccLaunch *oacc_launch = (CUpti_ActivityOpenAccLaunch*) record;
+					if (oacc_launch->deviceType != acc_device_nvidia) {
+            printf("Error: OpenACC device type is %u, not %u (acc_device_nvidia)\n", oacc_launch->deviceType, acc_device_nvidia);
+            exit(-1);
+          }
+
+					map_size = 4;
+					map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
+
+					static TauContextUserEvent* gangs;
+					Tau_get_context_userevent((void**) &gangs, "Num gangs");
+					map[0].userEvent = gangs;
+					map[0].data = oacc_launch->numGangs;
+
+					static TauContextUserEvent* workers;
+					Tau_get_context_userevent((void**) &workers, "Num workers");
+					map[1].userEvent = workers;
+					map[1].data = oacc_launch->numWorkers;
+
+					static TauContextUserEvent* vector;
+					Tau_get_context_userevent((void**) &vector, "Vector lanes");
+					map[2].userEvent = vector;
+					map[2].data = oacc_launch->vectorLength;
+
+					break;
+				}
         case CUPTI_ACTIVITY_KIND_OPENACC_OTHER:
         {                                                                                    
-					CUpti_ActivityOpenAcc *oacc = (CUpti_ActivityOpenAcc *)record;
-					if (oacc->deviceType != acc_device_nvidia) { 
-						printf("Error: OpenACC device type is %u, not %u (acc_device_nvidia)\n", oacc->deviceType, acc_device_nvidia);
-						exit(-1);
-					}
-					
-					uint32_t context = oacc->cuContextId;
-					uint32_t device = oacc->cuDeviceId;
-					uint32_t stream = oacc->cuStreamId;
-					uint32_t corr_id = oacc->externalId; // pretty sure this is right
-					uint64_t start = oacc->start;
-					uint64_t end = oacc->end;
+					CUpti_ActivityOpenAccData *oacc_other = (CUpti_ActivityOpenAccData*) record;
+					if (oacc_other->deviceType != acc_device_nvidia) {
+            printf("Error: OpenACC device type is %u, not %u (acc_device_nvidia)\n", oacc_other->deviceType, acc_device_nvidia);
+            exit(-1);
+          }
 
-					int task = oacc->cuThreadId;
-
-					//TODO: empty for now
-					GpuEventAttributes* map;
-					int map_size = 2;
+					map_size = 1;
 					map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
-					
-					static TauContextUserEvent* event_kind;
-					Tau_get_context_userevent((void**) &event_kind, "OpenACC event kind");
-					map[0].userEvent = event_kind;
-					map[0].data = oacc->eventKind;
-
-					static TauContextUserEvent* parent_construct;
-					Tau_get_context_userevent((void**) &parent_construct, "OpenACC parent construct");
-					map[1].userEvent = parent_construct;
-					map[1].data = oacc->parentConstruct;
-					
-
-					//TODO: could do better but this'll do for now
-					const char* name = openacc_event_names[oacc->eventKind];
-					
-					Tau_openacc_register_gpu_event(name, device, stream, context, task, corr_id, map, map_size, start/1e3, end/1e3);
-
-          openacc_records++;
-        }
         break;
+        }
 
 		default:
       ;
   }
+
+	CUpti_ActivityOpenAcc* oacc = (CUpti_ActivityOpenAcc*) record;
+	// are we guaranteed to only get openacc events? I don't know. Guess we'll find out.
+	// always add duration at the end
+	uint32_t context = oacc->cuContextId;
+	uint32_t device = oacc->cuDeviceId;
+	uint32_t stream = oacc->cuStreamId;
+	uint32_t corr_id = oacc->externalId; // pretty sure this is right
+	uint64_t start = oacc->start;
+	uint64_t end = oacc->end;
+
+	int task = oacc->cuThreadId;
+
+	static TauContextUserEvent* duration;
+	Tau_get_context_userevent((void**) &duration, "Duration");
+	map[map_size-1].userEvent = duration;
+	map[map_size-1].data = (double)(end - start) / (double)1e6;
+
+	//TODO: could do better but this'll do for now
+	const char* name = openacc_event_names[oacc->eventKind];
+	
+	Tau_openacc_register_gpu_event(name, device, stream, context, task, corr_id, map, map_size, start/1e3, end/1e3);
+
+	openacc_records++;
 }
 
 void CUPTIAPI bufferRequested(uint8_t **buffer, size_t *size, size_t *maxNumRecords)
