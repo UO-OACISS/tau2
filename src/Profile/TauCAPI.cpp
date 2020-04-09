@@ -78,7 +78,7 @@ void esd_exit (elg_ui4 rid);
 #include <Profile/TauPluginCPPTypes.h>
 
 #ifdef CUPTI
-void Tau_cupti_activity_flush_at_exit(void);
+#include <cupti.h>
 #endif
 
 using namespace tau;
@@ -2958,7 +2958,9 @@ extern "C" int Tau_get_local_tid(void) {
 void Tau_destructor_trigger() {
 #ifdef CUPTI
   // flush all the cuda activity before we exit!
-  Tau_cupti_activity_flush_at_exit();
+  if (Tau_init_check_initialized() && !Tau_global_getLightsOut()) {
+    cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+  }
 #endif
 // First, make sure all thread timers have stopped
   Tau_profile_exit_all_threads();
