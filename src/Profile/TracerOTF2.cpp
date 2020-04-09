@@ -1826,7 +1826,9 @@ void TauTraceOTF2ShutdownComms(int tid) {
     //TauTraceOTF2Close(tid);
 }
 
+#ifdef CUPTI
 void Tau_cupti_activity_flush_at_exit(void);
+#endif
 
 /* Close the trace */
 void TauTraceOTF2Close(int tid) {
