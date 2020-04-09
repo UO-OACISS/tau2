@@ -66,6 +66,9 @@
 #endif
 #endif /* TAU_INCLUDE_MPI_H_HEADER */
 
+#ifdef CUPTI
+#include <cupti.h>
+#endif
 
 #define OTF2_EC(call) { \
     OTF2_ErrorCode ec = call; \
@@ -1826,12 +1829,12 @@ void TauTraceOTF2ShutdownComms(int tid) {
     //TauTraceOTF2Close(tid);
 }
 
-void Tau_cupti_activity_flush_at_exit(void);
-
 /* Close the trace */
 void TauTraceOTF2Close(int tid) {
 #ifdef CUPTI
-  Tau_cupti_activity_flush_at_exit();
+  if (Tau_init_check_initialized() && !Tau_global_getLightsOut()) {
+    cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+  }
 #endif
 #ifdef TAU_OTF2_DEBUG
   fprintf(stderr, "%u: TauTraceOTF2Close(%d)\n", my_node(), tid);

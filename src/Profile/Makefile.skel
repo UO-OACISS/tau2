@@ -785,7 +785,7 @@ Tracer.o   	: Tracer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TracerOTF2.o : TracerOTF2.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS)  $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE)  $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauCollectives.o : TauCollectives.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
@@ -809,7 +809,7 @@ JavaThreadLayer.o   : JavaThreadLayer.cpp $(HDRS)
 	$(CXX)  $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauCAPI.o   : TauCAPI.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE)   -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(TAU_MPI_INCLUDE)   -c $(@:.o=.cpp)
 
 TauFAPI.o   : TauFAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
