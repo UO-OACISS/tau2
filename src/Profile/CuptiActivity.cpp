@@ -2666,22 +2666,21 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 
     FILE* createFilePointer(std::string fname) {
 
-#if TAU_DEBUG_SASS
+#ifdef TAU_DEBUG_SASS
         printf(" Inside createFilePointer type %s\n", fname.c_str());
 #endif
 	FILE *fp;
         if ( fp == NULL ) {
 #ifdef TAU_DEBUG_SASS
-	  printf("About to create file pointer for sass_%s.csv: %i\n", fname.c_str());
+	  printf("About to create file pointer for sass_%s.csv\n", fname.c_str());
 #endif
             char str[500];
             strcpy (str,TauEnv_get_profiledir());
-            strcat (str,"/");
-            strcat (str,"sass_");
+            strcat (str,"/sass_");
 	    strcat (str, fname.c_str());
 	    strcat (str, ".csv");
 
-            fp = fopen(str, "a");
+            fp = fopen(str, "w+");
             if (fp == NULL) {
 #ifdef TAU_DEBUG_SASS
 	      printf("fp_%s failed\n", fname.c_str());
@@ -2696,7 +2695,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 	return fp;
     }
 
-    int dump_instruction_map_to_csv(int taskId) {
+    int output_instruction_map_to_csv(int taskId) {
         if (instructionMap[taskId].empty()) {
 	    return 0;
 	}
@@ -2705,7 +2704,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 	if(!fp) {
 	    return -1;
 	}
-	fprintf(fp, "correlation,executed,functionId,notPredOffThreadsExecuted,pcOffset,sourceLocatiorId,threadsExecuted\n");
+	fprintf(fp, "correlationId,executed,functionId,notPredOffThreadsExecuted,pcOffset,sourceLocatorId,threadsExecuted\n");
 	for(std::map<uint32_t, std::list<CUpti_ActivityInstructionExecution> >::iterator it1 = instructionMap[taskId].begin(); it1 != instructionMap[taskId].end(); it1++) {
 	    std::list<CUpti_ActivityInstructionExecution> ie_list = it1->second;
 	    for (std::list<CUpti_ActivityInstructionExecution>::iterator it = ie_list.begin(); it != ie_list.end(); it++) {
@@ -2713,18 +2712,18 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 		uint32_t correlationId = instr->correlationId;
 		uint32_t executed = instr->executed;
 		uint32_t functionId = instr->functionId;
-		uint32_t npote = instr->notPredOffThreadsExecuted;
+		uint32_t notPredOffThreadsExecuted = instr->notPredOffThreadsExecuted;
 		uint32_t pcOffset = instr->pcOffset;
-		uint32_t sourceLocId = instr->sourceLocatorId;
+		uint32_t sourceLocatorId = instr->sourceLocatorId;
 		uint32_t threadsExecuted = instr->threadsExecuted;
-		fprintf(fp, "%u,%u,%u,%u,%u,%u,%u\n", correlationId, executed, functionId, npote, pcOffset, sourceLocId, threadsExecuted);
+		fprintf(fp, "%u,%u,%u,%u,%u,%u,%u\n", correlationId, executed, functionId, notPredOffThreadsExecuted, pcOffset, sourceLocatorId, threadsExecuted);
 	    }
 	}
 	fclose(fp);
 	return 1;
     }
 
-    int dump_function_map_to_csv() {
+    int output_function_map_to_csv() {
         if (functionMap.empty()) {
 	    return 0;
 	}
@@ -2745,7 +2744,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 	return 1;
     }
 
-    int dump_source_map_to_csv() {
+    int output_source_map_to_csv() {
         if (sourceLocatorMap.empty()) {
 	    return 0;
 	}
@@ -2753,7 +2752,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 	if(!fp) {
 	    return -1;
 	}
-	fprintf(fp, "sourceId,lineNumber,fileName\n");
+	fprintf(fp, "id,lineNumber,fileName\n");
 	for(std::map<uint32_t, CUpti_ActivitySourceLocator>::iterator it = sourceLocatorMap.begin(); it != sourceLocatorMap.end(); it++) {
 	    CUpti_ActivitySourceLocator* source = &it->second;
 	    uint32_t sourceId = source->id;
@@ -2768,8 +2767,8 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
     void write_sass_counters() {
         // same for all devices/threads
         if (TauEnv_get_cuda_csv_output()) {
-	    dump_function_map_to_csv();
-	    dump_source_map_to_csv();
+	    output_function_map_to_csv();
+	    output_source_map_to_csv();
 	}
 	for(std::map<uint32_t, uint32_t>::iterator iter = correlationStreamMap.begin(); iter != correlationStreamMap.end(); iter++) {
 	    uint32_t correlationId = iter->first;
@@ -2784,13 +2783,13 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 		    record_imix_counters(kname, vtid, kernel->streamId, kernel->contextId, kernel->correlationId, kernel->end);
 		}
 		if (TauEnv_get_cuda_csv_output()) {
-		    dump_instruction_map_to_csv(vtid);
+		    output_instruction_map_to_csv(vtid);
 		}
 		sass_written_tasks.insert(vtid);
 	    }
 	    else {
 #ifdef TAU_DEBUG_SASS
-	        printf("  Already dumped SASS for task %u!\n", vtid);
+	        printf("  Already outputted SASS for task %u!\n", vtid);
 #endif
 	    }
 	}
