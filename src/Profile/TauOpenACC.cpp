@@ -24,20 +24,17 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <openacc.h>
-#ifdef TAU_PGI_OPENACC
 #include "pgi_acc_prof.h"
-#endif /* TAU_PGI_OPENACC */
-#include <Profile/Profiler.h>
-//#include <cupti_openacc.h>
+
 #ifdef CUPTI
 #include <cupti.h>
 #include <cuda.h>
 #endif
 
+#include <Profile/Profiler.h>
 #include <Profile/TauOpenACC.h>
 #include <Profile/TauGpuAdapterOpenACC.h>
 #include <Profile/TauGpu.h>
-//#include <Profile/CuptiActivity.h> // solely for get_taskid_from_context_id
 
 #define TAU_SET_EVENT_NAME(event_name, str) strcpy(event_name, str); break 
 ////////////////////////////////////////////////////////////////////////////
@@ -51,27 +48,11 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
   acc_launch_event_info* launch_event_info = NULL;
   //acc_other_event_info*  other_event_info = NULL;
 
-  
-#ifdef TAU_PGI_OPENACC_OLD
-  switch (prof_info->eventtype) {
-    case acc_ev_init_start 	            : Tau_create_top_level_timer_if_necessary(); TAU_SET_EVENT_NAME(event_name, ">openacc_init"); 
-    case acc_ev_init_end   	            : TAU_SET_EVENT_NAME(event_name, "<openacc_init");
-    case acc_ev_shutdown_start              : TAU_SET_EVENT_NAME(event_name, ">openacc_shutdown");
-    case acc_ev_shutdown_end                : TAU_SET_EVENT_NAME(event_name, "<openacc_shutdown");
-    case acc_ev_done                        : TAU_SET_EVENT_NAME(event_name, "openacc_done");
-    case acc_ev_data_construct_enter_start  : TAU_SET_EVENT_NAME(event_name, ">openacc_data_construct_enter");
-    case acc_ev_data_construct_enter_end    : TAU_SET_EVENT_NAME(event_name, "<openacc_data_construct_enter");
-    case acc_ev_data_construct_exit_start   : TAU_SET_EVENT_NAME(event_name, ">openacc_data_construct_exit");
-    case acc_ev_data_construct_exit_end     : TAU_SET_EVENT_NAME(event_name, "<openacc_data_construct_exit");
-    case acc_ev_update_construct_start      : TAU_SET_EVENT_NAME(event_name, ">openacc_update_construct");
-    case acc_ev_update_construct_end        : TAU_SET_EVENT_NAME(event_name, "<openacc_update_construct");
-#else /* TAU_PGI_OPENACC_OLD */
   switch (prof_info->event_type) {
     case acc_ev_device_init_start 	            : Tau_create_top_level_timer_if_necessary(); TAU_SET_EVENT_NAME(event_name, ">openacc_init"); 
     case acc_ev_device_init_end   	            : TAU_SET_EVENT_NAME(event_name, "<openacc_init");
     case acc_ev_device_shutdown_start              : TAU_SET_EVENT_NAME(event_name, ">openacc_shutdown");
     case acc_ev_device_shutdown_end                : TAU_SET_EVENT_NAME(event_name, "<openacc_shutdown");
-    // case acc_ev_done                        : TAU_SET_EVENT_NAME(event_name, "openacc_done");
     case acc_ev_enter_data_start: 
        TAU_SET_EVENT_NAME(event_name, ">openacc_enter_data");
     case acc_ev_enter_data_end: TAU_SET_EVENT_NAME(event_name, "<openacc_enter_data");
@@ -79,8 +60,6 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
     case acc_ev_exit_data_end: TAU_SET_EVENT_NAME(event_name, "<openacc_exit_data");
     case acc_ev_update_start                : TAU_SET_EVENT_NAME(event_name, ">openacc_update");
     case acc_ev_update_end                  : TAU_SET_EVENT_NAME(event_name, "<openacc_update");
-#endif /* TAU_PGI_OPENACC_OLD */
-
     case acc_ev_enqueue_launch_start        : 
       if (event_info) {
         launch_event_info = &(event_info->launch_event); 
@@ -128,10 +107,6 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
     case acc_ev_enqueue_download_end        : TAU_SET_EVENT_NAME(event_name, "<openacc_enqueue_download");
     case acc_ev_wait_start                  : TAU_SET_EVENT_NAME(event_name, ">openacc_wait");
     case acc_ev_wait_end                    : TAU_SET_EVENT_NAME(event_name, "<openacc_wait");
-#ifdef TAU_PGI_OPENACC_15
-    case acc_ev_implicit_wait_start         : TAU_SET_EVENT_NAME(event_name, ">openacc_implicit_wait");
-    case acc_ev_implicit_wait_end           : TAU_SET_EVENT_NAME(event_name, "<openacc_implicit_wait");
-#endif /* TAU_PGI_OPENACC_15 */
     case acc_ev_compute_construct_start     : TAU_SET_EVENT_NAME(event_name, ">openacc_compute_construct");
     case acc_ev_compute_construct_end       : TAU_SET_EVENT_NAME(event_name, "<openacc_compute_construct");
     case acc_ev_create                      : TAU_SET_EVENT_NAME(event_name, "openacc_create");
@@ -144,19 +119,6 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
   char lineinfo[256]; 
 
   if (prof_info) {
-#ifdef TAU_PGI_OPENACC_OLD
-    TAU_VERBOSE("Device=%d ", prof_info->devnum);
-    TAU_VERBOSE("Thread=%d ", prof_info->threadid);
-    sprintf(srcinfo, " %s [{%s}", prof_info->funcname, prof_info->srcfile);
-    if (prof_info->lineno) { 
-      sprintf(lineinfo, " {%d,0}", prof_info->lineno); 
-      strcat(srcinfo,lineinfo);
-      if ((prof_info->endlineno) && (prof_info->endlineno > prof_info->lineno)) {
-        sprintf(lineinfo, "-{%d,0}", prof_info->endlineno); 
-        strcat(srcinfo,lineinfo);
-      }
-    }
-#else /* TAU_PGI_OPENACC_OLD */
     TAU_VERBOSE("Device=%d ", prof_info->device_number);
     TAU_VERBOSE("Thread=%d ", prof_info->thread_id);
     sprintf(srcinfo, " %s [{%s}", prof_info->func_name, prof_info->src_file);
@@ -173,7 +135,6 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
         strcat(srcinfo,lineinfo);
       }
     }
-#endif /* TAU_PGI_OPENACC_OLD */
     strcat(srcinfo,"]");
     strcat(event_name, srcinfo); 
   }
@@ -198,9 +159,6 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
       cuptiGetResultString(_status, &errstr);                           \
       fprintf(stderr, "%s:%d: error: function %s failed with error %s.\n", \
               __FILE__, __LINE__, #call, errstr);                       \
-      /*if(_status == CUPTI_ERROR_LEGACY_PROFILER_NOT_SUPPORTED)          \
-          exit(0);                                                      \
-      else*/                                                              \
           exit(-1);                                                     \
     }                                                                   \
   } while (0)
@@ -385,58 +343,15 @@ void finalize()
 }
 
 ////////////////////////////////////////////////////////////////////////////
-typedef void (*Tau_openacc_registration_routine_t)( acc_event_t, acc_prof_callback_t, int );
-#ifdef TAU_PGI_OPENACC_OLD 
-extern "C" void
-acc_register_library(Tau_openacc_registration_routine_t reg, Tau_openacc_registration_routine_t unreg )
-{
-    TAU_VERBOSE("Inside acc_register_library\n");
-#else /* TAU_PGI_OPENACC_OLD */
-////////////////////////////////////////////////////////////////////////////
-//typedef void (*Tau_openacc_prof_fn_t)();
-
-////////////////////////////////////////////////////////////////////////////
-//typedef Tau_acc_prof_fn_t (*Tau_acc_prof_lookup) (const char *name);
-
-////////////////////////////////////////////////////////////////////////////
 extern "C" void
 acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup lookup)
 {
     TAU_VERBOSE("Inside acc_register_library\n");
-#endif /* TAU_PGI_OPENACC_OLD */
 
-#ifdef TAU_PGI_OPENACC_OLD 
-    reg( acc_ev_init_start, Tau_openacc_callback, 0 );
-    reg( acc_ev_init_end, Tau_openacc_callback, 0 );
-    reg( acc_ev_shutdown_start, Tau_openacc_callback, 0 );
-    reg( acc_ev_shutdown_end, Tau_openacc_callback, 0 );
-    reg( acc_ev_done, Tau_openacc_callback, 0 );
-    reg( acc_ev_update_construct_start, Tau_openacc_callback, 0 );
-    reg( acc_ev_update_construct_end, Tau_openacc_callback, 0 );
-    reg( acc_ev_enqueue_launch_start, Tau_openacc_callback, 0 );
-    reg( acc_ev_enqueue_launch_end, Tau_openacc_callback, 0 );
-    reg( acc_ev_enqueue_upload_start, Tau_openacc_callback, 0 );
-    reg( acc_ev_enqueue_upload_end, Tau_openacc_callback, 0 );
-    reg( acc_ev_enqueue_download_start, Tau_openacc_callback, 0 );
-    reg( acc_ev_enqueue_download_end, Tau_openacc_callback, 0 );
-    reg( acc_ev_wait_start, Tau_openacc_callback, 0 );
-    reg( acc_ev_wait_end, Tau_openacc_callback, 0 );
-    reg( acc_ev_implicit_wait_start, Tau_openacc_callback, 0 );
-    reg( acc_ev_implicit_wait_end, Tau_openacc_callback, 0 );
-    reg( acc_ev_enter_data_start, Tau_openacc_callback, 0 );
-    reg( acc_ev_enter_data_end, Tau_openacc_callback, 0 );
-    reg( acc_ev_exit_data_start, Tau_openacc_callback, 0 );
-    reg( acc_ev_exit_data_end, Tau_openacc_callback, 0 );
-    reg( acc_ev_create, Tau_openacc_callback, 0 );
-    reg( acc_ev_delete, Tau_openacc_callback, 0 );
-    reg( acc_ev_alloc, Tau_openacc_callback, 0 );
-    reg( acc_ev_free, Tau_openacc_callback, 0 );
-#else /* TAU_PGI_OPENACC_OLD */
     reg( acc_ev_device_init_start, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_device_init_end, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_device_shutdown_start, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_device_shutdown_end, Tau_openacc_callback, (acc_register_t) 0 );
-    // reg( acc_ev_done, Tau_openacc_callback, 0 );
     reg( acc_ev_update_start, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_update_end, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_enqueue_launch_start, Tau_openacc_callback, (acc_register_t) 0 );
@@ -447,12 +362,6 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
     reg( acc_ev_enqueue_download_end, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_wait_start, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_wait_end, Tau_openacc_callback, (acc_register_t) 0 );
-#ifdef TAU_PGI_OPENACC_15
-    reg( acc_ev_implicit_wait_start, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_implicit_wait_end, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_exit_data_start, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_exit_data_end, Tau_openacc_callback, (acc_register_t) 0 );
-#endif /* TAU_PGI_OPENACC_15 */
     reg( acc_ev_create, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_delete, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_alloc, Tau_openacc_callback, (acc_register_t) 0 );
@@ -462,15 +371,8 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
     reg( acc_ev_compute_construct_end, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_enter_data_start, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_enter_data_end, Tau_openacc_callback, (acc_register_t) 0 );
-#endif /* TAU_PGI_OPENACC_OLD */
-/*
-    reg( acc_ev_compute_construct_start, Tau_openacc_callback, 0 );
-    reg( acc_ev_compute_construct_end, Tau_openacc_callback, 0 );
-    reg( acc_ev_data_construct_enter_start, Tau_openacc_callback, 0 );
-    reg( acc_ev_data_construct_enter_end, Tau_openacc_callback, 0 );
-    reg( acc_ev_data_construct_exit_start, Tau_openacc_callback, 0 );
-    reg( acc_ev_data_construct_exit_end, Tau_openacc_callback, 0 );
-*/
+
+
 #ifdef CUPTI
     if (cuptiOpenACCInitialize(reg, unreg, lookup) != CUPTI_SUCCESS) {
         printf("ERROR: failed to initialize CUPTI OpenACC support\n");
