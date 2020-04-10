@@ -1993,6 +1993,8 @@ int  MPI_Finalize(  )
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
+  Tau_flush_gpu_activity();
+
 #ifdef TAU_MPI_T
   Tau_track_mpi_t_here();
 

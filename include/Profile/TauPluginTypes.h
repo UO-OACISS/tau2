@@ -63,6 +63,7 @@ typedef struct Tau_plugin_event_function_registration_data {
 typedef struct Tau_plugin_event_metadata_registration_data {
    const char * name;
    Tau_metadata_value_t * value;
+   int tid;
 } Tau_plugin_event_metadata_registration_data_t;
 
 typedef struct Tau_plugin_event_post_init_data {
@@ -584,7 +585,7 @@ typedef struct Tau_plugin_callbacks_active {
 
 /*Deprecated*/
 
-/*Define data structures to hold information about currently loaded plugins. 
+/*Define data structures to hold information about currently loaded plugins.
  * Only relevant for TAU internals - not a concern to plugins themselves*/
 typedef struct Tau_plugin {
    char plugin_name[1024];
@@ -616,7 +617,7 @@ typedef struct Tau_plugin_new {
    char plugin_name[1024];
    void* handle;
    unsigned int id;
-} Tau_plugin_new_t; 
+} Tau_plugin_new_t;
 
 typedef int (*PluginInitFunc) (int argc, char **argv, unsigned int plugin_id);
 
