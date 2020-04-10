@@ -67,6 +67,7 @@
 #endif /* TAU_INCLUDE_MPI_H_HEADER */
 
 #ifdef CUPTI
+#include <Profile/CuptiLayer.h>
 #include <cupti.h>
 #endif
 
@@ -1832,7 +1833,9 @@ void TauTraceOTF2ShutdownComms(int tid) {
 /* Close the trace */
 void TauTraceOTF2Close(int tid) {
 #ifdef CUPTI
-  if (Tau_init_check_initialized() && !Tau_global_getLightsOut()) {
+  if (Tau_init_check_initialized() &&
+      !Tau_global_getLightsOut() &&
+      Tau_CuptiLayer_is_initialized()) {
     cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
   }
 #endif

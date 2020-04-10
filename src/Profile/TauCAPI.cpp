@@ -79,6 +79,7 @@ void esd_exit (elg_ui4 rid);
 
 #ifdef CUPTI
 #include <cupti.h>
+#include <Profile/CuptiLayer.h>
 #endif
 
 using namespace tau;
@@ -2958,7 +2959,9 @@ extern "C" int Tau_get_local_tid(void) {
 void Tau_destructor_trigger() {
 #ifdef CUPTI
   // flush all the cuda activity before we exit!
-  if (Tau_init_check_initialized() && !Tau_global_getLightsOut()) {
+  if (Tau_init_check_initialized() &&
+      !Tau_global_getLightsOut() &&
+      Tau_CuptiLayer_is_initialized()) {
     cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
   }
 #endif
