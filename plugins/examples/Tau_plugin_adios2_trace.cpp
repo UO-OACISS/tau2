@@ -1335,7 +1335,9 @@ void Tau_plugin_adios2_dump_history(void) {
     adios2::Variable<unsigned long> comm_timestamps =
         bpIO.DefineVariable<unsigned long>("comm_timestamps", {1, 8}, {0, 0}, {1, 8});
     /* write the metadata */
-    Tau_dump_ADIOS2_metadata(bpIO, 0);
+    for (int i = 0 ; i < my_adios->get_thread_count() ; i++) {
+        Tau_dump_ADIOS2_metadata(bpIO, i);
+    }
     /* write the program name */
     for (auto iter : my_adios->prog_names) {
         auto prog_name = iter.first;

@@ -1086,6 +1086,14 @@ extern "C" int Tau_dump(void) {
 
   /*Invoke plugins only if both plugin path and plugins are specified*/
   if(Tau_plugins_enabled.dump) {
+#ifdef CUPTI
+    // flush all the cuda activity before we dump!
+    if (Tau_init_check_initialized() &&
+        !Tau_global_getLightsOut() &&
+        Tau_CuptiLayer_is_initialized()) {
+      cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+    }
+#endif
     Tau_plugin_event_dump_data_t plugin_data;
     plugin_data.tid = RtsLayer::myThread();
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, "*", &plugin_data);
