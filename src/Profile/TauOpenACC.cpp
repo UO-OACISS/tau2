@@ -36,7 +36,7 @@
 #include <Profile/TauGpuAdapterOpenACC.h>
 #include <Profile/TauGpu.h>
 
-#define TAU_SET_EVENT_NAME(event_name, str) strcpy(event_name, str); break 
+#define TAU_SET_EVENT_NAME(event_name, str) strcpy(event_name, str)
 ////////////////////////////////////////////////////////////////////////////
 extern "C" static void
 Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info )
@@ -49,38 +49,58 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
   //acc_other_event_info*  other_event_info = NULL;
 
   switch (prof_info->event_type) {
-    case acc_ev_device_init_start 	            : Tau_create_top_level_timer_if_necessary(); TAU_SET_EVENT_NAME(event_name, ">openacc_init"); 
-    case acc_ev_device_init_end   	            : TAU_SET_EVENT_NAME(event_name, "<openacc_init");
-    case acc_ev_device_shutdown_start              : TAU_SET_EVENT_NAME(event_name, ">openacc_shutdown");
-    case acc_ev_device_shutdown_end                : TAU_SET_EVENT_NAME(event_name, "<openacc_shutdown");
+    case acc_ev_device_init_start: 
+			Tau_create_top_level_timer_if_necessary(); 
+			TAU_SET_EVENT_NAME(event_name, ">openacc_init"); 
+			break;
+    case acc_ev_device_init_end: 
+			TAU_SET_EVENT_NAME(event_name, "<openacc_init");
+			break;
+    case acc_ev_device_shutdown_start: 
+			TAU_SET_EVENT_NAME(event_name, ">openacc_shutdown");
+			break;
+    case acc_ev_device_shutdown_end: 
+			TAU_SET_EVENT_NAME(event_name, "<openacc_shutdown");
+			break;
     case acc_ev_enter_data_start: 
-       TAU_SET_EVENT_NAME(event_name, ">openacc_enter_data");
-    case acc_ev_enter_data_end: TAU_SET_EVENT_NAME(event_name, "<openacc_enter_data");
-    case acc_ev_exit_data_start: TAU_SET_EVENT_NAME(event_name, ">openacc_exit_data");
-    case acc_ev_exit_data_end: TAU_SET_EVENT_NAME(event_name, "<openacc_exit_data");
-    case acc_ev_update_start                : TAU_SET_EVENT_NAME(event_name, ">openacc_update");
-    case acc_ev_update_end                  : TAU_SET_EVENT_NAME(event_name, "<openacc_update");
-    case acc_ev_enqueue_launch_start        : 
+      TAU_SET_EVENT_NAME(event_name, ">openacc_enter_data");
+			break;
+    case acc_ev_enter_data_end: 
+			TAU_SET_EVENT_NAME(event_name, "<openacc_enter_data");
+			break;
+    case acc_ev_exit_data_start: 
+			TAU_SET_EVENT_NAME(event_name, ">openacc_exit_data");
+			break;
+    case acc_ev_exit_data_end: 
+			TAU_SET_EVENT_NAME(event_name, "<openacc_exit_data");
+			break;
+    case acc_ev_update_start: 
+			TAU_SET_EVENT_NAME(event_name, ">openacc_update");
+			break;
+    case acc_ev_update_end: 
+			TAU_SET_EVENT_NAME(event_name, "<openacc_update");
+			break;
+    case acc_ev_enqueue_launch_start: 
       if (event_info) {
         launch_event_info = &(event_info->launch_event); 
         sprintf(event_name, ">openacc_enqueue_launch kernel=%s <num_gangs=%d, num_workers=%d, vector_length=%d>", 
-		launch_event_info->kernel_name, 
-		launch_event_info->num_gangs, launch_event_info->num_workers, launch_event_info->vector_length);
+					launch_event_info->kernel_name, 
+					launch_event_info->num_gangs, launch_event_info->num_workers, launch_event_info->vector_length);
       }
       break;
-    case acc_ev_enqueue_launch_end          : 
+    case acc_ev_enqueue_launch_end: 
       if (event_info) {
         launch_event_info = &(event_info->launch_event); 
         sprintf(event_name, "<openacc_enqueue_launch kernel=%s <num_gangs=%d, num_workers=%d, vector_length=%d>", 
-		launch_event_info->kernel_name, 
-		launch_event_info->num_gangs, launch_event_info->num_workers, launch_event_info->vector_length);
+					launch_event_info->kernel_name, 
+					launch_event_info->num_gangs, launch_event_info->num_workers, launch_event_info->vector_length);
       }
       break;
-    case acc_ev_enqueue_upload_start        : 
+    case acc_ev_enqueue_upload_start: 
       if (event_info) {
         data_event_info = &(event_info->data_event); 
-        TAU_VERBOSE("UPLOAD start: Var_name = %s, bytes=%d \n", data_event_info->var_name, 
-		event_info->data_event.bytes);
+        TAU_VERBOSE("UPLOAD start: Var_name = %s, bytes=%d \n", 
+					data_event_info->var_name, event_info->data_event.bytes);
         if (data_event_info->var_name) {
           sprintf(user_event_name, "Data transfer from host to device <variable=%s>", data_event_info->var_name);
         } else {
@@ -89,13 +109,15 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
         TAU_TRIGGER_EVENT(user_event_name, event_info->data_event.bytes);
       }
       TAU_SET_EVENT_NAME(event_name, ">openacc_enqueue_upload");
-    case acc_ev_enqueue_upload_end          : 
+			break;
+    case acc_ev_enqueue_upload_end: 
       TAU_SET_EVENT_NAME(event_name, "<openacc_enqueue_upload");
-    case acc_ev_enqueue_download_start      : 
+			break;
+    case acc_ev_enqueue_download_start: 
       if (event_info) {
         data_event_info = &(event_info->data_event); 
         TAU_VERBOSE("DOWNLOAD start: Var_name = %s, bytes=%d \n", data_event_info->var_name, 
-		event_info->data_event.bytes);
+					event_info->data_event.bytes);
         if (data_event_info->var_name) {
           sprintf(user_event_name, "Data transfer from device to host <variable=%s>", data_event_info->var_name);
         } else {
@@ -104,16 +126,37 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
         TAU_TRIGGER_EVENT(user_event_name, event_info->data_event.bytes);
       }
       TAU_SET_EVENT_NAME(event_name, ">openacc_enqueue_download");
-    case acc_ev_enqueue_download_end        : TAU_SET_EVENT_NAME(event_name, "<openacc_enqueue_download");
-    case acc_ev_wait_start                  : TAU_SET_EVENT_NAME(event_name, ">openacc_wait");
-    case acc_ev_wait_end                    : TAU_SET_EVENT_NAME(event_name, "<openacc_wait");
-    case acc_ev_compute_construct_start     : TAU_SET_EVENT_NAME(event_name, ">openacc_compute_construct");
-    case acc_ev_compute_construct_end       : TAU_SET_EVENT_NAME(event_name, "<openacc_compute_construct");
-    case acc_ev_create                      : TAU_SET_EVENT_NAME(event_name, "openacc_create");
-    case acc_ev_delete                      : TAU_SET_EVENT_NAME(event_name, "openacc_delete");
-    case acc_ev_alloc                       : TAU_SET_EVENT_NAME(event_name, "openacc_alloc");
-    case acc_ev_free                        : TAU_SET_EVENT_NAME(event_name, "openacc_free");
-    default                                 : TAU_SET_EVENT_NAME(event_name, "default");
+			break;
+    case acc_ev_enqueue_download_end: 
+			TAU_SET_EVENT_NAME(event_name, "<openacc_enqueue_download");
+			break;
+    case acc_ev_wait_start: 
+			TAU_SET_EVENT_NAME(event_name, ">openacc_wait");
+			break;
+    case acc_ev_wait_end: 
+			TAU_SET_EVENT_NAME(event_name, "<openacc_wait");
+			break;
+    case acc_ev_compute_construct_start: 
+			TAU_SET_EVENT_NAME(event_name, ">openacc_compute_construct");
+			break;
+    case acc_ev_compute_construct_end: 
+			TAU_SET_EVENT_NAME(event_name, "<openacc_compute_construct");
+			break;
+    case acc_ev_create: 
+			TAU_SET_EVENT_NAME(event_name, "openacc_create");
+			break;
+    case acc_ev_delete: 
+			TAU_SET_EVENT_NAME(event_name, "openacc_delete");
+			break;
+    case acc_ev_alloc: 
+			TAU_SET_EVENT_NAME(event_name, "openacc_alloc");
+			break;
+    case acc_ev_free: 
+			TAU_SET_EVENT_NAME(event_name, "openacc_free");
+			break;
+    default: 
+			TAU_SET_EVENT_NAME(event_name, "unknown OpenACC event");
+			break;
   }
   char srcinfo[1024]; 
   char lineinfo[256]; 
@@ -123,10 +166,10 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
     TAU_VERBOSE("Thread=%d ", prof_info->thread_id);
     sprintf(srcinfo, " %s [{%s}", prof_info->func_name, prof_info->src_file);
     if ((event_name[15] == 'd' && event_name[16] == 'a' && prof_info->line_no) || (event_name[17] == 'c' && event_name[18] == 'o' && prof_info->line_no)) {
-	TAU_VERBOSE("Do not extract line number info for %s\n", event_name); 
-	// PGI has messed up line numbers for entry and exit for construct 
-	// and data events 
-    /* do nothing */ 
+			TAU_VERBOSE("Do not extract line number info for %s\n", event_name); 
+			// PGI has messed up line numbers for entry and exit for construct 
+			// and data events 
+				/* do nothing */ 
     } else {
       sprintf(lineinfo, " {%d,0}", prof_info->line_no); 
       strcat(srcinfo,lineinfo);
@@ -144,11 +187,9 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
   }  else if (event_name[0] == '<') {
     TAU_VERBOSE("STOP <<%s\n", &event_name[1]);
     TAU_STOP(&event_name[1]);
-     } else {
-        TAU_VERBOSE("event_name = %s\n", event_name);
-     }
-  
-
+  } else {
+    TAU_VERBOSE("event_name = %s\n", event_name);
+  }
 }
 
 #define CUPTI_CALL(call)                                                \
@@ -400,6 +441,3 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
 
 } // acc_register_library 
 
-////////////////////////////////////////////////////////////////////////////
-//
-////////////////////////////////////////////////////////////////////////////
