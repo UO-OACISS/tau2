@@ -373,6 +373,7 @@ void initialize_papi_events(void) {
             fprintf(stderr, "Warning: PAPI component info unavailable, no measurements will be done.\n");
             return;
         }
+        //fprintf(stdout, "Found %s PAPI component with %d native events.\n", comp_info->name, comp_info->num_native_events);
         /* Skip the perf_event component, that's standard PAPI */
         if (strstr(comp_info->name, "perf_event") != NULL) {
             continue;
@@ -462,8 +463,8 @@ void initialize_papi_events(void) {
         /* Start the event set */
         retval = PAPI_start(comp->event_set);
         if (retval != PAPI_OK) {
-            fprintf(stderr, "Error: Error starting PAPI eventset.\n");
-            return;
+            fprintf(stderr, "Error: Error starting PAPI eventset for component %s.\n", comp_info->name);
+            continue;
         }
         comp->initialized = true;
         components.push_back(comp);
@@ -1140,6 +1141,7 @@ void read_config_file(void) {
             cfg.close();
         } catch (...) {
             // fail silently, nothing to do
+            fprintf(stderr, "Error reading tau_monitoring.json file!");
             configuration = json::parse(default_configuration);
         }
 }
