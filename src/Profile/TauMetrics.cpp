@@ -235,18 +235,22 @@ static void metricv_add(const char *name) {
 			if (std::string(buff).compare("event_name") == 0) {
 				sprintf(buff, "CUpti_EventID:%d", event);
 			}
-		
+
 			std::string event_name = "CUDA." + device_name + '.' + std::string(buff);
-			
-			if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) { // check, maybe initialize counter map
-				if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) { // double check because it just got initialized
-					CuptiCounterEvent* ev = new CuptiCounterEvent(dev, event);
+
+            if (Tau_CuptiLayer_is_initialized()) {
+                // check, maybe initialize counter map
+			    if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) {
+                    // double check because it just got initialized
+				    if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) {
+					    CuptiCounterEvent* ev = new CuptiCounterEvent(dev, event);
                 			Tau_CuptiLayer_Counter_Map().insert(std::make_pair(event_name, ev));
+                    }
 				}
 			}
-			
+
 			TAU_VERBOSE("%s: %s\n", name, event_name.c_str());
-						
+
 			// Add event to metricv if it's not already on the list.
 			bool found = false;
 			for (int k=0; k<nmetrics; ++k) {
@@ -444,7 +448,7 @@ static int is_likwid_metric(char *str) {
 static int is_cupti_event(char const * str)
 {
 	if (strncmp("CUDA", str, 4) == 0 && Tau_CuptiLayer_is_cupti_counter(str)) {
-		return 1;			
+		return 1;
 	}
 	return 0;
 }
@@ -741,8 +745,11 @@ extern "C" const char *TauMetrics_getMetricName(int metric) {
 	char const * metric_name = metricv[metric];
 #ifdef CUPTI
 	int event_id = Tau_CuptiLayer_get_cupti_event_id(metric);
-	if (Tau_CuptiLayer_is_cupti_counter(metric_name) && event_id < Tau_CuptiLayer_get_num_events()) {
-		return Tau_CuptiLayer_get_event_name(event_id);
+    if (Tau_CuptiLayer_is_initialized()) {
+	    if (Tau_CuptiLayer_is_cupti_counter(metric_name) &&
+            event_id < Tau_CuptiLayer_get_num_events()) {
+		    return Tau_CuptiLayer_get_event_name(event_id);
+        }
 	}
 #endif
 	return metric_name;
@@ -834,8 +841,8 @@ void TauMetrics_getMetrics(int tid, double values[], int reversed) {
 			TauMetrics_init();
 		}
 		// we need to give some value to the tracer or it will take 0
-		// as the default value which will mess up traces. This is 
-		// seen in roctracer (AMD). 
+		// as the default value which will mess up traces. This is
+		// seen in roctracer (AMD).
                 metric_read_gettimeofday(tid, 0, &values[0]);
 	}
 }

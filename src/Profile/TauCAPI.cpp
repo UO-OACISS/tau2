@@ -77,6 +77,11 @@ void esd_exit (elg_ui4 rid);
 #include <Profile/TauPluginInternals.h>
 #include <Profile/TauPluginCPPTypes.h>
 
+#ifdef CUPTI
+#include <cupti.h>
+#include <Profile/CuptiLayer.h>
+#endif
+
 using namespace tau;
 
 extern "C" void Tau_shutdown(void);
@@ -1074,11 +1079,22 @@ extern "C" int Tau_get_thread(void) {
   return RtsLayer::myThread();
 }
 
+extern "C" void Tau_flush_gpu_activity(void) {
+#ifdef CUPTI
+    // flush all the cuda activity before we dump!
+    if (Tau_init_check_initialized() &&
+        !Tau_global_getLightsOut() &&
+        Tau_CuptiLayer_is_initialized()) {
+      cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+    }
+#endif
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump(void) {
   TauInternalFunctionGuard protects_this_function;
 
+  Tau_flush_gpu_activity();
   /*Invoke plugins only if both plugin path and plugins are specified*/
   if(Tau_plugins_enabled.dump) {
     Tau_plugin_event_dump_data_t plugin_data;
@@ -2195,12 +2211,6 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 
 #endif
 }
-#ifdef CUPTI_disabled
-int vtid_to_ttid[TAU_MAX_THREADS];
-int vtid_to_corrid[TAU_MAX_THREADS];
-std::map<uint32_t, uint32_t> map_cuptiThread;
-std::map<uint32_t, CudaThread> map_cudaThread;
-#endif
 
 #ifdef TAU_ROCTRACER
 extern void Tau_roctracer_start_tracing(void);
@@ -2208,12 +2218,6 @@ extern void Tau_roctracer_stop_tracing(void);
 #endif /* TAU_ROCTRACER */
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
-// #if defined(TAU_GPU) && defined(PTHREADS)
-//   TAU_VERBOSE("[TauCAPI]:  About to call register_gpu_thread\n");
-//   // register_gpu_thread(RtsLayer::getTid(), Tau_get_thread(), RtsLayer::getPid(), RtsLayer::myNode());
-//   register_gpu_thread(pthread_self(), Tau_get_thread(), RtsLayer::getPid(), RtsLayer::myNode());
-//   // CudaThreadLayer::RegisterThread();
-// #endif
   if ((RtsLayer::myNode() == -1) && (Tau_get_thread() != 0)) {
     TauEnv_set_nodeNegOneSeen(TauEnv_get_nodeNegOneSeen()+1);
   }
@@ -2964,6 +2968,7 @@ extern "C" int Tau_get_local_tid(void) {
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
+  Tau_flush_gpu_activity();
 // First, make sure all thread timers have stopped
   Tau_profile_exit_all_threads();
 #ifdef TAU_OPENMP
@@ -3295,71 +3300,12 @@ extern "C" void Tau_disable_tracking_mpi_t(void) {
   TauEnv_set_track_mpi_t_pvars(0);
 }
 
-#ifdef CUPTI_disabled
-extern "C" int register_cuda_thread(unsigned int sys_tid, unsigned int parent_tid, int tau_vtid, unsigned int corr_id, unsigned int context_id, const char* func_name, unsigned int device_id) {
-  CudaThread ct;
-  ct.sys_tid = sys_tid;
-  ct.parent_tid = parent_tid;
-  ct.tau_vtid = tau_vtid;
-  ct.correlation_id = corr_id;
-  ct.context_id = context_id;
-  ct.function_name = func_name;
-  ct.device_id = device_id;
-  map_cudaThread[corr_id] = ct;
-  return 1;
-}
-
-extern "C" cuda_thread_device_t* get_cuda_thread_device(int* size) {
-  *size = map_cuptiThread.size();
-  cuda_thread_device_t* ctd;
-  ctd = new cuda_thread_device_t[*size];
-  int i = 0;
-
-  for(std::map<uint32_t, uint32_t>::iterator it = map_cuptiThread.begin(); it != map_cuptiThread.end(); it++) {
-    int vtid = it->first;
-    int corrid1 = get_corrid_from_vtid(vtid);
-    CudaThread ct = map_cudaThread[corrid1];
-    ctd[i].threadid = it->second;
-    ctd[i].deviceid = ct.device_id;
-    ctd[i].tau_vtid = vtid;
-    i++;
-  }
-  return ctd;
-}
-extern "C" void set_cupti_thread(int vtid, int threadid) {
-  map_cuptiThread[vtid] = threadid;
-}
-extern "C" int get_task_from_id(int id, int task) {
-   return (map_cudaThread.find(id) != map_cudaThread.end()) ? map_cuptiThread[map_cudaThread[id].tau_vtid] : task;
-}
-extern "C" int get_corrid_from_vtid(int vtid) {
-  int retval = 0;
-  for(std::map<uint32_t, CudaThread>::iterator it = map_cudaThread.begin(); it != map_cudaThread.end(); it++) {
-    int corrid = it->first;
-    CudaThread ct = it->second;
-    if (ct.tau_vtid == vtid) {
-      retval = ct.correlation_id;
-      break;
-    }
-  }
-  return retval;
-}
-
-extern "C" int get_vtid_from_corrid(int corrid) {
-  return map_cudaThread[corrid].tau_vtid;
-}
-
-extern "C" int lookup_thread_from_corrid(int corrid) {
-  return map_cudaThread.find(corrid) == map_cudaThread.end();
-}
-
 #ifndef TAU_PROFILE_PATHS
 // stub function when PROFILEPATHS is not defined.
 extern "C" long Tau_get_message_path(void) {
   return 0L;
 }
 #endif /* TAU_PROFILE_PATHS */
-#endif
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $

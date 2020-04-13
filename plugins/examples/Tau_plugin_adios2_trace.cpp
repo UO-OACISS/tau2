@@ -57,7 +57,7 @@
 tau::Profiler *Tau_get_timer_at_stack_depth(int);
 int Tau_plugin_adios2_function_exit(
     Tau_plugin_event_function_exit_data_t* data);
-void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO);
+void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid);
 void Tau_plugin_adios2_dump_history(void);
 
 static bool enabled{false};
@@ -1059,7 +1059,7 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
     Tau_global_incr_insideTAU();
     //fprintf(stdout, "TAU Metadata registration\n"); fflush(stdout);
     std::stringstream ss;
-    ss << "MetaData:" << global_comm_rank << ":" << RtsLayer::myThread() << ":" << data->name;
+    ss << "MetaData:" << global_comm_rank << ":" << data->tid << ":" << data->name;
     switch(data->value->type) {
         case TAU_METADATA_TYPE_STRING:
             my_adios->define_attribute(ss.str(), std::string(data->value->data.cval), my_adios->_bpIO, false);
@@ -1335,7 +1335,9 @@ void Tau_plugin_adios2_dump_history(void) {
     adios2::Variable<unsigned long> comm_timestamps =
         bpIO.DefineVariable<unsigned long>("comm_timestamps", {1, 8}, {0, 0}, {1, 8});
     /* write the metadata */
-    Tau_dump_ADIOS2_metadata(bpIO, 0);
+    for (int i = 0 ; i < my_adios->get_thread_count() ; i++) {
+        Tau_dump_ADIOS2_metadata(bpIO, i);
+    }
     /* write the program name */
     for (auto iter : my_adios->prog_names) {
         auto prog_name = iter.first;
@@ -1591,7 +1593,9 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     /* Open the ADIOS archive */
     my_adios = new tau_plugin::adios();
     enabled = true;
-    Tau_dump_ADIOS2_metadata(my_adios->_bpIO, RtsLayer::myThread());
+    for (int i = 0 ; i < my_adios->get_thread_count() ; i++) {
+        Tau_dump_ADIOS2_metadata(my_adios->_bpIO, i);
+    }
     my_adios->check_event_type(std::string("ENTRY"));
     my_adios->check_event_type(std::string("EXIT"));
     my_adios->check_event_type(std::string("SEND"));

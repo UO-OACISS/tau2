@@ -1,3 +1,6 @@
+#ifndef TAU_GPU_ADAPTER_CUPTI_H
+#define TAU_GPU_ADAPTER_CUPTI_H
+
 #include "Profile/CuptiLayer.h"
 #include <Profile/TauGpu.h>
 #include <stdlib.h>
@@ -92,16 +95,16 @@ public:
 	//This event is tied to the entire deivce not a particular stream or context.
 	//Used for recording device metadata.
 	bool deviceContainer;
-	
+
 	const char *name;
 	//FunctionInfo *callingSite;
 	GpuEventAttributes *gpu_event_attributes;
 	int number_of_gpu_attributes;
 
 	/*CuptiGpuEvent(uint32_t s, uint32_t cn, uint32_t c) { streamId = s; contextId = cn ; correlationId = c; };*/
-	CuptiGpuEvent *getCopy() const { 
+	CuptiGpuEvent *getCopy() const {
 		CuptiGpuEvent *c = new CuptiGpuEvent(*this);
-		return c; 
+		return c;
 	};
  CuptiGpuEvent(const char* n, uint32_t device, GpuEventAttributes *m, int m_size) : name(n), deviceId(device), gpu_event_attributes(m), number_of_gpu_attributes(m_size) {
 		deviceContainer = true;
@@ -118,7 +121,7 @@ public:
 	};
 
   void setCdp() { cdpId = ++cdpCount; }
-  
+
 	const char* getName() const { return name; }
 	int getTaskId() const { return taskId; }
 
@@ -130,11 +133,16 @@ public:
 	x_uint64 id_p1() const {
 		return correlationId;
 	};
-	x_uint64 id_p2() const { 
-		return RtsLayer::myNode(); 
+	x_uint64 id_p2() const {
+		return RtsLayer::myNode();
 	};
     bool less_than(const GpuEvent *other) const
-    {	
+    {
+        // if we are not tracing, only the device ID matters.
+        if (!TauEnv_get_thread_per_gpu_stream()) {
+            // Devices are different, return
+            return deviceId < ((CuptiGpuEvent *)other)->deviceId;
+        }
         /* First, check if we are running on different devices */
         if (deviceContainer || ((CuptiGpuEvent *)other)->deviceContainer) {
             if (deviceId != ((CuptiGpuEvent *)other)->deviceId) {
@@ -180,24 +188,26 @@ public:
 
         char tmpVal[32] = {0};
         sprintf(tmpVal, "%u", deviceId);
-        Tau_metadata_task("CUPTI Device", tmpVal, id);
+        Tau_metadata_task("CUDA Device", tmpVal, id);
         sprintf(tmpVal, "%u", contextId);
-        Tau_metadata_task("CUPTI Context", tmpVal, id);
-        sprintf(tmpVal, "%u", streamId);
-        Tau_metadata_task("CUPTI Stream", tmpVal, id);
+        Tau_metadata_task("CUDA Context", tmpVal, id);
+        if (TauEnv_get_thread_per_gpu_stream()) {
+            sprintf(tmpVal, "%u", streamId);
+            Tau_metadata_task("CUDA Stream", tmpVal, id);
+        }
         if (cdpId > 0) {
             sprintf(tmpVal, "%u", cdpId);
-            Tau_metadata_task("CUPTI cdpId", tmpVal, id);
+            Tau_metadata_task("CUDA cdpId", tmpVal, id);
         }
 	}
 
-	double syncOffset() const 
-  { 
-    return (double) beginTimestamp; 
+	double syncOffset() const
+  {
+    return (double) beginTimestamp;
   };
 	static void setSyncOffset(double offset)
-  { 
-    beginTimestamp = offset; 
+  {
+    beginTimestamp = offset;
   };
 	uint32_t stream() { return streamId; };
 	uint32_t context() { return contextId; };
@@ -212,7 +222,7 @@ public:
       RtsLayer::LockDB();
       std::map<int64_t, FunctionInfo*>::iterator it = functionInfoMap_deviceLaunch().find(parentGridId);
       if (it != functionInfoMap_deviceLaunch().end())
-      { 
+      {
         funcInfo = it->second;
         //printf("found device launch site: %s.\n", funcInfo->GetName());
       }
@@ -244,3 +254,4 @@ public:
 uint32_t CuptiGpuEvent::cdpCount = 0;
 double CuptiGpuEvent::beginTimestamp = 0;
 
+#endif //TAU_GPU_ADAPTER_CUPTI_H

@@ -29,7 +29,7 @@
 #include <regex>
 #else
 #include <regex.h>
-#endif 
+#endif
 
 #include <Profile/Profiler.h>
 #include <TauMetaData.h>
@@ -56,7 +56,7 @@ OmptPluginsVect plugins_for_ompt_event[NB_TAU_PLUGIN_EVENTS];
 std::list < std::string > regex_list;
 
 unsigned int plugin_id_counter = 0;
-size_t star_hash; 
+size_t star_hash;
 
 extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *name);
 
@@ -120,26 +120,26 @@ static tau_bfd_handle_t & TheBfdUnitHandle()
  * that has been embedded in the function name using a pre-fixed token sequence.
  * Currently, this is only invoked from TracerOTF2.cpp and Profiler.cpp while
  * writing out the trace and profile files respectively.
- * NOTE: We do NOT need to lock the HashTable data structure as the thread has already 
+ * NOTE: We do NOT need to lock the HashTable data structure as the thread has already
  * acquired the lock from outside this routine */
 extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address) {
- 
+
       unsigned long addr = 0;
       char region_type[100];
       sscanf(fi.GetName(), "%s ADDR <%lx>", region_type, &addr);
       #ifdef TAU_BFD
       HashNode * node;
       tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
-     
+
       node = TheHashTable()[addr];
       if (!node) {
         node = new HashNode;
         node->fi = NULL;
         node->excluded = false;
-        
+
         TheHashTable()[addr] = node;
       }
-      
+
       Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
 
       if(node && node->info.filename && node->info.funcname && node->info.lineno) {
@@ -151,33 +151,33 @@ extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_addr
       } else {
         sprintf(resolved_address, "OpenMP %s __UNKNOWN__", region_type);
       }
-      #else 
+      #else
         sprintf(resolved_address, "OpenMP %s __UNKNOWN__", region_type);
       #endif /*TAU_BFD*/
 }
 
 /* Given the unsigned long address, and a pointer to the string, fill the string with the BFD resolved address.
- * NOTE: We need to lock the HashTable data structure, as this function is invoked from the OMPT callbacks themselves, 
- * when the user wants to resolve the function name eagerly. 
+ * NOTE: We need to lock the HashTable data structure, as this function is invoked from the OMPT callbacks themselves,
+ * when the user wants to resolve the function name eagerly.
  * For this feature to be active, TAU_OMPT_RESOLVE_ADDRESS_EAGERLY must be set.*/
 extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address) {
- 
+
       #ifdef TAU_BFD
       HashNode * node;
       tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
-     
-      RtsLayer::LockDB();  
+
+      RtsLayer::LockDB();
       node = TheHashTable()[addr];
       if (!node) {
         node = new HashNode;
         node->fi = NULL;
         node->excluded = false;
-        
+
         TheHashTable()[addr] = node;
 
         Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
       }
-      RtsLayer::UnLockDB(); 
+      RtsLayer::UnLockDB();
 
       if(node && node->info.filename && node->info.funcname && node->info.lineno) {
         sprintf(resolved_address, "%s [{%s} {%d, 0}]", node->info.funcname, node->info.filename, node->info.lineno);
@@ -194,7 +194,7 @@ extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * res
 }
 
 extern "C" size_t Tau_util_return_hash_of_string(const char * input) {
-#if defined(__clang__) && defined(__APPLE__)
+#if defined(__clang__) // && defined(__APPLE__)
   std::hash<std::string> hash_fn;
 #else
   std::tr1::hash<std::string> hash_fn;
@@ -219,7 +219,7 @@ void TAU_ABORT(const char *format, ...) {
 /*********************************************************************
  * Create an buffer output device
  ********************************************************************/
-Tau_util_outputDevice *Tau_util_createBufferOutputDevice() 
+Tau_util_outputDevice *Tau_util_createBufferOutputDevice()
 {
   Tau_util_outputDevice *out = (Tau_util_outputDevice*) TAU_UTIL_MALLOC (sizeof(Tau_util_outputDevice));
   if (out == NULL) {
@@ -286,21 +286,21 @@ int Tau_util_output(Tau_util_outputDevice *out, const char *format, ...) {
  ********************************************************************/
 int Tau_util_readFullLine(char *line, FILE *fp) {
   int ch;
-  int i = 0; 
+  int i = 0;
   while ( (ch = fgetc(fp)) && ch != EOF && ch != (int) '\n') {
     line[i++] = (unsigned char) ch;
   }
   // Be careful to check that line is large enough:
   // sizeof(line) == strlen(str) + 1
-  line[i] = '\0'; 
-  return i; 
+  line[i] = '\0';
+  return i;
 }
 
 /*********************************************************************
- * Duplicates a string and replaces all the runs of spaces with a 
+ * Duplicates a string and replaces all the runs of spaces with a
  * single space.
  ********************************************************************/
-char const * Tau_util_removeRuns(char const * spaced_str) 
+char const * Tau_util_removeRuns(char const * spaced_str)
 {
   if (!spaced_str) {
     return spaced_str; /* do nothing with a null string */
@@ -357,7 +357,7 @@ void *Tau_util_calloc(size_t size, const char *file, int line) {
 PluginManager* Tau_util_get_plugin_manager() {
   static PluginManager * plugin_manager = NULL;
   static int is_plugin_system_initialized = 0;
-  
+
   /*Allocate memory for the plugin list and callback list*/
   if(!is_plugin_system_initialized) {
 
@@ -400,7 +400,7 @@ int Tau_util_parse_plugin_token(char * token, char ** plugin_name, char *** plug
   char * arg_token;
   char *pos_left = NULL;
   char *pos_right = NULL;
-  
+
 
   *plugin_num_args = 0;
   *plugin_name = (char*)malloc(1024*sizeof(char));
@@ -420,7 +420,7 @@ int Tau_util_parse_plugin_token(char * token, char ** plugin_name, char *** plug
   length_of_arg_string = (pos_right - pos_left) - 1;
 
   strncpy(arg_string, pos_left+1, length_of_arg_string);
-  // null terminate the string after copying it. 
+  // null terminate the string after copying it.
   arg_string[length_of_arg_string] = '\0';
   strncpy(*plugin_name, token, (pos_left-token));
 
@@ -505,7 +505,7 @@ void Tau_flag_ompt_events() {
 }
 
 
-/********************************************************************* 
+/*********************************************************************
  * Load a list of plugins at TAU init, given following environment variables:
  *  - TAU_PLUGINS_NAMES
  *  - TAU_PLUGINS_PATH
@@ -526,12 +526,12 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
     printf("TAU: One or more of the environment variable(s) TAU_PLUGINS_PATH: %s, TAU_PLUGINS: %s are empty\n", TauEnv_get_plugins_path(), TauEnv_get_plugins());
     return -1;
   }
-  
+
   strcpy(pluginpath, TauEnv_get_plugins_path());
   strcpy(listpluginsnames, TauEnv_get_plugins());
 
   /*Individual plugin names are separated by a ":"*/
-  token = strtok_r(listpluginsnames,":", &save_ptr); 
+  token = strtok_r(listpluginsnames,":", &save_ptr);
   TAU_VERBOSE("TAU: Trying to load plugin with name %s\n", token);
 
   fullpath = (char*)calloc(TAU_NAME_LENGTH, sizeof(char));
@@ -553,20 +553,20 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
 #endif
 
     TAU_VERBOSE("TAU: Full path for the current plugin: %s\n", fullpath);
-   
+
     /*Return a handle to the loaded dynamic object*/
     void* handle = Tau_util_load_plugin(plugin_name, fullpath, plugin_manager);
 
     if (handle) {
       /*If handle is NOT NULL, register the plugin's handlers for various supported events*/
       handle = Tau_util_register_plugin(plugin_name, plugin_args, plugin_num_args, handle, plugin_manager, plugin_id_counter);
-     
+
       /*Plugin registration failed. Bail*/
       if(!handle) return -1;
       TAU_VERBOSE("TAU: Successfully called the init func of plugin: %s\n", token);
 
       /* Plugin API */
-      Tau_plugin_new_t * plugin_; 
+      Tau_plugin_new_t * plugin_;
       plugin_ = (Tau_plugin_new_t *)malloc(sizeof(Tau_plugin_new_t));
 
       strcpy(plugin_->plugin_name, plugin_name);
@@ -587,7 +587,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
   Tau_flag_ompt_events();
   Tau_enable_plugins_for_all_events();
   star_hash = Tau_util_return_hash_of_string("*");
-  
+
   Tau_metadata_push_to_plugins();
 
   free(fullpath);
@@ -620,7 +620,7 @@ void* Tau_util_register_plugin(const char *name, char **args, int num_args, void
     dlclose(handle); //TODO : Replace with Tau_plugin_cleanup();
 #endif /* TAU_WINDOWS */
     return NULL;
-  } 
+  }
   return handle;
 }
 
@@ -633,7 +633,7 @@ void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* pl
 #else
   void* handle = NULL;
 #endif /* TAU_WINDOWS */
-  
+
   if (handle) {
     Tau_plugin * plugin = (Tau_plugin *)malloc(sizeof(Tau_plugin));
     strcpy(plugin->plugin_name, name);
@@ -642,7 +642,7 @@ void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* pl
     (plugin_manager->plugin_list)->head = plugin;
 
     TAU_VERBOSE("TAU: Successfully loaded plugin: %s\n", name);
-    return handle;    
+    return handle;
   } else {
 #ifndef TAU_WINDOWS
     printf("TAU: Failed loading %s plugin with error: %s\n", name, dlerror());
@@ -793,7 +793,7 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
   if (cb->OmptTargetDataOp != 0) { Tau_plugins_enabled.ompt_target_data_op = 1; }
   if (cb->OmptTargetSubmit != 0) { Tau_plugins_enabled.ompt_target_submit = 1; }
   if (cb->OmptFinalize != 0) { Tau_plugins_enabled.ompt_finalize = 1; }
-  
+
   /* Register needed OMPT callback if they are not already registered */
 #if defined(TAU_USE_OMPT) || defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
   Tau_ompt_register_plugin_callbacks(&Tau_plugins_enabled);
@@ -840,13 +840,13 @@ extern "C" const char* Tau_check_for_matching_regex(const char * input)
       return (*it).c_str();
     }
   }
-#else 
+#else
   for(std::list< std::string >::iterator it = regex_list.begin(); it != regex_list.end(); it++) {
     if(Tau_C_regex_match(input, (*it).c_str())) {
       return (*it).c_str();
     }
   }
-#endif 
+#endif
   return NULL;
 }
 
@@ -856,12 +856,12 @@ extern "C" const char* Tau_check_for_matching_regex(const char * input)
  * Overloaded function that invokes all registered callbacks for the function registration event
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data_t* data, PluginKey key) {
-  
+
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->FunctionRegistrationComplete != 0)
       plugin_callback_map[*it]->FunctionRegistrationComplete(data);
   }
-  
+
 }
 
 /**************************************************************************************************************************
@@ -1190,7 +1190,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_end_of_execution_data_t* data, 
 }
 
 /*****************************************************************************
- * Overloaded function that invokes all registered callbacks for the 
+ * Overloaded function that invokes all registered callbacks for the
  * finalize event
  *****************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_function_finalize_data_t* data, PluginKey key) {
@@ -1305,35 +1305,35 @@ void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const v
     case TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_function_registration_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_METADATA_REGISTRATION: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_metadata_registration_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_POST_INIT: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_post_init_data_t*)data, key);
       break;
-    }  
+    }
     case TAU_PLUGIN_EVENT_MPIT: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_mpit_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_DUMP: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_dump_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_FUNCTION_ENTRY: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_function_entry_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_FUNCTION_EXIT: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_function_exit_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_current_timer_exit_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_FUNCTION_FINALIZE: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_function_finalize_data_t*)data, key);
       break;
@@ -1341,27 +1341,27 @@ void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const v
      case TAU_PLUGIN_EVENT_SEND: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_send_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_RECV: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_recv_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_atomic_event_registration_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_atomic_event_trigger_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_pre_end_of_execution_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_END_OF_EXECUTION: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_end_of_execution_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_interrupt_trigger_data_t*)data, key);
       break;
@@ -1500,7 +1500,7 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * s
   } else {
      hash = star_hash;
   }
-  
+
   PluginKey key(event, hash);
   Tau_util_do_invoke_callbacks(event, key, data);
 }
@@ -1511,21 +1511,21 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * s
 int Tau_util_cleanup_all_plugins() {
 
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
-  
+
   Tau_plugin * temp_plugin;
   Tau_plugin_callback_t * temp_callback;
 
   Tau_plugin * plugin = (plugin_manager->plugin_list)->head;
   Tau_plugin_callback_t * callback = (plugin_manager->callback_list)->head;
 
-  /*Two separate while loops to handle the weird case that a plugin is loaded but doesn't register anything*/ 
+  /*Two separate while loops to handle the weird case that a plugin is loaded but doesn't register anything*/
   while(plugin) {
     temp_plugin = plugin;
 
     plugin = temp_plugin->next;
 
     /*Close the dynamic library*/
-#ifndef TAU_WINDOWS 
+#ifndef TAU_WINDOWS
     if(temp_plugin->handle)
       dlclose(temp_plugin->handle);
 #endif /* TAU_WINDOWS */
@@ -1533,7 +1533,7 @@ int Tau_util_cleanup_all_plugins() {
     temp_plugin->next = NULL;
 
     free(temp_plugin);
-  }   
+  }
 
   while(callback) {
     temp_callback = callback;

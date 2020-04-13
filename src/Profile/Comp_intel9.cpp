@@ -98,6 +98,9 @@ extern "C" void __VT_IntelEntry(char* str, int* id, int* id2) {
 
   if (intel_init) { // initialization
     intel_init = 0;
+    /* This is the entry point into TAU from PDT-instrumented C++ codes, so
+     * make sure that TAU is ready to go before doing anything else! */
+    Tau_init_initializeTAU();
     TheUsingCompInst() = 1;
     TAU_PROFILE_SET_NODE(0);
   }
@@ -158,7 +161,7 @@ extern "C" void __VT_IntelExit(int* id2) {
 //   if (it != theMap.end()) {
 //     FunctionInfo *fi = (*it).second;
 //     Tau_stop_timer(fi);
-//   }  
+//   }
 #else
 //   HashNode *hn;
 //   if ((hn = hash_get((long)id2))) {

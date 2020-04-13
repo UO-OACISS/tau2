@@ -7475,6 +7475,7 @@ if [ $ompt_compiler_support = no ] ; then
             download_ompt=yes
         else
             echo "LLVM-OpenMP does not support detected compiler"
+            echo "OpenMP support is only available with -opari for the specified compilers $c_compiler and $cxx_compiler."
             (>&2 echo 'ERROR: OMPT Requested, but there is no way to provide it.')
             exit 1;
         fi
@@ -7649,8 +7650,9 @@ if [ "x$download_ompt" = "xyes" ] ; then
       /bin/rm -rf ${libomp_oss}
     fi
     # get the tar file
-    echo "downloading $libomp_osstgz..."
+    if [ ! -d $libomp_oss ]; then
     if [ ! -f $libomp_osstgz ]; then
+    echo "downloading $libomp_osstgz..."
       download "$libomp_ossurl" "$libomp_osstgz"
     fi
 
@@ -7665,7 +7667,9 @@ if [ "x$download_ompt" = "xyes" ] ; then
       echo "expanding $libomp_osstgz..."
       tar -xzf $libomp_osstgz
       echo "removing $libomp_osstgz..."
-      rm $libomp_osstgz
+      #rm $libomp_osstgz
+    fi
+    fi # ! -d $libomp_oss
       cd $libomp_oss
       libomp_oss_log=build.log
       specialflags="-DCMAKE_C_FLAGS=-fPIC -DCMAKE_CXX_FLAGS=-fPIC"
@@ -7684,8 +7688,15 @@ if [ "x$download_ompt" = "xyes" ] ; then
 	  mkdir build-${ompt_cxx_compiler}
 	  cd build-${ompt_cxx_compiler}
       libomp_cmake_instdir=`pwd`
-	  echo cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true cmake -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} ..
-	  cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. > $libomp_oss_log 2>&1
+      if [ "x$cuda" == "xyes" ] ; then
+        # It probably doesn't make sense to have target offload support.
+	    #cmake_cmd="cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} -DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_70 -DLIBOMPTARGET_ENABLE_DEBUG=on -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=35,60,70 ${specialflags} .. "
+	    cmake_cmd="cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. "
+      else
+	    cmake_cmd="cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. "
+      fi
+      echo $cmake_cmd
+      $cmake_cmd > $libomp_oss_log 2>&1
       result=$?
       if [ $result -eq 0 ] ; then
         echo make clean
@@ -7714,7 +7725,7 @@ if [ "x$download_ompt" = "xyes" ] ; then
         echo "Please check `pwd`/${libomp_oss_log}"
 		exit 1;
       fi
-    fi
+    #fi
   else #Still need to copy the header to be sure it's not from the wrong version
       echo cp $libomp_oss/build-${ompt_cxx_compiler}/include/*.h ${START_DIR}/include/.
       cp $libomp_oss/build-${ompt_cxx_compiler}/include/*.h ${START_DIR}/include/.
@@ -12200,12 +12211,13 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
     ompt_instdir_=${targetdir}/${architecture}/lib/shared${tauoptions}
     mkdir -p ${ompt_instdir}
     mkdir -p ${ompt_instdir_}
-    cp ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ${ompt_instdir}/lib${libomp_oss_name}.so ;
-    cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;
+    #cp ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ${ompt_instdir}/lib${libomp_oss_name}.so ;
+    #cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;
 
     # Copy the OpenMP runtime in the tauoptions directory as well
-    cp ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ${ompt_instdir_}/lib${libomp_oss_name}.so ;
-    cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir_}/libomp.so ;
+    #cp ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ${ompt_instdir_}/lib${libomp_oss_name}.so ;
+    #cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir_}/libomp.so ;
+    cp ${libomp_ossdir_shared}/*.so ${ompt_instdir_}/.
 
     echo "ompt_dir=$ompt_dir"
     omptlinking="-Wl,-rpath=${ompt_instdir_}#-L${ompt_instdir_}#$omptlibrary"
@@ -12232,12 +12244,12 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
     fi
 
-    if [ ! ${libomp_ossdir_shared} = ${ompt_instdir} ] ; then
-        mkdir -p ${ompt_instdir}
-        cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;
-        cp ${libomp_ossdir_shared}/libgomp.so ${ompt_instdir}/libgomp.so ;
-        cp ${libomp_ossdir_shared}/libiomp5.so ${ompt_instdir}/libiomp5.so ;
-    fi
+#    if [ ! ${libomp_ossdir_shared} = ${ompt_instdir} ] ; then
+#        mkdir -p ${ompt_instdir}
+#        cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;
+#        cp ${libomp_ossdir_shared}/libgomp.so ${ompt_instdir}/libgomp.so ;
+#        cp ${libomp_ossdir_shared}/libiomp5.so ${ompt_instdir}/libiomp5.so ;
+#    fi
 	# apex also needs the headers...
 	mkdir -p ${targetdir}/${architecture}/include
     cp ${START_DIR}/include/omp*.h ${targetdir}/${architecture}/include

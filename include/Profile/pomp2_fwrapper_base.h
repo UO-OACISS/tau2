@@ -12,11 +12,12 @@
  *
  * See the COPYING file in the package base directory for details.
  */
-#include <omp.h>
-#include "pomp2_fwrapper_def.h"
 
 #ifndef POMP2_FWRAPPER_BASE_H
 #define POMP2_FWRAPPER_BASE_H
+
+#include <omp.h>
+#include "pomp2_fwrapper_def.h"
 
 extern "C" {
 extern void
