@@ -38,6 +38,7 @@
 
 #define TAU_SET_EVENT_NAME(event_name, str) strcpy(event_name, str)
 ////////////////////////////////////////////////////////////////////////////
+//TODO: split this into multiple functions to get rid of the nasty switch case
 extern "C" static void
 Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info )
 {
@@ -161,6 +162,7 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
   char srcinfo[1024]; 
   char lineinfo[256]; 
 
+//TODO: fix this, ew
   if (prof_info) {
     TAU_VERBOSE("Device=%d ", prof_info->device_number);
     TAU_VERBOSE("Thread=%d ", prof_info->thread_id);
@@ -241,11 +243,6 @@ printActivity(CUpti_Activity *record)
   switch (record->kind) {
 	//TODO:
 	// make an event mappy thing a la CuptiActivity
-	// probably only events that matter are 11, 12, and 9
-	// find out what events are actually under LAUNCH
-	// https://docs.nvidia.com/cuda/cupti/structCUpti__ActivityOpenAcc.html#structCUpti__ActivityOpenAcc
-	// https://docs.nvidia.com/cuda/cupti/structCUpti__ActivityOpenAccData.html#structCUpti__ActivityOpenAccData
-	// https://docs.nvidia.com/cuda/cupti/group__CUPTI__ACTIVITY__API.html#group__CUPTI__ACTIVITY__API_1g0e638b0b6a210164345ab159bcba6717
         case CUPTI_ACTIVITY_KIND_OPENACC_DATA:
 				{
 					CUpti_ActivityOpenAccData *oacc_data = (CUpti_ActivityOpenAccData*) record;
@@ -309,7 +306,7 @@ printActivity(CUpti_Activity *record)
   }
 
 	CUpti_ActivityOpenAcc* oacc = (CUpti_ActivityOpenAcc*) record;
-	// are we guaranteed to only get openacc events? I don't know. Guess we'll find out.
+	// TODO: are we guaranteed to only get openacc events? I don't know. Guess we'll find out.
 	// always add duration at the end
 	uint32_t context = oacc->cuContextId;
 	uint32_t device = oacc->cuDeviceId;
@@ -389,29 +386,28 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
 {
     TAU_VERBOSE("Inside acc_register_library\n");
 
-    reg( acc_ev_device_init_start, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_device_init_end, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_device_shutdown_start, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_device_shutdown_end, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_update_start, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_update_end, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enqueue_launch_start, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enqueue_launch_end, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enqueue_upload_start, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enqueue_upload_end, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enqueue_download_start, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enqueue_download_end, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_wait_start, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_wait_end, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_create, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_delete, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_alloc, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_free, Tau_openacc_callback, (acc_register_t) 0 );
-// Added these four to the new version: (line numbers are omitted for PGI)
-    reg( acc_ev_compute_construct_start, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_compute_construct_end, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enter_data_start, Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enter_data_end, Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_device_init_start,         Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_device_init_end,           Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_device_shutdown_start,     Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_device_shutdown_end,       Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_update_start,              Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_update_end,                Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_enqueue_launch_start,      Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_enqueue_launch_end,        Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_enqueue_upload_start,      Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_enqueue_upload_end,        Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_enqueue_download_start,    Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_enqueue_download_end,      Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_wait_start,                Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_wait_end,                  Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_create,                    Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_delete,                    Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_alloc,                     Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_free,                      Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_compute_construct_start,   Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_compute_construct_end,     Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_enter_data_start,          Tau_openacc_callback, (acc_register_t) 0 );
+    reg( acc_ev_enter_data_end,            Tau_openacc_callback, (acc_register_t) 0 );
 
 
 #ifdef CUPTI
