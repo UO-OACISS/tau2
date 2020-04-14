@@ -67,6 +67,7 @@
 #endif /* TAU_INCLUDE_MPI_H_HEADER */
 
 #ifdef CUPTI
+#include <Profile/CuptiLayer.h>
 #include <cupti.h>
 #endif
 
@@ -160,8 +161,8 @@ static region_map_t global_region_map;
 typedef map<string,set<string> > group_map_t;
 static group_map_t global_group_map;
 
-typedef map<string,uint64_t> metric_map_t;
-static metric_map_t global_metric_map;
+typedef map<string,uint64_t> otf_metric_map_t;
+static otf_metric_map_t global_metric_map;
 
 typedef map<string,uint32_t> metric_param_map_t;
 static metric_param_map_t global_metric_param_map;
@@ -1057,7 +1058,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     }
 
     // Write all the user events out as Metrics
-    for (metric_map_t::const_iterator it = global_metric_map.begin(); it != global_metric_map.end(); it++) {
+    for (otf_metric_map_t::const_iterator it = global_metric_map.begin(); it != global_metric_map.end(); it++) {
         int thisMetricName = nextString++;
         std::string metric_name = it->first;
         const bool monotonic = metric_name[metric_name.length()-1] == 'M';
@@ -1184,12 +1185,12 @@ static void TauTraceOTF2WriteLocalDefinitions() {
             fprintf(stderr, "Unable to create OTF2_IdMap for metrics of size %zu\n", TheEventDB().size());
             abort();
         }
-        const metric_map_t & global_metric_map_ref = global_metric_map;
+        const otf_metric_map_t & global_metric_map_ref = global_metric_map;
         for (AtomicEventDB::iterator it = TheEventDB().begin(); it != TheEventDB().end(); it++) {
             const uint64_t local_id  = (*it)->GetId();
             bool monotonic = (*it)->IsMonotonicallyIncreasing();
             std::string name = string(((*it)->GetName() + (monotonic ? "M" : "N")).c_str());
-            metric_map_t::const_iterator global_id_iter = global_metric_map_ref.find(name);
+            otf_metric_map_t::const_iterator global_id_iter = global_metric_map_ref.find(name);
             if(global_id_iter == global_metric_map_ref.end()) {
                 // If this node has metrics that came into existence after comms shutdown,
                 // we have nothing to map them to.
@@ -1407,7 +1408,7 @@ static void TauTraceOTF2ExchangeMetrics() {
             global_metric_map[*it] = next_id++;
         }
         stringstream ss;
-        for(metric_map_t::const_iterator it = global_metric_map.begin(); it != global_metric_map.end(); it++) {
+        for(otf_metric_map_t::const_iterator it = global_metric_map.begin(); it != global_metric_map.end(); it++) {
             ss << it->first;
             ss.put('\0');
         }
@@ -1832,7 +1833,9 @@ void TauTraceOTF2ShutdownComms(int tid) {
 /* Close the trace */
 void TauTraceOTF2Close(int tid) {
 #ifdef CUPTI
-  if (Tau_init_check_initialized() && !Tau_global_getLightsOut()) {
+  if (Tau_init_check_initialized() &&
+      !Tau_global_getLightsOut() &&
+      Tau_CuptiLayer_is_initialized()) {
     cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
   }
 #endif

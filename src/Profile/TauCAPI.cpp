@@ -79,6 +79,7 @@ void esd_exit (elg_ui4 rid);
 
 #ifdef CUPTI
 #include <cupti.h>
+#include <Profile/CuptiLayer.h>
 #endif
 
 using namespace tau;
@@ -1078,11 +1079,22 @@ extern "C" int Tau_get_thread(void) {
   return RtsLayer::myThread();
 }
 
+extern "C" void Tau_flush_gpu_activity(void) {
+#ifdef CUPTI
+    // flush all the cuda activity before we dump!
+    if (Tau_init_check_initialized() &&
+        !Tau_global_getLightsOut() &&
+        Tau_CuptiLayer_is_initialized()) {
+      cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+    }
+#endif
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump(void) {
   TauInternalFunctionGuard protects_this_function;
 
+  Tau_flush_gpu_activity();
   /*Invoke plugins only if both plugin path and plugins are specified*/
   if(Tau_plugins_enabled.dump) {
     Tau_plugin_event_dump_data_t plugin_data;
@@ -2956,12 +2968,7 @@ extern "C" int Tau_get_local_tid(void) {
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
-#ifdef CUPTI
-  // flush all the cuda activity before we exit!
-  if (Tau_init_check_initialized() && !Tau_global_getLightsOut()) {
-    cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
-  }
-#endif
+  Tau_flush_gpu_activity();
 // First, make sure all thread timers have stopped
   Tau_profile_exit_all_threads();
 #ifdef TAU_OPENMP
