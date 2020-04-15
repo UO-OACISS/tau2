@@ -1968,14 +1968,16 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                 end / 1e3, end / 1e3, taskId);
     }
 
-    void record_imix_counters(const char* name, uint32_t taskId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end) {
+    int record_imix_counters(const char* name, uint32_t taskId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end) {
         // check if data available
         bool update = false;
         if (instructionMap[taskId].find(id) == instructionMap[taskId].end()) {
             TAU_VERBOSE("[CuptiActivity] warning:  Instruction mix counters not recorded.\n");
+	    return 0;
         }
         else if (map_disassem.empty()) {
             TAU_VERBOSE("[CuptiActivity] warning:  No disassembly found, SASS counters not recorded.\n");
+	    return 0;
         }
         else {
             ImixStats is_runtime = write_runtime_imix(id, taskId, map_disassem, name);
@@ -2001,12 +2003,12 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
             transport_imix_counters(v_flops, FlPtOps, name, taskId, streamId, contextId, id, end, fp_ops);
             transport_imix_counters(v_memops, MemOps, name, taskId, streamId, contextId, id, end, mem_ops);
             transport_imix_counters(v_ctrlops, CtrlOps, name, taskId, streamId, contextId, id, end, ctrl_ops);
-
+	    
         }
         if(!update) {
             TAU_VERBOSE("TAU Warning:  Did not record instruction operations.\n");
         }
-
+	return 1;
     }
 
     ImixStats write_runtime_imix(uint32_t corrId, uint32_t taskId, std::map<std::pair<int, int>, CudaOps> map_disassem, std::string kernel)
@@ -2812,9 +2814,10 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	    }
 	    CUPTI_KERNEL_TYPE *kernel = &(kernelMap[taskId].find(correlationId)->second);
 	    const char *kname = demangleName(kernel->name);
-	    record_imix_counters(kname, taskId, kernel->streamId, kernel->contextId, correlationId, kernel->end);
-	    correlationWritten.erase(iter);
-	    assert(correlationWritten.find(correlationId) == correlationWritten.end());
+	    if (record_imix_counters(kname, taskId, kernel->streamId, kernel->contextId, correlationId, kernel->end)) {
+	        correlationWritten.erase(iter);
+	        assert(correlationWritten.find(correlationId) == correlationWritten.end());
+	    }
 	}
     }
 
