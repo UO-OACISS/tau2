@@ -38,6 +38,85 @@
 
 #define TAU_SET_EVENT_NAME(event_name, str) strcpy(event_name, str)
 ////////////////////////////////////////////////////////////////////////////
+
+// strings for OpenACC parent constructs; based on enum acc_construct_t
+char* acc_constructs[] = {
+	"parallel",
+	"kernels",
+	"loop",
+	"data",
+	"enter data",
+	"exit data",
+	"host data",
+	"atomic",
+	"declare",
+	"init",
+	"shutdown",
+	"set",
+	"update",
+	"routine",
+	"wait",
+	"runtime api",
+	"serial",
+};
+
+extern "C" static void
+Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info)
+{
+	acc_launch_event_info* launch_event = &(event_info->launch_event);
+	char file_name[256];
+	char event_name[256];
+	char event_data[256];
+	int start = 0; // 0 = stop, 1 = start, -1 = something weird happened
+
+	switch(prof_info->event_type) {
+		// note: these don't correspond to when kernels are actually run, just when they're put in the 
+		// execution queue on the device
+		case acc_ev_enqueue_launch_start:
+			start = 1;
+			sprintf(event_name, "OpenACC enqueue launch");
+			break;
+		case acc_ev_enqueue_launch_end:
+			start = 0;
+			sprintf(event_name, "OpenACC enqueue launch");
+			break;
+		default:
+			start = -1;
+			sprintf(event_name, "UNKNOWN OPENACC LAUNCH EVENT");
+			fprintf(stderr, "ERROR: Non-launch event passed to OpenACC launch event callback.");
+	}
+
+	sprintf(file_name, "%s:%s-%s", 
+			prof_info->src_file, 
+			(prof_info->line_no > 0) ? std::to_string(prof_info->line_no).c_str() : "?",
+			(prof_info->end_line_no > 0) ? std::to_string(prof_info->end_line_no).c_str() : "?");
+
+	
+	sprintf(event_data, " kernel name = %s %s; parent construct = %s; gangs=%zu, workers=%zu, vector lanes=%zu (%s)", 
+	//                            name ^  ^ (implicit?)                                   file and line no. ^
+			(launch_event->kernel_name) ? launch_event->kernel_name : "unknown kernel",
+			(launch_event->implicit) ? "(implicit)" : "",
+			acc_constructs[launch_event->parent_construct],
+			launch_event->num_gangs,
+			launch_event->num_workers,
+			launch_event->vector_length,
+			file_name);
+
+	//printf("parent construct %d\n", launch_event->parent_construct);
+
+	strcat(event_name, event_data);
+
+	if (start == 1) {
+		TAU_START(&event_name[0]); //has to be &str[index] to get around const-ness problems
+	}
+	else if (start == 0) {
+		TAU_STOP(&event_name[0]);
+	}
+	else {
+		TAU_TRIGGER_EVENT(&event_name[0], 0);
+	}
+}
+
 //TODO: split this into multiple functions to get rid of the nasty switch case
 extern "C" static void
 Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info )
@@ -81,22 +160,6 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
     case acc_ev_update_end: 
 			TAU_SET_EVENT_NAME(event_name, "<openacc_update");
 			break;
-    case acc_ev_enqueue_launch_start: 
-      if (event_info) {
-        launch_event_info = &(event_info->launch_event); 
-        sprintf(event_name, ">openacc_enqueue_launch kernel=%s <num_gangs=%d, num_workers=%d, vector_length=%d>", 
-					launch_event_info->kernel_name, 
-					launch_event_info->num_gangs, launch_event_info->num_workers, launch_event_info->vector_length);
-      }
-      break;
-    case acc_ev_enqueue_launch_end: 
-      if (event_info) {
-        launch_event_info = &(event_info->launch_event); 
-        sprintf(event_name, "<openacc_enqueue_launch kernel=%s <num_gangs=%d, num_workers=%d, vector_length=%d>", 
-					launch_event_info->kernel_name, 
-					launch_event_info->num_gangs, launch_event_info->num_workers, launch_event_info->vector_length);
-      }
-      break;
     case acc_ev_enqueue_upload_start: 
       if (event_info) {
         data_event_info = &(event_info->data_event); 
@@ -386,28 +449,31 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
 {
     TAU_VERBOSE("Inside acc_register_library\n");
 
-    reg( acc_ev_device_init_start,         Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_device_init_end,           Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_device_shutdown_start,     Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_device_shutdown_end,       Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_update_start,              Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_update_end,                Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enqueue_launch_start,      Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enqueue_launch_end,        Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enqueue_upload_start,      Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enqueue_upload_end,        Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enqueue_download_start,    Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enqueue_download_end,      Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_wait_start,                Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_wait_end,                  Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_create,                    Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_delete,                    Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_alloc,                     Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_free,                      Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_compute_construct_start,   Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_compute_construct_end,     Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enter_data_start,          Tau_openacc_callback, (acc_register_t) 0 );
-    reg( acc_ev_enter_data_end,            Tau_openacc_callback, (acc_register_t) 0 );
+		// Launch events
+    reg( acc_ev_enqueue_launch_start,      Tau_openacc_launch_callback, acc_reg );
+    reg( acc_ev_enqueue_launch_end,        Tau_openacc_launch_callback, acc_reg );
+    
+		// Other events
+		reg( acc_ev_device_init_start,         Tau_openacc_callback, acc_reg );
+    reg( acc_ev_device_init_end,           Tau_openacc_callback, acc_reg );
+    reg( acc_ev_device_shutdown_start,     Tau_openacc_callback, acc_reg );
+    reg( acc_ev_device_shutdown_end,       Tau_openacc_callback, acc_reg );
+    reg( acc_ev_update_start,              Tau_openacc_callback, acc_reg );
+    reg( acc_ev_update_end,                Tau_openacc_callback, acc_reg );
+    reg( acc_ev_enqueue_upload_start,      Tau_openacc_callback, acc_reg );
+    reg( acc_ev_enqueue_upload_end,        Tau_openacc_callback, acc_reg );
+    reg( acc_ev_enqueue_download_start,    Tau_openacc_callback, acc_reg );
+    reg( acc_ev_enqueue_download_end,      Tau_openacc_callback, acc_reg );
+    reg( acc_ev_wait_start,                Tau_openacc_callback, acc_reg );
+    reg( acc_ev_wait_end,                  Tau_openacc_callback, acc_reg );
+    reg( acc_ev_create,                    Tau_openacc_callback, acc_reg );
+    reg( acc_ev_delete,                    Tau_openacc_callback, acc_reg );
+    reg( acc_ev_alloc,                     Tau_openacc_callback, acc_reg );
+    reg( acc_ev_free,                      Tau_openacc_callback, acc_reg );
+    reg( acc_ev_compute_construct_start,   Tau_openacc_callback, acc_reg );
+    reg( acc_ev_compute_construct_end,     Tau_openacc_callback, acc_reg );
+    reg( acc_ev_enter_data_start,          Tau_openacc_callback, acc_reg );
+    reg( acc_ev_enter_data_end,            Tau_openacc_callback, acc_reg );
 
 
 #ifdef CUPTI
