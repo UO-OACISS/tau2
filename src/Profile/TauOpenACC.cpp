@@ -86,6 +86,20 @@ Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info
 			fprintf(stderr, "ERROR: Unknown launch event passed to OpenACC launch event callback.");
 	}
 
+	// if this is an end event, short circuit by grabbing the FunctionInfo pointer out of tool_info
+	// and stopping that timer; if the pointer is NULL something bad happened, print warning and kill 
+	// whatever timer is on top of the stack
+	if (start == 0) {
+		if (launch_event->tool_info == NULL) {
+			fprintf(stderr, "WARNING: OpenACC launch end event has bad matching start event.");
+			Tau_global_stop();
+		}
+		else {
+			Tau_lite_stop_timer(launch_event->tool_info);
+		}
+		return;
+	}
+
 	sprintf(file_name, "%s:%s-%s", 
 			prof_info->src_file, 
 			(prof_info->line_no > 0) ? std::to_string(prof_info->line_no).c_str() : "?",
@@ -93,7 +107,7 @@ Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info
 
 	
 	sprintf(event_data, " kernel name = %s %s; parent construct = %s ; gangs=%zu, workers=%zu, vector lanes=%zu (%s)", 
-	//                            name ^  ^ (implicit?)                                   file and line no. ^
+	//                             name ^  ^ (implicit?)                                       file and line no. ^
 			(launch_event->kernel_name) ? launch_event->kernel_name : "unknown kernel",
 			(launch_event->implicit) ? "(implicit)" : "",
 			acc_constructs[launch_event->parent_construct],
@@ -107,10 +121,9 @@ Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info
 	strcat(event_name, event_data);
 
 	if (start == 1) {
-		TAU_START(&event_name[0]); //has to be &str[index] to get around const-ness problems
-	}
-	else if (start == 0) {
-		TAU_STOP(&event_name[0]);
+		void* func_info = Tau_get_function_info(event_name, "", TAU_USER, "TAU_OPENACC");
+		launch_event->tool_info = func_info;
+		Tau_lite_start_timer(func_info, 0); 
 	}
 	else {
 		TAU_TRIGGER_EVENT(&event_name[0], 0);
@@ -165,6 +178,20 @@ Tau_openacc_data_callback( acc_prof_info* prof_info, acc_event_info* event_info,
 			fprintf(stderr, "ERROR: Unknown data event passed to OpenACC data event callback.");
 	}
 
+	// if this is an end event, short circuit by grabbing the FunctionInfo pointer out of tool_info
+	// and stopping that timer; if the pointer is NULL something bad happened, print warning and kill 
+	// whatever timer is on top of the stack
+	if (start == 0) {
+		if (data_event->tool_info == NULL) {
+			fprintf(stderr, "WARNING: OpenACC launch end event has bad matching start event.");
+			Tau_global_stop();
+		}
+		else {
+			Tau_lite_stop_timer(data_event->tool_info);
+		}
+		return;
+	}
+
 	sprintf(file_name, "%s:%s-%s", 
 			prof_info->src_file, 
 			(prof_info->line_no > 0) ? std::to_string(prof_info->line_no).c_str() : "?",
@@ -180,11 +207,10 @@ Tau_openacc_data_callback( acc_prof_info* prof_info, acc_event_info* event_info,
 	strcat(event_name, event_data);
 
 	if (start == 1) {
-		TAU_START(&event_name[0]);
+		void* func_info = Tau_get_function_info(event_name, "", TAU_USER, "TAU_OPENACC");
+		data_event->tool_info = func_info;
+		Tau_lite_start_timer(func_info, 0); 
 		TAU_TRIGGER_EVENT(&event_name[0], data_event->bytes);
-	}
-	else if (start == 0) {
-		TAU_STOP(&event_name[0]);
 	}
 	else {
 		TAU_TRIGGER_EVENT(&event_name[0], data_event->bytes);
@@ -267,6 +293,20 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 			fprintf(stderr, "ERROR: Unknown other event passed to OpenACC other event callback.");
 	}
 	
+	// if this is an end event, short circuit by grabbing the FunctionInfo pointer out of tool_info
+	// and stopping that timer; if the pointer is NULL something bad happened, print warning and kill 
+	// whatever timer is on top of the stack
+	if (start == 0) {
+		if (other_event->tool_info == NULL) {
+			fprintf(stderr, "WARNING: OpenACC launch end event has bad matching start event.");
+			Tau_global_stop();
+		}
+		else {
+			Tau_lite_stop_timer(other_event->tool_info);
+		}
+		return;
+	}
+
 	sprintf(file_name, "%s:%s-%s", 
 			prof_info->src_file, 
 			(prof_info->line_no > 0) ? std::to_string(prof_info->line_no).c_str() : "?",
@@ -285,10 +325,9 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 #endif
 
 	if (start == 1) {
-		TAU_START(&event_name[0]);
-	}
-	else if (start == 0) {
-		TAU_STOP(&event_name[0]);
+		void* func_info = Tau_get_function_info(event_name, "", TAU_USER, "TAU_OPENACC");
+		other_event->tool_info = func_info;
+		Tau_lite_start_timer(func_info, 0); 
 	}
 	else {
 		TAU_TRIGGER_EVENT(&event_name[0], 0);
@@ -296,100 +335,6 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 }
 
 
-
-
-
-//TODO: split this into multiple functions to get rid of the nasty switch case
-extern "C" static void
-Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info )
-{
-  char event_name[256], user_event_name[256];
-
-  //acc_event_t *event_type_info = NULL; 
-  //acc_other_event_info*  other_event_info = NULL;
-
-  switch (prof_info->event_type) {
-    case acc_ev_device_init_start: 
-			Tau_create_top_level_timer_if_necessary(); 
-			TAU_SET_EVENT_NAME(event_name, ">openacc_init"); 
-			break;
-    case acc_ev_device_init_end: 
-			TAU_SET_EVENT_NAME(event_name, "<openacc_init");
-			break;
-    case acc_ev_device_shutdown_start: 
-			TAU_SET_EVENT_NAME(event_name, ">openacc_shutdown");
-			break;
-    case acc_ev_device_shutdown_end: 
-			TAU_SET_EVENT_NAME(event_name, "<openacc_shutdown");
-			break;
-    case acc_ev_enter_data_start: 
-      TAU_SET_EVENT_NAME(event_name, ">openacc_enter_data");
-			break;
-    case acc_ev_enter_data_end: 
-			TAU_SET_EVENT_NAME(event_name, "<openacc_enter_data");
-			break;
-    case acc_ev_exit_data_start: 
-			TAU_SET_EVENT_NAME(event_name, ">openacc_exit_data");
-			break;
-    case acc_ev_exit_data_end: 
-			TAU_SET_EVENT_NAME(event_name, "<openacc_exit_data");
-			break;
-    case acc_ev_update_start: 
-			TAU_SET_EVENT_NAME(event_name, ">openacc_update");
-			break;
-    case acc_ev_update_end: 
-			TAU_SET_EVENT_NAME(event_name, "<openacc_update");
-			break;
-    case acc_ev_wait_start: 
-			TAU_SET_EVENT_NAME(event_name, ">openacc_wait");
-			break;
-    case acc_ev_wait_end: 
-			TAU_SET_EVENT_NAME(event_name, "<openacc_wait");
-			break;
-    case acc_ev_compute_construct_start: 
-			TAU_SET_EVENT_NAME(event_name, ">openacc_compute_construct");
-			break;
-    case acc_ev_compute_construct_end: 
-			TAU_SET_EVENT_NAME(event_name, "<openacc_compute_construct");
-			break;
-    default: 
-			TAU_SET_EVENT_NAME(event_name, "unknown OpenACC event");
-			break;
-  }
-  char srcinfo[1024]; 
-  char lineinfo[256]; 
-
-//TODO: fix this, ew
-  if (prof_info) {
-    TAU_VERBOSE("Device=%d ", prof_info->device_number);
-    TAU_VERBOSE("Thread=%d ", prof_info->thread_id);
-    sprintf(srcinfo, " %s [{%s}", prof_info->func_name, prof_info->src_file);
-    if ((event_name[15] == 'd' && event_name[16] == 'a' && prof_info->line_no) || (event_name[17] == 'c' && event_name[18] == 'o' && prof_info->line_no)) {
-			TAU_VERBOSE("Do not extract line number info for %s\n", event_name); 
-			// PGI has messed up line numbers for entry and exit for construct 
-			// and data events 
-				/* do nothing */ 
-    } else {
-      sprintf(lineinfo, " {%d,0}", prof_info->line_no); 
-      strcat(srcinfo,lineinfo);
-      if ((prof_info->end_line_no) && (prof_info->end_line_no > prof_info->line_no)) {
-        sprintf(lineinfo, "-{%d,0}", prof_info->end_line_no); 
-        strcat(srcinfo,lineinfo);
-      }
-    }
-    strcat(srcinfo,"]");
-    strcat(event_name, srcinfo); 
-  }
-  if (event_name[0] == '>') {
-    TAU_VERBOSE("START>>%s\n", &event_name[1]);
-    TAU_START(&event_name[1]);
-  }  else if (event_name[0] == '<') {
-    TAU_VERBOSE("STOP <<%s\n", &event_name[1]);
-    TAU_STOP(&event_name[1]);
-  } else {
-    TAU_VERBOSE("event_name = %s\n", event_name);
-  }
-}
 
 #define CUPTI_CALL(call)                                                \
   do {                                                                  \
