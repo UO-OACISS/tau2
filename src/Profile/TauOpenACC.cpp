@@ -191,6 +191,113 @@ Tau_openacc_data_callback( acc_prof_info* prof_info, acc_event_info* event_info,
 	}
 }
 
+extern "C" static void
+Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info )
+{
+	acc_other_event_info* other_event = &(event_info->other_event);
+	char file_name[256];
+	char event_name[256];
+	char event_data[256];
+	int start = -1;
+
+	switch(prof_info->event_type) {
+		case acc_ev_device_init_start:
+			start = 1;
+			sprintf(event_name, "OpenACC device init");
+			break;
+		case acc_ev_device_init_end:
+			start = 0;
+			sprintf(event_name, "OpenACC device init");
+			break;
+		case acc_ev_device_shutdown_start:
+			start = 1;
+			sprintf(event_name, "OpenACC device shutdown");
+			break;
+		case acc_ev_device_shutdown_end:
+			start = 0;
+			sprintf(event_name, "OpenACC device shutdown");
+			break;
+		case acc_ev_runtime_shutdown:
+			start = -1;
+			sprintf(event_name, "OpenACC runtime shutdown");
+			break;
+		case acc_ev_enter_data_start:
+			start = 1;
+			sprintf(event_name, "OpenACC enter data");
+			break;
+		case acc_ev_enter_data_end:
+			start = 0;
+			sprintf(event_name, "OpenACC enter data");
+			break;
+		case acc_ev_exit_data_start:
+			start = 1;
+			sprintf(event_name, "OpenACC exit data");
+			break;
+		case acc_ev_exit_data_end:
+			start = 0;
+			sprintf(event_name, "OpenACC exit data");
+			break;
+		case acc_ev_update_start:
+			start = 1;
+			sprintf(event_name, "OpenACC update");
+			break;
+		case acc_ev_update_end:
+			start = 0;
+			sprintf(event_name, "OpenACC update");
+			break;
+		case acc_ev_compute_construct_start:
+			start = 1;
+			sprintf(event_name, "OpenACC compute construct");
+			break;
+		case acc_ev_compute_construct_end:
+			start = 0;
+			sprintf(event_name, "OpenACC compute construct");
+			break;
+		case acc_ev_wait_start:
+			start = 1;
+			sprintf(event_name, "OpenACC wait");
+			break;
+		case acc_ev_wait_end:
+			start = 0;
+			sprintf(event_name, "OpenACC wait");
+			break;
+		default:
+			start = -1;
+			sprintf(event_name, "UNKNOWN OPENACC OTHER EVENT");
+			fprintf(stderr, "ERROR: Unknown other event passed to OpenACC other event callback.");
+	}
+	
+	sprintf(file_name, "%s:%s-%s", 
+			prof_info->src_file, 
+			(prof_info->line_no > 0) ? std::to_string(prof_info->line_no).c_str() : "?",
+			(prof_info->end_line_no > 0) ? std::to_string(prof_info->end_line_no).c_str() : "?");
+	
+	sprintf(event_data, " %s; parent construct = %s (%s)", 
+	//                      ^ (implicit?)              ^ file and line no.
+			(other_event->implicit) ? "(implicit)" : "",
+			acc_constructs[other_event->parent_construct],
+			file_name);
+
+	strcat(event_name, event_data);
+
+#ifdef DEBUG_OPENACC
+	printf("%s\n", event_name);
+#endif
+
+	if (start == 1) {
+		TAU_START(&event_name[0]);
+	}
+	else if (start == 0) {
+		TAU_STOP(&event_name[0]);
+	}
+	else {
+		TAU_TRIGGER_EVENT(&event_name[0], 0);
+	}
+}
+
+
+
+
 
 //TODO: split this into multiple functions to get rid of the nasty switch case
 extern "C" static void
@@ -491,18 +598,21 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
     reg( acc_ev_free,                      Tau_openacc_data_callback, acc_reg );
     
 		// Other events
-		reg( acc_ev_device_init_start,         Tau_openacc_callback, acc_reg );
-    reg( acc_ev_device_init_end,           Tau_openacc_callback, acc_reg );
-    reg( acc_ev_device_shutdown_start,     Tau_openacc_callback, acc_reg );
-    reg( acc_ev_device_shutdown_end,       Tau_openacc_callback, acc_reg );
-    reg( acc_ev_update_start,              Tau_openacc_callback, acc_reg );
-    reg( acc_ev_update_end,                Tau_openacc_callback, acc_reg );
-    reg( acc_ev_wait_start,                Tau_openacc_callback, acc_reg );
-    reg( acc_ev_wait_end,                  Tau_openacc_callback, acc_reg );
-    reg( acc_ev_compute_construct_start,   Tau_openacc_callback, acc_reg );
-    reg( acc_ev_compute_construct_end,     Tau_openacc_callback, acc_reg );
-    reg( acc_ev_enter_data_start,          Tau_openacc_callback, acc_reg );
-    reg( acc_ev_enter_data_end,            Tau_openacc_callback, acc_reg );
+		reg( acc_ev_device_init_start,         Tau_openacc_other_callback, acc_reg );
+    reg( acc_ev_device_init_end,           Tau_openacc_other_callback, acc_reg );
+    reg( acc_ev_device_shutdown_start,     Tau_openacc_other_callback, acc_reg );
+    reg( acc_ev_device_shutdown_end,       Tau_openacc_other_callback, acc_reg );
+		reg( acc_ev_runtime_shutdown,					 Tau_openacc_other_callback, acc_reg );
+		reg( acc_ev_enter_data_start,					 Tau_openacc_other_callback, acc_reg );
+		reg( acc_ev_enter_data_end,						 Tau_openacc_other_callback, acc_reg );
+		reg( acc_ev_exit_data_start,					 Tau_openacc_other_callback, acc_reg );
+		reg( acc_ev_exit_data_end,						 Tau_openacc_other_callback, acc_reg );
+    reg( acc_ev_update_start,              Tau_openacc_other_callback, acc_reg );
+    reg( acc_ev_update_end,                Tau_openacc_other_callback, acc_reg );
+    reg( acc_ev_compute_construct_start,   Tau_openacc_other_callback, acc_reg );
+    reg( acc_ev_compute_construct_end,     Tau_openacc_other_callback, acc_reg );
+    reg( acc_ev_wait_start,                Tau_openacc_other_callback, acc_reg );
+    reg( acc_ev_wait_end,                  Tau_openacc_other_callback, acc_reg );
 
 
 #ifdef CUPTI
