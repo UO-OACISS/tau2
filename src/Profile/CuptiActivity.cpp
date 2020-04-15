@@ -606,7 +606,7 @@ void Tau_cupti_onunload() {
     if(TauEnv_get_cuda_track_unified_memory()) {
         CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
     }
-    if (TauEnv_get_cuda_csv_output()) {
+    if (TauEnv_get_cuda_track_sass() && TauEnv_get_cuda_csv_output()) {
         write_sass_output();
     }
 }
@@ -2810,16 +2810,11 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	    if (kernelMap[taskId].find(correlationId) == kernelMap[taskId].end()) {
 		return;
 	    }
-	    else if (instructionMap[taskId].find(correlationId) == instructionMap[taskId].end()) {
-		return;
-	    }
-	    else { 
-	        CUPTI_KERNEL_TYPE *kernel = &(kernelMap[taskId].find(correlationId)->second);
-		const char *kname = demangleName(kernel->name);
-		record_imix_counters(kname, taskId, kernel->streamId, kernel->contextId, correlationId, kernel->end);
-		correlationWritten.erase(iter);
-		assert(correlationWritten.find(correlationId) == correlationWritten.end());
-	    }
+	    CUPTI_KERNEL_TYPE *kernel = &(kernelMap[taskId].find(correlationId)->second);
+	    const char *kname = demangleName(kernel->name);
+	    record_imix_counters(kname, taskId, kernel->streamId, kernel->contextId, correlationId, kernel->end);
+	    correlationWritten.erase(iter);
+	    assert(correlationWritten.find(correlationId) == correlationWritten.end());
 	}
     }
 
