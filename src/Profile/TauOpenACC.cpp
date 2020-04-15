@@ -78,7 +78,6 @@ Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info
 			break;
 		case acc_ev_enqueue_launch_end:
 			start = 0;
-			sprintf(event_name, "OpenACC enqueue launch");
 			break;
 		default:
 			start = -1;
@@ -110,16 +109,17 @@ Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info
 	//                             name ^  ^ (implicit?)                                       file and line no. ^
 			(launch_event->kernel_name) ? launch_event->kernel_name : "unknown kernel",
 			(launch_event->implicit) ? "(implicit)" : "",
-			acc_constructs[launch_event->parent_construct],
+			(launch_event->parent_construct < 9999) ? acc_constructs[launch_event->parent_construct] : "unknown construct",
 			launch_event->num_gangs,
 			launch_event->num_workers,
 			launch_event->vector_length,
 			file_name);
 
-	//printf("parent construct %d\n", launch_event->parent_construct);
 
 	strcat(event_name, event_data);
 
+	// if this is a start event, get the FunctionInfo and put it in tool_info so the end event will
+	// get it to stop the timer
 	if (start == 1) {
 		void* func_info = Tau_get_function_info(event_name, "", TAU_USER, "TAU_OPENACC");
 		launch_event->tool_info = func_info;
@@ -146,7 +146,6 @@ Tau_openacc_data_callback( acc_prof_info* prof_info, acc_event_info* event_info,
 			break;
 		case acc_ev_enqueue_upload_end:
 			start = 0;
-			sprintf(event_name, "OpenACC enqueue data transfer (HtoD)");
 			break;
 		case acc_ev_enqueue_download_start:
 			start = 1;
@@ -154,7 +153,6 @@ Tau_openacc_data_callback( acc_prof_info* prof_info, acc_event_info* event_info,
 			break;
 		case acc_ev_enqueue_download_end:
 			start = 0;
-			sprintf(event_name, "OpenACC enqueue data transfer (DtoH)");
 			break;
 		case acc_ev_create:
 			start = -1;
@@ -201,11 +199,13 @@ Tau_openacc_data_callback( acc_prof_info* prof_info, acc_event_info* event_info,
 	//                               name ^  ^ (implicit move?)         ^ file and line no.
 			(data_event->var_name) ? data_event->var_name : "unknown variable",
 			(data_event->implicit) ? "(implicit move)" : "",
-			acc_constructs[data_event->parent_construct],
+			(data_event->parent_construct < 9999) ? acc_constructs[data_event->parent_construct] : "unknown construct",
 			file_name);
 
 	strcat(event_name, event_data);
 
+	// if this is a start event, get the FunctionInfo and put it in tool_info so the end event will
+	// get it to stop the timer
 	if (start == 1) {
 		void* func_info = Tau_get_function_info(event_name, "", TAU_USER, "TAU_OPENACC");
 		data_event->tool_info = func_info;
@@ -233,7 +233,6 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 			break;
 		case acc_ev_device_init_end:
 			start = 0;
-			sprintf(event_name, "OpenACC device init");
 			break;
 		case acc_ev_device_shutdown_start:
 			start = 1;
@@ -241,7 +240,6 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 			break;
 		case acc_ev_device_shutdown_end:
 			start = 0;
-			sprintf(event_name, "OpenACC device shutdown");
 			break;
 		case acc_ev_runtime_shutdown:
 			start = -1;
@@ -253,7 +251,6 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 			break;
 		case acc_ev_enter_data_end:
 			start = 0;
-			sprintf(event_name, "OpenACC enter data");
 			break;
 		case acc_ev_exit_data_start:
 			start = 1;
@@ -261,7 +258,6 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 			break;
 		case acc_ev_exit_data_end:
 			start = 0;
-			sprintf(event_name, "OpenACC exit data");
 			break;
 		case acc_ev_update_start:
 			start = 1;
@@ -269,7 +265,6 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 			break;
 		case acc_ev_update_end:
 			start = 0;
-			sprintf(event_name, "OpenACC update");
 			break;
 		case acc_ev_compute_construct_start:
 			start = 1;
@@ -277,7 +272,6 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 			break;
 		case acc_ev_compute_construct_end:
 			start = 0;
-			sprintf(event_name, "OpenACC compute construct");
 			break;
 		case acc_ev_wait_start:
 			start = 1;
@@ -285,7 +279,6 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 			break;
 		case acc_ev_wait_end:
 			start = 0;
-			sprintf(event_name, "OpenACC wait");
 			break;
 		default:
 			start = -1;
@@ -315,8 +308,10 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 	sprintf(event_data, " %s; parent construct = %s (%s)", 
 	//                      ^ (implicit?)              ^ file and line no.
 			(other_event->implicit) ? "(implicit)" : "",
-			acc_constructs[other_event->parent_construct],
+			(other_event->parent_construct < 9999) ? acc_constructs[other_event->parent_construct] : "unknown construct",
 			file_name);
+
+	//printf("parent construct %d\n", other_event->parent_construct);
 
 	strcat(event_name, event_data);
 
@@ -324,6 +319,8 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 	printf("%s\n", event_name);
 #endif
 
+	// if this is a start event, get the FunctionInfo and put it in tool_info so the end event will
+	// get it to stop the timer
 	if (start == 1) {
 		void* func_info = Tau_get_function_info(event_name, "", TAU_USER, "TAU_OPENACC");
 		other_event->tool_info = func_info;
@@ -383,8 +380,6 @@ printActivity(CUpti_Activity *record)
 	GpuEventAttributes* map;
 	int map_size;                                              
   switch (record->kind) {
-	//TODO:
-	// make an event mappy thing a la CuptiActivity
         case CUPTI_ACTIVITY_KIND_OPENACC_DATA:
 				{
 					CUpti_ActivityOpenAccData *oacc_data = (CUpti_ActivityOpenAccData*) record;
