@@ -27,12 +27,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <aio.h>
-  
+
 #include <stdarg.h>
-  
-#include <aio.h> 
+
+#include <aio.h>
 #include <sys/uio.h>
-  
+
 #include <setjmp.h>
 #include <TAU.h>
 
@@ -52,7 +52,7 @@
 #ifndef __PGI
 #include <Profile/TauEnv.h>
 #endif
-    
+
 #define TAU_WRITE TAU_IO
 #define TAU_READ TAU_IO
 
@@ -61,7 +61,7 @@
 
 
 /*********************************************************************
- * fopen 
+ * fopen
  ********************************************************************/
 FILE *fopen(const char *path, const char *mode) {
   static FILE* (*_fopen)(const char *path, const char *mode) = NULL;
@@ -69,7 +69,7 @@ FILE *fopen(const char *path, const char *mode) {
   if (_fopen == NULL) {
     _fopen = ( FILE* (*)(const char *path, const char *mode)) dlsym(RTLD_NEXT, "fopen");
   }
-  
+
   if (Tau_iowrap_checkPassThrough()) {
     return _fopen(path, mode);
   }
@@ -86,15 +86,15 @@ FILE *fopen(const char *path, const char *mode) {
   if (ret != NULL) {
     Tau_iowrap_registerEvents(fileno(ret), path);
   }
-  TAU_PROFILE_STOP(t); 
+  TAU_PROFILE_STOP(t);
   TAU_IOWRAPPER_WRITE_FILE_METADATA_FOPEN(mode, path)
 
-  TAU_VERBOSE ("* fopen called on %s\n", path); 
-  return ret; 
+  TAU_VERBOSE ("* fopen called on %s\n", path);
+  return ret;
 }
 
 /*********************************************************************
- * fopen64 
+ * fopen64
  ********************************************************************/
 FILE *fopen64(const char *path, const char *mode) {
   static FILE* (*_fopen64)(const char *path, const char *mode) = NULL;
@@ -102,7 +102,7 @@ FILE *fopen64(const char *path, const char *mode) {
   if (_fopen64 == NULL) {
     _fopen64 = ( FILE* (*)(const char *path, const char *mode)) dlsym(RTLD_NEXT, "fopen64");
   }
-  
+
   if (Tau_iowrap_checkPassThrough()) {
     return _fopen64(path, mode);
   }
@@ -119,16 +119,16 @@ FILE *fopen64(const char *path, const char *mode) {
   if (ret != NULL) {
     Tau_iowrap_registerEvents(fileno(ret), path);
   }
-  TAU_PROFILE_STOP(t); 
+  TAU_PROFILE_STOP(t);
   TAU_IOWRAPPER_WRITE_FILE_METADATA_FOPEN(mode, path)
 
-  TAU_VERBOSE ("* fopen64 called on %s\n", path); 
-  return ret; 
+  TAU_VERBOSE ("* fopen64 called on %s\n", path);
+  return ret;
 }
 
 
 /*********************************************************************
- * fdopen 
+ * fdopen
  ********************************************************************/
 FILE *fdopen(int fd, const char *mode) {
   static FILE* (*_fdopen)(int fd, const char *mode) = NULL;
@@ -136,7 +136,7 @@ FILE *fdopen(int fd, const char *mode) {
   if (_fdopen == NULL) {
     _fdopen = ( FILE* (*)(int fd, const char *mode)) dlsym(RTLD_NEXT, "fdopen");
   }
-  
+
   if (Tau_iowrap_checkPassThrough()) {
     return _fdopen(fd, mode);
   }
@@ -149,15 +149,15 @@ FILE *fdopen(int fd, const char *mode) {
   TAU_PROFILE_START(t);
 
   ret = _fdopen(fd, mode);
-  TAU_PROFILE_STOP(t); 
+  TAU_PROFILE_STOP(t);
   //TAU_IOWRAPPER_WRITE_FILE_METADATA_FOPEN(flags, pathname)
 
-  TAU_VERBOSE ("* fdopen called on %d\n", fd); 
-  return ret; 
+  TAU_VERBOSE ("* fdopen called on %d\n", fd);
+  return ret;
 }
 
 /*********************************************************************
- * freopen 
+ * freopen
  ********************************************************************/
 FILE *freopen(const char *path, const char *mode, FILE *stream) {
   static FILE* (*_freopen)(const char *path, const char *mode, FILE *stream) = NULL;
@@ -165,7 +165,7 @@ FILE *freopen(const char *path, const char *mode, FILE *stream) {
   if (_freopen == NULL) {
     _freopen = ( FILE* (*)(const char *path, const char *mode, FILE *stream)) dlsym(RTLD_NEXT, "freopen");
   }
-  
+
   if (Tau_iowrap_checkPassThrough()) {
     return _freopen(path, mode, stream);
   }
@@ -181,15 +181,15 @@ FILE *freopen(const char *path, const char *mode, FILE *stream) {
   if (ret != NULL) {
     Tau_iowrap_registerEvents(fileno(ret), path);
   }
-  TAU_PROFILE_STOP(t); 
+  TAU_PROFILE_STOP(t);
   TAU_IOWRAPPER_WRITE_FILE_METADATA_FOPEN(mode, path)
 
-  TAU_VERBOSE ("* freopen called on %s\n", path); 
-  return ret; 
+  TAU_VERBOSE ("* freopen called on %s\n", path);
+  return ret;
 }
 
 /*********************************************************************
- * fclose 
+ * fclose
  ********************************************************************/
 int fclose(FILE *fp) {
   static int (*_fclose)(FILE *fp) = NULL;
@@ -197,7 +197,7 @@ int fclose(FILE *fp) {
   if (_fclose == NULL) {
     _fclose = ( int (*)(FILE *fp)) dlsym(RTLD_NEXT, "fclose");
   }
-  
+
   int fd = fileno(fp);
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -210,10 +210,10 @@ int fclose(FILE *fp) {
 
   Tau_iowrap_unregisterEvents (fd);
   ret = _fclose(fp);
-  TAU_PROFILE_STOP(t); 
+  TAU_PROFILE_STOP(t);
 
-  TAU_VERBOSE ("* fclose(%d) called\n", fd); 
-  return ret; 
+  TAU_VERBOSE ("* fclose(%d) called\n", fd);
+  return ret;
 }
 
 
@@ -229,7 +229,7 @@ int fprintf(FILE *stream, const char *format, ...) {
   if (_fprintf == NULL) {
     _fprintf = ( int (*)(FILE *stream, const char *format, ...)) dlsym(RTLD_NEXT, "fprintf");
   }
-  
+
   if (Tau_iowrap_checkPassThrough()) {
     va_start (arg, format);
     ret = vfprintf(stream, format, arg);
@@ -254,7 +254,7 @@ int fprintf(FILE *stream, const char *format, ...) {
   va_start (arg, format);
   ret = vfprintf(stream, format, arg);
   va_end (arg);
-  
+
   gettimeofday(&t2, 0);
 
   int count = ret;
@@ -282,7 +282,7 @@ int fprintf(FILE *stream, const char *format, ...) {
 }
 
 /*********************************************************************
- * fscanf 
+ * fscanf
  ********************************************************************/
 int fscanf(FILE *stream, const char *format, ...) {
   va_list arg;
@@ -292,7 +292,7 @@ int fscanf(FILE *stream, const char *format, ...) {
   if (_fscanf == NULL) {
     _fscanf = ( int (*)(FILE *stream, const char *format, ...)) dlsym(RTLD_NEXT, "fscanf");
   }
-  
+
   if (Tau_iowrap_checkPassThrough()) {
     va_start (arg, format);
     ret = vfscanf(stream, format, arg);
@@ -315,7 +315,7 @@ int fscanf(FILE *stream, const char *format, ...) {
   va_start (arg, format);
   ret = vfscanf(stream, format, arg);
   va_end (arg);
-  
+
   gettimeofday(&t2, 0);
 
   int count = ret;
@@ -324,7 +324,7 @@ int fscanf(FILE *stream, const char *format, ...) {
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
   if ((currentRead > 1e-12) && (ret > 0)) {
-    bw = (double) count/currentRead; 
+    bw = (double) count/currentRead;
     TAU_CONTEXT_EVENT(rb, bw);
     TAU_CONTEXT_EVENT(global_read_bandwidth, bw);
   } else {
@@ -336,14 +336,14 @@ int fscanf(FILE *stream, const char *format, ...) {
     TAU_CONTEXT_EVENT(global_bytes_read, count);
   }
 
-  TAU_PROFILE_STOP(t); 
+  TAU_PROFILE_STOP(t);
 
-  TAU_VERBOSE ("* fscanf called\n"); 
-  return ret; 
+  TAU_VERBOSE ("* fscanf called\n");
+  return ret;
 }
 
 /*********************************************************************
- * fwrite 
+ * fwrite
  ********************************************************************/
 size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
   static size_t (*_fwrite)(const void *ptr, size_t size, size_t nmemb, FILE *stream) = NULL;
@@ -351,7 +351,7 @@ size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
   if (_fwrite == NULL) {
     _fwrite = ( size_t (*)(const void *ptr, size_t size, size_t nmemb, FILE *stream)) dlsym(RTLD_NEXT, "fwrite");
   }
-  
+
   if (Tau_iowrap_checkPassThrough()) {
     return _fwrite(ptr, size, nmemb, stream);
   }
@@ -375,7 +375,7 @@ size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
   if ((currentWrite > 1e-12) && (ret > 0)) {
-    bw = (double) count/currentWrite; 
+    bw = (double) count/currentWrite;
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
@@ -386,14 +386,14 @@ size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
     TAU_CONTEXT_EVENT(global_bytes_written, count);
   }
 
-  TAU_PROFILE_STOP(t); 
+  TAU_PROFILE_STOP(t);
 
-  TAU_VERBOSE ("* fwrite called\n"); 
-  return ret; 
+  TAU_VERBOSE ("* fwrite called\n");
+  return ret;
 }
 
 /*********************************************************************
- * fread 
+ * fread
  ********************************************************************/
 size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   static size_t (*_fread)(void *ptr, size_t size, size_t nmemb, FILE *stream) = NULL;
@@ -401,7 +401,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   if (_fread == NULL) {
     _fread = ( size_t (*)(void *ptr, size_t size, size_t nmemb, FILE *stream)) dlsym(RTLD_NEXT, "fread");
   }
-  
+
   if (Tau_iowrap_checkPassThrough()) {
     return _fread(ptr, size, nmemb, stream);
   }
@@ -437,7 +437,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   TAU_PROFILE_STOP(t);
 
   TAU_VERBOSE ("* TAU: read : %d bytes\n", ret);
-  return ret; 
+  return ret;
 }
 
 /*********************************************************************
@@ -450,7 +450,7 @@ int fcntl(int fd, int cmd, ...) {
   static int (*_fcntl)(int fd, int cmd, ...) = NULL;
   int ret;
   if (_fcntl == NULL) {
-    _fcntl = ( int (*)(int fd, int cmd, ...)) dlsym(RTLD_NEXT, "fcntl");   
+    _fcntl = ( int (*)(int fd, int cmd, ...)) dlsym(RTLD_NEXT, "fcntl");
   }
 
   switch (cmd) {
@@ -475,7 +475,7 @@ int fcntl(int fd, int cmd, ...) {
       ret = _fcntl(fd, cmd, arg);
       break;
   }
-  
+
   switch (cmd) {
     case F_DUPFD :
       Tau_iowrap_checkInit();
@@ -502,7 +502,7 @@ off_t lseek(int fd, off_t offset, int whence) {
 
   Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "lseek()", " ", TAU_IO);
-  TAU_PROFILE_START(t); 
+  TAU_PROFILE_START(t);
   ret = _lseek(fd, offset, whence);
   TAU_PROFILE_STOP(t);
 
@@ -538,7 +538,7 @@ off64_t lseek64(int fd, off64_t offset, int whence) {
 }
 
 /*********************************************************************
- * fseek 
+ * fseek
  ********************************************************************/
 int fseek(FILE *stream, long offset, int whence) {
   static int (*_fseek)(FILE *stream, long offset, int whence) = NULL;
@@ -546,7 +546,7 @@ int fseek(FILE *stream, long offset, int whence) {
   if (_fseek == NULL) {
     _fseek = ( int (*)(FILE *stream, long offset, int whence)) dlsym(RTLD_NEXT, "fseek");
   }
-  
+
   if (Tau_iowrap_checkPassThrough()) {
     return _fseek(stream, offset, whence);
   }
@@ -556,21 +556,21 @@ int fseek(FILE *stream, long offset, int whence) {
   TAU_PROFILE_START(t);
 
   ret = _fseek(stream, offset, whence);
-  TAU_PROFILE_STOP(t); 
+  TAU_PROFILE_STOP(t);
 
-  TAU_VERBOSE ("* fseek called\n"); 
-  return ret; 
+  TAU_VERBOSE ("* fseek called\n");
+  return ret;
 }
 
 /*********************************************************************
- * rewind 
+ * rewind
  ********************************************************************/
 void rewind(FILE *stream) {
   static void (*_rewind)(FILE *stream) = NULL;
   if (_rewind == NULL) {
     _rewind = ( void (*)(FILE *stream)) dlsym(RTLD_NEXT, "rewind");
   }
-  
+
   if (Tau_iowrap_checkPassThrough()) {
     _rewind(stream);
     return;
@@ -580,9 +580,9 @@ void rewind(FILE *stream) {
   TAU_PROFILE_TIMER(t, "rewind()", " ", TAU_IO);
   TAU_PROFILE_START(t);
   _rewind(stream);
-  TAU_PROFILE_STOP(t); 
+  TAU_PROFILE_STOP(t);
 
-  TAU_VERBOSE ("* rewind called\n"); 
+  TAU_VERBOSE ("* rewind called\n");
   return;
 }
 
@@ -629,7 +629,7 @@ ssize_t write (int fd, const void *buf, size_t count) {
     TAU_CONTEXT_EVENT(byteswritten, ret);
     TAU_CONTEXT_EVENT(global_bytes_written, ret);
   }
- 
+
   TAU_PROFILE_STOP(t);
 
   TAU_VERBOSE ("* TAU: write : %d bytes, bandwidth %g \n", ret, bw);
@@ -639,11 +639,11 @@ ssize_t write (int fd, const void *buf, size_t count) {
 
 
 /*********************************************************************
- * read 
+ * read
  ********************************************************************/
 ssize_t read (int fd, void *buf, size_t count) {
   static ssize_t (*_read)(int fd, void *buf, size_t count) = NULL;
-  ssize_t ret; 
+  ssize_t ret;
 
   if (_read == NULL) {
     _read = ( ssize_t (*)(int fd, void *buf, size_t count)) dlsym(RTLD_NEXT, "read");
@@ -689,11 +689,11 @@ ssize_t read (int fd, void *buf, size_t count) {
 
 
 /*********************************************************************
- * readv 
+ * readv
  ********************************************************************/
 ssize_t readv (int fd, const struct iovec *vec, int count) {
   static ssize_t (*_readv)(int fd, const struct iovec *vec, int count) = NULL;
-  ssize_t ret; 
+  ssize_t ret;
 
   if (_readv == NULL) {
     _readv = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "readv");
@@ -743,7 +743,7 @@ ssize_t readv (int fd, const struct iovec *vec, int count) {
 }
 
 /*********************************************************************
- * writev 
+ * writev
  ********************************************************************/
 ssize_t writev (int fd, const struct iovec *vec, int count) {
   static ssize_t (*_writev)(int fd, const struct iovec *vec, int count) = NULL;
@@ -778,7 +778,7 @@ ssize_t writev (int fd, const struct iovec *vec, int count) {
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
   if ((currentWrite > 1e-12) && (ret > 0)) {
-    bw = (double) ret/currentWrite; 
+    bw = (double) ret/currentWrite;
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
@@ -789,7 +789,7 @@ ssize_t writev (int fd, const struct iovec *vec, int count) {
     TAU_CONTEXT_EVENT(byteswritten, ret);
     TAU_CONTEXT_EVENT(global_bytes_written, ret);
   }
- 
+
   TAU_PROFILE_STOP(t);
 
   TAU_VERBOSE ("* TAU: writev(%d) : %d bytes, bandwidth %g \n", fd, ret, bw);
@@ -863,28 +863,28 @@ FILE* tmpfile () {
 
 
 /*********************************************************************
- * open 
+ * open
  ********************************************************************/
-int open (const char *pathname, int flags, ...) { 
+int open (const char *pathname, int flags, ...) {
   static int (*_open)(const char *pathname, int flags, ...)  = NULL;
   mode_t mode = 0777; // default value
   va_list args;
   int ret;
 
-  if (_open == NULL) { 
-    _open = ( int (*)(const char *pathname, int flags, ...)) dlsym(RTLD_NEXT, "open"); 
-  } 
+  if (_open == NULL) {
+    _open = ( int (*)(const char *pathname, int flags, ...)) dlsym(RTLD_NEXT, "open");
+  }
 
   if (Tau_iowrap_checkPassThrough()) {
-    /* if the file is being created, get the third argument for specifying the 
+    /* if the file is being created, get the third argument for specifying the
        mode (e.g., 0644) */
-    if (flags & O_CREAT) { 
+    if (flags & O_CREAT) {
       va_start(args, flags);
       mode = va_arg(args, int);
-      va_end(args); 
+      va_end(args);
     }
-    
-    ret = _open(pathname, flags, mode); 
+
+    ret = _open(pathname, flags, mode);
     return ret;
   }
 
@@ -895,48 +895,48 @@ int open (const char *pathname, int flags, ...) {
   TAU_PROFILE_TIMER(t, "open()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
-  /* if the file is being created, get the third argument for specifying the 
+  /* if the file is being created, get the third argument for specifying the
      mode (e.g., 0644) */
-  if (flags & O_CREAT) { 
+  if (flags & O_CREAT) {
     va_start(args, flags);
     mode = va_arg(args, int);
-    va_end(args); 
+    va_end(args);
   }
 
-  ret = _open(pathname, flags, mode); 
+  ret = _open(pathname, flags, mode);
   if (ret != -1) {
     Tau_iowrap_registerEvents(ret, pathname);
   }
-  TAU_PROFILE_STOP(t); 
+  TAU_PROFILE_STOP(t);
   TAU_IOWRAPPER_WRITE_FILE_METADATA(flags, pathname)
 
-  TAU_VERBOSE ("* open called on %s\n", pathname); 
-    
-  return ret; 
-} 
+  TAU_VERBOSE ("* open called on %s\n", pathname);
+
+  return ret;
+}
 
 /*********************************************************************
- * open64 
+ * open64
  ********************************************************************/
-int open64 (const char *pathname, int flags, ...) { 
+int open64 (const char *pathname, int flags, ...) {
   static int (*_open64)(const char *pathname, int flags, ...)  = NULL;
   mode_t mode = 0777; // default value
   va_list args;
   int ret;
 
-  if (_open64 == NULL) { 
-     _open64 = ( int (*)(const char *pathname, int flags, ...)) dlsym(RTLD_NEXT, "open64"); 
-  } 
+  if (_open64 == NULL) {
+     _open64 = ( int (*)(const char *pathname, int flags, ...)) dlsym(RTLD_NEXT, "open64");
+  }
 
   if (Tau_iowrap_checkPassThrough()) {
-    /* if the file is being created, get the third argument for specifying the 
+    /* if the file is being created, get the third argument for specifying the
        mode (e.g., 0644) */
-    if (flags & O_CREAT) { 
+    if (flags & O_CREAT) {
       va_start(args, flags);
       mode = va_arg(args, int);
-      va_end(args); 
+      va_end(args);
     }
-    ret = _open64(pathname, flags, mode); 
+    ret = _open64(pathname, flags, mode);
     return ret;
   }
 
@@ -947,25 +947,25 @@ int open64 (const char *pathname, int flags, ...) {
   TAU_PROFILE_TIMER(t, "open64()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
-  if (flags & O_CREAT) { 
+  if (flags & O_CREAT) {
     va_start(args, flags);
     mode = va_arg(args, int);
-    va_end(args); 
+    va_end(args);
   }
 
-  ret = _open64(pathname, flags, mode); 
+  ret = _open64(pathname, flags, mode);
   if (ret != -1) {
     Tau_iowrap_registerEvents(ret, pathname);
   }
-  TAU_PROFILE_STOP(t); 
+  TAU_PROFILE_STOP(t);
   TAU_IOWRAPPER_WRITE_FILE_METADATA(flags, pathname)
-  TAU_VERBOSE ("* open64 called on %s\n", pathname); 
-    
-  return ret; 
-} 
+  TAU_VERBOSE ("* open64 called on %s\n", pathname);
+
+  return ret;
+}
 
 /*********************************************************************
- * creat 
+ * creat
  ********************************************************************/
 int creat(const char *pathname, mode_t mode) {
   static int (*_creat)(const char *pathname, mode_t mode) = NULL;
@@ -998,7 +998,7 @@ int creat(const char *pathname, mode_t mode) {
 }
 
 /*********************************************************************
- * creat64 
+ * creat64
  ********************************************************************/
 int creat64(const char *pathname, mode_t mode) {
   static int (*_creat64)(const char *pathname, mode_t mode) = NULL;
@@ -1032,11 +1032,11 @@ int creat64(const char *pathname, mode_t mode) {
 
 
 /*********************************************************************
- * close 
+ * close
  ********************************************************************/
 int close(int fd) {
   static int (*_close) (int fd) = NULL;
-  int ret; 
+  int ret;
 
   if (_close == NULL) {
     _close = (int (*) (int fd) ) dlsym(RTLD_NEXT, "close");
@@ -1053,7 +1053,7 @@ int close(int fd) {
   Tau_iowrap_unregisterEvents(fd);
   ret = _close(fd);
 
-  TAU_PROFILE_STOP(t); 
+  TAU_PROFILE_STOP(t);
 
   TAU_VERBOSE ("* close called on %d\n", fd);
   return ret;
@@ -1061,7 +1061,7 @@ int close(int fd) {
 
 
 /*********************************************************************
- * pipe 
+ * pipe
  ********************************************************************/
 int pipe(int filedes[2]) {
   static int (*_pipe) (int filedes[2]) = NULL;
@@ -1095,20 +1095,20 @@ int pipe(int filedes[2]) {
 
 
 /*********************************************************************
- * Tau_get_socketname returns the name of the socket (AF_INET/AF_UNIX) 
+ * Tau_get_socketname returns the name of the socket (AF_INET/AF_UNIX)
  ********************************************************************/
 char * Tau_get_socket_name(const struct sockaddr *sa, char *s, size_t len) {
   int i;
   Tau_iowrap_checkInit();
   char addr[256];
   switch (sa->sa_family) {
-    case AF_INET: 
+    case AF_INET:
       inet_ntop(AF_INET, &(((struct sockaddr_in *) sa)->sin_addr), addr, len);
       sprintf(s,"%s,port=%d",addr,ntohs((((struct sockaddr_in *)sa)->sin_port)));
       break;
-    case AF_INET6: 
+    case AF_INET6:
       inet_ntop(AF_INET6, &(((struct sockaddr_in6 *) sa)->sin6_addr), addr, len);
-      for (i = 0; i < strlen(addr); i++) { 
+      for (i = 0; i < strlen(addr); i++) {
         if (addr[i] == ':' ) addr[i] = '.';
       }
       sprintf(s,"%s,port=%d",addr,ntohs((((struct sockaddr_in6 *)sa)->sin6_port)));
@@ -1124,7 +1124,7 @@ char * Tau_get_socket_name(const struct sockaddr *sa, char *s, size_t len) {
 }
 
 /*********************************************************************
- * socket 
+ * socket
  ********************************************************************/
 int socket(int domain, int type, int protocol) {
   static int (*_socket) (int domain, int type, int protocol) = NULL;
@@ -1156,7 +1156,7 @@ int socket(int domain, int type, int protocol) {
 }
 
 /*********************************************************************
- * socketpair 
+ * socketpair
  ********************************************************************/
 int socketpair(int d, int type, int protocol, int sv[2]) {
   static int (*_socketpair) (int d, int type, int protocol, int sv[2]) = NULL;
@@ -1190,7 +1190,7 @@ int socketpair(int d, int type, int protocol, int sv[2]) {
 
 #if (!(defined(TAU_BGP) || defined(TAU_XLC)))
 /*********************************************************************
- * bind 
+ * bind
  ********************************************************************/
 int bind(int socket, const struct sockaddr *address, socklen_t address_len) {
   static int (*_bind) (int socket, const struct sockaddr *address, socklen_t address_len) = NULL;
@@ -1290,7 +1290,7 @@ int connect(int socket, const struct sockaddr *address, socklen_t address_len) {
  ********************************************************************/
 ssize_t recv (int fd, void *buf, size_t count, int flags) {
   static ssize_t (*_recv)(int fd, void *buf, size_t count, int flags) = NULL;
-  ssize_t ret; 
+  ssize_t ret;
 
   if (_recv == NULL) {
     _recv = ( ssize_t (*)(int fd, void *buf, size_t count, int flags)) dlsym(RTLD_NEXT, "recv");
@@ -1340,7 +1340,7 @@ ssize_t recv (int fd, void *buf, size_t count, int flags) {
 
 ssize_t send (int fd, const void *buf, size_t count, int flags) {
   static ssize_t (*_send)(int fd, const void *buf, size_t count, int flags) = NULL;
-  ssize_t ret; 
+  ssize_t ret;
 
   if (_send == NULL) {
     _send = ( ssize_t (*)(int fd, const void *buf, size_t count, int flags)) dlsym(RTLD_NEXT, "send");
@@ -1391,7 +1391,7 @@ ssize_t send (int fd, const void *buf, size_t count, int flags) {
 
 ssize_t sendto (int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len) {
   static ssize_t (*_sendto)(int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len) = NULL;
-  ssize_t ret; 
+  ssize_t ret;
 
   if (_sendto == NULL) {
     _sendto = ( ssize_t (*)(int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len)) dlsym(RTLD_NEXT, "sendto");
@@ -1443,7 +1443,7 @@ ssize_t sendto (int fd, const void *buf, size_t count, int flags, const struct s
 
 ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct sockaddr *from, socklen_t *len) {
   static ssize_t (*_recvfrom)(int fd, void *buf, size_t count, int flags, struct sockaddr *from, socklen_t * len) = NULL;
-  ssize_t ret; 
+  ssize_t ret;
 
   if (_recvfrom == NULL) {
     _recvfrom = ( ssize_t (*)(int fd, void *buf, size_t count, int flags, struct sockaddr * from, socklen_t * len)) dlsym(RTLD_NEXT, "recvfrom");
@@ -1497,7 +1497,7 @@ int dup(int oldfd) {
   int fd;
 
   if (_dup == NULL) {
-    _dup = ( int(*)(int fd)) dlsym(RTLD_NEXT, "dup");   
+    _dup = ( int(*)(int fd)) dlsym(RTLD_NEXT, "dup");
   }
 
   fd = _dup(oldfd);
@@ -1516,7 +1516,7 @@ int dup2(int oldfd, int newfd) {
   static int (*_dup2)(int oldfd, int newfd) = NULL;
 
   if (_dup2 == NULL) {
-    _dup2 = ( int(*)(int fd, int newfd)) dlsym(RTLD_NEXT, "dup2");   
+    _dup2 = ( int(*)(int fd, int newfd)) dlsym(RTLD_NEXT, "dup2");
   }
 
   newfd = _dup2(oldfd, newfd);
@@ -1540,7 +1540,7 @@ FILE * popen (const char *command, const char *type) {
   }
 
   if (Tau_iowrap_checkPassThrough()) {
-    return _popen(command, type);   
+    return _popen(command, type);
   }
 
   Tau_iowrap_checkInit();
@@ -1771,11 +1771,11 @@ void exit(int status) {
   static void (*_internal_exit) (int status) = NULL;
 
   int ret;
-  TAU_VERBOSE("TAU: Inside tau_wrap.c: exit(): status = %d\n", status);
+  TAU_VERBOSE("TAU: Inside %s: %s: status = %d\n", __FILE__, __func__, status);
 
   TAU_PROFILE_EXIT("EXITING from TAU...");
 
-  
+
   if (_internal_exit == NULL) {
     _internal_exit = (void (*) (int status)) dlsym(RTLD_NEXT, "exit");
   }

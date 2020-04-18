@@ -14,7 +14,7 @@
  ***************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 
 
@@ -40,7 +40,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 // strings for OpenACC parent constructs; based on enum acc_construct_t
-char* acc_constructs[] = {
+const char* acc_constructs[] = {
 	"parallel",
 	"kernels",
 	"loop",
@@ -70,7 +70,7 @@ Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info
 	int start = -1; // 0 = stop timer, 1 = start timer, -1 = something else; trigger event
 
 	switch(prof_info->event_type) {
-		// note: these don't correspond to when kernels are actually run, just when they're put in the 
+		// note: these don't correspond to when kernels are actually run, just when they're put in the
 		// execution queue on the device
 		case acc_ev_enqueue_launch_start:
 			start = 1;
@@ -86,7 +86,7 @@ Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info
 	}
 
 	// if this is an end event, short circuit by grabbing the FunctionInfo pointer out of tool_info
-	// and stopping that timer; if the pointer is NULL something bad happened, print warning and kill 
+	// and stopping that timer; if the pointer is NULL something bad happened, print warning and kill
 	// whatever timer is on top of the stack
 	if (start == 0) {
 		if (launch_event->tool_info == NULL) {
@@ -99,13 +99,13 @@ Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info
 		return;
 	}
 
-	sprintf(file_name, "%s:%s-%s", 
-			prof_info->src_file, 
+	sprintf(file_name, "%s:%s-%s",
+			prof_info->src_file,
 			(prof_info->line_no > 0) ? std::to_string(prof_info->line_no).c_str() : "?",
 			(prof_info->end_line_no > 0) ? std::to_string(prof_info->end_line_no).c_str() : "?");
 
-	
-	sprintf(event_data, " kernel name = %s %s; parent construct = %s ; gangs=%zu, workers=%zu, vector lanes=%zu (%s)", 
+
+	sprintf(event_data, " kernel name = %s %s; parent construct = %s ; gangs=%zu, workers=%zu, vector lanes=%zu (%s)",
 	//                             name ^  ^ (implicit?)                                       file and line no. ^
 			(launch_event->kernel_name) ? launch_event->kernel_name : "unknown kernel",
 			(launch_event->implicit) ? "(implicit)" : "",
@@ -123,12 +123,34 @@ Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info
 	if (start == 1) {
 		void* func_info = Tau_get_function_info(event_name, "", TAU_USER, "TAU_OPENACC");
 		launch_event->tool_info = func_info;
-		Tau_lite_start_timer(func_info, 0); 
+		Tau_lite_start_timer(func_info, 0);
 	}
 	else {
 		TAU_TRIGGER_EVENT(&event_name[0], 0);
 	}
 }
+
+extern void Tau_pure_start_task_string(const std::string name, int tid);
+static std::string acc_ev_enqueue_upload_str("OpenACC enqueue data transfer (HtoD)");
+static std::string acc_ev_enqueue_download_str("OpenACC enqueue data transfer (DtoH)");
+
+extern "C" static void
+Tau_openacc_data_callback_signal_safe( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info )
+{
+	switch(prof_info->event_type) {
+		case acc_ev_enqueue_upload_start:
+            Tau_pure_start_task_string(acc_ev_enqueue_upload_str, Tau_get_thread());
+			break;
+		case acc_ev_enqueue_download_start:
+            Tau_pure_start_task_string(acc_ev_enqueue_download_str, Tau_get_thread());
+			break;
+		default:
+			Tau_global_stop();
+			break;
+	}
+}
+
+#if 0
 
 extern "C" static void
 Tau_openacc_data_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info )
@@ -159,7 +181,7 @@ Tau_openacc_data_callback( acc_prof_info* prof_info, acc_event_info* event_info,
 			sprintf(event_name, "OpenACC device data create");
 			break;
 		case acc_ev_delete:
-			start = -1; 
+			start = -1;
 			sprintf(event_name, "OpenACC device data delete");
 			break;
 		case acc_ev_alloc:
@@ -177,7 +199,7 @@ Tau_openacc_data_callback( acc_prof_info* prof_info, acc_event_info* event_info,
 	}
 
 	// if this is an end event, short circuit by grabbing the FunctionInfo pointer out of tool_info
-	// and stopping that timer; if the pointer is NULL something bad happened, print warning and kill 
+	// and stopping that timer; if the pointer is NULL something bad happened, print warning and kill
 	// whatever timer is on top of the stack
 	if (start == 0) {
 		if (data_event->tool_info == NULL) {
@@ -190,12 +212,12 @@ Tau_openacc_data_callback( acc_prof_info* prof_info, acc_event_info* event_info,
 		return;
 	}
 
-	sprintf(file_name, "%s:%s-%s", 
-			prof_info->src_file, 
+	sprintf(file_name, "%s:%s-%s",
+			prof_info->src_file,
 			(prof_info->line_no > 0) ? std::to_string(prof_info->line_no).c_str() : "?",
 			(prof_info->end_line_no > 0) ? std::to_string(prof_info->end_line_no).c_str() : "?");
 
-	sprintf(event_data, " ; variable name = %s %s; parent construct = %s (%s)", 
+	sprintf(event_data, " ; variable name = %s %s; parent construct = %s (%s)",
 	//                               name ^  ^ (implicit move?)         ^ file and line no.
 			(data_event->var_name) ? data_event->var_name : "unknown variable",
 			(data_event->implicit) ? "(implicit move)" : "",
@@ -209,13 +231,15 @@ Tau_openacc_data_callback( acc_prof_info* prof_info, acc_event_info* event_info,
 	if (start == 1) {
 		void* func_info = Tau_get_function_info(event_name, "", TAU_USER, "TAU_OPENACC");
 		data_event->tool_info = func_info;
-		Tau_lite_start_timer(func_info, 0); 
+		Tau_lite_start_timer(func_info, 0);
 		TAU_TRIGGER_EVENT(&event_name[0], data_event->bytes);
 	}
 	else {
 		TAU_TRIGGER_EVENT(&event_name[0], data_event->bytes);
 	}
 }
+
+#endif
 
 extern "C" static void
 Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info )
@@ -285,9 +309,9 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 			sprintf(event_name, "UNKNOWN OPENACC OTHER EVENT");
 			fprintf(stderr, "ERROR: Unknown other event passed to OpenACC other event callback.");
 	}
-	
+
 	// if this is an end event, short circuit by grabbing the FunctionInfo pointer out of tool_info
-	// and stopping that timer; if the pointer is NULL something bad happened, print warning and kill 
+	// and stopping that timer; if the pointer is NULL something bad happened, print warning and kill
 	// whatever timer is on top of the stack
 	if (start == 0) {
 		if (other_event->tool_info == NULL) {
@@ -300,12 +324,12 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 		return;
 	}
 
-	sprintf(file_name, "%s:%s-%s", 
-			prof_info->src_file, 
+	sprintf(file_name, "%s:%s-%s",
+			prof_info->src_file,
 			(prof_info->line_no > 0) ? std::to_string(prof_info->line_no).c_str() : "?",
 			(prof_info->end_line_no > 0) ? std::to_string(prof_info->end_line_no).c_str() : "?");
-	
-	sprintf(event_data, " %s; parent construct = %s (%s)", 
+
+	sprintf(event_data, " %s; parent construct = %s (%s)",
 	//                      ^ (implicit?)              ^ file and line no.
 			(other_event->implicit) ? "(implicit)" : "",
 			(other_event->parent_construct < 9999) ? acc_constructs[other_event->parent_construct] : "unknown construct",
@@ -324,7 +348,7 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 	if (start == 1) {
 		void* func_info = Tau_get_function_info(event_name, "", TAU_USER, "TAU_OPENACC");
 		other_event->tool_info = func_info;
-		Tau_lite_start_timer(func_info, 0); 
+		Tau_lite_start_timer(func_info, 0);
 	}
 	else {
 		TAU_TRIGGER_EVENT(&event_name[0], 0);
@@ -352,7 +376,7 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
 
 
 //array enumerating CUpti_OpenAccEventKind strings
-char* openacc_event_names[] = {
+const char* openacc_event_names[] = {
 		"CUPTI_OPENACC_EVENT_KIND_INVALD",
 		"CUPTI_OPENACC_EVENT_KIND_DEVICE_INIT",
 		"CUPTI_OPENACC_EVENT_KIND_DEVICE_SHUTDOWN",
@@ -378,7 +402,7 @@ static void
 printActivity(CUpti_Activity *record)
 {
 	GpuEventAttributes* map;
-	int map_size;                                              
+	int map_size;
   switch (record->kind) {
         case CUPTI_ACTIVITY_KIND_OPENACC_DATA:
 				{
@@ -396,7 +420,7 @@ printActivity(CUpti_Activity *record)
 					map[0].userEvent = bytes;
 					map[0].data = oacc_data->bytes;
 					break;
-				}                                        
+				}
         case CUPTI_ACTIVITY_KIND_OPENACC_LAUNCH:
 				{
 					CUpti_ActivityOpenAccLaunch *oacc_launch = (CUpti_ActivityOpenAccLaunch*) record;
@@ -426,7 +450,7 @@ printActivity(CUpti_Activity *record)
 					break;
 				}
         case CUPTI_ACTIVITY_KIND_OPENACC_OTHER:
-        {                                                                                    
+        {
 					CUpti_ActivityOpenAccData *oacc_other = (CUpti_ActivityOpenAccData*) record;
 					if (oacc_other->deviceType != acc_device_nvidia) {
             printf("Error: OpenACC device type is %u, not %u (acc_device_nvidia)\n", oacc_other->deviceType, acc_device_nvidia);
@@ -461,7 +485,7 @@ printActivity(CUpti_Activity *record)
 
 	//TODO: could do better but this'll do for now
 	const char* name = openacc_event_names[oacc->eventKind];
-	
+
 	Tau_openacc_register_gpu_event(name, device, stream, context, task, corr_id, map, map_size, start/1e3, end/1e3);
 
 	openacc_records++;
@@ -527,16 +551,20 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
     reg( acc_ev_enqueue_launch_start,      Tau_openacc_launch_callback, acc_reg );
     reg( acc_ev_enqueue_launch_end,        Tau_openacc_launch_callback, acc_reg );
 
+/* The data events aren't signal safe, for some reason.  So, that means we can't
+ * allocate any memory, which limits what we can do.  For that reason, we only
+ * handle some events, and with static timer names. */
 		// Data events
-    reg( acc_ev_enqueue_upload_start,      Tau_openacc_data_callback, acc_reg );
-    reg( acc_ev_enqueue_upload_end,        Tau_openacc_data_callback, acc_reg );
-    reg( acc_ev_enqueue_download_start,    Tau_openacc_data_callback, acc_reg );
-    reg( acc_ev_enqueue_download_end,      Tau_openacc_data_callback, acc_reg );
+    reg( acc_ev_enqueue_upload_start,      Tau_openacc_data_callback_signal_safe, acc_reg );
+    reg( acc_ev_enqueue_upload_end,        Tau_openacc_data_callback_signal_safe, acc_reg );
+    reg( acc_ev_enqueue_download_start,    Tau_openacc_data_callback_signal_safe, acc_reg );
+    reg( acc_ev_enqueue_download_end,      Tau_openacc_data_callback_signal_safe, acc_reg );
+#if 0
     reg( acc_ev_create,                    Tau_openacc_data_callback, acc_reg );
     reg( acc_ev_delete,                    Tau_openacc_data_callback, acc_reg );
     reg( acc_ev_alloc,                     Tau_openacc_data_callback, acc_reg );
     reg( acc_ev_free,                      Tau_openacc_data_callback, acc_reg );
-    
+#endif
 		// Other events
 		reg( acc_ev_device_init_start,         Tau_openacc_other_callback, acc_reg );
     reg( acc_ev_device_init_end,           Tau_openacc_other_callback, acc_reg );
@@ -580,5 +608,5 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
 #endif
     atexit(finalize);
 
-} // acc_register_library 
+} // acc_register_library
 
