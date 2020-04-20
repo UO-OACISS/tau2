@@ -80,7 +80,7 @@ extern "C" {
 bool PapiLayer::papiInitialized = false;
 double PapiLayer::scalingFactor = 0.0;
 ThreadValue * PapiLayer::ThreadList[TAU_MAX_THREADS] = { 0 };
-//vector<ThreadValue *> PapiLayer::ThreadList;//[TAU_MAX_THREADS] = { 0 };
+//vector<ThreadValue *> PapiLayer::ThreadList;//TODO: Change ThreadList to a vector
 int PapiLayer::numCounters = 0;
 int PapiLayer::counterList[MAX_PAPI_COUNTERS];
 
@@ -120,14 +120,6 @@ static int Tau_initialize_papi_library(void)
   }
   return err;
 }
-
-void PapiLayer::setThreadValue(int tid, ThreadValue* tv){
-	ThreadList[tid]=tv;
-}
-
-ThreadValue* PapiLayer::getThreadValue(int tid){
-  return ThreadList[tid];
-} 
 
 // Some versions of PAPI don't have these defined
 // so we'll define them to 0 and if the user tries to use them
@@ -308,16 +300,15 @@ int PapiLayer::initializeThread(int tid)
     return -1;
   }
   
-  if (!getThreadValue(tid)){//!ThreadList[tid]) {
+  if (!getThreadValue(tid)){
     RtsLayer::LockDB();
-    if (!getThreadValue(tid)){//!ThreadList[tid]) {
+    if (!getThreadValue(tid)){
       dmesg(1, "TAU: PAPI: Initializing Thread Data for TID = %d\n", tid);
 
       /* Task API does not have a real thread associated with it. It is fake */
       if (Tau_is_thread_fake(tid) == 1) tid = 0;
       ThreadValue* localThreadValue = new ThreadValue;
       setThreadValue(tid,localThreadValue);
-      //ThreadList[tid] = new ThreadValue;
       localThreadValue->ThreadID = tid;
       localThreadValue->CounterValues = new long long[MAX_PAPI_COUNTERS];
       memset(localThreadValue->CounterValues, 0, MAX_PAPI_COUNTERS*sizeof(long long));
@@ -711,16 +702,15 @@ int PapiLayer::initializeAndCheckRAPL(int tid) {
   if (!papiInitialized)
     initializePapiLayer();
 
-  if (!getThreadValue(tid)) { //ThreadList[tid]) {
+  if (!getThreadValue(tid)) { 
     RtsLayer::LockDB();
-    if (!getThreadValue(tid)) { //ThreadList[tid]) {
+    if (!getThreadValue(tid)) {
       dmesg(1, "TAU: PAPI: Initializing Thread Data for TID = %d\n", tid);
 
       /* Task API does not have a real thread associated with it. It is fake */
       if (Tau_is_thread_fake(tid) == 1) tid = 0;
       ThreadValue* localThreadValue = new ThreadValue;
       setThreadValue(tid,localThreadValue);
-      //ThreadList[tid] = new ThreadValue;
       localThreadValue->ThreadID = tid;
       localThreadValue->CounterValues = new long long[MAX_PAPI_COUNTERS];
       memset(localThreadValue->CounterValues, 0, MAX_PAPI_COUNTERS*sizeof(long long));

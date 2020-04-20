@@ -43,10 +43,16 @@ public:
   static int addCounter(char *name);
   static void setPapiInitialized(bool value); 
   static void triggerRAPLPowerEvents(bool in_signal_handler);
-  static void setThreadValue(int tid, ThreadValue* tv);
-  static ThreadValue* getThreadValue(int tid); 
   static int numCounters;
   static int counterList[TAU_MAX_COUNTERS];
+  inline static void setThreadValue(int tid, ThreadValue* tv){
+        ThreadList[tid]=tv;
+  }
+
+  inline static ThreadValue* getThreadValue(int tid){
+        return ThreadList[tid];
+  }   
+
 private:
   static int initializeSingleCounter();
   static int initializeThread(int tid);
