@@ -12,7 +12,7 @@
 **	Contact		: tau-team@cs.uoregon.edu 		 	   **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
 ****************************************************************************/
-
+//#include <vector>
 #ifndef _PAPI_LAYER_H_
 #define _PAPI_LAYER_H_
 
@@ -43,7 +43,8 @@ public:
   static int addCounter(char *name);
   static void setPapiInitialized(bool value); 
   static void triggerRAPLPowerEvents(bool in_signal_handler);
-  static ThreadValue *ThreadList[TAU_MAX_THREADS];
+  static void setThreadValue(int tid, ThreadValue* tv);
+  static ThreadValue* getThreadValue(int tid); 
   static int numCounters;
   static int counterList[TAU_MAX_COUNTERS];
 private:
@@ -56,6 +57,8 @@ private:
   static void checkDomain(int domain, char* domainstr);
   static bool papiInitialized;
   static double scalingFactor;
+  static ThreadValue *ThreadList[TAU_MAX_THREADS];
+  //static vector<ThreadValue*> ThreadList;
 };
 
 #endif /* TAU_PAPI */

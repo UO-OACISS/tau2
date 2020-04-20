@@ -80,6 +80,7 @@ extern "C" {
 bool PapiLayer::papiInitialized = false;
 double PapiLayer::scalingFactor = 0.0;
 ThreadValue * PapiLayer::ThreadList[TAU_MAX_THREADS] = { 0 };
+//vector<ThreadValue *> PapiLayer::ThreadList;//[TAU_MAX_THREADS] = { 0 };
 int PapiLayer::numCounters = 0;
 int PapiLayer::counterList[MAX_PAPI_COUNTERS];
 
@@ -119,6 +120,14 @@ static int Tau_initialize_papi_library(void)
   }
   return err;
 }
+
+void PapiLayer::setThreadValue(int tid, ThreadValue* tv){
+	ThreadList[tid]=tv;
+}
+
+ThreadValue* PapiLayer::getThreadValue(int tid){
+  return ThreadList[tid];
+} 
 
 // Some versions of PAPI don't have these defined
 // so we'll define them to 0 and if the user tries to use them
@@ -184,31 +193,33 @@ if(  tid >= TAU_MAX_THREADS) {
     fprintf (stderr, "TAU: Exceeded max thread count of TAU_MAX_THREADS\n");
   }
 
+  ThreadValue* localThreadValue=PapiLayer::getThreadValue(tid);
   /* Check ThreadList */
-  if (PapiLayer::ThreadList[tid] == 0) {
-    PapiLayer::ThreadList[tid] = new ThreadValue;
+  if (localThreadValue == 0) {
+    localThreadValue=new ThreadValue;
+    PapiLayer::setThreadValue(tid, localThreadValue);
   }
-  PapiLayer::ThreadList[tid]->ThreadID = tid;
-  PapiLayer::ThreadList[tid]->CounterValues = new long long[MAX_PAPI_COUNTERS];
+  localThreadValue->ThreadID = tid;
+  localThreadValue->CounterValues = new long long[MAX_PAPI_COUNTERS];
   for (i = 0; i < MAX_PAPI_COUNTERS; i++) {
-    PapiLayer::ThreadList[tid]->CounterValues[i] = 0L;
+    localThreadValue->CounterValues[i] = 0L;
   }
 
   for (i = 0; i < TAU_PAPI_MAX_COMPONENTS; i++) {
-    PapiLayer::ThreadList[tid]->NumEvents[i] = 0;
-    PapiLayer::ThreadList[tid]->EventSet[i] = PAPI_NULL;
-    rc = PAPI_create_eventset(&(PapiLayer::ThreadList[tid]->EventSet[i]));
+    localThreadValue->NumEvents[i] = 0;
+    localThreadValue->EventSet[i] = PAPI_NULL;
+    rc = PAPI_create_eventset(&(localThreadValue->EventSet[i]));
     if (rc != PAPI_OK) {
       fprintf(stderr, "TAU: Error creating PAPI event set: %s\n", PAPI_strerror(rc));
       return;
     }
     if(TauEnv_get_papi_multiplexing()) {
-      rc = PAPI_assign_eventset_component( PapiLayer::ThreadList[tid]->EventSet[i], 0 );
+      rc = PAPI_assign_eventset_component( localThreadValue->EventSet[i], 0 );
       if ( PAPI_OK != rc ) {
         fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(rc));
         return;
       }
-      rc = PAPI_set_multiplex(PapiLayer::ThreadList[tid]->EventSet[i]);
+      rc = PAPI_set_multiplex(localThreadValue->EventSet[i]);
       if ( PAPI_OK != rc ) {
         fprintf(stderr, "PAPI_set_multiplex failed (%s)\n", PAPI_strerror(rc));
         return;
@@ -219,19 +230,19 @@ if(  tid >= TAU_MAX_THREADS) {
   /* PAPI 3 support goes here */
   for (i = 0; i < numCounters; i++) {
     int comp = PAPI_COMPONENT_INDEX (PapiLayer::counterList[i]);
-    rc = PAPI_add_event(PapiLayer::ThreadList[tid]->EventSet[comp], PapiLayer::counterList[i]);
+    rc = PAPI_add_event(localThreadValue->EventSet[comp], PapiLayer::counterList[i]);
     if (rc != PAPI_OK) {
       fprintf(stderr, "pid=%d, TAU: Error adding PAPI events: %s\n", RtsLayer::getPid(), PAPI_strerror(rc));
       return;
     }
 
     // this creates a mapping from 'component', and index in that component back    // to the original index, since we return just a single array of values
-    PapiLayer::ThreadList[tid]->Comp2Metric[comp][PapiLayer::ThreadList[tid]->NumEvents[comp]++] = i;
+    localThreadValue->Comp2Metric[comp][localThreadValue->NumEvents[comp]++] = i;
   }
 
   for (i = 0; i < TAU_PAPI_MAX_COMPONENTS; i++) {
-    if (PapiLayer::ThreadList[tid]->NumEvents[i] >= 1) {    // if there were active counters for this component
-      rc = PAPI_start(PapiLayer::ThreadList[tid]->EventSet[i]);
+    if (localThreadValue->NumEvents[i] >= 1) {    // if there were active counters for this component
+      rc = PAPI_start(localThreadValue->EventSet[i]);
     }
   }
 
@@ -296,36 +307,37 @@ int PapiLayer::initializeThread(int tid)
     fprintf (stderr, "TAU: Exceeded max thread count of TAU_MAX_THREADS\n");
     return -1;
   }
-
-  if (!ThreadList[tid]) {
+  
+  if (!getThreadValue(tid)){//!ThreadList[tid]) {
     RtsLayer::LockDB();
-    if (!ThreadList[tid]) {
+    if (!getThreadValue(tid)){//!ThreadList[tid]) {
       dmesg(1, "TAU: PAPI: Initializing Thread Data for TID = %d\n", tid);
 
       /* Task API does not have a real thread associated with it. It is fake */
       if (Tau_is_thread_fake(tid) == 1) tid = 0;
-
-      ThreadList[tid] = new ThreadValue;
-      ThreadList[tid]->ThreadID = tid;
-      ThreadList[tid]->CounterValues = new long long[MAX_PAPI_COUNTERS];
-      memset(ThreadList[tid]->CounterValues, 0, MAX_PAPI_COUNTERS*sizeof(long long));
+      ThreadValue* localThreadValue = new ThreadValue;
+      setThreadValue(tid,localThreadValue);
+      //ThreadList[tid] = new ThreadValue;
+      localThreadValue->ThreadID = tid;
+      localThreadValue->CounterValues = new long long[MAX_PAPI_COUNTERS];
+      memset(localThreadValue->CounterValues, 0, MAX_PAPI_COUNTERS*sizeof(long long));
       
       for (int i=0; i<TAU_PAPI_MAX_COMPONENTS; i++) {
-        ThreadList[tid]->NumEvents[i] = 0;
-        ThreadList[tid]->EventSet[i] = PAPI_NULL;
-        rc = PAPI_create_eventset(&(ThreadList[tid]->EventSet[i]));
+        localThreadValue->NumEvents[i] = 0;
+        localThreadValue->EventSet[i] = PAPI_NULL;
+        rc = PAPI_create_eventset(&(localThreadValue->EventSet[i]));
         if (rc != PAPI_OK) {
           fprintf (stderr, "TAU: Error creating PAPI event set: %s\n", PAPI_strerror(rc));
           RtsLayer::UnLockDB();
           return -1;
         }
         if(TauEnv_get_papi_multiplexing()) {
-          rc = PAPI_assign_eventset_component( ThreadList[tid]->EventSet[i], 0 );
+          rc = PAPI_assign_eventset_component( localThreadValue->EventSet[i], 0 );
           if ( PAPI_OK != rc ) {
             fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(rc));
             exit(1);
           }
-          rc = PAPI_set_multiplex(ThreadList[tid]->EventSet[i]);
+          rc = PAPI_set_multiplex(localThreadValue->EventSet[i]);
           if ( PAPI_OK != rc ) {
             fprintf(stderr, "PAPI_set_multiplex failed (%s)\n", PAPI_strerror(rc));
             return -1;
@@ -335,7 +347,7 @@ int PapiLayer::initializeThread(int tid)
 
 #ifndef PAPI_VERSION
       /* PAPI 2 support goes here */
-      rc = PAPI_add_events(&(ThreadList[tid]->EventSet[0]), counterList, numCounters);
+      rc = PAPI_add_events(&(localThreadValue->EventSet[0]), counterList, numCounters);
       if (rc != PAPI_OK) {
         fprintf (stderr, "TAU: Error adding PAPI events: %s\n", PAPI_strerror(rc));
         RtsLayer::UnLockDB();
@@ -345,7 +357,7 @@ int PapiLayer::initializeThread(int tid)
       /* PAPI 3 support goes here */
       for (int i=0; i<numCounters; i++) {
         int comp = PAPI_COMPONENT_INDEX (counterList[i]);
-        rc = PAPI_add_event(ThreadList[tid]->EventSet[comp], counterList[i]);
+        rc = PAPI_add_event(localThreadValue->EventSet[comp], counterList[i]);
         if (rc != PAPI_OK) {
           fprintf (stderr, "TAU: Error adding PAPI events: %s\n", PAPI_strerror(rc));
           RtsLayer::UnLockDB();
@@ -354,7 +366,7 @@ int PapiLayer::initializeThread(int tid)
         
         // this creates a mapping from 'component', and index in that component back
         // to the original index, since we return just a single array of values
-        ThreadList[tid]->Comp2Metric[comp][ThreadList[tid]->NumEvents[comp]++] = i;
+        localThreadValue->Comp2Metric[comp][localThreadValue->NumEvents[comp]++] = i;
       }
 
 
@@ -364,7 +376,7 @@ int PapiLayer::initializeThread(int tid)
           int comp = PAPI_COMPONENT_INDEX (tauSampEvent);
           int threshold = TauEnv_get_ebs_period();
           TAU_VERBOSE("TAU: Setting PAPI overflow handler\n");
-          rc = PAPI_overflow(ThreadList[tid]->EventSet[comp], tauSampEvent, threshold, 0, Tau_sampling_papi_overflow_handler);
+          rc = PAPI_overflow(localThreadValue->EventSet[comp], tauSampEvent, threshold, 0, Tau_sampling_papi_overflow_handler);
           if (rc != PAPI_OK) {
             fprintf (stderr, "TAU Sampling Warning: Error adding PAPI overflow handler: %s. Threshold=%d\n", PAPI_strerror(rc), threshold);
             tauSampEvent = 0; // Make sampling use itimer instead. We can disable it later.
@@ -379,8 +391,8 @@ int PapiLayer::initializeThread(int tid)
 #endif 
       
       for (int i=0; i<TAU_PAPI_MAX_COMPONENTS; i++) {
-        if (ThreadList[tid]->NumEvents[i] > 0) { // if there were active counters for this component
-          rc = PAPI_start(ThreadList[tid]->EventSet[i]);
+        if (localThreadValue->NumEvents[i] > 0) { // if there were active counters for this component
+          rc = PAPI_start(localThreadValue->EventSet[i]);
           if (rc != PAPI_OK) {
             fprintf (stderr, "pid=%d: TAU: Error calling PAPI_start: %s, tid = %d\n", RtsLayer::getPid(), PAPI_strerror(rc), tid);
             RtsLayer::UnLockDB();
@@ -392,7 +404,7 @@ int PapiLayer::initializeThread(int tid)
     RtsLayer::UnLockDB();
   } /*if (!ThreadList[tid]) */
 
-  dmesg(10, "ThreadList[%d] = %p\n", tid, ThreadList[tid]);
+  dmesg(10, "ThreadList[%d] = %p\n", tid, localThreadValue);
   return 0;
 }
 
@@ -418,52 +430,52 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
     return NULL;
   }
 
-  if (ThreadList[tid] == NULL) {
+  if (getThreadValue(tid) == NULL) {
     if(initializeThread(tid)) {
       return NULL;
     }
   }
   
   *numValues = numCounters;
-
+  ThreadValue* localThreadValue=getThreadValue(tid);
 #ifdef TAU_PAPI_DEBUG
   long long previousCounters[MAX_PAPI_COUNTERS];
   for (int i=0; i<numCounters; i++) {
-    previousCounters[i] = ThreadList[tid]->CounterValues[i];
+    previousCounters[i] = localThreadValue->CounterValues[i];
   }
 #endif
 
 #ifdef PTHREADS
   if (tid != RtsLayer::myThread() ) {
     //printf("Returning values for %d instead of %d\n", tid, RtsLayer::myThread());
-    return ThreadList[tid]->CounterValues;
+    return localThreadValue->CounterValues;
   }
 #endif /* PTHREADS */
 
   for (int comp=0; comp<TAU_PAPI_MAX_COMPONENTS; comp++) {
-    if (ThreadList[tid]->NumEvents[comp] > 0) { // if there were active counters for this component
+    if (localThreadValue->NumEvents[comp] > 0) { // if there were active counters for this component
       // read eventset for this component and reset counters
-      if (PAPI_read(ThreadList[tid]->EventSet[comp], tmpCounters) != PAPI_OK) 
+      if (PAPI_read(localThreadValue->EventSet[comp], tmpCounters) != PAPI_OK) 
         break;
-      if (PAPI_reset(ThreadList[tid]->EventSet[comp]) != PAPI_OK)
+      if (PAPI_reset(localThreadValue->EventSet[comp]) != PAPI_OK)
         break;
       // map back to original indices
-      for (int j=0; j<ThreadList[tid]->NumEvents[comp]; j++) {
-	int index = ThreadList[tid]->Comp2Metric[comp][j];
-	ThreadList[tid]->CounterValues[index] += tmpCounters[j];
-        dmesg(10, "ThreadList[%d]->CounterValues[%d] = %lld\n", tid, index, ThreadList[tid]->CounterValues[index]);
+      for (int j=0; j<localThreadValue->NumEvents[comp]; j++) {
+	int index = localThreadValue->Comp2Metric[comp][j];
+	localThreadValue->CounterValues[index] += tmpCounters[j];
+        dmesg(10, "ThreadList[%d]->CounterValues[%d] = %lld\n", tid, index, localThreadValue->CounterValues[index]);
       }
     }
   }
 
 #ifdef TAU_PAPI_DEBUG
   for (int i=0; i<numCounters; i++) {
-    long long difference = ThreadList[tid]->CounterValues[i] - previousCounters[i];
+    long long difference = localThreadValue->CounterValues[i] - previousCounters[i];
     dmesg(10, "TAU: PAPI: Difference[%d] = %lld\n", i, difference);
     if (difference < 0) {
       dmesg(0, "TAU: PAPI: Counter running backwards?\n");
       dmesg(0, "TAU: PAPI: Previous value[%d] = %lld\n", i, previousCounters[i]);
-      dmesg(0, "TAU: PAPI: Current  value[%d] = %lld\n", i, ThreadList[tid]->CounterValues[i]);
+      dmesg(0, "TAU: PAPI: Current  value[%d] = %lld\n", i, localThreadValue->CounterValues[i]);
       dmesg(0, "TAU: PAPI: Difference    [%d] = %lld\n", i, difference);
     }
   }
@@ -474,7 +486,7 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
     return NULL;
   }
   
-  return ThreadList[tid]->CounterValues;  
+  return localThreadValue->CounterValues;  
 }
 
 
@@ -492,11 +504,12 @@ int PapiLayer::reinitializePAPI() {
     if (papiInitialized) {
       TAU_VERBOSE("Reinitializing papi...");
       for(int i=0; i<TAU_MAX_THREADS; i++){
-        if (ThreadList[i] != NULL) {
-          delete ThreadList[i]->CounterValues;
-          delete ThreadList[i];
+	ThreadValue* localThreadValue=getThreadValue(i);
+        if (localThreadValue != NULL) {
+          delete localThreadValue->CounterValues;
+          delete localThreadValue;
         }
-        ThreadList[i] = NULL;
+        setThreadValue(i,NULL);
       }
       TauMetrics_init();
       rc = initializePAPI();
@@ -553,7 +566,7 @@ int PapiLayer::initializePAPI() {
 #endif /* TAU_AT_FORK */
 
   for (int i=0; i<TAU_MAX_THREADS; i++) {
-    ThreadList[i] = NULL;
+    setThreadValue(i,NULL);
   }
 
   // Initialize PAPI
@@ -698,18 +711,19 @@ int PapiLayer::initializeAndCheckRAPL(int tid) {
   if (!papiInitialized)
     initializePapiLayer();
 
-  if (!ThreadList[tid]) {
+  if (!getThreadValue(tid)) { //ThreadList[tid]) {
     RtsLayer::LockDB();
-    if (!ThreadList[tid]) {
+    if (!getThreadValue(tid)) { //ThreadList[tid]) {
       dmesg(1, "TAU: PAPI: Initializing Thread Data for TID = %d\n", tid);
 
       /* Task API does not have a real thread associated with it. It is fake */
       if (Tau_is_thread_fake(tid) == 1) tid = 0;
-
-      ThreadList[tid] = new ThreadValue;
-      ThreadList[tid]->ThreadID = tid;
-      ThreadList[tid]->CounterValues = new long long[MAX_PAPI_COUNTERS];
-      memset(ThreadList[tid]->CounterValues, 0, MAX_PAPI_COUNTERS*sizeof(long long));
+      ThreadValue* localThreadValue = new ThreadValue;
+      setThreadValue(tid,localThreadValue);
+      //ThreadList[tid] = new ThreadValue;
+      localThreadValue->ThreadID = tid;
+      localThreadValue->CounterValues = new long long[MAX_PAPI_COUNTERS];
+      memset(localThreadValue->CounterValues, 0, MAX_PAPI_COUNTERS*sizeof(long long));
     }
     RtsLayer::UnLockDB();
   }
@@ -745,15 +759,15 @@ int PapiLayer::initializePerfRAPL(int tid) {
     fprintf(stderr,"PAPI_set_granularity\n");
     exit(1);
   }
-
-  ThreadList[tid]->EventSet[rapl_cid] = PAPI_NULL;
-  ret = PAPI_create_eventset(&(ThreadList[tid]->EventSet[rapl_cid]));
+  ThreadValue* localThreadValue=getThreadValue(tid);
+  localThreadValue->EventSet[rapl_cid] = PAPI_NULL;
+  ret = PAPI_create_eventset(&(localThreadValue->EventSet[rapl_cid]));
   if (PAPI_OK != ret) {
     fprintf(stderr,"PAPI_create_eventset.\n");
     exit(1);
   }
-  opt.eventset = ThreadList[tid]->EventSet[rapl_cid];
-  ret = PAPI_assign_eventset_component( ThreadList[tid]->EventSet[rapl_cid], 1 );
+  opt.eventset = localThreadValue->EventSet[rapl_cid];
+  ret = PAPI_assign_eventset_component( localThreadValue->EventSet[rapl_cid], 1 );
 
   if ( PAPI_OK != ret ) {
     fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(ret));
@@ -767,7 +781,7 @@ int PapiLayer::initializePerfRAPL(int tid) {
   }
 
   if(TauEnv_get_papi_multiplexing()) {
-    ret = PAPI_set_multiplex(ThreadList[tid]->EventSet[rapl_cid]);
+    ret = PAPI_set_multiplex(localThreadValue->EventSet[rapl_cid]);
     if ( PAPI_OK != ret ) {
       fprintf(stderr, "PAPI_set_multiplex failed (%s)\n", PAPI_strerror(ret));
       exit(1);
@@ -786,7 +800,7 @@ int PapiLayer::initializePerfRAPL(int tid) {
   fclose(para);
 
   numCounters = 0;
-  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], (char*)"rapl::RAPL_ENERGY_CORES");
+  ret = PAPI_add_named_event(localThreadValue->EventSet[rapl_cid], (char*)"rapl::RAPL_ENERGY_CORES");
   if (PAPI_OK != ret) {
 #ifdef DEBUG_PROF
     fprintf(stderr,"Error: PAPI_add_named_event(RAPL_ENERGY_CORES) because %s.\nPlease ensure that /proc/sys/kernel/perf_event_paranoid has a -1 and your system has /sys/devices/power/events/energy-pkg.scale.\n", PAPI_strerror(ret));
@@ -798,7 +812,7 @@ int PapiLayer::initializePerfRAPL(int tid) {
     numCounters++; 
   }
 
-  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], (char*)"rapl::RAPL_ENERGY_PKG");
+  ret = PAPI_add_named_event(localThreadValue->EventSet[rapl_cid], (char*)"rapl::RAPL_ENERGY_PKG");
   if (PAPI_OK != ret) {
 
 #ifdef DEBUG_PROF
@@ -814,7 +828,7 @@ int PapiLayer::initializePerfRAPL(int tid) {
 #endif /* TAU_BEACON */
   }
 
-  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], (char*)"rapl::RAPL_ENERGY_GPU");
+  ret = PAPI_add_named_event(localThreadValue->EventSet[rapl_cid], (char*)"rapl::RAPL_ENERGY_GPU");
   if (PAPI_OK != ret) {
 #ifdef DEBUG_PROF
     fprintf(stderr,"Error: PAPI_add_named_event(RAPL_ENERGY_GPU) because %s.\nPlease ensure that /proc/sys/kernel/perf_event_paranoid has a -1 and your system has /sys/devices/power/events/energy-pkg.scale.\n", PAPI_strerror(ret));
@@ -826,7 +840,7 @@ int PapiLayer::initializePerfRAPL(int tid) {
     numCounters++; 
   }
 
-  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], (char*)"rapl::RAPL_ENERGY_DRAM");
+  ret = PAPI_add_named_event(localThreadValue->EventSet[rapl_cid], (char*)"rapl::RAPL_ENERGY_DRAM");
   if (PAPI_OK != ret) {
    // OK: this event is only available on servers 
   } else {
@@ -847,9 +861,9 @@ int PapiLayer::initializePerfRAPL(int tid) {
      printf("%s: /sys/devices/power/events/energy-pkg.scale doesn't contain a double", line);
      exit(1);
   }
-  ThreadList[tid]->NumEvents[rapl_cid] = numCounters; 
+  localThreadValue->NumEvents[rapl_cid] = numCounters; 
 
-  if (PAPI_start(ThreadList[tid]->EventSet[rapl_cid]) != PAPI_OK) {
+  if (PAPI_start(localThreadValue->EventSet[rapl_cid]) != PAPI_OK) {
     printf("TAU PERF: Error in PAPI_Start\n");
     return -1;
   }
@@ -866,7 +880,7 @@ int PapiLayer::initializeRAPL(int tid) {
   int num_events = 0;
  
   initializeAndCheckRAPL(tid); 
-
+  ThreadValue* localThreadValue=getThreadValue(tid);
   ncomponents = PAPI_num_components(); 
   for (i=0; i < ncomponents; i++) {
     if ((cinfo = PAPI_get_component_info(i)) == NULL) { 
@@ -882,20 +896,20 @@ int PapiLayer::initializeRAPL(int tid) {
         return -1;
       } /* rapl is disabled */
       /* create event set */
-      ThreadList[tid]->EventSet[rapl_cid] = PAPI_NULL;
-      ret = PAPI_create_eventset(&(ThreadList[tid]->EventSet[rapl_cid]));
+      localThreadValue->EventSet[rapl_cid] = PAPI_NULL;
+      ret = PAPI_create_eventset(&(localThreadValue->EventSet[rapl_cid]));
       if (ret != PAPI_OK) {
         printf("WARNING: TAU couldn't create a PAPI eventset. Please check the LD_LIBRARY_PATH and ensure that there is no mismatch between the version of papi.h and the papi library that is loaded\n");
         return -1;
       }
 
       if(TauEnv_get_papi_multiplexing()) {
-        ret = PAPI_assign_eventset_component( ThreadList[tid]->EventSet[rapl_cid], 0 );
+        ret = PAPI_assign_eventset_component( localThreadValue->EventSet[rapl_cid], 0 );
         if ( PAPI_OK != ret ) {
           fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(ret));
           return -1;
         }
-        ret = PAPI_set_multiplex(ThreadList[tid]->EventSet[rapl_cid]);
+        ret = PAPI_set_multiplex(localThreadValue->EventSet[rapl_cid]);
         if ( PAPI_OK != ret ) {
           fprintf(stderr, "PAPI_set_multiplex failed (%s)\n", PAPI_strerror(ret));
           return -1;
@@ -927,14 +941,14 @@ int PapiLayer::initializeRAPL(int tid) {
         if ((evinfo.units[0] == 'n') && (evinfo.units[1] == 'J')) {
           scalingFactor = 1.0e-9; /* nano Joules */
           strncpy(Tau_rapl_units[num_events], evinfo.units, PAPI_MIN_STR_LEN);
-          ret = PAPI_add_event( (ThreadList[tid]->EventSet[rapl_cid]), code);
+          ret = PAPI_add_event( (localThreadValue->EventSet[rapl_cid]), code);
           if (ret != PAPI_OK) {
             printf("PAPI_add_event is not OK!\n");
             break; /* hit an event limit */
           }
-          dmesg(1,"Added PAPI event %s successfully, rapl_cid = %d, EventSet=%d\n", Tau_rapl_event_names[num_events], rapl_cid, ThreadList[tid]->EventSet[rapl_cid]);
-          ThreadList[tid]->Comp2Metric[rapl_cid][ThreadList[tid]->NumEvents[rapl_cid]++] = numCounters;
-          ThreadList[tid]->CounterValues[num_events] = 0;
+          dmesg(1,"Added PAPI event %s successfully, rapl_cid = %d, EventSet=%d\n", Tau_rapl_event_names[num_events], rapl_cid, localThreadValue->EventSet[rapl_cid]);
+          localThreadValue->Comp2Metric[rapl_cid][localThreadValue->NumEvents[rapl_cid]++] = numCounters;
+          localThreadValue->CounterValues[num_events] = 0;
           num_events++; 
 	  numCounters++;
           ret = PAPI_enum_cmp_event(&code, PAPI_ENUM_EVENTS, rapl_cid);
@@ -947,7 +961,7 @@ int PapiLayer::initializeRAPL(int tid) {
     } /* if rapl */
   } /* for ncomponents */
 
-  if (PAPI_start(ThreadList[tid]->EventSet[rapl_cid]) != PAPI_OK) {
+  if (PAPI_start(localThreadValue->EventSet[rapl_cid]) != PAPI_OK) {
     printf("PAPI RAPL: Error in PAPI_Start\n");
     return -1;
   }
@@ -975,9 +989,9 @@ void PapiLayer::triggerRAPLPowerEvents(bool in_signal_handler) {
   double elapsedTimeInSecs = 0.0;
   long long curtime; 
   char ename[1024];
-
+  ThreadValue* localThreadValue=getThreadValue(tid);
   /* Have we initialized on this thread yet? */
-  if (ThreadList[tid] == 0) return;
+  if (localThreadValue == 0) return;
   for (i=0; i<numCounters; i++) {
     tmpCounters[i] = 0;
     dmesg(1,"Tau_rapl_event_names = %s, Tau_rapl_units=%s, numCounters=%d\n",
@@ -990,27 +1004,27 @@ void PapiLayer::triggerRAPLPowerEvents(bool in_signal_handler) {
     curtime = PAPI_get_real_nsec();
     if (firsttime) {
        firsttime = false; 
-       ThreadList[tid]->CounterValues[numCounters - 1] = curtime;
+       localThreadValue->CounterValues[numCounters - 1] = curtime;
        return ;
     }
    
     // NOTE: We store the curtime in the numCounters index. 
-    dmesg(1,"curtime = %lld, EventSet=%d, numEvents=%d\n", curtime, ThreadList[tid]->EventSet[rapl_cid], ThreadList[tid]->NumEvents[rapl_cid]);
-    if (ThreadList[tid]->NumEvents[rapl_cid] > 0) { // active counters 
+    dmesg(1,"curtime = %lld, EventSet=%d, numEvents=%d\n", curtime, localThreadValue->EventSet[rapl_cid], localThreadValue->NumEvents[rapl_cid]);
+    if (localThreadValue->NumEvents[rapl_cid] > 0) { // active counters 
       // read eventset for this component and reset counters 
-      if (PAPI_stop(ThreadList[tid]->EventSet[rapl_cid], tmpCounters) 
+      if (PAPI_stop(localThreadValue->EventSet[rapl_cid], tmpCounters) 
 	!= PAPI_OK) {
         printf("Node %d, Thread %d:Error reading counters in PapiLayer::triggerRAPLPowerEvents\n", RtsLayer::myNode(), tid);
         return;  
       }
       tmpCounters[numCounters - 1] = curtime;
       
-      elapsedTimeInSecs = (curtime - ThreadList[tid]->CounterValues[numCounters-1])/1.0e9;
-      ThreadList[tid]->CounterValues[numCounters - 1] = curtime;
+      elapsedTimeInSecs = (curtime - localThreadValue->CounterValues[numCounters-1])/1.0e9;
+      localThreadValue->CounterValues[numCounters - 1] = curtime;
 
       for (i = 0; i < numCounters-1; i++) {
 	dmesg(1,"Before subtracting: Counter: %s: tmp value= %.8f, units = %s, old value=%.8f, time elapsed=%.4f seconds\n",
-	Tau_rapl_event_names[i], (double) tmpCounters[i], Tau_rapl_units[i], (double) ThreadList[tid]->CounterValues[i], elapsedTimeInSecs);
+	Tau_rapl_event_names[i], (double) tmpCounters[i], Tau_rapl_units[i], (double) localThreadValue->CounterValues[i], elapsedTimeInSecs);
 	
       }
       for(i=0; i < numCounters -1; i++) {
@@ -1031,7 +1045,7 @@ void PapiLayer::triggerRAPLPowerEvents(bool in_signal_handler) {
       }
       
 
-      if (PAPI_start(ThreadList[tid]->EventSet[rapl_cid]) != PAPI_OK) { 
+      if (PAPI_start(localThreadValue->EventSet[rapl_cid]) != PAPI_OK) { 
         printf("Node %d, Thread %d:Error starting counters in PapiLayer::triggerRAPLPowerEvents\n", RtsLayer::myNode(), tid);
         return;  
       }
