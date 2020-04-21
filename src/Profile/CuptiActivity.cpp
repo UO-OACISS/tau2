@@ -842,17 +842,8 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
     }
     Tau_gpu_enter_event(cbInfo->functionName);
     if (function_is_launch(id))
-    { // ENTRY to a launch function
-        static bool do_this_once = false;
-	    if (!do_this_once) {
-	        RtsLayer::LockDB();
-	        if (!do_this_once) {
-	            Tau_CuptiLayer_init();
-	            do_this_once = true;
-	        }
-	        RtsLayer::UnLockDB();
-	    }
-
+    {
+	    Tau_CuptiLayer_init();
 	    TAU_DEBUG_PRINT("[at call (enter), %d] name: %s.\n",
             cbInfo->correlationId, cbInfo->functionName);
 	    record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
@@ -2003,7 +1994,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
             transport_imix_counters(v_flops, FlPtOps, name, taskId, streamId, contextId, id, end, fp_ops);
             transport_imix_counters(v_memops, MemOps, name, taskId, streamId, contextId, id, end, mem_ops);
             transport_imix_counters(v_ctrlops, CtrlOps, name, taskId, streamId, contextId, id, end, ctrl_ops);
-	    
+
         }
         if(!update) {
             TAU_VERBOSE("TAU Warning:  Did not record instruction operations.\n");
@@ -2693,7 +2684,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 	strcat (str,"/sass_");
 	strcat (str, fname.c_str());
 	strcat (str, ".csv");
-	
+
 	fp = fopen(str, "w+b");
 	if (fp == NULL) {
 #ifdef TAU_DEBUG_SASS
@@ -2720,7 +2711,7 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	strcat (str, fname.c_str());
 	strcat (str, ".csv");
 	// at this point csv with header should have been created!
-	fp = fopen(str, "a+");	
+	fp = fopen(str, "a+");
 	if (!fp) {
 	    return 0;
 	}
@@ -2740,7 +2731,7 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	    uint32_t threadsExecuted = instr->threadsExecuted;
 	    fprintf(fp, "%u,%u,%u,%u,%u,%u,%u\n", correlationId, executed, functionId, notPredOffThreadsExecuted, pcOffset, sourceLocatorId, threadsExecuted);
 	}
-	fclose(fp);  
+	fclose(fp);
 	return 1;
     }
 
@@ -2794,7 +2785,7 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	strcat (str,"/sass_");
 	strcat (str, fname.c_str());
 	strcat (str, ".csv");
-	fp = fopen(str, "w+b");	
+	fp = fopen(str, "w+b");
 
 	if (!fp) {
 	    return 0;
@@ -2826,7 +2817,7 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
         // same for all devices/threads
         output_function_map_to_csv();
         output_source_map_to_csv();
-	
+
 	for (std::map<uint32_t, uint32_t>::iterator iter = correlationThreadMap.begin();
 	     iter != correlationThreadMap.end(); iter++) {
 	    uint32_t correlationId = iter->first;

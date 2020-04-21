@@ -45,7 +45,7 @@
 #include <Profile/TauBacktrace.h>
 #include <Profile/TauUtil.h>
 
-#ifdef TAU_VAMPIRTRACE 
+#ifdef TAU_VAMPIRTRACE
 #include <Profile/TauVampirTrace.h>
 #else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
@@ -131,7 +131,7 @@ static void tauSignalHandler(int sig)
     for (int i = 0 ; i < RtsLayer::getTotalThreads() ; i++){
      if (TauEnv_get_ebs_enabled()) {
           Tau_sampling_finalize_if_necessary(i);
-     } 
+     }
 
     TauProfiler_DumpData(false, i, "profile");
   }
@@ -262,7 +262,7 @@ int Tau_init_vampirTrace(void) {
 }
 #endif /* TAU_VAMPIRTRACE */
 
-#ifdef TAU_EPILOG 
+#ifdef TAU_EPILOG
 //////////////////////////////////////////////////////////////////////
 // Initialize EPILOG Tracing package
 //////////////////////////////////////////////////////////////////////
@@ -444,6 +444,7 @@ extern "C" int Tau_init_initializeTAU()
 
   static bool initialized = false;
   if (initialized) return 0;
+  initialized = true;
 
   /* initialize the memory debugger */
   Tau_memory_initialize();

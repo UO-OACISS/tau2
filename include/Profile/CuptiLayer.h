@@ -14,6 +14,7 @@
 #include <cupti_events.h>
 #include <cupti_metrics.h>
 #include <cuda_runtime_api.h>
+#include "cupti.h"
 
 /* Specific errors from CUDA lib */
 #define CHECK_CU_ERROR(err, cufunc) \
@@ -172,9 +173,9 @@ extern void Tau_CuptiLayer_Initialize_Map();
 counter_map_t Counter_Map;
 
 /* mapping the metric number to the cupti metric number */
-counter_id_map_t internal_id_map; 
+counter_id_map_t internal_id_map;
 extern counter_id_map_t internal_id_map() {return internal_id_map;}
-counter_id_map_t internal_id_map_backwards; 
+counter_id_map_t internal_id_map_backwards;
 extern counter_id_map_t internal_id_map_backwards() {return internal_id_map_backwards;}
 #else
 

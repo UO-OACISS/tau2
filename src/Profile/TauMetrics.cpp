@@ -238,16 +238,13 @@ static void metricv_add(const char *name) {
 
 			std::string event_name = "CUDA." + device_name + '.' + std::string(buff);
 
-            if (Tau_CuptiLayer_is_initialized()) {
-                // check, maybe initialize counter map
-			    if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) {
-                    // double check because it just got initialized
-				    if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) {
-					    CuptiCounterEvent* ev = new CuptiCounterEvent(dev, event);
-                			Tau_CuptiLayer_Counter_Map().insert(std::make_pair(event_name, ev));
-                    }
-				}
-			}
+            if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) {
+                // double check because it just got initialized
+                if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) {
+                    CuptiCounterEvent* ev = new CuptiCounterEvent(dev, event);
+                    Tau_CuptiLayer_Counter_Map().insert(std::make_pair(event_name, ev));
+                }
+            }
 
 			TAU_VERBOSE("%s: %s\n", name, event_name.c_str());
 
@@ -744,13 +741,11 @@ static void initialize_functionArray() {
 extern "C" const char *TauMetrics_getMetricName(int metric) {
 	char const * metric_name = metricv[metric];
 #ifdef CUPTI
-	int event_id = Tau_CuptiLayer_get_cupti_event_id(metric);
-    if (Tau_CuptiLayer_is_initialized()) {
-	    if (Tau_CuptiLayer_is_cupti_counter(metric_name) &&
-            event_id < Tau_CuptiLayer_get_num_events()) {
-		    return Tau_CuptiLayer_get_event_name(event_id);
-        }
-	}
+    int event_id = Tau_CuptiLayer_get_cupti_event_id(metric);
+    if (Tau_CuptiLayer_is_cupti_counter(metric_name) &&
+        event_id < Tau_CuptiLayer_get_num_events()) {
+        return Tau_CuptiLayer_get_event_name(event_id);
+    }
 #endif
 	return metric_name;
 }

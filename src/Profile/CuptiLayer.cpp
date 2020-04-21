@@ -23,7 +23,7 @@ void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev) {}
 
 void Tau_CuptiLayer_read_counter(uint64_t * cBuffer, int id) {}
 
-int internal_id_map[TAU_MAX_COUNTERS]; 
+int internal_id_map[TAU_MAX_COUNTERS];
 int internal_id_map_backwards[TAU_MAX_COUNTERS];
 
 #endif
@@ -41,8 +41,8 @@ metric_map_t & Tau_CuptiLayer_Metric_Map() {
 static bool * initialized = NULL;
 
 
-int internal_id_map[TAU_MAX_COUNTERS] = {0};  
-int internal_id_map_backwards[TAU_MAX_COUNTERS] = {0}; 
+int internal_id_map[TAU_MAX_COUNTERS] = {0};
+int internal_id_map_backwards[TAU_MAX_COUNTERS] = {0};
 
 
 counter_vec_t & Tau_CuptiLayer_Added_counters() {
@@ -58,7 +58,7 @@ metric_vec_t & Tau_CuptiLayer_Added_metrics() {
 char const * Tau_CuptiLayer_Added_strings[TAU_MAX_COUNTERS];
 static int number_of_added_strings = 0;
 
-CUpti_EventGroup* eventGroup;	
+CUpti_EventGroup* eventGroup;
 
 int Tau_CuptiLayer_num_events;
 
@@ -102,13 +102,13 @@ CuptiCounterEvent::CuptiCounterEvent(int device_n, int event_n)
     CHECK_CU_ERROR(cuErr, "cuDeviceGet");
     cuErr = cuDeviceGetName(buff, sizeof(buff), device);
     CHECK_CU_ERROR(cuErr, "cuDeviceGetName");
-    
+
     device_name = string(buff);
-    
+
     //std::replace(device_name.begin(), device_name.end(), ' ', '_');
     //std::replace(device_name.begin(), device_name.end(), ' ', '_');
     // PGI compiler has problems with -c++11
-    Tau_util_replaceStringInPlace(device_name, " ", "_"); 
+    Tau_util_replaceStringInPlace(device_name, " ", "_");
 
     //Event
 
@@ -150,8 +150,8 @@ void CuptiCounterEvent::printHeader()
 
 void CuptiCounterEvent::print()
 {
-	//cout << "CUDA." << setw(15) << clean_device_name.str() << setw(10) << 
-	//		domain_name << setw(20) << event_name << setw(25) << event_description << 
+	//cout << "CUDA." << setw(15) << clean_device_name.str() << setw(10) <<
+	//		domain_name << setw(20) << event_name << setw(25) << event_description <<
 	//	endl << endl;
 	cout << setw(54) << tag << " " <<
 					setw(15) << event_description <<
@@ -173,7 +173,7 @@ CuptiMetric::CuptiMetric(int device_n, int metric_n)
     cuErr = cuDeviceGetName(buff, sizeof(buff), device);
     CHECK_CU_ERROR(cuErr, "cuDeviceGetName");
     device_name = string(buff);
-    Tau_util_replaceStringInPlace(device_name, " ", "_"); 
+    Tau_util_replaceStringInPlace(device_name, " ", "_");
 
     //Event
     uint32_t num_metrics;
@@ -220,8 +220,8 @@ void CuptiMetric::printHeader()
 
 void CuptiMetric::print()
 {
-	//cout << "CUDA." << setw(15) << clean_device_name.str() << setw(10) << 
-	//		domain_name << setw(20) << event_name << setw(25) << event_description << 
+	//cout << "CUDA." << setw(15) << clean_device_name.str() << setw(10) <<
+	//		domain_name << setw(20) << event_name << setw(25) << event_description <<
 	//	endl << endl;
 	cout << setw(54) << tag << " " <<
 					setw(15) << metric_description <<
@@ -386,7 +386,7 @@ void Tau_CuptiLayer_enable()
 }
 
 void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev)
-{	
+{
 		Tau_CuptiLayer_Added_counters().push_back(ev);
 }
 
@@ -430,32 +430,32 @@ void Tau_CuptiLayer_read_counters(int device, int task, uint64_t * counterDataBu
 			CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupGetAttribute" );
 
       cuptiErr = cuptiDeviceGetEventDomainAttribute(device,
-                           groupDomain, 
+                           groupDomain,
                            CUPTI_EVENT_DOMAIN_ATTR_INSTANCE_COUNT,
                            &numTotalInstancesSize, &numTotalInstances);
 			CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventDomainGetAttribute" );
-      
-      cuptiErr = cuptiEventGroupGetAttribute(eventGroup[device], 
+
+      cuptiErr = cuptiEventGroupGetAttribute(eventGroup[device],
                            CUPTI_EVENT_GROUP_ATTR_INSTANCE_COUNT,
                            &numInstancesSize, &numInstances);
 			CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventDomainGetAttribute 2" );
 
-			bufferSizeBytes = Tau_CuptiLayer_num_events * numInstances * sizeof ( uint64_t ); 
+			bufferSizeBytes = Tau_CuptiLayer_num_events * numInstances * sizeof ( uint64_t );
 
       uint64_t * instanceDataBuffer = (uint64_t *) malloc(bufferSizeBytes);
 
 			arraySizeBytes = Tau_CuptiLayer_num_events * sizeof ( CUpti_EventID );
 			eventIDArray = ( CUpti_EventID * ) malloc( arraySizeBytes );
 
-			// read counter data for the specified event from the CuPTI eventGroup 
-      
+			// read counter data for the specified event from the CuPTI eventGroup
+
 			cuptiErr = cuptiEventGroupReadAllEvents( eventGroup[device],
 													 CUPTI_EVENT_READ_FLAG_NONE,
 													 &bufferSizeBytes,
 													 instanceDataBuffer, &arraySizeBytes,
 													 eventIDArray, &events_read );
 			CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupReadAllEvents" );
-       
+
 			/* for validation, also read each event indiviually. */
       /*
       for (counter_vec_t::iterator it = Tau_CuptiLayer_Added_counters.begin(); it !=
@@ -493,8 +493,8 @@ void Tau_CuptiLayer_read_counters(int device, int task, uint64_t * counterDataBu
 
 				//printf("init  events, values %d => %llu.\n",
 				//i, counterDataBuffer[i]);
-			}	
-     
+			}
+
       int e = 0;
       //sum data.
       for (int n = 0; n < numInstances*Tau_CuptiLayer_num_events; n++)
@@ -507,7 +507,7 @@ void Tau_CuptiLayer_read_counters(int device, int task, uint64_t * counterDataBu
         //{
           //printf("instance: %llu.\n", instanceDataBuffer[n]);
           //printf("end.\n");
-          
+
           //printf("e: %d, data: %llu.\n", e, instanceDataBuffer[n]);
 
           counterDataBuffer[e] += instanceDataBuffer[n];
@@ -528,7 +528,7 @@ void Tau_CuptiLayer_read_counters(int device, int task, uint64_t * counterDataBu
 			arraySizeBytes = Tau_CuptiLayer_num_events * sizeof ( CUpti_EventID );
 			eventIDArray = ( CUpti_EventID * ) malloc( arraySizeBytes );
 
-			// read counter data for the specified event from the CuPTI eventGroup 
+			// read counter data for the specified event from the CuPTI eventGroup
 			cuptiErr = cuptiEventGroupReadAllEvents( eventGroup[device],
 													 CUPTI_EVENT_READ_FLAG_NONE,
 													 &bufferSizeBytes,
@@ -538,9 +538,9 @@ void Tau_CuptiLayer_read_counters(int device, int task, uint64_t * counterDataBu
 #endif
 			//if ( events_read != ( size_t ) Tau_CuptiLayer_num_events )
 				//TODO error return -1;
-	
 
-			
+
+
 			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
 			{
 				//printf("cupti last values  %d =>  %llu.\n",
@@ -548,7 +548,7 @@ void Tau_CuptiLayer_read_counters(int device, int task, uint64_t * counterDataBu
 
 				//printf("cupti events, values %d => %llu.\n",
 				//i, counterDataBuffer[i]);
-			}	
+			}
 
 			//accumulate counter values.
 			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
@@ -560,7 +560,7 @@ void Tau_CuptiLayer_read_counters(int device, int task, uint64_t * counterDataBu
 			//free( counterDataBuffer );
 			free( eventIDArray );
 	  }
-		
+
 	}
   else {
     for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
@@ -571,7 +571,7 @@ void Tau_CuptiLayer_read_counters(int device, int task, uint64_t * counterDataBu
 	//printf("[%d] cupti actual value: %llu.\n", internal_id_map[id], counterDataBuffer[internal_id_map[id]]);
 }
 uint64_t Tau_CuptiLayer_read_counter(int id)
-{ 
+{
 	uint64_t * counterDataBuffer = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
   CUdevice device;
   cuDeviceGet(&device, 0);
@@ -588,6 +588,8 @@ uint64_t Tau_CuptiLayer_read_counter(int id)
 
 void Tau_CuptiLayer_Initialize_callbacks()
 {
+    static bool once = false;
+    if (once) { return; } else { once = true; }
     // Simply loading this shared library will trigger Tau_cupti_onload()
     if (!dlmopen(LM_ID_BASE, "libTAU-CUact.so", RTLD_NOW)) {
         fprintf(stderr, "Failed to load libTAU-CUact.so %s\n", dlerror());

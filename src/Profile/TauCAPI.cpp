@@ -78,7 +78,6 @@ void esd_exit (elg_ui4 rid);
 #include <Profile/TauPluginCPPTypes.h>
 
 #ifdef CUPTI
-#include <cupti.h>
 #include <Profile/CuptiLayer.h>
 #endif
 
