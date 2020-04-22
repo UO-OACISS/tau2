@@ -65,8 +65,8 @@ using namespace tau;
 #include <Profile/TauPin.h>
 
 
-int RtsLayer::lockDBCounty[TAU_MAX_THREADS];
-int RtsLayer::lockEnvCounty[TAU_MAX_THREADS];
+int RtsLayer::lockDBCount[TAU_MAX_THREADS];
+int RtsLayer::lockEnvCount[TAU_MAX_THREADS];
 /*
 inline int getDBLock(int tid){
 	return RtsLayer::lockDBCounty[tid];

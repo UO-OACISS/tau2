@@ -84,35 +84,35 @@ public:
   }
 
   inline static int getDBLock(int tid){
-    return lockDBCounty[tid];
+    return lockDBCount[tid];
   }
 
   inline static void setDBLock(int tid, int value){
-    lockDBCounty[tid]=value;
+    lockDBCount[tid]=value;
   }
 
   inline static void incrementDBLock(int tid){
-    lockDBCounty[tid]++;
+    lockDBCount[tid]++;
   }
 
   inline static void decrementDBLock(int tid){
-    lockDBCounty[tid]--;
+    lockDBCount[tid]--;
   }
 
   inline static int getEnvLock(int tid){
-    return lockEnvCounty[tid];
+    return lockEnvCount[tid];
   }
 
   inline static void setEnvLock(int tid, int value){
-    lockEnvCounty[tid]=value;
+    lockEnvCount[tid]=value;
   }
   
   inline static void incrementEnvLock(int tid){
-    lockEnvCounty[tid]++;
+    lockEnvCount[tid]++;
   }
 
   inline static void decrementEnvLock(int tid){
-    lockEnvCounty[tid]--;
+    lockEnvCount[tid]--;
   }
 
   static void Initialize(void);
@@ -179,8 +179,8 @@ private:
   static void threadLockEnv(void);
   static void threadUnLockEnv(void);
 
-  static int lockDBCounty[TAU_MAX_THREADS];
-  static int lockEnvCounty[TAU_MAX_THREADS];
+  static int lockDBCount[TAU_MAX_THREADS];
+  static int lockEnvCount[TAU_MAX_THREADS];
 
   static bool initLocks();
   static bool initEnvLocks();
