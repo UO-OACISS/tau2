@@ -198,10 +198,12 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
 
   //Add function name to the name list.
   TauProfiler_theFunctionList(NULL, NULL, true, (const char *)GetName());
-
+/*
+ //TODO: Confirm that this init is no longer needed
   if (InitData) {
     for (int i = 0; i < TAU_MAX_THREADS; i++) {
-      SetAlreadyOnStack(false, i);
+      SetAlreadyOnStack(false, i); 
+      SetCalls(i,0);
       NumCalls[i] = 0;
       NumSubrs[i] = 0;
       for (int j = 0; j < Tau_Global_numCounters; j++) {
@@ -211,8 +213,8 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
         dumpInclusiveValues[i][j] = 0;
       }
     }
-  }
-
+  } 
+*/
   MyProfileGroup_ = ProfileGroup;
 
   // While accessing the global function database, lock it to ensure
@@ -242,13 +244,17 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
       !strstr(ProfileGroupName, "TAU_UNWIND"))
   {
     for (int i = 0; i < TAU_MAX_THREADS; i++) {
-      pathHistogram[i] = new TauPathHashTable<TauPathAccumulator>(i);
+      SetPathHistogram(i,new TauPathHashTable<TauPathAccumulator>(i));
+      //pathHistogram[i] = new TauPathHashTable<TauPathAccumulator>(i);
     }
-  } else {
+  } 
+  //NULL by default 
+  /*
+  else {
     for (int i = 0; i < TAU_MAX_THREADS; i++) {
       pathHistogram[i] = NULL;
     }
-  }
+  }*/
 
   // Initialization of CallSite discovery structures.
   isCallSite = false;
@@ -311,6 +317,8 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   HeadroomEvent = new TauUserEvent(string(string(Name)+" "+Type+" - Memory Headroom Available (MB)").c_str());
 #endif /* TAU_PROFILEHEADROOM */
 
+//Already NULL by default
+/*
 #ifdef RENCI_STFF
   for (int t=0; t < TAU_MAX_THREADS; t++) {
     for (int i=0; i < TAU_MAX_COUNTERS; i++) {
@@ -318,6 +326,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
     }
   }
 #endif //RENCI_STFF
+*/
 
   /*Invoke plugins only if both plugin path and plugins are specified*/
   if(Tau_plugins_enabled.function_registration) {
@@ -396,7 +405,7 @@ FunctionInfo::~FunctionInfo()
 #ifndef TAU_WINDOWS
 #ifndef _AIX
   for (int i = 0; i < TAU_MAX_THREADS; i++) {
-    delete pathHistogram[i];
+    delete GetPathHistogram(i);
   }
 #endif /* _AIX */
 #endif /* TAU_WINDOWS */
@@ -406,7 +415,7 @@ FunctionInfo::~FunctionInfo()
 double * FunctionInfo::GetExclTime(int tid){
   double * tmpCharPtr = (double *) malloc( sizeof(double) * Tau_Global_numCounters);
   for(int i=0;i<Tau_Global_numCounters;i++){
-    tmpCharPtr[i] = ExclTime[tid][i];
+    tmpCharPtr[i] = GetExclTimeForCounter(tid,i);
   }
   return tmpCharPtr;
 }
@@ -414,34 +423,10 @@ double * FunctionInfo::GetExclTime(int tid){
 double * FunctionInfo::GetInclTime(int tid){
   double * tmpCharPtr = (double *) malloc( sizeof(double) * Tau_Global_numCounters);
   for(int i=0;i<Tau_Global_numCounters;i++){
-    tmpCharPtr[i] = InclTime[tid][i];
+    tmpCharPtr[i] = GetInclTimeForCounter(tid,i);
   }
   return tmpCharPtr;
 }
-
-
-double *FunctionInfo::getInclusiveValues(int tid) {
-  printf ("TAU: Warning, potentially evil function called\n");
-  return InclTime[tid];
-}
-
-double *FunctionInfo::getExclusiveValues(int tid) {
-  printf ("TAU: Warning, potentially evil function called\n");
-  return ExclTime[tid];
-}
-
-void FunctionInfo::getInclusiveValues(int tid, double *values) {
-  for(int i=0; i<Tau_Global_numCounters; i++) {
-    values[i] = InclTime[tid][i];
-  }
-}
-
-void FunctionInfo::getExclusiveValues(int tid, double *values) {
-  for(int i=0; i<Tau_Global_numCounters; i++) {
-    values[i] = ExclTime[tid][i];
-  }
-}
-
 
 //////////////////////////////////////////////////////////////////////
 x_uint64 FunctionInfo::GetFunctionId(void) {
@@ -466,8 +451,8 @@ void FunctionInfo::ResetExclTimeIfNegative(int tid) {
      and multiple counters */
   int i;
   for (i=0; i < Tau_Global_numCounters; i++) {
-    if (ExclTime[tid][i] < 0) {
-      ExclTime[tid][i] = 0.0; /* set each negative counter to zero */
+    if (GetExclTimeForCounter(tid,i) < 0) {
+      SetExclTimeForCounter(0.0, tid, i); /* set each negative counter to zero */
     }
   }
   return;
@@ -657,7 +642,7 @@ void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[
 {
   // Add to the mmap-ed histogram. We start with a temporary conversion. This
   //   becomes unnecessary once we stop using the vector.
-  TauPathAccumulator * accumulator = pathHistogram[tid]->get(pcStack);
+  TauPathAccumulator * accumulator = GetPathHistogram(tid)->get(pcStack);
   if (accumulator == NULL) {
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
@@ -671,7 +656,7 @@ void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[
     accumulator = (TauPathAccumulator*)Tau_MemMgr_malloc(tid, sizeof(TauPathAccumulator));
     new (accumulator) TauPathAccumulator(1, interval);
 
-    bool success = pathHistogram[tid]->insert(pcStack, *accumulator);
+    bool success = GetPathHistogram(tid)->insert(pcStack, *accumulator);
     if (!success) {
       fprintf(stderr, "addPcSample: Failed to insert sample.\n");
     }

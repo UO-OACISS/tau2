@@ -1067,14 +1067,14 @@ void Tau_sampling_finalizeProfile(int tid)
           string temp_ss(resolved_address);
           parentTauContext->SetName(temp_ss);
     }
-
-    if ((parentTauContext->pathHistogram[tid] == NULL) || (parentTauContext->pathHistogram[tid]->size() == 0)) {
+    TauPathHashTable<TauPathAccumulator>* pathHistogram=parentTauContext->GetPathHistogram(tid);
+    if ((pathHistogram == NULL) || (pathHistogram->size() == 0)) {
       // No samples encountered in this TAU context. Continue to next TAU context.
 //      DEBUGMSG("Tau Context %s has no samples", parentTauContext->GetName());
       continue;
     }
-    parentTauContext->pathHistogram[tid]->resetIter();
-    pair<unsigned long *, TauPathAccumulator> * item = parentTauContext->pathHistogram[tid]->nextIter();
+    pathHistogram->resetIter();
+    pair<unsigned long *, TauPathAccumulator> * item = pathHistogram->nextIter();
     while (item) {
       // This is a placeholder for more generic pcStack extraction routines.
       CallSiteCandidate * candidate = new CallSiteCandidate(item->first, item->second.count, parentTauContext);
@@ -1084,7 +1084,7 @@ void Tau_sampling_finalizeProfile(int tid)
       }
       candidates.push_back(candidate);
       delete item;
-      item = parentTauContext->pathHistogram[tid]->nextIter();
+      item = pathHistogram->nextIter();
     }
   }
   RtsLayer::UnLockDB();

@@ -40,8 +40,8 @@ extern int Tau_Global_numCounters;
 }
 #endif /* __cplusplus */
 
-#define TAU_STORAGE(type, variable) type variable[TAU_MAX_THREADS]
-#define TAU_MULTSTORAGE(type, variable) type variable[TAU_MAX_THREADS][TAU_MAX_COUNTERS]
+#define TAU_STORAGE(type, variable, init) type variable = init
+#define TAU_MULTSTORAGE(type, variable, init) type variable[TAU_MAX_COUNTERS] = {init}
 
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
 #include <Profile/KtauFuncInfo.h>
@@ -104,7 +104,7 @@ public:
 			bool InitData, int tid );
 
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
-  KtauFuncInfo* GetKtauFuncInfo(int tid) { return &(KernelFunc[tid]); }
+  KtauFuncInfo* GetKtauFuncInfo(int tid) { return &( MetricList[tid].KernelFunc); }
 #endif /* TAUKTAU && TAUKTAU_MERGE */
 
   inline void ExcludeTime(double *t, int tid);
@@ -127,9 +127,8 @@ public:
 
 #ifdef RENCI_STFF
   // signatures for inclusive time for each counter in each thread
-  TAU_MULTSTORAGE(ApplicationSignature*, Signatures);
   ApplicationSignature** GetSignature(int tid) {
-    return Signatures[tid];
+    return MetricList[tid].Signatures;
   }
 #endif //RENCI_STFF
 
@@ -137,17 +136,30 @@ private:
   // A record of the information unique to this function.
   // Statistics about calling this function.
 	
+  struct FunctionMetrics{
+	
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
   TAU_STORAGE(KtauFuncInfo, KernelFunc);
 #endif /* KTAU && KTAU_MERGE */
 
-  TAU_STORAGE(long, NumCalls);
-  TAU_STORAGE(long, NumSubrs);
-  TAU_MULTSTORAGE(double, ExclTime);
-  TAU_MULTSTORAGE(double, InclTime);
-  TAU_STORAGE(bool, AlreadyOnStack);
-  TAU_MULTSTORAGE(double, dumpExclusiveValues);
-  TAU_MULTSTORAGE(double, dumpInclusiveValues);
+#ifdef RENCI_STFF
+  // signatures for inclusive time for each counter in each thread
+  TAU_MULTSTORAGE(ApplicationSignature*, Signatures, NULL);
+#endif //RENCI_STFF
+
+  TAU_STORAGE(long, NumCalls, 0);
+  TAU_STORAGE(long, NumSubrs, 0);
+  TAU_MULTSTORAGE(double, ExclTime, 0);
+  TAU_MULTSTORAGE(double, InclTime, 0);
+  TAU_STORAGE(bool, AlreadyOnStack, false);
+  TAU_MULTSTORAGE(double, dumpExclusiveValues, 0);
+  TAU_MULTSTORAGE(double, dumpInclusiveValues, 0);
+  #ifndef _AIX
+  TauPathHashTable<TauPathAccumulator> *pathHistogram=NULL;
+  #endif /* _AIX */
+  };
+  
+  FunctionMetrics MetricList[TAU_MAX_THREADS];
 
 public:
   char *Name;
@@ -167,7 +179,6 @@ public:
   //  map<unsigned long, unsigned int> *pcHistogram;
 #ifndef TAU_WINDOWS
 #ifndef _AIX
-  TauPathHashTable<TauPathAccumulator> *pathHistogram[TAU_MAX_THREADS];
 
   // For CallSite discovery
   bool isCallSite;
@@ -177,6 +188,12 @@ public:
   char *ShortenedName;
   void SetShortName(std::string& str) { ShortenedName = strdup(str.c_str()); }
   const char* GetShortName() const { return ShortenedName; }
+  inline void SetPathHistogram(int tid, TauPathHashTable<TauPathAccumulator> *input){
+    MetricList[tid].pathHistogram=input;
+  }
+  inline TauPathHashTable<TauPathAccumulator>* GetPathHistogram(int tid){
+    return MetricList[tid].pathHistogram;
+  }
 
   /* EBS Sampling Profiles */
   void addPcSample(unsigned long *pc, int tid, double interval[TAU_MAX_COUNTERS]);
@@ -184,11 +201,11 @@ public:
 #endif // TAU_WINDOWS
 
   inline double *getDumpExclusiveValues(int tid) {
-    return dumpExclusiveValues[tid];
+    return MetricList[tid].dumpExclusiveValues;
   }
 
   inline double *getDumpInclusiveValues(int tid) {
-    return dumpInclusiveValues[tid];
+    return MetricList[tid].dumpInclusiveValues;
   }
 
   // Cough up the information about this function.
@@ -216,27 +233,42 @@ public:
   char const * GetFullName(); /* created on demand, cached */
 
   x_uint64 GetFunctionId() ;
-  long GetCalls(int tid) { return NumCalls[tid]; }
-  void SetCalls(int tid, long calls) { NumCalls[tid] = calls; }
-  long GetSubrs(int tid) { return NumSubrs[tid]; }
-  void SetSubrs(int tid, long subrs) { NumSubrs[tid] = subrs; }
+  long GetCalls(int tid) { return MetricList[tid].NumCalls; }
+  void SetCalls(int tid, long calls) { MetricList[tid].NumCalls = calls; }
+  long GetSubrs(int tid) { return MetricList[tid].NumSubrs; }
+  void SetSubrs(int tid, long subrs) { MetricList[tid].NumSubrs = subrs; }
   void ResetExclTimeIfNegative(int tid);
 
 
-  double *getInclusiveValues(int tid);
-  double *getExclusiveValues(int tid);
+  double *getInclusiveValues(int tid){
+    printf ("TAU: Warning, potentially evil function called\n");
+    return MetricList[tid].InclTime;
+  }
+  
+  double *getExclusiveValues(int tid){
+    printf ("TAU: Warning, potentially evil function called\n");
+    return MetricList[tid].ExclTime;
+  }
 
-  void getInclusiveValues(int tid, double *values);
-  void getExclusiveValues(int tid, double *values);
+  void getInclusiveValues(int tid, double *values){
+    for(int i=0; i<Tau_Global_numCounters; i++) {
+        values[i] = MetricList[tid].InclTime[i];
+    }
+  }
+  void getExclusiveValues(int tid, double *values){
+    for(int i=0; i<Tau_Global_numCounters; i++) {
+        values[i] = MetricList[tid].ExclTime[i];
+    }
+  }
 
   void SetExclTimeZero(int tid) {
     for(int i=0;i<Tau_Global_numCounters;i++) {
-      ExclTime[tid][i] = 0;
+      MetricList[tid].ExclTime[i] = 0;
     }
   }
   void SetInclTimeZero(int tid) {
     for(int i=0;i<Tau_Global_numCounters;i++) {
-      InclTime[tid][i] = 0;
+      MetricList[tid].InclTime[i] = 0;
     }
   }
 
@@ -246,19 +278,20 @@ public:
   double *GetInclTime(int tid);
   inline void SetExclTime(int tid, double *excltime) {
     for(int i=0;i<Tau_Global_numCounters;i++) {
-      ExclTime[tid][i] = excltime[i];
+      MetricList[tid].ExclTime[i] = excltime[i];
     }
   }
   inline void SetInclTime(int tid, double *incltime) { 
     for(int i=0;i<Tau_Global_numCounters;i++)
-      InclTime[tid][i] = incltime[i];
+      MetricList[tid].InclTime[i] = incltime[i];
   }
 
 
-  inline void AddInclTimeForCounter(double value, int tid, int counter) { InclTime[tid][counter] += value; }
-  inline void AddExclTimeForCounter(double value, int tid, int counter) { ExclTime[tid][counter] += value; }
-  inline double GetInclTimeForCounter(int tid, int counter) { return InclTime[tid][counter]; }
-  inline double GetExclTimeForCounter(int tid, int counter) { return ExclTime[tid][counter]; }
+  inline void AddInclTimeForCounter(double value, int tid, int counter) { MetricList[tid].InclTime[counter] += value; }
+  inline void AddExclTimeForCounter(double value, int tid, int counter) { MetricList[tid].ExclTime[counter] += value; }
+  inline void SetExclTimeForCounter(double value, int tid, int counter) { MetricList[tid].ExclTime[counter] = value; }
+  inline double GetInclTimeForCounter(int tid, int counter) { return MetricList[tid].InclTime[counter]; }
+  inline double GetExclTimeForCounter(int tid, int counter) { return MetricList[tid].ExclTime[counter]; }
 
   TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
   void SetProfileGroup(TauGroup_t gr) {MyProfileGroup_ = gr; }
@@ -284,37 +317,37 @@ inline void FunctionInfo::ExcludeTime(double *t, int tid) {
   // called by a function to decrease its parent functions time
   // exclude from it the time spent in child function
   for (int i=0; i<Tau_Global_numCounters; i++) {
-    ExclTime[tid][i] -= t[i];
+    MetricList[tid].ExclTime[i] -= t[i];
   }
 }
 	
 
 inline void FunctionInfo::AddInclTime(double *t, int tid) {
   for (int i=0; i<Tau_Global_numCounters; i++) {
-    InclTime[tid][i] += t[i]; // Add Inclusive time
+    MetricList[tid].InclTime[i] += t[i]; // Add Inclusive time
   }
 }
 
 inline void FunctionInfo::AddExclTime(double *t, int tid) {
   for (int i=0; i<Tau_Global_numCounters; i++) {
-    ExclTime[tid][i] += t[i]; // Add Total Time to Exclusive time (-ve)
+    MetricList[tid].ExclTime[i] += t[i]; // Add Total Time to Exclusive time (-ve)
   }
 }
 
 inline void FunctionInfo::IncrNumCalls(int tid) {
-  NumCalls[tid]++; // Increment number of calls
+  MetricList[tid].NumCalls++; // Increment number of calls
 } 
 
 inline void FunctionInfo::IncrNumSubrs(int tid) {
-  NumSubrs[tid]++;  // increment # of subroutines
+  MetricList[tid].NumSubrs++;  // increment # of subroutines
 }
 
 inline void FunctionInfo::SetAlreadyOnStack(bool value, int tid) {
-  AlreadyOnStack[tid] = value;
+  MetricList[tid].AlreadyOnStack = value;
 }
 
 inline bool FunctionInfo::GetAlreadyOnStack(int tid) {
-  return AlreadyOnStack[tid];
+  return MetricList[tid].AlreadyOnStack;
 }
 
 
