@@ -286,6 +286,8 @@ void __attribute__ ((constructor)) Tau_cupti_onload(void);
 
 void Tau_cupti_subscribe(void);
 
+void Tau_cupti_init(void);
+
 void __attribute__ ((destructor)) Tau_cupti_onunload(void);
 
 void get_values_from_memcpy(const CUpti_CallbackData *info, CUpti_CallbackId id, CUpti_CallbackDomain domain, int &kind, int &count);

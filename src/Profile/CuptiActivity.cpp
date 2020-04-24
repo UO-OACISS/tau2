@@ -31,6 +31,7 @@ static int currentContextId = -1;
 // From CuptiActivity.h
 uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;
+CUpti_EventGroup eventGroup;
 
 int number_of_streams[TAU_MAX_THREADS] = {0};
 std::vector<int> streamIds[TAU_MAX_THREADS];
@@ -499,6 +500,90 @@ void Tau_cupti_subscribe()
     err = cuptiActivityRegisterCallbacks(Tau_cupti_register_buffer_creation, Tau_cupti_register_sync_event);
     CUPTI_CHECK_ERROR(err, "cuptiActivityRegisterCallbacks");
     subscribed = 1;
+}
+
+void Tau_cupti_init()
+{
+  if (!subscribed) {
+    Tau_cupti_subscribe();
+  }
+
+  CUresult cuErr;
+  CUptiResult cuptiErr;
+  CUcontext cuCtx;
+
+  eventGroup = (CUpti_EventGroup*)malloc(sizeof(CUpti_EventGroup));
+
+  cuErr = cuCtxGetCurrent(&cuCtx);
+  CUDA_CHECK_ERROR(cuErr, "cuCtxGetCurrent");
+  cuptiErr = cuptiEventGroupCreate(cuCtx, &eventGroup[device], 0);
+  CHECK_CUPTI_ERROR(cuptiErr, "cuptiEventGroupCreate");
+
+  counter_vec_t & added_counters = Tau_CuptiLayer_Added_counters();
+
+  for (counter_vec_t::iterator it = added_counters.begin(); it != added_counters.end(); it++) {
+      CuptiCounterEvent & evt = **it;
+
+      char device_char[TAU_CUPTI_MAX_NAME];
+      cuErr = cuDeviceGetName(device_char, sizeof(device_char), device);
+      if (cuErr != CUDA_SUCCESS) {
+          cerr << __FILE__ << ":" << __LINE__ << ":  cuDeviceGetName failed on device " << device << endl;
+          continue;
+      }
+
+      char counter_char[TAU_CUPTI_MAX_NAME];
+      cuErr = cuDeviceGetName(counter_char, sizeof(counter_char), evt.device);
+      if (cuErr != CUDA_SUCCESS) {
+          cerr << __FILE__ << ":" << __LINE__ << ":  cuDeviceGetName failed on device " << evt.device << endl;
+          continue;
+      }
+
+      if (strcmp(device_char, counter_char)) {
+          /* This warning is to cover a small corner case. Since each event group
+           * fill the counter buffers starting at a zero offset, disjoint event
+           * groups (ie. two or more event groups that collect counters for
+           * seperate GPUs) will end up writing to the same offset causing the
+           * data to become garbled.
+           * Notice that running on multiple different GPUs is supported as long
+           * as we only collect counters for one set at a time.
+           */
+          cerr << "TAU Error: Cannot add event: " << evt.tag << " to GPU device: " << device_char << "\n"
+               << "           Only counters for a single GPU device model can be collected at the same time."
+               << endl;
+          exit(EXIT_FAILURE);
+      }
+
+      //enable all domains
+      uint32_t all = 1;
+      CHECK_CUPTI_ERROR(cuptiEventGroupSetAttribute(eventGroup, CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES,
+                                  sizeof(all), &all));
+
+      CHECK_CUPTI_ERROR(cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_KERNEL));
+
+#ifdef TAU_DEBUG_CUPTI
+      cerr << "Will add event " << evt.tag << " to GPU device: " << device_char << endl;
+#endif
+      CUpti_EventID evts[TAU_MAX_COUNTERS];
+      size_t evts_size = TAU_MAX_COUNTERS*sizeof(CUpti_EventID);
+      cuptiErr = cuptiEventGroupGetAttribute(eventGroup, CUPTI_EVENT_GROUP_ATTR_EVENTS, &evts_size, evts);
+      int in_array = 0;
+      for (int i = 0; i < (int) evts_size/sizeof(CUpti_EventID); i++) {
+          if (evts[i] == evt.event) {
+              in_array = 1;
+          }
+      }
+      if (!in_array) {
+        printf("adding event %s\n", evt.tag.c_str());
+        cuptiErr = cuptiEventGroupAddEvent(eventGroup[device], evt.event);
+        CHECK_CUPTI_ERROR(cuptiErr, "cuptiEventGroupAddEvent");
+        if (cuptiErr != CUPTI_SUCCESS) {
+          cerr << "TAU Warning: Cannot add event: " << evt.tag << " to GPU device: " << device_char << endl;
+          exit(EXIT_FAILURE);
+        }
+      }
+    }
+    //record the fact the events have been added.
+    Tau_CuptiLayer_num_events = added_counters.size();
 }
 
 void Tau_cupti_onload()
