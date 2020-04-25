@@ -248,7 +248,7 @@ void Tau_CuptiLayer_init()
 #endif
 
         // Add events to the CuPTI eventGroup
-        Tau_CuptiLayer_enable_eventgroup();
+        //Tau_CuptiLayer_enable_eventgroup();
 
         int minor, major;
 #if CUDA_VERSION >= 5000

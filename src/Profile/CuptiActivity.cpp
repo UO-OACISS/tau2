@@ -591,6 +591,8 @@ void Tau_cupti_init()
     }
     //record the fact the events have been added.
     Tau_CuptiLayer_set_num_events(added_counters.size());
+
+    Tau_CuptiLayer_init();
 }
 
 void Tau_cupti_onload()
@@ -935,7 +937,7 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
     Tau_gpu_enter_event(cbInfo->functionName);
     if (function_is_launch(id))
     {
-	    Tau_CuptiLayer_init();
+	    Tau_CuptiLayer_enable_eventgroup();
 	    TAU_DEBUG_PRINT("[at call (enter), %d] name: %s.\n",
             cbInfo->correlationId, cbInfo->functionName);
 	    record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
