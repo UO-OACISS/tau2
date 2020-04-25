@@ -1,4 +1,5 @@
 #include <Profile/CuptiActivity.h>
+#include <Profile/CuptiLayer.h>
 #include <Profile/TauMetaData.h>
 #include <iostream>
 #include <time.h>
@@ -502,6 +503,11 @@ void Tau_cupti_subscribe()
     subscribed = 1;
 }
 
+CUpti_EventGroup* Tau_cupti_get_eventgroup()
+{
+  return &eventGroup;
+}
+
 void Tau_cupti_init()
 {
   if (!subscribed) {
@@ -511,13 +517,14 @@ void Tau_cupti_init()
   CUresult cuErr;
   CUptiResult cuptiErr;
   CUcontext cuCtx;
+  CUdevice device;
 
   eventGroup = (CUpti_EventGroup*)malloc(sizeof(CUpti_EventGroup));
 
   cuErr = cuCtxGetCurrent(&cuCtx);
   CUDA_CHECK_ERROR(cuErr, "cuCtxGetCurrent");
-  cuptiErr = cuptiEventGroupCreate(cuCtx, &eventGroup[device], 0);
-  CHECK_CUPTI_ERROR(cuptiErr, "cuptiEventGroupCreate");
+  cuptiErr = cuptiEventGroupCreate(cuCtx, &eventGroup, 0);
+  CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupCreate");
 
   counter_vec_t & added_counters = Tau_CuptiLayer_Added_counters();
 
@@ -555,10 +562,10 @@ void Tau_cupti_init()
 
       //enable all domains
       uint32_t all = 1;
-      CHECK_CUPTI_ERROR(cuptiEventGroupSetAttribute(eventGroup, CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES,
-                                  sizeof(all), &all));
+      CUPTI_CHECK_ERROR(cuptiEventGroupSetAttribute(eventGroup, CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES,
+                                  sizeof(all), &all), "cuptiEventGroupSetAttribute");
 
-      CHECK_CUPTI_ERROR(cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_KERNEL));
+      CUPTI_CHECK_ERROR(cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_KERNEL), "cuptiSetEventCollectionMode");
 
 #ifdef TAU_DEBUG_CUPTI
       cerr << "Will add event " << evt.tag << " to GPU device: " << device_char << endl;
@@ -574,8 +581,8 @@ void Tau_cupti_init()
       }
       if (!in_array) {
         printf("adding event %s\n", evt.tag.c_str());
-        cuptiErr = cuptiEventGroupAddEvent(eventGroup[device], evt.event);
-        CHECK_CUPTI_ERROR(cuptiErr, "cuptiEventGroupAddEvent");
+        cuptiErr = cuptiEventGroupAddEvent(eventGroup, evt.event);
+        CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupAddEvent");
         if (cuptiErr != CUPTI_SUCCESS) {
           cerr << "TAU Warning: Cannot add event: " << evt.tag << " to GPU device: " << device_char << endl;
           exit(EXIT_FAILURE);
@@ -583,7 +590,7 @@ void Tau_cupti_init()
       }
     }
     //record the fact the events have been added.
-    Tau_CuptiLayer_num_events = added_counters.size();
+    Tau_CuptiLayer_set_num_events(added_counters.size());
 }
 
 void Tau_cupti_onload()

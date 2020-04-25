@@ -2,7 +2,6 @@
 #define CUPTI_ACTIVITY_H
 
 #include <Profile/TauGpu.h>
-#include <Profile/CuptiLayer.h>
 #include <Profile/CudaSass.h>
 #include <cuda.h>
 #include <cupti.h>
@@ -286,6 +285,8 @@ void __attribute__ ((constructor)) Tau_cupti_onload(void);
 
 void Tau_cupti_subscribe(void);
 
+CUpti_EventGroup* Tau_cupti_get_eventgroup(void);
+
 void Tau_cupti_init(void);
 
 void __attribute__ ((destructor)) Tau_cupti_onunload(void);
@@ -333,19 +334,6 @@ void transport_environment_counters(std::vector<uint32_t> vec, EnvType envT, con
 
 int get_device_count();
 int get_device_id();
-
-// Envt helper functions:
-float getVecAvgVal(std::vector<uint32_t> vec)
-{
-  if (vec.size() == 0) {
-    return 0;
-  }
-  int sum_of_elems = 0;
-  for(std::vector<uint32_t>::iterator iter=vec.begin(); iter != vec.end(); iter++) {
-      sum_of_elems += *iter;
-  }
-  return (float)sum_of_elems/vec.size();
-}
 
 #if CUPTI_API_VERSION >= 3
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);

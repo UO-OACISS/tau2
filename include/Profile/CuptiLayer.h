@@ -105,7 +105,7 @@ struct CuptiCounterIdMap : public std::map<int, int>
 };
 typedef CuptiCounterIdMap counter_id_map_t;
 
-
+counter_vec_t & Tau_CuptiLayer_Added_counters(void);
 
 struct CuptiMetric
 {
@@ -217,6 +217,8 @@ extern counter_id_map_t interal_id_map();
 
 
 extern "C" int Tau_CuptiLayer_get_num_events();
+
+extern "C" void Tau_CuptiLayer_set_num_events(int n);
 
 extern "C" void Tau_CuptiLayer_set_event_name(int metric_n, int type);
 
