@@ -147,7 +147,13 @@ x_uint64 Tau_get_firstTimeStamp();
 // For OpenMP
 //////////////////////////////////////////////////////////////////////
 #ifdef TAU_TRACK_IDLE_THREADS
-double TheLastTimeStamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
+double TheLastTimeStamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS]; //TODO: DYNATHREAD
+inline void setLastTimeStamp(int tid, int counter, double value){
+    TheLastTimeStamp[tid][counter]=value;
+}
+inline double getLastTimeStamp(int tid, int counter){
+    return TheLastTimeStamp[tid][counter];
+}
 #endif /* TAU_TRACK_IDLE_THREADS */
 
 //////////////////////////////////////////////////////////////////////
@@ -466,14 +472,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
     /* for openmp parallel regions */
     /* .TAU Application needs to be stopped */
     for (i = 0; i < TAU_MAX_COUNTERS; i++) {
-      CurrentTime[i] = TheLastTimeStamp[tid][i];
+      CurrentTime[i] = getLastTimeStamp(tid,i);
     }
   } else {
     /* use the usual mechanism */
     RtsLayer::getUSecD(tid, CurrentTime);
   }
   for (i = 0; i < TAU_MAX_COUNTERS; i++) {
-    TheLastTimeStamp[tid][i] = CurrentTime[i];
+    setLastTimeStamp(tid,i,CurrentTime[i]);
   }
 #else
   RtsLayer::getUSecD(tid, CurrentTime);
@@ -1519,13 +1525,22 @@ static int writeProfile(FILE *fp, char *metricName, int tid, int metric, const c
 }
 
 static int profileWriteCount[TAU_MAX_THREADS];
+inline void setProfileWriteCount(int tid, int val){//TODO: DYNATHREAD
+    profileWriteCount[tid]=val;
+}
+inline void incProfileWriteCount(int tid){
+    profileWriteCount[tid]++;
+}
+inline int getProfileWriteCount(int tid){//TODO: DYNATHREAD
+    return profileWriteCount[tid];
+}
 static int profileWriteWarningPrinted = 0;
 
 extern "C" int Tau_profiler_initialization()
 {
   int i;
   for (i = 1; i < TAU_MAX_THREADS; i++) {
-    profileWriteCount[i] = 0;
+    setProfileWriteCount(i,0);
   }
   profileWriteWarningPrinted = 0;
   return 0;
@@ -1575,17 +1590,17 @@ int TauProfiler_StoreData(int tid)
 #ifdef TAU_SCOREP
   Tau_write_metadata_records_in_scorep(tid);
 #endif /* TAU_SCOREP */
-  profileWriteCount[tid]++;
+  incProfileWriteCount(tid);
   // if ((tid != 0) && (profileWriteCount[tid] > 1)) return 0;
 #if !defined(PTHREADS)
   // Rob:  Needed to evaluate for kernels to show in profiles (ignore dreaded #2 thread)!
-  if ((tid != 0) && (profileWriteCount[tid] > 1)) {
-    TAU_VERBOSE("[Profiler]: TauProfiler_StoreData: returning, tid: %i, profileWriteCount[%i]: %i\n", tid, tid, profileWriteCount[tid]);
+  if ((tid != 0) && (getProfileWriteCount(tid) > 1)) {
+    TAU_VERBOSE("[Profiler]: TauProfiler_StoreData: returning, tid: %i, profileWriteCount[%i]: %i\n", tid, tid, getProfileWriteCount(tid));
     return 0;
   }
 #endif
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 2\n", RtsLayer::myNode(), tid);
-  if (profileWriteCount[tid] == 10) {
+  if (getProfileWriteCount(tid) == 10) {
     RtsLayer::LockDB();
     if (profileWriteWarningPrinted == 0) {
       profileWriteWarningPrinted = 1;

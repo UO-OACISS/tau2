@@ -40,7 +40,8 @@ extern int Tau_Global_numCounters;
 }
 #endif /* __cplusplus */
 
-#define TAU_STORAGE(type, variable, init) type variable = init
+//TODO: DYNATHREAD
+#define TAU_STORAGE(type, variable, init) type variable = init 
 #define TAU_MULTSTORAGE(type, variable, init) type variable[TAU_MAX_COUNTERS] = {init}
 
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
@@ -136,7 +137,7 @@ private:
   // A record of the information unique to this function.
   // Statistics about calling this function.
 	
-  struct FunctionMetrics{
+  struct FunctionMetrics{//TODO: DYNATHREAD
 	
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
   TAU_STORAGE(KtauFuncInfo, KernelFunc);
