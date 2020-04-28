@@ -29,17 +29,23 @@ public:
   static long long getSingleCounter(int tid);
   static long long *getAllCounters(int tid, int *numValues);
   static int addEvents(const char *name); 
-  static ThreadValue *ThreadList[TAU_MAX_THREADS];
   static int numCounters;
   static int counterList[TAU_MAX_COUNTERS];
   static int* cpus;
   static int gid;
   static int err;
   static bool likwidInitialized;
+  static inline void SetThreadList(int tid, ThreadValue* tv){
+    ThreadList[tid]=tv;
+  }
+  static inline ThreadValue* GetThreadList(int tid){
+    return ThreadList[tid];
+  }
 private:
   static int initializeSingleCounter();
   static int initializeThread(int tid);
   static double scalingFactor;
+  static ThreadValue *ThreadList[TAU_MAX_THREADS];
 };
 
 #endif /* TAU_LIKWID */

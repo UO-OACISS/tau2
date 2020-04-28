@@ -142,20 +142,20 @@ int LikwidLayer::initializeThread(int tid) {
 		return -1;
 	}
 
-	if (!ThreadList[tid]) {
+	if (!GetThreadList(tid)) {
 		RtsLayer::LockDB();
-		if (!ThreadList[tid]) {
+		if (!GetThreadList(tid)) {
 			dmesg(1, "TAU: LIKWID: Initializing Thread Data for TID = %d\n", tid);
 
 			/* Task API does not have a real thread associated with it. It is fake */
 			if (Tau_is_thread_fake(tid) == 1)
 				tid = 0;
 
-			ThreadList[tid] = new ThreadValue;
-			ThreadList[tid]->ThreadID = tid;
+			SetThreadList(tid, new ThreadValue);
+			GetThreadList(tid)->ThreadID = tid;
 
-			ThreadList[tid]->CounterValues = new long long[numCounters];
-			memset(ThreadList[tid]->CounterValues, 0,
+			GetThreadList(tid)->CounterValues = new long long[numCounters];
+			memset(GetThreadList(tid)->CounterValues, 0,
 					numCounters * sizeof(long long));
 
 		} /*if (!ThreadList[tid]) */
@@ -187,7 +187,7 @@ long long *LikwidLayer::getAllCounters(int tid, int *numValues) {
 		return NULL;
 	}
 
-	if (ThreadList[tid] == NULL) {
+	if (GetThreadList(tid) == NULL) {
 		if (initializeThread(tid)) {
 			return NULL;
 		}
@@ -211,13 +211,13 @@ long long *LikwidLayer::getAllCounters(int tid, int *numValues) {
 		//printf("Counter %d longsum %lld dblsum %f\n", comp, static_cast<long long>(dblsum), dblsum);
         //tmpCounters[comp] += static_cast<long long>(s);
 		//for (int j=0; j<numCounters; j++) {
-		ThreadList[tid]->CounterValues[comp] += static_cast<long long>(dblsum);
+		GetThreadList(tid)->CounterValues[comp] += static_cast<long long>(dblsum);
 		//printf("ThreadList[%d]->CounterValues[%d] = %lld\n", tid, comp, ThreadList[tid]->CounterValues[comp]);
 		//}
 
 	}
 
-	return ThreadList[tid]->CounterValues;
+	return GetThreadList(tid)->CounterValues;
 }
 
 
