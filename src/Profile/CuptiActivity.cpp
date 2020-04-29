@@ -34,6 +34,11 @@ uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;
 CUpti_EventGroup eventGroup;
 
+CUpti_EventGroup* Tau_cupti_get_eventgroup()
+{
+  return &eventGroup;
+}
+
 int number_of_streams[TAU_MAX_THREADS] = {0};
 std::vector<int> streamIds[TAU_MAX_THREADS];
 
@@ -290,6 +295,9 @@ static void handleResource(CUpti_CallbackId cbid, const CUpti_ResourceData *reso
 /* END:  Dump cubin (sass) */
 
 void Tau_cupti_setup_unified_memory() {
+
+		TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_setup_unified_memory\n");
+
     CUptiResult err = CUPTI_SUCCESS;
     CUresult err2 = CUDA_SUCCESS;
     CUpti_ActivityDevice device = __deviceMap()[get_device_id()];
@@ -338,9 +346,15 @@ void Tau_cupti_setup_unified_memory() {
         CUDA_CHECK_ERROR(err2, "CUDA Compute Capability 3.0 or higher required!\n");
     }
     CUDA_CHECK_ERROR(err2, "Cannot enqueue buffer.\n");
+	
+		TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_setup_unified_memory\n");
+
 }
 
 void Tau_cupti_set_device_props() {
+
+		TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_set_device_props\n");
+
     CUptiResult cupti_err = CUPTI_SUCCESS;
     cudaError cuda_err = cudaSuccess;
 
@@ -453,8 +467,12 @@ void Tau_cupti_set_device_props() {
         TAU_VERBOSE("TAU Warning: CUDA 5.0 or greater is needed to record counters on more that one GPU device at the same time.\n");
     }
 #endif
-}
 
+
+		TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_set_device_props\n");
+
+}
+/*
 CUresult cuInit(unsigned int a1)
 {
     TAU_DEBUG_PRINT("in cuInit\n");
@@ -476,11 +494,11 @@ CUresult cuInit(unsigned int a1)
     //Tau_cupti_subscribe();
     return cuInit_h(a1);
 }
-
+*/
 void Tau_cupti_subscribe()
 {
     if(subscribed) return;
-    TAU_DEBUG_PRINT("in Tau_cupti_subscribe\n");
+    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_subscribe\n");
     CUptiResult err = CUPTI_SUCCESS;
     CUresult err2 = CUDA_SUCCESS;
 
@@ -501,25 +519,123 @@ void Tau_cupti_subscribe()
     err = cuptiActivityRegisterCallbacks(Tau_cupti_register_buffer_creation, Tau_cupti_register_sync_event);
     CUPTI_CHECK_ERROR(err, "cuptiActivityRegisterCallbacks");
     subscribed = 1;
+    TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_subscribe\n");
 }
 
-CUpti_EventGroup* Tau_cupti_get_eventgroup()
+
+void Tau_cupti_enable_domains() 
 {
-  return &eventGroup;
+
+    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_enable_domains\n");
+		CUptiResult cuptiErr = CUPTI_SUCCESS;
+
+    if (cupti_api_runtime())
+    {
+        TAU_DEBUG_PRINT("TAU: Subscribing to RUNTIME API.\n");
+        cuptiErr = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RUNTIME_API);
+        CUPTI_CHECK_ERROR(cuptiErr, "cuptiEnableDomain (CUPTI_CB_DOMAIN_RUNTIME_API)");
+        //runtime_enabled = true;
+    }
+    if (cupti_api_driver())
+    {
+        TAU_DEBUG_PRINT("TAU: Subscribing to DRIVER API.\n");
+        cuptiErr = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API);
+        CUPTI_CHECK_ERROR(cuptiErr, "cuptiEnableDomain (CUPTI_CB_DOMAIN_DRIVER_API)");
+        //driver_enabled = true;
+    }
+
+    cuptiErr = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_SYNCHRONIZE);
+    CUPTI_CHECK_ERROR(cuptiErr, "cuptiEnableDomain (CUPTI_CB_DOMAIN_SYNCHRONIZE)");
+    cuptiErr = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RESOURCE);
+    CUPTI_CHECK_ERROR(cuptiErr, "cuptiEnableDomain (CUPTI_CB_DOMAIN_RESOURCE)");
+    //CUDA_CHECK_ERROR(err2, "Cannot set Domain, check if the CUDA toolkit version is supported by the install CUDA driver.\n");
+    /* BEGIN source line info */
+    /* Need to check if device is pre-Fermi */
+    if(TauEnv_get_cuda_track_sass()) {
+        cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_INSTRUCTION_EXECUTION);
+        CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_INSTRUCTION_EXECUTION)");
+        // err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RESOURCE);
+        // CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_RESOURCE)");
+    }
+    /* END source line info */
+    cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
+    CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONTEXT)");
+    if(!TauEnv_get_cuda_track_sass()) {
+        cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
+        CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY)");
+    }
+    cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY2);
+    CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY2)");
+    /*  SASS incompatible with KIND_CONCURRENT_KERNEL  */
+    if(!TauEnv_get_cuda_track_sass()) {
+        cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
+        CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL)");
+    }
+    else {
+        cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
+        CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
+    }
+    if(TauEnv_get_cuda_track_env()) {
+        cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_ENVIRONMENT);
+        CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_ENVIRONMENT)");
+    }
+    if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
+    {
+        cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR);
+        CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR)");
+        cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_GLOBAL_ACCESS);
+        CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_GLOBAL_ACCESS)");
+    } else if (strcasecmp(TauEnv_get_cuda_instructions(), "BRANCH") == 0)
+    {
+        cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR);
+        CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR)");
+        cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_BRANCH);
+        CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_BRANCH)");
+    }
+    //if (!TauEnv_get_tracing()) {
+        cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SYNCHRONIZATION);
+        CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_SYNCHRONIZATION)");
+    //}
+    cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_STREAM);
+    CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_STREAM)");
+
+    TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_enable_domains\n");
 }
 
-void Tau_cupti_init()
+void Tau_cupti_setup_offset() 
 {
-  if (!subscribed) {
-    Tau_cupti_subscribe();
-  }
 
+	
+    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_setup_offset\n");
+
+		CUptiResult cuptiErr;
+    uint64_t gpu_timestamp;
+    cuptiErr = cuptiGetTimestamp(&gpu_timestamp);
+    CUPTI_CHECK_ERROR(cuptiErr, "Cannot get timestamp.\n");
+    uint64_t cpu_timestamp = time(NULL); // NO: TauTraceGetTimeStamp(); //TODO: more precise ts for cpu
+    double tmp = (double)cpu_timestamp - ((double)gpu_timestamp / 1.0e9);
+    //printf("Set offset: %lu - %f/1e3 = %f\n", TauTraceGetTimeStamp(), (double)gpu_timestamp, tmp);
+    Tau_cupti_set_offset(tmp);
+    //Tau_cupti_set_offset((-1) * timestamp / 1e3);
+    //cerr << "begining timestamp: " << TauTraceGetTimeStamp() - ((double)timestamp/1e3) << "ms.\n" << endl;
+    //Tau_cupti_set_offset(0);
+
+
+    TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_setup_offset\n");
+}
+
+void Tau_cupti_setup_eventgroup() 
+{
+	
+    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_setup_eventgroup\n");
   CUresult cuErr;
   CUptiResult cuptiErr;
   CUcontext cuCtx;
   CUdevice device;
 
-  eventGroup = (CUpti_EventGroup*)malloc(sizeof(CUpti_EventGroup));
+	eventGroup = (CUpti_EventGroup*)malloc(sizeof(CUpti_EventGroup));
+	cuErr = cuDeviceGet(&device, 0);
+	CUDA_CHECK_ERROR(cuErr, "cuDeviceGet");
 
   cuErr = cuCtxGetCurrent(&cuCtx);
   CUDA_CHECK_ERROR(cuErr, "cuCtxGetCurrent");
@@ -592,8 +708,34 @@ void Tau_cupti_init()
     //record the fact the events have been added.
     Tau_CuptiLayer_set_num_events(added_counters.size());
 
-    Tau_CuptiLayer_init();
+
+    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_setup_eventgroup\n");
 }
+
+void Tau_cupti_init()
+{
+
+    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_init\n");
+
+    Tau_gpu_init();
+
+    Tau_cupti_set_device_props();
+  
+    Tau_cupti_setup_unified_memory();
+
+		Tau_CuptiLayer_init();
+
+		if (!subscribed) {
+			Tau_cupti_subscribe();
+		}
+
+
+		// subscribe must happen before enable domains
+		Tau_cupti_enable_domains();
+
+    TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_init\n");
+}
+
 
 void Tau_cupti_onload()
 {
@@ -601,99 +743,13 @@ void Tau_cupti_onload()
     static bool once = false;
     if (once) { return; } else { once = true; }
 
-    CUptiResult err = CUPTI_SUCCESS;
-    CUresult err2 = CUDA_SUCCESS;
-    TAU_DEBUG_PRINT("in Tau_cupti_onload\n");
-    cuInit(0);
-    if (!subscribed) {
-        Tau_cupti_subscribe();
-    }
+    CUresult cuErr = CUDA_SUCCESS;
+    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_onload\n");
+
+    cuErr = cuInit(0);
     TAU_VERBOSE("TAU: Enabling CUPTI callbacks.\n");
-
-    if (cupti_api_runtime())
-    {
-        TAU_DEBUG_PRINT("TAU: Subscribing to RUNTIME API.\n");
-        err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RUNTIME_API);
-        CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_RUNTIME_API)");
-        //runtime_enabled = true;
-    }
-    if (cupti_api_driver())
-    {
-        TAU_DEBUG_PRINT("TAU: Subscribing to DRIVER API.\n");
-        err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API);
-        CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_DRIVER_API)");
-        //driver_enabled = true;
-    }
-
-    err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_SYNCHRONIZE);
-    CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_SYNCHRONIZE)");
-    err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RESOURCE);
-    CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_RESOURCE)");
-    CUDA_CHECK_ERROR(err2, "Cannot set Domain, check if the CUDA toolkit version is supported by the install CUDA driver.\n");
-    /* BEGIN source line info */
-    /* Need to check if device is pre-Fermi */
-    if(TauEnv_get_cuda_track_sass()) {
-        err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_INSTRUCTION_EXECUTION);
-        CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_INSTRUCTION_EXECUTION)");
-        // err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RESOURCE);
-        // CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_RESOURCE)");
-    }
-    /* END source line info */
-    err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
-    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONTEXT)");
-    if(!TauEnv_get_cuda_track_sass()) {
-        err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
-        CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY)");
-    }
-    err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY2);
-    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY2)");
-    /*  SASS incompatible with KIND_CONCURRENT_KERNEL  */
-    if(!TauEnv_get_cuda_track_sass()) {
-        err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
-        CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL)");
-    }
-    else {
-        err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
-        CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
-    }
-    if(TauEnv_get_cuda_track_env()) {
-        err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_ENVIRONMENT);
-        CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_ENVIRONMENT)");
-    }
-    if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
-    {
-        err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR);
-        CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR)");
-        err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_GLOBAL_ACCESS);
-        CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_GLOBAL_ACCESS)");
-    } else if (strcasecmp(TauEnv_get_cuda_instructions(), "BRANCH") == 0)
-    {
-        err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR);
-        CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR)");
-        err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_BRANCH);
-        CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_BRANCH)");
-    }
-    //if (!TauEnv_get_tracing()) {
-        err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SYNCHRONIZATION);
-        CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_SYNCHRONIZATION)");
-    //}
-    err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_STREAM);
-    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_STREAM)");
-
-    uint64_t gpu_timestamp;
-    err = cuptiGetTimestamp(&gpu_timestamp);
-    CUDA_CHECK_ERROR(err2, "Cannot get timestamp.\n");
-    uint64_t cpu_timestamp = time(NULL); // NO: TauTraceGetTimeStamp(); //TODO: more precise ts for cpu
-    double tmp = (double)cpu_timestamp - ((double)gpu_timestamp / 1.0e9);
-    //printf("Set offset: %lu - %f/1e3 = %f\n", TauTraceGetTimeStamp(), (double)gpu_timestamp, tmp);
-    Tau_cupti_set_offset(tmp);
-    //Tau_cupti_set_offset((-1) * timestamp / 1e3);
-    //cerr << "begining timestamp: " << TauTraceGetTimeStamp() - ((double)timestamp/1e3) << "ms.\n" << endl;
-    //Tau_cupti_set_offset(0);
-
-    Tau_gpu_init();
-    Tau_cupti_set_device_props();
-    Tau_cupti_setup_unified_memory();
+		CUDA_CHECK_ERROR(cuErr, "cuInit");
+		TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_onload\n");
 }
 
 void Tau_cupti_onunload() {

@@ -9,6 +9,11 @@
 using namespace std;
 
 #if CUPTI_API_VERSION >= 2
+#ifdef TAU_DEBUG_CUPTI
+#define TAU_DEBUG_PRINT(...) do{ fprintf( stderr, __VA_ARGS__ ); } while( false )
+#else
+#define TAU_DEBUG_PRINT(...) do{ } while ( false )
+#endif
 
 counter_map_t & Tau_CuptiLayer_Counter_Map() {
   static counter_map_t Counter_Map;
@@ -225,9 +230,9 @@ void Tau_CuptiLayer_enable_eventgroup()
 /* lifted from PAPI. */
 void Tau_CuptiLayer_init()
 {
-#ifdef TAU_DEBUG_CUPTI
-    printf("in Tau_CuptiLayer_init\n");
-#endif
+
+		TAU_DEBUG_PRINT("AHJ: entering Tau_CuptiLayer_init\n");
+
     int device_count;
     cuDeviceGetCount(&device_count);
     if (!initialized) {
@@ -235,11 +240,21 @@ void Tau_CuptiLayer_init()
         initialized = (bool*)calloc(device_count, sizeof(bool));
     }
 
-    CUdevice device;
+    CUdevice device = 0;
     CUptiResult cuptiErr;
+		CUresult cudaErr;
+		cudaError_t cuErr;
     CUcontext cuCtx;
-    cuCtxGetCurrent(&cuCtx);
-    cuCtxGetDevice(&device);
+/*
+    cuErr = cudaGetDevice(&device);
+		if (cuErr != cudaSuccess) 
+		{ 
+			fprintf (stderr, "[%s:%d] Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, cuErr, "cudaGetDevice");
+		}*/
+		fprintf(stderr, "device %d\n", device);
+		cudaErr = cuDevicePrimaryCtxRetain(&cuCtx, device);
+		CHECK_CU_ERROR(cudaErr, "cuCtxGetDevice");
+
     counter_vec_t & added_counters = Tau_CuptiLayer_Added_counters();
 
     if (!initialized[device] && added_counters.size() > 0) {
@@ -278,9 +293,7 @@ void Tau_CuptiLayer_init()
     }
     cudaEventCreate(&TAU_cudaEvent);
 
-#ifdef TAU_DEBUG_CUPTI
-    printf("leaving Tau_CuptiLayer_init\n");
-#endif
+		TAU_DEBUG_PRINT("AHJ: entering Tau_CuptiLayer_init\n");
 }
 
 void Tau_CuptiLayer_disable()
