@@ -37,10 +37,10 @@ extern "C" void Tau_cupti_register_host_calling_site(
             TauInternal_CurrentProfiler(i)->CallPathFunction != NULL)
         {
             // lock required to prevent multithreaded access to the tree
-            RtsLayer::LockDB();
+            functionInfoMap_mutex().lock();
             functionInfoMap_hostLaunch()[correlationId] =
                 TauInternal_CurrentProfiler(i)->CallPathFunction;
-            RtsLayer::UnLockDB();
+            functionInfoMap_mutex().unlock();
             break;
         }
     }
@@ -51,10 +51,12 @@ extern "C" void Tau_cupti_register_host_calling_site(
 extern "C" void Tau_cupti_register_device_calling_site(
         int64_t correlationId,
         const char *name) {
+    // can't lock before this call, it locks inside
+    FunctionInfo * tmp = (FunctionInfo *) Tau_pure_search_for_function(name, 0);
     // lock required to prevent multithreaded access to the tree
-    RtsLayer::LockDB();
-    functionInfoMap_deviceLaunch()[correlationId] = (FunctionInfo *) Tau_pure_search_for_function(name, 0);
-    RtsLayer::UnLockDB();
+    functionInfoMap_mutex().lock();
+    functionInfoMap_deviceLaunch()[correlationId] = tmp;
+    functionInfoMap_mutex().unlock();
 }
 extern "C" void Tau_cupti_register_sync_site(
         uint32_t correlationId,

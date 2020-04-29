@@ -1079,13 +1079,59 @@ extern "C" int Tau_get_thread(void) {
   return RtsLayer::myThread();
 }
 
+#ifdef CUPTI
+class cupti_buffer_tracking {
+public:
+    cupti_buffer_tracking() {
+        created = 0;
+        processed = 0;
+    }
+    int open_buffers(void) {
+        return created - processed;
+    }
+    int created;
+    int processed;
+};
+
+cupti_buffer_tracking& Tau_get_cupti_buffer_tracker(void) {
+    static cupti_buffer_tracking tracker;
+    return tracker;
+}
+
+void Tau_cupti_buffer_created(void) {
+    Tau_get_cupti_buffer_tracker().created++;
+    //printf("BUFFERS! Created: %d, processed: %d\n", Tau_get_cupti_buffer_tracker().created, Tau_get_cupti_buffer_tracker().processed);
+    //fflush(stdout);
+}
+
+void Tau_cupti_buffer_processed(void) {
+    Tau_get_cupti_buffer_tracker().processed++;
+    //printf("BUFFERS! Created: %d, processed: %d\n", Tau_get_cupti_buffer_tracker().created, Tau_get_cupti_buffer_tracker().processed);
+    //fflush(stdout);
+}
+#endif
+
 extern "C" void Tau_flush_gpu_activity(void) {
 #ifdef CUPTI
-    // flush all the cuda activity before we dump!
+    static bool did_once = false;
+    static bool done = false;
+    static int loops = 0;
+    if (RtsLayer::myThread() != 0) return;
     if (Tau_init_check_initialized() &&
         !Tau_global_getLightsOut() &&
-        Tau_CuptiLayer_is_initialized()) {
-      cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+        !done) {
+        while (Tau_get_cupti_buffer_tracker().created > Tau_get_cupti_buffer_tracker().processed) {
+            if (RtsLayer::myNode() == 0) {
+                if (did_once) {
+                    printf("TAU: ...still flushing asynchronous CUDA events...\n");
+                } else {
+                    printf("TAU: flushing asynchronous CUDA events...\n");
+                    did_once = true;
+                }
+            }
+            cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+        }
+        done = true;
     }
 #endif
 }
@@ -2187,6 +2233,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
   }
 
   if (!initthread[tid]) {
+    RtsLayer::LockDB();
     // if there is no top-level timer, create one - But only create one FunctionInfo object.
     // that should be handled by the Tau_pure_start_task call.
     if (!TauInternal_CurrentProfiler(tid)) {
@@ -2207,6 +2254,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
       initializing[tid] = false;
 #endif
     }
+    RtsLayer::UnLockDB();
   }
 
 #endif
