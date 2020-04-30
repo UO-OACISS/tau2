@@ -35,6 +35,9 @@ struct BacktraceFrame
 };
 
 static int iteration[TAU_MAX_THREADS] = { 0 };
+static inline int& getIterationRef(int tid){
+    return iteration[tid];
+}
 
 static int getBacktraceFromExecinfo(int trim, BacktraceFrame ** oframes)
 {
@@ -144,7 +147,7 @@ int Tau_backtrace_record_backtrace(int trim)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  int & iter = iteration[RtsLayer::myThread()];
+  int & iter = getIterationRef(RtsLayer::myThread());
   ++iter;
 
   BacktraceFrame * frames;

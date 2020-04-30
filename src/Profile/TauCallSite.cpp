@@ -193,13 +193,22 @@ static callsitePathMap_t& TheCallSitePathMap(void)
 }
 
 static unsigned long callSiteId[TAU_MAX_THREADS];
+static inline unsigned long getCallSiteId(int tid){
+    return callSiteId[tid];
+}
+static inline void setCallSiteId(int tid, unsigned long value){
+    callSiteId[tid]=value;
+}
+static inline void incrementCallSiteId(int tid){
+    callSiteId[tid]++;
+}
 
 void initializeCallSiteDiscoveryIfNecessary()
 {
   static bool initialized = false;
   if (!initialized) {
     for (int i = 0; i < TAU_MAX_THREADS; i++) {
-      callSiteId[i] = 0;
+      setCallSiteId(i, 0);//TODO: Can't we just initialize like ={0}
     }
     initialized = true;
   }
@@ -645,7 +654,7 @@ void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
       // *CWL* - It is important to make a copy of the callsiteKey for registration.
       unsigned long * callsiteKeyCopy = (unsigned long*)malloc(sizeof(callsiteKey));
       memcpy(callsiteKeyCopy, callsiteKey, sizeof(callsiteKey));
-      callsiteKeyId = callSiteId[tid];
+      callsiteKeyId = getCallSiteId(tid);
       TheCallSiteKey2IdMap().insert(map<TAU_CALLSITE_KEY_ID_MAP_TYPE>::value_type(callsiteKeyCopy, callsiteKeyId));
       tau_cs_info_t *callSiteInfo = (tau_cs_info_t *)malloc(sizeof(tau_cs_info_t));
       callSiteInfo->key = callsiteKeyCopy;
@@ -654,7 +663,7 @@ void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
       callSiteInfo->hasName = false;
       callSiteInfo->resolvedName = NULL;
       TheCallSiteIdVector().push_back(callSiteInfo);
-      callSiteId[tid]++;
+      incrementCallSiteId(tid);
     } else {
       // We've seen this callsite key before.
       callsiteKeyId = (*itCs).second;
@@ -839,7 +848,7 @@ extern "C" void finalizeCallSites_if_necessary()
 #endif /* TAU_BFD */
 
   string delimiter = string(" --> ");
-  for (unsigned int i = 0; i < callSiteId[tid]; i++) {
+  for (unsigned int i = 0; i < getCallSiteId(tid); i++) {
     tau_cs_info_t *callsiteInfo = TheCallSiteIdVector()[i];
     if (callsiteInfo && callsiteInfo->hasName) {
       // We've already done this in the discovery phase.
