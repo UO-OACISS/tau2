@@ -490,8 +490,10 @@ int RtsLayer::getNumDBLocks(void) {
 
 int RtsLayer::LockDB(void) {
   static bool init = initLocks();
+#ifdef DEBUG_LOCK_PROBLEMS
   thread_local static void* old_callstack[128];
   thread_local static int old_frames;
+#endif
   // use the init value so the compiler doesn't complain
   if (!init) {}
   int tid=localThreadId();
