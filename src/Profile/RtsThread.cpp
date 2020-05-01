@@ -16,7 +16,7 @@
 
 
 //////////////////////////////////////////////////////////////////////
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -43,20 +43,23 @@
 #endif //TAUKTAU_SHCTR
 #endif //TAUKTAU
 
-#ifdef TAU_MPC 
+#ifdef TAU_MPC
 #include <Profile/MPCThreadLayer.h>
 #endif /* TAU_MPC */
 
 // This is used for printing the stack trace when debugging locks
+//#define DEBUG_LOCK_PROBLEMS
 #ifdef DEBUG_LOCK_PROBLEMS
+//#define DEBUG_LOCK_PROBLEMS_disabled
 #include <execinfo.h>
+thread_local bool verbose{false};
 #endif //DEBUG_LOCK_PROBLEMS
 
 // This is a hack for all the deadlocks in TAU.
 // A new threading layer is being built that will do away with
 // this locking model and make this hack obsolete.
 #ifndef TAU_ENVLOCK_IS_DBLOCK
-#define TAU_ENVLOCK_IS_DBLOCK 
+#define TAU_ENVLOCK_IS_DBLOCK
 #endif
 
 using namespace std;
@@ -89,7 +92,7 @@ void TraceCallStack(int tid, Profiler *current);
 
 
 //////////////////////////////////////////////////////////////////////
-// Thread struct 
+// Thread struct
 //////////////////////////////////////////////////////////////////////
 class RtsThread
 {
@@ -128,7 +131,7 @@ static unsigned int nextThread = 1;
 int RtsLayer::_createThread()
 {
 	RtsThread* newThread;
-	
+
 	if (nextThread > TheThreadList().size())
 	{
 		newThread = new RtsThread();
@@ -152,7 +155,7 @@ int RtsLayer::createThread()
   threadLockEnv();
 
 	int tid = RtsLayer::_createThread();
-	
+
   threadUnLockEnv();
 
   int numThreads = getTotalThreads();
@@ -173,11 +176,11 @@ void RtsLayer::recycleThread(int id)
 {
   TauInternalFunctionGuard protects_this_function;
   LockEnv();
-	
+
 	TheThreadList().at(id-1)->active = false;
 	TheThreadList().at(id-1)->next_available = nextThread;
-	nextThread = id-1;	
-  
+	nextThread = id-1;
+
 	UnLockEnv();
 }
 
@@ -210,7 +213,7 @@ int RtsLayer::unsafeLocalThreadId(void)
   return OpenMPLayer::GetThreadId();
 #elif TAU_PAPI_THREADS
   return PapiThreadLayer::GetThreadId();
-#else  // if no other thread package is available 
+#else  // if no other thread package is available
   return 0;
 #endif // PTHREADS
 }
@@ -238,7 +241,7 @@ int RtsLayer::unsafeThreadId(void)
   return OpenMPLayer::GetTauThreadId();
 #elif TAU_PAPI_THREADS
   return PapiThreadLayer::GetThreadId();
-#else  // if no other thread package is available 
+#else  // if no other thread package is available
   return 0;
 #endif // PTHREADS
 }
@@ -292,7 +295,7 @@ int RtsLayer::myNode(void)
 // myContext() returns the current context id (0..N-1)
 //////////////////////////////////////////////////////////////////////
 int RtsLayer::myContext(void)
-{	
+{
 #ifdef KTAU_NG
   return RtsLayer::getLinuxKernelTid(); //voorhees
 #elif defined(__MIC__)
@@ -302,12 +305,12 @@ if (TauEnv_get_mic_offload())
 }
 else
 #endif /* KTAU_NG */
-  return TheContext(); 
+  return TheContext();
 }
 
 
 //////////////////////////////////////////////////////////////////////
-// RegisterThread is called before any other profiling function in a 
+// RegisterThread is called before any other profiling function in a
 // thread that is spawned off
 //////////////////////////////////////////////////////////////////////
 int RtsLayer::RegisterThread()
@@ -355,7 +358,7 @@ int RtsLayer::RegisterThread()
 
 
 //////////////////////////////////////////////////////////////////////
-// RegisterFork is called before any other profiling function in a 
+// RegisterFork is called before any other profiling function in a
 // process that is forked off (child process)
 //////////////////////////////////////////////////////////////////////
 void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
@@ -368,7 +371,7 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
 
 #ifdef TAUKTAU
   //If KTAU profiling (esp. merged, but even non-merged) is on
-  //then we ALWAYS do EXCLUDE_PARENT - i.e. KTAU doesnt currently 
+  //then we ALWAYS do EXCLUDE_PARENT - i.e. KTAU doesnt currently
   //support INCLUDE_PARENT. Unlike in the case of TAU, there is a
   // LOT of extra work that needs to be done in KTAU for INCLUDE.
   // - TODO. : AN
@@ -386,9 +389,9 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
 #endif	// TAUKTAU_SHCTR
 
   TAU_PROFILE_SET_NODE(nodeid);
-  // First, set the new id 
+  // First, set the new id
   if (opcode == TAU_EXCLUDE_PARENT_DATA) {
-  // If opcode is TAU_EXCLUDE_PARENT_DATA then we clear out the 
+  // If opcode is TAU_EXCLUDE_PARENT_DATA then we clear out the
   // previous values in the TheFunctionDB()
 
   // Get the current time
@@ -397,12 +400,12 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
        CurrentTimeOrCounts[i]=0;
      }
      getUSecD(myThread(), CurrentTimeOrCounts);
-     for (int tid = 0; tid < TAU_MAX_THREADS; tid++) { 
-       // For each thread of execution 
+     for (int tid = 0; tid < TAU_MAX_THREADS; tid++) {
+       // For each thread of execution
 #ifdef PROFILING_ON
-       for(it=TheFunctionDB().begin(); it!=TheFunctionDB().end(); it++) { 
-	 // Iterate through each FunctionDB item 
-	 // Clear all values 
+       for(it=TheFunctionDB().begin(); it!=TheFunctionDB().end(); it++) {
+	 // Iterate through each FunctionDB item
+	 // Clear all values
 	 (*it)->SetCalls(tid, 0);
 	 (*it)->SetSubrs(tid, 0);
          (*it)->SetExclTimeZero(tid);
@@ -419,16 +422,16 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
        KtauFuncInfo::ResetAllGrpTotals(tid);
 #endif //TAUKTAU_MERGE
        DEBUGPROFMSG("RtsLayer::RegisterFork: Running-Up Stack\n");
-       // Now that the FunctionDB is cleared, we need to add values to it 
+       // Now that the FunctionDB is cleared, we need to add values to it
        //	corresponding to the present state.
        current = TauInternal_CurrentProfiler(tid);
-       while (current != 0) { 
-	 // Iterate through each profiler on the callstack and 
-	 // fill Values in it 
-	 DEBUGPROFMSG("P Correct: Inside "<< current->ThisFunction->GetName() 
+       while (current != 0) {
+	 // Iterate through each profiler on the callstack and
+	 // fill Values in it
+	 DEBUGPROFMSG("P Correct: Inside "<< current->ThisFunction->GetName()
 		      <<endl;);
 	 current->ThisFunction->IncrNumCalls(tid);
-	 if (current->ParentProfiler != 0) { 
+	 if (current->ParentProfiler != 0) {
 	   // Increment the number of called functions in its parent
 	   current->ParentProfiler->ThisFunction->IncrNumSubrs(tid);
 	 }
@@ -438,14 +441,14 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
 	 current = current->ParentProfiler;
        } // Until the top of the stack
 #endif   // PROFILING_ON
-       
-       
+
+
        if (TauEnv_get_tracing()) {
 	 DEBUGPROFMSG("Tracing Correct: "<<endl;);
-	 TauTraceUnInitialize(tid); // Zap the earlier contents of the trace buffer  
-	 TraceCallStack(tid, TauInternal_CurrentProfiler(tid)); 
+	 TauTraceUnInitialize(tid); // Zap the earlier contents of the trace buffer
+	 TraceCallStack(tid, TauInternal_CurrentProfiler(tid));
        }
-       
+
 #ifdef TAUKTAU
        DEBUGPROFMSG("RtsLayer::RegisterFork: CurrentProfiler:"<<TauInternal_CurrentProfiler(tid)<<endl;);
        if (TauInternal_CurrentProfiler(tid) != NULL) {
@@ -454,10 +457,10 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
 #endif //TAUKTAU
 
      } // for tid loop
-     // DONE! 
+     // DONE!
    }
    // If it is TAU_INCLUDE_PARENT_DATA then there's no need to do anything.
-   // fork would copy over all the parent data as it is. 
+   // fork would copy over all the parent data as it is.
 }
 void RtsLayer::Initialize(void) {
 #if TAU_OPENMP
@@ -503,6 +506,10 @@ int RtsLayer::getNumDBLocks(void) {
 
 int RtsLayer::LockDB(void) {
   static bool init = initLocks();
+#ifdef DEBUG_LOCK_PROBLEMS
+  thread_local static void* old_callstack[128];
+  thread_local static int old_frames;
+#endif
   // use the init value so the compiler doesn't complain
   if (!init) {}
   int tid=localThreadId();
@@ -511,17 +518,27 @@ int RtsLayer::LockDB(void) {
 #ifdef DEBUG_LOCK_PROBLEMS
     int nid = RtsLayer::myNode();
   if (getDBLock(tid) > 0) {
-    fprintf(stderr,"WARNING! Thread %d,%d has DB lock, trying for another DB lock\n", nid, tid);
-  }
     if(!TauEnv_get_ebs_enabled()) {
+      int i;
+      char** old_strs = backtrace_symbols(old_callstack, old_frames);
+      fprintf(stderr,"\n\n");
+      for (i = 0; i < old_frames; ++i) {
+        fprintf(stderr,"%d,%d: %s\n", nid, tid, old_strs[i]);
+      }
+      free(old_strs);
       void* callstack[128];
-      int i, frames = backtrace(callstack, 128);
+      int frames = backtrace(callstack, 128);
       char** strs = backtrace_symbols(callstack, frames);
+      fprintf(stderr,"\n\n");
       for (i = 0; i < frames; ++i) {
         fprintf(stderr,"%d,%d: %s\n", nid, tid, strs[i]);
       }
       free(strs);
     }
+    fprintf(stderr,"WARNING! Thread %d,%d has DB lock, trying for another DB lock\n", nid, tid);
+    //abort();
+  }
+  old_frames = backtrace(old_callstack, 128);
 /*
   // check the OTHER lock
   if (lockEnvCount[tid] > 0) {
@@ -543,7 +560,15 @@ int RtsLayer::LockDB(void) {
   }
   incrementDBLock(tid);
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
-#ifdef DEBUG_LOCK_PROBLEMS
+#ifdef DEBUG_LOCK_PROBLEMS_disabled
+      void* callstack[128];
+      int frames = backtrace(callstack, 128);
+      char** strs = backtrace_symbols(callstack, frames);
+      fprintf(stderr,"\n\n");
+      for (i = 0; i < frames; ++i) {
+        fprintf(stderr,"%d,%d: %s\n", nid, tid, strs[i]);
+      }
+      free(strs);
   fprintf(stderr,"THREAD %d,%d HAS %d DB LOCKS (locking)\n", RtsLayer::myNode(), tid, lockDBCount[tid]);
   fflush(stdout);
 #endif
@@ -555,11 +580,18 @@ int RtsLayer::UnLockDB(void) {
   decrementDBLock(tid);
   if (getDBLock(tid) == 0) {
     threadUnLockDB();
+  } else {
+    // protect against too many unlocks!
+    if (lockDBCount[tid] < 0) {
+        lockDBCount[tid] = 0;
+    }
   }
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 #ifdef DEBUG_LOCK_PROBLEMS
-  fprintf(stderr,"THREAD %d,%d HAS %d DB LOCKS\n", RtsLayer::myNode(), tid, lockDBCount[tid]);
+  if (lockDBCount[tid] > 0) {
+  fprintf(stderr,"Unlock: THREAD %d,%d HAS %d DB LOCKS\n", RtsLayer::myNode(), tid, lockDBCount[tid]);
   fflush(stdout);
+  }
 #endif
   return getDBLock(tid);
 }
@@ -626,7 +658,7 @@ int RtsLayer::getNumEnvLocks(void) {
 
 int RtsLayer::LockEnv(void)
 {
-#ifdef TAU_ENVLOCK_IS_DBLOCK 
+#ifdef TAU_ENVLOCK_IS_DBLOCK
   return LockDB();
 #else
   static bool init = initEnvLocks();
@@ -635,9 +667,7 @@ int RtsLayer::LockEnv(void)
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 #ifdef DEBUG_LOCK_PROBLEMS
     int nid = RtsLayer::myNode();
-  if (getEnvLock(tid) > 0){ 
-    fprintf(stderr,"WARNING! Thread %d,%d has Env lock, trying for another Env lock\n", nid, tid);
-  }
+  if (getEnvLock(tid) > 0) {
     if(!TauEnv_get_ebs_enabled()) {
       void* callstack[128];
       int i, frames = backtrace(callstack, 128);
@@ -647,6 +677,9 @@ int RtsLayer::LockEnv(void)
       }
       free(strs);
     }
+    fprintf(stderr,"WARNING! Thread %d,%d has Env lock, trying for another Env lock\n", nid, tid);
+    abort();
+  }
 #endif
   //TAU_ASSERT(lockDBCount[tid] == 0, "Thread has DB lock, trying for Env lock");
 	if (getEnvLock(tid) == 0) { 
@@ -654,7 +687,7 @@ int RtsLayer::LockEnv(void)
   }
   incrementEnvLock(tid);
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
-#ifdef DEBUG_LOCK_PROBLEMS
+#ifdef DEBUG_LOCK_PROBLEMS_disabled
   fprintf(stderr,"THREAD %d,%d HAS %d ENV LOCKS (locking)\n", RtsLayer::myNode(), tid, getEnvLock(tid));
   fflush(stdout);
 #endif
@@ -662,9 +695,9 @@ int RtsLayer::LockEnv(void)
 #endif
 }
 
-int RtsLayer::UnLockEnv(void) 
+int RtsLayer::UnLockEnv(void)
 {
-#ifdef TAU_ENVLOCK_IS_DBLOCK 
+#ifdef TAU_ENVLOCK_IS_DBLOCK
   return UnLockDB();
 #else
   int tid=localThreadId();
@@ -673,7 +706,7 @@ int RtsLayer::UnLockEnv(void)
     threadUnLockEnv();
   }
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
-#ifdef DEBUG_LOCK_PROBLEMS
+#ifdef DEBUG_LOCK_PROBLEMS_disabled
   fprintf(stderr,"THREAD %d,%d HAS %d ENV LOCKS\n", RtsLayer::myNode(), tid, getEnvLock(tid));
   fflush(stdout);
 #endif

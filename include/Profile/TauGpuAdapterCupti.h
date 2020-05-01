@@ -4,6 +4,7 @@
 #include "Profile/CuptiLayer.h"
 #include <Profile/TauGpu.h>
 #include <stdlib.h>
+#include <mutex>
 
 extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
 
@@ -42,6 +43,11 @@ struct DeviceMap : public std::map<int64_t, FunctionInfo*> {
 DeviceMap & functionInfoMap_deviceLaunch() {
   static DeviceMap device_map;
   return device_map;
+}
+
+std::mutex & functionInfoMap_mutex() {
+  static std::mutex mtx;
+  return mtx;
 }
 
 struct DeviceInfoMap : public std::map<uint32_t, metadata_struct> {
@@ -219,24 +225,24 @@ public:
     if (cdpId != 0)
     {
       // lock required to prevent multithreaded access to the tree
-      RtsLayer::LockDB();
+      functionInfoMap_mutex().lock();
       std::map<int64_t, FunctionInfo*>::iterator it = functionInfoMap_deviceLaunch().find(parentGridId);
       if (it != functionInfoMap_deviceLaunch().end())
       {
         funcInfo = it->second;
         //printf("found device launch site: %s.\n", funcInfo->GetName());
       }
-      RtsLayer::UnLockDB();
+      functionInfoMap_mutex().unlock();
     } else {
       // lock required to prevent multithreaded access to the tree
-      RtsLayer::LockDB();
+      functionInfoMap_mutex().lock();
       std::map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap_hostLaunch().find(correlationId);
       if (it != functionInfoMap_hostLaunch().end())
       {
         funcInfo = it->second;
         //printf("found host launch site: %s.\n", funcInfo->GetName());
       }
-      RtsLayer::UnLockDB();
+      functionInfoMap_mutex().unlock();
     }
     if (funcInfo != NULL) {
       funcInfo->SetPrimaryGroupName("TAU_REMOTE");
