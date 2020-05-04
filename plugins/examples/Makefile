@@ -35,7 +35,7 @@ libTAU-sos-plugin$(TAU_SHLIBX): Tau_plugin_sos.o TauSOS.o
 	$(CXX) Tau_plugin_sos.o TauSOS.o $(TAU_SOS_LINKER_OPTS) $(TAU_SHFLAGS) libTAU-sos-plugin$(TAU_SHLIBX)
 
 libTAU-adios2-plugin$(TAU_SHLIBX): Tau_plugin_adios2.o Tau_sockets.o
-	$(CXX) Tau_plugin_adios2.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-adios2-plugin$(TAU_SHLIBX)
+	$(CXX) Tau_plugin_adios2.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-adios2-plugin$(TAU_SHLIBX) $(TAU_SHLIBS)
 
 libTAU-adios2-trace-plugin$(TAU_SHLIBX): Tau_plugin_adios2_trace.o
 	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_adios2_trace.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-adios2-trace-plugin$(TAU_SHLIBX)
@@ -47,7 +47,7 @@ libTAU-sqlite3-plugin$(TAU_SHLIBX): Tau_plugin_sqlite3.o
 	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_sqlite3.o $(TAU_SQLITE3_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-sqlite3-plugin$(TAU_SHLIBX)
 
 libTAU-monitoring-plugin$(TAU_SHLIBX): Tau_plugin_monitoring.o
-	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_monitoring.o $(TAU_PAPI_EXTRA_FLAGS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-monitoring-plugin$(TAU_SHLIBX)
+	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_monitoring.o $(TAU_PAPI_EXTRA_FLAGS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-monitoring-plugin$(TAU_SHLIBX) $(TAU_SHLIBS)
 
 libTAU-thread-summary-plugin$(TAU_SHLIBX): Tau_plugin_thread_summary.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-thread-summary-plugin$(TAU_SHLIBX) Tau_plugin_thread_summary.o
