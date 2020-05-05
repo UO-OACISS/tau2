@@ -114,6 +114,11 @@ static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] __
 static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] = {0};
 #endif
 
+static inline Tau_collector_status_flags& getTauCollectorFlags(int tid)
+{
+    return Tau_collector_flags[tid];
+}
+
 // this is map of region names, indexed by region id.
 static std::map<unsigned long, char*> * region_names = NULL;
 static std::map<unsigned long, char*> * task_names = NULL;
@@ -244,12 +249,12 @@ void region_name_cleanup(unsigned long parallel_id) {
 void Tau_get_region_id(int tid) {
     // if not available, return something useful
     if (Tau_collector_api == NULL) {
-        Tau_collector_flags[tid].regionid = 0UL;
+        getTauCollectorFlags(tid).regionid = 0UL;
         return;
     }
     // query the thread state
-    int rc = (Tau_collector_api)(Tau_collector_flags[tid].region_message);
-    Tau_collector_flags[tid].regionid = (unsigned long)Tau_collector_flags[tid].region_message[4];
+    int rc = (Tau_collector_api)(getTauCollectorFlags(tid).region_message);
+    getTauCollectorFlags(tid).regionid = (unsigned long)getTauCollectorFlags(tid).region_message[4];
     if (rc !=0) {
       TAU_VERBOSE("Error getting region id from ORA!\n");
     }
@@ -259,12 +264,12 @@ void Tau_get_region_id(int tid) {
 void Tau_get_task_id(int tid) {
     // if not available, return something useful
     if (Tau_collector_api == NULL) {
-        Tau_collector_flags[tid].taskid = 0UL;
+        getTauCollectorFlags(tid).taskid = 0UL;
         return;
     }
     // query the thread state
-    int rc = (Tau_collector_api)(Tau_collector_flags[tid].task_message);
-    Tau_collector_flags[tid].taskid = (unsigned long)Tau_collector_flags[tid].task_message[4];
+    int rc = (Tau_collector_api)(getTauCollectorFlags(tid).task_message);
+    getTauCollectorFlags(tid).taskid = (unsigned long)getTauCollectorFlags(tid).task_message[4];
     if (rc !=0) {
       TAU_VERBOSE("Error getting task id from ORA!\n");
     }
@@ -549,12 +554,12 @@ defined (__GNUC_PATCHLEVEL__)) // IBM OMPT and Generic ORA support requires unwi
     if (task) {
         //TAU_VERBOSE("Task %lu has name %s\n", Tau_collector_flags[tid].taskid, tmpStr);
         TAU_OPENMP_SET_LOCK;
-        (*task_names)[Tau_collector_flags[tid].taskid] = strdup(tmpStr);
+        (*task_names)[getTauCollectorFlags(tid).taskid] = strdup(tmpStr);
         TAU_OPENMP_UNSET_LOCK;
     } else {
         //TAU_VERBOSE("Region %lu has name %s\n", Tau_collector_flags[tid].regionid, tmpStr);
         TAU_OPENMP_SET_LOCK;
-        (*region_names)[Tau_collector_flags[tid].regionid] = strdup(tmpStr);
+        (*region_names)[getTauCollectorFlags(tid).regionid] = strdup(tmpStr);
         TAU_OPENMP_UNSET_LOCK;
     }
     free (tmpStr);
@@ -675,31 +680,31 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
         case OMP_EVENT_FORK:
             Tau_get_current_region_context(tid, 0LU, false);
             Tau_omp_start_timer("OpenMP_PARALLEL_REGION", tid, 1, 1, false);
-            Tau_collector_flags[tid].parallel++;
+            getTauCollectorFlags(tid).parallel++;
             break;
         case OMP_EVENT_JOIN:
-            if (Tau_collector_flags[tid].parallel>0) {
+            if (getTauCollectorFlags(tid).parallel>0) {
                 Tau_omp_stop_timer("OpenMP_PARALLEL_REGION", tid, 1, false);
-                Tau_collector_flags[tid].parallel--;
+                getTauCollectorFlags(tid).parallel--;
             }
-            region_name_cleanup(Tau_collector_flags[tid].regionid);
+            region_name_cleanup(getTauCollectorFlags(tid).regionid);
             break;
         case OMP_EVENT_THR_BEGIN_IDLE:
             // sometimes IDLE can be called twice in a row
-            if (Tau_collector_flags[tid].idle == 1 && 
-                    Tau_collector_flags[tid].busy == 0) {
+            if (getTauCollectorFlags(tid).idle == 1 && 
+                    getTauCollectorFlags(tid).busy == 0) {
                 break;
             }
-            if (Tau_collector_flags[tid].busy == 1) {
+            if (getTauCollectorFlags(tid).busy == 1) {
                 Tau_omp_stop_timer("OpenMP_PARALLEL_REGION", tid, 1, false);
-                Tau_collector_flags[tid].busy = 0;
+                getTauCollectorFlags(tid).busy = 0;
             }
-            Tau_collector_flags[tid].idle = 1;
+            getTauCollectorFlags(tid).idle = 1;
             break;
         case OMP_EVENT_THR_END_IDLE:
             Tau_omp_start_timer("OpenMP_PARALLEL_REGION", tid, 1, 1, false);
-            Tau_collector_flags[tid].busy = 1;
-            Tau_collector_flags[tid].idle = 0;
+            getTauCollectorFlags(tid).busy = 1;
+            getTauCollectorFlags(tid).idle = 0;
             break;
         case OMP_EVENT_THR_BEGIN_IBAR:
             Tau_omp_start_timer("OpenMP_IMPLICIT_BARRIER", tid, 1, 0, false);
@@ -727,16 +732,16 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
             break;
         case OMP_EVENT_THR_BEGIN_ODWT:
             // for some reason, the ordered region wait is entered twice for some threads.
-            if (Tau_collector_flags[tid].ordered_region_wait == 0) {
+            if (getTauCollectorFlags(tid).ordered_region_wait == 0) {
                 Tau_omp_start_timer("OpenMP_ORDERED_REGION_WAIT", tid, 1, 0, false);
             }
-            Tau_collector_flags[tid].ordered_region_wait = 1;
+            getTauCollectorFlags(tid).ordered_region_wait = 1;
             break;
         case OMP_EVENT_THR_END_ODWT:
-            if (Tau_collector_flags[tid].ordered_region_wait == 1) {
+            if (getTauCollectorFlags(tid).ordered_region_wait == 1) {
                 Tau_omp_stop_timer("OpenMP_ORDERED_REGION_WAIT", tid, 1, false);
             }
-            Tau_collector_flags[tid].ordered_region_wait = 0;
+            getTauCollectorFlags(tid).ordered_region_wait = 0;
             break;
         case OMP_EVENT_THR_BEGIN_MASTER:
             Tau_omp_start_timer("OpenMP_MASTER_REGION", tid, 1, 0, false);
@@ -752,16 +757,16 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
             break;
         case OMP_EVENT_THR_BEGIN_ORDERED:
             // for some reason, the ordered region is entered twice for some threads.
-            if (Tau_collector_flags[tid].ordered_region == 0) {
+            if (getTauCollectorFlags(tid).ordered_region == 0) {
                 Tau_omp_start_timer("OpenMP_ORDERED_REGION", tid, 1, 0, false);
-                Tau_collector_flags[tid].ordered_region = 1;
+                getTauCollectorFlags(tid).ordered_region = 1;
             }
             break;
         case OMP_EVENT_THR_END_ORDERED:
-            if (Tau_collector_flags[tid].ordered_region == 1) {
+            if (getTauCollectorFlags(tid).ordered_region == 1) {
                 Tau_omp_stop_timer("OpenMP_ORDERED_REGION", tid, 1, false);
             }
-            Tau_collector_flags[tid].ordered_region = 0;
+            getTauCollectorFlags(tid).ordered_region = 0;
             break;
         case OMP_EVENT_THR_BEGIN_ATWT:
             Tau_omp_start_timer("OpenMP_ATOMIC_REGION_WAIT", tid, 1, 0, false);
@@ -832,16 +837,16 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
             // query the ORA to get the task id
             Tau_get_task_id (tid);
             Tau_omp_start_timer("OpenMP_EXECUTE_TASK", tid, 1, 0, false);
-            Tau_collector_flags[tid].task_exec += 1;
+            getTauCollectorFlags(tid).task_exec += 1;
             break;
         case OMP_EVENT_THR_BEGIN_FINISH_TASK:
             // query the ORA to get the task id
             //Tau_get_task_id (tid);
             // When we get a "finish task", there might be a task executing...
             // or there might not.
-            if (Tau_collector_flags[tid].task_exec > 0) {
+            if (getTauCollectorFlags(tid).task_exec > 0) {
                 Tau_omp_stop_timer("OpenMP_EXECUTE_TASK", tid, 0, false);
-                Tau_collector_flags[tid].task_exec -= 1;
+                getTauCollectorFlags(tid).task_exec -= 1;
             }
             Tau_omp_start_timer("OpenMP_FINISH_TASK", tid, 0, 0, false);
             break;
@@ -999,26 +1004,26 @@ extern "C" int Tau_initialize_collector_api(void) {
     int task_rsz = sizeof(int);
     for(i=0;i<omp_get_max_threads();i++) {  
         // for getting thread state
-        Tau_collector_flags[i].signal_message = (int*)malloc(OMP_COLLECTORAPI_HEADERSIZE+state_rsz+sizeof(int));
-        memset(Tau_collector_flags[i].signal_message, 0, (OMP_COLLECTORAPI_HEADERSIZE+state_rsz+sizeof(int)));
-        Tau_collector_flags[i].signal_message[0] = OMP_COLLECTORAPI_HEADERSIZE+state_rsz;
-        Tau_collector_flags[i].signal_message[1] = OMP_REQ_STATE;
-        Tau_collector_flags[i].signal_message[2] = OMP_ERRCODE_OK;
-        Tau_collector_flags[i].signal_message[3] = state_rsz;
+        getTauCollectorFlags(i).signal_message = (int*)malloc(OMP_COLLECTORAPI_HEADERSIZE+state_rsz+sizeof(int));
+        memset(getTauCollectorFlags(i).signal_message, 0, (OMP_COLLECTORAPI_HEADERSIZE+state_rsz+sizeof(int)));
+        getTauCollectorFlags(i).signal_message[0] = OMP_COLLECTORAPI_HEADERSIZE+state_rsz;
+        getTauCollectorFlags(i).signal_message[1] = OMP_REQ_STATE;
+        getTauCollectorFlags(i).signal_message[2] = OMP_ERRCODE_OK;
+        getTauCollectorFlags(i).signal_message[3] = state_rsz;
         // for getting region id
-        Tau_collector_flags[i].region_message = (int *)malloc(OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz+sizeof(int));
-        memset(Tau_collector_flags[i].region_message, 0, (OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz+sizeof(int)));
-        Tau_collector_flags[i].region_message[0] = OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz;
-        Tau_collector_flags[i].region_message[1] = OMP_REQ_CURRENT_PRID;
-        Tau_collector_flags[i].region_message[2] = OMP_ERRCODE_OK;
-        Tau_collector_flags[i].region_message[3] = currentid_rsz;
+        getTauCollectorFlags(i).region_message = (int *)malloc(OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz+sizeof(int));
+        memset(getTauCollectorFlags(i).region_message, 0, (OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz+sizeof(int)));
+        getTauCollectorFlags(i).region_message[0] = OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz;
+        getTauCollectorFlags(i).region_message[1] = OMP_REQ_CURRENT_PRID;
+        getTauCollectorFlags(i).region_message[2] = OMP_ERRCODE_OK;
+        getTauCollectorFlags(i).region_message[3] = currentid_rsz;
         // for getting task id
-        Tau_collector_flags[i].task_message = (int *)malloc(OMP_COLLECTORAPI_HEADERSIZE+task_rsz+sizeof(int));
-        memset(Tau_collector_flags[i].task_message, 0, (OMP_COLLECTORAPI_HEADERSIZE+task_rsz+sizeof(int)));
-        Tau_collector_flags[i].task_message[0] = OMP_COLLECTORAPI_HEADERSIZE+task_rsz;
-        Tau_collector_flags[i].task_message[1] = OMP_REQ_CURRENT_PRID;
-        Tau_collector_flags[i].task_message[2] = OMP_ERRCODE_OK;
-        Tau_collector_flags[i].task_message[3] = task_rsz;
+        getTauCollectorFlags(i).task_message = (int *)malloc(OMP_COLLECTORAPI_HEADERSIZE+task_rsz+sizeof(int));
+        memset(getTauCollectorFlags(i).task_message, 0, (OMP_COLLECTORAPI_HEADERSIZE+task_rsz+sizeof(int)));
+        getTauCollectorFlags(i).task_message[0] = OMP_COLLECTORAPI_HEADERSIZE+task_rsz;
+        getTauCollectorFlags(i).task_message[1] = OMP_REQ_CURRENT_PRID;
+        getTauCollectorFlags(i).task_message[2] = OMP_ERRCODE_OK;
+        getTauCollectorFlags(i).task_message[3] = task_rsz;
     }
 
 #ifdef TAU_UNWIND
@@ -1112,8 +1117,8 @@ extern "C" int Tau_get_thread_omp_state(int tid) {
     if (Tau_collector_api == NULL) return -1;
     OMP_COLLECTOR_API_THR_STATE thread_state = THR_LAST_STATE;
     // query the thread state
-    (Tau_collector_api)(Tau_collector_flags[tid].signal_message);
-    thread_state = (OMP_COLLECTOR_API_THR_STATE)Tau_collector_flags[tid].signal_message[4];
+    (Tau_collector_api)(getTauCollectorFlags(tid).signal_message);
+    thread_state = (OMP_COLLECTOR_API_THR_STATE)getTauCollectorFlags(tid).signal_message[4];
     // return the thread state
     return (int)(thread_state);
 }
