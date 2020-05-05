@@ -36,6 +36,12 @@ struct TauMemMgrInfo
 
 TauMemMgrSummary memSummary[TAU_MAX_THREADS];
 TauMemMgrInfo memInfo[TAU_MAX_THREADS][TAU_MEMMGR_MAX_MEMBLOCKS];
+inline TauMemMgrSummary& getMemSummary(int tid){
+    return memSummary[tid];
+}
+inline TauMemMgrInfo& getMemInfo(int tid,int block){
+    return memInfo[tid][block];
+}
 
 /* For "freeing" memory, we need to maintain a map of "queues"
  * for each thread.  The map will map from a "length" to a 
@@ -51,6 +57,9 @@ typedef std::vector<void*, TauSignalSafeAllocator<void*> > __custom_vector_t;
 typedef std::pair<const std::size_t, std::vector<void*> > __custom_pair_t;
 typedef std::map<std::size_t, __custom_vector_t*, std::less<std::size_t>, TauSignalSafeAllocator<__custom_pair_t> > __custom_map_t;
 __custom_map_t free_chunks[TAU_MAX_THREADS];
+inline __custom_map_t& getFreeChunks(int tid){
+    return free_chunks[TAU_MAX_THREADS];
+}
 #endif
 bool finalized = false;
 
@@ -68,9 +77,9 @@ bool Tau_MemMgr_initIfNecessary(void)
     RtsLayer::LockEnv();
     // check again, someone else might already have initialized by now.
     if (!initialized) {
-      for (int i = 0; i < TAU_MAX_THREADS; i++) {
-        memSummary[i].numBlocks = 0;
-        memSummary[i].totalAllocatedMemory = 0;
+      for (int i = 0; i < TAU_MAX_THREADS; i++) { //TODO: DYNATHREAD
+        getMemSummary(i).numBlocks = 0;
+        getMemSummary(i).totalAllocatedMemory = 0;
       }
       initialized = true;
     }
@@ -122,14 +131,14 @@ void *Tau_MemMgr_mmap(int tid, size_t size)
     fprintf(stderr, "Tau_MemMgr_mmap: mmap failed\n");
     addr = NULL;
   } else {
-    int numBlocks = memSummary[tid].numBlocks;
-    memInfo[tid][numBlocks].start = (unsigned long)addr;
-    memInfo[tid][numBlocks].size = size;
-    memInfo[tid][numBlocks].low = (unsigned long)addr;
-    memInfo[tid][numBlocks].high = (unsigned long)addr + size;
-    memSummary[tid].numBlocks++;
+    int numBlocks = getMemSummary(tid).numBlocks;
+    getMemInfo(tid,numBlocks).start = (unsigned long)addr;
+    getMemInfo(tid,numBlocks).size = size;
+    getMemInfo(tid,numBlocks).low = (unsigned long)addr;
+    getMemInfo(tid,numBlocks).high = (unsigned long)addr + size;
+    getMemSummary(tid).numBlocks++;
     //printf("********* %d: Incremented numblocks! %d\n", tid, memSummary[tid].numBlocks); fflush(stdout);
-    memSummary[tid].totalAllocatedMemory += size;
+    getMemSummary(tid).totalAllocatedMemory += size;
   }
 
 //  TAU_VERBOSE("Tau_MemMgr_mmap: tid=%d, size = %ld, fd = %d, addr = %p, blocks = %ld, used = %ld\n", tid, size, fd,
@@ -139,7 +148,7 @@ void *Tau_MemMgr_mmap(int tid, size_t size)
 
 int Tau_MemMgr_findFit(int tid, size_t size)
 {
-  int numBlocks = memSummary[tid].numBlocks;
+  int numBlocks = getMemSummary(tid).numBlocks;
   size_t blockSize = TAU_MEMMGR_DEFAULT_BLOCKSIZE;
   // If the request bigger than the default size.
   if (size > TAU_MEMMGR_DEFAULT_BLOCKSIZE) {
@@ -148,7 +157,7 @@ int Tau_MemMgr_findFit(int tid, size_t size)
 
   // Hunt for an existing block with sufficient memory.
   for (int i = 0; i < numBlocks; i++) {
-    if (memInfo[tid][i].high - memInfo[tid][i].low > size) {
+    if (getMemInfo(tid,i).high - getMemInfo(tid,i).low > size) {
       return i;
     }
   }
@@ -159,7 +168,7 @@ int Tau_MemMgr_findFit(int tid, size_t size)
       return TAU_MEMMGR_MAP_CREATION_FAILED;
     }
     // return index to new block
-    return memSummary[tid].numBlocks - 1;
+    return getMemSummary(tid).numBlocks - 1;
   } else {
     return TAU_MEMMGR_MAX_MEMBLOCKS_REACHED;
   }
@@ -172,10 +181,10 @@ void * Tau_MemMgr_recycle(int tid, size_t size)
     // get the vector for this size
     __custom_vector_t * queue;
     RtsLayer::LockEnv();
-    __custom_map_t::const_iterator it = free_chunks[tid].find(size);
+    __custom_map_t::const_iterator it = getFreeChunks(tid).find(size);
 
     // is this a new size that we haven't freed yet?
-    if (it == free_chunks[tid].end()) {
+    if (it == getFreeChunks(tid).end()) {
         RtsLayer::UnLockEnv();
         return NULL;
     } else {
@@ -239,8 +248,8 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
     return NULL;
   }
 
-  void * addr = (void *)((memInfo[tid][myBlock].low + (TAU_MEMMGR_ALIGN-1)) & ~(TAU_MEMMGR_ALIGN-1));
-  memInfo[tid][myBlock].low += myRequest;
+  void * addr = (void *)((getMemInfo(tid,myBlock).low + (TAU_MEMMGR_ALIGN-1)) & ~(TAU_MEMMGR_ALIGN-1));
+  getMemInfo(tid,myBlock).low += myRequest;
 
   TAU_ASSERT(addr != NULL, "Tau_MemMgr_malloc unexpectedly returning NULL!");
 
@@ -266,17 +275,17 @@ void Tau_MemMgr_free(int tid, void *addr, size_t size)
 #ifdef USE_RECYCLER
     RtsLayer::LockEnv();
     // get the vector for this size
-    __custom_map_t::const_iterator it = free_chunks[tid].find(size);
+    __custom_map_t::const_iterator it = getFreeChunks(tid).find(size);
     __custom_vector_t * queue;
 
     // is this a new size that we haven't freed yet?
-    if (it == free_chunks[tid].end()) {
+    if (it == getFreeChunks(tid).end()) {
         // eat our own dog food.  Have to. Create the new vector...
         queue = (__custom_vector_t*)Tau_MemMgr_malloc(tid, sizeof(__custom_vector_t));
         // ...call its constructor...
         new(queue) __custom_vector_t();
         // ...and add the new vector into the map
-        free_chunks[tid][size] = queue;
+        getFreeChunks(tid)[size] = queue;
     } else {
         queue = (*it).second;
     }

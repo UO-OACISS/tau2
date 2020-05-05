@@ -910,7 +910,7 @@ int TauMetrics_init() {
     }
 
 		/* Set the user clock values to 0 */
-	for (i = 0; i < TAU_MAX_THREADS; i++) {
+	for (i = 0; i < TAU_MAX_THREADS; i++) { //TODO: DYNATHREAD
 		metric_write_userClock(i, 0);
 	}
 

@@ -1334,7 +1334,7 @@ void TauEnv_initialize()
       env_verbose = 1;
     }
 
-    sprintf(tmpstr, "%d", TAU_MAX_THREADS);
+    sprintf(tmpstr, "%d", TAU_MAX_THREADS);//TODO: DYNATHREAD
     TAU_VERBOSE("TAU: Supporting %d threads\n", TAU_MAX_THREADS);
     TAU_METADATA("TAU_MAX_THREADS", tmpstr);
 
