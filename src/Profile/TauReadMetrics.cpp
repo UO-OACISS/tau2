@@ -124,13 +124,19 @@ double TauWindowsUsecD(void);
 /* user defined clock */
 
 static double userClock[TAU_MAX_THREADS];
+static inline double getUserClock(int tid){
+    return userClock[tid];
+}
+static inline void setUserClock(int tid, double value){
+    userClock[tid]=value;
+}
 
 void metric_write_userClock(int tid, double value) {
-  userClock[tid] = value;
+  setUserClock(tid, value);
 }
 
 void metric_read_userClock(int tid, int idx, double values[]) {
-  values[idx] = userClock[tid];
+  values[idx] = getUserClock(tid);
 }
 
 
@@ -343,17 +349,26 @@ void metric_read_ktau(int tid, int idx, double values[]) {
 #define CPU_THREAD 0
 
 double gpu_timestamp[TAU_MAX_THREADS];
+inline double getGpuTimestamp(int tid){
+    return gpu_timestamp[tid];
+}
+inline void setGpuTimestamp(int tid, double value){
+    gpu_timestamp[tid]=value;
+}
 double gpu_counterstamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
+inline void setGpuCounterstamp(int tid,int idx,double value){
+    gpu_counterstamp[tid][idx] = value;
+}
 
 extern "C" void metric_set_gpu_timestamp(int tid, double value)
 {
   // printf("TauReadMetrics.cpp: metric_set_gpu_timestamp: tid = %d, value = %f\n", tid, value);
-	gpu_timestamp[tid] = value;
+	setGpuTimestamp(tid, value);
 }
 
 extern "C" void metric_set_gpu_counterstamp(int tid, int idx, double value)
 {
-	gpu_counterstamp[tid][idx] = value;
+	setGpuCounterstamp(tid, idx, value);
 }
 
 void metric_read_cudatime(int tid, int idx, double values[]) {
@@ -371,7 +386,7 @@ void metric_read_cudatime(int tid, int idx, double values[]) {
   // get time from the callback API 
   else
   {
-    values[idx] = gpu_timestamp[tid];
+    values[idx] = getGpuTimestamp(tid);
     //values[idx] = gpu_timestamp[tid][1];
   }
   //printf("metric_read_cudatime: tid %d, values[%d] = %f\n", tid, idx, values[idx]); 
@@ -384,7 +399,7 @@ void metric_read_cupti(int tid, int idx, double values[])
   { 
     values[idx] = 0;
   } else {
-    values[idx] = gpu_counterstamp[tid][Tau_CuptiLayer_get_cupti_event_id(idx)];
+    values[idx] = getGpuCounterstamp(tid, Tau_CuptiLayer_get_cupti_event_id(idx));
   }
 }
 #endif //CUPTI
