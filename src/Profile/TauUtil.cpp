@@ -403,7 +403,7 @@ int Tau_util_parse_plugin_token(char * token, char ** plugin_name, char *** plug
 
 
   *plugin_num_args = 0;
-  *plugin_name = (char*)malloc(1024*sizeof(char));
+  *plugin_name = (char*)calloc(1024,sizeof(char));
   pos_left = strchr(token, '(');
   pos_right = strchr(token, ')');
 
@@ -414,8 +414,8 @@ int Tau_util_parse_plugin_token(char * token, char ** plugin_name, char *** plug
     return -1; //Bad plugin name
   }
 
-  *plugin_args = (char**)malloc(10*sizeof(char*)); //Maximum of 10 args supported for now
-  arg_string = (char*)malloc(1024*sizeof(char));
+  *plugin_args = (char**)calloc(10,sizeof(char*)); //Maximum of 10 args supported for now
+  arg_string = (char*)calloc(1024,sizeof(char));
 
   length_of_arg_string = (pos_right - pos_left) - 1;
 
@@ -430,7 +430,7 @@ int Tau_util_parse_plugin_token(char * token, char ** plugin_name, char *** plug
   /*Grab and pack, and count all the arguments to the plugin*/
   while(arg_token != NULL) {
     (*plugin_num_args)++;
-    (*plugin_args)[i] = (char*)malloc(1024*sizeof(char));
+    (*plugin_args)[i] = (char*)calloc(1024,sizeof(char));
     strcpy((*plugin_args)[i], arg_token);
     arg_token = strtok_r(NULL, ",", &save_ptr);
     i++;
