@@ -364,12 +364,18 @@ static inline struct tau_sampling_flags *tau_sampling_flags(void)
 { return (struct tau_sampling_flags*)(pthread_getspecific(tau_sampling_tls_key)); }
 #else
 // worst case - array of flags, one for each thread.
-struct tau_sampling_flags tau_sampling_tls_flags[TAU_MAX_THREADS];
+struct tau_sampling_flags tau_sampling_tls_flags[TAU_MAX_THREADS]; //TODO: DYNATHREAD
 static inline struct tau_sampling_flags *tau_sampling_flags(void)
 { return &tau_sampling_tls_flags[Tau_get_local_tid()]; }
 #endif
 
 static bool samplingThrInitialized[TAU_MAX_THREADS] = { false };
+static inline bool getSamplingThrInitialized(int tid){
+	return samplingThrInitialized[tid];
+}
+static inline void setSamplingThrInitialized(int tid, bool value){
+	samplingThrInitialized[tid]=value;
+}
 
 /* The trace for this node, mulithreaded execution currently not supported */
 //FILE *ebsTrace[TAU_MAX_THREADS] = { NULL };
@@ -1804,9 +1810,9 @@ int Tau_sampling_init(int tid, pid_t pid)
     }
     // Since we've now initialized sigaction, we can start the timer on any deferred threads
     for(DeferredInitVector::iterator it = TheDeferredInitVector().begin(); it != TheDeferredInitVector().end(); ++it) {
-        if(!samplingThrInitialized[it->tid]) {
+        if(!getSamplingThrInitialized(it->tid)) {
             TAU_VERBOSE("Will create sampling timer for deferred thread %d\n", it->tid);
-            samplingThrInitialized[it->tid] = true;
+            setSamplingThrInitialized(it->tid, true);
             Tau_sampling_init(it->tid, it->pid);
         }
     }
@@ -2016,7 +2022,7 @@ extern "C" void Tau_sampling_init_if_necessary(void)
 
   int tid = RtsLayer::localThreadId();
   // have we initialized already?
-  if (samplingThrInitialized[tid]) return;
+  if (getSamplingThrInitialized(tid)) return;
 
   /* Greetings, intrepid thread developer. We had a problem with OpenMP applications
    * which did not call instrumented functions or regions from an OpenMP region. In
@@ -2083,8 +2089,8 @@ extern "C" void Tau_sampling_init_if_necessary(void)
 
 #else
 // handle all other cases!
-  if (!samplingThrInitialized[tid]) {
-    samplingThrInitialized[tid] = true;
+  if (!getSamplingThrInitialized(tid)) {
+    setSamplingThrInitialized(tid, true);
     Tau_sampling_init(tid, 0);
     TAU_VERBOSE("Thread %d initialized sampling\n", tid);
   }
@@ -2095,7 +2101,7 @@ extern "C"
 void Tau_sampling_finalize_if_necessary(int tid)
 {
   static bool finalized = false;
-  static bool thrFinalized[TAU_MAX_THREADS] = {false};
+  static bool thrFinalized[TAU_MAX_THREADS] = {false}; //TODO: DYNATHREAD
   //int tid = Tau_get_local_tid();
 
   TAU_VERBOSE("TAU: Finalize(if necessary) <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stderr);
