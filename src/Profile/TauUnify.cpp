@@ -791,7 +791,7 @@ extern "C" int TauGetMpiRank(void) {
   int tid = RtsLayer::myThread();
   if (firsttime) {
     if (rank == NULL) {
-      rank = new int[TAU_MAX_THREADS];
+      rank = new int[TAU_MAX_THREADS];   //TODO: DYNATHREAD
       firsttime = TauInitMpcThreads(rank);
     }
   }
