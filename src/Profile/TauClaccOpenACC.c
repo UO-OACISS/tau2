@@ -112,7 +112,8 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
     TAU_START(&event_name[1]);
   }  else if (event_name[0] == '<') {
     TAU_VERBOSE("STOP <<%s\n", &event_name[1]);
-    TAU_STOP(&event_name[1]);
+    //    TAU_STOP(&event_name[1]);
+    Tau_global_stop();
   } else {
     TAU_VERBOSE("event_name = %s\n", event_name);
   }
