@@ -16,6 +16,10 @@
 #include <vector>
 #include <regex>
 
+#ifdef TAU_MPI
+#include "mpi.h"
+#endif
+
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
 #include <Profile/TauMetrics.h>
@@ -24,16 +28,13 @@
 #include <Profile/TauMetaData.h>
 #include <pthread.h>
 
-#ifdef TAU_MPI
-#include "mpi.h"
-#endif
-
 #ifdef TAU_PAPI
 #include "papi.h"
 #else
 #define PAPI_NULL -1
 #endif
 
+#include "Tau_scoped_timer.h"
 #include "json.h"
 using json = nlohmann::json;
 json configuration;
@@ -169,18 +170,6 @@ namespace tau {
             return ltrim(rtrim(s, t), t);
         }
 
-        class ScopedTimer {
-            public:
-                ScopedTimer(const char * name) {
-                    _name = strdup(name);
-                    //Tau_pure_start(_name);
-                }
-                ~ScopedTimer() {
-                    //Tau_pure_stop(_name);
-                    free(_name);
-                }
-                char * _name;
-        };
     }
 }
 
@@ -381,9 +370,10 @@ void initialize_papi_events(void) {
     for (int component_id = 0 ; component_id < num_components ; component_id++) {
         comp_info = PAPI_get_component_info(component_id);
         if (comp_info == NULL) {
-            fprintf(stderr, "Warning: PAPI component info unavailable, no measurements will be done.\n");
+            TAU_VERBOSE("Warning: PAPI component info unavailable, no measurements will be done.\n");
             return;
         }
+        //fprintf(stdout, "Found %s PAPI component with %d native events.\n", comp_info->name, comp_info->num_native_events);
         /* Skip the perf_event component, that's standard PAPI */
         if (strstr(comp_info->name, "perf_event") != NULL) {
             continue;
@@ -396,13 +386,22 @@ void initialize_papi_events(void) {
         if (strstr(comp_info->name, "perf_event_uncore") != NULL) {
             continue;
         }
+        /* Skip the nvml component, for non-CUPTI configurations */
+#ifndef CUPTI
+        if (strstr(comp_info->name, "nvml") != NULL) {
+            continue;
+        }
+        if (strstr(comp_info->name, "cuda") != NULL) {
+            continue;
+        }
+#endif
         if (!include_component(comp_info->name)) { return; }
         if (my_rank == 0) TAU_VERBOSE("Found %s component...\n", comp_info->name);
         /* Does this component have available events? */
         if (comp_info->num_native_events == 0) {
-            fprintf(stderr, "Error: No %s events found.\n", comp_info->name);
+            TAU_VERBOSE("Error: No %s events found.\n", comp_info->name);
             if (comp_info->disabled != 0) {
-                fprintf(stderr, "Error: %s.\n", comp_info->disabled_reason);
+                TAU_VERBOSE("Error: %s.\n", comp_info->disabled_reason);
             }
             continue;
         }
@@ -410,7 +409,7 @@ void initialize_papi_events(void) {
         /* Construct the event set and populate it */
         retval = PAPI_create_eventset(&comp->event_set);
         if (retval != PAPI_OK) {
-            fprintf(stderr, "Error: Error creating PAPI eventset for %s component.\n", comp_info->name);
+            TAU_VERBOSE("Error: Error creating PAPI eventset for %s component.\n", comp_info->name);
             continue;
         }
         int code = PAPI_NATIVE_MASK;
@@ -420,7 +419,7 @@ void initialize_papi_events(void) {
             retval = PAPI_enum_cmp_event( &code, event_modifier, component_id );
             event_modifier = PAPI_ENUM_EVENTS;
             if ( retval != PAPI_OK ) {
-                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__,
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__,
                         __LINE__, "PAPI_event_code_to_name", retval );
                 continue;
             }
@@ -428,7 +427,7 @@ void initialize_papi_events(void) {
             char event_name[PAPI_MAX_STR_LEN];
             retval = PAPI_event_code_to_name( code, event_name );
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__,
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__,
                         __LINE__, "Error getting event name\n",retval);
                 continue;
             }
@@ -439,7 +438,7 @@ void initialize_papi_events(void) {
             PAPI_event_info_t evinfo;
             retval = PAPI_get_event_info(code,&evinfo);
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__,
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__,
                         __LINE__, "Error getting event info\n",retval);
                 continue;
             }
@@ -465,7 +464,7 @@ void initialize_papi_events(void) {
             }
             retval = PAPI_add_event(comp->event_set, code);
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error: Error adding PAPI %s event %s.\n", comp_info->name, event_name);
+                TAU_VERBOSE("Error: Error adding PAPI %s event %s.\n", comp_info->name, event_name);
                 return;
             }
             comp->events.push_back(std::move(this_event));
@@ -473,8 +472,8 @@ void initialize_papi_events(void) {
         /* Start the event set */
         retval = PAPI_start(comp->event_set);
         if (retval != PAPI_OK) {
-            fprintf(stderr, "Error: Error starting PAPI eventset.\n");
-            return;
+            TAU_VERBOSE("Error: Error starting PAPI eventset for component %s.\n", comp_info->name);
+            continue;
         }
         comp->initialized = true;
         components.push_back(comp);
@@ -483,7 +482,6 @@ void initialize_papi_events(void) {
 #endif
 
 std::vector<cpustats_t*> * read_cpu_stats() {
-    tau::papi_plugin::ScopedTimer(__func__);
     if (!include_component("/proc/stat")) { return NULL; }
     std::vector<cpustats_t*> * cpu_stats = new std::vector<cpustats_t*>();
     /*  Reading proc/stat as a file  */
@@ -524,7 +522,6 @@ std::vector<cpustats_t*> * read_cpu_stats() {
 }
 
 std::vector<netstats_t*> * read_net_stats() {
-    tau::papi_plugin::ScopedTimer(__func__);
     if (!include_component("/proc/net/dev")) { return NULL; }
     std::vector<netstats_t*> * net_stats = new std::vector<netstats_t*>();
     /*  Reading proc/stat as a file  */
@@ -573,7 +570,6 @@ std::vector<netstats_t*> * read_net_stats() {
 }
 
 iostats_t * read_io_stats() {
-    tau::papi_plugin::ScopedTimer(__func__);
     if (!include_component("/proc/self/io")) { return NULL; }
     iostats_t * io_stats = new iostats_t();
     /*  Reading proc/stat as a file  */
@@ -652,7 +648,6 @@ int choose_volunteer_rank() {
 }
 
 void parse_proc_meminfo() {
-  tau::papi_plugin::ScopedTimer(__func__);
   if (!include_component("/proc/meminfo")) { return; }
   FILE *f = fopen("/proc/meminfo", "r");
   if (f) {
@@ -695,7 +690,6 @@ void parse_proc_meminfo() {
 extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
 
 void parse_proc_self_status() {
-  tau::papi_plugin::ScopedTimer(__func__);
   if (!include_component("/proc/self/status")) { return; }
   FILE *f = fopen("/proc/self/status", "r");
   if (f) {
@@ -716,7 +710,6 @@ void parse_proc_self_status() {
 }
 
 void parse_proc_self_statm() {
-  tau::papi_plugin::ScopedTimer(__func__);
   if (!include_component("/proc/self/statm")) { return; }
   FILE *f = fopen("/proc/self/statm", "r");
   if (f) {
@@ -795,7 +788,6 @@ void sample_value(const char * component, const char * cpu, const char * name,
 }
 
 void update_cpu_stats(void) {
-    tau::papi_plugin::ScopedTimer(__func__);
     if (!include_component("/proc/stat")) { return; }
     /* get the current stats */
     std::vector<cpustats_t*> * new_stats = read_cpu_stats();
@@ -833,7 +825,6 @@ void update_cpu_stats(void) {
 }
 
 void update_net_stats(void) {
-    tau::papi_plugin::ScopedTimer(__func__);
     if (!include_component("/proc/net/dev")) { return; }
     /* get the current stats */
     std::vector<netstats_t*> * new_stats = read_net_stats();
@@ -882,7 +873,6 @@ void update_net_stats(void) {
 }
 
 void update_io_stats(void) {
-    tau::papi_plugin::ScopedTimer(__func__);
     if (!include_component("/proc/self/io")) { return; }
     /* get the current stats */
     iostats_t * new_stats = read_io_stats();
@@ -897,7 +887,6 @@ void update_io_stats(void) {
 }
 
 void read_components(void) {
-    tau::papi_plugin::ScopedTimer(__func__);
 #ifdef TAU_PAPI
     for (size_t index = 0; index < components.size() ; index++) {
         if (components[index]->initialized) {
@@ -905,7 +894,7 @@ void read_components(void) {
             long long * values = (long long *)calloc(comp->events.size(), sizeof(long long));
             int retval = PAPI_read(comp->event_set, values);
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error: Error reading PAPI %s eventset.\n", comp->name.c_str());
+                TAU_VERBOSE("Error: Error reading PAPI %s eventset.\n", comp->name.c_str());
                 return;
             }
             for (size_t i = 0 ; i < comp->events.size() ; i++) {
@@ -965,20 +954,20 @@ void free_papi_components(void) {
             long long * values = (long long *)calloc(comp->events.size(), sizeof(long long));
             int retval = PAPI_stop(comp->event_set, values);
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error: Error reading PAPI %s eventset.\n", comp->name.c_str());
+                TAU_VERBOSE("Error: Error reading PAPI %s eventset.\n", comp->name.c_str());
                 return;
             }
             free(values);
             /* Done, clean up */
             retval = PAPI_cleanup_eventset(comp->event_set);
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__, __LINE__,
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__, __LINE__,
                         "PAPI_cleanup_eventset()",retval);
             }
 
             retval = PAPI_destroy_eventset(&(comp->event_set));
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__, __LINE__,
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__, __LINE__,
                         "PAPI_destroy_eventset()",retval);
             }
             comp->initialized = false;
@@ -1157,15 +1146,22 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
 void read_config_file(void) {
     try {
             std::ifstream cfg("tau_monitoring.json");
+            // if the file doesn't exist, return
+            if (cfg.good()) {
+            	// fail silently, nothing to do but use defaults
+                configuration = json::parse(default_configuration);
+                return;
+            }
             cfg >> configuration;
             cfg.close();
         } catch (...) {
-            // fail silently, nothing to do
+            TAU_VERBOSE("Error reading tau_monitoring.json file!");
             configuration = json::parse(default_configuration);
         }
 }
 
 int Tau_plugin_dump_monitoring(Tau_plugin_event_dump_data_t* data) {
+    tau::plugins::ScopedTimer(__func__);
     //printf("PAPI Component PLUGIN %s\n", __func__);
     // take a reading...
     read_components();

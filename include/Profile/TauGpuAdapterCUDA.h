@@ -1,3 +1,6 @@
+#ifndef TAU_GPU_ADAPTER_CUDA_H
+#define TAU_GPU_ADAPTER_CUDA_H
+
 #include "TauGpu.h"
 #include <cuda_runtime_api.h>
 #include <cuda.h>
@@ -254,3 +257,5 @@ void Tau_cuda_enqueue_kernel_enter_event(CudaGpuEvent *id);
 void Tau_cuda_enqueue_kernel_exit_event(CudaGpuEvent *id);
 
 void Tau_cuda_register_sync_event();
+
+#endif //TAU_GPU_ADAPTER_CUDA_H

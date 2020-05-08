@@ -3,7 +3,8 @@ include $(TAU_TEST_MAKEFILE)
 CXX		= $(TAU_CXX)
 CC		= $(TAU_CC)
 FFLAGS        	= $(TAU_INCLUDE) $(TAU_F90_FIXED) $(TAU_SHMEM_INC)
-LIBS            = $(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_FORTRANLIBS) $(TAU_CXXLIBS) $(LEXTRA1) $(EXTRALIBS) $(TAU_SHMEM_LIB)
+LIBS            = $(shell tau_cc.sh -tau:showsharedlibs) $(TAU_FORTRANLIBS)
+#$(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_FORTRANLIBS) $(TAU_CXXLIBS) $(LEXTRA1) $(EXTRALIBS) $(TAU_SHMEM_LIB)
 
 LDFLAGS	      	= $(USER_OPT) $(TAU_F90_OPT)
 RM 	      	= /bin/rm -f

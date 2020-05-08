@@ -1,3 +1,6 @@
+#ifndef TAU_GPU_ADAPTER_CUPTI40_H
+#define TAU_GPU_ADAPTER_CUPTI40_H
+
 #include <Profile/TauGpu.h>
 #include <cupti_events.h>
 #include <cupti_callbacks.h>
@@ -104,3 +107,4 @@ typedef struct RuntimeApiTrace_st {
 
 enum launchOrder{ MEMCPY_H2D1, MEMCPY_H2D2, MEMCPY_D2H, KERNEL, THREAD_SYNC, LAUNCH_LAST};
 
+#endif //TAU_GPU_ADAPTER_CUPTI40_H

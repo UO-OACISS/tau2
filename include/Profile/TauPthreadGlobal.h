@@ -1,3 +1,6 @@
+#ifndef TAU_PTHREAD_GLOBAL_H
+#define TAU_PTHREAD_GLOBAL_H
+
 /* These functions are useful for using pthread functions to
  * emulate Thread Local Storage. 
  *
@@ -39,3 +42,4 @@ public:
   pthread_key_t* getKey() {return _key;};
 };
 
+#endif //TAU_PTHREAD_GLOBAL_H

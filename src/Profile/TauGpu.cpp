@@ -90,7 +90,7 @@ using namespace std;
 double cpu_start_time;
 
 static inline void record_context_event(TauContextUserEvent * e, TAU_EVENT_DATATYPE event_data, int task, double timestamp) {
-  if(Tau_is_thread_fake(task)) {  
+  if(Tau_is_thread_fake(task)) {
     TAU_CONTEXT_EVENT_THREAD_TS(e, event_data, task, timestamp);
   } else {
     TAU_CONTEXT_EVENT_THREAD(e, event_data, task);
@@ -119,7 +119,7 @@ void check_gpu_event(int gpuTask)
 
 /* === Begin implementing the hooks === */
 
-/* create TAU callback routine to capture both CPU and GPU execution time 
+/* create TAU callback routine to capture both CPU and GPU execution time
  takes the thread id as a argument. */
 
 void Tau_gpu_enter_event(const char* name)
@@ -214,7 +214,7 @@ void Tau_gpu_enter_unifmem_event(const char *functionName, GpuEvent *device, int
   //Inorder to capture the entire memcpy transaction time start the send/recived
   //at the start of the event
   if (TauEnv_get_tracing()) {
-    int threadId = get_task(device);  
+    int threadId = get_task(device);
     if (unifmemType == BytesDtoH) {
       TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, threadId, 0UL);
     } else if (unifmemType == BytesHtoD) {
@@ -269,8 +269,9 @@ void Tau_gpu_exit_memcpy_event(const char * functionName, GpuEvent *device, int 
   // time.
 
   //Tau_pure_stop(functionName);
-  void* handle = Tau_get_function_info(functionName, "", TAU_USER, "TAU_GPU_MEMORY_COPY");
-  Tau_stop_timer(handle, Tau_get_thread());
+  //void* handle = Tau_get_function_info(functionName, "", TAU_USER, "TAU_GPU_MEMORY_COPY");
+  //Tau_stop_timer(handle, Tau_get_thread());
+  Tau_stop_current_timer_task(Tau_get_thread());
 
 }
 
@@ -297,8 +298,9 @@ void Tau_gpu_exit_unifmem_event(const char * functionName, GpuEvent *device, int
   // time.
 
   //Tau_pure_stop(functionName);
-  void* handle = Tau_get_function_info(functionName, "", TAU_USER, "TAU_GPU_UNIFIED_MEMORY");
-  Tau_stop_timer(handle, Tau_get_thread());
+  //void* handle = Tau_get_function_info(functionName, "", TAU_USER, "TAU_GPU_UNIFIED_MEMORY");
+  //Tau_stop_timer(handle, Tau_get_thread());
+  Tau_stop_current_timer_task(Tau_get_thread());
 
 }
 
@@ -308,8 +310,10 @@ void Tau_gpu_exit_event(const char *name)
   TAU_VERBOSE("exit cu event: %s.\n", name);
 #endif
   //Tau_pure_stop(name);
-  void* handle = Tau_get_function_info(name, "", TAU_USER, "TAU_GPU_API");
-  Tau_stop_timer(handle, Tau_get_thread());
+  //void* handle = Tau_get_function_info(name, "", TAU_USER, "TAU_GPU_API");
+  //Tau_stop_timer(handle, Tau_get_thread());
+  Tau_stop_current_timer_task(Tau_get_thread());
+
 }
 
 void stage_gpu_event(const char *name, int gpuTask, double start_time, FunctionInfo* parent, const char * group)
@@ -335,7 +339,8 @@ void break_gpu_event(const char *name, int gpuTask, double stop_time, FunctionIn
   cerr << "setting gpu timestamp for stop: " << setprecision(16) << stop_time << endl;
 #endif
   metric_set_gpu_timestamp(gpuTask, stop_time);
-  Tau_pure_stop_task(name, gpuTask);
+  //Tau_pure_stop_task(name, gpuTask);
+  Tau_stop_current_timer_task(gpuTask);
   if (TauEnv_get_callpath()) {
     //printf("Profiler: %s \n", parent->GetName());
     double totalTime = 0;
@@ -393,23 +398,33 @@ void Tau_gpu_exit_event_from_cpu(const char* name, int tid, double end)
 
 void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
 {
-  int task = get_task(id);
+  int task;
+  if(TauEnv_get_cuda_track_sass()) {
+      task = id->getTaskId();
+  }
+  else {
+      task = get_task(id);
+  }
   const double syncStartTime = startTime + id->syncOffset();
   const double syncEndTime = endTime + id->syncOffset();
-  stage_gpu_event(id->getName(), task, syncStartTime, id->getCallingSite(), "TAU_GPU_KERNEL");
+  FunctionInfo * fi = id->getCallingSite();
+  const char * name = id->getName();
+  stage_gpu_event(name, task, syncStartTime, fi, "TAU_GPU_KERNEL");
   GpuEventAttributes *attr;
   int number_of_attributes;
   id->getAttributes(attr, number_of_attributes);
   for (int i = 0; i < number_of_attributes; i++) {
     TauContextUserEvent* e = attr[i].userEvent;
-    if (e) { 
+    if (e) {
       TAU_EVENT_DATATYPE event_data = attr[i].data;
-      record_context_event(e, event_data, task, syncStartTime);
+      /* SHould the counter be associated with the start time or end time? */
+      //record_context_event(e, event_data, task, syncStartTime);
+      record_context_event(e, event_data, task, syncEndTime);
     } else {
       break;
     }
   }
-  break_gpu_event(id->getName(), task, syncEndTime, id->getCallingSite());
+  break_gpu_event(name, task, syncEndTime, fi);
 }
 
 void Tau_gpu_register_sync_event(GpuEvent *id, double startTime, double endTime)
@@ -424,7 +439,7 @@ void Tau_gpu_register_sync_event(GpuEvent *id, double startTime, double endTime)
 void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTime, int transferSize, int memcpyType,
 				   int direction)
 {
-  int task = get_task(id);  
+  int task = get_task(id);
   const char* functionName = id->getName();
   if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0) {
     if (memcpyType == MemcpyHtoD) {
@@ -437,7 +452,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
     //printf("using default name: %s.\n", functionName);
   }
 
-#ifdef DEBUG_PROF		
+#ifdef DEBUG_PROF
   TAU_VERBOSE("recording memcopy event.\n");
   TAU_VERBOSE("time is: %f:%f.\n", startTime, endTime);
   TAU_VERBOSE("kind is: %d.\n", memcpyType);
@@ -454,7 +469,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
       record_context_event(MemoryCopyEventHtoD, transferSize, task, syncStartTime);
       //TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
       //TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread());
-#ifdef DEBUG_PROF		
+#ifdef DEBUG_PROF
       TAU_VERBOSE("[%f] onesided event mem recv: %d, id: %s.\n", startTime, transferSize,
           id->gpuIdentifier());
 #endif
@@ -473,7 +488,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
       //since these copies are record on the host, start the parent timer here
       record_context_event(MemoryCopyEventDtoH, transferSize, task, syncStartTime);
       //TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
-#ifdef DEBUG_PROF		
+#ifdef DEBUG_PROF
       TAU_VERBOSE("[%f] onesided event mem send: %d, id: %s\n", startTime, transferSize,
           id->gpuIdentifier());
 #endif
@@ -496,7 +511,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
       counted_memcpys++;
       record_context_event(MemoryCopyEventDtoD, transferSize, task, syncStartTime);
       //TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
-#ifdef DEBUG_PROF		
+#ifdef DEBUG_PROF
       TAU_VERBOSE("[%f] onesided event mem send: %d, id: %s\n", startTime, transferSize,
           id->gpuIdentifier());
 #endif
@@ -514,7 +529,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 
 void Tau_gpu_register_envt_event(GpuEvent *event, double startTime, double endTime, int transferSize, int dataType)
 {
-  int task = get_task(event);  
+  int task = get_task(event);
 	const char* functionName = event->getName();
 	if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
 	{
@@ -539,7 +554,7 @@ void Tau_gpu_register_envt_event(GpuEvent *event, double startTime, double endTi
 		  }
 	}
 
-#ifdef DEBUG_PROF	
+#ifdef DEBUG_PROF
 	TAU_VERBOSE("recording environment event.\n");
 	TAU_VERBOSE("time is: %f:%f.\n", startTime, endTime);
 	TAU_VERBOSE("kind is: %d.\n", dataType);
@@ -559,7 +574,7 @@ void Tau_gpu_register_envt_event(GpuEvent *event, double startTime, double endTi
 void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTime, int transferSize, int unifmemType,
     int direction)
 {
-  int task = get_task(id);  
+  int task = get_task(id);
   const char* functionName = id->getName();
   if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0) {
     if (unifmemType == BytesHtoD) {
@@ -571,7 +586,7 @@ void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTi
     }
   }
 
-#ifdef DEBUG_PROF		
+#ifdef DEBUG_PROF
   TAU_VERBOSE("recording unified memory event.\n");
   TAU_VERBOSE("time is: %f:%f.\n", startTime, endTime);
   TAU_VERBOSE("kind is: %d.\n", unifmemType);
@@ -588,7 +603,7 @@ void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTi
       record_context_event(UnifiedMemoryEventHtoD, transferSize, task, syncStartTime);
       //TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
       //TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread());
-#ifdef DEBUG_PROF		
+#ifdef DEBUG_PROF
       TAU_VERBOSE("[%f] onesided event mem recv: %d, id: %s.\n", startTime, transferSize,
           id->gpuIdentifier());
 #endif
@@ -607,7 +622,7 @@ void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTi
       //since these copies are record on the host, start the parent timer here
       record_context_event(UnifiedMemoryEventDtoH, transferSize, task, syncStartTime);
       //TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
-#ifdef DEBUG_PROF		
+#ifdef DEBUG_PROF
       TAU_VERBOSE("[%f] onesided event mem send: %d, id: %s\n", startTime, transferSize,
           id->gpuIdentifier());
 #endif
@@ -630,7 +645,7 @@ void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTi
       counted_unifmems++;
       record_context_event(UnifiedMemoryEventPageFault, transferSize, task, syncStartTime);
       //TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
-#ifdef DEBUG_PROF		
+#ifdef DEBUG_PROF
       TAU_VERBOSE("[%f] onesided event mem send: %d, id: %s\n", startTime, transferSize,
           id->gpuIdentifier());
 #endif
@@ -646,15 +661,15 @@ void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTi
 
 }
 
-/* 
+/*
  * Callback for GPU atomic event.
  */
 void Tau_gpu_register_gpu_atomic_event(GpuEvent *event)
 {
-#ifdef DEBUG_PROF		
+#ifdef DEBUG_PROF
   TAU_VERBOSE("registering atomic event.\n");
 #endif //DEBUG_PROF
-  int task = get_task(event);  
+  int task = get_task(event);
   GpuEventAttributes *attr;
   int number_of_attributes;
   event->getAttributes(attr, number_of_attributes);
@@ -668,7 +683,7 @@ void Tau_gpu_register_gpu_atomic_event(GpuEvent *event)
 
 void Tau_gpu_register_imix_event(GpuEvent *event, double startTime, double endTime, int transferSize, int dataType)
 {
-  int task = get_task(event);  
+  int task = get_task(event);
   printf("IMIX type is %d, contextId: %i.\n", dataType, task);
   const char* functionName = event->getName();
   if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
@@ -763,7 +778,7 @@ void Tau_gpu_exit(void)
   printf("stopping level %d tasks.\n", TauEnv_get_cudaTotalThreads());
   for (int i=0; i < TauEnv_get_cudaTotalThreads(); i++) {
     // GpuThread gTemp = gThreads[i];
-    // printf("[TauGpu]: Tau_gpu_exit, calling Tau_stop_top_level_timer_if_necessary_task for %i\n", gTemp.gpu_tid);    
+    // printf("[TauGpu]: Tau_gpu_exit, calling Tau_stop_top_level_timer_if_necessary_task for %i\n", gTemp.gpu_tid);
     // Tau_stop_top_level_timer_if_necessary_task(gTemp.gpu_tid);
     Tau_stop_top_level_timer_if_necessary_task(i);
   }

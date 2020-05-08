@@ -15,7 +15,7 @@
 ***************************************************************************/
 
 
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 
 #ifndef _GNU_SOURCE
@@ -31,7 +31,7 @@
 #include <signal.h>
 #include <Profile/TauEnv.h>
 
-#define dprintf TAU_VERBOSE 
+#define dprintf TAU_VERBOSE
 
 #if (defined (TAU_BGP) || defined(TAU_XLC))
 #define TAU_DISABLE_SYSCALL_WRAPPER
@@ -46,7 +46,7 @@ pid_t __wrap_fork(void) {
   pid_t pid_ret;
   pid_ret = __real_fork();
   dprintf("TAU: calling _fork \n");
-  
+
 	if (pid_ret == 0) {
     TAU_REGISTER_FORK(RtsLayer::getPid(), TAU_EXCLUDE_PARENT_DATA);
     dprintf ("[%d] Registered Fork!\n", RtsLayer::getPid());
@@ -90,7 +90,7 @@ int __wrap_kill(pid_t pid, int sig) {
 /////////////////////////////////////////////////////////////////////////
 void __real__exit(int status);
 void __wrap__exit(int status) {
-  dprintf("TAU: Inside tau_wrap.c: _exit(): status = %d\n", status);
+  dprintf("TAU: Inside %s: %s: status = %d\n", __FILE__, __func__, status);
 
   TAU_PROFILE_EXIT("_EXITING from TAU...");
 

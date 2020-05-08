@@ -99,10 +99,10 @@
 #define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo, Tau_get_thread()); Tau_invoke_plugin_phase_exit(var##finfo)
 #define TAU_ENABLE_GROUP(group)			Tau_enable_group(group);
 #define TAU_DISABLE_GROUP(group)		Tau_disable_group(group);
-#define TAU_ENABLE_GROUP_NAME(group)            Tau_enable_group_name(group) 
+#define TAU_ENABLE_GROUP_NAME(group)            Tau_enable_group_name(group)
 #define TAU_DISABLE_GROUP_NAME(group)           Tau_disable_group_name(group)
-#define TAU_ENABLE_ALL_GROUPS()            	Tau_enable_all_groups() 
-#define TAU_DISABLE_ALL_GROUPS()            	Tau_disable_all_groups() 
+#define TAU_ENABLE_ALL_GROUPS()            	Tau_enable_all_groups()
+#define TAU_DISABLE_ALL_GROUPS()            	Tau_disable_all_groups()
 #define TAU_DISABLE_GROUP_NAME(group)           Tau_disable_group_name(group)
 #define TAU_GET_PROFILE_GROUP(group)            Tau_get_profile_group(group)
 
@@ -131,7 +131,7 @@
 #define TAU_PROFILE_TIMER_GET_GROUP(timer) Tau_profile_get_group(timer)
 #define TAU_PROFILE_TIMER_GET_GROUP_NAME(timer) Tau_profile_get_group_name(timer)
 
-#define TAU_REGISTER_THREAD()			Tau_register_thread();	
+#define TAU_REGISTER_THREAD()			Tau_register_thread();
 #define TAU_REGISTER_FORK(nodeid, op) 		Tau_register_fork(nodeid, op);
 #define TAU_ENABLE_INSTRUMENTATION()		Tau_enable_instrumentation();
 #define TAU_DISABLE_INSTRUMENTATION()		Tau_disable_instrumentation();
@@ -162,10 +162,10 @@
 #define TAU_REGISTER_EVENT(event, name)	static void *event = 0; \
                                  if (event == 0) event = Tau_get_userevent(name);
 #define TAU_PROFILER_REGISTER_EVENT(e, msg) TauUserEvent* e () { \
-	static TauUserEvent u(msg); return &u; } 
- 
+	static TauUserEvent u(msg); return &u; }
+
 #define TAU_REGISTER_CONTEXT_EVENT(event, name)	static void *event = 0; \
-                                 if (event == 0) Tau_get_context_userevent(&event, name);  
+                                 if (event == 0) Tau_get_context_userevent(&event, name);
 
 #define TAU_TRIGGER_CONTEXT_EVENT(eventname, eventvalue) Tau_trigger_context_event(eventname, eventvalue)
 #define TAU_TRIGGER_CONTEXT_EVENT_THREAD(eventname, eventvalue, tid) Tau_trigger_context_event_thread(eventname, eventvalue, tid)
@@ -175,7 +175,7 @@
 #define TAU_CONTEXT_EVENT(event, data)		Tau_context_userevent(event, data);
 #define TAU_CONTEXT_EVENT_THREAD(event, data, tid) Tau_context_userevent_thread(event, data, tid);
 #define TAU_CONTEXT_EVENT_THREAD_TS(event, data, tid, ts) Tau_context_userevent_thread_ts(event, data, tid, ts);
-#define TAU_EVENT_SET_NAME(event, name)	Tau_set_event_name(event, name); 	
+#define TAU_EVENT_SET_NAME(event, name)	Tau_set_event_name(event, name);
 #define TAU_REPORT_STATISTICS()		Tau_report_statistics();
 #define TAU_REPORT_THREAD_STATISTICS()  Tau_report_thread_statistics();
 #define TAU_EVENT_DISABLE_MIN(event) 	Tau_event_disable_min(event);
@@ -221,7 +221,7 @@
 { static void *ptr = NULL; \
   Tau_profile_c_timer(&ptr, name, type, group, #group); \
   return ptr; \
-} 
+}
 #define TAU_GLOBAL_TIMER_START(timer) { void *ptr = TauGlobal##timer(); \
     Tau_start_timer(ptr, 0, Tau_get_thread()); }
 #define TAU_GLOBAL_TIMER_STOP()  Tau_global_stop();
@@ -231,7 +231,7 @@
 { static void *ptr = NULL; \
   Tau_profile_c_timer(&ptr, name, type, group, #group); \
   return ptr; \
-} 
+}
 
 #define TAU_GLOBAL_PHASE_START(timer) { void *ptr = TauGlobalPhase##timer(); \
     Tau_start_timer(ptr, 1, Tau_get_thread()); }
@@ -312,7 +312,7 @@
 #ifdef TAU_PROFILEPARAM
 #define TAU_PROFILE_PARAM1L(data,name)  	Tau_profile_param1l(data,name)
 #else  /* TAU_PROFILEPARAM */
-#define TAU_PROFILE_PARAM1L(data,name)  	
+#define TAU_PROFILE_PARAM1L(data,name)
 #endif /* TAU_PROFILEPARAM */
 
 #define TAU_TRACE_SENDMSG(type, destination, length) \
@@ -359,8 +359,8 @@
 
 #define TAU_BCAST_DATA(data)  	                Tau_bcast_data(data)
 #define TAU_REDUCE_DATA(data)  	                Tau_reduce_data(data)
-#define TAU_ALLTOALL_DATA(data)                 Tau_alltoall_data(data) 
-#define TAU_SCATTER_DATA(data)                  Tau_scatter_data(data) 
+#define TAU_ALLTOALL_DATA(data)                 Tau_alltoall_data(data)
+#define TAU_SCATTER_DATA(data)                  Tau_scatter_data(data)
 #define TAU_GATHER_DATA(data)  	                Tau_gather_data(data)
 #define TAU_ALLREDUCE_DATA(data)  	        Tau_allreduce_data(data)
 #define TAU_WAIT_DATA(data)  	        	Tau_wait_data(data)
@@ -443,7 +443,7 @@ void Tau_get_exclusive_values(void *handle, double* values, int tid);
 void Tau_set_exclusive_values(void *handle, double* values, int tid);
 void Tau_get_counter_info(const char ***counterlist, int *numcounters);
 
-int TAUDECL Tau_get_current_stack_depth(int tid); 
+int TAUDECL Tau_get_current_stack_depth(int tid);
 
 int TAUDECL Tau_get_local_tid(void);
 int TAUDECL Tau_get_thread(void);
@@ -559,8 +559,8 @@ void TAUDECL Tau_metadata_array_put(Tau_metadata_value_t* array, const int index
 void TAUDECL Tau_metadata_object_put(Tau_metadata_value_t* object, const char *name, Tau_metadata_value_t* value);
 
 
-void TAUDECL Tau_Bg_hwp_counters_start(int *error); 
-void TAUDECL Tau_Bg_hwp_counters_stop(int* numCounters, x_uint64 counters[], int* mode, int *error); 
+void TAUDECL Tau_Bg_hwp_counters_start(int *error);
+void TAUDECL Tau_Bg_hwp_counters_stop(int* numCounters, x_uint64 counters[], int* mode, int *error);
 void TAUDECL Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[], int* mode, int* error);
 
 void Tau_set_user_clock(double value);
@@ -573,6 +573,7 @@ void Tau_set_context(int context);
 void Tau_set_thread(int thread);
 void Tau_callstack(void);
 int Tau_dump(void);
+void Tau_flush_gpu_activity(void);
 int Tau_mergeProfiles_MPI();
 int Tau_mergeProfiles_SHMEM();
 int Tau_dump_incr(void);
@@ -650,27 +651,16 @@ void Tau_track_class_deallocation(const char * name, size_t size);
 void Tau_start_class_allocation(const char * name, size_t size, int include_in_parent);
 void Tau_stop_class_allocation(const char * name, int record);
 
-#ifdef CUPTI
-  #include <Profile/CudaThread.h>
-  int register_cuda_thread(unsigned int sys_tid, unsigned int parent_tid, int tau_vtid, unsigned int corr_id, unsigned int context_id, const char* func_name, unsigned int device_id);
-  void set_cupti_thread(int vtid, int threadid);
-  int get_task_from_id(int id, int task);
-  int get_vtid_from_corrid(int corrid);
-  int get_corrid_from_vtid(int vtid);
-  int lookup_thread_from_corrid(int corrid);
-  cuda_thread_device_t* get_cuda_thread_device(int* size);
-#endif
-
 #ifdef __cplusplus
 /* Include the C++ API header */
 #include <Profile/TauCppAPI.h>
 #else /* __cplusplus */
 /* These can't be used in C, only C++, so they are dummy macros here */
-#define TAU_PROFILE(name, type, group) 
-#define TAU_DYNAMIC_PROFILE(name, type, group) 
+#define TAU_PROFILE(name, type, group)
+#define TAU_DYNAMIC_PROFILE(name, type, group)
 #define TYPE_STRING(profileString, str)
 #define TAU_CT(obj)
-#endif /* __cplusplus */ 
+#endif /* __cplusplus */
 
 
 #ifdef __cplusplus
@@ -683,5 +673,5 @@ void Tau_stop_class_allocation(const char * name, int record);
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: cheelee $
  * $Revision: 1.116 $   $Date: 2010/06/08 01:09:52 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.116 2010/06/08 01:09:52 cheelee Exp $ 
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.116 2010/06/08 01:09:52 cheelee Exp $
  ***************************************************************************/

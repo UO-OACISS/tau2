@@ -9,7 +9,7 @@ include $(TAU_TEST_MAKEFILE)
 OPTS = -optVerbose -optCompile=$(TAU_F90_SUFFIX) -optCompInst  -optNoRevert
 # -optLinkReset="$(TAU_LIBS) $(TAU_CXXLIBS)" -optNoRevert
 F90=$(TAU_COMPILER) $(OPTS) $(TAU_F90) 
-LIBS= 
+LIBS= $(shell tau_cc.sh -tau:showsharedlibs) $(TAU_FORTRANLIBS)
 INCLUDE=
 OBJS= simple.o
 

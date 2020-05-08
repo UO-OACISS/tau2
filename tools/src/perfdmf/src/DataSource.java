@@ -1421,8 +1421,8 @@ public abstract class DataSource {
     				double subrSum = 0;
     				double callSumSqr = 0;
     				double subrSumSqr = 0;
-    				double callMin = Integer.MAX_VALUE;
-    				double subrMin = Integer.MAX_VALUE;
+    				double callMin = Double.MAX_VALUE;
+    				double subrMin = Double.MAX_VALUE;
     				double callMax = 0;
     				double subrMax = 0;
     				for (int i = 0; i < numMetrics; i++) {
@@ -1430,8 +1430,8 @@ public abstract class DataSource {
     					inclSum[i] = 0;
     					exclSumSqr[i] = 0;
     					inclSumSqr[i] = 0;
-    					exclMin[i] = Integer.MAX_VALUE;
-    					inclMin[i] = Integer.MAX_VALUE;
+    					exclMin[i] = Double.MAX_VALUE;
+    					inclMin[i] = Double.MAX_VALUE;
     					exclMax[i] = 0;
     					inclMax[i] = 0;
     				}
@@ -1476,17 +1476,17 @@ public abstract class DataSource {
 							// If we don't have this function on any thread the
 							// default values need to be zero, not max-int
 							for (int m = startMetric; m <= endMetric; m++) {
-								if (exclMin[m] == Integer.MAX_VALUE) {
+								if (exclMin[m] == Double.MAX_VALUE) {
 									exclMin[m] = 0;
 								}
-								if (inclMin[m] == Integer.MAX_VALUE) {
+								if (inclMin[m] == Double.MAX_VALUE) {
 									inclMin[m] = 0;
 								}
 								if (m == 0) {
-									if (callMin == Integer.MAX_VALUE) {
+									if (callMin == Double.MAX_VALUE) {
 										callMin = 0;
 									}
-									if (subrMin == Integer.MAX_VALUE) {
+									if (subrMin == Double.MAX_VALUE) {
 										subrMin = 0;
 									}
 								}

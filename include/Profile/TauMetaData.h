@@ -46,14 +46,14 @@ class Tau_metadata_key {
     if (timer_context) free(timer_context);
   }
   */
-  
+
 };
 
 
 struct Tau_Metadata_Compare: std::binary_function<Tau_metadata_key,Tau_metadata_key,bool>
 {
-  bool operator()(const Tau_metadata_key& lhs, const Tau_metadata_key& rhs) const { 
-    
+  bool operator()(const Tau_metadata_key& lhs, const Tau_metadata_key& rhs) const {
+
     char *left;
     char *right;
     int allocate_left = 0;
@@ -129,6 +129,8 @@ Tau_util_outputDevice *Tau_metadata_generateMergeBuffer();
 void Tau_metadata_removeDuplicates(char *buffer, int buflen);
 
 void Tau_metadata_register(const char *name, int value);
+void Tau_metadata_register(const char *name, const char *value);
+
 int Tau_metadata_mergeMetaData();
 int Tau_write_metadata_records_in_scorep(int tid);
 char* Tau_metadata_get(const char *name, int tid);

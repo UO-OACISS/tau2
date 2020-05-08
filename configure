@@ -2118,10 +2118,12 @@ for arg in "$@"; do
 	    ;;
 
 	-ompt=download)
-            echo "ompt=download"
+        # Don't download all the time - let the later check see
+        # if the compiler has OMPT support built-in
 	    openmp=yes
 	    ompt=yes
-	    download_ompt=yes
+        #echo "ompt=download"
+	    #download_ompt=yes
 	    shift
 	    ;;
 	-ompt=download-tr4)
@@ -4307,24 +4309,42 @@ fi
 # auto-detect the MPI settings and the compiler to use.
 ####################################################################
 
+# mpicxx may change the compilers!
 orig_c_compiler=$c_compiler
 orig_cxx_compiler=$cxx_compiler
 orig_fortran_compiler=$fortran_compiler
-# mpicxx may change it.
-#if [ $cxx_compiler = mpicxx ] ; then
+
+# If Intel is detected, check for mpiicpc not mpicxx
+mpicxx_exe=mpicxx
+mpicc_exe=mpicc
+mpif90_exe=mpif90
+intel_cxx=`which mpiicpc 2>/dev/null | wc -l`
+if [ $intel_cxx = 1 ] ; then
+    echo "detected Intel in path"
+    if [ "x$cxx_compiler" = "xicpc" -o "x$cxx_compiler" = "xmpiicpc" ] ; then
+        echo "using Intel MPI wrappers (with Intel compilers)"
+        mpicxx_exe=mpiicpc
+        mpicc_exe=mpiicc
+        mpif90_exe=mpiifort
+    else
+        echo "WARNING: Intel compilers found in your path, but C++ compiler not specified.  Whatever is detected in mpicxx will be used as the compiler.  To force Intel compilers, please pass -c++=icpc or -c++=mpiicpc"
+        issue_intel_warning=yes
+    fi
+fi
+
 if [ $mpi = yes -a "x$mpiinc" = "x" ] ; then
-    cxxloaded=`which mpicxx 2>/dev/null | wc -l`
+    cxxloaded=`which $mpicxx_exe 2>/dev/null | wc -l`
     mpi=yes
     if [ $cxxloaded = 1 ]
     then
-	echo "NOTE: Found mpicxx in the path...trying to auto-configure compilers and flags..."
-	c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	f90loaded=`which mpif90 2>/dev/null | wc -l`
+	echo "NOTE: Found $mpicxx_exe in the path...trying to auto-configure compilers and flags..."
+	c_compiler=`$mpicc_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	f90loaded=`which $mpif90_exe 2>/dev/null | wc -l`
 	#if [ $f90loaded = 1 -a "x$orig_fortran_compiler" = "xmpif90" ]
 	if [ $f90loaded = 1 ] ; then
-	    echo "NOTE: Found mpif90 in the path...trying to auto-configure compilers and flags..."
-            fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	    echo "NOTE: Found $mpif90_exe in the path...trying to auto-configure compilers and flags..."
+            fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
 	    echo "NOTE: detected $fortran_compiler"
             if [ "x$fortran_compiler" = "xifort" ]; then
 		fortran_compiler=intel
@@ -4350,8 +4370,8 @@ if [ $mpi = yes -a "x$mpiinc" = "x" ] ; then
 	else
 	    echo "Default fortran compiler was '$orig_fortran_compiler'..."
 	    if [ $f90loaded = 1 ] ; then
-                fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	    else 
+                fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	    else
                 if [ "x$orig_fortran_compiler" = "xdefault" ]; then
                   fortran_compiler=no
                 fi
@@ -4372,14 +4392,14 @@ if [ $mpi = yes -a "x$mpiinc" = "x" ] ; then
             is_internal_compiler_loaded=`which $cxx_compiler 2>/dev/null | wc -l`
             if [ $is_internal_compiler_loaded = 0 ]; then
 		# Compiler is not loaded, use full path to it
-		c_compiler=`mpicc -show | awk '{ print $1;}' `
-		cxx_compiler=`mpicxx -show | awk '{ print $1;}' `
-		fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
+		c_compiler=`$mpicc_exe -show | awk '{ print $1;}' `
+		cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' `
+		fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' `
             fi
             if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
-		mpiinc=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
-		mpilibargs=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
-		mpiflibargs=`mpif90 -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
+		mpiinc=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+		mpilibargs=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+		mpiflibargs=`$mpif90_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
 
 		mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
 		mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
@@ -4387,8 +4407,8 @@ if [ $mpi = yes -a "x$mpiinc" = "x" ] ; then
 	        mpilibargs_added_to_fixmakeargs=yes
 
             fi
-            full_cxx_compiler=`mpicxx -show | tail -n 1 | awk '{ print $1; }'`
-            full_cc_compiler=`mpicc -show | tail -n 1 | awk '{ print $1; }'`
+            full_cxx_compiler=`$mpicxx_exe -show | tail -n 1 | awk '{ print $1; }'`
+            full_cc_compiler=`$mpicc_exe -show | tail -n 1 | awk '{ print $1; }'`
             fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
             mpi=yes
 	fi
@@ -7455,6 +7475,7 @@ if [ $ompt_compiler_support = no ] ; then
             download_ompt=yes
         else
             echo "LLVM-OpenMP does not support detected compiler"
+            echo "OpenMP support is only available with -opari for the specified compilers $c_compiler and $cxx_compiler."
             (>&2 echo 'ERROR: OMPT Requested, but there is no way to provide it.')
             exit 1;
         fi
@@ -7629,8 +7650,9 @@ if [ "x$download_ompt" = "xyes" ] ; then
       /bin/rm -rf ${libomp_oss}
     fi
     # get the tar file
-    echo "downloading $libomp_osstgz..."
+    if [ ! -d $libomp_oss ]; then
     if [ ! -f $libomp_osstgz ]; then
+    echo "downloading $libomp_osstgz..."
       download "$libomp_ossurl" "$libomp_osstgz"
     fi
 
@@ -7645,7 +7667,9 @@ if [ "x$download_ompt" = "xyes" ] ; then
       echo "expanding $libomp_osstgz..."
       tar -xzf $libomp_osstgz
       echo "removing $libomp_osstgz..."
-      rm $libomp_osstgz
+      #rm $libomp_osstgz
+    fi
+    fi # ! -d $libomp_oss
       cd $libomp_oss
       libomp_oss_log=build.log
       specialflags="-DCMAKE_C_FLAGS=-fPIC -DCMAKE_CXX_FLAGS=-fPIC"
@@ -7664,8 +7688,15 @@ if [ "x$download_ompt" = "xyes" ] ; then
 	  mkdir build-${ompt_cxx_compiler}
 	  cd build-${ompt_cxx_compiler}
       libomp_cmake_instdir=`pwd`
-	  echo cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true cmake -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} ..
-	  cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. > $libomp_oss_log 2>&1
+      if [ "x$cuda" == "xyes" ] ; then
+        # It probably doesn't make sense to have target offload support.
+	    #cmake_cmd="cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} -DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_70 -DLIBOMPTARGET_ENABLE_DEBUG=on -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=35,60,70 ${specialflags} .. "
+	    cmake_cmd="cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. "
+      else
+	    cmake_cmd="cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. "
+      fi
+      echo $cmake_cmd
+      $cmake_cmd > $libomp_oss_log 2>&1
       result=$?
       if [ $result -eq 0 ] ; then
         echo make clean
@@ -7694,7 +7725,7 @@ if [ "x$download_ompt" = "xyes" ] ; then
         echo "Please check `pwd`/${libomp_oss_log}"
 		exit 1;
       fi
-    fi
+    #fi
   else #Still need to copy the header to be sure it's not from the wrong version
       echo cp $libomp_oss/build-${ompt_cxx_compiler}/include/*.h ${START_DIR}/include/.
       cp $libomp_oss/build-${ompt_cxx_compiler}/include/*.h ${START_DIR}/include/.
@@ -12180,15 +12211,16 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
     ompt_instdir_=${targetdir}/${architecture}/lib/shared${tauoptions}
     mkdir -p ${ompt_instdir}
     mkdir -p ${ompt_instdir_}
-    cp ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ${ompt_instdir}/lib${libomp_oss_name}.so ;
-    cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;
+    #cp ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ${ompt_instdir}/lib${libomp_oss_name}.so ;
+    #cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;
 
     # Copy the OpenMP runtime in the tauoptions directory as well
-    cp ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ${ompt_instdir_}/lib${libomp_oss_name}.so ;
-    cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir_}/libomp.so ;
+    #cp ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ${ompt_instdir_}/lib${libomp_oss_name}.so ;
+    #cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir_}/libomp.so ;
+    cp ${libomp_ossdir_shared}/*.so ${ompt_instdir_}/.
 
     echo "ompt_dir=$ompt_dir"
-    omptlinking="-Wl,-rpath=${ompt_instdir}#-L${ompt_instdir}#$omptlibrary"
+    omptlinking="-Wl,-rpath=${ompt_instdir_}#-L${ompt_instdir_}#$omptlibrary"
     if [ "x$download_ompt_tr4" = "xyes" ] ; then
       fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
     elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
@@ -12212,12 +12244,12 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
     fi
 
-    if [ ! ${libomp_ossdir_shared} = ${ompt_instdir} ] ; then
-        mkdir -p ${ompt_instdir}
-        cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;
-        cp ${libomp_ossdir_shared}/libgomp.so ${ompt_instdir}/libgomp.so ;
-        cp ${libomp_ossdir_shared}/libiomp5.so ${ompt_instdir}/libiomp5.so ;
-    fi
+#    if [ ! ${libomp_ossdir_shared} = ${ompt_instdir} ] ; then
+#        mkdir -p ${ompt_instdir}
+#        cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;
+#        cp ${libomp_ossdir_shared}/libgomp.so ${ompt_instdir}/libgomp.so ;
+#        cp ${libomp_ossdir_shared}/libiomp5.so ${ompt_instdir}/libiomp5.so ;
+#    fi
 	# apex also needs the headers...
 	mkdir -p ${targetdir}/${architecture}/include
     cp ${START_DIR}/include/omp*.h ${targetdir}/${architecture}/include
@@ -12247,6 +12279,12 @@ elif [ $ompt = yes -a $ompt_compiler_support = yes ] ; then
     rm -f ${ompt_instdir}/libomp.so
     rm -f ${ompt_instdir}/libgomp.so
     rm -f ${ompt_instdir}/libiomp5.so
+fi
+# Regardless, remove the libomp.so from ${targetdir}/${architecture}/lib
+if [ $ompt = yes ] ; then
+    rm -f ${targetdir}/${architecture}/lib/libomp.so
+    rm -f ${targetdir}/${architecture}/lib/libgomp.so
+    rm -f ${targetdir}/${architecture}/lib/libiomp5.so
 fi
 
 # Install the Static object library for LLVM-OMPT
@@ -12498,5 +12536,8 @@ then
    echo "NOTE: This system supports the Cray CNL platform. You may configure with -arch=craycnl to enable this option."
 fi
 
+if [ "x$issue_intel_warning" = "xyes" ] ; then
+    echo "NOTE: Intel compilers found in your path, but C++ compiler not specified.  Whatever was detected in 'mpicxx -show' will be used as the compiler.  To force Intel compilers, please pass -c++=icpc or -c++=mpiicpc"
+fi
 
 exit 0

@@ -1,3 +1,6 @@
+#ifndef TAU_PLUGIN_CPP_TYPES_H
+#define TAU_PLUGIN_CPP_TYPES_H
+
 #include <map>
 #include <set>
 #include <string>
@@ -121,3 +124,5 @@ class OmptPluginsVect {
 };
 
 extern OmptPluginsVect plugins_for_ompt_event[NB_TAU_PLUGIN_EVENTS];
+
+#endif //TAU_PLUGIN_CPP_TYPES_H
