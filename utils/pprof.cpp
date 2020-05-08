@@ -26,10 +26,10 @@
  * Version 2.4  racy support (dump format)
  * Version 2.5  switched to ASCII files to be really portable
  * Version 2.6  Added support for HPC+++ (n,c,t) , aggregates
- * Version 2.7  Added support for Dynamic profiling 
- * Version 2.8  Added no. of subroutines data 
+ * Version 2.7  Added support for Dynamic profiling
+ * Version 2.8  Added no. of subroutines data
  * Version 2.9  Added no. of subrs and stddev to dump mode
- * Version 2.91 Separate column heading for stddev in dump mode, 
+ * Version 2.91 Separate column heading for stddev in dump mode,
  *              delete stddev column for mean
  */
 
@@ -38,8 +38,8 @@
 # include "user_event_data.h"
 //# include "tau_platforms.h"
 #ifdef APPLECXX
-#define APPLE_SSCANF_BUG 1 
-/* developer.apple.com: Fixed sscanf() now works as expected for reading long doubles. (r. 2757634). */    
+#define APPLE_SSCANF_BUG 1
+/* developer.apple.com: Fixed sscanf() now works as expected for reading long doubles. (r. 2757634). */
 #include <sstream>
 using namespace std;
 #endif /* APPLECXX */
@@ -48,7 +48,7 @@ static struct p_func_descr {
 #ifdef USE_LONG
   long     numcalls;
   long     numsubrs;
-#else // DEFAULT double 
+#else // DEFAULT double
   double     numcalls;
   double     numsubrs;
 #endif // USE_LONG
@@ -64,10 +64,10 @@ static struct p_prof_elem {
 #ifdef USE_LONG
   long     numcalls;
   long     numsubrs;
-#else // DEFAULT double 
+#else // DEFAULT double
   double     numcalls;
   double     numsubrs;
-#endif //USE_LONG 
+#endif //USE_LONG
   double  usec;
   double  cumusec;
   double  stddeviation;
@@ -78,7 +78,7 @@ static struct p_prof_elem {
 
 /* MIMD extension to identify top level function in each thread */
 int top_level_function; /* id for the top level function */
-double max_thread_cumusec = 0.0; 
+double max_thread_cumusec = 0.0;
 bool read_summary_files = false;
 char summary_prefix[1024];
 static struct p_coll_descr {
@@ -138,7 +138,7 @@ static char lbuf[256];        /* -- temporary line buffer for reads -- */
 static char sbuf[128];        /* -- temporary string buffer -- */
 static int  hpcxx_flag = FALSE;
 static int  hwcounters = false;     /* -- are we using hardware counters or timing measurements -- */
-static bool multipleCounters = false;  
+static bool multipleCounters = false;
 static char * counterName = NULL;
 static int  userevents = false;
 static int  profilestats = false; /* for SumExclSqr */
@@ -146,14 +146,14 @@ static int  files_processed = 0; /* -- used for printing summary -- */
 
 /************** Function Declarations *********************************/
 
-int FunctionSummaryInfo(int no, int ctx, int thr, int max); 
+int FunctionSummaryInfo(int no, int ctx, int thr, int max);
 static char *strsave (const char *s); /* defined later */
 static int MsecCmp (const void *left, const void *right);
 static int CumMsecCmp (const void *left, const void *right);
 static int StdDevCmp (const void *left, const void *right);
 static int CallCmp (const void *left, const void *right);
 static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
-                         int max, char *order); 
+                         int max, char *order);
 static void PrintFuncTab (struct p_prof_elem *tab, double total, int max);
 static void Processuser_event_data(FILE *fp, int no, int ctx, int thr, int max);
 static void UserEventSummaryInfo(int node, int ctx, int thr);
@@ -178,10 +178,10 @@ map<const char*, user_event_data, ltstr> userEventDB;
 
 static char *removeRuns(char *str) {
   // replaces runs of spaces with a single space
-  
+
   // also removes leading whitespace
   while (*str && *str == ' ') str++;
-  
+
   int len = strlen(str);
   for (int i=0; i<len; i++) {
     if (str[i] == ' ') {
@@ -201,7 +201,7 @@ static char *removeRuns(char *str) {
 
 bool IsDynamicProfiling(char *filename) {
   //This function determines if dynamic profiling is used by opening the
-  //profile and examing the version that is contained on the first line.  
+  //profile and examing the version that is contained on the first line.
   //It then returns the corresponding boolean.
   //
   //max line length for the first line of the profile file.
@@ -242,16 +242,16 @@ bool IsDynamicProfiling(char *filename) {
       retval = true;
     }//if
     else{
-      hwcounters = false; // Timing data is in the profile files  
+      hwcounters = false; // Timing data is in the profile files
       retval = true;
     }//else
   }//if
-  else  { 
+  else  {
     if ((strcmp(version,"templated_functions_hw_counters") == 0)) {
       hwcounters  = true; // Counters - do not use time string formatting
       retval = true; // It is dynamic profiling
     }//if
-    else // Neither  - static profiling 
+    else // Neither  - static profiling
       retval = false;
   }//else
 
@@ -260,10 +260,10 @@ bool IsDynamicProfiling(char *filename) {
 }//IsDynamicProfiling()
 
 
-/* ExtractName() routine examines line and extracts function name from it 
-   by examining the number of quotes. It returns the index in line where the 
+/* ExtractName() routine examines line and extracts function name from it
+   by examining the number of quotes. It returns the index in line where the
    function ends and the other data begins. maxquotes is the maximum no. of
-   quotes that you'd expect in a line. For userevents it is 2, for function 
+   quotes that you'd expect in a line. For userevents it is 2, for function
    line (with GROUP information) it is 4 */
 int ExtractName(char* func, char *line, int maxquotes)
 {
@@ -272,7 +272,7 @@ int ExtractName(char* func, char *line, int maxquotes)
     int numquotes = 0;
     int idx, j = 0;
     int stringlength = strlen(line);
-    
+
     for (idx = 0; idx < stringlength; idx++)
       if (line[idx] == '"') numquotes++;
 
@@ -285,7 +285,7 @@ int ExtractName(char* func, char *line, int maxquotes)
     // At this point line[j] is '"' and the has a blank after that, so
     // line[j+1] corresponds to the beginning of other data.
     }
-    else 
+    else
     { /* numquotes is >maxquotes */
 #ifdef DEBUG
       printf("numquotes for line = %d [%s]\n", numquotes, line);
@@ -294,19 +294,19 @@ int ExtractName(char* func, char *line, int maxquotes)
       if (maxquotes == 4) numquotes -= 3;  /* for groups */
       if (maxquotes == 2) numquotes -= 1;  /* for userevents */
       for (j = 1; numquotes != 0; j ++)
-      { 
+      {
 #ifdef DEBUG
 	printf("idx = %d\n", j);
 #endif /* DEBUG */
-        func[j-1] = line [j]; 
-        if (line [j] == '"') numquotes--; 
+        func[j-1] = line [j];
+        if (line [j] == '"') numquotes--;
         if (j == stringlength) break;
       }
       func[j -2 ] = '\0'; /* get rid of the trailing " in func name */
 #ifdef DEBUG
       printf("idx = %d, line [idx] = %s, func = %s\n", j, &line[j], func);
 #endif /* DEBUG */
-      
+
     }
 
 #ifdef DEBUG
@@ -339,7 +339,7 @@ int ExtractName(char* func, char *line, int maxquotes)
 
 
     return j;
-  
+
 }
 
 int InitFuncNameBuf(void){
@@ -348,18 +348,18 @@ int InitFuncNameBuf(void){
   //First allocate space for the three buffers, then fill them up.
   int i;
   map<const char*, function_data, ltstr>::iterator it;
-  funcnamebuf = (char **) malloc (numfunc * sizeof(char *));  
-  if (funcnamebuf == NULL){  
+  funcnamebuf = (char **) malloc (numfunc * sizeof(char *));
+  if (funcnamebuf == NULL){
     perror("Error: Out of Memory : malloc returns NULL ");
     exit (1);
   }//if
-  functagbuf  = (int *) malloc (numfunc * sizeof(int));  
-  if (functagbuf == NULL){  
+  functagbuf  = (int *) malloc (numfunc * sizeof(int));
+  if (functagbuf == NULL){
     perror("Error: Out of Memory : malloc returns NULL ");
     exit (1);
   }//if
-  groupnamebuf = (char **) malloc (numfunc * sizeof(char *));  
-  if (groupnamebuf == NULL){  
+  groupnamebuf = (char **) malloc (numfunc * sizeof(char *));
+  if (groupnamebuf == NULL){
     perror("Error: Out of Memory : malloc returns NULL ");
     exit (1);
   }//if
@@ -382,14 +382,14 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
   char groupNames[SIZE_OF_LINE];
   char version[64],filename[SIZE_OF_FILENAME]; // double check?
   int numberOfFunctions, i, j, k;
-  char header[256], trailer[256]; // Format string 
-  int hlen, tlen; 
-#ifdef USE_LONG 
+  char header[256], trailer[256]; // Format string
+  int hlen, tlen;
+#ifdef USE_LONG
   long numcalls,numsubrs,numinvocations;
-#else // DEFAULT double 
+#else // DEFAULT double
   double     numcalls;
   double     numsubrs;
-  double     numinvocations; 
+  double     numinvocations;
 #endif // USE_LONG
   double excl, incl, exclthiscall, inclthiscall, sumexclsqr;
   bool dontread = false;
@@ -398,10 +398,10 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
   char *functionName; //need a separate string otherwise it stores only one ptr.
   char *userEventName; //need a separate string otherwise it stores only one ptr
   map<const char*, function_data, ltstr>::iterator it;
-  map<const char*, user_event_data, ltstr>::iterator uit;  
+  map<const char*, user_event_data, ltstr>::iterator uit;
   if (read_summary_files) {
     static int invocation = 0;
-    if (invocation > 0) return 0; 
+    if (invocation > 0) return 0;
     strcpy(filename, prefix);
     invocation++;
   }
@@ -419,25 +419,25 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
 #endif /* DEBUG */
     return 0;
   }//if
-#ifdef DEBUG 
+#ifdef DEBUG
   cout << "Inside FillFunctionDB  n " << node << " c " << ctx << " thr " << thr << endl;
 #endif /* DEBUG */
   filledDBThr++; /* Set flag to indicate that some work was done */
   filledDBCtx++; /* Set flag to indicate that some work was done */
   //read in the first line
-  if (fgets(line, sizeof(line), fp) == NULL) { 
+  if (fgets(line, sizeof(line), fp) == NULL) {
     perror("Error: fgets returns NULL ");
     return 0;
   }//if
   sscanf(line,"%d %s", &numberOfFunctions, version);
-  // double check - just to be sure 
-  if (strncmp(version,"templated_functions",strlen("templated_functions")) != 0 ) { 
+  // double check - just to be sure
+  if (strncmp(version,"templated_functions",strlen("templated_functions")) != 0 ) {
    // Neither templated_functions nor templated_functions_hw_counters
     printf("Incorrect version in file %s : %s", filename, version);
     return 0;
   }//if
 
-  // New Data format contains a string like 
+  // New Data format contains a string like
   // "# Name Calls Subrs Excl Incl SumExclSqr ProfileCalls"
   if (fgets(line, sizeof(line), fp) == NULL) {
     perror("Error: fgets returns NULL in format string ");
@@ -450,41 +450,41 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
       // skip to next line
     }
   }
-  if (line[0] == '#') { // new data format 
+  if (line[0] == '#') { // new data format
     sprintf(header,"# Name Calls Subrs Excl Incl ");
     hlen = strlen(header);
     if (strncmp(line, header, hlen) != 0) {
       printf("Error in reading Format String : Expected %s Got %s\n", header, line);
       exit(1);
-    }//if 
+    }//if
     else { // Format string parsed correctly. See if PROFILE_STATS is on
       sprintf(trailer,"SumExclSqr ProfileCalls");
       tlen = strlen(trailer);
       if (strncmp(line+hlen, trailer, tlen) == 0)
 	profilestats = true;
-      else { // doesn't contain SumExclSqr 
+      else { // doesn't contain SumExclSqr
         sprintf(trailer, "ProfileCalls");
 	tlen = strlen(trailer);
 	if (strncmp(line+hlen, trailer, tlen) == 0)
 	  profilestats = false;
-	else { // neither matched! 
+	else { // neither matched!
           printf("Error in reading Format String : Got %s\n", line);
 	  exit(1);
-	}//else - trailer matches 
-      }//else - doesn't contain SumExclSqr 
+	}//else - trailer matches
+      }//else - doesn't contain SumExclSqr
 #ifdef DEBUG
       printf("Format String correct ProfileStats is %d\n", profilestats);
-#endif /* DEBUG */ 
-    }//else - Format String available  
+#endif /* DEBUG */
+    }//else - Format String available
   }//if - First char is '#'
-  else{ // Old data format! # is not there! 
+  else{ // Old data format! # is not there!
     profilestats = false;
     dontread = true; //already read a data line - process that first!
-  }//else - line[0] = '#' 
+  }//else - line[0] = '#'
   for (i=0; i < numberOfFunctions; i++) {
-    if((i == 0) && (dontread == true)) { //skip 
-    } 
-    else { 
+    if((i == 0) && (dontread == true)) { //skip
+    }
+    else {
       if (fgets(line, SIZE_OF_LINE, fp) == NULL) {
         perror("Error in fgets: Cannot read function table");
         return 0;
@@ -510,8 +510,8 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
 	groupNames[innerCount] = '\0';
       }//if
     }//for
-    if (!profilestats) { // SumExclSqr is not there 
-#ifdef USE_LONG 
+    if (!profilestats) { // SumExclSqr is not there
+#ifdef USE_LONG
       sscanf(&line[j+1], "%ld %ld %lG %lG %ld", &numcalls, &numsubrs, &excl, &incl, &numinvocations);
 #else // DEFAULT double
 #ifdef APPLECXX
@@ -520,58 +520,58 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
 #endif /* DEBUG */
 #ifdef APPLE_SSCANF_BUG
       istringstream ist(&line[j+1]);
-      ist >> numcalls >> numsubrs >> excl >> incl >> numinvocations ; 
+      ist >> numcalls >> numsubrs >> excl >> incl >> numinvocations ;
 #else /* APPLE_SSCANF_BUG */
       int a, b, c, d, e;
       sscanf(&line[j+1], "%d %d %lG %lG %d", &a, &b, &c, &d, &e);
-      numcalls = (double) a; numsubrs = (double) b; excl = (double) c; 
+      numcalls = (double) a; numsubrs = (double) b; excl = (double) c;
       incl = (double) d; numinvocations = (double) e;
 #endif /* APPLE_SSCANF_BUG */
 #ifdef DEBUG
       cout <<"calls " <<numcalls<<" subrs "<<numsubrs << " ex "<<excl <<endl;
       cout <<"incl " <<incl <<" invocations "<<numinvocations<<endl;
 #endif /* DEBUG */
-           
-#else 
+
+#else
       sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &numinvocations);
-#endif 
-#endif // USE_LONG 
-    }//if 
+#endif
+#endif // USE_LONG
+    }//if
     else { // SumExclSqr is there.
-#ifdef USE_LONG 
+#ifdef USE_LONG
       sscanf(&line[j+1], "%ld %ld %lG %lG %lG %ld", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
 #else // DEFAULT double
 #ifdef APPLECXX
       {
 #ifdef APPLE_SSCANF_BUG
         istringstream ist(&line[j+1]);
-        ist >> numcalls >> numsubrs >> excl >> incl >> sumexclsqr >> numinvocations ; 
+        ist >> numcalls >> numsubrs >> excl >> incl >> sumexclsqr >> numinvocations ;
 #else /* APPLE_SSCANF_BUG */
       int a, b, c, d, e, f;
       sscanf(&line[j+1], "%d %d %d %d %d %d", &a, &b, &c, &d, &e, &f);
-      numcalls = (double) a; numsubrs = (double) b; excl = (double) c; 
+      numcalls = (double) a; numsubrs = (double) b; excl = (double) c;
       incl = (double) d; sumexclsqr = (double) e; numinvocations = (double) f;
 #endif /* APPLE_SSCANF_BUG */
       }
-#else 
+#else
       sscanf(&line[j+1], "%lG %lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
-#endif 
-#endif // USE_LONG 
-    }//else - profilestats 
+#endif
+#endif // USE_LONG
+    }//else - profilestats
 #ifdef DEBUG
     cout << "func = "<< func << endl;
     cout << "numcalls = "<< numcalls << " numsubrs = "<< numsubrs << " excl = "<< excl <<" incl = " << incl << " no profiled invocations " << numinvocations << endl;
 #endif /* DEBUG */
     functionName = new char[strlen(func)+1]; // create a new storage - STL req.
     strcpy(functionName,func);
-    if ((it = funcDB.find((const char *)functionName)) != funcDB.end()) { 
-#ifdef DEBUG 
+    if ((it = funcDB.find((const char *)functionName)) != funcDB.end()) {
+#ifdef DEBUG
       cout << "Found the name " << functionName << endl;
 #endif /* DEBUG */
       delete functionName; // don't need this if its already there.
     }//if
     else{
-      funcDB[(const char *)functionName] = function_data(); 
+      funcDB[(const char *)functionName] = function_data();
       // adds  a null record and creates the name key in the map
       // Note: don't delete functionName - STL needs it
       /* PROCESS NO. OF Invocations Profiled */
@@ -611,30 +611,30 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
       if (strcmp(version, "userevents") == 0) /* User events */
         userevents = true;
       else{ // Hey! What data did we read?
-#ifdef DEBUG 
+#ifdef DEBUG
         printf("Unable to process data read: %s\n", line);
         printf("You're probably using an older version of this tool. Please upgrade\n");
         fclose(fp);
 #endif /* DEBUG */
         return 0;
       }//else
-      // First read the comment line 
+      // First read the comment line
       // Read the user events
       if ( fgets (line, 256, fp) != NULL) {
-	if (line[0] != '#'){ 
+	if (line[0] != '#'){
 	  // everything is fine  read # eventname numevents max min mean sumsqr
-	  // line contains the data for user events at this stage 
+	  // line contains the data for user events at this stage
 	  printf("Possible error in data format read: %s\n", line);
 	  fclose(fp);
 	  return 0;
 	}//if
-	// Got the # line and now for the real user data 
+	// Got the # line and now for the real user data
 	for (i =0; i < numberOfUserEvents; i++) {
 	  if (fgets(line, SIZE_OF_LINE, fp) == NULL) {
 	    perror("Error in fgets: Cannot read user event table");
 	    return 0;
 	  }//if
-          j = ExtractName(func, line, 2); 
+          j = ExtractName(func, line, 2);
 #ifdef OLDCODE
 	  // line[0] has '"' - start loop from 1 to get the entire function name
 	  for (j=1; line[j] != '"'; j++) {
@@ -663,14 +663,14 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
 #ifdef DEBUG
 	  printf("User Events read %s \n", line);
 #endif /* DEBUG */
-	  /* at this stage, the user event data should be read and userEventDB should 
-	     be filled in */    
+	  /* at this stage, the user event data should be read and userEventDB should
+	     be filled in */
 	}//for - All n user event data lines have been processed
-      }//if -  read the first line after n userevents. It contains # event...  
+      }//if -  read the first line after n userevents. It contains # event...
       else{ /* EOF encountered */
 	fclose(fp);
 	return 0;
-      }//else - data processed 
+      }//else - data processed
   }//if - userevent data not found
   fclose(fp);
   return 1;
@@ -693,7 +693,7 @@ int FillFunctionDBInNode (int node, int ctx, int thr, char *prefix) {
   cout << "FillFunctionDBInNode n" << node << " c " << ctx << " t " << thr << endl;
 #endif /* DEBUG */
   for(ctx = 0, filledDBCtx = 0; FillFunctionDBInContext(node, ctx, thr, prefix); ctx ++);
-  if (filledDBCtx) 
+  if (filledDBCtx)
     return TRUE;
   else
     return FALSE;
@@ -713,11 +713,11 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
   char func[SIZE_OF_LINE]; // - do -
   char version[64],filename[SIZE_OF_FILENAME]; // double check?
   int numberOfFunctions, i, j, k;
-#ifdef USE_LONG 
+#ifdef USE_LONG
   long numcalls, numsubrs, numinvocations;
 #else // DEFAULT double
   double numcalls, numsubrs, numinvocations;
-#endif // USE_LONG 
+#endif // USE_LONG
   double excl, incl, exclthiscall, inclthiscall, sumexclsqr, stddev;
   bool dontread = false;
   FILE *fp;
@@ -726,7 +726,7 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
 
   if (read_summary_files) {
     static int invocations = 0;
-    if (invocations > 0) return 0; 
+    if (invocations > 0) return 0;
     invocations++;
     sprintf(filename,prefix);
   } else {
@@ -741,7 +741,7 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
 #endif /* DEBUG */
     return 0;
   }//if
-  
+
 #ifdef DEBUG
   printf("Inside ProcessFileDynamic : Filename %s\n",filename);
 #endif /* DEBUG */
@@ -755,13 +755,13 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
   //double check to make sure we have the right info for this file
   sscanf(line,"%d %s", &numberOfFunctions, version);
   //check to make sure the version is one of the "templated_functions" versions
-  if (strncmp(version,"templated_functions",strlen("templated_functions")) != 0 ) { 
+  if (strncmp(version,"templated_functions",strlen("templated_functions")) != 0 ) {
     // Neither templated_functions nor templated_functions_hw_counters
     printf("Incorrect version in file %s : %s", filename, version);
     return 0;
   }//if
   // Read in next line.  Should contain the format of the data
-  // New Data format contains a string like 
+  // New Data format contains a string like
   // "# Name Calls Subrs Excl Incl SumExclSqr ProfileCalls"
   if (fgets(line, sizeof(line), fp) == NULL) {
     perror("Error: fgets returns NULL in format string ");
@@ -774,25 +774,25 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
       // skip to next line
     }
   }
-  //check to make sure first character is the #.  If not, then we 
+  //check to make sure first character is the #.  If not, then we
   //are using the old data format, so note accordingly.
-  if (line[0] != '#') { // Old data format without '#' 
+  if (line[0] != '#') { // Old data format without '#'
     profilestats = false;
     dontread = true; // have already read a valid data line
-  }//if 
+  }//if
   // We've already parsed the options correctly in FillFunctionDB
-  // Before reading the data, initialize the map for the function 
+  // Before reading the data, initialize the map for the function
   for(it = funcDB.begin(); it != funcDB.end(); it++) {
     (*it).second = function_data(); /* initialized to null values */
-  }//for - This ensures that data from two files doesn't interfere 
-  
+  }//for - This ensures that data from two files doesn't interfere
+
   /* Main loop of reading the function information, line by line */
   for (i=0; i < numberOfFunctions; i++) {
     //check to see if we had set dont read to true and we are in our
     //first iteration.  If so, then we have already read in a data line.
     //if not, then we need to read the next line in
-    if ( (i==0) && (dontread == true)) { //skip 
-    }//if 
+    if ( (i==0) && (dontread == true)) { //skip
+    }//if
     else {
       if (fgets(line, SIZE_OF_LINE, fp) == NULL) {
         perror("Error in fgets: Cannot read function table");
@@ -804,56 +804,56 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
     j = ExtractName(func, line, 4);
     // At this point line[j] is '"' and the has a blank after that, so
     // line[j+1] corresponds to the beginning of other data.
-    if (!profilestats) { // SumExclSqr is not there 
-#ifdef USE_LONG 
+    if (!profilestats) { // SumExclSqr is not there
+#ifdef USE_LONG
       sscanf(&line[j+1], "%ld %ld %lG %lG %ld", &numcalls, &numsubrs, &excl, &incl, &numinvocations);
 #else // DEFAULT double
 #ifdef APPLECXX
 #ifdef APPLE_SSCANF_BUG
       istringstream ist(&line[j+1]);
-      ist >> numcalls >> numsubrs >> excl >> incl >> numinvocations ; 
+      ist >> numcalls >> numsubrs >> excl >> incl >> numinvocations ;
 #else /* APPLE_SSCANF_BUG */
       int a, b, c, d, e;
       sscanf(&line[j+1], "%d %d %d %d %d", &a, &b, &c, &d, &e);
-      numcalls = (double) a; numsubrs = (double) b; excl = (double) c; 
+      numcalls = (double) a; numsubrs = (double) b; excl = (double) c;
       incl = (double) d; numinvocations = (double) e;
 #endif /* APPLE_SSCANF_BUG */
-#else 
+#else
       sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &numinvocations);
 
-#endif 
-#endif // USE_LONG 
-      stddev = 0; // Not defined in this case 
-    }//if(!profilestats 
+#endif
+#endif // USE_LONG
+      stddev = 0; // Not defined in this case
+    }//if(!profilestats
     else { // SumExclSqr is there.
-#ifdef USE_LONG 
+#ifdef USE_LONG
       sscanf(&line[j+1], "%ld %ld %lG %lG %lG %ld", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
 #else // DEFAULT double
 #ifdef APPLECXX
 #ifdef APPLE_SSCANF_BUG
       istringstream ist(&line[j+1]);
-      ist >> numcalls >> numsubrs >> excl >> incl >> sumexclsqr >> numinvocations; 
+      ist >> numcalls >> numsubrs >> excl >> incl >> sumexclsqr >> numinvocations;
 #else /* APPLE_SSCANF_BUG */
       int a, b, c, d, e, f;
       sscanf(&line[j+1], "%d %d %d %d %d %d", &a, &b, &c, &d, &e, &f);
-      numcalls = (double) a; numsubrs = (double) b; excl = (double) c; 
+      numcalls = (double) a; numsubrs = (double) b; excl = (double) c;
       incl = (double) d; sumexclsqr = (double) e; numinvocations = (double) f;
 #endif /* APPLE_SSCANF_BUG */
-#else 
+#else
       sscanf(&line[j+1], "%lG %lG %lG %lG %lG %lG", &numcalls, &numsubrs, &excl, &incl, &sumexclsqr, &numinvocations);
-#endif 
-#endif // USE_LONG 
+#endif
+#endif // USE_LONG
       // Calculate the standard deviation = sqrt((sumt^2)/N - mean^2)
       stddev = sqrt(fabs( (sumexclsqr/numcalls) - ((excl/numcalls) * (excl/numcalls))) );
 #ifdef DEBUG
-      cout << "stddeviation = "<< stddev << " sumexclsqr = "<< sumexclsqr << " func : "<< " excl " << excl<< " calls " << numcalls << func<< endl; 
+      cout << "stddeviation = "<< stddev << " sumexclsqr = "<< sumexclsqr << " func : "<< " excl " << excl<< " calls " << numcalls << func<< endl;
 #endif /* DEBUG */
     }// else
 #ifdef DEBUG
     cout << "func = "<< func << endl;
     cout << "numcalls = "<< numcalls <<" numsubrs = "<< numsubrs<< " excl = "<< excl <<" incl = " << incl << " num invocations profiled = " << numinvocations << endl;
 #endif /* DEBUG */
-    //Error Checking:  Check to see if the funtion name we got is in our FunctionDB.  
+    //Error Checking:  Check to see if the funtion name we got is in our FunctionDB.
     //If not, report an error and return 0.
     if ((it = funcDB.find((const char *)func)) == funcDB.end()) {
       cout << "ERROR : In second pass ProcessFileDynamic didn't find name " << func << " in file "<< filename << endl;
@@ -864,7 +864,7 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
     funcDB[func] += function_data(numcalls, numsubrs, excl, incl, stddev);
     /* In case a function appears twice in the same file (templated function
        the user didn't specify exactly unique type - then add the data. Defaults
-       to assignment as initialization cleans it up. */ 
+       to assignment as initialization cleans it up. */
     /* PROCESS NO. OF Invocations Profiled */
     for(k = 0; k < numinvocations; k++) {
       if(fgets(line,SIZE_OF_LINE,fp) == NULL) {
@@ -890,15 +890,15 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
     p_func_list[i].stddeviation = (*it).second.stddeviation;
     //to find which is the top level function in this thread, we find the function with max cumusex
     if (p_func_list[i].cumusec > max_thread_cumusec) {
-      top_level_function = i; 
+      top_level_function = i;
       max_thread_cumusec = p_func_list[i].cumusec;
     }//if
 #ifdef DEBUG
-#ifdef USE_LONG 
+#ifdef USE_LONG
     printf("Func Id %d name %s numcalls %ld numsubrs %ld usec %lG cumusec %lG\n",i, funcnamebuf[i],  p_func_list[i].numcalls, p_func_list[i].numsubrs, p_func_list[i].usec, p_func_list[i].cumusec);
 #else // DEFAULT double
     printf("Func Id %d name %s numcalls %lG numsubrs %lG usec %lG cumusec %lG\n",i, funcnamebuf[i],  p_func_list[i].numcalls, p_func_list[i].numsubrs, p_func_list[i].usec, p_func_list[i].cumusec);
-#endif // USE_LONG 
+#endif // USE_LONG
 #endif /* DEBUG */
   }//for
   /* -- read number of collections ------------------------------------------ */
@@ -909,10 +909,10 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
   }//if
   sscanf(line, "%d %s", &numcoll, version);
   if (strcmp(version, "aggregates") == 0) /* Aggregates in dynamic profiling */
-    { // WRITE CODE TO SUPPORT AGGREGATES HERE 
-      if(numcoll) { 
-      } // numcoll > 0 
-    } // "aggregates" 
+    { // WRITE CODE TO SUPPORT AGGREGATES HERE
+      if(numcoll) {
+      } // numcoll > 0
+    } // "aggregates"
 
   if ( fgets (line, 256, fp) != NULL) {
     // If userevent data is available, process it.
@@ -923,33 +923,33 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
       printf("User Events read %s \n", line);
 #endif /* DEBUG */
       Processuser_event_data(fp, node, ctx, thr, numberOfUserEvents);
-    }//if 
-    else{ // Hey! What data did we read? 
+    }//if
+    else{ // Hey! What data did we read?
 #ifdef DEBUG
       printf("Unable to process data read: %s\n", line);
       printf("You're probably using an older version of this tool. \
 	Please upgrade\n");
 #endif /* DEBUG */
     }//else
-  }//if - user event data was there 
+  }//if - user event data was there
   else {
     userevents = false; /* no events defined for this file */
-  }//else   
+  }//else
   fclose(fp);
 #ifdef DEBUG
   cout << "Closing file " << filename << endl;
 #endif /* DEBUG */
-  // FUNCTION SUMMARY INFO 
+  // FUNCTION SUMMARY INFO
   FunctionSummaryInfo(node, ctx, thr, max);
-  if (userevents){ 
+  if (userevents){
     /* user events were defined for this file */
     UserEventSummaryInfo(node, ctx, thr);
   }//if
   return 1;
 }//ProcessFileDynamic()
 
-int FunctionSummaryInfo(int no, int ctx, int thr, int max){ 
-  // Continuation of ProcessFileDynamic - just breaking up the code 
+int FunctionSummaryInfo(int no, int ctx, int thr, int max){
+  // Continuation of ProcessFileDynamic - just breaking up the code
   int i, j;
   int active_counters=0;
   int numf;
@@ -959,7 +959,7 @@ int FunctionSummaryInfo(int no, int ctx, int thr, int max){
   char ident_str[32];
   /* Globals used to initialize locals */
   numf = numfunc;
-  numc = numa = numcoll; 
+  numc = numa = numcoll;
   hpcxx_flag = TRUE; // for n,c,t display
 
   /* -- initialize summary function profile data table ---------------------- */
@@ -981,12 +981,12 @@ int FunctionSummaryInfo(int no, int ctx, int thr, int max){
       p_max_tbl[i].tag      = p_min_tbl[i].tag      = p_total_tbl[i].tag;
       p_max_tbl[i].name     = p_min_tbl[i].name     = p_total_tbl[i].name;
       p_max_tbl[i].usec     = p_min_tbl[i].usec     = p_func_list[i].usec;
-      p_max_tbl[i].cumusec  = p_min_tbl[i].cumusec  = p_func_list[i].cumusec; 
+      p_max_tbl[i].cumusec  = p_min_tbl[i].cumusec  = p_func_list[i].cumusec;
       p_max_tbl[i].numcalls = p_min_tbl[i].numcalls = p_func_list[i].numcalls;
       p_max_tbl[i].numsubrs = p_min_tbl[i].numsubrs = p_func_list[i].numsubrs;
       p_max_tbl[i].stddeviation = p_min_tbl[i].stddeviation = p_func_list[i].stddeviation;
 #ifdef DEBUG
-#ifdef USE_LONG 
+#ifdef USE_LONG
       printf(" Func %d, min_tbl[i].numcalls %ld min_tbl[i].numsubrs %ld usec %lG, cumusec %lG\n",
 	     i, p_min_tbl[i].numcalls, p_min_tbl[i].numsubrs, p_min_tbl[i].usec, p_min_tbl[i].cumusec);
 
@@ -998,7 +998,7 @@ int FunctionSummaryInfo(int no, int ctx, int thr, int max){
 
       printf(" Func %d, max_tbl[i].numcalls %lG max_tbl[i].numsubrs %lG usec %lG, cumusec %lG\n",
 	     i, p_max_tbl[i].numcalls, p_max_tbl[i].numsubrs, p_max_tbl[i].usec, p_max_tbl[i].cumusec);
-#endif // USE_LONG 
+#endif // USE_LONG
 #endif /* DEBUG */
     }//for
     total_total = 0.0;
@@ -1043,7 +1043,7 @@ int FunctionSummaryInfo(int no, int ctx, int thr, int max){
   }//for
 #ifdef DEBUG
   for (i=0; i<numf; i++) {
-#ifdef USE_LONG 
+#ifdef USE_LONG
     printf(" Func %d, min_tbl[i].numcalls %ld  numsubrs %ld usec %lG, cumusec %lG\n",
 	   i, p_min_tbl[i].numcalls, p_min_tbl[i].numsubrs, p_min_tbl[i].usec, p_min_tbl[i].cumusec);
 
@@ -1055,7 +1055,7 @@ int FunctionSummaryInfo(int no, int ctx, int thr, int max){
 
     printf(" Func %d, max_tbl[i].numcalls %lG numsubrs %lG usec %lG, cumusec %lG\n",
 	   i, p_max_tbl[i].numcalls, p_max_tbl[i].numsubrs, p_max_tbl[i].usec, p_max_tbl[i].cumusec);
-#endif // USE_LONG 
+#endif // USE_LONG
   }//for
 #endif /* DEBUG */
 #ifdef DEBUG
@@ -1126,7 +1126,7 @@ int FunctionSummaryInfo(int no, int ctx, int thr, int max){
 		    p_coll_list[i].localacs, p_coll_list[i].remoteacs,
 		    i, p_coll_list[i].varname);
           }//else
-        }//if 
+        }//if
         /* -- compute collection profile summary ------------------------------ */
         p_coll_tbl[i].localacs  += p_coll_list[i].localacs;
         p_coll_tbl[i].remoteacs += p_coll_list[i].remoteacs;
@@ -1184,7 +1184,7 @@ int FunctionSummaryInfo(int no, int ctx, int thr, int max){
 			 p_aggr_list[i].counters[j]*100.0/p_aggr_list[i].total_events);
 		}//else
 	      }//if
-	    }//for - printed all events 
+	    }//for - printed all events
 	  }//else - not dump
         }//if(nodeprint)
         /* -- compute collection profile summary ------------------------------ */
@@ -1216,16 +1216,16 @@ int ProcessFileDynamicInContext(int node, int ctx, int thr, int maxfuncs, char *
   if (filledDBThr)
     return TRUE;
   else
-    return FALSE; 
+    return FALSE;
 }//ProcessFileDynamicInContext()
 
 
-/*  used to iterate over all the nodes.  Each node may have multiple contexts, and 
+/*  used to iterate over all the nodes.  Each node may have multiple contexts, and
  *  each context may have multiple threads.  Passes each node into ProcessFileDynamicInContext()
  *  until a false is returned, which signals that there are no more contexts.
  */
 int ProcessFileDynamicInNode (int node, int ctx, int thr, int maxfuncs, char *prefix){
-#ifdef DEBUG 
+#ifdef DEBUG
   cout << "ProcessFileDynamicInNode n "<< node << " c "<< ctx << " t "<< thr<< endl;
 #endif /* DEBUG */
   /*  iterate through the contexts until false is returned  */
@@ -1241,11 +1241,11 @@ int ProcessFileDynamicInNode (int node, int ctx, int thr, int maxfuncs, char *pr
 /******************* user events profiling code ***************************/
 void  Processuser_event_data(FILE *fp, int node, int ctx, int thr, int numberOfUserEvents){
   char line[SIZE_OF_LINE]; // In case function name is *really* long - templ. args
-  char func[SIZE_OF_LINE]; // - do - 
+  char func[SIZE_OF_LINE]; // - do -
   double userNumEvents, userMax, userMin, userMean, userSumSqr;
   map<const char*, user_event_data, ltstr>::iterator it;
   int i, j;
-  
+
   // New Data format contains a string like
   // "# Name Calls Subrs Excl Incl SumExclSqr ProfileCalls"
   // "# eventname numevents max min mean sumsqr
@@ -1253,8 +1253,8 @@ void  Processuser_event_data(FILE *fp, int node, int ctx, int thr, int numberOfU
     perror("Error: User Event fgets returns NULL in format string ");
     return ;
   }//if
-  if (strncmp (line, "# eventname numevents max min mean sumsqr", 
-	       strlen("# eventname numevents max min mean sumsqr")) == 0){ 
+  if (strncmp (line, "# eventname numevents max min mean sumsqr",
+	       strlen("# eventname numevents max min mean sumsqr")) == 0){
 #ifdef DEBUG
     cout << "Processuser_event_data: Read line :" << line << " AS EXPECTED " << endl;
 #endif /* DEBUG */
@@ -1263,11 +1263,11 @@ void  Processuser_event_data(FILE *fp, int node, int ctx, int thr, int numberOfU
     cout << "Unexpected format string :"<< line <<": Currently not supported"<< endl;
     return;
   }//else
-  
+
   /* Before reading the data, initialize the map for the function */
   for(it = userEventDB.begin(); it != userEventDB.end(); it++) {
     (*it).second = user_event_data(); /* initialized to null values */
-#ifdef DEBUG 
+#ifdef DEBUG
     cout << "userEventDB entries name :"<< (*it).first <<endl;
 #endif /* DEBUG */
   }//for - This ensures that data from two files doesn't interfere
@@ -1278,7 +1278,7 @@ void  Processuser_event_data(FILE *fp, int node, int ctx, int thr, int numberOfU
       perror("Error in fgets: Cannot read event table");
       return ;
     }//if
-#ifdef OLDCODE 
+#ifdef OLDCODE
     // line[0] has '"' - start loop from 1 to get the entire function name
     for (j=1; line[j] != '"'; j++) {
       func[j-1] = line[j];
@@ -1291,68 +1291,69 @@ void  Processuser_event_data(FILE *fp, int node, int ctx, int thr, int numberOfU
 #ifdef APPLECXX
 #ifdef APPLE_SSCANF_BUG
     istringstream ist(&line[j+1]);
-    ist >> userNumEvents >> userMax >> userMin >> userMean >> userSumSqr ; 
+    ist >> userNumEvents >> userMax >> userMin >> userMean >> userSumSqr ;
 #else /* APPLE_SSCANF_BUG */
     int a1, b1, c1, d1, e1;
     sscanf(&line[j+1], "%d %d %d %d %d", &a1, &b1, &c1, &d1, &e1);
-    userNumEvents = (double) a1; userMax = (double) b1; userMin = (double) c1; userMean = (double) d1; userSumSqr = (double) e1;  
+    userNumEvents = (double) a1; userMax = (double) b1; userMin = (double) c1; userMean = (double) d1; userSumSqr = (double) e1;
 #endif /* APPLE_SSCANF_BUG */
-#else 
-    sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &userNumEvents, &userMax, 
+#else
+    sscanf(&line[j+1], "%lG %lG %lG %lG %lG", &userNumEvents, &userMax,
 	   &userMin, &userMean, &userSumSqr);
 #endif /* APPLECXX */
     if ((it = userEventDB.find((const char *)func)) == userEventDB.end()) {
-      cout << "ERROR : In second pass Processuser_event_data didn't find name " 
-	   << func << " on node " << node << " context " << ctx << " thread " 
+      cout << "ERROR : In second pass Processuser_event_data didn't find name "
+	   << func << " on node " << node << " context " << ctx << " thread "
 	   << thr << endl;
       return;
     }//if
-    userEventDB[func] += user_event_data(userNumEvents, userMax, userMin, 
+    userEventDB[func] += user_event_data(userNumEvents, userMax, userMin,
 				       userMean, userSumSqr);
     /* In case a function appears twice in the same file (templated function
        the user didn't specify exactly unique type - then add the data. Defaults
        to assignment as initialization cleans it up. */
-#ifdef DEBUG 
-    cout << "Added userEvent entry to DB " << func << " : num " 
-	 << userNumEvents << " max " << userMax << " mean " << userMean 
+#ifdef DEBUG
+    cout << "Added userEvent entry to DB " << func << " : num "
+	 << userNumEvents << " max " << userMax << " mean " << userMean
 	 << " sumsqr " << userSumSqr << endl;
 #endif /* DEBUG */
   }//for - processed all userevent lines
   return;
-}//Processuser_event_data() 
+}//Processuser_event_data()
 
 
 void UserEventSummaryInfo(int node, int ctx, int thr){
-  // Generate a report of user events 
+  // Generate a report of user events
   double stddev;
   int i;
   map<const char*, user_event_data, ltstr>::iterator it;
- 
+
   /* -- print user event profile data table ------------------------------ */
   if ( nodeprint ) {
     if ( dump ){
-	//Code for racy 
+	//Code for racy
 	printf("%d userevents\n", userEventDB.size());
 	printf("NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name\n");
 	for(it = userEventDB.begin(), i=0; it != userEventDB.end(); it++, i++ ) {
 	  // Calculate the standard deviation = sqrt((sumt^2)/N - mean^2)
-	  if ((*it).second.numevents == 0) { 
+	  if ((*it).second.numevents == 0) {
 	    stddev = 0;
 	    (*it).second.maxvalue = 0;
 	    (*it).second.minvalue = 0;
 	    (*it).second.meanvalue = 0;
+        continue;
 	  }//if
 	  else{
 	    stddev = sqrt(fabs( ((*it).second.sumsqr/(*it).second.numevents)
 				- ( (*it).second.meanvalue * (*it).second.meanvalue )));
 	  }//else
-	  printf("userevent %d,%d,%d %d \"%s\" %#.16G %#.16G %#.16G %#.16G %#.16G\n", 
+	  printf("userevent %d,%d,%d %d \"%s\" %#.16G %#.16G %#.16G %#.16G %#.16G\n",
 		 node, ctx, thr, i,
-		 (*it).first, 
-		 (*it).second.numevents, 
-		 (*it).second.maxvalue, 
-		 (*it).second.minvalue, 
-		 (*it).second.meanvalue, 
+		 (*it).first,
+		 (*it).second.numevents,
+		 (*it).second.maxvalue,
+		 (*it).second.minvalue,
+		 (*it).second.meanvalue,
 		 stddev);
 	  printf("%10.4G %10.4G %10.4G %10.4G %10.4G  %s\n",
 		 (*it).second.numevents,
@@ -1375,14 +1376,15 @@ void UserEventSummaryInfo(int node, int ctx, int thr){
       printf("---------------------------------------------------------------------------------------\n");
       for(it = userEventDB.begin(); it != userEventDB.end(); it++ ) {
 	// Calculate the standard deviation = sqrt((sumt^2)/N - mean^2)
-	if ((*it).second.numevents == 0){ 
+	if ((*it).second.numevents == 0){
 	  stddev = 0;
 	  (*it).second.maxvalue = 0;
 	  (*it).second.minvalue = 0;
 	  (*it).second.meanvalue = 0;
-	}//if 
+      continue;
+	}//if
 	else{
-	  stddev = sqrt(fabs( ((*it).second.sumsqr/(*it).second.numevents) 
+	  stddev = sqrt(fabs( ((*it).second.sumsqr/(*it).second.numevents)
 			      - ( (*it).second.meanvalue * (*it).second.meanvalue )));
 	}//else
 	printf("%10.4G %10.4G %10.4G %10.4G %10.4G  %s\n",
@@ -1392,11 +1394,11 @@ void UserEventSummaryInfo(int node, int ctx, int thr){
 	       (*it).second.meanvalue,
 	       stddev,
 	       (*it).first);
-      }//for 
+      }//for
       printf("---------------------------------------------------------------------------------------\n");
     }//else - not dump
-  }//if(nodeprint)	  
-}//UserEventSummaryInfo() 
+  }//if(nodeprint)
+}//UserEventSummaryInfo()
 
 
 
@@ -1423,7 +1425,7 @@ static char *ToTimeStr (double ti, char timbuf[]){
       sec  = (long) fmod (ti / 1.0e6, 60.0);
       min  = (long) fmod (ti / 60.0e6, 60.0);
       hour = (long) (ti / 36.0e8);
-    
+
       if ( hour )
         sprintf (timbuf, "%2d:%02d:%02d.%03d", hour, min, sec, msec);
       else if ( min )
@@ -1432,23 +1434,23 @@ static char *ToTimeStr (double ti, char timbuf[]){
         sprintf (timbuf, "      %2d,%03d", sec, msec);
       else
         sprintf (timbuf, "         %3d", msec);
-      if (ti < 1.0e3) 
+      if (ti < 1.0e3)
         sprintf (timbuf, "   %9.3G",ti/1.0e3);
     } else {  /* suppress time formatting but convert to msec */
         /* nsc start */
         /*  if less than 100 msec, keep fractions to retain precision */
         /*  otherwise round to whole msecs */
-        if (ti >= 1.0e5) 
+        if (ti >= 1.0e5)
           sprintf (timbuf, "%12.0f",ti/1.0e3);
-        else if (ti >= 1.0e4) 
+        else if (ti >= 1.0e4)
           sprintf (timbuf, "%12.1f",ti/1.0e3);
-        else if (ti >= 1.0e3) 
+        else if (ti >= 1.0e3)
           sprintf (timbuf, "%12.2f",ti/1.0e3);
         else
           sprintf (timbuf, "%12.3f",ti/1.0e3);
         /* nsc end */
     } // mseconly if
-  }// hwcounters if 
+  }// hwcounters if
   else /* counters */
     sprintf(timbuf,"%12.4G", ti);
   return (timbuf);
@@ -1552,13 +1554,13 @@ static int SubrCmp (const void *left, const void *right){
  */
 static void PrintFuncTab (struct p_prof_elem *tab, double total, int max){
   int i;
-#ifdef USE_LONG 
+#ifdef USE_LONG
   int o_numcalls = 0;
   int o_numsubrs = 0;
-#else // DEFAULT double 
+#else // DEFAULT double
   double o_numcalls = 0.0;
   double o_numsubrs = 0.0;
-#endif // USE_LONG 
+#endif // USE_LONG
   double o_usec = 0.0;
   double o_cumusec = 0.0;
   double o_stddeviation = 0.0;
@@ -1574,11 +1576,11 @@ static void PrintFuncTab (struct p_prof_elem *tab, double total, int max){
   if (hwcounters == false) {
     printf ("---------------------------------------------------------------------------------------\n");
     printf ("%%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive ");
-    if (profilestats) 
+    if (profilestats)
       printf("  Standard ");
     printf("Name\n");
     printf ("              msec   total msec                          usec/call ");
-    if (profilestats) 
+    if (profilestats)
       printf(" deviation ");
     printf("\n");
     printf ("---------------------------------------------------------------------------------------\n");
@@ -1592,24 +1594,24 @@ static void PrintFuncTab (struct p_prof_elem *tab, double total, int max){
     if (profilestats) printf("  deviation ");
     printf("\n");
     printf ("---------------------------------------------------------------------------------------\n");
-  }//else -  Counters data 
+  }//else -  Counters data
   for (i=0; i<numfunc && i<max; i++) {
 #ifdef DEBUG
-#ifdef USE_LONG 
+#ifdef USE_LONG
     printf(" PrintFuncTab name = %s, numcalls %ld, numsubrs %ld usec %lG, cumusec %lG \n",
 	   tab[i].name, tab[i].numcalls, tab[i].numsubrs, tab[i].usec, tab[i].cumusec);
 #else // DEFAULT double
     printf(" PrintFuncTab name = %s, numcalls %lG, numsubrs %lG usec %lG, cumusec %lG \n",
 	   tab[i].name, tab[i].numcalls, tab[i].numsubrs, tab[i].usec, tab[i].cumusec);
-#endif // USE_LONG 
-#endif 
+#endif // USE_LONG
+#endif
     /* DO WE NEED if tab[i].numcalls > 0 ? Yes - otherwise usec/call is inf */
     if ( tab[i].numcalls > 0 )  {
       if ( tab[i].cumusec > 0.0 ) { /*changed from usec > 0.0 to cumusec >0.0 */
         if ( hwcounters == false) { /* timing data use strings conversion */
 #ifdef USE_LONG
           printf ("%5.1f %s %s %8ld %8ld %10.0f ",
-#else // DEFAULT double 
+#else // DEFAULT double
 	  printf ("%5.1f %s %s %11G %11G %10.0f ",
 #endif // USE_LONG
 	  tab[i].cumusec / total * 100.0,
@@ -1618,22 +1620,22 @@ static void PrintFuncTab (struct p_prof_elem *tab, double total, int max){
 	  tab[i].numcalls,
 	  tab[i].numsubrs,
 	  tab[i].cumusec / tab[i].numcalls);
-	  if (profilestats) printf("%10.4G ", tab[i].stddeviation); 
+	  if (profilestats) printf("%10.4G ", tab[i].stddeviation);
 	  printf("%s\n", tab[i].name);
-	}//if 
+	}//if
         else { /* Counters  - do not use hr:mn:sec.msec format */
-#ifdef USE_LONG 
+#ifdef USE_LONG
           printf ("%5.1f  %10.4G  %10.4G %8ld %8ld %10.0f ",
 #else // DEFAULT double
           printf ("%5.1f  %10.4G  %10.4G %11G %11G %10.0f ",
-#endif // USE_LONG 
+#endif // USE_LONG
 		  tab[i].cumusec / total * 100.0,
 		  tab[i].usec,
 		  tab[i].cumusec,
 		  tab[i].numcalls,
 		  tab[i].numsubrs,
 		  tab[i].cumusec / tab[i].numcalls);
-	  if(profilestats) 
+	  if(profilestats)
 	    printf("%10.4G ", tab[i].stddeviation);
           printf("%s\n", tab[i].name);
 	}//else - counters
@@ -1641,25 +1643,25 @@ static void PrintFuncTab (struct p_prof_elem *tab, double total, int max){
       else {
 #ifdef USE_LONG
         printf ("  0.0            0            0 %8ld %8ld          0 ",
-#else // DEFAULT double 
+#else // DEFAULT double
         printf ("  0.0            0            0 %11G %11G          0 ",
-#endif // USE_LONG 
+#endif // USE_LONG
 		tab[i].numcalls,
 		tab[i].numsubrs);
-	if (profilestats) 
+	if (profilestats)
 	  printf("%10.4G ", tab[i].stddeviation);
 	printf("%s\n", tab[i].name);
       }//else
-    }//if 
+    }//if
   }//for
   if ( o_numcalls > 0 ) {
     if ( o_cumusec > 0.0 ) {
       if (hwcounters == false) { /* time */
 #ifdef USE_LONG
         printf ("%5.1f %s %s %8ld %8ld %10.0f ",
-#else // DEFAULT double 
+#else // DEFAULT double
         printf ("%5.1f %s %s %11G %11G %10.0f ",
-#endif // USE_LONG 
+#endif // USE_LONG
           o_cumusec / total * 100.0,
           ToTimeStr (o_usec, buf1), ToTimeStr (o_cumusec, buf2),
           o_numcalls, o_numsubrs, o_cumusec / o_numcalls);
@@ -1668,26 +1670,26 @@ static void PrintFuncTab (struct p_prof_elem *tab, double total, int max){
       }//if
       else { /* counters */
 #ifdef USE_LONG
-        printf ("%5.1f  %10.4G  %10.4G %8ld %8ld %10.0f ", 
+        printf ("%5.1f  %10.4G  %10.4G %8ld %8ld %10.0f ",
 #else // DEFAULT double
-        printf ("%5.1f  %10.4G  %10.4G %11G %11G %10.0f ", 
-#endif // USE_LONG 
+        printf ("%5.1f  %10.4G  %10.4G %11G %11G %10.0f ",
+#endif // USE_LONG
           o_cumusec / total * 100.0,
           o_usec, o_cumusec,
           o_numcalls, o_numsubrs, o_cumusec / o_numcalls);
-	if (profilestats) 
+	if (profilestats)
 	  printf("%10.4G ",o_stddeviation);
 	printf("-others-\n");
-      }//else - counters 
-    }//if - o_cumusec > 0 
+      }//else - counters
+    }//if - o_cumusec > 0
     else {
 #ifdef USE_LONG
       printf ("  0.0            0            0 %8ld %8ld          0 ",
-#else // DEFAULT double 
+#else // DEFAULT double
       printf ("  0.0            0            0 %11G %11G          0 ",
-#endif // USE_LONG 
+#endif // USE_LONG
         o_numcalls, o_numsubrs);
-      if (profilestats) 
+      if (profilestats)
         printf("%10.4G ", o_stddeviation);
       printf("-others-\n");
     }//else
@@ -1698,13 +1700,13 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
                          int max, char *order){
   int i;
   int printed_anything = 0;
-#ifdef USE_LONG 
+#ifdef USE_LONG
   long o_numcalls = 0;
   long o_numsubrs = 0;
 #else // DEFAULT double
   double o_numcalls = 0.0;
   double o_numsubrs = 0.0;
-#endif // USE_LONG 
+#endif // USE_LONG
   double t = 0.0;
   double o_usec = 0.0;
   double o_cumusec = 0.0;
@@ -1712,7 +1714,7 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
   char buf1[20], buf2[20];
 
   for (i=0; i<numfunc; i++) {
-    if ( tab[i].numcalls ) 
+    if ( tab[i].numcalls )
       t += tab[i].usec;
     if ( i >= max ) {
       o_numcalls += tab[i].numcalls;
@@ -1722,7 +1724,7 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
       o_stddeviation += tab[i].stddeviation;
     }//if
   }//for
-  
+
 /* SINCE RACY DOESN'T SUPPORT NO OF SUBROUTINES, WE DON'T SEND IT THIS YET! */
   for (i=0; i<numfunc && i<max; i++) {
     if (tab[i].numcalls) {
@@ -1741,9 +1743,9 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
 	  printf ("%.16G %4.2f\n", tab[i].cumusec, tab[i].cumusec/total*100.0);
       }//else
       if ( tab[i].cumusec > 0.0 ) {
-#ifdef USE_LONG 
+#ifdef USE_LONG
         printf ("%5.1f %s %s %8d %8d %10.0f ",
-#else // DEFAULT double 
+#else // DEFAULT double
         printf ("%5.1f %s %s %11G %11G %10.0f ",
 #endif // USE_LONG
           tab[i].cumusec / total * 100.0,
@@ -1756,7 +1758,7 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
       else {
 #ifdef USE_LONG
 	printf ("%5.1f %s %s %8d %8d %10.0f ",
-#else // DEFAULT double 
+#else // DEFAULT double
         printf ("%5.1f %s %s %11G %11G %10.0f ",
 #endif // USE_LONG
 		tab[i].cumusec / total * 100.0,
@@ -1781,9 +1783,9 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
     if ( o_cumusec > 0.0 ) {
 #ifdef USE_LONG
       printf ("%5.1f %s %s %8d %8d %10.0f ",
-#else // DEFAULT double 
+#else // DEFAULT double
       printf ("%5.1f %s %s %11G %11G %10.0f ",
-#endif // USE_LONG 
+#endif // USE_LONG
         o_cumusec / total * 100.0,
         ToTimeStr (o_usec, buf1), ToTimeStr (o_cumusec, buf2),
         o_numcalls, o_numsubrs, o_cumusec / o_numcalls);
@@ -1793,9 +1795,9 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
     else {
 #ifdef USE_LONG
       printf ("  0.0            0            0 %8d %8d          0 ",
-#else // DEFAULT double 
+#else // DEFAULT double
       printf ("  0.0            0            0 %11G %11G          0 ",
-#endif // USE_LONG 
+#endif // USE_LONG
 	      o_numcalls, o_numsubrs);
       if(profilestats) printf("%10.4G ", o_stddeviation);
       printf("-other-\n");
@@ -1806,21 +1808,21 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
   if (!printed_anything) { /* then print a dummy record */
     printf("%s ", id_str);
     printf (" -1 -others- %s ", order);
- 
+
     if ( order[0] == 'e' )
       if (t > 0.0) {
         printf ("%.16G %4.2f\n", o_usec, o_usec / total * 100.0);
       }
-      else { 
+      else {
         printf ("%.16G %4.2f\n", o_usec, o_usec ); /* will print 0 0 */
       }
     else if ( order[0] == 'i' )
       printf ("%.16G %4.2f\n", o_cumusec, o_cumusec / total * 100.0);
 #ifdef USE_LONG
     printf ("  0.0            0            0 %8d %8d          0 ",
-#else // DEFAULT double 
+#else // DEFAULT double
     printf ("  0.0            0            0 %11G %11G          0 ",
-#endif // USE_LONG 
+#endif // USE_LONG
 	    o_numcalls, o_numsubrs);
       if(profilestats) printf("%10.4G ", o_stddeviation);
       printf("-other-\n");
@@ -1853,7 +1855,7 @@ static void ReadNameTable (char file[]){
   /* -- read number of functions -- */
   fgets (lbuf, 256, in);
   sscanf (lbuf, "%d", &numfunc);
-  
+
   /* -- read function table -- */
   funcnamebuf = (char **) malloc (numfunc * sizeof(char *));
   functagbuf  = (int *) malloc (numfunc * sizeof(int));
@@ -1869,7 +1871,7 @@ static void ReadNameTable (char file[]){
   fclose (in);
 }
 
-static void ReadEventTable (char file[]){ 
+static void ReadEventTable (char file[]){
   /* reads from profile.ctab the event tables <eid, eventname> */
   int i, j, eventid;
   FILE *in;
@@ -1902,7 +1904,7 @@ static void ReadEventTable (char file[]){
       sscanf(lbuf, "%d %s",&eventid, sbuf);
       fprintf(stderr,"Warning : event id %d name %s should be in quotes in %s\n", eventid, sbuf, proffile);
     }
-    
+
     if ( eventid < 0 )
       eventnamebuf[i] = NULL;
     else
@@ -1960,7 +1962,7 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
   top_level_function = 0 ; /* by default - works for pC++ */
   max_thread_cumusec = 0.0 ; /* initialize */
 
-  /* -- read number of functions -------------------------------------------- */  
+  /* -- read number of functions -------------------------------------------- */
   if ( fgets (lbuf, 256, in) == NULL )
     fprintf (stderr,"invalid proftablefile: cannot read number of functions\n");    exit (1);
   sscanf (lbuf, "%d", &numf);
@@ -1970,7 +1972,7 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
     exit (1);
   }
 
-  /* -- read and setup function profile data -------------------------------- */  
+  /* -- read and setup function profile data -------------------------------- */
   p_func_list = (struct p_func_descr *) malloc (numf * sizeof(struct p_func_descr));
   for (i=0; i<numf; i++) {
     fgets (lbuf, 256, in);
@@ -2003,7 +2005,7 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
     /* -- setup and read collection profile data ------------------------------ */
     if ( numc ) {
       p_coll_list = (struct p_coll_descr *) malloc (numc * sizeof(struct p_coll_descr));
-  
+
       for (i=0; i<numc; i++) {
         fgets (lbuf, 256, in);
         sscanf (lbuf,"%d %d %d %d %d %s %s %s", &n, &d, &s, &l, &r, sbuf, s1, s2);
@@ -2016,7 +2018,7 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
         p_coll_list[i].elemname = strsave(s1);
         p_coll_list[i].varname  = strsave(s2);
       }
-  
+
       if ( !p_coll_tbl ) {
         p_coll_tbl = (struct p_coll_descr *) malloc (numc * sizeof(struct p_coll_descr));
         for (i=0; i<numc; i++) {
@@ -2037,7 +2039,7 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
       }
     }
   } /* if aggr_str == "coll"*/
-  else if (strcmp(aggr_str,"aggregates") == 0){ 
+  else if (strcmp(aggr_str,"aggregates") == 0){
     /* hpc++ aggregate info */
     numa = numc;
     hpcxx_flag = TRUE;
@@ -2056,11 +2058,11 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
 	for(j =0; j < MAX_COUNTERS; j++){
 	  p_aggr_list[i].counters[j] = 0L;
  	}
-	p_aggr_list[i].total_events = 0L;  
+	p_aggr_list[i].total_events = 0L;
         p_aggr_list[i].numelem   = n;
         p_aggr_list[i].dim       = d;
         p_aggr_list[i].size      = s;
-	for(j = 0; j < e; j++){ 
+	for(j = 0; j < e; j++){
 	  /* read the tuples <eventid, count > */
 	  fscanf(in,"%d %ld ", &eid, &count);
 #ifdef DEBUG
@@ -2096,7 +2098,7 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
 	    p_aggr_tbl[i].total_events = 0L;
 	  }
         }
-        numaggr = numa; 
+        numaggr = numa;
       }
       else if ( numa != numaggr ) {
         fprintf (stderr, "%s: number of aggregates does not match\n", proffile);
@@ -2171,8 +2173,8 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
   printf("Top level function = %d in file %s\n", top_level_function, proffile);
 #endif /* DEBUG */
   /* -- get total runtime (time of "main" function (always function 0)) ----- */
-  /* This is not true for all programs; new method - 
-     The top level function has max cumusec time for that thread (support 
+  /* This is not true for all programs; new method -
+     The top level function has max cumusec time for that thread (support
      for MIMD programs where top level fn is different for different threads */
   total_total += total = p_func_list[top_level_function].cumusec;
   if ( min_total > p_func_list[top_level_function].cumusec ) min_total = p_func_list[top_level_function].cumusec;
@@ -2181,11 +2183,11 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
 #ifdef DEBUG
   printf("%s : total = %5.1f top level = %5.1f\n", proffile, total, max_thread_cumusec);
 #endif
-  if (hpcxx_flag == FALSE) 
+  if (hpcxx_flag == FALSE)
     sprintf(ident_str,"%d", no);
   else  /* hpc++ */
     sprintf(ident_str,"%d,%d,%d", no, ctx, thr);
- 
+
   /* -- print function profile data table ----------------------------------- */
   if ( nodeprint ) {
     if ( dump ) {
@@ -2224,7 +2226,7 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
           /* -- print collection profile data table --------------------------- */
           if ( dump ) {
             if ( ct = p_coll_list[i].localacs + p_coll_list[i].remoteacs ) {
-              printf ("coll %d %d %d %4.2f %d %4.2f\n", no, i, 
+              printf ("coll %d %d %d %4.2f %d %4.2f\n", no, i,
                      p_coll_list[i].localacs, p_coll_list[i].localacs/ct*100.0,
                      p_coll_list[i].remoteacs, p_coll_list[i].remoteacs/ct*100.0);
             }
@@ -2237,7 +2239,7 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
               i, p_coll_list[i].varname);
           }
         }
-  
+
         /* -- compute collection profile summary ------------------------------ */
         p_coll_tbl[i].localacs  += p_coll_list[i].localacs;
         p_coll_tbl[i].remoteacs += p_coll_list[i].remoteacs;
@@ -2252,22 +2254,22 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
             if ( p_aggr_list[i].total_events ) {
 	      active_counters = 0;
 	      for(j=0; j < MAX_COUNTERS; j++){
-		if (p_aggr_list[i].counters[j]) 
+		if (p_aggr_list[i].counters[j])
 		  active_counters++ ;
 	      }
-	      printf("aggregates %d,%d,%d %d %d ",no, ctx, thr, i, active_counters); 
+	      printf("aggregates %d,%d,%d %d %d ",no, ctx, thr, i, active_counters);
 	      /* and then the quads <eid, name, no, %val> */
 	      for (j = 0; j < MAX_COUNTERS; j++) {
-		/* print only those events that took place */ 
+		/* print only those events that took place */
 		if ( p_aggr_list[i].counters[j]){
-		  if (eventnamebuf == NULL){ 
+		  if (eventnamebuf == NULL){
 		    /* print NULL */
-		    printf("%d NULL %d %4.2f ", j, p_aggr_list[i].counters[j], 
+		    printf("%d NULL %d %4.2f ", j, p_aggr_list[i].counters[j],
 			   p_aggr_list[i].counters[j]*100.0/p_aggr_list[i].total_events);
 		  }
 		  else{
 		    printf("%d %s %d %4.2f ", j, eventnamebuf[j],
-			   p_aggr_list[i].counters[j], 
+			   p_aggr_list[i].counters[j],
 			   p_aggr_list[i].counters[j]*100.0/p_aggr_list[i].total_events);
 		  }
 		}
@@ -2276,12 +2278,12 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
 		     p_aggr_list[i].container_type, p_aggr_list[i].var_name);
 	    }
 	    else{ /* all counters are 0 */
-              printf("aggregates %d,%d,%d %d 0 NULL 0 0.0 %s %s %s\n", 
+              printf("aggregates %d,%d,%d %d 0 NULL 0 0.0 %s %s %s\n",
 		no, ctx, thr, i, p_aggr_list[i].container_name,
 		p_aggr_list[i].container_type, p_aggr_list[i].var_name);
 	      /* node no ctx thr , eid 0 name NULL events 0 % 0.0 */
 	    }
-	  } 
+	  }
           else{ /* not dump */
 	    printf("aggregates %s <%s> %s\n",p_aggr_list[i].container_name,
 			p_aggr_list[i].container_type, p_aggr_list[i].var_name);
@@ -2289,7 +2291,7 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
 	      if(p_aggr_list[i].counters[j]) {
 		if(eventnamebuf == NULL){
 		  printf("Event id %d\t: %d %4.2f	percent\n",
-			 j, p_aggr_list[i].counters[j],  
+			 j, p_aggr_list[i].counters[j],
 			 p_aggr_list[i].counters[j]*100.0/p_aggr_list[i].total_events);
 		}
 		else{
@@ -2297,7 +2299,7 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
 			 j, eventnamebuf[j], p_aggr_list[i].counters[j],
 			 p_aggr_list[i].counters[j]*100.0/p_aggr_list[i].total_events);
 		}
-	      } 
+	      }
 	    } /* printed all events */
 	  } /* not dump */
 	} /* nodeprint */
@@ -2375,7 +2377,7 @@ static void PrintSummary (int max, int numproc){
         for (i=0; i<numcoll; i++) {
           ct = p_coll_tbl[i].localacs + p_coll_tbl[i].remoteacs;
           printf ("cinfo %d %s<%s> %s %d %d %d %d %4.2f %d %4.2f\n",
-            i, p_coll_tbl[i].collname, 
+            i, p_coll_tbl[i].collname,
             p_coll_tbl[i].elemname, p_coll_tbl[i].varname,
             p_coll_tbl[i].numelem, p_coll_tbl[i].size, p_coll_tbl[i].dim,
             p_coll_tbl[i].localacs, p_coll_tbl[i].localacs/ct*100.0,
@@ -2402,24 +2404,24 @@ static void PrintSummary (int max, int numproc){
       if ( dump ) {
         for (i=0; i<numaggr; i++) {
 	  no_active_counters  = 0;
-	  for (j = 0; j < MAX_COUNTERS; j++) { 
+	  for (j = 0; j < MAX_COUNTERS; j++) {
 	    if(p_aggr_tbl[i].counters[j]) no_active_counters ++;
-	  } 
-	  printf("ainfo %d %s %s  %s %d %d %d %d ", i, 
+	  }
+	  printf("ainfo %d %s %s  %s %d %d %d %d ", i,
 	    p_aggr_tbl[i].container_name, p_aggr_tbl[i].container_type,
-	    p_aggr_tbl[i].var_name, p_aggr_tbl[i].numelem, 
+	    p_aggr_tbl[i].var_name, p_aggr_tbl[i].numelem,
 	    p_aggr_tbl[i].size, p_aggr_tbl[i].dim, no_active_counters);
 
 	  for(j = 0; j < MAX_COUNTERS; j++){
-	    if (p_aggr_tbl[i].counters[j]){ /* non zero */ 
+	    if (p_aggr_tbl[i].counters[j]){ /* non zero */
   	      if (eventnamebuf == NULL){ /* print NULL */
-  	        printf("%d NULL %d %4.2f ", j, 
-  	    	  p_aggr_tbl[i].counters[j], 
+  	        printf("%d NULL %d %4.2f ", j,
+  	    	  p_aggr_tbl[i].counters[j],
   	p_aggr_tbl[i].counters[j]*100.0/p_aggr_tbl[i].total_events);
   	      }
   	      else{
   	        printf("%d %s %d %4.2f ", j, eventnamebuf[j],
-  	          p_aggr_tbl[i].counters[j], 
+  	          p_aggr_tbl[i].counters[j],
   	p_aggr_tbl[i].counters[j]*100.0/p_aggr_tbl[i].total_events);
   	      }
   	    }
@@ -2431,7 +2433,7 @@ static void PrintSummary (int max, int numproc){
         printf ("\nAGGREGATE SUMMARY:\n");
         printf ("------------------------------------------------------------\n");
         for (i=0; i<numaggr; i++) {
-          printf ("%s<%s> %s, aggregate #%d\n", 
+          printf ("%s<%s> %s, aggregate #%d\n",
 	    p_aggr_tbl[i].container_name,
             p_aggr_tbl[i].container_type, p_aggr_tbl[i].var_name, i);
           printf ("\t%d elements of size %d, %d-dimensional\n",
@@ -2440,7 +2442,7 @@ static void PrintSummary (int max, int numproc){
 	    if(p_aggr_tbl[i].counters[j]) {
 	      if(eventnamebuf == NULL){
 	        printf("Event id %d\t: %d %4.2f	percent\n",
-		  j, p_aggr_tbl[i].counters[j],  
+		  j, p_aggr_tbl[i].counters[j],
 	p_aggr_tbl[i].counters[j]*100.0/p_aggr_tbl[i].total_events);
 	      }
 	      else{
@@ -2469,14 +2471,14 @@ static int IsFilePresent(char *filename){
   }
 }//IsFilePresent()
 
-static int ProcessFileInContext (int no, int ctx, int thr, int longname, int max, char prefix[], int ignore){ 
+static int ProcessFileInContext (int no, int ctx, int thr, int longname, int max, char prefix[], int ignore){
   /* check files from thread 0 to n in loop till ProcessFile returns
      FALSE  */
   for (thr = 0; ProcessFile (no, ctx, thr, longname, max, prefix, ignore); thr ++);
   return (FALSE);
 }
 
-static int ProcessFileInNode (int no, int ctx, int thr, int longname, int max, char prefix[], int ignore){ 
+static int ProcessFileInNode (int no, int ctx, int thr, int longname, int max, char prefix[], int ignore){
   /* check files from context 0 to n */
   for (ctx = 0; ProcessFileInContext(no, ctx, thr, longname, max, prefix, ignore); ctx ++); /* blank */
     return (FALSE);
@@ -2490,10 +2492,10 @@ int main (int argc, char *argv[]){
   int argno;
   int start;
   int i;
-  int max = 999999999;                     //default value 
+  int max = 999999999;                     //default value
   int errflag;                             //determine if an error has occurred
   char *file = "profile";                  //name of file to be read in from command line -- set to default
-  char proffile[SIZE_OF_FILENAME];         //hold entire profile name (ie profile.n.c.t)  
+  char proffile[SIZE_OF_FILENAME];         //hold entire profile name (ie profile.n.c.t)
   char *dir;                               //directory where profile is located
 #ifdef TAU_WINDOWS
   int optind = 0;
@@ -2504,17 +2506,17 @@ int main (int argc, char *argv[]){
   dir = getenv("PROFILEDIR");
   if(dir != NULL) {
     file = strsave(strcat(strcat(dir,"/"),file));
-  } 
+  }
 
 #ifdef TAU_WINDOWS
-  /* -- parse command line arguments ---------------------------------------- */  
+  /* -- parse command line arguments ---------------------------------------- */
   errflag = FALSE;
-  for( int j = 1; j < argc; j++){  
+  for( int j = 1; j < argc; j++){
       char *argchar = argv[j];
       switch(argchar[0]){
 	case '-':{
 	    switch(argchar[1]){
-	      case 'a': 
+	      case 'a':
 		optShowLocation = true;
 		break;
 	      case 'c': /* -- sort according to number of *C*alls -- */
@@ -2533,7 +2535,7 @@ int main (int argc, char *argv[]){
 		if(argv[j + 1] == NULL){
 		  //Set the error flag and break out.
 		  errflag = TRUE;
-		}		
+		}
 		else{
 		   if(argv[j+1][0] == '-'){
 		     //The chances are that the filename was forgotten.
@@ -2565,7 +2567,7 @@ int main (int argc, char *argv[]){
 	      case 'i': /* -- sort according to Milliseconds (*I*nclusive per call)  -- */
 		compar = CumMsecPerCallCmp;
 		break;
-	      case 'n': /* -- print only first n *N*umber of funtions -- */					
+	      case 'n': /* -- print only first n *N*umber of funtions -- */
 		//A number given.  The next parameter should be the number of functions.
 		//Check to make sure that there is SOMETHING and that it is likely to be a number.
 		if(argv[j + 1] == NULL){
@@ -2580,7 +2582,7 @@ int main (int argc, char *argv[]){
 		    //Set max to the number given.
 		    max = atoi(argv[j + 1]);
 		    //Now, I need to increment i as i+1 has already been processed.
-		    j = j+1;		      				
+		    j = j+1;
 		  }
 		  //Otherwise, just act normally.
 		  else{
@@ -2606,8 +2608,8 @@ int main (int argc, char *argv[]){
 		compar = CumMsecCmp; /* default mode */
 		break;
 	      case 'v': /* -- sort according to standard de*V*iation --*/
-		compar = StdDevCmp;  
-		break; 
+		compar = StdDevCmp;
+		break;
 	      case 'x': /* -- dump min and ma*X* information as well (default don't) -- */
 		dumpminmax  = TRUE;
 		break;
@@ -2616,7 +2618,7 @@ int main (int argc, char *argv[]){
 		break;
 	    }
 	  }//switch
-	  break;	  
+	  break;
 	default:
 	  errflag = TRUE;
 	  break;
@@ -2624,13 +2626,13 @@ int main (int argc, char *argv[]){
     }//for
   // just for windows
   optind = argc;
-#else  
+#else
   /* -- parse command line arguments ---------------------------------------- */
   int ch;       //to hold option character from command line
   errflag = FALSE;
   while ( (ch = getopt (argc, argv, "acbdf:lmeivn:prstx")) != EOF ) {
     switch ( ch ) {
-    case 'a': 
+    case 'a':
       optShowLocation = true;
       break;
     case 'c': /* -- sort according to number of *C*alls -- */
@@ -2673,8 +2675,8 @@ int main (int argc, char *argv[]){
       compar = CumMsecCmp; /* default mode */
       break;
     case 'v': /* -- sort according to standard de*V*iation --*/
-      compar = StdDevCmp;  
-      break; 
+      compar = StdDevCmp;
+      break;
     case 'x': /* -- dump min and ma*X* information as well (default don't) -- */
       dumpminmax  = TRUE;
       break;
@@ -2702,7 +2704,7 @@ int main (int argc, char *argv[]){
     fprintf(stderr," -p : suPpress conversion to hh:mm:ss:mmm format\n");
     fprintf(stderr," -l : List all functions and exit\n");
     fprintf(stderr," -d : Dump output format (for tau_reduce)");
-    fprintf(stderr," [node numbers] : prints only info about all contexts/threads of given node numbers\n");	
+    fprintf(stderr," [node numbers] : prints only info about all contexts/threads of given node numbers\n");
     exit (1);
   }//if(errflag)
 
@@ -2710,13 +2712,13 @@ int main (int argc, char *argv[]){
       have profile.n.c.t with it - new file format */
 
   //determine the n variable of the profile.n.c.t string
-  if(optind == argc) 
-    start = 0; 
-  else 
+  if(optind == argc)
+    start = 0;
+  else
     start = atoi(argv[optind]);
   sprintf(proffile,"%s.%d.0.0", file, start);  /*  create profile file name  */
-  if (!dump) // This statement not in the dump protocol 
-    printf("Reading Profile files in %s.*\n", file); 
+  if (!dump) // This statement not in the dump protocol
+    printf("Reading Profile files in %s.*\n", file);
 
   if (strstr(file, "profile.")!= 0 && strlen(file) > 10) {
     strcpy(proffile, file);
@@ -2728,9 +2730,9 @@ int main (int argc, char *argv[]){
   if (IsDynamicProfiling(proffile)) { /* we don't need to read .ftab files */
     //now, fill up the funcDB
     if ( optind == argc) {/* files not specified by specific node nos list on command line */
-      if (read_summary_files) 
-        FillFunctionDBInNode(0,0,0, file); 
-      else { 
+      if (read_summary_files)
+        FillFunctionDBInNode(0,0,0, file);
+      else {
         for(argno = 0; FillFunctionDBInNode(argno, 0, 0, file); argno++) ;
       }
     } else { /* 4 45 68 ... - process this list of node nos. */
@@ -2741,24 +2743,24 @@ int main (int argc, char *argv[]){
     InitFuncNameBuf();/* funcnamebuf and functagbuf are initialized here */
     //if the list option was flagged, then just print out function names and exit -- for debugging
     if (list)  {
-      PrintFunctionNamesInDB(); 
-      exit(0); 
+      PrintFunctionNamesInDB();
+      exit(0);
     } //if
     //if the dump option was flagged, dump in format for RACY
-    else if (dump) { 
+    else if (dump) {
       /* NOTE : Using TEMPLATED_FUNCTIONS as sig to RACY */
       /* used by racy - but here there's no depfile - for compatibility only */
       if(profilestats) {
 	  if(hwcounters) { /*  output headings with hardware counters  */
 	    printf ("default.dep\n%d templated_functions_hw_counters -stddev\n", numfunc);
 	    printf ("%%time       counts total counts       #call      #subrs count/call     stddev name\n");
-	  }//if 
+	  }//if
 	  else {  /*  output headings for templated functions  with timing measurements  */
 	    printf ("default.dep\n%d templated_functions -stddev\n", numfunc);
 	    printf ("%%time         msec   total msec       #call      #subrs  usec/call     stddev name\n");
 	  }//else
-      }//if 
-      else{ //not profilestats 
+      }//if
+      else{ //not profilestats
 	if(hwcounters){  /*with hardware counters  */
 	  if(multipleCounters){ /*  output headings for multiplCounters */
 	    printf ("default.dep\n%d %s\n", numfunc, counterName);
@@ -2770,7 +2772,7 @@ int main (int argc, char *argv[]){
 	  }//else
 	}//if
 	else{ /*  not hardware counters  */
-	  if(multipleCounters){ /*  output headings for multiple Counters  */ 
+	  if(multipleCounters){ /*  output headings for multiple Counters  */
 	    printf ("default.dep\n%d %s\n", numfunc, counterName);
 	    printf ("%%time         msec   total msec       #call      #subrs  usec/call name\n");
 	  }//if
@@ -2778,9 +2780,9 @@ int main (int argc, char *argv[]){
 	    printf ("default.dep\n%d templated_functions\n", numfunc);
 	    printf ("%%time         msec   total msec       #call      #subrs  usec/call name\n");
 	  }//else
-	}//else 
+	}//else
       }//end else
-    }//if(dump) 
+    }//if(dump)
 
     /* Process the files for data - second pass */
     /* iterate over nodes, contexts and threads */
@@ -2792,13 +2794,13 @@ int main (int argc, char *argv[]){
         ProcessFileDynamicInNode (atoi(argv[argno]), 0, 0,  max, file);
       argno -= optind;
     }
-    if (files_processed > 0) 
+    if (files_processed > 0)
       PrintSummary(max, files_processed);
     return 0;
     /* End of Dynamic Profiling */
-  } 
+  }
   else { /* static profiling using .ftab .ctab files */
-    ReadNameTable (file); 
+    ReadNameTable (file);
     /* read profile.ftab file and register function names*/
     ReadEventTable (file); /* for hpc++ */
     if ( list ) {
@@ -2808,14 +2810,14 @@ int main (int argc, char *argv[]){
           printf ("%5d  %s\n", functagbuf[i], funcnamebuf[i]);
       }
       exit (0); /* exit after printing list */
-    } 
+    }
     else if ( dump ) {
       printf ("%s\n%d functions\n", depfile, numfunc);
       printf ("%%time         msec   total_msec       #call      #subrs  usec/call name\n");
     }
-  }  
+  }
   sprintf(proffile,"%s.%d", file,start);
-  if(IsFilePresent(proffile)){ 
+  if(IsFilePresent(proffile)){
     /* pc++ files - profile.0, etc. Use ctx 0, thr 0 and longname = FALSE */
     if ( optind == argc ) {
       for (argno = 0; ProcessFile(argno, 0, 0, FALSE,  max, file, TRUE); argno++);
@@ -2844,7 +2846,7 @@ int main (int argc, char *argv[]){
       }
       if (files_processed > 0) PrintSummary (max, files_processed);
     }
-    else{ 
+    else{
       /* both profile.0 and profile.0.0.0 not found */
       printf("Error : profile file %s not found",proffile);
       exit(1);
@@ -2855,5 +2857,5 @@ int main (int argc, char *argv[]){
 /***************************************************************************
  * $RCSfile: pprof.cpp,v $   $Author: wspear $
  * $Revision: 1.52 $   $Date: 2009/06/25 17:49:52 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.52 2009/06/25 17:49:52 wspear Exp $                                
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.52 2009/06/25 17:49:52 wspear Exp $
  ***************************************************************************/

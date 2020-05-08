@@ -533,8 +533,13 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
                 excl << shortName << " / Exclusive " << counterNames[m];
                 // assign real data
                 for (int tid = 0; tid < numThreadsLocal; tid++) {
-                    timers[incl.str()][tid] = fi->getDumpInclusiveValues(tid)[m];
-                    timers[excl.str()][tid] = fi->getDumpExclusiveValues(tid)[m];
+                    if (fi->GetCalls(tid) == 0) {
+                        timers[incl.str()][tid] = 0.0;
+                        timers[excl.str()][tid] = 0.0;
+		    } else {
+                        timers[incl.str()][tid] = fi->getDumpInclusiveValues(tid)[m];
+                        timers[excl.str()][tid] = fi->getDumpExclusiveValues(tid)[m];
+		    }
                 }
                 // pad with zeroes - all ranks may not have the same num threads
                 for (int tid = numThreadsLocal; tid < numThreadsLocal; tid++) {

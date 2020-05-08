@@ -103,8 +103,8 @@ OPENACC_O=
 #OPENACC#OPENACC_STATIC_O = TauClaccOpenACC.o #ENDIF#
 #PGIACC#PGIACC_O = PgiAcc.o #ENDIF#
 #PGI#PGIACC_STATIC_O = PgiAcc.o #ENDIF#
-#PGI_OPENACC#PGIACC_O = TauOpenACC.o #ENDIF#
-#PGI_OPENACC#PGIACC_STATIC_O = TauOpenACC.o #ENDIF#
+#PGI_OPENACC#PGIACC_O = TauOpenACC.o TauGpuAdapterOpenACC.o TauGpu.o #ENDIF#
+#PGI_OPENACC#PGIACC_STATIC_O = TauOpenACC.o TauGpuAdapterOpenACC.o TauGpu.o #ENDIF#
 
 TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.o \
 		TauSampling_libunwind.o TauMmapMemMgr.o
@@ -783,7 +783,7 @@ Tracer.o   	: Tracer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TracerOTF2.o : TracerOTF2.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS)  $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE)  $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauCollectives.o : TauCollectives.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
@@ -807,7 +807,7 @@ JavaThreadLayer.o   : JavaThreadLayer.cpp $(HDRS)
 	$(CXX)  $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauCAPI.o   : TauCAPI.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE)   -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(TAU_MPI_INCLUDE)   -c $(@:.o=.cpp)
 
 TauFAPI.o   : TauFAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
@@ -955,13 +955,13 @@ TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)  $(INCDIR)/TauGpuAdapter
 	$(CXX) $(CXXFLAGS) -I$(TAU_OPENCL_INC) -g -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti.h
-	$(CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -g $(TAU_STDCXX11_FLAG) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti40.o : TauGpuAdapterCupti40.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti40.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_PERMISSIVE_FLAG) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauOpenACC.o : TauOpenACC.cpp TauGpuAdapterOpenACC.o $(HDRS) ../../include/Profile/TauOpenACC.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_PERMISSIVE_FLAG) -DCUPTI_OPENACC_SUPPORT -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) TauGpuAdapterOpenACC.o -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_STDCXX11_FLAG) $(TAU_PERMISSIVE_FLAG) -DCUPTI_OPENACC_SUPPORT -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauGpuAdapterOpenACC.o : TauGpuAdapterOpenACC.cpp $(HDRS) ../../include/Profile/TauGpuAdapterOpenACC.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_PERMISSIVE_FLAG) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)

@@ -66,6 +66,10 @@
 #endif
 #endif /* TAU_INCLUDE_MPI_H_HEADER */
 
+#ifdef CUPTI
+#include <Profile/CuptiLayer.h>
+#include <cupti.h>
+#endif
 
 #define OTF2_EC(call) { \
     OTF2_ErrorCode ec = call; \
@@ -157,8 +161,8 @@ static region_map_t global_region_map;
 typedef map<string,set<string> > group_map_t;
 static group_map_t global_group_map;
 
-typedef map<string,uint64_t> metric_map_t;
-static metric_map_t global_metric_map;
+typedef map<string,uint64_t> otf_metric_map_t;
+static otf_metric_map_t global_metric_map;
 
 typedef map<string,uint32_t> metric_param_map_t;
 static metric_param_map_t global_metric_param_map;
@@ -1054,7 +1058,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     }
 
     // Write all the user events out as Metrics
-    for (metric_map_t::const_iterator it = global_metric_map.begin(); it != global_metric_map.end(); it++) {
+    for (otf_metric_map_t::const_iterator it = global_metric_map.begin(); it != global_metric_map.end(); it++) {
         int thisMetricName = nextString++;
         std::string metric_name = it->first;
         const bool monotonic = metric_name[metric_name.length()-1] == 'M';
@@ -1181,12 +1185,12 @@ static void TauTraceOTF2WriteLocalDefinitions() {
             fprintf(stderr, "Unable to create OTF2_IdMap for metrics of size %zu\n", TheEventDB().size());
             abort();
         }
-        const metric_map_t & global_metric_map_ref = global_metric_map;
+        const otf_metric_map_t & global_metric_map_ref = global_metric_map;
         for (AtomicEventDB::iterator it = TheEventDB().begin(); it != TheEventDB().end(); it++) {
             const uint64_t local_id  = (*it)->GetId();
             bool monotonic = (*it)->IsMonotonicallyIncreasing();
             std::string name = string(((*it)->GetName() + (monotonic ? "M" : "N")).c_str());
-            metric_map_t::const_iterator global_id_iter = global_metric_map_ref.find(name);
+            otf_metric_map_t::const_iterator global_id_iter = global_metric_map_ref.find(name);
             if(global_id_iter == global_metric_map_ref.end()) {
                 // If this node has metrics that came into existence after comms shutdown,
                 // we have nothing to map them to.
@@ -1404,7 +1408,7 @@ static void TauTraceOTF2ExchangeMetrics() {
             global_metric_map[*it] = next_id++;
         }
         stringstream ss;
-        for(metric_map_t::const_iterator it = global_metric_map.begin(); it != global_metric_map.end(); it++) {
+        for(otf_metric_map_t::const_iterator it = global_metric_map.begin(); it != global_metric_map.end(); it++) {
             ss << it->first;
             ss.put('\0');
         }
@@ -1826,13 +1830,8 @@ void TauTraceOTF2ShutdownComms(int tid) {
     //TauTraceOTF2Close(tid);
 }
 
-void Tau_cupti_activity_flush_at_exit(void);
-
 /* Close the trace */
 void TauTraceOTF2Close(int tid) {
-#ifdef CUPTI
-  Tau_cupti_activity_flush_at_exit();
-#endif
 #ifdef TAU_OTF2_DEBUG
   fprintf(stderr, "%u: TauTraceOTF2Close(%d)\n", my_node(), tid);
 #endif
@@ -1840,6 +1839,10 @@ void TauTraceOTF2Close(int tid) {
     if(tid != 0 || otf2_finished || !otf2_initialized) {
         return;
     }
+#ifdef CUPTI
+    Tau_flush_gpu_activity();
+    printf("TAU: OTF2 Trace closing!\n");
+#endif
 
     if(!otf2_comms_shutdown) {
         TauTraceOTF2ShutdownComms(tid);

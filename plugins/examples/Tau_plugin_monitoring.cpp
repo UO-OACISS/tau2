@@ -370,9 +370,10 @@ void initialize_papi_events(void) {
     for (int component_id = 0 ; component_id < num_components ; component_id++) {
         comp_info = PAPI_get_component_info(component_id);
         if (comp_info == NULL) {
-            fprintf(stderr, "Warning: PAPI component info unavailable, no measurements will be done.\n");
+            TAU_VERBOSE("Warning: PAPI component info unavailable, no measurements will be done.\n");
             return;
         }
+        //fprintf(stdout, "Found %s PAPI component with %d native events.\n", comp_info->name, comp_info->num_native_events);
         /* Skip the perf_event component, that's standard PAPI */
         if (strstr(comp_info->name, "perf_event") != NULL) {
             continue;
@@ -385,13 +386,22 @@ void initialize_papi_events(void) {
         if (strstr(comp_info->name, "perf_event_uncore") != NULL) {
             continue;
         }
+        /* Skip the nvml component, for non-CUPTI configurations */
+#ifndef CUPTI
+        if (strstr(comp_info->name, "nvml") != NULL) {
+            continue;
+        }
+        if (strstr(comp_info->name, "cuda") != NULL) {
+            continue;
+        }
+#endif
         if (!include_component(comp_info->name)) { return; }
         if (my_rank == 0) TAU_VERBOSE("Found %s component...\n", comp_info->name);
         /* Does this component have available events? */
         if (comp_info->num_native_events == 0) {
-            fprintf(stderr, "Error: No %s events found.\n", comp_info->name);
+            TAU_VERBOSE("Error: No %s events found.\n", comp_info->name);
             if (comp_info->disabled != 0) {
-                fprintf(stderr, "Error: %s.\n", comp_info->disabled_reason);
+                TAU_VERBOSE("Error: %s.\n", comp_info->disabled_reason);
             }
             continue;
         }
@@ -399,7 +409,7 @@ void initialize_papi_events(void) {
         /* Construct the event set and populate it */
         retval = PAPI_create_eventset(&comp->event_set);
         if (retval != PAPI_OK) {
-            fprintf(stderr, "Error: Error creating PAPI eventset for %s component.\n", comp_info->name);
+            TAU_VERBOSE("Error: Error creating PAPI eventset for %s component.\n", comp_info->name);
             continue;
         }
         int code = PAPI_NATIVE_MASK;
@@ -409,7 +419,7 @@ void initialize_papi_events(void) {
             retval = PAPI_enum_cmp_event( &code, event_modifier, component_id );
             event_modifier = PAPI_ENUM_EVENTS;
             if ( retval != PAPI_OK ) {
-                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__,
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__,
                         __LINE__, "PAPI_event_code_to_name", retval );
                 continue;
             }
@@ -417,7 +427,7 @@ void initialize_papi_events(void) {
             char event_name[PAPI_MAX_STR_LEN];
             retval = PAPI_event_code_to_name( code, event_name );
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__,
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__,
                         __LINE__, "Error getting event name\n",retval);
                 continue;
             }
@@ -428,7 +438,7 @@ void initialize_papi_events(void) {
             PAPI_event_info_t evinfo;
             retval = PAPI_get_event_info(code,&evinfo);
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__,
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__,
                         __LINE__, "Error getting event info\n",retval);
                 continue;
             }
@@ -454,7 +464,7 @@ void initialize_papi_events(void) {
             }
             retval = PAPI_add_event(comp->event_set, code);
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error: Error adding PAPI %s event %s.\n", comp_info->name, event_name);
+                TAU_VERBOSE("Error: Error adding PAPI %s event %s.\n", comp_info->name, event_name);
                 return;
             }
             comp->events.push_back(std::move(this_event));
@@ -462,8 +472,8 @@ void initialize_papi_events(void) {
         /* Start the event set */
         retval = PAPI_start(comp->event_set);
         if (retval != PAPI_OK) {
-            fprintf(stderr, "Error: Error starting PAPI eventset.\n");
-            return;
+            TAU_VERBOSE("Error: Error starting PAPI eventset for component %s.\n", comp_info->name);
+            continue;
         }
         comp->initialized = true;
         components.push_back(comp);
@@ -884,7 +894,7 @@ void read_components(void) {
             long long * values = (long long *)calloc(comp->events.size(), sizeof(long long));
             int retval = PAPI_read(comp->event_set, values);
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error: Error reading PAPI %s eventset.\n", comp->name.c_str());
+                TAU_VERBOSE("Error: Error reading PAPI %s eventset.\n", comp->name.c_str());
                 return;
             }
             for (size_t i = 0 ; i < comp->events.size() ; i++) {
@@ -944,20 +954,20 @@ void free_papi_components(void) {
             long long * values = (long long *)calloc(comp->events.size(), sizeof(long long));
             int retval = PAPI_stop(comp->event_set, values);
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error: Error reading PAPI %s eventset.\n", comp->name.c_str());
+                TAU_VERBOSE("Error: Error reading PAPI %s eventset.\n", comp->name.c_str());
                 return;
             }
             free(values);
             /* Done, clean up */
             retval = PAPI_cleanup_eventset(comp->event_set);
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__, __LINE__,
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__, __LINE__,
                         "PAPI_cleanup_eventset()",retval);
             }
 
             retval = PAPI_destroy_eventset(&(comp->event_set));
             if (retval != PAPI_OK) {
-                fprintf(stderr, "Error: %s %d %s %d\n", __FILE__, __LINE__,
+                TAU_VERBOSE("Error: %s %d %s %d\n", __FILE__, __LINE__,
                         "PAPI_destroy_eventset()",retval);
             }
             comp->initialized = false;
@@ -1136,10 +1146,16 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
 void read_config_file(void) {
     try {
             std::ifstream cfg("tau_monitoring.json");
+            // if the file doesn't exist, return
+            if (cfg.good()) {
+            	// fail silently, nothing to do but use defaults
+                configuration = json::parse(default_configuration);
+                return;
+            }
             cfg >> configuration;
             cfg.close();
         } catch (...) {
-            // fail silently, nothing to do
+            TAU_VERBOSE("Error reading tau_monitoring.json file!");
             configuration = json::parse(default_configuration);
         }
 }

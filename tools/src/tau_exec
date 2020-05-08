@@ -778,6 +778,7 @@ if [ $adios2_trace = "true" ]; then
     # Because we are writing the data to ADIOS, disable profile output
     export TAU_PROFILE=0
     unset TAU_PROFILE_FORMAT
+    export TAU_THREAD_PER_GPU_STREAM=1
 fi
 
 if [ $sos = "true" ]; then
