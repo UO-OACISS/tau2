@@ -49,7 +49,7 @@ extern void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count);
 extern void *Tau_MemMgr_malloc(int tid, size_t size);
 extern void Tau_MemMgr_free(int tid, void *addr, size_t size);
 extern char * Tau_get_pvar_name(int i, int j);
-
+int Tau_msg_init();
 
 int Tau_mpi_t_initialize();
 
@@ -770,6 +770,7 @@ int Tau_mpi_t_cvar_initialize(void) {
     }
   }
 
+  Tau_msg_init(); 
   return_val = Tau_mpi_t_print_all_cvar_desc(num_cvars);
   if(return_val != MPI_SUCCESS) {
     printf("TAU: Rank %d: Can't read the MPI_T control variables in this MPI implementation\n", rank);
@@ -1014,10 +1015,213 @@ void Tau_mpi_t_check_communicator(void *comm, const char *comm_name) {
   }
 }
 
+/* Here we define all the profile path based tracking calls */
+typedef struct {
+    /* pvar metadata variables */
+    char        *name;
+    char        *desc;
+    int         name_len;
+    int         desc_len;
+    int         verbosity;
+    int         var_class;
+    int         bind;
+    int         readonly;
+    int         continuous;
+    int         atomic;
+    int         count;
+    MPI_Datatype    datatype;
+    MPI_T_enum      enumtype;
+} pvar_data_t;
+
+static MPI_T_pvar_handle tau_handle_send;
+static MPI_T_pvar_handle tau_handle_recv;
+static MPI_T_pvar_session tau_session; 
+static unsigned long long * tau_send_value;
+static unsigned long long * tau_recv_value;
+static int tau_send_count = 0;
+static int tau_recv_count = 0;
+
+
 //////////////////////////////////////////////////////////////////////
-long Tau_get_message_path(void) {
+int Tau_msg_init(void){
+  int err, i=0; 
+  char *send_name = malloc(sizeof(char) * TAU_NAME_LENGTH);
+  char *send_description = malloc(sizeof(char) * TAU_NAME_LENGTH);
+  char *recv_name = malloc(sizeof(char) * TAU_NAME_LENGTH);
+  char *recv_description = malloc(sizeof(char) * TAU_NAME_LENGTH);
+  int pvar_send_index = 0;
+  int pvar_recv_index = 0;
+  pvar_data_t *pvar_send = malloc(sizeof(pvar_data_t));
+  pvar_data_t *pvar_recv = malloc(sizeof(pvar_data_t));
+  pvar_send->name_len = TAU_NAME_LENGTH;
+  pvar_send->desc_len = TAU_NAME_LENGTH;
+  pvar_recv->name_len = TAU_NAME_LENGTH;
+  pvar_recv->desc_len = TAU_NAME_LENGTH;
+
+  MPI_T_pvar_session_create(&tau_session);
+  /* For MVAPICH2: check if the link utilization for send is there */
+  PMPI_T_pvar_get_index("mv2_hardware_link_utilization_send", MPI_T_PVAR_CLASS_COUNTER, &pvar_send_index);
+  PMPI_T_pvar_get_info(pvar_send_index,
+            send_name,
+            &pvar_send->name_len,
+            &pvar_send->verbosity,
+            &pvar_send->var_class,
+            &pvar_send->datatype,
+            &pvar_send->enumtype,
+            send_description,
+            &pvar_send->desc_len,
+            &pvar_send->bind,
+            &pvar_send->readonly,
+            &pvar_send->continuous,
+            &pvar_send->atomic);
+  pvar_send->name = malloc(pvar_send->name_len);
+  pvar_send->desc = malloc(pvar_send->desc_len);
+  strcpy(pvar_send->name, send_name);
+  strcpy(pvar_send->desc, send_description);
+
+  /* For MVAPICH2: check if the link utilization for recv is there */
+  PMPI_T_pvar_get_index("mv2_hardware_link_utilization_recv", MPI_T_PVAR_CLASS_COUNTER, &pvar_recv_index);
+  PMPI_T_pvar_get_info(pvar_recv_index,
+            recv_name,
+            &pvar_recv->name_len,
+            &pvar_recv->verbosity,
+            &pvar_recv->var_class,
+            &pvar_recv->datatype,
+            &pvar_recv->enumtype,
+            recv_description,
+            &pvar_recv->desc_len,
+            &pvar_recv->bind,
+            &pvar_recv->readonly,
+            &pvar_recv->continuous,
+            &pvar_recv->atomic);
+  pvar_recv->name = malloc(pvar_recv->name_len);
+  pvar_recv->desc = malloc(pvar_recv->desc_len);
+  strcpy(pvar_recv->name, recv_name);
+  strcpy(pvar_recv->desc, recv_description);
+
+  /* Next, we allocate handles: */
+  MPI_Comm comm = MPI_COMM_WORLD; 
+  err = MPI_T_pvar_handle_alloc(tau_session,pvar_send_index, &comm, &tau_handle_send, &tau_send_count);
+  if (err != MPI_SUCCESS) {
+    fprintf(stderr, "\nTAU: ERROR pvar_handle_alloc failed for NO_OBJ (%d)\n", err);
+  }
+
+  err = MPI_T_pvar_handle_alloc(tau_session,pvar_recv_index, &comm, &tau_handle_recv, &tau_recv_count);
+  if (err != MPI_SUCCESS) {
+    fprintf(stderr, "\nTAU: ERROR pvar_handle_alloc failed for NO_OBJ (%d)\n", err);
+  }
+    
+  /* Parse the description of PVARs for all paths between CPUs and GPUs */
+  char **send_paths = malloc(tau_send_count * sizeof(char*));
+  for(i = 0; i < tau_send_count; i++)
+  {
+    send_paths[i] = malloc(sizeof(char) * TAU_NAME_LENGTH);
+    char *nextLine = strchr(send_description, '\n');
+    if (nextLine) *nextLine = '\0';
+    strcpy(send_paths[i], send_description);
+    if (nextLine) *nextLine = '\n';
+    send_description = nextLine + 1;
+    TAU_METADATA_ITERATION("TAU_SEND_PATH_ID", i, send_paths[i]);
+  }
+
+  char **recv_paths = malloc(tau_recv_count * sizeof(char*));
+  for(i = 0; i < tau_recv_count; i++)
+  {
+    recv_paths[i] = malloc(sizeof(char) * TAU_NAME_LENGTH);
+    char *nextLine = strchr(recv_description, '\n');
+    if (nextLine) *nextLine = '\0';
+    strcpy(recv_paths[i], recv_description);
+    if (nextLine) *nextLine = '\n';
+    recv_description = nextLine + 1;
+    TAU_METADATA_ITERATION("TAU_RECV_PATH_ID", i, recv_paths[i]);
+  }
+    
+  /* Initialize value arrays to get link utilization for within the node and inter-node links */
+  tau_send_value = malloc(sizeof(unsigned long long) * tau_send_count);
+  tau_recv_value = malloc(sizeof(unsigned long long) * tau_recv_count);
+
+}
+
+//////////////////////////////////////////////////////////////////////
+int Tau_msg_send_prolog(void){
+  TAU_VERBOSE("Inside message send prolog\n");
+  int err; 
+  err = PMPI_T_pvar_start(tau_session, tau_handle_send);
+  if (err != MPI_SUCCESS)
+    fprintf(stderr,"TAU: ERROR in MPI_T pvar start in send prolog (%d)", err);
+  TAU_VERBOSE("Exiting from message send prolog\n");
+  fflush(stdout);
+  return 0;
+} 
+
+//////////////////////////////////////////////////////////////////////
+int Tau_msg_recv_prolog(void){
+  TAU_VERBOSE("Inside message recv prolog\n");
+  int err; 
+  err = PMPI_T_pvar_start(tau_session, tau_handle_recv);
+  if (err != MPI_SUCCESS)
+    fprintf(stderr,"TAU: ERROR in MPI_T pvar start in recv prolog (%d)", err);
+  return 0;
+} 
+
+//////////////////////////////////////////////////////////////////////
+long Tau_get_message_send_path(void) {
   // Query MPI_T and return the path associated with the pvars. 
-  return 1L;  // return a default path for now. 
+  int err;
+  int i;  
+  long id = 0; 
+  int found = 0;
+  
+  err = PMPI_T_pvar_stop(tau_session, tau_handle_send);
+  if (err != MPI_SUCCESS)
+    fprintf(stderr,"TAU: ERROR in MPI_T pvar stop in send path (%d)", err);
+
+  /* Read send value from pvar */
+  err = PMPI_T_pvar_read(tau_session, tau_handle_send, tau_send_value);
+  if (err != MPI_SUCCESS)
+    fprintf(stderr,"TAU: ERROR in MPI_T pvar read in send path (%d)", err);
+
+  for(i = 0; i < tau_send_count; i++)
+  { 
+    /* If delta is > 0, send_paths[i] was used */
+    if (tau_send_value[i] > 0)
+    {
+      id = id+(pow(100,found)*i);
+      found++;
+    }
+  }
+  return id; /* default path id */
+}
+
+//////////////////////////////////////////////////////////////////////
+long Tau_get_message_recv_path(void) {
+  // Query MPI_T and return the path associated with the pvars. 
+  int err; 
+  int i, found;
+  long id = 0;
+
+  err = PMPI_T_pvar_stop(tau_session, tau_handle_recv);
+  if (err != MPI_SUCCESS)
+    fprintf(stderr,"TAU: ERROR in MPI_T pvar stop in recv path (%d)", err);
+
+
+   
+  /* Read recv value from pvar */
+  err = PMPI_T_pvar_read(tau_session, tau_handle_recv, tau_recv_value);
+  if (err != MPI_SUCCESS)
+    fprintf(stderr,"TAU: ERROR in MPI_T pvar read in recv path (%d)", err);
+
+  found = 0;
+  for(i = 0; i < tau_recv_count; i++)
+  { 
+    /* If delta is > 0, recv_paths[i] was used */
+    if (tau_recv_value[i] > 0) {
+      id = id+(pow(100,found)*i);
+      found++;
+    }
+  }
+  return id; /* default path id */
+
 }
 //////////////////////////////////////////////////////////////////////
 // EOF : TauMpiT.c
