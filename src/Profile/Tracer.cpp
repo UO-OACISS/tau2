@@ -49,12 +49,34 @@ static int TauBufferSize = 0;
 
 /* Trace buffer */
 static TAU_EV *TraceBuffer[TAU_MAX_THREADS]; 
+static inline TAU_EV* getTraceBuffer(int tid){
+	return TraceBuffer[tid];
+}
+static inline void setTraceBuffer(int tid, TAU_EV* value){
+	TraceBuffer[tid]=value;
+}
 
 /* Trace buffer pointer for each threads */
 static unsigned int TauCurrentEvent[TAU_MAX_THREADS] = {0}; 
+static inline unsigned int getTauCurrentEvent(int tid){
+	return TauCurrentEvent[tid];
+}
+static inline void incrementTauCurrentEvent(int tid){
+	TauCurrentEvent[tid]++;
+}
+static inline void resetTauCurrentEvent(int tid){
+	TauCurrentEvent[tid]=0;
+}
 
 /* Trace file descriptors */
 static int TauTraceFd[TAU_MAX_THREADS] = {0};
+static inline int setTauTraceFd(int tid, int value){
+	TauTraceFd[tid]=value;
+	return value;
+}
+static inline int getTauTraceFd(int tid){
+	return TauTraceFd[tid];
+}
 
 /* Flags for whether or not EDF files need to be rewritten when this thread's
    trace buffer is flushed.  Because any thread can introduce new functions and
@@ -64,8 +86,19 @@ static int TauTraceFlushEvents = 0;
 
 /* Initialization status flags */
 static int TauTraceInitialized[TAU_MAX_THREADS] = {0};
+static inline int getTauTraceInitialized(int tid){
+	return TauTraceInitialized[tid];
+}
+static inline void setTauTraceInitialized(int tid, int value){
+	TauTraceInitialized[tid]=value;
+}
 static int TraceFileInitialized[TAU_MAX_THREADS] = {0};
-
+static inline int getTraceFileInitialized(int tid){
+	return TraceFileInitialized[tid];
+}
+static inline void setTraceFileInitialized(int tid){
+	TraceFileInitialized[tid]=1;
+}
 //static double tracerValues[TAU_MAX_COUNTERS] = {0};
 
 
@@ -115,13 +148,13 @@ extern "C" x_uint64 TauTraceGetTimeStamp() {
 
 /* Write event to buffer only [without overflow check] */
 void TauTraceEventOnly(long int ev, x_int64 par, int tid) {
-  TAU_EV * tau_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
+  TAU_EV * tau_ev_ptr = &getTraceBuffer(tid)[getTauCurrentEvent(tid)] ;  
   tau_ev_ptr->ev   = ev;
   tau_ev_ptr->ti   = TauTraceGetTimeStamp(tid);
   tau_ev_ptr->par  = par;
   tau_ev_ptr->nid  = RtsLayer::myNode();
   tau_ev_ptr->tid  = tid;
-  TauCurrentEvent[tid] ++;
+  incrementTauCurrentEvent(tid);
 }
 
 /* Set the flag for flushing the EDF file, 1 means flush edf file. */
@@ -142,17 +175,17 @@ int TauTraceGetFlushEvents() {
 
 /* Check that the trace file is initialized */
 static int checkTraceFileInitialized(int tid) {
-  if ( !(TraceFileInitialized[tid])){
+  if ( !(getTraceFileInitialized(tid))){
     if(RtsLayer::myNode() <= -1) {
       fprintf (stderr,"ERROR: TAU is creating a trace file on a node less than 0.\n");
     } 
-    TraceFileInitialized[tid] = 1;
+    setTraceFileInitialized(tid);
     const char *dirname;
     char tracefilename[1024];
     dirname = TauEnv_get_tracedir();
     sprintf(tracefilename, "%s/tautrace.%d.%d.%d.trc",dirname, 
 	    RtsLayer::myNode(), RtsLayer::myContext(), tid);
-    if ((TauTraceFd[tid] = open (tracefilename, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND|O_BINARY|LARGEFILE_OPTION, 0666)) < 0) {
+    if ((setTauTraceFd(tid, open (tracefilename, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND|O_BINARY|LARGEFILE_OPTION, 0666))) < 0) {
       fprintf (stderr, "TAU: TauTraceInit[open]: ");
       perror (tracefilename);
       exit (1);
@@ -161,14 +194,15 @@ static int checkTraceFileInitialized(int tid) {
     //    printf("checkTraceFileInitialized [%d]: TauTraceFd[%d] for [%s] is %d\n", RtsLayer::myNode(), 
     //	   tid, tracefilename, TauTraceFd[tid]);
 
-    if (TraceBuffer[tid][0].ev == TAU_EV_INIT) { 
+	TAU_EV* TB = getTraceBuffer(tid);
+    if (TB[0].ev == TAU_EV_INIT) { 
       /* first record is init */
-      for (unsigned int iter = 0; iter < TauCurrentEvent[tid]; iter ++) {
+      for (unsigned int iter = 0; iter < getTauCurrentEvent(tid); iter ++) {
         int mynodeid = RtsLayer::myNode();
-	if ((mynodeid > 0) && (TraceBuffer[tid][iter].nid == 0)) {
-          TraceBuffer[tid][iter].nid = RtsLayer::myNode();
+	if ((mynodeid > 0) && (TB[iter].nid == 0)) {
+          TB[iter].nid = RtsLayer::myNode();
         } else {
-            if ((mynodeid > 0) && (TraceBuffer[tid][iter].nid > 0))
+            if ((mynodeid > 0) && (TB[iter].nid > 0))
 	      break;
         }
       }
@@ -194,7 +228,7 @@ void TauTraceFlushBuffer(int tid)
   checkTraceFileInitialized(tid);
 
   int ret;
-  if (TauTraceFd[tid] == -1) {
+  if (getTauTraceFd(tid) == -1) {
     printf("Error: TauTraceFlush(%d): Fd is -1. Trace file not initialized \n", tid);
     if (RtsLayer::myNode() == -1) {
       fprintf(stderr, "TAU: ERROR in configuration. Trace file not initialized.\n"
@@ -218,7 +252,7 @@ void TauTraceFlushBuffer(int tid)
     TauTraceSetFlushEvents(0);
   }
 
-  int numEventsToBeFlushed = TauCurrentEvent[tid]; /* starting from 0 */
+  int numEventsToBeFlushed = getTauCurrentEvent(tid); /* starting from 0 */
   DEBUGPROFMSG("Tid "<<tid<<": TauTraceFlush()"<<endl;);
   if (numEventsToBeFlushed != 0) {
 #ifdef TAU_MPI
@@ -228,7 +262,7 @@ void TauTraceFlushBuffer(int tid)
    {
 #endif /* TAU_MPI */
 
-    ret = write(TauTraceFd[tid], TraceBuffer[tid], (numEventsToBeFlushed) * sizeof(TAU_EV));
+    ret = write(getTauTraceFd(tid), getTraceBuffer(tid), (numEventsToBeFlushed) * sizeof(TAU_EV));
     if (ret < 0) {
 #ifdef DEBUG_PROF
       TAU_VERBOSE("Error: TauTraceFd[%d] = %d, numEvents = %d ", tid, TauTraceFd[tid], numEventsToBeFlushed);
@@ -245,14 +279,14 @@ void TauTraceFlushBuffer(int tid)
 #endif /* TAU_SHMEM */
 #endif /* TAU_MPI */
   }
-  TauCurrentEvent[tid] = 0;
+  resetTauCurrentEvent(tid);
 }
 
 
 /* static list of flags specifying if the buffer has been allocated for a given thread */
 bool *TauBufferAllocated() {
   static bool flag = true;
-  static bool allocated[TAU_MAX_THREADS];
+  static bool allocated[TAU_MAX_THREADS]; //TODO: DYNATHREAD
   if (flag) {
     for (int i=0; i < TAU_MAX_THREADS; i++) {
       allocated[i] = false;
@@ -277,8 +311,8 @@ int TauTraceInit(int tid)
    if (!TauBufferAllocated()[tid]) {
      TauMaxTraceRecords = (unsigned long long) TauEnv_get_max_records(); 
      TauBufferSize = sizeof(TAU_EV)*TauMaxTraceRecords; 
-     TraceBuffer[tid] = (TAU_EV*) malloc(TauBufferSize);
-     if (TraceBuffer[tid] == (TAU_EV *) NULL) {
+     setTraceBuffer(tid,(TAU_EV*) malloc(TauBufferSize));
+     if (getTraceBuffer(tid) == (TAU_EV *) NULL) {
        fprintf(stderr, 
           "TAU: FATAL Error: Trace buffer malloc failed.\n"
           "TAU: Please rerun the application with the TAU_MAX_RECORDS environment variable set to a smaller value\n");
@@ -289,22 +323,23 @@ int TauTraceInit(int tid)
   int retvalue = 0; 
   /* by default this is what is returned. No trace records were generated */
    
-  if ( !(TauTraceInitialized[tid]) && (RtsLayer::myNode() > -1)) {
+  if ( !(getTauTraceInitialized(tid)) && (RtsLayer::myNode() > -1)) {
   /* node has been set*/ 
     /* done with initialization */
-    TauTraceInitialized[tid] = 1;
+    setTauTraceInitialized(tid,1);
 
     /* there may be some records in tau_ev_ptr already. Make sure that the
        first record has node id set properly */
-    if (TraceBuffer[tid][0].ev == TAU_EV_INIT) { 
+	TAU_EV* TB = getTraceBuffer(tid);
+    if (TB[0].ev == TAU_EV_INIT) { 
       /* first record is init */
-      for (unsigned int iter = 0; iter < TauCurrentEvent[tid]; iter ++) {
-        TraceBuffer[tid][iter].nid = RtsLayer::myNode();
+      for (unsigned int iter = 0; iter < getTauCurrentEvent(tid); iter ++) {
+        TB[iter].nid = RtsLayer::myNode();
       }
     } else {
       /* either the first record is blank - in which case we should
 	 put INIT record, or it is an error */
-      if (TauCurrentEvent[tid] == 0) { 
+      if (getTauCurrentEvent(tid) == 0) { 
         TauTraceEventSimple(TAU_EV_INIT, INIT_PARAM, tid, TAU_TRACE_EVENT_KIND_FUNC);
         retvalue ++; /* one record generated */
       } else { 
@@ -346,8 +381,8 @@ void TauTraceUnInitialize(int tid) {
 #endif
   /* to set the trace as uninitialized and clear the current buffers (for forked
      child process, trying to clear its parent records) */
-  TauTraceInitialized[tid] = 0;
-  TauCurrentEvent[tid] = 0;
+  setTauTraceInitialized(tid,0);
+  resetTauCurrentEvent(tid);
   TauTraceEventOnly(TAU_EV_INIT, INIT_PARAM, tid);
 }
 
@@ -374,7 +409,7 @@ void TauTraceEventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int
   int i;
   int records_created = TauTraceInit(tid);
   x_uint64 timestamp;
-  TAU_EV *event = &TraceBuffer[tid][TauCurrentEvent[tid]];  
+  TAU_EV *event = &getTraceBuffer(tid)[getTauCurrentEvent(tid)];  
 
   if (TauEnv_get_synchronize_clocks()) {
     ts = (x_uint64) TauSyncAdjustTimeStamp((double)ts);
@@ -388,12 +423,12 @@ void TauTraceEventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int
       /* Initialize only records just above the current record! */
       for (i = 0; i < records_created; i++) {
 	/* set the timestamp accordingly */
-        TraceBuffer[tid][TauCurrentEvent[tid]-1-i].ti = ts; 
+        getTraceBuffer(tid)[getTauCurrentEvent(tid)-1-i].ti = ts; 
       }
     }
   }
 
-  if (!(TauTraceInitialized[tid]) && (TauCurrentEvent[tid] == 0)) {
+  if (!(getTauTraceInitialized(tid)) && (getTauCurrentEvent(tid) == 0)) {
   /* not initialized  and its the first time */
     if (ev != TAU_EV_INIT) {
 	/* we need to ensure that INIT is the first event */
@@ -409,8 +444,8 @@ void TauTraceEventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int
       event->nid = RtsLayer::myNode();
       event->tid = tid;
  
-      TauCurrentEvent[tid] ++;
-      event = &TraceBuffer[tid][TauCurrentEvent[tid]];
+      incrementTauCurrentEvent(tid);
+      event = &getTraceBuffer(tid)[getTauCurrentEvent(tid)];
     } 
   } 
         
@@ -426,24 +461,24 @@ void TauTraceEventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int
   event->par = par;
   event->nid = node_id;
   event->tid = tid ;
-  TauCurrentEvent[tid]++;
+  incrementTauCurrentEvent(tid);
 
-  if (TauCurrentEvent[tid] >= TauMaxTraceRecords-2) {
+  if (getTauCurrentEvent(tid) >= TauMaxTraceRecords-2) {
     //TauTraceEventSimple (TAU_EV_FLUSH, 0, tid);
-    event = &TraceBuffer[tid][TauCurrentEvent[tid]];
+    event = &getTraceBuffer(tid)[getTauCurrentEvent(tid)];
     event->ev = TAU_EV_FLUSH;  event->ti = timestamp; event->par = 1;
     event->nid = node_id; event->tid = tid; 
-    TauCurrentEvent[tid]++;
+    incrementTauCurrentEvent(tid);
 
     // Flush the buffer! 
     TauTraceFlushBuffer(tid); 
 
     //TauTraceEventSimple (TAU_EV_FLUSH, 0, tid);
     timestamp = TauTraceGetTimeStamp(tid);
-    event = &TraceBuffer[tid][TauCurrentEvent[tid]];
+    event = &getTraceBuffer(tid)[getTauCurrentEvent(tid)];
     event->ev = TAU_EV_FLUSH;  event->ti = timestamp; event->par = -1;
     event->nid = node_id; event->tid = tid; 
-    TauCurrentEvent[tid]++;
+    incrementTauCurrentEvent(tid);
   }
 }
 
@@ -471,7 +506,7 @@ void TauTraceClose(int tid) {
   // for OpenMP.
 #ifndef TAU_OPENMP
   if ((RtsLayer::myNode() == 0) && (RtsLayer::myThread() == 0)) {
-    close(TauTraceFd[tid]);
+    close(getTauTraceFd(tid));
   }
 #endif /* TAU_OPENMP */
 
