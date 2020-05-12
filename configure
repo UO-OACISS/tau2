@@ -7247,7 +7247,7 @@ if [ "x$download_unwind" = xyes ] ; then
       tar -xzf $libunwindtgz
       echo "removing $libunwindtgz..."
       rm $libunwindtgz
-      if [ ${c_compiler} = mpc_cc -o ${c_compiler} = mpc_icc ]
+      if [ ${c_compiler} = mpc_cc -o ${c_compiler} = mpc_icc -o ${c_compiler} = hcc ]
       then
         unwind_c_compiler=gcc
         unwind_cxx_compiler=g++
