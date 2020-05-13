@@ -254,6 +254,7 @@ void Tau_CuptiLayer_init()
 		fprintf(stderr, "device %d\n", device);
 		cudaErr = cuDevicePrimaryCtxRetain(&cuCtx, device);
 		CHECK_CU_ERROR(cudaErr, "cuCtxGetDevice");
+		fprintf(stderr, "got context\n");
 
     counter_vec_t & added_counters = Tau_CuptiLayer_Added_counters();
 

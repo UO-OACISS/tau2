@@ -723,7 +723,6 @@ void Tau_cupti_init()
   
     Tau_cupti_setup_unified_memory();
 
-		Tau_CuptiLayer_init();
 
 		if (!subscribed) {
 			Tau_cupti_subscribe();
@@ -733,6 +732,7 @@ void Tau_cupti_init()
 		// subscribe must happen before enable domains
 		Tau_cupti_enable_domains();
 
+		Tau_CuptiLayer_init();
     TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_init\n");
 }
 
@@ -749,6 +749,7 @@ void Tau_cupti_onload()
     cuErr = cuInit(0);
     TAU_VERBOSE("TAU: Enabling CUPTI callbacks.\n");
 		CUDA_CHECK_ERROR(cuErr, "cuInit");
+		fprintf(stderr, "cuinit happened\n");
 		TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_onload\n");
 }
 
