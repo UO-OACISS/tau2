@@ -20,6 +20,11 @@
 #define CHECK_CU_ERROR(err, cufunc) \
 if (err != CUDA_SUCCESS) \
 { \
+		const char* err_name; \
+    const char* err_str; \
+		cuGetErrorName(err, &err_name); \
+		cuGetErrorString(err, &err_str); \
+		fprintf(stderr, "CUDA driver error %s: %s\n", err_name, err_str); \
 printf ("[%s:%d] Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, err, cufunc); \
 }
 

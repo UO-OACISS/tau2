@@ -32,8 +32,12 @@
 #define CUDA_CHECK_ERROR(err, str) \
 	if (err != CUDA_SUCCESS) \
   { \
+		const char* err_name; \
+		const char* err_str; \
+		cuGetErrorName(err, &err_name); \
+		cuGetErrorString(err, &err_str); \
+		fprintf(stderr, "CUDA driver error %s: %s\n", err_name, err_str); \
 		fprintf(stderr, str); \
-		exit(1); \
 	} \
 
 #define CUPTI_CHECK_ERROR(err, str) \

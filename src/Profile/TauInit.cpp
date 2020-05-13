@@ -504,9 +504,9 @@ extern "C" int Tau_init_initializeTAU()
   /* initialize the metrics we will be counting */
   TauMetrics_init();
 
-#ifdef CUPTI
-  Tau_cupti_init(); //MUST HAPPEN AFTER TAUMETRICS_INIT()
-#endif
+//#ifdef CUPTI
+//  Tau_cupti_init(); //MUST HAPPEN AFTER TAUMETRICS_INIT()
+//#endif
 
   // Mark initialization complete so calls below can start timers
   tau_initialized = 1;
