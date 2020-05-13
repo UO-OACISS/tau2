@@ -42,7 +42,7 @@ metric_vec_t & Tau_CuptiLayer_Added_metrics() {
     return added_metrics;
 }
 
-CUpti_EventGroup eventGroup;
+CUpti_EventGroup eventGroup = NULL;
 
 CUpti_EventGroup* Tau_CuptiLayer_get_eventgroup()
 {

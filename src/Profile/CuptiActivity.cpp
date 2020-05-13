@@ -467,6 +467,7 @@ void Tau_cupti_set_device_props() {
 
 }
 
+/*
 CUresult cuInit(unsigned int a1)
 {
     TAU_DEBUG_PRINT("in cuInit\n");
@@ -488,6 +489,7 @@ CUresult cuInit(unsigned int a1)
     //Tau_cupti_subscribe();
     return cuInit_h(a1);
 }
+*/
 
 void Tau_cupti_subscribe()
 {
@@ -623,21 +625,20 @@ void Tau_cupti_init()
 
     TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_init\n");
 
-    //Tau_gpu_init();
+    Tau_gpu_init();
 
-    //Tau_cupti_set_device_props();
+    Tau_cupti_set_device_props();
   
-    //Tau_cupti_setup_unified_memory();
+    Tau_cupti_setup_unified_memory();
 
-		//Tau_CuptiLayer_init();
+		Tau_CuptiLayer_init();
 
 		if (!subscribed) {
-			//Tau_cupti_subscribe();
+			Tau_cupti_subscribe();
 		}
 
-
 		// subscribe must happen before enable domains
-		//Tau_cupti_enable_domains();
+		Tau_cupti_enable_domains();
 
     TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_init\n");
 }
@@ -656,16 +657,10 @@ void Tau_cupti_onload()
     TAU_VERBOSE("TAU: Enabling CUPTI callbacks.\n");
 		CUDA_CHECK_ERROR(cuErr, "cuInit");
 		fprintf(stderr, "cuinit happened\n");
+
+		//DO NOT CHANGE THIS
 		Tau_init_initializeTAU();
 		Tau_cupti_init();
-		/*cudaError_t cudaErr;
-		cudaErr = cudaSetDevice(0);
-		if (cudaErr != cudaSuccess)
-    {
-      fprintf (stderr, "[%s:%d] Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, cudaErr, "cudaGetDevice");
-    }*/
-
-
 
 		TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_onload\n");
 }
