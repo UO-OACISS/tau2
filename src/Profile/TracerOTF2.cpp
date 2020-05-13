@@ -117,19 +117,19 @@ static uint64_t start_time = 0;
 // Time of last event recorded
 static uint64_t end_time = 0;
 // Type, Time of previous event
-static int previous_typey[TAU_MAX_THREADS] = {0};
+static int previous_type[TAU_MAX_THREADS] = {0};
 static inline int getPreviousType(int tid){
-	return previous_typey[tid];
+	return previous_type[tid];
 }
 static inline void setPreviousType(int tid, int value){
-	previous_typey[tid]=value;
+	previous_type[tid]=value;
 }
-static uint64_t previous_tsy[TAU_MAX_THREADS] = {0};
+static uint64_t previous_ts[TAU_MAX_THREADS] = {0};
 static inline uint64_t getPreviousTS(int tid){
-	return previous_tsy[tid];
+	return previous_ts[tid];
 }
 static inline void setPreviousTS(int tid, uint64_t value){
-	previous_tsy[tid]=value;
+	previous_ts[tid]=value;
 }
 
 static uint64_t global_start_time = 0;
@@ -148,12 +148,12 @@ struct temp_buffer_entry {
 // pair.first = FunctionId
 // pair.second = timestamp
 static vector<temp_buffer_entry> * temp_buffers[TAU_MAX_THREADS] = {0};
-static bool buffers_writteny[TAU_MAX_THREADS] = {0};
+static bool buffers_written[TAU_MAX_THREADS] = {0};
 static inline bool getBuffersWritten(int tid){
-	return buffers_writteny[tid];
+	return buffers_written[tid];
 }
 static inline void setBuffersWritten(int tid, bool value){
-	buffers_writteny[tid]=value;
+	buffers_written[tid]=value;
 }
 
 // For unification data
@@ -191,19 +191,19 @@ static metrics_seen_t metrics_seen;
 typedef pair<pair<int,int>,int> rma_win_triple_t;
 typedef map<rma_win_triple_t,uint64_t> rma_win_map_t;
 static rma_win_map_t rma_win_map;
-static rma_win_map_t * local_rma_win_mapsy[TAU_MAX_THREADS];
+static rma_win_map_t * local_rma_win_maps[TAU_MAX_THREADS];
 static inline rma_win_map_t * getLocalRMAWinMaps(int tid){
-	return local_rma_win_mapsy[tid];
+	return local_rma_win_maps[tid];
 }
 static inline void setLocalRMAWinMaps(int tid,rma_win_map_t * value){
-	local_rma_win_mapsy[tid]=value;
+	local_rma_win_maps[tid]=value;
 }
-static uint64_t next_rma_winy[TAU_MAX_THREADS];
+static uint64_t next_rma_win[TAU_MAX_THREADS];
 static inline uint64_t getNextRMAWin(int tid){
-	return next_rma_winy[tid];
+	return next_rma_win[tid];
 }
 static inline void setNextRMAWin(int tid, uint64_t value){
-	next_rma_winy[tid]=value;
+	next_rma_win[tid]=value;
 }
 static uint64_t total_rma_wins;
 
