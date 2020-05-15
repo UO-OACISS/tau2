@@ -79,8 +79,8 @@ extern "C" {
 
 bool PapiLayer::papiInitialized = false;
 double PapiLayer::scalingFactor = 0.0;
-ThreadValue * PapiLayer::ThreadList[TAU_MAX_THREADS] = { 0 };
-//vector<ThreadValue *> PapiLayer::ThreadList;//TODO: Change ThreadList to a vector
+//ThreadValue * PapiLayer::ThreadList[TAU_MAX_THREADS] = { 0 };
+vector<ThreadValue *> PapiLayer::ThreadList;//TODO: Change ThreadList to a vector
 int PapiLayer::numCounters = 0;
 int PapiLayer::counterList[MAX_PAPI_COUNTERS];
 

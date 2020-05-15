@@ -103,7 +103,7 @@ int Tau_Global_numCounters = -1;
 
 static TauUserEvent **traceCounterEvents;
 
-typedef void (*function)(int, int, double[]);
+typedef void (*tau_function)(int, int, double[]);
 
 static char *metricv[TAU_MAX_METRICS];
 static int nmetrics = 0;
@@ -119,7 +119,7 @@ static int nfunctions = 0;
 static int traceMetric = 0;
 
 /* array of function pointers used to get metric data */
-static function functionArray[TAU_MAX_METRICS];
+static tau_function functionArray[TAU_MAX_METRICS];
 
 /* gtod based initial timestamp, used for snapshots and other stuff */
 static x_uint64 initialTimeStamp = 0L;

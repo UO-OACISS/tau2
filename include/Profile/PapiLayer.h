@@ -12,7 +12,7 @@
 **	Contact		: tau-team@cs.uoregon.edu 		 	   **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
 ****************************************************************************/
-//#include <vector>
+#include <vector>
 #ifndef _PAPI_LAYER_H_
 #define _PAPI_LAYER_H_
 
@@ -22,7 +22,7 @@
 #define TAU_PAPI_MAX_COMPONENTS 4
 
 #define MAX_PAPI_COUNTERS TAU_MAX_COUNTERS
-
+using namespace std;
 struct ThreadValue {
   int ThreadID;
   int EventSet[TAU_PAPI_MAX_COMPONENTS]; 
@@ -46,10 +46,12 @@ public:
   static int numCounters;
   static int counterList[TAU_MAX_COUNTERS];
   inline static void setThreadValue(int tid, ThreadValue* tv){
+	    checkVector(tid);
         ThreadList[tid]=tv;
   }
 
   inline static ThreadValue* getThreadValue(int tid){
+		checkVector(tid);
         return ThreadList[tid];
   }   
 
@@ -63,8 +65,14 @@ private:
   static void checkDomain(int domain, char* domainstr);
   static bool papiInitialized;
   static double scalingFactor;
-  static ThreadValue *ThreadList[TAU_MAX_THREADS];
-  //static vector<ThreadValue*> ThreadList;
+  //static ThreadValue *ThreadList[TAU_MAX_THREADS];
+  static vector<ThreadValue*> ThreadList;
+  static inline void checkVector(int tid){
+	while(ThreadList.size()<=tid){
+		ThreadValue* tv = new ThreadValue();
+		ThreadList.push_back(tv);
+	}
+}
 };
 
 #endif /* TAU_PAPI */
