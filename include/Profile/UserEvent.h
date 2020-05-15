@@ -245,7 +245,7 @@ private:
 
   void AddEventToDB();
 
-  Data eventData[TAU_MAX_THREADS];
+  Data eventData[TAU_MAX_THREADS]; //TODO: DYNATHREAD
 
   x_uint64 eventId;
   TauSafeString name;

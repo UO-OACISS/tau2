@@ -33,6 +33,7 @@
 #include <Profile/TauMetrics.h>
 
 #include <iostream>
+#include <vector>
 
 using namespace std;
 using namespace tau;
@@ -47,35 +48,62 @@ extern "C" int Tau_get_usesMPI(void);
 static unsigned long long TauMaxTraceRecords = 0; 
 static int TauBufferSize = 0; 
 
+struct trace_thread_data
+{
+	TAU_EV *TraceBuffer=NULL;
+	unsigned int TauCurrentEvent=0;
+	int TauTraceFd=0;
+	int TauTraceInitialized=0;
+	int TraceFileInitialized=0;
+	bool allocated=false;
+};
+
+static vector<trace_thread_data> TTD;
+
+static inline void checkVector(int tid){
+	while(TTD.size()<=tid){
+		TTD.push_back(trace_thread_data());
+	}
+}
+
 /* Trace buffer */
-static TAU_EV *TraceBuffer[TAU_MAX_THREADS]; 
+
+
+//static TAU_EV *TraceBuffer[TAU_MAX_THREADS]; 
 static inline TAU_EV* getTraceBuffer(int tid){
-	return TraceBuffer[tid];
+	checkVector(tid);
+	return TTD[tid].TraceBuffer;
 }
 static inline void setTraceBuffer(int tid, TAU_EV* value){
-	TraceBuffer[tid]=value;
+	checkVector(tid);
+	TTD[tid].TraceBuffer=value;
 }
 
 /* Trace buffer pointer for each threads */
-static unsigned int TauCurrentEvent[TAU_MAX_THREADS] = {0}; 
+//static unsigned int TauCurrentEvent[TAU_MAX_THREADS] = {0}; 
 static inline unsigned int getTauCurrentEvent(int tid){
-	return TauCurrentEvent[tid];
+	checkVector(tid);
+	return TTD[tid].TauCurrentEvent;
 }
 static inline void incrementTauCurrentEvent(int tid){
-	TauCurrentEvent[tid]++;
+	checkVector(tid);
+	TTD[tid].TauCurrentEvent++;
 }
 static inline void resetTauCurrentEvent(int tid){
-	TauCurrentEvent[tid]=0;
+	checkVector(tid);
+	TTD[tid].TauCurrentEvent=0;
 }
 
 /* Trace file descriptors */
-static int TauTraceFd[TAU_MAX_THREADS] = {0};
+//static int TauTraceFd[TAU_MAX_THREADS] = {0};
 static inline int setTauTraceFd(int tid, int value){
-	TauTraceFd[tid]=value;
+	checkVector(tid);
+	TTD[tid].TauTraceFd=value;
 	return value;
 }
 static inline int getTauTraceFd(int tid){
-	return TauTraceFd[tid];
+	checkVector(tid);
+	return TTD[tid].TauTraceFd;
 }
 
 /* Flags for whether or not EDF files need to be rewritten when this thread's
@@ -85,19 +113,23 @@ static int TauTraceFlushEvents = 0;
 
 
 /* Initialization status flags */
-static int TauTraceInitialized[TAU_MAX_THREADS] = {0};
+//static int TauTraceInitialized[TAU_MAX_THREADS] = {0};
 static inline int getTauTraceInitialized(int tid){
-	return TauTraceInitialized[tid];
+	checkVector(tid);
+	return TTD[tid].TauTraceInitialized;
 }
 static inline void setTauTraceInitialized(int tid, int value){
-	TauTraceInitialized[tid]=value;
+	checkVector(tid);
+	TTD[tid].TauTraceInitialized=value;
 }
-static int TraceFileInitialized[TAU_MAX_THREADS] = {0};
+//static int TraceFileInitialized[TAU_MAX_THREADS] = {0};
 static inline int getTraceFileInitialized(int tid){
-	return TraceFileInitialized[tid];
+	checkVector(tid);
+	return TTD[tid].TraceFileInitialized;
 }
 static inline void setTraceFileInitialized(int tid){
-	TraceFileInitialized[tid]=1;
+	checkVector(tid);
+	TTD[tid].TraceFileInitialized=1;
 }
 //static double tracerValues[TAU_MAX_COUNTERS] = {0};
 
@@ -283,7 +315,7 @@ void TauTraceFlushBuffer(int tid)
 }
 
 
-/* static list of flags specifying if the buffer has been allocated for a given thread */
+/* static list of flags specifying if the buffer has been allocated for a given thread 
 bool *TauBufferAllocated() {
   static bool flag = true;
   static bool allocated[TAU_MAX_THREADS]; //TODO: DYNATHREAD
@@ -294,6 +326,16 @@ bool *TauBufferAllocated() {
     flag = false;
   }
   return allocated;
+}*/ //TODO: Remove once validated
+
+static inline bool getTauBufferAllocated(int tid){
+	checkVector(tid);
+	return TTD[tid].allocated;
+}
+
+static inline void setTauBufferAllocated(int tid, bool value){
+	checkVector(tid);
+	TTD[tid].allocated=value;
 }
 
 /* Initialize tracing. TauTraceInit should be called in every trace routine to ensure that 
@@ -307,8 +349,7 @@ int TauTraceInit(int tid)
       return TauTraceOTF2Init(tid);
   }
 #endif
-
-   if (!TauBufferAllocated()[tid]) {
+   if (!getTauBufferAllocated(tid)) {
      TauMaxTraceRecords = (unsigned long long) TauEnv_get_max_records(); 
      TauBufferSize = sizeof(TAU_EV)*TauMaxTraceRecords; 
      setTraceBuffer(tid,(TAU_EV*) malloc(TauBufferSize));
@@ -318,7 +359,7 @@ int TauTraceInit(int tid)
           "TAU: Please rerun the application with the TAU_MAX_RECORDS environment variable set to a smaller value\n");
        exit(1); 
      }
-     TauBufferAllocated()[tid] = true;
+     setTauBufferAllocated(tid, true);
    }
   int retvalue = 0; 
   /* by default this is what is returned. No trace records were generated */
