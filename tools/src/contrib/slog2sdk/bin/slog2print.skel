@@ -1,4 +1,5 @@
-#!/bin/@SHELL@
+#!/bin/bash
+#@SHELL@
 TAUROOT=@TAUROOTDIR@
 MACHINE=@ARCH@
 
