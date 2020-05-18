@@ -58,11 +58,12 @@ struct trace_thread_data
 	bool allocated=false;
 };
 
-static vector<trace_thread_data> TTD;
+static vector<trace_thread_data*> TTD;
 
 static inline void checkVector(int tid){
 	while(TTD.size()<=tid){
-		TTD.push_back(trace_thread_data());
+        trace_thread_data* td = new trace_thread_data();
+		TTD.push_back(td);
 	}
 }
 
@@ -72,38 +73,38 @@ static inline void checkVector(int tid){
 //static TAU_EV *TraceBuffer[TAU_MAX_THREADS]; 
 static inline TAU_EV* getTraceBuffer(int tid){
 	checkVector(tid);
-	return TTD[tid].TraceBuffer;
+	return TTD[tid]->TraceBuffer;
 }
 static inline void setTraceBuffer(int tid, TAU_EV* value){
 	checkVector(tid);
-	TTD[tid].TraceBuffer=value;
+	TTD[tid]->TraceBuffer=value;
 }
 
 /* Trace buffer pointer for each threads */
 //static unsigned int TauCurrentEvent[TAU_MAX_THREADS] = {0}; 
 static inline unsigned int getTauCurrentEvent(int tid){
 	checkVector(tid);
-	return TTD[tid].TauCurrentEvent;
+	return TTD[tid]->TauCurrentEvent;
 }
 static inline void incrementTauCurrentEvent(int tid){
 	checkVector(tid);
-	TTD[tid].TauCurrentEvent++;
+	TTD[tid]->TauCurrentEvent++;
 }
 static inline void resetTauCurrentEvent(int tid){
 	checkVector(tid);
-	TTD[tid].TauCurrentEvent=0;
+	TTD[tid]->TauCurrentEvent=0;
 }
 
 /* Trace file descriptors */
 //static int TauTraceFd[TAU_MAX_THREADS] = {0};
 static inline int setTauTraceFd(int tid, int value){
 	checkVector(tid);
-	TTD[tid].TauTraceFd=value;
+	TTD[tid]->TauTraceFd=value;
 	return value;
 }
 static inline int getTauTraceFd(int tid){
 	checkVector(tid);
-	return TTD[tid].TauTraceFd;
+	return TTD[tid]->TauTraceFd;
 }
 
 /* Flags for whether or not EDF files need to be rewritten when this thread's
@@ -116,20 +117,20 @@ static int TauTraceFlushEvents = 0;
 //static int TauTraceInitialized[TAU_MAX_THREADS] = {0};
 static inline int getTauTraceInitialized(int tid){
 	checkVector(tid);
-	return TTD[tid].TauTraceInitialized;
+	return TTD[tid]->TauTraceInitialized;
 }
 static inline void setTauTraceInitialized(int tid, int value){
 	checkVector(tid);
-	TTD[tid].TauTraceInitialized=value;
+	TTD[tid]->TauTraceInitialized=value;
 }
 //static int TraceFileInitialized[TAU_MAX_THREADS] = {0};
 static inline int getTraceFileInitialized(int tid){
 	checkVector(tid);
-	return TTD[tid].TraceFileInitialized;
+	return TTD[tid]->TraceFileInitialized;
 }
 static inline void setTraceFileInitialized(int tid){
 	checkVector(tid);
-	TTD[tid].TraceFileInitialized=1;
+	TTD[tid]->TraceFileInitialized=1;
 }
 //static double tracerValues[TAU_MAX_COUNTERS] = {0};
 
@@ -330,12 +331,12 @@ bool *TauBufferAllocated() {
 
 static inline bool getTauBufferAllocated(int tid){
 	checkVector(tid);
-	return TTD[tid].allocated;
+	return TTD[tid]->allocated;
 }
 
 static inline void setTauBufferAllocated(int tid, bool value){
 	checkVector(tid);
-	TTD[tid].allocated=value;
+	TTD[tid]->allocated=value;
 }
 
 /* Initialize tracing. TauTraceInit should be called in every trace routine to ensure that 
