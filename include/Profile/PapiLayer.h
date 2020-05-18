@@ -69,8 +69,7 @@ private:
   static vector<ThreadValue*> ThreadList;
   static inline void checkVector(int tid){
 	while(ThreadList.size()<=tid){
-		ThreadValue* tv = new ThreadValue();
-		ThreadList.push_back(tv);
+		ThreadList.push_back(new ThreadValue());
 	}
 }
 };
