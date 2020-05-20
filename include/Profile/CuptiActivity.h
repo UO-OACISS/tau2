@@ -275,7 +275,7 @@ extern "C" void Tau_cupti_gpu_exit_event_from_cpu(const char* name, int tid);
 
 extern "C" x_uint64 TauTraceGetTimeStamp();
 
-void Tau_cupti_register_sync_event(CUcontext c, uint32_t stream, uint8_t* buffer, size_t size, size_t validSize);
+void Tau_cupti_process_buffer(CUcontext c, uint32_t stream, uint8_t* buffer, size_t size, size_t validSize);
 
 void Tau_cupti_activity_flush_all();
 

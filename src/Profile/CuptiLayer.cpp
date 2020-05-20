@@ -351,8 +351,8 @@ void Tau_CuptiLayer_init()
     CUcontext cuCtx;
 
     cuErr = cudaGetDevice(&device);
-		if (cuErr != cudaSuccess) 
-		{ 
+		if (cuErr != cudaSuccess)
+		{
 			fprintf (stderr, "[%s:%d] Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, cuErr, "cudaGetDevice");
 		}
 		fprintf(stderr, "device %d\n", device);
@@ -394,8 +394,8 @@ void Tau_CuptiLayer_init()
             lastDataBuffer[i] = 0;
         }
         initialized[device] = true;
-        Tau_CuptiLayer_initialized = true;
     }
+    Tau_CuptiLayer_initialized = true;
     cudaEventCreate(&TAU_cudaEvent);
 
 		TAU_DEBUG_PRINT("AHJ: exiting Tau_CuptiLayer_init\n");

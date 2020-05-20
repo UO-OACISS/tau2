@@ -112,6 +112,38 @@ x)      echo="echo"     nnl="\c";;  #SysV
         exit 1;;
 esac
 
+#Check downloader options
+useWget=0
+useCurl=0
+if [ ! -x $"(command -v wget)" ]; then
+	useWget=1
+elif [ ! -x $"(command -v curl)" ]; then
+	useCurl=1
+fi
+
+#1URL, 2FILE, 3Print-Status
+download() {
+	if [ "$useWget" -eq 1 ]; then
+		status="-nv"
+	    if [ "$3" -eq 1 ]; then
+			status=""
+		fi
+		wget ${status} "$1" -O "$2" 
+	elif [ "$useCurl" -eq 1 ]; then
+		status="-S"
+		if [ "$3" -eq 1 ]; then
+			status=""
+		fi
+		curl ${status} -L "$1" -o "$2" 
+	else
+		status=false
+		if [ "$3" -eq 1 ]; then
+		  status=true
+		fi
+		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget "$1" "$2" "$status"
+	fi
+}
+
 # check to see if PerfDMF has been executed
     
  $echo "What is the name of your PerfDMF Configuration: ${nnl}"
@@ -224,14 +256,14 @@ if [ ! -r ${WEKA_JAR} ]; then
 		  cp ${tauroot}/external_dependencies/${FILE} ${FILE}
 		else
 		  #wget http://www.cs.uoregon.edu/research/paracomp/tau/${redirectfile}
-		  java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget $redirect ${redirectfile} false
+		  download $redirect ${redirectfile} 0
 		  URL=`grep URL ${redirectfile} | sed s/URL=//`
 		  FILE=`grep FILE ${redirectfile} | sed s/FILE=//`
 		  DIR=`grep DIR ${redirectfile} | sed s/DIR=//`
 		  /bin/rm -f ${redirectfile}
 		  echo "Getting $FILE... please be patient..."
 		  #wget "$URL"
-		  java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget "$URL" "$FILE" true
+		  download "$URL" "$FILE" 1
 		fi
 		mv "$FILE" ${WEKA_ZIP_DIR}/.
 		cd ${WEKA_ZIP_DIR}/.
@@ -315,7 +347,7 @@ if [ ! -r ${JBOSS_JAR} ]; then
 		else
 		  echo "Getting $FILE... please be patient..."
 		  #wget "$URL"
-		  java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget "$URL" "$FILE" true
+		  download "$URL" "$FILE" 1
 	  	fi
 		mv "$FILE" ${JBOSS_TAR_DIR}/.
 		cd ${JBOSS_TAR_DIR}/.

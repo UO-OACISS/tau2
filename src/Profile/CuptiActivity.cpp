@@ -2,6 +2,7 @@
 #include <Profile/CuptiLayer.h>
 #include <Profile/TauMetaData.h>
 #include <iostream>
+#include <mutex>
 #include <time.h>
 #include <assert.h>
 #define __STDC_FORMAT_MACROS
@@ -10,6 +11,8 @@ using namespace std;
 
 #if CUPTI_API_VERSION >= 2
 #include <dlfcn.h>
+
+#include <cxxabi.h>
 
 //#define TAU_DEBUG_CUPTI
 
@@ -53,6 +56,9 @@ typedef struct tau_cupti_context {
     uint32_t streamId;
     int v_threadId;
 } tau_cupti_context_t;
+
+// Mutext to control access to the following maps
+std::mutex cupti_mtx;
 
 // map from context/stream to everything else
 std::map<uint64_t, tau_cupti_context_t*> newContextMap;
@@ -101,8 +107,8 @@ static sanity_check sanity;
 /* Keep track of null streams for contexts.  Each context has a "default" stream,
  * and when asynchronous events happen, it is given.  However, when the context is
  * created, we don't have access to it.  So, keep track of them. */
-std::vector<uint32_t> context_null_streams;
-std::vector<uint32_t> context_devices;
+std::map<uint32_t, uint32_t> context_null_streams;
+std::map<uint32_t, uint32_t> context_devices;
 
 device_map_t & __deviceMap()
 {
@@ -160,13 +166,12 @@ int get_taskid_from_gpu_event(uint32_t deviceId, uint32_t streamId,
 
 /* Using the context/stream key, get the virtual thread ID */
 int get_taskid_from_key(uint64_t key) {
-    RtsLayer::LockDB();
-    size_t c = newContextMap.count(key);
-    RtsLayer::UnLockDB();
-    if (c == 0) { return 0; }
-    RtsLayer::LockDB();
-    int tid = newContextMap[key]->v_threadId;
-    RtsLayer::UnLockDB();
+    int tid = 0;
+    cupti_mtx.lock();
+    if (newContextMap.count(key) > 0) {
+        tid = newContextMap[key]->v_threadId;
+    }
+    cupti_mtx.unlock();
     return tid;
 }
 
@@ -183,16 +188,16 @@ int get_taskid_from_context_id(uint32_t contextId, uint32_t streamId) {
     if (tid == 0) {
         key = (uint64_t)(contextId);
         key = (key << 32);
-        RtsLayer::LockDB();
-        size_t c = newContextMap.count(key);
-        if (c == 0) {
-            RtsLayer::UnLockDB();
+        cupti_mtx.lock();
+        if (newContextMap.count(key) == 0) {
+            cupti_mtx.unlock();
             return 0;
         }
         tau_cupti_context_t * baseContext = newContextMap[key];
-        RtsLayer::UnLockDB();
+        uint32_t tmpstream = context_null_streams[contextId];
+        cupti_mtx.unlock();
         uint32_t deviceId = baseContext->deviceId;
-        if (context_null_streams[contextId] == streamId) {
+        if (tmpstream == streamId) {
             tid = baseContext->v_threadId;
         } else {
             tid = insert_context_into_map(deviceId, contextId, streamId);
@@ -204,19 +209,23 @@ int get_taskid_from_context_id(uint32_t contextId, uint32_t streamId) {
 }
 
 int get_stream_from_correlation_id(uint32_t correlationId) {
-    RtsLayer::LockDB();
-    size_t c = correlationStreamMap.count(correlationId);
-    RtsLayer::UnLockDB();
-    if (c == 0) { return 0; }
-    return correlationStreamMap[correlationId];
+    cupti_mtx.lock();
+    int streamId = 0;
+    if (correlationStreamMap.count(correlationId) > 0) {
+        streamId = correlationStreamMap[correlationId];
+    }
+    cupti_mtx.unlock();
+    return streamId;
 }
 
 int get_context_from_correlation_id(uint32_t correlationId) {
-    RtsLayer::LockDB();
-    size_t c = correlationContextMap.count(correlationId);
-    RtsLayer::UnLockDB();
-    if (c == 0) { return 0; }
-    return correlationContextMap[correlationId];
+    int contextId = 0;
+    cupti_mtx.lock();
+    if (correlationContextMap.count(correlationId) > 0) {
+        contextId = correlationContextMap[correlationId];
+    }
+    cupti_mtx.unlock();
+    return contextId;
 }
 
 /* get the context/stream key from correlation ID, and then do the
@@ -228,27 +237,21 @@ int get_taskid_from_correlation_id(uint32_t correlationId) {
 }
 
 void insert_context_correlation_map(uint32_t correlationId, uint32_t contextId) {
-    RtsLayer::LockDB();
-    size_t c = correlationContextMap.count(correlationId);
-    RtsLayer::UnLockDB();
-    if (c == 0) {
-        RtsLayer::LockDB();
-	correlationContextMap[correlationId] = contextId;
-	RtsLayer::UnLockDB();
+    cupti_mtx.lock();
+    if (correlationContextMap.count(correlationId) == 0) {
+	    correlationContextMap[correlationId] = contextId;
     }
+	cupti_mtx.unlock();
 }
 
 void insert_thread_correlation_map(uint32_t correlationId) {
 
     int taskId = get_taskid_from_correlation_id(correlationId);
-    RtsLayer::LockDB();
-    size_t c = correlationThreadMap.count(correlationId);
-    RtsLayer::UnLockDB();
-    if (c == 0) {
-        RtsLayer::LockDB();
-	correlationThreadMap[correlationId] = taskId;
-	RtsLayer::UnLockDB();
+    cupti_mtx.lock();
+    if (correlationThreadMap.count(correlationId) == 0) {
+	    correlationThreadMap[correlationId] = taskId;
     }
+	cupti_mtx.unlock();
 }
 
 /* BEGIN:  Dump cubin (sass) */
@@ -340,7 +343,7 @@ void Tau_cupti_setup_unified_memory() {
         CUDA_CHECK_ERROR(err2, "CUDA Compute Capability 3.0 or higher required!\n");
     }
     CUDA_CHECK_ERROR(err2, "Cannot enqueue buffer.\n");
-	
+
 		TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_setup_unified_memory\n");
 
 }
@@ -510,16 +513,16 @@ void Tau_cupti_subscribe()
 
     // With the ASYNC ACTIVITY API CUPTI will call
     // Tau_cupti_register_buffer_creation() when it needs a new activity buffer
-    // and Tau_cupti_register_sync_event() when a buffer is completed so all we
+    // and Tau_cupti_process_buffer() when a buffer is completed so all we
     // need to do here is to register these callback functions.
-    err = cuptiActivityRegisterCallbacks(Tau_cupti_register_buffer_creation, Tau_cupti_register_sync_event);
+    err = cuptiActivityRegisterCallbacks(Tau_cupti_register_buffer_creation, Tau_cupti_process_buffer);
     CUPTI_CHECK_ERROR(err, "cuptiActivityRegisterCallbacks");
     subscribed = 1;
     TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_subscribe\n");
 }
 
 
-void Tau_cupti_enable_domains() 
+void Tau_cupti_enable_domains()
 {
 
     TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_enable_domains\n");
@@ -598,10 +601,10 @@ void Tau_cupti_enable_domains()
     TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_enable_domains\n");
 }
 
-void Tau_cupti_setup_offset() 
+void Tau_cupti_setup_offset()
 {
 
-	
+
     TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_setup_offset\n");
 
 		CUptiResult cuptiErr;
@@ -626,9 +629,9 @@ void Tau_cupti_init()
     TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_init\n");
 
     Tau_gpu_init();
-
+    disable_callbacks =1;
     Tau_cupti_set_device_props();
-  
+
     Tau_cupti_setup_unified_memory();
 
 		if (!subscribed) {
@@ -661,6 +664,9 @@ void Tau_cupti_onload()
 		Tau_cupti_init();
 
 		TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_onload\n");
+
+    disable_callbacks =0;
+
 }
 
 void Tau_cupti_onunload() {
@@ -683,27 +689,24 @@ extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
 int insert_context_into_map(uint32_t deviceId, uint32_t contextId, uint32_t streamId) {
     uint64_t key = (uint64_t)(contextId);
     key = (key << 32) + streamId;
-    RtsLayer::LockDB();
-    size_t c = newContextMap.count(key);
-    RtsLayer::UnLockDB();
     int tid = 0;
-    if (c == 0) {
+    cupti_mtx.lock();
+    if (newContextMap.count(key) == 0) {
         tau_cupti_context_t * tmp;
         tmp = new tau_cupti_context_t();
         tmp->contextId = contextId;
         tmp->deviceId = deviceId;
         tmp->streamId = streamId;
+        // this call will lock the DB, so unlock before it
         tid = get_taskid_from_gpu_event(deviceId, streamId, contextId, false);
         tmp->v_threadId = tid;
+        newContextMap[key] = tmp;
+        cupti_mtx.unlock();
         TAU_DEBUG_PRINT("key: %llu, Device: %u, Context: %u, Stream: %u, Thread: %u\n",
             key, deviceId, contextId, streamId, tid);
-        RtsLayer::LockDB();
-        newContextMap[key] = tmp;
-        RtsLayer::UnLockDB();
     } else {
-        RtsLayer::LockDB();
         tid = newContextMap[key]->v_threadId;
-        RtsLayer::UnLockDB();
+        cupti_mtx.unlock();
     }
     char tmpVal[32] = {0};
     sprintf(tmpVal, "%u", deviceId);
@@ -728,10 +731,10 @@ int get_vthread_for_cupti_context(const CUpti_ResourceData *handle, bool stream)
         uint8_t perThreadStream = 1;
         cuptiGetStreamIdEx(handle->context, handle->resourceHandle.stream, perThreadStream, &streamId);
     } else {
-        while (contextId > context_null_streams.size()) {
-            context_null_streams.push_back(0);
-        }
-        context_devices.push_back(deviceId);
+        cupti_mtx.lock();
+        context_null_streams[contextId] = 0;
+        context_devices[contextId] = deviceId;
+        cupti_mtx.unlock();
     }
     // save the context Id for the current device
     while (deviceId >= deviceContextVector.size()) {
@@ -778,7 +781,6 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
             Tau_cupti_gpu_exit_event_from_cpu("CUDA Context",
                 get_vthread_for_cupti_context(handle, false));
                 */
-            get_vthread_for_cupti_context(handle, false);
             break;
             }
         case CUPTI_CBID_RESOURCE_STREAM_CREATED: {
@@ -789,7 +791,7 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
             Tau_cupti_gpu_enter_event_from_cpu("CUDA Stream",
                 get_vthread_for_cupti_context(handle, true));
                 */
-            get_vthread_for_cupti_context(handle, true);
+            //get_vthread_for_cupti_context(handle, true);
             break;
             }
         case CUPTI_CBID_RESOURCE_STREAM_DESTROY_STARTING: {
@@ -808,7 +810,6 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
             Tau_cupti_gpu_exit_event_from_cpu("CUDA Stream",
                 get_vthread_for_cupti_context(handle, true));
                 */
-            tid = get_vthread_for_cupti_context(handle, true);
             /* Very important!  We create a new virtual thread for each
              * stream.  When they go away, we need to reclaim the virtual
              * thread.  Ideally, in the async api we need to know when the
@@ -818,7 +819,6 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
              * give up the thread id until all the async events are in.
              */
             if (TauEnv_get_thread_per_gpu_stream()) {
-                //RtsLayer::recycleThread(tid);
                 streamsToRecycle.insert(streamId);
             }
             break;
@@ -887,6 +887,16 @@ void Tau_handle_driver_api_memcpy (void *ud, CUpti_CallbackDomain domain,
     }
 }
 
+char * demangle_name(const char *funcname) {
+    int status;
+    char *demangled_funcname = abi::__cxa_demangle(funcname, 0, 0, &status);
+    if (status == 0) {
+        return demangled_funcname;
+    } else {
+        return strdup(funcname);
+    }
+}
+
 void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
         CUpti_CallbackId id, const CUpti_CallbackData *cbInfo) {
     TAU_DEBUG_PRINT("TAU: CUPTI API enter\n");
@@ -901,7 +911,6 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
     if(strcmp(cbInfo->functionName, "cudaDeviceReset") == 0) {
         fprintf(stderr, "TAU: WARNING! cudaDeviceReset was called. CUPTI counters will not be measured from now on.\n");
     }
-    Tau_gpu_enter_event(cbInfo->functionName);
     if (function_is_launch(id))
     {
 	    Tau_CuptiLayer_enable_eventgroup();
@@ -910,9 +919,11 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
 	    record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
 	    CUdevice device;
 	    cuCtxGetDevice(&device);
-	    Tau_cuda_Event_Synchonize();
+	    //Tau_cuda_Event_Synchonize();
 	    int taskId = get_taskid_from_context_id(cbInfo->contextUid, 0);
 	    record_gpu_counters_at_launch(device, taskId);
+    } else {
+        Tau_gpu_enter_event(cbInfo->functionName);
     }
     TAU_DEBUG_PRINT("callback for %s, enter.\n", cbInfo->functionName);
 }
@@ -936,7 +947,16 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
 
     TAU_DEBUG_PRINT("callback for %s, exit.\n", cbInfo->functionName);
     TAU_DEBUG_PRINT("[at call (exit), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
-    Tau_gpu_exit_event(cbInfo->functionName);
+    if (function_is_launch(id))
+    {
+        stringstream ss;
+        char * demangled = demangle_name(cbInfo->symbolName);
+        ss << cbInfo->functionName << ": " << demangled;
+        free(demangled);
+        Tau_gpu_exit_event(ss.str().c_str());
+    } else {
+        Tau_gpu_exit_event(cbInfo->functionName);
+    }
     if (function_is_sync(id))
     {
         TAU_DEBUG_PRINT("sync function name: %s\n", cbInfo->functionName);
@@ -948,9 +968,9 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
 	record_gpu_counters_at_sync();
 
 #ifdef TAU_ASYNC_ACTIVITY_API
-	Tau_cupti_activity_flush_at_exit();
+	//Tau_cupti_activity_flush_at_exit();
 #else
-	Tau_cupti_register_sync_event(cbInfo->context, 0, NULL, 0, 0);
+	//Tau_cupti_process_buffer(cbInfo->context, 0, NULL, 0, 0);
 #endif
 	//Tau_CuptiLayer_enable();
     }
@@ -969,11 +989,11 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         return;
     }
     if (!device_count_total) {
-        RtsLayer::LockDB();
+        cupti_mtx.lock();
         disable_callbacks = 1;
         device_count_total = get_device_count();
         disable_callbacks = 0;
-        RtsLayer::UnLockDB();
+        cupti_mtx.unlock();
     }
     //Just in case we encounter a callback before TAU is intialized or finished.
     if (!Tau_init_check_initialized() || Tau_global_getLightsOut()) {
@@ -1015,6 +1035,17 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         // do nothing
         return;
     }
+    // Why is this here?  Well, to make sure that this thread isn't
+    // holding the lock!  FOR SOME REASON, the TauGpu code will finish
+    // without releasing the lock...
+    int tmp = RtsLayer::getNumDBLocks();
+    if (tmp != 0) {
+#if TAU_HAS_TOO_MANY_BROKEN_LOCKS
+        printf ("\n*\n*\n*\nHolding %d locks!\n*\n*\n*\n",tmp);
+        fflush(stdout);
+#endif
+        RtsLayer::UnLockDB();
+    }
 }
 
     void CUPTIAPI Tau_cupti_activity_flush_all() {
@@ -1025,7 +1056,10 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         }
     }
 
-    void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, uint8_t *activityBuffer, size_t size, size_t bufferSize)
+extern void Tau_cupti_buffer_created(void);
+extern void Tau_cupti_buffer_processed(void);
+
+    void CUPTIAPI Tau_cupti_process_buffer(CUcontext context, uint32_t stream, uint8_t *activityBuffer, size_t size, size_t bufferSize)
     {
         static int counter = 0;
         int thisloop = counter++;
@@ -1034,7 +1068,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         int count_iter = TauEnv_get_cudaTotalThreads();
         record_gpu_counters_at_sync();
 
-        //TAU_PROFILE("Tau_cupti_register_sync_event", "", TAU_DEFAULT);
+        //TAU_PROFILE("Tau_cupti_process_buffer", "", TAU_DEFAULT);
         //printf("in sync: context=%p stream=%d.\n", context, stream);
         registered_sync = true;
         CUptiResult err, status;
@@ -1068,6 +1102,17 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
                 status = cuptiActivityGetNextRecord(activityBuffer, bufferSize, &record);
                 if (status == CUPTI_SUCCESS) {
                     Tau_cupti_record_activity(record);
+                    // Why is this here?  Well, to make sure that this thread isn't
+                    // holding the lock!  FOR SOME REASON, the TauGpu code will finish
+                    // without releasing the lock...
+                    int tmp = RtsLayer::getNumDBLocks();
+                    if (tmp != 0) {
+#if TAU_HAS_TOO_MANY_BROKEN_LOCKS
+                        printf ("\n*\n*\n*\nHolding %d locks!\n*\n*\n*\n",tmp);
+                        fflush(stdout);
+#endif
+                        RtsLayer::UnLockDB();
+                    }
                     ++num_buffers;
                 }
                 else if (status == CUPTI_ERROR_MAX_LIMIT_REACHED) {
@@ -1141,18 +1186,24 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
             printf("TAU: CUPTI Unknown error cannot read from buffer.\n");
         }
         // printf("------------> done in %s, iteration %d, %d buffers\n", __func__, thisloop, num_buffers);
+        Tau_cupti_buffer_processed();
     }
+
+#define ALIGN_SIZE (8)
+#define ALIGN_BUFFER(buffer, align)                                            \
+  (((uintptr_t) (buffer) & ((align)-1)) ? ((buffer) + (align) - ((uintptr_t) (buffer) & ((align)-1))) : (buffer))
 
     void CUPTIAPI Tau_cupti_register_buffer_creation(uint8_t **activityBuffer, size_t *size, size_t *maxNumRecords)
     {
-        uint8_t* bf = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
+        uint8_t* bf = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE+ALIGN_SIZE);
         if (bf == NULL) {
             printf("sufficient memory available to allocate activity buffer of size %d.", ACTIVITY_BUFFER_SIZE);
             exit(1);
         }
-        *activityBuffer = bf;
+        *activityBuffer = ALIGN_BUFFER(bf, ALIGN_SIZE);
         *size = ACTIVITY_BUFFER_SIZE;
         *maxNumRecords = 0;
+        Tau_cupti_buffer_created();
     }
 
 bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
@@ -1186,15 +1237,15 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
         CUDA_CHECK_ERROR(err2, "Cannot get timestamp.\n");
 
         switch (record->kind) {
-        /*
             case CUPTI_ACTIVITY_KIND_STREAM:
             {
+                /*
                 CUpti_ActivityStream *stream = (CUpti_ActivityStream *)record;
                 printf("STREAM ACTIVITY! context %lu, stream %lu, correlation %lu\n",
                     stream->contextId, stream->streamId, stream->correlationId);
+                 */
                 break;
             }
-            */
             case CUPTI_ACTIVITY_KIND_CONTEXT:
                 {
                     CUpti_ActivityContext *context = (CUpti_ActivityContext *)record;
@@ -1202,8 +1253,10 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                     currentContextId = context->contextId;
                     TAU_DEBUG_PRINT("----> Found null stream %d for context %d, device %d\n",
                         context->nullStreamId, context->contextId, context->deviceId);
+                    cupti_mtx.lock();
                     context_null_streams[context->contextId] = context->nullStreamId;
                     context_devices[context->contextId] = context->deviceId;
+                    cupti_mtx.unlock();
                     break;
                 }
                 if (TauEnv_get_cuda_track_env()) {
@@ -1899,7 +1952,9 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 		    write_sass_counters();
 		}
                 uint32_t streamId = 0;
+                cupti_mtx.lock();
                 uint32_t deviceId = context_devices[sync->contextId];
+                cupti_mtx.unlock();
                 uint64_t start = sync->start;
                 if (sync->streamId != CUPTI_SYNCHRONIZATION_INVALID_VALUE) {
                     streamId = sync->streamId;
@@ -1963,6 +2018,15 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                         break;
                 }
                 previous_ts[taskId] = sync->end;
+                break;
+            }
+            case CUPTI_ACTIVITY_KIND_CUDA_EVENT: {
+                break; // do nothing
+            }
+            default: {
+                fprintf(stderr, "TAU: Unhandled CUPTI event! %d\n", record->kind);
+                fflush(stderr);
+                break;
             }
 #endif //CUPTI_API_VERSION >= 3
         }

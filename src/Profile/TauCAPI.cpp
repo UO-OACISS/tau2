@@ -86,7 +86,8 @@ using namespace tau;
 extern "C" void Tau_shutdown(void);
 //extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
-extern "C" long Tau_get_message_path(void);
+extern "C" long Tau_get_message_send_path(void);
+extern "C" long Tau_get_message_recv_path(void);
 extern "C" size_t Tau_util_return_hash_of_string(const char *name);
 extern "C" void Tau_util_invoke_async_callback(unsigned int id, void * data);
 
@@ -1078,13 +1079,59 @@ extern "C" int Tau_get_thread(void) {
   return RtsLayer::myThread();
 }
 
+#ifdef CUPTI
+class cupti_buffer_tracking {
+public:
+    cupti_buffer_tracking() {
+        created = 0;
+        processed = 0;
+    }
+    int open_buffers(void) {
+        return created - processed;
+    }
+    int created;
+    int processed;
+};
+
+cupti_buffer_tracking& Tau_get_cupti_buffer_tracker(void) {
+    static cupti_buffer_tracking tracker;
+    return tracker;
+}
+
+void Tau_cupti_buffer_created(void) {
+    Tau_get_cupti_buffer_tracker().created++;
+    //printf("BUFFERS! Created: %d, processed: %d\n", Tau_get_cupti_buffer_tracker().created, Tau_get_cupti_buffer_tracker().processed);
+    //fflush(stdout);
+}
+
+void Tau_cupti_buffer_processed(void) {
+    Tau_get_cupti_buffer_tracker().processed++;
+    //printf("BUFFERS! Created: %d, processed: %d\n", Tau_get_cupti_buffer_tracker().created, Tau_get_cupti_buffer_tracker().processed);
+    //fflush(stdout);
+}
+#endif
+
 extern "C" void Tau_flush_gpu_activity(void) {
 #ifdef CUPTI
-    // flush all the cuda activity before we dump!
+    static bool did_once = false;
+    static bool done = false;
+    static int loops = 0;
+    if (RtsLayer::myThread() != 0) return;
     if (Tau_init_check_initialized() &&
         !Tau_global_getLightsOut() &&
-        Tau_CuptiLayer_is_initialized()) {
-      cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+        !done) {
+        while (Tau_get_cupti_buffer_tracker().created > Tau_get_cupti_buffer_tracker().processed) {
+            if (RtsLayer::myNode() == 0) {
+                if (did_once) {
+                    printf("TAU: ...still flushing asynchronous CUDA events...\n");
+                } else {
+                    printf("TAU: flushing asynchronous CUDA events...\n");
+                    did_once = true;
+                }
+            }
+            cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+        }
+        done = true;
     }
 #endif
 }
@@ -1613,7 +1660,7 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
 #ifdef TAU_PROFILE_PATHS
-  TAU_PROFILE_PARAM1L(Tau_get_message_path(), "message path");
+//  TAU_PROFILE_PARAM1L(Tau_get_message_send_path(), "message send path id");
 #else
   TAU_PROFILE_PARAM1L(length, "message size");
 #endif /* TAU_PROFILE_PATHS */
@@ -1655,7 +1702,7 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length)
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
 #ifdef TAU_PROFILE_PATHS
-  TAU_PROFILE_PARAM1L(Tau_get_message_path(), "message path");
+  TAU_PROFILE_PARAM1L(Tau_get_message_recv_path(), "message receive path id");
 #else
   TAU_PROFILE_PARAM1L(length, "message size");
 #endif /* TAU_PROFILE_PATHS */
@@ -2186,6 +2233,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
   }
 
   if (!initthread[tid]) {
+    RtsLayer::LockDB();
     // if there is no top-level timer, create one - But only create one FunctionInfo object.
     // that should be handled by the Tau_pure_start_task call.
     if (!TauInternal_CurrentProfiler(tid)) {
@@ -2206,6 +2254,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
       initializing[tid] = false;
 #endif
     }
+    RtsLayer::UnLockDB();
   }
 
 #endif
@@ -3299,12 +3348,28 @@ extern "C" void Tau_disable_tracking_mpi_t(void) {
   TauEnv_set_track_mpi_t_pvars(0);
 }
 
-#ifndef TAU_PROFILE_PATHS
-// stub function when PROFILEPATHS is not defined.
-extern "C" long Tau_get_message_path(void) {
+#ifndef TAU_MPI_T
+// stub function when MPI_T is not defined.
+extern "C" int Tau_msg_init(void) {
+  return 0;
+}
+extern "C" long Tau_get_message_send_path(void) {
   return 0L;
 }
-#endif /* TAU_PROFILE_PATHS */
+
+// stub function when MPI_T is not defined.
+extern "C" long Tau_get_message_recv_path(void) {
+  return 0L;
+}
+
+extern "C" int Tau_msg_send_prolog(void){ 
+  return 0;
+}
+
+extern "C" int Tau_msg_recv_prolog(void){ 
+  return 0;
+}
+#endif /* TAU_MPI_T */
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $

@@ -1831,13 +1831,6 @@ void TauTraceOTF2ShutdownComms(int tid) {
 
 /* Close the trace */
 void TauTraceOTF2Close(int tid) {
-#ifdef CUPTI
-  if (Tau_init_check_initialized() &&
-      !Tau_global_getLightsOut() &&
-      Tau_CuptiLayer_is_initialized()) {
-    cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
-  }
-#endif
 #ifdef TAU_OTF2_DEBUG
   fprintf(stderr, "%u: TauTraceOTF2Close(%d)\n", my_node(), tid);
 #endif
@@ -1845,6 +1838,10 @@ void TauTraceOTF2Close(int tid) {
     if(tid != 0 || otf2_finished || !otf2_initialized) {
         return;
     }
+#ifdef CUPTI
+    Tau_flush_gpu_activity();
+    printf("TAU: OTF2 Trace closing!\n");
+#endif
 
     if(!otf2_comms_shutdown) {
         TauTraceOTF2ShutdownComms(tid);
