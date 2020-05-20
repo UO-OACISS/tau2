@@ -219,7 +219,9 @@ extern counter_id_map_t interal_id_map();
 
 #include <stdint.h>
 
+void Tau_cupti_post_init(void);
 void Tau_CuptiLayer_enable_eventgroup(void);
+void Tau_CuptiLayer_setup_eventgroup(void);
 
 extern "C" int Tau_CuptiLayer_get_num_events();
 

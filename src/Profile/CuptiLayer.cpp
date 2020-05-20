@@ -228,13 +228,18 @@ void CuptiMetric::print()
 
 void Tau_CuptiLayer_enable_eventgroup()
 {
+	TAU_DEBUG_PRINT("AHJ: entering Tau_CuptiLayer_enable_eventgroup\n");
   CUptiResult cuptiErr;
   cuptiErr = cuptiEventGroupEnable(eventGroup);
   CHECK_CUPTI_ERROR(cuptiErr, "cuptiEventGroupEnable");
+	TAU_DEBUG_PRINT("AHJ: exiting Tau_CuptiLayer_enable_eventgroup\n");
 }
 
 void Tau_CuptiLayer_setup_eventgroup()
 {
+
+	static bool only_once = false;
+	if (only_once) { return; } else { only_once = true; }
 
     TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_setup_eventgroup\n");
   CUresult cuErr;
@@ -246,12 +251,14 @@ void Tau_CuptiLayer_setup_eventgroup()
   cuErr = cuDeviceGet(&device, 0);
   CUDA_CHECK_ERROR(cuErr, "cuDeviceGet");
 
-  cuErr = cuCtxGetCurrent(&cuCtx);
-  CUDA_CHECK_ERROR(cuErr, "cuCtxGetCurrent");
+	cuErr = cuDevicePrimaryCtxRetain(&cuCtx, device);
+	CHECK_CU_ERROR(cuErr, "cuCtxGetDevice");
   cuptiErr = cuptiEventGroupCreate(cuCtx, &eventGroup, 0);
   CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupCreate");
 
   counter_vec_t & added_counters = Tau_CuptiLayer_Added_counters();
+
+	fprintf(stderr, "AHJ %d\n", Tau_CuptiLayer_Added_counters().size());
 
   for (counter_vec_t::iterator it = added_counters.begin(); it != added_counters.end(); it++) {
       CuptiCounterEvent & evt = **it;
@@ -293,7 +300,7 @@ void Tau_CuptiLayer_setup_eventgroup()
       CUPTI_CHECK_ERROR(cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_KERNEL), "cuptiSetEventCollectionMode");
 
 #ifdef TAU_DEBUG_CUPTI
-      cerr << "Will add event " << evt.tag << " to GPU device: " << device_char << endl;
+      cerr << "AHJ: Will add event " << evt.tag << " to GPU device: " << device_char << endl;
 #endif
       CUpti_EventID evts[TAU_MAX_COUNTERS];
       size_t evts_size = TAU_MAX_COUNTERS*sizeof(CUpti_EventID);
@@ -318,7 +325,7 @@ void Tau_CuptiLayer_setup_eventgroup()
     Tau_CuptiLayer_set_num_events(added_counters.size());
 
 
-    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_setup_eventgroup\n");
+    TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_setup_eventgroup\n");
 }
 
 
@@ -391,7 +398,16 @@ void Tau_CuptiLayer_init()
     }
     cudaEventCreate(&TAU_cudaEvent);
 
-		TAU_DEBUG_PRINT("AHJ: entering Tau_CuptiLayer_init\n");
+		TAU_DEBUG_PRINT("AHJ: exiting Tau_CuptiLayer_init\n");
+}
+
+//for things that need to happen AFTER TauMetrics_init
+void Tau_cupti_post_init()
+{
+		TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_post_init\n");
+	Tau_CuptiLayer_init();
+	Tau_CuptiLayer_setup_eventgroup();
+		TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_post_init\n");
 }
 
 void Tau_CuptiLayer_disable()

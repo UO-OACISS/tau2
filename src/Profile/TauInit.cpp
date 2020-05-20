@@ -58,7 +58,7 @@
 #endif
 
 #ifdef CUPTI
-#include <Profile/CuptiActivity.h>
+#include <Profile/CuptiLayer.h>
 #endif
 
 #ifdef TAU_ANDROID
@@ -504,9 +504,10 @@ extern "C" int Tau_init_initializeTAU()
   /* initialize the metrics we will be counting */
   TauMetrics_init();
 
-//#ifdef CUPTI
-//  Tau_cupti_init(); //MUST HAPPEN AFTER TAUMETRICS_INIT()
-//#endif
+#ifdef CUPTI
+	//DO NOT MOVE OR FACE ALISTER'S WRATH.
+  Tau_cupti_post_init(); //MUST HAPPEN AFTER TAUMETRICS_INIT()
+#endif
 
   // Mark initialization complete so calls below can start timers
   tau_initialized = 1;

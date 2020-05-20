@@ -631,8 +631,6 @@ void Tau_cupti_init()
   
     Tau_cupti_setup_unified_memory();
 
-		Tau_CuptiLayer_init();
-
 		if (!subscribed) {
 			Tau_cupti_subscribe();
 		}
