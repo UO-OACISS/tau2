@@ -106,8 +106,8 @@ static sanity_check sanity;
 /* Keep track of null streams for contexts.  Each context has a "default" stream,
  * and when asynchronous events happen, it is given.  However, when the context is
  * created, we don't have access to it.  So, keep track of them. */
-std::vector<uint32_t> context_null_streams;
-std::vector<uint32_t> context_devices;
+std::map<uint32_t, uint32_t> context_null_streams;
+std::map<uint32_t, uint32_t> context_devices;
 
 device_map_t & __deviceMap()
 {
@@ -193,9 +193,10 @@ int get_taskid_from_context_id(uint32_t contextId, uint32_t streamId) {
             return 0;
         }
         tau_cupti_context_t * baseContext = newContextMap[key];
+        uint32_t tmpstream = context_null_streams[contextId];
         cupti_mtx.unlock();
         uint32_t deviceId = baseContext->deviceId;
-        if (context_null_streams[contextId] == streamId) {
+        if (tmpstream == streamId) {
             tid = baseContext->v_threadId;
         } else {
             tid = insert_context_into_map(deviceId, contextId, streamId);
@@ -600,8 +601,10 @@ void Tau_cupti_onload()
     //Tau_cupti_set_offset(0);
 
     Tau_gpu_init();
+    disable_callbacks =1;
     Tau_cupti_set_device_props();
     Tau_cupti_setup_unified_memory();
+    disable_callbacks =0;
 }
 
 void Tau_cupti_onunload() {
@@ -666,10 +669,10 @@ int get_vthread_for_cupti_context(const CUpti_ResourceData *handle, bool stream)
         uint8_t perThreadStream = 1;
         cuptiGetStreamIdEx(handle->context, handle->resourceHandle.stream, perThreadStream, &streamId);
     } else {
-        while (contextId > context_null_streams.size()) {
-            context_null_streams.push_back(0);
-        }
-        context_devices.push_back(deviceId);
+        cupti_mtx.lock();
+        context_null_streams[contextId] = 0;
+        context_devices[contextId] = deviceId;
+        cupti_mtx.unlock();
     }
     // save the context Id for the current device
     while (deviceId >= deviceContextVector.size()) {
@@ -1202,8 +1205,10 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                     currentContextId = context->contextId;
                     TAU_DEBUG_PRINT("----> Found null stream %d for context %d, device %d\n",
                         context->nullStreamId, context->contextId, context->deviceId);
+                    cupti_mtx.lock();
                     context_null_streams[context->contextId] = context->nullStreamId;
                     context_devices[context->contextId] = context->deviceId;
+                    cupti_mtx.unlock();
                     break;
                 }
                 if (TauEnv_get_cuda_track_env()) {
@@ -1899,7 +1904,9 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 		    write_sass_counters();
 		}
                 uint32_t streamId = 0;
+                cupti_mtx.lock();
                 uint32_t deviceId = context_devices[sync->contextId];
+                cupti_mtx.unlock();
                 uint64_t start = sync->start;
                 if (sync->streamId != CUPTI_SYNCHRONIZATION_INVALID_VALUE) {
                     streamId = sync->streamId;
