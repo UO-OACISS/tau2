@@ -1705,7 +1705,7 @@ static int getProfileLocation(int metric, char *str)
     profiledir = TauEnv_get_profiledir();
 #endif
 
-    if (Tau_Global_numCounters <= 1) {
+    if (Tau_Global_numCounters - Tau_Global_numGPUCounters <= 1) {
         sprintf(str, "%s", profiledir);
     } else {
 #ifdef DEBUGPROF
@@ -1802,6 +1802,9 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
       FILE* fp;
 
       getMetricHeader(i, metricHeader);
+      if (TauMetrics_getIsCuptiMetric(i) == TAU_METRIC_CUPTI_METRIC) continue;
+      if (TauMetrics_getIsCuptiMetric(i) == TAU_METRIC_CUPTI_EVENT) continue;
+
       //cout << "metric name: " << metricHeader << endl;
 #ifdef CUPTI
       // Is a Cupti event, do not record

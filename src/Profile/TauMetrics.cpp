@@ -100,6 +100,7 @@ static bool functionsInitialized(false);
 #endif
 /* Global Variable holding the number of counters */
 int Tau_Global_numCounters = -1;
+int Tau_Global_numGPUCounters = 0;
 
 static TauUserEvent **traceCounterEvents;
 
@@ -264,6 +265,7 @@ static void metricv_add(const char *name) {
 				eventsv[nmetrics] = event; // This looks weird... is this right?
 				cumetric[nmetrics] = TAU_METRIC_CUPTI_EVENT;
 				nmetrics++;
+                Tau_Global_numGPUCounters++;
 			}
 		} // for (event)
 	} // for (dev)
@@ -274,6 +276,7 @@ static void metricv_add(const char *name) {
 	eventsv[nmetrics] = 0;
 	cumetric[nmetrics] =
 			cupti_metric ? TAU_METRIC_CUPTI_METRIC : TAU_METRIC_NOT_CUPTI;
+    if (cumetric[nmetrics] == TAU_METRIC_CUPTI_METRIC) Tau_Global_numGPUCounters++;
 	nmetrics++;
 	fprintf(stderr, "AHJ: exiting metricv_add, adding metric %s\n", name);
 }

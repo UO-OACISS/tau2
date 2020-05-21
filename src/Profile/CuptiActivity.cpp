@@ -629,7 +629,7 @@ void Tau_cupti_init()
     TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_init\n");
 
     Tau_gpu_init();
-    disable_callbacks =1;
+    //disable_callbacks =1;
     Tau_cupti_set_device_props();
 
     Tau_cupti_setup_unified_memory();
@@ -665,7 +665,7 @@ void Tau_cupti_onload()
 
 		TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_onload\n");
 
-    disable_callbacks =0;
+    //disable_callbacks =0;
 
 }
 
@@ -742,7 +742,14 @@ int get_vthread_for_cupti_context(const CUpti_ResourceData *handle, bool stream)
     }
     deviceContextVector[deviceId] = contextId;
 
-    return insert_context_into_map(deviceId, contextId, streamId);
+    int tmp = insert_context_into_map(deviceId, contextId, streamId);
+    if (!stream) {
+        while (contextId >= deviceContextThreadVector.size()) {
+            deviceContextThreadVector.push_back(0);
+        }
+        deviceContextThreadVector[contextId] = tmp;
+    }
+    return tmp;
 }
 
 void CUPTIAPI Tau_cupti_activity_flush_at_exit() {
@@ -770,7 +777,7 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
             Tau_cupti_gpu_enter_event_from_cpu("CUDA Context",
                 get_vthread_for_cupti_context(handle, false));
                 */
-            deviceContextThreadVector.push_back(get_vthread_for_cupti_context(handle, false));
+            get_vthread_for_cupti_context(handle, false);
             break;
             }
         case CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING: {
@@ -791,7 +798,10 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
             Tau_cupti_gpu_enter_event_from_cpu("CUDA Stream",
                 get_vthread_for_cupti_context(handle, true));
                 */
-            //get_vthread_for_cupti_context(handle, true);
+            // make sure we have a null stream thread for this context
+            get_vthread_for_cupti_context(handle, false);
+            // then make sure we have a thread for this context+stream
+            get_vthread_for_cupti_context(handle, true);
             break;
             }
         case CUPTI_CBID_RESOURCE_STREAM_DESTROY_STARTING: {
@@ -913,6 +923,12 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
     }
     if (function_is_launch(id))
     {
+        stringstream ss;
+        char * demangled = demangle_name(cbInfo->symbolName);
+        ss << cbInfo->functionName << ": " << demangled;
+        free(demangled);
+        Tau_gpu_enter_event(ss.str().c_str());
+
 	    Tau_CuptiLayer_enable_eventgroup();
 	    TAU_DEBUG_PRINT("[at call (enter), %d] name: %s.\n",
             cbInfo->correlationId, cbInfo->functionName);
@@ -1583,6 +1599,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                     uint32_t streamId;
                     uint32_t contextId;
                     uint32_t correlationId;
+                    int taskId;
 #if CUDA_VERSION < 5050
                     uint32_t runtimeCorrelationId;
 #endif
@@ -1646,7 +1663,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                         staticSharedMemory = kernel->staticSharedMemory;
                         localMemoryPerThread = kernel->localMemoryPerThread;
                         registersPerThread = kernel->registersPerThread;
-                        int taskId = get_taskid_from_context_id(kernel->contextId, streamId);
+                        taskId = get_taskid_from_context_id(contextId, streamId);
                         kernelMap[taskId][kernel->correlationId] = *kernel;
 			correlationStreamMap[kernel->correlationId] = kernel->streamId;
 #if CUDA_VERSION >= 5050
@@ -1664,7 +1681,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                     {
                         id = correlationId;
                     }
-                    int taskId = get_taskid_from_context_id(contextId, streamId);
+                    taskId = get_taskid_from_context_id(contextId, streamId);
                         if (TauEnv_get_tracing() && start < previous_ts[taskId]) {
                             sanity.kernel_out_of_order++;
                         }
@@ -1683,7 +1700,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                         record_gpu_counters(nullcontext_taskId, name, id, &eventMap[taskId]);
                     }
 #else
-                    record_gpu_counters(nullcontext_taskId, name, id, &eventMap[taskId]);
+                    record_gpu_counters(taskId, name, id, &eventMap[taskId]);
 #endif
                     if (TauEnv_get_cuda_track_env()) {
 #if CUDA_VERSION >= 5050
