@@ -137,8 +137,7 @@ public:
 #endif //RENCI_STFF
 
 private:
-  //0: don't set them at all. 1: Set them to NULL. 2+: set them to new object
-  int setPathHistograms=0;
+  bool setPathHistograms=false;
 
   // A record of the information unique to this function.
   // Statistics about calling this function.
@@ -171,12 +170,9 @@ vector<FunctionMetrics*> MetricList;
 inline void checkVector(int tid){
 	while(MetricList.size()<=tid){
 		MetricList.push_back(new FunctionMetrics());
-        if(setPathHistograms>0){
+        if(setPathHistograms){
             int topThread=MetricList.size()-1;
-            if(setPathHistograms==1)
-                MetricList[topThread]->pathHistogram=NULL;
-            else
-                MetricList[topThread]->pathHistogram=new TauPathHashTable<TauPathAccumulator>(topThread);
+            MetricList[topThread]->pathHistogram=new TauPathHashTable<TauPathAccumulator>(topThread);
         }
 	}
 }

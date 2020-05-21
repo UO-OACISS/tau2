@@ -244,17 +244,14 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
       //!strstr(ProfileGroupName, "TAU_OMP_STATE") &&
       !strstr(ProfileGroupName, "TAU_UNWIND"))
   {
-      setPathHistograms=2;
+      setPathHistograms=true;
     /*for (int i = 0; i < TAU_MAX_THREADS; i++) {
       SetPathHistogram(i,new TauPathHashTable<TauPathAccumulator>(i));
       //pathHistogram[i] = new TauPathHashTable<TauPathAccumulator>(i);
     }*/
   } 
-  else{
-      setPathHistograms=1;
-  }
   
-  //NULL by default 
+  //Initialized as NULL in the struct 
   /*
   else {
     for (int i = 0; i < TAU_MAX_THREADS; i++) {
