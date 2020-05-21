@@ -2145,6 +2145,42 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+    # This option indicates that the OMPT path specified in -ompt=* is a TR4 version.
+    # TAU Commander uses this option because it downloads and builds its own version of
+    # the LLVM OpenMP runtime.
+
+    -ompt-tr4=download)
+	    openmp=yes
+	    ompt=yes
+	    download_ompt=yes
+      ompt_use_tr4_version=yes
+      ompt_header=ompt.h
+        shift
+        ;;
+
+    -ompt-tr4=*)
+        openmp=yes
+        ompt=yes
+        ompt_use_tr4_version=yes
+        ompt_header=ompt.h
+        ompt_dir=`echo $arg | sed -e 's/-ompt-tr4=//'`
+        if [ ! -d $ompt_dir ]
+        then
+          echo "Error: OMPT directory $ompt_dir cannot be accessed"
+          exit 1
+        fi
+	    omptlib="${ompt_dir}/lib"
+        shift
+        ;;
+
+    -ompt-tr4*)
+        openmp=yes
+        ompt=yes
+        ompt_use_tr4_version=yes
+        ompt_header=ompt.h
+        shift
+        ;;
+
     # This option indicates that the OMPT path specified in -ompt=* is a TR6 version.
     # TAU Commander uses this option because it downloads and builds its own version of
     # the LLVM OpenMP runtime.
@@ -7211,7 +7247,7 @@ if [ "x$download_unwind" = xyes ] ; then
       tar -xzf $libunwindtgz
       echo "removing $libunwindtgz..."
       rm $libunwindtgz
-      if [ ${c_compiler} = mpc_cc -o ${c_compiler} = mpc_icc ]
+      if [ ${c_compiler} = mpc_cc -o ${c_compiler} = mpc_icc -o ${c_compiler} = hcc ]
       then
         unwind_c_compiler=gcc
         unwind_cxx_compiler=g++
@@ -7399,7 +7435,7 @@ fi
 
 #This deletion is here in case the file was left behind from a previous call to configure
 rm -f ./ompt_ver_test
-if [ $ompt_use_tr6_version = "no" ] ; then
+if [ $ompt_use_tr4_version = "no" -a $ompt_use_tr6_version = "no" ] ; then
 
     #checking for OMPT Version 5.0
     echo -ne "\t Checking for version 5.0 ..."
@@ -7420,7 +7456,7 @@ if [ $ompt_use_tr6_version = "no" ] ; then
     rm -f ./ompt_ver_test
 fi
 
-if [ $ompt_compiler_support = no -a $ompt_use_tr6_version = no ] ; then
+if [ $ompt_compiler_support = no -a $ompt_use_tr4_version = no -a $ompt_use_tr6_version = no ] ; then
 
     echo -ne "\t Checking for version TR7 ..."
     $c_compiler $openmp_flag $openmp_INC $openmp_LINK $orig_useropt -DVERTEST_OMPT_TR7 ompt_ver_test.c -o ompt_ver_test $openmp_lib 1>/dev/null 2>&1
@@ -11297,7 +11333,7 @@ if [ $adios2 = yes ] ; then
     echo "Querying ADIOS2 CXX flags..."
     adios2cxxflags=`${adios2_config_cmd} --c-flags | grep -v ADIOS2_DIR | sed -e 's/[[:space:]]*$//' | sed 's/ /#/g'`
     echo "Querying ADIOS2 LIB flags..."
-    adios2libs=`${adios2_config_cmd} --c-libs | sed -e 's/[[:space:]]*$//' | sed 's/ /#/g' | sed 's/,/\\\\,/g'`
+    adios2libs=`${adios2_config_cmd} --cxx-libs | sed -e 's/[[:space:]]*$//' | sed 's/ /#/g' | sed 's/,/\\\\,/g'`
     tauoptions="${tauoptions}-adios2"
     fixmakeargs="$fixmakeargs ADIOS2"
     fixmakeargs="$fixmakeargs adios2dir=$adios2dir"

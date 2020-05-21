@@ -284,7 +284,7 @@ source_info parseSourceInfo(const char * name){
 		info.startline = atoi(tmp);//timer->line_number
 	    tmp = strtok(NULL, " <,>]");
 		info.stopline = atoi(tmp);//timer->line_number_end
-	  } else if (strstr(name, "[") != NULL) {
+	  } else if (strstr(name, "[") != NULL && strstr(name, "}") != NULL) {
 	    // regular case
 		// get the function signature
 	    char* tmp = strtok(working, "[");

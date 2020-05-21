@@ -27,8 +27,7 @@ THE SOFTWARE.
 // The goal of the implementation is to provide a HW specific low-level
 // performance analysis interface for profiling of GPU compute applications.
 // The profiling includes HW performance counters (PMC) with complex
-// performance metrics and thread traces (SQTT). The profiling is supported
-// by the SQTT, PMC and Callback APIs.
+// performance metrics and traces.
 //
 // The library can be used by a tool library loaded by HSA runtime or by
 // higher level HW independent performance analysis API like PAPI.
@@ -43,10 +42,11 @@ THE SOFTWARE.
 #define INC_ROCPROFILER_H_
 
 #include <hsa.h>
+#include <amd_hsa_kernel_code.h>
 #include <hsa_ven_amd_aqlprofile.h>
 #include <stdint.h>
 
-#define ROCPROFILER_VERSION_MAJOR 3
+#define ROCPROFILER_VERSION_MAJOR 7
 #define ROCPROFILER_VERSION_MINOR 0
 
 #ifdef __cplusplus
@@ -64,8 +64,10 @@ uint32_t rocprofiler_version_minor();
 
 typedef struct {
   uint32_t intercept_mode;
-  uint32_t sqtt_size;
-  uint32_t sqtt_local;
+  uint32_t code_obj_tracking;
+  uint32_t memcopy_tracking;
+  uint32_t trace_size;
+  uint32_t trace_local;
   uint64_t timeout;
   uint32_t timestamp_on;
 } rocprofiler_settings_t;
@@ -197,6 +199,18 @@ hsa_status_t rocprofiler_close(rocprofiler_t* context);  // [in] profiling conte
 hsa_status_t rocprofiler_reset(rocprofiler_t* context,  // [in] profiling context
                                uint32_t group_index);   // group index
 
+// Supported time value ID
+typedef enum {
+  ROCPROFILER_TIME_ID_CLOCK_REALTIME = 0, // Linux realtime clock time
+  ROCPROFILER_TIME_ID_CLOCK_MONOTONIC = 1, // Linux monotonic clock time
+} rocprofiler_time_id_t;
+
+// Return time value for a given time ID and profiling timestamp
+hsa_status_t rocprofiler_get_time(
+  rocprofiler_time_id_t time_id, // identifier of the particular time to convert the timesatmp
+  uint64_t timestamp, // profiling timestamp
+  uint64_t* value_ns); // [out] returned time 'ns' value
+
 ////////////////////////////////////////////////////////////////////////////////
 // Queue callbacks
 //
@@ -218,9 +232,11 @@ typedef struct {
   const hsa_queue_t* queue;                            // HSA queue
   uint64_t queue_index;                                // Index in the queue
   uint32_t queue_id;                                   // Queue id
+  hsa_signal_t completion_signal;                      // Completion signal
   const hsa_kernel_dispatch_packet_t* packet;          // HSA dispatch packet
   const char* kernel_name;                             // Kernel name
-  uint64_t kernel_object;                              // Kernel object pointer
+  uint64_t kernel_object;                              // Kernel object address
+  const amd_kernel_code_t* kernel_code;                // Kernel code pointer
   int64_t thread_id;                                   // Thread id
   const rocprofiler_dispatch_record_t* record;         // Dispatch record
 } rocprofiler_callback_data_t;
@@ -234,6 +250,7 @@ typedef hsa_status_t (*rocprofiler_callback_t)(
 // Queue callbacks
 typedef struct {
     rocprofiler_callback_t dispatch;                          // dispatch callback
+    hsa_status_t (*create)(hsa_queue_t* queue, void* data);   // create callback
     hsa_status_t (*destroy)(hsa_queue_t* queue, void* data);  // destroy callback
 } rocprofiler_queue_callbacks_t;
 
@@ -371,13 +388,73 @@ hsa_status_t rocprofiler_query_info(
   hsa_status_t (*callback)(const rocprofiler_info_data_t info, void *data), // callback
   void *data); // [in/out] data passed to callback
 
-// Creates a profiled queue. All dispatches on this queue will be profiled
+// Create a profiled queue. All dispatches on this queue will be profiled
 hsa_status_t rocprofiler_queue_create_profiled(
   hsa_agent_t agent_handle,uint32_t size, hsa_queue_type32_t type,
   void (*callback)(hsa_status_t status, hsa_queue_t* source, void* data),
   void* data, uint32_t private_segment_size, uint32_t group_segment_size,
   hsa_queue_t** queue);
 
+////////////////////////////////////////////////////////////////////////////////
+// Profiling pool
+//
+// Support for profiling contexts pool
+// The API provide capability to create a contexts pool for a given agent and a set of features,
+// to fetch/relase a context entry, to register a callback for the contexts completion.
+
+// Profiling pool handle
+typedef void rocprofiler_pool_t;
+
+// Profiling pool entry
+typedef struct {
+  rocprofiler_t* context;             // context object
+  void* payload;                      // payload data object
+} rocprofiler_pool_entry_t;
+
+// Profiling handler, calling on profiling completion
+typedef bool (*rocprofiler_pool_handler_t)(const rocprofiler_pool_entry_t* entry, void* arg);
+
+// Profiling preperties
+typedef struct {
+  uint32_t num_entries;                // pool size entries
+  uint32_t payload_bytes;              // payload size bytes
+  rocprofiler_pool_handler_t handler;  // handler on context completion
+  void* handler_arg;                   // the handler arg
+} rocprofiler_pool_properties_t;
+
+// Open profiling pool
+hsa_status_t rocprofiler_pool_open(
+  hsa_agent_t agent,                   // GPU handle
+  rocprofiler_feature_t* features,     // [in] profiling features array
+  uint32_t feature_count,              // profiling info count
+  rocprofiler_pool_t** pool,           // [out] context object
+  uint32_t mode,                       // profiling mode mask
+  rocprofiler_pool_properties_t*);     // pool properties
+
+// Close profiling pool
+hsa_status_t rocprofiler_pool_close(
+  rocprofiler_pool_t* pool);          // profiling pool handle
+
+// Fetch profiling pool entry
+hsa_status_t rocprofiler_pool_fetch(
+  rocprofiler_pool_t* pool,           // profiling pool handle
+  rocprofiler_pool_entry_t* entry);   // [out] empty profiling pool entry
+
+// Release profiling pool entry
+hsa_status_t rocprofiler_pool_release(
+  rocprofiler_pool_entry_t* entry);   // released profiling pool entry
+
+// Iterate fetched profiling pool entries
+hsa_status_t rocprofiler_pool_iterate(
+  rocprofiler_pool_t* pool,           // profiling pool handle
+  hsa_status_t (*callback)(rocprofiler_pool_entry_t* entry, void* data), // callback
+  void *data); // [in/out] data passed to callback
+
+// Flush completed entries in profiling pool
+hsa_status_t rocprofiler_pool_flush(
+  rocprofiler_pool_t* pool);          // profiling pool handle
+
+////////////////////////////////////////////////////////////////////////////////
 #ifdef __cplusplus
 }  // extern "C" block
 #endif  // __cplusplus

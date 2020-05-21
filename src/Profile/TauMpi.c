@@ -55,6 +55,7 @@ extern void Tau_metadata_writeEndingTimeStamp(void);
 #define TAU_MAX_MPI_RANKS 8
 #endif /* ifndef */
 
+/* NOTE: We can either track communicator or paths, but not both! */
 #ifdef TAU_EXP_TRACK_COMM
 #define TAU_TRACK_COMM(c) \
   void *commhandle; \
@@ -388,6 +389,10 @@ extern int Tau_mpi_t_cvar_initialize();
 extern int Tau_track_mpi_t_here();
 extern void Tau_track_mpi_t();
 extern int Tau_mpi_t_cleanup();
+extern int Tau_msg_send_prolog();
+extern int Tau_msg_recv_prolog();
+#define TAU_MSG_SEND_PROLOG() Tau_msg_send_prolog()
+#define TAU_MSG_RECV_PROLOG() Tau_msg_recv_prolog()
 
 #ifdef TAU_BEACON
 extern int TauBeaconSubscribe(char *topic_name, char *topic_scope, void (*handler)(BEACON_receive_topic_t*));
@@ -2989,6 +2994,7 @@ MPI_Status * status;
 
   TAU_TRACK_COMM(comm);
 
+  TAU_MSG_RECV_PROLOG();
   returnVal = PMPI_Recv( buf, count, datatype, source, tag, comm, status );
 
   if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
@@ -3066,6 +3072,7 @@ if (TauEnv_get_track_message()) {
   return returnVal;
 }
 
+extern long Tau_get_message_send_path(void); 
 
 int  MPI_Send( buf, count, datatype, dest, tag, comm )
 TAU_MPICH3_CONST void * buf;
@@ -3081,6 +3088,8 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Send()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   PMPI_Type_size( datatype, &typesize );
+  TAU_MSG_SEND_PROLOG();
+
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count);
@@ -3090,6 +3099,8 @@ MPI_Comm comm;
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Send( buf, count, datatype, dest, tag, comm );
+  TAU_PROFILE_PARAM1L(Tau_get_message_send_path(), "message send path id");
+
   TAU_PROFILE_STOP(tautimer);
   return returnVal;
 }

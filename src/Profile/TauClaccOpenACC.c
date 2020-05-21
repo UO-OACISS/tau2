@@ -42,13 +42,13 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
     /* kernel_name is always set to NULL (permitted by OpenACC), num_gangs, num_workers, and vector_length are omitted */
     if (event_info) {
       launch_event_info = &(event_info->launch_event); 
-      sprintf(event_name, ">openacc_enqueue_launch>" );
+      sprintf(event_name, ">openacc_enqueue_launch" );
     }
     break;
   case acc_ev_enqueue_launch_end          : 
     if (event_info) { /* same */
       launch_event_info = &(event_info->launch_event); 
-      sprintf(event_name, "<openacc_enqueue_launch>" );
+      sprintf(event_name, "<openacc_enqueue_launch" );
     }
     break;
   case acc_ev_enqueue_upload_start        : 
@@ -112,7 +112,8 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
     TAU_START(&event_name[1]);
   }  else if (event_name[0] == '<') {
     TAU_VERBOSE("STOP <<%s\n", &event_name[1]);
-    TAU_STOP(&event_name[1]);
+    //    TAU_STOP(&event_name[1]);
+    Tau_global_stop();
   } else {
     TAU_VERBOSE("event_name = %s\n", event_name);
   }
