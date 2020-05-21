@@ -159,9 +159,9 @@ private:
   TAU_STORAGE(bool, AlreadyOnStack, false);
   TAU_MULTSTORAGE(double, dumpExclusiveValues, 0);
   TAU_MULTSTORAGE(double, dumpInclusiveValues, 0);
-  #ifndef _AIX
-  TauPathHashTable<TauPathAccumulator> *pathHistogram=NULL;
-  #endif /* _AIX */
+  //#ifndef _AIX //TODO: DYNAPROF the dynamic implementation of this needs more work
+  //TauPathHashTable<TauPathAccumulator> *pathHistogram=NULL;
+  //#endif /* _AIX */
   };
   
   //FunctionMetrics MetricList[TAU_MAX_THREADS];
@@ -170,10 +170,10 @@ vector<FunctionMetrics*> MetricList;
 inline void checkVector(int tid){
 	while(MetricList.size()<=tid){
 		MetricList.push_back(new FunctionMetrics());
-        if(setPathHistograms){
+        /*if(setPathHistograms){//TODO: DYNAPROF
             int topThread=MetricList.size()-1;
             MetricList[topThread]->pathHistogram=new TauPathHashTable<TauPathAccumulator>(topThread);
-        }
+        }*/
 	}
 }
 
@@ -195,6 +195,7 @@ public:
   //  map<unsigned long, unsigned int> *pcHistogram;
 #ifndef TAU_WINDOWS
 #ifndef _AIX
+  TauPathHashTable<TauPathAccumulator> *pathHistogram[TAU_MAX_THREADS]; //TODO: DYNAPROF
 
   // For CallSite discovery
   bool isCallSite;
@@ -204,10 +205,10 @@ public:
   char *ShortenedName;
   void SetShortName(std::string& str) { ShortenedName = strdup(str.c_str()); }
   const char* GetShortName() const { return ShortenedName; }
-  inline TauPathHashTable<TauPathAccumulator>* GetPathHistogram(int tid){
+/*  inline TauPathHashTable<TauPathAccumulator>* GetPathHistogram(int tid){//TODO: DYNAPROF
     checkVector(tid);
     return MetricList[tid]->pathHistogram;
-  }
+  }*/
 
   /* EBS Sampling Profiles */
   void addPcSample(unsigned long *pc, int tid, double interval[TAU_MAX_COUNTERS]);

@@ -1073,7 +1073,7 @@ void Tau_sampling_finalizeProfile(int tid)
           string temp_ss(resolved_address);
           parentTauContext->SetName(temp_ss);
     }
-    TauPathHashTable<TauPathAccumulator>* pathHistogram=parentTauContext->GetPathHistogram(tid);
+    TauPathHashTable<TauPathAccumulator>* pathHistogram=parentTauContext->pathHistogram[tid]; //GetPathHistogram(tid);//TODO:DYNAPROF
     if ((pathHistogram == NULL) || (pathHistogram->size() == 0)) {
       // No samples encountered in this TAU context. Continue to next TAU context.
 //      DEBUGMSG("Tau Context %s has no samples", parentTauContext->GetName());
