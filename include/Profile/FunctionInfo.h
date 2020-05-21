@@ -18,6 +18,9 @@
 #define _FUNCTIONINFO_H_
 
 #include <string>
+#include <vector>
+
+using namespace std;
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -105,7 +108,7 @@ public:
 			bool InitData, int tid );
 
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
-  KtauFuncInfo* GetKtauFuncInfo(int tid) { return &( MetricList[tid].KernelFunc); }
+  KtauFuncInfo* GetKtauFuncInfo(int tid) { return &( MetricList[tid]->KernelFunc); }
 #endif /* TAUKTAU && TAUKTAU_MERGE */
 
   inline void ExcludeTime(double *t, int tid);
@@ -129,14 +132,16 @@ public:
 #ifdef RENCI_STFF
   // signatures for inclusive time for each counter in each thread
   ApplicationSignature** GetSignature(int tid) {
-    return MetricList[tid].Signatures;
+    return MetricList[tid]->Signatures;
   }
 #endif //RENCI_STFF
 
 private:
+  //0: don't set them at all. 1: Set them to NULL. 2+: set them to new object
+  int setPathHistograms=0;
+
   // A record of the information unique to this function.
   // Statistics about calling this function.
-	
   struct FunctionMetrics{//TODO: DYNATHREAD
 	
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
@@ -160,7 +165,21 @@ private:
   #endif /* _AIX */
   };
   
-  FunctionMetrics MetricList[TAU_MAX_THREADS];
+  //FunctionMetrics MetricList[TAU_MAX_THREADS];
+vector<FunctionMetrics*> MetricList;
+
+inline void checkVector(int tid){
+	while(MetricList.size()<=tid){
+		MetricList.push_back(new FunctionMetrics());
+        if(setPathHistograms>0){
+            int topThread=MetricList.size()-1;
+            if(setPathHistograms==1)
+                MetricList[topThread]->pathHistogram=NULL;
+            else
+                MetricList[topThread]->pathHistogram=new TauPathHashTable<TauPathAccumulator>(topThread);
+        }
+	}
+}
 
 public:
   char *Name;
@@ -189,11 +208,9 @@ public:
   char *ShortenedName;
   void SetShortName(std::string& str) { ShortenedName = strdup(str.c_str()); }
   const char* GetShortName() const { return ShortenedName; }
-  inline void SetPathHistogram(int tid, TauPathHashTable<TauPathAccumulator> *input){
-    MetricList[tid].pathHistogram=input;
-  }
   inline TauPathHashTable<TauPathAccumulator>* GetPathHistogram(int tid){
-    return MetricList[tid].pathHistogram;
+    checkVector(tid);
+    return MetricList[tid]->pathHistogram;
   }
 
   /* EBS Sampling Profiles */
@@ -202,11 +219,13 @@ public:
 #endif // TAU_WINDOWS
 
   inline double *getDumpExclusiveValues(int tid) {
-    return MetricList[tid].dumpExclusiveValues;
+    checkVector(tid);
+    return MetricList[tid]->dumpExclusiveValues;
   }
 
   inline double *getDumpInclusiveValues(int tid) {
-    return MetricList[tid].dumpInclusiveValues;
+    checkVector(tid);
+    return MetricList[tid]->dumpInclusiveValues;
   }
 
   // Cough up the information about this function.
@@ -234,42 +253,48 @@ public:
   char const * GetFullName(); /* created on demand, cached */
 
   x_uint64 GetFunctionId() ;
-  long GetCalls(int tid) { return MetricList[tid].NumCalls; }
-  void SetCalls(int tid, long calls) { MetricList[tid].NumCalls = calls; }
-  long GetSubrs(int tid) { return MetricList[tid].NumSubrs; }
-  void SetSubrs(int tid, long subrs) { MetricList[tid].NumSubrs = subrs; }
+  long GetCalls(int tid) { checkVector(tid); return MetricList[tid]->NumCalls; }
+  void SetCalls(int tid, long calls) {checkVector(tid); MetricList[tid]->NumCalls = calls; }
+  long GetSubrs(int tid) { checkVector(tid); return MetricList[tid]->NumSubrs; }
+  void SetSubrs(int tid, long subrs) { checkVector(tid); MetricList[tid]->NumSubrs = subrs; }
   void ResetExclTimeIfNegative(int tid);
 
 
   double *getInclusiveValues(int tid){
     printf ("TAU: Warning, potentially evil function called\n");
-    return MetricList[tid].InclTime;
+    checkVector(tid);
+    return MetricList[tid]->InclTime;
   }
   
   double *getExclusiveValues(int tid){
     printf ("TAU: Warning, potentially evil function called\n");
-    return MetricList[tid].ExclTime;
+    checkVector(tid);
+    return MetricList[tid]->ExclTime;
   }
 
   void getInclusiveValues(int tid, double *values){
+    checkVector(tid);  
     for(int i=0; i<Tau_Global_numCounters; i++) {
-        values[i] = MetricList[tid].InclTime[i];
+        values[i] = MetricList[tid]->InclTime[i];
     }
   }
   void getExclusiveValues(int tid, double *values){
+    checkVector(tid);  
     for(int i=0; i<Tau_Global_numCounters; i++) {
-        values[i] = MetricList[tid].ExclTime[i];
+        values[i] = MetricList[tid]->ExclTime[i];
     }
   }
 
   void SetExclTimeZero(int tid) {
+    checkVector(tid);  
     for(int i=0;i<Tau_Global_numCounters;i++) {
-      MetricList[tid].ExclTime[i] = 0;
+      MetricList[tid]->ExclTime[i] = 0;
     }
   }
   void SetInclTimeZero(int tid) {
+    checkVector(tid);  
     for(int i=0;i<Tau_Global_numCounters;i++) {
-      MetricList[tid].InclTime[i] = 0;
+      MetricList[tid]->InclTime[i] = 0;
     }
   }
 
@@ -278,21 +303,23 @@ public:
   double *GetExclTime(int tid);
   double *GetInclTime(int tid);
   inline void SetExclTime(int tid, double *excltime) {
+    checkVector(tid);  
     for(int i=0;i<Tau_Global_numCounters;i++) {
-      MetricList[tid].ExclTime[i] = excltime[i];
+      MetricList[tid]->ExclTime[i] = excltime[i];
     }
   }
   inline void SetInclTime(int tid, double *incltime) { 
+    checkVector(tid);
     for(int i=0;i<Tau_Global_numCounters;i++)
-      MetricList[tid].InclTime[i] = incltime[i];
+      MetricList[tid]->InclTime[i] = incltime[i];
   }
 
 
-  inline void AddInclTimeForCounter(double value, int tid, int counter) { MetricList[tid].InclTime[counter] += value; }
-  inline void AddExclTimeForCounter(double value, int tid, int counter) { MetricList[tid].ExclTime[counter] += value; }
-  inline void SetExclTimeForCounter(double value, int tid, int counter) { MetricList[tid].ExclTime[counter] = value; }
-  inline double GetInclTimeForCounter(int tid, int counter) { return MetricList[tid].InclTime[counter]; }
-  inline double GetExclTimeForCounter(int tid, int counter) { return MetricList[tid].ExclTime[counter]; }
+  inline void AddInclTimeForCounter(double value, int tid, int counter) {checkVector(tid); MetricList[tid]->InclTime[counter] += value; }
+  inline void AddExclTimeForCounter(double value, int tid, int counter) {checkVector(tid); MetricList[tid]->ExclTime[counter] += value; }
+  inline void SetExclTimeForCounter(double value, int tid, int counter) {checkVector(tid); MetricList[tid]->ExclTime[counter] = value; }
+  inline double GetInclTimeForCounter(int tid, int counter) {checkVector(tid); return MetricList[tid]->InclTime[counter]; }
+  inline double GetExclTimeForCounter(int tid, int counter) {checkVector(tid); return MetricList[tid]->ExclTime[counter]; }
 
   TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
   void SetProfileGroup(TauGroup_t gr) {MyProfileGroup_ = gr; }
@@ -317,38 +344,45 @@ int& TheUsingCompInst(void);
 inline void FunctionInfo::ExcludeTime(double *t, int tid) { 
   // called by a function to decrease its parent functions time
   // exclude from it the time spent in child function
+  checkVector(tid);
   for (int i=0; i<Tau_Global_numCounters; i++) {
-    MetricList[tid].ExclTime[i] -= t[i];
+    MetricList[tid]->ExclTime[i] -= t[i];
   }
 }
 	
 
 inline void FunctionInfo::AddInclTime(double *t, int tid) {
+    checkVector(tid);
   for (int i=0; i<Tau_Global_numCounters; i++) {
-    MetricList[tid].InclTime[i] += t[i]; // Add Inclusive time
+    MetricList[tid]->InclTime[i] += t[i]; // Add Inclusive time
   }
 }
 
 inline void FunctionInfo::AddExclTime(double *t, int tid) {
+    checkVector(tid);
   for (int i=0; i<Tau_Global_numCounters; i++) {
-    MetricList[tid].ExclTime[i] += t[i]; // Add Total Time to Exclusive time (-ve)
+    MetricList[tid]->ExclTime[i] += t[i]; // Add Total Time to Exclusive time (-ve)
   }
 }
 
 inline void FunctionInfo::IncrNumCalls(int tid) {
-  MetricList[tid].NumCalls++; // Increment number of calls
+    checkVector(tid);
+  MetricList[tid]->NumCalls++; // Increment number of calls
 } 
 
 inline void FunctionInfo::IncrNumSubrs(int tid) {
-  MetricList[tid].NumSubrs++;  // increment # of subroutines
+    checkVector(tid);
+  MetricList[tid]->NumSubrs++;  // increment # of subroutines
 }
 
 inline void FunctionInfo::SetAlreadyOnStack(bool value, int tid) {
-  MetricList[tid].AlreadyOnStack = value;
+    checkVector(tid);
+  MetricList[tid]->AlreadyOnStack = value;
 }
 
 inline bool FunctionInfo::GetAlreadyOnStack(int tid) {
-  return MetricList[tid].AlreadyOnStack;
+    checkVector(tid);
+  return MetricList[tid]->AlreadyOnStack;
 }
 
 

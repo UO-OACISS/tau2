@@ -233,6 +233,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   //         while in the middle of some other malloc call.
 #ifndef TAU_WINDOWS
 #ifndef _AIX
+//This is now handled in FunctionInfo.h as new threads are created.
   // create structure only if EBS is required.
   // Thread-safe, all (const char *) parameters. This check removes
   //   the need to create and allocate memory for EBS post-processed
@@ -243,11 +244,16 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
       //!strstr(ProfileGroupName, "TAU_OMP_STATE") &&
       !strstr(ProfileGroupName, "TAU_UNWIND"))
   {
-    for (int i = 0; i < TAU_MAX_THREADS; i++) {
+      setPathHistograms=2;
+    /*for (int i = 0; i < TAU_MAX_THREADS; i++) {
       SetPathHistogram(i,new TauPathHashTable<TauPathAccumulator>(i));
       //pathHistogram[i] = new TauPathHashTable<TauPathAccumulator>(i);
-    }
+    }*/
   } 
+  else{
+      setPathHistograms=1;
+  }
+  
   //NULL by default 
   /*
   else {
