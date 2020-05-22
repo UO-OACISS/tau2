@@ -228,11 +228,13 @@ void CuptiMetric::print()
 
 void Tau_CuptiLayer_enable_eventgroup()
 {
-	TAU_DEBUG_PRINT("AHJ: entering Tau_CuptiLayer_enable_eventgroup\n");
-  CUptiResult cuptiErr;
-  cuptiErr = cuptiEventGroupEnable(eventGroup);
-  CHECK_CUPTI_ERROR(cuptiErr, "cuptiEventGroupEnable");
-	TAU_DEBUG_PRINT("AHJ: exiting Tau_CuptiLayer_enable_eventgroup\n");
+    if (Tau_CuptiLayer_get_num_events() > 0) {
+        TAU_DEBUG_PRINT("AHJ: entering Tau_CuptiLayer_enable_eventgroup\n");
+        CUptiResult cuptiErr;
+        cuptiErr = cuptiEventGroupEnable(eventGroup);
+        CHECK_CUPTI_ERROR(cuptiErr, "cuptiEventGroupEnable");
+        TAU_DEBUG_PRINT("AHJ: exiting Tau_CuptiLayer_enable_eventgroup\n");
+    }
 }
 
 void Tau_CuptiLayer_setup_eventgroup()

@@ -763,7 +763,8 @@ void CUPTIAPI Tau_cupti_activity_flush_at_exit() {
 void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
         CUpti_CallbackId id, const CUpti_ResourceData *handle) {
     TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_RESOURCE event\n");
-    int tid = 0;
+    // make sure we have a null stream thread for this context
+    get_vthread_for_cupti_context(handle, false);
     switch (id) {
         case CUPTI_CBID_RESOURCE_INVALID: {
             TAU_DEBUG_PRINT("CUPTI_CBID_RESOURCE_INVALID\n");
@@ -777,7 +778,6 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
             Tau_cupti_gpu_enter_event_from_cpu("CUDA Context",
                 get_vthread_for_cupti_context(handle, false));
                 */
-            get_vthread_for_cupti_context(handle, false);
             break;
             }
         case CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING: {
@@ -798,8 +798,6 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
             Tau_cupti_gpu_enter_event_from_cpu("CUDA Stream",
                 get_vthread_for_cupti_context(handle, true));
                 */
-            // make sure we have a null stream thread for this context
-            get_vthread_for_cupti_context(handle, false);
             // then make sure we have a thread for this context+stream
             get_vthread_for_cupti_context(handle, true);
             break;
