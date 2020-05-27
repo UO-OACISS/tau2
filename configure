@@ -7923,7 +7923,11 @@ EOF
   if [ "x$mpiinc" != "x" ]
   then
       # echo "mpiinc is specified"
-      mpi_include=-I$mpiinc
+      if [[ $mpiinc == \-I* ]] ; then
+        mpi_include=$mpiinc
+      else
+        mpi_include=-I$mpiinc
+      fi
   fi
 
   mpi_include="$mpi_include $mpiincargs"
