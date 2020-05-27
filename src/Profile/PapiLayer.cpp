@@ -79,7 +79,7 @@ extern "C" {
 
 bool PapiLayer::papiInitialized = false;
 double PapiLayer::scalingFactor = 0.0;
-vector<ThreadValue *> PapiLayer::ThreadList;
+PapiLayer::PapiThreadList PapiLayer::ThreadList;
 int PapiLayer::numCounters = 0;
 int PapiLayer::counterList[MAX_PAPI_COUNTERS];
 
@@ -223,7 +223,7 @@ if(  tid >= TAU_MAX_THREADS) {
     int comp = PAPI_COMPONENT_INDEX (PapiLayer::counterList[i]);
     rc = PAPI_add_event(localThreadValue->EventSet[comp], PapiLayer::counterList[i]);
     if (rc != PAPI_OK) {
-      fprintf(stderr, "pid=%d, TAU: Error adding PAPI events: %s\n", RtsLayer::getPid(), PAPI_strerror(rc));
+      fprintf(stderr, "pid=%d, TAU (tau_child): Error adding PAPI events: %s\n", RtsLayer::getPid(), PAPI_strerror(rc));
       return;
     }
 
@@ -238,7 +238,7 @@ if(  tid >= TAU_MAX_THREADS) {
   }
 
   if (rc != PAPI_OK) {
-    fprintf(stderr, "pid=%d: TAU: Error calling PAPI_start: %s, tid = %d\n", RtsLayer::getPid(), PAPI_strerror(rc), tid);
+    fprintf(stderr, "pid=%d: TAU (tau_child2): Error calling PAPI_start: %s, tid = %d\n", RtsLayer::getPid(), PAPI_strerror(rc), tid);
     return;
   }
 
@@ -384,7 +384,7 @@ int PapiLayer::initializeThread(int tid)
         if (localThreadValue->NumEvents[i] > 0) { // if there were active counters for this component
           rc = PAPI_start(localThreadValue->EventSet[i]);
           if (rc != PAPI_OK) {
-            fprintf (stderr, "pid=%d: TAU: Error calling PAPI_start: %s, tid = %d\n", RtsLayer::getPid(), PAPI_strerror(rc), tid);
+            fprintf (stderr, "pid=%d: TAU(initializeThread): Error calling PAPI_start: %s, tid = %d\n", RtsLayer::getPid(), PAPI_strerror(rc), tid);
             RtsLayer::UnLockDB();
             return -1;
           }
@@ -493,8 +493,8 @@ int PapiLayer::reinitializePAPI() {
     RtsLayer::LockDB();
     if (papiInitialized) {
       TAU_VERBOSE("Reinitializing papi...");
-      for(int i=0; i<TAU_MAX_THREADS; i++){
-	ThreadValue* localThreadValue=getThreadValue(i);
+      for(int i=0; i<ThreadList.size(); i++){
+	    ThreadValue* localThreadValue=getThreadValue(i);
         if (localThreadValue != NULL) {
           delete localThreadValue->CounterValues;
           delete localThreadValue;
@@ -555,9 +555,9 @@ int PapiLayer::initializePAPI() {
 #endif /* TAU_MPI */
 #endif /* TAU_AT_FORK */
 
-  for (int i=0; i<TAU_MAX_THREADS; i++) {
-    setThreadValue(i,NULL);
-  }
+//  for (int i=0; i<TAU_MAX_THREADS; i++) {
+//    setThreadValue(i,NULL);
+//  }
 
   // Initialize PAPI
   if (Tau_initialize_papi_library() != PAPI_VER_CURRENT) {

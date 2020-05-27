@@ -66,10 +66,21 @@ private:
   static bool papiInitialized;
   static double scalingFactor;
   //static ThreadValue *ThreadList[TAU_MAX_THREADS];
-  static vector<ThreadValue*> ThreadList;
+  struct PapiThreadList : vector<ThreadValue*>{
+     PapiThreadList(){
+          printf("Creating PapiThreadList\n");
+     }
+    virtual ~PapiThreadList(){
+        printf("Destroying PapiThreadList at %p, with size %ld\n", this, this->size());
+        Tau_destructor_trigger();
+    }
+  };
+  
+   static PapiThreadList ThreadList;
+  
   static inline void checkVector(int tid){
 	while(ThreadList.size()<=tid){
-		ThreadList.push_back(new ThreadValue());
+		ThreadList.push_back(NULL);
 	}
 }
 };
