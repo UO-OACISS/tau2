@@ -79,9 +79,15 @@ extern "C" {
 
 bool PapiLayer::papiInitialized = false;
 double PapiLayer::scalingFactor = 0.0;
-PapiLayer::PapiThreadList PapiLayer::ThreadList;
 int PapiLayer::numCounters = 0;
 int PapiLayer::counterList[MAX_PAPI_COUNTERS];
+
+
+PapiLayer::PapiThreadList & PapiLayer::ThePapiThreadList() {
+    static PapiLayer::PapiThreadList threadList;
+    return threadList;
+}
+
 
 int tauSampEvent = 0;
 
@@ -493,7 +499,7 @@ int PapiLayer::reinitializePAPI() {
     RtsLayer::LockDB();
     if (papiInitialized) {
       TAU_VERBOSE("Reinitializing papi...");
-      for(int i=0; i<ThreadList.size(); i++){
+      for(int i=0; i<ThePapiThreadList().size(); i++){
 	    ThreadValue* localThreadValue=getThreadValue(i);
         if (localThreadValue != NULL) {
           delete localThreadValue->CounterValues;

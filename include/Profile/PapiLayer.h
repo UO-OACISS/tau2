@@ -47,12 +47,12 @@ public:
   static int counterList[TAU_MAX_COUNTERS];
   inline static void setThreadValue(int tid, ThreadValue* tv){
 	    checkVector(tid);
-        ThreadList[tid]=tv;
+        ThePapiThreadList()[tid]=tv;
   }
 
   inline static ThreadValue* getThreadValue(int tid){
 		checkVector(tid);
-        return ThreadList[tid];
+        return ThePapiThreadList()[tid];
   }   
 
 private:
@@ -68,19 +68,19 @@ private:
   //static ThreadValue *ThreadList[TAU_MAX_THREADS];
   struct PapiThreadList : vector<ThreadValue*>{
      PapiThreadList(){
-          printf("Creating PapiThreadList\n");
+        //printf("Creating PapiThreadList at %p\n", this);
      }
     virtual ~PapiThreadList(){
-        printf("Destroying PapiThreadList at %p, with size %ld\n", this, this->size());
+        //printf("Destroying PapiThreadList at %p, with size %ld\n", this, this->size());
         Tau_destructor_trigger();
     }
   };
   
-   static PapiThreadList ThreadList;
+  static PapiThreadList & ThePapiThreadList();
   
   static inline void checkVector(int tid){
-	while(ThreadList.size()<=tid){
-		ThreadList.push_back(NULL);
+	while(ThePapiThreadList().size()<=tid){
+		ThePapiThreadList().push_back(NULL);
 	}
 }
 };
