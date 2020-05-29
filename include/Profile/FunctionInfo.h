@@ -169,7 +169,9 @@ vector<FunctionMetrics*> MetricList;
 
 inline void checkVector(int tid){
 	while(MetricList.size()<=tid){
+        RtsLayer::LockDB();
 		MetricList.push_back(new FunctionMetrics());
+        RtsLayer::UnLockDB();
         /*if(setPathHistograms){//TODO: DYNAPROF
             int topThread=MetricList.size()-1;
             MetricList[topThread]->pathHistogram=new TauPathHashTable<TauPathAccumulator>(topThread);

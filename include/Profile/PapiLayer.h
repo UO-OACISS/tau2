@@ -80,7 +80,9 @@ private:
   
   static inline void checkVector(int tid){
 	while(ThePapiThreadList().size()<=tid){
+        RtsLayer::LockDB();
 		ThePapiThreadList().push_back(NULL);
+        RtsLayer::UnLockDB();
 	}
 }
 };
