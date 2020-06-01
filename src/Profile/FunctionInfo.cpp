@@ -243,10 +243,10 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
       !strstr(ProfileGroupName, "TAU_SAMPLE_CONTEXT") &&
       //!strstr(ProfileGroupName, "TAU_OMP_STATE") &&
       !strstr(ProfileGroupName, "TAU_UNWIND"))
- /*{//TODO: DYNAPROF. We need to flag this to do at initial thread initializations since we don't have all our threads at startup in a dynamic implementation
+ {//TODO: DYNAPROF. We need to flag this to do at initial thread initializations since we don't have all our threads at startup in a dynamic implementation
       setPathHistograms=true;
-  }*/ 
-    {
+  }
+    /*{
     for (int i = 0; i < TAU_MAX_THREADS; i++) {
       pathHistogram[i] = new TauPathHashTable<TauPathAccumulator>(i);
     }
@@ -254,7 +254,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
     for (int i = 0; i < TAU_MAX_THREADS; i++) {
       pathHistogram[i] = NULL;
     }
-  }
+  }*/
 
   // Initialization of CallSite discovery structures.
   isCallSite = false;
@@ -405,7 +405,7 @@ FunctionInfo::~FunctionInfo()
 #ifndef TAU_WINDOWS
 #ifndef _AIX
   for (int i = 0; i < TAU_MAX_THREADS; i++) {
-    delete pathHistogram[i];// GetPathHistogram(i);//TODO: DYNAPROF
+    delete GetPathHistogram(i);//pathHistogram[i];// TODO: DYNAPROF
   }
 #endif /* _AIX */
 #endif /* TAU_WINDOWS */
@@ -642,7 +642,7 @@ void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[
 {
   // Add to the mmap-ed histogram. We start with a temporary conversion. This
   //   becomes unnecessary once we stop using the vector.
-  TauPathAccumulator * accumulator = pathHistogram[tid]->get(pcStack);//GetPathHistogram(tid)->get(pcStack);//TODO:DYNAPROF
+  TauPathAccumulator * accumulator = GetPathHistogram(tid)->get(pcStack);//pathHistogram[tid]->get(pcStack);//TODO:DYNAPROF
   if (accumulator == NULL) {
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
@@ -656,7 +656,7 @@ void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[
     accumulator = (TauPathAccumulator*)Tau_MemMgr_malloc(tid, sizeof(TauPathAccumulator));
     new (accumulator) TauPathAccumulator(1, interval);
 
-    bool success = pathHistogram[tid]->insert(pcStack, *accumulator);//GetPathHistogram(tid)->insert(pcStack, *accumulator);//TODO: DYNAPROF
+    bool success = GetPathHistogram(tid)->insert(pcStack, *accumulator);//pathHistogram[tid]->insert(pcStack, *accumulator);//TODO: DYNAPROF
     if (!success) {
       fprintf(stderr, "addPcSample: Failed to insert sample.\n");
     }
