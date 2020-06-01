@@ -851,11 +851,15 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
     }
     if (function_is_launch(id))
     { // ENTRY to a launch function
-        stringstream ss;
-        char * demangled = demangle_name(cbInfo->symbolName);
-        ss << cbInfo->functionName << ": " << demangled;
-        free(demangled);
-        Tau_gpu_enter_event(ss.str().c_str());
+        if (cbInfo->symbolName != NULL) {
+            stringstream ss;
+            char * demangled = demangle_name(cbInfo->symbolName);
+            ss << cbInfo->functionName << ": " << demangled;
+            free(demangled);
+            Tau_gpu_enter_event(ss.str().c_str());
+        } else {
+            Tau_gpu_enter_event(cbInfo->functionName);
+        }
         //static bool do_this_once = false;
 	    //if (!do_this_once) {
 	        //cupti_mtx.lock();
@@ -901,11 +905,15 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
     TAU_DEBUG_PRINT("[at call (exit), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
     if (function_is_launch(id))
     {
-        stringstream ss;
-        char * demangled = demangle_name(cbInfo->symbolName);
-        ss << cbInfo->functionName << ": " << demangled;
-        free(demangled);
-        Tau_gpu_exit_event(ss.str().c_str());
+        if (cbInfo->symbolName != NULL) {
+            stringstream ss;
+            char * demangled = demangle_name(cbInfo->symbolName);
+            ss << cbInfo->functionName << ": " << demangled;
+            free(demangled);
+            Tau_gpu_exit_event(ss.str().c_str());
+        } else {
+            Tau_gpu_exit_event(cbInfo->functionName);
+        }
     } else {
         Tau_gpu_exit_event(cbInfo->functionName);
     }
