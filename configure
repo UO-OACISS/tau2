@@ -1134,6 +1134,9 @@ ompt_header=omp-tools.h
 omptlib=
 omptlibrary=-lomp
 omptenabled=no
+ompt_use_tr4_version=no
+ompt_use_tr6_version=no
+ompt_compiler_support=no
 download_ompt=no
 download_ompt_5_0=no
 download_ompt_tr6=no
@@ -1141,6 +1144,7 @@ download_ompt_tr4=no
 ompt_version_selected=no
 ompt_compiler_support=no
 install_ompt=no
+ompt_use_tr4_version=no
 ompt_use_tr6_version=no
 ompt_use_tr7_version=no
 ompt_use_v5_version=no
@@ -7923,7 +7927,11 @@ EOF
   if [ "x$mpiinc" != "x" ]
   then
       # echo "mpiinc is specified"
-      mpi_include=-I$mpiinc
+      if [[ $mpiinc == \-I* ]] ; then
+        mpi_include=$mpiinc
+      else
+        mpi_include=-I$mpiinc
+      fi
   fi
 
   mpi_include="$mpi_include $mpiincargs"

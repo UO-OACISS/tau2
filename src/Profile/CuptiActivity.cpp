@@ -920,12 +920,16 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
         fprintf(stderr, "TAU: WARNING! cudaDeviceReset was called. CUPTI counters will not be measured from now on.\n");
     }
     if (function_is_launch(id))
-    {
-        stringstream ss;
-        char * demangled = demangle_name(cbInfo->symbolName);
-        ss << cbInfo->functionName << ": " << demangled;
-        free(demangled);
-        Tau_gpu_enter_event(ss.str().c_str());
+    { // ENTRY to a launch function
+        if (cbInfo->symbolName != NULL) {
+            stringstream ss;
+            char * demangled = demangle_name(cbInfo->symbolName);
+            ss << cbInfo->functionName << ": " << demangled;
+            free(demangled);
+            Tau_gpu_enter_event(ss.str().c_str());
+        } else {
+            Tau_gpu_enter_event(cbInfo->functionName);
+        }
 
 	    Tau_CuptiLayer_enable_eventgroup();
 	    TAU_DEBUG_PRINT("[at call (enter), %d] name: %s.\n",
@@ -963,11 +967,15 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
     TAU_DEBUG_PRINT("[at call (exit), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
     if (function_is_launch(id))
     {
-        stringstream ss;
-        char * demangled = demangle_name(cbInfo->symbolName);
-        ss << cbInfo->functionName << ": " << demangled;
-        free(demangled);
-        Tau_gpu_exit_event(ss.str().c_str());
+        if (cbInfo->symbolName != NULL) {
+            stringstream ss;
+            char * demangled = demangle_name(cbInfo->symbolName);
+            ss << cbInfo->functionName << ": " << demangled;
+            free(demangled);
+            Tau_gpu_exit_event(ss.str().c_str());
+        } else {
+            Tau_gpu_exit_event(cbInfo->functionName);
+        }
     } else {
         Tau_gpu_exit_event(cbInfo->functionName);
     }
