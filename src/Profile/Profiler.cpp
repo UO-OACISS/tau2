@@ -44,6 +44,7 @@
 #include <limits.h>
 
 #include <string>
+#include <vector>
 
 #ifdef TAU_VAMPIRTRACE
 #include <Profile/TauVampirTrace.h>
@@ -142,17 +143,33 @@ extern void TauFlushRocmEventsIfNecessary(int thread_id);
 #endif /* TAU_ENABLE_ROCM */
 
 x_uint64 Tau_get_firstTimeStamp();
-
+struct ProfilerData{
+    int profileWriteCount;
+    #ifdef TAU_TRACK_IDLE_THREADS
+        double TheLastTimeStamp[TAU_MAX_COUNTERS];
+    #endif /* TAU_TRACK_IDLE_THREADS */
+};
+static vector<ProfilerData*> ProfilerThreadList;
+inline void checkVector(int tid){
+	while(ProfilerThreadList.size()<=tid){
+        RtsLayer::LockDB();
+		ProfilerThreadList.push_back(new ProfilerData());
+        ProfilerThreadList.back()->profileWriteCount=0;
+        RtsLayer::UnLockDB();
+	}
+}
 //////////////////////////////////////////////////////////////////////
 // For OpenMP
 //////////////////////////////////////////////////////////////////////
 #ifdef TAU_TRACK_IDLE_THREADS
-double TheLastTimeStamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS]; //TODO: DYNATHREAD
+//double TheLastTimeStamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS]; //TODO: DYNATHREAD
 inline void setLastTimeStamp(int tid, int counter, double value){
-    TheLastTimeStamp[tid][counter]=value;
+    checkVector(tid);
+    ProfilerThreadList[tid]->TheLastTimeStamp[counter]=value;
 }
 inline double getLastTimeStamp(int tid, int counter){
-    return TheLastTimeStamp[tid][counter];
+    checkVector(tid);
+    return ProfilerThreadList[tid]->TheLastTimeStamp[counter];
 }
 #endif /* TAU_TRACK_IDLE_THREADS */
 
@@ -1524,15 +1541,18 @@ static int writeProfile(FILE *fp, char *metricName, int tid, int metric, const c
   return 0;
 }
 
-static int profileWriteCount[TAU_MAX_THREADS];
+//static int profileWriteCount[TAU_MAX_THREADS];
 inline void setProfileWriteCount(int tid, int val){//TODO: DYNATHREAD
-    profileWriteCount[tid]=val;
+    checkVector(tid);
+    ProfilerThreadList[tid]->profileWriteCount=val;
 }
 inline void incProfileWriteCount(int tid){
-    profileWriteCount[tid]++;
+    checkVector(tid);
+    ProfilerThreadList[tid]->profileWriteCount++;
 }
 inline int getProfileWriteCount(int tid){//TODO: DYNATHREAD
-    return profileWriteCount[tid];
+    checkVector(tid);
+    return ProfilerThreadList[tid]->profileWriteCount;
 }
 static int profileWriteWarningPrinted = 0;
 
