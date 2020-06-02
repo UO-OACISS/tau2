@@ -559,24 +559,29 @@ void Tau_cupti_enable_domains()
     /* END source line info */
     cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
     CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONTEXT)");
-    if(!TauEnv_get_cuda_track_sass()) {
+    /* Can't measure memory activity when CUPTI metrics/events are enabled */
+    if(!TauEnv_get_cuda_track_sass() && Tau_Global_numGPUCounters == 0) {
         cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
         CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY)");
     }
     cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY2);
     CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY2)");
     /*  SASS incompatible with KIND_CONCURRENT_KERNEL  */
-    if(!TauEnv_get_cuda_track_sass()) {
+    /* Can't measure memory activity when CUPTI metrics/events are enabled */
+    if(!TauEnv_get_cuda_track_sass() && Tau_Global_numGPUCounters == 0) {
         cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
         CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL)");
     }
-    else {
-        cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
-        CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
-    }
+    cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
+    CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
+    /* Can't measure environment activity when CUPTI metrics/events are enabled */
     if(TauEnv_get_cuda_track_env()) {
-        cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_ENVIRONMENT);
-        CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_ENVIRONMENT)");
+        if (Tau_Global_numGPUCounters == 0) {
+            cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_ENVIRONMENT);
+            CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_ENVIRONMENT)");
+        } else {
+            TAU_VERBOSE("TAU WARNING! CUPTI counters and Environment are not compatible.\n");
+        }
     }
     if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
     {
@@ -656,14 +661,15 @@ void Tau_cupti_onload()
 
     cuErr = cuInit(0);
     TAU_VERBOSE("TAU: Enabling CUPTI callbacks.\n");
-		CUDA_CHECK_ERROR(cuErr, "cuInit");
-		fprintf(stderr, "cuinit happened\n");
+	CUDA_CHECK_ERROR(cuErr, "cuInit");
+	fprintf(stderr, "cuinit happened\n");
 
-		//DO NOT CHANGE THIS
-		Tau_init_initializeTAU();
-		Tau_cupti_init();
+	//DO NOT CHANGE THIS
+    Tau_register_post_init_callback(&Tau_cupti_init);
+	Tau_init_initializeTAU();
+	//Tau_cupti_init();
 
-		TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_onload\n");
+	TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_onload\n");
 
     //disable_callbacks =0;
 

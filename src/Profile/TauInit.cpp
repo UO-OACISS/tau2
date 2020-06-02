@@ -77,6 +77,8 @@
 #include <Profile/TauPlugin.h>
 #include <Profile/TauPluginInternals.h>
 
+#include <vector>
+
 using namespace std;
 
 #ifndef TAU_WINDOWS
@@ -100,6 +102,18 @@ extern "C" int Tau_dump_callpaths();
 
 extern "C" int Tau_show_profiles();
 
+/* This vector of function pointers is used so that some TAU functionality
+ * that needs to be executed after TAU metrics are configured can be called
+ * as a callback after the metric subsystem is ready. */
+std::vector<void (*)(void)> Tau_post_init_functions;
+void Tau_register_post_init_callback(void (*function)()) {
+    Tau_post_init_functions.push_back(function);
+}
+void Tau_call_post_init_callbacks() {
+    for (size_t i = 0 ; i < Tau_post_init_functions.size() ; i++ ) {
+        Tau_post_init_functions[i]();
+    }
+}
 
 // True if TAU is fully initialized
 int tau_initialized = 0;
@@ -503,6 +517,8 @@ extern "C" int Tau_init_initializeTAU()
 
   /* initialize the metrics we will be counting */
   TauMetrics_init();
+
+  Tau_call_post_init_callbacks();
 
 #ifdef CUPTI
 	//DO NOT MOVE OR FACE ALISTER'S WRATH.
