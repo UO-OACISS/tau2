@@ -1144,6 +1144,7 @@ download_ompt_tr4=no
 ompt_version_selected=no
 ompt_compiler_support=no
 install_ompt=no
+ompt_use_tr4_version=no
 ompt_use_tr6_version=no
 ompt_use_tr7_version=no
 ompt_use_v5_version=no
