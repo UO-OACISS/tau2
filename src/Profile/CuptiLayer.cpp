@@ -4,6 +4,7 @@
 #include "TAU.h"
 #include "Profile/TauEnv.h"
 #include <dlfcn.h>
+#include <mutex>
 
 // Moved from header file
 using namespace std;
@@ -230,11 +231,22 @@ void CuptiMetric::print()
 
 void Tau_CuptiLayer_enable_eventgroup()
 {
+    static std::mutex event_group_mutex;
+    static bool enabled = false;
     if (Tau_CuptiLayer_get_num_events() > 0) {
+        // has someone enabled the counters? make the common case fast...
+        if (enabled) return;
         TAU_DEBUG_PRINT("AHJ: entering Tau_CuptiLayer_enable_eventgroup\n");
-        CUptiResult cuptiErr;
-        cuptiErr = cuptiEventGroupEnable(eventGroup);
-        CHECK_CUPTI_ERROR(cuptiErr, "cuptiEventGroupEnable");
+        // only one thread needs to enable this...
+        event_group_mutex.lock();
+        // has someone enabled the counters?
+        if (!enabled) {
+            CUptiResult cuptiErr;
+            cuptiErr = cuptiEventGroupEnable(eventGroup);
+            CHECK_CUPTI_ERROR(cuptiErr, "cuptiEventGroupEnable");
+            enabled = true;
+        }
+        event_group_mutex.unlock();
         TAU_DEBUG_PRINT("AHJ: exiting Tau_CuptiLayer_enable_eventgroup\n");
     }
 }

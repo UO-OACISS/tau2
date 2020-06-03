@@ -669,9 +669,19 @@ void Tau_cupti_onload()
 	TAU_VERBOSE("cuinit happened\n");
 
 	//DO NOT CHANGE THIS
+    /* Here's what's happening.  If TauMetrics_init() loads the CUDA
+     * library in order to initialize CUDA metrics, then we have to
+     * request that Tau_cupti_init() happen AFTER the metrics are initialized.
+     * If CUDA metrics are requested, then this Tau_cupti_onload() function
+     * will get called when the metrics are initialized, which is too soon.
+     * However, if we are not using CUDA metrics, we DO need to explicitly
+     * call the Tau_cupti_init() function after TAU is fully initialized.
+     */
     Tau_register_post_init_callback(&Tau_cupti_init);
 	Tau_init_initializeTAU();
-	//Tau_cupti_init();
+    if (Tau_Global_numGPUCounters == 0) {
+	    Tau_cupti_init();
+    }
 
 	TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_onload\n");
 
@@ -949,8 +959,10 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
 	    CUdevice device;
 	    cuCtxGetDevice(&device);
 	    //Tau_cuda_Event_Synchonize();
-	    int taskId = get_taskid_from_context_id(cbInfo->contextUid, 0);
-	    record_gpu_counters_at_launch(device, taskId);
+        if (Tau_Global_numGPUCounters > 0) {
+	        int taskId = get_taskid_from_context_id(cbInfo->contextUid, 0);
+	        record_gpu_counters_at_launch(device, taskId);
+        }
     } else {
         Tau_gpu_enter_event(cbInfo->functionName);
     }
@@ -1059,14 +1071,14 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_RESOURCE event\n");
     } else if (domain == CUPTI_CB_DOMAIN_SYNCHRONIZE) {
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_SYNCHRONIZE event\n");
-        const CUpti_SynchronizeData *cbInfo = (CUpti_SynchronizeData *) params;
-        uint32_t deviceId;
-        uint32_t contextId;
-        cuptiGetDeviceId(cbInfo->context, &deviceId);
-        cuptiGetContextId(cbInfo->context, &contextId);
-        int taskId = get_taskid_from_context_id(contextId, 0);
-        record_gpu_counters_at_sync(deviceId, taskId);
         if (Tau_Global_numGPUCounters > 0) {
+            const CUpti_SynchronizeData *cbInfo = (CUpti_SynchronizeData *) params;
+            uint32_t deviceId;
+            uint32_t contextId;
+            cuptiGetDeviceId(cbInfo->context, &deviceId);
+            cuptiGetContextId(cbInfo->context, &contextId);
+            int taskId = get_taskid_from_context_id(contextId, 0);
+            record_gpu_counters_at_sync(deviceId, taskId);
             cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
         }
     } else if (domain == CUPTI_CB_DOMAIN_NVTX) {
