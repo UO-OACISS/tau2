@@ -59,13 +59,20 @@ bool gpuComp(GpuEvent* a, GpuEvent* b)
 }
 
 //map of GPU to Profile id.
-map<GpuEvent*, int, bool (*)(GpuEvent*, GpuEvent*)>& TheGpuEventMap(void)
-{
-  bool (*gpuCompFunc)(GpuEvent*, GpuEvent*) = gpuComp;
-  static map<GpuEvent*, int, bool (*)(GpuEvent*, GpuEvent*)> GpuEventMap(gpuCompFunc);
+class GpuEventMap {
+  public:
+    GpuEventMap() : gpuCompFunc(gpuComp), theMap(gpuCompFunc) {}
+    ~GpuEventMap() {
+        Tau_destructor_trigger();
+    }
+    map<GpuEvent*, int, bool (*)(GpuEvent*, GpuEvent*)>& get(void) {
+        return theMap;
+    }
+    bool (*gpuCompFunc)(GpuEvent*, GpuEvent*);
+    map<GpuEvent*, int, bool (*)(GpuEvent*, GpuEvent*)> theMap;
+};
 
-  return GpuEventMap;
-}
+static GpuEventMap TheGpuEventMap;
 
 //The number of Memcpys called with unknown transfer size which should be given
 //on the GPU thread.
@@ -352,13 +359,13 @@ void break_gpu_event(const char *name, int gpuTask, double stop_time, FunctionIn
 int get_task(GpuEvent *new_task)
 {
   int task = 0;
-  map<GpuEvent*, int>::iterator it = TheGpuEventMap().find(new_task);
-  if (it == TheGpuEventMap().end()) {
+  map<GpuEvent*, int>::iterator it = TheGpuEventMap.get().find(new_task);
+  if (it == TheGpuEventMap.get().end()) {
     GpuEvent *create_task = new_task->getCopy();
     task = Tau_RtsLayer_createThread();
     //new task, record metadata.
     create_task->recordMetadata(task);
-    TheGpuEventMap().insert(pair<GpuEvent *, int>(create_task, task));
+    TheGpuEventMap.get().insert(pair<GpuEvent *, int>(create_task, task));
     number_of_tasks++;
     Tau_set_thread_fake(task);
     //TAU_CREATE_TASK(task);
@@ -771,7 +778,7 @@ void Tau_gpu_exit(void)
 #if not defined(PTHREADS)
   TAU_VERBOSE("stopping level %d tasks.\n", number_of_tasks);
   map<GpuEvent*, int>::iterator it;
-  for (it = TheGpuEventMap().begin(); it != TheGpuEventMap().end(); it++) {
+  for (it = TheGpuEventMap.get().begin(); it != TheGpuEventMap.get().end(); it++) {
     Tau_stop_top_level_timer_if_necessary_task(it->second);
   }
 #else

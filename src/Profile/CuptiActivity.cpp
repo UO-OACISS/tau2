@@ -15,8 +15,8 @@ using namespace std;
 #include <cxxabi.h>
 
 //#define TAU_DEBUG_CUPTI
-#define TAU_DEBUG_CUPTI_COUNTERS
-#define TAU_CUPTI_DEBUG_COUNTERS
+//#define TAU_DEBUG_CUPTI_COUNTERS
+//#define TAU_CUPTI_DEBUG_COUNTERS
 
 #ifdef TAU_DEBUG_CUPTI
 #define TAU_DEBUG_PRINT(...) do{ fprintf( stderr, __VA_ARGS__ ); } while( false )
@@ -575,9 +575,10 @@ void Tau_cupti_enable_domains()
     if(!TauEnv_get_cuda_track_sass() && Tau_Global_numGPUCounters == 0) {
         cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
         CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL)");
+    } else {
+        cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
+        CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
     }
-    cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
-    CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
     /* Can't measure environment activity when CUPTI metrics/events are enabled */
     if(TauEnv_get_cuda_track_env()) {
         if (Tau_Global_numGPUCounters == 0) {
