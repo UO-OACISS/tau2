@@ -43,8 +43,10 @@ extern "C" {
 #define dmesg(level, fmt, ...)
 
 bool LikwidLayer::likwidInitialized = false;
-ThreadValue * LikwidLayer::ThreadList[TAU_MAX_THREADS] = { 0 };
-
+vector<ThreadValue *> & LikwidLayer::TheThreadList() {
+    static vector<ThreadValue *> threadList;
+    return threadList;
+}
 //string LikwidLayer::eventString;//[] = "L2_LINES_IN_ALL:PMC0,L2_TRANS_L2_WB:PMC1";
 int* LikwidLayer::cpus;
 int num_cpus = 0;
