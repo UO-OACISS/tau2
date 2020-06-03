@@ -15,8 +15,8 @@ using namespace std;
 #include <cxxabi.h>
 
 //#define TAU_DEBUG_CUPTI
-//#define TAU_DEBUG_CUPTI_COUNTERS
-//#define TAU_CUPTI_DEBUG_COUNTERS
+#define TAU_DEBUG_CUPTI_COUNTERS
+#define TAU_CUPTI_DEBUG_COUNTERS
 
 #ifdef TAU_DEBUG_CUPTI
 #define TAU_DEBUG_PRINT(...) do{ fprintf( stderr, __VA_ARGS__ ); } while( false )
@@ -677,9 +677,12 @@ void Tau_cupti_onload()
      * However, if we are not using CUDA metrics, we DO need to explicitly
      * call the Tau_cupti_init() function after TAU is fully initialized.
      */
-    Tau_register_post_init_callback(&Tau_cupti_init);
-	Tau_init_initializeTAU();
-    if (Tau_Global_numGPUCounters == 0) {
+    if (Tau_init_initializingTAU()) {
+        // If we are *already* initializing, ask TAU to run this function afterwards
+        Tau_register_post_init_callback(&Tau_cupti_init);
+    } else {
+        // If we are not initializing, do it, then initialize Cupti
+	    Tau_init_initializeTAU();
 	    Tau_cupti_init();
     }
 
@@ -998,6 +1001,10 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
             Tau_gpu_exit_event(ss.str().c_str());
         } else {
             Tau_gpu_exit_event(cbInfo->functionName);
+        }
+        // Do a synchronization, so that we can get accurate counters.
+        if (Tau_Global_numGPUCounters > 0) {
+            cudaDeviceSynchronize();
         }
     } else {
         Tau_gpu_exit_event(cbInfo->functionName);
