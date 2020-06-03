@@ -164,7 +164,7 @@ static void check_max_metrics() {
 static void metricv_add(const char *name) {
 	int cupti_metric = 0;
 
-	fprintf(stderr, "AHJ: entering metricv_add, adding metric %s\n", name);
+	TAU_VERBOSE("entering metricv_add, adding metric %s\n", name);
 
 	// Don't add metrics twice
 	for (int i = 0; i < nmetrics; ++i) {
@@ -236,7 +236,7 @@ static void metricv_add(const char *name) {
 			}
 			// some events don't have proper names, so just use event id instead
 			if (std::string(buff).compare("event_name") == 0) {
-				sprintf(buff, "CUpti_EventID:%d", event);
+				sprintf(buff, "CUpti_EventID.%d", event);
 			}
 
 			std::string event_name = "CUDA." + device_name + '.' + std::string(buff);
@@ -278,7 +278,7 @@ static void metricv_add(const char *name) {
 			cupti_metric ? TAU_METRIC_CUPTI_METRIC : TAU_METRIC_NOT_CUPTI;
     if (cumetric[nmetrics] == TAU_METRIC_CUPTI_METRIC) Tau_Global_numGPUCounters++;
 	nmetrics++;
-	fprintf(stderr, "AHJ: exiting metricv_add, adding metric %s\n", name);
+	TAU_VERBOSE("exiting metricv_add, adding metric %s\n", name);
 }
 
 /*********************************************************************
@@ -898,7 +898,7 @@ int TauMetrics_init() {
     // measurements until after metrics are ready.
     RtsLayer::LockDB();
 
-	fprintf(stderr, "AHJ: entering TauMetrics_init\n");
+	TAU_VERBOSE("entering TauMetrics_init\n");
 
 	int i;
 
@@ -953,7 +953,7 @@ int TauMetrics_init() {
 		}
 	}
 
-	fprintf(stderr, "AHJ: exiting TauMetrics_init\n");
+	TAU_VERBOSE("exiting TauMetrics_init\n");
     RtsLayer::UnLockDB();
 	return 0;
 }

@@ -120,7 +120,7 @@ CuptiCounterEvent::CuptiCounterEvent(int device_n, int event_n)
         exit(EXIT_FAILURE);
     }
     if (string(buff).compare("event_name") == 0) {
-        sprintf(buff, "CUpti_EventID:%d", event);
+        sprintf(buff, "CUpti_EventID.%d", event);
     }
     event_name = string(buff);
 
@@ -260,7 +260,7 @@ void Tau_CuptiLayer_setup_eventgroup()
 
   counter_vec_t & added_counters = Tau_CuptiLayer_Added_counters();
 
-	fprintf(stderr, "AHJ %d\n", Tau_CuptiLayer_Added_counters().size());
+	//fprintf(stderr, "AHJ %d\n", Tau_CuptiLayer_Added_counters().size());
 
   for (counter_vec_t::iterator it = added_counters.begin(); it != added_counters.end(); it++) {
       CuptiCounterEvent & evt = **it;
@@ -357,10 +357,8 @@ void Tau_CuptiLayer_init()
 		{
 			fprintf (stderr, "[%s:%d] Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, cuErr, "cudaGetDevice");
 		}
-		fprintf(stderr, "device %d\n", device);
 		cudaErr = cuDevicePrimaryCtxRetain(&cuCtx, device);
 		CHECK_CU_ERROR(cudaErr, "cuCtxGetDevice");
-		fprintf(stderr, "got context\n");
 
     counter_vec_t & added_counters = Tau_CuptiLayer_Added_counters();
 

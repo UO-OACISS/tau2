@@ -15,6 +15,8 @@ using namespace std;
 #include <cxxabi.h>
 
 //#define TAU_DEBUG_CUPTI
+//#define TAU_DEBUG_CUPTI_COUNTERS
+//#define TAU_CUPTI_DEBUG_COUNTERS
 
 #ifdef TAU_DEBUG_CUPTI
 #define TAU_DEBUG_PRINT(...) do{ fprintf( stderr, __VA_ARGS__ ); } while( false )
@@ -66,6 +68,8 @@ std::map<uint64_t, tau_cupti_context_t*> newContextMap;
 std::map<uint32_t, uint32_t> correlationContextMap;
 std::map<uint32_t, uint32_t> correlationStreamMap;
 std::map<uint32_t, uint32_t> correlationThreadMap;
+// set of cuda virtual thread ids
+std::set<int> cudaThreadIds;
 // destryed streams that we can recycle
 std::set<uint32_t> streamsToRecycle;
 std::set<uint32_t> correlationWritten;
@@ -662,7 +666,7 @@ void Tau_cupti_onload()
     cuErr = cuInit(0);
     TAU_VERBOSE("TAU: Enabling CUPTI callbacks.\n");
 	CUDA_CHECK_ERROR(cuErr, "cuInit");
-	fprintf(stderr, "cuinit happened\n");
+	TAU_VERBOSE("cuinit happened\n");
 
 	//DO NOT CHANGE THIS
     Tau_register_post_init_callback(&Tau_cupti_init);
@@ -705,6 +709,7 @@ int insert_context_into_map(uint32_t deviceId, uint32_t contextId, uint32_t stre
         tmp->streamId = streamId;
         // this call will lock the DB, so unlock before it
         tid = get_taskid_from_gpu_event(deviceId, streamId, contextId, false);
+        cudaThreadIds.insert(tid);
         tmp->v_threadId = tid;
         newContextMap[key] = tmp;
         cupti_mtx.unlock();
@@ -895,7 +900,7 @@ void Tau_handle_driver_api_memcpy (void *ud, CUpti_CallbackDomain domain,
             //Disable counter tracking during the sync.
             // KAH removed this synchronization because, why is is it needed?
             //cudaDeviceSynchronize();
-            // KEVIN record_gpu_counters_at_sync();
+            //record_gpu_counters_at_sync();
             Tau_cupti_activity_flush_all();
         }
     }
@@ -988,19 +993,19 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
     if (function_is_sync(id))
     {
         TAU_DEBUG_PRINT("sync function name: %s\n", cbInfo->functionName);
-	//Tau_CuptiLayer_disable();
-	//cuCtxSynchronize();
-    // KAH removed this synchronization because, why is is it needed?
-	//cudaDeviceSynchronize();
-	//Tau_CuptiLayer_enable();
-	record_gpu_counters_at_sync();
+	    //Tau_CuptiLayer_disable();
+	    //cuCtxSynchronize();
+        // KAH removed this synchronization because, why is is it needed?
+	    //cudaDeviceSynchronize();
+	    //Tau_CuptiLayer_enable();
+	    //record_gpu_counters_at_sync();
 
 #ifdef TAU_ASYNC_ACTIVITY_API
-	//Tau_cupti_activity_flush_at_exit();
+	    //Tau_cupti_activity_flush_at_exit();
 #else
-	//Tau_cupti_process_buffer(cbInfo->context, 0, NULL, 0, 0);
+	    //Tau_cupti_process_buffer(cbInfo->context, 0, NULL, 0, 0);
 #endif
-	//Tau_CuptiLayer_enable();
+	    //Tau_CuptiLayer_enable();
     }
 }
 
@@ -1054,7 +1059,14 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_RESOURCE event\n");
     } else if (domain == CUPTI_CB_DOMAIN_SYNCHRONIZE) {
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_SYNCHRONIZE event\n");
-        /* Todo: Count synchronization events? */
+        const CUpti_SynchronizeData *cbInfo = (CUpti_SynchronizeData *) params;
+        uint32_t deviceId;
+        uint32_t contextId;
+        cuptiGetDeviceId(cbInfo->context, &deviceId);
+        cuptiGetContextId(cbInfo->context, &contextId);
+        int taskId = get_taskid_from_context_id(contextId, 0);
+        record_gpu_counters_at_sync(deviceId, taskId);
+        cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
     } else if (domain == CUPTI_CB_DOMAIN_NVTX) {
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_NVTX event\n");
     } else if (domain == CUPTI_CB_DOMAIN_SIZE) {
@@ -1093,8 +1105,8 @@ extern void Tau_cupti_buffer_processed(void);
         int thisloop = counter++;
         //Since we do not control the synchronization points this is only place where
         //we can record the gpu counters.
-        int count_iter = TauEnv_get_cudaTotalThreads();
-        record_gpu_counters_at_sync();
+        size_t count_iter = cudaThreadIds.size();
+        //record_gpu_counters_at_sync();
 
         //TAU_PROFILE("Tau_cupti_process_buffer", "", TAU_DEFAULT);
         //printf("in sync: context=%p stream=%d.\n", context, stream);
@@ -1170,9 +1182,11 @@ extern void Tau_cupti_buffer_processed(void);
             CUDA_CHECK_ERROR(err2, "Cannot requeue buffer.\n");
 
 
-            for (int i=0; i < count_iter; i++) {
+            //for (int i=0; i < count_iter; i++) {
+            for (auto iter : cudaThreadIds) {
+                int i = iter;
 #ifdef TAU_DEBUG_CUPTI_COUNTERS
-                printf("Kernels encountered/recorded: %d/%d.\n", kernels_encountered[i], kernels_recorded[i]);
+                printf("Thread %d, Kernels encountered/recorded: %d/%d.\n", i, kernels_encountered[i], kernels_recorded[i]);
 #endif
 
                 if (kernels_recorded[i] == kernels_encountered[i])
@@ -2383,6 +2397,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 #endif
                 TauContextUserEvent* c;
                 const char *event_name = Tau_CuptiLayer_get_event_name(n);
+                printf("Event Name: %s\n", event_name);
                 if (n >= counterEvents[taskId].size()) {
                     c = (TauContextUserEvent *) Tau_return_context_userevent(event_name);
                     counterEvents[taskId].push_back(c);
