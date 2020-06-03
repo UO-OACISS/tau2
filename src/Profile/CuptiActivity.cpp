@@ -1066,7 +1066,9 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         cuptiGetContextId(cbInfo->context, &contextId);
         int taskId = get_taskid_from_context_id(contextId, 0);
         record_gpu_counters_at_sync(deviceId, taskId);
-        cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+        if (Tau_Global_numGPUCounters > 0) {
+            cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+        }
     } else if (domain == CUPTI_CB_DOMAIN_NVTX) {
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_NVTX event\n");
     } else if (domain == CUPTI_CB_DOMAIN_SIZE) {
@@ -2397,7 +2399,7 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 #endif
                 TauContextUserEvent* c;
                 const char *event_name = Tau_CuptiLayer_get_event_name(n);
-                printf("Event Name: %s\n", event_name);
+                //printf("Event Name: %s\n", event_name);
                 if (n >= counterEvents[taskId].size()) {
                     c = (TauContextUserEvent *) Tau_return_context_userevent(event_name);
                     counterEvents[taskId].push_back(c);

@@ -84,9 +84,9 @@ void Tau_CuptiLayer_finalize()
 //running total for each counter.
 uint64_t* lastDataBuffer;
 
-CuptiCounterEvent::CuptiCounterEvent(int device_n, int event_n)
+CuptiCounterEvent::CuptiCounterEvent(int device_n, int event_n, const char * name)
 {
-    //printf("creating counter event from ids: %d:%d:%d.\n", device_n, domain_n, event_n);
+    //printf("creating counter event from ids: %d:%d:%s\n", device_n, event_n, name);
     CUresult cuErr;
     CUptiResult cuptiErr;
     size_t size;
@@ -120,7 +120,9 @@ CuptiCounterEvent::CuptiCounterEvent(int device_n, int event_n)
         exit(EXIT_FAILURE);
     }
     if (string(buff).compare("event_name") == 0) {
-        sprintf(buff, "CUpti_EventID.%d", event);
+        //sprintf(buff, "%s.%d", name, event);
+        sprintf(buff, "%s", name);
+        //sprintf(buff, "CUpti_EventID.%s", name);
     }
     event_name = string(buff);
 
@@ -314,7 +316,7 @@ void Tau_CuptiLayer_setup_eventgroup()
           }
       }
       if (!in_array) {
-        printf("adding event %s\n", evt.tag.c_str());
+        //printf("adding event %s\n", evt.tag.c_str());
         cuptiErr = cuptiEventGroupAddEvent(eventGroup, evt.event);
         CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupAddEvent");
         if (cuptiErr != CUPTI_SUCCESS) {
@@ -680,7 +682,13 @@ void Tau_CuptiLayer_Initialize_Map(int off)
             CHECK_CUPTI_ERROR(err, "cuptiEventDomainEnumEvents");
 
             for (int k = 0; k < eventCount; k++) {
-                CuptiCounterEvent* ev = new CuptiCounterEvent(i, eventIDs[k]);
+                char name[1024] = {0};
+                size_t namelen = 1024;
+                err = cuptiEventGetAttribute(eventIDs[k], CUPTI_EVENT_ATTR_NAME, &namelen, name);
+                CHECK_CUPTI_ERROR(err, "cuptiEventGetAttribute");
+                sprintf(name, "%s.%d", name, eventIDs[k]);
+
+                CuptiCounterEvent* ev = new CuptiCounterEvent(i, eventIDs[k], name);
                 Tau_CuptiLayer_Counter_Map().insert(std::make_pair(ev->tag, ev));
 #ifdef TAU_DEBUG_CUPTI
                // ev->print();

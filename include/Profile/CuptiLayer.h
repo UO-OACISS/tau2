@@ -63,7 +63,7 @@ struct CuptiCounterEvent
 {
     static void printHeader();
 
-    CuptiCounterEvent(int device_n, int event_n);
+    CuptiCounterEvent(int device_n, int event_n, const char * name);
 
     CUdevice device;
 	CUpti_EventID event;

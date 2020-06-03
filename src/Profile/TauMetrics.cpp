@@ -234,9 +234,14 @@ static void metricv_add(const char *name) {
 				fprintf(stderr, "TAU_CUPTI_MAX_NAME=%d is too small for event name!\n", TAU_CUPTI_MAX_NAME);
 				exit(EXIT_FAILURE);
 			}
-			// some events don't have proper names, so just use event id instead
-			if (std::string(buff).compare("event_name") == 0) {
-				sprintf(buff, "CUpti_EventID.%d", event);
+            if (numMetricEvents == 1) {
+				sprintf(buff, "%s", name);
+            } else {
+			    // some events don't have proper names, so just use event id instead
+			    if (std::string(buff).compare("event_name") == 0) {
+				    sprintf(buff, "%s.%d", name, event);
+				    //sprintf(buff, "CUpti_EventID.%s", name);
+			    }
 			}
 
 			std::string event_name = "CUDA." + device_name + '.' + std::string(buff);
@@ -244,7 +249,7 @@ static void metricv_add(const char *name) {
             if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) {
                 // double check because it just got initialized
                 if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) {
-                    CuptiCounterEvent* ev = new CuptiCounterEvent(dev, event);
+                    CuptiCounterEvent* ev = new CuptiCounterEvent(dev, event, buff);
                     Tau_CuptiLayer_Counter_Map().insert(std::make_pair(event_name, ev));
                 }
             }
