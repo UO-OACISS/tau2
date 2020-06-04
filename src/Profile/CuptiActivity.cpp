@@ -17,6 +17,7 @@ using namespace std;
 //#define TAU_DEBUG_CUPTI
 //#define TAU_DEBUG_CUPTI_COUNTERS
 //#define TAU_CUPTI_DEBUG_COUNTERS
+#define TAU_DEBUG_ENV
 
 #ifdef TAU_DEBUG_CUPTI
 #define TAU_DEBUG_PRINT(...) do{ fprintf( stderr, __VA_ARGS__ ); } while( false )
@@ -1378,6 +1379,17 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 #endif
                                         environmentMap.find(contextId)->second.smClock.push_back(smClock);
                                         environmentMap.find(contextId)->second.memoryClock.push_back(memoryClock);
+                                        TauContextUserEvent *sm, *memory;
+                                        Tau_cupti_find_context_event(&sm, "GPU SM Frequency (MHz)", false);
+                                        Tau_cupti_find_context_event(&memory, "GPU Memory Frequency (MHz)", false);
+                                        int taskId = get_taskid_from_context_id(contextId, 0);
+                                        GpuEventAttributes *map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * 2);
+                                        map[0].userEvent = sm;
+                                        map[0].data = smClock;
+                                        map[1].userEvent = memory;
+                                        map[1].data = memoryClock;
+                                        Tau_cupti_register_gpu_atomic_event("", deviceId,
+                                        0, contextId, 0, map, 2, taskId);
                                         break;
                                     }
                                 case CUPTI_ACTIVITY_ENVIRONMENT_TEMPERATURE:
@@ -1387,6 +1399,14 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 #endif
                                         uint32_t gpuTemperature = env->data.temperature.gpuTemperature;
                                         environmentMap.find(contextId)->second.gpuTemperature.push_back(gpuTemperature);
+                                        TauContextUserEvent *temp;
+                                        Tau_cupti_find_context_event(&temp, "GPU Temperature (C)", false);
+                                        int taskId = get_taskid_from_context_id(contextId, 0);
+                                        GpuEventAttributes *map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * 1);
+                                        map[0].userEvent = temp;
+                                        map[0].data = gpuTemperature;
+                                        Tau_cupti_register_gpu_atomic_event("", deviceId,
+                                        0, contextId, 0, map, 1, taskId);
                                         break;
                                     }
                                 case CUPTI_ACTIVITY_ENVIRONMENT_POWER:
@@ -1400,6 +1420,20 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                                         environmentMap.find(contextId)->second.power.push_back(power_t);
                                         environmentMap.find(contextId)->second.powerLimit = powerLimit; // cap shouldn't change
                                         double power_utilization = ((float)power_t/powerLimit) * 100.0;
+                                        TauContextUserEvent *power, *limit, *util;
+                                        Tau_cupti_find_context_event(&power, "GPU Power (mW)", false);
+                                        Tau_cupti_find_context_event(&limit, "GPU Power Limit (mW)", false);
+                                        Tau_cupti_find_context_event(&util, "GPU Power Utilization (% mW)", false);
+                                        int taskId = get_taskid_from_context_id(contextId, 0);
+                                        GpuEventAttributes *map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * 3);
+                                        map[0].userEvent = power;
+                                        map[0].data = power_t;
+                                        map[1].userEvent = limit;
+                                        map[1].data = powerLimit;
+                                        map[2].userEvent = util;
+                                        map[2].data = power_utilization;
+                                        Tau_cupti_register_gpu_atomic_event("", deviceId,
+                                        0, contextId, 0, map, 3, taskId);
                                         break;
                                     }
                                 case CUPTI_ACTIVITY_ENVIRONMENT_COOLING:
@@ -1410,6 +1444,14 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 #endif
                                         uint32_t fanSpeed = env->data.cooling.fanSpeed;
                                         environmentMap.find(contextId)->second.fanSpeed.push_back(fanSpeed);
+                                        TauContextUserEvent *speed;
+                                        Tau_cupti_find_context_event(&speed, "GPU Fan Speed (% max)", false);
+                                        int taskId = get_taskid_from_context_id(contextId, 0);
+                                        GpuEventAttributes *map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * 1);
+                                        map[0].userEvent = speed;
+                                        map[0].data = fanSpeed;
+                                        Tau_cupti_register_gpu_atomic_event("", deviceId,
+                                        0, contextId, 0, map, 1, taskId);
                                         break;
                                     }
                                 default:
@@ -2359,11 +2401,11 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
             static TauContextUserEvent* power_t;
             static TauContextUserEvent* fan_speed;
 
-            Tau_get_context_userevent((void **) &sm_clock, "SM Frequency (MHz)");
-            Tau_get_context_userevent((void **) &memory_clock, "Memory Frequency (MHz)");
+            Tau_get_context_userevent((void **) &sm_clock, "GPU SM Frequency (MHz)");
+            Tau_get_context_userevent((void **) &memory_clock, "GPU Memory Frequency (MHz)");
             Tau_get_context_userevent((void **) &gpu_temperature, "GPU Temperature (C)");
-            Tau_get_context_userevent((void **) &power_t, "Power Utilization (% mW)");
-            Tau_get_context_userevent((void **) &fan_speed, "Fan Speed (% max)");
+            Tau_get_context_userevent((void **) &power_t, "GPU Power Utilization (% mW)");
+            Tau_get_context_userevent((void **) &fan_speed, "GPU Fan Speed (% max)");
 
             CudaEnvironment ce = environmentMap.find(contextId)->second;
             std::vector<uint32_t> v_power = ce.power;
