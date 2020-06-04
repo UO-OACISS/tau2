@@ -68,7 +68,6 @@
 
 #ifdef CUPTI
 #include <Profile/CuptiLayer.h>
-#include <cupti.h>
 #endif
 
 #define OTF2_EC(call) { \

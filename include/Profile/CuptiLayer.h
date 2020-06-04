@@ -14,11 +14,17 @@
 #include <cupti_events.h>
 #include <cupti_metrics.h>
 #include <cuda_runtime_api.h>
+#include "cupti.h"
 
 /* Specific errors from CUDA lib */
 #define CHECK_CU_ERROR(err, cufunc) \
 if (err != CUDA_SUCCESS) \
 { \
+		const char* err_name; \
+    const char* err_str; \
+		cuGetErrorName(err, &err_name); \
+		cuGetErrorString(err, &err_str); \
+		fprintf(stderr, "CUDA driver error %s: %s\n", err_name, err_str); \
 printf ("[%s:%d] Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, err, cufunc); \
 }
 
@@ -57,7 +63,7 @@ struct CuptiCounterEvent
 {
     static void printHeader();
 
-    CuptiCounterEvent(int device_n, int event_n);
+    CuptiCounterEvent(int device_n, int event_n, const char * name);
 
     CUdevice device;
 	CUpti_EventID event;
@@ -104,7 +110,7 @@ struct CuptiCounterIdMap : public std::map<int, int>
 };
 typedef CuptiCounterIdMap counter_id_map_t;
 
-
+counter_vec_t & Tau_CuptiLayer_Added_counters(void);
 
 struct CuptiMetric
 {
@@ -172,9 +178,9 @@ extern void Tau_CuptiLayer_Initialize_Map();
 counter_map_t Counter_Map;
 
 /* mapping the metric number to the cupti metric number */
-counter_id_map_t internal_id_map; 
+counter_id_map_t internal_id_map;
 extern counter_id_map_t internal_id_map() {return internal_id_map;}
-counter_id_map_t internal_id_map_backwards; 
+counter_id_map_t internal_id_map_backwards;
 extern counter_id_map_t internal_id_map_backwards() {return internal_id_map_backwards;}
 #else
 
@@ -213,9 +219,13 @@ extern counter_id_map_t interal_id_map();
 
 #include <stdint.h>
 
-
+void Tau_cupti_post_init(void);
+void Tau_CuptiLayer_enable_eventgroup(void);
+void Tau_CuptiLayer_setup_eventgroup(void);
 
 extern "C" int Tau_CuptiLayer_get_num_events();
+
+extern "C" void Tau_CuptiLayer_set_num_events(int n);
 
 extern "C" void Tau_CuptiLayer_set_event_name(int metric_n, int type);
 

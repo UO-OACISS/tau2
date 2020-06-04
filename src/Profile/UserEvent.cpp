@@ -14,18 +14,19 @@
  ***************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 #ifdef TAU_CRAYXMT
 #pragma mta instantiate used
 #endif /* TAU_CRAYXMT */
+#define DEBUGPROFMSG
 
 #ifdef TAU_BEACON
 #include <Profile/TauBeacon.h>
 #endif /* TAU_BEACON */
 
 #ifndef TAU_DISABLE_MARKERS
-#define TAU_USE_EVENT_THRESHOLDS 1 
+#define TAU_USE_EVENT_THRESHOLDS 1
 #endif /* TAU_DISABLE_MARKERS */
 
 #include <stdio.h>
@@ -303,8 +304,8 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
   /*Invoke plugins only if both plugin path and plugins are specified*/
     /* and only output the counter if it's not a context counter */
     if(Tau_plugins_enabled.atomic_event_trigger) {
-      if ((name[0] != '[') 
-            && (name.find(" : ") == std::string::npos) 
+      if ((name[0] != '[')
+            && (name.find(" : ") == std::string::npos)
             && (name.find("=>") == std::string::npos)) {
         Tau_plugin_event_atomic_event_trigger_data_t plugin_data;
         plugin_data.counter_name = name.c_str();
@@ -507,7 +508,7 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
 	    userEventPrevVec.push_back(tok);
 	  }
 	  userEventPrevVec[0].erase(userEventPrevVec[0].length()-1, userEventPrevVec[0].length());
-	  userEventPrevVec[1].erase(0, 1);	  
+	  userEventPrevVec[1].erase(0, 1);
 	  if (!((std::string)(userEvent->GetName().c_str())).compare(userEventPrevVec[0])) {
 	    if (((std::string)(fi->GetName())).compare(userEventPrevVec[1])) {
 	      cuda_ctx_seen = false;
@@ -564,5 +565,5 @@ x_uint64 TauUserEvent_GetEventId(TauUserEvent const * evt)
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
  * $Revision: 1.46 $   $Date: 2010/05/07 22:16:23 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.46 2010/05/07 22:16:23 amorris Exp $ 
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.46 2010/05/07 22:16:23 amorris Exp $
  ***************************************************************************/

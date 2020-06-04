@@ -100,6 +100,7 @@ static bool functionsInitialized(false);
 #endif
 /* Global Variable holding the number of counters */
 int Tau_Global_numCounters = -1;
+int Tau_Global_numGPUCounters = 0;
 
 static TauUserEvent **traceCounterEvents;
 
@@ -162,6 +163,8 @@ static void check_max_metrics() {
  ********************************************************************/
 static void metricv_add(const char *name) {
 	int cupti_metric = 0;
+
+	TAU_VERBOSE("entering metricv_add, adding metric %s\n", name);
 
 	// Don't add metrics twice
 	for (int i = 0; i < nmetrics; ++i) {
@@ -231,23 +234,25 @@ static void metricv_add(const char *name) {
 				fprintf(stderr, "TAU_CUPTI_MAX_NAME=%d is too small for event name!\n", TAU_CUPTI_MAX_NAME);
 				exit(EXIT_FAILURE);
 			}
-			// some events don't have proper names, so just use event id instead
-			if (std::string(buff).compare("event_name") == 0) {
-				sprintf(buff, "CUpti_EventID:%d", event);
+            if (numMetricEvents == 1) {
+				sprintf(buff, "%s", name);
+            } else {
+			    // some events don't have proper names, so just use event id instead
+			    if (std::string(buff).compare("event_name") == 0) {
+				    sprintf(buff, "%s.%d", name, event);
+				    //sprintf(buff, "CUpti_EventID.%s", name);
+			    }
 			}
 
 			std::string event_name = "CUDA." + device_name + '.' + std::string(buff);
 
-            if (Tau_CuptiLayer_is_initialized()) {
-                // check, maybe initialize counter map
-			    if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) {
-                    // double check because it just got initialized
-				    if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) {
-					    CuptiCounterEvent* ev = new CuptiCounterEvent(dev, event);
-                			Tau_CuptiLayer_Counter_Map().insert(std::make_pair(event_name, ev));
-                    }
-				}
-			}
+            if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) {
+                // double check because it just got initialized
+                if (!Tau_CuptiLayer_is_cupti_counter(event_name.c_str())) {
+                    CuptiCounterEvent* ev = new CuptiCounterEvent(dev, event, buff);
+                    Tau_CuptiLayer_Counter_Map().insert(std::make_pair(event_name, ev));
+                }
+            }
 
 			TAU_VERBOSE("%s: %s\n", name, event_name.c_str());
 
@@ -265,6 +270,7 @@ static void metricv_add(const char *name) {
 				eventsv[nmetrics] = event; // This looks weird... is this right?
 				cumetric[nmetrics] = TAU_METRIC_CUPTI_EVENT;
 				nmetrics++;
+                Tau_Global_numGPUCounters++;
 			}
 		} // for (event)
 	} // for (dev)
@@ -275,7 +281,9 @@ static void metricv_add(const char *name) {
 	eventsv[nmetrics] = 0;
 	cumetric[nmetrics] =
 			cupti_metric ? TAU_METRIC_CUPTI_METRIC : TAU_METRIC_NOT_CUPTI;
+    if (cumetric[nmetrics] == TAU_METRIC_CUPTI_METRIC) Tau_Global_numGPUCounters++;
 	nmetrics++;
+	TAU_VERBOSE("exiting metricv_add, adding metric %s\n", name);
 }
 
 /*********************************************************************
@@ -744,13 +752,11 @@ static void initialize_functionArray() {
 extern "C" const char *TauMetrics_getMetricName(int metric) {
 	char const * metric_name = metricv[metric];
 #ifdef CUPTI
-	int event_id = Tau_CuptiLayer_get_cupti_event_id(metric);
-    if (Tau_CuptiLayer_is_initialized()) {
-	    if (Tau_CuptiLayer_is_cupti_counter(metric_name) &&
-            event_id < Tau_CuptiLayer_get_num_events()) {
-		    return Tau_CuptiLayer_get_event_name(event_id);
-        }
-	}
+    int event_id = Tau_CuptiLayer_get_cupti_event_id(metric);
+    if (Tau_CuptiLayer_is_cupti_counter(metric_name) &&
+        event_id < Tau_CuptiLayer_get_num_events()) {
+        return Tau_CuptiLayer_get_event_name(event_id);
+    }
 #endif
 	return metric_name;
 }
@@ -897,6 +903,8 @@ int TauMetrics_init() {
     // measurements until after metrics are ready.
     RtsLayer::LockDB();
 
+	TAU_VERBOSE("entering TauMetrics_init\n");
+
 	int i;
 
 	initialTimeStamp = TauMetrics_getTimeOfDay();
@@ -950,6 +958,7 @@ int TauMetrics_init() {
 		}
 	}
 
+	TAU_VERBOSE("exiting TauMetrics_init\n");
     RtsLayer::UnLockDB();
 	return 0;
 }
