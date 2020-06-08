@@ -1,65 +1,58 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import os
-import popen2
-import string
+import subprocess
 import glob
-import signal
-import os
 
 uniqID = 1
 
-serial_runner="TAU_SET_NODE=0 ./simple" #TAU_SET_NODE=0 allows serial tests to run with MPI builds
-parallel_runner="mpirun -np 2 ./simple"
-
-class TimeoutError(Exception):
-   """Raised if the external process takes too much"""
-
-# python 2.2 check
-if string.atof( ( string.split( sys.version )[0] ) [0:3]) < 2.3:
-    True = 1
-    False = 0
+# TAU_SET_NODE=0 allows serial tests to run with MPI builds
+serial_runner = "TAU_SET_NODE=0 ./simple"
+parallel_runner = "mpirun -np 2 ./simple"
 
 
 def outputHeader(message):
-    if verbose == True:
-        if html == True:
-            print "</pre><h2><font color=blue>\n" + message + "\n</font></h2><pre>";
+    if verbose:
+        if html:
+            print(
+                "</pre><h2><font color=blue>\n" +
+                message +
+                "\n</font></h2><pre>")
         else:
-            print message + "\n";
+            print(message + "\n")
 
-        
 
 def output(message):
-    if verbose == True:
-        if html == True:
-            print "</pre><h3><font color=green>\n" + message + "\n</font></h3><pre>";
+    if verbose:
+        if html:
+            print(
+                "</pre><h3><font color=green>\n" +
+                message +
+                "\n</font></h3><pre>")
         else:
-            print message + "\n";
+            print(message + "\n")
 
 
 def begin():
-    if html == True:
-        print "<html><body><pre>\n"
+    if html:
+        print("<html><body><pre>\n")
     else:
-        print "------------------------------------------------------"
-        print "build/run : %-20s : %s" % ("test name", "stub makefile")
-        print "------------------------------------------------------"
-        
-
+        print("------------------------------------------------------")
+        print("build/run : %-20s : %s" % ("test name", "stub makefile"))
+        print("------------------------------------------------------")
 
 
 def end():
     if (errorsFound == 0):
-        outputHeader ("No Errors!")
+        outputHeader("No Errors!")
         code = 0
         cleanup()
     else:
-        print "Encountered %d errors" % errorsFound
+        print("Encountered %d errors" % errorsFound)
         code = errorsFound
     if (html):
-        print "</pre><body></html>\n"
+        print("</pre><body></html>\n")
     sys.exit(code)
 
 
@@ -72,148 +65,147 @@ def usesOption(makefile, option):
 
 
 def shortMakefile(makefile):
-    return makefile[makefile.find("/lib/")+5:]
+    return makefile[makefile.find("/lib/") + 5:]
 
-def raise_timeout(signum, frame):
-    raise TimeoutError
 
 def system(command, timeout_sec=None):
-    if timeout_sec is None:
-        # use the old method, the new one below sometimes hangs forever
-        if verbose == True:
-            if html == True:
-                print "<b>" + os.getcwd() + "> " + command + "</b>"
-            else:
-                print os.getcwd() + "> " + command
-            sys.stdout.flush()
-            child = popen2.Popen4(command)
-            data = child.fromchild.readlines()
-            for line in data:
-                print line
-            retval = child.wait()
-            return retval
+    if verbose:
+        if html:
+            print("<b>" + os.getcwd() + "> " + command + "</b>")
         else:
-            child = popen2.Popen4(command)
-            data = child.fromchild.readlines()
-            retval = child.wait()
-            return retval
-        
-
-    if verbose == True:
-        if html == True:
-            print "<b>" + os.getcwd() + "> " + command + "</b>"
-        else:
-            print os.getcwd() + "> " + command
+            print(os.getcwd() + "> " + command)
         sys.stdout.flush()
 
-    if timeout_sec is not None:
-        command = command.split()
-        # otherwise and additional shell is spawn and
-        # it is difficult to kill the runaway process
-        
-    child = popen2.Popen4(command)
-    retval = -1
-    data = ""
-    while (retval == -1):
-        if verbose == True:
-            for line in data:
-                print line
-        try:
-            if timeout_sec is not None:
-                signal.alarm(timeout_sec)
-            signal.alarm(0)
-        except TimeoutError:
-            os.kill(child.pid, 15)
-            break
-        retval = child.poll()
-    data = child.fromchild.readlines()
-    if verbose == True:
-       for line in data:
-          print line
-    return retval
+    proc = None
+    try:
+        if verbose:
+            fdout = subprocess.PIPE
+        else:
+            if sys.version_info >= (3, 3):
+                fdout = subprocess.DEVNULL
+            else:
+                fdout = None
+        proc = subprocess.Popen([command], shell=True,
+                                stdout=fdout, stderr=fdout)
+        stdout_data, stderr_data = proc.communicate(timeout=timeout_sec)
+        ##The following produces unhelpful lines like "b''". Consider scrubbing these and reactivating.
+        #if verbose:
+        #    print(stdout_data, file=sys.stdout)
+        #    print(stderr_data, file=sys.stderr)
+        return proc.returncode
+    except BaseException:
+        # Many different exceptions can be thrown by subprocess,
+        # but all of them indicate an unrecoverable failure, so just
+        # swallow them all and return a generic error
+        if proc is not None:
+            proc.kill()
+
+        if verbose and proc is not None:
+            # Empty the pipes
+            proc.communicate()
+        return -1
 
 
 def chdir(directory):
-    if verbose == True:
-        if html == True:
-            print "<b>" + os.getcwd() + "> cd " + directory + "</b>"
+    if verbose:
+        if html:
+            print("<b>" + os.getcwd() + "> cd " + directory + "</b>")
         else:
-            print os.getcwd() + "> cd " + directory
+            print(os.getcwd() + "> cd " + directory)
     if os.path.exists(directory) and os.path.isdir(directory):
         os.chdir(directory)
 
+
 def prependPath(directory):
-    print "<b>" + os.getcwd() + "> PATH=" + directory + ":$PATH</b>"
+    print("<b>" + os.getcwd() + "> PATH=" + directory + ":$PATH</b>")
     os.environ['PATH'] = directory + os.pathsep + os.environ['PATH']
 
-def setEnviron(variable,value):
-    print "<b>" + os.getcwd() + "> export " + variable + "=" + value + "</b>"
+
+def setEnviron(variable, value):
+    print("<b>" + os.getcwd() + "> export " + variable + "=" + value + "</b>")
     os.environ[variable] = value
 
+
 def unsetEnviron(variable):
-    print "<b>" + os.getcwd() + "> unset " + variable + "</b>"
+    print("<b>" + os.getcwd() + "> unset " + variable + "</b>")
     del os.environ[variable]
-    
+
+
 def openTable(tests):
-    if html == True:
-        print "<table border=1>"
-        print "<tr><td rowspan=2>Stub Makefile</td>"
+    if html:
+        print("<table border=1>")
+        print("<tr><td rowspan=2>Stub Makefile</td>")
         for test in tests:
-            print "<td colspan=2>"+test.name+"</td>"
-        print "</tr>"
-    
-        print "<tr>"
+            print("<td colspan=2>" + test.name + "</td>")
+        print("</tr>")
+
+        print("<tr>")
         for test in tests:
-            print "<td colspan>build</td>"
-            print "<td colspan>run</td>"
-        print "</tr>"
-    
+            print("<td colspan>build</td>")
+            print("<td colspan>run</td>")
+        print("</tr>")
+
+
 def closeTable():
-    if html == True:
-        print "</tr>"
-        print "</table>"
+    if html:
+        print("</tr>")
+        print("</table>")
 
 
 def outputSingle(tests, makefile):
-    if verbose == True and html == False:
+    if verbose and not html:
         for test in tests:
-            print "%4s : %40s : %s %s" % (test.buildresult, test.name, makefile, test.message)
+            print(
+                "%4s : %40s : %s %s" %
+                (test.buildresult,
+                 test.name,
+                 makefile,
+                 test.message))
         return
 
-    if html == True:
-        print "<tr><td>"+makefile+"</td>"
+    if html:
+        print("<tr><td>" + makefile + "</td>")
         for test in tests:
             if test.buildresult == "pass":
-                print "<td bgcolor=#64FF64>pass</td>"
+                print("<td bgcolor=#64FF64>pass</td>")
             elif test.buildresult == "fail":
-                print "<td bgcolor=#FF6464><a href=#%d>fail</a></td>" % (test.errorID)
+                print(
+                    "<td bgcolor=#FF6464><a href=#%d>fail</a></td>" %
+                    (test.errorID))
             elif test.buildresult == "timeout":
-                print "<td bgcolor=#FF6464><a href=#%d>timeout</a></td>" % (test.errorID)
+                print(
+                    "<td bgcolor=#FF6464><a href=#%d>timeout</a></td>" %
+                    (test.errorID))
             else:
-                print "<td bgcolor=#CCCCCC>N/A</td>"
+                print("<td bgcolor=#CCCCCC>N/A</td>")
 
             if test.runresult == "pass":
-                print "<td bgcolor=#64FF64>pass</td>"
+                print("<td bgcolor=#64FF64>pass</td>")
             elif test.runresult == "fail":
-                print "<td bgcolor=#FF6464><a href=#%d>fail</a></td>" % (test.errorID)
+                print(
+                    "<td bgcolor=#FF6464><a href=#%d>fail</a></td>" %
+                    (test.errorID))
             elif test.runresult == "timeout":
-                print "<td bgcolor=#FF6464><a href=#%d>timeout</a></td>" % (test.errorID)
+                print(
+                    "<td bgcolor=#FF6464><a href=#%d>timeout</a></td>" %
+                    (test.errorID))
             else:
-                print "<td bgcolor=#CCCCCC>N/A</td>"
-                
+                print("<td bgcolor=#CCCCCC>N/A</td>")
+
 
 def outputSummary(testgrid):
     first = 1
-    for makefile in testgrid.keys():
+    for makefile in list(testgrid.keys()):
         tests = testgrid[makefile]
 
         if first == 1:
             first = 0
             openTable(tests)
-                
+
         outputSingle(tests, makefile)
-        
-    closeTable()        
+
+    closeTable()
+
 
 class Test:
     def __init__(self, name, makefile):
@@ -223,51 +215,53 @@ class Test:
         self.runresult = "na"
         self.message = ""
         self.makefile = shortMakefile(makefile)
-        self.buildpath = "build-" + self.makefile
+        self.buildpath = "build"
         self.errorID = 0
 
     def checkApplicable(self):
         return True
 
     def runTest(self, timeout):
-        self.error ("Base class runTest called")
+        self.error("Base class runTest called")
 
     def buildTest(self):
-        self.error ("Base class buildTest called")
+        self.error("Base class buildTest called")
 
     def checkResults(self):
-       if os.path.exists("profile.0.0.0") == True:
-          retval = system("pprof")
-          self.runresult = "pass"
-       elif os.path.exists("tautrace.0.0.0.trc"):
-          self.runresult = "pass"
-       elif os.path.exists("MULTI__GET_TIME_OF_DAY/profile.0.0.0"):
-          self.runresult = "pass"
-       elif usesOption(self.makefile, "epilog") == True:
-          self.runresult = "pass"
-       elif usesOption(self.makefile, "vampirtrace") == True:
-          if os.path.exists("simple.otf") == True:
-             self.runresult = "pass"
-          else:
-             self.error("Error: run succeeded, but no trace found")
-             self.runresult = "fail"
-       elif usesOption(self.makefile, "scorep") == True:
-          self.runresult = "pass"
-       else:
-          self.error("Error: run succeeded, but no profiles found")
-          self.runresult = "fail"
+        if os.path.exists("profile.0.0.0"):
+            retval = system("pprof")
+            self.runresult = "pass"
+        elif os.path.exists("tautrace.0.0.0.trc"):
+            self.runresult = "pass"
+        elif os.path.exists("MULTI__GET_TIME_OF_DAY/profile.0.0.0"):
+            self.runresult = "pass"
+        elif usesOption(self.makefile, "epilog"):
+            self.runresult = "pass"
+        elif usesOption(self.makefile, "vampirtrace"):
+            if os.path.exists("simple.otf"):
+                self.runresult = "pass"
+            else:
+                self.error("Error: run succeeded, but no trace found")
+                self.runresult = "fail"
+        elif usesOption(self.makefile, "scorep"):
+            self.runresult = "pass"
+        else:
+            self.error("Error: run succeeded, but no profiles found")
+            self.runresult = "fail"
 
-    def error(self,message):
+    def error(self, message):
         global errorsFound
         global uniqID
         errorsFound = errorsFound + 1
-        if verbose == True:
-            if html == True:
-                print ("</pre><h1><font color=red><a name=%d>\n" + message + "\n</a></font></h1><pre>") % (uniqID);
+        if verbose:
+            if html:
+                print(("</pre><h1><font color=red><a name=%d>\n" +
+                       message + "\n</a></font></h1><pre>") % (uniqID))
                 self.errorID = uniqID
                 uniqID = uniqID + 1
             else:
-                print message + "\n";
+                print(message + "\n")
+
 
 class SimpleTest(Test):
     def __init__(self, name, makefile):
@@ -275,16 +269,31 @@ class SimpleTest(Test):
 
     def getActualTest(self):
         return "simple"
-        
+
     def buildTest(self):
-        outputHeader("SimpleTest("+self.getActualTest()+"), build (" + self.fullmakefile + ")")
-        if self.checkApplicable() == False:
+        outputHeader(
+            "SimpleTest(" +
+            self.getActualTest() +
+            "), build (" +
+            self.fullmakefile +
+            ")")
+        if not self.checkApplicable():
             return
         chdir(TEST_ROOT + "/" + self.getActualTest())
         system("rm -rf " + self.buildpath)
-        system("TAU_MAKEFILE="+self.fullmakefile + " TAU_TEST_MAKEFILE="+self.fullmakefile+" make clean")
-        retval = system("TAU_MAKEFILE="+self.fullmakefile + " TAU_TEST_MAKEFILE="+self.fullmakefile+" make")
-        if retval != 0 or os.path.exists("simple") == False:
+        system(
+            "TAU_MAKEFILE=" +
+            self.fullmakefile +
+            " TAU_TEST_MAKEFILE=" +
+            self.fullmakefile +
+            " make clean")
+        retval = system(
+            "TAU_MAKEFILE=" +
+            self.fullmakefile +
+            " TAU_TEST_MAKEFILE=" +
+            self.fullmakefile +
+            " make")
+        if retval != 0 or not os.path.exists("simple"):
             self.error("Error: failed to build")
             self.buildresult = "fail"
             return
@@ -292,16 +301,14 @@ class SimpleTest(Test):
         system("mkdir " + self.buildpath)
         system("cp simple " + self.buildpath)
 
-
-
-
     def runTest(self, timeout):
-        outputHeader("SimpleTest("+self.getActualTest()+", run (" + self.fullmakefile + ")")
-        if self.checkApplicable() == False:
+        outputHeader("SimpleTest(" + self.getActualTest() +
+                     ", run (" + self.fullmakefile + ")")
+        if not self.checkApplicable():
             return
 
         chdir(TEST_ROOT + "/" + self.getActualTest())
-        if os.path.exists(self.buildpath) == False:
+        if not os.path.exists(self.buildpath):
             output("Nothing to run")
             return
         chdir(self.buildpath)
@@ -317,16 +324,16 @@ class SimpleTest(Test):
             self.checkResults()
 
     def runMPITest(self, timeout):
-        outputHeader("MPITest("+self.getActualTest()+", run (" + self.fullmakefile + ")")
+        outputHeader("MPITest(" + self.getActualTest() +
+                     ", run (" + self.fullmakefile + ")")
         if parallel_runner == "":
-          output ("Warning: Using default mpi launch: \"mpirun -np 2\". Set TAU_VALIDATE_PARALLEL to change")
-          #output ("Skipping Test (TAU_VALIDATE_PARALLEL is not set, can't run MPI)")
-          #return
-        if self.checkApplicable() == False:
+            output(
+                "Warning: Using default mpi launch: \"mpirun -np 2\". Set TAU_VALIDATE_PARALLEL to change")
+        if not self.checkApplicable():
             return
 
         chdir(TEST_ROOT + "/" + self.getActualTest())
-        if os.path.exists(self.buildpath) == False:
+        if not os.path.exists(self.buildpath):
             output("Nothing to run")
             return
         chdir(self.buildpath)
@@ -341,61 +348,89 @@ class SimpleTest(Test):
         else:
             self.checkResults()
 
+
 class CTest(SimpleTest):
     def __init__(self, makefile):
         SimpleTest.__init__(self, "C", makefile)
+
     def getActualTest(self):
         return "c"
+
     def checkApplicable(self):
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "scorep") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "scorep"):
             return False
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
         return True
+
 
 class CompInstCTest(SimpleTest):
     def __init__(self, makefile):
         SimpleTest.__init__(self, "CompInst (C)", makefile)
+
     def getActualTest(self):
         return "compc"
+
     def checkApplicable(self):
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "scorep") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "scorep"):
             return False
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
-        if system("grep \"^TAU_COMPINST_OPTION\" "+self.fullmakefile) != 0:
+        if system("grep \"^TAU_COMPINST_OPTION\" " + self.fullmakefile) != 0:
             return False
         return True
+
 
 class CompInstCPPTest(SimpleTest):
     def __init__(self, makefile):
         SimpleTest.__init__(self, "CompInst (C++)", makefile)
+
     def getActualTest(self):
         return "compcpp"
+
     def checkApplicable(self):
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "scorep") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "scorep"):
             return False
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
-        if system("grep \"^TAU_COMPINST_OPTION\" "+self.fullmakefile) != 0:
+        if system("grep \"^TAU_COMPINST_OPTION\" " + self.fullmakefile) != 0:
             return False
         return True
+
 
 class CompInstF90Test(SimpleTest):
     def __init__(self, makefile):
         SimpleTest.__init__(self, "CompInst (F90)", makefile)
+
     def getActualTest(self):
         return "compf"
+
     def checkApplicable(self):
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "scorep") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "scorep"):
             return False
-        if usesOption(self.makefile, "upc") == True:
+        if usesOption(self.makefile, "upc"):
             return False
-        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+        if system("grep \"^TAU_F90 \" " + self.fullmakefile) != 0:
             return False
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
-        if system("grep \"^TAU_COMPINST_OPTION\" "+self.fullmakefile) != 0:
+        if system("grep \"^TAU_COMPINST_OPTION\" " + self.fullmakefile) != 0:
             return False
         return True
 
@@ -403,17 +438,22 @@ class CompInstF90Test(SimpleTest):
 class FflinkTest(SimpleTest):
     def __init__(self, makefile):
         SimpleTest.__init__(self, "Fortran (flink)", makefile)
+
     def getActualTest(self):
         return "fflink"
 
     def checkApplicable(self):
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "scorep") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "scorep"):
             return False
-        if usesOption(self.makefile, "upc") == True:
+        if usesOption(self.makefile, "upc"):
             return False
-        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+        if system("grep \"^TAU_F90 \" " + self.fullmakefile) != 0:
             return False
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
         return True
 
@@ -421,73 +461,85 @@ class FflinkTest(SimpleTest):
 class FcpplinkTest(SimpleTest):
     def __init__(self, makefile):
         SimpleTest.__init__(self, "Fortran (cpplink)", makefile)
+
     def getActualTest(self):
         return "fcpplink"
 
     def checkApplicable(self):
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "scorep") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "scorep"):
             return False
-        if usesOption(self.makefile, "upc") == True:
+        if usesOption(self.makefile, "upc"):
             return False
-        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+        if system("grep \"^TAU_F90 \" " + self.fullmakefile) != 0:
             return False
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
         return True
-    
+
+
 class FclinkTest(SimpleTest):
     def __init__(self, makefile):
         SimpleTest.__init__(self, "Fortran (clink)", makefile)
+
     def getActualTest(self):
         return "fclink"
 
     def checkApplicable(self):
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "scorep") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "scorep"):
             return False
-        if usesOption(self.makefile, "upc") == True:
+        if usesOption(self.makefile, "upc"):
             return False
-        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+        if system("grep \"^TAU_F90 \" " + self.fullmakefile) != 0:
             return False
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
         return True
-
 
 
 class MpiCTest(SimpleTest):
     def __init__(self, makefile):
         SimpleTest.__init__(self, "MPI (C)", makefile)
+
     def getActualTest(self):
         return "mpic"
 
     def checkApplicable(self):
-        if usesOption(self.makefile, "mpi") == False:
+        if not usesOption(self.makefile, "mpi"):
             output("Skipping, not configured with MPI")
             return False
         return True
 
     def runTest(self, timeout):
         self.runMPITest(timeout)
+
 
 class MpiFTest(SimpleTest):
     def __init__(self, makefile):
         SimpleTest.__init__(self, "MPI (Fortran)", makefile)
+
     def getActualTest(self):
         return "mpif"
 
     def checkApplicable(self):
-        if usesOption(self.makefile, "upc") == True:
+        if usesOption(self.makefile, "upc"):
             return False
-        if usesOption(self.makefile, "mpi") == False:
+        if not usesOption(self.makefile, "mpi"):
             output("Skipping, not configured with MPI")
             return False
-        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+        if system("grep \"^TAU_F90 \" " + self.fullmakefile) != 0:
             return False
         return True
 
     def runTest(self, timeout):
         self.runMPITest(timeout)
-        
 
 
 class PdtTest(Test):
@@ -498,21 +550,36 @@ class PdtTest(Test):
         return "pdt"
 
     def buildTest(self):
-        outputHeader("Build: Test="+self.getActualTest()+", Makefile=" + self.fullmakefile + ")")
+        outputHeader(
+            "Build: Test=" +
+            self.getActualTest() +
+            ", Makefile=" +
+            self.fullmakefile +
+            ")")
 
-        if usesOption(self.makefile, "pdt") == False:
+        if not usesOption(self.makefile, "pdt"):
             output("Skipping, not configured with PDT")
             return
 
-        if self.checkApplicable() == False:
+        if not self.checkApplicable():
             return
 
         chdir(TEST_ROOT + "/" + self.getActualTest())
         system("rm -rf " + self.buildpath)
 
-        system("TAU_MAKEFILE="+self.fullmakefile + " TAU_TEST_MAKEFILE="+self.fullmakefile+" make clean")
+        system(
+            "TAU_MAKEFILE=" +
+            self.fullmakefile +
+            " TAU_TEST_MAKEFILE=" +
+            self.fullmakefile +
+            " make clean")
         system("rm -f *.inst.*")
-        retval = system("TAU_MAKEFILE="+self.fullmakefile + " TAU_TEST_MAKEFILE="+self.fullmakefile+" make")
+        retval = system(
+            "TAU_MAKEFILE=" +
+            self.fullmakefile +
+            " TAU_TEST_MAKEFILE=" +
+            self.fullmakefile +
+            " make")
         if retval != 0:
             self.error("Error: failed to build")
             self.buildresult = "fail"
@@ -522,24 +589,28 @@ class PdtTest(Test):
             self.error("Error: failed to instrument")
             self.buildresult = "fail"
             return
-        
+
         self.buildresult = "pass"
         system("mkdir " + self.buildpath)
         system("cp simple " + self.buildpath)
-        
 
     def runTest(self, timeout):
-        outputHeader("Run: Test="+self.getActualTest()+", Makefile=" + self.fullmakefile + ")")
+        outputHeader(
+            "Run: Test=" +
+            self.getActualTest() +
+            ", Makefile=" +
+            self.fullmakefile +
+            ")")
 
-        if usesOption(self.makefile, "pdt") == False:
+        if not usesOption(self.makefile, "pdt"):
             output("Skipping, not configured with PDT")
             return
 
-        if self.checkApplicable() == False:
+        if not self.checkApplicable():
             return
-        
+
         chdir(TEST_ROOT + "/" + self.getActualTest())
-        if os.path.exists(self.buildpath) == False:
+        if not os.path.exists(self.buildpath):
             output("Nothing to run")
             return
         chdir(self.buildpath)
@@ -555,21 +626,26 @@ class PdtTest(Test):
             self.checkResults()
 
     def runMPITest(self, timeout):
-        outputHeader("Run (MPI): Test="+self.getActualTest()+", Makefile=" + self.fullmakefile + ")")
+        outputHeader(
+            "Run (MPI): Test=" +
+            self.getActualTest() +
+            ", Makefile=" +
+            self.fullmakefile +
+            ")")
 
         if parallel_runner == "":
-          output ("Skipping Test (TAU_VALIDATE_PARALLEL is not set, can't run MPI)")
-          return
+            output("Skipping Test (TAU_VALIDATE_PARALLEL is not set, can't run MPI)")
+            return
 
-        if usesOption(self.makefile, "pdt") == False:
+        if not usesOption(self.makefile, "pdt"):
             output("Skipping, not configured with PDT")
             return
 
-        if self.checkApplicable() == False:
+        if not self.checkApplicable():
             return
-        
+
         chdir(TEST_ROOT + "/" + self.getActualTest())
-        if os.path.exists(self.buildpath) == False:
+        if not os.path.exists(self.buildpath):
             output("Nothing to run")
             return
         chdir(self.buildpath)
@@ -588,183 +664,234 @@ class PdtTest(Test):
 class PdtTestC(PdtTest):
     def __init__(self, makefile):
         PdtTest.__init__(self, "PDT (C)", makefile)
+
     def getActualTest(self):
         return "pdtc"
+
     def checkApplicable(self):
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "scorep") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "scorep"):
             return False
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
         return True
+
     def runTest(self, timeout):
         if usesOption(self.makefile, "mpi"):
             self.runMPITest(timeout)
         else:
-            PdtTest.runTest(self,timeout)
+            PdtTest.runTest(self, timeout)
 
-    
+
 class PdtTestCPP(PdtTest):
     def __init__(self, makefile):
         PdtTest.__init__(self, "PDT (C++)", makefile)
+
     def getActualTest(self):
         return "pdtcpp"
+
     def checkApplicable(self):
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "scorep") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "scorep"):
             return False
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
         return True
+
 
 class PdtTestF(PdtTest):
     def __init__(self, makefile):
         PdtTest.__init__(self, "PDT (Fortran)", makefile)
+
     def getActualTest(self):
         return "pdtf"
+
     def checkApplicable(self):
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "scorep") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "scorep"):
             return False
-        if usesOption(self.makefile, "upc") == True:
+        if usesOption(self.makefile, "upc"):
             return False
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
-        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+        if system("grep \"^TAU_F90 \" " + self.fullmakefile) != 0:
             return False
         return True
+
 
 class PdtTestGF(PdtTest):
     def __init__(self, makefile):
         PdtTest.__init__(self, "PDT (GFortran)", makefile)
+
     def getActualTest(self):
         return "pdtgf"
+
     def checkApplicable(self):
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "scorep") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "scorep"):
             return False
-        if usesOption(self.makefile, "upc") == True:
+        if usesOption(self.makefile, "upc"):
             return False
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
-        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+        if system("grep \"^TAU_F90 \" " + self.fullmakefile) != 0:
             return False
         return True
+
 
 class PdtMPITestC(PdtTest):
     def __init__(self, makefile):
         PdtTest.__init__(self, "PDT-MPI (C)", makefile)
+
     def getActualTest(self):
         return "pdtmpic"
+
     def checkApplicable(self):
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
-        if usesOption(self.makefile, "mpi") == False:
+        if not usesOption(self.makefile, "mpi"):
             output("Skipping, not configured with MPI")
             return False
         return True
+
     def runTest(self, timeout):
         self.runMPITest(timeout)
-
 
 
 class PdtMPITestCPP(PdtTest):
     def __init__(self, makefile):
         PdtTest.__init__(self, "PDT-MPI (C++)", makefile)
+
     def getActualTest(self):
         return "pdtmpicpp"
+
     def checkApplicable(self):
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
-        if usesOption(self.makefile, "mpi") == False:
+        if not usesOption(self.makefile, "mpi"):
             output("Skipping, not configured with MPI")
             return False
         return True
+
     def runTest(self, timeout):
         self.runMPITest(timeout)
+
 
 class PdtMPITestF(PdtTest):
     def __init__(self, makefile):
         PdtTest.__init__(self, "PDT-MPI (Fortran)", makefile)
+
     def getActualTest(self):
         return "pdtmpif"
+
     def checkApplicable(self):
-        if usesOption(self.makefile, "upc") == True:
+        if usesOption(self.makefile, "upc"):
             return False
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
-        if usesOption(self.makefile, "mpi") == False:
+        if not usesOption(self.makefile, "mpi"):
             output("Skipping, not configured with MPI")
             return False
-        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+        if system("grep \"^TAU_F90 \" " + self.fullmakefile) != 0:
             return False
         return True
+
     def runTest(self, timeout):
         self.runMPITest(timeout)
+
 
 class PdtMPITestGF(PdtTest):
     def __init__(self, makefile):
         PdtTest.__init__(self, "PDT-MPI (GFortran)", makefile)
+
     def getActualTest(self):
         return "pdtmpigf"
+
     def checkApplicable(self):
-        if usesOption(self.makefile, "upc") == True:
+        if usesOption(self.makefile, "upc"):
             return False
-        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+        if usesOption(
+                self.makefile, "mpi") and usesOption(
+                self.makefile, "epilog"):
             return False
-        if usesOption(self.makefile, "mpi") == False:
+        if not usesOption(self.makefile, "mpi"):
             output("Skipping, not configured with MPI")
             return False
-        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+        if system("grep \"^TAU_F90 \" " + self.fullmakefile) != 0:
             return False
         return True
+
     def runTest(self, timeout):
         self.runMPITest(timeout)
 
 
 def usage():
-    print ""
-    print "Usage: tau_validate [-v] [--html] [--tag <tag>] [--timeout <timeout>]"
-    print "                    [--table <file>] [--build] [--run] <target>"
-    print ""
-    print "Options:"
-    print ""
-    print "-v                   Verbose output"
-    print "--html               Output results in HTML"
-    print "--tag <tag>          Validate only the subset of TAU stub makefiles matching <tag>"
-    print "--timeout <timeout>  Give up if a test does not succeed after timeout "
-    print "                     seconds of runtime"
-    print "--table <file>       Real-time creation of an addition <file> containing "
-    print "                     the summary table of the tests"
-    print "--build              Only build"
-    print "--run                Only run"
-    print "<target>             Specify an arch directory (e.g. rs6000), or the lib"
-    print "                     directory (rs6000/lib), or a specific makefile."
-    print "                     Relative or absolute paths are ok."
-    print ""
-    print "Notes:"
-    print "tau_validate will attempt to validate a TAU installation by performing"
-    print "various tests on each TAU stub Makefile.  Some degree of logic exists"
-    print "to determine if a given test applies to a given makefile, but it's not"
-    print "perfect."
-    print ""
-    print "Example:"
-    print ""
-    print "bash : ./tau_validate --html --table table.html --timeout 180 x86_64 &> results.html"
-    print "tcsh : ./tau_validate --html --table table.html --timeout 180 x86_64 >& results.html"
-    print ""
-    print "Optional run scripts:"
-    print "Using the environment variables TAU_VALIDATE_SERIAL and TAU_VALIDATE_PARALLEL"
-    print "you can do custom execution of jobs.  A sample parallel runner (app will "
-    print "always be called 'simple'). The following is an example script parallel.sh"
-    print "(make sure it has execute permissions before running tau_validate):"
-    print ""
-    print "#!/bin/bash"
-    print "mpirun -np 2 ./simple"
-    print ""
-    print "With parallel runner:"
-    print ""
-    print "(using bash)"
-    print "export TAU_VALIDATE_PARALLEL=`pwd`/parallel.sh; ./tau_validate -v --html x86_64 &> results.html"
-    print ""
-    
+    print("")
+    print(
+        "Usage: tau_validate [-v] [--html] [--tag <tag>] [--timeout <timeout>]")
+    print("                    [--table <file>] [--build] [--run] <target>")
+    print("")
+    print("Options:")
+    print("")
+    print("-v                   Verbose output")
+    print("--html               Output results in HTML")
+    print("--tag <tag>          Validate only the subset of TAU stub makefiles matching <tag>")
+    print("--timeout <timeout>  Give up if a test does not succeed after timeout ")
+    print("                     seconds of runtime")
+    print("--table <file>       Real-time creation of an addition <file> containing ")
+    print("                     the summary table of the tests")
+    print("--build              Only build")
+    print("--run                Only run")
+    print("<target>             Specify an arch directory (e.g. rs6000), or the lib")
+    print("                     directory (rs6000/lib), or a specific makefile.")
+    print("                     Relative or absolute paths are ok.")
+    print("")
+    print("Notes:")
+    print("tau_validate will attempt to validate a TAU installation by performing")
+    print("various tests on each TAU stub Makefile.  Some degree of logic exists")
+    print("to determine if a given test applies to a given makefile, but it's not")
+    print("perfect.")
+    print("")
+    print("Example:")
+    print("")
+    print("bash : ./tau_validate --html --table table.html --timeout 180 x86_64 &> results.html")
+    print("tcsh : ./tau_validate --html --table table.html --timeout 180 x86_64 >& results.html")
+    print("")
+    print("Optional run scripts:")
+    print("Using the environment variables TAU_VALIDATE_SERIAL and TAU_VALIDATE_PARALLEL")
+    print("you can do custom execution of jobs.  A sample parallel runner (app will ")
+    print("always be called 'simple'). The following is an example script parallel.sh")
+    print("(make sure it has execute permissions before running tau_validate):")
+    print("")
+    print("#!/bin/bash")
+    print("mpirun -np 2 ./simple")
+    print("")
+    print("With parallel runner:")
+    print("")
+    print("(using bash)")
+    print("export TAU_VALIDATE_PARALLEL=`pwd`/parallel.sh; ./tau_validate -v --html x86_64 &> results.html")
+    print("")
+
     sys.exit(-1)
+
 
 def cleanup():
     chdir(TEST_ROOT)
@@ -781,14 +908,11 @@ def cleanup():
     system("find . -name \"simple\" | xargs rm -f")
 
 
-
 # execution starts here
-
 errorsFound = 0
 
 PWD = os.getcwd()
 TEST_ROOT = PWD + "/examples/validate"
-
 
 
 args = sys.argv[1:]
@@ -808,18 +932,18 @@ table_filename = None
 tag = ""
 timeout_sec = None
 for arg in args:
-    if nextArgTag == True:
+    if nextArgTag:
         tag = arg
         nextArgTag = False
-    elif nextArgTimeout == True:
+    elif nextArgTimeout:
         try:
             timeout_sec = int(arg)
         except ValueError:
-            print "timeout must be an integer number of seconds"
-            print "you provided: ", arg
+            print("timeout must be an integer number of seconds")
+            print("you provided: ", arg)
             usage()
         nextArgTimeout = False
-    elif nextArgTable == True:
+    elif nextArgTable:
         table_filename = arg
         nextArgTable = False
     elif arg == "-v":
@@ -846,14 +970,12 @@ for arg in args:
             usage()
         target = arg
 
-signal.signal(signal.SIGALRM, raise_timeout)
-
 if optClean:
-    print "Cleaning..."
+    print("Cleaning...")
     verbose = True
     cleanup()
     sys.exit(0)
-    
+
 
 # if neither is specified, do both
 if not optRun and not optBuild:
@@ -867,28 +989,32 @@ if target == "":
 target = os.path.realpath(target)
 
 
+if 'TAU_VALIDATE_SERIAL' in os.environ:
+    serial_runner = os.environ['TAU_VALIDATE_SERIAL']
 
-if os.environ.has_key('TAU_VALIDATE_SERIAL'):
-   serial_runner=os.environ['TAU_VALIDATE_SERIAL']
-
-if os.environ.has_key('TAU_VALIDATE_PARALLEL'):
-   parallel_runner=os.environ['TAU_VALIDATE_PARALLEL']
+if 'TAU_VALIDATE_PARALLEL' in os.environ:
+    parallel_runner = os.environ['TAU_VALIDATE_PARALLEL']
 
 begin()
 
 
-def runTest(test,tests):
+def runTest(test, tests):
     if optBuild:
         test.buildTest()
     if optRun:
         test.runTest(timeout_sec)
     tests.append(test)
-    print "%4s/%-4s : %-20s : %s %s" % (test.buildresult, test.runresult, test.name, makefile, test.message)
-    
+    print(
+        "%4s/%-4s : %-20s : %s %s" %
+        (test.buildresult,
+         test.runresult,
+         test.name,
+         makefile,
+         test.message))
 
 
 if not os.path.exists(target):
-    print "Couldn't find: " + target
+    print("Couldn't find: " + target)
     usage()
 
 directory = False
@@ -896,7 +1022,7 @@ if os.path.isdir(target):
     directory = True
 
     if os.path.exists(target + "/lib"):
-        target = target + "/lib";
+        target = target + "/lib"
 
     chdir(target)
     if optTag:
@@ -906,7 +1032,7 @@ if os.path.isdir(target):
         makefiles = glob.glob("Makefile.tau*")
 
 else:
-    makefiles = [ target ]
+    makefiles = [target]
 
 testgrid = {}
 found = 0
@@ -914,78 +1040,68 @@ first = 1
 
 for makefile in makefiles:
     found = 1
-#    print makefile
 
     tests = []
     if directory:
         fullmakefile = target + "/" + makefile
     else:
         fullmakefile = os.path.realpath(target)
-            
 
+    runTest(CTest(fullmakefile), tests)
 
-    runTest(CTest(fullmakefile),tests)
+    runTest(FflinkTest(fullmakefile), tests)
+    runTest(FcpplinkTest(fullmakefile), tests)
+    runTest(FclinkTest(fullmakefile), tests)
 
-    runTest(FflinkTest(fullmakefile),tests)
-    runTest(FcpplinkTest(fullmakefile),tests)
-    runTest(FclinkTest(fullmakefile),tests)
+    runTest(MpiCTest(fullmakefile), tests)
+    runTest(MpiFTest(fullmakefile), tests)
 
-    runTest(MpiCTest(fullmakefile),tests)
-    runTest(MpiFTest(fullmakefile),tests)
+    runTest(CompInstCTest(fullmakefile), tests)
+    runTest(CompInstCPPTest(fullmakefile), tests)
+    runTest(CompInstF90Test(fullmakefile), tests)
 
-    runTest(CompInstCTest(fullmakefile),tests)
-    runTest(CompInstCPPTest(fullmakefile),tests)
-    runTest(CompInstF90Test(fullmakefile),tests)
+    runTest(PdtTestC(fullmakefile), tests)
+    runTest(PdtTestCPP(fullmakefile), tests)
+    runTest(PdtTestF(fullmakefile), tests)
+    runTest(PdtTestGF(fullmakefile), tests)
 
-    runTest(PdtTestC(fullmakefile),tests)
-    runTest(PdtTestCPP(fullmakefile),tests)
-    runTest(PdtTestF(fullmakefile),tests)
-    runTest(PdtTestGF(fullmakefile),tests)
-
-    runTest(PdtMPITestC(fullmakefile),tests)
-    runTest(PdtMPITestCPP(fullmakefile),tests)
-    runTest(PdtMPITestF(fullmakefile),tests)
-    runTest(PdtMPITestGF(fullmakefile),tests)
-
+    runTest(PdtMPITestC(fullmakefile), tests)
+    runTest(PdtMPITestCPP(fullmakefile), tests)
+    runTest(PdtMPITestF(fullmakefile), tests)
+    runTest(PdtMPITestGF(fullmakefile), tests)
 
     testgrid[makefile] = tests
-    
-    if verbose == True:
-        if html == True:
-            print "<hr>"
+
+    if verbose:
+        if html:
+            print("<hr>")
         else:
-            print "----------------"
-    
-    if separateTable == True:
+            print("----------------")
+
+    if separateTable:
         if first == 1:
             first = 0
             saveout = sys.stdout
             fsock = open(PWD + "/" + table_filename, 'w')
             sys.stdout = fsock
-            print "<html><body>"
+            print("<html><body>")
             openTable(tests)
-            
-        sys.stdout = fsock    
+
+        sys.stdout = fsock
         outputSingle(tests, makefile)
         fsock.flush()
         sys.stdout = saveout
 
 if found == 0:
-    print "Couldn't find any makefiles in " + target
+    print("Couldn't find any makefiles in " + target)
 
-if separateTable == True:
+if separateTable:
     sys.stdout = fsock
     closeTable()
-    print "</body><html>"
+    print("</body><html>")
     sys.stdout = saveout
     fsock.close()
 
 outputSummary(testgrid)
 
 end()
-
-
-
-
-
-
