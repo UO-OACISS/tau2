@@ -20,6 +20,7 @@
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <sstream>
 #include <iostream>
+#include <vector>
 using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <sstream.h>
@@ -136,92 +137,41 @@ extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup
   return (void *)f;
 }
 
-/* An array of this struct is shared by all threads.
- * To make sure we don't have false sharing, the struct is 64 bytes in size,
- * so that it fits exactly in one (or two) cache lines. That way, when one
- * thread updates its data in the array, it won't invalidate the cache line
- * for other threads. This is very important with timers, as all threads are
- * entering timers at the same time, and every thread will invalidate the
- * cache line otherwise.
- */
-#ifndef CRAYCC
-union Tau_thread_status_flags
-{
-  /* Padding structures is tricky because compilers pad unexpectedly
-   * and word sizes differ.
-   *
-   * You can see this in this example program:
-   *   struct A {
-   *     char c;
-   *     char d;
-   *     int i;
-   *   };
-   *   struct B {
-   *     char c;
-   *     int i;
-   *     char d;
-   *   };
-   *   int main() {
-   *     cout << sizeof(A) << endl;
-   *     cout << sizeof(B) << endl;
-   *   }
-   *
-   * Depending on your compiler, you'll get two different sizes.
-   * The only sure way to see this structure padded to 64 bytes is to calculate
-   * the pad at compile time as below.
-   *
-   * Use an anonymous struct container and allow the compiler to place members
-   * where it likes.  IT IS CRITICALLY IMPORTANT that the members are ordered
-   * largest to smallest, i.e. doubles before floats.  The "int i" member of
-   * struct B in the above example could be misaligned.  This idiom is very
-   * dangerous in an I/O situation, but for this application it should be safe.
-   */
-  struct {
-    Profiler * Tau_global_stack;
-    int Tau_global_stackdepth;
-    int Tau_global_stackpos;
-    int Tau_global_insideTAU;
-    int Tau_is_thread_fake_for_task_api;
-    int lightsOut;
-  };
-
-  char _pad[64];
-};
-#else
 struct Tau_thread_status_flags {
-  Profiler * Tau_global_stack;
-  int Tau_global_stackdepth;
-  int Tau_global_stackpos;
-  int Tau_global_insideTAU;
-  int Tau_is_thread_fake_for_task_api;
-  int lightsOut;
-  // Not as elegant, but similar effect
-  char _pad[64-sizeof(Profiler*)-5*sizeof(int)];
+  Profiler * Tau_global_stack = NULL;
+  int Tau_global_stackdepth = 0;
+  int Tau_global_stackpos = -1;
+  int Tau_global_insideTAU = 0;
+  int Tau_is_thread_fake_for_task_api = 0;
+  int lightsOut = 0;
 };
-#endif
 
 #define STACK_DEPTH_INCREMENT 100
-/* This array is shared by all threads. To make sure we don't have false
- * sharing, the struct is 64 bytes in size, so that it fits exactly in
- * one (or two) cache lines. That way, when one thread updates its data
- * in the array, it won't invalidate the cache line for other threads.
- * This is very important with timers, as all threads are entering timers
- * at the same time, and every thread will invalidate the cache line
- * otherwise. */
-#if defined(__INTEL_COMPILER)
-__declspec (align(64)) static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
-#elif defined(__PGIC__)
-static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS];
-#elif defined(TAU_NEC_SX)
-static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
-#elif defined(__GNUC__)
-static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {{{0}}};
-#else  /* __GNUC__ */
-static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
-#endif /* __INTEL_COMPILER */
+ struct CAPIThreadList : vector<Tau_thread_status_flags *>{
+      CAPIThreadList(){
+         //printf("Creating PapiThreadList at %p\n", this);
+      }
+     virtual ~CAPIThreadList(){
+         //printf("Destroying PapiThreadList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
+ 
+ static CAPIThreadList Tau_thread_flags;
+ 
+ inline void checkVector(int tid){
+ 	while(Tau_thread_flags.size()<=tid){
+         //RtsLayer::LockDB();
+ 		Tau_thread_flags.push_back(new Tau_thread_status_flags());
+         //RtsLayer::UnLockDB();
+ 	}
+ }
 
 static inline Tau_thread_status_flags& getTauThreadFlag(int tid){
-    return Tau_thread_flags[tid];
+    checkVector(tid);
+    //Tau_thread_status_flags& test = *Tau_thread_flags[tid];
+    //printf("stackpos: %d on tid: %d\n", test.Tau_global_stackpos,tid);
+    return *Tau_thread_flags[tid];
 }
 //static inline void SetTauThreadFlag
 
@@ -248,14 +198,6 @@ static void Tau_stack_checkInit() {
 #else
   getTauThreadFlag(RtsLayer::unsafeLocalThreadId()).lightsOut = 0;
 #endif
-
-  for (int i=0; i<TAU_MAX_THREADS; i++) {
-    getTauThreadFlag(i).Tau_global_stackdepth = 0;
-    getTauThreadFlag(i).Tau_global_stackpos = -1;
-    getTauThreadFlag(i).Tau_global_stack = NULL;
-    getTauThreadFlag(i).Tau_global_insideTAU = 0;
-    getTauThreadFlag(i).Tau_is_thread_fake_for_task_api = 0; /* by default all threads are real*/
-  }
 }
 
 extern "C" int Tau_global_getLightsOut() {
@@ -898,7 +840,7 @@ extern "C" void Tau_stop_current_timer()
 
 extern "C" int Tau_show_profiles()
 {
-  for (int tid = 0; tid < TAU_MAX_THREADS; ++tid) {
+  for (int tid = 0; tid < Tau_thread_flags.size(); ++tid) {
     int pos = getTauThreadFlag(tid).Tau_global_stackpos;
     while (pos >= 0) {
       Profiler * p = &(getTauThreadFlag(tid).Tau_global_stack[pos]);
@@ -953,7 +895,7 @@ inline void Tau_profile_exit_threads(int begin_index)
   bool su = JNIThreadLayer::IsMgmtThread();
 #endif
 
-  for(int tid = begin_index; tid < TAU_MAX_THREADS; ++tid) {
+  for(int tid = begin_index; tid < Tau_thread_flags.size(); ++tid) {
 #ifdef TAU_ANDROID
     if (su) {
       JNIThreadLayer::SuThread(tid);
