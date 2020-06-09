@@ -576,10 +576,12 @@ void adios::write_variables(void)
 {
     int programs = get_prog_count();
     int comm_ranks = global_comm_size;
-    int threads = get_thread_count();
     int event_types = get_event_type_count();
+    pthread_mutex_lock(&_my_mutex);
+    int threads = get_thread_count();
     int timers = get_timer_count();
     int counters = get_counter_count();
+    pthread_mutex_unlock(&_my_mutex);
 
     Tau_global_incr_insideTAU();
     bpWriter.BeginStep();
@@ -815,37 +817,47 @@ void adios::write_variables(void)
 
     /* Keep a map of timers to indexes */
     int adios::check_timer(const char * timer) {
+        bool new_timer{false};
         std::string tmp(timer);
         if (timers.count(tmp) == 0) {
-            std::stringstream ss;
-            int num = timers.size();
-            ss << "timer " << num;
             pthread_mutex_lock(&_my_mutex);
             // check to make sure another thread didn't create it already
             if (timers.count(tmp) == 0) {
+                int num = timers.size();
                 timers[tmp] = num;
                 // printf("%d = %s\n", num, timer);
-                define_attribute(ss.str(), tmp, _bpIO, false);
+                new_timer = true;
             }
             pthread_mutex_unlock(&_my_mutex);
+            // Because ADIOS is instrumented with TAU calls, make sure the
+            // lock is released before defining the attribute.
+            if (new_timer) {
+                std::stringstream ss;
+                ss << "timer " << timers[tmp];
+                define_attribute(ss.str(), tmp, _bpIO, false);
+            }
         }
         return timers[tmp];
     }
 
     /* Keep a map of counters to indexes */
     int adios::check_counter(const char * counter) {
+        bool new_counter{false};
         std::string tmp(counter);
         if (counters.count(tmp) == 0) {
-            std::stringstream ss;
-            int num = counters.size();
-            ss << "counter " << num;
             pthread_mutex_lock(&_my_mutex);
             // check to make sure another thread didn't create it already
             if (counters.count(tmp) == 0) {
+                int num = counters.size();
                 counters[tmp] = num;
-                define_attribute(ss.str(), tmp, _bpIO, false);
+                new_counter = true;
             }
             pthread_mutex_unlock(&_my_mutex);
+            if (new_counter) {
+                std::stringstream ss;
+                ss << "counter " << counters[tmp];
+                define_attribute(ss.str(), tmp, _bpIO, false);
+            }
         }
         return counters[tmp];
     }
@@ -905,9 +917,7 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     }
     Tau_pure_start(__func__);
     Tau_global_incr_insideTAU();
-    pthread_mutex_lock(&_my_mutex);
     my_adios->write_variables();
-    pthread_mutex_unlock(&_my_mutex);
     Tau_global_decr_insideTAU();
     Tau_pure_stop(__func__);
     return 0;
