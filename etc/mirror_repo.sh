@@ -5,7 +5,7 @@ set -x
 T="$(date +%s)"
 
 # Do this in the /tmp directory
-basedir=/tmp
+basedir=/tmp/`whoami`
 # The name of the working tau2 repo
 repodir=tau2-for-cleaning
 # The main TAU repo
@@ -39,7 +39,7 @@ fi
 
 # Run the BFG! See https://github.com/rtyley/bfg-repo-cleaner for details.
 before=`du -sh .`
-java -jar /tmp/bfg-1.13.0.jar --strip-blobs-bigger-than 10M .
+java -jar ${basedir}/bfg-1.13.0.jar --strip-blobs-bigger-than 10M .
 git reflog expire --expire=now --all && git gc --prune=now --aggressive
 after=`du -sh .`
 
