@@ -159,7 +159,7 @@ struct Tau_thread_status_flags {
  
  static CAPIThreadList Tau_thread_flags;
  
- inline void checkVector(int tid){
+void checkTCAPIVector(int tid){
  	while(Tau_thread_flags.size()<=tid){
          //RtsLayer::LockDB();
  		Tau_thread_flags.push_back(new Tau_thread_status_flags());
@@ -168,8 +168,8 @@ struct Tau_thread_status_flags {
  }
 
 static inline Tau_thread_status_flags& getTauThreadFlag(int tid){
-    checkVector(tid);
-    //Tau_thread_status_flags& test = *Tau_thread_flags[tid];
+    checkTCAPIVector(tid);
+    Tau_thread_status_flags& test = *(Tau_thread_flags[tid]);
     //printf("stackpos: %d on tid: %d\n", test.Tau_global_stackpos,tid);
     return *Tau_thread_flags[tid];
 }
@@ -2233,6 +2233,9 @@ extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid)
   TauInternalFunctionGuard protects_this_function;
 
   Profiler * current = TauInternal_CurrentProfiler(tid);
+  /*if(current){
+    printf("current Profiler: %p\n",current);
+  }*/
   if (current
       && current->ParentProfiler == NULL
       && strcmp(current->ThisFunction->GetName(), ".TAU application") == 0)

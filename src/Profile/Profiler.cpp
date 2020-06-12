@@ -144,19 +144,31 @@ extern void TauFlushRocmEventsIfNecessary(int thread_id);
 
 x_uint64 Tau_get_firstTimeStamp();
 struct ProfilerData{
-    int profileWriteCount;
+    int profileWriteCount=0;
     #ifdef TAU_TRACK_IDLE_THREADS
         double TheLastTimeStamp[TAU_MAX_COUNTERS];
     #endif /* TAU_TRACK_IDLE_THREADS */
 };
-static vector<ProfilerData*> ProfilerThreadList;
-inline void checkVector(int tid){
+struct PThreadList : vector<ProfilerData*>{
+    PThreadList(){
+         //printf("Creating PapiThreadList at %p\n", this);
+      }
+     virtual ~PThreadList(){
+         //printf("Destroying PapiThreadList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
+
+static PThreadList ProfilerThreadList;
+
+void checkProfilerVector(int tid){
 	while(ProfilerThreadList.size()<=tid){
         RtsLayer::LockDB();
 		ProfilerThreadList.push_back(new ProfilerData());
-        ProfilerThreadList.back()->profileWriteCount=0;
+        //ProfilerThreadList.back()->profileWriteCount=0;
         RtsLayer::UnLockDB();
 	}
+    //printf("Write count for tid: %d, post-check: %d\n",tid,ProfilerThreadList[tid]->profileWriteCount);
 }
 //////////////////////////////////////////////////////////////////////
 // For OpenMP
@@ -164,11 +176,11 @@ inline void checkVector(int tid){
 #ifdef TAU_TRACK_IDLE_THREADS
 //double TheLastTimeStamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS]; //TODO: DYNATHREAD
 inline void setLastTimeStamp(int tid, int counter, double value){
-    checkVector(tid);
+    checkProfilerVector(tid);
     ProfilerThreadList[tid]->TheLastTimeStamp[counter]=value;
 }
 inline double getLastTimeStamp(int tid, int counter){
-    checkVector(tid);
+    checkProfilerVector(tid);
     return ProfilerThreadList[tid]->TheLastTimeStamp[counter];
 }
 #endif /* TAU_TRACK_IDLE_THREADS */
@@ -761,7 +773,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #ifdef TAU_TRACK_IDLE_THREADS /* Check if we need to shut off .TAU applications on other tids */
         if (tid == 0) {
           int i;
-          for (i = 1; i < TAU_MAX_THREADS; i++) {
+          for (i = 1; i < ProfilerThreadList.size(); i++) {
             /* for all other threads */
             Profiler *cp = TauInternal_CurrentProfiler(i);
             if (cp && strncmp(cp->ThisFunction->GetName(), ".TAU", 4) == 0) {
@@ -1543,15 +1555,20 @@ static int writeProfile(FILE *fp, char *metricName, int tid, int metric, const c
 
 //static int profileWriteCount[TAU_MAX_THREADS];
 inline void setProfileWriteCount(int tid, int val){//TODO: DYNATHREAD
-    checkVector(tid);
+    checkProfilerVector(tid);
     ProfilerThreadList[tid]->profileWriteCount=val;
 }
 inline void incProfileWriteCount(int tid){
-    checkVector(tid);
+    checkProfilerVector(tid);
+    //printf("Write count for tid: %d, pre increment: %d\n",tid,ProfilerThreadList[tid]->profileWriteCount);
+    //printf("Vector for tid: %d: %p\n",tid,ProfilerThreadList);
+    //printf("Pointer for tid: %d, pre increment: %p\n",tid,ProfilerThreadList[tid]);
+    //printf("ProfilerThreadList size: %d, checking tid: %d\n",ProfilerThreadList.size(),tid);
     ProfilerThreadList[tid]->profileWriteCount++;
+
 }
 inline int getProfileWriteCount(int tid){//TODO: DYNATHREAD
-    checkVector(tid);
+    checkProfilerVector(tid);
     return ProfilerThreadList[tid]->profileWriteCount;
 }
 static int profileWriteWarningPrinted = 0;
@@ -1559,7 +1576,7 @@ static int profileWriteWarningPrinted = 0;
 extern "C" int Tau_profiler_initialization()
 {
   int i;
-  for (i = 1; i < TAU_MAX_THREADS; i++) {
+  for (i = 1; i < ProfilerThreadList.size(); i++) {
     setProfileWriteCount(i,0);
   }
   profileWriteWarningPrinted = 0;
