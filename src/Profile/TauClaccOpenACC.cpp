@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <acc_prof.h>
 #include <sstream>
+#include <iostream>
 
 #define TAU_ACC_NAME_LEN 4096
 #define VERSION 0.1
@@ -17,6 +18,7 @@
 Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info )
 {
   std::stringstream event_name, user_event_name;
+  std::stringstream srcinfo, lineinfo;
   
   //acc_event_t *event_type_info = NULL; 
   acc_data_event_info*   data_event_info = NULL;
@@ -34,8 +36,7 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
     case acc_ev_wait_end                    : TAU_SET_EVENT_NAME(event_name, "<openacc_wait");
     case acc_ev_update_start                : TAU_SET_EVENT_NAME(event_name, ">openacc_update");
     case acc_ev_update_end                  : TAU_SET_EVENT_NAME(event_name, "<openacc_update");*/
-  case acc_ev_enter_data_start: 
-    TAU_SET_EVENT_NAME(event_name, ">openacc_enter_data");
+  case acc_ev_enter_data_start:   TAU_SET_EVENT_NAME(event_name, ">openacc_enter_data");
   case acc_ev_enter_data_end: TAU_SET_EVENT_NAME(event_name, "<openacc_enter_data");
   case acc_ev_exit_data_start: TAU_SET_EVENT_NAME(event_name, ">openacc_exit_data");
   case acc_ev_exit_data_end: TAU_SET_EVENT_NAME(event_name, "<openacc_exit_data");
@@ -90,7 +91,6 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
   case acc_ev_free                        : TAU_SET_EVENT_NAME(event_name, "openacc_free");
   default                                 : TAU_SET_EVENT_NAME(event_name, "default");
   }
-  std::stringstream srcinfo, lineinfo;
   
   if (prof_info) {
     TAU_VERBOSE("Device=%d ", prof_info->device_number);
@@ -105,7 +105,7 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
       srcinfo << lineinfo;
     }
     srcinfo << "]" ;
-    event_name << srcinfo;
+    event_name << srcinfo.str();
   }
   const char* name = event_name.str().c_str();
   if ( name[0] == '>') {
