@@ -99,10 +99,10 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
     TAU_VERBOSE( "src info: %s\n", srcinfo.str().c_str() );
     TAU_VERBOSE( "Line nb %d\n", prof_info->line_no );
     lineinfo << " {" << prof_info->line_no << ":" << prof_info->func_line_no << "}";
-    srcinfo << lineinfo;
+    srcinfo << lineinfo.str();
     if ((prof_info->end_line_no) && (prof_info->end_line_no > prof_info->line_no)) {
       lineinfo << "-{" << prof_info->end_line_no << ":" << prof_info->func_end_line_no << "}";
-      srcinfo << lineinfo;
+      srcinfo << lineinfo.str();
     }
     srcinfo << "]" ;
     event_name << srcinfo.str();
