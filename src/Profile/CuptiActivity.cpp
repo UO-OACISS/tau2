@@ -1821,16 +1821,26 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                                 deviceId,
                                 name,
                                 &eventMap[taskId]);
-                        static TauContextUserEvent* bs;
-                        static TauContextUserEvent* dm;
-                        static TauContextUserEvent* sm;
-                        static TauContextUserEvent* lm;
-                        static TauContextUserEvent* lr;
+                        static TauContextUserEvent* bs = NULL;
+                        static TauContextUserEvent* dm = NULL;
+                        static TauContextUserEvent* sm = NULL;
+                        static TauContextUserEvent* lm = NULL;
+                        static TauContextUserEvent* lr = NULL;
+                        if (!bs) {
                         Tau_get_context_userevent((void **) &bs, "Block Size");
+                        }
+                        if (!dm) {
                         Tau_get_context_userevent((void **) &dm, "Shared Dynamic Memory (bytes)");
+                        }
+                        if (!sm) {
                         Tau_get_context_userevent((void **) &sm, "Shared Static Memory (bytes)");
+                        }
+                        if (!lm) {
                         Tau_get_context_userevent((void **) &lm, "Local Memory (bytes per thread)");
+                        }
+                        if (!lr) {
                         Tau_get_context_userevent((void **) &lr, "Local Registers (per thread)");
+                        }
 
                         eventMap[taskId][bs] = blockX * blockY * blockZ;
                         eventMap[taskId][dm] = dynamicSharedMemory;
