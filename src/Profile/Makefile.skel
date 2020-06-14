@@ -987,8 +987,8 @@ TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar
 TauOMPT.o 	: TauOMPT.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
-TauClaccOpenACC.o: TauClaccOpenACC.c
-	$(CC) $(CFLAGS) -c $^
+TauClaccOpenACC.o: TauClaccOpenACC.cpp
+	$(CXX) $(CXXFLAGS) -c $^
 
 TauScorePAdapterInit.o : TauScorePAdapterInit.c $(HDRS)
 	$(CC) $(CFLAGS) -c $(@:.o=.c)
