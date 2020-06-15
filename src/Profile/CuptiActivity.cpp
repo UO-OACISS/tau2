@@ -1292,6 +1292,11 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
     return true;
 }
 
+#if defined(TAU_PGI_OPENACC)
+/* This function is defined in TauOpenACC.cpp */
+void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
+#endif
+
     /* This callback handles asynchronous activity */
 
     void Tau_cupti_record_activity(CUpti_Activity *record)
@@ -1302,6 +1307,16 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
         CUDA_CHECK_ERROR(err2, "Cannot get timestamp.\n");
 
         switch (record->kind) {
+#if defined(TAU_PGI_OPENACC)
+            /* Handle OpenACC special cases */
+            case CUPTI_ACTIVITY_KIND_OPENACC_DATA:
+            case CUPTI_ACTIVITY_KIND_OPENACC_LAUNCH:
+            case CUPTI_ACTIVITY_KIND_OPENACC_OTHER:
+            {
+                Tau_openacc_process_cupti_activity(record);
+                break;
+            }
+#endif
             case CUPTI_ACTIVITY_KIND_STREAM:
             {
                 /*
@@ -1704,7 +1719,6 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                     uint32_t staticSharedMemory;
                     uint32_t localMemoryPerThread;
                     uint32_t registersPerThread;
-
 #if CUDA_VERSION >= 5050
                     if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
                         printf(" inside cdp_kernel\n");
@@ -1807,16 +1821,26 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                                 deviceId,
                                 name,
                                 &eventMap[taskId]);
-                        static TauContextUserEvent* bs;
-                        static TauContextUserEvent* dm;
-                        static TauContextUserEvent* sm;
-                        static TauContextUserEvent* lm;
-                        static TauContextUserEvent* lr;
+                        static TauContextUserEvent* bs = NULL;
+                        static TauContextUserEvent* dm = NULL;
+                        static TauContextUserEvent* sm = NULL;
+                        static TauContextUserEvent* lm = NULL;
+                        static TauContextUserEvent* lr = NULL;
+                        if (!bs) {
                         Tau_get_context_userevent((void **) &bs, "Block Size");
+                        }
+                        if (!dm) {
                         Tau_get_context_userevent((void **) &dm, "Shared Dynamic Memory (bytes)");
+                        }
+                        if (!sm) {
                         Tau_get_context_userevent((void **) &sm, "Shared Static Memory (bytes)");
+                        }
+                        if (!lm) {
                         Tau_get_context_userevent((void **) &lm, "Local Memory (bytes per thread)");
+                        }
+                        if (!lr) {
                         Tau_get_context_userevent((void **) &lr, "Local Registers (per thread)");
+                        }
 
                         eventMap[taskId][bs] = blockX * blockY * blockZ;
                         eventMap[taskId][dm] = dynamicSharedMemory;
