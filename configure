@@ -1505,7 +1505,14 @@ for arg in "$@"; do
 		  fixmakeargs="$fixmakeargs PAPINOINC"
             fi
             if [ -r /sys/devices/power/events/energy-pkg.scale ] ; then
-		  fixmakeargs="$fixmakeargs PAPI_PERF_RAPL"
+                if [ -r /proc/sys/kernel/perf_event_paranoid ] ; then
+                    paranoid=`cat /proc/sys/kernel/perf_event_paranoid`
+                    if [ "${paranoid}" == "-1" ] ; then
+		                fixmakeargs="$fixmakeargs PAPI_PERF_RAPL"
+                    else
+                        echo "NOTE: /proc/sys/kernel/perf_event_paranoid has a value greater than -1, RAPL power measurement disabled."
+                    fi
+                fi
             fi
 
 	    shift

@@ -19,7 +19,6 @@
 #ifdef TAU_CRAYXMT
 #pragma mta instantiate used
 #endif /* TAU_CRAYXMT */
-#define DEBUGPROFMSG
 
 #ifdef TAU_BEACON
 #include <Profile/TauBeacon.h>
