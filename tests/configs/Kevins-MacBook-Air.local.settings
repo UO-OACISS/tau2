@@ -1,0 +1,15 @@
+#!/bin/zsh -e
+
+source /Users/khuck/spack/share/spack/setup-env.sh
+spack load gcc binutils openmpi otf2 pdt%gcc
+
+export TAU_OPTIONS="-optRevert"
+
+declare -a thread_options=("-pthread")
+export thread_options
+declare -a mpi_options=("-mpi")
+export mpi_options
+
+# Enable the things that Spack enables by default
+base_support="-bfd=`spack location -i binutils` -iowrapper -pdt=`spack location -i pdt%gcc` -otf=`spack location -i otf2`"
+
