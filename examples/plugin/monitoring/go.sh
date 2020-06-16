@@ -23,7 +23,7 @@ new_method() {
     # launch the program with tau_exec
     echo "With PAPI component plugin tau_exec"
     T="$(date +%s)"
-    mpirun -np 2 tau_exec -T papi,mpi,pthread,adios2 -adios2 -papi_components ./matmult
+    mpirun -np 2 tau_exec -T papi,mpi,pthread,adios2 -monitoring ./matmult
     A="$(($(date +%s)-T))"
     printf "Time to run tau: %02d hours %02d minutes %02d seconds.\n" "$((A/3600))" "$((A/60%60))" "$((A%60))"
 }
