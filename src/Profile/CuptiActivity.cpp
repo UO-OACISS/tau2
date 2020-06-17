@@ -951,8 +951,15 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
             stringstream ss;
             char * demangled = demangle_name(cbInfo->symbolName);
             ss << cbInfo->functionName << ": " << demangled;
-            free(demangled);
             Tau_gpu_enter_event(ss.str().c_str());
+            /* If we are tracing (could be through a plugin),
+             * add the correlation ID as a user event */
+            if (TauEnv_get_thread_per_gpu_stream()) {
+                std::stringstream ss2;
+                ss2 << "Correlation ID : " << demangled;
+                TAU_TRIGGER_EVENT(ss2.str().c_str(), cbInfo->correlationId);
+            }
+            free(demangled);
         } else {
             Tau_gpu_enter_event(cbInfo->functionName);
         }
@@ -1847,6 +1854,15 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                         eventMap[taskId][sm] = staticSharedMemory;
                         eventMap[taskId][lm] = localMemoryPerThread;
                         eventMap[taskId][lr] = registersPerThread;
+                    }
+                    /* If we are tracing (could be through a plugin),
+                     * add the correlation ID as a user event */
+                    if (TauEnv_get_thread_per_gpu_stream()) {
+                        static TauContextUserEvent* cid = NULL;
+                        if (!cid) {
+                            Tau_get_context_userevent((void **) &cid, "Correlation ID");
+                        }
+                        eventMap[taskId][cid] = correlationId;
                     }
 
                     GpuEventAttributes *map;
