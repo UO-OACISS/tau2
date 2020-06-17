@@ -15,24 +15,36 @@ myhost=`hostname`
 myhost=`basename -s .nic.uoregon.edu ${myhost}`
 osname=`uname`
 
-# Source that host's settings file to load modules and set paths
-source ${tauroot}/tests/configs/${myhost}.settings
-
-cd ${tauroot}
-
 # Usage message
-if [ $# -eq 0 ] ; then
-    echo "Usage: $0 [configure|build|test|clean]"
+if [ $# -lt 2 ] ; then
+    echo "Usage: $0 compiler [configure|build|test|clean]"
+    echo "Exmple: $0 gcc configure"
+    echo "Exmple: $0 icc build"
+    echo "Exmple: $0 pgcc test"
     kill -INT $$
 fi
 
+compiler=$1
+
+if [ -f ${tauroot}/tests/configs/${myhost}.${compiler}.settings ] ; then
+    # Source that host's settings file to load modules and set paths
+    source ${tauroot}/tests/configs/${myhost}.${compiler}.settings
+else
+    echo "${tauroot}/tests/configs/${myhost}.${compiler}.settings not found."
+    kill -INT $$
+fi
+
+cd ${tauroot}
+
+compilers="-cc=${CC} -c++=${CXX} -fortran=${FC}"
+
 # Do configure step, using all arguments except this script name and configure
-if [ "$1" == "configure" ] ; then
-    echo "./configure ${@:2} ..."
-    ./configure ${@:2}
+if [ "$2" == "configure" ] ; then
+    echo "./configure ${compilers} ${@:3}"
+    ./configure ${compilers} ${@:3}
 
 # Do build step
-elif [ "$1" == "build" ] ; then
+elif [ "$2" == "build" ] ; then
     nprocs=2
     if [ ${osname} == "Darwin" ]; then
         nprocs=`sysctl -n hw.ncpu`
@@ -49,13 +61,13 @@ elif [ "$1" == "build" ] ; then
     make -j $ntcores -l $ntcores install
 
 # Do test step
-elif [ "$1" == "test" ] ; then
+elif [ "$2" == "test" ] ; then
     echo "Running tests..."
     cd ${tauroot}/tests/programs
     make
 
 # Do clean step
-elif [ "$1" == "clean" ] ; then
+elif [ "$2" == "clean" ] ; then
     echo "Cleaning tests..."
     cd ${tauroot}/tests/programs
     make cleanall

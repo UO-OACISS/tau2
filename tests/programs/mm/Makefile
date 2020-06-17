@@ -37,7 +37,7 @@ matmult_initialize.o: matmult_initialize.c matmult_initialize.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 test:
-	./matmult
+	$(MPIRUN) ./matmult
 	test -f profile.0.0.0 || test -d MULTI__PAPI_TOT_INS || exit 1
 
 #$(shell if [ ! -f profile.0.0.0 ] then ; exit 1 )
