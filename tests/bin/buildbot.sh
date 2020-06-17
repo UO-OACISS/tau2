@@ -64,6 +64,7 @@ elif [ "$2" == "build" ] ; then
 elif [ "$2" == "test" ] ; then
     echo "Running tests..."
     cd ${tauroot}/tests/programs
+    make clean
     make
 
 # Do clean step

@@ -1,4 +1,5 @@
 PROGRAMS ?= $(wildcard [a-z]*)
+COMPILER ?= gcc
 
 PHONY: all
 
@@ -23,8 +24,8 @@ cleanall:
 	@echo "Done!"
 
 test:
-	../bin/buildbot.sh test
+	../bin/buildbot.sh $(COMPILER) test
 
 clean:
-	../bin/buildbot.sh clean
+	../bin/buildbot.sh $(COMPILER) clean
 

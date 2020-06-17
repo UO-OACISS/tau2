@@ -1,8 +1,8 @@
 #!/bin/zsh -e
 
 module load gcc/7.3 # Needed for PDT, apparently
-module load mpi/openmpi-3.1.3_pgi-19.10
-module load pgi-community/19.10
+module load intel/20
+module load mpi/intel-20
 module load python/3.6.8
 module load cuda/10.2
 BFD=/usr/local/packages/binutils/2.33.1
@@ -10,15 +10,14 @@ PDT=/usr/local/packages/pdtoolkit-3.25.1
 OTF2=/usr/local/packages/otf2/2.1
 PAPI=/usr/local/packages/papi/6.0.0.1
 
-export CC=pgcc
-export CXX=pgc++
-export FC=pgi
-export COMPILER=pgi
+export CC=icc
+export CXX=icpc
+export FC=ifort
+export COMPILER=intel
 
 export TAU_OPTIONS="-optRevert"
 
-# No ompt support
-declare -a thread_options=("-pthread" "-openmp -opari")
+declare -a thread_options=("-pthread" "-openmp -opari" "-openmp -ompt")
 export thread_options
 declare -a mpi_options=("-mpi")
 export mpi_options
@@ -36,5 +35,5 @@ base_support="-bfd=${BFD} -iowrapper -pdt=${PDT} -pdt_c++=g++ -otf=${OTF2}"
 basic_test_programs="mm"
 mpi_test_programs="mm"
 python_test_programs="python"
-cuda_test_programs="cuda openacc"
+cuda_test_programs="cuda"
 

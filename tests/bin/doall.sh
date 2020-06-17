@@ -32,7 +32,7 @@ three_steps() {
 }
 
 test_vanilla() {
-    export PROGRAMS="mm"
+    export PROGRAMS=${basic_test_programs}
     configs=""
     # Total vanilla build
     three_steps
@@ -43,7 +43,7 @@ test_vanilla() {
 }
 
 test_threads() {
-    export PROGRAMS="mm"
+    export PROGRAMS=${basic_test_programs}
 
     # Test threading options
     for option in "${thread_options[@]}" ; do
@@ -53,7 +53,7 @@ test_threads() {
 }
 
 test_mpi() {
-    export PROGRAMS="mm"
+    export PROGRAMS=${mpi_test_programs}
     export MPIRUN="mpirun -np 2"
 
     # Test mpi options
@@ -66,7 +66,7 @@ test_mpi() {
 }
 
 test_papi() {
-    export PROGRAMS="mm"
+    export PROGRAMS=${basic_test_programs}
     export TAU_METRICS=TIME:PAPI_TOT_INS
 
     # Test papi options
@@ -79,7 +79,7 @@ test_papi() {
 }
 
 test_python() {
-    export PROGRAMS="python"
+    export PROGRAMS=${python_test_protrams}
 
     # Test python options
     for option in "${python_options[@]}" ; do
@@ -89,7 +89,7 @@ test_python() {
 }
 
 test_cuda() {
-    export PROGRAMS="cuda openacc"
+    export PROGRAMS=${cuda_test_protrams}
 
     # Test cuda options
     for option in "${cuda_options[@]}" ; do
@@ -98,8 +98,7 @@ test_cuda() {
     done
 }
 
-#declare -a compilers=("gcc" "pgi" "icc")
-declare -a compilers=("pgi")
+declare -a compilers=("gcc" "pgi" "intel")
 
 for compiler in "${compilers[@]}" ; do
     # Source that host's settings file to load modules and set paths

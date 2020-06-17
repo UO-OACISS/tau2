@@ -12,6 +12,7 @@ PAPI=/usr/local/packages/papi/6.0.0.1
 export CC=gcc
 export CXX=g++
 export FC=gfortran
+export COMPILER=gcc
 
 export TAU_OPTIONS="-optRevert"
 
@@ -29,3 +30,8 @@ export cuda_options
 # Enable the things that Spack enables by default
 base_support="-bfd=${BFD} -iowrapper -pdt=${PDT} -pdt_c++=g++ -otf=${OTF2}"
 
+# Which tests to run?
+basic_test_programs="mm"
+mpi_test_programs="mm"
+python_test_programs="python"
+cuda_test_programs="cuda openacc"
