@@ -24,7 +24,13 @@ cleanall:
 	@echo "Done!"
 
 test:
-	../bin/buildbot.sh $(COMPILER) test
+	@for a in $(PROGRAMS); do \
+		if [ -d $(a) ]; then \
+			echo "processing folder $$a"; \
+			$(MAKE) -C $$a ; \
+		fi; \
+	done;
+	@echo "Done!"
 
 clean:
 	../bin/buildbot.sh $(COMPILER) clean

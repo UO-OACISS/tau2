@@ -17,10 +17,10 @@ osname=`uname`
 
 # Usage message
 if [ $# -lt 2 ] ; then
-    echo "Usage: $0 compiler [configure|build|test|clean]"
-    echo "Exmple: $0 gcc configure"
-    echo "Exmple: $0 icc build"
-    echo "Exmple: $0 pgcc test"
+    echo "Usage: $0 compiler [configure|build|test|clean] config"
+    echo "Exmple: $0 gcc configure base"
+    echo "Exmple: $0 icc build mpi"
+    echo "Exmple: $0 pgcc test cuda"
     kill -INT $$
 fi
 
@@ -37,14 +37,6 @@ fi
 cd ${tauroot}
 
 compilers="-cc=${CC} -c++=${CXX} -fortran=${FC}"
-
-export pthread_config="${base_support} -pthread"
-export opari_config="${base_support} -openmp -opari"
-export ompt_config="${base_support} -openmp -ompt"
-export mpi_config="${base_support} -mpi"
-export papi_config="${base_support} -papi=${PAPI}"
-export python_config="${base_support} -python -pythoninc=${PYTHONTOP}/include/python3.6m -pythonlib=${PYTHONTOP}/lib"
-export cuda_config="${base_support} -cuda=${CUDA} -pthread"
 
 # Do configure step, using all arguments except this script name and configure
 if [ "$2" == "configure" ] ; then
@@ -90,6 +82,7 @@ elif [ "$2" == "build" ] ; then
 
 # Do test step
 elif [ "$2" == "test" ] ; then
+    export PPROF_CMD="pprof -a"
     config=$3
     if [ "${config}" == "vanilla" ] ; then
         export PROGRAMS=${basic_test_programs}
@@ -103,14 +96,15 @@ elif [ "$2" == "test" ] ; then
         export PROGRAMS=${basic_test_programs}
     elif [ "${config}" == "mpi" ] ; then
         export PROGRAMS=${mpi_test_programs}
-        export MPIRUN="mpirun -np 2"
+        export MPIRUN="${mpirun_command}"
     elif [ "${config}" == "papi" ] ; then
         export PROGRAMS=${basic_test_programs}
         export TAU_METRICS=TIME:PAPI_TOT_INS
+        export PPROF_CMD="cd MULTI__PAPI_TOT_INS && pprof -a"
     elif [ "${config}" == "python" ] ; then
-        export PROGRAMS=${python_test_protrams}
+        export PROGRAMS=${python_test_programs}
     elif [ "${config}" == "cuda" ] ; then
-        export PROGRAMS=${cuda_test_protrams}
+        export PROGRAMS=${cuda_test_programs}
     fi
     echo "Running tests..."
     cd ${tauroot}/tests/programs
@@ -119,6 +113,7 @@ elif [ "$2" == "test" ] ; then
     unset PROGRAMS
     unset MPIRUN
     unset TAU_METRICS
+    unset PPROF_CMD
 
 # Do clean step
 elif [ "$2" == "clean" ] ; then

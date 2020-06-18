@@ -1,4 +1,4 @@
-all: multiGpuThread
+all: multiGpuThread test
 
 multiGpuThread: multiGpuThread.cu
 	nvcc -g -O2 -o multiGpuThread multiGpuThread.cu -lpthread --default-stream per-thread
@@ -7,6 +7,7 @@ multiGpuThread: multiGpuThread.cu
 test:
 	tau_exec -T cupti,serial,pthread -cupti ./multiGpuThread
 	test -f profile.0.0.0 || exit 1
+	$(PPROF_CMD)
 
 clean:
 	rm -rf multiGpuThread multiGpuThread_legacy profile.* MULTI__* traces*

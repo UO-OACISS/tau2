@@ -29,6 +29,7 @@ all: clean test
 test:
 	tau_python -T serial -tau-python-interpreter=python3 ./firstprime.py
 	test -f profile.0.0.0 || exit 1
+	$(PPROF_CMD)
 
 #$(shell if [ ! -f profile.0.0.0 ] then ; exit 1 )
 

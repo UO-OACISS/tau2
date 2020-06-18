@@ -20,8 +20,8 @@
 #include <stdio.h>
 #include "timer.h"
 
-#define NN 1024
-#define NM 1024
+#define NN 128
+#define NM 128
 
 double A[NN][NM];
 double Anew[NN][NM];

@@ -21,10 +21,10 @@ export TAU_OPTIONS="-optRevert"
 base_support="-bfd=${BFD} -iowrapper -pdt=${PDT} -pdt_c++=g++ -otf=${OTF2}"
 
 # Which tests to run?
-basic_test_programs="mm"
-mpi_test_programs="mm"
-python_test_programs="python"
-cuda_test_programs="cuda openacc"
+export basic_test_programs="mm"
+export mpi_test_programs="mm"
+export python_test_programs="python"
+export cuda_test_programs="cuda openacc"
 
 export pthread_config="${base_support} -pthread"
 export opari_config="${base_support} -openmp -opari"
