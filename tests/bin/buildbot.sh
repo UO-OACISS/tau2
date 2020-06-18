@@ -38,10 +38,38 @@ cd ${tauroot}
 
 compilers="-cc=${CC} -c++=${CXX} -fortran=${FC}"
 
+export pthread_config="${base_support} -pthread"
+export opari_config="${base_support} -openmp -opari"
+export ompt_config="${base_support} -openmp -ompt"
+export mpi_config="${base_support} -mpi"
+export papi_config="${base_support} -papi=${PAPI}"
+export python_config="${base_support} -python -pythoninc=${PYTHONTOP}/include/python3.6m -pythonlib=${PYTHONTOP}/lib"
+export cuda_config="${base_support} -cuda=${CUDA} -pthread"
+
 # Do configure step, using all arguments except this script name and configure
 if [ "$2" == "configure" ] ; then
-    echo "./configure ${compilers} ${@:3}"
-    ./configure ${compilers} ${@:3}
+    config=$3
+    if [ "${config}" == "vanilla" ] ; then
+        config=""
+    elif [ "${config}" == "base" ] ; then
+        config=${base_support}
+    elif [ "${config}" == "pthread" ] ; then
+        config=${pthread_config}
+    elif [ "${config}" == "opari" ] ; then
+        config=${opari_config}
+    elif [ "${config}" == "ompt" ] ; then
+        config=${ompt_config}
+    elif [ "${config}" == "mpi" ] ; then
+        config=${mpi_config}
+    elif [ "${config}" == "papi" ] ; then
+        config=${papi_config}
+    elif [ "${config}" == "python" ] ; then
+        config=${python_config}
+    elif [ "${config}" == "cuda" ] ; then
+        config=${cuda_config}
+    fi
+    echo "./configure ${compilers} ${config}"
+    ./configure ${compilers} ${config}
 
 # Do build step
 elif [ "$2" == "build" ] ; then
@@ -62,10 +90,35 @@ elif [ "$2" == "build" ] ; then
 
 # Do test step
 elif [ "$2" == "test" ] ; then
+    config=$3
+    if [ "${config}" == "vanilla" ] ; then
+        export PROGRAMS=${basic_test_programs}
+    elif [ "${config}" == "base" ] ; then
+        export PROGRAMS=${basic_test_programs}
+    elif [ "${config}" == "pthread" ] ; then
+        export PROGRAMS=${basic_test_programs}
+    elif [ "${config}" == "opari" ] ; then
+        export PROGRAMS=${basic_test_programs}
+    elif [ "${config}" == "ompt" ] ; then
+        export PROGRAMS=${basic_test_programs}
+    elif [ "${config}" == "mpi" ] ; then
+        export PROGRAMS=${mpi_test_programs}
+        export MPIRUN="mpirun -np 2"
+    elif [ "${config}" == "papi" ] ; then
+        export PROGRAMS=${basic_test_programs}
+        export TAU_METRICS=TIME:PAPI_TOT_INS
+    elif [ "${config}" == "python" ] ; then
+        export PROGRAMS=${python_test_protrams}
+    elif [ "${config}" == "cuda" ] ; then
+        export PROGRAMS=${cuda_test_protrams}
+    fi
     echo "Running tests..."
     cd ${tauroot}/tests/programs
     make clean
     make
+    unset PROGRAMS
+    unset MPIRUN
+    unset TAU_METRICS
 
 # Do clean step
 elif [ "$2" == "clean" ] ; then

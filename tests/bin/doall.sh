@@ -23,84 +23,84 @@ build_log=/tmp/${myname}/build.log
 test_log=/tmp/${myname}/test.log
 
 three_steps() {
-    echo "Configuring... ${compiler} ${configs} (see ${config_log})"
-    ${scriptdir}/buildbot.sh ${compiler} configure ${configs} >& ${config_log}
+    cmd="${scriptdir}/buildbot.sh ${compiler} configure ${config}"
+    echo "Configuring... ${compiler} ${config} (see ${config_log})"
+    echo ${cmd}
+    ${cmd} >& ${config_log}
     echo "Building... (see ${build_log})"
-    ${scriptdir}/buildbot.sh ${compiler} build >& ${build_log}
+    cmd="${scriptdir}/buildbot.sh ${compiler} build ${config}"
+    echo ${cmd}
+    ${cmd} >& ${build_log}
     echo "Testing ${PROGRAMS}... (see ${test_log})"
-    ${scriptdir}/buildbot.sh ${compiler} test >& ${test_log}
+    cmd="${scriptdir}/buildbot.sh ${compiler} test ${config}"
+    echo ${cmd}
+    ${cmd} >& ${test_log}
 }
 
 test_vanilla() {
-    export PROGRAMS=${basic_test_programs}
-    configs=""
+    config="vanilla"
     # Total vanilla build
     three_steps
 
     # Base support build
-    configs="${base_support}"
+    config="base"
     three_steps
 }
 
 test_threads() {
-    export PROGRAMS=${basic_test_programs}
-
     # Test threading options
-    for option in "${thread_options[@]}" ; do
-        configs="${base_support} ${option}"
+    if [ "${pthread_config}" != "" ] ; then
+        config="pthread"
         three_steps
-    done
+    fi
+    if [ "${opari_config}" != "" ] ; then
+        config="opari"
+        three_steps
+    fi
+    if [ "${ompt_config}" != "" ] ; then
+        config="ompt"
+        three_steps
+    fi
 }
 
 test_mpi() {
-    export PROGRAMS=${mpi_test_programs}
-    export MPIRUN="mpirun -np 2"
-
     # Test mpi options
-    for option in "${mpi_options[@]}" ; do
-        configs="${base_support} ${option}"
+    if [ "${mpi_config}" != "" ] ; then
+        config="mpi"
         three_steps
-    done
-
-    unset MPIRUN
+    fi
 }
 
 test_papi() {
-    export PROGRAMS=${basic_test_programs}
-    export TAU_METRICS=TIME:PAPI_TOT_INS
-
     # Test papi options
-    for option in "${papi_options[@]}" ; do
-        configs="${base_support} ${option}"
+    if [ "${papi_config}" != "" ] ; then
+        config="papi"
         three_steps
-    done
-
-    unset TAU_METRICS
+    fi
 }
 
 test_python() {
-    export PROGRAMS=${python_test_protrams}
-
     # Test python options
-    for option in "${python_options[@]}" ; do
-        configs="${base_support} ${option}"
+    if [ "${python_config}" != "" ] ; then
+        config="python"
         three_steps
-    done
+    fi
 }
 
 test_cuda() {
-    export PROGRAMS=${cuda_test_protrams}
-
     # Test cuda options
-    for option in "${cuda_options[@]}" ; do
-        configs="${base_support} ${option}"
+    if [ "${cuda_config}" != "" ] ; then
+        config="cuda"
         three_steps
-    done
+    fi
 }
 
-declare -a compilers=("gcc" "pgi" "intel")
+declare -a compilers=("gcc" "pgi" "intel" "xl")
 
 for compiler in "${compilers[@]}" ; do
+    if [ ! -f ${tauroot}/tests/configs/${myhost}.${compiler}.settings ] ; then
+        continue
+    fi
     # Source that host's settings file to load modules and set paths
     source ${tauroot}/tests/configs/${myhost}.${compiler}.settings
 

@@ -1,5 +1,6 @@
-#!/bin/zsh -e
+#!/bin/bash -e
 
+module purge
 module load mpi/openmpi-3.1.1_gcc-7.3
 module load gcc/7.3
 module load python/3.6.8
@@ -16,17 +17,6 @@ export COMPILER=gcc
 
 export TAU_OPTIONS="-optRevert"
 
-declare -a thread_options=("-pthread" "-openmp -opari" "-openmp -ompt")
-export thread_options
-declare -a mpi_options=("-mpi")
-export mpi_options
-declare -a python_options=("-python -pythoninc=${PYTHONTOP}/include/python3.6m -pythonlib=${PYTHONTOP}/lib")
-export python_options
-declare -a papi_options=("-papi=${PAPI}")
-export papi_options
-declare -a cuda_options=("-cuda=${CUDA} -pthread")
-export cuda_options
-
 # Enable the things that Spack enables by default
 base_support="-bfd=${BFD} -iowrapper -pdt=${PDT} -pdt_c++=g++ -otf=${OTF2}"
 
@@ -35,3 +25,12 @@ basic_test_programs="mm"
 mpi_test_programs="mm"
 python_test_programs="python"
 cuda_test_programs="cuda openacc"
+
+export pthread_config="${base_support} -pthread"
+export opari_config="${base_support} -openmp -opari"
+export ompt_config="${base_support} -openmp -ompt"
+export mpi_config="${base_support} -mpi"
+export papi_config="${base_support} -papi=${PAPI}"
+export python_config="${base_support} -python -pythoninc=${PYTHONTOP}/include/python3.6m -pythonlib=${PYTHONTOP}/lib"
+export cuda_config="${base_support} -cuda=${CUDA} -pthread"
+
