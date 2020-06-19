@@ -26,6 +26,8 @@ export mpi_test_programs="mm"
 export python_test_programs="python"
 export cuda_test_programs="cuda openacc"
 
+export mpirun_command="mpirun -np 2"
+
 export pthread_config="${base_support} -pthread"
 export opari_config="${base_support} -openmp -opari"
 export ompt_config="${base_support} -openmp -ompt"
