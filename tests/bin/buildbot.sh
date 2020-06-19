@@ -35,6 +35,8 @@ else
 fi
 
 cd ${tauroot}
+config_arch=`${tauroot}/utils/archfind`
+export PATH=${tauroot}/${config_arch}/bin:${PATH}
 
 compilers="-cc=${CC} -c++=${CXX} -fortran=${FC}"
 
@@ -82,10 +84,10 @@ elif [ "$2" == "build" ] ; then
 
 # Do test step
 elif [ "$2" == "test" ] ; then
-    config_arch=`${tauroot}/utils/archfind`
-    export PPROF_CMD="${tauroot}/${config_arch}/bin/pprof -a"
+    export PPROF_CMD="pprof -a"
     config=$3
     if [ "${config}" == "vanilla" ] ; then
+        export TAU_OPTIONS="-optCompInst ${TAU_OPTIONS}"
         export PROGRAMS=${basic_test_programs}
     elif [ "${config}" == "base" ] ; then
         export PROGRAMS=${basic_test_programs}
@@ -101,7 +103,7 @@ elif [ "$2" == "test" ] ; then
     elif [ "${config}" == "papi" ] ; then
         export PROGRAMS=${basic_test_programs}
         export TAU_METRICS=TIME:PAPI_TOT_INS
-        export PPROF_CMD="cd MULTI__PAPI_TOT_INS && ${tauroot}/${config_arch}/bin/pprof -a"
+        export PPROF_CMD="cd MULTI__PAPI_TOT_INS && pprof -a"
     elif [ "${config}" == "python" ] ; then
         export PROGRAMS=${python_test_programs}
     elif [ "${config}" == "cuda" ] ; then
