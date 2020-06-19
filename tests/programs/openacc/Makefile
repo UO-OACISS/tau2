@@ -18,7 +18,7 @@ clean:
 	/bin/rm -f prof* MULT* *.trc *.edf *.o jacobi
 
 test:
-	tau_exec -T serial,cupti -cupti -openacc ./jacobi
+	../../../$(CONFIG_ARCH)/bin/tau_exec -T serial,cupti -cupti -openacc ./jacobi
 	test -f profile.0.0.0 || exit 1
 	$(PPROF_CMD)
 
