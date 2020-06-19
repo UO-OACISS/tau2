@@ -1,8 +1,11 @@
+TAU_MAKEFILE ?=${tauroot}/include/Makefile
+include $(TAU_MAKEFILE)
+
 all: multiGpuThread test
 
 multiGpuThread: multiGpuThread.cu
-	nvcc -g -O2 -o multiGpuThread multiGpuThread.cu -lpthread --default-stream per-thread
-	nvcc -g -O2 -o multiGpuThread_legacy multiGpuThread.cu -lpthread
+	nvcc -ccbin $(CONFIG_CXX) -g -O2 -o multiGpuThread multiGpuThread.cu -lpthread --default-stream per-thread
+	nvcc -ccbin $(CONFIG_CXX) -g -O2 -o multiGpuThread_legacy multiGpuThread.cu -lpthread
 
 test:
 	tau_exec -T cupti,serial,pthread -cupti ./multiGpuThread
