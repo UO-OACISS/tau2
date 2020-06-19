@@ -13,7 +13,7 @@ PAPI=/usr/local/packages/papi/6.0.0.1-cuda-nvml-gcc7.3
 export CC=xlc_r
 export CXX=xlC_r
 export FC=ibm64
-export COMPILER=xlc
+export COMPILER=xl
 
 export TAU_OPTIONS="-optRevert -optShared"
 
