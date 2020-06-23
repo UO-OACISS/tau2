@@ -28,7 +28,7 @@ LDFLAGS =-g $(TAU_OPENMP_OPTION)
 all: clean $(TARGET) test
 
 $(TARGET): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
+	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS) -lm -ldl
 
 matmult.o: matmult.c
 	$(CC) $(CFLAGS) -c $< -o $@

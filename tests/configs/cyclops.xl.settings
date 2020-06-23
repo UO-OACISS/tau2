@@ -15,14 +15,14 @@ export CXX=xlC_r
 export FC=ibm64
 export COMPILER=xl
 
-export TAU_OPTIONS="-optRevert -optShared"
+export TAU_OPTIONS="-optRevert"
 
 # Enable the things that Spack enables by default
 base_support="-bfd=${BFD} -iowrapper -pdt=${PDT} -pdt_c++=g++ -otf=${OTF2}"
 
 # Which tests to run?
 export basic_test_programs="mm"
-export mpi_test_programs="mm"
+export mpi_test_programs="mm mm_fortran"
 export python_test_programs="python"
 export cuda_test_programs="cuda"
 
