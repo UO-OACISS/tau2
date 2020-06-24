@@ -5,6 +5,10 @@ CCBIN=-ccbin $(CONFIG_CXX)
 ifeq ("$(CONFIG_CXX)","icpc")
     CCBIN=
 endif
+# Clang 9 doesn't work with Cuda 10
+ifeq ("$(CONFIG_CXX)","clang++")
+    CCBIN=
+endif
 
 all: multiGpuThread test
 

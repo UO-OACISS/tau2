@@ -95,8 +95,9 @@ test_cuda() {
     fi
 }
 
-declare -a compilers=("gcc" "pgi" "intel" "xl")
+#declare -a compilers=("gcc" "pgi" "intel" "xl")
 #declare -a compilers=("xl")
+declare -a compilers=("llvm")
 
 for compiler in "${compilers[@]}" ; do
     if [ ! -f ${tauroot}/tests/configs/${myhost}.${compiler}.settings ] ; then
