@@ -149,29 +149,34 @@ struct Tau_thread_status_flags {
 #define STACK_DEPTH_INCREMENT 100
  struct CAPIThreadList : vector<Tau_thread_status_flags *>{
       CAPIThreadList(){
-         //printf("Creating PapiThreadList at %p\n", this);
+         //printf("Creating CapiThreadList at %p\n", this);
       }
      virtual ~CAPIThreadList(){
-         //printf("Destroying PapiThreadList at %p, with size %ld\n", this, this->size());
+         //printf("Destroying CapiThreadList at %p, with size %ld\n", this, this->size());
+         this->clear(); //TODO: This should not be necessary
          Tau_destructor_trigger();
      }
    };
  
- static CAPIThreadList Tau_thread_flags;
+//static CAPIThreadList Tau_thread_flags;
+CAPIThreadList & TheCAPIThreadList() {
+    static CAPIThreadList threadList;
+    return threadList;
+}
  
 void checkTCAPIVector(int tid){
- 	while(Tau_thread_flags.size()<=tid){
-         //RtsLayer::LockDB();
- 		Tau_thread_flags.push_back(new Tau_thread_status_flags());
-         //RtsLayer::UnLockDB();
+ 	while(TheCAPIThreadList().size()<=tid){
+        RtsLayer::LockDB();
+ 		TheCAPIThreadList().push_back(new Tau_thread_status_flags());
+        RtsLayer::UnLockDB();
  	}
  }
 
 static inline Tau_thread_status_flags& getTauThreadFlag(int tid){
     checkTCAPIVector(tid);
-    Tau_thread_status_flags& test = *(Tau_thread_flags[tid]);
+    //Tau_thread_status_flags& test = *(TheCAPIThreadList()[tid]);
     //printf("stackpos: %d on tid: %d\n", test.Tau_global_stackpos,tid);
-    return *Tau_thread_flags[tid];
+    return *TheCAPIThreadList()[tid];
 }
 //static inline void SetTauThreadFlag
 
@@ -394,6 +399,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 
   // move the stack pointer
+  //printf("Incrementing stack pointer at 401 for tid:%d\n",tid);
   getTauThreadFlag(tid).Tau_global_stackpos++; /* push */
 
   if (getTauThreadFlag(tid).Tau_global_stackpos >= getTauThreadFlag(tid).Tau_global_stackdepth) {
@@ -512,6 +518,7 @@ extern "C" void Tau_lite_start_timer(void *functionInfo, int phase)
 
     int tid = RtsLayer::myThread();
     // move the stack pointer
+    //printf("Incrementing stack pointer at 521 for tid:%d\n",tid);
     getTauThreadFlag(tid).Tau_global_stackpos++; /* push */
     Profiler *pp = TauInternal_ParentProfiler(tid);
     if (fi) {
@@ -840,7 +847,7 @@ extern "C" void Tau_stop_current_timer()
 
 extern "C" int Tau_show_profiles()
 {
-  for (int tid = 0; tid < Tau_thread_flags.size(); ++tid) {
+  for (int tid = 0; tid < TheCAPIThreadList().size(); ++tid) {
     int pos = getTauThreadFlag(tid).Tau_global_stackpos;
     while (pos >= 0) {
       Profiler * p = &(getTauThreadFlag(tid).Tau_global_stack[pos]);
@@ -895,7 +902,7 @@ inline void Tau_profile_exit_threads(int begin_index)
   bool su = JNIThreadLayer::IsMgmtThread();
 #endif
 
-  for(int tid = begin_index; tid < Tau_thread_flags.size(); ++tid) {
+  for(int tid = begin_index; tid < TheCAPIThreadList().size(); ++tid) {
 #ifdef TAU_ANDROID
     if (su) {
       JNIThreadLayer::SuThread(tid);
@@ -2250,10 +2257,13 @@ extern "C" const char * Tau_get_current_timer_name(int tid) {
 }
 
 extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
+   static bool done = false;
+   if(done){return;}
    Tau_stop_top_level_timer_if_necessary_task(Tau_get_thread());
 #ifdef TAU_ROCTRACER
    Tau_roctracer_stop_tracing();
 #endif /* TAU_ROCTRACER */
+   done = true;
 }
 
 

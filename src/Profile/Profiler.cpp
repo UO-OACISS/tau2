@@ -151,10 +151,10 @@ struct ProfilerData{
 };
 struct PThreadList : vector<ProfilerData*>{
     PThreadList(){
-         //printf("Creating PapiThreadList at %p\n", this);
+         //printf("Creating ProfilerThreadList at %p\n", this);
       }
      virtual ~PThreadList(){
-         //printf("Destroying PapiThreadList at %p, with size %ld\n", this, this->size());
+         //printf("Destroying ProfilerThreadList at %p, with size %ld\n", this, this->size());
          Tau_destructor_trigger();
      }
    };
