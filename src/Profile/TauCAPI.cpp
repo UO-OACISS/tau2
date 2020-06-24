@@ -1077,7 +1077,7 @@ extern "C" void Tau_flush_gpu_activity(void) {
     if (Tau_init_check_initialized() &&
         !Tau_global_getLightsOut() &&
         !done) {
-        while (Tau_get_cupti_buffer_tracker().created > Tau_get_cupti_buffer_tracker().processed) {
+        if (Tau_get_cupti_buffer_tracker().created > Tau_get_cupti_buffer_tracker().processed) {
             if (RtsLayer::myNode() == 0) {
                 if (did_once) {
                     printf("TAU: ...still flushing asynchronous CUDA events...\n");
@@ -1088,7 +1088,9 @@ extern "C" void Tau_flush_gpu_activity(void) {
             }
             cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
         }
-        done = true;
+        if (Tau_get_cupti_buffer_tracker().created == Tau_get_cupti_buffer_tracker().processed) {
+            done = true;
+        }
     }
 #endif
 }

@@ -17,6 +17,7 @@ using namespace std;
 //#define TAU_DEBUG_CUPTI
 //#define TAU_DEBUG_CUPTI_COUNTERS
 //#define TAU_CUPTI_DEBUG_COUNTERS
+#define TAU_DEBUG_ENV
 
 #ifdef TAU_DEBUG_CUPTI
 #define TAU_DEBUG_PRINT(...) do{ fprintf( stderr, __VA_ARGS__ ); } while( false )
@@ -950,8 +951,15 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
             stringstream ss;
             char * demangled = demangle_name(cbInfo->symbolName);
             ss << cbInfo->functionName << ": " << demangled;
-            free(demangled);
             Tau_gpu_enter_event(ss.str().c_str());
+            /* If we are tracing (could be through a plugin),
+             * add the correlation ID as a user event */
+            if (TauEnv_get_thread_per_gpu_stream()) {
+                std::stringstream ss2;
+                ss2 << "Correlation ID : " << demangled;
+                TAU_TRIGGER_EVENT(ss2.str().c_str(), cbInfo->correlationId);
+            }
+            free(demangled);
         } else {
             Tau_gpu_enter_event(cbInfo->functionName);
         }
@@ -1291,6 +1299,11 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
     return true;
 }
 
+#if defined(TAU_PGI_OPENACC)
+/* This function is defined in TauOpenACC.cpp */
+void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
+#endif
+
     /* This callback handles asynchronous activity */
 
     void Tau_cupti_record_activity(CUpti_Activity *record)
@@ -1301,6 +1314,16 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
         CUDA_CHECK_ERROR(err2, "Cannot get timestamp.\n");
 
         switch (record->kind) {
+#if defined(TAU_PGI_OPENACC)
+            /* Handle OpenACC special cases */
+            case CUPTI_ACTIVITY_KIND_OPENACC_DATA:
+            case CUPTI_ACTIVITY_KIND_OPENACC_LAUNCH:
+            case CUPTI_ACTIVITY_KIND_OPENACC_OTHER:
+            {
+                Tau_openacc_process_cupti_activity(record);
+                break;
+            }
+#endif
             case CUPTI_ACTIVITY_KIND_STREAM:
             {
                 /*
@@ -1378,6 +1401,17 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 #endif
                                         environmentMap.find(contextId)->second.smClock.push_back(smClock);
                                         environmentMap.find(contextId)->second.memoryClock.push_back(memoryClock);
+                                        TauContextUserEvent *sm, *memory;
+                                        Tau_cupti_find_context_event(&sm, "GPU SM Frequency (MHz)", false);
+                                        Tau_cupti_find_context_event(&memory, "GPU Memory Frequency (MHz)", false);
+                                        int taskId = get_taskid_from_context_id(contextId, 0);
+                                        GpuEventAttributes *map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * 2);
+                                        map[0].userEvent = sm;
+                                        map[0].data = smClock;
+                                        map[1].userEvent = memory;
+                                        map[1].data = memoryClock;
+                                        Tau_cupti_register_gpu_atomic_event("", deviceId,
+                                        0, contextId, 0, map, 2, taskId);
                                         break;
                                     }
                                 case CUPTI_ACTIVITY_ENVIRONMENT_TEMPERATURE:
@@ -1387,6 +1421,14 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 #endif
                                         uint32_t gpuTemperature = env->data.temperature.gpuTemperature;
                                         environmentMap.find(contextId)->second.gpuTemperature.push_back(gpuTemperature);
+                                        TauContextUserEvent *temp;
+                                        Tau_cupti_find_context_event(&temp, "GPU Temperature (C)", false);
+                                        int taskId = get_taskid_from_context_id(contextId, 0);
+                                        GpuEventAttributes *map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * 1);
+                                        map[0].userEvent = temp;
+                                        map[0].data = gpuTemperature;
+                                        Tau_cupti_register_gpu_atomic_event("", deviceId,
+                                        0, contextId, 0, map, 1, taskId);
                                         break;
                                     }
                                 case CUPTI_ACTIVITY_ENVIRONMENT_POWER:
@@ -1400,6 +1442,20 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                                         environmentMap.find(contextId)->second.power.push_back(power_t);
                                         environmentMap.find(contextId)->second.powerLimit = powerLimit; // cap shouldn't change
                                         double power_utilization = ((float)power_t/powerLimit) * 100.0;
+                                        TauContextUserEvent *power, *limit, *util;
+                                        Tau_cupti_find_context_event(&power, "GPU Power (mW)", false);
+                                        Tau_cupti_find_context_event(&limit, "GPU Power Limit (mW)", false);
+                                        Tau_cupti_find_context_event(&util, "GPU Power Utilization (% mW)", false);
+                                        int taskId = get_taskid_from_context_id(contextId, 0);
+                                        GpuEventAttributes *map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * 3);
+                                        map[0].userEvent = power;
+                                        map[0].data = power_t;
+                                        map[1].userEvent = limit;
+                                        map[1].data = powerLimit;
+                                        map[2].userEvent = util;
+                                        map[2].data = power_utilization;
+                                        Tau_cupti_register_gpu_atomic_event("", deviceId,
+                                        0, contextId, 0, map, 3, taskId);
                                         break;
                                     }
                                 case CUPTI_ACTIVITY_ENVIRONMENT_COOLING:
@@ -1410,6 +1466,14 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
 #endif
                                         uint32_t fanSpeed = env->data.cooling.fanSpeed;
                                         environmentMap.find(contextId)->second.fanSpeed.push_back(fanSpeed);
+                                        TauContextUserEvent *speed;
+                                        Tau_cupti_find_context_event(&speed, "GPU Fan Speed (% max)", false);
+                                        int taskId = get_taskid_from_context_id(contextId, 0);
+                                        GpuEventAttributes *map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * 1);
+                                        map[0].userEvent = speed;
+                                        map[0].data = fanSpeed;
+                                        Tau_cupti_register_gpu_atomic_event("", deviceId,
+                                        0, contextId, 0, map, 1, taskId);
                                         break;
                                     }
                                 default:
@@ -1662,7 +1726,6 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                     uint32_t staticSharedMemory;
                     uint32_t localMemoryPerThread;
                     uint32_t registersPerThread;
-
 #if CUDA_VERSION >= 5050
                     if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
                         printf(" inside cdp_kernel\n");
@@ -1765,22 +1828,41 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
                                 deviceId,
                                 name,
                                 &eventMap[taskId]);
-                        static TauContextUserEvent* bs;
-                        static TauContextUserEvent* dm;
-                        static TauContextUserEvent* sm;
-                        static TauContextUserEvent* lm;
-                        static TauContextUserEvent* lr;
+                        static TauContextUserEvent* bs = NULL;
+                        static TauContextUserEvent* dm = NULL;
+                        static TauContextUserEvent* sm = NULL;
+                        static TauContextUserEvent* lm = NULL;
+                        static TauContextUserEvent* lr = NULL;
+                        if (!bs) {
                         Tau_get_context_userevent((void **) &bs, "Block Size");
+                        }
+                        if (!dm) {
                         Tau_get_context_userevent((void **) &dm, "Shared Dynamic Memory (bytes)");
+                        }
+                        if (!sm) {
                         Tau_get_context_userevent((void **) &sm, "Shared Static Memory (bytes)");
+                        }
+                        if (!lm) {
                         Tau_get_context_userevent((void **) &lm, "Local Memory (bytes per thread)");
+                        }
+                        if (!lr) {
                         Tau_get_context_userevent((void **) &lr, "Local Registers (per thread)");
+                        }
 
                         eventMap[taskId][bs] = blockX * blockY * blockZ;
                         eventMap[taskId][dm] = dynamicSharedMemory;
                         eventMap[taskId][sm] = staticSharedMemory;
                         eventMap[taskId][lm] = localMemoryPerThread;
                         eventMap[taskId][lr] = registersPerThread;
+                    }
+                    /* If we are tracing (could be through a plugin),
+                     * add the correlation ID as a user event */
+                    if (TauEnv_get_thread_per_gpu_stream()) {
+                        static TauContextUserEvent* cid = NULL;
+                        if (!cid) {
+                            Tau_get_context_userevent((void **) &cid, "Correlation ID");
+                        }
+                        eventMap[taskId][cid] = correlationId;
                     }
 
                     GpuEventAttributes *map;
@@ -2359,11 +2441,11 @@ bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
             static TauContextUserEvent* power_t;
             static TauContextUserEvent* fan_speed;
 
-            Tau_get_context_userevent((void **) &sm_clock, "SM Frequency (MHz)");
-            Tau_get_context_userevent((void **) &memory_clock, "Memory Frequency (MHz)");
+            Tau_get_context_userevent((void **) &sm_clock, "GPU SM Frequency (MHz)");
+            Tau_get_context_userevent((void **) &memory_clock, "GPU Memory Frequency (MHz)");
             Tau_get_context_userevent((void **) &gpu_temperature, "GPU Temperature (C)");
-            Tau_get_context_userevent((void **) &power_t, "Power Utilization (% mW)");
-            Tau_get_context_userevent((void **) &fan_speed, "Fan Speed (% max)");
+            Tau_get_context_userevent((void **) &power_t, "GPU Power Utilization (% mW)");
+            Tau_get_context_userevent((void **) &fan_speed, "GPU Fan Speed (% max)");
 
             CudaEnvironment ce = environmentMap.find(contextId)->second;
             std::vector<uint32_t> v_power = ce.power;

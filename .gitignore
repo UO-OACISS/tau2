@@ -76,4 +76,12 @@ utils/tau_reduce
 utils/tau_selectfile
 utils/tau_wrap
 utils/trace2profile/trace2profile
+utils/tau2otf2
+utils/tau_trace2json
 core
+
+# examples
+examples/mm/matmult
+include/omp*
+*.dSYM
+

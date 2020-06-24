@@ -3,18 +3,22 @@
 #include <TAU.h>
 #include <stdlib.h>
 #include <acc_prof.h>
+#include <sstream>
+#include <iostream>
 
 #define TAU_ACC_NAME_LEN 4096
 #define VERSION 0.1
 
 
 
-#define TAU_SET_EVENT_NAME(event_name, str) strcpy(event_name, str); break 
+#define TAU_SET_EVENT_NAME(event_name, str) event_name << str; break 
+
 ////////////////////////////////////////////////////////////////////////////
 /*extern "C" static*/ void
 Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info )
 {
-  char event_name[256], user_event_name[256];
+  std::stringstream event_name, user_event_name;
+  std::stringstream srcinfo, lineinfo;
   
   //acc_event_t *event_type_info = NULL; 
   acc_data_event_info*   data_event_info = NULL;
@@ -32,8 +36,7 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
     case acc_ev_wait_end                    : TAU_SET_EVENT_NAME(event_name, "<openacc_wait");
     case acc_ev_update_start                : TAU_SET_EVENT_NAME(event_name, ">openacc_update");
     case acc_ev_update_end                  : TAU_SET_EVENT_NAME(event_name, "<openacc_update");*/
-  case acc_ev_enter_data_start: 
-    TAU_SET_EVENT_NAME(event_name, ">openacc_enter_data");
+  case acc_ev_enter_data_start:   TAU_SET_EVENT_NAME(event_name, ">openacc_enter_data");
   case acc_ev_enter_data_end: TAU_SET_EVENT_NAME(event_name, "<openacc_enter_data");
   case acc_ev_exit_data_start: TAU_SET_EVENT_NAME(event_name, ">openacc_exit_data");
   case acc_ev_exit_data_end: TAU_SET_EVENT_NAME(event_name, "<openacc_exit_data");
@@ -42,13 +45,13 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
     /* kernel_name is always set to NULL (permitted by OpenACC), num_gangs, num_workers, and vector_length are omitted */
     if (event_info) {
       launch_event_info = &(event_info->launch_event); 
-      sprintf(event_name, ">openacc_enqueue_launch" );
+      event_name << ">openacc_enqueue_launch";
     }
     break;
   case acc_ev_enqueue_launch_end          : 
     if (event_info) { /* same */
       launch_event_info = &(event_info->launch_event); 
-      sprintf(event_name, "<openacc_enqueue_launch" );
+      event_name << "<openacc_enqueue_launch";
     }
     break;
   case acc_ev_enqueue_upload_start        : 
@@ -57,11 +60,11 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
       TAU_VERBOSE("UPLOAD start: Var_name = %s, bytes=%d \n", data_event_info->var_name, 
 		  event_info->data_event.bytes);
       if (data_event_info->var_name) {
-	sprintf(user_event_name, "Data transfer from host to device <variable=%s>", data_event_info->var_name);
+	user_event_name << "Data transfer from host to device <variable=" << data_event_info->var_name << ">";
       } else {
-	sprintf(user_event_name, "Data transfer from host to device <other>");
+	user_event_name << "Data transfer from host to device <other>";
       }
-      TAU_TRIGGER_EVENT(user_event_name, event_info->data_event.bytes);
+      TAU_TRIGGER_EVENT(user_event_name.str().c_str(), event_info->data_event.bytes);
     }
     TAU_SET_EVENT_NAME(event_name, ">openacc_enqueue_upload");
   case acc_ev_enqueue_upload_end          : 
@@ -72,11 +75,11 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
       TAU_VERBOSE("DOWNLOAD start: Var_name = %s, bytes=%d \n", data_event_info->var_name, 
 		  event_info->data_event.bytes);
       if (data_event_info->var_name) {
-	sprintf(user_event_name, "Data transfer from device to host <variable=%s>", data_event_info->var_name);
+	user_event_name << "Data transfer from device to host <variable=" << data_event_info->var_name << ">";
       } else {
-	sprintf(user_event_name, "Data transfer from device to host <other>");
+	user_event_name << "Data transfer from device to host <other>";
       }
-      TAU_TRIGGER_EVENT(user_event_name, event_info->data_event.bytes);
+      TAU_TRIGGER_EVENT(user_event_name.str().c_str(), event_info->data_event.bytes);
     }
     TAU_SET_EVENT_NAME(event_name, ">openacc_enqueue_download");
   case acc_ev_enqueue_download_end        : TAU_SET_EVENT_NAME(event_name, "<openacc_enqueue_download");
@@ -88,34 +91,31 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
   case acc_ev_free                        : TAU_SET_EVENT_NAME(event_name, "openacc_free");
   default                                 : TAU_SET_EVENT_NAME(event_name, "default");
   }
-  char srcinfo[1024]; 
-  char lineinfo[256]; 
   
   if (prof_info) {
     TAU_VERBOSE("Device=%d ", prof_info->device_number);
     TAU_VERBOSE("Thread=%d ", prof_info->thread_id); /* Seems to be always set to 0 */
-    sprintf(srcinfo, " %s [{%s:%d}", prof_info->func_name, prof_info->src_file, prof_info->line_no);
-    TAU_VERBOSE( "src info: %s\n", srcinfo );
+    srcinfo << prof_info->func_name << " [{" << prof_info->src_file << ":" << prof_info->line_no << "}";
+    TAU_VERBOSE( "src info: %s\n", srcinfo.str().c_str() );
     TAU_VERBOSE( "Line nb %d\n", prof_info->line_no );
-    sprintf(lineinfo, " {%d,%d}", prof_info->line_no, prof_info->func_line_no); 
-    strcat(srcinfo,lineinfo);
+    lineinfo << " {" << prof_info->line_no << ":" << prof_info->func_line_no << "}";
+    srcinfo << lineinfo.str();
     if ((prof_info->end_line_no) && (prof_info->end_line_no > prof_info->line_no)) {
-      sprintf(lineinfo, "-{%d,%d}", prof_info->end_line_no, prof_info->func_end_line_no); 
-      strcat(srcinfo,lineinfo);
+      lineinfo << "-{" << prof_info->end_line_no << ":" << prof_info->func_end_line_no << "}";
+      srcinfo << lineinfo.str();
     }
-    
-    strcat(srcinfo,"]");
-    strcat(event_name, srcinfo); 
+    srcinfo << "]" ;
+    event_name << srcinfo.str();
   }
-  if (event_name[0] == '>') {
-    TAU_VERBOSE("START>>%s\n", &event_name[1]);
-    TAU_START(&event_name[1]);
-  }  else if (event_name[0] == '<') {
-    TAU_VERBOSE("STOP <<%s\n", &event_name[1]);
-    //    TAU_STOP(&event_name[1]);
+  const char* name = event_name.str().c_str();
+  if ( name[0] == '>') {
+    TAU_VERBOSE("START>>%s\n", name+1 );
+    TAU_START( name+1 );
+  }  else if ( name[0] == '<' ) {
+    TAU_VERBOSE("STOP <<%s\n", name+1 );
     Tau_global_stop();
   } else {
-    TAU_VERBOSE("event_name = %s\n", event_name);
+    TAU_VERBOSE("event_name = %s\n", name);
   }
 }
 

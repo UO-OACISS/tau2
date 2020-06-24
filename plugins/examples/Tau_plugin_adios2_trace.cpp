@@ -61,7 +61,6 @@ void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid);
 void Tau_plugin_adios2_dump_history(void);
 
 static bool enabled{false};
-static bool initialized{false};
 static bool done{false};
 static bool _threaded{false};
 static int global_comm_size = 1;
@@ -289,7 +288,7 @@ public:
     step_data_t(int num_threads) : threads(num_threads),
         primer_stacks{nullptr}, step_of_events(nullptr) { }
     ~step_data_t() {
-        for (int i ; i < threads ; i++) {
+        for (int i=0 ; i < threads ; i++) {
             if (primer_stacks[i] != nullptr) {
                 delete primer_stacks[i];
             }
@@ -576,10 +575,12 @@ void adios::write_variables(void)
 {
     int programs = get_prog_count();
     int comm_ranks = global_comm_size;
-    int threads = get_thread_count();
     int event_types = get_event_type_count();
+    pthread_mutex_lock(&_my_mutex);
+    int threads = get_thread_count();
     int timers = get_timer_count();
     int counters = get_counter_count();
+    pthread_mutex_unlock(&_my_mutex);
 
     Tau_global_incr_insideTAU();
     bpWriter.BeginStep();
@@ -815,37 +816,47 @@ void adios::write_variables(void)
 
     /* Keep a map of timers to indexes */
     int adios::check_timer(const char * timer) {
+        bool new_timer{false};
         std::string tmp(timer);
         if (timers.count(tmp) == 0) {
-            std::stringstream ss;
-            int num = timers.size();
-            ss << "timer " << num;
             pthread_mutex_lock(&_my_mutex);
             // check to make sure another thread didn't create it already
             if (timers.count(tmp) == 0) {
+                int num = timers.size();
                 timers[tmp] = num;
                 // printf("%d = %s\n", num, timer);
-                define_attribute(ss.str(), tmp, _bpIO, false);
+                new_timer = true;
             }
             pthread_mutex_unlock(&_my_mutex);
+            // Because ADIOS is instrumented with TAU calls, make sure the
+            // lock is released before defining the attribute.
+            if (new_timer) {
+                std::stringstream ss;
+                ss << "timer " << timers[tmp];
+                define_attribute(ss.str(), tmp, _bpIO, false);
+            }
         }
         return timers[tmp];
     }
 
     /* Keep a map of counters to indexes */
     int adios::check_counter(const char * counter) {
+        bool new_counter{false};
         std::string tmp(counter);
         if (counters.count(tmp) == 0) {
-            std::stringstream ss;
-            int num = counters.size();
-            ss << "counter " << num;
             pthread_mutex_lock(&_my_mutex);
             // check to make sure another thread didn't create it already
             if (counters.count(tmp) == 0) {
+                int num = counters.size();
                 counters[tmp] = num;
-                define_attribute(ss.str(), tmp, _bpIO, false);
+                new_counter = true;
             }
             pthread_mutex_unlock(&_my_mutex);
+            if (new_counter) {
+                std::stringstream ss;
+                ss << "counter " << counters[tmp];
+                define_attribute(ss.str(), tmp, _bpIO, false);
+            }
         }
         return counters[tmp];
     }
@@ -903,13 +914,11 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
         // reset for next time
         dump_history = false;
     }
-    Tau_pure_start(__func__);
+    //Tau_pure_start(__func__);
     Tau_global_incr_insideTAU();
-    pthread_mutex_lock(&_my_mutex);
     my_adios->write_variables();
-    pthread_mutex_unlock(&_my_mutex);
     Tau_global_decr_insideTAU();
-    Tau_pure_stop(__func__);
+    //Tau_pure_stop(__func__);
     return 0;
 }
 
@@ -974,8 +983,8 @@ int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution
     }
     RtsLayer::UnLockDB();
     /* write those last events... */
-    Tau_plugin_event_dump_data_t* dummy_data;
-    Tau_plugin_adios2_dump(dummy_data);
+    Tau_plugin_event_dump_data_t dummy_data;
+    Tau_plugin_adios2_dump(&dummy_data);
     /* Close ADIOS archive */
     if (my_adios != nullptr) {
         my_adios->close();
@@ -996,8 +1005,8 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
     if (!enabled || data->tid != 0) return 0;
     TAU_VERBOSE("TAU PLUGIN ADIOS2 Finalize\n"); fflush(stdout);
     Tau_ADIOS2_stop_worker();
-    Tau_plugin_event_dump_data_t* dummy_data;
-    Tau_plugin_adios2_dump(dummy_data);
+    Tau_plugin_event_dump_data_t dummy_data;
+    Tau_plugin_adios2_dump(&dummy_data);
     enabled = false;
     /* Close ADIOS archive */
     if (my_adios != nullptr) {
@@ -1281,8 +1290,8 @@ void * Tau_ADIOS2_thread_function(void* data) {
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
         if (rc == ETIMEDOUT) {
             TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
-            Tau_plugin_event_dump_data_t* dummy_data;
-            Tau_plugin_adios2_dump(dummy_data);
+            Tau_plugin_event_dump_data_t dummy_data;
+            Tau_plugin_adios2_dump(&dummy_data);
             TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
         } else if (rc == EINVAL) {
             TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
@@ -1564,7 +1573,7 @@ void Tau_plugin_adios2_dump_history(void) {
  * Every plugin MUST implement this function to register callbacks for various events
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
-    Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
+    Tau_plugin_callbacks_t cb;
     TAU_VERBOSE("TAU PLUGIN ADIOS2 Init\n"); fflush(stdout);
     tau_plugin::Tau_ADIOS2_parse_environment_variables();
 #if TAU_MPI
@@ -1572,23 +1581,25 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     PMPI_Comm_rank(MPI_COMM_WORLD, &global_comm_rank);
 #endif
     /* Create the callback object */
-    TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
+    TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(&cb);
 
     /* Required event support */
-    cb->Dump = Tau_plugin_adios2_dump;
-    cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_func;
-    cb->PostInit = Tau_plugin_adios2_post_init;
-    cb->PreEndOfExecution = Tau_plugin_adios2_pre_end_of_execution;
-    cb->EndOfExecution = Tau_plugin_adios2_end_of_execution;
+    if (!tau_plugin::thePluginOptions().env_periodic) {
+        cb.Dump = Tau_plugin_adios2_dump;
+    }
+    cb.MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_func;
+    cb.PostInit = Tau_plugin_adios2_post_init;
+    cb.PreEndOfExecution = Tau_plugin_adios2_pre_end_of_execution;
+    cb.EndOfExecution = Tau_plugin_adios2_end_of_execution;
     /* Trace events */
-    cb->Send = Tau_plugin_adios2_send;
-    cb->Recv = Tau_plugin_adios2_recv;
-    cb->FunctionEntry = Tau_plugin_adios2_function_entry;
-    cb->FunctionExit = Tau_plugin_adios2_function_exit;
-    cb->AtomicEventTrigger = Tau_plugin_adios2_atomic_trigger;
+    cb.Send = Tau_plugin_adios2_send;
+    cb.Recv = Tau_plugin_adios2_recv;
+    cb.FunctionEntry = Tau_plugin_adios2_function_entry;
+    cb.FunctionExit = Tau_plugin_adios2_function_exit;
+    cb.AtomicEventTrigger = Tau_plugin_adios2_atomic_trigger;
 
     /* Register the callback object */
-    TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
+    TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(&cb, id);
 
     /* Open the ADIOS archive */
     my_adios = new tau_plugin::adios();

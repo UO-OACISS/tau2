@@ -12,31 +12,23 @@
 #######################################################################
 
 
-TAU_MAKEFILE ?=../../../include/Makefile
+TAU_MAKEFILE ?=${tauroot}/include/Makefile
 
 include $(TAU_MAKEFILE)
 
-CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optShared
-#CC		= mpicc
-
-PRINT	      	= pr
-
-RM 	      	= /bin/rm -rf
-
-TARGET	      	= matmult
-
-OBJS     	= matmult.o matmult_initialize.o
-CFLAGS=-g -O3 $(TAU_OPENMP_OPTION)
-LDFLAGS=-g -O3 $(TAU_OPENMP_OPTION)
+CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh
+RM 	    = /bin/rm -rf
+TARGET	= matmult
+OBJS    = matmult.o matmult_initialize.o
+CFLAGS  =-g $(TAU_OPENMP_OPTION)
+LDFLAGS =-g $(TAU_OPENMP_OPTION)
 
 ##############################################
 
-all:		$(TARGET)
+all: clean $(TARGET) test
 
-install: 	$(TARGET)
-
-$(TARGET):	$(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS) -ldl
+$(TARGET): $(OBJS)
+	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS) -lm -ldl
 
 matmult.o: matmult.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -44,6 +36,14 @@ matmult.o: matmult.c
 matmult_initialize.o: matmult_initialize.c matmult_initialize.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+test:
+	$(MPIRUN) ./matmult
+	test -f profile.0.0.0 || test -d MULTI__PAPI_TOT_INS || exit 1
+	$(PPROF_CMD)
+
+#$(shell if [ ! -f profile.0.0.0 ] then ; exit 1 )
+
 clean:
-	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog dump.* tauprofile*.bp.dir tau-metrics* tauprofile*.bp*
+	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog
+
 ##############################################

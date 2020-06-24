@@ -10,7 +10,7 @@
 ##                  pC++/Sage++  Copyright (C) 1993,1995             ##
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
- 
+
 ########### Automatically modified by the configure script ############
 CONFIG_ARCH=default
 PDT_CXX=
@@ -25,7 +25,7 @@ DYNINST_LIB_DIR=$(DYNINST_ROOT)/lib
 DYNINSTDIR=
 OPARICOMP=
 #######################################################################
- 
+
 #MIPSR8K#ISA          = -mips4		   #ENDIF#
 
 ############# Standard Defines ##############
@@ -48,7 +48,7 @@ LINKER	= $(CC)
 #INTELCXXLIBICC#CXX=$(CONFIG_CXX) $(ABI) $(ISA) $(INTELOPTS) #ENDIF#
 #MIC_LINUX#CEXTRA = -DTAU_MIC_LINUX #ENDIF#
 
-LEXTRAUTIL = 
+LEXTRAUTIL =
 DWARFOPTS=
 #APPLECXX#CEXTRA = -DAPPLECXX #ENDIF#
 #CLANG#CEXTRA = -DTAU_CLANG -DTAU_DOT_H_LESS_HEADERS #ENDIF#
@@ -77,7 +77,7 @@ DWARFOPTS=
 #CM5#CEXTRA = -D__CM5__#ENDIF#
 #SGICC#CEXTRA = -LANG:std -D__SGIMP__#ENDIF#
 #SGICC#CEXTRA = -D_STANDARD_C_PLUS_PLUS -D__SGIMP__#ENDIF#
-WARNINGSOPT	= -w 
+WARNINGSOPT	= -w
 #CRAYX1CC#WARNINGSOPT	= #ENDIF#
 #CRAYCC#WARNINGSOPT= -DCRAYCC  #ENDIF#
 #COMPINST_CRAYCC#WARNINGSOPT= -DCRAYCC  #ENDIF#
@@ -97,8 +97,8 @@ TAU_TRACE2JSON		= tau_trace2json
 SELECTFILE 	= tau_selectfile
 #OPARI#TAUOMPCHECK    = $(PDTOMPCHECK) #ENDIF#
 #DYNINST#TAURUN 	= tau_run #ENDIF#
-TRACE2PROFILE	= trace2profile/trace2profile 
-INSTALLTRACE2PROFILE	= $(INSTALLDEST)/trace2profile 
+TRACE2PROFILE	= trace2profile/trace2profile
+INSTALLTRACE2PROFILE	= $(INSTALLDEST)/trace2profile
 #TRACE#TAU_TIMECORRECT	= tau_timecorrect #ENDIF#
 #TRACE#INSTALLTAU_TIMECORRECT	= $(INSTALLDEST)/tau_timecorrect #ENDIF#
 #VTF#TAU2VTF 	= tau2vtf #ENDIF#
@@ -146,7 +146,13 @@ INSTALLTRACE2PROFILE	= $(INSTALLDEST)/trace2profile
 #COMPAQ_ALPHA#COMPSPECIFIC = -DCOMPAQ_ALPHA#ENDIF#
 
 # We must drop the $(ABI) on mips linux
-PDT_ABI = $(ABI)
+PDT_ABI = $(strip $(ABI))
+# If the TAU compiler is xlC, but PDT was built with g++, fix the ABI
+ifeq ("$(PDT_CXX)","g++")
+  ifeq ("$(PDT_ABI)","-q64")
+    PDT_ABI = $(IBM_GNU_ABI)
+  endif
+endif
 #MIPS32LINUX#PDT_ABI = #ENDIF#
 #MIPS64LINUX#PDT_ABI = #ENDIF#
 #MMIC#PDT_ABI = #ENDIF#
@@ -183,7 +189,7 @@ PDT_CFLAGS = $(PDTCFLAGS) $(PDT_COMPILE_FLAGS)
 ELG_INC_DIR=$(EPILOGINCDIR)
 #CRAYCNL#ELG_INC_DIR=$(EPILOGINCDIR)/../fe #ENDIF#
 
-ELG_LIB_DIR=$(EPILOGLIBDIR) 
+ELG_LIB_DIR=$(EPILOGLIBDIR)
 #CRAYCNL#ELG_LIB_DIR=$(EPILOGLIBDIR)/../fe #ENDIF#
 
 SAGE1DIR=
@@ -222,11 +228,11 @@ INSTALL_OTF_TOOLS = $(INSTALL_EBS2OTF)
 #GNU_GFORTRAN#CRAY_OPARI2_CONFIG=$(CRAY_OPARI2_CONFIG_CRAYCNL) #ENDIF#
 #CRAY_FORTRAN#CRAY_OPARI2_CONFIG=$(CRAY_OPARI2_CONFIG_CRAYCNL) #ENDIF#
 
-CFLAGS        = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $(COMPILEROPT) $(PKGOPT) $(LARGEFILEOPT) $(DEBUGOPT) $(GNUOPT) 
+CFLAGS        = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $(COMPILEROPT) $(PKGOPT) $(LARGEFILEOPT) $(DEBUGOPT) $(GNUOPT)
 
-TAU_USEROPT_CFLAGS        = $(CFLAGS) $(TAU_CC_SPECIAL_OPTS) 
-# PGI cannot compile tau_convert and tau_merge when -O2 is used. So, we delete this from CFLAGS. 
-#PGI#TAU_USEROPT_CFLAGS        = -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $(COMPILEROPT) $(PKGOPT) $(LARGEFILEOPT) $(DEBUGOPT) $(GNUOPT) $(TAU_CC_SPECIAL_OPTS) #ENDIF# 
+TAU_USEROPT_CFLAGS        = $(CFLAGS) $(TAU_CC_SPECIAL_OPTS)
+# PGI cannot compile tau_convert and tau_merge when -O2 is used. So, we delete this from CFLAGS.
+#PGI#TAU_USEROPT_CFLAGS        = -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $(COMPILEROPT) $(PKGOPT) $(LARGEFILEOPT) $(DEBUGOPT) $(GNUOPT) $(TAU_CC_SPECIAL_OPTS) #ENDIF#
 
 PDTCFLAGS     = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $(COMPILEROPT) $(PKGOPT) $(LARGEFILEOPT) $(DEBUGOPT)
 

@@ -49,8 +49,8 @@ typedef struct context_event_index {
 } context_event_index_t;
 
 inline bool file_exists (const char * name) {
-  struct stat buffer;   
-  return (stat (name, &buffer) == 0); 
+  struct stat buffer;
+  return (stat (name, &buffer) == 0);
 }
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
@@ -87,9 +87,9 @@ void create_database() {
         TAU_VERBOSE("TAU database exists, adding trial to it\n");
     } else {
         rc = sqlite3_exec(db, database_schema, callback, 0, &zErrMsg);
-   
+
         if( rc != SQLITE_OK ){
-            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            fprintf(stderr, "SQL error creating schema!: %s\n", zErrMsg);
             sqlite3_free(zErrMsg);
             return;
         } else {
@@ -103,9 +103,10 @@ void begin_transaction() {
     std::stringstream sql;
     sql << "begin transaction;";
     rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
- 
+
     if( rc != SQLITE_OK ){
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        fprintf(stderr, "failed query: %s\n", sql.str().c_str());
         sqlite3_free(zErrMsg);
     } else {
         //TAU_VERBOSE("Begin Transaction\n");
@@ -116,9 +117,10 @@ void end_transaction() {
     std::stringstream sql;
     sql << "commit transaction;";
     rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
- 
+
     if( rc != SQLITE_OK ){
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        fprintf(stderr, "failed query: %s\n", sql.str().c_str());
         sqlite3_free(zErrMsg);
     } else {
         //TAU_VERBOSE("Commit Transaction\n");
@@ -134,9 +136,10 @@ size_t store_trial() {
     const char * execname = Tau_metadata_getMetaData(0)[key]->data.cval;
     sql << "insert into trial (name) values ('" << execname << "');";
     rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
- 
+
     if( rc != SQLITE_OK ){
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        fprintf(stderr, "failed query: %s\n", sql.str().c_str());
         sqlite3_free(zErrMsg);
     } else {
         trial_id = sqlite3_last_insert_rowid(db);
@@ -157,9 +160,10 @@ void store_threads(size_t trial_id) {
         << 0 << ","
         << t << ");";
         rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
- 
+
         if( rc != SQLITE_OK ){
             fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            fprintf(stderr, "failed query: %s\n", sql.str().c_str());
             sqlite3_free(zErrMsg);
         } else {
             thread_id = sqlite3_last_insert_rowid(db);
@@ -205,9 +209,10 @@ void store_metadata(size_t trial_id) {
             << it->first.name << "','"
             << value << "');";
             rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
- 
+
             if( rc != SQLITE_OK ){
                 fprintf(stderr, "SQL error: %s\n", zErrMsg);
+                fprintf(stderr, "failed query: %s\n", sql.str().c_str());
                 sqlite3_free(zErrMsg);
             } else {
                 //TAU_VERBOSE("Metadata %lu %s %s inserted successfully\n", thread_id, it->first.name, value.c_str());
@@ -226,6 +231,7 @@ void store_metric(size_t trial_id, const char * name) {
     size_t metric_id = 0;
     if( rc != SQLITE_OK ){
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        fprintf(stderr, "failed query: %s\n", sql.str().c_str());
         sqlite3_free(zErrMsg);
     } else {
         metric_id = sqlite3_last_insert_rowid(db);
@@ -276,6 +282,7 @@ size_t store_timer(size_t trial_id, std::string longName, bool has_parent, size_
     size_t timer_id = 0;
     if( rc != SQLITE_OK ){
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        fprintf(stderr, "failed query: %s\n", sql.str().c_str());
         sqlite3_free(zErrMsg);
     } else {
         timer_id = sqlite3_last_insert_rowid(db);
@@ -304,6 +311,7 @@ size_t store_counter(size_t trial_id, std::string name) {
     size_t counter_id = 0;
     if( rc != SQLITE_OK ){
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        fprintf(stderr, "failed query: %s\n", sql.str().c_str());
         sqlite3_free(zErrMsg);
     } else {
         counter_id = sqlite3_last_insert_rowid(db);
@@ -324,7 +332,7 @@ size_t get_or_store_counter(size_t trial_id, std::string name) {
 
 /* If the timer is a callpath:
  *   - split the name into tokens
- *   - lookup and/or store token[0] 
+ *   - lookup and/or store token[0]
  *   - lookup and/or store token[0] => token[1]
  *   - etc.
  */
@@ -362,6 +370,7 @@ void store_timer_value(size_t timer_id, size_t metric_id, size_t thread_id,
     rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
     if( rc != SQLITE_OK ){
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        fprintf(stderr, "failed query: %s\n", sql.str().c_str());
         sqlite3_free(zErrMsg);
     } else {
         //TAU_VERBOSE("timer_value inserted successfully\n");
@@ -451,6 +460,7 @@ void store_counter_value(context_event_index_t * context, size_t thread_id, tau:
     rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
     if( rc != SQLITE_OK ){
         fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        fprintf(stderr, "failed query: %s\n", sql.str().c_str());
         sqlite3_free(zErrMsg);
     } else {
         //TAU_VERBOSE("counter_value inserted successfully\n");
@@ -505,23 +515,31 @@ void write_profile_to_database() {
     TauProfiler_updateAllIntermediateStatistics();
     size_t trial_id = 0;
     if (comm_rank == 0) {
+        create_database();
         trial_id = store_profile(0UL);
+        close_database();
 #ifdef TAU_MPI
-        PMPI_Send(&trial_id, 1, MPI_UNSIGNED_LONG, 1, comm_rank+1, MPI_COMM_WORLD);
+        if (comm_size > 1) {
+            printf("Rank 0 sending to rank 1\n"); fflush(stdout);
+            PMPI_Send(&trial_id, 1, MPI_UNSIGNED_LONG, comm_rank+1, 1, MPI_COMM_WORLD);
+        }
 #endif
     } else {
 #ifdef TAU_MPI
         MPI_Status status;
-        PMPI_Recv(&trial_id, 1, MPI_UNSIGNED_LONG, comm_rank-1, 0, MPI_COMM_WORLD, &status);
+        printf("Rank %d receiving from rank %d\n", comm_rank, comm_rank-1); fflush(stdout);
+        PMPI_Recv(&trial_id, 1, MPI_UNSIGNED_LONG, comm_rank-1, 1, MPI_COMM_WORLD, &status);
 #endif
+        open_database();
         trial_id = store_profile(trial_id);
+        close_database();
 #ifdef TAU_MPI
         if (comm_rank+1 < comm_size) {
-            PMPI_Send(&trial_id, 1, MPI_UNSIGNED_LONG, 1, comm_rank+1, MPI_COMM_WORLD);
+            printf("Rank %d sending to rank %d\n", comm_rank, comm_rank+1); fflush(stdout);
+            PMPI_Send(&trial_id, 1, MPI_UNSIGNED_LONG, comm_rank+1, 1, MPI_COMM_WORLD);
         }
 #endif
     }
-    close_database();
     done = true;
 }
 
@@ -550,14 +568,11 @@ int Tau_plugin_event_post_init_sqlite3(Tau_plugin_event_post_init_data_t* data) 
     MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 #endif
-    if (comm_rank == 0) {
-        create_database();
-    }
     return 0;
-}  
+}
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
- * Every plugin MUST implement this function to register callbacks for various events 
+ * Every plugin MUST implement this function to register callbacks for various events
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));

@@ -11,39 +11,29 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
 
-
-TAU_MAKEFILE ?=../../../include/Makefile
+TAU_MAKEFILE ?=${tauroot}/include/Makefile
 
 include $(TAU_MAKEFILE)
 
-CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optShared
-#CC		= mpicc
-
-PRINT	      	= pr
-
-RM 	      	= /bin/rm -rf
-
-TARGET	      	= matmult
-
-OBJS     	= matmult.o matmult_initialize.o
-CFLAGS=-g -O3 $(TAU_OPENMP_OPTION)
-LDFLAGS=-g -O3 $(TAU_OPENMP_OPTION)
+CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh
+RM 	    = /bin/rm -rf
+TARGET	= matmult
+OBJS    = matmult.o matmult_initialize.o
+CFLAGS  =-g $(TAU_OPENMP_OPTION)
+LDFLAGS =-g $(TAU_OPENMP_OPTION)
 
 ##############################################
 
-all:		$(TARGET)
+all: clean test
 
-install: 	$(TARGET)
+test:
+	tau_python -T serial -tau-python-interpreter=python3 ./firstprime.py
+	test -f profile.0.0.0 || exit 1
+	$(PPROF_CMD)
 
-$(TARGET):	$(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS) -ldl
-
-matmult.o: matmult.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-matmult_initialize.o: matmult_initialize.c matmult_initialize.h
-	$(CC) $(CFLAGS) -c $< -o $@
+#$(shell if [ ! -f profile.0.0.0 ] then ; exit 1 )
 
 clean:
-	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog dump.* tauprofile*.bp.dir tau-metrics* tauprofile*.bp*
+	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog
+
 ##############################################
