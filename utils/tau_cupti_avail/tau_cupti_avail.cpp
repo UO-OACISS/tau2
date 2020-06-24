@@ -1,7 +1,8 @@
 #include <Profile/CuptiLayer.h>
 #include <unistd.h>
-
-using namespace std;
+#include <sstream>
+#include <string>
+#include <vector>
 
 // CrayCC is stupid and doesn't support weak symbols
 void * pomp_rd_table;
@@ -68,20 +69,20 @@ int main(int argc, char **argv)
         }
         printf("conter list arg is: %s.\n", counter_list);
         //split counter list by ':' delimiter.
-        string counter_list_str = string(counter_list);
+        std::string counter_list_str = std::string(counter_list);
 
-        stringstream iss(counter_list_str);
-        string item;
-        vector<string> tags;
+        std::stringstream iss(counter_list_str);
+        std::string item;
+        std::vector<std::string> tags;
         while (std::getline(iss, item, ':')) {
             tags.push_back(item);
         }
 
-        vector<string> tags_added;
-        vector<string> tags_failed;
-        vector<CuptiCounterEvent*> counters_added;
+        std::vector<std::string> tags_added;
+        std::vector<std::string> tags_failed;
+        std::vector<CuptiCounterEvent*> counters_added;
 
-        for (vector<string>::iterator it = tags.begin(); it != tags.end(); it++) {
+        for (std::vector<std::string>::iterator it = tags.begin(); it != tags.end(); it++) {
             //printf("size of available counters: %d.\n", Tau_CuptiLayer_Counter_Map.size());
 
             if (Tau_CuptiLayer_Counter_Map().count(*it) > 0) {
@@ -94,13 +95,13 @@ int main(int argc, char **argv)
             }
         }
 
-        cout << "Counters successfully set:" << endl;
-        for (vector<string>::iterator it = tags_added.begin(); it != tags_added.end(); it++) {
-            cout << "\t * " << *it << endl;
+        std::cout << "Counters successfully set:" << std::endl;
+        for (std::vector<std::string>::iterator it = tags_added.begin(); it != tags_added.end(); it++) {
+            std::cout << "\t * " << *it << std::endl;
         }
-        cout << "Failed to set these counters:" << endl;
-        for (vector<string>::iterator it = tags_failed.begin(); it != tags_failed.end(); it++) {
-            cout << "\t * " << *it << endl;
+        std::cout << "Failed to set these counters:" << std::endl;
+        for (std::vector<std::string>::iterator it = tags_failed.begin(); it != tags_failed.end(); it++) {
+            std::cout << "\t * " << *it << std::endl;
         }
 
     }
