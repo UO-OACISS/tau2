@@ -45,7 +45,7 @@
 #include <Profile/TauBacktrace.h>
 #include <Profile/TauUtil.h>
 
-#ifdef TAU_VAMPIRTRACE 
+#ifdef TAU_VAMPIRTRACE
 #include <Profile/TauVampirTrace.h>
 #else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
@@ -55,6 +55,10 @@
 
 #ifdef TAU_SCOREP
 #include <Profile/TauSCOREP.h>
+#endif
+
+#ifdef CUPTI
+#include <Profile/CuptiLayer.h>
 #endif
 
 #ifdef TAU_ANDROID
@@ -72,6 +76,8 @@
 
 #include <Profile/TauPlugin.h>
 #include <Profile/TauPluginInternals.h>
+
+#include <vector>
 
 using namespace std;
 
@@ -96,6 +102,18 @@ extern "C" int Tau_dump_callpaths();
 
 extern "C" int Tau_show_profiles();
 
+/* This vector of function pointers is used so that some TAU functionality
+ * that needs to be executed after TAU metrics are configured can be called
+ * as a callback after the metric subsystem is ready. */
+std::vector<void (*)(void)> Tau_post_init_functions;
+void Tau_register_post_init_callback(void (*function)()) {
+    Tau_post_init_functions.push_back(function);
+}
+void Tau_call_post_init_callbacks() {
+    for (size_t i = 0 ; i < Tau_post_init_functions.size() ; i++ ) {
+        Tau_post_init_functions[i]();
+    }
+}
 
 // True if TAU is fully initialized
 int tau_initialized = 0;
@@ -131,7 +149,7 @@ static void tauSignalHandler(int sig)
     for (int i = 0 ; i < RtsLayer::getTotalThreads() ; i++){
      if (TauEnv_get_ebs_enabled()) {
           Tau_sampling_finalize_if_necessary(i);
-     } 
+     }
 
     TauProfiler_DumpData(false, i, "profile");
   }
@@ -262,7 +280,7 @@ int Tau_init_vampirTrace(void) {
 }
 #endif /* TAU_VAMPIRTRACE */
 
-#ifdef TAU_EPILOG 
+#ifdef TAU_EPILOG
 //////////////////////////////////////////////////////////////////////
 // Initialize EPILOG Tracing package
 //////////////////////////////////////////////////////////////////////
@@ -444,6 +462,7 @@ extern "C" int Tau_init_initializeTAU()
 
   static bool initialized = false;
   if (initialized) return 0;
+  initialized = true;
 
   /* initialize the memory debugger */
   Tau_memory_initialize();
@@ -498,6 +517,13 @@ extern "C" int Tau_init_initializeTAU()
 
   /* initialize the metrics we will be counting */
   TauMetrics_init();
+
+  Tau_call_post_init_callbacks();
+
+#ifdef CUPTI
+	//DO NOT MOVE OR FACE ALISTER'S WRATH.
+  Tau_cupti_post_init(); //MUST HAPPEN AFTER TAUMETRICS_INIT()
+#endif
 
   // Mark initialization complete so calls below can start timers
   tau_initialized = 1;

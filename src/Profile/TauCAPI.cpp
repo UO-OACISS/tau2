@@ -78,7 +78,6 @@ void esd_exit (elg_ui4 rid);
 #include <Profile/TauPluginCPPTypes.h>
 
 #ifdef CUPTI
-#include <cupti.h>
 #include <Profile/CuptiLayer.h>
 #endif
 
@@ -971,6 +970,9 @@ extern "C" void Tau_profile_exit_all_threads()
    * as it gets called from many, many destructors. */
   static bool done = false;
   if (done) { return; }
+  // because this function gets called from the preload shutdown (static
+  // global destructor) make sure CUPTI processing is finished.
+  Tau_flush_gpu_activity();
   Tau_profile_exit_threads(0);
   Tau_shutdown();
   done = true;
@@ -1121,7 +1123,7 @@ extern "C" void Tau_flush_gpu_activity(void) {
     if (Tau_init_check_initialized() &&
         !Tau_global_getLightsOut() &&
         !done) {
-        while (Tau_get_cupti_buffer_tracker().created > Tau_get_cupti_buffer_tracker().processed) {
+        if (Tau_get_cupti_buffer_tracker().created > Tau_get_cupti_buffer_tracker().processed) {
             if (RtsLayer::myNode() == 0) {
                 if (did_once) {
                     printf("TAU: ...still flushing asynchronous CUDA events...\n");
@@ -1132,7 +1134,9 @@ extern "C" void Tau_flush_gpu_activity(void) {
             }
             cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
         }
-        done = true;
+        if (Tau_get_cupti_buffer_tracker().created == Tau_get_cupti_buffer_tracker().processed) {
+            done = true;
+        }
     }
 #endif
 }
@@ -3363,11 +3367,11 @@ extern "C" long Tau_get_message_recv_path(void) {
   return 0L;
 }
 
-extern "C" int Tau_msg_send_prolog(void){ 
+extern "C" int Tau_msg_send_prolog(void){
   return 0;
 }
 
-extern "C" int Tau_msg_recv_prolog(void){ 
+extern "C" int Tau_msg_recv_prolog(void){
   return 0;
 }
 #endif /* TAU_MPI_T */

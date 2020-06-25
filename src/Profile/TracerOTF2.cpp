@@ -68,7 +68,6 @@
 
 #ifdef CUPTI
 #include <Profile/CuptiLayer.h>
-#include <cupti.h>
 #endif
 
 #define OTF2_EC(call) { \
@@ -1841,7 +1840,7 @@ void TauTraceOTF2Close(int tid) {
     }
 #ifdef CUPTI
     Tau_flush_gpu_activity();
-    printf("TAU: OTF2 Trace closing!\n");
+    //printf("TAU: OTF2 Trace closing!\n");
 #endif
 
     if(!otf2_comms_shutdown) {

@@ -1134,6 +1134,9 @@ ompt_header=omp-tools.h
 omptlib=
 omptlibrary=-lomp
 omptenabled=no
+ompt_use_tr4_version=no
+ompt_use_tr6_version=no
+ompt_compiler_support=no
 download_ompt=no
 download_ompt_5_0=no
 download_ompt_tr6=no
@@ -1141,6 +1144,7 @@ download_ompt_tr4=no
 ompt_version_selected=no
 ompt_compiler_support=no
 install_ompt=no
+ompt_use_tr4_version=no
 ompt_use_tr6_version=no
 ompt_use_tr7_version=no
 ompt_use_v5_version=no
@@ -1501,7 +1505,14 @@ for arg in "$@"; do
 		  fixmakeargs="$fixmakeargs PAPINOINC"
             fi
             if [ -r /sys/devices/power/events/energy-pkg.scale ] ; then
-		  fixmakeargs="$fixmakeargs PAPI_PERF_RAPL"
+                if [ -r /proc/sys/kernel/perf_event_paranoid ] ; then
+                    paranoid=`cat /proc/sys/kernel/perf_event_paranoid`
+                    if [ "${paranoid}" == "-1" ] ; then
+		                fixmakeargs="$fixmakeargs PAPI_PERF_RAPL"
+                    else
+                        echo "NOTE: /proc/sys/kernel/perf_event_paranoid has a value greater than -1, RAPL power measurement disabled."
+                    fi
+                fi
             fi
 
 	    shift
@@ -7923,7 +7934,11 @@ EOF
   if [ "x$mpiinc" != "x" ]
   then
       # echo "mpiinc is specified"
-      mpi_include=-I$mpiinc
+      if [[ $mpiinc == \-I* ]] ; then
+        mpi_include=$mpiinc
+      else
+        mpi_include=-I$mpiinc
+      fi
   fi
 
   mpi_include="$mpi_include $mpiincargs"
@@ -11333,7 +11348,7 @@ if [ $adios2 = yes ] ; then
     echo "Querying ADIOS2 CXX flags..."
     adios2cxxflags=`${adios2_config_cmd} --c-flags | grep -v ADIOS2_DIR | sed -e 's/[[:space:]]*$//' | sed 's/ /#/g'`
     echo "Querying ADIOS2 LIB flags..."
-    adios2libs=`${adios2_config_cmd} --c-libs | sed -e 's/[[:space:]]*$//' | sed 's/ /#/g' | sed 's/,/\\\\,/g'`
+    adios2libs=`${adios2_config_cmd} --cxx-libs | sed -e 's/[[:space:]]*$//' | sed 's/ /#/g' | sed 's/,/\\\\,/g'`
     tauoptions="${tauoptions}-adios2"
     fixmakeargs="$fixmakeargs ADIOS2"
     fixmakeargs="$fixmakeargs adios2dir=$adios2dir"

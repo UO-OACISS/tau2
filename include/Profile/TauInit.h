@@ -28,6 +28,8 @@ extern "C" {
 int Tau_init_initializeTAU();
 int Tau_init_check_initialized();
 int Tau_init_initializingTAU();
+void Tau_register_post_init_callback(void (*function)());
+
 
 //call by wrappers/taupreload/dl_auditor.
 void Tau_init_dl_initialized();

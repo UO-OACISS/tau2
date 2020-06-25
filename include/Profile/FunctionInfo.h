@@ -36,6 +36,7 @@
 extern "C" {
 #endif /* __cplusplus */
 extern int Tau_Global_numCounters;
+extern int Tau_Global_numGPUCounters;
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
@@ -78,8 +79,8 @@ class FunctionInfo
 {
 public:
   // Construct with the name of the function and its type.
-  FunctionInfo(const char* name, const char * type, 
-	       TauGroup_t ProfileGroup = TAU_DEFAULT, 
+  FunctionInfo(const char* name, const char * type,
+	       TauGroup_t ProfileGroup = TAU_DEFAULT,
 	       const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true,
 	       int tid = RtsLayer::myThread());
   FunctionInfo(const char* name, const std::string& type,
@@ -94,13 +95,13 @@ public:
 	       TauGroup_t ProfileGroup = TAU_DEFAULT,
 	       const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true,
 	       int tid = RtsLayer::myThread());
-  
+
   FunctionInfo(const FunctionInfo& X) ;
   // When we exit, we have to clean up.
   ~FunctionInfo();
   FunctionInfo& operator= (const FunctionInfo& X) ;
 
-  void FunctionInfoInit(TauGroup_t PGroup, const char *PGroupName, 
+  void FunctionInfoInit(TauGroup_t PGroup, const char *PGroupName,
 			bool InitData, int tid );
 
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
@@ -114,7 +115,7 @@ public:
   inline void IncrNumCalls(int tid);
   inline void IncrNumSubrs(int tid);
   inline bool GetAlreadyOnStack(int tid);
-  inline void SetAlreadyOnStack(bool value, int tid);  
+  inline void SetAlreadyOnStack(bool value, int tid);
 
 #ifdef TAU_PROFILEMEMORY
   tau::TauUserEvent * MemoryEvent;
@@ -136,7 +137,7 @@ public:
 private:
   // A record of the information unique to this function.
   // Statistics about calling this function.
-	
+
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
   TAU_STORAGE(KtauFuncInfo, KernelFunc);
 #endif /* KTAU && KTAU_MERGE */
@@ -249,7 +250,7 @@ public:
       ExclTime[tid][i] = excltime[i];
     }
   }
-  inline void SetInclTime(int tid, double *incltime) { 
+  inline void SetInclTime(int tid, double *incltime) {
     for(int i=0;i<Tau_Global_numCounters;i++)
       InclTime[tid][i] = incltime[i];
   }
@@ -280,14 +281,14 @@ int& TheUsingCompInst(void);
 //
 // For efficiency, make the timing updates inline.
 //
-inline void FunctionInfo::ExcludeTime(double *t, int tid) { 
+inline void FunctionInfo::ExcludeTime(double *t, int tid) {
   // called by a function to decrease its parent functions time
   // exclude from it the time spent in child function
   for (int i=0; i<Tau_Global_numCounters; i++) {
     ExclTime[tid][i] -= t[i];
   }
 }
-	
+
 
 inline void FunctionInfo::AddInclTime(double *t, int tid) {
   for (int i=0; i<Tau_Global_numCounters; i++) {
@@ -303,7 +304,7 @@ inline void FunctionInfo::AddExclTime(double *t, int tid) {
 
 inline void FunctionInfo::IncrNumCalls(int tid) {
   NumCalls[tid]++; // Increment number of calls
-} 
+}
 
 inline void FunctionInfo::IncrNumSubrs(int tid) {
   NumSubrs[tid]++;  // increment # of subroutines
@@ -318,7 +319,7 @@ inline bool FunctionInfo::GetAlreadyOnStack(int tid) {
 }
 
 
-void tauCreateFI(void **ptr, const char *name, const char *type, 
+void tauCreateFI(void **ptr, const char *name, const char *type,
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
 void tauCreateFI(void **ptr, const char *name, const std::string& type,
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
@@ -326,7 +327,7 @@ void tauCreateFI(void **ptr, const std::string& name, const char *type,
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
 void tauCreateFI(void **ptr, const std::string& name, const std::string& type,
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
-void tauCreateFI_signalSafe(void **ptr, const std::string& name, const char *type, 
+void tauCreateFI_signalSafe(void **ptr, const std::string& name, const char *type,
          TauGroup_t ProfileGroup, const char *ProfileGroupName);
 
 
@@ -334,5 +335,5 @@ void tauCreateFI_signalSafe(void **ptr, const std::string& name, const char *typ
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
  * $Revision: 1.57 $   $Date: 2010/03/19 00:21:13 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.57 2010/03/19 00:21:13 amorris Exp $ 
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.57 2010/03/19 00:21:13 amorris Exp $
  ***************************************************************************/

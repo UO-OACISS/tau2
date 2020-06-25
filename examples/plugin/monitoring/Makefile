@@ -10,9 +10,9 @@
 ##                  pC++/Sage++  Copyright (C) 1993,1995             ##
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
- 
 
-TAU_MAKEFILE ?=../../include/Makefile
+
+TAU_MAKEFILE ?=../../../include/Makefile
 
 include $(TAU_MAKEFILE)
 
@@ -31,12 +31,12 @@ LDFLAGS=-g -O3 $(TAU_OPENMP_OPTION)
 
 ##############################################
 
-all:		$(TARGET)	
+all:		$(TARGET)
 
 install: 	$(TARGET)
 
-$(TARGET):	$(OBJS) 
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS) -Wl,-rpath,/Users/khuck/src/tau2/apple/lib
+$(TARGET):	$(OBJS)
+	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS) -ldl
 
 matmult.o: matmult.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -44,6 +44,6 @@ matmult.o: matmult.c
 matmult_initialize.o: matmult_initialize.c matmult_initialize.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-clean: 	
+clean:
 	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog dump.* tauprofile*.bp.dir tau-metrics* tauprofile*.bp*
 ##############################################

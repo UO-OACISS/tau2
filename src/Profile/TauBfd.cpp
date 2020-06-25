@@ -34,7 +34,7 @@
 #define HAVE_DECL_BASENAME 1
 #include <demangle.h>
 #define DEFAULT_DEMANGLE_FLAGS DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES
-#ifdef __PGI
+#if defined(__PGI) && defined(DMGL_ARM)
 #define DEMANGLE_FLAGS DEFAULT_DEMANGLE_FLAGS | DMGL_ARM
 #else
 #define DEMANGLE_FLAGS DEFAULT_DEMANGLE_FLAGS
@@ -71,7 +71,18 @@
 #include <libdwarf.h>
 #endif
 
-
+/* When BFD 2.34 was released, some API calls were replaced. */
+#if !defined(bfd_get_section)
+#define TAU_BFD_GET_SECTION_FLAGS(_abfd, _section) bfd_section_flags(_section)
+#define TAU_BFD_GET_SECTION_VMA(_abfd, _section) bfd_section_vma(_section)
+#define TAU_BFD_GET_SECTION_SIZE(_section) bfd_section_size(_section)
+#define TAU_BFD_GET_SECTION(_symbol) bfd_asymbol_section(_symbol)
+#else
+#define TAU_BFD_GET_SECTION_FLAGS(_abfd, _section) bfd_get_section_flags(_abfd, _section)
+#define TAU_BFD_GET_SECTION_VMA(_abfd, _section) bfd_get_section_vma(_abfd, _section)
+#define TAU_BFD_GET_SECTION_SIZE(_section) bfd_get_section_size(_section)
+#define TAU_BFD_GET_SECTION(_symbol) bfd_get_section(_symbol)
+#endif
 
 using namespace std;
 
@@ -1017,19 +1028,19 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   }
 
   // Skip this section if it isn't a debug info section
-  if ((bfd_get_section_flags(bfdptr, section) & SEC_ALLOC) == 0) {
+  if ((TAU_BFD_GET_SECTION_FLAGS(bfdptr, section) & SEC_ALLOC) == 0) {
     return;
   }
 
 
   // Skip this section if the address is before the section start
-  bfd_vma vma = bfd_get_section_vma(bfdptr, section);
+  bfd_vma vma = TAU_BFD_GET_SECTION_VMA(bfdptr, section);
   if (data.info.probeAddr < vma) {
       return;
   }
 
   // Skip this section if the address is after the section end
-  bfd_size_type size = bfd_get_section_size(section);
+  bfd_size_type size = TAU_BFD_GET_SECTION_SIZE(section);
   if (data.info.probeAddr >= vma + size) {
     return;
   }
@@ -1425,7 +1436,7 @@ static int Tau_internal_get_lineno_for_function(tau_bfd_handle_t bfd_handle, cha
       // be cached.
       for (i = 0; i < nr_all_syms; i++) {
           //addr = syms[i]->section->vma + syms[i]->value;
-          bfd_find_nearest_line(bfdImage, bfd_get_section(syms[i]), syms,
+          bfd_find_nearest_line(bfdImage, TAU_BFD_GET_SECTION(syms[i]), syms,
           syms[i]->value, &filename, &func, &lineno);
           func = syms[i]->name;
           if (lineno > 0) { // We only store non-zero entries now
