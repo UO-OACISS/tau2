@@ -11512,6 +11512,7 @@ if [ "x$download_dwarf" = xyes ] ; then
               fi
             else
               echo "Found /usr/include/libelf.h"
+              libelfdir=/usr
             fi
 # End of libelf check. Continue with libdwarf build.
             if [ $elf=yes ]; then
