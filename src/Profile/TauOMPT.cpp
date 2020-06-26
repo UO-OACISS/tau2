@@ -128,6 +128,7 @@ static ompt_get_partition_place_nums_t ompt_get_partition_place_nums;
 static ompt_get_proc_id_t ompt_get_proc_id;
 static ompt_enumerate_states_t ompt_enumerate_states;
 static ompt_enumerate_mutex_impls_t ompt_enumerate_mutex_impls;
+static ompt_finalize_tool_t ompt_finalize_tool;
 
 /* IMPT NOTE: In general, we use Tau_global_stop() instead of TAU_PROFILER_STOP(handle) because it is
  * not possible to determine in advance which optional events are supported by the compiler used
@@ -1267,6 +1268,7 @@ extern "C" int ompt_initialize(
   ompt_get_proc_id = (ompt_get_proc_id_t) lookup("ompt_get_proc_id");
   ompt_enumerate_states = (ompt_enumerate_states_t) lookup("ompt_enumerate_states");
   ompt_enumerate_mutex_impls = (ompt_enumerate_mutex_impls_t) lookup("ompt_enumerate_mutex_impls");
+  ompt_finalize_tool = (ompt_finalize_tool_t) lookup("ompt_finalize_tool");
 
 /* Required events */
   Tau_register_callback(ompt_callback_parallel_begin, cb_t(on_ompt_callback_parallel_begin));
@@ -1355,9 +1357,18 @@ void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugi
     register_callback(ompt_callback_target_submit, cb_t(on_ompt_callback_target_submit));
 }
 
+void Tau_ompt_finalize(void) {
+    static bool called = false;
+    if (!called) {
+        ompt_finalize_tool();
+        called = true;
+    }
+}
+
 extern "C" void ompt_finalize(ompt_data_t* tool_data)
 {
   TAU_VERBOSE("OpenMP runtime is shutting down...\n");
+  Tau_destructor_trigger();
 
   if(Tau_plugins_enabled.ompt_finalize) {
     Tau_plugin_event_ompt_finalize_data_t plugin_data;
