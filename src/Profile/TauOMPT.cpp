@@ -117,6 +117,7 @@ static void format_task_type(int type, char* buffer)
 /* Function pointers.  These are all queried from the runtime during
  * ompt_initialize() */
 static ompt_set_callback_t ompt_set_callback;
+static ompt_finalize_tool_t ompt_finalize_tool;
 static ompt_get_task_info_t ompt_get_task_info;
 static ompt_get_thread_data_t ompt_get_thread_data;
 static ompt_get_parallel_info_t ompt_get_parallel_info;
@@ -1267,6 +1268,7 @@ extern "C" int ompt_initialize(
   ompt_get_proc_id = (ompt_get_proc_id_t) lookup("ompt_get_proc_id");
   ompt_enumerate_states = (ompt_enumerate_states_t) lookup("ompt_enumerate_states");
   ompt_enumerate_mutex_impls = (ompt_enumerate_mutex_impls_t) lookup("ompt_enumerate_mutex_impls");
+  ompt_finalize_tool = (ompt_finalize_tool_t) lookup("ompt_finalize_tool");
 
 /* Required events */
   Tau_register_callback(ompt_callback_parallel_begin, cb_t(on_ompt_callback_parallel_begin));
@@ -1355,9 +1357,17 @@ void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugi
     register_callback(ompt_callback_target_submit, cb_t(on_ompt_callback_target_submit));
 }
 
+/* This is called by the Tau_destructor_trigger() to prevent
+ * callbacks from happening after TAU is shut down */
+void Tau_ompt_finalize(void) {
+    ompt_finalize_tool();
+}
+
 extern "C" void ompt_finalize(ompt_data_t* tool_data)
 {
   TAU_VERBOSE("OpenMP runtime is shutting down...\n");
+  /* Just in case... */
+  Tau_destructor_trigger();
 
   if(Tau_plugins_enabled.ompt_finalize) {
     Tau_plugin_event_ompt_finalize_data_t plugin_data;

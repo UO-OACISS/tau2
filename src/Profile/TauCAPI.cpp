@@ -153,17 +153,16 @@ struct Tau_thread_status_flags {
       }
      virtual ~CAPIThreadList(){
          //printf("Destroying CapiThreadList at %p, with size %ld\n", this, this->size());
-         this->clear(); //TODO: This should not be necessary
          Tau_destructor_trigger();
      }
    };
- 
+
 //static CAPIThreadList Tau_thread_flags;
 CAPIThreadList & TheCAPIThreadList() {
     static CAPIThreadList threadList;
     return threadList;
 }
- 
+
 void checkTCAPIVector(int tid){
  	while(TheCAPIThreadList().size()<=tid){
         RtsLayer::LockDB();
@@ -2977,6 +2976,9 @@ extern "C" int Tau_get_local_tid(void) {
 #ifdef TAU_OPENMP
 //extern "C" void Tau_finalize_collector_api(void);
 #endif
+#ifdef TAU_USE_OMPT_5_0
+  extern void Tau_ompt_finalize(void);
+#endif
 
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
@@ -2984,6 +2986,9 @@ void Tau_destructor_trigger() {
   Tau_flush_gpu_activity();
 // First, make sure all thread timers have stopped
   Tau_profile_exit_all_threads();
+#ifdef TAU_USE_OMPT_5_0
+  Tau_ompt_finalize();
+#endif
 #ifdef TAU_OPENMP
   //Tau_finalize_collector_api();
 #endif
