@@ -309,17 +309,14 @@ void Tau_metadata_register(const char *name, int value) {
   char buf[256];
   sprintf (buf, "%d", value);
   Tau_metadata(name, buf);
-  printf("Registered: %s = %d\n", name, value);
 }
 
 void Tau_metadata_register(const char *name, const char *value) {
   Tau_metadata(name, value);
-  printf("Registered: %s = %s\n", name, value);
 }
 
 void Tau_metadata_register(const char *name, const std::string &value) {
   Tau_metadata(name, value.c_str());
-  printf("Registered: %s = %s\n", name, value.c_str());
 }
 
 #ifdef TAU_WINDOWS
