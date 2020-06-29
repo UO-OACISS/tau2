@@ -75,6 +75,14 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 using namespace std;
 using namespace tau;
 
+#ifdef _OPENMP
+#include <omp.h>
+#include <map>
+map<unsigned,string> openmp_map{
+    {200505,"2.5"},{200805,"3.0"},{201107,"3.1"},
+    {201307,"4.0"},{201511,"4.5"},{201811,"5.0"}};
+#endif
+
 #ifdef TAU_SCOREP_METADATA
 #include <scorep/SCOREP_Tau.h>
 #endif /* TAU_SCOREP_METADATA */
@@ -301,10 +309,17 @@ void Tau_metadata_register(const char *name, int value) {
   char buf[256];
   sprintf (buf, "%d", value);
   Tau_metadata(name, buf);
+  printf("Registered: %s = %d\n", name, value);
 }
 
 void Tau_metadata_register(const char *name, const char *value) {
   Tau_metadata(name, value);
+  printf("Registered: %s = %s\n", name, value);
+}
+
+void Tau_metadata_register(const char *name, const std::string &value) {
+  Tau_metadata(name, value.c_str());
+  printf("Registered: %s = %s\n", name, value.c_str());
 }
 
 #ifdef TAU_WINDOWS
@@ -336,8 +351,8 @@ int Tau_metadata_fillMetaData()
 
 
   thisTime = localtime(&theTime);
-  char buf[4096];
-  strftime (buf,4096,"%Y-%m-%dT%H:%M:%S", thisTime);
+  char buf[256];
+  strftime (buf,256,"%Y-%m-%dT%H:%M:%S", thisTime);
 
   char tzone[7]={0};
   strftime (tzone, 7, "%z", thisTime);
@@ -742,6 +757,82 @@ int Tau_metadata_fillMetaData()
   if (user != NULL) {
     Tau_metadata_register("username", user);
   }
+
+#ifdef _OPENMP
+#if TAU_OPENMP && !defined(TAU_MPC)
+  /* Capture OpenMP version */
+  Tau_metadata_register("OpenMP Version String", _OPENMP);
+  Tau_metadata_register("OpenMP Version", openmp_map.at(_OPENMP).c_str());
+
+// MPC wht OpenMP isn't initialized before TAU is, so these function calls will hang.
+  const char* schedule;
+  int modifier;
+  omp_sched_t kind;
+  omp_get_schedule(&kind, &modifier);
+  if (kind == omp_sched_static) {
+      schedule = "STATIC";
+  } else if (kind == omp_sched_dynamic) {
+      schedule = "DYNAMIC";
+  } else if ( kind == omp_sched_guided) {
+      schedule = "GUIDED";
+  } else if ( kind == omp_sched_auto) {
+      schedule = "AUTO";
+  } else {
+      schedule = "UNKNOWN";
+  }
+  Tau_metadata_register("OMP_SCHEDULE", schedule);
+  Tau_metadata_register("OMP_CHUNK_SIZE", modifier);
+  Tau_metadata_register("OMP_MAX_THREADS", omp_get_max_threads());
+  Tau_metadata_register("OMP_NUM_PROCS", omp_get_num_procs());
+  Tau_metadata_register("OMP_DYNAMIC", omp_get_dynamic() ? "TRUE" : "FALSE");
+  Tau_metadata_register("OMP_NESTED", omp_get_nested() ? "TRUE" : "FALSE");
+  Tau_metadata_register("OMP_MAX_ACTIVE_LEVELS", omp_get_max_active_levels());
+  Tau_metadata_register("OMP_THREAD_LIMIT", omp_get_thread_limit());
+
+#if _OPENMP >= 201307
+  Tau_metadata_register("OMP_CANCELLATION", omp_get_cancellation() ? "TRUE" : "FALSE");
+  Tau_metadata_register("OMP_PROC_BIND", omp_get_proc_bind() ? "TRUE" : "FALSE");
+  Tau_metadata_register("OMP_DEFAULT_DEVICE", omp_get_default_device());
+  Tau_metadata_register("OMP_NUM_DEVICES", omp_get_num_devices());
+#endif
+
+#if _OPENMP >= 201511
+  Tau_metadata_register("OMP_MAX_TASK_PRIORITY", omp_get_max_task_priority());
+  char * omp_var = getenv("OMP_PLACES");
+  if (omp_var != NULL) {
+    Tau_metadata_register("OMP_PLACES", omp_var);
+  }
+  Tau_metadata_register("OMP_NUM_PLACES", omp_get_num_places());
+  stringstream ss_num;
+  stringstream ss_ids;
+  ss_num << "{";
+  ss_ids << "{";
+  for (int i = 0 ; i < omp_get_num_places() ; i++) {
+    if (i > 0) {
+      ss_num << ",";
+      ss_ids << ",";
+    }
+    ss_num << i << ":" << omp_get_place_num_procs(i);
+    vector<int> v_ids(omp_get_place_num_procs(i),0);
+    omp_get_place_proc_ids(i, v_ids.data());
+    ss_ids << i << ":[";
+    for (int j = 0 ; j < omp_get_place_num_procs(i) ; j++) {
+      if (j > 0) {
+        ss_ids << ",";
+      }
+      ss_ids << j;
+    }
+    ss_ids << "]";
+  }
+  ss_num << "}";
+  ss_ids << "}";
+  Tau_metadata_register("OMP_PLACE_NUM_PROCS", ss_num.str());
+  Tau_metadata_register("OMP_PLACE_PROC_IDS", ss_ids.str());
+#endif
+
+#endif // TAU_OPENMP && !TAU_MPC
+
+#endif // _OPENMP
 
 #endif // TAU_DISABLE_METADATA
 
