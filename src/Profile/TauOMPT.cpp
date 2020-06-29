@@ -93,6 +93,21 @@ static const char* ompt_cancel_flag_t_values[] = {
   "ompt_cancel_discarded_task"
 };
 
+/* We need this method to make sure that we don't get any callbacks after
+ * ompt_finaize_tool() has been called.  We *shouldn't* get any callbacks
+ * after that, but with modern GCC implementations, it's happening, even
+ * with the Intel/LLVM OpenMP runtime.  This is an insurance policy.  It
+ * is only needed for the end of implicit tasks and thread exit events
+ * (which can happen by the LLVM runtime when it harvests threads after
+ * the program has exited and TAU has been mostly if not entirely destroyed. */
+static bool Tau_ompt_finalized(bool changeValue = false) {
+    static bool _finalized = false;
+    if (changeValue) {
+        _finalized = true;
+    }
+    return _finalized;
+}
+
 /* This is used to be able to register a callback for a plugin and still
  * prevent TAU from executing it's part of the callback.
  * The size is updated manually for now as I believe there is no way to get the
@@ -573,6 +588,8 @@ on_ompt_callback_thread_end(
   ompt_data_t *thread_data)
 {
   TauInternalFunctionGuard protects_this_function;
+  // Prevent against callbacks after finalization
+  if (Tau_ompt_finalized()) { return; }
   if(Tau_ompt_callbacks_enabled[ompt_callback_thread_end] && Tau_init_check_initialized()) {
 #if defined (TAU_USE_TLS)
     if (is_master) return; // master thread can't be a new worker.
@@ -608,6 +625,8 @@ on_ompt_callback_implicit_task(
     unsigned int thread_num)
 {
   TauInternalFunctionGuard protects_this_function;
+  // protect against calls after finalization
+  if(Tau_ompt_finalized()) { return; }
   if(Tau_ompt_callbacks_enabled[ompt_callback_implicit_task] && Tau_init_check_initialized()) {
     char timerName[100];
     sprintf(timerName, "OpenMP_Implicit_Task");
@@ -1360,9 +1379,12 @@ void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugi
 /* This is called by the Tau_destructor_trigger() to prevent
  * callbacks from happening after TAU is shut down */
 void Tau_ompt_finalize(void) {
+    if(Tau_ompt_finalized()) { return; }
+    Tau_ompt_finalized(true);
     ompt_finalize_tool();
 }
 
+/* This callback should come from the runtime when the runtime is shut down */
 extern "C" void ompt_finalize(ompt_data_t* tool_data)
 {
   TAU_VERBOSE("OpenMP runtime is shutting down...\n");
