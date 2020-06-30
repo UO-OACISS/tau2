@@ -13,10 +13,10 @@ all: $(TAU_CUPTI_AVAIL)
 install: $(INSTALLTAU_CUPTI_AVAIL)
 
 $(TAU_CUPTI_AVAIL): tau_cupti_avail.o $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/libTAUsh$(TAU_CONFIG).so
-		$(CXX) -o $@ $< -L$(TAU_LIB_DIR) $(TAU_LINKER_RPATH_OPT) $(TAU_SHLIBS) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/shared$(TAU_CONFIG)/libTAU-CUact$(TAU_SHLIBX) $(TAU_OPENMP_OPTION) -lcuda $(USER_OPT) -Wl,-rpath,$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
+		$(CXX) -o $@ $< $(TAU_SHARED_LINK) -Wl,-rpath,$(TAU_LIB_DIR)/shared$(TAU_CONFIG)
 
 tau_cupti_avail.o: tau_cupti_avail.cpp
-		$(TAU_CUDA_CXX) $(CFLAGS) -I$(TAU_CUDA_INC) -I$(TAU_CUPTI_INC) -I$(TAU_INC_DIR) -c $<
+		$(CXX) $(CFLAGS) -I$(TAU_CUDA_INC) -I$(TAU_CUPTI_INC) -I$(TAU_INC_DIR) -c $<
 
 $(INSTALLTAU_CUPTI_AVAIL): $(TAU_CUPTI_AVAIL)
 		@echo Installing $? in $(INSTALLDEST)
@@ -26,5 +26,5 @@ $(INSTALLTAU_CUPTI_AVAIL): $(TAU_CUPTI_AVAIL)
 
 
 clean:
-	$(RM) tau_cupti_avail.o $(TAU_CUPTI_AVAIL) 
+	$(RM) tau_cupti_avail.o $(TAU_CUPTI_AVAIL)
 

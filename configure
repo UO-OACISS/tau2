@@ -4379,7 +4379,7 @@ if [ $intel_cxx = 1 ] ; then
     fi
 fi
 
-if [ $mpi = yes -a "x$mpiinc" = "x" ] ; then
+if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$cxx_compiler" = "xmpicxx" ] ; then
     cxxloaded=`which $mpicxx_exe 2>/dev/null | wc -l`
     mpi=yes
     if [ $cxxloaded = 1 ]

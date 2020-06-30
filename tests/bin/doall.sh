@@ -95,8 +95,9 @@ test_cuda() {
     fi
 }
 
-declare -a compilers=("gcc" "pgi" "intel" "xl")
+declare -a compilers=("gcc" "pgi" "intel" "xl" "llvm")
 #declare -a compilers=("xl")
+#declare -a compilers=("llvm")
 
 for compiler in "${compilers[@]}" ; do
     if [ ! -f ${tauroot}/tests/configs/${myhost}.${compiler}.settings ] ; then
@@ -114,12 +115,12 @@ for compiler in "${compilers[@]}" ; do
         fi
     fi
 
-    test_vanilla
-    test_threads
+    #test_vanilla
+    #test_threads
     test_mpi
-    test_papi
-    test_python
-    test_cuda
+    #test_papi
+    #test_python
+    #test_cuda
 done
 
 echo "Success!"

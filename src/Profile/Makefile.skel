@@ -645,7 +645,7 @@ Profiler.o 	: Profiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)   $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
 TauMetaData.o 	: TauMetaData.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_STDCXX11_FLAG) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauShmemCrayC.o  : TauShmemCrayC.c $(HDRS)
 	$(CC) $(CFLAGS) -c $(@:.o=.c)
