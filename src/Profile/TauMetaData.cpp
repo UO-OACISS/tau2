@@ -167,8 +167,14 @@ int tau_bgq_init(void) {
 
 // These come from Tau_metadata_register calls
 MetaDataRepo &Tau_metadata_getMetaData(int tid) {
-  static MetaDataRepo metadata[TAU_MAX_THREADS];
-  return metadata[tid];
+  static vector<MetaDataRepo*> metadata;//[TAU_MAX_THREADS];
+  
+  while(metadata.size()<=tid){
+        RtsLayer::LockDB();
+		metadata.push_back(new MetaDataRepo);
+        RtsLayer::UnLockDB();
+	}
+  return *metadata[tid];
 }
 
 void MetaDataRepo::freeMetadata (Tau_metadata_value_t * tmv) {
