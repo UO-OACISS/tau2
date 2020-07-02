@@ -81,13 +81,6 @@ using namespace tau;
 map<unsigned,string> openmp_map{
     {200505,"2.5"},{200805,"3.0"},{201107,"3.1"},
     {201307,"4.0"},{201511,"4.5"},{201811,"5.0"}};
-#if defined(__PGI)
-  /* the PGI compiler lies!  It implements these two functions, but doesn't include
-   * them in omp.h!  So declare them here.
-   */
-int omp_get_cancellation(void);
-int omp_get_num_devices(void);
-#endif
 #endif
 
 #ifdef TAU_SCOREP_METADATA
@@ -797,8 +790,10 @@ int Tau_metadata_fillMetaData()
 #if _OPENMP >= 201307 // OpenMP 4.0
   Tau_metadata_register("OMP_PROC_BIND", omp_get_proc_bind() ? "TRUE" : "FALSE");
   Tau_metadata_register("OMP_DEFAULT_DEVICE", omp_get_default_device());
+#if _OPENMP == 201307 && !defined(__PGI) // PGI claims 4.0, but is missing these implementations
   Tau_metadata_register("OMP_CANCELLATION", omp_get_cancellation() ? "TRUE" : "FALSE");
   Tau_metadata_register("OMP_NUM_DEVICES", omp_get_num_devices());
+#endif
 #endif
 
 #if _OPENMP >= 201511 // OpenMP 4.5
