@@ -92,6 +92,34 @@ extern TauUserEvent *TheGatherEvent(void);
 extern TauUserEvent *TheAllgatherEvent(void);
 #endif /* TAU_MPI */
 
+struct clockStamp{//TAU_MAX_THREADS of these
+    double userClock=0;//[TAU_MAX_THREADS];
+    double gpu_timestamp=0;//[TAU_MAX_THREADS];
+    double gpu_counterstamp[TAU_MAX_COUNTERS];//[TAU_MAX_THREADS]
+};
+
+struct TRMThreadList : vector<clockStamp*>{
+    TRMThreadList(){
+         //printf("Creating TRMThreadList at %p\n", this);
+      }
+     virtual ~TRMThreadList(){
+         //printf("Destroying TRMThreadList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
+
+static TRMThreadList clockStampV;
+inline void checkTRMVector(int tid){
+	while(clockStampV.size()<=tid){
+        RtsLayer::LockDB();
+		clockStampV.push_back(new clockStamp());
+        RtsLayer::UnLockDB();
+	}
+}
+
+int metric_get_num_clocks(){
+    return clockStampV.size();
+}
 
 
 /* null clock that always returns 0 */
@@ -123,12 +151,14 @@ double TauWindowsUsecD(void);
 
 /* user defined clock */
 
-static double userClock[TAU_MAX_THREADS];
+
 static inline double getUserClock(int tid){
-    return userClock[tid];
+    checkTRMVector(tid);
+    return clockStampV[tid]->userClock;
 }
 static inline void setUserClock(int tid, double value){
-    userClock[tid]=value;
+    checkTRMVector(tid);
+    clockStampV[tid]->userClock=value;
 }
 
 void metric_write_userClock(int tid, double value) {
@@ -348,16 +378,19 @@ void metric_read_ktau(int tid, int idx, double values[]) {
 
 #define CPU_THREAD 0
 
-double gpu_timestamp[TAU_MAX_THREADS];
+
 inline double getGpuTimestamp(int tid){
-    return gpu_timestamp[tid];
+    checkTRMVector(tid);
+    return clockStampV[tid]->gpu_timestamp;
 }
 inline void setGpuTimestamp(int tid, double value){
-    gpu_timestamp[tid]=value;
+    checkTRMVector(tid);
+    clockStampV[tid]->gpu_timestamp=value;
 }
-double gpu_counterstamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
+
 inline void setGpuCounterstamp(int tid,int idx,double value){
-    gpu_counterstamp[tid][idx] = value;
+    checkTRMVector(tid);
+    clockStampV[tid]->gpu_counterstamp[idx] = value;
 }
 
 extern "C" void metric_set_gpu_timestamp(int tid, double value)

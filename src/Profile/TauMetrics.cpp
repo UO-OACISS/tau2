@@ -63,6 +63,7 @@ struct ScopedArray {
 
 void metric_read_nullClock(int tid, int idx, double values[]);
 void metric_write_userClock(int tid, double value);
+int metric_get_num_clocks();
 void metric_read_userClock(int tid, int idx, double values[]);
 void metric_read_logicalClock(int tid, int idx, double values[]);
 void metric_read_gettimeofday(int tid, int idx, double values[]);
@@ -926,7 +927,8 @@ int TauMetrics_init() {
     }
 
 		/* Set the user clock values to 0 */
-	for (i = 0; i < TAU_MAX_THREADS; i++) { //TODO: DYNATHREAD
+    int numClocks=metric_get_num_clocks();
+	for (i = 0; i < numClocks; i++) {
 		metric_write_userClock(i, 0);
 	}
 
