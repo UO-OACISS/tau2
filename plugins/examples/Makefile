@@ -17,9 +17,9 @@ CFLAGS = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAU_DEFS) $(USER_OPT) $(TAU
 
 LDFLAGS = $(TAU_MPI_LIB)
 
-OBJS = Tau_plugin_example_disable_instrumentation_runtime.o Tau_plugin_example_mpit_recommend_sharp_usage.o Tau_plugin_example_free_unused_vbufs.o Tau_plugin_sos.o Tau_plugin_thread_summary.o Tau_plugin_example_selective_tracing.o Tau_plugin_example_profile_snapshot_trigger.o Tau_plugin_example_mpit_exchange_pvar_data.o Tau_plugin_example_analyze_profile_snapshots.o Tau_plugin_example_load_balance_async.o Tau_plugin_example_load_balance.o Tau_plugin_example_analyze_node_profile_snapshots.o Tau_plugin_example_analyze_node_profile_snapshots_async.o Tau_plugin_example_emulate_profile_snapshots_analysis_async.o Tau_plugin_example_memory_usage_async.o Tau_plugin_example_atomic_trigger.o
+OBJS = Tau_plugin_example_disable_instrumentation_runtime.o Tau_plugin_example_mpit_recommend_sharp_usage.o Tau_plugin_example_free_unused_vbufs.o Tau_plugin_pooky2.o Tau_plugin_sos.o Tau_plugin_thread_summary.o Tau_plugin_example_selective_tracing.o Tau_plugin_example_profile_snapshot_trigger.o Tau_plugin_example_mpit_exchange_pvar_data.o Tau_plugin_example_analyze_profile_snapshots.o Tau_plugin_example_load_balance_async.o Tau_plugin_example_load_balance.o Tau_plugin_example_analyze_node_profile_snapshots.o Tau_plugin_example_analyze_node_profile_snapshots_async.o Tau_plugin_example_emulate_profile_snapshots_analysis_async.o Tau_plugin_example_memory_usage_async.o Tau_plugin_example_atomic_trigger.o
 
-SHAREDLIBS = libTAU-memory-usage-async$(TAU_SHLIBX) libTAU-emulate-profiles-analysis-async$(TAU_SHLIBX) libTAU-load-balance-async$(TAU_SHLIBX) libTAU-analyze-node-profiles$(TAU_SHLIBX) libTAU-analyze-node-profiles-async$(TAU_SHLIBX) libTAU-filter-plugin$(TAU_SHLIBX) libTAU-mpit-recommend-sharp-usage-plugin$(TAU_SHLIBX) libTAU-mpit-mvapich-free_unused_vbufs$(TAU_SHLIBX) libTAU-sos-plugin$(TAU_SHLIBX) libTAU-thread-summary-plugin$(TAU_SHLIBX) libTAU-selective-tracing$(TAU_SHLIBX) libTAU-snapshot-trigger$(TAU_SHLIBX) libTAU-mpit-exchange-data$(TAU_SHLIBX) libTAU-analyze-profiles$(TAU_SHLIBX) libTAU-load-balance$(TAU_SHLIBX) libTAU-memory-usage-async$(TAU_SHLIBX) libTAU-adios2-plugin$(TAU_SHLIBX) libTAU-adios2-trace-plugin$(TAU_SHLIBX) libTAU-atomic-trigger$(TAU_SHLIBX) libTAU-adios2-trace-plugin$(TAU_SHLIBX) libTAU-null-plugin$(TAU_SHLIBX) libTAU-monitoring-plugin$(TAU_SHLIBX) $(TAU_SQLITE3_PLUGIN_LIB)
+SHAREDLIBS = libTAU-memory-usage-async$(TAU_SHLIBX) libTAU-emulate-profiles-analysis-async$(TAU_SHLIBX) libTAU-load-balance-async$(TAU_SHLIBX) libTAU-analyze-node-profiles$(TAU_SHLIBX) libTAU-analyze-node-profiles-async$(TAU_SHLIBX) libTAU-filter-plugin$(TAU_SHLIBX) libTAU-mpit-recommend-sharp-usage-plugin$(TAU_SHLIBX) libTAU-mpit-mvapich-free_unused_vbufs$(TAU_SHLIBX) libTAU-pooky2-plugin$(TAU_SHLIBX) libTAU-sos-plugin$(TAU_SHLIBX) libTAU-thread-summary-plugin$(TAU_SHLIBX) libTAU-selective-tracing$(TAU_SHLIBX) libTAU-snapshot-trigger$(TAU_SHLIBX) libTAU-mpit-exchange-data$(TAU_SHLIBX) libTAU-analyze-profiles$(TAU_SHLIBX) libTAU-load-balance$(TAU_SHLIBX) libTAU-memory-usage-async$(TAU_SHLIBX) libTAU-adios2-plugin$(TAU_SHLIBX) libTAU-adios2-trace-plugin$(TAU_SHLIBX) libTAU-atomic-trigger$(TAU_SHLIBX) libTAU-adios2-trace-plugin$(TAU_SHLIBX) libTAU-null-plugin$(TAU_SHLIBX) libTAU-monitoring-plugin$(TAU_SHLIBX) $(TAU_SQLITE3_PLUGIN_LIB)
 
 all: install
 	@echo
@@ -33,6 +33,9 @@ libTAU-atomic-trigger$(TAU_SHLIBX): Tau_plugin_example_atomic_trigger.o
 
 libTAU-sos-plugin$(TAU_SHLIBX): Tau_plugin_sos.o TauSOS.o
 	$(CXX) Tau_plugin_sos.o TauSOS.o $(TAU_SOS_LINKER_OPTS) $(TAU_SHFLAGS) libTAU-sos-plugin$(TAU_SHLIBX)
+
+libTAU-pooky2-plugin$(TAU_SHLIBX): Tau_plugin_pooky2.o
+	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_pooky2.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-pooky2-plugin$(TAU_SHLIBX)
 
 libTAU-adios2-plugin$(TAU_SHLIBX): Tau_plugin_adios2.o Tau_sockets.o
 	$(CXX) Tau_plugin_adios2.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-adios2-plugin$(TAU_SHLIBX) $(TAU_SHLIBS)
@@ -116,6 +119,9 @@ Tau_plugin_example_load_balance_async.o: Tau_plugin_example_load_balance_async.c
 	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) -c $< -o $@
 
 Tau_plugin_example_load_balance.o: Tau_plugin_example_load_balance.cpp
+	$(CXX) $(CFLAGS) -c $< -o $@
+
+Tau_plugin_pooky2.o: Tau_plugin_pooky2.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 Tau_plugin_sos.o: Tau_plugin_sos.cpp

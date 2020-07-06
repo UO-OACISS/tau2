@@ -85,7 +85,7 @@ extern void Tau_metadata_writeEndingTimeStamp(void);
 
 /* These functions and macros are for creating MPI "events" in the SOS stream. */
 
-#if defined(TAU_SOS)
+#if defined(TAU_SOS) || defined(TAU_POOKY2)
 
 #ifndef TAU_ADIOS
 int TAU_inside_ADIOS(void) {
@@ -97,25 +97,20 @@ int TAU_inside_ADIOS(void) {
 int TAU_inside_ADIOS(void);
 #endif /*  TAU_ADIOS */
 
-inline void Tau_plugin_trace_current_timer(const char * name) {
-
-#if 0
-    Tau_plugin_event_current_timer_exit_data_t plugin_data;
-    plugin_data.name_prefix = name;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
-#endif
-
-#if 1
+void Tau_plugin_trace_current_timer(const char * name) {
     /*Invoke plugins only if both plugin path and plugins are specified*/
     if(TauEnv_get_plugins_enabled() && TAU_inside_ADIOS() == 0) {
         Tau_plugin_event_current_timer_exit_data_t plugin_data;
         plugin_data.name_prefix = name;
         Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, name, &plugin_data);
     }
-#endif
 }
 
+#if defined(TAU_SOS)
 #define EVENT_TRACE_PREFIX "TAU_EVENT::MPI"
+#else
+#define EVENT_TRACE_PREFIX "MPI"
+#endif
 
 #define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
@@ -461,7 +456,7 @@ static int sum_array (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI_Comm 
   return total * typesize;
 }
 
-#if defined(TAU_SOS)
+#if defined(TAU_SOS) || defined(TAU_POOKY2)
 static double* array_stats (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI_Comm comm, double vals[5]) {
 
   int typesize, commSize, commRank, i;
@@ -732,7 +727,7 @@ MPI_Comm comm;
 
   track_allvector(TAU_ALLGATHER_DATA, recvcounts, typesize);
 
-#if defined(TAU_SOS)
+#if defined(TAU_SOS) || defined(TAU_POOKY2)
   double tmp_array[5] = {0.0};
 #endif
   TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Allgatherv",array_stats(recvcounts,recvtype,comm,tmp_array),comm);
@@ -818,7 +813,7 @@ MPI_Comm comm;
 
   TAU_ALLTOALL_DATA(tracksize);
 
-#if defined(TAU_SOS)
+#if defined(TAU_SOS) || defined(TAU_POOKY2)
   double tmp_array1[5] = {0.0};
   double tmp_array2[5] = {0.0};
 #endif
@@ -987,7 +982,7 @@ MPI_Comm comm;
 
   track_vector(TAU_GATHER_DATA, recvcnts, recvtype);
 
-#if defined(TAU_SOS)
+#if defined(TAU_SOS) || defined(TAU_POOKY2)
   double tmp_array[5] = {0.0};
 #endif
   TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Gatherv",array_stats(recvcnts,recvtype,comm,tmp_array),comm);
@@ -1152,7 +1147,7 @@ MPI_Comm comm;
 
   track_vector(TAU_SCATTER_DATA, sendcnts, typesize);
 
-#if defined(TAU_SOS)
+#if defined(TAU_SOS) || defined(TAU_POOKY2)
   double tmp_array[5] = {0.0};
 #endif
   TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Scatterv",array_stats(sendcnts,recvtype,comm,tmp_array),comm);
@@ -3072,7 +3067,7 @@ if (TauEnv_get_track_message()) {
   return returnVal;
 }
 
-extern long Tau_get_message_send_path(void); 
+extern long Tau_get_message_send_path(void);
 
 int  MPI_Send( buf, count, datatype, dest, tag, comm )
 TAU_MPICH3_CONST void * buf;
