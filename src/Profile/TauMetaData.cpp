@@ -78,9 +78,21 @@ using namespace tau;
 #if defined(_OPENMP) && defined(TAU_OPENMP) && !defined(TAU_MPC)
 #include <omp.h>
 #include <map>
-map<unsigned,string> openmp_map{
-    {200505,"2.5"},{200805,"3.0"},{201107,"3.1"},
-    {201307,"4.0"},{201511,"4.5"},{201811,"5.0"}};
+
+struct OpenMPVersionMap : public map<unsigned,string> {
+    using std::map<unsigned,string>::map;
+
+    ~OpenMPVersionMap() {
+        Tau_destructor_trigger();
+    }
+};
+
+const OpenMPVersionMap & TheOpenMPVersionMap() {
+    static const OpenMPVersionMap openmp_map{
+        {200505,"2.5"},{200805,"3.0"},{201107,"3.1"},
+        {201307,"4.0"},{201511,"4.5"},{201811,"5.0"}};
+    return openmp_map;
+}
 #endif
 
 #ifdef TAU_SCOREP_METADATA
@@ -759,7 +771,7 @@ int Tau_metadata_fillMetaData()
 #if TAU_OPENMP && !defined(TAU_MPC)
   /* Capture OpenMP version */
   Tau_metadata_register("OpenMP Version String", _OPENMP);
-  Tau_metadata_register("OpenMP Version", openmp_map.at(_OPENMP).c_str());
+  Tau_metadata_register("OpenMP Version", TheOpenMPVersionMap().at(_OPENMP).c_str());
 
 // MPC wht OpenMP isn't initialized before TAU is, so these function calls will hang.
   const char* schedule;
