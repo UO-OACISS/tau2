@@ -97,7 +97,7 @@ FILE *fopen(const char *path, const char *mode) {
     Tau_iowrap_registerEvents(fileno(ret), path);
   }
   char event_name[4096];
-  sprintf (event_name, "POSIX fopen %s %s %p", path, mode, ret);
+  sprintf (event_name, "type: POSIX, function: fopen, path: %s, mode: %s, return: %p", path, mode, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
   TAU_IOWRAPPER_WRITE_FILE_METADATA_FOPEN(mode, path)
@@ -133,7 +133,7 @@ FILE *fopen64(const char *path, const char *mode) {
     Tau_iowrap_registerEvents(fileno(ret), path);
   }
   char event_name[4096];
-  sprintf (event_name, "POSIX fopen64 %s %s %p", path, mode, ret);
+  sprintf (event_name, "type: POSIX, function: fopen64, path: %s, mode: %s, return: %p", path, mode, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
   TAU_IOWRAPPER_WRITE_FILE_METADATA_FOPEN(mode, path)
@@ -166,7 +166,7 @@ FILE *fdopen(int fd, const char *mode) {
 
   ret = _fdopen(fd, mode);
   char event_name[4096];
-  sprintf (event_name, "POSIX fdopen %d %s %p", fd, mode, ret);
+  sprintf (event_name, "type: POSIX, function: fdopen, fd: %d, mode: %s, return: %p", fd, mode, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
   //TAU_IOWRAPPER_WRITE_FILE_METADATA_FOPEN(flags, pathname)
@@ -201,7 +201,7 @@ FILE *freopen(const char *path, const char *mode, FILE *stream) {
     Tau_iowrap_registerEvents(fileno(ret), path);
   }
   char event_name[4096];
-  sprintf (event_name, "POSIX freopen %s %s %p %p", path, mode, stream, ret);
+  sprintf (event_name, "type: POSIX, function: freopen, path: %s, mode: %s, stream: %p, return: %p", path, mode, stream, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
   TAU_IOWRAPPER_WRITE_FILE_METADATA_FOPEN(mode, path)
@@ -233,7 +233,7 @@ int fclose(FILE *fp) {
   Tau_iowrap_unregisterEvents (fd);
   ret = _fclose(fp);
   char event_name[4096];
-  sprintf (event_name, "POSIX fclose %p", fp);
+  sprintf (event_name, "type: POSIX, function: fclose, fp: %p", fp);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
 
@@ -300,7 +300,7 @@ int fprintf(FILE *stream, const char *format, ...) {
   }
 
   char event_name[4096];
-  sprintf (event_name, "POSIX fprintf %p %d", stream, ret);
+  sprintf (event_name, "type: POSIX, function: fprintf, stream: %p, return: %d", stream, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
 
@@ -365,7 +365,7 @@ int fscanf(FILE *stream, const char *format, ...) {
   }
 
   char event_name[4096];
-  sprintf (event_name, "POSIX fscanf %p %d", stream, ret);
+  sprintf (event_name, "type: POSIX, function: fscanf, stream: %p, return: %d", stream, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
 
@@ -418,7 +418,7 @@ size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
   }
 
   char event_name[4096];
-  sprintf (event_name, "POSIX fwrite %p %lu", stream, ret);
+  sprintf (event_name, "type: POSIX, function: fwrite, stream: %p, return: %lu", stream, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
 
@@ -469,7 +469,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   }
 
   char event_name[4096];
-  sprintf (event_name, "POSIX read %p %d", stream, ret);
+  sprintf (event_name, "type: POSIX, function: read, stream: %p, return: %d", stream, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
 
@@ -542,7 +542,7 @@ off_t lseek(int fd, off_t offset, int whence) {
   TAU_PROFILE_START(t);
   ret = _lseek(fd, offset, whence);
   char event_name[4096];
-  sprintf (event_name, "POSIX lseek %d %lld %d %lld", fd, offset, whence, ret);
+  sprintf (event_name, "type: POSIX, function: lseek, fd: %d, offset: %lld, whence: %d, return: %lld", fd, offset, whence, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
 
@@ -572,7 +572,7 @@ off64_t lseek64(int fd, off64_t offset, int whence) {
   TAU_PROFILE_START(t);
   ret = _lseek64(fd, offset, whence);
   char event_name[4096];
-  sprintf (event_name, "POSIX lseek64 %d %lld %d %lld", fd, offset, whence, ret);
+  sprintf (event_name, "type: POSIX, function: lseek64, fd: %d, offset: %lld, whence: %d, return: %lld", fd, offset, whence, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
 
@@ -600,7 +600,7 @@ int fseek(FILE *stream, long offset, int whence) {
 
   ret = _fseek(stream, offset, whence);
   char event_name[4096];
-  sprintf (event_name, "POSIX fseek %p %ld %d %d", stream, offset, whence, ret);
+  sprintf (event_name, "type: POSIX, function: fseek, stream: %p, offset: %ld, whence: %d, return: %d", stream, offset, whence, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
 
@@ -627,7 +627,7 @@ void rewind(FILE *stream) {
   TAU_PROFILE_START(t);
   _rewind(stream);
   char event_name[4096];
-  sprintf (event_name, "POSIX rewind %p", stream);
+  sprintf (event_name, "type: POSIX, function: rewind, stream: %p", stream);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
 
@@ -680,7 +680,7 @@ ssize_t write (int fd, const void *buf, size_t count) {
   }
 
   char event_name[4096];
-  sprintf (event_name, "POSIX write %d %lu", fd, ret);
+  sprintf (event_name, "type: POSIX, function: write, fd: %d, return: %lu", fd, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
 
@@ -733,7 +733,7 @@ ssize_t read (int fd, void *buf, size_t count) {
   }
 
   char event_name[4096];
-  sprintf (event_name, "POSIX read %d %lu", fd, ret);
+  sprintf (event_name, "type: POSIX, function: read, fd: %d, return: %lu", fd, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
 
@@ -791,7 +791,7 @@ ssize_t readv (int fd, const struct iovec *vec, int count) {
   }
 
   char event_name[4096];
-  sprintf (event_name, "POSIX readv %d %lu", fd, ret);
+  sprintf (event_name, "type: POSIX, function: readv, fd: %d, return: %lu", fd, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
 
@@ -849,7 +849,7 @@ ssize_t writev (int fd, const struct iovec *vec, int count) {
   }
 
   char event_name[4096];
-  sprintf (event_name, "POSIX writev %d %lu", fd, ret);
+  sprintf (event_name, "type: POSIX, function: writev, fd: %d, return: %lu", fd, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
 
@@ -969,7 +969,7 @@ int open (const char *pathname, int flags, ...) {
     Tau_iowrap_registerEvents(ret, pathname);
   }
   char event_name[4096];
-  sprintf (event_name, "POSIX open %s %d %d %d", pathname, flags, mode, ret);
+  sprintf (event_name, "type: POSIX, function: open, pathname: %s, flags: %d, mode: %d, return: %d", pathname, flags, mode, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
   TAU_IOWRAPPER_WRITE_FILE_METADATA(flags, pathname)
@@ -1022,7 +1022,7 @@ int open64 (const char *pathname, int flags, ...) {
     Tau_iowrap_registerEvents(ret, pathname);
   }
   char event_name[4096];
-  sprintf (event_name, "POSIX open64 %s %d %d %d", pathname, flags, mode, ret);
+  sprintf (event_name, "type: POSIX, function: open64, pathname: %s, flags: %d, mode: %d, return: %d", pathname, flags, mode, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
   TAU_IOWRAPPER_WRITE_FILE_METADATA(flags, pathname)
@@ -1058,7 +1058,7 @@ int creat(const char *pathname, mode_t mode) {
     Tau_iowrap_registerEvents(ret, pathname);
   }
   char event_name[4096];
-  sprintf (event_name, "POSIX creat %s %d %d", pathname, mode, ret);
+  sprintf (event_name, "type: POSIX, function: creat, pathname: %s, mode: %d, return: %d", pathname, mode, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
   TAU_IOWRAPPER_WRITE_FILE_METADATA(O_WRONLY, pathname)
@@ -1094,7 +1094,7 @@ int creat64(const char *pathname, mode_t mode) {
     Tau_iowrap_registerEvents(ret, pathname);
   }
   char event_name[4096];
-  sprintf (event_name, "POSIX creat64 %s %d %d", pathname, mode, ret);
+  sprintf (event_name, "type: POSIX, function: creat64, pathname: %s, mode: %d, return: %d", pathname, mode, ret);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
   TAU_IOWRAPPER_WRITE_FILE_METADATA(O_WRONLY, pathname)
@@ -1127,7 +1127,7 @@ int close(int fd) {
   ret = _close(fd);
 
   char event_name[4096];
-  sprintf (event_name, "POSIX close %d", fd);
+  sprintf (event_name, "type: POSIX, function: close, fd: %d", fd);
   Tau_posix_plugin_trace_current_timer(event_name);
   TAU_PROFILE_STOP(t);
 

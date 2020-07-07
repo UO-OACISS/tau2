@@ -4,7 +4,7 @@
  * *
  * *********************************************************************************************/
 
-#include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
 #include <string>
 #include <sstream>
@@ -12,6 +12,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <iomanip>
+#include <mutex>          // std::mutex
 
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
@@ -28,22 +30,25 @@ static bool enabled(false);
 static std::ofstream tracefile;
 int commrank = 0;
 int commsize = 1;
+std::mutex mtx;           // mutex for critical section
 
-/* This happens from MPI_Finalize, before MPI is torn down. */
-int Tau_plugin_sos_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t* data) {
+int Tau_plugin_pooky2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t* data) {
     if (!enabled) return 0;
     Tau_global_incr_insideTAU();
+    mtx.lock();
     /* Close the file */
     if (tracefile.is_open()) {
+        tracefile.flush();
         tracefile.close();
     }
+    mtx.unlock();
     Tau_global_decr_insideTAU();
     return 0;
 }
 
 /* This happens after MPI_Init, and after all TAU metadata variables have been
  * read */
-int Tau_plugin_sos_post_init(Tau_plugin_event_post_init_data_t* data) {
+int Tau_plugin_pooky2_post_init(Tau_plugin_event_post_init_data_t* data) {
     if (!enabled) return 0;
     Tau_global_incr_insideTAU();
     /* Open a file for myself to write to */
@@ -57,28 +62,32 @@ int Tau_plugin_sos_post_init(Tau_plugin_event_post_init_data_t* data) {
     if (stat("pooky2", &st) == -1) {
         mkdir("pooky2", 0700);
     }
-    filename << "pooky2/rank" << commrank << ".trace";
+    filename << "pooky2/rank"
+             << std::setfill('0')
+             << std::setw(5)
+             << commrank << ".trace";
     tracefile.open(filename.str());
     Tau_global_decr_insideTAU();
     return 0;
 }
 
 /* This happens for special events from ADIOS, MPI */
-int Tau_plugin_sos_current_timer_exit(Tau_plugin_event_current_timer_exit_data_t* data) {
+int Tau_plugin_pooky2_current_timer_exit(Tau_plugin_event_current_timer_exit_data_t* data) {
     if (!enabled) return 0;
     Tau_global_incr_insideTAU();
     // get the current profiler
     tau::Profiler * p = Tau_get_current_profiler();
     // get the current time
-    double current[TAU_MAX_THREADS];
-    int tid = RtsLayer::myThread();
-    RtsLayer::getUSecD(tid, current);
     // assume time is the first counter!
     // also convert it to microseconds
-    double value = (current[0] - p->StartTime[0]) * CONVERT_TO_USEC;
-    tracefile << TauMetrics_getTimeOfDay() << "\t"
-              << std::fixed << value << "\t"
-              << data->name_prefix << std::endl;
+    uint64_t start = p->StartTime[0];
+    uint64_t end = TauMetrics_getTimeOfDay();
+    double value = (end - start) * CONVERT_TO_USEC;
+    mtx.lock();
+    tracefile << "- {timestamp: " << std::fixed << start
+              << ", duration: " << std::fixed << value
+              << ", " << data->name_prefix << "}\n";
+    mtx.unlock();
     Tau_global_decr_insideTAU();
     return 0;
 }
@@ -89,15 +98,13 @@ int Tau_plugin_sos_current_timer_exit(Tau_plugin_event_current_timer_exit_data_t
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_global_incr_insideTAU();
     Tau_plugin_callbacks_t cb;
-    //fprintf(stdout, "TAU PLUGIN SOS Init\n"); fflush(stdout);
-    //Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
     TAU_VERBOSE("TAU PLUGIN Pooky2 Init\n");
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(&cb);
     /* Required event support */
-    cb.PostInit = Tau_plugin_sos_post_init;
-    cb.PreEndOfExecution = Tau_plugin_sos_pre_end_of_execution;
-    cb.CurrentTimerExit = Tau_plugin_sos_current_timer_exit;
+    cb.PostInit = Tau_plugin_pooky2_post_init;
+    cb.PreEndOfExecution = Tau_plugin_pooky2_pre_end_of_execution;
+    cb.CurrentTimerExit = Tau_plugin_pooky2_current_timer_exit;
 
     /* Register the callback object */
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(&cb, id);
