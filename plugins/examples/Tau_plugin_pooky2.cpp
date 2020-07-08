@@ -107,7 +107,8 @@ int Tau_plugin_pooky2_current_timer_exit(Tau_plugin_event_current_timer_exit_dat
     // also convert it to microseconds
     uint64_t start = p->StartTime[0];
     uint64_t end = TauMetrics_getTimeOfDay();
-    double value = (end - start) * CONVERT_TO_USEC;
+    //double value = (end - start) * CONVERT_TO_USEC;
+    uint64_t value = end - start;
     mtx.lock();
     (*active_stream) << "- {timestamp: " << std::fixed << start
               << ", duration: " << std::fixed << value
