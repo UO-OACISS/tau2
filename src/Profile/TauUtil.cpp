@@ -23,6 +23,7 @@
 #include <TauPluginCPPTypes.h>
 #include <stdarg.h>
 #include <string.h>
+#include <map>
 
 #ifdef TAU_USE_STDCXX11
 #include <thread>
@@ -752,7 +753,9 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
   /* Plugin API */
   Tau_plugin_callbacks_t * cb_ = (Tau_plugin_callbacks_t *)malloc(sizeof(Tau_plugin_callbacks_t));
   Tau_util_make_callback_copy(cb_, cb);
-  plugin_callback_map[plugin_id] = cb_;
+  //plugin_callback_map[plugin_id] = cb_;
+  plugin_callback_map.insert(
+    std::pair< unsigned int, Tau_plugin_callbacks_t* >(plugin_id, cb_));
   /* Plugin API */
 
   /* Set some flags to make runtime conditional processing more efficient */

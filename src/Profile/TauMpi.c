@@ -119,18 +119,18 @@ sprintf(__tmp, "%s %s, comm: 0x%08x", EVENT_TRACE_PREFIX, __desc, __comm); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
-#define TAU_SOS_COLLECTIVE_EXCH_EVENT(__desc,__size,__comm) \
+#define TAU_SOS_COLLECTIVE_EXCH_EVENT(__desc,__size,__root,__comm) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 char __tmp[128]; \
-sprintf(__tmp, "%s %s, size: %d, comm: 0x%08x", EVENT_TRACE_PREFIX, __desc, __size, __comm); \
+sprintf(__tmp, "%s %s, size: %lu, root: %u, comm: 0x%08x", EVENT_TRACE_PREFIX, __desc, __size, __root, __comm); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
-#define TAU_SOS_COLLECTIVE_EXCH_V_EVENT(__desc,__stats,__comm) \
+#define TAU_SOS_COLLECTIVE_EXCH_V_EVENT(__desc,__stats,__root,__comm) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 char __tmp[128]; \
-sprintf(__tmp, "%s %s, stats: [%f,%f,%f,%f,%f], comm: 0x%08x", \
-    EVENT_TRACE_PREFIX, __desc, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __comm); \
+sprintf(__tmp, "%s %s, count: %f, mean: %f, min: %f, max: %f, sumsqr: %f, root: %u, comm: 0x%08x", \
+    EVENT_TRACE_PREFIX, __desc, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __root, __comm); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
@@ -138,7 +138,7 @@ Tau_plugin_trace_current_timer(__tmp); \
 if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 char __tmp[256]; \
 sprintf(__tmp, \
-    "%s %s, stats1: [%f,%f,%f,%f,%f], stats2: [%f,%f,%f,%f,%f], comm: 0x%08x", \
+    "%s %s, count1: %f, mean1: %f, min1: %f, min1: %f, max1: %f, count2: %f, mean2: %f, min2: %f, max2: %f, sumsqr2: %f, comm: 0x%08x", \
     EVENT_TRACE_PREFIX, __desc, __stats1[0],__stats1[1],__stats1[2],__stats1[3],__stats1[4], \
     __stats2[0],__stats2[1],__stats2[2],__stats2[3],__stats2[4], __comm); \
 Tau_plugin_trace_current_timer(__tmp); \
@@ -351,8 +351,8 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 
 #else
 #define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm)
-#define TAU_SOS_COLLECTIVE_EXCH_EVENT(__desc,__size,__comm)
-#define TAU_SOS_COLLECTIVE_EXCH_V_EVENT(__desc,__stats,__comm)
+#define TAU_SOS_COLLECTIVE_EXCH_EVENT(__desc,__size,__root,__comm)
+#define TAU_SOS_COLLECTIVE_EXCH_V_EVENT(__desc,__stats,__root,__comm)
 #define TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT(__desc,__stats1,__stats2,__comm)
 #define TAU_SOS_COMM_SPLIT_EVENT(__comm,__color,__key,__comm_out)
 #define TAU_SOS_COMM_DUP_EVENT(__comm,__comm_out)
@@ -480,7 +480,7 @@ static double* array_stats (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI
     for (i = 1; i<5; i++) {
       vals[i] = vals[i] * (double)typesize;
     }
-    vals[1] = vals[1] / (double)commSize;
+    vals[1] = vals[1] / (double)commSize; // now it's the mean
   }
   return vals;
 }
@@ -699,7 +699,7 @@ MPI_Comm comm;
   PMPI_Type_size( recvtype, &typesize );
   TAU_ALLGATHER_DATA(typesize*recvcount);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Allgather",typesize*recvcount,comm);
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Allgather",typesize*recvcount,0,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -730,7 +730,7 @@ MPI_Comm comm;
 #if defined(TAU_SOS) || defined(TAU_POOKY2)
   double tmp_array[5] = {0.0};
 #endif
-  TAU_SOS_COLLECTIVE_EXCH_V_EVENT("MPI_Allgatherv",array_stats(recvcounts,recvtype,comm,tmp_array),comm);
+  TAU_SOS_COLLECTIVE_EXCH_V_EVENT("MPI_Allgatherv",array_stats(recvcounts,recvtype,comm,tmp_array),0,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -755,7 +755,7 @@ MPI_Comm comm;
   PMPI_Type_size( datatype, &typesize );
   TAU_ALLREDUCE_DATA(typesize*count);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Allreduce",typesize*count,comm);
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Allreduce",typesize*count,0,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -782,7 +782,7 @@ MPI_Comm comm;
   PMPI_Type_size( sendtype, &typesize );
   TAU_ALLTOALL_DATA(typesize*sendcount);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Alltoall",typesize*sendcount,comm);
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Alltoall",typesize*sendcount,0,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -922,7 +922,7 @@ MPI_Comm comm;
 
   TAU_BCAST_DATA(typesize*count);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Bcast",typesize*count,comm);
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Bcast",typesize*count,root,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -949,13 +949,12 @@ MPI_Comm comm;
   returnVal = PMPI_Gather( sendbuf, sendcnt, sendtype, recvbuf, recvcount, recvtype, root, comm );
 
   PMPI_Comm_rank ( comm, &rank );
+  PMPI_Type_size( recvtype, &typesize );
   if (rank == root) {
-    PMPI_Type_size( recvtype, &typesize );
     TAU_GATHER_DATA(typesize*recvcount);
   }
 
-
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Gather",typesize*recvcount,comm);
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Gather",typesize*recvcount,root,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -985,7 +984,7 @@ MPI_Comm comm;
 #if defined(TAU_SOS) || defined(TAU_POOKY2)
   double tmp_array[5] = {0.0};
 #endif
-  TAU_SOS_COLLECTIVE_EXCH_V_EVENT("MPI_Gatherv",array_stats(recvcnts,recvtype,comm,tmp_array),comm);
+  TAU_SOS_COLLECTIVE_EXCH_V_EVENT("MPI_Gatherv",array_stats(recvcnts,recvtype,comm,tmp_array),root,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -1042,7 +1041,7 @@ MPI_Comm comm;
   PMPI_Type_size( datatype, &typesize );
   TAU_REDUCESCATTER_DATA(typesize*(*recvcnts));
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Reduce_scatter",typesize*(*recvcnts),comm);
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Reduce_scatter",typesize*(*recvcnts),0,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -1068,7 +1067,7 @@ MPI_Comm comm;
   PMPI_Type_size( datatype, &typesize );
   TAU_REDUCE_DATA(typesize*count);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Reduce",typesize*count,comm);
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Reduce",typesize*count,root,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -1093,7 +1092,7 @@ MPI_Comm comm;
   PMPI_Type_size( datatype, &typesize );
   TAU_SCAN_DATA(typesize*count);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Scan",typesize*count,comm);
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Scan",typesize*count,0,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -1120,7 +1119,7 @@ MPI_Comm comm;
   PMPI_Type_size( sendtype, &typesize );
   TAU_SCATTER_DATA(typesize*sendcnt);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Scatter",typesize*sendcnt,comm);
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("MPI_Scatter",typesize*sendcnt,root,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -1150,7 +1149,7 @@ MPI_Comm comm;
 #if defined(TAU_SOS) || defined(TAU_POOKY2)
   double tmp_array[5] = {0.0};
 #endif
-  TAU_SOS_COLLECTIVE_EXCH_V_EVENT("MPI_Scatterv",array_stats(sendcnts,recvtype,comm,tmp_array),comm);
+  TAU_SOS_COLLECTIVE_EXCH_V_EVENT("MPI_Scatterv",array_stats(sendcnts,recvtype,comm,tmp_array),root,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;

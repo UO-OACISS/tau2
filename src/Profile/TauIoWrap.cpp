@@ -29,7 +29,15 @@
 using namespace std;
 using namespace tau;
 
+std::map<int, const char *> fid_map;
 
+const char * Tau_get_pathname_from_fid(int fid) {
+    static const char * empty = "";
+    if (fid_map.count(fid) == 0) {
+        return empty;
+    }
+    return fid_map[fid];
+}
 
 #define dprintf TAU_VERBOSE
 
@@ -46,7 +54,7 @@ void * global_bytes_written = 0;
 void * global_bytes_read = 0;
 
 /*********************************************************************
- * IOvector subclasses vector to provide custom constructor/destructor 
+ * IOvector subclasses vector to provide custom constructor/destructor
  * to enable/disable wrapping
  ********************************************************************/
 static int lightsOut = 0;
@@ -90,6 +98,8 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname)
   TauInternalFunctionGuard protects_this_function;
 
   RtsLayer::LockDB();
+  // save the pathname so we can look it up later
+  fid_map[fid] = strdup(pathname);
 
   IOvector & iowrap_events = TheIoWrapEvents();
   dprintf("Asked to register %d with %s (current size=%d)\n", fid, pathname, TheIoWrapEvents()[0].size());
@@ -144,7 +154,7 @@ extern "C" void Tau_iowrap_unregisterEvents(unsigned int fid)
 }
 
 /*********************************************************************
- * Tau_iowrap_dupEvents takes care of the associating the events with the 
+ * Tau_iowrap_dupEvents takes care of the associating the events with the
  * new file descriptor obtained by using dup/dup2 calls.
  ********************************************************************/
 extern "C" void Tau_iowrap_dupEvents(unsigned int oldfid, unsigned int newfid)
@@ -223,24 +233,24 @@ struct tau_io_wrapper_event {
 #if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER)
 // thread local storage
 static tau_io_wrapper_event * tau_get_io_event_record(void)
-{ 
+{
   static __thread tau_io_wrapper_event * io_wrapper_event_tls = NULL;
   if(io_wrapper_event_tls == NULL) {
     io_wrapper_event_tls = new tau_io_wrapper_event[TAU_IO_NUM_EVENT_KINDS];
   }
-  return io_wrapper_event_tls; 
+  return io_wrapper_event_tls;
 }
 
 typedef std::map<std::string, void*> tfio_write_bytes_map_t;
 
 // thread local storage
 static tfio_write_bytes_map_t * tau_tfio_write_bytes_map(void)
-{ 
+{
   static __thread tfio_write_bytes_map_t * tfio_write_bytes_map_tls = NULL;
   if(tfio_write_bytes_map_tls == NULL) {
     tfio_write_bytes_map_tls = new tfio_write_bytes_map_t();
   }
-  return tfio_write_bytes_map_tls; 
+  return tfio_write_bytes_map_tls;
 }
 
 
@@ -248,24 +258,24 @@ typedef std::map<std::string, void*> tfio_write_bw_map_t;
 
 // thread local storage
 static tfio_write_bw_map_t * tau_tfio_write_bw_map(void)
-{ 
+{
   static __thread tfio_write_bw_map_t * tfio_write_bw_map_tls = NULL;
   if(tfio_write_bw_map_tls == NULL) {
     tfio_write_bw_map_tls = new tfio_write_bw_map_t();
   }
-  return tfio_write_bw_map_tls; 
+  return tfio_write_bw_map_tls;
 }
 
 typedef std::map<std::string, void*> tfio_read_bytes_map_t;
 
 // thread local storage
 static tfio_read_bytes_map_t * tau_tfio_read_bytes_map(void)
-{ 
+{
   static __thread tfio_read_bytes_map_t * tfio_read_bytes_map_tls = NULL;
   if(tfio_read_bytes_map_tls == NULL) {
     tfio_read_bytes_map_tls = new tfio_read_bytes_map_t();
   }
-  return tfio_read_bytes_map_tls; 
+  return tfio_read_bytes_map_tls;
 }
 
 
@@ -273,12 +283,12 @@ typedef std::map<std::string, void*> tfio_read_bw_map_t;
 
 // thread local storage
 static tfio_read_bw_map_t * tau_tfio_read_bw_map(void)
-{ 
+{
   static __thread tfio_read_bw_map_t * tfio_read_bw_map_tls = NULL;
   if(tfio_read_bw_map_tls == NULL) {
     tfio_read_bw_map_tls = new tfio_read_bw_map_t();
   }
-  return tfio_read_bw_map_tls; 
+  return tfio_read_bw_map_tls;
 }
 
 
@@ -312,16 +322,16 @@ void Tau_app_report_file_read_stop(const char * name, size_t size) {
     TAU_STOP("TensorFlow File Read");
     tau_io_wrapper_event * tau_io_event_record_arr = tau_get_io_event_record();
     gettimeofday(&(tau_io_event_record_arr[TAU_IO_EVENT_KIND_READ].t2), 0);
-    
+
     tfio_read_bytes_map_t * tfio_read_bytes_map = tau_tfio_read_bytes_map();
     std::string nameStr = std::string(name);
     tfio_read_bytes_map_t::const_iterator it = tfio_read_bytes_map->find(nameStr);
     if(it == tfio_read_bytes_map->end()) {
         fprintf(stderr, "TAU: ERROR: File read stop seen for %s without start!\n", name);
         return;
-    } 
+    }
     void * bytesEvent = it->second;
-    
+
     tfio_read_bw_map_t * tfio_read_bw_map = tau_tfio_read_bw_map();
     tfio_read_bw_map_t::const_iterator it2 = tfio_read_bw_map->find(nameStr);
     if(it == tfio_read_bw_map->end()) {
@@ -329,12 +339,12 @@ void Tau_app_report_file_read_stop(const char * name, size_t size) {
         return;
     }
     void * bwEvent = it2->second;
-    
+
     struct timeval t1 = tau_io_event_record_arr[TAU_IO_EVENT_KIND_READ].t1;
     struct timeval t2 = tau_io_event_record_arr[TAU_IO_EVENT_KIND_READ].t2;
     double readTime = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
     double bw = size/readTime;
-    
+
     TAU_CONTEXT_EVENT(bytesEvent, size);
     TAU_CONTEXT_EVENT(bwEvent, bw);
 
@@ -367,16 +377,16 @@ void Tau_app_report_file_write_stop(const char * name, size_t size) {
     TAU_STOP("TensorFlow File Write");
     tau_io_wrapper_event * tau_io_event_record_arr = tau_get_io_event_record();
     gettimeofday(&(tau_io_event_record_arr[TAU_IO_EVENT_KIND_WRITE].t2), 0);
-    
+
     tfio_write_bytes_map_t * tfio_write_bytes_map = tau_tfio_write_bytes_map();
     std::string nameStr = std::string(name);
     tfio_write_bytes_map_t::const_iterator it = tfio_write_bytes_map->find(nameStr);
     if(it == tfio_write_bytes_map->end()) {
         fprintf(stderr, "TAU: ERROR: File write stop seen for %s without start!\n", name);
         return;
-    } 
+    }
     void * bytesEvent = it->second;
-    
+
     tfio_write_bw_map_t * tfio_write_bw_map = tau_tfio_write_bw_map();
     tfio_write_bw_map_t::const_iterator it2 = tfio_write_bw_map->find(nameStr);
     if(it == tfio_write_bw_map->end()) {
@@ -384,12 +394,12 @@ void Tau_app_report_file_write_stop(const char * name, size_t size) {
         return;
     }
     void * bwEvent = it2->second;
-    
+
     struct timeval t1 = tau_io_event_record_arr[TAU_IO_EVENT_KIND_WRITE].t1;
     struct timeval t2 = tau_io_event_record_arr[TAU_IO_EVENT_KIND_WRITE].t2;
     double writeTime = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
     double bw = size/writeTime;
-    
+
     TAU_CONTEXT_EVENT(bytesEvent, size);
     TAU_CONTEXT_EVENT(bwEvent, bw);
 }
@@ -417,7 +427,7 @@ void Tau_app_report_file_flush_start(const char * name) {
 void Tau_app_report_file_flush_stop(const char * name) {
     TAU_STOP("TensorFlow File Flush");
 }
- 
+
 
 }
 #endif // TAU_USE_TLS

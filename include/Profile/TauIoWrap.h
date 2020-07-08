@@ -43,9 +43,10 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname);
 void Tau_iowrap_unregisterEvents(unsigned int fid);
 void Tau_iowrap_dupEvents(unsigned int oldfid, unsigned int newfid);
 
-extern void *global_write_bandwidth, *global_read_bandwidth, 
+extern void *global_write_bandwidth, *global_read_bandwidth,
   *global_bytes_written, *global_bytes_read;
 
+const char * Tau_get_pathname_from_fid(int fid);
 
 #ifdef __cplusplus
 } /* for extern "C" */
