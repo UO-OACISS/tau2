@@ -34,15 +34,6 @@ struct TauMemMgrInfo
   unsigned long high;
 };
 
-TauMemMgrSummary memSummary[TAU_MAX_THREADS];
-TauMemMgrInfo memInfo[TAU_MAX_THREADS][TAU_MEMMGR_MAX_MEMBLOCKS];
-inline TauMemMgrSummary& getMemSummary(int tid){
-    return memSummary[tid];
-}
-inline TauMemMgrInfo& getMemInfo(int tid,int block){
-    return memInfo[tid][block];
-}
-
 /* For "freeing" memory, we need to maintain a map of "queues"
  * for each thread.  The map will map from a "length" to a 
  * queue of free blocks of that length. Each thread will have
@@ -56,11 +47,43 @@ inline TauMemMgrInfo& getMemInfo(int tid,int block){
 typedef std::vector<void*, TauSignalSafeAllocator<void*> > __custom_vector_t;
 typedef std::pair<const std::size_t, std::vector<void*> > __custom_pair_t;
 typedef std::map<std::size_t, __custom_vector_t*, std::less<std::size_t>, TauSignalSafeAllocator<__custom_pair_t> > __custom_map_t;
-__custom_map_t free_chunks[TAU_MAX_THREADS];
+#endif
+
+struct TMMUnit
+{
+    TauMemMgrSummary memSummary;
+    TauMemMgrInfo memInfo [TAU_MEMMGR_MAX_MEMBLOCKS];
+#ifdef USE_RECYCLER
+    __custom_map_t free_chunks;
+#endif
+};
+
+static vector<TMMUnit*> TMMList;
+
+inline void checkTMMVector(int tid){
+	while(TMMList.size()<=tid){
+        RtsLayer::LockDB();
+		TMMList.push_back(new TMMUnit());
+        RtsLayer::UnLockDB();
+	}
+}
+
+inline TauMemMgrSummary& getMemSummary(int tid){
+    checkTMMVector(tid);
+    return TMMList[tid]->memSummary;
+}
+inline TauMemMgrInfo& getMemInfo(int tid,int block){
+    checkTMMVector(tid);
+    return TMMList[tid]->memInfo[block];
+}
+
+#ifdef USE_RECYCLER
 inline __custom_map_t& getFreeChunks(int tid){
-    return free_chunks[TAU_MAX_THREADS];
+    checkTMMVector(tid);
+    return TMMList[tid]->free_chunks;
 }
 #endif
+
 bool finalized = false;
 
 bool Tau_MemMgr_initIfNecessary(void)
