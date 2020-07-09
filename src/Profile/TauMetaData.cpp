@@ -75,7 +75,7 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 using namespace std;
 using namespace tau;
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && defined(TAU_OPENMP) && !defined(TAU_MPC)
 #include <omp.h>
 #include <map>
 
@@ -800,18 +800,21 @@ int Tau_metadata_fillMetaData()
   Tau_metadata_register("OMP_MAX_THREADS", omp_get_max_threads());
   Tau_metadata_register("OMP_NUM_PROCS", omp_get_num_procs());
   Tau_metadata_register("OMP_DYNAMIC", omp_get_dynamic() ? "TRUE" : "FALSE");
-  Tau_metadata_register("OMP_NESTED", omp_get_nested() ? "TRUE" : "FALSE");
+  // Deprecated
+  //Tau_metadata_register("OMP_NESTED", omp_get_nested() ? "TRUE" : "FALSE");
   Tau_metadata_register("OMP_MAX_ACTIVE_LEVELS", omp_get_max_active_levels());
   Tau_metadata_register("OMP_THREAD_LIMIT", omp_get_thread_limit());
 
-#if _OPENMP >= 201307
-  Tau_metadata_register("OMP_CANCELLATION", omp_get_cancellation() ? "TRUE" : "FALSE");
+#if _OPENMP >= 201307 // OpenMP 4.0
   Tau_metadata_register("OMP_PROC_BIND", omp_get_proc_bind() ? "TRUE" : "FALSE");
   Tau_metadata_register("OMP_DEFAULT_DEVICE", omp_get_default_device());
+#if _OPENMP == 201307 && !defined(__PGI) // PGI claims 4.0, but is missing these implementations
+  Tau_metadata_register("OMP_CANCELLATION", omp_get_cancellation() ? "TRUE" : "FALSE");
   Tau_metadata_register("OMP_NUM_DEVICES", omp_get_num_devices());
 #endif
+#endif
 
-#if _OPENMP >= 201511
+#if _OPENMP >= 201511 // OpenMP 4.5
   Tau_metadata_register("OMP_MAX_TASK_PRIORITY", omp_get_max_task_priority());
   char * omp_var = getenv("OMP_PLACES");
   if (omp_var != NULL) {

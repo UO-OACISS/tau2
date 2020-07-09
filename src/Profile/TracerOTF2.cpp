@@ -18,7 +18,7 @@
 **                                                                         **
 ****************************************************************************/
 
-//#define TAU_OTF2_DEBUG
+// #define TAU_OTF2_DEBUG
 
 #define __STDC_FORMAT_MACROS
 #include <stdio.h>
@@ -606,7 +606,9 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
       last_ts = it->ts;
     }
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, my_real_location(node_id,tid));
+#if defined(TAU_SHMEM)
     OTF2_EvtWriter_RmaWinCreate(evt_writer, NULL, last_ts+1, TAU_OTF2_COMM_WIN);
+#endif
     delete temp_buffers[tid];
 }
 
@@ -1119,7 +1121,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_WORLD, worldGroupName, OTF2_GROUP_TYPE_COMM_GROUP, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, ranks_list));
     OTF2_EC(OTF2_GlobalDefWriter_WriteComm(global_def_writer, TAU_OTF2_COMM_WORLD, commName, TAU_OTF2_GROUP_WORLD, OTF2_UNDEFINED_COMM));
 
-#if defined(KEVIN)
+#if defined(TAU_SHMEM)
     // Write global RMA window
     const int commWinName = nextString++;
     OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, commWinName, "RMA_WIN_WORLD"));
@@ -1838,7 +1840,8 @@ void TauTraceOTF2ShutdownComms(int tid) {
     otf2_disable = true;
     // Now everyone is at the beginning of MPI_Finalize()
     finalizeCallSites_if_necessary();
-#if defined(TAU_MPI) || defined(TAU_SHMEM)
+//#if defined(TAU_MPI) || defined(TAU_SHMEM)
+#if defined(TAU_SHMEM)
     TauTraceOTF2DestroyRmaWins();
 #endif
     TauTraceOTF2ExchangeStartTime();
@@ -1846,7 +1849,9 @@ void TauTraceOTF2ShutdownComms(int tid) {
     TauTraceOTF2ExchangeEventsWritten();
     TauTraceOTF2ExchangeRegions();
     TauTraceOTF2ExchangeMetrics();
-    //TauTraceOTF2ExchangeRmaWins();
+#if defined(TAU_SHMEM)
+    TauTraceOTF2ExchangeRmaWins();
+#endif
     if(TauEnv_get_set_node()==-1){
       TauCollectives_Finalize();
     }
