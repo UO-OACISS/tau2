@@ -106,6 +106,7 @@ struct Tau_collector_status_flags {
  * This is very important with timers, as all threads are entering timers
  * at the same time, and every thread will invalidate the cache line
  * otherwise. */
+ /*
 #if defined __INTEL__COMPILER
 __declspec (align(64)) static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] = {0};
 #elif defined __GNUC__
@@ -113,10 +114,22 @@ static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] __
 #else
 static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] = {0};
 #endif
+*/
+
+static vector<Tau_collector_status_flags*> Tau_collector_flags;
+
+inline void checkTCFVector(int tid){
+	while(Tau_collector_flags.size()<=tid){
+        RtsLayer::LockDB();
+		Tau_collector_flags.push_back(new Tau_collector_status_flags());
+        RtsLayer::UnLockDB();
+	}
+}
 
 static inline Tau_collector_status_flags& getTauCollectorFlags(int tid)
 {
-    return Tau_collector_flags[tid];
+    checkTCFVector(tid)
+    return *Tau_collector_flags[tid];
 }
 
 // this is map of region names, indexed by region id.
