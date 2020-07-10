@@ -363,10 +363,26 @@ pthread_key_t tau_sampling_tls_key;
 static inline struct tau_sampling_flags *tau_sampling_flags(void)
 { return (struct tau_sampling_flags*)(pthread_getspecific(tau_sampling_tls_key)); }
 #else
-// worst case - array of flags, one for each thread.
-struct tau_sampling_flags tau_sampling_tls_flags[TAU_MAX_THREADS]; //TODO: DYNATHREAD
+// worst case - vector of flags, one for each thread.
+struct tau_sampling_flagsList : vector<tau_sampling_flags*> {
+    tau_sampling_flagsList(){
+         //printf("Creating tau_sampling_tls_flags at %p\n", this);
+      }
+     virtual ~tau_sampling_flagsList(){
+         //printf("Destroying tau_sampling_tls_flags at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
+static tau_sampling_flagsList tau_sampling_tls_flags;
 static inline struct tau_sampling_flags *tau_sampling_flags(void)
-{ return &tau_sampling_tls_flags[Tau_get_local_tid()]; }
+{ 
+    int tid = Tau_get_local_tid();
+    while(tau_sampling_tls_flags.size()<=tid){
+        RtsLayer::LockDB();
+		tau_sampling_tls_flags.push_back(new struct tau_sampling_flags());
+        RtsLayer::UnLockDB();
+	}
+    return tau_sampling_tls_flags[tid]; }
 #endif
 
 static bool samplingThrInitialized[TAU_MAX_THREADS] = { false };
@@ -2069,9 +2085,9 @@ extern "C" void Tau_sampling_init_if_necessary(void)
         {
           // Getting the thread ID registers the OpenMP thread.
           int myTid = Tau_get_thread ();
-          if (!samplingThrInitialized[myTid]) {
+          if (!getSamplingThrInitialized(myTid)) {
             Tau_sampling_init(myTid);
-            samplingThrInitialized[myTid] = true;
+            setSamplingThrInitialized(myTid,true);
             TAU_VERBOSE("Thread %d, %d initialized sampling\n", tid, myTid);
           }
         }    // critical
@@ -2097,11 +2113,20 @@ extern "C" void Tau_sampling_init_if_necessary(void)
 #endif
 }
 
+inline void checkBVector (vector<bool>* v, int tid){
+    while(v->size()<=tid){
+        RtsLayer::LockDB();
+		v->push_back(false);
+        RtsLayer::UnLockDB();
+	}
+}
+
 extern "C"
 void Tau_sampling_finalize_if_necessary(int tid)
 {
   static bool finalized = false;
-  static bool thrFinalized[TAU_MAX_THREADS] = {false}; //TODO: DYNATHREAD
+  //static bool thrFinalized[TAU_MAX_THREADS] = {false}; //TODO: DYNATHREAD
+  static vector<bool> thrFinalized;
   //int tid = Tau_get_local_tid();
 
   TAU_VERBOSE("TAU: Finalize(if necessary) <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stderr);
@@ -2118,6 +2143,8 @@ void Tau_sampling_finalize_if_necessary(int tid)
 #else
     sigprocmask(SIG_BLOCK, &x, NULL);
 #endif
+
+    checkBVector(&thrFinalized,tid);
 
     if (!finalized) {
       TAU_VERBOSE("TAU: <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stdout);
