@@ -59,6 +59,7 @@ static void open_file() {
              << std::setw(5) << commrank << ".trace";
     tracefile.open(filename.str());
     opened = true;
+    tracefile << "[\n";
     tracefile << buffer.str();
     active_stream = &tracefile;
     mtx.unlock();
@@ -69,6 +70,13 @@ static void close_file() {
     if (!enabled || !opened) return;
     Tau_global_incr_insideTAU();
     mtx.lock();
+    uint64_t end = TauMetrics_getTimeOfDay();
+    tracefile << "{\"timestamp\": " << std::fixed << end
+              << ", \"duration\": " << std::fixed << 1
+              << ", \"step\": " << std::fixed << step
+              << ", \"type\": \"none\""
+              << ", \"function\": \"program exit\"}\n]\n";
+
     /* Close the file */
     if (tracefile.is_open()) {
         tracefile.flush();
@@ -110,10 +118,10 @@ int Tau_plugin_pooky2_current_timer_exit(Tau_plugin_event_current_timer_exit_dat
     //double value = (end - start) * CONVERT_TO_USEC;
     uint64_t value = end - start;
     mtx.lock();
-    (*active_stream) << "- {timestamp: " << std::fixed << start
-              << ", duration: " << std::fixed << value
-              << ", step: " << std::fixed << step
-              << ", " << data->name_prefix << "}\n";
+    (*active_stream) << "{\"timestamp\": " << std::fixed << start
+              << ", \"duration\": " << std::fixed << value
+              << ", \"step\": " << std::fixed << step
+              << ", " << data->name_prefix << "},\n";
     mtx.unlock();
     Tau_global_decr_insideTAU();
     return 0;
