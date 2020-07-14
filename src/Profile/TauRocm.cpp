@@ -244,11 +244,11 @@ extern void TauFlushRocmEventsIfNecessary(int thread_id) {
 
   static bool reentrant_flag = false;
   if (reentrant_flag) {
-    printf("TauFlushRocmEventsIfNecessary: reentrant_flag = true, tid = %d\n", thread_id); 
+    TAU_VERBOSE("TauFlushRocmEventsIfNecessary: reentrant_flag = true, tid = %d\n", thread_id); 
     return;
   }
   reentrant_flag = true; 
-  printf("Inside TauFlushRocmEventsIfNecessary: tid = %d\n", thread_id);
+  TAU_VERBOSE("Inside TauFlushRocmEventsIfNecessary: tid = %d\n", thread_id);
   if(!Tau_is_thread_id_rocm_task(thread_id)) return ;
 
   if (TauRocmList.empty()) return;
@@ -284,7 +284,7 @@ extern void TauFlushRocmEventsIfNecessary(int thread_id) {
         TAU_VERBOSE("Closing thread id: %d last timestamp = %llu\n", Tau_get_initialized_queues(i), tau_last_timestamp_ns);
         Tau_metric_set_synchronized_gpu_timestamp(i, ((double)tau_last_timestamp_ns/1e3)); // convert to microseconds
         Tau_stop_top_level_timer_if_necessary_task(Tau_get_initialized_queues(i));
-	printf("Setting initialized_queues i=%d to -1: \n", i);
+	TAU_VERBOSE("Setting initialized_queues i=%d to -1: \n", i);
         Tau_set_initialized_queues(i, -1);
       }
       RtsLayer::UnLockDB();
