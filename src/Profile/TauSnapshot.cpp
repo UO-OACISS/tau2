@@ -24,6 +24,7 @@
 #include <TauMetrics.h>
 #include <TauXML.h>
 #include <TauUnify.h>
+#include <vector>
 
 using namespace std;
 using namespace tau;
@@ -31,26 +32,45 @@ using namespace tau;
 static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer);
 static int startNewSnapshotFile(char *threadid, int tid, int to_buffer);
 
+struct SnapshotFileList : vector<Tau_util_outputDevice *>{
+    SnapshotFileList(){
+         printf("Creating SnapshotFileList at %p\n", this);
+      }
+     virtual ~SnapshotFileList(){
+         printf("Destroying SnapshotFileList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
 
 // Static holder for snapshot file handles
-static Tau_util_outputDevice **Tau_snapshot_getFiles() {
-  static Tau_util_outputDevice **snapshotFiles = NULL;
-  int i;
+static SnapshotFileList Tau_snapshot_getFiles() {
+  static SnapshotFileList snapshotFiles;// = NULL;
+  /*int i;
   if (!snapshotFiles) {
     snapshotFiles = new Tau_util_outputDevice*[TAU_MAX_THREADS]; //TODO: DYNATHREAD
     for (i=0; i<TAU_MAX_THREADS; i++) {
       snapshotFiles[i] = NULL;
     }
-  }
+  }*/
  
   TAU_VERBOSE("Tau_snapshot_getFiles() end: out=%p\n", snapshotFiles); 
   return snapshotFiles;
 }
 
+static inline void checkSnapshotFilesVector(int tid){
+	while(Tau_snapshot_getFiles().size()<=tid){
+        RtsLayer::LockDB();
+		Tau_snapshot_getFiles().push_back(NULL);
+        RtsLayer::UnLockDB();
+	}
+}
+
 static inline Tau_util_outputDevice * Tau_snapshot_GetFile(int tid){
+    checkSnapshotFilesVector(tid);
 	return Tau_snapshot_getFiles()[tid];
 }
 static inline void Tau_snapshot_SetFile(int tid, Tau_util_outputDevice * value){
+    checkSnapshotFilesVector(tid);
 	Tau_snapshot_getFiles()[tid]=value;
 }
 
@@ -96,20 +116,31 @@ extern "C" int Tau_snapshot_getBufferLength() {
 }
 
 // Static holder for snapshot event counts
-static int *Tau_snapshot_getEventCounts() { //TODO: DYNATHREAD
-  static int eventCounts[TAU_MAX_THREADS];
+static vector<int> Tau_snapshot_getEventCounts() { //TODO: DYNATHREAD
+  static vector<int> eventCounts;//[TAU_MAX_THREADS];
   return eventCounts;
 }
+
+static inline void checkEventCountsVector(int tid){
+	while(Tau_snapshot_getEventCounts().size()<=tid){
+        RtsLayer::LockDB();
+		Tau_snapshot_getEventCounts().push_back(0);
+        RtsLayer::UnLockDB();
+	}
+}
+
 static inline int Tau_snapshot_getEventCount(int tid){
+    checkEventCountsVector(tid);
 	return Tau_snapshot_getEventCounts()[tid];
 }
 static inline void Tau_snapshot_setEventCount(int tid, int value){
+    checkEventCountsVector(tid);
 	Tau_snapshot_getEventCounts()[tid]=value;
 }
 
 // Static holder for snapshot user event counts //TODO: DYNATHREAD
-static int *Tau_snapshot_getUserEventCounts() {
-  static int userEventCounts[TAU_MAX_THREADS];
+static vector<int> Tau_snapshot_getUserEventCounts() {
+  static vector<int> userEventCounts;//[TAU_MAX_THREADS];
   return userEventCounts;
 }
 static inline int Tau_snapshot_getUserEventCount(int tid){
