@@ -34,7 +34,7 @@ libTAU-atomic-trigger$(TAU_SHLIBX): Tau_plugin_example_atomic_trigger.o
 libTAU-sos-plugin$(TAU_SHLIBX): Tau_plugin_sos.o TauSOS.o
 	$(CXX) Tau_plugin_sos.o TauSOS.o $(TAU_SOS_LINKER_OPTS) $(TAU_SHFLAGS) libTAU-sos-plugin$(TAU_SHLIBX)
 
-libTAU-adios2-plugin$(TAU_SHLIBX): Tau_plugin_adios2.o Tau_sockets.o
+libTAU-adios2-plugin$(TAU_SHLIBX): Tau_plugin_adios2.o
 	$(CXX) Tau_plugin_adios2.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-adios2-plugin$(TAU_SHLIBX) $(TAU_SHLIBS)
 
 libTAU-adios2-trace-plugin$(TAU_SHLIBX): Tau_plugin_adios2_trace.o
@@ -127,7 +127,7 @@ Tau_plugin_thread_summary.o: Tau_plugin_thread_summary.cpp
 TauSOS.o: TauSOS.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
-Tau_plugin_adios2.o: Tau_plugin_adios2.cpp Tau_sockets.h
+Tau_plugin_adios2.o: Tau_plugin_adios2.cpp
 	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) $(TAU_ADIOS2_INCLUDE_OPTS) -c $< -o $@
 
 Tau_plugin_adios2_trace.o: Tau_plugin_adios2_trace.cpp

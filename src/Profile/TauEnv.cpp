@@ -49,10 +49,6 @@
 #include <string>
 #include <set>
 
-#if TAU_OPENMP // for querying OpenMP settings
-#include "omp.h"
-#endif
-
 #include <iostream>
 using namespace std;
 
@@ -2245,78 +2241,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: OpenMP Runtime Support Context none\n");
       TAU_METADATA("TAU_OPENMP_RUNTIME_CONTEXT", "none");
     }
-
-// MPC wht OpenMP isn't initialized before TAU is, so these function calls will hang.
-#if TAU_OPENMP && !defined(TAU_MPC)
-    const char* schedule;
-    int modifier;
-#if defined(omp_sched_t)
-    omp_sched_t kind;
-    omp_get_schedule(&kind, &modifier);
-    if (kind == omp_sched_static) {
-        schedule = "STATIC";
-    } else if (kind == omp_sched_dynamic) {
-        schedule = "DYNAMIC";
-    } else if ( kind == omp_sched_guided) {
-        schedule = "GUIDED";
-    } else if ( kind == omp_sched_auto) {
-        schedule = "AUTO";
-    } else {
-        schedule = "UNKNOWN";
-    }
-    TAU_METADATA("OMP_SCHEDULE", schedule);
-    sprintf(tmpstr,"%d",modifier);
-    TAU_METADATA("OMP_CHUNK_SIZE", tmpstr);
-#else
-    schedule = "UNKNOWN";
-    modifier = 1;
-    TAU_METADATA("OMP_SCHEDULE", schedule);
-    sprintf(tmpstr,"%d",modifier);
-    TAU_METADATA("OMP_CHUNK_SIZE", tmpstr);
-#endif
-
-    /* TODO: Bugs with when called during Tau_initialize with LLVM and Intel runtime. (Deadlock because the runtime try to initialize twice). Remove Ifdef once the issue is resolved */
-#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
-    int value = -1;
-#else /*  defined TAU_USE_OMPT TR6-5_0 */
-    int value = omp_get_max_threads();
-#endif /*  defined TAU_USE_OMPT TR6-5_0 */
-    sprintf(tmpstr,"%d",value);
-    TAU_METADATA("OMP_MAX_THREADS", tmpstr);
-
-#if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
-    value = -1;
-#else /*  defined TAU_USE_OMPT TR6-5_0 */
-    value = omp_get_num_procs();
-#endif /*  defined TAU_USE_OMPT TR6-5_0 */
-    sprintf(tmpstr,"%d",value);
-    TAU_METADATA("OMP_NUM_PROCS", tmpstr);
-
-    value = omp_get_dynamic();
-    sprintf(tmpstr,"%s",value?"on":"off");
-    TAU_METADATA("OMP_DYNAMIC", tmpstr);
-
-#if TAU_OPENMP_NESTED
-    //value = omp_get_nested();
-    value = omp_get_max_active_levels();
-    sprintf(tmpstr,"%s",value>1?"on":"off");
-    TAU_METADATA("OMP_NESTED", tmpstr);
-#else
-    TAU_METADATA("OMP_NESTED", "off");
-#endif
-
-#if defined(omp_get_thread_limit)
-    value = omp_get_thread_limit();
-    sprintf(tmpstr,"%d",value);
-    TAU_METADATA("OMP_THREAD_LIMIT", tmpstr);
-#endif
-
-#if defined(omp_get_max_active_levels)
-    value = omp_get_max_active_levels();
-    sprintf(tmpstr,"%d",value);
-    TAU_METADATA("OMP_MAX_ACTIVE_LEVELS", tmpstr);
-#endif
-#endif
 
     tmp = getconf("TAU_MEASURE_TAU");
     if (parse_bool(tmp, TAU_EBS_DEFAULT_TAU)) {
