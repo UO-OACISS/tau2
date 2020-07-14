@@ -16,6 +16,7 @@
 #include <vector>
 #include <regex>
 #include <algorithm>
+#include <math.h>
 
 #ifdef TAU_MPI
 #include "mpi.h"
@@ -40,13 +41,17 @@
 using json = nlohmann::json;
 json configuration;
 
+#define ONE_BILLION  1000000000
+#define ONE_BILLIONF 1000000000.0
+
 /* Provide a default configuration,
  * to avoid collecting too much data by default */
 
 const char * default_configuration = R"(
 {
   "periodic": false,
-  "periodicity seconds": 10,
+  "periodicity seconds": 10.0,
+  "PAPI metrics": [],
   "/proc/stat": {
     "disable": false,
     "comment": "This will exclude all core-specific readings.",
@@ -185,6 +190,8 @@ typedef tau::papi_plugin::CPUStat cpustats_t;
 typedef tau::papi_plugin::NetStat netstats_t;
 typedef std::vector<std::pair<std::string, long long> > iostats_t;
 std::vector<ppc*> components;
+int papi_periodic_event_set = {PAPI_NULL};
+long long * papi_periodic_values;
 
 std::vector<cpustats_t*> * previous_cpu_stats = nullptr;
 std::vector<netstats_t*> * previous_net_stats = nullptr;
@@ -368,11 +375,53 @@ bool include_component(const char * component) {
 #endif
 
 #ifdef TAU_PAPI
-void initialize_papi_events(void) {
+void initialize_papi_events(bool do_components) {
     PapiLayer::initializePapiLayer();
     int num_components = PAPI_num_components();
     const PAPI_component_info_t *comp_info;
     int retval = PAPI_OK;
+    const char * tau_metrics = TauEnv_get_metrics();
+    if (tau_metrics != NULL && strlen(tau_metrics) > 0) {
+        TAU_VERBOSE("WARNING: TAU_METRICS is set to '%s'.\n", tau_metrics);
+        TAU_VERBOSE("TAU can't enable process-wide hardware PAPI measurements in the monitoring plugin.\n");
+    }
+    if ((tau_metrics == NULL || strlen(tau_metrics) == 0) &&
+        configuration.count("PAPI metrics")) {
+        // Set the default granularity for the cpu component - this won't work.
+        if ((retval = PAPI_set_cmp_granularity(PAPI_GRN_PROC, 0)) != PAPI_OK)
+            TAU_VERBOSE("Error: PAPI_set_granularity: %d %s\n", retval, PAPI_strerror(retval));
+
+        // Enable multiplexing to allow everything to be captured
+        if ((retval = PAPI_multiplex_init()) != PAPI_OK)
+            printf("Error: PAPI_mulitplex_init: %d %s\n", retval, PAPI_strerror(retval));
+
+        /* Set up counters, if desired */
+        if ((retval = PAPI_create_eventset(&papi_periodic_event_set)) != PAPI_OK)
+            printf("Error: PAPI_create_eventset: %d %s\n", retval, PAPI_strerror(retval));
+
+        if ((retval = PAPI_assign_eventset_component(papi_periodic_event_set, 0)) != PAPI_OK)
+            printf("Error: PAPI_create_eventset: %d %s\n", retval, PAPI_strerror(retval));
+
+        if ((retval = PAPI_set_multiplex(papi_periodic_event_set)) != PAPI_OK)
+            printf("Error: PAPI_set_multiplex: %d %s\n", retval, PAPI_strerror(retval));
+
+        auto metrics = configuration["PAPI metrics"];
+        for (auto i : metrics) {
+            std::string metric(i);
+            if ((retval = PAPI_add_named_event(papi_periodic_event_set, metric.c_str())) != PAPI_OK)
+                printf("Error: PAPI_add_event: %d %s %s\n", retval, PAPI_strerror(retval), metric.c_str());
+        }
+        if (metrics.size() > 0) {
+            papi_periodic_values = (long long*)(calloc(metrics.size(), sizeof(long long)));
+
+            if ((retval = PAPI_start(papi_periodic_event_set)) != PAPI_OK)
+                printf("Error: PAPI_start: %d %s\n", retval, PAPI_strerror(retval));
+        }
+    }
+
+    // if this rank isn't doing system stats, return
+    if (!do_components) { return; }
+
     // are there any components?
     for (int component_id = 0 ; component_id < num_components ; component_id++) {
         comp_info = PAPI_get_component_info(component_id);
@@ -975,6 +1024,27 @@ void read_components(void) {
             free(values);
         }
     }
+    if (configuration.count("PAPI metrics")) {
+        int retval = PAPI_accum(papi_periodic_event_set, papi_periodic_values);
+        if (retval != PAPI_OK) {
+            TAU_VERBOSE("Error: PAPI_read: %d %s\n", retval, PAPI_strerror(retval));
+        } else {
+            auto metrics = configuration["PAPI metrics"];
+            int index = 0;
+            for (auto i : metrics) {
+                std::string metric(i);
+                if (papi_periodic_values[index] < 0LL) {
+                    TAU_VERBOSE("Bogus (probably derived/multiplexed) value: %s %lld\n", metric.c_str(), papi_periodic_values[index]);
+                    papi_periodic_values[index] = 0LL;
+                }
+                void * ue = find_user_event(metric.c_str());
+                Tau_userevent_thread(ue, ((double)papi_periodic_values[index]), 0);
+                // set it back to zero so we can use PAPI_accum and not PAPI_reset
+                papi_periodic_values[index] = 0;
+                index++;
+            }
+        }
+    }
 #endif
     /* Also read some OS level metrics. */
 
@@ -1082,14 +1152,27 @@ void * Tau_monitoring_plugin_threaded_function(void* data) {
     while (!done) {
         // take a reading...
         read_components();
-        // wait x microseconds for the next batch.
+        // wait x seconds for the next batch.  Can be floating!
         gettimeofday(&tp, NULL);
         int seconds = 1;
+        int nanoseconds = 0;
+        // convert the floating seconds to seconds and nanoseconds
         if (configuration.count("periodicity seconds")) {
-            seconds = configuration["periodicity seconds"];
+            double floating = configuration["periodicity seconds"];
+            double integer;
+            double fractional = modf(floating, &integer);
+            seconds = (int)(integer);
+            nanoseconds = (int)(fractional * ONE_BILLIONF);
         }
+        // add our nanoseconds of delay
+        ts.tv_nsec = (1000 * tp.tv_usec) + nanoseconds;
+        // check for overflow
+        if (ts.tv_nsec > ONE_BILLION){
+            ts.tv_nsec = ts.tv_nsec - ONE_BILLION;
+            seconds = seconds + 1;
+        }
+        // add our seconds of delay
         ts.tv_sec  = (tp.tv_sec + seconds);
-        ts.tv_nsec = (1000 * tp.tv_usec);
         pthread_mutex_lock(&_my_mutex);
         // wait the time period.
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
@@ -1168,14 +1251,20 @@ static void do_cleanup() {
 }
 
 int Tau_plugin_event_pre_end_of_execution_monitoring(Tau_plugin_event_pre_end_of_execution_data_t *data) {
-    if (my_rank == 0) TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    do_cleanup();
+    if (my_rank == 0)
+        TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+    if (RtsLayer::myThread() == 0) {
+        do_cleanup();
+    }
     return 0;
 }
 
 int Tau_plugin_event_end_of_execution_monitoring(Tau_plugin_event_end_of_execution_data_t *data) {
-    if (my_rank == 0) TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    do_cleanup();
+    if (my_rank == 0)
+        TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+    if (RtsLayer::myThread() == 0) {
+        do_cleanup();
+    }
     return 0;
 }
 
@@ -1189,11 +1278,12 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
 
     rank_getting_system_data = choose_volunteer_rank();
 
-    if (my_rank == rank_getting_system_data) {
 #ifdef TAU_PAPI
-        /* get ready to read metrics! */
-        initialize_papi_events();
+    /* get ready to read metrics! */
+    initialize_papi_events(my_rank == rank_getting_system_data);
 #endif
+
+    if (my_rank == rank_getting_system_data) {
 #if !defined(__APPLE__)
         previous_cpu_stats = read_cpu_stats();
         /* Parse initial node network data */
