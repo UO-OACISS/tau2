@@ -37,11 +37,14 @@ bool Tau_compare_rocm_events (struct TauRocmEvent one, struct TauRocmEvent two) 
 }
 
 
-//static int tau_initialized_queues[TAU_MAX_ROCM_QUEUES] = { 0 };
+#ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
+static int tau_initialized_queues[TAU_MAX_ROCM_QUEUES] = { 0 };
+#else 
 static std::map<int, int, less<int> >& TheTauInitializedQueues() {
   static std::map<int, int, less<int> > initialized_queues; 
   return initialized_queues;
 }
+#endif /* TAU_ROCM_USE_MAP_FOR_INIT_QUEUES */
 
 
 // Dispatch callbacks and context handlers synchronization
@@ -49,7 +52,10 @@ static std::map<int, int, less<int> >& TheTauInitializedQueues() {
 
 // access tau_initialized_queues through get and set access functions
 int Tau_get_initialized_queues(int queue_id) {
-  //return tau_initialized_queues[queue_id]; 
+#ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
+  return tau_initialized_queues[queue_id]; 
+#else 
+
   std::map<int, int, less<int> >::iterator it;
   it = TheTauInitializedQueues().find(queue_id); 
   if (it == TheTauInitializedQueues().end()) { // not found!
@@ -59,6 +65,7 @@ int Tau_get_initialized_queues(int queue_id) {
     TAU_VERBOSE("Tau_get_initialized_queues: queue_id = %d found. Returning %d\n", queue_id, it->second);
     return it->second; 
   }
+#endif /* TAU_ROCM_USE_MAP_FOR_INIT_QUEUES */
   /* 
   TAU_VERBOSE("Tau_get_initialized_queues: queue_id = %d, value = %d\n", queue_id,  TheTauInitializedQueues()[queue_id]);
   return TheTauInitializedQueues()[queue_id];
@@ -66,9 +73,12 @@ int Tau_get_initialized_queues(int queue_id) {
 }
 
 void Tau_set_initialized_queues(int queue_id, int value) {
-  //tau_initialized_queues[queue_id]=value; 
+#ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
+  tau_initialized_queues[queue_id]=value; 
+#else 
   TheTauInitializedQueues()[queue_id]=value; 
   TAU_VERBOSE("Tau_set_initialized_queues: queue_id = %d, value = %d\n", queue_id,  TheTauInitializedQueues()[queue_id]);
+#endif /* TAU_ROCM_USE_MAP_FOR_INIT_QUEUES */
   return;
 }
 
@@ -101,14 +111,15 @@ void Tau_add_metadata_for_task(const char *key, int value, int taskid) {
 
 bool Tau_is_thread_id_rocm_task(int thread_id) {
   // Just for checking!
-/* Not needed with iterators 
+/* Not needed with iterators */
+#ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES 
   for (int i=0; i < TAU_MAX_ROCM_QUEUES; i++) {
     if (Tau_get_initialized_queues(i) == thread_id) {
       TAU_VERBOSE("TauIsThreadRocmTask: Tau_get_initialized_queues(%d) = %d matches thread_id %d. Returning true\n", i, Tau_get_initialized_queues(i), thread_id);
       return true;
     }
   }
- */
+#else
 
   std::map<int, int, less<int> >::iterator it;
   for (it = TheTauInitializedQueues().begin(); it != TheTauInitializedQueues().end(); it++) {
@@ -117,6 +128,7 @@ bool Tau_is_thread_id_rocm_task(int thread_id) {
       return true;
     }
   }
+#endif /* TAU_ROCM_USE_MAP_FOR_INIT_QUEUES */
   return false;
 }
 
@@ -230,6 +242,13 @@ void Tau_process_rocm_events(struct TauRocmEvent e) {
 
 extern void TauFlushRocmEventsIfNecessary(int thread_id) {
 
+  static bool reentrant_flag = false;
+  if (reentrant_flag) {
+    printf("TauFlushRocmEventsIfNecessary: reentrant_flag = true, tid = %d\n", thread_id); 
+    return;
+  }
+  reentrant_flag = true; 
+  printf("Inside TauFlushRocmEventsIfNecessary: tid = %d\n", thread_id);
   if(!Tau_is_thread_id_rocm_task(thread_id)) return ;
 
   if (TauRocmList.empty()) return;
@@ -241,7 +260,8 @@ extern void TauFlushRocmEventsIfNecessary(int thread_id) {
   }
 
 //  Tau_stop_top_level_timer_if_necessary(); 
-/*
+
+#ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
   for (int i=0; i < TAU_MAX_ROCM_QUEUES; i++) {
     if (Tau_get_initialized_queues(i) != -1) {
       RtsLayer::LockDB();
@@ -254,7 +274,7 @@ extern void TauFlushRocmEventsIfNecessary(int thread_id) {
       RtsLayer::UnLockDB();
     }
   }
-*/
+#else 
   std::map<int, int, less<int> >::iterator it;
   for (it = TheTauInitializedQueues().begin(); it != TheTauInitializedQueues().end(); it++) {
     if (it -> second != -1) {
@@ -264,11 +284,14 @@ extern void TauFlushRocmEventsIfNecessary(int thread_id) {
         TAU_VERBOSE("Closing thread id: %d last timestamp = %llu\n", Tau_get_initialized_queues(i), tau_last_timestamp_ns);
         Tau_metric_set_synchronized_gpu_timestamp(i, ((double)tau_last_timestamp_ns/1e3)); // convert to microseconds
         Tau_stop_top_level_timer_if_necessary_task(Tau_get_initialized_queues(i));
+	printf("Setting initialized_queues i=%d to -1: \n", i);
         Tau_set_initialized_queues(i, -1);
       }
       RtsLayer::UnLockDB();
     }
   }
+#endif /* TAU_ROCM_USE_MAP_FOR_INIT_QUEUES */
+  reentrant_flag = false;  /* safe */
 
 }
 
