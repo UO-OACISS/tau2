@@ -44,6 +44,22 @@ json configuration;
 #define ONE_BILLION  1000000000
 #define ONE_BILLIONF 1000000000.0
 
+inline void _plugin_assert(const char* expression, const char* file, int line)
+{
+    fprintf(stderr, "Assertion '%s' failed, file '%s' line '%d' on node '%d', thread '%d'.",
+        expression, file, line, RtsLayer::myNode(), RtsLayer::myThread());
+    abort();
+}
+
+#ifdef NDEBUG
+#define PLUGIN_ASSERT(EXPRESSION) ((void)0)
+#else
+#define PLUGIN_ASSERT(EXPRESSION) ((EXPRESSION) ? (void)0 : \
+    _plugin_assert(#EXPRESSION, __FILE__, __LINE__))
+#endif
+
+thread_local bool main_thread = false;
+
 /* Provide a default configuration,
  * to avoid collecting too much data by default */
 
@@ -860,6 +876,7 @@ void parse_proc_self_statm() {
 
 void update_cpu_stats(void) {
     static const char * source = "/proc/stat";
+    PLUGIN_ASSERT(previous_cpu_stats != nullptr);
     if (!include_component(source)) { return; }
     /* get the current stats */
     std::vector<cpustats_t*> * new_stats = read_cpu_stats();
@@ -908,6 +925,7 @@ void update_cpu_stats(void) {
 std::vector<netstats_t*> * update_net_stats(const char * source,
 std::vector<netstats_t*> *previous) {
     if (!include_component(source)) { return previous; }
+    PLUGIN_ASSERT(previous != nullptr);
     /* get the current stats */
     std::vector<netstats_t*> * new_stats = read_net_stats(source);
     if (new_stats == NULL) return previous;
@@ -988,6 +1006,7 @@ std::vector<netstats_t*> *previous) {
 
 void update_io_stats(const char * source) {
     if (!include_component(source)) { return; }
+    PLUGIN_ASSERT(previous_io_stats != nullptr);
     /* get the current stats */
     iostats_t * new_stats = read_io_stats(source);
     if (new_stats == NULL) return;
@@ -1117,8 +1136,6 @@ void free_papi_components(void) {
 
 void stop_worker(void) {
     if (done) return;
-    // if no thread, return
-    if (configuration.count("periodic") == 0 || !configuration["periodic"]) return;
     pthread_mutex_lock(&_my_mutex);
     done = true;
     pthread_mutex_unlock(&_my_mutex);
@@ -1211,8 +1228,12 @@ void init_lock(pthread_mutex_t * _mutex) {
 static void do_cleanup() {
     static bool clean = false;
     if (clean) return;
-    stop_worker();
-    read_components();
+    // if no thread, return
+    if (configuration.count("periodic") == 0 || !configuration["periodic"]) {
+        read_components();
+    } else {
+        stop_worker();
+    }
 #ifdef TAU_PAPI
     /* clean up papi */
     if (my_rank == rank_getting_system_data) {
@@ -1253,7 +1274,9 @@ static void do_cleanup() {
 int Tau_plugin_event_pre_end_of_execution_monitoring(Tau_plugin_event_pre_end_of_execution_data_t *data) {
     if (my_rank == 0)
         TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    if (RtsLayer::myThread() == 0) {
+    //if (RtsLayer::myThread() == 0) {
+    if (main_thread) {
+        // only the main thread should cleanup
         do_cleanup();
     }
     return 0;
@@ -1262,7 +1285,9 @@ int Tau_plugin_event_pre_end_of_execution_monitoring(Tau_plugin_event_pre_end_of
 int Tau_plugin_event_end_of_execution_monitoring(Tau_plugin_event_end_of_execution_data_t *data) {
     if (my_rank == 0)
         TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
-    if (RtsLayer::myThread() == 0) {
+    //if (RtsLayer::myThread() == 0) {
+    if (main_thread) {
+        // only the main thread should cleanup
         do_cleanup();
     }
     return 0;
@@ -1348,6 +1373,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
 
     done = false;
+    main_thread = true;
 
     read_config_file();
 
