@@ -38,7 +38,7 @@ bool Tau_compare_rocm_events (struct TauRocmEvent one, struct TauRocmEvent two) 
 
 
 #ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
-static int tau_initialized_queues[TAU_MAX_ROCM_QUEUES] = { 0 };
+static int tau_initialized_queues[TAU_MAX_ROCM_QUEUES];
 #else 
 static std::map<int, int, less<int> >& TheTauInitializedQueues() {
   static std::map<int, int, less<int> > initialized_queues; 
@@ -50,9 +50,19 @@ static std::map<int, int, less<int> >& TheTauInitializedQueues() {
 // Dispatch callbacks and context handlers synchronization
 // Tool is unloaded
 
+int Tau_initialize_queues(void) {
+  int i; 
+  for (i=0; i < TAU_MAX_ROCM_QUEUES; i++) {
+    tau_initialized_queues[i] = -1;
+  }
+  return 1; 
+}
 // access tau_initialized_queues through get and set access functions
 int Tau_get_initialized_queues(int queue_id) {
+  TAU_VERBOSE("Tau_get_initialized_queues: queue_id = %d ", queue_id);
 #ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
+  static int flag = Tau_initialize_queues();
+  TAU_VERBOSE("value = %d\n", tau_initialized_queues[queue_id]);
   return tau_initialized_queues[queue_id]; 
 #else 
 
@@ -60,9 +70,11 @@ int Tau_get_initialized_queues(int queue_id) {
   it = TheTauInitializedQueues().find(queue_id); 
   if (it == TheTauInitializedQueues().end()) { // not found!
     TAU_VERBOSE("Tau_get_initialized_queues: queue_id = %d not found. Returning -1\n", queue_id);
+    TAU_VERBOSE("value = -1\n");
     return -1;
   } else {
     TAU_VERBOSE("Tau_get_initialized_queues: queue_id = %d found. Returning %d\n", queue_id, it->second);
+    TAU_VERBOSE("value = %d\n", it->second);
     return it->second; 
   }
 #endif /* TAU_ROCM_USE_MAP_FOR_INIT_QUEUES */
@@ -73,6 +85,7 @@ int Tau_get_initialized_queues(int queue_id) {
 }
 
 void Tau_set_initialized_queues(int queue_id, int value) {
+  TAU_VERBOSE("Tau_set_initialized_queues: queue_id = %d, value = %d\n", queue_id, value);
 #ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
   tau_initialized_queues[queue_id]=value; 
 #else 
