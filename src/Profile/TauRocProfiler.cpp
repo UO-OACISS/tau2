@@ -416,7 +416,7 @@ extern "C" PUBLIC_API void OnUnloadTool() {
 }
 
 extern "C" CONSTRUCTOR_API void constructor() {
-  printf("INTT constructor\n"); fflush(stdout);
+  TAU_VERBOSE("INTT constructor\n"); fflush(stdout);
 }
 
 extern "C" DESTRUCTOR_API void destructor() {
