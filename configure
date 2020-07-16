@@ -4379,7 +4379,13 @@ if [ $intel_cxx = 1 ] ; then
     fi
 fi
 
-if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$cxx_compiler" = "xmpicxx" ] ; then
+if [ "x$cxx_compiler" = "xmpicxx" -o  "x$cxx_compiler" = "xmpiicpc" -o "x$cxx_compiler" = "xicpc" -o "x$ibmxlc" = "xyes" ]; then
+  mpi_wrapper_mpicxx_or_mpiicpc=yes
+else
+  mpi_wrapper_mpicxx_or_mpiicpc=no
+fi
+
+if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes" ] ; then
     cxxloaded=`which $mpicxx_exe 2>/dev/null | wc -l`
     mpi=yes
     if [ $cxxloaded = 1 ]
