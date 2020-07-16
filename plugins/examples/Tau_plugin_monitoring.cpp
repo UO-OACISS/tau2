@@ -424,7 +424,8 @@ void initialize_papi_events(bool do_components) {
         auto metrics = configuration["PAPI metrics"];
         for (auto i : metrics) {
             std::string metric(i);
-            if ((retval = PAPI_add_named_event(papi_periodic_event_set, metric.c_str())) != PAPI_OK)
+            // PAPI is either const char * or char * depending on version.  Fun.
+            if ((retval = PAPI_add_named_event(papi_periodic_event_set, (char*)(metric.c_str()))) != PAPI_OK)
                 printf("Error: PAPI_add_event: %d %s %s\n", retval, PAPI_strerror(retval), metric.c_str());
         }
         if (metrics.size() > 0) {

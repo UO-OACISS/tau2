@@ -4379,11 +4379,22 @@ if [ $intel_cxx = 1 ] ; then
     fi
 fi
 
-if [ "x$cxx_compiler" = "xmpicxx" -o  "x$cxx_compiler" = "xmpiicpc" -o "x$cxx_compiler" = "xicpc" -o "x$ibmxlc" = "xyes" ]; then
-  mpi_wrapper_mpicxx_or_mpiicpc=yes
-else
-  mpi_wrapper_mpicxx_or_mpiicpc=no
-fi
+case "x$cxx_compiler" in
+  "xmpicxx")
+    mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
+  "xmpiicpc")
+    mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
+  "xicpc")
+    mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
+  "xxlC"*)
+    mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
+  *)
+    mpi_wrapper_mpicxx_or_mpiicpc=no ;;
+esac
+
+#echo $mpi_wrapper_mpicxx_or_mpiicpc
+#echo $cxx_compiler
+#kill -9 $$
 
 if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes" ] ; then
     cxxloaded=`which $mpicxx_exe 2>/dev/null | wc -l`
