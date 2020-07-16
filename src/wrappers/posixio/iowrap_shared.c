@@ -85,6 +85,7 @@ FILE *fopen(const char *path, const char *mode) {
   }
 
   Tau_iowrap_checkInit();
+  Tau_global_incr_insideTAU();
 
   /* get the name of the current timer, current thread and get a timestamp */
   TAU_IOWRAPPER_METADATA_SETUP
@@ -103,6 +104,7 @@ FILE *fopen(const char *path, const char *mode) {
   TAU_IOWRAPPER_WRITE_FILE_METADATA_FOPEN(mode, path)
 
   TAU_VERBOSE ("* fopen called on %s\n", path);
+  Tau_global_decr_insideTAU();
   return ret;
 }
 
@@ -121,6 +123,7 @@ FILE *fopen64(const char *path, const char *mode) {
   }
 
   Tau_iowrap_checkInit();
+  Tau_global_incr_insideTAU();
 
   /* get the name of the current timer, current thread and get a timestamp */
   TAU_IOWRAPPER_METADATA_SETUP
@@ -139,6 +142,7 @@ FILE *fopen64(const char *path, const char *mode) {
   TAU_IOWRAPPER_WRITE_FILE_METADATA_FOPEN(mode, path)
 
   TAU_VERBOSE ("* fopen64 called on %s\n", path);
+  Tau_global_decr_insideTAU();
   return ret;
 }
 
@@ -158,6 +162,7 @@ FILE *fdopen(int fd, const char *mode) {
   }
 
   Tau_iowrap_checkInit();
+  Tau_global_incr_insideTAU();
   /* get the name of the current timer, current thread and get a timestamp */
   //TAU_IOWRAPPER_METADATA_SETUP
 
@@ -173,6 +178,7 @@ FILE *fdopen(int fd, const char *mode) {
   //TAU_IOWRAPPER_WRITE_FILE_METADATA_FOPEN(flags, pathname)
 
   TAU_VERBOSE ("* fdopen called on %d\n", fd);
+  Tau_global_decr_insideTAU();
   return ret;
 }
 
@@ -191,6 +197,7 @@ FILE *freopen(const char *path, const char *mode, FILE *stream) {
   }
 
   Tau_iowrap_checkInit();
+  Tau_global_incr_insideTAU();
   /* get the name of the current timer, current thread and get a timestamp */
   TAU_IOWRAPPER_METADATA_SETUP
 
@@ -208,6 +215,7 @@ FILE *freopen(const char *path, const char *mode, FILE *stream) {
   TAU_IOWRAPPER_WRITE_FILE_METADATA_FOPEN(mode, path)
 
   TAU_VERBOSE ("* freopen called on %s\n", path);
+  Tau_global_decr_insideTAU();
   return ret;
 }
 
@@ -227,9 +235,10 @@ int fclose(FILE *fp) {
     return _fclose(fp);
   }
 
+  Tau_iowrap_checkInit();
+  Tau_global_incr_insideTAU();
   // get the name _before_ it's closed!
   const char * tmp = Tau_get_pathname_from_fid(fileno(fp));
-  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "fclose()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -241,6 +250,7 @@ int fclose(FILE *fp) {
   TAU_PROFILE_STOP(t);
 
   TAU_VERBOSE ("* fclose(%d) called\n", fd);
+  Tau_global_decr_insideTAU();
   return ret;
 }
 
@@ -332,6 +342,7 @@ int fscanf(FILE *stream, const char *format, ...) {
     return ret;
   }
   Tau_iowrap_checkInit();
+  Tau_global_incr_insideTAU();
 
   double currentRead = 0.0;
   struct timeval t1, t2;
@@ -375,6 +386,7 @@ int fscanf(FILE *stream, const char *format, ...) {
   TAU_PROFILE_STOP(t);
 
   TAU_VERBOSE ("* fscanf called\n");
+  Tau_global_decr_insideTAU();
   return ret;
 }
 
@@ -393,6 +405,7 @@ size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
   }
 
   Tau_iowrap_checkInit();
+  Tau_global_incr_insideTAU();
   double currentWrite = 0.0;
   struct timeval t1, t2;
   double bw = 0.0;
@@ -429,6 +442,7 @@ size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
   TAU_PROFILE_STOP(t);
 
   TAU_VERBOSE ("* fwrite called\n");
+  Tau_global_decr_insideTAU();
   return ret;
 }
 
@@ -447,6 +461,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   }
 
   Tau_iowrap_checkInit();
+  Tau_global_incr_insideTAU();
   double currentRead = 0.0;
   struct timeval t1, t2;
   TAU_PROFILE_TIMER(t, "read()", " ", TAU_READ|TAU_IO);
@@ -481,6 +496,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   TAU_PROFILE_STOP(t);
 
   TAU_VERBOSE ("* TAU: read : %d bytes\n", ret);
+  Tau_global_decr_insideTAU();
   return ret;
 }
 
@@ -604,6 +620,7 @@ int fseek(FILE *stream, long offset, int whence) {
   }
 
   Tau_iowrap_checkInit();
+  Tau_global_incr_insideTAU();
   TAU_PROFILE_TIMER(t, "fseek()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -615,6 +632,7 @@ int fseek(FILE *stream, long offset, int whence) {
   TAU_PROFILE_STOP(t);
 
   TAU_VERBOSE ("* fseek called\n");
+  Tau_global_decr_insideTAU();
   return ret;
 }
 
