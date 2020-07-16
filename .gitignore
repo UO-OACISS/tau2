@@ -85,3 +85,7 @@ examples/mm/matmult
 include/omp*
 *.dSYM
 
+# Python, Jupyter stuff
+.ipynb_checkpoints
+__pycache__
+
