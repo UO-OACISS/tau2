@@ -4633,7 +4633,7 @@ case $cxx_compiler in
 	fi
 	compilerLocation=`which $ibm_compiler`
 
-	if [ "x$compilerLocation" = "x/usr/bin/$ibm_compiler" ] ; then
+	if [ "x$compilerLocation" = "x/usr/bin/$ibm_compiler" -o "x$compilerLocation" = "x/bin/$ibm_compiler" ] ; then
 	    # if xlc or blrts_xlc is found in /usr/bin, it is likely a
 	    # symlink.  Since we use ../lib to locate the libraries
 	    # we will dereference the symlink once.  Don't do it more
@@ -4654,7 +4654,7 @@ case $cxx_compiler in
 	fi
 
 
-	extradircxx=`echo $compilerLocation | sed s/$ibm_compiler/../`
+	extradircxx=`echo $compilerLocation | sed -e 's/$ibm_compiler/../' -e 's@bin/xlc$@bin/..@'`
 
         if [ "$machine" = ibm64linux ] ; then
            if [ ! -r $extradircxx/lib/libibmc++.a ]; then
