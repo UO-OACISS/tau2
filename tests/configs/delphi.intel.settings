@@ -2,14 +2,15 @@
 
 module purge
 module load gcc/7.3 # Needed for PDT, apparently
-module load intel/20
-module load mpi/intel-20
+module load intel/19
+module load mpi/intel-19
 module load python/3.6.8
 module load cuda/10.2
 BFD=/usr/local/packages/binutils/2.33.1
 PDT=/usr/local/packages/pdtoolkit-3.25.1
 OTF2=/usr/local/packages/otf2/2.1
 PAPI=/usr/local/packages/papi/6.0.0.1
+#PAPI=/usr/local/packages/papi/5.5.1
 
 export CC=icc
 export CXX=icpc
