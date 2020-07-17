@@ -88,9 +88,13 @@ struct OpenMPVersionMap : public map<unsigned,string> {
 };
 
 const OpenMPVersionMap & TheOpenMPVersionMap() {
-    static const OpenMPVersionMap openmp_map{
+    static OpenMPVersionMap openmp_map{
         {200505,"2.5"},{200805,"3.0"},{201107,"3.1"},
         {201307,"4.0"},{201511,"4.5"},{201811,"5.0"}};
+    if (openmp_map.count(_OPENMP) == 0) {
+        openmp_map.insert ( std::pair<unsigned,string>(_OPENMP,std::to_string(_OPENMP)) );
+
+    }
     return openmp_map;
 }
 #endif
@@ -177,9 +181,23 @@ int tau_bgq_init(void) {
 #include <signal.h>
 #include <stdarg.h>
 
+/* Intel is such an annoying beast.  It won't let us declare this
+ * as a static member object in the below function.  This may cause
+ * instability if the application isn't linked with the TAU shared
+ * object library (-optShared). */
+#if defined(__INTEL_COMPILER)
+static MetaDataRepo metadata[TAU_MAX_THREADS];
+#endif
+
 // These come from Tau_metadata_register calls
 MetaDataRepo &Tau_metadata_getMetaData(int tid) {
+/* Intel is such an annoying beast.  It won't let us declare this
+ * as a static member object in this function.  This may cause
+ * instability if the application isn't linked with the TAU shared
+ * object library (-optShared). */
+#if !defined(__INTEL_COMPILER)
   static MetaDataRepo metadata[TAU_MAX_THREADS];
+#endif
   return metadata[tid];
 }
 
