@@ -31,29 +31,22 @@ using namespace tau;
 
 static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer);
 static int startNewSnapshotFile(char *threadid, int tid, int to_buffer);
-
 struct SnapshotFileList : vector<Tau_util_outputDevice *>{
+    SnapshotFileList (const SnapshotFileList&) = delete;
+    SnapshotFileList& operator= (const SnapshotFileList&) = delete;
     SnapshotFileList(){
-         printf("Creating SnapshotFileList at %p\n", this);
+         //printf("Creating SnapshotFileList at %p\n", this);
       }
      virtual ~SnapshotFileList(){
-         printf("Destroying SnapshotFileList at %p, with size %ld\n", this, this->size());
+         //printf("Destroying SnapshotFileList at %p, with size %ld\n", this, this->size());
          Tau_destructor_trigger();
      }
    };
 
 // Static holder for snapshot file handles
-static SnapshotFileList Tau_snapshot_getFiles() {
-  static SnapshotFileList snapshotFiles;// = NULL;
-  /*int i;
-  if (!snapshotFiles) {
-    snapshotFiles = new Tau_util_outputDevice*[TAU_MAX_THREADS]; //TODO: DYNATHREAD
-    for (i=0; i<TAU_MAX_THREADS; i++) {
-      snapshotFiles[i] = NULL;
-    }
-  }*/
- 
-  TAU_VERBOSE("Tau_snapshot_getFiles() end: out=%p\n", snapshotFiles); 
+static SnapshotFileList & Tau_snapshot_getFiles() {
+  static SnapshotFileList snapshotFiles;
+  TAU_VERBOSE("Tau_snapshot_getFiles() end: out=%p\n", &snapshotFiles); 
   return snapshotFiles;
 }
 
@@ -73,6 +66,7 @@ static inline void Tau_snapshot_SetFile(int tid, Tau_util_outputDevice * value){
     checkSnapshotFilesVector(tid);
 	Tau_snapshot_getFiles()[tid]=value;
 }
+
 
 static void writeEventXML(Tau_util_outputDevice *out, int id, FunctionInfo *fi) {
   Tau_util_output (out, "<event id=\"%d\"><name>", id);
@@ -116,8 +110,17 @@ extern "C" int Tau_snapshot_getBufferLength() {
 }
 
 // Static holder for snapshot event counts
-static vector<int> Tau_snapshot_getEventCounts() { //TODO: DYNATHREAD
-  static vector<int> eventCounts;//[TAU_MAX_THREADS];
+struct snapshotEventCountList: vector<int>{
+    snapshotEventCountList(){
+        //printf("Creating snapshotEventCountList at %p\n", this);
+    }
+    virtual ~snapshotEventCountList(){
+        //printf("Destroying snapshotEventCountList at %p, with size %ld\n", this, this->size());
+        Tau_destructor_trigger();
+    }
+};
+static snapshotEventCountList & Tau_snapshot_getEventCounts() {
+  static snapshotEventCountList eventCounts;
   return eventCounts;
 }
 
@@ -138,15 +141,33 @@ static inline void Tau_snapshot_setEventCount(int tid, int value){
 	Tau_snapshot_getEventCounts()[tid]=value;
 }
 
-// Static holder for snapshot user event counts //TODO: DYNATHREAD
-static vector<int> Tau_snapshot_getUserEventCounts() {
-  static vector<int> userEventCounts;//[TAU_MAX_THREADS];
+// Static holder for snapshot user event counts
+struct snapshotUserEventCountList: vector<int>{
+    snapshotUserEventCountList(){
+        //printf("Creating snapshotUserEventCountList at %p\n", this);
+    }
+    virtual ~snapshotUserEventCountList(){
+        //printf("Destroying snapshotUserEventCountList at %p, with size %ld\n", this, this->size());
+        Tau_destructor_trigger();
+    }
+};
+static snapshotUserEventCountList & Tau_snapshot_getUserEventCounts() {
+  static snapshotUserEventCountList userEventCounts;
   return userEventCounts;
 }
+static inline void checkUserEventCountsVector(int tid){
+	while(Tau_snapshot_getUserEventCounts().size()<=tid){
+        RtsLayer::LockDB();
+		Tau_snapshot_getUserEventCounts().push_back(0);
+        RtsLayer::UnLockDB();
+	}
+}
 static inline int Tau_snapshot_getUserEventCount(int tid){
+    checkUserEventCountsVector(tid);
 	return Tau_snapshot_getUserEventCounts()[tid];
 }
 static inline void Tau_snapshot_setUserEventCount(int tid, int value){
+    checkUserEventCountsVector(tid);
 	Tau_snapshot_getUserEventCounts()[tid]=value;
 }
 
