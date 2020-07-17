@@ -185,9 +185,6 @@ int tau_bgq_init(void) {
  * as a static member object in the below function.  This may cause
  * instability if the application isn't linked with the TAU shared
  * object library (-optShared). */
-#if defined(__INTEL_COMPILER)
-static MetaDataRepo metadata[TAU_MAX_THREADS];
-#endif
 
 // These come from Tau_metadata_register calls
 MetaDataRepo &Tau_metadata_getMetaData(int tid) {
@@ -195,9 +192,7 @@ MetaDataRepo &Tau_metadata_getMetaData(int tid) {
  * as a static member object in this function.  This may cause
  * instability if the application isn't linked with the TAU shared
  * object library (-optShared). */
-#if !defined(__INTEL_COMPILER)
   static MetaDataRepo metadata[TAU_MAX_THREADS];
-#endif
   return metadata[tid];
 }
 
@@ -786,7 +781,7 @@ int Tau_metadata_fillMetaData()
   }
 
 #ifdef _OPENMP
-#if TAU_OPENMP && !defined(TAU_MPC)
+#if defined(TAU_OPENMP) && !defined(TAU_MPC)
   /* Capture OpenMP version */
   Tau_metadata_register("OpenMP Version String", _OPENMP);
   Tau_metadata_register("OpenMP Version", TheOpenMPVersionMap().at(_OPENMP).c_str());
@@ -819,7 +814,13 @@ int Tau_metadata_fillMetaData()
 
 #if _OPENMP >= 201307 // OpenMP 4.0
   Tau_metadata_register("OMP_PROC_BIND", omp_get_proc_bind() ? "TRUE" : "FALSE");
+#if !defined(__INTEL_COMPILER)
+/* Don't make this call for the Intel compiler!  It may compile, but without
+ * MIC/KNL offload support, the linker will fail with really esoteric error messages
+ * about either missing destructor in ~MetaDataRepo() or missing i_ofldbegin_target.o
+ */
   Tau_metadata_register("OMP_DEFAULT_DEVICE", omp_get_default_device());
+#endif
 #if _OPENMP == 201307 && !defined(__PGI) // PGI claims 4.0, but is missing these implementations
   Tau_metadata_register("OMP_CANCELLATION", omp_get_cancellation() ? "TRUE" : "FALSE");
   Tau_metadata_register("OMP_NUM_DEVICES", omp_get_num_devices());
