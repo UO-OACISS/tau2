@@ -962,6 +962,9 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
             free(demangled);
         } else {
             Tau_gpu_enter_event(cbInfo->functionName);
+            if (TauEnv_get_thread_per_gpu_stream()) {
+                TAU_TRIGGER_EVENT("Correlation ID", cbInfo->correlationId);
+            }
         }
 
 	    Tau_CuptiLayer_enable_eventgroup();
