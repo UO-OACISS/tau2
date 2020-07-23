@@ -10,8 +10,14 @@ PATH=${HOME}/Library/Python/3.7/bin:${PATH}
 
 export PYTHONPATH=${HOME}/src/tau2/apple/python:${PYTHONPATH}
 
-# Then run jupyter lab:
+# get the notebook file from argv
+if [ "$#" -ne 1 ]; then
+  echo "usage: go.sh <jupyter notebook file>";
+  exit 1;
+fi
 
-jupyter lab ./PlotlyBarCharts.ipynb
+# Then run jupyter lab with the jupyter notebook file:
+
+jupyter lab $1
 
 #In your browser that is launched, open the notebook and go!
