@@ -88,9 +88,13 @@ struct OpenMPVersionMap : public map<unsigned,string> {
 };
 
 const OpenMPVersionMap & TheOpenMPVersionMap() {
-    static const OpenMPVersionMap openmp_map{
+    static OpenMPVersionMap openmp_map{
         {200505,"2.5"},{200805,"3.0"},{201107,"3.1"},
         {201307,"4.0"},{201511,"4.5"},{201811,"5.0"}};
+    if (openmp_map.count(_OPENMP) == 0) {
+        openmp_map.insert ( std::pair<unsigned,string>(_OPENMP,std::to_string(_OPENMP)) );
+
+    }
     return openmp_map;
 }
 #endif
@@ -177,8 +181,18 @@ int tau_bgq_init(void) {
 #include <signal.h>
 #include <stdarg.h>
 
+/* Intel is such an annoying beast.  It won't let us declare this
+ * as a static member object in the below function.  This may cause
+ * instability if the application isn't linked with the TAU shared
+ * object library (-optShared). */
+
 // These come from Tau_metadata_register calls
 MetaDataRepo &Tau_metadata_getMetaData(int tid) {
+
+/* Intel is such an annoying beast.  It won't let us declare this
+ * as a static member object in this function.  This may cause
+ * instability if the application isn't linked with the TAU shared
+ * object library (-optShared). */
   static vector<MetaDataRepo*> metadata;
   
   while(metadata.size()<=tid){
@@ -774,7 +788,7 @@ int Tau_metadata_fillMetaData()
   }
 
 #ifdef _OPENMP
-#if TAU_OPENMP && !defined(TAU_MPC)
+#if defined(TAU_OPENMP) && !defined(TAU_MPC)
   /* Capture OpenMP version */
   Tau_metadata_register("OpenMP Version String", _OPENMP);
   Tau_metadata_register("OpenMP Version", TheOpenMPVersionMap().at(_OPENMP).c_str());
@@ -807,7 +821,13 @@ int Tau_metadata_fillMetaData()
 
 #if _OPENMP >= 201307 // OpenMP 4.0
   Tau_metadata_register("OMP_PROC_BIND", omp_get_proc_bind() ? "TRUE" : "FALSE");
+#if !defined(__INTEL_COMPILER)
+/* Don't make this call for the Intel compiler!  It may compile, but without
+ * MIC/KNL offload support, the linker will fail with really esoteric error messages
+ * about either missing destructor in ~MetaDataRepo() or missing i_ofldbegin_target.o
+ */
   Tau_metadata_register("OMP_DEFAULT_DEVICE", omp_get_default_device());
+#endif
 #if _OPENMP == 201307 && !defined(__PGI) // PGI claims 4.0, but is missing these implementations
   Tau_metadata_register("OMP_CANCELLATION", omp_get_cancellation() ? "TRUE" : "FALSE");
   Tau_metadata_register("OMP_NUM_DEVICES", omp_get_num_devices());
