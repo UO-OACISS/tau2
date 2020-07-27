@@ -373,19 +373,22 @@ struct tau_sampling_flagsList : vector<tau_sampling_flags*> {
          Tau_destructor_trigger();
      }
    };
-static tau_sampling_flagsList tau_sampling_tls_flags;
+static tau_sampling_flagsList & tau_sampling_tls_flags(){
+	static tau_sampling_flagsList theFlagsList;
+	return theFlagsList;
+}
 static inline struct tau_sampling_flags *tau_sampling_flags(void)
 { 
     int tid = Tau_get_local_tid();
-    while(tau_sampling_tls_flags.size()<=tid){
+    while(tau_sampling_tls_flags().size()<=tid){
         RtsLayer::LockDB();
-		tau_sampling_tls_flags.push_back(new struct tau_sampling_flags());
+		tau_sampling_tls_flags().push_back(new struct tau_sampling_flags());
         RtsLayer::UnLockDB();
 	}
-    return tau_sampling_tls_flags[tid]; }
+    return tau_sampling_tls_flags()[tid]; }
 #endif
 
-static bool samplingThrInitialized[TAU_MAX_THREADS] = { false };
+static bool samplingThrInitialized[TAU_MAX_THREADS] = { false };//DYNAPROF
 static inline bool getSamplingThrInitialized(int tid){
 	return samplingThrInitialized[tid];
 }

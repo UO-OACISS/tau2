@@ -108,17 +108,20 @@ struct TRMThreadList : vector<clockStamp*>{
      }
    };
 
-static TRMThreadList clockStampV;
+static TRMThreadList & clockStampV(){
+    static TRMThreadList TRMThreads;
+    return TRMThreads;
+}
 inline void checkTRMVector(int tid){
-	while(clockStampV.size()<=tid){
+	while(clockStampV().size()<=tid){
         RtsLayer::LockDB();
-		clockStampV.push_back(new clockStamp());
+		clockStampV().push_back(new clockStamp());
         RtsLayer::UnLockDB();
 	}
 }
 
 int metric_get_num_clocks(){
-    return clockStampV.size();
+    return clockStampV().size();
 }
 
 
@@ -154,11 +157,11 @@ double TauWindowsUsecD(void);
 
 static inline double getUserClock(int tid){
     checkTRMVector(tid);
-    return clockStampV[tid]->userClock;
+    return clockStampV()[tid]->userClock;
 }
 static inline void setUserClock(int tid, double value){
     checkTRMVector(tid);
-    clockStampV[tid]->userClock=value;
+    clockStampV()[tid]->userClock=value;
 }
 
 void metric_write_userClock(int tid, double value) {
@@ -381,16 +384,16 @@ void metric_read_ktau(int tid, int idx, double values[]) {
 
 inline double getGpuTimestamp(int tid){
     checkTRMVector(tid);
-    return clockStampV[tid]->gpu_timestamp;
+    return clockStampV()[tid]->gpu_timestamp;
 }
 inline void setGpuTimestamp(int tid, double value){
     checkTRMVector(tid);
-    clockStampV[tid]->gpu_timestamp=value;
+    clockStampV()[tid]->gpu_timestamp=value;
 }
 
 inline void setGpuCounterstamp(int tid,int idx,double value){
     checkTRMVector(tid);
-    clockStampV[tid]->gpu_counterstamp[idx] = value;
+    clockStampV()[tid]->gpu_counterstamp[idx] = value;
 }
 
 extern "C" void metric_set_gpu_timestamp(int tid, double value)
