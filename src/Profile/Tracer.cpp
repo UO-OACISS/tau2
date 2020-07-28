@@ -297,7 +297,7 @@ void TauTraceFlushBuffer(int tid)
     ret = write(getTauTraceFd(tid), getTraceBuffer(tid), (numEventsToBeFlushed) * sizeof(TAU_EV));
     if (ret < 0) {
 #ifdef DEBUG_PROF
-      TAU_VERBOSE("Error: TauTraceFd[%d] = %d, numEvents = %d ", tid, TauTraceFd[tid], numEventsToBeFlushed);
+      TAU_VERBOSE("Error: TauTraceFd[%d] = %d, numEvents = %d ", tid, getTauTraceFd(tid), numEventsToBeFlushed);
       TAU_VERBOSE("Write Error in TauTraceFlush()");
 #endif
     }
