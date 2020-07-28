@@ -39,6 +39,6 @@ $(TARGET).o : $(TARGET).cpp
 	$(CXX) $(CFLAGS) -c $(TARGET).cpp
 
 clean:
-	$(RM) $(TARGET) $(TARGET).o $(TARGET).pdb
+	$(RM) $(TARGET) $(TARGET).o $(TARGET).pdb core core.* profile.* *.trc *.edf
 
 ##############################################

@@ -35,6 +35,6 @@ $(TARGET).o : $(TARGET).c
 	$(CC) $(CFLAGS) -c $(TARGET).c
 
 clean:
-	$(RM) $(TARGET) $(TARGET).o $(TARGET).pdb core profile.* *.trc *.edf
+	$(RM) $(TARGET) $(TARGET).o $(TARGET).pdb core core.* profile.* *.trc *.edf
 
 ##############################################
