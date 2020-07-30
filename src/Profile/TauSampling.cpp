@@ -388,12 +388,33 @@ static inline struct tau_sampling_flags *tau_sampling_flags(void)
     return tau_sampling_tls_flags()[tid]; }
 #endif
 
-static bool samplingThrInitialized[TAU_MAX_THREADS] = { false };//DYNAPROF
+struct sampThrInit:vector<bool>{
+        sampThrInit(){
+         //printf("Creating tau_sampling_tls_flags at %p\n", this);
+      }
+     virtual ~sampThrInit(){
+         //printf("Destroying tau_sampling_tls_flags at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+};
+static sampThrInit & samplingThrInitialized(){
+    static sampThrInit theSamplingThrInitializedList;
+    return theSamplingThrInitializedList;
+}
+void checkSampThrInitVector(int tid){
+	while(samplingThrInitialized().size()<=tid){
+        RtsLayer::LockDB();
+		samplingThrInitialized().push_back(false);
+        RtsLayer::UnLockDB();
+	}
+}
 static inline bool getSamplingThrInitialized(int tid){
-	return samplingThrInitialized[tid];
+    checkSampThrInitVector(tid);
+	return samplingThrInitialized()[tid];
 }
 static inline void setSamplingThrInitialized(int tid, bool value){
-	samplingThrInitialized[tid]=value;
+    checkSampThrInitVector(tid);
+	samplingThrInitialized()[tid]=value;
 }
 
 /* The trace for this node, mulithreaded execution currently not supported */
