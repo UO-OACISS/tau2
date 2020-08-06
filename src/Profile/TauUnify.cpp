@@ -771,7 +771,7 @@ extern "C" int Tau_unify_unifyDefinitions_SHMEM() {
 #endif /* TAU_UNIFY */
 
 #ifdef TAU_MPC
-extern "C" int TauInitMpcThreads(int* rank) {
+/*extern "C" int TauInitMpcThreads(int* rank) {
   static bool firsttime = true;
   if (firsttime) {
     for (int i = 0; i < TAU_MAX_THREADS; i++) {
@@ -780,22 +780,31 @@ extern "C" int TauInitMpcThreads(int* rank) {
     firsttime = false;
   }
   return 0;
-}
+}*/
+struct RankList : vector<int>{ //TODO: DYNATHREAD Test this implementation with a working MPC + merged profile output
+ virtual ~RankList(){
+         //printf("Destroying RankList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+};
 
 extern "C" int TauGetMpiRank(void) {
-  static int firsttime = 1;
-  static int *rank = NULL;
+  //static int firsttime = 1;
+  static RankList rank;//int *rank = NULL;
   int retval;
 
   RtsLayer::LockDB();
   int tid = RtsLayer::myThread();
-  if (firsttime) {
+  /*if (firsttime) {
     if (rank == NULL) {
-      rank = new int[TAU_MAX_THREADS];   //TODO: DYNATHREAD
+      rank = new int[TAU_MAX_THREADS];   
       firsttime = TauInitMpcThreads(rank);
     }
-  }
-  if (rank[tid] == -1) {
+  }*/
+  if (rank.size()<=tid||rank[tid] == -1) {
+    while(rank.size()<=tid){
+        rank.push_back(-1);
+    }
     PMPI_Comm_rank(MPI_COMM_WORLD, &rank[tid]);
   }
   retval = rank[tid];
