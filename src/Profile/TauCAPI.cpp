@@ -163,20 +163,12 @@ CAPIThreadList & TheCAPIThreadList() {
     return threadList;
 }
 
-static thread_local bool locallock=false;
+//static thread_local bool locallock=false;
 void checkTCAPIVector(int tid){
     if(TheCAPIThreadList().size()<=tid){
-        if(!locallock){
-            locallock=true;
-            RtsLayer::LockDB();
-        }
-        while(TheCAPIThreadList().size()<=tid){
-            TheCAPIThreadList().push_back(new Tau_thread_status_flags());
-        }
-        if(locallock){
-            RtsLayer::UnLockDB();
-            locallock=false;
-        }
+      while(TheCAPIThreadList().size()<=tid){
+        TheCAPIThreadList().push_back(new Tau_thread_status_flags());
+      }
     }
  }
 
