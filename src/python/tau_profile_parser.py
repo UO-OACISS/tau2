@@ -112,16 +112,37 @@ class TauProfileParser(object):
         return func_name, location, timer_type
 
     @classmethod
-    def parse(cls, dir_path, filenames=None, trial=None):
+    def parse(cls, dir_path, filenames=None, trial=None, MULTI=False):
+        #default behavior is to run the profile* files first, if multi=true then it will look for MULTI__ folders
+        if MULTI:
+            return cls.multi_parse(dir_path,filenames,trial)
+        
         if not os.path.isdir(dir_path):
             print("Error: %s is not a directory." % dir_path, file=stderr)
             sys.exit(1)
+            
+        if filenames is None:
+            filenames = [os.path.basename(x) for x in glob.glob(os.path.join(dir_path, 'profile.*'))]
+        if not filenames:
+            multi_dir = [x for x in glob.glob(dir_path+'/MULTI*')]
+            
+        if filenames:
+            return cls.profile_parse(dir_path,filenames,trial)
+        elif multi_dir:
+            return cls.multi_parse(dir_path,filenames,trial)
+        else:
+            print("Error: No Profile or MULTI__ to parse.")
+            sys.exit(1)
+           
+        
+    @classmethod
+    def profile_parse(cls, dir_path, filenames=None, trial=None):
         intervals = []
         atomics = []
         indices = []
         trial_data_metric = None
         trial_data_metadata = None
-        if filenames is None:
+        if filenames is None or filenames==[]:
             filenames = [os.path.basename(x) for x in glob.glob(os.path.join(dir_path, 'profile.*'))]
         if not filenames:
             print("Error: No profile files found.")
@@ -156,11 +177,48 @@ class TauProfileParser(object):
                 intervals.append(interval)
                 atomics.append(atomic)
                 indices.append((node, context, thread))
+        
         interval_df = pandas.concat(intervals, keys=indices)
         interval_df.index.rename(['Node', 'Context', 'Thread', 'Timer'], inplace=True)
         atomic_df = pandas.concat(atomics, keys=indices)
         atomic_df.index.rename(['Node', 'Context', 'Thread', 'Timer'], inplace=True)
         return cls(trial, trial_data_metric, trial_data_metadata, indices, interval_df, atomic_df)
+    
+    
+    @classmethod
+    def multi_parse(cls, path_to_multis,filenames=None, trial=None):
+        multi_dir = [x for x in glob.glob(path_to_multis+'/MULTI*')]
+        tau_objs = [cls.profile_parse(folder,filenames,trial) for folder in multi_dir]
+        combined_metric = b', '.join([tau_obj.metric for tau_obj in tau_objs])
+        combined_metadata = tau_objs[0].metadata
+        combined_metadata['Metric Name'] = ', '.join([tau_obj.metadata['Metric Name'] for tau_obj in tau_objs])
+        combined_indices = tau_objs[0].indices
+        combined_atomic_df = tau_objs[0].atomic_data()
+        
+        combined_intervals = pandas.concat({"": tau_objs[0].interval_data().drop(['Exclusive', 'Inclusive'],axis=1)}, axis=1, 
+                                           names=['Metric','Intervals']).swaplevel('Metric','Intervals',axis=1)
+        
+        
+        # build Exclusive and inclusive dictionaires to do line 250
+        #exclusives
+        
+       # in_between_exclusive_df = pandas.concat([tau_obj.interval_data()['Exclusive'].to_frame().rename(columns={'Exclusive':combined_metadata['Metric Name'].split(', ')[tau_objs.index(tau_obj)]}) for #tau_obj in tau_objs], axis=1)
+        
+        
+        exclusive_df = pandas.concat({'Exclusive': pandas.concat([tau_obj.interval_data()['Exclusive'].to_frame().rename(columns={'Exclusive':combined_metadata['Metric Name'].split(', ')[tau_objs.index(tau_obj)]}) for tau_obj in tau_objs], axis=1)}, axis=1, names=['Intervals','Metric'])
+        
+        
+        #inclusives
+        inclusive_df = pandas.concat({'Inclusive': pandas.concat([tau_obj.interval_data()['Inclusive'].to_frame().rename(columns={'Inclusive':combined_metadata['Metric Name'].split(', ')[tau_objs.index(tau_obj)]}) for tau_obj in tau_objs], axis=1)}, axis=1, names=['Intervals','Metric'])
+        
+        #df = combined_intervals.join(pd.DataFrame(np.random.rand(3,3),columns=pd.MultiIndex.from_product([['new'], ['one','two','three']]), index=df.index))  
+        combined_intervals = pandas.concat([combined_intervals,exclusive_df,inclusive_df], axis=1)
+        
+        
+        
+        return cls(trial, combined_metric, combined_metadata, combined_indices, combined_intervals, combined_atomic_df)
+        
+        
 
 
 if __name__ == "__main__":

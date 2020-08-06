@@ -10281,14 +10281,22 @@ EOF
 		cuda_version=$(cat "$cudadir"/include/cuda.h | grep "define CUDA_VERSION")
 		vers_arr=($cuda_version)
 		cupti_event_path=""
+        cuda_arch=`arch | awk '{print tolower($0)}'`
+        cuda_uname=`uname | awk '{print tolower($0)}'`
 		if [ -f "$cudadir/extras/CUPTI/include/cupti_events.h" ] ; then
 		    # check if usual path exists, otherwise use fallback
 		    cupti_event_path="$cudadir/extras/CUPTI/include/cupti_events.h"
 		else
-		    cupti_event_path="$cudadir/extras/CUPTI.orig/include/cupti_events.h"
-		    if [ -f "$cudadir/targets/aarch64-linux/include/cupti_events.h" ]; then
-		      cupti_event_path="$cudadir/targets/aarch64-linux/include/cupti_events.h"
+		    # Check in new location for 10.2+
+		    if [ -f "$cudadir/targets/${cuda_arch}-${cuda_uname}/include/cupti_events.h" ] ; then
+		        cupti_event_path="$cudadir/targets/${cuda_arch}-${cuda_uname}/include/cupti_events.h"
+            else
+		        # Check for special cases
+		        cupti_event_path="$cudadir/extras/CUPTI.orig/include/cupti_events.h"
+		        if [ -f "$cudadir/targets/aarch64-linux/include/cupti_events.h" ]; then
+		            cupti_event_path="$cudadir/targets/aarch64-linux/include/cupti_events.h"
 	            fi
+	        fi
 		fi
 		if [ $cupti = no -a -f $cupti_event_path ] ; then
 		    tauoptions="${tauoptions}-cupti"
