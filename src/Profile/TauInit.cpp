@@ -78,6 +78,8 @@
 #include <Profile/TauPluginInternals.h>
 
 #include <vector>
+/* Added for backtrace support */
+// #include <execinfo.h>
 
 using namespace std;
 
@@ -161,7 +163,19 @@ static void tauToggleInstrumentationHandler(int sig)
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-
+  // On summit, the job scheduler will send SIGUSR2 to the application
+  // to tell it to shut down - if debugging a deadlock, uncomment this
+  // code to find out where
+#if 0
+       void* callstack[128];
+       int i, frames = backtrace(callstack, 128);
+       char** strs = backtrace_symbols(callstack, frames);
+       for (i = 0; i < frames; ++i) {
+         fprintf(stderr,"[%d,%d]:[%d,%d] %s\n", RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myNode(), RtsLayer::myThread(), strs[i]);
+       }
+       free(strs);
+  exit(0);
+#endif
   fprintf(stderr, "Caught SIGUSR2, toggling TAU instrumentation\n");
   if (RtsLayer::TheEnableInstrumentation()) {
     RtsLayer::TheEnableInstrumentation() = false;

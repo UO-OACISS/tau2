@@ -630,7 +630,7 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
     /* Initialize CUPTI handling */
     Tau_cupti_onload();
 
-    printf("Initialized CUPTI for OpenACC\n");
+    TAU_VERBOSE("Initialized CUPTI for OpenACC\n");
 
     CUptiResult cupti_err = CUPTI_SUCCESS;
 
