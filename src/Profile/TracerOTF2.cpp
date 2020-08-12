@@ -18,7 +18,7 @@
 **                                                                         **
 ****************************************************************************/
 
-// #define TAU_OTF2_DEBUG
+ #define TAU_OTF2_DEBUG
 
 #define __STDC_FORMAT_MACROS
 #include <stdio.h>
@@ -116,20 +116,7 @@ static uint64_t start_time = 0;
 // Time of last event recorded
 static uint64_t end_time = 0;
 // Type, Time of previous event
-static int previous_type[TAU_MAX_THREADS] = {0};
-static inline int getPreviousType(int tid){
-	return previous_type[tid];
-}
-static inline void setPreviousType(int tid, int value){
-	previous_type[tid]=value;
-}
-static uint64_t previous_ts[TAU_MAX_THREADS] = {0};
-static inline uint64_t getPreviousTS(int tid){
-	return previous_ts[tid];
-}
-static inline void setPreviousTS(int tid, uint64_t value){
-	previous_ts[tid]=value;
-}
+//static int previous_type[TAU_MAX_THREADS] = {0};
 
 static uint64_t global_start_time = 0;
 
@@ -146,13 +133,103 @@ struct temp_buffer_entry {
 // Temporary buffer for events prior to initialization
 // pair.first = FunctionId
 // pair.second = timestamp
-static vector<temp_buffer_entry> * temp_buffers[TAU_MAX_THREADS] = {0};
-static bool buffers_written[TAU_MAX_THREADS] = {0};
+//static vector<temp_buffer_entry> * temp_buffers[TAU_MAX_THREADS] = {0};
+//static bool buffers_written[TAU_MAX_THREADS] = {0};
+
+
+typedef pair<pair<int,int>,int> rma_win_triple_t;
+typedef map<rma_win_triple_t,uint64_t> rma_win_map_t;
+
+//static rma_win_map_t * local_rma_win_maps[TAU_MAX_THREADS];
+
+//static uint64_t next_rma_win[TAU_MAX_THREADS];
+
+
+
+
+struct otf2_thread_data{
+    int previous_type = 0;
+    uint64_t previous_ts = 0;
+    bool buffers_written = false;
+    vector<temp_buffer_entry> * temp_buffers=NULL;
+    uint64_t next_rma_win;
+    rma_win_map_t * local_rma_win_maps;
+};
+
+struct OTF2ThreadList : vector<otf2_thread_data *>{
+    OTF2ThreadList (const OTF2ThreadList&) = delete;
+    OTF2ThreadList& operator= (const OTF2ThreadList&) = delete;
+    OTF2ThreadList(){
+         //printf("Creating OTF2ThreadList at %p\n", this);
+      }
+     virtual ~OTF2ThreadList(){
+         //printf("Destroying OTF2ThreadList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
+
+// Static holder for snapshot file handles
+static OTF2ThreadList & Tau_otf2_getThreadData() {
+  static OTF2ThreadList otf2ThreadList;
+  TAU_VERBOSE("Tau_otf2_getThreadData() end: out=%p\n", &Tau_otf2_getThreadData); 
+  return otf2ThreadList;
+}
+
+static inline void checkOtf2ThreadDataVector(int tid){
+	while(Tau_otf2_getThreadData().size()<=tid){
+        RtsLayer::LockDB();
+		Tau_otf2_getThreadData().push_back(new otf2_thread_data());
+        RtsLayer::UnLockDB();
+	}
+}
+
+static inline int getPreviousType(int tid){
+    checkOtf2ThreadDataVector(tid);
+	return Tau_otf2_getThreadData()[tid]->previous_type;
+}
+static inline void setPreviousType(int tid, int value){
+    checkOtf2ThreadDataVector(tid);
+	Tau_otf2_getThreadData()[tid]->previous_type=value;
+}
+//static uint64_t previous_ts[TAU_MAX_THREADS] = {0};
+static inline uint64_t getPreviousTS(int tid){
+    checkOtf2ThreadDataVector(tid);
+	return Tau_otf2_getThreadData()[tid]->previous_ts;
+}
+static inline void setPreviousTS(int tid, uint64_t value){
+    checkOtf2ThreadDataVector(tid);
+	Tau_otf2_getThreadData()[tid]->previous_ts=value;
+}
+
 static inline bool getBuffersWritten(int tid){
-	return buffers_written[tid];
+    checkOtf2ThreadDataVector(tid);
+	return Tau_otf2_getThreadData()[tid]->buffers_written;
 }
 static inline void setBuffersWritten(int tid, bool value){
-	buffers_written[tid]=value;
+    checkOtf2ThreadDataVector(tid);
+	Tau_otf2_getThreadData()[tid]->buffers_written=value;
+}
+
+static inline vector<temp_buffer_entry>*& getTempBuffer(int tid){
+    checkOtf2ThreadDataVector(tid);
+    return Tau_otf2_getThreadData()[tid]->temp_buffers;
+}
+
+static inline rma_win_map_t * getLocalRMAWinMaps(int tid){
+    checkOtf2ThreadDataVector(tid);
+	return Tau_otf2_getThreadData()[tid]->local_rma_win_maps;
+}
+static inline void setLocalRMAWinMaps(int tid,rma_win_map_t * value){
+    checkOtf2ThreadDataVector(tid);
+	Tau_otf2_getThreadData()[tid]->local_rma_win_maps=value;
+}
+static inline uint64_t getNextRMAWin(int tid){
+    checkOtf2ThreadDataVector(tid);
+	return Tau_otf2_getThreadData()[tid]->next_rma_win;
+}
+static inline void setNextRMAWin(int tid, uint64_t value){
+    checkOtf2ThreadDataVector(tid);
+	Tau_otf2_getThreadData()[tid]->next_rma_win=value;
 }
 
 // For unification data
@@ -187,23 +264,7 @@ static metric_param_map_t global_metric_param_map;
 typedef set<uint64_t> metrics_seen_t;
 static metrics_seen_t metrics_seen;
 
-typedef pair<pair<int,int>,int> rma_win_triple_t;
-typedef map<rma_win_triple_t,uint64_t> rma_win_map_t;
 static rma_win_map_t rma_win_map;
-static rma_win_map_t * local_rma_win_maps[TAU_MAX_THREADS];
-static inline rma_win_map_t * getLocalRMAWinMaps(int tid){
-	return local_rma_win_maps[tid];
-}
-static inline void setLocalRMAWinMaps(int tid,rma_win_map_t * value){
-	local_rma_win_maps[tid]=value;
-}
-static uint64_t next_rma_win[TAU_MAX_THREADS];
-static inline uint64_t getNextRMAWin(int tid){
-	return next_rma_win[tid];
-}
-static inline void setNextRMAWin(int tid, uint64_t value){
-	next_rma_win[tid]=value;
-}
 static uint64_t total_rma_wins;
 
 static rma_win_triple_t make_triple(const int x, const int y, const int z) {
@@ -219,20 +280,23 @@ extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_addr
 
 static inline OTF2_LocationRef my_location_offset() {
     const int64_t myNode = RtsLayer::myNode();
-    return myNode == -1 ? 0 : (myNode * TAU_MAX_THREADS);//TODO: DYNATHREAD 
+    const int64_t myThread = RtsLayer::myThread();
+    int totNodes=tau_totalnodes(0,0);
+    printf("Max Nodes: %d\n",totNodes);
+    return myNode == -1 ? 0 : (myThread * tau_totalnodes(0,0));//(myNode * TAU_MAX_THREADS);//TODO: DYNATHREAD 
 }
 
 static inline OTF2_LocationRef my_real_location( int64_t myNode, int64_t myThread ) {
      //const int64_t myNode = RtsLayer::myNode();
      //const int64_t myThread = RtsLayer::myThread();
-     return myNode == -1 ? myThread : (myNode * TAU_MAX_THREADS) + myThread;
+     return myNode == -1 ? myThread : (myThread * tau_totalnodes(0,0)) + myNode; //(myNode * TAU_MAX_THREADS) + myThread;
  }
 
 
 static inline OTF2_LocationRef my_location() {
     const int64_t myNode = RtsLayer::myNode();
     const int64_t myThread = RtsLayer::myThread();
-    return myNode == -1 ? myThread : (myNode * TAU_MAX_THREADS) + myThread;
+    return myNode == -1 ? myThread : (myThread * tau_totalnodes(0,0)) + myNode; //(myNode * TAU_MAX_THREADS) + myThread;
 }
 
 static inline uint32_t my_node() {
@@ -596,11 +660,11 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
 #endif
     TauInternalFunctionGuard protects_this_function;
     setBuffersWritten(tid, true);
-    if(temp_buffers[tid] == NULL) {
+    if(getTempBuffer(tid) == NULL) {
         return; // Nothing was saved for this thread
     }
     x_uint64 last_ts = 0;
-    for(vector<temp_buffer_entry>::const_iterator it = temp_buffers[tid]->begin(); it != temp_buffers[tid]->end(); ++it) {
+    for(vector<temp_buffer_entry>::const_iterator it = getTempBuffer(tid)->begin(); it != getTempBuffer(tid)->end(); ++it) {
       int kind = it->kind == TAU_TRACE_EVENT_KIND_USEREVENT ? TAU_TRACE_EVENT_KIND_TEMP_USEREVENT : TAU_TRACE_EVENT_KIND_TEMP_FUNC;
       TauTraceOTF2EventWithNodeId(it->ev, it->par, tid, it->ts, true, node_id, kind);
       last_ts = it->ts;
@@ -609,7 +673,7 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
 #if defined(TAU_SHMEM)
     OTF2_EvtWriter_RmaWinCreate(evt_writer, NULL, last_ts+1, TAU_OTF2_COMM_WIN);
 #endif
-    delete temp_buffers[tid];
+    delete getTempBuffer(tid);
 }
 
 extern "C" int Tau_is_thread_fake(int t);
@@ -676,11 +740,11 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
    }
    else
    {
-    if(temp_buffers[tid] == NULL) {
-        temp_buffers[tid] = new vector<temp_buffer_entry>();
+    if(getTempBuffer(tid) == NULL) {
+        getTempBuffer(tid) = new vector<temp_buffer_entry>();
     }
     x_uint64 my_ts = fix_zero_timestamp(use_ts ? ts : TauTraceGetTimeStamp(tid), tid);
-    temp_buffers[tid]->push_back(temp_buffer_entry(ev, my_ts, par, kind));
+    getTempBuffer(tid)->push_back(temp_buffer_entry(ev, my_ts, par, kind));
     return;
    }
 #else
@@ -958,6 +1022,10 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, 0, "" ));
 
     const int nodes = tau_totalnodes(0, 0);
+    int max_threads=*max_element(num_locations,num_locations+nodes);
+    #ifdef TAU_OTF2_DEBUG
+        fprintf(stderr, "Global max threads: %d\n", max_threads);
+    #endif
     for(int node = 0; node < nodes; ++node) {
         // System Tree Node
         char namebuf[256];
@@ -975,7 +1043,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, groupName, namebuf));
         OTF2_EC(OTF2_GlobalDefWriter_WriteLocationGroup(global_def_writer, node, groupName, OTF2_LOCATION_GROUP_TYPE_PROCESS, node));
 
-        const int start_loc = node * TAU_MAX_THREADS; //TODO: DYNATHREAD
+        const int start_loc = node * max_threads;//TAU_MAX_THREADS; //TODO: DYNATHREAD 
         const int end_loc = start_loc + num_locations[node];
         int thread_num = 0;
         for(int loc = start_loc; loc < end_loc; ++loc) {
@@ -1114,7 +1182,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     uint64_t nodes_list[nodes];
     uint64_t ranks_list[nodes];
     for(int i = 0; i < nodes; ++i) {
-        nodes_list[i] = i * TAU_MAX_THREADS;//TODO: DYNATHREAD
+        nodes_list[i] = i * max_threads;//TAU_MAX_THREADS;//TODO: DYNATHREAD
         ranks_list[i] = i;
     }
     OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_LOCS, locsGroupName, OTF2_GROUP_TYPE_COMM_LOCATIONS, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, nodes_list));
