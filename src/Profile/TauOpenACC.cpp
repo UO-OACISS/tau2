@@ -148,22 +148,37 @@ Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info
     }
 }
 
-extern void Tau_pure_start_task_string(const std::string name, int tid);
-static std::string acc_ev_enqueue_upload_str("OpenACC enqueue data transfer (HtoD)");
-static std::string acc_ev_enqueue_download_str("OpenACC enqueue data transfer (DtoH)");
+std::map<int, void*>& get_safe_profiler_map(void) {
+    static std::map<int, void*> theMap;
+    return theMap;
+}
+
+void populate_safe_profiler_map(void) {
+    std::map<int, void*>& theMap = get_safe_profiler_map();
+    theMap[acc_ev_enqueue_upload_start] =
+        Tau_pure_search_for_function("OpenACC enqueue data transfer (HtoD)", 1);
+    theMap[acc_ev_enqueue_download_start] =
+        Tau_pure_search_for_function("OpenACC enqueue data transfer (DtoH)", 1);
+}
 
     extern "C" static void
 Tau_openacc_data_callback_signal_safe( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info )
 {
+    std::map<int, void*>& theMap = get_safe_profiler_map();
     switch(prof_info->event_type) {
         case acc_ev_enqueue_upload_start:
-            Tau_pure_start_task_string(acc_ev_enqueue_upload_str, Tau_get_thread());
+            Tau_start_timer(theMap[acc_ev_enqueue_upload_start], 0, Tau_get_thread());
             break;
         case acc_ev_enqueue_download_start:
-            Tau_pure_start_task_string(acc_ev_enqueue_download_str, Tau_get_thread());
+            Tau_start_timer(theMap[acc_ev_enqueue_download_start], 0, Tau_get_thread());
+            break;
+        case acc_ev_enqueue_upload_end:
+            Tau_stop_timer(theMap[acc_ev_enqueue_upload_start], Tau_get_thread());
+            break;
+        case acc_ev_enqueue_download_end:
+            Tau_stop_timer(theMap[acc_ev_enqueue_download_start], Tau_get_thread());
             break;
         default:
-            Tau_global_stop();
             break;
     }
 }
@@ -573,10 +588,12 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
     reg( acc_ev_enqueue_launch_start,      Tau_openacc_launch_callback, acc_reg );
     reg( acc_ev_enqueue_launch_end,        Tau_openacc_launch_callback, acc_reg );
 
-    /* The data events aren't signal safe, for some reason.  So, that means we can't
+    /* The data events aren't signal safe, likely because the memory transfers
+     * happen as a page fault, which is a signal.  So, that means we can't
      * allocate any memory, which limits what we can do.  For that reason, we only
-     * handle some events, and with static timer names. */
+     * handle some events, and with static, preallocated timers. */
     // Data events
+    populate_safe_profiler_map();
     reg( acc_ev_enqueue_upload_start,      Tau_openacc_data_callback_signal_safe, acc_reg );
     reg( acc_ev_enqueue_upload_end,        Tau_openacc_data_callback_signal_safe, acc_reg );
     reg( acc_ev_enqueue_download_start,    Tau_openacc_data_callback_signal_safe, acc_reg );
@@ -613,7 +630,7 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
     /* Initialize CUPTI handling */
     Tau_cupti_onload();
 
-    printf("Initialized CUPTI for OpenACC\n");
+    TAU_VERBOSE("Initialized CUPTI for OpenACC\n");
 
     CUptiResult cupti_err = CUPTI_SUCCESS;
 

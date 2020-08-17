@@ -1211,7 +1211,7 @@ extern "C" void Tau_enable_plugin_for_specific_event(int ev, const char *name, u
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
-  plugins_for_named_specific_event[key].insert(id);
+  Tau_get_plugins_for_named_specific_event()[key].insert(id);
   if(plugins_for_ompt_event[ev].is_ompt())
     plugins_for_ompt_event[ev].insert(id);
   RtsLayer::UnLockDB();
@@ -1224,7 +1224,7 @@ extern "C" void Tau_disable_plugin_for_specific_event(int ev, const char *name, 
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
-  plugins_for_named_specific_event[key].erase(id);
+  Tau_get_plugins_for_named_specific_event()[key].erase(id);
   if(plugins_for_ompt_event[ev].is_ompt())
     plugins_for_ompt_event[ev].erase(id);
   RtsLayer::UnLockDB();
@@ -1237,7 +1237,7 @@ extern "C" void Tau_disable_all_plugins_for_specific_event(int ev, const char *n
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
-  plugins_for_named_specific_event[key].clear();
+  Tau_get_plugins_for_named_specific_event()[key].clear();
   if(plugins_for_ompt_event[ev].is_ompt())
     plugins_for_ompt_event[ev].clear();
   RtsLayer::UnLockDB();
@@ -1251,7 +1251,7 @@ extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *na
 
   RtsLayer::LockDB();
   for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
-    plugins_for_named_specific_event[key].insert(i);
+    Tau_get_plugins_for_named_specific_event()[key].insert(i);
   }
 
   if(plugins_for_ompt_event[ev].is_ompt()) {
@@ -1268,7 +1268,7 @@ extern "C" void Tau_enable_plugin_for_trigger_event(int ev, size_t hash, unsigne
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
-  plugins_for_named_specific_event[key].insert(id);
+  Tau_get_plugins_for_named_specific_event()[key].insert(id);
   RtsLayer::UnLockDB();
 
 }
@@ -1278,7 +1278,7 @@ extern "C" void Tau_disable_plugin_for_trigger_event(int ev, size_t hash, unsign
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
-  plugins_for_named_specific_event[key].erase(id);
+  Tau_get_plugins_for_named_specific_event()[key].erase(id);
   RtsLayer::UnLockDB();
 
 }
@@ -1288,7 +1288,7 @@ extern "C" void Tau_disable_all_plugins_for_trigger_event(int ev, size_t hash)
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
-  plugins_for_named_specific_event[key].clear();
+  Tau_get_plugins_for_named_specific_event()[key].clear();
   RtsLayer::UnLockDB();
 }
 
@@ -1299,7 +1299,7 @@ extern "C" void Tau_enable_all_plugins_for_trigger_event(int ev, size_t hash)
 
   RtsLayer::LockDB();
   for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
-    plugins_for_named_specific_event[key].insert(i);
+    Tau_get_plugins_for_named_specific_event()[key].insert(i);
   }
   RtsLayer::UnLockDB();
 }
@@ -3017,6 +3017,9 @@ extern "C" int Tau_get_local_tid(void) {
 #ifdef TAU_OPENMP
 //extern "C" void Tau_finalize_collector_api(void);
 #endif
+#ifdef TAU_USE_OMPT_5_0
+extern void Tau_ompt_finalize(void);
+#endif
 
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
@@ -3024,6 +3027,9 @@ void Tau_destructor_trigger() {
   Tau_flush_gpu_activity();
 // First, make sure all thread timers have stopped
   Tau_profile_exit_all_threads();
+#ifdef TAU_USE_OMPT_5_0
+  Tau_ompt_finalize();
+#endif
 #ifdef TAU_OPENMP
   //Tau_finalize_collector_api();
 #endif

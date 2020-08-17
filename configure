@@ -4379,7 +4379,24 @@ if [ $intel_cxx = 1 ] ; then
     fi
 fi
 
-if [ $mpi = yes -a "x$mpiinc" = "x" ] ; then
+case "x$cxx_compiler" in
+  "xmpicxx")
+    mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
+  "xmpiicpc")
+    mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
+  "xicpc")
+    mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
+  "xxlC"*)
+    mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
+  *)
+    mpi_wrapper_mpicxx_or_mpiicpc=no ;;
+esac
+
+#echo $mpi_wrapper_mpicxx_or_mpiicpc
+#echo $cxx_compiler
+#kill -9 $$
+
+if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes" ] ; then
     cxxloaded=`which $mpicxx_exe 2>/dev/null | wc -l`
     mpi=yes
     if [ $cxxloaded = 1 ]
@@ -4627,7 +4644,7 @@ case $cxx_compiler in
 	fi
 	compilerLocation=`which $ibm_compiler`
 
-	if [ "x$compilerLocation" = "x/usr/bin/$ibm_compiler" ] ; then
+	if [ "x$compilerLocation" = "x/usr/bin/$ibm_compiler" -o "x$compilerLocation" = "x/bin/$ibm_compiler" ] ; then
 	    # if xlc or blrts_xlc is found in /usr/bin, it is likely a
 	    # symlink.  Since we use ../lib to locate the libraries
 	    # we will dereference the symlink once.  Don't do it more
@@ -4648,7 +4665,7 @@ case $cxx_compiler in
 	fi
 
 
-	extradircxx=`echo $compilerLocation | sed s/$ibm_compiler/../`
+	extradircxx=`echo $compilerLocation | sed -e 's/$ibm_compiler/../' -e 's@bin/xlc$@bin/..@'`
 
         if [ "$machine" = ibm64linux ] ; then
            if [ ! -r $extradircxx/lib/libibmc++.a ]; then
@@ -8640,7 +8657,7 @@ if [ $mpi = yes ] ; then
 			fi
 
 			echo "NOTE: OpenMPI configured with --disable_shared"
-			mpilibrary="$LIBMPICXX -lmpi -lopen-rte -lopen-pal -lrt -ldl -lpthread -lutil"
+			mpilibrary="$LIBMPICXX -lmpi -lopen-rte -lopen-pal -ldl -lpthread -lutil"
 			# check for -libverbs, sometimes necessary with OpenMPI
 			if [ $machine != bgq -a $machine != craycnl ] ; then
 			    if [ -r /usr/lib64/libibverbs.a -o -r /usr/lib64/libibverbs.so ] ; then
@@ -10264,14 +10281,22 @@ EOF
 		cuda_version=$(cat "$cudadir"/include/cuda.h | grep "define CUDA_VERSION")
 		vers_arr=($cuda_version)
 		cupti_event_path=""
+        cuda_arch=`arch | awk '{print tolower($0)}'`
+        cuda_uname=`uname | awk '{print tolower($0)}'`
 		if [ -f "$cudadir/extras/CUPTI/include/cupti_events.h" ] ; then
 		    # check if usual path exists, otherwise use fallback
 		    cupti_event_path="$cudadir/extras/CUPTI/include/cupti_events.h"
 		else
-		    cupti_event_path="$cudadir/extras/CUPTI.orig/include/cupti_events.h"
-		    if [ -f "$cudadir/targets/aarch64-linux/include/cupti_events.h" ]; then
-		      cupti_event_path="$cudadir/targets/aarch64-linux/include/cupti_events.h"
+		    # Check in new location for 10.2+
+		    if [ -f "$cudadir/targets/${cuda_arch}-${cuda_uname}/include/cupti_events.h" ] ; then
+		        cupti_event_path="$cudadir/targets/${cuda_arch}-${cuda_uname}/include/cupti_events.h"
+            else
+		        # Check for special cases
+		        cupti_event_path="$cudadir/extras/CUPTI.orig/include/cupti_events.h"
+		        if [ -f "$cudadir/targets/aarch64-linux/include/cupti_events.h" ]; then
+		            cupti_event_path="$cudadir/targets/aarch64-linux/include/cupti_events.h"
 	            fi
+	        fi
 		fi
 		if [ $cupti = no -a -f $cupti_event_path ] ; then
 		    tauoptions="${tauoptions}-cupti"
@@ -11527,6 +11552,7 @@ if [ "x$download_dwarf" = xyes ] ; then
               fi
             else
               echo "Found /usr/include/libelf.h"
+              libelfdir=/usr
             fi
 # End of libelf check. Continue with libdwarf build.
             if [ $elf=yes ]; then

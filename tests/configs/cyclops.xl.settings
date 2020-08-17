@@ -1,10 +1,13 @@
 #!/bin/bash -e
 
 module purge
-module load mvapich2/2.3.3-xl16.01
+module load openmpi/4.0.1-xl16
+#module load mvapich2/2.3.3-xl16.01
+#module load xscale-ai
 module load gcc/7.3
 module load python/3.8.0_shared
 module load cuda/10.1
+#module load cuda/9.2
 BFD=/usr/local/packages/binutils/2.34
 PDT=/usr/local/packages/pdtoolkit-3.25.1_gcc7.3
 OTF2=/usr/local/packages/otf2/2.1-ppc64le
@@ -15,14 +18,14 @@ export CXX=xlC_r
 export FC=ibm64
 export COMPILER=xl
 
-export TAU_OPTIONS="-optRevert -optShared"
+export TAU_OPTIONS="-optRevert"
 
 # Enable the things that Spack enables by default
 base_support="-bfd=${BFD} -iowrapper -pdt=${PDT} -pdt_c++=g++ -otf=${OTF2}"
 
 # Which tests to run?
 export basic_test_programs="mm"
-export mpi_test_programs="mm"
+export mpi_test_programs="mm ring_fortran"
 export python_test_programs="python"
 export cuda_test_programs="cuda"
 

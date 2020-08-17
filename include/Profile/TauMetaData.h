@@ -111,9 +111,8 @@ public :
 	}
 	this->clear();
   }
-  virtual ~MetaDataRepo() {
-    this->shallowEmpty();
-    //Tau_destructor_trigger();
+  ~MetaDataRepo(void) {
+      this->shallowEmpty();
   }
 };
 

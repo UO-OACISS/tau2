@@ -107,6 +107,12 @@ elif [ "$2" == "test" ] ; then
     elif [ "${config}" == "python" ] ; then
         export PROGRAMS=${python_test_programs}
     elif [ "${config}" == "cuda" ] ; then
+        if [ "${compiler}" == "xl" ] ; then
+            # The mvapich2 module messes up cuda
+            module unload mvapich2
+            # reload cuda
+            module load cuda/10.1
+        fi
         export PROGRAMS=${cuda_test_programs}
     fi
     echo "Running tests..."
