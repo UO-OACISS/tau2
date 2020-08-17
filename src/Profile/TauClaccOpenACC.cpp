@@ -95,7 +95,7 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
   if (prof_info) {
     TAU_VERBOSE("Device=%d ", prof_info->device_number);
     TAU_VERBOSE("Thread=%d ", prof_info->thread_id); /* Seems to be always set to 0 */
-    srcinfo << prof_info->func_name << " [{" << prof_info->src_file << ":" << prof_info->line_no << "}";
+    srcinfo << " " << prof_info->func_name << " [{" << prof_info->src_file << ":" << prof_info->line_no << "}";
     TAU_VERBOSE( "src info: %s\n", srcinfo.str().c_str() );
     TAU_VERBOSE( "Line nb %d\n", prof_info->line_no );
     lineinfo << " {" << prof_info->line_no << ":" << prof_info->func_line_no << "}";
