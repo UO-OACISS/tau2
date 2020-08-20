@@ -18,7 +18,7 @@
 **                                                                         **
 ****************************************************************************/
 
- #define TAU_OTF2_DEBUG
+//#define TAU_OTF2_DEBUG
 
 #define __STDC_FORMAT_MACROS
 #include <stdio.h>
@@ -282,13 +282,14 @@ static inline OTF2_LocationRef my_location_offset() {
     const int64_t myNode = RtsLayer::myNode();
     const int64_t myThread = RtsLayer::myThread();
     int totNodes=tau_totalnodes(0,0);
-    printf("Max Nodes: %d\n",totNodes);
+    //printf("Max Nodes: %d\n",totNodes);
     return myNode == -1 ? 0 : (myThread * tau_totalnodes(0,0));//(myNode * TAU_MAX_THREADS);//TODO: DYNATHREAD 
 }
 
 static inline OTF2_LocationRef my_real_location( int64_t myNode, int64_t myThread ) {
      //const int64_t myNode = RtsLayer::myNode();
      //const int64_t myThread = RtsLayer::myThread();
+     //printf("OTF2 Location: myNode: %ld, myThread: %ld, global: %ld\n",myNode,myThread, myNode==-1 ? myThread : (myThread * tau_totalnodes(0,0)) + myNode);
      return myNode == -1 ? myThread : (myThread * tau_totalnodes(0,0)) + myNode; //(myNode * TAU_MAX_THREADS) + myThread;
  }
 
@@ -296,7 +297,7 @@ static inline OTF2_LocationRef my_real_location( int64_t myNode, int64_t myThrea
 static inline OTF2_LocationRef my_location() {
     const int64_t myNode = RtsLayer::myNode();
     const int64_t myThread = RtsLayer::myThread();
-    return myNode == -1 ? myThread : (myThread * tau_totalnodes(0,0)) + myNode; //(myNode * TAU_MAX_THREADS) + myThread;
+    return my_real_location(myNode,myThread);//myNode == -1 ? myThread : (myThread * tau_totalnodes(0,0)) + myNode; //(myNode * TAU_MAX_THREADS) + myThread;
 }
 
 static inline uint32_t my_node() {
@@ -1043,10 +1044,11 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, groupName, namebuf));
         OTF2_EC(OTF2_GlobalDefWriter_WriteLocationGroup(global_def_writer, node, groupName, OTF2_LOCATION_GROUP_TYPE_PROCESS, node));
 
-        const int start_loc = node * max_threads;//TAU_MAX_THREADS; //TODO: DYNATHREAD 
-        const int end_loc = start_loc + num_locations[node];
+        //const int start_loc = my_real_location(node,0);//node + num_locations[node];//max_threads;//TAU_MAX_THREADS; //TODO: DYNATHREAD 
+        //const int end_loc = start_loc + num_locations[node];
         int thread_num = 0;
-        for(int loc = start_loc; loc < end_loc; ++loc) {
+        for(int it_thread = 0; it_thread < num_locations[node]; ++it_thread) {
+            int loc=my_real_location(node,it_thread);
 		    OTF2_LocationType_enum thread_type = OTF2_LOCATION_TYPE_CPU_THREAD;
             if(nodes < 2 && thread_num == 0) {
                 snprintf(namebuf, 256, "Master thread 0");
@@ -1182,7 +1184,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     uint64_t nodes_list[nodes];
     uint64_t ranks_list[nodes];
     for(int i = 0; i < nodes; ++i) {
-        nodes_list[i] = i * max_threads;//TAU_MAX_THREADS;//TODO: DYNATHREAD
+        nodes_list[i] = i * num_locations[nodes];//max_threads;//TAU_MAX_THREADS;//TODO: DYNATHREAD
         ranks_list[i] = i;
     }
     OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_LOCS, locsGroupName, OTF2_GROUP_TYPE_COMM_LOCATIONS, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, nodes_list));
@@ -1269,10 +1271,11 @@ static void TauTraceOTF2WriteLocalDefinitions() {
             const uint64_t global_id = global_region_map_ref.find(string(fi->GetName()))->second;
             OTF2_EC(OTF2_IdMap_AddIdPair(loc_region_map, local_id, global_id));
         }
-        const int start_loc = my_location();
+        const int start_loc = 0;//my_location();
         const int end_loc = start_loc + RtsLayer::getTotalThreads();
         for(int loc = start_loc; loc < end_loc; ++loc) {
-            OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
+            int gloc = my_real_location(my_node(),loc);
+            OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, gloc);
             OTF2_EC(OTF2_DefWriter_WriteMappingTable(def_writer, OTF2_MAPPING_REGION, loc_region_map));
         }
         OTF2_IdMap_Free(loc_region_map);
@@ -1299,10 +1302,11 @@ static void TauTraceOTF2WriteLocalDefinitions() {
             const uint64_t global_id = global_id_iter->second;
             OTF2_EC(OTF2_IdMap_AddIdPair(loc_metric_map, local_id, global_id));
         }
-        const int start_loc = my_location();
+        const int start_loc = 0;//my_location();
         const int end_loc = start_loc + RtsLayer::getTotalThreads();
         for(int loc = start_loc; loc < end_loc; ++loc) {
-            OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
+            int gloc = my_real_location(my_node(),loc);
+            OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, gloc);
             OTF2_EC(OTF2_DefWriter_WriteMappingTable(def_writer, OTF2_MAPPING_METRIC, loc_metric_map));
         }
         OTF2_IdMap_Free(loc_metric_map);
@@ -1310,10 +1314,11 @@ static void TauTraceOTF2WriteLocalDefinitions() {
 
     // Write RMA window mapping table
     if(rma_win_map.size() > 0) {
-        const int start_loc = my_location();
+        const int start_loc = 0;//my_location();
         const int end_loc = start_loc + RtsLayer::getTotalThreads();
         int loc_tid = 0;
         for(int loc = start_loc; loc < end_loc; ++loc) {
+            int gloc = my_real_location(my_node(),loc);
             rma_win_map_t * local_map = getLocalRMAWinMaps(loc_tid++);
             if(local_map == NULL) {
                 continue;
@@ -1335,16 +1340,17 @@ static void TauTraceOTF2WriteLocalDefinitions() {
                 const uint64_t global_id = global_it->second;
                 OTF2_EC(OTF2_IdMap_AddIdPair(loc_rma_map, local_id, global_id));
             }
-            OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
+            OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, gloc);
             OTF2_EC(OTF2_DefWriter_WriteMappingTable(def_writer, OTF2_MAPPING_RMA_WIN, loc_rma_map));
         }
     }
 
     // Close local definition writers
-    const int start_loc = my_location();
+    const int start_loc = 0;//my_location();
     const int end_loc = start_loc + RtsLayer::getTotalThreads();
     for(int loc = start_loc; loc < end_loc; ++loc) {
-        OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
+        int gloc = my_real_location(my_node(),loc);
+        OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, gloc);
         OTF2_EC(OTF2_Archive_CloseDefWriter(otf2_archive, def_writer));
     }
 
@@ -1894,7 +1900,8 @@ void TauTraceOTF2ShutdownComms(int tid) {
   // initialization, and end after MPI/OTF2 finalization.  We want to capture them.
   // The progress threads in Open MPI 4 are such threads.
   if(TauEnv_get_set_node()==-1){
-    for (int tid = 0; tid < TAU_MAX_THREADS; tid++) {//TODO: DYNATHREAD
+    int threadCount=Tau_otf2_getThreadData().size();
+    for (int tid = 0; tid < threadCount; tid++) {//TODO: DYNATHREAD
       if(!getBuffersWritten(tid)) {
         TauTraceOTF2WriteTempBuffer(tid, my_node());
       }
