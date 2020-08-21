@@ -83,7 +83,7 @@ if [ $python_wrapper = "true" ] ; then
   echo "        -adios2_trace Write trace output to ADIOS2 archive"
   echo "        -monitoring   Periodically read available OS/HW monitoring counters"
   echo "        -sqlite3      Write profile data to SQLite3 database"
-  echo "        -pooky2       Write trace event data to pooky files"
+  echo "        -skel         Write trace event data to skeleton files"
 fi
   echo ""
   echo "Notes:"
@@ -325,7 +325,7 @@ ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 adios2=false
 monitoring=false
 sqlite3=false
-pooky2=false
+skel=false
 adios2_trace=false
 sos=false
 
@@ -405,8 +405,8 @@ for arg in "$@" ; do
         sqlite3=true
         shift
         ;;
-      -pooky2)
-        pooky2=true
+      -skel)
+        skel=true
         shift
         ;;
       -adios2)
@@ -778,12 +778,13 @@ if [ $sqlite3 = "true" ]; then
     unset TAU_PROFILE_FORMAT
 fi
 
-if [ $pooky2 = "true" ]; then
-    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-pooky2-plugin${TAU_SHLIBX}
+if [ $skel = "true" ]; then
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-skel-plugin${TAU_SHLIBX}
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
     # Because we are writing the data to SQLite, disable profile output
     export TAU_PROFILE=0
     unset TAU_PROFILE_FORMAT
+    export TAU_CURRENT_TIMER_EXIT_PARAMS=1
     export TAU_TRACE=0
 fi
 

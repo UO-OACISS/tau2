@@ -36,7 +36,7 @@ int commsize = 1;
 std::mutex mtx;           // mutex for critical section
 static int step = 0;
 
-int Tau_plugin_pooky2_dump(Tau_plugin_event_dump_data_t* data) {
+int Tau_plugin_skel_dump(Tau_plugin_event_dump_data_t* data) {
     step = step + 1;
 }
 
@@ -52,10 +52,10 @@ static void open_file() {
     std::stringstream filename;
     // make the directory
     struct stat st = {0};
-    if (stat("pooky2", &st) == -1) {
-        mkdir("pooky2", 0700);
+    if (stat("skel", &st) == -1) {
+        mkdir("skel", 0700);
     }
-    filename << "pooky2/rank" << std::setfill('0')
+    filename << "skel/rank" << std::setfill('0')
              << std::setw(5) << commrank << ".trace";
     tracefile.open(filename.str());
     opened = true;
@@ -87,25 +87,25 @@ static void close_file() {
     Tau_global_decr_insideTAU();
 }
 
-int Tau_plugin_pooky2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t* data) {
+int Tau_plugin_skel_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t* data) {
     close_file();
     return 0;
 }
 
-int Tau_plugin_pooky2_end_of_execution(Tau_plugin_event_end_of_execution_data_t* data) {
+int Tau_plugin_skel_end_of_execution(Tau_plugin_event_end_of_execution_data_t* data) {
     close_file();
     return 0;
 }
 
 /* This happens after MPI_Init, and after all TAU metadata variables have been
  * read */
-int Tau_plugin_pooky2_post_init(Tau_plugin_event_post_init_data_t* data) {
+int Tau_plugin_skel_post_init(Tau_plugin_event_post_init_data_t* data) {
     open_file();
     return 0;
 }
 
 /* This happens for special events from ADIOS, MPI */
-int Tau_plugin_pooky2_current_timer_exit(Tau_plugin_event_current_timer_exit_data_t* data) {
+int Tau_plugin_skel_current_timer_exit(Tau_plugin_event_current_timer_exit_data_t* data) {
     if (!enabled) return 0;
     Tau_global_incr_insideTAU();
     // get the current profiler
@@ -133,15 +133,15 @@ int Tau_plugin_pooky2_current_timer_exit(Tau_plugin_event_current_timer_exit_dat
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_global_incr_insideTAU();
     Tau_plugin_callbacks_t cb;
-    TAU_VERBOSE("TAU PLUGIN Pooky2 Init\n");
+    TAU_VERBOSE("TAU PLUGIN Skel Init\n");
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(&cb);
     /* Required event support */
-    cb.PostInit = Tau_plugin_pooky2_post_init;
-    cb.PreEndOfExecution = Tau_plugin_pooky2_pre_end_of_execution;
-    cb.EndOfExecution = Tau_plugin_pooky2_end_of_execution;
-    cb.CurrentTimerExit = Tau_plugin_pooky2_current_timer_exit;
-    cb.Dump = Tau_plugin_pooky2_dump;
+    cb.PostInit = Tau_plugin_skel_post_init;
+    cb.PreEndOfExecution = Tau_plugin_skel_pre_end_of_execution;
+    cb.EndOfExecution = Tau_plugin_skel_end_of_execution;
+    cb.CurrentTimerExit = Tau_plugin_skel_current_timer_exit;
+    cb.Dump = Tau_plugin_skel_dump;
 
     /* Register the callback object */
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(&cb, id);
