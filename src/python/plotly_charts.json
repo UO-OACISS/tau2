@@ -1,0 +1,101 @@
+{
+    "figures" : [
+        {
+        "name" : "CPU Utilization",
+        "filename" : "cpu_utilization",
+        "granularity" : "node",
+        "legend columns" : 3,
+        "x axis" : "Node",
+        "y axis" : "Percent",
+        "error bar" : false,
+        "variables" : [
+            "cpu: Guest % / Mean",
+            "cpu: I/O Wait % / Mean",
+            "cpu: IRQ % / Mean",
+            "cpu: Idle % / Mean",
+            "cpu: Nice % / Mean",
+            "cpu: Steal % / Mean",
+            "cpu: System % / Mean",
+            "cpu: User % / Mean",
+            "cpu: soft IRQ % / Mean"
+        ],
+        "labels" : [
+            "Guest",
+            "I/O Wait",
+            "IRQ",
+            "Idle",
+            "Nice",
+            "Steal",
+            "System",
+            "User",
+            "soft IRQ"
+        ]
+        },
+        {
+        "name" : "Memory Usage",
+        "filename" : "memory_usage",
+        "granularity" : "process",
+        "legend columns" : 1,
+        "x axis" : "Rank",
+        "y axis" : "Value",
+        "plot style" : ".",
+        "error bar" : true,
+        "variables" : [
+            "Memory Footprint (VmRSS) (KB) / Mean",
+            "Peak Memory Usage Resident Set Size (VmHWM) (KB) / Mean",
+            "program size (kB) / Mean",
+            "resident set size (kB) / Mean"
+        ],
+        "labels" : [
+            "Memory Footprint (VmRSS) (KB)",
+            "Peak Memory Usage Resident Set Size (VmHWM) (KB)",
+            "program size (kB)",
+            "resident set size (kB)"
+        ]
+        },
+        {
+        "name" : "I/O Usage",
+        "filename" : "io_usage",
+        "granularity" : "process",
+        "legend columns" : 2,
+        "x axis" : "Rank",
+        "y axis" : "Value",
+        "plot style" : ".",
+        "error bar" : true,
+        "variables" : [
+            "io:cancelled_write_bytes / Mean",
+            "io:rchar / Mean",
+            "io:read_bytes / Mean",
+            "io:syscr / Mean",
+            "io:syscw / Mean",
+            "io:wchar / Mean",
+            "io:write_bytes / Mean"
+        ],
+        "labels" : [
+            "cancelled_write_bytes",
+            "rchar",
+            "read_bytes",
+            "syscr",
+            "syscw",
+            "wchar",
+            "write_bytes"
+        ]
+        },
+        {
+        "name" : "Top 9 Timers",
+        "filename" : "top_9_timers",
+        "granularity" : "process",
+        "number of timers" : 9,
+        "legend columns" : 2,
+        "x axis" : "Rank",
+        "y axis" : "Time",
+        "number of ticks" : 8,
+        "max label length" : 35,
+        "error bar" : false
+        }
+    ],
+    "ADIOS2 config file": "adios2.xml",
+    "HTML output directory": "public_html",
+    "Timestep for filename": "MAIN_LOOP / Calls"
+
+}
