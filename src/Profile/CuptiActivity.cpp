@@ -754,6 +754,9 @@ int get_vthread_for_cupti_context(const CUpti_ResourceData *handle, bool stream)
     int tid = 0;
     cuptiGetDeviceId(handle->context, &deviceId);
     cuptiGetContextId(handle->context, &contextId);
+    if (contextId != UINT32_MAX && contextId != 0) { // uninitialized context value
+        return 0;
+    }
     if (stream) {
         uint8_t perThreadStream = 1;
         cuptiGetStreamIdEx(handle->context, handle->resourceHandle.stream, perThreadStream, &streamId);
