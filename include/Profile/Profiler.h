@@ -31,7 +31,7 @@
 #ifdef TAU_INCLUDE_MPI_H_HEADER
 #ifdef TAU_MPI
 #include <mpi.h>
-#endif 
+#endif
 #endif /* TAU_INCLUDE_MPI_H_HEADER */
 
 #include <sys/types.h>
@@ -41,7 +41,7 @@
 #define fork() tau_fork()
 
 #ifdef __cplusplus
-extern "C" 
+extern "C"
 #endif
 pid_t tau_fork (void);
 
@@ -73,13 +73,13 @@ int tau_pthread_join(pthread_t thread, void ** retval);
 
 void tau_pthread_exit (void *arg);
 
-#ifdef TAU_PTHREAD_BARRIER_AVAILABLE 
+#ifdef TAU_PTHREAD_BARRIER_AVAILABLE
 int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 #endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
 #ifdef __cplusplus
 }
-#endif 
+#endif
 
 #endif /* PTHREADS */
 #endif /* TAU_LIBRARY_SOURCE */
@@ -117,13 +117,13 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 
 #else /* not using threads? */
 #ifndef TAU_MAX_THREADS
-/* *CWL* - If useropt is not specified, then GPUs need to override the non-threaded default of 1. 
+/* *CWL* - If useropt is not specified, then GPUs need to override the non-threaded default of 1.
          - If thread packages are used, their defaults (> 32) are used.
 	 Ultimately, we would like some way of setting TAU_MAX_THREADS as a cumulative value of
          each component value (e.g., PTHREADS + GPU = 128 + 32 = 160).
 */
 #ifdef TAU_GPU
-#define TAU_MAX_THREADS 512 
+#define TAU_MAX_THREADS 512
 #else /* TAU_GPU */
 #define TAU_MAX_THREADS 1
 #endif /* TAU_GPU */
@@ -131,7 +131,7 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 #endif /* PTHREADS || TULIPTHREADS || JAVA || TAU_WINDOWS || OPENMP || SPROC */
 
 
-#ifdef TAU_OPENMP 
+#ifdef TAU_OPENMP
 #define TAU_TRACK_IDLE_THREADS
 #endif
 
@@ -199,19 +199,19 @@ class Profiler
 {
 public:
 
-  Profiler *ParentProfiler; 
+  Profiler *ParentProfiler;
   TauGroup_t MyProfileGroup_;
   bool StartStopUsed_;
-  bool AddInclFlag; 
+  bool AddInclFlag;
   bool PhaseFlag;
-  bool AddInclCallPathFlag; 
+  bool AddInclCallPathFlag;
   FunctionInfo *ThisFunction;
   FunctionInfo *CallPathFunction;
   FunctionInfo *CallSiteFunction;
 
   Profiler() : heapmem(0) {};
   ~Profiler() {};
-  
+
   void Start(int tid = RtsLayer::myThread());
   void Stop(int tid = RtsLayer::myThread(), bool useLastTimeStamp = false);
   double *getStartValues();
@@ -220,21 +220,21 @@ public:
   void CallPathStop(double* totaltime, int tid);
 
 #ifdef TAU_PROFILEPARAM
-  FunctionInfo *ProfileParamFunction; 
-  bool 	       AddInclProfileParamFlag; 
+  FunctionInfo *ProfileParamFunction;
+  bool 	       AddInclProfileParamFlag;
   void ProfileParamStop(double* totaltime, int tid);
 #endif /* TAU_PROFILEPARAM */
-  
+
   double StartTime[TAU_MAX_COUNTERS];
 
-  /* Compensate for instrumentation overhead based on total number of 
+  /* Compensate for instrumentation overhead based on total number of
      child calls executed under the given timer */
   long NumChildren;
   void SetNumChildren(long n);
   long GetNumChildren(void);
   void AddNumChildren(long value);
-  
-  
+
+
 #ifdef TAU_PROFILEPHASE
   bool GetPhase(void);
   void SetPhase(bool flag);
@@ -246,7 +246,7 @@ public:
   KtauMergeInfo ThisKtauMergeInfo;
 #endif /* TAUKTAU_MERGE */
 #endif /* TAUKTAU */
-  
+
 #ifdef TAU_MPITRACE
   bool RecordEvent; /* true when an MPI call is in the callpath */
 #endif /* TAU_MPITRACE */
@@ -279,9 +279,9 @@ extern "C" tau::Profiler * Tau_get_current_profiler(void);
 
 int TauProfiler_updateIntermediateStatistics(int tid);
 bool TauProfiler_createDirectories();
-int TauProfiler_StoreData(int tid = RtsLayer::myThread()); 
-int TauProfiler_DumpData(bool increment = false, int tid = RtsLayer::myThread(), const char *prefix = "dump"); 
-int TauProfiler_writeData(int tid, const char *prefix = "profile", bool increment = false, 
+int TauProfiler_StoreData(int tid = RtsLayer::myThread());
+int TauProfiler_DumpData(bool increment = false, int tid = RtsLayer::myThread(), const char *prefix = "dump");
+int TauProfiler_writeData(int tid, const char *prefix = "profile", bool increment = false,
 		       const char **inFuncs = NULL, int numFuncs = 0);
 void TauProfiler_PurgeData(int tid = RtsLayer::myThread());
 
@@ -290,7 +290,7 @@ void TauProfiler_theFunctionList(const char ***inPtr, int *numOfFunctions,
 void TauProfiler_dumpFunctionNames();
 
 void TauProfiler_theCounterList(const char ***inPtr, int *numOfCounters);
-  
+
 void TauProfiler_getFunctionValues(const char **inFuncs,
 				   int numFuncs,
 				   double ***counterExclusiveValues,
@@ -303,14 +303,14 @@ void TauProfiler_getFunctionValues(const char **inFuncs,
 int TauProfiler_dumpFunctionValues(const char **inFuncs,
 				   int numFuncs,
 				   bool increment = false,
-				   int tid = RtsLayer::myThread(), 
+				   int tid = RtsLayer::myThread(),
 				   const char *prefix = "dump");
 
 void TauProfiler_getUserEventList(const char ***inPtr, int *numUserEvents);
 
 void TauProfiler_getUserEventValues(const char **inUserEvents, int numUserEvents,
 				    int **numEvents, double **max, double **min,
-				    double **mean, double **sumSqr, 
+				    double **mean, double **sumSqr,
 				    int tid = RtsLayer::myThread());
 
 
@@ -337,5 +337,5 @@ mach_port_t pthread_mach_thread_np(pthread_t);
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
  * $Revision: 1.120 $   $Date: 2010/03/18 17:31:12 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.120 2010/03/18 17:31:12 amorris Exp $ 
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.120 2010/03/18 17:31:12 amorris Exp $
  ***************************************************************************/

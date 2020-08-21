@@ -602,10 +602,11 @@ void Tau_cupti_enable_domains()
         cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_BRANCH);
         CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_BRANCH)");
     }
-    //if (!TauEnv_get_tracing()) {
+    /* When tracing (with TAU, OTF2 or a plugin) don't create too many streams! */
+    if (!TauEnv_get_thread_per_gpu_stream()) {
         cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SYNCHRONIZATION);
         CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_SYNCHRONIZATION)");
-    //}
+    }
     cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_STREAM);
     CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_STREAM)");
 
@@ -753,6 +754,9 @@ int get_vthread_for_cupti_context(const CUpti_ResourceData *handle, bool stream)
     int tid = 0;
     cuptiGetDeviceId(handle->context, &deviceId);
     cuptiGetContextId(handle->context, &contextId);
+    if (contextId != UINT32_MAX && contextId != 0) { // uninitialized context value
+        return 0;
+    }
     if (stream) {
         uint8_t perThreadStream = 1;
         cuptiGetStreamIdEx(handle->context, handle->resourceHandle.stream, perThreadStream, &streamId);
@@ -824,8 +828,6 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
             Tau_cupti_gpu_enter_event_from_cpu("CUDA Stream",
                 get_vthread_for_cupti_context(handle, true));
                 */
-            // then make sure we have a thread for this context+stream
-            get_vthread_for_cupti_context(handle, true);
             break;
             }
         case CUPTI_CBID_RESOURCE_STREAM_DESTROY_STARTING: {
@@ -947,6 +949,7 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
     }
     if (function_is_launch(id))
     { // ENTRY to a launch function
+#if 0
         if (cbInfo->symbolName != NULL) {
             stringstream ss;
             char * demangled = demangle_name(cbInfo->symbolName);
@@ -962,7 +965,16 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
             free(demangled);
         } else {
             Tau_gpu_enter_event(cbInfo->functionName);
+            if (TauEnv_get_thread_per_gpu_stream()) {
+                TAU_TRIGGER_EVENT("Correlation ID", cbInfo->correlationId);
+            }
         }
+#else
+            Tau_gpu_enter_event(cbInfo->functionName);
+            if (TauEnv_get_thread_per_gpu_stream()) {
+                TAU_TRIGGER_EVENT("Correlation ID", cbInfo->correlationId);
+            }
+#endif
 
 	    Tau_CuptiLayer_enable_eventgroup();
 	    TAU_DEBUG_PRINT("[at call (enter), %d] name: %s.\n",
@@ -1002,6 +1014,7 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
     TAU_DEBUG_PRINT("[at call (exit), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
     if (function_is_launch(id))
     {
+#if 0
         if (cbInfo->symbolName != NULL) {
             stringstream ss;
             char * demangled = demangle_name(cbInfo->symbolName);
@@ -1011,6 +1024,9 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
         } else {
             Tau_gpu_exit_event(cbInfo->functionName);
         }
+#else
+            Tau_gpu_exit_event(cbInfo->functionName);
+#endif
         // Do a synchronization, so that we can get accurate counters.
         if (Tau_Global_numGPUCounters > 0) {
             cudaDeviceSynchronize();
@@ -2109,7 +2125,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                 int taskId = get_taskid_from_context_id(sync->contextId, streamId);
                 switch (sync->type) {
                     case CUPTI_ACTIVITY_SYNCHRONIZATION_TYPE_EVENT_SYNCHRONIZE: {
-                        if ((!TauEnv_get_tracing() || streamId == 0) &&
+                        if ((!TauEnv_get_thread_per_gpu_stream() || streamId == 0) &&
                             (valid_sync_timestamp(&start, sync->end, taskId))) {
                             TAU_DEBUG_PRINT("Event Synchronize! c%u s%u o%u e%u t%u %f %f\n",
                                 sync->contextId, streamId, sync->correlationId,
@@ -2123,7 +2139,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                     }
                     case CUPTI_ACTIVITY_SYNCHRONIZATION_TYPE_STREAM_WAIT_EVENT: {
                         // Stream wait event API.
-                        if ((!TauEnv_get_tracing()) &&
+                        if ((!TauEnv_get_thread_per_gpu_stream()) &&
                             (valid_sync_timestamp(&start, sync->end, taskId))) {
                             TAU_DEBUG_PRINT("Stream Wait! c%u s%u o%u t%u %f %f\n",
                                 sync->contextId, sync->streamId, sync->correlationId,
@@ -2137,7 +2153,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                     }
                     case CUPTI_ACTIVITY_SYNCHRONIZATION_TYPE_STREAM_SYNCHRONIZE: {
                         // Stream synchronize API.
-                        if ((!TauEnv_get_tracing()) &&
+                        if ((!TauEnv_get_thread_per_gpu_stream()) &&
                             (valid_sync_timestamp(&start, sync->end, taskId))) {
                             TAU_DEBUG_PRINT("Stream Synchronize! c%u s%u o%u t%u %f %f\n",
                                 sync->contextId, sync->streamId, sync->correlationId,

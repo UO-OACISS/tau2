@@ -78,9 +78,25 @@ using namespace tau;
 #if defined(_OPENMP) && defined(TAU_OPENMP) && !defined(TAU_MPC)
 #include <omp.h>
 #include <map>
-map<unsigned,string> openmp_map{
-    {200505,"2.5"},{200805,"3.0"},{201107,"3.1"},
-    {201307,"4.0"},{201511,"4.5"},{201811,"5.0"}};
+
+struct OpenMPVersionMap : public map<unsigned,string> {
+    using std::map<unsigned,string>::map;
+
+    ~OpenMPVersionMap() {
+        Tau_destructor_trigger();
+    }
+};
+
+const OpenMPVersionMap & TheOpenMPVersionMap() {
+    static OpenMPVersionMap openmp_map{
+        {200505,"2.5"},{200805,"3.0"},{201107,"3.1"},
+        {201307,"4.0"},{201511,"4.5"},{201811,"5.0"}};
+    if (openmp_map.count(_OPENMP) == 0) {
+        openmp_map.insert ( std::pair<unsigned,string>(_OPENMP,std::to_string(_OPENMP)) );
+
+    }
+    return openmp_map;
+}
 #endif
 
 #ifdef TAU_SCOREP_METADATA
@@ -165,8 +181,17 @@ int tau_bgq_init(void) {
 #include <signal.h>
 #include <stdarg.h>
 
+/* Intel is such an annoying beast.  It won't let us declare this
+ * as a static member object in the below function.  This may cause
+ * instability if the application isn't linked with the TAU shared
+ * object library (-optShared). */
+
 // These come from Tau_metadata_register calls
 MetaDataRepo &Tau_metadata_getMetaData(int tid) {
+/* Intel is such an annoying beast.  It won't let us declare this
+ * as a static member object in this function.  This may cause
+ * instability if the application isn't linked with the TAU shared
+ * object library (-optShared). */
   static MetaDataRepo metadata[TAU_MAX_THREADS];
   return metadata[tid];
 }
@@ -756,10 +781,10 @@ int Tau_metadata_fillMetaData()
   }
 
 #ifdef _OPENMP
-#if TAU_OPENMP && !defined(TAU_MPC)
+#if defined(TAU_OPENMP) && !defined(TAU_MPC)
   /* Capture OpenMP version */
   Tau_metadata_register("OpenMP Version String", _OPENMP);
-  Tau_metadata_register("OpenMP Version", openmp_map.at(_OPENMP).c_str());
+  Tau_metadata_register("OpenMP Version", TheOpenMPVersionMap().at(_OPENMP).c_str());
 
 // MPC wht OpenMP isn't initialized before TAU is, so these function calls will hang.
   const char* schedule;
@@ -789,7 +814,13 @@ int Tau_metadata_fillMetaData()
 
 #if _OPENMP >= 201307 // OpenMP 4.0
   Tau_metadata_register("OMP_PROC_BIND", omp_get_proc_bind() ? "TRUE" : "FALSE");
+#if !defined(__INTEL_COMPILER)
+/* Don't make this call for the Intel compiler!  It may compile, but without
+ * MIC/KNL offload support, the linker will fail with really esoteric error messages
+ * about either missing destructor in ~MetaDataRepo() or missing i_ofldbegin_target.o
+ */
   Tau_metadata_register("OMP_DEFAULT_DEVICE", omp_get_default_device());
+#endif
 #if _OPENMP == 201307 && !defined(__PGI) // PGI claims 4.0, but is missing these implementations
   Tau_metadata_register("OMP_CANCELLATION", omp_get_cancellation() ? "TRUE" : "FALSE");
   Tau_metadata_register("OMP_NUM_DEVICES", omp_get_num_devices());

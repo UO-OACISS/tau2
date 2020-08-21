@@ -30,22 +30,16 @@ extern "C" void Tau_cupti_register_host_calling_site(
         const char *name) {
     //find thread with launch event.
     FunctionInfo* launch = (FunctionInfo *) Tau_pure_search_for_function(name, 0);
-    for (int i=0; i<TAU_MAX_THREADS; i++)
+    int tid = RtsLayer::myThread();
+    Profiler * p = TauInternal_CurrentProfiler(tid);
+    if (p != NULL && launch == p->ThisFunction && p->CallPathFunction != NULL)
     {
-        if (TauInternal_CurrentProfiler(i) != NULL &&
-            launch == TauInternal_CurrentProfiler(i)->ThisFunction &&
-            TauInternal_CurrentProfiler(i)->CallPathFunction != NULL)
-        {
-            // lock required to prevent multithreaded access to the tree
-            functionInfoMap_mutex().lock();
-            functionInfoMap_hostLaunch()[correlationId] =
-                TauInternal_CurrentProfiler(i)->CallPathFunction;
-            functionInfoMap_mutex().unlock();
-            break;
-        }
+        // lock required to prevent multithreaded access to the tree
+        functionInfoMap_mutex().lock();
+        functionInfoMap_hostLaunch()[correlationId] =
+            TauInternal_CurrentProfiler(tid)->CallPathFunction;
+        functionInfoMap_mutex().unlock();
     }
-    //functionInfoMap_hostLaunch()[correlationId] =
-    //  TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
 }
 
 extern "C" void Tau_cupti_register_device_calling_site(

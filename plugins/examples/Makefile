@@ -37,7 +37,7 @@ libTAU-sos-plugin$(TAU_SHLIBX): Tau_plugin_sos.o TauSOS.o
 libTAU-pooky2-plugin$(TAU_SHLIBX): Tau_plugin_pooky2.o
 	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_pooky2.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-pooky2-plugin$(TAU_SHLIBX)
 
-libTAU-adios2-plugin$(TAU_SHLIBX): Tau_plugin_adios2.o Tau_sockets.o
+libTAU-adios2-plugin$(TAU_SHLIBX): Tau_plugin_adios2.o
 	$(CXX) Tau_plugin_adios2.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-adios2-plugin$(TAU_SHLIBX) $(TAU_SHLIBS)
 
 libTAU-adios2-trace-plugin$(TAU_SHLIBX): Tau_plugin_adios2_trace.o
@@ -133,7 +133,7 @@ Tau_plugin_thread_summary.o: Tau_plugin_thread_summary.cpp
 TauSOS.o: TauSOS.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
-Tau_plugin_adios2.o: Tau_plugin_adios2.cpp Tau_sockets.h
+Tau_plugin_adios2.o: Tau_plugin_adios2.cpp
 	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) $(TAU_ADIOS2_INCLUDE_OPTS) -c $< -o $@
 
 Tau_plugin_adios2_trace.o: Tau_plugin_adios2_trace.cpp

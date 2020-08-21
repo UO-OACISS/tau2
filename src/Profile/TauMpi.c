@@ -2124,7 +2124,9 @@ int  MPI_Finalize(  )
   TAU_PROFILE_STOP(tautimer);
 
   Tau_stop_top_level_timer_if_necessary();
+#ifndef TAU_MPC
   tau_mpi_finalized = 1;
+#endif /* TAU_MPC */
 
   return returnVal;
 }

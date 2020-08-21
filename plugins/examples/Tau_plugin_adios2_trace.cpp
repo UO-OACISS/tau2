@@ -907,8 +907,8 @@ void init_lock(pthread_mutex_t * _mutex) {
 }
 
 int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
-    TAU_VERBOSE("TAU PLUGIN ADIOS2 Dump\n"); fflush(stdout);
     if (!enabled) return 0;
+    TAU_VERBOSE("%d TAU PLUGIN ADIOS2 Dump\n", global_comm_rank); fflush(stdout);
     if (dump_history) {
         Tau_plugin_adios2_dump_history();
         // reset for next time
@@ -919,6 +919,7 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     my_adios->write_variables();
     Tau_global_decr_insideTAU();
     //Tau_pure_stop(__func__);
+    TAU_VERBOSE("%d TAU PLUGIN ADIOS2 Dump exit\n", global_comm_rank); fflush(stdout);
     return 0;
 }
 
@@ -953,6 +954,8 @@ void Tau_ADIOS2_stop_worker(void) {
     _threaded = false;
 }
 
+extern "C" int Tau_is_thread_fake(int tid);
+
 /* This happens from MPI_Finalize, before MPI is torn down. */
 int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t* data) {
     if (!enabled || data->tid != 0) return 0;
@@ -961,18 +964,19 @@ int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution
     Tau_plugin_event_function_exit_data_t exit_data;
     // safe to assume 0?
     //int tid = exit_data.tid;
-    RtsLayer::UnLockDB();
-    for (int tid = TAU_MAX_THREADS-1 ; tid >= 0 ; tid--) {
+    RtsLayer::LockDB();
+    //for (int tid = RtsLayer::getTotalThreads()-1 ; tid >= 0 ; tid--) {
+    //  if (Tau_is_thread_fake(tid) == 1) { continue; }
+    int tid = 0; // only do thread 0
       int depth = Tau_get_current_stack_depth(tid);
       for (int i = depth ; i > -1 ; i--) {
         tau::Profiler *profiler = Tau_get_timer_at_stack_depth(i);
-        if (profiler->ThisFunction->GetName() == NULL) {
-          // small memory leak, but at shutdown.
-          exit_data.timer_name = strdup(".TAU application");
-        } else {
-          exit_data.timer_name = profiler->ThisFunction->GetName();
-          exit_data.timer_group = profiler->ThisFunction->GetAllGroups();
-        }
+        // not sure how this can happen
+        if (profiler == NULL) { continue; }
+        exit_data.timer_name = profiler->ThisFunction->GetName();
+        // not sure how this can happen
+        if (exit_data.timer_name == NULL) { continue; }
+        exit_data.timer_group = profiler->ThisFunction->GetAllGroups();
         exit_data.tid = tid;
         double CurrentTime[TAU_MAX_COUNTERS] = { 0 };
         RtsLayer::getUSecD(tid, CurrentTime);
@@ -980,7 +984,7 @@ int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution
         //printf("%d Stopping %s\n", tid, exit_data.timer_name);
         Tau_plugin_adios2_function_exit(&exit_data);
       }
-    }
+    //}
     RtsLayer::UnLockDB();
     /* write those last events... */
     Tau_plugin_event_dump_data_t dummy_data;
@@ -1633,20 +1637,27 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     /* If we are tracing, we need to "start" all of the timers on the stack */
     RtsLayer::LockDB();
     //int tid = RtsLayer::myThread();
-    for (int tid = TAU_MAX_THREADS-1 ; tid >= 0 ; tid--) {
+    //for (int tid = RtsLayer::getTotalThreads()-1 ; tid >= 0 ; tid--) {
+    //  if (Tau_is_thread_fake(tid) == 1) { continue; }
+    int tid = 0; // only do thread 0
       Tau_plugin_event_function_entry_data_t entry_data;
       // safe to assume 0?
       int depth = Tau_get_current_stack_depth(tid);
       for (int i = 0 ; i <= depth ; i++) {
         tau::Profiler *profiler = Tau_get_timer_at_stack_depth(i);
+        // not sure how this can happen...
+        if (profiler == NULL) { continue; }
         entry_data.timer_name = profiler->ThisFunction->GetName();
+        // not sure how this can happen...
+        if (entry_data.timer_name == NULL) { continue; }
         entry_data.timer_group = profiler->ThisFunction->GetAllGroups();
         entry_data.tid = tid;
         entry_data.timestamp = (x_uint64)profiler->StartTime[0];
-        //printf("%d,%d Starting %s\n", getpid(), tid, data.timer_name);
+        //printf("%d,%d,%d,%d Starting %s\n", getpid(), tid, i, depth, entry_data.timer_name);
+        //fflush(stdout);
         Tau_plugin_adios2_function_entry(&entry_data);
       }
-    }
+    //}
 
     if (signal(SIGUSR1, Tau_plugin_adios2_signal_handler) == SIG_ERR) {
       perror("failed to register TAU profile dump signal handler");

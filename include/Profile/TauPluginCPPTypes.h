@@ -14,16 +14,16 @@ class PluginKey {
      plugin_event = _plugin_event;
      specific_event_hash = _specific_event_hash;
    }
-   
+
    bool operator< (const PluginKey &rhs) const {
      if(plugin_event != rhs.plugin_event) return plugin_event < rhs.plugin_event;
      else return specific_event_hash < rhs.specific_event_hash;
    }
-   
+
    ~PluginKey() { }
 };
 
-extern std::map<PluginKey, std::set<unsigned int> > plugins_for_named_specific_event;
+std::map<PluginKey, std::set<unsigned int> >& Tau_get_plugins_for_named_specific_event(void);
 
 /* TODO: This class is used as a subtiture for
  * plugins_for_named_specific_event for ompt events.
