@@ -122,7 +122,7 @@ Tau_plugin_example_load_balance.o: Tau_plugin_example_load_balance.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 Tau_plugin_skel.o: Tau_plugin_skel.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@
+	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) -c $< -o $@
 
 Tau_plugin_sos.o: Tau_plugin_sos.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@

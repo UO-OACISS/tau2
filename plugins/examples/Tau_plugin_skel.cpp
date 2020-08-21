@@ -38,6 +38,7 @@ static int step = 0;
 
 int Tau_plugin_skel_dump(Tau_plugin_event_dump_data_t* data) {
     step = step + 1;
+    return 0;
 }
 
 static void open_file() {
