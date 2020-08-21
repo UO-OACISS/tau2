@@ -46,12 +46,12 @@ public:
   static int numCounters;
   static int counterList[TAU_MAX_COUNTERS];
   inline static void setThreadValue(int tid, ThreadValue* tv){
-	    checkVector(tid);
+	    checkPAPIVector(tid);
         ThePapiThreadList()[tid]=tv;
   }
 
   inline static ThreadValue* getThreadValue(int tid){
-		checkVector(tid);
+		checkPAPIVector(tid);
         return ThePapiThreadList()[tid];
   }   
 
@@ -78,7 +78,7 @@ private:
   
   static PapiThreadList & ThePapiThreadList();
   
-  static inline void checkVector(int tid){
+  static inline void checkPAPIVector(int tid){
 	while(ThePapiThreadList().size()<=tid){
         RtsLayer::LockDB();
 		ThePapiThreadList().push_back(NULL);

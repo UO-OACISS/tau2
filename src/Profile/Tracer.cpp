@@ -60,7 +60,7 @@ struct TraceThreadData
 
 static vector<TraceThreadData*> ThreadList;
 
-static inline void checkVector(int tid){
+static inline void checkTracerVector(int tid){
 	while(ThreadList.size()<=tid){
 		ThreadList.push_back(new TraceThreadData());
 	}
@@ -71,38 +71,38 @@ static inline void checkVector(int tid){
 
 //static TAU_EV *TraceBuffer[TAU_MAX_THREADS]; 
 static inline TAU_EV* getTraceBuffer(int tid){
-	checkVector(tid);
+	checkTracerVector(tid);
 	return ThreadList[tid]->TraceBuffer;
 }
 static inline void setTraceBuffer(int tid, TAU_EV* value){
-	checkVector(tid);
+	checkTracerVector(tid);
 	ThreadList[tid]->TraceBuffer=value;
 }
 
 /* Trace buffer pointer for each threads */
 //static unsigned int TauCurrentEvent[TAU_MAX_THREADS] = {0}; 
 static inline unsigned int getTauCurrentEvent(int tid){
-	checkVector(tid);
+	checkTracerVector(tid);
 	return ThreadList[tid]->TauCurrentEvent;
 }
 static inline void incrementTauCurrentEvent(int tid){
-	checkVector(tid);
+	checkTracerVector(tid);
 	ThreadList[tid]->TauCurrentEvent++;
 }
 static inline void resetTauCurrentEvent(int tid){
-	checkVector(tid);
+	checkTracerVector(tid);
 	ThreadList[tid]->TauCurrentEvent=0;
 }
 
 /* Trace file descriptors */
 //static int TauTraceFd[TAU_MAX_THREADS] = {0};
 static inline int setTauTraceFd(int tid, int value){
-	checkVector(tid);
+	checkTracerVector(tid);
 	ThreadList[tid]->TauTraceFd=value;
 	return value;
 }
 static inline int getTauTraceFd(int tid){
-	checkVector(tid);
+	checkTracerVector(tid);
 	return ThreadList[tid]->TauTraceFd;
 }
 
@@ -115,20 +115,20 @@ static int TauTraceFlushEvents = 0;
 /* Initialization status flags */
 //static int TauTraceInitialized[TAU_MAX_THREADS] = {0};
 static inline int getTauTraceInitialized(int tid){
-	checkVector(tid);
+	checkTracerVector(tid);
 	return ThreadList[tid]->TauTraceInitialized;
 }
 static inline void setTauTraceInitialized(int tid, int value){
-	checkVector(tid);
+	checkTracerVector(tid);
 	ThreadList[tid]->TauTraceInitialized=value;
 }
 //static int TraceFileInitialized[TAU_MAX_THREADS] = {0};
 static inline int getTraceFileInitialized(int tid){
-	checkVector(tid);
+	checkTracerVector(tid);
 	return ThreadList[tid]->TraceFileInitialized;
 }
 static inline void setTraceFileInitialized(int tid){
-	checkVector(tid);
+	checkTracerVector(tid);
 	ThreadList[tid]->TraceFileInitialized=1;
 }
 //static double tracerValues[TAU_MAX_COUNTERS] = {0};
@@ -329,12 +329,12 @@ bool *TauBufferAllocated() {
 }*/ //TODO: Remove once validated
 
 static inline bool getTauBufferAllocated(int tid){
-	checkVector(tid);
+	checkTracerVector(tid);
 	return ThreadList[tid]->allocated;
 }
 
 static inline void setTauBufferAllocated(int tid, bool value){
-	checkVector(tid);
+	checkTracerVector(tid);
 	ThreadList[tid]->allocated=value;
 }
 

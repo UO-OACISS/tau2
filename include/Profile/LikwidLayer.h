@@ -38,11 +38,11 @@ public:
   static int err;
   static bool likwidInitialized;
   static inline void SetThreadList(int tid, ThreadValue* tv){
-    checkVector(tid);
+    checkLikwidVector(tid);
     TheThreadList()[tid]=tv;
   }
   static inline ThreadValue* GetThreadList(int tid){
-    checkVector(tid);
+    checkLikwidVector(tid);
     return TheThreadList()[tid];
   }
 private:
@@ -50,7 +50,7 @@ private:
   static int initializeThread(int tid);
   static double scalingFactor;
   static vector<ThreadValue *> & TheThreadList();
-  static inline void checkVector(int tid){
+  static inline void checkLikwidVector(int tid){
         while(TheThreadList().size()<=tid){
         RtsLayer::LockDB();
             TheThreadList().push_back(NULL);
