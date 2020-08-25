@@ -4306,7 +4306,7 @@ if [ $machine = nec-sx-aurora ]; then
         nec_extradirs=`which nfort | sed s@bin/nfort@@`nfort/*/lib
         for i in $nec_extradirs
         do
-             if [ -r $nec_extradirs/libnfort.a ]; then
+             if [ -r $i/libnfort.a ]; then
                   extradir=$i
              fi
         done
