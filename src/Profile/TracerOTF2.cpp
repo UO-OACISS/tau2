@@ -1184,7 +1184,8 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     uint64_t nodes_list[nodes];
     uint64_t ranks_list[nodes];
     for(int i = 0; i < nodes; ++i) {
-        nodes_list[i] = i * num_locations[nodes];//max_threads;//TAU_MAX_THREADS;//TODO: DYNATHREAD
+        int nodelocs = num_locations[nodes];
+        nodes_list[i] = i * nodelocs;//max_threads;//TAU_MAX_THREADS;//TODO: DYNATHREAD
         ranks_list[i] = i;
     }
     OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_LOCS, locsGroupName, OTF2_GROUP_TYPE_COMM_LOCATIONS, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, nodes_list));

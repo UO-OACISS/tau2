@@ -21,6 +21,7 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <mutex>
 using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <sstream.h>
@@ -164,8 +165,10 @@ CAPIThreadList & TheCAPIThreadList() {
 }
 
 //static thread_local bool locallock=false;
+std::mutex CAPIVectorMutex;
 void checkTCAPIVector(int tid){
     if(TheCAPIThreadList().size()<=tid){
+      std::lock_guard<std::mutex> guard(CAPIVectorMutex);
       while(TheCAPIThreadList().size()<=tid){
         TheCAPIThreadList().push_back(new Tau_thread_status_flags());
       }
