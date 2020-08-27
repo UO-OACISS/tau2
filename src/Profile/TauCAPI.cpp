@@ -175,11 +175,28 @@ void checkTCAPIVector(int tid){
     }
  }
 
+static thread_local int local_tid = RtsLayer::myThread();
+static thread_local Tau_thread_status_flags* flag_cache=0;
 static inline Tau_thread_status_flags& getTauThreadFlag(int tid){
+    
+    if(tid == local_tid){
+        if(flag_cache!=0){
+            return *flag_cache;
+        }
+    }
+    
     checkTCAPIVector(tid);
+
     //Tau_thread_status_flags& test = *(TheCAPIThreadList()[tid]);
     //printf("stackpos: %d on tid: %d\n", test.Tau_global_stackpos,tid);
-    return *TheCAPIThreadList()[tid];
+    std::lock_guard<std::mutex> guard(CAPIVectorMutex);
+    Tau_thread_status_flags* FlagOut=TheCAPIThreadList()[tid];
+    if(tid == local_tid){
+        if(flag_cache==0){
+            flag_cache=FlagOut;
+        }
+    }
+    return *FlagOut;//*TheCAPIThreadList()[tid];
 }
 //static inline void SetTauThreadFlag
 
