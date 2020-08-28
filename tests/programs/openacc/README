@@ -1,0 +1,49 @@
+This example demonstrates TAU's support for OpenACC profiling interface. 
+If you are using a PGI compiler that supports the accelerator primitives (license), 
+you may try this example as follows:
+
+% make
+% tau_exec -T serial,pgi,pdt -openacc ./jacobi
+% pprof 
+
+It sets the PGI_ACC_PROFLIB environment variable. For further questions, please contact:
+tau-bugs@cs.uoregon.edu.
+
+On Cray systems, I typically use:
+module switch PrgEnv-cray PrgEnv-pgi
+module switch pgi pgi/14.9  
+(or better than 14.9) 
+module load craype-accel-nvidia35
+
+and
+module unload cray-libsci_acc
+to get rid of messages such as:
+Error:  PE_LIBSCI_ACC is not available for the PGI compiler
+
+
+On Cray, I configure TAU as I normally would:
+./configure -pdt=<dir> -arch=craycnl -bfd=download -iowrapper -mpi ; make install 
+and use:
+aprun -n 1 tau_exec -T pgi -openacc ./jacobi
+
+> pprof -a
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0          716        1,130           1        6006    1130322 .TAU application
+ 34.3          387          387        1000           0        388 openacc_implicit_wait main [{/users/sameer/pkgs/tau2/examples/openacc/jacobi.c} {71,0}]
+  1.0           10           10        2000           0          5 openacc_enqueue_launch main [{/users/sameer/pkgs/tau2/examples/openacc/jacobi.c} {60,0}]
+  0.5            6            6        1000           0          6 openacc_enqueue_launch main [{/users/sameer/pkgs/tau2/examples/openacc/jacobi.c} {71,0}]
+  0.4            5            5        2000           0          3 openacc_implicit_wait main [{/users/sameer/pkgs/tau2/examples/openacc/jacobi.c} {60,0}]
+  0.2            2            2           1           0       2755 openacc_implicit_wait main [{/users/sameer/pkgs/tau2/examples/openacc/jacobi.c} {82,0}]
+  0.1            1            1           1           0       1348 openacc_implicit_wait main [{/users/sameer/pkgs/tau2/examples/openacc/jacobi.c} {52,0}]
+  0.0         0.04         0.04           2           0         20 openacc_enqueue_upload main [{/users/sameer/pkgs/tau2/examples/openacc/jacobi.c} {52,0}]
+  0.0        0.015        0.015           1           0         15 openacc_enqueue_download main [{/users/sameer/pkgs/tau2/examples/openacc/jacobi.c} {82,0}]
+  0.0        0.014        0.014           1           0         14 openacc_init main [{/users/sameer/pkgs/tau2/examples/openacc/jacobi.c} {52,0}-{82,0}]
+
+
+This is the output on a Cray XC system.

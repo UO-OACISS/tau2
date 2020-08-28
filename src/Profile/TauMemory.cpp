@@ -92,7 +92,7 @@ bool wrapper_registered = false;
 wrapper_enable_handle_t wrapper_enable_handle = NULL;
 wrapper_disable_handle_t wrapper_disable_handle = NULL;
 
-extern "C" int Tau_trigger_memory_rss_hwm(void);
+extern "C" int Tau_trigger_memory_rss_hwm(bool use_context);
 
 // Returns true if the given allocation size should be protected
 static inline bool AllocationShouldBeProtected(size_t size)
@@ -703,7 +703,9 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TriggerHeapMemoryUsageEvent() {
   TAU_REGISTER_EVENT(evt, "Heap Memory Used (KB)");
-  TAU_EVENT(evt, Tau_max_RSS());
+  /* Make the measurement on thread 0, because we are 
+   * recording the heap for the process. */
+  Tau_userevent_thread(evt, Tau_max_RSS(), 0);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1807,19 +1809,32 @@ extern "C" int Tau_close_status(int fd) {
 // Tau_trigger_memory_rss_hwm triggers resident memory size and high water 
 // mark events
 //////////////////////////////////////////////////////////////////////
-extern "C" int Tau_trigger_memory_rss_hwm(void) {
+extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
   static int fd=Tau_open_status();
+  if (fd == -1) return 0; // failure
 
   long long vmrss, vmhwm; 
-  TAU_REGISTER_EVENT(proc_rss, "Memory Footprint (VmRSS) (KB)");
   TAU_REGISTER_CONTEXT_EVENT(proc_vmhwm, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
+  TAU_REGISTER_CONTEXT_EVENT(proc_rss, "Memory Footprint (VmRSS) (KB)");
+  TAU_REGISTER_EVENT(proc_vmhwm_no_context, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
+  TAU_REGISTER_EVENT(proc_rss_no_context, "Memory Footprint (VmRSS) (KB)");
 
   Tau_read_status(fd, &vmrss, &vmhwm);
 
-  if (vmrss > 0)
-    TAU_EVENT(proc_rss, (double) vmrss);
-  if (vmhwm > 0)
-    TAU_CONTEXT_EVENT(proc_vmhwm, (double) vmhwm);
+  if (vmrss > 0) {
+    if (use_context) {
+        TAU_CONTEXT_EVENT(proc_rss, (double) vmrss);
+    } else {
+        Tau_userevent_thread(proc_rss_no_context, (double) vmrss, 0);
+    }
+  }
+  if (vmhwm > 0) {
+    if (use_context) {
+        TAU_CONTEXT_EVENT(proc_vmhwm, (double) vmhwm);
+    } else {
+        Tau_userevent_thread(proc_vmhwm_no_context, (double) vmhwm, 0);
+    }
+  }
 
 #ifdef TAU_BEACON
   TauBeaconPublish((double) vmrss, "KB", "MEMORY", "Memory Footprint (VmRSS - Resident Set Size)");

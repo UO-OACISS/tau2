@@ -15,7 +15,7 @@
 ***************************************************************************/
 
 
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 
 #ifndef _GNU_SOURCE
@@ -33,7 +33,7 @@
 
 extern int Tau_init_check_initialized();
 
-#define dprintf TAU_VERBOSE 
+#define dprintf TAU_VERBOSE
 
 #if (defined (TAU_BGP) || defined(TAU_XLC) || defined(__APPLE__))
 #define TAU_DISABLE_SYSCALL_WRAPPER
@@ -57,11 +57,11 @@ void exit(int status) {
   static void (*_internal_exit) (int status) = NULL;
 
   int ret;
-  dprintf("TAU: Inside tau_wrap.c: exit(): status = %d\n", status);
+  dprintf("TAU: Inside %s: %s: status = %d\n", __FILE__, __func__, status);
 
   TAU_PROFILE_EXIT("EXITING from TAU...");
 
-  /* Search for exit */  
+  /* Search for exit */
   if (_internal_exit == NULL) {
     _internal_exit = (void (*) (int status)) dlsym(RTLD_NEXT, "exit");
   }
@@ -79,11 +79,11 @@ void exit_group(int status) {
   static void (*_internal_exit_group) (int status) = NULL;
 
   int ret;
-  dprintf("TAU: Inside tau_wrap.c: exit_group(): status = %d\n", status);
+  dprintf("TAU: Inside %s: %s: status = %d\n", __FILE__, __func__, status);
 
   TAU_PROFILE_EXIT("EXIT_GROUPING from TAU...");
 
-  /* Search for exit_group */  
+  /* Search for exit_group */
   if (_internal_exit_group == NULL) {
     _internal_exit_group = (void (*) (int status)) dlsym(RTLD_NEXT, "exit_group");
   }
@@ -100,11 +100,11 @@ void _exit(int status) {
   static void (*_internal__exit) (int status) = NULL;
 
   int ret;
-  dprintf("TAU: Inside tau_wrap.c: _exit(): status = %d\n", status);
+  dprintf("TAU: Inside %s: %s: status = %d\n", __FILE__, __func__, status);
 
   TAU_PROFILE_EXIT("_EXITING from TAU...");
 
-  /* Search for _exit */  
+  /* Search for _exit */
   if (_internal__exit == NULL) {
     _internal__exit = (void (*) (int status)) dlsym(RTLD_NEXT, "_exit");
   }
@@ -121,7 +121,7 @@ pid_t fork(void) {
   static pid_t (*_fork) (void) = NULL;
 
   pid_t pid_ret;
-  
+
 
   if (_fork == NULL) {
     _fork = (pid_t (*) (void)) dlsym(RTLD_NEXT, "fork");
@@ -131,13 +131,13 @@ pid_t fork(void) {
 
 	if (Tau_wrap_syscalls_checkPassThrough() == 1) {
 		return pid_ret;
-	}	
+	}
   dprintf("TAU: calling _fork \n");
-  
+
 	if (pid_ret == 0) {
     TAU_REGISTER_FORK(RtsLayer::getPid(), TAU_EXCLUDE_PARENT_DATA);
     dprintf ("[%d] Registered Fork!\n", RtsLayer::getPid());
-   
+
   }
   return pid_ret;
 
@@ -153,7 +153,7 @@ int kill(pid_t pid, int sig) {
   int ret;
 
   TAU_PROFILE_TIMER(t,"sleep inside kill timer","" ,TAU_DEFAULT);
-  /* Search for kill */  
+  /* Search for kill */
   if (_kill == NULL) {
     _kill = (int (*) (pid_t pid, int sig)) dlsym(RTLD_NEXT, "kill");
   }

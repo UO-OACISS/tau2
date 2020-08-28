@@ -55,325 +55,301 @@ extern void Tau_metadata_writeEndingTimeStamp(void);
 #define TAU_MAX_MPI_RANKS 8
 #endif /* ifndef */
 
-#ifdef TAU_EXP_TRACK_COMM 
+/* NOTE: We can either track communicator or paths, but not both! */
+#ifdef TAU_EXP_TRACK_COMM
 #define TAU_TRACK_COMM(c) \
   void *commhandle; \
   commhandle = (void*)c; \
-  TAU_PROFILE_PARAM1L((long)commhandle, "comm"); 
+  TAU_PROFILE_PARAM1L((long)commhandle, "comm");
 #else
-#define TAU_TRACK_COMM(c) 
+#define TAU_TRACK_COMM(c)
 #endif /* TAU_EXP_TRACK_COMM */
 
 #ifdef TAU_MPICH3
 #define TAU_MPICH3_CONST const
 #else
-#define TAU_MPICH3_CONST 
+#define TAU_MPICH3_CONST
 #endif
 
 #ifdef TAU_OPENMPI3
 #define TAU_OPENMPI3_CONST  const
 #else
-#define TAU_OPENMPI3_CONST  
+#define TAU_OPENMPI3_CONST
 #endif
 
 #if defined(TAU_MPC)
-#define TAU_NONMPC_CONST  
+#define TAU_NONMPC_CONST
 #else
 #define TAU_NONMPC_CONST const
 #endif
 
-/* These functions and macros are for creating MPI "events" in the SOS stream. */
-
-#if defined(TAU_SOS)
+/* These functions and macros are for creating MPI exit "events" in a plugin trace stream. */
 
 #ifndef TAU_ADIOS
-int TAU_inside_ADIOS(void) {
-
- return 0;
-
-}
+#define TAU_DO_TIMER_EXIT (TauEnv_get_current_timer_exit_params() == 1)
 #else
 int TAU_inside_ADIOS(void);
+#define TAU_DO_TIMER_EXIT ((TauEnv_get_current_timer_exit_params() == 1) && (TAU_inside_ADIOS() == 0))
 #endif /*  TAU_ADIOS */
 
-inline void Tau_plugin_trace_current_timer(const char * name) {
-
-#if 0
-    Tau_plugin_event_current_timer_exit_data_t plugin_data;
-    plugin_data.name_prefix = name;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
-#endif
-
-#if 1
+void Tau_plugin_trace_current_timer(const char * name) {
     /*Invoke plugins only if both plugin path and plugins are specified*/
-    if(TauEnv_get_plugins_enabled() && TAU_inside_ADIOS() == 0) {
+    if(TauEnv_get_plugins_enabled() && TAU_DO_TIMER_EXIT) {
         Tau_plugin_event_current_timer_exit_data_t plugin_data;
         plugin_data.name_prefix = name;
         Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, name, &plugin_data);
     }
-#endif
 }
 
+#if defined(TAU_SOS)
 #define EVENT_TRACE_PREFIX "TAU_EVENT::MPI"
+#else
+#define EVENT_TRACE_PREFIX "\"type\": \"MPI\", \"function\":"
+#endif
 
-#define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-char __tmp[128]; \
-sprintf(__tmp, "%s collective synchronize %s 0x%08x", EVENT_TRACE_PREFIX, __desc, __comm); \
+#define TIMER_EXIT_COLLECTIVE_SYNC_EVENT(__desc,__comm) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __tmp[1024]; \
+sprintf(__tmp, "%s \"%s\", \"comm\": \"0x%08x\"", EVENT_TRACE_PREFIX, __desc, __comm); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
-#define TAU_SOS_COLLECTIVE_EXCH_EVENT(__desc,__size,__comm) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-char __tmp[128]; \
-sprintf(__tmp, "%s collective exchange %s (%d) 0x%08x", EVENT_TRACE_PREFIX, __desc, __size, __comm); \
+#define TIMER_EXIT_COLLECTIVE_EXCH_EVENT(__desc,__size,__root,__comm) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __tmp[1024]; \
+sprintf(__tmp, "%s \"%s\", \"size\": %lu, \"root\": %u, \"comm\": \"0x%08x\"", EVENT_TRACE_PREFIX, __desc, __size, __root, __comm); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
-#define TAU_SOS_COLLECTIVE_EXCH_V_EVENT(__desc,__stats,__comm) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-char __tmp[128]; \
-sprintf(__tmp, "%s collective exchangev %s ([%f,%f,%f,%f,%f]) 0x%08x", \
-    EVENT_TRACE_PREFIX, __desc, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __comm); \
+#define TIMER_EXIT_COLLECTIVE_EXCH_ALL_EVENT(__desc,__send_size,__recv_size,__root,__comm) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __tmp[1024]; \
+sprintf(__tmp, "%s \"%s\", \"sendsize\": %lu, \"recvsize\": %lu, \"root\": %u, \"comm\": \"0x%08x\"", EVENT_TRACE_PREFIX, __desc, __send_size, __recv_size, __root, __comm); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
-#define TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT(__desc,__stats1,__stats2,__comm) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-char __tmp[256]; \
+#define TIMER_EXIT_COLLECTIVE_EXCH_V_EVENT(__desc,__label,__mybytes,__stats,__root,__comm) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __tmp[1024]; \
+sprintf(__tmp, "%s \"%s\", \"%s\": %lu, \"count\": %f, \"mean\": %f, \"min\": %f, \"max\": %f, \"sumsqr\": %f, \"root\": %u, \"comm\": \"0x%08x\"", \
+    EVENT_TRACE_PREFIX, __desc, __label, __mybytes, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __root, __comm); \
+Tau_plugin_trace_current_timer(__tmp); \
+}
+
+#define TIMER_EXIT_COLLECTIVE_EXCH_AAV_EVENT(__desc,__stats1,__stats2,__comm) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __tmp[1024]; \
 sprintf(__tmp, \
-    "%s collective exchangev %s ([%f,%f,%f,%f,%f],[%f,%f,%f,%f,%f]) 0x%08x", \
+    "%s \"%s\", \"sendcount\": %f, \"sendmean\": %f, \"sendmin\": %f, \"sendmax\": %f, \"sendstddev\": %f, \"recvcount\": %f, \"recvmean\": %f, \"recvmin\": %f, \"recvmax\": %f, \"recvsumsqr\": %f, \"comm\": \"0x%08x\"", \
     EVENT_TRACE_PREFIX, __desc, __stats1[0],__stats1[1],__stats1[2],__stats1[3],__stats1[4], \
     __stats2[0],__stats2[1],__stats2[2],__stats2[3],__stats2[4], __comm); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
-#define TAU_SOS_COMM_SPLIT_EVENT(__comm,__color,__key,__comm_out) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-char __tmp[128]; \
-sprintf(__tmp, "%s_Comm_split (%p, %d, %d) 0x%08x", EVENT_TRACE_PREFIX, __comm,__color,__key,__comm_out); \
+#define TIMER_EXIT_COMM_SPLIT_EVENT(__comm,__color,__key,__comm_out) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __tmp[1024]; \
+sprintf(__tmp, "%s \"MPI_Comm_split\", \"comm_in\": \"%p\", \"color\": %d, \"key\": %d, \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __comm,__color,__key,__comm_out); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
-#define TAU_SOS_COMM_DUP_EVENT(__comm,__comm_out) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-char __tmp[128]; \
-sprintf(__tmp, "%s_Comm_dup (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
+#define TIMER_EXIT_COMM_DUP_EVENT(__comm,__comm_out) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __tmp[1024]; \
+sprintf(__tmp, "%s \"MPI_Comm_dup\", \"comm_in\": \"%p\", \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __comm, __comm_out); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
-#define TAU_SOS_COMM_CREATE_EVENT(__comm,__group,__comm_out) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-char __tmp[128]; \
-sprintf(__tmp, "%s_Comm_create (%p, %p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __group, __comm_out); \
+#define TIMER_EXIT_COMM_CREATE_EVENT(__comm,__group,__comm_out) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __tmp[1024]; \
+sprintf(__tmp, "%s \"MPI_Comm_create\", \"comm_in\": \"%p\", \"group\": \"%p\", \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __comm, __group, __comm_out); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
-#define TAU_SOS_COMM_GROUP_EVENT(__comm,__group_addr) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-char __tmp[128]; \
-sprintf(__tmp, "%s_Comm_group (%p) %p", EVENT_TRACE_PREFIX, __comm, __group_addr); \
+#define TIMER_EXIT_COMM_GROUP_EVENT(__comm,__group_addr) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __tmp[1024]; \
+sprintf(__tmp, "%s \"MPI_Comm_group\", \"comm\": \"%p\", \"group_addr\": \"%p\"", EVENT_TRACE_PREFIX, __comm, __group_addr); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
-void Tau_sos_group_incl_event(MPI_Group group, int count, int ranks[], MPI_Group new_group) {
+void Tau_timer_exit_group_incl_event(MPI_Group group, int count, int ranks[], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(count*11), sizeof(char)));
-    sprintf(tmp, "%s_Group_incl (%p, %d, [", EVENT_TRACE_PREFIX, group,count);
+    sprintf(tmp, "%s \"MPI_Group_incl\", \"group\": \"%p\", \"count\": %d, \"ranks\": [", EVENT_TRACE_PREFIX, group,count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, ranks[x]);
     }
-    sprintf(tmp, "%s%d]) %p", tmp, ranks[count-1], new_group);
+    sprintf(tmp, "%s%d], \"new_group\": \"%p\"", tmp, ranks[count-1], new_group);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
 
-#define TAU_SOS_GROUP_INCL_EVENT(__group,__count,__ranks,__group_addr) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-    Tau_sos_group_incl_event(__group, __count, __ranks, __group_addr); \
+#define TIMER_EXIT_GROUP_INCL_EVENT(__group,__count,__ranks,__group_addr) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+    Tau_timer_exit_group_incl_event(__group, __count, __ranks, __group_addr); \
 }
 
-void Tau_sos_group_excl_event(MPI_Group group, int count, int ranks[], MPI_Group new_group) {
+void Tau_timer_exit_group_excl_event(MPI_Group group, int count, int ranks[], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(count*11), sizeof(char)));
-    sprintf(tmp, "%s_Group_excl (%p, %d, [", EVENT_TRACE_PREFIX, group,count);
+    sprintf(tmp, "%s \"MPI_Group_excl\", \"group\": \"%p\", \"count\": %d, \"ranks\": [", EVENT_TRACE_PREFIX, group,count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, ranks[x]);
     }
-    sprintf(tmp, "%s%d]) %p", tmp, ranks[count-1], new_group);
+    sprintf(tmp, "%s%d], \"new_group\": \"%p\"", tmp, ranks[count-1], new_group);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
 
-#define TAU_SOS_GROUP_EXCL_EVENT(__group,__count,__ranks,__group_addr) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-    Tau_sos_group_excl_event(__group, __count, __ranks, __group_addr); \
+#define TIMER_EXIT_GROUP_EXCL_EVENT(__group,__count,__ranks,__group_addr) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+    Tau_timer_exit_group_excl_event(__group, __count, __ranks, __group_addr); \
 }
 
-void Tau_sos_group_range_incl_event(MPI_Group group, int count, int ranges[][3], MPI_Group new_group) {
+void Tau_timer_exit_group_range_incl_event(MPI_Group group, int count, int ranges[][3], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(count*33), sizeof(char)));
-    sprintf(tmp, "%s_Group_range_incl (%p, %d, [", EVENT_TRACE_PREFIX, group,count);
+    sprintf(tmp, "%s \"MPI_Group_range_incl\", \"group\": \"%p\", \"count\": %d, \"ranges\": [", EVENT_TRACE_PREFIX, group,count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s[%d,%d,%d],", tmp, ranges[x][0], ranges[x][1], ranges[x][2]);
     }
-    sprintf(tmp, "%s[%d,%d,%d]]) %p", tmp, ranges[count-1][0], ranges[count-1][1], ranges[count-1][2], new_group);
+    sprintf(tmp, "%s[%d,%d,%d]], \"new_group\": \"%p\"", tmp, ranges[count-1][0], ranges[count-1][1], ranges[count-1][2], new_group);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
 
-#define TAU_SOS_GROUP_RANGE_INCL_EVENT(__group,__count,__ranges,__newgroup) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-    Tau_sos_group_range_incl_event(__group, __count, __ranges, __newgroup); \
+#define TIMER_EXIT_GROUP_RANGE_INCL_EVENT(__group,__count,__ranges,__newgroup) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+    Tau_timer_exit_group_range_incl_event(__group, __count, __ranges, __newgroup); \
 }
 
-void Tau_sos_group_range_excl_event(MPI_Group group, int count, int ranges[][3], MPI_Group new_group) {
+void Tau_timer_exit_group_range_excl_event(MPI_Group group, int count, int ranges[][3], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(count*33), sizeof(char)));
-    sprintf(tmp, "%s_Group_range_excl (%p, %d, [", EVENT_TRACE_PREFIX, group,count);
+    sprintf(tmp, "%s \"MPI_Group_range_excl\", \"group\": \"%p\", \"count\": %d, \"ranges\": [", EVENT_TRACE_PREFIX, group,count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s[%d,%d,%d],", tmp, ranges[x][0], ranges[x][1], ranges[x][2]);
     }
-    sprintf(tmp, "%s[%d,%d,%d]]) %p", tmp, ranges[count-1][0], ranges[count-1][1], ranges[count-1][2], new_group);
+    sprintf(tmp, "%s[%d,%d,%d]], \"new_group\": \"%p\"", tmp, ranges[count-1][0], ranges[count-1][1], ranges[count-1][2], new_group);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
 
-#define TAU_SOS_GROUP_RANGE_EXCL_EVENT(__group,__count,__ranges,__newgroup) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-    Tau_sos_group_range_excl_event(__group, __count, __ranges, __newgroup); \
+#define TIMER_EXIT_GROUP_RANGE_EXCL_EVENT(__group,__count,__ranges,__newgroup) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+    Tau_timer_exit_group_range_excl_event(__group, __count, __ranges, __newgroup); \
 }
 
-void Tau_sos_group_translate_ranks_event(MPI_Group group1, int count, int *ranks1, MPI_Group group2, int *ranks2) {
+void Tau_timer_exit_group_translate_ranks_event(MPI_Group group1, int count, int *ranks1, MPI_Group group2, int *ranks2) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(count*11), sizeof(char)));
-    sprintf(tmp, "%s_Group_translate_ranks (%p, %d, [", EVENT_TRACE_PREFIX, group1, count);
+    sprintf(tmp, "%s \"MPI_Group_translate_ranks\", \"group_in\": \"%p\", \"count\": %d, \"ranks_in\": [", EVENT_TRACE_PREFIX, group1, count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, ranks1[x]);
     }
-    sprintf(tmp, "%s%d], [", tmp, ranks1[count-1]);
+    sprintf(tmp, "%s%d], \"ranks_out\": [", tmp, ranks1[count-1]);
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, ranks2[x]);
     }
-    sprintf(tmp, "%s%d]) %p", tmp, ranks2[count-1], group2);
+    sprintf(tmp, "%s%d], \"group_out\": \"%p\"", tmp, ranks2[count-1], group2);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
 
-#define TAU_SOS_GROUP_TRANSLATE_RANKS_EVENT(__group,__count,__ranks1,__group2,__ranks2) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-    Tau_sos_group_translate_ranks_event(__group, __count, __ranks1, __group2, __ranks2); \
+#define TIMER_EXIT_GROUP_TRANSLATE_RANKS_EVENT(__group,__count,__ranks1,__group2,__ranks2) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+    Tau_timer_exit_group_translate_ranks_event(__group, __count, __ranks1, __group2, __ranks2); \
 }
 
-#define TAU_SOS_GROUP_DIFFERENCE_EVENT(__group1,__group2,__newgroup) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
+#define TIMER_EXIT_GROUP_DIFFERENCE_EVENT(__group1,__group2,__newgroup) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __tmp[128]; \
-sprintf(__tmp, "%s_Group_difference (%p,%p) %p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
+sprintf(__tmp, "%s \"MPI_Group_difference\", \"group1\": \"%p\", \"group2\": \"%p\", \"new_group\": \"%p\"", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
-#define TAU_SOS_GROUP_INTERSECTION_EVENT(__group1,__group2,__newgroup) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
+#define TIMER_EXIT_GROUP_INTERSECTION_EVENT(__group1,__group2,__newgroup) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __tmp[128]; \
-sprintf(__tmp, "%s_Group_intersection (%p,%p) %p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
+sprintf(__tmp, "%s \"MPI_Group_intersection\", \"group1\": \"%p\", \"group2\": \"%p\", \"new_group\": \"%p\"", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
-#define TAU_SOS_GROUP_UNION_EVENT(__group1,__group2,__newgroup) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
+#define TIMER_EXIT_GROUP_UNION_EVENT(__group1,__group2,__newgroup) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __tmp[128]; \
-sprintf(__tmp, "%s_Group_union (%p,%p) %p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
+sprintf(__tmp, "%s \"MPI_Group_union\", \"group1\": \"%p\", \"group2\": \"%p\", \"new_group\": \"%p\"", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
 // this is used between cart_create and cart_sub calls... may not be safe, but...
 static int __cart_dims = 1;
 
-void Tau_sos_cart_create_event(MPI_Comm comm, int ndims, TAU_MPICH3_CONST int * dims, TAU_MPICH3_CONST int * periods, int reorder, MPI_Comm comm_out) {
+void Tau_timer_exit_cart_create_event(MPI_Comm comm, int ndims, TAU_MPICH3_CONST int * dims, TAU_MPICH3_CONST int * periods, int reorder, MPI_Comm comm_out) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(ndims*22), sizeof(char)));
-    sprintf(tmp, "%s_Cart_create (%p, %d, [", EVENT_TRACE_PREFIX, comm,ndims);
+    sprintf(tmp, "%s \"MPI_Cart_create\", \"comm\": \"%p\", \"ndims\": %d, \"dims\": [", EVENT_TRACE_PREFIX, comm,ndims);
     int x;
     __cart_dims = ndims;
     for (x = 0 ; x < ndims-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, dims[x]);
     }
-    sprintf(tmp, "%s%d], [", tmp, dims[ndims-1]);
+    sprintf(tmp, "%s%d], \"periods\": [", tmp, dims[ndims-1]);
     for (x = 0 ; x < ndims-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, periods[x]);
     }
-    sprintf(tmp, "%s%d], %d) %p", tmp, periods[ndims-1], reorder, comm_out);
+    sprintf(tmp, "%s%d], \"reorder\": %d, \"comm_out\": \"%p\"", tmp, periods[ndims-1], reorder, comm_out);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
 
-#define TAU_SOS_CART_CREATE_EVENT(__comm,__ndims,__dims,__periods,__reorder,__comm_out) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-   Tau_sos_cart_create_event(__comm,__ndims,__dims,__periods,__reorder,__comm_out); \
+#define TIMER_EXIT_CART_CREATE_EVENT(__comm,__ndims,__dims,__periods,__reorder,__comm_out) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+   Tau_timer_exit_cart_create_event(__comm,__ndims,__dims,__periods,__reorder,__comm_out); \
 }
 
-void Tau_sos_cart_coords_event(MPI_Comm comm, int rank, int maxdims, int * coords) {
+void Tau_timer_exit_cart_coords_event(MPI_Comm comm, int rank, int maxdims, int * coords) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(maxdims*11), sizeof(char)));
-    sprintf(tmp, "%s_Cart_coords (%p, %d, %d, [", EVENT_TRACE_PREFIX, comm,rank,maxdims);
+    sprintf(tmp, "%s \"MPI_Cart_coords\", \"comm\": \"%p\", \"rank\": %d, \"maxdims\": %d, \"coords\": [", EVENT_TRACE_PREFIX, comm,rank,maxdims);
     int x;
     for (x = 0 ; x < maxdims-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, coords[x]);
     }
-    sprintf(tmp, "%s%d]) 0x0", tmp, coords[maxdims-1]);
+    sprintf(tmp, "%s%d]", tmp, coords[maxdims-1]);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
 
-#define TAU_SOS_CART_COORDS_EVENT(__comm,__rank,__maxdims,__coords) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-    Tau_sos_cart_coords_event(__comm,__rank,__maxdims,__coords); \
+#define TIMER_EXIT_CART_COORDS_EVENT(__comm,__rank,__maxdims,__coords) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+    Tau_timer_exit_cart_coords_event(__comm,__rank,__maxdims,__coords); \
 }
 
-void Tau_sos_cart_sub_event(MPI_Comm comm, TAU_MPICH3_CONST int * remains, MPI_Comm comm_out) {
+void Tau_timer_exit_cart_sub_event(MPI_Comm comm, TAU_MPICH3_CONST int * remains, MPI_Comm comm_out) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(__cart_dims*11), sizeof(char)));
-    sprintf(tmp, "%s_Cart_sub (%p, [", EVENT_TRACE_PREFIX, comm);
+    sprintf(tmp, "%s \"MPI_Cart_sub\", \"comm\": \"%p\", \"remains\": [", EVENT_TRACE_PREFIX, comm);
     int x;
     for (x = 0 ; x < __cart_dims-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, remains[x]);
     }
-    sprintf(tmp, "%s%d]) 0x%08x", tmp, remains[__cart_dims-1], comm_out);
+    sprintf(tmp, "%s%d], \"comm_out\": \"0x%08x\"", tmp, remains[__cart_dims-1], comm_out);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
 
-#define TAU_SOS_CART_SUB_EVENT(__comm,__remains,__comm_out) \
-if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
-    Tau_sos_cart_sub_event(__comm,__remains,__comm_out); \
+#define TIMER_EXIT_CART_SUB_EVENT(__comm,__remains,__comm_out) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+    Tau_timer_exit_cart_sub_event(__comm,__remains,__comm_out); \
 }
-
-#else
-#define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm)
-#define TAU_SOS_COLLECTIVE_EXCH_EVENT(__desc,__size,__comm)
-#define TAU_SOS_COLLECTIVE_EXCH_V_EVENT(__desc,__stats,__comm)
-#define TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT(__desc,__stats1,__stats2,__comm)
-#define TAU_SOS_COMM_SPLIT_EVENT(__comm,__color,__key,__comm_out)
-#define TAU_SOS_COMM_DUP_EVENT(__comm,__comm_out)
-#define TAU_SOS_COMM_CREATE_EVENT(__comm,__group,__comm_out)
-#define TAU_SOS_CART_CREATE_EVENT(__comm,__ndims,__dims,__periods,__reorder,__comm_out)
-#define TAU_SOS_CART_COORDS_EVENT(__comm,__rank,__maxdims,__coords)
-#define TAU_SOS_CART_SUB_EVENT(__comm,__remains,__comm_out)
-#define TAU_SOS_COMM_GROUP_EVENT(__comm,__group_addr)
-#define TAU_SOS_GROUP_INCL_EVENT(__group,__count,__ranks,__group_addr)
-#define TAU_SOS_GROUP_EXCL_EVENT(__group,__count,__ranks,__group_addr)
-#define TAU_SOS_GROUP_RANGE_INCL_EVENT(__group,__count,__ranges,__newgroup)
-#define TAU_SOS_GROUP_RANGE_EXCL_EVENT(__group,__count,__ranges,__newgroup)
-#define TAU_SOS_GROUP_TRANSLATE_RANKS_EVENT(__group,__count,__ranks1,__group2,__ranks2)
-#define TAU_SOS_GROUP_DIFFERENCE_EVENT(__group1,__group2,__newgroup)
-#define TAU_SOS_GROUP_INTERSECTION_EVENT(__group1,__group2,__newgroup)
-#define TAU_SOS_GROUP_UNION_EVENT(__group1,__group2,__newgroup)
-#endif
 
 
 void TauSyncClocks();
@@ -388,6 +364,10 @@ extern int Tau_mpi_t_cvar_initialize();
 extern int Tau_track_mpi_t_here();
 extern void Tau_track_mpi_t();
 extern int Tau_mpi_t_cleanup();
+extern int Tau_msg_send_prolog();
+extern int Tau_msg_recv_prolog();
+#define TAU_MSG_SEND_PROLOG() Tau_msg_send_prolog()
+#define TAU_MSG_RECV_PROLOG() Tau_msg_recv_prolog()
 
 #ifdef TAU_BEACON
 extern int TauBeaconSubscribe(char *topic_name, char *topic_scope, void (*handler)(BEACON_receive_topic_t*));
@@ -419,7 +399,7 @@ void tau_mpi_init_predefined_constants()
    in where the calls are placed. For e.g., in TAU a send is traced before
    the MPI_Send and a receive after MPI_Recv. This avoids -ve time problems
    that can happen on a uniprocessor if a receive is traced before the send
-   is traced. 
+   is traced.
 
    This file was once generated using:
    % <mpich>/mpe/profiling/wrappergen/wrappergen -w TauMpi.w -o TauMpi.c
@@ -440,7 +420,7 @@ static int procid_0;
       } \
       call(typesize*sendcount); \
     } \
-  } 
+  }
 
 static int sum_array (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI_Comm comm) {
 
@@ -449,14 +429,13 @@ static int sum_array (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI_Comm 
   PMPI_Comm_rank(comm, &commRank);
   PMPI_Comm_size(comm, &commSize);
   PMPI_Type_size(type, &typesize );
-  
+
   for (i = 0; i<commSize; i++) {
     total += counts[i]; // sum
-  } 
+  }
   return total * typesize;
 }
 
-#if defined(TAU_SOS)
 static double* array_stats (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI_Comm comm, double vals[5]) {
 
   int typesize, commSize, commRank, i;
@@ -470,21 +449,20 @@ static double* array_stats (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI
     vals[2] = (double)counts[0]; //min
     vals[3] = (double)counts[0]; //max
     vals[4] = (double)counts[0] * (double)counts[0]; //sumsqr
-  
+
     for (i = 1; i<commSize; i++) {
       vals[1] += (double)counts[i]; // sum
       vals[2] = (double)counts[i] < vals[2] ? (double)counts[i] : vals[2]; // min
       vals[3] = (double)counts[i] > vals[3] ? (double)counts[i] : vals[3]; // max
       vals[4] += ((double)counts[i] * (double)counts[i]); // sumsqr
-    } 
+    }
     for (i = 1; i<5; i++) {
       vals[i] = vals[i] * (double)typesize;
     }
-    vals[1] = vals[1] / (double)commSize;
+    vals[1] = vals[1] / (double)commSize; // now it's the mean
   }
   return vals;
 }
-#endif
 
 #define track_allvector( call, counts, typesize ) { \
     int typesize, commSize, commRank, sendcount = 0, i; \
@@ -499,7 +477,7 @@ static double* array_stats (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI
       sendcount += counts[i]; \
     } \
     call(typesize*sendcount); \
-  } 
+  }
 
 
 /* MPI PROFILING INTERFACE WRAPPERS BEGIN HERE */
@@ -560,7 +538,7 @@ static double* array_stats (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI
 */
 
 
-  
+
 
 
 
@@ -601,7 +579,7 @@ char *note;
   if ((rq) && rq->status == RQ_RECV)
   { /* See if we need to see the status to get values of tag & id */
     /* for wildcard receives from any task */
-    /* if (rq->otherParty == MPI_ANY_SOURCE) */ 
+    /* if (rq->otherParty == MPI_ANY_SOURCE) */
     otherid = status->MPI_SOURCE;
     /* if (rq->tag == MPI_ANY_TAG) */
     othertag = status->MPI_TAG;
@@ -614,12 +592,12 @@ char *note;
   if (!rq->is_persistent) {
     TauDeleteRequestData(request);
   }
-  
+
   // TAU_PROFILE_STOP(tautimer);
-  return; 
+  return;
 }
 
-/* This routine traverses the list of requests and checks for RQ_SEND. The 
+/* This routine traverses the list of requests and checks for RQ_SEND. The
    message is logged if this request matches */
 
 
@@ -651,7 +629,7 @@ char *note;
 #endif /* DEBUG */
 
   if ((rq) && rq->status == RQ_SEND)
-  { 
+  {
     otherid = TauTranslateRankToWorld(rq->comm, rq->otherParty);
     othertag = rq->tag;
     /* post the send message */
@@ -659,7 +637,7 @@ char *note;
     TAU_PLUGIN_SENDMSG(othertag, otherid, rq->size, 0);
   }
 
-  return; 
+  return;
 }
 
 
@@ -693,13 +671,13 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Allgather()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Allgather( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm );
   PMPI_Type_size( recvtype, &typesize );
   TAU_ALLGATHER_DATA(typesize*recvcount);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("Allgather",typesize*recvcount,comm);
+  TIMER_EXIT_COLLECTIVE_EXCH_ALL_EVENT("MPI_Allgather",typesize*sendcount,typesize*recvcount,0,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -720,17 +698,17 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Allgatherv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Allgatherv( sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm );
   PMPI_Type_size( recvtype, &typesize );
 
   track_allvector(TAU_ALLGATHER_DATA, recvcounts, typesize);
 
-#if defined(TAU_SOS)
-  double tmp_array[5] = {0.0};
-#endif
-  TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Allgatherv",array_stats(recvcounts,recvtype,comm,tmp_array),comm);
+  if (TAU_DO_TIMER_EXIT) {
+    double tmp_array[5] = {0.0};
+    TIMER_EXIT_COLLECTIVE_EXCH_V_EVENT("MPI_Allgatherv","sendbytes",sendcount*typesize,array_stats(recvcounts,recvtype,comm,tmp_array),0,comm);
+  }
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -749,13 +727,13 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Allreduce()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Allreduce( sendbuf, recvbuf, count, datatype, op, comm );
   PMPI_Type_size( datatype, &typesize );
   TAU_ALLREDUCE_DATA(typesize*count);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("Allreduce",typesize*count,comm);
+  TIMER_EXIT_COLLECTIVE_EXCH_EVENT("MPI_Allreduce",typesize*count,0,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -775,14 +753,14 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Alltoall()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
 
   returnVal = PMPI_Alltoall( sendbuf, sendcount, sendtype, recvbuf, recvcnt, recvtype, comm );
   PMPI_Type_size( sendtype, &typesize );
   TAU_ALLTOALL_DATA(typesize*sendcount);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("Alltoall",typesize*sendcount,comm);
+  TIMER_EXIT_COLLECTIVE_EXCH_ALL_EVENT("MPI_Alltoall",typesize*sendcount,typesize*recvcnt,0,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -804,7 +782,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Alltoallv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Alltoallv( sendbuf, sendcnts, sdispls, sendtype, recvbuf, recvcnts, rdispls, recvtype, comm );
 
@@ -813,44 +791,11 @@ MPI_Comm comm;
 
   TAU_ALLTOALL_DATA(tracksize);
 
-#if defined(TAU_SOS)
-  double tmp_array1[5] = {0.0};
-  double tmp_array2[5] = {0.0};
-#endif
-#ifdef TAU_SOS_disabled
-  //TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT("Alltoallv",array_stats(sendcnts,sendtype,comm,tmp_array1),array_stats(recvcnts,recvtype,comm,tmp_array2),comm);
-  if (TauEnv_get_sos_trace_events()) {
-	  int commsize = 0;
-      PMPI_Comm_size(comm, &commsize);
-	  // allocate enough space. each count can be 10 digits, then add spaces
-	  // and commas, and 256 for text.
-	  int buffersize = (commsize * 11) + (commsize * 11) + 256;
-      char * buffer = (char*)(calloc(buffersize, sizeof(char)));
-      sprintf(buffer, "%s collective exchangev %s (", EVENT_TRACE_PREFIX, "Alltoallv");
-	  int sendtypesize = 0;
-	  int recvtypesize = 0;
-	  PMPI_Type_size(sendtype, &sendtypesize);
-	  PMPI_Type_size(recvtype, &recvtypesize);
-	  /* loop over sendcnts */
-      sprintf(buffer, "%s[%d", buffer, sendcnts[0]);
-	  int i = 1;
-	  for (i = 1 ; i < commsize ; i++) {
-          sprintf(buffer, "%s,%d", buffer, sendcnts[i]);
-	  }
-      sprintf(buffer, "%s],%d", buffer, sendtypesize);
-      sprintf(buffer, "%s,[%d", buffer, recvcnts[0]);
-	  /* loop over recvcnts */
-	  for (i = 1 ; i < commsize ; i++) {
-          sprintf(buffer, "%s,%d", buffer, recvcnts[i]);
-	  }
-      sprintf(buffer, "%s],%d", buffer, recvtypesize);
-
-	  sprintf(buffer, "%s) 0x%08x", buffer, comm);
-      Tau_plugin_trace_current_timer(buffer);
-	  free(buffer);
+  if (TAU_DO_TIMER_EXIT) {
+    double tmp_array1[5] = {0.0};
+    double tmp_array2[5] = {0.0};
+    TIMER_EXIT_COLLECTIVE_EXCH_AAV_EVENT("MPI_Alltoallv",array_stats(sendcnts,sendtype,comm,tmp_array1),array_stats(recvcnts,recvtype,comm,tmp_array2),comm);
   }
-#endif // TAU_SOS
-
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -863,11 +808,11 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Barrier()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Barrier( comm );
 
-  TAU_SOS_COLLECTIVE_SYNC_EVENT("Barrier",comm);
+  TIMER_EXIT_COLLECTIVE_SYNC_EVENT("MPI_Barrier",comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -888,7 +833,7 @@ MPI_Comm comm;
   TAU_REGISTER_CONTEXT_EVENT(c3, "Message size in MPI_Bcast [10KB, 100KB)");
   TAU_REGISTER_CONTEXT_EVENT(c4, "Message size in MPI_Bcast [100KB, 1000KB)");
   TAU_REGISTER_CONTEXT_EVENT(c5, "Message size in MPI_Bcast [1000KB+]");
- 
+
 #endif
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Bcast()",  " ", TAU_MESSAGE);
@@ -900,8 +845,8 @@ MPI_Comm comm;
   PMPI_Type_size( datatype, &typesize );
 
 #ifdef TAU_MPI_BCAST_HISTOGRAM
-  unsigned long long volume = typesize * count; 
-  if (volume  < 1024) { 
+  unsigned long long volume = typesize * count;
+  if (volume  < 1024) {
     TAU_CONTEXT_EVENT(c1, volume);
   } else {
     if (volume < 10240) {
@@ -922,7 +867,7 @@ MPI_Comm comm;
 
   TAU_BCAST_DATA(typesize*count);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("Bcast",typesize*count,comm);
+  TIMER_EXIT_COLLECTIVE_EXCH_EVENT("MPI_Bcast",typesize*count,root,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -944,18 +889,17 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Gather()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Gather( sendbuf, sendcnt, sendtype, recvbuf, recvcount, recvtype, root, comm );
 
   PMPI_Comm_rank ( comm, &rank );
+  PMPI_Type_size( recvtype, &typesize );
   if (rank == root) {
-    PMPI_Type_size( recvtype, &typesize );
     TAU_GATHER_DATA(typesize*recvcount);
   }
 
-
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("Gather",typesize*recvcount,comm);
+  TIMER_EXIT_COLLECTIVE_EXCH_ALL_EVENT("MPI_Gather",typesize*sendcnt,typesize*recvcount,root,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -982,10 +926,12 @@ MPI_Comm comm;
 
   track_vector(TAU_GATHER_DATA, recvcnts, recvtype);
 
-#if defined(TAU_SOS)
-  double tmp_array[5] = {0.0};
-#endif
-  TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Gatherv",array_stats(recvcnts,recvtype,comm,tmp_array),comm);
+  if (TAU_DO_TIMER_EXIT) {
+    double tmp_array[5] = {0.0};
+    int typesize;
+    PMPI_Type_size( sendtype, &typesize );
+    TIMER_EXIT_COLLECTIVE_EXCH_V_EVENT("MPI_Gatherv","sendbytes",sendcnt*typesize,array_stats(recvcnts,recvtype,comm,tmp_array),root,comm);
+  }
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -1000,7 +946,7 @@ MPI_Op * op;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Op_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Op_create( function, commute, op );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1015,7 +961,7 @@ MPI_Op * op;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Op_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Op_free( op );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1036,13 +982,13 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Reduce_scatter()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Reduce_scatter( sendbuf, recvbuf, recvcnts, datatype, op, comm );
   PMPI_Type_size( datatype, &typesize );
   TAU_REDUCESCATTER_DATA(typesize*(*recvcnts));
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("Reduce_scatter",typesize*(*recvcnts),comm);
+  TIMER_EXIT_COLLECTIVE_EXCH_EVENT("MPI_Reduce_scatter",typesize*(*recvcnts),0,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -1062,13 +1008,13 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Reduce()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Reduce( sendbuf, recvbuf, count, datatype, op, root, comm );
   PMPI_Type_size( datatype, &typesize );
   TAU_REDUCE_DATA(typesize*count);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("Reduce",typesize*count,comm);
+  TIMER_EXIT_COLLECTIVE_EXCH_EVENT("MPI_Reduce",typesize*count,root,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -1087,13 +1033,13 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Scan()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Scan( sendbuf, recvbuf, count, datatype, op, comm );
   PMPI_Type_size( datatype, &typesize );
   TAU_SCAN_DATA(typesize*count);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("Scan",typesize*count,comm);
+  TIMER_EXIT_COLLECTIVE_EXCH_EVENT("MPI_Scan",typesize*count,0,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -1114,13 +1060,13 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Scatter()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Scatter( sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm );
   PMPI_Type_size( sendtype, &typesize );
   TAU_SCATTER_DATA(typesize*sendcnt);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT("Scatter",typesize*sendcnt,comm);
+  TIMER_EXIT_COLLECTIVE_EXCH_ALL_EVENT("MPI_Scatter",typesize*sendcnt,typesize*recvcnt,root,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -1141,16 +1087,18 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Scatterv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Scatterv( sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm );
 
   track_vector(TAU_SCATTER_DATA, sendcnts, typesize);
 
-#if defined(TAU_SOS)
-  double tmp_array[5] = {0.0};
-#endif
-  TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Scatterv",array_stats(sendcnts,recvtype,comm,tmp_array),comm);
+  if (TAU_DO_TIMER_EXIT) {
+    double tmp_array[5] = {0.0};
+    int typesize;
+    PMPI_Type_size( sendtype, &typesize );
+    TIMER_EXIT_COLLECTIVE_EXCH_V_EVENT("MPI_Scatterv","recvbytes",recvcnt*typesize,array_stats(sendcnts,recvtype,comm,tmp_array),root,comm);
+  }
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -1166,7 +1114,7 @@ int keyval;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Attr_delete()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Attr_delete( comm, keyval );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1185,7 +1133,7 @@ int * flag;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Attr_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Attr_get( comm, keyval, attr_value, flag );
 
@@ -1205,7 +1153,7 @@ void * attr_value;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Attr_put()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Attr_put( comm, keyval, attr_value );
 
@@ -1224,7 +1172,7 @@ int * result;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_compare()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Comm_compare( comm1, comm2, result );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1245,9 +1193,9 @@ MPI_Comm * comm_out;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Comm_create( comm, group, comm_out );
-  TAU_SOS_COMM_CREATE_EVENT(comm, group, *comm_out);
+  TIMER_EXIT_COMM_CREATE_EVENT(comm, group, *comm_out);
 
   Tau_setupCommunicatorInfo(comm_out);
   TAU_PROFILE_STOP(tautimer);
@@ -1263,10 +1211,10 @@ MPI_Comm * comm_out;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_dup()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_dup( comm, comm_out );
-  TAU_SOS_COMM_DUP_EVENT(comm, *comm_out);
+  TIMER_EXIT_COMM_DUP_EVENT(comm, *comm_out);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1280,7 +1228,7 @@ MPI_Comm * comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   MPI_Comm silly =  *comm;
   returnVal = PMPI_Comm_free( &(silly) );
 
@@ -1297,10 +1245,10 @@ MPI_Group * group;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_group()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_group( comm, group );
-  TAU_SOS_COMM_GROUP_EVENT(comm,*group);
+  TIMER_EXIT_COMM_GROUP_EVENT(comm,*group);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1315,7 +1263,7 @@ int * rank;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_rank()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_rank( comm, rank );
 
@@ -1338,7 +1286,7 @@ MPI_Group * group;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_remote_group()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_remote_group( comm, group );
 
@@ -1355,7 +1303,7 @@ int * size;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_remote_size()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_remote_size( comm, size );
 
@@ -1372,7 +1320,7 @@ int * size;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_size()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Comm_size( comm, size );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1381,10 +1329,10 @@ int * size;
 }
 
 /**************************************************************************
- Experimental routine to track communicator splits in metadata 
+ Experimental routine to track communicator splits in metadata
  This will create a metadata item such as:
    Name : MPI_Comm 102140608
-   Value : 0 2 4 6 ... 
+   Value : 0 2 4 6 ...
 ***************************************************************************/
 #ifdef TAU_EXP_TRACK_COMM
 void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
@@ -1434,10 +1382,10 @@ MPI_Comm * comm_out;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_split()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   MPI_Comm newcomm = comm;
   returnVal = PMPI_Comm_split( newcomm, color, key, comm_out );
-  TAU_SOS_COMM_SPLIT_EVENT(comm,color,key,*comm_out);
+  TIMER_EXIT_COMM_SPLIT_EVENT(comm,color,key,*comm_out);
 
 #ifdef TAU_EXP_TRACK_COMM
   tau_exp_track_comm_split(newcomm, *comm_out);
@@ -1485,12 +1433,12 @@ int MPI_Comm_spawn(TAU_NONMPC_CONST char *command, char *argv[], int maxprocs,
     }
     wordexp(tau_exec_args, &p, WRDE_NOCMD);
     argv = malloc((p.we_wordc + old_argc + 2) * sizeof(char*));
-    int offset;
+    size_t offset;
     for(offset = 0; offset < p.we_wordc; ++offset) {
       argv[offset] = p.we_wordv[offset];
     }
     argv[offset++] = (char*)old_command;
-    int i;
+    size_t i;
     for(i = 0; i < old_argc; ++i) {
       argv[offset++] = old_argv[i];
     }
@@ -1500,7 +1448,7 @@ int MPI_Comm_spawn(TAU_NONMPC_CONST char *command, char *argv[], int maxprocs,
     allocated_argv = 1;
 
   }
-  
+
   returnVal = PMPI_Comm_spawn(command, argv, maxprocs, info, root, comm, intercomm, array_of_errcodes);
   Tau_handle_comm_spawn(comm, *intercomm);
 
@@ -1522,7 +1470,7 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_spawn_multiple()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Comm_spawn_multiple(count, array_of_commands, array_of_argv, array_of_maxprocs, array_of_info, root, comm, intercomm, array_of_errcodes);
   Tau_handle_comm_spawn(comm, *intercomm);
 
@@ -1540,7 +1488,7 @@ int * flag;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_test_inter()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_test_inter( comm, flag );
 
@@ -1558,7 +1506,7 @@ int * result;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Group_compare()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Group_compare( group1, group2, result );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1575,9 +1523,9 @@ MPI_Group * group_out;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Group_difference()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Group_difference( group1, group2, group_out );
-  TAU_SOS_GROUP_DIFFERENCE_EVENT(group1, group2, *group_out);
+  TIMER_EXIT_GROUP_DIFFERENCE_EVENT(group1, group2, *group_out);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1594,9 +1542,9 @@ MPI_Group * newgroup;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Group_excl()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Group_excl( group, n, ranks, newgroup );
-  TAU_SOS_GROUP_EXCL_EVENT(group,n,ranks,*newgroup);
+  TIMER_EXIT_GROUP_EXCL_EVENT(group,n,ranks,*newgroup);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1610,7 +1558,7 @@ MPI_Group * group;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Group_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Group_free( group );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1628,9 +1576,9 @@ MPI_Group * group_out;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Group_incl()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Group_incl( group, n, ranks, group_out );
-  TAU_SOS_GROUP_INCL_EVENT(group,n,ranks,*group_out);
+  TIMER_EXIT_GROUP_INCL_EVENT(group,n,ranks,*group_out);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1646,9 +1594,9 @@ MPI_Group * group_out;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Group_intersection()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Group_intersection( group1, group2, group_out );
-  TAU_SOS_GROUP_INTERSECTION_EVENT(group1, group2, *group_out);
+  TIMER_EXIT_GROUP_INTERSECTION_EVENT(group1, group2, *group_out);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1663,7 +1611,7 @@ int * rank;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Group_rank()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Group_rank( group, rank );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1681,9 +1629,9 @@ MPI_Group * newgroup;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Group_range_excl()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Group_range_excl( group, n, ranges, newgroup );
-  TAU_SOS_GROUP_RANGE_EXCL_EVENT(group, n, ranges, *newgroup);
+  TIMER_EXIT_GROUP_RANGE_EXCL_EVENT(group, n, ranges, *newgroup);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1701,9 +1649,9 @@ MPI_Group * newgroup;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Group_range_incl()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Group_range_incl( group, n, ranges, newgroup );
-  TAU_SOS_GROUP_RANGE_INCL_EVENT(group, n, ranges, *newgroup);
+  TIMER_EXIT_GROUP_RANGE_INCL_EVENT(group, n, ranges, *newgroup);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1719,7 +1667,7 @@ int * size;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Group_size()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Group_size( group, size );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1738,9 +1686,9 @@ int * ranks_b;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Group_translate_ranks()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Group_translate_ranks( group_a, n, ranks_a, group_b, ranks_b );
-  TAU_SOS_GROUP_TRANSLATE_RANKS_EVENT(group_a, n, ranks_a, group_b, ranks_b);
+  TIMER_EXIT_GROUP_TRANSLATE_RANKS_EVENT(group_a, n, ranks_a, group_b, ranks_b);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1756,9 +1704,9 @@ MPI_Group * group_out;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Group_union()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Group_union( group1, group2, group_out );
-  TAU_SOS_GROUP_UNION_EVENT(group1, group2, *group_out);
+  TIMER_EXIT_GROUP_UNION_EVENT(group1, group2, *group_out);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1777,7 +1725,7 @@ MPI_Comm * comm_out;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Intercomm_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(local_comm);
   returnVal = PMPI_Intercomm_create( local_comm, local_leader, peer_comm, remote_leader, tag, comm_out );
 
@@ -1795,7 +1743,7 @@ MPI_Comm * comm_out;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Intercomm_merge()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Intercomm_merge( comm, high, comm_out );
 
@@ -1816,7 +1764,7 @@ void * extra_state;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Keyval_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Keyval_create( copy_fn, delete_fn, keyval, extra_state );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1831,7 +1779,7 @@ int * keyval;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Keyval_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Keyval_free( keyval );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1854,8 +1802,8 @@ int errorcode;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Abort()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
- 
-#ifndef TAU_WINDOWS 
+
+#ifndef TAU_WINDOWS
   if (TauEnv_get_track_signals()) {
     kill(getpid(), SIGABRT);
   }
@@ -1877,7 +1825,7 @@ int * errorclass;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Error_class()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Error_class( errorcode, errorclass );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1895,7 +1843,7 @@ MPI_Errhandler * errhandler;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Errhandler_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Errhandler_create( function, errhandler );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1910,7 +1858,7 @@ MPI_Errhandler * errhandler;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Errhandler_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Errhandler_free( errhandler );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1926,7 +1874,7 @@ MPI_Errhandler * errhandler;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Errhandler_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Errhandler_get( comm, errhandler );
 
@@ -1945,7 +1893,7 @@ int * resultlen;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Error_string()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Error_string( errorcode, string, resultlen );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1963,7 +1911,7 @@ MPI_Errhandler errhandler;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Errhandler_set()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Errhandler_set( comm, errhandler );
 
@@ -1992,7 +1940,9 @@ int  MPI_Finalize(  )
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
+  Tau_flush_gpu_activity();
+
 #ifdef TAU_MPI_T
   Tau_track_mpi_t_here();
 
@@ -2007,7 +1957,7 @@ int  MPI_Finalize(  )
 #endif /* TAU_MPI_T */
 
 #ifdef TAU_SOS
-  //TAU_SOS_stop_worker();
+  //TIMER_EXIT_stop_worker();
 #endif
 
   if (TauEnv_get_synchronize_clocks()) {
@@ -2021,7 +1971,7 @@ int  MPI_Finalize(  )
   if (Tau_get_node() < 0) {
     /* Grab the node id, we don't always wrap mpi_init */
     PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
-    TAU_PROFILE_SET_NODE(procid_0 ); 
+    TAU_PROFILE_SET_NODE(procid_0 );
     Tau_set_usesMPI(1);
   }
 
@@ -2031,7 +1981,7 @@ int  MPI_Finalize(  )
   x_uint64 counterVals[1024];
 
   if (TauEnv_get_ibm_bg_hwp_counters()) {
-    PMPI_Barrier(MPI_COMM_WORLD); 
+    PMPI_Barrier(MPI_COMM_WORLD);
     Tau_Bg_hwp_counters_stop(&numCounters, counterVals, &mode, &upcErr);
     if (upcErr != 0) {
       printf("  ** Error stopping UPC performance counters");
@@ -2058,7 +2008,7 @@ int  MPI_Finalize(  )
 #ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
     //    Tau_sampling_finalizeNode();
-    
+
     Tau_sampling_finalize_if_necessary(Tau_get_local_tid());
   }
 #endif /* _AIX */
@@ -2087,7 +2037,7 @@ int  MPI_Finalize(  )
     //TauProfiler_updateAllIntermediateStatistics();
     Tau_mergeProfiles_MPI();
   }
-  
+
 #ifdef TAU_MONITORING
   Tau_mon_disconnect();
 #endif /* TAU_MONITORING */
@@ -2111,8 +2061,10 @@ int  MPI_Finalize(  )
   TAU_PROFILE_STOP(tautimer);
 
   Tau_stop_top_level_timer_if_necessary();
-  //tau_mpi_finalized = 1;
- 
+#ifndef TAU_MPC
+  tau_mpi_finalized = 1;
+#endif /* TAU_MPC */
+
   return returnVal;
 }
 
@@ -2124,7 +2076,7 @@ int * resultlen;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Get_processor_name()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Get_processor_name( name, resultlen );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2141,7 +2093,7 @@ int Tau_MPI_T_initialization(void) {
   if (TauEnv_get_track_mpi_t_pvars()) {
     Tau_mpi_t_initialize();
   }
- 
+
   returnVal = Tau_mpi_t_cvar_initialize();
 
   #ifdef TAU_BEACON
@@ -2162,15 +2114,15 @@ int Tau_MPI_T_initialization(void) {
 int mkdirp(const char *path) {
     const size_t len = strlen(path);
     char _path[4096];
-    char *p; 
+    char *p;
 
     errno = 0;
 
     /* Copy string so its mutable */
     if (len > sizeof(_path)-1) {
             errno = ENAMETOOLONG;
-            return -1; 
-        }   
+            return -1;
+        }
     strcpy(_path, path);
 
     /* Iterate the string */
@@ -2178,20 +2130,20 @@ int mkdirp(const char *path) {
             if (*p == '/') {
                         /* Temporarily truncate */
                         *p = '\0';
-            
+
                         if (mkdir(_path, S_IRWXU) != 0) {
                                         if (errno != EEXIST)
-                                            return -1; 
+                                            return -1;
                                     }
-            
+
                         *p = '/';
                     }
-        }   
+        }
 
     if (mkdir(_path, S_IRWXU) != 0) {
             if (errno != EEXIST)
-                return -1; 
-        }   
+                return -1;
+        }
 
     return 0;
 }
@@ -2224,15 +2176,11 @@ char *** argv;
   if(Tau_get_usesMPI() == 0)
   {
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE);
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
-  
+
   tau_mpi_init_predefined_constants();
-#ifdef TAU_MPI_T
-  Tau_MPI_T_initialization();
-  Tau_track_mpi_t();
-#endif /* TAU_MPI_T */
 
 #ifdef TAU_ADIOS
   // this is only here to force the linker to resolve the adiost_tool symbol
@@ -2251,6 +2199,11 @@ char *** argv;
    returnVal = PMPI_Init( argc, argv );
 #endif
 
+#ifdef TAU_MPI_T
+  Tau_MPI_T_initialization();
+  Tau_track_mpi_t();
+#endif /* TAU_MPI_T */
+
   MPI_Comm parent;
   PMPI_Comm_get_parent(&parent);
   if(parent != MPI_COMM_NULL) {
@@ -2259,7 +2212,7 @@ char *** argv;
   }
 
 #ifndef TAU_WINDOWS
-#ifndef _AIX 
+#ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
   }
@@ -2269,7 +2222,7 @@ char *** argv;
   /* Initialize the plugin system */
   Tau_initialize_plugin_system();
 
-  Tau_signal_initialization(); 
+  Tau_signal_initialization();
 
 #ifdef TAU_MONITORING
   Tau_mon_connect();
@@ -2277,18 +2230,18 @@ char *** argv;
 
 #ifdef TAU_BGP
   if (TauEnv_get_ibm_bg_hwp_counters()) {
-    int upcErr; 
-    Tau_Bg_hwp_counters_start(&upcErr); 
+    int upcErr;
+    Tau_Bg_hwp_counters_start(&upcErr);
     if (upcErr != 0) {
       printf("TAU ERROR: ** Error starting IBM BGP UPC hardware performance counters\n");
     }
     PMPI_Barrier(MPI_COMM_WORLD);
   }
 #endif /* TAU_BGP */
-  TAU_PROFILE_STOP(tautimer); 
+  TAU_PROFILE_STOP(tautimer);
 
   PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
-  TAU_PROFILE_SET_NODE(procid_0 ); 
+  TAU_PROFILE_SET_NODE(procid_0 );
   Tau_set_usesMPI(1);
 
   PMPI_Comm_size( MPI_COMM_WORLD, &size );
@@ -2305,12 +2258,12 @@ char *** argv;
     returnVal = 0;
   }
 
-  writeMetaDataAfterMPI_Init(); 
+  writeMetaDataAfterMPI_Init();
 
-  Tau_post_init(); 
+  Tau_post_init();
 
 #ifndef TAU_WINDOWS
-#ifndef _AIX 
+#ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
   }
@@ -2334,18 +2287,19 @@ int *provided;
   int  procnamelength;
 
   TAU_VERBOSE("call TAU MPI_Init_thread()\n");
- 
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Init_thread()",  " ", TAU_MESSAGE);
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
- 
+
   tau_mpi_init_predefined_constants();
+
+  returnVal = PMPI_Init_thread( argc, argv, required, provided );
+
 #ifdef TAU_MPI_T
   returnVal = Tau_MPI_T_initialization();
   Tau_track_mpi_t();
 #endif /* TAU_MPI_T */
-
-  returnVal = PMPI_Init_thread( argc, argv, required, provided );
 
   MPI_Comm parent;
   MPI_Comm_get_parent(&parent);
@@ -2365,7 +2319,7 @@ int *provided;
 #endif /* _AIX */
 #endif /* TAU_WINDOWS */
 
-  Tau_signal_initialization(); 
+  Tau_signal_initialization();
 
 #ifdef TAU_BGP
   if (TauEnv_get_ibm_bg_hwp_counters()) {
@@ -2396,9 +2350,9 @@ int *provided;
     //TauSyncClocks(procid_0, size);
   }
 
-  writeMetaDataAfterMPI_Init(); 
+  writeMetaDataAfterMPI_Init();
 
-  Tau_post_init(); 
+  Tau_post_init();
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX
@@ -2422,7 +2376,7 @@ int * flag;
   TAU_PROFILE_TIMER(tautimer, "MPI_Initialized()",  " ", TAU_MESSAGE);
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Initialized( flag );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2440,7 +2394,7 @@ double  MPI_Wtick(  )
   /* To enable the instrumentation change group to TAU_MESSAGE */
   TAU_PROFILE_TIMER(tautimer, "MPI_Wtick()",  " ", TAU_DISABLE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Wtick(  );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2455,7 +2409,7 @@ double  MPI_Wtime(  )
   /* To enable the instrumentation change group to TAU_MESSAGE */
   TAU_PROFILE_TIMER(tautimer, "MPI_Wtime()",  " ", TAU_DISABLE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Wtime(  );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2472,7 +2426,7 @@ int MPI_Get_version( int *version, int *subversion )
   /* To enable the instrumentation change group to TAU_MESSAGE */
   TAU_PROFILE_TIMER(tautimer, "MPI_Get_version()",  " ", TAU_DISABLE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Get_version( version, subversion );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2484,9 +2438,9 @@ int MPI_Get_version( int *version, int *subversion )
 // OpenMPI 4 and later have removed some functions deleted in MPI 3.0
 #if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
 int  MPI_Address( location, address )
-#if (defined(TAU_SGI_MPT_MPI) || defined(TAU_NEC_SX))
+#if (defined(TAU_SGI_MPT_MPI) || defined(TAU_NEC_SX) || defined(TAU_NEC_MPI_VH_SX))
 void * location;
-#else 
+#else
 TAU_OPENMPI3_CONST void * location;
 #endif /* TAU_SGI_MPT_MPI */
 MPI_Aint * address;
@@ -2495,7 +2449,7 @@ MPI_Aint * address;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Address()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Address( location, address );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2505,7 +2459,7 @@ MPI_Aint * address;
 #endif //OMPI_MAJOR_VERSION
 
 int  MPI_Bsend( buf, count, datatype, dest, tag, comm )
-TAU_MPICH3_CONST TAU_MPICH3_CONST void * buf;
+TAU_MPICH3_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -2515,7 +2469,7 @@ MPI_Comm comm;
   int  returnVal;
   int typesize;
 
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Bsend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
@@ -2527,7 +2481,7 @@ MPI_Comm comm;
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count, 0);
   TAU_TRACK_COMM(comm);
-  
+
   returnVal = PMPI_Bsend( buf, count, datatype, dest, tag, comm );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2536,7 +2490,7 @@ MPI_Comm comm;
 }
 
 int  MPI_Bsend_init( buf, count, datatype, dest, tag, comm, request )
-TAU_MPICH3_CONST TAU_MPICH3_CONST void * buf;
+TAU_MPICH3_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -2547,7 +2501,7 @@ MPI_Request * request;
   int  returnVal;
 
 /* fprintf( stderr, "MPI_Bsend_init call on %d\n", procid_0 ); */
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Bsend_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
@@ -2571,7 +2525,7 @@ int size;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Buffer_attach()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Buffer_attach( buffer, size );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2587,7 +2541,7 @@ int * size;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Buffer_detach()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Buffer_detach( buffer, size );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2599,10 +2553,10 @@ int  MPI_Cancel( request )
 MPI_Request * request;
 {
   int  returnVal;
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Cancel()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   if (TauEnv_get_track_message()) {
     TauDeleteRequestData(request);
   }
@@ -2619,14 +2573,14 @@ MPI_Request * request;
 
   /* The request may have completed, may have not.  */
   /* We'll assume it didn't. */
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Request_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
   if (TauEnv_get_track_message()) {
     TauDeleteRequestData(request);
   }
-  
+
   returnVal = PMPI_Request_free( request );
   TAU_PROFILE_STOP(tautimer);
   return returnVal;
@@ -2642,10 +2596,10 @@ MPI_Comm comm;
 MPI_Request * request;
 {
   int  returnVal;
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Recv_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Recv_init( buf, count, datatype, source, tag, comm, request );
 
@@ -2669,16 +2623,16 @@ MPI_Request * request;
   int  returnVal;
 
 #ifdef DEBUG
-  fprintf( stderr, "MPI_Send_init call on %d\n", procid_0 ); 
+  fprintf( stderr, "MPI_Send_init call on %d\n", procid_0 );
 #endif /* DEBUG */
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Send_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Send_init( buf, count, datatype, dest, tag, comm, request );
 
-  /* we need to store the request and associate it with the size/tag so MPI_Start can 
+  /* we need to store the request and associate it with the size/tag so MPI_Start can
      retrieve it and log the TAU_TRACE_SENDMSG */
 if (TauEnv_get_track_message()) {
   TauAddRequestData(RQ_SEND, count, datatype, dest, tag, comm, request, returnVal, 1);
@@ -2698,7 +2652,7 @@ int * elements;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Get_elements()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Get_elements( status, datatype, elements );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2715,7 +2669,7 @@ int * count;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Get_count()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Get_count( status, datatype, count );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2734,10 +2688,10 @@ MPI_Request * request;
 {
   int  returnVal;
   int typesize;
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Ibsend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   PMPI_Type_size( datatype, &typesize );
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
@@ -2745,7 +2699,7 @@ MPI_Request * request;
     }
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize, 0);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Ibsend( buf, count, datatype, dest, tag, comm, request );
   TAU_PROFILE_STOP(tautimer);
@@ -2763,7 +2717,7 @@ MPI_Status * status;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Iprobe()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Iprobe( source, tag, comm, flag, status );
 
@@ -2786,10 +2740,10 @@ MPI_Request * request;
 #ifdef DEBUG
   int myrank;
 #endif /* DEBUG */
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Irecv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
 #ifdef DEBUG
   PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 #endif /* DEBUG */
@@ -2806,7 +2760,7 @@ MPI_Request * request;
   if (TauEnv_get_track_message()) {
     TauAddRequestData(RQ_RECV, count, datatype, source, tag, comm, request, returnVal, 0);
   }
-  
+
   return returnVal;
 }
 
@@ -2821,10 +2775,10 @@ MPI_Request * request;
 {
   int  returnVal;
   int typesize3;
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Irsend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   PMPI_Type_size( datatype, &typesize3 );
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
@@ -2864,7 +2818,7 @@ MPI_Request * request;
     }
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3, 0);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Isend( buf, count, datatype, dest, tag, comm, request );
   TAU_PROFILE_STOP(tautimer);
@@ -2885,7 +2839,7 @@ MPI_Request * request;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Issend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   PMPI_Type_size( datatype, &typesize3 );
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
@@ -2893,7 +2847,7 @@ MPI_Request * request;
     }
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3, 0);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Issend( buf, count, datatype, dest, tag, comm, request );
   TAU_PROFILE_STOP(tautimer);
@@ -2913,7 +2867,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Pack()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Pack( inbuf, incount, type, outbuf, outcount, position, comm );
 
@@ -2932,7 +2886,7 @@ int * size;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Pack_size()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Pack_size( incount, datatype, comm, size );
 
@@ -2951,7 +2905,7 @@ MPI_Status * status;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Probe()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Probe( source, tag, comm, status );
 
@@ -2985,6 +2939,7 @@ MPI_Status * status;
 
   TAU_TRACK_COMM(comm);
 
+  TAU_MSG_RECV_PROLOG();
   returnVal = PMPI_Recv( buf, count, datatype, source, tag, comm, status );
 
   if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
@@ -3017,7 +2972,7 @@ MPI_Comm comm;
 {
   int  returnVal;
   int typesize;
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Rsend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   PMPI_Type_size( datatype, &typesize );
@@ -3027,7 +2982,7 @@ MPI_Comm comm;
     }
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count, 0);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Rsend( buf, count, datatype, dest, tag, comm );
   TAU_PROFILE_STOP(tautimer);
@@ -3044,12 +2999,12 @@ MPI_Comm comm;
 MPI_Request * request;
 {
   int  returnVal;
-  
+
 /* fprintf( stderr, "MPI_Rsend_init call on %d\n", procid_0 ); */
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Rsend_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Rsend_init( buf, count, datatype, dest, tag, comm, request );
 
@@ -3062,6 +3017,7 @@ if (TauEnv_get_track_message()) {
   return returnVal;
 }
 
+extern long Tau_get_message_send_path(void);
 
 int  MPI_Send( buf, count, datatype, dest, tag, comm )
 TAU_MPICH3_CONST void * buf;
@@ -3073,19 +3029,23 @@ MPI_Comm comm;
 {
   int  returnVal;
   int typesize;
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Send()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   PMPI_Type_size( datatype, &typesize );
+  TAU_MSG_SEND_PROLOG();
+
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count);
     }
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count, 0);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Send( buf, count, datatype, dest, tag, comm );
+  TAU_PROFILE_PARAM1L(Tau_get_message_send_path(), "message send path id");
+
   TAU_PROFILE_STOP(tautimer);
   return returnVal;
 }
@@ -3109,7 +3069,7 @@ MPI_Status * status;
   int typesize1;
   int count;
 
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Sendrecv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   PMPI_Type_size( sendtype, &typesize1 );
@@ -3118,7 +3078,7 @@ MPI_Status * status;
       TAU_TRACE_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize1*sendcount);
     }
   }
-    
+
     // plugins need the status, too
     if (status == MPI_STATUS_IGNORE) {
       status = &local_status;
@@ -3143,7 +3103,7 @@ MPI_Status * status;
     }
   }
   TAU_PROFILE_STOP(tautimer);
-  
+
   return returnVal;
 }
 
@@ -3163,7 +3123,7 @@ MPI_Status * status;
   int size1;
   int typesize2;
 
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Sendrecv_replace()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   PMPI_Type_size( datatype, &typesize2 );
@@ -3172,16 +3132,16 @@ MPI_Status * status;
       TAU_TRACE_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize2*count);
     }
   }
-    
+
     // plugins need the status, too
     if (status == MPI_STATUS_IGNORE) {
       status = &local_status;
     }
   TAU_PLUGIN_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize2*count, 0);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Sendrecv_replace( buf, count, datatype, dest, sendtag, source, recvtag, comm, status );
-  
+
   if (dest != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
     if (TauEnv_get_track_message()) {
       PMPI_Get_count( status, MPI_BYTE, &size1 );
@@ -3196,7 +3156,7 @@ MPI_Status * status;
     }
   }
   TAU_PROFILE_STOP(tautimer);
-  
+
   return returnVal;
 }
 
@@ -3210,7 +3170,7 @@ MPI_Comm comm;
 {
   int  returnVal;
   int typesize;
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Ssend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   PMPI_Type_size( datatype, &typesize );
@@ -3220,12 +3180,12 @@ MPI_Comm comm;
     }
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count, 0);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Ssend( buf, count, datatype, dest, tag, comm );
-  
+
   TAU_PROFILE_STOP(tautimer);
-  
+
   return returnVal;
 }
 
@@ -3239,12 +3199,12 @@ MPI_Comm comm;
 MPI_Request * request;
 {
   int  returnVal;
-  
+
 /* fprintf( stderr, "MPI_Ssend_init call on %d\n", procid_0 ); */
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Ssend_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Ssend_init( buf, count, datatype, dest, tag, comm, request );
 
@@ -3277,7 +3237,7 @@ MPI_Request * request;
     /* fix up the request since MPI_Start may (will) change it */
     rq->request = request;
   }
-  
+
   TAU_PROFILE_STOP(tautimer);
   return returnVal;
 }
@@ -3290,7 +3250,7 @@ MPI_Request * array_of_requests;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Startall()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Startall( count, array_of_requests );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3306,25 +3266,25 @@ MPI_Status * status;
   int   returnVal;
   MPI_Request saverequest;
   MPI_Status local_status;
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Test()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   if (TauEnv_get_track_message()) {
     saverequest = *request;
     if (status == MPI_STATUS_IGNORE) {
       status = &local_status;
     }
   }
-  
+
   returnVal = PMPI_Test( request, flag, status );
-  
+
   if (TauEnv_get_track_message()) {
     if (*flag) {
       TauProcessRecv(&saverequest, status, "MPI_Test");
     }
   }
-  
+
   TAU_PROFILE_STOP(tautimer);
   return returnVal;
 }
@@ -3340,7 +3300,7 @@ MPI_Status * array_of_statuses;
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
 
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Testall()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   if (TauEnv_get_track_message()) {
@@ -3352,11 +3312,11 @@ MPI_Status * array_of_statuses;
       need_to_free = 1;
     }
   }
-  
+
   returnVal = PMPI_Testall( count, array_of_requests, flag, array_of_statuses );
-  
+
   if (TauEnv_get_track_message()) {
-    if (*flag) { 
+    if (*flag) {
       /* at least one completed */
       for(i=0; i < count; i++) {
 	TauProcessRecv(&saverequest[i], &array_of_statuses[i], "MPI_Testall");
@@ -3366,7 +3326,7 @@ MPI_Status * array_of_statuses;
       free(array_of_statuses);
     }
   }
-  
+
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -3383,7 +3343,7 @@ MPI_Status * status;
   MPI_Status local_status;
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Testany()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
@@ -3395,15 +3355,15 @@ MPI_Status * status;
       status = &local_status;
     }
   }
-  
+
   returnVal = PMPI_Testany( count, array_of_requests, index, flag, status );
-  
-  
+
+
   if (TauEnv_get_track_message()) {
     if (*flag && (*index != MPI_UNDEFINED)) {
       TauProcessRecv(&saverequest[*index], status, "MPI_Testany");
     }
-    
+
   }
   TAU_PROFILE_STOP(tautimer);
   return returnVal;
@@ -3417,7 +3377,7 @@ int * flag;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Test_cancelled()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Test_cancelled( status, flag );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3436,10 +3396,10 @@ MPI_Status * array_of_statuses;
   int need_to_free = 0;
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Testsome()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   if (TauEnv_get_track_message()) {
     for (i = 0; i < incount; i++){
       saverequest[i] = array_of_requests[i];
@@ -3449,9 +3409,9 @@ MPI_Status * array_of_statuses;
       need_to_free = 1;
     }
   }
-  
+
   returnVal = PMPI_Testsome( incount, array_of_requests, outcount, array_of_indices, array_of_statuses );
-  
+
   if (TauEnv_get_track_message()) {
     for (i=0; i < *outcount; i++) {
       TauProcessRecv( &saverequest[array_of_indices[i]],
@@ -3462,9 +3422,9 @@ MPI_Status * array_of_statuses;
     free(array_of_statuses);
     }
   }
-  
+
   TAU_PROFILE_STOP(tautimer);
-  
+
   return returnVal;
 }
 
@@ -3475,7 +3435,7 @@ MPI_Datatype * datatype;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Type_commit()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Type_commit( datatype );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3492,7 +3452,7 @@ MPI_Datatype * newtype;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Type_contiguous()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Type_contiguous( count, old_type, newtype );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3510,7 +3470,7 @@ MPI_Aint * extent;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Type_extent()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Type_extent( datatype, extent );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3526,7 +3486,7 @@ MPI_Datatype * datatype;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Type_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Type_free( datatype );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3538,7 +3498,7 @@ MPI_Datatype * datatype;
 #define TAU_HINDEXED_CONST const
 #else
 #ifndef TAU_HINDEXED_CONST
-#define TAU_HINDEXED_CONST 
+#define TAU_HINDEXED_CONST
 #endif /* TAU_HINDEXED_CONST */
 #endif /* TAU_SGI_MPT_MPI */
 
@@ -3555,7 +3515,7 @@ MPI_Datatype * newtype;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Type_hindexed()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Type_hindexed( count, blocklens, indices, old_type, newtype );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3574,7 +3534,7 @@ MPI_Datatype * newtype;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Type_hvector()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Type_hvector( count, blocklen, stride, old_type, newtype );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3594,7 +3554,7 @@ MPI_Datatype * newtype;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Type_indexed()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Type_indexed( count, blocklens, indices, old_type, newtype );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3612,7 +3572,7 @@ MPI_Aint * displacement;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Type_lb()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Type_lb( datatype, displacement );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3629,7 +3589,7 @@ int * size;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Type_size()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Type_size( datatype, size );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3651,7 +3611,7 @@ MPI_Datatype * newtype;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Type_struct()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Type_struct( count, blocklens, indices, old_types, newtype );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3667,7 +3627,7 @@ MPI_Aint * displacement;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Type_ub()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Type_ub( datatype, displacement );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3687,7 +3647,7 @@ MPI_Datatype * newtype;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Type_vector()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Type_vector( count, blocklen, stride, old_type, newtype );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3708,7 +3668,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Unpack()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Unpack( inbuf, insize, position, outbuf, outcount, type, comm );
 
@@ -3734,13 +3694,13 @@ MPI_Status * status;
     }
     saverequest = *request;
   }
-  
+
   returnVal = PMPI_Wait( request, status );
-  
+
   if (TauEnv_get_track_message()) {
     TauProcessRecv(&saverequest, status, "MPI_Wait");
   }
-  
+
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -3755,7 +3715,7 @@ MPI_Status * array_of_statuses;
   int need_to_free = 0;
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Waitall()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
@@ -3763,25 +3723,25 @@ MPI_Status * array_of_statuses;
     for (i = 0; i < count; i++) {
       saverequest[i] = array_of_requests[i];
     }
-    
+
     if (array_of_statuses == MPI_STATUSES_IGNORE) {
       array_of_statuses = (MPI_Status*) malloc (sizeof(MPI_Status)*count);
       need_to_free = 1;
     }
   }
-  
+
   returnVal = PMPI_Waitall( count, array_of_requests, array_of_statuses );
-  
+
   if (TauEnv_get_track_message()) {
     for(i=0; i < count; i++) {
       TauProcessRecv(&saverequest[i], &array_of_statuses[i], "MPI_Waitall");
     }
-    
+
     if (need_to_free) {
       free(array_of_statuses);
     }
   }
-  
+
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -3797,10 +3757,10 @@ MPI_Status * status;
   MPI_Status local_status;
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Waitany()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   if (TauEnv_get_track_message()) {
     for (i = 0; i < count; i++){
       saverequest[i] = array_of_requests[i];
@@ -3809,14 +3769,14 @@ MPI_Status * status;
       status = &local_status;
     }
   }
-  
+
   returnVal = PMPI_Waitany( count, array_of_requests, index, status );
 
 
   if (TauEnv_get_track_message()) {
     TauProcessRecv( &saverequest[*index], status, "MPI_Waitany" );
   }
-  
+
   TAU_PROFILE_STOP(tautimer);
   return returnVal;
 }
@@ -3833,7 +3793,7 @@ MPI_Status * array_of_statuses;
   int need_to_free = 0;
   int i;
   MPI_Request saverequest[TAU_MAX_REQUESTS];
-  
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Waitsome()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
@@ -3841,16 +3801,16 @@ MPI_Status * array_of_statuses;
     for (i = 0; i < incount; i++) {
       saverequest[i] = array_of_requests[i];
     }
-    
+
     if (array_of_statuses == MPI_STATUSES_IGNORE) {
       array_of_statuses = (MPI_Status*) malloc (sizeof(MPI_Status)*incount);
       need_to_free = 1;
     }
   }
-  
+
   returnVal = PMPI_Waitsome( incount, array_of_requests, outcount, array_of_indices, array_of_statuses );
 
-  
+
   if (TauEnv_get_track_message()) {
     for (i=0; i < *outcount; i++) {
       TauProcessRecv( &saverequest[array_of_indices[i]], &(array_of_statuses[i]), "MPI_Waitsome" );
@@ -3858,7 +3818,7 @@ MPI_Status * array_of_statuses;
     if (need_to_free) {
       free(array_of_statuses);
     }
-    
+
   }
   TAU_PROFILE_STOP(tautimer);
 
@@ -3876,10 +3836,10 @@ int * coords;
   TAU_PROFILE_TIMER(tautimer, "MPI_Cart_coords()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   TAU_TRACK_COMM(comm);
-  
+
   returnVal = PMPI_Cart_coords( comm, rank, maxdims, coords );
 
-  //TAU_SOS_CART_COORDS_EVENT( comm, rank, maxdims, coords );
+  //TIMER_EXIT_CART_COORDS_EVENT( comm, rank, maxdims, coords );
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -3897,10 +3857,10 @@ MPI_Comm * comm_cart;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Cart_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Cart_create( comm_old, ndims, dims, periods, reorder, comm_cart );
 
-  TAU_SOS_CART_CREATE_EVENT(comm_old, ndims, dims, periods, reorder, *comm_cart);
+  TIMER_EXIT_CART_CREATE_EVENT(comm_old, ndims, dims, periods, reorder, *comm_cart);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -3917,7 +3877,7 @@ int * coords;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Cart_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Cart_get( comm, maxdims, dims, periods, coords );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3936,7 +3896,7 @@ int * newrank;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Cart_map()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm_old);
   returnVal = PMPI_Cart_map( comm_old, ndims, dims, periods, newrank );
 
@@ -3954,7 +3914,7 @@ int * rank;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Cart_rank()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Cart_rank( comm, coords, rank );
 
@@ -3974,7 +3934,7 @@ int * dest;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Cart_shift()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Cart_shift( comm, direction, displ, source, dest );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3992,10 +3952,10 @@ MPI_Comm * comm_new;
   TAU_PROFILE_TIMER(tautimer, "MPI_Cart_sub()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   TAU_TRACK_COMM(comm);
-  
+
   returnVal = PMPI_Cart_sub( comm, remain_dims, comm_new );
 
-  TAU_SOS_CART_SUB_EVENT(comm,remain_dims,*comm_new);
+  TIMER_EXIT_CART_SUB_EVENT(comm,remain_dims,*comm_new);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -4009,7 +3969,7 @@ int * ndims;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Cartdim_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Cartdim_get( comm, ndims );
 
@@ -4027,7 +3987,7 @@ int * dims;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Dims_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Dims_create( nnodes, ndims, dims );
 
   TAU_PROFILE_STOP(tautimer);
@@ -4047,7 +4007,7 @@ MPI_Comm * comm_graph;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Graph_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm_old);
   returnVal = PMPI_Graph_create( comm_old, nnodes, index, edges, reorder, comm_graph );
 
@@ -4067,7 +4027,7 @@ int * edges;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Graph_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Graph_get( comm, maxindex, maxedges, index, edges );
 
@@ -4087,7 +4047,7 @@ int * newrank;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Graph_map()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   returnVal = PMPI_Graph_map( comm_old, nnodes, index, edges, newrank );
 
   TAU_PROFILE_STOP(tautimer);
@@ -4105,7 +4065,7 @@ int * neighbors;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Graph_neighbors()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Graph_neighbors( comm, rank, maxneighbors, neighbors );
 
@@ -4123,7 +4083,7 @@ int * nneighbors;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Graph_neighbors_count()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Graph_neighbors_count( comm, rank, nneighbors );
 
@@ -4141,7 +4101,7 @@ int * nedges;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Graphdims_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Graphdims_get( comm, nnodes, nedges );
 
@@ -4158,7 +4118,7 @@ int * top_type;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Topo_test()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Topo_test( comm, top_type );
 
@@ -4176,40 +4136,40 @@ int TauGetCpuSite(int *node, int *core, int *rank) {
   char (*host_names)[MPI_MAX_PROCESSOR_NAME];
   MPI_Comm internode;
   MPI_Comm intranode;
-  
+
   int nprocs, namelen,n,bytes;
-  
+
   PMPI_Comm_rank(MPI_COMM_WORLD, rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   PMPI_Get_processor_name(host_name,&namelen);
   bytes = nprocs * sizeof(char[MPI_MAX_PROCESSOR_NAME]);
-  
+
   host_names = (char (*)[MPI_MAX_PROCESSOR_NAME]) malloc(bytes);
-  
+
   strcpy(host_names[*rank], host_name);
   for (n=0; n<nprocs; n++) {
-    PMPI_Bcast(&(host_names[n]),MPI_MAX_PROCESSOR_NAME, MPI_CHAR, n, MPI_COMM_WORLD); 
+    PMPI_Bcast(host_names[n],MPI_MAX_PROCESSOR_NAME, MPI_CHAR, n, MPI_COMM_WORLD);
   }
-  
+
   unsigned int color;
   color = 0;
-  
+
   for (n=1; n<nprocs; n++) {
     if(strcmp(host_names[n-1], host_names[n])) color++;
     if(strcmp(host_name, host_names[n]) == 0) break;
   }
-  
+
   PMPI_Comm_split(MPI_COMM_WORLD, color, *rank, &internode);
   PMPI_Comm_rank(internode,core);
-  
+
   PMPI_Comm_split(MPI_COMM_WORLD, *core, *rank, &intranode);
-  
+
   PMPI_Comm_rank(intranode,node);
   return 0;
 }
 
 /* moved over to TauUnify.o so ScoreP can use it with tau_run */
-/* 
+/*
 int TauGetMpiRank(void)
 {
   int rank;
@@ -4223,19 +4183,19 @@ int TauGetMpiRank(void)
 char * Tau_printRanks(void *comm_ptr) {
   /* Create an array of ranks and fill it in using MPI_Group_translate_ranks*/
   /* Fill in a character array that we can append to the name and make it accessible using a map */
-   
+
   int i, limit, size;
   char name[16384];
   char rankbuffer[256];
   int worldrank;
   MPI_Comm comm = (MPI_Comm)(intptr_t) comm_ptr;
   memset(name, 0, 16384);
-  
+
   PMPI_Comm_size(comm, &size);
   limit = (size < TAU_MAX_MPI_RANKS) ? size : TAU_MAX_MPI_RANKS;
   for ( i = 0; i < limit; i++) {
     worldrank = TauTranslateRankToWorld(comm, i);
-    if (i == 0) { 
+    if (i == 0) {
       sprintf(rankbuffer, "ranks: %d", worldrank);
     } else {
       sprintf(rankbuffer, ", %d", worldrank);

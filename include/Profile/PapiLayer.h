@@ -42,7 +42,7 @@ public:
   static int reinitializePAPI(void);
   static int addCounter(char *name);
   static void setPapiInitialized(bool value); 
-  static void triggerRAPLPowerEvents(void);
+  static void triggerRAPLPowerEvents(bool in_signal_handler);
   static ThreadValue *ThreadList[TAU_MAX_THREADS];
   static int numCounters;
   static int counterList[TAU_MAX_COUNTERS];

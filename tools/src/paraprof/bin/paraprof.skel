@@ -3,10 +3,28 @@ TAUROOT=@TAUROOTDIR@
 MACHINE=@ARCH@
 
 
+if [ ! -d "$TAUROOT" ]; then #If the original root directory is not found find and work from this script's bin directory
+
+  SOURCE="$0"
+  while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+    DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+  done
+  TAUBIN="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+
+  TAUROOT=`dirname $TAUBIN`
+  MACHINE=`basename $TAUROOT`
+  TAUROOT=`dirname $TAUROOT`
+
+fi #End backup root search
+
+
 SCHEMADIR=${TAUROOT}/etc
 BINDIR=${TAUROOT}/${MACHINE}/bin
 LIBDIR=${TAUROOT}/${MACHINE}/lib
 JARDIR=${TAUROOT}/${MACHINE}/lib
+JAVA2D_OPENGL_FLAG=1
 
 CUBE_JAVA_READER=${TAUROOT}/${MACHINE}/lib/CubeReader.jar
 
@@ -14,6 +32,8 @@ CUBE_JAVA_READER=${TAUROOT}/${MACHINE}/lib/CubeReader.jar
 for arg 
 do
   shift
+  [ "$arg" = "-libgl_indirect" ] && LIBGL_ALWAYS_INDIRECT_FLAG=1 && continue
+  [ "$arg" = "-disable_java2d_opengl" ] && JAVA2D_OPENGL_FLAG=0 && continue
   [ "$arg" = "-64" ] && FLAG64=1 && continue
   [ "$arg" = "-32" ] && FLAG32=1 && continue
   [ "$arg" = "-jogl1" ] && FLAGJOGL1=1 && continue
@@ -33,6 +53,25 @@ if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_linux" ] || [ "$MACHINE" = 
 	fi
 fi
 
+# If 3D window has problems, please uncomment
+if [ $MACHINE = bgq -o $MACHINE = arm64_linux ]; then
+  JAVA2D_OPENGL_FLAG=0
+  LIBGL_ALWAYS_INDIRECT_FLAG=1
+fi
+
+if [ "$LIBGL_ALWAYS_INDIRECT_FLAG" = "1" ]; then 
+  export LIBGL_ALWAYS_INDIRECT=1
+fi
+
+if [ "$JAVA2D_OPENGL_FLAG" = "1" ]; then 
+  JAVA2D_OPENGL_OPT="-Dsun.java2d.opengl=true"
+fi
+
+if [ "$MACHINE" = "craycnl"  -a "`uname -m`" = "aarch64" ]; then
+        if [ "$FLAGJOGL1" != "1" ]; then
+                FLAGJOGL2=1
+        fi
+fi
 
 JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
 
@@ -42,10 +81,6 @@ if [ "$FLAGJOGL2" = "1" ]; then
 	JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis-jogl2.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar:${JARDIR}/jogl-all-natives.jar:${JARDIR}/gluegen-rt-natives.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
 fi
 
-# If 3D window has problems, please uncomment
-#if [ $MACHINE = bgq -o $MACHINE = arm_linux ]; then
-#export LIBGL_ALWAYS_INDIRECT=1
-#fi
 
 APPLE_OPTIONS=""
 JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
@@ -199,4 +234,14 @@ fi
 $BINDIR/tau_user_setup.sh
 
 # Launch!
-java $MEMORY  -Dsun.java2d.opengl=true  -Dderby.system.home=${HOME}/.ParaProf -Dpython.home=$JAR_HOME/jython -Dpython.verbose=error -Djava.library.path=${LIBDIR}:${javaLocation} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf -j $JARDIR -c $SCHEMADIR $*	
+# Removed: -Dsun.java2d.opengl=true for arm64.
+java $MEMORY ${JAVA2D_OPENGL_OPT} -Dderby.system.home=${HOME}/.ParaProf -Dpython.home=$JAR_HOME/jython -Dpython.verbose=error -Djava.library.path=${LIBDIR}:${javaLocation} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf -j $JARDIR -c $SCHEMADIR $*
+retVal=$?
+if [ $retVal -ne 0 ]; then
+  echo "Some OpenGL/rendering and other errors can be overcome using the following options: "
+  echo "  -libgl_indirect 		(Turns on LIBGL_ALWAYS_INDIRECT)"
+  echo "  -disable_java2d_opengl 	(Turns off java2d OpenGl rendering. Can fix title bar rendering errors on OSX)"
+  echo "  -64/-32 			(Disables/Forces 32 bit memory capacity calculation and use of -d32 flag on OSX)"
+  echo "  -jogl1/-jogl2 		(force use of old (jogl1)/new(jogl2) 3d libraries)"
+fi
+exit $retVal	

@@ -20,6 +20,9 @@
 /*********************************************************************
  * register different kinds of events here
  ********************************************************************/
+#ifndef TAU_IO_WRAP_H
+#define TAU_IO_WRAP_H
+
 #define NUM_EVENTS 4
 typedef enum {
   WRITE_BW,
@@ -40,12 +43,15 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname);
 void Tau_iowrap_unregisterEvents(unsigned int fid);
 void Tau_iowrap_dupEvents(unsigned int oldfid, unsigned int newfid);
 
-extern void *global_write_bandwidth, *global_read_bandwidth, 
+extern void *global_write_bandwidth, *global_read_bandwidth,
   *global_bytes_written, *global_bytes_read;
 
+const char * Tau_get_pathname_from_fid(int fid);
 
 #ifdef __cplusplus
 } /* for extern "C" */
 #endif /* __cplusplus */
 
 #define TAU_GET_IOWRAP_EVENT(e, event, fid) void *e = Tau_iowrap_getEvent(event, fid);
+
+#endif //TAU_IO_WRAP_H

@@ -1,3 +1,6 @@
+#ifndef CUPTI_LAYER_H
+#define CUPTI_LAYER_H
+
 #ifdef __GNUC__
 #include <cstdio>
 #include <iostream>
@@ -11,11 +14,17 @@
 #include <cupti_events.h>
 #include <cupti_metrics.h>
 #include <cuda_runtime_api.h>
+#include "cupti.h"
 
 /* Specific errors from CUDA lib */
 #define CHECK_CU_ERROR(err, cufunc) \
 if (err != CUDA_SUCCESS) \
 { \
+		const char* err_name; \
+    const char* err_str; \
+		cuGetErrorName(err, &err_name); \
+		cuGetErrorString(err, &err_str); \
+		fprintf(stderr, "CUDA driver error %s: %s\n", err_name, err_str); \
 printf ("[%s:%d] Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, err, cufunc); \
 }
 
@@ -23,7 +32,9 @@ printf ("[%s:%d] Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n
 #define CHECK_CUPTI_ERROR(err, cuptifunc) \
 if (err != CUPTI_SUCCESS) \
 { \
-printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, err, cuptifunc); \
+const char * tmpstr;  \
+cuptiGetResultString(err, &tmpstr); \
+printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n%s\n", __FILE__, __LINE__, err, cuptifunc, tmpstr); \
 }
 
 #define TAU_CUPTI_MAX_NAME 40
@@ -48,30 +59,16 @@ printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n", __F
 extern "C" int Tau_init_initializeTAU();
 extern "C" void Tau_destructor_trigger();
 
-struct CudaThread
-{
- public:
-  unsigned int sys_tid;     // pthread
-  int parent_tid;
-  int tau_vtid;    // virtual tid, write profiles
-    // callback info
-  const char* function_name;
-  unsigned int context_id;
-  unsigned int correlation_id;
-};
-
 struct CuptiCounterEvent
 {
     static void printHeader();
 
-    CuptiCounterEvent(int device_n, int domain_n, int event_n);
+    CuptiCounterEvent(int device_n, int event_n, const char * name);
 
     CUdevice device;
-	CUpti_EventDomainID domain;
 	CUpti_EventID event;
 
 	std::string device_name;
-	std::string domain_name;
 	std::string event_name;
 	std::string event_description;
 	std::string tag; // string presented to the user.
@@ -113,7 +110,7 @@ struct CuptiCounterIdMap : public std::map<int, int>
 };
 typedef CuptiCounterIdMap counter_id_map_t;
 
-
+counter_vec_t & Tau_CuptiLayer_Added_counters(void);
 
 struct CuptiMetric
 {
@@ -181,9 +178,9 @@ extern void Tau_CuptiLayer_Initialize_Map();
 counter_map_t Counter_Map;
 
 /* mapping the metric number to the cupti metric number */
-counter_id_map_t internal_id_map; 
+counter_id_map_t internal_id_map;
 extern counter_id_map_t internal_id_map() {return internal_id_map;}
-counter_id_map_t internal_id_map_backwards; 
+counter_id_map_t internal_id_map_backwards;
 extern counter_id_map_t internal_id_map_backwards() {return internal_id_map_backwards;}
 #else
 
@@ -222,9 +219,13 @@ extern counter_id_map_t interal_id_map();
 
 #include <stdint.h>
 
-
+void Tau_cupti_post_init(void);
+void Tau_CuptiLayer_enable_eventgroup(void);
+void Tau_CuptiLayer_setup_eventgroup(void);
 
 extern "C" int Tau_CuptiLayer_get_num_events();
+
+extern "C" void Tau_CuptiLayer_set_num_events(int n);
 
 extern "C" void Tau_CuptiLayer_set_event_name(int metric_n, int type);
 
@@ -234,7 +235,7 @@ extern "C" int Tau_CuptiLayer_get_cupti_event_id(int metric_n);
 
 extern "C" int Tau_CuptiLayer_get_metric_event_id(int metric_n);
 
-extern "C" void Tau_CuptiLayer_read_counters(int d, uint64_t *cb);
+extern "C" void Tau_CuptiLayer_read_counters(int d, int t, uint64_t *cb);
 
 extern "C" uint64_t Tau_CuptiLayer_read_counter(int metric_n);
 
@@ -243,3 +244,5 @@ extern "C" bool Tau_CuptiLayer_is_cupti_counter(char const * str);
 extern "C" void Tau_CuptiLayer_register_string(char const * str, int metric_n);
 
 extern "C" void Tau_cuda_Event_Synchonize();
+
+#endif //CUPTI_LAYER_H

@@ -1,5 +1,7 @@
+#ifndef CUPTI_ACTIVITY_H
+#define CUPTI_ACTIVITY_H
+
 #include <Profile/TauGpu.h>
-#include <Profile/CuptiLayer.h>
 #include <Profile/CudaSass.h>
 #include <cuda.h>
 #include <cupti.h>
@@ -17,14 +19,25 @@
 #  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 #    include <demangle.h>
 #  endif /* HAVE_GNU_DEMANGLE */
+// Add these definitions because the Binutils comedians think all the world uses autotools
+#ifndef PACKAGE
+#define PACKAGE TAU
+#endif
+#ifndef PACKAGE_VERSION
+#define PACKAGE_VERSION 2.25
+#endif
 #  include <bfd.h>
 #endif /* TAU_BFD */
 
 #define CUDA_CHECK_ERROR(err, str) \
 	if (err != CUDA_SUCCESS) \
   { \
+		const char* err_name; \
+		const char* err_str; \
+		cuGetErrorName(err, &err_name); \
+		cuGetErrorString(err, &err_str); \
+		fprintf(stderr, "CUDA driver error %s: %s\n", err_name, err_str); \
 		fprintf(stderr, str); \
-		exit(1); \
 	} \
 
 #define CUPTI_CHECK_ERROR(err, str) \
@@ -125,7 +138,7 @@ extern "C" void * Tau_return_context_userevent(const char *name);
 extern "C" void metric_set_gpu_timestamp(int tid, double value);
 
 extern "C" void Tau_cupti_find_context_event(
-						TauContextUserEvent** u, 
+						TauContextUserEvent** u,
 						const char *name,
             bool context);
 
@@ -172,7 +185,7 @@ extern "C" void Tau_cupti_register_memcpy_event(
 						double stop,
 						int bytes_copied,
 						int memcpy_type,
-						int direction, 
+						int direction,
 						int taskId);
 
 extern "C" void Tau_cupti_register_unifmem_event(
@@ -201,6 +214,16 @@ extern "C" void Tau_cupti_register_gpu_event(
 						double stop,
 						int taskId);
 
+extern "C" void Tau_cupti_register_gpu_sync_event(
+						const char *name,
+						uint32_t deviceId,
+						uint32_t streamId,
+						uint32_t contextId,
+						uint32_t correlationId,
+						double start,
+						double stop,
+						int taskId);
+
 extern "C" void Tau_cupti_register_gpu_atomic_event(
 						const char *name,
 						uint32_t deviceId,
@@ -211,7 +234,8 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
 						int number_of_attributes,
 						int taskId);
 
-extern "C" bool register_cuda_thread(unsigned int sys_tid, unsigned int parent_tid, int tau_vtid, unsigned int corr_id, unsigned int context_id, const char* func_name);
+extern "C" void Tau_cupti_gpu_enter_event_from_cpu(const char* name, int tid);
+extern "C" void Tau_cupti_gpu_exit_event_from_cpu(const char* name, int tid);
 
 /* extern "C" void Tau_cupti_register_func_event( */
 /*                                               const char *name, */
@@ -251,7 +275,7 @@ extern "C" bool register_cuda_thread(unsigned int sys_tid, unsigned int parent_t
 
 extern "C" x_uint64 TauTraceGetTimeStamp();
 
-void Tau_cupti_register_sync_event(CUcontext c, uint32_t stream, uint8_t* buffer, size_t size, size_t validSize);
+void Tau_cupti_process_buffer(CUcontext c, uint32_t stream, uint8_t* buffer, size_t size, size_t validSize);
 
 void Tau_cupti_activity_flush_all();
 
@@ -264,6 +288,10 @@ void Tau_cupti_record_activity(CUpti_Activity *record);
 void __attribute__ ((constructor)) Tau_cupti_onload(void);
 
 void Tau_cupti_subscribe(void);
+
+CUpti_EventGroup* Tau_cupti_get_eventgroup(void);
+
+void Tau_cupti_init(void);
 
 void __attribute__ ((destructor)) Tau_cupti_onunload(void);
 
@@ -286,43 +314,30 @@ bool cupti_api_driver();
 
 typedef std::map<TauContextUserEvent *, TAU_EVENT_DATATYPE> eventMap_t;
 static std::set<uint32_t> set_gpuThread;
-static std::map<uint32_t, CudaThread> map_cudaThread;
-static std::map<uint32_t, uint32_t> map_cuptiThread;
 
 int gpu_occupancy_available(int deviceId);
 
-void record_gpu_occupancy(int32_t blockX, 
+void record_gpu_occupancy(int32_t blockX,
                           int32_t blockY,
                           int32_t blockZ,
 			  uint16_t registersPerThread,
 			  int32_t staticSharedMemory,
                           uint32_t deviceId,
-                          const char *name, 
+                          const char *name,
                           eventMap_t *map);
 
 void record_gpu_launch(int cId, const char *name);
 void record_gpu_counters(int device_id, const char *name, uint32_t id, eventMap_t *m);
-void record_environment_counters(const char *name, uint32_t taskId, uint32_t device, uint32_t streamId, uint32_t contextId, uint32_t id, uint32_t end);
+int record_imix_counters(const char* name, uint32_t taskId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end);
+void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uint32_t taskId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent * tc);
+ImixStats write_runtime_imix(uint32_t corrId, uint32_t taskId, std::map<std::pair<int, int>, CudaOps> map_disassem, std::string kernel);
+void write_sass_counters();
+void write_sass_output();
+void record_environment_counters(const char *name, uint32_t taskId, uint32_t device, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end);
 void transport_environment_counters(std::vector<uint32_t> vec, EnvType envT, const char* name, uint32_t taskId, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent* tc);
-void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end);
-void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent * tc);
-void dump_sass_to_csv(int task_id);
 
 int get_device_count();
 int get_device_id();
-
-// Envt helper functions:
-float getVecAvgVal(std::vector<uint32_t> vec)
-{
-  if (vec.size() == 0) {
-    return 0;
-  }
-  int sum_of_elems = 0;
-  for(std::vector<uint32_t>::iterator iter=vec.begin(); iter != vec.end(); iter++) {
-      sum_of_elems += *iter;
-  }
-  return (float)sum_of_elems/vec.size();
-}
 
 #if CUPTI_API_VERSION >= 3
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
@@ -334,10 +349,6 @@ void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceL
 #define TAU_MAX_GPU_DEVICES 16
 #endif
 
-// void createFilePointerSass(int device_count);
-FILE* createFileSourceSass(int task_id);
-FILE* createFileInstrSass(int task_id);
-FILE* createFileFuncSass(int task_id);
 
 #if CUDA_VERSION >= 6000
 static const char * getUvmCounterKindString(CUpti_ActivityUnifiedMemoryCounterKind kind);
@@ -359,15 +370,11 @@ typedef struct RuntimeApiTrace_st {
 typedef std::map<uint32_t, CUpti_ActivityDevice> device_map_t;
 //static std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 
-void record_gpu_counters_at_launch(int device);
-  
-void record_gpu_counters_at_sync(int device);
+void record_gpu_counters_at_launch(int device, int task);
+void record_gpu_counters_at_sync();
+void record_gpu_counters_at_sync(int device, int task);
 
 void clear_counters(int device);
-
-ImixStats write_runtime_imix(uint32_t corrId, uint32_t taskId, std::map<std::pair<int, int>, CudaOps> map_disassem, std::string kernel);
-
-int get_device_from_id(int id);
 
 int get_task_from_id(int id, int task);
 
@@ -391,5 +398,6 @@ int get_task_from_id(int id, int task);
 	id++
 #endif
 
-	//Tau_metadata("GPU " SX(name), str_##name.str().c_str()); 
+	//Tau_metadata("GPU " SX(name), str_##name.str().c_str());
 
+#endif //CUPTI_ACTIVITY_H

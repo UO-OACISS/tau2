@@ -28,7 +28,7 @@ TAGS
 .configure_env
 .active_stub
 .active_stubs
-
+.nfs*
 # Ignore build files
 tools/src/android/dexInjector/*.jar
 tools/src/android/dexInjector/edu
@@ -76,4 +76,16 @@ utils/tau_reduce
 utils/tau_selectfile
 utils/tau_wrap
 utils/trace2profile/trace2profile
+utils/tau2otf2
+utils/tau_trace2json
 core
+
+# examples
+examples/mm/matmult
+include/omp*
+*.dSYM
+
+# Python, Jupyter stuff
+.ipynb_checkpoints
+__pycache__
+

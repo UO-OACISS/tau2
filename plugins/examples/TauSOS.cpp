@@ -96,13 +96,13 @@ void * Tau_sos_thread_function(void* data) {
         pthread_mutex_lock(&_my_mutex);
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
         if (rc == ETIMEDOUT) {
-            TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
+            TAU_VERBOSE("[TAU_SOS]%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
             TAU_SOS_send_data(false);
-            TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
+            TAU_VERBOSE("[TAU_SOS]%d Done.\n", RtsLayer::myNode()); fflush(stderr);
         } else if (rc == EINVAL) {
-            TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
+            TAU_VERBOSE("[TAU_SOS]Invalid timeout!\n"); fflush(stderr);
         } else if (rc == EPERM) {
-            TAU_VERBOSE("Mutex not locked!\n"); fflush(stderr);
+            TAU_VERBOSE("[TAU_SOS]Mutex not locked!\n"); fflush(stderr);
         }
     }
     // unlock after being signalled.
@@ -214,12 +214,12 @@ void TAU_SOS_send_shutdown_message(void) {
     header.msg_size = offset;
     offset = 0;
     SOS_buffer_pack(buffer, &offset, (char*)"i", header.msg_size);
-    TAU_VERBOSE("Sending SOS_MSG_TYPE_SHUTDOWN ...\n");
+    TAU_VERBOSE("[TAU_SOS]Sending SOS_MSG_TYPE_SHUTDOWN ...\n");
     SOS_send_to_daemon(buffer, buffer);
     SOS_buffer_destroy(buffer);
 	char * exporting = getenv("SOS_EXPORT_DB_AT_EXIT");
 	if (exporting != NULL) {
-    	TAU_VERBOSE("Waiting %d seconds for SOS to write (if necessary)...\n", thePluginOptions().env_sos_shutdown_delay);
+    	TAU_VERBOSE("[TAU_SOS]Waiting %d seconds for SOS to write (if necessary)...\n", thePluginOptions().env_sos_shutdown_delay);
 		sleep(thePluginOptions().env_sos_shutdown_delay);
 	}
 #endif
@@ -471,7 +471,7 @@ void Tau_SOS_parse_selection_file(const char * filename) {
 
 bool TAU_SOS_init() {
     static bool initialized = false;
-    TAU_VERBOSE("TAU_SOS_init()...\n");
+    TAU_VERBOSE("[TAU_SOS]TAU_SOS_init()...\n");
     if (!initialized) {
 #ifdef TAU_MPI
         PMPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -486,10 +486,10 @@ bool TAU_SOS_init() {
         // if runtime returns null, wait a bit and try again. If 
         // we fail "too many" times, give an error and continue
         _runtime = NULL;
-        TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
+        TAU_VERBOSE("[TAU_SOS]TAU_SOS_init() trying to connect...\n");
         SOS_init(&_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
         if(_runtime == NULL) {
-            TAU_VERBOSE("Unable to connect to SOS daemon. Spawning...\n");
+            TAU_VERBOSE("[TAU_SOS]Unable to connect to SOS daemon. Spawning...\n");
             shutdown_daemon = TAU_SOS_fork_exec_sosd();
             if (!shutdown_daemon) { 
                 // failed.  Don't claim initialized.
@@ -504,17 +504,17 @@ bool TAU_SOS_init() {
             TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
             SOS_init(&_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
             if (_runtime != NULL) {
-                TAU_VERBOSE("Connected to SOS daemon. Continuing...\n");
+                TAU_VERBOSE("[TAU_SOS]Connected to SOS daemon. Continuing...\n");
                 break;
             } else if (--repeat < 0) { 
-                TAU_VERBOSE("Unable to connect to SOS daemon. Failing...\n");
+                TAU_VERBOSE("[TAU_SOS]Unable to connect to SOS daemon. Failing...\n");
                 return false;
             }
         }
 
         if (thePluginOptions().env_sos_periodic) {
             period_microseconds = thePluginOptions().env_sos_period;
-            TAU_VERBOSE("Spawning thread for SOS.\n");
+            TAU_VERBOSE("[TAU_SOS]Spawning thread for SOS.\n");
             int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
             if (ret != 0) {
                 errno = ret;
@@ -536,7 +536,7 @@ void TAU_SOS_stop_worker(void) {
     done = true;
     pthread_mutex_unlock(&_my_mutex);
     if (thePluginOptions().env_sos_periodic) {
-        TAU_VERBOSE("TAU SOS thread joining...\n"); fflush(stderr);
+        TAU_VERBOSE("[TAU_SOS]TAU SOS thread joining...\n"); fflush(stderr);
         pthread_cond_signal(&_my_cond);
         int ret = pthread_join(worker_thread, NULL);
         if (ret != 0) {
@@ -581,9 +581,9 @@ void TAU_SOS_finalize(void) {
     // shutdown the daemon, if necessary
     if (shutdown_daemon) {
         if (my_rank == daemon_rank) {
-            TAU_VERBOSE("Waiting %d seconds for SOS to flush...\n", thePluginOptions().env_sos_shutdown_delay);
+            TAU_VERBOSE("[TAU_SOS]Waiting %d seconds for SOS to flush...\n", thePluginOptions().env_sos_shutdown_delay);
 		    sleep(thePluginOptions().env_sos_shutdown_delay);
-			printf("TAU: rank %d sending shutdown message to listener %d...\n", my_rank, listener_rank);
+			printf("[TAU_SOS]TAU: rank %d sending shutdown message to listener %d...\n", my_rank, listener_rank);
             TAU_SOS_send_shutdown_message();
 			int returnStatus = 0;
 			pid_t retval = 0;
@@ -617,11 +617,13 @@ void Tau_SOS_pack_current_timer(const char * event_name) {
     if (_runtime == NULL) { return; }
     // first time?
     if (tau_sos_pub == NULL) {
+        TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::LockDB()\n");
         RtsLayer::LockDB();
         // protect against race conditions
         if (tau_sos_pub == NULL) {
             TAU_SOS_make_pub();
         }
+        TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::UnLockDB()\n");
         RtsLayer::UnLockDB();
     }
     if (done) { return; }
@@ -643,11 +645,13 @@ void Tau_SOS_pack_string(const char * name, char * value) {
     if (done) { return; }
     // first time?
     if (tau_sos_pub == NULL) {
+        TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::LockDB()\n");
         RtsLayer::LockDB();
         // protect against race conditions
         if (tau_sos_pub == NULL) {
             TAU_SOS_make_pub();
         }
+        TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::UnLockDB()\n");
         RtsLayer::UnLockDB();
     }
     // if (strlen(name) > 256) { printf("long string, %d: '%s'\n", strlen(name), name); }
@@ -659,11 +663,13 @@ void Tau_SOS_pack_double(const char * name, double value) {
     if (done) { return; }
     // first time?
     if (tau_sos_pub == NULL) {
+        TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::LockDB()\n");
         RtsLayer::LockDB();
         // protect against race conditions
         if (tau_sos_pub == NULL) {
             TAU_SOS_make_pub();
         }
+        TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::UnLockDB()\n");
         RtsLayer::UnLockDB();
     }
     // if (strlen(name) > 256) { printf("long string, %d: '%s'\n", strlen(name), name); }
@@ -675,11 +681,13 @@ void Tau_SOS_pack_integer(const char * name, int value) {
     if (done) { return; }
     // first time?
     if (tau_sos_pub == NULL) {
+        TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::LockDB()\n");
         RtsLayer::LockDB();
         // protect against race conditions
         if (tau_sos_pub == NULL) {
             TAU_SOS_make_pub();
         }
+        TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::UnLockDB()\n");
         RtsLayer::UnLockDB();
     }
     // if (strlen(name) > 256) { printf("long string, %d: '%s'\n", strlen(name), name); }
@@ -691,11 +699,13 @@ void Tau_SOS_pack_long(const char * name, long int value) {
     if (done) { return; }
     // first time?
     if (tau_sos_pub == NULL) {
+        TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::LockDB()\n");
         RtsLayer::LockDB();
         // protect against race conditions
         if (tau_sos_pub == NULL) {
             TAU_SOS_make_pub();
         }
+        TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::UnLockDB()\n");
         RtsLayer::UnLockDB();
     }
     // if (strlen(name) > 256) { printf("long string, %d: '%s'\n", strlen(name), name); }
@@ -722,12 +732,13 @@ void TAU_SOS_pack_profile() {
     Tau_global_incr_insideTAU();
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
-
+    TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::LockDB()\n");
     RtsLayer::LockDB();
     /* Copy the function info database so we can release the lock */
     std::vector<FunctionInfo*> tmpTimers(TheFunctionDB());
     // use the normal copy constructor.
-    tau::AtomicEventDB tmpCounters(tau::TheEventDB());
+    //tau::AtomicEventDB tmpCounters(tau::TheEventDB());
+    TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::UnLockDB()\n");
     RtsLayer::UnLockDB();
 
     // get the FunctionInfo database, and iterate over it
@@ -796,8 +807,10 @@ void TAU_SOS_pack_profile() {
     int numEvents;
     double max, min, mean, sumsqr;
     std::stringstream tmp_str;
-    for (counterIterator = tmpCounters.begin();
-         counterIterator != tmpCounters.end(); counterIterator++) {
+    TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::LockDB()\n");
+    RtsLayer::LockDB();
+    for (counterIterator = tau::TheEventDB().begin();
+         counterIterator != tau::TheEventDB().end(); counterIterator++) {
         tau::TauUserEvent *ue = (*counterIterator);
         if (ue == NULL) continue;
         /* First, check to see if we are including/excluding this counter */
@@ -837,9 +850,11 @@ void TAU_SOS_pack_profile() {
             tmp_str.str(std::string());
         }
     }
+    TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::UnLockDB()\n");
+    RtsLayer::UnLockDB();
     
     if ((ue_count + fi_count) > SOS_DEFAULT_ELEM_MAX) {
-        TAU_VERBOSE("DANGER, WILL ROBINSON! EXCEEDING MAX ELEMENTS IN SOS. Bad things might happen?\n");
+        TAU_VERBOSE("[TAU_SOS]DANGER, WILL ROBINSON! EXCEEDING MAX ELEMENTS IN SOS. Bad things might happen?\n");
     }
 }
 
@@ -854,27 +869,23 @@ void TAU_SOS_send_data(bool finalizing) {
     }
     // Do we have a pub handle?
     if (tau_sos_pub == NULL) {
+        TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::LockDB()\n");
         RtsLayer::LockDB();
         // protect against race conditions
         if (tau_sos_pub == NULL) {
             TAU_SOS_make_pub();
         }
+        TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::UnLockDB()\n");
         RtsLayer::UnLockDB();
     }
     // Make sure we have a pub handle */
     assert(tau_sos_pub);
-    // Update these now, WITHOUT a signal. Signals are TROUBLE.
-    // However, that means we have to duplicate code, because we don't want
-    // the measurement on *this* thread, but on thread 0.
-    Tau_trigger_context_event_thread("Heap Memory Used (KB)", Tau_max_RSS(), 0);
-  	static int fd=Tau_open_status();
-    long long vmrss, vmhwm;
-    Tau_read_status(fd, &vmrss, &vmhwm);
-    if (vmrss > 0)
-    	Tau_trigger_context_event_thread("Memory Footprint (VmRSS) (KB)", (double)vmrss, 0);
-    if (vmhwm > 0)
-    	Tau_trigger_context_event_thread("Peak Memory Usage Resident Set Size (VmHWM) (KB)", (double)vmhwm, 0);
-    TauTrackLoadHere();
+    /* records the heap, with no context, even though it says "here". */
+    Tau_track_memory_here();
+    /* records the rss/hwm, without context. */
+    Tau_track_memory_rss_and_hwm();
+    /* records the load, without context */
+    Tau_track_load();
     /* Only send a profile update if we aren't tracing */
     if (finalizing || 
         (!thePluginOptions().env_sos_tracing && 
@@ -883,7 +894,7 @@ void TAU_SOS_send_data(bool finalizing) {
     }
     static int frame = 0;
     TAU_VERBOSE("[TAU_SOS_send_data]: Publishing the values for frame %d...\n", frame++);
-    TAU_VERBOSE("MY RANK IS: %d/%d\n", _runtime->config.comm_rank, _runtime->config.comm_size);
+    TAU_VERBOSE("[TAU_SOS_send_data]MY RANK IS: %d/%d\n", _runtime->config.comm_rank, _runtime->config.comm_size);
     SOS_announce(tau_sos_pub);
     SOS_publish(tau_sos_pub);
     TAU_VERBOSE("[TAU_SOS_send_data]:   ...done.\n");

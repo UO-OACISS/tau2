@@ -15,7 +15,7 @@
 ***************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 
 #ifndef TAU_WINDOWS
@@ -32,7 +32,7 @@
 
 #include <Profile/TauPluginInternals.h>
 
-extern "C" int Tau_track_mpi_t_here(void); 
+extern "C" int Tau_track_mpi_t_here(void);
 //////////////////////////////////////////////////////////////////////
 // Routines
 //////////////////////////////////////////////////////////////////////
@@ -79,21 +79,21 @@ bool& TheIsTauTrackingLoad(void) {
 }
 
 //////////////////////////////////////////////////////////////////////
-// Start tracking memory 
+// Start tracking memory
 //////////////////////////////////////////////////////////////////////
 int TauEnableTrackingMemory(void) {
   // Set tracking to true
   TheIsTauTrackingMemory() = true;
-  return 1; 
+  return 1;
 }
 
 //////////////////////////////////////////////////////////////////////
-// Start tracking memory 
+// Start tracking memory
 //////////////////////////////////////////////////////////////////////
 int TauEnableTrackingMemoryHeadroom(void) {
   // Set tracking to true
   TheIsTauTrackingMemoryHeadroom() = true;
-  return 1; 
+  return 1;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -124,7 +124,7 @@ int TauEnableTrackingMemoryRSSandHWM(void) {
 }
 
 //////////////////////////////////////////////////////////////////////
-// Stop tracking memory 
+// Stop tracking memory
 //////////////////////////////////////////////////////////////////////
 int TauDisableTrackingMemory(void) {
   TheIsTauTrackingMemory() = false;
@@ -168,9 +168,9 @@ int TauDisableTrackingLoad(void) {
 //////////////////////////////////////////////////////////////////////
 // Set interrupt interval
 //////////////////////////////////////////////////////////////////////
-int& TheTauInterruptInterval(void) { 
+int& TheTauInterruptInterval(void) {
   static int interval = TauEnv_get_interval(); /* interrupt every 10 seconds */
-  return interval; 
+  return interval;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -182,10 +182,10 @@ void TauSetInterruptInterval(int interval) {
 }
 
 int Tau_read_cray_power_events(int fd, long long int *value)  {
-  char buf[2048]; 
+  char buf[2048];
   int ret, bytesread;
   if (fd > 0) {
-    ret = lseek(fd, 0, SEEK_SET); 
+    ret = lseek(fd, 0, SEEK_SET);
     if (ret < 0) {
       perror("lseek failure:");
       *value = 0;
@@ -194,19 +194,19 @@ int Tau_read_cray_power_events(int fd, long long int *value)  {
   }
   else {
     *value = 0;
-    return -1; 
+    return -1;
   }
   bytesread = read(fd, buf, 2048);
   if (bytesread == -1) {
     perror("Error reading from Cray power events");
-    return bytesread; 
+    return bytesread;
   }
-  ret = sscanf(buf, "%lld", value); 
+  ret = sscanf(buf, "%lld", value);
   return ret;
 }
 
 int Tau_read_load_event(int fd, double *value)  {
-  char buf[2048];
+  char buf[2048] = {0};
   int ret, bytesread;
   if (fd > 0) {
     ret = lseek(fd, 0, SEEK_SET);
@@ -231,15 +231,15 @@ int Tau_read_load_event(int fd, double *value)  {
 }
 
 int Tau_open_system_file(const char *filename) {
-  
+
   int fd = open(filename, O_RDONLY);
-  return fd; 
+  return fd;
 }
 
 void TauTriggerCrayPowerEvent(int fd, const char *event_name)  {
-  long long int value; 
+  long long int value;
   if (fd) {
-    Tau_read_cray_power_events(fd, &value); 
+    Tau_read_cray_power_events(fd, &value);
     if (value > 0) {
       Tau_trigger_context_event_thread(event_name, (double) value, 0);
       TAU_VERBOSE("Triggered %s with %lld\n", event_name, value);
@@ -247,7 +247,7 @@ void TauTriggerCrayPowerEvent(int fd, const char *event_name)  {
   }
 }
 
-void TauTriggerCrayPowerEvents(void) {
+void TauTriggerCrayPowerEvents() {
 /*
   static int power_fd=Tau_open_cray_file("/sys/cray/pm_counters/power");
   static int accel_power_fd=Tau_open_cray_file("/sys/cray/pm_counters/accel_power");
@@ -262,13 +262,13 @@ void TauTriggerCrayPowerEvents(void) {
 */
 }
 
-void TauTriggerPowerEvent(void) {
+void TauTriggerPowerEvent(bool in_signal_handler) {
   //printf("Inside TauTriggerPowerEvent\n");
 #ifdef TAU_CRAYCNL
   TauTriggerCrayPowerEvents();
-#else 
-#ifdef TAU_PAPI
-  PapiLayer::triggerRAPLPowerEvents();
+#else
+#ifdef TAU_PAPI_PERF_RAPL
+  PapiLayer::triggerRAPLPowerEvents(in_signal_handler);
 #endif /* TAU_PAPI */
 #endif /* TAU_CRAYCNL */
 }
@@ -276,47 +276,75 @@ void TauTriggerPowerEvent(void) {
 //////////////////////////////////////////////////////////////////////
 // TAU's trigger load
 //////////////////////////////////////////////////////////////////////
-void TauTriggerLoadEvent(void) {
+
+/* Assume the first call comes from initialization, not the handler.
+ * This function is used only once, to initialize the user event,
+ * so that we don't have to allocate memory during the signal
+ * handler. */
+void * TauTriggerLoadEvent_helper(void) {
+  if (TauEnv_get_tracing()) {
+    return Tau_get_userevent("System load (x100)");
+  } else {
+    return Tau_get_userevent("System load");
+  }
+}
+
+void TauTriggerLoadEvent(bool use_context) {
   double value;
+  /* maintain this from call-to-call so we don't have to
+   * allocate during a signal handler */
+  static void *ue = TauTriggerLoadEvent_helper();
   static int fd = Tau_open_system_file("/proc/loadavg");
   if (fd) {
     Tau_read_load_event(fd, &value);
-    
-    //Do not bother with recording the load if TAU is uninitialized. 
+    //Do not bother with recording the load if TAU is uninitialized.
     if (Tau_init_check_initialized() && TheSafeToDumpData()) {
       if (TauEnv_get_tracing()) {
-        Tau_trigger_context_event_thread("System load (x100)", value*100, 0);
-        TAU_VERBOSE("Triggered System load (x100) with %g value \n", value*100);
+          if(use_context) {
+            Tau_trigger_context_event_thread("System load (x100)", value*100, 0);
+          } else {
+            Tau_userevent_thread(ue, value*100, 0);
+          }
       }
       else  {
-        Tau_trigger_context_event_thread("System load", value, 0);
-        TAU_VERBOSE("Triggered System load with %g value \n", value);
+          if(use_context) {
+            Tau_trigger_context_event_thread("System load", value, 0);
+          } else {
+            Tau_userevent_thread(ue, value, 0);
+          }
       }
     }
   }
 }
 
-extern "C" int Tau_trigger_memory_rss_hwm(void);
+extern "C" int Tau_trigger_memory_rss_hwm(bool use_context);
 //////////////////////////////////////////////////////////////////////
 // TAU's alarm signal handler
 //////////////////////////////////////////////////////////////////////
 void TauAlarmHandler(int signum) {
+    //printf("In %s\n", __func__);
+
 
    /* Check and see if we're tracking memory events */
+  // these are never safe!  It's not signal safe...
+/*
   if (TheIsTauTrackingMemory()) {
-    TauAllocation::TriggerHeapMemoryUsageEvent();
+      TauAllocation::TriggerHeapMemoryUsageEvent();
   }
 
   if (TheIsTauTrackingMemoryHeadroom()) {
     TauAllocation::TriggerMemoryHeadroomEvent();
   }
+*/
 
   if (TheIsTauTrackingPower()) {
-    TauTriggerPowerEvent();
+    // yes, we are in a signal handler
+    TauTriggerPowerEvent(true);
   }
 
   if (TheIsTauTrackingLoad()) {
-    TauTriggerLoadEvent();
+    // no, don't use the context (not signal safe)
+    TauTriggerLoadEvent(false);
   }
 
   if (TauEnv_get_track_mpi_t_pvars()) {
@@ -324,7 +352,8 @@ void TauAlarmHandler(int signum) {
   }
 
   if (TheIsTauTrackingMemoryRSSandHWM()) {
-    Tau_trigger_memory_rss_hwm();
+    // no, don't use the context (not signal safe)
+    Tau_trigger_memory_rss_hwm(false);
   }
 
   /* Set alarm for the next interrupt */
@@ -348,21 +377,21 @@ void TauSetupHandler(void) {
   memset(&old_action, 0, sizeof(struct sigaction));
   memset(&new_action, 0, sizeof(struct sigaction));
 
-  // call the handler once, at startup.  This will pre-allocate some 
+  // call the handler once, at startup.  This will pre-allocate some
   // necessary data structures for us, so they don't have to be created
   // during the signal processing.
-  TauAlarmHandler(SIGINT); 
+  TauAlarmHandler(SIGINT);
 
-  // set signal handler 
-  new_action.sa_handler = TauAlarmHandler; 
- 
+  // set signal handler
+  new_action.sa_handler = TauAlarmHandler;
+
   new_action.sa_flags = 0;
   sigaction(SIGALRM, NULL, &old_action);
   if (old_action.sa_handler != SIG_IGN) {
     /* by default it is set to ignore */
     sigaction(SIGALRM, &new_action, NULL);
   }
-  
+
   /* activate alarm */
   alarm(TheTauInterruptInterval());
 #endif
@@ -375,13 +404,13 @@ void TauTrackMemoryUtilization(bool allocated) {
 //////////////////////////////////////////////////////////////////////
 // Argument: allocated. TauTrackMemoryUtilization can keep track of memory
 // allocated or memory free (headroom to grow). Accordingly, it is true
-// for tracking memory allocated, and false to check the headroom 
+// for tracking memory allocated, and false to check the headroom
 //////////////////////////////////////////////////////////////////////
-  // Are we tracking memory or headroom. Check the allocated argument. 
+  // Are we tracking memory or headroom. Check the allocated argument.
   if (allocated) {
-    TheIsTauTrackingMemory() = true; 
+    TheIsTauTrackingMemory() = true;
   } else {
-    TheIsTauTrackingMemoryHeadroom() = true; 
+    TheIsTauTrackingMemoryHeadroom() = true;
   }
 }
 
@@ -389,16 +418,32 @@ void TauTrackMemoryUtilization(bool allocated) {
 // Track Power
 //////////////////////////////////////////////////////////////////////
 void TauTrackPower(void) {
-  // Are we tracking memory or headroom. Check the allocated argument. 
-  TheIsTauTrackingPower() = true;
+  /* Enable tracking power by default */
+  static int flag = TauEnableTrackingPower();
+  // use the variable to prevent compiler complaints
+  if (!flag) {};
+
+  /* Check and see if we're *still* tracking memory events */
+  if (TheIsTauTrackingPower()) {
+    // not in a signal handler, but don't use context
+    TauTriggerPowerEvent(true);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
 // Track Load
 //////////////////////////////////////////////////////////////////////
 void TauTrackLoad(void) {
-  // Are we tracking memory or headroom. Check the allocated argument. 
-  TheIsTauTrackingLoad() = true;
+  /* Enable tracking power by default */
+  static int flag = TauEnableTrackingLoad();
+  // use the variable to prevent compiler complaints
+  if (!flag) {};
+
+  /* Check and see if we're *still* tracking memory events */
+  if (TheIsTauTrackingLoad()) {
+    // don't use context
+    TauTriggerLoadEvent(false);
+  }
 }
 //////////////////////////////////////////////////////////////////////
 // Track MPI_T
@@ -412,7 +457,15 @@ extern "C" void Tau_track_mpi_t(void) {
 // Track memory resident set size (RSS) and high water mark (hwm)
 //////////////////////////////////////////////////////////////////////
 void TauTrackMemoryFootPrint(void) {
-  TauEnableTrackingMemoryRSSandHWM();
+  /* Enable tracking memory by default */
+  static int flag = TauEnableTrackingMemoryRSSandHWM();
+  // use the variable to prevent compiler complaints
+  if (!flag) {};
+
+  /* Check and see if we're *still* tracking memory events */
+  if (TheIsTauTrackingMemoryRSSandHWM()) {
+    Tau_trigger_memory_rss_hwm(false);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -423,10 +476,10 @@ void TauTrackMemoryFootPrintHere(void) {
   static int flag = TauEnableTrackingMemoryRSSandHWM();
   // use the variable to prevent compiler complaints
   if (!flag) {};
- 
+
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingMemoryRSSandHWM()) {
-    Tau_trigger_memory_rss_hwm();
+    Tau_trigger_memory_rss_hwm(true);
   }
 }
 
@@ -439,7 +492,7 @@ void TauTrackMemoryHere(void) {
   static int flag = TauEnableTrackingMemory();
   // use the variable to prevent compiler complaints
   if (!flag) {};
- 
+
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingMemory()) {
     TauAllocation::TriggerHeapMemoryUsageEvent();
@@ -454,7 +507,7 @@ void TauTrackMemoryHeadroomHere(void) {
   static int flag = TauEnableTrackingMemoryHeadroom();
   // use the variable to prevent compiler complaints
   if (!flag) {};
- 
+
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingMemoryHeadroom()) {
     TauAllocation::TriggerMemoryHeadroomEvent();
@@ -469,10 +522,11 @@ void TauTrackPowerHere(void) {
   static int flag = TauEnableTrackingPower();
   // use the variable to prevent compiler complaints
   if (!flag) {};
- 
+
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingPower()) {
-    TauTriggerPowerEvent();
+    // no, not in a signal handler
+    TauTriggerPowerEvent(false);
   }
 }
 
@@ -484,20 +538,21 @@ void TauTrackLoadHere(void) {
   static int flag = TauEnableTrackingLoad();
   // use the variable to prevent compiler complaints
   if (!flag) {};
- 
+
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingLoad()) {
-    TauTriggerLoadEvent();
+    // use context
+    TauTriggerLoadEvent(true);
   }
 }
-  
+
 /***************************************************************************
  * $RCSfile: TauHandler.cpp,v $   $Author: amorris $
  * $Revision: 1.24 $   $Date: 2010/05/14 22:21:04 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.24 2010/05/14 22:21:04 amorris Exp $ 
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.24 2010/05/14 22:21:04 amorris Exp $
  ***************************************************************************/
 
-	
+
 
 
 

@@ -391,7 +391,7 @@ normalizeUserObj(PyObject *obj)
   }
 }
 
-static ProfilerEntry *newProfilerEntry(ProfilerObject *pObj, void *key, PyObject *userObj, 
+static ProfilerEntry *newProfilerEntry(ProfilerObject *pObj, void *key, PyObject *userObj,
 				       PyFrameObject *frame, char *cname) {
   char routine[4096];
   char *co_name, *co_filename;
@@ -638,7 +638,7 @@ static int profiler_callback(PyObject *self, PyFrameObject *frame, int what, PyO
       ptrace_enter_call(self,
 			((PyCFunctionObject *)arg)->m_ml,
 			arg, NULL, (char *)fn->m_ml->ml_name);
-      
+
     }
     break;
 
@@ -977,16 +977,24 @@ initctau_impl(void)
   module = Py_InitModule3("ctau_impl", moduleMethods, "TAU Fast profiler");
 #endif
   if (module == NULL)
+#if defined(__APPLE__) && PY_MAJOR_VERSION < 3
+    return ;
+#else
     return NULL;
+#endif /* __APPLE__ */
   d = PyModule_GetDict(module);
   if (PyType_Ready(&PyProfiler_Type) < 0)
+#if defined(__APPLE__) && PY_MAJOR_VERSION < 3
+    return ;
+#else
     return NULL;
+#endif /* __APPLE__ */
   PyDict_SetItemString(d, "Profiler", (PyObject *)&PyProfiler_Type);
 
   if (!initialized) {
-    PyStructSequence_InitType(&StatsEntryType, 
+    PyStructSequence_InitType(&StatsEntryType,
 			      &profiler_entry_desc);
-    PyStructSequence_InitType(&StatsSubEntryType, 
+    PyStructSequence_InitType(&StatsSubEntryType,
 			      &profiler_subentry_desc);
   }
   Py_INCREF((PyObject*) &StatsEntryType);
@@ -998,6 +1006,6 @@ initctau_impl(void)
   empty_tuple = PyTuple_New(0);
   initialized = 1;
 #if PY_MAJOR_VERSION >= 3
-  return module; 
+  return module;
 #endif
 }

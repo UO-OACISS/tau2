@@ -196,7 +196,7 @@ extern void Tau_sampling_outputTraceCallstack(int tid, void *pc,
 //               calls made by TAU (eg. dependance on compilers) between the user
 //               code representing that context to the point in TAU where we begin to
 //               unwind the event context. All we know is we can safely drop
-//               exactly 1 call layer, which explains the "skip" variable 
+//               exactly 1 call layer, which explains the "skip" variable
 //               (see TauSampling_libunwind). This layer is invariably
 //               "Tau_sampling_event_start"
 //
@@ -208,7 +208,7 @@ extern void Tau_sampling_unwind(int tid, Profiler *profiler,
 
 extern "C" bool unwind_cutoff(void **addresses, void *address) {
   // if the unwind depth is not "auto", then return
-  if (TauEnv_get_ebs_unwind_depth() > 0) 
+  if (TauEnv_get_ebs_unwind_depth() > 0)
     return false;
   bool found = false;
   for (int i=0; i<TAU_SAMP_NUM_ADDRESSES; i++) {
@@ -284,13 +284,13 @@ struct CallSiteCacheNode {
 };
 
 //typedef TAU_HASH_MAP<unsigned long, CallSiteCacheNode*> CallSiteCacheMap;
-struct CallSiteCacheMap : public TAU_HASH_MAP<unsigned long, CallSiteCacheNode*> 
+struct CallSiteCacheMap : public TAU_HASH_MAP<unsigned long, CallSiteCacheNode*>
 {
   CallSiteCacheMap() {}
   virtual ~CallSiteCacheMap() {
     //Wait! We might not be done! Unbelieveable as it may seem, this map
 	//could (and does sometimes) get destroyed BEFORE we have resolved the addresses. Bummer.
-    Tau_sampling_finalize_if_necessary(Tau_get_local_tid());
+    Tau_destructor_trigger();
   }
 };
 
@@ -469,8 +469,10 @@ unsigned long get_pc(void *p)
   pc = (unsigned long)sc->arm_pc;
 # elif __aarch64__
   pc = (unsigned long)sc->pc;
+# elif __NEC__
+  pc = (unsigned long)sc->IC;
 #elif defined(TAU_FUJITSU)
-  pc = ((struct sigcontext *)p)->sigc_regs.tpc; 
+  pc = ((struct sigcontext *)p)->sigc_regs.tpc;
 # else
   issueUnavailableWarning("Warning, TAU Sampling does not work on unknown platform.\n");
   return 0;
@@ -772,9 +774,9 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
     node = callSiteCache[addr];
     if (!node) {
       node = new CallSiteCacheNode;
-#if defined(__APPLE__) 
+#if defined(__APPLE__)
 #if defined(TAU_HAVE_CORESYMBOLICATION)
-      static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid()); 
+      static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid());
       CSSourceInfoRef source_info = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator, (vm_address_t)addr, kCSNow);
       if(CSIsNull(source_info)) {
           node->resolved = false;
@@ -830,50 +832,50 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
     // make sure we allocate enough space for the buffer!!!!
     if (childName) {
         if (TauEnv_get_ebs_resolution() == TAU_EBS_RESOLUTION_FILE) {
-            buff = (char*)malloc(strlen(tag) + strlen(childName) + 
+            buff = (char*)malloc(strlen(tag) + strlen(childName) +
                     strlen(resolvedInfo.filename) + 32);
             sprintf(buff, "[%s] %s [@] [{%s} {0}]",
                 tag, childName, resolvedInfo.filename);
         } else if (TauEnv_get_ebs_resolution() == TAU_EBS_RESOLUTION_FUNCTION) {
-            buff = (char*)malloc(strlen(tag) + strlen(childName) + 
-                    strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) + 
+            buff = (char*)malloc(strlen(tag) + strlen(childName) +
+                    strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) +
                     strlen(lineno) + 32);
             sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
-                tag, childName, resolvedInfo.funcname, 
-                resolvedInfo.filename, 
-		Tau_get_lineno_for_function(TheBfdUnitHandle(), 
+                tag, childName, resolvedInfo.funcname,
+                resolvedInfo.filename,
+		Tau_get_lineno_for_function(TheBfdUnitHandle(),
                                             resolvedInfo.funcname) );
         } else { // Line resolution
-            buff = (char*)malloc(strlen(tag) + strlen(childName) + 
-                    strlen(resolvedInfo.funcname) + 
-                    strlen(resolvedInfo.filename) + 
+            buff = (char*)malloc(strlen(tag) + strlen(childName) +
+                    strlen(resolvedInfo.funcname) +
+                    strlen(resolvedInfo.filename) +
                     strlen(lineno) + 32);
             sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
-                tag, childName, resolvedInfo.funcname, 
+                tag, childName, resolvedInfo.funcname,
                 resolvedInfo.filename, resolvedInfo.lineno);
         }
     } else {
         if (TauEnv_get_ebs_resolution() == TAU_EBS_RESOLUTION_FILE) {
-            buff = (char*)malloc(strlen(tag) + 
+            buff = (char*)malloc(strlen(tag) +
                     strlen(resolvedInfo.filename) + 32);
             sprintf(buff, "[%s] [{%s} {0}]",
                 tag, resolvedInfo.filename);
         } else if (TauEnv_get_ebs_resolution() == TAU_EBS_RESOLUTION_FUNCTION) {
-            buff = (char*)malloc(strlen(tag) + 
-                    strlen(resolvedInfo.funcname) + 
+            buff = (char*)malloc(strlen(tag) +
+                    strlen(resolvedInfo.funcname) +
                     strlen(resolvedInfo.filename) + 32);
             sprintf(buff, "[%s] %s [{%s} {%d}]",
-                tag, resolvedInfo.funcname, 
-                resolvedInfo.filename, 
-                Tau_get_lineno_for_function(TheBfdUnitHandle(), 
+                tag, resolvedInfo.funcname,
+                resolvedInfo.filename,
+                Tau_get_lineno_for_function(TheBfdUnitHandle(),
                                             resolvedInfo.funcname));
         } else { // Line resolution
-            buff = (char*)malloc(strlen(tag) + 
-                    strlen(resolvedInfo.funcname) + 
-                    strlen(resolvedInfo.filename) + 
+            buff = (char*)malloc(strlen(tag) +
+                    strlen(resolvedInfo.funcname) +
+                    strlen(resolvedInfo.filename) +
                     strlen(lineno) + 32);
             sprintf(buff, "[%s] %s [{%s} {%d}]",
-                tag, resolvedInfo.funcname, 
+                tag, resolvedInfo.funcname,
                 resolvedInfo.filename, resolvedInfo.lineno);
         }
     }
@@ -944,7 +946,7 @@ string *Tau_sampling_getPathName(unsigned int index, CallStackInfo *callStack) {
     fprintf(stderr, "ERROR: EBS attempted to access index %d of vector of length %ld\n", index, sites.size());
     exit(-1);
   }
-  
+
   startIdx = (int)(sites.size()) - 1;
   stringstream buffer;
   buffer << (sites[startIdx])->name;
@@ -1057,7 +1059,7 @@ void Tau_sampling_finalizeProfile(int tid)
   //       we iterate TheFunctionDB()! Hence the candidates!
   for (vector<FunctionInfo*>::iterator fI_iter = TheFunctionDB().begin(); fI_iter != TheFunctionDB().end(); fI_iter++) {
     FunctionInfo * parentTauContext = *fI_iter;
-    char resolved_address[1024] = "";  
+    char resolved_address[1024] = "";
     /* If OMPT-TR6 is enabled, we need to resolve addresses that are embedded within the timer name, if they haven't already been
      * resolved. */
     if(strcmp(parentTauContext->GetPrimaryGroup(), "TAU_OPENMP") == 0 && !TauEnv_get_ompt_resolve_address_eagerly()) {
@@ -1152,7 +1154,7 @@ void Tau_sampling_finalizeProfile(int tid)
     fi_it = name2FuncInfoMap->find(iglstring);
     if (fi_it == name2FuncInfoMap->end()) {
       // Create the FunctionInfo object for the leaf Intermediate object.
-      intermediateGlobalLeaf = 
+      intermediateGlobalLeaf =
 	new FunctionInfo(iglstring,
 			 candidate->tauContext->GetType(),
 			 candidate->tauContext->GetProfileGroup(),
@@ -1174,7 +1176,7 @@ void Tau_sampling_finalizeProfile(int tid)
     fi_it = name2FuncInfoMap->find(iplstring);
     if (fi_it == name2FuncInfoMap->end()) {
       // Create the FunctionInfo object for the leaf Intermediate object.
-      intermediatePathLeaf = 
+      intermediatePathLeaf =
 	new FunctionInfo(iplstring,
 			 candidate->tauContext->GetType(),
 			 candidate->tauContext->GetProfileGroup(),
@@ -1230,7 +1232,7 @@ void Tau_sampling_finalizeProfile(int tid)
         sampleGlobalLeaf = (FunctionInfo*)fi_it->second;
       }
       RtsLayer::UnLockDB();
-      
+
       stringstream callSiteKeyName;
 	  callSiteKeyName << iplstring << " ";
 	  callSiteKeyName << candidate->tauContext->GetType() << " => ";
@@ -1440,7 +1442,7 @@ void Tau_sampling_event_start(int tid, void **addresses)
 #endif /* TAU_UNWIND */
 
 /* Kevin here. This code is a bad idea. I have disabled it for now.
- * Sampling and instrumentation can play together just fine, if a 
+ * Sampling and instrumentation can play together just fine, if a
  * timer starts / stops, it shouldn't affect the timers for sampling.
  * And SHOULDN'T affect the timers for sampling.
  */
@@ -1679,7 +1681,7 @@ int Tau_sampling_init(int tid, pid_t pid)
       strcmp(TauEnv_get_ebs_source(), "TIME") == 0)
   {
 #endif // TAU_BGQ
-  
+
   static bool sigaction_initialized = false;
   // Deferred thread sampling init will happen inside this same function,
   // so we only lock if we are NOT currently handling a deferred thread
@@ -1966,7 +1968,7 @@ extern "C" void Tau_sampling_defer_init(void) {
 #ifdef SIGEV_THREAD_ID
 #ifndef TAU_ANDROID
 #ifndef TAU_FUJITSU
-#ifdef SYS_gettid  
+#ifdef SYS_gettid
     const pid_t pid = syscall(SYS_gettid);
 #elif defined(__NR_gettid)
     const pid_t pid = syscall(__NR_gettid);
@@ -2049,13 +2051,13 @@ extern "C" void Tau_sampling_init_if_necessary(void)
     // do this for all threads
 	int dummy = 0;
 	int all_threads = omp_get_max_threads();
-#pragma omp parallel for ordered 
+#pragma omp parallel for ordered
     for (dummy = 0 ; dummy < all_threads ; dummy++) {
         // but do it sequentially.
 		//
         // Protect TAU from itself
         TauInternalFunctionGuard protects_this_function;
-#pragma omp ordered 
+#pragma omp ordered
       {
 #pragma omp critical (creatingtopleveltimer)
         {

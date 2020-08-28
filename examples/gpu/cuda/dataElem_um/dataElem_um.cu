@@ -7,7 +7,7 @@ struct DataElement
   int value;
 };
 
-__global__ 
+__global__
 void Kernel(DataElement *elem) {
   printf("On device: name=%s, value=%d\n", elem->name, elem->value);
 
@@ -35,7 +35,4 @@ int main(void)
 
   cudaFree(e->name);
   cudaFree(e);
-
-  cudaDeviceReset();
-
 }

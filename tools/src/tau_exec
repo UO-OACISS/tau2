@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 LANG="C"
 export LANG
@@ -19,7 +19,7 @@ fi
 
 if tau-config | grep -q 'TAUARCH=craycnl' 2>/dev/null ; then
   on_craycnl=true
-else 
+else
   on_craycnl=false
 fi
 
@@ -57,7 +57,7 @@ usage()
   echo "        -pin          Use Intel PIN for instrumentation"
   echo "        -ptts         Run with ParaTools ThreadSpotter"
   echo "        -ptts-post    Skip application sampling and post-process existing PTTS sample files"
-  echo "        -ptts-num=<N>  Number of ranks used for ThreadSpotter"    
+  echo "        -ptts-num=<N>  Number of ranks used for ThreadSpotter"
   echo "        -ptts-sample-flags=<flags> Flags to pass to PTTS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
   echo "        -ptts-restart Enable restart support within PTTS, allowing application to continue running and be reinstrumented after stop."
   echo "        -ptts-start=<addr> Address at which to start a PTTS sampling region"
@@ -81,6 +81,9 @@ if [ $python_wrapper = "true" ] ; then
   echo "        -tau-python-interpreter=<\"python\"> name of python interpreter (e.g, python, python3.6)"
   echo "        -adios2       Write output to ADIOS2 archive"
   echo "        -adios2_trace Write trace output to ADIOS2 archive"
+  echo "        -monitoring   Periodically read available OS/HW monitoring counters"
+  echo "        -sqlite3      Write profile data to SQLite3 database"
+  echo "        -skel         Write trace event data to skeleton files"
 fi
   echo ""
   echo "Notes:"
@@ -121,7 +124,7 @@ set_node()
 {
   if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
     # ThreadSpotter's sample_ts uses the same method to determine MPI rank,
-    # see get_rank() in library/exe_path/path_substitute.cc 
+    # see get_rank() in library/exe_path/path_substitute.cc
     rank_env_vars=("PMI_RANK"
                    "OMPI_COMM_WORLD_RANK"
                    "OMPI_MCA_ns_nds_vpid"
@@ -320,7 +323,11 @@ py_interp_args=""
 ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
 ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 adios2=false
+monitoring=false
+sqlite3=false
+skel=false
 adios2_trace=false
+sos=false
 
 # This saves the args to tau_exec so they can be reused later.
 # This is used for MPI_Comm_spawn support, in which TAU spawns the child
@@ -338,13 +345,13 @@ for arg in "$@" ; do
     binding_options=`echo $binding_options $arg | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
     processT="false"
     test_arg=`echo $arg | sed -e 's@scorep@@g'`
-    if [ "x$test_arg" != "x$arg" ]; then 
+    if [ "x$test_arg" != "x$arg" ]; then
       scorep=true
     fi
     save_arg $arg
     shift
   else
-    case $arg in 
+    case $arg in
       -vv)
         verbose=true
         export TAU_VERBOSE=1
@@ -390,12 +397,28 @@ for arg in "$@" ; do
         save_arg $arg
         shift
         ;;
+      -monitoring)
+        monitoring=true
+        shift
+        ;;
+      -sqlite3)
+        sqlite3=true
+        shift
+        ;;
+      -skel)
+        skel=true
+        shift
+        ;;
       -adios2)
         adios2=true
         shift
         ;;
       -adios2_trace)
         adios2_trace=true
+        shift
+        ;;
+      -sos)
+        sos=true
         shift
         ;;
       -power)
@@ -642,12 +665,12 @@ done
 export TAU_EXEC_PATH=${BASH_SOURCE[0]}
 
 if [ "x$ptts_start" != "x" ]; then
-    ptts_sample_flags="$ptts_sample_flags --start-at-address $ptts_start" 
+    ptts_sample_flags="$ptts_sample_flags --start-at-address $ptts_start"
     ptts_restart=true
 fi
 
 if [ "x$ptts_stop" != "x" ]; then
-    ptts_sample_flags="$ptts_sample_flags --stop-at-address $ptts_stop" 
+    ptts_sample_flags="$ptts_sample_flags --stop-at-address $ptts_stop"
     ptts_restart=true
 fi
 
@@ -659,7 +682,7 @@ fi
 new_binding_options=""
 if [ "x$binding_options" != "x" ]; then
   for i in $binding_options ; do
-    case $i in 
+    case $i in
       *)
         new_binding_options="$new_binding_options $i"
         ;;
@@ -686,7 +709,7 @@ if [ "x$binding_specified" = "x" ] && ! $use_pin ; then
   fi
   theBinding=`tau-config --binding $binding_options`
   if [ $? != 0 ] ; then
-    if [ $verbose = "true" ]; then 
+    if [ $verbose = "true" ]; then
       echo "Binding options: $binding_options didn't work; trying without MPI using serial instead."
     fi
     new_binding_options=`echo $binding_options | sed -e 's/mpi/serial/' `
@@ -694,7 +717,7 @@ if [ "x$binding_specified" = "x" ] && ! $use_pin ; then
     if [ $? != 0 ] ; then
       echo "Binding not found. Exiting..."
       exit 1
-    else 
+    else
       echo "Using $theBinding"
       binding_options=$new_binding_options
     fi
@@ -732,13 +755,50 @@ else
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX:$LD_PRELOAD
 fi
 
-if [ $adios2 = "true" ]; then
-    export TAU_PLUGINS=libTAU-adios2-plugin.so
+# Make sure this plugin is first!  In the default configuration, it
+# reads the counters on the "dump" event.
+if [ $monitoring = "true" ]; then
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-monitoring-plugin${TAU_SHLIBX}
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
 fi
 
+if [ $adios2 = "true" ]; then
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-adios2-plugin${TAU_SHLIBX}
+    export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+    # Because we are writing the data to ADIOS, disable profile output
+    export TAU_PROFILE=0
+    unset TAU_PROFILE_FORMAT
+fi
+
+if [ $sqlite3 = "true" ]; then
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-sqlite3-plugin${TAU_SHLIBX}
+    export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+    # Because we are writing the data to SQLite, disable profile output
+    export TAU_PROFILE=0
+    unset TAU_PROFILE_FORMAT
+fi
+
+if [ $skel = "true" ]; then
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-skel-plugin${TAU_SHLIBX}
+    export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+    # Because we are writing the data to SQLite, disable profile output
+    export TAU_PROFILE=0
+    unset TAU_PROFILE_FORMAT
+    export TAU_CURRENT_TIMER_EXIT_PARAMS=1
+    export TAU_TRACE=0
+fi
+
 if [ $adios2_trace = "true" ]; then
-    export TAU_PLUGINS=libTAU-adios2-trace-plugin.so
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-adios2-trace-plugin${TAU_SHLIBX}
+    export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+    # Because we are writing the data to ADIOS, disable profile output
+    export TAU_PROFILE=0
+    unset TAU_PROFILE_FORMAT
+    export TAU_THREAD_PER_GPU_STREAM=1
+fi
+
+if [ $sos = "true" ]; then
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-sos-plugin${TAU_SHLIBX}
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
 fi
 
@@ -775,8 +835,8 @@ fi
 if [ $track_numa = "true" ]; then
   options=`echo $theBinding | sed -e 's/shared-//g' `
   mk=$BASEDIR/lib/Makefile.tau-$options
-  if [ -r $mk ]; then 
-    if [ $verbose = "true" ]; then 
+  if [ -r $mk ]; then
+    if [ $verbose = "true" ]; then
       echo "Using TAU_MAKEFILE=$mk to extract PAPIDIR"
     fi
     papibin=`grep "^PAPIDIR" $mk | sed -e 's/^PAPIDIR=//g' | head -n 1 `/bin
@@ -784,11 +844,11 @@ if [ $track_numa = "true" ]; then
       $papibin/papi_event_chooser NATIVE perf::PERF_COUNT_HW_CACHE_NODE:ACCESS OFFCORE_RESPONSE_0:REMOTE_DRAM &> /dev/null
       ret=$?
       if [ $ret = 0 -a "x$TAU_METRICS" = "x" ]; then
-        if [ $verbose = "true" ]; then 
+        if [ $verbose = "true" ]; then
           echo "Setting TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS  for $scriptname -numa"
         fi
         export TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS
-      else 
+      else
         echo "WARNING: $scriptname: a PAPI configuration that supports perf events perf::PERF_COUNT_HW_CACHE_NODE:ACCESS and OFFCORE_RESPONSE_0:REMOTE_DRAM should be specified to use the -numa option"
       fi
     fi
@@ -822,7 +882,7 @@ if [ $track_cuda = "true" ] ; then
   if [ `echo $TAU_METRICS | grep "TIME"` ]; then
     export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
   else
-    export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
+    export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
   fi
 fi
 if [ $track_cupti = "true" ] ; then
@@ -839,7 +899,7 @@ if [ $track_cupti = "true" ] ; then
     if [ `echo $TAU_METRICS | grep "TIME"` ]; then
       export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
     else
-      export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
+      export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
     fi
   fi
 
@@ -877,12 +937,21 @@ if [ $track_opencl = "true" ] ; then
   fi
 fi
 if [ $track_openacc = "true" ] ; then
-  export PGI_ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
-  export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
+  export PGI_ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU${TAU_SHLIBX}
+  export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU${TAU_SHLIBX}
 fi
 if [ $track_rocm = "true" ] ; then
-  export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
-  export TAU_HSA_TOOLS_LIB=librocprofiler64.so.1
+  $dryrun export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+  #export TAU_HSA_TOOLS_LIB=librocprofiler64.so.1
+  options=`echo $theBinding | sed -e 's/shared-//g' `
+  mk=$BASEDIR/lib/Makefile.tau-$options
+  rocprofdir=`grep "TAU_ROCPROFILER=" $mk | sed -e 's@TAU_ROCPROFILER=@@g'`
+  if [ -r $rocprofdir/lib/librocprofiler64.so ]; then
+    $dryrun export TAU_HSA_TOOLS_LIB=$rocprofdir/lib/librocprofiler64.so
+  fi
+  if [ -r $rocprofdir/lib/metrics.xml ]; then
+    $dryrun export ROCP_METRICS=$rocprofdir/lib/metrics.xml
+  fi
 fi
 
 isRoctracer=`echo $theBinding | grep roctracer`
@@ -914,13 +983,13 @@ fi
 
 if [ $track_power = "true" ]; then
   export TAU_TRACK_POWER=1
-  if [ "x$TAU_INTERRUPT_INTERVAL" == "x" ]; then 
+  if [ "x$TAU_INTERRUPT_INTERVAL" == "x" ]; then
     export TAU_INTERRUPT_INTERVAL=1
   fi
 fi
 if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX ]; then
   TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX
-  if [ $verbose = "true" ]; then 
+  if [ $verbose = "true" ]; then
     echo "Tracking with TAU's OMPT wrapper is enabled by preloading $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX"
   fi
 fi
@@ -933,14 +1002,14 @@ if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libomp$TAU_SHLIBX ]; th
 fi
 
 if [ $scorep = true ]; then
-  if [ $verbose = "true" ]; then 
+  if [ $verbose = "true" ]; then
     echo "Score-P is specified"
   fi
-  scoreplib=`ldd $BASEDIR/lib/$theBinding/libTAU.so | grep scorep_adapter_mpi_event.so | awk ' { print $3;}'`
-  if [ -f $scoreplib -a $verbose = "true" ]; then 
+  scoreplib=`ldd $BASEDIR/lib/$theBinding/libTAU${TAU_SHLIBX} | grep scorep_adapter_mpi_event.so | awk ' { print $3;}'`
+  if [ -f $scoreplib -a $verbose = "true" ]; then
     echo "Preloading: $scoreplib"
   fi
-  if [ "x$extraloadlibs" = "x" ]; then 
+  if [ "x$extraloadlibs" = "x" ]; then
     extraloadlibs=":$scoreplib"
   else
     extraloadlibs=":$scoreplib:$extraloadlibs"
@@ -970,11 +1039,19 @@ if [ $qsub_mode = false ]; then
   if [ "$python_wrapper" != "true" -a ! -x "$prog" ] ; then
     echo "$scriptname: $1: command not found"
     exit
-  fi 
+  fi
 
   # always use the basic preload library now
   TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
 fi
+
+if [ $track_rocm = "true" ] ; then
+# Don't LD_PRELOAD with -rocm.
+  TAUEX_LD_PRELOAD=""
+  #echo "TAUEX_LD_PRELOAD = $TAUEX_LD_PRELOAD"
+fi
+
+
 
 
 if [ $verbose = "true" ] ; then
@@ -1007,14 +1084,14 @@ if $use_pin ; then
   if ! echo "$mk_options" | grep -q "pin" >/dev/null 2>&1 ; then
     mk_options=tau-pin
     theBinding=shared-pin
-  fi 
+  fi
   mk=$BASEDIR/lib/Makefile.$mk_options
   if [ -r $mk ]; then
-    PIN_ROOT=`grep "^PIN_ROOT=" $mk | sed -e 's@^PIN_ROOT=@@g' ` 
+    PIN_ROOT=`grep "^PIN_ROOT=" $mk | sed -e 's@^PIN_ROOT=@@g' `
     #echo "PIN_ROOT=$PIN_ROOT"
-    $PIN_ROOT/pin -t $BASEDIR/lib/$theBinding/libTAU.so -- $@
+    $PIN_ROOT/pin -t $BASEDIR/lib/$theBinding/libTAU${TAU_SHLIBX} -- $@
     exit $?
-  else 
+  else
     echo "$0: PIN configuration not found. Please use ./configure -pin=download; make install;  and retry"
   fi
 fi
@@ -1032,7 +1109,7 @@ fi
 
 if [ $qsub_mode = true ] ; then
 
-  # gather all TAU_* environment variabls, but skip TAU_OPTIONS since it often has spaces, 
+  # gather all TAU_* environment variabls, but skip TAU_OPTIONS since it often has spaces,
   # and the ACLF staff tells us that it's impossible to pass env vars with spaces through qsub
   tau_vars=`env | grep TAU_ | grep -v TAU_OPTIONS | tr '\n' ':'`
   cmd="$@"
@@ -1050,7 +1127,7 @@ if [ $qsub_mode = true ] ; then
       prevEnv="$arg"
       processEnv=false
     else
-      case $arg in 
+      case $arg in
         --env)
           processEnv=true
           ;;
@@ -1076,25 +1153,25 @@ else
       echo "set env LD_BIND_NOW=1" >> .gdb_commands
     fi
     if [ $track_io = "true" ] ; then
-      echo "set env LD_BIND_NOW=1" >> .gdb_commands 
+      echo "set env LD_BIND_NOW=1" >> .gdb_commands
     fi
     if [ $apple = 1 ]; then
-      echo "_regexp-env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands 
-      echo "_regexp-env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands    
-      echo "_regexp-env DYLD_LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands    
-      echo "_regexp-env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands  
+      echo "_regexp-env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands
+      echo "_regexp-env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands
+      echo "_regexp-env DYLD_LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands
+      echo "_regexp-env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands
       if [ $# -gt 1 ] ; then
         echo "settings set target.run-args ${*:2}" >> .gdb_commands
       fi
     else
-      echo "set env LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands  
-      echo "set env LD_AUDIT=$TAUEX_LD_AUDITOR" >> .gdb_commands  
-      echo "set env LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands   
+      echo "set env LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands
+      echo "set env LD_AUDIT=$TAUEX_LD_AUDITOR" >> .gdb_commands
+      echo "set env LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands
       if [ $memory_debug = "true" ] ; then
-        echo "set env TAU_TRACK_MEMORY_LEAKS=1" >> .gdb_commands 
-        echo "set env TAU_MEMDBG_PROTECT_ABOVE=1">> .gdb_commands 
+        echo "set env TAU_TRACK_MEMORY_LEAKS=1" >> .gdb_commands
+        echo "set env TAU_MEMDBG_PROTECT_ABOVE=1">> .gdb_commands
       fi
-      echo "set env LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands   
+      echo "set env LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands
     fi
     if [ $apple = 1 ]; then
         lldb -s .gdb_commands -- "$@"
@@ -1123,11 +1200,11 @@ else
     #$dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
     if [ $track_rocm = "true" ] ; then
       if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-        if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then 
-          export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+        if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then
+          $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
         fi
       else
-        export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
+        $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
       fi
     fi
     $dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
@@ -1184,7 +1261,7 @@ else
         samplingendtime=`date +%s`
         echo "PTTS($node/$nodecount): sample_ts time: $((samplingendtime-samplingstarttime)) seconds"
       fi
-    fi 
+    fi
 
     # Write the index first.  Even if some nodes fail later the index will help
     # navigate the rest of the report.
@@ -1210,7 +1287,7 @@ else
       else
         exit $retval
       fi
-    fi 
+    fi
 
     # Post-process samples
     if [ "$node" -eq 0 ] ; then
@@ -1228,7 +1305,7 @@ else
       if [ ! -f "$reportfile" ] ; then
         echo "PTTS($node/$nodecount): report_ts returned 0 but report file \"$reportfile\" does not exist."
         exit 255
-      fi 
+      fi
     else
       echo "PTTS($node/$nodecount): report_ts returned error code $retval."
       exit $retval
@@ -1250,7 +1327,7 @@ else
       if [ ! -f "$viewdir/front.html" ] ; then
         echo "PTTS($node/$nodecount): view-static_ts returned 0 but report file \"$viewdir/front.html\" does not exist."
         exit 255
-      fi 
+      fi
     else
       echo "PTTS($node/$nodecount): view-static_ts returned error code $retval."
       exit $retval

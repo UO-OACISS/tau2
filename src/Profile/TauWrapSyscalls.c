@@ -15,7 +15,7 @@
 ***************************************************************************/
 
 
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 
 #ifndef _GNU_SOURCE
@@ -32,7 +32,7 @@
 
 extern int Tau_init_check_initialized();
 
-#define dprintf TAU_VERBOSE 
+#define dprintf TAU_VERBOSE
 
 #if (defined (TAU_BGP) || defined(TAU_XLC))
 #define TAU_DISABLE_SYSCALL_WRAPPER
@@ -53,7 +53,7 @@ int Tau_wrap_syscalls_checkPassThrough() {
 /////////////////////////////////////////////////////////////////////////
 #ifndef TAU_DISABLE_SYSCALL_WRAPPER
 void exit(int status) {
-  dprintf("TAU: Inside tau_wrap.c: exit(): status = %d\n", status);
+  dprintf("TAU: Inside %s: %s: status = %d\n", __FILE__, __func__, status);
 
   TAU_PROFILE_EXIT("EXITING from TAU...");
 
@@ -67,7 +67,7 @@ void exit(int status) {
 // Define the exit_group wrapper
 /////////////////////////////////////////////////////////////////////////
 void exit_group(int status) {
-  dprintf("TAU: Inside tau_wrap.c: exit_group(): status = %d\n", status);
+  dprintf("TAU: Inside %s: %s: status = %d\n", __FILE__, __func__, status);
 
   TAU_PROFILE_EXIT("EXIT_GROUPING from TAU...");
 

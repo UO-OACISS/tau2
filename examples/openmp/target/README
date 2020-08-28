@@ -1,0 +1,6 @@
+This example is for testing/demonstrating the target offload support
+in OpenMP, and specifically the OMPT support in TAU.
+
+This code (and the OMP pragmas) have been tested with NVIDIA cards only,
+using Clang 8.0.1.
+

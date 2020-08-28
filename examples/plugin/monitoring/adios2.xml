@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<adios-config>
+
+    <io name="TAUProfileOutput">
+        <engine type="SST">
+            <!-- SST engine parameters -->
+            <parameter key="RendezvousReaderCount" value="0"/>
+            <parameter key="QueueLimit" value="5"/>
+            <parameter key="QueueFullPolicy" value="Block"/>
+            <!-- BP4/SST engine parameters -->
+            <parameter key="OpenTimeoutSecs" value="10.0"/>
+        </engine>
+    </io>
+
+</adios-config>

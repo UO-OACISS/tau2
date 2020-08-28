@@ -23,13 +23,14 @@
 #include <TauPluginCPPTypes.h>
 #include <stdarg.h>
 #include <string.h>
+#include <map>
 
 #ifdef TAU_USE_STDCXX11
 #include <thread>
 #include <regex>
 #else
 #include <regex.h>
-#endif 
+#endif
 
 #include <Profile/Profiler.h>
 #include <TauMetaData.h>
@@ -46,18 +47,33 @@
 #endif /* TAU_WINDOWS */
 
 /* Plugin Declarations */
-std::map < PluginKey, std::set<unsigned int> > plugins_for_named_specific_event;
-std::map < unsigned int, Tau_plugin_new_t*> plugin_map;
-std::map < unsigned int, Tau_plugin_callbacks_t* > plugin_callback_map;
+std::map < PluginKey, std::set<unsigned int> >& Tau_get_plugins_for_named_specific_event(void) {
+    static std::map < PluginKey, std::set<unsigned int> > my_map;
+    return my_map;
+}
+std::map < unsigned int, Tau_plugin_new_t*>& Tau_get_plugin_map(void) {
+    static std::map < unsigned int, Tau_plugin_new_t*> themap;
+    return themap;
+}
+std::map < unsigned int, Tau_plugin_callbacks_t* >& Tau_get_plugin_callback_map(void) {
+    static std::map < unsigned int, Tau_plugin_callbacks_t* > themap;
+    return themap;
+}
+
+/* TODO: Temporary subtitute to "plugins_for_named_specific_event",
+ * see TauPluginCPPTypes.h for more detail */
+OmptPluginsVect plugins_for_ompt_event[NB_TAU_PLUGIN_EVENTS];
 
 std::list < std::string > regex_list;
 
 unsigned int plugin_id_counter = 0;
-size_t star_hash; 
+size_t star_hash;
 
 extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *name);
 
 Tau_plugin_callbacks_active_t Tau_plugins_enabled;
+
+extern void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugins_enabled);
 /* Plugin Declarations */
 
 
@@ -83,6 +99,10 @@ struct HashTable : public TAU_HASH_MAP<unsigned long, HashNode*>
     Tau_init_initializeTAU();
   }
   virtual ~HashTable() {
+    for (auto it = this->cbegin(); it != this->cend() /* not hoisted */; /* no increment */)
+    {
+        this->erase(it++);
+    }
     Tau_destructor_trigger();
   }
 };
@@ -111,69 +131,69 @@ static tau_bfd_handle_t & TheBfdUnitHandle()
  * that has been embedded in the function name using a pre-fixed token sequence.
  * Currently, this is only invoked from TracerOTF2.cpp and Profiler.cpp while
  * writing out the trace and profile files respectively.
- * NOTE: We do NOT need to lock the HashTable data structure as the thread has already 
+ * NOTE: We do NOT need to lock the HashTable data structure as the thread has already
  * acquired the lock from outside this routine */
 extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address) {
- 
+
       unsigned long addr = 0;
       char region_type[100];
       sscanf(fi.GetName(), "%s ADDR <%lx>", region_type, &addr);
       #ifdef TAU_BFD
       HashNode * node;
       tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
-     
+
       node = TheHashTable()[addr];
       if (!node) {
         node = new HashNode;
         node->fi = NULL;
         node->excluded = false;
-        
+
         TheHashTable()[addr] = node;
       }
-      
+
       Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
 
       if(node && node->info.filename && node->info.funcname && node->info.lineno) {
         sprintf(resolved_address, "%s %s [{%s} {%d, 0}]", region_type, node->info.funcname, node->info.filename, node->info.lineno);
       } else if(node && node->info.filename && node->info.funcname) {
-        sprintf(resolved_address, "%s %s [{%s}]", region_type, node->info.funcname, node->info.filename);
+        sprintf(resolved_address, "%s %s [{%s} {0, 0}]", region_type, node->info.funcname, node->info.filename);
       } else if(node && node->info.funcname) {
         sprintf(resolved_address, "%s %s", region_type, node->info.funcname);
       } else {
         sprintf(resolved_address, "OpenMP %s __UNKNOWN__", region_type);
       }
-      #else 
+      #else
         sprintf(resolved_address, "OpenMP %s __UNKNOWN__", region_type);
       #endif /*TAU_BFD*/
 }
 
 /* Given the unsigned long address, and a pointer to the string, fill the string with the BFD resolved address.
- * NOTE: We need to lock the HashTable data structure, as this function is invoked from the OMPT callbacks themselves, 
- * when the user wants to resolve the function name eagerly. 
+ * NOTE: We need to lock the HashTable data structure, as this function is invoked from the OMPT callbacks themselves,
+ * when the user wants to resolve the function name eagerly.
  * For this feature to be active, TAU_OMPT_RESOLVE_ADDRESS_EAGERLY must be set.*/
 extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address) {
- 
+
       #ifdef TAU_BFD
       HashNode * node;
       tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
-     
-      RtsLayer::LockDB();  
+
+      RtsLayer::LockDB();
       node = TheHashTable()[addr];
       if (!node) {
         node = new HashNode;
         node->fi = NULL;
         node->excluded = false;
-        
+
         TheHashTable()[addr] = node;
 
         Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
       }
-      RtsLayer::UnLockDB(); 
+      RtsLayer::UnLockDB();
 
       if(node && node->info.filename && node->info.funcname && node->info.lineno) {
         sprintf(resolved_address, "%s [{%s} {%d, 0}]", node->info.funcname, node->info.filename, node->info.lineno);
       } else if(node && node->info.filename && node->info.funcname) {
-        sprintf(resolved_address, "%s [{%s}]", node->info.funcname, node->info.filename);
+        sprintf(resolved_address, "%s [{%s} {0, 0}]", node->info.funcname, node->info.filename);
       } else if(node && node->info.funcname) {
         sprintf(resolved_address, "%s", node->info.funcname);
       } else {
@@ -185,7 +205,11 @@ extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * res
 }
 
 extern "C" size_t Tau_util_return_hash_of_string(const char * input) {
+#if defined(__clang__) // && defined(__APPLE__)
+  std::hash<std::string> hash_fn;
+#else
   std::tr1::hash<std::string> hash_fn;
+#endif
   std::string s(input);
   return hash_fn(s);
 }
@@ -206,7 +230,7 @@ void TAU_ABORT(const char *format, ...) {
 /*********************************************************************
  * Create an buffer output device
  ********************************************************************/
-Tau_util_outputDevice *Tau_util_createBufferOutputDevice() 
+Tau_util_outputDevice *Tau_util_createBufferOutputDevice()
 {
   Tau_util_outputDevice *out = (Tau_util_outputDevice*) TAU_UTIL_MALLOC (sizeof(Tau_util_outputDevice));
   if (out == NULL) {
@@ -273,21 +297,21 @@ int Tau_util_output(Tau_util_outputDevice *out, const char *format, ...) {
  ********************************************************************/
 int Tau_util_readFullLine(char *line, FILE *fp) {
   int ch;
-  int i = 0; 
+  int i = 0;
   while ( (ch = fgetc(fp)) && ch != EOF && ch != (int) '\n') {
     line[i++] = (unsigned char) ch;
   }
   // Be careful to check that line is large enough:
   // sizeof(line) == strlen(str) + 1
-  line[i] = '\0'; 
-  return i; 
+  line[i] = '\0';
+  return i;
 }
 
 /*********************************************************************
- * Duplicates a string and replaces all the runs of spaces with a 
+ * Duplicates a string and replaces all the runs of spaces with a
  * single space.
  ********************************************************************/
-char const * Tau_util_removeRuns(char const * spaced_str) 
+char const * Tau_util_removeRuns(char const * spaced_str)
 {
   if (!spaced_str) {
     return spaced_str; /* do nothing with a null string */
@@ -344,7 +368,7 @@ void *Tau_util_calloc(size_t size, const char *file, int line) {
 PluginManager* Tau_util_get_plugin_manager() {
   static PluginManager * plugin_manager = NULL;
   static int is_plugin_system_initialized = 0;
-  
+
   /*Allocate memory for the plugin list and callback list*/
   if(!is_plugin_system_initialized) {
 
@@ -365,6 +389,7 @@ PluginManager* Tau_util_get_plugin_manager() {
  ********************************************************************/
 int Tau_initialize_plugin_system() {
   memset(&Tau_plugins_enabled, 0, sizeof(Tau_plugin_callbacks_active_t));
+
   if(TauEnv_get_plugins_enabled()) {
     TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
     if(!Tau_util_load_and_register_plugins(Tau_util_get_plugin_manager())) {
@@ -386,10 +411,10 @@ int Tau_util_parse_plugin_token(char * token, char ** plugin_name, char *** plug
   char * arg_token;
   char *pos_left = NULL;
   char *pos_right = NULL;
-  
+
 
   *plugin_num_args = 0;
-  *plugin_name = (char*)malloc(1024*sizeof(char));
+  *plugin_name = (char*)calloc(1024,sizeof(char));
   pos_left = strchr(token, '(');
   pos_right = strchr(token, ')');
 
@@ -400,13 +425,13 @@ int Tau_util_parse_plugin_token(char * token, char ** plugin_name, char *** plug
     return -1; //Bad plugin name
   }
 
-  *plugin_args = (char**)malloc(10*sizeof(char*)); //Maximum of 10 args supported for now
-  arg_string = (char*)malloc(1024*sizeof(char));
+  *plugin_args = (char**)calloc(10,sizeof(char*)); //Maximum of 10 args supported for now
+  arg_string = (char*)calloc(1024,sizeof(char));
 
   length_of_arg_string = (pos_right - pos_left) - 1;
 
   strncpy(arg_string, pos_left+1, length_of_arg_string);
-  // null terminate the string after copying it. 
+  // null terminate the string after copying it.
   arg_string[length_of_arg_string] = '\0';
   strncpy(*plugin_name, token, (pos_left-token));
 
@@ -416,7 +441,7 @@ int Tau_util_parse_plugin_token(char * token, char ** plugin_name, char *** plug
   /*Grab and pack, and count all the arguments to the plugin*/
   while(arg_token != NULL) {
     (*plugin_num_args)++;
-    (*plugin_args)[i] = (char*)malloc(1024*sizeof(char));
+    (*plugin_args)[i] = (char*)calloc(1024,sizeof(char));
     strcpy((*plugin_args)[i], arg_token);
     arg_token = strtok_r(NULL, ",", &save_ptr);
     i++;
@@ -447,10 +472,51 @@ void Tau_enable_plugins_for_all_events() {
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, "*");
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER, "*");
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_TRIGGER, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_PARALLEL_BEGIN, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_PARALLEL_END, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_TASK_CREATE, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_TASK_SCHEDULE, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_IMPLICIT_TASK, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_THREAD_BEGIN, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_THREAD_END, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_WORK, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_MASTER, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_IDLE, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_SYNC_REGION, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRE, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRED, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_MUTEX_RELEASED, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_TARGET, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_TARGET_DATA_OP, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_TARGET_SUBMIT, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_FINALIZE, "*");
+}
+
+/* TODO: Function part of the tomporary fix described in
+ * TauPluginCPPTypes.h */
+void Tau_flag_ompt_events() {
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_PARALLEL_BEGIN].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_PARALLEL_END].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_TASK_CREATE].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_TASK_SCHEDULE].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_IMPLICIT_TASK].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_THREAD_BEGIN].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_THREAD_END].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_WORK].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_MASTER].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_IDLE].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_SYNC_REGION].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRE].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRED].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_MUTEX_RELEASED].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_TARGET].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_TARGET_DATA_OP].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_TARGET_SUBMIT].flag_as_ompt();
+  plugins_for_ompt_event[TAU_PLUGIN_EVENT_OMPT_FINALIZE].flag_as_ompt();
 }
 
 
-/********************************************************************* 
+/*********************************************************************
  * Load a list of plugins at TAU init, given following environment variables:
  *  - TAU_PLUGINS_NAMES
  *  - TAU_PLUGINS_PATH
@@ -471,12 +537,12 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
     printf("TAU: One or more of the environment variable(s) TAU_PLUGINS_PATH: %s, TAU_PLUGINS: %s are empty\n", TauEnv_get_plugins_path(), TauEnv_get_plugins());
     return -1;
   }
-  
+
   strcpy(pluginpath, TauEnv_get_plugins_path());
   strcpy(listpluginsnames, TauEnv_get_plugins());
 
   /*Individual plugin names are separated by a ":"*/
-  token = strtok_r(listpluginsnames,":", &save_ptr); 
+  token = strtok_r(listpluginsnames,":", &save_ptr);
   TAU_VERBOSE("TAU: Trying to load plugin with name %s\n", token);
 
   fullpath = (char*)calloc(TAU_NAME_LENGTH, sizeof(char));
@@ -498,26 +564,26 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
 #endif
 
     TAU_VERBOSE("TAU: Full path for the current plugin: %s\n", fullpath);
-   
+
     /*Return a handle to the loaded dynamic object*/
     void* handle = Tau_util_load_plugin(plugin_name, fullpath, plugin_manager);
 
     if (handle) {
       /*If handle is NOT NULL, register the plugin's handlers for various supported events*/
       handle = Tau_util_register_plugin(plugin_name, plugin_args, plugin_num_args, handle, plugin_manager, plugin_id_counter);
-     
+
       /*Plugin registration failed. Bail*/
       if(!handle) return -1;
       TAU_VERBOSE("TAU: Successfully called the init func of plugin: %s\n", token);
 
       /* Plugin API */
-      Tau_plugin_new_t * plugin_; 
+      Tau_plugin_new_t * plugin_;
       plugin_ = (Tau_plugin_new_t *)malloc(sizeof(Tau_plugin_new_t));
 
       strcpy(plugin_->plugin_name, plugin_name);
       plugin_->id = plugin_id_counter;
       plugin_->handle = handle;
-      plugin_map[plugin_id_counter] = plugin_;
+      Tau_get_plugin_map()[plugin_id_counter] = plugin_;
       plugin_id_counter++;
       /* Plugin API */
 
@@ -529,9 +595,10 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
     token = strtok_r(NULL, ":", &save_ptr);
   }
 
+  Tau_flag_ompt_events();
   Tau_enable_plugins_for_all_events();
   star_hash = Tau_util_return_hash_of_string("*");
-  
+
   Tau_metadata_push_to_plugins();
 
   free(fullpath);
@@ -564,7 +631,7 @@ void* Tau_util_register_plugin(const char *name, char **args, int num_args, void
     dlclose(handle); //TODO : Replace with Tau_plugin_cleanup();
 #endif /* TAU_WINDOWS */
     return NULL;
-  } 
+  }
   return handle;
 }
 
@@ -577,7 +644,7 @@ void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* pl
 #else
   void* handle = NULL;
 #endif /* TAU_WINDOWS */
-  
+
   if (handle) {
     Tau_plugin * plugin = (Tau_plugin *)malloc(sizeof(Tau_plugin));
     strcpy(plugin->plugin_name, name);
@@ -586,7 +653,7 @@ void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* pl
     (plugin_manager->plugin_list)->head = plugin;
 
     TAU_VERBOSE("TAU: Successfully loaded plugin: %s\n", name);
-    return handle;    
+    return handle;
   } else {
 #ifndef TAU_WINDOWS
     printf("TAU: Failed loading %s plugin with error: %s\n", name, dlerror());
@@ -619,6 +686,24 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->FunctionFinalize = 0;
   cb->PhaseEntry = 0;
   cb->PhaseExit = 0;
+  cb->OmptParallelBegin = 0;
+  cb->OmptParallelEnd = 0;
+  cb->OmptTaskCreate = 0;
+  cb->OmptTaskSchedule = 0;
+  cb->OmptImplicitTask = 0;
+  cb->OmptThreadBegin = 0;
+  cb->OmptThreadEnd = 0;
+  cb->OmptWork = 0;
+  cb->OmptMaster = 0;
+  cb->OmptIdle = 0;
+  cb->OmptSyncRegion = 0;
+  cb->OmptMutexAcquire = 0;
+  cb->OmptMutexAcquired = 0;
+  cb->OmptMutexReleased = 0;
+  cb->OmptTarget = 0;
+  cb->OmptTargetDataOp = 0;
+  cb->OmptTargetSubmit = 0;
+  cb->OmptFinalize = 0;
 }
 
 /**************************************************************************************************************************
@@ -644,6 +729,24 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->FunctionFinalize = src->FunctionFinalize;
   dest->PhaseEntry = src->PhaseEntry;
   dest->PhaseExit = src->PhaseExit;
+  dest->OmptParallelBegin = src->OmptParallelBegin;
+  dest->OmptParallelEnd = src->OmptParallelEnd;
+  dest->OmptTaskCreate = src->OmptTaskCreate;
+  dest->OmptTaskSchedule = src->OmptTaskSchedule;
+  dest->OmptImplicitTask = src->OmptImplicitTask;
+  dest->OmptThreadBegin = src->OmptThreadBegin;
+  dest->OmptThreadEnd = src->OmptThreadEnd;
+  dest->OmptWork = src->OmptWork;
+  dest->OmptMaster = src->OmptMaster;
+  dest->OmptIdle = src->OmptIdle;
+  dest->OmptSyncRegion = src->OmptSyncRegion;
+  dest->OmptMutexAcquire = src->OmptMutexAcquire;
+  dest->OmptMutexAcquired = src->OmptMutexAcquired;
+  dest->OmptMutexReleased = src->OmptMutexReleased;
+  dest->OmptTarget = src->OmptTarget;
+  dest->OmptTargetDataOp = src->OmptTargetDataOp;
+  dest->OmptTargetSubmit = src->OmptTargetSubmit;
+  dest->OmptFinalize = src->OmptFinalize;
 }
 
 /**************************************************************************************************************************
@@ -660,7 +763,7 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
   /* Plugin API */
   Tau_plugin_callbacks_t * cb_ = (Tau_plugin_callbacks_t *)malloc(sizeof(Tau_plugin_callbacks_t));
   Tau_util_make_callback_copy(cb_, cb);
-  plugin_callback_map[plugin_id] = cb_;
+  Tau_get_plugin_callback_map()[plugin_id] = cb_;
   /* Plugin API */
 
   /* Set some flags to make runtime conditional processing more efficient */
@@ -683,7 +786,29 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
   if (cb->Trigger != 0) { Tau_plugins_enabled.trigger = 1; }
   if (cb->PhaseEntry != 0) { Tau_plugins_enabled.phase_entry = 1; }
   if (cb->PhaseExit != 0) { Tau_plugins_enabled.phase_exit = 1; }
-  
+  if (cb->OmptParallelBegin != 0) { Tau_plugins_enabled.ompt_parallel_begin = 1; }
+  if (cb->OmptParallelEnd != 0) { Tau_plugins_enabled.ompt_parallel_end = 1; }
+  if (cb->OmptTaskCreate != 0) { Tau_plugins_enabled.ompt_task_create = 1; }
+  if (cb->OmptTaskSchedule != 0) { Tau_plugins_enabled.ompt_task_schedule = 1; }
+  if (cb->OmptImplicitTask != 0) { Tau_plugins_enabled.ompt_implicit_task = 1; }
+  if (cb->OmptThreadBegin != 0) { Tau_plugins_enabled.ompt_thread_begin = 1; }
+  if (cb->OmptThreadEnd != 0) { Tau_plugins_enabled.ompt_thread_end = 1; }
+  if (cb->OmptWork != 0) { Tau_plugins_enabled.ompt_work = 1; }
+  if (cb->OmptMaster != 0) { Tau_plugins_enabled.ompt_master = 1; }
+  if (cb->OmptIdle != 0) { Tau_plugins_enabled.ompt_idle = 1; }
+  if (cb->OmptSyncRegion != 0) { Tau_plugins_enabled.ompt_sync_region = 1; }
+  if (cb->OmptMutexAcquire != 0) { Tau_plugins_enabled.ompt_mutex_acquire = 1; }
+  if (cb->OmptMutexAcquired != 0) { Tau_plugins_enabled.ompt_mutex_acquired = 1; }
+  if (cb->OmptMutexReleased != 0) { Tau_plugins_enabled.ompt_mutex_released = 1; }
+  if (cb->OmptTarget != 0) { Tau_plugins_enabled.ompt_target = 1; }
+  if (cb->OmptTargetDataOp != 0) { Tau_plugins_enabled.ompt_target_data_op = 1; }
+  if (cb->OmptTargetSubmit != 0) { Tau_plugins_enabled.ompt_target_submit = 1; }
+  if (cb->OmptFinalize != 0) { Tau_plugins_enabled.ompt_finalize = 1; }
+
+  /* Register needed OMPT callback if they are not already registered */
+#if defined(TAU_USE_OMPT) || defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+  Tau_ompt_register_plugin_callbacks(&Tau_plugins_enabled);
+#endif /* TAU_OMPT */
 }
 
 #ifndef TAU_USE_STDCXX11
@@ -726,26 +851,28 @@ extern "C" const char* Tau_check_for_matching_regex(const char * input)
       return (*it).c_str();
     }
   }
-#else 
+#else
   for(std::list< std::string >::iterator it = regex_list.begin(); it != regex_list.end(); it++) {
     if(Tau_C_regex_match(input, (*it).c_str())) {
       return (*it).c_str();
     }
   }
-#endif 
+#endif
   return NULL;
 }
+
+/* TODO: for the following overloaded functions, the ones for the ompt events are slightly different due to a bug. More information in TauPluginCPPTypes.h */
 
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the function registration event
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data_t* data, PluginKey key) {
-  
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->FunctionRegistrationComplete != 0)
-      plugin_callback_map[*it]->FunctionRegistrationComplete(data);
+
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->FunctionRegistrationComplete != 0)
+      Tau_get_plugin_callback_map()[*it]->FunctionRegistrationComplete(data);
   }
-  
+
 }
 
 /**************************************************************************************************************************
@@ -753,9 +880,9 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data_t* d
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_mpit_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->Mpit != 0)
-      plugin_callback_map[*it]->Mpit(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->Mpit != 0)
+      Tau_get_plugin_callback_map()[*it]->Mpit(data);
   }
 }
 
@@ -764,9 +891,9 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_mpit_data_t* data, PluginKey ke
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_dump_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->Dump != 0)
-      plugin_callback_map[*it]->Dump(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->Dump != 0)
+      Tau_get_plugin_callback_map()[*it]->Dump(data);
   }
 }
 
@@ -775,9 +902,9 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_dump_data_t* data, PluginKey ke
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_function_entry_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->FunctionEntry != 0)
-      plugin_callback_map[*it]->FunctionEntry(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->FunctionEntry != 0)
+      Tau_get_plugin_callback_map()[*it]->FunctionEntry(data);
   }
 }
 
@@ -786,9 +913,9 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_entry_data_t* data, Pl
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_function_exit_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->FunctionExit != 0)
-      plugin_callback_map[*it]->FunctionExit(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->FunctionExit != 0)
+      Tau_get_plugin_callback_map()[*it]->FunctionExit(data);
   }
 }
 
@@ -797,9 +924,9 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_exit_data_t* data, Plu
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_current_timer_exit_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->CurrentTimerExit != 0)
-      plugin_callback_map[*it]->CurrentTimerExit(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->CurrentTimerExit != 0)
+      Tau_get_plugin_callback_map()[*it]->CurrentTimerExit(data);
   }
 }
 
@@ -808,9 +935,9 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_current_timer_exit_data_t* data
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_send_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->Send != 0)
-      plugin_callback_map[*it]->Send(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->Send != 0)
+      Tau_get_plugin_callback_map()[*it]->Send(data);
   }
 }
 
@@ -819,9 +946,9 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_send_data_t* data, PluginKey ke
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_recv_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->Recv != 0)
-      plugin_callback_map[*it]->Recv(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->Recv != 0)
+      Tau_get_plugin_callback_map()[*it]->Recv(data);
   }
 }
 
@@ -830,9 +957,9 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_recv_data_t* data, PluginKey ke
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_metadata_registration_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->MetadataRegistrationComplete != 0)
-      plugin_callback_map[*it]->MetadataRegistrationComplete(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->MetadataRegistrationComplete != 0)
+      Tau_get_plugin_callback_map()[*it]->MetadataRegistrationComplete(data);
   }
 }
 
@@ -841,9 +968,9 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_metadata_registration_data_t* d
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_post_init_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->PostInit != 0)
-      plugin_callback_map[*it]->PostInit(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->PostInit != 0)
+      Tau_get_plugin_callback_map()[*it]->PostInit(data);
   }
 }
 
@@ -852,9 +979,9 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_post_init_data_t* data, PluginK
  ****************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_registration_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->AtomicEventRegistrationComplete != 0)
-      plugin_callback_map[*it]->AtomicEventRegistrationComplete(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->AtomicEventRegistrationComplete != 0)
+      Tau_get_plugin_callback_map()[*it]->AtomicEventRegistrationComplete(data);
   }
 }
 
@@ -863,9 +990,191 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_registration_data_
  *****************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_trigger_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->AtomicEventTrigger != 0)
-      plugin_callback_map[*it]->AtomicEventTrigger(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->AtomicEventTrigger != 0)
+      Tau_get_plugin_callback_map()[*it]->AtomicEventTrigger(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_parallel_begin event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_parallel_begin_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptParallelBegin != 0)
+      Tau_get_plugin_callback_map()[id]->OmptParallelBegin(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_parallel_end event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_parallel_end_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptParallelEnd != 0)
+      Tau_get_plugin_callback_map()[id]->OmptParallelEnd(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_task_create event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_task_create_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptTaskCreate != 0)
+      Tau_get_plugin_callback_map()[id]->OmptTaskCreate(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_task_schedule event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_task_schedule_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptTaskSchedule != 0)
+      Tau_get_plugin_callback_map()[id]->OmptTaskSchedule(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_implicit_task event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_implicit_task_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptImplicitTask != 0)
+      Tau_get_plugin_callback_map()[id]->OmptImplicitTask(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_thread_begin event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_thread_begin_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptThreadBegin != 0)
+      Tau_get_plugin_callback_map()[id]->OmptThreadBegin(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_thread_end event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_thread_end_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptThreadEnd != 0)
+      Tau_get_plugin_callback_map()[id]->OmptThreadEnd(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_work event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_work_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptWork != 0)
+      Tau_get_plugin_callback_map()[id]->OmptWork(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_master event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_master_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptMaster != 0)
+      Tau_get_plugin_callback_map()[id]->OmptMaster(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_idle event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_idle_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptIdle != 0)
+      Tau_get_plugin_callback_map()[id]->OmptIdle(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_sync_region event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_sync_region_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptSyncRegion != 0)
+      Tau_get_plugin_callback_map()[id]->OmptSyncRegion(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_mutex_acquire event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_mutex_acquire_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptMutexAcquire != 0)
+      Tau_get_plugin_callback_map()[id]->OmptMutexAcquire(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_mutex_acquired event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_mutex_acquired_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptMutexAcquired != 0)
+      Tau_get_plugin_callback_map()[id]->OmptMutexAcquired(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_mutex_released event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_mutex_released_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptMutexReleased != 0)
+      Tau_get_plugin_callback_map()[id]->OmptMutexReleased(data);
   }
 }
 
@@ -874,9 +1183,9 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_trigger_data_t* da
  ******************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_pre_end_of_execution_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->PreEndOfExecution != 0)
-      plugin_callback_map[*it]->PreEndOfExecution(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->PreEndOfExecution != 0)
+      Tau_get_plugin_callback_map()[*it]->PreEndOfExecution(data);
   }
 }
 
@@ -885,21 +1194,21 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_pre_end_of_execution_data_t* da
  ******************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_end_of_execution_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->EndOfExecution != 0)
-      plugin_callback_map[*it]->EndOfExecution(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->EndOfExecution != 0)
+      Tau_get_plugin_callback_map()[*it]->EndOfExecution(data);
   }
 }
 
 /*****************************************************************************
- * Overloaded function that invokes all registered callbacks for the 
+ * Overloaded function that invokes all registered callbacks for the
  * finalize event
  *****************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_function_finalize_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->FunctionFinalize != 0)
-      plugin_callback_map[*it]->FunctionFinalize(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->FunctionFinalize != 0)
+      Tau_get_plugin_callback_map()[*it]->FunctionFinalize(data);
   }
 }
 
@@ -908,9 +1217,9 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_finalize_data_t* data,
  *******************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_interrupt_trigger_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->InterruptTrigger != 0)
-      plugin_callback_map[*it]->InterruptTrigger(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->InterruptTrigger != 0)
+      Tau_get_plugin_callback_map()[*it]->InterruptTrigger(data);
   }
 }
 
@@ -919,9 +1228,9 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_interrupt_trigger_data_t* data,
  *******************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_trigger_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->Trigger != 0) {
-      plugin_callback_map[*it]->Trigger(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->Trigger != 0) {
+      Tau_get_plugin_callback_map()[*it]->Trigger(data);
     }
   }
 }
@@ -931,9 +1240,9 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_trigger_data_t* data, PluginKey
  *******************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_entry_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->PhaseEntry != 0)
-      plugin_callback_map[*it]->PhaseEntry(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->PhaseEntry != 0)
+      Tau_get_plugin_callback_map()[*it]->PhaseEntry(data);
   }
 }
 
@@ -942,10 +1251,62 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_entry_data_t* data, Plugi
  *******************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_exit_data_t* data, PluginKey key) {
 
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->PhaseExit != 0)
-      plugin_callback_map[*it]->PhaseExit(data);
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->PhaseExit != 0)
+      Tau_get_plugin_callback_map()[*it]->PhaseExit(data);
   }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_target event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_target_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptTarget != 0)
+      Tau_get_plugin_callback_map()[id]->OmptTarget(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_target_data_op event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_target_data_op_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptTargetDataOp != 0)
+      Tau_get_plugin_callback_map()[id]->OmptTargetDataOp(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_target_submit event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_target_submit_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptTargetSubmit != 0)
+      Tau_get_plugin_callback_map()[id]->OmptTargetSubmit(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks ompt_finalize event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_finalize_data_t* data, PluginKey key) {
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptFinalize != 0)
+      Tau_get_plugin_callback_map()[id]->OmptFinalize(data);
+  }
+  plugins_for_ompt_event[ev].destroy();
 }
 
 /* Actually do the invocation */
@@ -955,35 +1316,35 @@ void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const v
     case TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_function_registration_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_METADATA_REGISTRATION: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_metadata_registration_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_POST_INIT: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_post_init_data_t*)data, key);
       break;
-    }  
+    }
     case TAU_PLUGIN_EVENT_MPIT: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_mpit_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_DUMP: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_dump_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_FUNCTION_ENTRY: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_function_entry_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_FUNCTION_EXIT: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_function_exit_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_current_timer_exit_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_FUNCTION_FINALIZE: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_function_finalize_data_t*)data, key);
       break;
@@ -991,27 +1352,27 @@ void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const v
      case TAU_PLUGIN_EVENT_SEND: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_send_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_RECV: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_recv_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_atomic_event_registration_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_atomic_event_trigger_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_pre_end_of_execution_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_END_OF_EXECUTION: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_end_of_execution_data_t*)data, key);
       break;
-    } 
+    }
     case TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_interrupt_trigger_data_t*)data, key);
       break;
@@ -1026,6 +1387,78 @@ void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const v
     }
     case TAU_PLUGIN_EVENT_PHASE_EXIT: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_phase_exit_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_PARALLEL_BEGIN: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_parallel_begin_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_PARALLEL_END: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_parallel_end_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_TASK_CREATE: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_task_create_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_TASK_SCHEDULE: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_task_schedule_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_IMPLICIT_TASK: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_implicit_task_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_THREAD_BEGIN: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_thread_begin_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_THREAD_END: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_thread_end_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_WORK: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_work_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_MASTER: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_master_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_IDLE: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_idle_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_SYNC_REGION: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_sync_region_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRE: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_mutex_acquire_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRED: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_mutex_acquired_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_MUTEX_RELEASED: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_mutex_released_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_TARGET: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_target_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_TARGET_DATA_OP: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_target_data_op_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_TARGET_SUBMIT: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_target_submit_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_OMPT_FINALIZE: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_finalize_data_t*)data, key);
       break;
     }
    default: {
@@ -1045,7 +1478,7 @@ extern "C" void Tau_util_invoke_callbacks_for_trigger_event(Tau_plugin_event eve
   Tau_plugin_event_trigger_data_t data;
   data.data = data_;
 
-  if(!plugins_for_named_specific_event[key_].empty()) {
+  if(!Tau_get_plugins_for_named_specific_event()[key_].empty()) {
     Tau_util_do_invoke_callbacks(event, key_, &data);
   } else {
     PluginKey key(event, star_hash);
@@ -1065,12 +1498,12 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * s
 
   PluginKey key_(event, hash_);
 
-  if(!plugins_for_named_specific_event[key_].empty()) {
+  if(!Tau_get_plugins_for_named_specific_event()[key_].empty()) {
      hash = hash_;
   } else if (matching_regex != NULL) {
      size_t hash__ = Tau_util_return_hash_of_string(matching_regex);
      PluginKey key__(event, hash__);
-     if(plugins_for_named_specific_event[key__].empty()) {
+     if(Tau_get_plugins_for_named_specific_event()[key__].empty()) {
        hash = star_hash;
      } else {
        hash = hash__;
@@ -1078,7 +1511,7 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * s
   } else {
      hash = star_hash;
   }
-  
+
   PluginKey key(event, hash);
   Tau_util_do_invoke_callbacks(event, key, data);
 }
@@ -1089,21 +1522,21 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * s
 int Tau_util_cleanup_all_plugins() {
 
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
-  
+
   Tau_plugin * temp_plugin;
   Tau_plugin_callback_t * temp_callback;
 
   Tau_plugin * plugin = (plugin_manager->plugin_list)->head;
   Tau_plugin_callback_t * callback = (plugin_manager->callback_list)->head;
 
-  /*Two separate while loops to handle the weird case that a plugin is loaded but doesn't register anything*/ 
+  /*Two separate while loops to handle the weird case that a plugin is loaded but doesn't register anything*/
   while(plugin) {
     temp_plugin = plugin;
 
     plugin = temp_plugin->next;
 
     /*Close the dynamic library*/
-#ifndef TAU_WINDOWS 
+#ifndef TAU_WINDOWS
     if(temp_plugin->handle)
       dlclose(temp_plugin->handle);
 #endif /* TAU_WINDOWS */
@@ -1111,7 +1544,7 @@ int Tau_util_cleanup_all_plugins() {
     temp_plugin->next = NULL;
 
     free(temp_plugin);
-  }   
+  }
 
   while(callback) {
     temp_callback = callback;

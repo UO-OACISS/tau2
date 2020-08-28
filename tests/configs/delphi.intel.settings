@@ -1,0 +1,40 @@
+#!/bin/bash -e
+
+module purge
+module load gcc/7.3 # Needed for PDT, apparently
+module load intel/20
+module load mpi/intel-20
+module load python/3.6.8
+module load cuda/10.2
+BFD=/usr/local/packages/binutils/2.33.1
+PDT=/usr/local/packages/pdtoolkit-3.25.1
+OTF2=/usr/local/packages/otf2/2.1
+PAPI=/usr/local/packages/papi/6.0.0.1
+#PAPI=/usr/local/packages/papi/5.5.1
+
+export CC=icc
+export CXX=icpc
+export FC=ifort
+export COMPILER=intel
+
+export TAU_OPTIONS="-optRevert"
+
+# Enable the things that Spack enables by default
+base_support="-bfd=${BFD} -iowrapper -pdt=${PDT} -pdt_c++=g++ -otf=${OTF2}"
+
+# Which tests to run?
+export basic_test_programs="mm"
+export mpi_test_programs="mm mm_fortran"
+export python_test_programs="python"
+export cuda_test_programs="cuda"
+
+export mpirun_command="mpirun -np 2"
+
+export pthread_config="${base_support} -pthread"
+export opari_config="${base_support} -openmp -opari"
+export ompt_config="${base_support} -openmp -ompt"
+export mpi_config="${base_support} -mpi"
+export papi_config="${base_support} -papi=${PAPI}"
+export python_config="${base_support} -python -pythoninc=${PYTHONTOP}/include/python3.6m -pythonlib=${PYTHONTOP}/lib"
+export cuda_config="${base_support} -cuda=${CUDA} -pthread"
+

@@ -24,65 +24,47 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+#include <string>
 
 /*********************************************************************
- * writes an XML string to an output device, converts certain 
+ * writes an XML string to an output device, converts certain
  * characters as necessary and uses CDATA when necessary
  ********************************************************************/
 void Tau_XML_writeString(Tau_util_outputDevice *out, const char *s) {
   if (!s) return;
-  
+
   bool useCdata = false;
-  
+
   if (strchr(s, '<') || strchr(s, '&')) {
     useCdata = true;
   }
-  
+
   if (strstr(s, "]]>") || strchr(s, '\n')) {
     useCdata = false;
   }
-  
+
   if (useCdata) {
     Tau_util_output (out,"<![CDATA[%s]]>",s);
     return;
   }
 
   // could grow up to 5 times in length
-  char *str = (char *) malloc (6*strlen(s)+10);
-  char *d = str;
-  while (*s) {
-    if ((*s == '<') || (*s == '>') || (*s == '&') || (*s == '\n')) {
-      // escape these characters
-      if (*s == '<') {
-	strcpy (d,"&lt;");
-	d+=4;
-      }
-      
-      if (*s == '>') {
-	strcpy (d,"&gt;");
-	d+=4;
-      }
-
-      if (*s == '\n') {
-	strcpy (d,"&#xa;");
-	d+=5;
-      }
-      
-      if (*s == '&') {
-	strcpy (d,"&amp;");
-	d+=5;
-      }
-    } else {
-      *d = *s;
-      d++; 
+  std::string buffer;
+  std::string data(s);
+  //buffer.reserve(data.size()*6);
+    for(size_t pos = 0; pos != data.size(); ++pos) {
+        switch(data[pos]) {
+            case '&':  buffer.append("&amp;");       break;
+            case '\"': buffer.append("&quot;");      break;
+            case '\'': buffer.append("&apos;");      break;
+            case '\n': buffer.append("&#xa;");      break;
+            case '<':  buffer.append("&lt;");        break;
+            case '>':  buffer.append("&gt;");        break;
+            default:   buffer.append(&data[pos], 1); break;
+        }
     }
-    
-    s++;
-  }
-  *d = 0;
-  
-  Tau_util_output (out,"%s",str);
-  free (str);
+
+  Tau_util_output (out,"%s",buffer.c_str());
 }
 
 /*********************************************************************

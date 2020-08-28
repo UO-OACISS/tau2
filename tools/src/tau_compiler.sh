@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -905,7 +905,7 @@ for arg in "$@" ; do
         	fi
         	;;
 
-            *.cu) 
+            *.cu)
 		CMD="nvcc -Xcompiler -finstrument-functions"
 		useNVCC=$TRUE;
         	fileName=$arg
@@ -963,7 +963,7 @@ for arg in "$@" ; do
         	if [ $fortranParserDefined == $FALSE ]; then
         			#If it is not passed EXPLICITY, use the default gfparse.
                     if [ -r "$optPdtDir"/gfparse485 ]; then
-                # New updated gfparse485 symlink exists! Use gfparse48 by default. 
+                # New updated gfparse485 symlink exists! Use gfparse48 by default.
                       pdtParserF="$optPdtDir"/gfparse48
                     else
                       pdtParserF="$optPdtDir"/gfparse
@@ -1582,7 +1582,7 @@ if [ $numFiles == 0 ]; then
       link_options_file="$optWrappersDir/armci_wrapper/link_options.tau"
     fi
 
-    if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then
+    if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau -a $optShared == $FALSE ] ; then
       link_options_file="$optWrappersDir/pthread_wrapper/link_options.tau"
     fi
 
@@ -2143,7 +2143,7 @@ else
                                              sed -e 's/  */,/g' | \
                                              sed -e 's/^,*//' -e 's/,*$//')
                      fi
-                       if [ "x$optExcludeFuncsList" != "x" ]; then 
+                       if [ "x$optExcludeFuncsList" != "x" ]; then
                          optExcludeFuncs=-finstrument-functions-exclude-function-list=$optExcludeFuncsList
                          optCompInstOption="$optExcludeFuncs $optCompInstOption"
                          echoIfDebug "$optCompInstOption=$optCompInstOption"
@@ -2151,8 +2151,8 @@ else
                      fi
           	     extraopt=$optCompInstOption
                      if [ $groupType == $group_f_F ]; then
-# If we need to tweak the Fortran options, we should do it here 
-# For e.g., if Nagware needs a -Wc,<opt>, or if we want to remove file-exclude. 
+# If we need to tweak the Fortran options, we should do it here
+# For e.g., if Nagware needs a -Wc,<opt>, or if we want to remove file-exclude.
           	       extraopt="$optExcludeFuncs $optCompInstFortranOption"
           	       echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
                      fi
@@ -2319,49 +2319,49 @@ else
           fi
 
           echoIfDebug "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
-          if [ $trackIO == $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then 
+          if [ $trackIO == $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then
             optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
             link_options_file="$optWrappersDir/io_wrapper/link_options.tau"
-          fi   
+          fi
 
           echoIfDebug "optMemDbg = $optMemDbg, wrappers = $optWrappersDir/memory_wrapper/link_options.tau "
-          if [ $optMemDbg == $TRUE -a -r $optWrappersDir/memory_wrapper/link_options.tau ] ; then 
+          if [ $optMemDbg == $TRUE -a -r $optWrappersDir/memory_wrapper/link_options.tau ] ; then
             optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
             link_options_file="$optWrappersDir/memory_wrapper/link_options.tau"
-          fi   
+          fi
 
-          if [ $trackDMAPP == $TRUE -a -r $optWrappersDir/dmapp_wrapper/link_options.tau ] ; then 
+          if [ $trackDMAPP == $TRUE -a -r $optWrappersDir/dmapp_wrapper/link_options.tau ] ; then
             link_options_file="$optWrappersDir/dmapp_wrapper/link_options.tau"
-          fi   
+          fi
 
-          if [ $trackARMCI == $TRUE -a -r $optWrappersDir/armci_wrapper/link_options.tau ] ; then 
+          if [ $trackARMCI == $TRUE -a -r $optWrappersDir/armci_wrapper/link_options.tau ] ; then
             link_options_file="$optWrappersDir/armci_wrapper/link_options.tau"
-          fi   
+          fi
 
-          if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then 
+          if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau -a $optShared == $FALSE ] ; then
             link_options_file="$optWrappersDir/pthread_wrapper/link_options.tau"
-          fi   
+          fi
 
-          if [ $trackGOMP == $TRUE -a -r $optWrappersDir/gomp_wrapper/link_options.tau ] ; then 
+          if [ $trackGOMP == $TRUE -a -r $optWrappersDir/gomp_wrapper/link_options.tau ] ; then
             link_options_file="$optWrappersDir/gomp_wrapper/link_options.tau"
-          fi   
+          fi
 
-          if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then 
+          if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then
             link_options_file="$optWrappersDir/mpcthread_wrapper/link_options.tau"
-          fi   
+          fi
 
 
-          if [ $trackUPCR == $TRUE ] ; then 
+          if [ $trackUPCR == $TRUE ] ; then
             case $upc in
               berkeley)
-                if [ -r $optWrappersDir/upc/bupc/link_options.tau ] ; then 
+                if [ -r $optWrappersDir/upc/bupc/link_options.tau ] ; then
                   link_options_file="$optWrappersDir/upc/bupc/link_options.tau"
-                else 
+                else
                   echo "Warning: can't locate link_options.tau for Berkeley UPC runtime tracking"
-                fi   
-              ;;   
+                fi
+              ;;
               xlupc)
-                if [ -r $optWrappersDir/upc/xlupc/link_options.tau ] ; then 
+                if [ -r $optWrappersDir/upc/xlupc/link_options.tau ] ; then
                   link_options_file="$optWrappersDir/upc/xlupc/link_options.tau"
                 else
                   echo "Warning: can't locate link_options.tau for IBM XL UPC runtime tracking"

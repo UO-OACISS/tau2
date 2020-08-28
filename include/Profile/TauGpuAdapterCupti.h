@@ -1,6 +1,10 @@
+#ifndef TAU_GPU_ADAPTER_CUPTI_H
+#define TAU_GPU_ADAPTER_CUPTI_H
+
 #include "Profile/CuptiLayer.h"
 #include <Profile/TauGpu.h>
 #include <stdlib.h>
+#include <mutex>
 
 extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
 
@@ -39,6 +43,11 @@ struct DeviceMap : public std::map<int64_t, FunctionInfo*> {
 DeviceMap & functionInfoMap_deviceLaunch() {
   static DeviceMap device_map;
   return device_map;
+}
+
+std::mutex & functionInfoMap_mutex() {
+  static std::mutex mtx;
+  return mtx;
 }
 
 struct DeviceInfoMap : public std::map<uint32_t, metadata_struct> {
@@ -92,16 +101,16 @@ public:
 	//This event is tied to the entire deivce not a particular stream or context.
 	//Used for recording device metadata.
 	bool deviceContainer;
-	
+
 	const char *name;
 	//FunctionInfo *callingSite;
 	GpuEventAttributes *gpu_event_attributes;
 	int number_of_gpu_attributes;
 
 	/*CuptiGpuEvent(uint32_t s, uint32_t cn, uint32_t c) { streamId = s; contextId = cn ; correlationId = c; };*/
-	CuptiGpuEvent *getCopy() const { 
+	CuptiGpuEvent *getCopy() const {
 		CuptiGpuEvent *c = new CuptiGpuEvent(*this);
-		return c; 
+		return c;
 	};
  CuptiGpuEvent(const char* n, uint32_t device, GpuEventAttributes *m, int m_size) : name(n), deviceId(device), gpu_event_attributes(m), number_of_gpu_attributes(m_size) {
 		deviceContainer = true;
@@ -118,7 +127,7 @@ public:
 	};
 
   void setCdp() { cdpId = ++cdpCount; }
-  
+
 	const char* getName() const { return name; }
 	int getTaskId() const { return taskId; }
 
@@ -130,31 +139,38 @@ public:
 	x_uint64 id_p1() const {
 		return correlationId;
 	};
-	x_uint64 id_p2() const { 
-		return RtsLayer::myNode(); 
+	x_uint64 id_p2() const {
+		return RtsLayer::myNode();
 	};
-	bool less_than(const GpuEvent *other) const
-	{	
-		if (deviceContainer || ((CuptiGpuEvent *)other)->deviceContainer) {
-			return deviceId < ((CuptiGpuEvent *)other)->deviceId;
-		}
-		else {
-			if (contextId == ((CuptiGpuEvent *)other)->context()) {
-        if (streamId == ((CuptiGpuEvent *)other)->stream()) {
-          return cdpId < ((CuptiGpuEvent *)other)->cdp();
-        } else {
-				  return streamId < ((CuptiGpuEvent *)other)->stream();
+    bool less_than(const GpuEvent *other) const
+    {
+        // if we are not tracing, only the device ID matters.
+        if (!TauEnv_get_thread_per_gpu_stream()) {
+            // Devices are different, return
+            return deviceId < ((CuptiGpuEvent *)other)->deviceId;
         }
-			} else {
-				return contextId < ((CuptiGpuEvent *)other)->context();
-			}
-		}
-		/*
-		if (ret) { printf("%s equals %s.\n", printId(), ((CuptiGpuEvent *)other)->printId()); }
-		else { printf("%s does not equal %s.\n", printId(), ((CuptiGpuEvent *)other)->printId());}
-		return ret;
-		*/
-	};
+        /* First, check if we are running on different devices */
+        if (deviceContainer || ((CuptiGpuEvent *)other)->deviceContainer) {
+            if (deviceId != ((CuptiGpuEvent *)other)->deviceId) {
+                /* Devices are different, return */
+                return deviceId < ((CuptiGpuEvent *)other)->deviceId;
+            }
+        }
+        /* Either same device or no device container */
+        else {
+            /* Are we in the same context? */
+            if (contextId == ((CuptiGpuEvent *)other)->context()) {
+                /* Are we on different streams? */
+                if (streamId == ((CuptiGpuEvent *)other)->stream()) {
+                    return cdpId < ((CuptiGpuEvent *)other)->cdp();
+                } else {
+                    return streamId < ((CuptiGpuEvent *)other)->stream();
+                }
+            } else {
+                return contextId < ((CuptiGpuEvent *)other)->context();
+            }
+        }
+    };
 
 	void getAttributes(GpuEventAttributes *&gA, int &num) const
 	{
@@ -175,15 +191,29 @@ public:
 				Tau_metadata_task(gpu_metadata[i].name, gpu_metadata[i].value, id);
 			}
 		}
+
+        char tmpVal[32] = {0};
+        sprintf(tmpVal, "%u", deviceId);
+        Tau_metadata_task("CUDA Device", tmpVal, id);
+        sprintf(tmpVal, "%u", contextId);
+        Tau_metadata_task("CUDA Context", tmpVal, id);
+        if (TauEnv_get_thread_per_gpu_stream()) {
+            sprintf(tmpVal, "%u", streamId);
+            Tau_metadata_task("CUDA Stream", tmpVal, id);
+        }
+        if (cdpId > 0) {
+            sprintf(tmpVal, "%u", cdpId);
+            Tau_metadata_task("CUDA cdpId", tmpVal, id);
+        }
 	}
 
-	double syncOffset() const 
-  { 
-    return (double) beginTimestamp; 
+	double syncOffset() const
+  {
+    return (double) beginTimestamp;
   };
 	static void setSyncOffset(double offset)
-  { 
-    beginTimestamp = offset; 
+  {
+    beginTimestamp = offset;
   };
 	uint32_t stream() { return streamId; };
 	uint32_t context() { return contextId; };
@@ -195,24 +225,24 @@ public:
     if (cdpId != 0)
     {
       // lock required to prevent multithreaded access to the tree
-      RtsLayer::LockDB();
+      functionInfoMap_mutex().lock();
       std::map<int64_t, FunctionInfo*>::iterator it = functionInfoMap_deviceLaunch().find(parentGridId);
       if (it != functionInfoMap_deviceLaunch().end())
-      { 
+      {
         funcInfo = it->second;
         //printf("found device launch site: %s.\n", funcInfo->GetName());
       }
-      RtsLayer::UnLockDB();
+      functionInfoMap_mutex().unlock();
     } else {
       // lock required to prevent multithreaded access to the tree
-      RtsLayer::LockDB();
+      functionInfoMap_mutex().lock();
       std::map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap_hostLaunch().find(correlationId);
       if (it != functionInfoMap_hostLaunch().end())
       {
         funcInfo = it->second;
         //printf("found host launch site: %s.\n", funcInfo->GetName());
       }
-      RtsLayer::UnLockDB();
+      functionInfoMap_mutex().unlock();
     }
     if (funcInfo != NULL) {
       funcInfo->SetPrimaryGroupName("TAU_REMOTE");
@@ -229,3 +259,5 @@ public:
 
 uint32_t CuptiGpuEvent::cdpCount = 0;
 double CuptiGpuEvent::beginTimestamp = 0;
+
+#endif //TAU_GPU_ADAPTER_CUPTI_H

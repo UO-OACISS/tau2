@@ -14,7 +14,7 @@
  ***************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 #ifdef TAU_CRAYXMT
 #pragma mta instantiate used
@@ -25,7 +25,7 @@
 #endif /* TAU_BEACON */
 
 #ifndef TAU_DISABLE_MARKERS
-#define TAU_USE_EVENT_THRESHOLDS 1 
+#define TAU_USE_EVENT_THRESHOLDS 1
 #endif /* TAU_DISABLE_MARKERS */
 
 #include <stdio.h>
@@ -84,13 +84,13 @@ struct ContextEventMapCompare
   {
     int i = 0;
     for (i=0; (i<=l1[0] && i<=l2[0]) ; i++) {
-        //printf("%d: %ld, %ld\t", i, l1[i], l2[i]);
+        //printf("%d: %p, %p\t", i, l1[i], l2[i]);
       if (l1[i] != l2[i]) {
-          /*
+      /*
           if (l1[i] < l2[i]) {
-              printf("\nleft <  right\n");
+              printf("\nleft <  right\n"); fflush(stdout);
           } else {
-              printf("\nleft >= right\n");
+              printf("\nleft >= right\n"); fflush(stdout);
           }
           */
           return l1[i] < l2[i];
@@ -303,8 +303,8 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
   /*Invoke plugins only if both plugin path and plugins are specified*/
     /* and only output the counter if it's not a context counter */
     if(Tau_plugins_enabled.atomic_event_trigger) {
-      if ((name[0] != '[') 
-            && (name.find(" : ") == std::string::npos) 
+      if ((name[0] != '[')
+            && (name.find(" : ") == std::string::npos)
             && (name.find("=>") == std::string::npos)) {
         Tau_plugin_event_atomic_event_trigger_data_t plugin_data;
         plugin_data.counter_name = name.c_str();
@@ -398,21 +398,30 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 // Formulate Context Comparison Array, an array of addresses with size depth+2.
 // The callpath depth is the 0th index, the user event goes is the last index
 //////////////////////////////////////////////////////////////////////
-void TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, long * comparison)
+void TauContextUserEvent::FormulateContextComparisonArray(Profiler * in_current, long * comparison)
 {
   int tid = RtsLayer::myThread();
   int depth = Tau_get_current_stack_depth(tid);
+  Profiler * current = in_current;
   if (depth > TAU_MAX_CALLPATH_DEPTH) {
       // oh, no...  super-deep callpath.  Warn the user and abort.  Bummer.
       fprintf(stderr, "ERROR! The callstack depth has exceeded a hard-coded limit in TAU.  Please reconfigure TAU with the option '-useropt=-DTAU_MAX_CALLPATH_DEPTH=X' where X is greater than %d\n", TAU_MAX_CALLPATH_DEPTH);
   }
 
   int i=1;
-  // start writing to index 1, we fill in the depth after
-  for(; current && depth; ++i) {
+  // we might be processing virtual thread data, in which case tid is bogus
+  // (because we are processing the asynchronous gpu data on a different thread)
+  // so do some special handling
+  if (current != NULL && depth == 0) {
     comparison[i] = Tau_convert_ptr_to_long(current->ThisFunction);
-    current = current->ParentProfiler;
-    --depth;
+    i++;
+  } else {
+    // start writing to index 1, we fill in the depth after
+    for(; current && depth; ++i) {
+        comparison[i] = Tau_convert_ptr_to_long(current->ThisFunction);
+        current = current->ParentProfiler;
+        --depth;
+    }
   }
   comparison[i] = Tau_convert_ptr_to_long(userEvent);
   comparison[0] = i; // set the depth
@@ -423,9 +432,10 @@ void TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, lo
 ////////////////////////////////////////////////////////////////////////////
 // Formulate Context Callpath name string
 ////////////////////////////////////////////////////////////////////////////
-TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current)
+TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * in_current)
 {
   int tid = RtsLayer::myThread();
+  Profiler * current = in_current;
   if (current) {
       //std::basic_stringstream<char, std::char_traits<char>, TauSignalSafeAllocator<char> > buff;
       std::stringstream buff;
@@ -435,7 +445,6 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
       FunctionInfo * fi;
       if (depth > 0) {
           Profiler ** path = new Profiler*[depth];
-
           // Reverse the callpath to avoid string copies
           int i=depth-1;
           for (; current && i >= 0; --i) {
@@ -460,7 +469,7 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
           if (strlen(fi->GetType()) > 0)
             buff << " " << fi->GetType();
 
-          delete[] path;
+          //delete[] path;
       } else {
           fi = current->ThisFunction;
           buff << " : " << fi->GetName();
@@ -490,9 +499,10 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
     if (contextEnabled) {
       Profiler * current = TauInternal_CurrentProfiler(tid);
       if (current) {
-        //printf("**** Looking for : %s\n", FormulateContextNameString(current).c_str()); fflush(stdout);
+        //printf("**** Looking for : %p %s\n", current, FormulateContextNameString(current).c_str()); fflush(stdout);
         long comparison[TAU_MAX_CALLPATH_DEPTH] = {0};
         FormulateContextComparisonArray(current, comparison);
+        //printf("Searching: %lu, %lu or %p (should be %p)\n", comparison[0], comparison[1], comparison[1], current);
 
         RtsLayer::LockDB();
         ContextEventMap::const_iterator it = contextMap.find(comparison);
@@ -508,7 +518,7 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
 	    userEventPrevVec.push_back(tok);
 	  }
 	  userEventPrevVec[0].erase(userEventPrevVec[0].length()-1, userEventPrevVec[0].length());
-	  userEventPrevVec[1].erase(0, 1);	  
+	  userEventPrevVec[1].erase(0, 1);
 	  if (!((std::string)(userEvent->GetName().c_str())).compare(userEventPrevVec[0])) {
 	    if (((std::string)(fi->GetName())).compare(userEventPrevVec[1])) {
 	      cuda_ctx_seen = false;
@@ -519,32 +529,16 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
 #else
         if (it == contextMap.end()) {
 #endif
-          //printf("****  NEW  **** \n"); fflush(stdout);
-    /* KAH - Whoops!! We can't call "new" here, because malloc is not
-     * safe in signal handling. therefore, use the special memory
-     * allocation routines */
-#if (!(defined (TAU_WINDOWS) || defined(_AIX)))
-    contextEvent = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
-    /*  now, use the pacement new function to create a object in
-     *  pre-allocated memory. NOTE - this memory needs to be explicitly
-     *  deallocated by explicitly calling the destructor. 
-     *  I think the best place for that is in the destructor for
-     *  the hash table. */
-          new(contextEvent) TauUserEvent(
-              FormulateContextNameString(current).c_str(),
-              userEvent->IsMonotonicallyIncreasing());
-#else
           contextEvent = new TauUserEvent(
               FormulateContextNameString(current).c_str(),
               userEvent->IsMonotonicallyIncreasing());
-#endif
           // need to make a heap copy of our comparison array. Otherwise it gets
           // corrupted, because right now this is a stack variable.
           // It needs to be a stack variable so that searching each time we have
           // a counter doesn't eat up the whole memory map.
           int depth = comparison[0];
           int size = sizeof(long)*(depth+2);
-          long * ary = (long*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), size);
+          long * ary = (long*)malloc(size);
           int i;
           for (i = 0 ; i <= depth ; i++) {
               ary[i] = comparison[i];
@@ -581,5 +575,5 @@ x_uint64 TauUserEvent_GetEventId(TauUserEvent const * evt)
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
  * $Revision: 1.46 $   $Date: 2010/05/07 22:16:23 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.46 2010/05/07 22:16:23 amorris Exp $ 
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.46 2010/05/07 22:16:23 amorris Exp $
  ***************************************************************************/

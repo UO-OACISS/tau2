@@ -34,7 +34,7 @@
 #define HAVE_DECL_BASENAME 1
 #include <demangle.h>
 #define DEFAULT_DEMANGLE_FLAGS DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES
-#ifdef __PGI
+#if defined(__PGI) && defined(DMGL_ARM)
 #define DEMANGLE_FLAGS DEFAULT_DEMANGLE_FLAGS | DMGL_ARM
 #else
 #define DEMANGLE_FLAGS DEFAULT_DEMANGLE_FLAGS
@@ -71,7 +71,18 @@
 #include <libdwarf.h>
 #endif
 
-
+/* When BFD 2.34 was released, some API calls were replaced. */
+#if !defined(bfd_get_section)
+#define TAU_BFD_GET_SECTION_FLAGS(_abfd, _section) bfd_section_flags(_section)
+#define TAU_BFD_GET_SECTION_VMA(_abfd, _section) bfd_section_vma(_section)
+#define TAU_BFD_GET_SECTION_SIZE(_section) bfd_section_size(_section)
+#define TAU_BFD_GET_SECTION(_symbol) bfd_asymbol_section(_symbol)
+#else
+#define TAU_BFD_GET_SECTION_FLAGS(_abfd, _section) bfd_get_section_flags(_abfd, _section)
+#define TAU_BFD_GET_SECTION_VMA(_abfd, _section) bfd_get_section_vma(_abfd, _section)
+#define TAU_BFD_GET_SECTION_SIZE(_section) bfd_get_section_size(_section)
+#define TAU_BFD_GET_SECTION(_symbol) bfd_get_section(_symbol)
+#endif
 
 using namespace std;
 
@@ -156,7 +167,7 @@ struct TauBfdModule
       if (!size) {
         TAU_VERBOSE("loadSymbolTable: Cannot get symbol table size [%s]\n", path);
         return (bfdOpen = false);
-      } 
+      }
     }
 
     syms = (asymbol **)malloc(size);
@@ -174,7 +185,7 @@ struct TauBfdModule
     if (bfd_get_flavour(bfdImage) == bfd_target_elf_flavour) {
       Elf_Internal_Phdr * elf_pheader = elf_tdata(bfdImage)->phdr;
       if(elf_pheader != NULL) {
-        unsigned int num_segments = elf_elfheader(bfdImage)->e_phnum;  
+        unsigned int num_segments = elf_elfheader(bfdImage)->e_phnum;
         for(unsigned int i = 0; i < num_segments; i++, elf_pheader++) {
           if(elf_pheader->p_type != PT_LOAD) {
             // Only care about LOAD segments
@@ -275,24 +286,13 @@ static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit);
 // ensure that non-local static variables are initialised before being
 // used (Ref: Scott Meyers, Item 47 Eff. C++).
 //////////////////////////////////////////////////////////////////////
-extern "C" void Tau_sampling_finalize_if_necessary(int tid);
-extern "C" void finalizeCallSites_if_necessary(void);
 struct bfd_unit_vector_t : public std::vector<TauBfdUnit*>
 {
   bfd_unit_vector_t() {}
   virtual ~bfd_unit_vector_t() {
   //Wait! We might not be done! Unbelieveable as it may seem, this object
   //could (and does sometimes) get destroyed BEFORE we have resolved the addresses. Bummer.
-#ifndef TAU_WINDOWS
-    if (TauEnv_get_callsite()) {
-      finalizeCallSites_if_necessary();
-    }
-
-    if (TauEnv_get_ebs_enabled()) {
-      // Tau_sampling_finalize(tid);
-      Tau_sampling_finalize_if_necessary(Tau_get_local_tid());
-    }
-#endif
+  Tau_destructor_trigger();
   }
 };
 
@@ -398,7 +398,7 @@ static void Tau_bfd_internal_updateProcSelfMaps(TauBfdUnit *unit)
 #if (defined (TAU_BGP) || defined(TAU_BGQ) || (TAU_WINDOWS))
   /* do nothing */
   // *JCL* - Windows has no /proc filesystem, so don't try to use it
-#else 
+#else
 
   // Note: Linux systems only.
   FILE * mapsfile = fopen("/proc/self/maps", "r");
@@ -739,9 +739,9 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
 #endif /* TAU_INTEL12 */
     info.funcname = Tau_bfd_internal_tryDemangle(module->bfdImage, info.funcname);
     return true;
-  } 
+  }
 
-  // Data wasn't found, so check every symbol's address directly to see if it matches.  
+  // Data wasn't found, so check every symbol's address directly to see if it matches.
   // If so, try to get the function name from the symbol name.
   for (asymbol ** s = module->syms; *s; s++) {
     asymbol const & asym = **s;
@@ -775,7 +775,7 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
 
   TAU_VERBOSE("result: %p, %s, %s, %d\n", probeAddr, info.funcname, info.filename, info.lineno);
 
-  // we might have partial information, like filename and line number. 
+  // we might have partial information, like filename and line number.
   // MOST LIKELY this is an outlined region or some other code that the compiler
   // generated.
   if ((info.funcname == NULL) && (info.filename != NULL) && (info.lineno > 0)) {
@@ -1017,19 +1017,19 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   }
 
   // Skip this section if it isn't a debug info section
-  if ((bfd_get_section_flags(bfdptr, section) & SEC_ALLOC) == 0) {
+  if ((TAU_BFD_GET_SECTION_FLAGS(bfdptr, section) & SEC_ALLOC) == 0) {
     return;
   }
 
 
   // Skip this section if the address is before the section start
-  bfd_vma vma = bfd_get_section_vma(bfdptr, section);
+  bfd_vma vma = TAU_BFD_GET_SECTION_VMA(bfdptr, section);
   if (data.info.probeAddr < vma) {
       return;
   }
 
   // Skip this section if the address is after the section end
-  bfd_size_type size = bfd_get_section_size(section);
+  bfd_size_type size = TAU_BFD_GET_SECTION_SIZE(section);
   if (data.info.probeAddr >= vma + size) {
     return;
   }
@@ -1103,7 +1103,7 @@ static void Tau_get_dwarf_line_number(tau_bfd_handle_t bfd_handle, Dwarf_Debug d
 
     // The other is the linkage name. This should be the mangled name used by the linker.
     Dwarf_Attribute linkage_name;
-    res = dwarf_attr(die, DW_AT_linkage_name, &linkage_name, errp); 
+    res = dwarf_attr(die, DW_AT_linkage_name, &linkage_name, errp);
     char * linkage_name_str = NULL;
     if(res == DW_DLV_OK) {
         res = dwarf_formstring(linkage_name, &linkage_name_str, errp);
@@ -1150,8 +1150,8 @@ static void Tau_get_dwarf_line_number(tau_bfd_handle_t bfd_handle, Dwarf_Debug d
         if(demangled_name_str != NULL) {
             sym_map[std::string(demangled_name_str)] = line_number_u;
         }
-    } 
-    
+    }
+
     // Add regular name to the map, if it exists.
     if(!noname) {
         sym_map[std::string(name)] = line_number_u;
@@ -1248,7 +1248,7 @@ static void Tau_get_dwarf_symbols(tau_bfd_handle_t bfd_handle, const char * file
         memset(&signature,0, sizeof(signature));
 
         res = dwarf_next_cu_header_d(dbg, is_info, &cu_header_length, &version_stamp, &abbrev_offset,
-                &address_size, &offset_size, &extension_size, &signature, &typeoffset, &next_cu_header, 
+                &address_size, &offset_size, &extension_size, &signature, &typeoffset, &next_cu_header,
                 &header_cu_type, errp);
         if(res == DW_DLV_ERROR) {
             fprintf(stderr, "TAU: Error in dwarf_next_cu_header: %d\n", res);
@@ -1287,45 +1287,45 @@ static void Tau_get_dwarf_symbols(tau_bfd_handle_t bfd_handle, const char * file
 #endif // TAU_DWARF
 
 // Given a function name, this routine iterates through the list of symbols and
-// returns the line number associated with the function name. It needs to 
-// cache this information - it is not efficient. 
+// returns the line number associated with the function name. It needs to
+// cache this information - it is not efficient.
 static int Tau_internal_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcname) {
-  if (TauEnv_get_lite_enabled()) return 0; 
+  if (TauEnv_get_lite_enabled()) return 0;
 
-  static bool first_time = true; 
+  static bool first_time = true;
   static map<string, int> cached_symtab;
   map<string, int>::iterator cit, fit;
   static map<string, int> full_symtab;
   int lno = 0;
-  
+
   if (!first_time) {
     // See if the funcname has appeared before
-    cit = cached_symtab.find(funcname);  
+    cit = cached_symtab.find(funcname);
     if (cit == cached_symtab.end()) {
-      TAU_VERBOSE("TAU_BFD: Didn't find %s in the cached_symtab\n", funcname); 
+      TAU_VERBOSE("TAU_BFD: Didn't find %s in the cached_symtab\n", funcname);
       // Let us search for it in the full_symtab.
-      fit = full_symtab.find(funcname); 
+      fit = full_symtab.find(funcname);
       if (fit == full_symtab.end()) {
-        TAU_VERBOSE("TAU_BFD: Didn't find %s in the full_symtab either!\n", funcname); 
+        TAU_VERBOSE("TAU_BFD: Didn't find %s in the full_symtab either!\n", funcname);
         return 0; /* didn't find it */
       } else { // found it in the full_symtab!
-        // add it to the cached entry first! 
-        lno = fit->second; 
+        // add it to the cached entry first!
+        lno = fit->second;
         cached_symtab[funcname] = lno;
         TAU_VERBOSE("TAU_BFD: Adding: cached_symtab[%s] = %d\n", funcname, lno);
 	return lno; // line number
       }
     } else {
         // Found the function name in the cached_symtab!
-        lno = cit->second; 
+        lno = cit->second;
         TAU_VERBOSE("TAU_BFD: Found: cached_symtab[%s] = %d\n", funcname, lno);
         return lno;
     }
-  } 
-  // This is the first time 
-  // reset the flag. Acquire lock?  
-  first_time = false;  
-      
+  }
+  // This is the first time
+  // reset the flag. Acquire lock?
+  first_time = false;
+
   TauBfdUnit * unit = ThebfdUnits()[bfd_handle];
   int result_line = 0;
 #ifdef TAU_DWARF
@@ -1335,7 +1335,7 @@ static int Tau_internal_get_lineno_for_function(tau_bfd_handle_t bfd_handle, cha
     for(vector<TauBfdModule*>::iterator it = unit->modules.begin(); it != unit->modules.end(); ++it) {
       TauBfdModule * module = *it;
       if(module != NULL) {
-        bfd * bfdImage = module->bfdImage;   
+        bfd * bfdImage = module->bfdImage;
         if(bfdImage == NULL) {
           TAU_VERBOSE("TAU_BFD: Forcing load of symbol table for %s\n", module->name.c_str());
           module->loadSymbolTable(module->name.c_str());
@@ -1352,7 +1352,7 @@ static int Tau_internal_get_lineno_for_function(tau_bfd_handle_t bfd_handle, cha
   }
   fit = full_symtab.find(funcname);
   if(fit == full_symtab.end()) {
-    TAU_VERBOSE("TAU_BFD: Didn't find %s in the full_symtab during first attempt!\n", funcname); 
+    TAU_VERBOSE("TAU_BFD: Didn't find %s in the full_symtab during first attempt!\n", funcname);
     return 0;
   } else {
     lno = fit->second;
@@ -1364,10 +1364,10 @@ static int Tau_internal_get_lineno_for_function(tau_bfd_handle_t bfd_handle, cha
 #else // we don't have TAU_DWARF; do it the slow way with libbfd
   if(unit != NULL) {
     for(vector<TauBfdModule*>::iterator it = unit->modules.begin(); it != unit->modules.end(); ++it) {
-      TauBfdModule *module = *it; 
+      TauBfdModule *module = *it;
       bfd * bfdImage;
       if(module != NULL) {
-          bfdImage = module->bfdImage;   
+          bfdImage = module->bfdImage;
           if(bfdImage == NULL) {
             TAU_VERBOSE("TAU_BFD: Forcing load of symbol table for %s\n", module->name.c_str());
             module->loadSymbolTable(module->name.c_str());
@@ -1389,25 +1389,25 @@ static int Tau_internal_get_lineno_for_function(tau_bfd_handle_t bfd_handle, cha
 
       /* we have a valid bfdImage pointer. Examine the symbol table. */
       size_t sz = bfd_get_symtab_upper_bound(bfdImage);
-      asymbol **syms; 
-      bool dynamic;  
-      int nr_all_syms, i; 
+      asymbol **syms;
+      bool dynamic = false;
+      int nr_all_syms, i;
       if (!sz) {
           TAU_VERBOSE("loadSymbolTable: Retrying with dynamic\n");
           sz = bfd_get_dynamic_symtab_upper_bound(bfdImage);
           //dynamic = true;
           if (!sz) {
-          TAU_VERBOSE("loadSymbolTable: Cannot get symbol table size \n" );    
+          TAU_VERBOSE("loadSymbolTable: Cannot get symbol table size \n" );
           continue;
-          } 
-      } 
-          
-      // allocate the symbol table. 
+          }
+      }
+
+      // allocate the symbol table.
       syms = (asymbol **)malloc(sz);
-      long addr; 
+      //long addr;
       const char *filename = NULL;
-      const char *func; 
-      unsigned int lineno = 0; 
+      const char *func;
+      unsigned int lineno = 0;
 
       if (dynamic) {
           nr_all_syms = bfd_canonicalize_dynamic_symtab(bfdImage, syms);
@@ -1417,37 +1417,37 @@ static int Tau_internal_get_lineno_for_function(tau_bfd_handle_t bfd_handle, cha
 
       if (nr_all_syms < 1) {
           TAU_VERBOSE("TAU_BFD: Skipping %s because it has no symbols\n", module->name.c_str(), nr_all_syms);
-          continue; 
+          continue;
       }
 
-      // iterate through all the symbols and see if we get a match. If we do, 
-      // return the line number associated with it. Previous invocations should 
-      // be cached. 
+      // iterate through all the symbols and see if we get a match. If we do,
+      // return the line number associated with it. Previous invocations should
+      // be cached.
       for (i = 0; i < nr_all_syms; i++) {
-          addr = syms[i]->section->vma + syms[i]->value; 
-          bfd_find_nearest_line(bfdImage, bfd_get_section(syms[i]), syms, 
-          syms[i]->value, &filename, &func, &lineno); 
+          //addr = syms[i]->section->vma + syms[i]->value;
+          bfd_find_nearest_line(bfdImage, TAU_BFD_GET_SECTION(syms[i]), syms,
+          syms[i]->value, &filename, &func, &lineno);
           func = syms[i]->name;
-          if (lineno > 0) { // We only store non-zero entries now 
+          if (lineno > 0) { // We only store non-zero entries now
             full_symtab[func] = lineno; // Add this entry to the full symbol table.
           }
       }
-      fit = full_symtab.find(funcname); 
-      if (fit == full_symtab.end()) { // We didn't find it - return 0; 
+      fit = full_symtab.find(funcname);
+      if (fit == full_symtab.end()) { // We didn't find it - return 0;
           TAU_VERBOSE("TAU_BFD: Didn't find line number for %s\n", funcname);
           continue;
       } else { // found it!
-          lineno = fit->second; 
-          TAU_VERBOSE("TAU_BFD: Found it - first time! %s line no = %d\n", funcname, lineno); 
-          cached_symtab[funcname] = lineno; 
+          lineno = fit->second;
+          TAU_VERBOSE("TAU_BFD: Found it - first time! %s line no = %d\n", funcname, lineno);
+          cached_symtab[funcname] = lineno;
           result_line = lineno;
       }
     }
   }
 #endif // TAU_DWARF else clause
 
-  return result_line; 
-  
+  return result_line;
+
 }
 
 int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcname) {

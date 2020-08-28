@@ -2,7 +2,7 @@
 **			TAU Performance System(R)                          **
 **			http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2019 				   	           **
+**    Copyright 1997-2020 				   	           **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **	
@@ -20,10 +20,10 @@ Tuning and Analysis Utilities: TAU
 **********************************
 
 TAU is a program and performance analysis tool framework being developed for
-the DOE and ASC program at University of Oregon. TAU provides a suite of 
+the DOE, ECP, and ASC program at University of Oregon. TAU provides a suite of 
 static and dynamic tools that provide graphical user
 interaction and interoperation to form an integrated analysis environment for
-parallel Fortran 95, C, and C++ applications.  In particular, a robust 
+parallel Fortran, Python, C, and C++ applications.  In particular, a robust 
 performance profiling facility availble in TAU has been 
 applied extensively in the ACTS toolkit.  Also, recent advancements in TAU's 
 code analysis capabilities have allowed new static tools to be developed, 
@@ -31,7 +31,7 @@ such as an automatic instrumentation tool.  These two features of the TAU framew
 
 TAU Portable Profiling Package
 ****************************** 
-The model that TAU uses to profile parallel, multi-threaded C++, C, Fortran 95,
+The model that TAU uses to profile parallel, multi-threaded C++, C, Fortran,
 UPC, Python, Chapel and Java programs maintains performance data for each thread, context,
 and node in use by an application.  The profiling instrumentation needed to
 implement the model captures data for functions, methods, basic blocks, and

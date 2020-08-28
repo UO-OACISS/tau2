@@ -62,7 +62,7 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #ifdef TAU_MPI
 #include <mpi.h>
 #if (defined(TAU_CRAYCNL_PMI) || defined(TAU_CRAYCNL_PMI_FOUND))
-#define TAU_ENABLE_PMI 1 
+#define TAU_ENABLE_PMI 1
 #include <pmi.h>
 #endif /* TAU_CRAYCNL_PMI || TAU_CRAYCNL_PMI_FOUND */
 #endif
@@ -75,6 +75,30 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 using namespace std;
 using namespace tau;
 
+#if defined(_OPENMP) && defined(TAU_OPENMP) && !defined(TAU_MPC)
+#include <omp.h>
+#include <map>
+
+struct OpenMPVersionMap : public map<unsigned,string> {
+    using std::map<unsigned,string>::map;
+
+    ~OpenMPVersionMap() {
+        Tau_destructor_trigger();
+    }
+};
+
+const OpenMPVersionMap & TheOpenMPVersionMap() {
+    static OpenMPVersionMap openmp_map{
+        {200505,"2.5"},{200805,"3.0"},{201107,"3.1"},
+        {201307,"4.0"},{201511,"4.5"},{201811,"5.0"}};
+    if (openmp_map.count(_OPENMP) == 0) {
+        openmp_map.insert ( std::pair<unsigned,string>(_OPENMP,std::to_string(_OPENMP)) );
+
+    }
+    return openmp_map;
+}
+#endif
+
 #ifdef TAU_SCOREP_METADATA
 #include <scorep/SCOREP_Tau.h>
 #endif /* TAU_SCOREP_METADATA */
@@ -86,7 +110,7 @@ using namespace tau;
 
 
 /* Re-enabled since we believe this is now working (2009-11-02) */
-/* 
+/*
    #ifdef TAU_IBM_XLC_BGP
    #undef TAU_BGP
    #endif
@@ -157,8 +181,17 @@ int tau_bgq_init(void) {
 #include <signal.h>
 #include <stdarg.h>
 
+/* Intel is such an annoying beast.  It won't let us declare this
+ * as a static member object in the below function.  This may cause
+ * instability if the application isn't linked with the TAU shared
+ * object library (-optShared). */
+
 // These come from Tau_metadata_register calls
 MetaDataRepo &Tau_metadata_getMetaData(int tid) {
+/* Intel is such an annoying beast.  It won't let us declare this
+ * as a static member object in this function.  This may cause
+ * instability if the application isn't linked with the TAU shared
+ * object library (-optShared). */
   static MetaDataRepo metadata[TAU_MAX_THREADS];
   return metadata[tid];
 }
@@ -173,7 +206,7 @@ void MetaDataRepo::freeMetadata (Tau_metadata_value_t * tmv) {
 	    free(tmv->data.cval);
 	  //}
 	  break;
-    case TAU_METADATA_TYPE_OBJECT: 
+    case TAU_METADATA_TYPE_OBJECT:
 	  for (i = 0 ; i < tmo->count ; i++) {
 	    free(tmo->names[i]);
 	    freeMetadata(tmo->values[i]);
@@ -260,13 +293,14 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   //RtsLayer::LockEnv();
   Tau_metadata_getMetaData(tid)[key] = tmv;
   //RtsLayer::UnLockEnv();
-  //printf("%s : %s\n", key.name, tmv->data.cval);
+  //printf("Metadata for thread %d : %s : %s\n", tid, key.name, tmv->data.cval);
 
   /*Invoke plugins only if both plugin path and plugins are specified*/
   if(Tau_plugins_enabled.metadata_registration) {
     Tau_plugin_event_metadata_registration_data_t plugin_data;
     plugin_data.name = name;
     plugin_data.value = tmv;
+    plugin_data.tid = tid;
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, name, &plugin_data);
   }
 #endif
@@ -274,11 +308,11 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
 
 /* OK, the problem is that plugins aren't initialized when TauEnv is setting up
  * TAU, and in the process registering a bunch of metadata name/value pairs.
- * So, once the plugin is set up, provide a method for the plugin to get all the 
+ * So, once the plugin is set up, provide a method for the plugin to get all the
  * metadata registered on thread 0 up to this point. */
 void Tau_metadata_push_to_plugins(void) {
     int tid = RtsLayer::myThread();
-    for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).begin(); 
+    for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).begin();
          it != Tau_metadata_getMetaData(tid).end(); it++) {
 
         /*Invoke plugins only if both plugin path and plugins are specified*/
@@ -286,13 +320,14 @@ void Tau_metadata_push_to_plugins(void) {
           Tau_plugin_event_metadata_registration_data_t plugin_data;
           plugin_data.name = it->first.name;
           plugin_data.value = it->second;
+          plugin_data.tid = tid;
           Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, it->first.name, &plugin_data);
         }
 	}
 }
 
 extern "C" void Tau_metadata(const char *name, const char *value) {
-  Tau_metadata_task(name, value, RtsLayer::myThread()); 
+  Tau_metadata_task(name, value, RtsLayer::myThread());
 }
 
 void Tau_metadata_register(const char *name, int value) {
@@ -305,13 +340,17 @@ void Tau_metadata_register(const char *name, const char *value) {
   Tau_metadata(name, value);
 }
 
+void Tau_metadata_register(const char *name, const std::string &value) {
+  Tau_metadata(name, value.c_str());
+}
+
 #ifdef TAU_WINDOWS
 const char *Tau_metadata_timeFormat = "%I64d";
 #else
 const char *Tau_metadata_timeFormat = "%lld";
 #endif // TAU_WINDOWS
 
-int Tau_metadata_fillMetaData() 
+int Tau_metadata_fillMetaData()
 {
 #ifndef TAU_DISABLE_METADATA
 
@@ -334,8 +373,8 @@ int Tau_metadata_fillMetaData()
 
 
   thisTime = localtime(&theTime);
-  char buf[4096];
-  strftime (buf,4096,"%Y-%m-%dT%H:%M:%S", thisTime);
+  char buf[256];
+  strftime (buf,256,"%Y-%m-%dT%H:%M:%S", thisTime);
 
   char tzone[7]={0};
   strftime (tzone, 7, "%z", thisTime);
@@ -470,7 +509,7 @@ int Tau_metadata_fillMetaData()
   Tau_metadata_register("BGP isTorus", bgpbuffer);
 
   Tau_metadata_register("BGP DDRSize (MB)", BGP_Personality_DDRSizeMB(&personality));
-  /* CHECK: 
+  /* CHECK:
      Tau_metadata_register("BGP DDRModuleType", personality.DDRModuleType);
    */
   Tau_metadata_register("BGP Location", location);
@@ -483,7 +522,7 @@ int Tau_metadata_fillMetaData()
   Tau_metadata_register("BGP psetNum", BGP_Personality_psetNum(&personality));
   Tau_metadata_register("BGP numPsets", BGP_Personality_numComputeNodes(&personality));
 
-  /* CHECK: 
+  /* CHECK:
      sprintf (bgpbuffer, "(%d,%d,%d)", BGP_Personality_xPsetSize(&personality),
      BGP_Personality_yPsetSize(&personality),
      BGP_Personality_zPsetSize(&personality));
@@ -503,21 +542,21 @@ int Tau_metadata_fillMetaData()
 #endif /* TAU_BGP */
 
 #ifdef TAU_BGQ
-  /* NOTE: Please refer to Scalasca's elg_pform_bgq.c [www.scalasca.org] for 
+  /* NOTE: Please refer to Scalasca's elg_pform_bgq.c [www.scalasca.org] for
      details on IBM BGQ Axis mapping. */
-  static int bgq_init = tau_bgq_init(); 
+  static int bgq_init = tau_bgq_init();
   char bgqbuffer[4096];
-  static char tau_axis_map[] = "EFABCD";  
+  static char tau_axis_map[] = "EFABCD";
   /* EF -> x, AB -> y, CD -> z */
 
 #define TAU_BGQ_IDX(i) tau_axis_map[i] - 'A'
 
-  int x = tau_torus_coord[TAU_BGQ_IDX(0)] * tau_torus_size[TAU_BGQ_IDX(1)] 	
-    + tau_torus_coord[TAU_BGQ_IDX(1)]; 
-  int y = tau_torus_coord[TAU_BGQ_IDX(2)] * tau_torus_size[TAU_BGQ_IDX(3)] 
-    + tau_torus_coord[TAU_BGQ_IDX(3)]; 
+  int x = tau_torus_coord[TAU_BGQ_IDX(0)] * tau_torus_size[TAU_BGQ_IDX(1)]
+    + tau_torus_coord[TAU_BGQ_IDX(1)];
+  int y = tau_torus_coord[TAU_BGQ_IDX(2)] * tau_torus_size[TAU_BGQ_IDX(3)]
+    + tau_torus_coord[TAU_BGQ_IDX(3)];
   int z = tau_torus_coord[TAU_BGQ_IDX(4)] * tau_torus_size[TAU_BGQ_IDX(5)]
-    + tau_torus_coord[TAU_BGQ_IDX(5)]; 
+    + tau_torus_coord[TAU_BGQ_IDX(5)];
 
   sprintf(bgqbuffer, "(%d,%d,%d)", x,y,z);
   Tau_metadata_register("BGQ Coords", bgqbuffer);
@@ -530,9 +569,9 @@ int Tau_metadata_fillMetaData()
       tau_torus_size[3], tau_torus_size[4], tau_torus_size[5]);
   Tau_metadata_register("BGQ Size", bgqbuffer);
 
-  int wrap_x = tau_torus_wraparound[TAU_BGQ_IDX(0)] && tau_torus_wraparound[TAU_BGQ_IDX(1)]; 
-  int wrap_y = tau_torus_wraparound[TAU_BGQ_IDX(2)] && tau_torus_wraparound[TAU_BGQ_IDX(3)]; 
-  int wrap_z = tau_torus_wraparound[TAU_BGQ_IDX(4)] && tau_torus_wraparound[TAU_BGQ_IDX(5)]; 
+  int wrap_x = tau_torus_wraparound[TAU_BGQ_IDX(0)] && tau_torus_wraparound[TAU_BGQ_IDX(1)];
+  int wrap_y = tau_torus_wraparound[TAU_BGQ_IDX(2)] && tau_torus_wraparound[TAU_BGQ_IDX(3)];
+  int wrap_z = tau_torus_wraparound[TAU_BGQ_IDX(4)] && tau_torus_wraparound[TAU_BGQ_IDX(5)];
 
   sprintf(bgqbuffer, "(%d,%d,%d)", wrap_x,wrap_y,wrap_z);
   Tau_metadata_register("BGQ Period", bgqbuffer);
@@ -597,8 +636,8 @@ int Tau_metadata_fillMetaData()
 	tau_bgq_personality.Network_Config.cnBridge_E);
 
   Tau_metadata_register("BGQ Bridge I/O Coordinates", bgqbuffer);
-  
-  sprintf(bgqbuffer, "(%d, %d, %d, %d, %d)",  
+
+  sprintf(bgqbuffer, "(%d, %d, %d, %d, %d)",
 	tau_bgq_personality.Network_Config.Acoord,
 	tau_bgq_personality.Network_Config.Bcoord,
 	tau_bgq_personality.Network_Config.Ccoord,
@@ -712,7 +751,7 @@ int Tau_metadata_fillMetaData()
         os.append(" ");
       }
       os.append(line);
-    }    
+    }
     Tau_metadata_register("Command Line", os.c_str());
     fclose(f);
   }
@@ -741,6 +780,91 @@ int Tau_metadata_fillMetaData()
     Tau_metadata_register("username", user);
   }
 
+#ifdef _OPENMP
+#if defined(TAU_OPENMP) && !defined(TAU_MPC)
+  /* Capture OpenMP version */
+  Tau_metadata_register("OpenMP Version String", _OPENMP);
+  Tau_metadata_register("OpenMP Version", TheOpenMPVersionMap().at(_OPENMP).c_str());
+
+// MPC wht OpenMP isn't initialized before TAU is, so these function calls will hang.
+  const char* schedule;
+  int modifier;
+  omp_sched_t kind;
+  omp_get_schedule(&kind, &modifier);
+  if (kind == omp_sched_static) {
+      schedule = "STATIC";
+  } else if (kind == omp_sched_dynamic) {
+      schedule = "DYNAMIC";
+  } else if ( kind == omp_sched_guided) {
+      schedule = "GUIDED";
+  } else if ( kind == omp_sched_auto) {
+      schedule = "AUTO";
+  } else {
+      schedule = "UNKNOWN";
+  }
+  Tau_metadata_register("OMP_SCHEDULE", schedule);
+  Tau_metadata_register("OMP_CHUNK_SIZE", modifier);
+  Tau_metadata_register("OMP_MAX_THREADS", omp_get_max_threads());
+  Tau_metadata_register("OMP_NUM_PROCS", omp_get_num_procs());
+  Tau_metadata_register("OMP_DYNAMIC", omp_get_dynamic() ? "TRUE" : "FALSE");
+  // Deprecated
+  //Tau_metadata_register("OMP_NESTED", omp_get_nested() ? "TRUE" : "FALSE");
+  Tau_metadata_register("OMP_MAX_ACTIVE_LEVELS", omp_get_max_active_levels());
+  Tau_metadata_register("OMP_THREAD_LIMIT", omp_get_thread_limit());
+
+#if _OPENMP >= 201307 // OpenMP 4.0
+  Tau_metadata_register("OMP_PROC_BIND", omp_get_proc_bind() ? "TRUE" : "FALSE");
+#if !defined(__INTEL_COMPILER)
+/* Don't make this call for the Intel compiler!  It may compile, but without
+ * MIC/KNL offload support, the linker will fail with really esoteric error messages
+ * about either missing destructor in ~MetaDataRepo() or missing i_ofldbegin_target.o
+ */
+  Tau_metadata_register("OMP_DEFAULT_DEVICE", omp_get_default_device());
+#endif
+#if _OPENMP == 201307 && !defined(__PGI) // PGI claims 4.0, but is missing these implementations
+  Tau_metadata_register("OMP_CANCELLATION", omp_get_cancellation() ? "TRUE" : "FALSE");
+  Tau_metadata_register("OMP_NUM_DEVICES", omp_get_num_devices());
+#endif
+#endif
+
+#if _OPENMP >= 201511 // OpenMP 4.5
+  Tau_metadata_register("OMP_MAX_TASK_PRIORITY", omp_get_max_task_priority());
+  char * omp_var = getenv("OMP_PLACES");
+  if (omp_var != NULL) {
+    Tau_metadata_register("OMP_PLACES", omp_var);
+  }
+  Tau_metadata_register("OMP_NUM_PLACES", omp_get_num_places());
+  stringstream ss_num;
+  stringstream ss_ids;
+  ss_num << "{";
+  ss_ids << "{";
+  for (int i = 0 ; i < omp_get_num_places() ; i++) {
+    if (i > 0) {
+      ss_num << ",";
+      ss_ids << ",";
+    }
+    ss_num << i << ":" << omp_get_place_num_procs(i);
+    vector<int> v_ids(omp_get_place_num_procs(i),0);
+    omp_get_place_proc_ids(i, v_ids.data());
+    ss_ids << i << ":[";
+    for (int j = 0 ; j < omp_get_place_num_procs(i) ; j++) {
+      if (j > 0) {
+        ss_ids << ",";
+      }
+      ss_ids << j;
+    }
+    ss_ids << "]";
+  }
+  ss_num << "}";
+  ss_ids << "}";
+  Tau_metadata_register("OMP_PLACE_NUM_PROCS", ss_num.str());
+  Tau_metadata_register("OMP_PLACE_PROC_IDS", ss_ids.str());
+#endif
+
+#endif // TAU_OPENMP && !TAU_MPC
+
+#endif // _OPENMP
+
 #endif // TAU_DISABLE_METADATA
 
   return 0;
@@ -749,28 +873,28 @@ int Tau_metadata_fillMetaData()
 extern "C" int writeMetaDataAfterMPI_Init(void) {
 
 #if (defined(TAU_FUJITSU) && defined(TAU_MPI))
-  int xrank, yrank, zrank, xshape, yshape, zshape; 
-  int retcode, dim; 
-  char fbuffer[4096]; 
+  int xrank, yrank, zrank, xshape, yshape, zshape;
+  int retcode, dim;
+  char fbuffer[4096];
 
 
-  retcode  = FJMPI_Topology_get_dimension(&dim);  
+  retcode  = FJMPI_Topology_get_dimension(&dim);
   if (retcode != MPI_SUCCESS) {
     fprintf(stderr, "FJMPI_Topology_get_dimension ERROR in TauMetaData.cpp\n");
     return 0;
   }
 
   switch (dim) {
-  case 1: 
-    retcode = FJMPI_Topology_rank2x(RtsLayer::myNode(), &xrank); 
+  case 1:
+    retcode = FJMPI_Topology_rank2x(RtsLayer::myNode(), &xrank);
     sprintf (fbuffer, "(%d)", xrank);
     break;
   case 2:
-    retcode = FJMPI_Topology_rank2xy(RtsLayer::myNode(), &xrank, &yrank); 
+    retcode = FJMPI_Topology_rank2xy(RtsLayer::myNode(), &xrank, &yrank);
     sprintf (fbuffer, "(%d,%d)", xrank, yrank);
     break;
   case 3:
-    retcode = FJMPI_Topology_rank2xyz(RtsLayer::myNode(), &xrank, &yrank, &zrank); 
+    retcode = FJMPI_Topology_rank2xyz(RtsLayer::myNode(), &xrank, &yrank, &zrank);
     sprintf (fbuffer, "(%d,%d,%d)", xrank, yrank, zrank);
     break;
   default:
@@ -783,7 +907,7 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
   }
 
   Tau_metadata_register("FUJITSU Coords", fbuffer);
-  retcode = FJMPI_Topology_get_shape(&xshape, &yshape, &zshape); 
+  retcode = FJMPI_Topology_get_shape(&xshape, &yshape, &zshape);
   if (retcode != MPI_SUCCESS) {
     fprintf(stderr, "FJMPI_Topology_get_shape ERROR in TauMetaData.cpp\n");
     return 0;
@@ -852,7 +976,7 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
     unsigned int node = 0;
     char a, b, c, d;
     sscanf(cname, "%c%u-%u%c%u%c%u%c%u", &a, &column, &row, &b, &cage, &c, &slot, &d, &node);
-  
+
     Tau_metadata_register("CRAY_TOPO_COLUMN_ID", column);
     Tau_metadata_register("CRAY_TOPO_ROW_ID", row);
     Tau_metadata_register("CRAY_TOPO_CAGE_ID", cage);
@@ -936,7 +1060,7 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
       if ( it->second) {
         SCOREP_Tau_AddLocationProperty((it->first).name, it->second->data.cval);
       }
-#endif 
+#endif
 	//}
 	i++;
   }
@@ -950,7 +1074,7 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
   } else {
   	delete localRepo;
   }
-#endif 
+#endif
 
 #ifndef TAU_SCOREP
   Tau_util_output (out, "</metadata>%s", endl);
@@ -1043,7 +1167,7 @@ extern "C" void Tau_phase_metadata(const char *name, const char *value) {
 	  key->call_number = fi->GetCalls(tid);
 	  key->timestamp = (x_uint64)current->StartTime[0];
 	  break;
-    }    
+    }
     current = current->ParentProfiler;
   }
   Tau_metadata_value_t* tmv = NULL;
@@ -1170,7 +1294,7 @@ char * Tau_metadata_get(const char * name, int tid) {
     char * returnval = NULL;
     Tau_metadata_key key;
     key.name = strdup(name);
-    MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).find(key); 
+    MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).find(key);
     if (it != Tau_metadata_getMetaData(tid).end()) {
 	  if (it->second->type == TAU_METADATA_TYPE_STRING) {
         const char *my_value = it->second->data.cval;

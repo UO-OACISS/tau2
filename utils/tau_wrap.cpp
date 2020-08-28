@@ -891,7 +891,8 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
       buff << "    if (" << r->name() << "_h == NULL) {\n"
            << "      perror(\"Error obtaining symbol info from dlopen'ed lib\"); \n"
            << "  " << retstring << "\n"
-           << "    }\n";
+           << "    }\n"
+           << "  }\n";
     }
     dltext = buff.str();
   } /* if (runtime == RUNTIME_INTERCEPT) */
@@ -1005,6 +1006,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
   impl<<"}\n"<<endl;
 
   if (runtime == RUNTIME_INTERCEPT) { /* linker-based instrumentation */
+#if 0
     printFunctionNameInOutputFile(r, impl, "  ", sig);
     impl << "{" << endl;
     if(sig.returntypename.compare(0, 4, "void") == 0)
@@ -1012,6 +1014,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
     else
             impl << "   return __wrap_" << sig.func << ";" << endl;
     impl << "}\n" << endl;
+#endif /* 0 */
 
 #if 0
     // Fortran wrapper functions
