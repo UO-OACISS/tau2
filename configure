@@ -3849,7 +3849,7 @@ case $machine in
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
 	    default_fortran=cray
-	    if [ $dmapp = no ]; then
+	    if [ $dmapp = no -a "x$CRAY_DMAPP_INCLUDE_OPTS" != "x" ]; then
 		fixmakeargs="$fixmakeargs DMAPP"
             fi
 
@@ -3877,14 +3877,22 @@ case $machine in
 	    #         shared objects (see above) and it is not happy
 	    #         with -lmpichcxx which is static. -lmpichcxx_cray
 	    #         has to be used instead.
-	    fixmakeargs="$fixmakeargs CRAYCNL_CCE"
+            if [ "x$PE_MVAPICH2_FIXED_PRGENV" = "x" ]; then 
+	      fixmakeargs="$fixmakeargs CRAYCNL_CCE"
+            else
+	      fixmakeargs="$fixmakeargs CRAYCNL_MVAPICH2"
+            fi 
 
 	    touch conf_test.c
 	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
 	    rm -f conf_test.c conf_test.o
 
 	    # not implemented yet
-	    fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
+            if [ "x$CRAY_PE_USE_CLANG" = "x" ]; then 
+	      fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
+            else 
+	      fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
+            fi
 	fi
 	if [ $fortran_compiler = no ] ; then
 	    fortran_compiler=$default_fortran
@@ -5487,7 +5495,21 @@ then
 	    ;;
 	craycnl)
 	    #	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
-	    mpiinc=$CRAY_MPICH2_DIR/include
+            if [ "x$CRAY_MPICH2_DIR" = "x" ]; then
+              cat <<EOF > mpiincl.c 
+#include <mpi.h>
+EOF
+              mpiinc=`$c_compiler -E -c mpiincl.c | grep include | grep mpi.h | head -1  | awk '{ print $3;}'  | sed -e 's@"@@g'  | sed -e 's@/mpi.h@@g'`
+              /bin/rm -f mpiincl.c
+              echo "Found MPI include dir = $mpiinc"
+              findmpi=`echo $mpiinc | sed -e 's@include$@lib@'`
+              if [ -d $findmpi ]; then
+                mpilib=$findmpi
+                echo "And found MPI lib in $mpilib"
+              fi
+            else 
+	      mpiinc=$CRAY_MPICH2_DIR/include
+            fi 
             if [ ! -r $mpiinc ] ; then
 		echo "ERROR: $CRAY_MPICH2_DIR/include (CRAY_MPICH2_DIR/include) is not readable. Please configure with -mpiinc=<dir> to point to the MPI include directory."
 		exit 1
@@ -6637,10 +6659,11 @@ EOF
     fixmakeargs="$fixmakeargs CRAYCNL_PMI_FOUND"
   else
     echo "no."
-    echo "WARNING! You may need to reconfigure TAU with -PMI if there are missing references during linking."
+    echo "WARNING! PMI not found. You may need to reconfigure TAU with -PMI if there are missing references during linking."
     echo "============="
   fi
 fi
+/bin/rm -f pmitest.c
 
 
 ######################################################################
@@ -11651,7 +11674,7 @@ if [ $opari1 = yes ] ; then
 fi
 
 if [ $upc_compiler = cc -o $upc_compiler = default ]; then
-    if [ $machine = craycnl -a "x$PE_ENV" = xCRAY ]; then
+    if [ $machine = craycnl -a "x$PE_ENV" = xCRAY -a "x$CRAY_DMAPP_INCLUDE_OPTS" != "x" ]; then
 	fixmakeargs="$fixmakeargs CRAY_UPC"
     fi
 fi
