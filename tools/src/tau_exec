@@ -83,6 +83,7 @@ if [ $python_wrapper = "true" ] ; then
   echo "        -adios2_trace Write trace output to ADIOS2 archive"
   echo "        -monitoring   Periodically read available OS/HW monitoring counters"
   echo "        -sqlite3      Write profile data to SQLite3 database"
+  echo "        -skel         Write trace event data to skeleton files"
 fi
   echo ""
   echo "Notes:"
@@ -324,6 +325,7 @@ ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 adios2=false
 monitoring=false
 sqlite3=false
+skel=false
 adios2_trace=false
 sos=false
 
@@ -401,6 +403,10 @@ for arg in "$@" ; do
         ;;
       -sqlite3)
         sqlite3=true
+        shift
+        ;;
+      -skel)
+        skel=true
         shift
         ;;
       -adios2)
@@ -772,6 +778,16 @@ if [ $sqlite3 = "true" ]; then
     unset TAU_PROFILE_FORMAT
 fi
 
+if [ $skel = "true" ]; then
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-skel-plugin${TAU_SHLIBX}
+    export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+    # Because we are writing the data to SQLite, disable profile output
+    export TAU_PROFILE=0
+    unset TAU_PROFILE_FORMAT
+    export TAU_CURRENT_TIMER_EXIT_PARAMS=1
+    export TAU_TRACE=0
+fi
+
 if [ $adios2_trace = "true" ]; then
     export TAU_PLUGINS=$TAU_PLUGINS:libTAU-adios2-trace-plugin${TAU_SHLIBX}
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
@@ -930,7 +946,7 @@ if [ $track_rocm = "true" ] ; then
   options=`echo $theBinding | sed -e 's/shared-//g' `
   mk=$BASEDIR/lib/Makefile.tau-$options
   rocprofdir=`grep "TAU_ROCPROFILER=" $mk | sed -e 's@TAU_ROCPROFILER=@@g'`
-  if [ -r $rocprofdir/lib/librocprofiler64.so ]; then 
+  if [ -r $rocprofdir/lib/librocprofiler64.so ]; then
     $dryrun export TAU_HSA_TOOLS_LIB=$rocprofdir/lib/librocprofiler64.so
   fi
   if [ -r $rocprofdir/lib/metrics.xml ]; then
@@ -1030,7 +1046,7 @@ if [ $qsub_mode = false ]; then
 fi
 
 if [ $track_rocm = "true" ] ; then
-# Don't LD_PRELOAD with -rocm. 
+# Don't LD_PRELOAD with -rocm.
   TAUEX_LD_PRELOAD=""
   #echo "TAUEX_LD_PRELOAD = $TAUEX_LD_PRELOAD"
 fi

@@ -74,6 +74,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_depth_limit();
   void TAUDECL TauEnv_set_depth_limit(int value);
   int  TAUDECL TauEnv_get_comm_matrix();
+  int  TAUDECL TauEnv_get_current_timer_exit_params();
   int  TAUDECL TauEnv_get_track_message();
   int  TAUDECL TauEnv_get_lite_enabled();
   int  TAUDECL TauEnv_get_compensate();
