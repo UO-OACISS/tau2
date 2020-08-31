@@ -2165,6 +2165,12 @@ static string& gTauApplication()
 // forward declare the function we need to use - it's defined later
 extern void Tau_pure_start_task_string(const string name, int tid);
 
+static inline void expandVector(vector<bool>* bv,int dex){
+    while(bv->size()<=dex){
+        bv->push_back(false);
+    }
+}
+
 /* We need a routine that will create a top level parent profiler and give
  * it a dummy name for the application, if just the MPI wrapper interposition
  * library is used without any instrumentation in main */
@@ -2177,11 +2183,14 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
    timer start code, it will call this function, so in that case,
    return right away. */
   static bool initialized = false;
-  static bool initializing[TAU_MAX_THREADS] = { false }; //TODO: DYNATHREAD
-  static bool initthread[TAU_MAX_THREADS] = { false }; //TODO: DYNATHREAD
+  static vector<bool> initializing;//[TAU_MAX_THREADS] = { false }; //TODO: DYNATHREAD
+  static vector<bool> initthread;//[TAU_MAX_THREADS] = { false }; //TODO: DYNATHREAD
 
-  if (!initialized && !initializing[tid]) {
+  
+  if (!initialized && (initializing.size()<=tid || !initializing[tid])) {
     RtsLayer::LockDB();
+    expandVector(&initializing,tid);
+    expandVector(&initthread,tid);
     if (!initialized) {
       // whichever thread got here first, has the lock and will create the
       // FunctionInfo object for the top level timer.
@@ -2211,8 +2220,10 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
     RtsLayer::UnLockDB();
   }
 
-  if (!initthread[tid]) {
+  if (initthread.size()<=tid || !initthread[tid]) {
     RtsLayer::LockDB();
+    expandVector(&initializing,tid);
+    expandVector(&initthread,tid);
     // if there is no top-level timer, create one - But only create one FunctionInfo object.
     // that should be handled by the Tau_pure_start_task call.
     if (!TauInternal_CurrentProfiler(tid)) {
@@ -2482,8 +2493,8 @@ PureMap & ThePureMap()
   return map;
 }
 
-map<string, int *>& TheIterationMap() {
-  static map<string, int *> iterationMap;
+map<string, vector<int> *>& TheIterationMap() {
+  static map<string, vector<int> *> iterationMap;
   return iterationMap;
 }
 
@@ -2791,15 +2802,15 @@ extern "C" void Tau_static_phase_stop(char const * name)
 }
 
 
-static int *getIterationList(char const * name) {
+static vector<int> *getIterationList(char const * name) {
   string searchName(name);
-  map<string, int *>::iterator iit = TheIterationMap().find(searchName);
+  map<string, vector<int> *>::iterator iit = TheIterationMap().find(searchName);
   if (iit == TheIterationMap().end()) {
     RtsLayer::LockEnv();
-    int *iterationList = new int[TAU_MAX_THREADS]; //TODO: DYNATHREAD
-    for (int i=0; i<TAU_MAX_THREADS; i++) {
+    vector<int> *iterationList = new vector<int>;//[TAU_MAX_THREADS]; //TODO: DYNATHREAD
+    /*for (int i=0; i<TAU_MAX_THREADS; i++) {
       iterationList[i] = 0;
-    }
+    }*/
     TheIterationMap()[searchName] = iterationList;
     RtsLayer::UnLockEnv();
   }
@@ -2814,10 +2825,10 @@ extern "C" void Tau_dynamic_start(char const * name, int isPhase)
   isPhase = 0;
 #endif
 
-  int *iterationList = getIterationList(name);
+  vector<int> *iterationList = getIterationList(name);
 
   int tid = RtsLayer::myThread();
-  int itcount = iterationList[tid];
+  int itcount = (*iterationList)[tid];
 
   FunctionInfo *fi = NULL;
   char const * newName = Tau_append_iteration_to_name(itcount, name, strlen(name));
@@ -2845,13 +2856,13 @@ extern "C" void Tau_dynamic_start(char const * name, int isPhase)
 extern "C" void Tau_dynamic_stop(char const * name, int isPhase)
 {
   TauInternalFunctionGuard protects_this_function;
-  int *iterationList = getIterationList(name);
+  vector<int> *iterationList = getIterationList(name);
 
   int tid = RtsLayer::myThread();
-  int itcount = iterationList[tid];
+  int itcount = (*iterationList)[tid];
 
   // increment the counter
-  iterationList[tid]++;
+  (*iterationList)[tid]++;
 
   FunctionInfo *fi = NULL;
   char const * newName = Tau_append_iteration_to_name(itcount, name, strlen(name));
