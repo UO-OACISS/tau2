@@ -159,12 +159,13 @@ int RtsLayer::createThread()
   threadUnLockEnv();
 
   int numThreads = getTotalThreads();
-  if (numThreads > TAU_MAX_THREADS) {
+  
+  /*if (numThreads > TAU_MAX_THREADS) {
     fprintf(stderr,
         "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit> or set the environment variable TAU_RECYCLE_THREADS=1\n",
         TAU_MAX_THREADS, numThreads);
     exit(-1);
-  }
+  }*/
   return tid;
 }
 
@@ -338,12 +339,12 @@ int RtsLayer::RegisterThread()
   //         Because this is a guaranteed failure, we "gracefully" exit at this point
   //         rather than suffer a random segfault later.
   int numThreads = getTotalThreads();
-  if (numThreads > TAU_MAX_THREADS) {
+  /*if (numThreads > TAU_MAX_THREADS) {
     fprintf(stderr,
         "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit> or set the environment variable TAU_RECYCLE_THREADS=1\n",
         TAU_MAX_THREADS, numThreads);
     exit(-1);
-  }
+  }*/
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX
@@ -400,7 +401,8 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
        CurrentTimeOrCounts[i]=0;
      }
      getUSecD(myThread(), CurrentTimeOrCounts);
-     for (int tid = 0; tid < TAU_MAX_THREADS; tid++) {
+     int threadCount=getTotalThreads();
+     for (int tid = 0; tid < threadCount; tid++) {
        // For each thread of execution
 #ifdef PROFILING_ON
        for(it=TheFunctionDB().begin(); it!=TheFunctionDB().end(); it++) {

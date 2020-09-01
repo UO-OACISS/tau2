@@ -3069,9 +3069,9 @@ extern "C" int Tau_create_task(void) {
   TauInternalFunctionGuard protects_this_function;
 
   int taskid;
-  if (TAU_MAX_THREADS == 1) { //TODO: DYNATHREAD
+  /*if (TAU_MAX_THREADS == 1) { //TODO: DYNATHREAD
     printf("TAU: ERROR: Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=100  and rebuild it to use the new TASK API\n");
-  }
+  }*/
   taskid = Tau_RtsLayer_createThread();
   // taskid= RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
   /* specify taskid is a fake thread used in the Task API */
