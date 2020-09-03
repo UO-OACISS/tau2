@@ -191,6 +191,8 @@ extern "C" {
   void Tau_util_replaceStringInPlace(std::string& subject, const std::string& search,
                           const std::string& replace);
 #endif /* __cplusplus */
+  void Tau_util_replaceStringInPlaceC(char * subject, const char search,
+                          const char replace);
 
 #ifdef __cplusplus
 }
