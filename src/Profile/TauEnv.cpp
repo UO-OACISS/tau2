@@ -535,6 +535,19 @@ void Tau_util_replaceStringInPlace(std::string& subject, const std::string& sear
     }
 }
 
+/* A C implementation, for crappy compilers. */
+void Tau_util_replaceStringInPlaceC(char * subject, const char search,
+                          const char replace) {
+    size_t pos = 0;
+    size_t len = strlen(subject);
+    while (pos < len) {
+         if (subject[pos] == search) {
+            subject[pos] = replace;
+         }
+         pos++;
+    }
+}
+
 /*********************************************************************
  * Parse a boolean value
  ********************************************************************/

@@ -16,7 +16,7 @@
 
 
 //////////////////////////////////////////////////////////////////////
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 
 #ifdef TAU_DOT_H_LESS_HEADERS
@@ -28,7 +28,7 @@
 #include <sstream>
 #include <stack>
 #include <iostream>
-using namespace std; 
+using namespace std;
 #endif /* TAU_DOT_H_LESS_HEADERS */
 #include <stdlib.h>
 
@@ -82,7 +82,7 @@ void ps_tool_initialize(void) {
 #ifndef TAU_MPI
     Tau_set_node(0);
 #endif
-    /* Disable throttling, because if users use ps_tool_stop_current(), 
+    /* Disable throttling, because if users use ps_tool_stop_current(),
      * throttling will cause Tau_start() to do nothing for throttled events,
      * but Tau_global_stop() will stop the timer on the stop of the stack */
     TauEnv_set_throttle(0);
@@ -100,6 +100,14 @@ void ps_tool_finalize(void) {
     //Tau_destructor_trigger();
     //Tau_profile_exit_all_threads();
     Tau_exit("stub exiting");
+}
+
+void ps_tool_pause_measurement(void) {
+    Tau_disable_instrumentation();
+}
+
+void ps_tool_resume_measurement(void) {
+    Tau_enable_instrumentation();
 }
 
 void ps_tool_dump_data(void) {
