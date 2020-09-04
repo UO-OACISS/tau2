@@ -21,6 +21,8 @@
 #include <string>
 #include <functional>
 #include <utility>
+#include <vector>
+using namespace std;
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -37,6 +39,7 @@
 typedef std::map<std::string, TauGroup_t, std::less<std::string> > ProfileMap_t;
 
 
+
 double TauWindowsUsecD(void);
 
 class RtsLayer {
@@ -45,6 +48,20 @@ public:
  	
   RtsLayer () { }  // defaults
   ~RtsLayer () { } 
+
+struct TAULocks{
+    int lockDBCount=0;
+    int lockEnvCount=0;
+};
+ struct LockList : vector<TAULocks *>{
+      LockList(){
+         //printf("Creating CapiThreadList at %p\n", this);
+      }
+     virtual ~LockList(){
+         //printf("Destroying CapiThreadList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
 
   static int _createThread(void);
   static int createThread(void);
@@ -82,37 +99,61 @@ public:
     if (str) return str;
     else return "  ";
   }
+  
+  static LockList & TheLockList() {
+    static LockList threadList;
+    return threadList;
+}
+  static void checkLockVector(int tid){
+      //static std::mutex DBVectorMutex;
+      //std::lock_guard<std::mutex> guard(DBVectorMutex);
+      while(TheLockList().size()<=tid){
+          TheLockList().push_back(new TAULocks());
+      }
+  }
+
+  inline static int getLockVecSize(){
+      return TheLockList().size();
+  }
 
   inline static int getDBLock(int tid){
-    return lockDBCount[tid];
+      checkLockVector(tid);
+    return TheLockList()[tid]->lockDBCount;
   }
 
   inline static void setDBLock(int tid, int value){
-    lockDBCount[tid]=value;
+      checkLockVector(tid);
+    TheLockList()[tid]->lockDBCount=value;
   }
 
   inline static void incrementDBLock(int tid){
-    lockDBCount[tid]++;
+      checkLockVector(tid);
+    TheLockList()[tid]->lockDBCount++;
   }
 
   inline static void decrementDBLock(int tid){
-    lockDBCount[tid]--;
+      checkLockVector(tid);
+    TheLockList()[tid]->lockDBCount--;
   }
 
   inline static int getEnvLock(int tid){
-    return lockEnvCount[tid];
+      checkLockVector(tid);
+    return TheLockList()[tid]->lockEnvCount;
   }
 
   inline static void setEnvLock(int tid, int value){
-    lockEnvCount[tid]=value;
+      checkLockVector(tid);
+    TheLockList()[tid]->lockEnvCount=value;
   }
   
   inline static void incrementEnvLock(int tid){
-    lockEnvCount[tid]++;
+      checkLockVector(tid);
+    TheLockList()[tid]->lockEnvCount++;
   }
 
   inline static void decrementEnvLock(int tid){
-    lockEnvCount[tid]--;
+      checkLockVector(tid);
+    TheLockList()[tid]->lockEnvCount--;
   }
 
   static void Initialize(void);
@@ -179,8 +220,8 @@ private:
   static void threadLockEnv(void);
   static void threadUnLockEnv(void);
 
-  static int lockDBCount[TAU_MAX_THREADS];
-  static int lockEnvCount[TAU_MAX_THREADS];
+  //static vector<LockList*> TheLockList();//[TAU_MAX_THREADS];
+  //static vector<int*> lockEnvCount;//[TAU_MAX_THREADS];
 
   static bool initLocks();
   static bool initEnvLocks();

@@ -68,8 +68,8 @@ using namespace tau;
 #include <Profile/TauPin.h>
 
 
-int RtsLayer::lockDBCount[TAU_MAX_THREADS];
-int RtsLayer::lockEnvCount[TAU_MAX_THREADS];
+//vector<RtsLayer::LockList*> RtsLayer::lockCounts;//[TAU_MAX_THREADS];
+//vector<int*> RtsLayer::lockEnvCount;//[TAU_MAX_THREADS];
 /*
 inline int getDBLock(int tid){
 	return RtsLayer::lockDBCounty[tid];
@@ -473,7 +473,9 @@ void RtsLayer::Initialize(void) {
 
 bool RtsLayer::initLocks(void) {
   threadLockDB();
-  for (int i=0; i<TAU_MAX_THREADS; i++) {
+  int threadCount=TAU_MAX_THREADS;//getDBVecSize();//getTotalThreads();
+  
+  for (int i=0; i<threadCount; i++) {
     setDBLock(i, 0);
   }
   threadUnLockDB();
@@ -482,7 +484,8 @@ bool RtsLayer::initLocks(void) {
 
 bool RtsLayer::initEnvLocks(void) {
   threadLockEnv();
-  for (int i=0; i<TAU_MAX_THREADS; i++) {
+  int threadCount=TAU_MAX_THREADS;//getEnvVecSize();//getTotalThreads();
+  for (int i=0; i<threadCount; i++) {
 	  setEnvLock(i,0);
   }
   threadUnLockEnv();
@@ -584,14 +587,14 @@ int RtsLayer::UnLockDB(void) {
     threadUnLockDB();
   } else {
     // protect against too many unlocks!
-    if (lockDBCount[tid] < 0) {
-        lockDBCount[tid] = 0;
+    if (getDBLock(tid) < 0) {
+        setDBLock(tid, 0);
     }
   }
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 #ifdef DEBUG_LOCK_PROBLEMS
-  if (lockDBCount[tid] > 0) {
-  fprintf(stderr,"Unlock: THREAD %d,%d HAS %d DB LOCKS\n", RtsLayer::myNode(), tid, lockDBCount[tid]);
+  if (getDBLock(tid) > 0) {
+  fprintf(stderr,"Unlock: THREAD %d,%d HAS %d DB LOCKS\n", RtsLayer::myNode(), tid, getDBLock(tid));
   fflush(stdout);
   }
 #endif
