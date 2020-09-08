@@ -391,6 +391,11 @@ inline void setGpuTimestamp(int tid, double value){
     clockStampV()[tid]->gpu_timestamp=value;
 }
 
+inline double getGpuCounterstamp(int tid,int idx){
+    checkTRMVector(tid);
+    return clockStampV()[tid]->gpu_counterstamp[idx];
+}
+
 inline void setGpuCounterstamp(int tid,int idx,double value){
     checkTRMVector(tid);
     clockStampV()[tid]->gpu_counterstamp[idx] = value;
