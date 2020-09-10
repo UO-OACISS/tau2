@@ -3892,6 +3892,7 @@ case $machine in
 	      fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
             else 
 	      fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
+              extradir=`echo $CRAY_PE_USE_CLANG | sed -e 's@bin/clang@lib@'`
             fi
 	fi
 	if [ $fortran_compiler = no ] ; then
@@ -7305,7 +7306,7 @@ if [ "x$download_unwind" = xyes ] ; then
       else
         unwind_c_compiler=${c_compiler}
         unwind_cxx_compiler=${cxx_compiler}
-        echo "NOTE: Using unwind_c_compiler=$unwind_c_compiler and $unwind_cxx_compiler=$unwind_cxx_compiler to compile libunwind"
+        echo "NOTE: Using unwind_c_compiler=$unwind_c_compiler and unwind_cxx_compiler=$unwind_cxx_compiler to compile libunwind"
       fi
 
       if [ $craymic = no -a $machine != mic_linux ]; then
@@ -7320,6 +7321,11 @@ if [ "x$download_unwind" = xyes ] ; then
           sed 's/_Unwind_Resume/_Unwind_Resume_other/' tmp.c > src/unwind/Resume.c
           rm tmp.c
         elif [ "$machine" = "craycnl" ] ; then
+          if [ "x$CRAY_PE_USE_CLANG" != "x" ]; then 
+# use Cray PE clang compiler
+            unwind_c_compiler=clang
+            unwind_cxx_compiler=clang++
+          fi
           ./configure --prefix=${unwind_dir}  CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared --disable-minidebuginfo > ${libunwind_log} 2>&1
         else
           ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} > ${libunwind_log} 2>&1
