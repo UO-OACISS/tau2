@@ -3893,6 +3893,14 @@ case $machine in
             else 
 	      fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
               extradir=`echo $CRAY_PE_USE_CLANG | sed -e 's@bin/clang@lib@'`
+              srun_dir=`which srun 2>/dev/null`
+              if [ "x$srun_dir" != "x" ]; then
+                slurm_dir=`echo $srun_dir | sed -e 's@bin/srun@@g' `
+                if [ "x$slurm_dir" != "x" -a -d $slurm_dir -a -r $slurm_dir/lib64/libslurm.so ]; then
+                  echo "TAU: Found $slurm_dir/lib64/libslurm.so"
+	          fixmakeargs="$fixmakeargs slurmdir=$slurm_dir CRAYPE_CLANG_SLURM"
+                fi
+              fi
             fi
 	fi
 	if [ $fortran_compiler = no ] ; then

@@ -81,6 +81,11 @@ case $1 in
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
 	;;
 
+     slurmdir=*)
+        slurmdir=`echo $1 | sed -e 's/^slurmdir=//'`
+	echo "s,^SLURMDIR=.*$,SLURMDIR=$slurmdir,g" >> $sedout
+	;;
+
      likwiddir=*)
         likwiddir=`echo $1 | sed -e 's/^likwiddir=//'`
 	echo "s,^LIKWIDDIR=.*$,LIKWIDDIR=$likwiddir,g" >> $sedout
@@ -2418,6 +2423,9 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      COMPINST_CRAYPE_CLANG)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CRAYPE_CLANG_SLURM)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCNL_PAPI_SHARED)
