@@ -687,7 +687,7 @@ TauUtil.o 	: TauUtil.cpp $(HDRS)
 	$(CXX) $(TAU_STDCXX11_FLAG) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauIoWrap.o 	: TauIoWrap.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(TAU_STDCXX11_FLAG) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauSnapshot.o 	: TauSnapshot.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
