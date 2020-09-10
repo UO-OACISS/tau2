@@ -55,14 +55,14 @@ INSTALLDEST   = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 TAUINC	      = -I$(TAUROOT)/include -I$(TAUROOT)/include/Profile
 
-CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(OPENMPOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE)
+CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(OPENMPOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE) $(TAU_STDCXX11_FLAG)
 
-SERIAL_CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE)
+SERIAL_CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE) $(TAU_STDCXX11_FLAG)
 
 TAU_UPC_FPIC= -Wc,-fPIC
 UPCFLAGS      = $(TAUINC) $(subst -fPIC,$(TAU_UPC_FPIC), $(PROFILEOPTS) )
 
-CFLAGS        = $(DEFINES) $(TAU_MPI_INCLUDE) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE)
+CFLAGS        = $(DEFINES) $(TAU_MPI_INCLUDE) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE) $(TAU_STDCXX11_FLAG)
 
 INCDIR	      = $(TAUROOT)/include/Profile
 
@@ -645,7 +645,7 @@ Profiler.o 	: Profiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)   $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
 TauMetaData.o 	: TauMetaData.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(TAU_STDCXX11_FLAG) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauShmemCrayC.o  : TauShmemCrayC.c $(HDRS)
 	$(CC) $(CFLAGS) -c $(@:.o=.c)
@@ -684,7 +684,7 @@ TauXML.o 	: TauXML.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauUtil.o 	: TauUtil.cpp $(HDRS)
-	$(CXX) $(TAU_STDCXX11_FLAG) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauIoWrap.o 	: TauIoWrap.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -807,7 +807,7 @@ JavaThreadLayer.o   : JavaThreadLayer.cpp $(HDRS)
 	$(CXX)  $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauCAPI.o   : TauCAPI.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(TAU_STDCXX11_FLAG) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(TAU_MPI_INCLUDE)   -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(TAU_MPI_INCLUDE)   -c $(@:.o=.cpp)
 
 TauFAPI.o   : TauFAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
@@ -955,25 +955,25 @@ TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)  $(INCDIR)/TauGpuAdapter
 	$(CXX) $(CXXFLAGS) -I$(TAU_OPENCL_INC) -g -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti.h
-	$(CXX) $(CXXFLAGS) -g $(TAU_STDCXX11_FLAG) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti40.o : TauGpuAdapterCupti40.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti40.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_PERMISSIVE_FLAG) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauOpenACC.o : TauOpenACC.cpp TauGpuAdapterOpenACC.o $(HDRS) ../../include/Profile/TauOpenACC.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_STDCXX11_FLAG) $(TAU_PERMISSIVE_FLAG) -DCUPTI_OPENACC_SUPPORT -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_PERMISSIVE_FLAG) -DCUPTI_OPENACC_SUPPORT -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauGpuAdapterOpenACC.o : TauGpuAdapterOpenACC.cpp $(HDRS) ../../include/Profile/TauGpuAdapterOpenACC.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_PERMISSIVE_FLAG) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiActivity.o : CuptiActivity.cpp $(HDRS) ../../include/Profile/CuptiActivity.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_STDCXX11_FLAG) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUPTI_ACTIVITY_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUPTI_ACTIVITY_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CudaSass.o : CudaSass.cpp $(HDRS) ../../include/Profile/CudaSass.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiLayer.o : CuptiLayer.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_STDCXX11_FLAG) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiLayer40.o : CuptiLayer40.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
