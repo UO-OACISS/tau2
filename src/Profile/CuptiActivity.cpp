@@ -158,6 +158,10 @@ struct CADataList: vector<CuptiActivityData*>{
       }
      virtual ~CADataList(){
          //printf("Destroying CADataList at %p, with size %ld\n", this, this->size());
+        if (TauEnv_get_cuda_track_sass() && TauEnv_get_cuda_csv_output()) {
+            write_sass_output();
+         }
+
          Tau_destructor_trigger();
      }
 };
@@ -746,9 +750,11 @@ void Tau_cupti_onunload() {
     if(TauEnv_get_cuda_track_unified_memory()) {
         CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
     }
+/*
     if (TauEnv_get_cuda_track_sass() && TauEnv_get_cuda_csv_output()) {
         write_sass_output();
     }
+*/
 }
 
 extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
@@ -3169,7 +3175,6 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
         // same for all devices/threads
         output_function_map_to_csv();
         output_source_map_to_csv();
-
 	for (std::map<uint32_t, uint32_t>::iterator iter = correlationThreadMap.begin();
 	     iter != correlationThreadMap.end(); iter++) {
 	    uint32_t correlationId = iter->first;
