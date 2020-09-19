@@ -304,6 +304,7 @@ static int env_ebs_resolution = TAU_EBS_RESOLUTION_LINE;
 
 static int env_stat_precompute = 0;
 static int env_child_forkdirs = 0;
+static int env_l0_api_tracing = 0;
 
 static int env_profile_format = TAU_FORMAT_PROFILE;
 static const char *env_profile_prefix = NULL;
@@ -870,6 +871,10 @@ int TauEnv_get_callsite_offset() {
 
 int TauEnv_get_compensate() {
   return env_compensate;
+}
+
+int TauEnv_get_level_zero_enable_api_tracing() {
+  return env_l0_api_tracing;
 }
 
 int TauEnv_get_comm_matrix() {
@@ -2049,6 +2054,11 @@ void TauEnv_initialize()
     env_throttle_percall = TAU_THROTTLE_PERCALL_DEFAULT;
     if (percall) {
       env_throttle_percall = strtod(percall, 0);
+    }
+
+    const char *l0_api_tracing = getconf("ZE_ENABLE_API_TRACING");
+    if (l0_api_tracing) {
+      env_l0_api_tracing =1 ; /* Intel OneAPI Level Zero API TRACING */
     }
 
     const char *evt_threshold = getconf("TAU_EVENT_THRESHOLD");
