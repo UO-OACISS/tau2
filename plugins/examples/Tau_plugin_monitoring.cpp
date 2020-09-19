@@ -263,6 +263,9 @@ bool include_event(const char * component, const char * event_name) {
                         return true;
                     }
                 } catch (std::regex_error& e) {
+// PGI will barf on the otherwise fine regular expression,
+// no need to write out a ton of errors
+#if !defined(__PGI)
                     std::cerr << "Error: '" << e.what() << "' in regular expression: " << needle << std::endl;
                     switch (e.code()) {
                         case std::regex_constants::error_collate:
@@ -308,6 +311,7 @@ bool include_event(const char * component, const char * event_name) {
                             std::cerr << "unknown" << std::endl;
                             break;
                      }
+#endif
                 }
             }
             return false;
@@ -325,6 +329,9 @@ bool include_event(const char * component, const char * event_name) {
                         return false;
                     }
                 } catch (std::regex_error& e) {
+// PGI will barf on the otherwise fine regular expression,
+// no need to write out a ton of errors
+#if !defined(__PGI)
                     std::cerr << "Error: '" << e.what() << "' in regular expression: " << needle << std::endl;
                     switch (e.code()) {
                         case std::regex_constants::error_collate:
@@ -370,6 +377,7 @@ bool include_event(const char * component, const char * event_name) {
                             std::cerr << "unknown" << std::endl;
                             break;
                      }
+#endif
                 }
             }
         }

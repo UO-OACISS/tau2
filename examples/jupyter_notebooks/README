@@ -1,17 +1,88 @@
-To run this example, you'll need to install plotly, jupyterlab and pandas:
+# To run this example, you'll need to install nodejs, plotly, jupyterlab and pandas:
 
-$ python3 -m pip install -r requirements.txt
+# For ssh machines, conda was the easiest way to install nodejs. 
+# For personal machines, simply download nodejs and install.
 
-Then add jupyter to your path (for example):
+# For jupyterlab and pandas:
 
-$ PATH=${HOME}/Library/Python/3.7/bin:${PATH}
+	$ python3 -m pip install -r /path/to/requirements.txt
 
-Then add the TAU utilities to your python path (for example):
+# Find Jupyterlab path:
 
-$ export PYTHONPATH=${HOME}/src/tau2/apple/python:${PYTHONPATH}
+	$ python3 -m pip show jupyterlab
 
-Then run jupyter lab:
+# Add jupyterlab to path:
 
-$ jupyter PlotlyBarCharts.ipynb
+	$ export PATH=/path/to/jupyterlab:$PATH
 
-In your browser that is launched, open the notebook and go!
+# Install anaconda depending on architecture(see note below for other links) :
+
+	$ wget https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-ppc64le.sh
+
+	$ chmod +x Anaconda3-2020.02-Linux-ppc64le.sh
+
+	$ ./Anaconda3-2020.02-Linux-ppc64le.sh
+
+# or miniconda:
+
+	$ wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-ppc64le.sh.sh
+
+	$ chomd +x Miniconda3-latest-Linux-ppc64le.sh
+
+	$ ./Miniconda3-latest-Linux-ppc64le.sh
+
+# Install plotly and nodejs (plotly links with the python in anaconda):
+
+	$ conda install plotly nodejs
+
+# Add to PYTHONPATH the Tau utilities:
+# (to get the import Tau profile parser in the jupyterlab)
+# must do this for every session or permanently add to .bash_profile
+
+	$ export PYTHONPATH=${HOME}/tau2/src/python:${PYTHONPATH}
+
+# Now to link plotly to jupyterlab 
+# (https://plotly.com/python/getting-started/#jupyterlab-support-#python-35):
+
+	$ pip install jupyterlab "ipywidgets>=7.5"
+# or:
+	
+	$ conda install jupyterlab "ipywidgets=7.5"
+
+# Then for renderer support (requires nodejs):
+
+	$ jupyter labextension install jupyterlab-plotly@4.9.0
+
+# optional widget extension (recommended):
+	
+	$ jupyter labextension install @jupyter-widgets/jupyterlab-manager plotlywidget@4.9.0
+
+# To open the notebook:
+
+	$ jupyter lab path/to/PlotlyBarCharts.ipynb
+
+
+# For running on a host and connecting to a remote compute node 
+# to the jupyterlab running on it via ssh:
+# (https://benjlindsay.com/posts/running-jupyter-lab-remotely   down to running remotely):
+
+
+	$ssh username@hostname
+	$jupyter lab --no-browser --port=5678 --ip=$(hostname)
+
+# in a separate terminal window
+
+	$ ssh -CNL 5678:computehostname:5678 username@hostname
+
+# then in your local web browser navigate to localhost:5678
+# 5678 can be any four numbers of your choosing, 5678 is used as example and can fail if 
+# multiple users are using the same machine and same number.
+
+# NOTE FOR ANACONDA AND MINICONDA INSTALLS:
+# url link is different depending on if you are running it on x86_64 or ppc64le:
+
+#Anaconda x86_64: https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
+#Anaconda ppc64le: https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-ppc64le.sh
+#Miniconda x86_64: https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+#Miniconda ppc64le: https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-ppc64le.sh
+

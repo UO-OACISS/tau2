@@ -101,15 +101,12 @@ CuptiCounterEvent::CuptiCounterEvent(int device_n, int event_n, const char * nam
     cuErr = cuDeviceGetName(buff, sizeof(buff), device);
     CHECK_CU_ERROR(cuErr, "cuDeviceGetName");
 
-    device_name = string(buff);
-
-    //std::replace(device_name.begin(), device_name.end(), ' ', '_');
-    //std::replace(device_name.begin(), device_name.end(), ' ', '_');
-    // PGI compiler has problems with -c++11
-    Tau_util_replaceStringInPlace(device_name, " ", "_");
+    char * tmpstr = strdup(buff);
+    Tau_util_replaceStringInPlaceC(tmpstr, ' ', '_');
+    device_name = string(tmpstr);
+    free(tmpstr);
 
     //Event
-
     event = event_n;
 
     size = sizeof(buff);
@@ -172,8 +169,10 @@ CuptiMetric::CuptiMetric(int device_n, int metric_n)
     CHECK_CU_ERROR(cuErr, "cuDeviceGet");
     cuErr = cuDeviceGetName(buff, sizeof(buff), device);
     CHECK_CU_ERROR(cuErr, "cuDeviceGetName");
-    device_name = string(buff);
-    Tau_util_replaceStringInPlace(device_name, " ", "_");
+    char * tmpstr = strdup(buff);
+    Tau_util_replaceStringInPlaceC(tmpstr, ' ', '_');
+    device_name = string(tmpstr);
+    free(tmpstr);
 
     //Event
     uint32_t num_metrics;

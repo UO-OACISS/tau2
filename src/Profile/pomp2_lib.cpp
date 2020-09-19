@@ -664,7 +664,7 @@ POMP2_USER_Assign_handle( POMP2_USER_Region_handle* pomp2_handle,
     ++count;
 }
 
-void POMP2_Atomic_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string[])
+extern "C" void POMP2_Atomic_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string[])
 {
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
@@ -690,7 +690,7 @@ void POMP2_Atomic_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string
 #endif /* DEBUG_PROF */
 }
 
-void POMP2_Atomic_exit(POMP2_Region_handle* pomp2_handle)
+extern "C" void POMP2_Atomic_exit(POMP2_Region_handle* pomp2_handle)
 {
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
@@ -718,7 +718,7 @@ void POMP2_Atomic_exit(POMP2_Region_handle* pomp2_handle)
 
 
 
-void POMP2_Barrier_enter(POMP2_Region_handle* pomp2_handle, POMP2_Task_handle* pomp2_old_task, const char ctc_string[])
+extern "C" void POMP2_Barrier_enter(POMP2_Region_handle* pomp2_handle, POMP2_Task_handle* pomp2_old_task, const char ctc_string[])
 {
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
@@ -757,7 +757,7 @@ void POMP2_Barrier_enter(POMP2_Region_handle* pomp2_handle, POMP2_Task_handle* p
 #endif /* DEBUG_PROF */
 }
 
-void POMP2_Barrier_exit(POMP2_Region_handle* pomp2_handle, POMP2_Task_handle pomp2_old_task)
+extern "C" void POMP2_Barrier_exit(POMP2_Region_handle* pomp2_handle, POMP2_Task_handle pomp2_old_task)
 {
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
@@ -810,7 +810,7 @@ POMP2_Implicit_barrier_exit( POMP2_Region_handle* pomp2_handle, POMP2_Task_handl
   POMP2_Barrier_exit( pomp2_handle, pomp2_old_task );
 }
 
-void POMP2_Flush_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string[])
+extern "C" void POMP2_Flush_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string[])
 {
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
@@ -838,7 +838,7 @@ void POMP2_Flush_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string[
 #endif /* DEBUG_PROF */
 }
 
-void POMP2_Flush_exit(POMP2_Region_handle* pomp2_handle)
+extern "C" void POMP2_Flush_exit(POMP2_Region_handle* pomp2_handle)
 {
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
@@ -867,7 +867,7 @@ void POMP2_Flush_exit(POMP2_Region_handle* pomp2_handle)
 #endif /* DEBUG_PROF */
 }
 
-void POMP2_Critical_begin(POMP2_Region_handle* pomp2_handle)
+extern "C" void POMP2_Critical_begin(POMP2_Region_handle* pomp2_handle)
 {
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
@@ -893,7 +893,7 @@ void POMP2_Critical_begin(POMP2_Region_handle* pomp2_handle)
 #endif /* DEBUG_PROF */
 }
 
-void POMP2_Critical_end(POMP2_Region_handle* pomp2_handle)
+extern "C" void POMP2_Critical_end(POMP2_Region_handle* pomp2_handle)
 {
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
@@ -922,7 +922,7 @@ void POMP2_Critical_end(POMP2_Region_handle* pomp2_handle)
 #endif /* DEBUG_PROF */
 }
 
-void POMP2_Critical_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string[])
+extern "C" void POMP2_Critical_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string[])
 {
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;

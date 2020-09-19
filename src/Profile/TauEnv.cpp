@@ -98,12 +98,6 @@ using namespace std;
 #define TAU_OMPT_SUPPORT_LEVEL_LOWOVERHEAD "lowoverhead"
 #define TAU_OMPT_SUPPORT_LEVEL_FULL "full"
 
-#define TAU_SOS_DEFAULT 0
-#define TAU_SOS_TRACE_EVENTS_DEFAULT 0
-#define TAU_SOS_PERIODIC_DEFAULT 0
-#define TAU_SOS_PERIOD_DEFAULT 2000000 // microseconds
-#define TAU_SOS_HIGH_RESOLUTION_DEFAULT 0 // group, timer
-
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
 #define TAU_EBS_DEFAULT_TAU 0
@@ -332,6 +326,7 @@ static const char* env_sass_type = TAU_SASS_TYPE_DEFAULT;
 static int env_output_cuda_csv = TAU_OUTPUT_CUDA_CSV_DEFAULT;
 static const char *env_binaryexe = NULL;
 static int env_track_cuda_env = TAU_TRACK_CUDA_ENV_DEFAULT;
+static int env_current_timer_exit_params = 0;
 
 static int env_node_set = -1;
 
@@ -538,6 +533,19 @@ void Tau_util_replaceStringInPlace(std::string& subject, const std::string& sear
     while ((pos = subject.find(search, pos)) != std::string::npos) {
          subject.replace(pos, search.length(), replace);
          pos += replace.length();
+    }
+}
+
+/* A C implementation, for crappy compilers. */
+void Tau_util_replaceStringInPlaceC(char * subject, const char search,
+                          const char replace) {
+    size_t pos = 0;
+    size_t len = strlen(subject);
+    while (pos < len) {
+         if (subject[pos] == search) {
+            subject[pos] = replace;
+         }
+         pos++;
     }
 }
 
@@ -879,6 +887,10 @@ int TauEnv_get_level_zero_enable_api_tracing() {
 
 int TauEnv_get_comm_matrix() {
   return env_comm_matrix;
+}
+
+int TauEnv_get_current_timer_exit_params() {
+  return env_current_timer_exit_params;
 }
 
 int TauEnv_get_ompt_resolve_address_eagerly() {
@@ -1837,6 +1849,17 @@ void TauEnv_initialize()
       env_profiling = 0;
       TAU_VERBOSE("TAU: Profiling Disabled\n");
       TAU_METADATA("TAU_PROFILE", "off");
+    }
+
+    tmp = getconf("TAU_CURRENT_TIMER_EXIT_PARAMS");
+    if (parse_bool(tmp, profiling_default)) {
+      env_current_timer_exit_params = 1;
+      TAU_VERBOSE("TAU: Profiling Enabled\n");
+      TAU_METADATA("TAU_CURRENT_TIMER_EXIT_PARAMS", "on");
+    } else {
+      env_current_timer_exit_params = 0;
+      TAU_VERBOSE("TAU: Current Timer Exit Disabled\n");
+      TAU_METADATA("TAU_CURRENT_TIMER_EXIT_PARAMS", "off");
     }
 
     /* Switched this from env_profiling to !env_tracing.
