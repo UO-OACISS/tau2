@@ -1172,6 +1172,7 @@ dmapp=no
 zepto=no
 zeptodir=
 cuda=no
+level_zero=no
 rocm=no
 rocprofiler=no
 roctracer=no
@@ -2752,6 +2753,20 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-level_zero=*)
+            l0dir=`echo $arg | sed -e 's/-level_zero=//' -e 's/ /#/g'`
+            if [ ! -d $l0dir ]; then
+              echo  "Error: Cannot access Level Zero directory $l0dir"
+              exit 1
+            else
+              fixmakeargs="$fixmakeargs l0dir=$l0dir LEVEL_ZERO"
+              level_zero=yes
+            fi
+            tauoptions="${tauoptions}-level_zero"
+            pthread=yes
+            shift
+            ;;
+
 	-rocm)
             rocmdir=/opt/rocm
 	    #fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM ROCPROFILER"
@@ -3474,7 +3489,11 @@ detectarch=`./archfind`
 detectxdev=`./archfind -x`
 cd ..
 if [ "x$detectarch" = "x" ] ; then
+  detectarch=`TAU_CCOM=gcc utils/archfind`
+  detectxdev=`TAU_CCOM=gcc utils/archfind -x`
+  if [ "x$detectarch" = "x" ] ; then
     detectarch=unknown
+  fi
 fi
 
 
