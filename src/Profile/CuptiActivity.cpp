@@ -906,6 +906,9 @@ void Tau_handle_driver_api_memcpy (void *ud, CUpti_CallbackDomain domain,
             getMemcpyType(kind), taskId);
         Tau_cupti_register_host_calling_site(cbInfo->correlationId,
             cbInfo->functionName);
+        if (TauEnv_get_thread_per_gpu_stream()) {
+            TAU_TRIGGER_EVENT("Correlation ID", cbInfo->correlationId);
+        }
     } else { // memcpy exit
         TAU_DEBUG_PRINT("callback for %s, exit\n", cbInfo->functionName);
         CUptiResult cuptiErr;

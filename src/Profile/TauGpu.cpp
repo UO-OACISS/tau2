@@ -34,6 +34,7 @@ using namespace std;
 static TauContextUserEvent *MemoryCopyEventHtoD;
 static TauContextUserEvent *MemoryCopyEventDtoH;
 static TauContextUserEvent *MemoryCopyEventDtoD;
+static TauContextUserEvent *TraceCorrelationID;
 static TauContextUserEvent *UnifiedMemoryEventHtoD;
 static TauContextUserEvent *UnifiedMemoryEventDtoH;
 static TauContextUserEvent *UnifiedMemoryEventPageFault;
@@ -469,6 +470,9 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
   const double syncEndTime = endTime + id->syncOffset();
   if (memcpyType == MemcpyHtoD) {
     stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite(), "TAU_GPU_MEMORY_COPY");
+    if (TauEnv_get_thread_per_gpu_stream()) {
+      record_context_event(TraceCorrelationID, id->id_p1(), task, syncStartTime);
+    }
     //TAU_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
     if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE) {
       counted_memcpys++;
@@ -489,6 +493,9 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
     }
   } else if (memcpyType == MemcpyDtoH) {
     stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite(), "TAU_GPU_MEMORY_COPY");
+    if (TauEnv_get_thread_per_gpu_stream()) {
+      record_context_event(TraceCorrelationID, id->id_p1(), task, syncStartTime);
+    }
     //TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
     if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE) {
       counted_memcpys++;
@@ -510,6 +517,9 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
     }
   } else {
     stage_gpu_event(functionName, task, syncStartTime, id->getCallingSite(), "TAU_GPU_MEMORY_COPY");
+    if (TauEnv_get_thread_per_gpu_stream()) {
+      record_context_event(TraceCorrelationID, id->id_p1(), task, syncStartTime);
+    }
     //TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
     if (TauEnv_get_tracing() && direction == MESSAGE_RECIPROCAL_SEND) {
       TauTraceOneSidedMsg(direction, id, transferSize, task, syncStartTime);
@@ -756,6 +766,7 @@ void Tau_gpu_init(void)
   Tau_get_context_userevent((void **)&MemoryCopyEventHtoD, "Bytes copied from Host to Device");
   Tau_get_context_userevent((void **)&MemoryCopyEventDtoH, "Bytes copied from Device to Host");
   Tau_get_context_userevent((void **)&MemoryCopyEventDtoD, "Bytes copied from Device to Device");
+  Tau_get_context_userevent((void **)&TraceCorrelationID, "Correlation ID");
   Tau_get_context_userevent((void **)&UnifiedMemoryEventHtoD, "Unified Memory Bytes copied from Host to Device");
   Tau_get_context_userevent((void **)&UnifiedMemoryEventDtoH, "Unified Memory Bytes copied from Device to Host");
   Tau_get_context_userevent((void **)&UnifiedMemoryEventPageFault, "Unified Memory CPU Page Faults");
