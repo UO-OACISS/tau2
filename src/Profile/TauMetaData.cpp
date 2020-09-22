@@ -819,7 +819,9 @@ int Tau_metadata_fillMetaData()
  * MIC/KNL offload support, the linker will fail with really esoteric error messages
  * about either missing destructor in ~MetaDataRepo() or missing i_ofldbegin_target.o
  */
+#if !defined(TAU_CRAYCC_USE_CLANG)
   Tau_metadata_register("OMP_DEFAULT_DEVICE", omp_get_default_device());
+#endif
 #endif
 #if _OPENMP == 201307 && !defined(__PGI) // PGI claims 4.0, but is missing these implementations
   Tau_metadata_register("OMP_CANCELLATION", omp_get_cancellation() ? "TRUE" : "FALSE");

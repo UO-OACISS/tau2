@@ -7485,7 +7485,14 @@ if [ "$gnu" = "yes" ]; then openmp_flag=-fopenmp; fi
 if [ "$llvm" = "yes" ]; then openmp_flag=-fopenmp; fi
 if [ "$pgi" = "yes" ]; then openmp_flag=-mp; fi
 if [ "$fujitsu" = "yes" ]; then openmp_flag=-kopenmp; fi
-if [ "$default_fortran" = "cray" ]; then openmp_flag=-h#omp; fi
+if [ "$default_fortran" = "cray" ]; then 
+  if [ "x$CRAY_PE_USE_CLANG" = "x" ]; then
+    openmp_flag=-h#omp; 
+  else
+    openmp_flag=-fopenmp;
+  fi
+fi
+
 if [ "$intel" = "yes" ]; then openmp_flag=-qopenmp; fi
 
 if [ "$ompt_dir" != "" ]; then
