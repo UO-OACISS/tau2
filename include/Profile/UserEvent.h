@@ -267,9 +267,10 @@ private:
          Tau_destructor_trigger();
      }
   };
-  // Static holder for snapshot file handles
-  static UDataList & Tau_getUserData() {
-      static UDataList uDataList;
+  // non-static holder provider for UserData
+  UDataList uDataList;
+  UDataList & Tau_getUserData() {
+      //static UDataList uDataList;
       return uDataList;
   }
   //vector<Data*> eventData;//[TAU_MAX_THREADS]; //TODO: DYNATHREAD
