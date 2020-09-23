@@ -22,8 +22,8 @@
 
 struct TauMemMgrSummary
 {
-  int numBlocks;
-  unsigned long totalAllocatedMemory;
+  int numBlocks=0;
+  unsigned long totalAllocatedMemory=0;
 };
 
 struct TauMemMgrInfo
@@ -76,7 +76,9 @@ inline TauMemMgrInfo& getMemInfo(int tid,int block){
     checkTMMVector(tid);
     return TMMList[tid]->memInfo[block];
 }
-
+inline int getMemSumSize(){
+	return TMMList.size();
+}
 #ifdef USE_RECYCLER
 inline __custom_map_t& getFreeChunks(int tid){
     checkTMMVector(tid);
@@ -100,7 +102,8 @@ bool Tau_MemMgr_initIfNecessary(void)
     RtsLayer::LockEnv();
     // check again, someone else might already have initialized by now.
     if (!initialized) {
-      for (int i = 0; i < TAU_MAX_THREADS; i++) { //TODO: DYNATHREAD
+      int maxThreads=getMemSumSize();
+      for (int i = 0; i < maxThreads; i++) { //TODO: DYNATHREAD. This may be unnecessary since these are allocated on demand now.
         getMemSummary(i).numBlocks = 0;
         getMemSummary(i).totalAllocatedMemory = 0;
       }

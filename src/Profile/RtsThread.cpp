@@ -473,7 +473,7 @@ void RtsLayer::Initialize(void) {
 
 bool RtsLayer::initLocks(void) {
   threadLockDB();
-  int threadCount=TAU_MAX_THREADS;//getDBVecSize();//getTotalThreads();
+  int threadCount=getLockVecSize();//TAU_MAX_THREADS;//getDBVecSize();//getTotalThreads();
   
   for (int i=0; i<threadCount; i++) {
     setDBLock(i, 0);
@@ -484,7 +484,7 @@ bool RtsLayer::initLocks(void) {
 
 bool RtsLayer::initEnvLocks(void) {
   threadLockEnv();
-  int threadCount=TAU_MAX_THREADS;//getEnvVecSize();//getTotalThreads();
+  int threadCount=getLockVecSize();//TAU_MAX_THREADS;//getEnvVecSize();//getTotalThreads();
   for (int i=0; i<threadCount; i++) {
 	  setEnvLock(i,0);
   }

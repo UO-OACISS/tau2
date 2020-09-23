@@ -404,7 +404,8 @@ FunctionInfo::~FunctionInfo()
   Name = Type = GroupName = AllGroups = NULL;
 #ifndef TAU_WINDOWS
 #ifndef _AIX
-  for (int i = 0; i < TAU_MAX_THREADS; i++) {
+  int maxThreads=getPathHistogramSize();
+  for (int i = 0; i < maxThreads; i++) {
     delete GetPathHistogram(i);//pathHistogram[i];// TODO: DYNAPROF
   }
 #endif /* _AIX */

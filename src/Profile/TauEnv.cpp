@@ -1342,9 +1342,9 @@ void TauEnv_initialize()
       env_verbose = 1;
     }
 
-    sprintf(tmpstr, "%d", TAU_MAX_THREADS);//TODO: DYNATHREAD
-    TAU_VERBOSE("TAU: Supporting %d threads\n", TAU_MAX_THREADS);
-    TAU_METADATA("TAU_MAX_THREADS", tmpstr);
+    //sprintf(tmpstr, "%d", TAU_MAX_THREADS);//TODO: DYNATHREAD
+    TAU_VERBOSE("TAU: Supporting dynamic allocation of threads\n");//, TAU_MAX_THREADS);
+    //TAU_METADATA("TAU_MAX_THREADS", tmpstr);
 
     /*** Options that can be used with Scalasca and VampirTrace ***/
     tmp = getconf("TAU_LITE");

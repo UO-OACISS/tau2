@@ -213,6 +213,10 @@ public:
     checkFIVector(tid);
     return MetricList[tid]->pathHistogram;
   }
+  inline int getPathHistogramSize()
+  {
+	return MetricList.size();
+  }
 
   /* EBS Sampling Profiles */
   void addPcSample(unsigned long *pc, int tid, double interval[TAU_MAX_COUNTERS]);
