@@ -254,6 +254,10 @@ private:
     return *Tau_getUserData()[tid];
   }
 
+  int ThreadDataSize(){
+	return Tau_getUserData().size();
+  }
+
   void AddEventToDB();
 
   struct UDataList: vector<Data*>{
