@@ -1148,12 +1148,16 @@ if [ $qsub_mode = true ] ; then
 else
 
   if [ $use_gdb = "true" ]; then
+    envcmd="set env"
+    if [ $apple = 1 ]; then
+        envcmd="_regexp-env"
+    fi
     echo "" > .gdb_commands
     if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
-      echo "set env LD_BIND_NOW=1" >> .gdb_commands
+      echo "${envcmd} LD_BIND_NOW=1" >> .gdb_commands
     fi
     if [ $track_io = "true" ] ; then
-      echo "set env LD_BIND_NOW=1" >> .gdb_commands
+      echo "${envcmd} LD_BIND_NOW=1" >> .gdb_commands
     fi
     if [ $apple = 1 ]; then
       echo "_regexp-env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands

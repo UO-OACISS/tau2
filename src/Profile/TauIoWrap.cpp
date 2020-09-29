@@ -184,8 +184,20 @@ extern "C" void Tau_iowrap_dupEvents(unsigned int oldfid, unsigned int newfid)
 extern "C" void Tau_iowrap_checkInit()
 {
   static int init = 0;
-  if (init) return;
+  static thread_local bool seen{false};
+  if (init) {
+    // don't re-register thread 0!
+    if (!seen) {
+        if (Tau_init_check_initialized() && !Tau_global_getLightsOut()) {
+            Tau_register_thread();
+            Tau_create_top_level_timer_if_necessary();
+            seen = true;
+        }
+    }
+    return;
+  }
   init = 1;
+  seen = true;
 
   global_write_bandwidth = 0;
   global_read_bandwidth = 0;
