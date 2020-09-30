@@ -854,11 +854,21 @@ static string getNameAndType(FunctionInfo *fi)
 }
 */
 
+ struct CallsiteFinalThreadList : vector<bool>{
+      CallsiteFinalThreadList(){
+         //printf("Creating CallsiteFinalThreadList at %p\n", this);
+      }
+     virtual ~CallsiteFinalThreadList(){
+         //printf("Destroying CallsiteFinalThreadList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
+
 extern "C" void finalizeCallSites_if_necessary()
 {
   //static std::mutex FinCaSiVectorMutex;
   static bool callsiteFinalizationSetup = false;
-  static vector<bool> callsiteThreadFinalized;//[TAU_MAX_THREADS];
+  static CallsiteFinalThreadList callsiteThreadFinalized;//[TAU_MAX_THREADS];
   if (!callsiteFinalizationSetup) {
     int vecSize=RtsLayer::getTotalThreads();
     //std::lock_guard<std::mutex> guard(FinCaSiVectorMutex);
