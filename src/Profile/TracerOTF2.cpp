@@ -1081,7 +1081,9 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
 				thread_type = OTF2_LOCATION_TYPE_GPU;
             } else {
                 static int cputhreads = 1;
-                snprintf(namebuf, 256, "CPU thread %02d", cputhreads++);
+                int nodeThread=cputhreads%nodes;
+                snprintf(namebuf, 256, "CPU thread %02d", nodeThread);
+		cputhreads++;
             }
 #ifdef TAU_ENABLE_ROCM
                 //snprintf(namebuf, 256, "Thread %d (ROCM GPU ID:%d, Queue ID:%d, Thread ID:%d)", thread_num, 1, 2, 3);

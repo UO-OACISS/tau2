@@ -51,7 +51,7 @@
 #define TAU_ADIOS2_ENGINE "BPFile"
 
 // This will enable some checking to make sure we don't have call stack violations.
-// #define DO_VALIDATION
+//#define DO_VALIDATION
 
 /* Some forward declarations that we need */
 tau::Profiler *Tau_get_timer_at_stack_depth(int);
@@ -646,14 +646,19 @@ void adios::write_variables(void)
             timer_stack[it->second[2]].push(it->second[4]);
         } else if (it->second[3] == 1) {
             // on exit
-            if (timer_stack[it->second[2]].top() != it->second[4]) {
+            if (timer_stack[it->second[2]].size() == 0) {
                 fprintf(stderr, "Stack violation.\n");
-                fprintf(stderr, "thread %lu, %lu != %lu, timestamp %lu\n", it->second[2], timer_stack[it->second[2]].top(), it->second[4], it->first);
-            } else if (timer_stack[it->second[2]].size() == 0) {
-                fprintf(stderr, "Stack violation.\n");
-                fprintf(stderr, "Stack for thread %lu is empty, timestamp %lu.\n", it->second[2], it->first);
+                fprintf(stderr, "Stack for thread %lu is empty, timestamp %lu.\n",
+                    it->second[2], it->first);
+            } else {
+                if (timer_stack[it->second[2]].top() != it->second[4]) {
+                    fprintf(stderr, "Stack violation.\n");
+                    fprintf(stderr, "thread %lu, %lu != %lu, timestamp %lu\n",
+                        it->second[2], timer_stack[it->second[2]].top(),
+                        it->second[4], it->first);
+                }
+                timer_stack[it->second[2]].pop();
             }
-            timer_stack[it->second[2]].pop();
         }
 #endif
     }
@@ -1212,16 +1217,27 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     pthread_mutex_lock(&_vector_mutex[data->tid]);
     auto &tmp = my_adios->timer_values_array[data->tid];
 #ifdef DO_VALIDATION
-    unsigned long ts = my_adios->previous_timestamp[data->tid] > data->timestamp ? my_adios->previous_timestamp[data->tid] + 1 : data->timestamp;
+    unsigned long ts = my_adios->previous_timestamp[data->tid] >
+        data->timestamp ? my_adios->previous_timestamp[data->tid] + 1 :
+            data->timestamp;
     my_adios->previous_timestamp[data->tid] = ts;
-    if (my_adios->pre_timer_stack[tmparray[2]].top() != tmparray[4]) {
-      fprintf(stderr, "Pre: Stack violation.\n");
-      fprintf(stderr, "Pre: thread %lu, %lu != %lu, timestamp %lu\n", tmparray[2], my_adios->pre_timer_stack[tmparray[2]].top(), tmparray[4], data->timestamp);
-    } else if (my_adios->pre_timer_stack[tmparray[2]].size() == 0) {
-      fprintf(stderr, "Pre: Stack violation.\n");
-      fprintf(stderr, "Pre: Stack for thread %lu is empty, timestamp %lu.\n", tmparray[2], data->timestamp);
+    //if (my_adios->pre_timer_stack[tmparray[2]].top() != tmparray[4]) {
+    if (my_adios->pre_timer_stack[tmparray[2]].size() == 0) {
+      fprintf(stderr, "Pre: Stack violation. %s\n", data->timer_name);
+      fprintf(stderr, "Pre: Stack for thread %lu is empty, timestamp %lu.\n",
+        tmparray[2], data->timestamp);
+      pthread_mutex_unlock(&_vector_mutex[data->tid]);
+      return 0;
+    } else {
+        unsigned long lhs = (unsigned long)(my_adios->pre_timer_stack[data->tid].top());
+        unsigned long rhs = (unsigned long)(timer_index);
+        if (lhs != rhs) {
+            fprintf(stderr, "Pre: Stack violation.\n");
+            fprintf(stderr, "Pre: thread %lu, %lu != %lu, timestamp %lu\n",
+                tmparray[2], lhs, rhs, data->timestamp);
+        }
+        my_adios->pre_timer_stack[tmparray[2]].pop();
     }
-    my_adios->pre_timer_stack[tmparray[2]].pop();
 #else
     unsigned long ts = data->timestamp;
 #endif
