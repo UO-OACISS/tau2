@@ -269,6 +269,26 @@ struct LocateAddressData
   TauBfdInfo & info;
 };
 
+struct SymbolTableLineNumMap : public map<string, int>
+{
+  SymbolTableLineNumMap() {}
+  virtual ~SymbolTableLineNumMap() {
+    //Wait! We might not be done! Unbelieveable as it may seem, this map
+    //could (and does sometimes) get destroyed BEFORE we have resolved the addresses. Bummer.
+    Tau_destructor_trigger();
+  }
+};
+
+static SymbolTableLineNumMap & TheSymbolTableLineNumMap() {
+  static SymbolTableLineNumMap map;
+  return map;
+}
+
+static SymbolTableLineNumMap & TheCachedSymbolTableLineNumMap() {
+  static SymbolTableLineNumMap map;
+  return map;
+}
+
 // Internal function prototypes
 static bool Tau_bfd_internal_loadSymTab(TauBfdUnit *unit, int moduleIndex);
 static bool Tau_bfd_internal_loadExecSymTab(TauBfdUnit *unit);
@@ -1293,25 +1313,23 @@ static int Tau_internal_get_lineno_for_function(tau_bfd_handle_t bfd_handle, cha
   if (TauEnv_get_lite_enabled()) return 0;
 
   static bool first_time = true;
-  static map<string, int> cached_symtab;
   map<string, int>::iterator cit, fit;
-  static map<string, int> full_symtab;
   int lno = 0;
 
   if (!first_time) {
     // See if the funcname has appeared before
-    cit = cached_symtab.find(funcname);
-    if (cit == cached_symtab.end()) {
+    cit = TheCachedSymbolTableLineNumMap().find(funcname);
+    if (cit == TheCachedSymbolTableLineNumMap().end()) {
       TAU_VERBOSE("TAU_BFD: Didn't find %s in the cached_symtab\n", funcname);
       // Let us search for it in the full_symtab.
-      fit = full_symtab.find(funcname);
-      if (fit == full_symtab.end()) {
+      fit = TheSymbolTableLineNumMap().find(funcname);
+      if (fit == TheSymbolTableLineNumMap().end()) {
         TAU_VERBOSE("TAU_BFD: Didn't find %s in the full_symtab either!\n", funcname);
         return 0; /* didn't find it */
       } else { // found it in the full_symtab!
         // add it to the cached entry first!
         lno = fit->second;
-        cached_symtab[funcname] = lno;
+        TheCachedSymbolTableLineNumMap()[funcname] = lno;
         TAU_VERBOSE("TAU_BFD: Adding: cached_symtab[%s] = %d\n", funcname, lno);
 	return lno; // line number
       }
@@ -1346,19 +1364,19 @@ static int Tau_internal_get_lineno_for_function(tau_bfd_handle_t bfd_handle, cha
           }
         }
         TAU_VERBOSE("TAU_BFD: Will process symbols in %s using libdwarf\n", module->name.c_str());
-        Tau_get_dwarf_symbols(bfd_handle, module->name.c_str(), full_symtab, bfdImage);
+        Tau_get_dwarf_symbols(bfd_handle, module->name.c_str(), TheSymbolTableLineNumMap(), bfdImage);
       }
     }
   }
-  fit = full_symtab.find(funcname);
-  if(fit == full_symtab.end()) {
+  fit = TheSymbolTableLineNumMap().find(funcname);
+  if(fit == TheSymbolTableLineNumMap().end()) {
     TAU_VERBOSE("TAU_BFD: Didn't find %s in the full_symtab during first attempt!\n", funcname);
     return 0;
   } else {
     lno = fit->second;
     result_line = lno;
     TAU_VERBOSE("TAU_BFD: Adding: cached_symtab[%s] = %d\n", funcname, lno);
-    cached_symtab[funcname] = lno;
+    TheCachedSymbolTableLineNumMap()[funcname] = lno;
   }
 
 #else // we don't have TAU_DWARF; do it the slow way with libbfd
@@ -1429,17 +1447,17 @@ static int Tau_internal_get_lineno_for_function(tau_bfd_handle_t bfd_handle, cha
           syms[i]->value, &filename, &func, &lineno);
           func = syms[i]->name;
           if (lineno > 0) { // We only store non-zero entries now
-            full_symtab[func] = lineno; // Add this entry to the full symbol table.
+            TheSymbolTableLineNumMap()[func] = lineno; // Add this entry to the full symbol table.
           }
       }
-      fit = full_symtab.find(funcname);
-      if (fit == full_symtab.end()) { // We didn't find it - return 0;
+      fit = TheSymbolTableLineNumMap().find(funcname);
+      if (fit == TheSymbolTableLineNumMap().end()) { // We didn't find it - return 0;
           TAU_VERBOSE("TAU_BFD: Didn't find line number for %s\n", funcname);
           continue;
       } else { // found it!
           lineno = fit->second;
           TAU_VERBOSE("TAU_BFD: Found it - first time! %s line no = %d\n", funcname, lineno);
-          cached_symtab[funcname] = lineno;
+          TheCachedSymbolTableLineNumMap()[funcname] = lineno;
           result_line = lineno;
       }
     }
