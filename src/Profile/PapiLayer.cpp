@@ -186,10 +186,6 @@ void Tau_child(void)
 
   rc = PAPI_thread_init((unsigned long (*)(void))(RtsLayer::unsafeThreadId));
 
-if(  tid >= TAU_MAX_THREADS) {
-    fprintf (stderr, "TAU: Exceeded max thread count of TAU_MAX_THREADS\n");
-  }
-
   ThreadValue* localThreadValue=PapiLayer::getThreadValue(tid);
   /* Check ThreadList */
   if (localThreadValue == 0) {
@@ -300,11 +296,6 @@ int PapiLayer::initializeThread(int tid)
 {
   int rc;
 
-  if (tid >= TAU_MAX_THREADS) {
-    fprintf (stderr, "TAU: Exceeded max thread count of TAU_MAX_THREADS\n");
-    return -1;
-  }
-  
   if (!getThreadValue(tid)){
     RtsLayer::LockDB();
     if (!getThreadValue(tid)){
@@ -559,10 +550,6 @@ int PapiLayer::initializePAPI() {
   pthread_atfork(Tau_prepare, Tau_parent, Tau_child);
 #endif /* TAU_MPI */
 #endif /* TAU_AT_FORK */
-
-//  for (int i=0; i<TAU_MAX_THREADS; i++) {
-//    setThreadValue(i,NULL);
-//  }
 
   // Initialize PAPI
   if (Tau_initialize_papi_library() != PAPI_VER_CURRENT) {
