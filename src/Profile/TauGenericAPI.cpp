@@ -97,9 +97,11 @@ void ps_tool_register_thread(void) {
 void Tau_profile_exit_all_threads();
 
 void ps_tool_finalize(void) {
+#ifndef TAU_MPI
     //Tau_destructor_trigger();
     //Tau_profile_exit_all_threads();
     Tau_exit("stub exiting");
+#endif
 }
 
 void ps_tool_pause_measurement(void) {
