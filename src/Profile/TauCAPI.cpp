@@ -1117,25 +1117,19 @@ void Tau_cupti_buffer_processed(void) {
 extern "C" void Tau_flush_gpu_activity(void) {
 #ifdef CUPTI
     static bool did_once = false;
-    static bool done = false;
-    static int loops = 0;
     if (RtsLayer::myThread() != 0) return;
     if (Tau_init_check_initialized() &&
-        !Tau_global_getLightsOut() &&
-        !done) {
+        !Tau_global_getLightsOut()) {
         if (Tau_get_cupti_buffer_tracker().created > Tau_get_cupti_buffer_tracker().processed) {
             if (RtsLayer::myNode() == 0) {
                 if (did_once) {
-                    printf("TAU: ...still flushing asynchronous CUDA events...\n");
+                    TAU_VERBOSE("TAU: ...still flushing asynchronous CUDA events...\n");
                 } else {
-                    printf("TAU: flushing asynchronous CUDA events...\n");
+                    TAU_VERBOSE("TAU: flushing asynchronous CUDA events...\n");
                     did_once = true;
                 }
             }
             cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
-        }
-        if (Tau_get_cupti_buffer_tracker().created == Tau_get_cupti_buffer_tracker().processed) {
-            done = true;
         }
     }
 #endif
@@ -1190,14 +1184,15 @@ extern "C" int Tau_invoke_plugin_phase_exit(void *functionInfo) {
 
 /* Plugin API */
 extern "C" size_t Tau_create_trigger(const char *name) {
-  static size_t trigger_counter = -1;
+  static size_t trigger_counter = 0;
   TauInternalFunctionGuard protects_this_function;
 
   RtsLayer::LockDB();
+  size_t retval =  trigger_counter;
   trigger_counter++;
   RtsLayer::UnLockDB();
 
-  return trigger_counter;
+  return retval;
 }
 
 extern "C" void Tau_trigger(size_t id, void * data) {
