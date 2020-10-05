@@ -16,7 +16,7 @@
 
 
 //////////////////////////////////////////////////////////////////////
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 
 #ifdef TAU_DOT_H_LESS_HEADERS
@@ -27,7 +27,7 @@
 #include <string>
 #include <stack>
 #include <iostream>
-using namespace std; 
+using namespace std;
 #endif /* TAU_DOT_H_LESS_HEADERS */
 #include <stdlib.h>
 
@@ -55,7 +55,7 @@ map<int,FunctionInfo*> KokkosFunctionInfoDB;
           dem_name = name; \
         } \
 
-extern "C" char *tau_demangle_name(char **mangled_name); 
+extern "C" char *tau_demangle_name(char **mangled_name);
 
 
 ///////////////////////////////////////////////////////////
@@ -80,7 +80,7 @@ extern "C" void kokkosp_init_library(const int loadSeq,
 	void* deviceInfo) {
 
 	TAU_VERBOSE("TAU: Example Library Initialized (sequence is %d, version: %llu)\n", loadSeq, interfaceVer);
-	
+
 }
 
 ///////////////////////////////////////////////////////////
@@ -102,46 +102,50 @@ extern "C" void Tau_start_kokkos_timer(string operation, const char* name, const
 #if defined(TAU_BFD) && defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 	TAU_INTERNAL_DEMANGLE_NAME(name, dem_name);
 #else
-	dem_name = name; 
+	dem_name = name;
 #endif /* HAVE_GNU_DEMANGLE */
 	char buf[256]; sprintf(buf," [device=%d]", devID);
 	//string region_name(std::string("Kokkos::parallel_for ")+dem_name+buf);
 	string region_name(operation+" "+dem_name+buf);
-	
-	void *fiptr; 
+
+	void *fiptr;
 	TAU_PROFILER_CREATE(fiptr, region_name.c_str(), "", TAU_KOKKOS);
-	TAU_PROFILER_START(fiptr); 
-	FunctionInfo *fi = (FunctionInfo *)fiptr; 
+	TAU_PROFILER_START(fiptr);
+	FunctionInfo *fi = (FunctionInfo *)fiptr;
   	*kID=fi->GetFunctionId();
 
-        KokkosFunctionInfoDB[*kID] = fi; 
+        KokkosFunctionInfoDB[*kID] = fi;
 
+/*
 	TAU_VERBOSE("TAU: Start : %s kernel id=%llu on device %d\n", fi->GetName(), *kID, devID);
         TAU_VERBOSE("TAU: Start: KokkosFunctionInfoDB[%d]->GetName() is %s, addr = %p\n",
 	  (*(kID)), KokkosFunctionInfoDB[*kID]->GetName(), KokkosFunctionInfoDB[*kID]);
+*/
 	//cout <<"Region: "<<region_name<<" id = "<<*kID<<endl;
-	//printf("Kokkos::parallel_for %s [device=%d]\n", dem_name, devID); 
+	//printf("Kokkos::parallel_for %s [device=%d]\n", dem_name, devID);
 }
 
 extern "C" void kokkosp_begin_parallel_for(const char* name, const uint32_t devID, uint64_t* kID) {
   	Tau_start_kokkos_timer(string("Kokkos::parallel_for"), name, devID, kID);
 }
 ///////////////////////////////////////////////////////////
-//// end parallel for 
+//// end parallel for
 ///////////////////////////////////////////////////////////
 extern "C" void Tau_stop_kokkos_timer(const uint64_t kID) {
 	//FunctionInfo *fiptr = TheFunctionDB()[kID-1];
 	FunctionInfo *fiptr = KokkosFunctionInfoDB[kID];
-	TAU_PROFILER_STOP(fiptr); 
-	TAU_VERBOSE("TAU: Stop:  %s kernel id=%d is complete.\n", 
-		fiptr->GetName(), kID); 
+	TAU_PROFILER_STOP(fiptr);
+/*
+	TAU_VERBOSE("TAU: Stop:  %s kernel id=%d is complete.\n",
+		fiptr->GetName(), kID);
+*/
 }
 
 extern "C" void kokkosp_end_parallel_for(const uint64_t kID) {
       	Tau_stop_kokkos_timer(kID);
 }
 ///////////////////////////////////////////////////////////
-//// begin parallel scan 
+//// begin parallel scan
 ///////////////////////////////////////////////////////////
 extern "C" void kokkosp_begin_parallel_scan(const char* name, const uint32_t devID, uint64_t* kID) {
   	Tau_start_kokkos_timer(string("Kokkos::parallel_scan"), name, devID, kID);
@@ -149,48 +153,47 @@ extern "C" void kokkosp_begin_parallel_scan(const char* name, const uint32_t dev
 }
 
 ///////////////////////////////////////////////////////////
-//// end parallel scan 
+//// end parallel scan
 ///////////////////////////////////////////////////////////
 extern "C" void kokkosp_end_parallel_scan(const uint64_t kID) {
       	Tau_stop_kokkos_timer(kID);
 }
 
 ///////////////////////////////////////////////////////////
-//// begin parallel reduce 
+//// begin parallel reduce
 ///////////////////////////////////////////////////////////
 extern "C" void kokkosp_begin_parallel_reduce(const char* name, const uint32_t devID, uint64_t* kID) {
   	Tau_start_kokkos_timer(string("Kokkos::parallel_reduce"), name, devID, kID);
 }
 
 ///////////////////////////////////////////////////////////
-//// end parallel reduce 
+//// end parallel reduce
 ///////////////////////////////////////////////////////////
 extern "C" void kokkosp_end_parallel_reduce(const uint64_t kID) {
       	Tau_stop_kokkos_timer(kID);
 }
 
 
-stack <string>  Tau_kokkos_stack;   
+stack <string>  Tau_kokkos_stack;
 ///////////////////////////////////////////////////////////
 //// push parallel region to the callstack
 ///////////////////////////////////////////////////////////
 extern "C" void kokkosp_push_profile_region(char* regionName) {
-  Tau_kokkos_stack.push(regionName); 
-  TAU_VERBOSE("TAU: kokkosp_push_profile_region: %s\n", regionName);
+  Tau_kokkos_stack.push(regionName);
+  //TAU_VERBOSE("TAU: kokkosp_push_profile_region: %s\n", regionName);
   TAU_STATIC_PHASE_START(regionName);
 }
 
 ///////////////////////////////////////////////////////////
-//// pop parallel region 
+//// pop parallel region
 ///////////////////////////////////////////////////////////
 extern "C" void kokkosp_pop_profile_region() {
   TAU_STATIC_PHASE_STOP(Tau_kokkos_stack.top().c_str());
-  TAU_VERBOSE("TAU: kokkosp_pop_profile_region: %s\n", 
-	Tau_kokkos_stack.top().c_str());
+  //TAU_VERBOSE("TAU: kokkosp_pop_profile_region: %s\n", Tau_kokkos_stack.top().c_str());
   Tau_kokkos_stack.pop();
 }
 /***************************************************************************
  * $RCSfile: TauKokkos.cpp,v $   $Author: sameer $
  * $Revision: 1.0 $   $Date: 2017/02/01 22:16:23 $
- * POOMA_VERSION_ID: $Id: TauKokkos.cpp,v 1.46 2017/02/01 22:16:23 sameer Exp $ 
+ * POOMA_VERSION_ID: $Id: TauKokkos.cpp,v 1.46 2017/02/01 22:16:23 sameer Exp $
  ***************************************************************************/
