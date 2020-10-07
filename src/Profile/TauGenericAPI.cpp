@@ -142,11 +142,11 @@ void ps_tool_timer_stop(const void * timer) {
 }
 
 void ps_tool_start_string(const char * name) {
-    Tau_start(name);
+    Tau_pure_start_task_group(name, Tau_get_thread(), "TAU_PERFSTUBS");
 }
 
 void ps_tool_stop_string(const char * name) {
-    Tau_stop(name);
+    Tau_pure_stop_task(name, Tau_get_thread());
 }
 
 void ps_tool_stop_current(void) {

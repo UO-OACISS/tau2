@@ -2506,14 +2506,15 @@ extern "C" void *Tau_pure_search_for_function(const char *name, int create)
 {
   FunctionInfo *fi = 0;
   PureMap & pure = ThePureMap();
+  std::string tmp(name);
   RtsLayer::LockDB();
-  PureMap::iterator it = pure.find(name);
+  PureMap::iterator it = pure.find(tmp);
   if (it != pure.end()) {
     fi = it->second;
   } else {
     if (create != 0) {
       tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
-      pure[name] = fi;
+      pure[tmp] = fi;
     }
   }
   RtsLayer::UnLockDB();
