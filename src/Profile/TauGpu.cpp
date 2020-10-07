@@ -406,13 +406,7 @@ void Tau_gpu_exit_event_from_cpu(const char* name, int tid, double end)
 
 void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
 {
-  int task;
-  if(TauEnv_get_cuda_track_sass()) {
-      task = id->getTaskId();
-  }
-  else {
-      task = get_task(id);
-  }
+  int task = get_task(id);
   const double syncStartTime = startTime + id->syncOffset();
   const double syncEndTime = endTime + id->syncOffset();
   FunctionInfo * fi = id->getCallingSite();

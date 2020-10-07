@@ -269,6 +269,7 @@ void Tau_CuptiLayer_setup_eventgroup()
     cuErr = cuDevicePrimaryCtxRetain(&cuCtx, device);
     CHECK_CU_ERROR(cuErr, "cuDevicePrimaryCtxRetain");
     cuptiErr = cuptiEventGroupCreate(cuCtx, &eventGroup, 0);
+#if CUDA_VERSION >= 10200
     if(cuptiErr == CUPTI_ERROR_LEGACY_PROFILER_NOT_SUPPORTED) {
         // If this device doesn't support the legacy profiler,
         // there's nothing to initialize
@@ -276,6 +277,7 @@ void Tau_CuptiLayer_setup_eventgroup()
         CHECK_CU_ERROR(cuErr, "cuDevicePrimaryCtxRelease")
         return;
     }
+#endif
     CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupCreate");
 
     counter_vec_t & added_counters = Tau_CuptiLayer_Added_counters();
@@ -665,9 +667,11 @@ void Tau_CuptiLayer_Initialize_Map(int off)
 #endif
         CHECK_CU_ERROR(er, "cuDeviceGet");
         err = cuptiDeviceGetNumEventDomains(currDevice, &domainCount);
+#if CUDA_VERSION >= 10200
         if(err == CUPTI_ERROR_LEGACY_PROFILER_NOT_SUPPORTED) {
             continue;
         }
+#endif
         CHECK_CUPTI_ERROR(err, "cuptiDeviceGetNumEventDomains");
         if (domainCount == 0) {
             printf("No domain is exposed by dev = %d\n", i);

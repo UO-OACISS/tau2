@@ -1091,25 +1091,19 @@ void Tau_cupti_buffer_processed(void) {
 extern "C" void Tau_flush_gpu_activity(void) {
 #ifdef CUPTI
     static bool did_once = false;
-    static bool done = false;
-    static int loops = 0;
     if (RtsLayer::myThread() != 0) return;
     if (Tau_init_check_initialized() &&
-        !Tau_global_getLightsOut() &&
-        !done) {
+        !Tau_global_getLightsOut()) {
         if (Tau_get_cupti_buffer_tracker().created > Tau_get_cupti_buffer_tracker().processed) {
             if (RtsLayer::myNode() == 0) {
                 if (did_once) {
-                    printf("TAU: ...still flushing asynchronous CUDA events...\n");
+                    TAU_VERBOSE("TAU: ...still flushing asynchronous CUDA events...\n");
                 } else {
-                    printf("TAU: flushing asynchronous CUDA events...\n");
+                    TAU_VERBOSE("TAU: flushing asynchronous CUDA events...\n");
                     did_once = true;
                 }
             }
             cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
-        }
-        if (Tau_get_cupti_buffer_tracker().created == Tau_get_cupti_buffer_tracker().processed) {
-            done = true;
         }
     }
 #endif
@@ -1164,14 +1158,15 @@ extern "C" int Tau_invoke_plugin_phase_exit(void *functionInfo) {
 
 /* Plugin API */
 extern "C" size_t Tau_create_trigger(const char *name) {
-  static size_t trigger_counter = -1;
+  static size_t trigger_counter = 0;
   TauInternalFunctionGuard protects_this_function;
 
   RtsLayer::LockDB();
+  size_t retval =  trigger_counter;
   trigger_counter++;
   RtsLayer::UnLockDB();
 
-  return trigger_counter;
+  return retval;
 }
 
 extern "C" void Tau_trigger(size_t id, void * data) {
@@ -2501,15 +2496,16 @@ map<string, vector<int> *>& TheIterationMap() {
 extern "C" void *Tau_pure_search_for_function(const char *name, int create)
 {
   FunctionInfo *fi = 0;
-  RtsLayer::LockDB();
   PureMap & pure = ThePureMap();
-  PureMap::iterator it = pure.find(name);
+  std::string tmp(name);
+  RtsLayer::LockDB();
+  PureMap::iterator it = pure.find(tmp);
   if (it != pure.end()) {
     fi = it->second;
   } else {
     if (create != 0) {
       tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
-      pure[name] = fi;
+      pure[tmp] = fi;
     }
   }
   RtsLayer::UnLockDB();
@@ -2528,8 +2524,8 @@ void Tau_pure_start_task_string(const string name, int tid)
 {
   TauInternalFunctionGuard protects_this_function;
   FunctionInfo *fi = 0;
-  RtsLayer::LockDB();
   PureMap & pure = ThePureMap();
+  RtsLayer::LockDB();
   PureMap::iterator it = pure.find(name);
   if (it == pure.end()) {
     tauCreateFI_signalSafe((void**)&fi, name, "", TAU_DEFAULT, "TAU_DEFAULT");
@@ -2549,22 +2545,15 @@ extern "C" void Tau_pure_start_task_group(const char * n, int tid, const char * 
   FunctionInfo * fi = NULL;
 
   PureMap & pure = ThePureMap();
+  RtsLayer::LockEnv();
   PureMap::iterator it = pure.find(name);
   if (it != pure.end()) {
     fi = it->second;
+  } else {
+    tauCreateFI((void**)&fi, name, "", TAU_USER, group);
+    pure[name] = fi;
   }
-  if (fi == NULL) {
-    RtsLayer::LockEnv();
-    PureMap::iterator it = pure.find(name);
-    if (it == pure.end()) {
-      tauCreateFI((void**)&fi, name, "", TAU_USER, group);
-      pure[name] = fi;
-
-    } else {
-      fi = it->second;
-    }
-    RtsLayer::UnLockEnv();
-  }
+  RtsLayer::UnLockEnv();
   Tau_start_timer(fi, 0, tid);
 }
 
@@ -2587,23 +2576,15 @@ FunctionInfo* Tau_make_cupti_sample_timer(const char * filename, const char * fu
   FunctionInfo * fi = NULL;
 
   PureMap & pure = ThePureMap();
-  int exists = pure.count(name);
-  if (exists > 0) {
-    PureMap::iterator it = pure.find(name);
+  RtsLayer::LockEnv();
+  PureMap::iterator it = pure.find(name);
+  if (it != pure.end()) {
     fi = it->second;
-    //pure[dstream_name] = fi;
+  } else {
+    tauCreateFI((void**)&fi, name, type, TAU_USER, "CUPTI_SAMPLES");
+    pure[name] = fi;
   }
-  if (fi == NULL) {
-    RtsLayer::LockEnv();
-    PureMap::iterator it = pure.find(name);
-    if (it == pure.end()) {
-      tauCreateFI((void**)&fi, name, type, TAU_USER, "CUPTI_SAMPLES");
-      pure[name] = fi;
-    } else {
-      fi = it->second;
-    }
-    RtsLayer::UnLockEnv();
-  }
+  RtsLayer::UnLockEnv();
   return fi;
 }
 
@@ -2621,22 +2602,15 @@ extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
 
   //printf("Tau_make_openmp_timer: n=%s, t = %s, PureMapSize=%d\n", n, t, ThePureMap().size());
   PureMap & pure = ThePureMap();
-  int exists = pure.count(name);
-  if (exists > 0) {
-    PureMap::const_iterator it = pure.find(name);
+  RtsLayer::LockEnv();
+  PureMap::iterator it = pure.find(name);
+  if (it != pure.end()) {
     fi = it->second;
+  } else {
+    tauCreateFI((void**)&fi, name, type, TAU_USER, "OpenMP");
+    pure[name] = fi;
   }
-  if (fi == NULL) {
-    RtsLayer::LockEnv();
-    PureMap::const_iterator it = pure.find(name);
-    if (it == pure.end()) {
-      tauCreateFI((void**)&fi, name, type, TAU_USER, "OpenMP");
-      pure[name] = fi;
-    } else {
-      fi = it->second;
-    }
-    RtsLayer::UnLockEnv();
-  }
+  RtsLayer::UnLockEnv();
   return fi;
 }
 
@@ -2657,8 +2631,8 @@ FunctionInfo * Tau_create_thread_state_if_necessary(const char *name)
   TauInternalFunctionGuard protects_this_function;
   FunctionInfo *fi = NULL;
   std::string n = name;
-  RtsLayer::LockEnv();
   PureMap & pure = ThePureMap();
+  RtsLayer::LockEnv();
   PureMap::iterator it = pure.find(n);
   if (it == pure.end()) {
     tauCreateFI_signalSafe((void**)&fi, n, "", TAU_USER, "TAU_OMP_STATE");
@@ -2676,8 +2650,8 @@ FunctionInfo * Tau_create_thread_state_if_necessary_string(string const & name)
   TauInternalFunctionGuard protects_this_function;
   FunctionInfo *fi = NULL;
 
-  RtsLayer::LockEnv();
   PureMap & pure = ThePureMap();
+  RtsLayer::LockEnv();
   PureMap::iterator it = pure.find(name);
   if (it == pure.end()) {
     tauCreateFI_signalSafe((void**)&fi, name, "", TAU_USER, "TAU_OMP_STATE");
@@ -2717,8 +2691,8 @@ extern "C" void Tau_pure_stop_task(char const * n, int tid)
   // cout << "[TauCAPI]:  Name now: " << name << endl;
   FunctionInfo * fi = NULL;
 
-  RtsLayer::LockDB();
   PureMap & pure = ThePureMap();
+  RtsLayer::LockDB();
   PureMap::iterator it = pure.find(name);
   if (it == pure.end()) {
     fprintf(stderr,
@@ -2747,8 +2721,8 @@ extern "C" void Tau_static_phase_start(char const * name)
   FunctionInfo *fi = 0;
   string n = name;
 
-  RtsLayer::LockDB();
   PureMap & pure = ThePureMap();
+  RtsLayer::LockDB();
   PureMap::iterator it = pure.find(n);
   if (it == pure.end()) {
     tauCreateFI((void**)&fi, n, "", TAU_USER, "TAU_USER");
@@ -2766,8 +2740,8 @@ extern "C" void * Tau_get_function_info(const char *fname, const char *type, Tau
   FunctionInfo *fi = 0;
   string n = fname;
 
-  RtsLayer::LockDB();
   PureMap & pure = ThePureMap();
+  RtsLayer::LockDB();
   PureMap::iterator it = pure.find(n);
   if (it == pure.end()) {
     tauCreateFI((void**)&fi, n, type, group, gr_name);
@@ -2785,8 +2759,8 @@ extern "C" void Tau_static_phase_stop(char const * name)
   FunctionInfo *fi;
   string n = name;
 
-  RtsLayer::LockDB();
   PureMap & pure = ThePureMap();
+  RtsLayer::LockDB();
   PureMap::iterator it = pure.find(n);
   if (it == pure.end()) {
     fprintf(stderr,

@@ -1498,12 +1498,14 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * s
 
   PluginKey key_(event, hash_);
 
-  if(!Tau_get_plugins_for_named_specific_event()[key_].empty()) {
+  auto it_ = Tau_get_plugins_for_named_specific_event().find(key_);
+  if(it_ != Tau_get_plugins_for_named_specific_event().end() && !it_->second.empty()) {
      hash = hash_;
   } else if (matching_regex != NULL) {
      size_t hash__ = Tau_util_return_hash_of_string(matching_regex);
      PluginKey key__(event, hash__);
-     if(Tau_get_plugins_for_named_specific_event()[key__].empty()) {
+     auto it__ = Tau_get_plugins_for_named_specific_event().find(key__);
+     if(it__ == Tau_get_plugins_for_named_specific_event().end() || it__->second.empty()) {
        hash = star_hash;
      } else {
        hash = hash__;

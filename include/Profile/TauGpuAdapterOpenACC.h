@@ -20,7 +20,7 @@ class OpenACCGpuEvent : public GpuEvent
 
 				~HostMap() {
 						Tau_destructor_trigger();
-				}	
+				}
 		};
 
 
@@ -35,7 +35,7 @@ class OpenACCGpuEvent : public GpuEvent
 		uint32_t device_id;
 		uint32_t task_id;
 		uint32_t correlation_id;
-		
+
 		const char* name;
 
 		GpuEventAttributes* event_attrs;
@@ -56,7 +56,7 @@ class OpenACCGpuEvent : public GpuEvent
 				event_attrs(evt_attrs), num_event_attrs(num_evt_attrs)
 		{}
 
-		OpenACCGpuEvent* getCopy() const 
+		OpenACCGpuEvent* getCopy() const
 		{
 			OpenACCGpuEvent* c = new OpenACCGpuEvent(*this);
 			return c;
@@ -70,20 +70,17 @@ class OpenACCGpuEvent : public GpuEvent
 			else if (context_id != ((OpenACCGpuEvent*) other)->context_id) {
 				return context_id < ((OpenACCGpuEvent*) other)->context_id;
 			}
-			else if (stream_id != ((OpenACCGpuEvent*) other)->stream_id) {
+			else {
 				return stream_id < ((OpenACCGpuEvent*) other)->stream_id;
-			}
-			else { // for now, using thread id as task id
-				return task_id < ((OpenACCGpuEvent*) other)->task_id;
 			}
 		}
 
-		const char* getName() const 
+		const char* getName() const
 		{
 			return name;
 		}
 
-		int getTaskId() const 
+		int getTaskId() const
 		{
 			return task_id;
 		}
@@ -107,7 +104,7 @@ class OpenACCGpuEvent : public GpuEvent
 			return funcInfo;
 		}
 
-		void getAttributes(GpuEventAttributes *&attrs, int &num) const 
+		void getAttributes(GpuEventAttributes *&attrs, int &num) const
 		{
 			num = num_event_attrs;
 			attrs = event_attrs;
@@ -126,7 +123,8 @@ class OpenACCGpuEvent : public GpuEvent
 		const char* gpuIdentifier() const
 		{
 			char* id = (char*) malloc(50*sizeof(char));
-			sprintf(id, "%d/%d/%d/%d/%d", device_id, stream_id, context_id, correlation_id, task_id);
+			sprintf(id, "Dev%d/Ctx%d/Strm%d/cor%d/task%d", device_id, stream_id, context_id, correlation_id, task_id);
+
 			return id;
 		}
 
@@ -141,7 +139,7 @@ class OpenACCGpuEvent : public GpuEvent
 			return RtsLayer::myNode();
 		}
 
-		~OpenACCGpuEvent() 
+		~OpenACCGpuEvent()
 		{
 			if (event_attrs) {
 				free(event_attrs);
