@@ -496,7 +496,9 @@ void __cyg_profile_func_exit(void* func, void* callsite)
     // Get the hash node
     hn = TheLocalHashTable()[addr];
     if(!hn){
+        RtsLayer::LockDB();
         hn = TheHashTable()[addr];
+        RtsLayer::UnLockDB();
     }
     // Skip excluded functions or functions we didn't enter
     if (!hn || hn->excluded || !hn->fi) return;
