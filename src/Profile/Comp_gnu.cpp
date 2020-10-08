@@ -116,6 +116,11 @@ static HashTable & TheHashTable()
   return htab;
 }
 
+static HashTable & TheLocalHashTable(){
+  static thread_local HashTable lhtab;
+  return lhtab;
+}
+
 static tau_bfd_handle_t & TheBfdUnitHandle()
 {
   static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
@@ -158,13 +163,14 @@ bool isExcluded(char const * funcname)
 
 void updateHashTable(unsigned long addr, const char *funcname)
 {
-  HashNode * hn = TheHashTable()[addr];
+  HashNode * hn = TheLocalHashTable()[addr];
   if (!hn) {
     RtsLayer::LockDB();
     hn = TheHashTable()[addr];
     if (!hn) {
       hn = new HashNode;
       TheHashTable()[addr] = hn;
+      TheLocalHashTable()[addr] = hn;
     }
     RtsLayer::UnLockDB();
   }
@@ -193,6 +199,7 @@ void runOnExit()
     delete node;
   }
   mytab.clear();
+  
 #ifdef TAU_BFD
   Tau_delete_bfd_units();
 #endif
@@ -273,7 +280,8 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered());
 
     // Get the hash node
-    node = TheHashTable()[addr];
+    
+    node = TheLocalHashTable()[addr];
     if (!node) {
       // We must be inside TAU before we lock the database
       TauInternalFunctionGuard protects_this_region;
@@ -290,10 +298,10 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         node->fi = NULL;
         node->excluded = false;
         TheHashTable()[addr] = node;
+        TheLocalHashTable()[addr] =  node;
       }
       RtsLayer::UnLockDB();
     }
-
     // Skip excluded functions
     if (node->excluded) return;
   } // END protected region
@@ -485,8 +493,10 @@ void __cyg_profile_func_exit(void* func, void* callsite)
     addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
     // Get the hash node
-    hn = TheHashTable()[addr];
-
+    hn = TheLocalHashTable()[addr];
+    if(!hn){
+        hn = TheHashTable()[addr];
+    }
     // Skip excluded functions or functions we didn't enter
     if (!hn || hn->excluded || !hn->fi) return;
   } // END protected region
