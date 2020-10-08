@@ -170,8 +170,8 @@ void updateHashTable(unsigned long addr, const char *funcname)
     if (!hn) {
       hn = new HashNode;
       TheHashTable()[addr] = hn;
-      TheLocalHashTable()[addr] = hn;
     }
+    TheLocalHashTable()[addr] = hn;
     RtsLayer::UnLockDB();
   }
   hn->info.funcname = funcname;
@@ -298,8 +298,9 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         node->fi = NULL;
         node->excluded = false;
         TheHashTable()[addr] = node;
-        TheLocalHashTable()[addr] =  node;
+        
       }
+      TheLocalHashTable()[addr] =  node;
       RtsLayer::UnLockDB();
     }
     // Skip excluded functions
