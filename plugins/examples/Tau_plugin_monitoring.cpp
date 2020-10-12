@@ -594,10 +594,10 @@ std::vector<cpustats_t*> * read_cpu_stats() {
 #endif
                 cpu_stats->push_back(cpu_stat);
             }
-#if defined(__PGI)
+//#if defined(__PGI)
             // only do the first line.
             break;
-#endif
+//#endif
         }
     }
     fclose(pFile);

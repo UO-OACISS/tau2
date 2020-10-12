@@ -98,10 +98,6 @@ public:
   uint32_t cdpId;
   static uint32_t cdpCount;
 
-	//This event is tied to the entire deivce not a particular stream or context.
-	//Used for recording device metadata.
-	bool deviceContainer;
-
 	const char *name;
 	//FunctionInfo *callingSite;
 	GpuEventAttributes *gpu_event_attributes;
@@ -112,17 +108,7 @@ public:
 		CuptiGpuEvent *c = new CuptiGpuEvent(*this);
 		return c;
 	};
- CuptiGpuEvent(const char* n, uint32_t device, GpuEventAttributes *m, int m_size) : name(n), deviceId(device), gpu_event_attributes(m), number_of_gpu_attributes(m_size) {
-		deviceContainer = true;
-		streamId = 0;
-		contextId = 0;
-		correlationId = -1;
-    cdpId = 0;
-    parentGridId = 0;
-    taskId = -1;
-	};
  CuptiGpuEvent(const char* n, uint32_t device, uint32_t stream, uint32_t context, uint32_t correlation, int64_t pId, GpuEventAttributes *m, int m_size, uint32_t task_id) : name(n), deviceId(device), streamId(stream), contextId(context), correlationId(correlation), parentGridId(pId), gpu_event_attributes(m), number_of_gpu_attributes(m_size), taskId(task_id) {
-		deviceContainer = false;
     cdpId = 0;
 	};
 
@@ -133,7 +119,7 @@ public:
 
 	const char* gpuIdentifier() const {
 		char *rtn = (char*) malloc(50*sizeof(char));
-		sprintf(rtn, "%d/%d/%d/%d/%d", deviceId, streamId, contextId, correlationId, taskId);
+		sprintf(rtn, "Dev%d/Ctx%d/Strm%d/cdp%d/cor%d/task%d", deviceId, contextId, streamId, cdpId, correlationId, taskId);
 		return rtn;
 	};
 	x_uint64 id_p1() const {
@@ -150,24 +136,24 @@ public:
             return deviceId < ((CuptiGpuEvent *)other)->deviceId;
         }
         /* First, check if we are running on different devices */
-        if (deviceContainer || ((CuptiGpuEvent *)other)->deviceContainer) {
-            if (deviceId != ((CuptiGpuEvent *)other)->deviceId) {
-                /* Devices are different, return */
-                return deviceId < ((CuptiGpuEvent *)other)->deviceId;
-            }
-        }
-        /* Either same device or no device container */
-        else {
+        if (deviceId != ((CuptiGpuEvent *)other)->deviceId) {
+            /* Devices are different, return */
+            return deviceId < ((CuptiGpuEvent *)other)->deviceId;
+        } else {
+            /* same device */
             /* Are we in the same context? */
-            if (contextId == ((CuptiGpuEvent *)other)->context()) {
-                /* Are we on different streams? */
-                if (streamId == ((CuptiGpuEvent *)other)->stream()) {
-                    return cdpId < ((CuptiGpuEvent *)other)->cdp();
-                } else {
-                    return streamId < ((CuptiGpuEvent *)other)->stream();
-                }
-            } else {
+            if (contextId != ((CuptiGpuEvent *)other)->context()) {
                 return contextId < ((CuptiGpuEvent *)other)->context();
+            } else {
+                /* same context */
+                /* Are we on different streams? */
+                if (streamId != ((CuptiGpuEvent *)other)->stream()) {
+                    return streamId < ((CuptiGpuEvent *)other)->stream();
+                } else {
+                    /* same stream */
+                    /* Are we using CDP kernels? */
+                    return cdpId < ((CuptiGpuEvent *)other)->cdp();
+                }
             }
         }
     };
