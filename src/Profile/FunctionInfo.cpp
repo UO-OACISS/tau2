@@ -146,6 +146,9 @@ static char *strip_tau_group(const char *ProfileGroupName) {
   return source;
 }
 
+thread_local int FunctionInfo::local_tid = RtsLayer::myThread();
+thread_local unordered_map<FunctionInfo*,FunctionInfo::FunctionMetrics*>* FunctionInfo::metrics_cache=new             unordered_map<FunctionInfo*,FunctionInfo::FunctionMetrics*>;
+
 //////////////////////////////////////////////////////////////////////
 // FunctionInfoInit is called by all four forms of FunctionInfo ctor
 //////////////////////////////////////////////////////////////////////

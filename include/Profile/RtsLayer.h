@@ -22,6 +22,7 @@
 #include <functional>
 #include <utility>
 #include <vector>
+#include <mutex>
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////
@@ -105,10 +106,12 @@ struct TAULocks{
     return threadList;
 }
   static void checkLockVector(int tid){
-      //static std::mutex DBVectorMutex;
-      //std::lock_guard<std::mutex> guard(DBVectorMutex);
+      if(TheLockList().size()<=tid){
+      static std::mutex DBVectorMutex;
+      std::lock_guard<std::mutex> guard(DBVectorMutex);
       while(TheLockList().size()<=tid){
           TheLockList().push_back(new TAULocks());
+      }
       }
   }
 
