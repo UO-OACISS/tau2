@@ -372,7 +372,9 @@ extern "C" PUBLIC_API void OnLoadToolProp(rocprofiler_settings_t* settings)
   Tau_init_initializeTAU();
 
 #if (!(defined (TAU_MPI) || (TAU_SHMEM)))
-  TAU_PROFILE_SET_NODE(0);
+  if (Tau_get_node() == -1) {
+      TAU_PROFILE_SET_NODE(0);
+  }
 #endif /* TAU_MPI || TAU_SHMEM */
 
   if (pthread_mutex_lock(&rocm_mutex) != 0) {

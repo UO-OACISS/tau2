@@ -589,7 +589,9 @@ static int profiler_callback(PyObject *self, PyFrameObject *frame, int what, PyO
 
   static int init = 0;
   if (init == 0) {
-    TAU_PROFILE_SET_NODE(0);
+    if (Tau_get_node() == -1) {
+        TAU_PROFILE_SET_NODE(0);
+    }
     init = 1;
   }
 

@@ -560,7 +560,7 @@ void tau_profile_init_()
 {
 #ifndef TAU_MPI
 #ifndef TAU_SHMEM
-  Tau_set_node(0); 
+  if (Tau_get_node() == -1) { Tau_set_node(0); }
 #endif /* TAU_SHMEM */
 #endif /* TAU_MPI */
 }
@@ -944,7 +944,7 @@ void TAU_PROFILE_INIT()
   // tau_profile_init_(argc, argv);
 #ifndef TAU_MPI
 #ifndef TAU_SHMEM
-  Tau_set_node(0); 
+  if (Tau_get_node() == -1) { Tau_set_node(0); }
 #endif /* TAU_SHMEM */
 #endif /* TAU_MPI */
 }
@@ -953,7 +953,7 @@ void TAU_PROFILE_INIT_()
 {
 #ifndef TAU_MPI
 #ifndef TAU_SHMEM
-  Tau_set_node(0); 
+  if (Tau_get_node() == -1) { Tau_set_node(0); }
 #endif /* TAU_SHMEM */
 #endif /* TAU_MPI */
 }
@@ -1393,7 +1393,7 @@ void tau_profile_init(void)
 
 #ifndef TAU_MPI
 #ifndef TAU_SHMEM
-  Tau_set_node(0); 
+  if (Tau_get_node() == -1) { Tau_set_node(0); }
 #endif /* TAU_SHMEM */
 #endif /* TAU_MPI */
 }
@@ -1518,7 +1518,7 @@ void tau_profile_init__()
   // tau_profile_init_(argc, argv);
 #ifndef TAU_MPI
 #ifndef TAU_SHMEM
-  Tau_set_node(0); 
+  if (Tau_get_node() == -1) { Tau_set_node(0); }
 #endif /* TAU_SHMEM */
 #endif /* TAU_MPI */
 }

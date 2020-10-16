@@ -106,7 +106,6 @@ using namespace std;
 #include <asm/unistd.h>
 #endif /* TAUKTAU */
 
-
 /////////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class RtsLayer
 // Important for Porting to other platforms and frameworks.
@@ -139,14 +138,49 @@ long RtsLayer::GenerateUniqueId(void) {
   return ++UniqueId;
 }
 
+int Tau_test_for_MPI_comm_rank() {
+#ifdef TAU_SETNODE0
+    int commrank = 0;
+#else /* TAU_SETNODE0  */
+    int commrank = -1;
+#endif /* TAU_SETNODE0 */
+    /* Some configurations might use MPI without telling TAU - they can
+       * call Tau_Init() even if
+     * they are running in an MPI application.  For that reason, we double
+     * check to make sure that we aren't in an MPI execution by checking
+     * for some common environment variables. */
+    // PMI, MPICH, Cray, Intel, MVAPICH2...
+    const char * tmpvar = getenv("PMI_RANK");
+	if (tmpvar != NULL) {
+        commrank = atoi(tmpvar);
+		// printf("Changing MPICH rank to %lu\n", commrank);
+		return commrank;
+    }
+	// OpenMPI, Spectrum
+    tmpvar = getenv("OMPI_COMM_WORLD_RANK");
+	if (tmpvar != NULL) {
+        commrank = atoi(tmpvar);
+		// printf("Changing openMPI rank to %lu\n", commrank);
+		return commrank;
+    }
+	// PBS/Torque
+    tmpvar = getenv("PBS_TASKNUM");
+	if (tmpvar != NULL) {
+        commrank = atoi(tmpvar);
+		return commrank;
+    }
+	// Slurm - last resort
+    tmpvar = getenv("SLURM_PROCID");
+	if (tmpvar != NULL) {
+        commrank = atoi(tmpvar);
+		return commrank;
+    }
+	return commrank;
+}
+
 /////////////////////////////////////////////////////////////////////////
 int& RtsLayer::TheNode(void) {
-#ifdef TAU_SETNODE0
-  static int Node = 0;
-#else /* TAU_SETNODE0  */
-  static int Node =-1;
-#endif /* TAU_SETNODE0 */
- 
+  static int Node = Tau_test_for_MPI_comm_rank();
   return Node;
 }
 

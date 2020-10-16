@@ -80,7 +80,9 @@ void ps_tool_initialize(void) {
     _argv[0] = (char *)(_dummy);
     Tau_init(_argc, _argv);
 #ifndef TAU_MPI
-    Tau_set_node(0);
+    if (Tau_get_node() < 0) {
+        Tau_set_node(0);
+    }
 #endif
     /* Disable throttling, because if users use ps_tool_stop_current(),
      * throttling will cause Tau_start() to do nothing for throttled events,

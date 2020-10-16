@@ -102,7 +102,9 @@ extern "C" void __VT_IntelEntry(char* str, int* id, int* id2) {
      * make sure that TAU is ready to go before doing anything else! */
     Tau_init_initializeTAU();
     TheUsingCompInst() = 1;
-    TAU_PROFILE_SET_NODE(0);
+    if (Tau_get_node() == -1) {
+        TAU_PROFILE_SET_NODE(0);
+    }
   }
 
 #ifdef USE_MAP
