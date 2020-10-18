@@ -9237,22 +9237,26 @@ zlibs=zlib-1.2.11
 zlibtgz=$zlibs.tar.gz
 zliburl=https://www.zlib.net/$zlibtgz
 build_zlib() {
-  echo "Building zlib..."
   if [ "x$zlibdir" = xdownload ]; then
     zlibdir="$targetdir/$architecture/$zlibs"
-    download $zliburl $zlibtgz
   fi
-  tar xf $zlibtgz
-  cd $zlibs
-  #./configure --prefix=$zlibdir
-  CC=$c_compiler ./configure --prefix=$zlibdir
-  echo "Installing in $zlibdir"
-#  sed -e 's/gcc/ncc/g' Makefile > Makefile~
-#  mv Makefile~ Makefile
-  make
-  make install
-  cd ..
-  echo "Built zlib"
+  if [ ! -d "$zlibdir" ]; then
+    echo "Building zlib..."
+    download $zliburl $zlibtgz
+    tar xf $zlibtgz
+    cd $zlibs
+    #./configure --prefix=$zlibdir
+    CC=$c_compiler ./configure --prefix=$zlibdir
+    echo "Installing in $zlibdir"
+#    sed -e 's/gcc/ncc/g' Makefile > Makefile~
+#    mv Makefile~ Makefile
+    make
+    make install
+    cd ..
+    echo "Built zlib"
+  else
+    echo "Found zlib installation"
+  fi
 
   zlibinclude="-I$zlibdir/include#-I$zlibdir/include/extra"
   zliblink="-L$zlibdir/lib#-L$zlibdir/lib64#-Wl\,-rpath\,$zlibdir/lib#-Wl\,-rpath\,$zlibdir/lib64#-L$zlibdir/lib"
@@ -9262,10 +9266,8 @@ build_zlib() {
 
 echo "$zlibdir"
 if [ "x$zlibdir" = xdownload ] ; then
-  if [ ! -d "$zlibdir" ]; then
-    echo "Install zlibdir"
-    build_zlib
-  fi
+  echo "Install zlibdir"
+  build_zlib
 fi
 
 ######################################################################
