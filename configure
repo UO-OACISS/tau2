@@ -594,6 +594,8 @@ usage() {
     echo "    Note: 'download' will download and build the library automatically."
     echo "-unwind=<dir | download> ... Specify a libunwind directory or download."
     echo "    Note: 'download' will download and build the library automatically."
+    echo "-zlib=<dir | download> .......... Specify a zlib directory or download."
+    echo "    Note: 'download' will download and build the library automatically."
     echo ""
     echo "MPI Options:"
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
@@ -740,6 +742,8 @@ for arg in "$@"; do
         echo "-bfd=<dir | download> ....... Specify a binutils directory or download."
         echo "    Note: 'download' will download and build the library automatically."
         echo "-unwind=<dir | download> ... Specify a libunwind directory or download."
+        echo "    Note: 'download' will download and build the library automatically."
+        echo "-zlib=<dir | download> .......... Specify a zlib directory or download."
         echo "    Note: 'download' will download and build the library automatically."
         echo "-cube=<dir> | own.| ext..... Specify location of CUBE or use TAU's jar."
         echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
@@ -996,6 +1000,8 @@ perfsuitedir=
 bfd=no
 elf=no
 bfddir=
+zlib=no
+zlibdir=
 elfdir=
 turnbfdoff=no
 perf=no
@@ -1642,6 +1648,12 @@ for arg in "$@"; do
 
 	-unwindextras=*)
 	    unwind_extras=`echo $arg | sed -e 's/-unwind_extras=//'`
+	    shift
+	    ;;
+
+	-zlib=*)
+	    zlib=yes
+            zlibdir=`echo $arg | sed -e 's/-zlib=//'`
 	    shift
 	    ;;
 
@@ -9219,6 +9231,44 @@ if [ "x$sos" = "xyes" ] ; then
   fi
 fi
 ######################################################################
+# Install ZLIB if requested
+######################################################################
+zlibs=zlib-1.2.11
+zlibtgz=$zlibs.tar.gz
+zliburl=https://www.zlib.net/$zlibtgz
+build_zlib() {
+  echo "Building zlib..."
+  if [ "x$zlibdir" = xdownload ]; then
+    zlibdir="$targetdir/$architecture/$zlibs"
+    download $zliburl $zlibtgz
+  fi
+  tar xf $zlibtgz
+  cd $zlibs
+  #./configure --prefix=$zlibdir
+  CC=$c_compiler ./configure --prefix=$zlibdir
+  echo "Installing in $zlibdir"
+#  sed -e 's/gcc/ncc/g' Makefile > Makefile~
+#  mv Makefile~ Makefile
+  make
+  make install
+  cd ..
+  echo "Built zlib"
+
+  zlibinclude="-I$zlibdir/include#-I$zlibdir/include/extra"
+  zliblink="-L$zlibdir/lib#-L$zlibdir/lib64#-Wl\,-rpath\,$zlibdir/lib#-Wl\,-rpath\,$zlibdir/lib64#-L$zlibdir/lib"
+  zliblibs="-lz"
+  fixmakeargs="$fixmakeargs zlibinclude=$zlibinclude zliblink=$zliblink zliblibs=$zliblibs"
+}
+
+echo "$zlibdir"
+if [ "x$zlibdir" = xdownload ] ; then
+  if [ ! -d "$zlibdir" ]; then
+    echo "Install zlibdir"
+    build_zlib
+  fi
+fi
+
+######################################################################
 # Install BFD if requested
 ######################################################################
 binutils=binutils-2.23.2
@@ -9397,6 +9447,8 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 	zliburl=https://www.zlib.net/zlib-1.2.11.tar.gz
         if [ -d $bfddir/../zlib-1.2.11 ]; then
           echo "Found zlib-1.2.11"
+        elif [ -d $zlibdir ]; then
+          echo "Found zlib-1.2.11"
         else
           download $zliburl zlib-1.2.11.tar.gz
           tar xf zlib-1.2.11.tar.gz; cd ./zlib-1.2.11; ./configure --prefix=$bfddir; sed -e 's/gcc/ncc/g' Makefile > Makefile~; mv Makefile~ Makefile; make; make install; cd ..
@@ -9507,7 +9559,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     bfdinclude="-I$bfddir/include#-I$bfddir/include/extra"
     fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
     bfdinclude="-I$bfddir/include -I$bfddir/include/extra"
-    bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64"
+    bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64 -L$zlibdir/lib"
   fi
 
   # The libintl.dylib library is in /opt/local/lib... is that everywhere?

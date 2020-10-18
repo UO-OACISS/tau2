@@ -120,6 +120,21 @@ case $1 in
 	echo "s,^BFDINCLUDE=.*$,BFDINCLUDE=$bfdinclude,g" >> $sedout
 	;;
 
+     zliblink=*)
+        zliblink=`echo $1 | sed -e 's/^zliblink=//' -e 's/#/ /g'`
+	echo "s,^ZLIBLINK=.*$,ZLIBLINK=$zliblink,g" >> $sedout
+	;;
+
+     zliblibs=*)
+        zliblibs=`echo $1 | sed -e 's/^zliblibs=//' -e 's/#/ /g'`
+	echo "s,^ZLIBLIBS=.*$,ZLIBLIBS=$zliblibs,g" >> $sedout
+	;;
+
+     zlibinclude=*)
+        zlibinclude=`echo $1 | sed -e 's/^zlibinclude=//' -e 's/#/ /g'`
+	echo "s,^ZLIBINCLUDE=.*$,ZLIBINCLUDE=$zlibinclude,g" >> $sedout
+	;;
+
      unwind_flag=*)
        unwind_flag=`echo $1 | sed -e 's/^unwind_flag=//'`
         echo "s,^UNWIND_FLAG=.*$,UNWIND_FLAG=$unwind_flag,g" >> $sedout
