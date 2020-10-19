@@ -285,7 +285,9 @@ extern "C" void __func_trace_enter(char * name, char * fname, int lno, void ** c
       Tau_init_initializeTAU();
       Tau_create_top_level_timer_if_necessary();
       TheUsingCompInst() = 1;
-      TAU_PROFILE_SET_NODE(0);
+      if (Tau_get_node() == -1) {
+        TAU_PROFILE_SET_NODE(0);
+      }
 
       // Register callback
       //atexit(runOnExit);

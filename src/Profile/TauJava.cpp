@@ -158,7 +158,9 @@ void TauJavaLayer::NotifyEvent(JVMPI_Event *event) {
   static int j = 0;
   if (j == 0) {
     j=1;
-    TAU_PROFILE_SET_NODE(0);
+    if (Tau_get_node() == -1) {
+        TAU_PROFILE_SET_NODE(0);
+    }
   }
 #else  /* TAU_MPI */
   //static int j = TAU_MAPPING_PROFILE_SET_NODE(RtsLayer::getPid(), tid);

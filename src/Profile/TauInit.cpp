@@ -571,7 +571,9 @@ extern "C" int Tau_init_initializeTAU()
 
 #ifdef __MIC__
   if (TauEnv_get_mic_offload()) {
-    TAU_PROFILE_SET_NODE(0);
+    if (Tau_get_node() == -1) {
+        TAU_PROFILE_SET_NODE(0);
+    }
   }
 #endif
 
