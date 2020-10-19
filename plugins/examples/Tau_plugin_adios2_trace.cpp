@@ -51,7 +51,7 @@
 #define TAU_ADIOS2_ENGINE "BPFile"
 
 // This will enable some checking to make sure we don't have call stack violations.
-#define DO_VALIDATION
+//#define DO_VALIDATION
 
 /* Some forward declarations that we need */
 tau::Profiler *Tau_get_timer_at_stack_depth(int);
@@ -616,6 +616,8 @@ void adios::write_variables(void)
     // copy the current primer stack
     this_step->primer_stacks[0] = new timer_values_array_t(current_primer_stack[0]);
     for (int t = 1 ; t < threads ; t++) {
+        // is there any data on this thread?
+        if (timer_values_array[t].size() == 0) { continue; }
         // make a list from the next thread of data - copying the data in!
         std::list<std::pair<unsigned long, std::array<unsigned long, 5> > >
             next_thread(timer_values_array[t].begin(),
@@ -1234,14 +1236,15 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
 
     auto &tmp = my_adios->timer_values_array[data->tid];
 #ifdef DO_VALIDATION
-    unsigned long ts = my_adios->previous_timestamp[data->tid] > data->timestamp ? my_adios->previous_timestamp[data->tid] + 1 : data->timestamp;
+    unsigned long ts = my_adios->previous_timestamp[data->tid] > data->timestamp ?
+        my_adios->previous_timestamp[data->tid] + 1 : data->timestamp;
     my_adios->previous_timestamp[data->tid] = ts;
-    my_adios->pre_timer_stack[tmparray[2]].push(tmparray[4]);
+    my_adios->pre_timer_stack[data->tid].push(timer_index);
 #else
     unsigned long ts = data->timestamp;
 #endif
     // push this timer on the stack for provenance output, make a copy
-    my_adios->current_primer_stack[tmparray[2]].push_back(std::make_pair(ts, tmparray));
+    my_adios->current_primer_stack[data->tid].push_back(std::make_pair(ts, tmparray));
     tmp.push_back(
         std::make_pair(
             ts,
@@ -1286,11 +1289,13 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
         data->timestamp ? my_adios->previous_timestamp[data->tid] + 1 :
             data->timestamp;
     my_adios->previous_timestamp[data->tid] = ts;
-    //if (my_adios->pre_timer_stack[tmparray[2]].top() != tmparray[4]) {
-    if (my_adios->pre_timer_stack[tmparray[2]].size() == 0) {
+    if (my_adios->pre_timer_stack[data->tid].size() == 0) {
       fprintf(stderr, "Pre: Stack violation. %s\n", data->timer_name);
       fprintf(stderr, "Pre: Stack for thread %lu is empty, timestamp %lu.\n",
         tmparray[2], data->timestamp);
+	  if (my_adios->current_primer_stack[data->tid].size() > 0) {
+          my_adios->current_primer_stack[data->tid].pop_back();
+	  }
       active_threads--;
       return 0;
     } else {
@@ -1301,7 +1306,7 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
             fprintf(stderr, "Pre: thread %lu, %lu != %lu, timestamp %lu\n",
                 tmparray[2], lhs, rhs, data->timestamp);
         }
-        my_adios->pre_timer_stack[tmparray[2]].pop();
+        my_adios->pre_timer_stack[data->tid].pop();
     }
 #else
     unsigned long ts = data->timestamp;
@@ -1309,8 +1314,8 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     // pop this timer off the stack for provenance output
 	// For some reason, at the end of execution we are popping too many.
 	// This is a safety check, but not great for performance.
-	if (my_adios->current_primer_stack[tmparray[2]].size() > 0) {
-        my_adios->current_primer_stack[tmparray[2]].pop_back();
+	if (my_adios->current_primer_stack[data->tid].size() > 0) {
+        my_adios->current_primer_stack[data->tid].pop_back();
 	}
     tmp.push_back(
         std::make_pair(
