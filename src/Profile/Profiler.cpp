@@ -45,6 +45,7 @@
 
 #include <string>
 #include <vector>
+//#include <mutex>
 
 #ifdef TAU_VAMPIRTRACE
 #include <Profile/TauVampirTrace.h>
@@ -149,30 +150,34 @@ struct ProfilerData{
         double TheLastTimeStamp[TAU_MAX_COUNTERS];
     #endif /* TAU_TRACK_IDLE_THREADS */
 };
-struct PThreadList : vector<ProfilerData*>{
-    PThreadList (const PThreadList&) = delete;
-    PThreadList& operator= (const PThreadList&) = delete;
-    PThreadList(){
+struct ProfThreadList : vector<ProfilerData*>{
+    ProfThreadList (const ProfThreadList&) = delete;
+    ProfThreadList& operator= (const ProfThreadList&) = delete;
+    ProfThreadList(){
          //printf("Creating ProfilerThreadList at %p\n", this);
       }
-     virtual ~PThreadList(){
+     virtual ~ProfThreadList(){
          //printf("Destroying ProfilerThreadList at %p, with size %ld\n", this, this->size());
          Tau_destructor_trigger();
      }
    };
 
-static PThreadList & ProfilerThreadList(){
-	static PThreadList pThreads;
-	return pThreads; 
+static ProfThreadList & ProfilerThreadList(){
+	static ProfThreadList profThreads;
+	return profThreads; 
 }
 
 void checkProfilerVector(int tid){
+    //if(ProfilerThreadList().size()<=tid){
+    //  static std::mutex ProfilerVectorMutex;
+    //  std::lock_guard<std::mutex> guard(ProfilerVectorMutex);
 	while(ProfilerThreadList().size()<=tid){
         RtsLayer::LockDB();
 		ProfilerThreadList().push_back(new ProfilerData());
         //ProfilerThreadList.back()->profileWriteCount=0;
         RtsLayer::UnLockDB();
 	}
+    //}
     //printf("Write count for tid: %d, post-check: %d\n",tid,ProfilerThreadList[tid]->profileWriteCount);
 }
 //////////////////////////////////////////////////////////////////////
@@ -181,7 +186,14 @@ void checkProfilerVector(int tid){
 #ifdef TAU_TRACK_IDLE_THREADS
 //double TheLastTimeStamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS]; //TODO: DYNATHREAD
 inline void setLastTimeStamp(int tid, int counter, double value){
+    //printf("SLT: TID: %d, CID: %d\n",tid,counter);
     checkProfilerVector(tid);
+    //printf("SLT: Checked\n");
+    //if(ProfilerThreadList()[tid]->TheLastTimeStamp==0||)
+    //{
+    //    printf("SLT: Invalid!\n");
+    //}
+    
     ProfilerThreadList()[tid]->TheLastTimeStamp[counter]=value;
 }
 inline double getLastTimeStamp(int tid, int counter){
