@@ -107,70 +107,114 @@ void Tau_plugin_trace_current_timer(const char * name) {
 #define EVENT_TRACE_PREFIX "\"type\": \"MPI\", \"function\":"
 #endif
 
+void convert_comm(char * tmpstr, MPI_Comm comm) {
+    if (comm == MPI_COMM_WORLD) {
+        sprintf(tmpstr, "MPI_COMM_WORLD");
+        return;
+    }
+    if (comm == MPI_COMM_SELF) {
+        sprintf(tmpstr, "MPI_COMM_SELF");
+        return;
+    }
+    if (comm == MPI_COMM_NULL) {
+        sprintf(tmpstr, "MPI_COMM_NULL");
+        return;
+    }
+    sprintf(tmpstr, "0x%08x", comm);
+    return;
+}
+
 #define TIMER_EXIT_COLLECTIVE_SYNC_EVENT(__desc,__comm) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __commstr[64]; \
+convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"%s\", \"comm\": \"0x%08x\"", EVENT_TRACE_PREFIX, __desc, __comm); \
+sprintf(__tmp, "%s \"%s\", \"comm\": \"%s\"", EVENT_TRACE_PREFIX, __desc, __commstr); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
 #define TIMER_EXIT_COLLECTIVE_EXCH_EVENT(__desc,__size,__root,__comm) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __commstr[64]; \
+convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"%s\", \"size\": %lu, \"root\": %u, \"comm\": \"0x%08x\"", EVENT_TRACE_PREFIX, __desc, __size, __root, __comm); \
+sprintf(__tmp, "%s \"%s\", \"size\": %lu, \"root\": %u, \"comm\": \"%s\"", EVENT_TRACE_PREFIX, __desc, __size, __root, __commstr); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
 #define TIMER_EXIT_COLLECTIVE_EXCH_ALL_EVENT(__desc,__send_size,__recv_size,__root,__comm) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __commstr[64]; \
+convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"%s\", \"sendsize\": %lu, \"recvsize\": %lu, \"root\": %u, \"comm\": \"0x%08x\"", EVENT_TRACE_PREFIX, __desc, __send_size, __recv_size, __root, __comm); \
+sprintf(__tmp, "%s \"%s\", \"sendsize\": %lu, \"recvsize\": %lu, \"root\": %u, \"comm\": \"%s\"", EVENT_TRACE_PREFIX, __desc, __send_size, __recv_size, __root, __commstr); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
 #define TIMER_EXIT_COLLECTIVE_EXCH_V_EVENT(__desc,__label,__mybytes,__stats,__root,__comm) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __commstr[64]; \
+convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"%s\", \"%s\": %lu, \"count\": %f, \"mean\": %f, \"min\": %f, \"max\": %f, \"sumsqr\": %f, \"root\": %u, \"comm\": \"0x%08x\"", \
-    EVENT_TRACE_PREFIX, __desc, __label, __mybytes, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __root, __comm); \
+sprintf(__tmp, "%s \"%s\", \"%s\": %lu, \"count\": %f, \"mean\": %f, \"min\": %f, \"max\": %f, \"sumsqr\": %f, \"root\": %u, \"comm\": \"%s\"", \
+    EVENT_TRACE_PREFIX, __desc, __label, __mybytes, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __root, __commstr); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
 #define TIMER_EXIT_COLLECTIVE_EXCH_AAV_EVENT(__desc,__stats1,__stats2,__comm) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __commstr[64]; \
+convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
 sprintf(__tmp, \
-    "%s \"%s\", \"sendcount\": %f, \"sendmean\": %f, \"sendmin\": %f, \"sendmax\": %f, \"sendstddev\": %f, \"recvcount\": %f, \"recvmean\": %f, \"recvmin\": %f, \"recvmax\": %f, \"recvsumsqr\": %f, \"comm\": \"0x%08x\"", \
+    "%s \"%s\", \"sendcount\": %f, \"sendmean\": %f, \"sendmin\": %f, \"sendmax\": %f, \"sendstddev\": %f, \"recvcount\": %f, \"recvmean\": %f, \"recvmin\": %f, \"recvmax\": %f, \"recvsumsqr\": %f, \"comm\": \"%s\"", \
     EVENT_TRACE_PREFIX, __desc, __stats1[0],__stats1[1],__stats1[2],__stats1[3],__stats1[4], \
-    __stats2[0],__stats2[1],__stats2[2],__stats2[3],__stats2[4], __comm); \
+    __stats2[0],__stats2[1],__stats2[2],__stats2[3],__stats2[4], __commstr); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
 #define TIMER_EXIT_COMM_SPLIT_EVENT(__comm,__color,__key,__comm_out) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __commstr[64]; \
+convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"MPI_Comm_split\", \"comm_in\": \"%p\", \"color\": %d, \"key\": %d, \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __comm,__color,__key,__comm_out); \
+sprintf(__tmp, "%s \"MPI_Comm_split\", \"comm_in\": \"%s\", \"color\": %d, \"key\": %d, \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __commstr,__color,__key,__comm_out); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
 #define TIMER_EXIT_COMM_DUP_EVENT(__comm,__comm_out) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __commstr[64]; \
+convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"MPI_Comm_dup\", \"comm_in\": \"%p\", \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __comm, __comm_out); \
+sprintf(__tmp, "%s \"MPI_Comm_dup\", \"comm_in\": \"%s\", \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __commstr, __comm_out); \
+Tau_plugin_trace_current_timer(__tmp); \
+}
+
+#define TIMER_EXIT_COMM_FREE_EVENT(__comm) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __commstr[64]; \
+convert_comm(__commstr, __comm); \
+char __tmp[1024]; \
+sprintf(__tmp, "%s \"MPI_Comm_free\", \"comm\": \"%s\"", EVENT_TRACE_PREFIX, __commstr); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
 #define TIMER_EXIT_COMM_CREATE_EVENT(__comm,__group,__comm_out) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __commstr[64]; \
+convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"MPI_Comm_create\", \"comm_in\": \"%p\", \"group\": \"%p\", \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __comm, __group, __comm_out); \
+sprintf(__tmp, "%s \"MPI_Comm_create\", \"comm_in\": \"%s\", \"group\": \"%p\", \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __commstr, __group, __comm_out); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
 #define TIMER_EXIT_COMM_GROUP_EVENT(__comm,__group_addr) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __commstr[64]; \
+convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"MPI_Comm_group\", \"comm\": \"%p\", \"group_addr\": \"%p\"", EVENT_TRACE_PREFIX, __comm, __group_addr); \
+sprintf(__tmp, "%s \"MPI_Comm_group\", \"comm\": \"%s\", \"group_addr\": \"%p\"", EVENT_TRACE_PREFIX, __commstr, __group_addr); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
@@ -270,22 +314,42 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 
 #define TIMER_EXIT_GROUP_DIFFERENCE_EVENT(__group1,__group2,__newgroup) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
-char __tmp[128]; \
+char __tmp[256]; \
 sprintf(__tmp, "%s \"MPI_Group_difference\", \"group1\": \"%p\", \"group2\": \"%p\", \"new_group\": \"%p\"", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
 #define TIMER_EXIT_GROUP_INTERSECTION_EVENT(__group1,__group2,__newgroup) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
-char __tmp[128]; \
+char __tmp[256]; \
 sprintf(__tmp, "%s \"MPI_Group_intersection\", \"group1\": \"%p\", \"group2\": \"%p\", \"new_group\": \"%p\"", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
 #define TIMER_EXIT_GROUP_UNION_EVENT(__group1,__group2,__newgroup) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
-char __tmp[128]; \
+char __tmp[256]; \
 sprintf(__tmp, "%s \"MPI_Group_union\", \"group1\": \"%p\", \"group2\": \"%p\", \"new_group\": \"%p\"", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
+Tau_plugin_trace_current_timer(__tmp); \
+}
+
+#define TIMER_EXIT_INTERCOMM_CREATE_EVENT(__local_comm, __local_leader, __peer_comm, __remote_leader, __tag, __comm_out) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __local_commstr[64]; \
+char __peer_commstr[64]; \
+convert_comm(__local_commstr, __local_comm); \
+convert_comm(__peer_commstr, __peer_comm); \
+char __tmp[256]; \
+sprintf(__tmp, "%s \"MPI_Intercomm_create\", \"local_comm\": \"%s\", \"local_leader\": \"%d\", \"peer_comm\": \"%s\", \"remote_leader\": \"%d\", \"tag\": \"%d\", \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __local_commstr, __local_leader, __peer_commstr, __remote_leader, __tag, __comm_out); \
+Tau_plugin_trace_current_timer(__tmp); \
+}
+
+#define TIMER_EXIT_INTERCOMM_MERGE_EVENT(__local_comm, __high, __comm_out) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
+char __local_commstr[64]; \
+convert_comm(__local_commstr, __local_comm); \
+char __tmp[256]; \
+sprintf(__tmp, "%s \"MPI_Intercomm_merge\", \"local_comm\": \"%s\", \"high\": \"%d\", \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __local_commstr, __high, __comm_out); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
@@ -295,7 +359,9 @@ static int __cart_dims = 1;
 void Tau_timer_exit_cart_create_event(MPI_Comm comm, int ndims, TAU_MPICH3_CONST int * dims, TAU_MPICH3_CONST int * periods, int reorder, MPI_Comm comm_out) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(ndims*22), sizeof(char)));
-    sprintf(tmp, "%s \"MPI_Cart_create\", \"comm\": \"%p\", \"ndims\": %d, \"dims\": [", EVENT_TRACE_PREFIX, comm,ndims);
+    char commstr[64];
+    convert_comm(commstr, comm);
+    sprintf(tmp, "%s \"MPI_Cart_create\", \"comm\": \"%s\", \"ndims\": %d, \"dims\": [", EVENT_TRACE_PREFIX, commstr, ndims);
     int x;
     __cart_dims = ndims;
     for (x = 0 ; x < ndims-1 ; x++ ) {
@@ -318,7 +384,9 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 void Tau_timer_exit_cart_coords_event(MPI_Comm comm, int rank, int maxdims, int * coords) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(maxdims*11), sizeof(char)));
-    sprintf(tmp, "%s \"MPI_Cart_coords\", \"comm\": \"%p\", \"rank\": %d, \"maxdims\": %d, \"coords\": [", EVENT_TRACE_PREFIX, comm,rank,maxdims);
+    char commstr[64];
+    convert_comm(commstr, comm);
+    sprintf(tmp, "%s \"MPI_Cart_coords\", \"comm\": \"%s\", \"rank\": %d, \"maxdims\": %d, \"coords\": [", EVENT_TRACE_PREFIX, commstr,rank,maxdims);
     int x;
     for (x = 0 ; x < maxdims-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, coords[x]);
@@ -336,7 +404,9 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 void Tau_timer_exit_cart_sub_event(MPI_Comm comm, TAU_MPICH3_CONST int * remains, MPI_Comm comm_out) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(__cart_dims*11), sizeof(char)));
-    sprintf(tmp, "%s \"MPI_Cart_sub\", \"comm\": \"%p\", \"remains\": [", EVENT_TRACE_PREFIX, comm);
+    char commstr[64];
+    convert_comm(commstr, comm);
+    sprintf(tmp, "%s \"MPI_Cart_sub\", \"comm\": \"%s\", \"remains\": [", EVENT_TRACE_PREFIX, commstr);
     int x;
     for (x = 0 ; x < __cart_dims-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, remains[x]);
@@ -1231,6 +1301,7 @@ MPI_Comm * comm;
 
   MPI_Comm silly =  *comm;
   returnVal = PMPI_Comm_free( &(silly) );
+  TIMER_EXIT_COMM_FREE_EVENT(*comm);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1728,6 +1799,7 @@ MPI_Comm * comm_out;
 
   TAU_TRACK_COMM(local_comm);
   returnVal = PMPI_Intercomm_create( local_comm, local_leader, peer_comm, remote_leader, tag, comm_out );
+  TIMER_EXIT_INTERCOMM_CREATE_EVENT(local_comm, local_leader, peer_comm, remote_leader, tag, *comm_out);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1746,6 +1818,7 @@ MPI_Comm * comm_out;
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Intercomm_merge( comm, high, comm_out );
+  TIMER_EXIT_INTERCOMM_MERGE_EVENT(comm, high, *comm_out);
 
   TAU_PROFILE_STOP(tautimer);
 
