@@ -630,7 +630,7 @@ void Tau_SOS_pack_current_timer(const char * event_name) {
     // get the current profiler
     tau::Profiler * p = Tau_get_current_profiler();
     // get the current time
-    double current[TAU_MAX_THREADS];
+    double current[TAU_MAX_METRICS];//TODO: DYNATHREAD. Can't initialize this to TAU_MAX_THREADS. TAU_MAX_METRICS may be insufficient.
     int tid = RtsLayer::myThread();
     RtsLayer::getUSecD(tid, current);
     // assume time is the first counter!

@@ -314,7 +314,7 @@ public:
     int counters;
     size_t num_counter_values;
     size_t num_comm_values;
-    timer_values_array_t* primer_stacks[TAU_MAX_THREADS];
+    std::vector<timer_values_array_t*> primer_stacks;//TODO: DYNAPROF
     std::vector<unsigned long>* step_of_events;
     std::vector<unsigned long> step_of_counters;
     std::vector<unsigned long> step_of_comms;
@@ -471,18 +471,22 @@ class adios {
         // This is an array (one per thread)
         // of vectors (one per timestamp)
         // of pairs (timestamp, values)...
-        timer_values_array_t timer_values_array[TAU_MAX_THREADS];
-        counter_values_array_t counter_values_array[TAU_MAX_THREADS];
-        comm_values_array_t comm_values_array[TAU_MAX_THREADS];
-        // provenance history containers
-        timer_values_array_t current_primer_stack[TAU_MAX_THREADS];
         circular_buffer step_history;
+        struct adiosThreadwise{
+            timer_values_array_t timer_values_array;
+            counter_values_array_t counter_values_array;
+            comm_values_array_t comm_values_array;
+        // provenance history containers
+            timer_values_array_t current_primer_stack;
+        
         // for validation
 #ifdef DO_VALIDATION
-        std::stack<unsigned long> timer_stack[TAU_MAX_THREADS];
-        std::stack<unsigned long> pre_timer_stack[TAU_MAX_THREADS];
-        unsigned long previous_timestamp[TAU_MAX_THREADS];
+            std::stack<unsigned long> timer_stack;
+            std::stack<unsigned long> pre_timer_stack;
+            unsigned long previous_timestamp;
 #endif
+        };
+        vector<adiosThreadwise*> adiosThreadwiseList;
 };
 
 void adios::initialize() {
@@ -608,22 +612,26 @@ void adios::write_variables(void)
 
     /* sort into one big vector from all threads */
     // make a list from the first thread of data - copying the data in!
+    if(adiosThreadwiseList.size()==0){adiosThreadwiseList.push_back(new adiosThreadwise());}
     std::list<std::pair<unsigned long, std::array<unsigned long, 5> > >
-        merged_timers(timer_values_array[0].begin(),
-                      timer_values_array[0].end());
+        merged_timers(adiosThreadwiseList[0]->timer_values_array.begin(),
+                      adiosThreadwiseList[0]->timer_values_array.end());
     // this clear will empty the vector and destroy the objects!
-    timer_values_array[0].clear();
+    adiosThreadwiseList[0]->timer_values_array.clear();
     // copy the current primer stack
-    this_step->primer_stacks[0] = new timer_values_array_t(current_primer_stack[0]);
+    if(this_step->primer_stacks.size()==0){this_step->primer_stacks.push_back(0);}
+    this_step->primer_stacks[0] = new timer_values_array_t(adiosThreadwiseList[0]->current_primer_stack);
     for (int t = 1 ; t < threads ; t++) {
         // make a list from the next thread of data - copying the data in!
+        if(adiosThreadwiseList.size()<=t){adiosThreadwiseList.push_back(new adiosThreadwise());}
         std::list<std::pair<unsigned long, std::array<unsigned long, 5> > >
-            next_thread(timer_values_array[t].begin(),
-                        timer_values_array[t].end());
+            next_thread(adiosThreadwiseList[t]->timer_values_array.begin(),
+                        adiosThreadwiseList[t]->timer_values_array.end());
         // this clear will empty the vector and destroy the objects!
-        timer_values_array[t].clear();
+        adiosThreadwiseList[t]->timer_values_array.clear();
         // copy the current primer stack
-        this_step->primer_stacks[t] = new timer_values_array_t(current_primer_stack[t]);
+        if(this_step->primer_stacks.size()<=t){this_step->primer_stacks.resize(t+1);}
+        this_step->primer_stacks[t] = new timer_values_array_t(adiosThreadwiseList[t]->current_primer_stack);
         // start at the head of the list
         auto it = merged_timers.begin();
         // start at the head of the vector
@@ -661,21 +669,21 @@ void adios::write_variables(void)
 #ifdef DO_VALIDATION
         if (it->second[3] == 0) {
             // on entry
-            timer_stack[it->second[2]].push(it->second[4]);
+            adiosThreadwiseList[it->second[2]]->timer_stack.push(it->second[4]);
         } else if (it->second[3] == 1) {
             // on exit
-            if (timer_stack[it->second[2]].size() == 0) {
+            if (adiosThreadwiseList[it->second[2]]->timer_stack.size() == 0) {
                 fprintf(stderr, "Writing: Stack violation.\n");
                 fprintf(stderr, "Writing: Stack for thread %lu is empty, timestamp %lu.\n",
                     it->second[2], it->first);
             } else {
-                if (timer_stack[it->second[2]].top() != it->second[4]) {
+                if (adiosThreadwiseList[it->second[2]]->timer_stack.top() != it->second[4]) {
                     fprintf(stderr, "Writing: Stack violation.\n");
                     fprintf(stderr, "Writing: thread %lu, %lu != %lu, timestamp %lu\n",
-                        it->second[2], timer_stack[it->second[2]].top(),
+                        it->second[2], adiosThreadwiseList[it->second[2]]->timer_stack.top(),
                         it->second[4], it->first);
                 }
-                timer_stack[it->second[2]].pop();
+                adiosThreadwiseList[it->second[2]]->timer_stack.pop();
             }
         }
 #endif
@@ -685,11 +693,11 @@ void adios::write_variables(void)
 
     /* sort into one big vector from all threads */
     std::vector<std::pair<unsigned long, std::array<unsigned long, 5> > >
-        merged_counters(counter_values_array[0]);
+        merged_counters(adiosThreadwiseList[0]->counter_values_array);
     for (int t = 1 ; t < threads ; t++) {
         merged_counters.insert(merged_counters.end(),
-            counter_values_array[t].begin(),
-            counter_values_array[t].end());
+            adiosThreadwiseList[t]->counter_values_array.begin(),
+            adiosThreadwiseList[t]->counter_values_array.end());
     }
     std::sort(merged_counters.begin(), merged_counters.end());
     size_t num_counter_values = merged_counters.size();
@@ -708,18 +716,18 @@ void adios::write_variables(void)
     }
 
     for (int t = 0 ; t < threads ; t++) {
-        counter_values_array[t].clear();
+        adiosThreadwiseList[t]->counter_values_array.clear();
     }
 
     //printf("%d %s %d\n", global_comm_rank, __func__, __LINE__); fflush(stdout);
 
     /* sort into one big vector from all threads */
     std::vector<std::pair<unsigned long, std::array<unsigned long, 7> > >
-        merged_comms(comm_values_array[0]);
+        merged_comms(adiosThreadwiseList[0]->comm_values_array);
     for (int t = 1 ; t < threads ; t++) {
         merged_comms.insert(merged_comms.end(),
-            comm_values_array[t].begin(),
-            comm_values_array[t].end());
+            adiosThreadwiseList[t]->comm_values_array.begin(),
+            adiosThreadwiseList[t]->comm_values_array.end());
     }
     std::sort(merged_comms.begin(), merged_comms.end());
     size_t num_comm_values = merged_comms.size();
@@ -740,7 +748,7 @@ void adios::write_variables(void)
     }
 
     for (int t = 0 ; t < threads ; t++) {
-        comm_values_array[t].clear();
+        adiosThreadwiseList[t]->comm_values_array.clear();
     }
 
     // Need to release the "dumping" flag so that ADIOS2 calls that
@@ -1154,7 +1162,7 @@ int Tau_plugin_adios2_send(Tau_plugin_event_send_data_t* data) {
     /* Release the lock, we've got control */
     pthread_mutex_unlock(&_my_mutex);
 
-    auto &tmp = my_adios->comm_values_array[data->tid];
+    auto &tmp = my_adios->adiosThreadwiseList[data->tid]->comm_values_array;
     tmp.push_back(
         std::make_pair(
             data->timestamp,
@@ -1190,7 +1198,7 @@ int Tau_plugin_adios2_recv(Tau_plugin_event_recv_data_t* data) {
     /* Release the lock, we've got control */
     pthread_mutex_unlock(&_my_mutex);
 
-    auto &tmp = my_adios->comm_values_array[data->tid];
+    auto &tmp = my_adios->adiosThreadwiseList[data->tid]->comm_values_array;
     tmp.push_back(
         std::make_pair(
             data->timestamp,
@@ -1232,16 +1240,16 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
     /* Release the lock, we've got control */
     pthread_mutex_unlock(&_my_mutex);
 
-    auto &tmp = my_adios->timer_values_array[data->tid];
+    auto &tmp = my_adios->adiosThreadwiseList[data->tid]->timer_values_array;
 #ifdef DO_VALIDATION
-    unsigned long ts = my_adios->previous_timestamp[data->tid] > data->timestamp ? my_adios->previous_timestamp[data->tid] + 1 : data->timestamp;
-    my_adios->previous_timestamp[data->tid] = ts;
-    my_adios->pre_timer_stack[tmparray[2]].push(tmparray[4]);
+    unsigned long ts = my_adios->adiosThreadwiseList[data->tid]->previous_timestamp > data->timestamp ? my_adios->adiosThreadwiseList[data->tid]->previous_timestamp + 1 : data->timestamp;
+    my_adios->adiosThreadwiseList[data->tid]->previous_timestamp = ts;
+    my_adios->adiosThreadwiseList[tmparray[2]]->pre_timer_stack.push(tmparray[4]);
 #else
     unsigned long ts = data->timestamp;
 #endif
     // push this timer on the stack for provenance output, make a copy
-    my_adios->current_primer_stack[tmparray[2]].push_back(std::make_pair(ts, tmparray));
+    my_adios->adiosThreadwiseList[tmparray[2]]->current_primer_stack.push_back(std::make_pair(ts, tmparray));
     tmp.push_back(
         std::make_pair(
             ts,
@@ -1280,28 +1288,28 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     /* Release the lock, we've got control */
     pthread_mutex_unlock(&_my_mutex);
 
-    auto &tmp = my_adios->timer_values_array[data->tid];
+    auto &tmp = my_adios->adiosThreadwiseList[data->tid]->timer_values_array;
 #ifdef DO_VALIDATION
-    unsigned long ts = my_adios->previous_timestamp[data->tid] >
-        data->timestamp ? my_adios->previous_timestamp[data->tid] + 1 :
+    unsigned long ts = my_adios->adiosThreadwiseList[data->tid]->previous_timestamp >
+        data->timestamp ? my_adios->adiosThreadwiseList[data->tid]->previous_timestamp + 1 :
             data->timestamp;
-    my_adios->previous_timestamp[data->tid] = ts;
+    my_adios->adiosThreadwiseList[data->tid]->previous_timestamp = ts;
     //if (my_adios->pre_timer_stack[tmparray[2]].top() != tmparray[4]) {
-    if (my_adios->pre_timer_stack[tmparray[2]].size() == 0) {
+    if (my_adios->adiosThreadwiseList[tmparray[2]]->pre_timer_stack.size() == 0) {
       fprintf(stderr, "Pre: Stack violation. %s\n", data->timer_name);
       fprintf(stderr, "Pre: Stack for thread %lu is empty, timestamp %lu.\n",
         tmparray[2], data->timestamp);
       active_threads--;
       return 0;
     } else {
-        unsigned long lhs = (unsigned long)(my_adios->pre_timer_stack[data->tid].top());
+        unsigned long lhs = (unsigned long)(my_adios->adiosThreadwiseList[data->tid]->pre_timer_stack.top());
         unsigned long rhs = (unsigned long)(timer_index);
         if (lhs != rhs) {
             fprintf(stderr, "Pre: Stack violation. %s\n", data->timer_name);
             fprintf(stderr, "Pre: thread %lu, %lu != %lu, timestamp %lu\n",
                 tmparray[2], lhs, rhs, data->timestamp);
         }
-        my_adios->pre_timer_stack[tmparray[2]].pop();
+        my_adios->adiosThreadwiseList[tmparray[2]]->pre_timer_stack.pop();
     }
 #else
     unsigned long ts = data->timestamp;
@@ -1309,8 +1317,8 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     // pop this timer off the stack for provenance output
 	// For some reason, at the end of execution we are popping too many.
 	// This is a safety check, but not great for performance.
-	if (my_adios->current_primer_stack[tmparray[2]].size() > 0) {
-        my_adios->current_primer_stack[tmparray[2]].pop_back();
+	if (my_adios->adiosThreadwiseList[tmparray[2]]->current_primer_stack.size() > 0) {
+        my_adios->adiosThreadwiseList[tmparray[2]]->current_primer_stack.pop_back();
 	}
     tmp.push_back(
         std::make_pair(
@@ -1350,7 +1358,7 @@ int Tau_plugin_adios2_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data_
     /* Release the lock, we've got control */
     pthread_mutex_unlock(&_my_mutex);
 
-    auto &tmp = my_adios->counter_values_array[data->tid];
+    auto &tmp = my_adios->adiosThreadwiseList[data->tid]->counter_values_array;
     tmp.push_back(
         std::make_pair(
             data->timestamp,
