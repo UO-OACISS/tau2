@@ -2056,6 +2056,10 @@ int  MPI_Finalize(  )
    }
 #endif
 
+  if (TauEnv_get_track_memory_footprint()) {
+    TAU_TRACK_MEMORY_FOOTPRINT_HERE();
+  }
+
   returnVal = PMPI_Finalize();
 
   TAU_PROFILE_STOP(tautimer);
