@@ -49,6 +49,7 @@
 #define TAU_ADIOS2_FILENAME "tau-metrics"
 #define TAU_ADIOS2_ONE_FILE_DEFAULT false
 #define TAU_ADIOS2_ENGINE "BPFile"
+#define TAU_ADIOS2_CONFIG_FILE_DEFAULT "./adios2.xml"
 
 // This will enable some checking to make sure we don't have call stack violations.
 //#define DO_VALIDATION
@@ -112,7 +113,8 @@ class plugin_options {
             env_use_selection(TAU_ADIOS2_USE_SELECTION_DEFAULT),
             env_filename(TAU_ADIOS2_FILENAME),
             env_one_file(TAU_ADIOS2_ONE_FILE_DEFAULT),
-            env_engine(TAU_ADIOS2_ENGINE)
+            env_engine(TAU_ADIOS2_ENGINE),
+            env_config_file(nullptr)
             {}
     public:
         int env_periodic;
@@ -122,6 +124,7 @@ class plugin_options {
         std::string env_filename;
         int env_one_file;
         std::string env_engine;
+        char * env_config_file;
         std::set<std::string> included_timers;
         std::set<std::string> excluded_timers;
         std::set<std::string> included_timers_with_wildcards;
@@ -208,6 +211,18 @@ void Tau_ADIOS2_parse_environment_variables(void) {
     tmp = getenv("TAU_ADIOS2_ENGINE");
     if (tmp != NULL) {
       thePluginOptions().env_engine = strdup(tmp);
+    }
+    tmp = getenv("TAU_ADIOS2_CONFIG_FILE");
+    if (tmp != NULL) {
+      thePluginOptions().env_config_file = strdup(tmp);
+    } else {
+      if( access(TAU_ADIOS2_CONFIG_FILE_DEFAULT, F_OK ) != -1 ) {
+          // file exists
+          thePluginOptions().env_config_file = strdup(TAU_ADIOS2_CONFIG_FILE_DEFAULT);
+      } else {
+          // file doesn't exist
+          thePluginOptions().env_config_file = nullptr;
+      }
     }
 }
 
@@ -499,24 +514,36 @@ void adios::initialize() {
         PMPI_Comm_dup(MPI_COMM_SELF, &adios_comm);
     }
     Tau_global_incr_insideTAU();
-    ad = adios2::ADIOS(adios_comm, true);
+    if (thePluginOptions().env_config_file != nullptr) {
+        ad = adios2::ADIOS(thePluginOptions().env_config_file, adios_comm, true);
+    } else {
+        ad = adios2::ADIOS(adios_comm, true);
+    }
 #else
     /** ADIOS class factory of IO class objects, DebugON is recommended */
-    ad = adios2::ADIOS(true);
+    if (thePluginOptions().env_config_file != nullptr) {
+        ad = adios2::ADIOS(thePluginOptions().env_config_file, true);
+    } else {
+        ad = adios2::ADIOS(true);
+    }
 #endif
     /*** IO class object: settings and factory of Settings: Variables,
      * Parameters, Transports, and Execution: Engines */
     _bpIO = ad.DeclareIO("TAU trace data");
-    // if not defined by user, we can change the default settings
-    // BPFile is the default engine
-    _bpIO.SetEngine(thePluginOptions().env_engine);
-    // bpIO.SetParameters({{"num_threads", "2"}});
-    // don't wait on readers to connect
-    _bpIO.SetParameters({{"RendezvousReaderCount", "0"}});
 
-    // ISO-POSIX file output is the default transport (called "File")
-    // Passing parameters to the transport
-    // _bpIO.AddTransport("File", {{"Library", "POSIX"}});
+    if (thePluginOptions().env_config_file == nullptr) {
+        // if not defined by user, we can change the default settings
+        // BPFile is the default engine
+        _bpIO.SetEngine(thePluginOptions().env_engine);
+        // bpIO.SetParameters({{"num_threads", "2"}});
+        // don't wait on readers to connect
+        _bpIO.SetParameters({{"RendezvousReaderCount", "0"}});
+        _bpIO.SetParameters({{"num_threads", "1"}});
+
+        // ISO-POSIX file output is the default transport (called "File")
+        // Passing parameters to the transport
+        _bpIO.AddTransport("File", {{"Library", "POSIX"}});
+    }
     Tau_global_decr_insideTAU();
 }
 
@@ -998,7 +1025,7 @@ int do_teardown(bool pre) {
     /* only complete this function once! */
     static bool done_once = false;
     if (done_once) { return 0; }
-    printf("%d:%d %s...\n", global_comm_rank, RtsLayer::myThread(), __func__); fflush(stdout);
+    TAU_VERBOSE("%d:%d %s...\n", global_comm_rank, RtsLayer::myThread(), __func__); fflush(stdout);
     /* Don't do these instructions more than once */
     done_once = true;
     Tau_ADIOS2_stop_worker();
@@ -1033,7 +1060,7 @@ int do_teardown(bool pre) {
     }
 #if TAU_MPI
     /* Don't let any processes exit early - it could terminate our processing. */
-    printf("%d TAU ADIOS2 plugin Exiting\n", global_comm_rank);
+    TAU_VERBOSE("%d TAU ADIOS2 plugin Exiting\n", global_comm_rank);
     PMPI_Barrier(MPI_COMM_WORLD);
 #endif
     return 0;
