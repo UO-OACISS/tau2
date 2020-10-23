@@ -41,6 +41,9 @@
 #include <signal.h>
 #include <unistd.h>
 
+// get program name
+#include <errno.h>
+
 #define CONVERT_TO_USEC 1.0/1000000.0 // hopefully the compiler will precompute this.
 #define TAU_ADIOS2_PERIODIC_DEFAULT false
 #define TAU_ADIOS2_PERIOD_DEFAULT 2000000 // microseconds
@@ -88,19 +91,17 @@ char *_program_path()
 #if defined(__APPLE__)
     return NULL;
 #else
-    char *path = (char*)malloc(PATH_MAX);
-    if (path != NULL) {
-        if (readlink("/proc/self/exe", path, PATH_MAX) == -1) {
-            free(path);
-            path = NULL;
-        }
-        std::string tmp(path);
-        size_t i = tmp.rfind('/', tmp.length());
-        if (i != string::npos) {
-            sprintf(path, "%s", tmp.substr(i+1, tmp.length() - i).c_str());
-        }
+    char path[PATH_MAX];
+    if (readlink("/proc/self/exe", path, PATH_MAX) == -1) {
+        return NULL;
     }
-    return path;
+    char *executable = (char*)calloc(PATH_MAX, sizeof(char));
+    std::string tmp(path);
+    size_t i = tmp.rfind('/', tmp.length());
+    if (i != string::npos) {
+        sprintf(executable, "%s", tmp.substr(i+1, tmp.length() - i).c_str());
+    }
+    return executable;
 #endif
 }
 
@@ -114,7 +115,7 @@ class plugin_options {
             env_filename(TAU_ADIOS2_FILENAME),
             env_one_file(TAU_ADIOS2_ONE_FILE_DEFAULT),
             env_engine(TAU_ADIOS2_ENGINE),
-            env_config_file(nullptr)
+            env_config_file("")
             {}
     public:
         int env_periodic;
@@ -124,7 +125,7 @@ class plugin_options {
         std::string env_filename;
         int env_one_file;
         std::string env_engine;
-        char * env_config_file;
+        std::string env_config_file;
         std::set<std::string> included_timers;
         std::set<std::string> excluded_timers;
         std::set<std::string> included_timers_with_wildcards;
@@ -221,7 +222,7 @@ void Tau_ADIOS2_parse_environment_variables(void) {
           thePluginOptions().env_config_file = strdup(TAU_ADIOS2_CONFIG_FILE_DEFAULT);
       } else {
           // file doesn't exist
-          thePluginOptions().env_config_file = nullptr;
+          thePluginOptions().env_config_file = "";
       }
     }
 }
@@ -514,14 +515,14 @@ void adios::initialize() {
         PMPI_Comm_dup(MPI_COMM_SELF, &adios_comm);
     }
     Tau_global_incr_insideTAU();
-    if (thePluginOptions().env_config_file != nullptr) {
+    if (thePluginOptions().env_config_file != "") {
         ad = adios2::ADIOS(thePluginOptions().env_config_file, adios_comm, true);
     } else {
         ad = adios2::ADIOS(adios_comm, true);
     }
 #else
     /** ADIOS class factory of IO class objects, DebugON is recommended */
-    if (thePluginOptions().env_config_file != nullptr) {
+    if (thePluginOptions().env_config_file != "") {
         ad = adios2::ADIOS(thePluginOptions().env_config_file, true);
     } else {
         ad = adios2::ADIOS(true);
@@ -531,7 +532,7 @@ void adios::initialize() {
      * Parameters, Transports, and Execution: Engines */
     _bpIO = ad.DeclareIO("TAU trace data");
 
-    if (thePluginOptions().env_config_file == nullptr) {
+    if (thePluginOptions().env_config_file == "") {
         // if not defined by user, we can change the default settings
         // BPFile is the default engine
         _bpIO.SetEngine(thePluginOptions().env_engine);
@@ -578,7 +579,7 @@ void adios::open() {
             ss << "-" << global_comm_rank;
         }
         ss << ".bp";
-        TAU_VERBOSE("Writing %s\n", ss.str().c_str());
+        //printf("Writing %s\n", ss.str().c_str());
         bpWriter = _bpIO.Open(ss.str(), adios2::Mode::Write);
         opened = true;
         Tau_global_decr_insideTAU();
