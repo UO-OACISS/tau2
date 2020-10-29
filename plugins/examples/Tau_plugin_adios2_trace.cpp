@@ -1269,7 +1269,8 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
     active_threads++;
     /* Release the lock, we've got control */
     pthread_mutex_unlock(&_my_mutex);
-
+    
+    while(my_adios->adiosThreadwiseList.size()<=data->tid){my_adios->adiosThreadwiseList.push_back(new tau_plugin::adios::adiosThreadwise());}
     auto &tmp = my_adios->adiosThreadwiseList[data->tid]->timer_values_array;
 #ifdef DO_VALIDATION
     unsigned long ts = my_adios->adiosThreadwiseList[data->tid]->previous_timestamp > data->timestamp ? 
