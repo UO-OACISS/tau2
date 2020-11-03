@@ -111,6 +111,8 @@ using namespace std;
 // Important for Porting to other platforms and frameworks.
 /////////////////////////////////////////////////////////////////////////
 
+std::mutex RtsLayer::DBVectorMutex;
+
 /////////////////////////////////////////////////////////////////////////
 TauGroup_t& RtsLayer::TheProfileMask(void) { 
   // to avoid initialization problems of non-local static variables

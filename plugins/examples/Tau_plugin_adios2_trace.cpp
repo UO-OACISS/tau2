@@ -584,7 +584,8 @@ void adios::open() {
         }
         ss << ".bp";
         //printf("Writing %s\n", ss.str().c_str());
-        bpWriter = _bpIO.Open(ss.str(), adios2::Mode::Write);
+        std::string tmp{ss.str()};
+        bpWriter = _bpIO.Open(tmp, adios2::Mode::Write);
         opened = true;
         Tau_global_decr_insideTAU();
     }

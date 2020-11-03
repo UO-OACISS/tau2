@@ -16,7 +16,7 @@
 
 
 //////////////////////////////////////////////////////////////////////
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 
 #include <cstdio>
@@ -36,8 +36,8 @@
 #endif
 #include <errno.h>
 #ifdef __PIN__
-void *pvalloc(size_t size) { 
-   return malloc(size); 
+void *pvalloc(size_t size) {
+   return malloc(size);
 }
 #endif /* __PIN__ */
 
@@ -703,7 +703,7 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TriggerHeapMemoryUsageEvent() {
   TAU_REGISTER_EVENT(evt, "Heap Memory Used (KB)");
-  /* Make the measurement on thread 0, because we are 
+  /* Make the measurement on thread 0, because we are
    * recording the heap for the process. */
   Tau_userevent_thread(evt, Tau_max_RSS(), 0);
 }
@@ -1731,7 +1731,7 @@ else {
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_open_status(void) {
 
-#ifndef TAU_WINDOWS 
+#ifndef TAU_WINDOWS
   int fd = open ("/proc/self/status", O_RDONLY);
 #else
   int fd = -1;
@@ -1745,11 +1745,12 @@ extern "C" int Tau_open_status(void) {
 }
 
 //////////////////////////////////////////////////////////////////////
-// Tau_read_status returns the VmRSS and VmHWM (high water mark of 
+// Tau_read_status returns the VmRSS and VmHWM (high water mark of
 // RSS or resident set size) to give an accurate idea of the memory
 // footprint of the program. It gets this from parsing /proc/self/status
 //////////////////////////////////////////////////////////////////////
-extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm) {
+extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm,
+    long long * threads, long long * nvswitch, long long * vswitch) {
   char buf[2048];
   int ret, i, j, bytesread;
   memset(buf, 0, 2048);
@@ -1789,6 +1790,39 @@ extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm) {
         }
       break;
     }
+   /* Search for Threads for total thread count from /proc/self/status */
+    if (buf[i] == '\n' && buf[i+1] == 'T' && buf[i+2] == 'h' && buf[i+3] == 'r' && buf[i+4] == 'e' && buf[i+5] == 'a' && buf[i+6] == 'd' && buf[i+7] == 's' && buf[i+8] == ':') {
+        for (j = 9 ; j+i < bytesread ; j++) {
+            if (buf[i+j] != ' ') {
+                sscanf(&buf[i+j], "%lld", threads);
+                //printf("Threads: %lld\n", *threads);
+                break;
+            }
+        }
+      break;
+    }
+   /* Search for voluntary_ctxt_switches for total thread count from /proc/self/status */
+    if (buf[i] == '\n' && buf[i+1] == 'v' && buf[i+2] == 'o' && buf[i+3] == 'l' && buf[i+4] == 'u' && buf[i+5] == 'n' && buf[i+6] == 't' && buf[i+7] == 'a' && buf[i+8] == 'r') {
+        for (j = (strlen("voluntary_ctxt_switches:")+1) ; j+i < bytesread ; j++) {
+            if (buf[i+j] != ' ') {
+                sscanf(&buf[i+j], "%lld", threads);
+                //printf("voluntary_ctxt_switches: %lld\n", *threads);
+                break;
+            }
+        }
+      break;
+    }
+   /* Search for nonvoluntary_ctxt_switches for total thread count from /proc/self/status */
+    if (buf[i] == '\n' && buf[i+1] == 'n' && buf[i+2] == 'o' && buf[i+3] == 'n' && buf[i+4] == 'v' && buf[i+5] == 'o' && buf[i+6] == 'l' && buf[i+7] == 'u' && buf[i+8] == 'n') {
+        for (j = (strlen("nonvoluntary_ctxt_switches:")+1) ; j+i < bytesread ; j++) {
+            if (buf[i+j] != ' ') {
+                sscanf(&buf[i+j], "%lld", threads);
+                //printf("nonvoluntary_ctxt_switches: %lld\n", *threads);
+                break;
+            }
+        }
+      break;
+    }
   }
   return ret;
 }
@@ -1806,20 +1840,26 @@ extern "C" int Tau_close_status(int fd) {
 }
 
 //////////////////////////////////////////////////////////////////////
-// Tau_trigger_memory_rss_hwm triggers resident memory size and high water 
+// Tau_trigger_memory_rss_hwm triggers resident memory size and high water
 // mark events
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
   static int fd=Tau_open_status();
   if (fd == -1) return 0; // failure
 
-  long long vmrss, vmhwm; 
+  long long vmrss, vmhwm, threads, nvswitch, vswitch;
   TAU_REGISTER_CONTEXT_EVENT(proc_vmhwm, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
   TAU_REGISTER_CONTEXT_EVENT(proc_rss, "Memory Footprint (VmRSS) (KB)");
+  TAU_REGISTER_CONTEXT_EVENT(stat_threads, "Threads");
+  TAU_REGISTER_CONTEXT_EVENT(stat_voluntary, "Voluntary Context Switches");
+  TAU_REGISTER_CONTEXT_EVENT(stat_nonvoluntary, "Non-voluntary Context Switches");
   TAU_REGISTER_EVENT(proc_vmhwm_no_context, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
   TAU_REGISTER_EVENT(proc_rss_no_context, "Memory Footprint (VmRSS) (KB)");
+  TAU_REGISTER_EVENT(stat_threads_no_context, "Threads");
+  TAU_REGISTER_EVENT(stat_voluntary_no_context, "Voluntary Context Switches");
+  TAU_REGISTER_EVENT(stat_nonvoluntary_no_context, "Non-voluntary Context Switches");
 
-  Tau_read_status(fd, &vmrss, &vmhwm);
+  Tau_read_status(fd, &vmrss, &vmhwm, &threads, &nvswitch, &vswitch);
 
   if (vmrss > 0) {
     if (use_context) {
@@ -1833,6 +1873,30 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
         TAU_CONTEXT_EVENT(proc_vmhwm, (double) vmhwm);
     } else {
         Tau_userevent_thread(proc_vmhwm_no_context, (double) vmhwm, 0);
+    }
+  }
+
+  if (threads > 0) {
+    if (use_context) {
+        TAU_CONTEXT_EVENT(stat_threads, (double) threads);
+    } else {
+        Tau_userevent_thread(stat_threads_no_context, (double) threads, 0);
+    }
+  }
+
+  if (vswitch > 0) {
+    if (use_context) {
+        TAU_CONTEXT_EVENT(stat_voluntary, (double) vswitch);
+    } else {
+        Tau_userevent_thread(stat_voluntary_no_context, (double) vswitch, 0);
+    }
+  }
+
+  if (nvswitch > 0) {
+    if (use_context) {
+        TAU_CONTEXT_EVENT(stat_nonvoluntary, (double) nvswitch);
+    } else {
+        Tau_userevent_thread(stat_nonvoluntary_no_context, (double) nvswitch, 0);
     }
   }
 
@@ -1885,19 +1949,19 @@ typedef std::deque<alloc_entry_t> alloc_stack_t;
 #if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER) // Intel compiler doesn't like __thread for non-POD object
 // thread local storage
 static alloc_stack_t * tau_alloc_stack(void)
-{ 
+{
   static __thread alloc_stack_t * alloc_stack_tls = NULL;
   if(alloc_stack_tls == NULL) {
     alloc_stack_tls = new alloc_stack_t();
   }
-  return alloc_stack_tls; 
+  return alloc_stack_tls;
 }
 #elif defined(TAU_USE_DTLS) && !defined(__INTEL_COMPILER)
 // thread local storage
 static alloc_stack_t * tau_alloc_stack(void)
-{ 
-  static __declspec(thread) alloc_stack_t alloc_stack_tls; 
-  return &alloc_stack_tls; 
+{
+  static __declspec(thread) alloc_stack_t alloc_stack_tls;
+  return &alloc_stack_tls;
 }
 #else
 // worst case - array of flags, one for each thread.
@@ -2118,5 +2182,5 @@ size_t strxfrm(char *dest, const char *src, size_t n);
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: amorris $
  * $Revision: 1.33 $   $Date: 2010/01/27 00:47:51 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.33 2010/01/27 00:47:51 amorris Exp $ 
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.33 2010/01/27 00:47:51 amorris Exp $
  ***************************************************************************/

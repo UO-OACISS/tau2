@@ -105,10 +105,11 @@ struct TAULocks{
     static LockList threadList;
     return threadList;
 }
-  static void checkLockVector(int tid){
+  static std::mutex DBVectorMutex;
+  static inline void checkLockVector(int tid){
       if(TheLockList().size()<=tid){
       static std::mutex DBVectorMutex;
-      std::lock_guard<std::mutex> guard(DBVectorMutex);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
       while(TheLockList().size()<=tid){
           TheLockList().push_back(new TAULocks());
       }
@@ -121,41 +122,49 @@ struct TAULocks{
 
   inline static int getDBLock(int tid){
       checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
     return TheLockList()[tid]->lockDBCount;
   }
 
   inline static void setDBLock(int tid, int value){
       checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
     TheLockList()[tid]->lockDBCount=value;
   }
 
   inline static void incrementDBLock(int tid){
       checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
     TheLockList()[tid]->lockDBCount++;
   }
 
   inline static void decrementDBLock(int tid){
       checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
     TheLockList()[tid]->lockDBCount--;
   }
 
   inline static int getEnvLock(int tid){
       checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
     return TheLockList()[tid]->lockEnvCount;
   }
 
   inline static void setEnvLock(int tid, int value){
       checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
     TheLockList()[tid]->lockEnvCount=value;
   }
   
   inline static void incrementEnvLock(int tid){
       checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
     TheLockList()[tid]->lockEnvCount++;
   }
 
   inline static void decrementEnvLock(int tid){
       checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
     TheLockList()[tid]->lockEnvCount--;
   }
 
