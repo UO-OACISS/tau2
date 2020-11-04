@@ -1698,12 +1698,17 @@ if [ $numFiles == 0 ]; then
 
     if [ $optFujitsu == $TRUE ]; then
       oldLinkCmd=`echo $linkCmd`
-      linkCmd=`echo $linkCmd | sed -e 's/frtpx/FCCpx/g'`
+      linkCmd=`echo $linkCmd | sed -e 's/frt/FCC/g'`
       if [ "x$linkCmd" != "x$oldLinkCmd" ] ; then
-        echoIfDebug "We changed the linker to use FCCpx compilers. We need to add --linkfortran to the link line"
-        linkCmd="$linkCmd --linkfortran -lmpi_f90 -lmpi_f77"
+        echoIfDebug "We changed the linker to use FCC compilers. We need to add --linkfortran to the link line"
+	if [ `uname -m ` == aarch64 ]; then
+          linkCmd="$linkCmd --linkfortran "
+        else
+          # Old K computer Fujitsu - Sparc
+          linkCmd="$linkCmd --linkfortran -lmpi_f90 -lmpi_f77"
+	fi 
       fi
-      linkCmd=`echo $linkCmd | sed -e 's/fccpx/FCCpx/g'`
+      linkCmd=`echo $linkCmd | sed -e 's/fcc/FCC/g'`
     fi
 
     evalWithDebugMessage "$linkCmd" "Linking with TAU Options"
