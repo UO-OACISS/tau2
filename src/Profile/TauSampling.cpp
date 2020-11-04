@@ -1977,6 +1977,9 @@ extern "C" void Tau_sampling_defer_init(void) {
 #else
     const pid_t pid = JNIThreadLayer::GetThreadSid();
 #endif
+#ifdef TAU_FX_AARCH64
+    const pid_t pid = syscall(__NR_gettid);
+#endif 
 #else
     fprintf(stderr, "TAU: WARNING: Thread %d was started before MPI_Init, but this system "
             "doesn't support timer_create. Thread %d will not be sampled!\n", tid, tid);
