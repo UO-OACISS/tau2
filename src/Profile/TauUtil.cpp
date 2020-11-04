@@ -205,7 +205,7 @@ extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * res
 }
 
 extern "C" size_t Tau_util_return_hash_of_string(const char * input) {
-#if defined(__clang__) // && defined(__APPLE__)
+#if (defined(__clang__) || defined (TAU_FX_AARCH64) ) // && defined(__APPLE__)
   std::hash<std::string> hash_fn;
 #else
   std::tr1::hash<std::string> hash_fn;
