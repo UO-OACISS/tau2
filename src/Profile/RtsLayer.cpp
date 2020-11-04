@@ -138,6 +138,8 @@ long RtsLayer::GenerateUniqueId(void) {
   return ++UniqueId;
 }
 
+void Tau_set_usesMPI(int value);
+
 int Tau_test_for_MPI_comm_rank() {
 #ifdef TAU_SETNODE0
     int commrank = 0;
@@ -154,6 +156,7 @@ int Tau_test_for_MPI_comm_rank() {
 	if (tmpvar != NULL) {
         commrank = atoi(tmpvar);
 		// printf("Changing MPICH rank to %lu\n", commrank);
+        Tau_set_usesMPI(1);
 		return commrank;
     }
 	// OpenMPI, Spectrum
@@ -161,18 +164,21 @@ int Tau_test_for_MPI_comm_rank() {
 	if (tmpvar != NULL) {
         commrank = atoi(tmpvar);
 		// printf("Changing openMPI rank to %lu\n", commrank);
+        Tau_set_usesMPI(1);
 		return commrank;
     }
 	// PBS/Torque
     tmpvar = getenv("PBS_TASKNUM");
 	if (tmpvar != NULL) {
         commrank = atoi(tmpvar);
+        Tau_set_usesMPI(1);
 		return commrank;
     }
 	// Slurm - last resort
     tmpvar = getenv("SLURM_PROCID");
 	if (tmpvar != NULL) {
         commrank = atoi(tmpvar);
+        Tau_set_usesMPI(1);
 		return commrank;
     }
 	return commrank;
