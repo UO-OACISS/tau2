@@ -91,15 +91,18 @@ char *_program_path()
 #if defined(__APPLE__)
     return NULL;
 #else
-    char path[PATH_MAX];
-    if (readlink("/proc/self/exe", path, PATH_MAX) == -1) {
+    char path[PATH_MAX] = {0};
+    int len = readlink("/proc/self/exe", path, PATH_MAX);
+    if (len == -1) {
         return NULL;
     }
+    // the string from readlink isn't null terminated!
+    path[len] = '\0';
     char *executable = (char*)calloc(PATH_MAX, sizeof(char));
     std::string tmp(path);
     size_t i = tmp.rfind('/', tmp.length());
     if (i != string::npos) {
-        sprintf(executable, "%s", tmp.substr(i+1, tmp.length() - i).c_str());
+        sprintf(executable, "%s", tmp.substr(i+1, ((tmp.length() - i) - 1)).c_str());
     }
     return executable;
 #endif

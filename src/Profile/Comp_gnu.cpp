@@ -538,6 +538,13 @@ void __pat_tp_func_return(const void *ea, const void *ra)
   __cyg_profile_func_exit((void *)ea, (void *)ra);
 }
 
+#ifdef TAU_FX_AARCH64
+int __cxa_thread_atexit(void (*func)(), void *obj,
+                                   void *dso_symbol) {
+  int __cxa_thread_atexit_impl(void (*)(), void *, void *);
+  return __cxa_thread_atexit_impl(func, obj, dso_symbol);
+}
+#endif /* TAU_FX_AARCH64 */
 }    // extern "C"
 
 #endif /* TAU_XLC */
