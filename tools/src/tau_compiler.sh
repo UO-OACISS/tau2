@@ -1698,7 +1698,7 @@ if [ $numFiles == 0 ]; then
 
     if [ $optFujitsu == $TRUE ]; then
       oldLinkCmd=`echo $linkCmd`
-      linkCmd=`echo $linkCmd | sed -e 's/frt/FCC/g'`
+      linkCmd=`echo $linkCmd | sed -e 's/^mpifrt/mpiFCC/' -e's/^frt/FCC/'`
       if [ "x$linkCmd" != "x$oldLinkCmd" ] ; then
         echoIfDebug "We changed the linker to use FCC compilers. We need to add --linkfortran to the link line"
 	if [ `uname -m ` == aarch64 ]; then
@@ -1708,7 +1708,7 @@ if [ $numFiles == 0 ]; then
           linkCmd="$linkCmd --linkfortran -lmpi_f90 -lmpi_f77"
 	fi 
       fi
-      linkCmd=`echo $linkCmd | sed -e 's/fcc/FCC/g'`
+      linkCmd=`echo $linkCmd | sed -e 's/^mpifcc/mpiFCC/' -e 's/^fcc/FCC/'`
     fi
 
     evalWithDebugMessage "$linkCmd" "Linking with TAU Options"
