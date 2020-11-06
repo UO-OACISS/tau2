@@ -469,7 +469,9 @@ int Tau_roctracer_init_tracing() {
   No need to do this. We use iterators now. 
 */
 #if (!(defined (TAU_MPI) || (TAU_SHMEM)))
-  TAU_PROFILE_SET_NODE(0);
+  if (Tau_get_node() == -1) {
+      TAU_PROFILE_SET_NODE(0);
+  }
 #endif /* TAU_MPI || TAU_SHMEM */
   // Allocating tracing pool
   roctracer_properties_t properties{};

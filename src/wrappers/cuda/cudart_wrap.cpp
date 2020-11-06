@@ -3007,7 +3007,9 @@ cudaError_t cudaRuntimeGetVersion(int * a1) {
   Tau_create_top_level_timer_if_necessary();
   Tau_global_decr_insideTAU();
 
-  TAU_PROFILE_SET_NODE(0);
+  if (Tau_get_node() == -1) {
+      TAU_PROFILE_SET_NODE(0);
+  }
   TAU_PROFILE_START(t);
   retval  =  (*cudaRuntimeGetVersion_h)( a1);
   TAU_PROFILE_STOP(t);

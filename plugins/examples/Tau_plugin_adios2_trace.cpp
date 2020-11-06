@@ -41,6 +41,9 @@
 #include <signal.h>
 #include <unistd.h>
 
+// get program name
+#include <errno.h>
+
 #define CONVERT_TO_USEC 1.0/1000000.0 // hopefully the compiler will precompute this.
 #define TAU_ADIOS2_PERIODIC_DEFAULT false
 #define TAU_ADIOS2_PERIOD_DEFAULT 2000000 // microseconds
@@ -49,9 +52,10 @@
 #define TAU_ADIOS2_FILENAME "tau-metrics"
 #define TAU_ADIOS2_ONE_FILE_DEFAULT false
 #define TAU_ADIOS2_ENGINE "BPFile"
+#define TAU_ADIOS2_CONFIG_FILE_DEFAULT "./adios2.xml"
 
 // This will enable some checking to make sure we don't have call stack violations.
-#define DO_VALIDATION
+//#define DO_VALIDATION
 
 /* Some forward declarations that we need */
 tau::Profiler *Tau_get_timer_at_stack_depth(int);
@@ -87,19 +91,20 @@ char *_program_path()
 #if defined(__APPLE__)
     return NULL;
 #else
-    char *path = (char*)malloc(PATH_MAX);
-    if (path != NULL) {
-        if (readlink("/proc/self/exe", path, PATH_MAX) == -1) {
-            free(path);
-            path = NULL;
-        }
-        std::string tmp(path);
-        size_t i = tmp.rfind('/', tmp.length());
-        if (i != string::npos) {
-            sprintf(path, "%s", tmp.substr(i+1, tmp.length() - i).c_str());
-        }
+    char path[PATH_MAX] = {0};
+    int len = readlink("/proc/self/exe", path, PATH_MAX);
+    if (len == -1) {
+        return NULL;
     }
-    return path;
+    // the string from readlink isn't null terminated!
+    path[len] = '\0';
+    char *executable = (char*)calloc(PATH_MAX, sizeof(char));
+    std::string tmp(path);
+    size_t i = tmp.rfind('/', tmp.length());
+    if (i != string::npos) {
+        sprintf(executable, "%s", tmp.substr(i+1, ((tmp.length() - i) - 1)).c_str());
+    }
+    return executable;
 #endif
 }
 
@@ -112,7 +117,8 @@ class plugin_options {
             env_use_selection(TAU_ADIOS2_USE_SELECTION_DEFAULT),
             env_filename(TAU_ADIOS2_FILENAME),
             env_one_file(TAU_ADIOS2_ONE_FILE_DEFAULT),
-            env_engine(TAU_ADIOS2_ENGINE)
+            env_engine(TAU_ADIOS2_ENGINE),
+            env_config_file("")
             {}
     public:
         int env_periodic;
@@ -122,6 +128,7 @@ class plugin_options {
         std::string env_filename;
         int env_one_file;
         std::string env_engine;
+        std::string env_config_file;
         std::set<std::string> included_timers;
         std::set<std::string> excluded_timers;
         std::set<std::string> included_timers_with_wildcards;
@@ -208,6 +215,18 @@ void Tau_ADIOS2_parse_environment_variables(void) {
     tmp = getenv("TAU_ADIOS2_ENGINE");
     if (tmp != NULL) {
       thePluginOptions().env_engine = strdup(tmp);
+    }
+    tmp = getenv("TAU_ADIOS2_CONFIG_FILE");
+    if (tmp != NULL) {
+      thePluginOptions().env_config_file = strdup(tmp);
+    } else {
+      if( access(TAU_ADIOS2_CONFIG_FILE_DEFAULT, F_OK ) != -1 ) {
+          // file exists
+          thePluginOptions().env_config_file = strdup(TAU_ADIOS2_CONFIG_FILE_DEFAULT);
+      } else {
+          // file doesn't exist
+          thePluginOptions().env_config_file = "";
+      }
     }
 }
 
@@ -499,24 +518,36 @@ void adios::initialize() {
         PMPI_Comm_dup(MPI_COMM_SELF, &adios_comm);
     }
     Tau_global_incr_insideTAU();
-    ad = adios2::ADIOS(adios_comm, true);
+    if (thePluginOptions().env_config_file != "") {
+        ad = adios2::ADIOS(thePluginOptions().env_config_file, adios_comm, true);
+    } else {
+        ad = adios2::ADIOS(adios_comm, true);
+    }
 #else
     /** ADIOS class factory of IO class objects, DebugON is recommended */
-    ad = adios2::ADIOS(true);
+    if (thePluginOptions().env_config_file != "") {
+        ad = adios2::ADIOS(thePluginOptions().env_config_file, true);
+    } else {
+        ad = adios2::ADIOS(true);
+    }
 #endif
     /*** IO class object: settings and factory of Settings: Variables,
      * Parameters, Transports, and Execution: Engines */
     _bpIO = ad.DeclareIO("TAU trace data");
-    // if not defined by user, we can change the default settings
-    // BPFile is the default engine
-    _bpIO.SetEngine(thePluginOptions().env_engine);
-    // bpIO.SetParameters({{"num_threads", "2"}});
-    // don't wait on readers to connect
-    _bpIO.SetParameters({{"RendezvousReaderCount", "0"}});
 
-    // ISO-POSIX file output is the default transport (called "File")
-    // Passing parameters to the transport
-    // _bpIO.AddTransport("File", {{"Library", "POSIX"}});
+    if (thePluginOptions().env_config_file == "") {
+        // if not defined by user, we can change the default settings
+        // BPFile is the default engine
+        _bpIO.SetEngine(thePluginOptions().env_engine);
+        // bpIO.SetParameters({{"num_threads", "2"}});
+        // don't wait on readers to connect
+        _bpIO.SetParameters({{"RendezvousReaderCount", "0"}});
+        _bpIO.SetParameters({{"num_threads", "1"}});
+
+        // ISO-POSIX file output is the default transport (called "File")
+        // Passing parameters to the transport
+        _bpIO.AddTransport("File", {{"Library", "POSIX"}});
+    }
     Tau_global_decr_insideTAU();
 }
 
@@ -551,8 +582,9 @@ void adios::open() {
             ss << "-" << global_comm_rank;
         }
         ss << ".bp";
-        TAU_VERBOSE("Writing %s\n", ss.str().c_str());
-        bpWriter = _bpIO.Open(ss.str(), adios2::Mode::Write);
+        //printf("Writing %s\n", ss.str().c_str());
+        std::string tmp{ss.str()};
+        bpWriter = _bpIO.Open(tmp, adios2::Mode::Write);
         opened = true;
         Tau_global_decr_insideTAU();
     }
@@ -616,6 +648,8 @@ void adios::write_variables(void)
     // copy the current primer stack
     this_step->primer_stacks[0] = new timer_values_array_t(current_primer_stack[0]);
     for (int t = 1 ; t < threads ; t++) {
+        // is there any data on this thread?
+        if (timer_values_array[t].size() == 0) { continue; }
         // make a list from the next thread of data - copying the data in!
         std::list<std::pair<unsigned long, std::array<unsigned long, 5> > >
             next_thread(timer_values_array[t].begin(),
@@ -996,7 +1030,7 @@ int do_teardown(bool pre) {
     /* only complete this function once! */
     static bool done_once = false;
     if (done_once) { return 0; }
-    printf("%d:%d %s...\n", global_comm_rank, RtsLayer::myThread(), __func__); fflush(stdout);
+    TAU_VERBOSE("%d:%d %s...\n", global_comm_rank, RtsLayer::myThread(), __func__); fflush(stdout);
     /* Don't do these instructions more than once */
     done_once = true;
     Tau_ADIOS2_stop_worker();
@@ -1031,7 +1065,7 @@ int do_teardown(bool pre) {
     }
 #if TAU_MPI
     /* Don't let any processes exit early - it could terminate our processing. */
-    printf("%d TAU ADIOS2 plugin Exiting\n", global_comm_rank);
+    TAU_VERBOSE("%d TAU ADIOS2 plugin Exiting\n", global_comm_rank);
     PMPI_Barrier(MPI_COMM_WORLD);
 #endif
     return 0;
@@ -1234,14 +1268,15 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
 
     auto &tmp = my_adios->timer_values_array[data->tid];
 #ifdef DO_VALIDATION
-    unsigned long ts = my_adios->previous_timestamp[data->tid] > data->timestamp ? my_adios->previous_timestamp[data->tid] + 1 : data->timestamp;
+    unsigned long ts = my_adios->previous_timestamp[data->tid] > data->timestamp ?
+        my_adios->previous_timestamp[data->tid] + 1 : data->timestamp;
     my_adios->previous_timestamp[data->tid] = ts;
-    my_adios->pre_timer_stack[tmparray[2]].push(tmparray[4]);
+    my_adios->pre_timer_stack[data->tid].push(timer_index);
 #else
     unsigned long ts = data->timestamp;
 #endif
     // push this timer on the stack for provenance output, make a copy
-    my_adios->current_primer_stack[tmparray[2]].push_back(std::make_pair(ts, tmparray));
+    my_adios->current_primer_stack[data->tid].push_back(std::make_pair(ts, tmparray));
     tmp.push_back(
         std::make_pair(
             ts,
@@ -1286,11 +1321,13 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
         data->timestamp ? my_adios->previous_timestamp[data->tid] + 1 :
             data->timestamp;
     my_adios->previous_timestamp[data->tid] = ts;
-    //if (my_adios->pre_timer_stack[tmparray[2]].top() != tmparray[4]) {
-    if (my_adios->pre_timer_stack[tmparray[2]].size() == 0) {
+    if (my_adios->pre_timer_stack[data->tid].size() == 0) {
       fprintf(stderr, "Pre: Stack violation. %s\n", data->timer_name);
       fprintf(stderr, "Pre: Stack for thread %lu is empty, timestamp %lu.\n",
         tmparray[2], data->timestamp);
+	  if (my_adios->current_primer_stack[data->tid].size() > 0) {
+          my_adios->current_primer_stack[data->tid].pop_back();
+	  }
       active_threads--;
       return 0;
     } else {
@@ -1301,7 +1338,7 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
             fprintf(stderr, "Pre: thread %lu, %lu != %lu, timestamp %lu\n",
                 tmparray[2], lhs, rhs, data->timestamp);
         }
-        my_adios->pre_timer_stack[tmparray[2]].pop();
+        my_adios->pre_timer_stack[data->tid].pop();
     }
 #else
     unsigned long ts = data->timestamp;
@@ -1309,8 +1346,8 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     // pop this timer off the stack for provenance output
 	// For some reason, at the end of execution we are popping too many.
 	// This is a safety check, but not great for performance.
-	if (my_adios->current_primer_stack[tmparray[2]].size() > 0) {
-        my_adios->current_primer_stack[tmparray[2]].pop_back();
+	if (my_adios->current_primer_stack[data->tid].size() > 0) {
+        my_adios->current_primer_stack[data->tid].pop_back();
 	}
     tmp.push_back(
         std::make_pair(

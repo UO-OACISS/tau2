@@ -874,7 +874,7 @@ int Tau_metadata_fillMetaData()
 
 extern "C" int writeMetaDataAfterMPI_Init(void) {
 
-#if (defined(TAU_FUJITSU) && defined(TAU_MPI))
+#if (defined(TAU_FUJITSU) && defined(TAU_MPI) && !defined(TAU_FX_AARCH64))
   int xrank, yrank, zrank, xshape, yshape, zshape;
   int retcode, dim;
   char fbuffer[4096];
