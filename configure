@@ -996,6 +996,7 @@ perfsuite=no
 perfsuitedir=
 bfd=no
 elf=no
+systemlibelf=no
 bfddir=
 elfdir=
 turnbfdoff=no
@@ -11622,9 +11623,10 @@ if [ "x$download_dwarf" = xyes ] ; then
             else
               echo "Found /usr/include/libelf.h"
               libelfdir=/usr
+              systemlibelf=yes
             fi
 # End of libelf check. Continue with libdwarf build.
-            if [ $elf=yes ]; then
+            if [ $elf=yes -a $systemlibelf=no ]; then
               if [ $machine = x86_64 -o $machine = craycnl ]; then
                 orig_cflags=`echo $CFLAGS`
                 export CFLAGS="$orig_cflags -I${libelfdir}/include"
