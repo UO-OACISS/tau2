@@ -9251,6 +9251,12 @@ if [ $machine = arm64_linux -a ! -r $targetdir/$architecture/$binutils/include/b
   cd $targetdir/$architecture/; download "$binutilsurl" "$binutilstgz" ; tar zxf $binutilstgz; rm -f $binutilstgz ; cd ${p};
 fi
 
+if [ $machine = nec-sx-aurora ]; then
+  binutils=binutils-2.35.1
+  binutilstgz=$binutils.tar.gz
+  binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
+fi
+
 if [ "x$bfddir" = xnone ]; then
   echo "BFD disabled."
   turnbfdoff=yes
