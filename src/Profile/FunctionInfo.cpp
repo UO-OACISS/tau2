@@ -146,6 +146,7 @@ static char *strip_tau_group(const char *ProfileGroupName) {
   return source;
 }
 
+std::mutex FunctionInfo::MetricVectorMutex;
 thread_local int FunctionInfo::local_tid = RtsLayer::myThread();
 thread_local unordered_map<FunctionInfo*,FunctionInfo::FunctionMetrics*>* FunctionInfo::metrics_cache=new             unordered_map<FunctionInfo*,FunctionInfo::FunctionMetrics*>;
 

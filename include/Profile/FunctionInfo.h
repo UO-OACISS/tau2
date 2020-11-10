@@ -185,24 +185,29 @@ inline void checkFIVector(int tid){
 
 static thread_local int local_tid;
 static thread_local unordered_map<FunctionInfo*,FunctionMetrics*>* metrics_cache;
-std::mutex MetricVectorMutex;
+static std::mutex MetricVectorMutex;
 
-inline FunctionMetrics* getFunctionMetric(int tid){
+FunctionMetrics* getFunctionMetric(int tid){
     FunctionMetrics* MOut;
     if(tid == local_tid){
-        MOut=(*metrics_cache)[this];
+        std::unordered_map<FunctionInfo*,FunctionMetrics*>::iterator mCheck =(*metrics_cache).find(this); 
+        if(mCheck != (*metrics_cache).end())
+        {
+        MOut=mCheck->second;//(*metrics_cache)[this];
         if(MOut!=0){
             //printf("Got Cache at %p on TID: %d\n",MOut,tid);
             return MOut;
+        }
         }
     }
 
     checkFIVector(tid);
 
-    std::lock_guard<std::mutex> guard(MetricVectorMutex);
+    std::lock_guard<std::mutex> guard(FunctionInfo::MetricVectorMutex);
     MOut=FMetricList[tid];
     if(tid == local_tid){
-        if((*metrics_cache)[this]==0){
+        std::unordered_map<FunctionInfo*,FunctionMetrics*>::iterator mCheck =(*metrics_cache).find(this); 
+        if(mCheck == (*metrics_cache).end()||mCheck->second==0){
             (*metrics_cache)[this]=MOut;
         }
     }
