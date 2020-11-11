@@ -170,8 +170,8 @@ private:
 vector<FunctionMetrics*> FMetricList;
 
 inline void checkFIVector(int tid){
+    RtsLayer::LockDB();
 	while(FMetricList.size()<=tid){
-        RtsLayer::LockDB();
 		FMetricList.push_back(new FunctionMetrics());
         
         if(setPathHistograms){//TODO: DYNAPROF
@@ -179,13 +179,12 @@ inline void checkFIVector(int tid){
             FMetricList[topThread]->pathHistogram=new TauPathHashTable<TauPathAccumulator>(topThread);
         }
         
-        RtsLayer::UnLockDB();
 	}
+    RtsLayer::UnLockDB();
 }
 
 static thread_local int local_tid;
 static thread_local unordered_map<FunctionInfo*,FunctionMetrics*>* metrics_cache;
-static std::mutex MetricVectorMutex;
 
 FunctionMetrics* getFunctionMetric(int tid){
     FunctionMetrics* MOut;
@@ -203,7 +202,7 @@ FunctionMetrics* getFunctionMetric(int tid){
 
     checkFIVector(tid);
 
-    std::lock_guard<std::mutex> guard(FunctionInfo::MetricVectorMutex);
+    RtsLayer::LockDB();
     MOut=FMetricList[tid];
     if(tid == local_tid){
         std::unordered_map<FunctionInfo*,FunctionMetrics*>::iterator mCheck =(*metrics_cache).find(this); 
@@ -211,6 +210,7 @@ FunctionMetrics* getFunctionMetric(int tid){
             (*metrics_cache)[this]=MOut;
         }
     }
+    RtsLayer::UnLockDB();
     //printf("TID: %d, LOCAL_TID: %d, ADDR: %p\n",tid,local_tid,MOut);
     return MOut;
 
