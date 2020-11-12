@@ -2250,89 +2250,91 @@ char *** argv;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
 
-  if(Tau_get_usesMPI() == 0)
-  {
+  // prevent double-initialization for SHMEM cases
+  int init_flag = 0;
+  MPI_Initialized(&init_flag);
+  if(init_flag == 0) {
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE);
-  Tau_create_top_level_timer_if_necessary();
-  TAU_PROFILE_START(tautimer);
+    TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE);
+    Tau_create_top_level_timer_if_necessary();
+    TAU_PROFILE_START(tautimer);
 
-  tau_mpi_init_predefined_constants();
+    tau_mpi_init_predefined_constants();
 
 #ifdef TAU_ADIOS
-  // this is only here to force the linker to resolve the adiost_tool symbol
-  // before the weak one in the ADIOS static library gets pulled in, and prevents
-  // TAU from replacing it.
-  adiost_tool();
+    // this is only here to force the linker to resolve the adiost_tool symbol
+    // before the weak one in the ADIOS static library gets pulled in, and prevents
+    // TAU from replacing it.
+    adiost_tool();
 #endif
 
 #ifdef TAU_ADIOS2
-  int provided;
-  returnVal = PMPI_Init_thread( argc, argv, MPI_THREAD_MULTIPLE, &provided );
-  if (provided != MPI_THREAD_MULTIPLE && provided != MPI_THREAD_FUNNELED) {
+    int provided;
+    returnVal = PMPI_Init_thread( argc, argv, MPI_THREAD_MULTIPLE, &provided );
+    if (provided != MPI_THREAD_MULTIPLE && provided != MPI_THREAD_FUNNELED) {
       fprintf(stderr, "ERROR!!!  MPI implementation doesn't provide threaded support.\nADIOS2 output from TAU likely won't work.\n");
-  }
+    }
 #else
-   returnVal = PMPI_Init( argc, argv );
+    returnVal = PMPI_Init( argc, argv );
 #endif
 
 #ifdef TAU_MPI_T
-  Tau_MPI_T_initialization();
-  Tau_track_mpi_t();
+    Tau_MPI_T_initialization();
+    Tau_track_mpi_t();
 #endif /* TAU_MPI_T */
 
-  MPI_Comm parent;
-  PMPI_Comm_get_parent(&parent);
-  if(parent != MPI_COMM_NULL) {
-    // This process was created through MPI_Comm_spawn
-    Tau_handle_spawned_init(parent);
-  }
+    MPI_Comm parent;
+    PMPI_Comm_get_parent(&parent);
+    if(parent != MPI_COMM_NULL) {
+      // This process was created through MPI_Comm_spawn
+      Tau_handle_spawned_init(parent);
+    }
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX
-  if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_init_if_necessary();
-  }
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_init_if_necessary();
+    }
 #endif /* _AIX */
 #endif /* TAU_WINDOWS */
 
-  /* Initialize the plugin system */
-  Tau_initialize_plugin_system();
+    /* Initialize the plugin system */
+    Tau_initialize_plugin_system();
 
-  Tau_signal_initialization();
+    Tau_signal_initialization();
 
 #ifdef TAU_MONITORING
-  Tau_mon_connect();
+    Tau_mon_connect();
 #endif /* TAU_MONITORING */
 
 #ifdef TAU_BGP
-  if (TauEnv_get_ibm_bg_hwp_counters()) {
-    int upcErr;
-    Tau_Bg_hwp_counters_start(&upcErr);
-    if (upcErr != 0) {
-      printf("TAU ERROR: ** Error starting IBM BGP UPC hardware performance counters\n");
+    if (TauEnv_get_ibm_bg_hwp_counters()) {
+      int upcErr;
+      Tau_Bg_hwp_counters_start(&upcErr);
+      if (upcErr != 0) {
+        printf("TAU ERROR: ** Error starting IBM BGP UPC hardware performance counters\n");
+      }
+      PMPI_Barrier(MPI_COMM_WORLD);
     }
-    PMPI_Barrier(MPI_COMM_WORLD);
-  }
 #endif /* TAU_BGP */
-  TAU_PROFILE_STOP(tautimer);
+    TAU_PROFILE_STOP(tautimer);
 
-  PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
-  TAU_PROFILE_SET_NODE(procid_0 );
-  Tau_set_usesMPI(1);
+    PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+    TAU_PROFILE_SET_NODE(procid_0 );
+    Tau_set_usesMPI(1);
 
-  PMPI_Comm_size( MPI_COMM_WORLD, &size );
-  tau_totalnodes(1, size); /* Set the totalnodes */
+    PMPI_Comm_size( MPI_COMM_WORLD, &size );
+    tau_totalnodes(1, size); /* Set the totalnodes */
 
-  PMPI_Get_processor_name(procname, &procnamelength);
-  TAU_METADATA("MPI Processor Name", procname);
+    PMPI_Get_processor_name(procname, &procnamelength);
+    TAU_METADATA("MPI Processor Name", procname);
 
-  if (TauEnv_get_synchronize_clocks()) {
-    TauSyncClocks();
-  }
-  }
-  else {
-    returnVal = 0;
+    if (TauEnv_get_synchronize_clocks()) {
+      TauSyncClocks();
+    }
+  } else {
+    returnVal = MPI_SUCCESS;
+    Tau_set_usesMPI(1);
   }
 
   writeMetaDataAfterMPI_Init();

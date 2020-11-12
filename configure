@@ -996,6 +996,7 @@ perfsuite=no
 perfsuitedir=
 bfd=no
 elf=no
+systemlibelf=no
 bfddir=
 elfdir=
 turnbfdoff=no
@@ -9270,6 +9271,12 @@ if [ $machine = arm64_linux -a ! -r $targetdir/$architecture/$binutils/include/b
   cd $targetdir/$architecture/; download "$binutilsurl" "$binutilstgz" ; tar zxf $binutilstgz; rm -f $binutilstgz ; cd ${p};
 fi
 
+if [ $machine = nec-sx-aurora ]; then
+  binutils=binutils-2.35.1
+  binutilstgz=$binutils.tar.gz
+  binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
+fi
+
 if [ "x$bfddir" = xnone ]; then
   echo "BFD disabled."
   turnbfdoff=yes
@@ -11635,9 +11642,10 @@ if [ "x$download_dwarf" = xyes ] ; then
             else
               echo "Found /usr/include/libelf.h"
               libelfdir=/usr
+              systemlibelf=yes
             fi
 # End of libelf check. Continue with libdwarf build.
-            if [ $elf=yes ]; then
+            if [ $elf=yes -a $systemlibelf=no ]; then
               if [ $machine = x86_64 -o $machine = craycnl ]; then
                 orig_cflags=`echo $CFLAGS`
                 export CFLAGS="$orig_cflags -I${libelfdir}/include"
