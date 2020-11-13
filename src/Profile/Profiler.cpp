@@ -2028,22 +2028,8 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
           TAU_VERBOSE("[pid=%d], TAU: Writing B profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
         }
       }
-#ifdef TAU_MPI
-      if (Tau_get_usesMPI()) {
-#endif /* TAU_MPI */
-        TAU_VERBOSE("[pid=%d], TAU: Uses MPI Rank=%d\n", RtsLayer::getPid(), RtsLayer::myNode());
-        writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
-#ifdef TAU_MPI
-      } else {
-#ifdef TAU_SHMEM
-        writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
-#else /* TAU_SHMEM */
-        printf("TAU: WARNING! An MPI configuration was used in TAU, but MPI_Init was not called. No data will be written for pid=%d.\n", getpid());
-	printf("TAU: You may set the environment variable TAU_SET_NODE=0 and re-run this application to generate TAU data.\n");
-	//printf("Node = %d\n", RtsLayer::myNode());
-#endif /* TAU_SHMEM */
-      }
-#endif /* TAU_MPI */
+      TAU_VERBOSE("[pid=%d], TAU: Uses MPI Rank=%d\n", RtsLayer::getPid(), RtsLayer::myNode());
+      writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
     }
   }
 
