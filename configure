@@ -982,6 +982,7 @@ charm=no
 comm=yes
 sproc=no
 noex=no
+fx_aarch64=no
 plugins=yes
 disableshared=no
 pmi=no
@@ -999,6 +1000,7 @@ perfsuite=no
 perfsuitedir=
 bfd=no
 elf=no
+systemlibelf=no
 bfddir=
 zlib=no
 zlibdir=
@@ -3642,6 +3644,18 @@ case $machine in
             c_compiler=cc
 	fi
 	;;
+    arm64_linux) 
+	if [ "x$cxx_compiler" = "xdefault" -a "x$mpi" = "xyes" ]; then 
+	  # Are we on a Fujitsu FX aarch64 system with Fujitsu compilers in the path? 
+	  found_compiler=`which mpiFCC 2>/dev/null` 
+          if [ "x$found_compiler" != "x" -a -x $found_compiler ]; then
+	     echo "TAU: Using mpiFCC, mpifcc, and mpifrt as C++, C, and Fortran compilers respectively."
+	     cxx_compiler=mpiFCC
+	     c_compiler=mpifcc
+	     fortran_compiler=mpifrt
+          fi 
+	fi
+	;;
 
     apple)
 	if [ "$cxx_compiler" = "default" ]
@@ -4773,9 +4787,15 @@ case $cxx_compiler in
 	orig_useropt="-O2"
 	useropt="-O2"
 	# -g interferes with optimizations for Fujitsu.
-	fixmakeargs="$fixmakeargs FX"
+	if [ $machine = arm64_linux ]; then 
+	  fixmakeargs="$fixmakeargs FX_AARCH64"
+	  fx_aarch64=yes
+	else
+	  fixmakeargs="$fixmakeargs FX"
+	fi
 	#mpiinc=`which mpiFCCpx | sed -e 's/\/bin\/mpiFCCpx$//'`/include
-	mpiinc=`which mpiFCCpx | sed -e 's/\/bin\/mpiFCCpx$//'`/include/mpi/fujitsu
+	#mpiinc=`which mpiFCCpx | sed -e 's/\/bin\/mpiFCCpx$//'`/include/mpi/fujitsu
+	mpiinc=`which $cxx_compiler | sed -e "s@/bin/$cxx_compiler@@"`/include/mpi/fujitsu
 	if [ ! -d $mpiinc -a -r /opt/FJSVfxlang/1.2.0/include/mpi/fujitsu/mpi.h ]
 	then
             mpiinc=/opt/FJSVfxlang/1.2.0/include/mpi/fujitsu/
@@ -4786,7 +4806,7 @@ case $cxx_compiler in
             echo "Using MPI include directory $mpiinc"
 	fi
 	fixmakeargs="$fixmakeargs mpiincargs=-I$mpiinc"
-	echo "Adding -I$mpiinc to MPI include"
+	#echo "Adding -I$mpiinc to MPI include"
 	if [ $fortran_compiler = no -o $fortran_compiler = mpifrtpx -o $fortran_compiler = fujitsu ]
 	then
             extradir=`which mpiFCCpx | sed s/mpiFCCpx/../`
@@ -9284,6 +9304,12 @@ if [ $machine = arm64_linux -a ! -r $targetdir/$architecture/$binutils/include/b
   cd $targetdir/$architecture/; download "$binutilsurl" "$binutilstgz" ; tar zxf $binutilstgz; rm -f $binutilstgz ; cd ${p};
 fi
 
+if [ $machine = nec-sx-aurora ]; then
+  binutils=binutils-2.35.1
+  binutilstgz=$binutils.tar.gz
+  binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
+fi
+
 if [ "x$bfddir" = xnone ]; then
   echo "BFD disabled."
   turnbfdoff=yes
@@ -11651,9 +11677,10 @@ if [ "x$download_dwarf" = xyes ] ; then
             else
               echo "Found /usr/include/libelf.h"
               libelfdir=/usr
+              systemlibelf=yes
             fi
 # End of libelf check. Continue with libdwarf build.
-            if [ $elf=yes ]; then
+            if [ $elf=yes -a $systemlibelf=no ]; then
               if [ $machine = x86_64 -o $machine = craycnl ]; then
                 orig_cflags=`echo $CFLAGS`
                 export CFLAGS="$orig_cflags -I${libelfdir}/include"
@@ -12533,6 +12560,7 @@ sed -f $sedout < src/Profile/Makefile.skel > src/Profile/Makefile
 sed -f $sedout < src/TraceInput/Makefile.skel > src/TraceInput/Makefile
 sed -f $sedout < src/wrappers/Makefile.skel > src/wrappers/Makefile
 sed -f $sedout < utils/include/Makefile.skel > utils/include/Makefile
+sed -f $sedout < plugins/examples/Makefile.skel > plugins/examples/Makefile
 
 if [ $armci = yes ]; then
   sed -f $sedout < src/wrappers/armci/Makefile.skel > src/wrappers/armci/Makefile
