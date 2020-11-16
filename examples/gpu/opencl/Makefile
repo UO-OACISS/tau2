@@ -1,8 +1,8 @@
 include ../../../include/Makefile
-TAU_OPENCL_INC=/opt/intel/oneapi/compiler/2021.1-beta10/linux/include/sycl
+#TAU_OPENCL_INC=/opt/intel/oneapi/compiler/2021.1-beta10/linux/include/sycl
 
 TAU_OPENCL_LIB=-L$(TAU_OPENCL_INC)/../lib/x86_64 -L$(TAU_OPENCL_INC)/../lib -lOpenCL
-TAU_OPENCL_LIB=-L/opt/intel/oneapi/compiler/2021.1-beta10/linux/lib -lOpenCL
+#TAU_OPENCL_LIB=-L/opt/intel/oneapi/compiler/2021.1-beta10/linux/lib -lOpenCL
 TAU_CXX=clang++
 
 all: matmult
