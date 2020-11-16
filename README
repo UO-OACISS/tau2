@@ -55,7 +55,8 @@ user-level profiling is possible.
 
 TAU supports GPUs from NVIDIA (CUDA/CUPTI), AMD (ROCm/Rocprofiler), and
 Intel (OneAPI/Level Zero) where a binary may be launched with tau_exec with
-no modification to the binary. It also supports OpenMP Tools Interface v5.0 (OMPT).
+no modification to the binary. It also supports OpenMP Tools Interface v5.0 
+(OMPT), the Kokkos profiling interface, MPI Tools Interface (MPI_T) and pthread.
 
 TAU's profile visualization tool, paraprof, provides graphical displays of all
 the performance analysis results, in aggregate and per node/context/thread
