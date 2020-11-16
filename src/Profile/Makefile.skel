@@ -943,7 +943,7 @@ TauRocm.o : TauRocm.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauLevelZero.o : TauLevelZero.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauRocTracer.o : TauRocTracer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
