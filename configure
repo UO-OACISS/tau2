@@ -12067,7 +12067,7 @@ fi
 #esac
 
 if [ $machine = apple ]; then
-    if [ -e /System/Library/PrivateFrameworks/CoreSymbolication.framework/CoreSymbolication ]; then
+    if [ -e /System/Library/PrivateFrameworks/CoreSymbolication.framework ]; then
 # Let us test if this works with the current compiler.
 cat <<EOF > tau_apple_symbol.cpp
 #include "CoreSymbolication.h"
