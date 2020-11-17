@@ -295,6 +295,7 @@ struct CallSiteCacheMap : public TAU_HASH_MAP<unsigned long, CallSiteCacheNode*>
   }
 };
 
+#if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ) && !defined(TAU_FUJITSU)
 struct ThreadTimerMap : public TAU_HASH_MAP<int, timer_t> {
   ThreadTimerMap() {};
   virtual ~ThreadTimerMap() {
@@ -311,6 +312,7 @@ static std::mutex & TheThreadTimerMapMutex() {
     static std::mutex thread_timer_map_mutex;
     return thread_timer_map_mutex;
 }
+#endif
 
 struct DeferredInit {
   int tid;
@@ -516,6 +518,7 @@ extern "C" void Tau_sampling_resume(int tid)
 }
 
 extern "C" void Tau_sampling_timer_pause() {
+#if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ) && !defined(TAU_FUJITSU)
   std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
   auto it = TheThreadTimerMap().find(RtsLayer::getTid());
   if(it != TheThreadTimerMap().end()) {
@@ -528,9 +531,11 @@ extern "C" void Tau_sampling_timer_pause() {
       fprintf(stderr, "TAU: Failed to pause timer\n");
     }
   }
+#endif
 }
 
 extern "C" void Tau_sampling_timer_resume() {
+#if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ) && !defined(TAU_FUJITSU)
   std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
   auto it = TheThreadTimerMap().find(RtsLayer::getTid());
   if(it != TheThreadTimerMap().end()) {
@@ -544,6 +549,7 @@ extern "C" void Tau_sampling_timer_resume() {
       fprintf(stderr, "TAU: Failed to resume timer\n");
     }
   }
+#endif
 }
 
 // TODO: Why is this here?  For HPC Toolkit?
