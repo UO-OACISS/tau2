@@ -2757,6 +2757,20 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-level_zero)
+            level_zero=yes
+	    if [ -r /usr/lib64/libze_loader.so ]; then
+	      l0dir="/usr"
+              fixmakeargs="$fixmakeargs l0dir=$l0dir LEVEL_ZERO"
+              tauoptions="${tauoptions}-level_zero"
+              pthread=yes
+	    else
+	      echo "TAU: /usr/lib64/libze_loader.so not found. Please specify -level_zero=<dir> and reconfigure TAU."
+	      exit 1
+	    fi
+	    shift
+	    ;;
+
 	-level_zero=*)
             l0dir=`echo $arg | sed -e 's/-level_zero=//' -e 's/ /#/g'`
             if [ ! -d $l0dir ]; then
@@ -2877,6 +2891,10 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-opencl)
+	    use_opencl=yes
+	    shift
+	    ;;
 	-opencl=*)
 	    openclinclude=`echo $arg | sed -e 's/-opencl=//' -e 's/ /#/g'`/include
 	    if [ ! -d $openclinclude ] ; then
@@ -2969,6 +2987,35 @@ if [ "x$python"  = "xyes" ] ; then
       exit 1
     fi
   fi
+fi
+
+if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler ]; then
+  rocprofilerdir=$rocmdir/rocprofiler
+  fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER"
+  rocprofiler=yes
+  tauoptions="${tauoptions}-rocprofiler"
+  pthread=yes
+fi
+
+if [ "x$use_opencl" = "xyes" -a "x$openclinclude" = "x" ]; then
+  ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
+  for d in $ld_lib_path
+  do
+    if [ -r $d/libOpenCL.so ]; then
+      openclinclude=`echo $d | sed -e "s@/lib@@g"`/include
+      if [ -f "$openclinclude/CL/cl.h" ] ; then
+      #                       useropt="$useropt#-DTAU_MAX_THREADS=32"
+        fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude"
+	break;
+      else
+        if [ -f "$openclinclude/sycl/CL/cl.h" ]; then
+          fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude/sycl"
+        else
+            echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+        fi
+      fi
+    fi
+  done
 fi
 
 if [ "x$upcnetwork" = "x" ] ; then
