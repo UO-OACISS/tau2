@@ -22,6 +22,7 @@
 #include <Profile/Profiler.h>
 #include <Profile/PthreadLayer.h>
 #include <Profile/TauInit.h>
+#include <Profile/TauSampling.h>
 
 #include <stdlib.h>
 
@@ -117,6 +118,23 @@ void PthreadLayer::delete_wrapper_flags_key(void* wrapped) {
 }
 
 extern "C"
+void Tau_pthread_fork_before(void) {
+  // Temporarily disable the sampling timer when a fork occurs.
+  // Otherwise the signal can interfere with the fork.
+  if(TauEnv_get_ebs_enabled()) {
+    Tau_sampling_timer_pause();
+  }
+}
+
+extern "C"
+void Tau_pthread_fork_after(void) {
+  // Re-enable the sampling timer
+  if(TauEnv_get_ebs_enabled()) {
+    Tau_sampling_timer_resume();
+  }
+}
+
+extern "C"
 void pthread_init_once(void)
 {
   pthread_key_create(&PthreadLayer::tauPthreadId, &PthreadLayer::delete_wrapper_flags_key);
@@ -125,6 +143,8 @@ void pthread_init_once(void)
   pthread_mutex_init(&PthreadLayer::tauEnvMutex, NULL);
   // FIXME: This is completely unrelated to PthreadLayer
   pthread_key_create(&wrapper_flags_key, NULL);
+  // Register handler to disable sample processing during fork
+  pthread_atfork(Tau_pthread_fork_before, Tau_pthread_fork_after, NULL);
 }
 
 int PthreadLayer::InitializeThreadData(void)

@@ -83,6 +83,7 @@
 #include <stdlib.h>
 #include <strings.h>
 #include <stdint.h>
+#include <mutex>
 
 /* Android didn't provide <ucontext.h> so we make our own */
 #ifdef TAU_ANDROID
@@ -294,6 +295,23 @@ struct CallSiteCacheMap : public TAU_HASH_MAP<unsigned long, CallSiteCacheNode*>
   }
 };
 
+struct ThreadTimerMap : public TAU_HASH_MAP<int, timer_t> {
+  ThreadTimerMap() {};
+  virtual ~ThreadTimerMap() {
+    Tau_destructor_trigger();  
+  };
+};
+
+static ThreadTimerMap & TheThreadTimerMap() {
+    static ThreadTimerMap threadTimerMap;
+    return threadTimerMap;
+}
+
+static std::mutex & TheThreadTimerMapMutex() {
+    static std::mutex thread_timer_map_mutex;
+    return thread_timer_map_mutex;
+}
+
 struct DeferredInit {
   int tid;
   pid_t pid;
@@ -380,6 +398,7 @@ int collectingSamples = 0;
 // When we register our signal handler, we have to save any existing handler,
 // so that we can call it when we are done.
 static struct sigaction application_sa;
+
 
 /*********************************************************************
  * Get the architecture specific PC
@@ -494,6 +513,37 @@ extern "C" void Tau_sampling_suspend(int tid)
 extern "C" void Tau_sampling_resume(int tid)
 {
   tau_sampling_flags()->suspendSampling = 0;
+}
+
+extern "C" void Tau_sampling_timer_pause() {
+  std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
+  auto it = TheThreadTimerMap().find(RtsLayer::getTid());
+  if(it != TheThreadTimerMap().end()) {
+    struct itimerspec ts;
+    ts.it_interval.tv_nsec = ts.it_value.tv_nsec = 0;
+    ts.it_interval.tv_sec  = ts.it_value.tv_sec  = 0;
+    TAU_VERBOSE("Pausing timer on thread %d\n", RtsLayer::getTid());
+    int ret = timer_settime(it->second, 0, &ts, NULL);
+    if(ret != 0) {
+      fprintf(stderr, "TAU: Failed to pause timer\n");
+    }
+  }
+}
+
+extern "C" void Tau_sampling_timer_resume() {
+  std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
+  auto it = TheThreadTimerMap().find(RtsLayer::getTid());
+  if(it != TheThreadTimerMap().end()) {
+    int threshold = TauEnv_get_ebs_period();
+    struct itimerspec ts;
+    ts.it_interval.tv_nsec = ts.it_value.tv_nsec = (threshold % TAU_MILLION) * TAU_THOUSAND;
+    ts.it_interval.tv_sec  = ts.it_value.tv_sec  = threshold / TAU_MILLION;
+    TAU_VERBOSE("Resuming timer on thread %d\n", RtsLayer::getTid());
+    int ret = timer_settime(it->second, 0, &ts, NULL);
+    if(ret != 0) {
+      fprintf(stderr, "TAU: Failed to resume timer\n");
+    }
+  }
 }
 
 // TODO: Why is this here?  For HPC Toolkit?
@@ -1764,12 +1814,19 @@ int Tau_sampling_init(int tid, pid_t pid)
         return -1;
     }
     act.sa_sigaction = Tau_sampling_handler;
-    act.sa_flags = SA_SIGINFO | SA_RESTART;
+
+    // By default, we use SA_RESTART so that syscalls are automatically restarted instead of
+    // returning EINTR.
+    act.sa_flags = SA_RESTART | SA_SIGINFO;
 
     // initialize the application signal action, so we can apply it
     // after we run our signal handler
     struct sigaction query_action;
+    // If the application explicitly disabled syscall restart, leave it that way.
     ret = sigaction(TAU_ALARM_TYPE, NULL, &query_action);
+    if(query_action.sa_handler != SIG_DFL && query_action.sa_handler != SIG_IGN && !(query_action.sa_flags & SA_RESTART)) {
+        act.sa_flags = SA_SIGINFO;
+    }
     if (ret != 0) {
         fprintf(stderr, "TAU: Sampling error 3: %s\n", strerror(ret));
         return -1;
@@ -1839,6 +1896,10 @@ int Tau_sampling_init(int tid, pid_t pid)
    TAU_VERBOSE(" *** (S%d) send alarm to %d\n", gettid(), sev.sigev_notify_thread_id);
 #endif
    ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
+   {
+     std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
+     TheThreadTimerMap()[pid == 0 ? RtsLayer::getTid() : pid] = timerid;
+   }
    TAU_VERBOSE("Created sampling timer for TAU tid = %d, kernel TID = %jd\n", tid, (intmax_t)sev.sigev_notify_thread_id);
   if (ret != 0) {
     fprintf(stderr, "TAU: (%d, %d) Sampling error 6: %s\n", RtsLayer::myNode(), RtsLayer::myThread(), strerror(ret));
