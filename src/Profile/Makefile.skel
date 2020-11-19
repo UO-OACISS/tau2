@@ -720,7 +720,7 @@ TauPinHelper.o 	: TauPinHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TauSampling.o 	: TauSampling.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
+	$(CXX) $(TAU_STDCXX11_FLAG) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TauSampling_hpctoolkit.o 	: TauSampling_hpctoolkit.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
