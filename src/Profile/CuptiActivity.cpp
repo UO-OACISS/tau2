@@ -641,17 +641,20 @@ void Tau_cupti_init()
     TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_init\n");
 
     Tau_gpu_init();
-    //disable_callbacks =1;
     Tau_cupti_set_device_props();
 
     Tau_cupti_setup_unified_memory();
 
-		if (!subscribed) {
-			Tau_cupti_subscribe();
-		}
+    if (!subscribed) {
+        Tau_cupti_subscribe();
+    }
 
-		// subscribe must happen before enable domains
-		Tau_cupti_enable_domains();
+    // when monitoring the driver API, there are events that happen
+    // when enabling domains.  Ignore them, because TAU isn't ready yet.
+    disable_callbacks =1;
+    // subscribe must happen before enable domains
+    Tau_cupti_enable_domains();
+    disable_callbacks =0;
 
     TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_init\n");
 }
@@ -690,8 +693,6 @@ void Tau_cupti_onload()
     }
 
 	TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_onload\n");
-
-    //disable_callbacks =0;
 
 }
 
