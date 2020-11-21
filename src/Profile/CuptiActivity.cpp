@@ -985,7 +985,13 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
             cbInfo->correlationId, cbInfo->functionName);
 	    record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
 	    CUdevice device;
+        // The below call to cuCtxGetDevice() itself triggers a callback that TAU will process.
+        // If the timer for cuCtxGetDevice is throttled, this is causing the top-level timer
+        // to stop early. We disable callbacks here to prevent this and so as to not record
+        // a timer for a function called by TAU rather than the application.
+        disable_callbacks = 1;
 	    cuCtxGetDevice(&device);
+        disable_callbacks = 0;
 	    //Tau_cuda_Event_Synchonize();
         if (Tau_Global_numGPUCounters > 0) {
 	        int taskId = get_taskid_from_context_id(cbInfo->contextUid, 0);
