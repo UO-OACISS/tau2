@@ -35,7 +35,6 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <time.h>
 
 #include <sstream>
-#include <iostream>
 
 #ifdef TAU_NEC_SX
 #include <strings.h>
@@ -351,27 +350,20 @@ const char *Tau_metadata_timeFormat = "%I64d";
 const char *Tau_metadata_timeFormat = "%lld";
 #endif // TAU_WINDOWS
 
-// Fill thread-specific metadata
-// The non-thread-specific Tau_metadata_fillMetaData() function only runs on
-// thread 0, but that data is written on every thread within the rank.
-// As such, anything that changes between threads should be recorded here instead.
-// This function is called from RegisterThread
-int Tau_metadata_fillThreadMetaData() {
-    Tau_metadata_register("tid", RtsLayer::getTid());
-}
-
 int Tau_metadata_fillMetaData()
 {
 #ifndef TAU_DISABLE_METADATA
+
   static int filled = 0;
   if (filled) {
     return 0;
   }
   filled = 1;
 
+
   char tmpstr[4096];
   sprintf (tmpstr, Tau_metadata_timeFormat, TauMetrics_getInitialTimeStamp());
-  Tau_metadata("Starting Timestamp", tmpstr);
+  Tau_metadata_register("Starting Timestamp", tmpstr);
 
 
   time_t theTime = time(NULL);
@@ -423,6 +415,7 @@ int Tau_metadata_fillMetaData()
   Tau_metadata_register("TAU Version", TAU_VERSION);
 
   Tau_metadata_register("pid", RtsLayer::getPid());
+  Tau_metadata_register("tid", RtsLayer::getTid());
 #endif // windows
 
 #ifdef TAU_BGL
@@ -874,14 +867,10 @@ int Tau_metadata_fillMetaData()
 
 #endif // _OPENMP
 
-  // Thread 0 is also a thread, so fill the thread-specific
-  // metadata too
-  Tau_metadata_fillThreadMetaData();
 #endif // TAU_DISABLE_METADATA
 
   return 0;
 }
-
 
 extern "C" int writeMetaDataAfterMPI_Init(void) {
 

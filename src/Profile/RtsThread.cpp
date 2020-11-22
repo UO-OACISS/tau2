@@ -293,8 +293,6 @@ else
 }
 
 
-extern int Tau_metadata_fillThreadMetaData();
-
 //////////////////////////////////////////////////////////////////////
 // RegisterThread is called before any other profiling function in a
 // thread that is spawned off
@@ -338,8 +336,6 @@ int RtsLayer::RegisterThread()
   }
 #endif /* _AIX */
 #endif
-
-  Tau_metadata_fillThreadMetaData();
 
   return numThreads;
 }
