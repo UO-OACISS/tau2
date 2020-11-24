@@ -9,13 +9,11 @@
 #if defined(TAU_MOCHI)
 
 #include <iostream>
-#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
 #include <sstream>
 #include <assert.h>
-#include <ctype.h>
 
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
@@ -23,11 +21,6 @@
 #include <Profile/TauAPI.h>
 #include <Profile/TauPlugin.h>
 #include <Profile/TauMetaData.h>
-
-
-#include <margo.h>
-#include <sdskv-client.h>
-
 /* So that we can keep track of how long this plugin takes */
 #include "Tau_scoped_timer.h"
 
@@ -35,16 +28,6 @@ static bool enabled{false};
 static bool initialized{false};
 static bool opened{false};
 static bool done{false};
-static margo_instance_id mid;
-static hg_addr_t svr_addr;
-static std::string svr_addr_str;
-static sdskv_database_id_t db_id;
-static std::string db_name;
-static uint8_t mplex_id;
-static sdskv_client_t sdskv_cl;
-static sdskv_provider_handle_t provider_handle;
-static char *svr_addr_file;
-
 pthread_mutex_t _my_mutex; // for initialization, termination
 
 /* These are useful if you want to tell Mochi what the name of the program
@@ -123,81 +106,12 @@ void Tau_dump_mochi_metadata() {
 
 void Tau_plugin_mochi_init_mochi(void) {
     /* initialize mochi client */
-    char *proto;
-    char *colon;
-    int ret;
-
-    /* initialize Mercury using the transport portion of the destination
-     * address (i.e., the part before the first : character if present)
-     */
-    std::ifstream fp( svr_addr_file );
-    std::getline(fp, svr_addr_str);
-
-    proto = strdup(svr_addr_str.c_str());
-    assert(proto);
-    colon = strchr(proto, ':');
-    if(colon)
-        *colon = '\0';
-    mid = margo_init(proto, MARGO_CLIENT_MODE, 0, 0);
-    if (mid == MARGO_INSTANCE_NULL)
-    {
-	std::cerr << "Error: margo_init()" << std::endl;
-	ret = -1;
-        return;
-    }
-
-    ret = sdskv_client_init(mid, &sdskv_cl);
-    if (ret != 0)
-    {
-	std::cerr << "Error: sdskv_client_init()" << std::endl;
-	margo_finalize(mid);
-	ret = -1;
-        return;
-    }
-
-    if (ret == 0) { initialized = true; }
-    assert(ret == 0);
+    initialized = true;
 }
 
 void Tau_plugin_mochi_open_file(void) {
     /* open mochi connection */
-
-    int ret;
-    hg_return_t hret = margo_addr_lookup(mid, svr_addr_str.c_str(), &svr_addr);
-    if (hret != HG_SUCCESS)
-    {
-	std::cerr << "Error: margo_addr_lookup()" << std::endl;
-	sdskv_client_finalize(sdskv_cl);
-	margo_finalize(mid);
-        ret = -1;
-	return;
-    }
-
-    ret = sdskv_provider_handle_create(sdskv_cl, svr_addr, mplex_id, &provider_handle);
-
-    if (ret != 0)
-    {
-	std::cerr << "Error: sdskv_provider_handle_create()" << std::endl;
-	margo_addr_free(mid, svr_addr);
-	sdskv_client_finalize(sdskv_cl);
-	margo_finalize(mid);
-        ret = -1;
-	return;
-    }
-
-    ret = sdskv_open(provider_handle, db_name.c_str(), &db_id);
-    if (ret != 0) 
-    {
-	std::cerr << "Error: could not open database " <<  db_name << std::endl;
-	sdskv_provider_handle_release(provider_handle);
-	margo_addr_free(mid, svr_addr);
-	sdskv_client_finalize(sdskv_cl);
-	margo_finalize(mid);
-        ret = -1 ;
-	return;
-    }
-    if (ret == 0) { opened = true;}
-    assert(ret == 0);
+    opened = true;
 }
 
 /* Convenience function if you want to strip the source info */
@@ -208,11 +122,6 @@ void shorten_timer_name(std::string& name) {
     }
 }
 
-/* Iterates over the FunctionInfo DB and EventDB to compile a list of 
- * per-thread metrics and counters. 
- * Subsequently, contacts the remote Mochi SDSKV db to write metrics and counters values
- * on a per-thread basis using two respective sdskv_put_multi() RPC calls. Note that put_multi()
- * is more efficient than a sequence of put() calls as in saves the unnecessary roundtrip RPC times */
 void Tau_plugin_mochi_write_variables() {
     RtsLayer::LockDB();
     /* Copy the function info database so we can release the lock */
@@ -226,20 +135,6 @@ void Tau_plugin_mochi_write_variables() {
     TauMetrics_getCounterList(&counterNames, &(numCounters[0]));
 
     std::map<std::string, std::vector<double> >::iterator timer_map_it;
-    std::vector<std::string>  m_keys;
-    std::vector<std::vector<double> >  m_vals;
-    std::vector<hg_size_t>   m_ksizes;
-    std::vector<const void*> m_kptrs;
-    std::vector<hg_size_t>   m_vsizes;
-    std::vector<const void*> m_vptrs;
-
-    m_keys.reserve(3*numThreadsLocal*tmpTimers.size());
-    m_vals.reserve(3*numThreadsLocal*tmpTimers.size());
-    m_ksizes.reserve(3*numThreadsLocal*tmpTimers.size());
-    m_kptrs.reserve(3*numThreadsLocal*tmpTimers.size());
-    m_vsizes.reserve(3*numThreadsLocal*tmpTimers.size());
-    m_vptrs.reserve(3*numThreadsLocal*tmpTimers.size());
-   
 
     //foreach: TIMER
     std::vector<FunctionInfo*>::const_iterator it;
@@ -249,76 +144,37 @@ void Tau_plugin_mochi_write_variables() {
         stringstream ss;
         std::string shortName(fi->GetName());
         shorten_timer_name(shortName);
-        ss << shortName << "_Calls";
+        ss << shortName << " / Calls";
 
         // assign real data
         for (int tid = 0; tid < numThreadsLocal; tid++) {
             /* build a name with ss, tid */
             /* write the fi->GetCalls(tid) value */
-            ss << "_" << tid;
-            m_keys.push_back(ss.str());
-            std::string key = ss.str();
-            std::vector<double> val;
-            val.push_back((double)fi->GetCalls(tid));
-            m_vals.push_back(val);
         }
         
-        for (int m = 0 ; m < numCounters.size() ; m++) {
+        for (int m = 0 ; m < numCounters ; m++) {
             stringstream incl;
             stringstream excl;
-            incl << shortName << "_Inclusive_" << counterNames[m];
-            excl << shortName << "_Exclusive_" << counterNames[m];
+            incl << shortName << " / Inclusive " << counterNames[m];
+            excl << shortName << " / Exclusive " << counterNames[m];
             // assign real data
             for (int tid = 0; tid < numThreadsLocal; tid++) {
-                /* build a name with incl, tid */
-                /* write the fi->getDumpInclusiveValues(tid)[m] value */
-                /* build a name with excl, tid */
-                /* write the fi->getDumpExclusiveValues(tid)[m] value */
-                incl << "_" << tid;
-		excl << "_" << tid;
-                std::vector<double> val1, val2;
-                if(fi->GetCalls(tid) == 0) {
-                  val1.push_back(0.0);
-		  val2.push_back(0.0);
+                if (fi->GetCalls(tid) == 0) {
+                    /* write zeros */
                 } else {
-                  val1.push_back(fi->getDumpInclusiveValues(tid)[m]);
-                  val2.push_back(fi->getDumpExclusiveValues(tid)[m]);
+                    /* build a name with incl, tid */
+                    /* write the fi->getDumpInclusiveValues(tid)[m] value */
+                    /* build a name with excl, tid */
+                    /* write the fi->getDumpExclusiveValues(tid)[m] value */
                 }
-                m_keys.push_back(incl.str());
-                m_vals.push_back(val1);
-                m_keys.push_back(excl.str());
-                m_vals.push_back(val2);
             }
         }
     }
-
-    for (int i = 0 ; i < 3*numThreadsLocal*tmpTimers.size(); i++) {
-        m_ksizes[i] = m_keys[i].size();
-        m_kptrs[i]  = m_keys[i].data();
-        m_vsizes[i] = m_vals[i].size();
-        m_vptrs[i]  = m_vals[i].data();
-    }
-
-    //Make a sdskv-put-multi call to the Mochi db
-    int ret = sdskv_put_multi(provider_handle, db_id, 3*numThreadsLocal*tmpTimers.size(), m_kptrs.data(), m_ksizes.data(), m_vptrs.data(), m_vsizes.data());  
-    assert(ret == 0);
 
     /* Lock the counter map */
     RtsLayer::LockDB();
     tau::AtomicEventDB::const_iterator it2;
     std::map<std::string, std::vector<double> >::iterator counter_map_it;
-    std::vector<std::string>  m_counter_keys;
-    std::vector<std::vector<double> >  m_counter_vals;
-    std::vector<hg_size_t>   m_counter_ksizes;
-    std::vector<const void*> m_counter_kptrs;
-    std::vector<hg_size_t>   m_counter_vsizes;
-    std::vector<const void*> m_counter_vptrs;
-    m_counter_keys.reserve(5*numThreadsLocal*tau::TheEventDB().size());
-    m_counter_vals.reserve(5*numThreadsLocal*tau::TheEventDB().size());
-    m_counter_ksizes.reserve(5*numThreadsLocal*tau::TheEventDB().size());
-    m_counter_kptrs.reserve(5*numThreadsLocal*tau::TheEventDB().size());
-    m_counter_vsizes.reserve(5*numThreadsLocal*tau::TheEventDB().size());
-    m_counter_vptrs.reserve(5*numThreadsLocal*tau::TheEventDB().size());
 
     // do the same with counters.
     for (it2 = tau::TheEventDB().begin(); it2 != tau::TheEventDB().end(); it2++) {
@@ -326,11 +182,11 @@ void Tau_plugin_mochi_write_variables() {
         if (ue == NULL) continue;
         std::string counter_name(ue->GetName().c_str());
         std::stringstream ss, mean, min, max, sumsqr;
-        ss << counter_name << "_NumEvents";
-        mean << counter_name << "_Mean";
-        min << counter_name << "_Min";
-        max << counter_name << "_Max";
-        sumsqr << counter_name << "_SumSquares";
+        ss << counter_name << " / Num Events";
+        mean << counter_name << " / Mean";
+        min << counter_name << " / Min";
+        max << counter_name << " / Max";
+        sumsqr << counter_name << " / Sum Squares";
 
         // assign real data
         for (int tid = 0; tid < numThreadsLocal; tid++) {
@@ -341,43 +197,10 @@ void Tau_plugin_mochi_write_variables() {
             ue->GetMin(tid);
             ue->GetSumSqr(tid);
             */
-            ss << "_" << tid;
-            mean << "_" << tid;
-            min << "_" << tid;
-            max << "_" << tid;
-            sumsqr << "_" << tid;
-            m_counter_keys.push_back(ss.str());
-            m_counter_keys.push_back(mean.str());
-            m_counter_keys.push_back(min.str());
-            m_counter_keys.push_back(max.str());
-            m_counter_keys.push_back(sumsqr.str());
-            std::vector<double> num_val, mean_val, min_val, max_val, sumsqr_val;
-            num_val.push_back((double)ue->GetNumEvents(tid));
-            mean_val.push_back((double)ue->GetMean(tid));
-            min_val.push_back((double)ue->GetMin(tid));
-            max_val.push_back((double)ue->GetMax(tid));
-            sumsqr_val.push_back((double)ue->GetSumSqr(tid));
-            m_counter_vals.push_back(num_val);
-            m_counter_vals.push_back(mean_val);
-            m_counter_vals.push_back(min_val);
-            m_counter_vals.push_back(max_val);
-            m_counter_vals.push_back(sumsqr_val);
         }
     }
-
-    for (int i = 0 ; i < 5*numThreadsLocal*tau::TheEventDB().size(); i++) {
-        m_counter_ksizes[i] = m_counter_keys[i].size();
-        m_counter_kptrs[i]  = m_counter_keys[i].data();
-        m_counter_vsizes[i] = m_counter_vals[i].size();
-        m_counter_vptrs[i]  = m_counter_vals[i].data();
-    }
-
     /* unlock the counter map */
     RtsLayer::UnLockDB();
-
-    //Make a sdskv-put-multi call to the Mochi db
-    ret = sdskv_put_multi(provider_handle, db_id, 5*numThreadsLocal*m_counter_ksizes.size(), m_counter_kptrs.data(), m_counter_ksizes.data(), m_counter_vptrs.data(), m_counter_vsizes.data());  
-    assert(ret == 0);
 }
 
 int Tau_plugin_mochi_dump(Tau_plugin_event_dump_data_t* data) {
@@ -455,15 +278,6 @@ int Tau_plugin_mochi_end_of_execution(Tau_plugin_event_end_of_execution_data_t* 
     return 0;
 }
 
-/* Function to remove all spaces from a given string */
-void removeSpaces(char *str) {
-     // To keep track of non-space character count
-     int count = 0;
-     for (int i = 0; str[i]; i++)
-         if (str[i] != ' ') str[count++] = str[i];
-             str[count] = '\0';
-}
-
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
  * Every plugin MUST implement this function to register callbacks for various events
  * that the plugin is interested in listening to*/
@@ -478,13 +292,6 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     cb.PreEndOfExecution = Tau_plugin_mochi_pre_end_of_execution;
     cb.EndOfExecution = Tau_plugin_mochi_end_of_execution;
 
-    assert(argc == 3);
-    svr_addr_file = strdup(argv[0]);
-    mplex_id = atoi(argv[1]);
-    char * db_name_ = strdup(argv[2]);
-    removeSpaces(db_name_);
-    db_name = db_name_;
-    
     /* Register the callback object */
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(&cb, id);
     enabled = true;
