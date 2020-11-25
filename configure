@@ -732,6 +732,7 @@ for arg in "$@"; do
         echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
         echo "-boost=<dir> ....................... Specify location of Boost package."
         echo "-apex ......................................... Build the APEX package."
+        echo "-mochi ............................ Add MOCHI backend database support."
         echo "-dyninst=<dir> ................... Specify location of DynInst package."
         echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
         echo "-dyninstlib=<dir> ................ Specify location of DynInst lib dir."
