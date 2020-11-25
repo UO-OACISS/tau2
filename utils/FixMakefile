@@ -465,6 +465,14 @@ case $1 in
         sqlite3dir=`echo $1 | sed -e 's/^sqlite3dir=//'`
 	echo "s,^SQLITE3DIR=.*$,SQLITE3DIR=$sqlite3dir,g" >> $sedout
 	;;
+    mochiincludes=*)
+        mochiincludes=`echo $1 | sed -e 's/^mochiincludes=//' -e 's/#/ /g'`
+	echo "s,^MOCHIINCLUDES=.*$,MOCHIINCLUDES=$mochiincludes,g" >> $sedout
+	;;
+    mochilibs=*)
+        mochilibs=`echo $1 | sed -e 's/^mochilibs=//' -e 's/#/ /g'`
+	echo "s,^MOCHILIBS=.*$,MOCHILIBS=$mochilibs,g" >> $sedout
+	;;
 
 #    caliperdir=*)
 #        caliperdir=`echo $1 | sed -e 's/^caliperdir=//'`
@@ -1760,6 +1768,10 @@ case $1 in
 	;;
      SQLITE3)
 	echo "NOTE: Using SQLITE3 ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MOCHI)
+	echo "NOTE: Using MOCHI ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 #     CALIPER)

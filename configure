@@ -1122,6 +1122,8 @@ adiosdir=
 adios2=no
 adios2dir=
 sqlite3=no
+mochi=no
+mochi_sdskv_dir=
 sqlite3dir=
 #caliper=no
 #caliperdir=
@@ -2011,6 +2013,21 @@ for arg in "$@"; do
             exit 1
         else
             sqlite3=yes
+        fi
+        shift
+        ;;
+
+    -mochi)
+        if [ `command -v pkg-config &> /dev/null; echo $?` == "1" ] ; then
+            echo "Error: Cannot find any pkg-config installation! pkg-config is required to detect a mochi installation."
+            exit 1
+        fi
+
+        if [ `pkg-config --exists sdskv-client; echo $?` == "1" ] ; then
+            echo "Error: Cannot access mochi_sdskv install directory! Please verify that mochi-sdskv and dependent modules are loaded."
+            exit 1
+        else
+            mochi=yes
         fi
         shift
         ;;
@@ -11528,6 +11545,15 @@ if [ $sqlite3 = yes ] ; then
 	echo "Detected SQLITE3..."
     fixmakeargs="$fixmakeargs SQLITE3 "
     fixmakeargs="$fixmakeargs sqlite3dir=$sqlite3dir"
+fi
+
+if [ $mochi = yes ] ; then
+        echo "Detected Mochi..."
+    mochiincludes=`pkg-config --cflags-only-I sdskv-client | sed -e 's/[[:space:]]*$//' | sed 's/ /#/g'`
+    mochilibs=`pkg-config --libs sdskv-client | sed -e 's/[[:space:]]*$//' | sed 's/ /#/g'`
+    fixmakeargs="$fixmakeargs MOCHI "
+    fixmakeargs="$fixmakeargs mochiincludes=${mochiincludes}#-DTAU_MOCHI"
+    fixmakeargs="$fixmakeargs mochilibs=${mochilibs}"
 fi
 
 #if [ $caliper = yes ] ; then
