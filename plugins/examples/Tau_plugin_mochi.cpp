@@ -24,6 +24,9 @@
 #include <Profile/TauPlugin.h>
 #include <Profile/TauMetaData.h>
 
+#ifdef TAU_MPI
+#include<mpi.h>
+#endif
 
 #include <margo.h>
 #include <sdskv-client.h>
@@ -232,7 +235,7 @@ void Tau_plugin_mochi_write_variables() {
 
     std::map<std::string, std::vector<double> >::iterator timer_map_it;
     std::vector<std::string>  m_keys;
-    std::vector<std::vector<double> >  m_vals;
+    std::vector<std::string>  m_vals;
     std::vector<hg_size_t>   m_ksizes, m_vsizes;
     std::vector<const void*> m_kptrs, m_vptrs;
 
@@ -244,6 +247,11 @@ void Tau_plugin_mochi_write_variables() {
     RESERVE(m_kptrs, metric_size);
     RESERVE(m_vsizes, metric_size);
     RESERVE(m_vptrs, metric_size);
+    
+    int rank = 0;
+    #ifdef TAU_MPI
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    #endif
 
     //foreach: TIMER
     std::vector<FunctionInfo*>::const_iterator it;
@@ -253,25 +261,33 @@ void Tau_plugin_mochi_write_variables() {
         stringstream ss;
         std::string shortName(fi->GetName());
         shorten_timer_name(shortName);
-        ss << shortName << "_Calls";
+        ss << shortName;
+        ss << "_Calls_";
+        ss << rank;
 
         // assign real data
         for (int tid = 0; tid < numThreadsLocal; tid++) {
             /* build a name with ss, tid */
             /* write the fi->GetCalls(tid) value */
-            ss << "_" << tid;
-            std::vector<double> val;
-            val.push_back((double)fi->GetCalls(tid));
-            m_vals.push_back(val);
+            ss << "_";
+            ss << tid;
             UPDATE_KEY(m_keys, ss.str());
-            UPDATE_VAL(m_vals, val);
+            stringstream val;
+            val << (double)fi->GetCalls(tid);
+            UPDATE_VAL(m_vals, val.str());
         }
         
         for (int m = 0 ; m < numCounters.size() ; m++) {
             stringstream incl;
             stringstream excl;
-            incl << shortName << "_Inclusive_" << counterNames[m];
-            excl << shortName << "_Exclusive_" << counterNames[m];
+            incl << shortName;
+            incl << "_Inclusive_";
+            incl << counterNames[m] << "_";
+            incl << rank;
+            excl << shortName;
+            excl <<  "_Exclusive_";
+            excl << counterNames[m];
+            excl << rank << "_";
             // assign real data
             for (int tid = 0; tid < numThreadsLocal; tid++) {
                 /* build a name with incl, tid */
@@ -280,18 +296,18 @@ void Tau_plugin_mochi_write_variables() {
                 /* write the fi->getDumpExclusiveValues(tid)[m] value */
                 incl << "_" << tid;
 		excl << "_" << tid;
-                std::vector<double> val1, val2;
+                stringstream val1, val2;
                 if(fi->GetCalls(tid) == 0) {
-                  val1.push_back(0.0);
-		  val2.push_back(0.0);
+                  val1 << 0.0;
+                  val2 << 0.0;
                 } else {
-                  val1.push_back(fi->getDumpInclusiveValues(tid)[m]);
-                  val2.push_back(fi->getDumpExclusiveValues(tid)[m]);
+                  val1 << (fi->getDumpInclusiveValues(tid)[m]);
+                  val2 << (fi->getDumpExclusiveValues(tid)[m]);
                 }
                 UPDATE_KEY(m_keys, incl.str());
-                UPDATE_VAL(m_vals, val1);
+                UPDATE_VAL(m_vals, val1.str());
                 UPDATE_KEY(m_keys, excl.str());
-                UPDATE_VAL(m_vals, val2);
+                UPDATE_VAL(m_vals, val2.str());
             }
         }
     }
@@ -312,7 +328,7 @@ void Tau_plugin_mochi_write_variables() {
     tau::AtomicEventDB::const_iterator it2;
     std::map<std::string, std::vector<double> >::iterator counter_map_it;
     std::vector<std::string>  m_counter_keys;
-    std::vector<std::vector<double> >  m_counter_vals;
+    std::vector<double>  m_counter_vals;
     std::vector<hg_size_t>   m_counter_ksizes, m_counter_vsizes;
     std::vector<const void*> m_counter_kptrs, m_counter_vptrs;
    
@@ -355,12 +371,12 @@ void Tau_plugin_mochi_write_variables() {
             UPDATE_KEY(m_counter_keys, max.str());
             UPDATE_KEY(m_counter_keys, sumsqr.str());
             
-            std::vector<double> num_val, mean_val, min_val, max_val, sumsqr_val;
-            num_val.push_back((double)ue->GetNumEvents(tid));
-            mean_val.push_back((double)ue->GetMean(tid));
-            min_val.push_back((double)ue->GetMin(tid));
-            max_val.push_back((double)ue->GetMax(tid));
-            sumsqr_val.push_back((double)ue->GetSumSqr(tid));
+            double num_val, mean_val, min_val, max_val, sumsqr_val;
+            num_val = ((double)ue->GetNumEvents(tid));
+            mean_val = ((double)ue->GetMean(tid));
+            min_val = ((double)ue->GetMin(tid));
+            max_val = ((double)ue->GetMax(tid));
+            sumsqr_val = ((double)ue->GetSumSqr(tid));
           
             UPDATE_VAL(m_counter_vals, num_val);
             UPDATE_VAL(m_counter_vals, mean_val);
@@ -371,11 +387,12 @@ void Tau_plugin_mochi_write_variables() {
         }
     }
 
+    double *counter_vptrs = m_counter_vals.data();
     for (int i = 0 ; i < 5*numThreadsLocal*tau::TheEventDB().size(); i++) {
         m_counter_ksizes[i] = m_counter_keys[i].size();
         m_counter_kptrs[i]  = m_counter_keys[i].data();
-        m_counter_vsizes[i] = m_counter_vals[i].size();
-        m_counter_vptrs[i]  = m_counter_vals[i].data();
+        m_counter_vsizes[i] = sizeof(double);
+        m_counter_vptrs[i]  = (void*)&counter_vptrs[i];
     }
 
     /* unlock the counter map */
