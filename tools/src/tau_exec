@@ -1191,7 +1191,6 @@ else
     if [ $apple = 1 ]; then
       echo "_regexp-env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands
       echo "_regexp-env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands
-      echo "_regexp-env DYLD_LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands
       echo "_regexp-env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands
       if [ $# -gt 1 ] ; then
         echo "settings set target.run-args ${*:2}" >> .gdb_commands

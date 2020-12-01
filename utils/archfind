@@ -54,6 +54,9 @@ if [ "y$test_arg" != "y$uname_output" ]
 then
     TAU_CCOM=gcc
     ARCH=arm_linux
+    if [ `uname -s ` = "Darwin" ]; then 
+      ARCH=arm64_apple
+    fi
 fi
 
 match_string="ppc64le"

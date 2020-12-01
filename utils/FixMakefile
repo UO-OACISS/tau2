@@ -1450,6 +1450,10 @@ case $1 in
 	echo NOTE: Apple c++ compiler will be used
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     ARM64_APPLE)
+	echo NOTE: Apple ARM64 Apple Silicon settings will be used
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      APPLE_MACH_PORT_BUG)
 	echo NOTE: Using -DTAU_APPLE_MACH_PORT_BUG compiler option 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
