@@ -187,6 +187,15 @@ install: .clean
 	@for i in ${SUBDIR}; do (echo "*** COMPILING $$i DIRECTORY"; cd $$i;\
              $(MAKE) "MAKE=$(MAKE)" install ) || exit $$?; done
 	@echo " "
+	@if [ x${CONFIG_ARCH} = xarm64_apple ] ; then \
+        (echo "Working around macOS codesigning bug..." ; \
+		echo "Making temporary copy of $(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)" ; \
+		cp -r -p $(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH) $(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)-temp ; \
+		echo "Removing $(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)" ; \
+	    rm -r $(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH) ; \
+		echo "Replacing $(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH) with temporary copy" ; \
+		mv $(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)-temp $(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)) ; \
+		fi
 	@echo "Built $(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)/lib/Makefile.tau$(TAU_CONFIG)"
 	@echo "***************** DONE ************************"
 
