@@ -451,6 +451,8 @@ unsigned long get_pc(void *p)
   pc = uct->uc_mcontext->__ss.__rip;
 #elif defined (__i386__)
   pc = uct->uc_mcontext->__ss.__eip;
+#elif defined (__arm64__)
+  pc = uct->uc_mcontext->__ss.__pc;
 #else
   pc = uct->uc_mcontext->__ss.__srr0;
 #endif /* defined(_STRUCT_X86_THREAD_STATE64) && !defined(__i386__) */
