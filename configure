@@ -12146,6 +12146,7 @@ fi
 #    ;;
 #esac
 
+#if [ $machine = apple -o $machine = arm64_apple ]; then
 if [ $machine = apple ]; then
     if [ -e /System/Library/PrivateFrameworks/CoreSymbolication.framework ]; then
 # Let us test if this works with the current compiler.
@@ -12159,7 +12160,7 @@ EOF
         else
           echo "no"
         fi
-        /bin/rm -f tau_apple_symbol.o
+        /bin/rm -f tau_apple_symbol.o tau_apple_symbol.cpp
     fi
 fi
 
