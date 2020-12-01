@@ -55,8 +55,8 @@ libTAU-null-plugin$(TAU_SHLIBX): Tau_plugin_example_null.o
 libTAU-sqlite3-plugin$(TAU_SHLIBX): Tau_plugin_sqlite3.o
 	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_sqlite3.o $(TAU_SQLITE3_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-sqlite3-plugin$(TAU_SHLIBX)
 
-libTAU-monitoring-plugin$(TAU_SHLIBX): Tau_plugin_monitoring.o
-	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_monitoring.o $(TAU_PAPI_EXTRA_FLAGS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-monitoring-plugin$(TAU_SHLIBX) $(TAU_SHLIBS)
+libTAU-monitoring-plugin$(TAU_SHLIBX): Tau_plugin_monitoring.o tau_nvml.o
+	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_monitoring.o tau_nvml.o $(TAU_PAPI_EXTRA_FLAGS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-monitoring-plugin$(TAU_SHLIBX) $(TAU_SHLIBS) -L$(TAU_CUPTI_INCLUDE)/../lib -lnvidia-ml
 
 libTAU-thread-summary-plugin$(TAU_SHLIBX): Tau_plugin_thread_summary.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-thread-summary-plugin$(TAU_SHLIBX) Tau_plugin_thread_summary.o
@@ -155,7 +155,10 @@ Tau_plugin_sqlite3.o: Tau_plugin_sqlite3.cpp Tau_plugin_sqlite3_schema.h
 	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) $(TAU_SQLITE3_INCLUDE_OPTS) -c $< -o $@
 
 Tau_plugin_monitoring.o: Tau_plugin_monitoring.cpp
-	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) -c $< -o $@
+	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUPTI_ACTIVITY_INCLUDE) $(TAU_CUDA_INCLUDE) -c $< -o $@
+
+tau_nvml.o: tau_nvml.cpp
+	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUPTI_ACTIVITY_INCLUDE) $(TAU_CUDA_INCLUDE) -c $< -o $@
 
 Tau_sockets.o: Tau_sockets.cpp Tau_sockets.h
 	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) -c $< -o $@
