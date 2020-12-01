@@ -3295,7 +3295,7 @@ configure_perfexplorer () {
 
     case $machine in
 
-	apple)
+	apple | arm64_apple)
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl.jnilib.gz > $JARTARGET/libjogl.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_awt.jnilib.gz > $JARTARGET/libjogl_awt.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_cg.jnilib.gz > $JARTARGET/libjogl_cg.jnilib
@@ -3736,7 +3736,7 @@ case $machine in
 	fi
 	;;
 
-    apple)
+    apple | arm64_apple )
 	if [ "$cxx_compiler" = "default" ]
 	then
             cxx_compiler=g++
@@ -4116,8 +4116,8 @@ if [ $c_compiler = hcc ]; then
 fi
 
 
-if [ "$machine" = "apple" ] ; then
-    mkdir -p apple/lib
+if [ "$machine" = "apple" -o "$machine" = "arm64_apple" ] ; then
+    mkdir -p $machine/lib
     cp tools/src/common/resources/tau-medium.png apple/lib/
     compiler_name=`which $cxx_compiler | awk '{print $1;}'`
     if [ "$compiler_name" = "no" -o "$compiler_name" = "" ]; then
@@ -4129,6 +4129,12 @@ if [ "$machine" = "apple" ] ; then
 	exit 0
     fi
 fi
+
+if [ "$machine" = "arm64_apple" ]; then
+  fixmakeargs="$fixmakeargs ARM64_APPLE"
+fi
+
+
 
 
 if [ $machine = craycnl -o $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
@@ -4391,7 +4397,7 @@ if [ $machine = mic_linux ] ; then
     orig_useropt="-xMIC-AVX512 -O2 "
 fi
 
-if [ $machine = apple ] ; then
+if [ $machine = apple -o ] ; then
     if [ $cxx_compiler = g++ -o $cxx_compiler = g++-5 -o $cxx_compiler = g++-6 -o $cxx_compiler = g++-7 -o $cxx_compiler = g++-8 -o $cxx_compiler = c++  -o $cxx_compiler = icpc  -o $cxx_compiler = icpx ] ; then
 	fixmakeargs="$fixmakeargs APPLECXX"
     fi

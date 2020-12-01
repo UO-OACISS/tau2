@@ -351,7 +351,11 @@ ARCHalpha
 
 #if defined(__APPLE__)
 #  define _havehosttype_ 
+#if defined(__arm64__)
+ARCHarm64_apple
+#else
 ARCHapple 
+#endif /* apple */
 # endif 
 
 #if defined(__hiuxmpp)
