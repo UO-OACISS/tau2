@@ -41,6 +41,10 @@
 using json = nlohmann::json;
 json configuration;
 
+#ifdef CUPTI
+#include "tau_nvml.hpp"
+#endif
+
 #define ONE_BILLION  1000000000
 #define ONE_BILLIONF 1000000000.0
 
@@ -220,6 +224,12 @@ pthread_t worker_thread;
 bool done;
 int rank_getting_system_data;
 int my_rank = 0;
+#ifdef CUPTI
+tau::nvml::monitor& get_nvml_reader() {
+    static tau::nvml::monitor nvml_reader;
+    return nvml_reader;
+}
+#endif
 
 void * find_user_event(const std::string& name) {
     void * ue = NULL;
@@ -1092,6 +1102,10 @@ void read_components(void) {
 #endif
 
     if (my_rank == rank_getting_system_data) {
+#ifdef CUPTI
+        get_nvml_reader().query();
+#endif
+
 #if !defined(__APPLE__)
         /* records the load, without context */
         Tau_track_load();
