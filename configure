@@ -4397,7 +4397,7 @@ if [ $machine = mic_linux ] ; then
     orig_useropt="-xMIC-AVX512 -O2 "
 fi
 
-if [ $machine = apple -o ] ; then
+if [ $machine = apple ] ; then
     if [ $cxx_compiler = g++ -o $cxx_compiler = g++-5 -o $cxx_compiler = g++-6 -o $cxx_compiler = g++-7 -o $cxx_compiler = g++-8 -o $cxx_compiler = c++  -o $cxx_compiler = icpc  -o $cxx_compiler = icpx ] ; then
 	fixmakeargs="$fixmakeargs APPLECXX"
     fi
