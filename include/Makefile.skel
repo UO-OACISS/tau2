@@ -1662,12 +1662,8 @@ TAU_SHLIBX              = .so
 #APPLECXX#TAU_APPLE_SHLIBX  = .dylib            #ENDIF#
 #APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)   #ENDIF#
 
-#ARM64_APPLE#TAU_APPLE_SHLIBX  = .dylib            #ENDIF#
-#ARM64_APPLE#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)   #ENDIF#
-
 # For loading the collector API on Apple
 #APPLECXX#TAU_USE_DYLIB = -DTAU_USE_DYLIB            #ENDIF#
-#ARM64_APPLE#TAU_USE_DYLIB = -DTAU_USE_DYLIB            #ENDIF#
 
 #############################################
 
