@@ -692,17 +692,20 @@ void Tau_cupti_init()
     TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_init\n");
 
     Tau_gpu_init();
-    //disable_callbacks =1;
     Tau_cupti_set_device_props();
 
     Tau_cupti_setup_unified_memory();
 
-		if (!subscribed) {
-			Tau_cupti_subscribe();
-		}
+    if (!subscribed) {
+        Tau_cupti_subscribe();
+    }
 
-		// subscribe must happen before enable domains
-		Tau_cupti_enable_domains();
+    // when monitoring the driver API, there are events that happen
+    // when enabling domains.  Ignore them, because TAU isn't ready yet.
+    disable_callbacks =1;
+    // subscribe must happen before enable domains
+    Tau_cupti_enable_domains();
+    disable_callbacks =0;
 
     TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_init\n");
 }
@@ -741,8 +744,6 @@ void Tau_cupti_onload()
     }
 
 	TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_onload\n");
-
-    //disable_callbacks =0;
 
 }
 
@@ -1036,10 +1037,16 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
 	    TAU_DEBUG_PRINT("[at call (enter), %d] name: %s.\n",
             cbInfo->correlationId, cbInfo->functionName);
 	    record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
-	    CUdevice device;
-	    cuCtxGetDevice(&device);
-	    //Tau_cuda_Event_Synchonize();
         if (Tau_Global_numGPUCounters > 0) {
+	        CUdevice device;
+            // The below call to cuCtxGetDevice() itself triggers a callback that TAU will process.
+            // If the timer for cuCtxGetDevice is throttled, this is causing the top-level timer
+            // to stop early. We disable callbacks here to prevent this and so as to not record
+            // a timer for a function called by TAU rather than the application.
+            disable_callbacks = 1;
+	        cuCtxGetDevice(&device);
+            disable_callbacks = 0;
+	        //Tau_cuda_Event_Synchonize();
 	        int taskId = get_taskid_from_context_id(cbInfo->contextUid, 0);
 	        record_gpu_counters_at_launch(device, taskId);
         }

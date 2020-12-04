@@ -50,6 +50,7 @@ usage()
   echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
   echo "        -rocm         Track ROCm events via rocprofiler "
   echo "        -ompt         Track OpenMP events via OMPT interface"
+  echo "        -oneapi       Track Intel OneAPI Level Zero events"
   echo "        -power        Track power events via PAPI's perf RAPL interface"
   echo "        -numa         Track remote DRAM, total DRAM events (needs papi with recent perf support for x86_64)"
   echo "        -armci        Track ARMCI events via PARMCI"
@@ -290,6 +291,7 @@ track_memory=false
 memory_debug=false
 track_cuda=false
 track_ompt=false
+track_l0=false
 track_power=false
 track_cupti=false
 unified_memory=false
@@ -394,6 +396,11 @@ for arg in "$@" ; do
         ;;
       -ompt)
         track_ompt=true
+        save_arg $arg
+        shift
+        ;;
+      -l0|-L0|-oneapi|-level_zero|-levelzero)
+        track_l0=true
         save_arg $arg
         shift
         ;;
@@ -807,6 +814,21 @@ if [ $track_ompt = "true" ]; then
   export OMP_TOOL_LIBRARIES=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
 fi
 
+if [ $track_l0 = "true" ]; then
+  export PTI_ENABLE=1
+  export ZE_ENABLE_API_TRACING=1
+  export ZET_ENABLE_API_TRACING_EXP=1
+  if [ $track_rocm = "true" ] ; then
+    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+      if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then
+        $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+      fi
+    else
+      $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+    fi
+  fi
+fi
+
 
 isTBB=`echo $theBinding | grep tbb`
 if [ ! "x$isTBB" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX ]; then
@@ -930,6 +952,13 @@ if [ $track_opencl = "true" ] ; then
   # Add the OpenCL wrapper library to the LD_PRELOAD list
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL$TAU_SHLIBX:$TAUEX_LD_PRELOAD
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OCLci$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+    export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+  else
+    export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
+  fi
+fi
+if [ $track_l0 = "true" -a $track_opencl = "false" ]; then
   if [ `echo $TAU_METRICS | grep "TIME"` ]; then
     export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
   else
@@ -1162,7 +1191,6 @@ else
     if [ $apple = 1 ]; then
       echo "_regexp-env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands
       echo "_regexp-env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands
-      echo "_regexp-env DYLD_LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands
       echo "_regexp-env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands
       if [ $# -gt 1 ] ; then
         echo "settings set target.run-args ${*:2}" >> .gdb_commands

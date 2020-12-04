@@ -12,29 +12,41 @@
 
 using namespace std;
 
+template <typename T, typename P>
 class TauCachingMap {
 private:
-    map<size_t,dummy*> _privateMap;
-    static map<size_t,dummy*> _sharedMap;
-    static mutex _sharedAccess;
+    map<T,P>& _privateMap() {
+        static thread_local map<T,P> theMap;
+        return theMap;
+    }
+    map<T,P>& _sharedMap() {
+        static map<T,P> theMap;
+        return theMap;
+    }
+    mutex& _sharedAccess() {
+        static mutex theMutex;
+        return theMutex;
+    }
 
 public:
     TauCachingMap() {};
     ~TauCachingMap() {};  // call the destructor trigger here!
 
-    dummy* find(size_t key) {
+    P find(T key) {
+        auto& pmap = _privateMap();
         // is it in the cache?
-        auto cached = _privateMap.find(key);
-        if (cached != _privateMap.end()) {
+        auto cached = pmap.find(key);
+        if (cached != pmap.end()) {
             return cached->second;
         }
+        auto& smap = _sharedMap();
         // acquire the lock
-        const lock_guard<mutex> lock(_sharedAccess);
+        const lock_guard<mutex> lock(_sharedAccess());
         // is it in the shared map?
-        auto shared = _sharedMap.find(key);
-        if (shared != _sharedMap.end()) {
+        auto shared = smap.find(key);
+        if (shared != smap.end()) {
             // copy it to the thread local cache
-            _privateMap[key] = shared->second;
+            pmap[key] = shared->second;
             return shared->second;
         }
         // not here.
@@ -42,35 +54,51 @@ public:
     }
 
     // with a function pointer with defined type...
-    //dummy* findOrInsert(size_t id, size_t key, std::function<dummy*(size_t, size_t)> p) {
+    //dummy* findOrInsert(size_t key, std::function<dummy*(size_t, size_t)> p) {
     // ...or with a template
-    template <typename P>
-    dummy* findOrInsert(size_t id, size_t key, P p) {
+    template<typename Func>
+    P findOrInsert(T key, Func f) {
+        auto& pmap = _privateMap();
         // is it in the cache?
-        auto cached = _privateMap.find(key);
-        if (cached != _privateMap.end()) {
+        auto cached = pmap.find(key);
+        if (cached != pmap.end()) {
             return cached->second;
         }
+        auto& smap = _sharedMap();
         // acquire the lock
-        const lock_guard<mutex> lock(_sharedAccess);
+        const lock_guard<mutex> lock(_sharedAccess());
         // is it in the shared map?
-        auto shared = _sharedMap.find(key);
-        if (shared != _sharedMap.end()) {
+        auto shared = smap.find(key);
+        if (shared != smap.end()) {
             // copy it to the thread local cache
-            _privateMap[key] = shared->second;
+            pmap[key] = shared->second;
             return shared->second;
         }
         // not here?  then create it.
-        auto tmp = p(id, key);
+        auto tmp = f();
         // put it in the shared map
-        _sharedMap[key] = tmp;
+        smap[key] = tmp;
         // ...and in the private, cache map
-        _privateMap[key] = tmp;
+        pmap[key] = tmp;
         return tmp;
     }
 
-    map<size_t, dummy*>& getAll() {
-        return _sharedMap;
+    map<T, P>& getAll() {
+        return _sharedMap();
     }
 
 };
+
+/* this has to be a different type for the test, otherwise the
+ * map gets reused, and there are no inserts */
+class TauDummyMap : public TauCachingMap<size_t, dummy2*> {
+private:
+    TauDummyMap() {};
+    ~TauDummyMap() {};  // call the destructor trigger here!
+public:
+    static TauDummyMap& instance() {
+        static TauDummyMap _i;
+        return _i;
+    }
+};
+

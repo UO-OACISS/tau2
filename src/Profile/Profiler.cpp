@@ -1735,7 +1735,11 @@ int TauProfiler_StoreData(int tid)
     if (RtsLayer::myThread() == 0 && tid == 0) {
     /* clean up other threads? */
     for (int i = 1; i < RtsLayer::getTotalThreads(); i++) {
-      TauProfiler_StoreData(i);
+      TAU_VERBOSE("Thread 0 checking other threads... i = %d\n", i);
+      if (TauInternal_CurrentProfiler(i)) {
+        TAU_VERBOSE("Thread 0 writing data for thread %d\n", i);
+        TauProfiler_StoreData(i);
+      }
     }
 #ifndef TAU_MPI
 #ifndef TAU_SHMEM
