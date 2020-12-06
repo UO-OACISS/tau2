@@ -1,0 +1,64 @@
+To use this example with TAU, please configure TAU with -opencl=<dir> option:
+
+source /opt/intel/oneapi/setvars.sh
+./configure -level_zero=/usr -bfd=download -unwind=download -dwarf=download -iowrapper -otf=download -opencl=/opt/intel/oneapi/compiler/2021.1-beta10/linux
+make install
+cd examples/gpu/oneapi/oneCCL
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .. 
+make 
+cd out/benchmark
+./benchmark
+tau_exec -T serial,level_zero -opencl ./benchmark
+pprof -a
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0          460          479           1          43     479198 .TAU application
+  3.9           18           18           2           1       9416 cl_int clGetPlatformIDs(cl_uint, cl_platform_id *, cl_uint *) C
+  0.0        0.075        0.075           3           0         25 pthread_create
+  0.0        0.049        0.049           2           0         24 pthread_join
+  0.0        0.033        0.033          21           0          2 cl_int clGetDeviceInfo(cl_device_id, cl_device_info, size_t, void *, size_t *) C
+  0.0         0.02         0.02          12           0          2 cl_int clGetDeviceIDs(cl_platform_id, cl_device_type, cl_uint, cl_device_id *, cl_uint *) C
+  0.0        0.002        0.002           6           0          0 cl_int clGetPlatformInfo(cl_platform_id, cl_platform_info, size_t, void *, size_t *) C
+
+NODE 0;CONTEXT 0;THREAD 1:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0            2          468           1           1     468499 .TAU application
+ 99.5          466          466           1           0     466319 NEO::DrmGemCloseWorker::worker(void*) [{} {0, 0}]
+
+NODE 0;CONTEXT 0;THREAD 2:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0            2          450           1           1     450652 .TAU application
+ 99.5          448          448           1           0     448409 ccl_worker_func(void*) [{worker.cpp} {0, 0}]
+
+NODE 0;CONTEXT 0;THREAD 3:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.194          171           1           1     171388 .TAU application
+ 99.9          171          171           1           0     171194 kvs_server_init(void*) [{} {0, 0}]
+
+
+To try MPI:
+./configure  -mpi -level_zero=/usr -bfd=download -unwind=download -dwarf=download -iowrapper -otf=download -opencl=/opt/intel/oneapi/compiler/2021.1-beta10/linux
+make install
+cd examples/gpu/oneapi/oneCCL
+mkdir mpibuild; cd mpibuild; cmake  -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+make -j; cd out/benchmark
+mpirun -np 4 tau_exec -T level_zero -opencl ./benchmark
+pprof 
+
+

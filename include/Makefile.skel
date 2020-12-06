@@ -122,6 +122,8 @@ SOSDIR=
 ADIOSDIR=
 ADIOS2DIR=
 SQLITE3DIR=
+MOCHIINCLUDES=
+MOCHILIBS=
 ADIOS2_CXXFLAGS=
 ADIOS2_LIBS=
 CALIPERDIR=
@@ -172,6 +174,7 @@ TAU_MPILIB_DIR=
 TAU_MPILIB_DIRLIB=
 TAU_MPI_NOWRAP_LIB=
 TAU_MPI_NOWRAP_FLIB=
+TAU_L0_DIR=
 TAU_ROCM_DIR=
 TAU_ROCPROFILER=
 TAU_ROCPROFILER_INC=
@@ -349,6 +352,13 @@ MPI_FORTRAN_INIT = TauFInit.o
 #SQLITE3#TAU_SQLITE3_LIBS=-L$(SQLITE3DIR)/lib -Wl,-rpath,$(SQLITE3DIR)/lib -L$(SQLITE3DIR)/lib64 -Wl,-rpath,$(SQLITE3DIR)/lib64 #ENDIF#
 #SQLITE3#TAU_SQLITE3_LINKER_OPTS=$(TAU_SQLITE3_LIBS) -lsqlite3 #ENDIF#
 #SQLITE3#TAU_SQLITE3_PLUGIN_LIB=libTAU-sqlite3-plugin$(TAU_SHLIBX) #ENDIF#
+
+#############################################
+# MOCHI OBJECTS and libs
+#############################################
+#MOCHI#TAU_MOCHI_INCLUDE_OPTS=$(MOCHIINCLUDES) #ENDIF#
+#MOCHI#TAU_MOCHI_LIBS=$(MOCHILIBS) #ENDIF#
+#MOCHI#TAU_MOCHI_LINKER_OPTS=$(TAU_MOCHI_LIBS) #ENDIF#
 
 #############################################
 # CALIPER OBJECTS and libs
@@ -716,6 +726,7 @@ JDKBINDIR = $(JDKDIR)/bin
 #APPLE_MACH_PORT_BUG#PROFILEOPT109         = -DTAU_APPLE_MACH_PORT_BUG #ENDIF#
 #SGI_MPT_MPI#PROFILEOPT110         = -DTAU_SGI_MPT_MPI #ENDIF#
 #OPENCL#PROFILEOPT111         = -DTAU_ENABLE_OPENCL #ENDIF#
+#LEVEL_ZERO#PROFILEOPT112         = -DTAU_ENABLE_LEVEL_ZERO -DTAU_DISABLE_SYSCALL_WRAPPER -I$(TAU_L0_DIR)/include #ENDIF#
 #ROCM#PROFILEOPT112         = -DTAU_ENABLE_ROCM #ENDIF#
 #ROCPROFILER#PROFILEOPT113 = -DTAU_ENABLE_ROCPROFILER -DTAU_GPU #ENDIF#
 #ROCM#PROFILEOPT114 = -DTAU_GPU #ENDIF#
@@ -1387,7 +1398,7 @@ TAU_CUPTI_INC=
 #CUDA#TAU_CUDA_INCLUDE=-I$(TAU_CUDA_INC)#ENDIF#
 #CUPTI#TAU_CUPTI_INCLUDE=-I$(TAU_CUPTI_INC)#ENDIF#
 
-#CUPTI#TAU_CUDA_LINKER_OPTS=-L$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) -lcupti -L$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)/stubs -lcuda -L$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)  $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)#ENDIF#
+#CUPTI#TAU_CUDA_LINKER_OPTS=-L$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) -lcupti -lnvidia-ml -L$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)/stubs -lcuda -L$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)  $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)#ENDIF#
 
 
 TAU_CUDA_LIBRARY=
@@ -1406,6 +1417,7 @@ TAU_INTERNAL_FLAGS = $(TAU_INTERNAL_FLAG1) $(TAU_INTERNAL_FLAG2)
 #PIN#TAU_PIN_LINKER_OPTS= -Wl,--hash-style=sysv $(PIN_ROOT)/intel64/runtime/pincrt/crtbeginS.o -Wl,-Bsymbolic -Wl,--version-script=$(PIN_ROOT)/source/include/pin/pintool.ver -fabi-version=2 -L$(PIN_ROOT)/intel64/runtime/pincrt -L$(PIN_ROOT)/intel64/lib -L$(PIN_ROOT)/intel64/lib-ext -L$(PIN_ROOT)/extras/xed-intel64/lib -lpin -lxed $(PIN_ROOT)/intel64/runtime/pincrt/crtendS.o -lpin3dwarf  -ldl-dynamic -nostdlib -lstlport-dynamic -lm-dynamic -lc-dynamic -lunwind-dynamic #ENDIF#
 #ROCPROFILER#TAU_ROCPROFILER_LINKER_OPTS=$(TAU_ROCPROFILER)/lib/librocprofiler64.so $(TAU_ROCM_DIR)/lib/libhsa-runtime64.so -Wl,-rpath,$(TAU_ROCM_DIR)/lib #ENDIF#
 #ROCTRACER#TAU_ROCTRACER_LINKER_OPTS=-L$(TAU_ROCTRACER_LIB_DIR) -lroctracer64 -Wl,-rpath,$(TAU_ROCTRACER_LIB_DIR) #ENDIF#
+#LEVEL_ZERO#TAU_LEVEL_ZERO_LINKER_OPTS=-L$(TAU_L0_DIR)/lib64 -lze_loader -Wl,-rpath,$(TAU_L0_DIR)/lib64 -ldrm #ENDIF#
 OTFLIB=
 #OTF2#TAU_OTF2_LINKER_OPTS = -L$(OTFLIB) -lotf2 -lotf2 -Wl,-rpath,$(OTFLIB) #ENDIF#
 #CRAYCNL_PMI#TAU_LINKER_OPT23=$(CRAY_PMI_POST_LINK_OPTS) -lpmi $(CRAY_XPMEM_POST_LINK_OPTS) -lxpmem -L/opt/cray/ugni/default/lib64 -lugni $(CRAY_UDREG_POST_LINK_OPTS) -ludreg $(CRAY_ALPS_POST_LINK_OPTS) -lalpslli -L/opt/cray/wlm_detect/default/lib64 -lwlm_detect -lalpsutil -lugni #ENDIF#
@@ -1430,7 +1442,7 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_CUDA_LINKER_OPTS) $(TAU_PYTHON_LINKER_OPTS)  \
                   $(TAU_ANDROID_LINKER_OPTS) $(TAU_BEACON_LINKER_OPTS) \
                   $(TAU_PIN_LINKER_OPTS) $(TAU_ROCPROFILER_LINKER_OPTS) \
-                  $(TAU_ROCTRACER_LINKER_OPTS) \
+                  $(TAU_ROCTRACER_LINKER_OPTS) $(TAU_LEVEL_ZERO_LINKER_OPTS) \
 				  $(TAU_SOS_LINKER_OPTS) $(TAU_ADIOS_LINKER_OPTS) \
 		  $(TAU_IBM_XL_MVAPICH2_OPTS) $(TAU_OTF2_LINKER_OPTS) $(TAU_CORESYMBOLICATION_LINKER_OPT) \
 		  $(DWARFLIB)

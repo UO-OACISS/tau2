@@ -76,6 +76,9 @@
 #define Tau_sampling_suspend(int tid)
 #define Tau_sampling_resume(int tid)
 
+#define Tau_sampling_timer_pause()
+#define Tau_sampling_timer_resume()
+
 #define Tau_sampling_init_if_necessary()
 #define Tau_sampling_finalize_if_necessary(tid)
 #define Tau_sampling_outputTraceCallpath(tid, pc, context)
@@ -93,6 +96,9 @@ extern "C" {
 /* These must be extern "C" so that HPCToolkit can call them */
 void Tau_sampling_suspend(int tid);
 void Tau_sampling_resume(int tid);
+
+void Tau_sampling_timer_pause(void);
+void Tau_sampling_timer_resume(void);
 
 /* For TauMpi.c workaround to handle conflict between EBS operation and
    mvapich2 on Hera.

@@ -624,9 +624,10 @@ usage() {
     echo "-cuda=<dir> ................ Specify location of the top level CUDA SDK"
     echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
     echo "-rocm[=<dir>] ...... Specify alternate path to ROCm (/opt/rocm default)."
-#   echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
+    echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
 #   echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
 #   echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
+    echo "-level_zero[=<dir>] ................. Specify path to Intel Level Zero."
     echo "-roctracer=<dir> .................. Specify location of ROCm roctracer."
     echo "-hip=<dir> .................... Specify location of ROCm HIP directory."
     echo ""
@@ -733,6 +734,7 @@ for arg in "$@"; do
         echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
         echo "-boost=<dir> ....................... Specify location of Boost package."
         echo "-apex ......................................... Build the APEX package."
+        echo "-mochi ............................ Add MOCHI backend database support."
         echo "-dyninst=<dir> ................... Specify location of DynInst package."
         echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
         echo "-dyninstlib=<dir> ................ Specify location of DynInst lib dir."
@@ -776,11 +778,12 @@ for arg in "$@"; do
         echo "-opencl=<dir> ................ Specify location of the top level OpenCL SDK"
         echo "  Note: This option is needed when used with -cuda=<dir> option. "
         echo "-rocm[=<dir>] ...... Specify alternate path to ROCm (/opt/rocm default)."
-        #echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
+        echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
         #echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
         #echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
         echo "-roctracer=<dir> .................. Specify location of ROCm roctracer."
         echo "-hip=<dir> .................... Specify location of ROCm HIP directory."
+        echo "-level_zero[=<dir>] ................. Specify path to Intel Level Zero."
         echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
         echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
         echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
@@ -797,63 +800,63 @@ for arg in "$@"; do
 #    echo "-mon-mrnet-use-lightweight ..... Instructs ToM to use MRNet lightweight"
 #    echo "                                 interface.                            "
         echo "-scorep=<dir>  .................... Specify location of SCOREP package."
-	    echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
-	    echo "-gasnet=<dir>  ............ Specify location of GASNET for UPC wrapper."
-	    echo "-python .. Automatically choose python options based on Python in path."
-	    echo "-pythoninc=<dir> ........ Specify location of Python include directory."
-	    echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
-	    echo "-tag=<unique name> ........ Specify a tag to identify the installation."
-	    echo "-perfinc=<dir> ............. Specify a Perflib[LANL] include directory."
-	    echo "-perflib=<dir> ................. Specify a Perflib[LANL] lib directory."
-	    echo "-perflibrary=<library> ... Specify a different perflib runtime library."
-	    echo "-ktau ........................................... Kernel TAU Profiling."
-	    echo "-ktau_shctr ........................ Kernel TAU Profiling with shared- "
-	    echo "                                                   OS counters support."
-	    echo "-ktauinc=<dir> ............... Specify location of Linux Kernel source."
-	    echo "-ktauincuser=<dir> ............... Specify location of KTAU user incls."
-	    echo "-ktaulib=<dir> ............ Specify location of KTAU library libktau.a."
-	    echo "-ktausym=<path to System.map>  ...... Specify location of Linux Kernel."
-	    echo "                                                          Symbol Table."
-	    echo "-stff=<dir> .... Location of RENCI Scalable Time-series filter library."
-	    echo "-sddf=<dir> ...... SDDF library location; Only required for RENCI STFF."
-	    echo "-sos=<dir | download>................. Use Scalable Observation System."
-	    echo "-soscomm=<comm>..communicatiors between SOS daemons[mpi,sockets,evpath]"
+	echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
+	echo "-gasnet=<dir>  ............ Specify location of GASNET for UPC wrapper."
+	echo "-python .. Automatically choose python options based on Python in path."
+	echo "-pythoninc=<dir> ........ Specify location of Python include directory."
+	echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
+	echo "-tag=<unique name> ........ Specify a tag to identify the installation."
+	echo "-perfinc=<dir> ............. Specify a Perflib[LANL] include directory."
+	echo "-perflib=<dir> ................. Specify a Perflib[LANL] lib directory."
+	echo "-perflibrary=<library> ... Specify a different perflib runtime library."
+	echo "-ktau ........................................... Kernel TAU Profiling."
+	echo "-ktau_shctr ........................ Kernel TAU Profiling with shared- "
+	echo "                                                   OS counters support."
+	echo "-ktauinc=<dir> ............... Specify location of Linux Kernel source."
+	echo "-ktauincuser=<dir> ............... Specify location of KTAU user incls."
+	echo "-ktaulib=<dir> ............ Specify location of KTAU library libktau.a."
+	echo "-ktausym=<path to System.map>  ...... Specify location of Linux Kernel."
+	echo "                                                          Symbol Table."
+	echo "-stff=<dir> .... Location of RENCI Scalable Time-series filter library."
+	echo "-sddf=<dir> ...... SDDF library location; Only required for RENCI STFF."
+	echo "-sos=<dir | download>................. Use Scalable Observation System."
+	echo "-soscomm=<comm>..communicatiors between SOS daemons[mpi,sockets,evpath]"
 	    #    echo "-TRACE ..................................... Generate TAU event traces."
 	    #    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
 	    #    echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
 	    #    echo "-PROFILECALLPATH ......................... Generate call path profiles."
-	    echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
-            echo "-PROFILEPATHS ........ Generate profiles with MPI path based profiling."
-	    echo "-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info."
-	    echo "-PROFILEPHASE .......................... Generate phase based profiles."
+	echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
+        echo "-PROFILEPATHS ........ Generate profiles with MPI path based profiling."
+	echo "-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info."
+	echo "-PROFILEPHASE .......................... Generate phase based profiles."
 	    #    echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
 	    #    echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
 	    #    echo "-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry."
 	    #    echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
-	    echo "-BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems."
-	    echo "-BGPTIMERS .... Use fast low-overhead timers on IBM BlueGene/P systems."
-	    echo "-BGQTIMERS .... Use fast low-overhead timers on IBM BlueGene/Q systems."
-	    echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
-	    echo "-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems."
-	    echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
-	    echo "-CPUTIME .......... Use usertime+system time instead of wallclock time."
-	    echo "-PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi."
-	    echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
-	    echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
-	    echo "-noex .................. Use no exceptions while compiling the library."
-	    echo "-noplugins ...................... Do not build support for TAU plugins."
-	    echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
-            echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
-            echo "                       (Note: also disables sampling, marker tracking)."
-	    echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
-            echo "-PMI ...................... Enable Cray PMI for tracking topology info."
-	    echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
-	    echo "-zeptodir=<dir> ............................. ZeptoOS install location."
-	    echo "                              See http://www-unix.mcs.anl.gov/zeptoos/."
-	    echo "-help ...................................... display this help message."
-	    echo "-fullhelp .............................. display the full help message."
-	    exit
-	    ;;
+	echo "-BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems."
+	echo "-BGPTIMERS .... Use fast low-overhead timers on IBM BlueGene/P systems."
+	echo "-BGQTIMERS .... Use fast low-overhead timers on IBM BlueGene/Q systems."
+	echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
+	echo "-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems."
+	echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
+	echo "-CPUTIME .......... Use usertime+system time instead of wallclock time."
+	echo "-PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi."
+	echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
+	echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
+	echo "-noex .................. Use no exceptions while compiling the library."
+	echo "-noplugins ...................... Do not build support for TAU plugins."
+	echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
+        echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
+        echo "                       (Note: also disables sampling, marker tracking)."
+	echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
+        echo "-PMI ...................... Enable Cray PMI for tracking topology info."
+	echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
+	echo "-zeptodir=<dir> ............................. ZeptoOS install location."
+	echo "                              See http://www-unix.mcs.anl.gov/zeptoos/."
+	echo "-help ...................................... display this help message."
+	echo "-fullhelp .............................. display the full help message."
+	exit
+	;;
     esac
 done
 
@@ -1126,6 +1129,8 @@ adiosdir=
 adios2=no
 adios2dir=
 sqlite3=no
+mochi=no
+mochi_sdskv_dir=
 sqlite3dir=
 #caliper=no
 #caliperdir=
@@ -1180,6 +1185,7 @@ dmapp=no
 zepto=no
 zeptodir=
 cuda=no
+level_zero=no
 rocm=no
 rocprofiler=no
 roctracer=no
@@ -2024,6 +2030,21 @@ for arg in "$@"; do
         shift
         ;;
 
+    -mochi)
+        if [ `command -v pkg-config &> /dev/null; echo $?` == "1" ] ; then
+            echo "Error: Cannot find any pkg-config installation! pkg-config is required to detect a mochi installation."
+            exit 1
+        fi
+
+        if [ `pkg-config --exists sdskv-client; echo $?` == "1" ] ; then
+            echo "Error: Cannot access mochi_sdskv install directory! Please verify that mochi-sdskv and dependent modules are loaded."
+            exit 1
+        else
+            mochi=yes
+        fi
+        shift
+        ;;
+
 #	-caliper=*)
 #	    caliper=yes
 #	    caliperdir=`echo $arg | sed -e 's/-caliper=//'`
@@ -2766,6 +2787,34 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-level_zero)
+            level_zero=yes
+	    if [ -r /usr/lib64/libze_loader.so ]; then
+	      l0dir="/usr"
+              fixmakeargs="$fixmakeargs l0dir=$l0dir LEVEL_ZERO"
+              tauoptions="${tauoptions}-level_zero"
+              pthread=yes
+	    else
+	      echo "TAU: /usr/lib64/libze_loader.so not found. Please specify -level_zero=<dir> and reconfigure TAU."
+	      exit 1
+	    fi
+	    shift
+	    ;;
+
+	-level_zero=*)
+            l0dir=`echo $arg | sed -e 's/-level_zero=//' -e 's/ /#/g'`
+            if [ ! -d $l0dir ]; then
+              echo  "Error: Cannot access Level Zero directory $l0dir"
+              exit 1
+            else
+              fixmakeargs="$fixmakeargs l0dir=$l0dir LEVEL_ZERO"
+              level_zero=yes
+            fi
+            tauoptions="${tauoptions}-level_zero"
+            pthread=yes
+            shift
+            ;;
+
 	-rocm)
             rocmdir=/opt/rocm
 	    #fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM ROCPROFILER"
@@ -2872,6 +2921,10 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-opencl)
+	    use_opencl=yes
+	    shift
+	    ;;
 	-opencl=*)
 	    openclinclude=`echo $arg | sed -e 's/-opencl=//' -e 's/ /#/g'`/include
 	    if [ ! -d $openclinclude ] ; then
@@ -2890,7 +2943,12 @@ for arg in "$@"; do
 		fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude"
                 use_opencl=yes
 	    else
-		echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+		if [ -f "$openclinclude/sycl/CL/cl.h" ]; then 
+		    fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude/sycl"
+                    use_opencl=yes
+		else
+	            echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+	        fi 
 	    fi
 	    shift
 	    ;;
@@ -2959,6 +3017,35 @@ if [ "x$python"  = "xyes" ] ; then
       exit 1
     fi
   fi
+fi
+
+if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler ]; then
+  rocprofilerdir=$rocmdir/rocprofiler
+  fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER"
+  rocprofiler=yes
+  tauoptions="${tauoptions}-rocprofiler"
+  pthread=yes
+fi
+
+if [ "x$use_opencl" = "xyes" -a "x$openclinclude" = "x" ]; then
+  ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
+  for d in $ld_lib_path
+  do
+    if [ -r $d/libOpenCL.so ]; then
+      openclinclude=`echo $d | sed -e "s@/lib@@g"`/include
+      if [ -f "$openclinclude/CL/cl.h" ] ; then
+      #                       useropt="$useropt#-DTAU_MAX_THREADS=32"
+        fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude"
+	break;
+      else
+        if [ -f "$openclinclude/sycl/CL/cl.h" ]; then
+          fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude/sycl"
+        else
+            echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+        fi
+      fi
+    fi
+  done
 fi
 
 if [ "x$upcnetwork" = "x" ] ; then
@@ -3220,7 +3307,7 @@ configure_perfexplorer () {
 
     case $machine in
 
-	apple)
+	apple | arm64_apple)
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl.jnilib.gz > $JARTARGET/libjogl.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_awt.jnilib.gz > $JARTARGET/libjogl_awt.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_cg.jnilib.gz > $JARTARGET/libjogl_cg.jnilib
@@ -3488,7 +3575,11 @@ detectarch=`./archfind`
 detectxdev=`./archfind -x`
 cd ..
 if [ "x$detectarch" = "x" ] ; then
+  detectarch=`TAU_CCOM=gcc utils/archfind`
+  detectxdev=`TAU_CCOM=gcc utils/archfind -x`
+  if [ "x$detectarch" = "x" ] ; then
     detectarch=unknown
+  fi
 fi
 
 
@@ -3657,7 +3748,7 @@ case $machine in
 	fi
 	;;
 
-    apple)
+    apple | arm64_apple )
 	if [ "$cxx_compiler" = "default" ]
 	then
             cxx_compiler=g++
@@ -4037,8 +4128,8 @@ if [ $c_compiler = hcc ]; then
 fi
 
 
-if [ "$machine" = "apple" ] ; then
-    mkdir -p apple/lib
+if [ "$machine" = "apple" -o "$machine" = "arm64_apple" ] ; then
+    mkdir -p $machine/lib
     cp tools/src/common/resources/tau-medium.png apple/lib/
     compiler_name=`which $cxx_compiler | awk '{print $1;}'`
     if [ "$compiler_name" = "no" -o "$compiler_name" = "" ]; then
@@ -4050,6 +4141,12 @@ if [ "$machine" = "apple" ] ; then
 	exit 0
     fi
 fi
+
+if [ "$machine" = "arm64_apple" ]; then
+  fixmakeargs="$fixmakeargs ARM64_APPLE"
+fi
+
+
 
 
 if [ $machine = craycnl -o $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
@@ -4312,7 +4409,7 @@ if [ $machine = mic_linux ] ; then
     orig_useropt="-xMIC-AVX512 -O2 "
 fi
 
-if [ $machine = apple ] ; then
+if [ $machine = apple -o $machine = arm64_apple ] ; then
     if [ $cxx_compiler = g++ -o $cxx_compiler = g++-5 -o $cxx_compiler = g++-6 -o $cxx_compiler = g++-7 -o $cxx_compiler = g++-8 -o $cxx_compiler = c++  -o $cxx_compiler = icpc  -o $cxx_compiler = icpx ] ; then
 	fixmakeargs="$fixmakeargs APPLECXX"
     fi
@@ -11511,6 +11608,15 @@ if [ $sqlite3 = yes ] ; then
     fixmakeargs="$fixmakeargs sqlite3dir=$sqlite3dir"
 fi
 
+if [ $mochi = yes ] ; then
+        echo "Detected Mochi..."
+    mochiincludes=`pkg-config --cflags-only-I sdskv-client | sed -e 's/[[:space:]]*$//' | sed 's/ /#/g'`
+    mochilibs=`pkg-config --libs sdskv-client | sed -e 's/[[:space:]]*$//' | sed 's/ /#/g'`
+    fixmakeargs="$fixmakeargs MOCHI "
+    fixmakeargs="$fixmakeargs mochiincludes=${mochiincludes}#-DTAU_MOCHI"
+    fixmakeargs="$fixmakeargs mochilibs=${mochilibs}"
+fi
+
 #if [ $caliper = yes ] ; then
 #    tauoptions="${tauoptions}-caliper"
 #    fixmakeargs="$fixmakeargs CALIPER "
@@ -12094,8 +12200,9 @@ fi
 #    ;;
 #esac
 
-if [ $machine = apple ]; then
-    if [ -e /System/Library/PrivateFrameworks/CoreSymbolication.framework/CoreSymbolication ]; then
+if [ $machine = apple -o $machine = arm64_apple ]; then
+#if [ $machine = apple ]; then
+    if [ -e /System/Library/PrivateFrameworks/CoreSymbolication.framework ]; then
 # Let us test if this works with the current compiler.
 cat <<EOF > tau_apple_symbol.cpp
 #include "CoreSymbolication.h"
@@ -12107,7 +12214,7 @@ EOF
         else
           echo "no"
         fi
-        /bin/rm -f tau_apple_symbol.o
+        /bin/rm -f tau_apple_symbol.o tau_apple_symbol.cpp
     fi
 fi
 

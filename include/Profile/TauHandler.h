@@ -43,6 +43,9 @@ int TauEnableTrackingMemoryHeadroom(void);
 int TauDisableTrackingMemoryHeadroom(void);
 void TauTrackMemoryHeadroomHere(void);
 
+int Tau_open_system_file(const char *filename);
+int Tau_read_load_event(int fd, double *value);
+
 #endif /* _TAU_HANDLER_H_ */
   
 /***************************************************************************

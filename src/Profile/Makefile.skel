@@ -143,6 +143,7 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #############################################
 #ROCPROFILER#ROCPROFILER_O = TauGpu.o TauRocProfiler.o #ENDIF#
 #ROCM#ROCM_O = TauRocm.o #ENDIF#
+#LEVEL_ZERO#TAU_LEVEL_ZERO_O = TauLevelZero.o #ENDIF#
 #ROCTRACER#ROCTRACER_O = TauRocTracer.o #ENDIF#
 
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
@@ -159,7 +160,8 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
 		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
 		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O) $(ADIOS_O) \
-		$(OTF2_O) $(CALIPER_O) $(ROCPROFILER_O) $(ROCM_O) $(ROCTRACER_O)
+		$(OTF2_O) $(CALIPER_O) $(ROCPROFILER_O) $(ROCM_O) $(ROCTRACER_O) \
+		$(TAU_LEVEL_ZERO_O) 
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is
@@ -718,7 +720,7 @@ TauPinHelper.o 	: TauPinHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TauSampling.o 	: TauSampling.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
+	$(CXX) $(TAU_STDCXX11_FLAG) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TauSampling_hpctoolkit.o 	: TauSampling_hpctoolkit.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -939,6 +941,9 @@ TauRocProfiler.o : TauRocProfiler.cpp $(HDRS)
 
 TauRocm.o : TauRocm.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauLevelZero.o : TauLevelZero.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauRocTracer.o : TauRocTracer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)

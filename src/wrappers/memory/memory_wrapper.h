@@ -34,7 +34,14 @@ extern "C" {
 #endif
 
 // Size of heap memory for library wrapper bootstrapping
+#ifdef __APPLE__
+// Starting on macOS 11, PAGE_SIZE is not constant on macOS
+// Apple recommends using PAGE_MAX_SIZE instead.
+// see https://developer.apple.com/videos/play/wwdc2020/10214/?time=549
+#define BOOTSTRAP_HEAP_SIZE (3*PAGE_MAX_SIZE)
+#else
 #define BOOTSTRAP_HEAP_SIZE (3*PAGE_SIZE)
+#endif
 
 // Types of function pointers for wrapped functions
 typedef void * (*malloc_t)(size_t);

@@ -15,12 +15,13 @@ using namespace std;
 
 std::vector<size_t> keys;
 
-thread_local TauCachingMap theCachingMap;
-TauRegularMap theRegularMap;
+TauCachingMap<size_t,dummy*> theCachingMap;
+TauRegularMap<size_t,dummy*> theRegularMap;
 
 #define handle_error_en(en, msg) \
     do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
 
+#if !defined(_MSC_VER) && !defined(__APPLE__)
 void set_thread_affinity(int core) {
     if (!pin_threads_to_cores) { return; }
     int s;
@@ -36,33 +37,51 @@ void set_thread_affinity(int core) {
 
     s = pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
     if (s != 0) handle_error_en(s, "pthread_setaffinity_np");
-
     return;
 }
+#endif
 
 /* Thread function to test the caching map */
 void fooCaching (size_t id) {
+#if !defined(_MSC_VER) && !defined(__APPLE__)
     set_thread_affinity(id);
+#endif
     for (size_t i = 0 ; i < iterations ; i++) {
         size_t key = keys[i];
-        dummy* d = theCachingMap.findOrInsert(id, key, [](size_t id, size_t key) { return new dummy(id,key); });
+        dummy* d = theCachingMap.findOrInsert(key, [&]() { return new dummy(id,key); });
+        assert(d);
+    }
+}
+
+/* Thread function to test the caching map as a singleton */
+void fooSingleton (size_t id) {
+#if !defined(_MSC_VER) && !defined(__APPLE__)
+    set_thread_affinity(id);
+#endif
+    for (size_t i = 0 ; i < iterations ; i++) {
+        size_t key = keys[i];
+        dummy2* d = TauDummyMap::instance().findOrInsert(key, [&]() { return new dummy2(id,key); });
         assert(d);
     }
 }
 
 /* Thread function to test the regular (shared) map */
 void fooRegular (size_t id) {
+#if !defined(_MSC_VER) && !defined(__APPLE__)
     set_thread_affinity(id);
+#endif
     for (size_t i = 0 ; i < iterations ; i++) {
         size_t key = keys[i];
-        dummy* d = theRegularMap.findOrInsert(id, key, [](size_t id, size_t key) { return new dummy(id,key); });
+        dummy* d = theRegularMap.findOrInsert(key, [&]() { return new dummy(id,key); });
         assert(d);
     }
 }
 
 /* Thread function to test what should be the fastest map - each thread has their own local map */
 void fooFastest (size_t id) {
+#if !defined(_MSC_VER) && !defined(__APPLE__)
     set_thread_affinity(id);
+#endif
     map<size_t, dummy*> fastestMap;
     for (size_t i = 0 ; i < iterations ; i++) {
         size_t key = keys[i];
@@ -90,13 +109,14 @@ int main() {
         keys.push_back(key);
     }
 
-    /* Test the caching map with a bunch of threads */
-    cout << "Caching map..." << endl;
     using namespace std::chrono;
+
+    /* test the theoretically fastest map (no sharing) with a bunch of threads */
+    cout << "Local map..." << endl;
     auto start = high_resolution_clock::now();
 
     for (size_t i = 0 ; i < numThreads ; i++) {
-        thread t(fooCaching, i);
+        thread t(fooFastest, i);
         threads.push_back(move(t));
     }
 
@@ -105,11 +125,11 @@ int main() {
     }
 
     auto stop = high_resolution_clock::now();
-    auto cachingDuration = duration_cast<milliseconds>(stop - start);
+    auto fastestDuration = duration_cast<milliseconds>(stop - start);
     threads.clear();
 
     /* test the regular map with a bunch of threads */
-    cout << "Regular (shared) map..." << endl;
+    cout << "Shared map..." << endl;
     start = high_resolution_clock::now();
 
     for (size_t i = 0 ; i < numThreads ; i++) {
@@ -125,12 +145,12 @@ int main() {
     auto regularDuration = duration_cast<milliseconds>(stop - start);
     threads.clear();
 
-    /* test the theoretically fastest map (no sharing) with a bunch of threads */
-    cout << "Local (fastest?) map..." << endl;
+    /* Test the caching map with a bunch of threads */
+    cout << "Singleton map..." << endl;
     start = high_resolution_clock::now();
 
     for (size_t i = 0 ; i < numThreads ; i++) {
-        thread t(fooFastest, i);
+        thread t(fooSingleton, i);
         threads.push_back(move(t));
     }
 
@@ -139,7 +159,25 @@ int main() {
     }
 
     stop = high_resolution_clock::now();
-    auto fastestDuration = duration_cast<milliseconds>(stop - start);
+    auto singletonDuration = duration_cast<milliseconds>(stop - start);
+    threads.clear();
+
+    /* Test the caching map with a bunch of threads */
+    cout << "Caching map..." << endl;
+    using namespace std::chrono;
+    start = high_resolution_clock::now();
+
+    for (size_t i = 0 ; i < numThreads ; i++) {
+        thread t(fooCaching, i);
+        threads.push_back(move(t));
+    }
+
+    for (size_t i = 0 ; i < numThreads ; i++) {
+        threads[i].join();
+    }
+
+    stop = high_resolution_clock::now();
+    auto cachingDuration = duration_cast<milliseconds>(stop - start);
 
     /* Print out the maps, showing which thread created each entry */
     /*
@@ -154,7 +192,8 @@ int main() {
     }
     */
 
-    cout << "Caching: " << cachingDuration.count() << " ms" << endl;
-    cout << "Regular: " << regularDuration.count() << " ms" << endl;
     cout << "Fastest: " << fastestDuration.count() << " ms" << endl;
+    cout << "Caching: " << cachingDuration.count() << " ms" << endl;
+    cout << "Singleton: " << singletonDuration.count() << " ms" << endl;
+    cout << "Regular: " << regularDuration.count() << " ms" << endl;
 }

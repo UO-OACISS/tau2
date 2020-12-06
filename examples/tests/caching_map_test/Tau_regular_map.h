@@ -5,61 +5,61 @@
 #include <mutex>
 #include <thread>
 #include <iostream>
-#include "dummy.h"
+#include <sstream>
+#include <functional>
+#include <assert.h>
 
 using namespace std;
 
+template <typename T, typename P>
 class TauRegularMap {
 private:
-    static map<size_t,dummy*> _sharedMap;
-    static mutex _sharedAccess;
-
-    // ASSUMES THE LOCK IS ACQUIRED FIRST!
-    dummy* _find(size_t key) {
-        // is it in the shared map?
-        auto shared = _sharedMap.find(key);
-        if (shared != _sharedMap.end()) {
-            return shared->second;
-        }
-        // not here?  then create it.
-        return nullptr;
+    map<T,P>& _sharedMap() {
+        static map<T,P> theMap;
+        return theMap;
     }
+    mutex& _sharedAccess() {
+        static mutex theMutex;
+        return theMutex;
+    }
+
 public:
     TauRegularMap() {};
-    ~TauRegularMap() {};
+    ~TauRegularMap() {};  // call the destructor trigger here!
 
-    dummy* find(size_t key) {
+    P find(T key) {
         // acquire the lock
-        const lock_guard<mutex> lock(_sharedAccess);
-        return _find(key);
-    }
-
-    dummy* insert(size_t key, dummy* value) {
-        // acquire the lock
-        const lock_guard<mutex> lock(_sharedAccess);
-        auto tmp = _find(key);
-        if (tmp != nullptr) { return tmp; }
-        _sharedMap[key] = value;
-        return value;
-    }
-
-    template <typename P>
-    dummy* findOrInsert(size_t id, size_t key, P p) {
-        // acquire the lock
-        const lock_guard<mutex> lock(_sharedAccess);
+        const lock_guard<mutex> lock(_sharedAccess());
         // is it in the shared map?
-        auto shared = _sharedMap.find(key);
-        if (shared != _sharedMap.end()) {
+        auto shared = _sharedMap().find(key);
+        if (shared != _sharedMap().end()) {
+            return shared->second;
+        }
+        // not here.
+        return nullptr;
+    }
+
+    // with a function pointer with defined type...
+    //dummy* findOrInsert(size_t key, std::function<dummy*(size_t, size_t)> p) {
+    // ...or with a template
+    template<typename Func>
+    P findOrInsert(T key, Func f) {
+        // acquire the lock
+        const lock_guard<mutex> lock(_sharedAccess());
+        // is it in the shared map?
+        auto shared = _sharedMap().find(key);
+        if (shared != _sharedMap().end()) {
             return shared->second;
         }
         // not here?  then create it.
-        auto tmp = p(id, key);
-        _sharedMap[key] = tmp;
+        auto tmp = f();
+        // put it in the shared map
+        _sharedMap()[key] = tmp;
         return tmp;
     }
 
-    map<size_t, dummy*>& getAll() {
-        return _sharedMap;
+    map<T, P>& getAll() {
+        return _sharedMap();
     }
 
 };
