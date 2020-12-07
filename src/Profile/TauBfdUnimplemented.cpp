@@ -108,3 +108,11 @@ void Tau_delete_bfd_units(void) {
   return;
 }
 
+/* Dummy instantiation for tau_exec -io -memory support when Binutils aren't included */
+
+typedef int * (*objopen_counter_t)(void);
+extern "C" void Tau_bfd_register_objopen_counter(objopen_counter_t handle) {
+  return;
+}
+
+
