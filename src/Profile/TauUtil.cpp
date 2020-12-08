@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <map>
+#include <set>
 
 #ifdef TAU_USE_STDCXX11
 #include <thread>
@@ -546,9 +547,13 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
   TAU_VERBOSE("TAU: Trying to load plugin with name %s\n", token);
 
   fullpath = (char*)calloc(TAU_NAME_LENGTH, sizeof(char));
+  std::set<std::string> plugins_seen;
 
   while(token != NULL)
   {
+    // check to make sure we haven't loaded it already!
+    std::string tmp(token);
+    if (plugins_seen.count(tmp) > 0) continue;
     TAU_VERBOSE("TAU: Loading plugin: %s\n", token);
     strcpy(fullpath, "");
     strcpy(fullpath,pluginpath);
@@ -556,6 +561,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
       printf("TAU: Plugin name specification does not match form <plugin_name1>(<plugin_arg1>,<plugin_arg2>):<plugin_name2>(<plugin_arg1>,<plugin_arg2>) for: %s\n",token);
       return -1;
     }
+    plugins_seen.insert(tmp);
 
 #ifndef TAU_WINDOWS
     sprintf(fullpath, "%s/%s", pluginpath, plugin_name);
