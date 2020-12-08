@@ -2789,7 +2789,7 @@ for arg in "$@"; do
 
 	-level_zero)
             level_zero=yes
-	    if [ -r /usr/lib64/libze_loader.so ]; then
+	    if [ -r /usr/lib64/libze_loader.so -o -r /usr/lib/x86_64-linux-gnu/libze_loader.so ]; then
 	      l0dir="/usr"
               fixmakeargs="$fixmakeargs l0dir=$l0dir LEVEL_ZERO"
               tauoptions="${tauoptions}-level_zero"
