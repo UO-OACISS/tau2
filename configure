@@ -2789,13 +2789,22 @@ for arg in "$@"; do
 
 	-level_zero)
             level_zero=yes
-	    if [ -r /usr/lib64/libze_loader.so -o -r /usr/lib/x86_64-linux-gnu/libze_loader.so ]; then
+            tauoptions="${tauoptions}-level_zero"
+            pthread=yes
+	    if [ -r /usr/lib64/libze_loader.so ]; then
 	      l0dir="/usr"
-              fixmakeargs="$fixmakeargs l0dir=$l0dir LEVEL_ZERO"
-              tauoptions="${tauoptions}-level_zero"
-              pthread=yes
+	      l0_lib_dir="/usr/lib64"
+              fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+            elif [ -r /usr/lib/x86_64-linux-gnu/libze_loader.so ]; then 
+	      l0dir="/usr"
+	      l0_lib_dir="/usr/lib/x86_64-linux-gnu"
+              fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+            elif [ -r /usr/local/lib/libze_loader.so ]; then 
+	      l0dir="/usr/local"
+	      l0_lib_dir="/usr/local/lib"
+              fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
 	    else
-	      echo "TAU: /usr/lib64/libze_loader.so not found. Please specify -level_zero=<dir> and reconfigure TAU."
+	      echo "TAU: libze_loader.so not found. Please specify -level_zero=<dir> and reconfigure TAU."
 	      exit 1
 	    fi
 	    shift
@@ -2810,6 +2819,21 @@ for arg in "$@"; do
               fixmakeargs="$fixmakeargs l0dir=$l0dir LEVEL_ZERO"
               level_zero=yes
             fi
+	    if [ -r $l0dir/lib64/libze_loader.so ]; then 
+             l0_lib_dir="$l0dir/lib64"
+	    elif [ -r $l0dir/lib/libze_loader.so ]; then 
+             l0_lib_dir="$l0dir/lib"
+	    elif [ -r $l0dir/lib/x86_64-linux-gnu/libze_loader.so ]; then 
+             l0_lib_dir="$l0dir/lib/x86_64-linux-gnu"
+	    else
+              echo  "Error: Cannot access Level Zero libze_loader.so in $l0dir/lib or $l0dir/lib64 or $l0dir/x86_64-linux-gnu"
+              exit 1
+	    fi
+	    if [ ! -r $l0_lib_dir/libdrm.so ]; then
+              echo  "Error: TAU requires libdrm.so to be installed in $l0_lib_dir. Please install libdrm-devel (Centos) or libdrm-dev (Ubuntu) package."
+              exit 1
+	    fi
+            fixmakeargs="$fixmakeargs l0_lib_dir=$l0_lib_dir"
             tauoptions="${tauoptions}-level_zero"
             pthread=yes
             shift

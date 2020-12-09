@@ -991,6 +991,11 @@ case $1 in
 	echo "s@^TAU_L0_DIR=\(.*\)@TAU_L0_DIR=$l0dir@g" >> $sedout
         ;;
 
+     l0_lib_dir=*)
+        l0_lib_dir=`echo $1 | sed -e 's/^l0_lib_dir=//' -e 's/#/ /g'`
+	echo "s@^TAU_L0_LIB_DIR=\(.*\)@TAU_L0_LIB_DIR=$l0_lib_dir@g" >> $sedout
+        ;;
+
      LEVEL_ZERO)
         echo NOTE: Using the TAU Level Zero Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
