@@ -8,7 +8,7 @@
 #define PTI_SAMPLES_UTILS_I915_UTILS_H_
 
 #if defined(__linux__)
-#include <drm/i915_drm.h>
+#include <libdrm/i915_drm.h>
 #include <Profile/L0/xf86drm.h>
 
 #define I915_TIMESTAMP_LOW_OFFSET 0x2358
