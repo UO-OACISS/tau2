@@ -553,7 +553,10 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
   {
     // check to make sure we haven't loaded it already!
     std::string tmp(token);
-    if (plugins_seen.count(tmp) > 0) continue;
+    if (plugins_seen.count(tmp) > 0) {
+        token = strtok_r(NULL, ":", &save_ptr);
+        continue;
+    }
     TAU_VERBOSE("TAU: Loading plugin: %s\n", token);
     strcpy(fullpath, "");
     strcpy(fullpath,pluginpath);

@@ -1711,7 +1711,6 @@ void Tau_plugin_adios2_dump_history(void) {
 int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
     /* Open the ADIOS archive */
     printf("Making my_adios %d\n", __LINE__);
-    enabled = true;
     for (int i = 0 ; i < my_adios().get_thread_count() ; i++) {
         Tau_dump_ADIOS2_metadata(my_adios()._bpIO, i);
     }
@@ -1764,6 +1763,7 @@ int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
     if (signal(SIGUSR1, Tau_plugin_adios2_signal_handler) == SIG_ERR) {
       perror("failed to register TAU profile dump signal handler");
     }
+    enabled = true;
 
     return 0;
 }
