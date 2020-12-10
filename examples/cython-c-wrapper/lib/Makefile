@@ -1,6 +1,6 @@
 TAU_MAKEFILE ?=../../../include/Makefile
 
-CC = tau_cc.sh -optCompInst -optShared -tau_makefile=$(TAU_MAKEFILE)
+CC = tau_cc.sh -optCompInst -optShared -tau_makefile=$(TAU_MAKEFILE) -fopenmp
 
 default: libexamples.so
 

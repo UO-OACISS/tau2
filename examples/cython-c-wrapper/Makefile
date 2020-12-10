@@ -10,9 +10,9 @@ $(LIB_DIR)/libexamples.so:
 	ln -s $(LIB_DIR)/libexamples.so .
 
 test: pyexamples
-	tau_python -tau-python-interpreter=python3 -T python,serial ./main.py
-	pprof -a
+	tau_python -tau-python-interpreter=python3 -T python,pthread,serial ./main.py
+	pprof -a -s
 
 clean:
-	rm -f *.o *.so profile.0.0.0
+	rm -f *.o *.so profile.*
 	make -C $(LIB_DIR) clean
