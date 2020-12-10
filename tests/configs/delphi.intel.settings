@@ -16,6 +16,7 @@ export CC=icc
 export CXX=icpc
 export FC=ifort
 export COMPILER=intel
+export I_MPI_FABRICS=shm
 
 export TAU_OPTIONS="-optRevert"
 
