@@ -10,7 +10,6 @@ install: $(INSTALL_LD_LIB) $(INSTALL_PRELOAD_LIB)
 $(INSTALL_LD_LIB): $(PTHREAD_LDPRELOAD_LIB)
 	mkdir -p $(INSTALLDEST)/wrappers/pthread_wrapper
 	cp link_options.tau $(INSTALLDEST)/wrappers/pthread_wrapper
-	cp shared_link_options.tau $(INSTALLDEST)/wrappers/pthread_wrapper
 	$(TAU_SHARED_INSTALL_CMD)
 
 install-preload-lib: $(PTHREAD_LD_LIB)
