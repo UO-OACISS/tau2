@@ -594,6 +594,8 @@ usage() {
     echo "    Note: 'download' will download and build the library automatically."
     echo "-unwind=<dir | download> ... Specify a libunwind directory or download."
     echo "    Note: 'download' will download and build the library automatically."
+    echo "-zlib=<dir | download> .......... Specify a zlib directory or download."
+    echo "    Note: 'download' will download and build the library automatically."
     echo ""
     echo "MPI Options:"
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
@@ -742,6 +744,8 @@ for arg in "$@"; do
         echo "-bfd=<dir | download> ....... Specify a binutils directory or download."
         echo "    Note: 'download' will download and build the library automatically."
         echo "-unwind=<dir | download> ... Specify a libunwind directory or download."
+        echo "    Note: 'download' will download and build the library automatically."
+        echo "-zlib=<dir | download> .......... Specify a zlib directory or download."
         echo "    Note: 'download' will download and build the library automatically."
         echo "-cube=<dir> | own.| ext..... Specify location of CUBE or use TAU's jar."
         echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
@@ -1001,6 +1005,8 @@ bfd=no
 elf=no
 systemlibelf=no
 bfddir=
+zlib=no
+zlibdir=
 elfdir=
 turnbfdoff=no
 perf=no
@@ -1650,6 +1656,12 @@ for arg in "$@"; do
 
 	-unwindextras=*)
 	    unwind_extras=`echo $arg | sed -e 's/-unwind_extras=//'`
+	    shift
+	    ;;
+
+	-zlib=*)
+	    zlib=yes
+            zlibdir=`echo $arg | sed -e 's/-zlib=//'`
 	    shift
 	    ;;
 
@@ -2777,13 +2789,22 @@ for arg in "$@"; do
 
 	-level_zero)
             level_zero=yes
+            tauoptions="${tauoptions}-level_zero"
+            pthread=yes
 	    if [ -r /usr/lib64/libze_loader.so ]; then
 	      l0dir="/usr"
-              fixmakeargs="$fixmakeargs l0dir=$l0dir LEVEL_ZERO"
-              tauoptions="${tauoptions}-level_zero"
-              pthread=yes
+	      l0_lib_dir="/usr/lib64"
+              fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+            elif [ -r /usr/lib/x86_64-linux-gnu/libze_loader.so ]; then 
+	      l0dir="/usr"
+	      l0_lib_dir="/usr/lib/x86_64-linux-gnu"
+              fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+            elif [ -r /usr/local/lib/libze_loader.so ]; then 
+	      l0dir="/usr/local"
+	      l0_lib_dir="/usr/local/lib"
+              fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
 	    else
-	      echo "TAU: /usr/lib64/libze_loader.so not found. Please specify -level_zero=<dir> and reconfigure TAU."
+	      echo "TAU: libze_loader.so not found. Please specify -level_zero=<dir> and reconfigure TAU."
 	      exit 1
 	    fi
 	    shift
@@ -2798,6 +2819,22 @@ for arg in "$@"; do
               fixmakeargs="$fixmakeargs l0dir=$l0dir LEVEL_ZERO"
               level_zero=yes
             fi
+	    if [ -r $l0dir/lib64/libze_loader.so ]; then 
+             l0_lib_dir="$l0dir/lib64"
+	    elif [ -r $l0dir/lib/libze_loader.so ]; then 
+             l0_lib_dir="$l0dir/lib"
+	    elif [ -r $l0dir/lib/x86_64-linux-gnu/libze_loader.so ]; then 
+             l0_lib_dir="$l0dir/lib/x86_64-linux-gnu"
+	    else
+              echo  "Error: Cannot access Level Zero libze_loader.so in $l0dir/lib or $l0dir/lib64 or $l0dir/x86_64-linux-gnu"
+              exit 1
+	    fi
+	    if [ ! -r $l0_lib_dir/libdrm.so -a ! -r /usr/lib/x86_64-linux-gnu/libdrm.so ]; then
+
+              echo  "Error: TAU requires libdrm.so to be installed in $l0_lib_dir. Please install libdrm-devel (Centos) or libdrm-dev (Ubuntu) package."
+              exit 1
+	    fi
+            fixmakeargs="$fixmakeargs l0_lib_dir=$l0_lib_dir"
             tauoptions="${tauoptions}-level_zero"
             pthread=yes
             shift
@@ -9336,6 +9373,46 @@ if [ "x$sos" = "xyes" ] ; then
   fi
 fi
 ######################################################################
+# Install ZLIB if requested
+######################################################################
+zlibs=zlib-1.2.11
+zlibtgz=$zlibs.tar.gz
+zliburl=https://www.zlib.net/$zlibtgz
+build_zlib() {
+  if [ "x$zlibdir" = xdownload ]; then
+    zlibdir="$targetdir/$architecture/$zlibs"
+  fi
+  if [ ! -d "$zlibdir" ]; then
+    echo "Building zlib..."
+    download $zliburl $zlibtgz
+    tar xf $zlibtgz
+    cd $zlibs
+    #./configure --prefix=$zlibdir
+    CC=$c_compiler ./configure --prefix=$zlibdir
+    echo "Installing in $zlibdir"
+#    sed -e 's/gcc/ncc/g' Makefile > Makefile~
+#    mv Makefile~ Makefile
+    make
+    make install
+    cd ..
+    echo "Built zlib"
+  else
+    echo "Found zlib installation"
+  fi
+
+  zlibinclude="-I$zlibdir/include#-I$zlibdir/include/extra"
+  zliblink="-L$zlibdir/lib#-L$zlibdir/lib64#-Wl\,-rpath\,$zlibdir/lib#-Wl\,-rpath\,$zlibdir/lib64#-L$zlibdir/lib"
+  zliblibs="-lz"
+  fixmakeargs="$fixmakeargs zlibinclude=$zlibinclude zliblink=$zliblink zliblibs=$zliblibs"
+}
+
+echo "$zlibdir"
+if [ "x$zlibdir" = xdownload ] ; then
+  echo "Install zlibdir"
+  build_zlib
+fi
+
+######################################################################
 # Install BFD if requested
 ######################################################################
 binutils=binutils-2.23.2
@@ -9517,13 +9594,16 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       nec-sx-aurora)
         echo "Building BFD for nec-sx-aurora. Checking for zlib."
 	# We need zlib built from source code.
-	zliburl=https://www.zlib.net/zlib-1.2.11.tar.gz
-        if [ -d $bfddir/../zlib-1.2.11 ]; then
-          echo "Found zlib-1.2.11"
-        else
+        if [ "x$zlibdir" != xdownload ]; then
+          echo "STANDARD INSTALLATION"
+	  zliburl=https://www.zlib.net/zlib-1.2.11.tar.gz
           download $zliburl zlib-1.2.11.tar.gz
           tar xf zlib-1.2.11.tar.gz; cd ./zlib-1.2.11; ./configure --prefix=$bfddir; sed -e 's/gcc/ncc/g' Makefile > Makefile~; mv Makefile~ Makefile; make; make install; cd ..
           echo "Built zlib"
+        elif [ -d $bfddir/../zlib-1.2.11 ]; then
+          echo "Found zlib-1.2.11"
+        elif [ -d $zlibdir ]; then
+          echo "Found zlib-1.2.11"
         fi
 
         ./configure CC=ncc CXX=nc++ --prefix=$bfddir --disable-nls --disable-werror \
@@ -9630,7 +9710,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     bfdinclude="-I$bfddir/include#-I$bfddir/include/extra"
     fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
     bfdinclude="-I$bfddir/include -I$bfddir/include/extra"
-    bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64"
+    bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64 -L$zlibdir/lib"
   fi
 
   # The libintl.dylib library is in /opt/local/lib... is that everywhere?

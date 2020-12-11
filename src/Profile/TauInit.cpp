@@ -118,10 +118,16 @@ void Tau_call_post_init_callbacks() {
 }
 
 // True if TAU is fully initialized
-int tau_initialized = 0;
+int& tau_initialized() {
+  static int _tau_initialized = 0;
+  return _tau_initialized;
+}
 
 // True if TAU is initializing
-int initializing = 0;
+int& initializing() {
+  static int _initializing = 0;
+  return _initializing;
+}
 
 // Rely on the dl auditor (src/wrapper/taupreload) to set dl_initialized
 // if the audit feature is available (GLIBC version 2.4 or greater).
@@ -307,14 +313,14 @@ int Tau_init_epilog(void) {
 extern "C"
 int Tau_init_check_initialized()
 {
-  return tau_initialized;
+  return tau_initialized();
 }
 
 
 extern "C"
 int Tau_init_initializingTAU()
 {
-  return initializing - tau_initialized;
+  return initializing() - tau_initialized();
 }
 
 extern "C"
@@ -465,8 +471,8 @@ extern "C" int Tau_init_initializeTAU()
 {
 
   //protect against reentrancy
-  if (initializing) return 0;
-  initializing = 1;
+  if (initializing()) return 0;
+  initializing() = 1;
 
   //Initialize locks.
   RtsLayer::Initialize();
@@ -540,7 +546,7 @@ extern "C" int Tau_init_initializeTAU()
 #endif
 
   // Mark initialization complete so calls below can start timers
-  tau_initialized = 1;
+  tau_initialized() = 1;
 
   Tau_signal_initialization();
 

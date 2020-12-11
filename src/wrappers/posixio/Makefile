@@ -37,7 +37,7 @@ iowrap_shared.o: iowrap_shared.c
 	$(CC) $(CFLAGS) -c iowrap_shared.c -I.
 
 libTAU-iowrap$(TAU_SHLIBX): iowrap_shared.o
-	$(CC) $(TAU_SHFLAGS) libTAU-iowrap$(TAU_SHLIBX) iowrap_shared.o $(TAU_SHAREDLIBS) -ldl
+	$(CC) $(TAU_SHFLAGS) libTAU-iowrap$(TAU_SHLIBX) iowrap_shared.o -ldl
 
 clean:
 	/bin/rm -f iowrapper.o libTauIOWrapper.a iowrap_shared.o iowrap_link.o libTauPosixWrap.a

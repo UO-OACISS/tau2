@@ -13,7 +13,7 @@ taupreload.o: taupreload.c
 	$(PRELOAD_CC) $(CFLAGS) -c taupreload.c
 
 libTAU-preload$(TAU_SHLIBX): taupreload.o
-	$(PRELOAD_CC) $(TAU_SHFLAGS) libTAU-preload$(TAU_SHLIBX) taupreload.o $(TAU_SHAREDLIBS) $(TAU_LIBDL)
+	$(PRELOAD_CC) $(TAU_SHFLAGS) libTAU-preload$(TAU_SHLIBX) taupreload.o $(TAU_LIBDL)
 
 dl_auditor.o: dl_auditor.c
 	$(PRELOAD_CC) $(CFLAGS) -c dl_auditor.c

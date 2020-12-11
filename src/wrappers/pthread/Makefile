@@ -1,8 +1,8 @@
 include ../../../include/Makefile
 include ../Makefile
-CC=$(TAU_CC) 
-ARFLAGS=rcv 
-CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE) $(TAU_CC_SPECIAL_OPTS) 
+CC=$(TAU_CC)
+ARFLAGS=rcv
+CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE) $(TAU_CC_SPECIAL_OPTS)
 INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 install: $(INSTALL_LD_LIB) $(INSTALL_PRELOAD_LIB)
@@ -22,7 +22,7 @@ pthread_wrap_ld.o: pthread_wrap.c
 	$(CC) -DTAU_LIBRARY_SOURCE $(CFLAGS) -g -c $<  -o $@
 
 $(PTHREAD_LDPRELOAD_LIB): pthread_wrap_preload.o
-	$(CC) $(TAU_SHFLAGS) $@ $(TAU_SHLIBS) -L$(INSTALLDEST) $< -ldl
+	$(CC) $(TAU_SHFLAGS) $@ $< -ldl
 
 pthread_wrap_preload.o: pthread_wrap.c
 	$(CC) -DTAU_LIBRARY_SOURCE -DTAU_PRELOAD_LIB $(CFLAGS) -g -c $< -o $@
