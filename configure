@@ -9399,17 +9399,20 @@ build_zlib() {
   else
     echo "Found zlib installation"
   fi
+}
 
+echo "$zlibdir"
+if [ "x$zlib" = xnone ]; then
+  echo "zlib disabled."
+else
+if [ "x$zlibdir" = xdownload ] ; then
+  echo "Install zlibdir"
+  build_zlib
+fi
   zlibinclude="-I$zlibdir/include#-I$zlibdir/include/extra"
   zliblink="-L$zlibdir/lib#-L$zlibdir/lib64#-Wl\,-rpath\,$zlibdir/lib#-Wl\,-rpath\,$zlibdir/lib64#-L$zlibdir/lib"
   zliblibs="-lz"
   fixmakeargs="$fixmakeargs zlibinclude=$zlibinclude zliblink=$zliblink zliblibs=$zliblibs"
-}
-
-echo "$zlibdir"
-if [ "x$zlibdir" = xdownload ] ; then
-  echo "Install zlibdir"
-  build_zlib
 fi
 
 ######################################################################
