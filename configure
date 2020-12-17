@@ -10648,18 +10648,24 @@ if [ "x$unwinder" != "xnone" ] ; then
             unwind_extras="-Wl\,-rpath=$unwind_lib"
         fi
     fi
+    if [ "x$unwind_inc" != "x" ] ; then
+      unwind_inc="-I${unwind_inc}"
+    fi
+    if [ "x$unwind_lib" != "x" ] ; then
+      unwind_lib="-L${unwind_lib}"
+    fi
     if [ "x$unwinder" = "xlibunwind" ] ; then
-	if [ $machine = apple ] ; then
+	  if [ $machine = apple ] ; then
 	    unwind_lib_flag="-framework#System"
 	    unwind_extras=""
-	fi
-	if [ $machine = craycnl -a "x$CRAY_TARGET_PE" = "xcray" ]; then
-	  echo "WARNING: TAU does not currently support libunwind with Cray CCE compilers on AARCH64."
-	else
-	  fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
-	fi
+	  fi
+	  if [ $machine = craycnl -a "x$CRAY_TARGET_PE" = "xcray" ]; then
+	    echo "WARNING: TAU does not currently support libunwind with Cray CCE compilers on AARCH64."
+	  else
+	    fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
+	  fi
     else
-	fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_STACKWALKER unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
+	  fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_STACKWALKER unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
     fi
 fi
 
