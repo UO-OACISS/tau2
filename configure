@@ -1606,7 +1606,7 @@ for arg in "$@"; do
 		unwind_lib_flag="-lstackwalk"
 	    elif [ "x$unwinder" = "xbacktrace" ] ; then
 		unwind_flag="-DTAU_USE_BACKTRACE"
-		unwind_lib_flag="-lgcc_s"
+		#unwind_lib_flag="-lgcc_s"
 	    elif [ "x$unwinder" = "xnone" ] ; then
 		echo "No Unwinding Support."
 	    else
