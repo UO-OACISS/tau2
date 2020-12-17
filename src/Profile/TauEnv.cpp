@@ -124,7 +124,11 @@ using namespace std;
 
 #define TAU_EBS_SOURCE_DEFAULT "itimer"
 #define TAU_EBS_UNWIND_DEFAULT 0
+#ifdef TAU_USE_BACKTRACE
+#define TAU_EBS_UNWIND_DEPTH_DEFAULT 0
+#else
 #define TAU_EBS_UNWIND_DEPTH_DEFAULT 10
+#endif
 
 #define TAU_EBS_RESOLUTION_STR_LINE "line"
 #define TAU_EBS_RESOLUTION_STR_FILE "file"

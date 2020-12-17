@@ -207,10 +207,13 @@ extern void Tau_sampling_unwindTauContext(int tid, void **address);
 extern void Tau_sampling_unwind(int tid, Profiler *profiler,
     void *pc, void *context, unsigned long stack[]);
 
+#ifdef TAU_USE_LIBBACKTRACE
+extern void Tau_sampling_unwind_init();
+#endif
+
 extern "C" bool unwind_cutoff(void **addresses, void *address) {
   // if the unwind depth is not "auto", then return
-  if (TauEnv_get_ebs_unwind_depth() > 0)
-    return false;
+  if (TauEnv_get_ebs_unwind_depth() > 0) return false;
   bool found = false;
   for (int i=0; i<TAU_SAMP_NUM_ADDRESSES; i++) {
     if ((unsigned long)(addresses[i]) == (unsigned long)address) {
@@ -299,7 +302,7 @@ struct CallSiteCacheMap : public TAU_HASH_MAP<unsigned long, CallSiteCacheNode*>
 struct ThreadTimerMap : public TAU_HASH_MAP<int, timer_t> {
   ThreadTimerMap() {};
   virtual ~ThreadTimerMap() {
-    Tau_destructor_trigger();  
+    Tau_destructor_trigger();
   };
 };
 
@@ -369,9 +372,10 @@ struct tau_sampling_flags {
 
 #ifdef TAU_USE_TLS
 // thread local storage
-__thread struct tau_sampling_flags tau_sampling_tls_flags;
-static inline struct tau_sampling_flags *tau_sampling_flags(void)
-{ return &tau_sampling_tls_flags; }
+struct tau_sampling_flags *tau_sampling_flags(void) {
+    static thread_local struct tau_sampling_flags tau_sampling_tls_flags;
+    return &tau_sampling_tls_flags;
+}
 #elif defined(TAU_USE_DTLS)
 // thread local storage
 __declspec(thread) struct tau_sampling_flags tau_sampling_tls_flags;
@@ -2048,7 +2052,7 @@ extern "C" void Tau_sampling_defer_init(void) {
 #endif
 #ifdef TAU_FX_AARCH64
     const pid_t pid = syscall(__NR_gettid);
-#endif 
+#endif
 #else
     fprintf(stderr, "TAU: WARNING: Thread %d was started before MPI_Init, but this system "
             "doesn't support timer_create. Thread %d will not be sampled!\n", tid, tid);
