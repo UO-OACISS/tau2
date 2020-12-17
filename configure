@@ -10644,7 +10644,9 @@ fi
 
 if [ "x$unwinder" != "xnone" ] ; then
     if [ $c_compiler = gcc -o $c_compiler = icc -o $c_compiler = pgcc -o $c_compiler = mpc_icc -o $c_compiler = mpc_cc ] ; then
-	unwind_extras="-Wl\,-rpath=$unwind_lib"
+        if [ "x$unwind_lib" != "x" ] ; then
+            unwind_extras="-Wl\,-rpath=$unwind_lib"
+        fi
     fi
     if [ "x$unwinder" = "xlibunwind" ] ; then
 	if [ $machine = apple ] ; then
