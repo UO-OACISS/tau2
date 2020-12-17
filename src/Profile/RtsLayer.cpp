@@ -113,6 +113,7 @@ using namespace std;
 
 std::mutex RtsLayer::DBVectorMutex;
 
+std::atomic<int> RtsLayer::maxLockTid(-1);
 /////////////////////////////////////////////////////////////////////////
 TauGroup_t& RtsLayer::TheProfileMask(void) {
   // to avoid initialization problems of non-local static variables

@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 #include <mutex>
+#include <atomic>
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////
@@ -106,12 +107,24 @@ struct TAULocks{
     return threadList;
 }
   static std::mutex DBVectorMutex;
+  
+  //static thread_local int local_lock_tid = RtsLayer::myThread();
+  //static thread_local TAULocks* TL_cache=0;
+  static std::atomic<int> maxLockTid;
+  
   static inline void checkLockVector(int tid){
+    if(maxLockTid>=tid){
+        //printf("Tid: %d vs max: %d. No check needed?\n",tid,maxLockTid);
+        return;
+    }
+      
       if(TheLockList().size()<=tid){
       static std::mutex DBVectorMutex;
       std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
+      maxLockTid=tid;
       while(TheLockList().size()<=tid){
           TheLockList().push_back(new TAULocks());
+
       }
       }
   }
