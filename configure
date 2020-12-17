@@ -9405,7 +9405,7 @@ build_zlib() {
 }
 
 echo "$zlibdir"
-if [ "x$zlib" = xnone ]; then
+if [ "x$zlib" = "xno" ]; then
   echo "zlib disabled."
 else
 if [ "x$zlibdir" = xdownload ] ; then
