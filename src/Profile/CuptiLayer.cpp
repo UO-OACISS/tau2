@@ -269,7 +269,7 @@ void Tau_CuptiLayer_setup_eventgroup()
     cuErr = cuDevicePrimaryCtxRetain(&cuCtx, device);
     CHECK_CU_ERROR(cuErr, "cuDevicePrimaryCtxRetain");
     cuptiErr = cuptiEventGroupCreate(cuCtx, &eventGroup, 0);
-#if CUDA_VERSION >= 10200
+#if CUDA_VERSION >= 10020
     if(cuptiErr == CUPTI_ERROR_LEGACY_PROFILER_NOT_SUPPORTED) {
         // If this device doesn't support the legacy profiler,
         // there's nothing to initialize
