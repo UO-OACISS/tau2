@@ -116,8 +116,8 @@ static HashTable & TheHashTable()
   return htab;
 }
 
-static HashTable & TheLocalHashTable(){
-  static thread_local HashTable lhtab;
+static TAU_HASH_MAP<unsigned long, HashNode*>& TheLocalHashTable(){
+  static thread_local TAU_HASH_MAP<unsigned long, HashNode*> lhtab;
   return lhtab;
 }
 
@@ -199,7 +199,7 @@ void runOnExit()
     delete node;
   }
   mytab.clear();
-  
+
 #ifdef TAU_BFD
   Tau_delete_bfd_units();
 #endif
@@ -280,7 +280,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered());
 
     // Get the hash node
-    
+
     node = TheLocalHashTable()[addr];
     if (!node) {
       // We must be inside TAU before we lock the database
@@ -298,7 +298,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         node->fi = NULL;
         node->excluded = false;
         TheHashTable()[addr] = node;
-        
+
       }
       TheLocalHashTable()[addr] =  node;
       RtsLayer::UnLockDB();
