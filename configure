@@ -2794,22 +2794,35 @@ for arg in "$@"; do
             level_zero=yes
             tauoptions="${tauoptions}-level_zero"
             pthread=yes
-	    if [ -r /usr/lib64/libze_loader.so ]; then
-	      l0dir="/usr"
-	      l0_lib_dir="/usr/lib64"
-              fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
-            elif [ -r /usr/lib/x86_64-linux-gnu/libze_loader.so ]; then
-	      l0dir="/usr"
-	      l0_lib_dir="/usr/lib/x86_64-linux-gnu"
-              fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
-            elif [ -r /usr/local/lib/libze_loader.so ]; then
-	      l0dir="/usr/local"
-	      l0_lib_dir="/usr/local/lib"
-              fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
-	    else
-	      echo "TAU: libze_loader.so not found. Please specify -level_zero=<dir> and reconfigure TAU."
-	      exit 1
-	    fi
+            ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
+            for d in $ld_lib_path
+            do
+              if [ -r $d/libze_loader.so ]; then
+	        l0_lib_dir=$d
+                l0dir=$d/..
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+                break;
+              fi
+            done
+
+            if [ "x$l0dir" = "x" ]; then  
+	      if [ -r /usr/lib64/libze_loader.so ]; then
+	        l0dir="/usr"
+	        l0_lib_dir="/usr/lib64"
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+              elif [ -r /usr/lib/x86_64-linux-gnu/libze_loader.so ]; then
+	        l0dir="/usr"
+	        l0_lib_dir="/usr/lib/x86_64-linux-gnu"
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+              elif [ -r /usr/local/lib/libze_loader.so ]; then
+	        l0dir="/usr/local"
+	        l0_lib_dir="/usr/local/lib"
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+	      else
+	        echo "TAU: libze_loader.so not found. Please specify -level_zero=<dir> and reconfigure TAU."
+	        exit 1
+	      fi
+            fi
 	    shift
 	    ;;
 
