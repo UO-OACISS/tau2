@@ -1257,8 +1257,8 @@ EBS_CLOCK_RES=
 ##############################################
 # TAU Unwinder flags
 ##############################################
-#TAU_UNWIND#PROFILEOPT85 = -DTAU_UNWIND $(UNWIND_FLAG) -I$(UNWIND_INC) #ENDIF#
-#TAU_UNWIND#TAU_LINKER_OPT17 = -L$(UNWIND_LIB) $(UNWIND_LIB_FLAG) $(UNWIND_EXTRAS)#ENDIF#
+#TAU_UNWIND#PROFILEOPT85 = -DTAU_UNWIND $(UNWIND_FLAG) $(UNWIND_INC) #ENDIF#
+#TAU_UNWIND#TAU_LINKER_OPT17 = $(UNWIND_LIB) $(UNWIND_LIB_FLAG) $(UNWIND_EXTRAS)#ENDIF#
 #MMIC#TAU_LINKER_OPT18=-mmic #ENDIF#
 
 ##############################################

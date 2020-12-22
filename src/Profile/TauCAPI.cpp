@@ -2989,6 +2989,11 @@ extern void Tau_ompt_finalize(void);
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
+  /* Set up a static flag to make sure we only do this once,
+   * as it gets called from many, many destructors. */
+  static bool once = false;
+  if (once) { return; }
+  once = true;
   Tau_flush_gpu_activity();
 // First, make sure all thread timers have stopped
   Tau_profile_exit_all_threads();

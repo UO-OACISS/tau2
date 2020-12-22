@@ -1604,11 +1604,14 @@ for arg in "$@"; do
 	    elif [ "x$unwinder" = "xstackwalker" ] ; then
 		unwind_flag="-DTAU_USE_STACKWALKER"
 		unwind_lib_flag="-lstackwalk"
+	    elif [ "x$unwinder" = "xbacktrace" ] ; then
+		unwind_flag="-DTAU_USE_BACKTRACE"
+		#unwind_lib_flag="-lgcc_s"
 	    elif [ "x$unwinder" = "xnone" ] ; then
 		echo "No Unwinding Support."
 	    else
 		echo "Error: Invalid Stack Unwinder $unwinder. Valid options are:"
-		echo "libunwind, stackwalker, none (default)."
+		echo "libunwind, stackwalker, backtrace (libgcc_s), none (default)."
 		exit 1
 	    fi
 	    shift
@@ -2791,22 +2794,35 @@ for arg in "$@"; do
             level_zero=yes
             tauoptions="${tauoptions}-level_zero"
             pthread=yes
-	    if [ -r /usr/lib64/libze_loader.so ]; then
-	      l0dir="/usr"
-	      l0_lib_dir="/usr/lib64"
-              fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
-            elif [ -r /usr/lib/x86_64-linux-gnu/libze_loader.so ]; then 
-	      l0dir="/usr"
-	      l0_lib_dir="/usr/lib/x86_64-linux-gnu"
-              fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
-            elif [ -r /usr/local/lib/libze_loader.so ]; then 
-	      l0dir="/usr/local"
-	      l0_lib_dir="/usr/local/lib"
-              fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
-	    else
-	      echo "TAU: libze_loader.so not found. Please specify -level_zero=<dir> and reconfigure TAU."
-	      exit 1
-	    fi
+            ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
+            for d in $ld_lib_path
+            do
+              if [ -r $d/libze_loader.so ]; then
+	        l0_lib_dir=$d
+                l0dir=$d/..
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+                break;
+              fi
+            done
+
+            if [ "x$l0dir" = "x" ]; then  
+	      if [ -r /usr/lib64/libze_loader.so ]; then
+	        l0dir="/usr"
+	        l0_lib_dir="/usr/lib64"
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+              elif [ -r /usr/lib/x86_64-linux-gnu/libze_loader.so ]; then
+	        l0dir="/usr"
+	        l0_lib_dir="/usr/lib/x86_64-linux-gnu"
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+              elif [ -r /usr/local/lib/libze_loader.so ]; then
+	        l0dir="/usr/local"
+	        l0_lib_dir="/usr/local/lib"
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+	      else
+	        echo "TAU: libze_loader.so not found. Please specify -level_zero=<dir> and reconfigure TAU."
+	        exit 1
+	      fi
+            fi
 	    shift
 	    ;;
 
@@ -2819,11 +2835,11 @@ for arg in "$@"; do
               fixmakeargs="$fixmakeargs l0dir=$l0dir LEVEL_ZERO"
               level_zero=yes
             fi
-	    if [ -r $l0dir/lib64/libze_loader.so ]; then 
+	    if [ -r $l0dir/lib64/libze_loader.so ]; then
              l0_lib_dir="$l0dir/lib64"
-	    elif [ -r $l0dir/lib/libze_loader.so ]; then 
+	    elif [ -r $l0dir/lib/libze_loader.so ]; then
              l0_lib_dir="$l0dir/lib"
-	    elif [ -r $l0dir/lib/x86_64-linux-gnu/libze_loader.so ]; then 
+	    elif [ -r $l0dir/lib/x86_64-linux-gnu/libze_loader.so ]; then
              l0_lib_dir="$l0dir/lib/x86_64-linux-gnu"
 	    else
               echo  "Error: Cannot access Level Zero libze_loader.so in $l0dir/lib or $l0dir/lib64 or $l0dir/x86_64-linux-gnu"
@@ -2968,12 +2984,12 @@ for arg in "$@"; do
 		fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude"
                 use_opencl=yes
 	    else
-		if [ -f "$openclinclude/sycl/CL/cl.h" ]; then 
+		if [ -f "$openclinclude/sycl/CL/cl.h" ]; then
 		    fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude/sycl"
                     use_opencl=yes
 		else
 	            echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
-	        fi 
+	        fi
 	    fi
 	    shift
 	    ;;
@@ -3760,16 +3776,16 @@ case $machine in
             c_compiler=cc
 	fi
 	;;
-    arm64_linux) 
-	if [ "x$cxx_compiler" = "xdefault" -a "x$mpi" = "xyes" ]; then 
-	  # Are we on a Fujitsu FX aarch64 system with Fujitsu compilers in the path? 
-	  found_compiler=`which mpiFCC 2>/dev/null` 
+    arm64_linux)
+	if [ "x$cxx_compiler" = "xdefault" -a "x$mpi" = "xyes" ]; then
+	  # Are we on a Fujitsu FX aarch64 system with Fujitsu compilers in the path?
+	  found_compiler=`which mpiFCC 2>/dev/null`
           if [ "x$found_compiler" != "x" -a -x $found_compiler ]; then
 	     echo "TAU: Using mpiFCC, mpifcc, and mpifrt as C++, C, and Fortran compilers respectively."
 	     cxx_compiler=mpiFCC
 	     c_compiler=mpifcc
 	     fortran_compiler=mpifrt
-          fi 
+          fi
 	fi
 	;;
 
@@ -4019,20 +4035,20 @@ case $machine in
 	    #         shared objects (see above) and it is not happy
 	    #         with -lmpichcxx which is static. -lmpichcxx_cray
 	    #         has to be used instead.
-            if [ "x$PE_MVAPICH2_FIXED_PRGENV" = "x" ]; then 
+            if [ "x$PE_MVAPICH2_FIXED_PRGENV" = "x" ]; then
 	      fixmakeargs="$fixmakeargs CRAYCNL_CCE"
             else
 	      fixmakeargs="$fixmakeargs CRAYCNL_MVAPICH2"
-            fi 
+            fi
 
 	    touch conf_test.c
 	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
 	    rm -f conf_test.c conf_test.o
 
 	    # not implemented yet
-            if [ "x$CRAY_PE_USE_CLANG" = "x" ]; then 
+            if [ "x$CRAY_PE_USE_CLANG" = "x" ]; then
 	      fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
-            else 
+            else
 	      fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
               extradir=`echo $CRAY_PE_USE_CLANG | sed -e 's@bin/clang@lib@'`
               srun_dir=`which srun 2>/dev/null`
@@ -4909,7 +4925,7 @@ case $cxx_compiler in
 	orig_useropt="-O2"
 	useropt="-O2"
 	# -g interferes with optimizations for Fujitsu.
-	if [ $machine = arm64_linux ]; then 
+	if [ $machine = arm64_linux ]; then
 	  fixmakeargs="$fixmakeargs FX_AARCH64"
 	  fx_aarch64=yes
 	else
@@ -5659,7 +5675,7 @@ then
 	craycnl)
 	    #	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
             if [ "x$CRAY_MPICH2_DIR" = "x" ]; then
-              cat <<EOF > mpiincl.c 
+              cat <<EOF > mpiincl.c
 #include <mpi.h>
 EOF
               mpiinc=`$c_compiler -E -c mpiincl.c | grep include | grep mpi.h | head -1  | awk '{ print $3;}'  | sed -e 's@"@@g'  | sed -e 's@/mpi.h@@g'`
@@ -5670,9 +5686,9 @@ EOF
                 mpilib=$findmpi
                 echo "And found MPI lib in $mpilib"
               fi
-            else 
+            else
 	      mpiinc=$CRAY_MPICH2_DIR/include
-            fi 
+            fi
             if [ ! -r $mpiinc ] ; then
 		echo "ERROR: $CRAY_MPICH2_DIR/include (CRAY_MPICH2_DIR/include) is not readable. Please configure with -mpiinc=<dir> to point to the MPI include directory."
 		exit 1
@@ -7483,7 +7499,7 @@ if [ "x$download_unwind" = xyes ] ; then
           sed 's/_Unwind_Resume/_Unwind_Resume_other/' tmp.c > src/unwind/Resume.c
           rm tmp.c
         elif [ "$machine" = "craycnl" ] ; then
-          if [ "x$CRAY_PE_USE_CLANG" != "x" ]; then 
+          if [ "x$CRAY_PE_USE_CLANG" != "x" ]; then
 # use Cray PE clang compiler
             unwind_c_compiler=clang
             unwind_cxx_compiler=clang++
@@ -7639,9 +7655,9 @@ if [ "$gnu" = "yes" ]; then openmp_flag=-fopenmp; fi
 if [ "$llvm" = "yes" ]; then openmp_flag=-fopenmp; fi
 if [ "$pgi" = "yes" ]; then openmp_flag=-mp; fi
 if [ "$fujitsu" = "yes" ]; then openmp_flag=-kopenmp; fi
-if [ "$default_fortran" = "cray" ]; then 
+if [ "$default_fortran" = "cray" ]; then
   if [ "x$CRAY_PE_USE_CLANG" = "x" ]; then
-    openmp_flag=-h#omp; 
+    openmp_flag=-h#omp;
   else
     openmp_flag=-fopenmp;
   fi
@@ -9399,17 +9415,20 @@ build_zlib() {
   else
     echo "Found zlib installation"
   fi
+}
 
+echo "$zlibdir"
+if [ "x$zlib" = "xno" ]; then
+  echo "zlib disabled."
+else
+if [ "x$zlibdir" = xdownload ] ; then
+  echo "Install zlibdir"
+  build_zlib
+fi
   zlibinclude="-I$zlibdir/include#-I$zlibdir/include/extra"
   zliblink="-L$zlibdir/lib#-L$zlibdir/lib64#-Wl\,-rpath\,$zlibdir/lib#-Wl\,-rpath\,$zlibdir/lib64#-L$zlibdir/lib"
   zliblibs="-lz"
   fixmakeargs="$fixmakeargs zlibinclude=$zlibinclude zliblink=$zliblink zliblibs=$zliblibs"
-}
-
-echo "$zlibdir"
-if [ "x$zlibdir" = xdownload ] ; then
-  echo "Install zlibdir"
-  build_zlib
 fi
 
 ######################################################################
@@ -10638,20 +10657,28 @@ fi
 
 if [ "x$unwinder" != "xnone" ] ; then
     if [ $c_compiler = gcc -o $c_compiler = icc -o $c_compiler = pgcc -o $c_compiler = mpc_icc -o $c_compiler = mpc_cc ] ; then
-	unwind_extras="-Wl\,-rpath=$unwind_lib"
+        if [ "x$unwind_lib" != "x" ] ; then
+            unwind_extras="-Wl\,-rpath=$unwind_lib"
+        fi
+    fi
+    if [ "x$unwind_inc" != "x" ] ; then
+      unwind_inc="-I${unwind_inc}"
+    fi
+    if [ "x$unwind_lib" != "x" ] ; then
+      unwind_lib="-L${unwind_lib}"
     fi
     if [ "x$unwinder" = "xlibunwind" ] ; then
-	if [ $machine = apple ] ; then
+	  if [ $machine = apple ] ; then
 	    unwind_lib_flag="-framework#System"
 	    unwind_extras=""
-	fi
-	if [ $machine = craycnl -a "x$CRAY_TARGET_PE" = "xcray" ]; then
-	  echo "WARNING: TAU does not currently support libunwind with Cray CCE compilers on AARCH64."
-	else
-	  fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
-	fi
+	  fi
+	  if [ $machine = craycnl -a "x$CRAY_TARGET_PE" = "xcray" ]; then
+	    echo "WARNING: TAU does not currently support libunwind with Cray CCE compilers on AARCH64."
+	  else
+	    fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
+	  fi
     else
-	fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_STACKWALKER unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
+	  fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_STACKWALKER unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
     fi
 fi
 
