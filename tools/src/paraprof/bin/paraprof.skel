@@ -41,7 +41,7 @@ do
   set -- "$@" "$arg"
 done
 
-if [ "$MACHINE" = "apple" || [ "$MACHINE" = "arm64_apple" ] ]; then
+if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_apple" ] ; then
 	if [ "$FLAG32" != "1" ]; then
 		FLAG64=1
 	fi
