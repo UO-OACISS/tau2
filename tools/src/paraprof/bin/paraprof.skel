@@ -41,13 +41,13 @@ do
   set -- "$@" "$arg"
 done
 
-if [ "$MACHINE" = "apple" ]; then
+if [ "$MACHINE" = "apple" || [ "$MACHINE" = "arm64_apple" ] ]; then
 	if [ "$FLAG32" != "1" ]; then
 		FLAG64=1
 	fi
 fi
 
-if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_linux" ] || [ "$MACHINE" = "ibm64linux" ]; then
+if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_linux" ] || [ "$MACHINE" = "ibm64linux" ] || [ "$MACHINE" = "arm64_apple" ] || [ "$MACHINE" = "craycnl"  -a "`uname -m`" = "aarch64" ]; then
 	if [ "$FLAGJOGL1" != "1" ]; then
 		FLAGJOGL2=1
 	fi
@@ -67,19 +67,20 @@ if [ "$JAVA2D_OPENGL_FLAG" = "1" ]; then
   JAVA2D_OPENGL_OPT="-Dsun.java2d.opengl=true"
 fi
 
-if [ "$MACHINE" = "craycnl"  -a "`uname -m`" = "aarch64" ]; then
-        if [ "$FLAGJOGL1" != "1" ]; then
-                FLAGJOGL2=1
-        fi
-fi
+JOGL1_JARS=${JARDIR}/vis.jar:${JARDIR}/jogl.jar
+DEFAULT_JOGL2_JARS=${JARDIR}/vis-jogl2.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar:${JARDIR}/jogl-all-natives.jar:${JARDIR}/gluegen-rt-natives.jar:${JARDIR}
+ARM_OSX_JOGL2_JARS=${JARDIR}/vis-jogl2.jar:${JARDIR}/jogl-java3d.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar
 
-JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
-
-
+JOGL_JARS=${JOGL1_JARS}
 
 if [ "$FLAGJOGL2" = "1" ]; then
-	JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis-jogl2.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar:${JARDIR}/jogl-all-natives.jar:${JARDIR}/gluegen-rt-natives.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
+	JOGL_JARS=${DEFAULT_JOGL2_JARS}
+	if [ "$MACHINE" = "arm64_apple" ]; then
+		JOGL_JARS=${ARM_OSX_JOGL2_JARS}
+	fi 
 fi
+
+JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JOGL_JARS}:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
 
 
 APPLE_OPTIONS=""
