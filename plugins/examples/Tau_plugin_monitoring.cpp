@@ -1075,8 +1075,13 @@ void read_components(void) {
                     TAU_VERBOSE("Bogus (probably derived/multiplexed) value: %s %lld\n", metric.c_str(), papi_periodic_values[index]);
                     papi_periodic_values[index] = 0LL;
                 }
-                void * ue = find_user_event(metric.c_str());
-                Tau_userevent_thread(ue, ((double)papi_periodic_values[index]), 0);
+                if (TauEnv_get_tracing()) {
+                    Tau_trigger_userevent(metric.c_str(),
+                        ((double)papi_periodic_values[index]));
+                } else {
+                    void * ue = find_user_event(metric.c_str());
+                    Tau_userevent_thread(ue, ((double)papi_periodic_values[index]), 0);
+                }
                 // set it back to zero so we can use PAPI_accum and not PAPI_reset
                 papi_periodic_values[index] = 0;
                 index++;
@@ -1188,6 +1193,12 @@ void * Tau_monitoring_plugin_threaded_function(void* data) {
     /* Set the wakeup time (ts) to 2 seconds in the future. */
     struct timespec ts;
     struct timeval  tp;
+
+    /* If we are tracing while doing periodic measurements, then register
+     * this thread so we don't collide with events on thread 0 */
+    if (TauEnv_get_tracing()) {
+        Tau_register_thread();
+    }
 
     while (!done) {
         // take a reading...
