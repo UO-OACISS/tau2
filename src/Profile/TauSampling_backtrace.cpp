@@ -2,6 +2,7 @@
 
 #include "Profile/TauSampling_unwind.h"
 #include <unwind.h>
+#include <stdint.h>
 
 // Moved from header file
 using namespace std;

@@ -3348,13 +3348,18 @@ configure_perfexplorer () {
 
     case $machine in
 
-	apple | arm64_apple)
+	apple )
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl.jnilib.gz > $JARTARGET/libjogl.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_awt.jnilib.gz > $JARTARGET/libjogl_awt.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_cg.jnilib.gz > $JARTARGET/libjogl_cg.jnilib
 	    cp tools/src/contrib/jogl/apple/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
 	    cp tools/src/contrib/jogl/apple/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
 
+	    ;;
+
+         arm64_apple)
+	    tar -xzf tools/src/contrib/jogl/arm64_apple/jogl-glob.tgz -C $JARTARGET
+	    
 	    ;;
 
 	i386_linux)
