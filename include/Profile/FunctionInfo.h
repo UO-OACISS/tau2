@@ -21,6 +21,7 @@
 #include <vector>
 #include <mutex>
 #include <unordered_map>
+#include <pthread.h>
 
 using namespace std;
 
@@ -168,7 +169,7 @@ private:
   
   //FunctionMetrics MetricList[TAU_MAX_THREADS];
 vector<FunctionMetrics*> FMetricList;
-
+/*
 inline void checkFIVector(int tid){
     RtsLayer::LockDB();
 	while(FMetricList.size()<=tid){
@@ -181,13 +182,26 @@ inline void checkFIVector(int tid){
         
 	}
     RtsLayer::UnLockDB();
-}
+}*/
 
-static thread_local int local_tid;
-static thread_local unordered_map<FunctionInfo*,FunctionMetrics*>* metrics_cache;
+//static thread_local int local_tid;
+//static thread_local unordered_map<FunctionInfo*,FunctionMetrics*>* metrics_cache;
+pthread_key_t thr_id_key;
+//pthread_once_t key_once;
+/*static void make_key()
+{
+    (void) pthread_key_create(&thr_id_key, NULL);
+}*/
+std::mutex fInfoVectorMutex;
 
 FunctionMetrics* getFunctionMetric(int tid){
+    //pthread_once(&key_once, make_key);
     FunctionMetrics* MOut;
+    if ((MOut = (FunctionInfo::FunctionMetrics*)pthread_getspecific(thr_id_key)) != NULL) {
+        return MOut;
+    }
+    
+    /*
     if(tid == local_tid){
         std::unordered_map<FunctionInfo*,FunctionMetrics*>::iterator mCheck =(*metrics_cache).find(this); 
         if(mCheck != (*metrics_cache).end())
@@ -198,19 +212,33 @@ FunctionMetrics* getFunctionMetric(int tid){
             return MOut;
         }
         }
-    }
+    }*/
 
-    checkFIVector(tid);
+    //checkFIVector(tid);
 
-    RtsLayer::LockDB();
+    //RtsLayer::LockDB();
+    std::lock_guard<std::mutex> guard(fInfoVectorMutex);
+    while(FMetricList.size()<=tid){
+		FMetricList.push_back(new FunctionMetrics());
+        
+        if(setPathHistograms){//TODO: DYNAPROF
+            int topThread=FMetricList.size()-1;
+            FMetricList[topThread]->pathHistogram=new TauPathHashTable<TauPathAccumulator>(topThread);
+        }
+        
+	}
+    
     MOut=FMetricList[tid];
-    if(tid == local_tid){
-        std::unordered_map<FunctionInfo*,FunctionMetrics*>::iterator mCheck =(*metrics_cache).find(this); 
+    //if(tid == local_tid){
+        /*std::unordered_map<FunctionInfo*,FunctionMetrics*>::iterator mCheck =(*metrics_cache).find(this); 
         if(mCheck == (*metrics_cache).end()||mCheck->second==0){
             (*metrics_cache)[this]=MOut;
-        }
-    }
-    RtsLayer::UnLockDB();
+        }*/
+        
+   // }
+    //else{printf("THREAD ID MISMATCH!!! TID: %d, LOCAL_TID: %d, ADDR: %p\n",tid,local_tid,MOut);}
+    //RtsLayer::UnLockDB();
+    pthread_setspecific(thr_id_key, MOut);
     //printf("TID: %d, LOCAL_TID: %d, ADDR: %p\n",tid,local_tid,MOut);
     return MOut;
 
