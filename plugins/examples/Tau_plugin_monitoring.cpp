@@ -825,13 +825,6 @@ void parse_proc_self_status() {
                 const_cast<char*>(results[1].c_str()), 0);
             }
         }
-        if (results[0].find("Threads") != std::string::npos) {
-            char* pEnd;
-            double d1 = strtod (results[1].c_str(), &pEnd);
-            if (pEnd) {
-                sample_value(source, "status", results[0].c_str(), d1, 100LL);
-            }
-        }
     }
     fclose(f);
   }
