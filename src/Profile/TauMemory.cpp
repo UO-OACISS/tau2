@@ -705,7 +705,11 @@ void TauAllocation::TriggerHeapMemoryUsageEvent() {
   TAU_REGISTER_EVENT(evt, "Heap Memory Used (KB)");
   /* Make the measurement on thread 0, because we are
    * recording the heap for the process. */
-  Tau_userevent_thread(evt, Tau_max_RSS(), 0);
+  int tid = 0;
+  if (TauEnv_get_tracing()) {
+    tid = RtsLayer::myThread();
+  }
+  Tau_userevent_thread(evt, Tau_max_RSS(), tid);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1788,7 +1792,6 @@ extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm,
                 break;
             }
         }
-      break;
     }
    /* Search for Threads for total thread count from /proc/self/status */
     if (buf[i] == '\n' && buf[i+1] == 'T' && buf[i+2] == 'h' && buf[i+3] == 'r' && buf[i+4] == 'e' && buf[i+5] == 'a' && buf[i+6] == 'd' && buf[i+7] == 's' && buf[i+8] == ':') {
@@ -1799,29 +1802,26 @@ extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm,
                 break;
             }
         }
-      break;
     }
    /* Search for voluntary_ctxt_switches for total thread count from /proc/self/status */
     if (buf[i] == '\n' && buf[i+1] == 'v' && buf[i+2] == 'o' && buf[i+3] == 'l' && buf[i+4] == 'u' && buf[i+5] == 'n' && buf[i+6] == 't' && buf[i+7] == 'a' && buf[i+8] == 'r') {
         for (j = (strlen("voluntary_ctxt_switches:")+1) ; j+i < bytesread ; j++) {
             if (buf[i+j] != ' ') {
-                sscanf(&buf[i+j], "%lld", threads);
-                //printf("voluntary_ctxt_switches: %lld\n", *threads);
+                sscanf(&buf[i+j], "%lld", vswitch);
+                //printf("voluntary_ctxt_switches: %lld\n", *vswitch);
                 break;
             }
         }
-      break;
     }
    /* Search for nonvoluntary_ctxt_switches for total thread count from /proc/self/status */
     if (buf[i] == '\n' && buf[i+1] == 'n' && buf[i+2] == 'o' && buf[i+3] == 'n' && buf[i+4] == 'v' && buf[i+5] == 'o' && buf[i+6] == 'l' && buf[i+7] == 'u' && buf[i+8] == 'n') {
         for (j = (strlen("nonvoluntary_ctxt_switches:")+1) ; j+i < bytesread ; j++) {
             if (buf[i+j] != ' ') {
-                sscanf(&buf[i+j], "%lld", threads);
-                //printf("nonvoluntary_ctxt_switches: %lld\n", *threads);
+                sscanf(&buf[i+j], "%lld", nvswitch);
+                //printf("nonvoluntary_ctxt_switches: %lld\n", *nvswitch);
                 break;
             }
         }
-      break;
     }
   }
   return ret;
@@ -1861,18 +1861,23 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
 
   Tau_read_status(fd, &vmrss, &vmhwm, &threads, &nvswitch, &vswitch);
 
+  int tid = 0;
+  if (TauEnv_get_tracing()) {
+    tid = RtsLayer::myThread();
+  }
+
   if (vmrss > 0) {
     if (use_context) {
         TAU_CONTEXT_EVENT(proc_rss, (double) vmrss);
     } else {
-        Tau_userevent_thread(proc_rss_no_context, (double) vmrss, 0);
+        Tau_userevent_thread(proc_rss_no_context, (double) vmrss, tid);
     }
   }
   if (vmhwm > 0) {
     if (use_context) {
         TAU_CONTEXT_EVENT(proc_vmhwm, (double) vmhwm);
     } else {
-        Tau_userevent_thread(proc_vmhwm_no_context, (double) vmhwm, 0);
+        Tau_userevent_thread(proc_vmhwm_no_context, (double) vmhwm, tid);
     }
   }
 
@@ -1880,7 +1885,7 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
     if (use_context) {
         TAU_CONTEXT_EVENT(stat_threads, (double) threads);
     } else {
-        Tau_userevent_thread(stat_threads_no_context, (double) threads, 0);
+        Tau_userevent_thread(stat_threads_no_context, (double) threads, tid);
     }
   }
 
@@ -1888,7 +1893,7 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
     if (use_context) {
         TAU_CONTEXT_EVENT(stat_voluntary, (double) vswitch);
     } else {
-        Tau_userevent_thread(stat_voluntary_no_context, (double) vswitch, 0);
+        Tau_userevent_thread(stat_voluntary_no_context, (double) vswitch, tid);
     }
   }
 
@@ -1896,7 +1901,7 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
     if (use_context) {
         TAU_CONTEXT_EVENT(stat_nonvoluntary, (double) nvswitch);
     } else {
-        Tau_userevent_thread(stat_nonvoluntary_no_context, (double) nvswitch, 0);
+        Tau_userevent_thread(stat_nonvoluntary_no_context, (double) nvswitch, tid);
     }
   }
 
