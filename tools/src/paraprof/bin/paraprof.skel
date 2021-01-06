@@ -85,7 +85,7 @@ JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JOG
 
 APPLE_OPTIONS=""
 JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
-if [ "$MACHINE" = "apple" ]; then
+if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_apple" ]; then
     IS_JAVA_64BIT=`java -version 2>&1 | tail -1 | grep 64 | wc -l`
     if [ "$FLAG64" != "1" ]; then
     	OSX_BITS="-d32"
