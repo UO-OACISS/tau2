@@ -16,6 +16,9 @@ Version 2.30 changes (from 2.29):
 3. Enhanced support for PAPI for NEC SX Aurora (-arch=nec-sx-aurora) using TAU_METRICS and tau_exec -ebs. 
 4. Added preliminary support for Apple macOS arm64_apple architecture (M1 Mac Mini). 
 5. Updated support for ROCm 3.9 and use of pthread with ROCm in system installed rocm (not spack). 
+6. Updated TAU to use PAPI from git repo on NEC SX Aurora. 
+7. Updated 3D support in ParaProf using new Jogl libs for Apple M1 macs (arch is arm64_apple). 
+
 
 
 Version 2.29 changes (from 2.28):
