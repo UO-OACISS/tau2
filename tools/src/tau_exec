@@ -1074,13 +1074,6 @@ if [ $qsub_mode = false ]; then
   TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
 fi
 
-if [ $track_rocm = "true" ] ; then
-# Don't LD_PRELOAD with -rocm.
-  TAUEX_LD_PRELOAD=""
-  #echo "TAUEX_LD_PRELOAD = $TAUEX_LD_PRELOAD"
-fi
-
-
 
 
 if [ $verbose = "true" ] ; then
