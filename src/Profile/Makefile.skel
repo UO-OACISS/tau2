@@ -937,7 +937,7 @@ $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
 
 TauGpu.o : TauGpu.cpp $(HDRS)
-	$(CXX) -DTAU_GPU $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) -DTAU_GPU $(CXXFLAGS) -c $(@:.o=.cpp) $(ROCPROFILER_FLAGS)
 
 TauRocProfiler.o : TauRocProfiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) $(ROCPROFILER_FLAGS)

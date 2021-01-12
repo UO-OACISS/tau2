@@ -4176,7 +4176,7 @@ fi
 
 if [ "$machine" = "apple" -o "$machine" = "arm64_apple" ] ; then
     mkdir -p $machine/lib
-    cp tools/src/common/resources/tau-medium.png apple/lib/
+    cp tools/src/common/resources/tau-medium.png $machine/lib/
     compiler_name=`which $cxx_compiler | awk '{print $1;}'`
     if [ "$compiler_name" = "no" -o "$compiler_name" = "" ]; then
 	echo "NOTE: No compilers found, please use option '-c++=<compilername>' if you have a C++ compiler"
