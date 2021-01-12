@@ -1847,7 +1847,11 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
   static int fd=Tau_open_status();
   if (fd == -1) return 0; // failure
 
-  long long vmrss, vmhwm, threads, nvswitch, vswitch;
+  long long vmrss = 0;
+  long long vmhwm = 0;
+  long long threads = 0;
+  long long nvswitch = 0;
+  long long vswitch = 0;
   TAU_REGISTER_CONTEXT_EVENT(proc_vmhwm, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
   TAU_REGISTER_CONTEXT_EVENT(proc_rss, "Memory Footprint (VmRSS) (KB)");
   TAU_REGISTER_CONTEXT_EVENT(stat_threads, "Threads");
@@ -1881,29 +1885,23 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
     }
   }
 
-  if (threads > 0) {
     if (use_context) {
         TAU_CONTEXT_EVENT(stat_threads, (double) threads);
     } else {
         Tau_userevent_thread(stat_threads_no_context, (double) threads, tid);
     }
-  }
 
-  if (vswitch > 0) {
     if (use_context) {
         TAU_CONTEXT_EVENT(stat_voluntary, (double) vswitch);
     } else {
         Tau_userevent_thread(stat_voluntary_no_context, (double) vswitch, tid);
     }
-  }
 
-  if (nvswitch > 0) {
     if (use_context) {
         TAU_CONTEXT_EVENT(stat_nonvoluntary, (double) nvswitch);
     } else {
         Tau_userevent_thread(stat_nonvoluntary_no_context, (double) nvswitch, tid);
     }
-  }
 
 #ifdef TAU_BEACON
   TauBeaconPublish((double) vmrss, "KB", "MEMORY", "Memory Footprint (VmRSS - Resident Set Size)");
