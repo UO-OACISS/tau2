@@ -479,6 +479,9 @@ void __cyg_profile_func_exit(void* func, void* callsite)
   // Don't profile if we're still initializing.
   if (Tau_init_initializingTAU()) return;
 
+  // Don't profile if we're done initializing but have yet to return from the init function
+  if (Tau_get_inside_initialize()) return;
+
   HashNode * hn;
   unsigned long addr;
 
