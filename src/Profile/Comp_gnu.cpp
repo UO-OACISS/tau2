@@ -252,16 +252,20 @@ void profile_func_exit(void*, void*);
 #if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_enter
 #endif /* SICORTEX || TAU_SCOREP */
+
+
 void __cyg_profile_func_enter(void* func, void* callsite)
 {
   static bool gnu_init = true;
   HashNode * node;
   /* This is the entry point into TAU from PDT-instrumented C++ codes, so
    * make sure that TAU is ready to go before doing anything else! */
-  static int do_this_once = Tau_init_initializeTAU();
 
   // Don't profile if we're done executing or still initializing
-  if (executionFinished || Tau_init_initializingTAU()) return;
+  if (executionFinished || Tau_init_initializingTAU() || Tau_get_inside_initialize()) return;
+
+  static int do_this_once = Tau_init_initializeTAU();
+
 
   // Convert void * to integer
   void * funcptr = func;
