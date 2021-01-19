@@ -266,6 +266,9 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
   static int do_this_once = Tau_init_initializeTAU();
 
+  // Don't profile TAU internals. This also prevents reentrancy.
+  if (Tau_global_get_insideTAU() > 0) return;
+
 
   // Convert void * to integer
   void * funcptr = func;
@@ -311,8 +314,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
     if (node->excluded) return;
   } // END protected region
 
-  // Don't profile TAU internals. This also prevents reentrancy.
-  if (Tau_global_get_insideTAU() > 0) return;
 
   // Construct and start the function timer.  This region needs to be protected
   // in all situations.
@@ -482,6 +483,9 @@ void __cyg_profile_func_exit(void* func, void* callsite)
   // Don't profile if we're done initializing but have yet to return from the init function
   if (Tau_get_inside_initialize()) return;
 
+  // Don't profile TAU internals. This also prevents reentrancy.
+  if (Tau_global_get_insideTAU() > 0) return;
+
   HashNode * hn;
   unsigned long addr;
 
@@ -511,8 +515,6 @@ void __cyg_profile_func_exit(void* func, void* callsite)
     if (!hn || hn->excluded || !hn->fi) return;
   } // END protected region
 
-  // Don't profile TAU internals. This also prevents reentrancy.
-  if (Tau_global_get_insideTAU() > 0) return;
 
 
   // Stop the timer.  This routine is protected so we don't need another guard.
