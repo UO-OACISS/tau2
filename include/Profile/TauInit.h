@@ -28,6 +28,7 @@ extern "C" {
 int Tau_init_initializeTAU();
 int Tau_init_check_initialized();
 int Tau_init_initializingTAU();
+int Tau_get_inside_initialize(); 
 void Tau_register_post_init_callback(void (*function)());
 
 

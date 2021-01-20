@@ -46,8 +46,8 @@ static TauContextUserEvent *SMClockEvent;
 static TauContextUserEvent *MemoryClockEvent;
 static TauContextUserEvent *PowerUtilizationEvent;
 
-static uint32_t recentKernelId = -1;
-static uint32_t recentCorrelationId = -1;
+//static uint32_t recentKernelId = -1;
+//static uint32_t recentCorrelationId = -1;
 
 int number_of_tasks = 0;
 int number_of_top_level_task_events = 0;
@@ -351,7 +351,7 @@ void break_gpu_event(const char *name, int gpuTask, double stop_time, FunctionIn
   Tau_stop_current_timer_task(gpuTask);
   if (TauEnv_get_callpath()) {
     //printf("Profiler: %s \n", parent->GetName());
-    double totalTime = 0;
+    //double totalTime = 0;
     if (parent != NULL) {
       Tau_stop_timer(parent, gpuTask);
     }
@@ -540,7 +540,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 
 void Tau_gpu_register_envt_event(GpuEvent *event, double startTime, double endTime, int transferSize, int dataType)
 {
-  int task = get_task(event);
+//  int task = get_task(event);
 	const char* functionName = event->getName();
 	if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
 	{
@@ -561,7 +561,7 @@ void Tau_gpu_register_envt_event(GpuEvent *event, double startTime, double endTi
 		  }
 		else if (dataType == FanSpeed)
 		  {
-		    functionName == "Fan Speed";
+		    functionName = "Fan Speed";
 		  }
 	}
 
