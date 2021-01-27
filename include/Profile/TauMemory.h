@@ -16,7 +16,7 @@
 ****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 
 #ifndef _TAU_MEMORY_H_
@@ -77,6 +77,12 @@
 #ifndef HAVE_FREE
 // Assume all platforms have free
 #define HAVE_FREE 1
+#endif
+
+// Which platforms have puts?
+#ifndef HAVE_PUTS
+// Assume all platforms have puts
+#define HAVE_PUTS 1
 #endif
 
 // Which platforms have memalign?
@@ -142,7 +148,7 @@
 #ifndef HAVE_MALLINFO
 #if !( defined(TAU_CRAYXMT) || defined(TAU_CATAMOUNT) || defined(TAU_NEC_SX) ) && \
      ( defined (__linux__) || defined (_AIX) || defined(sgi) || \
-       defined (__alpha) || defined (CRAYCC) || defined(__blrts__)) 
+       defined (__alpha) || defined (CRAYCC) || defined(__blrts__))
 #define HAVE_MALLINFO 1
 #endif
 #endif
@@ -264,8 +270,8 @@ public:
     lgap_addr(NULL), lgap_size(0),
     ugap_addr(NULL), ugap_size(0),
     tracked(false), allocated(false)
-  { 
-    // Initialize leak event map early on since Intel 12.x compilers 
+  {
+    // Initialize leak event map early on since Intel 12.x compilers
     // can't construct tr1::hash_map from exit()
     static leak_event_map_t & leak_event_map = __leak_event_map();
 	// use the static object, so the compiler doesn't complain
@@ -403,5 +409,5 @@ void * Tau_memcpy(void *, void const *, size_t, char const *, int);
 /***************************************************************************
  * $RCSfile: TauMemory.h,v $   $Author: amorris $
  * $Revision: 1.4 $   $Date: 2010/02/03 06:09:44 $
- * TAU_VERSION_ID: $Id: TauMemory.h,v 1.4 2010/02/03 06:09:44 amorris Exp $ 
+ * TAU_VERSION_ID: $Id: TauMemory.h,v 1.4 2010/02/03 06:09:44 amorris Exp $
  ***************************************************************************/
