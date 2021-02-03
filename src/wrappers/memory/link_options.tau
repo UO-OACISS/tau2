@@ -1,1 +1,1 @@
--Wl,-wrap,malloc -Wl,-wrap,calloc -Wl,-wrap,free -Wl,-wrap,memalign -Wl,-wrap,posix_memalign -Wl,-wrap,realloc -Wl,-wrap,valloc -Wl,-wrap,pvalloc -lTauMemoryWrap
+-Wl,-wrap,malloc -Wl,-wrap,calloc -Wl,-wrap,free -Wl,-wrap,memalign -Wl,-wrap,posix_memalign -Wl,-wrap,realloc -Wl,-wrap,valloc -Wl,-wrap,pvalloc -Wl,-wrap,puts -lTauMemoryWrap

@@ -48,6 +48,9 @@ extern void * __real_valloc(size_t size);
 #ifdef HAVE_PVALLOC
 extern void * __real_pvalloc(size_t size);
 #endif
+#ifdef HAVE_PUTS
+extern int __real_puts(const char *s);
+#endif
 
 
 
@@ -114,6 +117,15 @@ pvalloc_t get_system_pvalloc()
 #endif
 }
 
+puts_t get_system_puts()
+{
+#ifdef HAVE_PUTS
+  return __real_puts;
+#else
+  return NULL;
+#endif
+}
+
 free_t get_system_free()
 {
 #ifdef HAVE_FREE
@@ -161,6 +173,11 @@ void * __wrap_valloc(size_t size)
 void * __wrap_pvalloc(size_t size)
 {
   return pvalloc_wrapper(size);
+}
+
+int __wrap_puts(const char *s)
+{
+  return puts_wrapper(s);
 }
 
 /*********************************************************************
