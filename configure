@@ -12124,12 +12124,15 @@ if [ $cxx_compiler = icpc -o $cxx_compiler = icpx -o $cxx_compiler = mpiicpc -o 
     t="Version 1"
     t1="${cxx_compiler#$s} version 1"
     t2="${cxx_compiler#$s}.orig version 1"
+    #Test for versions 20+ as well
+    t3="${cxx_compiler#$s} version 2"
     testarg=${version//$t/}
     testarg1=${version//$t1/}
     testarg2=${version#$t2}
+    testarg3=${version#$t3}
 
 
-    if [ "y$testarg" != "y$version" -o "y$testarg1" != "y$version" -o "y$testarg2" != "y$version" ] ; then
+    if [ "y$testarg" != "y$version" -o "y$testarg1" != "y$version" -o "y$testarg2" != "y$version" -o "y$testarg3" != "y$version" ] ; then
         echo "Intel v10.0+ compilers found"
         fixmakeargs="$fixmakeargs INTEL10FIX COMPINST_GNU"
     else
