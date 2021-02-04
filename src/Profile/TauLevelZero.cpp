@@ -204,7 +204,7 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t app
   const char *kernel_name = name.c_str(); 
   double started_translated = TAUTranslateGPUtoCPUTimestamp(taskid, started);
   double ended_translated = TAUTranslateGPUtoCPUTimestamp(taskid, ended);
-  // TAU_INTERNAL_DEMANGLE_NAME(kernel_name, demangled_name);
+  TAU_INTERNAL_DEMANGLE_NAME(kernel_name, demangled_name);
   TAU_VERBOSE("TAU: <kernel>: (raw) name: %s appended: %ld submitted: %ld started: %ld ended: %ld task id=%d\n", 
 		  name.c_str(), appended, submitted, started, ended, taskid);
   TAU_VERBOSE("TAU: <kernel>: (raw) name: %s appended: %g submitted: %g started: %g ended: %g task id=%d\n",  
@@ -214,10 +214,11 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t app
 
   last_gpu_timestamp = ended; 
   metric_set_gpu_timestamp(taskid, started_translated); 
-  TAU_START_TASK(name.c_str(), taskid); 
+  TAU_START_TASK(demangled_name, taskid);
+
 
   metric_set_gpu_timestamp(taskid, ended_translated); 
-  TAU_STOP_TASK(name.c_str(), taskid); 
+  TAU_STOP_TASK(demangled_name, taskid);
   return;
 }
 
