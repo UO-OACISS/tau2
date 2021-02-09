@@ -2994,6 +2994,7 @@ void Tau_destructor_trigger() {
   static bool once = false;
   if (once) { return; }
   once = true;
+  FunctionInfo::disable_metric_cache();
   Tau_flush_gpu_activity();
 // First, make sure all thread timers have stopped
   Tau_profile_exit_all_threads();

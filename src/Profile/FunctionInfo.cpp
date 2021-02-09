@@ -152,6 +152,7 @@ static char *strip_tau_group(const char *ProfileGroupName) {
 std::atomic<uint64_t> FunctionInfo::next_id{0};
 
 thread_local vector<FunctionInfo::FunctionMetrics*> FunctionInfo::MetricThreadCache;
+bool FunctionInfo::use_metric_tls = true;
 
 //////////////////////////////////////////////////////////////////////
 // FunctionInfoInit is called by all four forms of FunctionInfo ctor

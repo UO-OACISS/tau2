@@ -195,6 +195,7 @@ std::mutex fInfoVectorMutex;
 static thread_local vector<FunctionMetrics*> MetricThreadCache; // One entry per instance
 static std::atomic<uint64_t> next_id; // The next available ID; incremented when function_info_id is set.
 uint64_t function_info_id; // This is set in FunctionInfo::FunctionInfoInit()
+static bool use_metric_tls; // This is set to false to disable the thread-local cache during shutdown.
 
 
 // getFunctionMetric(tid) returns the pointer to this instance's FunctionMetric 
@@ -202,12 +203,16 @@ uint64_t function_info_id; // This is set in FunctionInfo::FunctionInfoInit()
 FunctionMetrics* getFunctionMetric(int tid){
     FunctionMetrics* MOut = NULL;
 
-    static thread_local int local_tid = RtsLayer::myThread();
+    static thread_local const int local_tid = RtsLayer::myThread();
+
 
     // Use thread-local optimization if the current thread is requesting its own metrics.
     // After the first time a thread requests its own metrics, we no longer have to lock.
     // (If requesting a *different* thread's metrics, we have to use the slow path.)
-    if(tid == local_tid) {
+    // Also don't use the cache during shutdown -- it might have been destructed already,
+    // but we can't put a destructor trigger on MetricThreadCache because they are *also*
+    // destructed when a thread exits.
+    if(use_metric_tls && (tid == local_tid)) {
         if(MetricThreadCache.size() > function_info_id) {
             MOut = MetricThreadCache[function_info_id];
             if(MOut != NULL) {
@@ -232,7 +237,7 @@ FunctionMetrics* getFunctionMetric(int tid){
     MOut=FMetricList[tid];
 
     // Use thread-local optimization if the current thread is requesting its own metrics.
-    if(tid == local_tid) {
+    if(use_metric_tls && (tid == local_tid)) {
         // Ensure the FMetricList vector is long enough to accomodate the new cached item.
         while(MetricThreadCache.size() <= function_info_id) {
             MetricThreadCache.push_back(NULL);
@@ -384,6 +389,10 @@ public:
 
   bool IsThrottled() const {
     return ! (RtsLayer::TheEnableInstrumentation() && (MyProfileGroup_ & RtsLayer::TheProfileMask()));
+  }
+
+  static void disable_metric_cache() {
+    use_metric_tls = false;
   }
 
 private:
