@@ -2214,26 +2214,35 @@ extern "C" void Tau_sampling_init_if_necessary(void)
 #endif
 }
 
-inline void checkBVector (vector<bool>* v, int tid){
+struct thrFinalizedVector:vector<bool>{
+    thrFinalizedVector() {
+        // nothing
+    }
+
+    virtual ~thrFinalizedVector(){
+        Tau_destructor_trigger();
+    }
+};
+
+inline void checkBVector (thrFinalizedVector * v, int tid){
+    RtsLayer::LockDB();
     while(v->size()<=tid){
-        RtsLayer::LockDB();
 		v->push_back(false);
-        RtsLayer::UnLockDB();
 	}
+    RtsLayer::UnLockDB();
 }
 
 extern "C"
 void Tau_sampling_finalize_if_necessary(int tid)
 {
-  static bool finalized = false;
-  //static bool thrFinalized[TAU_MAX_THREADS] = {false}; //TODO: DYNATHREAD
-  static vector<bool> thrFinalized;
-  //int tid = Tau_get_local_tid();
+    static bool finalized = false;
 
-  TAU_VERBOSE("TAU: Finalize(if necessary) <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stderr);
+    TAU_VERBOSE("TAU: Finalize(if necessary) <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stderr);
 
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
+
+    static thrFinalizedVector thrFinalized;
 
     // before wrapping things up, stop listening to signals.
     sigset_t x;
@@ -2248,39 +2257,36 @@ void Tau_sampling_finalize_if_necessary(int tid)
     checkBVector(&thrFinalized,tid);
 
     if (!finalized) {
-      TAU_VERBOSE("TAU: <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stdout);
-      RtsLayer::LockEnv();
-      // check again, someone else might already have finalized by now.
-      if (!finalized) {
-        collectingSamples = 0;
-        finalized = true;
-      }
-      RtsLayer::UnLockEnv();
+        TAU_VERBOSE("TAU: <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stdout);
+        RtsLayer::LockEnv();
+        // check again, someone else might already have finalized by now.
+        if (!finalized) {
+            collectingSamples = 0;
+            finalized = true;
+        }
+        RtsLayer::UnLockEnv();
     }
 
+    RtsLayer::LockEnv();
     if (!thrFinalized[tid]) {
-      RtsLayer::LockEnv();
-      if (!thrFinalized[tid]) {
         tau_sampling_flags()->samplingEnabled = 0;
         thrFinalized[tid] = true;
         Tau_sampling_finalize(tid);
-      }
-      RtsLayer::UnLockEnv();
     }
+    RtsLayer::UnLockEnv();
 
     // Kevin: should we finalize all threads on this process? I think so.
-  if (tid == 0) {
-    for (int i = 0; i < RtsLayer::getTotalThreads(); i++) {
-      if (!thrFinalized[i]) {
-        RtsLayer::LockEnv();
-        if (!thrFinalized[i]) {
-          thrFinalized[i] = true;
-          Tau_sampling_finalize(i);
+    if (tid == 0) {
+        checkBVector(&thrFinalized, RtsLayer::getTotalThreads());
+        for (int i = 0; i < RtsLayer::getTotalThreads(); i++) {
+            RtsLayer::LockEnv();
+            if (!thrFinalized[i]) {
+                thrFinalized[i] = true;
+                Tau_sampling_finalize(i);
+            }
+            RtsLayer::UnLockEnv();
         }
-        RtsLayer::UnLockEnv();
-      }
     }
-  }
 }
 
 #endif //TAU_WINDOWS && TAU_ANDROID

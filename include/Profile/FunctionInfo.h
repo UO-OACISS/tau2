@@ -168,8 +168,18 @@ private:
   };
 
 
+struct FMetricListVector : vector<FunctionMetrics *>{
+    FMetricListVector() {
+        // nothing
+    }
+
+    virtual ~FMetricListVector(){
+        Tau_destructor_trigger();
+    }
+};
+
 // Metric list -- one entry per thread
-vector<FunctionMetrics*> FMetricList;
+FMetricListVector FMetricList;
 
 // Mutex which protects FMetricList
 std::mutex fInfoVectorMutex;
@@ -198,7 +208,7 @@ FunctionMetrics* getFunctionMetric(int tid){
     // After the first time a thread requests its own metrics, we no longer have to lock.
     // (If requesting a *different* thread's metrics, we have to use the slow path.)
     if(tid == local_tid) {
-        if(MetricThreadCache.size() >= function_info_id) {
+        if(MetricThreadCache.size() > function_info_id) {
             MOut = MetricThreadCache[function_info_id];
             if(MOut != NULL) {
                 return MOut;
@@ -224,7 +234,7 @@ FunctionMetrics* getFunctionMetric(int tid){
     // Use thread-local optimization if the current thread is requesting its own metrics.
     if(tid == local_tid) {
         // Ensure the FMetricList vector is long enough to accomodate the new cached item.
-        while(MetricThreadCache.size() < function_info_id) {
+        while(MetricThreadCache.size() <= function_info_id) {
             MetricThreadCache.push_back(NULL);
         }    
         // Store the FunctionMetrics pointer in the thread-local cache
