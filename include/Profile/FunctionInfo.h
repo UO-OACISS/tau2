@@ -21,7 +21,7 @@
 #include <vector>
 #include <mutex>
 #include <unordered_map>
-#include <pthread.h>
+#include <atomic>
 
 using namespace std;
 
@@ -166,57 +166,48 @@ private:
     TauPathHashTable<TauPathAccumulator> *pathHistogram=NULL;
   #endif /* _AIX */
   };
-  
-  //FunctionMetrics MetricList[TAU_MAX_THREADS];
-vector<FunctionMetrics*> FMetricList;
-/*
-inline void checkFIVector(int tid){
-    RtsLayer::LockDB();
-	while(FMetricList.size()<=tid){
-		FMetricList.push_back(new FunctionMetrics());
-        
-        if(setPathHistograms){//TODO: DYNAPROF
-            int topThread=FMetricList.size()-1;
-            FMetricList[topThread]->pathHistogram=new TauPathHashTable<TauPathAccumulator>(topThread);
-        }
-        
-	}
-    RtsLayer::UnLockDB();
-}*/
 
-//static thread_local int local_tid;
-//static thread_local unordered_map<FunctionInfo*,FunctionMetrics*>* metrics_cache;
-pthread_key_t thr_id_key;
-//pthread_once_t key_once;
-/*static void make_key()
-{
-    (void) pthread_key_create(&thr_id_key, NULL);
-}*/
+
+// Metric list -- one entry per thread
+vector<FunctionMetrics*> FMetricList;
+
+// Mutex which protects FMetricList
 std::mutex fInfoVectorMutex;
 
+// Thread-local optimization for the FMetricList.
+// We need a thread-local FMetricList, which means a thread-local member.
+// C++ doesn't allow a thread_local member variable, only thread-local statics.
+// Pthread TLS only allows a maximum of 1,024 such variables,
+// and we need to support more timers than that.
+//
+// This keeps a sequential ID number for each FunctionInfo instance.
+// This is used an an index into the static thread_local MetricThreadCache.
+static thread_local vector<FunctionMetrics*> MetricThreadCache; // One entry per instance
+static std::atomic<uint64_t> next_id; // The next available ID; incremented when function_info_id is set.
+uint64_t function_info_id; // This is set in FunctionInfo::FunctionInfoInit()
+
+
+// getFunctionMetric(tid) returns the pointer to this instance's FunctionMetric 
+// for the given tid. Uses thread-local cache if tid = this thread.
 FunctionMetrics* getFunctionMetric(int tid){
-    //pthread_once(&key_once, make_key);
-    FunctionMetrics* MOut;
-    if ((MOut = (FunctionInfo::FunctionMetrics*)pthread_getspecific(thr_id_key)) != NULL) {
-        return MOut;
+    FunctionMetrics* MOut = NULL;
+
+    static thread_local int local_tid = RtsLayer::myThread();
+
+    // Use thread-local optimization if the current thread is requesting its own metrics.
+    // After the first time a thread requests its own metrics, we no longer have to lock.
+    // (If requesting a *different* thread's metrics, we have to use the slow path.)
+    if(tid == local_tid) {
+        if(MetricThreadCache.size() >= function_info_id) {
+            MOut = MetricThreadCache[function_info_id];
+            if(MOut != NULL) {
+                return MOut;
+            }
+        }
     }
     
-    /*
-    if(tid == local_tid){
-        std::unordered_map<FunctionInfo*,FunctionMetrics*>::iterator mCheck =(*metrics_cache).find(this); 
-        if(mCheck != (*metrics_cache).end())
-        {
-        MOut=mCheck->second;//(*metrics_cache)[this];
-        if(MOut!=0){
-            //printf("Got Cache at %p on TID: %d\n",MOut,tid);
-            return MOut;
-        }
-        }
-    }*/
-
-    //checkFIVector(tid);
-
-    //RtsLayer::LockDB();
+    // Not in thread-local cache, or cache not searched.
+    // Create a new FunctionMetrics instance.
     std::lock_guard<std::mutex> guard(fInfoVectorMutex);
     while(FMetricList.size()<=tid){
 		FMetricList.push_back(new FunctionMetrics());
@@ -229,20 +220,19 @@ FunctionMetrics* getFunctionMetric(int tid){
 	}
     
     MOut=FMetricList[tid];
-    //if(tid == local_tid){
-        /*std::unordered_map<FunctionInfo*,FunctionMetrics*>::iterator mCheck =(*metrics_cache).find(this); 
-        if(mCheck == (*metrics_cache).end()||mCheck->second==0){
-            (*metrics_cache)[this]=MOut;
-        }*/
-        
-   // }
-    //else{printf("THREAD ID MISMATCH!!! TID: %d, LOCAL_TID: %d, ADDR: %p\n",tid,local_tid,MOut);}
-    //RtsLayer::UnLockDB();
-    pthread_setspecific(thr_id_key, MOut);
-    //printf("TID: %d, LOCAL_TID: %d, ADDR: %p\n",tid,local_tid,MOut);
+
+    // Use thread-local optimization if the current thread is requesting its own metrics.
+    if(tid == local_tid) {
+        // Ensure the FMetricList vector is long enough to accomodate the new cached item.
+        while(MetricThreadCache.size() < function_info_id) {
+            MetricThreadCache.push_back(NULL);
+        }    
+        // Store the FunctionMetrics pointer in the thread-local cache
+        MetricThreadCache[function_info_id] = MOut;
+    }
+
     return MOut;
 
-    //return FMetricList[tid];
 }
 
 public:

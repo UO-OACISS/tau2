@@ -129,6 +129,7 @@ int& TheUsingCompInst()
 //////////////////////////////////////////////////////////////////////
 
 
+
 static char *strip_tau_group(const char *ProfileGroupName) {
   char *source = strdup(ProfileGroupName);
   const char *find = "TAU_GROUP_";
@@ -146,10 +147,11 @@ static char *strip_tau_group(const char *ProfileGroupName) {
   return source;
 }
 
-//thread_local int FunctionInfo::local_tid = RtsLayer::myThread();
-//pthread_once_t FunctionInfo::key_once = PTHREAD_ONCE_INIT;
-//pthread_key_t FunctionInfo::thr_id_key = NULL;
-//thread_local unordered_map<FunctionInfo*,FunctionInfo::FunctionMetrics*>* FunctionInfo::metrics_cache=new             unordered_map<FunctionInfo*,FunctionInfo::FunctionMetrics*>;
+// The next ID number for a FunctionInfo instance.
+// This is used for the thread-local cache of FunctionMetrics.
+std::atomic<uint64_t> FunctionInfo::next_id{0};
+
+thread_local vector<FunctionInfo::FunctionMetrics*> FunctionInfo::MetricThreadCache;
 
 //////////////////////////////////////////////////////////////////////
 // FunctionInfoInit is called by all four forms of FunctionInfo ctor
@@ -183,7 +185,9 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
 
   // Use LockDB to avoid a possible race condition.
   RtsLayer::LockDB();
-pthread_key_create(&thr_id_key, NULL);
+
+  function_info_id = ++next_id;
+
   //Need to keep track of all the groups this function is a member of.
   AllGroups = strip_tau_group(ProfileGroupName);
 
