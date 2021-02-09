@@ -4564,7 +4564,6 @@ if [ $intel_cxx = 1 ] ; then
         issue_intel_warning=yes
     fi
 fi
-
 case "x$cxx_compiler" in
   "xmpicxx")
     mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
@@ -4581,8 +4580,17 @@ case "x$cxx_compiler" in
     mpi_wrapper_mpicxx_or_mpiicpc=no ;;
 esac
 
-#echo $mpi_wrapper_mpicxx_or_mpiicpc
-#echo $cxx_compiler
+# Check for regular ol' mpicxx
+any_cxx=`which mpicxx 2>/dev/null | wc -l`
+if [ $any_cxx = 1 ] ; then
+    echo "detected MPI in path"
+    mpi_wrapper_mpicxx_or_mpiicpc=yes
+fi
+
+# DEbugging...
+#echo "mpi_wrapper_mpicxx_or_mpiicpc = ($mpi_wrapper_mpicxx_or_mpiicpc)"
+#echo "mpi = ($mpi)"
+#echo "mpiinc = ($mpiinc)"
 #kill -9 $$
 
 if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes" ] ; then
