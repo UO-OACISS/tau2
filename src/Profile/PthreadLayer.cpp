@@ -25,6 +25,7 @@
 #include <Profile/TauSampling.h>
 
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef TAU_GPU
 #include <Profile/TauGpu.h>
@@ -254,7 +255,9 @@ void * tau_pthread_function(void *arg)
   }
   /* Create a timer that will measure this spawned thread */
   char timerName[1024] = {0};
-  Tau_ompt_resolve_callsite_eagerly((unsigned long)(pack->start_routine), timerName);
+  const char timerPrefix[] = "[PTHREAD] ";
+  strncpy(timerName, timerPrefix, sizeof(timerName));
+  Tau_ompt_resolve_callsite_eagerly((unsigned long)(pack->start_routine), timerName + sizeof(timerPrefix) - 1);
   void *handle = NULL;
   TAU_PROFILER_CREATE(handle, timerName, "", TAU_DEFAULT);
   TAU_PROFILER_START(handle);
