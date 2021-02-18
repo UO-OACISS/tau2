@@ -117,6 +117,13 @@ void * pvalloc(size_t size)
 }
 #endif
 
+#ifdef HAVE_PUTS
+int puts(const char *s)
+{
+  return puts_wrapper(s);
+}
+#endif
+
 
 /******************************************************************************
  *
@@ -185,6 +192,15 @@ pvalloc_t get_system_pvalloc()
 #endif
 }
 
+puts_t get_system_puts()
+{
+#ifdef HAVE_PUTS
+  return (puts_t)get_system_function_handle("puts");
+#else
+  return NULL;
+#endif
+}
+
 free_t get_system_free()
 {
 #ifdef HAVE_FREE
@@ -196,7 +212,7 @@ free_t get_system_free()
 
 
 /******************************************************************************
- * pthread wrappers 
+ * pthread wrappers
  ******************************************************************************/
 
 #if 0
@@ -214,7 +230,7 @@ int pthread_getattr_np(pthread_t thread, pthread_attr_t *attr)
   }
 
   retval = pthread_getattr_np_system(thread, attr);
-  
+
   memory_wrapper_enable();
 
   return retval;

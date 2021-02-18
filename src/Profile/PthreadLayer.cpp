@@ -25,6 +25,7 @@
 #include <Profile/TauSampling.h>
 
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef TAU_GPU
 #include <Profile/TauGpu.h>
@@ -239,31 +240,23 @@ struct tau_pthread_pack
 
 extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address);
 
+struct tau_pthread_wrapper_args_t {
+    void * handle; // TAU timer handle
+    tau_pthread_pack * pack; // Argument to tau_pthread_function
+};
+
+// If a thread exits through pthread_exit(), we will never return
+// to the tau_ptrhead_function() wrapper and could end up not stopping
+// the timer. We use a pthread cleanup function to handle stopping
+// the timer in that case.
 extern "C"
-void * tau_pthread_function(void *arg)
-{
-  tau_pthread_pack * pack = (tau_pthread_pack*)arg;
-  TAU_REGISTER_THREAD();
-  Tau_create_top_level_timer_if_necessary();
-  /* iterate over the stack and create a timer context */
-  if (TauEnv_get_threadContext() && pack->timer_context_stack.size() > 0) {
-    for (std::vector<FunctionInfo*>::iterator iter = pack->timer_context_stack.begin() ;
-        iter != pack->timer_context_stack.end() ; iter++) {
-  	    Tau_start_timer(*iter, 0, Tau_get_thread());
-    }
-  }
-  /* Create a timer that will measure this spawned thread */
-  char timerName[1024] = {0};
-  Tau_ompt_resolve_callsite_eagerly((unsigned long)(pack->start_routine), timerName);
-  void *handle = NULL;
-  TAU_PROFILER_CREATE(handle, timerName, "", TAU_DEFAULT);
-  TAU_PROFILER_START(handle);
-  void * ret = pack->start_routine(pack->arg);
-  TAU_PROFILER_STOP(handle);
+void tau_pthread_function_cleanup_handler(void * args) {
+  tau_pthread_wrapper_args_t * wrapper_args = (tau_pthread_wrapper_args_t *)args;
+  TAU_PROFILER_STOP(wrapper_args->handle);
   /* iterate over the stack and stop the timer context */
-  if (TauEnv_get_threadContext() && pack->timer_context_stack.size() > 0) {
-    for (std::vector<FunctionInfo*>::iterator iter = pack->timer_context_stack.end() ;
-        iter != pack->timer_context_stack.begin() ; iter--) {
+  if (TauEnv_get_threadContext() && wrapper_args->pack->timer_context_stack.size() > 0) {
+    for (std::vector<FunctionInfo*>::iterator iter = wrapper_args->pack->timer_context_stack.end() ;
+        iter != wrapper_args->pack->timer_context_stack.begin() ; iter--) {
   	    Tau_stop_timer(*iter, Tau_get_thread());
     }
   }
@@ -274,7 +267,58 @@ void * tau_pthread_function(void *arg)
   // See src/wrappers/taupreload/taupreload.c:taupreload_fini() for details
   Tau_stop_top_level_timer_if_necessary();
 #endif
-  delete pack;
+  delete wrapper_args->pack;
+}
+
+// TAU replaces the function which is to be launched on a new pthread
+// with this wrapper function, which ensures that the thread is registered
+// and starts a timer on it before calling the function that was actually
+// provided to pthread_create.
+extern "C"
+void * tau_pthread_function(void *arg)
+{   
+  void * ret = NULL;
+  tau_pthread_pack * pack = (tau_pthread_pack*)arg;
+
+  TAU_REGISTER_THREAD();
+  Tau_create_top_level_timer_if_necessary();
+  
+  /* iterate over the stack and create a timer context */
+  if (TauEnv_get_threadContext() && pack->timer_context_stack.size() > 0) {
+    for (std::vector<FunctionInfo*>::iterator iter = pack->timer_context_stack.begin() ;
+        iter != pack->timer_context_stack.end() ; iter++) {
+  	    Tau_start_timer(*iter, 0, Tau_get_thread());
+    }
+  }
+
+  /* Create a timer that will measure this spawned thread */
+  char timerName[1024] = {0};
+  // Give the timer name a prefix of [PTHREAD] to distinguish it from
+  // the timer started within the function if it is instrumented.
+  const char timerPrefix[] = "[PTHREAD] ";
+  strncpy(timerName, timerPrefix, sizeof(timerName));
+  Tau_ompt_resolve_callsite_eagerly((unsigned long)(pack->start_routine), timerName + sizeof(timerPrefix) - 1);
+  void *handle = NULL;
+  TAU_PROFILER_CREATE(handle, timerName, "", TAU_DEFAULT);
+
+  TAU_PROFILER_START(handle);
+  // Stopping this timer is handled by a pthread cleanup function,
+  // which accepts a single argument. We pass the timer handle
+  // and pack through to the cleanup function through wrapper_args.
+  tau_pthread_wrapper_args_t wrapper_args;
+  wrapper_args.handle = handle;
+  wrapper_args.pack = pack;
+  // Register the cleanup function.
+  pthread_cleanup_push(tau_pthread_function_cleanup_handler, &wrapper_args);
+  
+  // Call the function that we are wrapping.
+  ret = pack->start_routine(pack->arg);
+
+  // If we return normally, we pop the cleanup function.
+  // Non-zero argument causes the cleanup function to execute when popped,
+  // so that we will stop the timer through the cleanup function even
+  // when returning normally.
+  pthread_cleanup_pop(1);
   return ret;
 }
 
@@ -393,6 +437,21 @@ int tau_pthread_join_wrapper(pthread_join_p pthread_join_call,
   return ret;
 }
 
+struct tau_pthread_exit_wrapper_cleanup_args_t {
+    void * timer;
+    bool * wrapped;
+};
+
+// In order to time pthread_exit, we have to use a cleanup handler,
+// since the exit call will otherwise prevent the timer stop from
+// being reached.
+extern "C"
+void tau_pthread_exit_wrapper_cleanup(void * args) {
+    tau_pthread_exit_wrapper_cleanup_args_t * exit_args = (tau_pthread_exit_wrapper_cleanup_args_t *)args;
+    TAU_PROFILER_STOP(exit_args->timer);
+    *(exit_args->wrapped) = false;
+}
+
 extern "C"
 void tau_pthread_exit_wrapper(pthread_exit_p pthread_exit_call, void * value_ptr)
 {
@@ -410,9 +469,15 @@ void tau_pthread_exit_wrapper(pthread_exit_p pthread_exit_call, void * value_ptr
     pthread_exit_call(value_ptr);
   } else {
     *wrapped = true;
-    TAU_PROFILE_EXIT("pthread_exit");
+    void * handle;
+    TAU_PROFILER_CREATE(handle, "pthread_exit", "", TAU_DEFAULT);
+    TAU_PROFILER_START(handle);
+    tau_pthread_exit_wrapper_cleanup_args_t cleanup_args;
+    cleanup_args.timer = handle;
+    cleanup_args.wrapped = wrapped;
+    pthread_cleanup_push(tau_pthread_exit_wrapper_cleanup, &cleanup_args);
     pthread_exit_call(value_ptr);
-    *wrapped = false;
+    pthread_cleanup_pop(1);
   }
 }
 
