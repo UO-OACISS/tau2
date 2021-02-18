@@ -571,14 +571,14 @@ $(PYTAU_INSTALL): $(TAU_SHLIB)
 		cd $(INSTALLDEST) && $(LN) $(TAU_SHLIB) $(CTAU_IMPL)
 		@echo Installing Python bindings in $(TAU_SHAREDDIR)
 		$(MKDIR) -p $(TAU_SHAREDDIR)
-		$(RM) $(TAU_SHAREDDIR)/*
+		# Selectively remove some libraries and wrappers before making links
+		$(RM) $(TAU_SHAREDDIR)/$(PYTAU)
+		$(RM) $(TAU_SHAREDDIR)/$(CTAU_IMPL)
+		$(RM) $(TAU_SHAREDDIR)/*tau*.py
 		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) $(PYTAU)
 		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) $(CTAU_IMPL)
 		cd $(TAU_SHAREDDIR) && $(LN) ../tau.py ../ltau.py ../tau_python_wrapper.py .
 		cd $(TAU_SHAREDDIR) && $(LN) ../tau.py ../ltau.py ../tau_pyspark_wrapper.py .
-		cd $(TAU_SHAREDDIR) && $(RM) libTAU$(TAU_SHLIBX) TAU.dll
-		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
-		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) TAU.dll
 		cd $(INSTALLDEST) && $(LN) shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
 
 $(INSTALLDEST)/libpgnod_prof.a :
@@ -937,7 +937,7 @@ $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
 
 TauGpu.o : TauGpu.cpp $(HDRS)
-	$(CXX) -DTAU_GPU $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) -DTAU_GPU $(CXXFLAGS) -c $(@:.o=.cpp) $(ROCPROFILER_FLAGS)
 
 TauRocProfiler.o : TauRocProfiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) $(ROCPROFILER_FLAGS)

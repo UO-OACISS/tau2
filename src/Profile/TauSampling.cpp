@@ -1412,7 +1412,9 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
     samplingContext = profiler->ThisFunction;
   }
 
+#ifndef __NEC__
   TAU_ASSERT(samplingContext != NULL, "samplingContext == NULL!");
+#endif
 
   /* Get the current metric values */
   double values[TAU_MAX_COUNTERS] = { 0.0 };

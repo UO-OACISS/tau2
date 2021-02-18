@@ -129,6 +129,19 @@ int& initializing() {
   return _initializing;
 }
 
+// True if currently inside Tau_init_initializeTAU()
+// This is different from tau_initialized() which becomes true partway
+// through Tau_init_initializeTAU(), at the point when timers can be
+// created. 
+int& tau_inside_initialize() {
+  static int _tau_inside_initialize = 0;
+  return _tau_inside_initialize;
+}
+
+int Tau_get_inside_initialize() {
+  return tau_inside_initialize();
+}
+
 // Rely on the dl auditor (src/wrapper/taupreload) to set dl_initialized
 // if the audit feature is available (GLIBC version 2.4 or greater).
 // DO NOT declare static!
@@ -474,6 +487,8 @@ extern "C" int Tau_init_initializeTAU()
   if (initializing()) return 0;
   initializing() = 1;
 
+  tau_inside_initialize() = true;
+
   //Initialize locks.
   RtsLayer::Initialize();
 
@@ -597,5 +612,6 @@ extern "C" int Tau_init_initializeTAU()
 #endif // TAU_MPI
 
   initialized = true;
+  tau_inside_initialize() = false;
   return 0;
 }

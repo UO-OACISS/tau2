@@ -2314,7 +2314,7 @@ else
               objectFilesForLinking="pompregions.o $objectFilesForLinking"
           fi
 
-          newCmd="$CMD $listOfObjectFiles $argsRemaining $objectFilesForLinking $OUTPUTARGSFORTAU"
+          newCmd="$CMD $listOfObjectFiles $objectFilesForLinking $argsRemaining $OUTPUTARGSFORTAU"
 
           # check for -lc, if found, move it to the end
           check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc\)\W.*/\1/g'`
