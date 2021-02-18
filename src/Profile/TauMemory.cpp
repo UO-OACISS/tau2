@@ -1856,36 +1856,17 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
     tid = RtsLayer::myThread();
   }
 
-  if (vmrss > 0) {
     if (use_context) {
         TAU_CONTEXT_EVENT(proc_rss, (double) vmrss);
-    } else {
-        Tau_userevent_thread(proc_rss_no_context, (double) vmrss, tid);
-    }
-  }
-  if (vmhwm > 0) {
-    if (use_context) {
         TAU_CONTEXT_EVENT(proc_vmhwm, (double) vmhwm);
-    } else {
-        Tau_userevent_thread(proc_vmhwm_no_context, (double) vmhwm, tid);
-    }
-  }
-
-    if (use_context) {
         TAU_CONTEXT_EVENT(stat_threads, (double) threads);
-    } else {
-        Tau_userevent_thread(stat_threads_no_context, (double) threads, tid);
-    }
-
-    if (use_context) {
         TAU_CONTEXT_EVENT(stat_voluntary, (double) vswitch);
-    } else {
-        Tau_userevent_thread(stat_voluntary_no_context, (double) vswitch, tid);
-    }
-
-    if (use_context) {
         TAU_CONTEXT_EVENT(stat_nonvoluntary, (double) nvswitch);
     } else {
+        Tau_userevent_thread(proc_rss_no_context, (double) vmrss, tid);
+        Tau_userevent_thread(proc_vmhwm_no_context, (double) vmhwm, tid);
+        Tau_userevent_thread(stat_threads_no_context, (double) threads, tid);
+        Tau_userevent_thread(stat_voluntary_no_context, (double) vswitch, tid);
         Tau_userevent_thread(stat_nonvoluntary_no_context, (double) nvswitch, tid);
     }
 
