@@ -259,7 +259,11 @@ void tau_pthread_function_cleanup_handler(void * args) {
       return;
   }
   tau_pthread_wrapper_args_t * wrapper_args = (tau_pthread_wrapper_args_t *)args;
-  TAU_PROFILER_STOP(wrapper_args->handle);
+  // The thread is about to exit, so we stop all the timers on it.
+  // We can't just stop the wrapper timer because if the thread was
+  // canceled early, we may have returned here without stopping
+  // other timers on the stack.
+  Tau_stop_all_timers(Tau_get_thread());
   /* iterate over the stack and stop the timer context */
   if (TauEnv_get_threadContext() && wrapper_args->pack->timer_context_stack.size() > 0) {
     for (std::vector<FunctionInfo*>::iterator iter = wrapper_args->pack->timer_context_stack.end() ;
