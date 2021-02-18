@@ -251,6 +251,13 @@ struct tau_pthread_wrapper_args_t {
 // the timer in that case.
 extern "C"
 void tau_pthread_function_cleanup_handler(void * args) {
+  // When thread 0 exits, any still-running threads are cancelled,
+  // which would trigger this handler. However, if thread 0 has exited,
+  // TAU may have already shut down. If TAU has already shut down,
+  // there's nothing to do here.
+  if(Tau_global_getLightsOut()) {
+      return;
+  }
   tau_pthread_wrapper_args_t * wrapper_args = (tau_pthread_wrapper_args_t *)args;
   TAU_PROFILER_STOP(wrapper_args->handle);
   /* iterate over the stack and stop the timer context */
@@ -279,6 +286,13 @@ void * tau_pthread_function(void *arg)
 {   
   void * ret = NULL;
   tau_pthread_pack * pack = (tau_pthread_pack*)arg;
+
+  // In the case of a detached thread, the thread could reach this point
+  // after TAU has shut down, in which case we just call the wrapped function
+  // and skip the TAU parts.
+  if(Tau_global_getLightsOut()) {
+    return pack->start_routine(pack->arg);
+  }
 
   TAU_REGISTER_THREAD();
   Tau_create_top_level_timer_if_necessary();
