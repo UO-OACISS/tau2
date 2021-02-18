@@ -1772,57 +1772,43 @@ extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm,
   }
   *hwm = 0LL;
   *rss = 0LL;
-  for(i=0; i < bytesread; i++) {
-   /* Search for VmHWM for high water mark of memory from /proc/self/status */
-    if (buf[i] == '\n' && buf[i+1] == 'V' && buf[i+2] == 'm' && buf[i+3] == 'H' && buf[i+4] == 'W' && buf[i+5] == 'M' && buf[i+6] == ':') {
-        for (j = 7 ; j+i < bytesread ; j++) {
-            if (buf[i+j] != ' ') {
-                sscanf(&buf[i+j], "%lld", hwm);
-                //printf("VmHWM: %lld\n", *hwm);
-                break;
-            }
-        }
+  *threads = 0LL;
+  *vswitch = 0LL;
+  *nvswitch = 0LL;
+  // Split the data into lines
+  char * line = strtok(buf, "\n");
+  const char * _vmHWM = "VmHWM:";
+  const char * _vmRSS = "VmRSS:";
+  const char * _Threads = "Threads:";
+  const char * _voluntary_ctxt_switches = "voluntary_ctxt_switches:";
+  const char * _nonvoluntary_ctxt_switches = "nonvoluntary_ctxt_switches:";
+  while (line != NULL) {
+    if (strstr(line, _vmHWM) != NULL) {
+        char * tmp = line + strlen(_vmHWM) + 1;
+        char * pEnd;
+        *hwm = strtol(tmp, &pEnd, 10);
     }
-   /* Search for VmRSS for resident set size of memory from /proc/self/status */
-    if (buf[i] == '\n' && buf[i+1] == 'V' && buf[i+2] == 'm' && buf[i+3] == 'R' && buf[i+4] == 'S' && buf[i+5] == 'S' && buf[i+6] == ':') {
-        for (j = 7 ; j+i < bytesread ; j++) {
-            if (buf[i+j] != ' ') {
-                sscanf(&buf[i+j], "%lld", rss);
-                //printf("VmRSS: %lld\n", *rss);
-                break;
-            }
-        }
+    else if (strstr(line, _vmRSS) != NULL) {
+        char * tmp = line + strlen(_vmRSS) + 1;
+        char * pEnd;
+        *rss = strtol(tmp, &pEnd, 10);
     }
-   /* Search for Threads for total thread count from /proc/self/status */
-    if (buf[i] == '\n' && buf[i+1] == 'T' && buf[i+2] == 'h' && buf[i+3] == 'r' && buf[i+4] == 'e' && buf[i+5] == 'a' && buf[i+6] == 'd' && buf[i+7] == 's' && buf[i+8] == ':') {
-        for (j = 9 ; j+i < bytesread ; j++) {
-            if (buf[i+j] != ' ') {
-                sscanf(&buf[i+j], "%lld", threads);
-                //printf("Threads: %lld\n", *threads);
-                break;
-            }
-        }
+    else if (strstr(line, _Threads) != NULL) {
+        char * tmp = line + strlen(_Threads) + 1;
+        char * pEnd;
+        *threads = strtol(tmp, &pEnd, 10);
     }
-   /* Search for voluntary_ctxt_switches for total thread count from /proc/self/status */
-    if (buf[i] == '\n' && buf[i+1] == 'v' && buf[i+2] == 'o' && buf[i+3] == 'l' && buf[i+4] == 'u' && buf[i+5] == 'n' && buf[i+6] == 't' && buf[i+7] == 'a' && buf[i+8] == 'r') {
-        for (j = (strlen("voluntary_ctxt_switches:")+1) ; j+i < bytesread ; j++) {
-            if (buf[i+j] != ' ') {
-                sscanf(&buf[i+j], "%lld", vswitch);
-                //printf("voluntary_ctxt_switches: %lld\n", *vswitch);
-                break;
-            }
-        }
+    else if (strstr(line, _voluntary_ctxt_switches) != NULL) {
+        char * tmp = line + strlen(_voluntary_ctxt_switches) + 1;
+        char * pEnd;
+        *vswitch = strtol(tmp, &pEnd, 10);
     }
-   /* Search for nonvoluntary_ctxt_switches for total thread count from /proc/self/status */
-    if (buf[i] == '\n' && buf[i+1] == 'n' && buf[i+2] == 'o' && buf[i+3] == 'n' && buf[i+4] == 'v' && buf[i+5] == 'o' && buf[i+6] == 'l' && buf[i+7] == 'u' && buf[i+8] == 'n') {
-        for (j = (strlen("nonvoluntary_ctxt_switches:")+1) ; j+i < bytesread ; j++) {
-            if (buf[i+j] != ' ') {
-                sscanf(&buf[i+j], "%lld", nvswitch);
-                //printf("nonvoluntary_ctxt_switches: %lld\n", *nvswitch);
-                break;
-            }
-        }
+    else if (strstr(line, _nonvoluntary_ctxt_switches) != NULL) {
+        char * tmp = line + strlen(_nonvoluntary_ctxt_switches) + 1;
+        char * pEnd;
+        *nvswitch = strtol(tmp, &pEnd, 10);
     }
+    line = strtok(NULL, "\n");
   }
   return ret;
 }
