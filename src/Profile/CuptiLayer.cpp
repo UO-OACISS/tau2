@@ -267,8 +267,9 @@ void Tau_CuptiLayer_setup_eventgroup()
     /* Get the current device index */
     int deviceIndex;
     cudaError_t cudaErr = cudaGetDevice(&deviceIndex);
+    /* IF we didn't get a device index, there isn't a device.  Just continue */
     if (cudaErr != cudaSuccess)
-	{ fprintf(stderr, "Unable to get device index.\n"); return; }
+	{ /*fprintf(stderr, "%s:%d: Unable to get device index.\n", __func__, __LINE__); */return; }
     //printf("%d Using device index: %d\n", RtsLayer::myNode(), deviceIndex);
     /* Get the device object */
     cuErr = cuDeviceGet(&device, deviceIndex);
@@ -370,7 +371,14 @@ void Tau_CuptiLayer_init()
     int device_count;
     CUresult cuErr;
     cuErr = cuDeviceGetCount(&device_count);
-    CHECK_CU_ERROR(cuErr, "cuDeviceGetCount");
+    if (cuErr == CUDA_ERROR_NOT_INITIALIZED) {
+        cuInit(0);
+        cuErr = cuDeviceGetCount(&device_count);
+    }
+    if (cuErr != CUDA_SUCCESS) {
+        //no devices found.
+        return;
+    }
 
     if (!initialized) {
         Tau_CuptiLayer_register_all_counters();
@@ -386,7 +394,7 @@ void Tau_CuptiLayer_init()
     int deviceIndex;
     cudaError_t cudaErr = cudaGetDevice(&deviceIndex);
     if (cudaErr != cudaSuccess)
-	{ fprintf(stderr, "Unable to get device index.\n"); return; }
+	{ fprintf(stderr, "%s:%d: Unable to get device index.\n", __func__, __LINE__); return; }
     printf("%d Using device index: %d\n", RtsLayer::myNode(), deviceIndex);
     /* Get the device object */
     cuErr = cuDeviceGet(&device, deviceIndex);
@@ -622,7 +630,7 @@ uint64_t Tau_CuptiLayer_read_counter(int id)
     int deviceIndex;
     cudaError_t cudaErr = cudaGetDevice(&deviceIndex);
     if (cudaErr != cudaSuccess)
-	{ fprintf(stderr, "Unable to get device index.\n"); return 0; }
+	{ fprintf(stderr, "%s:%d: Unable to get device index.\n", __func__, __LINE__); return 0; }
     CUdevice device;
     cuDeviceGet(&device, deviceIndex);
     Tau_CuptiLayer_read_counters(device, device, counterDataBuffer);
@@ -680,7 +688,7 @@ void Tau_CuptiLayer_Initialize_Map(int off)
     int i;
     cudaError_t cudaErr = cudaGetDevice(&i);
     if (cudaErr != cudaSuccess)
-	{ fprintf(stderr, "Unable to get device index.\n"); return; }
+	{ fprintf(stderr, "%s:%d: Unable to get device index.\n", __func__, __LINE__); return; }
         er = cuDeviceGet(&currDevice, i);
 #ifdef TAU_DEBUG_CUPTI
         printf("looping, i=%d, currDevice=%d.\n", i, currDevice);
