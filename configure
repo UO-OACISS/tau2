@@ -11522,7 +11522,16 @@ if [ $otf = yes ] ; then
 	else
 	    otflib="$otfdir/${architecture}/lib"
 	fi
-	echo "OTF Library implicitly set to $otflib"
+	if [ ! -d $otflib ]; then 
+	  if [ -d $otfdir/lib64 ]; then
+	    otflib="$otfdir/lib64"
+	  else
+	    otflib="$otfdir/${architecture}/lib64"
+	  fi
+	fi 
+	if [ -d $oflib ]; then 
+	  echo "OTF Library implicitly set to $otflib"
+	fi 
     fi
     if [ "$otfinc" = "" ] ; then
 	if [ -r $otfdir/include/otf.h ]; then
