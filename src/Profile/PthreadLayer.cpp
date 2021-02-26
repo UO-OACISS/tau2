@@ -455,48 +455,13 @@ int tau_pthread_join_wrapper(pthread_join_p pthread_join_call,
   return ret;
 }
 
-struct tau_pthread_exit_wrapper_cleanup_args_t {
-    void * timer;
-    bool * wrapped;
-};
-
-// In order to time pthread_exit, we have to use a cleanup handler,
-// since the exit call will otherwise prevent the timer stop from
-// being reached.
-extern "C"
-void tau_pthread_exit_wrapper_cleanup(void * args) {
-    tau_pthread_exit_wrapper_cleanup_args_t * exit_args = (tau_pthread_exit_wrapper_cleanup_args_t *)args;
-    TAU_PROFILER_STOP(exit_args->timer);
-    *(exit_args->wrapped) = false;
-}
 
 extern "C"
 void tau_pthread_exit_wrapper(pthread_exit_p pthread_exit_call, void * value_ptr)
 {
-  TauInternalFunctionGuard protects_this_function;
+    TauInternalFunctionGuard protects_this_function;
 
-  bool * wrapped = (bool*)pthread_getspecific(wrapper_flags_key);
-  if (!wrapped) {
-    wrapped = new bool;
-    pthread_setspecific(wrapper_flags_key, (void*)wrapped);
-    *wrapped = false;
-  }
-
-  if(*wrapped || Tau_global_getLightsOut()) {
-    // Another wrapper has already intercepted the call so just pass through
     pthread_exit_call(value_ptr);
-  } else {
-    *wrapped = true;
-    void * handle;
-    TAU_PROFILER_CREATE(handle, "pthread_exit", "", TAU_DEFAULT);
-    TAU_PROFILER_START(handle);
-    tau_pthread_exit_wrapper_cleanup_args_t cleanup_args;
-    cleanup_args.timer = handle;
-    cleanup_args.wrapped = wrapped;
-    pthread_cleanup_push(tau_pthread_exit_wrapper_cleanup, &cleanup_args);
-    pthread_exit_call(value_ptr);
-    pthread_cleanup_pop(1);
-  }
 }
 
 #ifdef TAU_PTHREAD_BARRIER_AVAILABLE
