@@ -993,7 +993,6 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
             disable_callbacks = 1;
 	        cuCtxGetDevice(&device);
             disable_callbacks = 0;
-	        //Tau_cuda_Event_Synchonize();
 	        int taskId = get_taskid_from_context_id(cbInfo->contextUid, 0);
 	        record_gpu_counters_at_launch(device, taskId);
         }

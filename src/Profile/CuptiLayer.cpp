@@ -65,8 +65,6 @@ void Tau_CuptiLayer_set_num_events(int n)
   Tau_CuptiLayer_num_events = n;
 }
 
-cudaEvent_t TAU_cudaEvent;
-
 bool Tau_CuptiLayer_initialized = false;
 bool Tau_CuptiLayer_finalized = false;
 bool Tau_CuptiLayer_enabled = true;
@@ -78,7 +76,6 @@ bool Tau_CuptiLayer_is_initialized()
 
 void Tau_CuptiLayer_finalize()
 {
-    cudaEventDestroy(TAU_cudaEvent);
 	Tau_CuptiLayer_finalized = true;
 }
 
@@ -356,6 +353,8 @@ void Tau_CuptiLayer_setup_eventgroup()
     }
     //record the fact the events have been added.
     Tau_CuptiLayer_set_num_events(added_counters.size());
+    cuErr = cuDevicePrimaryCtxRelease(device);
+    CHECK_CU_ERROR(cuErr, "cuDevicePrimaryCtxRelease")
 
     TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_setup_eventgroup\n");
 }
@@ -438,7 +437,6 @@ void Tau_CuptiLayer_init()
     }
 #endif
     Tau_CuptiLayer_initialized = true;
-    cudaEventCreate(&TAU_cudaEvent);
 
     TAU_DEBUG_PRINT("AHJ: exiting Tau_CuptiLayer_init\n");
 }
@@ -824,11 +822,6 @@ int Tau_CuptiLayer_get_cupti_event_id(int metric_id)
 int Tau_CuptiLayer_get_metric_event_id(int metric_id)
 {
   return internal_id_map_backwards[metric_id];
-}
-
-void Tau_cuda_Event_Synchonize()
-{
-  cudaEventSynchronize(TAU_cudaEvent);
 }
 
 #endif
