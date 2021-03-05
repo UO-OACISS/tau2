@@ -4596,7 +4596,7 @@ fi
 if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes" ] ; then
     cxxloaded=`which $mpicxx_exe 2>/dev/null | wc -l`
     mpi=yes
-    if [ $cxxloaded = 1 ]
+    if [ $cxxloaded = 1 -a "x$machine" != "xcraycnl" ]
     then
 	echo "NOTE: Found $mpicxx_exe in the path...trying to auto-configure compilers and flags..."
 	c_compiler=`$mpicc_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
@@ -11522,7 +11522,16 @@ if [ $otf = yes ] ; then
 	else
 	    otflib="$otfdir/${architecture}/lib"
 	fi
-	echo "OTF Library implicitly set to $otflib"
+	if [ ! -d $otflib ]; then 
+	  if [ -d $otfdir/lib64 ]; then
+	    otflib="$otfdir/lib64"
+	  else
+	    otflib="$otfdir/${architecture}/lib64"
+	  fi
+	fi 
+	if [ -d $oflib ]; then 
+	  echo "OTF Library implicitly set to $otflib"
+	fi 
     fi
     if [ "$otfinc" = "" ] ; then
 	if [ -r $otfdir/include/otf.h ]; then
