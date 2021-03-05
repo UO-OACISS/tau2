@@ -22,6 +22,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <sstream>
 #include <tau_types.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauMemory.h>
@@ -1730,13 +1731,22 @@ else {
 #endif
 }
 
+const char * get_status_file() {
+    std::stringstream ss;
+    //ss << "/proc/" << RtsLayer::getPid() << "/status";
+    ss << "/proc/self/status";
+    static std::string filename{ss.str()};
+    return filename.c_str();
+}
+
 //////////////////////////////////////////////////////////////////////
 // Tau_open_status returns the file descriptor of /proc/self/status
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_open_status(void) {
 
 #ifndef TAU_WINDOWS
-  int fd = open ("/proc/self/status", O_RDONLY);
+  const char * filename = get_status_file(); 
+  int fd = open (filename, O_RDONLY);
 #else
   int fd = -1;
 #endif /* TAU_WINDOWS */
@@ -1759,11 +1769,13 @@ extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm,
   int ret, i, j, bytesread;
   memset(buf, 0, 2048);
 
+  /*
   ret = lseek(fd, 0, SEEK_SET);
   if (ret == -1) {
     perror("lseek failure on /proc/self/status");
     return ret;
   }
+  */
 
   bytesread = read(fd, buf, 2048);
   if (bytesread == -1) {
@@ -1830,26 +1842,18 @@ extern "C" int Tau_close_status(int fd) {
 // mark events
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
-  static int fd=Tau_open_status();
+  int fd = Tau_open_status();
   if (fd == -1) return 0; // failure
+  //printf("***** %d,%d,%s\n", RtsLayer::myNode(), __LINE__, __func__); fflush(stdout);
 
   long long vmrss = 0;
   long long vmhwm = 0;
   long long threads = 0;
   long long nvswitch = 0;
   long long vswitch = 0;
-  TAU_REGISTER_CONTEXT_EVENT(proc_vmhwm, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
-  TAU_REGISTER_CONTEXT_EVENT(proc_rss, "Memory Footprint (VmRSS) (KB)");
-  TAU_REGISTER_CONTEXT_EVENT(stat_threads, "Threads");
-  TAU_REGISTER_CONTEXT_EVENT(stat_voluntary, "Voluntary Context Switches");
-  TAU_REGISTER_CONTEXT_EVENT(stat_nonvoluntary, "Non-voluntary Context Switches");
-  TAU_REGISTER_EVENT(proc_vmhwm_no_context, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
-  TAU_REGISTER_EVENT(proc_rss_no_context, "Memory Footprint (VmRSS) (KB)");
-  TAU_REGISTER_EVENT(stat_threads_no_context, "Threads");
-  TAU_REGISTER_EVENT(stat_voluntary_no_context, "Voluntary Context Switches");
-  TAU_REGISTER_EVENT(stat_nonvoluntary_no_context, "Non-voluntary Context Switches");
 
   Tau_read_status(fd, &vmrss, &vmhwm, &threads, &nvswitch, &vswitch);
+  close(fd);
 
   int tid = 0;
   if (TauEnv_get_tracing()) {
@@ -1857,12 +1861,22 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
   }
 
     if (use_context) {
+  	TAU_REGISTER_CONTEXT_EVENT(proc_vmhwm, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
+  	TAU_REGISTER_CONTEXT_EVENT(proc_rss, "Memory Footprint (VmRSS) (KB)");
+  	TAU_REGISTER_CONTEXT_EVENT(stat_threads, "Threads");
+  	TAU_REGISTER_CONTEXT_EVENT(stat_voluntary, "Voluntary Context Switches");
+  	TAU_REGISTER_CONTEXT_EVENT(stat_nonvoluntary, "Non-voluntary Context Switches");
         TAU_CONTEXT_EVENT(proc_rss, (double) vmrss);
         TAU_CONTEXT_EVENT(proc_vmhwm, (double) vmhwm);
         TAU_CONTEXT_EVENT(stat_threads, (double) threads);
         TAU_CONTEXT_EVENT(stat_voluntary, (double) vswitch);
         TAU_CONTEXT_EVENT(stat_nonvoluntary, (double) nvswitch);
     } else {
+  	static void * proc_vmhwm_no_context = Tau_get_userevent("Peak Memory Usage Resident Set Size (VmHWM) (KB)");
+  	static void * proc_rss_no_context = Tau_get_userevent("Memory Footprint (VmRSS) (KB)");
+  	static void * stat_threads_no_context = Tau_get_userevent("Threads");
+  	static void * stat_voluntary_no_context = Tau_get_userevent("Voluntary Context Switches");
+  	static void * stat_nonvoluntary_no_context = Tau_get_userevent("Non-voluntary Context Switches");
         Tau_userevent_thread(proc_rss_no_context, (double) vmrss, tid);
         Tau_userevent_thread(proc_vmhwm_no_context, (double) vmhwm, tid);
         Tau_userevent_thread(stat_threads_no_context, (double) threads, tid);
