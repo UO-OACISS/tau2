@@ -118,9 +118,16 @@ public:
 
 int RtsThread::num_threads = 0;
 
-vector<RtsThread*>& TheThreadList(void)
+class TauThreadList : public vector<RtsThread*> {
+public:
+    virtual ~TauThreadList() {
+        Tau_destructor_trigger();
+    }
+};
+
+TauThreadList & TheThreadList(void)
 {
-	static vector<RtsThread*> ThreadList;
+	static TauThreadList ThreadList;
 
 	return ThreadList;
 }

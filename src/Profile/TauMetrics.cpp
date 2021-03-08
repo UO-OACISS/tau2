@@ -142,8 +142,8 @@ static int cuda_device_count() {
     if (result != CUDA_SUCCESS) {
         char const * err_str;
         cuGetErrorString(result, &err_str);
-        fprintf(stderr, "cuDeviceGetCount failed: %s\n", err_str);
-        exit(result);
+        //fprintf(stderr, "cuDeviceGetCount failed: %s\n", err_str);
+        return 0;
     }
     return deviceCount;
 }
@@ -761,6 +761,12 @@ static void initialize_functionArray() {
 extern "C" const char *TauMetrics_getMetricName(int metric) {
     char const * metric_name = metricv[metric];
 #ifdef CUPTI
+    // Don't bother checking if it's a CUPTI counter if it's obviously not.
+    if( (strncmp(metric_name, "TAU", 3) == 0)
+            || (strncmp(metric_name, "TIME", 4) == 0)
+            || (strncmp(metric_name, "PAPI", 4) == 0) ) {
+        return metric_name;
+    }
     int event_id = Tau_CuptiLayer_get_cupti_event_id(metric);
     if (Tau_CuptiLayer_is_cupti_counter(metric_name) &&
         event_id < Tau_CuptiLayer_get_num_events()) {

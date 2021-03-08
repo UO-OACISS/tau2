@@ -1412,10 +1412,17 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
             int deviceCount;
             CUresult result = cuDeviceGetCount(&deviceCount);
             if (result != CUDA_SUCCESS) {
-                char const * err_str;
-                cuGetErrorString(result, &err_str);
-                fprintf(stderr, "cuDeviceGetCount failed: %s\n", err_str);
-                exit(result);
+                if (result == CUDA_ERROR_NOT_INITIALIZED) {
+                    cuInit(0);
+                    result = cuDeviceGetCount(&deviceCount);
+                }
+                if (result != CUDA_SUCCESS) {
+                    char const * err_str;
+                    cuGetErrorString(result, &err_str);
+                    fprintf(stderr, "cuDeviceGetCount failed: %s\n", err_str);
+                    // no device found.
+                    continue;
+                }
             }
             for(int dev=0; dev<deviceCount; ++dev) {
                 CUptiResult result;

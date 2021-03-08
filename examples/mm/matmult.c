@@ -223,6 +223,7 @@ void * threaded_func(void *data)
 
 int main (int argc, char *argv[])
 {
+  printf ("Starting...\n"); fflush(stdout);
 
 #ifdef PTHREADS
   int ret;
@@ -290,6 +291,9 @@ int main (int argc, char *argv[])
   int i;
   for (i = 0 ; i < 1 ; i++) {
   do_work();
+#ifdef TAU_MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif /* TAU_MPI */
   }
 
 #ifdef PTHREADS

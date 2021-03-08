@@ -162,6 +162,14 @@ int Tau_test_for_MPI_comm_rank() {
         Tau_set_usesMPI(1);
 		return commrank;
     }
+    // ALPS on Cray
+    tmpvar = getenv("ALPS_APP_PE");
+    if (tmpvar != NULL) {
+        commrank = atoi(tmpvar);
+	//printf("Found the rank! '%s', %d\n", tmpvar, commrank);
+        Tau_set_usesMPI(1);
+        return commrank;
+    }
 	// OpenMPI, Spectrum
     tmpvar = getenv("OMPI_COMM_WORLD_RANK");
 	if (tmpvar != NULL) {
