@@ -12938,4 +12938,12 @@ if [ "x$issue_intel_warning" = "xyes" ] ; then
     echo "NOTE: Intel compilers found in your path, but C++ compiler not specified.  Whatever was detected in 'mpicxx -show' will be used as the compiler.  To force Intel compilers, please pass -c++=icpc or -c++=mpiicpc"
 fi
 
+if [ "x$PE_ENV" = "xCRAY" -a "x`uname -m`" == "xaarch64" -a "x$download_unwind" = "xyes" ]; 
+then
+   echo  "NOTE: TAU does not support currently support unwinding using TAU_EBS_UNWIND=1 on "
+   echo  " the Cray aarch64 platforms as the libmpichcxx.so is linked with a different libunwind.so.1 library."
+   echo  " Please do not use this option for now. For questions, please contact tau-bugs@cs.uoregon.edu."
+   echo  "****************************************************************************************************"
+fi
+
 exit 0
