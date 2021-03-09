@@ -19,7 +19,7 @@ Version 2.30 changes (from 2.29):
 6. Updated TAU to use PAPI from git repo on NEC SX Aurora. 
 7. Updated 3D support in ParaProf using new Jogl libs for Apple M1 macs (arch is arm64_apple). 
 8. Added support for demangling dpcpp kernel names using the -fno-sycl-unnamed-lambda compiler flag. 
-9. Added support for Cray CCE compilers on A64FX (aarch64) systems (Ookami). 
+9. Added support for Cray CCE compilers on A64FX (aarch64) systems (Ookami) without libunwind. 
 
 
 Version 2.29 changes (from 2.28):
