@@ -3362,7 +3362,11 @@ extern "C" int Tau_msg_recv_prolog(void){
 #endif /* TAU_MPI_T */
 
 size_t& tauGetAPITraceDepth() {
+#ifdef thread_local
     thread_local static size_t depth{0};
+#else
+    static size_t depth = 0;
+#endif
     return depth;
 }
 
