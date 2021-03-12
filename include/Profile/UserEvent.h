@@ -237,7 +237,7 @@ public:
 private:
 
   std::mutex DataVectorMutex;
-  inline void checkDataVector(int tid){
+  inline void checkDataVector(unsigned int tid){
       std::lock_guard<std::mutex> guard(DataVectorMutex);
       while (Tau_getUserData().size()<=tid){
           Tau_getUserData().push_back(new Data());

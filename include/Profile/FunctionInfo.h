@@ -200,10 +200,10 @@ static bool use_metric_tls; // This is set to false to disable the thread-local 
 
 // getFunctionMetric(tid) returns the pointer to this instance's FunctionMetric 
 // for the given tid. Uses thread-local cache if tid = this thread.
-FunctionMetrics* getFunctionMetric(int tid){
+FunctionMetrics* getFunctionMetric(unsigned int tid){
     FunctionMetrics* MOut = NULL;
 
-    static thread_local const int local_tid = RtsLayer::myThread();
+    static thread_local const unsigned int local_tid = RtsLayer::myThread();
 
 
     // Use thread-local optimization if the current thread is requesting its own metrics.

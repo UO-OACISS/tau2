@@ -112,8 +112,8 @@ struct TAULocks{
   //static thread_local TAULocks* TL_cache=0;
   static std::atomic<int> maxLockTid;
   
-  static inline void checkLockVector(int tid){
-    if(maxLockTid>=tid){
+  static inline void checkLockVector(unsigned int tid){
+    if(maxLockTid>=0 && (unsigned int)maxLockTid>=tid){
         //printf("Tid: %d vs max: %d. No check needed?\n",tid,maxLockTid);
         return;
     }
