@@ -1735,7 +1735,7 @@ const char * get_status_file() {
     std::stringstream ss;
     //ss << "/proc/" << RtsLayer::getPid() << "/status";
     ss << "/proc/self/status";
-    static std::string filename{ss.str()};
+    static std::string filename(ss.str());
     return filename.c_str();
 }
 
@@ -1745,7 +1745,7 @@ const char * get_status_file() {
 extern "C" int Tau_open_status(void) {
 
 #ifndef TAU_WINDOWS
-  const char * filename = get_status_file(); 
+  const char * filename = get_status_file();
   int fd = open (filename, O_RDONLY);
 #else
   int fd = -1;

@@ -4162,6 +4162,13 @@ fi
 
 if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" ]; then
    fixmakeargs="$fixmakeargs FLANG"
+   touch foo_compinst.f
+   test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
+   if [ $? -eq 1 ]; then
+     # New flang doesn't support  -Mx,129,0x800 for compiler-based instrumentation
+     fixmakeargs="$fixmakeargs FLANG_NO_MX_OPTS"
+   fi
+   /bin/rm -f foo_compinst.f
 fi
 
 if [ "x$fortran_compiler" = "xno" ]; then
@@ -4627,6 +4634,13 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
               fi
               if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" ]; then
                   fixmakeargs="$fixmakeargs FLANG"
+		  touch foo_compinst.f
+                  test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
+                  if [ $? -eq 1 ]; then
+                  # New flang doesn't support  -Mx,129,0x800 for compiler-based instrumentation
+                    fixmakeargs="$fixmakeargs FLANG_NO_MX_OPTS"
+                  fi
+                  /bin/rm -f foo_compinst.f
               fi
   	    if [ "x$orig_fortran_compiler" = "xcaf" ]; then
   		fortran_compiler=caf
