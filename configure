@@ -4047,7 +4047,11 @@ case $machine in
             fi
 
 	    touch conf_test.c
-	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
+	    crayarchdir=`uname -m`
+	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/pe/cce" | grep "$crayarchdir/lib$" | uniq | grep -v rpath`
+	    #echo "EXTRADIR=$extradir"
+	    fixmakeargs="$fixmakeargs extradir=$extradir"
+
 	    rm -f conf_test.c conf_test.o
 
 	    # not implemented yet
@@ -4055,14 +4059,14 @@ case $machine in
 	      fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
             else
 	      fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
-              extradir=`echo $CRAY_PE_USE_CLANG | sed -e 's@bin/clang@lib@'`
-              srun_dir=`which srun 2>/dev/null`
-              if [ "x$srun_dir" != "x" ]; then
-                slurm_dir=`echo $srun_dir | sed -e 's@bin/srun@@g' `
-                if [ "x$slurm_dir" != "x" -a -d $slurm_dir -a -r $slurm_dir/lib64/libslurm.so ]; then
-                  echo "TAU: Found $slurm_dir/lib64/libslurm.so"
-	          fixmakeargs="$fixmakeargs slurmdir=$slurm_dir CRAYPE_CLANG_SLURM"
-                fi
+            fi
+            extradir=`echo $CRAY_PE_USE_CLANG | sed -e 's@bin/clang@lib@'`
+            srun_dir=`which srun 2>/dev/null`
+            if [ "x$srun_dir" != "x" ]; then
+              slurm_dir=`echo $srun_dir | sed -e 's@bin/srun@@g' `
+              if [ "x$slurm_dir" != "x" -a -d $slurm_dir -a -r $slurm_dir/lib64/libslurm.so ]; then
+                echo "TAU: Found $slurm_dir/lib64/libslurm.so"
+	        fixmakeargs="$fixmakeargs slurmdir=$slurm_dir CRAYPE_CLANG_SLURM"
               fi
             fi
 	fi
@@ -4158,6 +4162,13 @@ fi
 
 if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" ]; then
    fixmakeargs="$fixmakeargs FLANG"
+   touch foo_compinst.f
+   test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
+   if [ $? -eq 1 ]; then
+     # New flang doesn't support  -Mx,129,0x800 for compiler-based instrumentation
+     fixmakeargs="$fixmakeargs FLANG_NO_MX_OPTS"
+   fi
+   /bin/rm -f foo_compinst.f
 fi
 
 if [ "x$fortran_compiler" = "xno" ]; then
@@ -4564,7 +4575,6 @@ if [ $intel_cxx = 1 ] ; then
         issue_intel_warning=yes
     fi
 fi
-
 case "x$cxx_compiler" in
   "xmpicxx")
     mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
@@ -4581,116 +4591,135 @@ case "x$cxx_compiler" in
     mpi_wrapper_mpicxx_or_mpiicpc=no ;;
 esac
 
-#echo $mpi_wrapper_mpicxx_or_mpiicpc
-#echo $cxx_compiler
+# Check for regular ol' mpicxx
+any_cxx=`which mpicxx 2>/dev/null | wc -l`
+if [ $any_cxx = 1 ] ; then
+    echo "detected MPI in path"
+    mpi_wrapper_mpicxx_or_mpiicpc=yes
+fi
+
+# DEbugging...
+#echo "mpi_wrapper_mpicxx_or_mpiicpc = ($mpi_wrapper_mpicxx_or_mpiicpc)"
+#echo "mpi = ($mpi)"
+#echo "mpiinc = ($mpiinc)"
 #kill -9 $$
 
 if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes" ] ; then
     cxxloaded=`which $mpicxx_exe 2>/dev/null | wc -l`
     mpi=yes
-    if [ $cxxloaded = 1 ]
+    if [ "x$machine" != "xcraycnl" ]
     then
-	echo "NOTE: Found $mpicxx_exe in the path...trying to auto-configure compilers and flags..."
-	c_compiler=`$mpicc_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	f90loaded=`which $mpif90_exe 2>/dev/null | wc -l`
-	#if [ $f90loaded = 1 -a "x$orig_fortran_compiler" = "xmpif90" ]
-	if [ $f90loaded = 1 ] ; then
-	    echo "NOTE: Found $mpif90_exe in the path...trying to auto-configure compilers and flags..."
-            fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	    echo "NOTE: detected $fortran_compiler"
-            if [ "x$fortran_compiler" = "xifort" ]; then
-		fortran_compiler=intel
-	    fi
-            if [ "x$fortran_compiler" = "xxlf_r" -o "x$fortran_compiler" = "xxlf90_r"  -o "x$fortran_compiler" = "xxlf90" -o "x$fortran_compiler" = "xxlf2008_r" ]; then
-                fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
-	    fi
-            if [ "x$fortran_compiler" = "xxlflang" ]; then
-                fixmakeargs="$fixmakeargs XLFLANG"
-            fi
-            if [ "x$fortran_compiler" = "xarmflang" ]; then
-                fixmakeargs="$fixmakeargs ARMFLANG"
-            fi
-            if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" ]; then
-                fixmakeargs="$fixmakeargs FLANG"
-            fi
-	    if [ "x$orig_fortran_compiler" = "xcaf" ]; then
-		fortran_compiler=caf
-            fi
-	    if [ "x$orig_fortran_compiler" = "xpgfortran" ]; then
-		fortran_compiler=pgfortran
-            fi
-	else
-	    echo "Default fortran compiler was '$orig_fortran_compiler'..."
-	    if [ $f90loaded = 1 ] ; then
-                fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	    else
-                if [ "x$orig_fortran_compiler" = "xdefault" ]; then
-                  fortran_compiler=no
-                fi
-            fi
-	    echo "Setting fortran compiler to '$fortran_compiler'..."
-	fi
-
-	if [ $machine = bgq -o $machine = bgp ]; then
-            c_compiler=mpicc
-            cxx_compiler=mpicxx
-            is_gnu_compiler=`$cxx_compiler -show  2>/dev/null | awk ' { print $1;}' | xargs grep g++ | wc -l`
-            if [ $is_gnu_compiler = 1 ]; then
-              gnu=yes
-              tauoptions="${tauoptions}-gnu"
-            fi
-	else
-	    # All other machines besides IBM BG*
-            is_internal_compiler_loaded=`which $cxx_compiler 2>/dev/null | wc -l`
-            if [ $is_internal_compiler_loaded = 0 ]; then
-		# Compiler is not loaded, use full path to it
-		c_compiler=`$mpicc_exe -show | awk '{ print $1;}' `
-		cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' `
-		fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' `
-            fi
-            if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
-		mpiinc=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
-		mpilibargs=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
-		mpiflibargs=`$mpif90_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
-
-		mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
-		mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
-	        fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpiincargs=$mpiinc"
-	        mpilibargs_added_to_fixmakeargs=yes
-
-            fi
-            full_cxx_compiler=`$mpicxx_exe -show | tail -n 1 | awk '{ print $1; }'`
-            full_cc_compiler=`$mpicc_exe -show | tail -n 1 | awk '{ print $1; }'`
-            fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
-            mpi=yes
-	fi
-	# Do not use the internal compiler from mpicxx when BGP/BGQ is used.
-    else
-	echo "NOTE: Didn't find mpicxx in the path, using default values"
-	gnu=yes
-	tauoptions="${tauoptions}-gnu"
-	if [ $machine = bgq ] ; then
-            if [ -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx -a -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc ] ; then
-		echo "NOTE: Using /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx"
-		cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
-		c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
-            else
-		echo "ERROR: Please set your path to include mpicxx and reconfigure TAU."
-		exit 1
-            fi
-	elif [ $machine = bgp ]; then
-            if [ -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx -a -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicc ]; then
-		echo "NOTE: Using /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx"
-		cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
-		c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
-            else
-		echo "ERROR: Please set your path to include mpicxx and reconfigure TAU."
-		exit 1
-            fi
-	fi
-
-    fi
+      if [ $cxxloaded = 1 ]
+      then
+  	echo "NOTE: Found $mpicxx_exe in the path...trying to auto-configure compilers and flags..."
+  	c_compiler=`$mpicc_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+  	cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+  	f90loaded=`which $mpif90_exe 2>/dev/null | wc -l`
+  	#if [ $f90loaded = 1 -a "x$orig_fortran_compiler" = "xmpif90" ]
+  	if [ $f90loaded = 1 ] ; then
+  	    echo "NOTE: Found $mpif90_exe in the path...trying to auto-configure compilers and flags..."
+              fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+  	    echo "NOTE: detected $fortran_compiler"
+              if [ "x$fortran_compiler" = "xifort" ]; then
+  		fortran_compiler=intel
+  	    fi
+              if [ "x$fortran_compiler" = "xxlf_r" -o "x$fortran_compiler" = "xxlf90_r"  -o "x$fortran_compiler" = "xxlf90" -o "x$fortran_compiler" = "xxlf2008_r" ]; then
+                  fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
+  	    fi
+              if [ "x$fortran_compiler" = "xxlflang" ]; then
+                  fixmakeargs="$fixmakeargs XLFLANG"
+              fi
+              if [ "x$fortran_compiler" = "xarmflang" ]; then
+                  fixmakeargs="$fixmakeargs ARMFLANG"
+              fi
+              if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" ]; then
+                  fixmakeargs="$fixmakeargs FLANG"
+		  touch foo_compinst.f
+                  test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
+                  if [ $? -eq 1 ]; then
+                  # New flang doesn't support  -Mx,129,0x800 for compiler-based instrumentation
+                    fixmakeargs="$fixmakeargs FLANG_NO_MX_OPTS"
+                  fi
+                  /bin/rm -f foo_compinst.f
+              fi
+  	    if [ "x$orig_fortran_compiler" = "xcaf" ]; then
+  		fortran_compiler=caf
+              fi
+  	    if [ "x$orig_fortran_compiler" = "xpgfortran" ]; then
+  		fortran_compiler=pgfortran
+              fi
+  	else
+  	    echo "Default fortran compiler was '$orig_fortran_compiler'..."
+  	    if [ $f90loaded = 1 ] ; then
+                  fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+  	    else
+                  if [ "x$orig_fortran_compiler" = "xdefault" ]; then
+                    fortran_compiler=no
+                  fi
+              fi
+  	    echo "Setting fortran compiler to '$fortran_compiler'..."
+  	fi
+  
+  	if [ $machine = bgq -o $machine = bgp ]; then
+              c_compiler=mpicc
+              cxx_compiler=mpicxx
+              is_gnu_compiler=`$cxx_compiler -show  2>/dev/null | awk ' { print $1;}' | xargs grep g++ | wc -l`
+              if [ $is_gnu_compiler = 1 ]; then
+                gnu=yes
+                tauoptions="${tauoptions}-gnu"
+              fi
+  	else
+  	    # All other machines besides IBM BG*
+              is_internal_compiler_loaded=`which $cxx_compiler 2>/dev/null | wc -l`
+              if [ $is_internal_compiler_loaded = 0 ]; then
+  		# Compiler is not loaded, use full path to it
+  		c_compiler=`$mpicc_exe -show | awk '{ print $1;}' `
+  		cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' `
+  		fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' `
+              fi
+              if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
+  		mpiinc=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+  		mpilibargs=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+  		mpiflibargs=`$mpif90_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
+  
+  		mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
+  		mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
+  	        fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpiincargs=$mpiinc"
+  	        mpilibargs_added_to_fixmakeargs=yes
+  
+              fi
+              full_cxx_compiler=`$mpicxx_exe -show | tail -n 1 | awk '{ print $1; }'`
+              full_cc_compiler=`$mpicc_exe -show | tail -n 1 | awk '{ print $1; }'`
+              fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
+              mpi=yes
+  	fi
+  	# Do not use the internal compiler from mpicxx when BGP/BGQ is used.
+      else
+  	echo "NOTE: Didn't find mpicxx in the path, using default values"
+  	gnu=yes
+  	tauoptions="${tauoptions}-gnu"
+  	if [ $machine = bgq ] ; then
+              if [ -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx -a -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc ] ; then
+  		echo "NOTE: Using /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx"
+  		cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
+  		c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
+              else
+  		echo "ERROR: Please set your path to include mpicxx and reconfigure TAU."
+  		exit 1
+              fi
+  	elif [ $machine = bgp ]; then
+              if [ -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx -a -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicc ]; then
+  		echo "NOTE: Using /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx"
+  		cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
+  		c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
+              else
+  		echo "ERROR: Please set your path to include mpicxx and reconfigure TAU."
+  		exit 1
+              fi
+  	fi
+  
+      fi
+    fi 
     # Check for BG/P or BG/Q for GNU
     #    is_gnu_compiler=`$cxx_compiler -show  2>/dev/null | awk ' { print $1;}' | xargs grep g++ | wc -l'
     #    if [ "x$is_gnu_compiler" = "x1" ]; then
@@ -7485,7 +7514,7 @@ if [ "x$download_unwind" = xyes ] ; then
       tar -xzf $libunwindtgz
       echo "removing $libunwindtgz..."
       rm $libunwindtgz
-      if [ ${c_compiler} = mpc_cc -o ${c_compiler} = mpc_icc -o ${c_compiler} = hcc ]
+      if [ ${c_compiler} = mpc_cc -o ${c_compiler} = mpc_icc -o ${c_compiler} = hcc -o "x$PE_ENV" = "xCRAY" ]
       then
         unwind_c_compiler=gcc
         unwind_cxx_compiler=g++
@@ -7512,7 +7541,7 @@ if [ "x$download_unwind" = xyes ] ; then
             unwind_c_compiler=clang
             unwind_cxx_compiler=clang++
           fi
-          ./configure --prefix=${unwind_dir}  CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared --disable-minidebuginfo > ${libunwind_log} 2>&1
+	  ./configure --prefix=${unwind_dir}  CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared --disable-minidebuginfo > ${libunwind_log} 2>&1
         else
           ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} > ${libunwind_log} 2>&1
         fi
@@ -10680,11 +10709,11 @@ if [ "x$unwinder" != "xnone" ] ; then
 	    unwind_lib_flag="-framework#System"
 	    unwind_extras=""
 	  fi
-	  if [ $machine = craycnl -a "x$CRAY_TARGET_PE" = "xcray" ]; then
-	    echo "WARNING: TAU does not currently support libunwind with Cray CCE compilers on AARCH64."
-	  else
-	    fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
-	  fi
+	  #if [ $machine = craycnl -a "x$CRAY_TARGET_PE" = "xcray" ]; then
+	  #  echo "WARNING: TAU does not currently support libunwind with Cray CCE compilers on AARCH64."
+	  #else
+	  fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
+	  #fi
     else
 	  fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_STACKWALKER unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
     fi
@@ -11514,7 +11543,16 @@ if [ $otf = yes ] ; then
 	else
 	    otflib="$otfdir/${architecture}/lib"
 	fi
-	echo "OTF Library implicitly set to $otflib"
+	if [ ! -d $otflib ]; then 
+	  if [ -d $otfdir/lib64 ]; then
+	    otflib="$otfdir/lib64"
+	  else
+	    otflib="$otfdir/${architecture}/lib64"
+	  fi
+	fi 
+	if [ -d $oflib ]; then 
+	  echo "OTF Library implicitly set to $otflib"
+	fi 
     fi
     if [ "$otfinc" = "" ] ; then
 	if [ -r $otfdir/include/otf.h ]; then
@@ -12912,6 +12950,14 @@ fi
 
 if [ "x$issue_intel_warning" = "xyes" ] ; then
     echo "NOTE: Intel compilers found in your path, but C++ compiler not specified.  Whatever was detected in 'mpicxx -show' will be used as the compiler.  To force Intel compilers, please pass -c++=icpc or -c++=mpiicpc"
+fi
+
+if [ "x$PE_ENV" = "xCRAY" -a "x`uname -m`" == "xaarch64" -a "x$download_unwind" = "xyes" ]; 
+then
+   echo  "NOTE: TAU does not support currently support unwinding using TAU_EBS_UNWIND=1 on "
+   echo  " the Cray aarch64 platforms as the libmpichcxx.so is linked with a different libunwind.so.1 library."
+   echo  " Please do not use this option for now. For questions, please contact tau-bugs@cs.uoregon.edu."
+   echo  "****************************************************************************************************"
 fi
 
 exit 0
