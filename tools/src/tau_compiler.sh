@@ -10,6 +10,7 @@ declare -i group_C=3
 declare -i group_upc=4
 
 declare -i disablePdtStep=$FALSE
+declare -i disableLink=$FALSE
 declare -i hasAnOutputFile=$FALSE
 declare -i fortranParserDefined=$FALSE
 declare -i gfparseUsed=$FALSE
@@ -59,6 +60,7 @@ declare -i continueBeforeOMP=$FALSE
 declare -i trackIO=$FALSE
 declare -i trackUPCR=$FALSE
 declare -i linkOnly=$FALSE
+declare -i doNothing=$FALSE
 declare -i trackDMAPP=$FALSE
 declare -i trackARMCI=$FALSE
 declare -i trackPthread=$FALSE
@@ -137,6 +139,7 @@ printUsage () {
     echo -e "  -optUseReturnFix\t\tSpecifies the use of a bug fix with ROSE parser using EDG v3.x"
     echo -e "  -optOpariTool=\"<path/opari>\"\tSpecifies the location of the Opari tool"
     echo -e "  -optLinkOnly\t\t\tDisable instrumentation during compilation, do link in the TAU libs"
+    echo -e "  -optDisable\t\t\tDisable instrumentation during compilation, do NOT link in the TAU libs"
     echo -e "  -optOpariDir=\"<path>\"\t\tSpecifies the location of the Opari directory"
     echo -e "  -optOpariOpts=\"\"\t\tSpecifies optional arguments to the Opari tool"
     echo -e "  -optOpariNoInit=\"\"\t\t Do not initlize the POMP2 regions."
@@ -369,6 +372,16 @@ for arg in "$@" ; do
         		disablePdtStep=$TRUE
         		disableCompInst=$TRUE
         		# disable instrumentation during .o file generation, just link in the TAU libs.
+        		;;
+
+        	    -optDisable)
+        		doNothing=$TRUE
+        		isVerbose=$FALSE
+        		echoIfDebug "NOTE: turning doNothing on"
+        		disablePdtStep=$TRUE
+        		disableCompInst=$TRUE
+        		disableLink=$TRUE
+        		# disable all the things!
         		;;
 
         	    -optTrackDMAPP)
@@ -1248,6 +1261,12 @@ echoIfDebug "Using $optCompInstOption $optCompInstFortranOption for compiling Fo
 # on the first pass, we use PDT, on the 2nd, compiler instrumentation (if available and not disabled)
 declare -i passCount=0;
 
+if [ $doNothing == 1 ] ; then
+    evalWithDebugMessage "$CMD $regularCmd" ""
+    errorStatus=$?
+    exit $errorStatus
+fi
+
 while [ $passCount -lt 2 ] ; do
 
 if [ $passCount == 1 ] ; then
@@ -1706,7 +1725,7 @@ if [ $numFiles == 0 ]; then
         else
           # Old K computer Fujitsu - Sparc
           linkCmd="$linkCmd --linkfortran -lmpi_f90 -lmpi_f77"
-	fi 
+	fi
       fi
       linkCmd=`echo $linkCmd | sed -e 's/^mpifcc/mpiFCC/' -e 's/^fcc/FCC/'`
     fi

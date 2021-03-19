@@ -217,6 +217,7 @@ std::vector<cpustats_t*> * previous_cpu_stats = nullptr;
 std::vector<netstats_t*> * previous_net_stats = nullptr;
 std::vector<netstats_t*> * previous_self_net_stats = nullptr;
 iostats_t * previous_io_stats = nullptr;
+size_t num_metrics = 0;
 
 pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_cond_t _my_cond; // for timer
@@ -443,8 +444,11 @@ void initialize_papi_events(bool do_components) {
         for (auto i : metrics) {
             std::string metric(i);
             // PAPI is either const char * or char * depending on version.  Fun.
-            if ((retval = PAPI_add_named_event(papi_periodic_event_set, (char*)(metric.c_str()))) != PAPI_OK)
-                printf("Error: PAPI_add_event: %d %s %s\n", retval, PAPI_strerror(retval), metric.c_str());
+            if ((retval = PAPI_add_named_event(papi_periodic_event_set, (char*)(metric.c_str()))) != PAPI_OK) {
+                printf("Error: PAPI_add_event: %d %s %s\n", retval, PAPI_strerror(retval), metric.c_str()); 
+	    } else {
+                num_metrics++;
+	    }
         }
         if (metrics.size() > 0) {
             papi_periodic_values = (long long*)(calloc(metrics.size(), sizeof(long long)));
@@ -1055,7 +1059,9 @@ void read_components(void) {
             free(values);
         }
     }
-    if (configuration.count("PAPI metrics")) {
+    if (num_metrics > 0) {
+	// reset the counters to zero
+	memset(papi_periodic_values, 0, (sizeof(long long) * num_metrics));
         int retval = PAPI_accum(papi_periodic_event_set, papi_periodic_values);
         if (retval != PAPI_OK) {
             TAU_VERBOSE("Error: PAPI_read: %d %s\n", retval, PAPI_strerror(retval));

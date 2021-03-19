@@ -85,12 +85,7 @@ extern void Tau_metadata_writeEndingTimeStamp(void);
 
 /* These functions and macros are for creating MPI exit "events" in a plugin trace stream. */
 
-#ifndef TAU_ADIOS
-#define TAU_DO_TIMER_EXIT (TauEnv_get_current_timer_exit_params() == 1)
-#else
-int TAU_inside_ADIOS(void);
-#define TAU_DO_TIMER_EXIT ((TauEnv_get_current_timer_exit_params() == 1) && (TAU_inside_ADIOS() == 0))
-#endif /*  TAU_ADIOS */
+#define TAU_DO_TIMER_EXIT ((TauEnv_get_current_timer_exit_params() == 1) && (Tau_time_traced_api_call() == 1))
 
 void Tau_plugin_trace_current_timer(const char * name) {
     /*Invoke plugins only if both plugin path and plugins are specified*/
@@ -104,7 +99,7 @@ void Tau_plugin_trace_current_timer(const char * name) {
 #if defined(TAU_SOS)
 #define EVENT_TRACE_PREFIX "TAU_EVENT::MPI"
 #else
-#define EVENT_TRACE_PREFIX "\"type\": \"MPI\", \"function\":"
+#define EVENT_TRACE_PREFIX "\"cat\": \"MPI\", \"name\":"
 #endif
 
 void convert_comm(char * tmpstr, MPI_Comm comm) {

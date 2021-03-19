@@ -650,6 +650,9 @@ void Tau_track_class_allocation(const char * name, size_t size);
 void Tau_track_class_deallocation(const char * name, size_t size);
 void Tau_start_class_allocation(const char * name, size_t size, int include_in_parent);
 void Tau_stop_class_allocation(const char * name, int record);
+void Tau_traced_api_call_enter();
+void Tau_traced_api_call_exit();
+int Tau_time_traced_api_call();
 
 #ifdef __cplusplus
 /* Include the C++ API header */

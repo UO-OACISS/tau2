@@ -3364,6 +3364,28 @@ extern "C" int Tau_msg_recv_prolog(void){
 }
 #endif /* TAU_MPI_T */
 
+size_t& tauGetAPITraceDepth() {
+#ifdef thread_local
+    thread_local static size_t depth{0};
+#else
+    static size_t depth = 0;
+#endif
+    return depth;
+}
+
+extern "C" void Tau_traced_api_call_enter() {
+    tauGetAPITraceDepth()++;
+}
+
+extern "C" void Tau_traced_api_call_exit() {
+    tauGetAPITraceDepth()--;
+}
+
+extern "C" int Tau_time_traced_api_call() {
+    if (tauGetAPITraceDepth() > 0) { return 0;}
+    return 1;
+}
+
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
  * $Revision: 1.158 $   $Date: 2010/05/28 17:45:49 $
