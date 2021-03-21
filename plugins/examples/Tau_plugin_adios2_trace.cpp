@@ -59,6 +59,7 @@
 
 /* Some forward declarations that we need */
 tau::Profiler *Tau_get_timer_at_stack_depth(int);
+tau::Profiler *Tau_get_timer_at_stack_depth_task(int, int);
 int Tau_plugin_adios2_function_exit(
     Tau_plugin_event_function_exit_data_t* data);
 void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid);
@@ -699,13 +700,13 @@ void adios::write_variables(void)
         } else if (it->second[3] == 1) {
             // on exit
             if (timer_stack[it->second[2]].size() == 0) {
-                fprintf(stderr, "Writing: Stack violation.\n");
-                fprintf(stderr, "Writing: Stack for thread %lu is empty, timestamp %lu.\n",
+                TAU_VERBOSE("Writing: Stack violation.\n");
+                TAU_VERBOSE("Writing: Stack for thread %lu is empty, timestamp %lu.\n",
                     it->second[2], it->first);
             } else {
                 if (timer_stack[it->second[2]].top() != it->second[4]) {
-                    fprintf(stderr, "Writing: Stack violation.\n");
-                    fprintf(stderr, "Writing: thread %lu, %lu != %lu, timestamp %lu\n",
+                    TAU_VERBOSE("Writing: Stack violation.\n");
+                    TAU_VERBOSE("Writing: thread %lu, %lu != %lu, timestamp %lu\n",
                         it->second[2], timer_stack[it->second[2]].top(),
                         it->second[4], it->first);
                 }
@@ -1310,6 +1311,7 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
         my_adios().previous_timestamp[data->tid] + 1 : data->timestamp;
     my_adios().previous_timestamp[data->tid] = ts;
     my_adios().pre_timer_stack[data->tid].push(timer_index);
+    TAU_VERBOSE("Enter:   %d %d %s\n", global_comm_rank, data->tid, data->timer_name);
 #else
     unsigned long ts = data->timestamp;
 #endif
@@ -1355,14 +1357,15 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
 
     auto &tmp = my_adios().timer_values_array[data->tid];
 #ifdef DO_VALIDATION
+    TAU_VERBOSE("Exit:    %d %d %s\n", global_comm_rank, data->tid, data->timer_name);
     unsigned long ts = my_adios().previous_timestamp[data->tid] >
         data->timestamp ? my_adios().previous_timestamp[data->tid] + 1 :
             data->timestamp;
     my_adios().previous_timestamp[data->tid] = ts;
     if (my_adios().pre_timer_stack[data->tid].size() == 0) {
-      fprintf(stderr, "Pre: Stack violation. %s\n", data->timer_name);
-      fprintf(stderr, "Pre: Stack for thread %lu is empty, timestamp %lu.\n",
-        tmparray[2], data->timestamp);
+      TAU_VERBOSE("%d Pre: Stack violation. %s\n", getpid(), data->timer_name);
+      TAU_VERBOSE("%d Pre: Stack for thread %lu is empty, timestamp %lu.\n",
+        getpid(), tmparray[2], data->timestamp);
 	  if (my_adios().current_primer_stack[data->tid].size() > 0) {
           my_adios().current_primer_stack[data->tid].pop_back();
 	  }
@@ -1372,8 +1375,8 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
         unsigned long lhs = (unsigned long)(my_adios().pre_timer_stack[data->tid].top());
         unsigned long rhs = (unsigned long)(timer_index);
         if (lhs != rhs) {
-            fprintf(stderr, "Pre: Stack violation. %s\n", data->timer_name);
-            fprintf(stderr, "Pre: thread %lu, %lu != %lu, timestamp %lu\n",
+            TAU_VERBOSE("Pre: Stack violation. %s\n", data->timer_name);
+            TAU_VERBOSE("Pre: thread %lu, %lu != %lu, timestamp %lu\n",
                 tmparray[2], lhs, rhs, data->timestamp);
         }
         my_adios().pre_timer_stack[data->tid].pop();
@@ -1424,6 +1427,10 @@ int Tau_plugin_adios2_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data_
     active_threads++;
     /* Release the lock, we've got control */
     pthread_mutex_unlock(&_my_mutex);
+
+#ifdef DO_VALIDATION
+    TAU_VERBOSE("Counter: %d %d %s\n", global_comm_rank, data->tid, data->counter_name);
+#endif
 
     auto &tmp = my_adios().counter_values_array[data->tid];
     tmp.push_back(
@@ -1736,34 +1743,44 @@ int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
 
     /* If we are tracing, we need to "start" all of the timers on the stack */
     RtsLayer::LockDB();
+    // Do this now, otherwise we don't get enter events!
+    enabled = true;
     //int tid = RtsLayer::myThread();
-    //for (int tid = RtsLayer::getTotalThreads()-1 ; tid >= 0 ; tid--) {
-    //  if (Tau_is_thread_fake(tid) == 1) { continue; }
-    int tid = 0; // only do thread 0
+    for (int tid = RtsLayer::getTotalThreads()-1 ; tid >= 0 ; tid--) {
+      if (Tau_is_thread_fake(tid) == 1) { continue; }
+    //int tid = 0; // only do thread 0
       Tau_plugin_event_function_entry_data_t entry_data;
       // safe to assume 0?
       int depth = Tau_get_current_stack_depth(tid);
       for (int i = 0 ; i <= depth ; i++) {
-        tau::Profiler *profiler = Tau_get_timer_at_stack_depth(i);
+        tau::Profiler *profiler = Tau_get_timer_at_stack_depth_task(i, tid);
         // not sure how this can happen...
-        if (profiler == NULL) { continue; }
+        if (profiler == NULL) {
+#ifdef DO_VALIDATION
+        TAU_VERBOSE("%d,%d,%d,%d NULL profiler!\n", getpid(), tid, i, depth);
+#endif
+        continue; }
         entry_data.timer_name = profiler->ThisFunction->GetName();
         // not sure how this can happen...
-        if (entry_data.timer_name == NULL) { continue; }
+        if (entry_data.timer_name == NULL) {
+#ifdef DO_VALIDATION
+        TAU_VERBOSE("%d,%d,%d,%d Missing timer name!\n", getpid(), tid, i, depth);
+#endif
+        continue; }
         entry_data.timer_group = profiler->ThisFunction->GetAllGroups();
         entry_data.tid = tid;
         entry_data.timestamp = (x_uint64)profiler->StartTime[0];
-        //printf("%d,%d,%d,%d Starting %s\n", getpid(), tid, i, depth, entry_data.timer_name);
-        //fflush(stdout);
+#ifdef DO_VALIDATION
+        TAU_VERBOSE("%d,%d,%d,%d Starting %s\n", getpid(), tid, i, depth, entry_data.timer_name);
+#endif
         Tau_plugin_adios2_function_entry(&entry_data);
       }
-    //}
+    }
     RtsLayer::UnLockDB();
 
     if (signal(SIGUSR1, Tau_plugin_adios2_signal_handler) == SIG_ERR) {
       perror("failed to register TAU profile dump signal handler");
     }
-    enabled = true;
 
     return 0;
 }
