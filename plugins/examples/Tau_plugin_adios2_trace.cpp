@@ -55,7 +55,7 @@
 #define TAU_ADIOS2_CONFIG_FILE_DEFAULT "./adios2.xml"
 
 // This will enable some checking to make sure we don't have call stack violations.
-#define DO_VALIDATION
+// #define DO_VALIDATION
 
 /* Some forward declarations that we need */
 tau::Profiler *Tau_get_timer_at_stack_depth(int);
