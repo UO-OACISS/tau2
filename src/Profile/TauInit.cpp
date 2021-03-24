@@ -356,7 +356,9 @@ int Tau_profile_exit_scorep()
 }
 
 /* disable this stupid thing */
-extern "C" int PetscPopSignalHandler(void);
+extern "C" int __attribute__((weak)) PetscPopSignalHandler(void) {
+    return 0;
+}
 typedef int(*PetscPopSignalHandler_p)(void);
 
 //////////////////////////////////////////////////////////////////////
