@@ -55,7 +55,7 @@
 #define TAU_ADIOS2_CONFIG_FILE_DEFAULT "./adios2.xml"
 
 // This will enable some checking to make sure we don't have call stack violations.
-//#define DO_VALIDATION
+#define DO_VALIDATION
 
 /* Some forward declarations that we need */
 tau::Profiler *Tau_get_timer_at_stack_depth(int);
@@ -146,6 +146,17 @@ class plugin_options {
 
 inline plugin_options& thePluginOptions() {
     return plugin_options::thePluginOptions();
+}
+
+/* We need a way to prevent screwing up the timestamps when processing
+ * events.  The first time we see a timer or counter, we create define
+ * an attribute in ADIOS2, which IS INSTRUMENTED, so we can possibly get
+ * a pair of start/stop events for IO::DefineAttribute in our trace.
+ * To prevent that, ignore the plugin callbacks when we are processing
+ * a plugin callback. */
+bool& inPlugin() {
+    static thread_local bool in(false);
+    return in;
 }
 
 void Tau_ADIOS2_parse_environment_variables(void);
@@ -501,8 +512,8 @@ class adios {
 #ifdef DO_VALIDATION
         std::stack<unsigned long> timer_stack[TAU_MAX_THREADS];
         std::stack<unsigned long> pre_timer_stack[TAU_MAX_THREADS];
-        unsigned long previous_timestamp[TAU_MAX_THREADS];
 #endif
+        unsigned long previous_timestamp[TAU_MAX_THREADS];
 };
 
 void adios::initialize() {
@@ -974,6 +985,7 @@ void init_lock(pthread_mutex_t * _mutex) {
 
 int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     if (!enabled) return 0;
+    tau_plugin::inPlugin() = true;
     static int iter = 0;
     TAU_VERBOSE("%d TAU PLUGIN ADIOS2 Dump %d \n", global_comm_rank, iter); fflush(stdout);
     if (dump_history) {
@@ -987,6 +999,7 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     Tau_global_decr_insideTAU();
     //Tau_pure_stop(__func__);
     TAU_VERBOSE("%d TAU PLUGIN ADIOS2 Dump exit %d\n", global_comm_rank, iter++); fflush(stdout);
+    tau_plugin::inPlugin() = false;
     return 0;
 }
 
@@ -1132,6 +1145,7 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
 
 void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid) {
     if (!enabled) return;
+    tau_plugin::inPlugin() = true;
     //int tid = RtsLayer::myThread();
     int nodeid = TAU_PROFILE_GET_NODE();
     Tau_global_incr_insideTAU();
@@ -1167,11 +1181,13 @@ void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid) {
         }
     }
     Tau_global_decr_insideTAU();
+    tau_plugin::inPlugin() = false;
 }
 
 /* This happens when a Metadata field is saved. */
 int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_registration_data_t* data) {
     if (!enabled) return 0;
+    tau_plugin::inPlugin() = true;
     Tau_global_incr_insideTAU();
     //fprintf(stdout, "TAU Metadata registration\n"); fflush(stdout);
     std::stringstream ss;
@@ -1199,12 +1215,15 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
             break;
     }
     Tau_global_decr_insideTAU();
+    tau_plugin::inPlugin() = false;
     return 0;
 }
 
 /* This happens on MPI_Send events (and similar) */
 int Tau_plugin_adios2_send(Tau_plugin_event_send_data_t* data) {
     if (!enabled) return 0;
+    if (tau_plugin::inPlugin()) return 0;
+    tau_plugin::inPlugin() = true;
     static std::string sendstr("SEND");
     int event_index = my_adios().check_event_type(sendstr);
     my_adios().check_thread(data->tid);
@@ -1227,20 +1246,28 @@ int Tau_plugin_adios2_send(Tau_plugin_event_send_data_t* data) {
     /* Release the lock, we've got control */
     pthread_mutex_unlock(&_my_mutex);
 
+    unsigned long ts = my_adios().previous_timestamp[data->tid] >
+        data->timestamp ? my_adios().previous_timestamp[data->tid] :
+            data->timestamp;
+    my_adios().previous_timestamp[data->tid] = ts;
+
     auto &tmp = my_adios().comm_values_array[data->tid];
     tmp.push_back(
         std::make_pair(
-            data->timestamp,
+            ts,
             std::move(tmparray)
         )
     );
     active_threads--;
+    tau_plugin::inPlugin() = false;
     return 0;
 }
 
 /* This happens on MPI_Recv events (and similar) */
 int Tau_plugin_adios2_recv(Tau_plugin_event_recv_data_t* data) {
     if (!enabled) return 0;
+    if (tau_plugin::inPlugin()) return 0;
+    tau_plugin::inPlugin() = true;
     static std::string recvstr("RECV");
     int event_index = my_adios().check_event_type(recvstr);
     my_adios().check_thread(data->tid);
@@ -1263,14 +1290,20 @@ int Tau_plugin_adios2_recv(Tau_plugin_event_recv_data_t* data) {
     /* Release the lock, we've got control */
     pthread_mutex_unlock(&_my_mutex);
 
+    unsigned long ts = my_adios().previous_timestamp[data->tid] >
+        data->timestamp ? my_adios().previous_timestamp[data->tid] :
+            data->timestamp;
+    my_adios().previous_timestamp[data->tid] = ts;
+
     auto &tmp = my_adios().comm_values_array[data->tid];
     tmp.push_back(
         std::make_pair(
-            data->timestamp,
+            ts,
             std::move(tmparray)
         )
     );
     active_threads--;
+    tau_plugin::inPlugin() = false;
     return 0;
 }
 
@@ -1283,6 +1316,8 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
     if (skip_timer(data->timer_name)) {
         return 0;
     }
+    if (tau_plugin::inPlugin()) return 0;
+    tau_plugin::inPlugin() = true;
     /* todo: filter on group */
     int timer_index = my_adios().check_timer(data->timer_name);
     static std::string entrystr("ENTRY");
@@ -1306,14 +1341,12 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
     pthread_mutex_unlock(&_my_mutex);
 
     auto &tmp = my_adios().timer_values_array[data->tid];
-#ifdef DO_VALIDATION
     unsigned long ts = my_adios().previous_timestamp[data->tid] > data->timestamp ?
-        my_adios().previous_timestamp[data->tid] + 1 : data->timestamp;
+        my_adios().previous_timestamp[data->tid] : data->timestamp;
     my_adios().previous_timestamp[data->tid] = ts;
+#ifdef DO_VALIDATION
     my_adios().pre_timer_stack[data->tid].push(timer_index);
-    TAU_VERBOSE("Enter:   %d %d %s\n", global_comm_rank, data->tid, data->timer_name);
-#else
-    unsigned long ts = data->timestamp;
+    TAU_VERBOSE("Enter:   %d %d %lu %lu %s %s\n", global_comm_rank, data->tid, data->timestamp, ts, (data->timestamp != ts ? "FIXED" : ""), data->timer_name);
 #endif
     // push this timer on the stack for provenance output, make a copy
     my_adios().current_primer_stack[data->tid].push_back(std::make_pair(ts, tmparray));
@@ -1324,6 +1357,7 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
         )
     );
     active_threads--;
+    tau_plugin::inPlugin() = false;
     return 0;
 }
 
@@ -1334,6 +1368,8 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     if (skip_timer(data->timer_name)) {
         return 0;
     }
+    if (tau_plugin::inPlugin()) return 0;
+    tau_plugin::inPlugin() = true;
     /* todo: filter on group */
     int timer_index = my_adios().check_timer(data->timer_name);
     static std::string exitstr("EXIT");
@@ -1356,12 +1392,12 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     pthread_mutex_unlock(&_my_mutex);
 
     auto &tmp = my_adios().timer_values_array[data->tid];
-#ifdef DO_VALIDATION
-    TAU_VERBOSE("Exit:    %d %d %s\n", global_comm_rank, data->tid, data->timer_name);
     unsigned long ts = my_adios().previous_timestamp[data->tid] >
-        data->timestamp ? my_adios().previous_timestamp[data->tid] + 1 :
+        data->timestamp ? my_adios().previous_timestamp[data->tid] :
             data->timestamp;
     my_adios().previous_timestamp[data->tid] = ts;
+#ifdef DO_VALIDATION
+    TAU_VERBOSE("Exit:    %d %d %lu %lu %s %s\n", global_comm_rank, data->tid, data->timestamp, ts, (data->timestamp != ts ? "FIXED" : ""), data->timer_name);
     if (my_adios().pre_timer_stack[data->tid].size() == 0) {
       TAU_VERBOSE("%d Pre: Stack violation. %s\n", getpid(), data->timer_name);
       TAU_VERBOSE("%d Pre: Stack for thread %lu is empty, timestamp %lu.\n",
@@ -1370,6 +1406,7 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
           my_adios().current_primer_stack[data->tid].pop_back();
 	  }
       active_threads--;
+      tau_plugin::inPlugin() = false;
       return 0;
     } else {
         unsigned long lhs = (unsigned long)(my_adios().pre_timer_stack[data->tid].top());
@@ -1381,8 +1418,6 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
         }
         my_adios().pre_timer_stack[data->tid].pop();
     }
-#else
-    unsigned long ts = data->timestamp;
 #endif
     // pop this timer off the stack for provenance output
 	// For some reason, at the end of execution we are popping too many.
@@ -1397,6 +1432,7 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
         )
     );
     active_threads--;
+    tau_plugin::inPlugin() = false;
     return 0;
 }
 
@@ -1409,6 +1445,8 @@ int Tau_plugin_adios2_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data_
     if (skip_counter(data->counter_name)) {
         return 0;
     }
+    if (tau_plugin::inPlugin()) return 0;
+    tau_plugin::inPlugin() = true;
     int counter_index = my_adios().check_counter(data->counter_name);
     my_adios().check_thread(data->tid);
     std::array<unsigned long, 5> tmparray;
@@ -1428,18 +1466,23 @@ int Tau_plugin_adios2_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data_
     /* Release the lock, we've got control */
     pthread_mutex_unlock(&_my_mutex);
 
+    unsigned long ts = my_adios().previous_timestamp[data->tid] >
+        data->timestamp ? my_adios().previous_timestamp[data->tid] :
+            data->timestamp;
+    my_adios().previous_timestamp[data->tid] = ts;
 #ifdef DO_VALIDATION
-    TAU_VERBOSE("Counter: %d %d %s\n", global_comm_rank, data->tid, data->counter_name);
+    TAU_VERBOSE("Counter: %d %d %lu %lu %s %s\n", global_comm_rank, data->tid, data->timestamp, ts, (data->timestamp != ts ? "FIXED" : ""), data->counter_name);
 #endif
 
     auto &tmp = my_adios().counter_values_array[data->tid];
     tmp.push_back(
         std::make_pair(
-            data->timestamp,
+            ts,
             std::move(tmparray)
         )
     );
     active_threads--;
+    tau_plugin::inPlugin() = false;
     return 0;
 }
 
@@ -1448,6 +1491,7 @@ extern x_uint64 TauTraceGetTimeStamp(int tid);
 void Tau_plugin_adios2_dump_history(void) {
     RtsLayer::LockDB();
     printf("In Provenance history dump\n");
+    tau_plugin::inPlugin() = true;
 
     /* open an ADIOS archive */
     adios2::IO bpIO = my_adios().ad.DeclareIO("TAU trace data window");
@@ -1711,11 +1755,13 @@ void Tau_plugin_adios2_dump_history(void) {
     }
     bpWriter.Close();
     RtsLayer::UnLockDB();
+    tau_plugin::inPlugin() = false;
 }
 
 /* This happens after MPI_Init, and after all TAU metadata variables have been
  * read */
 int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
+    tau_plugin::inPlugin() = true;
     /* Open the ADIOS archive */
     printf("Making my_adios %d\n", __LINE__);
     for (int i = 0 ; i < my_adios().get_thread_count() ; i++) {
@@ -1782,6 +1828,7 @@ int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
       perror("failed to register TAU profile dump signal handler");
     }
 
+    tau_plugin::inPlugin() = false;
     return 0;
 }
 
