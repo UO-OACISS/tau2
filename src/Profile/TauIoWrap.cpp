@@ -118,7 +118,7 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname)
     }
     void *event = 0;
     char ename[4096];
-    sprintf(ename,"%s <file=%s>", iowrap_event_names[i], pathname);
+    snprintf(ename, sizeof(ename), "%s <file=%s>", iowrap_event_names[i], pathname);
     Tau_pure_context_userevent(&event, ename);
     iowrap_events[i][fid] = (TauUserEvent*)event;
   }
