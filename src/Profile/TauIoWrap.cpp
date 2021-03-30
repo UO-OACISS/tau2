@@ -23,6 +23,8 @@
 #include <vector>
 #include <deque>
 #include <utility>
+#include <sstream>
+#include <string>
 #include <sys/time.h>
 
 
@@ -117,9 +119,10 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname)
       }
     }
     void *event = 0;
-    char ename[4096];
-    snprintf(ename, sizeof(ename), "%s <file=%s>", iowrap_event_names[i], pathname);
-    Tau_pure_context_userevent(&event, ename);
+    std::stringstream ss;
+    ss << iowrap_event_names[i] << " <file=" << pathname << ">";
+    std::string ename(ss.str());
+    Tau_pure_context_userevent(&event, ename.c_str());
     iowrap_events[i][fid] = (TauUserEvent*)event;
   }
   dprintf("Registering %d with %s\n", fid - 1, pathname);
