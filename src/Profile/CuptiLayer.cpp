@@ -65,8 +65,6 @@ void Tau_CuptiLayer_set_num_events(int n)
   Tau_CuptiLayer_num_events = n;
 }
 
-cudaEvent_t TAU_cudaEvent;
-
 bool Tau_CuptiLayer_initialized = false;
 bool Tau_CuptiLayer_finalized = false;
 bool Tau_CuptiLayer_enabled = true;
@@ -78,7 +76,6 @@ bool Tau_CuptiLayer_is_initialized()
 
 void Tau_CuptiLayer_finalize()
 {
-    cudaEventDestroy(TAU_cudaEvent);
 	Tau_CuptiLayer_finalized = true;
 }
 
@@ -252,93 +249,112 @@ void Tau_CuptiLayer_enable_eventgroup()
 
 void Tau_CuptiLayer_setup_eventgroup()
 {
+    //printf("%d: %s %d\n", RtsLayer::myNode(), __func__, __LINE__); fflush(stdout);
 
-	static bool only_once = false;
-	if (only_once) { return; } else { only_once = true; }
+    static bool only_once = false;
+    if (only_once) { return; } else { only_once = true; }
 
     TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_setup_eventgroup\n");
-  CUresult cuErr;
-  CUptiResult cuptiErr;
-  CUcontext cuCtx;
-  CUdevice device;
+    CUresult cuErr;
+    CUptiResult cuptiErr;
+    CUcontext cuCtx;
+    CUdevice device;
 
-  eventGroup = (CUpti_EventGroup*)malloc(sizeof(CUpti_EventGroup));
-  cuErr = cuDeviceGet(&device, 0);
-  CUDA_CHECK_ERROR(cuErr, "cuDeviceGet");
+    eventGroup = (CUpti_EventGroup*)malloc(sizeof(CUpti_EventGroup));
+    /* Get the current device index */
+    int deviceIndex;
+    cudaError_t cudaErr = cudaGetDevice(&deviceIndex);
+    /* IF we didn't get a device index, there isn't a device.  Just continue */
+    if (cudaErr != cudaSuccess)
+	{ /*fprintf(stderr, "%s:%d: Unable to get device index.\n", __func__, __LINE__); */return; }
+    //printf("%d Using device index: %d\n", RtsLayer::myNode(), deviceIndex);
+    /* Get the device object */
+    cuErr = cuDeviceGet(&device, deviceIndex);
+    CUDA_CHECK_ERROR(cuErr, "cuDeviceGet");
+    /* Get the primary context */
+    cuErr = cuDevicePrimaryCtxRetain(&cuCtx, device);
+    CHECK_CU_ERROR(cuErr, "cuDevicePrimaryCtxRetain");
+    cuptiErr = cuptiEventGroupCreate(cuCtx, &eventGroup, 0);
+#if CUDA_VERSION >= 10020
+    if(cuptiErr == CUPTI_ERROR_LEGACY_PROFILER_NOT_SUPPORTED) {
+        // If this device doesn't support the legacy profiler,
+        // there's nothing to initialize
+        cuErr = cuDevicePrimaryCtxRelease(device);
+        CHECK_CU_ERROR(cuErr, "cuDevicePrimaryCtxRelease")
+        return;
+    }
+#endif
+    CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupCreate");
 
-	cuErr = cuDevicePrimaryCtxRetain(&cuCtx, device);
-	CHECK_CU_ERROR(cuErr, "cuCtxGetDevice");
-  cuptiErr = cuptiEventGroupCreate(cuCtx, &eventGroup, 0);
-  CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupCreate");
+    counter_vec_t & added_counters = Tau_CuptiLayer_Added_counters();
 
-  counter_vec_t & added_counters = Tau_CuptiLayer_Added_counters();
+    //fprintf(stderr, "AHJ %d\n", Tau_CuptiLayer_Added_counters().size());
 
-	//fprintf(stderr, "AHJ %d\n", Tau_CuptiLayer_Added_counters().size());
+    for (counter_vec_t::iterator it = added_counters.begin(); it != added_counters.end(); it++) {
+        CuptiCounterEvent & evt = **it;
 
-  for (counter_vec_t::iterator it = added_counters.begin(); it != added_counters.end(); it++) {
-      CuptiCounterEvent & evt = **it;
+        char device_char[TAU_CUPTI_MAX_NAME];
+        cuErr = cuDeviceGetName(device_char, sizeof(device_char), device);
+        if (cuErr != CUDA_SUCCESS) {
+            cerr << __FILE__ << ":" << __LINE__ << ":  cuDeviceGetName failed on device " << device << endl;
+            continue;
+        }
 
-      char device_char[TAU_CUPTI_MAX_NAME];
-      cuErr = cuDeviceGetName(device_char, sizeof(device_char), device);
-      if (cuErr != CUDA_SUCCESS) {
-          cerr << __FILE__ << ":" << __LINE__ << ":  cuDeviceGetName failed on device " << device << endl;
-          continue;
-      }
+        char counter_char[TAU_CUPTI_MAX_NAME];
+        cuErr = cuDeviceGetName(counter_char, sizeof(counter_char), evt.device);
+        if (cuErr != CUDA_SUCCESS) {
+            cerr << __FILE__ << ":" << __LINE__ << ":  cuDeviceGetName failed on device " << evt.device << endl;
+            continue;
+        }
 
-      char counter_char[TAU_CUPTI_MAX_NAME];
-      cuErr = cuDeviceGetName(counter_char, sizeof(counter_char), evt.device);
-      if (cuErr != CUDA_SUCCESS) {
-          cerr << __FILE__ << ":" << __LINE__ << ":  cuDeviceGetName failed on device " << evt.device << endl;
-          continue;
-      }
+        if (strcmp(device_char, counter_char)) {
+            /* This warning is to cover a small corner case. Since each event group
+             * fill the counter buffers starting at a zero offset, disjoint event
+             * groups (ie. two or more event groups that collect counters for
+             * seperate GPUs) will end up writing to the same offset causing the
+             * data to become garbled.
+             * Notice that running on multiple different GPUs is supported as long
+             * as we only collect counters for one set at a time.
+             */
+            cerr << "TAU Error: Cannot add event: " << evt.tag << " to GPU device: " << device_char << "\n"
+                << "           Only counters for a single GPU device model can be collected at the same time."
+                << endl;
+            exit(EXIT_FAILURE);
+        }
 
-      if (strcmp(device_char, counter_char)) {
-          /* This warning is to cover a small corner case. Since each event group
-           * fill the counter buffers starting at a zero offset, disjoint event
-           * groups (ie. two or more event groups that collect counters for
-           * seperate GPUs) will end up writing to the same offset causing the
-           * data to become garbled.
-           * Notice that running on multiple different GPUs is supported as long
-           * as we only collect counters for one set at a time.
-           */
-          cerr << "TAU Error: Cannot add event: " << evt.tag << " to GPU device: " << device_char << "\n"
-               << "           Only counters for a single GPU device model can be collected at the same time."
-               << endl;
-          exit(EXIT_FAILURE);
-      }
+        //enable all domains
+        uint32_t all = 1;
+        CUPTI_CHECK_ERROR(cuptiEventGroupSetAttribute(eventGroup, CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES,
+                    sizeof(all), &all), "cuptiEventGroupSetAttribute");
 
-      //enable all domains
-      uint32_t all = 1;
-      CUPTI_CHECK_ERROR(cuptiEventGroupSetAttribute(eventGroup, CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES,
-                                  sizeof(all), &all), "cuptiEventGroupSetAttribute");
-
-      CUPTI_CHECK_ERROR(cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_KERNEL), "cuptiSetEventCollectionMode");
+        CUPTI_CHECK_ERROR(cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_KERNEL), "cuptiSetEventCollectionMode");
 
 #ifdef TAU_DEBUG_CUPTI
-      cerr << "AHJ: Will add event " << evt.tag << " to GPU device: " << device_char << endl;
+        cerr << "AHJ: Will add event " << evt.tag << " to GPU device: " << device_char << endl;
 #endif
-      CUpti_EventID evts[TAU_MAX_COUNTERS];
-      size_t evts_size = TAU_MAX_COUNTERS*sizeof(CUpti_EventID);
-      cuptiErr = cuptiEventGroupGetAttribute(eventGroup, CUPTI_EVENT_GROUP_ATTR_EVENTS, &evts_size, evts);
-      int in_array = 0;
-      for (int i = 0; i < (int) evts_size/sizeof(CUpti_EventID); i++) {
-          if (evts[i] == evt.event) {
-              in_array = 1;
-          }
-      }
-      if (!in_array) {
-        //printf("adding event %s\n", evt.tag.c_str());
-        cuptiErr = cuptiEventGroupAddEvent(eventGroup, evt.event);
-        CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupAddEvent");
-        if (cuptiErr != CUPTI_SUCCESS) {
-          cerr << "TAU Warning: Cannot add event: " << evt.tag << " to GPU device: " << device_char << endl;
-          exit(EXIT_FAILURE);
+        CUpti_EventID evts[TAU_MAX_COUNTERS];
+        size_t evts_size = TAU_MAX_COUNTERS*sizeof(CUpti_EventID);
+        cuptiErr = cuptiEventGroupGetAttribute(eventGroup, CUPTI_EVENT_GROUP_ATTR_EVENTS, &evts_size, evts);
+        int in_array = 0;
+        for (int i = 0; i < (int) evts_size/sizeof(CUpti_EventID); i++) {
+            if (evts[i] == evt.event) {
+                in_array = 1;
+            }
         }
-      }
+        if (!in_array) {
+            //printf("adding event %s\n", evt.tag.c_str());
+            cuptiErr = cuptiEventGroupAddEvent(eventGroup, evt.event);
+            CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupAddEvent");
+            if (cuptiErr != CUPTI_SUCCESS) {
+                cerr << "TAU Warning: Cannot add event: " << evt.tag << " to GPU device: " << device_char << endl;
+                exit(EXIT_FAILURE);
+            }
+        }
     }
     //record the fact the events have been added.
     Tau_CuptiLayer_set_num_events(added_counters.size());
-
+    cuErr = cuDevicePrimaryCtxRelease(device);
+    CHECK_CU_ERROR(cuErr, "cuDevicePrimaryCtxRelease")
 
     TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_setup_eventgroup\n");
 }
@@ -347,40 +363,51 @@ void Tau_CuptiLayer_setup_eventgroup()
 /* lifted from PAPI. */
 void Tau_CuptiLayer_init()
 {
+    //printf("%d: %s %d\n", RtsLayer::myNode(), __func__, __LINE__); fflush(stdout);
+    TAU_DEBUG_PRINT("AHJ: entering Tau_CuptiLayer_init\n");
 
-		TAU_DEBUG_PRINT("AHJ: entering Tau_CuptiLayer_init\n");
-
-		CUresult cudaErr;
+    /* Get the device count, to allocate initialization flags */
     int device_count;
-    cudaErr = cuDeviceGetCount(&device_count);
-		CHECK_CU_ERROR(cudaErr, "cuDeviceGetCount");
+    CUresult cuErr;
+    cuErr = cuDeviceGetCount(&device_count);
+    if (cuErr == CUDA_ERROR_NOT_INITIALIZED) {
+        cuInit(0);
+        cuErr = cuDeviceGetCount(&device_count);
+    }
+    if (cuErr != CUDA_SUCCESS) {
+        //no devices found.
+        return;
+    }
 
     if (!initialized) {
         Tau_CuptiLayer_register_all_counters();
         initialized = (bool*)calloc(device_count, sizeof(bool));
     }
 
+#if 0
     CUdevice device = 0;
     CUptiResult cuptiErr;
-		cudaError_t cuErr;
     CUcontext cuCtx;
 
-    cuErr = cudaGetDevice(&device);
-		if (cuErr != cudaSuccess)
-		{
-			fprintf (stderr, "[%s:%d] Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, cuErr, "cudaGetDevice");
-		}
-		cudaErr = cuDevicePrimaryCtxRetain(&cuCtx, device);
-		CHECK_CU_ERROR(cudaErr, "cuCtxGetDevice");
+    /* Which device index are we using? */
+    int deviceIndex;
+    cudaError_t cudaErr = cudaGetDevice(&deviceIndex);
+    if (cudaErr != cudaSuccess)
+	{ fprintf(stderr, "%s:%d: Unable to get device index.\n", __func__, __LINE__); return; }
+    printf("%d Using device index: %d\n", RtsLayer::myNode(), deviceIndex);
+    /* Get the device object */
+    cuErr = cuDeviceGet(&device, deviceIndex);
+    CHECK_CU_ERROR(cuErr, "cuDeviceGet");
+    /* Get the primary context object */
+    cuErr = cuDevicePrimaryCtxRetain(&cuCtx, device);
+    CHECK_CU_ERROR(cuErr, "cuDevicePrimaryCtxRetain");
 
+    /* Have we added counters for this device yet? */
     counter_vec_t & added_counters = Tau_CuptiLayer_Added_counters();
 
     if (!initialized[device] && added_counters.size() > 0) {
-#ifdef TAU_DEBUG_CUPTI
-        printf("in Tau_CuptiLayer_init, device = %d.\n", device);
-#endif
-
         // Add events to the CuPTI eventGroup
+        printf("%d setup %d\n", RtsLayer::myNode(), __LINE__); fflush(stdout);
         Tau_CuptiLayer_setup_eventgroup();
 
         int minor, major;
@@ -408,19 +435,20 @@ void Tau_CuptiLayer_init()
         }
         initialized[device] = true;
     }
+#endif
     Tau_CuptiLayer_initialized = true;
-    cudaEventCreate(&TAU_cudaEvent);
 
-		TAU_DEBUG_PRINT("AHJ: exiting Tau_CuptiLayer_init\n");
+    TAU_DEBUG_PRINT("AHJ: exiting Tau_CuptiLayer_init\n");
 }
 
 //for things that need to happen AFTER TauMetrics_init
 void Tau_cupti_post_init()
 {
-		TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_post_init\n");
+    //printf("%d: %s %d\n", RtsLayer::myNode(), __func__, __LINE__); fflush(stdout);
+    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_post_init\n");
 	Tau_CuptiLayer_init();
 	Tau_CuptiLayer_setup_eventgroup();
-		TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_post_init\n");
+    TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_post_init\n");
 }
 
 void Tau_CuptiLayer_disable()
@@ -597,15 +625,19 @@ void Tau_CuptiLayer_read_counters(int device, int task, uint64_t * counterDataBu
 uint64_t Tau_CuptiLayer_read_counter(int id)
 {
 	uint64_t * counterDataBuffer = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
-  CUdevice device;
-  cuDeviceGet(&device, 0);
-  Tau_CuptiLayer_read_counters(device, device, counterDataBuffer);
-  uint64_t cb;
-  if (counterDataBuffer != NULL) {
-    cb = counterDataBuffer[internal_id_map[id]];
-  } else {
-    cb = 0;
-  }
+    int deviceIndex;
+    cudaError_t cudaErr = cudaGetDevice(&deviceIndex);
+    if (cudaErr != cudaSuccess)
+	{ fprintf(stderr, "%s:%d: Unable to get device index.\n", __func__, __LINE__); return 0; }
+    CUdevice device;
+    cuDeviceGet(&device, deviceIndex);
+    Tau_CuptiLayer_read_counters(device, device, counterDataBuffer);
+    uint64_t cb;
+    if (counterDataBuffer != NULL) {
+        cb = counterDataBuffer[internal_id_map[id]];
+    } else {
+        cb = 0;
+    }
 	free(counterDataBuffer);
 	return cb;
 }
@@ -651,17 +683,25 @@ void Tau_CuptiLayer_Initialize_Map(int off)
         //no devices found.
         return;
     }
-    for (int i = 0; i < deviceCount; i++) {
+    int i;
+    cudaError_t cudaErr = cudaGetDevice(&i);
+    if (cudaErr != cudaSuccess)
+	{ fprintf(stderr, "%s:%d: Unable to get device index.\n", __func__, __LINE__); return; }
         er = cuDeviceGet(&currDevice, i);
 #ifdef TAU_DEBUG_CUPTI
         printf("looping, i=%d, currDevice=%d.\n", i, currDevice);
 #endif
         CHECK_CU_ERROR(er, "cuDeviceGet");
         err = cuptiDeviceGetNumEventDomains(currDevice, &domainCount);
+#if CUDA_VERSION >= 10200
+        if(err == CUPTI_ERROR_LEGACY_PROFILER_NOT_SUPPORTED) {
+            return;
+        }
+#endif
         CHECK_CUPTI_ERROR(err, "cuptiDeviceGetNumEventDomains");
         if (domainCount == 0) {
             printf("No domain is exposed by dev = %d\n", i);
-            continue;
+            return;
         }
 #ifdef TAU_DEBUG_CUPTI
         else {
@@ -720,8 +760,6 @@ void Tau_CuptiLayer_Initialize_Map(int off)
           //  metric->print();
 #endif
         }
-        cuDeviceGetCount(&deviceCount);
-    }
 #ifdef TAU_DEBUG_CUPTI
     printf("leaving Tau_CuptiLayer_Initialize_Map\n");
 #endif
@@ -784,11 +822,6 @@ int Tau_CuptiLayer_get_cupti_event_id(int metric_id)
 int Tau_CuptiLayer_get_metric_event_id(int metric_id)
 {
   return internal_id_map_backwards[metric_id];
-}
-
-void Tau_cuda_Event_Synchonize()
-{
-  cudaEventSynchronize(TAU_cudaEvent);
 }
 
 #endif

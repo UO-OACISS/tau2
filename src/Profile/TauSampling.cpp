@@ -83,6 +83,7 @@
 #include <stdlib.h>
 #include <strings.h>
 #include <stdint.h>
+#include <mutex>
 
 /* Android didn't provide <ucontext.h> so we make our own */
 #ifdef TAU_ANDROID
@@ -206,10 +207,13 @@ extern void Tau_sampling_unwindTauContext(int tid, void **address);
 extern void Tau_sampling_unwind(int tid, Profiler *profiler,
     void *pc, void *context, unsigned long stack[]);
 
+#ifdef TAU_USE_LIBBACKTRACE
+extern void Tau_sampling_unwind_init();
+#endif
+
 extern "C" bool unwind_cutoff(void **addresses, void *address) {
   // if the unwind depth is not "auto", then return
-  if (TauEnv_get_ebs_unwind_depth() > 0)
-    return false;
+  if (TauEnv_get_ebs_unwind_depth() > 0) return false;
   bool found = false;
   for (int i=0; i<TAU_SAMP_NUM_ADDRESSES; i++) {
     if ((unsigned long)(addresses[i]) == (unsigned long)address) {
@@ -294,6 +298,25 @@ struct CallSiteCacheMap : public TAU_HASH_MAP<unsigned long, CallSiteCacheNode*>
   }
 };
 
+#if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ) && !defined(TAU_FUJITSU)
+struct ThreadTimerMap : public TAU_HASH_MAP<int, timer_t> {
+  ThreadTimerMap() {};
+  virtual ~ThreadTimerMap() {
+    Tau_destructor_trigger();
+  };
+};
+
+static ThreadTimerMap & TheThreadTimerMap() {
+    static ThreadTimerMap threadTimerMap;
+    return threadTimerMap;
+}
+
+static std::mutex & TheThreadTimerMapMutex() {
+    static std::mutex thread_timer_map_mutex;
+    return thread_timer_map_mutex;
+}
+#endif
+
 struct DeferredInit {
   int tid;
   pid_t pid;
@@ -349,9 +372,10 @@ struct tau_sampling_flags {
 
 #ifdef TAU_USE_TLS
 // thread local storage
-__thread struct tau_sampling_flags tau_sampling_tls_flags;
-static inline struct tau_sampling_flags *tau_sampling_flags(void)
-{ return &tau_sampling_tls_flags; }
+struct tau_sampling_flags *tau_sampling_flags(void) {
+    static thread_local struct tau_sampling_flags tau_sampling_tls_flags;
+    return &tau_sampling_tls_flags;
+}
 #elif defined(TAU_USE_DTLS)
 // thread local storage
 __declspec(thread) struct tau_sampling_flags tau_sampling_tls_flags;
@@ -380,6 +404,7 @@ int collectingSamples = 0;
 // When we register our signal handler, we have to save any existing handler,
 // so that we can call it when we are done.
 static struct sigaction application_sa;
+
 
 /*********************************************************************
  * Get the architecture specific PC
@@ -430,6 +455,8 @@ unsigned long get_pc(void *p)
   pc = uct->uc_mcontext->__ss.__rip;
 #elif defined (__i386__)
   pc = uct->uc_mcontext->__ss.__eip;
+#elif defined (__arm64__)
+  pc = uct->uc_mcontext->__ss.__pc;
 #else
   pc = uct->uc_mcontext->__ss.__srr0;
 #endif /* defined(_STRUCT_X86_THREAD_STATE64) && !defined(__i386__) */
@@ -494,6 +521,41 @@ extern "C" void Tau_sampling_suspend(int tid)
 extern "C" void Tau_sampling_resume(int tid)
 {
   tau_sampling_flags()->suspendSampling = 0;
+}
+
+extern "C" void Tau_sampling_timer_pause() {
+#if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ) && !defined(TAU_FUJITSU)
+  std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
+  auto it = TheThreadTimerMap().find(RtsLayer::getTid());
+  if(it != TheThreadTimerMap().end()) {
+    struct itimerspec ts;
+    ts.it_interval.tv_nsec = ts.it_value.tv_nsec = 0;
+    ts.it_interval.tv_sec  = ts.it_value.tv_sec  = 0;
+    TAU_VERBOSE("Pausing timer on thread %d\n", RtsLayer::getTid());
+    int ret = timer_settime(it->second, 0, &ts, NULL);
+    if(ret != 0) {
+      fprintf(stderr, "TAU: Failed to pause timer\n");
+    }
+  }
+#endif
+}
+
+extern "C" void Tau_sampling_timer_resume() {
+#if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ) && !defined(TAU_FUJITSU)
+  std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
+  auto it = TheThreadTimerMap().find(RtsLayer::getTid());
+  if(it != TheThreadTimerMap().end()) {
+    int threshold = TauEnv_get_ebs_period();
+    struct itimerspec ts;
+    ts.it_interval.tv_nsec = ts.it_value.tv_nsec = (threshold % TAU_MILLION) * TAU_THOUSAND;
+    ts.it_interval.tv_sec  = ts.it_value.tv_sec  = threshold / TAU_MILLION;
+    TAU_VERBOSE("Resuming timer on thread %d\n", RtsLayer::getTid());
+    int ret = timer_settime(it->second, 0, &ts, NULL);
+    if(ret != 0) {
+      fprintf(stderr, "TAU: Failed to resume timer\n");
+    }
+  }
+#endif
 }
 
 // TODO: Why is this here?  For HPC Toolkit?
@@ -840,11 +902,9 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
             buff = (char*)malloc(strlen(tag) + strlen(childName) +
                     strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) +
                     strlen(lineno) + 32);
-            sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
+            sprintf(buff, "[%s] %s [@] %s [{%s} {0}]",
                 tag, childName, resolvedInfo.funcname,
-                resolvedInfo.filename,
-		Tau_get_lineno_for_function(TheBfdUnitHandle(),
-                                            resolvedInfo.funcname) );
+                resolvedInfo.filename);
         } else { // Line resolution
             buff = (char*)malloc(strlen(tag) + strlen(childName) +
                     strlen(resolvedInfo.funcname) +
@@ -860,15 +920,17 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
                     strlen(resolvedInfo.filename) + 32);
             sprintf(buff, "[%s] [{%s} {0}]",
                 tag, resolvedInfo.filename);
+            *newShortName = (char*)malloc(strlen(resolvedInfo.filename) + 2);
+            sprintf(*newShortName, "%s", resolvedInfo.filename);
         } else if (TauEnv_get_ebs_resolution() == TAU_EBS_RESOLUTION_FUNCTION) {
             buff = (char*)malloc(strlen(tag) +
                     strlen(resolvedInfo.funcname) +
                     strlen(resolvedInfo.filename) + 32);
-            sprintf(buff, "[%s] %s [{%s} {%d}]",
+            sprintf(buff, "[%s] %s [{%s} {0}]",
                 tag, resolvedInfo.funcname,
-                resolvedInfo.filename,
-                Tau_get_lineno_for_function(TheBfdUnitHandle(),
-                                            resolvedInfo.funcname));
+                resolvedInfo.filename);
+            *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + 2);
+            sprintf(*newShortName, "%s", resolvedInfo.funcname);
         } else { // Line resolution
             buff = (char*)malloc(strlen(tag) +
                     strlen(resolvedInfo.funcname) +
@@ -877,14 +939,10 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
             sprintf(buff, "[%s] %s [{%s} {%d}]",
                 tag, resolvedInfo.funcname,
                 resolvedInfo.filename, resolvedInfo.lineno);
+            *newShortName = (char*)malloc(strlen(resolvedInfo.filename) + strlen(lineno) + 2);
+            sprintf(*newShortName, "%s.%d", resolvedInfo.filename, resolvedInfo.lineno);
         }
     }
-    *newShortName = (char*)malloc(strlen(resolvedInfo.filename) + strlen(lineno) + 2);
-    sprintf(*newShortName, "%s.%d", resolvedInfo.filename, resolvedInfo.lineno);
-    //newName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
-    //sprintf(newName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
-    //*newShortName = newName;
-    //TAU_VERBOSE("resolved function name (newName in TauSampling.cpp) = %s\n", newName);
   } else {
     char const * mapName = "UNKNOWN";
     if (TauEnv_get_bfd_lookup()) {
@@ -985,7 +1043,10 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
       for (int i = 2; i < length; ++i) {
         unsigned long address = addresses[i];
         callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-            address, "UNWIND", prevShortName, &newShortName, addAddress));
+            address, "UNWIND",
+            ((TauEnv_get_ebs_resolution() == TAU_EBS_RESOLUTION_LINE) ?
+            prevShortName : NULL),
+            &newShortName, addAddress));
         // free the previous short name now.
         if (prevShortName) {
           free(prevShortName);
@@ -1351,7 +1412,9 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
     samplingContext = profiler->ThisFunction;
   }
 
+#ifndef __NEC__
   TAU_ASSERT(samplingContext != NULL, "samplingContext == NULL!");
+#endif
 
   /* Get the current metric values */
   double values[TAU_MAX_COUNTERS] = { 0.0 };
@@ -1764,12 +1827,19 @@ int Tau_sampling_init(int tid, pid_t pid)
         return -1;
     }
     act.sa_sigaction = Tau_sampling_handler;
-    act.sa_flags = SA_SIGINFO | SA_RESTART;
+
+    // By default, we use SA_RESTART so that syscalls are automatically restarted instead of
+    // returning EINTR.
+    act.sa_flags = SA_RESTART | SA_SIGINFO;
 
     // initialize the application signal action, so we can apply it
     // after we run our signal handler
     struct sigaction query_action;
+    // If the application explicitly disabled syscall restart, leave it that way.
     ret = sigaction(TAU_ALARM_TYPE, NULL, &query_action);
+    if(query_action.sa_handler != SIG_DFL && query_action.sa_handler != SIG_IGN && !(query_action.sa_flags & SA_RESTART)) {
+        act.sa_flags = SA_SIGINFO;
+    }
     if (ret != 0) {
         fprintf(stderr, "TAU: Sampling error 3: %s\n", strerror(ret));
         return -1;
@@ -1839,6 +1909,10 @@ int Tau_sampling_init(int tid, pid_t pid)
    TAU_VERBOSE(" *** (S%d) send alarm to %d\n", gettid(), sev.sigev_notify_thread_id);
 #endif
    ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
+   {
+     std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
+     TheThreadTimerMap()[pid == 0 ? RtsLayer::getTid() : pid] = timerid;
+   }
    TAU_VERBOSE("Created sampling timer for TAU tid = %d, kernel TID = %jd\n", tid, (intmax_t)sev.sigev_notify_thread_id);
   if (ret != 0) {
     fprintf(stderr, "TAU: (%d, %d) Sampling error 6: %s\n", RtsLayer::myNode(), RtsLayer::myThread(), strerror(ret));
@@ -1976,6 +2050,9 @@ extern "C" void Tau_sampling_defer_init(void) {
 #endif /* TAU_FUJITSU */
 #else
     const pid_t pid = JNIThreadLayer::GetThreadSid();
+#endif
+#ifdef TAU_FX_AARCH64
+    const pid_t pid = syscall(__NR_gettid);
 #endif
 #else
     fprintf(stderr, "TAU: WARNING: Thread %d was started before MPI_Init, but this system "

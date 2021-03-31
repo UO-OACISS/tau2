@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <map>
+#include <set>
 
 #ifdef TAU_USE_STDCXX11
 #include <thread>
@@ -205,7 +206,7 @@ extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * res
 }
 
 extern "C" size_t Tau_util_return_hash_of_string(const char * input) {
-#if defined(__clang__) // && defined(__APPLE__)
+#if (defined(__clang__) || defined (TAU_FX_AARCH64) ) // && defined(__APPLE__)
   std::hash<std::string> hash_fn;
 #else
   std::tr1::hash<std::string> hash_fn;
@@ -546,9 +547,16 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
   TAU_VERBOSE("TAU: Trying to load plugin with name %s\n", token);
 
   fullpath = (char*)calloc(TAU_NAME_LENGTH, sizeof(char));
+  std::set<std::string> plugins_seen;
 
   while(token != NULL)
   {
+    // check to make sure we haven't loaded it already!
+    std::string tmp(token);
+    if (plugins_seen.count(tmp) > 0) {
+        token = strtok_r(NULL, ":", &save_ptr);
+        continue;
+    }
     TAU_VERBOSE("TAU: Loading plugin: %s\n", token);
     strcpy(fullpath, "");
     strcpy(fullpath,pluginpath);
@@ -556,6 +564,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
       printf("TAU: Plugin name specification does not match form <plugin_name1>(<plugin_arg1>,<plugin_arg2>):<plugin_name2>(<plugin_arg1>,<plugin_arg2>) for: %s\n",token);
       return -1;
     }
+    plugins_seen.insert(tmp);
 
 #ifndef TAU_WINDOWS
     sprintf(fullpath, "%s/%s", pluginpath, plugin_name);
@@ -1498,12 +1507,14 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * s
 
   PluginKey key_(event, hash_);
 
-  if(!Tau_get_plugins_for_named_specific_event()[key_].empty()) {
+  auto it_ = Tau_get_plugins_for_named_specific_event().find(key_);
+  if(it_ != Tau_get_plugins_for_named_specific_event().end() && !it_->second.empty()) {
      hash = hash_;
   } else if (matching_regex != NULL) {
      size_t hash__ = Tau_util_return_hash_of_string(matching_regex);
      PluginKey key__(event, hash__);
-     if(Tau_get_plugins_for_named_specific_event()[key__].empty()) {
+     auto it__ = Tau_get_plugins_for_named_specific_event().find(key__);
+     if(it__ == Tau_get_plugins_for_named_specific_event().end() || it__->second.empty()) {
        hash = star_hash;
      } else {
        hash = hash__;

@@ -72,11 +72,13 @@ static void close_file() {
     Tau_global_incr_insideTAU();
     mtx.lock();
     uint64_t end = TauMetrics_getTimeOfDay();
-    tracefile << "{\"timestamp\": " << std::fixed << end
-              << ", \"duration\": " << std::fixed << 1
+    tracefile << "{\"ts\": " << std::fixed << end
+              << ", \"dur\": " << std::fixed << 1
+              << ", \"ph\": \"X\", \"tid\": 0"
+              << ", \"pid\": " << std::fixed << Tau_get_node()
               << ", \"step\": " << std::fixed << step
-              << ", \"type\": \"none\""
-              << ", \"function\": \"program exit\"}\n]\n";
+              << ", \"cat\": \"TAU\""
+              << ", \"name\": \"program exit\"}\n]\n";
 
     /* Close the file */
     if (tracefile.is_open()) {
@@ -119,8 +121,10 @@ int Tau_plugin_skel_current_timer_exit(Tau_plugin_event_current_timer_exit_data_
     //double value = (end - start) * CONVERT_TO_USEC;
     uint64_t value = end - start;
     mtx.lock();
-    (*active_stream) << "{\"timestamp\": " << std::fixed << start
-              << ", \"duration\": " << std::fixed << value
+    (*active_stream) << "{\"ts\": " << std::fixed << start
+              << ", \"dur\": " << std::fixed << value
+              << ", \"ph\": \"X\", \"tid\": 0"
+              << ", \"pid\": " << std::fixed << Tau_get_node()
               << ", \"step\": " << std::fixed << step
               << ", " << data->name_prefix << "},\n";
     mtx.unlock();

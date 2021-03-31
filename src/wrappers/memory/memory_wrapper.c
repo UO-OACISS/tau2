@@ -21,7 +21,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
-  
+
 #include <memory.h>
 #if (defined(__APPLE_CC__) || defined(TAU_APPLE_XLC) || defined(TAU_APPLE_PGI))
 #include <malloc/malloc.h>
@@ -61,6 +61,7 @@ memalign_t memalign_system;
 posix_memalign_t posix_memalign_system;
 valloc_t valloc_system;
 pvalloc_t pvalloc_system;
+puts_t puts_system;
 
 // Memory for bootstrapping.  Must not be static.
 char bootstrap_heap[BOOTSTRAP_HEAP_SIZE];
@@ -475,6 +476,44 @@ void * pvalloc_wrapper(size_t size)
     return pvalloc_system(size);
   } else {
     return Tau_pvalloc(size, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
+  }
+}
+
+/*********************************************************************
+ * puts
+ * We need to wrap puts simply so we don't generate a false positive
+ * on printf() statememts.  puts will allocate some memory to buffer
+ * output, and TAU will report it as a leak otherwise.
+ ********************************************************************/
+
+int puts_wrapper(const char *s)
+{
+  static int initializing = 0;
+  static int bootstrapped = 0;
+
+  if (!bootstrapped) {
+    if (!initializing) {
+      initializing = 1;
+      puts_system = get_system_puts();
+    }
+
+    if (!puts_system) {
+      return 0;
+    }
+
+    if (memory_wrapper_init()) {
+      return puts_system(s);
+    }
+
+    bootstrapped = 1;
+  }
+
+  if (*memory_wrapper_disabled_flag()) {
+    return puts_system(s);
+  } else {
+    memory_wrapper_disable();
+    return puts_system(s);
+    memory_wrapper_enable();
   }
 }
 

@@ -118,10 +118,29 @@ void Tau_call_post_init_callbacks() {
 }
 
 // True if TAU is fully initialized
-int tau_initialized = 0;
+int& tau_initialized() {
+  static int _tau_initialized = 0;
+  return _tau_initialized;
+}
 
 // True if TAU is initializing
-int initializing = 0;
+int& initializing() {
+  static int _initializing = 0;
+  return _initializing;
+}
+
+// True if currently inside Tau_init_initializeTAU()
+// This is different from tau_initialized() which becomes true partway
+// through Tau_init_initializeTAU(), at the point when timers can be
+// created.
+int& tau_inside_initialize() {
+  static int _tau_inside_initialize = 0;
+  return _tau_inside_initialize;
+}
+
+int Tau_get_inside_initialize() {
+  return tau_inside_initialize();
+}
 
 // Rely on the dl auditor (src/wrapper/taupreload) to set dl_initialized
 // if the audit feature is available (GLIBC version 2.4 or greater).
@@ -171,7 +190,7 @@ static void tauToggleInstrumentationHandler(int sig)
        int i, frames = backtrace(callstack, 128);
        char** strs = backtrace_symbols(callstack, frames);
        for (i = 0; i < frames; ++i) {
-         fprintf(stderr,"[%d,%d]:[%d,%d] %s\n", RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myNode(), RtsLayer::myThread(), strs[i]);
+         TAU_VERBOSE("[%d,%d]:[%d,%d] %s\n", RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myNode(), RtsLayer::myThread(), strs[i]);
        }
        free(strs);
   exit(0);
@@ -307,14 +326,14 @@ int Tau_init_epilog(void) {
 extern "C"
 int Tau_init_check_initialized()
 {
-  return tau_initialized;
+  return tau_initialized();
 }
 
 
 extern "C"
 int Tau_init_initializingTAU()
 {
-  return initializing - tau_initialized;
+  return initializing() - tau_initialized();
 }
 
 extern "C"
@@ -336,6 +355,12 @@ int Tau_profile_exit_scorep()
   return 0;
 }
 
+/* disable this stupid thing */
+extern "C" int __attribute__((weak)) PetscPopSignalHandler(void) {
+    return 0;
+}
+typedef int(*PetscPopSignalHandler_p)(void);
+
 //////////////////////////////////////////////////////////////////////
 // Initialize signal handling routines
 //////////////////////////////////////////////////////////////////////
@@ -348,6 +373,12 @@ int Tau_signal_initialization()
 
   if (TauEnv_get_track_signals()) {
     TAU_VERBOSE("TAU: Enable signal tracking\n");
+
+    /* Disable the PETSc signal handler, if it exists */
+    PetscPopSignalHandler_p foo = &PetscPopSignalHandler;
+    if (foo != NULL) {
+        foo();
+    }
 
     tauAddSignal(SIGILL);
     tauAddSignal(SIGINT);
@@ -465,8 +496,10 @@ extern "C" int Tau_init_initializeTAU()
 {
 
   //protect against reentrancy
-  if (initializing) return 0;
-  initializing = 1;
+  if (initializing()) return 0;
+  initializing() = 1;
+
+  tau_inside_initialize() = true;
 
   //Initialize locks.
   RtsLayer::Initialize();
@@ -540,7 +573,7 @@ extern "C" int Tau_init_initializeTAU()
 #endif
 
   // Mark initialization complete so calls below can start timers
-  tau_initialized = 1;
+  tau_initialized() = 1;
 
   Tau_signal_initialization();
 
@@ -571,7 +604,9 @@ extern "C" int Tau_init_initializeTAU()
 
 #ifdef __MIC__
   if (TauEnv_get_mic_offload()) {
-    TAU_PROFILE_SET_NODE(0);
+    if (Tau_get_node() == -1) {
+        TAU_PROFILE_SET_NODE(0);
+    }
   }
 #endif
 
@@ -589,5 +624,6 @@ extern "C" int Tau_init_initializeTAU()
 #endif // TAU_MPI
 
   initialized = true;
+  tau_inside_initialize() = false;
   return 0;
 }

@@ -80,7 +80,9 @@ void ps_tool_initialize(void) {
     _argv[0] = (char *)(_dummy);
     Tau_init(_argc, _argv);
 #ifndef TAU_MPI
-    Tau_set_node(0);
+    if (Tau_get_node() < 0) {
+        Tau_set_node(0);
+    }
 #endif
     /* Disable throttling, because if users use ps_tool_stop_current(),
      * throttling will cause Tau_start() to do nothing for throttled events,
@@ -97,9 +99,11 @@ void ps_tool_register_thread(void) {
 void Tau_profile_exit_all_threads();
 
 void ps_tool_finalize(void) {
+#ifndef TAU_MPI
     //Tau_destructor_trigger();
     //Tau_profile_exit_all_threads();
     Tau_exit("stub exiting");
+#endif
 }
 
 void ps_tool_pause_measurement(void) {
@@ -140,11 +144,11 @@ void ps_tool_timer_stop(const void * timer) {
 }
 
 void ps_tool_start_string(const char * name) {
-    Tau_start(name);
+    Tau_pure_start_task_group(name, Tau_get_thread(), "TAU_PERFSTUBS");
 }
 
 void ps_tool_stop_string(const char * name) {
-    Tau_stop(name);
+    Tau_pure_stop_task(name, Tau_get_thread());
 }
 
 void ps_tool_stop_current(void) {

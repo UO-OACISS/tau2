@@ -28,7 +28,7 @@ armciwrap_shared.o: armciwrapper.c
 	$(CC) $(CFLAGS) $(TAU_INTERNAL_FLAGS) -c armciwrapper.c -o armciwrap_shared.o
 
 libTAU-armciwrap$(TAU_SHLIBX): armciwrap_shared.o
-	$(CC) $(TAU_SHFLAGS) libTAU-armciwrap$(TAU_SHLIBX) armciwrap_shared.o $(TAU_SHAREDLIBS) -ldl -L$(ARMCIDIR)/lib -larmci -lga
+	$(CC) $(TAU_SHFLAGS) libTAU-armciwrap$(TAU_SHLIBX) armciwrap_shared.o -ldl -L$(ARMCIDIR)/lib -larmci -lga
 
 clean:
 	/bin/rm -f armciwrapper.o libTauARMCIWrapper.a armciwrap_shared.o libTAU-armciwrap$(TAU_SHLIBX)

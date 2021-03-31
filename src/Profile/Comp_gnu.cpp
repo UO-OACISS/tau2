@@ -116,6 +116,11 @@ static HashTable & TheHashTable()
   return htab;
 }
 
+static TAU_HASH_MAP<unsigned long, HashNode*>& TheLocalHashTable(){
+  static thread_local TAU_HASH_MAP<unsigned long, HashNode*> lhtab;
+  return lhtab;
+}
+
 static tau_bfd_handle_t & TheBfdUnitHandle()
 {
   static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
@@ -158,7 +163,7 @@ bool isExcluded(char const * funcname)
 
 void updateHashTable(unsigned long addr, const char *funcname)
 {
-  HashNode * hn = TheHashTable()[addr];
+  HashNode * hn = TheLocalHashTable()[addr];
   if (!hn) {
     RtsLayer::LockDB();
     hn = TheHashTable()[addr];
@@ -166,6 +171,7 @@ void updateHashTable(unsigned long addr, const char *funcname)
       hn = new HashNode;
       TheHashTable()[addr] = hn;
     }
+    TheLocalHashTable()[addr] = hn;
     RtsLayer::UnLockDB();
   }
   hn->info.funcname = funcname;
@@ -193,6 +199,7 @@ void runOnExit()
     delete node;
   }
   mytab.clear();
+
 #ifdef TAU_BFD
   Tau_delete_bfd_units();
 #endif
@@ -245,16 +252,23 @@ void profile_func_exit(void*, void*);
 #if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_enter
 #endif /* SICORTEX || TAU_SCOREP */
+
+
 void __cyg_profile_func_enter(void* func, void* callsite)
 {
   static bool gnu_init = true;
   HashNode * node;
   /* This is the entry point into TAU from PDT-instrumented C++ codes, so
    * make sure that TAU is ready to go before doing anything else! */
-  static int do_this_once = Tau_init_initializeTAU();
 
   // Don't profile if we're done executing or still initializing
-  if (executionFinished || Tau_init_initializingTAU()) return;
+  if (executionFinished || Tau_init_initializingTAU() || Tau_get_inside_initialize()) return;
+
+  static int do_this_once = Tau_init_initializeTAU();
+
+  // Don't profile TAU internals. This also prevents reentrancy.
+  if (Tau_global_get_insideTAU() > 0) return;
+
 
   // Convert void * to integer
   void * funcptr = func;
@@ -273,7 +287,8 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered());
 
     // Get the hash node
-    node = TheHashTable()[addr];
+
+    node = TheLocalHashTable()[addr];
     if (!node) {
       // We must be inside TAU before we lock the database
       TauInternalFunctionGuard protects_this_region;
@@ -290,16 +305,15 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         node->fi = NULL;
         node->excluded = false;
         TheHashTable()[addr] = node;
+
       }
+      TheLocalHashTable()[addr] =  node;
       RtsLayer::UnLockDB();
     }
-
     // Skip excluded functions
     if (node->excluded) return;
   } // END protected region
 
-  // Don't profile TAU internals. This also prevents reentrancy.
-  if (Tau_global_get_insideTAU() > 0) return;
 
   // Construct and start the function timer.  This region needs to be protected
   // in all situations.
@@ -466,6 +480,12 @@ void __cyg_profile_func_exit(void* func, void* callsite)
   // Don't profile if we're still initializing.
   if (Tau_init_initializingTAU()) return;
 
+  // Don't profile if we're done initializing but have yet to return from the init function
+  if (Tau_get_inside_initialize()) return;
+
+  // Don't profile TAU internals. This also prevents reentrancy.
+  if (Tau_global_get_insideTAU() > 0) return;
+
   HashNode * hn;
   unsigned long addr;
 
@@ -485,14 +505,16 @@ void __cyg_profile_func_exit(void* func, void* callsite)
     addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
     // Get the hash node
-    hn = TheHashTable()[addr];
-
+    hn = TheLocalHashTable()[addr];
+    if(!hn){
+        RtsLayer::LockDB();
+        hn = TheHashTable()[addr];
+        RtsLayer::UnLockDB();
+    }
     // Skip excluded functions or functions we didn't enter
     if (!hn || hn->excluded || !hn->fi) return;
   } // END protected region
 
-  // Don't profile TAU internals. This also prevents reentrancy.
-  if (Tau_global_get_insideTAU() > 0) return;
 
 
   // Stop the timer.  This routine is protected so we don't need another guard.
@@ -525,6 +547,13 @@ void __pat_tp_func_return(const void *ea, const void *ra)
   __cyg_profile_func_exit((void *)ea, (void *)ra);
 }
 
+#ifdef TAU_FX_AARCH64
+int __cxa_thread_atexit(void (*func)(), void *obj,
+                                   void *dso_symbol) {
+  int __cxa_thread_atexit_impl(void (*)(), void *, void *);
+  return __cxa_thread_atexit_impl(func, obj, dso_symbol);
+}
+#endif /* TAU_FX_AARCH64 */
 }    // extern "C"
 
 #endif /* TAU_XLC */

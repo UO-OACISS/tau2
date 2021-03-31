@@ -41,6 +41,10 @@
 using json = nlohmann::json;
 json configuration;
 
+#ifdef CUPTI
+#include "tau_nvml.hpp"
+#endif
+
 #define ONE_BILLION  1000000000
 #define ONE_BILLIONF 1000000000.0
 
@@ -213,6 +217,7 @@ std::vector<cpustats_t*> * previous_cpu_stats = nullptr;
 std::vector<netstats_t*> * previous_net_stats = nullptr;
 std::vector<netstats_t*> * previous_self_net_stats = nullptr;
 iostats_t * previous_io_stats = nullptr;
+size_t num_metrics = 0;
 
 pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_cond_t _my_cond; // for timer
@@ -220,6 +225,12 @@ pthread_t worker_thread;
 bool done;
 int rank_getting_system_data;
 int my_rank = 0;
+#ifdef CUPTI
+tau::nvml::monitor& get_nvml_reader() {
+    static tau::nvml::monitor nvml_reader;
+    return nvml_reader;
+}
+#endif
 
 void * find_user_event(const std::string& name) {
     void * ue = NULL;
@@ -433,8 +444,11 @@ void initialize_papi_events(bool do_components) {
         for (auto i : metrics) {
             std::string metric(i);
             // PAPI is either const char * or char * depending on version.  Fun.
-            if ((retval = PAPI_add_named_event(papi_periodic_event_set, (char*)(metric.c_str()))) != PAPI_OK)
-                printf("Error: PAPI_add_event: %d %s %s\n", retval, PAPI_strerror(retval), metric.c_str());
+            if ((retval = PAPI_add_named_event(papi_periodic_event_set, (char*)(metric.c_str()))) != PAPI_OK) {
+                printf("Error: PAPI_add_event: %d %s %s\n", retval, PAPI_strerror(retval), metric.c_str()); 
+	    } else {
+                num_metrics++;
+	    }
         }
         if (metrics.size() > 0) {
             papi_periodic_values = (long long*)(calloc(metrics.size(), sizeof(long long)));
@@ -594,10 +608,10 @@ std::vector<cpustats_t*> * read_cpu_stats() {
 #endif
                 cpu_stats->push_back(cpu_stat);
             }
-#if defined(__PGI)
+//#if defined(__PGI)
             // only do the first line.
             break;
-#endif
+//#endif
         }
     }
     fclose(pFile);
@@ -813,13 +827,6 @@ void parse_proc_self_status() {
             if (results[0].find("_allowed_list") != std::string::npos) {
                 Tau_metadata_task(const_cast<char*>(results[0].c_str()),
                 const_cast<char*>(results[1].c_str()), 0);
-            }
-        }
-        if (results[0].find("Threads") != std::string::npos) {
-            char* pEnd;
-            double d1 = strtod (results[1].c_str(), &pEnd);
-            if (pEnd) {
-                sample_value(source, "status", results[0].c_str(), d1, 100LL);
             }
         }
     }
@@ -1052,7 +1059,9 @@ void read_components(void) {
             free(values);
         }
     }
-    if (configuration.count("PAPI metrics")) {
+    if (num_metrics > 0) {
+	// reset the counters to zero
+	memset(papi_periodic_values, 0, (sizeof(long long) * num_metrics));
         int retval = PAPI_accum(papi_periodic_event_set, papi_periodic_values);
         if (retval != PAPI_OK) {
             TAU_VERBOSE("Error: PAPI_read: %d %s\n", retval, PAPI_strerror(retval));
@@ -1065,8 +1074,13 @@ void read_components(void) {
                     TAU_VERBOSE("Bogus (probably derived/multiplexed) value: %s %lld\n", metric.c_str(), papi_periodic_values[index]);
                     papi_periodic_values[index] = 0LL;
                 }
-                void * ue = find_user_event(metric.c_str());
-                Tau_userevent_thread(ue, ((double)papi_periodic_values[index]), 0);
+                if (TauEnv_get_tracing()) {
+                    Tau_trigger_userevent(metric.c_str(),
+                        ((double)papi_periodic_values[index]));
+                } else {
+                    void * ue = find_user_event(metric.c_str());
+                    Tau_userevent_thread(ue, ((double)papi_periodic_values[index]), 0);
+                }
                 // set it back to zero so we can use PAPI_accum and not PAPI_reset
                 papi_periodic_values[index] = 0;
                 index++;
@@ -1092,6 +1106,10 @@ void read_components(void) {
 #endif
 
     if (my_rank == rank_getting_system_data) {
+#ifdef CUPTI
+        get_nvml_reader().query();
+#endif
+
 #if !defined(__APPLE__)
         /* records the load, without context */
         Tau_track_load();
@@ -1174,6 +1192,12 @@ void * Tau_monitoring_plugin_threaded_function(void* data) {
     /* Set the wakeup time (ts) to 2 seconds in the future. */
     struct timespec ts;
     struct timeval  tp;
+
+    /* If we are tracing while doing periodic measurements, then register
+     * this thread so we don't collide with events on thread 0 */
+    if (TauEnv_get_tracing()) {
+        Tau_register_thread();
+    }
 
     while (!done) {
         // take a reading...

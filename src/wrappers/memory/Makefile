@@ -20,7 +20,7 @@ install: install-static install-shared
 	cp link_options.tau $(INSTALLDEST)/wrappers/memory_wrapper
 
 $(TAU_MEMORYWRAP_SHARED): $(DYNAMIC_OBJ)
-	$(CC) $(TAU_SHFLAGS) $@ $(DYNAMIC_OBJ) $(TAU_SHAREDLIBS) -ldl
+	$(CC) $(TAU_SHFLAGS) $@ $(DYNAMIC_OBJ) -ldl
 
 libTauMemoryWrap.a: $(STATIC_OBJ)
 	$(TAU_AR) $(ARFLAGS) $@ $(STATIC_OBJ)

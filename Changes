@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2020						   **
+**    Copyright 1997-2021						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Research Centre Juelich, Germany                                     **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
@@ -10,6 +10,19 @@
 
 Change log:
 ------------
+Version 2.30 changes (from 2.29):
+1. Added support for Fugaku Fujitsu FX system with Fujitsu compilers (-mpi -bfd=download) for Fugaku. 
+2. Added support for Intel OneAPI (TigerLake Intel GPUs) (-opencl=<dir> -level_zero=<dir>). See examples/gpu/oneapi.
+3. Enhanced support for PAPI for NEC SX Aurora (-arch=nec-sx-aurora) using TAU_METRICS and tau_exec -ebs. 
+4. Added preliminary support for Apple macOS arm64_apple architecture (M1 Mac Mini). 
+5. Updated support for ROCm 3.9 and use of pthread with ROCm in system installed rocm (not spack). 
+6. Updated TAU to use PAPI from git repo on NEC SX Aurora. 
+7. Updated 3D support in ParaProf using new Jogl libs for Apple M1 macs (arch is arm64_apple). 
+8. Added support for demangling dpcpp kernel names using the -fno-sycl-unnamed-lambda compiler flag. 
+9. Added support for Cray CCE compilers on A64FX (aarch64) systems (Ookami) without libunwind. 
+10. Added support for flang v12 using gfortran as backend. 
+
+
 Version 2.29 changes (from 2.28):
 1. Updated OMPT support.
 2. Updated CUDA 10 support.

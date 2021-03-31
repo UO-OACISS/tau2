@@ -260,9 +260,14 @@ extern void TauFlushRocmEventsIfNecessary(int thread_id) {
     TAU_VERBOSE("TauFlushRocmEventsIfNecessary: reentrant_flag = true, tid = %d\n", thread_id); 
     return;
   }
-  reentrant_flag = true; 
+  if (Tau_is_thread_id_rocm_task(thread_id)) {
+    reentrant_flag = true; 
+  }
+  else {
+    return; 
+  }
   TAU_VERBOSE("Inside TauFlushRocmEventsIfNecessary: tid = %d\n", thread_id);
-  if(!Tau_is_thread_id_rocm_task(thread_id)) return ;
+  //if(!Tau_is_thread_id_rocm_task(thread_id)) return ;
 
   if (TauRocmList.empty()) return;
   TAU_VERBOSE("Inside unload! publishing...\n");

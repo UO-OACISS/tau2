@@ -34,7 +34,14 @@ extern "C" {
 #endif
 
 // Size of heap memory for library wrapper bootstrapping
+#ifdef __APPLE__
+// Starting on macOS 11, PAGE_SIZE is not constant on macOS
+// Apple recommends using PAGE_MAX_SIZE instead.
+// see https://developer.apple.com/videos/play/wwdc2020/10214/?time=549
+#define BOOTSTRAP_HEAP_SIZE (3*PAGE_MAX_SIZE)
+#else
 #define BOOTSTRAP_HEAP_SIZE (3*PAGE_SIZE)
+#endif
 
 // Types of function pointers for wrapped functions
 typedef void * (*malloc_t)(size_t);
@@ -44,6 +51,7 @@ typedef void * (*memalign_t)(size_t, size_t);
 typedef int    (*posix_memalign_t)(void **, size_t, size_t);
 typedef void * (*valloc_t)(size_t);
 typedef void * (*pvalloc_t)(size_t);
+typedef int    (*puts_t)(const char *);
 typedef void   (*free_t)(void *);
 
 
@@ -55,6 +63,7 @@ memalign_t get_system_memalign();
 posix_memalign_t get_system_posix_memalign();
 valloc_t get_system_valloc();
 pvalloc_t get_system_pvalloc();
+puts_t get_system_puts();
 free_t get_system_free();
 
 void * malloc_wrapper(size_t size);
@@ -65,6 +74,7 @@ void * memalign_wrapper(size_t alignment, size_t size);
 int posix_memalign_wrapper(void ** ptr, size_t alignment, size_t size);
 void * valloc_wrapper(size_t size);
 void * pvalloc_wrapper(size_t size);
+int puts_wrapper(const char *s);
 
 #ifdef __cplusplus
 } /* extern "C" */

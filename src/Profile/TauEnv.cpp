@@ -50,6 +50,7 @@
 #include <set>
 
 #include <iostream>
+#include <sstream>
 using namespace std;
 
 #ifndef TAU_BGP
@@ -124,7 +125,11 @@ using namespace std;
 
 #define TAU_EBS_SOURCE_DEFAULT "itimer"
 #define TAU_EBS_UNWIND_DEFAULT 0
+#ifdef TAU_USE_BACKTRACE
+#define TAU_EBS_UNWIND_DEPTH_DEFAULT 0
+#else
 #define TAU_EBS_UNWIND_DEPTH_DEFAULT 10
+#endif
 
 #define TAU_EBS_RESOLUTION_STR_LINE "line"
 #define TAU_EBS_RESOLUTION_STR_FILE "file"
@@ -244,6 +249,8 @@ extern "C" {
 
 static int env_synchronize_clocks = 0;
 static int env_verbose = 0;
+static int env_verbose_file = 0;
+static int env_verbose_rank = -1;
 static int env_throttle = 0;
 static double env_evt_threshold = 0.0;
 static int env_interval = 0;
@@ -298,6 +305,7 @@ static int env_ebs_resolution = TAU_EBS_RESOLUTION_LINE;
 
 static int env_stat_precompute = 0;
 static int env_child_forkdirs = 0;
+static int env_l0_api_tracing = 0;
 
 static int env_profile_format = TAU_FORMAT_PROFILE;
 static const char *env_profile_prefix = NULL;
@@ -594,9 +602,30 @@ static int TauConf_read()
   const char *tmp;
   char conf_file_name[1024];
 
+/* Eagerly get some settings needed for configuring verbose output */
+
   tmp = getenv("TAU_VERBOSE");
   if (parse_bool(tmp)) {
     env_verbose = 1;
+    tmp = getenv("TAU_VERBOSE_FILE");
+    if (parse_bool(tmp,env_verbose_file)) {
+        env_verbose_file = 1;
+    }
+    tmp = getenv("TAU_VERBOSE_RANK");
+    if (parse_int(tmp,env_verbose_rank)) {
+        env_verbose_rank = Tau_get_node();
+    }
+    if ((env_profiledir = getenv("PROFILEDIR")) == NULL) {
+      env_profiledir = ".";   /* current directory */
+#ifdef TAU_GPI
+      // if exe is /usr/local/foo, this will return /usr/local where profiles
+      // may be stored if PROFILEDIR is not specified
+      char const * cwd = Tau_get_cwd_of_exe();
+      if (cwd) {
+        env_profiledir = strdup(cwd);
+      }
+#endif /* TAU_GPI */
+    }
   } else {
     env_verbose = 0;
   }
@@ -731,6 +760,26 @@ char * Tau_check_dirname(const char * dir)
 
 /****************************************************************************/
 
+class Tau_logfile_t {
+public:
+    FILE * pfile;
+    Tau_logfile_t() : pfile(stderr) {
+        if (env_verbose_file == 1 &&
+            env_verbose_rank == Tau_get_node()) {
+            std::stringstream ss;
+            ss << env_profiledir << "/tau." << Tau_get_node() << ".log";
+            std::string tmp(ss.str());
+            pfile = fopen(tmp.c_str(),"w");
+        }
+    }
+    ~Tau_logfile_t() {
+        if (env_verbose_file == 1 &&
+            env_verbose_rank == Tau_get_node()) {
+            fclose(pfile);
+        }
+    }
+};
+
 extern "C" { /* C linkage */
 
 #ifdef TAU_GPI
@@ -743,6 +792,7 @@ extern "C" { /* C linkage */
 void TAU_VERBOSE(const char *format, ...)
 {
   if (env_verbose == 1) {
+    static Tau_logfile_t foo;
     TauInternalFunctionGuard protects_this_function;
     va_list args;
 
@@ -763,10 +813,10 @@ void TAU_VERBOSE(const char *format, ...)
 #ifdef TAU_GPI
     gpi_vprintf(format, args);
 #else
-    vfprintf(stderr, format, args);
+    vfprintf(foo.pfile, format, args);
 #endif
     va_end(args);
-    fflush(stderr);
+    fflush(foo.pfile);
 
 #endif
   } // END inside TAU
@@ -878,6 +928,10 @@ int TauEnv_get_callsite_offset() {
 
 int TauEnv_get_compensate() {
   return env_compensate;
+}
+
+int TauEnv_get_level_zero_enable_api_tracing() {
+  return env_l0_api_tracing;
 }
 
 int TauEnv_get_comm_matrix() {
@@ -1340,6 +1394,21 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: VERBOSE enabled\n");
       TAU_METADATA("TAU_VERBOSE", "on");
       env_verbose = 1;
+    }
+
+    tmp = getconf("TAU_VERBOSE_FILE");
+    if (parse_bool(tmp,env_verbose_file)) {
+      TAU_VERBOSE("TAU: VERBOSE to file enabled\n");
+      TAU_METADATA("TAU_VERBOSE_FILE", "on");
+      env_verbose_file = 1;
+    }
+
+    tmp = getconf("TAU_VERBOSE_RANK");
+    if (parse_int(tmp,env_verbose_rank)) {
+      TAU_VERBOSE("TAU: VERBOSE RANK enabled\n");
+      sprintf(tmpstr, "%d", env_verbose_rank);
+      TAU_METADATA("TAU_VERBOSE_RANK", tmpstr);
+      env_verbose_rank = Tau_get_node();
     }
 
     sprintf(tmpstr, "%d", TAU_MAX_THREADS);
@@ -2072,6 +2141,11 @@ void TauEnv_initialize()
     env_throttle_percall = TAU_THROTTLE_PERCALL_DEFAULT;
     if (percall) {
       env_throttle_percall = strtod(percall, 0);
+    }
+
+    const char *l0_api_tracing = getconf("ZE_ENABLE_API_TRACING");
+    if (l0_api_tracing) {
+      env_l0_api_tracing =1 ; /* Intel OneAPI Level Zero API TRACING */
     }
 
     const char *evt_threshold = getconf("TAU_EVENT_THRESHOLD");

@@ -838,7 +838,9 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 
     Tau_init_initializeTAU();
 #ifndef TAU_MPI
-    TAU_PROFILE_SET_NODE(0);
+    if (Tau_get_node() == -1) {
+        TAU_PROFILE_SET_NODE(0);
+    }
 #endif /* TAU_MPI */
 
     /* Register the current thread, since the JVM makes calls with the first thread, before

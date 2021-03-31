@@ -16,12 +16,13 @@
 
 
 //////////////////////////////////////////////////////////////////////
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <sstream>
 #include <tau_types.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauMemory.h>
@@ -36,8 +37,8 @@
 #endif
 #include <errno.h>
 #ifdef __PIN__
-void *pvalloc(size_t size) { 
-   return malloc(size); 
+void *pvalloc(size_t size) {
+   return malloc(size);
 }
 #endif /* __PIN__ */
 
@@ -703,9 +704,13 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TriggerHeapMemoryUsageEvent() {
   TAU_REGISTER_EVENT(evt, "Heap Memory Used (KB)");
-  /* Make the measurement on thread 0, because we are 
+  /* Make the measurement on thread 0, because we are
    * recording the heap for the process. */
-  Tau_userevent_thread(evt, Tau_max_RSS(), 0);
+  int tid = 0;
+  if (TauEnv_get_tracing()) {
+    tid = RtsLayer::myThread();
+  }
+  Tau_userevent_thread(evt, Tau_max_RSS(), tid);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1726,13 +1731,22 @@ else {
 #endif
 }
 
+const char * get_status_file() {
+    std::stringstream ss;
+    //ss << "/proc/" << RtsLayer::getPid() << "/status";
+    ss << "/proc/self/status";
+    static std::string filename(ss.str());
+    return filename.c_str();
+}
+
 //////////////////////////////////////////////////////////////////////
 // Tau_open_status returns the file descriptor of /proc/self/status
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_open_status(void) {
 
-#ifndef TAU_WINDOWS 
-  int fd = open ("/proc/self/status", O_RDONLY);
+#ifndef TAU_WINDOWS
+  const char * filename = get_status_file();
+  int fd = open (filename, O_RDONLY);
 #else
   int fd = -1;
 #endif /* TAU_WINDOWS */
@@ -1745,20 +1759,23 @@ extern "C" int Tau_open_status(void) {
 }
 
 //////////////////////////////////////////////////////////////////////
-// Tau_read_status returns the VmRSS and VmHWM (high water mark of 
+// Tau_read_status returns the VmRSS and VmHWM (high water mark of
 // RSS or resident set size) to give an accurate idea of the memory
 // footprint of the program. It gets this from parsing /proc/self/status
 //////////////////////////////////////////////////////////////////////
-extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm) {
+extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm,
+    long long * threads, long long * nvswitch, long long * vswitch) {
   char buf[2048];
   int ret, i, j, bytesread;
   memset(buf, 0, 2048);
 
+  /*
   ret = lseek(fd, 0, SEEK_SET);
   if (ret == -1) {
     perror("lseek failure on /proc/self/status");
     return ret;
   }
+  */
 
   bytesread = read(fd, buf, 2048);
   if (bytesread == -1) {
@@ -1767,28 +1784,43 @@ extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm) {
   }
   *hwm = 0LL;
   *rss = 0LL;
-  for(i=0; i < bytesread; i++) {
-   /* Search for VmHWM for high water mark of memory from /proc/self/status */
-    if (buf[i] == '\n' && buf[i+1] == 'V' && buf[i+2] == 'm' && buf[i+3] == 'H' && buf[i+4] == 'W' && buf[i+5] == 'M' && buf[i+6] == ':') {
-        for (j = 7 ; j+i < bytesread ; j++) {
-            if (buf[i+j] != ' ') {
-                sscanf(&buf[i+j], "%lld", hwm);
-                //printf("VmHWM: %lld\n", *hwm);
-                break;
-            }
-        }
+  *threads = 0LL;
+  *vswitch = 0LL;
+  *nvswitch = 0LL;
+  // Split the data into lines
+  char * line = strtok(buf, "\n");
+  const char * _vmHWM = "VmHWM:";
+  const char * _vmRSS = "VmRSS:";
+  const char * _Threads = "Threads:";
+  const char * _voluntary_ctxt_switches = "voluntary_ctxt_switches:";
+  const char * _nonvoluntary_ctxt_switches = "nonvoluntary_ctxt_switches:";
+  while (line != NULL) {
+    if (strstr(line, _vmHWM) != NULL) {
+        char * tmp = line + strlen(_vmHWM) + 1;
+        char * pEnd;
+        *hwm = strtol(tmp, &pEnd, 10);
     }
-   /* Search for VmRSS for resident set size of memory from /proc/self/status */
-    if (buf[i] == '\n' && buf[i+1] == 'V' && buf[i+2] == 'm' && buf[i+3] == 'R' && buf[i+4] == 'S' && buf[i+5] == 'S' && buf[i+6] == ':') {
-        for (j = 7 ; j+i < bytesread ; j++) {
-            if (buf[i+j] != ' ') {
-                sscanf(&buf[i+j], "%lld", rss);
-                //printf("VmRSS: %lld\n", *rss);
-                break;
-            }
-        }
-      break;
+    else if (strstr(line, _vmRSS) != NULL) {
+        char * tmp = line + strlen(_vmRSS) + 1;
+        char * pEnd;
+        *rss = strtol(tmp, &pEnd, 10);
     }
+    else if (strstr(line, _Threads) != NULL) {
+        char * tmp = line + strlen(_Threads) + 1;
+        char * pEnd;
+        *threads = strtol(tmp, &pEnd, 10);
+    }
+    else if (strstr(line, _voluntary_ctxt_switches) != NULL) {
+        char * tmp = line + strlen(_voluntary_ctxt_switches) + 1;
+        char * pEnd;
+        *vswitch = strtol(tmp, &pEnd, 10);
+    }
+    else if (strstr(line, _nonvoluntary_ctxt_switches) != NULL) {
+        char * tmp = line + strlen(_nonvoluntary_ctxt_switches) + 1;
+        char * pEnd;
+        *nvswitch = strtol(tmp, &pEnd, 10);
+    }
+    line = strtok(NULL, "\n");
   }
   return ret;
 }
@@ -1806,35 +1838,51 @@ extern "C" int Tau_close_status(int fd) {
 }
 
 //////////////////////////////////////////////////////////////////////
-// Tau_trigger_memory_rss_hwm triggers resident memory size and high water 
+// Tau_trigger_memory_rss_hwm triggers resident memory size and high water
 // mark events
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
-  static int fd=Tau_open_status();
+  int fd = Tau_open_status();
   if (fd == -1) return 0; // failure
+  //printf("***** %d,%d,%s\n", RtsLayer::myNode(), __LINE__, __func__); fflush(stdout);
 
-  long long vmrss, vmhwm; 
-  TAU_REGISTER_CONTEXT_EVENT(proc_vmhwm, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
-  TAU_REGISTER_CONTEXT_EVENT(proc_rss, "Memory Footprint (VmRSS) (KB)");
-  TAU_REGISTER_EVENT(proc_vmhwm_no_context, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
-  TAU_REGISTER_EVENT(proc_rss_no_context, "Memory Footprint (VmRSS) (KB)");
+  long long vmrss = 0;
+  long long vmhwm = 0;
+  long long threads = 0;
+  long long nvswitch = 0;
+  long long vswitch = 0;
 
-  Tau_read_status(fd, &vmrss, &vmhwm);
+  Tau_read_status(fd, &vmrss, &vmhwm, &threads, &nvswitch, &vswitch);
+  close(fd);
 
-  if (vmrss > 0) {
+  int tid = 0;
+  if (TauEnv_get_tracing()) {
+    tid = RtsLayer::myThread();
+  }
+
     if (use_context) {
+  	TAU_REGISTER_CONTEXT_EVENT(proc_vmhwm, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
+  	TAU_REGISTER_CONTEXT_EVENT(proc_rss, "Memory Footprint (VmRSS) (KB)");
+  	TAU_REGISTER_CONTEXT_EVENT(stat_threads, "Threads");
+  	TAU_REGISTER_CONTEXT_EVENT(stat_voluntary, "Voluntary Context Switches");
+  	TAU_REGISTER_CONTEXT_EVENT(stat_nonvoluntary, "Non-voluntary Context Switches");
         TAU_CONTEXT_EVENT(proc_rss, (double) vmrss);
-    } else {
-        Tau_userevent_thread(proc_rss_no_context, (double) vmrss, 0);
-    }
-  }
-  if (vmhwm > 0) {
-    if (use_context) {
         TAU_CONTEXT_EVENT(proc_vmhwm, (double) vmhwm);
+        TAU_CONTEXT_EVENT(stat_threads, (double) threads);
+        TAU_CONTEXT_EVENT(stat_voluntary, (double) vswitch);
+        TAU_CONTEXT_EVENT(stat_nonvoluntary, (double) nvswitch);
     } else {
-        Tau_userevent_thread(proc_vmhwm_no_context, (double) vmhwm, 0);
+  	static void * proc_vmhwm_no_context = Tau_get_userevent("Peak Memory Usage Resident Set Size (VmHWM) (KB)");
+  	static void * proc_rss_no_context = Tau_get_userevent("Memory Footprint (VmRSS) (KB)");
+  	static void * stat_threads_no_context = Tau_get_userevent("Threads");
+  	static void * stat_voluntary_no_context = Tau_get_userevent("Voluntary Context Switches");
+  	static void * stat_nonvoluntary_no_context = Tau_get_userevent("Non-voluntary Context Switches");
+        Tau_userevent_thread(proc_rss_no_context, (double) vmrss, tid);
+        Tau_userevent_thread(proc_vmhwm_no_context, (double) vmhwm, tid);
+        Tau_userevent_thread(stat_threads_no_context, (double) threads, tid);
+        Tau_userevent_thread(stat_voluntary_no_context, (double) vswitch, tid);
+        Tau_userevent_thread(stat_nonvoluntary_no_context, (double) nvswitch, tid);
     }
-  }
 
 #ifdef TAU_BEACON
   TauBeaconPublish((double) vmrss, "KB", "MEMORY", "Memory Footprint (VmRSS - Resident Set Size)");
@@ -1885,24 +1933,24 @@ typedef std::deque<alloc_entry_t> alloc_stack_t;
 #if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER) // Intel compiler doesn't like __thread for non-POD object
 // thread local storage
 static alloc_stack_t * tau_alloc_stack(void)
-{ 
+{
   static __thread alloc_stack_t * alloc_stack_tls = NULL;
   if(alloc_stack_tls == NULL) {
     alloc_stack_tls = new alloc_stack_t();
   }
-  return alloc_stack_tls; 
+  return alloc_stack_tls;
 }
 #elif defined(TAU_USE_DTLS) && !defined(__INTEL_COMPILER)
 // thread local storage
 static alloc_stack_t * tau_alloc_stack(void)
-{ 
-  static __declspec(thread) alloc_stack_t alloc_stack_tls; 
-  return &alloc_stack_tls; 
+{
+  static __declspec(thread) alloc_stack_t alloc_stack_tls;
+  return &alloc_stack_tls;
 }
 #else
 // worst case - array of flags, one for each thread.
 static inline alloc_stack_t  * tau_alloc_stack(void)
-{ 
+{
   static alloc_stack_t * alloc_stack_arr[TAU_MAX_THREADS] = {NULL};
   if(alloc_stack_arr[Tau_get_local_tid()] == NULL) {
     alloc_stack_arr[Tau_get_local_tid()] = new alloc_stack_t();
@@ -2107,5 +2155,5 @@ size_t strxfrm(char *dest, const char *src, size_t n);
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: amorris $
  * $Revision: 1.33 $   $Date: 2010/01/27 00:47:51 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.33 2010/01/27 00:47:51 amorris Exp $ 
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.33 2010/01/27 00:47:51 amorris Exp $
  ***************************************************************************/

@@ -23,6 +23,8 @@
 #include <vector>
 #include <deque>
 #include <utility>
+#include <sstream>
+#include <string>
 #include <sys/time.h>
 
 
@@ -117,9 +119,10 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname)
       }
     }
     void *event = 0;
-    char ename[4096];
-    sprintf(ename,"%s <file=%s>", iowrap_event_names[i], pathname);
-    Tau_pure_context_userevent(&event, ename);
+    std::stringstream ss;
+    ss << iowrap_event_names[i] << " <file=" << pathname << ">";
+    std::string ename(ss.str());
+    Tau_pure_context_userevent(&event, ename.c_str());
     iowrap_events[i][fid] = (TauUserEvent*)event;
   }
   dprintf("Registering %d with %s\n", fid - 1, pathname);
@@ -184,8 +187,20 @@ extern "C" void Tau_iowrap_dupEvents(unsigned int oldfid, unsigned int newfid)
 extern "C" void Tau_iowrap_checkInit()
 {
   static int init = 0;
-  if (init) return;
+  static thread_local bool seen{false};
+  if (init) {
+    // don't re-register thread 0!
+    if (!seen) {
+        if (Tau_init_check_initialized() && !Tau_global_getLightsOut()) {
+            Tau_register_thread();
+            Tau_create_top_level_timer_if_necessary();
+            seen = true;
+        }
+    }
+    return;
+  }
   init = 1;
+  seen = true;
 
   global_write_bandwidth = 0;
   global_read_bandwidth = 0;

@@ -49,7 +49,7 @@ extern void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count);
 extern void *Tau_MemMgr_malloc(int tid, size_t size);
 extern void Tau_MemMgr_free(int tid, void *addr, size_t size);
 extern char * Tau_get_pvar_name(int i, int j);
-int Tau_msg_init();
+int Tau_msg_ini();
 
 int Tau_mpi_t_initialize();
 
@@ -1113,14 +1113,23 @@ int Tau_msg_init(void){
     
   /* Parse the description of PVARs for all paths between CPUs and GPUs */
   char **send_paths = malloc(tau_send_count * sizeof(char*));
+  TAU_VERBOSE("send_description=%s, tau_send_count=%d\n", send_description, tau_send_count);
+  TAU_VERBOSE("recv_description=%s, tau_recv_count=%d\n", recv_description, tau_recv_count);
+  int nl_found; // does it find a new line in the string?
   for(i = 0; i < tau_send_count; i++)
   {
     send_paths[i] = malloc(sizeof(char) * TAU_NAME_LENGTH);
+    nl_found = 0; 
     char *nextLine = strchr(send_description, '\n');
-    if (nextLine) *nextLine = '\0';
-    strcpy(send_paths[i], send_description);
-    if (nextLine) *nextLine = '\n';
-    send_description = nextLine + 1;
+    if (nextLine) {
+      nl_found = 1; // new line is found! 
+      *nextLine = '\0'; // null terminate it
+    } 
+    strcpy(send_paths[i], send_description); // chop off and store the path
+    if (nl_found) {
+      *nextLine = '\n';  
+      send_description = nextLine + 1; // if new line is found
+    }
     TAU_METADATA_ITERATION("TAU_SEND_PATH_ID", i, send_paths[i]);
   }
 
@@ -1128,11 +1137,17 @@ int Tau_msg_init(void){
   for(i = 0; i < tau_recv_count; i++)
   {
     recv_paths[i] = malloc(sizeof(char) * TAU_NAME_LENGTH);
+    nl_found = 0; 
     char *nextLine = strchr(recv_description, '\n');
-    if (nextLine) *nextLine = '\0';
+    if (nextLine) {
+      nl_found = 1; // new line is found! 
+      *nextLine = '\0'; // null terminate it
+    }
     strcpy(recv_paths[i], recv_description);
-    if (nextLine) *nextLine = '\n';
-    recv_description = nextLine + 1;
+    if (nl_found) {
+      *nextLine = '\n';  
+      recv_description = nextLine + 1; // if new line is found
+    }
     TAU_METADATA_ITERATION("TAU_RECV_PATH_ID", i, recv_paths[i]);
   }
     

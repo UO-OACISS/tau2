@@ -1257,7 +1257,9 @@ extern "C" int ompt_initialize(
   initializing = true;
   TauInternalFunctionGuard protects_this_function;
   if (!TauEnv_get_openmp_runtime_enabled()) return 0;
-  TAU_PROFILE_SET_NODE(0);
+  if (Tau_get_node() == -1) {
+      TAU_PROFILE_SET_NODE(0);
+  }
 
 #if defined (TAU_USE_TLS)
   is_master = true;

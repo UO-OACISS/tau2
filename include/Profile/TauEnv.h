@@ -78,6 +78,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_message();
   int  TAUDECL TauEnv_get_lite_enabled();
   int  TAUDECL TauEnv_get_compensate();
+  int  TAUDECL TauEnv_get_level_zero_enable_api_tracing();
 
   int  TAUDECL TauEnv_get_track_load();
   int  TAUDECL TauEnv_get_track_memory_heap();

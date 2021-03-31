@@ -1,11 +1,11 @@
 #!/bin/sh
 
-# If an outside makefile has specified -w, our wrapper will generate extra/incorrect 
+# If an outside makefile has specified -w, our wrapper will generate extra/incorrect
 # output unless we remove the flags
 MAKEFLAGS=
 MFLAGS=
 
-# Define variables 
+# Define variables
 makefile_specified=no
 options_specified=no
 
@@ -50,7 +50,7 @@ usage()
     echo -e "  -optPdtCleanscapeParser\tSpecify the Cleanscape Fortran parser"
     echo -e "  -optTauSelectFile=\"\"\t\tSpecify selective instrumentation file for tau_instrumentor"
     echo -e "  -optPreProcess\t\tPreprocess the source code before parsing. Uses /usr/bin/cpp -P by default."
-    echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files" 
+    echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files"
     echo -e "  -optShared\t\t\tUse shared library version of TAU."
     echo -e "  -optCompInst\t\t\tUse compiler-based instrumentation."
     echo -e "  -optPDTInst\t\t\tUse PDT-based instrumentation."
@@ -74,7 +74,7 @@ for arg in "$@" ; do
       NON_TAUARGS="$NON_TAUARGS $modarg"
       EATNEXT=false
   else
-      case $arg in 
+      case $arg in
 	  -tau_makefile=*)
 	      MAKEFILE=`echo $arg | sed -e 's/-tau_makefile=//'`
 	      makefile_specified=yes
@@ -185,7 +185,7 @@ fi
 if [ $options_specified = no ] ; then
     TAUCOMPILER_OPTIONS=$TAU_OPTIONS
     if [ "x$TAUCOMPILER_OPTIONS" = "x" ] ; then
-	TAUCOMPILER_OPTIONS=-optVerbose 
+	TAUCOMPILER_OPTIONS=-optVerbose
     fi
 fi
 
@@ -203,7 +203,7 @@ show:
 showcompiler:
 	@echo \$(TAU_RUN_CC)
 showincludes:
-	@echo \$(TAU_INCLUDE) \$(TAU_MPI_INCLUDE) 
+	@echo \$(TAU_INCLUDE) \$(TAU_MPI_INCLUDE)
 showlibs:
 	@echo \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)
 showsharedlibs:
@@ -221,7 +221,7 @@ include $MAKEFILE
 all:
 	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_RUN_CC) $TAUARGS
 EOF
-make -s -f /tmp/makefile.tau.$USER.$$ 
+make -s -f /tmp/makefile.tau.$USER.$$
 retval=$?
 /bin/rm -f /tmp/makefile.tau.$USER.$$
 fi

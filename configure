@@ -594,6 +594,8 @@ usage() {
     echo "    Note: 'download' will download and build the library automatically."
     echo "-unwind=<dir | download> ... Specify a libunwind directory or download."
     echo "    Note: 'download' will download and build the library automatically."
+    echo "-zlib=<dir | download> .......... Specify a zlib directory or download."
+    echo "    Note: 'download' will download and build the library automatically."
     echo ""
     echo "MPI Options:"
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
@@ -622,9 +624,10 @@ usage() {
     echo "-cuda=<dir> ................ Specify location of the top level CUDA SDK"
     echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
     echo "-rocm[=<dir>] ...... Specify alternate path to ROCm (/opt/rocm default)."
-#   echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
+    echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
 #   echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
 #   echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
+    echo "-level_zero[=<dir>] ................. Specify path to Intel Level Zero."
     echo "-roctracer=<dir> .................. Specify location of ROCm roctracer."
     echo "-hip=<dir> .................... Specify location of ROCm HIP directory."
     echo ""
@@ -731,6 +734,7 @@ for arg in "$@"; do
         echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
         echo "-boost=<dir> ....................... Specify location of Boost package."
         echo "-apex ......................................... Build the APEX package."
+        echo "-mochi ............................ Add MOCHI backend database support."
         echo "-dyninst=<dir> ................... Specify location of DynInst package."
         echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
         echo "-dyninstlib=<dir> ................ Specify location of DynInst lib dir."
@@ -740,6 +744,8 @@ for arg in "$@"; do
         echo "-bfd=<dir | download> ....... Specify a binutils directory or download."
         echo "    Note: 'download' will download and build the library automatically."
         echo "-unwind=<dir | download> ... Specify a libunwind directory or download."
+        echo "    Note: 'download' will download and build the library automatically."
+        echo "-zlib=<dir | download> .......... Specify a zlib directory or download."
         echo "    Note: 'download' will download and build the library automatically."
         echo "-cube=<dir> | own.| ext..... Specify location of CUBE or use TAU's jar."
         echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
@@ -772,11 +778,12 @@ for arg in "$@"; do
         echo "-opencl=<dir> ................ Specify location of the top level OpenCL SDK"
         echo "  Note: This option is needed when used with -cuda=<dir> option. "
         echo "-rocm[=<dir>] ...... Specify alternate path to ROCm (/opt/rocm default)."
-        #echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
+        echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
         #echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
         #echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
         echo "-roctracer=<dir> .................. Specify location of ROCm roctracer."
         echo "-hip=<dir> .................... Specify location of ROCm HIP directory."
+        echo "-level_zero[=<dir>] ................. Specify path to Intel Level Zero."
         echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
         echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
         echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
@@ -793,63 +800,63 @@ for arg in "$@"; do
 #    echo "-mon-mrnet-use-lightweight ..... Instructs ToM to use MRNet lightweight"
 #    echo "                                 interface.                            "
         echo "-scorep=<dir>  .................... Specify location of SCOREP package."
-	    echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
-	    echo "-gasnet=<dir>  ............ Specify location of GASNET for UPC wrapper."
-	    echo "-python .. Automatically choose python options based on Python in path."
-	    echo "-pythoninc=<dir> ........ Specify location of Python include directory."
-	    echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
-	    echo "-tag=<unique name> ........ Specify a tag to identify the installation."
-	    echo "-perfinc=<dir> ............. Specify a Perflib[LANL] include directory."
-	    echo "-perflib=<dir> ................. Specify a Perflib[LANL] lib directory."
-	    echo "-perflibrary=<library> ... Specify a different perflib runtime library."
-	    echo "-ktau ........................................... Kernel TAU Profiling."
-	    echo "-ktau_shctr ........................ Kernel TAU Profiling with shared- "
-	    echo "                                                   OS counters support."
-	    echo "-ktauinc=<dir> ............... Specify location of Linux Kernel source."
-	    echo "-ktauincuser=<dir> ............... Specify location of KTAU user incls."
-	    echo "-ktaulib=<dir> ............ Specify location of KTAU library libktau.a."
-	    echo "-ktausym=<path to System.map>  ...... Specify location of Linux Kernel."
-	    echo "                                                          Symbol Table."
-	    echo "-stff=<dir> .... Location of RENCI Scalable Time-series filter library."
-	    echo "-sddf=<dir> ...... SDDF library location; Only required for RENCI STFF."
-	    echo "-sos=<dir | download>................. Use Scalable Observation System."
-	    echo "-soscomm=<comm>..communicatiors between SOS daemons[mpi,sockets,evpath]"
+	echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
+	echo "-gasnet=<dir>  ............ Specify location of GASNET for UPC wrapper."
+	echo "-python .. Automatically choose python options based on Python in path."
+	echo "-pythoninc=<dir> ........ Specify location of Python include directory."
+	echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
+	echo "-tag=<unique name> ........ Specify a tag to identify the installation."
+	echo "-perfinc=<dir> ............. Specify a Perflib[LANL] include directory."
+	echo "-perflib=<dir> ................. Specify a Perflib[LANL] lib directory."
+	echo "-perflibrary=<library> ... Specify a different perflib runtime library."
+	echo "-ktau ........................................... Kernel TAU Profiling."
+	echo "-ktau_shctr ........................ Kernel TAU Profiling with shared- "
+	echo "                                                   OS counters support."
+	echo "-ktauinc=<dir> ............... Specify location of Linux Kernel source."
+	echo "-ktauincuser=<dir> ............... Specify location of KTAU user incls."
+	echo "-ktaulib=<dir> ............ Specify location of KTAU library libktau.a."
+	echo "-ktausym=<path to System.map>  ...... Specify location of Linux Kernel."
+	echo "                                                          Symbol Table."
+	echo "-stff=<dir> .... Location of RENCI Scalable Time-series filter library."
+	echo "-sddf=<dir> ...... SDDF library location; Only required for RENCI STFF."
+	echo "-sos=<dir | download>................. Use Scalable Observation System."
+	echo "-soscomm=<comm>..communicatiors between SOS daemons[mpi,sockets,evpath]"
 	    #    echo "-TRACE ..................................... Generate TAU event traces."
 	    #    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
 	    #    echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
 	    #    echo "-PROFILECALLPATH ......................... Generate call path profiles."
-	    echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
-            echo "-PROFILEPATHS ........ Generate profiles with MPI path based profiling."
-	    echo "-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info."
-	    echo "-PROFILEPHASE .......................... Generate phase based profiles."
+	echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
+        echo "-PROFILEPATHS ........ Generate profiles with MPI path based profiling."
+	echo "-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info."
+	echo "-PROFILEPHASE .......................... Generate phase based profiles."
 	    #    echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
 	    #    echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
 	    #    echo "-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry."
 	    #    echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
-	    echo "-BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems."
-	    echo "-BGPTIMERS .... Use fast low-overhead timers on IBM BlueGene/P systems."
-	    echo "-BGQTIMERS .... Use fast low-overhead timers on IBM BlueGene/Q systems."
-	    echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
-	    echo "-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems."
-	    echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
-	    echo "-CPUTIME .......... Use usertime+system time instead of wallclock time."
-	    echo "-PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi."
-	    echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
-	    echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
-	    echo "-noex .................. Use no exceptions while compiling the library."
-	    echo "-noplugins ...................... Do not build support for TAU plugins."
-	    echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
-            echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
-            echo "                       (Note: also disables sampling, marker tracking)."
-	    echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
-            echo "-PMI ...................... Enable Cray PMI for tracking topology info."
-	    echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
-	    echo "-zeptodir=<dir> ............................. ZeptoOS install location."
-	    echo "                              See http://www-unix.mcs.anl.gov/zeptoos/."
-	    echo "-help ...................................... display this help message."
-	    echo "-fullhelp .............................. display the full help message."
-	    exit
-	    ;;
+	echo "-BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems."
+	echo "-BGPTIMERS .... Use fast low-overhead timers on IBM BlueGene/P systems."
+	echo "-BGQTIMERS .... Use fast low-overhead timers on IBM BlueGene/Q systems."
+	echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
+	echo "-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems."
+	echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
+	echo "-CPUTIME .......... Use usertime+system time instead of wallclock time."
+	echo "-PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi."
+	echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
+	echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
+	echo "-noex .................. Use no exceptions while compiling the library."
+	echo "-noplugins ...................... Do not build support for TAU plugins."
+	echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
+        echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
+        echo "                       (Note: also disables sampling, marker tracking)."
+	echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
+        echo "-PMI ...................... Enable Cray PMI for tracking topology info."
+	echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
+	echo "-zeptodir=<dir> ............................. ZeptoOS install location."
+	echo "                              See http://www-unix.mcs.anl.gov/zeptoos/."
+	echo "-help ...................................... display this help message."
+	echo "-fullhelp .............................. display the full help message."
+	exit
+	;;
     esac
 done
 
@@ -978,6 +985,7 @@ charm=no
 comm=yes
 sproc=no
 noex=no
+fx_aarch64=no
 plugins=yes
 disableshared=no
 pmi=no
@@ -995,7 +1003,10 @@ perfsuite=no
 perfsuitedir=
 bfd=no
 elf=no
+systemlibelf=no
 bfddir=
+zlib=no
+zlibdir=
 elfdir=
 turnbfdoff=no
 perf=no
@@ -1118,6 +1129,8 @@ adiosdir=
 adios2=no
 adios2dir=
 sqlite3=no
+mochi=no
+mochi_sdskv_dir=
 sqlite3dir=
 #caliper=no
 #caliperdir=
@@ -1172,6 +1185,7 @@ dmapp=no
 zepto=no
 zeptodir=
 cuda=no
+level_zero=no
 rocm=no
 rocprofiler=no
 roctracer=no
@@ -1227,7 +1241,7 @@ for arg in "$@"; do
 
 	-c++=*)
 	    myarg=`echo $arg | sed 's/-c++=//'`
-	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = g++-5 -o $myarg = g++-6 -o $myarg = g++-7 -o $myarg = g++-8 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = icpx -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiicpx -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = mpc_icpx -o $myarg = clang++ -o $myarg = hcc -o $myarg = hipcc -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx  -o $myarg = armclang++ -o $myarg = nc++ ]
+	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = g++-5 -o $myarg = g++-6 -o $myarg = g++-7 -o $myarg = g++-8 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = icpx -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx -o $myarg = mpic++ -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiicpx -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = mpc_icpx -o $myarg = clang++ -o $myarg = hcc -o $myarg = hipcc -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx  -o $myarg = armclang++ -o $myarg = nc++ ]
 	    then
 		cxx_compiler=$myarg
                 if [  $cxx_compiler = mpc_cxx -o $cxx_compiler = mpc_icpc  -o $cxx_compiler = mpc_icpx  ]
@@ -1241,7 +1255,7 @@ for arg in "$@"; do
 		testmp=`echo $myarg | sed -e 's/^mp//'`
 		if [ "y$testxlc" = "y$myarg" -a "y$testmp" = "y$myarg" ]
 		then
-		    echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'icpx', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', 'mpiicpx', 'mpiFCC', 'mpiFCCpx', 'orCC', 'openCC', 'mpc_cxx',  'mpc_icpc', 'mpc_icpx', 'clang++', 'hcc', 'hipcc', 'bgclang++', 'mpicxx', 'mcxx', 'oshCC', oshcxx, 'oshc++', 'armclang++', or 'nc++' "
+		    echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'icpx', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', 'mpiicpx', 'mpiFCC', 'mpiFCCpx', 'orCC', 'openCC', 'mpc_cxx',  'mpc_icpc', 'mpc_icpx', 'clang++', 'hcc', 'hipcc', 'bgclang++', 'mpicxx', 'mpic++', 'mcxx', 'oshCC', oshcxx, 'oshc++', 'armclang++', or 'nc++' "
 		    #       exit 1
 		else
 		    if [ "y$testxlc" != "y$myarg" ]
@@ -1590,11 +1604,14 @@ for arg in "$@"; do
 	    elif [ "x$unwinder" = "xstackwalker" ] ; then
 		unwind_flag="-DTAU_USE_STACKWALKER"
 		unwind_lib_flag="-lstackwalk"
+	    elif [ "x$unwinder" = "xbacktrace" ] ; then
+		unwind_flag="-DTAU_USE_BACKTRACE"
+		#unwind_lib_flag="-lgcc_s"
 	    elif [ "x$unwinder" = "xnone" ] ; then
 		echo "No Unwinding Support."
 	    else
 		echo "Error: Invalid Stack Unwinder $unwinder. Valid options are:"
-		echo "libunwind, stackwalker, none (default)."
+		echo "libunwind, stackwalker, backtrace (libgcc_s), none (default)."
 		exit 1
 	    fi
 	    shift
@@ -1606,7 +1623,7 @@ for arg in "$@"; do
         # use libunwind as the default.
         unwinder="libunwind"
         unwind_flag="-DTAU_USE_LIBUNWIND"
-        unwind_lib_flag="-lunwind#-Wl,-rpath,\$(UNWIND_LIB)"
+        unwind_lib_flag="-lunwind"
         download_unwind=yes
         shift
         ;;
@@ -1625,7 +1642,7 @@ for arg in "$@"; do
 	    if [ "x$unwinder" = "xnone" ] ; then
 		unwinder="libunwind"
 		unwind_flag="-DTAU_USE_LIBUNWIND"
-		unwind_lib_flag="-lunwind#-Wl,-rpath,\$(UNWIND_LIB)"
+		unwind_lib_flag="-lunwind"
 	    fi
 	    shift
 	    ;;
@@ -1642,6 +1659,12 @@ for arg in "$@"; do
 
 	-unwindextras=*)
 	    unwind_extras=`echo $arg | sed -e 's/-unwind_extras=//'`
+	    shift
+	    ;;
+
+	-zlib=*)
+	    zlib=yes
+            zlibdir=`echo $arg | sed -e 's/-zlib=//'`
 	    shift
 	    ;;
 
@@ -2006,6 +2029,21 @@ for arg in "$@"; do
             exit 1
         else
             sqlite3=yes
+        fi
+        shift
+        ;;
+
+    -mochi)
+        if [ `command -v pkg-config &> /dev/null; echo $?` == "1" ] ; then
+            echo "Error: Cannot find any pkg-config installation! pkg-config is required to detect a mochi installation."
+            exit 1
+        fi
+
+        if [ `pkg-config --exists sdskv-client; echo $?` == "1" ] ; then
+            echo "Error: Cannot access mochi_sdskv install directory! Please verify that mochi-sdskv and dependent modules are loaded."
+            exit 1
+        else
+            mochi=yes
         fi
         shift
         ;;
@@ -2752,6 +2790,72 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-level_zero)
+            level_zero=yes
+            tauoptions="${tauoptions}-level_zero"
+            pthread=yes
+            ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
+            for d in $ld_lib_path
+            do
+              if [ -r $d/libze_loader.so ]; then
+	        l0_lib_dir=$d
+                l0dir=$d/..
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+                break;
+              fi
+            done
+
+            if [ "x$l0dir" = "x" ]; then
+	      if [ -r /usr/lib64/libze_loader.so ]; then
+	        l0dir="/usr"
+	        l0_lib_dir="/usr/lib64"
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+              elif [ -r /usr/lib/x86_64-linux-gnu/libze_loader.so ]; then
+	        l0dir="/usr"
+	        l0_lib_dir="/usr/lib/x86_64-linux-gnu"
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+              elif [ -r /usr/local/lib/libze_loader.so ]; then
+	        l0dir="/usr/local"
+	        l0_lib_dir="/usr/local/lib"
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+	      else
+	        echo "TAU: libze_loader.so not found. Please specify -level_zero=<dir> and reconfigure TAU."
+	        exit 1
+	      fi
+            fi
+	    shift
+	    ;;
+
+	-level_zero=*)
+            l0dir=`echo $arg | sed -e 's/-level_zero=//' -e 's/ /#/g'`
+            if [ ! -d $l0dir ]; then
+              echo  "Error: Cannot access Level Zero directory $l0dir"
+              exit 1
+            else
+              fixmakeargs="$fixmakeargs l0dir=$l0dir LEVEL_ZERO"
+              level_zero=yes
+            fi
+	    if [ -r $l0dir/lib64/libze_loader.so ]; then
+             l0_lib_dir="$l0dir/lib64"
+	    elif [ -r $l0dir/lib/libze_loader.so ]; then
+             l0_lib_dir="$l0dir/lib"
+	    elif [ -r $l0dir/lib/x86_64-linux-gnu/libze_loader.so ]; then
+             l0_lib_dir="$l0dir/lib/x86_64-linux-gnu"
+	    else
+              echo  "Error: Cannot access Level Zero libze_loader.so in $l0dir/lib or $l0dir/lib64 or $l0dir/x86_64-linux-gnu"
+              exit 1
+	    fi
+	    if [ ! -r $l0_lib_dir/libdrm.so -a ! -r /usr/lib/x86_64-linux-gnu/libdrm.so ]; then
+
+              echo  "Error: TAU requires libdrm.so to be installed in $l0_lib_dir. Please install libdrm-devel (Centos) or libdrm-dev (Ubuntu) package."
+              exit 1
+	    fi
+            fixmakeargs="$fixmakeargs l0_lib_dir=$l0_lib_dir"
+            tauoptions="${tauoptions}-level_zero"
+            pthread=yes
+            shift
+            ;;
+
 	-rocm)
             rocmdir=/opt/rocm
 	    #fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM ROCPROFILER"
@@ -2858,6 +2962,10 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-opencl)
+	    use_opencl=yes
+	    shift
+	    ;;
 	-opencl=*)
 	    openclinclude=`echo $arg | sed -e 's/-opencl=//' -e 's/ /#/g'`/include
 	    if [ ! -d $openclinclude ] ; then
@@ -2876,7 +2984,12 @@ for arg in "$@"; do
 		fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude"
                 use_opencl=yes
 	    else
-		echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+		if [ -f "$openclinclude/sycl/CL/cl.h" ]; then
+		    fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude/sycl"
+                    use_opencl=yes
+		else
+	            echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+	        fi
 	    fi
 	    shift
 	    ;;
@@ -2945,6 +3058,35 @@ if [ "x$python"  = "xyes" ] ; then
       exit 1
     fi
   fi
+fi
+
+if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler ]; then
+  rocprofilerdir=$rocmdir/rocprofiler
+  fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER"
+  rocprofiler=yes
+  tauoptions="${tauoptions}-rocprofiler"
+  pthread=yes
+fi
+
+if [ "x$use_opencl" = "xyes" -a "x$openclinclude" = "x" ]; then
+  ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
+  for d in $ld_lib_path
+  do
+    if [ -r $d/libOpenCL.so ]; then
+      openclinclude=`echo $d | sed -e "s@/lib@@g"`/include
+      if [ -f "$openclinclude/CL/cl.h" ] ; then
+      #                       useropt="$useropt#-DTAU_MAX_THREADS=32"
+        fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude"
+	break;
+      else
+        if [ -f "$openclinclude/sycl/CL/cl.h" ]; then
+          fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude/sycl"
+        else
+            echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+        fi
+      fi
+    fi
+  done
 fi
 
 if [ "x$upcnetwork" = "x" ] ; then
@@ -3206,12 +3348,17 @@ configure_perfexplorer () {
 
     case $machine in
 
-	apple)
+	apple )
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl.jnilib.gz > $JARTARGET/libjogl.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_awt.jnilib.gz > $JARTARGET/libjogl_awt.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_cg.jnilib.gz > $JARTARGET/libjogl_cg.jnilib
 	    cp tools/src/contrib/jogl/apple/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
 	    cp tools/src/contrib/jogl/apple/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+
+	    ;;
+
+         arm64_apple)
+	    tar -xzf tools/src/contrib/jogl/arm64_apple/jogl-glob.tgz -C $JARTARGET
 
 	    ;;
 
@@ -3474,7 +3621,11 @@ detectarch=`./archfind`
 detectxdev=`./archfind -x`
 cd ..
 if [ "x$detectarch" = "x" ] ; then
+  detectarch=`TAU_CCOM=gcc utils/archfind`
+  detectxdev=`TAU_CCOM=gcc utils/archfind -x`
+  if [ "x$detectarch" = "x" ] ; then
     detectarch=unknown
+  fi
 fi
 
 
@@ -3630,8 +3781,20 @@ case $machine in
             c_compiler=cc
 	fi
 	;;
+    arm64_linux)
+	if [ "x$cxx_compiler" = "xdefault" -a "x$mpi" = "xyes" ]; then
+	  # Are we on a Fujitsu FX aarch64 system with Fujitsu compilers in the path?
+	  found_compiler=`which mpiFCC 2>/dev/null`
+          if [ "x$found_compiler" != "x" -a -x $found_compiler ]; then
+	     echo "TAU: Using mpiFCC, mpifcc, and mpifrt as C++, C, and Fortran compilers respectively."
+	     cxx_compiler=mpiFCC
+	     c_compiler=mpifcc
+	     fortran_compiler=mpifrt
+          fi
+	fi
+	;;
 
-    apple)
+    apple | arm64_apple )
 	if [ "$cxx_compiler" = "default" ]
 	then
             cxx_compiler=g++
@@ -3877,22 +4040,34 @@ case $machine in
 	    #         shared objects (see above) and it is not happy
 	    #         with -lmpichcxx which is static. -lmpichcxx_cray
 	    #         has to be used instead.
-            if [ "x$PE_MVAPICH2_FIXED_PRGENV" = "x" ]; then 
+            if [ "x$PE_MVAPICH2_FIXED_PRGENV" = "x" ]; then
 	      fixmakeargs="$fixmakeargs CRAYCNL_CCE"
             else
 	      fixmakeargs="$fixmakeargs CRAYCNL_MVAPICH2"
-            fi 
+            fi
 
 	    touch conf_test.c
-	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
+	    crayarchdir=`uname -m`
+	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/pe/cce" | grep "$crayarchdir/lib$" | uniq | grep -v rpath`
+	    #echo "EXTRADIR=$extradir"
+	    fixmakeargs="$fixmakeargs extradir=$extradir"
+
 	    rm -f conf_test.c conf_test.o
 
 	    # not implemented yet
-            if [ "x$CRAY_PE_USE_CLANG" = "x" ]; then 
+            if [ "x$CRAY_PE_USE_CLANG" = "x" ]; then
 	      fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
-            else 
+            else
 	      fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
-              extradir=`echo $CRAY_PE_USE_CLANG | sed -e 's@bin/clang@lib@'`
+            fi
+            extradir=`echo $CRAY_PE_USE_CLANG | sed -e 's@bin/clang@lib@'`
+            srun_dir=`which srun 2>/dev/null`
+            if [ "x$srun_dir" != "x" ]; then
+              slurm_dir=`echo $srun_dir | sed -e 's@bin/srun@@g' `
+              if [ "x$slurm_dir" != "x" -a -d $slurm_dir -a -r $slurm_dir/lib64/libslurm.so ]; then
+                echo "TAU: Found $slurm_dir/lib64/libslurm.so"
+	        fixmakeargs="$fixmakeargs slurmdir=$slurm_dir CRAYPE_CLANG_SLURM"
+              fi
             fi
 	fi
 	if [ $fortran_compiler = no ] ; then
@@ -3987,6 +4162,13 @@ fi
 
 if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" ]; then
    fixmakeargs="$fixmakeargs FLANG"
+   touch foo_compinst.f
+   test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
+   if [ $? -eq 1 ]; then
+     # New flang doesn't support  -Mx,129,0x800 for compiler-based instrumentation
+     fixmakeargs="$fixmakeargs FLANG_NO_MX_OPTS"
+   fi
+   /bin/rm -f foo_compinst.f
 fi
 
 if [ "x$fortran_compiler" = "xno" ]; then
@@ -4003,9 +4185,9 @@ if [ $c_compiler = hcc ]; then
 fi
 
 
-if [ "$machine" = "apple" ] ; then
-    mkdir -p apple/lib
-    cp tools/src/common/resources/tau-medium.png apple/lib/
+if [ "$machine" = "apple" -o "$machine" = "arm64_apple" ] ; then
+    mkdir -p $machine/lib
+    cp tools/src/common/resources/tau-medium.png $machine/lib/
     compiler_name=`which $cxx_compiler | awk '{print $1;}'`
     if [ "$compiler_name" = "no" -o "$compiler_name" = "" ]; then
 	echo "NOTE: No compilers found, please use option '-c++=<compilername>' if you have a C++ compiler"
@@ -4016,6 +4198,12 @@ if [ "$machine" = "apple" ] ; then
 	exit 0
     fi
 fi
+
+if [ "$machine" = "arm64_apple" ]; then
+  fixmakeargs="$fixmakeargs ARM64_APPLE"
+fi
+
+
 
 
 if [ $machine = craycnl -o $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
@@ -4278,7 +4466,7 @@ if [ $machine = mic_linux ] ; then
     orig_useropt="-xMIC-AVX512 -O2 "
 fi
 
-if [ $machine = apple ] ; then
+if [ $machine = apple -o $machine = arm64_apple ] ; then
     if [ $cxx_compiler = g++ -o $cxx_compiler = g++-5 -o $cxx_compiler = g++-6 -o $cxx_compiler = g++-7 -o $cxx_compiler = g++-8 -o $cxx_compiler = c++  -o $cxx_compiler = icpc  -o $cxx_compiler = icpx ] ; then
 	fixmakeargs="$fixmakeargs APPLECXX"
     fi
@@ -4387,10 +4575,12 @@ if [ $intel_cxx = 1 ] ; then
         issue_intel_warning=yes
     fi
 fi
-
 case "x$cxx_compiler" in
   "xmpicxx")
     mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
+  "xmpic++")
+    mpi_wrapper_mpicxx_or_mpiicpc=yes
+    mpicxx_exe=mpic++ ;;
   "xmpiicpc")
     mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
   "xicpc")
@@ -4401,116 +4591,135 @@ case "x$cxx_compiler" in
     mpi_wrapper_mpicxx_or_mpiicpc=no ;;
 esac
 
-#echo $mpi_wrapper_mpicxx_or_mpiicpc
-#echo $cxx_compiler
+# Check for regular ol' mpicxx
+any_cxx=`which mpicxx 2>/dev/null | wc -l`
+if [ $any_cxx = 1 ] ; then
+    echo "detected MPI in path"
+    mpi_wrapper_mpicxx_or_mpiicpc=yes
+fi
+
+# DEbugging...
+#echo "mpi_wrapper_mpicxx_or_mpiicpc = ($mpi_wrapper_mpicxx_or_mpiicpc)"
+#echo "mpi = ($mpi)"
+#echo "mpiinc = ($mpiinc)"
 #kill -9 $$
 
 if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes" ] ; then
     cxxloaded=`which $mpicxx_exe 2>/dev/null | wc -l`
     mpi=yes
-    if [ $cxxloaded = 1 ]
+    if [ "x$machine" != "xcraycnl" ]
     then
-	echo "NOTE: Found $mpicxx_exe in the path...trying to auto-configure compilers and flags..."
-	c_compiler=`$mpicc_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	f90loaded=`which $mpif90_exe 2>/dev/null | wc -l`
-	#if [ $f90loaded = 1 -a "x$orig_fortran_compiler" = "xmpif90" ]
-	if [ $f90loaded = 1 ] ; then
-	    echo "NOTE: Found $mpif90_exe in the path...trying to auto-configure compilers and flags..."
-            fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	    echo "NOTE: detected $fortran_compiler"
-            if [ "x$fortran_compiler" = "xifort" ]; then
-		fortran_compiler=intel
-	    fi
-            if [ "x$fortran_compiler" = "xxlf_r" -o "x$fortran_compiler" = "xxlf90_r"  -o "x$fortran_compiler" = "xxlf90" -o "x$fortran_compiler" = "xxlf2008_r" ]; then
-                fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
-	    fi
-            if [ "x$fortran_compiler" = "xxlflang" ]; then
-                fixmakeargs="$fixmakeargs XLFLANG"
-            fi
-            if [ "x$fortran_compiler" = "xarmflang" ]; then
-                fixmakeargs="$fixmakeargs ARMFLANG"
-            fi
-            if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" ]; then
-                fixmakeargs="$fixmakeargs FLANG"
-            fi
-	    if [ "x$orig_fortran_compiler" = "xcaf" ]; then
-		fortran_compiler=caf
-            fi
-	    if [ "x$orig_fortran_compiler" = "xpgfortran" ]; then
-		fortran_compiler=pgfortran
-            fi
-	else
-	    echo "Default fortran compiler was '$orig_fortran_compiler'..."
-	    if [ $f90loaded = 1 ] ; then
-                fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	    else
-                if [ "x$orig_fortran_compiler" = "xdefault" ]; then
-                  fortran_compiler=no
-                fi
-            fi
-	    echo "Setting fortran compiler to '$fortran_compiler'..."
-	fi
-
-	if [ $machine = bgq -o $machine = bgp ]; then
-            c_compiler=mpicc
-            cxx_compiler=mpicxx
-            is_gnu_compiler=`$cxx_compiler -show  2>/dev/null | awk ' { print $1;}' | xargs grep g++ | wc -l`
-            if [ $is_gnu_compiler = 1 ]; then
-              gnu=yes
-              tauoptions="${tauoptions}-gnu"
-            fi
-	else
-	    # All other machines besides IBM BG*
-            is_internal_compiler_loaded=`which $cxx_compiler 2>/dev/null | wc -l`
-            if [ $is_internal_compiler_loaded = 0 ]; then
-		# Compiler is not loaded, use full path to it
-		c_compiler=`$mpicc_exe -show | awk '{ print $1;}' `
-		cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' `
-		fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' `
-            fi
-            if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
-		mpiinc=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
-		mpilibargs=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
-		mpiflibargs=`$mpif90_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
-
-		mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
-		mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
-	        fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpiincargs=$mpiinc"
-	        mpilibargs_added_to_fixmakeargs=yes
-
-            fi
-            full_cxx_compiler=`$mpicxx_exe -show | tail -n 1 | awk '{ print $1; }'`
-            full_cc_compiler=`$mpicc_exe -show | tail -n 1 | awk '{ print $1; }'`
-            fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
-            mpi=yes
-	fi
-	# Do not use the internal compiler from mpicxx when BGP/BGQ is used.
-    else
-	echo "NOTE: Didn't find mpicxx in the path, using default values"
-	gnu=yes
-	tauoptions="${tauoptions}-gnu"
-	if [ $machine = bgq ] ; then
-            if [ -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx -a -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc ] ; then
-		echo "NOTE: Using /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx"
-		cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
-		c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
-            else
-		echo "ERROR: Please set your path to include mpicxx and reconfigure TAU."
-		exit 1
-            fi
-	elif [ $machine = bgp ]; then
-            if [ -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx -a -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicc ]; then
-		echo "NOTE: Using /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx"
-		cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
-		c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
-            else
-		echo "ERROR: Please set your path to include mpicxx and reconfigure TAU."
-		exit 1
-            fi
-	fi
-
-    fi
+      if [ $cxxloaded = 1 ]
+      then
+  	echo "NOTE: Found $mpicxx_exe in the path...trying to auto-configure compilers and flags..."
+  	c_compiler=`$mpicc_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+  	cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+  	f90loaded=`which $mpif90_exe 2>/dev/null | wc -l`
+  	#if [ $f90loaded = 1 -a "x$orig_fortran_compiler" = "xmpif90" ]
+  	if [ $f90loaded = 1 ] ; then
+  	    echo "NOTE: Found $mpif90_exe in the path...trying to auto-configure compilers and flags..."
+              fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+  	    echo "NOTE: detected $fortran_compiler"
+              if [ "x$fortran_compiler" = "xifort" ]; then
+  		fortran_compiler=intel
+  	    fi
+              if [ "x$fortran_compiler" = "xxlf_r" -o "x$fortran_compiler" = "xxlf90_r"  -o "x$fortran_compiler" = "xxlf90" -o "x$fortran_compiler" = "xxlf2008_r" ]; then
+                  fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
+  	    fi
+              if [ "x$fortran_compiler" = "xxlflang" ]; then
+                  fixmakeargs="$fixmakeargs XLFLANG"
+              fi
+              if [ "x$fortran_compiler" = "xarmflang" ]; then
+                  fixmakeargs="$fixmakeargs ARMFLANG"
+              fi
+              if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" ]; then
+                  fixmakeargs="$fixmakeargs FLANG"
+		  touch foo_compinst.f
+                  test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
+                  if [ $? -eq 1 ]; then
+                  # New flang doesn't support  -Mx,129,0x800 for compiler-based instrumentation
+                    fixmakeargs="$fixmakeargs FLANG_NO_MX_OPTS"
+                  fi
+                  /bin/rm -f foo_compinst.f
+              fi
+  	    if [ "x$orig_fortran_compiler" = "xcaf" ]; then
+  		fortran_compiler=caf
+              fi
+  	    if [ "x$orig_fortran_compiler" = "xpgfortran" ]; then
+  		fortran_compiler=pgfortran
+              fi
+  	else
+  	    echo "Default fortran compiler was '$orig_fortran_compiler'..."
+  	    if [ $f90loaded = 1 ] ; then
+                  fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+  	    else
+                  if [ "x$orig_fortran_compiler" = "xdefault" ]; then
+                    fortran_compiler=no
+                  fi
+              fi
+  	    echo "Setting fortran compiler to '$fortran_compiler'..."
+  	fi
+  
+  	if [ $machine = bgq -o $machine = bgp ]; then
+              c_compiler=mpicc
+              cxx_compiler=mpicxx
+              is_gnu_compiler=`$cxx_compiler -show  2>/dev/null | awk ' { print $1;}' | xargs grep g++ | wc -l`
+              if [ $is_gnu_compiler = 1 ]; then
+                gnu=yes
+                tauoptions="${tauoptions}-gnu"
+              fi
+  	else
+  	    # All other machines besides IBM BG*
+              is_internal_compiler_loaded=`which $cxx_compiler 2>/dev/null | wc -l`
+              if [ $is_internal_compiler_loaded = 0 ]; then
+  		# Compiler is not loaded, use full path to it
+  		c_compiler=`$mpicc_exe -show | awk '{ print $1;}' `
+  		cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' `
+  		fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' `
+              fi
+              if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
+  		mpiinc=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+  		mpilibargs=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+  		mpiflibargs=`$mpif90_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
+  
+  		mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
+  		mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
+  	        fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpiincargs=$mpiinc"
+  	        mpilibargs_added_to_fixmakeargs=yes
+  
+              fi
+              full_cxx_compiler=`$mpicxx_exe -show | tail -n 1 | awk '{ print $1; }'`
+              full_cc_compiler=`$mpicc_exe -show | tail -n 1 | awk '{ print $1; }'`
+              fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
+              mpi=yes
+  	fi
+  	# Do not use the internal compiler from mpicxx when BGP/BGQ is used.
+      else
+  	echo "NOTE: Didn't find mpicxx in the path, using default values"
+  	gnu=yes
+  	tauoptions="${tauoptions}-gnu"
+  	if [ $machine = bgq ] ; then
+              if [ -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx -a -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc ] ; then
+  		echo "NOTE: Using /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx"
+  		cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
+  		c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
+              else
+  		echo "ERROR: Please set your path to include mpicxx and reconfigure TAU."
+  		exit 1
+              fi
+  	elif [ $machine = bgp ]; then
+              if [ -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx -a -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicc ]; then
+  		echo "NOTE: Using /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx"
+  		cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
+  		c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
+              else
+  		echo "ERROR: Please set your path to include mpicxx and reconfigure TAU."
+  		exit 1
+              fi
+  	fi
+  
+      fi
+    fi 
     # Check for BG/P or BG/Q for GNU
     #    is_gnu_compiler=`$cxx_compiler -show  2>/dev/null | awk ' { print $1;}' | xargs grep g++ | wc -l'
     #    if [ "x$is_gnu_compiler" = "x1" ]; then
@@ -4753,9 +4962,15 @@ case $cxx_compiler in
 	orig_useropt="-O2"
 	useropt="-O2"
 	# -g interferes with optimizations for Fujitsu.
-	fixmakeargs="$fixmakeargs FX"
+	if [ $machine = arm64_linux ]; then
+	  fixmakeargs="$fixmakeargs FX_AARCH64"
+	  fx_aarch64=yes
+	else
+	  fixmakeargs="$fixmakeargs FX"
+	fi
 	#mpiinc=`which mpiFCCpx | sed -e 's/\/bin\/mpiFCCpx$//'`/include
-	mpiinc=`which mpiFCCpx | sed -e 's/\/bin\/mpiFCCpx$//'`/include/mpi/fujitsu
+	#mpiinc=`which mpiFCCpx | sed -e 's/\/bin\/mpiFCCpx$//'`/include/mpi/fujitsu
+	mpiinc=`which $cxx_compiler | sed -e "s@/bin/$cxx_compiler@@"`/include/mpi/fujitsu
 	if [ ! -d $mpiinc -a -r /opt/FJSVfxlang/1.2.0/include/mpi/fujitsu/mpi.h ]
 	then
             mpiinc=/opt/FJSVfxlang/1.2.0/include/mpi/fujitsu/
@@ -4766,7 +4981,7 @@ case $cxx_compiler in
             echo "Using MPI include directory $mpiinc"
 	fi
 	fixmakeargs="$fixmakeargs mpiincargs=-I$mpiinc"
-	echo "Adding -I$mpiinc to MPI include"
+	#echo "Adding -I$mpiinc to MPI include"
 	if [ $fortran_compiler = no -o $fortran_compiler = mpifrtpx -o $fortran_compiler = fujitsu ]
 	then
             extradir=`which mpiFCCpx | sed s/mpiFCCpx/../`
@@ -5497,7 +5712,7 @@ then
 	craycnl)
 	    #	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
             if [ "x$CRAY_MPICH2_DIR" = "x" ]; then
-              cat <<EOF > mpiincl.c 
+              cat <<EOF > mpiincl.c
 #include <mpi.h>
 EOF
               mpiinc=`$c_compiler -E -c mpiincl.c | grep include | grep mpi.h | head -1  | awk '{ print $3;}'  | sed -e 's@"@@g'  | sed -e 's@/mpi.h@@g'`
@@ -5508,9 +5723,9 @@ EOF
                 mpilib=$findmpi
                 echo "And found MPI lib in $mpilib"
               fi
-            else 
+            else
 	      mpiinc=$CRAY_MPICH2_DIR/include
-            fi 
+            fi
             if [ ! -r $mpiinc ] ; then
 		echo "ERROR: $CRAY_MPICH2_DIR/include (CRAY_MPICH2_DIR/include) is not readable. Please configure with -mpiinc=<dir> to point to the MPI include directory."
 		exit 1
@@ -7299,7 +7514,7 @@ if [ "x$download_unwind" = xyes ] ; then
       tar -xzf $libunwindtgz
       echo "removing $libunwindtgz..."
       rm $libunwindtgz
-      if [ ${c_compiler} = mpc_cc -o ${c_compiler} = mpc_icc -o ${c_compiler} = hcc ]
+      if [ ${c_compiler} = mpc_cc -o ${c_compiler} = mpc_icc -o ${c_compiler} = hcc -o "x$PE_ENV" = "xCRAY" ]
       then
         unwind_c_compiler=gcc
         unwind_cxx_compiler=g++
@@ -7321,12 +7536,12 @@ if [ "x$download_unwind" = xyes ] ; then
           sed 's/_Unwind_Resume/_Unwind_Resume_other/' tmp.c > src/unwind/Resume.c
           rm tmp.c
         elif [ "$machine" = "craycnl" ] ; then
-          if [ "x$CRAY_PE_USE_CLANG" != "x" ]; then 
+          if [ "x$CRAY_PE_USE_CLANG" != "x" ]; then
 # use Cray PE clang compiler
             unwind_c_compiler=clang
             unwind_cxx_compiler=clang++
           fi
-          ./configure --prefix=${unwind_dir}  CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared --disable-minidebuginfo > ${libunwind_log} 2>&1
+	  ./configure --prefix=${unwind_dir}  CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared --disable-minidebuginfo > ${libunwind_log} 2>&1
         else
           ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} > ${libunwind_log} 2>&1
         fi
@@ -7477,7 +7692,14 @@ if [ "$gnu" = "yes" ]; then openmp_flag=-fopenmp; fi
 if [ "$llvm" = "yes" ]; then openmp_flag=-fopenmp; fi
 if [ "$pgi" = "yes" ]; then openmp_flag=-mp; fi
 if [ "$fujitsu" = "yes" ]; then openmp_flag=-kopenmp; fi
-if [ "$default_fortran" = "cray" ]; then openmp_flag=-h#omp; fi
+if [ "$default_fortran" = "cray" ]; then
+  if [ "x$CRAY_PE_USE_CLANG" = "x" ]; then
+    openmp_flag=-h#omp;
+  else
+    openmp_flag=-fopenmp;
+  fi
+fi
+
 if [ "$intel" = "yes" ]; then openmp_flag=-qopenmp; fi
 
 if [ "$ompt_dir" != "" ]; then
@@ -9204,6 +9426,49 @@ if [ "x$sos" = "xyes" ] ; then
   fi
 fi
 ######################################################################
+# Install ZLIB if requested
+######################################################################
+zlibs=zlib-1.2.11
+zlibtgz=$zlibs.tar.gz
+zliburl=https://www.zlib.net/$zlibtgz
+build_zlib() {
+  if [ "x$zlibdir" = xdownload ]; then
+    zlibdir="$targetdir/$architecture/$zlibs"
+  fi
+  if [ ! -d "$zlibdir" ]; then
+    echo "Building zlib..."
+    download $zliburl $zlibtgz
+    tar xf $zlibtgz
+    cd $zlibs
+    #./configure --prefix=$zlibdir
+    CC=$c_compiler ./configure --prefix=$zlibdir
+    echo "Installing in $zlibdir"
+#    sed -e 's/gcc/ncc/g' Makefile > Makefile~
+#    mv Makefile~ Makefile
+    make
+    make install
+    cd ..
+    echo "Built zlib"
+  else
+    echo "Found zlib installation"
+  fi
+}
+
+echo "$zlibdir"
+if [ "x$zlib" = "xno" ]; then
+  echo "zlib disabled."
+else
+if [ "x$zlibdir" = xdownload ] ; then
+  echo "Install zlibdir"
+  build_zlib
+fi
+  zlibinclude="-I$zlibdir/include#-I$zlibdir/include/extra"
+  zliblink="-L$zlibdir/lib#-L$zlibdir/lib64#-Wl\,-rpath\,$zlibdir/lib#-Wl\,-rpath\,$zlibdir/lib64#-L$zlibdir/lib"
+  zliblibs="-lz"
+  fixmakeargs="$fixmakeargs zlibinclude=$zlibinclude zliblink=$zliblink zliblibs=$zliblibs"
+fi
+
+######################################################################
 # Install BFD if requested
 ######################################################################
 binutils=binutils-2.23.2
@@ -9215,6 +9480,12 @@ if [ $machine = arm64_linux -a ! -r $targetdir/$architecture/$binutils/include/b
   binutilstgz=arm64-bfd.tgz
   p=`pwd`
   cd $targetdir/$architecture/; download "$binutilsurl" "$binutilstgz" ; tar zxf $binutilstgz; rm -f $binutilstgz ; cd ${p};
+fi
+
+if [ $machine = nec-sx-aurora ]; then
+  binutils=binutils-2.35.1
+  binutilstgz=$binutils.tar.gz
+  binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
 fi
 
 if [ "x$bfddir" = xnone ]; then
@@ -9379,13 +9650,16 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       nec-sx-aurora)
         echo "Building BFD for nec-sx-aurora. Checking for zlib."
 	# We need zlib built from source code.
-	zliburl=https://www.zlib.net/zlib-1.2.11.tar.gz
-        if [ -d $bfddir/../zlib-1.2.11 ]; then
-          echo "Found zlib-1.2.11"
-        else
+        if [ "x$zlibdir" != xdownload ]; then
+          echo "STANDARD INSTALLATION"
+	  zliburl=https://www.zlib.net/zlib-1.2.11.tar.gz
           download $zliburl zlib-1.2.11.tar.gz
           tar xf zlib-1.2.11.tar.gz; cd ./zlib-1.2.11; ./configure --prefix=$bfddir; sed -e 's/gcc/ncc/g' Makefile > Makefile~; mv Makefile~ Makefile; make; make install; cd ..
           echo "Built zlib"
+        elif [ -d $bfddir/../zlib-1.2.11 ]; then
+          echo "Found zlib-1.2.11"
+        elif [ -d $zlibdir ]; then
+          echo "Found zlib-1.2.11"
         fi
 
         ./configure CC=ncc CXX=nc++ --prefix=$bfddir --disable-nls --disable-werror \
@@ -9492,7 +9766,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     bfdinclude="-I$bfddir/include#-I$bfddir/include/extra"
     fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
     bfdinclude="-I$bfddir/include -I$bfddir/include/extra"
-    bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64"
+    bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64 -L$zlibdir/lib"
   fi
 
   # The libintl.dylib library is in /opt/local/lib... is that everywhere?
@@ -10420,20 +10694,28 @@ fi
 
 if [ "x$unwinder" != "xnone" ] ; then
     if [ $c_compiler = gcc -o $c_compiler = icc -o $c_compiler = pgcc -o $c_compiler = mpc_icc -o $c_compiler = mpc_cc ] ; then
-	unwind_extras="-Wl\,-rpath=$unwind_lib"
+        if [ "x$unwind_lib" != "x" ] ; then
+            unwind_extras="-Wl\,-rpath\,$unwind_lib"
+        fi
+    fi
+    if [ "x$unwind_inc" != "x" ] ; then
+      unwind_inc="-I${unwind_inc}"
+    fi
+    if [ "x$unwind_lib" != "x" ] ; then
+      unwind_lib="-L${unwind_lib}"
     fi
     if [ "x$unwinder" = "xlibunwind" ] ; then
-	if [ $machine = apple ] ; then
+	  if [ $machine = apple ] ; then
 	    unwind_lib_flag="-framework#System"
 	    unwind_extras=""
-	fi
-	if [ $machine = craycnl -a "x$CRAY_TARGET_PE" = "xcray" ]; then
-	  echo "WARNING: TAU does not currently support libunwind with Cray CCE compilers on AARCH64."
-	else
+	  fi
+	  #if [ $machine = craycnl -a "x$CRAY_TARGET_PE" = "xcray" ]; then
+	  #  echo "WARNING: TAU does not currently support libunwind with Cray CCE compilers on AARCH64."
+	  #else
 	  fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
-	fi
+	  #fi
     else
-	fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_STACKWALKER unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
+	  fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_STACKWALKER unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
     fi
 fi
 
@@ -11261,7 +11543,16 @@ if [ $otf = yes ] ; then
 	else
 	    otflib="$otfdir/${architecture}/lib"
 	fi
-	echo "OTF Library implicitly set to $otflib"
+	if [ ! -d $otflib ]; then 
+	  if [ -d $otfdir/lib64 ]; then
+	    otflib="$otfdir/lib64"
+	  else
+	    otflib="$otfdir/${architecture}/lib64"
+	  fi
+	fi 
+	if [ -d $oflib ]; then 
+	  echo "OTF Library implicitly set to $otflib"
+	fi 
     fi
     if [ "$otfinc" = "" ] ; then
 	if [ -r $otfdir/include/otf.h ]; then
@@ -11414,6 +11705,15 @@ if [ $sqlite3 = yes ] ; then
 	echo "Detected SQLITE3..."
     fixmakeargs="$fixmakeargs SQLITE3 "
     fixmakeargs="$fixmakeargs sqlite3dir=$sqlite3dir"
+fi
+
+if [ $mochi = yes ] ; then
+        echo "Detected Mochi..."
+    mochiincludes=`pkg-config --cflags-only-I sdskv-client | sed -e 's/[[:space:]]*$//' | sed 's/ /#/g'`
+    mochilibs=`pkg-config --libs sdskv-client | sed -e 's/[[:space:]]*$//' | sed 's/ /#/g'`
+    fixmakeargs="$fixmakeargs MOCHI "
+    fixmakeargs="$fixmakeargs mochiincludes=${mochiincludes}#-DTAU_MOCHI"
+    fixmakeargs="$fixmakeargs mochilibs=${mochilibs}"
 fi
 
 #if [ $caliper = yes ] ; then
@@ -11582,9 +11882,10 @@ if [ "x$download_dwarf" = xyes ] ; then
             else
               echo "Found /usr/include/libelf.h"
               libelfdir=/usr
+              systemlibelf=yes
             fi
 # End of libelf check. Continue with libdwarf build.
-            if [ $elf=yes ]; then
+            if [ $elf=yes -a $systemlibelf=no ]; then
               if [ $machine = x86_64 -o $machine = craycnl ]; then
                 orig_cflags=`echo $CFLAGS`
                 export CFLAGS="$orig_cflags -I${libelfdir}/include"
@@ -11864,12 +12165,15 @@ if [ $cxx_compiler = icpc -o $cxx_compiler = icpx -o $cxx_compiler = mpiicpc -o 
     t="Version 1"
     t1="${cxx_compiler#$s} version 1"
     t2="${cxx_compiler#$s}.orig version 1"
+    #Test for versions 20+ as well
+    t3="${cxx_compiler#$s} version 2"
     testarg=${version//$t/}
     testarg1=${version//$t1/}
     testarg2=${version#$t2}
+    testarg3=${version#$t3}
 
 
-    if [ "y$testarg" != "y$version" -o "y$testarg1" != "y$version" -o "y$testarg2" != "y$version" ] ; then
+    if [ "y$testarg" != "y$version" -o "y$testarg1" != "y$version" -o "y$testarg2" != "y$version" -o "y$testarg3" != "y$version" ] ; then
         echo "Intel v10.0+ compilers found"
         fixmakeargs="$fixmakeargs INTEL10FIX COMPINST_GNU"
     else
@@ -11998,8 +12302,9 @@ fi
 #    ;;
 #esac
 
-if [ $machine = apple ]; then
-    if [ -e /System/Library/PrivateFrameworks/CoreSymbolication.framework/CoreSymbolication ]; then
+if [ $machine = apple -o $machine = arm64_apple ]; then
+#if [ $machine = apple ]; then
+    if [ -e /System/Library/PrivateFrameworks/CoreSymbolication.framework ]; then
 # Let us test if this works with the current compiler.
 cat <<EOF > tau_apple_symbol.cpp
 #include "CoreSymbolication.h"
@@ -12011,7 +12316,7 @@ EOF
         else
           echo "no"
         fi
-        /bin/rm -f tau_apple_symbol.o
+        /bin/rm -f tau_apple_symbol.o tau_apple_symbol.cpp
     fi
 fi
 
@@ -12464,6 +12769,7 @@ sed -f $sedout < src/Profile/Makefile.skel > src/Profile/Makefile
 sed -f $sedout < src/TraceInput/Makefile.skel > src/TraceInput/Makefile
 sed -f $sedout < src/wrappers/Makefile.skel > src/wrappers/Makefile
 sed -f $sedout < utils/include/Makefile.skel > utils/include/Makefile
+sed -f $sedout < plugins/examples/Makefile.skel > plugins/examples/Makefile
 
 if [ $armci = yes ]; then
   sed -f $sedout < src/wrappers/armci/Makefile.skel > src/wrappers/armci/Makefile
@@ -12644,6 +12950,14 @@ fi
 
 if [ "x$issue_intel_warning" = "xyes" ] ; then
     echo "NOTE: Intel compilers found in your path, but C++ compiler not specified.  Whatever was detected in 'mpicxx -show' will be used as the compiler.  To force Intel compilers, please pass -c++=icpc or -c++=mpiicpc"
+fi
+
+if [ "x$PE_ENV" = "xCRAY" -a "x`uname -m`" == "xaarch64" -a "x$download_unwind" = "xyes" ]; 
+then
+   echo  "NOTE: TAU does not support currently support unwinding using TAU_EBS_UNWIND=1 on "
+   echo  " the Cray aarch64 platforms as the libmpichcxx.so is linked with a different libunwind.so.1 library."
+   echo  " Please do not use this option for now. For questions, please contact tau-bugs@cs.uoregon.edu."
+   echo  "****************************************************************************************************"
 fi
 
 exit 0

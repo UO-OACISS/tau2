@@ -81,6 +81,11 @@ case $1 in
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
 	;;
 
+     slurmdir=*)
+        slurmdir=`echo $1 | sed -e 's/^slurmdir=//'`
+	echo "s,^SLURMDIR=.*$,SLURMDIR=$slurmdir,g" >> $sedout
+	;;
+
      likwiddir=*)
         likwiddir=`echo $1 | sed -e 's/^likwiddir=//'`
 	echo "s,^LIKWIDDIR=.*$,LIKWIDDIR=$likwiddir,g" >> $sedout
@@ -113,6 +118,21 @@ case $1 in
      bfdinclude=*)
         bfdinclude=`echo $1 | sed -e 's/^bfdinclude=//' -e 's/#/ /g'`
 	echo "s,^BFDINCLUDE=.*$,BFDINCLUDE=$bfdinclude,g" >> $sedout
+	;;
+
+     zliblink=*)
+        zliblink=`echo $1 | sed -e 's/^zliblink=//' -e 's/#/ /g'`
+	echo "s,^ZLIBLINK=.*$,ZLIBLINK=$zliblink,g" >> $sedout
+	;;
+
+     zliblibs=*)
+        zliblibs=`echo $1 | sed -e 's/^zliblibs=//' -e 's/#/ /g'`
+	echo "s,^ZLIBLIBS=.*$,ZLIBLIBS=$zliblibs,g" >> $sedout
+	;;
+
+     zlibinclude=*)
+        zlibinclude=`echo $1 | sed -e 's/^zlibinclude=//' -e 's/#/ /g'`
+	echo "s,^ZLIBINCLUDE=.*$,ZLIBINCLUDE=$zlibinclude,g" >> $sedout
 	;;
 
      unwind_flag=*)
@@ -459,6 +479,14 @@ case $1 in
     sqlite3dir=*)
         sqlite3dir=`echo $1 | sed -e 's/^sqlite3dir=//'`
 	echo "s,^SQLITE3DIR=.*$,SQLITE3DIR=$sqlite3dir,g" >> $sedout
+	;;
+    mochiincludes=*)
+        mochiincludes=`echo $1 | sed -e 's/^mochiincludes=//' -e 's/#/ /g'`
+	echo "s,^MOCHIINCLUDES=.*$,MOCHIINCLUDES=$mochiincludes,g" >> $sedout
+	;;
+    mochilibs=*)
+        mochilibs=`echo $1 | sed -e 's/^mochilibs=//' -e 's/#/ /g'`
+	echo "s,^MOCHILIBS=.*$,MOCHILIBS=$mochilibs,g" >> $sedout
 	;;
 
 #    caliperdir=*)
@@ -958,6 +986,21 @@ case $1 in
 	echo "s@^TAU_SHMEMMPI_INC=\(.*\)@TAU_SHMEMMPI_INC=$shmemmpiinc@g" >> $sedout
         ;;
 
+     l0dir=*)
+        l0dir=`echo $1 | sed -e 's/^l0dir=//' -e 's/#/ /g'`
+	echo "s@^TAU_L0_DIR=\(.*\)@TAU_L0_DIR=$l0dir@g" >> $sedout
+        ;;
+
+     l0_lib_dir=*)
+        l0_lib_dir=`echo $1 | sed -e 's/^l0_lib_dir=//' -e 's/#/ /g'`
+	echo "s@^TAU_L0_LIB_DIR=\(.*\)@TAU_L0_LIB_DIR=$l0_lib_dir@g" >> $sedout
+        ;;
+
+     LEVEL_ZERO)
+        echo NOTE: Using the TAU Level Zero Profiling Interface 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      rocmdir=*)
         rocmdir=`echo $1 | sed -e 's/^rocmdir=//' -e 's/#/ /g'`
 	echo "s@^TAU_ROCM_DIR=\(.*\)@TAU_ROCM_DIR=$rocmdir@g" >> $sedout
@@ -1427,6 +1470,10 @@ case $1 in
 	echo NOTE: Apple c++ compiler will be used
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     ARM64_APPLE)
+	echo NOTE: Apple ARM64 Apple Silicon settings will be used
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      APPLE_MACH_PORT_BUG)
 	echo NOTE: Using -DTAU_APPLE_MACH_PORT_BUG compiler option 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1745,6 +1792,10 @@ case $1 in
 	;;
      SQLITE3)
 	echo "NOTE: Using SQLITE3 ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MOCHI)
+	echo "NOTE: Using MOCHI ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 #     CALIPER)
@@ -2303,12 +2354,20 @@ case $1 in
         echo "NOTE: flang compiler for Linux options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     FLANG_NO_MX_OPTS)
+        echo "NOTE: using newer flang compiler-based instrumentation option"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      MPIIFORT)
         echo "NOTE: Intel mpiifort compiler options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      FX)
         echo "NOTE: Fujitsu mpifrtpx compiler options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     FX_AARCH64)
+        echo "NOTE: Fujitsu mpifrt compiler for aarch64 options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      IBM64LINUX_XLC)
@@ -2418,6 +2477,9 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      COMPINST_CRAYPE_CLANG)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CRAYPE_CLANG_SLURM)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCNL_PAPI_SHARED)

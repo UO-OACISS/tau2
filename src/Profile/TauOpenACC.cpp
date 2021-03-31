@@ -575,7 +575,7 @@ void finalize()
 }
 
 #ifdef CUPTI
-void Tau_cupti_onload(void);
+//void Tau_cupti_onload(void);
 #endif
 
 ////////////////////////////////////////////////////////////////////////////
@@ -628,7 +628,7 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
     }
 
     /* Initialize CUPTI handling */
-    Tau_cupti_onload();
+    //Tau_cupti_onload(); // assume this has been done with the tau_exec -cupti flag!
 
     TAU_VERBOSE("Initialized CUPTI for OpenACC\n");
 
