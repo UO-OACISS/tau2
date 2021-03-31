@@ -882,9 +882,12 @@ extern "C" int Tau_show_profiles()
 /* Used by SOS plugin to start all currently running timers
  * because "tracing" is not enabled until after some timers
  * are started. */
-extern Profiler * Tau_get_timer_at_stack_depth(int pos)
-{
+extern Profiler * Tau_get_timer_at_stack_depth(int pos) {
     return &(getTauThreadFlag(RtsLayer::myThread()).Tau_global_stack[pos]);
+}
+
+extern Profiler * Tau_get_timer_at_stack_depth_task(int pos, int tid) {
+    return &(getTauThreadFlag(tid).Tau_global_stack[pos]);
 }
 
 extern "C" void Tau_stop_all_timers(int tid)

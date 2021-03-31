@@ -86,6 +86,7 @@ if [ $python_wrapper = "true" ] ; then
   echo "        -monitoring   Periodically read available OS/HW monitoring counters"
   echo "        -sqlite3      Write profile data to SQLite3 database"
   echo "        -skel         Write trace event data to skeleton files"
+  echo "        -disable-kokkos  Disable Kokkos profiling (removes fences that hurt performance)"
 fi
   echo ""
   echo "Notes:"
@@ -329,6 +330,7 @@ adios2=false
 monitoring=false
 sqlite3=false
 skel=false
+track_kokkos=true
 adios2_trace=false
 sos=false
 
@@ -415,6 +417,10 @@ for arg in "$@" ; do
         ;;
       -skel)
         skel=true
+        shift
+        ;;
+      -disable-kokkos)
+        track_kokkos=false
         shift
         ;;
       -adios2)
@@ -815,7 +821,10 @@ if [ $sos = "true" ]; then
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
 fi
 
-export KOKKOS_PROFILE_LIBRARY=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+if [ $track_kokkos = "true" ]; then
+    export KOKKOS_PROFILE_LIBRARY=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+fi
+
 if [ $track_ompt = "true" ]; then
   export OMP_TOOL_LIBRARIES=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
 fi
