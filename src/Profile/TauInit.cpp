@@ -132,7 +132,7 @@ int& initializing() {
 // True if currently inside Tau_init_initializeTAU()
 // This is different from tau_initialized() which becomes true partway
 // through Tau_init_initializeTAU(), at the point when timers can be
-// created. 
+// created.
 int& tau_inside_initialize() {
   static int _tau_inside_initialize = 0;
   return _tau_inside_initialize;
@@ -190,7 +190,7 @@ static void tauToggleInstrumentationHandler(int sig)
        int i, frames = backtrace(callstack, 128);
        char** strs = backtrace_symbols(callstack, frames);
        for (i = 0; i < frames; ++i) {
-         fprintf(stderr,"[%d,%d]:[%d,%d] %s\n", RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myNode(), RtsLayer::myThread(), strs[i]);
+         TAU_VERBOSE("[%d,%d]:[%d,%d] %s\n", RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myNode(), RtsLayer::myThread(), strs[i]);
        }
        free(strs);
   exit(0);
@@ -355,6 +355,12 @@ int Tau_profile_exit_scorep()
   return 0;
 }
 
+/* disable this stupid thing */
+extern "C" int __attribute__((weak)) PetscPopSignalHandler(void) {
+    return 0;
+}
+typedef int(*PetscPopSignalHandler_p)(void);
+
 //////////////////////////////////////////////////////////////////////
 // Initialize signal handling routines
 //////////////////////////////////////////////////////////////////////
@@ -367,6 +373,12 @@ int Tau_signal_initialization()
 
   if (TauEnv_get_track_signals()) {
     TAU_VERBOSE("TAU: Enable signal tracking\n");
+
+    /* Disable the PETSc signal handler, if it exists */
+    PetscPopSignalHandler_p foo = &PetscPopSignalHandler;
+    if (foo != NULL) {
+        foo();
+    }
 
     tauAddSignal(SIGILL);
     tauAddSignal(SIGINT);
