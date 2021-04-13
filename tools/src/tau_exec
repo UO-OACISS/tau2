@@ -87,6 +87,7 @@ if [ $python_wrapper = "true" ] ; then
   echo "        -sqlite3      Write profile data to SQLite3 database"
   echo "        -skel         Write trace event data to skeleton files"
   echo "        -disable-kokkos  Disable Kokkos profiling (removes fences that hurt performance)"
+  echo "        -ugni         Track Cray UGNI network library functions."
 fi
   echo ""
   echo "Notes:"
@@ -333,6 +334,7 @@ skel=false
 track_kokkos=true
 adios2_trace=false
 sos=false
+track_ugni=false
 
 # This saves the args to tau_exec so they can be reused later.
 # This is used for MPI_Comm_spawn support, in which TAU spawns the child
@@ -646,6 +648,16 @@ for arg in "$@" ; do
           exit 1
         fi
         ;;
+      -ugni)
+        track_ugni=true
+        save_arg $arg
+        shift
+        ;;
+      -gni)
+        track_ugni=true
+        save_arg $arg
+        shift
+        ;;
       -c)
         if [ $python_wrapper = "true" ] ; then
           save_arg $arg
@@ -867,6 +879,11 @@ if [ $track_io = "true" ] ; then
   TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
   #Needed for the auditor
   export LD_BIND_NOW=1
+fi
+
+if [ $track_ugni = "true" ] ; then
+  # Add the UGNI wrapper library to the LD_PRELOAD list
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gni-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
 if [ $track_numa = "true" ]; then

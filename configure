@@ -1182,6 +1182,7 @@ sddfdir=
 tau_uselm=yes
 iowrapper=no
 dmapp=no
+ugni=no
 zepto=no
 zeptodir=
 cuda=no
@@ -1374,6 +1375,11 @@ for arg in "$@"; do
 
 	-dmapp)
 	    dmapp=yes
+	    shift
+	    ;;
+
+	-ugni)
+	    ugni=yes
 	    shift
 	    ;;
 
@@ -4015,6 +4021,9 @@ case $machine in
 	    if [ $dmapp = no -a "x$CRAY_DMAPP_INCLUDE_OPTS" != "x" ]; then
 		fixmakeargs="$fixmakeargs DMAPP"
             fi
+	    if [ $ugni = no -a "x$CRAY_DMAPP_INCLUDE_OPTS" != "x" ]; then
+		fixmakeargs="$fixmakeargs UGNI"
+            fi
 
 	    # *CWL* - if bfd path is not explicitly specified, point
 	    #         to the correct preset bfd path.
@@ -4365,6 +4374,13 @@ if [ "x$PE_ENV" = "xCRAY" -o $dmapp = yes ]; then
     fi
 fi
 
+if [ "x$PE_ENV" = "xCRAY" -o $ugni = yes ]; then
+    if [ "x$CRAY_UGNI_INCLUDE_OPTS" = "x" ] ; then
+        echo "TAU: Please load the dmapp module on Cray to set CRAY_DMAPP_INCLUDE_OPTS environment variable and reconfigure TAU with the -dmapp configure option"
+    else
+        fixmakeargs="$fixmakeargs UGNI"
+    fi
+fi
 
 if [ $stff = yes ] ; then
     fixmakeargs="$fixmakeargs RENCI_STFF stffdir=${stffdir} sddfdir=${sddfdir}"
