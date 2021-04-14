@@ -29,6 +29,7 @@
 #ifdef TAU_ADIOS
 #include "adiost_callback_api.h"
 #endif
+#include "inttypes.h"
 
 /* Can't include TauMmapMemMgr, becuase it's c++ header.  So declare the
    functions here. */
@@ -115,7 +116,7 @@ void convert_comm(char * tmpstr, MPI_Comm comm) {
         sprintf(tmpstr, "MPI_COMM_NULL");
         return;
     }
-    sprintf(tmpstr, "0x%08x", comm);
+    sprintf(tmpstr, "0x%" PRIx64 "", (uint64_t)comm);
     return;
 }
 
@@ -173,7 +174,7 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __commstr[64]; \
 convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"MPI_Comm_split\", \"comm_in\": \"%s\", \"color\": %d, \"key\": %d, \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __commstr,__color,__key,__comm_out); \
+sprintf(__tmp, "%s \"MPI_Comm_split\", \"comm_in\": \"%s\", \"color\": %d, \"key\": %d, \"comm_out\": \"0x%" PRIx64 "\"", EVENT_TRACE_PREFIX, __commstr,__color,__key,(uint64_t)__comm_out); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
@@ -182,7 +183,7 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __commstr[64]; \
 convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"MPI_Comm_dup\", \"comm_in\": \"%s\", \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __commstr, __comm_out); \
+sprintf(__tmp, "%s \"MPI_Comm_dup\", \"comm_in\": \"%s\", \"comm_out\": \"0x%" PRIx64 "\"", EVENT_TRACE_PREFIX, __commstr, (uint64_t)__comm_out); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
@@ -200,7 +201,7 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __commstr[64]; \
 convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"MPI_Comm_create\", \"comm_in\": \"%s\", \"group\": \"%p\", \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __commstr, __group, __comm_out); \
+sprintf(__tmp, "%s \"MPI_Comm_create\", \"comm_in\": \"%s\", \"group\": \"%p\", \"comm_out\": \"0x%" PRIx64 "\"", EVENT_TRACE_PREFIX, __commstr, __group, (uint64_t)__comm_out); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
@@ -335,7 +336,7 @@ char __peer_commstr[64]; \
 convert_comm(__local_commstr, __local_comm); \
 convert_comm(__peer_commstr, __peer_comm); \
 char __tmp[256]; \
-sprintf(__tmp, "%s \"MPI_Intercomm_create\", \"local_comm\": \"%s\", \"local_leader\": \"%d\", \"peer_comm\": \"%s\", \"remote_leader\": \"%d\", \"tag\": \"%d\", \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __local_commstr, __local_leader, __peer_commstr, __remote_leader, __tag, __comm_out); \
+sprintf(__tmp, "%s \"MPI_Intercomm_create\", \"local_comm\": \"%s\", \"local_leader\": \"%d\", \"peer_comm\": \"%s\", \"remote_leader\": \"%d\", \"tag\": \"%d\", \"comm_out\": \"0x%" PRIx64 "\"", EVENT_TRACE_PREFIX, __local_commstr, __local_leader, __peer_commstr, __remote_leader, __tag, (uint64_t)__comm_out); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
@@ -344,7 +345,7 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __local_commstr[64]; \
 convert_comm(__local_commstr, __local_comm); \
 char __tmp[256]; \
-sprintf(__tmp, "%s \"MPI_Intercomm_merge\", \"local_comm\": \"%s\", \"high\": \"%d\", \"comm_out\": \"0x%08x\"", EVENT_TRACE_PREFIX, __local_commstr, __high, __comm_out); \
+sprintf(__tmp, "%s \"MPI_Intercomm_merge\", \"local_comm\": \"%s\", \"high\": \"%d\", \"comm_out\": \"0x%" PRIx64 "\"", EVENT_TRACE_PREFIX, __local_commstr, __high, (uint64_t)__comm_out); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
@@ -366,7 +367,7 @@ void Tau_timer_exit_cart_create_event(MPI_Comm comm, int ndims, TAU_MPICH3_CONST
     for (x = 0 ; x < ndims-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, periods[x]);
     }
-    sprintf(tmp, "%s%d], \"reorder\": %d, \"comm_out\": \"%p\"", tmp, periods[ndims-1], reorder, comm_out);
+    sprintf(tmp, "%s%d], \"reorder\": %d, \"comm_out\": \"%" PRIx64 "\"", tmp, periods[ndims-1], reorder, (uint64_t)comm_out);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
@@ -406,7 +407,7 @@ void Tau_timer_exit_cart_sub_event(MPI_Comm comm, TAU_MPICH3_CONST int * remains
     for (x = 0 ; x < __cart_dims-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, remains[x]);
     }
-    sprintf(tmp, "%s%d], \"comm_out\": \"0x%08x\"", tmp, remains[__cart_dims-1], comm_out);
+    sprintf(tmp, "%s%d], \"comm_out\": \"0x%" PRIx64 "\"", tmp, remains[__cart_dims-1], (uint64_t)comm_out);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
