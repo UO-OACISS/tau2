@@ -441,7 +441,10 @@ int tau_pthread_join_wrapper(pthread_join_p pthread_join_call,
   }
 
   int ret;
-  if(*wrapped || Tau_global_getLightsOut()) {
+  // CUDA can call pthread_join during TAU initialization, before timer creation
+  // is supported, so we have to check to make sure TAU is actually initialized
+  // before wrapping pthread_join.
+  if(*wrapped || Tau_global_getLightsOut() || !Tau_init_check_initialized()) {
     // Another wrapper has already intercepted the call so just pass through
     ret = pthread_join_call(thread, retval);
   } else {
