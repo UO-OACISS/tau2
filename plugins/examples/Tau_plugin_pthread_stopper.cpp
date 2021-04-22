@@ -27,12 +27,12 @@ namespace tau_plugin {
 class plugin_options {
     private:
         plugin_options(void) {
-            excluded_timers.insert(std::string("MPI_Init()"));
+            // MPI_Init() is handled in TauMpi.c
+            //excluded_timers.insert(std::string("MPI_Init()"));
             excluded_timers.insert(std::string("cudaDeviceSynchronize"));
             excluded_timers.insert(std::string("BP4Writer::Open"));
         }
     public:
-        bool env_use_selection;
         std::set<std::string> excluded_timers;
         static plugin_options& thePluginOptions() {
             static plugin_options tpo;
@@ -59,7 +59,6 @@ void Tau_stopper_parse_selection_file(const char * filename) {
     std::ifstream file(filename);
     std::string str;
     bool excluding_timers = false;
-    thePluginOptions().env_use_selection = true;
     while (std::getline(file, str)) {
         // trim right whitespace
         str.erase(str.find_last_not_of(" \n\r\t")+1);
@@ -139,10 +138,6 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
 }
 
 bool skip_timer(const char * key) {
-    // are we filtering at all?
-    if (!thePluginOptions().env_use_selection) {
-        return false;
-    }
     // check to see if this label is excluded
     std::string _key(key);
     if (thePluginOptions().excluded_timers.find(_key) !=

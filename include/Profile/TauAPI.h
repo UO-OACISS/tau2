@@ -653,6 +653,8 @@ void Tau_stop_class_allocation(const char * name, int record);
 void Tau_traced_api_call_enter();
 void Tau_traced_api_call_exit();
 int Tau_time_traced_api_call();
+void Tau_disable_pthread_tracking(void);
+void Tau_enable_pthread_tracking(void);
 
 #ifdef __cplusplus
 /* Include the C++ API header */
@@ -673,8 +675,6 @@ int Tau_time_traced_api_call();
 // allow this to be called from within TAU
 #ifdef __cplusplus
 bool& Tau_is_pthread_tracking_enabled();
-void Tau_disable_pthread_tracking(void);
-void Tau_enable_pthread_tracking(void);
 #endif
 
 /**************************************************************************/

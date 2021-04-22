@@ -35,6 +35,9 @@ std::map<int, const char *> fid_map;
 
 const char * Tau_get_pathname_from_fid(int fid) {
     static const char * empty = "";
+    if (fid == 0) {
+        return empty;
+    }
     if (fid_map.count(fid) == 0) {
         return empty;
     }

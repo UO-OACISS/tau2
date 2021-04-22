@@ -2264,6 +2264,8 @@ char *** argv;
     adiost_tool();
 #endif
 
+    Tau_disable_pthread_tracking();
+
 #ifdef TAU_ADIOS2
     int provided;
     returnVal = PMPI_Init_thread( argc, argv, MPI_THREAD_MULTIPLE, &provided );
@@ -2273,6 +2275,8 @@ char *** argv;
 #else
     returnVal = PMPI_Init( argc, argv );
 #endif
+
+    Tau_enable_pthread_tracking();
 
 #ifdef TAU_MPI_T
     Tau_MPI_T_initialization();

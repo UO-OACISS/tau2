@@ -2413,11 +2413,11 @@ bool& Tau_is_pthread_tracking_enabled() {
     return enabled;
 }
 
-void Tau_disable_pthread_tracking(void) {
+extern "C" void Tau_disable_pthread_tracking(void) {
     Tau_is_pthread_tracking_enabled() = false;
 }
 
-void Tau_enable_pthread_tracking(void) {
+extern "C" void Tau_enable_pthread_tracking(void) {
     Tau_is_pthread_tracking_enabled() = true;
 }
 
