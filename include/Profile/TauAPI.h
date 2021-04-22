@@ -670,6 +670,13 @@ int Tau_time_traced_api_call();
 } /* for extern "C" */
 #endif /* __cplusplus */
 
+// allow this to be called from within TAU
+#ifdef __cplusplus
+bool& Tau_is_pthread_tracking_enabled();
+void Tau_disable_pthread_tracking(void);
+void Tau_enable_pthread_tracking(void);
+#endif
+
 /**************************************************************************/
 
 #endif /* _TAU_API_H_ */

@@ -2408,6 +2408,18 @@ extern "C" void Tau_set_interrupt_interval(int value) {
   TauSetInterruptInterval(value);
 }
 
+bool& Tau_is_pthread_tracking_enabled() {
+    static bool enabled = true;
+    return enabled;
+}
+
+void Tau_disable_pthread_tracking(void) {
+    Tau_is_pthread_tracking_enabled() = false;
+}
+
+void Tau_enable_pthread_tracking(void) {
+    Tau_is_pthread_tracking_enabled() = true;
+}
 
 extern "C" void Tau_global_stop(void) {
   Tau_stop_current_timer();

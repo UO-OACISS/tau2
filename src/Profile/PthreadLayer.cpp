@@ -287,7 +287,7 @@ void tau_pthread_function_cleanup_handler(void * args) {
 // provided to pthread_create.
 extern "C"
 void * tau_pthread_function(void *arg)
-{   
+{
   void * ret = NULL;
   tau_pthread_pack * pack = (tau_pthread_pack*)arg;
 
@@ -300,7 +300,7 @@ void * tau_pthread_function(void *arg)
 
   TAU_REGISTER_THREAD();
   Tau_create_top_level_timer_if_necessary();
-  
+
   /* iterate over the stack and create a timer context */
   if (TauEnv_get_threadContext() && pack->timer_context_stack.size() > 0) {
     for (std::vector<FunctionInfo*>::iterator iter = pack->timer_context_stack.begin() ;
@@ -328,7 +328,7 @@ void * tau_pthread_function(void *arg)
   wrapper_args.pack = pack;
   // Register the cleanup function.
   pthread_cleanup_push(tau_pthread_function_cleanup_handler, &wrapper_args);
-  
+
   // Call the function that we are wrapping.
   ret = pack->start_routine(pack->arg);
 
@@ -380,13 +380,13 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
   }
 
   int retval;
-  bool ignore_thread = false;
+  bool ignore_thread = !Tau_is_pthread_tracking_enabled();
 #ifdef CUPTI
 /* This is needed so that TauGpu.cpp can let the rest of TAU know that
  * it has been initialized.  PthreadLayer.cpp needs to know whether
  * CUDA/CUPTI has been initialized (for GPU timestamps) - if it starts before
  * TAU is initialized, then we could have problems.  This prevents that. */
-  ignore_thread = !Tau_gpu_initialized();
+  ignore_thread = !Tau_gpu_initialized() || !Tau_is_pthread_tracking_enabled();
 #endif
   if(*wrapped || Tau_global_getLightsOut() ||
      !Tau_init_check_initialized() || ignore_thread) {
