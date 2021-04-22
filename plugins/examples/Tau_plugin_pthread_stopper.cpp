@@ -26,7 +26,11 @@ namespace tau_plugin {
 
 class plugin_options {
     private:
-        plugin_options(void) {}
+        plugin_options(void) {
+            excluded_timers.insert(std::string("MPI_Init()"));
+            excluded_timers.insert(std::string("cudaDeviceSynchronize"));
+            excluded_timers.insert(std::string("BP4Writer::Open"));
+        }
     public:
         bool env_use_selection;
         std::set<std::string> excluded_timers;
@@ -134,6 +138,22 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     enabled = true;
 
     return 0;
+}
+
+/* Necessary to use const char * because UserEvents use TauSafeString objects,
+ * not std::string. We use the "if_empty" parameter to tell us how to treat
+ * an empty set.  For exclude lists, it's false, for include lists, it's true */
+bool Tau_stopper_contains(std::set<std::string>& myset,
+        const char * key, bool if_empty) {
+    // if the set has contents, and we are in the set, then return true.
+    std::string _key(key);
+    if (myset.size() == 0) {
+        return if_empty;
+    } else if (myset.find(_key) == myset.end()) {
+        return false;
+    }
+    // otherwise, return false.
+    return true;
 }
 
 } // end namespace
