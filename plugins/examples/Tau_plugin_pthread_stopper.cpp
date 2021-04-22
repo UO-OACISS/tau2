@@ -46,8 +46,6 @@ inline plugin_options& thePluginOptions() {
 
 void Tau_stopper_parse_environment_variables(void);
 void Tau_stopper_parse_selection_file(const char * filename);
-bool Tau_stopper_contains(std::set<std::string>& myset,
-        const char * key, bool if_empty);
 
 void Tau_stopper_parse_environment_variables(void) {
     char * tmp = NULL;
@@ -140,36 +138,20 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     return 0;
 }
 
-/* Necessary to use const char * because UserEvents use TauSafeString objects,
- * not std::string. We use the "if_empty" parameter to tell us how to treat
- * an empty set.  For exclude lists, it's false, for include lists, it's true */
-bool Tau_stopper_contains(std::set<std::string>& myset,
-        const char * key, bool if_empty) {
-    // if the set has contents, and we are in the set, then return true.
-    std::string _key(key);
-    if (myset.size() == 0) {
-        return if_empty;
-    } else if (myset.find(_key) == myset.end()) {
-        return false;
-    }
-    // otherwise, return false.
-    return true;
-}
-
-} // end namespace
-
-using namespace tau_plugin;
-
 bool skip_timer(const char * key) {
     // are we filtering at all?
     if (!thePluginOptions().env_use_selection) {
         return false;
     }
     // check to see if this label is excluded
-    if (Tau_stopper_contains(thePluginOptions().excluded_timers, key, false)) {
+    std::string _key(key);
+    if (thePluginOptions().excluded_timers.find(_key) !=
+        thePluginOptions().excluded_timers.end()) {
         return true;
     }
     // by default, don't skip it.
     return false;
 }
+
+} // end namespace
 
