@@ -4023,6 +4023,7 @@ case $machine in
             fi
 	    if [ $ugni = no -a "x$CRAY_DMAPP_INCLUDE_OPTS" != "x" ]; then
 		fixmakeargs="$fixmakeargs UGNI"
+	        tauoptions="${tauoptions}-ugni"
             fi
 
 	    # *CWL* - if bfd path is not explicitly specified, point
