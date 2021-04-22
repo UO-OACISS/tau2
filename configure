@@ -4380,6 +4380,7 @@ if [ "x$PE_ENV" = "xCRAY" -o $ugni = yes ]; then
         echo "TAU: Please load the dmapp module on Cray to set CRAY_DMAPP_INCLUDE_OPTS environment variable and reconfigure TAU with the -dmapp configure option"
     else
         fixmakeargs="$fixmakeargs UGNI"
+	tauoptions="${tauoptions}-ugni"
     fi
 fi
 
