@@ -84,6 +84,7 @@ if [ $python_wrapper = "true" ] ; then
   echo "        -adios2       Write output to ADIOS2 archive"
   echo "        -adios2_trace Write trace output to ADIOS2 archive"
   echo "        -monitoring   Periodically read available OS/HW monitoring counters"
+  echo "        -pthread-stopper   Prevent pthread tracking during specified functions"
   echo "        -sqlite3      Write profile data to SQLite3 database"
   echo "        -skel         Write trace event data to skeleton files"
   echo "        -disable-kokkos  Disable Kokkos profiling (removes fences that hurt performance)"
@@ -328,6 +329,7 @@ py_interp_args=""
 ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
 ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 adios2=false
+pthread_stopper=false
 monitoring=false
 sqlite3=false
 skel=false
@@ -423,6 +425,10 @@ for arg in "$@" ; do
         ;;
       -disable-kokkos)
         track_kokkos=false
+        shift
+        ;;
+      -pthread-stopper)
+        pthread_stopper=true
         shift
         ;;
       -adios2)
@@ -790,6 +796,11 @@ fi
 # reads the counters on the "dump" event.
 if [ $monitoring = "true" ]; then
     export TAU_PLUGINS=$TAU_PLUGINS:libTAU-monitoring-plugin${TAU_SHLIBX}
+    export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+fi
+
+if [ $pthread_stopper = "true" ]; then
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-pthread-stopper-plugin${TAU_SHLIBX}
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
 fi
 

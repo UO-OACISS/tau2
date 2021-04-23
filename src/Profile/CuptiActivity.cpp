@@ -349,7 +349,7 @@ static void handleResource(CUpti_CallbackId cbid, const CUpti_ResourceData *reso
 
 void Tau_cupti_setup_unified_memory() {
 
-		TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_setup_unified_memory\n");
+		TAU_DEBUG_PRINT("TAU: entering Tau_cupti_setup_unified_memory\n");
 
     CUptiResult err = CUPTI_SUCCESS;
     CUresult err2 = CUDA_SUCCESS;
@@ -400,13 +400,13 @@ void Tau_cupti_setup_unified_memory() {
     }
     CUDA_CHECK_ERROR(err2, "Cannot enqueue buffer.\n");
 
-		TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_setup_unified_memory\n");
+		TAU_DEBUG_PRINT("TAU: exiting Tau_cupti_setup_unified_memory\n");
 
 }
 
 void Tau_cupti_set_device_props() {
 
-		TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_set_device_props\n");
+		TAU_DEBUG_PRINT("TAU: entering Tau_cupti_set_device_props\n");
 
     CUptiResult cupti_err = CUPTI_SUCCESS;
     cudaError cuda_err = cudaSuccess;
@@ -522,7 +522,7 @@ void Tau_cupti_set_device_props() {
 #endif
 
 
-		TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_set_device_props\n");
+		TAU_DEBUG_PRINT("TAU: exiting Tau_cupti_set_device_props\n");
 
 }
 
@@ -553,7 +553,7 @@ CUresult cuInit(unsigned int a1)
 void Tau_cupti_subscribe()
 {
     if(subscribed) return;
-    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_subscribe\n");
+    TAU_DEBUG_PRINT("TAU: entering Tau_cupti_subscribe\n");
     CUptiResult err = CUPTI_SUCCESS;
     CUresult err2 = CUDA_SUCCESS;
 
@@ -574,14 +574,14 @@ void Tau_cupti_subscribe()
     err = cuptiActivityRegisterCallbacks(Tau_cupti_register_buffer_creation, Tau_cupti_process_buffer);
     CUPTI_CHECK_ERROR(err, "cuptiActivityRegisterCallbacks");
     subscribed = 1;
-    TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_subscribe\n");
+    TAU_DEBUG_PRINT("TAU: exiting Tau_cupti_subscribe\n");
 }
 
 
 void Tau_cupti_enable_domains()
 {
 
-    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_enable_domains\n");
+    TAU_DEBUG_PRINT("TAU: entering Tau_cupti_enable_domains\n");
 		CUptiResult cuptiErr = CUPTI_SUCCESS;
 
     if (cupti_api_runtime())
@@ -661,14 +661,14 @@ void Tau_cupti_enable_domains()
     cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_STREAM);
     CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_STREAM)");
 
-    TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_enable_domains\n");
+    TAU_DEBUG_PRINT("TAU: exiting Tau_cupti_enable_domains\n");
 }
 
 void Tau_cupti_setup_offset()
 {
 
 
-    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_setup_offset\n");
+    TAU_DEBUG_PRINT("TAU: entering Tau_cupti_setup_offset\n");
 
 		CUptiResult cuptiErr;
     uint64_t gpu_timestamp;
@@ -683,13 +683,13 @@ void Tau_cupti_setup_offset()
     //Tau_cupti_set_offset(0);
 
 
-    TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_setup_offset\n");
+    TAU_DEBUG_PRINT("TAU: exiting Tau_cupti_setup_offset\n");
 }
 
 void Tau_cupti_init()
 {
 
-    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_init\n");
+    TAU_DEBUG_PRINT("TAU: entering Tau_cupti_init\n");
 
     Tau_gpu_init();
     Tau_cupti_set_device_props();
@@ -707,7 +707,7 @@ void Tau_cupti_init()
     Tau_cupti_enable_domains();
     disable_callbacks =0;
 
-    TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_init\n");
+    TAU_DEBUG_PRINT("TAU: exiting Tau_cupti_init\n");
 }
 
 
@@ -718,7 +718,7 @@ void Tau_cupti_onload()
     if (once) { return; } else { once = true; }
 
     CUresult cuErr = CUDA_SUCCESS;
-    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_onload\n");
+    TAU_DEBUG_PRINT("TAU: entering Tau_cupti_onload\n");
 
     cuErr = cuInit(0);
     TAU_VERBOSE("TAU: Enabling CUPTI callbacks.\n");
@@ -743,7 +743,7 @@ void Tau_cupti_onload()
 	    Tau_cupti_init();
     }
 
-	TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_onload\n");
+	TAU_DEBUG_PRINT("TAU: exiting Tau_cupti_onload\n");
 
 }
 
