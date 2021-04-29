@@ -1271,6 +1271,10 @@ case $1 in
 	echo NOTE: Building Cray DMAPP wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     UGNI)
+	echo NOTE: Building Cray UGNI wrapper
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      ARMCI)
 	echo NOTE: Building ARMCI wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
