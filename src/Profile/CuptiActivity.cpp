@@ -140,7 +140,7 @@ static uint32_t buffers_queued = 0;
 struct CuptiActivityData{
     std::vector<TauContextUserEvent *> counterEvents;
     std::map<uint32_t, CUPTI_KERNEL_TYPE> kernelMap;
-    std::map<uint32_t, std::list<CUpti_ActivityInstructionExecution> > instructionMap;
+    std::map<uint32_t, std::list<CUpti_ActivityInstructionExecution *> > instructionMap;
     eventMap_t eventMap;
     uint64_t previous_ts=0;
     uint64_t counters_at_last_launch[TAU_MAX_COUNTERS] = {ULONG_MAX};
@@ -751,11 +751,6 @@ void Tau_cupti_onunload() {
     if(TauEnv_get_cuda_track_unified_memory()) {
         CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
     }
-/*
-    if (TauEnv_get_cuda_track_sass() && TauEnv_get_cuda_csv_output()) {
-        write_sass_output();
-    }
-*/
 }
 
 extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
@@ -908,6 +903,7 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
              * should probably move to the async handler, so that we don't
              * give up the thread id until all the async events are in.
              */
+             
             if (TauEnv_get_thread_per_gpu_stream()) {
                 streamsToRecycle.insert(streamId);
             }
@@ -2082,7 +2078,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                     instrRecord->pcOffset, instrRecord->sourceLocatorId,
                     instrRecord->threadsExecuted);
 #endif
-                    caData.instructionMap[instrRecord->correlationId].push_back(*instrRecord);
+                    caData.instructionMap[instrRecord->correlationId].push_back(instrRecord);
                 }
                 break;
             }
@@ -2381,18 +2377,18 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
         double flops_pct = 0;
         double ctrlops_pct = 0;
         double memops_pct = 0;
-        std::list<CUpti_ActivityInstructionExecution> instrSampList = caData.instructionMap.find(corrId)->second;
+        std::list<CUpti_ActivityInstructionExecution *> instrSampList = caData.instructionMap.find(corrId)->second;
 
         if (!instrSampList.empty()) {
-            for (std::list<CUpti_ActivityInstructionExecution>::iterator iter=instrSampList.begin();
+            for (std::list<CUpti_ActivityInstructionExecution *>::iterator iter=instrSampList.begin();
                     iter != instrSampList.end();
                     iter++) {
-                CUpti_ActivityInstructionExecution is = *iter;
-                int sid = is.sourceLocatorId;
+                CUpti_ActivityInstructionExecution* instr = *iter;
+                int sid = instr->sourceLocatorId;
                 int lineno = -1;
                 if ( sourceLocatorMap.find(sid) != sourceLocatorMap.end() ) {
                     lineno = sourceLocatorMap.find(sid)->second.lineNumber;
-                    std::pair<int, int> p1 = std::make_pair(lineno, (unsigned int) is.pcOffset);
+                    std::pair<int, int> p1 = std::make_pair(lineno, (unsigned int) instr->pcOffset);
 
                     for (std::map<std::pair<int, int>,CudaOps>::iterator iter= map_disassem.begin();
                             iter != map_disassem.end(); iter++) {
@@ -2429,7 +2425,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                         else {
 #if TAU_DEBUG_DISASM
                             cout << "[CuptiActivity]:  map_disassem does not exist for pair("
-                                << lineno << "," << is->pcOffset << ")\n";
+                                << lineno << "," << instr->pcOffset << ")\n";
 #endif
                         }
                     }
@@ -3081,13 +3077,13 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	if (!fp) {
 	    return 0;
 	}
-	std::list<CUpti_ActivityInstructionExecution> ie_list = caData.instructionMap.find(correlationId)->second;
+	std::list<CUpti_ActivityInstructionExecution *> ie_list = caData.instructionMap.find(correlationId)->second;
 	if (ie_list.empty()) {
 	    fclose(fp);
 	    return 0;
 	}
-	for (std::list<CUpti_ActivityInstructionExecution>::iterator iter = ie_list.begin(); iter != ie_list.end(); iter++) {
-	    CUpti_ActivityInstructionExecution* instr = &(*iter);
+	for (std::list<CUpti_ActivityInstructionExecution *>::iterator iter = ie_list.begin(); iter != ie_list.end(); iter++) {
+	    CUpti_ActivityInstructionExecution* instr = *iter;
 	    uint32_t correlationId = instr->correlationId;
 	    uint32_t executed = instr->executed;
 	    uint32_t functionId = instr->functionId;
@@ -3151,6 +3147,10 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	strcat (str,"/sass_");
 	strcat (str, fname.c_str());
 	strcat (str, ".csv");
+    
+ 	if (access (str, F_OK) == 0) {
+ 	  return 0;
+ 	}
 	fp = fopen(str, "w+b");
 
 	if (!fp) {
@@ -3163,6 +3163,10 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 
     void write_sass_counters() {
 
+    if(TauEnv_get_cuda_csv_output()) {
+        output_function_map_to_csv();
+        output_source_map_to_csv();
+    }
 	for (std::set<uint32_t>::iterator iter=correlationWritten.begin(); iter != correlationWritten.end(); iter++) {
 	    uint32_t correlationId = *iter;
 	    uint32_t taskId = get_taskid_from_correlation_id(correlationId);
@@ -3172,32 +3176,13 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	    }
 	    CUPTI_KERNEL_TYPE *kernel = &(caData.kernelMap.find(correlationId)->second);
 	    const char *kname = demangleName(kernel->name);
-	    if (record_imix_counters(kname, taskId, kernel->streamId, kernel->contextId, correlationId, kernel->end)) {
-	        correlationWritten.erase(iter);
-	        assert(correlationWritten.find(correlationId) == correlationWritten.end());
+ 	    record_imix_counters(kname, taskId, kernel->streamId, kernel->contextId, correlationId, kernel->end);
+ 	    if (TauEnv_get_cuda_csv_output()) {
+ 	        create_header_instruction_csv(taskId);
+ 	        output_instruction_map_to_csv(taskId, correlationId);
 	    }
-	}
-    }
-
-
-    void write_sass_output() {
-        // same for all devices/threads
-        output_function_map_to_csv();
-        output_source_map_to_csv();
-	for (std::map<uint32_t, uint32_t>::iterator iter = correlationThreadMap.begin();
-	     iter != correlationThreadMap.end(); iter++) {
-	    uint32_t correlationId = iter->first;
-	    uint32_t taskId = iter->second;
-	    std::string dir(TauEnv_get_profiledir());
-	    std::string fname = dir + "/sass_instruction_" + std::to_string(taskId) + ".csv";
-	    if (!file_exists(fname)) {
-	        if (!create_header_instruction_csv(taskId)) {
-		    return;
-		}
-	    }
-	    output_instruction_map_to_csv(taskId, correlationId);
-	    correlationThreadMap.erase(iter);
-	    assert(correlationThreadMap.find(correlationId) == correlationThreadMap.end());
+	    correlationWritten.erase(iter);
+	    assert(correlationWritten.find(correlationId) == correlationWritten.end());
 	}
     }
 
