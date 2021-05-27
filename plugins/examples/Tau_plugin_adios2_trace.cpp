@@ -1144,7 +1144,8 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
 }
 
 void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid) {
-    if (!enabled) return;
+    // ok to do this - it happens after TAU initialization is done
+    //if (!enabled) return;
     tau_plugin::inPlugin() = true;
     //int tid = RtsLayer::myThread();
     int nodeid = TAU_PROFILE_GET_NODE();
@@ -1160,6 +1161,20 @@ void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid) {
         switch(it->second->type) {
             case TAU_METADATA_TYPE_STRING:
                 my_adios().define_attribute(ss.str(), std::string(it->second->data.cval), bpIO, true);
+                /* If this is a ROCm queue, use the same metadata that the
+                 * Chimbuko anomaly detection is expecting - the CUDA metadata */
+                if (strcmp(it->first.name, "ROCM_GPU_ID") == 0) {
+                    ss.str("");
+                    ss << "MetaData:" << global_comm_rank << ":" << tid << ":CUDA Device";
+                    my_adios().define_attribute(ss.str(), std::string(it->second->data.cval), bpIO, true);
+                    ss.str();
+                    ss << "MetaData:" << global_comm_rank << ":" << tid << ":CUDA Context";
+                    my_adios().define_attribute(ss.str(), "0", bpIO, true);
+                } else if (strcmp(it->first.name, "ROCM_QUEUE_ID") == 0) {
+                    std::stringstream ss2;
+                    ss << "MetaData:" << global_comm_rank << ":" << tid << ":CUDA Stream";
+                    my_adios().define_attribute(ss.str(), std::string(it->second->data.cval), bpIO, true);
+                }
                 break;
             case TAU_METADATA_TYPE_INTEGER:
                 my_adios().define_attribute(ss.str(), std::to_string(it->second->data.ival), bpIO, true);
@@ -1195,6 +1210,20 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
     switch(data->value->type) {
         case TAU_METADATA_TYPE_STRING:
             my_adios().define_attribute(ss.str(), std::string(data->value->data.cval), my_adios()._bpIO, false);
+            /* If this is a ROCm queue, use the same metadata that the
+             * Chimbuko anomaly detection is expecting - the CUDA metadata */
+            if (strcmp(data->name, "ROCM_GPU_ID") == 0) {
+                ss.str("");
+                ss << "MetaData:" << global_comm_rank << ":" << data->tid << ":CUDA Device";
+                my_adios().define_attribute(ss.str(), std::string(data->value->data.cval), my_adios()._bpIO, false);
+                ss.str("");
+                ss << "MetaData:" << global_comm_rank << ":" << data->tid << ":CUDA Context";
+                my_adios().define_attribute(ss.str(), "0", my_adios()._bpIO, false);
+            } else if (strcmp(data->name, "ROCM_QUEUE_ID") == 0) {
+                ss.str("");
+                ss << "MetaData:" << global_comm_rank << ":" << data->tid << ":CUDA Stream";
+                my_adios().define_attribute(ss.str(), std::string(data->value->data.cval), my_adios()._bpIO, false);
+            }
             break;
         case TAU_METADATA_TYPE_INTEGER:
             my_adios().define_attribute(ss.str(), std::to_string(data->value->data.ival), my_adios()._bpIO, false);

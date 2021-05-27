@@ -25,9 +25,12 @@
 #include <hip/hip_runtime.h>
 #include <roctracer.h>
 #include <roctracer_roctx.h>
+#include <roctracer_hsa.h>
+#include <roctracer_hip.h>
+#include <roctracer_hcc.h>
 #include <stdlib.h>
 
-#define TAU_ENABLE_ROCTRACER_HSA
+//#define TAU_ENABLE_ROCTRACER_HSA
 #ifdef TAU_ENABLE_ROCTRACER_HSA
 #ifndef TAU_HSA_TASK_ID
 #define TAU_HSA_TASK_ID 501
@@ -95,17 +98,7 @@
 #define onload_debug false
 #endif
 
-typedef hsa_rt_utils::Timer::timestamp_t timestamp_t;
-hsa_rt_utils::Timer* timer = NULL;
-thread_local timestamp_t hsa_begin_timestamp = 0;
-thread_local timestamp_t hip_begin_timestamp = 0;
-bool trace_hsa_api = false;
-bool trace_hsa_activity = false;
-bool trace_hip = false;
-
-
-static inline uint32_t GetPid() { return syscall(__NR_getpid); }
-static inline uint32_t GetTid() { return syscall(__NR_gettid); }
+int64_t deltaTimestamp = 0;
 
 /* I know it's bad form to have this map just hanging out here,
  * but when I wrapped it with a getter function, it failed to work.
@@ -137,6 +130,22 @@ std::string Tau_roctracer_lookup_activity(uint64_t id) {
     }
     mapLock.unlock();
     return name;
+}
+
+bool run_once() {
+    // synchronize timestamps
+    // We'll take a CPU timestamp before and after taking a GPU timestmp, then
+    // take the average of those two, hoping that it's roughly at the same time
+    // as the GPU timestamp.
+    uint64_t startTimestampCPU = TauTraceGetTimeStamp();
+    uint64_t startTimestampGPU;
+    roctracer_get_timestamp(&startTimestampGPU);
+    startTimestampCPU += TauTraceGetTimeStamp();
+    startTimestampCPU = startTimestampCPU / 2;
+
+    // assume CPU timestamp is greater than GPU
+    deltaTimestamp = (int64_t)(startTimestampCPU) - (int64_t)(startTimestampGPU);
+    return true;
 }
 
 void Tau_roctx_api_callback(
@@ -202,6 +211,7 @@ void Tau_roctracer_api_callback(
     const void* callback_data,
     void* arg)
 {
+    static bool dummy = run_once();
   (void)arg;
   int task_id;
   const hip_api_data_t* data = reinterpret_cast<const hip_api_data_t*>(callback_data);
@@ -254,8 +264,8 @@ void Tau_roctracer_api_callback(
 }
 
 // gpu based events
-void Tau_roctracer_hcc_event(const roctracer_record_t *record, int task_id) {
-  Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(record->begin_ns)/1e3)); // convert to microseconds
+void Tau_roctracer_hcc_event(const roctracer_record_t *record, int task_id, uint64_t begin_ns, uint64_t end_ns) {
+  Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(begin_ns)/1e3)); // convert to microseconds
   int status;
   char *joined_name ;
   if ((record->op == HIP_OP_ID_DISPATCH)) {
@@ -267,13 +277,13 @@ void Tau_roctracer_hcc_event(const roctracer_record_t *record, int task_id) {
     joined_name = (char *) roctracer_op_string(record->domain, record->op, record->kind);
   }
   TAU_START_TASK(joined_name, task_id);
-  TAU_VERBOSE("Started event %s on task %d timestamp = %lu \n", joined_name, task_id, record->begin_ns);
+  TAU_VERBOSE("Started event %s on task %d timestamp = %lu \n", joined_name, task_id, begin_ns);
 
   // and the end
-  Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(record->end_ns)/1e3)); // convert to microseconds
+  Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(end_ns)/1e3)); // convert to microseconds
   TAU_STOP_TASK(joined_name, task_id);
-  TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", joined_name, task_id, record->end_ns);
-  Tau_set_last_timestamp_ns(record->end_ns);
+  TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", joined_name, task_id, end_ns);
+  Tau_set_last_timestamp_ns(end_ns);
 
   return;
 }
@@ -281,6 +291,7 @@ void Tau_roctracer_hcc_event(const roctracer_record_t *record, int task_id) {
 // Activity tracing callback
 //   hipMalloc id(3) correlation_id(1): begin_ns(1525888652762640464) end_ns(1525888652762877067)
 void Tau_roctracer_activity_callback(const char* begin, const char* end, void* arg) {
+    static bool dummy = run_once();
   int task_id=-1;
   const roctracer_record_t* record = reinterpret_cast<const roctracer_record_t*>(begin);
   const roctracer_record_t* end_record = reinterpret_cast<const roctracer_record_t*>(end);
@@ -293,6 +304,8 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
       record->begin_ns,
       record->end_ns
     );
+    uint64_t begin_ns = record->begin_ns + deltaTimestamp;
+    uint64_t end_ns = record->end_ns + deltaTimestamp;
     if (record->domain == ACTIVITY_DOMAIN_HIP_OPS) {
       TAU_VERBOSE(" ACTIVITY_DOMAIN_HIP_OPS\n");
       task_id = Tau_get_initialized_queues(record->queue_id);
@@ -300,7 +313,7 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
         TAU_VERBOSE("ACTIVITY_DOMAIN_HIP_API: creating task\n");
         TAU_CREATE_TASK(task_id);
         Tau_set_initialized_queues(record->queue_id, task_id);
-        Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)record->begin_ns/1e3));
+        Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)begin_ns/1e3));
         Tau_create_top_level_timer_if_necessary_task(task_id);
         Tau_add_metadata_for_task("TAU_TASK_ID", task_id, task_id);
         Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, task_id);
@@ -310,12 +323,12 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
         record->device_id,
         record->queue_id
       );
-      Tau_roctracer_hcc_event(record, task_id);  // on the gpu
+      Tau_roctracer_hcc_event(record, task_id, begin_ns, end_ns);  // on the gpu
     } else {
       TAU_VERBOSE("Bad domain %d\n", record->domain);
       abort();
     }
-    if (record->op == HSA_OP_ID_COPY) TAU_VERBOSE(" bytes(0x%zx)", record->bytes);
+    if (record->op == HIP_OP_ID_COPY) TAU_VERBOSE(" bytes(0x%zx)", record->bytes);
     TAU_VERBOSE("\n");
     fflush(stdout);
     ROCTRACER_CALL(roctracer_next_record(record, &record));
@@ -329,8 +342,8 @@ struct hip_api_trace_entry_t {
   uint32_t type;
   uint32_t domain;
   uint32_t cid;
-  timestamp_t begin;
-  timestamp_t end;
+  uint64_t begin;
+  uint64_t end;
   uint32_t pid;
   uint32_t tid;
   hip_api_data_t data;
@@ -343,8 +356,8 @@ void Tau_roctracer_hip_api_flush_cb(hip_api_trace_entry_t* entry) {
   const uint32_t domain = entry->domain;
   const uint32_t cid = entry->cid;
   const hip_api_data_t* data = &(entry->data);
-  const timestamp_t begin_timestamp = entry->begin;
-  const timestamp_t end_timestamp = entry->end;
+  const uint64_t begin_timestamp = entry->begin;
+  const uint64_t end_timestamp = entry->end;
   std::ostringstream oss;                                                                        \
 
   printf("Tau_roctracer_hip_api_flush_cb\n");
