@@ -51,7 +51,7 @@
 #define CONVERT_TO_USEC 1.0/1000000.0 // hopefully the compiler will precompute this.
 #define TAU_ADIOS2_PERIODIC_DEFAULT false
 #define TAU_ADIOS2_PERIOD_DEFAULT 2000000 // microseconds
-#define TAU_ADIOS2_PROVENANCE_HISTORY_DEFAULT 5 // 5 steps
+#define TAU_ADIOS2_PROVENANCE_HISTORY_DEFAULT 0 // 0 steps
 #define TAU_ADIOS2_USE_SELECTION_DEFAULT false
 #define TAU_ADIOS2_FILENAME "tau-metrics"
 #define TAU_ADIOS2_ONE_FILE_DEFAULT false
@@ -85,6 +85,7 @@ std::mutex _my_mutex;
  * before assuming exclusive access to the buffers.
  */
 static atomic<bool> dumping{false};
+static atomic<bool> in_async_write{false};
 static atomic<size_t> active_threads{0};
 
 std::condition_variable _my_cond;
@@ -1006,8 +1007,9 @@ void Tau_ADIOS2_stop_worker(void) {
     if (!enabled) return;
     if (!_threaded) return;
     done = true;
-    if (tau_plugin::thePluginOptions().env_periodic) {
+    if (tau_plugin::thePluginOptions().env_periodic && _threaded) {
         TAU_VERBOSE("TAU ADIOS2 thread joining...\n"); fflush(stderr);
+        while(in_async_write) {/* wait for the async thread to finish writing, if necessary */}
         _my_cond.notify_all();
         if (worker_thread != nullptr && worker_thread->joinable()) {
             worker_thread->join();
@@ -1020,6 +1022,7 @@ void * Tau_ADIOS2_thread_function(void) {
 	Tau_register_thread();
     std::chrono::microseconds period(tau_plugin::thePluginOptions().env_period);
     while (!done) {
+        in_async_write = false;
         {
             // scoped region for lock
             std::unique_lock<std::mutex> lk(_my_mutex);
@@ -1028,12 +1031,14 @@ void * Tau_ADIOS2_thread_function(void) {
                 break;
             }
         }
+        in_async_write = true;
         // timeout, dump data
         TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
         Tau_plugin_event_dump_data_t dummy_data;
         Tau_plugin_adios2_dump(&dummy_data);
         TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
     }
+    in_async_write = false;
 	return(NULL);
 }
 
