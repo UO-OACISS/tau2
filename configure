@@ -10713,7 +10713,7 @@ if [ $vtf = yes ] ; then
 fi
 
 if [ "x$unwinder" != "xnone" ] ; then
-    if [ $c_compiler = gcc -o $c_compiler = icc -o $c_compiler = pgcc -o $c_compiler = mpc_icc -o $c_compiler = mpc_cc ] ; then
+    if [ $c_compiler = gcc -o $c_compiler = icc -o $c_compiler = pgcc -o $c_compiler = mpc_icc -o $c_compiler = mpc_cc -o $c_compiler = clang ] ; then
         if [ "x$unwind_lib" != "x" ] ; then
             unwind_extras="-Wl\,-rpath\,$unwind_lib"
         fi
