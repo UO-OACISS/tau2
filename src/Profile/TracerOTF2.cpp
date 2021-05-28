@@ -325,7 +325,7 @@ static inline x_uint64 fix_zero_timestamp(x_uint64 my_ts, int tid) {
     my_ts = (x_uint64)(tmpTime[0]);
     // if so, the start time is possibly wrong, too.
     if (start_time == 0) {
-	  printf("Fixing Start! %lu = %llu\n", start_time, my_ts);
+	  printf("Fixing Start! %" PRIu64 " = %" PRIu64 "\n", start_time, my_ts);
       start_time = my_ts;
     }
   }
@@ -774,6 +774,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   // Validate that the timestamp is non-zero.  Can happen during startup, before
   // the metrics are ready.
   my_ts = fix_zero_timestamp(my_ts, tid);
+  if (start_time == 0) { start_time = my_ts; }
     // OK...we get some counter values during a CUPTI callback that are
     // in between the start and the stop, but the counter will get a timestamp
     // that could (will?) be after the timer stop.  So, to prevent out-of-order

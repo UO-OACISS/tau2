@@ -36,6 +36,10 @@
 #include <iterator>
 #include <algorithm>
 #include <atomic>
+#include <mutex>
+#include <condition_variable>
+#include <thread>
+#include <chrono>
 
 // signal handling to dump provenance
 #include <signal.h>
@@ -63,14 +67,16 @@ tau::Profiler *Tau_get_timer_at_stack_depth_task(int, int);
 int Tau_plugin_adios2_function_exit(
     Tau_plugin_event_function_exit_data_t* data);
 void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid);
+#ifdef HISTORY
 void Tau_plugin_adios2_dump_history(void);
+#endif
 
 static bool enabled{false};
 static bool done{false};
 static bool _threaded{false};
 static int global_comm_size = 1;
 static int global_comm_rank = 0;
-pthread_mutex_t _my_mutex; // for initialization, termination, semaphore access (see below)
+std::mutex _my_mutex;
 /* These two variables are used to create something like a "counting semaphore".
  * When dumping, we want to prevent any threads from adding events to the buffers.
  * But when adding to the buffers, the threads don't need exclusive access.
@@ -81,9 +87,11 @@ pthread_mutex_t _my_mutex; // for initialization, termination, semaphore access 
 static atomic<bool> dumping{false};
 static atomic<size_t> active_threads{0};
 
-pthread_cond_t _my_cond; // for timer
-pthread_t worker_thread;
+std::condition_variable _my_cond;
+std::thread * worker_thread = nullptr;
+#ifdef HISTORY
 static atomic<bool> dump_history{false};
+#endif
 
 namespace tau_plugin {
 
@@ -164,7 +172,7 @@ void Tau_ADIOS2_parse_selection_file(const char * filename);
 bool Tau_ADIOS2_contains(std::set<std::string>& myset,
         const char * key, bool if_empty);
 
-void * Tau_ADIOS2_thread_function(void* data);
+void * Tau_ADIOS2_thread_function(void);
 
 /*********************************************************************
  * Parse a boolean value
@@ -351,6 +359,7 @@ public:
     std::vector<unsigned long> step_of_comms;
 };
 
+#if HISTORY
 /* Circular buffer for storing provenance */
 class circular_buffer {
 public:
@@ -424,6 +433,7 @@ private:
     const size_t max_size_;
     bool full_ = 0;
 };
+#endif
 
 /* Class containing ADIOS archive info */
 class adios {
@@ -469,8 +479,10 @@ class adios {
             value_index(-1),
             frame_index(-1),
             time_index(-1),
-            max_threads(0),
-            step_history(thePluginOptions().env_history_depth)
+            max_threads(0)
+#ifdef HISTORY
+            , step_history(thePluginOptions().env_history_depth)
+#endif
         {
             initialize();
             open();
@@ -507,7 +519,9 @@ class adios {
         comm_values_array_t comm_values_array[TAU_MAX_THREADS];
         // provenance history containers
         timer_values_array_t current_primer_stack[TAU_MAX_THREADS];
+#ifdef HISTORY
         circular_buffer step_history;
+#endif
         // for validation
 #ifdef DO_VALIDATION
         std::stack<unsigned long> timer_stack[TAU_MAX_THREADS];
@@ -628,11 +642,11 @@ void adios::write_variables(void)
     int programs = get_prog_count();
     int comm_ranks = global_comm_size;
     int event_types = get_event_type_count();
-    pthread_mutex_lock(&_my_mutex);
+    _my_mutex.lock();
     int threads = get_thread_count();
     int timers = get_timer_count();
     int counters = get_counter_count();
-    pthread_mutex_unlock(&_my_mutex);
+    _my_mutex.unlock();
 
     Tau_global_incr_insideTAU();
     bpWriter.BeginStep();
@@ -642,13 +656,13 @@ void adios::write_variables(void)
      * and check two variables.  So acquire the lock before waiting until it's
      * safe to proceed with the dump.
      */
-    pthread_mutex_lock(&_my_mutex);
+    _my_mutex.lock();
     // set the dumping flag
     dumping = true;
     // wait for all active threads to finish doing what they do
     while(active_threads > 0) {}
     /* Release the lock, we've got control */
-    pthread_mutex_unlock(&_my_mutex);
+    _my_mutex.unlock();
 
     /* sort into one big vector from all threads */
     // make a list from the first thread of data - copying the data in!
@@ -854,8 +868,9 @@ void adios::write_variables(void)
 
     /* save the current set of counters in this step */
     this_step->step_of_comms = std::move(all_comms);
+#ifdef HISTORY
     step_history.put(this_step);
-
+#endif
     //printf("%d %s %d\n", global_comm_rank, __func__, __LINE__); fflush(stdout);
 
     bpWriter.EndStep();
@@ -893,7 +908,7 @@ void adios::write_variables(void)
         bool new_timer{false};
         std::string tmp(timer);
         if (timers.count(tmp) == 0) {
-            pthread_mutex_lock(&_my_mutex);
+            _my_mutex.lock();
             // check to make sure another thread didn't create it already
             if (timers.count(tmp) == 0) {
                 int num = timers.size();
@@ -901,7 +916,7 @@ void adios::write_variables(void)
                 // printf("%d = %s\n", num, timer);
                 new_timer = true;
             }
-            pthread_mutex_unlock(&_my_mutex);
+            _my_mutex.unlock();
             // Because ADIOS is instrumented with TAU calls, make sure the
             // lock is released before defining the attribute.
             if (new_timer) {
@@ -918,14 +933,14 @@ void adios::write_variables(void)
         bool new_counter{false};
         std::string tmp(counter);
         if (counters.count(tmp) == 0) {
-            pthread_mutex_lock(&_my_mutex);
+            _my_mutex.unlock();
             // check to make sure another thread didn't create it already
             if (counters.count(tmp) == 0) {
                 int num = counters.size();
                 counters[tmp] = num;
                 new_counter = true;
             }
-            pthread_mutex_unlock(&_my_mutex);
+            _my_mutex.unlock();
             if (new_counter) {
                 std::stringstream ss;
                 ss << "counter " << counters[tmp];
@@ -965,34 +980,18 @@ tau_plugin::adios& my_adios() {
   return _my_adios;
 }
 
-void init_lock(pthread_mutex_t * _mutex) {
-    if (!_threaded) return;
-    pthread_mutexattr_t Attr;
-    pthread_mutexattr_init(&Attr);
-    pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_ERRORCHECK);
-    int rc;
-    if ((rc = pthread_mutex_init(_mutex, &Attr)) != 0) {
-        errno = rc;
-        perror("pthread_mutex_init error");
-        exit(1);
-    }
-    if ((rc = pthread_cond_init(&_my_cond, NULL)) != 0) {
-        errno = rc;
-        perror("pthread_cond_init error");
-        exit(1);
-    }
-}
-
 int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     if (!enabled) return 0;
     tau_plugin::inPlugin() = true;
     static int iter = 0;
     TAU_VERBOSE("%d TAU PLUGIN ADIOS2 Dump %d \n", global_comm_rank, iter); fflush(stdout);
+#if HISTORY
     if (dump_history) {
         Tau_plugin_adios2_dump_history();
         // reset for next time
         dump_history = false;
     }
+#endif
     //Tau_pure_start(__func__);
     Tau_global_incr_insideTAU();
     my_adios().write_variables();
@@ -1006,77 +1005,44 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
 void Tau_ADIOS2_stop_worker(void) {
     if (!enabled) return;
     if (!_threaded) return;
-    pthread_mutex_lock(&_my_mutex);
     done = true;
-    pthread_mutex_unlock(&_my_mutex);
     if (tau_plugin::thePluginOptions().env_periodic) {
         TAU_VERBOSE("TAU ADIOS2 thread joining...\n"); fflush(stderr);
-        pthread_cond_signal(&_my_cond);
-        int ret = pthread_join(worker_thread, NULL);
-        if (ret != 0) {
-            switch (ret) {
-                case ESRCH:
-                    // already exited.
-                    break;
-                case EINVAL:
-                    // Didn't exist?
-                    break;
-                case EDEADLK:
-                    // trying to join with itself?
-                    break;
-                default:
-                    errno = ret;
-                    perror("Warning: pthread_join failed\n");
-                    break;
-            }
+        _my_cond.notify_all();
+        if (worker_thread != nullptr && worker_thread->joinable()) {
+            worker_thread->join();
         }
     }
     _threaded = false;
 }
 
-void * Tau_ADIOS2_thread_function(void* data) {
-    /* Set the wakeup time (ts) to 2 seconds in the future. */
-    struct timespec ts;
-    struct timeval  tp;
-	//Tau_create_top_level_timer_if_necessary();
+void * Tau_ADIOS2_thread_function(void) {
 	Tau_register_thread();
-
+    std::chrono::microseconds period(tau_plugin::thePluginOptions().env_period);
     while (!done) {
-        // wait x microseconds for the next batch.
-        gettimeofday(&tp, NULL);
-        const int one_second = 1000000;
-        // first, add the period to the current microseconds
-        int tmp_usec = tp.tv_usec + tau_plugin::thePluginOptions().env_period;
-        int flow_sec = 0;
-        if (tmp_usec > one_second) { // did we overflow?
-            flow_sec = tmp_usec / one_second; // how many seconds?
-            tmp_usec = tmp_usec % one_second; // get the remainder
+        {
+            // scoped region for lock
+            std::unique_lock<std::mutex> lk(_my_mutex);
+            if (_my_cond.wait_for(lk, period, [] {return done == true;})) {
+                // done executing
+                break;
+            }
         }
-        ts.tv_sec  = (tp.tv_sec + flow_sec);
-        ts.tv_nsec = (1000 * tmp_usec);
-        pthread_mutex_lock(&_my_mutex);
-        int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
-        if (rc == ETIMEDOUT) {
-            TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
-            Tau_plugin_event_dump_data_t dummy_data;
-            Tau_plugin_adios2_dump(&dummy_data);
-            TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
-        } else if (rc == EINVAL) {
-            TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
-        } else if (rc == EPERM) {
-            TAU_VERBOSE("Mutex not locked!\n"); fflush(stderr);
-        }
+        // timeout, dump data
+        TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
+        Tau_plugin_event_dump_data_t dummy_data;
+        Tau_plugin_adios2_dump(&dummy_data);
+        TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
     }
-    // unlock after being signalled.
-    pthread_mutex_unlock(&_my_mutex);
-    pthread_exit((void*)0L);
 	return(NULL);
 }
 
 void Tau_plugin_adios2_signal_handler(int signal) {
     printf("In Provenance signal handler\n");
     // the next time we write data, dump history first
+#if HISTORY
     dump_history = true;
+#endif
 }
 
 extern "C" int Tau_is_thread_fake(int tid);
@@ -1135,16 +1101,12 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
     if (!enabled || data->tid != 0) return 0;
     TAU_VERBOSE("TAU PLUGIN ADIOS2 Finalize\n"); fflush(stdout);
     int rc = do_teardown(false);
-    /* Not really necessary. */
-    if (tau_plugin::thePluginOptions().env_periodic) {
-        pthread_cond_destroy(&_my_cond);
-        pthread_mutex_destroy(&_my_mutex);
-    }
     return rc;
 }
 
 void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid) {
-    if (!enabled) return;
+    // ok to do this - it happens after TAU initialization is done
+    //if (!enabled) return;
     tau_plugin::inPlugin() = true;
     //int tid = RtsLayer::myThread();
     int nodeid = TAU_PROFILE_GET_NODE();
@@ -1160,6 +1122,20 @@ void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid) {
         switch(it->second->type) {
             case TAU_METADATA_TYPE_STRING:
                 my_adios().define_attribute(ss.str(), std::string(it->second->data.cval), bpIO, true);
+                /* If this is a ROCm queue, use the same metadata that the
+                 * Chimbuko anomaly detection is expecting - the CUDA metadata */
+                if (strcmp(it->first.name, "ROCM_GPU_ID") == 0) {
+                    ss.str("");
+                    ss << "MetaData:" << global_comm_rank << ":" << tid << ":CUDA Device";
+                    my_adios().define_attribute(ss.str(), std::string(it->second->data.cval), bpIO, true);
+                    ss.str();
+                    ss << "MetaData:" << global_comm_rank << ":" << tid << ":CUDA Context";
+                    my_adios().define_attribute(ss.str(), "0", bpIO, true);
+                } else if (strcmp(it->first.name, "ROCM_QUEUE_ID") == 0) {
+                    std::stringstream ss2;
+                    ss << "MetaData:" << global_comm_rank << ":" << tid << ":CUDA Stream";
+                    my_adios().define_attribute(ss.str(), std::string(it->second->data.cval), bpIO, true);
+                }
                 break;
             case TAU_METADATA_TYPE_INTEGER:
                 my_adios().define_attribute(ss.str(), std::to_string(it->second->data.ival), bpIO, true);
@@ -1195,6 +1171,20 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
     switch(data->value->type) {
         case TAU_METADATA_TYPE_STRING:
             my_adios().define_attribute(ss.str(), std::string(data->value->data.cval), my_adios()._bpIO, false);
+            /* If this is a ROCm queue, use the same metadata that the
+             * Chimbuko anomaly detection is expecting - the CUDA metadata */
+            if (strcmp(data->name, "ROCM_GPU_ID") == 0) {
+                ss.str("");
+                ss << "MetaData:" << global_comm_rank << ":" << data->tid << ":CUDA Device";
+                my_adios().define_attribute(ss.str(), std::string(data->value->data.cval), my_adios()._bpIO, false);
+                ss.str("");
+                ss << "MetaData:" << global_comm_rank << ":" << data->tid << ":CUDA Context";
+                my_adios().define_attribute(ss.str(), "0", my_adios()._bpIO, false);
+            } else if (strcmp(data->name, "ROCM_QUEUE_ID") == 0) {
+                ss.str("");
+                ss << "MetaData:" << global_comm_rank << ":" << data->tid << ":CUDA Stream";
+                my_adios().define_attribute(ss.str(), std::string(data->value->data.cval), my_adios()._bpIO, false);
+            }
             break;
         case TAU_METADATA_TYPE_INTEGER:
             my_adios().define_attribute(ss.str(), std::to_string(data->value->data.ival), my_adios()._bpIO, false);
@@ -1240,11 +1230,11 @@ int Tau_plugin_adios2_send(Tau_plugin_event_send_data_t* data) {
      * and check two variables.  So acquire the lock before waiting until it's
      * safe to proceed with the dump.
      */
-    pthread_mutex_lock(&_my_mutex);
+    _my_mutex.lock();
     while(dumping) {}
     active_threads++;
     /* Release the lock, we've got control */
-    pthread_mutex_unlock(&_my_mutex);
+    _my_mutex.unlock();
 
     unsigned long ts = my_adios().previous_timestamp[data->tid] >
         data->timestamp ? my_adios().previous_timestamp[data->tid] :
@@ -1284,11 +1274,11 @@ int Tau_plugin_adios2_recv(Tau_plugin_event_recv_data_t* data) {
      * and check two variables.  So acquire the lock before waiting until it's
      * safe to proceed with the dump.
      */
-    pthread_mutex_lock(&_my_mutex);
+    _my_mutex.lock();
     while(dumping) {}
     active_threads++;
     /* Release the lock, we've got control */
-    pthread_mutex_unlock(&_my_mutex);
+    _my_mutex.unlock();
 
     unsigned long ts = my_adios().previous_timestamp[data->tid] >
         data->timestamp ? my_adios().previous_timestamp[data->tid] :
@@ -1334,11 +1324,11 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
      * and check two variables.  So acquire the lock before waiting until it's
      * safe to proceed with the dump.
      */
-    pthread_mutex_lock(&_my_mutex);
+    _my_mutex.lock();
     while(dumping) {}
     active_threads++;
     /* Release the lock, we've got control */
-    pthread_mutex_unlock(&_my_mutex);
+    _my_mutex.unlock();
 
     auto &tmp = my_adios().timer_values_array[data->tid];
     unsigned long ts = my_adios().previous_timestamp[data->tid] > data->timestamp ?
@@ -1385,11 +1375,11 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
      * and check two variables.  So acquire the lock before waiting until it's
      * safe to proceed with the dump.
      */
-    pthread_mutex_lock(&_my_mutex);
+    _my_mutex.lock();
     while(dumping) {}
     active_threads++;
     /* Release the lock, we've got control */
-    pthread_mutex_unlock(&_my_mutex);
+    _my_mutex.unlock();
 
     auto &tmp = my_adios().timer_values_array[data->tid];
     unsigned long ts = my_adios().previous_timestamp[data->tid] >
@@ -1460,11 +1450,11 @@ int Tau_plugin_adios2_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data_
      * and check two variables.  So acquire the lock before waiting until it's
      * safe to proceed with the dump.
      */
-    pthread_mutex_lock(&_my_mutex);
+    _my_mutex.lock();
     while(dumping) {}
     active_threads++;
     /* Release the lock, we've got control */
-    pthread_mutex_unlock(&_my_mutex);
+    _my_mutex.unlock();
 
     unsigned long ts = my_adios().previous_timestamp[data->tid] >
         data->timestamp ? my_adios().previous_timestamp[data->tid] :
@@ -1488,6 +1478,7 @@ int Tau_plugin_adios2_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data_
 
 extern x_uint64 TauTraceGetTimeStamp(int tid);
 
+#ifdef HISTORY
 void Tau_plugin_adios2_dump_history(void) {
     RtsLayer::LockDB();
     printf("In Provenance history dump\n");
@@ -1757,6 +1748,7 @@ void Tau_plugin_adios2_dump_history(void) {
     RtsLayer::UnLockDB();
     tau_plugin::inPlugin() = false;
 }
+#endif
 
 /* This happens after MPI_Init, and after all TAU metadata variables have been
  * read */
@@ -1775,14 +1767,9 @@ int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
     /* spawn the thread if doing periodic */
     if (tau_plugin::thePluginOptions().env_periodic) {
         _threaded = true;
-        init_lock(&_my_mutex);
+        //init_lock(&_my_mutex);
         TAU_VERBOSE("Spawning thread for ADIOS2.\n");
-        int ret = pthread_create(&worker_thread, NULL, &Tau_ADIOS2_thread_function, NULL);
-        if (ret != 0) {
-            errno = ret;
-            perror("Error: pthread_create (1) fails\n");
-            exit(1);
-        }
+        worker_thread = new std::thread(Tau_ADIOS2_thread_function);
     } else {
         _threaded = false;
     }
