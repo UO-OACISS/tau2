@@ -51,7 +51,6 @@
 #define CONVERT_TO_USEC 1.0/1000000.0 // hopefully the compiler will precompute this.
 #define TAU_ADIOS2_PERIODIC_DEFAULT false
 #define TAU_ADIOS2_PERIOD_DEFAULT 2000000 // microseconds
-#define TAU_ADIOS2_PROVENANCE_HISTORY_DEFAULT 0 // 0 steps
 #define TAU_ADIOS2_USE_SELECTION_DEFAULT false
 #define TAU_ADIOS2_FILENAME "tau-metrics"
 #define TAU_ADIOS2_ONE_FILE_DEFAULT false
@@ -67,9 +66,6 @@ tau::Profiler *Tau_get_timer_at_stack_depth_task(int, int);
 int Tau_plugin_adios2_function_exit(
     Tau_plugin_event_function_exit_data_t* data);
 void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid);
-#ifdef HISTORY
-void Tau_plugin_adios2_dump_history(void);
-#endif
 
 static bool enabled{false};
 static bool done{false};
@@ -77,6 +73,7 @@ static bool _threaded{false};
 static int global_comm_size = 1;
 static int global_comm_rank = 0;
 std::mutex _my_mutex;
+
 /* These two variables are used to create something like a "counting semaphore".
  * When dumping, we want to prevent any threads from adding events to the buffers.
  * But when adding to the buffers, the threads don't need exclusive access.
@@ -90,9 +87,6 @@ static atomic<size_t> active_threads{0};
 
 std::condition_variable _my_cond;
 std::thread * worker_thread = nullptr;
-#ifdef HISTORY
-static atomic<bool> dump_history{false};
-#endif
 
 namespace tau_plugin {
 
@@ -123,7 +117,6 @@ class plugin_options {
         plugin_options(void) :
             env_periodic(TAU_ADIOS2_PERIODIC_DEFAULT),
             env_period(TAU_ADIOS2_PERIOD_DEFAULT),
-            env_history_depth(TAU_ADIOS2_PROVENANCE_HISTORY_DEFAULT),
             env_use_selection(TAU_ADIOS2_USE_SELECTION_DEFAULT),
             env_filename(TAU_ADIOS2_FILENAME),
             env_one_file(TAU_ADIOS2_ONE_FILE_DEFAULT),
@@ -133,7 +126,6 @@ class plugin_options {
     public:
         int env_periodic;
         int env_period;
-        int env_history_depth;
         bool env_use_selection;
         std::string env_filename;
         int env_one_file;
@@ -220,12 +212,6 @@ void Tau_ADIOS2_parse_environment_variables(void) {
       thePluginOptions().env_periodic = true;
       tmp = getenv("TAU_ADIOS2_PERIOD");
       thePluginOptions().env_period = parse_int(tmp, TAU_ADIOS2_PERIOD_DEFAULT);
-    }
-    tmp = getenv("TAU_ADIOS2_PROVENANCE_HISTORY");
-    thePluginOptions().env_history_depth = parse_int(tmp, TAU_ADIOS2_PROVENANCE_HISTORY_DEFAULT);
-    tmp = getenv("TAU_ADIOS2_SELECTION_FILE");
-    if (tmp != NULL) {
-      Tau_ADIOS2_parse_selection_file(tmp);
     }
     tmp = getenv("TAU_ADIOS2_FILENAME");
     if (tmp != NULL) {
@@ -360,82 +346,6 @@ public:
     std::vector<unsigned long> step_of_comms;
 };
 
-#if HISTORY
-/* Circular buffer for storing provenance */
-class circular_buffer {
-public:
-    explicit circular_buffer(size_t size) :
-        max_size_(size) {
-            buf_.reserve(size);
-            for(int i = 0 ; i < size ; i++) {
-                buf_[i] = nullptr;
-            }
-        }
-
-    void put(step_data_t* item) {
-        // destroy any existing data at this index
-        if (buf_[head_] != nullptr) {
-            delete buf_[head_];
-        }
-        buf_[head_] = item;
-        if(full_) {
-            tail_ = (tail_ + 1) % max_size_;
-        }
-        head_ = (head_ + 1) % max_size_;
-        full_ = head_ == tail_;
-    }
-
-    step_data_t* get() {
-        if(empty()) {
-            return nullptr;
-        }
-
-        //Read data and advance the tail (we now have a free space)
-        auto val = buf_[tail_];
-        buf_[tail_] = nullptr;
-        full_ = false;
-        tail_ = (tail_ + 1) % max_size_;
-        return val;
-    }
-
-    void reset() {
-        head_ = tail_;
-        full_ = false;
-    }
-
-    bool empty() const {
-        //if head and tail are equal, we are empty
-        return (!full_ && (head_ == tail_));
-    }
-
-    bool full() const {
-        //If tail is ahead the head by 1, we are full
-        return full_;
-    }
-
-    size_t capacity() const { return max_size_; }
-
-    size_t size() const {
-        size_t size = max_size_;
-        if(!full_) {
-            if(head_ >= tail_) {
-                size = head_ - tail_;
-            } else {
-                size = max_size_ + head_ - tail_;
-            }
-        }
-        return size;
-    }
-
-private:
-    std::vector<step_data_t*> buf_;
-    size_t head_ = 0;
-    size_t tail_ = 0;
-    const size_t max_size_;
-    bool full_ = 0;
-};
-#endif
-
 /* Class containing ADIOS archive info */
 class adios {
     private:
@@ -481,9 +391,6 @@ class adios {
             frame_index(-1),
             time_index(-1),
             max_threads(0)
-#ifdef HISTORY
-            , step_history(thePluginOptions().env_history_depth)
-#endif
         {
             initialize();
             open();
@@ -518,11 +425,6 @@ class adios {
         timer_values_array_t timer_values_array[TAU_MAX_THREADS];
         counter_values_array_t counter_values_array[TAU_MAX_THREADS];
         comm_values_array_t comm_values_array[TAU_MAX_THREADS];
-        // provenance history containers
-        timer_values_array_t current_primer_stack[TAU_MAX_THREADS];
-#ifdef HISTORY
-        circular_buffer step_history;
-#endif
         // for validation
 #ifdef DO_VALIDATION
         std::stack<unsigned long> timer_stack[TAU_MAX_THREADS];
@@ -651,7 +553,6 @@ void adios::write_variables(void)
 
     Tau_global_incr_insideTAU();
     bpWriter.BeginStep();
-    step_data_t* this_step = new step_data_t(threads);
 
     /* There's a tiny chance of a race condition because we have to update
      * and check two variables.  So acquire the lock before waiting until it's
@@ -673,7 +574,6 @@ void adios::write_variables(void)
     // this clear will empty the vector and destroy the objects!
     timer_values_array[0].clear();
     // copy the current primer stack
-    this_step->primer_stacks[0] = new timer_values_array_t(current_primer_stack[0]);
     for (int t = 1 ; t < threads ; t++) {
         // is there any data on this thread?
         if (timer_values_array[t].size() == 0) { continue; }
@@ -683,8 +583,6 @@ void adios::write_variables(void)
                         timer_values_array[t].end());
         // this clear will empty the vector and destroy the objects!
         timer_values_array[t].clear();
-        // copy the current primer stack
-        this_step->primer_stacks[t] = new timer_values_array_t(current_primer_stack[t]);
         // start at the head of the list
         auto it = merged_timers.begin();
         // start at the head of the vector
@@ -707,18 +605,14 @@ void adios::write_variables(void)
     }
     size_t num_timer_values = merged_timers.size();
 
-    //printf("%d %s %d\n", global_comm_rank, __func__, __LINE__); fflush(stdout);
-
-    std::vector<unsigned long>* all_timers = new std::vector<unsigned long>(6,0);
-    all_timers->reserve(6*merged_timers.size());
-    int timer_value_index = 0;
+    std::vector<unsigned long> all_timers(6,0);
     for (auto it = merged_timers.begin() ; it != merged_timers.end() ; it++) {
-        (*all_timers)[timer_value_index++] = it->second[0];
-        (*all_timers)[timer_value_index++] = it->second[1];
-        (*all_timers)[timer_value_index++] = it->second[2];
-        (*all_timers)[timer_value_index++] = it->second[3];
-        (*all_timers)[timer_value_index++] = it->second[4];
-        (*all_timers)[timer_value_index++] = it->first;
+        all_timers.push_back(it->second[0]);
+        all_timers.push_back(it->second[1]);
+        all_timers.push_back(it->second[2]);
+        all_timers.push_back(it->second[3]);
+        all_timers.push_back(it->second[4]);
+        all_timers.push_back(it->first);
 #ifdef DO_VALIDATION
         if (it->second[3] == 0) {
             // on entry
@@ -755,24 +649,20 @@ void adios::write_variables(void)
     std::sort(merged_counters.begin(), merged_counters.end());
     size_t num_counter_values = merged_counters.size();
 
-    std::vector<unsigned long> all_counters(6,0);;
-    all_counters.reserve(6*merged_counters.size());
-    int counter_value_index = 0;
+    std::vector<unsigned long> all_counters(6,0);
     for (auto it = merged_counters.begin() ;
          it != merged_counters.end() ; it++) {
-        all_counters[counter_value_index++] = it->second[0];
-        all_counters[counter_value_index++] = it->second[1];
-        all_counters[counter_value_index++] = it->second[2];
-        all_counters[counter_value_index++] = it->second[3];
-        all_counters[counter_value_index++] = it->second[4];
-        all_counters[counter_value_index++] = it->first;
+        all_counters.push_back(it->second[0]);
+        all_counters.push_back(it->second[1]);
+        all_counters.push_back(it->second[2]);
+        all_counters.push_back(it->second[3]);
+        all_counters.push_back(it->second[4]);
+        all_counters.push_back(it->first);
     }
 
     for (int t = 0 ; t < threads ; t++) {
         counter_values_array[t].clear();
     }
-
-    //printf("%d %s %d\n", global_comm_rank, __func__, __LINE__); fflush(stdout);
 
     /* sort into one big vector from all threads */
     std::vector<std::pair<unsigned long, std::array<unsigned long, 7> > >
@@ -785,19 +675,17 @@ void adios::write_variables(void)
     std::sort(merged_comms.begin(), merged_comms.end());
     size_t num_comm_values = merged_comms.size();
 
-    std::vector<unsigned long> all_comms(8,0);;
-    all_comms.reserve(8*merged_comms.size());
-    int comm_value_index = 0;
+    std::vector<unsigned long> all_comms(8,0);
     for (auto it = merged_comms.begin() ;
          it != merged_comms.end() ; it++) {
-        all_comms[comm_value_index++] = it->second[0];
-        all_comms[comm_value_index++] = it->second[1];
-        all_comms[comm_value_index++] = it->second[2];
-        all_comms[comm_value_index++] = it->second[3];
-        all_comms[comm_value_index++] = it->second[4];
-        all_comms[comm_value_index++] = it->second[5];
-        all_comms[comm_value_index++] = it->second[6];
-        all_comms[comm_value_index++] = it->first;
+        all_comms.push_back(it->second[0]);
+        all_comms.push_back(it->second[1]);
+        all_comms.push_back(it->second[2]);
+        all_comms.push_back(it->second[3]);
+        all_comms.push_back(it->second[4]);
+        all_comms.push_back(it->second[5]);
+        all_comms.push_back(it->second[6]);
+        all_comms.push_back(it->first);
     }
 
     for (int t = 0 ; t < threads ; t++) {
@@ -819,18 +707,6 @@ void adios::write_variables(void)
     bpWriter.Put(counter_event_count, &num_counter_values);
     bpWriter.Put(comm_count, &num_comm_values);
 
-    this_step->programs = programs;
-    this_step->comm_ranks = comm_ranks;
-    this_step->threads = threads;
-    this_step->event_types = event_types;
-    this_step->timers = timers;
-    this_step->num_timer_values = num_timer_values;
-    this_step->counters = counters;
-    this_step->num_counter_values = num_counter_values;
-    this_step->num_comm_values = num_comm_values;
-
-    //printf("%d %s %d\n", global_comm_rank, __func__, __LINE__); fflush(stdout);
-
     if (num_timer_values > 0) {
         event_timestamps.SetShape({num_timer_values, 6});
         /* These dimensions need to change for 1-file case! */
@@ -838,11 +714,8 @@ void adios::write_variables(void)
         const adios2::Dims timer_count{static_cast<size_t>(num_timer_values), 6};
         const adios2::Box<adios2::Dims> timer_selection{timer_start, timer_count};
         event_timestamps.SetSelection(timer_selection);
-        bpWriter.Put(event_timestamps, all_timers->data());
+        bpWriter.Put(event_timestamps, all_timers.data());
     }
-
-    /* save the current set of events in this step */
-    this_step->step_of_events = all_timers;
 
     if (num_counter_values > 0) {
         counter_values.SetShape({num_counter_values, 6});
@@ -854,9 +727,6 @@ void adios::write_variables(void)
         bpWriter.Put(counter_values, all_counters.data());
     }
 
-    /* save the current set of counters in this step */
-    this_step->step_of_counters = std::move(all_counters);
-
     if (num_comm_values > 0) {
         comm_timestamps.SetShape({num_comm_values, 8});
         /* These dimensions need to change for 1-file case! */
@@ -867,14 +737,10 @@ void adios::write_variables(void)
         bpWriter.Put(comm_timestamps, all_comms.data());
     }
 
-    /* save the current set of counters in this step */
-    this_step->step_of_comms = std::move(all_comms);
-#ifdef HISTORY
-    step_history.put(this_step);
-#endif
-    //printf("%d %s %d\n", global_comm_rank, __func__, __LINE__); fflush(stdout);
-
     bpWriter.EndStep();
+    // if we aren't storing history, free the arrays now.  ADIOS should be
+    // done with them.  Because they are stack variables, they'll go out
+    // of scope.
     Tau_global_decr_insideTAU();
 }
 
@@ -934,7 +800,7 @@ void adios::write_variables(void)
         bool new_counter{false};
         std::string tmp(counter);
         if (counters.count(tmp) == 0) {
-            _my_mutex.unlock();
+            _my_mutex.lock();
             // check to make sure another thread didn't create it already
             if (counters.count(tmp) == 0) {
                 int num = counters.size();
@@ -986,13 +852,6 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     tau_plugin::inPlugin() = true;
     static int iter = 0;
     TAU_VERBOSE("%d TAU PLUGIN ADIOS2 Dump %d \n", global_comm_rank, iter); fflush(stdout);
-#if HISTORY
-    if (dump_history) {
-        Tau_plugin_adios2_dump_history();
-        // reset for next time
-        dump_history = false;
-    }
-#endif
     //Tau_pure_start(__func__);
     Tau_global_incr_insideTAU();
     my_adios().write_variables();
@@ -1045,9 +904,6 @@ void * Tau_ADIOS2_thread_function(void) {
 void Tau_plugin_adios2_signal_handler(int signal) {
     printf("In Provenance signal handler\n");
     // the next time we write data, dump history first
-#if HISTORY
-    dump_history = true;
-#endif
 }
 
 extern "C" int Tau_is_thread_fake(int tid);
@@ -1343,8 +1199,6 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
     my_adios().pre_timer_stack[data->tid].push(timer_index);
     TAU_VERBOSE("Enter:   %d %d %lu %lu %s %s\n", global_comm_rank, data->tid, data->timestamp, ts, (data->timestamp != ts ? "FIXED" : ""), data->timer_name);
 #endif
-    // push this timer on the stack for provenance output, make a copy
-    my_adios().current_primer_stack[data->tid].push_back(std::make_pair(ts, tmparray));
     tmp.push_back(
         std::make_pair(
             ts,
@@ -1397,9 +1251,6 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
       TAU_VERBOSE("%d Pre: Stack violation. %s\n", getpid(), data->timer_name);
       TAU_VERBOSE("%d Pre: Stack for thread %lu is empty, timestamp %lu.\n",
         getpid(), tmparray[2], data->timestamp);
-	  if (my_adios().current_primer_stack[data->tid].size() > 0) {
-          my_adios().current_primer_stack[data->tid].pop_back();
-	  }
       active_threads--;
       tau_plugin::inPlugin() = false;
       return 0;
@@ -1414,12 +1265,6 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
         my_adios().pre_timer_stack[data->tid].pop();
     }
 #endif
-    // pop this timer off the stack for provenance output
-	// For some reason, at the end of execution we are popping too many.
-	// This is a safety check, but not great for performance.
-	if (my_adios().current_primer_stack[data->tid].size() > 0) {
-        my_adios().current_primer_stack[data->tid].pop_back();
-	}
     tmp.push_back(
         std::make_pair(
             ts,
@@ -1483,278 +1328,6 @@ int Tau_plugin_adios2_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data_
 
 extern x_uint64 TauTraceGetTimeStamp(int tid);
 
-#ifdef HISTORY
-void Tau_plugin_adios2_dump_history(void) {
-    RtsLayer::LockDB();
-    printf("In Provenance history dump\n");
-    tau_plugin::inPlugin() = true;
-
-    /* open an ADIOS archive */
-    adios2::IO bpIO = my_adios().ad.DeclareIO("TAU trace data window");
-    bpIO.SetEngine("BPFile");
-    bpIO.SetParameters({{"RendezvousReaderCount", "0"}});
-    std::stringstream ss;
-    ss << tau_plugin::thePluginOptions().env_filename << "-window";
-    ss << "-" << global_comm_rank;
-    ss << ".bp";
-    TAU_VERBOSE("Writing %s\n", ss.str().c_str());
-    adios2::Engine bpWriter = bpIO.Open(ss.str(), adios2::Mode::Write);
-    adios2::Variable<int> program_count = bpIO.DefineVariable<int>("program_count");
-    adios2::Variable<int> comm_size = bpIO.DefineVariable<int>("comm_rank_count");
-    adios2::Variable<int> thread_count = bpIO.DefineVariable<int>("thread_count");
-    adios2::Variable<int> event_type_count = bpIO.DefineVariable<int>("event_type_count");
-    adios2::Variable<int> timer_count = bpIO.DefineVariable<int>("timer_count");
-    adios2::Variable<size_t> timer_event_count = bpIO.DefineVariable<size_t>("timer_event_count");
-    adios2::Variable<int> counter_count = bpIO.DefineVariable<int>("counter_count");
-    adios2::Variable<size_t> counter_event_count = bpIO.DefineVariable<size_t>("counter_event_count");
-    adios2::Variable<size_t> comm_count = bpIO.DefineVariable<size_t>("comm_count");
-    /* These are 2 dimensional variables, so they get special treatment */
-    adios2::Variable<unsigned long> event_timestamps =
-        bpIO.DefineVariable<unsigned long>("event_timestamps", {1, 6}, {0, 0}, {1, 6});
-    adios2::Variable<unsigned long> counter_values =
-        bpIO.DefineVariable<unsigned long>("counter_values", {1, 6}, {0, 0}, {1, 6});
-    adios2::Variable<unsigned long> comm_timestamps =
-        bpIO.DefineVariable<unsigned long>("comm_timestamps", {1, 8}, {0, 0}, {1, 8});
-    /* write the metadata */
-    for (int i = 0 ; i < my_adios().get_thread_count() ; i++) {
-        Tau_dump_ADIOS2_metadata(bpIO, i);
-    }
-    /* write the program name */
-    for (auto iter : my_adios().prog_names) {
-        auto prog_name = iter.first;
-        std::stringstream ss;
-        ss << "program_name " << my_adios().prog_names[prog_name];
-        my_adios().define_attribute(ss.str(), prog_name, bpIO, true);
-    }
-    /* write the event types */
-    for (auto iter : my_adios().event_types) {
-        auto event_type = iter.first;
-        std::stringstream ss;
-        ss << "event_type " << my_adios().event_types[event_type];
-        my_adios().define_attribute(ss.str(), event_type, bpIO, true);
-    }
-    /* write the timer names */
-    for (auto iter : my_adios().timers) {
-        auto timer = iter.first;
-        std::stringstream ss;
-        ss << "timer " << my_adios().timers[timer];
-        my_adios().define_attribute(ss.str(), timer, bpIO, true);
-    }
-    /* write the counter names */
-    for (auto iter : my_adios().counters) {
-        auto counter = iter.first;
-        std::stringstream ss;
-        ss << "counter " << my_adios().counters[counter];
-        my_adios().define_attribute(ss.str(), counter, bpIO, true);
-    }
-
-    bool first = true;
-    while (!my_adios().step_history.empty()) {
-        auto step_data = my_adios().step_history.get();
-        /* write the primer events? */
-        if (first) {
-            first = false;
-            /* sort into one big vector from all threads */
-            // make a list from the first thread of data - copying the data in!
-            std::list<std::pair<unsigned long, std::array<unsigned long, 5> > >
-                merged_timers(step_data->primer_stacks[0]->begin(),
-                            step_data->primer_stacks[0]->end());
-            for (int t = 1 ; t < step_data->threads ; t++) {
-                // make a list from the next thread of data - copying the data in!
-                std::list<std::pair<unsigned long, std::array<unsigned long, 5> > >
-                    next_thread(step_data->primer_stacks[t]->begin(),
-                                step_data->primer_stacks[t]->end());
-                // start at the head of the list
-                auto it = merged_timers.begin();
-                // start at the head of the vector
-                auto head = next_thread.begin();
-                auto tail = next_thread.end();
-                do {
-                    // if the next event on thread n is less than the current timestamp
-                    if (head->first < it->first) {
-                        merged_timers.insert(it, *head);
-                        head++;
-                    } else {
-                        it++;
-                        // if we're at the end of the list, append the rest of this thread
-                        if (it == merged_timers.end()) {
-                            merged_timers.insert (it,head,tail);
-                            break;
-                        }
-                    }
-                } while (head != tail);
-            }
-            size_t num_timer_values = merged_timers.size();
-
-            std::vector<unsigned long> all_timers(6,0);
-            all_timers.reserve(6*merged_timers.size());
-            int timer_value_index = 0;
-            for (auto it = merged_timers.begin() ; it != merged_timers.end() ; it++) {
-                (all_timers)[timer_value_index++] = it->second[0];
-                (all_timers)[timer_value_index++] = it->second[1];
-                (all_timers)[timer_value_index++] = it->second[2];
-                (all_timers)[timer_value_index++] = it->second[3];
-                (all_timers)[timer_value_index++] = it->second[4];
-                (all_timers)[timer_value_index++] = it->first;
-            }
-
-    printf("%d BeginStep\n", __LINE__);
-            bpWriter.BeginStep();
-    printf("Done\n");
-            size_t num_counter_values{0};
-            size_t num_comm_values{0};
-            bpWriter.Put(program_count, &step_data->programs);
-            bpWriter.Put(comm_size, &step_data->comm_ranks);
-            bpWriter.Put(thread_count, &step_data->threads);
-            bpWriter.Put(event_type_count, &step_data->event_types);
-            bpWriter.Put(timer_count, &step_data->timers);
-            bpWriter.Put(timer_event_count, &num_timer_values);
-            bpWriter.Put(counter_count, &step_data->counters);
-            bpWriter.Put(counter_event_count, &num_counter_values);
-            bpWriter.Put(comm_count, &num_comm_values);
-            if (num_timer_values > 0) {
-                event_timestamps.SetShape({num_timer_values, 6});
-                /* These dimensions need to change for 1-file case! */
-                const adios2::Dims timer_start{0, 0};
-                const adios2::Dims timer_count{static_cast<size_t>(num_timer_values), 6};
-                const adios2::Box<adios2::Dims> timer_selection{timer_start, timer_count};
-                event_timestamps.SetSelection(timer_selection);
-                bpWriter.Put(event_timestamps, all_timers.data());
-            }
-    printf("%d EndStep\n", __LINE__);
-            bpWriter.EndStep();
-    printf("Done\n");
-            // this is all we want from this frame, so advance to the next one.
-            continue;
-        }
-
-    printf("%d BeginStep\n", __LINE__);
-        bpWriter.BeginStep();
-    printf("Done\n");
-        bpWriter.Put(program_count, &step_data->programs);
-        bpWriter.Put(comm_size, &step_data->comm_ranks);
-        bpWriter.Put(thread_count, &step_data->threads);
-        bpWriter.Put(event_type_count, &step_data->event_types);
-        bpWriter.Put(timer_count, &step_data->timers);
-        bpWriter.Put(timer_event_count, &step_data->num_timer_values);
-        bpWriter.Put(counter_count, &step_data->counters);
-        bpWriter.Put(counter_event_count, &step_data->num_counter_values);
-        bpWriter.Put(comm_count, &step_data->num_comm_values);
-
-        if (step_data->num_timer_values > 0) {
-            event_timestamps.SetShape({step_data->num_timer_values, 6});
-            /* These dimensions need to change for 1-file case! */
-            const adios2::Dims timer_start{0, 0};
-            const adios2::Dims timer_count{static_cast<size_t>(step_data->num_timer_values), 6};
-            const adios2::Box<adios2::Dims> timer_selection{timer_start, timer_count};
-            event_timestamps.SetSelection(timer_selection);
-            bpWriter.Put(event_timestamps, step_data->step_of_events->data());
-        }
-
-        if (step_data->num_counter_values > 0) {
-            counter_values.SetShape({step_data->num_counter_values, 6});
-            /* These dimensions need to change for 1-file case! */
-            const adios2::Dims counter_start{0, 0};
-            const adios2::Dims counter_count{static_cast<size_t>(step_data->num_counter_values), 6};
-            const adios2::Box<adios2::Dims> counter_selection{counter_start, counter_count};
-            counter_values.SetSelection(counter_selection);
-            bpWriter.Put(counter_values, step_data->step_of_counters.data());
-        }
-
-        if (step_data->num_comm_values > 0) {
-            comm_timestamps.SetShape({step_data->num_comm_values, 8});
-            /* These dimensions need to change for 1-file case! */
-            const adios2::Dims comm_start{0, 0};
-            const adios2::Dims comm_count{static_cast<size_t>(step_data->num_comm_values), 8};
-            const adios2::Box<adios2::Dims> comm_selection{comm_start, comm_count};
-            comm_timestamps.SetSelection(comm_selection);
-            bpWriter.Put(comm_timestamps, step_data->step_of_comms.data());
-        }
-
-    printf("%d EndStep\n", __LINE__);
-        bpWriter.EndStep();
-    printf("Done\n");
-        // if this is the last step to write, stop the current timers
-        if (my_adios().step_history.empty()) {
-            /* sort into one big vector from all threads */
-            // make a list from the first thread of data - copying the data in!
-            std::list<std::pair<unsigned long, std::array<unsigned long, 5> > >
-                merged_timers(step_data->primer_stacks[0]->rbegin(),
-                            step_data->primer_stacks[0]->rend());
-            for (int t = 1 ; t < step_data->threads ; t++) {
-                // make a list from the next thread of data - copying the data in!
-                std::list<std::pair<unsigned long, std::array<unsigned long, 5> > >
-                    next_thread(step_data->primer_stacks[t]->rbegin(),
-                                step_data->primer_stacks[t]->rend());
-                // start at the head of the list
-                auto it = merged_timers.begin();
-                // start at the head of the vector
-                auto head = next_thread.begin();
-                auto tail = next_thread.end();
-                do {
-                    // if the next event on thread n is less than the current timestamp
-                    if (head->first < it->first) {
-                        merged_timers.insert(it, *head);
-                        head++;
-                    } else {
-                        it++;
-                        // if we're at the end of the list, append the rest of this thread
-                        if (it == merged_timers.end()) {
-                            merged_timers.insert (it,head,tail);
-                            break;
-                        }
-                    }
-                } while (head != tail);
-            }
-            size_t num_timer_values = merged_timers.size();
-
-            std::vector<unsigned long> all_timers(6,0);
-            all_timers.reserve(6*merged_timers.size());
-            int timer_value_index = 0;
-            for (auto it = merged_timers.begin() ; it != merged_timers.end() ; it++) {
-                (all_timers)[timer_value_index++] = it->second[0];
-                (all_timers)[timer_value_index++] = it->second[1];
-                (all_timers)[timer_value_index++] = it->second[2];
-                (all_timers)[timer_value_index++] = it->second[3];
-                (all_timers)[timer_value_index++] = it->second[4];
-                (all_timers)[timer_value_index++] = TauTraceGetTimeStamp(0);
-            }
-
-    printf("%d BeginStep\n", __LINE__);
-            bpWriter.BeginStep();
-    printf("Done\n");
-            size_t num_counter_values{0};
-            size_t num_comm_values{0};
-            bpWriter.Put(program_count, &step_data->programs);
-            bpWriter.Put(comm_size, &step_data->comm_ranks);
-            bpWriter.Put(thread_count, &step_data->threads);
-            bpWriter.Put(event_type_count, &step_data->event_types);
-            bpWriter.Put(timer_count, &step_data->timers);
-            bpWriter.Put(timer_event_count, &num_timer_values);
-            bpWriter.Put(counter_count, &step_data->counters);
-            bpWriter.Put(counter_event_count, &num_counter_values);
-            bpWriter.Put(comm_count, &num_comm_values);
-            if (num_timer_values > 0) {
-                event_timestamps.SetShape({num_timer_values, 6});
-                /* These dimensions need to change for 1-file case! */
-                const adios2::Dims timer_start{0, 0};
-                const adios2::Dims timer_count{static_cast<size_t>(num_timer_values), 6};
-                const adios2::Box<adios2::Dims> timer_selection{timer_start, timer_count};
-                event_timestamps.SetSelection(timer_selection);
-                bpWriter.Put(event_timestamps, all_timers.data());
-            }
-    printf("%d EndStep\n", __LINE__);
-            bpWriter.EndStep();
-    printf("Done\n");
-         }
-        delete step_data;
-    }
-    bpWriter.Close();
-    RtsLayer::UnLockDB();
-    tau_plugin::inPlugin() = false;
-}
-#endif
-
 /* This happens after MPI_Init, and after all TAU metadata variables have been
  * read */
 int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
@@ -1772,7 +1345,6 @@ int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
     /* spawn the thread if doing periodic */
     if (tau_plugin::thePluginOptions().env_periodic) {
         _threaded = true;
-        //init_lock(&_my_mutex);
         TAU_VERBOSE("Spawning thread for ADIOS2.\n");
         worker_thread = new std::thread(Tau_ADIOS2_thread_function);
     } else {
