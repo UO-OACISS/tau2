@@ -1,4 +1,7 @@
-# To run this example, you'll need to install nodejs, plotly, jupyterlab and pandas:
+# To run these examples, you'll need to install nodejs, plotly, jupyterlab and pandas:
+# Some instructions are included at the end of this README
+
+# Installation:
 
 # For ssh machines, conda was the easiest way to install nodejs. 
 # For personal machines, simply download nodejs and install.
@@ -86,3 +89,17 @@
 #Miniconda x86_64: https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 #Miniconda ppc64le: https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-ppc64le.sh
 
+# Instructions:
+
+# Most of the notebooks simply rely on inputing the path to the data.
+
+# The 'Scaling*.ipynb' are created to drag into the folder that contains
+# the folders containing the profile.* files. For example, the directory
+# should look as this:
+# parentFolder/ScalingTimerVisualizations.ipynb
+# parentFolder/Folder1/profile.0.0.0
+# parentFolder/Folder1/profile.0.0.1
+# parentFolder/Folder2/profile.0.0.0
+
+# The Scaling .ipynb will parse the profile.* files automatically. 
+# The user can then easily make a few changes to select desired timers.
