@@ -1091,6 +1091,10 @@ void Tau_cupti_buffer_processed(void) {
 }
 #endif
 
+#ifdef TAU_ROCTRACER
+extern void Tau_roctracer_flush_tracing(void);
+#endif /* TAU_ROCTRACER */
+
 extern "C" void Tau_flush_gpu_activity(void) {
 #ifdef CUPTI
     static bool did_once = false;
@@ -1110,6 +1114,9 @@ extern "C" void Tau_flush_gpu_activity(void) {
         }
     }
 #endif
+#ifdef TAU_ROCTRACER
+   Tau_roctracer_flush_tracing();
+#endif /* TAU_ROCTRACER */
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -3001,6 +3008,10 @@ extern "C" int Tau_get_local_tid(void) {
 extern void Tau_ompt_finalize(void);
 #endif
 
+#ifdef TAU_OTF2
+extern void TauTraceOTF2ToggleFlushAtExit(bool);
+#endif
+
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
@@ -3010,6 +3021,9 @@ void Tau_destructor_trigger() {
   if (once) { return; }
   once = true;
   FunctionInfo::disable_metric_cache();
+#ifdef TAU_OTF2
+  TauTraceOTF2ToggleFlushAtExit(true);
+#endif
   Tau_flush_gpu_activity();
 // First, make sure all thread timers have stopped
   Tau_profile_exit_all_threads();
