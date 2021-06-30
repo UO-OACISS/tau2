@@ -1992,7 +1992,9 @@ int Tau_sampling_finalize(int tid)
 
   /* Disable sampling first */
   tau_sampling_flags()->samplingEnabled = 0;
-  collectingSamples = 0;
+  if(tid == 0) {
+    collectingSamples = 0;
+  }
 
   struct itimerval itval;
   int ret;
@@ -2195,7 +2197,9 @@ void Tau_sampling_finalize_if_necessary(int tid)
       RtsLayer::LockEnv();
       // check again, someone else might already have finalized by now.
       if (!finalized) {
-        collectingSamples = 0;
+        if(tid == 0) {
+            collectingSamples = 0;
+        }
         finalized = true;
       }
       RtsLayer::UnLockEnv();
