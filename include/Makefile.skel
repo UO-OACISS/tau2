@@ -1372,7 +1372,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 		  $(TAU_SOS_INCLUDE_OPTS) $(TAU_ADIOS_INCLUDE_OPTS) \
 		  $(TAU_OTF2_INCLUDE_OPTS) $(TAU_CALIPER_INCLUDE_OPTS) \
                   $(TAU_CORESYMBOLICATION_INCLUDE_OPTS) $(TAU_ELF_BFD_PROFILEOPT) \
-				  $(TAU_DWARF_PROFILEOPT) $(DWARFINC) $(TAU_UGNI_OPT)
+				  $(TAU_DWARF_PROFILEOPT) $(DWARFINC) $(TAU_UGNI_OPT) $(TAU_STDCXX11_FLAG)
 
 ##############################################
 # These flags will only be used for the TAU library, not the users's code
