@@ -21,6 +21,7 @@ Version 2.30 changes (from 2.29):
 8. Added support for demangling dpcpp kernel names using the -fno-sycl-unnamed-lambda compiler flag. 
 9. Added support for Cray CCE compilers on A64FX (aarch64) systems (Ookami) without libunwind. 
 10. Added support for flang v12 using gfortran as backend. 
+11. Added support for NVHPC (21.5) (-c++=nvc++ -cc=nvc -fortran=nvfortran).
 
 
 Version 2.29 changes (from 2.28):
