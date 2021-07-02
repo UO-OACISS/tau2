@@ -2394,6 +2394,10 @@ case $1 in
 	echo "NOTE: PGI pgf90 compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     NV_FORTRAN)
+	echo "NOTE: NVIDIA nvfortran compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PGI_FORTRAN_OTHER)
 	echo "NOTE: PGI pgfortran compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
