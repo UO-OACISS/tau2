@@ -644,6 +644,10 @@ usage() {
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
     echo "-mpit ............................... Enable MPI-T profiling interface."
+    echo "-llvm_src=<dir> ......................... Path to the LLVM source tree "
+    echo "                             (necessary for the instrumentation plugin)"
+    echo "-llvm_cxx=<dir.................. Compiler that was used to compile LLVM"
+    echo "                             (necessary for the instrumentation plugin)"
     echo ""
     echo "-help ...................................... display this help message."
     echo "-fullhelp .............................. display the full help message."
@@ -808,6 +812,10 @@ for arg in "$@"; do
 	echo "-python .. Automatically choose python options based on Python in path."
 	echo "-pythoninc=<dir> ........ Specify location of Python include directory."
 	echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
+	echo "-llvm_src=<dir> ......................... Path to the LLVM source tree "
+	echo "                             (necessary for the instrumentation plugin)"
+	echo "-llvm_cxx=<dir.................. Compiler that was used to compile LLVM"
+	echo "                             (necessary for the instrumentation plugin)"
 	echo "-tag=<unique name> ........ Specify a tag to identify the installation."
 	echo "-perfinc=<dir> ............. Specify a Perflib[LANL] include directory."
 	echo "-perflib=<dir> ................. Specify a Perflib[LANL] lib directory."
@@ -1203,6 +1211,8 @@ strsignal_ok=no
 android_version=4.4
 android_platform=19
 disable_memory_manager=no
+llvm_src_dir=""
+llvm_cxx=""
 
 restore_perfdmf_and_paraprof
 
@@ -1542,6 +1552,19 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-llvm_src=*)
+	    llvm_src_dir=`echo $arg | sed -e 's/-llvm_src=//'`
+	    fixmakeargs="$fixmakeargs llvm_src_dir=$llvm_src_dir LLVM_SRC_DIR"
+	    shift
+	    ;;
+	
+	-llvm_cxx=*)
+	    llvm_cxx=`echo $arg | sed -e 's/-llvm_cxx=//'`
+	    fixmakeargs="$fixmakeargs llvm_cxx=$llvm_cxx LLVM_CXX"
+	    shift
+	    ;;
+
+	
         -likwid=download*)
             echo "Downloading LIKWID..."
             likwid=yes
