@@ -2167,12 +2167,21 @@ else
                                              sed -e 's/  */,/g' | \
                                              sed -e 's/^,*//' -e 's/,*$//')
                      fi
-                       if [ "x$optExcludeFuncsList" != "x" ]; then
-                         optExcludeFuncs=-finstrument-functions-exclude-function-list=$optExcludeFuncsList
+                     if [ "x$optExcludeFuncsList" != "x" ]; then
+                       optExcludeFuncs=-finstrument-functions-exclude-function-list=$optExcludeFuncsList
                          optCompInstOption="$optExcludeFuncs $optCompInstOption"
                          echoIfDebug "$optCompInstOption=$optCompInstOption"
                        fi
                      fi
+		     
+		     if [ "x$TAUCOMP" == "xclang" ]; then
+			 echo "CAMILLE COMPILER INSTRU" 
+			 echo "FILE IS " $tauSelectFile
+			 optExcludeFuncs=""
+			 # TODO check the plugin exists here
+			 optCompInstOption="-flegacy-pass-manager -fplugin=$LLVM_DIR/lib/TAU_Profiling.so -mllvm -tau-input-file=$tauSelectFile"
+
+		     fi
           	     extraopt=$optCompInstOption
                      if [ $groupType == $group_f_F ]; then
 # If we need to tweak the Fortran options, we should do it here
