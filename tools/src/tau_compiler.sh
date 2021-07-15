@@ -2109,7 +2109,7 @@ else
       #e.g. see compliation of mpi.c. So do not attempt to modify it simply
       #by placing the output to "a.out".
 
-      if [ $isForCompilation == $TRUE ]; then
+     if [ $isForCompilation == $TRUE ]; then
           # The number of files could be more than one.  Check for creation of each .o file.
           tempCounter=0
           while [ $tempCounter -lt $numFiles ]; do
@@ -2144,19 +2144,19 @@ else
 
               # Should we use compiler-based instrumentation on this file?
               extraopt=
-            if [ $optCompInst == $TRUE ]; then
+           if [ $optCompInst == $TRUE ]; then
           	  tempTauFileName=${arrTau[$tempCounter]}
           	  instrumentedFileForCompilation=" $tempTauFileName"
           	  useCompInst=yes
           	if [ $linkOnly == $TRUE ]; then
           	  useCompInst=no
-      fi
+		fi
           	if [ "x$tauSelectFile" != "x" ] ; then
           	    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'`
           	    useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
           	fi
-          	if [ "$useCompInst" = yes ]; then
-                     if [ `echo $optCompInstOption | grep finstrument-functions | wc -l ` != 0 ]; then
+         	if [ "$useCompInst" = yes ]; then
+                   if [ `echo $optCompInstOption | grep finstrument-functions | wc -l ` != 0 ]; then
                        echoIfDebug "Has GNU CompInst option"
 		     if [ "x$tauSelectFile" != "x" ] ; then
                        optExcludeFuncsList=$(sed -e 's/^#.*//g' -e '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $tauSelectFile | \
@@ -2173,14 +2173,16 @@ else
                          echoIfDebug "$optCompInstOption=$optCompInstOption"
                        fi
                      fi
-		     
-		     if [ "x$TAUCOMP" == "xclang" ]; then
-			 echo "CAMILLE COMPILER INSTRU" 
-			 echo "FILE IS " $tauSelectFile
-			 optExcludeFuncs=""
-			 # TODO check the plugin exists here
-			 optCompInstOption="-flegacy-pass-manager -fplugin=$LLVM_DIR/lib/TAU_Profiling.so -mllvm -tau-input-file=$tauSelectFile"
 
+		     if [ "x$TAUCOMP" == "xclang" ]; then
+			 optExcludeFuncs=""
+			 if [ "x$tauSelectFile" != "x" ]; then
+			     # TODO check the plugin exists here
+			     optCompInstOption="-flegacy-pass-manager -fplugin=$LLVM_DIR/lib/TAU_Profiling.so -mllvm -tau-input-file=$tauSelectFile"
+			 else
+			     # instrument every function
+			     optCompInstOption="-finstrument-functions"
+			 fi
 		     fi
           	     extraopt=$optCompInstOption
                      if [ $groupType == $group_f_F ]; then
@@ -2238,7 +2240,7 @@ else
               fi
               tempCounter=tempCounter+1
           done
-
+		
       else #if [ $isForCompilation == $FALSE ]; compile each of the source file
           	#with a -c option individually and with a .o file. In end link them together.
 
@@ -2276,9 +2278,22 @@ else
           	if [ "x$useCompInst" = "xyes" ]; then
           	    extraopt=$optCompInstOption
                      if [ $groupType == $group_f_F ]; then
-          	     extraopt=$optCompInstFortranOption
-          	     echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
-                     fi
+          		 extraopt=$optCompInstFortranOption
+          		 echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
+		     else
+			 # Not working with fortran (yet)
+			 if [ "x$TAUCOMP" == "xclang" ]; then
+			     optExcludeFuncs=""
+			     if [ "x$tauSelectFile" != "x" ]; then
+				 # TODO check the plugin exists here
+				 extraopt="-g -flegacy-pass-manager -fplugin=$LLVM_DIR/lib/TAU_Profiling.so -mllvm -tau-input-file=$tauSelectFile"
+			     else
+				 # instrument every function
+				 extraopt=$optCompInstOption
+			     fi
+			 fi
+		     fi
+
           	fi
               fi
 
