@@ -17,6 +17,7 @@ CXX = $(TAU_CXX)
 #TUNING_POLICY=tuningpolicy
 TEST_PLUGINS=testplugins
 EXAMPLES=examples
+LLVM=llvm
 
 SUBDIR = $(TEST_PLUGINS) $(EXAMPLES) #$(TUNING_POLICY)
 
@@ -26,6 +27,10 @@ all: install
 install: 
 	@for i in ${SUBDIR}; do (echo "*** COMPILING $$i DIRECTORY"; cd $$i;\
              $(MAKE) "MAKE=$(MAKE)" install ) || exit $$?; done
+
+# Compile the LLVM one separately
+llvm:
+	cd $(LLVM) && $(MAKE) "MAKE=$(MAKE)" install ) || exit $$?
 
 clean:
 	@for i in ${SUBDIR}; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" clean || exit 0); done
