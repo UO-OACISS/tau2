@@ -6943,6 +6943,7 @@ if [ $machine = craycnl -a $pmi = no ]; then
   echo "Testing for <pmi.h> header... ${nnl}"
 cat <<EOF > pmitest.c
 #include <pmi.h>
+#include <ugni.h>
 EOF
   if $cxx_compiler -c pmitest.c 1> /dev/null 2>&1
   then
