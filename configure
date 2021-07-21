@@ -8593,17 +8593,32 @@ else
     echo "no"
 fi
 
+
 $echo "Checking for MPI 3 const interface... ${nnl}"
 if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  1> /dev/null 2>&1 ; then
-    echo "no"
+    if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_BASEDIR" != "x" ]; then 
+      echo "yes"
+      fixmakeargs="$fixmakeargs MPICH3_CONST"
+    else
+      echo "no"
+    fi
 else
   if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
     echo "yes"
     fixmakeargs="$fixmakeargs MPICH3_CONST"
-
   else
-    echo "no"
+    if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_BASEDIR" != "x" ]; then 
+      echo "yes"
+      fixmakeargs="$fixmakeargs MPICH3_CONST"
+    else
+      echo "no"
+    fi
   fi
+fi
+
+if [ "x$PE_ENV" = "xCRAY" -a "x$MPICH_DIR" != "x" -a -r $CRAY_MPICH_DIR/lib/libmpi_cray.a ]; then
+  echo "Found libmpi_cray.a"
+  fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPI_CRAY"
 fi
 
 $echo "Checking for OpenMPI 3 const interface..... ${nnl}"
