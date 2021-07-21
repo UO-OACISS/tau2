@@ -5783,7 +5783,7 @@ then
 	    ;;
 	craycnl)
 	    #	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
-            if [ "x$CRAY_MPICH2_DIR" = "x" ]; then
+            if [ "x$CRAY_MPICH2_DIR" = "x" -a "x$CRAY_MPICH_DIR" = "x" ]; then
               cat <<EOF > mpiincl.c
 #include <mpi.h>
 EOF
@@ -5798,8 +5798,11 @@ EOF
             else
 	      mpiinc=$CRAY_MPICH2_DIR/include
             fi
+	    if [ ! -r $mpiinc ] ; then
+		     mpiinc=$CRAY_MPICH_DIR/include
+            fi
             if [ ! -r $mpiinc ] ; then
-		echo "ERROR: $CRAY_MPICH2_DIR/include (CRAY_MPICH2_DIR/include) is not readable. Please configure with -mpiinc=<dir> to point to the MPI include directory."
+		    echo "ERROR: $CRAY_MPICH_DIR/include (CRAY_MPICH(2)_DIR/include) is not readable. Please configure with -mpiinc=<dir> to point to the MPI include directory."
 		exit 1
             fi
             echo "Using MPI INCLUDE dir from $mpiinc"
