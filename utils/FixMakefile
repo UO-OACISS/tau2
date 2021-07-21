@@ -783,6 +783,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 
+     CRAY_MPICH_LIBMPI_CRAY)
+	echo "NOTE: Using -lmpi_cray during linking"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      MPICH3_CONST)
 	echo "NOTE: Using the -DTAU_MPICH3_CONST=const to compile programs"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
