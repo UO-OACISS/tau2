@@ -8616,9 +8616,16 @@ else
   fi
 fi
 
-if [ "x$PE_ENV" = "xCRAY" -a "x$MPICH_DIR" != "x" -a -r $CRAY_MPICH_DIR/lib/libmpi_cray.a ]; then
-  echo "Found libmpi_cray.a"
-  fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPI_CRAY"
+if [ "x$PE_ENV" = "xCRAY" -a "x$MPICH_DIR" != "x" ]; then
+  if [ -r $CRAY_MPICH_DIR/lib/libmpi_cray.a ]; then 
+    echo "Found libmpi_cray.a"
+    fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPI_CRAY"
+  else 
+    if [ -r $CRAY_MPICH_DIR/lib/libmpich_crayclang.a ]; then 
+      echo "Found libmpich_crayclang.a"
+      fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPICH_CRAYCLANG"
+    fi
+  fi
 fi
 
 $echo "Checking for OpenMPI 3 const interface..... ${nnl}"
