@@ -3094,7 +3094,7 @@ if [ "x$python"  = "xyes" ] ; then
   fi
 fi
 
-if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler ]; then
+if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler -a "x$roctracerdir" = "x" ]; then
   rocprofilerdir=$rocmdir/rocprofiler
   fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER"
   rocprofiler=yes
