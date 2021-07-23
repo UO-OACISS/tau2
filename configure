@@ -1195,6 +1195,7 @@ tau_uselm=yes
 iowrapper=no
 dmapp=no
 ugni=no
+tauoptions_has_ugni=no
 zepto=no
 zeptodir=
 cuda=no
@@ -3093,7 +3094,7 @@ if [ "x$python"  = "xyes" ] ; then
   fi
 fi
 
-if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler ]; then
+if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler -a "x$roctracerdir" = "x" ]; then
   rocprofilerdir=$rocmdir/rocprofiler
   fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER"
   rocprofiler=yes
@@ -4051,6 +4052,7 @@ case $machine in
 	    if [ $ugni = no -a "x$CRAY_DMAPP_INCLUDE_OPTS" != "x" ]; then
 		fixmakeargs="$fixmakeargs UGNI"
 	        tauoptions="${tauoptions}-ugni"
+		tauoptions_has_ugni=yes
             fi
 
 	    # *CWL* - if bfd path is not explicitly specified, point
@@ -4406,8 +4408,10 @@ if [ "x$PE_ENV" = "xCRAY" -o $ugni = yes ]; then
     if [ "x$CRAY_UGNI_INCLUDE_OPTS" = "x" ] ; then
         echo "TAU: Please load the dmapp module on Cray to set CRAY_DMAPP_INCLUDE_OPTS environment variable and reconfigure TAU with the -dmapp configure option"
     else
-        fixmakeargs="$fixmakeargs UGNI"
-	tauoptions="${tauoptions}-ugni"
+	if [ $tauoptions_has_ugni = no ]; then 
+            fixmakeargs="$fixmakeargs UGNI"
+	    tauoptions="${tauoptions}-ugni"
+        fi 
     fi
 fi
 
@@ -5783,7 +5787,7 @@ then
 	    ;;
 	craycnl)
 	    #	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
-            if [ "x$CRAY_MPICH2_DIR" = "x" ]; then
+            if [ "x$CRAY_MPICH2_DIR" = "x" -a "x$CRAY_MPICH_DIR" = "x" ]; then
               cat <<EOF > mpiincl.c
 #include <mpi.h>
 EOF
@@ -5798,8 +5802,11 @@ EOF
             else
 	      mpiinc=$CRAY_MPICH2_DIR/include
             fi
+	    if [ ! -r $mpiinc ] ; then
+		     mpiinc=$CRAY_MPICH_DIR/include
+            fi
             if [ ! -r $mpiinc ] ; then
-		echo "ERROR: $CRAY_MPICH2_DIR/include (CRAY_MPICH2_DIR/include) is not readable. Please configure with -mpiinc=<dir> to point to the MPI include directory."
+		    echo "ERROR: $CRAY_MPICH_DIR/include (CRAY_MPICH(2)_DIR/include) is not readable. Please configure with -mpiinc=<dir> to point to the MPI include directory."
 		exit 1
             fi
             echo "Using MPI INCLUDE dir from $mpiinc"
@@ -6940,6 +6947,7 @@ if [ $machine = craycnl -a $pmi = no ]; then
   echo "Testing for <pmi.h> header... ${nnl}"
 cat <<EOF > pmitest.c
 #include <pmi.h>
+#include <ugni.h>
 EOF
   if $cxx_compiler -c pmitest.c 1> /dev/null 2>&1
   then
@@ -8589,16 +8597,38 @@ else
     echo "no"
 fi
 
+
 $echo "Checking for MPI 3 const interface... ${nnl}"
 if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  1> /dev/null 2>&1 ; then
-    echo "no"
+    if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_BASEDIR" != "x" ]; then 
+      echo "yes"
+      fixmakeargs="$fixmakeargs MPICH3_CONST"
+    else
+      echo "no"
+    fi
 else
   if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
     echo "yes"
     fixmakeargs="$fixmakeargs MPICH3_CONST"
-
   else
-    echo "no"
+    if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_BASEDIR" != "x" ]; then 
+      echo "yes"
+      fixmakeargs="$fixmakeargs MPICH3_CONST"
+    else
+      echo "no"
+    fi
+  fi
+fi
+
+if [ "x$PE_ENV" = "xCRAY" -a "x$MPICH_DIR" != "x" ]; then
+  if [ -r $CRAY_MPICH_DIR/lib/libmpi_cray.a ]; then 
+    echo "Found libmpi_cray.a"
+    fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPI_CRAY"
+  else 
+    if [ -r $CRAY_MPICH_DIR/lib/libmpich_crayclang.a ]; then 
+      echo "Found libmpich_crayclang.a"
+      fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPICH_CRAYCLANG"
+    fi
   fi
 fi
 
