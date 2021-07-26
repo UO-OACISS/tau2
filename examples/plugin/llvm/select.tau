@@ -1,4 +1,4 @@
 BEGIN_EXCLUDE_LIST
-initialize 
+initialize
 compute_interchange
 END_EXCLUDE_LIST
