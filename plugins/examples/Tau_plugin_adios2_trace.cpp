@@ -646,7 +646,11 @@ void adios::write_variables(void)
         }
         if (all_timers == nullptr) {
             TAU_VERBOSE("COULD NOT ALLOCATE %d BYTES!  ABORTING!\n", all_timers_bytes);
+#if TAU_MPI
             PMPI_Abort(MPI_COMM_WORLD, 99);
+#else
+            abort();
+#endif
         }
         for (int t = 0 ; t < threads ; t++) {
             TAU_VERBOSE("%s: thread %d...\n", __func__, t);
@@ -792,7 +796,11 @@ void adios::write_variables(void)
     TAU_VERBOSE("Done writing step.\n");
     } catch ( ... ) {
         TAU_VERBOSE("Unhandled exception!\n");
+#if TAU_MPI
         PMPI_Abort(MPI_COMM_WORLD, 99);
+#else
+        abort();
+#endif
     }
     // if we aren't storing history, free the arrays now.  ADIOS should be
     // done with them.  Because they are stack variables, they'll go out
