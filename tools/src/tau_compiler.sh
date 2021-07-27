@@ -88,6 +88,12 @@ TAU_BIN_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TAUARCH="`grep 'TAU_ARCH=' $TAU_MAKEFILE | sed -e 's@TAU_ARCH=@@g' `"
 TAUCOMP="`grep 'TAU_COMPILER_SUITE_USED=' $TAU_MAKEFILE | grep '##' | sed -e 's/TAU_COMPILER_SUITE_USED=\(.*\)#ENDIF##\(.*\)#/\1/' | tr -d ' '`"
 
+TAU_PLUGIN_DIR="`grep 'TAU_LIB_DIR=' $TAU_MAKEFILE | sed -e 's@TAU_LIB_DIR=@@g' `"
+TAU_PREFIX_INSTALL_DIR="`grep 'TAU_PREFIX_INSTALL_DIR=' $TAU_MAKEFILE | sed -e 's@TAU_PREFIX_INSTALL_DIR=@@g' `"
+TAU_LIB_DIR=${TAU_PREFIX_INSTALL_DIR}/${TAUARCH}/lib
+TAU_CONFIG="`grep 'TAU_CONFIG=' $TAU_MAKEFILE | sed -e 's@TAU_CONFIG=@@g' `"
+TAU_PLUGIN_DIR=${TAU_LIB_DIR}"/shared"${TAU_CONFIG}"/plugins/lib"
+
 printUsage () {
     echo -e "Usage: tau_compiler.sh"
     echo -e "  -optVerbose\t\t\tTurn on verbose debugging message"
@@ -1324,6 +1330,24 @@ if [ "x$TAUCOMP" = "xpgi" ]; then
 	cat_link_file=$TRUE
 fi
 
+# identify the language, if we are using the LLVM plugin for selective instrumentation
+if [ "x$tauSelectFile" != "x" -a "x$TAUCOMP" == "xclang" ] ; then
+    echo "Using selective instrumentation for LLVM"
+    case $groupType in
+	$group_c )
+	    TAU_LLVM_PLUGIN="TAU_Profiling.so"
+            ;;
+	$group_C)
+	    TAU_LLVM_PLUGIN="TAU_Profiling_CXX.so"
+            ;;
+	$group_f_F)
+	    ;;
+    esac
+    # Does it exist?
+    if [ ! -f "${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}" ]; then
+	echo "Warning: the plugin supposed to be installed at ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} does not exist."
+    fi
+fi
 
 tempCounter=0
 while [ $tempCounter -lt $numFiles ]; do
@@ -2177,8 +2201,8 @@ else
 		     if [ "x$TAUCOMP" == "xclang" ]; then
 			 optExcludeFuncs=""
 			 if [ "x$tauSelectFile" != "x" ]; then
-			     # TODO check the plugin exists here
-			     optCompInstOption="-flegacy-pass-manager -fplugin=$LLVM_DIR/lib/TAU_Profiling.so -mllvm -tau-input-file=$tauSelectFile"
+			     # TODO check the plugin exists here (done above)
+			     optCompInstOption="-flegacy-pass-manager -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
 			 else
 			     # instrument every function
 			     optCompInstOption="-finstrument-functions"
@@ -2285,8 +2309,8 @@ else
 			 if [ "x$TAUCOMP" == "xclang" ]; then
 			     optExcludeFuncs=""
 			     if [ "x$tauSelectFile" != "x" ]; then
-				 # TODO check the plugin exists here
-				 extraopt="-g -flegacy-pass-manager -fplugin=$LLVM_DIR/lib/TAU_Profiling.so -mllvm -tau-input-file=$tauSelectFile"
+				 # TODO check the plugin exists here (done above)
+				 extraopt="-g -flegacy-pass-manager -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
 			     else
 				 # instrument every function
 				 extraopt=$optCompInstOption
