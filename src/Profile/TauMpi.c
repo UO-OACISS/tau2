@@ -201,7 +201,7 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __commstr[64]; \
 convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"MPI_Comm_create\", \"comm_in\": \"%s\", \"group\": \"%p\", \"comm_out\": \"0x%" PRIx64 "\"", EVENT_TRACE_PREFIX, __commstr, __group, (uint64_t)__comm_out); \
+sprintf(__tmp, "%s \"MPI_Comm_create\", \"comm_in\": \"%s\", \"group\": \"%p\", \"comm_out\": \"0x%" PRIx64 "\"", EVENT_TRACE_PREFIX, __commstr, (void*)__group, (uint64_t)__comm_out); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
@@ -210,19 +210,19 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __commstr[64]; \
 convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"MPI_Comm_group\", \"comm\": \"%s\", \"group_addr\": \"%p\"", EVENT_TRACE_PREFIX, __commstr, __group_addr); \
+sprintf(__tmp, "%s \"MPI_Comm_group\", \"comm\": \"%s\", \"group_addr\": \"%p\"", EVENT_TRACE_PREFIX, __commstr, (void*)__group_addr); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
 void Tau_timer_exit_group_incl_event(MPI_Group group, int count, const int ranks[], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(count*11), sizeof(char)));
-    sprintf(tmp, "%s \"MPI_Group_incl\", \"group\": \"%p\", \"count\": %d, \"ranks\": [", EVENT_TRACE_PREFIX, group,count);
+    sprintf(tmp, "%s \"MPI_Group_incl\", \"group\": \"%p\", \"count\": %d, \"ranks\": [", EVENT_TRACE_PREFIX, (void*)group,count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, ranks[x]);
     }
-    sprintf(tmp, "%s%d], \"new_group\": \"%p\"", tmp, ranks[count-1], new_group);
+    sprintf(tmp, "%s%d], \"new_group\": \"%p\"", tmp, ranks[count-1], (void*)new_group);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
@@ -235,12 +235,12 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 void Tau_timer_exit_group_excl_event(MPI_Group group, int count, const int ranks[], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(count*11), sizeof(char)));
-    sprintf(tmp, "%s \"MPI_Group_excl\", \"group\": \"%p\", \"count\": %d, \"ranks\": [", EVENT_TRACE_PREFIX, group,count);
+    sprintf(tmp, "%s \"MPI_Group_excl\", \"group\": \"%p\", \"count\": %d, \"ranks\": [", EVENT_TRACE_PREFIX, (void*)group,count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, ranks[x]);
     }
-    sprintf(tmp, "%s%d], \"new_group\": \"%p\"", tmp, ranks[count-1], new_group);
+    sprintf(tmp, "%s%d], \"new_group\": \"%p\"", tmp, ranks[count-1], (void*)new_group);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
@@ -253,12 +253,12 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 void Tau_timer_exit_group_range_incl_event(MPI_Group group, int count, const int ranges[][3], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(count*33), sizeof(char)));
-    sprintf(tmp, "%s \"MPI_Group_range_incl\", \"group\": \"%p\", \"count\": %d, \"ranges\": [", EVENT_TRACE_PREFIX, group,count);
+    sprintf(tmp, "%s \"MPI_Group_range_incl\", \"group\": \"%p\", \"count\": %d, \"ranges\": [", EVENT_TRACE_PREFIX, (void*)group,count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s[%d,%d,%d],", tmp, ranges[x][0], ranges[x][1], ranges[x][2]);
     }
-    sprintf(tmp, "%s[%d,%d,%d]], \"new_group\": \"%p\"", tmp, ranges[count-1][0], ranges[count-1][1], ranges[count-1][2], new_group);
+    sprintf(tmp, "%s[%d,%d,%d]], \"new_group\": \"%p\"", tmp, ranges[count-1][0], ranges[count-1][1], ranges[count-1][2], (void*)new_group);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
@@ -271,12 +271,12 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 void Tau_timer_exit_group_range_excl_event(MPI_Group group, int count, int ranges[][3], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(count*33), sizeof(char)));
-    sprintf(tmp, "%s \"MPI_Group_range_excl\", \"group\": \"%p\", \"count\": %d, \"ranges\": [", EVENT_TRACE_PREFIX, group,count);
+    sprintf(tmp, "%s \"MPI_Group_range_excl\", \"group\": \"%p\", \"count\": %d, \"ranges\": [", EVENT_TRACE_PREFIX, (void*)group,count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s[%d,%d,%d],", tmp, ranges[x][0], ranges[x][1], ranges[x][2]);
     }
-    sprintf(tmp, "%s[%d,%d,%d]], \"new_group\": \"%p\"", tmp, ranges[count-1][0], ranges[count-1][1], ranges[count-1][2], new_group);
+    sprintf(tmp, "%s[%d,%d,%d]], \"new_group\": \"%p\"", tmp, ranges[count-1][0], ranges[count-1][1], ranges[count-1][2], (void*)new_group);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
@@ -289,7 +289,7 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 void Tau_timer_exit_group_translate_ranks_event(MPI_Group group1, int count, const int *ranks1, MPI_Group group2, int *ranks2) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(count*11), sizeof(char)));
-    sprintf(tmp, "%s \"MPI_Group_translate_ranks\", \"group_in\": \"%p\", \"count\": %d, \"ranks_in\": [", EVENT_TRACE_PREFIX, group1, count);
+    sprintf(tmp, "%s \"MPI_Group_translate_ranks\", \"group_in\": \"%p\", \"count\": %d, \"ranks_in\": [", EVENT_TRACE_PREFIX, (void*)group1, count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, ranks1[x]);
@@ -298,7 +298,7 @@ void Tau_timer_exit_group_translate_ranks_event(MPI_Group group1, int count, con
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, ranks2[x]);
     }
-    sprintf(tmp, "%s%d], \"group_out\": \"%p\"", tmp, ranks2[count-1], group2);
+    sprintf(tmp, "%s%d], \"group_out\": \"%p\"", tmp, ranks2[count-1], (void*)group2);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
@@ -311,21 +311,21 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 #define TIMER_EXIT_GROUP_DIFFERENCE_EVENT(__group1,__group2,__newgroup) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __tmp[256]; \
-sprintf(__tmp, "%s \"MPI_Group_difference\", \"group1\": \"%p\", \"group2\": \"%p\", \"new_group\": \"%p\"", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
+sprintf(__tmp, "%s \"MPI_Group_difference\", \"group1\": \"%p\", \"group2\": \"%p\", \"new_group\": \"%p\"", EVENT_TRACE_PREFIX, (void*)__group1, (void*)__group2, (void*)__newgroup); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
 #define TIMER_EXIT_GROUP_INTERSECTION_EVENT(__group1,__group2,__newgroup) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __tmp[256]; \
-sprintf(__tmp, "%s \"MPI_Group_intersection\", \"group1\": \"%p\", \"group2\": \"%p\", \"new_group\": \"%p\"", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
+sprintf(__tmp, "%s \"MPI_Group_intersection\", \"group1\": \"%p\", \"group2\": \"%p\", \"new_group\": \"%p\"", EVENT_TRACE_PREFIX, (void*)__group1, (void*)__group2, (void*)__newgroup); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
 #define TIMER_EXIT_GROUP_UNION_EVENT(__group1,__group2,__newgroup) \
 if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __tmp[256]; \
-sprintf(__tmp, "%s \"MPI_Group_union\", \"group1\": \"%p\", \"group2\": \"%p\", \"new_group\": \"%p\"", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
+sprintf(__tmp, "%s \"MPI_Group_union\", \"group1\": \"%p\", \"group2\": \"%p\", \"new_group\": \"%p\"", EVENT_TRACE_PREFIX, (void*)__group1, (void*)__group2, (void*)__newgroup); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
