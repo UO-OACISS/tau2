@@ -134,7 +134,7 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __commstr[64]; \
 convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"%s\", \"size\": %lu, \"root\": %u, \"comm\": \"%s\"", EVENT_TRACE_PREFIX, __desc, __size, __root, __commstr); \
+sprintf(__tmp, "%s \"%s\", \"size\": %d, \"root\": %u, \"comm\": \"%s\"", EVENT_TRACE_PREFIX, __desc, __size, __root, __commstr); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
@@ -143,7 +143,7 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __commstr[64]; \
 convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"%s\", \"sendsize\": %lu, \"recvsize\": %lu, \"root\": %u, \"comm\": \"%s\"", EVENT_TRACE_PREFIX, __desc, __send_size, __recv_size, __root, __commstr); \
+sprintf(__tmp, "%s \"%s\", \"sendsize\": %d, \"recvsize\": %d, \"root\": %u, \"comm\": \"%s\"", EVENT_TRACE_PREFIX, __desc, __send_size, __recv_size, __root, __commstr); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
@@ -152,7 +152,7 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
 char __commstr[64]; \
 convert_comm(__commstr, __comm); \
 char __tmp[1024]; \
-sprintf(__tmp, "%s \"%s\", \"%s\": %lu, \"count\": %f, \"mean\": %f, \"min\": %f, \"max\": %f, \"sumsqr\": %f, \"root\": %u, \"comm\": \"%s\"", \
+sprintf(__tmp, "%s \"%s\", \"%s\": %d, \"count\": %f, \"mean\": %f, \"min\": %f, \"max\": %f, \"sumsqr\": %f, \"root\": %u, \"comm\": \"%s\"", \
     EVENT_TRACE_PREFIX, __desc, __label, __mybytes, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __root, __commstr); \
 Tau_plugin_trace_current_timer(__tmp); \
 }
@@ -214,7 +214,7 @@ sprintf(__tmp, "%s \"MPI_Comm_group\", \"comm\": \"%s\", \"group_addr\": \"%p\""
 Tau_plugin_trace_current_timer(__tmp); \
 }
 
-void Tau_timer_exit_group_incl_event(MPI_Group group, int count, int ranks[], MPI_Group new_group) {
+void Tau_timer_exit_group_incl_event(MPI_Group group, int count, const int ranks[], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(count*11), sizeof(char)));
     sprintf(tmp, "%s \"MPI_Group_incl\", \"group\": \"%p\", \"count\": %d, \"ranks\": [", EVENT_TRACE_PREFIX, group,count);
@@ -232,7 +232,7 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
     Tau_timer_exit_group_incl_event(__group, __count, __ranks, __group_addr); \
 }
 
-void Tau_timer_exit_group_excl_event(MPI_Group group, int count, int ranks[], MPI_Group new_group) {
+void Tau_timer_exit_group_excl_event(MPI_Group group, int count, const int ranks[], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(count*11), sizeof(char)));
     sprintf(tmp, "%s \"MPI_Group_excl\", \"group\": \"%p\", \"count\": %d, \"ranks\": [", EVENT_TRACE_PREFIX, group,count);
@@ -250,7 +250,7 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
     Tau_timer_exit_group_excl_event(__group, __count, __ranks, __group_addr); \
 }
 
-void Tau_timer_exit_group_range_incl_event(MPI_Group group, int count, int ranges[][3], MPI_Group new_group) {
+void Tau_timer_exit_group_range_incl_event(MPI_Group group, int count, const int ranges[][3], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(count*33), sizeof(char)));
     sprintf(tmp, "%s \"MPI_Group_range_incl\", \"group\": \"%p\", \"count\": %d, \"ranges\": [", EVENT_TRACE_PREFIX, group,count);
@@ -286,7 +286,7 @@ if(Tau_plugins_enabled.current_timer_exit && TAU_DO_TIMER_EXIT) { \
     Tau_timer_exit_group_range_excl_event(__group, __count, __ranges, __newgroup); \
 }
 
-void Tau_timer_exit_group_translate_ranks_event(MPI_Group group1, int count, int *ranks1, MPI_Group group2, int *ranks2) {
+void Tau_timer_exit_group_translate_ranks_event(MPI_Group group1, int count, const int *ranks1, MPI_Group group2, int *ranks2) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
     char * tmp = (char*)(calloc(128+(count*11), sizeof(char)));
     sprintf(tmp, "%s \"MPI_Group_translate_ranks\", \"group_in\": \"%p\", \"count\": %d, \"ranks_in\": [", EVENT_TRACE_PREFIX, group1, count);
@@ -1997,6 +1997,8 @@ int TAU_MPI_Finalized() {
   return tau_mpi_finalized;
 }
 #endif
+
+int TauEnv_get_track_memory_footprint(void);
 
 void finalizeCallSites_if_necessary();
 int  MPI_Finalize(  )
