@@ -9573,7 +9573,11 @@ fi
 ######################################################################
 # Install BFD if requested
 ######################################################################
+# If binutils-2.36 doesn't build, please comment the 2.36 line and use
+# the binutils 2.23.2 instead. If you are using C++ lamda functions in
+# your code, you probably need binutils 2.36 to demangle C++ names. 
 binutils=binutils-2.23.2
+binutils=binutils-2.36
 binutilstgz=$binutils.tar.gz
 binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
 
@@ -9803,6 +9807,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       # Build and install binutils if configure successful
       if [ $err -ne 0 ] ; then
         echo "Error: BFD configuration failed. Cannot proceed with -bfd=download"
+        echo "Error: Please try editing configure and use binutils-2.23.2 instead of 2.36."
         exit 1
       else
         echo "Building (see $tempdir/$binutils/tau_build.log for details)..."
