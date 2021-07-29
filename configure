@@ -3662,6 +3662,10 @@ if [ "x$detectarch" = "x" ] ; then
   fi
 fi
 
+if [ $tauarch = unknown -a "x$detectarch" = "xrs6000" ]; then
+# use 64 bit mode on AIX as default instead of 32 (rs6000) 
+  detectarch="ibm64"  
+fi
 
 case "$tauarch" in
   i386_linux|i386_solaris|arm_android|arm_linux|mpis32|ppc64)
@@ -9895,6 +9899,14 @@ else
 fi # bfd = yes && turnbfdoff != yes
 bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl,-rpath,$bfddir/lib -Wl,-rpath,$bfddir/lib64"
 
+if [ $machine = ibm64 ]; then
+  if [ "x$bfddir" = "x" -o "x$bfddir" = "x/opt/freeware" -o "x$bfddir" = "x/opt/freeware/" ]; then
+    echo "Using /opt/freeware/lib64 for bfd"
+    bfdlink="-L/opt/freeware/lib64#/opt/freeware/lib64/libbfd.a#-liberty#-lintl#-lz"
+    fixmakeargs="$fixmakeargs bfdlink=$bfdlink"
+  fi
+fi
+
 
 
 
@@ -10060,6 +10072,7 @@ if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
 fi
 
 if [ $bfd_worked = "no" -a "$machine" != "apple" -a $pin = no ] ; then
+  if [ "$machine" != "ibm64" ]; then
     echo "failed. Using -lbfd -liberty -lz."
     echo ""
     echo ""
@@ -10072,6 +10085,7 @@ if [ $bfd_worked = "no" -a "$machine" != "apple" -a $pin = no ] ; then
     if [ $tauarch = i386_linux ]; then
 	BFDLIBS=""
     fi
+  fi
 else
     echo $BFDLIBS
 fi
@@ -12625,6 +12639,18 @@ if [ $machine = nec-sx-aurora ]; then
    chmod +x $BINTARGET/tau_exec
    cp $BINTARGET/tau_exec $BINTARGET/tau_python
 fi
+
+if [ $machine = ibm64 ]; then 
+# IBM AIX needs gmake instead of make in TAU compiler scripts. Which scripts need to be changed?
+  for i in `grep "^make -s " ibm64/bin/tau* |  awk '{ print $1;}' | sed -e s@:make@@g`; 
+  do
+    sed -e "s@^make -s@gmake -s@g" ${i} > ${i}~
+    mv ${i}~ ${i}
+    chmod +x ${i}
+  done
+fi
+
+  
 
 if [ $pdtarchdir != unknown ]
 then
