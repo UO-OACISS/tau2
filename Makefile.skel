@@ -86,6 +86,7 @@ TRACE2PROFILE=utils/trace2profile
 
 TAUPRELOAD=src/wrappers/taupreload
 #PIN#TAUPRELOAD= #ENDIF#
+#IBM64#TAUPRELOAD= #ENDIF#
 #CUDA#TAUCUDA=src/wrappers/cuda #ENDIF#
 #CUPTI#TAU_CUPTI_AVAIL=utils/tau_cupti_avail #ENDIF#
 #SHMEM#TAU_CUPTI_AVAIL= #ENDIF#
@@ -95,6 +96,7 @@ TAUPRELOAD=src/wrappers/taupreload
 #TAUENV#TAU_ENV=utils/tau_env #ENDIF#
 TAUOPENCL=src/wrappers/opencl
 MEMORYWRAPPER=src/wrappers/memory
+#IBM64#MEMORYWRAPPER= #ENDIF#
 #ANDROID#ANDROID_TOOLS=tools/src/android #ENDIF#
 
 #CRAYXMT#TAU_ENV= #ENDIF#
@@ -135,6 +137,7 @@ MEMORYWRAPPER=src/wrappers/memory
 
 # Plugin directory
 PLUGINS=plugins
+#IBM64#PLUGINS= #ENDIF#
 #NOPLUGINS#PLUGINS= #ENDIF#
 
 # Subdirectories to make resursively
