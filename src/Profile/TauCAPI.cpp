@@ -1936,14 +1936,23 @@ struct cmp_str
 {
    bool operator()(char const *a, char const *b)
    {
+#ifdef TAU_AIX
+      return strcmp(a, b) < 0;
+#else
       return std::strcmp(a, b) < 0;
+#endif /* TAU_AIX */
    }
 };
 
 struct StrCompare : public std::binary_function<const char*, const char*, bool> {
 public:
-    bool operator() (const char* str1, const char* str2) const
-        { return std::strcmp(str1, str2) < 0; }
+    bool operator() (const char* str1, const char* str2) const {
+#ifdef TAU_AIX
+        return strcmp(str1, str2) < 0; 
+#else 
+        return std::strcmp(str1, str2) < 0; 
+#endif /* TAU_AIX */
+    }
 };
 
 typedef bool(*_my_compare_const_char_func)(const char *, const char *);
@@ -1953,8 +1962,13 @@ bool _my_compare_const_char(const char * lhs, const char * rhs) {
 
 struct StrCompare2 {
 public:
-    bool operator() (const TauSafeString& lhs, const TauSafeString& rhs) const
-        { return std::strcmp(lhs.c_str(), rhs.c_str()) < 0; }
+    bool operator() (const TauSafeString& lhs, const TauSafeString& rhs) const { 
+#ifdef TAU_AIX
+      return strcmp(lhs.c_str(), rhs.c_str()) < 0; 
+#else
+      return std::strcmp(lhs.c_str(), rhs.c_str()) < 0; 
+#endif /* TAU_AIX */
+    }
 };
 
 typedef std::map<TauSafeString, TauContextUserEvent *, std::less<TauSafeString>, TauSignalSafeAllocator<std::pair<const TauSafeString, TauContextUserEvent *> > > pure_atomic_map_t;

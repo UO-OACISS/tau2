@@ -9598,13 +9598,21 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
-      rs6000|ibm64)
+      rs6000)
         ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --prefix=$bfddir \
             --disable-nls --disable-werror --disable-largefile > tau_configure.log 2>&1
         err=$?
         ;;
+      ibm64)
+        ./configure \
+            CFLAGS="-maix64 -fPIC" CXXFLAGS="-maix64 -fPIC" AR="/usr/bin/ar -X64 "\
+            --prefix=$bfddir \
+            --disable-nls --disable-werror --disable-largefile > tau_configure.log 2>&1
+        err=$?
+        ;;
+
       arm_android)
         patch -p1 <$START_DIR/android.binutils-2.23.2.patch && \
         ./configure \
