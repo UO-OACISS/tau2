@@ -916,7 +916,7 @@ MPCThreadLayer.o   : MPCThreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INC) -c $(@:.o=.cpp)
 
 TauMemory.o : TauMemory.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_STDCXX11_FLAG) -c $(@:.o=.cpp)
 
 TauGASP.o : TauGASP.c $(HDRS)
 	$(TAU_UPCC) $(UPCFLAGS) -c $(@:.o=.c)
