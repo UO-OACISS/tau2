@@ -68,7 +68,9 @@ using namespace std;
 #include <stdlib.h>
 #ifndef TAU_WINDOWS
 #ifndef TAU_XLC
+#ifndef TAU_AIX
 #include <sys/syscall.h>
+#endif /* TAU_AIX */
 #endif /* TAU_XLC */
 #endif /* TAU_WINDOWS */
 

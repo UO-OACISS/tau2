@@ -1713,7 +1713,7 @@ int TauProfiler_StoreData(int tid)
   Tau_MemMgr_finalizeIfNecessary();
 
 #ifndef TAU_WINDOWS
-#ifndef _AIX
+// #ifndef _AIX
   if (TauEnv_get_callsite()) {
     TAU_VERBOSE("finalizeCallSites_if_necessary: Total threads = %d\n", RtsLayer::getTotalThreads());
     finalizeCallSites_if_necessary();
@@ -1723,7 +1723,7 @@ int TauProfiler_StoreData(int tid)
     // Tau_sampling_finalize(tid);
     Tau_sampling_finalize_if_necessary(tid);
   }
-#endif /* _AIX */
+// #endif /* _AIX */
 #endif
   if (TauEnv_get_profiling()) {
     if (TauEnv_get_profile_format() == TAU_FORMAT_SNAPSHOT) {

@@ -1,0 +1,6 @@
+This example illustrates how the TAU-based selective instrumentation module for LLVM can be used.
+
+To use it:
+make
+tau_exec -T <TAU options> ./matmult
+pprof

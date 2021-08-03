@@ -10,36 +10,39 @@
 ##                  pC++/Sage++  Copyright (C) 1993,1995             ##
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
- 
+
+
 TAU_MAKEFILE ?=../../../include/Makefile
 
 include $(TAU_MAKEFILE)
 
-
-CXX		= $(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)/bin/tau_cxx.sh
-
-MAKEFILE      	= Makefile
+CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optVerbose -optTauSelectFile=$(PWD)/select.tau
 
 PRINT	      	= pr
 
-RM 	      	= /bin/rm -f
+RM 	      	= /bin/rm -rf
 
-TARGET	      	= ring
+TARGET	      	= matmult
 
-EXTRAOBJS     	= 
+OBJS     	= matmult.o matmult_initialize.o
+CFLAGS=-g -O0 $(TAU_OPENMP_OPTION)
+LDFLAGS=-g $(TAU_OPENMP_OPTION)
 
 ##############################################
-# Original Rules
-##############################################
-all:		$(TARGET)	
 
-$(TARGET):	$(TARGET).o
-	$(CXX) $(LDFLAGS) $(TARGET).o -o $@ $(LIBS)
+all:		$(TARGET)
 
-$(TARGET).o : $(TARGET).cpp
-	$(CXX) $(CFLAGS) -c $(TARGET).cpp
+install: 	$(TARGET)
+
+$(TARGET):	$(OBJS)
+	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
+
+matmult.o: matmult.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+matmult_initialize.o: matmult_initialize.c matmult_initialize.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	$(RM) $(TARGET) $(TARGET).o $(TARGET).pdb
-
+	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog
 ##############################################

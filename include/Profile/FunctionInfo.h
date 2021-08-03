@@ -267,8 +267,8 @@ public:
   //         eventually.
   //  map<unsigned long, unsigned int> *pcHistogram;
 #ifndef TAU_WINDOWS
-#ifndef _AIX
-  //TauPathHashTable<TauPathAccumulator> *pathHistogram[TAU_MAX_THREADS]; //TODO: DYNAPROF
+//#ifndef _AIX
+  //TauPathHashTable<TauPathAccumulator> *pathHistogram[TAU_MAX_THREADS];
 
   // For CallSite discovery
   bool isCallSite;
@@ -288,7 +288,7 @@ public:
 
   /* EBS Sampling Profiles */
   void addPcSample(unsigned long *pc, int tid, double interval[TAU_MAX_COUNTERS]);
-#endif /* _AIX */
+//#endif /* _AIX */
 #endif // TAU_WINDOWS
 
   inline double *getDumpExclusiveValues(int tid) {

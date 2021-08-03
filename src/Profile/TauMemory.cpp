@@ -42,6 +42,11 @@ void *pvalloc(size_t size) {
 }
 #endif /* __PIN__ */
 
+#ifdef TAU_AIX
+#define HAVE_POSIX_MEMALIGN 1
+#undef HAVE_MEMALIGN 
+#undef HAVE_PVALLOC
+#endif /* TAU_AIX */
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
 #include <map>

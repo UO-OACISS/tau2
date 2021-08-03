@@ -1,6 +1,6 @@
 #ifndef TAU_PATH_HASH_H_
 #define TAU_PATH_HASH_H_
-#ifndef _AIX
+//#ifndef _AIX
 
 #include <utility>
 #include <cstdio>
@@ -435,5 +435,5 @@ std::pair<unsigned long *, T> *TauPathHashTable<T>::nextIter()
   }
 }
 
-#endif /* _AIX */
+//#endif /* _AIX */
 #endif /* TAU_PATH_HASH_H_ */

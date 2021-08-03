@@ -46,7 +46,7 @@
 #include "llvm/IR/PassManager.h"
 #include "clang/Frontend/FrontendPluginRegistry.h"
 #include "clang/Frontend/CompilerInstance.h"
-//#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/IR/LegacyPassManager.h"
 #endif
 
 #ifdef TAU_PROF_CXX
@@ -225,7 +225,6 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
           }
           loadFunctionsFromFile(ifile);
       }
-      errs() << "hello\n";
     }
 
   /*! 
@@ -395,7 +394,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 	}
       }
     }
-
+    
     /*!
      *  The FunctionPass interface method, called on each function produced from
      *  the original source.
@@ -429,8 +428,49 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 #else
       return PreservedAnalyses(); 
 #endif
-    }
-  
+   }
+    
+   /* Get the call's location.
+    NB: this is obtained from debugging information, and therefore needs
+    -g to be acessible.
+   */       
+   std::string getFilename( Function& call ){
+       std::string filename;
+           
+       auto pi = inst_begin( &call );
+       Instruction* instruction = &*pi;
+       const llvm::DebugLoc &debugInfo = instruction->getDebugLoc();
+       
+       if( NULL != debugInfo ){ /* if compiled with -g */
+           filename = debugInfo->getDirectory().str() + "/" + debugInfo->getFilename().str();
+       } else {
+           filename = call.getParent()->getSourceFileName();
+       }
+       return filename;
+   }
+
+   std::string getLineAndCol( Function& call ){
+       std::string loc;
+       /* Not as precise: gives the line and column numbers of the first instruction */
+       /*
+       auto pi = inst_begin( &call );
+       Instruction* instruction = &*pi;
+       const llvm::DebugLoc &debugInfo = instruction->getDebugLoc();
+
+       if( NULL != debugInfo ){
+           loc = std::to_string( debugInfo.getLine() ) + "," + std::to_string( debugInfo.getCol() );
+       */
+       DISubprogram* s = call.getSubprogram();
+       if( NULL != s ){
+           int line = s->getLine();
+           loc = std::to_string( line );
+
+       } else {
+           loc = "0,0";
+       }       
+
+       return loc;
+   }
     /*!
      *  Inspect the given CallInst and, if it should be profiled, add it
      *  and its recognized name the given vector.
@@ -440,18 +480,8 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
      */
   bool maybeSaveForProfiling( Function& call ){
 	StringRef callName = call.getName();
-    std::string filename;
-    
-    auto pi = inst_begin( &call );
-    Instruction* instruction = &*pi;
-    const llvm::DebugLoc &debugInfo = instruction->getDebugLoc();
-    if( NULL != debugInfo ){ /* if compiled with -g */
-        filename = debugInfo->getFilename().str();
-    } else {
-        filename = call.getParent()->getSourceFileName();
-    }
-
-	StringRef prettycallName = normalize_name(callName);
+    std::string filename = getFilename( call );
+    StringRef prettycallName = normalize_name(callName);
 
 	/* This big test was explanded for readability */
 	bool instrumentHere = false;
@@ -464,7 +494,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 	  instrumentHere = true;
 	} else {
         /* Yes: are we in a file where we are instrumenting? */
-        if( ( ( filesIncl.size() + filesInclRegex.size() == 0) // do not specify a list of files to instrument -> instrument them all, except the excluded ones
+        if( ( ( filesIncl.size() + filesInclRegex.size() == 0) // did not specify a list of files to instrument -> instrument them all, except the excluded ones
               || ( filesIncl.count( filename ) > 0 
                    || regexFits( filename, filesInclRegex ) ) )
             && !( filesExcl.count( filename )
@@ -477,6 +507,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 	    ( funcsOfInterest.count( prettycallName ) > 0
 	      || regexFits ( prettycallName, funcsOfInterestRegex, true )
 	      //	      || funcsOfInterest.count(calleeAndParent) > 0
+          || ( funcsOfInterest.size() == 0 && funcsOfInterestRegex.size() == 0 ) // did not specify a list of functions to instrument -> instrument them all, except the excluded ones
 	      )
 	    && !( funcsExcl.count( prettycallName )
               || regexFits( prettycallName, funcsExclRegex, true )
@@ -537,18 +568,20 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 #endif // LLVM_VERSION_MAJOR <= 8
 
       errs() << "Adding instrumentation in " << prettyname << '\n';
+      
+      std::string filename = getFilename( func );
+      std::string location( "[{" + getFilename( func ) + "} {" +  getLineAndCol( func ) + "}]" );
 
       // Insert instrumentation before the first instruction
       auto pi = inst_begin( &func );
       Instruction* i = &*pi;
       IRBuilder<> before( i );
-
+      
       bool mutated = false; // TODO
 
       // This is the recommended way of creating a string constant (to be used
       // as an argument to runtime functions)
-
-      Value *strArg = before.CreateGlobalStringPtr( prettyname );
+      Value *strArg = before.CreateGlobalStringPtr( ( prettyname + " " + location ).str() );
       SmallVector<Value *, 1> args{strArg};
       before.CreateCall( onCallFunc, args );
       mutated = true;
@@ -558,8 +591,8 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
       for( inst_iterator I = inst_begin( func ), E = inst_end( func ); I != E; ++I){
           Instruction* e = &*I;
           if( isa<ReturnInst>( e ) ) {
-              IRBuilder<> final( e );
-              final.CreateCall( onRetFunc, args );
+              IRBuilder<> fina( e );
+              fina.CreateCall( onRetFunc, args );
           }	  
       }
       return mutated;

@@ -100,7 +100,9 @@
 #include <omp.h>
 #endif
 
+#ifndef TAU_AIX
 #include <sys/syscall.h>
+#endif /* TAU_AIX */
 #include <time.h>
 #include <unistd.h>
 #ifdef SIGEV_THREAD_ID
@@ -464,10 +466,9 @@ static struct sigaction application_sa;
 
 #define PPC_REG_PC 32
 
-#if (defined(sun) || defined(__APPLE__) || defined(_AIX)) || \
-    (!defined(TAU_BGP) && !defined(TAU_BGQ) && !defined(__x86_64__) && \
+#if (defined(sun) || defined(__APPLE__) ||  (!defined(TAU_BGP) && !defined(TAU_BGQ) && !defined(__x86_64__) && \
     !defined(i386) && !defined(__ia64__) && !defined(__powerpc64__) && \
-	!defined(__powerpc__) && !defined(__arm__) && !defined(__aarch64__))
+	!defined(__powerpc__) && !defined(__arm__) && !defined(__aarch64__)))
 static void issueUnavailableWarning(const char *text)
 {
   static bool warningIssued = false;
@@ -511,8 +512,20 @@ unsigned long get_pc(void *p)
 /* AIX SUPPORT */
 
 #elif _AIX
+/*
   issueUnavailableWarning("Warning, TAU Sampling does not work on AIX\n");
   return 0;
+*/
+  ucontext_t *uct = (ucontext_t *)p;
+
+  //pc = uct->uc_mcontext->jmp_context.iar;
+  if (uct != NULL)
+    pc = uct->uc_mcontext.jmp_context.iar;
+  else
+    pc = 0; 
+  // printf("pc = %p\n", pc); 
+  //pc = (((os_ucontext*)(uct))->uc_mcontext.jmp_context.iar); 
+  return pc; 
 
 /* EVERYTHING ELSE SUPPORT */
 
