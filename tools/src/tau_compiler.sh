@@ -1347,6 +1347,11 @@ if [ "x$tauSelectFile" != "x" -a "x$TAUCOMP" == "xclang" ] ; then
     if [ ! -f "${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}" ]; then
 	echo "Warning: the plugin supposed to be installed at ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} does not exist."
     fi
+    # Which version of clang?
+    clang_version=`$compilerSpecified --version | grep "clang version" | awk {'print $3'} | awk -F'.' {'print $1'}`
+    if [[ "$clang_version" -ge "13" ]] ; then    
+	CLANG_LEGACY="-flegacy-pass-manager"
+    fi
 fi
 
 tempCounter=0
@@ -2202,7 +2207,7 @@ else
 			 optExcludeFuncs=""
 			 if [ "x$tauSelectFile" != "x" ]; then
 			     # TODO check the plugin exists here (done above)
-			     optCompInstOption="-flegacy-pass-manager -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
+			     optCompInstOption="-g ${CLANG_LEGACY} -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
 			 else
 			     # instrument every function
 			     optCompInstOption="-finstrument-functions"
@@ -2310,7 +2315,7 @@ else
 			     optExcludeFuncs=""
 			     if [ "x$tauSelectFile" != "x" ]; then
 				 # TODO check the plugin exists here (done above)
-				 extraopt="-g -flegacy-pass-manager -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
+				 extraopt="-g ${CLANG_LEGACY} -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
 			     else
 				 # instrument every function
 				 extraopt=$optCompInstOption

@@ -109,7 +109,7 @@ OPENACC_O=
 TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.o \
 		TauSampling_libunwind.o TauSampling_backtrace.o TauMmapMemMgr.o
 #BGL#TAU_SAMPLING_O= #ENDIF#
-#SP1#TAU_SAMPLING_O= #ENDIF#
+#SP1##TAU_SAMPLING_O= #ENDIF#
 #PIN#TAU_SAMPLING_O= TauPinHelper.o #ENDIF#
 #CATAMOUNT#TAU_SAMPLING_O= #ENDIF#
 #CRAYX1CC#TAU_SAMPLING_O= #ENDIF#

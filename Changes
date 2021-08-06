@@ -24,6 +24,7 @@ Version 2.30 changes (from 2.29):
 11. Added support for NVHPC (21.5) (-c++=nvc++ -cc=nvc -fortran=nvfortran).
 12. Added support for Cray CNL (-arch=craycnl) with PrgEnv-gnu and AMD GPUs (Spock, ORNL). 
 13. Added initial support for a TAU LLVM plugin for supporting function level selective instrumentation.
+14. Added support for PDT and C/C++ for IBM AIX 7.2 (ibm64). 
 
 Version 2.29 changes (from 2.28):
 1. Updated OMPT support.

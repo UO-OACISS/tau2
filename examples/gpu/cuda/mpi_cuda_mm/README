@@ -1,0 +1,17 @@
+This file shows how to build the MPI example with CUDA and use the monitoring plugin to observe the GPU memory usage. 
+
+make; 
+TAU:
+mpirun -np <N> tau_exec -T cupti -ebs -monitoring ./add
+
+pprof -a | grep GPU | grep Used
+        30     0.3319    0.02674     0.3217    0.05477  GPU: Device 0 Memory Used (GB)
+        30    0.01206    0.01206    0.01206  1.467E-10  GPU: Device 1 Memory Used (GB)
+        30    0.01206    0.01206    0.01206  1.467E-10  GPU: Device 2 Memory Used (GB)
+        30    0.01206    0.01206    0.01206  1.467E-10  GPU: Device 3 Memory Used (GB)
+It only uses GPU 0 in this example and we see steady increase in memory usage only on GPU 0. 
+
+For any questions, please contact Sameer Shende <sameer@cs.uoregon.edu>
+
+
+
