@@ -66,23 +66,7 @@ extern void Tau_metadata_writeEndingTimeStamp(void);
 #define TAU_TRACK_COMM(c)
 #endif /* TAU_EXP_TRACK_COMM */
 
-#ifdef TAU_MPICH3
-#define TAU_MPICH3_CONST const
-#else
-#define TAU_MPICH3_CONST
-#endif
-
-#ifdef TAU_OPENMPI3
-#define TAU_OPENMPI3_CONST  const
-#else
-#define TAU_OPENMPI3_CONST
-#endif
-
-#if defined(TAU_MPC)
-#define TAU_NONMPC_CONST
-#else
-#define TAU_NONMPC_CONST const
-#endif
+#include "check_mpi_version.h"
 
 /* These functions and macros are for creating MPI exit "events" in a plugin trace stream. */
 

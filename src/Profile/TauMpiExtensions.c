@@ -15,25 +15,8 @@ void Tau_communicator_set_name(void *comm, const char *name);
 void Tau_mpi_t_check_communicator(void *comm, const char *comm_name);
 #endif /* TAU_MPI_T */
 /******************************************************/
-#ifdef TAU_MPICONSTCHAR
-#define TAU_CONST const
-#define TAU_CONST2 const
-#else
-#define TAU_CONST
-#define TAU_CONST2
-#endif
+#include "check_mpi_version.h"
 
-// OpenMPI is stupid. MPI_Info_set() doesn't use const, but
-// MPI_Info_delete() and MPI_Info_get_valuelen() do.
-#ifdef TAU_OPENMPI3
-#define TAU_CONST2 const
-#endif
-
-#ifdef TAU_MPICH3
-#define TAU_MPICH3_CONST const
-#else
-#define TAU_MPICH3_CONST
-#endif
 /******************************************************/
 /******************************************************/
 
@@ -566,7 +549,7 @@ void mpi_type_dup__( MPI_Fint *  type, MPI_Fint * newtype, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Type_create_hindexed wrapper function 
 ******************************************************/
-int MPI_Type_create_hindexed( int count, TAU_MPICH3_CONST int * array_of_blocklengths, TAU_MPICH3_CONST MPI_Aint * array_of_displacements, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPI_Type_create_hindexed( int count, TAU_MPICH3_CONST int array_of_blocklengths[], TAU_MPICH3_CONST MPI_Aint array_of_displacements[], MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Type_create_hindexed()", "", TAU_MESSAGE); 
@@ -579,7 +562,7 @@ int MPI_Type_create_hindexed( int count, TAU_MPICH3_CONST int * array_of_blockle
 /******************************************************
 ***      MPI_Type_create_hindexed wrapper function 
 ******************************************************/
-void MPI_TYPE_CREATE_HINDEXED( MPI_Fint *  count, MPI_Fint *  array_of_blocklengths, MPI_Aint * array_of_displacements, MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
+void MPI_TYPE_CREATE_HINDEXED( MPI_Fint *  count, MPI_Fint array_of_blocklengths[], MPI_Aint array_of_displacements[], MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_Datatype local_type;
   *ierr = MPI_Type_create_hindexed( *count, array_of_blocklengths, array_of_displacements, MPI_Type_f2c(*oldtype), &local_type) ; 
@@ -8496,7 +8479,7 @@ void mpi_pack_external__( char * datarep, MPI_Aint * inbuf, MPI_Fint *  incount,
 /******************************************************
 ***      MPI_Unpack_external wrapper function 
 ******************************************************/
-int MPI_Unpack_external( TAU_MPICH3_CONST char * datarep, TAU_MPICH3_CONST void * inbuf, MPI_Aint insize, MPI_Aint * position, void * outbuf, int outcount, MPI_Datatype datatype)
+int MPI_Unpack_external( TAU_MPICH3_CONST char datarep[], TAU_MPICH3_CONST void * inbuf, MPI_Aint insize, MPI_Aint * position, void * outbuf, int outcount, MPI_Datatype datatype)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Unpack_external()", "", TAU_MESSAGE); 
