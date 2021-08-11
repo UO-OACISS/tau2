@@ -1350,7 +1350,7 @@ extern "C" int Tau_dump_callpaths() {
 
   FILE* fp;
   if ((fp = fopen (filename, "a+")) == NULL) {
-    char errormsg[1024];
+    char errormsg[1064];
     sprintf(errormsg,"Error: Could not create %s",filename);
     perror(errormsg);
     return 1;

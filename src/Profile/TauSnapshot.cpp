@@ -402,7 +402,7 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
     TAU_VERBOSE("TAU: Opening Snapshot File %s, cwd = %s\n", filename, cwd);
 
     if ((fp = fopen (filename, "w+")) == NULL) {
-      char errormsg[4096];
+      char errormsg[4196];
       sprintf(errormsg,"Error: Could not create %s",filename);
       perror(errormsg);
       RtsLayer::UnLockDB();

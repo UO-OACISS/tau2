@@ -1063,7 +1063,7 @@ int MPI_Exscan( TAU_MPICH3_CONST void * sendbuf, void * recvbuf, int count, MPI_
 /******************************************************
 ***      MPI_Comm_create_errhandler wrapper function 
 ******************************************************/
-int MPI_Comm_create_errhandler( MPI_Comm_errhandler_fn * function, MPI_Errhandler * errhandler)
+int MPI_Comm_create_errhandler( TAU_MPI_COMM_ERRHANDLER_FUNCTION * function, MPI_Errhandler * errhandler)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Comm_create_errhandler()", "", TAU_MESSAGE); 
@@ -1076,7 +1076,7 @@ int MPI_Comm_create_errhandler( MPI_Comm_errhandler_fn * function, MPI_Errhandle
 /******************************************************
 ***      MPI_Comm_create_errhandler wrapper function 
 ******************************************************/
-void MPI_COMM_CREATE_ERRHANDLER( MPI_Comm_errhandler_fn * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
+void MPI_COMM_CREATE_ERRHANDLER( TAU_MPI_COMM_ERRHANDLER_FUNCTION * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
 {
   MPI_Errhandler local_errhandler; 
 
@@ -1089,7 +1089,7 @@ void MPI_COMM_CREATE_ERRHANDLER( MPI_Comm_errhandler_fn * function, MPI_Errhandl
 /******************************************************
 ***      MPI_Comm_create_errhandler wrapper function 
 ******************************************************/
-void mpi_comm_create_errhandler( MPI_Comm_errhandler_fn * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
+void mpi_comm_create_errhandler( TAU_MPI_COMM_ERRHANDLER_FUNCTION * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
 {
   MPI_COMM_CREATE_ERRHANDLER( function, errhandler, ierr) ; 
   return ; 
@@ -1098,7 +1098,7 @@ void mpi_comm_create_errhandler( MPI_Comm_errhandler_fn * function, MPI_Errhandl
 /******************************************************
 ***      MPI_Comm_create_errhandler wrapper function 
 ******************************************************/
-void mpi_comm_create_errhandler_( MPI_Comm_errhandler_fn * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
+void mpi_comm_create_errhandler_( TAU_MPI_COMM_ERRHANDLER_FUNCTION * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
 {
   MPI_COMM_CREATE_ERRHANDLER( function, errhandler, ierr) ; 
   return ; 
@@ -1107,7 +1107,7 @@ void mpi_comm_create_errhandler_( MPI_Comm_errhandler_fn * function, MPI_Errhand
 /******************************************************
 ***      MPI_Comm_create_errhandler wrapper function 
 ******************************************************/
-void mpi_comm_create_errhandler__( MPI_Comm_errhandler_fn * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
+void mpi_comm_create_errhandler__( TAU_MPI_COMM_ERRHANDLER_FUNCTION * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
 {
   MPI_COMM_CREATE_ERRHANDLER( function, errhandler, ierr) ; 
   return ; 
@@ -2580,7 +2580,7 @@ void mpi_win_free_keyval__( MPI_Fint *  win_keyval, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Win_create_errhandler wrapper function 
 ******************************************************/
-int MPI_Win_create_errhandler( MPI_Win_errhandler_fn * function, MPI_Errhandler * errhandler)
+int MPI_Win_create_errhandler( TAU_MPI_WIN_ERRHANDLER_FUNCTION * function, MPI_Errhandler * errhandler)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Win_create_errhandler()", "", TAU_MESSAGE); 
@@ -2593,7 +2593,7 @@ int MPI_Win_create_errhandler( MPI_Win_errhandler_fn * function, MPI_Errhandler 
 /******************************************************
 ***      MPI_Win_create_errhandler wrapper function 
 ******************************************************/
-void MPI_WIN_CREATE_ERRHANDLER( MPI_Win_errhandler_fn * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
+void MPI_WIN_CREATE_ERRHANDLER( TAU_MPI_WIN_ERRHANDLER_FUNCTION * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
 {
   MPI_Errhandler local_errhandler;
   *ierr = MPI_Win_create_errhandler( function, &local_errhandler) ; 
@@ -2605,7 +2605,7 @@ void MPI_WIN_CREATE_ERRHANDLER( MPI_Win_errhandler_fn * function, MPI_Errhandler
 /******************************************************
 ***      MPI_Win_create_errhandler wrapper function 
 ******************************************************/
-void mpi_win_create_errhandler( MPI_Win_errhandler_fn * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
+void mpi_win_create_errhandler( TAU_MPI_WIN_ERRHANDLER_FUNCTION * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
 {
   MPI_WIN_CREATE_ERRHANDLER( function, errhandler, ierr) ; 
   return ; 
@@ -2614,7 +2614,7 @@ void mpi_win_create_errhandler( MPI_Win_errhandler_fn * function, MPI_Errhandler
 /******************************************************
 ***      MPI_Win_create_errhandler wrapper function 
 ******************************************************/
-void mpi_win_create_errhandler_( MPI_Win_errhandler_fn * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
+void mpi_win_create_errhandler_( TAU_MPI_WIN_ERRHANDLER_FUNCTION * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
 {
   MPI_WIN_CREATE_ERRHANDLER( function, errhandler, ierr) ; 
   return ; 
@@ -2623,7 +2623,7 @@ void mpi_win_create_errhandler_( MPI_Win_errhandler_fn * function, MPI_Errhandle
 /******************************************************
 ***      MPI_Win_create_errhandler wrapper function 
 ******************************************************/
-void mpi_win_create_errhandler__( MPI_Win_errhandler_fn * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
+void mpi_win_create_errhandler__( TAU_MPI_WIN_ERRHANDLER_FUNCTION * function, MPI_Errhandler * errhandler, MPI_Fint * ierr)
 {
   MPI_WIN_CREATE_ERRHANDLER( function, errhandler, ierr) ; 
   return ; 
@@ -2876,7 +2876,7 @@ void MPI_FILE_OPEN( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fi
   MPI_Comm local_comm;
   MPI_Info local_info; 
   MPI_File local_fh; 
-  char const * newfilename = trim_fortran_string(filename, file_len);
+  TAU_MPICH3_CONST char * newfilename = (TAU_MPICH3_CONST char *)trim_fortran_string(filename, file_len);
   local_comm = MPI_Comm_f2c(*comm);
   local_info = MPI_Info_f2c(*info);
   *ierr = MPI_File_open( local_comm, newfilename, *amode, local_info, &local_fh) ; 
@@ -2994,7 +2994,7 @@ int MPI_File_delete( TAU_MPICH3_CONST char * filename, MPI_Info info)
 void MPI_FILE_DELETE( char * filename, MPI_Fint *  info, MPI_Fint * ierr, int filename_length)
 {
   MPI_Info local_info = PMPI_Info_f2c(*info);
-  char const * newfilename = trim_fortran_string(filename, filename_length);
+  TAU_MPICH3_CONST char * newfilename = (TAU_MPICH3_CONST char *)trim_fortran_string(filename, filename_length);
   *ierr = MPI_File_delete( newfilename, local_info) ; 
   free ((void*)newfilename);
   return ; 
@@ -4215,7 +4215,7 @@ void mpi_type_create_darray__( MPI_Fint *  size, MPI_Fint *  rank, MPI_Fint *  n
 /******************************************************
 ***      MPI_File_create_errhandler wrapper function 
 ******************************************************/
-int MPI_File_create_errhandler( MPI_File_errhandler_fn * function, MPI_Errhandler * errhandler)
+int MPI_File_create_errhandler( TAU_MPI_FILE_ERRHANDLER_FUNCTION * function, MPI_Errhandler * errhandler)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_create_errhandler()", "", TAU_MESSAGE); 
@@ -4228,7 +4228,7 @@ int MPI_File_create_errhandler( MPI_File_errhandler_fn * function, MPI_Errhandle
 /******************************************************
 ***      MPI_File_create_errhandler wrapper function 
 ******************************************************/
-void MPI_FILE_CREATE_ERRHANDLER( MPI_File_errhandler_fn * function, MPI_Fint * errhandler, MPI_Fint * ierr)
+void MPI_FILE_CREATE_ERRHANDLER( TAU_MPI_FILE_ERRHANDLER_FUNCTION * function, MPI_Fint * errhandler, MPI_Fint * ierr)
 {
   MPI_Errhandler local_errhandler;
   *ierr = MPI_File_create_errhandler( function, &local_errhandler) ; 
@@ -4239,7 +4239,7 @@ void MPI_FILE_CREATE_ERRHANDLER( MPI_File_errhandler_fn * function, MPI_Fint * e
 /******************************************************
 ***      MPI_File_create_errhandler wrapper function 
 ******************************************************/
-void mpi_file_create_errhandler( MPI_File_errhandler_fn * function, MPI_Fint * errhandler, MPI_Fint * ierr)
+void mpi_file_create_errhandler( TAU_MPI_FILE_ERRHANDLER_FUNCTION * function, MPI_Fint * errhandler, MPI_Fint * ierr)
 {
   MPI_FILE_CREATE_ERRHANDLER( function, errhandler, ierr) ; 
   return ; 
@@ -4248,7 +4248,7 @@ void mpi_file_create_errhandler( MPI_File_errhandler_fn * function, MPI_Fint * e
 /******************************************************
 ***      MPI_File_create_errhandler wrapper function 
 ******************************************************/
-void mpi_file_create_errhandler_( MPI_File_errhandler_fn * function, MPI_Fint * errhandler, MPI_Fint * ierr)
+void mpi_file_create_errhandler_( TAU_MPI_FILE_ERRHANDLER_FUNCTION * function, MPI_Fint * errhandler, MPI_Fint * ierr)
 {
   MPI_FILE_CREATE_ERRHANDLER( function, errhandler, ierr) ; 
   return ; 
@@ -4257,7 +4257,7 @@ void mpi_file_create_errhandler_( MPI_File_errhandler_fn * function, MPI_Fint * 
 /******************************************************
 ***      MPI_File_create_errhandler wrapper function 
 ******************************************************/
-void mpi_file_create_errhandler__( MPI_File_errhandler_fn * function, MPI_Fint * errhandler, MPI_Fint * ierr)
+void mpi_file_create_errhandler__( TAU_MPI_FILE_ERRHANDLER_FUNCTION * function, MPI_Fint * errhandler, MPI_Fint * ierr)
 {
   MPI_FILE_CREATE_ERRHANDLER( function, errhandler, ierr) ; 
   return ; 
