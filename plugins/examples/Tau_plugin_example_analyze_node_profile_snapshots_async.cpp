@@ -26,6 +26,8 @@
 
 #ifdef TAU_MPI
 #include <mpi.h>
+/* Portions of this code use MPI 3.0 features */
+#if MPI_VERSION > 2
 
 #include <list>
 #include <vector>
@@ -371,5 +373,6 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   return 0;
 }
 
-#endif
-#endif
+#endif /* MPI_VERSION > 2 */
+#endif /* TAU_MPI */
+#endif /* C++ 11 */

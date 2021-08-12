@@ -623,25 +623,25 @@ std::vector<netstats_t*> * read_net_stats(const char * source) {
     std::vector<netstats_t*> * net_stats = new std::vector<netstats_t*>();
     /*  Reading proc/stat as a file  */
     FILE * pFile;
-    char line[256] = {0};
+    char line[512] = {0};
     /* Do we want per-process readings? */
     pFile = fopen (source,"r");
     if (pFile == nullptr) {
         perror ("Error opening file");
         return NULL;
     }
-    char * rc = fgets(line, 4096, pFile); // skip this line
+    char * rc = fgets(line, 512, pFile); // skip this line
     if (rc == nullptr) {
         fclose(pFile);
         return NULL;
     }
-    rc = fgets(line, 4096, pFile); // skip this line
+    rc = fgets(line, 512, pFile); // skip this line
     if (rc == nullptr) {
         fclose(pFile);
         return NULL;
     }
     /* Read each device */
-    while (fgets(line, 4096, pFile)) {
+    while (fgets(line, 512, pFile)) {
         std::string outer_tmp(line);
         outer_tmp = tau::papi_plugin::trim(outer_tmp);
         netstats_t * net_stat = new(netstats_t);
@@ -670,14 +670,14 @@ iostats_t * read_io_stats(const char * source) {
     iostats_t * io_stats = new iostats_t();
     /*  Reading proc/stat as a file  */
     FILE * pFile;
-    char line[256] = {0};
+    char line[512] = {0};
     pFile = fopen (source,"r");
     if (pFile == nullptr) {
         perror ("Error opening file");
         return NULL;
     }
     /* Read each line */
-    while (fgets(line, 4096, pFile)) {
+    while (fgets(line, 512, pFile)) {
         char dummy[32] = {0};
         long long tmplong = 0LL;
         int nf = sscanf( line, "%s %lld\n", dummy, &tmplong);

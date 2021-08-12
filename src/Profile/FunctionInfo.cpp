@@ -230,7 +230,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   //         requires the use of an actual malloc
   //         while in the middle of some other malloc call.
 #ifndef TAU_WINDOWS
-#ifndef _AIX
+// #ifndef _AIX
   // create structure only if EBS is required.
   // Thread-safe, all (const char *) parameters. This check removes
   //   the need to create and allocate memory for EBS post-processed
@@ -256,7 +256,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   //  callSiteKeyId = 0; // Any value works.
   firstSpecializedFunction = NULL;
 
-#endif // _AIX
+// #endif // _AIX
 #endif // TAU_WINDOWS
 
 #if defined(TAU_VAMPIRTRACE)
@@ -652,11 +652,12 @@ char const * FunctionInfo::GetFullName()
 /* EBS Sampling Profiles */
 
 #ifndef TAU_WINDOWS
-#ifndef _AIX
+//#ifndef _AIX
 void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[TAU_MAX_COUNTERS])
 {
   // Add to the mmap-ed histogram. We start with a temporary conversion. This
   //   becomes unnecessary once we stop using the vector.
+  if (pathHistogram[tid] == NULL) return; 
   TauPathAccumulator * accumulator = pathHistogram[tid]->get(pcStack);
   if (accumulator == NULL) {
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
@@ -682,7 +683,7 @@ void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[
     }
   }
 }
-#endif // _AIX
+//#endif // _AIX
 #endif // TAU_WINDOWS
 
 /***************************************************************************
