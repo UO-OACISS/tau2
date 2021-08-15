@@ -518,7 +518,7 @@ TauTraceOffsetInfo *TheTauTraceOffsetInfo() {
 int TauTraceDumpEDF(int tid) {
   vector<FunctionInfo*>::iterator it;
   AtomicEventDB::iterator uit;
-  char filename[1024], errormsg[1024];
+  char filename[1024], errormsg[1064];
   const char *dirname;
   FILE* fp;
   int  numEvents, numExtra;
@@ -646,7 +646,7 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
   
   const char *outdir;
   char *keepfiles;
-  char cmd[1024];
+  char cmd[4096];
   char rmcmd[256]; 
   char cdcmd[1024];
   const char *tauroot=TAUROOT;

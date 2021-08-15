@@ -644,6 +644,10 @@ usage() {
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
     echo "-mpit ............................... Enable MPI-T profiling interface."
+    echo "-llvm_src=<dir> ......................... Path to the LLVM source tree "
+    echo "                             (necessary for the instrumentation plugin)"
+    echo "-llvm_cxx=<dir.................. Compiler that was used to compile LLVM"
+    echo "                             (necessary for the instrumentation plugin)"
     echo ""
     echo "-help ...................................... display this help message."
     echo "-fullhelp .............................. display the full help message."
@@ -808,6 +812,10 @@ for arg in "$@"; do
 	echo "-python .. Automatically choose python options based on Python in path."
 	echo "-pythoninc=<dir> ........ Specify location of Python include directory."
 	echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
+	echo "-llvm_src=<dir> ......................... Path to the LLVM source tree "
+	echo "                             (necessary for the instrumentation plugin)"
+	echo "-llvm_cxx=<dir.................. Compiler that was used to compile LLVM"
+	echo "                             (necessary for the instrumentation plugin)"
 	echo "-tag=<unique name> ........ Specify a tag to identify the installation."
 	echo "-perfinc=<dir> ............. Specify a Perflib[LANL] include directory."
 	echo "-perflib=<dir> ................. Specify a Perflib[LANL] lib directory."
@@ -1187,6 +1195,7 @@ tau_uselm=yes
 iowrapper=no
 dmapp=no
 ugni=no
+tauoptions_has_ugni=no
 zepto=no
 zeptodir=
 cuda=no
@@ -1203,6 +1212,8 @@ strsignal_ok=no
 android_version=4.4
 android_platform=19
 disable_memory_manager=no
+llvm_src_dir=""
+llvm_cxx=""
 
 restore_perfdmf_and_paraprof
 
@@ -1542,6 +1553,19 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-llvm_src=*)
+	    llvm_src_dir=`echo $arg | sed -e 's/-llvm_src=//'`
+	    fixmakeargs="$fixmakeargs llvm_src_dir=$llvm_src_dir LLVM_SRC_DIR"
+	    shift
+	    ;;
+	
+	-llvm_cxx=*)
+	    llvm_cxx=`echo $arg | sed -e 's/-llvm_cxx=//'`
+	    fixmakeargs="$fixmakeargs llvm_cxx=$llvm_cxx LLVM_CXX"
+	    shift
+	    ;;
+
+	
         -likwid=download*)
             echo "Downloading LIKWID..."
             likwid=yes
@@ -3070,7 +3094,7 @@ if [ "x$python"  = "xyes" ] ; then
   fi
 fi
 
-if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler ]; then
+if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler -a "x$roctracerdir" = "x" ]; then
   rocprofilerdir=$rocmdir/rocprofiler
   fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER"
   rocprofiler=yes
@@ -3638,6 +3662,10 @@ if [ "x$detectarch" = "x" ] ; then
   fi
 fi
 
+if [ $tauarch = unknown -a "x$detectarch" = "xrs6000" ]; then
+# use 64 bit mode on AIX as default instead of 32 (rs6000) 
+  detectarch="ibm64"  
+fi
 
 case "$tauarch" in
   i386_linux|i386_solaris|arm_android|arm_linux|mpis32|ppc64)
@@ -4028,6 +4056,7 @@ case $machine in
 	    if [ $ugni = no -a "x$CRAY_DMAPP_INCLUDE_OPTS" != "x" ]; then
 		fixmakeargs="$fixmakeargs UGNI"
 	        tauoptions="${tauoptions}-ugni"
+		tauoptions_has_ugni=yes
             fi
 
 	    # *CWL* - if bfd path is not explicitly specified, point
@@ -4383,8 +4412,10 @@ if [ "x$PE_ENV" = "xCRAY" -o $ugni = yes ]; then
     if [ "x$CRAY_UGNI_INCLUDE_OPTS" = "x" ] ; then
         echo "TAU: Please load the dmapp module on Cray to set CRAY_DMAPP_INCLUDE_OPTS environment variable and reconfigure TAU with the -dmapp configure option"
     else
-        fixmakeargs="$fixmakeargs UGNI"
-	tauoptions="${tauoptions}-ugni"
+	if [ $tauoptions_has_ugni = no ]; then 
+            fixmakeargs="$fixmakeargs UGNI"
+	    tauoptions="${tauoptions}-ugni"
+        fi 
     fi
 fi
 
@@ -5760,7 +5791,7 @@ then
 	    ;;
 	craycnl)
 	    #	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
-            if [ "x$CRAY_MPICH2_DIR" = "x" ]; then
+            if [ "x$CRAY_MPICH2_DIR" = "x" -a "x$CRAY_MPICH_DIR" = "x" ]; then
               cat <<EOF > mpiincl.c
 #include <mpi.h>
 EOF
@@ -5775,8 +5806,11 @@ EOF
             else
 	      mpiinc=$CRAY_MPICH2_DIR/include
             fi
+	    if [ ! -r $mpiinc ] ; then
+		     mpiinc=$CRAY_MPICH_DIR/include
+            fi
             if [ ! -r $mpiinc ] ; then
-		echo "ERROR: $CRAY_MPICH2_DIR/include (CRAY_MPICH2_DIR/include) is not readable. Please configure with -mpiinc=<dir> to point to the MPI include directory."
+		    echo "ERROR: $CRAY_MPICH_DIR/include (CRAY_MPICH(2)_DIR/include) is not readable. Please configure with -mpiinc=<dir> to point to the MPI include directory."
 		exit 1
             fi
             echo "Using MPI INCLUDE dir from $mpiinc"
@@ -6917,6 +6951,7 @@ if [ $machine = craycnl -a $pmi = no ]; then
   echo "Testing for <pmi.h> header... ${nnl}"
 cat <<EOF > pmitest.c
 #include <pmi.h>
+#include <ugni.h>
 EOF
   if $cxx_compiler -c pmitest.c 1> /dev/null 2>&1
   then
@@ -8566,16 +8601,38 @@ else
     echo "no"
 fi
 
+
 $echo "Checking for MPI 3 const interface... ${nnl}"
 if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  1> /dev/null 2>&1 ; then
-    echo "no"
+    if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_BASEDIR" != "x" ]; then 
+      echo "yes"
+      fixmakeargs="$fixmakeargs MPICH3_CONST"
+    else
+      echo "no"
+    fi
 else
   if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
     echo "yes"
     fixmakeargs="$fixmakeargs MPICH3_CONST"
-
   else
-    echo "no"
+    if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_BASEDIR" != "x" ]; then 
+      echo "yes"
+      fixmakeargs="$fixmakeargs MPICH3_CONST"
+    else
+      echo "no"
+    fi
+  fi
+fi
+
+if [ "x$PE_ENV" = "xCRAY" -a "x$MPICH_DIR" != "x" ]; then
+  if [ -r $CRAY_MPICH_DIR/lib/libmpi_cray.a ]; then 
+    echo "Found libmpi_cray.a"
+    fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPI_CRAY"
+  else 
+    if [ -r $CRAY_MPICH_DIR/lib/libmpich_crayclang.a ]; then 
+      echo "Found libmpich_crayclang.a"
+      fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPICH_CRAYCLANG"
+    fi
   fi
 fi
 
@@ -9520,7 +9577,11 @@ fi
 ######################################################################
 # Install BFD if requested
 ######################################################################
+# If binutils-2.36 doesn't build, please comment the 2.36 line and use
+# the binutils 2.23.2 instead. If you are using C++ lamda functions in
+# your code, you probably need binutils 2.36 to demangle C++ names. 
 binutils=binutils-2.23.2
+binutils=binutils-2.36
 binutilstgz=$binutils.tar.gz
 binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
 
@@ -9627,13 +9688,21 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
-      rs6000|ibm64)
+      rs6000)
         ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --prefix=$bfddir \
             --disable-nls --disable-werror --disable-largefile > tau_configure.log 2>&1
         err=$?
         ;;
+      ibm64)
+        ./configure \
+            CFLAGS="-maix64 -fPIC" CXXFLAGS="-maix64 -fPIC" AR="/usr/bin/ar -X64 "\
+            --prefix=$bfddir \
+            --disable-nls --disable-werror --disable-largefile > tau_configure.log 2>&1
+        err=$?
+        ;;
+
       arm_android)
         patch -p1 <$START_DIR/android.binutils-2.23.2.patch && \
         ./configure \
@@ -9750,6 +9819,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       # Build and install binutils if configure successful
       if [ $err -ne 0 ] ; then
         echo "Error: BFD configuration failed. Cannot proceed with -bfd=download"
+        echo "Error: Please try editing configure and use binutils-2.23.2 instead of 2.36."
         exit 1
       else
         echo "Building (see $tempdir/$binutils/tau_build.log for details)..."
@@ -9833,6 +9903,14 @@ else
   fixmakeargs="$fixmakeargs bfdinclude= bfdlink= "
 fi # bfd = yes && turnbfdoff != yes
 bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl,-rpath,$bfddir/lib -Wl,-rpath,$bfddir/lib64"
+
+if [ $machine = ibm64 ]; then
+  if [ "x$bfddir" = "x" -o "x$bfddir" = "x/opt/freeware" -o "x$bfddir" = "x/opt/freeware/" ]; then
+    echo "Using /opt/freeware/lib64 for bfd"
+    bfdlink="-L/opt/freeware/lib64#/opt/freeware/lib64/libbfd.a#-liberty#-lintl#-lz"
+    fixmakeargs="$fixmakeargs bfdlink=$bfdlink"
+  fi
+fi
 
 
 
@@ -9999,6 +10077,7 @@ if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
 fi
 
 if [ $bfd_worked = "no" -a "$machine" != "apple" -a $pin = no ] ; then
+  if [ "$machine" != "ibm64" ]; then
     echo "failed. Using -lbfd -liberty -lz."
     echo ""
     echo ""
@@ -10011,6 +10090,7 @@ if [ $bfd_worked = "no" -a "$machine" != "apple" -a $pin = no ] ; then
     if [ $tauarch = i386_linux ]; then
 	BFDLIBS=""
     fi
+  fi
 else
     echo $BFDLIBS
 fi
@@ -12564,6 +12644,18 @@ if [ $machine = nec-sx-aurora ]; then
    chmod +x $BINTARGET/tau_exec
    cp $BINTARGET/tau_exec $BINTARGET/tau_python
 fi
+
+if [ $machine = ibm64 ]; then 
+# IBM AIX needs gmake instead of make in TAU compiler scripts. Which scripts need to be changed?
+  for i in `grep "^make -s " ibm64/bin/tau* |  awk '{ print $1;}' | sed -e s@:make@@g`; 
+  do
+    sed -e "s@^make -s@gmake -s@g" ${i} > ${i}~
+    mv ${i}~ ${i}
+    chmod +x ${i}
+  done
+fi
+
+  
 
 if [ $pdtarchdir != unknown ]
 then

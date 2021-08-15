@@ -101,7 +101,7 @@ double Tau_metric_set_synchronized_gpu_timestamp(int tid, double value){
     offset_timestamp=TauTraceGetTimeStamp() - ((double)value);
   }
   metric_set_gpu_timestamp(tid, offset_timestamp+value);
-  printf("metric_set_gpu_timestamp = %llu + %f = %f\n", offset_timestamp, value, offset_timestamp+value);
+  TAU_VERBOSE("metric_set_gpu_timestamp = %llu + %f = %f\n", offset_timestamp, value, offset_timestamp+value);
   return offset_timestamp+value;
 }
 

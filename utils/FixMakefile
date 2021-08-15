@@ -297,6 +297,15 @@ case $1 in
 	echo "s,^TAU_GASNET_DIR=.*$,TAU_GASNET_DIR=$gasnetdir,g" >> $sedout
 	;;
 
+     llvm_src_dir=*)
+	llvm_src_dir=`echo $1 | sed -e 's/^llvm_src_dir=//' -e 's/#/ /g'`
+	echo "s,^TAU_LLVM_SRC_DIR=.*$,TAU_LLVM_SRC_DIR=$llvm_src_dir,g" >> $sedout
+	;;
+     llvm_cxx=*)
+	 llvm_cxx=`echo $1 | sed -e 's/^llvm_cxx=//' -e 's/#/ /g'`
+	 echo "s,^TAU_LLVM_CXX=.*$,TAU_LLVM_CXX=$llvm_cxx,g" >> $sedout
+	 ;;
+
      sicortexlink=*)
         sicortexlink=`echo $1 | sed -e 's/^sicortexlink=//' -e 's/#/ /g'`
 	echo "s@^SICORTEXLINK=.*\$@SICORTEXLINK=$sicortexlink@g" >> $sedout
@@ -773,6 +782,17 @@ case $1 in
 	echo "NOTE: Using the -DMPICH_IGNORE_CXX_SEEK to compile C++ programs"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+
+     CRAY_MPICH_LIBMPI_CRAY)
+	echo "NOTE: Using -lmpi_cray during linking"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     CRAY_MPICH_LIBMPICH_CRAYCLANG)
+	echo "NOTE: Using -lmpich_crayclang during linking"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
 
      MPICH3_CONST)
 	echo "NOTE: Using the -DTAU_MPICH3_CONST=const to compile programs"
@@ -1395,7 +1415,14 @@ case $1 in
 	echo NOTE: Using The GASNET directory 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     CRAYX1CC)
+     LLVM_SRC_DIR)
+	 echo NOTE: using LLVM source directory
+         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     LLVM_CXX)
+         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+    CRAYX1CC)
 	echo NOTE: Using The Cray CC C++ compiler 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
