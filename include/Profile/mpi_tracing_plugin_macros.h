@@ -284,7 +284,7 @@ void Tau_timer_exit_cart_create_event(MPI_Comm comm, int ndims, TAU_MPICH3_CONST
     for (x = 0 ; x < ndims-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, periods[x]);
     }
-    sprintf(tmp, "%s%d], \"reorder\": %d, \"comm_out\": \"%" PRIx64 "\"", tmp, periods[ndims-1], reorder, (uint64_t)comm_out);
+    sprintf(tmp, "%s%d], \"reorder\": %d, \"comm_out\": \"0x%" PRIx64 "\"", tmp, periods[ndims-1], reorder, (uint64_t)comm_out);
     Tau_plugin_trace_current_timer(tmp);
     free(tmp);
 }
