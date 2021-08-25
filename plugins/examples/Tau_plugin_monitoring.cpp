@@ -445,7 +445,7 @@ void initialize_papi_events(bool do_components) {
             std::string metric(i);
             // PAPI is either const char * or char * depending on version.  Fun.
             if ((retval = PAPI_add_named_event(papi_periodic_event_set, (char*)(metric.c_str()))) != PAPI_OK) {
-                printf("Error: PAPI_add_event: %d %s %s\n", retval, PAPI_strerror(retval), metric.c_str()); 
+                printf("Error: PAPI_add_event: %d %s %s\n", retval, PAPI_strerror(retval), metric.c_str());
 	    } else {
                 num_metrics++;
 	    }
@@ -805,6 +805,34 @@ void sample_value(const char * component, const char * cpu, const char * name,
 
 extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
 
+void parse_proc_self_stat() {
+  static const char * source = "/proc/self/stat";
+  static bool first = true;
+  if (!include_component(source)) { return; }
+  FILE *f = fopen(source, "r");
+  if (f) {
+    char line[4096] = {0};
+    while ( fgets( line, 4096, f)) {
+        std::string tmp(line);
+        std::istringstream iss(tmp);
+        // split the string on whitespace
+        std::vector<std::string> results(std::istream_iterator<std::string>{iss},
+                                         std::istream_iterator<std::string>());
+        if (results.size() >= 52) {
+            /* Remember that the string is 0-indexed, so subtract 1 from the
+             * indexes on https://man7.org/linux/man-pages/man5/proc.5.html */
+            Tau_trigger_userevent("Page faults (minor)", atof(results[9].c_str()));
+            Tau_trigger_userevent("Page faults (major)", atof(results[11].c_str()));
+            //Tau_trigger_userevent("Threads (stat)", atof(results[19].c_str()));
+            Tau_trigger_userevent("Pages swapped (not maintained)", atof(results[35].c_str()));
+        }
+    }
+    fclose(f);
+  }
+  first = false;
+  return;
+}
+
 void parse_proc_self_status() {
   static const char * source = "/proc/self/status";
   static bool first = true;
@@ -1101,6 +1129,8 @@ void read_components(void) {
     parse_proc_self_status();
     /* Parse memory stats */
     parse_proc_self_statm();
+    /* Parse general stat */
+    parse_proc_self_stat();
     /* Get current net stats for the process */
     previous_self_net_stats = update_net_stats("/proc/self/net/dev", previous_self_net_stats);
 #endif
@@ -1351,6 +1381,8 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
 #if !defined(__APPLE__)
     /* Parse status metadata */
     parse_proc_self_status();
+    /* Parse general stat */
+    parse_proc_self_stat();
     /* Parse initial process io data */
     previous_io_stats = read_io_stats("/proc/self/io");
     /* Parse initial process network data */

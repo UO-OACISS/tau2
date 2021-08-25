@@ -364,10 +364,16 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
         // one for dispatch
         TAU_CREATE_TASK(dispatch_task_id);
         Tau_set_initialized_queues(record->queue_id, dispatch_task_id);
-        // one for copy
-        TAU_CREATE_TASK(copy_task_id);
-        // one for barrier
-        TAU_CREATE_TASK(barrier_task_id);
+        if (TauEnv_get_thread_per_gpu_stream()) {
+            // another one for copy
+            TAU_CREATE_TASK(copy_task_id);
+            // another one for barrier
+            TAU_CREATE_TASK(barrier_task_id);
+        } else {
+            // when profiling, we just need one thread per device, really.
+            copy_task_id = dispatch_task_id;
+            barrier_task_id = dispatch_task_id;
+        }
         RtsLayer::UnLockDB();
         //Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)begin_us));
         metric_set_gpu_timestamp(dispatch_task_id, ((double)(begin_us)));
@@ -375,16 +381,22 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
         Tau_add_metadata_for_task("TAU_TASK_ID", dispatch_task_id, dispatch_task_id);
         Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, dispatch_task_id);
         Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, dispatch_task_id);
-        metric_set_gpu_timestamp(copy_task_id, ((double)(begin_us)));
-        Tau_create_top_level_timer_if_necessary_task(copy_task_id);
-        Tau_add_metadata_for_task("TAU_TASK_ID", copy_task_id, copy_task_id);
-        Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, copy_task_id);
-        Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, copy_task_id);
-        metric_set_gpu_timestamp(barrier_task_id, ((double)(begin_us)));
-        Tau_create_top_level_timer_if_necessary_task(barrier_task_id);
-        Tau_add_metadata_for_task("TAU_TASK_ID", barrier_task_id, barrier_task_id);
-        Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, barrier_task_id);
-        Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, barrier_task_id);
+        if (TauEnv_get_thread_per_gpu_stream()) {
+            metric_set_gpu_timestamp(copy_task_id, ((double)(begin_us)));
+            Tau_create_top_level_timer_if_necessary_task(copy_task_id);
+            Tau_add_metadata_for_task("TAU_TASK_ID", copy_task_id, copy_task_id);
+            Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, copy_task_id);
+            Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, copy_task_id);
+            metric_set_gpu_timestamp(barrier_task_id, ((double)(begin_us)));
+            Tau_create_top_level_timer_if_necessary_task(barrier_task_id);
+            Tau_add_metadata_for_task("TAU_TASK_ID", barrier_task_id, barrier_task_id);
+            Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, barrier_task_id);
+            Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, barrier_task_id);
+        }
+      } else {
+          // when profiling, we just need one thread per device, really.
+          copy_task_id = dispatch_task_id;
+          barrier_task_id = dispatch_task_id;
       }
       TAU_VERBOSE(" device_id(%d) queue_id(%lu)\n",
         record->device_id,
