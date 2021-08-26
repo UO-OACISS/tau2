@@ -16,7 +16,7 @@ pprof
 ./configure  -c++=clang++ -cc=clang -iowrapper -llvm_cxx=`which g++` -llvm_src=$LLVM_DIR
 ```
 
-`-llvm_cxx` indicates the C++ compiler tht was used to compile LLVM. It is necessary for binary compatibility purposes.
+`-llvm_cxx` indicates the C++ compiler that was used to compile LLVM. It is necessary for binary compatibility purposes.
 
 `-llvm_src` indicates the root of the source tree or the installation of your LLVM installation. If the `LLVM_DIR` environment variable has already been set (for instance, by your module management system), it might not be necessary.
 
