@@ -73,6 +73,65 @@ clone()
   git clone "$src" "$dst"
 }
 
+# This function checks the cmake version and even does a "module load cmake" if we don't have a required version. It takes 3 args: major minor "string" and returns 0 if success
+# and 1 if error
+#check_cmake 3 14 "LLVM plugin"
+#result=$?
+#if [ $result -eq 0 ]; then
+#  echo "Success: building LLVM plugin"
+#fi
+function check_cmake() {
+  #check if CMake exists
+  cmake_major_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f1`
+  cmake_minor_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f2 `
+  cmake_cmd=`which cmake`
+ 
+  echo "CMAKE VERSION: $cmake_major_version $cmake_minor_version"
+  echo "WHICH CMAKE: $cmake_cmd"
+  load_cmake=0
+ 
+  if [ "x$cmake_cmd" = "x" ] ||  (($cmake_major_version < $1))  ; then
+    load_cmake=1
+  else 
+    if (($cmake_major_version == $1))  &&  (($cmake_minor_version < $2)) ; then 
+      load_cmake=1 
+    fi
+  fi
+ 
+  # Try loading the cmake module if it exists
+  if (($load_cmake == 1)); then 
+      echo "ERROR: cmake version $1.$2+ is required for $3. Trying module load cmake."
+      module avail cmake 1> /dev/null 2>&1 
+      result=$?
+      if [ $result -eq 0 ]; then
+        module load cmake; 
+      fi; 
+  fi 
+  cmake_major_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f1`; cmake_minor_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f2 `; cmake_cmd=`which cmake`
+  if (($cmake_major_version == $1)) ; then 
+    if (($cmake_minor_version >= $2)) ; then 
+      echo "TAU: CMAKE version check passes. Using $cmake_major_version.$cmake_minor_version  "
+      return 0
+    else 
+      echo "ERROR: cmake version $1.$2+ is required for $3. Please load cmake version $1.$2+ and retry"
+      return 1
+    fi
+  else
+# cmake major is != $1
+    if (($cmake_major_version < $1)); then
+      echo "ERROR: cmake version $1.$2+ is required for $3. Even after module load cmake, this version is inadequate. Please load cmake version $1.$2+ and retry"
+      return 1
+    else
+# cmake major > $1
+      echo "Success: Using CMAKE version: $cmake_major_version.$cmake_minor_version"
+      return 0
+    fi
+  fi 
+# should not have reached here
+  return 1
+}
+
+
 # Install SOS dependencies such as EVPath
 installsosdeps()
 {
@@ -92,16 +151,12 @@ installsosdeps()
  P=`pwd`
 
  #check if CMake exists
- cmake_major_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f1`
- cmake_cmd=`which cmake`
-
- #echo "CMAKE VERSION: $cmake_major_version"
- #echo "WHICH CMAKE: $cmake_which"
-
- if [ "x$cmake_cmd" = "x" ] || [ $cmake_major_version -lt 3 ] ; then
+ check_cmake 3 0 "SOS"
+ result=$?
+ if [ $result -eq 1 ]; then 
    echo 'ERROR: cmake version 3 or higher required to build SOS dependencies, exiting.'
    exit 1;
- fi
+ fi 
 
  echo "Install SOS deps"
  if [ -d chaos ]; then
@@ -1208,6 +1263,7 @@ use_opencl=no
 use_openacc=no
 openacc_opt=""
 cupti=no
+build_llvm_plugin=no
 strsignal_ok=no
 android_version=4.4
 android_platform=19
@@ -4801,11 +4857,13 @@ case $cxx_compiler in
         llvm=yes
         fixmakeargs="$fixmakeargs CLANG COMPINST_LLVM"
         tauoptions="${tauoptions}-clang"
-	    if [ $machine = apple ]; then
-	        gnu=yes
+	if [ $machine = apple ]; then
+	    gnu=yes
             fixmakeargs="$fixmakeargs taugcclibdir=/usr/lib taugccstdcxxlibdir=/usr/lib"
             fixmakeargs="$fixmakeargs APPLECXX"
-
+        else
+	# We currently do not support building the TAU LLVM plugin for macOS. This may change in the future. 
+	    build_llvm_plugin=yes
         fi
         if [ $openmp = yes ]; then
           fixmakeargs="$fixmakeargs CLANG_OPENMP"
@@ -5379,6 +5437,9 @@ case $cxx_compiler in
 		if [ $machine = apple ]; then
 		    # MPI on Apple OS X has issues with shared objects
                     fixmakeargs="$fixmakeargs NOSHARED"
+                else
+	        # We currently do not support building the TAU LLVM plugin for macOS. This may change in the future. 
+	            build_llvm_plugin=yes
 		fi
 		;;
             *)
@@ -5392,6 +5453,26 @@ case $cxx_compiler in
 	;;
 
 esac
+
+# Should we build the TAU selective instrumentation plugin for LLVM?
+if [ $build_llvm_plugin = yes ]; then
+  check_cmake 3 14 "LLVM plugin"
+  result=$?
+  if [ $result -eq 0 ]; then
+    fixmakeargs="$fixmakeargs tau_cmake=$cmake_cmd TAU_BUILD_LLVM_PLUGIN"
+  # proceed with building the LLVM plugin. But check if the compiler or the LLVM source directories have been specified
+    if [ "x$llvm_src_dir" = "x" ]; then
+      llvm_src_dir=`which clang | sed -e 's@bin/clang@@' `
+      echo "TAU: Using LLVM source directory -llvm_src=$llvm_src_dir for building the TAU LLVM plugin."
+      fixmakeargs="$fixmakeargs llvm_src_dir=$llvm_src_dir LLVM_SRC_DIR"
+    fi
+    if [ "x$llvm_cxx" = "x" ]; then 
+      llvm_cxx=`which g++ `
+      echo "TAU: Using -llvm_cxx=$llvm_cxx as the compiler to build the TAU LLVM selective instrumentation plugin. "
+      fixmakeargs="$fixmakeargs llvm_cxx=$llvm_cxx LLVM_CXX"
+    fi
+  fi
+fi
 
 if [ $mpc = yes ]; then
   plugins=no
@@ -8036,8 +8117,9 @@ if [ "x$download_ompt" = "xyes" ] ; then
     preomptdir=`pwd`
 
     #check Cmake exists
-    cmake_cmd=`which cmake`
-    if [ "x$cmake_cmd" = "x" ] ; then
+    check_cmake 2 8 "OMPT support"
+    result=$?
+    if [ $result -eq 1 ]; then
       echo 'ERROR: cmake version 2.8 or higher required to build OMPT support.'
       exit 1;
     fi
@@ -10270,10 +10352,11 @@ if [ "x$download_dyninst" = xyes ] ; then
   prebfddir=`pwd`
 
   #check Cmake exists
-  cmake_cmd=`which cmake`
-  if [ "x$cmake_cmd" = "x" ] ; then
-      echo 'ERROR: cmake version 2.8.11 or higher required to build Dyninst.'
-      exit 1;
+  check_cmake 2 9 "Dyninst"
+  result=$?
+  if [ $result -eq 1 ]; then
+    echo 'ERROR: cmake version 2.9 or higher required to build Dyninst.'
+    exit 1;
   fi
 
   if [ -r "$dyninstdir/lib/libdyninstAPI.so" -o \
@@ -10997,11 +11080,13 @@ if [ $apex = yes ] ; then
 	    echo "Error: APEX is for multithreaded runtimes. Please configure TAU with thread support (pthread or OpenMP)."
 	    exit 1;
 	fi
-    cmake_cmd=`which cmake`
-    if [ "x$cmake_cmd" = "x" ] ; then
+    check_cmake 2 8 "APEX"
+    result=$?
+    if [ $result -eq 1 ]; then
         echo 'ERROR: cmake version 2.8 or higher required to build APEX.'
         exit 1;
     fi
+
 	echo "NOTE: Building APEX"
 	apex_include_file=apex/apex.mk
 	rm -f ${apex_include_file}
