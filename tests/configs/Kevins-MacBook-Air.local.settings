@@ -15,3 +15,4 @@ export mpirun_command="mpirun -np 2"
 # Enable the things that Spack enables by default
 base_support="-bfd=`spack location -i binutils` -iowrapper -pdt=`spack location -i pdt%gcc` -otf=`spack location -i otf2`"
 
+
