@@ -1955,9 +1955,9 @@ struct StrCompare : public std::binary_function<const char*, const char*, bool> 
 public:
     bool operator() (const char* str1, const char* str2) const {
 #ifdef TAU_AIX
-        return strcmp(str1, str2) < 0; 
-#else 
-        return std::strcmp(str1, str2) < 0; 
+        return strcmp(str1, str2) < 0;
+#else
+        return std::strcmp(str1, str2) < 0;
 #endif /* TAU_AIX */
     }
 };
@@ -1969,11 +1969,11 @@ bool _my_compare_const_char(const char * lhs, const char * rhs) {
 
 struct StrCompare2 {
 public:
-    bool operator() (const TauSafeString& lhs, const TauSafeString& rhs) const { 
+    bool operator() (const TauSafeString& lhs, const TauSafeString& rhs) const {
 #ifdef TAU_AIX
-      return strcmp(lhs.c_str(), rhs.c_str()) < 0; 
+      return strcmp(lhs.c_str(), rhs.c_str()) < 0;
 #else
-      return std::strcmp(lhs.c_str(), rhs.c_str()) < 0; 
+      return std::strcmp(lhs.c_str(), rhs.c_str()) < 0;
 #endif /* TAU_AIX */
     }
 };
@@ -3038,11 +3038,13 @@ extern void TauTraceOTF2ToggleFlushAtExit(bool);
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
+  TAU_VERBOSE("calling Tau_destructor_trigger\n");
   /* Set up a static flag to make sure we only do this once,
    * as it gets called from many, many destructors. */
   static bool once = false;
   if (once) { return; }
   once = true;
+  TAU_VERBOSE("executing Tau_destructor_trigger\n");
 #ifdef TAU_OTF2
   TauTraceOTF2ToggleFlushAtExit(true);
 #endif
