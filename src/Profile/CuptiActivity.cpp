@@ -195,8 +195,9 @@ int get_taskid_from_context_id(uint32_t contextId, uint32_t streamId) {
         key = (key << 32);
         cupti_mtx.lock();
         if (newContextMap.count(key) == 0) {
+            tid = context_devices[contextId];
             cupti_mtx.unlock();
-            return 0;
+            return tid;
         }
         tau_cupti_context_t * baseContext = newContextMap[key];
         uint32_t tmpstream = context_null_streams[contextId];
