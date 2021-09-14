@@ -837,7 +837,8 @@ int Tau_metadata_fillMetaData()
 #endif
 
 #if _OPENMP >= 201511 // OpenMP 4.5
-  Tau_metadata_register("OMP_MAX_TASK_PRIORITY", omp_get_max_task_priority());
+  // This API call crashes with NVCHPC 21.7, it doesn't tell us anything anyway
+  //Tau_metadata_register("OMP_MAX_TASK_PRIORITY", omp_get_max_task_priority());
   char * omp_var = getenv("OMP_PLACES");
   if (omp_var != NULL) {
     Tau_metadata_register("OMP_PLACES", omp_var);

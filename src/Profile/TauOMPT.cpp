@@ -131,19 +131,19 @@ static void format_task_type(int type, char* buffer)
 
 /* Function pointers.  These are all queried from the runtime during
  * ompt_initialize() */
-static ompt_set_callback_t ompt_set_callback;
-static ompt_finalize_tool_t ompt_finalize_tool;
-static ompt_get_task_info_t ompt_get_task_info;
-static ompt_get_thread_data_t ompt_get_thread_data;
-static ompt_get_parallel_info_t ompt_get_parallel_info;
-static ompt_get_unique_id_t ompt_get_unique_id;
-static ompt_get_num_places_t ompt_get_num_places;
-static ompt_get_place_proc_ids_t ompt_get_place_proc_ids;
-static ompt_get_place_num_t ompt_get_place_num;
-static ompt_get_partition_place_nums_t ompt_get_partition_place_nums;
-static ompt_get_proc_id_t ompt_get_proc_id;
-static ompt_enumerate_states_t ompt_enumerate_states;
-static ompt_enumerate_mutex_impls_t ompt_enumerate_mutex_impls;
+static ompt_set_callback_t ompt_set_callback = nullptr;
+static ompt_finalize_tool_t ompt_finalize_tool = nullptr;
+static ompt_get_task_info_t ompt_get_task_info = nullptr;
+static ompt_get_thread_data_t ompt_get_thread_data = nullptr;
+static ompt_get_parallel_info_t ompt_get_parallel_info = nullptr;
+static ompt_get_unique_id_t ompt_get_unique_id = nullptr;
+static ompt_get_num_places_t ompt_get_num_places = nullptr;
+static ompt_get_place_proc_ids_t ompt_get_place_proc_ids = nullptr;
+static ompt_get_place_num_t ompt_get_place_num = nullptr;
+static ompt_get_partition_place_nums_t ompt_get_partition_place_nums = nullptr;
+static ompt_get_proc_id_t ompt_get_proc_id = nullptr;
+static ompt_enumerate_states_t ompt_enumerate_states = nullptr;
+static ompt_enumerate_mutex_impls_t ompt_enumerate_mutex_impls = nullptr;
 
 /* IMPT NOTE: In general, we use Tau_global_stop() instead of TAU_PROFILER_STOP(handle) because it is
  * not possible to determine in advance which optional events are supported by the compiler used
@@ -1383,7 +1383,9 @@ void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugi
 void Tau_ompt_finalize(void) {
     if(Tau_ompt_finalized()) { return; }
     Tau_ompt_finalized(true);
-    ompt_finalize_tool();
+    if (ompt_finalize_tool != nullptr) {
+        ompt_finalize_tool();
+    }
 }
 
 /* This callback should come from the runtime when the runtime is shut down */
