@@ -61,8 +61,13 @@ if sys.argv[1] == '-c':
 elif sys.argv[1] == '-m':
   # tau_python -m moduleName.foo
   modname = sys.argv[2]
-  import pkgutil
-  pkg_loader = pkgutil.get_loader(modname)
+  try:
+    import pkgutil
+    pkg_loader = pkgutil.get_loader(modname)
+  except Exception as e:
+    dieInFlames('The name '{}' does not name a module in $PYTHONPATH or $PWD'.format(modname))
+  if pkg_loader is None:
+    dieInFlames('The name '{}' does not name a module in $PYTHONPATH or $PWD'.format(modname))
   # When python is run with -m, current directory is added to search path
   sys.path.append(os.getcwd())
   # Fix up argv to hide tau_python
