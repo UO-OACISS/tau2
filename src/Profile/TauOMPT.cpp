@@ -264,7 +264,6 @@ on_ompt_callback_task_create(
 {
   TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_task_create] && Tau_init_check_initialized()) {
-    char contextEventName[2058];
     char buffer[2048];
     char timerName[10240];
     char resolved_address[1024];
@@ -840,7 +839,6 @@ on_ompt_callback_mutex_acquired(
   TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_mutex_acquired] && Tau_init_check_initialized()) {
     char acquiredtimerName[10240];
-    char waitingtimerName[10240];
     char resolved_address[1024];
     void* mutex_acquired_handle=NULL;
 
@@ -907,14 +905,7 @@ on_ompt_callback_mutex_released(
 {
   TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_mutex_released] && Tau_init_check_initialized()) {
-    char timerName[10240];
-    char resolved_address[1024];
-
     if(codeptr_ra) {
-      void * codeptr_ra_copy = (void*) codeptr_ra;
-      unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
-      // Stop lock timer
-      //TAU_PROFILER_STOP(mutex_acquired_handle);
       Tau_global_stop();
     }
   }
@@ -1120,7 +1111,6 @@ extern "C" int ompt_initialize(
 #endif /* defined (TAU_USE_OMPT_5_0) */
   ompt_data_t* tool_data)
 {
-  int ret;
   Tau_init_initializeTAU();
   if (initialized || initializing) return 0;
   initializing = true;
