@@ -57,7 +57,6 @@ using namespace std;
 #include <Profile/TauUtil.h>
 #include <Profile/TauPin.h>
 
-
 #include <Profile/TauPluginInternals.h>
 
 //////////////////////////////////////////////////////////////////////
@@ -317,7 +316,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   {
     char * buff = new char[strlen(Name)+strlen(Type)+100];
     sprintf(buff, "%s %s - Heap Memory Used (KB)", Name, Type);
-    MemoryEvent = new TauUserEvent(buff);
+    MemoryEvent = new tau::TauUserEvent(buff);
     delete buff;
   }
 #endif
