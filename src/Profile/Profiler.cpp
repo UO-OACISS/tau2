@@ -90,8 +90,8 @@ double TauWindowsUsecD(void);
 #endif //CUPTI
 
 #ifdef TAU_ENABLE_ROCTRACER
-extern "C" void Tau_roctracer_stop_tracing(void);
-#endif /* TAU_ROCTRACER */
+extern void Tau_roctracer_stop_tracing(void);
+#endif /* TAU_ENABLE_ROCTRACER */
 
 #ifdef TAU_SHMEM
 #include "shmem.h"

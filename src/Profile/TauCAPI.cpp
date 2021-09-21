@@ -1117,11 +1117,12 @@ void Tau_cupti_buffer_processed(void) {
 }
 #endif
 
-#ifdef TAU_ROCTRACER
+#ifdef TAU_ENABLE_ROCTRACER
 extern void Tau_roctracer_flush_tracing(void);
-#endif /* TAU_ROCTRACER */
+#endif /* TAU_ENABLE_ROCTRACER */
 
 extern "C" void Tau_flush_gpu_activity(void) {
+   TAU_VERBOSE("TAU: flushing asynchronous GPU events...\n");
 #ifdef CUPTI
     static bool did_once = false;
     if (RtsLayer::myThread() != 0) return;
@@ -1140,9 +1141,10 @@ extern "C" void Tau_flush_gpu_activity(void) {
         }
     }
 #endif
-#ifdef TAU_ROCTRACER
+#ifdef TAU_ENABLE_ROCTRACER
+   TAU_VERBOSE("TAU: flushing asynchronous ROCM/HIP events...\n");
    Tau_roctracer_flush_tracing();
-#endif /* TAU_ROCTRACER */
+#endif /* TAU_ENABLE_ROCTRACER */
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2284,10 +2286,10 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 #endif
 }
 
-#ifdef TAU_ROCTRACER
+#ifdef TAU_ENABLE_ROCTRACER
 extern void Tau_roctracer_start_tracing(void);
 extern void Tau_roctracer_stop_tracing(void);
-#endif /* TAU_ROCTRACER */
+#endif /* TAU_ENABLE_ROCTRACER */
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
   if ((RtsLayer::myNode() == -1) && (Tau_get_thread() != 0)) {
@@ -2322,9 +2324,9 @@ extern "C" const char * Tau_get_current_timer_name(int tid) {
 
 extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
    Tau_stop_top_level_timer_if_necessary_task(Tau_get_thread());
-#ifdef TAU_ROCTRACER
+#ifdef TAU_ENABLE_ROCTRACER
    Tau_roctracer_stop_tracing();
-#endif /* TAU_ROCTRACER */
+#endif /* TAU_ENABLE_ROCTRACER */
 }
 
 
