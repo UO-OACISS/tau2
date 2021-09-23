@@ -240,8 +240,8 @@ extern "C" void Tau_set_usesMPI(int value);
 #endif /* TAU_MPI */
 
 #ifdef TAU_ENABLE_ROCTRACER
-extern "C" void Tau_roctracer_start_tracing(void);
-#endif /* TAU_ROCTRACER */
+extern void Tau_roctracer_start_tracing(void);
+#endif /* TAU_ENABLE_ROCTRACER */
 
 /************************** tau.conf stuff, adapted from Scalasca ***********/
 
@@ -2734,7 +2734,7 @@ void TauEnv_initialize()
   TAU_VERBOSE("Calling TAU_ROCTRACER...\n");
 #ifdef TAU_ENABLE_ROCTRACER
   Tau_roctracer_start_tracing();
-#endif /* TAU_ROCTRACER */
+#endif /* TAU_ENABLE_ROCTRACER */
 }
 
 } /* C linkage */

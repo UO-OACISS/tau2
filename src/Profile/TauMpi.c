@@ -1695,10 +1695,10 @@ int  MPI_Finalize(  )
 
   TAU_VERBOSE("TAU: Call MPI_Finalize()\n");
 
+  Tau_flush_gpu_activity();
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-
-  Tau_flush_gpu_activity();
 
 #ifdef TAU_MPI_T
   Tau_track_mpi_t_here();

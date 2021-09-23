@@ -1052,6 +1052,10 @@ void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid) {
                     std::stringstream ss2;
                     ss << "MetaData:" << global_comm_rank << ":" << tid << ":CUDA Stream";
                     my_adios().define_attribute(ss.str(), std::string(it->second->data.cval), bpIO, true);
+                } else if (strcmp(it->first.name, "ROCM_QUEUE_TYPE") == 0) {
+                    std::stringstream ss2;
+                    ss << "MetaData:" << global_comm_rank << ":" << tid << ":CUDA Activity Type";
+                    my_adios().define_attribute(ss.str(), std::string(it->second->data.cval), bpIO, true);
                 }
                 break;
             case TAU_METADATA_TYPE_INTEGER:
@@ -1098,6 +1102,10 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
             } else if (strcmp(data->name, "ROCM_QUEUE_ID") == 0) {
                 ss.str("");
                 ss << "MetaData:" << global_comm_rank << ":" << data->tid << ":CUDA Stream";
+                my_adios().define_attribute(ss.str(), std::string(data->value->data.cval), my_adios()._bpIO, false);
+            } else if (strcmp(data->name, "ROCM_QUEUE_TYPE") == 0) {
+                ss.str("");
+                ss << "MetaData:" << global_comm_rank << ":" << data->tid << ":CUDA Activity Type";
                 my_adios().define_attribute(ss.str(), std::string(data->value->data.cval), my_adios()._bpIO, false);
             }
             break;
