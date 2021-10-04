@@ -8,8 +8,12 @@
         // #warning "Found _OPENMP version 5.0"
     #else
         #warning "Found _OPENMP version less than 5.0"
-        #if defined (TAU_USE_OMPT_5_0)
-            #undef TAU_USE_OMPT_5_0
+        #if defined (__GNUC__) && defined (__GNUC_MINOR__)
+            #warning "Building OMPT support for GCC with LLVM library at runtime"
+        #else
+            #if defined (TAU_USE_OMPT_5_0)
+                #undef TAU_USE_OMPT_5_0
+            #endif
         #endif
     #endif
 #endif
@@ -694,15 +698,24 @@ on_ompt_callback_sync_region(
         case ompt_sync_region_reduction:
           sprintf(timerName, "OpenMP_Sync_Region_Reduction %s", resolved_address);
           break;
+          // this wasn't in llvm 11
+#if defined(ompt_sync_region_barrier_implicit_workshare)
         case ompt_sync_region_barrier_implicit_workshare:
           sprintf(timerName, "OpenMP_Sync_Region_Barrier_Implicit_Workshare %s", resolved_address);
           break;
+#endif
+          // this wasn't in llvm 11
+#if defined (ompt_sync_region_barrier_implicit_parallel)
         case ompt_sync_region_barrier_implicit_parallel:
           sprintf(timerName, "OpenMP_Sync_Region_Barrier_Implicit_Parallel %s", resolved_address);
           break;
+#endif
+          // this wasn't in llvm 11
+#if defined(ompt_sync_region_barrier_teams)
         case ompt_sync_region_barrier_teams:
           sprintf(timerName, "OpenMP_Sync_Region_Barrier_Teams %s", resolved_address);
           break;
+#endif
         // "Future proof?"
         default:
           sprintf(timerName, "OpenMP_Sync_Region_Barrier_Other %s", resolved_address);
