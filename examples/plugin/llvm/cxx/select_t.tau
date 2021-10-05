@@ -1,0 +1,14 @@
+BEGIN_INCLUDE_LIST
+initialize(#)
+void compute_interchange<#>(#**, #**, #**, int, int, int)
+END_INCLUDE_LIST
+BEGIN_EXCLUDE_LIST
+void compute_interchange<int>(int**, int**, int**, int, int, int)
+END_EXCLUDE_LIST
+BEGIN_FILE_INCLUDE_LIST
+matmult_t.cpp
+matmult_initialize_*.cpp
+END_FILE_INCLUDE_LIST
+BEGIN_FILE_EXCLUDE_LIST
+matmult_initialize_i.cpp
+END_FILE_EXCLUDE_LIST
