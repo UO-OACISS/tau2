@@ -1484,4 +1484,54 @@ int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcna
     return line_number;
 }
 
+/* If we have the demangler support from demangle.h, use it */
+#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+char * Tau_demangle_name(const char * name) {
+    char * dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES);
+    if (dem_name == NULL) {
+        dem_name = strdup(name);
+    }
+    return dem_name;
+}
+
+/* If not, and we have C++ support, use it */
+#else
+
+#include <cxxabi.h>
+char * Tau_demangle_name(const char * name) {
+#if defined(__GNUC__)
+    int status;
+    char * dem_name = abi::__cxa_demangle(name, 0, 0, &status);
+    if (status != 0 || dem_name == nullptr) {
+        switch (status) {
+            case 0:
+                TAU_VERBOSE("The demangling operation succeeded, but realname is NULL\n");
+                break;
+            case -1:
+                TAU_VERBOSE("The demangling operation failed:");
+                TAU_VERBOSE(" A memory allocation failiure occurred.\n");
+                break;
+            case -2:
+                TAU_VERBOSE("The demangling operation failed:");
+                TAU_VERBOSE(" '%s' is not a valid", name);
+                TAU_VERBOSE(" name under the C++ ABI mangling rules.\n");
+                break;
+            case -3:
+                TAU_VERBOSE("The demangling operation failed: One of the");
+                TAU_VERBOSE(" arguments is invalid.\n");
+                break;
+            default:
+                TAU_VERBOSE("The demangling operation failed: Unknown error.\n");
+                break;
+        }
+		dem_name = strdup(name);
+    }
+#else
+    dem_name = strdup(name);
+#endif
+    return dem_name;
+}
+#endif
+
+
 #endif /* TAU_BFD */

@@ -7,7 +7,6 @@
 #include <ctype.h>
 #include <map>
 #include <vector>
-#include <cxxabi.h>
 
 #include <Profile/TauSampling.h>
 #include <Profile/Profiler.h>
@@ -254,18 +253,14 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
     // this should be enough...
     length = strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) + 100;
     resolvedBuffer = (char*)malloc(length * sizeof(char));
-    int status;
 #ifndef TAU_NEC_SX
-    char *demangled_funcname = abi::__cxa_demangle(resolvedInfo.funcname, 0, 0, &status);
+    char *demangled_funcname = Tau_demangle_name(resolvedInfo.funcname);
 #else
-    char *demangled_funcname = (char *) resolvedInfo.funcname;
-#endif 
-    if (status == 0)
-      sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
-          demangled_funcname, resolvedInfo.filename, resolvedInfo.lineno);
-    else
-      sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
-          resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+    char *demangled_funcname = strdup(resolvedInfo.funcname);
+#endif
+    sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
+        demangled_funcname, resolvedInfo.filename, resolvedInfo.lineno);
+    free(demangled_funcname);
   } else {
     // this should be enough...
     length = strlen(mapName) + 32;
@@ -276,7 +271,7 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
   return resolvedBuffer;
 }
 
-// *CWL* - This is really a character index search on a string with unsigned long 
+// *CWL* - This is really a character index search on a string with unsigned long
 //         alphabets. The goal is to find the first different character.
 //         This returns the callsite with respect to a1.
 unsigned long determineCallSite(unsigned long *a1, unsigned long *a2)
@@ -420,7 +415,7 @@ bool nameInTau(const char *name)
       // no directory follows "tau". Not it.
       return false;
     }
-  } 
+  }
   return false;
 }
 
@@ -461,7 +456,7 @@ bool nameInMPI(const char *name)
 void registerNewCallsiteInfo(char *name, unsigned long callsite, int id)
 {
   TAU_VERBOSE("Found non-tau non-unknown callsite via string [%s]\n", name);
-  // Register the newly discovered callsite 
+  // Register the newly discovered callsite
   TheCallSiteIdVector()[id]->resolved = true;
   TheCallSiteIdVector()[id]->resolvedCallSite = callsite;
   TheCallSiteIdVector()[id]->hasName = true;
@@ -596,7 +591,7 @@ void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
   // No unwinder. We'll have to make do with backtrace. Unfortunately, backtrace will
   //   not allow us to mitigate the effects of deep direct recursion, so expect some
   //   strange results in that department.
-#ifdef TAU_EXECINFO 
+#ifdef TAU_EXECINFO
   void* array[TAU_SAMP_NUM_ADDRESSES];
   size_t size;
   // get void*'s for all entries on the stack
@@ -891,7 +886,7 @@ extern "C" void finalizeCallSites_if_necessary()
   // Do the same as EBS. Acquire candidates first. We need to create new FunctionInfo
   //   objects representing the callsites themselves.
   vector<FunctionInfo *> *candidates = new vector<FunctionInfo *>();
-  // For multi-threaded applications. 
+  // For multi-threaded applications.
   RtsLayer::LockDB();
   for (map<TAU_CALLSITE_PATH_MAP_TYPE>::iterator fI_iter = TheCallSitePathMap().begin(); fI_iter != TheCallSitePathMap().end(); fI_iter++) {
     FunctionInfo *theFunction = (*fI_iter).second;
