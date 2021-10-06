@@ -218,9 +218,14 @@ void Tau_roctracer_api_callback(
     const void* callback_data,
     void* arg)
 {
-    static bool dummy = run_once();
+  static bool dummy = run_once();
   (void)arg;
   int task_id;
+  /* Check for a couple of useless callbacks, we don't need to track them */
+  if (cid == HIP_API_ID___hipPushCallConfiguration ||
+      cid == HIP_API_ID___hipPopCallConfiguration) {
+      return;
+  }
   const hip_api_data_t* data = reinterpret_cast<const hip_api_data_t*>(callback_data);
   const char *activity_name = roctracer_op_string(ACTIVITY_DOMAIN_HIP_API, cid, 0);
   TAU_VERBOSE("<%s id(%u)\tcorrelation_id(%lu) %s> ",
