@@ -54,10 +54,10 @@ struct TauBfdAddrMap
 struct TauBfdInfo
 {
 	TauBfdInfo() :
-		probeAddr(0), filename(NULL), funcname(NULL), 
+		probeAddr(0), filename(NULL), funcname(NULL),
                 lineno(-1), discriminator(0)
 	{ }
-        
+
 	// Makes all fields safe to query
 	void secure(unsigned long addr) {
 		probeAddr = addr;
@@ -129,7 +129,10 @@ Tau_bfd_getAddressMap(tau_bfd_handle_t handle, unsigned long probeAddr);
 // Get the module that possibly defines the given address
 tau_bfd_module_handle_t
 Tau_bfd_getModuleHandle(tau_bfd_handle_t handle, unsigned long probeAddr);
-int Tau_get_lineno_for_function(tau_bfd_handle_t handle, const char *funcname); 
+int Tau_get_lineno_for_function(tau_bfd_handle_t handle, const char *funcname);
+
+// Name demangling, used everywhere
+char * Tau_demangle_name(const char * name);
 
 
 #endif /* _TAU_BFD_H */

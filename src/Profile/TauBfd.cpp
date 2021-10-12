@@ -30,7 +30,7 @@
 #include <dirent.h>
 #include <stdint.h>
 
-#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#if defined(HAVE_GNU_DEMANGLE)
 #define HAVE_DECL_BASENAME 1
 #include <demangle.h>
 #define DEFAULT_DEMANGLE_FLAGS DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES
@@ -621,7 +621,7 @@ TauBfdAddrMap const * Tau_bfd_getAddressMap(tau_bfd_handle_t handle, unsigned lo
 static char const * Tau_bfd_internal_tryDemangle(bfd * bfdImage, char const * funcname)
 {
   char const * demangled = NULL;
-#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#if defined(HAVE_GNU_DEMANGLE)
   if (funcname && bfdImage) {
     // Some compilers prepend .text. to the symbol name
     if (strncmp(funcname, ".text.", 6) == 0) {
@@ -1484,4 +1484,17 @@ int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcna
     return line_number;
 }
 
+/* If we have the demangler support from demangle.h, use it */
+#if defined(HAVE_GNU_DEMANGLE)
+char * Tau_demangle_name(const char * name) {
+    char * dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES);
+    if (dem_name == NULL) {
+        dem_name = strdup(name);
+    }
+    TAU_VERBOSE("Demangled: '%s'\n", dem_name);
+    return dem_name;
+}
+#endif // #if defined(HAVE_GNU_DEMANGLE)
 #endif /* TAU_BFD */
+
+

@@ -32,31 +32,9 @@ using namespace std;
 #include <stdlib.h>
 
 #include <TAU.h>
+#include <Profile/TauBfd.h>
 
 map<int,FunctionInfo*> KokkosFunctionInfoDB;
-
-#ifdef TAU_BFD
-#define HAVE_DECL_BASENAME 1
-#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-#    include <demangle.h>
-#  endif /* HAVE_GNU_DEMANGLE */
-// Add these definitions because the Binutils comedians think all the world uses autotools
-#ifndef PACKAGE
-#define PACKAGE TAU
-#endif
-#ifndef PACKAGE_VERSION
-#define PACKAGE_VERSION 2.25
-#endif
-#  include <bfd.h>
-#endif /* TAU_BFD */
-
-#define TAU_INTERNAL_DEMANGLE_NAME(name, dem_name)  dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES); \
-        if (dem_name == NULL) { \
-          dem_name = name; \
-        } \
-
-extern "C" char *tau_demangle_name(char **mangled_name);
-
 
 ///////////////////////////////////////////////////////////
 //// prints indents for the Kokkos regions on the callstack
@@ -95,15 +73,7 @@ extern "C" void kokkosp_finalize_library() {
 //// start Kokkos timer with a string (operation) and a name
 ///////////////////////////////////////////////////////////
 extern "C" void Tau_start_kokkos_timer(string operation, const char* name, const uint32_t devID, uint64_t* kID) {
-
-
-
-        const char *dem_name = 0;
-#if defined(TAU_BFD) && defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-	TAU_INTERNAL_DEMANGLE_NAME(name, dem_name);
-#else
-	dem_name = name;
-#endif /* HAVE_GNU_DEMANGLE */
+    char *dem_name = Tau_demangle_name(name);
 	char buf[256]; sprintf(buf," [device=%d]", devID);
 	//string region_name(std::string("Kokkos::parallel_for ")+dem_name+buf);
 	string region_name(operation+" "+dem_name+buf);
@@ -123,6 +93,7 @@ extern "C" void Tau_start_kokkos_timer(string operation, const char* name, const
 */
 	//cout <<"Region: "<<region_name<<" id = "<<*kID<<endl;
 	//printf("Kokkos::parallel_for %s [device=%d]\n", dem_name, devID);
+    free(dem_name);
 }
 
 extern "C" void kokkosp_begin_parallel_for(const char* name, const uint32_t devID, uint64_t* kID) {

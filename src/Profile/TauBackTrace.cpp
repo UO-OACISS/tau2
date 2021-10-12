@@ -4,10 +4,6 @@
 #include <vector>
 #include <cstdarg>
 
-#ifdef __GNUC__
-#include <cxxabi.h>
-#endif /* __GNUC__ */
-
 using namespace std;
 
 #define TAU_MAX_STACK 1024
@@ -73,7 +69,7 @@ static int getBacktraceFromExecinfo(int trim, BacktraceFrame ** oframes)
       TauBfdInfo info;
 #if defined(__APPLE__)
 #if defined(TAU_HAVE_CORESYMBOLICATION)
-      static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid()); 
+      static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid());
       CSSourceInfoRef source_info = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator, (vm_address_t)addr, kCSNow);
       if(!CSIsNull(source_info)) {
           CSSymbolRef symbol = CSSourceInfoGetSymbol(source_info);
@@ -196,7 +192,7 @@ void Tau_backtrace_exit_with_backtrace(int trim, char const * fmt, ...)
   Tau_global_incr_insideTAU();
 
 #ifndef TAU_WINDOWS
-#ifndef _AIX 
+#ifndef _AIX
   if (TauEnv_get_callsite()) {
     finalizeCallSites_if_necessary();
   }

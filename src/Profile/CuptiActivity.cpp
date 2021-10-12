@@ -1,6 +1,7 @@
 #include <Profile/CuptiActivity.h>
 #include <Profile/CuptiLayer.h>
 #include <Profile/TauMetaData.h>
+#include <Profile/TauBfd.h>
 #include <iostream>
 #include <mutex>
 #include <time.h>
@@ -11,8 +12,6 @@ using namespace std;
 
 #if CUPTI_API_VERSION >= 2
 #include <dlfcn.h>
-
-#include <cxxabi.h>
 
 //#define TAU_DEBUG_CUPTI
 //#define TAU_DEBUG_CUPTI_COUNTERS
@@ -977,16 +976,6 @@ void Tau_handle_driver_api_memcpy (void *ud, CUpti_CallbackDomain domain,
     }
 }
 
-char * demangle_name(const char *funcname) {
-    int status;
-    char *demangled_funcname = abi::__cxa_demangle(funcname, 0, 0, &status);
-    if (status == 0) {
-        return demangled_funcname;
-    } else {
-        return strdup(funcname);
-    }
-}
-
 void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
         CUpti_CallbackId id, const CUpti_CallbackData *cbInfo) {
     TAU_DEBUG_PRINT("TAU: CUPTI API enter\n");
@@ -1006,7 +995,7 @@ void Tau_handle_cupti_api_enter (void *ud, CUpti_CallbackDomain domain,
 #if 0
         if (cbInfo->symbolName != NULL) {
             stringstream ss;
-            char * demangled = demangle_name(cbInfo->symbolName);
+            char * demangled = Tau_demangle_name(cbInfo->symbolName);
             ss << cbInfo->functionName << ": " << demangled;
             Tau_gpu_enter_event(ss.str().c_str());
             /* If we are tracing (could be through a plugin),
@@ -1076,7 +1065,7 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
 #if 0
         if (cbInfo->symbolName != NULL) {
             stringstream ss;
-            char * demangled = demangle_name(cbInfo->symbolName);
+            char * demangled = Tau_demangle_name(cbInfo->symbolName);
             ss << cbInfo->functionName << ": " << demangled;
             free(demangled);
             Tau_gpu_exit_event(ss.str().c_str());
@@ -1881,7 +1870,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
 			correlationWritten.insert(correlationId);
                     caData.eventMap.erase(caData.eventMap.begin(), caData.eventMap.end());
                     const char* name_og = name;
-                    name = demangleName(name);
+                    char * dem_name = Tau_demangle_name(name);
                     int number_of_metrics = Tau_CuptiLayer_get_num_events() + 1;
                     double metrics_start[number_of_metrics];
                     double metrics_end[number_of_metrics];
@@ -1889,14 +1878,14 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                     int nullcontext_taskId = get_taskid_from_context_id(contextId, 0);
 #if CUDA_VERSION >= 5050
                     if (record->kind != CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
-                        record_gpu_counters(nullcontext_taskId, name, id, &caData.eventMap);
+                        record_gpu_counters(nullcontext_taskId, dem_name, id, &caData.eventMap);
                     }
 #else
-                    record_gpu_counters(taskId, name, id, &caData.eventMap);
+                    record_gpu_counters(taskId, dem_name, id, &caData.eventMap);
 #endif
                     if (TauEnv_get_cuda_track_env()) {
 #if CUDA_VERSION >= 5050
-                        record_environment_counters(name, taskId, deviceId, streamId, contextId, id, end);
+                        record_environment_counters(dem_name, taskId, deviceId, streamId, contextId, id, end);
 #endif
                     }
                     if (gpu_occupancy_available(deviceId))
@@ -1907,7 +1896,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                                 registersPerThread,
                                 staticSharedMemory,
                                 deviceId,
-                                name,
+                                dem_name,
                                 &caData.eventMap);
                         static TauContextUserEvent* bs = NULL;
                         static TauContextUserEvent* dm = NULL;
@@ -1966,23 +1955,23 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
 #if CUDA_VERSION >= 5050
                     if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
                         if (TauEnv_get_cuda_track_cdp()) {
-                            Tau_cupti_register_gpu_event(name, deviceId,
+                            Tau_cupti_register_gpu_event(dem_name, deviceId,
                                     streamId, contextId, id, parentGridId,
                                     true, map, map_size,
                                     start / 1e3, end / 1e3, taskId);
                         }
                     } else {
 #endif
-                        Tau_cupti_register_gpu_event(name, deviceId,
+                        Tau_cupti_register_gpu_event(dem_name, deviceId,
                                 streamId, contextId, id, 0, false, map, map_size,
                                 start / 1e3, end / 1e3, taskId);
 #if CUDA_VERSION >= 5050
                     }
 #endif
-                    Tau_cupti_register_device_calling_site(gridId, name);
+                    Tau_cupti_register_device_calling_site(gridId, dem_name);
                     /*
-                       CuptiGpuEvent gId = CuptiGpuEvent(name, kernel->streamId, kernel->contextId, id, map, map_size);
-                    //cuptiGpuEvent cuRec = cuptiGpuEvent(name, &gId, &map);
+                       CuptiGpuEvent gId = CuptiGpuEvent(dem_name, kernel->streamId, kernel->contextId, id, map, map_size);
+                    //cuptiGpuEvent cuRec = cuptiGpuEvent(dem_name, &gId, &map);
                     Tau_gpu_register_gpu_event(
                     &gId,
                     kernel->start / 1e3,
@@ -1998,6 +1987,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                         RtsLayer::recycleThread(taskId);
                     }
 
+                    free(dem_name);
                     break;
                 }
 
@@ -2133,8 +2123,10 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                     } else {
                         id = kernel->correlationId;
                     }
-                    Tau_cupti_register_gpu_atomic_event(demangleName(kernel->name), kernel->deviceId,
+                    char * tmp = Tau_demangle_name(kernel->name);
+                    Tau_cupti_register_gpu_atomic_event(tmp, kernel->deviceId,
                     kernel->streamId, kernel->contextId, id, map, map_size, taskId);
+                    free(tmp);
                 }
             }
             case CUPTI_ACTIVITY_KIND_BRANCH: {
@@ -2172,8 +2164,10 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                     } else {
                         id = kernel->correlationId;
                     }
-                    Tau_cupti_register_gpu_atomic_event(demangleName(kernel->name), kernel->deviceId,
+                    char * tmp = Tau_demangle_name(kernel->name);
+                    Tau_cupti_register_gpu_atomic_event(tmp, kernel->deviceId,
                     kernel->streamId, kernel->contextId, id, map, map_size, taskId);
+                    free(tmp);
                 }
             }
             case CUPTI_ACTIVITY_KIND_SYNCHRONIZATION: {
@@ -2727,7 +2721,9 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
 
         stringstream file_and_line("");
         file_and_line << event_name << " : ";
-        file_and_line << demangleName(kernel->name);
+        char * tmp = Tau_demangle_name(kernel->name);
+        file_and_line << tmp;
+        free(tmp);
         if (source->kind != CUPTI_ACTIVITY_KIND_INVALID)
         {
             file_and_line << " => [{" << source->fileName   << "}";
@@ -2980,26 +2976,6 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
         }
 #endif
 
-    const char *demangleName(const char* name)
-    {
-        const char *dem_name = 0;
-        //printf("demangling: %s.\n", name);
-#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-        //printf("demangling name....\n");
-        dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE |
-                DMGL_TYPES);
-        //check to see if demangling failed (name was not mangled).
-        if (dem_name == NULL)
-        {
-            dem_name = name;
-        }
-#else
-        dem_name = name;
-#endif /* HAVE_GPU_DEMANGLE */
-        //printf("demanged: %s.\n", dem_name);
-        return dem_name;
-    }
-
 
     bool cupti_api_runtime()
     {
@@ -3176,8 +3152,9 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 		return;
 	    }
 	    CUPTI_KERNEL_TYPE *kernel = &(caData.kernelMap.find(correlationId)->second);
-	    const char *kname = demangleName(kernel->name);
+	    char *kname = Tau_demangle_name(kernel->name);
  	    record_imix_counters(kname, taskId, kernel->streamId, kernel->contextId, correlationId, kernel->end);
+	    free(kname)
  	    if (TauEnv_get_cuda_csv_output()) {
  	        create_header_instruction_csv(taskId);
  	        output_instruction_map_to_csv(taskId, correlationId);
