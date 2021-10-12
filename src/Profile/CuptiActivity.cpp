@@ -3154,7 +3154,7 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	    CUPTI_KERNEL_TYPE *kernel = &(caData.kernelMap.find(correlationId)->second);
 	    char *kname = Tau_demangle_name(kernel->name);
  	    record_imix_counters(kname, taskId, kernel->streamId, kernel->contextId, correlationId, kernel->end);
-	    free(kname)
+	    free(kname);
  	    if (TauEnv_get_cuda_csv_output()) {
  	        create_header_instruction_csv(taskId);
  	        output_instruction_map_to_csv(taskId, correlationId);
