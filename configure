@@ -9421,7 +9421,7 @@ if [ $machine = arm64_linux -a ! -r $targetdir/$architecture/$binutils/include/b
 fi
 
 if [ $machine = nec-sx-aurora ]; then
-  binutils=binutils-2.35.1
+  binutils=binutils-2.23.2
   binutilstgz=$binutils.tar.gz
   binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
 fi
