@@ -3971,6 +3971,11 @@ case $machine in
 	    pgi=yes
 	    default_fortran=pgi
 	    fixmakeargs="$fixmakeargs PGI COMPINST_PGI"
+	elif [ "x$PE_ENV" = xAOCC ] ; then
+	    tauoptions="${tauoptions}-aocc"
+	    aocc=yes
+	    default_fortran=flang
+	    fixmakeargs="$fixmakeargs AOCC COMPINST_LLVM"
         elif [ "x$PE_ENV" = xGNU -a "x$CLANG_HOME" != "x" ]; then
 	    llvm=yes
 	    tauoptions="${tauoptions}-llvm"
