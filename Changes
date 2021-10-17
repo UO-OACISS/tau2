@@ -13,6 +13,7 @@ Change log:
 Version 2.31 changes (from 2.30):
 1. Updates for MPI on craycnl (CRAY_MPICH_PREFIX). 
 2. Updates for NEC VE for memory profiling. 
+3. Added support for PrgEnv-aocc on craycnl. 
  
 Version 2.30 changes (from 2.29):
 1. Added support for Fugaku Fujitsu FX system with Fujitsu compilers (-mpi -bfd=download) for Fugaku. 
