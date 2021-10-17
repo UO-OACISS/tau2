@@ -5782,8 +5782,12 @@ EOF
             else
 	      mpiinc=$CRAY_MPICH2_DIR/include
             fi
-	    if [ ! -r $mpiinc ] ; then
-		     mpiinc=$CRAY_MPICH_DIR/include
+            if [ ! -r $mpiinc ] ; then
+              if [ "x$CRAY_MPICH_DIR" != "x" ]; then
+                mpiinc=$CRAY_MPICH_DIR/include
+              elif [ "x$CRAY_MPICH_PREFIX" != "x" ]; then
+                mpiinc=$CRAY_MPICH_PREFIX/include
+              fi
             fi
             if [ ! -r $mpiinc ] ; then
 		    echo "ERROR: $CRAY_MPICH_DIR/include (CRAY_MPICH(2)_DIR/include) is not readable. Please configure with -mpiinc=<dir> to point to the MPI include directory."
@@ -8450,6 +8454,10 @@ else
       echo "no"
     fi
   fi
+fi
+
+if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" = "x" -a "x$CRAY_MPICH_PREFIX" != "x" ]; then
+  CRAY_MPICH_DIR=$CRAY_MPICH_PREFIX
 fi
 
 if [ "x$PE_ENV" = "xCRAY" -a "x$MPICH_DIR" != "x" ]; then
