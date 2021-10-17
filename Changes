@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2021						   **
+**    Copyright 1997-2022						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Research Centre Juelich, Germany                                     **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
@@ -10,6 +10,10 @@
 
 Change log:
 ------------
+Version 2.31 changes (from 2.30):
+1. Updates for MPI on craycnl (CRAY_MPICH_PREFIX). 
+2. Updates for NEC VE for memory profiling. 
+ 
 Version 2.30 changes (from 2.29):
 1. Added support for Fugaku Fujitsu FX system with Fujitsu compilers (-mpi -bfd=download) for Fugaku. 
 2. Added support for Intel OneAPI (TigerLake Intel GPUs) (-opencl=<dir> -level_zero=<dir>). See examples/gpu/oneapi.

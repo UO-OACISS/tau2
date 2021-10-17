@@ -5994,10 +5994,10 @@ then
 	    ;;
 	craycnl)
             if [ "x$MPICH_DIR" = "x" ]; then
-              if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_PREFIX" != "x" ]; then
+              if [ "x$CRAY_MPICH_PREFIX" != "x" ]; then
                 mpilib=$CRAY_MPICH_PREFIX/lib
               else
-                echo "TAU: mpilib not set."
+                echo "TAU: mpilib is not set."
               fi
             else
               mpilib=$MPICH_DIR/lib
