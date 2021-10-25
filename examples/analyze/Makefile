@@ -22,11 +22,11 @@ CC		= $(TAU_CC)
 
 PDTPARSE 	= $(PDTDIR)/$(PDTARCHDIR)/bin/cxxparse
 
-TAUINSTR 	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
+TAUINSTR 	= $(TAUROOT)/$(CONFIG_ARCH)/bin/tau_instrumentor
 
-TAUANALYZE	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_reduce
+TAUANALYZE	= $(TAUROOT)/$(CONFIG_ARCH)/bin/tau_reduce
 
-TAUPPROF	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/pprof
+TAUPPROF	= $(TAUROOT)/$(CONFIG_ARCH)/bin/pprof
 
 CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) -UTAU_MPI
 
@@ -77,7 +77,7 @@ showdata: run2
 
 # Execute refined target
 run2: $(TARGET).refined
-	./$(TARGET).refined $(ARGS)
+	TAU_THROTTLE=0 ./$(TARGET).refined $(ARGS)
 
 # Link refined target
 $(TARGET).refined: $(TARGET).refined.o 
@@ -103,7 +103,7 @@ pprof.dat: run1
 
 # Execute initial target instrumentation
 run1:	$(TARGET)
-	./$(TARGET) $(ARGS)
+	TAU_THROTTLE=0 ./$(TARGET) $(ARGS)
 
 # Compile initial target
 $(TARGET): $(TARGET).o 
