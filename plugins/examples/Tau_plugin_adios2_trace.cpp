@@ -47,7 +47,7 @@
 
 #define CONVERT_TO_USEC 1.0/1000000.0 // hopefully the compiler will precompute this.
 #define TAU_ADIOS2_PERIODIC_DEFAULT false
-#define TAU_ADIOS2_PERIOD_DEFAULT 2000000 // microseconds
+#define TAU_ADIOS2_PERIOD_DEFAULT 2000000 // microseconds or timer events
 #define TAU_ADIOS2_USE_SELECTION_DEFAULT false
 #define TAU_ADIOS2_FILENAME "tau-metrics"
 #define TAU_ADIOS2_ONE_FILE_DEFAULT false
@@ -407,22 +407,23 @@ void adios::initialize() {
     int world_rank, world_size;
     PMPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
     PMPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    MPI_Comm adios_comm;
+    MPI_Comm adios_comm = MPI_COMM_NULL;
 
+    // If we are using one file for the whole communicator, copy it
     if (thePluginOptions().env_one_file) {
         PMPI_Comm_dup(MPI_COMM_WORLD, &adios_comm);
-    } else {
-        PMPI_Comm_dup(MPI_COMM_SELF, &adios_comm);
     }
     Tau_global_incr_insideTAU();
     if (thePluginOptions().env_config_file != "") {
-        if (thePluginOptions().env_one_file) {
+        // if not using one file, we don't need MPI in ADIOS2
+        if (!thePluginOptions().env_one_file) {
             ad = adios2::ADIOS(thePluginOptions().env_config_file, true);
         } else {
             ad = adios2::ADIOS(thePluginOptions().env_config_file, adios_comm, true);
         }
     } else {
-        if (thePluginOptions().env_one_file) {
+        // if not using one file, we don't need MPI in ADIOS2
+        if (!thePluginOptions().env_one_file) {
             ad = adios2::ADIOS(true);
         } else {
             ad = adios2::ADIOS(adios_comm, true);
@@ -1289,6 +1290,15 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
         )
     );
     active_threads--;
+    if (tau_plugin::thePluginOptions().env_periodic &&
+        !tau_plugin::thePluginOptions().env_one_file) {
+        if (tmp.size() > tau_plugin::thePluginOptions().env_period) {
+            TAU_VERBOSE("%d Sending data from exit event...\n", RtsLayer::myNode()); fflush(stderr);
+            Tau_plugin_event_dump_data_t dummy_data;
+            Tau_plugin_adios2_dump(&dummy_data);
+            TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
+        }
+    }
     return 0;
 }
 
@@ -1346,7 +1356,11 @@ int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
     my_adios().check_event_type(std::string("RECV"));
 
     /* spawn the thread if doing periodic */
-    if (tau_plugin::thePluginOptions().env_periodic) {
+    // Not always!  this causes problems with multithreaded MPI.
+    // Instead, SYNCHRONOUSLY dump when we get env_period timer events.
+    // But only if each rank is writing to its own file.
+    if (tau_plugin::thePluginOptions().env_periodic &&
+        tau_plugin::thePluginOptions().env_one_file) {
         _threaded = true;
         TAU_VERBOSE("Spawning thread for ADIOS2.\n");
         worker_thread = new std::thread(Tau_ADIOS2_thread_function);
