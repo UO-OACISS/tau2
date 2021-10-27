@@ -1303,8 +1303,8 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
             // only let one thread do this
             timer_lock.lock();
             if (steady_clock::now() > next_write) {
-                // reset to a time in the future
-                next_write = steady_clock::now() +
+                // increment to a time in the future
+                next_write = next_write +
                     microseconds(tau_plugin::thePluginOptions().env_period);
                 mine = true;
             }
