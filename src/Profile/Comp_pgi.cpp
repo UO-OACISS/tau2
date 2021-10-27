@@ -115,6 +115,7 @@ struct Tau_thread_ignore_flag {
 	int padding[15]; // remaining 60 bytes.
 };
 
+/*
 #ifdef __INTEL__COMPILER
 __declspec (align(64)) static struct Tau_thread_ignore_flag Tau_ignore[TAU_MAX_THREADS] = {0};
 #else
@@ -124,6 +125,39 @@ static struct Tau_thread_ignore_flag Tau_ignore[TAU_MAX_THREADS] __attribute__ (
 static struct Tau_thread_ignore_flag Tau_ignore[TAU_MAX_THREADS] = {0};
 #endif
 #endif
+*/
+
+
+struct Tau_ignore_list : vector<Tau_thread_ignore_flag*>{
+    Tau_ignore_list(){
+      }
+     virtual ~Tau_ignore_list(){
+         Tau_destructor_trigger();
+     }
+   };
+
+static Tau_ignore_list & Tau_ignore_vector(){
+    static Tau_ignore_list TIInstance;
+    return TIInstance;
+}
+inline void checkTau_ignore_vector(int tid){
+        while(Tau_ignore_vector().size()<=tid){
+        RtsLayer::LockDB();
+                Tau_ignore_vector().push_back(new Tau_thread_ignore_flag());
+        RtsLayer::UnLockDB();
+        }
+}
+
+/*static inline void Tau_ignore_inc(int tid){
+	checkTau_ignore_vector(tid);
+        (Tau_ignore_vector()[tid])->count++;
+}*/
+
+static inline int& Tau_ignore_count(int tid){
+	checkTau_ignore_vector(tid);
+	return Tau_ignore_vector()[tid]->count;
+}
+
 
 // called at the beginning of each profiled routine
 #pragma save_all_regs
@@ -152,7 +186,7 @@ extern "C" void ___rouent2(struct s1 *p) {
 			p->rid = Tau_get_function_index_in_DB(fi);
 			Tau_start_timer(fi, 0, Tau_get_thread());
 			if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-				Tau_ignore[tid].count++; // the rouent2 shouldn't call stop
+				Tau_ignore_count(tid)++; // the rouent2 shouldn't call stop
 				p->isseen = ROUTINE_THROTTLED;	
 			}
 			else {
@@ -164,7 +198,7 @@ extern "C" void ___rouent2(struct s1 *p) {
 	else 
 	{
     if (p->isseen == ROUTINE_THROTTLED) {
-      Tau_ignore[tid].count++; // the rouent2 shouldn't call stop
+      Tau_ignore_count(tid)++; // the rouent2 shouldn't call stop
       return;
     }
 		RtsLayer::LockDB();
@@ -172,7 +206,7 @@ extern "C" void ___rouent2(struct s1 *p) {
 		RtsLayer::UnLockDB();
 	  Tau_start_timer(fi, 0, Tau_get_thread());
 		if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-			Tau_ignore[tid].count++; // the rouent2 shouldn't call stop
+			Tau_ignore_count(tid)++; // the rouent2 shouldn't call stop
 			p->isseen = ROUTINE_THROTTLED;	
 		}
 	}
@@ -200,11 +234,11 @@ extern "C" void ___rouret2(void) {
   
 	int tid = Tau_get_local_tid();
 	
-	if (Tau_ignore[tid].count == 0)
+	if (Tau_ignore_count(tid) == 0)
 	{
   	TAU_MAPPING_PROFILE_STOP(0);
 	} else {
-    Tau_ignore[tid].count--;
+    Tau_ignore_count(tid)--;
 	}
 }
 
