@@ -1290,13 +1290,32 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
         )
     );
     active_threads--;
+    // initialize to a time in the future
+    using namespace std::chrono;
+    static time_point<steady_clock> next_write(steady_clock::now() +
+        microseconds(tau_plugin::thePluginOptions().env_period));
+    static std::mutex timer_lock;
     if (tau_plugin::thePluginOptions().env_periodic &&
         !tau_plugin::thePluginOptions().env_one_file) {
-        if (tmp.size() > tau_plugin::thePluginOptions().env_period) {
-            TAU_VERBOSE("%d Sending data from exit event...\n", RtsLayer::myNode()); fflush(stderr);
-            Tau_plugin_event_dump_data_t dummy_data;
-            Tau_plugin_adios2_dump(&dummy_data);
-            TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
+        // is it time to write?
+        if (steady_clock::now() > next_write) {
+            bool mine = false;
+            // only let one thread do this
+            timer_lock.lock();
+            if (steady_clock::now() > next_write) {
+                // reset to a time in the future
+                next_write = steady_clock::now() +
+                    microseconds(tau_plugin::thePluginOptions().env_period);
+                mine = true;
+            }
+            // don't hold the lock while writing, deadlock can happen, apparently.
+            timer_lock.unlock();
+            if (mine) {
+                TAU_VERBOSE("%d Sending data from exit event...\n", RtsLayer::myNode()); fflush(stderr);
+                Tau_plugin_event_dump_data_t dummy_data;
+                Tau_plugin_adios2_dump(&dummy_data);
+                TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
+            }
         }
     }
     return 0;
