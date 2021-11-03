@@ -235,7 +235,8 @@ void Tau_roctracer_api_callback(
     (data->phase == ACTIVITY_API_PHASE_ENTER) ? "on-enter" : "on-exit");
   if (data->phase == ACTIVITY_API_PHASE_ENTER) {
     TAU_START(activity_name);
-    if (TauEnv_get_thread_per_gpu_stream()) {
+    if (TauEnv_get_thread_per_gpu_stream() &&
+        cid != HIP_API_ID_hipSetDevice) { // no corresponding cid on the GPU side
       TAU_TRIGGER_EVENT("Correlation ID", (double)(data->correlation_id));
     }
     switch (cid) {
