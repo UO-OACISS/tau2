@@ -830,6 +830,7 @@ int Tau_metadata_fillMetaData()
 #endif
 
 #if _OPENMP >= 201511 // OpenMP 4.5
+#if (!defined (__PGI))
   // This API call crashes with NVCHPC 21.7, it doesn't tell us anything anyway
   //Tau_metadata_register("OMP_MAX_TASK_PRIORITY", omp_get_max_task_priority());
   char * omp_var = getenv("OMP_PLACES");
@@ -862,6 +863,7 @@ int Tau_metadata_fillMetaData()
   ss_ids << "}";
   Tau_metadata_register("OMP_PLACE_NUM_PROCS", ss_num.str());
   Tau_metadata_register("OMP_PLACE_PROC_IDS", ss_ids.str());
+#endif /* PGI - PrgEnv-nvidia */
 #endif
 
 #endif // TAU_OPENMP && !TAU_MPC
