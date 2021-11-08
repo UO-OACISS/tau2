@@ -18,6 +18,7 @@ Version 2.31 changes (from 2.30):
 5. Updated TAU's LLVM selective instrumentation for -optCompInst. Supports C++. 
 6. Updated tau2slog2 for multi-threaded testcases. 
 7. Updated support for demangling C++ symbol names (TauBfd.cpp). 
+8. Added new AMD HIP examples (examples/gpu/hip) including MPI. 
  
 Version 2.30 changes (from 2.29):
 1. Added support for Fugaku Fujitsu FX system with Fujitsu compilers (-mpi -bfd=download) for Fugaku. 
