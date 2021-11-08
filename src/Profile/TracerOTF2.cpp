@@ -1067,11 +1067,11 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
                 char * test = Tau_metadata_get("CUDA Device", thread_num);
                 if (test != NULL && strcmp(test, "") != 0) {
                     if (strcmp(Tau_metadata_get("CUDA Stream", thread_num), "0") == 0) {
-                        snprintf(namebuf, 256, "GPU dev%s:ctx%s",
+                        snprintf(namebuf, 256, "CUDA [%s:%s:0]",
                             Tau_metadata_get("CUDA Device", thread_num),
                             Tau_metadata_get("CUDA Context", thread_num));
                     } else {
-                        snprintf(namebuf, 256, "GPU dev%s:ctx%s:str%03d",
+                        snprintf(namebuf, 256, "CUDA [%s:%s:%d]",
                             Tau_metadata_get("CUDA Device", thread_num),
                             Tau_metadata_get("CUDA Context", thread_num),
                             atoi(Tau_metadata_get("CUDA Stream", thread_num)));
