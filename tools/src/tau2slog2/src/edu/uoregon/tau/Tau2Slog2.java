@@ -93,6 +93,9 @@ public class Tau2Slog2
             slog_outs.setTreeLeafByteSize( leaf_bytesize );
         if ( num_children_per_node > 0 )
             slog_outs.setNumChildrenPerNode( num_children_per_node );
+        
+	//Bypasses error detected by newer java implementations
+        System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
 
         treetrunk = new TreeTrunk( slog_outs, shadefs );
         /* */    Date time2 = new Date();

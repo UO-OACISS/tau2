@@ -9,7 +9,12 @@ static const int anz = 512;
 class C {
 public:
   C(int m, int p) : me(m), proc(p) {}
-  void method() {
+  void method(); 
+private:
+  int proc, me;
+};
+
+void C::method() {
     int i;
     int field[anz];
     MPI_Status status;
@@ -31,11 +36,9 @@ public:
         MPI_Send(&field, anz, MPI_INT, me+1, 4711, MPI_COMM_WORLD);
     }
     printf("%d done.\n", me);
-  }
+    return; 
+}
 
-private:
-  int proc, me;
-};
 
 int main(int argc, char **argv) 
 {

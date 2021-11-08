@@ -115,4 +115,44 @@ extern "C" void Tau_bfd_register_objopen_counter(objopen_counter_t handle) {
   return;
 }
 
-
+/* If no bfd + demangle, and we have C++ support, use it */
+#if defined(__GNUC__)
+#include <cxxabi.h>
+char * Tau_demangle_name(const char * name) {
+    int status;
+    char * dem_name = abi::__cxa_demangle(name, 0, 0, &status);
+    if (status != 0 || dem_name == nullptr) {
+        switch (status) {
+            case 0:
+                TAU_VERBOSE("The demangling operation succeeded, but realname is NULL\n");
+                break;
+            case -1:
+                TAU_VERBOSE("The demangling operation failed:");
+                TAU_VERBOSE(" A memory allocation failiure occurred.\n");
+                break;
+            case -2:
+                TAU_VERBOSE("The demangling operation failed:");
+                TAU_VERBOSE(" '%s' is not a valid", name);
+                TAU_VERBOSE(" name under the C++ ABI mangling rules.\n");
+                break;
+            case -3:
+                TAU_VERBOSE("The demangling operation failed: One of the");
+                TAU_VERBOSE(" arguments is invalid.\n");
+                break;
+            default:
+                TAU_VERBOSE("The demangling operation failed: Unknown error.\n");
+                break;
+        }
+		dem_name = strdup(name);
+    }
+    TAU_VERBOSE("Demangled: '%s'\n", dem_name);
+    return dem_name;
+}
+/* No support for either, just return the name */
+#else
+char * Tau_demangle_name(const char * name) {
+    TAU_VERBOSE("Warning: No demangling support provided...\n");
+    dem_name = strdup(name);
+    return dem_name;
+}
+#endif // #if defined(__GNUC__)

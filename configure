@@ -1075,6 +1075,8 @@ tcltk=yes
 tcltkfile="/"
 kai=no
 pgi=no
+aocc=no
+cray_nvhpc=no
 nvhpc=no
 craymic=no
 fujitsu=no
@@ -3971,6 +3973,16 @@ case $machine in
 	    pgi=yes
 	    default_fortran=pgi
 	    fixmakeargs="$fixmakeargs PGI COMPINST_PGI"
+	elif [ "x$PE_ENV" = xNVIDIA ] ; then
+	    tauoptions="${tauoptions}-nvidia"
+	    cray_nvhpc=yes
+	    default_fortran=nvfortran
+	    fixmakeargs="$fixmakeargs NVIDIA NVFORTRAN"
+	elif [ "x$PE_ENV" = xAOCC ] ; then
+	    tauoptions="${tauoptions}-aocc"
+	    aocc=yes
+	    default_fortran=flang
+	    fixmakeargs="$fixmakeargs AOCC COMPINST_LLVM"
         elif [ "x$PE_ENV" = xGNU -a "x$CLANG_HOME" != "x" ]; then
 	    llvm=yes
 	    tauoptions="${tauoptions}-llvm"
@@ -4035,7 +4047,9 @@ case $machine in
             if [ "x$PE_MVAPICH2_FIXED_PRGENV" = "x" ]; then
 	      fixmakeargs="$fixmakeargs CRAYCNL_CCE"
             else
-	      fixmakeargs="$fixmakeargs CRAYCNL_MVAPICH2"
+              if [ "x$CRAY_MPICH_PREFIX" = "x" ]; then
+	        fixmakeargs="$fixmakeargs CRAYCNL_MVAPICH2"
+              fi
             fi
 
 	    touch conf_test.c
@@ -5782,8 +5796,12 @@ EOF
             else
 	      mpiinc=$CRAY_MPICH2_DIR/include
             fi
-	    if [ ! -r $mpiinc ] ; then
-		     mpiinc=$CRAY_MPICH_DIR/include
+            if [ ! -r $mpiinc ] ; then
+              if [ "x$CRAY_MPICH_DIR" != "x" ]; then
+                mpiinc=$CRAY_MPICH_DIR/include
+              elif [ "x$CRAY_MPICH_PREFIX" != "x" ]; then
+                mpiinc=$CRAY_MPICH_PREFIX/include
+              fi
             fi
             if [ ! -r $mpiinc ] ; then
 		    echo "ERROR: $CRAY_MPICH_DIR/include (CRAY_MPICH(2)_DIR/include) is not readable. Please configure with -mpiinc=<dir> to point to the MPI include directory."
@@ -5987,8 +6005,16 @@ then
 	    mpilib=/opt/xt-mpt/default/mpich2-64/P2/lib
 	    ;;
 	craycnl)
-	    mpilib=$MPICH_DIR/lib
-	    ;;
+            if [ "x$MPICH_DIR" = "x" ]; then
+              if [ "x$CRAY_MPICH_PREFIX" != "x" ]; then
+                mpilib=$CRAY_MPICH_PREFIX/lib
+              else
+                echo "TAU: mpilib is not set."
+              fi
+            else
+              mpilib=$MPICH_DIR/lib
+            fi
+            ;;
 	solaris2*)
 	    mpilib=/opt/SUNWhpc/lib
 	    ;;
@@ -7598,8 +7624,10 @@ if [ "x$download_unwind" = xyes ] ; then
         elif [ "$machine" = "craycnl" ] ; then
           if [ "x$CRAY_PE_USE_CLANG" != "x" ]; then
 # use Cray PE clang compiler
-            unwind_c_compiler=clang
-            unwind_cxx_compiler=clang++
+           # unwind_c_compiler=clang
+           # unwind_cxx_compiler=clang++
+            unwind_c_compiler=${CRAY_PE_USE_CLANG}
+            unwind_cxx_compiler=${CRAY_PE_USE_CLANG}++
           fi
 	  ./configure --prefix=${unwind_dir}  CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared --disable-minidebuginfo > ${libunwind_log} 2>&1
         else
@@ -8452,7 +8480,11 @@ else
   fi
 fi
 
-if [ "x$PE_ENV" = "xCRAY" -a "x$MPICH_DIR" != "x" ]; then
+if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" = "x" -a "x$CRAY_MPICH_PREFIX" != "x" ]; then
+  CRAY_MPICH_DIR=$CRAY_MPICH_PREFIX
+fi
+
+if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" != "x" ]; then
   if [ -r $CRAY_MPICH_DIR/lib/libmpi_cray.a ]; then 
     echo "Found libmpi_cray.a"
     fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPI_CRAY"
@@ -9421,7 +9453,7 @@ if [ $machine = arm64_linux -a ! -r $targetdir/$architecture/$binutils/include/b
 fi
 
 if [ $machine = nec-sx-aurora ]; then
-  binutils=binutils-2.35.1
+  binutils=binutils-2.23.2
   binutilstgz=$binutils.tar.gz
   binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
 fi
@@ -12004,7 +12036,9 @@ if [ $pgi = yes ] ; then
     if [ $nvhpc = yes ]; then 
       tauoptions="${tauoptions}-nvhpc"
     else 
-      tauoptions="${tauoptions}-pgi"
+      if [ $cray_nvhpc = no ]; then  # Cray nvhpc already sets -nvidia
+        tauoptions="${tauoptions}-pgi"
+      fi 
     fi
     if [ $openmp = yes ] ; then
 	fixmakeargs="$fixmakeargs PGIOPENMP"
