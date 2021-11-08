@@ -14,6 +14,10 @@ Version 2.31 changes (from 2.30):
 1. Updates for MPI on craycnl (CRAY_MPICH_PREFIX). 
 2. Updates for NEC VE for memory profiling. 
 3. Added support for PrgEnv-aocc and PrgEnv-nvidia on craycnl. 
+4. Added support for CUDA 11.4 and ROCm 4.3. 
+5. Updated TAU's LLVM selective instrumentation for -optCompInst. Supports C++. 
+6. Updated tau2slog2 for multi-threaded testcases. 
+7. Updated support for demangling C++ symbol names (TauBfd.cpp). 
  
 Version 2.30 changes (from 2.29):
 1. Added support for Fugaku Fujitsu FX system with Fujitsu compilers (-mpi -bfd=download) for Fugaku. 
