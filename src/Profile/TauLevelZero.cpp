@@ -25,6 +25,7 @@
 #include <Profile/L0/ze_api_collector.h>
 
 #include "Profile/Profiler.h"
+#include "Profile/TauBfd.h"
 using namespace std;
 
 extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid);
