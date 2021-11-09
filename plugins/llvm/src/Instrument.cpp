@@ -139,8 +139,17 @@ static StringRef normalize_name(StringRef mangled_name) {
     //        << mangled_name << '\n';
     break;
   case -2:
-    // errs() << "FAIL: " << mangled_name
-    //        << " is not a valid name under the C++ ABI mangling rules\n";
+      /* This case can happen in two cases:
+         - the name is not a valid name
+         - the name is main.
+         Fail only in the former case, return main in the latter one.
+      */      
+      if( 0 == mangled_name.str().compare( "main" ) ){
+          realname = StringRef( "main" );
+      } else {
+          errs() << "FAIL: " << mangled_name
+                 << " is not a valid name under the C++ ABI mangling rules\n";
+      }
     break;
   default:
     // errs() << "FAIL: couldn't demangle " << mangled_name

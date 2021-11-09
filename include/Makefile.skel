@@ -780,6 +780,7 @@ FWRAPPER	       = TauFMpi.o
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #ALPHATIMERS#LEXTRA	       = -lrt 	       #ENDIF#
 #PAPI#LEXTRA	       	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
+#PAPI#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -Wl,-rpath,$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
 #IA64PAPI#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -Wl,-rpath,$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
 #PAPIPFM#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -Wl,-rpath,$(PAPIDIR)/$(PAPISUBDIR) -lpfm -lpapi -lpfm #ENDIF#
 #X86_64PAPI#LEXTRA  = -L$(PAPIDIR)/$(PAPISUBDIR)/ -L$(PAPIDIR)/lib64/ -Wl,-rpath,$(PAPIDIR)/$(PAPISUBDIR) -Wl,-rpath,$(PAPIDIR)/lib64 -lpapi -lperfctr #ENDIF#

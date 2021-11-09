@@ -6358,7 +6358,7 @@ if [ $papi = yes ] ; then
 		    papisubdir=xt-cnl/lib
 		    fixmakeargs="$fixmakeargs papisubdir=xt-cnl/lib"
                 else
-		    if [ -f $papidir/lib64/libpapi.so -a $papidir != "/usr" ] ; then
+		    if [ -f $papidir/lib64/libpapi.so ] ; then
 			papisubdir=lib64
 			fixmakeargs="$fixmakeargs papisubdir=lib64"
 		    else
@@ -9450,6 +9450,7 @@ if [ $machine = arm64_linux -a ! -r $targetdir/$architecture/$binutils/include/b
   binutilstgz=arm64-bfd.tgz
   p=`pwd`
   cd $targetdir/$architecture/; download "$binutilsurl" "$binutilstgz" ; tar zxf $binutilstgz; rm -f $binutilstgz ; cd ${p};
+  binutils=binutils-2.23.2
 fi
 
 if [ $machine = nec-sx-aurora ]; then
