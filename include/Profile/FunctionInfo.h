@@ -192,7 +192,8 @@ std::mutex fInfoVectorMutex;
 //
 // This keeps a sequential ID number for each FunctionInfo instance.
 // This is used an an index into the static thread_local MetricThreadCache.
-static thread_local FMetricListVector MetricThreadCache; // One entry per instance
+static thread_local vector<FunctionMetrics*> MetricThreadCache; // One entry per instance
+//static thread_local FMetricListVector MetricThreadCache; // One entry per instance #Fixes opari bug, breaks pthreads
 static std::atomic<uint64_t> next_id; // The next available ID; incremented when function_info_id is set.
 uint64_t function_info_id; // This is set in FunctionInfo::FunctionInfoInit()
 static bool use_metric_tls; // This is set to false to disable the thread-local cache during shutdown.
