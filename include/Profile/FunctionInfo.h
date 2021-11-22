@@ -174,8 +174,7 @@ struct FMetricListVector : vector<FunctionMetrics *>{
     }
 
     virtual ~FMetricListVector(){
-        if(RtsLayer::myThread()==0)
-          Tau_destructor_trigger();
+        Tau_destructor_trigger();
     }
 };
 
@@ -193,8 +192,8 @@ std::mutex fInfoVectorMutex;
 //
 // This keeps a sequential ID number for each FunctionInfo instance.
 // This is used an an index into the static thread_local MetricThreadCache.
-//static thread_local vector<FunctionMetrics*> MetricThreadCache; // One entry per instance
-static thread_local FMetricListVector MetricThreadCache; // One entry per instance #Fixes opari bug, breaks pthreads
+static thread_local vector<FunctionMetrics*> MetricThreadCache; // One entry per instance
+//static thread_local FMetricListVector MetricThreadCache; // One entry per instance #Fixes opari bug, breaks pthreads
 static std::atomic<uint64_t> next_id; // The next available ID; incremented when function_info_id is set.
 uint64_t function_info_id; // This is set in FunctionInfo::FunctionInfoInit()
 static bool use_metric_tls; // This is set to false to disable the thread-local cache during shutdown.
@@ -214,7 +213,7 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     // Also don't use the cache during shutdown -- it might have been destructed already,
     // but we can't put a destructor trigger on MetricThreadCache because they are *also*
     // destructed when a thread exits.
-    if(use_metric_tls && (tid == local_tid)) {
+    if(tid!=0 && use_metric_tls && (tid == local_tid)) {
         if(MetricThreadCache.size() > function_info_id) {
             MOut = MetricThreadCache[function_info_id];
             if(MOut != NULL) {
@@ -239,7 +238,7 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     MOut=FMetricList[tid];
 
     // Use thread-local optimization if the current thread is requesting its own metrics.
-    if(use_metric_tls && (tid == local_tid)) {
+    if(tid !=0 && use_metric_tls && (tid == local_tid)) {
         // Ensure the FMetricList vector is long enough to accomodate the new cached item.
         while(MetricThreadCache.size() <= function_info_id) {
             MetricThreadCache.push_back(NULL);
