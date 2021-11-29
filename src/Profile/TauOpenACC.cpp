@@ -37,6 +37,7 @@
 #include <Profile/TauOpenACC.h>
 #include <Profile/TauGpuAdapterOpenACC.h>
 #include <Profile/TauGpu.h>
+#include <Profile/TauBfd.h>
 
 #define TAU_SET_EVENT_NAME(event_name, str) strcpy(event_name, str)
 ////////////////////////////////////////////////////////////////////////////
