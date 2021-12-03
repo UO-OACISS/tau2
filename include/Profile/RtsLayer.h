@@ -133,7 +133,7 @@ struct TAULocks{
       return TheLockList().size();
   }
 
-  inline static int getDBLock(int tid){
+  static int getDBLock(int tid){
       checkLockVector(tid);
       std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
     return TheLockList()[tid]->lockDBCount;
