@@ -1095,6 +1095,10 @@ void Tau_cupti_buffer_processed(void) {
 extern void Tau_roctracer_flush_tracing(void);
 #endif /* TAU_ENABLE_ROCTRACER */
 
+#ifdef TAU_ENABLE_ROCPROFILER
+extern void Tau_rocprofiler_pool_flush(void);
+#endif
+
 extern "C" void Tau_flush_gpu_activity(void) {
    TAU_VERBOSE("TAU: flushing asynchronous GPU events...\n");
 #ifdef CUPTI
@@ -1114,6 +1118,9 @@ extern "C" void Tau_flush_gpu_activity(void) {
             cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
         }
     }
+#endif
+#ifdef TAU_ENABLE_ROCPROFILER
+   Tau_rocprofiler_pool_flush();
 #endif
 #ifdef TAU_ENABLE_ROCTRACER
    TAU_VERBOSE("TAU: flushing asynchronous ROCM/HIP events...\n");
