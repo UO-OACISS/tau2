@@ -3202,7 +3202,7 @@ configure_perfexplorer () {
     cp ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel ${targetdir}/etc/.
     cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.derby ${targetdir}/etc/.
     cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.h2 ${targetdir}/etc/.
-    cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.mysql ${targetdir}/etc/.
+#    cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.mysql ${targetdir}/etc/.
     cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.oracle ${targetdir}/etc/.
     cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.postgresql ${targetdir}/etc/.
     cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.db2 ${targetdir}/etc/.
@@ -3310,7 +3310,7 @@ configure_perfexplorer () {
 
     cp ${tauroot}/tools/src/contrib/derby.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/h2.jar $JARTARGET
-    cp ${tauroot}/tools/src/contrib/mysql.jar $JARTARGET
+#    cp ${tauroot}/tools/src/contrib/mysql.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/postgresql.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/xerces.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/mesp.jar $JARTARGET
