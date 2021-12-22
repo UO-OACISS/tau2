@@ -151,7 +151,7 @@ static char *strip_tau_group(const char *ProfileGroupName) {
 std::atomic<uint64_t> FunctionInfo::next_id{0};
 
 //thread_local FunctionInfo::FMetricListVector FunctionInfo::MetricThreadCache; //#Fixes opari bug, breaks pthreads
-thread_local vector<FunctionInfo::FunctionMetrics*> FunctionInfo::MetricThreadCache; // One entry per instance
+thread_local vector<FunctionInfo::FunctionMetrics*>* FunctionInfo::MetricThreadCache=new vector<FunctionInfo::FunctionMetrics*>; // One entry per instance
 bool FunctionInfo::use_metric_tls = true;
 
 //////////////////////////////////////////////////////////////////////

@@ -192,7 +192,7 @@ std::mutex fInfoVectorMutex;
 //
 // This keeps a sequential ID number for each FunctionInfo instance.
 // This is used an an index into the static thread_local MetricThreadCache.
-static thread_local vector<FunctionMetrics*> MetricThreadCache; // One entry per instance
+static thread_local vector<FunctionMetrics*>* MetricThreadCache; // One entry per instance
 //static thread_local FMetricListVector MetricThreadCache; // One entry per instance #Fixes opari bug, breaks pthreads
 static std::atomic<uint64_t> next_id; // The next available ID; incremented when function_info_id is set.
 uint64_t function_info_id; // This is set in FunctionInfo::FunctionInfoInit()
@@ -214,8 +214,8 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     // but we can't put a destructor trigger on MetricThreadCache because they are *also*
     // destructed when a thread exits.
     if(tid!=0 && use_metric_tls && (tid == local_tid)) {
-        if(MetricThreadCache.size() > function_info_id) {
-            MOut = MetricThreadCache[function_info_id];
+        if(MetricThreadCache->size() > function_info_id) {
+            MOut = MetricThreadCache->operator[](function_info_id);
             if(MOut != NULL) {
                 return MOut;
             }
@@ -240,11 +240,11 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     // Use thread-local optimization if the current thread is requesting its own metrics.
     if(tid !=0 && use_metric_tls && (tid == local_tid)) {
         // Ensure the FMetricList vector is long enough to accomodate the new cached item.
-        while(MetricThreadCache.size() <= function_info_id) {
-            MetricThreadCache.push_back(NULL);
+        while(MetricThreadCache->size() <= function_info_id) {
+            MetricThreadCache->push_back(NULL);
         }    
         // Store the FunctionMetrics pointer in the thread-local cache
-        MetricThreadCache[function_info_id] = MOut;
+        MetricThreadCache->operator[](function_info_id) = MOut;
     }
 
     return MOut;
