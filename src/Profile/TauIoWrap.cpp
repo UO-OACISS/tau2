@@ -25,7 +25,9 @@
 #include <utility>
 #include <sstream>
 #include <string>
+#ifndef TAU_WINDOWS
 #include <sys/time.h>
+#endif
 
 
 using namespace std;

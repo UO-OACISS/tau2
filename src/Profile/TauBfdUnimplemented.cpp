@@ -10,7 +10,11 @@
 #include <Profile/TauBfd.h>
 
 #include <stdio.h>
+#ifndef TAU_WINDOWS
 #include <dirent.h>
+#else
+#include <io.h>
+#endif
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -152,7 +156,7 @@ char * Tau_demangle_name(const char * name) {
 #else
 char * Tau_demangle_name(const char * name) {
     TAU_VERBOSE("Warning: No demangling support provided...\n");
-    dem_name = strdup(name);
+    char * dem_name = strdup(name);
     return dem_name;
 }
 #endif // #if defined(__GNUC__)
