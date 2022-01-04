@@ -818,7 +818,7 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
 #endif /* TAU_OMPT */
 }
 
-#if not defined TAU_USE_STDCXX11 || not defined TAU_WINDOWS
+#if not defined TAU_USE_STDCXX11 && not defined TAU_WINDOWS
 /* C version of regex_match in case compiler doesn't support C++11 featues */
 /* Credit for logic: Laurence Gonsalves on stackoverflow.com */
 extern "C" int Tau_C_regex_match(const char * input, const char * rege)
