@@ -57,6 +57,13 @@ using namespace std;
 //#include <pwd.h>
 #endif /* TAU_BGP */
 
+#ifdef TAU_WINDOWS
+/* We are on Windows which doesn't have strtok_s */
+# define strtok_r strtok_s
+#define TAU_LIB_DIR "tau2/win32/lib"
+#endif
+
+
 #define MAX_LN_LEN 2048
 
 /* We should throttle if number n > a && percall < b .a and b are given below */

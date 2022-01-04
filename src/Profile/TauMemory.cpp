@@ -1904,7 +1904,7 @@ return 1; // SUCCESS
 //////////////////////////////////////////////////////////////////////
 extern "C" void Tau_track_mem_event_always(const char * name, const char * prefix, size_t size) {
   const size_t event_len = strlen(name) + strlen(prefix) + 2;
-#ifdef TAU_NEC_SX
+#if  defined TAU_NEC_SX || defined TAU_WINDOWS
   char event_name[16384];
 #else
   char event_name[event_len];

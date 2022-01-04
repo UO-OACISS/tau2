@@ -325,6 +325,7 @@ void Tau_MemMgr_free(int tid, void *addr, size_t size)
 #else /* TAU_WINDOWS */
 #include <stdlib.h>
 extern "C" bool Tau_MemMgr_initIfNecessary(void) {
+	return true;
 }
 extern "C" void Tau_MemMgr_finalizeIfNecessary(void) {
 }
