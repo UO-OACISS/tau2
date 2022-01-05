@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 
 ROOT=/cygdrive/c/tau
 
@@ -7,8 +7,8 @@ ROOT=/cygdrive/c/tau
 rm -rf $ROOT/tau-windows
 
 mkdir -p $ROOT/tau-windows/bin
-mkdir -p $ROOT/tau-windows/bin/jogl32
-mkdir -p $ROOT/tau-windows/bin/jogl64
+#mkdir -p $ROOT/tau-windows/bin/jogl32
+#mkdir -p $ROOT/tau-windows/bin/jogl64
 
 mkdir -p $ROOT/tau-windows/include
 mkdir -p $ROOT/tau-windows/lib
@@ -17,7 +17,7 @@ mkdir -p $ROOT/tau-windows/JavaDLL
 cp -r $ROOT/tau2/include /c/tau/tau-windows
 
 
-cd $ROOT/tau2/tools/src/contrib/jogl/windows; gunzip *.dll.gz
+#cd $ROOT/tau2/tools/src/contrib/jogl/windows; gunzip *.dll.gz
 cd $ROOT/tau2
 rm $ROOT/tau2/win32/bin/TraceInput.exp
 rm $ROOT/tau2/win32/bin/TraceInput.lib
@@ -46,17 +46,20 @@ cp tools/src/common/bin/tau-common.jar $ROOT/tau-windows/bin
 cp tools/src/paraprof/bin/*.jar $ROOT/tau-windows/bin
 cp tools/src/vis/bin/*.jar $ROOT/tau-windows/bin
 
-cp tools/src/contrib/jogl/jogl.jar $ROOT/tau-windows/bin/jogl32
-cp tools/src/contrib/jogl/windows/jogl.dll $ROOT/tau-windows/bin/jogl32
-cp tools/src/contrib/jogl/windows/jogl_awt.dll $ROOT/tau-windows/bin/jogl32
-cp tools/src/contrib/jogl/windows/jogl_cg.dll $ROOT/tau-windows/bin/jogl32
+#cp tools/src/contrib/jogl/jogl.jar $ROOT/tau-windows/bin/jogl32
+#cp tools/src/contrib/jogl/windows/jogl.dll $ROOT/tau-windows/bin/jogl32
+#cp tools/src/contrib/jogl/windows/jogl_awt.dll $ROOT/tau-windows/bin/jogl32
+#cp tools/src/contrib/jogl/windows/jogl_cg.dll $ROOT/tau-windows/bin/jogl32
+#
+#cp tools/src/contrib/jogl/windows64/jogl.jar $ROOT/tau-windows/bin/jogl64
+#cp tools/src/contrib/jogl/windows64/gluegen-rt.jar $ROOT/tau-windows/bin/jogl64
+#cp tools/src/contrib/jogl/windows64/jogl.dll $ROOT/tau-windows/bin/jogl64
+#cp tools/src/contrib/jogl/windows64/jogl_awt.dll $ROOT/tau-windows/bin/jogl64
+#cp tools/src/contrib/jogl/windows64/jogl_cg.dll $ROOT/tau-windows/bin/jogl64
+#cp tools/src/contrib/jogl/windows64/gluegen-rt.dll $ROOT/tau-windows/bin/jogl64
+#
 
-cp tools/src/contrib/jogl/windows64/jogl.jar $ROOT/tau-windows/bin/jogl64
-cp tools/src/contrib/jogl/windows64/gluegen-rt.jar $ROOT/tau-windows/bin/jogl64
-cp tools/src/contrib/jogl/windows64/jogl.dll $ROOT/tau-windows/bin/jogl64
-cp tools/src/contrib/jogl/windows64/jogl_awt.dll $ROOT/tau-windows/bin/jogl64
-cp tools/src/contrib/jogl/windows64/jogl_cg.dll $ROOT/tau-windows/bin/jogl64
-cp tools/src/contrib/jogl/windows64/gluegen-rt.dll $ROOT/tau-windows/bin/jogl64
+cp tools/src/contrib/jogl/windows-all/* $ROOT/tau-windows/bin
 
 cp tools/src/contrib/slog2sdk/lib/jumpshot.jar $ROOT/tau-windows/bin
 cp win32/lib/*.* $ROOT/tau-windows/lib
