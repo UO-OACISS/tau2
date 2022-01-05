@@ -44,7 +44,7 @@ cp tools/src/perfdmf/bin/perfdmf.jar $ROOT/tau-windows/bin
 cp tools/src/perfexplorer/perfexplorer.jar $ROOT/tau-windows/bin
 cp tools/src/common/bin/tau-common.jar $ROOT/tau-windows/bin
 cp tools/src/paraprof/bin/*.jar $ROOT/tau-windows/bin
-cp tools/src/vis/bin/*.jar $ROOT/tau-windows/bin
+cp tools/src/vis-jogl2/bin/*.jar $ROOT/tau-windows/bin
 
 #cp tools/src/contrib/jogl/jogl.jar $ROOT/tau-windows/bin/jogl32
 #cp tools/src/contrib/jogl/windows/jogl.dll $ROOT/tau-windows/bin/jogl32
