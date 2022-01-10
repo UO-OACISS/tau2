@@ -2,6 +2,7 @@
 
 if [ "x$PE_MPICH_GTL_DIR_amd_gfx908" != "x" ]; then 
   MPI_EXTRA_OPTS="${PE_MPICH_GTL_DIR_amd_gfx908} ${PE_MPICH_GTL_LIBS_amd_gfx908} "
+  export PATH=${CRAY_MPICH_PREFIX}/bin:$PATH
 fi
 
 MPIOPTS=`mpicc -show | awk '{$1=""}1'  `
