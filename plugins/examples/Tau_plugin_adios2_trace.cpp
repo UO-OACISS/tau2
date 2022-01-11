@@ -65,7 +65,7 @@ int Tau_plugin_adios2_function_exit(
 void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid);
 
 static bool enabled{false};
-static bool done{false};
+static bool plugin_done{false};
 static bool _threaded{false};
 static int global_comm_size = 1;
 static int global_comm_rank = 0;
@@ -942,7 +942,7 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
 void Tau_ADIOS2_stop_worker(void) {
     if (!enabled) return;
     if (!_threaded) return;
-    done = true;
+    plugin_done = true;
     if (tau_plugin::thePluginOptions().env_periodic && _threaded) {
         TAU_VERBOSE("TAU ADIOS2 thread joining...\n"); fflush(stderr);
         while(in_async_write) {/* wait for the async thread to finish writing, if necessary */}
@@ -957,12 +957,12 @@ void Tau_ADIOS2_stop_worker(void) {
 void * Tau_ADIOS2_thread_function(void) {
 	Tau_register_thread();
     std::chrono::microseconds period(tau_plugin::thePluginOptions().env_period);
-    while (!done) {
+    while (!plugin_done) {
         in_async_write = false;
         {
             // scoped region for lock
             std::unique_lock<std::mutex> lk(_my_mutex);
-            if (_my_cond.wait_for(lk, period, [] {return done == true;})) {
+            if (_my_cond.wait_for(lk, period, [] {return plugin_done == true;})) {
                 // done executing
                 break;
             }
@@ -987,6 +987,8 @@ int do_teardown(bool pre) {
     TAU_VERBOSE("%d:%d %s...\n", global_comm_rank, RtsLayer::myThread(), __func__); fflush(stdout);
     /* Don't do these instructions more than once */
     done_once = true;
+    /* Prevent any other timers from triggering a write */
+    plugin_done = true;
     Tau_ADIOS2_stop_worker();
     /* Stop any outstanding timers on the stack(s) */
     if (pre) {
@@ -1026,7 +1028,7 @@ int do_teardown(bool pre) {
 int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t* data) {
     if (!enabled || data->tid != 0) return 0;
     TAU_VERBOSE("TAU PLUGIN ADIOS2 Pre-Finalize\n"); fflush(stdout);
-    return do_teardown(false);
+    return do_teardown(true);
 }
 
 /* This happens from Profiler.cpp, when data is written out. */
@@ -1310,7 +1312,7 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     if (tau_plugin::thePluginOptions().env_periodic &&
         !tau_plugin::thePluginOptions().env_one_file) {
         // is it time to write?
-        if (steady_clock::now() > next_write) {
+        if (steady_clock::now() > next_write && !plugin_done) {
             bool mine = false;
             // only let one thread do this
             timer_lock.lock();
