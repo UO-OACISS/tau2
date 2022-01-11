@@ -132,7 +132,9 @@ extern "C" {
   const char* TAUDECL TauEnv_get_plugins();
   int TAUDECL TauEnv_get_plugins_enabled();
   int TAUDECL TauEnv_get_track_mpi_t_comm_metric_values();
+#ifndef TAU_WINDOWS
   const char  TAUDECL *TauEnv_get_mpi_t_comm_metric_values();
+#endif
   int TAUDECL TauEnv_get_set_node();
   const char* TAUDECL TauEnv_get_cupti_api();
   const char* TAUDECL TauEnv_get_cuda_device_name();

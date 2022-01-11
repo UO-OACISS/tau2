@@ -144,7 +144,7 @@ extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup
  * entering timers at the same time, and every thread will invalidate the
  * cache line otherwise.
  */
-#ifndef CRAYCC
+#if !(defined(CRAYCC) || defined(TAU_NEC_SX))
 union Tau_thread_status_flags
 {
   /* Padding structures is tricky because compilers pad unexpectedly

@@ -81,6 +81,10 @@
 #endif /* __cplusplus */
 
 
+#ifdef TAU_NEC_SX
+#undef DEBUG_ASSERT
+#endif /* TAU_NEC_SX */
+
 #ifdef DEBUG_ASSERT
 #ifdef TAU_EXECINFO
 #include <execinfo.h>
@@ -108,7 +112,11 @@
 }
 #endif
 #else /* !defined(DEBUG_ASSERT) */
+#ifdef TAU_NEC_SX
+#define TAU_ASSERT(test, fmt)
+#else
 #define TAU_ASSERT(test, fmt, ...)
+#endif /* TAU_NEC_SX */
 #endif /* DEBUG_ASSERT */
  
 #endif /* _TAU_INTERNAL_H_ */

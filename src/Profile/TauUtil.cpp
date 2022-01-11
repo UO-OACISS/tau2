@@ -27,7 +27,7 @@
 #include <set>
 #include <sstream>
 
-#ifdef TAU_USE_STDCXX11
+#if defined TAU_USE_STDCXX11 || defined TAU_WINDOWS
 #include <thread>
 #include <regex>
 #else
@@ -818,7 +818,7 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
 #endif /* TAU_OMPT */
 }
 
-#ifndef TAU_USE_STDCXX11
+#if not defined TAU_USE_STDCXX11 && not defined TAU_WINDOWS
 /* C version of regex_match in case compiler doesn't support C++11 featues */
 /* Credit for logic: Laurence Gonsalves on stackoverflow.com */
 extern "C" int Tau_C_regex_match(const char * input, const char * rege)
@@ -852,7 +852,7 @@ extern "C" const char* Tau_check_for_matching_regex(const char * input)
 {
 
   TauInternalFunctionGuard protects_this_function;
-#ifdef TAU_USE_STDCXX11
+#if defined TAU_USE_STDCXX11 || defined TAU_WINDOWS
   for(std::list< std::string >::iterator it = regex_list.begin(); it != regex_list.end(); it++) {
     if(regex_match(input, std::regex(*it))) {
       return (*it).c_str();
