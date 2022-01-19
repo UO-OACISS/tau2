@@ -65,7 +65,7 @@ int Tau_plugin_adios2_function_exit(
 void Tau_dump_ADIOS2_metadata(adios2::IO& bpIO, int tid);
 
 static bool enabled{false};
-static bool done{false};
+static bool plugin_done{false};
 static bool _threaded{false};
 static int global_comm_size = 1;
 static int global_comm_rank = 0;
@@ -447,12 +447,16 @@ void adios::initialize() {
         _bpIO.SetEngine(thePluginOptions().env_engine);
         // bpIO.SetParameters({{"num_threads", "2"}});
         // don't wait on readers to connect
-        _bpIO.SetParameters({{"RendezvousReaderCount", "0"}});
-        _bpIO.SetParameters({{"num_threads", "1"}});
-
-        // ISO-POSIX file output is the default transport (called "File")
-        // Passing parameters to the transport
-        _bpIO.AddTransport("File", {{"Library", "POSIX"}});
+        if (thePluginOptions().env_engine.compare("SST") == 0) {
+            _bpIO.SetParameters({{"RendezvousReaderCount", "1"}});
+            _bpIO.SetParameters({{"QueueFullPolicy", "Block"}});
+        } else {
+            _bpIO.SetParameters({{"RendezvousReaderCount", "0"}});
+            _bpIO.SetParameters({{"num_threads", "1"}});
+            // ISO-POSIX file output is the default transport (called "File")
+            // Passing parameters to the transport
+            _bpIO.AddTransport("File", {{"Library", "POSIX"}});
+        }
     }
     Tau_global_decr_insideTAU();
 }
@@ -579,7 +583,7 @@ void adios::write_variables(void)
     writer_gets_control();
 
     try{
-    TAU_VERBOSE("%s: Merging %lu timers...\n", __func__, timer_values_array[0].size());
+    TAU_VERBOSE("%s: Merging %lu timers from 0...\n", __func__, timer_values_array[0].size());
 #if 0
     /* sort into one big vector from all threads */
     std::vector<event5_t> merged_timers(timer_values_array[0]);
@@ -737,19 +741,17 @@ void adios::write_variables(void)
 
     tau_plugin::inPlugin() = true;
 
-    TAU_VERBOSE("%s: Writing step... ", __func__);
+    TAU_VERBOSE("%s: Writing step...\n", __func__);
+    _my_mutex.lock();
     bpWriter.BeginStep();
 
     // do this first, so other threads don't define new attributes yet
-    TAU_VERBOSE("%s: Writing %lu attributes...", __func__, attributes_to_define.size());
-    _my_mutex.lock();
+    TAU_VERBOSE("%s: Writing %lu attributes...\n", __func__, attributes_to_define.size());
     for (auto a : attributes_to_define) {
         _bpIO.DefineAttribute<std::string>(a.first, a.second);
     }
-    // safe to clear...
-    attributes_to_define.clear();
-    _my_mutex.unlock();
 
+    TAU_VERBOSE("%s: Writing scalar values...\n", __func__);
     bpWriter.Put(program_count, &programs);
     bpWriter.Put(comm_size, &comm_ranks);
     bpWriter.Put(thread_count, &threads);
@@ -760,6 +762,7 @@ void adios::write_variables(void)
     bpWriter.Put(counter_event_count, &num_counter_values);
     bpWriter.Put(comm_count, &num_comm_values);
 
+    TAU_VERBOSE("%s: Writing %lu timers...\n", __func__, num_timer_values);
     if (num_timer_values > 0) {
         event_timestamps.SetShape({num_timer_values, 6});
         /* These dimensions need to change for 1-file case! */
@@ -770,6 +773,7 @@ void adios::write_variables(void)
         bpWriter.Put(event_timestamps, all_timers);
     }
 
+    TAU_VERBOSE("%s: Writing %lu counters...\n", __func__, num_counter_values);
     if (num_counter_values > 0) {
         counter_values.SetShape({num_counter_values, 6});
         /* These dimensions need to change for 1-file case! */
@@ -780,6 +784,7 @@ void adios::write_variables(void)
         bpWriter.Put(counter_values, all_counters.data());
     }
 
+    TAU_VERBOSE("%s: Writing %lu communicators...\n", __func__, num_comm_values);
     if (num_comm_values > 0) {
         comm_timestamps.SetShape({num_comm_values, 8});
         /* These dimensions need to change for 1-file case! */
@@ -790,7 +795,14 @@ void adios::write_variables(void)
         bpWriter.Put(comm_timestamps, all_comms.data());
     }
 
+    TAU_VERBOSE("%s: Ending step...\n", __func__);
     bpWriter.EndStep();
+    TAU_VERBOSE("%s: Clearing attributes...\n", __func__);
+    // safe to clear...
+    attributes_to_define.clear();
+    TAU_VERBOSE("%s: Unlocking...\n", __func__);
+    _my_mutex.unlock();
+    TAU_VERBOSE("%s: leaving plugin...\n", __func__);
     tau_plugin::inPlugin() = false;
     //TAU_VERBOSE("Freeing all_timers.\n");
     //free(all_timers);
@@ -930,7 +942,7 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
 void Tau_ADIOS2_stop_worker(void) {
     if (!enabled) return;
     if (!_threaded) return;
-    done = true;
+    plugin_done = true;
     if (tau_plugin::thePluginOptions().env_periodic && _threaded) {
         TAU_VERBOSE("TAU ADIOS2 thread joining...\n"); fflush(stderr);
         while(in_async_write) {/* wait for the async thread to finish writing, if necessary */}
@@ -945,12 +957,12 @@ void Tau_ADIOS2_stop_worker(void) {
 void * Tau_ADIOS2_thread_function(void) {
 	Tau_register_thread();
     std::chrono::microseconds period(tau_plugin::thePluginOptions().env_period);
-    while (!done) {
+    while (!plugin_done) {
         in_async_write = false;
         {
             // scoped region for lock
             std::unique_lock<std::mutex> lk(_my_mutex);
-            if (_my_cond.wait_for(lk, period, [] {return done == true;})) {
+            if (_my_cond.wait_for(lk, period, [] {return plugin_done == true;})) {
                 // done executing
                 break;
             }
@@ -975,6 +987,8 @@ int do_teardown(bool pre) {
     TAU_VERBOSE("%d:%d %s...\n", global_comm_rank, RtsLayer::myThread(), __func__); fflush(stdout);
     /* Don't do these instructions more than once */
     done_once = true;
+    /* Prevent any other timers from triggering a write */
+    plugin_done = true;
     Tau_ADIOS2_stop_worker();
     /* Stop any outstanding timers on the stack(s) */
     if (pre) {
@@ -1014,7 +1028,7 @@ int do_teardown(bool pre) {
 int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t* data) {
     if (!enabled || data->tid != 0) return 0;
     TAU_VERBOSE("TAU PLUGIN ADIOS2 Pre-Finalize\n"); fflush(stdout);
-    return do_teardown(false);
+    return do_teardown(true);
 }
 
 /* This happens from Profiler.cpp, when data is written out. */
@@ -1298,7 +1312,7 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     if (tau_plugin::thePluginOptions().env_periodic &&
         !tau_plugin::thePluginOptions().env_one_file) {
         // is it time to write?
-        if (steady_clock::now() > next_write) {
+        if (steady_clock::now() > next_write && !plugin_done) {
             bool mine = false;
             // only let one thread do this
             timer_lock.lock();
@@ -1311,7 +1325,7 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
             // don't hold the lock while writing, deadlock can happen, apparently.
             timer_lock.unlock();
             if (mine) {
-                TAU_VERBOSE("%d Sending data from exit event...\n", RtsLayer::myNode()); fflush(stderr);
+                TAU_VERBOSE("%d Sending data from exit event %s...\n", RtsLayer::myNode(), data->timer_name); fflush(stderr);
                 Tau_plugin_event_dump_data_t dummy_data;
                 Tau_plugin_adios2_dump(&dummy_data);
                 TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);

@@ -360,6 +360,7 @@ const char *Tau_metadata_timeFormat = "%lld";
 int Tau_metadata_fillMetaData()
 {
 #ifndef TAU_DISABLE_METADATA
+  int anonymize=TauEnv_get_anonymize_enabled(); 
 
   static int filled = 0;
   if (filled) {
@@ -733,34 +734,38 @@ int Tau_metadata_fillMetaData()
     fclose(f);
   }
 
-  char buffer[4096];
-  bzero(buffer, 4096);
-  int rc = readlink("/proc/self/exe", buffer, 4096);
-  if (rc != -1) {
-    Tau_metadata_register("Executable", buffer);
-  }
+  /* If TAU_ANONYMIZE is used, don't write out executable and cwd info */
+  if (!anonymize) {
+    char buffer[4096];
+    bzero(buffer, 4096);
 
-  bzero(buffer, 4096);
-  rc = readlink("/proc/self/cwd", buffer, 4096);
-  if (rc != -1) {
-    Tau_metadata_register("CWD", buffer);
-  }
-
-
-  f = fopen("/proc/self/cmdline", "r");
-  if (f) {
-    char line[4096];
-
-    string os;
-    // *CWL* - The following loop performs newline to space conversions
-    while (Tau_util_readFullLine(line, f)) {
-      if (os.length() != 0) {
-        os.append(" ");
-      }
-      os.append(line);
+    int rc = readlink("/proc/self/exe", buffer, 4096);
+    if (rc != -1) {
+      Tau_metadata_register("Executable", buffer);
     }
-    Tau_metadata_register("Command Line", os.c_str());
-    fclose(f);
+
+    bzero(buffer, 4096);
+    rc = readlink("/proc/self/cwd", buffer, 4096);
+    if (rc != -1) {
+      Tau_metadata_register("CWD", buffer);
+    }
+
+
+    f = fopen("/proc/self/cmdline", "r");
+    if (f) {
+      char line[4096];
+
+      string os;
+      // *CWL* - The following loop performs newline to space conversions
+      while (Tau_util_readFullLine(line, f)) {
+        if (os.length() != 0) {
+          os.append(" ");
+        }
+        os.append(line);
+      }
+      Tau_metadata_register("Command Line", os.c_str());
+      fclose(f);
+    }
   }
 
 #elif defined(__APPLE__)
@@ -782,9 +787,11 @@ int Tau_metadata_fillMetaData()
 
 #endif /* __linux__ */
 
-  char *user = getenv("USER");
-  if (user != NULL) {
-    Tau_metadata_register("username", user);
+  if (!anonymize) {
+    char *user = getenv("USER");
+    if (user != NULL) {
+      Tau_metadata_register("username", user);
+    }
   }
 
 #ifdef _OPENMP

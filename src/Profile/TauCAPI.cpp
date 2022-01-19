@@ -138,6 +138,59 @@ extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup
   return (void *)f;
 }
 
+/*The padding is probably irrelevant for the dynamic (vector) implementation. Keeping for reference.*/
+/* An array of this struct is shared by all threads.
+ * To make sure we don't have false sharing, the struct is 64 bytes in size,
+ * so that it fits exactly in one (or two) cache lines. That way, when one
+ * thread updates its data in the array, it won't invalidate the cache line
+ * for other threads. This is very important with timers, as all threads are
+ * entering timers at the same time, and every thread will invalidate the
+ * cache line otherwise.
+ */
+//#if !(defined(CRAYCC) || defined(TAU_NEC_SX))
+//union Tau_thread_status_flags
+//{
+  /* Padding structures is tricky because compilers pad unexpectedly
+   * and word sizes differ.
+   *
+   * You can see this in this example program:
+   *   struct A {
+   *     char c;
+   *     char d;
+   *     int i;
+   *   };
+   *   struct B {
+   *     char c;
+   *     int i;
+   *     char d;
+   *   };
+   *   int main() {
+   *     cout << sizeof(A) << endl;
+   *     cout << sizeof(B) << endl;
+   *   }
+   *
+   * Depending on your compiler, you'll get two different sizes.
+   * The only sure way to see this structure padded to 64 bytes is to calculate
+   * the pad at compile time as below.
+   *
+   * Use an anonymous struct container and allow the compiler to place members
+   * where it likes.  IT IS CRITICALLY IMPORTANT that the members are ordered
+   * largest to smallest, i.e. doubles before floats.  The "int i" member of
+   * struct B in the above example could be misaligned.  This idiom is very
+   * dangerous in an I/O situation, but for this application it should be safe.
+   */
+/*  struct {
+    Profiler * Tau_global_stack;
+    int Tau_global_stackdepth;
+    int Tau_global_stackpos;
+    int Tau_global_insideTAU;
+    int Tau_is_thread_fake_for_task_api;
+    int lightsOut;
+  };
+
+  char _pad[64];
+};
+#else*/
 struct Tau_thread_status_flags {
   Profiler * Tau_global_stack = NULL;
   int Tau_global_stackdepth = 0;
@@ -146,6 +199,7 @@ struct Tau_thread_status_flags {
   int Tau_is_thread_fake_for_task_api = 0;
   int lightsOut = 0;
 };
+//#endif
 
 #define STACK_DEPTH_INCREMENT 100
  struct CAPIThreadList : vector<Tau_thread_status_flags *>{

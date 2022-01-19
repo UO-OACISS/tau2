@@ -283,6 +283,7 @@ static int env_track_memory_footprint = 0;
 static int env_show_memory_functions = 0;
 static int env_track_load = 0;
 static int env_tau_lite = 0;
+static int env_tau_anonymize = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
@@ -1252,6 +1253,10 @@ int TauEnv_get_lite_enabled() {
   return env_tau_lite;
 }
 
+int TauEnv_get_anonymize_enabled() {
+  return env_tau_anonymize;
+}
+
 int TauEnv_get_memdbg() {
   return env_memdbg;
 }
@@ -1430,6 +1435,7 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_LITE", "on");
       env_tau_lite = 1;
     }
+
 
     const char *interval = getconf("TAU_INTERRUPT_INTERVAL");
     env_interval = TAU_INTERRUPT_INTERVAL_DEFAULT;;
@@ -2217,6 +2223,17 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Output Format: profile\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "profile");
     }
+
+    tmp = getconf("TAU_ANONYMIZE");
+    if (parse_bool(tmp,env_tau_anonymize)) {
+      TAU_VERBOSE("TAU: Anonymize enabled\n");
+      TAU_METADATA("TAU_ANONYMIZE", "on");
+      env_tau_anonymize = 1;
+      env_profile_format = TAU_FORMAT_MERGED;
+      TAU_VERBOSE("TAU: Output Format: merged\n");
+      TAU_METADATA("TAU_PROFILE_FORMAT", "merged");
+    }
+
 
     tmp = getconf("TAU_SUMMARY");
     if (parse_bool(tmp, env_summary_only)) {

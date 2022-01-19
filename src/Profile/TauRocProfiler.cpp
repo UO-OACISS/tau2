@@ -164,14 +164,14 @@ void Tau_rocm_dump_context_entry(context_entry_t* entry, rocprofiler_feature_t* 
     void* ue = nullptr;
     double value;
     std::string tmp;
-    ss << "grid size : " << kernel_name;
+    ss << "Grid Size : " << kernel_name;
     tmp = ss.str();
     ue = Tau_get_userevent(tmp.c_str());
     value = (double)(entry->kernel_properties.grid_size);
     Tau_userevent_thread(ue, value, taskid);
 
     ss.str("");
-    ss << "workgroup size : " << kernel_name;
+    ss << "Work Group Size : " << kernel_name;
     tmp = ss.str();
     ue = Tau_get_userevent(tmp.c_str());
     value = (double)(entry->kernel_properties.workgroup_size);
@@ -179,7 +179,7 @@ void Tau_rocm_dump_context_entry(context_entry_t* entry, rocprofiler_feature_t* 
 
     ss.str("");
     const AgentInfo* agent_info = HsaRsrcFactory::Instance().GetAgentInfo(entry->agent);
-    ss << "lds size : " << kernel_name;
+    ss << "LDS Memory Size : " << kernel_name;
     tmp = ss.str();
     ue = Tau_get_userevent(tmp.c_str());
     static const uint32_t lds_block_size = 128 * 4;
@@ -187,21 +187,21 @@ void Tau_rocm_dump_context_entry(context_entry_t* entry, rocprofiler_feature_t* 
     Tau_userevent_thread(ue, value, taskid);
 
     ss.str("");
-    ss << "scratch size : " << kernel_name;
+    ss << "Scratch Memory Size : " << kernel_name;
     tmp = ss.str();
     ue = Tau_get_userevent(tmp.c_str());
     value = (double)(entry->kernel_properties.scratch_size);
     Tau_userevent_thread(ue, value, taskid);
 
     ss.str("");
-    ss << "vector register size : " << kernel_name;
+    ss << "Vector Register Size (VGPR) : " << kernel_name;
     tmp = ss.str();
     ue = Tau_get_userevent(tmp.c_str());
     value = (double)((entry->kernel_properties.vgpr_count + 1) * agent_info->vgpr_block_size);
     Tau_userevent_thread(ue, value, taskid);
 
     ss.str("");
-    ss << "scalar register size : " << kernel_name;
+    ss << "Scalar Register Size (SGPR) : " << kernel_name;
     tmp = ss.str();
     ue = Tau_get_userevent(tmp.c_str());
     value = (double)((entry->kernel_properties.sgpr_count + agent_info->sgpr_block_dflt) * agent_info->sgpr_block_size);

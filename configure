@@ -12596,6 +12596,9 @@ chmod a+rx ${targetdir}/${architecture}/bin/tau-config
 cp ${tauroot}/tools/src/tauinc.pl ${targetdir}/${architecture}/bin
 chmod a+rx  ${targetdir}/${architecture}/bin/tauinc.pl
 
+cp ${tauroot}/tools/src/tau_join.sh ${targetdir}/${architecture}/bin
+chmod a+rx  ${targetdir}/${architecture}/bin/tau_join.sh
+
 configure_perfexplorer
 
 cat ${tauroot}/tools/src/TauIL/bin/tau_analyze.skel |
