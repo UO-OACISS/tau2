@@ -77,6 +77,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_current_timer_exit_params();
   int  TAUDECL TauEnv_get_track_message();
   int  TAUDECL TauEnv_get_lite_enabled();
+  int  TAUDECL TauEnv_get_anonymize_enabled();
   int  TAUDECL TauEnv_get_compensate();
   int  TAUDECL TauEnv_get_level_zero_enable_api_tracing();
 
