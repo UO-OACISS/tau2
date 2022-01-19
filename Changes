@@ -21,6 +21,7 @@ Version 2.31 changes (from 2.30):
 8. Added new AMD HIP examples (examples/gpu/hip) including MPI. 
 9. Updated TAU for Windows 11. 
 10. Added support for TAU_ANONYMIZE: creates tauprofile.xml and tau_anonymized_key.xml. 
+11. Added tau_join.sh a tool to decrypt and join the files created by TAU_ANONYMIZE.
  
 Version 2.30 changes (from 2.29):
 1. Added support for Fugaku Fujitsu FX system with Fujitsu compilers (-mpi -bfd=download) for Fugaku. 
