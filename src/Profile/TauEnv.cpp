@@ -57,6 +57,13 @@ using namespace std;
 //#include <pwd.h>
 #endif /* TAU_BGP */
 
+#ifdef TAU_WINDOWS
+/* We are on Windows which doesn't have strtok_s */
+# define strtok_r strtok_s
+#define TAU_LIB_DIR "tau2/win32/lib"
+#endif
+
+
 #define MAX_LN_LEN 2048
 
 /* We should throttle if number n > a && percall < b .a and b are given below */
@@ -240,8 +247,8 @@ extern "C" void Tau_set_usesMPI(int value);
 #endif /* TAU_MPI */
 
 #ifdef TAU_ENABLE_ROCTRACER
-extern "C" void Tau_roctracer_start_tracing(void);
-#endif /* TAU_ROCTRACER */
+extern void Tau_roctracer_start_tracing(void);
+#endif /* TAU_ENABLE_ROCTRACER */
 
 /************************** tau.conf stuff, adapted from Scalasca ***********/
 
@@ -276,6 +283,7 @@ static int env_track_memory_footprint = 0;
 static int env_show_memory_functions = 0;
 static int env_track_load = 0;
 static int env_tau_lite = 0;
+static int env_tau_anonymize = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
@@ -1245,6 +1253,10 @@ int TauEnv_get_lite_enabled() {
   return env_tau_lite;
 }
 
+int TauEnv_get_anonymize_enabled() {
+  return env_tau_anonymize;
+}
+
 int TauEnv_get_memdbg() {
   return env_memdbg;
 }
@@ -1422,6 +1434,7 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_LITE", "on");
       env_tau_lite = 1;
     }
+
 
     const char *interval = getconf("TAU_INTERRUPT_INTERVAL");
     env_interval = TAU_INTERRUPT_INTERVAL_DEFAULT;;
@@ -2210,6 +2223,17 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_PROFILE_FORMAT", "profile");
     }
 
+    tmp = getconf("TAU_ANONYMIZE");
+    if (parse_bool(tmp,env_tau_anonymize)) {
+      TAU_VERBOSE("TAU: Anonymize enabled\n");
+      TAU_METADATA("TAU_ANONYMIZE", "on");
+      env_tau_anonymize = 1;
+      env_profile_format = TAU_FORMAT_MERGED;
+      TAU_VERBOSE("TAU: Output Format: merged\n");
+      TAU_METADATA("TAU_PROFILE_FORMAT", "merged");
+    }
+
+
     tmp = getconf("TAU_SUMMARY");
     if (parse_bool(tmp, env_summary_only)) {
 #ifdef TAU_MPI
@@ -2733,7 +2757,7 @@ void TauEnv_initialize()
   TAU_VERBOSE("Calling TAU_ROCTRACER...\n");
 #ifdef TAU_ENABLE_ROCTRACER
   Tau_roctracer_start_tracing();
-#endif /* TAU_ROCTRACER */
+#endif /* TAU_ENABLE_ROCTRACER */
 }
 
 } /* C linkage */

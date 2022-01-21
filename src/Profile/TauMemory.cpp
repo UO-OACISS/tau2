@@ -631,7 +631,9 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
   int len;
   int rem;
 
+#ifndef TAU_NEC_SX
   TAU_ASSERT((data != NULL), "Null string passed to TauAllocation::LocationHash");
+#endif /* TAU_NEC_SX */
 
   // Optimize for the common case
   if (hash == TAU_MEMORY_UNKNOWN_LINE) {
@@ -1902,7 +1904,11 @@ return 1; // SUCCESS
 //////////////////////////////////////////////////////////////////////
 extern "C" void Tau_track_mem_event_always(const char * name, const char * prefix, size_t size) {
   const size_t event_len = strlen(name) + strlen(prefix) + 2;
+#if  defined TAU_NEC_SX || defined TAU_WINDOWS
+  char event_name[16384];
+#else
   char event_name[event_len];
+#endif /* TAU_NEC_SX */
   sprintf(event_name, "%s %s", prefix, name);
   if(TauEnv_get_mem_callpath()) {
     TAU_TRIGGER_CONTEXT_EVENT(event_name, (double)size);

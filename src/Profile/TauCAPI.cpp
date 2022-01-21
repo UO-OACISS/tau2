@@ -144,7 +144,7 @@ extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup
  * entering timers at the same time, and every thread will invalidate the
  * cache line otherwise.
  */
-#ifndef CRAYCC
+#if !(defined(CRAYCC) || defined(TAU_NEC_SX))
 union Tau_thread_status_flags
 {
   /* Padding structures is tricky because compilers pad unexpectedly
@@ -1117,11 +1117,16 @@ void Tau_cupti_buffer_processed(void) {
 }
 #endif
 
-#ifdef TAU_ROCTRACER
+#ifdef TAU_ENABLE_ROCTRACER
 extern void Tau_roctracer_flush_tracing(void);
-#endif /* TAU_ROCTRACER */
+#endif /* TAU_ENABLE_ROCTRACER */
+
+#ifdef TAU_ENABLE_ROCPROFILER
+extern void Tau_rocprofiler_pool_flush(void);
+#endif
 
 extern "C" void Tau_flush_gpu_activity(void) {
+   TAU_VERBOSE("TAU: flushing asynchronous GPU events...\n");
 #ifdef CUPTI
     static bool did_once = false;
     if (RtsLayer::myThread() != 0) return;
@@ -1140,9 +1145,13 @@ extern "C" void Tau_flush_gpu_activity(void) {
         }
     }
 #endif
-#ifdef TAU_ROCTRACER
+#ifdef TAU_ENABLE_ROCPROFILER
+   Tau_rocprofiler_pool_flush();
+#endif
+#ifdef TAU_ENABLE_ROCTRACER
+   TAU_VERBOSE("TAU: flushing asynchronous ROCM/HIP events...\n");
    Tau_roctracer_flush_tracing();
-#endif /* TAU_ROCTRACER */
+#endif /* TAU_ENABLE_ROCTRACER */
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1350,7 +1359,7 @@ extern "C" int Tau_dump_callpaths() {
 
   FILE* fp;
   if ((fp = fopen (filename, "a+")) == NULL) {
-    char errormsg[1024];
+    char errormsg[1064];
     sprintf(errormsg,"Error: Could not create %s",filename);
     perror(errormsg);
     return 1;
@@ -1955,9 +1964,9 @@ struct StrCompare : public std::binary_function<const char*, const char*, bool> 
 public:
     bool operator() (const char* str1, const char* str2) const {
 #ifdef TAU_AIX
-        return strcmp(str1, str2) < 0; 
-#else 
-        return std::strcmp(str1, str2) < 0; 
+        return strcmp(str1, str2) < 0;
+#else
+        return std::strcmp(str1, str2) < 0;
 #endif /* TAU_AIX */
     }
 };
@@ -1969,11 +1978,11 @@ bool _my_compare_const_char(const char * lhs, const char * rhs) {
 
 struct StrCompare2 {
 public:
-    bool operator() (const TauSafeString& lhs, const TauSafeString& rhs) const { 
+    bool operator() (const TauSafeString& lhs, const TauSafeString& rhs) const {
 #ifdef TAU_AIX
-      return strcmp(lhs.c_str(), rhs.c_str()) < 0; 
+      return strcmp(lhs.c_str(), rhs.c_str()) < 0;
 #else
-      return std::strcmp(lhs.c_str(), rhs.c_str()) < 0; 
+      return std::strcmp(lhs.c_str(), rhs.c_str()) < 0;
 #endif /* TAU_AIX */
     }
 };
@@ -2284,10 +2293,10 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 #endif
 }
 
-#ifdef TAU_ROCTRACER
+#ifdef TAU_ENABLE_ROCTRACER
 extern void Tau_roctracer_start_tracing(void);
 extern void Tau_roctracer_stop_tracing(void);
-#endif /* TAU_ROCTRACER */
+#endif /* TAU_ENABLE_ROCTRACER */
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
   if ((RtsLayer::myNode() == -1) && (Tau_get_thread() != 0)) {
@@ -2322,9 +2331,9 @@ extern "C" const char * Tau_get_current_timer_name(int tid) {
 
 extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
    Tau_stop_top_level_timer_if_necessary_task(Tau_get_thread());
-#ifdef TAU_ROCTRACER
+#ifdef TAU_ENABLE_ROCTRACER
    Tau_roctracer_stop_tracing();
-#endif /* TAU_ROCTRACER */
+#endif /* TAU_ENABLE_ROCTRACER */
 }
 
 
@@ -3038,11 +3047,13 @@ extern void TauTraceOTF2ToggleFlushAtExit(bool);
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
+  TAU_VERBOSE("calling Tau_destructor_trigger\n");
   /* Set up a static flag to make sure we only do this once,
    * as it gets called from many, many destructors. */
   static bool once = false;
   if (once) { return; }
   once = true;
+  TAU_VERBOSE("executing Tau_destructor_trigger\n");
 #ifdef TAU_OTF2
   TauTraceOTF2ToggleFlushAtExit(true);
 #endif

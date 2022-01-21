@@ -3,3 +3,4 @@
   Area: "Development tools"
   Description: "A performance analysis and tuning library."
   MemberProduct: False
+  Accelerable: True

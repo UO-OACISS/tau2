@@ -31,14 +31,13 @@
 #include <cuda.h>
 #endif
 
-// for demangling
-#include <cxxabi.h>
 #include <sstream>
 
 #include <Profile/Profiler.h>
 #include <Profile/TauOpenACC.h>
 #include <Profile/TauGpuAdapterOpenACC.h>
 #include <Profile/TauGpu.h>
+#include <Profile/TauBfd.h>
 
 #define TAU_SET_EVENT_NAME(event_name, str) strcpy(event_name, str)
 ////////////////////////////////////////////////////////////////////////////
@@ -63,17 +62,6 @@ const char* acc_constructs[] = {
     "runtime api",
     "serial",
 };
-
-static char * demangle_name(const char *funcname) {
-    int status;
-    if (funcname == NULL) return NULL;
-    char *demangled_funcname = abi::__cxa_demangle(funcname, 0, 0, &status);
-    if (status == 0) {
-        return demangled_funcname;
-    } else {
-        return strdup(funcname);
-    }
-}
 
 extern "C" static void
 Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info)
@@ -112,10 +100,11 @@ Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info
         return;
     }
 
-    char * demangled = demangle_name(launch_event->kernel_name);
+    char * demangled = Tau_demangle_name(launch_event->kernel_name);
     if (demangled) {
         ss << demangled;
     }
+    free(demangled);
 
     if (launch_event->implicit) {
         ss << " (implicit)";

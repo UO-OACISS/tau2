@@ -445,7 +445,7 @@ void initialize_papi_events(bool do_components) {
             std::string metric(i);
             // PAPI is either const char * or char * depending on version.  Fun.
             if ((retval = PAPI_add_named_event(papi_periodic_event_set, (char*)(metric.c_str()))) != PAPI_OK) {
-                printf("Error: PAPI_add_event: %d %s %s\n", retval, PAPI_strerror(retval), metric.c_str()); 
+                printf("Error: PAPI_add_event: %d %s %s\n", retval, PAPI_strerror(retval), metric.c_str());
 	    } else {
                 num_metrics++;
 	    }
@@ -623,25 +623,25 @@ std::vector<netstats_t*> * read_net_stats(const char * source) {
     std::vector<netstats_t*> * net_stats = new std::vector<netstats_t*>();
     /*  Reading proc/stat as a file  */
     FILE * pFile;
-    char line[256] = {0};
+    char line[512] = {0};
     /* Do we want per-process readings? */
     pFile = fopen (source,"r");
     if (pFile == nullptr) {
         perror ("Error opening file");
         return NULL;
     }
-    char * rc = fgets(line, 4096, pFile); // skip this line
+    char * rc = fgets(line, 512, pFile); // skip this line
     if (rc == nullptr) {
         fclose(pFile);
         return NULL;
     }
-    rc = fgets(line, 4096, pFile); // skip this line
+    rc = fgets(line, 512, pFile); // skip this line
     if (rc == nullptr) {
         fclose(pFile);
         return NULL;
     }
     /* Read each device */
-    while (fgets(line, 4096, pFile)) {
+    while (fgets(line, 512, pFile)) {
         std::string outer_tmp(line);
         outer_tmp = tau::papi_plugin::trim(outer_tmp);
         netstats_t * net_stat = new(netstats_t);
@@ -670,14 +670,14 @@ iostats_t * read_io_stats(const char * source) {
     iostats_t * io_stats = new iostats_t();
     /*  Reading proc/stat as a file  */
     FILE * pFile;
-    char line[256] = {0};
+    char line[512] = {0};
     pFile = fopen (source,"r");
     if (pFile == nullptr) {
         perror ("Error opening file");
         return NULL;
     }
     /* Read each line */
-    while (fgets(line, 4096, pFile)) {
+    while (fgets(line, 512, pFile)) {
         char dummy[32] = {0};
         long long tmplong = 0LL;
         int nf = sscanf( line, "%s %lld\n", dummy, &tmplong);
@@ -804,6 +804,34 @@ void sample_value(const char * component, const char * cpu, const char * name,
 }
 
 extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
+
+void parse_proc_self_stat() {
+  static const char * source = "/proc/self/stat";
+  static bool first = true;
+  if (!include_component(source)) { return; }
+  FILE *f = fopen(source, "r");
+  if (f) {
+    char line[4096] = {0};
+    while ( fgets( line, 4096, f)) {
+        std::string tmp(line);
+        std::istringstream iss(tmp);
+        // split the string on whitespace
+        std::vector<std::string> results(std::istream_iterator<std::string>{iss},
+                                         std::istream_iterator<std::string>());
+        if (results.size() >= 52) {
+            /* Remember that the string is 0-indexed, so subtract 1 from the
+             * indexes on https://man7.org/linux/man-pages/man5/proc.5.html */
+            Tau_trigger_userevent("Page faults (minor)", atof(results[9].c_str()));
+            Tau_trigger_userevent("Page faults (major)", atof(results[11].c_str()));
+            //Tau_trigger_userevent("Threads (stat)", atof(results[19].c_str()));
+            Tau_trigger_userevent("Pages swapped (not maintained)", atof(results[35].c_str()));
+        }
+    }
+    fclose(f);
+  }
+  first = false;
+  return;
+}
 
 void parse_proc_self_status() {
   static const char * source = "/proc/self/status";
@@ -1101,6 +1129,8 @@ void read_components(void) {
     parse_proc_self_status();
     /* Parse memory stats */
     parse_proc_self_statm();
+    /* Parse general stat */
+    parse_proc_self_stat();
     /* Get current net stats for the process */
     previous_self_net_stats = update_net_stats("/proc/self/net/dev", previous_self_net_stats);
 #endif
@@ -1351,6 +1381,8 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
 #if !defined(__APPLE__)
     /* Parse status metadata */
     parse_proc_self_status();
+    /* Parse general stat */
+    parse_proc_self_stat();
     /* Parse initial process io data */
     previous_io_stats = read_io_stats("/proc/self/io");
     /* Parse initial process network data */

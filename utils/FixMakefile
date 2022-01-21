@@ -485,6 +485,11 @@ case $1 in
 	echo "s,^ADIOS2_LIBS=.*$,ADIOS2_LIBS=$adios2libs,g" >> $sedout
 	;;
 
+    tau_cmake=*)
+        tau_cmake=`echo $1 | sed -e 's/^tau_cmake=//'`
+	echo "s,^TAU_CMAKE=.*$,TAU_CMAKE=$tau_cmake,g" >> $sedout
+	;;
+
     sqlite3dir=*)
         sqlite3dir=`echo $1 | sed -e 's/^sqlite3dir=//'`
 	echo "s,^SQLITE3DIR=.*$,SQLITE3DIR=$sqlite3dir,g" >> $sedout
@@ -708,6 +713,10 @@ case $1 in
         ;;
      TAU_UNWIND)
         echo NOTE: Enabling Stack Unwinding support
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TAU_BUILD_LLVM_PLUGIN)
+        echo NOTE: Building LLVM plugin
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      TAU_UNWIND_LIBUNWIND)
@@ -1428,6 +1437,14 @@ case $1 in
 	;;
      CRAYKAI)
 	echo NOTE: Using The Cray T3E KAI C++ compiler 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     AOCC) 
+	echo NOTE: Using PrgEnv-aocc Clang/Flang compiler settings
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     NVIDIA) 
+	echo NOTE: Using PrgEnv-nvidia NV_FORTRAN compiler settings
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PGI) 

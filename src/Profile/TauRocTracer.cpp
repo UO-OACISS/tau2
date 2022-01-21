@@ -22,6 +22,7 @@
 
 
 #include <Profile/TauRocm.h>
+#include <Profile/TauBfd.h>  // for name demangling
 #include <hip/hip_runtime.h>
 #include <roctracer.h>
 #include <roctracer_roctx.h>
@@ -51,26 +52,6 @@
 #include <utility>
 #include <stack>
 #include <chrono>
-
-#ifdef TAU_BFD
-#define HAVE_DECL_BASENAME 1
-#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-#    include <demangle.h>
-#  endif /* HAVE_GNU_DEMANGLE */
-// Add these definitions because the Binutils comedians think all the world uses autotools
-#ifndef PACKAGE
-#define PACKAGE TAU
-#endif
-#ifndef PACKAGE_VERSION
-#define PACKAGE_VERSION 2.25
-#endif
-#  include <bfd.h>
-#endif /* TAU_BFD */
-#define TAU_INTERNAL_DEMANGLE_NAME(name, dem_name)  dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES); \
-        if (dem_name == NULL) { \
-          dem_name = name; \
-        } \
-
 
 #ifndef TAU_ROCTRACER_BUFFER_SIZE
 #define TAU_ROCTRACER_BUFFER_SIZE 65536
@@ -237,9 +218,14 @@ void Tau_roctracer_api_callback(
     const void* callback_data,
     void* arg)
 {
-    static bool dummy = run_once();
+  static bool dummy = run_once();
   (void)arg;
   int task_id;
+  /* Check for a couple of useless callbacks, we don't need to track them */
+  if (cid == HIP_API_ID___hipPushCallConfiguration ||
+      cid == HIP_API_ID___hipPopCallConfiguration) {
+      return;
+  }
   const hip_api_data_t* data = reinterpret_cast<const hip_api_data_t*>(callback_data);
   const char *activity_name = roctracer_op_string(ACTIVITY_DOMAIN_HIP_API, cid, 0);
   TAU_VERBOSE("<%s id(%u)\tcorrelation_id(%lu) %s> ",
@@ -249,7 +235,8 @@ void Tau_roctracer_api_callback(
     (data->phase == ACTIVITY_API_PHASE_ENTER) ? "on-enter" : "on-exit");
   if (data->phase == ACTIVITY_API_PHASE_ENTER) {
     TAU_START(activity_name);
-    if (TauEnv_get_thread_per_gpu_stream()) {
+    if (TauEnv_get_thread_per_gpu_stream() &&
+        cid != HIP_API_ID_hipSetDevice) { // no corresponding cid on the GPU side
       TAU_TRIGGER_EVENT("Correlation ID", (double)(data->correlation_id));
     }
     switch (cid) {
@@ -300,11 +287,11 @@ void Tau_roctracer_hcc_event(const roctracer_record_t *record,
   char *joined_name;
   if ((record->op == HIP_OP_ID_DISPATCH)) {
     std::string name = Tau_roctracer_lookup_activity(record->correlation_id);
-    const char *demangled_name;
-    TAU_INTERNAL_DEMANGLE_NAME(name.c_str(), demangled_name);
+    char *demangled_name = Tau_demangle_name(name.c_str());
     std::stringstream ss;
     ss << roctracer_op_string(record->domain, record->op, record->kind)
        << " " << demangled_name;
+    free(demangled_name);
     joined_name = strdup(ss.str().c_str());
   } else {
     joined_name = strdup(roctracer_op_string(record->domain, record->op, record->kind));
@@ -364,10 +351,16 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
         // one for dispatch
         TAU_CREATE_TASK(dispatch_task_id);
         Tau_set_initialized_queues(record->queue_id, dispatch_task_id);
-        // one for copy
-        TAU_CREATE_TASK(copy_task_id);
-        // one for barrier
-        TAU_CREATE_TASK(barrier_task_id);
+        if (TauEnv_get_thread_per_gpu_stream()) {
+            // another one for copy
+            TAU_CREATE_TASK(copy_task_id);
+            // another one for barrier
+            TAU_CREATE_TASK(barrier_task_id);
+        } else {
+            // when profiling, we just need one thread per device, really.
+            copy_task_id = dispatch_task_id;
+            barrier_task_id = dispatch_task_id;
+        }
         RtsLayer::UnLockDB();
         //Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)begin_us));
         metric_set_gpu_timestamp(dispatch_task_id, ((double)(begin_us)));
@@ -375,16 +368,31 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
         Tau_add_metadata_for_task("TAU_TASK_ID", dispatch_task_id, dispatch_task_id);
         Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, dispatch_task_id);
         Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, dispatch_task_id);
-        metric_set_gpu_timestamp(copy_task_id, ((double)(begin_us)));
-        Tau_create_top_level_timer_if_necessary_task(copy_task_id);
-        Tau_add_metadata_for_task("TAU_TASK_ID", copy_task_id, copy_task_id);
-        Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, copy_task_id);
-        Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, copy_task_id);
-        metric_set_gpu_timestamp(barrier_task_id, ((double)(begin_us)));
-        Tau_create_top_level_timer_if_necessary_task(barrier_task_id);
-        Tau_add_metadata_for_task("TAU_TASK_ID", barrier_task_id, barrier_task_id);
-        Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, barrier_task_id);
-        Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, barrier_task_id);
+        Tau_metadata_task("ROCM_QUEUE_TYPE", "Kernel Dispatch", dispatch_task_id);
+        if (TauEnv_get_thread_per_gpu_stream()) {
+            metric_set_gpu_timestamp(copy_task_id, ((double)(begin_us)));
+            Tau_create_top_level_timer_if_necessary_task(copy_task_id);
+            Tau_add_metadata_for_task("TAU_TASK_ID", copy_task_id, copy_task_id);
+            Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, copy_task_id);
+            Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, copy_task_id);
+            Tau_metadata_task("ROCM_QUEUE_TYPE", "Memory Transfers", copy_task_id);
+            metric_set_gpu_timestamp(barrier_task_id, ((double)(begin_us)));
+            Tau_create_top_level_timer_if_necessary_task(barrier_task_id);
+            Tau_add_metadata_for_task("TAU_TASK_ID", barrier_task_id, barrier_task_id);
+            Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, barrier_task_id);
+            Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, barrier_task_id);
+            Tau_metadata_task("ROCM_QUEUE_TYPE", "Synchronization", barrier_task_id);
+        }
+      } else {
+          if (TauEnv_get_thread_per_gpu_stream()) {
+              // we locked when we created them, to they are consecutive
+              copy_task_id = dispatch_task_id + 1;
+              barrier_task_id = dispatch_task_id + 2;
+          } else {
+              // when profiling, we just need one thread per device, really.
+              copy_task_id = dispatch_task_id;
+              barrier_task_id = dispatch_task_id;
+          }
       }
       TAU_VERBOSE(" device_id(%d) queue_id(%lu)\n",
         record->device_id,
@@ -394,8 +402,10 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
         Tau_roctracer_hcc_event(record, copy_task_id, begin_us, end_us);  // on the gpu
       } else if (record->op == HIP_OP_ID_BARRIER) {
         Tau_roctracer_hcc_event(record, barrier_task_id, begin_us, end_us);  // on the gpu
-      } else {
+      } else if (record->op == HIP_OP_ID_DISPATCH) {
         Tau_roctracer_hcc_event(record, dispatch_task_id, begin_us, end_us);  // on the gpu
+      } else {
+        TAU_VERBOSE("# Unhandled event! \n");
       }
     } else {
       TAU_VERBOSE("Bad domain %d\n", record->domain);
@@ -432,7 +442,7 @@ int Tau_roctracer_init_tracing() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Start tracing routine
-extern "C" void Tau_roctracer_start_tracing() {
+extern void Tau_roctracer_start_tracing() {
   static int flag = Tau_roctracer_init_tracing();
   TAU_VERBOSE("# START #############################\n");
   // Enable HIP API callbacks
@@ -445,7 +455,7 @@ extern "C" void Tau_roctracer_start_tracing() {
 }
 
 // Stop tracing routine
-extern "C" void Tau_roctracer_stop_tracing() {
+extern void Tau_roctracer_stop_tracing() {
   if (RtsLayer::myThread() != 0) return;
   ROCTRACER_CALL(roctracer_disable_domain_callback(ACTIVITY_DOMAIN_HIP_API));
   ROCTRACER_CALL(roctracer_disable_domain_activity(ACTIVITY_DOMAIN_HIP_OPS));
@@ -455,7 +465,8 @@ extern "C" void Tau_roctracer_stop_tracing() {
 }
 
 // Flush tracing routine
-extern "C" void Tau_roctracer_flush_tracing() {
+extern void Tau_roctracer_flush_tracing() {
+  TAU_VERBOSE("# FLUSHING ASYNC! ###################\n");
   ROCTRACER_CALL(roctracer_flush_activity());
 }
 

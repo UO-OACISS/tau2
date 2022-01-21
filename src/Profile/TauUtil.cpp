@@ -25,8 +25,9 @@
 #include <string.h>
 #include <map>
 #include <set>
+#include <sstream>
 
-#ifdef TAU_USE_STDCXX11
+#if defined TAU_USE_STDCXX11 || defined TAU_WINDOWS
 #include <thread>
 #include <regex>
 #else
@@ -526,7 +527,6 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
 {
   char pluginpath[1024];
   char listpluginsnames[1024];
-  char *fullpath = NULL;
   char *token = NULL;
   char *plugin_name = NULL;
   //char *initFuncName = NULL;
@@ -546,7 +546,6 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
   token = strtok_r(listpluginsnames,":", &save_ptr);
   TAU_VERBOSE("TAU: Trying to load plugin with name %s\n", token);
 
-  fullpath = (char*)calloc(TAU_NAME_LENGTH, sizeof(char));
   std::set<std::string> plugins_seen;
 
   while(token != NULL)
@@ -558,24 +557,24 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
         continue;
     }
     TAU_VERBOSE("TAU: Loading plugin: %s\n", token);
-    strcpy(fullpath, "");
-    strcpy(fullpath,pluginpath);
     if (Tau_util_parse_plugin_token(token, &plugin_name, &plugin_args, &plugin_num_args)) {
       printf("TAU: Plugin name specification does not match form <plugin_name1>(<plugin_arg1>,<plugin_arg2>):<plugin_name2>(<plugin_arg1>,<plugin_arg2>) for: %s\n",token);
       return -1;
     }
     plugins_seen.insert(tmp);
 
+    std::stringstream ss;
 #ifndef TAU_WINDOWS
-    sprintf(fullpath, "%s/%s", pluginpath, plugin_name);
+    ss << pluginpath << "/" << plugin_name;
 #else
-    sprintf(fullpath, "%s\\%s", pluginpath, plugin_name);
+    ss << pluginpath << "\\" << plugin_name;
 #endif
+    std::string fullpath{ss.str()};
 
-    TAU_VERBOSE("TAU: Full path for the current plugin: %s\n", fullpath);
+    TAU_VERBOSE("TAU: Full path for the current plugin: %s\n", fullpath.c_str());
 
     /*Return a handle to the loaded dynamic object*/
-    void* handle = Tau_util_load_plugin(plugin_name, fullpath, plugin_manager);
+    void* handle = Tau_util_load_plugin(plugin_name, fullpath.c_str(), plugin_manager);
 
     if (handle) {
       /*If handle is NOT NULL, register the plugin's handlers for various supported events*/
@@ -610,7 +609,6 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
 
   Tau_metadata_push_to_plugins();
 
-  free(fullpath);
   return 0;
 }
 
@@ -820,7 +818,7 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
 #endif /* TAU_OMPT */
 }
 
-#ifndef TAU_USE_STDCXX11
+#if not defined TAU_USE_STDCXX11 && not defined TAU_WINDOWS
 /* C version of regex_match in case compiler doesn't support C++11 featues */
 /* Credit for logic: Laurence Gonsalves on stackoverflow.com */
 extern "C" int Tau_C_regex_match(const char * input, const char * rege)
@@ -854,7 +852,7 @@ extern "C" const char* Tau_check_for_matching_regex(const char * input)
 {
 
   TauInternalFunctionGuard protects_this_function;
-#ifdef TAU_USE_STDCXX11
+#if defined TAU_USE_STDCXX11 || defined TAU_WINDOWS
   for(std::list< std::string >::iterator it = regex_list.begin(); it != regex_list.end(); it++) {
     if(regex_match(input, std::regex(*it))) {
       return (*it).c_str();

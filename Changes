@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2021						   **
+**    Copyright 1997-2022						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Research Centre Juelich, Germany                                     **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
@@ -10,6 +10,19 @@
 
 Change log:
 ------------
+Version 2.31 changes (from 2.30):
+1. Updates for MPI on craycnl (CRAY_MPICH_PREFIX). 
+2. Updates for NEC VE for memory profiling. 
+3. Added support for PrgEnv-aocc and PrgEnv-nvidia on craycnl. 
+4. Added support for CUDA 11.4 and ROCm 4.3. 
+5. Updated TAU's LLVM selective instrumentation for -optCompInst. Supports C++. 
+6. Updated tau2slog2 for multi-threaded testcases. 
+7. Updated support for demangling C++ symbol names (TauBfd.cpp). 
+8. Added new AMD HIP examples (examples/gpu/hip) including MPI. 
+9. Updated TAU for Windows 11. 
+10. Added support for TAU_ANONYMIZE: creates tauprofile.xml and tau_anonymized_key.xml. 
+11. Added tau_join.sh a tool to decrypt and join the files created by TAU_ANONYMIZE.
+ 
 Version 2.30 changes (from 2.29):
 1. Added support for Fugaku Fujitsu FX system with Fujitsu compilers (-mpi -bfd=download) for Fugaku. 
 2. Added support for Intel OneAPI (TigerLake Intel GPUs) (-opencl=<dir> -level_zero=<dir>). See examples/gpu/oneapi.
@@ -25,6 +38,7 @@ Version 2.30 changes (from 2.29):
 12. Added support for Cray CNL (-arch=craycnl) with PrgEnv-gnu and AMD GPUs (Spock, ORNL). 
 13. Added initial support for a TAU LLVM plugin for supporting function level selective instrumentation.
 14. Added support for PDT and C/C++ for IBM AIX 7.2 (ibm64). 
+15. Added support for TAU's LLVM selective instrumentation plugin (examples/plugin/llvm). 
 
 Version 2.29 changes (from 2.28):
 1. Updated OMPT support.

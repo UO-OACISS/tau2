@@ -124,7 +124,7 @@ int Tau_plugin_skel_current_timer_exit(Tau_plugin_event_current_timer_exit_data_
     (*active_stream) << "{\"ts\": " << std::fixed << start
               << ", \"dur\": " << std::fixed << value
               << ", \"ph\": \"X\", \"tid\": 0"
-              << ", \"pid\": " << std::fixed << Tau_get_node()
+              << ", \"pid\": " << std::fixed << (Tau_get_node() == -1 ? 0 : Tau_get_node())
               << ", \"step\": " << std::fixed << step
               << ", " << data->name_prefix << "},\n";
     mtx.unlock();

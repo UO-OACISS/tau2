@@ -33,7 +33,7 @@ THE SOFTWARE.
 #include <iostream>
 #include <sstream>
 #include <vector>
-
+#include <set>
 
 #define PUBLIC_API __attribute__((visibility("default")))
 #define CONSTRUCTOR_API __attribute__((constructor))
@@ -65,6 +65,7 @@ void Tau_rocm_check_status(hsa_status_t status) {
   }
 }
 
+/*
 // Context stored entry type
 struct context_entry_t {
   bool valid;
@@ -72,11 +73,45 @@ struct context_entry_t {
   rocprofiler_group_t group;
   rocprofiler_callback_data_t data;
 };
+*/
+
+// kernel properties structure
+struct kernel_properties_t {
+  uint32_t grid_size;
+  uint32_t workgroup_size;
+  uint32_t lds_size;
+  uint32_t scratch_size;
+  uint32_t vgpr_count;
+  uint32_t sgpr_count;
+  uint32_t fbarrier_count;
+  hsa_signal_t signal;
+  uint64_t object;
+};
+
+// Context stored entry type
+struct context_entry_t {
+  bool valid;
+  bool active;
+  uint32_t index;
+  hsa_agent_t agent;
+  rocprofiler_group_t group;
+  rocprofiler_feature_t* features;
+  unsigned feature_count;
+  rocprofiler_callback_data_t data;
+  kernel_properties_t kernel_properties;
+  //HsaRsrcFactory::symbols_map_it_t kernel_name_it;
+  FILE* file_handle;
+};
 
 // Context callback arg
 struct callbacks_arg_t {
   rocprofiler_pool_t** pools;
 };
+
+static std::set<rocprofiler_pool_t*>& get_pool_set() {
+    static std::set<rocprofiler_pool_t*> theset;
+    return theset;
+}
 
 // Handler callback arg
 struct handler_arg_t {
@@ -97,7 +132,7 @@ void Tau_rocm_dump_context_entry(context_entry_t* entry, rocprofiler_feature_t* 
   const std::string kernel_name = entry->data.kernel_name;
   const rocprofiler_dispatch_record_t* record = entry->data.record;
 
-  if (!record) return; // there is nothing to do here. 
+  if (!record) return; // there is nothing to do here.
 
   fflush(stdout);
   queueid = entry->data.queue_id;
@@ -123,6 +158,63 @@ void Tau_rocm_dump_context_entry(context_entry_t* entry, rocprofiler_feature_t* 
   struct TauRocmEvent e(kernel_name, record->begin, record->end, taskid);
   TAU_VERBOSE("KERNEL: name: %s entry: %lu exit: %lu ...\n",
         kernel_name.c_str(), record->begin, record->end);
+  /* Capture these with counters! */
+  if (!TauEnv_get_thread_per_gpu_stream()) {
+    std::stringstream ss;
+    void* ue = nullptr;
+    double value;
+    std::string tmp;
+    ss << "Grid Size : " << kernel_name;
+    tmp = ss.str();
+    ue = Tau_get_userevent(tmp.c_str());
+    value = (double)(entry->kernel_properties.grid_size);
+    Tau_userevent_thread(ue, value, taskid);
+
+    ss.str("");
+    ss << "Work Group Size : " << kernel_name;
+    tmp = ss.str();
+    ue = Tau_get_userevent(tmp.c_str());
+    value = (double)(entry->kernel_properties.workgroup_size);
+    Tau_userevent_thread(ue, value, taskid);
+
+    ss.str("");
+    const AgentInfo* agent_info = HsaRsrcFactory::Instance().GetAgentInfo(entry->agent);
+    ss << "LDS Memory Size : " << kernel_name;
+    tmp = ss.str();
+    ue = Tau_get_userevent(tmp.c_str());
+    static const uint32_t lds_block_size = 128 * 4;
+    value = (double)((entry->kernel_properties.lds_size + (lds_block_size - 1)) & ~(lds_block_size - 1));
+    Tau_userevent_thread(ue, value, taskid);
+
+    ss.str("");
+    ss << "Scratch Memory Size : " << kernel_name;
+    tmp = ss.str();
+    ue = Tau_get_userevent(tmp.c_str());
+    value = (double)(entry->kernel_properties.scratch_size);
+    Tau_userevent_thread(ue, value, taskid);
+
+    ss.str("");
+    ss << "Vector Register Size (VGPR) : " << kernel_name;
+    tmp = ss.str();
+    ue = Tau_get_userevent(tmp.c_str());
+    value = (double)((entry->kernel_properties.vgpr_count + 1) * agent_info->vgpr_block_size);
+    Tau_userevent_thread(ue, value, taskid);
+
+    ss.str("");
+    ss << "Scalar Register Size (SGPR) : " << kernel_name;
+    tmp = ss.str();
+    ue = Tau_get_userevent(tmp.c_str());
+    value = (double)((entry->kernel_properties.sgpr_count + agent_info->sgpr_block_dflt) * agent_info->sgpr_block_size);
+    Tau_userevent_thread(ue, value, taskid);
+
+    ss.str("");
+    ss << "fbarrier count : " << kernel_name;
+    tmp = ss.str();
+    ue = Tau_get_userevent(tmp.c_str());
+    value = (double)(entry->kernel_properties.fbarrier_count);
+    Tau_userevent_thread(ue, value, taskid);
+  }
+
 #ifdef DEBUG_PROF
   e.printEvent();
   cout <<endl;
@@ -344,6 +436,7 @@ void Tau_rocm_initialize() {
                                                 &pool, 0/*ROCPROFILER_MODE_SINGLEGROUP*/, &properties);
     Tau_rocm_check_status(status);
     callbacks_arg->pools[gpu_id] = pool;
+    get_pool_set().insert(pool);
   }
 
   rocprofiler_queue_callbacks_t callbacks_ptrs{};
@@ -363,6 +456,24 @@ void Tau_rocm_cleanup() {
   status = rocprofiler_pool_close(pool);
   Tau_rocm_check_status(status);
 #endif
+}
+
+void Tau_rocprofiler_pool_flush() {
+    if (pthread_mutex_lock(&rocm_mutex) != 0) {
+      perror("pthread_mutex_lock");
+      abort();
+    }
+
+    for (auto p : get_pool_set()) {
+        TAU_VERBOSE("Flushing pool %p\n");
+        hsa_status_t status = rocprofiler_pool_flush(p);
+        Tau_rocm_check_status(status);
+    }
+
+    if (pthread_mutex_unlock(&rocm_mutex) != 0) {
+      perror("pthread_mutex_unlock");
+      abort();
+    }
 }
 
 // Tool constructor

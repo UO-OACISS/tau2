@@ -73,6 +73,65 @@ clone()
   git clone "$src" "$dst"
 }
 
+# This function checks the cmake version and even does a "module load cmake" if we don't have a required version. It takes 3 args: major minor "string" and returns 0 if success
+# and 1 if error
+#check_cmake 3 14 "LLVM plugin"
+#result=$?
+#if [ $result -eq 0 ]; then
+#  echo "Success: building LLVM plugin"
+#fi
+function check_cmake() {
+  #check if CMake exists
+  cmake_major_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f1`
+  cmake_minor_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f2 `
+  cmake_cmd=`which cmake`
+ 
+  echo "CMAKE VERSION: $cmake_major_version $cmake_minor_version"
+  echo "WHICH CMAKE: $cmake_cmd"
+  load_cmake=0
+ 
+  if [ "x$cmake_cmd" = "x" ] ||  (($cmake_major_version < $1))  ; then
+    load_cmake=1
+  else 
+    if (($cmake_major_version == $1))  &&  (($cmake_minor_version < $2)) ; then 
+      load_cmake=1 
+    fi
+  fi
+ 
+  # Try loading the cmake module if it exists
+  if (($load_cmake == 1)); then 
+      echo "ERROR: cmake version $1.$2+ is required for $3. Trying module load cmake."
+      module avail cmake 1> /dev/null 2>&1 
+      result=$?
+      if [ $result -eq 0 ]; then
+        module load cmake; 
+      fi; 
+  fi 
+  cmake_major_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f1`; cmake_minor_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f2 `; cmake_cmd=`which cmake`
+  if (($cmake_major_version == $1)) ; then 
+    if (($cmake_minor_version >= $2)) ; then 
+      echo "TAU: CMAKE version check passes. Using $cmake_major_version.$cmake_minor_version  "
+      return 0
+    else 
+      echo "ERROR: cmake version $1.$2+ is required for $3. Please load cmake version $1.$2+ and retry"
+      return 1
+    fi
+  else
+# cmake major is != $1
+    if (($cmake_major_version < $1)); then
+      echo "ERROR: cmake version $1.$2+ is required for $3. Even after module load cmake, this version is inadequate. Please load cmake version $1.$2+ and retry"
+      return 1
+    else
+# cmake major > $1
+      echo "Success: Using CMAKE version: $cmake_major_version.$cmake_minor_version"
+      return 0
+    fi
+  fi 
+# should not have reached here
+  return 1
+}
+
+
 # Install SOS dependencies such as EVPath
 installsosdeps()
 {
@@ -92,16 +151,12 @@ installsosdeps()
  P=`pwd`
 
  #check if CMake exists
- cmake_major_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f1`
- cmake_cmd=`which cmake`
-
- #echo "CMAKE VERSION: $cmake_major_version"
- #echo "WHICH CMAKE: $cmake_which"
-
- if [ "x$cmake_cmd" = "x" ] || [ $cmake_major_version -lt 3 ] ; then
+ check_cmake 3 0 "SOS"
+ result=$?
+ if [ $result -eq 1 ]; then 
    echo 'ERROR: cmake version 3 or higher required to build SOS dependencies, exiting.'
    exit 1;
- fi
+ fi 
 
  echo "Install SOS deps"
  if [ -d chaos ]; then
@@ -574,7 +629,7 @@ usage() {
     echo "Compiler Options:"
     echo "-c++=<compiler>  ............................ specify the C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
-    echo "    armclang++|clang++|bgclang++|hcc|g++-*|icpc|scgcc|scpathCC|pathCC"
+    echo "    armclang++|clang++|bgclang++|hcc|g++-*|icpc|icpx|scgcc|scpathCC|pathCC"
     echo "    nvcpp|orCC|hipcc]."
     echo "-cc=<compiler> ................................ specify the C compiler."
     echo "     options [cc|gcc|clang|bgclang|gcc4|scgcc|KCC|pgcc|guidec|*xlc*|ecc|"
@@ -586,7 +641,7 @@ usage() {
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
-    echo "                                     g++-*|g++4|icpc|scgcc|pathCC|orCC]."
+    echo "                                     g++-*|g++4|icpc|icpx|scgcc|pathCC|orCC]."
     echo "-useropt='<param>' .......... arguments to compilers (defaults to -O2)."
     echo ""
     echo "Installation Options:"
@@ -611,10 +666,6 @@ usage() {
     echo "-openmp ........................................... Use OpenMP threads."
     echo "-opari .................................................... Use Opari2."
     echo "-ompt ............................................ Enable OMPT support."
-#   echo "-ompt=<dir | download | download-tr4 (default) | download-tr6 > ...... "
-#   echo "    Specify a libiomp5 directory or download."
-#   echo "    Note: 'download' will download and build the library automatically."
-#   echo "    Note: 'download' only supports the LLVM/Intel OpenMP runtime."
     echo ""
     echo "OpenACC Options:"
     echo "-openacc ................................................... Use OpenACC"
@@ -682,7 +733,7 @@ for arg in "$@"; do
         echo "  where [OPTIONS] are:"
         echo "-c++=<compiler>  ............................ specify the C++ compiler."
         echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
-        echo "       armclang++|clang++|bgclang++|hcc|hipcc|icpc|scgcc|scpathCC|pathCC|"
+        echo "       armclang++|clang++|bgclang++|hcc|hipcc|icpc|icpx|scgcc|scpathCC|pathCC|"
 	ecbo "       orCC|hipcc]."
         echo "-cc=<compiler> ................................ specify the C compiler."
         echo "   options [cc|gcc|gcc4|scgcc|clang|hcc|pgcc|guidec|*xlc*|ecc|pathcc|orcc|"
@@ -701,7 +752,7 @@ for arg in "$@"; do
         echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
         echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
         echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
-        echo "                        clang++|bgclang++|g++4|icpc|scgcc|pathCC|orCC]."
+        echo "                        clang++|bgclang++|g++4|icpc|icpx|scgcc|pathCC|orCC]."
         echo "-pdtcompdir=<compilerdir> . specify a different PDT compiler directory."
         echo "-pdtarchdir=<archdir> . specify a different PDT architecture directory."
         echo "-useropt='<param>' .......... arguments to compilers (defaults to -O2)."
@@ -725,10 +776,6 @@ for arg in "$@"; do
         echo "-oparicomp=<compiler>...Specify which compiler sutie to compile Opari2."
         echo "     options [gcc|ibm|intel|pathscale|pgi|studio]."
         echo "-ompt ............................................ Enable OMPT support. "
-#       echo "-ompt=<dir | download | download-tr4 (default) | download-tr6 > ...... "
-#       echo "    Specify a libiomp5 directory or download."
-#       echo "    Note: 'download' will download and build the library automatically."
-#       echo "    Note: 'download' only supports the LLVM/Intel OpenMP runtime."
         echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
 	echo "-likwid=<dir> ............................. Specify location of LIKWID."
         echo "-beacon=<dir> ............... Specify location of BEACON."
@@ -1028,6 +1075,8 @@ tcltk=yes
 tcltkfile="/"
 kai=no
 pgi=no
+aocc=no
+cray_nvhpc=no
 nvhpc=no
 craymic=no
 fujitsu=no
@@ -1155,24 +1204,15 @@ java=no
 asmdex=download
 openmp=no
 ompt=no
-ompt_header=omp-tools.h
 omptlib=
 omptlibrary=-lomp
 omptenabled=no
-ompt_use_tr4_version=no
-ompt_use_tr6_version=no
 ompt_compiler_support=no
 download_ompt=no
 download_ompt_5_0=no
-download_ompt_tr6=no
-download_ompt_tr4=no
 ompt_version_selected=no
 ompt_compiler_support=no
 install_ompt=no
-ompt_use_tr4_version=no
-ompt_use_tr6_version=no
-ompt_use_tr7_version=no
-ompt_use_v5_version=no
 xlsmp=no
 ibmxlc=no
 ibmxlc_r=no
@@ -1208,6 +1248,7 @@ use_opencl=no
 use_openacc=no
 openacc_opt=""
 cupti=no
+build_llvm_plugin=no
 strsignal_ok=no
 android_version=4.4
 android_platform=19
@@ -1228,7 +1269,7 @@ for arg in "$@"; do
 
 	-cc=*)
 	    myarg=`echo $arg | sed 's/-cc=//'`
-	    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = gcc-5 -o $myarg = gcc-6 -o $myarg = gcc-7 -o $myarg = gcc-8 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = hcc -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc -o $myarg = armclang  -o $myarg = ncc -o $myarg = hipcc -o $myarg = nvc ]
+	    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = gcc-5 -o $myarg = gcc-6 -o $myarg = gcc-7 -o $myarg = gcc-8 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = icx -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = hcc -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc -o $myarg = armclang  -o $myarg = ncc -o $myarg = hipcc -o $myarg = nvc ]
 	    then
 		c_compiler=$myarg
 
@@ -1241,7 +1282,7 @@ for arg in "$@"; do
 		testmp=`echo $myarg | sed -e 's/^mp//'`
 		if [ "y$testxlc" = "y$myarg"  -a "y$testmp" = "y$myarg" ]
 		then
-		    echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'gcc-*', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpc_icc', 'mpifcc', 'mpifccpx', 'clang', 'hcc', 'bgclang', 'mpicc', 'mcc', 'oshcc', 'armclang', 'ncc', 'hipcc', or 'nvc'"
+		    echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'gcc-*', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'icx', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpc_icc', 'mpifcc', 'mpifccpx', 'clang', 'hcc', 'bgclang', 'mpicc', 'mcc', 'oshcc', 'armclang', 'ncc', 'hipcc', or 'nvc'"
 		    #       exit 1
 		else
 		    if [ "y$testxlc" != "y$myarg" ]
@@ -2209,96 +2250,6 @@ for arg in "$@"; do
 	    #download_ompt=yes
 	    shift
 	    ;;
-	-ompt=download-tr4)
-            echo "ompt=download-tr4"
-	    openmp=yes
-	    ompt=yes
-	    download_ompt=yes
-      ompt_use_tr4_version=yes
-      ompt_header=ompt.h
-	    shift
-	    ;;
-	-ompt=download-tr6)
-            echo "ompt=download-tr6"
-	    openmp=yes
-	    ompt=yes
-	    download_ompt=yes
-      ompt_use_tr6_version=yes
-      ompt_header=ompt.h
-	    shift
-	    ;;
-
-    # This option indicates that the OMPT path specified in -ompt=* is a TR4 version.
-    # TAU Commander uses this option because it downloads and builds its own version of
-    # the LLVM OpenMP runtime.
-
-    -ompt-tr4=download)
-	    openmp=yes
-	    ompt=yes
-	    download_ompt=yes
-      ompt_use_tr4_version=yes
-      ompt_header=ompt.h
-        shift
-        ;;
-
-    -ompt-tr4=*)
-        openmp=yes
-        ompt=yes
-        ompt_use_tr4_version=yes
-        ompt_header=ompt.h
-        ompt_dir=`echo $arg | sed -e 's/-ompt-tr4=//'`
-        if [ ! -d $ompt_dir ]
-        then
-          echo "Error: OMPT directory $ompt_dir cannot be accessed"
-          exit 1
-        fi
-	    omptlib="${ompt_dir}/lib"
-        shift
-        ;;
-
-    -ompt-tr4*)
-        openmp=yes
-        ompt=yes
-        ompt_use_tr4_version=yes
-        ompt_header=ompt.h
-        shift
-        ;;
-
-    # This option indicates that the OMPT path specified in -ompt=* is a TR6 version.
-    # TAU Commander uses this option because it downloads and builds its own version of
-    # the LLVM OpenMP runtime.
-
-    -ompt-tr6=download)
-	    openmp=yes
-	    ompt=yes
-	    download_ompt=yes
-      ompt_use_tr6_version=yes
-      ompt_header=ompt.h
-        shift
-        ;;
-
-    -ompt-tr6=*)
-        openmp=yes
-        ompt=yes
-        ompt_use_tr6_version=yes
-        ompt_header=ompt.h
-        ompt_dir=`echo $arg | sed -e 's/-ompt-tr6=//'`
-        if [ ! -d $ompt_dir ]
-        then
-          echo "Error: OMPT directory $ompt_dir cannot be accessed"
-          exit 1
-        fi
-	    omptlib="${ompt_dir}/lib"
-        shift
-        ;;
-
-    -ompt-tr6*)
-        openmp=yes
-        ompt=yes
-        ompt_use_tr6_version=yes
-        ompt_header=ompt.h
-        shift
-        ;;
 
 	-ompt=*)
 	    openmp=yes
@@ -2879,7 +2830,7 @@ for arg in "$@"; do
               echo  "Error: Cannot access Level Zero libze_loader.so in $l0dir/lib or $l0dir/lib64 or $l0dir/x86_64-linux-gnu"
               exit 1
 	    fi
-	    if [ ! -r $l0_lib_dir/libdrm.so -a ! -r /usr/lib/x86_64-linux-gnu/libdrm.so ]; then
+	    if [ ! -r $l0_lib_dir/libdrm.so -a ! -r /usr/lib/x86_64-linux-gnu/libdrm.so -a ! -r /usr/lib64/libdrm.so ]; then
 
               echo  "Error: TAU requires libdrm.so to be installed in $l0_lib_dir. Please install libdrm-devel (Centos) or libdrm-dev (Ubuntu) package."
               exit 1
@@ -3251,7 +3202,7 @@ configure_perfexplorer () {
     cp ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel ${targetdir}/etc/.
     cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.derby ${targetdir}/etc/.
     cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.h2 ${targetdir}/etc/.
-    cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.mysql ${targetdir}/etc/.
+#    cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.mysql ${targetdir}/etc/.
     cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.oracle ${targetdir}/etc/.
     cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.postgresql ${targetdir}/etc/.
     cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.db2 ${targetdir}/etc/.
@@ -3359,7 +3310,7 @@ configure_perfexplorer () {
 
     cp ${tauroot}/tools/src/contrib/derby.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/h2.jar $JARTARGET
-    cp ${tauroot}/tools/src/contrib/mysql.jar $JARTARGET
+#    cp ${tauroot}/tools/src/contrib/mysql.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/postgresql.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/xerces.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/mesp.jar $JARTARGET
@@ -4022,6 +3973,16 @@ case $machine in
 	    pgi=yes
 	    default_fortran=pgi
 	    fixmakeargs="$fixmakeargs PGI COMPINST_PGI"
+	elif [ "x$PE_ENV" = xNVIDIA ] ; then
+	    tauoptions="${tauoptions}-nvidia"
+	    cray_nvhpc=yes
+	    default_fortran=nvfortran
+	    fixmakeargs="$fixmakeargs NVIDIA NVFORTRAN"
+	elif [ "x$PE_ENV" = xAOCC ] ; then
+	    tauoptions="${tauoptions}-aocc"
+	    aocc=yes
+	    default_fortran=flang
+	    fixmakeargs="$fixmakeargs AOCC COMPINST_LLVM"
         elif [ "x$PE_ENV" = xGNU -a "x$CLANG_HOME" != "x" ]; then
 	    llvm=yes
 	    tauoptions="${tauoptions}-llvm"
@@ -4086,7 +4047,9 @@ case $machine in
             if [ "x$PE_MVAPICH2_FIXED_PRGENV" = "x" ]; then
 	      fixmakeargs="$fixmakeargs CRAYCNL_CCE"
             else
-	      fixmakeargs="$fixmakeargs CRAYCNL_MVAPICH2"
+              if [ "x$CRAY_MPICH_PREFIX" = "x" ]; then
+	        fixmakeargs="$fixmakeargs CRAYCNL_MVAPICH2"
+              fi
             fi
 
 	    touch conf_test.c
@@ -4618,13 +4581,13 @@ mpif90_exe=mpif90
 intel_cxx=`which mpiicpc 2>/dev/null | wc -l`
 if [ $intel_cxx = 1 ] ; then
     echo "detected Intel in path"
-    if [ "x$cxx_compiler" = "xicpc" -o "x$cxx_compiler" = "xmpiicpc" ] ; then
+    if [ "x$cxx_compiler" = "xicpc" -o "x$cxx_compiler" = "xicpx" -o "x$cxx_compiler" = "xmpiicpc" ] ; then
         echo "using Intel MPI wrappers (with Intel compilers)"
         mpicxx_exe=mpiicpc
         mpicc_exe=mpiicc
         mpif90_exe=mpiifort
     else
-        echo "WARNING: Intel compilers found in your path, but C++ compiler not specified.  Whatever is detected in mpicxx will be used as the compiler.  To force Intel compilers, please pass -c++=icpc or -c++=mpiicpc"
+        echo "WARNING: Intel compilers found in your path, but C++ compiler not specified.  Whatever is detected in mpicxx will be used as the compiler.  To force Intel compilers, please pass -c++=icpc, -c++=icpx, or -c++=mpiicpc"
         issue_intel_warning=yes
     fi
 fi
@@ -4637,6 +4600,8 @@ case "x$cxx_compiler" in
   "xmpiicpc")
     mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
   "xicpc")
+    mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
+  "xicpx")
     mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
   "xxlC"*)
     mpi_wrapper_mpicxx_or_mpiicpc=yes ;;
@@ -4801,11 +4766,13 @@ case $cxx_compiler in
         llvm=yes
         fixmakeargs="$fixmakeargs CLANG COMPINST_LLVM"
         tauoptions="${tauoptions}-clang"
-	    if [ $machine = apple ]; then
-	        gnu=yes
+	if [ $machine = apple ]; then
+	    gnu=yes
             fixmakeargs="$fixmakeargs taugcclibdir=/usr/lib taugccstdcxxlibdir=/usr/lib"
             fixmakeargs="$fixmakeargs APPLECXX"
-
+        else
+	# We currently do not support building the TAU LLVM plugin for macOS. This may change in the future. 
+	    build_llvm_plugin=yes
         fi
         if [ $openmp = yes ]; then
           fixmakeargs="$fixmakeargs CLANG_OPENMP"
@@ -5379,6 +5346,9 @@ case $cxx_compiler in
 		if [ $machine = apple ]; then
 		    # MPI on Apple OS X has issues with shared objects
                     fixmakeargs="$fixmakeargs NOSHARED"
+                else
+	        # We currently do not support building the TAU LLVM plugin for macOS. This may change in the future. 
+	            build_llvm_plugin=yes
 		fi
 		;;
             *)
@@ -5392,6 +5362,26 @@ case $cxx_compiler in
 	;;
 
 esac
+
+# Should we build the TAU selective instrumentation plugin for LLVM?
+if [ $build_llvm_plugin = yes ]; then
+  check_cmake 3 14 "LLVM plugin"
+  result=$?
+  if [ $result -eq 0 ]; then
+    fixmakeargs="$fixmakeargs tau_cmake=$cmake_cmd TAU_BUILD_LLVM_PLUGIN"
+  # proceed with building the LLVM plugin. But check if the compiler or the LLVM source directories have been specified
+    if [ "x$llvm_src_dir" = "x" ]; then
+      llvm_src_dir=`which clang | sed -e 's@bin/clang@@' `
+      echo "TAU: Using LLVM source directory -llvm_src=$llvm_src_dir for building the TAU LLVM plugin."
+      fixmakeargs="$fixmakeargs llvm_src_dir=$llvm_src_dir LLVM_SRC_DIR"
+    fi
+    if [ "x$llvm_cxx" = "x" ]; then 
+      llvm_cxx=`which g++ `
+      echo "TAU: Using -llvm_cxx=$llvm_cxx as the compiler to build the TAU LLVM selective instrumentation plugin. "
+      fixmakeargs="$fixmakeargs llvm_cxx=$llvm_cxx LLVM_CXX"
+    fi
+  fi
+fi
 
 if [ $mpc = yes ]; then
   plugins=no
@@ -5806,8 +5796,12 @@ EOF
             else
 	      mpiinc=$CRAY_MPICH2_DIR/include
             fi
-	    if [ ! -r $mpiinc ] ; then
-		     mpiinc=$CRAY_MPICH_DIR/include
+            if [ ! -r $mpiinc ] ; then
+              if [ "x$CRAY_MPICH_DIR" != "x" ]; then
+                mpiinc=$CRAY_MPICH_DIR/include
+              elif [ "x$CRAY_MPICH_PREFIX" != "x" ]; then
+                mpiinc=$CRAY_MPICH_PREFIX/include
+              fi
             fi
             if [ ! -r $mpiinc ] ; then
 		    echo "ERROR: $CRAY_MPICH_DIR/include (CRAY_MPICH(2)_DIR/include) is not readable. Please configure with -mpiinc=<dir> to point to the MPI include directory."
@@ -6011,8 +6005,16 @@ then
 	    mpilib=/opt/xt-mpt/default/mpich2-64/P2/lib
 	    ;;
 	craycnl)
-	    mpilib=$MPICH_DIR/lib
-	    ;;
+            if [ "x$MPICH_DIR" = "x" ]; then
+              if [ "x$CRAY_MPICH_PREFIX" != "x" ]; then
+                mpilib=$CRAY_MPICH_PREFIX/lib
+              else
+                echo "TAU: mpilib is not set."
+              fi
+            else
+              mpilib=$MPICH_DIR/lib
+            fi
+            ;;
 	solaris2*)
 	    mpilib=/opt/SUNWhpc/lib
 	    ;;
@@ -6356,7 +6358,7 @@ if [ $papi = yes ] ; then
 		    papisubdir=xt-cnl/lib
 		    fixmakeargs="$fixmakeargs papisubdir=xt-cnl/lib"
                 else
-		    if [ -f $papidir/lib64/libpapi.so -a $papidir != "/usr" ] ; then
+		    if [ -f $papidir/lib64/libpapi.so ] ; then
 			papisubdir=lib64
 			fixmakeargs="$fixmakeargs papisubdir=lib64"
 		    else
@@ -7622,8 +7624,10 @@ if [ "x$download_unwind" = xyes ] ; then
         elif [ "$machine" = "craycnl" ] ; then
           if [ "x$CRAY_PE_USE_CLANG" != "x" ]; then
 # use Cray PE clang compiler
-            unwind_c_compiler=clang
-            unwind_cxx_compiler=clang++
+           # unwind_c_compiler=clang
+           # unwind_cxx_compiler=clang++
+            unwind_c_compiler=${CRAY_PE_USE_CLANG}
+            unwind_cxx_compiler=${CRAY_PE_USE_CLANG}++
           fi
 	  ./configure --prefix=${unwind_dir}  CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared --disable-minidebuginfo > ${libunwind_log} 2>&1
         else
@@ -7684,34 +7688,19 @@ if [ $ompt = yes -a $download_ompt = no ] ; then
 echo "Checking Compiler OMPT support : "
 touch ompt_ver_test.c
 cat <<EOF > ompt_ver_test.c
-#if defined(VERTEST_OMPT_TR7) || defined(VERTEST_OMPT_5_0)
 #include "omp-tools.h"
-#endif /* VERTEST_OMPT_TR7 || VERTEST_OMPT_5_0 */
-#if defined(VERTEST_OMPT_TR6)
-#include "ompt.h"
-#endif /* VERTEST_OMPT_TR6 */
 #include "omp.h"
 #include "stdio.h"
 
-#if !defined(VERTEST_OMPT_5_0) && !defined(VERTEST_OMPT_TR7) && !defined(VERTEST_OMPT_TR6)
+#if !defined(VERTEST_OMPT_5_0)
 #error "No OMPT Version was chosen"
 #endif
 
 void on_ompt_callback_mutex_acquire(
-#if defined(VERTEST_OMPT_5_0) || defined(VERTEST_OMPT_TR7)
 ompt_mutex_t kind,
-#endif /* VERTEST_OMPT_5_0)|| VERTEST_OMPT_5_0 */
-#if defined(VERTEST_OMPT_TR6)
-ompt_mutex_kind_t kind,
-#endif /* VERTEST_OMPT_TR6 */
 unsigned int hint,
 unsigned int impl,
-#if defined(VERTEST_OMPT_5_0)
 ompt_wait_id_t wait_id,
-#endif /* VERTEST_OMPT_5_0 */
-#if defined(VERTEST_OMPT_TR7) || defined(VERTEST_OMPT_TR6)
-omp_wait_id_t wait_id,
-#endif /* VERTEST_OMPT_TR7 || VERTEST_OMPT_TR6 */
 const void *codeptr_ra)
 {
     printf("Useless Callback\n");
@@ -7719,9 +7708,7 @@ const void *codeptr_ra)
 
 int ompt_initialize(
 ompt_function_lookup_t lookup,
-#if defined(VERTEST_OMPT_5_0)
 int initial_device_num,
-#endif /* VERTEST_OMPT_5_0 */
 ompt_data_t* tool_data)
 {
     ompt_set_callback_t ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
@@ -7752,12 +7739,6 @@ int main (int argc, char * argv[])
     #if defined(VERTEST_OMPT_5_0)
     printf("Testing Version 5.0\n");
     #endif /* VERTEST_OMPT_5_0 */
-    #if defined(VERTEST_OMPT_TR7)
-    printf("Testing Version TR7\n");
-    #endif /* VERTEST_OMPT_TR7 */
-    #if defined(VERTEST_OMPT_TR6)
-    printf("Testing Version TR6\n");
-    #endif /* VERTEST_OMPT_TR6 */
     #pragma omp parallel
     {
         printf ("Hi from thread %d\n", omp_get_thread_num());
@@ -7798,76 +7779,24 @@ fi
 
 #This deletion is here in case the file was left behind from a previous call to configure
 rm -f ./ompt_ver_test
-if [ $ompt_use_tr4_version = "no" -a $ompt_use_tr6_version = "no" ] ; then
-
-    #checking for OMPT Version 5.0
-    echo -ne "\t Checking for version 5.0 ..."
-    $c_compiler $openmp_flag $openmp_INC $openmp_LINK $orig_useropt -DVERTEST_OMPT_5_0 ompt_ver_test.c -o ompt_ver_test $openmp_lib 1>/dev/null 2>&1
-    result=$?
-    if [ $machine != craycnl ] ; then
-      LD_LIBRARY_PATH=$omptlib:$LD_LIBRARY_PATH ./ompt_ver_test 1>/dev/null 2>&1
-      result=$?
-    fi
-    if [ $result = "0" ]; then
-        echo " yes"
-        ompt_compiler_support=yes
-        download_ompt=no
-        ompt_use_v5_version=yes
-    else
-        echo " no"
-    fi
-    rm -f ./ompt_ver_test
+#checking for OMPT Version 5.0
+echo -ne "\t Checking for version 5.0 ..."
+$c_compiler $openmp_flag $openmp_INC $openmp_LINK $orig_useropt -DVERTEST_OMPT_5_0 ompt_ver_test.c -o ompt_ver_test $openmp_lib 1>/dev/null 2>&1
+result=$?
+if [ $machine != craycnl ] ; then
+  LD_LIBRARY_PATH=$omptlib:$LD_LIBRARY_PATH ./ompt_ver_test 1>/dev/null 2>&1
+  result=$?
 fi
-
-if [ $ompt_compiler_support = no -a $ompt_use_tr4_version = no -a $ompt_use_tr6_version = no ] ; then
-
-    echo -ne "\t Checking for version TR7 ..."
-    $c_compiler $openmp_flag $openmp_INC $openmp_LINK $orig_useropt -DVERTEST_OMPT_TR7 ompt_ver_test.c -o ompt_ver_test $openmp_lib 1>/dev/null 2>&1
-    result=$?
-    if [ $machine != craycnl ] ; then
-      OLD_LD_PRELOAD=$LD_PRELOAD
-      unset LD_PRELOAD
-      export LD_PRELOAD
-      LD_LIBRARY_PATH=$omptlib:$LD_LIBRARY_PATH ./ompt_ver_test 1>/dev/null 2>&1
-      result=$?
-      LD_PRELOAD=$OLD_LD_PRELOAD
-# OMPT test is sensitive to LD_PRELOADED libraries. Reset it.
-    fi
-    if [ $result = "0" ]; then
-        echo " yes"
-        ompt_compiler_support=yes
-        download_ompt=no
-        ompt_use_tr7_version=yes
-    else
-        echo " no"
-    fi
-    rm -f ./ompt_ver_test
+if [ $result = "0" ]; then
+    echo " yes"
+    ompt_compiler_support=yes
+    download_ompt=no
+else
+    echo " no"
 fi
+rm -f ./ompt_ver_test
 
 if [ $ompt_compiler_support = no ] ; then
-    #checking for OMPT Version TR6
-    echo -ne "\t Checking for version TR6 ..."
-    $c_compiler $openmp_flag $openmp_INC $openmp_LINK $orig_useropt -DVERTEST_OMPT_TR6 ompt_ver_test.c -o ompt_ver_test $openmp_lib 1>/dev/null 2>&1
-    result=$?
-    if [ $machine != craycnl ] ; then
-      LD_LIBRARY_PATH=$omptlib:$LD_LIBRARY_PATH ./ompt_ver_test 1>/dev/null 2>&1
-      result=$?
-    fi
-    if [ $result = "0" ]; then
-        echo " yes"
-        ompt_compiler_support=yes
-        download_ompt=no
-        ompt_use_tr6_version=yes
-        ompt_header=ompt.h
-    else
-        echo " no"
-    fi
-    rm -f ./ompt_ver_test
-fi
-
-rm -f ./ompt_ver_test.c
-if [ $ompt_compiler_support = no ] ; then
-    if [ $ompt_use_tr6_version = no ] ; then
         echo -n "Compiler does not support OMPT ... "
         if [ $gnu = yes -o $llvm = yes -o $intel = yes ] ; then
             echo "Downloading LLVM-OpenMP"
@@ -7878,17 +7807,6 @@ if [ $ompt_compiler_support = no ] ; then
             (>&2 echo 'ERROR: OMPT Requested, but there is no way to provide it.')
             exit 1;
         fi
-    else
-        echo -n "Compiler does not support OMPT TR6 ... "
-        if [ $gnu = yes -o $llvm = yes -o $intel = yes ] ; then
-            echo "Downloading LLVM-OpenMP"
-            download_ompt=yes
-        else
-            echo "LLVM-OpenMP does not support detected compiler"
-            (>&2 echo 'ERROR: OMPT TR6 Requested, but there is no way to provide it.')
-            exit 1;
-        fi
-    fi
 elif [ "x$ompt_dir" != "x" ] ; then
     install_ompt=yes
 fi
@@ -7915,49 +7833,17 @@ if [ "x$download_ompt" = "xyes" -a "x$ompt_use_5_0_version" = "xyes" ] ; then
   ompt_version_selected=yes
 fi
 
-if [ "x$download_ompt" = "xyes" -a "x$ompt_use_tr6_version" = "xyes" ] ; then
-  download_ompt_tr6=yes
-  ompt_version_selected=yes
-fi
-
-if [ "x$download_ompt" = "xyes" -a "x$ompt_use_tr4_version" = "xyes" ] ; then
-  download_ompt_tr4=yes
-  ompt_version_selected=yes
-fi
-
 #Default to ompt 5.0
 if [ "x$download_ompt" = "xyes" -a "x$ompt_version_selected" = "xno" ] ; then
   ompt_use_5_0_version=yes
   download_ompt_5_0=yes
 fi
 
-
 if [ $ompt = yes ]; then
   tauoptions="${tauoptions}-ompt"
-  if [ "x$download_ompt_tr4" = "xyes" ] ; then
-      tauoptions="${tauoptions}-tr4"
-  elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
-      tauoptions="${tauoptions}-tr6"
-  elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
-      tauoptions="${tauoptions}-tr7"
-  elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
-      tauoptions="${tauoptions}-v5"
-  fi
   if [ "x$CRAY_CPU_TARGET" != "x" -a "x$PE_ENV" = "xINTEL" ] ; then
     fixmakeargs="$fixmakeargs INTEL_CRAY_MIC_KNL_OMPT"
   fi
-fi
-
-if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
-  libomp_oss=LLVM-openmp-master
-  libomp_osstgz=LLVM-openmp-ompt-tr6.tar.gz
-  libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
-fi
-
-if [ "x$download_ompt_tr4" = "xyes" ] ; then
-  libomp_oss=LLVM-openmp-0.2
-  libomp_osstgz=${libomp_oss}.tar.gz
-  libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
 fi
 
 if [ "x$download_ompt_5_0" = "xyes" ] ; then
@@ -7966,28 +7852,11 @@ if [ "x$download_ompt_5_0" = "xyes" ] ; then
   libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
 fi
 
+libomp_oss_name=iomp5
 
-  libomp_oss_name=iomp5
 if [ "${omptlib}" = "" ] ; then
-    # TODO: Please remove this check once TR6 (and newer) become the only supported OMPT version(s).
-    # If we do not have separate directories for OMPT (legacy) and OMPT-TR6, then there are issues
-    # in installing both together for comparison purposes.
-    if [ "x$download_ompt_tr4" = "xyes" ] ; then
-        libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable-tr4
-        libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable-tr4
-    elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
-        libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable-tr6
-        libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable-tr6
-    elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
-        libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable-tr7
-        libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable-tr7
-    elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
-        libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable-v5
-        libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable-v5
-    else
-        libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable
-        libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable
-    fi
+    libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable
+    libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable
 else
     libomp_ossdir_shared=${omptlib}
     libomp_ossdir_static=${omptlib}
@@ -8009,9 +7878,6 @@ if [ "x$ompt_dir" != "x" -a -d "$ompt_dir" -a "$libomp_osstgz" != "" ] ; then
   if [ -r $ompt_dir/$libomp_osstgz ]; then
     echo "NOTE: Copying $ompt_dir/$libomp_osstgz"
     cp $ompt_dir/$libomp_osstgz .
-    #if [ "x$download_ompt" != "xyes" ] ; then
-    #  download_ompt_tr6=yes
-    #fi
   fi
 fi
 
@@ -8036,8 +7902,9 @@ if [ "x$download_ompt" = "xyes" ] ; then
     preomptdir=`pwd`
 
     #check Cmake exists
-    cmake_cmd=`which cmake`
-    if [ "x$cmake_cmd" = "x" ] ; then
+    check_cmake 2 8 "OMPT support"
+    result=$?
+    if [ $result -eq 1 ]; then
       echo 'ERROR: cmake version 2.8 or higher required to build OMPT support.'
       exit 1;
     fi
@@ -8142,7 +8009,7 @@ elif [ $ompt_compiler_support = no -o $install_ompt = yes ] ; then
   fi
 elif [ $ompt_compiler_support = yes -a $install_ompt = no ] ; then
   # Compiler support OMPT, removes previously copied header
-  rm -f ${START_DIR}/include/${ompt_header}
+  rm -f ${START_DIR}/include/omp-tools.h
 fi #ompt=download
 
 
@@ -8175,20 +8042,9 @@ if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
     fi
 else # intel OMPT support
     if [ $ompt = yes ]; then
-	    omptlinking="-Wl,-rpath,$omptlib#$omptlibrary"
-        if [ "x$download_ompt_tr4" = "xyes" ] ; then
-            echo "Using OMPT TR4"
-            fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
-        elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
-            echo "Using OMPT TR6"
-            fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
-        elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
-            echo "Using OMPT TR7"
-            fixmakeargs="$fixmakeargs TAU_OMPT_TR7 omptlib=$omptlinking"
-        elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
-            echo "Using OMPT 5"
-            fixmakeargs="$fixmakeargs TAU_OMPT_5_0 omptlib=$omptlinking"
-        fi
+        omptlinking="-Wl,-rpath,$omptlib#$omptlibrary"
+        echo "Using OMPT 5"
+        fixmakeargs="$fixmakeargs TAU_OMPT_5_0 omptlib=$omptlinking"
     fi
 fi
 
@@ -8624,7 +8480,11 @@ else
   fi
 fi
 
-if [ "x$PE_ENV" = "xCRAY" -a "x$MPICH_DIR" != "x" ]; then
+if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" = "x" -a "x$CRAY_MPICH_PREFIX" != "x" ]; then
+  CRAY_MPICH_DIR=$CRAY_MPICH_PREFIX
+fi
+
+if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" != "x" ]; then
   if [ -r $CRAY_MPICH_DIR/lib/libmpi_cray.a ]; then 
     echo "Found libmpi_cray.a"
     fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPI_CRAY"
@@ -9590,10 +9450,11 @@ if [ $machine = arm64_linux -a ! -r $targetdir/$architecture/$binutils/include/b
   binutilstgz=arm64-bfd.tgz
   p=`pwd`
   cd $targetdir/$architecture/; download "$binutilsurl" "$binutilstgz" ; tar zxf $binutilstgz; rm -f $binutilstgz ; cd ${p};
+  binutils=binutils-2.23.2
 fi
 
 if [ $machine = nec-sx-aurora ]; then
-  binutils=binutils-2.35.1
+  binutils=binutils-2.23.2
   binutilstgz=$binutils.tar.gz
   binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
 fi
@@ -10270,10 +10131,11 @@ if [ "x$download_dyninst" = xyes ] ; then
   prebfddir=`pwd`
 
   #check Cmake exists
-  cmake_cmd=`which cmake`
-  if [ "x$cmake_cmd" = "x" ] ; then
-      echo 'ERROR: cmake version 2.8.11 or higher required to build Dyninst.'
-      exit 1;
+  check_cmake 2 9 "Dyninst"
+  result=$?
+  if [ $result -eq 1 ]; then
+    echo 'ERROR: cmake version 2.9 or higher required to build Dyninst.'
+    exit 1;
   fi
 
   if [ -r "$dyninstdir/lib/libdyninstAPI.so" -o \
@@ -10822,7 +10684,7 @@ if [ $vtf = yes ] ; then
 fi
 
 if [ "x$unwinder" != "xnone" ] ; then
-    if [ $c_compiler = gcc -o $c_compiler = icc -o $c_compiler = pgcc -o $c_compiler = mpc_icc -o $c_compiler = mpc_cc -o $c_compiler = clang ] ; then
+    if [ $c_compiler = gcc -o $c_compiler = icc -o $c_compiler = icx -o $c_compiler = pgcc -o $c_compiler = mpc_icc -o $c_compiler = mpc_cc -o $c_compiler = clang ] ; then
         if [ "x$unwind_lib" != "x" ] ; then
             unwind_extras="-Wl\,-rpath\,$unwind_lib"
         fi
@@ -10997,11 +10859,13 @@ if [ $apex = yes ] ; then
 	    echo "Error: APEX is for multithreaded runtimes. Please configure TAU with thread support (pthread or OpenMP)."
 	    exit 1;
 	fi
-    cmake_cmd=`which cmake`
-    if [ "x$cmake_cmd" = "x" ] ; then
+    check_cmake 2 8 "APEX"
+    result=$?
+    if [ $result -eq 1 ]; then
         echo 'ERROR: cmake version 2.8 or higher required to build APEX.'
         exit 1;
     fi
+
 	echo "NOTE: Building APEX"
 	apex_include_file=apex/apex.mk
 	rm -f ${apex_include_file}
@@ -11024,16 +10888,7 @@ if [ $apex = yes ] ; then
 		echo 'TAUCXXFLAGS=-DCMAKE_CXX_FLAGS="-xMIC-AVX512 -DBOOST_NO_CXX11_ALLOCATOR"' >> ${apex_include_file}
 	fi
 	if [ ! "x${omptlib}" = "x" ] ; then
-		if [ "${download_ompt_tr4}" = "yes" ] ; then
-        	echo "TAUOMPT=-DUSE_OMPT=TRUE -DOMPT_ROOT=${targetdir}/${architecture}" >> ${apex_include_file}
-		else
         	echo "TAUOMPT=-DUSE_OMPT=TRUE -DOMPT_ROOT=${omptlib}" >> ${apex_include_file}
-		fi
-		if [ "${download_ompt_tr6}" = "yes" -o "x$ompt_use_tr6_version" = "xyes"] ; then
-        	echo "TAUOMPT=-DUSE_OMPT_TR6=TRUE -DOMPT_ROOT=${targetdir}/${architecture}" >> ${apex_include_file}
-		else
-        	echo "TAUOMPT=-DUSE_OMPT_TR6=TRUE -DOMPT_ROOT=${omptlib}" >> ${apex_include_file}
-		fi
 	fi
 	cp etc/Makefile.apex apex/Makefile
     fixmakeargs="$fixmakeargs APEX "
@@ -12182,7 +12037,9 @@ if [ $pgi = yes ] ; then
     if [ $nvhpc = yes ]; then 
       tauoptions="${tauoptions}-nvhpc"
     else 
-      tauoptions="${tauoptions}-pgi"
+      if [ $cray_nvhpc = no ]; then  # Cray nvhpc already sets -nvidia
+        tauoptions="${tauoptions}-pgi"
+      fi 
     fi
     if [ $openmp = yes ] ; then
 	fixmakeargs="$fixmakeargs PGIOPENMP"
@@ -12739,6 +12596,9 @@ chmod a+rx ${targetdir}/${architecture}/bin/tau-config
 cp ${tauroot}/tools/src/tauinc.pl ${targetdir}/${architecture}/bin
 chmod a+rx  ${targetdir}/${architecture}/bin/tauinc.pl
 
+cp ${tauroot}/tools/src/tau_join.sh ${targetdir}/${architecture}/bin
+chmod a+rx  ${targetdir}/${architecture}/bin/tau_join.sh
+
 configure_perfexplorer
 
 cat ${tauroot}/tools/src/TauIL/bin/tau_analyze.skel |
@@ -12777,37 +12637,12 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
 
     echo "ompt_dir=$ompt_dir"
     omptlinking="-Wl,-rpath=${ompt_instdir_}#-L${ompt_instdir_}#$omptlibrary"
-    if [ "x$download_ompt_tr4" = "xyes" ] ; then
-      fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
-    elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
-      fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
-    elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
-      fixmakeargs="$fixmakeargs TAU_OMPT_TR7 omptlib=$omptlinking"
-    elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
-      fixmakeargs="$fixmakeargs TAU_OMPT_5_0 omptlib=$omptlinking"
-    fi
+    fixmakeargs="$fixmakeargs TAU_OMPT_5_0 omptlib=$omptlinking"
     # also put them in the "disable" directory for later builds - but only do it once
+    ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
 
-    if [ "x$download_ompt_tr4" = "xyes" ] ; then
-        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr4
-    elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
-        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr6
-    elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
-        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr7
-    elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
-        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-v5
-    else
-       ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
-    fi
-
-#    if [ ! ${libomp_ossdir_shared} = ${ompt_instdir} ] ; then
-#        mkdir -p ${ompt_instdir}
-#        cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;
-#        cp ${libomp_ossdir_shared}/libgomp.so ${ompt_instdir}/libgomp.so ;
-#        cp ${libomp_ossdir_shared}/libiomp5.so ${ompt_instdir}/libiomp5.so ;
-#    fi
-	# apex also needs the headers...
-	mkdir -p ${targetdir}/${architecture}/include
+    # apex also needs the headers...
+    mkdir -p ${targetdir}/${architecture}/include
     cp ${START_DIR}/include/omp*.h ${targetdir}/${architecture}/include
   fi
 elif [ $ompt = yes -a $ompt_compiler_support = yes ] ; then
@@ -12820,17 +12655,7 @@ elif [ $ompt = yes -a $ompt_compiler_support = yes ] ; then
     rm -f ${ompt_instdir_}/lib${libomp_oss_name}.so
     rm -f ${ompt_instdir_}/libomp.so
 
-    if [ "x$download_ompt_tr4" = "xyes" ] ; then
-        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr4
-    elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
-        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr6
-    elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
-        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr7
-    elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
-        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-v5
-    else
-        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
-    fi
+    ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
 
     rm -f ${ompt_instdir}/libomp.so
     rm -f ${ompt_instdir}/libgomp.so
@@ -12856,17 +12681,7 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_static}/lib${libom
     echo "ompt_dir=$ompt_dir"
 
     # also put them in the "disable" directory for later builds - but only do it once
-    if [ "x$download_ompt_tr4" = "xyes" ] ; then
-        ompt_instdir=${targetdir}/${architecture}/lib/static-disable-tr4
-    elif [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
-        ompt_instdir=${targetdir}/${architecture}/lib/static-disable-tr6
-    elif [ "x$ompt_use_tr7_version" = "xyes" ] ; then
-        ompt_instdir=${targetdir}/${architecture}/lib/static-disable-tr7
-    elif [ "x$download_ompt_5_0" = "xyes" -o "x$ompt_use_v5_version" = "xyes" ] ; then
-        ompt_instdir=${targetdir}/${architecture}/lib/static-disable-v5
-    else
-        ompt_instdir=${targetdir}/${architecture}/lib/static-disable
-    fi
+    ompt_instdir=${targetdir}/${architecture}/lib/static-disable
 
     if [ ! ${libomp_ossdir_static} = ${ompt_instdir} ] ; then
         mkdir -p ${ompt_instdir}
@@ -13094,7 +12909,7 @@ then
 fi
 
 if [ "x$issue_intel_warning" = "xyes" ] ; then
-    echo "NOTE: Intel compilers found in your path, but C++ compiler not specified.  Whatever was detected in 'mpicxx -show' will be used as the compiler.  To force Intel compilers, please pass -c++=icpc or -c++=mpiicpc"
+    echo "NOTE: Intel compilers found in your path, but C++ compiler not specified.  Whatever was detected in 'mpicxx -show' will be used as the compiler.  To force Intel compilers, please pass -c++=icpc, -c++=icpx, or -c++=mpiicpc"
 fi
 
 if [ "x$PE_ENV" = "xCRAY" -a "x`uname -m`" == "xaarch64" -a "x$download_unwind" = "xyes" ]; 

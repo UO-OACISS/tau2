@@ -1331,7 +1331,7 @@ if [ "x$TAUCOMP" = "xpgi" ]; then
 fi
 
 # identify the language, if we are using the LLVM plugin for selective instrumentation
-if [ "x$tauSelectFile" != "x" -a "x$TAUCOMP" == "xclang" ] ; then
+if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
     echo "Using selective instrumentation for LLVM"
     case $groupType in
 	$group_c )
@@ -2181,7 +2181,7 @@ else
           	  useCompInst=no
 		fi
           	if [ "x$tauSelectFile" != "x" ] ; then
-          	    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'`
+         	    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'`
           	    useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
           	fi
          	if [ "$useCompInst" = yes ]; then
@@ -2203,14 +2203,17 @@ else
                        fi
                      fi
 
-		     if [ "x$TAUCOMP" == "xclang" ]; then
-			 optExcludeFuncs=""
+		   if [ "x$TAUCOMP" == "xclang" ]; then
+		       optExcludeFuncs=""
+		       # We are going to use the LLVM plugin. Remove -finstrument-functions or -finstrument-functions-after-inlining from the options, in order for the LLVM plugin to take precedence
+		       argsRemaining=`echo $argsRemaining | sed -e 's@-finstrument-functions-after-inlining@@g' | sed -e 's@-finstrument-functions@@g'`
 			 if [ "x$tauSelectFile" != "x" ]; then
 			     # TODO check the plugin exists here (done above)
 			     optCompInstOption="-g ${CLANG_LEGACY} -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
 			 else
-			     # instrument every function
-			     optCompInstOption="-finstrument-functions"
+			     # instrument every function -> do not pass any select file
+			     optCompInstOption="-g ${CLANG_LEGACY} -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
+#			     optCompInstOption="-finstrument-functions"
 			 fi
 		     fi
           	     extraopt=$optCompInstOption
@@ -2306,19 +2309,21 @@ else
           	fi
           	if [ "x$useCompInst" = "xyes" ]; then
           	    extraopt=$optCompInstOption
-                     if [ $groupType == $group_f_F ]; then
+                    if [ $groupType == $group_f_F ]; then
           		 extraopt=$optCompInstFortranOption
           		 echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
 		     else
 			 # Not working with fortran (yet)
 			 if [ "x$TAUCOMP" == "xclang" ]; then
 			     optExcludeFuncs=""
+			     # We are going to use the LLVM plugin. Remove -finstrument-functions or -finstrument-functions-after-inlining from the options, in order for the LLVM plugin to take precedence
+			     argsRemaining=`echo $argsRemaining | sed -e 's@-finstrument-functions-after-inlining@@g' | sed -e 's@-finstrument-functions@@g'`
 			     if [ "x$tauSelectFile" != "x" ]; then
 				 # TODO check the plugin exists here (done above)
 				 extraopt="-g ${CLANG_LEGACY} -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
 			     else
 				 # instrument every function
-				 extraopt=$optCompInstOption
+				 extraopt="-g ${CLANG_LEGACY} -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
 			     fi
 			 fi
 		     fi

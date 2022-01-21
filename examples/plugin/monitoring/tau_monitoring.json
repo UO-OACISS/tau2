@@ -1,9 +1,13 @@
 {
+  "periodic": false,
+  "periodicity seconds": 1.0,
   "/proc/stat": {
+    "disable": false,
     "comment": "This will exclude all core-specific readings.",
     "exclude": ["^cpu[0-9]+.*"]
   },
   "/proc/meminfo": {
+    "disable": true,
     "comment": "This will include three readings.",
     "include": [".*MemAvailable.*", ".*MemFree.*", ".*MemTotal.*"]
   },

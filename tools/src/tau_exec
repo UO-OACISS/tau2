@@ -337,6 +337,9 @@ track_kokkos=true
 adios2_trace=false
 sos=false
 track_ugni=false
+processM=false
+python_launch_module=false
+python_m_arg=""
 
 # This saves the args to tau_exec so they can be reused later.
 # This is used for MPI_Comm_spawn support, in which TAU spawns the child
@@ -357,6 +360,11 @@ for arg in "$@" ; do
     if [ "x$test_arg" != "x$arg" ]; then
       scorep=true
     fi
+    save_arg $arg
+    shift
+  elif [ "$processM" = true ] ; then
+    processM=false
+    python_m_arg=$arg
     save_arg $arg
     shift
   else
@@ -676,6 +684,8 @@ for arg in "$@" ; do
       -m)
         if [ $python_wrapper = "true" ] ; then
           save_arg $arg
+          processM=true
+          python_launch_module=true
           shift
           break
         else
@@ -1013,6 +1023,7 @@ if [ $track_openacc = "true" ] ; then
   export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU${TAU_SHLIBX}
 fi
 if [ $track_rocm = "true" ] ; then
+  $dryrun export ROCP_HSA_INTERCEPT=2
   $dryrun export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
   #export TAU_HSA_TOOLS_LIB=librocprofiler64.so.1
   options=`echo $theBinding | sed -e 's/shared-//g' `
@@ -1289,7 +1300,11 @@ else
     $dryrun export PYTHONPATH=$PYTHONPATH
     $dryrun $python_interpreter $py_interp_args -m tau_pyspark_wrapper "$@"
   elif $python_wrapper ; then
-    $dryrun $python_interpreter $py_interp_args -m tau_python_wrapper "$@"
+    if [ $python_launch_module = "true" ] ; then
+        $dryrun $python_interpreter $py_interp_args -m tau_python_wrapper -m $python_m_arg "$@"
+    else
+        $dryrun $python_interpreter $py_interp_args -m tau_python_wrapper "$@"
+    fi
     retval=$?
   elif $use_ptts ; then
     # Can't dryrun because `$dryrun CMD >$logfile 2>&1` creates $logfile

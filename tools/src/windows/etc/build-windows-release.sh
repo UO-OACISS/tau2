@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 if [ $# -ne 1 ] ; then
     echo "-------------"
@@ -9,7 +9,7 @@ fi
 
 go()
 {
-./1-get.sh
+./1-get.sh $1
 ./2-build.sh
 ./3-install.sh
 ./4-package.sh $1

@@ -75,6 +75,24 @@ def runmodule(modname, filename=None):
             result = prof.print_stats()
     return result
 
+def runmoduledir(modname, filename=None):
+    """
+    Compile and run a module directory specified by 'modnamedir', setting __main__ to that module.
+    """
+    prof = Profile()
+    result = None
+    try:
+        try:
+            prof = prof.runmoduledir(modname)
+        except SystemExit:
+            pass
+    finally:
+        if filename is not None:
+            prof.dump_stats(filename)
+        else:
+            result = prof.print_stats()
+    return result
+
 def exitAllThreads():
     Profile().exitAllThreads()
 
@@ -188,6 +206,15 @@ class Profile(ctau_impl.Profiler):
                 sys.modules[newname] = replaced
             self.disable()
         return self
+
+    def runmoduledir(self, modname, newname='__main__'):
+        self.enable()
+        try:
+            import runpy
+            runpy.run_module(modname, run_name='__main__', alter_sys=True)
+        finally:
+            self.disable()
+            return self
 
     # This method is more useful to profile a single function call.
     def runcall(self, func, *args, **kw):

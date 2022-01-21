@@ -1,13 +1,13 @@
 /******************************************************************************
 *   OpenMp Example - Matrix Multiply - C Version
-*   Demonstrates a matrix multiply using OpenMP. 
+*   Demonstrates a matrix multiply using OpenMP.
 *
 *   Modified from here:
 *   https://computing.llnl.gov/tutorials/openMP/samples/C/omp_mm.c
 *
-*   For  PAPI_FP_INS, the exclusive count for the event: 
+*   For  PAPI_FP_INS, the exclusive count for the event:
 *   for (null) [OpenMP location: file:matmult.c ]
-*   should be  2E+06 / Number of Threads 
+*   should be  2E+06 / Number of Threads
 ******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,25 +68,25 @@ void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, 
   int i,j,k;
   double tmp = 0.0;
 //num_threads(2)
-#pragma omp parallel private(i) shared(a,b,c) 
+#pragma omp parallel private(i) shared(a,b,c)
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
 #pragma omp for nowait schedule(dynamic,1)
     for (i=0; i<rows_a; i++) {
 //num_threads(2)
-#pragma omp parallel private(i,j,k) shared(a,b,c) 
+#pragma omp parallel private(i,j,k) shared(a,b,c)
       {
 #pragma omp for nowait schedule(dynamic,1)
         for (k=0; k<cols_a; k++) {
           for(j=0; j<cols_b; j++) {
 #ifdef APP_USE_INLINE_MULTIPLY
               c[i][j] += multiply(a[i][k], b[k][j]);
-#else 
+#else
               tmp = a[i][k];
 			  tmp = tmp * b[k][j];
               c[i][j] += tmp;
-#endif 
+#endif
             }
           }
       }
@@ -144,7 +144,7 @@ double do_work(void) {
   **c;           /* result matrix C */
   a = allocateMatrix(NRA, NCA);
   b = allocateMatrix(NCA, NCB);
-  c = allocateMatrix(NRA, NCB);  
+  c = allocateMatrix(NRA, NCB);
 
 /*** Spawn a parallel region explicitly scoping all variables ***/
 
@@ -215,7 +215,7 @@ void * threaded_func(void *data)
 
 //int Tau_dump(void);
 
-int main (int argc, char *argv[]) 
+int main (int argc, char *argv[])
 {
 
 #ifdef PTHREADS
@@ -249,7 +249,7 @@ int main (int argc, char *argv[])
     printf("MPI_Init_thread: provided = %d, MPI_THREAD_FUNNELED=%d\n", provided, MPI_THREAD_FUNNELED);
   }
 #else
-  rc = MPI_Init(&argc, &argv); 
+  rc = MPI_Init(&argc, &argv);
 #endif /* THREADS */
   if (rc != MPI_SUCCESS) {
     char *errorstring;
@@ -266,19 +266,19 @@ int main (int argc, char *argv[])
   if (ret) {
     printf("Error: pthread_create (1) fails ret = %d\n", ret);
     exit(1);
-  }   
+  }
 
   ret = pthread_create(&tid2, NULL, threaded_func, NULL);
   if (ret) {
     printf("Error: pthread_create (2) fails ret = %d\n", ret);
     exit(1);
-  }   
+  }
 
   ret = pthread_create(&tid3, NULL, threaded_func, NULL);
   if (ret) {
     printf("Error: pthread_create (3) fails ret = %d\n", ret);
     exit(1);
-  }   
+  }
 
 #endif /* PTHREADS */
 
@@ -286,7 +286,7 @@ int main (int argc, char *argv[])
     // create a communicator
     /* The code above only works with 4 or more processes!! */
     if (comm_size >=4 ) {
-      MPI_Group group_world, odd_group, even_group, diff_group, 
+      MPI_Group group_world, odd_group, even_group, diff_group,
                 union_group, inter_group, re_group, ri_group;
       int j, Neven, Nodd, members[8], ierr;
 
@@ -299,7 +299,7 @@ int main (int argc, char *argv[])
       for (j=0; j < Neven; j++) {   /* "members" determines members of even_group */
         members[j] = 2*j;
       };
-    
+
       MPI_Group_incl(group_world, Neven, members, &even_group);
       MPI_Group_excl(group_world, Neven, members, &odd_group);
       MPI_Comm even_comm;
@@ -315,7 +315,7 @@ int main (int argc, char *argv[])
       int ranks[2] = {0,1};
       int ranks_out[2] = {0};
       MPI_Group_translate_ranks(group_world, 2, ranks, union_group, ranks_out);
-    } 
+    }
 
 #endif /* TAU_MPI */
 
@@ -324,7 +324,7 @@ int main (int argc, char *argv[])
   for (i = 0 ; i < ITERATIONS ; i++) {
     printf("Iteration %d\n", i);
     do_work();
-    //Tau_dump();
+    Tau_dump();
   }
 
 #ifdef PTHREADS
@@ -332,19 +332,19 @@ int main (int argc, char *argv[])
   if (ret) {
     printf("Error: pthread_join (1) fails ret = %d\n", ret);
     exit(1);
-  }   
+  }
 
   ret = pthread_join(tid2, NULL);
   if (ret) {
     printf("Error: pthread_join (2) fails ret = %d\n", ret);
     exit(1);
-  }   
+  }
 
   ret = pthread_join(tid3, NULL);
   if (ret) {
     printf("Error: pthread_join (3) fails ret = %d\n", ret);
     exit(1);
-  }   
+  }
 
   pthread_mutex_destroy(&mutexsum);
 #endif /* PTHREADS */

@@ -139,8 +139,13 @@ static StringRef normalize_name(StringRef mangled_name) {
     //        << mangled_name << '\n';
     break;
   case -2:
-    // errs() << "FAIL: " << mangled_name
-    //        << " is not a valid name under the C++ ABI mangling rules\n";
+      /* This case can happen in two cases:
+         - the name is not a valid name
+         - the name is main.
+        However, names from C libraries or with extern "C" are not mangled.
+        So, return anyway.
+      */      
+    realname = mangled_name;
     break;
   default:
     // errs() << "FAIL: couldn't demangle " << mangled_name
