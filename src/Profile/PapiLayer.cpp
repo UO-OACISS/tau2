@@ -81,7 +81,7 @@ bool PapiLayer::papiInitialized = false;
 double PapiLayer::scalingFactor = 0.0;
 int PapiLayer::numCounters = 0;
 int PapiLayer::counterList[MAX_PAPI_COUNTERS];
-
+bool PapiLayer::destroyed=false;
 
 PapiLayer::PapiThreadList & PapiLayer::ThePapiThreadList() {
     static PapiLayer::PapiThreadList threadList;

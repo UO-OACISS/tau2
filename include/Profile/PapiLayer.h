@@ -45,12 +45,14 @@ public:
   static void triggerRAPLPowerEvents(bool in_signal_handler);
   static int numCounters;
   static int counterList[TAU_MAX_COUNTERS];
+  static bool destroyed;
   inline static void setThreadValue(int tid, ThreadValue* tv){
 	    checkPAPIVector(tid);
         ThePapiThreadList()[tid]=tv;
   }
 
   inline static ThreadValue* getThreadValue(int tid){
+	  if(destroyed)return NULL;
 		checkPAPIVector(tid);
         return ThePapiThreadList()[tid];
   }   
@@ -72,6 +74,7 @@ private:
      }
     virtual ~PapiThreadList(){
         //printf("Destroying PapiThreadList at %p, with size %ld\n", this, this->size());
+	destroyed=true;
         Tau_destructor_trigger();
     }
   };
