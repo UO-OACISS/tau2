@@ -142,7 +142,6 @@ public:
 
 private:
   bool setPathHistograms=false;
-
   // A record of the information unique to this function.
   // Statistics about calling this function.
   struct FunctionMetrics{//TODO: DYNATHREAD
@@ -174,6 +173,7 @@ struct FMetricListVector : vector<FunctionMetrics *>{
     }
 
     virtual ~FMetricListVector(){
+	destructed=true;
         Tau_destructor_trigger();
     }
 };
@@ -197,13 +197,13 @@ static thread_local vector<FunctionMetrics*>* MetricThreadCache; // One entry pe
 static std::atomic<uint64_t> next_id; // The next available ID; incremented when function_info_id is set.
 uint64_t function_info_id; // This is set in FunctionInfo::FunctionInfoInit()
 static bool use_metric_tls; // This is set to false to disable the thread-local cache during shutdown.
-
+static bool destructed;
 
 // getFunctionMetric(tid) returns the pointer to this instance's FunctionMetric 
 // for the given tid. Uses thread-local cache if tid = this thread.
 FunctionMetrics* getFunctionMetric(unsigned int tid){
     FunctionMetrics* MOut = NULL;
-
+    if(destructed)return MOut;
     static thread_local const unsigned int local_tid = RtsLayer::myThread();
 
 
