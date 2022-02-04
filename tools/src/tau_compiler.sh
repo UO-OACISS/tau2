@@ -1349,6 +1349,10 @@ if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
     fi
     # Which version of clang?
     clang_version=`$compilerSpecified --version | grep "clang version" | awk {'print $3'} | awk -F'.' {'print $1'}`
+    if [ "x$clang_version" = "xversion" ]; then
+    # AMD clang version 13.0.0   -> use the 4th column instead of 3rd. 
+      clang_version=`$compilerSpecified --version | grep "clang version" | awk {'print $4'} | awk -F'.' {'print $1'}`
+    fi
     if [[ "$clang_version" -ge "13" ]] ; then    
 	CLANG_LEGACY="-flegacy-pass-manager"
     fi
