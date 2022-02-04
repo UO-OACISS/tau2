@@ -770,7 +770,10 @@ int Tau_mpi_t_cvar_initialize(void) {
     }
   }
 
+#ifdef TAU_MPI_T_TRACK_GPU_MSGS
   Tau_msg_init(); 
+#endif /* TAU_MPI_T_TRACK_GPU_MSGS */
+
   return_val = Tau_mpi_t_print_all_cvar_desc(num_cvars);
   if(return_val != MPI_SUCCESS) {
     printf("TAU: Rank %d: Can't read the MPI_T control variables in this MPI implementation\n", rank);

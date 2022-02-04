@@ -201,6 +201,13 @@ hpTimerUnit(void)
 
 #else  /* !MS_WINDOWS */
 
+// In Python 3.9 and later, HAVE_GETTIMEOFDAY is no longer defined
+// (but structure of time variables is as if it were)
+// so we define it ourselves.
+#if (PY_MAJOR_VERSION >= 3) && (PY_MINOR_VERSION >= 9)
+#define HAVE_GETTIMEOFDAY
+#endif
+
 #ifndef HAVE_GETTIMEOFDAY
 #error "This module requires gettimeofday() on non-Windows platforms!"
 #endif
