@@ -211,6 +211,12 @@ void Tau_roctx_api_callback(
 
 }
 
+inline void capture_correlation_id(uint32_t correlation_id) {
+    if (TauEnv_get_thread_per_gpu_stream()) {
+      TAU_TRIGGER_EVENT("Correlation ID", (double)(correlation_id));
+    }
+}
+
 // Runtime API callback function
 void Tau_roctracer_api_callback(
     uint32_t domain,
@@ -235,30 +241,67 @@ void Tau_roctracer_api_callback(
     (data->phase == ACTIVITY_API_PHASE_ENTER) ? "on-enter" : "on-exit");
   if (data->phase == ACTIVITY_API_PHASE_ENTER) {
     TAU_START(activity_name);
-    if (TauEnv_get_thread_per_gpu_stream() &&
-        cid != HIP_API_ID_hipSetDevice) { // no corresponding cid on the GPU side
-      TAU_TRIGGER_EVENT("Correlation ID", (double)(data->correlation_id));
-    }
     switch (cid) {
+      /* If it's a kernel launch, map the correlation ID to the kernel name.
+         also, capture the correlation ID */
       case HIP_API_ID_hipLaunchKernel:
         Tau_roctracer_register_activity(data->correlation_id,
-          hipKernelNameRefByPtr(data->args.hipLaunchKernel.function_address, data->args.hipLaunchKernel.stream));
+          hipKernelNameRefByPtr(data->args.hipLaunchKernel.function_address,
+          data->args.hipLaunchKernel.stream));
+        capture_correlation_id(data->correlation_id);
         break;
       case HIP_API_ID_hipModuleLaunchKernel:
         Tau_roctracer_register_activity(data->correlation_id,
           hipKernelNameRef(data->args.hipModuleLaunchKernel.f));
+        capture_correlation_id(data->correlation_id);
         break;
       case HIP_API_ID_hipHccModuleLaunchKernel:
         Tau_roctracer_register_activity(data->correlation_id,
           hipKernelNameRef(data->args.hipHccModuleLaunchKernel.f));
+        capture_correlation_id(data->correlation_id);
         break;
       case HIP_API_ID_hipExtModuleLaunchKernel:
         Tau_roctracer_register_activity(data->correlation_id,
           hipKernelNameRef(data->args.hipExtModuleLaunchKernel.f));
+        capture_correlation_id(data->correlation_id);
         break;
       case HIP_API_ID_hipExtLaunchKernel:
         Tau_roctracer_register_activity(data->correlation_id,
-          hipKernelNameRefByPtr(data->args.hipExtLaunchKernel.function_address, data->args.hipLaunchKernel.stream));
+          hipKernelNameRefByPtr(data->args.hipExtLaunchKernel.function_address,
+          data->args.hipLaunchKernel.stream));
+        capture_correlation_id(data->correlation_id);
+        break;
+      /* If it's a memcpy, capture the correlation ID */
+      case HIP_API_ID_hipMemcpy:
+      case HIP_API_ID_hipMemcpy2D:
+      case HIP_API_ID_hipMemcpy2DAsync:
+      case HIP_API_ID_hipMemcpy2DFromArray:
+      case HIP_API_ID_hipMemcpy2DFromArrayAsync:
+      case HIP_API_ID_hipMemcpy2DToArray:
+      case HIP_API_ID_hipMemcpy2DToArrayAsync:
+      case HIP_API_ID_hipMemcpy3D:
+      case HIP_API_ID_hipMemcpy3DAsync:
+      case HIP_API_ID_hipMemcpyAsync:
+      case HIP_API_ID_hipMemcpyAtoH:
+      case HIP_API_ID_hipMemcpyDtoD:
+      case HIP_API_ID_hipMemcpyDtoDAsync:
+      case HIP_API_ID_hipMemcpyDtoH:
+      case HIP_API_ID_hipMemcpyDtoHAsync:
+      case HIP_API_ID_hipMemcpyFromArray:
+      case HIP_API_ID_hipMemcpyFromSymbol:
+      case HIP_API_ID_hipMemcpyFromSymbolAsync:
+      case HIP_API_ID_hipMemcpyHtoA:
+      case HIP_API_ID_hipMemcpyHtoD:
+      case HIP_API_ID_hipMemcpyHtoDAsync:
+      case HIP_API_ID_hipMemcpyParam2D:
+      case HIP_API_ID_hipMemcpyParam2DAsync:
+      case HIP_API_ID_hipMemcpyPeer:
+      case HIP_API_ID_hipMemcpyPeerAsync:
+      case HIP_API_ID_hipMemcpyToArray:
+      case HIP_API_ID_hipMemcpyToSymbol:
+      case HIP_API_ID_hipMemcpyToSymbolAsync:
+      case HIP_API_ID_hipMemcpyWithStream:
+        capture_correlation_id(data->correlation_id);
         break;
       default:
         // not necessary.
