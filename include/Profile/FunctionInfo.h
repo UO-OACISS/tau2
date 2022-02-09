@@ -184,6 +184,16 @@ FMetricListVector FMetricList;
 // Mutex which protects FMetricList
 std::mutex fInfoVectorMutex;
 
+struct FMetricListVector_local : vector<FunctionMetrics *>{
+    FMetricListVector_local() {
+        // nothing
+    }
+
+    virtual ~FMetricListVector_local(){
+        destructed_local=true;
+    }
+};
+
 // Thread-local optimization for the FMetricList.
 // We need a thread-local FMetricList, which means a thread-local member.
 // C++ doesn't allow a thread_local member variable, only thread-local statics.
@@ -192,18 +202,19 @@ std::mutex fInfoVectorMutex;
 //
 // This keeps a sequential ID number for each FunctionInfo instance.
 // This is used an an index into the static thread_local MetricThreadCache.
-static thread_local vector<FunctionMetrics*>* MetricThreadCache; // One entry per instance
+static thread_local FMetricListVector_local  MetricThreadCache;    //vector<FunctionMetrics*>* MetricThreadCache; // One entry per instance
 //static thread_local FMetricListVector MetricThreadCache; // One entry per instance #Fixes opari bug, breaks pthreads
 static std::atomic<uint64_t> next_id; // The next available ID; incremented when function_info_id is set.
 uint64_t function_info_id; // This is set in FunctionInfo::FunctionInfoInit()
 static bool use_metric_tls; // This is set to false to disable the thread-local cache during shutdown.
 static bool destructed;
+static thread_local bool destructed_local;
 
 // getFunctionMetric(tid) returns the pointer to this instance's FunctionMetric 
 // for the given tid. Uses thread-local cache if tid = this thread.
 FunctionMetrics* getFunctionMetric(unsigned int tid){
     FunctionMetrics* MOut = NULL;
-    if(destructed)return MOut;
+    if(destructed||destructed_local)return MOut;
     static thread_local const unsigned int local_tid = RtsLayer::myThread();
 
 
@@ -213,9 +224,9 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     // Also don't use the cache during shutdown -- it might have been destructed already,
     // but we can't put a destructor trigger on MetricThreadCache because they are *also*
     // destructed when a thread exits.
-    if(tid!=0 && use_metric_tls && (tid == local_tid) && !destructed) {
-        if(MetricThreadCache->size() > function_info_id) {
-            MOut = MetricThreadCache->operator[](function_info_id);
+    if(tid!=0 && use_metric_tls && (tid == local_tid) && !destructed && !destructed_local) {
+        if(MetricThreadCache.size() > function_info_id) {
+            MOut = MetricThreadCache.operator[](function_info_id);
             if(MOut != NULL) {
                 return MOut;
             }
@@ -240,11 +251,11 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     // Use thread-local optimization if the current thread is requesting its own metrics.
     if(tid !=0 && use_metric_tls && (tid == local_tid)) {
         // Ensure the FMetricList vector is long enough to accomodate the new cached item.
-        while(MetricThreadCache->size() <= function_info_id) {
-            MetricThreadCache->push_back(NULL);
+        while(MetricThreadCache.size() <= function_info_id) {
+            MetricThreadCache.push_back(NULL);
         }    
         // Store the FunctionMetrics pointer in the thread-local cache
-        MetricThreadCache->operator[](function_info_id) = MOut;
+        MetricThreadCache.operator[](function_info_id) = MOut;
     }
 
     return MOut;
