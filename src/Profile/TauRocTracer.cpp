@@ -113,6 +113,8 @@ std::string Tau_roctracer_lookup_activity(uint64_t id) {
     if (i != themap.end()) {
         name = i->second;
         themap.erase(id);
+    } else {
+        TAU_VERBOSE("WARNING! Kernel name not found for correlation %lu\n", id);
     }
     mapLock.unlock();
     return name;
@@ -332,8 +334,12 @@ void Tau_roctracer_hcc_event(const roctracer_record_t *record,
     std::string name = Tau_roctracer_lookup_activity(record->correlation_id);
     char *demangled_name = Tau_demangle_name(name.c_str());
     std::stringstream ss;
-    ss << roctracer_op_string(record->domain, record->op, record->kind)
-       << " " << demangled_name;
+    ss << roctracer_op_string(record->domain, record->op, record->kind);
+    if (strlen(demangled_name) == 0) {
+        ss << " " << name;
+    } else {
+        ss << " " << demangled_name;
+    }
     free(demangled_name);
     joined_name = strdup(ss.str().c_str());
   } else {
