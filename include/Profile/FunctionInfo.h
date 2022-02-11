@@ -224,7 +224,7 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     // Also don't use the cache during shutdown -- it might have been destructed already,
     // but we can't put a destructor trigger on MetricThreadCache because they are *also*
     // destructed when a thread exits.
-    if(tid!=0 && use_metric_tls && (tid == local_tid) && !destructed && !destructed_local) {
+    if(false && tid!=0 && use_metric_tls && (tid == local_tid) && !destructed && !destructed_local) {
         if(MetricThreadCache.size() > function_info_id) {
             MOut = MetricThreadCache.operator[](function_info_id);
             if(MOut != NULL) {
