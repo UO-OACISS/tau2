@@ -492,6 +492,15 @@ void Tau_enable_plugins_for_all_events() {
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_TARGET_DATA_OP, "*");
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_TARGET_SUBMIT, "*");
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_FINALIZE, "*");
+<<<<<<< HEAD
+  /* GPU EVENTS BEGIN */
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_GPU_INIT, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_GPU_FINALIZE, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_GPU_KERNEL_EXEC, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_GPU_MEMCPY, "*");
+  /* GPU EVENTS END */
+=======
+>>>>>>> b52025addf7c77ad95b4b4fabc925fb187fd72f9
 }
 
 /* TODO: Function part of the tomporary fix described in
@@ -647,7 +656,11 @@ void* Tau_util_register_plugin(const char *name, char **args, int num_args, void
  * ************************************************************************************************************************/
 void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* plugin_manager) {
 #ifndef TAU_WINDOWS
+<<<<<<< HEAD
+  void* handle = dlopen(path, RTLD_NOW | RTLD_GLOBAL);
+=======
   void* handle = dlopen(path, RTLD_NOW);
+>>>>>>> b52025addf7c77ad95b4b4fabc925fb187fd72f9
 #else
   void* handle = NULL;
 #endif /* TAU_WINDOWS */
@@ -711,6 +724,13 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->OmptTargetDataOp = 0;
   cb->OmptTargetSubmit = 0;
   cb->OmptFinalize = 0;
+<<<<<<< HEAD
+  cb->GpuInit = 0;
+  cb->GpuFinalize = 0;
+  cb->GpuKernelExec = 0;
+  cb->GpuMemcpy = 0;
+=======
+>>>>>>> b52025addf7c77ad95b4b4fabc925fb187fd72f9
 }
 
 /**************************************************************************************************************************
@@ -754,6 +774,13 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->OmptTargetDataOp = src->OmptTargetDataOp;
   dest->OmptTargetSubmit = src->OmptTargetSubmit;
   dest->OmptFinalize = src->OmptFinalize;
+<<<<<<< HEAD
+  dest->GpuInit = src->GpuInit;
+  dest->GpuFinalize = src->GpuFinalize;
+  dest->GpuKernelExec = src->GpuKernelExec;
+  dest->GpuMemcpy = src->GpuMemcpy;
+=======
+>>>>>>> b52025addf7c77ad95b4b4fabc925fb187fd72f9
 }
 
 /**************************************************************************************************************************
@@ -811,6 +838,13 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
   if (cb->OmptTargetDataOp != 0) { Tau_plugins_enabled.ompt_target_data_op = 1; }
   if (cb->OmptTargetSubmit != 0) { Tau_plugins_enabled.ompt_target_submit = 1; }
   if (cb->OmptFinalize != 0) { Tau_plugins_enabled.ompt_finalize = 1; }
+<<<<<<< HEAD
+  if (cb->GpuInit != 0) { Tau_plugins_enabled.gpu_init = 1; }
+  if (cb->GpuFinalize != 0) { Tau_plugins_enabled.gpu_finalize = 1; }
+  if (cb->GpuKernelExec != 0) { Tau_plugins_enabled.gpu_kernel_exec = 1; }
+  if (cb->GpuMemcpy != 0) { Tau_plugins_enabled.gpu_memcpy = 1; }
+=======
+>>>>>>> b52025addf7c77ad95b4b4fabc925fb187fd72f9
 
   /* Register needed OMPT callback if they are not already registered */
 #if defined(TAU_USE_OMPT) || defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
@@ -1316,6 +1350,52 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_finalize_data_t* data, Plu
   plugins_for_ompt_event[ev].destroy();
 }
 
+<<<<<<< HEAD
+/* GPU EVENTS BEGIN */
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks gpu_init event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_gpu_init_data_t* data, PluginKey key) {
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->GpuInit != 0)
+      Tau_get_plugin_callback_map()[*it]->GpuInit(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks gpu_finalize event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_gpu_finalize_data_t* data, PluginKey key) {
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->GpuFinalize != 0)
+      Tau_get_plugin_callback_map()[*it]->GpuFinalize(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks gpu_kernel_exec event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_gpu_kernel_exec_data_t* data, PluginKey key) {
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->GpuKernelExec != 0)
+      Tau_get_plugin_callback_map()[*it]->GpuKernelExec(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks gpu_memcpy event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_gpu_memcpy_data_t* data, PluginKey key) {
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->GpuMemcpy != 0)
+      Tau_get_plugin_callback_map()[*it]->GpuMemcpy(data);
+  }
+}
+
+/* GPU EVENTS END */
+
+=======
+>>>>>>> b52025addf7c77ad95b4b4fabc925fb187fd72f9
 /* Actually do the invocation */
 void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const void * data) {
 
@@ -1468,6 +1548,27 @@ void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const v
       Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_finalize_data_t*)data, key);
       break;
     }
+<<<<<<< HEAD
+    /* GPU EVENTS START */
+    case TAU_PLUGIN_EVENT_GPU_INIT: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_gpu_init_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_GPU_FINALIZE: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_gpu_finalize_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_GPU_KERNEL_EXEC: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_gpu_kernel_exec_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_GPU_MEMCPY: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_gpu_memcpy_data_t*)data, key);
+      break;
+    }
+    /* GPU EVENTS END */
+=======
+>>>>>>> b52025addf7c77ad95b4b4fabc925fb187fd72f9
    default: {
       perror("Someone forgot to implement an event for plugins...\n");
       abort();

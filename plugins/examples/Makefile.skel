@@ -20,9 +20,15 @@ TAU_MONITORING_PLUGIN_USING_JSON=libTAU-monitoring-plugin$(TAU_SHLIBX)
 
 LDFLAGS = $(TAU_MPI_LIB) -L$(PLUGININSTALLDIR) -Wl,-rpath,$(PLUGININSTALLDIR) -lTAU
 
+<<<<<<< HEAD
+OBJS = Tau_plugin_example_disable_instrumentation_runtime.o Tau_plugin_example_mpit_recommend_sharp_usage.o Tau_plugin_example_free_unused_vbufs.o Tau_plugin_skel.o Tau_plugin_sos.o Tau_plugin_thread_summary.o Tau_plugin_example_selective_tracing.o Tau_plugin_example_profile_snapshot_trigger.o Tau_plugin_example_mpit_exchange_pvar_data.o Tau_plugin_example_analyze_profile_snapshots.o Tau_plugin_example_load_balance_async.o Tau_plugin_example_load_balance.o Tau_plugin_example_analyze_node_profile_snapshots.o Tau_plugin_example_analyze_node_profile_snapshots_async.o Tau_plugin_example_emulate_profile_snapshots_analysis_async.o Tau_plugin_example_memory_usage_async.o Tau_plugin_example_atomic_trigger.o Tau_plugin_gpu_events.o
+
+SHAREDLIBS = libTAU-memory-usage-async$(TAU_SHLIBX) libTAU-emulate-profiles-analysis-async$(TAU_SHLIBX) libTAU-load-balance-async$(TAU_SHLIBX) libTAU-analyze-node-profiles$(TAU_SHLIBX) libTAU-analyze-node-profiles-async$(TAU_SHLIBX) libTAU-filter-plugin$(TAU_SHLIBX) libTAU-mpit-recommend-sharp-usage-plugin$(TAU_SHLIBX) libTAU-mpit-mvapich-free_unused_vbufs$(TAU_SHLIBX) libTAU-skel-plugin$(TAU_SHLIBX) libTAU-sos-plugin$(TAU_SHLIBX) libTAU-thread-summary-plugin$(TAU_SHLIBX) libTAU-selective-tracing$(TAU_SHLIBX) libTAU-snapshot-trigger$(TAU_SHLIBX) libTAU-mpit-exchange-data$(TAU_SHLIBX) libTAU-analyze-profiles$(TAU_SHLIBX) libTAU-load-balance$(TAU_SHLIBX) libTAU-memory-usage-async$(TAU_SHLIBX) libTAU-pthread-stopper-plugin$(TAU_SHLIBX) libTAU-adios2-plugin$(TAU_SHLIBX) libTAU-adios2-trace-plugin$(TAU_SHLIBX) libTAU-atomic-trigger$(TAU_SHLIBX) libTAU-adios2-trace-plugin$(TAU_SHLIBX) libTAU-null-plugin$(TAU_SHLIBX) $(TAU_MONITORING_PLUGIN_USING_JSON) $(TAU_SQLITE3_PLUGIN_LIB) libTAU-mochi-plugin$(TAU_SHLIBX) libTAU-gpu-events-plugin$(TAU_SHLIBX)
+=======
 OBJS = Tau_plugin_example_disable_instrumentation_runtime.o Tau_plugin_example_mpit_recommend_sharp_usage.o Tau_plugin_example_free_unused_vbufs.o Tau_plugin_skel.o Tau_plugin_sos.o Tau_plugin_thread_summary.o Tau_plugin_example_selective_tracing.o Tau_plugin_example_profile_snapshot_trigger.o Tau_plugin_example_mpit_exchange_pvar_data.o Tau_plugin_example_analyze_profile_snapshots.o Tau_plugin_example_load_balance_async.o Tau_plugin_example_load_balance.o Tau_plugin_example_analyze_node_profile_snapshots.o Tau_plugin_example_analyze_node_profile_snapshots_async.o Tau_plugin_example_emulate_profile_snapshots_analysis_async.o Tau_plugin_example_memory_usage_async.o Tau_plugin_example_atomic_trigger.o
 
 SHAREDLIBS = libTAU-memory-usage-async$(TAU_SHLIBX) libTAU-emulate-profiles-analysis-async$(TAU_SHLIBX) libTAU-load-balance-async$(TAU_SHLIBX) libTAU-analyze-node-profiles$(TAU_SHLIBX) libTAU-analyze-node-profiles-async$(TAU_SHLIBX) libTAU-filter-plugin$(TAU_SHLIBX) libTAU-mpit-recommend-sharp-usage-plugin$(TAU_SHLIBX) libTAU-mpit-mvapich-free_unused_vbufs$(TAU_SHLIBX) libTAU-skel-plugin$(TAU_SHLIBX) libTAU-sos-plugin$(TAU_SHLIBX) libTAU-thread-summary-plugin$(TAU_SHLIBX) libTAU-selective-tracing$(TAU_SHLIBX) libTAU-snapshot-trigger$(TAU_SHLIBX) libTAU-mpit-exchange-data$(TAU_SHLIBX) libTAU-analyze-profiles$(TAU_SHLIBX) libTAU-load-balance$(TAU_SHLIBX) libTAU-memory-usage-async$(TAU_SHLIBX) libTAU-pthread-stopper-plugin$(TAU_SHLIBX) libTAU-adios2-plugin$(TAU_SHLIBX) libTAU-adios2-trace-plugin$(TAU_SHLIBX) libTAU-atomic-trigger$(TAU_SHLIBX) libTAU-adios2-trace-plugin$(TAU_SHLIBX) libTAU-null-plugin$(TAU_SHLIBX) $(TAU_MONITORING_PLUGIN_USING_JSON) $(TAU_SQLITE3_PLUGIN_LIB) libTAU-mochi-plugin$(TAU_SHLIBX)
+>>>>>>> b52025addf7c77ad95b4b4fabc925fb187fd72f9
 
 all: install
 	@echo
@@ -43,6 +49,12 @@ libTAU-skel-plugin$(TAU_SHLIBX): Tau_plugin_skel.o
 libTAU-mochi-plugin$(TAU_SHLIBX): Tau_plugin_mochi.o
 	$(CXX) Tau_plugin_mochi.o $(TAU_MOCHI_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-mochi-plugin$(TAU_SHLIBX)
 
+<<<<<<< HEAD
+libTAU-gpu-events-plugin$(TAU_SHLIBX): Tau_plugin_gpu_events.o
+	$(CXX) Tau_plugin_gpu_events.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-gpu-events-plugin$(TAU_SHLIBX)
+
+=======
+>>>>>>> b52025addf7c77ad95b4b4fabc925fb187fd72f9
 libTAU-pthread-stopper-plugin$(TAU_SHLIBX): Tau_plugin_pthread_stopper.o
 	$(CXX) Tau_plugin_pthread_stopper.o $(LDFLAGS) $(TAU_SHFLAGS) libTAU-pthread-stopper-plugin$(TAU_SHLIBX) $(TAU_SHLIBS)
 
@@ -112,6 +124,12 @@ Tau_plugin_example_analyze_node_profile_snapshots_async.o: Tau_plugin_example_an
 Tau_plugin_example_analyze_node_profile_snapshots.o: Tau_plugin_example_analyze_node_profile_snapshots.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
+<<<<<<< HEAD
+Tau_plugin_gpu_events.o: Tau_plugin_gpu_events.cpp
+	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) $(TAU_MOCHI_INCLUDE_OPTS) -c $< -o $@
+
+=======
+>>>>>>> b52025addf7c77ad95b4b4fabc925fb187fd72f9
 Tau_plugin_example_mpit_exchange_pvar_data.o: Tau_plugin_example_mpit_exchange_pvar_data.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
