@@ -66,7 +66,6 @@ typedef struct Tau_plugin_event_metadata_registration_data {
    int tid;
 } Tau_plugin_event_metadata_registration_data_t;
 
-<<<<<<< HEAD
 /* GPU EVENTS BEGIN */
 typedef struct Tau_plugin_event_gpu_init_data {
    int tid;
@@ -89,8 +88,6 @@ typedef struct Tau_plugin_event_gpu_memcpy_data {
 } Tau_plugin_event_gpu_memcpy_data_t;
 /* GPU EVENTS END */
 
-=======
->>>>>>> b52025addf7c77ad95b4b4fabc925fb187fd72f9
 typedef struct Tau_plugin_event_post_init_data {
    int dummy;
    int tid;
@@ -480,15 +477,12 @@ typedef int (*Tau_plugin_ompt_target)(Tau_plugin_event_ompt_target_data_t*);
 typedef int (*Tau_plugin_ompt_target_data_op)(Tau_plugin_event_ompt_target_data_op_data_t*);
 typedef int (*Tau_plugin_ompt_target_submit)(Tau_plugin_event_ompt_target_submit_data_t*);
 typedef int (*Tau_plugin_ompt_finalize)(Tau_plugin_event_ompt_finalize_data_t*);
-<<<<<<< HEAD
 /* GPU EVENTS BEGIN */
 typedef int (*Tau_plugin_gpu_init)(Tau_plugin_event_gpu_init_data_t*);
 typedef int (*Tau_plugin_gpu_finalize)(Tau_plugin_event_gpu_finalize_data_t*);
 typedef int (*Tau_plugin_gpu_kernel_exec)(Tau_plugin_event_gpu_kernel_exec_data_t*);
 typedef int (*Tau_plugin_gpu_memcpy)(Tau_plugin_event_gpu_memcpy_data_t*);
 /* GPU EVENTS END */
-=======
->>>>>>> b52025addf7c77ad95b4b4fabc925fb187fd72f9
 
 
 /*Define the callback structure*/
@@ -530,15 +524,12 @@ typedef struct Tau_plugin_callbacks {
    Tau_plugin_ompt_target_data_op OmptTargetDataOp;
    Tau_plugin_ompt_target_submit OmptTargetSubmit;
    Tau_plugin_ompt_finalize OmptFinalize;
-<<<<<<< HEAD
 /* GPU EVENTS BEGIN */
    Tau_plugin_gpu_init GpuInit;
    Tau_plugin_gpu_finalize GpuFinalize;
    Tau_plugin_gpu_kernel_exec GpuKernelExec;
    Tau_plugin_gpu_memcpy GpuMemcpy;
 /* GPU EVENTS END */   
-=======
->>>>>>> b52025addf7c77ad95b4b4fabc925fb187fd72f9
 } Tau_plugin_callbacks_t;
 
 /*Define all the events currently supported*/
@@ -633,15 +624,12 @@ typedef struct Tau_plugin_callbacks_active {
     unsigned int ompt_target_data_op;
     unsigned int ompt_target_submit;
     unsigned int ompt_finalize;
-<<<<<<< HEAD
     /* GPU KERNEL START */
     unsigned int gpu_init;
     unsigned int gpu_finalize;
     unsigned int gpu_kernel_exec;
     unsigned int gpu_memcpy;
     /* GPU KERNEL STOP */
-=======
->>>>>>> b52025addf7c77ad95b4b4fabc925fb187fd72f9
 } Tau_plugin_callbacks_active_t;
 
 /*Deprecated*/
