@@ -573,6 +573,7 @@ int RtsLayer::LockDB(void) {
   incrementDBLock(tid);
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 #ifdef DEBUG_LOCK_PROBLEMS_disabled
+      int i;
       void* callstack[128];
       int frames = backtrace(callstack, 128);
       char** strs = backtrace_symbols(callstack, frames);
