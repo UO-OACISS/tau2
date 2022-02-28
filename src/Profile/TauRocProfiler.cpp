@@ -318,6 +318,52 @@ bool Tau_rocm_context_handler1(rocprofiler_group_t group, void* arg) {
   return false;
 }
 #endif
+
+static const amd_kernel_code_t* GetKernelCode(uint64_t kernel_object) {
+  const amd_kernel_code_t* kernel_code = NULL;
+  hsa_status_t status =
+      HsaRsrcFactory::Instance().LoaderApi()->hsa_ven_amd_loader_query_host_address(
+          reinterpret_cast<const void*>(kernel_object),
+          reinterpret_cast<const void**>(&kernel_code));
+  if (HSA_STATUS_SUCCESS != status) {
+    kernel_code = reinterpret_cast<amd_kernel_code_t*>(kernel_object);
+  }
+  return kernel_code;
+}
+
+// Setting kernel properties
+void set_kernel_properties(const rocprofiler_callback_data_t* callback_data,
+                           context_entry_t* entry)
+{
+  const hsa_kernel_dispatch_packet_t* packet = callback_data->packet;
+  kernel_properties_t* kernel_properties_ptr = &(entry->kernel_properties);
+  const amd_kernel_code_t* kernel_code = callback_data->kernel_code;
+
+  entry->data = *callback_data;
+
+  if (kernel_code == NULL) {
+    const uint64_t kernel_object = callback_data->packet->kernel_object;
+    kernel_code = GetKernelCode(kernel_object);
+    //entry->kernel_name_it = HsaRsrcFactory::AcquireKernelNameRef(kernel_object);
+  } else {
+    entry->data.kernel_name = strdup(callback_data->kernel_name);
+  }
+
+  uint64_t grid_size = packet->grid_size_x * packet->grid_size_y * packet->grid_size_z;
+  if (grid_size > UINT32_MAX) abort();
+  kernel_properties_ptr->grid_size = (uint32_t)grid_size;
+  uint64_t workgroup_size = packet->workgroup_size_x * packet->workgroup_size_y * packet->workgroup_size_z;
+  if (workgroup_size > UINT32_MAX) abort();
+  kernel_properties_ptr->workgroup_size = (uint32_t)workgroup_size;
+  kernel_properties_ptr->lds_size = packet->group_segment_size;
+  kernel_properties_ptr->scratch_size = packet->private_segment_size;
+  kernel_properties_ptr->vgpr_count = AMD_HSA_BITS_GET(kernel_code->compute_pgm_rsrc1, AMD_COMPUTE_PGM_RSRC_ONE_GRANULATED_WORKITEM_VGPR_COUNT);
+  kernel_properties_ptr->sgpr_count = AMD_HSA_BITS_GET(kernel_code->compute_pgm_rsrc1, AMD_COMPUTE_PGM_RSRC_ONE_GRANULATED_WAVEFRONT_SGPR_COUNT);
+  kernel_properties_ptr->fbarrier_count = kernel_code->workgroup_fbarrier_count;
+  kernel_properties_ptr->signal = callback_data->completion_signal;
+  kernel_properties_ptr->object = callback_data->packet->kernel_object;
+}
+
 // Kernel disoatch callback
 hsa_status_t Tau_rocm_dispatch_callback(const rocprofiler_callback_data_t* callback_data, void* arg,
                                rocprofiler_group_t* group) {
@@ -339,6 +385,8 @@ hsa_status_t Tau_rocm_dispatch_callback(const rocprofiler_callback_data_t* callb
   // Profiling context entry
   rocprofiler_t* context = pool_entry.context;
   context_entry_t* entry = reinterpret_cast<context_entry_t*>(pool_entry.payload);
+  // Setting kernel properties
+  set_kernel_properties(callback_data, entry);
 #else
   // Open profiling context
   // context properties
@@ -358,8 +406,8 @@ hsa_status_t Tau_rocm_dispatch_callback(const rocprofiler_callback_data_t* callb
   // Fill profiling context entry
   entry->agent = agent;
   entry->group = *group;
-  entry->data = *callback_data;
-  entry->data.kernel_name = strdup(callback_data->kernel_name);
+  //entry->data = *callback_data;
+  //entry->data.kernel_name = strdup(callback_data->kernel_name);
   reinterpret_cast<std::atomic<bool>*>(&entry->valid)->store(true);
 
   return HSA_STATUS_SUCCESS;

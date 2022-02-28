@@ -2,6 +2,8 @@
 #include <Profile/CuptiLayer.h>
 #include <Profile/TauMetaData.h>
 #include <Profile/TauBfd.h>
+#include <Profile/TauPluginInternals.h>
+#include <Profile/TauPluginCPPTypes.h>
 #include <iostream>
 #include <mutex>
 #include <time.h>
@@ -656,6 +658,12 @@ void Tau_cupti_init()
     Tau_cupti_enable_domains();
     disable_callbacks =0;
 
+    /* TAU GPU PLUGIN EVENT */
+    if(Tau_plugins_enabled.gpu_init) {
+      Tau_plugin_event_gpu_init_data_t plugin_data;
+      plugin_data.tid = RtsLayer::myThread();
+      Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_GPU_INIT, "*", &plugin_data);
+    }
     TAU_DEBUG_PRINT("TAU: exiting Tau_cupti_init\n");
 }
 
@@ -699,6 +707,12 @@ void Tau_cupti_onload()
 void Tau_cupti_onunload() {
     if(TauEnv_get_cuda_track_unified_memory()) {
         CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
+    }
+    /* TAU GPU PLUGIN EVENT */
+    if(Tau_plugins_enabled.gpu_finalize) {
+      Tau_plugin_event_gpu_finalize_data_t plugin_data;
+      plugin_data.tid = RtsLayer::myThread();
+      Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_GPU_FINALIZE, "*", &plugin_data);
     }
 }
 
@@ -1532,6 +1546,16 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                         cerr << "recording memcpy src: " << memcpy->srcDeviceId << "/" << memcpy->srcContextId << endl;
                         cerr << "recording memcpy dst: " << memcpy->dstDeviceId << "/" << memcpy->dstContextId << endl;
 #endif
+		        /* TAU GPU PLUGIN EVENT */
+                        if(Tau_plugins_enabled.gpu_memcpy) {
+                           Tau_plugin_event_gpu_memcpy_data_t plugin_data;
+                           plugin_data.tid = RtsLayer::myThread();
+   		           plugin_data.time = end - start;
+			   plugin_data.size = bytes;
+			   plugin_data.kind = memcpy->copyKind;
+                           Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_GPU_MEMCPY, "*", &plugin_data);
+                        }
+
                         int taskId = get_taskid_from_context_id(contextId, streamId);
                         if (TauEnv_get_tracing() && start < previous_ts[taskId]) {
                             sanity.memory_out_of_order++;
@@ -1594,6 +1618,15 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                         cerr << "recording memcpy on device: " << deviceId << endl;
                         cerr << "recording memcpy kind: " << getMemcpyType(copyKind) << endl;
 #endif
+		        /* TAU GPU PLUGIN EVENT */
+                        if(Tau_plugins_enabled.gpu_memcpy) {
+                           Tau_plugin_event_gpu_memcpy_data_t plugin_data;
+                           plugin_data.tid = RtsLayer::myThread();
+   		           plugin_data.time = end - start;
+			   plugin_data.size = bytes;
+			   plugin_data.kind = memcpy->copyKind;
+                           Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_GPU_MEMCPY, "*", &plugin_data);
+                        }
                         //We do not always know on the corresponding host event on
                         //the CPU what type of copy we have so we need to register
                         //the bytes copied here. Be careful we only want to record
@@ -1805,6 +1838,15 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                     {
                         id = correlationId;
                     }
+
+		    /* TAU GPU PLUGIN EVENT */
+                    if(Tau_plugins_enabled.gpu_kernel_exec) {
+                      Tau_plugin_event_gpu_kernel_exec_data_t plugin_data;
+                      plugin_data.tid = RtsLayer::myThread();
+		      plugin_data.time = end - start;
+                      Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_GPU_KERNEL_EXEC, "*", &plugin_data);
+                    }
+
                     taskId = get_taskid_from_context_id(contextId, streamId);
                         if (TauEnv_get_tracing() && start < previous_ts[taskId]) {
                             sanity.kernel_out_of_order++;

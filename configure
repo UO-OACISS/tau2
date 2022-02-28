@@ -3983,6 +3983,11 @@ case $machine in
 	    aocc=yes
 	    default_fortran=flang
 	    fixmakeargs="$fixmakeargs AOCC COMPINST_LLVM"
+	elif [ "x$PE_ENV" = xAMD ] ; then
+	    tauoptions="${tauoptions}-amd"
+	    aocc=yes
+	    default_fortran=flang
+	    fixmakeargs="$fixmakeargs AOCC COMPINST_LLVM"
         elif [ "x$PE_ENV" = xGNU -a "x$CLANG_HOME" != "x" ]; then
 	    llvm=yes
 	    tauoptions="${tauoptions}-llvm"

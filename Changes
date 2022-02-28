@@ -23,6 +23,8 @@ Version 2.31 changes (from 2.30):
 10. Added support for TAU_ANONYMIZE: creates tauprofile.xml and tau_anonymized_key.xml. 
 11. Added tau_join.sh a tool to decrypt and join the files created by TAU_ANONYMIZE.
 12. Added support for ROCm 4.5.2.
+13. Added support for Cray PrgEnv-amd. 
+14. Fixed a bug with throttling and CUPTI timer stop. 
  
 Version 2.30 changes (from 2.29):
 1. Added support for Fugaku Fujitsu FX system with Fujitsu compilers (-mpi -bfd=download) for Fugaku. 
