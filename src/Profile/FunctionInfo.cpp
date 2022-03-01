@@ -233,6 +233,8 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   // an atomic operation in the push_back and size() operations.
   // Important in the presence of concurrent threads.
   TheFunctionDB().push_back(this);
+  printf("Address of function %s is %p !\n",(const char *)GetName(),(TheFunctionDB().back()));
+
   FunctionId = RtsLayer::GenerateUniqueId();
 
   StartAddr = 0;
