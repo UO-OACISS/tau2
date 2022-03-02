@@ -30,6 +30,7 @@
 #ifdef TAU_GPU
 #include <Profile/TauGpu.h>
 #endif
+#include <execinfo.h>
 
 // FIXME: Duplicated in pthread_wrap.c
 #if !defined(__APPLE__)
@@ -173,7 +174,22 @@ int PthreadLayer::InitializeDBMutexData(void)
 int PthreadLayer::LockDB(void)
 {
   InitializeThreadData();
-  pthread_mutex_lock(&tauDBMutex);
+  int ret = pthread_mutex_trylock(&tauDBMutex);
+  if (ret == 0) return 1;
+
+  if (ret == EDEADLK) {
+    fprintf(stderr, "DEADLOCK! Thread trying to grab tauDBMutex twice!\n");
+    abort();
+  }
+  int tries = 0;
+  while (ret != 0) {
+    ret = pthread_mutex_trylock(&tauDBMutex);
+    if (tries > 100000000) {
+        fprintf(stderr, "DEADLOCK! Thread can't grab tauDBMutex owned by %d!\n", tauDBMutex.__data.__owner);
+        abort();
+    }
+    tries++;
+  }
   return 1;
 }
 
@@ -393,6 +409,22 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
     // Another wrapper has already intercepted the call so just pass through
     retval = pthread_create_call(threadp, attr, start_routine, arg);
   } else {
+
+  /* This block of code is helpful in finding pthread bombs. If a code is
+   * consuming lots of threads, and you don't know why - enable this block. */
+# if 0
+  constexpr int stack_depth=100;
+  void* callstack[stack_depth];
+  int frames = backtrace(callstack, stack_depth);
+  char** strs = backtrace_symbols(callstack, frames);
+  TAU_VERBOSE("\n\n");
+  TAU_VERBOSE("PTHREAD CREATE Callstack: \n");
+  for (int i = 0; i < frames; ++i) {
+      TAU_VERBOSE("    %s\n", strs[i]);
+  }
+  free(strs);
+#endif
+
     *wrapped = true;
     tau_pthread_pack * pack = new tau_pthread_pack;
     pack->start_routine = start_routine;

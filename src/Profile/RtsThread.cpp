@@ -48,7 +48,7 @@
 #endif /* TAU_MPC */
 
 // This is used for printing the stack trace when debugging locks
-//#define DEBUG_LOCK_PROBLEMS
+// #define DEBUG_LOCK_PROBLEMS
 #ifdef DEBUG_LOCK_PROBLEMS
 //#define DEBUG_LOCK_PROBLEMS_disabled
 #include <execinfo.h>
@@ -494,11 +494,14 @@ int RtsLayer::getNumDBLocks(void) {
   int tid=myThread();
   return lockDBCount[tid];
 }
+#ifdef DEBUG_LOCK_PROBLEMS
+constexpr int stack_depth=4;
+#endif
 
 int RtsLayer::LockDB(void) {
   static bool init = initLocks();
 #ifdef DEBUG_LOCK_PROBLEMS
-  thread_local static void* old_callstack[128];
+  thread_local static void* old_callstack[stack_depth];
   thread_local static int old_frames;
 #endif
   // use the init value so the compiler doesn't complain
@@ -513,30 +516,32 @@ int RtsLayer::LockDB(void) {
       int i;
       char** old_strs = backtrace_symbols(old_callstack, old_frames);
       TAU_VERBOSE("\n\n");
+      TAU_VERBOSE("Lock %d: Old Callstack: \n", lockDBCount[tid]);
       for (i = 0; i < old_frames; ++i) {
         fprintf(stderr,"%d,%d: %s\n", nid, tid, old_strs[i]);
       }
       free(old_strs);
-      void* callstack[128];
-      int frames = backtrace(callstack, 128);
+      void* callstack[stack_depth];
+      int frames = backtrace(callstack, stack_depth);
       char** strs = backtrace_symbols(callstack, frames);
       TAU_VERBOSE("\n\n");
+      TAU_VERBOSE("Lock %d: New Callstack: \n", lockDBCount[tid]);
       for (i = 0; i < frames; ++i) {
         TAU_VERBOSE("%d,%d: %s\n", nid, tid, strs[i]);
       }
       free(strs);
     }
-    TAU_VERBOSE("WARNING! Thread %d,%d has DB lock, trying for another DB lock\n", nid, tid);
+    TAU_VERBOSE("WARNING! Thread %d,%d,%d has %d DB locks, trying for another DB lock\n", nid, tid, gettid(), lockDBCount[tid]);
     //abort();
   }
-  old_frames = backtrace(old_callstack, 128);
+  old_frames = backtrace(old_callstack, stack_depth);
 /*
   // check the OTHER lock
   if (lockEnvCount[tid] > 0) {
     fprintf(stderr,"WARNING! Thread %d,%d has Env lock, trying for DB lock\n", nid, tid);
     if(!TauEnv_get_ebs_enabled()) {
-      void* callstack[128];
-      int i, frames = backtrace(callstack, 128);
+      void* callstack[stack_depth];
+      int i, frames = backtrace(callstack, stack_depth);
       char** strs = backtrace_symbols(callstack, frames);
       for (i = 0; i < frames; ++i) {
         fprintf(stderr,"%d,%d: %s\n", nid, tid, strs[i]);
@@ -553,15 +558,17 @@ int RtsLayer::LockDB(void) {
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 #ifdef DEBUG_LOCK_PROBLEMS_disabled
       int i;
-      void* callstack[128];
-      int frames = backtrace(callstack, 128);
+      void* callstack[stack_depth];
+      int frames = backtrace(callstack, stack_depth);
       char** strs = backtrace_symbols(callstack, frames);
       fprintf(stderr,"\n\n");
       for (i = 0; i < frames; ++i) {
         fprintf(stderr,"%d,%d: %s\n", nid, tid, strs[i]);
       }
       free(strs);
-  TAU_VERBOSE("THREAD %d,%d HAS %d DB LOCKS (locking)\n", RtsLayer::myNode(), tid, lockDBCount[tid]);
+#endif
+#ifdef DEBUG_LOCK_PROBLEMS
+  TAU_VERBOSE("Lock: THREAD %d,%d HAS %d DB LOCKS\n", RtsLayer::myNode(), tid, lockDBCount[tid]);
 #endif
   return lockDBCount[tid];
 }
@@ -579,9 +586,32 @@ int RtsLayer::UnLockDB(void) {
   }
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 #ifdef DEBUG_LOCK_PROBLEMS
+  thread_local static void* old_callstack[stack_depth];
+  thread_local static int old_frames;
+  int nid = RtsLayer::myNode();
   if (lockDBCount[tid] > 0) {
-  TAU_VERBOSE("Unlock: THREAD %d,%d HAS %d DB LOCKS\n", RtsLayer::myNode(), tid, lockDBCount[tid]);
+    if(!TauEnv_get_ebs_enabled()) {
+      int i;
+      char** old_strs = backtrace_symbols(old_callstack, old_frames);
+      TAU_VERBOSE("\n\n");
+      TAU_VERBOSE("Unlock %d: Old Callstack: \n", lockDBCount[tid]);
+      for (i = 0; i < old_frames; ++i) {
+        fprintf(stderr,"%d,%d: %s\n", nid, tid, old_strs[i]);
+      }
+      free(old_strs);
+      void* callstack[stack_depth];
+      int frames = backtrace(callstack, stack_depth);
+      char** strs = backtrace_symbols(callstack, frames);
+      TAU_VERBOSE("\n\n");
+      TAU_VERBOSE("Unlock %d: New Callstack: \n", lockDBCount[tid]);
+      for (i = 0; i < frames; ++i) {
+        TAU_VERBOSE("%d,%d: %s\n", nid, tid, strs[i]);
+      }
+      free(strs);
+    }
   }
+  old_frames = backtrace(old_callstack, stack_depth);
+  TAU_VERBOSE("Unlock: THREAD %d,%d HAS %d DB LOCKS\n", nid, tid, lockDBCount[tid]);
 #endif
   return lockDBCount[tid];
 }
@@ -658,16 +688,16 @@ int RtsLayer::LockEnv(void)
 #ifdef DEBUG_LOCK_PROBLEMS
     int nid = RtsLayer::myNode();
   if (lockEnvCount[tid] > 0) {
+    TAU_VERBOSE("WARNING! Thread %d,%d has Env lock, trying for another Env lock\n", nid, tid);
     if(!TauEnv_get_ebs_enabled()) {
-      void* callstack[128];
-      int i, frames = backtrace(callstack, 128);
+      void* callstack[stack_depth];
+      int i, frames = backtrace(callstack, stack_depth);
       char** strs = backtrace_symbols(callstack, frames);
       for (i = 0; i < frames; ++i) {
         TAU_VERBOSE("%d,%d: %s\n", nid, tid, strs[i]);
       }
       free(strs);
     }
-    TAU_VERBOSE("WARNING! Thread %d,%d has Env lock, trying for another Env lock\n", nid, tid);
     abort();
   }
 #endif

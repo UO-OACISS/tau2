@@ -26,6 +26,7 @@
 #include <map>
 #include <set>
 #include <sstream>
+#include <mutex>
 
 #if defined TAU_USE_STDCXX11 || defined TAU_WINDOWS
 #include <thread>
@@ -92,6 +93,7 @@ struct HashNode
 
   TauBfdInfo info;		///< Filename, line number, etc.
   FunctionInfo * fi;		///< Function profile information
+  char * resolved_name;   // save this for efficiency
   bool excluded;			///< Is function excluded from profiling?
 };
 
@@ -108,6 +110,11 @@ struct HashTable : public TAU_HASH_MAP<unsigned long, HashNode*>
     Tau_destructor_trigger();
   }
 };
+
+std::mutex & TheHashMutex() {
+    static std::mutex mtx;
+    return mtx;
+}
 
 static HashTable & TheHashTable()
 {
@@ -140,19 +147,27 @@ extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_addr
       unsigned long addr = 0;
       char region_type[100];
       sscanf(fi.GetName(), "%s ADDR <%lx>", region_type, &addr);
-      #ifdef TAU_BFD
+#ifdef TAU_BFD
+      // my local map, to reduce contention
+      thread_local static TAU_HASH_MAP<unsigned long, HashNode*> local_map;
       HashNode * node;
-      tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
-
-      node = TheHashTable()[addr];
+      node = local_map[addr];
+      // not in my local map?  look in the global map
       if (!node) {
-        node = new HashNode;
-        node->fi = NULL;
-        node->excluded = false;
-
-        TheHashTable()[addr] = node;
+        // acquire lock for global map
+        std::unique_lock<std::mutex> lck (TheHashMutex());
+        node = TheHashTable()[addr];
+        if (!node) {
+            node = new HashNode;
+            node->fi = NULL;
+            node->excluded = false;
+            TheHashTable()[addr] = node;
+        }
+        local_map[addr] = node;
       }
 
+      // resolve the string for output
+      tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
       Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
 
       if(node && node->info.filename && node->info.funcname && node->info.lineno) {
@@ -162,11 +177,11 @@ extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_addr
       } else if(node && node->info.funcname) {
         sprintf(resolved_address, "%s %s", region_type, node->info.funcname);
       } else {
-        sprintf(resolved_address, "OpenMP %s __UNKNOWN__", region_type);
+        sprintf(resolved_address, "%s __UNKNOWN__", region_type);
       }
-      #else
-        sprintf(resolved_address, "OpenMP %s __UNKNOWN__", region_type);
-      #endif /*TAU_BFD*/
+#else
+        sprintf(resolved_address, "%s __UNKNOWN__", region_type);
+#endif /*TAU_BFD*/
 }
 
 /* Given the unsigned long address, and a pointer to the string, fill the string with the BFD resolved address.
@@ -179,28 +194,36 @@ extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * res
       HashNode * node;
       tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
 
-      RtsLayer::LockDB();
-      node = TheHashTable()[addr];
+      // my local map, to reduce contention
+      thread_local static TAU_HASH_MAP<unsigned long, HashNode*> local_map;
+      node = local_map[addr];
+      // not in my local map?  look in the global map
       if (!node) {
-        node = new HashNode;
-        node->fi = NULL;
-        node->excluded = false;
-
-        TheHashTable()[addr] = node;
-
-        Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
+        // acquire lock for global map
+        std::unique_lock<std::mutex> lck (TheHashMutex());
+        node = TheHashTable()[addr];
+        if (!node) {
+            node = new HashNode;
+            node->fi = NULL;
+            node->excluded = false;
+            TheHashTable()[addr] = node;
+            Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
+            int length = strlen(node->info.funcname) + strlen(node->info.filename) + 64;
+            node->resolved_name = (char*)(malloc(length * sizeof(char)));
+            if(node && node->info.filename && node->info.funcname && node->info.lineno) {
+                sprintf(node->resolved_name, "%s [{%s} {%d, 0}]", node->info.funcname, node->info.filename, node->info.lineno);
+            } else if(node && node->info.filename && node->info.funcname) {
+                sprintf(node->resolved_name, "%s [{%s} {0, 0}]", node->info.funcname, node->info.filename);
+            } else if(node && node->info.funcname) {
+                sprintf(node->resolved_name, "%s", node->info.funcname);
+            } else {
+                sprintf(node->resolved_name, "__UNKNOWN__");
+            }
+        }
+        local_map[addr] = node;
       }
-      RtsLayer::UnLockDB();
+      sprintf(resolved_address, "%s", node->resolved_name);
 
-      if(node && node->info.filename && node->info.funcname && node->info.lineno) {
-        sprintf(resolved_address, "%s [{%s} {%d, 0}]", node->info.funcname, node->info.filename, node->info.lineno);
-      } else if(node && node->info.filename && node->info.funcname) {
-        sprintf(resolved_address, "%s [{%s} {0, 0}]", node->info.funcname, node->info.filename);
-      } else if(node && node->info.funcname) {
-        sprintf(resolved_address, "%s", node->info.funcname);
-      } else {
-        sprintf(resolved_address, "__UNKNOWN__");
-      }
       #else
         sprintf(resolved_address, "__UNKNOWN__");
       #endif /*TAU_BFD*/
