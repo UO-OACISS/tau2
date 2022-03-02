@@ -395,7 +395,6 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
         // So each one needs a unique virtual thread.
         // We lock the DB, so that we can create three consecutive thread
         // IDs with impunity.
-        RtsLayer::LockDB();
         TAU_VERBOSE("ACTIVITY_DOMAIN_HIP_API: creating task\n");
         // one for dispatch
         TAU_CREATE_TASK(dispatch_task_id);
@@ -410,7 +409,6 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
             copy_task_id = dispatch_task_id;
             barrier_task_id = dispatch_task_id;
         }
-        RtsLayer::UnLockDB();
         //Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)begin_us));
         metric_set_gpu_timestamp(dispatch_task_id, ((double)(begin_us)));
         Tau_create_top_level_timer_if_necessary_task(dispatch_task_id);
@@ -465,11 +463,22 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
     fflush(stdout);
     ROCTRACER_CALL(roctracer_next_record(record, &record));
   }
+    // Why is this here?  Well, to make sure that this thread isn't
+    // holding the lock!  FOR SOME REASON, the TauGpu code will finish
+    // without releasing the lock...
+    int tmp = RtsLayer::getNumDBLocks();
+    while (tmp != 0) {
+        //printf ("\n*\n*\n*\nHolding %d locks!\n*\n*\n*\n",tmp);
+        //fflush(stdout);
+        RtsLayer::UnLockDB();
+        tmp = RtsLayer::getNumDBLocks();
+    }
 }
 
 
 // Init tracing routine
 int Tau_roctracer_init_tracing() {
+  //return 0;
   TAU_VERBOSE("# START init_tracing: #############################\n");
 #if (!(defined (TAU_MPI) || (TAU_SHMEM)))
   if (Tau_get_node() == -1) {
@@ -492,6 +501,7 @@ int Tau_roctracer_init_tracing() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Start tracing routine
 extern void Tau_roctracer_start_tracing() {
+  //return;
   static int flag = Tau_roctracer_init_tracing();
   TAU_VERBOSE("# START #############################\n");
   // Enable HIP API callbacks
@@ -505,6 +515,7 @@ extern void Tau_roctracer_start_tracing() {
 
 // Stop tracing routine
 extern void Tau_roctracer_stop_tracing() {
+  //return;
   if (RtsLayer::myThread() != 0) return;
   ROCTRACER_CALL(roctracer_disable_domain_callback(ACTIVITY_DOMAIN_HIP_API));
   ROCTRACER_CALL(roctracer_disable_domain_activity(ACTIVITY_DOMAIN_HIP_OPS));
@@ -515,6 +526,7 @@ extern void Tau_roctracer_stop_tracing() {
 
 // Flush tracing routine
 extern void Tau_roctracer_flush_tracing() {
+  //return;
   TAU_VERBOSE("# FLUSHING ASYNC! ###################\n");
   ROCTRACER_CALL(roctracer_flush_activity());
 }
