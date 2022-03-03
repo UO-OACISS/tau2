@@ -36,6 +36,7 @@
 #include <Profile/TauBfd.h>
 
 #include <vector>
+#include <mutex>
 
 #include <tau_internal.h>
 
@@ -90,6 +91,11 @@ struct HashTable : public TAU_HASH_MAP<unsigned long, HashNode*>
     Tau_destructor_trigger();
   }
 };
+
+static std::mutex & theMutex() {
+  static std::mutex mtx;
+  return mtx;
+}
 
 static HashTable & TheHashTable()
 {
@@ -146,14 +152,13 @@ void updateHashTable(unsigned long addr, const char *funcname)
 {
   HashNode * hn = TheLocalHashTable()[addr];
   if (!hn) {
-    RtsLayer::LockDB();
+    std::unique_lock<std::mutex> lck (theMutex());
     hn = TheHashTable()[addr];
     if (!hn) {
       hn = new HashNode;
       TheHashTable()[addr] = hn;
     }
     TheLocalHashTable()[addr] = hn;
-    RtsLayer::UnLockDB();
   }
   hn->info.funcname = funcname;
   hn->excluded = isExcluded(funcname);
@@ -274,7 +279,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
       // We must be inside TAU before we lock the database
       TauInternalFunctionGuard protects_this_region;
 
-      RtsLayer::LockDB();
+      std::unique_lock<std::mutex> lck (theMutex());
       node = TheHashTable()[addr];
       if (!node) {
         node = new HashNode;
@@ -289,7 +294,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
       }
       TheLocalHashTable()[addr] =  node;
-      RtsLayer::UnLockDB();
     }
     // Skip excluded functions
     if (node->excluded) return;
@@ -335,7 +339,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
     // Start the timer if it's not an excluded function
     if (!node->fi) {
-      RtsLayer::LockDB();    // lock, then check again
+      std::unique_lock<std::mutex> lck (theMutex());
       if (!node->fi) {
         // Resolve function info if it hasn't already been retrieved
         if (!node->info.probeAddr) {
@@ -372,7 +376,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 	// exclude that routine.
 	if(!node->info.filename || !node->info.funcname) {
 		node->excluded = 1;
-		RtsLayer::UnLockDB();
 		return;
 	}
 
@@ -399,7 +402,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         // Cleanup
         free((void*)routine);
       }
-      RtsLayer::UnLockDB();
     }
 
     if (!node->excluded) {
@@ -483,9 +485,8 @@ void __cyg_profile_func_exit(void* func, void* callsite)
     // Get the hash node
     hn = TheLocalHashTable()[addr];
     if(!hn){
-        RtsLayer::LockDB();
+        std::unique_lock<std::mutex> lck (theMutex());
         hn = TheHashTable()[addr];
-        RtsLayer::UnLockDB();
     }
     // Skip excluded functions or functions we didn't enter
     if (!hn || hn->excluded || !hn->fi) return;
