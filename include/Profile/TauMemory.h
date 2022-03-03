@@ -155,6 +155,7 @@
 
 
 #ifdef __cplusplus
+#include <mutex>
 //=============================================================================
 // Allocation record for heap allocation made by TAU or by the system.
 // Manages guarded (de)allocation and memory profiling events.
@@ -256,6 +257,9 @@ private:
 
   // Bytes of memory protection overhead
   static size_t & __bytes_overhead();
+
+  // internal lock for memory management
+  static std::mutex mtx;
 
 // ----------------------------------------------------------------------------
 // Public instance members

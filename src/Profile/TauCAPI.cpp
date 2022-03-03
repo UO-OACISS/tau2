@@ -1186,10 +1186,10 @@ extern "C" size_t Tau_create_trigger(const char *name) {
   static size_t trigger_counter = 0;
   TauInternalFunctionGuard protects_this_function;
 
-  RtsLayer::LockDB();
+  static std::mutex mtx;
+  std::unique_lock<std::mutex> lck (mtx);
   size_t retval =  trigger_counter;
   trigger_counter++;
-  RtsLayer::UnLockDB();
 
   return retval;
 }
@@ -1199,16 +1199,21 @@ extern "C" void Tau_trigger(size_t id, void * data) {
   Tau_util_invoke_callbacks_for_trigger_event(TAU_PLUGIN_EVENT_TRIGGER, id, data);
 }
 
+/* This mutex is used to control access to the plugin triggers */
+std::mutex & TriggerMutex() {
+  static std::mutex mtx;
+  return mtx;
+}
+
 extern "C" void Tau_enable_plugin_for_specific_event(int ev, const char *name, unsigned int id)
 {
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
-  RtsLayer::LockDB();
+  std::unique_lock<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].insert(id);
   if(plugins_for_ompt_event[ev].is_ompt())
     plugins_for_ompt_event[ev].insert(id);
-  RtsLayer::UnLockDB();
 
 }
 
@@ -1217,11 +1222,10 @@ extern "C" void Tau_disable_plugin_for_specific_event(int ev, const char *name, 
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
-  RtsLayer::LockDB();
+  std::unique_lock<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].erase(id);
   if(plugins_for_ompt_event[ev].is_ompt())
     plugins_for_ompt_event[ev].erase(id);
-  RtsLayer::UnLockDB();
 
 }
 
@@ -1230,11 +1234,10 @@ extern "C" void Tau_disable_all_plugins_for_specific_event(int ev, const char *n
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
-  RtsLayer::LockDB();
+  std::unique_lock<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].clear();
   if(plugins_for_ompt_event[ev].is_ompt())
     plugins_for_ompt_event[ev].clear();
-  RtsLayer::UnLockDB();
 }
 
 extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *name)
@@ -1243,7 +1246,7 @@ extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *na
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
 
-  RtsLayer::LockDB();
+  std::unique_lock<std::mutex> lck (TriggerMutex());
   for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
     Tau_get_plugins_for_named_specific_event()[key].insert(i);
   }
@@ -1254,16 +1257,14 @@ extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *na
     }
   }
 
-  RtsLayer::UnLockDB();
 }
 
 extern "C" void Tau_enable_plugin_for_trigger_event(int ev, size_t hash, unsigned int id)
 {
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
-  RtsLayer::LockDB();
+  std::unique_lock<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].insert(id);
-  RtsLayer::UnLockDB();
 
 }
 
@@ -1271,9 +1272,8 @@ extern "C" void Tau_disable_plugin_for_trigger_event(int ev, size_t hash, unsign
 {
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
-  RtsLayer::LockDB();
+  std::unique_lock<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].erase(id);
-  RtsLayer::UnLockDB();
 
 }
 
@@ -1281,9 +1281,8 @@ extern "C" void Tau_disable_all_plugins_for_trigger_event(int ev, size_t hash)
 {
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
-  RtsLayer::LockDB();
+  std::unique_lock<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].clear();
-  RtsLayer::UnLockDB();
 }
 
 extern "C" void Tau_enable_all_plugins_for_trigger_event(int ev, size_t hash)
@@ -1291,20 +1290,18 @@ extern "C" void Tau_enable_all_plugins_for_trigger_event(int ev, size_t hash)
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
 
-  RtsLayer::LockDB();
+  std::unique_lock<std::mutex> lck (TriggerMutex());
   for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
     Tau_get_plugins_for_named_specific_event()[key].insert(i);
   }
-  RtsLayer::UnLockDB();
 }
 
 extern "C" void Tau_add_regex(const char * r)
 {
   TauInternalFunctionGuard protects_this_function;
   std::string s(r);
-  RtsLayer::LockDB();
+  std::unique_lock<std::mutex> lck (TriggerMutex());
   regex_list.push_back(s);
-  RtsLayer::UnLockDB();
 }
 
 /* Plugin API */
