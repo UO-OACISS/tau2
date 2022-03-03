@@ -258,10 +258,15 @@ struct tau_pthread_pack
 };
 
 extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address);
+extern "C" void tau_pthread_function_cleanup_handler(void * args);
 
-struct tau_pthread_wrapper_args_t {
+class tau_pthread_wrapper_args_t {
+public:
     void * handle; // TAU timer handle
     tau_pthread_pack * pack; // Argument to tau_pthread_function
+    ~tau_pthread_wrapper_args_t() {
+        tau_pthread_function_cleanup_handler(this);
+    }
 };
 
 // If a thread exits through pthread_exit(), we will never return
@@ -270,6 +275,10 @@ struct tau_pthread_wrapper_args_t {
 // the timer in that case.
 extern "C"
 void tau_pthread_function_cleanup_handler(void * args) {
+  //static thread_local bool do_once = false;
+  //printf("Wrapper args (cleanup): %p, %d\n", args, (int)do_once);
+  //if (do_once) { return; }
+  //do_once = true;
   // When thread 0 exits, any still-running threads are cancelled,
   // which would trigger this handler. However, if thread 0 has exited,
   // TAU may have already shut down. If TAU has already shut down,
@@ -346,7 +355,8 @@ void * tau_pthread_function(void *arg)
   wrapper_args.handle = handle;
   wrapper_args.pack = pack;
   // Register the cleanup function.
-  pthread_cleanup_push(tau_pthread_function_cleanup_handler, &wrapper_args);
+  //printf("Wrapper args: %p\n", &wrapper_args);
+  //pthread_cleanup_push(tau_pthread_function_cleanup_handler, &wrapper_args);
 
   // Call the function that we are wrapping.
   ret = pack->start_routine(pack->arg);
@@ -355,7 +365,11 @@ void * tau_pthread_function(void *arg)
   // Non-zero argument causes the cleanup function to execute when popped,
   // so that we will stop the timer through the cleanup function even
   // when returning normally.
-  pthread_cleanup_pop(1);
+  /* CORREECTION - with some compilers/runtimes, this approach can result
+   * in a corrupted wrapper_args pointer. Instead, the wrapper_args object
+   * has a destructor method that will call the cleanup function.  When this
+   * object goes out of scope, we will effectively be doing the same thing. */
+  //pthread_cleanup_pop(1);
   return ret;
 }
 
