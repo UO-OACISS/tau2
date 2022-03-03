@@ -367,10 +367,10 @@ int OpenMPLayer::InitializeThreadData(void)
   return 1;
 }
 
-void OpenMPLayer::Initialize(void)
+int OpenMPLayer::Initialize(void)
 {
   static int initializing_or_initialized = false;
-  if (initializing_or_initialized) { return; }
+  if (initializing_or_initialized) { return 0; }
   initializing_or_initialized = true;
   // ONLY INITIALIZE THE LOCK ONCE!
   static int registerInitFlag = InitializeRegisterMutexData();
@@ -379,6 +379,7 @@ void OpenMPLayer::Initialize(void)
   // use the flags so that the compiler doesn't complain
   if (registerInitFlag && dbInitFlag && envInitFlag) {};
   initialized = true;
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -406,8 +407,20 @@ int OpenMPLayer::InitializeRegisterMutexData(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::LockDB(void)
 {
-  Initialize();
-  if (initialized) omp_set_lock(&OpenMPLayer::tauDBmutex);
+  static int do_once = Initialize();
+  static int owner = 0;
+  if (initialized) {
+    int acquired = 0;
+    int tries = 0;
+    do {
+        acquired = omp_test_lock(&OpenMPLayer::tauDBmutex);
+        if (++tries > 10000000) {
+            printf("DEADLOCK! I am %d, lock held by %d\n", _tau_thread_id, owner);
+            abort();
+        }
+    } while(acquired == 0);
+  }
+  owner = _tau_thread_id;
   return 1;
 }
 
@@ -437,7 +450,7 @@ int OpenMPLayer::InitializeEnvMutexData(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::LockEnv(void)
 {
-  Initialize();
+  static int do_once = Initialize();
   if (initialized) omp_set_lock(&OpenMPLayer::tauEnvmutex);
   return 1;
 }

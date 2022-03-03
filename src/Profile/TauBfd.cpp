@@ -668,7 +668,7 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   // BFD is not thread safe, and we call this function from lots of places.
   static std::mutex mtx;
   // a unique lock will unlock when it goes out of scope.
-  std::unique_lock<std::mutex> lck (mtx);
+  std::lock_guard<std::mutex> lck (mtx);
 
   if (!TauEnv_get_bfd_lookup() || !Tau_bfd_checkHandle(handle)) {
     info.secure(probeAddr);

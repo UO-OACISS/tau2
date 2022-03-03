@@ -207,7 +207,7 @@ TauAllocation * TauAllocation::Find(allocation_map_t::key_type const & key)
 {
   TauAllocation * found = NULL;
   if (key) {
-    std::unique_lock<std::mutex> lck (mtx);
+    std::lock_guard<std::mutex> lck (mtx);
     allocation_map_t const & alloc_map = AllocationMap();
     allocation_map_t::const_iterator it = alloc_map.find(key);
     if (it != alloc_map.end()) {
@@ -224,7 +224,7 @@ TauAllocation * TauAllocation::FindContaining(void * ptr)
 {
   TauAllocation * found = NULL;
   if (ptr) {
-    std::unique_lock<std::mutex> lck (mtx);
+    std::lock_guard<std::mutex> lck (mtx);
     allocation_map_t const & allocMap = AllocationMap();
     allocation_map_t::const_iterator it;
     for(it = allocMap.begin(); it != allocMap.end(); it++) {
@@ -401,7 +401,7 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
   }
 
   {
-    std::unique_lock<std::mutex> lck (mtx);
+    std::lock_guard<std::mutex> lck (mtx);
     __bytes_allocated() += user_size;
     __bytes_overhead() += alloc_size - user_size;
     __allocation_map()[user_addr] = this;
@@ -487,7 +487,7 @@ void TauAllocation::Deallocate(const char * filename, int lineno)
   }
 
   {
-    std::unique_lock<std::mutex> lck (mtx);
+    std::lock_guard<std::mutex> lck (mtx);
     __bytes_deallocated() += user_size;
     if (protect_free) {
         __bytes_overhead() += user_size;
@@ -547,7 +547,7 @@ void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filena
       user_size = size;
     }
     {
-        std::unique_lock<std::mutex> lck (mtx);
+        std::lock_guard<std::mutex> lck (mtx);
         __bytes_allocated() += user_size;
         __allocation_map()[user_addr] = this;
     }
@@ -569,7 +569,7 @@ void TauAllocation::TrackDeallocation(const char * filename, int lineno)
   allocated = false;
 
   {
-    std::unique_lock<std::mutex> lck (mtx);
+    std::lock_guard<std::mutex> lck (mtx);
     __bytes_deallocated() += user_size;
     __allocation_map().erase(user_addr);
   }
@@ -607,7 +607,7 @@ void TauAllocation::TrackReallocation(void * ptr, size_t size, const char * file
       } else {
         // Track deallocation of old memory without destroying this object
         {
-            std::unique_lock<std::mutex> lck (mtx);
+            std::lock_guard<std::mutex> lck (mtx);
             __bytes_deallocated() += user_size;
             __allocation_map().erase(user_addr);
         }
@@ -753,7 +753,7 @@ void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, i
   unsigned long file_hash = LocationHash(lineno, filename);
 
   {
-    std::unique_lock<std::mutex> lck (mtx);
+    std::lock_guard<std::mutex> lck (mtx);
     event_map_t::iterator it = event_map.find(file_hash);
     if (it == event_map.end()) {
         if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
@@ -788,7 +788,7 @@ void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename,
   TauContextUserEvent * e;
 
   {
-    std::unique_lock<std::mutex> lck (mtx);
+    std::lock_guard<std::mutex> lck (mtx);
     event_map_t::iterator it = event_map.find(file_hash);
     if (it == event_map.end()) {
         if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
@@ -822,7 +822,7 @@ void TauAllocation::TriggerErrorEvent(char const * descript, char const * filena
   TauContextUserEvent * e;
 
   {
-    std::unique_lock<std::mutex> lck (mtx);
+    std::lock_guard<std::mutex> lck (mtx);
     event_map_t::iterator it = event_map.find(file_hash);
     if (it == event_map.end()) {
         char * name;

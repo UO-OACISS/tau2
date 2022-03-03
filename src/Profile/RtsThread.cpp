@@ -21,6 +21,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/syscall.h>
+
+#ifdef SYS_gettid
+pid_t tid = syscall(SYS_gettid);
+#define gettid() syscall(SYS_gettid)
+#else
+#error "SYS_gettid unavailable on this system"
+#endif
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -48,7 +57,7 @@
 #endif /* TAU_MPC */
 
 // This is used for printing the stack trace when debugging locks
-// #define DEBUG_LOCK_PROBLEMS
+#define DEBUG_LOCK_PROBLEMS
 #ifdef DEBUG_LOCK_PROBLEMS
 //#define DEBUG_LOCK_PROBLEMS_disabled
 #include <execinfo.h>
@@ -512,6 +521,7 @@ int RtsLayer::LockDB(void) {
 #ifdef DEBUG_LOCK_PROBLEMS
     int nid = RtsLayer::myNode();
   if (lockDBCount[tid] > 0) {
+    TAU_VERBOSE("WARNING! Thread %d,%d,%d has %d DB locks, trying for another DB lock\n", nid, tid, gettid(), lockDBCount[tid]);
     if(!TauEnv_get_ebs_enabled()) {
       int i;
       char** old_strs = backtrace_symbols(old_callstack, old_frames);
@@ -531,7 +541,6 @@ int RtsLayer::LockDB(void) {
       }
       free(strs);
     }
-    TAU_VERBOSE("WARNING! Thread %d,%d,%d has %d DB locks, trying for another DB lock\n", nid, tid, gettid(), lockDBCount[tid]);
     //abort();
   }
   old_frames = backtrace(old_callstack, stack_depth);

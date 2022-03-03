@@ -155,7 +155,7 @@ extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_addr
       // not in my local map?  look in the global map
       if (!node) {
         // acquire lock for global map
-        std::unique_lock<std::mutex> lck (TheHashMutex());
+        std::lock_guard<std::mutex> lck (TheHashMutex());
         node = TheHashTable()[addr];
         if (!node) {
             node = new HashNode;
@@ -200,7 +200,7 @@ extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * res
       // not in my local map?  look in the global map
       if (!node) {
         // acquire lock for global map
-        std::unique_lock<std::mutex> lck (TheHashMutex());
+        std::lock_guard<std::mutex> lck (TheHashMutex());
         node = TheHashTable()[addr];
         if (!node) {
             node = new HashNode;

@@ -152,7 +152,7 @@ void updateHashTable(unsigned long addr, const char *funcname)
 {
   HashNode * hn = TheLocalHashTable()[addr];
   if (!hn) {
-    std::unique_lock<std::mutex> lck (theMutex());
+    std::lock_guard<std::mutex> lck (theMutex());
     hn = TheHashTable()[addr];
     if (!hn) {
       hn = new HashNode;
@@ -279,7 +279,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
       // We must be inside TAU before we lock the database
       TauInternalFunctionGuard protects_this_region;
 
-      std::unique_lock<std::mutex> lck (theMutex());
+      std::lock_guard<std::mutex> lck (theMutex());
       node = TheHashTable()[addr];
       if (!node) {
         node = new HashNode;
@@ -339,7 +339,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
     // Start the timer if it's not an excluded function
     if (!node->fi) {
-      std::unique_lock<std::mutex> lck (theMutex());
+      std::lock_guard<std::mutex> lck (theMutex());
       if (!node->fi) {
         // Resolve function info if it hasn't already been retrieved
         if (!node->info.probeAddr) {
@@ -485,7 +485,7 @@ void __cyg_profile_func_exit(void* func, void* callsite)
     // Get the hash node
     hn = TheLocalHashTable()[addr];
     if(!hn){
-        std::unique_lock<std::mutex> lck (theMutex());
+        std::lock_guard<std::mutex> lck (theMutex());
         hn = TheHashTable()[addr];
     }
     // Skip excluded functions or functions we didn't enter

@@ -1187,7 +1187,7 @@ extern "C" size_t Tau_create_trigger(const char *name) {
   TauInternalFunctionGuard protects_this_function;
 
   static std::mutex mtx;
-  std::unique_lock<std::mutex> lck (mtx);
+  std::lock_guard<std::mutex> lck (mtx);
   size_t retval =  trigger_counter;
   trigger_counter++;
 
@@ -1210,7 +1210,7 @@ extern "C" void Tau_enable_plugin_for_specific_event(int ev, const char *name, u
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
-  std::unique_lock<std::mutex> lck (TriggerMutex());
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].insert(id);
   if(plugins_for_ompt_event[ev].is_ompt())
     plugins_for_ompt_event[ev].insert(id);
@@ -1222,7 +1222,7 @@ extern "C" void Tau_disable_plugin_for_specific_event(int ev, const char *name, 
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
-  std::unique_lock<std::mutex> lck (TriggerMutex());
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].erase(id);
   if(plugins_for_ompt_event[ev].is_ompt())
     plugins_for_ompt_event[ev].erase(id);
@@ -1234,7 +1234,7 @@ extern "C" void Tau_disable_all_plugins_for_specific_event(int ev, const char *n
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
-  std::unique_lock<std::mutex> lck (TriggerMutex());
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].clear();
   if(plugins_for_ompt_event[ev].is_ompt())
     plugins_for_ompt_event[ev].clear();
@@ -1246,7 +1246,7 @@ extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *na
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
 
-  std::unique_lock<std::mutex> lck (TriggerMutex());
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
     Tau_get_plugins_for_named_specific_event()[key].insert(i);
   }
@@ -1263,7 +1263,7 @@ extern "C" void Tau_enable_plugin_for_trigger_event(int ev, size_t hash, unsigne
 {
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
-  std::unique_lock<std::mutex> lck (TriggerMutex());
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].insert(id);
 
 }
@@ -1272,7 +1272,7 @@ extern "C" void Tau_disable_plugin_for_trigger_event(int ev, size_t hash, unsign
 {
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
-  std::unique_lock<std::mutex> lck (TriggerMutex());
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].erase(id);
 
 }
@@ -1281,7 +1281,7 @@ extern "C" void Tau_disable_all_plugins_for_trigger_event(int ev, size_t hash)
 {
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
-  std::unique_lock<std::mutex> lck (TriggerMutex());
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].clear();
 }
 
@@ -1290,7 +1290,7 @@ extern "C" void Tau_enable_all_plugins_for_trigger_event(int ev, size_t hash)
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
 
-  std::unique_lock<std::mutex> lck (TriggerMutex());
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
     Tau_get_plugins_for_named_specific_event()[key].insert(i);
   }
@@ -1300,7 +1300,7 @@ extern "C" void Tau_add_regex(const char * r)
 {
   TauInternalFunctionGuard protects_this_function;
   std::string s(r);
-  std::unique_lock<std::mutex> lck (TriggerMutex());
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   regex_list.push_back(s);
 }
 
@@ -1971,7 +1971,7 @@ extern "C" void Tau_pure_context_userevent(void **ptr, const char* name)
   TauSafeString tmp(name);
   static std::mutex mtx;
   static pure_atomic_map_t pureAtomicMap;
-  std::unique_lock<std::mutex> lck (mtx);
+  std::lock_guard<std::mutex> lck (mtx);
   pure_atomic_map_t::iterator it = pureAtomicMap.find(tmp);
   if (it == pureAtomicMap.end()) {
     ue = new TauContextUserEvent(name);
@@ -1994,7 +1994,7 @@ TauUserEvent * Tau_find_userevent_internal(const char* name, bool signal_safe = 
    * allocation routines */
   static string tmp = string(4096,0);
   tmp.assign(name);
-  std::unique_lock<std::mutex> lck (mtx);
+  std::lock_guard<std::mutex> lck (mtx);
   pure_userevent_atomic_map_t::iterator it = pureUserEventAtomicMap.find(tmp);
   if (it == pureUserEventAtomicMap.end()) {
     if (signal_safe) {
@@ -2197,7 +2197,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 
   static std::mutex mtx;
   if (!initialized && !initializing[tid]) {
-    std::unique_lock<std::mutex> lck (mtx);
+    std::lock_guard<std::mutex> lck (mtx);
     if (!initialized) {
       // whichever thread got here first, has the lock and will create the
       // FunctionInfo object for the top level timer.
@@ -2227,7 +2227,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
   }
 
   if (!initthread[tid]) {
-    std::unique_lock<std::mutex> lck (mtx);
+    std::lock_guard<std::mutex> lck (mtx);
     // if there is no top-level timer, create one - But only create one FunctionInfo object.
     // that should be handled by the Tau_pure_start_task call.
     if (!TauInternal_CurrentProfiler(tid)) {
@@ -2520,7 +2520,7 @@ FunctionInfo * Tau_get_function_info_internal(
   static std::mutex mtx;
   static PureMap pure;
   /* Acquire control of the map */
-  std::unique_lock<std::mutex> lck (mtx);
+  std::lock_guard<std::mutex> lck (mtx);
   it = pure.find(fname);
   /* Found? */
   if (it != pure.end()) {
@@ -2655,6 +2655,8 @@ extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
    * potentially construct a top level timer, which will recursively enter
    * this function. */
   static int do_this_once = Tau_init_initializeTAU();
+  /* Could be a new thread, make sure we don't deadlock */
+  static thread_local int do_this_once_too = RtsLayer::RegisterThread();
   string name; // this is VERY bad if called from signalling! see above ^
   if (strcmp(t,"") == 0) {
     name = string(n); // this is VERY bad if called from signalling! see above ^
@@ -2795,7 +2797,7 @@ static int *getIterationList(char const * name) {
   string searchName(name);
   map<string, int *>::iterator iit = iterationMap.find(searchName);
   if (iit == iterationMap.end()) {
-    std::unique_lock<std::mutex> lck (mtx);
+    std::lock_guard<std::mutex> lck (mtx);
     int *iterationList = new int[TAU_MAX_THREADS];
     for (int i=0; i<TAU_MAX_THREADS; i++) {
       iterationList[i] = 0;

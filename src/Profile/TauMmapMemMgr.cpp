@@ -71,7 +71,7 @@ bool Tau_MemMgr_initIfNecessary(void)
   //   for the first time! Right now, the correct place for this
   //   is sampling init.
   if (!initialized) {
-    std::unique_lock<std::mutex> lck (getMapMutex());
+    std::lock_guard<std::mutex> lck (getMapMutex());
     // check again, someone else might already have initialized by now.
     if (!initialized) {
       for (int i = 0; i < TAU_MAX_THREADS; i++) {
@@ -87,7 +87,7 @@ bool Tau_MemMgr_initIfNecessary(void)
 extern "C" void Tau_MemMgr_finalizeIfNecessary(void) {
   if (!finalized) {
     Tau_global_incr_insideTAU();
-    std::unique_lock<std::mutex> lck (getMapMutex());
+    std::lock_guard<std::mutex> lck (getMapMutex());
     // check again, someone else might already have initialized by now.
     if (!finalized) {
       finalized = true;
@@ -175,7 +175,7 @@ void * Tau_MemMgr_recycle(int tid, size_t size)
     // does the map for this thread exist?
     // get the vector for this size
     __custom_vector_t * queue;
-    std::unique_lock<std::mutex> lck (getMapMutex());
+    std::lock_guard<std::mutex> lck (getMapMutex());
     __custom_map_t::const_iterator it = free_chunks[tid].find(size);
 
     // is this a new size that we haven't freed yet?
@@ -265,7 +265,7 @@ void Tau_MemMgr_free(int tid, void *addr, size_t size)
     // freed memory just allocates more memory...
     if (finalized || size == 0) return;
 #ifdef USE_RECYCLER
-    std::unique_lock<std::mutex> lck (getMapMutex());
+    std::lock_guard<std::mutex> lck (getMapMutex());
     // get the vector for this size
     __custom_map_t::const_iterator it = free_chunks[tid].find(size);
     __custom_vector_t * queue;
