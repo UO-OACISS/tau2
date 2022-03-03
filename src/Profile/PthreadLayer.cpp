@@ -174,6 +174,8 @@ int PthreadLayer::InitializeDBMutexData(void)
 int PthreadLayer::LockDB(void)
 {
   InitializeThreadData();
+  pthread_mutex_lock(&tauDBMutex);
+#if 0
   int ret = pthread_mutex_trylock(&tauDBMutex);
   if (ret == 0) return 1;
 
@@ -190,6 +192,7 @@ int PthreadLayer::LockDB(void)
     }
     tries++;
   }
+#endif
   return 1;
 }
 
