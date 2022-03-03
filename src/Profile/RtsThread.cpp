@@ -57,7 +57,7 @@ pid_t tid = syscall(SYS_gettid);
 #endif /* TAU_MPC */
 
 // This is used for printing the stack trace when debugging locks
-#define DEBUG_LOCK_PROBLEMS
+//#define DEBUG_LOCK_PROBLEMS
 #ifdef DEBUG_LOCK_PROBLEMS
 //#define DEBUG_LOCK_PROBLEMS_disabled
 #include <execinfo.h>
