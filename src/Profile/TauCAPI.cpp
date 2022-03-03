@@ -2503,11 +2503,6 @@ FunctionInfo * Tau_get_function_info_internal(
     string fname, const char *type,
     TauGroup_t group, const char *gr_name,
     bool create = true, bool phase = false, bool signal_safe = false)  {
-  /* We have to make sure we initialize TAU first - just in case we are
-   * entering TAU for the first time, because tauCreateFI (below) will
-   * potentially construct a top level timer, which will recursively enter
-   * this function. */
-  static int do_this_once = Tau_init_initializeTAU();
   /* This is the thread_local cache map, so we can speed up lookups.  If we
    * have seen the timer before, we won't have to lock the main map to look
    * it up.  If we haven't another thread may have created it, so we'll
@@ -2560,6 +2555,11 @@ extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup
 
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
 
   DEBUGPROFMSG("Inside get_profiler group = " << group<<endl;);
   string name(fname);
@@ -2582,6 +2582,11 @@ extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup
 
 extern "C" void *Tau_pure_search_for_function(const char *name, int create)
 {
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   string fname(name);
   FunctionInfo *fi = Tau_get_function_info_internal(fname, "", TAU_USER, "TAU_USER", create != 0);
   return (void *) fi;
@@ -2598,6 +2603,11 @@ extern "C" void *Tau_pure_search_for_function(const char *name, int create)
 void Tau_pure_start_task_string(const string name, int tid)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_DEFAULT, "TAU_DEFAULT");
   Tau_start_timer(fi,0, tid);
 }
@@ -2606,6 +2616,11 @@ void Tau_pure_start_task_string(const string name, int tid)
 extern "C" void Tau_pure_start_task_group(const char * n, int tid, const char * group)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   string name = n; // this is VERY bad if called from signalling! see above ^
   FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_USER, "TAU_USER");
   Tau_start_timer(fi, 0, tid);
@@ -2619,6 +2634,11 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
 FunctionInfo* Tau_make_cupti_sample_timer(const char * filename, const char * function, int lineno)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   stringstream ss;
   ss << function << " [{" << filename << "}{" << lineno << "}]";
 
@@ -2633,6 +2653,11 @@ FunctionInfo* Tau_make_cupti_sample_timer(const char * filename, const char * fu
 extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   string name; // this is VERY bad if called from signalling! see above ^
   if (strcmp(t,"") == 0) {
     name = string(n); // this is VERY bad if called from signalling! see above ^
@@ -2658,6 +2683,11 @@ extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid) {
 FunctionInfo * Tau_create_thread_state_if_necessary(const char *name)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   std::string fname = name;
   FunctionInfo *fi = Tau_get_function_info_internal(fname, "", TAU_USER, "TAU_OMP_STATE");
   return fi;
@@ -2667,6 +2697,11 @@ FunctionInfo * Tau_create_thread_state_if_necessary(const char *name)
 FunctionInfo * Tau_create_thread_state_if_necessary_string(string const & name)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_USER, "TAU_OMP_STATE", true, false, true);
   return fi;
 }
@@ -2684,6 +2719,11 @@ extern "C" void tau_print_entry(const char *name) {
 extern "C" void Tau_pure_stop_task(char const * n, int tid)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   string name = n;
   FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_USER, "", false);
   if (fi == nullptr) {
@@ -2708,6 +2748,11 @@ extern "C" void tau_print_exit(const char *name) {
 extern "C" void Tau_static_phase_start(char const * name)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   string n = name;
 
   FunctionInfo *fi = Tau_get_function_info_internal(n, "", TAU_USER, "TAU_USER", true, true);
@@ -2716,6 +2761,11 @@ extern "C" void Tau_static_phase_start(char const * name)
 
 extern "C" void * Tau_get_function_info(const char *fname, const char *type, TauGroup_t group, const char *gr_name)  {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   string n = fname;
   FunctionInfo *fi = Tau_get_function_info_internal(n, type, group, gr_name);
   return (void *) fi;
@@ -2724,6 +2774,11 @@ extern "C" void * Tau_get_function_info(const char *fname, const char *type, Tau
 extern "C" void Tau_static_phase_stop(char const * name)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   string n = name;
   FunctionInfo *fi = Tau_get_function_info_internal(n, "", TAU_USER, "", false);
   if (fi == nullptr) {
@@ -2757,6 +2812,11 @@ static int *getIterationList(char const * name) {
 extern "C" void Tau_dynamic_start(char const * name, int isPhase)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
 #ifndef TAU_PROFILEPHASE
   isPhase = 0;
 #endif
@@ -2779,6 +2839,11 @@ extern "C" void Tau_dynamic_start(char const * name, int isPhase)
 extern "C" void Tau_dynamic_stop(char const * name, int isPhase)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   int *iterationList = getIterationList(name);
 
   int tid = RtsLayer::myThread();
