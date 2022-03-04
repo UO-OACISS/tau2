@@ -408,6 +408,7 @@ int OpenMPLayer::InitializeRegisterMutexData(void)
 int OpenMPLayer::LockDB(void)
 {
   static int do_once = Initialize();
+#if 0
   static int owner = 0;
   if (initialized) {
     int acquired = 0;
@@ -421,6 +422,9 @@ int OpenMPLayer::LockDB(void)
     } while(acquired == 0);
   }
   owner = _tau_thread_id;
+#else
+  omp_set_lock(&OpenMPLayer::tauDBmutex);
+#endif
   return 1;
 }
 
