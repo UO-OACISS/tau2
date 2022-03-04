@@ -34,6 +34,8 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/IR/InstIterator.h"
 
+#include "llvm/ADT/Triple.h"
+
 #include <llvm/IR/DebugLoc.h>
 #include <llvm/IR/DebugInfoMetadata.h>
 #include <clang/Basic/SourceManager.h>
@@ -224,6 +226,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 #else
         Instrument() : PassInfoMixin<Instrument>() {
 #endif
+      errs() <<"TauInputFile: "<<TauInputFile<<"\n"; 
       if(!TauInputFile.empty()) {
           std::ifstream ifile{TauInputFile};
           if( !ifile ){
@@ -486,13 +489,22 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
      * \param calls Vector to add to, if the CallInst should be profiled
      */
   bool maybeSaveForProfiling( Function& call ){
-	StringRef callName = call.getName();
+    StringRef callName = call.getName();
     std::string filename = getFilename( call );
     StringRef prettycallName = normalize_name(callName);
+    auto *module = call.getParent();
+    const std::string triple = module->getTargetTriple();
+    bool is_host_func = triple.compare(std::string("amdgcn-amd-amdhsa")); // returns 0 if it matches
+    // Compare similarly for other GPUs. If it matches, do not instrument it. 
+
 
 	/* This big test was explanded for readability */
 	bool instrumentHere = false;
-    //errs() << "Name " << prettycallName << " full " << callName << "\n";
+
+    if (is_host_func == false) {
+      errs() << "Name " << prettycallName << " GPU bound, instrument = "<<is_host_func<<"\n";
+      return false;
+    }
 
     if( prettycallName == "" ) return false;
 	
@@ -563,6 +575,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
       // Declare and get handles to the runtime profiling functions
       auto &context = func.getContext();
       auto *module = func.getParent();
+
       StringRef prettyname = normalize_name(func.getName());
 #if( LLVM_VERSION_MAJOR <= 8 )
       Constant
@@ -613,7 +626,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 
 char Instrument::ID = 0;
 
-static RegisterPass<Instrument> X("tau-prof", "TAU Profiling", false, false);
+static RegisterPass<Instrument> X("TAU", "TAU Profiling", false, false);
 
 // Automatically enable the pass.
 // http://adriansampson.net/blog/clangpass.html
@@ -629,14 +642,16 @@ RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible, registerInstrumentPass);
 class PluginInstrument : public clang::PluginASTAction {
 protected:
     std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &CI, StringRef file) {
+	errs() <<"INSIDE PluginInstrument::CreateASTConsumer\n"; // VERBOSE
         return std::make_unique<Instrument>();
     }
  
     bool ParseArgs(const clang::CompilerInstance &CI, const std::vector<std::string> &args) {
+	errs() <<"INSIDE PluginInstrument::ParseArgs "<<args[0] <<"\n"; // VERBOSE
         return true;
     }
 };
      
-static  clang::FrontendPluginRegistry::Add<PluginInstrument> X("tau-prof", "TAU profiling");
+static  clang::FrontendPluginRegistry::Add<PluginInstrument> X("TAU", "TAU profiling");
 
 #endif
