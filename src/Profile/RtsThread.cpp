@@ -463,9 +463,6 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
    // fork would copy over all the parent data as it is.
 }
 void RtsLayer::Initialize(void) {
-#if TAU_OPENMP
-  OpenMPLayer::Initialize();
-#endif
   return ; // do nothing if threads are not used
 }
 
