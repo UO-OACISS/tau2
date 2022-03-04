@@ -264,6 +264,7 @@ class tau_pthread_wrapper_args_t {
 public:
     void * handle; // TAU timer handle
     tau_pthread_pack * pack; // Argument to tau_pthread_function
+    void * self_ptr;  // a way to validate(?) that we haven't been corrupted
     ~tau_pthread_wrapper_args_t() {
         tau_pthread_function_cleanup_handler(this);
     }
@@ -287,6 +288,14 @@ void tau_pthread_function_cleanup_handler(void * args) {
       return;
   }
   tau_pthread_wrapper_args_t * wrapper_args = (tau_pthread_wrapper_args_t *)args;
+  // This looks odd.  Check to see if the args pointer is on the heap
+  // or not, and the easiest way to do that is to see if its address
+  // is smaller than the top of the stack, which is the address of main.
+  // Why do this?  Because sometimes libc corrups this object on the way
+  // out the door, and we don't want to crash.
+  if (args != wrapper_args->self_ptr) {
+      return;
+  }
   // The thread is about to exit, so we stop all the timers on it.
   // We can't just stop the wrapper timer because if the thread was
   // canceled early, we may have returned here without stopping
@@ -354,6 +363,8 @@ void * tau_pthread_function(void *arg)
   tau_pthread_wrapper_args_t wrapper_args;
   wrapper_args.handle = handle;
   wrapper_args.pack = pack;
+  // grab a pointer to ourselves, for "validation"
+  wrapper_args.self_ptr = &wrapper_args;
   // Register the cleanup function.
   //printf("Wrapper args: %p\n", &wrapper_args);
   //pthread_cleanup_push(tau_pthread_function_cleanup_handler, &wrapper_args);
