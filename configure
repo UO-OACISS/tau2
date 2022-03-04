@@ -686,6 +686,7 @@ usage() {
     echo "Other Options:"
     echo "-iowrapper .................................... Build POSIX IO Wrapper."
     echo "-pthread .................................. Use pthread thread package."
+    echo "-no_pthread_create ................... Suppress pthread_create wrapper."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
     echo "-likwid=<dir> ............................. Specify location of LIKWID."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
@@ -751,8 +752,8 @@ for arg in "$@"; do
         echo "                                     this is used for cross-compilation"
         echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
         echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
-        echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
-        echo "                        clang++|bgclang++|g++4|icpc|icpx|scgcc|pathCC|orCC]."
+        echo "   options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
+        echo "                   clang++|bgclang++|g++4|icpc|icpx|scgcc|pathCC|orCC]."
         echo "-pdtcompdir=<compilerdir> . specify a different PDT compiler directory."
         echo "-pdtarchdir=<archdir> . specify a different PDT architecture directory."
         echo "-useropt='<param>' .......... arguments to compilers (defaults to -O2)."
@@ -765,6 +766,7 @@ for arg in "$@"; do
         echo "                                                 arm_linux|arm_android]"
         echo "-iowrapper .................................... Build POSIX IO Wrapper."
         echo "-pthread .................................. Use pthread thread package."
+        echo "-no_pthread_create ................... Suppress pthread_create wrapper."
         echo "-papithread .................................. Use PAPI thread package."
         echo "-charm=<dir> .............................. Use charm++ thread package."
         echo "-sproc .................................. Use SGI sproc thread package."
@@ -1033,6 +1035,7 @@ sicortex=no
 extradir=
 extrashlibopts=
 pthread=no
+suppress_pthread_create_wrapper=no
 tbb=no
 papithread=no
 papipfm=no
@@ -1405,6 +1408,11 @@ for arg in "$@"; do
 	-pthread=*)
 	    pthread=yes
 	    ptdir=`echo $arg | sed -e 's/-pthread=//'`
+	    shift
+	    ;;
+
+	-no_pthread_create)
+            suppress_pthread_create_wrapper=yes
 	    shift
 	    ;;
 
@@ -3555,6 +3563,10 @@ if [ "$c_compiler" != "" -a "$c_compiler" != "default" ]; then
       TAU_CCOM="$mpc_c_compiler"
     fi
     export TAU_CCOM
+fi
+
+if [ "$cxx_compiler" = "hipcc" ]; then
+  suppress_pthread_create_wrapper=yes
 fi
 
 
@@ -10477,6 +10489,9 @@ fi
 
 ######################################################################
 
+if [ $suppress_pthread_create_wrapper = yes ]; then
+    fixmakeargs="$fixmakeargs SUPPRESS_PTHREAD_CREATE_WRAPPER"
+fi
 # If TBB support is requested, then make that the tag, not pthread
 if [ $tbb = yes ] ; then
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
