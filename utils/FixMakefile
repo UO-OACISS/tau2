@@ -1688,6 +1688,10 @@ case $1 in
         echo "NOTE: Using pthreads as the thread package. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     SUPPRESS_PTHREAD_CREATE_WRAPPER)
+        echo "NOTE: Not generating the pthread_create wrapper"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      TBB_AVAILABLE)
         echo "NOTE: Using pthreads as the thread package for TBB support. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

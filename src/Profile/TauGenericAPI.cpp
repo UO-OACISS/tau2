@@ -87,7 +87,8 @@ void ps_tool_initialize(void) {
     /* Disable throttling, because if users use ps_tool_stop_current(),
      * throttling will cause Tau_start() to do nothing for throttled events,
      * but Tau_global_stop() will stop the timer on the stop of the stack */
-    TauEnv_set_throttle(0);
+    /* Then again, if someone calls ps_stop_current(), they get what they deserve */
+    // TauEnv_set_throttle(0);
     Tau_create_top_level_timer_if_necessary();
 }
 

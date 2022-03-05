@@ -141,11 +141,22 @@ int pthread_barrier_wait(pthread_barrier_t * barrier)
 
 #else // Wrap via the the link line.
 
+#ifndef TAU_SUPPRESS_PTHREAD_CREATE_WRAPPER
 int __real_pthread_create(pthread_t *, const pthread_attr_t *, start_routine_p, void *);
 int __wrap_pthread_create(pthread_t * thread, const pthread_attr_t * attr, start_routine_p start_routine, void * arg)
 {
   return tau_pthread_create_wrapper(__real_pthread_create, thread, attr, start_routine, arg);
 }
+/*
+#else 
+int __real___wrap_pthread_create(pthread_t *, const pthread_attr_t *, start_routine_p, void *);
+int __wrap___wrap_pthread_create(pthread_t * thread, const pthread_attr_t * attr, start_routine_p start_routine, void * arg)
+{
+  printf("Inside __wrap___wrap_pthread_create\n");
+  return tau_pthread_create_wrapper(__real___wrap_pthread_create, thread, attr, start_routine, arg);
+}
+*/
+#endif /* TAU_WRAP_PTHREAD_CREATE */
 
 int __real_pthread_join(pthread_t, void **);
 int __wrap_pthread_join(pthread_t thread, void **retval)
