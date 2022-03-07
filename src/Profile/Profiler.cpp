@@ -1727,7 +1727,7 @@ static int getProfileLocation(int metric, char *str)
 #endif /* DEBUGPROF */
 
         //sanitize metricName before creating a directory name from it.
-        string illegalChars("/\\?%*:|\"<> ");
+        string illegalChars("/\\?%*:|\"<>= ");
         size_t found = metricStr.find_first_of(illegalChars, 0);
         while (found != string::npos) {
             metricStr[found] = '_';
