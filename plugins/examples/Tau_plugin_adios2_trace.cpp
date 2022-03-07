@@ -1311,8 +1311,10 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     static std::mutex timer_lock;
     if (tau_plugin::thePluginOptions().env_periodic &&
         !tau_plugin::thePluginOptions().env_one_file) {
-        // is it time to write?
-        if (steady_clock::now() > next_write && !plugin_done) {
+        // is it time to write? (and thread 0, and not in an MPI or ADIOS call)
+        if (steady_clock::now() > next_write && !plugin_done &&
+            data->tid == 0 &&
+            strstr(data->timer_name, "MPI_") == NULL) {
             bool mine = false;
             // only let one thread do this
             timer_lock.lock();

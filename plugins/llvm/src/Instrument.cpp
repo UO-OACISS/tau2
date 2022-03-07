@@ -122,6 +122,9 @@ TauDryRun("tau-dry-run",
 
 
 
+auto TauInitFunc = "Tau_init"; // arguments to pass: argc, argv 
+auto TauSetNodeFunc = "Tau_set_node"; // argument to pass: 0
+
 // Demangling technique borrowed/modified from
 // https://github.com/eklitzke/demangle/blob/master/src/demangle.cc
 static StringRef normalize_name(StringRef mangled_name) {
@@ -575,7 +578,38 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 #endif // LLVM_VERSION_MAJOR <= 8
 
       errs() << "Adding instrumentation in " << prettyname << '\n';
+            bool mutated = false; // TODO
+
+      /* Add TAU init in main */
       
+      if( 0 == prettyname.compare( "main" ) ){
+          errs() << "\tmain function: adding init\n";
+          auto initfun = getVoidFunc( TauInitFunc, context, module );
+          auto setnodefun = getVoidFunc( TauSetNodeFunc, context, module );
+          
+          auto beg = inst_begin( &func );
+          Instruction* b = &*beg;
+          IRBuilder<> b4( b );
+
+          /* TauInitFunc takes two arguments: argc and argv */
+
+          SmallVector<Value *, 2> mainArgsVect;
+          for( Argument &arg : func.args() ){
+              mainArgsVect.push_back( &arg );
+          }
+          b4.CreateCall( initfun, mainArgsVect );
+              
+          /* TauSetNodeFunc takes one argument: 0 */
+
+          Value* z = ConstantInt::get( context, llvm::APInt( 32, 0, false ) );
+          SmallVector<Value *, 1> zero{ z };
+          b4.CreateCall( setnodefun, zero );
+
+          mutated = true;
+      }
+      
+      /* Add regular TAU calls */
+         
       std::string filename = getFilename( func );
       std::string location( "[{" + getFilename( func ) + "} {" +  getLineAndCol( func ) + "}]" );
 
@@ -584,8 +618,6 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
       Instruction* i = &*pi;
       IRBuilder<> before( i );
       
-      bool mutated = false; // TODO
-
       // This is the recommended way of creating a string constant (to be used
       // as an argument to runtime functions)
       Value *strArg = before.CreateGlobalStringPtr( ( prettyname + " " + location ).str() );
