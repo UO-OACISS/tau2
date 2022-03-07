@@ -44,24 +44,35 @@
 
 // strings for OpenACC parent constructs; based on enum acc_construct_t
 const char* acc_constructs[] = {
-    "parallel",
-    "kernels",
-    "loop",
-    "data",
-    "enter data",
-    "exit data",
-    "host data",
-    "atomic",
-    "declare",
-    "init",
-    "shutdown",
-    "set",
-    "update",
-    "routine",
-    "wait",
-    "runtime api",
-    "serial",
+    "parallel",   // 0
+    "kernels",   // 1
+    "loop",   // 2
+    "data",   // 3
+    "enter data",   // 4
+    "exit data",   // 5
+    "host data",   // 6
+    "atomic",   // 7
+    "declare",   // 8
+    "init",   // 9
+    "shutdown",   // 10
+    "set",   // 11
+    "update",   // 12
+    "routine",   // 13
+    "wait",   // 14
+    "runtime api",   // 15
+    "serial",   // 16
 };
+
+/* We need to validate the construct that PGI sets, because they give us
+ * garbage like:
+ * 269822688 or -887713968 */
+const char* get_acc_construct(const acc_construct_t index) {
+    static const char* unknown = "unknown";
+    if (index < 0 || index > 16) {
+        return unknown;
+    }
+    return acc_constructs[index];
+}
 
 extern "C" static void
 Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info)
@@ -111,7 +122,7 @@ Tau_openacc_launch_callback(acc_prof_info* prof_info, acc_event_info* event_info
     }
     if (launch_event->parent_construct < 9999) {
         ss << " "
-           << acc_constructs[launch_event->parent_construct];
+           << get_acc_construct(launch_event->parent_construct);
     }
 
     ss << " [{"
@@ -327,6 +338,7 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
             start = -1;
             ss << "UNKNOWN OPENACC OTHER EVENT";
             fprintf(stderr, "ERROR: Unknown other event passed to OpenACC other event callback.");
+            return;
     }
 
     // if this is an end event, short circuit by grabbing the FunctionInfo pointer out of tool_info
@@ -348,16 +360,18 @@ Tau_openacc_other_callback( acc_prof_info* prof_info, acc_event_info* event_info
     }
     if (other_event->parent_construct < 9999) {
         ss << " "
-            << acc_constructs[other_event->parent_construct];
+           << get_acc_construct(other_event->parent_construct);
     }
 
-    ss << " [{"
-        << prof_info->src_file
-        << "} {"
-        << prof_info->line_no
-        << ","
-        << prof_info->end_line_no
-        << "}]";
+    if (prof_info->src_file != nullptr) {
+        ss << " [{"
+            << prof_info->src_file
+            << "} {"
+            << prof_info->line_no
+            << ","
+            << prof_info->end_line_no
+            << "}]";
+    }
 
 #ifdef DEBUG_OPENACC
     printf("%s\n", ss.str().c_str());
