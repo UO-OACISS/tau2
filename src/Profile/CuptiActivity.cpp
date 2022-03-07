@@ -1088,6 +1088,10 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         TAU_DEBUG_PRINT("TAU: [WARNING] Got CUPTI callback but TAU is either not yet initialized or has finished!\n");
         return;
     }
+    // MAKE SURE TAU DOESN'T CALL SOMETHING THAT CALLS CUDA AND WE RECURSE!
+    static thread_local bool recursive{false};
+    if (recursive) { return; }
+    recursive = true;
     if (domain == CUPTI_CB_DOMAIN_RESOURCE) {
         const CUpti_ResourceData *handle = (CUpti_ResourceData *) params;
         Tau_handle_resource (ud, domain, id, handle);
@@ -1130,7 +1134,6 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_SIZE event\n");
     } else {
         // do nothing
-        return;
     }
     // Why is this here?  Well, to make sure that this thread isn't
     // holding the lock!  FOR SOME REASON, the TauGpu code will finish
@@ -1143,6 +1146,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
 #endif
         RtsLayer::UnLockDB();
     }
+    recursive=false;
+    return;
 }
 
     void CUPTIAPI Tau_cupti_activity_flush_all() {
