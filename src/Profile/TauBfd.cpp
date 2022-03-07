@@ -13,6 +13,7 @@
 #include <string.h>
 #include <vector>
 #include <set>
+#include <mutex>
 
 #include <TAU.h>
 #include <Profile/TauBfd.h>
@@ -664,6 +665,11 @@ static unsigned long getProbeAddr(bfd * bfdImage, unsigned long pc) {
 // Probe for BFD information given a single address.
 bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, TauBfdInfo & info)
 {
+  // BFD is not thread safe, and we call this function from lots of places.
+  static std::mutex mtx;
+  // a unique lock will unlock when it goes out of scope.
+  std::lock_guard<std::mutex> lck (mtx);
+
   if (!TauEnv_get_bfd_lookup() || !Tau_bfd_checkHandle(handle)) {
     info.secure(probeAddr);
     return false;

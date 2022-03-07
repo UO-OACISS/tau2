@@ -27,6 +27,7 @@ using namespace std;
 #include <sstream.h>
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
+#include <mutex>
 
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
@@ -115,28 +116,7 @@ TAU_GEN_CONTEXT_EVENT(TheHeapMemoryExitEvent,"Heap Memory Used (KB) at Exit")
 TAU_GEN_CONTEXT_EVENT(TheHeapMemoryIncreaseEvent,"Increase in Heap Memory (KB)")
 TAU_GEN_CONTEXT_EVENT(TheHeapMemoryDecreaseEvent,"Decrease in Heap Memory (KB)")
 
-extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name)
-{
-  FunctionInfo *f;
-
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
-
-  DEBUGPROFMSG("Inside get_profiler group = " << group<<endl;);
-
-  // since we're using new, we should set InitData to true in FunctionInfoInit
-  if (group == TAU_MESSAGE) {
-    if (gr_name && strcmp(gr_name, "TAU_MESSAGE") == 0) {
-      f = new FunctionInfo(fname, type, group, "MPI", true);
-    } else {
-      f = new FunctionInfo(fname, type, group, gr_name, true);
-    }
-  } else {
-    f = new FunctionInfo(fname, type, group, gr_name, true);
-  }
-
-  return (void *)f;
-}
+extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name);
 
 /*The padding is probably irrelevant for the dynamic (vector) implementation. Keeping for reference.*/
 /* An array of this struct is shared by all threads.
@@ -1234,10 +1214,10 @@ extern "C" size_t Tau_create_trigger(const char *name) {
   static size_t trigger_counter = 0;
   TauInternalFunctionGuard protects_this_function;
 
-  RtsLayer::LockDB();
+  static std::mutex mtx;
+  std::lock_guard<std::mutex> lck (mtx);
   size_t retval =  trigger_counter;
   trigger_counter++;
-  RtsLayer::UnLockDB();
 
   return retval;
 }
@@ -1247,16 +1227,21 @@ extern "C" void Tau_trigger(size_t id, void * data) {
   Tau_util_invoke_callbacks_for_trigger_event(TAU_PLUGIN_EVENT_TRIGGER, id, data);
 }
 
+/* This mutex is used to control access to the plugin triggers */
+std::mutex & TriggerMutex() {
+  static std::mutex mtx;
+  return mtx;
+}
+
 extern "C" void Tau_enable_plugin_for_specific_event(int ev, const char *name, unsigned int id)
 {
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
-  RtsLayer::LockDB();
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].insert(id);
   if(plugins_for_ompt_event[ev].is_ompt())
     plugins_for_ompt_event[ev].insert(id);
-  RtsLayer::UnLockDB();
 
 }
 
@@ -1265,11 +1250,10 @@ extern "C" void Tau_disable_plugin_for_specific_event(int ev, const char *name, 
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
-  RtsLayer::LockDB();
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].erase(id);
   if(plugins_for_ompt_event[ev].is_ompt())
     plugins_for_ompt_event[ev].erase(id);
-  RtsLayer::UnLockDB();
 
 }
 
@@ -1278,11 +1262,10 @@ extern "C" void Tau_disable_all_plugins_for_specific_event(int ev, const char *n
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
-  RtsLayer::LockDB();
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].clear();
   if(plugins_for_ompt_event[ev].is_ompt())
     plugins_for_ompt_event[ev].clear();
-  RtsLayer::UnLockDB();
 }
 
 extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *name)
@@ -1291,7 +1274,7 @@ extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *na
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
 
-  RtsLayer::LockDB();
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
     Tau_get_plugins_for_named_specific_event()[key].insert(i);
   }
@@ -1302,16 +1285,14 @@ extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *na
     }
   }
 
-  RtsLayer::UnLockDB();
 }
 
 extern "C" void Tau_enable_plugin_for_trigger_event(int ev, size_t hash, unsigned int id)
 {
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
-  RtsLayer::LockDB();
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].insert(id);
-  RtsLayer::UnLockDB();
 
 }
 
@@ -1319,9 +1300,8 @@ extern "C" void Tau_disable_plugin_for_trigger_event(int ev, size_t hash, unsign
 {
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
-  RtsLayer::LockDB();
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].erase(id);
-  RtsLayer::UnLockDB();
 
 }
 
@@ -1329,9 +1309,8 @@ extern "C" void Tau_disable_all_plugins_for_trigger_event(int ev, size_t hash)
 {
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
-  RtsLayer::LockDB();
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   Tau_get_plugins_for_named_specific_event()[key].clear();
-  RtsLayer::UnLockDB();
 }
 
 extern "C" void Tau_enable_all_plugins_for_trigger_event(int ev, size_t hash)
@@ -1339,20 +1318,18 @@ extern "C" void Tau_enable_all_plugins_for_trigger_event(int ev, size_t hash)
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
 
-  RtsLayer::LockDB();
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
     Tau_get_plugins_for_named_specific_event()[key].insert(i);
   }
-  RtsLayer::UnLockDB();
 }
 
 extern "C" void Tau_add_regex(const char * r)
 {
   TauInternalFunctionGuard protects_this_function;
   std::string s(r);
-  RtsLayer::LockDB();
+  std::lock_guard<std::mutex> lck (TriggerMutex());
   regex_list.push_back(s);
-  RtsLayer::UnLockDB();
 }
 
 /* Plugin API */
@@ -1967,12 +1944,10 @@ extern "C" void Tau_get_context_userevent(void **ptr, const char *name)
 {
   if (!*ptr) {
     TauInternalFunctionGuard protects_this_function;
-    RtsLayer::LockEnv();
     if (!*ptr) {
       TauContextUserEvent * ue = new TauContextUserEvent(name);
       *ptr = (void*)ue;
     }
-    RtsLayer::UnLockEnv();
   }
 }
 
@@ -2016,78 +1991,68 @@ public:
 };
 
 typedef std::map<TauSafeString, TauContextUserEvent *, std::less<TauSafeString>, TauSignalSafeAllocator<std::pair<const TauSafeString, TauContextUserEvent *> > > pure_atomic_map_t;
-pure_atomic_map_t & ThePureAtomicMap() {
-  static pure_atomic_map_t pureAtomicMap;
-  return pureAtomicMap;
-}
-
-typedef TAU_HASH_MAP<string, TauUserEvent *> pure_userevent_atomic_map_t;
-pure_userevent_atomic_map_t & ThePureUserEventAtomicMap() {
-  static pure_userevent_atomic_map_t pureUserEventAtomicMap;
-  return pureUserEventAtomicMap;
-}
 
 extern "C" void Tau_pure_context_userevent(void **ptr, const char* name)
 {
   TauInternalFunctionGuard protects_this_function;
   TauContextUserEvent *ue = 0;
-  RtsLayer::LockEnv();
   TauSafeString tmp(name);
-  pure_atomic_map_t::iterator it = ThePureAtomicMap().find(tmp);
-  if (it == ThePureAtomicMap().end()) {
-    //printf("Adding %s to the map.\n", name); fflush(stdout);
-    /* KAH - Whoops!! We can't call "new" here, because malloc is not
-     * safe in signal handling. therefore, use the special memory
-     * allocation routines */
+  static std::mutex mtx;
+  static pure_atomic_map_t pureAtomicMap;
+  std::lock_guard<std::mutex> lck (mtx);
+  pure_atomic_map_t::iterator it = pureAtomicMap.find(tmp);
+  if (it == pureAtomicMap.end()) {
     ue = new TauContextUserEvent(name);
-    ThePureAtomicMap()[ue->GetName()] = ue;
+    pureAtomicMap[ue->GetName()] = ue;
   } else {
-    //printf("Found %s in the map.\n", name); fflush(stdout);
     ue = (*it).second;
   }
-  RtsLayer::UnLockEnv();
   *ptr = (void *) ue;
+}
+
+typedef TAU_HASH_MAP<string, TauUserEvent *> pure_userevent_atomic_map_t;
+
+TauUserEvent * Tau_find_userevent_internal(const char* name, bool signal_safe = false) {
+  static std::mutex mtx;
+  static pure_userevent_atomic_map_t pureUserEventAtomicMap;
+  TauInternalFunctionGuard protects_this_function;
+  TauUserEvent *ue = nullptr;
+  /* KAH - Whoops!! We can't call "new" here, because malloc is not
+   * safe in signal handling. therefore, use the special memory
+   * allocation routines */
+  static string tmp = string(4096,0);
+  tmp.assign(name);
+  std::lock_guard<std::mutex> lck (mtx);
+  pure_userevent_atomic_map_t::iterator it = pureUserEventAtomicMap.find(tmp);
+  if (it == pureUserEventAtomicMap.end()) {
+    if (signal_safe) {
+#ifndef TAU_WINDOWS
+        ue = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
+        new(ue) TauUserEvent(name);
+#else
+        ue = new TauUserEvent(name);
+#endif
+    } else {
+        ue = new TauUserEvent(name);
+    }
+    pureUserEventAtomicMap[tmp] = ue;
+  } else {
+      ue = (*it).second;
+  }
+  return ue;
 }
 
 extern "C" void Tau_pure_userevent(void **ptr, const char* name)
 {
   TauInternalFunctionGuard protects_this_function;
-  TauUserEvent *ue = 0;
-  RtsLayer::LockEnv();
-  pure_userevent_atomic_map_t::iterator it = ThePureUserEventAtomicMap().find(string(name));
-  if (it == ThePureUserEventAtomicMap().end()) {
-    ue = new TauUserEvent(name);
-    ThePureUserEventAtomicMap()[string(name)] = ue;
-  } else {
-    ue = (*it).second;
-  }
-  RtsLayer::UnLockEnv();
+  TauUserEvent *ue = Tau_find_userevent_internal(name, false);
   *ptr = (void *) ue;
 }
 
 extern "C" void Tau_pure_userevent_signal_safe(void **ptr, const char* name)
 {
   TauInternalFunctionGuard protects_this_function;
-  TauUserEvent *ue = 0;
-  RtsLayer::LockEnv();
-  /* KAH - Whoops!! We can't call "new" here, because malloc is not
-   * safe in signal handling. therefore, use the special memory
-   * allocation routines */
-  static string tmp = string(4096,0);
-  tmp.assign(name);
-  pure_userevent_atomic_map_t::const_iterator it = ThePureUserEventAtomicMap().find(tmp);
-  if (it == ThePureUserEventAtomicMap().end()) {
-#ifndef TAU_WINDOWS
-    ue = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
-    new(ue) TauUserEvent(name);
-#else
-    ue = new TauUserEvent(name);
-#endif
-    ThePureUserEventAtomicMap()[string(name)] = ue;
-  } else {
-    ue = (*it).second;
-  }
-  RtsLayer::UnLockEnv();
+  TauUserEvent *ue = Tau_find_userevent_internal(name, true);
   *ptr = (void *) ue;
 }
 
@@ -2215,9 +2180,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *ty
    */
   static int do_this_once = Tau_init_initializeTAU();
   if (*ptr == 0) {
-    TauInternalFunctionGuard protects_this_function;
-    RtsLayer::LockDB();
-    if (*ptr == 0) {
+      TauInternalFunctionGuard protects_this_function;
       // remove garbage characters from the end of name
       unsigned int len=0;
       while(isprint(name[len])) {
@@ -2231,8 +2194,6 @@ extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *ty
       *ptr = Tau_get_profiler(fixedname, type, group, group_name);
 
       free((void*)fixedname);
-    }
-    RtsLayer::UnLockDB();
   }
 }
 
@@ -2268,9 +2229,9 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
   static vector<bool> initializing;//[TAU_MAX_THREADS] = { false }; //TODO: DYNATHREAD
   static vector<bool> initthread;//[TAU_MAX_THREADS] = { false }; //TODO: DYNATHREAD
 
-  
+  static std::mutex mtx;
   if (!initialized && (initializing.size()<=tid || !initializing[tid])) {
-    RtsLayer::LockDB();
+    std::lock_guard<std::mutex> lck (mtx);
     expandVector(&initializing,tid);
     expandVector(&initthread,tid);
     if (!initialized) {
@@ -2278,32 +2239,31 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
       // FunctionInfo object for the top level timer.
       if (!TauInternal_CurrentProfiler(tid)) {
 #if defined(PTHREADS) && defined(TAU_GPU)
-	if (tid != 0 && RtsLayer::myNode() == -1) {
-	  TAU_VERBOSE("Found node=-1\n");
-	}
-	else {
-	  initthread[tid] = true;
-	  initializing[tid] = true;
-	  Tau_pure_start_task_string(gTauApplication(), tid);
-	  atexit(Tau_profile_exit_all_threads);
-	  initializing[tid] = false;
-	  initialized = true;
-	}
+        if (tid != 0 && RtsLayer::myNode() == -1) {
+          TAU_VERBOSE("Found node=-1\n");
+        }
+        else {
+          initthread[tid] = true;
+          initializing[tid] = true;
+          Tau_pure_start_task_string(gTauApplication(), tid);
+          atexit(Tau_profile_exit_all_threads);
+          initializing[tid] = false;
+          initialized = true;
+        }
 #else
-	initthread[tid] = true;
-	initializing[tid] = true;
-	Tau_pure_start_task_string(gTauApplication(), tid);
-	atexit(Tau_profile_exit_all_threads);
-	initializing[tid] = false;
-	initialized = true;
+        initthread[tid] = true;
+        initializing[tid] = true;
+        Tau_pure_start_task_string(gTauApplication(), tid);
+        atexit(Tau_profile_exit_all_threads);
+        initializing[tid] = false;
+        initialized = true;
 #endif
       }
     }
-    RtsLayer::UnLockDB();
   }
 
   if (initthread.size()<=tid || !initthread[tid]) {
-    RtsLayer::LockDB();
+    std::lock_guard<std::mutex> lck (mtx);
     expandVector(&initializing,tid);
     expandVector(&initthread,tid);
     // if there is no top-level timer, create one - But only create one FunctionInfo object.
@@ -2311,13 +2271,13 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
     if (!TauInternal_CurrentProfiler(tid)) {
 #if defined(PTHREADS) && defined(TAU_GPU)
       if (tid != 0 && RtsLayer::myNode() == -1) {
-      	TAU_VERBOSE("Found node=-1\n");
+        TAU_VERBOSE("Found node=-1\n");
       }
       else {
-	initthread[tid] = true;
-	initializing[tid] = true;
-	Tau_pure_start_task_string(gTauApplication(), tid);
-	initializing[tid] = false;
+        initthread[tid] = true;
+        initializing[tid] = true;
+        Tau_pure_start_task_string(gTauApplication(), tid);
+        initializing[tid] = false;
       }
 #else
       initthread[tid] = true;
@@ -2326,7 +2286,6 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
       initializing[tid] = false;
 #endif
     }
-    RtsLayer::UnLockDB();
   }
 
 #endif
@@ -2581,10 +2540,54 @@ struct PureMap : public TAU_HASH_MAP<string, FunctionInfo *> {
   }
 };
 
-PureMap & ThePureMap()
-{
-  static PureMap map;
-  return map;
+FunctionInfo * Tau_get_function_info_internal(
+    string fname, const char *type,
+    TauGroup_t group, const char *gr_name,
+    bool create = true, bool phase = false, bool signal_safe = false)  {
+  /* This is the thread_local cache map, so we can speed up lookups.  If we
+   * have seen the timer before, we won't have to lock the main map to look
+   * it up.  If we haven't another thread may have created it, so we'll
+   * then check the main map.  If we don't find it, optionally create it
+   * and insert into both maps. */
+  thread_local TAU_HASH_MAP<string, FunctionInfo *> local_pure;
+  FunctionInfo *fi = nullptr;
+
+  /* First, check if the FI is in the thread local map */
+  PureMap::iterator it = local_pure.find(fname);
+  /* found? */
+  if (it != local_pure.end()) {
+    fi = it->second;
+    return fi;
+  }
+
+  /* Not found, so check the shared map */
+  static std::mutex mtx;
+  static PureMap pure;
+  /* Acquire control of the map */
+  std::lock_guard<std::mutex> lck (mtx);
+  it = pure.find(fname);
+  /* Found? */
+  if (it != pure.end()) {
+    fi = it->second;
+    /* Save to local map to speed up next search */
+    local_pure[fname] = fi;
+    return fi;
+  }
+  /* Not found, so we need to create it, if requested */
+  if (create) {
+    if (signal_safe) {
+        tauCreateFI_signalSafe((void**)&fi, fname, type, group, gr_name);
+    } else {
+        tauCreateFI((void**)&fi, fname, type, group, gr_name);
+    }
+    pure[fname] = fi;
+    local_pure[fname] = fi;
+    if (phase) {
+        Tau_mark_group_as_phase(fi);
+    }
+  }
+  /* return the fi pointer, might be nullptr if not created. */
+  return fi;
 }
 
 map<string, vector<int> *>& TheIterationMap() {
@@ -2592,22 +2595,46 @@ map<string, vector<int> *>& TheIterationMap() {
   return iterationMap;
 }
 
+extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name)
+{
+  FunctionInfo *f;
+
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
+
+  DEBUGPROFMSG("Inside get_profiler group = " << group<<endl;);
+  string name(fname);
+  // since we're using new, we should set InitData to true in FunctionInfoInit
+  if (group == TAU_MESSAGE) {
+    if (gr_name && strcmp(gr_name, "TAU_MESSAGE") == 0) {
+      //f = new FunctionInfo(fname, type, group, "MPI", true);
+      f = Tau_get_function_info_internal(name, type, group, "MPI");
+    } else {
+      //f = new FunctionInfo(fname, type, group, gr_name, true);
+      f = Tau_get_function_info_internal(name, type, group, gr_name);
+    }
+  } else {
+    //f = new FunctionInfo(fname, type, group, gr_name, true);
+    f = Tau_get_function_info_internal(name, type, group, gr_name);
+  }
+
+  return (void *)f;
+}
+
 extern "C" void *Tau_pure_search_for_function(const char *name, int create)
 {
-  FunctionInfo *fi = 0;
-  PureMap & pure = ThePureMap();
-  std::string tmp(name);
-  RtsLayer::LockDB();
-  PureMap::iterator it = pure.find(tmp);
-  if (it != pure.end()) {
-    fi = it->second;
-  } else {
-    if (create != 0) {
-      tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
-      pure[tmp] = fi;
-    }
-  }
-  RtsLayer::UnLockDB();
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
+  string fname(name);
+  FunctionInfo *fi = Tau_get_function_info_internal(fname, "", TAU_USER, "TAU_USER", create != 0);
   return (void *) fi;
 }
 
@@ -2622,17 +2649,12 @@ extern "C" void *Tau_pure_search_for_function(const char *name, int create)
 void Tau_pure_start_task_string(const string name, int tid)
 {
   TauInternalFunctionGuard protects_this_function;
-  FunctionInfo *fi = 0;
-  PureMap & pure = ThePureMap();
-  RtsLayer::LockDB();
-  PureMap::iterator it = pure.find(name);
-  if (it == pure.end()) {
-    tauCreateFI_signalSafe((void**)&fi, name, "", TAU_DEFAULT, "TAU_DEFAULT");
-    pure[name] = fi;
-  } else {
-    fi = it->second;
-  }
-  RtsLayer::UnLockDB();
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
+  FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_DEFAULT, "TAU_DEFAULT");
   Tau_start_timer(fi,0, tid);
 }
 
@@ -2640,19 +2662,13 @@ void Tau_pure_start_task_string(const string name, int tid)
 extern "C" void Tau_pure_start_task_group(const char * n, int tid, const char * group)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   string name = n; // this is VERY bad if called from signalling! see above ^
-  FunctionInfo * fi = NULL;
-
-  PureMap & pure = ThePureMap();
-  RtsLayer::LockEnv();
-  PureMap::iterator it = pure.find(name);
-  if (it != pure.end()) {
-    fi = it->second;
-  } else {
-    tauCreateFI((void**)&fi, name, "", TAU_USER, group);
-    pure[name] = fi;
-  }
-  RtsLayer::UnLockEnv();
+  FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_USER, "TAU_USER");
   Tau_start_timer(fi, 0, tid);
 }
 
@@ -2664,6 +2680,11 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
 FunctionInfo* Tau_make_cupti_sample_timer(const char * filename, const char * function, int lineno)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   stringstream ss;
   ss << function << " [{" << filename << "}{" << lineno << "}]";
 
@@ -2671,45 +2692,27 @@ FunctionInfo* Tau_make_cupti_sample_timer(const char * filename, const char * fu
   //string name = string(function);
   //string dstream_name = string(ss.str());
 
-  string type = ""; // this is VERY bad if called from signalling! see above ^
-  FunctionInfo * fi = NULL;
-
-  PureMap & pure = ThePureMap();
-  RtsLayer::LockEnv();
-  PureMap::iterator it = pure.find(name);
-  if (it != pure.end()) {
-    fi = it->second;
-  } else {
-    tauCreateFI((void**)&fi, name, type, TAU_USER, "CUPTI_SAMPLES");
-    pure[name] = fi;
-  }
-  RtsLayer::UnLockEnv();
+  FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_USER, "CUPTI_SAMPLES");
   return fi;
 }
 
 extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
+  /* Could be a new thread, make sure we don't deadlock */
+  static thread_local int do_this_once_too = RtsLayer::RegisterThread();
   string name; // this is VERY bad if called from signalling! see above ^
   if (strcmp(t,"") == 0) {
     name = string(n); // this is VERY bad if called from signalling! see above ^
   } else {
     name = string(n) + string(" ") + string(t); // this is VERY bad if called from signalling! see above ^
   }
-  string type = ""; // this is VERY bad if called from signalling! see above ^
-  FunctionInfo * fi = NULL;
-
-  //printf("Tau_make_openmp_timer: n=%s, t = %s, PureMapSize=%d\n", n, t, ThePureMap().size());
-  PureMap & pure = ThePureMap();
-  RtsLayer::LockEnv();
-  PureMap::iterator it = pure.find(name);
-  if (it != pure.end()) {
-    fi = it->second;
-  } else {
-    tauCreateFI((void**)&fi, name, type, TAU_USER, "OpenMP");
-    pure[name] = fi;
-  }
-  RtsLayer::UnLockEnv();
+  FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_USER, "OpenMP");
   return fi;
 }
 
@@ -2728,18 +2731,13 @@ extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid) {
 FunctionInfo * Tau_create_thread_state_if_necessary(const char *name)
 {
   TauInternalFunctionGuard protects_this_function;
-  FunctionInfo *fi = NULL;
-  std::string n = name;
-  PureMap & pure = ThePureMap();
-  RtsLayer::LockEnv();
-  PureMap::iterator it = pure.find(n);
-  if (it == pure.end()) {
-    tauCreateFI_signalSafe((void**)&fi, n, "", TAU_USER, "TAU_OMP_STATE");
-    pure[n] = fi;
-  } else {
-    fi = it->second;
-  }
-  RtsLayer::UnLockEnv();
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
+  std::string fname = name;
+  FunctionInfo *fi = Tau_get_function_info_internal(fname, "", TAU_USER, "TAU_OMP_STATE");
   return fi;
 }
 
@@ -2747,18 +2745,12 @@ FunctionInfo * Tau_create_thread_state_if_necessary(const char *name)
 FunctionInfo * Tau_create_thread_state_if_necessary_string(string const & name)
 {
   TauInternalFunctionGuard protects_this_function;
-  FunctionInfo *fi = NULL;
-
-  PureMap & pure = ThePureMap();
-  RtsLayer::LockEnv();
-  PureMap::iterator it = pure.find(name);
-  if (it == pure.end()) {
-    tauCreateFI_signalSafe((void**)&fi, name, "", TAU_USER, "TAU_OMP_STATE");
-    pure[name] = fi;
-  } else {
-    fi = it->second;
-  }
-  RtsLayer::UnLockEnv();
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
+  FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_USER, "TAU_OMP_STATE", true, false, true);
   return fi;
 }
 
@@ -2775,32 +2767,19 @@ extern "C" void tau_print_entry(const char *name) {
 extern "C" void Tau_pure_stop_task(char const * n, int tid)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   string name = n;
-  // if(TauEnv_get_cuda_track_sass()) {
-  //   string name_temp = "";
-  //   for (string::size_type i = 0; i < name.size(); i++) {
-  //     if (name[i] != '[')
-  // 	name_temp += name[i];
-  //     else {
-  // 	name = name_temp.substr(0, name_temp.size()-1);
-  // 	break;
-  //     }
-  //   }
-  // }
-  // cout << "[TauCAPI]:  Name now: " << name << endl;
-  FunctionInfo * fi = NULL;
-
-  PureMap & pure = ThePureMap();
-  RtsLayer::LockDB();
-  PureMap::iterator it = pure.find(name);
-  if (it == pure.end()) {
-    fprintf(stderr,
-        "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\n"
-        "TAU Error: You will likely get an overlapping timer message next\n\n", n);
-  } else {
-    fi = it->second;
+  FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_USER, "", false);
+  if (fi == nullptr) {
+      fprintf(stderr,
+          "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\n"
+          "TAU Error: You will likely get an overlapping timer message next\n\n", n);
+      return;
   }
-  RtsLayer::UnLockDB();
   Tau_stop_timer(fi, tid);
 }
 
@@ -2817,75 +2796,58 @@ extern "C" void tau_print_exit(const char *name) {
 extern "C" void Tau_static_phase_start(char const * name)
 {
   TauInternalFunctionGuard protects_this_function;
-  FunctionInfo *fi = 0;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   string n = name;
 
-  PureMap & pure = ThePureMap();
-  RtsLayer::LockDB();
-  PureMap::iterator it = pure.find(n);
-  if (it == pure.end()) {
-    tauCreateFI((void**)&fi, n, "", TAU_USER, "TAU_USER");
-    Tau_mark_group_as_phase(fi);
-    pure[n] = fi;
-  } else {
-    fi = it->second;
-  }
-  RtsLayer::UnLockDB();
+  FunctionInfo *fi = Tau_get_function_info_internal(n, "", TAU_USER, "TAU_USER", true, true);
   Tau_start_timer(fi, 1, Tau_get_thread());
 }
 
 extern "C" void * Tau_get_function_info(const char *fname, const char *type, TauGroup_t group, const char *gr_name)  {
   TauInternalFunctionGuard protects_this_function;
-  FunctionInfo *fi = 0;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   string n = fname;
-
-  PureMap & pure = ThePureMap();
-  RtsLayer::LockDB();
-  PureMap::iterator it = pure.find(n);
-  if (it == pure.end()) {
-    tauCreateFI((void**)&fi, n, type, group, gr_name);
-    pure[n] = fi;
-  } else {
-    fi = it->second;
-  }
-  RtsLayer::UnLockDB();
+  FunctionInfo *fi = Tau_get_function_info_internal(n, type, group, gr_name);
   return (void *) fi;
 }
 
 extern "C" void Tau_static_phase_stop(char const * name)
 {
   TauInternalFunctionGuard protects_this_function;
-  FunctionInfo *fi;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   string n = name;
-
-  PureMap & pure = ThePureMap();
-  RtsLayer::LockDB();
-  PureMap::iterator it = pure.find(n);
-  if (it == pure.end()) {
-    fprintf(stderr,
-        "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\n"
-        "TAU Error: You will likely get an overlapping timer message next\n\n",
-        name);
-    RtsLayer::UnLockDB();
-  } else {
-    fi = it->second;
-    RtsLayer::UnLockDB();
-    Tau_stop_timer(fi, Tau_get_thread());
+  FunctionInfo *fi = Tau_get_function_info_internal(n, "", TAU_USER, "", false);
+  if (fi == nullptr) {
+      fprintf(stderr,
+          "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\n"
+          "TAU Error: You will likely get an overlapping timer message next\n\n",
+          name);
+      return;
   }
+  Tau_stop_timer(fi, Tau_get_thread());
 }
 
-
 static vector<int> *getIterationList(char const * name) {
+  static std::mutex mtx;
+  //static map<string, int *> iterationMap;???
   string searchName(name);
   map<string, vector<int> *>::iterator iit = TheIterationMap().find(searchName);
   if (iit == TheIterationMap().end()) {
-    RtsLayer::LockEnv();
-    vector<int> *iterationList = new vector<int>;//[TAU_MAX_THREADS]; //TODO: DYNATHREAD
-    /*for (int i=0; i<TAU_MAX_THREADS; i++) {
-      iterationList[i] = 0;
-    }*/
+    std::lock_guard<std::mutex> lck (mtx);
+    vector<int> *iterationList = new vector<int>;
     TheIterationMap()[searchName] = iterationList;
-    RtsLayer::UnLockEnv();
   }
   return TheIterationMap()[searchName];
 }
@@ -2894,6 +2856,11 @@ static vector<int> *getIterationList(char const * name) {
 extern "C" void Tau_dynamic_start(char const * name, int isPhase)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
 #ifndef TAU_PROFILEPHASE
   isPhase = 0;
 #endif
@@ -2903,23 +2870,10 @@ extern "C" void Tau_dynamic_start(char const * name, int isPhase)
   int tid = RtsLayer::myThread();
   int itcount = (*iterationList)[tid];
 
-  FunctionInfo *fi = NULL;
   char const * newName = Tau_append_iteration_to_name(itcount, name, strlen(name));
   string n(newName);
   free((void*)newName);
-
-  RtsLayer::LockDB();
-  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
-  if (it == ThePureMap().end()) {
-    tauCreateFI((void**)&fi, n, "", TAU_USER, "TAU_USER");
-    if (isPhase) {
-      Tau_mark_group_as_phase(fi);
-    }
-    ThePureMap()[n] = fi;
-  } else {
-    fi = (*it).second;
-  }
-  RtsLayer::UnLockDB();
+  FunctionInfo *fi = Tau_get_function_info_internal(n, "", TAU_USER, "", true, (isPhase != 0));
   Tau_start_timer(fi, isPhase, Tau_get_thread());
 }
 
@@ -2929,6 +2883,11 @@ extern "C" void Tau_dynamic_start(char const * name, int isPhase)
 extern "C" void Tau_dynamic_stop(char const * name, int isPhase)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* We have to make sure we initialize TAU first - just in case we are
+   * entering TAU for the first time, because Tau_get_function_info_internal (below) will
+   * potentially construct a top level timer, which will recursively enter
+   * this function. */
+  static int do_this_once = Tau_init_initializeTAU();
   vector<int> *iterationList = getIterationList(name);
 
   int tid = RtsLayer::myThread();
@@ -2937,23 +2896,16 @@ extern "C" void Tau_dynamic_stop(char const * name, int isPhase)
   // increment the counter
   (*iterationList)[tid]++;
 
-  FunctionInfo *fi = NULL;
   char const * newName = Tau_append_iteration_to_name(itcount, name, strlen(name));
   string n(newName);
   free((void*)newName);
-
-  RtsLayer::LockDB();
-  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
-  if (it == ThePureMap().end()) {
-    fprintf(stderr,
-        "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n",
-        name);
-    RtsLayer::UnLockDB();
-    return;
-  } else {
-    fi = (*it).second;
+  FunctionInfo *fi = Tau_get_function_info_internal(n, "", TAU_USER, "", false);
+  if (fi == nullptr) {
+      fprintf(stderr,
+          "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n",
+          name);
+      return;
   }
-  RtsLayer::UnLockDB();
   Tau_stop_timer(fi, Tau_get_thread());
 
   /*Invoke plugins only if both plugin path and plugins are specified*/
@@ -3126,32 +3078,6 @@ void Tau_destructor_trigger() {
 #endif
   }
 }
-
-/*
-   This is causing segfaults on exit.
-
-   Destructors are called in any order as the application exits
-   so we can't deallocate things from a destructor called on application exit.
-
-   In any case, there's no need to deallocate memory as the application exits
-   because the OS will do that.
-
-void Tau_clear_pure_map(void) {
-  // clear the hash map to eliminate memory leaks
-  PureMap & mymap = ThePureMap();
-  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = mymap.begin();
-  while ( it != mymap.end() ) {
-	TAU_HASH_MAP<string, FunctionInfo *>::iterator eraseme = it;
-	FunctionInfo * fi = eraseme->second;
-    it++; // do this BEFORE the delete!
-	// The top level timer is not allocated? Weird. IF you free it you'll get a segv.
-	if (strcmp(fi->Name, ".TAU application") != 0)
-		delete fi;
-    //mymap.erase(eraseme);
-  }
-  mymap.clear();
-}
-*/
 
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_create_task(void) {

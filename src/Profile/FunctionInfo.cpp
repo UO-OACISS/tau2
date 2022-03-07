@@ -233,8 +233,9 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   // an atomic operation in the push_back and size() operations.
   // Important in the presence of concurrent threads.
   TheFunctionDB().push_back(this);
-  printf("Address of function %s is %p !\n",(const char *)GetName(),(TheFunctionDB().back()));
-
+  //DEBUG object address
+  //printf("Address of function %s is %p !\n",(const char *)GetName(),(TheFunctionDB().back()));
+  //DEBUG
   FunctionId = RtsLayer::GenerateUniqueId();
 
   StartAddr = 0;
@@ -535,20 +536,12 @@ void tauCreateFI(void **ptr, const char *name, const string& type, TauGroup_t Pr
 void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, TauGroup_t ProfileGroup,
     const char *ProfileGroupName)
 {
-  /* This is the entry point into TAU from PDT-instrumented C++ codes, so
-   * make sure that TAU is ready to go before doing anything else! */
-  static int do_this_once = Tau_init_initializeTAU();
+  /* This is NOT the entry point into TAU from PDT-instrumented C++ codes!
+   * this comes from creating the top level timer in TauCAPI.cpp. */
   if (*ptr == 0) {
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
 
-#ifdef TAU_CHARM
-    if (RtsLayer::myNode() != -1)
-    RtsLayer::LockEnv();
-#else
-    RtsLayer::LockEnv();
-#endif
-    if (*ptr == 0) {
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
      * allocation routines */
@@ -562,13 +555,6 @@ void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, Ta
     new(*ptr) FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
 #else
     *ptr = (void *) new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
-#endif
-    }
-#ifdef TAU_CHARM
-    if (RtsLayer::myNode() != -1)
-    RtsLayer::UnLockEnv();
-#else
-    RtsLayer::UnLockEnv();
 #endif
   }
 }
@@ -656,7 +642,7 @@ void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[
 {
   // Add to the mmap-ed histogram. We start with a temporary conversion. This
   //   becomes unnecessary once we stop using the vector.
-  if (GetPathHistogram(tid) == NULL) return; 
+  if (GetPathHistogram(tid) == NULL) return;
   TauPathAccumulator * accumulator = GetPathHistogram(tid)->get(pcStack);
   if (accumulator == NULL) {
     /* KAH - Whoops!! We can't call "new" here, because malloc is not

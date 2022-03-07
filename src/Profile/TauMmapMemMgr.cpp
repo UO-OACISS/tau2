@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <map>
+#include <mutex>
 
 #define TAU_MEMMGR_MAP_CREATION_FAILED -1
 #define TAU_MEMMGR_MAX_MEMBLOCKS_REACHED -2
@@ -34,8 +35,13 @@ struct TauMemMgrInfo
   unsigned long high;
 };
 
+std::mutex& getMapMutex() {
+    static std::mutex _mtx;
+    return _mtx;
+}
+
 /* For "freeing" memory, we need to maintain a map of "queues"
- * for each thread.  The map will map from a "length" to a 
+ * for each thread.  The map will map from a "length" to a
  * queue of free blocks of that length. Each thread will have
  * its own map. The map and the queue require the custom allocator,
  * so this memory manager will eat its own dog food, so to speak.
@@ -99,7 +105,7 @@ bool Tau_MemMgr_initIfNecessary(void)
   //   for the first time! Right now, the correct place for this
   //   is sampling init.
   if (!initialized) {
-    RtsLayer::LockEnv();
+    std::lock_guard<std::mutex> lck (getMapMutex());
     // check again, someone else might already have initialized by now.
     if (!initialized) {
       int maxThreads=getMemSumSize();
@@ -109,7 +115,6 @@ bool Tau_MemMgr_initIfNecessary(void)
       }
       initialized = true;
     }
-    RtsLayer::UnLockEnv();
   }
   return true;
 }
@@ -117,12 +122,11 @@ bool Tau_MemMgr_initIfNecessary(void)
 extern "C" void Tau_MemMgr_finalizeIfNecessary(void) {
   if (!finalized) {
     Tau_global_incr_insideTAU();
-    RtsLayer::LockEnv();
+    std::lock_guard<std::mutex> lck (getMapMutex());
     // check again, someone else might already have initialized by now.
     if (!finalized) {
       finalized = true;
     }
-    RtsLayer::UnLockEnv();
     Tau_global_decr_insideTAU();
   }
 }
@@ -206,32 +210,29 @@ void * Tau_MemMgr_recycle(int tid, size_t size)
     // does the map for this thread exist?
     // get the vector for this size
     __custom_vector_t * queue;
-    RtsLayer::LockEnv();
+    std::lock_guard<std::mutex> lck (getMapMutex());
     __custom_map_t::const_iterator it = getFreeChunks(tid).find(size);
 
     // is this a new size that we haven't freed yet?
     if (it == getFreeChunks(tid).end()) {
-        RtsLayer::UnLockEnv();
         return NULL;
     } else {
         queue = (*it).second;
     }
     // Does this vector have a chunk for us to use?
     if (queue->empty()) {
-        RtsLayer::UnLockEnv();
         return NULL;
     }
     // there is a chunk! Recycle it!
     void * tmp = queue->back();
     queue->pop_back();
-    RtsLayer::UnLockEnv();
     return tmp;
 }
 #endif
 
 void * Tau_MemMgr_malloc(int tid, size_t size)
 {
-/* In some cases, when not using sampling or signal handling, we 
+/* In some cases, when not using sampling or signal handling, we
    want to disable the memory management altogether. */
 #ifdef TAU_DISABLE_MEM_MANAGER
     void * ptr = malloc(size);
@@ -247,10 +248,10 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
 #ifdef USE_RECYCLER
   // can we recycle an old block?
   void * recycled = Tau_MemMgr_recycle(tid, size);
-  if (recycled != NULL) { 
+  if (recycled != NULL) {
     //printf("Recycling block of size %d at address %p\n", size, recycled);
     memset(recycled, 0, size);
-    return recycled; 
+    return recycled;
   }
 #endif
 
@@ -286,7 +287,7 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
 
 void Tau_MemMgr_free(int tid, void *addr, size_t size)
 {
-/* In some cases, when not using sampling or signal handling, we 
+/* In some cases, when not using sampling or signal handling, we
    want to disable the memory management altogether. */
 #ifdef TAU_DISABLE_MEM_MANAGER
     free(addr);
@@ -299,7 +300,7 @@ void Tau_MemMgr_free(int tid, void *addr, size_t size)
     // freed memory just allocates more memory...
     if (finalized || size == 0) return;
 #ifdef USE_RECYCLER
-    RtsLayer::LockEnv();
+    std::lock_guard<std::mutex> lck (getMapMutex());
     // get the vector for this size
     __custom_map_t::const_iterator it = getFreeChunks(tid).find(size);
     __custom_vector_t * queue;
@@ -317,7 +318,6 @@ void Tau_MemMgr_free(int tid, void *addr, size_t size)
     }
     // Add this address to the end of the vector
     queue->push_back(addr);
-    RtsLayer::UnLockEnv();
 #endif
     return;
 }

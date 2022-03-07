@@ -41,7 +41,7 @@ TAU_TARGET		= libTauMpi$(TAU_CONFIG)$(LSX)
 
 all : 		$(TAU_TARGET)
 
-install:	$(INSTALLDEST)/$(TAU_TARGET) 
+install:	$(INSTALLDEST)/$(TAU_TARGET)
 
 $(TAU_TARGET) : TauMpi.o TauRequest.o TauTranslateRank.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS) $(MPI_FORTRAN_INIT) $(TAU_MPIT)
 	$(AR) $(ARFLAGS) $(TAU_TARGET) TauMpi.o TauRequest.o TauTranslateRank.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS) $(MPI_FORTRAN_INIT) $(TAU_MPIT)
@@ -54,10 +54,10 @@ TauMpiT.o : TauMpiT.c
 	$(CC) $(CFLAGS) -c TauMpiT.c
 
 TauRequest.o : TauRequest.cpp
-	$(CXX) $(CXXFLAGS) -c TauRequest.cpp
+	$(CXX) $(CFLAGS) $(TAU_STDCXX11_FLAG) -c TauRequest.cpp
 
 TauTranslateRank.o : TauTranslateRank.cpp
-	$(CXX) $(CXXFLAGS) -c TauTranslateRank.cpp
+	$(CXX) $(CFLAGS) $(TAU_STDCXX11_FLAG) -c TauTranslateRank.cpp
 
 TauFMpi.o : TauFMpi.c
 	$(CC) $(CFLAGS) -c TauFMpi.c
@@ -72,16 +72,16 @@ ClockSync.o : ClockSync.c
 	$(CC) $(CFLAGS) -c ClockSync.c
 
 TauProfileMerge.o : TauProfileMerge.cpp
-	$(CXX) $(CXXFLAGS) -c TauProfileMerge.cpp
+	$(CXX) $(CFLAGS) $(TAU_STDCXX11_FLAG) -c TauProfileMerge.cpp
 
 TauMetaDataMerge.o : TauMetaDataMerge.cpp
-	$(CXX) $(CXXFLAGS) -c TauMetaDataMerge.cpp
+	$(CXX) $(CFLAGS) $(TAU_STDCXX11_FLAG) -c TauMetaDataMerge.cpp
 
 $(INSTALLDEST)/$(TAU_TARGET): $(TAU_TARGET)
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
-clean: 	
+clean:
 	$(RM) core TauMpi.o TauRequest.o TauTranslateRank.o $(TAU_TARGET)
 ##############################################

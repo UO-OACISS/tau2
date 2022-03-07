@@ -36,6 +36,7 @@
 #include <string.h>
 #include <omp.h>
 #include <string>
+#include <mutex>
 #include <Profile/Profiler.h>
 #ifdef TAU_OPENMP
 #ifndef _OPENMP
@@ -363,11 +364,12 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
   }
 
   FunctionInfo **flist = (FunctionInfo **)(r->data);
+  static std::mutex mtx;
 
 #ifdef TAU_OPENMP_PARTITION_REGION
   if (!r->data) {
     // only one thread should create the array.
-    RtsLayer::LockEnv();
+    std::lock_guard<std::mutex> guard(mtx);
     // make sure some other thread hasn't created it.
     if (!r->data) {
       flist = new FunctionInfo*[NUM_OMP_TYPES];
@@ -378,15 +380,13 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
       // save the list of timers to the region
       r->data = (void*)flist;
 	}
-    RtsLayer::UnLockEnv();
-
     flist = (FunctionInfo **)(r->data);
   }
 
   // does the timer we want exist?
   if (flist[index] == NULL) {
     // only one thread should create the timers.
-    RtsLayer::LockEnv();
+    std::lock_guard<std::mutex> guard(mtx);
      // make sure some other thread hasn't created it.
     if (flist[index] == NULL) {
       char rname[1024], rtype[1024];
@@ -395,7 +395,6 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
       r->start_file_name, r->start_line_1, r->end_line_1);
       flist[index] = Tau_make_openmp_timer(rname, rtype);
     }
-    RtsLayer::UnLockEnv();
   }
 
   FunctionInfo *f = flist[index];
@@ -403,7 +402,7 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
 #else // not TAU_OPENMP_PARTITION_REGION
 
   if (!r->data) {
-    RtsLayer::LockEnv();
+    std::lock_guard<std::mutex> guard(mtx);
     // make sure some other thread hasn't created the timer.
     if (!r->data) {
       // create the timer for this region
@@ -415,8 +414,6 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
       FunctionInfo *f = Tau_make_openmp_timer(rname, rtype);
       r->data = (void*)f;
     }
-    // let other threads get to these timers
-    RtsLayer::UnLockEnv();
   }
   FunctionInfo *f = (FunctionInfo *)r->data;
 #endif

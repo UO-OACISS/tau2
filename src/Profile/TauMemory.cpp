@@ -44,7 +44,7 @@ void *pvalloc(size_t size) {
 
 #ifdef TAU_AIX
 #define HAVE_POSIX_MEMALIGN 1
-#undef HAVE_MEMALIGN 
+#undef HAVE_MEMALIGN
 #undef HAVE_PVALLOC
 #endif /* TAU_AIX */
 #ifdef TAU_DOT_H_LESS_HEADERS
@@ -119,6 +119,9 @@ static inline void BuildTimerName(char * buff, char const * funcname, char const
     sprintf(buff, "%s [{%s} {%d,1}-{%d,1}]", funcname, filename, lineno, lineno);
   }
 }
+
+// Declare static member vars
+std::mutex TauAllocation::mtx;
 
 //////////////////////////////////////////////////////////////////////
 // Triggers leak detection
@@ -204,13 +207,12 @@ TauAllocation * TauAllocation::Find(allocation_map_t::key_type const & key)
 {
   TauAllocation * found = NULL;
   if (key) {
-    RtsLayer::LockDB();
+    std::lock_guard<std::mutex> lck (mtx);
     allocation_map_t const & alloc_map = AllocationMap();
     allocation_map_t::const_iterator it = alloc_map.find(key);
     if (it != alloc_map.end()) {
       found = it->second;
     }
-    RtsLayer::UnLockDB();
   }
   return found;
 }
@@ -222,7 +224,7 @@ TauAllocation * TauAllocation::FindContaining(void * ptr)
 {
   TauAllocation * found = NULL;
   if (ptr) {
-    RtsLayer::LockDB();
+    std::lock_guard<std::mutex> lck (mtx);
     allocation_map_t const & allocMap = AllocationMap();
     allocation_map_t::const_iterator it;
     for(it = allocMap.begin(); it != allocMap.end(); it++) {
@@ -232,7 +234,6 @@ TauAllocation * TauAllocation::FindContaining(void * ptr)
         break;
       }
     }
-    RtsLayer::UnLockDB();
   }
   return found;
 }
@@ -399,11 +400,12 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
     if(ugap_size) memset(ugap_addr, fill_pattern, ugap_size);
   }
 
-  RtsLayer::LockDB();
-  __bytes_allocated() += user_size;
-  __bytes_overhead() += alloc_size - user_size;
-  __allocation_map()[user_addr] = this;
-  RtsLayer::UnLockDB();
+  {
+    std::lock_guard<std::mutex> lck (mtx);
+    __bytes_allocated() += user_size;
+    __bytes_overhead() += alloc_size - user_size;
+    __allocation_map()[user_addr] = this;
+  }
 
   allocated = true;
   TriggerAllocationEvent(user_size, filename, lineno);
@@ -484,15 +486,16 @@ void TauAllocation::Deallocate(const char * filename, int lineno)
     Protect(alloc_addr, alloc_size);
   }
 
-  RtsLayer::LockDB();
-  __bytes_deallocated() += user_size;
-  if (protect_free) {
-    __bytes_overhead() += user_size;
-  } else {
-    __bytes_overhead() -= alloc_size - user_size;
-    __allocation_map().erase(user_addr);
+  {
+    std::lock_guard<std::mutex> lck (mtx);
+    __bytes_deallocated() += user_size;
+    if (protect_free) {
+        __bytes_overhead() += user_size;
+    } else {
+        __bytes_overhead() -= alloc_size - user_size;
+        __allocation_map().erase(user_addr);
+    }
   }
-  RtsLayer::UnLockDB();
 
   TriggerDeallocationEvent(user_size, filename, lineno);
   TriggerMemDbgOverheadEvent();
@@ -543,10 +546,11 @@ void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filena
       user_addr = addr;
       user_size = size;
     }
-    RtsLayer::LockDB();
-    __bytes_allocated() += user_size;
-    __allocation_map()[user_addr] = this;
-    RtsLayer::UnLockDB();
+    {
+        std::lock_guard<std::mutex> lck (mtx);
+        __bytes_allocated() += user_size;
+        __allocation_map()[user_addr] = this;
+    }
 
     TriggerAllocationEvent(user_size, filename, lineno);
     TriggerHeapMemoryUsageEvent();
@@ -564,10 +568,11 @@ void TauAllocation::TrackDeallocation(const char * filename, int lineno)
   tracked = true;
   allocated = false;
 
-  RtsLayer::LockDB();
-  __bytes_deallocated() += user_size;
-  __allocation_map().erase(user_addr);
-  RtsLayer::UnLockDB();
+  {
+    std::lock_guard<std::mutex> lck (mtx);
+    __bytes_deallocated() += user_size;
+    __allocation_map().erase(user_addr);
+  }
 
   TriggerDeallocationEvent(user_size, filename, lineno);
   TriggerHeapMemoryUsageEvent();
@@ -601,10 +606,11 @@ void TauAllocation::TrackReallocation(void * ptr, size_t size, const char * file
         alloc_size = size;
       } else {
         // Track deallocation of old memory without destroying this object
-        RtsLayer::LockDB();
-        __bytes_deallocated() += user_size;
-        __allocation_map().erase(user_addr);
-        RtsLayer::UnLockDB();
+        {
+            std::lock_guard<std::mutex> lck (mtx);
+            __bytes_deallocated() += user_size;
+            __allocation_map().erase(user_addr);
+        }
         TriggerDeallocationEvent(user_size, filename, lineno);
 
         // Reuse this object to track the new resized allocation
@@ -746,24 +752,25 @@ void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, i
 
   unsigned long file_hash = LocationHash(lineno, filename);
 
-  RtsLayer::LockDB();
-  event_map_t::iterator it = event_map.find(file_hash);
-  if (it == event_map.end()) {
-    if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
-        !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
-    {
-      event = new TauContextUserEvent("Heap Allocate");
+  {
+    std::lock_guard<std::mutex> lck (mtx);
+    event_map_t::iterator it = event_map.find(file_hash);
+    if (it == event_map.end()) {
+        if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
+            !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
+        {
+        event = new TauContextUserEvent("Heap Allocate");
+        } else {
+        char * name = new char[strlen(filename)+128];
+        sprintf(name, "Heap Allocate <file=%s, line=%d>", filename, lineno);
+        event = new TauContextUserEvent(name);
+        delete[] name;
+        }
+        event_map[file_hash] = event;
     } else {
-      char * name = new char[strlen(filename)+128];
-      sprintf(name, "Heap Allocate <file=%s, line=%d>", filename, lineno);
-      event = new TauContextUserEvent(name);
-      delete[] name;
+        event = it->second;
     }
-    event_map[file_hash] = event;
-  } else {
-    event = it->second;
   }
-  RtsLayer::UnLockDB();
 
   event->TriggerEvent(size);
   alloc_event = event->getContextUserEvent();
@@ -780,24 +787,25 @@ void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename,
   unsigned long file_hash = LocationHash(lineno, filename);
   TauContextUserEvent * e;
 
-  RtsLayer::LockDB();
-  event_map_t::iterator it = event_map.find(file_hash);
-  if (it == event_map.end()) {
-    if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
-        !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
-    {
-      e = new TauContextUserEvent("Heap Free");
+  {
+    std::lock_guard<std::mutex> lck (mtx);
+    event_map_t::iterator it = event_map.find(file_hash);
+    if (it == event_map.end()) {
+        if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
+            !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
+        {
+        e = new TauContextUserEvent("Heap Free");
+        } else {
+        char * name = new char[strlen(filename)+128];
+        sprintf(name, "Heap Free <file=%s, line=%d>", filename, lineno);
+        e = new TauContextUserEvent(name);
+        delete[] name;
+        }
+        event_map[file_hash] = e;
     } else {
-      char * name = new char[strlen(filename)+128];
-      sprintf(name, "Heap Free <file=%s, line=%d>", filename, lineno);
-      e = new TauContextUserEvent(name);
-      delete[] name;
+        e = it->second;
     }
-    event_map[file_hash] = e;
-  } else {
-    e = it->second;
   }
-  RtsLayer::UnLockDB();
 
   e->TriggerEvent(size);
 }
@@ -813,26 +821,27 @@ void TauAllocation::TriggerErrorEvent(char const * descript, char const * filena
   unsigned long file_hash = LocationHash(lineno, filename);
   TauContextUserEvent * e;
 
-  RtsLayer::LockDB();
-  event_map_t::iterator it = event_map.find(file_hash);
-  if (it == event_map.end()) {
-    char * name;
-    if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
-        !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
-    {
-      name = new char[strlen(descript)+128];
-      sprintf(name, "Memory Error! %s", descript);
+  {
+    std::lock_guard<std::mutex> lck (mtx);
+    event_map_t::iterator it = event_map.find(file_hash);
+    if (it == event_map.end()) {
+        char * name;
+        if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
+            !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
+        {
+        name = new char[strlen(descript)+128];
+        sprintf(name, "Memory Error! %s", descript);
+        } else {
+        name = new char[strlen(descript)+strlen(filename)+128];
+        sprintf(name, "Memory Error! %s <file=%s, line=%d>", descript, filename, lineno);
+        }
+        e = new TauContextUserEvent(name);
+        event_map[file_hash] = e;
+        delete[] name;
     } else {
-      name = new char[strlen(descript)+strlen(filename)+128];
-      sprintf(name, "Memory Error! %s <file=%s, line=%d>", descript, filename, lineno);
+        e = it->second;
     }
-    e = new TauContextUserEvent(name);
-    event_map[file_hash] = e;
-    delete[] name;
-  } else {
-    e = it->second;
   }
-  RtsLayer::UnLockDB();
 
   e->TriggerEvent(1);
 }
