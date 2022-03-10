@@ -347,6 +347,8 @@ void Tau_roctracer_hcc_event(const roctracer_record_t *record,
   }
   // ignore marker events, not sure where they come from or what they are for
   if (strncmp(joined_name, "Marker", 6) == 0) return;
+  // ignore FillBuffer events, not sure where they come from or what they are for
+  if (strncmp(joined_name, "FillBuffer", 6) == 0) return;
   TAU_VERBOSE("*** Begin: %lu, End: %lu\n", begin_us, end_us);
   //double ts = Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(begin_us))); // convert to microseconds
   metric_set_gpu_timestamp(task_id, ((double)(begin_us)));
