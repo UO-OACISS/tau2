@@ -438,6 +438,10 @@ case $1 in
         fullcc=`echo $1 | sed -e 's@^fullcc=@@' -e 's@#@ @g'`
 	echo "s@^FULL_CC=.*@FULL_CC=$fullcc@g" >> $sedout
 	;;
+     fullfortran=*)
+        fullfortran=`echo $1 | sed -e 's@^fullfortran=@@' -e 's@#@ @g'`
+	echo "s@^FULL_FORTRAN=.*@FULL_FORTRAN=$fullfortran@g" >> $sedout
+	;;
      tau_build_cc=*)
         tau_build_cc=`echo $1 | sed -e 's@^tau_build_cc=@@' -e 's@#@ @g'`
 	echo "s@^TAU_BUILD_CC=.*@TAU_BUILD_CC=$tau_build_cc@g" >> $sedout
@@ -758,6 +762,10 @@ case $1 in
 	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     FORTRAN_SPECIFIED)
+        echo NOTE: Using the specified Fortran compiler instead of the default
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
 
 ###############################################################
 # Set up MPI stuff if possible
@@ -1730,6 +1738,10 @@ case $1 in
 	;;
      PYCUDA)
 	echo "NOTE: Building TAU PyCUDA interface ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PYCUDA_BOOST)
+	echo "NOTE: Building TAU PyCUDA interface with Boost libraries ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      MULTIPLECOUNTERS)
