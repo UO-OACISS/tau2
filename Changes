@@ -25,6 +25,7 @@ Version 2.31 changes (from 2.30):
 12. Added support for ROCm 4.5.2.
 13. Added support for Cray PrgEnv-amd. 
 14. Fixed a bug with throttling and CUPTI timer stop. 
+15. Allows a user to specify different compilers on Cray systems.
  
 Version 2.30 changes (from 2.29):
 1. Added support for Fugaku Fujitsu FX system with Fujitsu compilers (-mpi -bfd=download) for Fugaku. 
