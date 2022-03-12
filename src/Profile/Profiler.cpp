@@ -1253,7 +1253,10 @@ int TauProfiler_updateIntermediateStatistics(int tid)
   // iterate over all functions in the database.
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
-
+    if(fi==NULL){
+	    TAU_VERBOSE("WARNING: NULL FunctionInfoPointer!");
+	    continue;
+    }
     // get the current "dump" profile for this timer
     double *incltime = fi->getDumpInclusiveValues(tid);
     double *excltime = fi->getDumpExclusiveValues(tid);
