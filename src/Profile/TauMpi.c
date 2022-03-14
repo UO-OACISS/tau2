@@ -35,7 +35,6 @@
    functions here. */
 extern void Tau_MemMgr_finalizeIfNecessary(void);
 extern int Tau_get_usesMPI();
-extern void Tau_metadata_writeEndingTimeStamp(void);
 
 #include <stdio.h>
 #include <mpi.h>
@@ -1720,7 +1719,6 @@ int  MPI_Finalize(  )
   if (TauEnv_get_synchronize_clocks()) {
     TauSyncFinalClocks();
   }
-  Tau_metadata_writeEndingTimeStamp();
 
   PMPI_Get_processor_name(procname, &procnamelength);
   TAU_METADATA("MPI Processor Name", procname);

@@ -67,6 +67,7 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #endif /* TAU_CRAYCNL_PMI || TAU_CRAYCNL_PMI_FOUND */
 #endif
 #endif//TAU_CRAYCNL
+#include <mutex>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -186,6 +187,7 @@ int tau_bgq_init(void) {
  * instability if the application isn't linked with the TAU shared
  * object library (-optShared). */
 
+std::mutex _map_mutex;
 // These come from Tau_metadata_register calls
 MetaDataRepo &Tau_metadata_getMetaData(int tid) {
 /* Intel is such an annoying beast.  It won't let us declare this
@@ -193,6 +195,7 @@ MetaDataRepo &Tau_metadata_getMetaData(int tid) {
  * instability if the application isn't linked with the TAU shared
  * object library (-optShared). */
   static MetaDataRepo metadata[TAU_MAX_THREADS];
+  //printf("%d has %lu items\n", tid, metadata[tid].size());
   return metadata[tid];
 }
 
@@ -290,9 +293,12 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   Tau_metadata_value_t* tmv = NULL;
   Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
-  //RtsLayer::LockEnv();
-  Tau_metadata_getMetaData(tid)[key] = tmv;
-  //RtsLayer::UnLockEnv();
+  {
+    std::lock_guard<std::mutex> lck(_map_mutex);
+    //Tau_metadata_getMetaData(tid)[key] = tmv;
+    Tau_metadata_getMetaData(tid).insert(std::make_pair(key, tmv));
+  }
+  //printf("%d %s = %s\n", 0, name, value);
   //printf("Metadata for thread %d : %s : %s\n", tid, key.name, tmv->data.cval);
 
   /*Invoke plugins only if both plugin path and plugins are specified*/
@@ -312,6 +318,7 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
  * metadata registered on thread 0 up to this point. */
 void Tau_metadata_push_to_plugins(void) {
     int tid = RtsLayer::myThread();
+    std::lock_guard<std::mutex> lck(_map_mutex);
     for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).begin();
          it != Tau_metadata_getMetaData(tid).end(); it++) {
 
@@ -353,7 +360,7 @@ const char *Tau_metadata_timeFormat = "%lld";
 int Tau_metadata_fillMetaData()
 {
 #ifndef TAU_DISABLE_METADATA
-  int anonymize=TauEnv_get_anonymize_enabled(); 
+  int anonymize=TauEnv_get_anonymize_enabled();
 
   static int filled = 0;
   if (filled) {
@@ -1001,15 +1008,7 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
   return 0;
 }
 
-extern "C" void Tau_metadata_writeEndingTimeStamp(void) {
-  char tmpstr[4096];
-  TauMetrics_finalize(); // make sure there's a valid final timestamp
-  sprintf (tmpstr, Tau_metadata_timeFormat, TauMetrics_getFinalTimeStamp());
-  Tau_metadata_register("Ending Timestamp", tmpstr);
-}
-
 static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, int tid) {
-  Tau_metadata_writeEndingTimeStamp();
 
   const char *endl = "";
   //newline = true;
@@ -1024,6 +1023,7 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
     Tau_XML_writeAttribute(out, "Metric Name", RtsLayer::getCounterName(counter), newline);
   }
 
+  //printf("Writing metadata for %d, its map has %lu items\n", tid, Tau_metadata_getMetaData(tid).size());
   /*
    * In order to support thread-specific metadata, we will need to aggregate
    * the metadata which is common to all threads in this process (thread 0
@@ -1039,15 +1039,18 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
     // create a new aggregator
     localRepo = new MetaDataRepo();
 	// copy all metadata from thread 0
+    std::lock_guard<std::mutex> lck(_map_mutex);
     for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(0).begin(); it != Tau_metadata_getMetaData(0).end(); it++) {
 	  // DON'T copy the context metadata fields
 	  if (it->first.timer_context == NULL) {
-        (*localRepo)[it->first] = it->second;
+        //(*localRepo)[it->first] = it->second;
+        (*localRepo).insert(std::make_pair(it->first, it->second));
 	  }
 	}
  	// overwrite with thread-specific data
     for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).begin(); it != Tau_metadata_getMetaData(tid).end(); it++) {
-      (*localRepo)[it->first] = it->second;
+      //(*localRepo)[it->first] = it->second;
+      (*localRepo).insert(std::make_pair(it->first, it->second));
 	}
   }
   /*
@@ -1075,6 +1078,18 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
 #endif
 	//}
 	i++;
+  }
+  if (RtsLayer::myThread() == 0) {
+      char tmpstr[4096];
+      sprintf (tmpstr, Tau_metadata_timeFormat, TauMetrics_getFinalTimeStamp());
+      Tau_metadata_register("Ending Timestamp", tmpstr);
+#ifndef TAU_SCOREP
+      Tau_XML_writeAttribute(out, "Ending Timestamp", tmpstr, newline);
+#elif TAU_SCOREP_METADATA /* TAU_SCOREP */
+      if ( it->second) {
+        SCOREP_Tau_AddLocationProperty("Ending Timestamp", tmpstr);
+      }
+#endif
   }
 
 // can't do full delete, because the aggregation does not do deep copies. :(
@@ -1121,9 +1136,10 @@ extern "C" void Tau_context_metadata(const char *name, const char *value) {
   Tau_metadata_value_t* tmv = NULL;
   Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
-  //RtsLayer::LockEnv();
-  Tau_metadata_getMetaData(tid)[*key] = tmv;
-  //RtsLayer::UnLockEnv();
+  //printf("%d CONTEXT %s = %s\n", tid, name, value);
+  //printf("Metadata for thread %d : %s : %s\n", tid, key->name, tmv->data.cval);
+  std::lock_guard<std::mutex> lck(_map_mutex);
+  Tau_metadata_getMetaData(tid).insert(std::make_pair(*key, tmv));
 #endif
 }
 
@@ -1135,7 +1151,6 @@ extern "C" void Tau_structured_metadata(const Tau_metadata_object_t *object, boo
   int tid = RtsLayer::myThread();
   Tau_metadata_key *key = new Tau_metadata_key();
   if (context) {
-    RtsLayer::LockEnv();
     // get the current calling context
     Profiler *current = TauInternal_CurrentProfiler(tid);
     // it IS possible to request metadata with no active timer.
@@ -1153,9 +1168,11 @@ extern "C" void Tau_structured_metadata(const Tau_metadata_object_t *object, boo
     key->name = strdup(object->names[i]);
     Tau_metadata_value_t* tmv = object->values[i];
     //printf("%p  %s:%s:%d:%llu = %s\n", &(Tau_metadata_getMetaData(RtsLayer::myThread())), key->name, key->timer_context, key->call_number, key->timestamp, tmv->data.cval);
-    Tau_metadata_getMetaData(tid)[*key] = tmv;
+  std::lock_guard<std::mutex> lck(_map_mutex);
+    //Tau_metadata_getMetaData(tid)[*key] = tmv;
+  Tau_metadata_getMetaData(tid).insert(std::make_pair(*key, tmv));
+  //printf("Metadata for thread %d : %s : %s\n", tid, key->name, tmv->data.cval);
   }
-  RtsLayer::UnLockEnv();
 #endif
 }
 
@@ -1185,9 +1202,10 @@ extern "C" void Tau_phase_metadata(const char *name, const char *value) {
   Tau_metadata_value_t* tmv = NULL;
   Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
-  //RtsLayer::LockEnv();
-  Tau_metadata_getMetaData(tid)[*key] = tmv;
-  //RtsLayer::UnLockEnv();
+  std::lock_guard<std::mutex> lck(_map_mutex);
+  //Tau_metadata_getMetaData(tid)[*key] = tmv;
+  Tau_metadata_getMetaData(tid).insert(std::make_pair(*key, tmv));
+  //printf("Metadata for thread %d : %s : %s\n", tid, key.name, tmv->data.cval);
 #else
   Tau_context_metadata(name, value);
 #endif
@@ -1284,6 +1302,7 @@ void Tau_metadata_removeDuplicates(char *buffer, int buflen) {
 
     Tau_metadata_key key;
 	key.name = (char*)attribute;
+  std::lock_guard<std::mutex> lck(_map_mutex);
     MetaDataRepo::iterator iter = Tau_metadata_getMetaData(RtsLayer::myThread()).find(key);
     if (iter != Tau_metadata_getMetaData(RtsLayer::myThread()).end()) {
 	  if (iter->second->type == TAU_METADATA_TYPE_STRING) {
@@ -1306,6 +1325,7 @@ char * Tau_metadata_get(const char * name, int tid) {
     char * returnval = NULL;
     Tau_metadata_key key;
     key.name = strdup(name);
+  std::lock_guard<std::mutex> lck(_map_mutex);
     MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).find(key);
     if (it != Tau_metadata_getMetaData(tid).end()) {
 	  if (it->second->type == TAU_METADATA_TYPE_STRING) {
