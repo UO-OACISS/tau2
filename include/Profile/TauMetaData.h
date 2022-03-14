@@ -86,10 +86,13 @@ struct Tau_Metadata_Compare: std::binary_function<Tau_metadata_key,Tau_metadata_
   }
 };
 
+void Tau_destructor_trigger(void);
+
 class MetaDataRepo : public map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare> {
 private:
   void freeMetadata (Tau_metadata_value_t * tmv);
 public :
+  Tau_metadata_value_t*& operator[] (const Tau_metadata_key& k) = delete;
   void emptyRepo(void) {
 	MetaDataRepo::iterator it = this->begin();
 	while (it != this->end()) {
@@ -112,11 +115,10 @@ public :
 	this->clear();
   }
   ~MetaDataRepo(void) {
+      Tau_destructor_trigger();
       this->shallowEmpty();
   }
 };
-
-extern "C" void Tau_metadata_writeEndingTimeStamp(void);
 
 MetaDataRepo &Tau_metadata_getMetaData(int tid);
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter, int tid);
