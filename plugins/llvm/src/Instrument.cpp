@@ -235,13 +235,13 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
           }
           loadFunctionsFromFile(ifile);
       } else {
-          errs() << "Checking selective instrumentation file TAU_SELECT_FILE\n"; 
+          errs() << "Checking selective instrumentation file specified in env. variable TAU_SELECT_FILE\n"; 
 	  char *fname = getenv("TAU_SELECT_FILE");
 	  if (fname) {
-            errs() << "fname = "<<fname<<"\n"; 
+            errs() << "TAU_SELECT_FILE = "<<fname<<"\n"; 
             std::ifstream ifile{fname};
             if( !ifile ){
-              errs() << "Could not open input file\n";
+              errs() << "Could not open input file" << fname<<"\n";
               return;
             }
             loadFunctionsFromFile(ifile);
