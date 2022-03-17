@@ -241,7 +241,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
             errs() << "TAU_SELECT_FILE = "<<fname<<"\n"; 
             std::ifstream ifile{fname};
             if( !ifile ){
-              errs() << "Could not open input file" << fname<<"\n";
+              errs() << "Could not open input file: " << fname<<"\n";
               return;
             }
             loadFunctionsFromFile(ifile);
