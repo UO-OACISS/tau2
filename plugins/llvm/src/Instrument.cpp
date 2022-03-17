@@ -34,6 +34,8 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/IR/InstIterator.h"
 
+#include "llvm/ADT/Triple.h"
+
 #include <llvm/IR/DebugLoc.h>
 #include <llvm/IR/DebugInfoMetadata.h>
 #include <clang/Basic/SourceManager.h>
@@ -235,10 +237,10 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
           }
           loadFunctionsFromFile(ifile);
       } else {
-          errs() << "Checking selective instrumentation file specified in env. variable TAU_SELECT_FILE\n"; 
-	  char *fname = getenv("TAU_SELECT_FILE");
+          errs() << "Checking selective instrumentation file specified in env. variable TAU_COMPILER_SELECT_FILE\n"; 
+	  char *fname = getenv("TAU_COMPILER_SELECT_FILE");
 	  if (fname) {
-            errs() << "TAU_SELECT_FILE = "<<fname<<"\n"; 
+            errs() << "TAU_COMPILER_SELECT_FILE = "<<fname<<"\n"; 
             std::ifstream ifile{fname};
             if( !ifile ){
               errs() << "Could not open input file: " << fname<<"\n";
@@ -501,13 +503,21 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
      * \param calls Vector to add to, if the CallInst should be profiled
      */
   bool maybeSaveForProfiling( Function& call ){
-	StringRef callName = call.getName();
+    StringRef callName = call.getName();
     std::string filename = getFilename( call );
     StringRef prettycallName = normalize_name(callName);
+    auto *module = call.getParent();
+    const std::string triple = module->getTargetTriple();
+    bool is_host_func = triple.compare(std::string("amdgcn-amd-amdhsa")); // returns 0 if it matches
+    // Compare similarly for other GPUs. If it matches, do not instrument it.
 
 	/* This big test was explanded for readability */
 	bool instrumentHere = false;
     //errs() << "Name " << prettycallName << " full " << callName << "\n";
+    if (is_host_func == false) {
+      errs() << "Name " << prettycallName << " GPU bound, instrument = "<<is_host_func<<"\n";
+      return false;
+    }
 
     if( prettycallName == "" ) return false;
 	
@@ -657,7 +667,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 
 char Instrument::ID = 0;
 
-static RegisterPass<Instrument> X("tau-prof", "TAU Profiling", false, false);
+static RegisterPass<Instrument> X("TAU", "TAU Profiling", false, false);
 
 // Automatically enable the pass.
 // http://adriansampson.net/blog/clangpass.html
@@ -681,6 +691,6 @@ protected:
     }
 };
      
-static  clang::FrontendPluginRegistry::Add<PluginInstrument> X("tau-prof", "TAU profiling");
+static  clang::FrontendPluginRegistry::Add<PluginInstrument> X("TAU", "TAU profiling");
 
 #endif
