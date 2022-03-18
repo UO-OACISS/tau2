@@ -27,6 +27,7 @@ Version 2.31 changes (from 2.30):
 14. Fixed a bug with throttling and CUPTI timer stop. 
 15. Allows a user to specify different compilers on Cray systems.
 16. Added support for TAU_COMPILER_SELECT_FILE for specifying selective instrumentation for hipcc/clang for C++ files. 
+17. Added support for PrgEnv-cray with -c++=hipcc -cc=clang for LLVM selective instrumentation plugin. 
  
 Version 2.30 changes (from 2.29):
 1. Added support for Fugaku Fujitsu FX system with Fujitsu compilers (-mpi -bfd=download) for Fugaku. 
