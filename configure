@@ -3580,6 +3580,7 @@ fi
 
 if [ "$cxx_compiler" = "hipcc" ]; then
   suppress_pthread_create_wrapper=yes
+  fixmakeargs="$fixmakeargs HIPCC"
 fi
 
 
