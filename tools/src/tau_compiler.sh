@@ -86,7 +86,7 @@ defaultParser="noparser"
 optWrappersDir="/tmp"
 TAU_BIN_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TAUARCH="`grep 'TAU_ARCH=' $TAU_MAKEFILE | sed -e 's@TAU_ARCH=@@g' `"
-TAUCOMP="`grep 'TAU_COMPILER_SUITE_USED=' $TAU_MAKEFILE | grep '##' | sed -e 's/TAU_COMPILER_SUITE_USED=\(.*\)#ENDIF##\(.*\)#/\1/' | tr -d ' '`"
+TAUCOMP="`grep 'TAU_COMPILER_SUITE_USED=' $TAU_MAKEFILE | grep '##' | sed -e 's/TAU_COMPILER_SUITE_USED=\(.*\)#ENDIF##\(.*\)#/\1/' | tr -d ' ' | tail -1`"
 
 TAU_PLUGIN_DIR="`grep 'TAU_LIB_DIR=' $TAU_MAKEFILE | sed -e 's@TAU_LIB_DIR=@@g' `"
 TAU_PREFIX_INSTALL_DIR="`grep 'TAU_PREFIX_INSTALL_DIR=' $TAU_MAKEFILE | sed -e 's@TAU_PREFIX_INSTALL_DIR=@@g' `"
