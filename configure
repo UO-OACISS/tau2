@@ -3580,6 +3580,7 @@ fi
 
 if [ "$cxx_compiler" = "hipcc" ]; then
   suppress_pthread_create_wrapper=yes
+  fixmakeargs="$fixmakeargs HIPCC"
 fi
 
 
@@ -4079,7 +4080,9 @@ case $machine in
 	    #         with -lmpichcxx which is static. -lmpichcxx_cray
 	    #         has to be used instead.
             if [ "x$PE_MVAPICH2_FIXED_PRGENV" = "x" ]; then
-	      fixmakeargs="$fixmakeargs CRAYCNL_CCE"
+	      if [ -r $mpiinc/cray_version.h ]; then
+	        fixmakeargs="$fixmakeargs CRAYCNL_CCE"
+              fi
             else
               if [ "x$CRAY_MPICH_PREFIX" = "x" ]; then
 	        fixmakeargs="$fixmakeargs CRAYCNL_MVAPICH2"
@@ -4098,7 +4101,9 @@ case $machine in
             if [ "x$CRAY_PE_USE_CLANG" = "x" ]; then
 	      fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
             else
-	      fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
+	      if [ -r $mpiinc/cray_version.h ]; then
+	        fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
+              fi
             fi
             extradir=`echo $CRAY_PE_USE_CLANG | sed -e 's@bin/clang@lib@'`
             srun_dir=`which srun 2>/dev/null`
@@ -8528,7 +8533,7 @@ if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" = "x" -a "x$CRAY_MPICH_PREFIX" !
   CRAY_MPICH_DIR=$CRAY_MPICH_PREFIX
 fi
 
-if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" != "x" ]; then
+if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" != "x" -a -r $mpiinc/cray_version.h ]; then
   if [ -r $CRAY_MPICH_DIR/lib/libmpi_cray.a ]; then
     echo "Found libmpi_cray.a"
     fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPI_CRAY"

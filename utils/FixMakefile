@@ -1428,6 +1428,10 @@ case $1 in
 	echo NOTE: Using The Cray T3E CC C++ compiler 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     HIPCC)
+	echo NOTE: Using The AMD HIPCC C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      GASNET)
 	echo NOTE: Using The GASNET directory 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
