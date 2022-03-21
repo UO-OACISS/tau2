@@ -5,14 +5,14 @@
 **    Copyright 1997-2022 				   	           **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
-**    Research Center Juelich, ZAM Germany			           **	
+**    Research Center Juelich, ZAM Germany			           **
 *****************************************************************************
 /* NOTE: PLEASE REFER TO tools/src/contrib/LICENSE* files for open *
  * source licenses of other packages that TAU uses internally.     *
  *******************************************************************/
 
 ***************************************************************************
-Instructions on installing TAU can be found in the INSTALL file.   
+Instructions on installing TAU can be found in the INSTALL file.
 JAVA users should see README.JAVA
 ***************************************************************************
 
@@ -20,17 +20,17 @@ Tuning and Analysis Utilities: TAU
 **********************************
 
 TAU is a program and performance analysis tool framework being developed for
-the DOE, ECP, and ASC program at University of Oregon. TAU provides a suite of 
+the DOE, ECP, and ASC program at University of Oregon. TAU provides a suite of
 static and dynamic tools that provide graphical user
 interaction and interoperation to form an integrated analysis environment for
-parallel Fortran, Python, C, and C++ applications.  In particular, a robust 
-performance profiling facility availble in TAU has been 
-applied extensively in the ACTS toolkit.  Also, recent advancements in TAU's 
-code analysis capabilities have allowed new static tools to be developed, 
+parallel Fortran, Python, C, and C++ applications.  In particular, a robust
+performance profiling facility availble in TAU has been
+applied extensively in the ACTS toolkit.  Also, recent advancements in TAU's
+code analysis capabilities have allowed new static tools to be developed,
 such as an automatic instrumentation tool.  These two features of the TAU framework are described below.
 
 TAU Portable Profiling Package
-****************************** 
+******************************
 The model that TAU uses to profile parallel, multi-threaded C++, C, Fortran,
 UPC, Python, Chapel and Java programs maintains performance data for each thread, context,
 and node in use by an application.  The profiling instrumentation needed to
@@ -55,7 +55,7 @@ user-level profiling is possible.
 
 TAU supports GPUs from NVIDIA (CUDA/CUPTI), AMD (ROCm/Rocprofiler), and
 Intel (OneAPI/Level Zero) where a binary may be launched with tau_exec with
-no modification to the binary. It also supports OpenMP Tools Interface v5.0 
+no modification to the binary. It also supports OpenMP Tools Interface v5.0
 (OMPT), the Kokkos profiling interface, MPI Tools Interface (MPI_T) and pthread.
 
 TAU's profile visualization tool, paraprof, provides graphical displays of all
@@ -75,9 +75,10 @@ The work on extending TAU for OpenSHMEM and Kokkos regions was supported by the 
 Acknowledgments
 ===============
 We would like to thank the following sponsors for their support:
-U.S. Department of Energy and DOE national laboratories [www.doe.gov]. 
-U.S. Department of Defense (HPCMP PETTT) [www.defense.gov]. 
+U.S. Department of Energy and DOE national laboratories [www.doe.gov].
+U.S. Department of Defense (HPCMP PETTT) [www.defense.gov].
 National Science Foundation [www.nsf.gov].
-French Alternative Energies and Atomic Energy Commission (CEA) [www.cea.fr]. 
+French Alternative Energies and Atomic Energy Commission (CEA) [www.cea.fr].
 NASA [www.nasa.gov].
 ParaTools, Inc. [www.paratools.com]
+
