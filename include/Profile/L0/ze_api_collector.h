@@ -182,6 +182,8 @@ class ZeApiCollector {
         callback_data_(callback_data) {
     PTI_ASSERT(context_ != nullptr);
   }
+  
+  #include <Profile/L0/ze_api_callbacks.h>
 
  private: // Data
    ze_context_handle_t context_ = nullptr;

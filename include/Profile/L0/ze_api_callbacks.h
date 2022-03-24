@@ -36,6 +36,13 @@ static void zeInitOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeInit", time);
+  
+  if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeInit",
+                         start_time, end_time);
+  }
+  
 }
 
 static void zeDriverGetOnEnter(
@@ -65,6 +72,12 @@ static void zeDriverGetOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDriverGet", time);
+  
+  if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDriverGet",
+                         start_time, end_time);
+  }
 }
 
 static void zeDriverGetApiVersionOnEnter(
@@ -94,6 +107,12 @@ static void zeDriverGetApiVersionOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDriverGetApiVersion", time);
+  
+  if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDriverGetApiVersion",
+                         start_time, end_time);
+  }
 }
 
 static void zeDriverGetPropertiesOnEnter(
@@ -123,6 +142,12 @@ static void zeDriverGetPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDriverGetProperties", time);
+  
+  if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDriverGetProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeDriverGetIpcPropertiesOnEnter(
@@ -152,6 +177,12 @@ static void zeDriverGetIpcPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDriverGetIpcProperties", time);
+  
+  if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDriverGetIpcProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeDriverGetExtensionPropertiesOnEnter(
@@ -181,6 +212,12 @@ static void zeDriverGetExtensionPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDriverGetExtensionProperties", time);
+  
+  if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDriverGetExtensionProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeDeviceGetOnEnter(
@@ -210,6 +247,12 @@ static void zeDeviceGetOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGet", time);
+  
+  if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDeviceGet",
+                         start_time, end_time);
+  }
 }
 
 static void zeDeviceGetSubDevicesOnEnter(
@@ -239,6 +282,12 @@ static void zeDeviceGetSubDevicesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetSubDevices", time);
+  
+  if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDeviceGetSubDevices",
+                         start_time, end_time);
+  }
 }
 
 static void zeDeviceGetPropertiesOnEnter(
@@ -268,6 +317,12 @@ static void zeDeviceGetPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetProperties", time);
+  
+  if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDeviceGetSubDevices",
+                         start_time, end_time);
+  }
 }
 
 static void zeDeviceGetComputePropertiesOnEnter(
@@ -297,6 +352,12 @@ static void zeDeviceGetComputePropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetComputeProperties", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDeviceGetComputeProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeDeviceGetModulePropertiesOnEnter(
@@ -326,6 +387,12 @@ static void zeDeviceGetModulePropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetModuleProperties", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDeviceGetModuleProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeDeviceGetCommandQueueGroupPropertiesOnEnter(
@@ -355,6 +422,12 @@ static void zeDeviceGetCommandQueueGroupPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetCommandQueueGroupProperties", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDeviceGetCommandQueueGroupProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeDeviceGetMemoryPropertiesOnEnter(
@@ -384,6 +457,12 @@ static void zeDeviceGetMemoryPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetMemoryProperties", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDeviceGetMemoryProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeDeviceGetMemoryAccessPropertiesOnEnter(
@@ -413,6 +492,12 @@ static void zeDeviceGetMemoryAccessPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetMemoryAccessProperties", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDeviceGetMemoryAccessProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeDeviceGetCachePropertiesOnEnter(
@@ -442,6 +527,12 @@ static void zeDeviceGetCachePropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetCacheProperties", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDeviceGetCacheProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeDeviceGetImagePropertiesOnEnter(
@@ -471,6 +562,12 @@ static void zeDeviceGetImagePropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetImageProperties", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDeviceGetImageProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeDeviceGetExternalMemoryPropertiesOnEnter(
@@ -500,6 +597,12 @@ static void zeDeviceGetExternalMemoryPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetExternalMemoryProperties", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDeviceGetExternalMemoryProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeDeviceGetP2PPropertiesOnEnter(
@@ -529,6 +632,12 @@ static void zeDeviceGetP2PPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetP2PProperties", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDeviceGetP2PProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeDeviceCanAccessPeerOnEnter(
@@ -558,6 +667,12 @@ static void zeDeviceCanAccessPeerOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceCanAccessPeer", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDeviceCanAccessPeer",
+                         start_time, end_time);
+  }
 }
 
 static void zeDeviceGetStatusOnEnter(
@@ -587,6 +702,12 @@ static void zeDeviceGetStatusOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetStatus", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeDeviceGetStatus",
+                         start_time, end_time);
+  }
 }
 
 static void zeContextCreateOnEnter(
@@ -616,6 +737,12 @@ static void zeContextCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextCreate", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeContextCreate",
+                         start_time, end_time);
+  }
 }
 
 static void zeContextDestroyOnEnter(
@@ -645,6 +772,12 @@ static void zeContextDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextDestroy", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeContextDestroy",
+                         start_time, end_time);
+  }
 }
 
 static void zeContextGetStatusOnEnter(
@@ -674,6 +807,12 @@ static void zeContextGetStatusOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextGetStatus", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeContextGetStatus",
+                         start_time, end_time);
+  }
 }
 
 static void zeContextSystemBarrierOnEnter(
@@ -703,6 +842,12 @@ static void zeContextSystemBarrierOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextSystemBarrier", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeContextSystemBarrier",
+                         start_time, end_time);
+  }
 }
 
 static void zeContextMakeMemoryResidentOnEnter(
@@ -732,6 +877,12 @@ static void zeContextMakeMemoryResidentOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextMakeMemoryResident", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeContextMakeMemoryResident",
+                         start_time, end_time);
+  }
 }
 
 static void zeContextEvictMemoryOnEnter(
@@ -761,6 +912,12 @@ static void zeContextEvictMemoryOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextEvictMemory", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeContextEvictMemory",
+                         start_time, end_time);
+  }
 }
 
 static void zeContextMakeImageResidentOnEnter(
@@ -790,6 +947,12 @@ static void zeContextMakeImageResidentOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextMakeImageResident", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeContextMakeImageResident",
+                         start_time, end_time);
+  }
 }
 
 static void zeContextEvictImageOnEnter(
@@ -819,6 +982,12 @@ static void zeContextEvictImageOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextEvictImage", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeContextEvictImage",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandQueueCreateOnEnter(
@@ -848,6 +1017,12 @@ static void zeCommandQueueCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandQueueCreate", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandQueueCreate",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandQueueDestroyOnEnter(
@@ -877,6 +1052,12 @@ static void zeCommandQueueDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandQueueDestroy", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandQueueDestroy",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandQueueExecuteCommandListsOnEnter(
@@ -906,6 +1087,12 @@ static void zeCommandQueueExecuteCommandListsOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandQueueExecuteCommandLists", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandQueueExecuteCommandLists",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandQueueSynchronizeOnEnter(
@@ -935,6 +1122,12 @@ static void zeCommandQueueSynchronizeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandQueueSynchronize", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandQueueSynchronize",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListCreateOnEnter(
@@ -964,6 +1157,12 @@ static void zeCommandListCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListCreate", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListCreate",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListCreateImmediateOnEnter(
@@ -993,6 +1192,12 @@ static void zeCommandListCreateImmediateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListCreateImmediate", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListCreateImmediate",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListDestroyOnEnter(
@@ -1022,6 +1227,12 @@ static void zeCommandListDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListDestroy", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListDestroy",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListCloseOnEnter(
@@ -1051,6 +1262,12 @@ static void zeCommandListCloseOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListClose", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListClose",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListResetOnEnter(
@@ -1080,6 +1297,12 @@ static void zeCommandListResetOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListReset", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListReset",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendWriteGlobalTimestampOnEnter(
@@ -1109,6 +1332,12 @@ static void zeCommandListAppendWriteGlobalTimestampOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendWriteGlobalTimestamp", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendWriteGlobalTimestamp",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendBarrierOnEnter(
@@ -1138,6 +1367,12 @@ static void zeCommandListAppendBarrierOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendBarrier", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendBarrier",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendMemoryRangesBarrierOnEnter(
@@ -1167,6 +1402,12 @@ static void zeCommandListAppendMemoryRangesBarrierOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendMemoryRangesBarrier", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendMemoryRangesBarrier",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendMemoryCopyOnEnter(
@@ -1196,6 +1437,12 @@ static void zeCommandListAppendMemoryCopyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendMemoryCopy", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendMemoryCopy",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendMemoryFillOnEnter(
@@ -1225,6 +1472,12 @@ static void zeCommandListAppendMemoryFillOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendMemoryFill", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendMemoryFill",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendMemoryCopyRegionOnEnter(
@@ -1254,6 +1507,12 @@ static void zeCommandListAppendMemoryCopyRegionOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendMemoryCopyRegion", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendMemoryCopyRegion",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendMemoryCopyFromContextOnEnter(
@@ -1283,6 +1542,12 @@ static void zeCommandListAppendMemoryCopyFromContextOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendMemoryCopyFromContext", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendMemoryCopyFromContext",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendImageCopyOnEnter(
@@ -1312,6 +1577,12 @@ static void zeCommandListAppendImageCopyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendImageCopy", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendImageCopy",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendImageCopyRegionOnEnter(
@@ -1341,6 +1612,12 @@ static void zeCommandListAppendImageCopyRegionOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendImageCopyRegion", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendImageCopyRegion",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendImageCopyToMemoryOnEnter(
@@ -1370,6 +1647,12 @@ static void zeCommandListAppendImageCopyToMemoryOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendImageCopyToMemory", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendImageCopyToMemory",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendImageCopyFromMemoryOnEnter(
@@ -1399,6 +1682,12 @@ static void zeCommandListAppendImageCopyFromMemoryOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendImageCopyFromMemory", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendImageCopyFromMemory",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendMemoryPrefetchOnEnter(
@@ -1428,6 +1717,12 @@ static void zeCommandListAppendMemoryPrefetchOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendMemoryPrefetch", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendMemoryPrefetch",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendMemAdviseOnEnter(
@@ -1457,6 +1752,13 @@ static void zeCommandListAppendMemAdviseOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendMemAdvise", time);
+  
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendMemAdvise",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendSignalEventOnEnter(
@@ -1486,6 +1788,13 @@ static void zeCommandListAppendSignalEventOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendSignalEvent", time);
+  
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendSignalEvent",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendWaitOnEventsOnEnter(
@@ -1515,6 +1824,12 @@ static void zeCommandListAppendWaitOnEventsOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendWaitOnEvents", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendWaitOnEvents",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendEventResetOnEnter(
@@ -1544,6 +1859,12 @@ static void zeCommandListAppendEventResetOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendEventReset", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendEventReset",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendQueryKernelTimestampsOnEnter(
@@ -1573,6 +1894,12 @@ static void zeCommandListAppendQueryKernelTimestampsOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendQueryKernelTimestamps", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendQueryKernelTimestamps",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendLaunchKernelOnEnter(
@@ -1602,6 +1929,12 @@ static void zeCommandListAppendLaunchKernelOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendLaunchKernel", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendLaunchKernel",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendLaunchCooperativeKernelOnEnter(
@@ -1631,6 +1964,12 @@ static void zeCommandListAppendLaunchCooperativeKernelOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendLaunchCooperativeKernel", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendLaunchCooperativeKernel",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendLaunchKernelIndirectOnEnter(
@@ -1660,6 +1999,12 @@ static void zeCommandListAppendLaunchKernelIndirectOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendLaunchKernelIndirect", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendLaunchKernelIndirect",
+                         start_time, end_time);
+  }
 }
 
 static void zeCommandListAppendLaunchMultipleKernelsIndirectOnEnter(
@@ -1689,6 +2034,12 @@ static void zeCommandListAppendLaunchMultipleKernelsIndirectOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendLaunchMultipleKernelsIndirect", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeCommandListAppendLaunchMultipleKernelsIndirect",
+                         start_time, end_time);
+  }
 }
 
 static void zeFenceCreateOnEnter(
@@ -1718,6 +2069,12 @@ static void zeFenceCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeFenceCreate", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeFenceCreate",
+                         start_time, end_time);
+  }
 }
 
 static void zeFenceDestroyOnEnter(
@@ -1747,6 +2104,12 @@ static void zeFenceDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeFenceDestroy", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeFenceDestroy",
+                         start_time, end_time);
+  }
 }
 
 static void zeFenceHostSynchronizeOnEnter(
@@ -1776,6 +2139,12 @@ static void zeFenceHostSynchronizeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeFenceHostSynchronize", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeFenceHostSynchronize",
+                         start_time, end_time);
+  }
 }
 
 static void zeFenceQueryStatusOnEnter(
@@ -1805,6 +2174,12 @@ static void zeFenceQueryStatusOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeFenceQueryStatus", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeFenceQueryStatus",
+                         start_time, end_time);
+  }
 }
 
 static void zeFenceResetOnEnter(
@@ -1834,6 +2209,12 @@ static void zeFenceResetOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeFenceReset", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeFenceReset",
+                         start_time, end_time);
+  }
 }
 
 static void zeEventPoolCreateOnEnter(
@@ -1863,6 +2244,12 @@ static void zeEventPoolCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventPoolCreate", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeEventPoolCreate",
+                         start_time, end_time);
+  }
 }
 
 static void zeEventPoolDestroyOnEnter(
@@ -1892,6 +2279,12 @@ static void zeEventPoolDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventPoolDestroy", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeEventPoolDestroy",
+                         start_time, end_time);
+  }
 }
 
 static void zeEventPoolGetIpcHandleOnEnter(
@@ -1921,6 +2314,12 @@ static void zeEventPoolGetIpcHandleOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventPoolGetIpcHandle", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeEventPoolGetIpcHandle",
+                         start_time, end_time);
+  }
 }
 
 static void zeEventPoolOpenIpcHandleOnEnter(
@@ -1950,6 +2349,12 @@ static void zeEventPoolOpenIpcHandleOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventPoolOpenIpcHandle", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeEventPoolOpenIpcHandle",
+                         start_time, end_time);
+  }
 }
 
 static void zeEventPoolCloseIpcHandleOnEnter(
@@ -1979,6 +2384,12 @@ static void zeEventPoolCloseIpcHandleOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventPoolCloseIpcHandle", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeEventPoolCloseIpcHandle",
+                         start_time, end_time);
+  }
 }
 
 static void zeEventCreateOnEnter(
@@ -2008,6 +2419,13 @@ static void zeEventCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventCreate", time);
+  
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeEventCreate",
+                         start_time, end_time);
+  }
 }
 
 static void zeEventDestroyOnEnter(
@@ -2037,6 +2455,12 @@ static void zeEventDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventDestroy", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeEventDestroy",
+                         start_time, end_time);
+  }
 }
 
 static void zeEventHostSignalOnEnter(
@@ -2066,6 +2490,12 @@ static void zeEventHostSignalOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventHostSignal", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeEventHostSignal",
+                         start_time, end_time);
+  }
 }
 
 static void zeEventHostSynchronizeOnEnter(
@@ -2095,6 +2525,12 @@ static void zeEventHostSynchronizeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventHostSynchronize", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeEventHostSynchronize",
+                         start_time, end_time);
+  }
 }
 
 static void zeEventQueryStatusOnEnter(
@@ -2124,6 +2560,12 @@ static void zeEventQueryStatusOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventQueryStatus", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeEventQueryStatus",
+                         start_time, end_time);
+  }
 }
 
 static void zeEventHostResetOnEnter(
@@ -2153,6 +2595,12 @@ static void zeEventHostResetOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventHostReset", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeEventHostReset",
+                         start_time, end_time);
+  }
 }
 
 static void zeEventQueryKernelTimestampOnEnter(
@@ -2182,6 +2630,12 @@ static void zeEventQueryKernelTimestampOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventQueryKernelTimestamp", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeEventQueryKernelTimestamp",
+                         start_time, end_time);
+  }
 }
 
 static void zeImageGetPropertiesOnEnter(
@@ -2211,6 +2665,12 @@ static void zeImageGetPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeImageGetProperties", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeImageGetProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeImageCreateOnEnter(
@@ -2240,6 +2700,12 @@ static void zeImageCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeImageCreate", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeImageCreate",
+                         start_time, end_time);
+  }
 }
 
 static void zeImageDestroyOnEnter(
@@ -2269,6 +2735,12 @@ static void zeImageDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeImageDestroy", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeImageDestroy",
+                         start_time, end_time);
+  }
 }
 
 static void zeModuleCreateOnEnter(
@@ -2298,6 +2770,12 @@ static void zeModuleCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleCreate", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeModuleCreate",
+                         start_time, end_time);
+  }
 }
 
 static void zeModuleDestroyOnEnter(
@@ -2327,6 +2805,12 @@ static void zeModuleDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleDestroy", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeModuleDestroy",
+                         start_time, end_time);
+  }
 }
 
 static void zeModuleDynamicLinkOnEnter(
@@ -2356,6 +2840,12 @@ static void zeModuleDynamicLinkOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleDynamicLink", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeModuleDynamicLink",
+                         start_time, end_time);
+  }
 }
 
 static void zeModuleGetNativeBinaryOnEnter(
@@ -2385,6 +2875,12 @@ static void zeModuleGetNativeBinaryOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleGetNativeBinary", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeModuleGetNativeBinary",
+                         start_time, end_time);
+  }
 }
 
 static void zeModuleGetGlobalPointerOnEnter(
@@ -2414,6 +2910,12 @@ static void zeModuleGetGlobalPointerOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleGetGlobalPointer", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeModuleGetGlobalPointer",
+                         start_time, end_time);
+  }
 }
 
 static void zeModuleGetKernelNamesOnEnter(
@@ -2443,6 +2945,12 @@ static void zeModuleGetKernelNamesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleGetKernelNames", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeModuleGetKernelNames",
+                         start_time, end_time);
+  }
 }
 
 static void zeModuleGetPropertiesOnEnter(
@@ -2472,6 +2980,13 @@ static void zeModuleGetPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleGetProperties", time);
+  
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeModuleGetProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeModuleGetFunctionPointerOnEnter(
@@ -2501,6 +3016,12 @@ static void zeModuleGetFunctionPointerOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleGetFunctionPointer", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeModuleGetFunctionPointer",
+                         start_time, end_time);
+  }
 }
 
 static void zeModuleBuildLogDestroyOnEnter(
@@ -2530,6 +3051,12 @@ static void zeModuleBuildLogDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleBuildLogDestroy", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeModuleBuildLogDestroy",
+                         start_time, end_time);
+  }
 }
 
 static void zeModuleBuildLogGetStringOnEnter(
@@ -2559,6 +3086,12 @@ static void zeModuleBuildLogGetStringOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleBuildLogGetString", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeModuleBuildLogGetString",
+                         start_time, end_time);
+  }
 }
 
 static void zeKernelCreateOnEnter(
@@ -2588,6 +3121,12 @@ static void zeKernelCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelCreate", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeKernelCreate",
+                         start_time, end_time);
+  }
 }
 
 static void zeKernelDestroyOnEnter(
@@ -2617,6 +3156,12 @@ static void zeKernelDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelDestroy", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeKernelDestroy",
+                         start_time, end_time);
+  }
 }
 
 static void zeKernelSetCacheConfigOnEnter(
@@ -2646,6 +3191,12 @@ static void zeKernelSetCacheConfigOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelSetCacheConfig", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeKernelSetCacheConfig",
+                         start_time, end_time);
+  }
 }
 
 static void zeKernelSetGroupSizeOnEnter(
@@ -2675,6 +3226,12 @@ static void zeKernelSetGroupSizeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelSetGroupSize", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeKernelSetGroupSize",
+                         start_time, end_time);
+  }
 }
 
 static void zeKernelSuggestGroupSizeOnEnter(
@@ -2704,6 +3261,12 @@ static void zeKernelSuggestGroupSizeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelSuggestGroupSize", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeKernelSuggestGroupSize",
+                         start_time, end_time);
+  }
 }
 
 static void zeKernelSuggestMaxCooperativeGroupCountOnEnter(
@@ -2733,6 +3296,12 @@ static void zeKernelSuggestMaxCooperativeGroupCountOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelSuggestMaxCooperativeGroupCount", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeKernelSuggestMaxCooperativeGroupCount",
+                         start_time, end_time);
+  }
 }
 
 static void zeKernelSetArgumentValueOnEnter(
@@ -2762,6 +3331,12 @@ static void zeKernelSetArgumentValueOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelSetArgumentValue", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeKernelSetArgumentValue",
+                         start_time, end_time);
+  }
 }
 
 static void zeKernelSetIndirectAccessOnEnter(
@@ -2791,6 +3366,12 @@ static void zeKernelSetIndirectAccessOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelSetIndirectAccess", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeKernelSetIndirectAccess",
+                         start_time, end_time);
+  }
 }
 
 static void zeKernelGetIndirectAccessOnEnter(
@@ -2820,6 +3401,12 @@ static void zeKernelGetIndirectAccessOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelGetIndirectAccess", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeKernelGetIndirectAccess",
+                         start_time, end_time);
+  }
 }
 
 static void zeKernelGetSourceAttributesOnEnter(
@@ -2849,6 +3436,12 @@ static void zeKernelGetSourceAttributesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelGetSourceAttributes", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeKernelGetSourceAttributes",
+                         start_time, end_time);
+  }
 }
 
 static void zeKernelGetPropertiesOnEnter(
@@ -2878,6 +3471,12 @@ static void zeKernelGetPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelGetProperties", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeKernelGetProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeKernelGetNameOnEnter(
@@ -2907,6 +3506,12 @@ static void zeKernelGetNameOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelGetName", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeKernelGetName",
+                         start_time, end_time);
+  }
 }
 
 static void zeSamplerCreateOnEnter(
@@ -2936,6 +3541,12 @@ static void zeSamplerCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeSamplerCreate", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeSamplerCreate",
+                         start_time, end_time);
+  }
 }
 
 static void zeSamplerDestroyOnEnter(
@@ -2965,6 +3576,12 @@ static void zeSamplerDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeSamplerDestroy", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeSamplerDestroy",
+                         start_time, end_time);
+  }
 }
 
 static void zePhysicalMemCreateOnEnter(
@@ -2994,6 +3611,12 @@ static void zePhysicalMemCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zePhysicalMemCreate", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zePhysicalMemCreate",
+                         start_time, end_time);
+  }
 }
 
 static void zePhysicalMemDestroyOnEnter(
@@ -3023,6 +3646,12 @@ static void zePhysicalMemDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zePhysicalMemDestroy", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zePhysicalMemDestroy",
+                         start_time, end_time);
+  }
 }
 
 static void zeMemAllocSharedOnEnter(
@@ -3052,6 +3681,12 @@ static void zeMemAllocSharedOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemAllocShared", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeMemAllocShared",
+                         start_time, end_time);
+  }
 }
 
 static void zeMemAllocDeviceOnEnter(
@@ -3081,6 +3716,12 @@ static void zeMemAllocDeviceOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemAllocDevice", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeMemAllocDevice",
+                         start_time, end_time);
+  }
 }
 
 static void zeMemAllocHostOnEnter(
@@ -3110,6 +3751,12 @@ static void zeMemAllocHostOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemAllocHost", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeMemAllocHost",
+                         start_time, end_time);
+  }
 }
 
 static void zeMemFreeOnEnter(
@@ -3139,6 +3786,12 @@ static void zeMemFreeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemFree", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeMemFree",
+                         start_time, end_time);
+  }
 }
 
 static void zeMemGetAllocPropertiesOnEnter(
@@ -3168,6 +3821,12 @@ static void zeMemGetAllocPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemGetAllocProperties", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeMemGetAllocProperties",
+                         start_time, end_time);
+  }
 }
 
 static void zeMemGetAddressRangeOnEnter(
@@ -3197,6 +3856,12 @@ static void zeMemGetAddressRangeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemGetAddressRange", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeMemGetAddressRange",
+                         start_time, end_time);
+  }
 }
 
 static void zeMemGetIpcHandleOnEnter(
@@ -3226,6 +3891,12 @@ static void zeMemGetIpcHandleOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemGetIpcHandle", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeMemGetIpcHandle",
+                         start_time, end_time);
+  }
 }
 
 static void zeMemOpenIpcHandleOnEnter(
@@ -3255,6 +3926,12 @@ static void zeMemOpenIpcHandleOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemOpenIpcHandle", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeMemOpenIpcHandle",
+                         start_time, end_time);
+  }
 }
 
 static void zeMemCloseIpcHandleOnEnter(
@@ -3284,6 +3961,12 @@ static void zeMemCloseIpcHandleOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemCloseIpcHandle", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeMemCloseIpcHandle",
+                         start_time, end_time);
+  }
 }
 
 static void zeVirtualMemReserveOnEnter(
@@ -3313,6 +3996,12 @@ static void zeVirtualMemReserveOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeVirtualMemReserve", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeVirtualMemReserve",
+                         start_time, end_time);
+  }
 }
 
 static void zeVirtualMemFreeOnEnter(
@@ -3342,6 +4031,12 @@ static void zeVirtualMemFreeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeVirtualMemFree", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeVirtualMemFree",
+                         start_time, end_time);
+  }
 }
 
 static void zeVirtualMemQueryPageSizeOnEnter(
@@ -3371,6 +4066,12 @@ static void zeVirtualMemQueryPageSizeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeVirtualMemQueryPageSize", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeVirtualMemQueryPageSize",
+                         start_time, end_time);
+  }
 }
 
 static void zeVirtualMemMapOnEnter(
@@ -3400,6 +4101,12 @@ static void zeVirtualMemMapOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeVirtualMemMap", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeVirtualMemMap",
+                         start_time, end_time);
+  }
 }
 
 static void zeVirtualMemUnmapOnEnter(
@@ -3429,6 +4136,12 @@ static void zeVirtualMemUnmapOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeVirtualMemUnmap", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeVirtualMemUnmap",
+                         start_time, end_time);
+  }
 }
 
 static void zeVirtualMemSetAccessAttributeOnEnter(
@@ -3458,6 +4171,12 @@ static void zeVirtualMemSetAccessAttributeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeVirtualMemSetAccessAttribute", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeVirtualMemSetAccessAttribute",
+                         start_time, end_time);
+  }
 }
 
 static void zeVirtualMemGetAccessAttributeOnEnter(
@@ -3487,6 +4206,12 @@ static void zeVirtualMemGetAccessAttributeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeVirtualMemGetAccessAttribute", time);
+  
+    if (collector->callback_ != nullptr) {
+    collector->callback_(collector->callback_data_,
+                         "zeVirtualMemGetAccessAttribute",
+                         start_time, end_time);
+  }
 }
 
 static void SetTracingFunctions(zel_tracer_handle_t tracer) {
