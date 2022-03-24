@@ -187,35 +187,30 @@ class TauProfileParser(object):
     
     @classmethod
     def multi_parse(cls, path_to_multis,filenames=None, trial=None):
+       
         multi_dir = [x for x in glob.glob(path_to_multis+'/MULTI*')]
         tau_objs = [cls.profile_parse(folder,filenames,trial) for folder in multi_dir]
         combined_metric = b', '.join([tau_obj.metric for tau_obj in tau_objs])
+#         print('combined Metric', combined_metric)
+#         print('Combined_Metadata: ', tau_objs[0].metadata)
         combined_metadata = tau_objs[0].metadata
-        combined_metadata['Metric Name'] = ', '.join([tau_obj.metadata['Metric Name'] for tau_obj in tau_objs])
+        if 'Metric Name' in combined_metadata:
+            combined_metadata['Metric Name'] = ', '.join([tau_obj.metadata['Metric Name'] for tau_obj in tau_objs])
+        else:
+            combined_metadata['Metric Name'] = combined_metric.decode("utf-8")
+            
         combined_indices = tau_objs[0].indices
         combined_atomic_df = tau_objs[0].atomic_data()
         
         combined_intervals = pandas.concat({"": tau_objs[0].interval_data().drop(['Exclusive', 'Inclusive'],axis=1)}, axis=1, 
                                            names=['Metric','Intervals']).swaplevel('Metric','Intervals',axis=1)
         
-        
-        # build Exclusive and inclusive dictionaires to do line 250
-        #exclusives
-        
-       # in_between_exclusive_df = pandas.concat([tau_obj.interval_data()['Exclusive'].to_frame().rename(columns={'Exclusive':combined_metadata['Metric Name'].split(', ')[tau_objs.index(tau_obj)]}) for #tau_obj in tau_objs], axis=1)
-        
-        
         exclusive_df = pandas.concat({'Exclusive': pandas.concat([tau_obj.interval_data()['Exclusive'].to_frame().rename(columns={'Exclusive':combined_metadata['Metric Name'].split(', ')[tau_objs.index(tau_obj)]}) for tau_obj in tau_objs], axis=1)}, axis=1, names=['Intervals','Metric'])
         
-        
-        #inclusives
         inclusive_df = pandas.concat({'Inclusive': pandas.concat([tau_obj.interval_data()['Inclusive'].to_frame().rename(columns={'Inclusive':combined_metadata['Metric Name'].split(', ')[tau_objs.index(tau_obj)]}) for tau_obj in tau_objs], axis=1)}, axis=1, names=['Intervals','Metric'])
         
-        #df = combined_intervals.join(pd.DataFrame(np.random.rand(3,3),columns=pd.MultiIndex.from_product([['new'], ['one','two','three']]), index=df.index))  
         combined_intervals = pandas.concat([combined_intervals,exclusive_df,inclusive_df], axis=1)
-        
-        
-        
+
         return cls(trial, combined_metric, combined_metadata, combined_indices, combined_intervals, combined_atomic_df)
         
         

@@ -78,6 +78,7 @@ TRACE2PROFILE=utils/trace2profile
 
 #IOWRAPPER#IOWRAPPER=src/wrappers/posixio#ENDIF#
 #DMAPP#DMAPPWRAPPER=src/wrappers/dmapp#ENDIF#
+#UGNI#UGNIWRAPPER=src/wrappers/gni#ENDIF#
 #GPI#GPIWRAPPER=src/wrappers/gpi#ENDIF#
 #MPC#MPC_MPI_WRAPPER=src/wrappers/mpc_mpi#ENDIF#
 
@@ -85,6 +86,7 @@ TRACE2PROFILE=utils/trace2profile
 
 TAUPRELOAD=src/wrappers/taupreload
 #PIN#TAUPRELOAD= #ENDIF#
+#IBM64#TAUPRELOAD= #ENDIF#
 #CUDA#TAUCUDA=src/wrappers/cuda #ENDIF#
 #CUPTI#TAU_CUPTI_AVAIL=utils/tau_cupti_avail #ENDIF#
 #SHMEM#TAU_CUPTI_AVAIL= #ENDIF#
@@ -94,6 +96,7 @@ TAUPRELOAD=src/wrappers/taupreload
 #TAUENV#TAU_ENV=utils/tau_env #ENDIF#
 TAUOPENCL=src/wrappers/opencl
 MEMORYWRAPPER=src/wrappers/memory
+#IBM64#MEMORYWRAPPER= #ENDIF#
 #ANDROID#ANDROID_TOOLS=tools/src/android #ENDIF#
 
 #CRAYXMT#TAU_ENV= #ENDIF#
@@ -134,16 +137,20 @@ MEMORYWRAPPER=src/wrappers/memory
 
 # Plugin directory
 PLUGINS=plugins
+#TAU_BUILD_LLVM_PLUGIN#LLVM_PLUGIN=plugins/llvm #ENDIF#
+#IBM64#PLUGINS= #ENDIF#
 #NOPLUGINS#PLUGINS= #ENDIF#
+#IBM64#LLVM_PLUGIN= #ENDIF#
+#NOPLUGINS#LLVM_PLUGIN= #ENDIF#
 
 # Subdirectories to make resursively
 SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
           $(ANDROID_TOOLS) $(ELGCONVERTER) $(IOWRAPPER) $(TAUPRELOAD) \
           $(PTHREAD_WRAPPER) \
           $(MEMORYWRAPPER) $(TAUCUDA) $(TAU_CUPTI_AVAIL) $(TAU_ENV) $(TAUOPENCL) \
-          $(GPIWRAPPER) $(ARMCIWRAPPER) $(DMAPPWRAPPER) $(UPCWRAPPER) \
+          $(GPIWRAPPER) $(ARMCIWRAPPER) $(DMAPPWRAPPER) $(UGNIWRAPPER) $(UPCWRAPPER) \
           $(GOMP_WRAPPER) $(OTF2PROFILE) $(MPC_MPI_WRAPPER) $(APEX) \
-          $(SHMEM_WRAPPER) $(PLUGINS)
+          $(SHMEM_WRAPPER) $(PLUGINS) $(LLVM_PLUGIN)
 
 CONFIGQUERY=`utils/ConfigQuery -arch`
 

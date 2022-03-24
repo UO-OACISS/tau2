@@ -57,7 +57,6 @@ using namespace std;
 #include <Profile/TauUtil.h>
 #include <Profile/TauPin.h>
 
-
 #include <Profile/TauPluginInternals.h>
 
 //////////////////////////////////////////////////////////////////////
@@ -230,7 +229,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   //         requires the use of an actual malloc
   //         while in the middle of some other malloc call.
 #ifndef TAU_WINDOWS
-#ifndef _AIX
+// #ifndef _AIX
   // create structure only if EBS is required.
   // Thread-safe, all (const char *) parameters. This check removes
   //   the need to create and allocate memory for EBS post-processed
@@ -256,7 +255,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   //  callSiteKeyId = 0; // Any value works.
   firstSpecializedFunction = NULL;
 
-#endif // _AIX
+// #endif // _AIX
 #endif // TAU_WINDOWS
 
 #if defined(TAU_VAMPIRTRACE)
@@ -302,7 +301,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   {
     char * buff = new char[strlen(Name)+strlen(Type)+100];
     sprintf(buff, "%s %s - Heap Memory Used (KB)", Name, Type);
-    MemoryEvent = new TauUserEvent(buff);
+    MemoryEvent = new tau::TauUserEvent(buff);
     delete buff;
   }
 #endif
@@ -536,20 +535,12 @@ void tauCreateFI(void **ptr, const char *name, const string& type, TauGroup_t Pr
 void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, TauGroup_t ProfileGroup,
     const char *ProfileGroupName)
 {
-  /* This is the entry point into TAU from PDT-instrumented C++ codes, so
-   * make sure that TAU is ready to go before doing anything else! */
-  static int do_this_once = Tau_init_initializeTAU();
+  /* This is NOT the entry point into TAU from PDT-instrumented C++ codes!
+   * this comes from creating the top level timer in TauCAPI.cpp. */
   if (*ptr == 0) {
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
 
-#ifdef TAU_CHARM
-    if (RtsLayer::myNode() != -1)
-    RtsLayer::LockEnv();
-#else
-    RtsLayer::LockEnv();
-#endif
-    if (*ptr == 0) {
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
      * allocation routines */
@@ -563,13 +554,6 @@ void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, Ta
     new(*ptr) FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
 #else
     *ptr = (void *) new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
-#endif
-    }
-#ifdef TAU_CHARM
-    if (RtsLayer::myNode() != -1)
-    RtsLayer::UnLockEnv();
-#else
-    RtsLayer::UnLockEnv();
 #endif
   }
 }
@@ -652,11 +636,12 @@ char const * FunctionInfo::GetFullName()
 /* EBS Sampling Profiles */
 
 #ifndef TAU_WINDOWS
-#ifndef _AIX
+//#ifndef _AIX
 void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[TAU_MAX_COUNTERS])
 {
   // Add to the mmap-ed histogram. We start with a temporary conversion. This
   //   becomes unnecessary once we stop using the vector.
+  if (pathHistogram[tid] == NULL) return;
   TauPathAccumulator * accumulator = pathHistogram[tid]->get(pcStack);
   if (accumulator == NULL) {
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
@@ -682,7 +667,7 @@ void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[
     }
   }
 }
-#endif // _AIX
+//#endif // _AIX
 #endif // TAU_WINDOWS
 
 /***************************************************************************

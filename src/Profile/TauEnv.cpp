@@ -50,11 +50,19 @@
 #include <set>
 
 #include <iostream>
+#include <sstream>
 using namespace std;
 
 #ifndef TAU_BGP
 //#include <pwd.h>
 #endif /* TAU_BGP */
+
+#ifdef TAU_WINDOWS
+/* We are on Windows which doesn't have strtok_s */
+# define strtok_r strtok_s
+#define TAU_LIB_DIR "tau2/win32/lib"
+#endif
+
 
 #define MAX_LN_LEN 2048
 
@@ -239,8 +247,8 @@ extern "C" void Tau_set_usesMPI(int value);
 #endif /* TAU_MPI */
 
 #ifdef TAU_ENABLE_ROCTRACER
-extern "C" void Tau_roctracer_start_tracing(void);
-#endif /* TAU_ROCTRACER */
+extern void Tau_roctracer_start_tracing(void);
+#endif /* TAU_ENABLE_ROCTRACER */
 
 /************************** tau.conf stuff, adapted from Scalasca ***********/
 
@@ -248,6 +256,8 @@ extern "C" {
 
 static int env_synchronize_clocks = 0;
 static int env_verbose = 0;
+static int env_verbose_file = 0;
+static int env_verbose_rank = -1;
 static int env_throttle = 0;
 static double env_evt_threshold = 0.0;
 static int env_interval = 0;
@@ -273,6 +283,7 @@ static int env_track_memory_footprint = 0;
 static int env_show_memory_functions = 0;
 static int env_track_load = 0;
 static int env_tau_lite = 0;
+static int env_tau_anonymize = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
@@ -599,9 +610,30 @@ static int TauConf_read()
   const char *tmp;
   char conf_file_name[1024];
 
+/* Eagerly get some settings needed for configuring verbose output */
+
   tmp = getenv("TAU_VERBOSE");
   if (parse_bool(tmp)) {
     env_verbose = 1;
+    tmp = getenv("TAU_VERBOSE_FILE");
+    if (parse_bool(tmp,env_verbose_file)) {
+        env_verbose_file = 1;
+    }
+    tmp = getenv("TAU_VERBOSE_RANK");
+    if (parse_int(tmp,env_verbose_rank)) {
+        env_verbose_rank = Tau_get_node();
+    }
+    if ((env_profiledir = getenv("PROFILEDIR")) == NULL) {
+      env_profiledir = ".";   /* current directory */
+#ifdef TAU_GPI
+      // if exe is /usr/local/foo, this will return /usr/local where profiles
+      // may be stored if PROFILEDIR is not specified
+      char const * cwd = Tau_get_cwd_of_exe();
+      if (cwd) {
+        env_profiledir = strdup(cwd);
+      }
+#endif /* TAU_GPI */
+    }
   } else {
     env_verbose = 0;
   }
@@ -736,6 +768,26 @@ char * Tau_check_dirname(const char * dir)
 
 /****************************************************************************/
 
+class Tau_logfile_t {
+public:
+    FILE * pfile;
+    Tau_logfile_t() : pfile(stderr) {
+        if (env_verbose_file == 1 &&
+            env_verbose_rank == Tau_get_node()) {
+            std::stringstream ss;
+            ss << env_profiledir << "/tau." << Tau_get_node() << ".log";
+            std::string tmp(ss.str());
+            pfile = fopen(tmp.c_str(),"w");
+        }
+    }
+    ~Tau_logfile_t() {
+        if (env_verbose_file == 1 &&
+            env_verbose_rank == Tau_get_node()) {
+            fclose(pfile);
+        }
+    }
+};
+
 extern "C" { /* C linkage */
 
 #ifdef TAU_GPI
@@ -748,6 +800,7 @@ extern "C" { /* C linkage */
 void TAU_VERBOSE(const char *format, ...)
 {
   if (env_verbose == 1) {
+    static Tau_logfile_t foo;
     TauInternalFunctionGuard protects_this_function;
     va_list args;
 
@@ -768,10 +821,10 @@ void TAU_VERBOSE(const char *format, ...)
 #ifdef TAU_GPI
     gpi_vprintf(format, args);
 #else
-    vfprintf(stderr, format, args);
+    vfprintf(foo.pfile, format, args);
 #endif
     va_end(args);
-    fflush(stderr);
+    fflush(foo.pfile);
 
 #endif
   } // END inside TAU
@@ -1200,6 +1253,10 @@ int TauEnv_get_lite_enabled() {
   return env_tau_lite;
 }
 
+int TauEnv_get_anonymize_enabled() {
+  return env_tau_anonymize;
+}
+
 int TauEnv_get_memdbg() {
   return env_memdbg;
 }
@@ -1351,6 +1408,21 @@ void TauEnv_initialize()
       env_verbose = 1;
     }
 
+    tmp = getconf("TAU_VERBOSE_FILE");
+    if (parse_bool(tmp,env_verbose_file)) {
+      TAU_VERBOSE("TAU: VERBOSE to file enabled\n");
+      TAU_METADATA("TAU_VERBOSE_FILE", "on");
+      env_verbose_file = 1;
+    }
+
+    tmp = getconf("TAU_VERBOSE_RANK");
+    if (parse_int(tmp,env_verbose_rank)) {
+      TAU_VERBOSE("TAU: VERBOSE RANK enabled\n");
+      sprintf(tmpstr, "%d", env_verbose_rank);
+      TAU_METADATA("TAU_VERBOSE_RANK", tmpstr);
+      env_verbose_rank = Tau_get_node();
+    }
+
     sprintf(tmpstr, "%d", TAU_MAX_THREADS);
     TAU_VERBOSE("TAU: Supporting %d threads\n", TAU_MAX_THREADS);
     TAU_METADATA("TAU_MAX_THREADS", tmpstr);
@@ -1362,6 +1434,7 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_LITE", "on");
       env_tau_lite = 1;
     }
+
 
     const char *interval = getconf("TAU_INTERRUPT_INTERVAL");
     env_interval = TAU_INTERRUPT_INTERVAL_DEFAULT;;
@@ -2150,6 +2223,17 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_PROFILE_FORMAT", "profile");
     }
 
+    tmp = getconf("TAU_ANONYMIZE");
+    if (parse_bool(tmp,env_tau_anonymize)) {
+      TAU_VERBOSE("TAU: Anonymize enabled\n");
+      TAU_METADATA("TAU_ANONYMIZE", "on");
+      env_tau_anonymize = 1;
+      env_profile_format = TAU_FORMAT_MERGED;
+      TAU_VERBOSE("TAU: Output Format: merged\n");
+      TAU_METADATA("TAU_PROFILE_FORMAT", "merged");
+    }
+
+
     tmp = getconf("TAU_SUMMARY");
     if (parse_bool(tmp, env_summary_only)) {
 #ifdef TAU_MPI
@@ -2673,7 +2757,7 @@ void TauEnv_initialize()
   TAU_VERBOSE("Calling TAU_ROCTRACER...\n");
 #ifdef TAU_ENABLE_ROCTRACER
   Tau_roctracer_start_tracing();
-#endif /* TAU_ROCTRACER */
+#endif /* TAU_ENABLE_ROCTRACER */
 }
 
 } /* C linkage */

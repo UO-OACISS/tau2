@@ -51,6 +51,7 @@ typedef void * (*memalign_t)(size_t, size_t);
 typedef int    (*posix_memalign_t)(void **, size_t, size_t);
 typedef void * (*valloc_t)(size_t);
 typedef void * (*pvalloc_t)(size_t);
+typedef int    (*puts_t)(const char *);
 typedef void   (*free_t)(void *);
 
 
@@ -62,6 +63,7 @@ memalign_t get_system_memalign();
 posix_memalign_t get_system_posix_memalign();
 valloc_t get_system_valloc();
 pvalloc_t get_system_pvalloc();
+puts_t get_system_puts();
 free_t get_system_free();
 
 void * malloc_wrapper(size_t size);
@@ -72,6 +74,7 @@ void * memalign_wrapper(size_t alignment, size_t size);
 int posix_memalign_wrapper(void ** ptr, size_t alignment, size_t size);
 void * valloc_wrapper(size_t size);
 void * pvalloc_wrapper(size_t size);
+int puts_wrapper(const char *s);
 
 #ifdef __cplusplus
 } /* extern "C" */

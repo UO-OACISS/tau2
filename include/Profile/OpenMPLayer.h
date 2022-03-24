@@ -30,22 +30,18 @@ extern "C" {
 #define _OPENMP
 #endif /* _OPENMP */
 }
-class OpenMPLayer 
+#include <mutex>
+class OpenMPLayer
 { // Layer for RtsLayer to interact with OpenMP
   public:
- 	
- 	OpenMPLayer () { }  // defaults
-	~OpenMPLayer () { } 
 
-	static void Initialize(void);
+ 	OpenMPLayer () { }  // defaults
+	~OpenMPLayer () { }
+
 	static int RegisterThread(void); // called before any profiling code
 	static int numThreads(void); // max number of OpenMP threads.
-        static int InitializeThreadData(void);     // init thread mutexes
-        static int InitializeDBMutexData(void);     // init tauDB mutex
-        static int InitializeEnvMutexData(void);     // init tauEnv mutex
-        static int InitializeRegisterMutexData(void);     // init tauEnv mutex
 	static int GetThreadId(void); 	 // gets 0..N-1 thread id
-	static int GetTauThreadId(void); 	 //gets TAU thread id 
+	static int GetTauThreadId(void); 	 //gets TAU thread id
 	static int TotalThreads(void);   // gets number of threads
 	static int LockDB(void);	 // locks the tauDBMutex
 	static int UnLockDB(void);	 // unlocks the tauDBMutex
@@ -53,16 +49,16 @@ class OpenMPLayer
 	static int UnLockEnv(void);	 // unlocks the tauEnvMutex
 
   private:
-	static omp_lock_t tauDBmutex;  // to protect TheFunctionDB
-	static omp_lock_t tauEnvmutex;  // second lock
-	static omp_lock_t tauRegistermutex;  // lock around thread registration
-	
+	static std::mutex tauDBmutex;  // to protect TheFunctionDB
+	static std::mutex tauEnvmutex;  // second lock
+	static std::mutex tauRegistermutex;  // lock around thread registration
+
 };
 #endif // TAU_OPENMP
 
 #endif // _TAU_OPENMP_LAYER_H_
 
-	
+
 
 /***************************************************************************
  * $RCSfile: OpenMPLayer.h,v $   $Author: amorris $

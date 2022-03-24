@@ -7,19 +7,19 @@ using namespace std;
 #include "cuda_runtime_api.h"
 
 #define SIZE_OF_MATRIX 1000
-#define SIZE_OF_BLOCK 16 
+#define SIZE_OF_BLOCK 16
 #define M SIZE_OF_MATRIX
 unsigned int m = SIZE_OF_MATRIX;
 
 #define idx(i,j,lda) ((j) + ((i)*(lda)))
 
-__global__ void multiply_matrices(float *d_a, float *d_b, float *d_c, int lda)
+__global__ void multiply_matrices(double *d_a, double *d_b, double *d_c, int lda)
 {
 	unsigned int row = threadIdx.y + blockDim.y * blockIdx.y;
 	unsigned int col = threadIdx.x + blockDim.x * blockIdx.x;
 	unsigned int id  = idx(row,col,lda);
 
-	float ctemp = 0.0;
+	double ctemp = 0.0;
 
 	if (row < M && col < M)
 	{
@@ -31,7 +31,7 @@ __global__ void multiply_matrices(float *d_a, float *d_b, float *d_c, int lda)
 	}
 }
 
-__global__ void multiply_matrices_shared_blocks(float *d_a, float *d_b, float *d_c,
+__global__ void multiply_matrices_shared_blocks(double *d_a, double *d_b, double *d_c,
 int lda)
 {
 
@@ -39,15 +39,15 @@ int lda)
 	unsigned int row = threadIdx.y + blockDim.y * blockIdx.y;
 	unsigned int col = threadIdx.x + blockDim.x * blockIdx.x;
 	unsigned int id  = idx(row,col,lda);
-	
-	//submatrices
-	float *sub_a, *sub_b;
 
-	//shared submatrices	
-	__shared__ float a[SIZE_OF_BLOCK][SIZE_OF_BLOCK], b[SIZE_OF_BLOCK][SIZE_OF_BLOCK];
+	//submatrices
+	double *sub_a, *sub_b;
+
+	//shared submatrices
+	__shared__ double a[SIZE_OF_BLOCK][SIZE_OF_BLOCK], b[SIZE_OF_BLOCK][SIZE_OF_BLOCK];
 	//temp element of d_c
-	float c = 0;
-	
+	double c = 0;
+
 	//top-level row,col of block
 	int block_row = blockIdx.y * bs;
 	int block_col = blockIdx.x * bs;
@@ -55,8 +55,8 @@ int lda)
 	//id inside each block
 	int sub_row = threadIdx.y;
 	int sub_col = threadIdx.x;
-	
-	//for each block	
+
+	//for each block
 	for (int k = 0; k < (M / bs); k++)
 	{
 
@@ -64,8 +64,8 @@ int lda)
 		sub_b = &d_b[idx(bs*k, block_col, lda)];
 		a[sub_row][sub_col] = sub_a[idx(sub_row, sub_col, lda)];
 		b[sub_row][sub_col] = sub_b[idx(sub_row, sub_col, lda)];
-		
-		//wait for all threads to complete copy to shared memory.	
+
+		//wait for all threads to complete copy to shared memory.
 		__syncthreads();
 
 		//multiply each submatrix
@@ -73,30 +73,30 @@ int lda)
 		{
 			c = c + a[sub_row][j] * b[j][sub_col];
 		}
-	
+
 		// move results to device memory.
 		d_c[id] = c;
-	
+
 		// wait for multiplication to finish before moving onto the next submatrix.
 		__syncthreads();
-		
+
 	}
 }
 
-void multiply_by_element(dim3 grid, dim3 threads, float *d_a, float *d_b, float *d_c, int m, cudaStream_t cStream)
+void multiply_by_element(dim3 grid, dim3 threads, double *d_a, double *d_b, double *d_c, int m, cudaStream_t cStream)
 {
 
 	cudaError err;
-	unsigned int matsize = SIZE_OF_MATRIX*SIZE_OF_MATRIX*sizeof(float);
-	float* c = (float*)malloc(matsize);
-	
+	unsigned int matsize = SIZE_OF_MATRIX*SIZE_OF_MATRIX*sizeof(double);
+	double* c = (double*)malloc(matsize);
+
 	multiply_matrices<<< grid, threads, 0, cStream >>>(d_a, d_b, d_c, m);
 	err = cudaGetLastError();
 	if (err != cudaSuccess)
 	{
 		cout << "error in kernel, " << cudaGetErrorString(err) << endl;
 	}
-	
+
 	cudaStreamSynchronize(cStream);
 	err = cudaMemcpyAsync(c, d_c, matsize, cudaMemcpyDeviceToHost, cStream);
 	if (err != cudaSuccess)
@@ -107,11 +107,11 @@ void multiply_by_element(dim3 grid, dim3 threads, float *d_a, float *d_b, float 
 
 }
 
-void multiply_by_block(dim3 grid, dim3 threads, float *d_a, float *d_b, float *d_c, int m, cudaStream_t cStream)
+void multiply_by_block(dim3 grid, dim3 threads, double *d_a, double *d_b, double *d_c, int m, cudaStream_t cStream)
 {
 	cudaError err;
-	unsigned int matsize = SIZE_OF_MATRIX*SIZE_OF_MATRIX*sizeof(float);
-	float* c = (float*)malloc(matsize);
+	unsigned int matsize = SIZE_OF_MATRIX*SIZE_OF_MATRIX*sizeof(double);
+	double* c = (double*)malloc(matsize);
 
 	multiply_matrices_shared_blocks<<< grid, threads, 0, cStream >>>(d_a, d_b, d_c, m);
 
@@ -133,24 +133,24 @@ void multiply_by_block(dim3 grid, dim3 threads, float *d_a, float *d_b, float *d
 
 int main(int argc, char** argv)
 {
-	
+
 	unsigned int number_of_threads = min(SIZE_OF_MATRIX, SIZE_OF_BLOCK);
 	unsigned int number_of_blocks;
 	if (SIZE_OF_MATRIX > SIZE_OF_BLOCK)
-		number_of_blocks = ceil(SIZE_OF_MATRIX / ((float) SIZE_OF_BLOCK));
+		number_of_blocks = ceil(SIZE_OF_MATRIX / ((double) SIZE_OF_BLOCK));
 	else
 		 number_of_blocks = 1;
 
-	unsigned int matsize = SIZE_OF_MATRIX*SIZE_OF_MATRIX*sizeof(float);
+	unsigned int matsize = SIZE_OF_MATRIX*SIZE_OF_MATRIX*sizeof(double);
 
 	//cout << "blocks: " << number_of_blocks << " threads: " <<
 	//number_of_threads << endl;
 
 	//cout.flush();
 
-	float* a = (float*)malloc(matsize);
-	float* b = (float*)malloc(matsize);
-	float* c = (float*)malloc(matsize);
+	double* a = (double*)malloc(matsize);
+	double* b = (double*)malloc(matsize);
+	double* c = (double*)malloc(matsize);
 
 	//initalize matrices
 	for (int i=0; i<m; i++) {
@@ -174,7 +174,7 @@ int main(int argc, char** argv)
 
 	string device_list("");
 	int number_of_iterations = 1;
-	
+
 	int opt = getopt(argc, argv, "d:i:");
 	while(opt != -1) {
 		stringstream str;
@@ -226,7 +226,7 @@ int main(int argc, char** argv)
 		}
 	}
 	//cout << "finnished mapping devices." << endl;
-	float *d_a[nDevices], *d_b[nDevices], *d_c[nDevices];
+	double *d_a[nDevices], *d_b[nDevices], *d_c[nDevices];
 	cudaStream_t streams[nDevices * number_of_iterations];
 	for (int d=0;d<nDevices;d++)
 	{
@@ -264,7 +264,7 @@ int main(int argc, char** argv)
 		{
 			cout << "error in malloc, #=" << cudaGetErrorString(err) << endl;
 		}
-		
+
 	}
 
     for (int d=0; d<nDevices; d++)
@@ -316,7 +316,7 @@ int main(int argc, char** argv)
         }
 	}
 
-	//print c	
+	//print c
 	/*
 	cout << " results: " << endl;
 	for (int i=0; i<m; i++) {
@@ -326,21 +326,21 @@ int main(int argc, char** argv)
 		cout << endl;
 	}
 	*/
-	
-	
-	//print c	
-	/*
-	cout << " results: " << endl;
-	for (int i=0; i<m; i++) {
-		for (int j=0; j<m; j++) {
-			cout << c[i*m+j] << ", ";
-		}
-		cout << endl;
-	}
-	*/
-	cudaFree(d_a);
-	cudaFree(d_b);
-	cudaFree(d_c);
 
-	cudaThreadExit();
+
+	//print c
+	/*
+	cout << " results: " << endl;
+	for (int i=0; i<m; i++) {
+		for (int j=0; j<m; j++) {
+			cout << c[i*m+j] << ", ";
+		}
+		cout << endl;
+	}
+	*/
+	//cudaFree(d_a);
+	//cudaFree(d_b);
+	//cudaFree(d_c);
+
+	//cudaThreadExit();
 }

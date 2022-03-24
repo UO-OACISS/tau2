@@ -22,6 +22,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <sstream>
 #include <tau_types.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauMemory.h>
@@ -41,6 +42,11 @@ void *pvalloc(size_t size) {
 }
 #endif /* __PIN__ */
 
+#ifdef TAU_AIX
+#define HAVE_POSIX_MEMALIGN 1
+#undef HAVE_MEMALIGN
+#undef HAVE_PVALLOC
+#endif /* TAU_AIX */
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
 #include <map>
@@ -113,6 +119,9 @@ static inline void BuildTimerName(char * buff, char const * funcname, char const
     sprintf(buff, "%s [{%s} {%d,1}-{%d,1}]", funcname, filename, lineno, lineno);
   }
 }
+
+// Declare static member vars
+std::mutex TauAllocation::mtx;
 
 //////////////////////////////////////////////////////////////////////
 // Triggers leak detection
@@ -198,13 +207,12 @@ TauAllocation * TauAllocation::Find(allocation_map_t::key_type const & key)
 {
   TauAllocation * found = NULL;
   if (key) {
-    RtsLayer::LockDB();
+    std::lock_guard<std::mutex> lck (mtx);
     allocation_map_t const & alloc_map = AllocationMap();
     allocation_map_t::const_iterator it = alloc_map.find(key);
     if (it != alloc_map.end()) {
       found = it->second;
     }
-    RtsLayer::UnLockDB();
   }
   return found;
 }
@@ -216,7 +224,7 @@ TauAllocation * TauAllocation::FindContaining(void * ptr)
 {
   TauAllocation * found = NULL;
   if (ptr) {
-    RtsLayer::LockDB();
+    std::lock_guard<std::mutex> lck (mtx);
     allocation_map_t const & allocMap = AllocationMap();
     allocation_map_t::const_iterator it;
     for(it = allocMap.begin(); it != allocMap.end(); it++) {
@@ -226,7 +234,6 @@ TauAllocation * TauAllocation::FindContaining(void * ptr)
         break;
       }
     }
-    RtsLayer::UnLockDB();
   }
   return found;
 }
@@ -393,11 +400,12 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
     if(ugap_size) memset(ugap_addr, fill_pattern, ugap_size);
   }
 
-  RtsLayer::LockDB();
-  __bytes_allocated() += user_size;
-  __bytes_overhead() += alloc_size - user_size;
-  __allocation_map()[user_addr] = this;
-  RtsLayer::UnLockDB();
+  {
+    std::lock_guard<std::mutex> lck (mtx);
+    __bytes_allocated() += user_size;
+    __bytes_overhead() += alloc_size - user_size;
+    __allocation_map()[user_addr] = this;
+  }
 
   allocated = true;
   TriggerAllocationEvent(user_size, filename, lineno);
@@ -478,15 +486,16 @@ void TauAllocation::Deallocate(const char * filename, int lineno)
     Protect(alloc_addr, alloc_size);
   }
 
-  RtsLayer::LockDB();
-  __bytes_deallocated() += user_size;
-  if (protect_free) {
-    __bytes_overhead() += user_size;
-  } else {
-    __bytes_overhead() -= alloc_size - user_size;
-    __allocation_map().erase(user_addr);
+  {
+    std::lock_guard<std::mutex> lck (mtx);
+    __bytes_deallocated() += user_size;
+    if (protect_free) {
+        __bytes_overhead() += user_size;
+    } else {
+        __bytes_overhead() -= alloc_size - user_size;
+        __allocation_map().erase(user_addr);
+    }
   }
-  RtsLayer::UnLockDB();
 
   TriggerDeallocationEvent(user_size, filename, lineno);
   TriggerMemDbgOverheadEvent();
@@ -537,10 +546,11 @@ void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filena
       user_addr = addr;
       user_size = size;
     }
-    RtsLayer::LockDB();
-    __bytes_allocated() += user_size;
-    __allocation_map()[user_addr] = this;
-    RtsLayer::UnLockDB();
+    {
+        std::lock_guard<std::mutex> lck (mtx);
+        __bytes_allocated() += user_size;
+        __allocation_map()[user_addr] = this;
+    }
 
     TriggerAllocationEvent(user_size, filename, lineno);
     TriggerHeapMemoryUsageEvent();
@@ -558,10 +568,11 @@ void TauAllocation::TrackDeallocation(const char * filename, int lineno)
   tracked = true;
   allocated = false;
 
-  RtsLayer::LockDB();
-  __bytes_deallocated() += user_size;
-  __allocation_map().erase(user_addr);
-  RtsLayer::UnLockDB();
+  {
+    std::lock_guard<std::mutex> lck (mtx);
+    __bytes_deallocated() += user_size;
+    __allocation_map().erase(user_addr);
+  }
 
   TriggerDeallocationEvent(user_size, filename, lineno);
   TriggerHeapMemoryUsageEvent();
@@ -595,10 +606,11 @@ void TauAllocation::TrackReallocation(void * ptr, size_t size, const char * file
         alloc_size = size;
       } else {
         // Track deallocation of old memory without destroying this object
-        RtsLayer::LockDB();
-        __bytes_deallocated() += user_size;
-        __allocation_map().erase(user_addr);
-        RtsLayer::UnLockDB();
+        {
+            std::lock_guard<std::mutex> lck (mtx);
+            __bytes_deallocated() += user_size;
+            __allocation_map().erase(user_addr);
+        }
         TriggerDeallocationEvent(user_size, filename, lineno);
 
         // Reuse this object to track the new resized allocation
@@ -625,7 +637,9 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
   int len;
   int rem;
 
+#ifndef TAU_NEC_SX
   TAU_ASSERT((data != NULL), "Null string passed to TauAllocation::LocationHash");
+#endif /* TAU_NEC_SX */
 
   // Optimize for the common case
   if (hash == TAU_MEMORY_UNKNOWN_LINE) {
@@ -738,24 +752,25 @@ void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, i
 
   unsigned long file_hash = LocationHash(lineno, filename);
 
-  RtsLayer::LockDB();
-  event_map_t::iterator it = event_map.find(file_hash);
-  if (it == event_map.end()) {
-    if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
-        !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
-    {
-      event = new TauContextUserEvent("Heap Allocate");
+  {
+    std::lock_guard<std::mutex> lck (mtx);
+    event_map_t::iterator it = event_map.find(file_hash);
+    if (it == event_map.end()) {
+        if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
+            !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
+        {
+        event = new TauContextUserEvent("Heap Allocate");
+        } else {
+        char * name = new char[strlen(filename)+128];
+        sprintf(name, "Heap Allocate <file=%s, line=%d>", filename, lineno);
+        event = new TauContextUserEvent(name);
+        delete[] name;
+        }
+        event_map[file_hash] = event;
     } else {
-      char * name = new char[strlen(filename)+128];
-      sprintf(name, "Heap Allocate <file=%s, line=%d>", filename, lineno);
-      event = new TauContextUserEvent(name);
-      delete[] name;
+        event = it->second;
     }
-    event_map[file_hash] = event;
-  } else {
-    event = it->second;
   }
-  RtsLayer::UnLockDB();
 
   event->TriggerEvent(size);
   alloc_event = event->getContextUserEvent();
@@ -772,24 +787,25 @@ void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename,
   unsigned long file_hash = LocationHash(lineno, filename);
   TauContextUserEvent * e;
 
-  RtsLayer::LockDB();
-  event_map_t::iterator it = event_map.find(file_hash);
-  if (it == event_map.end()) {
-    if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
-        !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
-    {
-      e = new TauContextUserEvent("Heap Free");
+  {
+    std::lock_guard<std::mutex> lck (mtx);
+    event_map_t::iterator it = event_map.find(file_hash);
+    if (it == event_map.end()) {
+        if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
+            !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
+        {
+        e = new TauContextUserEvent("Heap Free");
+        } else {
+        char * name = new char[strlen(filename)+128];
+        sprintf(name, "Heap Free <file=%s, line=%d>", filename, lineno);
+        e = new TauContextUserEvent(name);
+        delete[] name;
+        }
+        event_map[file_hash] = e;
     } else {
-      char * name = new char[strlen(filename)+128];
-      sprintf(name, "Heap Free <file=%s, line=%d>", filename, lineno);
-      e = new TauContextUserEvent(name);
-      delete[] name;
+        e = it->second;
     }
-    event_map[file_hash] = e;
-  } else {
-    e = it->second;
   }
-  RtsLayer::UnLockDB();
 
   e->TriggerEvent(size);
 }
@@ -805,26 +821,27 @@ void TauAllocation::TriggerErrorEvent(char const * descript, char const * filena
   unsigned long file_hash = LocationHash(lineno, filename);
   TauContextUserEvent * e;
 
-  RtsLayer::LockDB();
-  event_map_t::iterator it = event_map.find(file_hash);
-  if (it == event_map.end()) {
-    char * name;
-    if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
-        !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
-    {
-      name = new char[strlen(descript)+128];
-      sprintf(name, "Memory Error! %s", descript);
+  {
+    std::lock_guard<std::mutex> lck (mtx);
+    event_map_t::iterator it = event_map.find(file_hash);
+    if (it == event_map.end()) {
+        char * name;
+        if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
+            !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
+        {
+        name = new char[strlen(descript)+128];
+        sprintf(name, "Memory Error! %s", descript);
+        } else {
+        name = new char[strlen(descript)+strlen(filename)+128];
+        sprintf(name, "Memory Error! %s <file=%s, line=%d>", descript, filename, lineno);
+        }
+        e = new TauContextUserEvent(name);
+        event_map[file_hash] = e;
+        delete[] name;
     } else {
-      name = new char[strlen(descript)+strlen(filename)+128];
-      sprintf(name, "Memory Error! %s <file=%s, line=%d>", descript, filename, lineno);
+        e = it->second;
     }
-    e = new TauContextUserEvent(name);
-    event_map[file_hash] = e;
-    delete[] name;
-  } else {
-    e = it->second;
   }
-  RtsLayer::UnLockDB();
 
   e->TriggerEvent(1);
 }
@@ -1730,13 +1747,22 @@ else {
 #endif
 }
 
+const char * get_status_file() {
+    std::stringstream ss;
+    //ss << "/proc/" << RtsLayer::getPid() << "/status";
+    ss << "/proc/self/status";
+    static std::string filename(ss.str());
+    return filename.c_str();
+}
+
 //////////////////////////////////////////////////////////////////////
 // Tau_open_status returns the file descriptor of /proc/self/status
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_open_status(void) {
 
 #ifndef TAU_WINDOWS
-  int fd = open ("/proc/self/status", O_RDONLY);
+  const char * filename = get_status_file();
+  int fd = open (filename, O_RDONLY);
 #else
   int fd = -1;
 #endif /* TAU_WINDOWS */
@@ -1759,11 +1785,13 @@ extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm,
   int ret, i, j, bytesread;
   memset(buf, 0, 2048);
 
+  /*
   ret = lseek(fd, 0, SEEK_SET);
   if (ret == -1) {
     perror("lseek failure on /proc/self/status");
     return ret;
   }
+  */
 
   bytesread = read(fd, buf, 2048);
   if (bytesread == -1) {
@@ -1772,57 +1800,43 @@ extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm,
   }
   *hwm = 0LL;
   *rss = 0LL;
-  for(i=0; i < bytesread; i++) {
-   /* Search for VmHWM for high water mark of memory from /proc/self/status */
-    if (buf[i] == '\n' && buf[i+1] == 'V' && buf[i+2] == 'm' && buf[i+3] == 'H' && buf[i+4] == 'W' && buf[i+5] == 'M' && buf[i+6] == ':') {
-        for (j = 7 ; j+i < bytesread ; j++) {
-            if (buf[i+j] != ' ') {
-                sscanf(&buf[i+j], "%lld", hwm);
-                //printf("VmHWM: %lld\n", *hwm);
-                break;
-            }
-        }
+  *threads = 0LL;
+  *vswitch = 0LL;
+  *nvswitch = 0LL;
+  // Split the data into lines
+  char * line = strtok(buf, "\n");
+  const char * _vmHWM = "VmHWM:";
+  const char * _vmRSS = "VmRSS:";
+  const char * _Threads = "Threads:";
+  const char * _voluntary_ctxt_switches = "voluntary_ctxt_switches:";
+  const char * _nonvoluntary_ctxt_switches = "nonvoluntary_ctxt_switches:";
+  while (line != NULL) {
+    if (strstr(line, _vmHWM) != NULL) {
+        char * tmp = line + strlen(_vmHWM) + 1;
+        char * pEnd;
+        *hwm = strtol(tmp, &pEnd, 10);
     }
-   /* Search for VmRSS for resident set size of memory from /proc/self/status */
-    if (buf[i] == '\n' && buf[i+1] == 'V' && buf[i+2] == 'm' && buf[i+3] == 'R' && buf[i+4] == 'S' && buf[i+5] == 'S' && buf[i+6] == ':') {
-        for (j = 7 ; j+i < bytesread ; j++) {
-            if (buf[i+j] != ' ') {
-                sscanf(&buf[i+j], "%lld", rss);
-                //printf("VmRSS: %lld\n", *rss);
-                break;
-            }
-        }
+    else if (strstr(line, _vmRSS) != NULL) {
+        char * tmp = line + strlen(_vmRSS) + 1;
+        char * pEnd;
+        *rss = strtol(tmp, &pEnd, 10);
     }
-   /* Search for Threads for total thread count from /proc/self/status */
-    if (buf[i] == '\n' && buf[i+1] == 'T' && buf[i+2] == 'h' && buf[i+3] == 'r' && buf[i+4] == 'e' && buf[i+5] == 'a' && buf[i+6] == 'd' && buf[i+7] == 's' && buf[i+8] == ':') {
-        for (j = 9 ; j+i < bytesread ; j++) {
-            if (buf[i+j] != ' ') {
-                sscanf(&buf[i+j], "%lld", threads);
-                //printf("Threads: %lld\n", *threads);
-                break;
-            }
-        }
+    else if (strstr(line, _Threads) != NULL) {
+        char * tmp = line + strlen(_Threads) + 1;
+        char * pEnd;
+        *threads = strtol(tmp, &pEnd, 10);
     }
-   /* Search for voluntary_ctxt_switches for total thread count from /proc/self/status */
-    if (buf[i] == '\n' && buf[i+1] == 'v' && buf[i+2] == 'o' && buf[i+3] == 'l' && buf[i+4] == 'u' && buf[i+5] == 'n' && buf[i+6] == 't' && buf[i+7] == 'a' && buf[i+8] == 'r') {
-        for (j = (strlen("voluntary_ctxt_switches:")+1) ; j+i < bytesread ; j++) {
-            if (buf[i+j] != ' ') {
-                sscanf(&buf[i+j], "%lld", vswitch);
-                //printf("voluntary_ctxt_switches: %lld\n", *vswitch);
-                break;
-            }
-        }
+    else if (strstr(line, _voluntary_ctxt_switches) != NULL) {
+        char * tmp = line + strlen(_voluntary_ctxt_switches) + 1;
+        char * pEnd;
+        *vswitch = strtol(tmp, &pEnd, 10);
     }
-   /* Search for nonvoluntary_ctxt_switches for total thread count from /proc/self/status */
-    if (buf[i] == '\n' && buf[i+1] == 'n' && buf[i+2] == 'o' && buf[i+3] == 'n' && buf[i+4] == 'v' && buf[i+5] == 'o' && buf[i+6] == 'l' && buf[i+7] == 'u' && buf[i+8] == 'n') {
-        for (j = (strlen("nonvoluntary_ctxt_switches:")+1) ; j+i < bytesread ; j++) {
-            if (buf[i+j] != ' ') {
-                sscanf(&buf[i+j], "%lld", nvswitch);
-                //printf("nonvoluntary_ctxt_switches: %lld\n", *nvswitch);
-                break;
-            }
-        }
+    else if (strstr(line, _nonvoluntary_ctxt_switches) != NULL) {
+        char * tmp = line + strlen(_nonvoluntary_ctxt_switches) + 1;
+        char * pEnd;
+        *nvswitch = strtol(tmp, &pEnd, 10);
     }
+    line = strtok(NULL, "\n");
   }
   return ret;
 }
@@ -1844,62 +1858,45 @@ extern "C" int Tau_close_status(int fd) {
 // mark events
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
-  static int fd=Tau_open_status();
+  int fd = Tau_open_status();
   if (fd == -1) return 0; // failure
+  //printf("***** %d,%d,%s\n", RtsLayer::myNode(), __LINE__, __func__); fflush(stdout);
 
   long long vmrss = 0;
   long long vmhwm = 0;
   long long threads = 0;
   long long nvswitch = 0;
   long long vswitch = 0;
-  TAU_REGISTER_CONTEXT_EVENT(proc_vmhwm, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
-  TAU_REGISTER_CONTEXT_EVENT(proc_rss, "Memory Footprint (VmRSS) (KB)");
-  TAU_REGISTER_CONTEXT_EVENT(stat_threads, "Threads");
-  TAU_REGISTER_CONTEXT_EVENT(stat_voluntary, "Voluntary Context Switches");
-  TAU_REGISTER_CONTEXT_EVENT(stat_nonvoluntary, "Non-voluntary Context Switches");
-  TAU_REGISTER_EVENT(proc_vmhwm_no_context, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
-  TAU_REGISTER_EVENT(proc_rss_no_context, "Memory Footprint (VmRSS) (KB)");
-  TAU_REGISTER_EVENT(stat_threads_no_context, "Threads");
-  TAU_REGISTER_EVENT(stat_voluntary_no_context, "Voluntary Context Switches");
-  TAU_REGISTER_EVENT(stat_nonvoluntary_no_context, "Non-voluntary Context Switches");
 
   Tau_read_status(fd, &vmrss, &vmhwm, &threads, &nvswitch, &vswitch);
+  close(fd);
 
   int tid = 0;
   if (TauEnv_get_tracing()) {
     tid = RtsLayer::myThread();
   }
 
-  if (vmrss > 0) {
     if (use_context) {
+  	TAU_REGISTER_CONTEXT_EVENT(proc_vmhwm, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
+  	TAU_REGISTER_CONTEXT_EVENT(proc_rss, "Memory Footprint (VmRSS) (KB)");
+  	TAU_REGISTER_CONTEXT_EVENT(stat_threads, "Threads");
+  	TAU_REGISTER_CONTEXT_EVENT(stat_voluntary, "Voluntary Context Switches");
+  	TAU_REGISTER_CONTEXT_EVENT(stat_nonvoluntary, "Non-voluntary Context Switches");
         TAU_CONTEXT_EVENT(proc_rss, (double) vmrss);
-    } else {
-        Tau_userevent_thread(proc_rss_no_context, (double) vmrss, tid);
-    }
-  }
-  if (vmhwm > 0) {
-    if (use_context) {
         TAU_CONTEXT_EVENT(proc_vmhwm, (double) vmhwm);
-    } else {
-        Tau_userevent_thread(proc_vmhwm_no_context, (double) vmhwm, tid);
-    }
-  }
-
-    if (use_context) {
         TAU_CONTEXT_EVENT(stat_threads, (double) threads);
-    } else {
-        Tau_userevent_thread(stat_threads_no_context, (double) threads, tid);
-    }
-
-    if (use_context) {
         TAU_CONTEXT_EVENT(stat_voluntary, (double) vswitch);
-    } else {
-        Tau_userevent_thread(stat_voluntary_no_context, (double) vswitch, tid);
-    }
-
-    if (use_context) {
         TAU_CONTEXT_EVENT(stat_nonvoluntary, (double) nvswitch);
     } else {
+  	static void * proc_vmhwm_no_context = Tau_get_userevent("Peak Memory Usage Resident Set Size (VmHWM) (KB)");
+  	static void * proc_rss_no_context = Tau_get_userevent("Memory Footprint (VmRSS) (KB)");
+  	static void * stat_threads_no_context = Tau_get_userevent("Threads");
+  	static void * stat_voluntary_no_context = Tau_get_userevent("Voluntary Context Switches");
+  	static void * stat_nonvoluntary_no_context = Tau_get_userevent("Non-voluntary Context Switches");
+        Tau_userevent_thread(proc_rss_no_context, (double) vmrss, tid);
+        Tau_userevent_thread(proc_vmhwm_no_context, (double) vmhwm, tid);
+        Tau_userevent_thread(stat_threads_no_context, (double) threads, tid);
+        Tau_userevent_thread(stat_voluntary_no_context, (double) vswitch, tid);
         Tau_userevent_thread(stat_nonvoluntary_no_context, (double) nvswitch, tid);
     }
 
@@ -1916,7 +1913,11 @@ return 1; // SUCCESS
 //////////////////////////////////////////////////////////////////////
 extern "C" void Tau_track_mem_event_always(const char * name, const char * prefix, size_t size) {
   const size_t event_len = strlen(name) + strlen(prefix) + 2;
+#if  defined TAU_NEC_SX || defined TAU_WINDOWS
+  char event_name[16384];
+#else
   char event_name[event_len];
+#endif /* TAU_NEC_SX */
   sprintf(event_name, "%s %s", prefix, name);
   if(TauEnv_get_mem_callpath()) {
     TAU_TRIGGER_CONTEXT_EVENT(event_name, (double)size);

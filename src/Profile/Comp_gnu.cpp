@@ -33,8 +33,10 @@
 
 #include <TAU.h>
 #include <Profile/TauInit.h>
+#include <Profile/TauBfd.h>
 
 #include <vector>
+#include <mutex>
 
 #include <tau_internal.h>
 
@@ -64,26 +66,6 @@
 
 using namespace std;
 
-
-#ifdef TAU_BFD
-#define HAVE_DECL_BASENAME 1
-#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-#    include <demangle.h>
-#  endif /* HAVE_GNU_DEMANGLE */
-// Add these definitions because the Binutils comedians think all the world uses autotools
-#ifndef PACKAGE
-#define PACKAGE TAU
-#endif
-#ifndef PACKAGE_VERSION
-#define PACKAGE_VERSION 2.25
-#endif
-#  include <bfd.h>
-#endif /* TAU_BFD */
-#define TAU_INTERNAL_DEMANGLE_NAME(name, dem_name)  dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES); \
-        if (dem_name == NULL) { \
-          dem_name = name; \
-        } \
-
 /*
  *-----------------------------------------------------------------------------
  * Simple hash table to map function addresses to region names/identifier
@@ -109,6 +91,11 @@ struct HashTable : public TAU_HASH_MAP<unsigned long, HashNode*>
     Tau_destructor_trigger();
   }
 };
+
+static std::mutex & theMutex() {
+  static std::mutex mtx;
+  return mtx;
+}
 
 static HashTable & TheHashTable()
 {
@@ -165,14 +152,13 @@ void updateHashTable(unsigned long addr, const char *funcname)
 {
   HashNode * hn = TheLocalHashTable()[addr];
   if (!hn) {
-    RtsLayer::LockDB();
+    std::lock_guard<std::mutex> lck (theMutex());
     hn = TheHashTable()[addr];
     if (!hn) {
       hn = new HashNode;
       TheHashTable()[addr] = hn;
     }
     TheLocalHashTable()[addr] = hn;
-    RtsLayer::UnLockDB();
   }
   hn->info.funcname = funcname;
   hn->excluded = isExcluded(funcname);
@@ -252,16 +238,23 @@ void profile_func_exit(void*, void*);
 #if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_enter
 #endif /* SICORTEX || TAU_SCOREP */
+
+
 void __cyg_profile_func_enter(void* func, void* callsite)
 {
   static bool gnu_init = true;
   HashNode * node;
   /* This is the entry point into TAU from PDT-instrumented C++ codes, so
    * make sure that TAU is ready to go before doing anything else! */
-  static int do_this_once = Tau_init_initializeTAU();
 
   // Don't profile if we're done executing or still initializing
-  if (executionFinished || Tau_init_initializingTAU()) return;
+  if (executionFinished || Tau_init_initializingTAU() || Tau_get_inside_initialize()) return;
+
+  static int do_this_once = Tau_init_initializeTAU();
+
+  // Don't profile TAU internals. This also prevents reentrancy.
+  if (Tau_global_get_insideTAU() > 0) return;
+
 
   // Convert void * to integer
   void * funcptr = func;
@@ -286,7 +279,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
       // We must be inside TAU before we lock the database
       TauInternalFunctionGuard protects_this_region;
 
-      RtsLayer::LockDB();
+      std::lock_guard<std::mutex> lck (theMutex());
       node = TheHashTable()[addr];
       if (!node) {
         node = new HashNode;
@@ -301,14 +294,11 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
       }
       TheLocalHashTable()[addr] =  node;
-      RtsLayer::UnLockDB();
     }
     // Skip excluded functions
     if (node->excluded) return;
   } // END protected region
 
-  // Don't profile TAU internals. This also prevents reentrancy.
-  if (Tau_global_get_insideTAU() > 0) return;
 
   // Construct and start the function timer.  This region needs to be protected
   // in all situations.
@@ -349,7 +339,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
     // Start the timer if it's not an excluded function
     if (!node->fi) {
-      RtsLayer::LockDB();    // lock, then check again
+      std::lock_guard<std::mutex> lck (theMutex());
       if (!node->fi) {
         // Resolve function info if it hasn't already been retrieved
         if (!node->info.probeAddr) {
@@ -386,7 +376,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 	// exclude that routine.
 	if(!node->info.filename || !node->info.funcname) {
 		node->excluded = 1;
-		RtsLayer::UnLockDB();
 		return;
 	}
 
@@ -394,18 +383,13 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
         char * routine = (char*)malloc(size);
         if (TauEnv_get_bfd_lookup()) {
-	const char *dem_name;
-
-#if defined(TAU_BFD) && defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-        TAU_INTERNAL_DEMANGLE_NAME(node->info.funcname, dem_name);
-#else
-        dem_name = node->info.funcname;
-#endif /* HAVE_GNU_DEMANGLE */
+          char *dem_name = Tau_demangle_name(node->info.funcname);
           //sprintf(routine, "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
 #ifdef DEBUG_PROF
           printf("name = %s, dem_name = %s\n", node->info.funcname, dem_name);
 #endif /* DEBUG_PROF */
           sprintf(routine, "%s [{%s} {%d,0}]", dem_name, node->info.filename, node->info.lineno);
+          free(dem_name);
         } else {
           sprintf(routine, "[%s] UNRESOLVED %s ADDR %lx", node->info.funcname, node->info.filename, addr);
         }
@@ -418,7 +402,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         // Cleanup
         free((void*)routine);
       }
-      RtsLayer::UnLockDB();
     }
 
     if (!node->excluded) {
@@ -475,6 +458,12 @@ void __cyg_profile_func_exit(void* func, void* callsite)
   // Don't profile if we're still initializing.
   if (Tau_init_initializingTAU()) return;
 
+  // Don't profile if we're done initializing but have yet to return from the init function
+  if (Tau_get_inside_initialize()) return;
+
+  // Don't profile TAU internals. This also prevents reentrancy.
+  if (Tau_global_get_insideTAU() > 0) return;
+
   HashNode * hn;
   unsigned long addr;
 
@@ -496,16 +485,13 @@ void __cyg_profile_func_exit(void* func, void* callsite)
     // Get the hash node
     hn = TheLocalHashTable()[addr];
     if(!hn){
-        RtsLayer::LockDB();
+        std::lock_guard<std::mutex> lck (theMutex());
         hn = TheHashTable()[addr];
-        RtsLayer::UnLockDB();
     }
     // Skip excluded functions or functions we didn't enter
     if (!hn || hn->excluded || !hn->fi) return;
   } // END protected region
 
-  // Don't profile TAU internals. This also prevents reentrancy.
-  if (Tau_global_get_insideTAU() > 0) return;
 
 
   // Stop the timer.  This routine is protected so we don't need another guard.

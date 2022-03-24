@@ -297,6 +297,15 @@ case $1 in
 	echo "s,^TAU_GASNET_DIR=.*$,TAU_GASNET_DIR=$gasnetdir,g" >> $sedout
 	;;
 
+     llvm_src_dir=*)
+	llvm_src_dir=`echo $1 | sed -e 's/^llvm_src_dir=//' -e 's/#/ /g'`
+	echo "s,^TAU_LLVM_SRC_DIR=.*$,TAU_LLVM_SRC_DIR=$llvm_src_dir,g" >> $sedout
+	;;
+     llvm_cxx=*)
+	 llvm_cxx=`echo $1 | sed -e 's/^llvm_cxx=//' -e 's/#/ /g'`
+	 echo "s,^TAU_LLVM_CXX=.*$,TAU_LLVM_CXX=$llvm_cxx,g" >> $sedout
+	 ;;
+
      sicortexlink=*)
         sicortexlink=`echo $1 | sed -e 's/^sicortexlink=//' -e 's/#/ /g'`
 	echo "s@^SICORTEXLINK=.*\$@SICORTEXLINK=$sicortexlink@g" >> $sedout
@@ -429,6 +438,10 @@ case $1 in
         fullcc=`echo $1 | sed -e 's@^fullcc=@@' -e 's@#@ @g'`
 	echo "s@^FULL_CC=.*@FULL_CC=$fullcc@g" >> $sedout
 	;;
+     fullfortran=*)
+        fullfortran=`echo $1 | sed -e 's@^fullfortran=@@' -e 's@#@ @g'`
+	echo "s@^FULL_FORTRAN=.*@FULL_FORTRAN=$fullfortran@g" >> $sedout
+	;;
      tau_build_cc=*)
         tau_build_cc=`echo $1 | sed -e 's@^tau_build_cc=@@' -e 's@#@ @g'`
 	echo "s@^TAU_BUILD_CC=.*@TAU_BUILD_CC=$tau_build_cc@g" >> $sedout
@@ -474,6 +487,11 @@ case $1 in
     adios2libs=*)
         adios2libs=`echo $1 | sed -e 's/^adios2libs=//' -e 's/#/ /g'`
 	echo "s,^ADIOS2_LIBS=.*$,ADIOS2_LIBS=$adios2libs,g" >> $sedout
+	;;
+
+    tau_cmake=*)
+        tau_cmake=`echo $1 | sed -e 's/^tau_cmake=//'`
+	echo "s,^TAU_CMAKE=.*$,TAU_CMAKE=$tau_cmake,g" >> $sedout
 	;;
 
     sqlite3dir=*)
@@ -701,6 +719,10 @@ case $1 in
         echo NOTE: Enabling Stack Unwinding support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     TAU_BUILD_LLVM_PLUGIN)
+        echo NOTE: Building LLVM plugin
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      TAU_UNWIND_LIBUNWIND)
         echo NOTE: Using libunwind Unwinder.
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -740,6 +762,10 @@ case $1 in
 	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     FORTRAN_SPECIFIED)
+        echo NOTE: Using the specified Fortran compiler instead of the default
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
 
 ###############################################################
 # Set up MPI stuff if possible
@@ -773,6 +799,17 @@ case $1 in
 	echo "NOTE: Using the -DMPICH_IGNORE_CXX_SEEK to compile C++ programs"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+
+     CRAY_MPICH_LIBMPI_CRAY)
+	echo "NOTE: Using -lmpi_cray during linking"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     CRAY_MPICH_LIBMPICH_CRAYCLANG)
+	echo "NOTE: Using -lmpich_crayclang during linking"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
 
      MPICH3_CONST)
 	echo "NOTE: Using the -DTAU_MPICH3_CONST=const to compile programs"
@@ -1271,6 +1308,10 @@ case $1 in
 	echo NOTE: Building Cray DMAPP wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     UGNI)
+	echo NOTE: Building Cray UGNI wrapper
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      ARMCI)
 	echo NOTE: Building ARMCI wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1387,16 +1428,35 @@ case $1 in
 	echo NOTE: Using The Cray T3E CC C++ compiler 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     HIPCC)
+	echo NOTE: Using The AMD HIPCC C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      GASNET)
 	echo NOTE: Using The GASNET directory 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     CRAYX1CC)
+     LLVM_SRC_DIR)
+	 echo NOTE: using LLVM source directory
+         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     LLVM_CXX)
+         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+    CRAYX1CC)
 	echo NOTE: Using The Cray CC C++ compiler 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYKAI)
 	echo NOTE: Using The Cray T3E KAI C++ compiler 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     AOCC) 
+	echo NOTE: Using PrgEnv-aocc Clang/Flang compiler settings
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     NVIDIA) 
+	echo NOTE: Using PrgEnv-nvidia NV_FORTRAN compiler settings
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PGI) 
@@ -1640,6 +1700,10 @@ case $1 in
         echo "NOTE: Using pthreads as the thread package. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     SUPPRESS_PTHREAD_CREATE_WRAPPER)
+        echo "NOTE: Not generating the pthread_create wrapper"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      TBB_AVAILABLE)
         echo "NOTE: Using pthreads as the thread package for TBB support. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1678,6 +1742,10 @@ case $1 in
 	;;
      PYCUDA)
 	echo "NOTE: Building TAU PyCUDA interface ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PYCUDA_BOOST)
+	echo "NOTE: Building TAU PyCUDA interface with Boost libraries ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      MULTIPLECOUNTERS)
@@ -2354,6 +2422,10 @@ case $1 in
         echo "NOTE: flang compiler for Linux options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     FLANG_NO_MX_OPTS)
+        echo "NOTE: using newer flang compiler-based instrumentation option"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      MPIIFORT)
         echo "NOTE: Intel mpiifort compiler options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -2384,6 +2456,10 @@ case $1 in
 	;;
      PGI_FORTRAN)
 	echo "NOTE: PGI pgf90 compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     NV_FORTRAN)
+	echo "NOTE: NVIDIA nvfortran compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PGI_FORTRAN_OTHER)

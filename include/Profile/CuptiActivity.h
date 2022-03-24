@@ -14,21 +14,6 @@
 
 #if CUPTI_API_VERSION >= 2
 
-#ifdef TAU_BFD
-#define HAVE_DECL_BASENAME 1
-#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-#    include <demangle.h>
-#  endif /* HAVE_GNU_DEMANGLE */
-// Add these definitions because the Binutils comedians think all the world uses autotools
-#ifndef PACKAGE
-#define PACKAGE TAU
-#endif
-#ifndef PACKAGE_VERSION
-#define PACKAGE_VERSION 2.25
-#endif
-#  include <bfd.h>
-#endif /* TAU_BFD */
-
 #define CUDA_CHECK_ERROR(err, str) \
 	if (err != CUDA_SUCCESS) \
   { \
@@ -299,8 +284,6 @@ void get_values_from_memcpy(const CUpti_CallbackData *info, CUpti_CallbackId id,
 
 int getMemcpyType(int kind);
 int getUnifmemType(int kind);
-
-const char* demangleName(const char *n);
 
 int getParentFunction(uint32_t id);
 

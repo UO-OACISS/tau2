@@ -10,6 +10,7 @@ declare -i group_C=3
 declare -i group_upc=4
 
 declare -i disablePdtStep=$FALSE
+declare -i disableLink=$FALSE
 declare -i hasAnOutputFile=$FALSE
 declare -i fortranParserDefined=$FALSE
 declare -i gfparseUsed=$FALSE
@@ -59,6 +60,7 @@ declare -i continueBeforeOMP=$FALSE
 declare -i trackIO=$FALSE
 declare -i trackUPCR=$FALSE
 declare -i linkOnly=$FALSE
+declare -i doNothing=$FALSE
 declare -i trackDMAPP=$FALSE
 declare -i trackARMCI=$FALSE
 declare -i trackPthread=$FALSE
@@ -84,7 +86,13 @@ defaultParser="noparser"
 optWrappersDir="/tmp"
 TAU_BIN_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TAUARCH="`grep 'TAU_ARCH=' $TAU_MAKEFILE | sed -e 's@TAU_ARCH=@@g' `"
-TAUCOMP="`grep 'TAU_COMPILER_SUITE_USED=' $TAU_MAKEFILE | grep '##' | sed -e 's/TAU_COMPILER_SUITE_USED=\(.*\)#ENDIF##\(.*\)#/\1/' | tr -d ' '`"
+TAUCOMP="`grep 'TAU_COMPILER_SUITE_USED=' $TAU_MAKEFILE | grep '##' | sed -e 's/TAU_COMPILER_SUITE_USED=\(.*\)#ENDIF##\(.*\)#/\1/' | tr -d ' ' | tail -1`"
+
+TAU_PLUGIN_DIR="`grep 'TAU_LIB_DIR=' $TAU_MAKEFILE | sed -e 's@TAU_LIB_DIR=@@g' `"
+TAU_PREFIX_INSTALL_DIR="`grep 'TAU_PREFIX_INSTALL_DIR=' $TAU_MAKEFILE | sed -e 's@TAU_PREFIX_INSTALL_DIR=@@g' `"
+TAU_LIB_DIR=${TAU_PREFIX_INSTALL_DIR}/${TAUARCH}/lib
+TAU_CONFIG="`grep 'TAU_CONFIG=' $TAU_MAKEFILE | sed -e 's@TAU_CONFIG=@@g' `"
+TAU_PLUGIN_DIR=${TAU_LIB_DIR}"/shared"${TAU_CONFIG}"/plugins/lib"
 
 printUsage () {
     echo -e "Usage: tau_compiler.sh"
@@ -137,6 +145,7 @@ printUsage () {
     echo -e "  -optUseReturnFix\t\tSpecifies the use of a bug fix with ROSE parser using EDG v3.x"
     echo -e "  -optOpariTool=\"<path/opari>\"\tSpecifies the location of the Opari tool"
     echo -e "  -optLinkOnly\t\t\tDisable instrumentation during compilation, do link in the TAU libs"
+    echo -e "  -optDisable\t\t\tDisable instrumentation during compilation, do NOT link in the TAU libs"
     echo -e "  -optOpariDir=\"<path>\"\t\tSpecifies the location of the Opari directory"
     echo -e "  -optOpariOpts=\"\"\t\tSpecifies optional arguments to the Opari tool"
     echo -e "  -optOpariNoInit=\"\"\t\t Do not initlize the POMP2 regions."
@@ -369,6 +378,16 @@ for arg in "$@" ; do
         		disablePdtStep=$TRUE
         		disableCompInst=$TRUE
         		# disable instrumentation during .o file generation, just link in the TAU libs.
+        		;;
+
+        	    -optDisable)
+        		doNothing=$TRUE
+        		isVerbose=$FALSE
+        		echoIfDebug "NOTE: turning doNothing on"
+        		disablePdtStep=$TRUE
+        		disableCompInst=$TRUE
+        		disableLink=$TRUE
+        		# disable all the things!
         		;;
 
         	    -optTrackDMAPP)
@@ -1248,6 +1267,12 @@ echoIfDebug "Using $optCompInstOption $optCompInstFortranOption for compiling Fo
 # on the first pass, we use PDT, on the 2nd, compiler instrumentation (if available and not disabled)
 declare -i passCount=0;
 
+if [ $doNothing == 1 ] ; then
+    evalWithDebugMessage "$CMD $regularCmd" ""
+    errorStatus=$?
+    exit $errorStatus
+fi
+
 while [ $passCount -lt 2 ] ; do
 
 if [ $passCount == 1 ] ; then
@@ -1305,6 +1330,33 @@ if [ "x$TAUCOMP" = "xpgi" ]; then
 	cat_link_file=$TRUE
 fi
 
+# identify the language, if we are using the LLVM plugin for selective instrumentation
+if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
+    echo "Using selective instrumentation for LLVM"
+    case $groupType in
+	$group_c )
+	    TAU_LLVM_PLUGIN="TAU_Profiling.so"
+            ;;
+	$group_C)
+	    TAU_LLVM_PLUGIN="TAU_Profiling_CXX.so"
+            ;;
+	$group_f_F)
+	    ;;
+    esac
+    # Does it exist?
+    if [ ! -f "${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}" ]; then
+	echo "Warning: the plugin supposed to be installed at ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} does not exist."
+    fi
+    # Which version of clang?
+    clang_version=`$compilerSpecified --version | grep "clang version" | awk {'print $3'} | awk -F'.' {'print $1'}`
+    if [ "x$clang_version" = "xversion" ]; then
+    # AMD clang version 13.0.0   -> use the 4th column instead of 3rd. 
+      clang_version=`$compilerSpecified --version | grep "clang version" | awk {'print $4'} | awk -F'.' {'print $1'}`
+    fi
+    if [[ "$clang_version" -ge "13" ]] ; then    
+	CLANG_LEGACY="-flegacy-pass-manager"
+    fi
+fi
 
 tempCounter=0
 while [ $tempCounter -lt $numFiles ]; do
@@ -1706,7 +1758,7 @@ if [ $numFiles == 0 ]; then
         else
           # Old K computer Fujitsu - Sparc
           linkCmd="$linkCmd --linkfortran -lmpi_f90 -lmpi_f77"
-	fi 
+	fi
       fi
       linkCmd=`echo $linkCmd | sed -e 's/^mpifcc/mpiFCC/' -e 's/^fcc/FCC/'`
     fi
@@ -2090,7 +2142,7 @@ else
       #e.g. see compliation of mpi.c. So do not attempt to modify it simply
       #by placing the output to "a.out".
 
-      if [ $isForCompilation == $TRUE ]; then
+     if [ $isForCompilation == $TRUE ]; then
           # The number of files could be more than one.  Check for creation of each .o file.
           tempCounter=0
           while [ $tempCounter -lt $numFiles ]; do
@@ -2125,19 +2177,19 @@ else
 
               # Should we use compiler-based instrumentation on this file?
               extraopt=
-            if [ $optCompInst == $TRUE ]; then
+           if [ $optCompInst == $TRUE ]; then
           	  tempTauFileName=${arrTau[$tempCounter]}
           	  instrumentedFileForCompilation=" $tempTauFileName"
           	  useCompInst=yes
           	if [ $linkOnly == $TRUE ]; then
           	  useCompInst=no
-      fi
+		fi
           	if [ "x$tauSelectFile" != "x" ] ; then
-          	    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'`
+         	    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'`
           	    useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
           	fi
-          	if [ "$useCompInst" = yes ]; then
-                     if [ `echo $optCompInstOption | grep finstrument-functions | wc -l ` != 0 ]; then
+         	if [ "$useCompInst" = yes ]; then
+                   if [ `echo $optCompInstOption | grep finstrument-functions | wc -l ` != 0 ]; then
                        echoIfDebug "Has GNU CompInst option"
 		     if [ "x$tauSelectFile" != "x" ] ; then
                        optExcludeFuncsList=$(sed -e 's/^#.*//g' -e '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $tauSelectFile | \
@@ -2148,12 +2200,26 @@ else
                                              sed -e 's/  */,/g' | \
                                              sed -e 's/^,*//' -e 's/,*$//')
                      fi
-                       if [ "x$optExcludeFuncsList" != "x" ]; then
-                         optExcludeFuncs=-finstrument-functions-exclude-function-list=$optExcludeFuncsList
+                     if [ "x$optExcludeFuncsList" != "x" ]; then
+                       optExcludeFuncs=-finstrument-functions-exclude-function-list=$optExcludeFuncsList
                          optCompInstOption="$optExcludeFuncs $optCompInstOption"
                          echoIfDebug "$optCompInstOption=$optCompInstOption"
                        fi
                      fi
+
+		   if [ "x$TAUCOMP" == "xclang" ]; then
+		       optExcludeFuncs=""
+		       # We are going to use the LLVM plugin. Remove -finstrument-functions or -finstrument-functions-after-inlining from the options, in order for the LLVM plugin to take precedence
+		       argsRemaining=`echo $argsRemaining | sed -e 's@-finstrument-functions-after-inlining@@g' | sed -e 's@-finstrument-functions@@g'`
+			 if [ "x$tauSelectFile" != "x" ]; then
+			     # TODO check the plugin exists here (done above)
+			     optCompInstOption="-g ${CLANG_LEGACY} -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
+			 else
+			     # instrument every function -> do not pass any select file
+			     optCompInstOption="-g ${CLANG_LEGACY} -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
+#			     optCompInstOption="-finstrument-functions"
+			 fi
+		     fi
           	     extraopt=$optCompInstOption
                      if [ $groupType == $group_f_F ]; then
 # If we need to tweak the Fortran options, we should do it here
@@ -2210,7 +2276,7 @@ else
               fi
               tempCounter=tempCounter+1
           done
-
+		
       else #if [ $isForCompilation == $FALSE ]; compile each of the source file
           	#with a -c option individually and with a .o file. In end link them together.
 
@@ -2247,10 +2313,25 @@ else
           	fi
           	if [ "x$useCompInst" = "xyes" ]; then
           	    extraopt=$optCompInstOption
-                     if [ $groupType == $group_f_F ]; then
-          	     extraopt=$optCompInstFortranOption
-          	     echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
-                     fi
+                    if [ $groupType == $group_f_F ]; then
+          		 extraopt=$optCompInstFortranOption
+          		 echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
+		     else
+			 # Not working with fortran (yet)
+			 if [ "x$TAUCOMP" == "xclang" ]; then
+			     optExcludeFuncs=""
+			     # We are going to use the LLVM plugin. Remove -finstrument-functions or -finstrument-functions-after-inlining from the options, in order for the LLVM plugin to take precedence
+			     argsRemaining=`echo $argsRemaining | sed -e 's@-finstrument-functions-after-inlining@@g' | sed -e 's@-finstrument-functions@@g'`
+			     if [ "x$tauSelectFile" != "x" ]; then
+				 # TODO check the plugin exists here (done above)
+				 extraopt="-g ${CLANG_LEGACY} -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
+			     else
+				 # instrument every function
+				 extraopt="-g ${CLANG_LEGACY} -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
+			     fi
+			 fi
+		     fi
+
           	fi
               fi
 
@@ -2314,7 +2395,7 @@ else
               objectFilesForLinking="pompregions.o $objectFilesForLinking"
           fi
 
-          newCmd="$CMD $listOfObjectFiles $argsRemaining $objectFilesForLinking $OUTPUTARGSFORTAU"
+          newCmd="$CMD $listOfObjectFiles $objectFilesForLinking $argsRemaining $OUTPUTARGSFORTAU"
 
           # check for -lc, if found, move it to the end
           check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc\)\W.*/\1/g'`

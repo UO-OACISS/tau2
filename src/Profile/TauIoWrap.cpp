@@ -23,21 +23,38 @@
 #include <vector>
 #include <deque>
 #include <utility>
+#include <sstream>
+#include <string>
+#ifndef TAU_WINDOWS
 #include <sys/time.h>
+#endif
 
 
 using namespace std;
 using namespace tau;
 
-std::map<int, const char *> fid_map;
+struct TauFidMap : public std::map<int, const char *> {
+    ~TauFidMap() {
+        Tau_destructor_trigger();
+    }
+};
+
+TauFidMap & TheFidMap() {
+    static TauFidMap fidMap;
+    return fidMap;
+}
 
 const char * Tau_get_pathname_from_fid(int fid) {
     static const char * empty = "";
-    if (fid_map.count(fid) == 0) {
+    if (fid == 0) {
         return empty;
     }
-    return fid_map[fid];
+    if (TheFidMap().count(fid) == 0) {
+        return empty;
+    }
+    return TheFidMap()[fid];
 }
+
 
 #define dprintf TAU_VERBOSE
 
@@ -99,7 +116,7 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname)
 
   RtsLayer::LockDB();
   // save the pathname so we can look it up later
-  fid_map[fid] = strdup(pathname);
+  TheFidMap()[fid] = strdup(pathname);
 
   IOvector & iowrap_events = TheIoWrapEvents();
   dprintf("Asked to register %d with %s (current size=%d)\n", fid, pathname, TheIoWrapEvents()[0].size());
@@ -117,9 +134,10 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname)
       }
     }
     void *event = 0;
-    char ename[4096];
-    sprintf(ename,"%s <file=%s>", iowrap_event_names[i], pathname);
-    Tau_pure_context_userevent(&event, ename);
+    std::stringstream ss;
+    ss << iowrap_event_names[i] << " <file=" << pathname << ">";
+    std::string ename(ss.str());
+    Tau_pure_context_userevent(&event, ename.c_str());
     iowrap_events[i][fid] = (TauUserEvent*)event;
   }
   dprintf("Registering %d with %s\n", fid - 1, pathname);

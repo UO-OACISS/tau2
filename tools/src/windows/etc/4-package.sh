@@ -24,7 +24,7 @@ echo "-------------"
 
 cd $ROOT
 
-PATH="$PATH:/c/Program Files/NSIS"
+PATH="$PATH:/cygdrive/c/Program Files (x86)/NSIS"
 
 makensis.exe /DVERSION=$1 /DOUTFILE=C:/tau/zip/tau-$1.exe C:/tau/tau2/tools/src/windows/tau.nsi
 

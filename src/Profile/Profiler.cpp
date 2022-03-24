@@ -90,8 +90,8 @@ double TauWindowsUsecD(void);
 #endif //CUPTI
 
 #ifdef TAU_ENABLE_ROCTRACER
-extern "C" void Tau_roctracer_stop_tracing(void);
-#endif /* TAU_ROCTRACER */
+extern void Tau_roctracer_stop_tracing(void);
+#endif /* TAU_ENABLE_ROCTRACER */
 
 #ifdef TAU_SHMEM
 #include "shmem.h"
@@ -228,7 +228,7 @@ static x_uint64 getTimeStamp()
 void Profiler::Start(int tid)
 {
 #ifdef DEBUG_PROF
-  TAU_VERBOSE( "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+  TAU_VERBOSE( "[%d:%d-%d] Profiler::Start for %s (%p), node %d\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction, RtsLayer::myNode());
 #endif
   ParentProfiler = TauInternal_ParentProfiler(tid);
 
@@ -402,7 +402,7 @@ void Profiler::Start(int tid)
 void Profiler::Stop(int tid, bool useLastTimeStamp)
 {
 #ifdef DEBUG_PROF
-  TAU_VERBOSE( "[%d:%d-%d] Profiler::Stop  for %s (%p), node %d\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction, RtsLayer::myNode()); fflush(stderr);
+  TAU_VERBOSE( "[%d:%d-%d] Profiler::Stop  for %s (%p), node %d\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction, RtsLayer::myNode());
 #endif
 
 /* It is possible that when the event stack gets deep, and has to be
@@ -1334,10 +1334,17 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
             int deviceCount;
             CUresult result = cuDeviceGetCount(&deviceCount);
             if (result != CUDA_SUCCESS) {
-                char const * err_str;
-                cuGetErrorString(result, &err_str);
-                fprintf(stderr, "cuDeviceGetCount failed: %s\n", err_str);
-                exit(result);
+                if (result == CUDA_ERROR_NOT_INITIALIZED) {
+                    cuInit(0);
+                    result = cuDeviceGetCount(&deviceCount);
+                }
+                if (result != CUDA_SUCCESS) {
+                    char const * err_str;
+                    cuGetErrorString(result, &err_str);
+                    fprintf(stderr, "cuDeviceGetCount failed: %s\n", err_str);
+                    // no device found.
+                    continue;
+                }
             }
             for(int dev=0; dev<deviceCount; ++dev) {
                 CUptiResult result;
@@ -1555,8 +1562,6 @@ int TauProfiler_StoreData(int tid)
 #endif /* TAU_ENABLE_ROCM */
   TauMetrics_finalize();
 
-  TAU_VERBOSE("finalizeCallSites_if_necessary: Total threads = %d\n", RtsLayer::getTotalThreads());
-
 #ifndef TAU_MPI
   /*Invoke plugins only if both plugin path and plugins are specified
    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
@@ -1567,7 +1572,7 @@ int TauProfiler_StoreData(int tid)
   }
 #endif
 
-  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 1\n", RtsLayer::myNode(), tid);
+  //TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 1\n", RtsLayer::myNode(), tid);
   if (TauEnv_get_tracing() && (tid == 0) && (TauEnv_get_trace_format() != TAU_TRACE_FORMAT_OTF2)) {
     Tau_print_metadata_for_traces(tid);
   }
@@ -1584,7 +1589,7 @@ int TauProfiler_StoreData(int tid)
     return 0;
   }
 #endif
-  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 2\n", RtsLayer::myNode(), tid);
+  //TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 2\n", RtsLayer::myNode(), tid);
   if (profileWriteCount[tid] == 10) {
     RtsLayer::LockDB();
     if (profileWriteWarningPrinted == 0) {
@@ -1608,13 +1613,14 @@ int TauProfiler_StoreData(int tid)
   }
 #endif
 
-  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 3\n", RtsLayer::myNode(), tid);
+  //TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 3\n", RtsLayer::myNode(), tid);
 
   Tau_MemMgr_finalizeIfNecessary();
 
 #ifndef TAU_WINDOWS
-#ifndef _AIX
+// #ifndef _AIX
   if (TauEnv_get_callsite()) {
+    TAU_VERBOSE("finalizeCallSites_if_necessary: Total threads = %d\n", RtsLayer::getTotalThreads());
     finalizeCallSites_if_necessary();
   }
 
@@ -1622,7 +1628,7 @@ int TauProfiler_StoreData(int tid)
     // Tau_sampling_finalize(tid);
     Tau_sampling_finalize_if_necessary(tid);
   }
-#endif /* _AIX */
+// #endif /* _AIX */
 #endif
   if (TauEnv_get_profiling()) {
     if (TauEnv_get_profile_format() == TAU_FORMAT_SNAPSHOT) {
@@ -1659,7 +1665,7 @@ int TauProfiler_StoreData(int tid)
 #endif
 #endif
   }
-  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 4\n", RtsLayer::myNode(), tid);
+  //TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 4\n", RtsLayer::myNode(), tid);
 
 #if defined(TAU_SHMEM) && !defined(TAU_MPI)
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
@@ -1672,7 +1678,7 @@ int TauProfiler_StoreData(int tid)
   }
 #endif /* TAU_SHMEM */
 
-  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 5\n", RtsLayer::myNode(), tid);
+  //TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 5\n", RtsLayer::myNode(), tid);
   /*Invoke plugins only if both plugin path and plugins are specified
    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
   if(RtsLayer::myThread() == 0 && tid == 0 && Tau_plugins_enabled.end_of_execution) {
@@ -1680,7 +1686,7 @@ int TauProfiler_StoreData(int tid)
     plugin_data.tid = tid;
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, "*", &plugin_data);
   }
-  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 6\n", RtsLayer::myNode(), tid);
+  ////TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 6\n", RtsLayer::myNode(), tid);
 /* static dtors cause a crash. This could fix it */
 #ifdef TAU_SCOREP
   TAU_VERBOSE("TAU<%d,%d>: Turning off the lights... \n", RtsLayer::myNode(), tid);
@@ -1721,7 +1727,7 @@ static int getProfileLocation(int metric, char *str)
 #endif /* DEBUGPROF */
 
         //sanitize metricName before creating a directory name from it.
-        string illegalChars("/\\?%*:|\"<> ");
+        string illegalChars("/\\?%*:|\"<>= ");
         size_t found = metricStr.find_first_of(illegalChars, 0);
         while (found != string::npos) {
             metricStr[found] = '_';

@@ -55,9 +55,9 @@ INSTALLDEST   = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 TAUINC	      = -I$(TAUROOT)/include -I$(TAUROOT)/include/Profile
 
-CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(OPENMPOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE)
+CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(OPENMPOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE) $(TAU_STDCXX11_FLAG)
 
-SERIAL_CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE)
+SERIAL_CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE) $(TAU_STDCXX11_FLAG)
 
 TAU_UPC_FPIC= -Wc,-fPIC
 UPCFLAGS      = $(TAUINC) $(subst -fPIC,$(TAU_UPC_FPIC), $(PROFILEOPTS) )
@@ -91,7 +91,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauMmapMemMgr.h $(INCDIR)/TauPathHash.h \
 		$(INCDIR)/agent_util.h	$(INCDIR)/java_crw_demo.h \
 		$(INCDIR)/adb.h         $(INCDIR)/jdwp.h          \
-		$(INCDIR)/LikwidLayer.h
+		$(INCDIR)/LikwidLayer.h $(INCDIR)/check_mpi_version.h 
 
 LDFLAGS	      =
 
@@ -109,7 +109,7 @@ OPENACC_O=
 TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.o \
 		TauSampling_libunwind.o TauSampling_backtrace.o TauMmapMemMgr.o
 #BGL#TAU_SAMPLING_O= #ENDIF#
-#SP1#TAU_SAMPLING_O= #ENDIF#
+#SP1##TAU_SAMPLING_O= #ENDIF#
 #PIN#TAU_SAMPLING_O= TauPinHelper.o #ENDIF#
 #CATAMOUNT#TAU_SAMPLING_O= #ENDIF#
 #CRAYX1CC#TAU_SAMPLING_O= #ENDIF#
@@ -371,7 +371,7 @@ CRAY_PGI_HACK=
 
 #PYCUDA#TAU_PYCUDA_OBJS = TauGpuAdapterPyCuda.o #ENDIF#
 #PYCUDA#TAU_PYCUDA_LIB  = pytau_cuda$(TAU_SHLIBX) #ENDIF#
-#PYCUDA#BOOST_LIB       = -lboost_python #ENDIF#
+#PYCUDA_BOOST#BOOST_LIB       = -lboost_python #ENDIF#
 #PYCUDA#GPU_INSTALL+=$(INSTALLDEST)/$(TAU_CUDA_LIB)  #ENDIF#
 #PYCUDA#GPU_INSTALL+=$(INSTALLDEST)/$(TAU_PYCUDA_LIB)  #ENDIF#
 
@@ -571,14 +571,14 @@ $(PYTAU_INSTALL): $(TAU_SHLIB)
 		cd $(INSTALLDEST) && $(LN) $(TAU_SHLIB) $(CTAU_IMPL)
 		@echo Installing Python bindings in $(TAU_SHAREDDIR)
 		$(MKDIR) -p $(TAU_SHAREDDIR)
-		$(RM) $(TAU_SHAREDDIR)/*
+		# Selectively remove some libraries and wrappers before making links
+		$(RM) $(TAU_SHAREDDIR)/$(PYTAU)
+		$(RM) $(TAU_SHAREDDIR)/$(CTAU_IMPL)
+		$(RM) $(TAU_SHAREDDIR)/*tau*.py
 		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) $(PYTAU)
 		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) $(CTAU_IMPL)
 		cd $(TAU_SHAREDDIR) && $(LN) ../tau.py ../ltau.py ../tau_python_wrapper.py .
 		cd $(TAU_SHAREDDIR) && $(LN) ../tau.py ../ltau.py ../tau_pyspark_wrapper.py .
-		cd $(TAU_SHAREDDIR) && $(RM) libTAU$(TAU_SHLIBX) TAU.dll
-		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
-		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) TAU.dll
 		cd $(INSTALLDEST) && $(LN) shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
 
 $(INSTALLDEST)/libpgnod_prof.a :
@@ -916,7 +916,7 @@ MPCThreadLayer.o   : MPCThreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INC) -c $(@:.o=.cpp)
 
 TauMemory.o : TauMemory.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_STDCXX11_FLAG) -c $(@:.o=.cpp)
 
 TauGASP.o : TauGASP.c $(HDRS)
 	$(TAU_UPCC) $(UPCFLAGS) -c $(@:.o=.c)

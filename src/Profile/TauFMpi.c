@@ -1276,7 +1276,7 @@ MPI_Fint *ierr;
 
 
 // OpenMPI 4 and later have removed some functions deleted in MPI 3.0
-#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
+#if !defined(MPI_VERSION) || MPI_VERSION < 2
 /******************************************************/
 /******************************************************/
 
@@ -1422,7 +1422,7 @@ MPI_Fint *ierr;
   mpi_attr_put_( comm, keyval, attr_value, ierr);
 }
 
-#endif // OMPI_MAJOR_VERSION
+#endif // !defined(MPI_VERSION) || MPI_VERSION < 2
 /******************************************************/
 /******************************************************/
 
@@ -2666,7 +2666,7 @@ MPI_Fint *ierr;
 /******************************************************/
 
 // OpenMPI 4 and later have removed some functions deleted in MPI 3.0
-#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
+#if !defined(MPI_VERSION) || MPI_VERSION < 2
 void   mpi_keyval_create_( copy_fn, delete_fn, keyval, extra_state, ierr )
 MPI_Copy_function * copy_fn;
 MPI_Delete_function * delete_fn;
@@ -2756,7 +2756,7 @@ MPI_Fint *ierr;
 {
   mpi_keyval_free_( keyval, ierr );
 }
-#endif // OMPI_MAJOR_VERSION
+#endif // !defined(MPI_VERSION) || MPI_VERSION < 2
 
 
 /******************************************************/
@@ -2850,7 +2850,7 @@ MPI_Fint *ierr;
 /******************************************************/
 
 // OpenMPI 4 and later have removed some functions deleted in MPI 3.0
-#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
+#if !defined(MPI_VERSION) || MPI_VERSION < 2
 void  mpi_errhandler_create_( function, errhandler , ierr)
 MPI_Handler_function * function;
 MPI_Errhandler * errhandler;
@@ -2891,7 +2891,7 @@ MPI_Fint *ierr;
 {
   mpi_errhandler_create_( function, errhandler , ierr);
 }
-#endif // OMPI_MAJOR_VERSION
+#endif // !defined(MPI_VERSION) || MPI_VERSION < 2
 
 
 /******************************************************/
@@ -2937,7 +2937,7 @@ MPI_Fint *ierr;
 /******************************************************/
 
 // OpenMPI 4 and later have removed some functions deleted in MPI 3.0
-#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
+#if !defined(MPI_VERSION) || MPI_VERSION < 2
 void  mpi_errhandler_get_( comm, errhandler, ierr )
 MPI_Fint *comm;
 MPI_Errhandler * errhandler;
@@ -2978,7 +2978,7 @@ MPI_Fint *ierr;
 {
   mpi_errhandler_get_( comm, errhandler, ierr );
 }
-#endif // OMPI_MAJOR_VERSION
+#endif // !defined(MPI_VERSION) || MPI_VERSION < 2
 
 /******************************************************/
 /******************************************************/
@@ -3296,7 +3296,7 @@ double  mpi_wtime(  )
 /******************************************************/
 
 // OpenMPI 4 and later have removed some functions deleted in MPI 3.0
-#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
+#if !defined(MPI_VERSION) || MPI_VERSION < 2
 void  mpi_address_( location, address , ierr)
 void * location;
 MPI_Fint * address;
@@ -3338,7 +3338,7 @@ MPI_Fint *ierr;
 {
   mpi_address_( location, address , ierr);
 }
-#endif // OMPI_MAJOR_VERSION
+#endif // !defined(MPI_VERSION) || MPI_VERSION < 2
 
 /******************************************************/
 /******************************************************/
@@ -5561,7 +5561,7 @@ MPI_Fint *ierr;
 /******************************************************/
 
 // OpenMPI 4 and later have removed some functions deleted in MPI 3.0
-#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
+#if !defined(MPI_VERSION) || MPI_VERSION < 2
 void  mpi_type_extent_( datatype, extent, ierr )
 MPI_Fint *datatype;
 MPI_Fint * extent;
@@ -5603,7 +5603,7 @@ MPI_Fint *ierr;
 {
   mpi_type_extent_( datatype, extent, ierr );
 }
-#endif // OMPI_MAJOR_VERSION
+#endif // !defined(MPI_VERSION) || MPI_VERSION < 2
 
 /******************************************************/
 /******************************************************/
@@ -5649,7 +5649,7 @@ MPI_Fint *ierr;
 /******************************************************/
 
 // OpenMPI 4 and later have removed some functions deleted in MPI 3.0
-#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
+#if !defined(MPI_VERSION) || MPI_VERSION < 2
 void  mpi_type_hindexed_( count, blocklens, indices, old_type, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint * blocklens;
@@ -5782,7 +5782,7 @@ MPI_Fint *ierr;
 {
   mpi_type_hvector_( count, blocklen, stride, old_type, newtype, ierr );
 } 
-#endif // OMPI_MAJOR_VERSION
+#endif // !defined(MPI_VERSION) || MPI_VERSION < 2
 
 /******************************************************/
 /******************************************************/
@@ -5848,7 +5848,7 @@ MPI_Fint *ierr;
 /******************************************************/
 
 // OpenMPI 4 and later have removed some functions deleted in MPI 3.0
-#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
+#if !defined(MPI_VERSION) || MPI_VERSION < 2
 void   mpi_type_lb_( datatype, displacement, ierr )
 MPI_Fint *datatype;
 MPI_Fint *displacement;
@@ -5891,7 +5891,7 @@ MPI_Fint *ierr;
 {
   mpi_type_lb_( datatype, displacement, ierr );
 }
-#endif // OMPI_MAJOR_VERSION
+#endif // !defined(MPI_VERSION) || MPI_VERSION < 2
 
 /******************************************************/
 /******************************************************/
@@ -5941,7 +5941,7 @@ MPI_Fint *ierr;
 /******************************************************/
 
 // OpenMPI 4 and later have removed some functions deleted in MPI 3.0
-#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
+#if !defined(MPI_VERSION) || MPI_VERSION < 2
 void  mpi_type_struct_( count, blocklens, indices, old_types, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint * blocklens;
@@ -6061,7 +6061,7 @@ MPI_Fint *ierr;
 {
   mpi_type_ub_( datatype, displacement, ierr );
 }
-#endif // OMPI_MAJOR_VERSION
+#endif // !defined(MPI_VERSION) || MPI_VERSION < 2
 
 /******************************************************/
 /******************************************************/
@@ -6267,6 +6267,13 @@ MPI_Fint *ierr;
   if (array_of_statuses != *(mpi_predef_statuses_ignore())) {
     TAU_FREE_LOCAL(local_statuses);
   }
+}
+#else
+void  mpi_waitall_( MPI_Fint *count, MPI_Fint *array_of_requests,
+MPI_Fint *array_of_statuses, MPI_Fint *ierr) 
+{
+  *ierr = MPI_Waitall(*count, (MPI_Request*)array_of_requests,
+		  (MPI_Status*)array_of_statuses);
 }
 #endif /* TAU_MPI_F_STATUSES_IGNORE_ABSENT */
 

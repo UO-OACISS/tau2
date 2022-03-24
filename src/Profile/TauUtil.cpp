@@ -25,8 +25,10 @@
 #include <string.h>
 #include <map>
 #include <set>
+#include <sstream>
+#include <mutex>
 
-#ifdef TAU_USE_STDCXX11
+#if defined TAU_USE_STDCXX11 || defined TAU_WINDOWS
 #include <thread>
 #include <regex>
 #else
@@ -91,6 +93,7 @@ struct HashNode
 
   TauBfdInfo info;		///< Filename, line number, etc.
   FunctionInfo * fi;		///< Function profile information
+  char * resolved_name;   // save this for efficiency
   bool excluded;			///< Is function excluded from profiling?
 };
 
@@ -107,6 +110,11 @@ struct HashTable : public TAU_HASH_MAP<unsigned long, HashNode*>
     Tau_destructor_trigger();
   }
 };
+
+std::mutex & TheHashMutex() {
+    static std::mutex mtx;
+    return mtx;
+}
 
 static HashTable & TheHashTable()
 {
@@ -139,19 +147,27 @@ extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_addr
       unsigned long addr = 0;
       char region_type[100];
       sscanf(fi.GetName(), "%s ADDR <%lx>", region_type, &addr);
-      #ifdef TAU_BFD
+#ifdef TAU_BFD
+      // my local map, to reduce contention
+      thread_local static TAU_HASH_MAP<unsigned long, HashNode*> local_map;
       HashNode * node;
-      tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
-
-      node = TheHashTable()[addr];
+      node = local_map[addr];
+      // not in my local map?  look in the global map
       if (!node) {
-        node = new HashNode;
-        node->fi = NULL;
-        node->excluded = false;
-
-        TheHashTable()[addr] = node;
+        // acquire lock for global map
+        std::lock_guard<std::mutex> lck (TheHashMutex());
+        node = TheHashTable()[addr];
+        if (!node) {
+            node = new HashNode;
+            node->fi = NULL;
+            node->excluded = false;
+            TheHashTable()[addr] = node;
+        }
+        local_map[addr] = node;
       }
 
+      // resolve the string for output
+      tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
       Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
 
       if(node && node->info.filename && node->info.funcname && node->info.lineno) {
@@ -161,11 +177,11 @@ extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_addr
       } else if(node && node->info.funcname) {
         sprintf(resolved_address, "%s %s", region_type, node->info.funcname);
       } else {
-        sprintf(resolved_address, "OpenMP %s __UNKNOWN__", region_type);
+        sprintf(resolved_address, "%s __UNKNOWN__", region_type);
       }
-      #else
-        sprintf(resolved_address, "OpenMP %s __UNKNOWN__", region_type);
-      #endif /*TAU_BFD*/
+#else
+        sprintf(resolved_address, "%s __UNKNOWN__", region_type);
+#endif /*TAU_BFD*/
 }
 
 /* Given the unsigned long address, and a pointer to the string, fill the string with the BFD resolved address.
@@ -178,28 +194,36 @@ extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * res
       HashNode * node;
       tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
 
-      RtsLayer::LockDB();
-      node = TheHashTable()[addr];
+      // my local map, to reduce contention
+      thread_local static TAU_HASH_MAP<unsigned long, HashNode*> local_map;
+      node = local_map[addr];
+      // not in my local map?  look in the global map
       if (!node) {
-        node = new HashNode;
-        node->fi = NULL;
-        node->excluded = false;
-
-        TheHashTable()[addr] = node;
-
-        Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
+        // acquire lock for global map
+        std::lock_guard<std::mutex> lck (TheHashMutex());
+        node = TheHashTable()[addr];
+        if (!node) {
+            node = new HashNode;
+            node->fi = NULL;
+            node->excluded = false;
+            TheHashTable()[addr] = node;
+            Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
+            int length = strlen(node->info.funcname) + strlen(node->info.filename) + 64;
+            node->resolved_name = (char*)(malloc(length * sizeof(char)));
+            if(node && node->info.filename && node->info.funcname && node->info.lineno) {
+                sprintf(node->resolved_name, "%s [{%s} {%d, 0}]", node->info.funcname, node->info.filename, node->info.lineno);
+            } else if(node && node->info.filename && node->info.funcname) {
+                sprintf(node->resolved_name, "%s [{%s} {0, 0}]", node->info.funcname, node->info.filename);
+            } else if(node && node->info.funcname) {
+                sprintf(node->resolved_name, "%s", node->info.funcname);
+            } else {
+                sprintf(node->resolved_name, "__UNKNOWN__");
+            }
+        }
+        local_map[addr] = node;
       }
-      RtsLayer::UnLockDB();
+      sprintf(resolved_address, "%s", node->resolved_name);
 
-      if(node && node->info.filename && node->info.funcname && node->info.lineno) {
-        sprintf(resolved_address, "%s [{%s} {%d, 0}]", node->info.funcname, node->info.filename, node->info.lineno);
-      } else if(node && node->info.filename && node->info.funcname) {
-        sprintf(resolved_address, "%s [{%s} {0, 0}]", node->info.funcname, node->info.filename);
-      } else if(node && node->info.funcname) {
-        sprintf(resolved_address, "%s", node->info.funcname);
-      } else {
-        sprintf(resolved_address, "__UNKNOWN__");
-      }
       #else
         sprintf(resolved_address, "__UNKNOWN__");
       #endif /*TAU_BFD*/
@@ -491,6 +515,12 @@ void Tau_enable_plugins_for_all_events() {
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_TARGET_DATA_OP, "*");
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_TARGET_SUBMIT, "*");
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_OMPT_FINALIZE, "*");
+  /* GPU EVENTS BEGIN */
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_GPU_INIT, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_GPU_FINALIZE, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_GPU_KERNEL_EXEC, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_GPU_MEMCPY, "*");
+  /* GPU EVENTS END */
 }
 
 /* TODO: Function part of the tomporary fix described in
@@ -526,7 +556,6 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
 {
   char pluginpath[1024];
   char listpluginsnames[1024];
-  char *fullpath = NULL;
   char *token = NULL;
   char *plugin_name = NULL;
   //char *initFuncName = NULL;
@@ -546,7 +575,6 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
   token = strtok_r(listpluginsnames,":", &save_ptr);
   TAU_VERBOSE("TAU: Trying to load plugin with name %s\n", token);
 
-  fullpath = (char*)calloc(TAU_NAME_LENGTH, sizeof(char));
   std::set<std::string> plugins_seen;
 
   while(token != NULL)
@@ -558,24 +586,24 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
         continue;
     }
     TAU_VERBOSE("TAU: Loading plugin: %s\n", token);
-    strcpy(fullpath, "");
-    strcpy(fullpath,pluginpath);
     if (Tau_util_parse_plugin_token(token, &plugin_name, &plugin_args, &plugin_num_args)) {
       printf("TAU: Plugin name specification does not match form <plugin_name1>(<plugin_arg1>,<plugin_arg2>):<plugin_name2>(<plugin_arg1>,<plugin_arg2>) for: %s\n",token);
       return -1;
     }
     plugins_seen.insert(tmp);
 
+    std::stringstream ss;
 #ifndef TAU_WINDOWS
-    sprintf(fullpath, "%s/%s", pluginpath, plugin_name);
+    ss << pluginpath << "/" << plugin_name;
 #else
-    sprintf(fullpath, "%s\\%s", pluginpath, plugin_name);
+    ss << pluginpath << "\\" << plugin_name;
 #endif
+    std::string fullpath{ss.str()};
 
-    TAU_VERBOSE("TAU: Full path for the current plugin: %s\n", fullpath);
+    TAU_VERBOSE("TAU: Full path for the current plugin: %s\n", fullpath.c_str());
 
     /*Return a handle to the loaded dynamic object*/
-    void* handle = Tau_util_load_plugin(plugin_name, fullpath, plugin_manager);
+    void* handle = Tau_util_load_plugin(plugin_name, fullpath.c_str(), plugin_manager);
 
     if (handle) {
       /*If handle is NOT NULL, register the plugin's handlers for various supported events*/
@@ -610,7 +638,6 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
 
   Tau_metadata_push_to_plugins();
 
-  free(fullpath);
   return 0;
 }
 
@@ -649,7 +676,7 @@ void* Tau_util_register_plugin(const char *name, char **args, int num_args, void
  * ************************************************************************************************************************/
 void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* plugin_manager) {
 #ifndef TAU_WINDOWS
-  void* handle = dlopen(path, RTLD_NOW);
+  void* handle = dlopen(path, RTLD_NOW | RTLD_GLOBAL);
 #else
   void* handle = NULL;
 #endif /* TAU_WINDOWS */
@@ -713,6 +740,10 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->OmptTargetDataOp = 0;
   cb->OmptTargetSubmit = 0;
   cb->OmptFinalize = 0;
+  cb->GpuInit = 0;
+  cb->GpuFinalize = 0;
+  cb->GpuKernelExec = 0;
+  cb->GpuMemcpy = 0;
 }
 
 /**************************************************************************************************************************
@@ -756,6 +787,10 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->OmptTargetDataOp = src->OmptTargetDataOp;
   dest->OmptTargetSubmit = src->OmptTargetSubmit;
   dest->OmptFinalize = src->OmptFinalize;
+  dest->GpuInit = src->GpuInit;
+  dest->GpuFinalize = src->GpuFinalize;
+  dest->GpuKernelExec = src->GpuKernelExec;
+  dest->GpuMemcpy = src->GpuMemcpy;
 }
 
 /**************************************************************************************************************************
@@ -813,6 +848,10 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
   if (cb->OmptTargetDataOp != 0) { Tau_plugins_enabled.ompt_target_data_op = 1; }
   if (cb->OmptTargetSubmit != 0) { Tau_plugins_enabled.ompt_target_submit = 1; }
   if (cb->OmptFinalize != 0) { Tau_plugins_enabled.ompt_finalize = 1; }
+  if (cb->GpuInit != 0) { Tau_plugins_enabled.gpu_init = 1; }
+  if (cb->GpuFinalize != 0) { Tau_plugins_enabled.gpu_finalize = 1; }
+  if (cb->GpuKernelExec != 0) { Tau_plugins_enabled.gpu_kernel_exec = 1; }
+  if (cb->GpuMemcpy != 0) { Tau_plugins_enabled.gpu_memcpy = 1; }
 
   /* Register needed OMPT callback if they are not already registered */
 #if defined(TAU_USE_OMPT) || defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
@@ -820,7 +859,7 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
 #endif /* TAU_OMPT */
 }
 
-#ifndef TAU_USE_STDCXX11
+#if not defined TAU_USE_STDCXX11 && not defined TAU_WINDOWS
 /* C version of regex_match in case compiler doesn't support C++11 featues */
 /* Credit for logic: Laurence Gonsalves on stackoverflow.com */
 extern "C" int Tau_C_regex_match(const char * input, const char * rege)
@@ -854,7 +893,7 @@ extern "C" const char* Tau_check_for_matching_regex(const char * input)
 {
 
   TauInternalFunctionGuard protects_this_function;
-#ifdef TAU_USE_STDCXX11
+#if defined TAU_USE_STDCXX11 || defined TAU_WINDOWS
   for(std::list< std::string >::iterator it = regex_list.begin(); it != regex_list.end(); it++) {
     if(regex_match(input, std::regex(*it))) {
       return (*it).c_str();
@@ -1318,6 +1357,49 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_finalize_data_t* data, Plu
   plugins_for_ompt_event[ev].destroy();
 }
 
+/* GPU EVENTS BEGIN */
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks gpu_init event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_gpu_init_data_t* data, PluginKey key) {
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->GpuInit != 0)
+      Tau_get_plugin_callback_map()[*it]->GpuInit(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks gpu_finalize event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_gpu_finalize_data_t* data, PluginKey key) {
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->GpuFinalize != 0)
+      Tau_get_plugin_callback_map()[*it]->GpuFinalize(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks gpu_kernel_exec event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_gpu_kernel_exec_data_t* data, PluginKey key) {
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->GpuKernelExec != 0)
+      Tau_get_plugin_callback_map()[*it]->GpuKernelExec(data);
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks gpu_memcpy event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_gpu_memcpy_data_t* data, PluginKey key) {
+  for(std::set<unsigned int>::iterator it = Tau_get_plugins_for_named_specific_event()[key].begin(); it != Tau_get_plugins_for_named_specific_event()[key].end(); it++) {
+    if (Tau_get_plugin_callback_map()[*it]->GpuMemcpy != 0)
+      Tau_get_plugin_callback_map()[*it]->GpuMemcpy(data);
+  }
+}
+
+/* GPU EVENTS END */
+
 /* Actually do the invocation */
 void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const void * data) {
 
@@ -1470,6 +1552,24 @@ void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const v
       Tau_util_invoke_callbacks_((Tau_plugin_event_ompt_finalize_data_t*)data, key);
       break;
     }
+    /* GPU EVENTS START */
+    case TAU_PLUGIN_EVENT_GPU_INIT: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_gpu_init_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_GPU_FINALIZE: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_gpu_finalize_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_GPU_KERNEL_EXEC: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_gpu_kernel_exec_data_t*)data, key);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_GPU_MEMCPY: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_gpu_memcpy_data_t*)data, key);
+      break;
+    }
+    /* GPU EVENTS END */
    default: {
       perror("Someone forgot to implement an event for plugins...\n");
       abort();
