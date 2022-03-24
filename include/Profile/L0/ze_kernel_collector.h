@@ -15,7 +15,6 @@
 
 #include <level_zero/layers/zel_tracing_api.h>
 
-#include <Profile/L0/i915_utils.h>
 #include <Profile/L0/utils1.h>
 #include <Profile/L0/ze_utils1.h>
 #include <Profile/TauEnv.h>
