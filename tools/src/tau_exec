@@ -864,6 +864,7 @@ fi
 
 if [ $track_l0 = "true" ]; then
   export PTI_ENABLE=1
+  export ZE_ENABLE_TRACING_LAYER=1
   export ZE_ENABLE_API_TRACING=1
   export ZET_ENABLE_API_TRACING_EXP=1
 fi
