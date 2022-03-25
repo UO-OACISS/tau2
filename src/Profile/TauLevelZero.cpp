@@ -20,7 +20,7 @@
 #include <level_zero/zet_api.h>
 #include <cstring>
 #include <fstream>
-#include <Profile/L0/utils1.h>
+#include <Profile/L0/utils.h>
 #include <Profile/L0/ze_kernel_collector.h>
 #include <Profile/L0/ze_api_collector.h>
 
@@ -89,7 +89,7 @@ extern "C"
 __declspec(dllexport)
 #endif
 void SetToolEnv() {
-  utils1::SetEnv("ZET_ENABLE_API_TRACING_EXP","1");
+  utils::SetEnv("ZET_ENABLE_API_TRACING_EXP","1");
 }
 
 // Internal Tool Functionality ////////////////////////////////////////////////
@@ -240,8 +240,8 @@ void EnableProfiling() {
 
   ze_driver_handle_t driver = nullptr;
   ze_device_handle_t device = nullptr;
-  driver =  utils1::ze::GetGpuDriver();
-  device =  utils1::ze::GetGpuDevice();
+  driver =  utils::ze::GetGpuDriver();
+  device =  utils::ze::GetGpuDevice();
 
   if (device == nullptr || driver == nullptr) {
     std::cout << "[WARNING] Unable to find target device" << std::endl;

@@ -16,8 +16,8 @@
 
 #include <level_zero/zet_api.h>
 
-#include <Profile/L0/utils1.h>
-#include <Profile/L0/ze_utils1.h>
+#include <Profile/L0/utils.h>
+#include <Profile/L0/ze_utils.h>
 
 struct ZeFunction {
   uint64_t total_time;
@@ -60,7 +60,7 @@ class ZeApiCollector {
 
 	PTI_ASSERT(driver != nullptr);
 
-    ze_context_handle_t context = utils1::ze::GetContext(driver);
+    ze_context_handle_t context = utils::ze::GetContext(driver);
     PTI_ASSERT(context != nullptr);
 
     ZeApiCollector* collector = new ZeApiCollector(context, callback, callback_data);
@@ -100,7 +100,7 @@ class ZeApiCollector {
 
   static void PrintFunctionsTable(const ZeFunctionInfoMap& function_info_map) {
     std::set< std::pair<std::string, ZeFunction>,
-              utils1::Comparator > sorted_list(
+              utils::Comparator > sorted_list(
         function_info_map.begin(), function_info_map.end());
 
     uint64_t total_duration = 0;

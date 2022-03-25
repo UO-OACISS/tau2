@@ -15,8 +15,8 @@
 
 #include <level_zero/layers/zel_tracing_api.h>
 
-#include <Profile/L0/utils1.h>
-#include <Profile/L0/ze_utils1.h>
+#include <Profile/L0/utils.h>
+#include <Profile/L0/ze_utils.h>
 #include <Profile/TauEnv.h>
 
 struct ZeKernelCommand {
@@ -78,9 +78,9 @@ class ZeKernelCollector {
       ze_driver_handle_t driver,
       OnKernelFinishCallback callback = nullptr,
       void* callback_data = nullptr) {
-    PTI_ASSERT(utils1::ze::GetVersion() != ZE_API_VERSION_1_0);
+    PTI_ASSERT(utils::ze::GetVersion() != ZE_API_VERSION_1_0);
     
-    ze_context_handle_t context = utils1::ze::GetContext(driver);
+    ze_context_handle_t context = utils::ze::GetContext(driver);
     PTI_ASSERT(context != nullptr);
 
     ZeKernelCollector* collector = new ZeKernelCollector(context, callback, callback_data);
@@ -103,7 +103,7 @@ class ZeKernelCollector {
 
   static void PrintKernelsTable(const ZeKernelInfoMap& kernel_info_map) {
     std::set< std::pair<std::string, ZeKernelInfo>,
-              utils1::Comparator > sorted_list(
+              utils::Comparator > sorted_list(
         kernel_info_map.begin(), kernel_info_map.end());
 
     uint64_t total_duration = 0;
@@ -546,7 +546,7 @@ class ZeKernelCollector {
 
     ze_device_handle_t device = collector->GetCommandListDevice(command_list);
     PTI_ASSERT(device != nullptr);
-    command->timer_frequency = utils1::ze::GetDeviceTimerFrequency(device);
+    command->timer_frequency = utils::ze::GetDeviceTimerFrequency(device);
     PTI_ASSERT(command->timer_frequency > 0);
 
     if (signal_event == nullptr) {
@@ -566,8 +566,8 @@ class ZeKernelCollector {
       ze_command_list_append_launch_kernel_params_t* params,
       ze_result_t result, void* global_data, void** instance_data) {
     OnEnterKernelAppend(
-        utils1::ze::GetKernelName(*(params->phKernel)),
-        utils1::ze::GetKernelMaxSubgroupSize(*(params->phKernel)),
+        utils::ze::GetKernelName(*(params->phKernel)),
+        utils::ze::GetKernelMaxSubgroupSize(*(params->phKernel)),
         *(params->phSignalEvent), *(params->phCommandList),
         global_data, instance_data);
   }

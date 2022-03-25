@@ -12,7 +12,7 @@
 
 #include "pti_assert.h"
 
-namespace utils1 {
+namespace utils {
 
 static inline std::string Demangle(const char* name) {
   PTI_ASSERT(name != nullptr);
