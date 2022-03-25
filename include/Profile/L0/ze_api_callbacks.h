@@ -1,86 +1,13 @@
-static const char* GetResultString(unsigned result) {
-  switch (result) {
-    case 1879048195:
-      return "ZE_RESULT_ERROR_OUT_OF_DEVICE_MEMORY";
-    case 2013265930:
-      return "ZE_RESULT_ERROR_UNSUPPORTED_ALIGNMENT";
-    case 2013265942:
-      return "ZE_RESULT_ERROR_INVALID_KERNEL_ARGUMENT_SIZE";
-    case 1879113729:
-      return "ZE_RESULT_ERROR_NOT_AVAILABLE";
-    case 2013265936:
-      return "ZE_RESULT_ERROR_INVALID_GLOBAL_NAME";
-    case 1879048196:
-      return "ZE_RESULT_ERROR_MODULE_BUILD_FAILURE";
-    case 2013265931:
-      return "ZE_RESULT_ERROR_INVALID_SYNCHRONIZATION_OBJECT";
-    case 2013265926:
-      return "ZE_RESULT_ERROR_HANDLE_OBJECT_IN_USE";
-    case 1879048194:
-      return "ZE_RESULT_ERROR_OUT_OF_HOST_MEMORY";
-    case 2013265933:
-      return "ZE_RESULT_ERROR_UNSUPPORTED_ENUMERATION";
-    case 2013265932:
-      return "ZE_RESULT_ERROR_INVALID_ENUMERATION";
-    case 2013265927:
-      return "ZE_RESULT_ERROR_INVALID_NULL_POINTER";
-    case 2013265944:
-      return "ZE_RESULT_ERROR_INVALID_MODULE_UNLINKED";
-    case 2013265946:
-      return "ZE_RESULT_ERROR_OVERLAPPING_REGIONS";
-    case 1879048193:
-      return "ZE_RESULT_ERROR_DEVICE_LOST";
-    case 2013265924:
-      return "ZE_RESULT_ERROR_INVALID_ARGUMENT";
-    case 2013265938:
-      return "ZE_RESULT_ERROR_INVALID_FUNCTION_NAME";
-    case 1879179264:
-      return "ZE_RESULT_ERROR_DEPENDENCY_UNAVAILABLE";
-    case 2013265922:
-      return "ZE_RESULT_ERROR_UNSUPPORTED_VERSION";
-    case 2013265934:
-      return "ZE_RESULT_ERROR_UNSUPPORTED_IMAGE_FORMAT";
-    case 2013265945:
-      return "ZE_RESULT_ERROR_INVALID_COMMAND_LIST_TYPE";
-    case 2147483647:
-      return "ZE_RESULT_FORCE_UINT32";
-    case 2013265941:
-      return "ZE_RESULT_ERROR_INVALID_KERNEL_ARGUMENT_INDEX";
-    case 1879048197:
-      return "ZE_RESULT_ERROR_MODULE_LINK_FAILURE";
-    case 2013265940:
-      return "ZE_RESULT_ERROR_INVALID_GLOBAL_WIDTH_DIMENSION";
-    case 1:
-      return "ZE_RESULT_NOT_READY";
-    case 0:
-      return "ZE_RESULT_SUCCESS";
-    case 2013265929:
-      return "ZE_RESULT_ERROR_UNSUPPORTED_SIZE";
-    case 2013265925:
-      return "ZE_RESULT_ERROR_INVALID_NULL_HANDLE";
-    case 2147483646:
-      return "ZE_RESULT_ERROR_UNKNOWN";
-    case 2013265939:
-      return "ZE_RESULT_ERROR_INVALID_GROUP_SIZE_DIMENSION";
-    case 2013265921:
-      return "ZE_RESULT_ERROR_UNINITIALIZED";
-    case 2013265937:
-      return "ZE_RESULT_ERROR_INVALID_KERNEL_NAME";
-    case 2013265935:
-      return "ZE_RESULT_ERROR_INVALID_NATIVE_BINARY";
-    case 2013265928:
-      return "ZE_RESULT_ERROR_INVALID_SIZE";
-    case 2013265943:
-      return "ZE_RESULT_ERROR_INVALID_KERNEL_ATTRIBUTE_VALUE";
-    case 1879113728:
-      return "ZE_RESULT_ERROR_INSUFFICIENT_PERMISSIONS";
-    case 2013265923:
-      return "ZE_RESULT_ERROR_UNSUPPORTED_FEATURE";
-    default:
-      break;
-  }
-  return "<UNKNOWN>";
-}
+//==============================================================
+// Copyright (C) Intel Corporation
+//
+// SPDX-License-Identifier: MIT
+// =============================================================
+
+#ifndef PTI_SAMPLES_ZE_HOT_FUNCTIONS_ZE_API_CALLBACKS_H_
+#define PTI_SAMPLES_ZE_HOT_FUNCTIONS_ZE_API_CALLBACKS_H_
+
+#include "pti_assert.h"
 
 static void zeInitOnEnter(
     ze_init_params_t* params,
@@ -88,16 +15,10 @@ static void zeInitOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeInit" << ":";
-    std::cerr << " flags = " << *(params->pflags);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeInitOnExit(
@@ -106,7 +27,8 @@ static void zeInitOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -114,18 +36,13 @@ static void zeInitOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeInit", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeInit" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
+  
   if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeInit",
                          start_time, end_time);
   }
+  
 }
 
 static void zeDriverGetOnEnter(
@@ -134,23 +51,10 @@ static void zeDriverGetOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDriverGet" << ":";
-    std::cerr << " pCount = " << *(params->ppCount);
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " (Count = " << **(params->ppCount) << ")";
-    }
-    std::cerr << " phDrivers = " << *(params->pphDrivers);
-    if (*(params->pphDrivers) != nullptr) {
-      std::cerr << " (hDrivers = " << **(params->pphDrivers) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDriverGetOnExit(
@@ -159,7 +63,8 @@ static void zeDriverGetOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -167,19 +72,7 @@ static void zeDriverGetOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDriverGet", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDriverGet" << " [" << time << " ns]";
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " Count = " << **(params->ppCount) << "";
-    }
-    if (*(params->pphDrivers) != nullptr) {
-      std::cerr << " hDrivers = " << **(params->pphDrivers) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
+  
   if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDriverGet",
@@ -193,17 +86,10 @@ static void zeDriverGetApiVersionOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDriverGetApiVersion" << ":";
-    std::cerr << " hDriver = " << *(params->phDriver);
-    std::cerr << " version = " << *(params->pversion);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDriverGetApiVersionOnExit(
@@ -212,7 +98,8 @@ static void zeDriverGetApiVersionOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -220,13 +107,7 @@ static void zeDriverGetApiVersionOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDriverGetApiVersion", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDriverGetApiVersion" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
+  
   if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDriverGetApiVersion",
@@ -240,17 +121,10 @@ static void zeDriverGetPropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDriverGetProperties" << ":";
-    std::cerr << " hDriver = " << *(params->phDriver);
-    std::cerr << " pDriverProperties = " << *(params->ppDriverProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDriverGetPropertiesOnExit(
@@ -259,7 +133,8 @@ static void zeDriverGetPropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -267,13 +142,7 @@ static void zeDriverGetPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDriverGetProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDriverGetProperties" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
+  
   if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDriverGetProperties",
@@ -287,17 +156,10 @@ static void zeDriverGetIpcPropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDriverGetIpcProperties" << ":";
-    std::cerr << " hDriver = " << *(params->phDriver);
-    std::cerr << " pIpcProperties = " << *(params->ppIpcProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDriverGetIpcPropertiesOnExit(
@@ -306,7 +168,8 @@ static void zeDriverGetIpcPropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -314,13 +177,7 @@ static void zeDriverGetIpcPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDriverGetIpcProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDriverGetIpcProperties" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
+  
   if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDriverGetIpcProperties",
@@ -334,21 +191,10 @@ static void zeDriverGetExtensionPropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDriverGetExtensionProperties" << ":";
-    std::cerr << " hDriver = " << *(params->phDriver);
-    std::cerr << " pCount = " << *(params->ppCount);
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " (Count = " << **(params->ppCount) << ")";
-    }
-    std::cerr << " pExtensionProperties = " << *(params->ppExtensionProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDriverGetExtensionPropertiesOnExit(
@@ -357,7 +203,8 @@ static void zeDriverGetExtensionPropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -365,16 +212,7 @@ static void zeDriverGetExtensionPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDriverGetExtensionProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDriverGetExtensionProperties" << " [" << time << " ns]";
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " Count = " << **(params->ppCount) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
+  
   if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDriverGetExtensionProperties",
@@ -388,24 +226,10 @@ static void zeDeviceGetOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDeviceGet" << ":";
-    std::cerr << " hDriver = " << *(params->phDriver);
-    std::cerr << " pCount = " << *(params->ppCount);
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " (Count = " << **(params->ppCount) << ")";
-    }
-    std::cerr << " phDevices = " << *(params->pphDevices);
-    if (*(params->pphDevices) != nullptr) {
-      std::cerr << " (hDevices = " << **(params->pphDevices) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDeviceGetOnExit(
@@ -414,7 +238,8 @@ static void zeDeviceGetOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -422,19 +247,7 @@ static void zeDeviceGetOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGet", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDeviceGet" << " [" << time << " ns]";
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " Count = " << **(params->ppCount) << "";
-    }
-    if (*(params->pphDevices) != nullptr) {
-      std::cerr << " hDevices = " << **(params->pphDevices) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
+  
   if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDeviceGet",
@@ -448,24 +261,10 @@ static void zeDeviceGetSubDevicesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDeviceGetSubDevices" << ":";
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " pCount = " << *(params->ppCount);
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " (Count = " << **(params->ppCount) << ")";
-    }
-    std::cerr << " phSubdevices = " << *(params->pphSubdevices);
-    if (*(params->pphSubdevices) != nullptr) {
-      std::cerr << " (hSubdevices = " << **(params->pphSubdevices) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDeviceGetSubDevicesOnExit(
@@ -474,7 +273,8 @@ static void zeDeviceGetSubDevicesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -482,19 +282,7 @@ static void zeDeviceGetSubDevicesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetSubDevices", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDeviceGetSubDevices" << " [" << time << " ns]";
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " Count = " << **(params->ppCount) << "";
-    }
-    if (*(params->pphSubdevices) != nullptr) {
-      std::cerr << " hSubdevices = " << **(params->pphSubdevices) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
+  
   if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDeviceGetSubDevices",
@@ -508,17 +296,10 @@ static void zeDeviceGetPropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDeviceGetProperties" << ":";
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " pDeviceProperties = " << *(params->ppDeviceProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDeviceGetPropertiesOnExit(
@@ -527,7 +308,8 @@ static void zeDeviceGetPropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -535,16 +317,10 @@ static void zeDeviceGetPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDeviceGetProperties" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
+  
   if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
-                         "zeDeviceGetProperties",
+                         "zeDeviceGetSubDevices",
                          start_time, end_time);
   }
 }
@@ -555,17 +331,10 @@ static void zeDeviceGetComputePropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDeviceGetComputeProperties" << ":";
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " pComputeProperties = " << *(params->ppComputeProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDeviceGetComputePropertiesOnExit(
@@ -574,7 +343,8 @@ static void zeDeviceGetComputePropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -582,14 +352,8 @@ static void zeDeviceGetComputePropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetComputeProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDeviceGetComputeProperties" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDeviceGetComputeProperties",
                          start_time, end_time);
@@ -602,17 +366,10 @@ static void zeDeviceGetModulePropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDeviceGetModuleProperties" << ":";
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " pModuleProperties = " << *(params->ppModuleProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDeviceGetModulePropertiesOnExit(
@@ -621,7 +378,8 @@ static void zeDeviceGetModulePropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -629,14 +387,8 @@ static void zeDeviceGetModulePropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetModuleProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDeviceGetModuleProperties" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDeviceGetModuleProperties",
                          start_time, end_time);
@@ -649,21 +401,10 @@ static void zeDeviceGetCommandQueueGroupPropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDeviceGetCommandQueueGroupProperties" << ":";
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " pCount = " << *(params->ppCount);
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " (Count = " << **(params->ppCount) << ")";
-    }
-    std::cerr << " pCommandQueueGroupProperties = " << *(params->ppCommandQueueGroupProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDeviceGetCommandQueueGroupPropertiesOnExit(
@@ -672,7 +413,8 @@ static void zeDeviceGetCommandQueueGroupPropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -680,17 +422,8 @@ static void zeDeviceGetCommandQueueGroupPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetCommandQueueGroupProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDeviceGetCommandQueueGroupProperties" << " [" << time << " ns]";
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " Count = " << **(params->ppCount) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDeviceGetCommandQueueGroupProperties",
                          start_time, end_time);
@@ -703,21 +436,10 @@ static void zeDeviceGetMemoryPropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDeviceGetMemoryProperties" << ":";
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " pCount = " << *(params->ppCount);
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " (Count = " << **(params->ppCount) << ")";
-    }
-    std::cerr << " pMemProperties = " << *(params->ppMemProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDeviceGetMemoryPropertiesOnExit(
@@ -726,7 +448,8 @@ static void zeDeviceGetMemoryPropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -734,17 +457,8 @@ static void zeDeviceGetMemoryPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetMemoryProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDeviceGetMemoryProperties" << " [" << time << " ns]";
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " Count = " << **(params->ppCount) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDeviceGetMemoryProperties",
                          start_time, end_time);
@@ -757,17 +471,10 @@ static void zeDeviceGetMemoryAccessPropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDeviceGetMemoryAccessProperties" << ":";
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " pMemAccessProperties = " << *(params->ppMemAccessProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDeviceGetMemoryAccessPropertiesOnExit(
@@ -776,7 +483,8 @@ static void zeDeviceGetMemoryAccessPropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -784,14 +492,8 @@ static void zeDeviceGetMemoryAccessPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetMemoryAccessProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDeviceGetMemoryAccessProperties" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDeviceGetMemoryAccessProperties",
                          start_time, end_time);
@@ -804,21 +506,10 @@ static void zeDeviceGetCachePropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDeviceGetCacheProperties" << ":";
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " pCount = " << *(params->ppCount);
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " (Count = " << **(params->ppCount) << ")";
-    }
-    std::cerr << " pCacheProperties = " << *(params->ppCacheProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDeviceGetCachePropertiesOnExit(
@@ -827,7 +518,8 @@ static void zeDeviceGetCachePropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -835,17 +527,8 @@ static void zeDeviceGetCachePropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetCacheProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDeviceGetCacheProperties" << " [" << time << " ns]";
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " Count = " << **(params->ppCount) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDeviceGetCacheProperties",
                          start_time, end_time);
@@ -858,17 +541,10 @@ static void zeDeviceGetImagePropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDeviceGetImageProperties" << ":";
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " pImageProperties = " << *(params->ppImageProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDeviceGetImagePropertiesOnExit(
@@ -877,7 +553,8 @@ static void zeDeviceGetImagePropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -885,14 +562,8 @@ static void zeDeviceGetImagePropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetImageProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDeviceGetImageProperties" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDeviceGetImageProperties",
                          start_time, end_time);
@@ -905,17 +576,10 @@ static void zeDeviceGetExternalMemoryPropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDeviceGetExternalMemoryProperties" << ":";
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " pExternalMemoryProperties = " << *(params->ppExternalMemoryProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDeviceGetExternalMemoryPropertiesOnExit(
@@ -924,7 +588,8 @@ static void zeDeviceGetExternalMemoryPropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -932,14 +597,8 @@ static void zeDeviceGetExternalMemoryPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetExternalMemoryProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDeviceGetExternalMemoryProperties" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDeviceGetExternalMemoryProperties",
                          start_time, end_time);
@@ -952,18 +611,10 @@ static void zeDeviceGetP2PPropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDeviceGetP2PProperties" << ":";
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " hPeerDevice = " << *(params->phPeerDevice);
-    std::cerr << " pP2PProperties = " << *(params->ppP2PProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDeviceGetP2PPropertiesOnExit(
@@ -972,7 +623,8 @@ static void zeDeviceGetP2PPropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -980,14 +632,8 @@ static void zeDeviceGetP2PPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetP2PProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDeviceGetP2PProperties" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDeviceGetP2PProperties",
                          start_time, end_time);
@@ -1000,18 +646,10 @@ static void zeDeviceCanAccessPeerOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDeviceCanAccessPeer" << ":";
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " hPeerDevice = " << *(params->phPeerDevice);
-    std::cerr << " value = " << *(params->pvalue);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDeviceCanAccessPeerOnExit(
@@ -1020,7 +658,8 @@ static void zeDeviceCanAccessPeerOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1028,14 +667,8 @@ static void zeDeviceCanAccessPeerOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceCanAccessPeer", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDeviceCanAccessPeer" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDeviceCanAccessPeer",
                          start_time, end_time);
@@ -1048,16 +681,10 @@ static void zeDeviceGetStatusOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeDeviceGetStatus" << ":";
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeDeviceGetStatusOnExit(
@@ -1066,7 +693,8 @@ static void zeDeviceGetStatusOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1074,14 +702,8 @@ static void zeDeviceGetStatusOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeDeviceGetStatus", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeDeviceGetStatus" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeDeviceGetStatus",
                          start_time, end_time);
@@ -1094,21 +716,10 @@ static void zeContextCreateOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeContextCreate" << ":";
-    std::cerr << " hDriver = " << *(params->phDriver);
-    std::cerr << " desc = " << *(params->pdesc);
-    std::cerr << " phContext = " << *(params->pphContext);
-    if (*(params->pphContext) != nullptr) {
-      std::cerr << " (hContext = " << **(params->pphContext) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeContextCreateOnExit(
@@ -1117,7 +728,8 @@ static void zeContextCreateOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1125,17 +737,8 @@ static void zeContextCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextCreate", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeContextCreate" << " [" << time << " ns]";
-    if (*(params->pphContext) != nullptr) {
-      std::cerr << " hContext = " << **(params->pphContext) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeContextCreate",
                          start_time, end_time);
@@ -1148,16 +751,10 @@ static void zeContextDestroyOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeContextDestroy" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeContextDestroyOnExit(
@@ -1166,7 +763,8 @@ static void zeContextDestroyOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1174,14 +772,8 @@ static void zeContextDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextDestroy", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeContextDestroy" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeContextDestroy",
                          start_time, end_time);
@@ -1194,16 +786,10 @@ static void zeContextGetStatusOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeContextGetStatus" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeContextGetStatusOnExit(
@@ -1212,7 +798,8 @@ static void zeContextGetStatusOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1220,14 +807,8 @@ static void zeContextGetStatusOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextGetStatus", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeContextGetStatus" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeContextGetStatus",
                          start_time, end_time);
@@ -1240,17 +821,10 @@ static void zeContextSystemBarrierOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeContextSystemBarrier" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeContextSystemBarrierOnExit(
@@ -1259,7 +833,8 @@ static void zeContextSystemBarrierOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1267,14 +842,8 @@ static void zeContextSystemBarrierOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextSystemBarrier", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeContextSystemBarrier" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeContextSystemBarrier",
                          start_time, end_time);
@@ -1287,19 +856,10 @@ static void zeContextMakeMemoryResidentOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeContextMakeMemoryResident" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeContextMakeMemoryResidentOnExit(
@@ -1308,7 +868,8 @@ static void zeContextMakeMemoryResidentOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1316,14 +877,8 @@ static void zeContextMakeMemoryResidentOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextMakeMemoryResident", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeContextMakeMemoryResident" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeContextMakeMemoryResident",
                          start_time, end_time);
@@ -1336,19 +891,10 @@ static void zeContextEvictMemoryOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeContextEvictMemory" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeContextEvictMemoryOnExit(
@@ -1357,7 +903,8 @@ static void zeContextEvictMemoryOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1365,14 +912,8 @@ static void zeContextEvictMemoryOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextEvictMemory", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeContextEvictMemory" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeContextEvictMemory",
                          start_time, end_time);
@@ -1385,18 +926,10 @@ static void zeContextMakeImageResidentOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeContextMakeImageResident" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " hImage = " << *(params->phImage);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeContextMakeImageResidentOnExit(
@@ -1405,7 +938,8 @@ static void zeContextMakeImageResidentOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1413,14 +947,8 @@ static void zeContextMakeImageResidentOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextMakeImageResident", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeContextMakeImageResident" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeContextMakeImageResident",
                          start_time, end_time);
@@ -1433,18 +961,10 @@ static void zeContextEvictImageOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeContextEvictImage" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " hImage = " << *(params->phImage);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeContextEvictImageOnExit(
@@ -1453,7 +973,8 @@ static void zeContextEvictImageOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1461,14 +982,8 @@ static void zeContextEvictImageOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeContextEvictImage", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeContextEvictImage" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeContextEvictImage",
                          start_time, end_time);
@@ -1481,31 +996,10 @@ static void zeCommandQueueCreateOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandQueueCreate" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " desc = " << *(params->pdesc);
-    if (*(params->pdesc) != nullptr) {
-      std::cerr << " {" << (*(params->pdesc))->stype << " ";
-      std::cerr << (*(params->pdesc))->pNext << " ";
-      std::cerr << (*(params->pdesc))->ordinal << " ";
-      std::cerr << (*(params->pdesc))->index << " ";
-      std::cerr << (*(params->pdesc))->flags << " ";
-      std::cerr << (*(params->pdesc))->mode << " ";
-      std::cerr << (*(params->pdesc))->priority << "}";
-    }
-    std::cerr << " phCommandQueue = " << *(params->pphCommandQueue);
-    if (*(params->pphCommandQueue) != nullptr) {
-      std::cerr << " (hCommandQueue = " << **(params->pphCommandQueue) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandQueueCreateOnExit(
@@ -1514,7 +1008,8 @@ static void zeCommandQueueCreateOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1522,17 +1017,8 @@ static void zeCommandQueueCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandQueueCreate", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandQueueCreate" << " [" << time << " ns]";
-    if (*(params->pphCommandQueue) != nullptr) {
-      std::cerr << " hCommandQueue = " << **(params->pphCommandQueue) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandQueueCreate",
                          start_time, end_time);
@@ -1545,16 +1031,10 @@ static void zeCommandQueueDestroyOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandQueueDestroy" << ":";
-    std::cerr << " hCommandQueue = " << *(params->phCommandQueue);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandQueueDestroyOnExit(
@@ -1563,7 +1043,8 @@ static void zeCommandQueueDestroyOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1571,14 +1052,8 @@ static void zeCommandQueueDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandQueueDestroy", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandQueueDestroy" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandQueueDestroy",
                          start_time, end_time);
@@ -1591,22 +1066,10 @@ static void zeCommandQueueExecuteCommandListsOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandQueueExecuteCommandLists" << ":";
-    std::cerr << " hCommandQueue = " << *(params->phCommandQueue);
-    std::cerr << " numCommandLists = " << *(params->pnumCommandLists);
-    std::cerr << " phCommandLists = " << *(params->pphCommandLists);
-    if (*(params->pphCommandLists) != nullptr) {
-      std::cerr << " (hCommandLists = " << **(params->pphCommandLists) << ")";
-    }
-    std::cerr << " hFence = " << *(params->phFence);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandQueueExecuteCommandListsOnExit(
@@ -1615,7 +1078,8 @@ static void zeCommandQueueExecuteCommandListsOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1623,17 +1087,8 @@ static void zeCommandQueueExecuteCommandListsOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandQueueExecuteCommandLists", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandQueueExecuteCommandLists" << " [" << time << " ns]";
-    if (*(params->pphCommandLists) != nullptr) {
-      std::cerr << " hCommandLists = " << **(params->pphCommandLists) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandQueueExecuteCommandLists",
                          start_time, end_time);
@@ -1646,17 +1101,10 @@ static void zeCommandQueueSynchronizeOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandQueueSynchronize" << ":";
-    std::cerr << " hCommandQueue = " << *(params->phCommandQueue);
-    std::cerr << " timeout = " << *(params->ptimeout);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandQueueSynchronizeOnExit(
@@ -1665,7 +1113,8 @@ static void zeCommandQueueSynchronizeOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1673,14 +1122,8 @@ static void zeCommandQueueSynchronizeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandQueueSynchronize", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandQueueSynchronize" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandQueueSynchronize",
                          start_time, end_time);
@@ -1693,22 +1136,10 @@ static void zeCommandListCreateOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListCreate" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " desc = " << *(params->pdesc);
-    std::cerr << " phCommandList = " << *(params->pphCommandList);
-    if (*(params->pphCommandList) != nullptr) {
-      std::cerr << " (hCommandList = " << **(params->pphCommandList) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListCreateOnExit(
@@ -1717,7 +1148,8 @@ static void zeCommandListCreateOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1725,17 +1157,8 @@ static void zeCommandListCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListCreate", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListCreate" << " [" << time << " ns]";
-    if (*(params->pphCommandList) != nullptr) {
-      std::cerr << " hCommandList = " << **(params->pphCommandList) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListCreate",
                          start_time, end_time);
@@ -1748,31 +1171,10 @@ static void zeCommandListCreateImmediateOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListCreateImmediate" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " altdesc = " << *(params->paltdesc);
-    if (*(params->paltdesc) != nullptr) {
-      std::cerr << " {" << (*(params->paltdesc))->stype << " ";
-      std::cerr << (*(params->paltdesc))->pNext << " ";
-      std::cerr << (*(params->paltdesc))->ordinal << " ";
-      std::cerr << (*(params->paltdesc))->index << " ";
-      std::cerr << (*(params->paltdesc))->flags << " ";
-      std::cerr << (*(params->paltdesc))->mode << " ";
-      std::cerr << (*(params->paltdesc))->priority << "}";
-    }
-    std::cerr << " phCommandList = " << *(params->pphCommandList);
-    if (*(params->pphCommandList) != nullptr) {
-      std::cerr << " (hCommandList = " << **(params->pphCommandList) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListCreateImmediateOnExit(
@@ -1781,7 +1183,8 @@ static void zeCommandListCreateImmediateOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1789,17 +1192,8 @@ static void zeCommandListCreateImmediateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListCreateImmediate", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListCreateImmediate" << " [" << time << " ns]";
-    if (*(params->pphCommandList) != nullptr) {
-      std::cerr << " hCommandList = " << **(params->pphCommandList) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListCreateImmediate",
                          start_time, end_time);
@@ -1812,16 +1206,10 @@ static void zeCommandListDestroyOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListDestroy" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListDestroyOnExit(
@@ -1830,7 +1218,8 @@ static void zeCommandListDestroyOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1838,14 +1227,8 @@ static void zeCommandListDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListDestroy", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListDestroy" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListDestroy",
                          start_time, end_time);
@@ -1858,16 +1241,10 @@ static void zeCommandListCloseOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListClose" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListCloseOnExit(
@@ -1876,7 +1253,8 @@ static void zeCommandListCloseOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1884,14 +1262,8 @@ static void zeCommandListCloseOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListClose", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListClose" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListClose",
                          start_time, end_time);
@@ -1904,16 +1276,10 @@ static void zeCommandListResetOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListReset" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListResetOnExit(
@@ -1922,7 +1288,8 @@ static void zeCommandListResetOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1930,14 +1297,8 @@ static void zeCommandListResetOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListReset", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListReset" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListReset",
                          start_time, end_time);
@@ -1950,23 +1311,10 @@ static void zeCommandListAppendWriteGlobalTimestampOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendWriteGlobalTimestamp" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " dstptr = " << *(params->pdstptr);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendWriteGlobalTimestampOnExit(
@@ -1975,7 +1323,8 @@ static void zeCommandListAppendWriteGlobalTimestampOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -1983,17 +1332,8 @@ static void zeCommandListAppendWriteGlobalTimestampOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendWriteGlobalTimestamp", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendWriteGlobalTimestamp" << " [" << time << " ns]";
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendWriteGlobalTimestamp",
                          start_time, end_time);
@@ -2006,22 +1346,10 @@ static void zeCommandListAppendBarrierOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendBarrier" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendBarrierOnExit(
@@ -2030,7 +1358,8 @@ static void zeCommandListAppendBarrierOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2038,17 +1367,8 @@ static void zeCommandListAppendBarrierOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendBarrier", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendBarrier" << " [" << time << " ns]";
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendBarrier",
                          start_time, end_time);
@@ -2061,25 +1381,10 @@ static void zeCommandListAppendMemoryRangesBarrierOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendMemoryRangesBarrier" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " numRanges = " << *(params->pnumRanges);
-    std::cerr << " pRangeSizes = " << *(params->ppRangeSizes);
-    std::cerr << " pRanges = " << *(params->ppRanges);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendMemoryRangesBarrierOnExit(
@@ -2088,7 +1393,8 @@ static void zeCommandListAppendMemoryRangesBarrierOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2096,17 +1402,8 @@ static void zeCommandListAppendMemoryRangesBarrierOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendMemoryRangesBarrier", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendMemoryRangesBarrier" << " [" << time << " ns]";
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendMemoryRangesBarrier",
                          start_time, end_time);
@@ -2119,25 +1416,10 @@ static void zeCommandListAppendMemoryCopyOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendMemoryCopy" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " dstptr = " << *(params->pdstptr);
-    std::cerr << " srcptr = " << *(params->psrcptr);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendMemoryCopyOnExit(
@@ -2146,7 +1428,8 @@ static void zeCommandListAppendMemoryCopyOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2154,17 +1437,8 @@ static void zeCommandListAppendMemoryCopyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendMemoryCopy", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendMemoryCopy" << " [" << time << " ns]";
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendMemoryCopy",
                          start_time, end_time);
@@ -2177,26 +1451,10 @@ static void zeCommandListAppendMemoryFillOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendMemoryFill" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << " pattern = " << *(params->ppattern);
-    std::cerr << " pattern_size = " << *(params->ppattern_size);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendMemoryFillOnExit(
@@ -2205,7 +1463,8 @@ static void zeCommandListAppendMemoryFillOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2213,17 +1472,8 @@ static void zeCommandListAppendMemoryFillOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendMemoryFill", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendMemoryFill" << " [" << time << " ns]";
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendMemoryFill",
                          start_time, end_time);
@@ -2236,30 +1486,10 @@ static void zeCommandListAppendMemoryCopyRegionOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendMemoryCopyRegion" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " dstptr = " << *(params->pdstptr);
-    std::cerr << " dstRegion = " << *(params->pdstRegion);
-    std::cerr << " dstPitch = " << *(params->pdstPitch);
-    std::cerr << " dstSlicePitch = " << *(params->pdstSlicePitch);
-    std::cerr << " srcptr = " << *(params->psrcptr);
-    std::cerr << " srcRegion = " << *(params->psrcRegion);
-    std::cerr << " srcPitch = " << *(params->psrcPitch);
-    std::cerr << " srcSlicePitch = " << *(params->psrcSlicePitch);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendMemoryCopyRegionOnExit(
@@ -2268,7 +1498,8 @@ static void zeCommandListAppendMemoryCopyRegionOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2276,17 +1507,8 @@ static void zeCommandListAppendMemoryCopyRegionOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendMemoryCopyRegion", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendMemoryCopyRegion" << " [" << time << " ns]";
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendMemoryCopyRegion",
                          start_time, end_time);
@@ -2299,26 +1521,10 @@ static void zeCommandListAppendMemoryCopyFromContextOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendMemoryCopyFromContext" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " dstptr = " << *(params->pdstptr);
-    std::cerr << " hContextSrc = " << *(params->phContextSrc);
-    std::cerr << " srcptr = " << *(params->psrcptr);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendMemoryCopyFromContextOnExit(
@@ -2327,7 +1533,8 @@ static void zeCommandListAppendMemoryCopyFromContextOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2335,17 +1542,8 @@ static void zeCommandListAppendMemoryCopyFromContextOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendMemoryCopyFromContext", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendMemoryCopyFromContext" << " [" << time << " ns]";
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendMemoryCopyFromContext",
                          start_time, end_time);
@@ -2358,24 +1556,10 @@ static void zeCommandListAppendImageCopyOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendImageCopy" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " hDstImage = " << *(params->phDstImage);
-    std::cerr << " hSrcImage = " << *(params->phSrcImage);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendImageCopyOnExit(
@@ -2384,7 +1568,8 @@ static void zeCommandListAppendImageCopyOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2392,17 +1577,8 @@ static void zeCommandListAppendImageCopyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendImageCopy", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendImageCopy" << " [" << time << " ns]";
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendImageCopy",
                          start_time, end_time);
@@ -2415,26 +1591,10 @@ static void zeCommandListAppendImageCopyRegionOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendImageCopyRegion" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " hDstImage = " << *(params->phDstImage);
-    std::cerr << " hSrcImage = " << *(params->phSrcImage);
-    std::cerr << " pDstRegion = " << *(params->ppDstRegion);
-    std::cerr << " pSrcRegion = " << *(params->ppSrcRegion);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendImageCopyRegionOnExit(
@@ -2443,7 +1603,8 @@ static void zeCommandListAppendImageCopyRegionOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2451,17 +1612,8 @@ static void zeCommandListAppendImageCopyRegionOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendImageCopyRegion", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendImageCopyRegion" << " [" << time << " ns]";
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendImageCopyRegion",
                          start_time, end_time);
@@ -2474,25 +1626,10 @@ static void zeCommandListAppendImageCopyToMemoryOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendImageCopyToMemory" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " dstptr = " << *(params->pdstptr);
-    std::cerr << " hSrcImage = " << *(params->phSrcImage);
-    std::cerr << " pSrcRegion = " << *(params->ppSrcRegion);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendImageCopyToMemoryOnExit(
@@ -2501,7 +1638,8 @@ static void zeCommandListAppendImageCopyToMemoryOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2509,17 +1647,8 @@ static void zeCommandListAppendImageCopyToMemoryOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendImageCopyToMemory", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendImageCopyToMemory" << " [" << time << " ns]";
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendImageCopyToMemory",
                          start_time, end_time);
@@ -2532,25 +1661,10 @@ static void zeCommandListAppendImageCopyFromMemoryOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendImageCopyFromMemory" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " hDstImage = " << *(params->phDstImage);
-    std::cerr << " srcptr = " << *(params->psrcptr);
-    std::cerr << " pDstRegion = " << *(params->ppDstRegion);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendImageCopyFromMemoryOnExit(
@@ -2559,7 +1673,8 @@ static void zeCommandListAppendImageCopyFromMemoryOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2567,17 +1682,8 @@ static void zeCommandListAppendImageCopyFromMemoryOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendImageCopyFromMemory", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendImageCopyFromMemory" << " [" << time << " ns]";
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendImageCopyFromMemory",
                          start_time, end_time);
@@ -2590,18 +1696,10 @@ static void zeCommandListAppendMemoryPrefetchOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendMemoryPrefetch" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendMemoryPrefetchOnExit(
@@ -2610,7 +1708,8 @@ static void zeCommandListAppendMemoryPrefetchOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2618,14 +1717,8 @@ static void zeCommandListAppendMemoryPrefetchOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendMemoryPrefetch", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendMemoryPrefetch" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendMemoryPrefetch",
                          start_time, end_time);
@@ -2638,54 +1731,10 @@ static void zeCommandListAppendMemAdviseOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendMemAdvise" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << " advice = " << *(params->padvice);
-    std::cerr << " (";
-    switch (*(params->padvice)) {
-      case 2:
-        std::cerr << "ZE_MEMORY_ADVICE_SET_PREFERRED_LOCATION";
-        break;
-      case 0:
-        std::cerr << "ZE_MEMORY_ADVICE_SET_READ_MOSTLY";
-        break;
-      case 6:
-        std::cerr << "ZE_MEMORY_ADVICE_BIAS_CACHED";
-        break;
-      case 4:
-        std::cerr << "ZE_MEMORY_ADVICE_SET_NON_ATOMIC_MOSTLY";
-        break;
-      case 2147483647:
-        std::cerr << "ZE_MEMORY_ADVICE_FORCE_UINT32";
-        break;
-      case 3:
-        std::cerr << "ZE_MEMORY_ADVICE_CLEAR_PREFERRED_LOCATION";
-        break;
-      case 1:
-        std::cerr << "ZE_MEMORY_ADVICE_CLEAR_READ_MOSTLY";
-        break;
-      case 7:
-        std::cerr << "ZE_MEMORY_ADVICE_BIAS_UNCACHED";
-        break;
-      case 5:
-        std::cerr << "ZE_MEMORY_ADVICE_CLEAR_NON_ATOMIC_MOSTLY";
-        break;
-      default:
-        std::cerr << "<UNKNOWN>";
-        break;
-    }
-    std::cerr << ")";
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendMemAdviseOnExit(
@@ -2694,7 +1743,8 @@ static void zeCommandListAppendMemAdviseOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2702,14 +1752,9 @@ static void zeCommandListAppendMemAdviseOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendMemAdvise", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendMemAdvise" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendMemAdvise",
                          start_time, end_time);
@@ -2722,17 +1767,10 @@ static void zeCommandListAppendSignalEventOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendSignalEvent" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " hEvent = " << *(params->phEvent);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendSignalEventOnExit(
@@ -2741,7 +1779,8 @@ static void zeCommandListAppendSignalEventOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2749,14 +1788,9 @@ static void zeCommandListAppendSignalEventOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendSignalEvent", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendSignalEvent" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendSignalEvent",
                          start_time, end_time);
@@ -2769,21 +1803,10 @@ static void zeCommandListAppendWaitOnEventsOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendWaitOnEvents" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " numEvents = " << *(params->pnumEvents);
-    std::cerr << " phEvents = " << *(params->pphEvents);
-    if (*(params->pphEvents) != nullptr) {
-      std::cerr << " (hEvents = " << **(params->pphEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendWaitOnEventsOnExit(
@@ -2792,7 +1815,8 @@ static void zeCommandListAppendWaitOnEventsOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2800,17 +1824,8 @@ static void zeCommandListAppendWaitOnEventsOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendWaitOnEvents", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendWaitOnEvents" << " [" << time << " ns]";
-    if (*(params->pphEvents) != nullptr) {
-      std::cerr << " hEvents = " << **(params->pphEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendWaitOnEvents",
                          start_time, end_time);
@@ -2823,17 +1838,10 @@ static void zeCommandListAppendEventResetOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendEventReset" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " hEvent = " << *(params->phEvent);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendEventResetOnExit(
@@ -2842,7 +1850,8 @@ static void zeCommandListAppendEventResetOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2850,14 +1859,8 @@ static void zeCommandListAppendEventResetOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendEventReset", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendEventReset" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendEventReset",
                          start_time, end_time);
@@ -2870,29 +1873,10 @@ static void zeCommandListAppendQueryKernelTimestampsOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendQueryKernelTimestamps" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " numEvents = " << *(params->pnumEvents);
-    std::cerr << " phEvents = " << *(params->pphEvents);
-    if (*(params->pphEvents) != nullptr) {
-      std::cerr << " (hEvents = " << **(params->pphEvents) << ")";
-    }
-    std::cerr << " dstptr = " << *(params->pdstptr);
-    std::cerr << " pOffsets = " << *(params->ppOffsets);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendQueryKernelTimestampsOnExit(
@@ -2901,7 +1885,8 @@ static void zeCommandListAppendQueryKernelTimestampsOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2909,20 +1894,8 @@ static void zeCommandListAppendQueryKernelTimestampsOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendQueryKernelTimestamps", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendQueryKernelTimestamps" << " [" << time << " ns]";
-    if (*(params->pphEvents) != nullptr) {
-      std::cerr << " hEvents = " << **(params->pphEvents) << "";
-    }
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendQueryKernelTimestamps",
                          start_time, end_time);
@@ -2935,24 +1908,10 @@ static void zeCommandListAppendLaunchKernelOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendLaunchKernel" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " hKernel = " << *(params->phKernel);
-    std::cerr << " pLaunchFuncArgs = " << *(params->ppLaunchFuncArgs);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendLaunchKernelOnExit(
@@ -2961,7 +1920,8 @@ static void zeCommandListAppendLaunchKernelOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -2969,17 +1929,8 @@ static void zeCommandListAppendLaunchKernelOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendLaunchKernel", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendLaunchKernel" << " [" << time << " ns]";
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendLaunchKernel",
                          start_time, end_time);
@@ -2992,24 +1943,10 @@ static void zeCommandListAppendLaunchCooperativeKernelOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendLaunchCooperativeKernel" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " hKernel = " << *(params->phKernel);
-    std::cerr << " pLaunchFuncArgs = " << *(params->ppLaunchFuncArgs);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendLaunchCooperativeKernelOnExit(
@@ -3018,7 +1955,8 @@ static void zeCommandListAppendLaunchCooperativeKernelOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3026,17 +1964,8 @@ static void zeCommandListAppendLaunchCooperativeKernelOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendLaunchCooperativeKernel", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendLaunchCooperativeKernel" << " [" << time << " ns]";
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendLaunchCooperativeKernel",
                          start_time, end_time);
@@ -3049,24 +1978,10 @@ static void zeCommandListAppendLaunchKernelIndirectOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendLaunchKernelIndirect" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " hKernel = " << *(params->phKernel);
-    std::cerr << " pLaunchArgumentsBuffer = " << *(params->ppLaunchArgumentsBuffer);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendLaunchKernelIndirectOnExit(
@@ -3075,7 +1990,8 @@ static void zeCommandListAppendLaunchKernelIndirectOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3083,17 +1999,8 @@ static void zeCommandListAppendLaunchKernelIndirectOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendLaunchKernelIndirect", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendLaunchKernelIndirect" << " [" << time << " ns]";
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendLaunchKernelIndirect",
                          start_time, end_time);
@@ -3106,32 +2013,10 @@ static void zeCommandListAppendLaunchMultipleKernelsIndirectOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeCommandListAppendLaunchMultipleKernelsIndirect" << ":";
-    std::cerr << " hCommandList = " << *(params->phCommandList);
-    std::cerr << " numKernels = " << *(params->pnumKernels);
-    std::cerr << " phKernels = " << *(params->pphKernels);
-    if (*(params->pphKernels) != nullptr) {
-      std::cerr << " (hKernels = " << **(params->pphKernels) << ")";
-    }
-    std::cerr << " pCountBuffer = " << *(params->ppCountBuffer);
-    if (*(params->ppCountBuffer) != nullptr) {
-      std::cerr << " (CountBuffer = " << **(params->ppCountBuffer) << ")";
-    }
-    std::cerr << " pLaunchArgumentsBuffer = " << *(params->ppLaunchArgumentsBuffer);
-    std::cerr << " hSignalEvent = " << *(params->phSignalEvent);
-    std::cerr << " numWaitEvents = " << *(params->pnumWaitEvents);
-    std::cerr << " phWaitEvents = " << *(params->pphWaitEvents);
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " (hWaitEvents = " << **(params->pphWaitEvents) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeCommandListAppendLaunchMultipleKernelsIndirectOnExit(
@@ -3140,7 +2025,8 @@ static void zeCommandListAppendLaunchMultipleKernelsIndirectOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3148,23 +2034,8 @@ static void zeCommandListAppendLaunchMultipleKernelsIndirectOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeCommandListAppendLaunchMultipleKernelsIndirect", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeCommandListAppendLaunchMultipleKernelsIndirect" << " [" << time << " ns]";
-    if (*(params->pphKernels) != nullptr) {
-      std::cerr << " hKernels = " << **(params->pphKernels) << "";
-    }
-    if (*(params->ppCountBuffer) != nullptr) {
-      std::cerr << " CountBuffer = " << **(params->ppCountBuffer) << "";
-    }
-    if (*(params->pphWaitEvents) != nullptr) {
-      std::cerr << " hWaitEvents = " << **(params->pphWaitEvents) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeCommandListAppendLaunchMultipleKernelsIndirect",
                          start_time, end_time);
@@ -3177,21 +2048,10 @@ static void zeFenceCreateOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeFenceCreate" << ":";
-    std::cerr << " hCommandQueue = " << *(params->phCommandQueue);
-    std::cerr << " desc = " << *(params->pdesc);
-    std::cerr << " phFence = " << *(params->pphFence);
-    if (*(params->pphFence) != nullptr) {
-      std::cerr << " (hFence = " << **(params->pphFence) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeFenceCreateOnExit(
@@ -3200,7 +2060,8 @@ static void zeFenceCreateOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3208,17 +2069,8 @@ static void zeFenceCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeFenceCreate", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeFenceCreate" << " [" << time << " ns]";
-    if (*(params->pphFence) != nullptr) {
-      std::cerr << " hFence = " << **(params->pphFence) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeFenceCreate",
                          start_time, end_time);
@@ -3231,16 +2083,10 @@ static void zeFenceDestroyOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeFenceDestroy" << ":";
-    std::cerr << " hFence = " << *(params->phFence);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeFenceDestroyOnExit(
@@ -3249,7 +2095,8 @@ static void zeFenceDestroyOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3257,14 +2104,8 @@ static void zeFenceDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeFenceDestroy", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeFenceDestroy" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeFenceDestroy",
                          start_time, end_time);
@@ -3277,17 +2118,10 @@ static void zeFenceHostSynchronizeOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeFenceHostSynchronize" << ":";
-    std::cerr << " hFence = " << *(params->phFence);
-    std::cerr << " timeout = " << *(params->ptimeout);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeFenceHostSynchronizeOnExit(
@@ -3296,7 +2130,8 @@ static void zeFenceHostSynchronizeOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3304,14 +2139,8 @@ static void zeFenceHostSynchronizeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeFenceHostSynchronize", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeFenceHostSynchronize" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeFenceHostSynchronize",
                          start_time, end_time);
@@ -3324,16 +2153,10 @@ static void zeFenceQueryStatusOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeFenceQueryStatus" << ":";
-    std::cerr << " hFence = " << *(params->phFence);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeFenceQueryStatusOnExit(
@@ -3342,7 +2165,8 @@ static void zeFenceQueryStatusOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3350,14 +2174,8 @@ static void zeFenceQueryStatusOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeFenceQueryStatus", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeFenceQueryStatus" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeFenceQueryStatus",
                          start_time, end_time);
@@ -3370,16 +2188,10 @@ static void zeFenceResetOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeFenceReset" << ":";
-    std::cerr << " hFence = " << *(params->phFence);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeFenceResetOnExit(
@@ -3388,7 +2200,8 @@ static void zeFenceResetOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3396,14 +2209,8 @@ static void zeFenceResetOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeFenceReset", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeFenceReset" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeFenceReset",
                          start_time, end_time);
@@ -3416,26 +2223,10 @@ static void zeEventPoolCreateOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeEventPoolCreate" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " desc = " << *(params->pdesc);
-    std::cerr << " numDevices = " << *(params->pnumDevices);
-    std::cerr << " phDevices = " << *(params->pphDevices);
-    if (*(params->pphDevices) != nullptr) {
-      std::cerr << " (hDevices = " << **(params->pphDevices) << ")";
-    }
-    std::cerr << " phEventPool = " << *(params->pphEventPool);
-    if (*(params->pphEventPool) != nullptr) {
-      std::cerr << " (hEventPool = " << **(params->pphEventPool) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeEventPoolCreateOnExit(
@@ -3444,7 +2235,8 @@ static void zeEventPoolCreateOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3452,20 +2244,8 @@ static void zeEventPoolCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventPoolCreate", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeEventPoolCreate" << " [" << time << " ns]";
-    if (*(params->pphDevices) != nullptr) {
-      std::cerr << " hDevices = " << **(params->pphDevices) << "";
-    }
-    if (*(params->pphEventPool) != nullptr) {
-      std::cerr << " hEventPool = " << **(params->pphEventPool) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeEventPoolCreate",
                          start_time, end_time);
@@ -3478,16 +2258,10 @@ static void zeEventPoolDestroyOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeEventPoolDestroy" << ":";
-    std::cerr << " hEventPool = " << *(params->phEventPool);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeEventPoolDestroyOnExit(
@@ -3496,7 +2270,8 @@ static void zeEventPoolDestroyOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3504,14 +2279,8 @@ static void zeEventPoolDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventPoolDestroy", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeEventPoolDestroy" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeEventPoolDestroy",
                          start_time, end_time);
@@ -3524,20 +2293,10 @@ static void zeEventPoolGetIpcHandleOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeEventPoolGetIpcHandle" << ":";
-    std::cerr << " hEventPool = " << *(params->phEventPool);
-    std::cerr << " phIpc = " << *(params->pphIpc);
-    if (*(params->pphIpc) != nullptr) {
-      std::cerr << " (hIpc = " << (*(params->pphIpc))->data << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeEventPoolGetIpcHandleOnExit(
@@ -3546,7 +2305,8 @@ static void zeEventPoolGetIpcHandleOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3554,17 +2314,8 @@ static void zeEventPoolGetIpcHandleOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventPoolGetIpcHandle", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeEventPoolGetIpcHandle" << " [" << time << " ns]";
-    if (*(params->pphIpc) != nullptr) {
-      std::cerr << " hIpc = " << (*(params->pphIpc))->data << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeEventPoolGetIpcHandle",
                          start_time, end_time);
@@ -3577,21 +2328,10 @@ static void zeEventPoolOpenIpcHandleOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeEventPoolOpenIpcHandle" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hIpc = " << (params->phIpc)->data;
-    std::cerr << " phEventPool = " << *(params->pphEventPool);
-    if (*(params->pphEventPool) != nullptr) {
-      std::cerr << " (hEventPool = " << **(params->pphEventPool) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeEventPoolOpenIpcHandleOnExit(
@@ -3600,7 +2340,8 @@ static void zeEventPoolOpenIpcHandleOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3608,17 +2349,8 @@ static void zeEventPoolOpenIpcHandleOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventPoolOpenIpcHandle", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeEventPoolOpenIpcHandle" << " [" << time << " ns]";
-    if (*(params->pphEventPool) != nullptr) {
-      std::cerr << " hEventPool = " << **(params->pphEventPool) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeEventPoolOpenIpcHandle",
                          start_time, end_time);
@@ -3631,16 +2363,10 @@ static void zeEventPoolCloseIpcHandleOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeEventPoolCloseIpcHandle" << ":";
-    std::cerr << " hEventPool = " << *(params->phEventPool);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeEventPoolCloseIpcHandleOnExit(
@@ -3649,7 +2375,8 @@ static void zeEventPoolCloseIpcHandleOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3657,14 +2384,8 @@ static void zeEventPoolCloseIpcHandleOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventPoolCloseIpcHandle", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeEventPoolCloseIpcHandle" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeEventPoolCloseIpcHandle",
                          start_time, end_time);
@@ -3677,21 +2398,10 @@ static void zeEventCreateOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeEventCreate" << ":";
-    std::cerr << " hEventPool = " << *(params->phEventPool);
-    std::cerr << " desc = " << *(params->pdesc);
-    std::cerr << " phEvent = " << *(params->pphEvent);
-    if (*(params->pphEvent) != nullptr) {
-      std::cerr << " (hEvent = " << **(params->pphEvent) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeEventCreateOnExit(
@@ -3700,7 +2410,8 @@ static void zeEventCreateOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3708,17 +2419,9 @@ static void zeEventCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventCreate", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeEventCreate" << " [" << time << " ns]";
-    if (*(params->pphEvent) != nullptr) {
-      std::cerr << " hEvent = " << **(params->pphEvent) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeEventCreate",
                          start_time, end_time);
@@ -3731,16 +2434,10 @@ static void zeEventDestroyOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeEventDestroy" << ":";
-    std::cerr << " hEvent = " << *(params->phEvent);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeEventDestroyOnExit(
@@ -3749,7 +2446,8 @@ static void zeEventDestroyOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3757,14 +2455,8 @@ static void zeEventDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventDestroy", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeEventDestroy" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeEventDestroy",
                          start_time, end_time);
@@ -3777,16 +2469,10 @@ static void zeEventHostSignalOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeEventHostSignal" << ":";
-    std::cerr << " hEvent = " << *(params->phEvent);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeEventHostSignalOnExit(
@@ -3795,7 +2481,8 @@ static void zeEventHostSignalOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3803,14 +2490,8 @@ static void zeEventHostSignalOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventHostSignal", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeEventHostSignal" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeEventHostSignal",
                          start_time, end_time);
@@ -3823,17 +2504,10 @@ static void zeEventHostSynchronizeOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeEventHostSynchronize" << ":";
-    std::cerr << " hEvent = " << *(params->phEvent);
-    std::cerr << " timeout = " << *(params->ptimeout);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeEventHostSynchronizeOnExit(
@@ -3842,7 +2516,8 @@ static void zeEventHostSynchronizeOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3850,14 +2525,8 @@ static void zeEventHostSynchronizeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventHostSynchronize", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeEventHostSynchronize" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeEventHostSynchronize",
                          start_time, end_time);
@@ -3870,16 +2539,10 @@ static void zeEventQueryStatusOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeEventQueryStatus" << ":";
-    std::cerr << " hEvent = " << *(params->phEvent);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeEventQueryStatusOnExit(
@@ -3888,7 +2551,8 @@ static void zeEventQueryStatusOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3896,14 +2560,8 @@ static void zeEventQueryStatusOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventQueryStatus", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeEventQueryStatus" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeEventQueryStatus",
                          start_time, end_time);
@@ -3916,16 +2574,10 @@ static void zeEventHostResetOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeEventHostReset" << ":";
-    std::cerr << " hEvent = " << *(params->phEvent);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeEventHostResetOnExit(
@@ -3934,7 +2586,8 @@ static void zeEventHostResetOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3942,14 +2595,8 @@ static void zeEventHostResetOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventHostReset", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeEventHostReset" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeEventHostReset",
                          start_time, end_time);
@@ -3962,17 +2609,10 @@ static void zeEventQueryKernelTimestampOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeEventQueryKernelTimestamp" << ":";
-    std::cerr << " hEvent = " << *(params->phEvent);
-    std::cerr << " dstptr = " << *(params->pdstptr);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeEventQueryKernelTimestampOnExit(
@@ -3981,7 +2621,8 @@ static void zeEventQueryKernelTimestampOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -3989,14 +2630,8 @@ static void zeEventQueryKernelTimestampOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeEventQueryKernelTimestamp", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeEventQueryKernelTimestamp" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeEventQueryKernelTimestamp",
                          start_time, end_time);
@@ -4009,18 +2644,10 @@ static void zeImageGetPropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeImageGetProperties" << ":";
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " desc = " << *(params->pdesc);
-    std::cerr << " pImageProperties = " << *(params->ppImageProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeImageGetPropertiesOnExit(
@@ -4029,7 +2656,8 @@ static void zeImageGetPropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4037,14 +2665,8 @@ static void zeImageGetPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeImageGetProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeImageGetProperties" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeImageGetProperties",
                          start_time, end_time);
@@ -4057,22 +2679,10 @@ static void zeImageCreateOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeImageCreate" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " desc = " << *(params->pdesc);
-    std::cerr << " phImage = " << *(params->pphImage);
-    if (*(params->pphImage) != nullptr) {
-      std::cerr << " (hImage = " << **(params->pphImage) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeImageCreateOnExit(
@@ -4081,7 +2691,8 @@ static void zeImageCreateOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4089,17 +2700,8 @@ static void zeImageCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeImageCreate", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeImageCreate" << " [" << time << " ns]";
-    if (*(params->pphImage) != nullptr) {
-      std::cerr << " hImage = " << **(params->pphImage) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeImageCreate",
                          start_time, end_time);
@@ -4112,16 +2714,10 @@ static void zeImageDestroyOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeImageDestroy" << ":";
-    std::cerr << " hImage = " << *(params->phImage);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeImageDestroyOnExit(
@@ -4130,7 +2726,8 @@ static void zeImageDestroyOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4138,14 +2735,8 @@ static void zeImageDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeImageDestroy", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeImageDestroy" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeImageDestroy",
                          start_time, end_time);
@@ -4158,26 +2749,10 @@ static void zeModuleCreateOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeModuleCreate" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " desc = " << *(params->pdesc);
-    std::cerr << " phModule = " << *(params->pphModule);
-    if (*(params->pphModule) != nullptr) {
-      std::cerr << " (hModule = " << **(params->pphModule) << ")";
-    }
-    std::cerr << " phBuildLog = " << *(params->pphBuildLog);
-    if (*(params->pphBuildLog) != nullptr) {
-      std::cerr << " (hBuildLog = " << **(params->pphBuildLog) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeModuleCreateOnExit(
@@ -4186,7 +2761,8 @@ static void zeModuleCreateOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4194,20 +2770,8 @@ static void zeModuleCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleCreate", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeModuleCreate" << " [" << time << " ns]";
-    if (*(params->pphModule) != nullptr) {
-      std::cerr << " hModule = " << **(params->pphModule) << "";
-    }
-    if (*(params->pphBuildLog) != nullptr) {
-      std::cerr << " hBuildLog = " << **(params->pphBuildLog) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeModuleCreate",
                          start_time, end_time);
@@ -4220,16 +2784,10 @@ static void zeModuleDestroyOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeModuleDestroy" << ":";
-    std::cerr << " hModule = " << *(params->phModule);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeModuleDestroyOnExit(
@@ -4238,7 +2796,8 @@ static void zeModuleDestroyOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4246,14 +2805,8 @@ static void zeModuleDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleDestroy", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeModuleDestroy" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeModuleDestroy",
                          start_time, end_time);
@@ -4266,24 +2819,10 @@ static void zeModuleDynamicLinkOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeModuleDynamicLink" << ":";
-    std::cerr << " numModules = " << *(params->pnumModules);
-    std::cerr << " phModules = " << *(params->pphModules);
-    if (*(params->pphModules) != nullptr) {
-      std::cerr << " (hModules = " << **(params->pphModules) << ")";
-    }
-    std::cerr << " phLinkLog = " << *(params->pphLinkLog);
-    if (*(params->pphLinkLog) != nullptr) {
-      std::cerr << " (hLinkLog = " << **(params->pphLinkLog) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeModuleDynamicLinkOnExit(
@@ -4292,7 +2831,8 @@ static void zeModuleDynamicLinkOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4300,20 +2840,8 @@ static void zeModuleDynamicLinkOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleDynamicLink", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeModuleDynamicLink" << " [" << time << " ns]";
-    if (*(params->pphModules) != nullptr) {
-      std::cerr << " hModules = " << **(params->pphModules) << "";
-    }
-    if (*(params->pphLinkLog) != nullptr) {
-      std::cerr << " hLinkLog = " << **(params->pphLinkLog) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeModuleDynamicLink",
                          start_time, end_time);
@@ -4326,18 +2854,10 @@ static void zeModuleGetNativeBinaryOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeModuleGetNativeBinary" << ":";
-    std::cerr << " hModule = " << *(params->phModule);
-    std::cerr << " pSize = " << *(params->ppSize);
-    std::cerr << " pModuleNativeBinary = " << *(params->ppModuleNativeBinary);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeModuleGetNativeBinaryOnExit(
@@ -4346,7 +2866,8 @@ static void zeModuleGetNativeBinaryOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4354,14 +2875,8 @@ static void zeModuleGetNativeBinaryOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleGetNativeBinary", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeModuleGetNativeBinary" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeModuleGetNativeBinary",
                          start_time, end_time);
@@ -4374,22 +2889,10 @@ static void zeModuleGetGlobalPointerOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeModuleGetGlobalPointer" << ":";
-    std::cerr << " hModule = " << *(params->phModule);
-    std::cerr << " pGlobalName = " << *(params->ppGlobalName);
-    std::cerr << " pSize = " << *(params->ppSize);
-    std::cerr << " pptr = " << *(params->ppptr);
-    if (*(params->ppptr) != nullptr) {
-      std::cerr << " (ptr = " << **(params->ppptr) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeModuleGetGlobalPointerOnExit(
@@ -4398,7 +2901,8 @@ static void zeModuleGetGlobalPointerOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4406,17 +2910,8 @@ static void zeModuleGetGlobalPointerOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleGetGlobalPointer", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeModuleGetGlobalPointer" << " [" << time << " ns]";
-    if (*(params->ppptr) != nullptr) {
-      std::cerr << " ptr = " << **(params->ppptr) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeModuleGetGlobalPointer",
                          start_time, end_time);
@@ -4429,21 +2924,10 @@ static void zeModuleGetKernelNamesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeModuleGetKernelNames" << ":";
-    std::cerr << " hModule = " << *(params->phModule);
-    std::cerr << " pCount = " << *(params->ppCount);
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " (Count = " << **(params->ppCount) << ")";
-    }
-    std::cerr << " pNames = " << *(params->ppNames);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeModuleGetKernelNamesOnExit(
@@ -4452,7 +2936,8 @@ static void zeModuleGetKernelNamesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4460,17 +2945,8 @@ static void zeModuleGetKernelNamesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleGetKernelNames", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeModuleGetKernelNames" << " [" << time << " ns]";
-    if (*(params->ppCount) != nullptr) {
-      std::cerr << " Count = " << **(params->ppCount) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeModuleGetKernelNames",
                          start_time, end_time);
@@ -4483,17 +2959,10 @@ static void zeModuleGetPropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeModuleGetProperties" << ":";
-    std::cerr << " hModule = " << *(params->phModule);
-    std::cerr << " pModuleProperties = " << *(params->ppModuleProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeModuleGetPropertiesOnExit(
@@ -4502,7 +2971,8 @@ static void zeModuleGetPropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4510,14 +2980,9 @@ static void zeModuleGetPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleGetProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeModuleGetProperties" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeModuleGetProperties",
                          start_time, end_time);
@@ -4530,18 +2995,10 @@ static void zeModuleGetFunctionPointerOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeModuleGetFunctionPointer" << ":";
-    std::cerr << " hModule = " << *(params->phModule);
-    std::cerr << " pFunctionName = " << *(params->ppFunctionName);
-    std::cerr << " pfnFunction = " << *(params->ppfnFunction);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeModuleGetFunctionPointerOnExit(
@@ -4550,7 +3007,8 @@ static void zeModuleGetFunctionPointerOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4558,14 +3016,8 @@ static void zeModuleGetFunctionPointerOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleGetFunctionPointer", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeModuleGetFunctionPointer" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeModuleGetFunctionPointer",
                          start_time, end_time);
@@ -4578,16 +3030,10 @@ static void zeModuleBuildLogDestroyOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeModuleBuildLogDestroy" << ":";
-    std::cerr << " hModuleBuildLog = " << *(params->phModuleBuildLog);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeModuleBuildLogDestroyOnExit(
@@ -4596,7 +3042,8 @@ static void zeModuleBuildLogDestroyOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4604,14 +3051,8 @@ static void zeModuleBuildLogDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleBuildLogDestroy", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeModuleBuildLogDestroy" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeModuleBuildLogDestroy",
                          start_time, end_time);
@@ -4624,18 +3065,10 @@ static void zeModuleBuildLogGetStringOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeModuleBuildLogGetString" << ":";
-    std::cerr << " hModuleBuildLog = " << *(params->phModuleBuildLog);
-    std::cerr << " pSize = " << *(params->ppSize);
-    std::cerr << " pBuildLog = " << *(params->ppBuildLog);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeModuleBuildLogGetStringOnExit(
@@ -4644,7 +3077,8 @@ static void zeModuleBuildLogGetStringOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4652,14 +3086,8 @@ static void zeModuleBuildLogGetStringOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeModuleBuildLogGetString", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeModuleBuildLogGetString" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeModuleBuildLogGetString",
                          start_time, end_time);
@@ -4672,21 +3100,10 @@ static void zeKernelCreateOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeKernelCreate" << ":";
-    std::cerr << " hModule = " << *(params->phModule);
-    std::cerr << " desc = " << *(params->pdesc);
-    std::cerr << " phKernel = " << *(params->pphKernel);
-    if (*(params->pphKernel) != nullptr) {
-      std::cerr << " (hKernel = " << **(params->pphKernel) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeKernelCreateOnExit(
@@ -4695,7 +3112,8 @@ static void zeKernelCreateOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4703,17 +3121,8 @@ static void zeKernelCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelCreate", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeKernelCreate" << " [" << time << " ns]";
-    if (*(params->pphKernel) != nullptr) {
-      std::cerr << " hKernel = " << **(params->pphKernel) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeKernelCreate",
                          start_time, end_time);
@@ -4726,16 +3135,10 @@ static void zeKernelDestroyOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeKernelDestroy" << ":";
-    std::cerr << " hKernel = " << *(params->phKernel);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeKernelDestroyOnExit(
@@ -4744,7 +3147,8 @@ static void zeKernelDestroyOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4752,14 +3156,8 @@ static void zeKernelDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelDestroy", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeKernelDestroy" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeKernelDestroy",
                          start_time, end_time);
@@ -4772,17 +3170,10 @@ static void zeKernelSetCacheConfigOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeKernelSetCacheConfig" << ":";
-    std::cerr << " hKernel = " << *(params->phKernel);
-    std::cerr << " flags = " << *(params->pflags);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeKernelSetCacheConfigOnExit(
@@ -4791,7 +3182,8 @@ static void zeKernelSetCacheConfigOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4799,14 +3191,8 @@ static void zeKernelSetCacheConfigOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelSetCacheConfig", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeKernelSetCacheConfig" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeKernelSetCacheConfig",
                          start_time, end_time);
@@ -4819,19 +3205,10 @@ static void zeKernelSetGroupSizeOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeKernelSetGroupSize" << ":";
-    std::cerr << " hKernel = " << *(params->phKernel);
-    std::cerr << " groupSizeX = " << *(params->pgroupSizeX);
-    std::cerr << " groupSizeY = " << *(params->pgroupSizeY);
-    std::cerr << " groupSizeZ = " << *(params->pgroupSizeZ);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeKernelSetGroupSizeOnExit(
@@ -4840,7 +3217,8 @@ static void zeKernelSetGroupSizeOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4848,14 +3226,8 @@ static void zeKernelSetGroupSizeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelSetGroupSize", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeKernelSetGroupSize" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeKernelSetGroupSize",
                          start_time, end_time);
@@ -4868,22 +3240,10 @@ static void zeKernelSuggestGroupSizeOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeKernelSuggestGroupSize" << ":";
-    std::cerr << " hKernel = " << *(params->phKernel);
-    std::cerr << " globalSizeX = " << *(params->pglobalSizeX);
-    std::cerr << " globalSizeY = " << *(params->pglobalSizeY);
-    std::cerr << " globalSizeZ = " << *(params->pglobalSizeZ);
-    std::cerr << " groupSizeX = " << *(params->pgroupSizeX);
-    std::cerr << " groupSizeY = " << *(params->pgroupSizeY);
-    std::cerr << " groupSizeZ = " << *(params->pgroupSizeZ);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeKernelSuggestGroupSizeOnExit(
@@ -4892,7 +3252,8 @@ static void zeKernelSuggestGroupSizeOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4900,14 +3261,8 @@ static void zeKernelSuggestGroupSizeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelSuggestGroupSize", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeKernelSuggestGroupSize" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeKernelSuggestGroupSize",
                          start_time, end_time);
@@ -4920,17 +3275,10 @@ static void zeKernelSuggestMaxCooperativeGroupCountOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeKernelSuggestMaxCooperativeGroupCount" << ":";
-    std::cerr << " hKernel = " << *(params->phKernel);
-    std::cerr << " totalGroupCount = " << *(params->ptotalGroupCount);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeKernelSuggestMaxCooperativeGroupCountOnExit(
@@ -4939,7 +3287,8 @@ static void zeKernelSuggestMaxCooperativeGroupCountOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4947,14 +3296,8 @@ static void zeKernelSuggestMaxCooperativeGroupCountOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelSuggestMaxCooperativeGroupCount", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeKernelSuggestMaxCooperativeGroupCount" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeKernelSuggestMaxCooperativeGroupCount",
                          start_time, end_time);
@@ -4967,19 +3310,10 @@ static void zeKernelSetArgumentValueOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeKernelSetArgumentValue" << ":";
-    std::cerr << " hKernel = " << *(params->phKernel);
-    std::cerr << " argIndex = " << *(params->pargIndex);
-    std::cerr << " argSize = " << *(params->pargSize);
-    std::cerr << " pArgValue = " << *(params->ppArgValue);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeKernelSetArgumentValueOnExit(
@@ -4988,7 +3322,8 @@ static void zeKernelSetArgumentValueOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -4996,14 +3331,8 @@ static void zeKernelSetArgumentValueOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelSetArgumentValue", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeKernelSetArgumentValue" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeKernelSetArgumentValue",
                          start_time, end_time);
@@ -5016,17 +3345,10 @@ static void zeKernelSetIndirectAccessOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeKernelSetIndirectAccess" << ":";
-    std::cerr << " hKernel = " << *(params->phKernel);
-    std::cerr << " flags = " << *(params->pflags);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeKernelSetIndirectAccessOnExit(
@@ -5035,7 +3357,8 @@ static void zeKernelSetIndirectAccessOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5043,14 +3366,8 @@ static void zeKernelSetIndirectAccessOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelSetIndirectAccess", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeKernelSetIndirectAccess" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeKernelSetIndirectAccess",
                          start_time, end_time);
@@ -5063,17 +3380,10 @@ static void zeKernelGetIndirectAccessOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeKernelGetIndirectAccess" << ":";
-    std::cerr << " hKernel = " << *(params->phKernel);
-    std::cerr << " pFlags = " << *(params->ppFlags);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeKernelGetIndirectAccessOnExit(
@@ -5082,7 +3392,8 @@ static void zeKernelGetIndirectAccessOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5090,14 +3401,8 @@ static void zeKernelGetIndirectAccessOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelGetIndirectAccess", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeKernelGetIndirectAccess" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeKernelGetIndirectAccess",
                          start_time, end_time);
@@ -5110,18 +3415,10 @@ static void zeKernelGetSourceAttributesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeKernelGetSourceAttributes" << ":";
-    std::cerr << " hKernel = " << *(params->phKernel);
-    std::cerr << " pSize = " << *(params->ppSize);
-    std::cerr << " pString = " << *(params->ppString);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeKernelGetSourceAttributesOnExit(
@@ -5130,7 +3427,8 @@ static void zeKernelGetSourceAttributesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5138,14 +3436,8 @@ static void zeKernelGetSourceAttributesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelGetSourceAttributes", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeKernelGetSourceAttributes" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeKernelGetSourceAttributes",
                          start_time, end_time);
@@ -5158,17 +3450,10 @@ static void zeKernelGetPropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeKernelGetProperties" << ":";
-    std::cerr << " hKernel = " << *(params->phKernel);
-    std::cerr << " pKernelProperties = " << *(params->ppKernelProperties);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeKernelGetPropertiesOnExit(
@@ -5177,7 +3462,8 @@ static void zeKernelGetPropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5185,14 +3471,8 @@ static void zeKernelGetPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelGetProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeKernelGetProperties" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeKernelGetProperties",
                          start_time, end_time);
@@ -5205,18 +3485,10 @@ static void zeKernelGetNameOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeKernelGetName" << ":";
-    std::cerr << " hKernel = " << *(params->phKernel);
-    std::cerr << " pSize = " << *(params->ppSize);
-    std::cerr << " pName = " << *(params->ppName);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeKernelGetNameOnExit(
@@ -5225,7 +3497,8 @@ static void zeKernelGetNameOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5233,14 +3506,8 @@ static void zeKernelGetNameOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeKernelGetName", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeKernelGetName" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeKernelGetName",
                          start_time, end_time);
@@ -5253,22 +3520,10 @@ static void zeSamplerCreateOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeSamplerCreate" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " desc = " << *(params->pdesc);
-    std::cerr << " phSampler = " << *(params->pphSampler);
-    if (*(params->pphSampler) != nullptr) {
-      std::cerr << " (hSampler = " << **(params->pphSampler) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeSamplerCreateOnExit(
@@ -5277,7 +3532,8 @@ static void zeSamplerCreateOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5285,17 +3541,8 @@ static void zeSamplerCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeSamplerCreate", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeSamplerCreate" << " [" << time << " ns]";
-    if (*(params->pphSampler) != nullptr) {
-      std::cerr << " hSampler = " << **(params->pphSampler) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeSamplerCreate",
                          start_time, end_time);
@@ -5308,16 +3555,10 @@ static void zeSamplerDestroyOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeSamplerDestroy" << ":";
-    std::cerr << " hSampler = " << *(params->phSampler);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeSamplerDestroyOnExit(
@@ -5326,7 +3567,8 @@ static void zeSamplerDestroyOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5334,14 +3576,8 @@ static void zeSamplerDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeSamplerDestroy", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeSamplerDestroy" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeSamplerDestroy",
                          start_time, end_time);
@@ -5354,22 +3590,10 @@ static void zePhysicalMemCreateOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zePhysicalMemCreate" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " desc = " << *(params->pdesc);
-    std::cerr << " phPhysicalMemory = " << *(params->pphPhysicalMemory);
-    if (*(params->pphPhysicalMemory) != nullptr) {
-      std::cerr << " (hPhysicalMemory = " << **(params->pphPhysicalMemory) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zePhysicalMemCreateOnExit(
@@ -5378,7 +3602,8 @@ static void zePhysicalMemCreateOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5386,17 +3611,8 @@ static void zePhysicalMemCreateOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zePhysicalMemCreate", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zePhysicalMemCreate" << " [" << time << " ns]";
-    if (*(params->pphPhysicalMemory) != nullptr) {
-      std::cerr << " hPhysicalMemory = " << **(params->pphPhysicalMemory) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zePhysicalMemCreate",
                          start_time, end_time);
@@ -5409,17 +3625,10 @@ static void zePhysicalMemDestroyOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zePhysicalMemDestroy" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hPhysicalMemory = " << *(params->phPhysicalMemory);
-    std::cerr << std::endl;
-  }
 }
 
 static void zePhysicalMemDestroyOnExit(
@@ -5428,7 +3637,8 @@ static void zePhysicalMemDestroyOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5436,14 +3646,8 @@ static void zePhysicalMemDestroyOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zePhysicalMemDestroy", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zePhysicalMemDestroy" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zePhysicalMemDestroy",
                          start_time, end_time);
@@ -5456,25 +3660,10 @@ static void zeMemAllocSharedOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeMemAllocShared" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " device_desc = " << *(params->pdevice_desc);
-    std::cerr << " host_desc = " << *(params->phost_desc);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << " alignment = " << *(params->palignment);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " pptr = " << *(params->ppptr);
-    if (*(params->ppptr) != nullptr) {
-      std::cerr << " (ptr = " << **(params->ppptr) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeMemAllocSharedOnExit(
@@ -5483,7 +3672,8 @@ static void zeMemAllocSharedOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5491,17 +3681,8 @@ static void zeMemAllocSharedOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemAllocShared", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeMemAllocShared" << " [" << time << " ns]";
-    if (*(params->ppptr) != nullptr) {
-      std::cerr << " ptr = " << **(params->ppptr) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeMemAllocShared",
                          start_time, end_time);
@@ -5514,24 +3695,10 @@ static void zeMemAllocDeviceOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeMemAllocDevice" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " device_desc = " << *(params->pdevice_desc);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << " alignment = " << *(params->palignment);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " pptr = " << *(params->ppptr);
-    if (*(params->ppptr) != nullptr) {
-      std::cerr << " (ptr = " << **(params->ppptr) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeMemAllocDeviceOnExit(
@@ -5540,7 +3707,8 @@ static void zeMemAllocDeviceOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5548,17 +3716,8 @@ static void zeMemAllocDeviceOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemAllocDevice", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeMemAllocDevice" << " [" << time << " ns]";
-    if (*(params->ppptr) != nullptr) {
-      std::cerr << " ptr = " << **(params->ppptr) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeMemAllocDevice",
                          start_time, end_time);
@@ -5571,23 +3730,10 @@ static void zeMemAllocHostOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeMemAllocHost" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " host_desc = " << *(params->phost_desc);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << " alignment = " << *(params->palignment);
-    std::cerr << " pptr = " << *(params->ppptr);
-    if (*(params->ppptr) != nullptr) {
-      std::cerr << " (ptr = " << **(params->ppptr) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeMemAllocHostOnExit(
@@ -5596,7 +3742,8 @@ static void zeMemAllocHostOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5604,17 +3751,8 @@ static void zeMemAllocHostOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemAllocHost", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeMemAllocHost" << " [" << time << " ns]";
-    if (*(params->ppptr) != nullptr) {
-      std::cerr << " ptr = " << **(params->ppptr) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeMemAllocHost",
                          start_time, end_time);
@@ -5627,17 +3765,10 @@ static void zeMemFreeOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeMemFree" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeMemFreeOnExit(
@@ -5646,7 +3777,8 @@ static void zeMemFreeOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5654,14 +3786,8 @@ static void zeMemFreeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemFree", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeMemFree" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeMemFree",
                          start_time, end_time);
@@ -5674,22 +3800,10 @@ static void zeMemGetAllocPropertiesOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeMemGetAllocProperties" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << " pMemAllocProperties = " << *(params->ppMemAllocProperties);
-    std::cerr << " phDevice = " << *(params->pphDevice);
-    if (*(params->pphDevice) != nullptr) {
-      std::cerr << " (hDevice = " << **(params->pphDevice) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeMemGetAllocPropertiesOnExit(
@@ -5698,7 +3812,8 @@ static void zeMemGetAllocPropertiesOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5706,17 +3821,8 @@ static void zeMemGetAllocPropertiesOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemGetAllocProperties", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeMemGetAllocProperties" << " [" << time << " ns]";
-    if (*(params->pphDevice) != nullptr) {
-      std::cerr << " hDevice = " << **(params->pphDevice) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeMemGetAllocProperties",
                          start_time, end_time);
@@ -5729,19 +3835,10 @@ static void zeMemGetAddressRangeOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeMemGetAddressRange" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << " pBase = " << *(params->ppBase);
-    std::cerr << " pSize = " << *(params->ppSize);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeMemGetAddressRangeOnExit(
@@ -5750,7 +3847,8 @@ static void zeMemGetAddressRangeOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5758,14 +3856,8 @@ static void zeMemGetAddressRangeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemGetAddressRange", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeMemGetAddressRange" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeMemGetAddressRange",
                          start_time, end_time);
@@ -5778,18 +3870,10 @@ static void zeMemGetIpcHandleOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeMemGetIpcHandle" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << " pIpcHandle = " << *(params->ppIpcHandle);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeMemGetIpcHandleOnExit(
@@ -5798,7 +3882,8 @@ static void zeMemGetIpcHandleOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5806,14 +3891,8 @@ static void zeMemGetIpcHandleOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemGetIpcHandle", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeMemGetIpcHandle" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeMemGetIpcHandle",
                          start_time, end_time);
@@ -5826,23 +3905,10 @@ static void zeMemOpenIpcHandleOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeMemOpenIpcHandle" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " handle = " << (params->phandle)->data;
-    std::cerr << " flags = " << *(params->pflags);
-    std::cerr << " pptr = " << *(params->ppptr);
-    if (*(params->ppptr) != nullptr) {
-      std::cerr << " (ptr = " << **(params->ppptr) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeMemOpenIpcHandleOnExit(
@@ -5851,7 +3917,8 @@ static void zeMemOpenIpcHandleOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5859,17 +3926,8 @@ static void zeMemOpenIpcHandleOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemOpenIpcHandle", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeMemOpenIpcHandle" << " [" << time << " ns]";
-    if (*(params->ppptr) != nullptr) {
-      std::cerr << " ptr = " << **(params->ppptr) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeMemOpenIpcHandle",
                          start_time, end_time);
@@ -5882,17 +3940,10 @@ static void zeMemCloseIpcHandleOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeMemCloseIpcHandle" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeMemCloseIpcHandleOnExit(
@@ -5901,7 +3952,8 @@ static void zeMemCloseIpcHandleOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5909,14 +3961,8 @@ static void zeMemCloseIpcHandleOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeMemCloseIpcHandle", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeMemCloseIpcHandle" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeMemCloseIpcHandle",
                          start_time, end_time);
@@ -5929,22 +3975,10 @@ static void zeVirtualMemReserveOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeVirtualMemReserve" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " pStart = " << *(params->ppStart);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << " pptr = " << *(params->ppptr);
-    if (*(params->ppptr) != nullptr) {
-      std::cerr << " (ptr = " << **(params->ppptr) << ")";
-    }
-    std::cerr << std::endl;
-  }
 }
 
 static void zeVirtualMemReserveOnExit(
@@ -5953,7 +3987,8 @@ static void zeVirtualMemReserveOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -5961,17 +3996,8 @@ static void zeVirtualMemReserveOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeVirtualMemReserve", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeVirtualMemReserve" << " [" << time << " ns]";
-    if (*(params->ppptr) != nullptr) {
-      std::cerr << " ptr = " << **(params->ppptr) << "";
-    }
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeVirtualMemReserve",
                          start_time, end_time);
@@ -5984,18 +4010,10 @@ static void zeVirtualMemFreeOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeVirtualMemFree" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeVirtualMemFreeOnExit(
@@ -6004,7 +4022,8 @@ static void zeVirtualMemFreeOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -6012,14 +4031,8 @@ static void zeVirtualMemFreeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeVirtualMemFree", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeVirtualMemFree" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeVirtualMemFree",
                          start_time, end_time);
@@ -6032,19 +4045,10 @@ static void zeVirtualMemQueryPageSizeOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeVirtualMemQueryPageSize" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " hDevice = " << *(params->phDevice);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << " pagesize = " << *(params->ppagesize);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeVirtualMemQueryPageSizeOnExit(
@@ -6053,7 +4057,8 @@ static void zeVirtualMemQueryPageSizeOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -6061,14 +4066,8 @@ static void zeVirtualMemQueryPageSizeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeVirtualMemQueryPageSize", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeVirtualMemQueryPageSize" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeVirtualMemQueryPageSize",
                          start_time, end_time);
@@ -6081,40 +4080,10 @@ static void zeVirtualMemMapOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeVirtualMemMap" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << " hPhysicalMemory = " << *(params->phPhysicalMemory);
-    std::cerr << " offset = " << *(params->poffset);
-    std::cerr << " access = " << *(params->paccess);
-    std::cerr << " (";
-    switch (*(params->paccess)) {
-      case 2147483647:
-        std::cerr << "ZE_MEMORY_ACCESS_ATTRIBUTE_FORCE_UINT32";
-        break;
-      case 0:
-        std::cerr << "ZE_MEMORY_ACCESS_ATTRIBUTE_NONE";
-        break;
-      case 1:
-        std::cerr << "ZE_MEMORY_ACCESS_ATTRIBUTE_READWRITE";
-        break;
-      case 2:
-        std::cerr << "ZE_MEMORY_ACCESS_ATTRIBUTE_READONLY";
-        break;
-      default:
-        std::cerr << "<UNKNOWN>";
-        break;
-    }
-    std::cerr << ")";
-    std::cerr << std::endl;
-  }
 }
 
 static void zeVirtualMemMapOnExit(
@@ -6123,7 +4092,8 @@ static void zeVirtualMemMapOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -6131,14 +4101,8 @@ static void zeVirtualMemMapOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeVirtualMemMap", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeVirtualMemMap" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeVirtualMemMap",
                          start_time, end_time);
@@ -6151,18 +4115,10 @@ static void zeVirtualMemUnmapOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeVirtualMemUnmap" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeVirtualMemUnmapOnExit(
@@ -6171,7 +4127,8 @@ static void zeVirtualMemUnmapOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -6179,14 +4136,8 @@ static void zeVirtualMemUnmapOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeVirtualMemUnmap", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeVirtualMemUnmap" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeVirtualMemUnmap",
                          start_time, end_time);
@@ -6199,38 +4150,10 @@ static void zeVirtualMemSetAccessAttributeOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeVirtualMemSetAccessAttribute" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << " access = " << *(params->paccess);
-    std::cerr << " (";
-    switch (*(params->paccess)) {
-      case 2147483647:
-        std::cerr << "ZE_MEMORY_ACCESS_ATTRIBUTE_FORCE_UINT32";
-        break;
-      case 0:
-        std::cerr << "ZE_MEMORY_ACCESS_ATTRIBUTE_NONE";
-        break;
-      case 1:
-        std::cerr << "ZE_MEMORY_ACCESS_ATTRIBUTE_READWRITE";
-        break;
-      case 2:
-        std::cerr << "ZE_MEMORY_ACCESS_ATTRIBUTE_READONLY";
-        break;
-      default:
-        std::cerr << "<UNKNOWN>";
-        break;
-    }
-    std::cerr << ")";
-    std::cerr << std::endl;
-  }
 }
 
 static void zeVirtualMemSetAccessAttributeOnExit(
@@ -6239,7 +4162,8 @@ static void zeVirtualMemSetAccessAttributeOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -6247,14 +4171,8 @@ static void zeVirtualMemSetAccessAttributeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeVirtualMemSetAccessAttribute", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeVirtualMemSetAccessAttribute" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeVirtualMemSetAccessAttribute",
                          start_time, end_time);
@@ -6267,20 +4185,10 @@ static void zeVirtualMemGetAccessAttributeOnEnter(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
-
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
   start_time = collector->GetTimestamp();
-  if (collector->call_tracing_) {
-    std::cerr << ">>>> [" << start_time << "] ";
-    std::cerr << "zeVirtualMemGetAccessAttribute" << ":";
-    std::cerr << " hContext = " << *(params->phContext);
-    std::cerr << " ptr = " << *(params->pptr);
-    std::cerr << " size = " << *(params->psize);
-    std::cerr << " access = " << *(params->paccess);
-    std::cerr << " outSize = " << *(params->poutSize);
-    std::cerr << std::endl;
-  }
 }
 
 static void zeVirtualMemGetAccessAttributeOnExit(
@@ -6289,7 +4197,8 @@ static void zeVirtualMemGetAccessAttributeOnExit(
     void* global_user_data,
     void** instance_user_data) {
   PTI_ASSERT(global_user_data != nullptr);
-  ZeApiCollector* collector = reinterpret_cast<ZeApiCollector*>(global_user_data);
+  ZeApiCollector* collector =
+    reinterpret_cast<ZeApiCollector*>(global_user_data);
   uint64_t end_time = collector->GetTimestamp();
 
   uint64_t& start_time = *reinterpret_cast<uint64_t*>(instance_user_data);
@@ -6297,21 +4206,15 @@ static void zeVirtualMemGetAccessAttributeOnExit(
   PTI_ASSERT(start_time < end_time);
   uint64_t time = end_time - start_time;
   collector->AddFunctionTime("zeVirtualMemGetAccessAttribute", time);
-  if (collector->call_tracing_) {
-    std::cerr << "<<<< [" << end_time << "] ";
-    std::cerr << "zeVirtualMemGetAccessAttribute" << " [" << time << " ns]";
-    std::cerr << " -> " << GetResultString(result) << 
-      " (" << result << ")" << std::endl;
-  }
-
-  if (collector->callback_ != nullptr) {
+  
+    if (collector->callback_ != nullptr) {
     collector->callback_(collector->callback_data_,
                          "zeVirtualMemGetAccessAttribute",
                          start_time, end_time);
   }
 }
 
-static void SetTracingAPIs(zet_tracer_exp_handle_t tracer) {
+static void SetTracingFunctions(zel_tracer_handle_t tracer) {
   zet_core_callbacks_t prologue = {};
   zet_core_callbacks_t epilogue = {};
 
@@ -6557,9 +4460,10 @@ static void SetTracingAPIs(zet_tracer_exp_handle_t tracer) {
   epilogue.VirtualMem.pfnGetAccessAttributeCb = zeVirtualMemGetAccessAttributeOnExit;
 
   ze_result_t status = ZE_RESULT_SUCCESS;
-  status = zetTracerExpSetPrologues(tracer, &prologue);
+  status = zelTracerSetPrologues(tracer, &prologue);
   PTI_ASSERT(status == ZE_RESULT_SUCCESS);
-  status = zetTracerExpSetEpilogues(tracer, &epilogue);
+  status = zelTracerSetEpilogues(tracer, &epilogue);
   PTI_ASSERT(status == ZE_RESULT_SUCCESS);
 }
 
+#endif // PTI_SAMPLES_ZE_HOT_FUNCTIONS_ZE_API_CALLBACKS_H_

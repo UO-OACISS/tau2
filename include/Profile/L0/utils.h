@@ -1,11 +1,11 @@
 //==============================================================
-// Copyright © 2019-2020 Intel Corporation
+// Copyright (C) Intel Corporation
 //
 // SPDX-License-Identifier: MIT
 // =============================================================
 
-#ifndef PTI_SAMPLES_UTILS_UTILS_H_
-#define PTI_SAMPLES_UTILS_UTILS_H_
+#ifndef PTI_UTILS_UTILS_H_
+#define PTI_UTILS_UTILS_H_
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -20,7 +20,10 @@
 #include <string>
 #include <vector>
 
-#include <Profile/L0/pti_assert.h>
+#include "pti_assert.h"
+
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
 
 #define MAX_STR_SIZE 1024
 
@@ -44,27 +47,34 @@ struct Comparator {
 };
 
 #if defined(__gnu_linux__)
-inline uint64_t ConvertClockMonotonicToRaw(uint64_t clock_monotonic) {
-  int status = 0;
 
-  timespec monotonic_time;
-  status = clock_gettime(CLOCK_MONOTONIC, &monotonic_time);
+inline uint64_t GetTime(clockid_t id) {
+  timespec ts{0};
+  int status = clock_gettime(id, &ts);
   PTI_ASSERT(status == 0);
-
-  timespec raw_time;
-  status = clock_gettime(CLOCK_MONOTONIC_RAW, &raw_time);
-  PTI_ASSERT(status == 0);
-
-  uint64_t raw = raw_time.tv_nsec + NSEC_IN_SEC * raw_time.tv_sec;
-  uint64_t monotonic = monotonic_time.tv_nsec +
-    NSEC_IN_SEC * monotonic_time.tv_sec;
-  if (raw > monotonic) {
-    return clock_monotonic + (raw - monotonic);
-  } else {
-    return clock_monotonic - (monotonic - raw);
-  }
+  return ts.tv_sec * NSEC_IN_SEC + ts.tv_nsec;
 }
+
+inline uint64_t ConvertClockMonotonicToRaw(uint64_t clock_monotonic) {
+  uint64_t raw = GetTime(CLOCK_MONOTONIC_RAW);
+  uint64_t monotonic = GetTime(CLOCK_MONOTONIC);
+  return (raw > monotonic) ?
+    clock_monotonic + (raw - monotonic) :
+    clock_monotonic - (monotonic - raw);
+}
+
 #endif
+
+inline std::string GetFilePath(const std::string& filename) {
+  PTI_ASSERT(!filename.empty());
+
+  size_t pos = filename.find_last_of("/\\");
+  if (pos == std::string::npos) {
+    return "";
+  }
+
+  return filename.substr(0, pos + 1);
+}
 
 inline std::string GetExecutablePath() {
   char buffer[MAX_STR_SIZE] = { 0 };
@@ -75,8 +85,7 @@ inline std::string GetExecutablePath() {
   ssize_t status = readlink("/proc/self/exe", buffer, MAX_STR_SIZE);
   PTI_ASSERT(status > 0);
 #endif
-  std::string path(buffer);
-  return path.substr(0, path.find_last_of("/\\") + 1);
+  return GetFilePath(buffer);
 }
 
 inline std::string GetExecutableName() {
@@ -111,13 +120,16 @@ inline std::vector<uint8_t> LoadBinaryFile(const std::string& path) {
   return binary;
 }
 
-inline void SetEnv(const char* str) {
-  PTI_ASSERT(str != nullptr);
+inline void SetEnv(const char* name, const char* value) {
+  PTI_ASSERT(name != nullptr);
+  PTI_ASSERT(value != nullptr);
+
   int status = 0;
 #if defined(_WIN32)
-  status = _putenv(str);
+  std::string str = std::string(name) + "=" + value;
+  status = _putenv(str.c_str());
 #else
-  status = putenv(const_cast<char*>(str));
+  status = setenv(name, value, 1);
 #endif
   PTI_ASSERT(status == 0);
 }
@@ -163,6 +175,48 @@ inline uint32_t GetTid() {
 #endif
 }
 
+inline uint64_t GetSystemTime() {
+#if defined(_WIN32)
+  LARGE_INTEGER ticks{0};
+  LARGE_INTEGER frequency{0};
+  BOOL status = QueryPerformanceFrequency(&frequency);
+  PTI_ASSERT(status != 0);
+  status = QueryPerformanceCounter(&ticks);
+  PTI_ASSERT(status != 0);
+  return ticks.QuadPart * (NSEC_IN_SEC / frequency.QuadPart);
+#else
+  return GetTime(CLOCK_MONOTONIC_RAW);
+#endif
+}
+
+inline size_t LowerBound(const std::vector<uint64_t>& data, uint64_t value) {
+  size_t start = 0;
+  size_t end = data.size();
+  while (start < end) {
+    size_t middle = (start + end) / 2;
+    if (value <= data[middle]) {
+      end = middle;
+    } else {
+      start = middle + 1;
+    }
+  }
+  return start;
+}
+
+inline size_t UpperBound(const std::vector<uint64_t>& data, uint64_t value) {
+  size_t start = 0;
+  size_t end = data.size();
+  while (start < end) {
+    size_t middle = (start + end) / 2;
+    if (value >= data[middle]) {
+      start = middle + 1;
+    } else {
+      end = middle;
+    }
+  }
+  return start;
+}
+
 } // namespace utils
 
-#endif // PTI_SAMPLES_UTILS_UTILS_H_
+#endif // PTI_UTILS_UTILS_H_
