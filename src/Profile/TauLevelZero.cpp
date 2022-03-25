@@ -197,22 +197,19 @@ void TAUOnAPIFinishCallback(void *data, const std::string& name, uint64_t starte
   TAU_STOP_TASK(name.c_str(), taskid);
 }
 
-void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t appended,
-                uint64_t submitted, uint64_t started, uint64_t ended) {
+void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t started, uint64_t ended) {
 
-  static bool first_call = TAUSetFirstGPUTimestamp(appended);
+  static bool first_call = TAUSetFirstGPUTimestamp(started);
   int taskid;
   taskid = *((int *) data);
   const char *kernel_name = name.c_str();
   double started_translated = TAUTranslateGPUtoCPUTimestamp(taskid, started);
   double ended_translated = TAUTranslateGPUtoCPUTimestamp(taskid, ended);
   char *demangled_name = Tau_demangle_name(kernel_name);
-  TAU_VERBOSE("TAU: <kernel>: (raw) name: %s appended: %ld submitted: %ld started: %ld ended: %ld task id=%d\n",
-		  name.c_str(), appended, submitted, started, ended, taskid);
-  TAU_VERBOSE("TAU: <kernel>: (raw) name: %s appended: %g submitted: %g started: %g ended: %g task id=%d\n",
-    name.c_str(), TAUTranslateGPUtoCPUTimestamp(taskid, appended),
-		  TAUTranslateGPUtoCPUTimestamp(taskid, submitted),
-		  started_translated, ended_translated, taskid);
+  TAU_VERBOSE("TAU: <kernel>: (raw) name: %s  started: %ld ended: %ld task id=%d\n",
+		  name.c_str(), started, ended, taskid);
+  TAU_VERBOSE("TAU: <kernel>: (raw) name: %s started: %g ended: %g task id=%d\n",
+    name.c_str(),  started_translated, ended_translated, taskid);
 
   last_gpu_timestamp = ended;
   metric_set_gpu_timestamp(taskid, started_translated);

@@ -68,7 +68,6 @@ using ZeCommandListMap = std::map<ze_command_list_handle_t, ZeCommandListInfo>;
 
 typedef void (*OnKernelFinishCallback)(
     void* data, const std::string& name,
-    uint64_t appended, uint64_t submitted,
     uint64_t started, uint64_t ended);
 
 class ZeKernelCollector {
@@ -313,7 +312,6 @@ class ZeKernelCollector {
     
     if(callback_ != nullptr){
     	callback_(callback_data_, call->name,
-                0, 0,
                 start_ns, end_ns);
     }
     
