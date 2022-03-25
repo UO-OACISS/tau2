@@ -8503,6 +8503,9 @@ then
 fi
 
 $echo "Checking for thread-safe MPI interface... ${nnl}"
+if [ "x$c_compiler" = "xicx" ]; then
+  mpiwarnings=""
+fi
 if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi_thread_test.$msuf  1> /dev/null 2>&1 ; then
     echo "yes"
     fixmakeargs="$fixmakeargs MPI_THREADED"
