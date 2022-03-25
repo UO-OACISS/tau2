@@ -3078,8 +3078,12 @@ if [ "x$use_opencl" = "xyes" -a "x$openclinclude" = "x" ]; then
   ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
   for d in $ld_lib_path
   do
+	  echo "OPENCL: CHECKING $d"
     if [ -r $d/libOpenCL.so ]; then
-      openclinclude=`echo $d | sed -e "s@/lib@@g"`/include
+      #openclinclude=`echo $d | sed -e "s@/lib@@g"`/include
+      echo "checking $d"
+      openclinclude=`echo $d | sed -e "s@/lib64@@g" -e "s@loader@headers@g" `/include
+      echo "openclinclude=$openclinclude"
       if [ -f "$openclinclude/CL/cl.h" ] ; then
       #                       useropt="$useropt#-DTAU_MAX_THREADS=32"
         fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude"
@@ -8499,6 +8503,9 @@ then
 fi
 
 $echo "Checking for thread-safe MPI interface... ${nnl}"
+if [ "x$c_compiler" = "xicx" ]; then
+  mpiwarnings=""
+fi
 if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi_thread_test.$msuf  1> /dev/null 2>&1 ; then
     echo "yes"
     fixmakeargs="$fixmakeargs MPI_THREADED"

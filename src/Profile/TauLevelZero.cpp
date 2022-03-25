@@ -24,6 +24,7 @@
 #include <Profile/L0/ze_kernel_collector.h>
 #include <Profile/L0/ze_api_collector.h>
 
+
 #include "Profile/Profiler.h"
 #include "Profile/TauBfd.h"
 using namespace std;
@@ -88,7 +89,7 @@ extern "C"
 __declspec(dllexport)
 #endif
 void SetToolEnv() {
-  utils::SetEnv("ZET_ENABLE_API_TRACING_EXP=1");
+  utils::SetEnv("ZET_ENABLE_API_TRACING_EXP","1");
 }
 
 // Internal Tool Functionality ////////////////////////////////////////////////
@@ -98,7 +99,7 @@ static void PrintResults() {
   std::chrono::duration<uint64_t, std::nano> time = end - start;
 
   PTI_ASSERT(kernel_collector != nullptr);
-  const KernelInfoMap& kernel_info_map = kernel_collector->GetKernelInfoMap();
+  const ZeKernelInfoMap& kernel_info_map = kernel_collector->GetKernelInfoMap();
   if (kernel_info_map.size() == 0) {
     return;
   }
@@ -129,7 +130,7 @@ static void APIPrintResults() {
   std::chrono::duration<uint64_t, std::nano> time = end - start;
 
   PTI_ASSERT(api_collector != nullptr);
-  const FunctionInfoMap& function_info_map = api_collector->GetFunctionInfoMap();
+  const ZeFunctionInfoMap& function_info_map = api_collector->GetFunctionInfoMap();
   if (function_info_map.size() == 0) {
     return;
   }
@@ -152,6 +153,7 @@ static void APIPrintResults() {
 
   std::cerr << std::endl;
 }
+
 
 
 
@@ -238,7 +240,9 @@ void EnableProfiling() {
 
   ze_driver_handle_t driver = nullptr;
   ze_device_handle_t device = nullptr;
-  utils::ze::GetIntelDeviceAndDriver(ZE_DEVICE_TYPE_GPU, device, driver);
+  driver =  utils::ze::GetGpuDriver();
+  device =  utils::ze::GetGpuDevice();
+
   if (device == nullptr || driver == nullptr) {
     std::cout << "[WARNING] Unable to find target device" << std::endl;
     return;
@@ -252,7 +256,7 @@ void EnableProfiling() {
   //*host_taskid = RtsLayer::myThread();
   TAU_CREATE_TASK(*api_taskid);
   host_api_task_id = *api_taskid;
-  kernel_collector = ZeKernelCollector::Create(driver, std::chrono::steady_clock::now(),
+  kernel_collector = ZeKernelCollector::Create(driver,
                   TAUOnKernelFinishCallback, pk);
   /*
   //uint64_t gpu_ts = utils::i915::GetGpuTimestamp() & 0x0FFFFFFFF;
@@ -266,8 +270,7 @@ void EnableProfiling() {
   // timestamps.
 
   void *ph = (void *) api_taskid;
-  api_collector = ZeApiCollector::Create(driver,  std::chrono::steady_clock::now(), false,
-                  TAUOnAPIFinishCallback, ph);
+  api_collector = ZeApiCollector::Create(driver, TAUOnAPIFinishCallback, ph);
 
   metric_set_gpu_timestamp(host_api_task_id, first_cpu_timestamp);
   Tau_create_top_level_timer_if_necessary_task(host_api_task_id);
