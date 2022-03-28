@@ -307,6 +307,7 @@ static int env_openmp_runtime_context = 1;
 static int env_ebs_enabled = 0;
 static int env_ebs_enabled_tau = 0;
 static const char *env_ebs_source = "itimer";
+static const char *env_ebs_source_orig = "itimer";
 static int env_ebs_unwind_enabled = 0;
 static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
 static int env_ebs_resolution = TAU_EBS_RESOLUTION_LINE;
@@ -1167,8 +1168,12 @@ const char *TauEnv_get_ebs_source() {
   return env_ebs_source;
 }
 
+const char *TauEnv_get_ebs_source_orig() {
+  return env_ebs_source_orig;
+}
+
 void TauEnv_override_ebs_source(const char *newName) {
-  env_ebs_source = newName;
+  env_ebs_source = strdup(newName);
   TAU_METADATA("TAU_EBS_SOURCE (Override)", newName);
 }
 
@@ -2416,8 +2421,9 @@ void TauEnv_initialize()
       if ((env_ebs_source = getconf("TAU_EBS_SOURCE")) == NULL) {
         env_ebs_source = "itimer";
       }
+      env_ebs_source_orig = strdup(env_ebs_source);
       sprintf(tmpstr, "%s", env_ebs_source);
-      TAU_METADATA("TAU_EBS_PERIOD", tmpstr);
+      TAU_METADATA("TAU_EBS_SOURCE", tmpstr);
 
       TAU_VERBOSE("TAU: EBS Source: %s\n", env_ebs_source);
 

@@ -1753,8 +1753,13 @@ int Tau_sampling_init(int tid, pid_t pid)
    See Tau_sampling_handle_sample().
    */
 #ifndef TAU_BGQ
-  if (strcmp(TauEnv_get_ebs_source(), "itimer") == 0 ||
-      strcmp(TauEnv_get_ebs_source(), "TIME") == 0)
+  // TauEnv_get_ebs_source_orig() still returns the original value even
+  // after it's overridden later with TauEnv_override_ebs_source.
+  // This avoids a race condition where one thread changes 
+  // TAU_EBS_SOURCE, causing this if to evaluate false on
+  // later-executing threads.
+  if (strcmp(TauEnv_get_ebs_source_orig(), "itimer") == 0 ||
+      strcmp(TauEnv_get_ebs_source_orig(), "TIME") == 0)
   {
 #endif // TAU_BGQ
 
