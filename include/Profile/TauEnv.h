@@ -119,6 +119,7 @@ extern "C" {
   int TAUDECL TauEnv_get_disable_instrumentation();
 
   const char* TAUDECL TauEnv_get_ebs_source();
+  const char* TAUDECL TauEnv_get_ebs_source_orig();
   void TAUDECL TauEnv_override_ebs_source(const char *newName);
   double      TAUDECL TauEnv_get_throttle_numcalls();
   double      TAUDECL TauEnv_get_throttle_percall();
