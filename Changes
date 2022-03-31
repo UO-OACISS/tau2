@@ -28,6 +28,8 @@ Version 2.31 changes (from 2.30):
 15. Allows a user to specify different compilers on Cray systems.
 16. Added support for TAU_COMPILER_SELECT_FILE for specifying selective instrumentation for hipcc/clang for C++ files. 
 17. Added support for PrgEnv-cray with -c++=hipcc -cc=clang for LLVM selective instrumentation plugin. 
+18. Added support for specifying full path of Fortran compiler (e.g., mpiifort) while building TAU. 
+19. Added support for using MPI compiler scripts with -c++=hipcc -cc=clang using mpiinc and mpilib on HPE/Cray. 
  
 Version 2.30 changes (from 2.29):
 1. Added support for Fugaku Fujitsu FX system with Fujitsu compilers (-mpi -bfd=download) for Fugaku. 
