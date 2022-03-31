@@ -3,6 +3,13 @@
 LANG="C"
 export LANG
 
+darshan_module_loaded=`env | grep LOADEDMODULES | grep darshan | wc -l`
+if [ $darshan_module_loaded -gt 0 ] ; then
+    echo "ERROR: Darshan is not compatible with TAU."
+    echo "Please unload any darshan modules before running tau_exec."
+    exit 1
+fi
+
 eval `tau-config`
 
 scriptname=`basename $0`
