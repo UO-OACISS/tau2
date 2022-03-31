@@ -5688,6 +5688,9 @@ if [ $scorep = yes ]; then
 fi
 
 full_fortran_compiler=`which $fortran_compiler 2>/dev/null`
+if [ $fortran_compiler != $orig_fortran_compiler ]; then
+  full_fortran_compiler=`which $orig_fortran_compiler 2>/dev/null`
+fi
 if [ $fortran_compiler_specified = yes -a "x$full_fortran_compiler" != "x" ]; then
   fixmakeargs="$fixmakeargs fullfortran=$full_fortran_compiler FORTRAN_SPECIFIED"
 fi
