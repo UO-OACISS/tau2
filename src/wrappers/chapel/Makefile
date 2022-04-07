@@ -3,7 +3,7 @@ include ../Makefile
 
 
 CC=$(TAU_CC) 
-CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -fPIC -Wall
+CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -fPIC 
 EXTRA_FLAGS=
 
 INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
@@ -19,5 +19,5 @@ chapel_wrap_dynamic.o: chapel_wrap_dynamic.c
 	$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@
 
 clean:
-	/bin/rm -f chapel_wrap_dynamic.o libTAU-chapel_wrap_dynamic.so
+	/bin/rm -f chapel_wrap_dynamic.o libTAU-chapel-wrap.so
 
