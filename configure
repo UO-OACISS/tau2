@@ -765,6 +765,8 @@ for arg in "$@"; do
 	echo "           nec-sx-aurora|crayxmt|solaris2-64|mips32|sgin32|sgi64|sgio32"
         echo "                                                 arm_linux|arm_android]"
         echo "-iowrapper .................................... Build POSIX IO Wrapper."
+        echo "-ugni ..................................... Build UGNI network wrapper."
+        echo "-chapel .................... Build Cray Chapel network atomics wrapper."
         echo "-pthread .................................. Use pthread thread package."
         echo "-no_pthread_create ................... Suppress pthread_create wrapper."
         echo "-papithread .................................. Use PAPI thread package."
@@ -1243,6 +1245,7 @@ iowrapper=no
 dmapp=no
 ugni=no
 tauoptions_has_ugni=no
+chapel=no
 zepto=no
 zeptodir=
 cuda=no
@@ -1451,6 +1454,11 @@ for arg in "$@"; do
 
 	-ugni)
 	    ugni=yes
+	    shift
+	    ;;
+
+	-chapel)
+	    chapel=yes
 	    shift
 	    ;;
 
@@ -4423,6 +4431,11 @@ if [ "x$PE_ENV" = "xCRAY" -o $ugni = yes ]; then
 	    tauoptions="${tauoptions}-ugni"
         fi
     fi
+fi
+
+if [ $chapel = yes ] ; then
+    fixmakeargs="$fixmakeargs CHAPEL"
+    tauoptions="${tauoptions}-chapel"
 fi
 
 if [ $stff = yes ] ; then
