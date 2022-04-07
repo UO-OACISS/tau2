@@ -5,7 +5,7 @@
 
 #include <dlfcn.h>
 
-const char * tau_orig_libname = "libchpl.so";
+static const char * tau_orig_libname = "libchpl.so";
 static void *tau_handle = NULL;
 
 
@@ -37,12 +37,14 @@ typedef int32_t chpl_bool32;
                                                                       \
         if (tau_handle == NULL) { \
             perror("Error opening library in dlopen call"); \
+            fprintf(stderr, "%s\n", dlerror()); \
             return;\
         } else { \
             if (chpl_comm_atomic_write_h == NULL)\
                chpl_comm_atomic_write_h = dlsym(tau_handle,"chpl_comm_atomic_write_" #type); \
             if (chpl_comm_atomic_write_h == NULL) {\
                perror("Error obtaining symbol info from dlopen'ed lib"); \
+               fprintf(stderr, "%s\n", dlerror()); \
             return;\
             }\
         }\
@@ -73,12 +75,14 @@ WRAP_CHPL_COMM_ATOMIC_WRITE(real64)
                                                                       \
         if (tau_handle == NULL) { \
             perror("Error opening library in dlopen call"); \
+            fprintf(stderr, "%s\n", dlerror()); \
             return;\
         } else { \
             if (chpl_comm_atomic_read_h == NULL)\
                chpl_comm_atomic_read_h = dlsym(tau_handle,"chpl_comm_atomic_read_" #type); \
             if (chpl_comm_atomic_read_h == NULL) {\
                perror("Error obtaining symbol info from dlopen'ed lib"); \
+            fprintf(stderr, "%s\n", dlerror()); \
             return;\
             }\
         }\
@@ -97,27 +101,29 @@ WRAP_CHPL_COMM_ATOMIC_READ(real64)
 
 #define WRAP_CHPL_COMM_ATOMIC_XCHG(type)                               \
   extern void chpl_comm_atomic_xchg_ ## type                           \
-         (void* a1, c_nodeid_t a2, void* a3,                 \
-          memory_order a4, int a5, int32_t a6) {                     \
+         (void* a1, c_nodeid_t a2, void* a3, void* a4,                 \
+          memory_order a5, int a6, int32_t a7) {                     \
                                                                         \
-        static void (*chpl_comm_atomic_xchg_h) (void * a1, c_nodeid_t a2, void * a3, memory_order a4, int a5, int32_t a6) = NULL; \
-        TAU_PROFILE_TIMER(t,"void chpl_comm_atomic_xchg_" #type "(void *, c_nodeit_t, void *, memory_order, int, int32_t) C", "", TAU_GROUP_TAU_CHPL); \
+        static void (*chpl_comm_atomic_xchg_h) (void * a1, c_nodeid_t a2, void * a3, void * a4, memory_order a5, int a6, int32_t a7) = NULL; \
+        TAU_PROFILE_TIMER(t,"void chpl_comm_atomic_xchg_" #type "(void *, c_nodeit_t, void *, void *, memory_order, int, int32_t) C", "", TAU_GROUP_TAU_CHPL); \
         if (tau_handle == NULL) \
             tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); \
                                                                       \
         if (tau_handle == NULL) { \
             perror("Error opening library in dlopen call"); \
+            fprintf(stderr, "%s\n", dlerror()); \
             return;\
         } else { \
             if (chpl_comm_atomic_xchg_h == NULL)\
                chpl_comm_atomic_xchg_h = dlsym(tau_handle,"chpl_comm_atomic_xchg_" #type); \
             if (chpl_comm_atomic_xchg_h == NULL) {\
                perror("Error obtaining symbol info from dlopen'ed lib"); \
+            fprintf(stderr, "%s\n", dlerror()); \
             return;\
             }\
         }\
         TAU_PROFILE_START(t);\
-        (*chpl_comm_atomic_xchg_h) ( a1,  a2,  a3,  a4, a5, a6);\
+        (*chpl_comm_atomic_xchg_h) ( a1,  a2,  a3,  a4, a5, a6, a7);\
         TAU_PROFILE_STOP(t);\
         return;\
     }
@@ -141,12 +147,14 @@ WRAP_CHPL_COMM_ATOMIC_XCHG(real64)
                                                                       \
         if (tau_handle == NULL) { \
             perror("Error opening library in dlopen call"); \
+            fprintf(stderr, "%s\n", dlerror()); \
             return;\
         } else { \
             if (chpl_comm_atomic_cmpxchg_h == NULL)\
                chpl_comm_atomic_cmpxchg_h = dlsym(tau_handle,"chpl_comm_atomic_cmpxchg_" #type); \
             if (chpl_comm_atomic_cmpxchg_h == NULL) {\
                perror("Error obtaining symbol info from dlopen'ed lib"); \
+            fprintf(stderr, "%s\n", dlerror()); \
             return;\
             }\
         }\
@@ -175,12 +183,14 @@ WRAP_CHPL_COMM_ATOMIC_CMPXCHG(real64)
                                                                         \
             if (tau_handle == NULL) { \
                 perror("Error opening library in dlopen call"); \
+            fprintf(stderr, "%s\n", dlerror()); \
                 return;\
             } else { \
                 if (chpl_comm_atomic_nonfetch_binary_h == NULL)\
                 chpl_comm_atomic_nonfetch_binary_h = dlsym(tau_handle,"chpl_comm_atomic_" #op "_" #type); \
                 if (chpl_comm_atomic_nonfetch_binary_h == NULL) {\
                 perror("Error obtaining symbol info from dlopen'ed lib"); \
+            fprintf(stderr, "%s\n", dlerror()); \
                 return;\
                 }\
             }\
@@ -202,12 +212,14 @@ WRAP_CHPL_COMM_ATOMIC_CMPXCHG(real64)
                                                                         \
             if (tau_handle == NULL) { \
                 perror("Error opening library in dlopen call"); \
+            fprintf(stderr, "%s\n", dlerror()); \
                 return;\
             } else { \
                 if (chpl_comm_atomic_nonfetch_unordered_binary_h == NULL)\
                 chpl_comm_atomic_nonfetch_unordered_binary_h = dlsym(tau_handle,"chpl_comm_atomic_" #op "_unordered_" #type); \
                 if (chpl_comm_atomic_nonfetch_unordered_binary_h == NULL) {\
                 perror("Error obtaining symbol info from dlopen'ed lib"); \
+            fprintf(stderr, "%s\n", dlerror()); \
                 return;\
                 }\
             }\
@@ -228,12 +240,14 @@ WRAP_CHPL_COMM_ATOMIC_CMPXCHG(real64)
                                                                         \
             if (tau_handle == NULL) { \
                 perror("Error opening library in dlopen call"); \
+            fprintf(stderr, "%s\n", dlerror()); \
                 return;\
             } else { \
                 if (chpl_comm_atomic_fetch_binary_h == NULL)\
                 chpl_comm_atomic_fetch_binary_h = dlsym(tau_handle,"chpl_comm_atomic_fetch" #op "_" #type); \
                 if (chpl_comm_atomic_fetch_binary_h == NULL) {\
                 perror("Error obtaining symbol info from dlopen'ed lib"); \
+            fprintf(stderr, "%s\n", dlerror()); \
                 return;\
                 }\
             }\
@@ -287,12 +301,14 @@ void chpl_comm_atomic_unordered_task_fence(void) {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return;
   } else { 
     if (chpl_comm_atomic_unordered_task_fence_h == NULL)
       chpl_comm_atomic_unordered_task_fence_h = dlsym(tau_handle,"chpl_comm_atomic_unordered_task_fence"); 
     if (chpl_comm_atomic_unordered_task_fence_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return;
     }
   }
