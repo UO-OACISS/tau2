@@ -238,8 +238,8 @@ on_ompt_callback_parallel_end(
     }
 
     if(codeptr_ra) {
-      //TAU_PROFILER_STOP(parallel_data->ptr);
-      Tau_global_stop();
+      TAU_PROFILER_STOP(parallel_data->ptr);
+      //Tau_global_stop();
     }
   }
 
