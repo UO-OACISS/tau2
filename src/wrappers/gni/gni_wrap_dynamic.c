@@ -5,7 +5,7 @@
 
 #include <dlfcn.h>
 
-const char * tau_orig_libname = "libugni.so";
+static const char * tau_orig_libname = "libugni.so";
 static void *tau_handle = NULL;
 
 
@@ -28,12 +28,14 @@ extern gni_return_t  GNI_DqueueInit(gni_nic_handle_t a1, gni_dqueue_in_attr_t * 
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_DqueueInit_h == NULL)
       GNI_DqueueInit_h = dlsym(tau_handle,"GNI_DqueueInit"); 
     if (GNI_DqueueInit_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -60,12 +62,14 @@ extern gni_return_t  GNI_DqueueFini(gni_dqueue_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_DqueueFini_h == NULL)
       GNI_DqueueFini_h = dlsym(tau_handle,"GNI_DqueueFini"); 
     if (GNI_DqueueFini_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -92,12 +96,14 @@ extern gni_return_t  GNI_DqueueConnect(gni_dqueue_handle_t a1, gni_dqueue_out_at
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_DqueueConnect_h == NULL)
       GNI_DqueueConnect_h = dlsym(tau_handle,"GNI_DqueueConnect"); 
     if (GNI_DqueueConnect_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -124,12 +130,14 @@ extern gni_return_t  GNI_DqueuePut(gni_dqueue_handle_t a1, void * a2, uint32_t a
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_DqueuePut_h == NULL)
       GNI_DqueuePut_h = dlsym(tau_handle,"GNI_DqueuePut"); 
     if (GNI_DqueuePut_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -156,12 +164,14 @@ extern gni_return_t  GNI_DqueueProgress(gni_dqueue_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_DqueueProgress_h == NULL)
       GNI_DqueueProgress_h = dlsym(tau_handle,"GNI_DqueueProgress"); 
     if (GNI_DqueueProgress_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -193,12 +203,14 @@ extern gni_return_t  GNI_CdmCreate(uint32_t a1, uint8_t a2, uint32_t a3, uint32_
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CdmCreate_h == NULL)
       GNI_CdmCreate_h = dlsym(tau_handle,"GNI_CdmCreate"); 
     if (GNI_CdmCreate_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -225,12 +237,14 @@ extern gni_return_t  GNI_CdmDestroy(gni_cdm_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CdmDestroy_h == NULL)
       GNI_CdmDestroy_h = dlsym(tau_handle,"GNI_CdmDestroy"); 
     if (GNI_CdmDestroy_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -257,12 +271,14 @@ extern gni_return_t  GNI_CdmHold(uint8_t a1, uint32_t a2, int * a3)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CdmHold_h == NULL)
       GNI_CdmHold_h = dlsym(tau_handle,"GNI_CdmHold"); 
     if (GNI_CdmHold_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -289,12 +305,14 @@ extern gni_return_t  GNI_CdmRelease(int a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CdmRelease_h == NULL)
       GNI_CdmRelease_h = dlsym(tau_handle,"GNI_CdmRelease"); 
     if (GNI_CdmRelease_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -321,12 +339,14 @@ extern gni_return_t  GNI_CdmGetNicAddress(uint32_t a1, uint32_t * a2, uint32_t *
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CdmGetNicAddress_h == NULL)
       GNI_CdmGetNicAddress_h = dlsym(tau_handle,"GNI_CdmGetNicAddress"); 
     if (GNI_CdmGetNicAddress_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -353,12 +373,14 @@ extern gni_return_t  GNI_CdmAttach(gni_cdm_handle_t a1, uint32_t a2, uint32_t * 
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CdmAttach_h == NULL)
       GNI_CdmAttach_h = dlsym(tau_handle,"GNI_CdmAttach"); 
     if (GNI_CdmAttach_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -385,12 +407,14 @@ extern gni_return_t  GNI_SuspendJob(uint32_t a1, uint64_t a2, uint8_t a3, uint32
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SuspendJob_h == NULL)
       GNI_SuspendJob_h = dlsym(tau_handle,"GNI_SuspendJob"); 
     if (GNI_SuspendJob_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -417,12 +441,14 @@ extern gni_return_t  GNI_ResumeJob(uint32_t a1, uint64_t a2, uint8_t a3, uint32_
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_ResumeJob_h == NULL)
       GNI_ResumeJob_h = dlsym(tau_handle,"GNI_ResumeJob"); 
     if (GNI_ResumeJob_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -449,12 +475,14 @@ extern gni_return_t  GNI_ConfigureNTT(int a1, gni_ntt_descriptor_t * a2, uint32_
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_ConfigureNTT_h == NULL)
       GNI_ConfigureNTT_h = dlsym(tau_handle,"GNI_ConfigureNTT"); 
     if (GNI_ConfigureNTT_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -481,12 +509,14 @@ extern gni_return_t  GNI_ConfigureJob(uint32_t a1, uint64_t a2, uint8_t a3, uint
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_ConfigureJob_h == NULL)
       GNI_ConfigureJob_h = dlsym(tau_handle,"GNI_ConfigureJob"); 
     if (GNI_ConfigureJob_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -513,12 +543,14 @@ extern gni_return_t  GNI_ConfigureJobFd(uint32_t a1, uint64_t a2, uint8_t a3, ui
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_ConfigureJobFd_h == NULL)
       GNI_ConfigureJobFd_h = dlsym(tau_handle,"GNI_ConfigureJobFd"); 
     if (GNI_ConfigureJobFd_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -545,12 +577,14 @@ extern gni_return_t  GNI_ConfigureNTTandJob(int a1, uint64_t a2, uint8_t a3, uin
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_ConfigureNTTandJob_h == NULL)
       GNI_ConfigureNTTandJob_h = dlsym(tau_handle,"GNI_ConfigureNTTandJob"); 
     if (GNI_ConfigureNTTandJob_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -577,12 +611,14 @@ extern gni_return_t  GNI_GetCapabilities(gni_revision_info_t * a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetCapabilities_h == NULL)
       GNI_GetCapabilities_h = dlsym(tau_handle,"GNI_GetCapabilities"); 
     if (GNI_GetCapabilities_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -609,12 +645,14 @@ extern gni_return_t  GNI_ValidateCapabilities(gni_revision_info_t a1, gni_revisi
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_ValidateCapabilities_h == NULL)
       GNI_ValidateCapabilities_h = dlsym(tau_handle,"GNI_ValidateCapabilities"); 
     if (GNI_ValidateCapabilities_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -641,12 +679,14 @@ extern gni_return_t  GNI_EpCreate(gni_nic_handle_t a1, gni_cq_handle_t a2, gni_e
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpCreate_h == NULL)
       GNI_EpCreate_h = dlsym(tau_handle,"GNI_EpCreate"); 
     if (GNI_EpCreate_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -673,12 +713,14 @@ extern gni_return_t  GNI_EpSetEventData(gni_ep_handle_t a1, uint32_t a2, uint32_
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpSetEventData_h == NULL)
       GNI_EpSetEventData_h = dlsym(tau_handle,"GNI_EpSetEventData"); 
     if (GNI_EpSetEventData_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -705,12 +747,14 @@ extern gni_return_t  GNI_EpBind(gni_ep_handle_t a1, uint32_t a2, uint32_t a3)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpBind_h == NULL)
       GNI_EpBind_h = dlsym(tau_handle,"GNI_EpBind"); 
     if (GNI_EpBind_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -737,12 +781,14 @@ extern gni_return_t  GNI_EpUnbind(gni_ep_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpUnbind_h == NULL)
       GNI_EpUnbind_h = dlsym(tau_handle,"GNI_EpUnbind"); 
     if (GNI_EpUnbind_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -769,12 +815,14 @@ extern gni_return_t  GNI_EpIdle(gni_ep_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpIdle_h == NULL)
       GNI_EpIdle_h = dlsym(tau_handle,"GNI_EpIdle"); 
     if (GNI_EpIdle_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -801,12 +849,14 @@ extern gni_return_t  GNI_EpDestroy(gni_ep_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpDestroy_h == NULL)
       GNI_EpDestroy_h = dlsym(tau_handle,"GNI_EpDestroy"); 
     if (GNI_EpDestroy_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -833,12 +883,14 @@ extern gni_return_t  GNI_EpPostData(gni_ep_handle_t a1, void * a2, uint16_t a3, 
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpPostData_h == NULL)
       GNI_EpPostData_h = dlsym(tau_handle,"GNI_EpPostData"); 
     if (GNI_EpPostData_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -865,12 +917,14 @@ extern gni_return_t  GNI_EpPostDataWId(gni_ep_handle_t a1, void * a2, uint16_t a
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpPostDataWId_h == NULL)
       GNI_EpPostDataWId_h = dlsym(tau_handle,"GNI_EpPostDataWId"); 
     if (GNI_EpPostDataWId_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -897,12 +951,14 @@ extern gni_return_t  GNI_EpPostDataTest(gni_ep_handle_t a1, gni_post_state_t * a
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpPostDataTest_h == NULL)
       GNI_EpPostDataTest_h = dlsym(tau_handle,"GNI_EpPostDataTest"); 
     if (GNI_EpPostDataTest_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -929,12 +985,14 @@ extern gni_return_t  GNI_EpPostDataTestById(gni_ep_handle_t a1, uint64_t a2, gni
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpPostDataTestById_h == NULL)
       GNI_EpPostDataTestById_h = dlsym(tau_handle,"GNI_EpPostDataTestById"); 
     if (GNI_EpPostDataTestById_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -961,12 +1019,14 @@ extern gni_return_t  GNI_EpPostDataWait(gni_ep_handle_t a1, uint32_t a2, gni_pos
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpPostDataWait_h == NULL)
       GNI_EpPostDataWait_h = dlsym(tau_handle,"GNI_EpPostDataWait"); 
     if (GNI_EpPostDataWait_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -993,12 +1053,14 @@ extern gni_return_t  GNI_EpPostDataWaitById(gni_ep_handle_t a1, uint64_t a2, uin
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpPostDataWaitById_h == NULL)
       GNI_EpPostDataWaitById_h = dlsym(tau_handle,"GNI_EpPostDataWaitById"); 
     if (GNI_EpPostDataWaitById_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1025,12 +1087,14 @@ extern gni_return_t  GNI_PostDataProbe(gni_nic_handle_t a1, uint32_t * a2, uint3
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_PostDataProbe_h == NULL)
       GNI_PostDataProbe_h = dlsym(tau_handle,"GNI_PostDataProbe"); 
     if (GNI_PostDataProbe_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1057,12 +1121,14 @@ extern gni_return_t  GNI_PostDataProbeById(gni_nic_handle_t a1, uint64_t * a2)  
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_PostDataProbeById_h == NULL)
       GNI_PostDataProbeById_h = dlsym(tau_handle,"GNI_PostDataProbeById"); 
     if (GNI_PostDataProbeById_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1089,12 +1155,14 @@ extern gni_return_t  GNI_PostdataProbeWaitById(gni_nic_handle_t a1, uint32_t a2,
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_PostdataProbeWaitById_h == NULL)
       GNI_PostdataProbeWaitById_h = dlsym(tau_handle,"GNI_PostdataProbeWaitById"); 
     if (GNI_PostdataProbeWaitById_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1121,12 +1189,14 @@ extern gni_return_t  GNI_EpPostDataCancel(gni_ep_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpPostDataCancel_h == NULL)
       GNI_EpPostDataCancel_h = dlsym(tau_handle,"GNI_EpPostDataCancel"); 
     if (GNI_EpPostDataCancel_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1153,12 +1223,14 @@ extern gni_return_t  GNI_EpPostDataCancelById(gni_ep_handle_t a1, uint64_t a2)  
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpPostDataCancelById_h == NULL)
       GNI_EpPostDataCancelById_h = dlsym(tau_handle,"GNI_EpPostDataCancelById"); 
     if (GNI_EpPostDataCancelById_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1185,12 +1257,14 @@ extern gni_return_t  GNI_MemRegister(gni_nic_handle_t a1, uint64_t a2, uint64_t 
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_MemRegister_h == NULL)
       GNI_MemRegister_h = dlsym(tau_handle,"GNI_MemRegister"); 
     if (GNI_MemRegister_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1217,12 +1291,14 @@ extern gni_return_t  GNI_MemRegisterSegments(gni_nic_handle_t a1, gni_mem_segmen
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_MemRegisterSegments_h == NULL)
       GNI_MemRegisterSegments_h = dlsym(tau_handle,"GNI_MemRegisterSegments"); 
     if (GNI_MemRegisterSegments_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1249,12 +1325,14 @@ extern gni_return_t  GNI_SetMddResources(gni_nic_handle_t a1, uint32_t a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SetMddResources_h == NULL)
       GNI_SetMddResources_h = dlsym(tau_handle,"GNI_SetMddResources"); 
     if (GNI_SetMddResources_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1281,12 +1359,14 @@ extern gni_return_t  GNI_MemDeregister(gni_nic_handle_t a1, gni_mem_handle_t * a
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_MemDeregister_h == NULL)
       GNI_MemDeregister_h = dlsym(tau_handle,"GNI_MemDeregister"); 
     if (GNI_MemDeregister_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1313,12 +1393,14 @@ extern gni_return_t  GNI_MemHndlQueryAttr(gni_mem_handle_t * a1, gni_mem_handle_
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_MemHndlQueryAttr_h == NULL)
       GNI_MemHndlQueryAttr_h = dlsym(tau_handle,"GNI_MemHndlQueryAttr"); 
     if (GNI_MemHndlQueryAttr_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1345,12 +1427,14 @@ extern gni_return_t  GNI_RebuildMemHndl(gni_mem_handle_t * a1, uint32_t a2, gni_
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_RebuildMemHndl_h == NULL)
       GNI_RebuildMemHndl_h = dlsym(tau_handle,"GNI_RebuildMemHndl"); 
     if (GNI_RebuildMemHndl_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1377,12 +1461,14 @@ extern gni_return_t  GNI_MemQueryHndls(gni_nic_handle_t a1, int a2, gni_mem_hand
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_MemQueryHndls_h == NULL)
       GNI_MemQueryHndls_h = dlsym(tau_handle,"GNI_MemQueryHndls"); 
     if (GNI_MemQueryHndls_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1409,12 +1495,14 @@ extern gni_return_t  GNI_CqCreate(gni_nic_handle_t a1, uint32_t a2, uint32_t a3,
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CqCreate_h == NULL)
       GNI_CqCreate_h = dlsym(tau_handle,"GNI_CqCreate"); 
     if (GNI_CqCreate_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1441,12 +1529,14 @@ extern gni_return_t  GNI_CqDestroy(gni_cq_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CqDestroy_h == NULL)
       GNI_CqDestroy_h = dlsym(tau_handle,"GNI_CqDestroy"); 
     if (GNI_CqDestroy_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1473,12 +1563,14 @@ extern gni_return_t  GNI_PostRdma(gni_ep_handle_t a1, gni_post_descriptor_t * a2
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_PostRdma_h == NULL)
       GNI_PostRdma_h = dlsym(tau_handle,"GNI_PostRdma"); 
     if (GNI_PostRdma_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1505,12 +1597,14 @@ extern gni_return_t  GNI_PostFma(gni_ep_handle_t a1, gni_post_descriptor_t * a2)
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_PostFma_h == NULL)
       GNI_PostFma_h = dlsym(tau_handle,"GNI_PostFma"); 
     if (GNI_PostFma_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1537,12 +1631,14 @@ extern gni_return_t  GNI_CtPostFma(gni_ep_handle_t a1, gni_post_descriptor_t * a
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CtPostFma_h == NULL)
       GNI_CtPostFma_h = dlsym(tau_handle,"GNI_CtPostFma"); 
     if (GNI_CtPostFma_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1569,12 +1665,14 @@ extern gni_return_t  GNI_PostCqWrite(gni_ep_handle_t a1, gni_post_descriptor_t *
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_PostCqWrite_h == NULL)
       GNI_PostCqWrite_h = dlsym(tau_handle,"GNI_PostCqWrite"); 
     if (GNI_PostCqWrite_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1601,12 +1699,14 @@ extern gni_return_t  GNI_CtPostCqWrite(gni_ep_handle_t a1, gni_post_descriptor_t
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CtPostCqWrite_h == NULL)
       GNI_CtPostCqWrite_h = dlsym(tau_handle,"GNI_CtPostCqWrite"); 
     if (GNI_CtPostCqWrite_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1633,12 +1733,14 @@ extern gni_return_t  GNI_GetCompleted(gni_cq_handle_t a1, gni_cq_entry_t a2, gni
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetCompleted_h == NULL)
       GNI_GetCompleted_h = dlsym(tau_handle,"GNI_GetCompleted"); 
     if (GNI_GetCompleted_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1665,12 +1767,14 @@ extern gni_return_t  GNI_CqGetEvent(gni_cq_handle_t a1, gni_cq_entry_t * a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CqGetEvent_h == NULL)
       GNI_CqGetEvent_h = dlsym(tau_handle,"GNI_CqGetEvent"); 
     if (GNI_CqGetEvent_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1697,12 +1801,14 @@ extern gni_return_t  GNI_CqWaitEvent(gni_cq_handle_t a1, uint64_t a2, gni_cq_ent
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CqWaitEvent_h == NULL)
       GNI_CqWaitEvent_h = dlsym(tau_handle,"GNI_CqWaitEvent"); 
     if (GNI_CqWaitEvent_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1729,12 +1835,14 @@ extern gni_return_t  GNI_CqVectorWaitEvent(gni_cq_handle_t * a1, uint32_t a2, ui
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CqVectorWaitEvent_h == NULL)
       GNI_CqVectorWaitEvent_h = dlsym(tau_handle,"GNI_CqVectorWaitEvent"); 
     if (GNI_CqVectorWaitEvent_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1761,12 +1869,14 @@ extern gni_return_t  GNI_CqVectorMonitor(gni_cq_handle_t * a1, uint32_t a2, uint
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CqVectorMonitor_h == NULL)
       GNI_CqVectorMonitor_h = dlsym(tau_handle,"GNI_CqVectorMonitor"); 
     if (GNI_CqVectorMonitor_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1793,12 +1903,14 @@ extern gni_return_t  GNI_CqInterruptMask(gni_cq_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CqInterruptMask_h == NULL)
       GNI_CqInterruptMask_h = dlsym(tau_handle,"GNI_CqInterruptMask"); 
     if (GNI_CqInterruptMask_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1825,12 +1937,14 @@ extern gni_return_t  GNI_CqInterruptUnmask(gni_cq_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CqInterruptUnmask_h == NULL)
       GNI_CqInterruptUnmask_h = dlsym(tau_handle,"GNI_CqInterruptUnmask"); 
     if (GNI_CqInterruptUnmask_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1857,12 +1971,14 @@ extern gni_return_t  GNI_CqTestEvent(gni_cq_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CqTestEvent_h == NULL)
       GNI_CqTestEvent_h = dlsym(tau_handle,"GNI_CqTestEvent"); 
     if (GNI_CqTestEvent_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1889,12 +2005,14 @@ extern gni_return_t  GNI_CqErrorStr(gni_cq_entry_t a1, void * a2, uint32_t a3)  
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CqErrorStr_h == NULL)
       GNI_CqErrorStr_h = dlsym(tau_handle,"GNI_CqErrorStr"); 
     if (GNI_CqErrorStr_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1921,12 +2039,14 @@ extern gni_return_t  GNI_CqErrorRecoverable(gni_cq_entry_t a1, uint32_t * a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CqErrorRecoverable_h == NULL)
       GNI_CqErrorRecoverable_h = dlsym(tau_handle,"GNI_CqErrorRecoverable"); 
     if (GNI_CqErrorRecoverable_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1953,12 +2073,14 @@ extern gni_return_t  GNI_SmsgBufferSizeNeeded(gni_smsg_attr_t * a1, unsigned int
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SmsgBufferSizeNeeded_h == NULL)
       GNI_SmsgBufferSizeNeeded_h = dlsym(tau_handle,"GNI_SmsgBufferSizeNeeded"); 
     if (GNI_SmsgBufferSizeNeeded_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -1985,12 +2107,14 @@ extern gni_return_t  GNI_SmsgInit(gni_ep_handle_t a1, gni_smsg_attr_t * a2, gni_
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SmsgInit_h == NULL)
       GNI_SmsgInit_h = dlsym(tau_handle,"GNI_SmsgInit"); 
     if (GNI_SmsgInit_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2017,12 +2141,14 @@ extern gni_return_t  GNI_SmsgSetDeliveryMode(gni_nic_handle_t a1, uint16_t a2)  
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SmsgSetDeliveryMode_h == NULL)
       GNI_SmsgSetDeliveryMode_h = dlsym(tau_handle,"GNI_SmsgSetDeliveryMode"); 
     if (GNI_SmsgSetDeliveryMode_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2049,12 +2175,14 @@ extern gni_return_t  GNI_SmsgSend(gni_ep_handle_t a1, void * a2, uint32_t a3, vo
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SmsgSend_h == NULL)
       GNI_SmsgSend_h = dlsym(tau_handle,"GNI_SmsgSend"); 
     if (GNI_SmsgSend_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2081,12 +2209,14 @@ extern gni_return_t  GNI_SmsgSendWTag(gni_ep_handle_t a1, void * a2, uint32_t a3
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SmsgSendWTag_h == NULL)
       GNI_SmsgSendWTag_h = dlsym(tau_handle,"GNI_SmsgSendWTag"); 
     if (GNI_SmsgSendWTag_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2113,12 +2243,14 @@ extern gni_return_t  GNI_SmsgGetNext(gni_ep_handle_t a1, void ** a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SmsgGetNext_h == NULL)
       GNI_SmsgGetNext_h = dlsym(tau_handle,"GNI_SmsgGetNext"); 
     if (GNI_SmsgGetNext_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2145,12 +2277,14 @@ extern gni_return_t  GNI_SmsgGetNextWTag(gni_ep_handle_t a1, void ** a2, uint8_t
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SmsgGetNextWTag_h == NULL)
       GNI_SmsgGetNextWTag_h = dlsym(tau_handle,"GNI_SmsgGetNextWTag"); 
     if (GNI_SmsgGetNextWTag_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2177,12 +2311,14 @@ extern gni_return_t  GNI_SmsgRelease(gni_ep_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SmsgRelease_h == NULL)
       GNI_SmsgRelease_h = dlsym(tau_handle,"GNI_SmsgRelease"); 
     if (GNI_SmsgRelease_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2209,12 +2345,14 @@ extern gni_return_t  GNI_MsgqInit(gni_nic_handle_t a1, gni_msgq_rcv_cb_func * a2
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_MsgqInit_h == NULL)
       GNI_MsgqInit_h = dlsym(tau_handle,"GNI_MsgqInit"); 
     if (GNI_MsgqInit_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2241,12 +2379,14 @@ extern gni_return_t  GNI_MsgqRelease(gni_msgq_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_MsgqRelease_h == NULL)
       GNI_MsgqRelease_h = dlsym(tau_handle,"GNI_MsgqRelease"); 
     if (GNI_MsgqRelease_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2273,12 +2413,14 @@ extern gni_return_t  GNI_MsgqIdle(gni_msgq_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_MsgqIdle_h == NULL)
       GNI_MsgqIdle_h = dlsym(tau_handle,"GNI_MsgqIdle"); 
     if (GNI_MsgqIdle_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2305,12 +2447,14 @@ extern gni_return_t  GNI_MsgqGetConnAttrs(gni_msgq_handle_t a1, uint32_t a2, gni
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_MsgqGetConnAttrs_h == NULL)
       GNI_MsgqGetConnAttrs_h = dlsym(tau_handle,"GNI_MsgqGetConnAttrs"); 
     if (GNI_MsgqGetConnAttrs_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2337,12 +2481,14 @@ extern gni_return_t  GNI_MsgqConnect(gni_msgq_handle_t a1, uint32_t a2, gni_msgq
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_MsgqConnect_h == NULL)
       GNI_MsgqConnect_h = dlsym(tau_handle,"GNI_MsgqConnect"); 
     if (GNI_MsgqConnect_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2369,12 +2515,14 @@ extern gni_return_t  GNI_MsgqConnRelease(gni_msgq_handle_t a1, uint32_t a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_MsgqConnRelease_h == NULL)
       GNI_MsgqConnRelease_h = dlsym(tau_handle,"GNI_MsgqConnRelease"); 
     if (GNI_MsgqConnRelease_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2401,12 +2549,14 @@ extern gni_return_t  GNI_MsgqSend(gni_msgq_handle_t a1, gni_ep_handle_t a2, void
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_MsgqSend_h == NULL)
       GNI_MsgqSend_h = dlsym(tau_handle,"GNI_MsgqSend"); 
     if (GNI_MsgqSend_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2433,12 +2583,14 @@ extern gni_return_t  GNI_MsgqProgress(gni_msgq_handle_t a1, uint32_t a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_MsgqProgress_h == NULL)
       GNI_MsgqProgress_h = dlsym(tau_handle,"GNI_MsgqProgress"); 
     if (GNI_MsgqProgress_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2465,12 +2617,14 @@ extern gni_return_t  GNI_MsgqSize(gni_msgq_attr_t * a1, uint32_t * a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_MsgqSize_h == NULL)
       GNI_MsgqSize_h = dlsym(tau_handle,"GNI_MsgqSize"); 
     if (GNI_MsgqSize_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2497,12 +2651,14 @@ extern gni_return_t  GNI_SmsgSetMaxRetrans(gni_nic_handle_t a1, uint16_t a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SmsgSetMaxRetrans_h == NULL)
       GNI_SmsgSetMaxRetrans_h = dlsym(tau_handle,"GNI_SmsgSetMaxRetrans"); 
     if (GNI_SmsgSetMaxRetrans_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2529,12 +2685,14 @@ extern gni_return_t  GNI_SubscribeErrors(gni_nic_handle_t a1, uint32_t a2, gni_e
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SubscribeErrors_h == NULL)
       GNI_SubscribeErrors_h = dlsym(tau_handle,"GNI_SubscribeErrors"); 
     if (GNI_SubscribeErrors_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2561,12 +2719,14 @@ extern gni_return_t  GNI_ReleaseErrors(gni_err_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_ReleaseErrors_h == NULL)
       GNI_ReleaseErrors_h = dlsym(tau_handle,"GNI_ReleaseErrors"); 
     if (GNI_ReleaseErrors_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2593,12 +2753,14 @@ extern gni_return_t  GNI_GetErrorMask(gni_err_handle_t a1, gni_error_mask_t * a2
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetErrorMask_h == NULL)
       GNI_GetErrorMask_h = dlsym(tau_handle,"GNI_GetErrorMask"); 
     if (GNI_GetErrorMask_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2625,12 +2787,14 @@ extern gni_return_t  GNI_SetErrorMask(gni_err_handle_t a1, gni_error_mask_t a2, 
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SetErrorMask_h == NULL)
       GNI_SetErrorMask_h = dlsym(tau_handle,"GNI_SetErrorMask"); 
     if (GNI_SetErrorMask_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2657,12 +2821,14 @@ extern gni_return_t  GNI_GetErrorEvent(gni_err_handle_t a1, gni_error_event_t * 
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetErrorEvent_h == NULL)
       GNI_GetErrorEvent_h = dlsym(tau_handle,"GNI_GetErrorEvent"); 
     if (GNI_GetErrorEvent_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2689,12 +2855,15 @@ extern gni_return_t  GNI_WaitErrorEvents(gni_err_handle_t a1, gni_error_event_t 
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_WaitErrorEvents_h == NULL)
       GNI_WaitErrorEvents_h = dlsym(tau_handle,"GNI_WaitErrorEvents"); 
     if (GNI_WaitErrorEvents_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2721,12 +2890,14 @@ extern gni_return_t  GNI_SetErrorPtag(gni_err_handle_t a1, uint8_t a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SetErrorPtag_h == NULL)
       GNI_SetErrorPtag_h = dlsym(tau_handle,"GNI_SetErrorPtag"); 
     if (GNI_SetErrorPtag_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2753,12 +2924,14 @@ extern gni_return_t  GNI_GetNumLocalDevices(int * a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetNumLocalDevices_h == NULL)
       GNI_GetNumLocalDevices_h = dlsym(tau_handle,"GNI_GetNumLocalDevices"); 
     if (GNI_GetNumLocalDevices_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2785,12 +2958,14 @@ extern gni_return_t  GNI_GetLocalDeviceIds(int a1, int * a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetLocalDeviceIds_h == NULL)
       GNI_GetLocalDeviceIds_h = dlsym(tau_handle,"GNI_GetLocalDeviceIds"); 
     if (GNI_GetLocalDeviceIds_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2817,12 +2992,14 @@ extern gni_return_t  GNI_GetVersion(uint32_t * a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetVersion_h == NULL)
       GNI_GetVersion_h = dlsym(tau_handle,"GNI_GetVersion"); 
     if (GNI_GetVersion_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2849,12 +3026,14 @@ extern gni_return_t  GNI_GetVersionInformation(gni_version_info_t * a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetVersionInformation_h == NULL)
       GNI_GetVersionInformation_h = dlsym(tau_handle,"GNI_GetVersionInformation"); 
     if (GNI_GetVersionInformation_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2881,12 +3060,14 @@ extern gni_return_t  GNI_GetDeviceType(gni_nic_device_t * a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetDeviceType_h == NULL)
       GNI_GetDeviceType_h = dlsym(tau_handle,"GNI_GetDeviceType"); 
     if (GNI_GetDeviceType_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2913,12 +3094,14 @@ extern gni_return_t  GNI_GetDevResInfo(uint32_t a1, gni_dev_res_t a2, gni_dev_re
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetDevResInfo_h == NULL)
       GNI_GetDevResInfo_h = dlsym(tau_handle,"GNI_GetDevResInfo"); 
     if (GNI_GetDevResInfo_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2945,12 +3128,14 @@ extern gni_return_t  GNI_GetJobResInfo(uint32_t a1, uint8_t a2, gni_job_res_t a3
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetJobResInfo_h == NULL)
       GNI_GetJobResInfo_h = dlsym(tau_handle,"GNI_GetJobResInfo"); 
     if (GNI_GetJobResInfo_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -2977,12 +3162,14 @@ extern gni_return_t  GNI_SetJobResInfo(uint32_t a1, uint8_t a2, gni_job_res_t a3
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SetJobResInfo_h == NULL)
       GNI_SetJobResInfo_h = dlsym(tau_handle,"GNI_SetJobResInfo"); 
     if (GNI_SetJobResInfo_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3009,12 +3196,14 @@ extern gni_return_t  GNI_GetNttGran(uint32_t a1, uint32_t * a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetNttGran_h == NULL)
       GNI_GetNttGran_h = dlsym(tau_handle,"GNI_GetNttGran"); 
     if (GNI_GetNttGran_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3041,12 +3230,14 @@ extern gni_return_t  GNI_GetPtag(uint32_t a1, uint32_t a2, uint8_t * a3)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetPtag_h == NULL)
       GNI_GetPtag_h = dlsym(tau_handle,"GNI_GetPtag"); 
     if (GNI_GetPtag_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3073,12 +3264,14 @@ extern gni_return_t  GNI_CeCreate(gni_nic_handle_t a1, gni_ce_handle_t * a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CeCreate_h == NULL)
       GNI_CeCreate_h = dlsym(tau_handle,"GNI_CeCreate"); 
     if (GNI_CeCreate_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3105,12 +3298,14 @@ extern gni_return_t  GNI_CeGetId(gni_ce_handle_t a1, uint32_t * a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CeGetId_h == NULL)
       GNI_CeGetId_h = dlsym(tau_handle,"GNI_CeGetId"); 
     if (GNI_CeGetId_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3137,12 +3332,14 @@ extern gni_return_t  GNI_EpSetCeAttr(gni_ep_handle_t a1, uint32_t a2, uint32_t a
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_EpSetCeAttr_h == NULL)
       GNI_EpSetCeAttr_h = dlsym(tau_handle,"GNI_EpSetCeAttr"); 
     if (GNI_EpSetCeAttr_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3169,12 +3366,14 @@ extern gni_return_t  GNI_CeConfigure(gni_ce_handle_t a1, gni_ep_handle_t * a2, u
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CeConfigure_h == NULL)
       GNI_CeConfigure_h = dlsym(tau_handle,"GNI_CeConfigure"); 
     if (GNI_CeConfigure_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3201,12 +3400,14 @@ extern gni_return_t  GNI_CeCheckResult(gni_ce_result_t * a1, uint32_t a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CeCheckResult_h == NULL)
       GNI_CeCheckResult_h = dlsym(tau_handle,"GNI_CeCheckResult"); 
     if (GNI_CeCheckResult_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3233,12 +3434,14 @@ extern gni_return_t  GNI_CeDestroy(gni_ce_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CeDestroy_h == NULL)
       GNI_CeDestroy_h = dlsym(tau_handle,"GNI_CeDestroy"); 
     if (GNI_CeDestroy_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3265,12 +3468,14 @@ extern gni_return_t  GNI_SetBIConfig(uint32_t a1, uint16_t a2, uint16_t a3, uint
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SetBIConfig_h == NULL)
       GNI_SetBIConfig_h = dlsym(tau_handle,"GNI_SetBIConfig"); 
     if (GNI_SetBIConfig_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3297,12 +3502,14 @@ extern gni_return_t  GNI_GetBIConfig(uint32_t a1, gni_bi_desc_t * a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetBIConfig_h == NULL)
       GNI_GetBIConfig_h = dlsym(tau_handle,"GNI_GetBIConfig"); 
     if (GNI_GetBIConfig_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3329,12 +3536,14 @@ extern gni_return_t  GNI_BISyncWait(uint32_t a1, uint32_t a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_BISyncWait_h == NULL)
       GNI_BISyncWait_h = dlsym(tau_handle,"GNI_BISyncWait"); 
     if (GNI_BISyncWait_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3361,12 +3570,14 @@ extern gni_return_t  GNI_GetNicStat(gni_nic_handle_t a1, gni_statistic_t a2, uin
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_GetNicStat_h == NULL)
       GNI_GetNicStat_h = dlsym(tau_handle,"GNI_GetNicStat"); 
     if (GNI_GetNicStat_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3393,12 +3604,14 @@ extern gni_return_t  GNI_ResetNicStat(gni_nic_handle_t a1, gni_statistic_t a2)  
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_ResetNicStat_h == NULL)
       GNI_ResetNicStat_h = dlsym(tau_handle,"GNI_ResetNicStat"); 
     if (GNI_ResetNicStat_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3425,12 +3638,14 @@ extern gni_return_t  GNI_CompChanCreate(gni_nic_handle_t a1, gni_comp_chan_handl
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CompChanCreate_h == NULL)
       GNI_CompChanCreate_h = dlsym(tau_handle,"GNI_CompChanCreate"); 
     if (GNI_CompChanCreate_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3457,12 +3672,14 @@ extern gni_return_t  GNI_CompChanDestroy(gni_comp_chan_handle_t a1)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CompChanDestroy_h == NULL)
       GNI_CompChanDestroy_h = dlsym(tau_handle,"GNI_CompChanDestroy"); 
     if (GNI_CompChanDestroy_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3489,12 +3706,14 @@ extern gni_return_t  GNI_CompChanFd(gni_comp_chan_handle_t a1, int * a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CompChanFd_h == NULL)
       GNI_CompChanFd_h = dlsym(tau_handle,"GNI_CompChanFd"); 
     if (GNI_CompChanFd_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3521,12 +3740,14 @@ extern gni_return_t  GNI_CompChanGetEvent(gni_comp_chan_handle_t a1, gni_cq_hand
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CompChanGetEvent_h == NULL)
       GNI_CompChanGetEvent_h = dlsym(tau_handle,"GNI_CompChanGetEvent"); 
     if (GNI_CompChanGetEvent_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3553,12 +3774,14 @@ extern gni_return_t  GNI_CqAttachCompChan(gni_cq_handle_t a1, gni_comp_chan_hand
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CqAttachCompChan_h == NULL)
       GNI_CqAttachCompChan_h = dlsym(tau_handle,"GNI_CqAttachCompChan"); 
     if (GNI_CqAttachCompChan_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3585,12 +3808,14 @@ extern gni_return_t  GNI_CqArmCompChan(gni_cq_handle_t * a1, uint32_t a2)  {
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_CqArmCompChan_h == NULL)
       GNI_CqArmCompChan_h = dlsym(tau_handle,"GNI_CqArmCompChan"); 
     if (GNI_CqArmCompChan_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
@@ -3617,12 +3842,14 @@ extern gni_return_t  GNI_SetDeviceOrbMMR(gni_nic_handle_t a1, gni_dev_orb_mmr_t 
 
   if (tau_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
+            fprintf(stderr, "%s\n", dlerror()); \
     return retval;
   } else { 
     if (GNI_SetDeviceOrbMMR_h == NULL)
       GNI_SetDeviceOrbMMR_h = dlsym(tau_handle,"GNI_SetDeviceOrbMMR"); 
     if (GNI_SetDeviceOrbMMR_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
+            fprintf(stderr, "%s\n", dlerror()); \
       return retval;
     }
   }
