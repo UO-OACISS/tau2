@@ -2412,6 +2412,13 @@ extern "C" void Tau_enable_pthread_tracking(void) {
 }
 
 extern "C" void Tau_global_stop(void) {
+    /* Enable this check if you are getting lots of profiles writing
+     * out early... */
+    /*
+  if (Tau_thread_flags[RtsLayer::myThread()].Tau_global_stackpos == 0) {
+    abort();
+  }
+  */
   Tau_stop_current_timer();
 }
 
