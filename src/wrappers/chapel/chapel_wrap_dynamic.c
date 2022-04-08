@@ -244,7 +244,7 @@ WRAP_CHPL_COMM_ATOMIC_CMPXCHG(real64)
                 return;\
             } else { \
                 if (chpl_comm_atomic_fetch_binary_h == NULL)\
-                chpl_comm_atomic_fetch_binary_h = dlsym(tau_handle,"chpl_comm_atomic_fetch" #op "_" #type); \
+                chpl_comm_atomic_fetch_binary_h = dlsym(tau_handle,"chpl_comm_atomic_fetch_" #op "_" #type); \
                 if (chpl_comm_atomic_fetch_binary_h == NULL) {\
                 perror("Error obtaining symbol info from dlopen'ed lib"); \
             fprintf(stderr, "%s\n", dlerror()); \
