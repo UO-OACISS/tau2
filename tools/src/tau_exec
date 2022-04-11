@@ -96,6 +96,7 @@ if [ $python_wrapper = "true" ] ; then
   echo "        -skel         Write trace event data to skeleton files"
   echo "        -disable-kokkos  Disable Kokkos profiling (removes fences that hurt performance)"
   echo "        -ugni         Track Cray UGNI network library functions."
+  echo "        -chapel         Track Cray Chapel network atomics library functions."
 fi
   echo ""
   echo "Notes:"
@@ -344,6 +345,7 @@ track_kokkos=true
 adios2_trace=false
 sos=false
 track_ugni=false
+track_chapel=false
 processM=false
 python_launch_module=false
 python_m_arg=""
@@ -679,6 +681,11 @@ for arg in "$@" ; do
         save_arg $arg
         shift
         ;;
+      -chapel)
+        track_chapel=true
+        save_arg $arg
+        shift
+        ;;
       -c)
         if [ $python_wrapper = "true" ] ; then
           save_arg $arg
@@ -912,6 +919,11 @@ fi
 if [ $track_ugni = "true" ] ; then
   # Add the UGNI wrapper library to the LD_PRELOAD list
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gni-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+fi
+
+if [ $track_chapel = "true" ] ; then
+  # Add the Chapel wrapper library to the LD_PRELOAD list
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-chapel-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
 if [ $track_numa = "true" ]; then
