@@ -912,8 +912,9 @@ if [ $track_io = "true" ] ; then
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-iowrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
   #use the auditor
   TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
-  #Needed for the auditor
-  export LD_BIND_NOW=1
+  #Needed for the auditor... but DON'T SET IT NOW!
+  # Only needed by GDB and the auditor.
+  # export LD_BIND_NOW=1
 fi
 
 if [ $track_ugni = "true" ] ; then
@@ -956,8 +957,9 @@ if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
   #use the auditor
   TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
-  #Needed for the auditor
-  export LD_BIND_NOW=1
+  #Needed for the auditor... but DON'T SET IT NOW!
+  # Only needed by GDB and the auditor.
+  #export LD_BIND_NOW=1
   # Track heap usage
   export TAU_TRACK_HEAP=1
   # Track memory leaks
