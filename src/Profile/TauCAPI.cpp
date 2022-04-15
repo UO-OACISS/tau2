@@ -2499,7 +2499,9 @@ extern "C" void Tau_profile_param1l(long data, const char *dataname) {
 */
 struct PureMap : public TAU_HASH_MAP<string, FunctionInfo *> {
   virtual ~PureMap() {
-    Tau_destructor_trigger();
+    if (RtsLayer::myThread() == 0) {
+        Tau_destructor_trigger();
+    }
   }
 };
 
@@ -2512,7 +2514,7 @@ FunctionInfo * Tau_get_function_info_internal(
    * it up.  If we haven't another thread may have created it, so we'll
    * then check the main map.  If we don't find it, optionally create it
    * and insert into both maps. */
-  thread_local TAU_HASH_MAP<string, FunctionInfo *> local_pure;
+  static thread_local PureMap local_pure;
   FunctionInfo *fi = nullptr;
 
   /* First, check if the FI is in the thread local map */
