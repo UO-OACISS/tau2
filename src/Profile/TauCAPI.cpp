@@ -2542,8 +2542,12 @@ extern "C" void Tau_profile_param1l(long data, const char *dataname) {
   The following is for supporting pure and elemental fortran subroutines
 */
 struct PureMap : public TAU_HASH_MAP<string, FunctionInfo *> {
+private:
+  int tid;
+public:
+  PureMap() : tid(RtsLayer::myThread()) { }
   virtual ~PureMap() {
-    if (RtsLayer::myThread() == 0) {
+    if (tid == 0) {
         Tau_destructor_trigger();
     }
   }
