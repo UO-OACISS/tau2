@@ -1086,9 +1086,7 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
 #ifndef TAU_SCOREP
       Tau_XML_writeAttribute(out, "Ending Timestamp", tmpstr, newline);
 #elif TAU_SCOREP_METADATA /* TAU_SCOREP */
-      if ( it->second) {
-        SCOREP_Tau_AddLocationProperty("Ending Timestamp", tmpstr);
-      }
+      SCOREP_Tau_AddLocationProperty("Ending Timestamp", tmpstr);
 #endif
   }
 
