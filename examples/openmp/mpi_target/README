@@ -1,0 +1,15 @@
+This example is for testing/demonstrating the target offload support
+in OpenMP, and specifically the OMPT support in TAU with MPI.
+
+This code (and the OMP pragmas) have been tested with AMD GPU cards only,
+using hipcc from ROCm 5.1.0.
+
+TAU was configured with:
+module load mpich/031021-llvm12  
+export PATH=/opt/rocm-5.1.0/bin:$PATH
+export PATH=/opt/rocm-5.1.0/llvm/bin:$PATH
+export PATH=/opt/rocm-5.1.0/hip/bin:$PATH
+./configure  -ompt -mpi -mpiinc=/packages/mpich/git/include -mpilib=/packages/mpich/git/lib -mpi -mpiinc=/packages/mpich/git/include -mpilib=/packages/mpich/git/lib -c++=hipcc -cc=clang -rocm=/opt/rocm-5.1.0 -rocprofiler=/opt/rocm-5.1.0/rocprofiler -bfd=download
+
+
+
