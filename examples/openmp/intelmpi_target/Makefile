@@ -16,7 +16,7 @@ all: $(EXECUTABLE)
 
 AMD_CXXFLAGS =  -fopenmp -target x86_64-pc-linux-gnu -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx908 -DTAU_MPI -DTAU_OPENMP 
 NVIDIA_CXXFLAGS=
-INTEL_CXXFLAGS=-qopenmp -fopenmp-targets=spir64
+INTEL_CXXFLAGS=-qopenmp -fopenmp-targets=spir64 -DTAU_MPI
 
 CXXFLAGS=${NVIDIA_CXXFLAGS}
 CXXFLAGS=${AMD_CXXFLAGS}
