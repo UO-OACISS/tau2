@@ -801,7 +801,7 @@ int Tau_metadata_fillMetaData()
   }
 
 #ifdef _OPENMP
-#if defined(TAU_OPENMP) && !defined(TAU_MPC)
+#if defined(TAU_OPENMP) && !defined(TAU_MPC) && !defined(TAU_CLANG)
   /* Capture OpenMP version */
   Tau_metadata_register("OpenMP Version String", _OPENMP);
   Tau_metadata_register("OpenMP Version", TheOpenMPVersionMap().at(_OPENMP).c_str());
@@ -857,12 +857,13 @@ int Tau_metadata_fillMetaData()
   if (omp_var != NULL) {
     Tau_metadata_register("OMP_PLACES", omp_var);
   }
-  Tau_metadata_register("OMP_NUM_PLACES", omp_get_num_places());
+  auto places = omp_get_num_places();
+  Tau_metadata_register("OMP_NUM_PLACES", places);
   stringstream ss_num;
   stringstream ss_ids;
   ss_num << "{";
   ss_ids << "{";
-  for (int i = 0 ; i < omp_get_num_places() ; i++) {
+  for (int i = 0 ; i < places ; i++) {
     if (i > 0) {
       ss_num << ",";
       ss_ids << ",";
@@ -1092,9 +1093,7 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
 #ifndef TAU_SCOREP
       Tau_XML_writeAttribute(out, "Ending Timestamp", tmpstr, newline);
 #elif TAU_SCOREP_METADATA /* TAU_SCOREP */
-      if ( it->second) {
-        SCOREP_Tau_AddLocationProperty("Ending Timestamp", tmpstr);
-      }
+      SCOREP_Tau_AddLocationProperty("Ending Timestamp", tmpstr);
 #endif
   }
 
