@@ -124,7 +124,7 @@ TauDryRun("tau-dry-run",
 
 
 
-auto TauInitFunc = "Tau_init"; // arguments to pass: argc, argv 
+auto TauInitFunc = "Tau_init"; // arguments to pass: argc, argv
 auto TauSetNodeFunc = "Tau_set_node"; // argument to pass: 0
 
 // Demangling technique borrowed/modified from
@@ -149,7 +149,7 @@ static StringRef normalize_name(StringRef mangled_name) {
          - the name is main.
         However, names from C libraries or with extern "C" are not mangled.
         So, return anyway.
-      */      
+      */
     realname = mangled_name;
     break;
   default:
@@ -210,14 +210,14 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
     //StringSet<> funcsExclRegex;
     std::vector<std::regex> funcsOfInterestRegex;
     std::vector<std::regex> funcsExclRegex;
-    
+
     StringSet<> filesIncl;
     StringSet<> filesExcl;
     // StringSet<> filesInclRegex;
     //  StringSet<> filesExclRegex;
     std::vector<std::regex> filesInclRegex;
     std::vector<std::regex> filesExclRegex;
- 
+
     // basic ==> POSIX regular expression
     std::regex rex{TauRegex,
                    std::regex_constants::ECMAScript};
@@ -229,6 +229,29 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 #else
         Instrument() : PassInfoMixin<Instrument>() {
 #endif
+
+    /* Add some important regular expressions to the exclusion set of regular expressions */
+    // Anything from the standard library
+    funcsExclRegex.push_back( std::regex( "[^(]+ std::.*" ) );
+    funcsExclRegex.push_back( std::regex( "decltype(.*) std::.*" ) );
+    funcsExclRegex.push_back( std::regex( "decltype (.*) std::.*" ) );
+    funcsExclRegex.push_back( std::regex( "std::.*" ) );
+    // Anything from the C++ internals
+    funcsExclRegex.push_back( std::regex( "[^(]+ __cxx.*" ) );
+    funcsExclRegex.push_back( std::regex( "__cxx.*" ) );
+    // Anything from the GNU C++ internals
+    funcsExclRegex.push_back( std::regex( "[^(]+ __gnu_cxx.*" ) );
+    funcsExclRegex.push_back( std::regex( "__gnu_cxx.*" ) );
+    // Anything from the LLVM internals
+    funcsExclRegex.push_back( std::regex( "[^(]+ llvm::.*" ) );
+    funcsExclRegex.push_back( std::regex( "decltype(.*) llvm::.*" ) );
+    funcsExclRegex.push_back( std::regex( "decltype (.*) llvm::.*" ) );
+    funcsExclRegex.push_back( std::regex( "llvm::.*" ) );
+    // Anything that couldn't be demangled
+    funcsExclRegex.push_back( std::regex( "_Z.*" ) );
+    // Other things we've encountered that aren't interesting
+    funcsExclRegex.push_back( std::regex( "__gthread_active_p.*" ) );
+    funcsExclRegex.push_back( std::regex( "_GLOBAL__sub_.*" ) );
       if(!TauInputFile.empty()) {
           std::ifstream ifile{TauInputFile};
           if( !ifile ){
@@ -237,10 +260,10 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
           }
           loadFunctionsFromFile(ifile);
       } else {
-          errs() << "Checking selective instrumentation file specified in env. variable TAU_COMPILER_SELECT_FILE\n"; 
+          errs() << "Checking selective instrumentation file specified in env. variable TAU_COMPILER_SELECT_FILE\n";
 	  char *fname = getenv("TAU_COMPILER_SELECT_FILE");
 	  if (fname) {
-            errs() << "TAU_COMPILER_SELECT_FILE = "<<fname<<"\n"; 
+            errs() << "TAU_COMPILER_SELECT_FILE = "<<fname<<"\n";
             std::ifstream ifile{fname};
             if( !ifile ){
               errs() << "Could not open input file: " << fname<<"\n";
@@ -251,20 +274,20 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
       }
     }
 
-  /*! 
-   * Given an open file, a token and two vectors, read what is coming next and 
+  /*!
+   * Given an open file, a token and two vectors, read what is coming next and
    * put it in the vector or its regex counterpart until the token has been
    * reached.
    */
     void readUntilToken( std::ifstream& file, StringSet<>& vec, std::vector<std::regex>& vecReg, const char* token ){
     std::string funcName;
     std::string s_token( token ); // used by an errs()
-    bool rc = true, isRegex = false;
+    bool rc = true;
 
     while( std::getline( file, funcName ) ){
       if( funcName.find_first_not_of(' ') != std::string::npos ) {
 	/* Exclude whitespace-only lines */
-       
+
 	if( 0 == funcName.compare( token ) ){
 	  return;
 	}
@@ -295,27 +318,25 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
         /* This is a filename */
         if( funcName.end() != std::find( funcName.begin(), funcName.end(), TAU_REGEX_FILE_STAR )
             || funcName.end() != std::find( funcName.begin(), funcName.end(), TAU_REGEX_FILE_QUES )){
-            
+
             std::regex q( std::string( "[*]" ) );
             std::string q_reg( std::string(  "(.*)" ) );
             std::string regex_1;
-            
+
             std::regex_replace( std::back_inserter( regex_1 ), funcName.begin(), funcName.end(), q, q_reg );
-            
+
             std::regex q2( std::string( "[?]" ) );
             std::string q2_reg( std::string(  "(.?)" ) );
             std::string regex_2;
-            
+
             std::regex_replace( std::back_inserter( regex_2 ), regex_1.begin(), regex_1.end(), q2, q2_reg );
-            
+
             //errs()<< "regex filename: " << regex_2 << "\n";
-            
+
             vecReg.push_back( std::regex( regex_2 ) );
-            isRegex = true;
             errs() << " (regex)";
-            
+
         } else {
-            isRegex = false;
             vec.insert( funcName );
         }
 	} else {
@@ -329,36 +350,34 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
             std::string regex_1, regex_0;
             std::regex_replace( std::back_inserter( regex_0 ), funcName.begin(), funcName.end(), par_o, s_o );
             std::regex_replace( std::back_inserter( regex_1 ), regex_0.begin(), regex_0.end(), par_c, s_c );
-            
+
             /* Escape the stars (pointers) */
-            std::regex r_s( std::string( "[\*]" ) );
+            std::regex r_s( std::string( "[\\*]" ) );
             std::string star( std::string(  "\\*" ) );
             std::string regex_2;
             std::regex_replace( std::back_inserter( regex_2 ), regex_1.begin(), regex_1.end(), r_s, star );
-            
+
             /* Wildcard: replace the # by stars */
             std::regex cross( std::string( "[#]" ) );
             std::string wildcard( std::string(  "(.*)" ) );
             std::string regex_3;
             std::regex_replace( std::back_inserter( regex_3 ), regex_2.begin(), regex_2.end(), cross, wildcard );
-            
+
             vecReg.push_back( std::regex( regex_3 ) );
 	    //	    errs()<< "regex function: " << regex_3 << " ";
-            isRegex = true;
             errs() << " (regex)";
         } else {
-            isRegex = false;
             vec.insert( funcName );
 	  }
 	}
 	errs() << "\n";
       }
     }
-    
+
     if( rc ){
         errs() << "Error while reading the instrumentation list in the input file. Did you close it with " << token << "?\n";
     }
-    
+
  }
 
 
@@ -369,34 +388,33 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
      */
     void loadFunctionsFromFile(std::ifstream & file) {
       std::string funcName;
-      bool rc = true;
 
       /* This will be necessary as long as we don't have pattern matching in C++ */
       enum TokenValues { wrong_token, begin_func_include, begin_func_exclude,
 			 begin_file_include, begin_file_exclude };
-      
+
       static std::map<std::string, TokenValues> s_mapTokenValues;
-      
+
       s_mapTokenValues[ TAU_BEGIN_INCLUDE_LIST_NAME ] = begin_func_include;
       s_mapTokenValues[ TAU_BEGIN_EXCLUDE_LIST_NAME ] = begin_func_exclude;
       s_mapTokenValues[ TAU_BEGIN_FILE_INCLUDE_LIST_NAME ] = begin_file_include;
       s_mapTokenValues[ TAU_BEGIN_FILE_EXCLUDE_LIST_NAME ] = begin_file_exclude;
-      
+
       while(std::getline(file, funcName)) {
 	if( funcName.find_first_not_of(' ') != std::string::npos ) {
 	  /* Exclude whitespace-only lines */
-	  
+
 	  switch( s_mapTokenValues[ funcName ]){
 	  case begin_func_include:
 	    errs() << "Included functions: \n";
 	    readUntilToken( file, funcsOfInterest, funcsOfInterestRegex, TAU_END_INCLUDE_LIST_NAME );
 	    break;
-	    
+
 	  case begin_func_exclude:
 	    //	    errs() << "Excluded functions: \n"<< s_mapTokenValues[ funcName ] << "\n";
 	    readUntilToken( file, funcsExcl, funcsExclRegex, TAU_END_EXCLUDE_LIST_NAME );
 	    break;
-	 
+
 	  case begin_file_include:
 	    errs() << "Included files: \n";
 	    readUntilToken( file, filesIncl, filesInclRegex, TAU_END_FILE_INCLUDE_LIST_NAME );
@@ -406,7 +424,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 	    errs() << "Excluded files: \n";
 	    readUntilToken( file, filesExcl, filesExclRegex, TAU_END_FILE_EXCLUDE_LIST_NAME );
 	    break;
-	 
+
 	  default:
 	    errs() << "Wrong syntax: the lists must be between ";
 	    errs() << TAU_BEGIN_INCLUDE_LIST_NAME << " and " << TAU_END_INCLUDE_LIST_NAME;
@@ -418,7 +436,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 	}
       }
     }
-    
+
     /*!
      *  The FunctionPass interface method, called on each function produced from
      *  the original source.
@@ -441,7 +459,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 #if LEGACY_PM
         return false; // Dry run does not modify anything
 #else
-      return PreservedAnalyses(); 
+      return PreservedAnalyses();
 #endif
       }
       if( instru ){
@@ -450,21 +468,21 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 #if LEGACY_PM
       return modified;
 #else
-      return PreservedAnalyses(); 
+      return PreservedAnalyses();
 #endif
    }
-    
+
    /* Get the call's location.
     NB: this is obtained from debugging information, and therefore needs
     -g to be acessible.
-   */       
+   */
    std::string getFilename( Function& call ){
        std::string filename;
-           
+
        auto pi = inst_begin( &call );
        Instruction* instruction = &*pi;
        const llvm::DebugLoc &debugInfo = instruction->getDebugLoc();
-       
+
        if( NULL != debugInfo ){ /* if compiled with -g */
            filename = debugInfo->getDirectory().str() + "/" + debugInfo->getFilename().str();
        } else {
@@ -491,10 +509,11 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 
        } else {
            loc = "0,0";
-       }       
+       }
 
        return loc;
    }
+
     /*!
      *  Inspect the given CallInst and, if it should be profiled, add it
      *  and its recognized name the given vector.
@@ -518,41 +537,75 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
       errs() << "Name " << prettycallName << " GPU bound, instrument = "<<is_host_func<<"\n";
       return false;
     }
-
+    // if the function name is empty, skip it
     if( prettycallName == "" ) return false;
-	
+
 	/* Are we including or excluding some files? */
 	if( (filesIncl.size() + filesInclRegex.size() + filesExcl.size() + filesExclRegex.size() == 0 ) ){
 	  instrumentHere = true;
 	} else {
         /* Yes: are we in a file where we are instrumenting? */
         if( ( ( filesIncl.size() + filesInclRegex.size() == 0) // did not specify a list of files to instrument -> instrument them all, except the excluded ones
-              || ( filesIncl.count( filename ) > 0 
+              || ( filesIncl.count( filename ) > 0
                    || regexFits( filename, filesInclRegex ) ) )
             && !( filesExcl.count( filename )
                   || regexFits( filename, filesExclRegex ) ) ){
             instrumentHere = true;
 	  }
 	}
-	if( instrumentHere
-	    &&
-	    ( funcsOfInterest.count( prettycallName ) > 0
-	      || regexFits ( prettycallName, funcsOfInterestRegex, true )
-	      //	      || funcsOfInterest.count(calleeAndParent) > 0
-          || ( funcsOfInterest.size() == 0 && funcsOfInterestRegex.size() == 0 ) // did not specify a list of functions to instrument -> instrument them all, except the excluded ones
-	      )
-	    && !( funcsExcl.count( prettycallName )
-              || regexFits( prettycallName, funcsExclRegex, true )
-		  ) ) {
-	  errs() << "Instrument " << prettycallName << "\n";
-      return true;
-	}
+
+    // Not doing this file?  Skip it.
+    if (!instrumentHere) { return false; }
+
+    // Nothing included/excluded?  Instrument it.
+    if (funcsOfInterest.size() == 0 &&
+        funcsExcl.size() == 0 &&
+        funcsOfInterestRegex.size() == 0 &&
+        funcsExclRegex.size() == 0) { return true; }
+
+    // simple cases...
+
+    // Is this function explicitly included?  Instrument it.
+	if (funcsOfInterest.size() > 0 && funcsOfInterest.count( prettycallName ) > 0) {
+        return true;
+    }
+    // Is this function explicitly excluded?  Skip it.
+	if (funcsExcl.size() > 0 && funcsExcl.count( prettycallName ) > 0) {
+        return false;
+    }
+
+    // Ok, now it gets complicated...
+
+    bool regex_include = false;
+	if (funcsOfInterestRegex.size() > 0 && regexFits ( prettycallName, funcsOfInterestRegex, true )) {
+        regex_include = true;
+    }
+    bool regex_exclude = false;
+    if (funcsExclRegex.size() > 0 && regexFits( prettycallName, funcsExclRegex, true )) {
+        regex_exclude = true;
+    }
+
+    // if only have includes, then is it included?
+    if (funcsExcl.size() == 0 && funcsExclRegex.size() == 0) {
+        if (regex_include) {
+            return true;
+        }
+    }
+
+    // if only have excludes, then is it excluded?
+    if (funcsOfInterest.size() == 0 && funcsOfInterestRegex.size() == 0) {
+        if (!regex_exclude) {
+            return true;
+        }
+    }
+
+    // all other cases, return false
 	return false;
   }
-  
-    /*! 
+
+    /*!
      * This function determines if the current function name (parameter name)
-     * matches a regular expression. Regular expressions can be passed either 
+     * matches a regular expression. Regular expressions can be passed either
      * on the command-line (historical behavior) or in the input file. The latter
      * use a specific wildcard.
      */
@@ -563,14 +616,14 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
             if(!TauRegex.empty()) match = std::regex_search(name.str(), rex);
             if(!TauIRegex.empty()) imatch = std::regex_search(name.str(), irex);
         }
-        
+
         if( match || imatch ) return true;
 
         for( auto& r : regexList ){
             match  = std::regex_match( name.str(), r );
             if( match ) return true;
         }
-        
+
         return false;
     }
 
@@ -599,16 +652,22 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
         onRetFunc = getVoidFunc(TauStopFunc, context, module);
 #endif // LLVM_VERSION_MAJOR <= 8
 
-      errs() << "Adding instrumentation in " << prettyname << '\n';
+      std::string shorter(prettyname);
+      // to keep formatting pretty, trim any long names
+      if (shorter.size() > 80) {
+        shorter.resize(77);
+        shorter.resize(80, '.');
+      }
+      errs() << "Adding instrumentation in " << shorter << '\n';
             bool mutated = false; // TODO
 
       /* Add TAU init in main */
-      
+
       if( 0 == prettyname.compare( "main" ) ){
           errs() << "\tmain function: adding init\n";
           auto initfun = getVoidFunc( TauInitFunc, context, module );
           auto setnodefun = getVoidFunc( TauSetNodeFunc, context, module );
-          
+
           auto beg = inst_begin( &func );
           Instruction* b = &*beg;
           IRBuilder<> b4( b );
@@ -620,7 +679,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
               mainArgsVect.push_back( &arg );
           }
           b4.CreateCall( initfun, mainArgsVect );
-              
+
           /* TauSetNodeFunc takes one argument: 0 */
 
           Value* z = ConstantInt::get( context, llvm::APInt( 32, 0, false ) );
@@ -629,9 +688,9 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 
           mutated = true;
       }
-      
+
       /* Add regular TAU calls */
-         
+
       std::string filename = getFilename( func );
       std::string location( "[{" + getFilename( func ) + "} {" +  getLineAndCol( func ) + "}]" );
 
@@ -639,7 +698,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
       auto pi = inst_begin( &func );
       Instruction* i = &*pi;
       IRBuilder<> before( i );
-      
+
       // This is the recommended way of creating a string constant (to be used
       // as an argument to runtime functions)
       Value *strArg = before.CreateGlobalStringPtr( ( prettyname + " " + location ).str() );
@@ -654,13 +713,13 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
           if( isa<ReturnInst>( e ) ) {
               IRBuilder<> fina( e );
               fina.CreateCall( onRetFunc, args );
-          }	  
+          }
       }
       return mutated;
     }
          };
  }
-        
+
 
 
 #if LEGACY_PM      /* Legacy pass manager */
@@ -685,12 +744,12 @@ protected:
     std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &CI, StringRef file) {
         return std::make_unique<Instrument>();
     }
- 
+
     bool ParseArgs(const clang::CompilerInstance &CI, const std::vector<std::string> &args) {
         return true;
     }
 };
-     
+
 static  clang::FrontendPluginRegistry::Add<PluginInstrument> X("TAU", "TAU profiling");
 
 #endif
