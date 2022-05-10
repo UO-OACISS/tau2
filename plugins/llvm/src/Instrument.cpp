@@ -210,6 +210,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
     //StringSet<> funcsExclRegex;
     std::vector<std::regex> funcsOfInterestRegex;
     std::vector<std::regex> funcsExclRegex;
+    bool verbose;
 
     StringSet<> filesIncl;
     StringSet<> filesExcl;
@@ -229,6 +230,12 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 #else
         Instrument() : PassInfoMixin<Instrument>() {
 #endif
+	  char *do_verbose = getenv("TAU_COMPILER_VERBOSE");
+      if (do_verbose != nullptr) {
+        verbose = true;
+      } else {
+        verbose = false;
+      }
 
     /* Add some important regular expressions to the exclusion set of regular expressions */
     // Anything from the standard library
@@ -260,10 +267,10 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
           }
           loadFunctionsFromFile(ifile);
       } else {
-          errs() << "Checking selective instrumentation file specified in env. variable TAU_COMPILER_SELECT_FILE\n";
+          if (verbose) errs() << "Checking selective instrumentation file specified in env. variable TAU_COMPILER_SELECT_FILE\n";
 	  char *fname = getenv("TAU_COMPILER_SELECT_FILE");
 	  if (fname) {
-            errs() << "TAU_COMPILER_SELECT_FILE = "<<fname<<"\n";
+            if (verbose) errs() << "TAU_COMPILER_SELECT_FILE = "<<fname<<"\n";
             std::ifstream ifile{fname};
             if( !ifile ){
               errs() << "Could not open input file: " << fname<<"\n";
@@ -293,9 +300,9 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 	}
 
 	if( s_token.end() == std::find( s_token.begin(), s_token.end(), 'X' ) ){
-	  errs() << "Include";
+	  if (verbose) errs() << "Include";
 	} else {
-	  errs() << "Exclude";
+	  if (verbose) errs() << "Exclude";
 	}
 	if( s_token.end() == std::find( s_token.begin(), s_token.end(), 'F' ) ){
             std::regex par_o( std::string( "\\([\\s]" ) );
@@ -306,10 +313,10 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
             std::regex_replace( std::back_inserter( regex_0 ), funcName.begin(), funcName.end(), par_o, s_o );
             std::regex_replace( std::back_inserter( regex_1 ), regex_0.begin(), regex_0.end(), par_c, s_c );
             funcName =  std::string( regex_1 );
-	    errs() << " function: " << funcName;
+	    if (verbose) errs() << " function: " << funcName;
       /* TODO: trim whitespaces */
 	} else {
-	  errs() << " file " << funcName;
+	  if (verbose) errs() << " file " << funcName;
 	}
 
 	/* The regex wildcards are not the same for filenames and function names. */
@@ -334,7 +341,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
             //errs()<< "regex filename: " << regex_2 << "\n";
 
             vecReg.push_back( std::regex( regex_2 ) );
-            errs() << " (regex)";
+            if (verbose) errs() << " (regex)";
 
         } else {
             vec.insert( funcName );
@@ -359,18 +366,17 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 
             /* Wildcard: replace the # by stars */
             std::regex cross( std::string( "[#]" ) );
-            std::string wildcard( std::string(  "(.*)" ) );
+            std::string wildcard( std::string(  ".*" ) );
             std::string regex_3;
             std::regex_replace( std::back_inserter( regex_3 ), regex_2.begin(), regex_2.end(), cross, wildcard );
 
             vecReg.push_back( std::regex( regex_3 ) );
-	    //	    errs()<< "regex function: " << regex_3 << " ";
-            errs() << " (regex)";
+            if (verbose) errs() << " (regex)";
         } else {
             vec.insert( funcName );
 	  }
 	}
-	errs() << "\n";
+	if (verbose) errs() << "\n";
       }
     }
 
@@ -406,7 +412,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 
 	  switch( s_mapTokenValues[ funcName ]){
 	  case begin_func_include:
-	    errs() << "Included functions: \n";
+	    if (verbose) errs() << "Included functions: \n";
 	    readUntilToken( file, funcsOfInterest, funcsOfInterestRegex, TAU_END_INCLUDE_LIST_NAME );
 	    break;
 
@@ -416,12 +422,12 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 	    break;
 
 	  case begin_file_include:
-	    errs() << "Included files: \n";
+	    if (verbose) errs() << "Included files: \n";
 	    readUntilToken( file, filesIncl, filesInclRegex, TAU_END_FILE_INCLUDE_LIST_NAME );
 	    break;
 
 	  case begin_file_exclude:
-	    errs() << "Excluded files: \n";
+	    if (verbose) errs() << "Excluded files: \n";
 	    readUntilToken( file, filesExcl, filesExclRegex, TAU_END_FILE_EXCLUDE_LIST_NAME );
 	    break;
 
@@ -532,9 +538,8 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 
 	/* This big test was explanded for readability */
 	bool instrumentHere = false;
-    //errs() << "Name " << prettycallName << " full " << callName << "\n";
     if (is_host_func == false) {
-      errs() << "Name " << prettycallName << " GPU bound, instrument = "<<is_host_func<<"\n";
+      //errs() << "Name " << prettycallName << " GPU bound, instrument = "<<is_host_func<<"\n";
       return false;
     }
     // if the function name is empty, skip it
@@ -564,42 +569,40 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
         funcsExclRegex.size() == 0) { return true; }
 
     // simple cases...
+    if (verbose) errs() << "Looking up '" << prettycallName.str() << "'...\n";
 
     // Is this function explicitly included?  Instrument it.
 	if (funcsOfInterest.size() > 0 && funcsOfInterest.count( prettycallName ) > 0) {
+        if (verbose) errs() << "include Match\n";
         return true;
     }
     // Is this function explicitly excluded?  Skip it.
 	if (funcsExcl.size() > 0 && funcsExcl.count( prettycallName ) > 0) {
+        if (verbose) errs() << "exclude Match\n";
         return false;
     }
 
     // Ok, now it gets complicated...
 
-    bool regex_include = false;
-	if (funcsOfInterestRegex.size() > 0 && regexFits ( prettycallName, funcsOfInterestRegex, true )) {
-        regex_include = true;
-    }
-    bool regex_exclude = false;
     if (funcsExclRegex.size() > 0 && regexFits( prettycallName, funcsExclRegex, true )) {
-        regex_exclude = true;
+        if (verbose) errs() << "excluded as regex!\n";
+        return false;
     }
 
-    // if only have includes, then is it included?
-    if (funcsExcl.size() == 0 && funcsExclRegex.size() == 0) {
-        if (regex_include) {
-            return true;
-        }
+	if (funcsOfInterestRegex.size() > 0 && regexFits ( prettycallName, funcsOfInterestRegex, true )) {
+        if (verbose) errs() << "included as regex!\n";
+        return true;
     }
 
-    // if only have excludes, then is it excluded?
     if (funcsOfInterest.size() == 0 && funcsOfInterestRegex.size() == 0) {
-        if (!regex_exclude) {
-            return true;
-        }
+        // finally, if we didn't match to anything, and there weren't any inclusion
+        // conditions, return true by default.
+        if (verbose) errs() << "Default - Returning true!\n";
+        return true;
     }
 
     // all other cases, return false
+    if (verbose) errs() << "Default - Returning false!\n";
 	return false;
   }
 
@@ -658,13 +661,13 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
         shorter.resize(77);
         shorter.resize(80, '.');
       }
-      errs() << "Adding instrumentation in " << shorter << '\n';
+      /* if (verbose) */ errs() << "Adding instrumentation in " << shorter << '\n';
             bool mutated = false; // TODO
 
       /* Add TAU init in main */
 
       if( 0 == prettyname.compare( "main" ) ){
-          errs() << "\tmain function: adding init\n";
+          if (verbose) errs() << "\tmain function: adding init\n";
           auto initfun = getVoidFunc( TauInitFunc, context, module );
           auto setnodefun = getVoidFunc( TauSetNodeFunc, context, module );
 
@@ -693,6 +696,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 
       std::string filename = getFilename( func );
       std::string location( "[{" + getFilename( func ) + "} {" +  getLineAndCol( func ) + "}]" );
+      errs() << "location: '" << location << "'\n";
 
       // Insert instrumentation before the first instruction
       auto pi = inst_begin( &func );
