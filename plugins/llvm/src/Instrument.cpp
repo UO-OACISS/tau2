@@ -485,14 +485,21 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
    std::string getFilename( Function& call ){
        std::string filename;
 
-       auto pi = inst_begin( &call );
-       Instruction* instruction = &*pi;
-       const llvm::DebugLoc &debugInfo = instruction->getDebugLoc();
-
-       if( NULL != debugInfo ){ /* if compiled with -g */
-           filename = debugInfo->getDirectory().str() + "/" + debugInfo->getFilename().str();
+       DISubprogram* s = call.getSubprogram();
+       if( s != nullptr ){
+           StringRef theFile = s->getFilename();
+           StringRef theDir = s->getDirectory();
+           filename = theDir.str() + "/" + theFile.str();
        } else {
-           filename = call.getParent()->getSourceFileName();
+            auto pi = inst_begin( &call );
+            Instruction* instruction = &*pi;
+            const llvm::DebugLoc &debugInfo = instruction->getDebugLoc();
+
+            if( NULL != debugInfo ){ /* if compiled with -g */
+                filename = debugInfo->getDirectory().str() + "/" + debugInfo->getFilename().str();
+            } else {
+                filename = call.getParent()->getSourceFileName();
+            }
        }
        return filename;
    }
