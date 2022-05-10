@@ -668,7 +668,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
         shorter.resize(77);
         shorter.resize(80, '.');
       }
-      /* if (verbose) */ errs() << "Adding instrumentation in " << shorter << '\n';
+      if (verbose) errs() << "Adding instrumentation in " << shorter << '\n';
             bool mutated = false; // TODO
 
       /* Add TAU init in main */
