@@ -37,7 +37,7 @@ install: 	$(TARGET)
 $(TARGET):	$(OBJS)
 	$(CXX) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
-main.o: main.cxx
+main.o: main.cxx headers1/A.h headers2/B.h
 	export TAU_COMPILER_VERBOSE=1
 	$(CXX) $(CFLAGS) -c $< -o $@
 

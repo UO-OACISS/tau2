@@ -1,10 +1,8 @@
 
 #include "headers2/B.h"
 
-using namespace std;
-
 int main ( int argc, char * argv[] ) {
-    cout << "in " << __func__ << endl;
+    REPORT
     A a;
     B b;
 
