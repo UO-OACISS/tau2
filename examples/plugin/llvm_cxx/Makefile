@@ -1,0 +1,46 @@
+#****************************************************************************
+#*			TAU Portable Profiling Package			   **
+#*			http://www.cs.uoregon.edu/research/tau	           **
+#****************************************************************************
+#*    Copyright 1997  						   	   **
+#*    Department of Computer and Information Science, University of Oregon **
+#*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+#****************************************************************************
+#######################################################################
+##                  pC++/Sage++  Copyright (C) 1993,1995             ##
+##  Indiana University  University of Oregon  University of Rennes   ##
+#######################################################################
+
+
+TAU_MAKEFILE ?=../../../include/Makefile
+
+include $(TAU_MAKEFILE)
+
+CXX		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cxx.sh -optVerbose -optCompInst -optShared
+
+PRINT	      	= pr
+
+RM 	      	= /bin/rm -rf
+
+TARGET	      	= program
+
+OBJS     	= main.o
+CFLAGS=-g -O0 $(TAU_OPENMP_OPTION) -I.
+LDFLAGS=-g $(TAU_OPENMP_OPTION)
+
+##############################################
+
+all:		$(TARGET)
+
+install: 	$(TARGET)
+
+$(TARGET):	$(OBJS)
+	$(CXX) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
+
+main.o: main.cxx
+	export TAU_COMPILER_VERBOSE=1
+	$(CXX) $(CFLAGS) -c $< -o $@
+
+clean:
+	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog
+##############################################
