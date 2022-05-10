@@ -703,7 +703,6 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 
       std::string filename = getFilename( func );
       std::string location( "[{" + getFilename( func ) + "} {" +  getLineAndCol( func ) + "}]" );
-      errs() << "location: '" << location << "'\n";
 
       // Insert instrumentation before the first instruction
       auto pi = inst_begin( &func );
