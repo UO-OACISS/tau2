@@ -1,0 +1,2 @@
+export TAU_COMPILER_SELECT_FILE=./select.tau
+export TAU_COMPILER_VERBOSE=1

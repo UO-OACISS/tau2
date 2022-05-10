@@ -1,0 +1,29 @@
+This example illustrates how the TAU-based selective instrumentation module for LLVM can be used.
+
+## To use this example:
+
+```
+source sourceme.sh
+make
+./program
+pprof -a
+```
+
+## To compile TAU and the plugin:
+
+### Configuration
+
+```
+./configure  -c++=clang++ -cc=clang
+```
+
+### Compilation
+
+Once you have configured TAU, compile it:
+
+```
+make -j install
+```
+
+This will install the plugin in your TAU installation, in the `plugins` directory.
+
