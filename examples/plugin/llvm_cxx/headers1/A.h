@@ -7,7 +7,7 @@ std::cout << "in " << __func__ << " line " << __FILE__ << " line " << (__LINE__-
 
 class A {
     public:
-        A() {
+        A() : flag(true) {
             REPORT
         };
         ~A() {
@@ -18,6 +18,9 @@ class A {
         }
         void method2 ();
         virtual void vmethod();
+        bool getFlag() { return flag; }
+    private:
+        bool flag;
 };
 
 void A::method2() {

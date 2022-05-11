@@ -2,7 +2,7 @@
 
 class B : public A {
     public:
-        B() : A() {
+        B() : A(), flag2(false) {
             REPORT
         };
         ~B() {
@@ -13,6 +13,9 @@ class B : public A {
         }
         void method2 ();
         virtual void vmethod ();
+        bool getFlag2() { return flag2; };
+    private:
+        bool flag2;
 };
 
 void B::method2() {

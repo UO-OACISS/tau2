@@ -211,6 +211,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
     std::vector<std::regex> funcsOfInterestRegex;
     std::vector<std::regex> funcsExclRegex;
     bool verbose;
+    unsigned minInstructionCount;
 
     StringSet<> filesIncl;
     StringSet<> filesExcl;
@@ -235,6 +236,16 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
         verbose = true;
       } else {
         verbose = false;
+      }
+	  char *mic = getenv("TAU_COMPILER_MIN_INSTRUCTION_COUNT");
+      if (mic != nullptr) {
+        minInstructionCount = std::stoul(std::string(mic));
+        if (verbose) errs() << "TAU_COMPILER_MIN_INSTRUCTION_COUNT set to "
+            << minInstructionCount << "\n";
+      } else {
+        minInstructionCount = 50;
+        if (verbose) errs() << "TAU_COMPILER_MIN_INSTRUCTION_COUNT set to "
+            << minInstructionCount << "\n";
       }
 
     /* Add some important regular expressions to the exclusion set of regular expressions */
@@ -519,7 +530,6 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
        if( NULL != s ){
            int line = s->getLine();
            loc = std::to_string( line );
-
        } else {
            loc = "0,0";
        }
@@ -538,6 +548,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
     StringRef callName = call.getName();
     std::string filename = getFilename( call );
     StringRef prettycallName = normalize_name(callName);
+    unsigned instructionCount = call.getInstructionCount();
     auto *module = call.getParent();
     const std::string triple = module->getTargetTriple();
     bool is_host_func = triple.compare(std::string("amdgcn-amd-amdhsa")); // returns 0 if it matches
@@ -551,6 +562,13 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
     }
     // if the function name is empty, skip it
     if( prettycallName == "" ) return false;
+    // if the instruction count is small, skip it
+    if( instructionCount < minInstructionCount) {
+        if (verbose) errs() << "Skipping small function '"
+            << prettycallName.str() << "' with only "
+            << instructionCount << " instructions.\n";
+        return false;
+    }
 
 	/* Are we including or excluding some files? */
 	if( (filesIncl.size() + filesInclRegex.size() + filesExcl.size() + filesExclRegex.size() == 0 ) ){
