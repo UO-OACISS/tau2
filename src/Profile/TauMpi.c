@@ -366,10 +366,12 @@ char *note;
    list when it is implemented in libpmpich.a */
 
 
-
-
-
-
+/* This macro captures the time spent synchronizing at collectives. */
+#define TAU_MPI_COLLECTIVE_SYNC(__comm) \
+    TAU_PROFILE_TIMER(synctautimer, "MPI Collective Sync", " ", TAU_MESSAGE); \
+    TAU_PROFILE_START(synctautimer); \
+    PMPI_Barrier(__comm); \
+    TAU_PROFILE_STOP(synctautimer);
 
 
 
@@ -387,6 +389,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Allgather()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Allgather( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm );
@@ -414,6 +417,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Allgatherv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Allgatherv( sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm );
@@ -443,6 +447,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Allreduce()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Allreduce( sendbuf, recvbuf, count, datatype, op, comm );
@@ -469,6 +474,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Alltoall()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
 
@@ -498,6 +504,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Alltoallv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Alltoallv( sendbuf, sendcnts, sdispls, sendtype, recvbuf, recvcnts, rdispls, recvtype, comm );
@@ -554,6 +561,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Bcast()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
 
@@ -605,6 +613,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Gather()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Gather( sendbuf, sendcnt, sendtype, recvbuf, recvcount, recvtype, root, comm );
@@ -636,6 +645,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Gatherv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Gatherv( sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm );
@@ -698,6 +708,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Reduce_scatter()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Reduce_scatter( sendbuf, recvbuf, recvcnts, datatype, op, comm );
@@ -724,6 +735,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Reduce()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Reduce( sendbuf, recvbuf, count, datatype, op, root, comm );
@@ -749,6 +761,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Scan()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Scan( sendbuf, recvbuf, count, datatype, op, comm );
@@ -776,6 +789,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Scatter()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Scatter( sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm );
@@ -803,6 +817,7 @@ MPI_Comm comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Scatterv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Scatterv( sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm );
@@ -934,6 +949,7 @@ MPI_Comm * comm_out;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_dup()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_dup( comm, comm_out );
@@ -951,6 +967,7 @@ MPI_Comm * comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  //TAU_MPI_COLLECTIVE_SYNC(comm);
 
   MPI_Comm silly =  *comm;
   returnVal = PMPI_Comm_free( &(silly) );
@@ -1106,6 +1123,7 @@ MPI_Comm * comm_out;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_split()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  //TAU_MPI_COLLECTIVE_SYNC(comm);
 
   MPI_Comm newcomm = comm;
   returnVal = PMPI_Comm_split( newcomm, color, key, comm_out );
@@ -1141,6 +1159,7 @@ int MPI_Comm_spawn(TAU_NONMPC_CONST char *command, char *argv[], int maxprocs,
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_spawn()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  //TAU_MPI_COLLECTIVE_SYNC(comm);
 
   const char * tau_exec_args = TauEnv_get_tau_exec_args();
   TAU_NONMPC_CONST char * tau_exec_path = (TAU_NONMPC_CONST char *)TauEnv_get_tau_exec_path();
