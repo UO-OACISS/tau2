@@ -949,6 +949,7 @@ MPI_Comm * comm_out;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_dup()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_dup( comm, comm_out );
@@ -966,6 +967,7 @@ MPI_Comm * comm;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_free()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  //TAU_MPI_COLLECTIVE_SYNC(comm);
 
   MPI_Comm silly =  *comm;
   returnVal = PMPI_Comm_free( &(silly) );
@@ -1121,6 +1123,7 @@ MPI_Comm * comm_out;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_split()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  //TAU_MPI_COLLECTIVE_SYNC(comm);
 
   MPI_Comm newcomm = comm;
   returnVal = PMPI_Comm_split( newcomm, color, key, comm_out );
@@ -1156,6 +1159,7 @@ int MPI_Comm_spawn(TAU_NONMPC_CONST char *command, char *argv[], int maxprocs,
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_spawn()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  //TAU_MPI_COLLECTIVE_SYNC(comm);
 
   const char * tau_exec_args = TauEnv_get_tau_exec_args();
   TAU_NONMPC_CONST char * tau_exec_path = (TAU_NONMPC_CONST char *)TauEnv_get_tau_exec_path();
