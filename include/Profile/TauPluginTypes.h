@@ -384,6 +384,50 @@ typedef struct Tau_plugin_event_ompt_mutex_released_data {
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_mutex_released_data_t;
 
+typedef struct Tau_plugin_event_ompt_device_initialize_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+    int device_num;
+    const char *type;
+    ompt_device_t *device;
+    ompt_function_lookup_t lookup;
+    const char *documentation;
+#else /* TAU_PLUGIN_OMPT_ON */
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+    int null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_device_initialize_data_t;
+
+typedef struct Tau_plugin_event_ompt_device_finalize_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+    int device_num;
+#else /* TAU_PLUGIN_OMPT_ON */
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+    int null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_device_finalize_data_t;
+
+typedef struct Tau_plugin_event_ompt_device_load_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+    int device_num;
+    const char *filename;
+    int64_t offset_in_file;
+    void *vma_in_file;
+    size_t bytes;
+    void *host_addr;
+    void *device_addr;
+    uint64_t module_id;
+#else /* TAU_PLUGIN_OMPT_ON */
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_device_load_data_t;
+
 typedef struct Tau_plugin_event_ompt_target_data {
 #ifdef TAU_PLUGIN_OMPT_ON
    ompt_target_t kind;
@@ -473,6 +517,9 @@ typedef int (*Tau_plugin_ompt_sync_region)(Tau_plugin_event_ompt_sync_region_dat
 typedef int (*Tau_plugin_ompt_mutex_acquire)(Tau_plugin_event_ompt_mutex_acquire_data_t*);
 typedef int (*Tau_plugin_ompt_mutex_acquired)(Tau_plugin_event_ompt_mutex_acquired_data_t*);
 typedef int (*Tau_plugin_ompt_mutex_released)(Tau_plugin_event_ompt_mutex_released_data_t*);
+typedef int (*Tau_plugin_ompt_device_initialize)(Tau_plugin_event_ompt_device_initialize_data_t*);
+typedef int (*Tau_plugin_ompt_device_finalize)(Tau_plugin_event_ompt_device_finalize_data_t*);
+typedef int (*Tau_plugin_ompt_device_load)(Tau_plugin_event_ompt_device_load_data_t*);
 typedef int (*Tau_plugin_ompt_target)(Tau_plugin_event_ompt_target_data_t*);
 typedef int (*Tau_plugin_ompt_target_data_op)(Tau_plugin_event_ompt_target_data_op_data_t*);
 typedef int (*Tau_plugin_ompt_target_submit)(Tau_plugin_event_ompt_target_submit_data_t*);
@@ -520,6 +567,9 @@ typedef struct Tau_plugin_callbacks {
    Tau_plugin_ompt_mutex_acquire OmptMutexAcquire;
    Tau_plugin_ompt_mutex_acquired OmptMutexAcquired;
    Tau_plugin_ompt_mutex_released OmptMutexReleased;
+   Tau_plugin_ompt_device_initialize OmptDeviceInitialize;
+   Tau_plugin_ompt_device_finalize OmptDeviceFinalize;
+   Tau_plugin_ompt_device_load OmptDeviceLoad;
    Tau_plugin_ompt_target OmptTarget;
    Tau_plugin_ompt_target_data_op OmptTargetDataOp;
    Tau_plugin_ompt_target_submit OmptTargetSubmit;
@@ -529,7 +579,7 @@ typedef struct Tau_plugin_callbacks {
    Tau_plugin_gpu_finalize GpuFinalize;
    Tau_plugin_gpu_kernel_exec GpuKernelExec;
    Tau_plugin_gpu_memcpy GpuMemcpy;
-/* GPU EVENTS END */   
+/* GPU EVENTS END */
 } Tau_plugin_callbacks_t;
 
 /*Define all the events currently supported*/
@@ -567,6 +617,9 @@ typedef enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRE,
    TAU_PLUGIN_EVENT_OMPT_MUTEX_ACQUIRED,
    TAU_PLUGIN_EVENT_OMPT_MUTEX_RELEASED,
+   TAU_PLUGIN_EVENT_OMPT_DEVICE_INITIALIZE,
+   TAU_PLUGIN_EVENT_OMPT_DEVICE_FINALIZE,
+   TAU_PLUGIN_EVENT_OMPT_DEVICE_LOAD,
    TAU_PLUGIN_EVENT_OMPT_TARGET,
    TAU_PLUGIN_EVENT_OMPT_TARGET_DATA_OP,
    TAU_PLUGIN_EVENT_OMPT_TARGET_SUBMIT,
@@ -617,6 +670,9 @@ typedef struct Tau_plugin_callbacks_active {
     unsigned int ompt_mutex_acquire;
     unsigned int ompt_mutex_acquired;
     unsigned int ompt_mutex_released;
+    unsigned int ompt_device_initialize;
+    unsigned int ompt_device_finalize;
+    unsigned int ompt_device_load;
     unsigned int ompt_target;
     unsigned int ompt_target_data_op;
     unsigned int ompt_target_submit;

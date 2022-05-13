@@ -374,7 +374,7 @@ CALIPER_O = TauCaliper.o #ENDIF#
 #############################################
 # OpenMP OBJECTS
 #############################################
-#OPENMP#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPI.o TauOMPT.o #ENDIF#
+#OPENMP#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPI.o TauOMPT.o TauGpuAdapterOpenMP.o TauGpu.o #ENDIF#
 #OPARI#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPIDisable.o #ENDIF#
 #OPARI2#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPIDisable.o #ENDIF#
 #PGS_AVAILABLE#OPENMP_PGS_O 	= TauPthreadGlobal.o  #ENDIF#
@@ -1615,7 +1615,7 @@ MIC_OFFLOAD_SHARED_LINKING=$(TAUHELPER) $(MIC_OFFLOAD_FLAGS) $(MIC_OFFLOAD_LINKI
 TAU_MPI_COMPILE_INCLUDE=$(TAU_MPI_INCLUDE)
 #COMPINST_CRAYCC#TAU_MPI_COMPILE_INCLUDE= #ENDIF#
 #COMPINST_CRAYPE_CLANG#TAU_MPI_COMPILE_INCLUDE= #ENDIF#
-#HIPCC#TAU_MPI_COMPILE_INCLUDE=$(TAU_MPI_INCLUDE) #ENDIF# 
+#HIPCC#TAU_MPI_COMPILE_INCLUDE=$(TAU_MPI_INCLUDE) #ENDIF#
 #FX#TAU_MPI_COMPILE_INCLUDE= #ENDIF#
 # Fujitsu doesn't want TAU_MPI_INC to propagate to the command line
 
