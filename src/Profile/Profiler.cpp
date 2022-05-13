@@ -24,7 +24,7 @@
 #include <Profile/TauPluginInternals.h>
 
 // Define DEBUG_PROF if you want to debug timers
-// #define DEBUG_PROF 1
+#define DEBUG_PROF 1
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>

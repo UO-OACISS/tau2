@@ -3057,7 +3057,7 @@ extern void TauTraceOTF2ToggleFlushAtExit(bool);
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
-  TAU_VERBOSE("calling Tau_destructor_trigger\n");
+  //TAU_VERBOSE("calling Tau_destructor_trigger\n");
   /* Set up a static flag to make sure we only do this once,
    * as it gets called from many, many destructors. */
   static bool once = false;
