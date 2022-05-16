@@ -35,7 +35,7 @@ using namespace std;
 // the node id, thread id etc. When Threads are implemented, myThread()
 // method should return the thread id in {0..N-1} where N is the total
 // number of threads. All interaction with the outside world should be
-// restrained to this class. 
+// restrained to this class.
 //////////////////////////////////////////////////////////////////////
 
 typedef std::map<std::string, TauGroup_t, std::less<std::string> > ProfileMap_t;
@@ -47,9 +47,9 @@ double TauWindowsUsecD(void);
 class RtsLayer {
   // Layer for Profiler to interact with the Runtime System
 public:
- 	
+
   RtsLayer () { }  // defaults
-  ~RtsLayer () { } 
+  ~RtsLayer () { }
 
 struct TAULocks{
     int lockDBCount=0;
@@ -91,12 +91,12 @@ struct TAULocks{
   static TauGroup_t disableAllGroups(void) ;
   static TauGroup_t resetProfileGroup(void) ;
   static int setAndParseProfileGroups (char *prog, char *str) ;
-  static bool isEnabled(TauGroup_t  ProfileGroup) ; 
+  static bool isEnabled(TauGroup_t  ProfileGroup) ;
   static void ProfileInit(int& argc, char**& argv);
   static std::string PrimaryGroup(const char *ProfileGroupName);
   static bool isCtorDtor(const char *name);
 
-  static std::string GetRTTI(const char *name); 
+  static std::string GetRTTI(const char *name);
   inline static const char * CheckNotNull(const char * str) {
     if (str) return str;
     else return "  ";
@@ -194,8 +194,8 @@ struct TAULocks{
 
   static int setMyContext(int ContextId);
 
-  static const char* getSingleCounterName(); 
-  static const char* getCounterName(int i); 
+  static const char* getSingleCounterName();
+  static const char* getCounterName(int i);
 
   // Return the number of the 'current' node.
   static int myNode(void);
@@ -207,8 +207,8 @@ struct TAULocks{
   static int myThread(void);
 
   static int unsafeThreadId(void);
- 
- 	// Return the local thread id (ignoring tasks) This is a 
+
+ 	// Return the local thread id (ignoring tasks) This is a
 	// low-overhead call but DO NOT use this call when
 	// accessing Profiler stack or the FunctionInfo DB.
   static int localThreadId(void);
@@ -222,7 +222,7 @@ struct TAULocks{
 #endif /* KTAU_NG */
 
   static int RegisterThread();
-	
+
   static void RegisterFork(int nodeid, enum TauFork_t opcode);
 
   // This ensure that the FunctionDB (global) is locked while updating
@@ -245,8 +245,8 @@ private:
   static void threadLockEnv(void);
   static void threadUnLockEnv(void);
 
-  //static vector<LockList*> TheLockList();//[TAU_MAX_THREADS];
-  //static vector<int*> lockEnvCount;//[TAU_MAX_THREADS];
+  static int& lockDBCount();
+  static int& lockEnvCount();
 
   static bool initLocks();
   static bool initEnvLocks();
@@ -261,5 +261,5 @@ extern "C" int Tau_RtsLayer_TheEnableInstrumentation();
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: amorris $
  * $Revision: 1.34 $   $Date: 2010/04/08 23:07:41 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.34 2010/04/08 23:07:41 amorris Exp $ 
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.34 2010/04/08 23:07:41 amorris Exp $
  ***************************************************************************/

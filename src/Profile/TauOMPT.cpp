@@ -41,7 +41,13 @@
 #include <assert.h>
 #include <unordered_map>
 #include <Profile/TauGpuAdapterOpenMP.h>
+#include <atomic>
+#include <array>
+#include <iostream>
 
+/* 16k buffer should be OK, if this is increased, please increase the size
+ * of the circular buffer that maps target_id values to the thread IDs that
+ * launched them - see TargetMap class, below! */
 #define OMPT_BUFFER_REQUEST_SIZE 16*1024
 
 static bool initializing = false;
@@ -55,6 +61,10 @@ __declspec(thread) bool is_master = false;
 #include "pthread.h"
 pthread_key_t thr_id_key;
 #endif
+static bool tau_ompt_tracing = false;
+/* This is to prevent libotf2 from registering a thread when our worker
+ * thread tries to store the asynchronous activity. */
+static thread_local bool internal_thread{false};
 
 int get_ompt_tid(void) {
 #if defined (TAU_USE_TLS)
@@ -152,6 +162,57 @@ static ompt_stop_trace_t ompt_stop_trace = nullptr;
 static ompt_get_record_ompt_t ompt_get_record_ompt = nullptr;
 static ompt_advance_buffer_cursor_t ompt_advance_buffer_cursor = nullptr;
 
+/* Global map for mapping target_id data from the host callback to the device activity. */
+class TargetMap {
+    public:
+        TargetMap(const TargetMap&) = delete;
+        TargetMap(TargetMap&&) = delete;
+        TargetMap& operator=(const TargetMap&) = delete;
+        TargetMap& operator=(TargetMap&&) = delete;
+        ~TargetMap() {};
+        int get_tid() {
+            static std::atomic<int> thread_count{0};
+            return (++thread_count)-1;
+        }
+        void add_thread_id(ompt_id_t target_id, int device_id) {
+            static thread_local int tid = get_tid();
+            size_t location = (size_t)target_id % map_size;
+            launching_thread[location] = tid;
+            write_index = location;
+            if (write_index == read_index) {
+                std::cerr << "Error!  The OpenMP target_id map in TAU is too small."
+                          << " Please increase the size of the map in "
+                          << __FILE__ << std::endl;
+                abort();
+            }
+            // make sure we have a virtual thread for the device activity for this target
+            Tau_openmp_get_taskid_from_gpu_event(device_id, tid);
+            //printf("%s %lu %d\n", __func__, location, tid);
+        }
+        int get_thread_id(ompt_id_t target_id) {
+            size_t location = (size_t)target_id % map_size;
+            read_index = location;
+            int tid = launching_thread[location];
+            //printf("%s %lu %d\n", __func__, location, tid);
+            return tid;
+        }
+        static TargetMap& instance() {
+            static TargetMap theMap;
+            return theMap;
+        }
+    private:
+        TargetMap() : write_index(0), read_index(0) {};
+        /* This size (1024) should be sufficient, as long as the buffer size
+         * doesn't increase from 16*1024.  If the buffer is increased, please
+         * increase the size of this circular buffer accordingly! */
+        static constexpr size_t map_size = 1024;
+        std::array<int,map_size> launching_thread;
+        /* These are used for validation of the buffer size. */
+        std::atomic<size_t> write_index;
+        std::atomic<size_t> read_index;
+};
+
+
 /*Externs*/
 extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address);
 
@@ -162,19 +223,22 @@ extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * re
 static void print_record_ompt(ompt_record_ompt_t *rec) {
     if (rec == NULL) return;
 
+    /*
     printf("rec=%p type=%d time=%lu thread_id=%lu target_id=%lu\n",
             rec, rec->type, rec->time, rec->thread_id, rec->target_id);
+            */
     /* Save some data from the target region, because we don't have it when we
        process the target submit activity. */
-    static int device_num = 0;
-    static ompt_id_t task_id;
-    static ompt_id_t target_id;
-    static void *codeptr_ra;
+    static int target_device_num = 0;
+    static ompt_id_t task_id = 0;
+    static ompt_id_t target_id = 0;
+    static void *codeptr_ra = 0;
+    static uint32_t thread_id = 0;
     uint32_t context = 0;
-    uint32_t stream = 0;
     uint64_t start = 0;
     uint64_t end = 0;
     int map_size = 0;
+    int device_num = 0;
     std::string name;
     bool make_timer = true;
     static char resolved_address[1024];
@@ -183,24 +247,41 @@ static void print_record_ompt(ompt_record_ompt_t *rec) {
         case ompt_callback_target:
         case ompt_callback_target_emi: {
             ompt_record_target_t target_rec = rec->record.target;
+            make_timer = false;
+            /*
             printf("\tRecord Target: kind=%d endpoint=%d device=%d task_id=%lu target_id=%lu codeptr=%p\n",
                     target_rec.kind, target_rec.endpoint, target_rec.device_num,
                     target_rec.task_id, target_rec.target_id, target_rec.codeptr_ra);
-            device_num = target_rec.device_num;
-            task_id = target_rec.task_id;
-            target_id = target_rec.target_id;
-            codeptr_ra = const_cast<void*>(target_rec.codeptr_ra);
-            make_timer = false;
-            if(TauEnv_get_ompt_resolve_address_eagerly()) {
-                Tau_ompt_resolve_callsite_eagerly((unsigned long)codeptr_ra, resolved_address);
+                    */
+            //printf("\tGPU Device: %d\n", target_rec.device_num);
+            if (target_rec.endpoint == ompt_scope_begin) {
+                target_device_num = target_rec.device_num;
+                // validate the device ID, sometimes we get -1 for no known reason.
+                if (target_device_num < 0) { target_device_num = 0; }
+                task_id = target_rec.task_id;
+                target_id = target_rec.target_id;
+                thread_id = TargetMap::instance().get_thread_id(target_id);
+                codeptr_ra = const_cast<void*>(target_rec.codeptr_ra);
+                if(TauEnv_get_ompt_resolve_address_eagerly()) {
+                    Tau_ompt_resolve_callsite_eagerly((unsigned long)codeptr_ra, resolved_address);
+                } else {
+                    sprintf(resolved_address, " : ADDR <%p>", codeptr_ra);
+                }
             } else {
-                sprintf(resolved_address, "ADDR <%p>", codeptr_ra);
+                // clear everything out
+                target_device_num = 0;
+                task_id = 0;
+                target_id = 0;
+                thread_id = 0;
+                codeptr_ra = nullptr;
+                memset(resolved_address, 0, 1024);
             }
             break;
         }
         case ompt_callback_target_data_op:
         case ompt_callback_target_data_op_emi: {
              ompt_record_target_data_op_t target_data_op_rec = rec->record.target_data_op;
+             /*
              printf("\t  Record DataOp: host_op_id=%lu optype=%d src_addr=%p src_device=%d "
                      "dest_addr=%p dest_device=%d bytes=%lu end_time=%lu duration=%lu ns codeptr=%p\n",
                      target_data_op_rec.host_op_id, target_data_op_rec.optype,
@@ -209,53 +290,76 @@ static void print_record_ompt(ompt_record_ompt_t *rec) {
                      target_data_op_rec.bytes, target_data_op_rec.end_time,
                      target_data_op_rec.end_time - rec->time,
                      target_data_op_rec.codeptr_ra);
+                     */
+            void * tmp_codeptr_ra;
+            if (codeptr_ra != nullptr) {
+                tmp_codeptr_ra = codeptr_ra;
+            } else {
+                tmp_codeptr_ra = const_cast<void*>(target_data_op_rec.codeptr_ra);
+            }
+            if(TauEnv_get_ompt_resolve_address_eagerly()) {
+                Tau_ompt_resolve_callsite_eagerly((unsigned long)tmp_codeptr_ra, resolved_address);
+            } else {
+                sprintf(resolved_address, " : ADDR <%p>", tmp_codeptr_ra);
+            }
             std::stringstream ss;
+            // by default, the device num is the target device number
+            device_num = target_device_num;
             ss << "GPU: OpenMP Target DataOp ";
             switch (target_data_op_rec.optype) {
                 case ompt_target_data_alloc: {
                     ss << "Alloc";
+                    device_num = target_data_op_rec.dest_device_num;
                     break;
                 }
                 case ompt_target_data_transfer_to_device: {
                     ss << "Xfer to Dev";
+                    device_num = target_data_op_rec.dest_device_num;
                     break;
                 }
                 case ompt_target_data_transfer_from_device: {
                     ss << "Xfer from Dev";
+                    device_num = target_data_op_rec.src_device_num;
                     break;
                 }
                 case ompt_target_data_delete: {
                     ss << "Delete";
+                    device_num = target_data_op_rec.dest_device_num;
                     break;
                 }
                 case ompt_target_data_associate: {
                     ss << "Associate";
+                    device_num = target_data_op_rec.dest_device_num;
                     break;
                 }
                 case ompt_target_data_disassociate: {
                     ss << "Disassociate";
+                    device_num = target_data_op_rec.dest_device_num;
                     break;
                 }
                 case ompt_target_data_alloc_async: {
                     ss << "Alloc";
+                    device_num = target_data_op_rec.dest_device_num;
                     break;
                 }
                 case ompt_target_data_transfer_to_device_async: {
                     ss << "Xfer to Dev Async";
+                    device_num = target_data_op_rec.dest_device_num;
                     break;
                 }
                 case ompt_target_data_transfer_from_device_async: {
                     ss << "Xfer from Dev Async";
+                    device_num = target_data_op_rec.src_device_num;
                     break;
                 }
                 case ompt_target_data_delete_async: {
                     ss << "Delete Async";
+                    device_num = target_data_op_rec.dest_device_num;
                     break;
                 }
             }
             ss << " " << resolved_address;
             name = ss.str();
-            stream = 0;
             start = rec->time;
             end = target_data_op_rec.end_time;
             break;
@@ -263,19 +367,20 @@ static void print_record_ompt(ompt_record_ompt_t *rec) {
         case ompt_callback_target_submit:
         case ompt_callback_target_submit_emi: {
             ompt_record_target_kernel_t target_kernel_rec = rec->record.target_kernel;
+            /*
             printf("\t  Record Submit: host_op_id=%lu requested_num_teams=%u granted_num_teams=%u "
                     "end_time=%lu duration=%lu ns\n",
                     target_kernel_rec.host_op_id, target_kernel_rec.requested_num_teams,
                     target_kernel_rec.granted_num_teams, target_kernel_rec.end_time,
                     target_kernel_rec.end_time - rec->time);
+                    */
 
-            //TODO: could do better but this'll do for now
             std::stringstream ss;
             ss << "GPU: OpenMP Target Submit " << resolved_address;
             name = ss.str();
-            stream = 0;
             start = rec->time;
             end = target_kernel_rec.end_time;
+            device_num = target_device_num;
             break;
         }
         default: {
@@ -283,7 +388,7 @@ static void print_record_ompt(ompt_record_ompt_t *rec) {
         }
     }
     if (make_timer) {
-        Tau_openmp_register_gpu_event(name.c_str(), device_num, stream, context, task_id, target_id, nullptr, map_size, start/1e3, end/1e3);
+        Tau_openmp_register_gpu_event(name.c_str(), device_num, thread_id, task_id, target_id, nullptr, map_size, start/1e3, end/1e3);
     }
 }
 
@@ -293,7 +398,9 @@ static void print_record_ompt(ompt_record_ompt_t *rec) {
 // free is used for corresponding malloc
 static void delete_buffer_ompt(ompt_buffer_t *buffer) {
   free(buffer);
+  /*
   printf("Deallocated %p\n", buffer);
+  */
 }
 
 // OMPT callbacks
@@ -305,10 +412,13 @@ static void on_ompt_callback_buffer_request (
   ompt_buffer_t **buffer,
   size_t *bytes
 ) {
+  TauInternalFunctionGuard protects_this_function;
   *bytes = OMPT_BUFFER_REQUEST_SIZE;
   *buffer = malloc(*bytes);
+  /*
     printf("%s\n", __func__);
   printf("Allocated %lu bytes at %p in buffer request callback\n", *bytes, *buffer);
+  */
 }
 
 // This function is called by an OpenMP runtime helper thread for
@@ -323,9 +433,14 @@ static void on_ompt_callback_buffer_complete (
   ompt_buffer_cursor_t begin,
   int buffer_owned
 ) {
+  TauInternalFunctionGuard protects_this_function;
+/*
     printf("%s\n", __func__);
   printf("Executing buffer complete callback: %d %p %lu %p %d\n",
 	 device_num, buffer, bytes, (void*)begin, buffer_owned);
+     */
+    //TAU_START("OMPT Activity handler");
+    internal_thread = true;
 
   int status = 1;
   ompt_buffer_cursor_t current = begin;
@@ -339,11 +454,12 @@ static void on_ompt_callback_buffer_complete (
 					&current);
   }
   if (buffer_owned) delete_buffer_ompt(buffer);
+  //TAU_STOP("OMPT Activity handler");
 }
 
 // Utility routine to enable the desired tracing modes
-static ompt_set_result_t set_trace_ompt() {
-    printf("%s\n", __func__);
+ompt_set_result_t Tau_ompt_set_trace() {
+    //printf("%s\n", __func__);
   if (!ompt_set_trace_ompt) return ompt_set_error;
 
   ompt_set_trace_ompt(0, 1, ompt_callback_target);
@@ -353,21 +469,24 @@ static ompt_set_result_t set_trace_ompt() {
   return ompt_set_always;
 }
 
-static int start_trace_ompt() {
-    printf("%s\n", __func__);
+int Tau_ompt_start_trace() {
+    //printf("%s\n", __func__);
   if (!ompt_start_trace) return 0;
+  tau_ompt_tracing = true;
   return ompt_start_trace(0, &on_ompt_callback_buffer_request,
 			  &on_ompt_callback_buffer_complete);
 }
 
-static int flush_trace() {
-    printf("%s\n", __func__);
+int Tau_ompt_flush_trace() {
+    //printf("%s\n", __func__);
   if (!ompt_flush_trace) return 0;
+  if (!tau_ompt_tracing) return 0;
   return ompt_flush_trace(0);
 }
 
-static int stop_trace() {
-    printf("%s\n", __func__);
+int Tau_ompt_stop_trace() {
+    //printf("%s\n", __func__);
+  tau_ompt_tracing = false;
   if (!ompt_stop_trace) return 0;
   return ompt_stop_trace(0);
 }
@@ -559,6 +678,7 @@ on_ompt_callback_task_schedule(
     ompt_task_status_t prior_task_status,
     ompt_data_t *next_task_data)
 {
+    TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_task_schedule] && Tau_init_check_initialized()) {
     if(prior_task_data->ptr) {
       //TAU_PROFILER_STOP(prior_task_data->ptr);
@@ -765,6 +885,7 @@ on_ompt_callback_thread_begin(
   ompt_data_t *thread_data)
 {
   TauInternalFunctionGuard protects_this_function;
+  if (internal_thread) { return; }
   if(Tau_ompt_callbacks_enabled[ompt_callback_thread_begin] && Tau_init_check_initialized()) {
 #if defined (TAU_USE_TLS)
     if (is_master) return; // master thread can't be a new worker.
@@ -1175,8 +1296,11 @@ static void on_ompt_callback_device_initialize (
   ompt_function_lookup_t lookup,
   const char *documentation
  ) {
+    TauInternalFunctionGuard protects_this_function;
+ /*
   printf("Init: device_num=%d type=%s device=%p lookup=%p doc=%p\n",
 	 device_num, type, device, lookup, documentation);
+     */
   if (!lookup) {
     printf("Trace collection disabled on device %d\n", device_num);
     return;
@@ -1195,13 +1319,16 @@ static void on_ompt_callback_device_initialize (
   // is because this device_init callback is invoked during the first
   // target construct implementation.
 
-  set_trace_ompt();
-  start_trace_ompt();
+  Tau_ompt_set_trace();
+  Tau_ompt_start_trace();
 }
 
 // Called at device finalize
 static void on_ompt_callback_device_finalize ( int device_num) {
-  printf("Callback Fini: device_num=%d\n", device_num);
+    TauInternalFunctionGuard protects_this_function;
+  //printf("Callback Fini: device_num=%d\n", device_num);
+  Tau_ompt_flush_trace();
+  Tau_ompt_stop_trace();
 }
 
 // Called at device load time
@@ -1216,8 +1343,11 @@ static void on_ompt_callback_device_load
      void *device_addr,
      uint64_t module_id
      ) {
+    TauInternalFunctionGuard protects_this_function;
+     /*
   printf("Load: device_num:%d filename:%s host_adddr:%p device_addr:%p bytes:%lu\n",
 	 device_num, filename, host_addr, device_addr, bytes);
+     */
 }
 
 /* TODO: These target callbacks strangely don't
@@ -1238,10 +1368,10 @@ static void on_ompt_callback_target(
 	    target_id, kind, endpoint, device_num, codeptr_ra);
     */
     TauInternalFunctionGuard protects_this_function;
+    //printf("CPU Device: %d\n", device_num);
 
     switch(endpoint) {
         case ompt_scope_begin: {
-            char buffer[2048];
             char timerName[10240];
             char resolved_address[1024];
             void * codeptr_ra_copy = (void*) codeptr_ra;
@@ -1261,6 +1391,8 @@ static void on_ompt_callback_target(
             TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
             task_data->ptr = (void*)handle;
             TAU_PROFILER_START(handle);
+            TargetMap::instance().add_thread_id(target_id,
+                (device_num == -1 ? 0 : device_num));
             break;
         }
         case ompt_scope_end: {
@@ -1313,30 +1445,38 @@ on_ompt_callback_target_data_op(
 	    dest_addr, dest_device_num, bytes, codeptr_ra);
     */
     TauInternalFunctionGuard protects_this_function;
+    //printf("CPU Device: %d, %d\n", src_device_num, dest_device_num);
 
     static std::unordered_map<void*,double> allocations;
     static std::mutex allocation_lock;
     void * ue = nullptr;
     double d_bytes = (double)bytes;
+    std::stringstream ss;
     // get the address and save the bytes transferred
     switch (optype) {
         case ompt_target_data_alloc: {
-            static void * _ue = Tau_get_userevent("OpenMP Target Data Alloc");
+            static const char * _name = "OpenMP Target Data Alloc Bytes";
+            static void * _ue = Tau_get_userevent(_name);
             ue = _ue;
+            ss << _name;
             std::unique_lock<std::mutex> l(allocation_lock);
             allocations[src_addr] = (double)bytes;
             break;
         }
         case ompt_target_data_transfer_to_device: {
-            static void * _ue = Tau_get_userevent("OpenMP Target Data Transfer to Device");
+            static const char * _name ="OpenMP Target Data Transfer to Device Bytes";
+            static void * _ue = Tau_get_userevent(_name);
             ue = _ue;
+            ss << _name;
             std::unique_lock<std::mutex> l(allocation_lock);
             allocations[dest_addr] = (double)bytes;
             break;
         }
         case ompt_target_data_transfer_from_device: {
-            static void * _ue = Tau_get_userevent("OpenMP Target Data Transfer from Device");
+            static const char * _name ="OpenMP Target Data Transfer from Device Bytes";
+            static void * _ue = Tau_get_userevent(_name);
             ue = _ue;
+            ss << _name;
             std::unique_lock<std::mutex> l(allocation_lock);
             allocations[dest_addr] = (double)bytes;
             break;
@@ -1347,37 +1487,49 @@ on_ompt_callback_target_data_op(
                 d_bytes = allocations[src_addr];
                 allocations.erase(src_addr);
             }
-            static void * _ue = Tau_get_userevent("OpenMP Target Data Delete");
+            static const char * _name ="OpenMP Target Data Delete Bytes";
+            static void * _ue = Tau_get_userevent(_name);
             ue = _ue;
+            ss << _name;
             break;
         }
         case ompt_target_data_associate: {
-            static void * _ue = Tau_get_userevent("OpenMP Target Data Associate");
+            static const char * _name ="OpenMP Target Data Associate Bytes";
+            static void * _ue = Tau_get_userevent(_name);
             ue = _ue;
+            ss << _name;
             break;
         }
         case ompt_target_data_disassociate: {
-            static void * _ue = Tau_get_userevent("OpenMP Target Data Disassociate");
+            static const char * _name ="OpenMP Target Data Disassociate Bytes";
+            static void * _ue = Tau_get_userevent(_name);
             ue = _ue;
+            ss << _name;
             break;
         }
         case ompt_target_data_alloc_async: {
-            static void * _ue = Tau_get_userevent("OpenMP Target Data Alloc Async");
+            static const char * _name ="OpenMP Target Data Alloc Async Bytes";
+            static void * _ue = Tau_get_userevent(_name);
             ue = _ue;
+            ss << _name;
             std::unique_lock<std::mutex> l(allocation_lock);
             allocations[src_addr] = (double)bytes;
             break;
         }
         case ompt_target_data_transfer_to_device_async: {
-            static void * _ue = Tau_get_userevent("OpenMP Target Data Transfer to Device Async");
+            static const char * _name ="OpenMP Target Data Transfer to Device Async Bytes";
+            static void * _ue = Tau_get_userevent(_name);
             ue = _ue;
+            ss << _name;
             std::unique_lock<std::mutex> l(allocation_lock);
             allocations[dest_addr] = (double)bytes;
             break;
         }
         case ompt_target_data_transfer_from_device_async: {
-            static void * _ue = Tau_get_userevent("OpenMP Target Data Transfer from Device Async");
+            static const char * _name ="OpenMP Target Data Transfer from Device Async Bytes";
+            static void * _ue = Tau_get_userevent(_name);
             ue = _ue;
+            ss << _name;
             std::unique_lock<std::mutex> l(allocation_lock);
             allocations[dest_addr] = (double)bytes;
             break;
@@ -1388,8 +1540,10 @@ on_ompt_callback_target_data_op(
                 d_bytes = allocations[src_addr];
                 allocations.erase(src_addr);
             }
-            static void * _ue = Tau_get_userevent("OpenMP Target Data Delete Async");
+            static const char * _name ="OpenMP Target Data Delete Async Bytes";
+            static void * _ue = Tau_get_userevent(_name);
             ue = _ue;
+            ss << _name;
             break;
         }
         default:
@@ -1398,6 +1552,18 @@ on_ompt_callback_target_data_op(
 
     if (ue != nullptr) {
         Tau_userevent(ue,d_bytes);
+        // create a target-specific counter, too
+        if (TauEnv_get_ompt_resolve_address_eagerly()) {
+            char resolved_address[1024];
+            void * codeptr_ra_copy = (void*) codeptr_ra;
+            unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
+            Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
+            ss << " : " << resolved_address;
+        } else {
+            ss << " : ADDR <0x" << codeptr_ra << ">";
+        }
+        void * ue2 = Tau_get_userevent(ss.str().c_str());
+        Tau_userevent(ue2,d_bytes);
     }
 
     if(Tau_plugins_enabled.ompt_target_data_op) {
@@ -1686,10 +1852,11 @@ void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugi
 /* This is called by the Tau_destructor_trigger() to prevent
  * callbacks from happening after TAU is shut down */
 void Tau_ompt_finalize(void) {
+  //printf("Callback %s\n", __func__);
     if(Tau_ompt_finalized()) { return; }
     Tau_ompt_finalized(true);
-    flush_trace();
-    stop_trace();
+    Tau_ompt_flush_trace();
+    //Tau_ompt_stop_trace();
     if (ompt_finalize_tool != nullptr) {
         ompt_finalize_tool();
     }

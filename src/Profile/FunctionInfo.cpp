@@ -159,7 +159,7 @@ thread_local bool FunctionInfo::destructed_local = false;
 //////////////////////////////////////////////////////////////////////
 // FunctionInfoInit is called by all four forms of FunctionInfo ctor
 //////////////////////////////////////////////////////////////////////
-void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *ProfileGroupName, bool InitData, int tid)
+void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *ProfileGroupName, bool InitData)
 {
   /* Make sure TAU is initialized */
   static bool flag = true;
@@ -177,7 +177,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   }
 #ifdef TAU_SCOREP
   if (Tau_global_getLightsOut()) {
-    TAU_VERBOSE("TAU<%d,%d>: FunctionInfoInit: Lights out... \n",RtsLayer::myNode(), tid);
+    TAU_VERBOSE("TAU<%d,%d>: FunctionInfoInit: Lights out... \n",RtsLayer::myNode(), RtsLayer::myThread());
     return;
   }
 #endif /* TAU_SCOREP */
@@ -312,7 +312,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
 #endif
 
   DEBUGPROFMSG("nct "<< RtsLayer::myNode() <<","
-      << RtsLayer::myContext() << ", " << tid
+      << RtsLayer::myContext() << ", " << RtsLayer::myThread()
       << " FunctionInfo::FunctionInfo(n,t) : Name : "<< GetName()
       << " Group :  " << GetProfileGroup()
       << " Id :  " << GetFunctionId()
@@ -346,7 +346,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   if(Tau_plugins_enabled.function_registration) {
     Tau_plugin_event_function_registration_data_t plugin_data;
     plugin_data.function_info_ptr = this;
-    plugin_data.tid = tid;
+    plugin_data.tid = RtsLayer::myThread();
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION, GetName(), &plugin_data);
   }
 
@@ -356,50 +356,48 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
 
 //////////////////////////////////////////////////////////////////////
 FunctionInfo::FunctionInfo(const char *name, const char *type, TauGroup_t ProfileGroup,
-    const char *ProfileGroupName, bool InitData, int tid)
+    const char *ProfileGroupName, bool InitData)
 {
   DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << ProfileGroup << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
   Name = strdup(name);
   Type = strdup(type);
   FullName = NULL;
   DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << ProfileGroup << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
-  FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
+  FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData);
 }
 
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(const char *name, const string& type, TauGroup_t ProfileGroup,
-    const char *ProfileGroupName, bool InitData, int tid)
+    const char *ProfileGroupName, bool InitData)
 {
   Name = strdup(name);
   Type = strdup(type.c_str());
   FullName = NULL;
-  FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
+  FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData);
 }
 
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(const string& name, const char * type,
-	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
-	int tid) {
+	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData) {
   Name = strdup(name.c_str());
   Type = strdup(type);
   FullName = NULL;
 
-  FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
+  FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData);
 }
 
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(const string& name, const string& type,
-	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
-	int tid) {
+	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData) {
 
   Name = strdup(name.c_str());
   Type = strdup(type.c_str());
   FullName = NULL;
 
-  FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
+  FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -476,7 +474,8 @@ void FunctionInfo::ResetExclTimeIfNegative(int tid) {
 
 
 //////////////////////////////////////////////////////////////////////
-void tauCreateFI(void **ptr, const char *name, const char *type, TauGroup_t ProfileGroup, const char *ProfileGroupName)
+void tauCreateFI(void **ptr, const char *name, const char *type,
+    TauGroup_t ProfileGroup, const char *ProfileGroupName)
 {
   /* This is the entry point into TAU from PDT-instrumented C++ codes, so
    * make sure that TAU is ready to go before doing anything else! */
@@ -504,8 +503,8 @@ void tauCreateFI(void **ptr, const char *name, const char *type, TauGroup_t Prof
   }
 }
 
-void tauCreateFI(void **ptr, const char *name, const string& type, TauGroup_t ProfileGroup,
-    const char *ProfileGroupName)
+void tauCreateFI(void **ptr, const char *name, const string& type,
+    TauGroup_t ProfileGroup, const char *ProfileGroupName)
 {
   /* This is the entry point into TAU from PDT-instrumented C++ codes, so
    * make sure that TAU is ready to go before doing anything else! */
@@ -533,8 +532,8 @@ void tauCreateFI(void **ptr, const char *name, const string& type, TauGroup_t Pr
   }
 }
 
-void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, TauGroup_t ProfileGroup,
-    const char *ProfileGroupName)
+void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type,
+    TauGroup_t ProfileGroup, const char *ProfileGroupName)
 {
   /* This is NOT the entry point into TAU from PDT-instrumented C++ codes!
    * this comes from creating the top level timer in TauCAPI.cpp. */
@@ -559,8 +558,8 @@ void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, Ta
   }
 }
 
-void tauCreateFI(void **ptr, const string& name, const char *type, TauGroup_t ProfileGroup,
-    const char *ProfileGroupName)
+void tauCreateFI(void **ptr, const string& name, const char *type,
+    TauGroup_t ProfileGroup, const char *ProfileGroupName)
 {
   /* This is the entry point into TAU from PDT-instrumented C++ codes, so
    * make sure that TAU is ready to go before doing anything else! */

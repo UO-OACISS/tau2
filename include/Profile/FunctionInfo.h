@@ -88,20 +88,16 @@ public:
   // Construct with the name of the function and its type.
   FunctionInfo(const char* name, const char * type,
 	       TauGroup_t ProfileGroup = TAU_DEFAULT,
-	       const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true,
-	       int tid = RtsLayer::myThread());
+	       const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true);
   FunctionInfo(const char* name, const std::string& type,
 	       TauGroup_t ProfileGroup = TAU_DEFAULT,
-	       const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true,
-	       int tid = RtsLayer::myThread());
+	       const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true);
   FunctionInfo(const std::string& name, const std::string& type,
 	       TauGroup_t ProfileGroup = TAU_DEFAULT,
-	       const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true,
-	       int tid = RtsLayer::myThread());
+	       const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true);
   FunctionInfo(const std::string& name, const char * type,
 	       TauGroup_t ProfileGroup = TAU_DEFAULT,
-	       const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true,
-	       int tid = RtsLayer::myThread());
+	       const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true);
 
   FunctionInfo(const FunctionInfo& X) ;
   // When we exit, we have to clean up.
@@ -109,7 +105,7 @@ public:
   FunctionInfo& operator= (const FunctionInfo& X) ;
 
   void FunctionInfoInit(TauGroup_t PGroup, const char *PGroupName,
-			bool InitData, int tid );
+			bool InitData);
 
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
   KtauFuncInfo* GetKtauFuncInfo(int tid) { return &( getFunctionMetric(tid)->KernelFunc); }
