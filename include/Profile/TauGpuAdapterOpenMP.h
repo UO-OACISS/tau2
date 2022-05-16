@@ -12,27 +12,9 @@ class OpenMPGpuEvent : public GpuEvent
 {
 	private:
 		static double offset;
-		/*
-		struct HostMap : public std::map<uint32_t, FunctionInfo*> {
-				HostMap() {
-						Tau_init_initializeTAU();
-				}
-
-				~HostMap() {
-						Tau_destructor_trigger();
-				}
-		};
-
-
-		HostMap &functionInfoMap_hostLaunch() {
-			static HostMap host_map;
-			return host_map;
-		}
-*/
 	public:
-		uint32_t stream_id;
-		uint32_t context_id;
 		uint32_t device_id;
+		uint32_t thread_id;
 		uint32_t task_id;
 		uint32_t correlation_id;
 
@@ -41,18 +23,16 @@ class OpenMPGpuEvent : public GpuEvent
 		GpuEventAttributes* event_attrs;
 		int num_event_attrs;
 
-		OpenMPGpuEvent(const char* n, uint32_t device, GpuEventAttributes* evt_attrs, int num_evt_attrs) :
-			name(n), device_id(device), event_attrs(evt_attrs), num_event_attrs(num_evt_attrs)
+		OpenMPGpuEvent(const char* n, uint32_t device, uint32_t _thread, GpuEventAttributes* evt_attrs, int num_evt_attrs) :
+			name(n), device_id(device), thread_id(_thread), event_attrs(evt_attrs), num_event_attrs(num_evt_attrs)
 		{
-			stream_id = 0;
-			context_id = 0;
-			task_id = -1;
+			task_id = 0;
 			correlation_id = 0;
 		}
 
-		OpenMPGpuEvent(const char* n, uint32_t device, uint32_t stream, uint32_t context, uint32_t task, uint32_t corr_id,
+		OpenMPGpuEvent(const char* n, uint32_t device, uint32_t _thread, uint32_t task, uint32_t corr_id,
 				GpuEventAttributes* evt_attrs, int num_evt_attrs) :
-			name(n), device_id(device), stream_id(stream), context_id(context), task_id(task), correlation_id(corr_id),
+			name(n), device_id(device), thread_id(_thread), task_id(task), correlation_id(corr_id),
 				event_attrs(evt_attrs), num_event_attrs(num_evt_attrs)
 		{}
 
@@ -66,12 +46,8 @@ class OpenMPGpuEvent : public GpuEvent
 		{
 			if (!TauEnv_get_thread_per_gpu_stream() || device_id != ((OpenMPGpuEvent*) other)->device_id) {
 				return device_id < ((OpenMPGpuEvent*) other)->device_id;
-			}
-			else if (context_id != ((OpenMPGpuEvent*) other)->context_id) {
-				return context_id < ((OpenMPGpuEvent*) other)->context_id;
-			}
-			else {
-				return stream_id < ((OpenMPGpuEvent*) other)->stream_id;
+			} else {
+				return thread_id < ((OpenMPGpuEvent*) other)->thread_id;
 			}
 		}
 
@@ -123,7 +99,7 @@ class OpenMPGpuEvent : public GpuEvent
 		const char* gpuIdentifier() const
 		{
 			char* id = (char*) malloc(50*sizeof(char));
-			sprintf(id, "Dev%d/Ctx%d/Strm%d/cor%d/task%d", device_id, stream_id, context_id, correlation_id, task_id);
+			sprintf(id, "Dev%d/Thrd%d/cor%d/task%d", device_id, thread_id, correlation_id, task_id);
 
 			return id;
 		}
@@ -149,14 +125,16 @@ class OpenMPGpuEvent : public GpuEvent
 
 //double OpenMPGpuEvent::offset = 0;
 void Tau_openmp_register_gpu_event(
-  const char* name,
-  uint32_t device,
-  uint32_t stream,
-  uint32_t context,
-  uint32_t task,
-	uint32_t corr_id,
-  GpuEventAttributes* event_attrs,
-  int num_event_attrs,
-  double start,
-  double stop);
+    const char* name,
+    uint32_t device,
+    uint32_t thread_id,
+    uint32_t task,
+    uint32_t corr_id,
+    GpuEventAttributes* event_attrs,
+    int num_event_attrs,
+    double start,
+    double stop);
+
+int Tau_openmp_get_taskid_from_gpu_event(uint32_t deviceId, uint32_t threadId);
+
 #endif //TAU_GPU_ADAPTER_OPENMP_H

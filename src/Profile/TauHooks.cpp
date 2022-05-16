@@ -112,7 +112,7 @@ void TauInitCode(char *arg, int isMPI)
        the global vector of FI pointers */
 #ifdef TAUDYNVEC
     FunctionInfo *taufi = new
-	FunctionInfo(name, " " , TAU_DEFAULT, "TAU_DEFAULT", true, tid);
+	FunctionInfo(name, " " , TAU_DEFAULT, "TAU_DEFAULT", true);
     if (taufi == (FunctionInfo *) NULL) {
       printf("ERROR: new returns NULL in TauInitCode\n"); exit(1);
     }

@@ -81,6 +81,7 @@ void esd_exit (elg_ui4 rid);
 #ifdef CUPTI
 #include <Profile/CuptiLayer.h>
 #endif
+#include <atomic>
 
 using namespace tau;
 
@@ -1104,6 +1105,9 @@ extern void Tau_roctracer_flush_tracing(void);
 #ifdef TAU_ENABLE_ROCPROFILER
 extern void Tau_rocprofiler_pool_flush(void);
 #endif
+#ifdef TAU_USE_OMPT_5_0
+extern void Tau_ompt_flush_trace(void);
+#endif
 
 extern "C" void Tau_flush_gpu_activity(void) {
    TAU_VERBOSE("TAU: flushing asynchronous GPU events...\n");
@@ -1132,6 +1136,9 @@ extern "C" void Tau_flush_gpu_activity(void) {
    TAU_VERBOSE("TAU: flushing asynchronous ROCM/HIP events...\n");
    Tau_roctracer_flush_tracing();
 #endif /* TAU_ENABLE_ROCTRACER */
+#ifdef TAU_USE_OMPT_5_0
+   Tau_ompt_flush_trace();
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2500,14 +2507,18 @@ extern "C" void Tau_profile_param1l(long data, const char *dataname) {
 struct PureMap : public TAU_HASH_MAP<string, FunctionInfo *> {
 private:
   int tid;
+  static atomic<int> num_threads;
 public:
-  PureMap() : tid(RtsLayer::myThread()) { }
+  PureMap() : tid(num_threads++) { }
   virtual ~PureMap() {
-    if (tid == 0) {
+    static bool called{true};
+    if (!called && (tid == 0 || --num_threads == 0)) {
         Tau_destructor_trigger();
     }
   }
 };
+
+atomic<int> PureMap::num_threads{0};
 
 FunctionInfo * Tau_get_function_info_internal(
     string fname, const char *type,

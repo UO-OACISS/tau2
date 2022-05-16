@@ -369,6 +369,7 @@ int get_task(GpuEvent *new_task)
     TheGpuEventMap.get().insert(pair<GpuEvent *, int>(create_task, task));
     number_of_tasks++;
     Tau_set_thread_fake(task);
+    Tau_create_top_level_timer_if_necessary_task(task);
     //TAU_CREATE_TASK(task);
     //printf("new task: %s id: %d.\n", create_task->gpuIdentifier(), task);
   } else {
