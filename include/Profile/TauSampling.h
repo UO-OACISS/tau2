@@ -87,7 +87,7 @@
 #else
 void Tau_sampling_event_start(int tid, void** address);
 int Tau_sampling_event_stop(int tid, double* stopTime);
-void Tau_sampling_papi_overflow_handler(int EventSet, void *address, 
+void Tau_sampling_papi_overflow_handler(int EventSet, void *address,
 					x_int64 overflow_vector, void *context);
 
 #ifdef __cplusplus
@@ -109,6 +109,7 @@ void Tau_sampling_defer_init(void);
 
 /* For TauMpi.c to invoke sampling finalization at MPI_Finalize */
 void Tau_sampling_finalize_if_necessary(int tid);
+void Tau_sampling_stop_sampling();
 #ifdef __cplusplus
 }
 #endif

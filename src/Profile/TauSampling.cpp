@@ -522,10 +522,10 @@ unsigned long get_pc(void *p)
   if (uct != NULL)
     pc = uct->uc_mcontext.jmp_context.iar;
   else
-    pc = 0; 
-  // printf("pc = %p\n", pc); 
-  //pc = (((os_ucontext*)(uct))->uc_mcontext.jmp_context.iar); 
-  return pc; 
+    pc = 0;
+  // printf("pc = %p\n", pc);
+  //pc = (((os_ucontext*)(uct))->uc_mcontext.jmp_context.iar);
+  return pc;
 
 /* EVERYTHING ELSE SUPPORT */
 
@@ -1439,9 +1439,13 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
       if (TauEnv_get_ebs_enabled_tau()) {
 	    // if we are sampling to measure TAU, the profile might not be done yet
 	    return;
+      } else if (collectingSamples == 0) {
+	    // Are we wrapping up?
+	    return;
 	  } else {
 	    printf("STILL no top level timer on thread %d!\n", tid);
 	    fflush(stdout);
+        abort();
 	    exit(999);
 	  }
 	}
@@ -1801,7 +1805,7 @@ int Tau_sampling_init(int tid, pid_t pid)
 #ifndef TAU_BGQ
   // TauEnv_get_ebs_source_orig() still returns the original value even
   // after it's overridden later with TauEnv_override_ebs_source.
-  // This avoids a race condition where one thread changes 
+  // This avoids a race condition where one thread changes
   // TAU_EBS_SOURCE, causing this if to evaluate false on
   // later-executing threads.
   if (strcmp(TauEnv_get_ebs_source_orig(), "itimer") == 0 ||
@@ -2309,6 +2313,10 @@ void Tau_sampling_finalize_if_necessary(int tid)
             RtsLayer::UnLockEnv();
         }
     }
+}
+
+void Tau_sampling_stop_sampling() {
+    collectingSamples = 0;
 }
 
 #endif //TAU_WINDOWS && TAU_ANDROID
