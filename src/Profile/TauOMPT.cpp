@@ -4,8 +4,10 @@
 #ifdef _OPENMP
     #if (_OPENMP >= 202011)
         // #warning "Found _OPENMP version 5.1"
+        #define TAU_OMPT_USE_TARGET_OFFLOAD
     #elif (_OPENMP == 201811)
         // #warning "Found _OPENMP version 5.0"
+        #define TAU_OMPT_USE_TARGET_OFFLOAD
     #else
         #warning "Found _OPENMP version less than 5.0"
         #if defined (__GNUC__) && defined (__GNUC_MINOR__)
@@ -44,6 +46,7 @@
 #include <atomic>
 #include <array>
 #include <iostream>
+#include <stack>
 
 /* 16k buffer should be OK, if this is increased, please increase the size
  * of the circular buffer that maps target_id values to the thread IDs that
@@ -212,9 +215,10 @@ class TargetMap {
         std::atomic<size_t> read_index;
 };
 
-
 /*Externs*/
 extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address);
+
+#ifdef TAU_OMPT_USE_TARGET_OFFLOAD
 
 /* Asynchronous device target offload support! */
 
@@ -476,6 +480,8 @@ int Tau_ompt_start_trace() {
   return ompt_start_trace(0, &on_ompt_callback_buffer_request,
 			  &on_ompt_callback_buffer_complete);
 }
+
+#endif // TAU_OMPT_USE_TARGET_OFFLOAD
 
 int Tau_ompt_flush_trace() {
     //printf("%s\n", __func__);
@@ -1306,6 +1312,7 @@ static void on_ompt_callback_device_initialize (
     return;
   }
 
+#ifdef TAU_OMPT_USE_TARGET_OFFLOAD
   ompt_set_trace_ompt = (ompt_set_trace_ompt_t) lookup("ompt_set_trace_ompt");
   ompt_start_trace = (ompt_start_trace_t) lookup("ompt_start_trace");
   ompt_flush_trace = (ompt_flush_trace_t) lookup("ompt_flush_trace");
@@ -1321,14 +1328,17 @@ static void on_ompt_callback_device_initialize (
 
   Tau_ompt_set_trace();
   Tau_ompt_start_trace();
+#endif
 }
 
 // Called at device finalize
 static void on_ompt_callback_device_finalize ( int device_num) {
     TauInternalFunctionGuard protects_this_function;
   //printf("Callback Fini: device_num=%d\n", device_num);
+#ifdef TAU_OMPT_USE_TARGET_OFFLOAD
   Tau_ompt_flush_trace();
   Tau_ompt_stop_trace();
+#endif
 }
 
 // Called at device load time
@@ -1369,7 +1379,10 @@ static void on_ompt_callback_target(
     */
     TauInternalFunctionGuard protects_this_function;
     //printf("CPU Device: %d\n", device_num);
-
+    // The INtel runtime doesn't manage tool data correctly. So we'll manage it ourselves.
+#ifdef __INTEL_COMPILER
+    static std::stack<ompt_data_t*> target_stack;
+#endif
     switch(endpoint) {
         case ompt_scope_begin: {
             char timerName[10240];
@@ -1389,15 +1402,28 @@ static void on_ompt_callback_target(
             }
 
             TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
+#ifdef __INTEL_COMPILER
+            // The intel runtime doesn't provide an allocated location.
+            task_data = new ompt_data_t();
             task_data->ptr = (void*)handle;
+            target_stack.push(task_data);
+#else
+            task_data->ptr = (void*)handle;
+#endif
             TAU_PROFILER_START(handle);
             TargetMap::instance().add_thread_id(target_id,
                 (device_num == -1 ? 0 : device_num));
             break;
         }
         case ompt_scope_end: {
+#ifdef __INTEL_COMPILER
+            task_data = target_stack.top();
+            target_stack.pop();
             TAU_PROFILER_STOP(task_data->ptr);
-            //Tau_global_stop();
+            delete task_data;
+#else
+            TAU_PROFILER_STOP(task_data->ptr);
+#endif
             break;
         }
 #if defined(ompt_scope_beginend)
@@ -1435,7 +1461,9 @@ on_ompt_callback_target_data_op(
         size_t bytes,
         const void *codeptr_ra)
 {
+#ifndef __INTEL_COMPILER // intel doesn't always provide a codeptr_ra value.
     assert(codeptr_ra != 0);
+#endif
     // Both src and dest must not be null
     assert(src_addr != 0 || dest_addr != 0);
     /*
@@ -1507,6 +1535,7 @@ on_ompt_callback_target_data_op(
             ss << _name;
             break;
         }
+#ifdef TAU_OMPT_USE_TARGET_OFFLOAD
         case ompt_target_data_alloc_async: {
             static const char * _name ="OpenMP Target Data Alloc Async Bytes";
             static void * _ue = Tau_get_userevent(_name);
@@ -1546,6 +1575,7 @@ on_ompt_callback_target_data_op(
             ss << _name;
             break;
         }
+#endif
         default:
             break;
     }
@@ -1553,6 +1583,7 @@ on_ompt_callback_target_data_op(
     if (ue != nullptr) {
         Tau_userevent(ue,d_bytes);
         // create a target-specific counter, too
+#ifndef __INTEL_COMPILER // intel doesn't always provide a codeptr_ra value.
         if (TauEnv_get_ompt_resolve_address_eagerly()) {
             char resolved_address[1024];
             void * codeptr_ra_copy = (void*) codeptr_ra;
@@ -1562,6 +1593,9 @@ on_ompt_callback_target_data_op(
         } else {
             ss << " : ADDR <0x" << codeptr_ra << ">";
         }
+#else
+            ss << " : ADDR <0x" << codeptr_ra << ">";
+#endif
         void * ue2 = Tau_get_userevent(ss.str().c_str());
         Tau_userevent(ue2,d_bytes);
     }
@@ -1855,7 +1889,9 @@ void Tau_ompt_finalize(void) {
   //printf("Callback %s\n", __func__);
     if(Tau_ompt_finalized()) { return; }
     Tau_ompt_finalized(true);
+#ifdef TAU_OMPT_USE_TARGET_OFFLOAD
     Tau_ompt_flush_trace();
+#endif
     //Tau_ompt_stop_trace();
     if (ompt_finalize_tool != nullptr) {
         ompt_finalize_tool();
