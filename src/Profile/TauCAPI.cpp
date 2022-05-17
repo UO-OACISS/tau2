@@ -3030,6 +3030,8 @@ void Tau_destructor_trigger() {
   if (once) { return; }
   once = true;
   TAU_VERBOSE("executing Tau_destructor_trigger\n");
+  // STOP ALL SAMPLING ON ALL THREADS!
+  Tau_sampling_stop_sampling();
 #ifdef TAU_OTF2
   TauTraceOTF2ToggleFlushAtExit(true);
 #endif
