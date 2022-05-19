@@ -1516,9 +1516,12 @@ char * Tau_demangle_name(const char * name) {
                 TAU_VERBOSE(" A memory allocation failiure occurred.\n");
                 break;
             case -2:
+                /* This happens when the name isn't mangled, so no reason to pollute the output... */
+                /*
                 TAU_VERBOSE("The demangling operation failed:");
                 TAU_VERBOSE(" '%s' is not a valid", name);
                 TAU_VERBOSE(" name under the C++ ABI mangling rules.\n");
+                */
                 break;
             case -3:
                 TAU_VERBOSE("The demangling operation failed: One of the");

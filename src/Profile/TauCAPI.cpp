@@ -34,6 +34,7 @@ using namespace std;
 #include <Profile/TauMetrics.h>
 #include <Profile/TauSnapshot.h>
 #include <Profile/TauTrace.h>
+#include <Profile/TauBacktrace.h>
 #include <ctype.h>
 
 #if (!defined(TAU_WINDOWS))
@@ -617,21 +618,30 @@ extern "C" void Tau_lite_start_timer(void *functionInfo, int phase)
 
 
 ///////////////////////////////////////////////////////////////////////////
-static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
-  fprintf(stderr, "[%d:%d][%d:%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n",
-	 RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myNode(), RtsLayer::myThread(),
-	 stack->GetName(), stack, caller->GetName(), caller);
+static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller, int tid) {
+    fprintf(stderr, "[%d:%d][%d:%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n",
+    RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myNode(), RtsLayer::myThread(),
+    stack->GetName(), stack, caller->GetName(), caller);
 #if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(_AIX) && !defined(TAU_NEC_SX)
-     if(!TauEnv_get_ebs_enabled()) {
-       void* callstack[128];
-       int i, frames = backtrace(callstack, 128);
-       char** strs = backtrace_symbols(callstack, frames);
-       for (i = 0; i < frames; ++i) {
-         fprintf(stderr,"%s\n", strs[i]);
-       }
-       free(strs);
-     }
+    if(TauEnv_get_ebs_enabled()) {
+        Tau_sampling_stop_sampling();
+    }
+    void* callstack[128];
+    int i, frames = backtrace(callstack, 128);
+    char** strs = backtrace_symbols(callstack, frames);
+    for (i = 0; i < frames; ++i) {
+        fprintf(stderr,"%s\n", strs[i]);
+    }
+    free(strs);
 #endif
+    fprintf(stderr,"Timer Stack:\n");
+    int position = Tau_thread_flags[tid].Tau_global_stackpos; /* pop */
+    while (position > 0) {
+        auto profiler = &(Tau_thread_flags[tid].Tau_global_stack[position]);
+        auto fi = profiler->ThisFunction;
+        fprintf(stderr,"%s\n", fi->GetName());
+        position--;
+     }
 	 abort();
 }
 
@@ -758,7 +768,7 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
       getTauThreadFlag(tid).Tau_global_stackpos--; /* pop */
       profiler = &(getTauThreadFlag(tid).Tau_global_stack[getTauThreadFlag(tid).Tau_global_stackpos]);
 #else
-      reportOverlap(profiler->ThisFunction, fi);
+      reportOverlap(profiler->ThisFunction, fi, tid);
 #endif
     }
   }
@@ -837,7 +847,7 @@ extern "C" void Tau_lite_stop_timer(void *function_info)
     }
 
     if (profiler && profiler->ThisFunction != fi) { /* Check for overlapping timers */
-      reportOverlap(profiler->ThisFunction, fi);
+      reportOverlap(profiler->ThisFunction, fi, tid);
     }
     if (profiler && profiler->AddInclFlag == true) {
       fi->SetAlreadyOnStack(false, tid);    // while exiting
