@@ -105,7 +105,7 @@ OPENACC_O=
 #PGI#PGIACC_STATIC_O = PgiAcc.o #ENDIF#
 #PGI_OPENACC#PGIACC_O = TauOpenACC.o TauGpuAdapterOpenACC.o #ENDIF#
 #PGI_OPENACC#PGIACC_STATIC_O = TauOpenACC.o TauGpuAdapterOpenACC.o #ENDIF#
-#TAU_GPU#TAU_GPU_O = TauGpu.o #ENDIF#
+#TAU_USE_GPU#TAU_GPU_O = TauGpu.o #ENDIF#
 
 TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.o \
 		TauSampling_libunwind.o TauSampling_backtrace.o TauMmapMemMgr.o
