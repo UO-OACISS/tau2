@@ -129,7 +129,7 @@ inline const char * devicestring_from_type(const DeviceType in) {
 //// start Kokkos timer with a string (operation) and a name
 ///////////////////////////////////////////////////////////
 extern "C" void Tau_start_kokkos_timer(string operation, const char* name, const uint32_t devID, uint64_t* kID) {
-    char *dem_name = Tau_demangle_name(name);
+    char *dem_name = (name[0] == '_') ? Tau_demangle_name(name) : strdup(name);
     /* "Top 8 bits represent the device type. Next 7 are the device id (think
      * GPU). Last 17 are the instance id (think stream) */
     // TAU doesn't want the stream.  Not here.
