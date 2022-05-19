@@ -2945,7 +2945,7 @@ for arg in "$@"; do
               echo  "Error: Cannot access rocprofiler directory $rocprofilerdir"
               exit 1
 	    else
-	      fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER TAU_GPU"
+	      fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER TAU_USE_GPU"
               rocprofiler=yes
               tauoptions="${tauoptions}-rocprofiler"
 	      pthread=yes
@@ -2987,7 +2987,7 @@ for arg in "$@"; do
 		if [ `uname -s ` = "Darwin" ];  then
 		  echo "Adding -useropt=-framework openCL"
 		  useropt="-framework#openCL"
-		  fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU TAU_GPU"
+		  fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU "
                   use_opencl=yes
 		else
 		  exit 1
@@ -2995,11 +2995,11 @@ for arg in "$@"; do
 	    fi
 	    if [ -f "$openclinclude/CL/cl.h" ] ; then
 		#			useropt="$useropt#-DTAU_MAX_THREADS=32"
-		fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU TAU_GPU openclinclude=$openclinclude"
+		fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude"
                 use_opencl=yes
 	    else
 		if [ -f "$openclinclude/sycl/CL/cl.h" ]; then
-		    fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU TAU_GPU openclinclude=$openclinclude/sycl"
+		    fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude/sycl"
                     use_opencl=yes
 		else
 	            echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
@@ -3076,7 +3076,7 @@ fi
 
 if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler -a "x$roctracerdir" = "x" ]; then
   rocprofilerdir=$rocmdir/rocprofiler
-  fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER TAU_GPU"
+  fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER TAU_USE_GPU"
   rocprofiler=yes
   tauoptions="${tauoptions}-rocprofiler"
   pthread=yes
@@ -3094,11 +3094,11 @@ if [ "x$use_opencl" = "xyes" -a "x$openclinclude" = "x" ]; then
       echo "openclinclude=$openclinclude"
       if [ -f "$openclinclude/CL/cl.h" ] ; then
       #                       useropt="$useropt#-DTAU_MAX_THREADS=32"
-        fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU TAU_GPU openclinclude=$openclinclude"
+        fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude"
 	break;
       else
         if [ -f "$openclinclude/sycl/CL/cl.h" ]; then
-          fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU TAU_GPU openclinclude=$openclinclude/sycl"
+          fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude/sycl"
         else
             echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
         fi
@@ -6979,7 +6979,7 @@ EOF
     if $cxx_compiler $orig_useropt -c pgiacctest.C 1> /dev/null 2>&1
     then
       echo "PGI compiler supports OpenACC profiling interface. Enabling OpenACC."
-      fixmakeargs="$fixmakeargs PGI_OPENACC TAU_GPU"
+      fixmakeargs="$fixmakeargs PGI_OPENACC TAU_USE_GPU"
       use_openacc=yes
     else
       echo "PGI compiler doesn't support OpenACC profiling interface."
@@ -8113,7 +8113,7 @@ else # intel OMPT support
     if [ $ompt = yes ]; then
         omptlinking="-Wl,-rpath,$omptlib#$omptlibrary"
         echo "Using OMPT 5"
-        fixmakeargs="$fixmakeargs TAU_OMPT_5_0 omptlib=$omptlinking TAU_GPU"
+        fixmakeargs="$fixmakeargs TAU_OMPT_5_0 omptlib=$omptlinking TAU_USE_GPU"
     fi
 fi
 
@@ -10630,7 +10630,7 @@ fi
 if [ $cuda = yes ] ; then
     if [ $disableshared = no ] ; then
 	if [ -f "$cudainclude/cuda.h" ] ; then
-	    fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU TAU_GPU cudainclude=$cudainclude"
+	    fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
 	    if [ "$opencl" != "disable" ] ; then
 		if [ "$use_opencl" = "no" -a -f "$cudainclude/CL/cl.h" ] ; then
 		    $echo "Checking $cxx_compiler compatibility with OpenCL... ${nnl}"
@@ -10639,7 +10639,7 @@ if [ $cuda = yes ] ; then
 EOF
 		    if $cxx_compiler -I$cudainclude -c opencl.cpp 1>/dev/null 2>&1 ; then
 			echo "yes"
-			fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU TAU_GPU openclinclude=$cudainclude"
+			fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
                         use_opencl=yes
 		    else
 			echo "no"
@@ -10679,7 +10679,7 @@ EOF
 			  cupti="$cudadir/targets/aarch64-linux"
 			fi
 		    fi
-		    fixmakeargs="$fixmakeargs CUPTI TAU_GPU cuptiinclude=$cupti/include"
+		    fixmakeargs="$fixmakeargs CUPTI TAU_USE_GPU cuptiinclude=$cupti/include"
 		    echo "Using CUPTI library found in $cupti."
 		    if [ $machine = craycnl ]; then
 			# check if -lcuda is available to the linker somehow
@@ -10729,7 +10729,7 @@ EOF
 	echo "CUPTI version 4.0 found."
     else
 	echo "CUPTI version >= 4.1 found."
-	fixmakeargs="$fixmakeargs CUPTI_ACTIVITY TAU_GPU"
+	fixmakeargs="$fixmakeargs CUPTI_ACTIVITY TAU_USE_GPU"
     fi
     rm -f cupti_version.C cupti_version.o
 fi
