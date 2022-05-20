@@ -27,7 +27,7 @@ struct ThreadValue {
   int ThreadID;
   int EventSet[TAU_PAPI_MAX_COMPONENTS]; 
   int NumEvents[TAU_PAPI_MAX_COMPONENTS];
-  long long *CounterValues;
+  long long *CounterValues=0;
   int Comp2Metric[TAU_PAPI_MAX_COMPONENTS][MAX_PAPI_COUNTERS];
 };
 

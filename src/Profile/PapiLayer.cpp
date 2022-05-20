@@ -417,14 +417,16 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
     return NULL;
   }
 
-  if (getThreadValue(tid) == NULL) {
+  ThreadValue* localThreadValue=getThreadValue(tid);
+  if (!localThreadValue) {
     if(initializeThread(tid)) {
       return NULL;
     }
   }
 
   *numValues = numCounters;
-  ThreadValue* localThreadValue=getThreadValue(tid);
+//ThreadValue* localThreadValue=getThreadValue(tid);
+  
 #ifdef TAU_PAPI_DEBUG
   long long previousCounters[MAX_PAPI_COUNTERS];
   for (int i=0; i<numCounters; i++) {

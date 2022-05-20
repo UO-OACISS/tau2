@@ -635,9 +635,9 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller, int tid) {
     free(strs);
 #endif
     fprintf(stderr,"Timer Stack:\n");
-    int position = Tau_thread_flags[tid].Tau_global_stackpos; /* pop */
+    int position = getTauThreadFlag(tid).Tau_global_stackpos; /* pop */
     while (position > 0) {
-        auto profiler = &(Tau_thread_flags[tid].Tau_global_stack[position]);
+        auto profiler = &(getTauThreadFlag(tid).Tau_global_stack[position]);
         auto fi = profiler->ThisFunction;
         fprintf(stderr,"%s\n", fi->GetName());
         position--;
