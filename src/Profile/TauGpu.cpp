@@ -277,9 +277,9 @@ void Tau_gpu_exit_memcpy_event(const char * functionName, GpuEvent *device, int 
   // time.
 
   //Tau_pure_stop(functionName);
-  //void* handle = Tau_get_function_info(functionName, "", TAU_USER, "TAU_GPU_MEMORY_COPY");
-  //Tau_stop_timer(handle, Tau_get_thread());
-  Tau_stop_current_timer_task(Tau_get_thread());
+  void* handle = Tau_get_function_info(functionName, "", TAU_USER, "TAU_GPU_MEMORY_COPY");
+  Tau_stop_timer(handle, Tau_get_thread());
+  //Tau_stop_current_timer_task(Tau_get_thread());
 
 }
 
@@ -306,9 +306,9 @@ void Tau_gpu_exit_unifmem_event(const char * functionName, GpuEvent *device, int
   // time.
 
   //Tau_pure_stop(functionName);
-  //void* handle = Tau_get_function_info(functionName, "", TAU_USER, "TAU_GPU_UNIFIED_MEMORY");
-  //Tau_stop_timer(handle, Tau_get_thread());
-  Tau_stop_current_timer_task(Tau_get_thread());
+  void* handle = Tau_get_function_info(functionName, "", TAU_USER, "TAU_GPU_UNIFIED_MEMORY");
+  Tau_stop_timer(handle, Tau_get_thread());
+  //Tau_stop_current_timer_task(Tau_get_thread());
 
 }
 
@@ -318,9 +318,9 @@ void Tau_gpu_exit_event(const char *name)
   TAU_VERBOSE("exit cu event: %s.\n", name);
 #endif
   //Tau_pure_stop(name);
-  //void* handle = Tau_get_function_info(name, "", TAU_USER, "TAU_GPU_API");
-  //Tau_stop_timer(handle, Tau_get_thread());
-  Tau_stop_current_timer_task(Tau_get_thread());
+  void* handle = Tau_get_function_info(name, "", TAU_USER, "TAU_GPU_API");
+  Tau_stop_timer(handle, Tau_get_thread());
+  //Tau_stop_current_timer_task(Tau_get_thread());
 
 }
 
@@ -347,8 +347,8 @@ void break_gpu_event(const char *name, int gpuTask, double stop_time, FunctionIn
   cerr << "setting gpu timestamp for stop: " << setprecision(16) << stop_time << endl;
 #endif
   metric_set_gpu_timestamp(gpuTask, stop_time);
-  //Tau_pure_stop_task(name, gpuTask);
-  Tau_stop_current_timer_task(gpuTask);
+  Tau_pure_stop_task(name, gpuTask);
+  //Tau_stop_current_timer_task(gpuTask);
   if (TauEnv_get_callpath()) {
     //printf("Profiler: %s \n", parent->GetName());
     //double totalTime = 0;
@@ -369,6 +369,7 @@ int get_task(GpuEvent *new_task)
     TheGpuEventMap.get().insert(pair<GpuEvent *, int>(create_task, task));
     number_of_tasks++;
     Tau_set_thread_fake(task);
+    Tau_create_top_level_timer_if_necessary_task(task);
     //TAU_CREATE_TASK(task);
     //printf("new task: %s id: %d.\n", create_task->gpuIdentifier(), task);
   } else {

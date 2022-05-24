@@ -53,11 +53,44 @@ except:
   dieInFlames("Unknown exception while importing tau: %s" % sys.exc_info()[0])
 
 if sys.argv[1] == '-c':
+  # tau_python -c 'some python commmand'
   command = sys.argv[2]
   del sys.argv[2]
   del sys.argv[0]
   tau.run(command)   
+elif sys.argv[1] == '-m':
+  # tau_python -m moduleName.foo
+  modname = sys.argv[2]
+  try:
+    import pkgutil
+    pkg_loader = pkgutil.get_loader(modname)
+  except Exception as e:
+    dieInFlames("The name '{}' does not name a module in $PYTHONPATH or $PWD".format(modname))
+  if pkg_loader is None:
+    dieInFlames("The name '{}' does not name a module in $PYTHONPATH or $PWD".format(modname))
+  # When python is run with -m, current directory is added to search path
+  sys.path.append(os.getcwd())
+  # Fix up argv to hide tau_python
+  # Find out the path to the module we are launching
+  filename = ""
+  try:
+    # New way of getting package filename
+    filename = pkg_loader.get_filename()
+  except Exception as e:
+    # old way
+    filename = pkg_loader.filename
+  sys.argv[0] = filename
+  # remove the args
+  del sys.argv[1]
+  del sys.argv[1]
+  if os.path.exists(modname) and filename[-3:].lower() != '.py':
+    tau.runmodule(sys.argv[0])  
+  else:
+    tau.runmoduledir(modname)
 else:
+  # If we launched a Python script using the normal method,
+  # argv would have the path to the script in argv[0].
+  # Fix argv to be as it would have been without tau_python
   if os.path.exists(modname):
     path = os.path.dirname(modname)
     modname = os.path.basename(modname)

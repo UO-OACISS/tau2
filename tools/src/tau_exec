@@ -3,6 +3,13 @@
 LANG="C"
 export LANG
 
+darshan_module_loaded=`env | grep LOADEDMODULES | grep darshan | wc -l`
+if [ $darshan_module_loaded -gt 0 ] ; then
+    echo "ERROR: Darshan is not compatible with TAU."
+    echo "Please unload any darshan modules before running tau_exec."
+    exit 1
+fi
+
 eval `tau-config`
 
 scriptname=`basename $0`
@@ -84,9 +91,12 @@ if [ $python_wrapper = "true" ] ; then
   echo "        -adios2       Write output to ADIOS2 archive"
   echo "        -adios2_trace Write trace output to ADIOS2 archive"
   echo "        -monitoring   Periodically read available OS/HW monitoring counters"
+  echo "        -pthread-stopper   Prevent pthread tracking during specified functions"
   echo "        -sqlite3      Write profile data to SQLite3 database"
   echo "        -skel         Write trace event data to skeleton files"
   echo "        -disable-kokkos  Disable Kokkos profiling (removes fences that hurt performance)"
+  echo "        -ugni         Track Cray UGNI network library functions."
+  echo "        -chapel         Track Cray Chapel network atomics library functions."
 fi
   echo ""
   echo "Notes:"
@@ -327,12 +337,18 @@ py_interp_args=""
 ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
 ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 adios2=false
+pthread_stopper=false
 monitoring=false
 sqlite3=false
 skel=false
 track_kokkos=true
 adios2_trace=false
 sos=false
+track_ugni=false
+track_chapel=false
+processM=false
+python_launch_module=false
+python_m_arg=""
 
 # This saves the args to tau_exec so they can be reused later.
 # This is used for MPI_Comm_spawn support, in which TAU spawns the child
@@ -353,6 +369,11 @@ for arg in "$@" ; do
     if [ "x$test_arg" != "x$arg" ]; then
       scorep=true
     fi
+    save_arg $arg
+    shift
+  elif [ "$processM" = true ] ; then
+    processM=false
+    python_m_arg=$arg
     save_arg $arg
     shift
   else
@@ -421,6 +442,10 @@ for arg in "$@" ; do
         ;;
       -disable-kokkos)
         track_kokkos=false
+        shift
+        ;;
+      -pthread-stopper)
+        pthread_stopper=true
         shift
         ;;
       -adios2)
@@ -646,6 +671,21 @@ for arg in "$@" ; do
           exit 1
         fi
         ;;
+      -ugni)
+        track_ugni=true
+        save_arg $arg
+        shift
+        ;;
+      -gni)
+        track_ugni=true
+        save_arg $arg
+        shift
+        ;;
+      -chapel)
+        track_chapel=true
+        save_arg $arg
+        shift
+        ;;
       -c)
         if [ $python_wrapper = "true" ] ; then
           save_arg $arg
@@ -658,6 +698,8 @@ for arg in "$@" ; do
       -m)
         if [ $python_wrapper = "true" ] ; then
           save_arg $arg
+          processM=true
+          python_launch_module=true
           shift
           break
         else
@@ -781,6 +823,11 @@ if [ $monitoring = "true" ]; then
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
 fi
 
+if [ $pthread_stopper = "true" ]; then
+    export TAU_PLUGINS=$TAU_PLUGINS:libTAU-pthread-stopper-plugin${TAU_SHLIBX}
+    export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
+fi
+
 if [ $adios2 = "true" ]; then
     export TAU_PLUGINS=$TAU_PLUGINS:libTAU-adios2-plugin${TAU_SHLIBX}
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
@@ -831,19 +878,19 @@ fi
 
 if [ $track_l0 = "true" ]; then
   export PTI_ENABLE=1
-  export ZE_ENABLE_API_TRACING=1
+  export ZE_ENABLE_TRACING_LAYER=1
   export ZET_ENABLE_API_TRACING_EXP=1
-  if [ $track_rocm = "true" ] ; then
-    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-      if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then
-        $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-      fi
-    else
-      $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
-    fi
-  fi
 fi
 
+if [ $track_rocm = "true" ] ; then
+  if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+    if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then
+      $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+    fi
+  else
+    $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+  fi
+fi
 
 isTBB=`echo $theBinding | grep tbb`
 if [ ! "x$isTBB" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX ]; then
@@ -865,8 +912,19 @@ if [ $track_io = "true" ] ; then
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-iowrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
   #use the auditor
   TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
-  #Needed for the auditor
-  export LD_BIND_NOW=1
+  #Needed for the auditor... but DON'T SET IT NOW!
+  # Only needed by GDB and the auditor.
+  # export LD_BIND_NOW=1
+fi
+
+if [ $track_ugni = "true" ] ; then
+  # Add the UGNI wrapper library to the LD_PRELOAD list
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gni-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+fi
+
+if [ $track_chapel = "true" ] ; then
+  # Add the Chapel wrapper library to the LD_PRELOAD list
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-chapel-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
 if [ $track_numa = "true" ]; then
@@ -899,8 +957,9 @@ if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
   #use the auditor
   TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
-  #Needed for the auditor
-  export LD_BIND_NOW=1
+  #Needed for the auditor... but DON'T SET IT NOW!
+  # Only needed by GDB and the auditor.
+  #export LD_BIND_NOW=1
   # Track heap usage
   export TAU_TRACK_HEAP=1
   # Track memory leaks
@@ -985,6 +1044,7 @@ if [ $track_openacc = "true" ] ; then
   export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU${TAU_SHLIBX}
 fi
 if [ $track_rocm = "true" ] ; then
+  $dryrun export ROCP_HSA_INTERCEPT=2
   $dryrun export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
   #export TAU_HSA_TOOLS_LIB=librocprofiler64.so.1
   options=`echo $theBinding | sed -e 's/shared-//g' `
@@ -1261,7 +1321,11 @@ else
     $dryrun export PYTHONPATH=$PYTHONPATH
     $dryrun $python_interpreter $py_interp_args -m tau_pyspark_wrapper "$@"
   elif $python_wrapper ; then
-    $dryrun $python_interpreter $py_interp_args -m tau_python_wrapper "$@"
+    if [ $python_launch_module = "true" ] ; then
+        $dryrun $python_interpreter $py_interp_args -m tau_python_wrapper -m $python_m_arg "$@"
+    else
+        $dryrun $python_interpreter $py_interp_args -m tau_python_wrapper "$@"
+    fi
     retval=$?
   elif $use_ptts ; then
     # Can't dryrun because `$dryrun CMD >$logfile 2>&1` creates $logfile

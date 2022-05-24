@@ -1,0 +1,151 @@
+This file describe the use of TAU to profile the time Chapel applications spend
+inside UGNI network calls and Chapel network atomics. 
+
+These instructions have been tested on the Cori system at NERSC, a Cray XC-40.
+
+Instructions, particularly for building Chapel and running applications, may be
+different on different systems.
+
+-------------------------------------------------------------------------------
+
+Configuring TAU:
+
+    When building TAU for use with Chapel, include the following options:
+
+        *  -pthread: The Chapel runtime is multithreaded, so threading support 
+        is necessary to handle timers on different threads.
+        
+        *  -ugni: Build the UGNI wrapper. This intercepts and times network
+        functions used in one-sided communication.
+
+        *  -chapel: Build the Chapel runtime wrapper. This currently wraps only
+        those runtime functions functions related to network atomics.
+
+   With the default PrgEnv-intel environment loaded, build TAU with:
+
+        ./configure -bfd=download -unwind=download -dwarf=download -pthread \
+                    -cc=icc -c++=icpc -fortran=ifort -ugni -chapel
+        make install
+
+-------------------------------------------------------------------------------
+
+Building Chapel:
+
+    Intercepting Chapel runtime functions requires that Chapel be built with a
+    shared library version of its runtime, which is not a configuration 
+    supported by the build system. Therefore, Chapel must be built with 
+    position-independent code and a shared library created manually after
+    building.
+
+    On Cori, set the following environment variables:
+
+        export CHPL_HOST_PLATFORM=cray-xe
+        export CHPL_LAUNCHER=slurm-srun
+        export CHPL_TARGET_COMPILER=intel
+        export CHPL_NETWORK_ATOMICS=ugni
+        export CHPL_COMM=ugni
+        export CHPL_LLVM=none
+        export CHPL_RE2=none
+        export C_INCLUDE_PATH=/opt/cray/pe/pmi/5.0.17/include:/opt/cray/gni-headers/default/include:/opt/cray/ugni/default/include
+
+   Build with:
+
+        gmake CFLAGS=-fPIC
+
+   plus any additional options you desire (DEBUG, OPTIMIZE, etc.)
+
+   After building, libchpl.a will be located in a directory that depends upon
+   the environment variables that were set prior to building. In the case of
+   the above options, the library will be located at 
+
+        ./lib/cray-xe/intel/x86_64/arch-unknown/loc-flat/comm-ugni/tasks-qthreads/\
+        tmr-generic/unwind-none/mem-jemalloc/atomics-intrinsics/bundled/none\
+        /fs-none/lib_pic-none/sanitizers-none/libchpl.a
+
+    Below, we will call the directory where the library is located
+    $CHPL_LIB_DIR.
+
+    Change to that directory, extract the object files from the archive, and
+    repackage them as a shared library.
+
+        cd $CHPL_LIB_DIR
+        mkdir -p tmp
+        cd tmp
+        ar x ../libchpl.a
+        icc -shared *.o -o ../libchpl.so
+
+    Either add $CHPL_LIB_DIR to $LD_LIBRARY_PATH or set it as an rpath when
+    compiling Chapel programs.
+
+-------------------------------------------------------------------------------
+
+Building Chapel programs:
+
+    Before building a Chapel program, do
+
+        source util/setchplenv.bash
+
+    and set the environment variables as in the Building Chapel section, above.
+
+    Chapel programs may be built as they normally are on the system. You may
+    want to add an rpath so that the location of libchpl.so will be
+    automatically searched. On Cori, programs are built with.
+
+    For example, the atomics.chpl program in this directory can be built on Cori
+    with:
+
+        chpl -o atomics $PWD/atomics.chpl \
+        -L/opt/cray/pe/pmi/5.0.17/lib64 -lpmi -L/opt/cray/ugni/default/lib64 \
+        -lugni -lhugetlbfs --ldflags -Wl,-rpath,$CHPL_LIB_DIR
+
+    This will create a launcher called `atomics` and the executable called 
+    `atomics_real`.
+
+-------------------------------------------------------------------------------
+
+Profiling Chapel programs with TAU:
+
+    Add TAU's bin directory to your $PATH, e.g.,
+
+        export PATH=$TAU_HOME/craycnl/bin:$PATH
+
+    Acquire an interactive allocation on compute nodes. Once within the
+    allocation, run:
+
+        ./atomics -nl <number_of_nodes>
+
+    This will print a command that should be run to execute the program.
+    For example, for two nodes of the Cori Haswell partition, this is:
+
+        HUGETLB_VERBOSE=0 HUGETLB_NO_RESERVE=yes \
+            CHPL_JE_MALLOC_CONF=purge:decay,lg_chunk:21 srun \
+            --job-name=CHPL-atomics --quiet --nodes=2 --ntasks=2 \
+            --ntasks-per-node=1 --cpus-per-task=64 --exclusive --mem=0 \
+            --kill-on-bad-exit $PWD/atomics_real -nl 2
+
+    A call to `tau_exec` should be placed into this command immediately before
+    the name of the actual executable. For example, the tau_exec invocation used
+    for the TAU configuration described above would be:
+
+        tau_exec -T serial,intel,ugni,chapel,icpc,pthread -ebs -ugni -chapel
+
+    Therefore, the complete command in this case would be: 
+
+        HUGETLB_VERBOSE=0 HUGETLB_NO_RESERVE=yes \
+            CHPL_JE_MALLOC_CONF=purge:decay,lg_chunk:21 srun \
+            --job-name=CHPL-atomics --quiet --nodes=2 --ntasks=2 \
+            --ntasks-per-node=1 --cpus-per-task=64 --exclusive --mem=0 \
+            --kill-on-bad-exit tau_exec -T serial,intel,ugni,chapel,icpc,pthread \
+            -ebs -ugni -chapel $PWD/atomics_real -nl 2
+
+    After running the code, view the profile files with
+
+        pprof -a
+
+    If the wrapper is working as expected, you should see timers in the profile
+    for UGNI network wrappers such as GNI_CqWaitEvent (and other calls beginning
+    with GNI) as well as Chapel runtime network atomic calls such as
+    chpl_comm_atomic_add_int64 (and other calls beginning with
+    chpl_comm_atomic).
+
+

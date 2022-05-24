@@ -1,0 +1,41 @@
+This example illustrates how the TAU-based selective instrumentation module for LLVM can be used.
+
+## To use this example:
+
+```
+make
+tau_exec -T <TAU options> ./matmult
+pprof
+```
+
+## To compile TAU and the plugin:
+
+### Configuration
+
+```
+./configure  -c++=clang++ -cc=clang -iowrapper -llvm_cxx=`which g++` -llvm_src=$LLVM_DIR
+```
+
+`-llvm_cxx` indicates the C++ compiler that was used to compile LLVM. It is necessary for binary compatibility purposes.
+
+`-llvm_src` indicates the root of the source tree or the installation of your LLVM installation. If the `LLVM_DIR` environment variable has already been set (for instance, by your module management system), it might not be necessary.
+
+It must contain a file `LLVMConfig.cmake`. If you are using an already existing installation, this file might be in `/path/to/your/installation/lib/cmake`. In this case, you can use the installation's root.
+
+### Compilation
+
+Once you have configured TAU, compile it:
+
+```
+make -j install
+```
+
+Compile the plugin:
+
+```
+cd plugins/llvm
+make
+```
+
+This will install the plugin in your TAU installation, in the `plugins` directory.
+

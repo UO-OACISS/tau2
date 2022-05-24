@@ -64,7 +64,7 @@ extern "C" int TAUDECL Tau_RtsLayer_myThread();
 
 #ifdef TAU_UNIFY
 void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
-*globalAtomicEventMap, FILE *f) {
+*globalAtomicEventMap, FILE *f, bool anonymize=false) {
 
   Tau_unify_object_t *functionUnifier, *atomicUnifier;
   functionUnifier = Tau_unify_getFunctionUnifier();
@@ -86,21 +86,50 @@ void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
       Tau_XML_writeTag(&out, "units", "unknown", true);
       Tau_util_output (&out, "</metric>\n");
   }
-
+  
+  char anonymous_name[64*1024]; 
+  char *group; 
+  char anonymous_group[64];
+  char MPI_group[64];
+  char anonymous_event_name[64];
+  if (anonymize) {
+    sprintf(anonymous_group, "TAU_ANONYMOUS_GROUP");
+    sprintf(MPI_group, "MPI");
+  }
   for (int i=0; i<functionUnifier->globalNumItems; i++) {
     Tau_util_output (&out, "<event id=\"%d\"><name>", i);
-
     char *name = functionUnifier->globalStrings[i];
-    char *group = strstr(name,":GROUP:");
-    if (group == NULL) {
-      fprintf (stderr, "TAU: Error extracting groups for %s!\n",name);
+
+    if (anonymize) { // fast character string operations to extract name. 
+      if (name [0] == 'M' && name[1] == 'P' && name[2]== 'I' && name[3] == '_') {
+	for (int j=0; j < strlen(name); j++) {
+	  if (name[j] != ':') {
+            anonymous_name[j] = name[j];
+	  } else {
+	    anonymous_name[j] = '\0';
+	    break;
+	  }
+	}
+	group = MPI_group;  // MPI
+      } else { 
+        sprintf(anonymous_name, "FUNCTION_%d", i); 
+        group = anonymous_group;
+      }
+      TAU_VERBOSE("writing: anonymous_name = %s\n", anonymous_name);
+      Tau_XML_writeString(&out, anonymous_name);
+
     } else {
-      char *target = group;
-      group+=strlen(":GROUP:");
-      *target=0;
+      group = strstr(name,":GROUP:");
+      if (group == NULL) {
+        fprintf (stderr, "TAU: Error extracting groups for %s!\n",name);
+      } else {
+        char *target = group;
+        group+=strlen(":GROUP:");
+        *target=0;
+      }
+      Tau_XML_writeString(&out, name);
     }
 
-    Tau_XML_writeString(&out, name);
     Tau_util_output (&out, "</name><group>");
     Tau_XML_writeString(&out, group);
     Tau_util_output (&out, "</group></event>\n");
@@ -108,7 +137,12 @@ void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
 
   for (int i=0; i<atomicUnifier->globalNumItems; i++) {
     Tau_util_output (&out, "<userevent id=\"%d\"><name>", i);
-    Tau_XML_writeString(&out, atomicUnifier->globalStrings[i]);
+    if (anonymize) {
+      sprintf(anonymous_event_name, "EVENT_%d", i); 
+      Tau_XML_writeString(&out, anonymous_event_name);
+    } else {
+      Tau_XML_writeString(&out, atomicUnifier->globalStrings[i]);
+    }
     Tau_util_output (&out, "</name></userevent>\n");
   }
 
@@ -120,12 +154,31 @@ void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
 #endif
 
 
+
+FILE *Tau_create_merged_profile(const char *profiledir, const char *profile_prefix, const char *fname) {
+  char filename[4096]; 
+  FILE *f; 
+  if (profile_prefix != NULL) {
+    sprintf (filename,"%s/%s-%s", profiledir, profile_prefix, fname);
+  } else {
+    sprintf (filename,"%s/%s", profiledir, fname);
+  }
+  if ((f = fopen (filename, "w+")) == NULL) {
+    char errormsg[4096];
+    sprintf(errormsg, "TAU Error: Could not create %s/%s-%s", profiledir, profile_prefix, fname);
+    perror(errormsg);
+  }
+  return f; 
+}
+
 int Tau_mergeProfiles_MPI()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
   FILE *f;
+  FILE *fa = (FILE *)NULL; /* for TAU_ANONYMIZE=1 */
+  int anonymize = 0; /* don't anonymize event names by default */
 #ifdef TAU_MPI
   MPI_Status status;
 #endif  /* TAU_MPI */
@@ -278,22 +331,26 @@ int Tau_mergeProfiles_MPI()
 
     TAU_VERBOSE("TAU: Merging Profiles\n");
     start = TauMetrics_getTimeOfDay();
+    anonymize = TauEnv_get_anonymize_enabled(); 
 
-    char filename[4096];
-    if (profile_prefix != NULL) {
-      sprintf (filename,"%s/%s-tauprofile.xml", profiledir, profile_prefix);
-    } else {
-      sprintf (filename,"%s/tauprofile.xml", profiledir);
+    f=Tau_create_merged_profile(profiledir, profile_prefix, "tauprofile.xml"); 
+    if (f == (FILE *) NULL) {
+      return -1; 
     }
 
-    if ((f = fopen (filename, "w+")) == NULL) {
-      char errormsg[4096];
-      sprintf(errormsg,"Error: Could not create tauprofile.xml");
-      perror(errormsg);
+    if (anonymize) {
+      fa=Tau_create_merged_profile(profiledir, profile_prefix, "tau_anonymized_key.xml"); 
+      if (fa == (FILE *) NULL) {
+        return -1; 
+      }
     }
 
 #ifdef TAU_UNIFY
-    Tau_profileMerge_writeDefinitions(globalEventMap, globalAtomicEventMap, f);
+    Tau_profileMerge_writeDefinitions(globalEventMap, globalAtomicEventMap, f, anonymize);
+    if (anonymize) {
+      Tau_profileMerge_writeDefinitions(globalEventMap, globalAtomicEventMap, fa, false); 
+      /* write the true names in the tau_anonymized_key file. anonymize = false */ 
+    }
 #endif
 
     for (int i=1; i<size; i++) {
@@ -446,6 +503,9 @@ int Tau_mergeProfiles_MPI()
 
 #ifdef TAU_FCLOSE_MERGE
     fclose(f);
+    if (anonymize) {
+      fclose(fa);
+    }
 #endif
   } else {
 
@@ -475,6 +535,8 @@ int Tau_mergeProfiles_SHMEM()
   TauInternalFunctionGuard protects_this_function;
 
   FILE *f;
+  FILE *fa = (FILE *)NULL; /* for TAU_ANONYMIZE=1 */
+  int anonymize = 0; /* don't anonymize event names by default */
   x_uint64 start, end;
   const char *profiledir = TauEnv_get_profiledir();
   const char *profile_prefix = TauEnv_get_profile_prefix();
@@ -659,21 +721,29 @@ int Tau_mergeProfiles_SHMEM()
     TAU_VERBOSE("TAU: Merging Profiles\n");
     start = TauMetrics_getTimeOfDay();
 
-    char filename[4096];
-    if (profile_prefix != NULL) {
-      sprintf (filename,"%s/%s-tauprofile.xml", profiledir, profile_prefix);
-    } else {
-      sprintf (filename,"%s/tauprofile.xml", profiledir);
+    anonymize = TauEnv_get_anonymize_enabled();
+
+    f=Tau_create_merged_profile(profiledir, profile_prefix, "tauprofile.xml");
+    if (f == (FILE *) NULL) {
+      return -1;
     }
 
-    if ((f = fopen (filename, "w+")) == NULL) {
-      char errormsg[4096];
-      sprintf(errormsg,"Error: Could not create tauprofile.xml");
-      perror(errormsg);
+    if (anonymize) {
+      fa=Tau_create_merged_profile(profiledir, profile_prefix, "tau_anonymized_key.xml");
+      if (fa == (FILE *) NULL) {
+        return -1;
+      }
     }
+
+
 
 #ifdef TAU_UNIFY
-    Tau_profileMerge_writeDefinitions(globalEventMap, globalAtomicEventMap, f);
+    Tau_profileMerge_writeDefinitions(globalEventMap, globalAtomicEventMap, f, anonymize);
+    if (anonymize) {
+      Tau_profileMerge_writeDefinitions(globalEventMap, globalAtomicEventMap, fa, false);
+      /* write the true names in the tau_anonymized_key file. anonymize = false */
+    }
+
 #endif
 
     for (int i=1; i<size; i++) {

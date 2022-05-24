@@ -20,6 +20,7 @@
 
 #include <tau_internal.h>
 #include <Profile/TauMetrics.h>
+#include <Profile/TauBfd.h>
 
 //#define DEBUG_PROF
 #ifdef TAU_AIX
@@ -68,7 +69,9 @@ using namespace std;
 #include <stdlib.h>
 #ifndef TAU_WINDOWS
 #ifndef TAU_XLC
+#ifndef TAU_AIX
 #include <sys/syscall.h>
+#endif /* TAU_AIX */
 #endif /* TAU_XLC */
 #endif /* TAU_WINDOWS */
 
@@ -779,12 +782,6 @@ string RtsLayer::PrimaryGroup(const char *ProfileGroupName)
 #define NO_RTTI 1
 #endif /* TAU_NEC_SX */
 
-#ifdef __GNUC__
-#ifndef NO_RTTI
-#include <cxxabi.h>
-#endif /* NO_RTTI */
-#endif /* __GNUC__ */
-
 /////////////////////////////////////////////////////////////////////////
 std::string RtsLayer::GetRTTI(const char *name) {
 #ifdef __GNUC__
@@ -793,7 +790,10 @@ std::string RtsLayer::GetRTTI(const char *name) {
   int stat;
   char *ptr = NULL;
   const std::string mangled = name;
-  return abi::__cxa_demangle(mangled.c_str(), ptr, &len, &stat);
+  char * demangled = Tau_demangle_name(mangled.c_str());
+  std::string tmpstr(demangled);
+  free(demangled);
+  return tmpstr;
 #else /* NO_RTTI */
   return string(name);
 #endif /* NO_RTTI */

@@ -1488,7 +1488,7 @@ int main(int argc, char **argv)
   if (runtime == RUNTIME_INTERCEPT) {
     /* add the runtime library calls */
     impl <<"#include <dlfcn.h>"<<endl<<endl;
-    impl <<"const char * tau_orig_libname = "<<"\""<<
+    impl <<"static const char * tau_orig_libname = "<<"\""<<
       runtime_libname<<"\";"<<endl; 
     impl <<"static void *tau_handle = NULL;"<<endl<<endl<<endl;
 

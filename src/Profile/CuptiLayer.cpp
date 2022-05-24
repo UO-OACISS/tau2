@@ -232,7 +232,7 @@ void Tau_CuptiLayer_enable_eventgroup()
     if (Tau_CuptiLayer_get_num_events() > 0) {
         // has someone enabled the counters? make the common case fast...
         if (enabled) return;
-        TAU_DEBUG_PRINT("AHJ: entering Tau_CuptiLayer_enable_eventgroup\n");
+        TAU_DEBUG_PRINT("TAU: entering Tau_CuptiLayer_enable_eventgroup\n");
         // only one thread needs to enable this...
         event_group_mutex.lock();
         // has someone enabled the counters?
@@ -243,7 +243,7 @@ void Tau_CuptiLayer_enable_eventgroup()
             enabled = true;
         }
         event_group_mutex.unlock();
-        TAU_DEBUG_PRINT("AHJ: exiting Tau_CuptiLayer_enable_eventgroup\n");
+        TAU_DEBUG_PRINT("TAU: exiting Tau_CuptiLayer_enable_eventgroup\n");
     }
 }
 
@@ -254,7 +254,7 @@ void Tau_CuptiLayer_setup_eventgroup()
     static bool only_once = false;
     if (only_once) { return; } else { only_once = true; }
 
-    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_setup_eventgroup\n");
+    TAU_DEBUG_PRINT("TAU: entering Tau_cupti_setup_eventgroup\n");
     CUresult cuErr;
     CUptiResult cuptiErr;
     CUcontext cuCtx;
@@ -288,7 +288,7 @@ void Tau_CuptiLayer_setup_eventgroup()
 
     counter_vec_t & added_counters = Tau_CuptiLayer_Added_counters();
 
-    //fprintf(stderr, "AHJ %d\n", Tau_CuptiLayer_Added_counters().size());
+    //fprintf(stderr, "TAU %d\n", Tau_CuptiLayer_Added_counters().size());
 
     for (counter_vec_t::iterator it = added_counters.begin(); it != added_counters.end(); it++) {
         CuptiCounterEvent & evt = **it;
@@ -330,7 +330,7 @@ void Tau_CuptiLayer_setup_eventgroup()
         CUPTI_CHECK_ERROR(cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_KERNEL), "cuptiSetEventCollectionMode");
 
 #ifdef TAU_DEBUG_CUPTI
-        cerr << "AHJ: Will add event " << evt.tag << " to GPU device: " << device_char << endl;
+        cerr << "TAU: Will add event " << evt.tag << " to GPU device: " << device_char << endl;
 #endif
         CUpti_EventID evts[TAU_MAX_COUNTERS];
         size_t evts_size = TAU_MAX_COUNTERS*sizeof(CUpti_EventID);
@@ -356,7 +356,7 @@ void Tau_CuptiLayer_setup_eventgroup()
     cuErr = cuDevicePrimaryCtxRelease(device);
     CHECK_CU_ERROR(cuErr, "cuDevicePrimaryCtxRelease")
 
-    TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_setup_eventgroup\n");
+    TAU_DEBUG_PRINT("TAU: exiting Tau_cupti_setup_eventgroup\n");
 }
 
 
@@ -364,7 +364,7 @@ void Tau_CuptiLayer_setup_eventgroup()
 void Tau_CuptiLayer_init()
 {
     //printf("%d: %s %d\n", RtsLayer::myNode(), __func__, __LINE__); fflush(stdout);
-    TAU_DEBUG_PRINT("AHJ: entering Tau_CuptiLayer_init\n");
+    TAU_DEBUG_PRINT("TAU: entering Tau_CuptiLayer_init\n");
 
     /* Get the device count, to allocate initialization flags */
     int device_count;
@@ -438,17 +438,17 @@ void Tau_CuptiLayer_init()
 #endif
     Tau_CuptiLayer_initialized = true;
 
-    TAU_DEBUG_PRINT("AHJ: exiting Tau_CuptiLayer_init\n");
+    TAU_DEBUG_PRINT("TAU: exiting Tau_CuptiLayer_init\n");
 }
 
 //for things that need to happen AFTER TauMetrics_init
 void Tau_cupti_post_init()
 {
     //printf("%d: %s %d\n", RtsLayer::myNode(), __func__, __LINE__); fflush(stdout);
-    TAU_DEBUG_PRINT("AHJ: entering Tau_cupti_post_init\n");
+    TAU_DEBUG_PRINT("TAU: entering Tau_cupti_post_init\n");
 	Tau_CuptiLayer_init();
 	Tau_CuptiLayer_setup_eventgroup();
-    TAU_DEBUG_PRINT("AHJ: exiting Tau_cupti_post_init\n");
+    TAU_DEBUG_PRINT("TAU: exiting Tau_cupti_post_init\n");
 }
 
 void Tau_CuptiLayer_disable()

@@ -402,10 +402,10 @@ int PapiLayer::initializeThread(int tid)
 /////////////////////////////////////////////////
 long long *PapiLayer::getAllCounters(int tid, int *numValues) {
   int rc=0;
-  long long tmpCounters[MAX_PAPI_COUNTERS];
+  long long tmpCounters[MAX_PAPI_COUNTERS] = {0};
 
   /* Task API does not have a real thread associated with it. It is fake */
-  if (Tau_is_thread_fake(tid) == 1) tid = 0;
+  if (Tau_is_thread_fake(tid) == 1) { return NULL; }
 
   if (!papiInitialized) {
     if (initializePapiLayer()) {
@@ -481,7 +481,7 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
 
 /////////////////////////////////////////////////
 int PapiLayer::reinitializePAPI() {
-  dmesg(1, "TAU: PapiLayer::reinitializePAPI\n");
+  dmesg(1, "%s", "TAU: PapiLayer::reinitializePAPI\n");
 
   // This function is called from the fork() handler
   // We need to clean up the ThreadList and then reinitialize PAPI
@@ -988,7 +988,7 @@ void PapiLayer::triggerRAPLPowerEvents(bool in_signal_handler) {
   }
 
   if (rapl_cid != -1) {
-    dmesg(1, "Inside PapiLayer::triggerRAPLPowerEvents()\n");
+    dmesg(1, "%s", "Inside PapiLayer::triggerRAPLPowerEvents()\n");
 
     curtime = PAPI_get_real_nsec();
     if (firsttime) {

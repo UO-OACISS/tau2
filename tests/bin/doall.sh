@@ -13,6 +13,7 @@ export tauroot
 myhost=`hostname`
 # In case there are extra qualifiers on the hostname
 myhost=`basename -s .nic.uoregon.edu ${myhost}`
+myhost=`basename -s .stor ${myhost}`
 osname=`uname`
 archtype=`arch`
 
@@ -115,12 +116,12 @@ for compiler in "${compilers[@]}" ; do
         fi
     fi
 
-    #test_vanilla
-    #test_threads
+    test_vanilla
+    test_threads
     test_mpi
-    #test_papi
-    #test_python
-    #test_cuda
+    test_papi
+    test_python
+    test_cuda
 done
 
 echo "Success!"

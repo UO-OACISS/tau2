@@ -14,7 +14,7 @@
 ***************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
-// Include Files 
+// Include Files
 //////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -27,12 +27,7 @@
 
 #include <Profile/Profiler.h>
 #include <Profile/TauPin.h>
-
-#ifndef __PIN__
-#ifdef __GNUC__
-#include <cxxabi.h>
-#endif
-#endif /* __PIN__ */
+#include <Profile/TauBfd.h>
 
 using namespace std;
 using namespace tau;
@@ -45,11 +40,11 @@ extern "C" void tau_dyninst_init(int isMPI);
 
 #ifndef __ia64
 int TheFlag[TAU_MAX_THREADS] ;
-#define TAU_MONITOR_ENTER(tid) if (TheFlag[tid] == 0) {TheFlag[tid] = 1;}  else {return; } 
+#define TAU_MONITOR_ENTER(tid) if (TheFlag[tid] == 0) {TheFlag[tid] = 1;}  else {return; }
 #define TAU_MONITOR_EXIT(tid) TheFlag[tid] = 0
 #else /* FOR IA64 */
-vector<int> TheFlag(TAU_MAX_THREADS); 
-#define TAU_MONITOR_ENTER(tid)  if (TheFlag[tid] == 0) {TheFlag[tid] = 1;}  else {return; } 
+vector<int> TheFlag(TAU_MAX_THREADS);
+#define TAU_MONITOR_ENTER(tid)  if (TheFlag[tid] == 0) {TheFlag[tid] = 1;}  else {return; }
 #define TAU_MONITOR_EXIT(tid) TheFlag[tid] = 0
 #endif /* IA64 */
 
@@ -69,7 +64,7 @@ vector<void*>& TheTauBinDynFI(void)
   return FuncTauDynFI;
 }
 /* global FI vector */
-// Initialization procedure. Should be called before invoking 
+// Initialization procedure. Should be called before invoking
 // other TAU routines.
 extern "C" {
 void TauInitCode(char *arg, int isMPI)
@@ -90,48 +85,48 @@ void TauInitCode(char *arg, int isMPI)
 /*
   for (j=1, str1 = arg; ; j++, str1 = NULL) {
     name = strtok_r(str1, "|", &saveptr);
-    if (name == NULL) 
+    if (name == NULL)
       break;
     printf("Extracted token = %s\n", name);
   }
 */
-  for (j=1, str1 = arg; ; j++, str1 = NULL) 
-  { 
+  for (j=1, str1 = arg; ; j++, str1 = NULL)
+  {
 #ifdef TAU_WINDOWS
     name = strtok(str1, "|");
 #else
     name = strtok_r(str1, "|", &saveptr);
 #endif
-    if (name == NULL) 
+    if (name == NULL)
       break;
     TAU_VERBOSE("After loop: name = %s\n", name);
 
-    functionId ++; 
+    functionId ++;
 #ifdef ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP
     TAU_VERBOSE("Extracted : %s :id = %d\n", name, functionId);
     char funcname[1024];
     TAU_MAPPING_CREATE(funcname, " ", functionId, "TAU_DEFAULT", tid);
 #else
     TAU_VERBOSE("Extracted : %s :id = %d\n", name, functionId-1);
-    /* Create a new FunctionInfo object with the given name and add it to 
+    /* Create a new FunctionInfo object with the given name and add it to
        the global vector of FI pointers */
 #ifdef TAUDYNVEC
-    FunctionInfo *taufi = new 
-	FunctionInfo(name, " " , TAU_DEFAULT, "TAU_DEFAULT", true, tid); 
+    FunctionInfo *taufi = new
+	FunctionInfo(name, " " , TAU_DEFAULT, "TAU_DEFAULT", true);
     if (taufi == (FunctionInfo *) NULL) {
-      printf("ERROR: new returns NULL in TauInitCode\n"); exit(1); 
+      printf("ERROR: new returns NULL in TauInitCode\n"); exit(1);
     }
     TAU_VERBOSE("TAU FI = %lx\n", taufi);
-    TheTauDynFI().push_back(taufi); 
+    TheTauDynFI().push_back(taufi);
 #else /* TAUDYNVEC */
     int id;
     id = functionId - 1; /* start from 0 */
     TauFuncNameVec.push_back(string(name));  /* Save the name with id */
-    TAU_VERBOSE("TauFuncNameVec[%d] = %s\n", id, TauFuncNameVec[id].c_str()); 
+    TAU_VERBOSE("TauFuncNameVec[%d] = %s\n", id, TauFuncNameVec[id].c_str());
     TheTauDynFI().push_back(NULL); /* create a null entry for this symbol */
 #endif /* TAUDYNVEC */
 #endif /* ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP */
-    
+
   }
   TAU_VERBOSE("Inside TauInitCode Initializations to be done here!\n");
   if (!isMPI)
@@ -139,7 +134,7 @@ void TauInitCode(char *arg, int isMPI)
   TAU_VERBOSE("Node = %d\n", RtsLayer::myNode());
 
 #if (defined (__linux__) && defined(TAU_DYNINST41BUGFIX))
-  Tau_create_top_level_timer_if_necessary();  
+  Tau_create_top_level_timer_if_necessary();
 #endif /* DyninstAPI 4.1 bug appears only under Linux */
   TAU_MONITOR_EXIT(0);
 }
@@ -163,16 +158,16 @@ void TauRoutineEntry(int id )
     break;
   }
 #else /* TAUDYNVEC */
-  id--; /* to account for offset. Start from 0..n-1 instead of 1..n */ 
-  if ((TauMethodName = TheTauDynFI()[id]) == NULL) 
+  id--; /* to account for offset. Start from 0..n-1 instead of 1..n */
+  if ((TauMethodName = TheTauDynFI()[id]) == NULL)
   {	/* Function has not been called so far */
-    TauMethodName = new   
-	 FunctionInfo(TauFuncNameVec[id].c_str(), " " , TAU_DEFAULT, "TAU_DEFAULT", true, tid); 
+    TauMethodName = new
+	 FunctionInfo(TauFuncNameVec[id].c_str(), " " , TAU_DEFAULT, "TAU_DEFAULT", true, tid);
     TheTauDynFI()[id] = TauMethodName;
   }
 #endif /* retrieve it from the vector */
-  
-#ifndef TAUDYNVEC 
+
+#ifndef TAUDYNVEC
   TAU_VERBOSE("<tid %d> Entry <id %d> <<<<< name = %s\n", tid, id, TauMethodName->GetName());
   TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
   TAU_MAPPING_PROFILE_START(TauTimer, tid);
@@ -186,7 +181,7 @@ void TauRoutineExit(int id)
 {
   int tid = RtsLayer::myThread();
   TAU_MONITOR_ENTER(tid);
-  id --; 
+  id --;
   /*
   FunctionInfo *fi = TheTauDynFI()[id];
   TAU_VERBOSE("<tid %d> Exit <id %d> >>>>>> name = %s\n", tid, id, fi->GetName());
@@ -199,7 +194,7 @@ void TauRoutineEntryTest(int id )
 {
   int tid = RtsLayer::myThread();
   TAU_MONITOR_ENTER(tid);
-  id --; 
+  id --;
   TAU_VERBOSE("<tid %d> TAU Entry <id %d>\n", tid, id);
   // TAU_VERBOSE("At entry, Size = %d\n", TheTauDynFI().size());
   vector<FunctionInfo *> vfi = TheTauDynFI();
@@ -215,26 +210,26 @@ void TauRoutineEntryTest(int id )
   FunctionInfo *fi = TheTauDynFI()[0];
   TAU_VERBOSE("<tid %d> Entry <id %d> <<<<< name = %s\n", tid, id, fi->GetName());
   */
-  
+
 
   TAU_MONITOR_EXIT(tid);
 }
-  
+
 
 void TauRoutineExitTest(int id)
 {
   int tid = RtsLayer::myThread();
   TAU_MONITOR_ENTER(tid);
-  id --; 
+  id --;
   TAU_VERBOSE("<tid %d> TAU Exit <id %d>\n", tid, id);
   int val = TheTauDynFI().size();
   TAU_VERBOSE("Size = %d\n", val);
   TAU_MAPPING_PROFILE_STOP(tid);
-  
-  /*  
+
+  /*
   FunctionInfo *fi = TheTauDynFI()[id];
   printf("<tid %d> Exit <id %d> >>>>>> name = %s\n", tid, id, fi->GetName());
-  */ 
+  */
   TAU_MONITOR_EXIT(tid);
 }
 
@@ -296,10 +291,9 @@ int TauRenameTimer(char *oldName, char *newName)
 }
 
 
-static int tauFiniID = -1; 
+static int tauFiniID = -1;
 static int tauDyninstEnabled[TAU_MAX_THREADS];
 
-char * tau_demangle_name(char **funcname) ;
 void trace_register_func(char *origname, int id)
 {
   static int invocations = 0;
@@ -314,33 +308,34 @@ void trace_register_func(char *origname, int id)
     for(i=0; i < funclen; i++) {
       if ((mirror[i] == '[') &&(mirror[i-1] == ' ')) {
         mirror[i-1] = '\0';
-        break; 
+        break;
       }
-    }  
-    char *dem = tau_demangle_name(&mirror);
-    char *newname = (char *) malloc(strlen(dem)+funclen-i+3); 
+    }
+    char *dem = Tau_demangle_name(mirror);
+    char *newname = (char *) malloc(strlen(dem)+funclen-i+3);
     sprintf(newname, "%s %s", dem, &func[i-1]);
-    TAU_VERBOSE("name=%s, newname = %s\n", func, newname); 
+    TAU_VERBOSE("name=%s, newname = %s\n", func, newname);
     free(mirror);
-    func = newname; 
+    free(dem);
+    func = newname;
   }
-  TAU_VERBOSE("trace_register_func: func = %s, id = %d\n", func, id); 
+  TAU_VERBOSE("trace_register_func: func = %s, id = %d\n", func, id);
   if (invocations == 0) {
     if (!tauDyninstEnabled[tid]) {
 #ifdef TAU_MPI
-      tau_dyninst_init(1); 
+      tau_dyninst_init(1);
 #else
-      tau_dyninst_init(0); 
+      tau_dyninst_init(0);
 #endif /* TAU_MPI */
     }
   }
 
-  int len = strlen(func); 
-  int startbracket = 0; 
+  int len = strlen(func);
+  int startbracket = 0;
   int stopbracket = 0;
   for (i=0; i < len; i++) {
-    if (func[i] == '[') startbracket = i; 
-    if (func[i] == ']') stopbracket = i; 
+    if (func[i] == '[') startbracket = i;
+    if (func[i] == ']') stopbracket = i;
     if (!isprint(func[i])) {
       TAU_VERBOSE("TauHooks.cpp: trace_register_func(): func=%s - isprint is false at i = %d\n", func, i);
       func[i] = '\0';
@@ -354,17 +349,17 @@ void trace_register_func(char *origname, int id)
   }
 
 
-    
+
   if (!tauDyninstEnabled[tid]) return;
 
   void *taufi;
   TAU_PROFILER_CREATE(taufi, func, " ", TAU_DEFAULT);
 
- 
+
   if (strncmp(func, "_fini", 5) == 0) {
     TAU_VERBOSE("FOUND FINI id = %d\n", id);
     tauFiniID = id;
-  } 
+  }
   if (func[0] == 't' && func[1] == 'a' && func[2] == 'r' && func[3] == 'g') {
     if (isdigit(func[4])) {
       TAU_VERBOSE("trace_register_func: Routine name is targN...\n");
@@ -379,7 +374,7 @@ void trace_register_func(char *origname, int id)
       TAU_VERBOSE("ADDR=%lx, name =%s\n", addr, func);
       char name[256];
       char filename[256];
-      Tau_get_func_name(addr, (char *)name, (char *)filename); 
+      Tau_get_func_name(addr, (char *)name, (char *)filename);
       printf("GOT: name = %s, filename = %s, addr = %lx\n", name, filename, addr);
 */
     }
@@ -392,7 +387,7 @@ void trace_register_func(char *origname, int id)
     printf("WARNING: trace_register_func: id does not match invocations\n");
     TheTauBinDynFI().resize(id+1);
     TheTauBinDynFI()[id] = taufi;
-  } 
+  }
   invocations ++;
   TAU_VERBOSE("Exiting trace_register_func\n");
 }
@@ -400,12 +395,12 @@ void trace_register_func(char *origname, int id)
 void traceEntry(int id)
 {
   int tid = RtsLayer::myThread();
-  if ( !RtsLayer::TheEnableInstrumentation()) return; 
+  if ( !RtsLayer::TheEnableInstrumentation()) return;
   if (!tauDyninstEnabled[tid]) return;
   void *fi = TheTauBinDynFI()[id];
 
   // Additional sanity checks
-  if (fi == NULL) { 
+  if (fi == NULL) {
     TAU_VERBOSE("ERROR?: ENTRY: id = null!\n");
     return;
   }
@@ -418,7 +413,7 @@ void traceEntry(int id)
   TAU_QUERY_DECLARE_EVENT(curr);
   TAU_QUERY_GET_CURRENT_EVENT(curr);
 
-  if ( curr && ((Profiler *)curr)->ThisFunction && 
+  if ( curr && ((Profiler *)curr)->ThisFunction &&
      ((Profiler *)curr)->ThisFunction->GetProfileGroup() == TAU_GROUP_31) {
     TAU_VERBOSE("TARG on the stack \n");
     TAU_PROFILER_STOP(((Profiler *)curr)->ThisFunction);
@@ -428,12 +423,12 @@ void traceEntry(int id)
   TAU_VERBOSE("Inside traceEntry: id = %d fi = %lx\n", id, fi);
   TAU_VERBOSE("Name = %s\n", ((FunctionInfo *)fi)->GetName());
 #endif
-  if (id == tauFiniID) { 
-    Tau_stop_top_level_timer_if_necessary(); 
+  if (id == tauFiniID) {
+    Tau_stop_top_level_timer_if_necessary();
 	/* if there is .TAU application from tau_exec, write the files out */
     TAU_DISABLE_INSTRUMENTATION();
     TAU_VERBOSE("Disabling instrumentation found id = %d\n", id);
-  } 
+  }
   else {
     if (fi != NULL) {
       //TAU_PROFILER_START(fi);
@@ -442,7 +437,7 @@ void traceEntry(int id)
       TAU_VERBOSE("ERROR?: traceEntry: fi = null!\n");
     }
   }
-  
+
 
 }
 
@@ -450,15 +445,15 @@ void traceExit(int id)
 {
   //const char *strcurr;
   //const char *strbin;
-  //TAU_VERBOSE("Inside traceExit: id = %d\n", id);  
-  
-  if ( !RtsLayer::TheEnableInstrumentation()) return; 
+  //TAU_VERBOSE("Inside traceExit: id = %d\n", id);
+
+  if ( !RtsLayer::TheEnableInstrumentation()) return;
   int tid = RtsLayer::myThread();
 
   if (!tauDyninstEnabled[tid]) return;
   void *fi = TheTauBinDynFI()[id];
 #if 0
-  if (fi) 
+  if (fi)
     TAU_VERBOSE("traceExit: Name = %s, %lx\n", ((FunctionInfo *)fi)->GetName(), fi);
   else
     return;
@@ -525,7 +520,7 @@ void tau_dyninst_init(int isMPI)
   int tid = RtsLayer::myThread();
   if (!tauDyninstEnabled[tid]) {
     RtsLayer::LockDB();
-    for (int i = 0; i < TAU_MAX_THREADS; i++) 
+    for (int i = 0; i < TAU_MAX_THREADS; i++)
       tauDyninstEnabled[i] = 1;
     RtsLayer::UnLockDB();
   }
@@ -536,39 +531,19 @@ void tau_dyninst_cleanup()
   TAU_VERBOSE("Inside tau_dyninst_cleanup\n");
 }
 
-/* PEBIL */
-char * tau_demangle_name(char **funcname) {
-#ifndef __PIN__
-#ifdef __GNUC__
-  std::size_t len=1024;
-  int stat;
-  char *dem_name = NULL; 
-  char *out_buf= (char *) malloc (strlen(*funcname)+100);
-  char *name = abi::__cxa_demangle(*funcname, out_buf, &len, &stat);
-  if (stat == 0 && name != NULL) dem_name = out_buf;
-  else dem_name = *funcname;
-  return dem_name; 
-#else  /* __GNUC__ */
-  return *funcname; 
-  /* return the original name pass it through c++filt <name> */
-#endif /* __GNUC__ */
-#else  /* __PIN__ */
-  return *funcname;
-#endif /* __PIN__ */
-  
-}
-
-void  tau_register_func(char **func, char** file, int* lineno, 
+void  tau_register_func(char **func, char** file, int* lineno,
   int id) {
+    char * tmpstr = Tau_demangle_name(*func);
     if (*file == NULL){
       TAU_VERBOSE("TAU: tau_register_func: name = %s, id = %d\n", *func, id);
-      trace_register_func(tau_demangle_name(func), id);
+      trace_register_func(tmpstr, id);
     } else {
       char funcname[2048];
-      sprintf(funcname, "%s [{%s}{%d}]", tau_demangle_name(func), *file, *lineno);
+      sprintf(funcname, "%s [{%s}{%d}]", tmpstr, *file, *lineno);
       trace_register_func(funcname, id);
       TAU_VERBOSE("TAU : tau_register_func: name = %s, id = %d\n", funcname, id);
     }
+    free(tmpstr);
 }
 
 void tau_trace_entry(int id) {
@@ -594,14 +569,14 @@ void tau_loop_trace_exit(int id) {
 #if !defined(TAU_PEBIL_DISABLE) && !defined(TAU_WINDOWS)
 #include <pthread.h>
 void* tool_thread_init(pthread_t args) {
-  TAU_VERBOSE("TAU: initializing thread %#lx\n", args); 
+  TAU_VERBOSE("TAU: initializing thread %#lx\n", args);
   Tau_create_top_level_timer_if_necessary();
   return NULL;
 }
 
 void* tool_thread_fini(pthread_t args) {
-  TAU_VERBOSE("TAU: finalizing thread %#lx\n", args); 
-  Tau_stop_top_level_timer_if_necessary(); 
+  TAU_VERBOSE("TAU: finalizing thread %#lx\n", args);
+  Tau_stop_top_level_timer_if_necessary();
   return NULL;
 }
 
@@ -619,13 +594,13 @@ void  tau_trace_register_loop(int id, char *loopname) {
 
 }
 
-void  tau_register_loop(char **func, char** file, int* lineno, 
+void  tau_register_loop(char **func, char** file, int* lineno,
   int id) {
 
-  char lname[2048]; 
+  char lname[2048];
   char *loopname;
   if (((*file) != (char *)NULL) && (*lineno != 0)) {
-    sprintf(lname, "Loop: %s [{%s}{%d}]", *func, *file, *lineno); 
+    sprintf(lname, "Loop: %s [{%s}{%d}]", *func, *file, *lineno);
   } else {
     sprintf(lname, "Loop: %s ",*func);
   }
@@ -649,11 +624,11 @@ extern "C" int bar(int x) {
 }
 */
 #endif /* __PIN__ */
-  
+
 
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
  * $Revision: 1.35 $   $Date: 2010/06/09 15:11:36 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.35 2010/06/09 15:11:36 sameer Exp $ 
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.35 2010/06/09 15:11:36 sameer Exp $
  ***************************************************************************/

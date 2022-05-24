@@ -18,6 +18,7 @@
 //////////////////////////////////////////////////////////////////////
 // Include Files
 //////////////////////////////////////////////////////////////////////
+#include <cinttypes>//Necessary in old centos versions
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <cstdio>
@@ -32,31 +33,9 @@ using namespace std;
 #include <stdlib.h>
 
 #include <TAU.h>
+#include <Profile/TauBfd.h>
 
 map<int,FunctionInfo*> KokkosFunctionInfoDB;
-
-#ifdef TAU_BFD
-#define HAVE_DECL_BASENAME 1
-#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-#    include <demangle.h>
-#  endif /* HAVE_GNU_DEMANGLE */
-// Add these definitions because the Binutils comedians think all the world uses autotools
-#ifndef PACKAGE
-#define PACKAGE TAU
-#endif
-#ifndef PACKAGE_VERSION
-#define PACKAGE_VERSION 2.25
-#endif
-#  include <bfd.h>
-#endif /* TAU_BFD */
-
-#define TAU_INTERNAL_DEMANGLE_NAME(name, dem_name)  dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES); \
-        if (dem_name == NULL) { \
-          dem_name = name; \
-        } \
-
-extern "C" char *tau_demangle_name(char **mangled_name);
-
 
 ///////////////////////////////////////////////////////////
 //// prints indents for the Kokkos regions on the callstack
@@ -90,21 +69,73 @@ extern "C" void kokkosp_finalize_library() {
 	TAU_VERBOSE("TAU: Kokkos library finalization called.\n");
 }
 
+/* THis code is copied from Kokkos_Profiling_Interface.hpp
+ * AND IT COULD NEED TO CHANGE IN THE FUTURE! */
+
+enum struct DeviceType {
+  Serial,
+  OpenMP,
+  Cuda,
+  HIP,
+  OpenMPTarget,
+  HPX,
+  Threads,
+  SYCL,
+  Unknown
+};
+
+struct ExecutionSpaceIdentifier {
+  DeviceType type;
+  uint32_t device_id;
+  uint32_t instance_id;
+};
+inline DeviceType devicetype_from_uint32t(const uint32_t in) {
+  switch (in) {
+    case 0: return DeviceType::Serial;
+    case 1: return DeviceType::OpenMP;
+    case 2: return DeviceType::Cuda;
+    case 3: return DeviceType::HIP;
+    case 4: return DeviceType::OpenMPTarget;
+    case 5: return DeviceType::HPX;
+    case 6: return DeviceType::Threads;
+    case 7: return DeviceType::SYCL;
+    default: return DeviceType::Unknown;  // TODO: error out?
+  }
+}
+
+inline ExecutionSpaceIdentifier identifier_from_devid(const uint32_t in) {
+  return {devicetype_from_uint32t(in >> 24),  // first 8 bits
+          ((in & 0x00FFFFFF) >> 17),  // next 7 bits
+           (in & 0x0001FFFF)}; // last 17 bits
+}
+
+/* "Top 8 bits represent the device type. Next 7 are the device id (think
+ * GPU). Last 17 are the instance id (think stream) */
+inline const char * devicestring_from_type(const DeviceType in) {
+  switch (in) {
+    case DeviceType::Serial: return "Serial";
+    case DeviceType::OpenMP: return "OpenMP";
+    case DeviceType::Cuda: return "Cuda";
+    case DeviceType::HIP: return "HIP";
+    case DeviceType::OpenMPTarget: return "OpenMPTarget";
+    case DeviceType::HPX: return "HPX";
+    case DeviceType::Threads: return "Threads";
+    case DeviceType::SYCL: return "SYCL";
+    default: return "Unknown";  // TODO: error out?
+  }
+}
 
 ///////////////////////////////////////////////////////////
 //// start Kokkos timer with a string (operation) and a name
 ///////////////////////////////////////////////////////////
 extern "C" void Tau_start_kokkos_timer(string operation, const char* name, const uint32_t devID, uint64_t* kID) {
-
-
-
-        const char *dem_name = 0;
-#if defined(TAU_BFD) && defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-	TAU_INTERNAL_DEMANGLE_NAME(name, dem_name);
-#else
-	dem_name = name;
-#endif /* HAVE_GNU_DEMANGLE */
-	char buf[256]; sprintf(buf," [device=%d]", devID);
+    char *dem_name = (name[0] == '_') ? Tau_demangle_name(name) : strdup(name);
+    /* "Top 8 bits represent the device type. Next 7 are the device id (think
+     * GPU). Last 17 are the instance id (think stream) */
+    // TAU doesn't want the stream.  Not here.
+    ExecutionSpaceIdentifier space_id = identifier_from_devid(devID);
+	char buf[256]; sprintf(buf," [type = %s, device = %" PRIu32 "]",
+        devicestring_from_type(space_id.type), space_id.device_id);
 	//string region_name(std::string("Kokkos::parallel_for ")+dem_name+buf);
 	string region_name(operation+" "+dem_name+buf);
 
@@ -123,6 +154,7 @@ extern "C" void Tau_start_kokkos_timer(string operation, const char* name, const
 */
 	//cout <<"Region: "<<region_name<<" id = "<<*kID<<endl;
 	//printf("Kokkos::parallel_for %s [device=%d]\n", dem_name, devID);
+    free(dem_name);
 }
 
 extern "C" void kokkosp_begin_parallel_for(const char* name, const uint32_t devID, uint64_t* kID) {

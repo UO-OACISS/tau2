@@ -30,6 +30,7 @@
 #ifdef TAU_GPU
 #include <Profile/TauGpu.h>
 #endif
+#include <execinfo.h>
 
 // FIXME: Duplicated in pthread_wrap.c
 #if !defined(__APPLE__)
@@ -174,6 +175,24 @@ int PthreadLayer::LockDB(void)
 {
   InitializeThreadData();
   pthread_mutex_lock(&tauDBMutex);
+#if 0
+  int ret = pthread_mutex_trylock(&tauDBMutex);
+  if (ret == 0) return 1;
+
+  if (ret == EDEADLK) {
+    fprintf(stderr, "DEADLOCK! Thread trying to grab tauDBMutex twice!\n");
+    abort();
+  }
+  int tries = 0;
+  while (ret != 0) {
+    ret = pthread_mutex_trylock(&tauDBMutex);
+    if (tries > 100000000) {
+        fprintf(stderr, "DEADLOCK! Thread can't grab tauDBMutex owned by %d!\n", tauDBMutex.__data.__owner);
+        abort();
+    }
+    tries++;
+  }
+#endif
   return 1;
 }
 
@@ -239,10 +258,16 @@ struct tau_pthread_pack
 };
 
 extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address);
+extern "C" void tau_pthread_function_cleanup_handler(void * args);
 
-struct tau_pthread_wrapper_args_t {
+class tau_pthread_wrapper_args_t {
+public:
     void * handle; // TAU timer handle
     tau_pthread_pack * pack; // Argument to tau_pthread_function
+    void * self_ptr;  // a way to validate(?) that we haven't been corrupted
+    ~tau_pthread_wrapper_args_t() {
+        tau_pthread_function_cleanup_handler(this);
+    }
 };
 
 // If a thread exits through pthread_exit(), we will never return
@@ -251,6 +276,10 @@ struct tau_pthread_wrapper_args_t {
 // the timer in that case.
 extern "C"
 void tau_pthread_function_cleanup_handler(void * args) {
+  //static thread_local bool do_once = false;
+  //printf("Wrapper args (cleanup): %p, %d\n", args, (int)do_once);
+  //if (do_once) { return; }
+  //do_once = true;
   // When thread 0 exits, any still-running threads are cancelled,
   // which would trigger this handler. However, if thread 0 has exited,
   // TAU may have already shut down. If TAU has already shut down,
@@ -259,6 +288,14 @@ void tau_pthread_function_cleanup_handler(void * args) {
       return;
   }
   tau_pthread_wrapper_args_t * wrapper_args = (tau_pthread_wrapper_args_t *)args;
+  // This looks odd.  Check to see if the args pointer is on the heap
+  // or not, and the easiest way to do that is to see if its address
+  // is smaller than the top of the stack, which is the address of main.
+  // Why do this?  Because sometimes libc corrups this object on the way
+  // out the door, and we don't want to crash.
+  if (args != wrapper_args->self_ptr) {
+      return;
+  }
   // The thread is about to exit, so we stop all the timers on it.
   // We can't just stop the wrapper timer because if the thread was
   // canceled early, we may have returned here without stopping
@@ -287,7 +324,7 @@ void tau_pthread_function_cleanup_handler(void * args) {
 // provided to pthread_create.
 extern "C"
 void * tau_pthread_function(void *arg)
-{   
+{
   void * ret = NULL;
   tau_pthread_pack * pack = (tau_pthread_pack*)arg;
 
@@ -300,7 +337,7 @@ void * tau_pthread_function(void *arg)
 
   TAU_REGISTER_THREAD();
   Tau_create_top_level_timer_if_necessary();
-  
+
   /* iterate over the stack and create a timer context */
   if (TauEnv_get_threadContext() && pack->timer_context_stack.size() > 0) {
     for (std::vector<FunctionInfo*>::iterator iter = pack->timer_context_stack.begin() ;
@@ -326,9 +363,12 @@ void * tau_pthread_function(void *arg)
   tau_pthread_wrapper_args_t wrapper_args;
   wrapper_args.handle = handle;
   wrapper_args.pack = pack;
+  // grab a pointer to ourselves, for "validation"
+  wrapper_args.self_ptr = &wrapper_args;
   // Register the cleanup function.
-  pthread_cleanup_push(tau_pthread_function_cleanup_handler, &wrapper_args);
-  
+  //printf("Wrapper args: %p\n", &wrapper_args);
+  //pthread_cleanup_push(tau_pthread_function_cleanup_handler, &wrapper_args);
+
   // Call the function that we are wrapping.
   ret = pack->start_routine(pack->arg);
 
@@ -336,7 +376,11 @@ void * tau_pthread_function(void *arg)
   // Non-zero argument causes the cleanup function to execute when popped,
   // so that we will stop the timer through the cleanup function even
   // when returning normally.
-  pthread_cleanup_pop(1);
+  /* CORREECTION - with some compilers/runtimes, this approach can result
+   * in a corrupted wrapper_args pointer. Instead, the wrapper_args object
+   * has a destructor method that will call the cleanup function.  When this
+   * object goes out of scope, we will effectively be doing the same thing. */
+  //pthread_cleanup_pop(1);
   return ret;
 }
 
@@ -380,19 +424,35 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
   }
 
   int retval;
-  bool ignore_thread = false;
+  bool ignore_thread = !Tau_is_pthread_tracking_enabled();
 #ifdef CUPTI
 /* This is needed so that TauGpu.cpp can let the rest of TAU know that
  * it has been initialized.  PthreadLayer.cpp needs to know whether
  * CUDA/CUPTI has been initialized (for GPU timestamps) - if it starts before
  * TAU is initialized, then we could have problems.  This prevents that. */
-  ignore_thread = !Tau_gpu_initialized();
+  ignore_thread = !Tau_gpu_initialized() || !Tau_is_pthread_tracking_enabled();
 #endif
   if(*wrapped || Tau_global_getLightsOut() ||
      !Tau_init_check_initialized() || ignore_thread) {
     // Another wrapper has already intercepted the call so just pass through
     retval = pthread_create_call(threadp, attr, start_routine, arg);
   } else {
+
+  /* This block of code is helpful in finding pthread bombs. If a code is
+   * consuming lots of threads, and you don't know why - enable this block. */
+# if 0
+  constexpr int stack_depth=100;
+  void* callstack[stack_depth];
+  int frames = backtrace(callstack, stack_depth);
+  char** strs = backtrace_symbols(callstack, frames);
+  TAU_VERBOSE("\n\n");
+  TAU_VERBOSE("PTHREAD CREATE Callstack: \n");
+  for (int i = 0; i < frames; ++i) {
+      TAU_VERBOSE("    %s\n", strs[i]);
+  }
+  free(strs);
+#endif
+
     *wrapped = true;
     tau_pthread_pack * pack = new tau_pthread_pack;
     pack->start_routine = start_routine;
@@ -441,7 +501,10 @@ int tau_pthread_join_wrapper(pthread_join_p pthread_join_call,
   }
 
   int ret;
-  if(*wrapped || Tau_global_getLightsOut()) {
+  // CUDA can call pthread_join during TAU initialization, before timer creation
+  // is supported, so we have to check to make sure TAU is actually initialized
+  // before wrapping pthread_join.
+  if(*wrapped || Tau_global_getLightsOut() || !Tau_init_check_initialized()) {
     // Another wrapper has already intercepted the call so just pass through
     ret = pthread_join_call(thread, retval);
   } else {

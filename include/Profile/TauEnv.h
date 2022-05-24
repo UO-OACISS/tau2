@@ -77,6 +77,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_current_timer_exit_params();
   int  TAUDECL TauEnv_get_track_message();
   int  TAUDECL TauEnv_get_lite_enabled();
+  int  TAUDECL TauEnv_get_anonymize_enabled();
   int  TAUDECL TauEnv_get_compensate();
   int  TAUDECL TauEnv_get_level_zero_enable_api_tracing();
 
@@ -118,6 +119,7 @@ extern "C" {
   int TAUDECL TauEnv_get_disable_instrumentation();
 
   const char* TAUDECL TauEnv_get_ebs_source();
+  const char* TAUDECL TauEnv_get_ebs_source_orig();
   void TAUDECL TauEnv_override_ebs_source(const char *newName);
   double      TAUDECL TauEnv_get_throttle_numcalls();
   double      TAUDECL TauEnv_get_throttle_percall();
@@ -132,7 +134,9 @@ extern "C" {
   const char* TAUDECL TauEnv_get_plugins();
   int TAUDECL TauEnv_get_plugins_enabled();
   int TAUDECL TauEnv_get_track_mpi_t_comm_metric_values();
+#ifndef TAU_WINDOWS
   const char  TAUDECL *TauEnv_get_mpi_t_comm_metric_values();
+#endif
   int TAUDECL TauEnv_get_set_node();
   const char* TAUDECL TauEnv_get_cupti_api();
   const char* TAUDECL TauEnv_get_cuda_device_name();

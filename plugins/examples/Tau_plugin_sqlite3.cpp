@@ -133,7 +133,7 @@ size_t store_trial() {
     /* Get the executable name from the TAU metadata */
     Tau_metadata_key key;
     key.name = strdup("Executable");
-    const char * execname = Tau_metadata_getMetaData(0)[key]->data.cval;
+    const char * execname = Tau_metadata_getMetaData(0).at(key)->data.cval;
     sql << "insert into trial (name) values ('" << execname << "');";
     rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
 
@@ -511,7 +511,6 @@ void close_database() {
 void write_profile_to_database() {
     if (done) { return; }
     if (RtsLayer::myThread() != 0) { return; }
-    Tau_metadata_writeEndingTimeStamp();
     TauProfiler_updateAllIntermediateStatistics();
     size_t trial_id = 0;
     if (comm_rank == 0) {

@@ -356,10 +356,12 @@ int Tau_profile_exit_scorep()
 }
 
 /* disable this stupid thing */
+#ifndef TAU_WINDOWS
 extern "C" int __attribute__((weak)) PetscPopSignalHandler(void) {
     return 0;
 }
 typedef int(*PetscPopSignalHandler_p)(void);
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // Initialize signal handling routines
@@ -582,6 +584,9 @@ extern "C" int Tau_init_initializeTAU()
     Tau_compensate_initialization();
   }
 
+  /* Start a top level timer BEFORE we start sampling */
+  Tau_create_top_level_timer_if_necessary();
+
   /* initialize sampling if requested */
 #if !defined(TAU_MPI) && !defined(TAU_WINDOWS)
   if (TauEnv_get_ebs_enabled()) {
@@ -609,8 +614,6 @@ extern "C" int Tau_init_initializeTAU()
     }
   }
 #endif
-
-  Tau_create_top_level_timer_if_necessary();
 
   Tau_memory_wrapper_enable();
 

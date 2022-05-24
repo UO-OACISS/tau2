@@ -13,6 +13,7 @@ export tauroot
 myhost=`hostname`
 # In case there are extra qualifiers on the hostname
 myhost=`basename -s .nic.uoregon.edu ${myhost}`
+myhost=`basename -s .stor ${myhost}`
 osname=`uname`
 
 # Usage message
