@@ -9205,7 +9205,7 @@ fi
 
 
 # Checking if we need to add -lmpifort here:
-if [ $mpi = yes -a -d $mpilib -a $mpilibargs_added_to_fixmakeargs = yes ]; then 
+if [ $mpi = yes -a $mpilibargs_added_to_fixmakeargs = yes ]; then 
   if [ $cxx_compiler = icpx -a -r $mpilib/libmpifort.so ]; then
     mpilibargs="${mpilibargs}#-lmpifort"
     fixmakeargs="$fixmakeargs mpilibargs=${mpilibargs}"
