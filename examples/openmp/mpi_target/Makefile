@@ -13,7 +13,7 @@ EXECUTABLE=./matmult
 
 all: $(EXECUTABLE) 
 
-AMD_CXXFLAGS =  -fopenmp -target x86_64-pc-linux-gnu -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx908 -DTAU_MPI -DTAU_OPENMP 
+AMD_CXXFLAGS =  -g -fopenmp -target x86_64-pc-linux-gnu -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx908 -DTAU_MPI -DTAU_OPENMP 
 NVIDIA_CXXFLAGS=
 INTEL_CXXFLAGS=
 
@@ -25,10 +25,10 @@ CXX=$(HIPCC)
 
 
 $(EXECUTABLE): $(OBJECTS) 
-	$(HIPCC) $(OBJECTS) -o $@ ${CXXFLAGS} ${MPI_OPTS}
+	$(CXX) $(OBJECTS) -o $@ ${CXXFLAGS} ${MPI_OPTS}
 
 %.o: %.cpp
-	$(HIPCC) ${CXXFLAGS} ${MPI_OPTS} -c $< 
+	$(CXX) ${CXXFLAGS} ${MPI_OPTS} -c $< 
 
 
 run: $(EXECUTABLE)

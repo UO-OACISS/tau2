@@ -1212,6 +1212,10 @@ case $1 in
 	echo NOTE: Using the Intel C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     INTEL_ICPX)
+	echo NOTE: Using the Intel icpx C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      USE_PATHCC)
 	echo NOTE: Using the Pathscale C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
