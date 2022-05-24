@@ -1093,6 +1093,7 @@ guidef90=no
 stdcxxlib=no
 intelcxxlibicc=no
 intelifort=no
+intel_icpx=no
 intel=no
 llvm=no
 mpiwarnings=
@@ -5240,7 +5241,7 @@ case $cxx_compiler in
             fi
 	fi
 	;;
-    mpiicp)
+    mpiicpx)
 	echo "Default C++ compiler will be Intel mpiicpx C++ compiler"
 	fixmakeargs="$fixmakeargs MPIICPC USE_INTELCXX"
 	tauoptions="${tauoptions}-icpx"
@@ -6791,6 +6792,7 @@ then
     tauoptions="${tauoptions}-shmem"
     fixmakeargs="$fixmakeargs shmemlibargs=$shmemlibargs shmemincargs=$shmemincargs shmemdirargs=$shmemdir shmemmpiincargs=$shmemmpiincargs"
 fi
+
 
 gcclibdir=unknown
 case $c_compiler in
@@ -9202,6 +9204,13 @@ else # if mpilib is specified
 fi
 
 
+# Checking if we need to add -lmpifort here:
+if [ $mpi = yes -a -d $mpilib -a $mpilibargs_added_to_fixmakeargs = yes ]; then 
+  if [ $cxx_compiler = icpx -a -r $mpilib/libmpifort.so ]; then
+    mpilibargs="${mpilibargs}#-lmpifort"
+    fixmakeargs="$fixmakeargs mpilibargs=${mpilibargs}"
+  fi
+fi
 
 # Special magic for xt3 and craycnl
 if [ $mpi = yes -a $mpilibargs_added_to_fixmakeargs = no ] ; then
@@ -9219,6 +9228,7 @@ if [ $mpi = yes -a $mpilibargs_added_to_fixmakeargs = no ] ; then
 	fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
     fi
 fi
+
 
 #####################################################################
 # Test for C++ string library
@@ -12170,7 +12180,7 @@ fi
 
 
 # CHECK if Intel 8.0 compilers are available.
-if [ $cxx_compiler = icpc -o $cxx_compiler = icpx  -o $cxx_compiler = mpiicpc  -o $cxx_compiler = mpiicpx ] ; then
+if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
     echo "Checking version (8.0/8.1+) of Intel compilers"
     # Intel compilers changed from -cxxlib-icc to -cxxlib-gcc (default) in 8.1
     cat << EOF > f1.cpp
@@ -12226,8 +12236,12 @@ EOF
     # Check over!
 fi
 
+if [ $cxx_compiler = icpx -o $cxx_compiler = mpiicpx ] ; then
+   fixmakeargs="$fixmakeargs INTEL_ICPX "
+   intel_icpx=yes
+fi
 
-if [ $cxx_compiler = icpc -o $cxx_compiler = icpx -o $cxx_compiler = mpiicpc -o $cxx_compiler = mpiicpx ] ; then
+if [ $cxx_compiler = icpc -o $cxx_compiler = icpx -o $cxx_compiler = mpiicpx -o $cxx_compiler = mpiicpc ] ; then
     echo "Checking version (10.0+) of Intel compilers"
     version=`${cxx_compiler} -v 2>&1`
     s="mpi"
@@ -12286,7 +12300,7 @@ if [ $cxx_compiler = icpc -o $cxx_compiler = icpx -o $cxx_compiler = mpiicpc -o 
     fixmakeargs="$fixmakeargs ifortlibdir=$libdir"
 fi
 
-if [ $cxx_compiler = icpc -o $cxx_compiler = icpx -o $cxx_compiler = mpiicpc -o $cxx_compiler = mpiicpx ] ; then
+if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
     echo "Checking version (12.x) of Intel compilers"
     version=`${cxx_compiler} -v 2>&1`
     t="Version 12"
