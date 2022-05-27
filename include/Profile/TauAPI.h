@@ -480,8 +480,6 @@ void *Tau_query_parent_event(void *event);
 void Tau_disable_context_event(void *event);
 void Tau_enable_context_event(void *event);
 
-void Tau_pure_context_userevent(void **u, const char *n);
-
 void Tau_the_function_list(const char ***functionList, int *num);
 int Tau_dump_prefix(const char *prefix);
 int Tau_dump_prefix_task(const char *prefix, int taskid);

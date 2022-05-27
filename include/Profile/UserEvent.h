@@ -36,8 +36,6 @@ class Profiler;
 //////////////////////////////////////////////////////////////////////
 typedef double TAU_EVENT_DATATYPE;
 
-typedef std::basic_string<char, std::char_traits<char>, TauSignalSafeAllocator<char> > TauSafeString;
-
 //////////////////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////////////////
@@ -79,7 +77,7 @@ public:
       eventId(0), name(e.name),
       minEnabled(e.minEnabled), maxEnabled(e.maxEnabled),
       meanEnabled(e.meanEnabled), stdDevEnabled(e.stdDevEnabled),
-      monoIncreasing(e.monoIncreasing), writeAsMetric(false) 
+      monoIncreasing(e.monoIncreasing), writeAsMetric(false)
   {
     //printf("Constructed UserEvent: %s\n", name.c_str()); fflush(stdout);
     AddEventToDB();
@@ -88,7 +86,7 @@ public:
   //TauUserEvent(std::string const & name, bool increasing=false) :
   TauUserEvent(const char * name, bool increasing=false) :
       eventId(0), name(name), minEnabled(true), maxEnabled(true),
-      meanEnabled(true), stdDevEnabled(true), monoIncreasing(increasing), writeAsMetric(false) 
+      meanEnabled(true), stdDevEnabled(true), monoIncreasing(increasing), writeAsMetric(false)
   {
     //printf("Constructed UserEvent: %s\n", name); fflush(stdout);
     AddEventToDB();
@@ -112,7 +110,7 @@ public:
     return eventId;
   }
 
-  TauSafeString const & GetName(void) {
+  std::string const & GetName(void) {
     return name;
   }
 
@@ -120,7 +118,7 @@ public:
     //name = value.c_str();
   //}
 
-  void SetName(TauSafeString const & value) {
+  void SetName(std::string const & value) {
     name = value;
   }
 
@@ -162,11 +160,11 @@ public:
   void SetWriteAsMetric(bool value) {
     writeAsMetric = value;
   }
-  
+
   bool GetWriteAsMetric() {
     return writeAsMetric;
   }
-  
+
   TAU_EVENT_DATATYPE GetMin(void) {
     Data const & d = ThreadData();
     return d.nEvents ? d.minVal : 0;
@@ -248,7 +246,7 @@ private:
   Data eventData[TAU_MAX_THREADS];
 
   x_uint64 eventId;
-  TauSafeString name;
+  std::string name;
   bool minEnabled;
   bool maxEnabled;
   bool meanEnabled;
@@ -272,7 +270,7 @@ public:
       contextEnabled(TauEnv_get_callpath_depth() != 0),
 #endif
       contextEvent(NULL)
-  { 
+  {
     //printf("Constructing ContextUserEvent: %s\n", name); fflush(stdout);
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
@@ -281,7 +279,7 @@ public:
     userEvent = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
     /*  now, use the pacement new function to create a object in
      *  pre-allocated memory. NOTE - this memory needs to be explicitly
-     *  deallocated by explicitly calling the destructor. 
+     *  deallocated by explicitly calling the destructor.
      *  I think the best place for that is in the destructor for
      *  the hash table. */
     new(userEvent) TauUserEvent(name, monoIncr);
@@ -289,7 +287,7 @@ public:
       userEvent = new TauUserEvent(name, monoIncr);
 #endif
   }
-  
+
   TauContextUserEvent(const TauContextUserEvent &c) :
 	  contextEnabled(c.contextEnabled),
       userEvent(c.userEvent),
@@ -298,11 +296,11 @@ public:
 
   TauContextUserEvent & operator=(const TauContextUserEvent &rhs) {
       userEvent = rhs.userEvent;
-      contextEvent = rhs.contextEvent; 
+      contextEvent = rhs.contextEvent;
       contextEnabled = rhs.contextEnabled;
       return *this;
   }
-  
+
   ~TauContextUserEvent() {
     // Because of the above "fixes" for pre-allocating memory, this delete
     // method now crashes. Let's not and say we did, ok?
@@ -314,46 +312,42 @@ public:
     contextEnabled = value;
   }
 
-  TauSafeString const & GetUserEventName() const {
+  std::string const & GetUserEventName() const {
     return userEvent->GetName();
   }
-  
+
   void SetAllEventName(std::string const & value) {
-    userEvent->SetName(TauSafeString(value.c_str()));
+    userEvent->SetName(std::string(value.c_str()));
     if (contextEvent != NULL)
     {
       std::size_t sep_pos = contextEvent->GetName().find(':');
-      if (sep_pos != TauSafeString::npos)
+      if (sep_pos != std::string::npos)
       {
-        TauSafeString context_portion = contextEvent->GetName().substr(sep_pos, contextEvent->GetName().length()-sep_pos);
+        std::string context_portion = contextEvent->GetName().substr(sep_pos, contextEvent->GetName().length()-sep_pos);
         //form new string
         //contextEvent = userEvent;
-        TauSafeString new_context = userEvent->GetName();
-        new_context += TauSafeString(" ");
+        std::string new_context = userEvent->GetName();
+        new_context += std::string(" ");
         new_context += context_portion;
-        contextEvent->SetName(TauSafeString(new_context.c_str()));
+        contextEvent->SetName(std::string(new_context.c_str()));
       }
       else {
-        contextEvent->SetName(TauSafeString(value.c_str()));
+        contextEvent->SetName(std::string(value.c_str()));
       }
     }
 
   }
 
-  TauSafeString const & GetName() const {
+  std::string const & GetName() const {
     if (contextEnabled && contextEvent != NULL) {
         return contextEvent->GetName();
     } else {
         return userEvent->GetName();
     }
   }
-  
-  void SetName(std::string const & value) {
-    contextEvent->SetName(TauSafeString(value.c_str()));
-  }
 
-  void SetName(TauSafeString const & value) {
-    contextEvent->SetName(TauSafeString(value.c_str()));
+  void SetName(std::string const & value) {
+    contextEvent->SetName(std::string(value.c_str()));
   }
 
   TauUserEvent *getContextUserEvent() {
@@ -378,7 +372,7 @@ public:
 private:
 
   void FormulateContextComparisonArray(Profiler * current, long * comparison);
-  TauSafeString FormulateContextNameString(Profiler * current);
+  std::string FormulateContextNameString(Profiler * current);
 
   bool contextEnabled;
   TauUserEvent * userEvent;
@@ -411,5 +405,5 @@ AtomicEventDB & TheEventDB(void);
 /***************************************************************************
  * $RCSfile: UserEvent.h,v $   $Author: amorris $
  * $Revision: 1.17 $   $Date: 2009/09/28 18:28:48 $
- * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.17 2009/09/28 18:28:48 amorris Exp $ 
+ * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.17 2009/09/28 18:28:48 amorris Exp $
  ***************************************************************************/

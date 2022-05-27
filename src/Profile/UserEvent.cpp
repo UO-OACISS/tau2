@@ -432,7 +432,7 @@ void TauContextUserEvent::FormulateContextComparisonArray(Profiler * in_current,
 ////////////////////////////////////////////////////////////////////////////
 // Formulate Context Callpath name string
 ////////////////////////////////////////////////////////////////////////////
-TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * in_current)
+std::string TauContextUserEvent::FormulateContextNameString(Profiler * in_current)
 {
   int tid = RtsLayer::myThread();
   Profiler * current = in_current;

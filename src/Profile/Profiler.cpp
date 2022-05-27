@@ -279,7 +279,9 @@ void Profiler::Start(int tid)
   // get the timers read just after initialization.
 #ifndef TAU_SCOREP
   if (TimeStamp == 0L) {
+#if !defined(TAU_USE_OMPT_5_0) || !defined(TAU_GPU) // this can happen with OMPT async threads
     printf("Got a bogus start! %d %s\n", tid, ThisFunction->GetName());
+#endif
     TauMetrics_getDefaults(tid, StartTime, 1);
     TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
     if (TimeStamp == 0L) {
