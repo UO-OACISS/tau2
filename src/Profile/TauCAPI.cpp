@@ -2044,6 +2044,15 @@ extern "C" void Tau_trigger_userevent(const char *name, double data) {
   Tau_userevent(ue, data);
 }
 
+/* This is only needed to write the metadata as user events at exit, so
+   there's no need to cache them. Besides, it can crash if our maps are
+   already gone. */
+extern "C" void Tau_trigger_userevent_nocache(const char *name, double data) {
+  TauInternalFunctionGuard protects_this_function;
+  void *ue = (void*)(new TauUserEvent(name));
+  Tau_userevent(ue, data);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trigger_userevent_thread(const char *name, double data, int tid) {
   TauInternalFunctionGuard protects_this_function;
