@@ -734,6 +734,45 @@ int Tau_metadata_fillMetaData()
     fclose(f);
   }
 
+  f = fopen("/proc/self/status", "r");
+  if (f) {
+    char line[4096];
+    while (Tau_util_readFullLine(line, f)) {
+      char const * value = strstr(line,":");
+
+      if (!value) {
+        break;
+      } else {
+        value += 2;
+      }
+
+      // Allocates a string
+      value = Tau_util_removeRuns(value);
+
+/* capture these:
+Cpus_allowed:	ffffffff,ffffffff,ffffffff,ffffffff
+Cpus_allowed_list:	0-127
+Mems_allowed:	00000000,0000000f
+Mems_allowed_list:	0-3
+*/
+      if (strncmp(line, "Cpus_allowed", 12) == 0) {
+        Tau_metadata_register("CPUs Allowed", value);
+      }
+      if (strncmp(line, "Cpus_allowed_list", 17) == 0) {
+        Tau_metadata_register("CPUs Allowed List", value);
+      }
+      if (strncmp(line, "Mems_allowed", 12) == 0) {
+        Tau_metadata_register("Memories Allowed", value);
+      }
+      if (strncmp(line, "Mems_allowed_list", 17) == 0) {
+        Tau_metadata_register("Memories Allowed List", value);
+      }
+
+      free((void*)value);
+    }
+    fclose(f);
+  }
+
   /* If TAU_ANONYMIZE is used, don't write out executable and cwd info */
   if (!anonymize) {
     char buffer[4096];
