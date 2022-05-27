@@ -1903,10 +1903,9 @@ private:
   int tid;
   static atomic<int> num_threads;
 public:
-  pure_context_userevent_map_t() : tid(num_threads++) { }
+  pure_context_userevent_map_t() : tid(RtsLayer::myThread()) { num_threads++; }
   virtual ~pure_context_userevent_map_t() {
-    static bool called{true};
-    if (!called && (tid == 0 || --num_threads == 0)) {
+    if (tid == 0 || --num_threads == 0) {
         Tau_destructor_trigger();
     }
   }
@@ -1948,10 +1947,9 @@ private:
   int tid;
   static atomic<int> num_threads;
 public:
-  pure_userevent_map_t() : tid(num_threads++) { }
+  pure_userevent_map_t() : tid(RtsLayer::myThread()) { num_threads++; }
   virtual ~pure_userevent_map_t() {
-    static bool called{true};
-    if (!called && (tid == 0 || --num_threads == 0)) {
+    if (tid == 0 || --num_threads == 0) {
         Tau_destructor_trigger();
     }
   }
@@ -2041,15 +2039,6 @@ extern "C" void Tau_trigger_context_event(const char *name, double data) {
 extern "C" void Tau_trigger_userevent(const char *name, double data) {
   TauInternalFunctionGuard protects_this_function;
   void *ue = Tau_get_userevent(name);
-  Tau_userevent(ue, data);
-}
-
-/* This is only needed to write the metadata as user events at exit, so
-   there's no need to cache them. Besides, it can crash if our maps are
-   already gone. */
-extern "C" void Tau_trigger_userevent_nocache(const char *name, double data) {
-  TauInternalFunctionGuard protects_this_function;
-  void *ue = (void*)(new TauUserEvent(name));
   Tau_userevent(ue, data);
 }
 
@@ -2494,8 +2483,7 @@ private:
 public:
   PureMap() : tid(num_threads++) { }
   virtual ~PureMap() {
-    static bool called{true};
-    if (!called && (tid == 0 || --num_threads == 0)) {
+    if (tid == 0 || --num_threads == 0) {
         Tau_destructor_trigger();
     }
   }

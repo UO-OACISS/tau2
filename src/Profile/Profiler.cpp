@@ -1547,7 +1547,7 @@ extern "C" int Tau_print_metadata_for_traces(int tid) {
 
    for (MetaDataRepo::iterator it = (*localRepo).begin(); it != (*localRepo).end(); it++) {
       string metadata_str(it->first.name + string(" | ") + string(it->second->data.cval));
-      Tau_trigger_userevent_nocache(metadata_str.c_str(), 1.0);
+      Tau_trigger_userevent(metadata_str.c_str(), 1.0);
   }
   return 0;
 }
