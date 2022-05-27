@@ -1931,10 +1931,9 @@ private:
   int tid;
   static atomic<int> num_threads;
 public:
-  pure_context_userevent_map_t() : tid(num_threads++) { }
+  pure_context_userevent_map_t() : tid(RtsLayer::myThread()) { num_threads++; }
   virtual ~pure_context_userevent_map_t() {
-    static bool called{true};
-    if (!called && (tid == 0 || --num_threads == 0)) {
+    if (tid == 0 || --num_threads == 0) {
         Tau_destructor_trigger();
     }
   }
@@ -1976,10 +1975,9 @@ private:
   int tid;
   static atomic<int> num_threads;
 public:
-  pure_userevent_map_t() : tid(num_threads++) { }
+  pure_userevent_map_t() : tid(RtsLayer::myThread()) { num_threads++; }
   virtual ~pure_userevent_map_t() {
-    static bool called{true};
-    if (!called && (tid == 0 || --num_threads == 0)) {
+    if (tid == 0 || --num_threads == 0) {
         Tau_destructor_trigger();
     }
   }
@@ -2529,8 +2527,7 @@ private:
 public:
   PureMap() : tid(num_threads++) { }
   virtual ~PureMap() {
-    static bool called{true};
-    if (!called && (tid == 0 || --num_threads == 0)) {
+    if (tid == 0 || --num_threads == 0) {
         Tau_destructor_trigger();
     }
   }
