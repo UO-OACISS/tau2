@@ -137,7 +137,7 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname)
     std::stringstream ss;
     ss << iowrap_event_names[i] << " <file=" << pathname << ">";
     std::string ename(ss.str());
-    Tau_pure_context_userevent(&event, ename.c_str());
+    Tau_get_context_userevent(&event, ename.c_str());
     iowrap_events[i][fid] = (TauUserEvent*)event;
   }
   dprintf("Registering %d with %s\n", fid - 1, pathname);
@@ -335,7 +335,7 @@ void Tau_app_report_file_read_start(const char * name, size_t size) {
         void *event = 0;
         char ename[4096];
         sprintf(ename,"TensorFlow File Read Bytes <file=%s>", name);
-        Tau_pure_context_userevent(&event, ename);
+        Tau_get_context_userevent(&event, ename);
         tfio_read_bytes_map->insert(std::pair<std::string, void *>(nameStr, event));
     }
     tfio_read_bw_map_t * tfio_read_bw_map = tau_tfio_read_bw_map();
@@ -343,7 +343,7 @@ void Tau_app_report_file_read_start(const char * name, size_t size) {
         void *event = 0;
         char ename[4096];
         sprintf(ename,"TensorFlow File Read Bandwidth <file=%s>", name);
-        Tau_pure_context_userevent(&event, ename);
+        Tau_get_context_userevent(&event, ename);
         tfio_read_bw_map->insert(std::pair<std::string, void *>(nameStr, event));
     }
 }
@@ -390,7 +390,7 @@ void Tau_app_report_file_write_start(const char * name, size_t size) {
         void *event = 0;
         char ename[4096];
         sprintf(ename,"TensorFlow File Write Bytes <file=%s>", name);
-        Tau_pure_context_userevent(&event, ename);
+        Tau_get_context_userevent(&event, ename);
         tfio_write_bytes_map->insert(std::pair<std::string, void *>(nameStr, event));
     }
     tfio_write_bw_map_t * tfio_write_bw_map = tau_tfio_write_bw_map();
@@ -398,7 +398,7 @@ void Tau_app_report_file_write_start(const char * name, size_t size) {
         void *event = 0;
         char ename[4096];
         sprintf(ename,"TensorFlow File Write Bandwidth <file=%s>", name);
-        Tau_pure_context_userevent(&event, ename);
+        Tau_get_context_userevent(&event, ename);
         tfio_write_bw_map->insert(std::pair<std::string, void *>(nameStr, event));
     }
 }

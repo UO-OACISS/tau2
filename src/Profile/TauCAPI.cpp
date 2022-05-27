@@ -1925,14 +1925,102 @@ extern "C" void Tau_trace_rma_collective_end(int tag, int type, int start, int s
 ///////////////////////////////////////////////////////////////////////////
 // User Defined Events
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void * Tau_get_userevent(char const * name) {
-  TauInternalFunctionGuard protects_this_function;
-  TauUserEvent *ue;
-  ue = new TauUserEvent(name);
-  return (void *) ue;
+
+class pure_context_userevent_map_t : public TAU_HASH_MAP<std::string, TauContextUserEvent*> {
+private:
+  int tid;
+  static atomic<int> num_threads;
+public:
+  pure_context_userevent_map_t() : tid(num_threads++) { }
+  virtual ~pure_context_userevent_map_t() {
+    static bool called{true};
+    if (!called && (tid == 0 || --num_threads == 0)) {
+        Tau_destructor_trigger();
+    }
+  }
+};
+
+atomic<int> pure_context_userevent_map_t::num_threads{0};
+
+TauContextUserEvent * Tau_find_context_userevent_internal(const char* name)
+{
+    static std::mutex mtx;
+    static pure_context_userevent_map_t pureMap;
+    static thread_local pure_context_userevent_map_t my_pureMap;
+    TauInternalFunctionGuard protects_this_function;
+    TauContextUserEvent *ue = nullptr;
+    std::string tmp{name};
+    /* First, check if this thread has seen this event before */
+    pure_context_userevent_map_t::iterator it = my_pureMap.find(tmp);
+    if (it != my_pureMap.end()) {
+        ue = (*it).second;
+        return ue;
+    }
+    /* if not, check the global map */
+    std::lock_guard<std::mutex> lck (mtx);
+    it = pureMap.find(tmp);
+    if (it == pureMap.end()) {
+        ue = new TauContextUserEvent(name);
+        /* Add it to the global map */
+        pureMap[tmp] = ue;
+    } else {
+        ue = (*it).second;
+    }
+    /* Add it to my local map */
+    my_pureMap[tmp] = ue;
+    return ue;
 }
 
-///////////////////////////////////////////////////////////////////////////
+class pure_userevent_map_t : public TAU_HASH_MAP<std::string, TauUserEvent*> {
+private:
+  int tid;
+  static atomic<int> num_threads;
+public:
+  pure_userevent_map_t() : tid(num_threads++) { }
+  virtual ~pure_userevent_map_t() {
+    static bool called{true};
+    if (!called && (tid == 0 || --num_threads == 0)) {
+        Tau_destructor_trigger();
+    }
+  }
+};
+
+atomic<int> pure_userevent_map_t::num_threads{0};
+
+TauUserEvent * Tau_find_userevent_internal(const char* name) {
+    static std::mutex mtx;
+    static pure_userevent_map_t pureUserEventAtomicMap;
+    static thread_local pure_userevent_map_t my_pureUserEventAtomicMap;
+    TauInternalFunctionGuard protects_this_function;
+    TauUserEvent *ue = nullptr;
+    std::string tmp{name};
+    /* First, check to see if it's in the thread's local map */
+    pure_userevent_map_t::iterator it = my_pureUserEventAtomicMap.find(tmp);
+    if (it != my_pureUserEventAtomicMap.end()) {
+        ue = (*it).second;
+        return ue;
+    }
+    /* Not in the local map, so check the global map */
+    std::lock_guard<std::mutex> lck (mtx);
+    it = pureUserEventAtomicMap.find(tmp);
+    if (it == pureUserEventAtomicMap.end()) {
+        ue = new TauUserEvent(name);
+        /* Add it to the global map */
+        pureUserEventAtomicMap[tmp] = ue;
+    } else {
+        ue = (*it).second;
+    }
+    /* Add it to the local map */
+    my_pureUserEventAtomicMap[tmp] = ue;
+    return ue;
+}
+
+extern "C" void * Tau_get_userevent(char const * name) {
+    TauInternalFunctionGuard protects_this_function;
+    TauUserEvent *ue = Tau_find_userevent_internal(name);
+    return (void *) ue;
+}
+
 extern "C" void Tau_userevent(void *ue, double data) {
   TauInternalFunctionGuard protects_this_function;
   TauUserEvent *t = (TauUserEvent *) ue;
@@ -1947,147 +2035,25 @@ extern "C" void Tau_userevent_thread(void *ue, double data, int tid) {
 
 extern "C" void * Tau_return_context_userevent(const char *name) {
     TauInternalFunctionGuard protects_this_function;
-    TauContextUserEvent * ue = new TauContextUserEvent(name);
-    return (void*)ue;
+    void * ue = Tau_find_context_userevent_internal(name);
+    return ue;
 }
 
-///////////////////////////////////////////////////////////////////////////
-// WARNING: the pointer passed into Tau_get_context_userevent must be declared
-// static or intialized to NULL otherwise it could end up pointing to a random
-// piece of memory. See Tau_pure_context_userevent for a routine that does a
-// name lookup.
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_get_context_userevent(void **ptr, const char *name)
-{
-  if (!*ptr) {
+extern "C" void Tau_get_context_userevent(void **ptr, const char *name) {
     TauInternalFunctionGuard protects_this_function;
-    if (!*ptr) {
-      TauContextUserEvent * ue = new TauContextUserEvent(name);
-      *ptr = (void*)ue;
-    }
-  }
+    *ptr = Tau_find_context_userevent_internal(name);
 }
 
-struct cmp_str
-{
-   bool operator()(char const *a, char const *b)
-   {
-#ifdef TAU_AIX
-      return strcmp(a, b) < 0;
-#else
-      return std::strcmp(a, b) < 0;
-#endif /* TAU_AIX */
-   }
-};
-
-struct StrCompare : public std::binary_function<const char*, const char*, bool> {
-public:
-    bool operator() (const char* str1, const char* str2) const {
-#ifdef TAU_AIX
-        return strcmp(str1, str2) < 0;
-#else
-        return std::strcmp(str1, str2) < 0;
-#endif /* TAU_AIX */
-    }
-};
-
-typedef bool(*_my_compare_const_char_func)(const char *, const char *);
-bool _my_compare_const_char(const char * lhs, const char * rhs) {
-   return (strcmp(lhs, rhs) < 0);
-}
-
-struct StrCompare2 {
-public:
-    bool operator() (const TauSafeString& lhs, const TauSafeString& rhs) const {
-#ifdef TAU_AIX
-      return strcmp(lhs.c_str(), rhs.c_str()) < 0;
-#else
-      return std::strcmp(lhs.c_str(), rhs.c_str()) < 0;
-#endif /* TAU_AIX */
-    }
-};
-
-typedef std::map<TauSafeString, TauContextUserEvent *, std::less<TauSafeString>, TauSignalSafeAllocator<std::pair<const TauSafeString, TauContextUserEvent *> > > pure_atomic_map_t;
-
-extern "C" void Tau_pure_context_userevent(void **ptr, const char* name)
-{
-  TauInternalFunctionGuard protects_this_function;
-  TauContextUserEvent *ue = 0;
-  TauSafeString tmp(name);
-  static std::mutex mtx;
-  static pure_atomic_map_t pureAtomicMap;
-  std::lock_guard<std::mutex> lck (mtx);
-  pure_atomic_map_t::iterator it = pureAtomicMap.find(tmp);
-  if (it == pureAtomicMap.end()) {
-    ue = new TauContextUserEvent(name);
-    pureAtomicMap[ue->GetName()] = ue;
-  } else {
-    ue = (*it).second;
-  }
-  *ptr = (void *) ue;
-}
-
-typedef TAU_HASH_MAP<string, TauUserEvent *> pure_userevent_atomic_map_t;
-
-TauUserEvent * Tau_find_userevent_internal(const char* name, bool signal_safe = false) {
-  static std::mutex mtx;
-  static pure_userevent_atomic_map_t pureUserEventAtomicMap;
-  TauInternalFunctionGuard protects_this_function;
-  TauUserEvent *ue = nullptr;
-  /* KAH - Whoops!! We can't call "new" here, because malloc is not
-   * safe in signal handling. therefore, use the special memory
-   * allocation routines */
-  static string tmp = string(4096,0);
-  tmp.assign(name);
-  std::lock_guard<std::mutex> lck (mtx);
-  pure_userevent_atomic_map_t::iterator it = pureUserEventAtomicMap.find(tmp);
-  if (it == pureUserEventAtomicMap.end()) {
-    if (signal_safe) {
-#ifndef TAU_WINDOWS
-        ue = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
-        new(ue) TauUserEvent(name);
-#else
-        ue = new TauUserEvent(name);
-#endif
-    } else {
-        ue = new TauUserEvent(name);
-    }
-    pureUserEventAtomicMap[tmp] = ue;
-  } else {
-      ue = (*it).second;
-  }
-  return ue;
-}
-
-extern "C" void Tau_pure_userevent(void **ptr, const char* name)
-{
-  TauInternalFunctionGuard protects_this_function;
-  TauUserEvent *ue = Tau_find_userevent_internal(name, false);
-  *ptr = (void *) ue;
-}
-
-extern "C" void Tau_pure_userevent_signal_safe(void **ptr, const char* name)
-{
-  TauInternalFunctionGuard protects_this_function;
-  TauUserEvent *ue = Tau_find_userevent_internal(name, true);
-  *ptr = (void *) ue;
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_context_userevent(void *ue, double data) {
   TauInternalFunctionGuard protects_this_function;
   TauContextUserEvent *t = (TauContextUserEvent *) ue;
   t->TriggerEvent(data);
 }
 
-
-///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trigger_context_event_thread(const char *name, double data, int tid) {
   TauInternalFunctionGuard protects_this_function;
   void *ue;
-  Tau_pure_context_userevent(&ue, name);
+  Tau_get_context_userevent(&ue, name);
   Tau_context_userevent_thread(ue, data, tid);
 }
 
@@ -2095,23 +2061,21 @@ extern "C" void Tau_trigger_context_event_thread(const char *name, double data, 
 extern "C" void Tau_trigger_context_event(const char *name, double data) {
   TauInternalFunctionGuard protects_this_function;
   void *ue;
-  Tau_pure_context_userevent(&ue, name);
+  Tau_get_context_userevent(&ue, name);
   Tau_context_userevent(ue, data);
 }
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trigger_userevent(const char *name, double data) {
   TauInternalFunctionGuard protects_this_function;
-  void *ue;
-  Tau_pure_userevent(&ue, name);
+  void *ue = Tau_get_userevent(name);
   Tau_userevent(ue, data);
 }
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trigger_userevent_thread(const char *name, double data, int tid) {
   TauInternalFunctionGuard protects_this_function;
-  void *ue;
-  Tau_pure_userevent(&ue, name);
+  void *ue = Tau_get_userevent(name);
   Tau_userevent_thread(ue, data, tid);
 }
 
@@ -3093,14 +3057,13 @@ void Tau_destructor_trigger() {
   TauTraceOTF2ToggleFlushAtExit(true);
 #endif
   Tau_flush_gpu_activity();
-// First, make sure all thread timers have stopped
-  Tau_profile_exit_all_threads();
+  // make sure TAU doesn't profile the IO
+  Tau_global_incr_insideTAU();
 #ifdef TAU_USE_OMPT_5_0
   Tau_ompt_finalize();
 #endif
-#ifdef TAU_OPENMP
-  //Tau_finalize_collector_api();
-#endif
+// First, make sure all thread timers have stopped
+  Tau_profile_exit_all_threads();
   Tau_memory_wrapper_disable();
 //#ifndef JAVA
   Tau_stop_top_level_timer_if_necessary();

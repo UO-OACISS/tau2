@@ -11,7 +11,7 @@ extern "C" void Tau_cupti_set_offset(double cpu_gpu_offset) {
 extern "C" void Tau_cupti_find_context_event(
         TauContextUserEvent** u,
         const char *name, bool context) {
-    Tau_pure_context_userevent((void **) u, name);
+    Tau_get_context_userevent((void **) u, name);
     (*u)->SetContextEnabled(context);
 }
 

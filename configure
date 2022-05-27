@@ -1349,7 +1349,7 @@ for arg in "$@"; do
 
 	-fortran=*)
 	    myarg=`echo $arg | sed 's/-fortran=//'`
-	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran-5 -o $myarg = gfortran-6 -o $myarg = gfortran-7 -o $myarg = gfortran-8 -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf -o $myarg = armflang -o $myarg = xlflang -o $myarg = ftn -o $myarg = flang -o $myarg = f18 -o $myarg = nfort -o $myarg = mpinfort -o $myarg = nvfortran -o $myarg = amdflang ] ; then
+	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = ifx -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran-5 -o $myarg = gfortran-6 -o $myarg = gfortran-7 -o $myarg = gfortran-8 -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf -o $myarg = armflang -o $myarg = xlflang -o $myarg = ftn -o $myarg = flang -o $myarg = f18 -o $myarg = nfort -o $myarg = mpinfort -o $myarg = nvfortran -o $myarg = amdflang ] ; then
 		fortran_compiler_specified=yes
 		if [ $myarg = gnu ] ; then
 		    fortran_compiler=gfortran
@@ -4695,7 +4695,7 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
   	    echo "NOTE: Found $mpif90_exe in the path...trying to auto-configure compilers and flags..."
               fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
   	    echo "NOTE: detected $fortran_compiler"
-              if [ "x$fortran_compiler" = "xifort" ]; then
+              if [ "x$fortran_compiler" = "xifort" -o "x$fortran_compiler" = "xifx" ]; then
   		fortran_compiler=intel
   	    fi
               if [ "x$fortran_compiler" = "xxlf_r" -o "x$fortran_compiler" = "xxlf90_r"  -o "x$fortran_compiler" = "xxlf90" -o "x$fortran_compiler" = "xxlf2008_r" ]; then
@@ -5213,7 +5213,7 @@ case $cxx_compiler in
 	intel=yes
 	if [ $fortran_compiler = no ]
 	then
-            intelifort=`which ifort 2>/dev/null`
+            intelifort=`which ifx 2>/dev/null`
             if [ "y$intelifort" != "y"  -a -x "$intelifort" ] ; then
 		fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
 		fortran_compiler=intel
@@ -5640,6 +5640,18 @@ case $fortran_compiler in
 		extradir=`which ifort | sed -e 's/\/bin\/ifort$//'`
             fi
 	fi
+	;;
+    ifx) 
+	if [ $cxx_compiler = icpx ]
+	then 
+	  echo "Default Fortran compiler will be Intel ifx"
+          fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
+          intelifort=`which ifx 2>/dev/null`
+          if [ "y$intelifort" != "y" -a -x "$intelifort" ]
+          then
+	    extradir=`which ifx | sed -e 's/\/bin\/ifx$//'`
+          fi
+        fi
 	;;
     no)
 	;;
