@@ -270,6 +270,8 @@ public:
     }
 };
 
+bool& Tau_is_destroyed(void);
+
 // If a thread exits through pthread_exit(), we will never return
 // to the tau_ptrhead_function() wrapper and could end up not stopping
 // the timer. We use a pthread cleanup function to handle stopping
@@ -284,7 +286,7 @@ void tau_pthread_function_cleanup_handler(void * args) {
   // which would trigger this handler. However, if thread 0 has exited,
   // TAU may have already shut down. If TAU has already shut down,
   // there's nothing to do here.
-  if(Tau_global_getLightsOut()) {
+  if(Tau_global_getLightsOut() || Tau_is_destroyed()) {
       return;
   }
   tau_pthread_wrapper_args_t * wrapper_args = (tau_pthread_wrapper_args_t *)args;

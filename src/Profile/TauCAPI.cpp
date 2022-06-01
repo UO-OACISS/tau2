@@ -245,7 +245,12 @@ __declspec(thread) int lightsOut = 0;
 #elif defined (TAU_USE_PGS)
 #include "TauPthreadGlobal.h"
 #endif
+/* This is the ONE flag that indicates whether thread 0 has exited. */
+static bool tauIsDestroyed = false;
 
+bool& Tau_is_destroyed(void) {
+    return tauIsDestroyed;
+}
 
 static void Tau_stack_checkInit() {
   static bool init = false;
@@ -3059,6 +3064,8 @@ void Tau_destructor_trigger() {
 #ifdef TAU_USE_OMPT_5_0
   Tau_ompt_finalize();
 #endif
+  // prevent any threads from handling their own exit
+  tauIsDestroyed = true;
 // First, make sure all thread timers have stopped
   Tau_profile_exit_all_threads();
   Tau_memory_wrapper_disable();
