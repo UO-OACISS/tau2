@@ -303,13 +303,6 @@ void tau_pthread_function_cleanup_handler(void * args) {
   // canceled early, we may have returned here without stopping
   // other timers on the stack.
   Tau_stop_all_timers(Tau_get_thread());
-  /* iterate over the stack and stop the timer context */
-  if (TauEnv_get_threadContext() && wrapper_args->pack->timer_context_stack.size() > 0) {
-    for (std::vector<FunctionInfo*>::iterator iter = wrapper_args->pack->timer_context_stack.end() ;
-        iter != wrapper_args->pack->timer_context_stack.begin() ; iter--) {
-  	    Tau_stop_timer(*iter, Tau_get_thread());
-    }
-  }
 #ifndef TAU_TBB_SUPPORT
   // Thread 0 in TBB will not wait for the other threads to finish
   // (it does not join). DO NOT stop the timer for this thread, but
