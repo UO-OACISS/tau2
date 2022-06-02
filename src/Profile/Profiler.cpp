@@ -1654,14 +1654,16 @@ int TauProfiler_StoreData(int tid)
    * support.  For some reason, thread 0 is getting its myThread()
    * value changed from 0, still need to investigate that. */
     if (RtsLayer::myThread() == 0 && tid == 0) {
-    /* clean up other threads? */
-    for (int i = 1; i < RtsLayer::getTotalThreads(); i++) {
-      TAU_VERBOSE("Thread 0 checking other threads... i = %d\n", i);
-      if (TauInternal_CurrentProfiler(i)) {
-        TAU_VERBOSE("Thread 0 writing data for thread %d\n", i);
-        TauProfiler_StoreData(i);
-      }
-    }
+        if (TauEnv_get_recycle_threads()) {
+            /* clean up other threads? */
+            for (int i = 1; i < RtsLayer::getTotalThreads(); i++) {
+                TAU_VERBOSE("Thread 0 checking other threads... i = %d\n", i);
+                if (TauInternal_CurrentProfiler(i)) {
+                    TAU_VERBOSE("Thread 0 writing data for thread %d\n", i);
+                    TauProfiler_StoreData(i);
+                }
+            }
+        }
 #ifndef TAU_MPI
 #ifndef TAU_SHMEM
 	/* Only thread 0 should create a merged profile. */

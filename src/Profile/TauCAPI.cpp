@@ -915,6 +915,10 @@ extern Profiler * Tau_get_timer_at_stack_depth_task(int pos, int tid) {
 extern "C" void Tau_stop_all_timers(int tid)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* Thread 0 can stop other threads' timers, and they could try to do
+     the same thing at the same time. So lock. */
+  static std::mutex mtx;
+  std::lock_guard<std::mutex> lck (mtx);
 
   //Make sure even throttled routines are stopped.
   while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
@@ -3009,7 +3013,7 @@ void Tau_destructor_trigger() {
 #ifndef TAU_WINDOWS
   // STOP ALL SAMPLING ON ALL THREADS!
   Tau_sampling_stop_sampling();
-#endif  
+#endif
 #ifdef TAU_OTF2
   TauTraceOTF2ToggleFlushAtExit(true);
 #endif
