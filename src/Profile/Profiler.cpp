@@ -1649,12 +1649,20 @@ extern "C" int Tau_print_metadata_for_traces(int tid) {
   }
   return 0;
 }
+
+bool& Tau_is_destroyed(void);
+
 // Store profile data at the end of execution (when top level timer stops)
 extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
   if(!TheSafeToDumpData()) {
+    return -1;
+  }
+  /* If TAU has already shut down and written data, return.
+   * This can happen if a thread outlives thread 0. */
+  if (RtsLayer::myThread() > 0 && Tau_is_destroyed()) {
     return -1;
   }
 #ifdef TAU_ENABLE_ROCM

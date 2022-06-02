@@ -3053,8 +3053,10 @@ void Tau_destructor_trigger() {
 
   FunctionInfo::disable_metric_cache();
   TAU_VERBOSE("executing Tau_destructor_trigger\n");
+#ifndef TAU_WINDOWS
   // STOP ALL SAMPLING ON ALL THREADS!
   Tau_sampling_stop_sampling();
+#endif  
 #ifdef TAU_OTF2
   TauTraceOTF2ToggleFlushAtExit(true);
 #endif

@@ -21,6 +21,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifndef TAU_WINDOWS
 #include <unistd.h>
 #include <sys/syscall.h>
 
@@ -30,6 +32,7 @@ pid_t tid = syscall(SYS_gettid);
 #else
 #error "SYS_gettid unavailable on this system"
 #endif
+#endif /*TAU_WINDOWS*/
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -527,7 +530,11 @@ int RtsLayer::LockDB(void) {
   thread_local static int old_frames;
 #endif
   // use the init value so the compiler doesn't complain
+#ifndef TAU_WINDOWS
   int tid=gettid();
+#else
+  int tid=localThreadId();
+#endif 
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 	TAU_ASSERT(Tau_global_get_insideTAU() > 0, "Thread is trying for DB lock but it is not in TAU");
 #ifdef DEBUG_LOCK_PROBLEMS
@@ -597,7 +604,11 @@ int RtsLayer::LockDB(void) {
 }
 
 int RtsLayer::UnLockDB(void) {
+#ifndef TAU_WINDOWS
   int tid=gettid();
+#else
+  int tid=localThreadID();
+#endif
   lockDBCount()--;
   if (lockDBCount() == 0) {
     threadUnLockDB();
