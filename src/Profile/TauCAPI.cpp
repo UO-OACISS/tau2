@@ -943,6 +943,10 @@ extern Profiler * Tau_get_timer_at_stack_depth_task(int pos, int tid) {
 extern "C" void Tau_stop_all_timers(int tid)
 {
   TauInternalFunctionGuard protects_this_function;
+  // prevent this thread from coming entering twice (from exit and from stop)
+  static thread_local bool in_here{false};
+  if (in_here) return;
+  in_here = true;
   /* Thread 0 can stop other threads' timers, and they could try to do
      the same thing at the same time. So lock. */
   static std::mutex mtx;
@@ -959,6 +963,7 @@ extern "C" void Tau_stop_all_timers(int tid)
       getTauThreadFlag(tid).Tau_global_stackpos--;
     }
   }
+  in_here = false;
 }
 
 inline void Tau_profile_exit_threads(int begin_index)
