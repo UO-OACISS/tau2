@@ -865,9 +865,12 @@ void TauProfiler_theFunctionList(const char ***inPtr, int *numFuncs, bool addNam
     //We do not want to pass back internal pointers.
     *inPtr = (char const **)malloc(sizeof(char *) * numberOfFunctions);
 
+  // don't iterate over the FunctionInfo vector without the lock!
+  RtsLayer::LockDB();
     for (int i = 0; i < numberOfFunctions; i++) {
       (*inPtr)[i] = TheFunctionDB()[i]->GetName();
     }
+  RtsLayer::UnLockDB();
     *numFuncs = numberOfFunctions;
   }
 }
@@ -1020,6 +1023,7 @@ void TauProfiler_getFunctionValues(const char **inFuncs, int numFuncs, double **
 
   TauProfiler_updateIntermediateStatistics(tid);
 
+  // don't iterate over the FunctionInfo vector without the lock!
   RtsLayer::LockDB();
 
   for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
@@ -1076,6 +1080,7 @@ void TauProfiler_PurgeData(int tid)
   Profiler *curr;
 
   DEBUGPROFMSG("Profiler::PurgeData( tid = "<<tid <<" ) "<<endl;);
+  // don't iterate over the FunctionInfo vector without the lock!
   RtsLayer::LockDB();
 
   // Reset The Function Database
@@ -1252,6 +1257,8 @@ int TauProfiler_updateIntermediateStatistics(int tid)
   // an index for iterating over counters
   int c;
 
+  // don't iterate over the FunctionInfo vector without the lock!
+  RtsLayer::LockDB();
   // iterate over all functions in the database.
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
@@ -1344,6 +1351,7 @@ int TauProfiler_updateIntermediateStatistics(int tid)
       //free(ExclTime);
     }
   }
+  RtsLayer::UnLockDB();
   return 0;
 }
 
@@ -1368,6 +1376,8 @@ static int matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs)
 // Writes function event data
 static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs, int numFuncs)
 {
+  // don't iterate over the FunctionInfo vector without the lock!
+  RtsLayer::LockDB();
     for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
         FunctionInfo & fi = **it;
 
@@ -1539,6 +1549,7 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
         fprintf(fp, "GROUP=\"%s\" \n", fi.GetAllGroups());
 
     } // for (it)
+  RtsLayer::UnLockDB();
 
     return 0;
 }
@@ -1551,6 +1562,8 @@ static int getTrueFunctionCount(int count, int tid, const char **inFuncs, int nu
   AtomicEventDB::iterator it2;
   const char *metricName = TauMetrics_getMetricAtomic(metric);
 
+  // don't iterate over the FunctionInfo vector without the lock!
+  RtsLayer::LockDB();
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
 
@@ -1589,6 +1602,7 @@ static int getTrueFunctionCount(int count, int tid, const char **inFuncs, int nu
 
     }
   }
+  RtsLayer::UnLockDB();
   return trueCount;
 }
 

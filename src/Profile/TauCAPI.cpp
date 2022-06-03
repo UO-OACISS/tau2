@@ -3060,8 +3060,9 @@ void Tau_destructor_trigger() {
   if (once) { return; }
   once = true;
 
-  FunctionInfo::disable_metric_cache();
-  TAU_VERBOSE("executing Tau_destructor_trigger\n");
+  FunctionInfo::disable_metric_cache(); //TODO: This may not be needed with fixes to object locking!
+  TAU_VERBOSE("Entering Tau_destructor_trigger...\n");
+
 #ifndef TAU_WINDOWS
   // STOP ALL SAMPLING ON ALL THREADS!
   Tau_sampling_stop_sampling();
@@ -3091,6 +3092,7 @@ void Tau_destructor_trigger() {
     TheSafeToDumpData() = 0;
 #endif
   }
+  TAU_VERBOSE("Exiting Tau_destructor_trigger!\n");
 }
 
 //////////////////////////////////////////////////////////////////////
