@@ -3014,7 +3014,7 @@ void Tau_destructor_trigger() {
   static bool once = false;
   if (once) { return; }
   once = true;
-  TAU_VERBOSE("executing Tau_destructor_trigger\n");
+  TAU_VERBOSE("Entering Tau_destructor_trigger...\n");
 #ifndef TAU_WINDOWS
   // STOP ALL SAMPLING ON ALL THREADS!
   Tau_sampling_stop_sampling();
@@ -3044,6 +3044,7 @@ void Tau_destructor_trigger() {
     TheSafeToDumpData() = 0;
 #endif
   }
+  TAU_VERBOSE("Exiting Tau_destructor_trigger!\n");
 }
 
 //////////////////////////////////////////////////////////////////////
