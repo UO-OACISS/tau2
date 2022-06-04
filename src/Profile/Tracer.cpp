@@ -59,7 +59,19 @@ struct TraceThreadData
 	bool allocated=false;
 };
 
-static vector<TraceThreadData*> ThreadList;
+struct TraceThreadVector : vector<TraceThreadData *>{
+    TraceThreadVector() {
+        // nothing
+    }
+
+    virtual ~TraceThreadVector(){
+        //destructed=true;
+        Tau_destructor_trigger();
+    }
+};
+
+
+static TraceThreadVector ThreadList;
 
 static inline void checkTracerVector(int tid){
 	while(ThreadList.size()<=tid){

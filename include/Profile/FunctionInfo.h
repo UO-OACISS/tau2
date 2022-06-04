@@ -187,6 +187,7 @@ struct FMetricListVector_local : vector<FunctionMetrics *>{
 
     virtual ~FMetricListVector_local(){
         destructed_local=true;
+	//Tau_destructor_trigger();
     }
 };
 
@@ -205,7 +206,7 @@ uint64_t function_info_id; // This is set in FunctionInfo::FunctionInfoInit()
 static bool use_metric_tls; // This is set to false to disable the thread-local cache during shutdown.
 static bool destructed;
 static thread_local bool destructed_local;
-
+//bool& Tau_is_destroyed(void);
 // getFunctionMetric(tid) returns the pointer to this instance's FunctionMetric 
 // for the given tid. Uses thread-local cache if tid = this thread.
 FunctionMetrics* getFunctionMetric(unsigned int tid){
