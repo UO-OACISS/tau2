@@ -229,7 +229,9 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
             }
         }
     }
-    
+   if(destructed_local || destructed){
+	return MOut;
+   }
     // Not in thread-local cache, or cache not searched.
     // Create a new FunctionMetrics instance.
     std::lock_guard<std::mutex> guard(fInfoVectorMutex);
