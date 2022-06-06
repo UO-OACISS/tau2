@@ -110,6 +110,10 @@ int Tau_plugin_skel_post_init(Tau_plugin_event_post_init_data_t* data) {
 /* This happens for special events from ADIOS, MPI */
 int Tau_plugin_skel_current_timer_exit(Tau_plugin_event_current_timer_exit_data_t* data) {
     if (!enabled) return 0;
+    /* We're going to use I/O, so make sure the iowrapper doesn't track what we do */
+    thread_local static bool inside{false};
+    if (inside) return 0;
+    inside = true;
     Tau_global_incr_insideTAU();
     // get the current profiler
     tau::Profiler * p = Tau_get_current_profiler();
@@ -129,6 +133,7 @@ int Tau_plugin_skel_current_timer_exit(Tau_plugin_event_current_timer_exit_data_
               << ", " << data->name_prefix << "},\n";
     mtx.unlock();
     Tau_global_decr_insideTAU();
+    inside = false;
     return 0;
 }
 
