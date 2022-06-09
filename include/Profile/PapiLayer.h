@@ -82,11 +82,11 @@ private:
   static PapiThreadList & ThePapiThreadList();
   
   static inline void checkPAPIVector(int tid){
+	RtsLayer::LockDB();  
 	while(ThePapiThreadList().size()<=tid){
-        RtsLayer::LockDB();
-		ThePapiThreadList().push_back(NULL);
-        RtsLayer::UnLockDB();
+	    ThePapiThreadList().push_back(NULL);
 	}
+	RtsLayer::UnLockDB();
 }
 };
 

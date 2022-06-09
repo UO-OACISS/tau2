@@ -236,14 +236,14 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     // Create a new FunctionMetrics instance.
     std::lock_guard<std::mutex> guard(fInfoVectorMutex);
     while(FMetricList.size()<=tid){
-		FMetricList.push_back(new FunctionMetrics());
+	FMetricList.push_back(new FunctionMetrics());
         
         if(setPathHistograms){//TODO: DYNAPROF
             int topThread=FMetricList.size()-1;
             FMetricList[topThread]->pathHistogram=new TauPathHashTable<TauPathAccumulator>(topThread);
         }
         
-	}
+    }
     
     MOut=FMetricList[tid];
 
