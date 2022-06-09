@@ -38,7 +38,6 @@ fi
 
 # Default makefile sed commands.  Returns things to normal
 echo "s/\(.*\)#ENDIF#\(.*\)/$bs\2$bs\1#ENDIF#/g" >> $sedout
-
 ###############################################################
 # PARSE AN ARGUMENT
 ###############################################################
@@ -568,8 +567,15 @@ case $1 in
 	#echo "Using PYTHON INCLUDE DIR =" $pythoninc
 	;;
 
+     pythonlibrary=*)
+        pythonlibrary=`echo $1 | sed -e 's/^pythonlibrary=//'`
+	;;
+
      pythonlib=*)
         pythonlib=`echo $1 | sed -e 's/^pythonlib=//'`
+	if [ "x$pythonlibrary" != "x"  ] ; then
+	  pythonlib_full="$pythonlib/$pythonlibrary"
+	else
 	# Discover python library version
 	for subdir in "" ".." "python*" ; do
           for ext in "so" "dylib" ; do
@@ -588,6 +594,7 @@ case $1 in
           done
         done
 	pythonlib_full="$pythonlib/lib$pythonso.$ext"
+	fi
 	if [ ! -f "$pythonlib_full" ] ; then
 	  echo "ERROR: Cannot find python library (libpython*.[so|dylib]"
 	  exit 1

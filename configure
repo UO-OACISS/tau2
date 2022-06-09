@@ -694,6 +694,8 @@ usage() {
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
+    echo "-pythonlibrary=<library> ......... Specify name of Python library file."
+    echo "                                   e.g. libpython3.10.so"
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
     echo "-mpit ............................... Enable MPI-T profiling interface."
     echo "-llvm_src=<dir> ......................... Path to the LLVM source tree "
@@ -1037,6 +1039,7 @@ extra_linker_args=
 pythoninc=
 pythonlib=
 python=no
+pythonlibrary=
 sicortex=no
 extradir=
 extrashlibopts=
@@ -2536,6 +2539,12 @@ for arg in "$@"; do
 	    python=yes
 	    shift
 	    ;;
+
+	-pythonlibrary=*)
+            pythonlibrary=`echo $arg | sed -e 's/-pythonlibrary=//' -e 's/#/ /g'`
+            shift
+            ;;
+
 
 	-opt=*)
 	    useropt=`echo $arg | sed -e 's/-opt=//' -e 's/ /_/g'`
@@ -10642,6 +10651,13 @@ if [ $sproc = yes ] ; then
 fi
 
 if [ $python = yes ] ; then
+    if [ "x$pythonlibrary" != "x" ] ; then
+        if [ ! -f $pythonlib/$pythonlibrary ] ; then
+		echo "ERROR: Python library $pythonlib/$pythonlibrary not found."
+		exit 1
+	fi
+    	fixmakeargs="$fixmakeargs pythonlibrary=$pythonlibrary"
+    fi
     fixmakeargs="$fixmakeargs PYTHON pythoninc=$pythoninc pythonlib=$pythonlib"
     tauoptions="${tauoptions}-python"
     if [ $machine = rs6000 -a "x$pythonlib" = "x" ] ; then
