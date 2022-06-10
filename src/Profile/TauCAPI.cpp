@@ -211,7 +211,12 @@ __declspec(thread) int lightsOut = 0;
 #elif defined (TAU_USE_PGS)
 #include "TauPthreadGlobal.h"
 #endif
+/* This is the ONE flag that indicates whether thread 0 has exited. */
+static bool tauIsDestroyed = false;
 
+bool& Tau_is_destroyed(void) {
+    return tauIsDestroyed;
+}
 
 static void Tau_stack_checkInit() {
   static bool init = false;
@@ -910,6 +915,14 @@ extern Profiler * Tau_get_timer_at_stack_depth_task(int pos, int tid) {
 extern "C" void Tau_stop_all_timers(int tid)
 {
   TauInternalFunctionGuard protects_this_function;
+  // prevent this thread from coming entering twice (from exit and from stop)
+  static thread_local bool in_here{false};
+  if (in_here) return;
+  in_here = true;
+  /* Thread 0 can stop other threads' timers, and they could try to do
+     the same thing at the same time. So lock. */
+  static std::mutex mtx;
+  std::lock_guard<std::mutex> lck (mtx);
 
   //Make sure even throttled routines are stopped.
   while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
@@ -922,6 +935,7 @@ extern "C" void Tau_stop_all_timers(int tid)
       Tau_thread_flags[tid].Tau_global_stackpos--;
     }
   }
+  in_here = false;
 }
 
 inline void Tau_profile_exit_threads(int begin_index)
@@ -3000,9 +3014,11 @@ void Tau_destructor_trigger() {
   static bool once = false;
   if (once) { return; }
   once = true;
-  TAU_VERBOSE("executing Tau_destructor_trigger\n");
+  TAU_VERBOSE("Entering Tau_destructor_trigger...\n");
+#ifndef TAU_WINDOWS
   // STOP ALL SAMPLING ON ALL THREADS!
   Tau_sampling_stop_sampling();
+#endif
 #ifdef TAU_OTF2
   TauTraceOTF2ToggleFlushAtExit(true);
 #endif
@@ -3012,6 +3028,8 @@ void Tau_destructor_trigger() {
 #ifdef TAU_USE_OMPT_5_0
   Tau_ompt_finalize();
 #endif
+  // prevent any threads from handling their own exit
+  tauIsDestroyed = true;
 // First, make sure all thread timers have stopped
   Tau_profile_exit_all_threads();
   Tau_memory_wrapper_disable();
@@ -3026,6 +3044,7 @@ void Tau_destructor_trigger() {
     TheSafeToDumpData() = 0;
 #endif
   }
+  TAU_VERBOSE("Exiting Tau_destructor_trigger!\n");
 }
 
 //////////////////////////////////////////////////////////////////////

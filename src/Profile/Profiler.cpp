@@ -279,7 +279,7 @@ void Profiler::Start(int tid)
   // get the timers read just after initialization.
 #ifndef TAU_SCOREP
   if (TimeStamp == 0L) {
-#if !defined(TAU_USE_OMPT_5_0) || !defined(TAU_GPU) // this can happen with OMPT async threads
+#if !defined(TAU_USE_OMPT_5_0) && !defined(TAU_GPU) // this can happen with OMPT async threads
     printf("Got a bogus start! %d %s\n", tid, ThisFunction->GetName());
 #endif
     TauMetrics_getDefaults(tid, StartTime, 1);
@@ -787,9 +787,12 @@ void TauProfiler_theFunctionList(const char ***inPtr, int *numFuncs, bool addNam
     //We do not want to pass back internal pointers.
     *inPtr = (char const **)malloc(sizeof(char *) * numberOfFunctions);
 
+  // don't iterate over the FunctionInfo vector without the lock!
+  RtsLayer::LockDB();
     for (int i = 0; i < numberOfFunctions; i++) {
       (*inPtr)[i] = TheFunctionDB()[i]->GetName();
     }
+  RtsLayer::UnLockDB();
     *numFuncs = numberOfFunctions;
   }
 }
@@ -942,6 +945,7 @@ void TauProfiler_getFunctionValues(const char **inFuncs, int numFuncs, double **
 
   TauProfiler_updateIntermediateStatistics(tid);
 
+  // don't iterate over the FunctionInfo vector without the lock!
   RtsLayer::LockDB();
 
   for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
@@ -998,6 +1002,7 @@ void TauProfiler_PurgeData(int tid)
   Profiler *curr;
 
   DEBUGPROFMSG("Profiler::PurgeData( tid = "<<tid <<" ) "<<endl;);
+  // don't iterate over the FunctionInfo vector without the lock!
   RtsLayer::LockDB();
 
   // Reset The Function Database
@@ -1174,6 +1179,8 @@ int TauProfiler_updateIntermediateStatistics(int tid)
   // an index for iterating over counters
   int c;
 
+  // don't iterate over the FunctionInfo vector without the lock!
+  RtsLayer::LockDB();
   // iterate over all functions in the database.
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
@@ -1263,6 +1270,7 @@ int TauProfiler_updateIntermediateStatistics(int tid)
       //free(ExclTime);
     }
   }
+  RtsLayer::UnLockDB();
   return 0;
 }
 
@@ -1287,6 +1295,8 @@ static int matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs)
 // Writes function event data
 static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs, int numFuncs)
 {
+  // don't iterate over the FunctionInfo vector without the lock!
+  RtsLayer::LockDB();
     for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
         FunctionInfo & fi = **it;
 
@@ -1458,6 +1468,7 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
         fprintf(fp, "GROUP=\"%s\" \n", fi.GetAllGroups());
 
     } // for (it)
+  RtsLayer::UnLockDB();
 
     return 0;
 }
@@ -1470,6 +1481,8 @@ static int getTrueFunctionCount(int count, int tid, const char **inFuncs, int nu
   AtomicEventDB::iterator it2;
   const char *metricName = TauMetrics_getMetricAtomic(metric);
 
+  // don't iterate over the FunctionInfo vector without the lock!
+  RtsLayer::LockDB();
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
 
@@ -1508,6 +1521,7 @@ static int getTrueFunctionCount(int count, int tid, const char **inFuncs, int nu
 
     }
   }
+  RtsLayer::UnLockDB();
   return trueCount;
 }
 
@@ -1551,12 +1565,20 @@ extern "C" int Tau_print_metadata_for_traces(int tid) {
   }
   return 0;
 }
+
+bool& Tau_is_destroyed(void);
+
 // Store profile data at the end of execution (when top level timer stops)
 extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
   if(!TheSafeToDumpData()) {
+    return -1;
+  }
+  /* If TAU has already shut down and written data, return.
+   * This can happen if a thread outlives thread 0. */
+  if (RtsLayer::myThread() > 0 && Tau_is_destroyed()) {
     return -1;
   }
 #ifdef TAU_ENABLE_ROCM
@@ -1646,14 +1668,16 @@ int TauProfiler_StoreData(int tid)
    * support.  For some reason, thread 0 is getting its myThread()
    * value changed from 0, still need to investigate that. */
     if (RtsLayer::myThread() == 0 && tid == 0) {
-    /* clean up other threads? */
-    for (int i = 1; i < RtsLayer::getTotalThreads(); i++) {
-      TAU_VERBOSE("Thread 0 checking other threads... i = %d\n", i);
-      if (TauInternal_CurrentProfiler(i)) {
-        TAU_VERBOSE("Thread 0 writing data for thread %d\n", i);
-        TauProfiler_StoreData(i);
-      }
-    }
+        if (TauEnv_get_recycle_threads()) {
+            /* clean up other threads? */
+            for (int i = 1; i < RtsLayer::getTotalThreads(); i++) {
+                TAU_VERBOSE("Thread 0 checking other threads... i = %d\n", i);
+                if (TauInternal_CurrentProfiler(i)) {
+                    TAU_VERBOSE("Thread 0 writing data for thread %d\n", i);
+                    TauProfiler_StoreData(i);
+                }
+            }
+        }
 #ifndef TAU_MPI
 #ifndef TAU_SHMEM
 	/* Only thread 0 should create a merged profile. */

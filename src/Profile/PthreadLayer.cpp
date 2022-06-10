@@ -270,6 +270,8 @@ public:
     }
 };
 
+bool& Tau_is_destroyed(void);
+
 // If a thread exits through pthread_exit(), we will never return
 // to the tau_ptrhead_function() wrapper and could end up not stopping
 // the timer. We use a pthread cleanup function to handle stopping
@@ -284,7 +286,7 @@ void tau_pthread_function_cleanup_handler(void * args) {
   // which would trigger this handler. However, if thread 0 has exited,
   // TAU may have already shut down. If TAU has already shut down,
   // there's nothing to do here.
-  if(Tau_global_getLightsOut()) {
+  if(Tau_global_getLightsOut() || Tau_is_destroyed()) {
       return;
   }
   tau_pthread_wrapper_args_t * wrapper_args = (tau_pthread_wrapper_args_t *)args;
@@ -301,13 +303,6 @@ void tau_pthread_function_cleanup_handler(void * args) {
   // canceled early, we may have returned here without stopping
   // other timers on the stack.
   Tau_stop_all_timers(Tau_get_thread());
-  /* iterate over the stack and stop the timer context */
-  if (TauEnv_get_threadContext() && wrapper_args->pack->timer_context_stack.size() > 0) {
-    for (std::vector<FunctionInfo*>::iterator iter = wrapper_args->pack->timer_context_stack.end() ;
-        iter != wrapper_args->pack->timer_context_stack.begin() ; iter--) {
-  	    Tau_stop_timer(*iter, Tau_get_thread());
-    }
-  }
 #ifndef TAU_TBB_SUPPORT
   // Thread 0 in TBB will not wait for the other threads to finish
   // (it does not join). DO NOT stop the timer for this thread, but
