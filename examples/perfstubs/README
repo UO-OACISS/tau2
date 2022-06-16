@@ -45,7 +45,7 @@ NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
 
 
 
-- You can also use "cmake ." or "./download_compile.sh" to automatically download and compile the examples,
+- You can also use "cmake . && make" or "./download_compile.sh" to automatically download and compile the examples,
 	cmake will compile and create a copy of the example file in this directory
 
 
