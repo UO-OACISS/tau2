@@ -71,12 +71,56 @@ struct TraceThreadVector : vector<TraceThreadData *>{
 };
 
 
-static TraceThreadVector ThreadList;
+struct TraceThreadVector_local : vector<TraceThreadData *>{
+    TraceThreadVector_local() {
+        // nothing
+    }
 
-static inline void checkTracerVector(int tid){
+    virtual ~TraceThreadVector_local(){
+        //destructed=true;
+        //Tau_destructor_trigger();
+    }
+};
+
+std::mutex TraceThreadListMutex;
+static TraceThreadVector ThreadList;
+static thread_local TraceThreadVector_local  ThreadListCache; 
+
+static TraceThreadData* getTracerVector(int tid){
+
+  TraceThreadData* TVOut=NULL;
+  static thread_local const unsigned int local_tid = RtsLayer::myThread();
+  
+  if(tid!=0 && (tid == local_tid)){// use_metric_tls && !destructed && !destructed_local) {
+        if(ThreadListCache.size() > tid) {
+            TVOut = ThreadListCache.operator[](tid);
+            if(TVOut != NULL) {
+                return TVOut;
+            }
+        }
+    }
+   //if(destructed_local || destructed){return MOut;}
+  
+  
+      // Not in thread-local cache, or cache not searched.
+    // Create a new FunctionMetrics instance.
+  std::lock_guard<std::mutex> guard(TraceThreadListMutex);
 	while(ThreadList.size()<=tid){
 		ThreadList.push_back(new TraceThreadData());
 	}
+    
+    TVOut=ThreadList[tid];
+
+    // Use thread-local optimization if the current thread is requesting its own metrics.
+    if(tid !=0 && (tid == local_tid)) { //use_metric_tls && 
+        // Ensure the FMetricList vector is long enough to accomodate the new cached item.
+        while(ThreadListCache.size() <= tid) {
+            ThreadListCache.push_back(NULL);
+        }    
+        // Store the FunctionMetrics pointer in the thread-local cache
+        ThreadListCache.operator[](tid) = TVOut;
+    } 
+ return TVOut;
 }
 
 /* Trace buffer */
@@ -84,39 +128,39 @@ static inline void checkTracerVector(int tid){
 
 //static TAU_EV *TraceBuffer[TAU_MAX_THREADS]; 
 static inline TAU_EV* getTraceBuffer(int tid){
-	checkTracerVector(tid);
-	return ThreadList[tid]->TraceBuffer;
+	//checkTracerVector(tid);
+	return getTracerVector(tid)->TraceBuffer;
 }
 static inline void setTraceBuffer(int tid, TAU_EV* value){
-	checkTracerVector(tid);
-	ThreadList[tid]->TraceBuffer=value;
+	//checkTracerVector(tid);
+	getTracerVector(tid)->TraceBuffer=value;
 }
 
 /* Trace buffer pointer for each threads */
 //static unsigned int TauCurrentEvent[TAU_MAX_THREADS] = {0}; 
 static inline unsigned int getTauCurrentEvent(int tid){
-	checkTracerVector(tid);
-	return ThreadList[tid]->TauCurrentEvent;
+	//checkTracerVector(tid);
+	return getTracerVector(tid)->TauCurrentEvent;
 }
 static inline void incrementTauCurrentEvent(int tid){
-	checkTracerVector(tid);
-	ThreadList[tid]->TauCurrentEvent++;
+	//checkTracerVector(tid);
+	getTracerVector(tid)->TauCurrentEvent++;
 }
 static inline void resetTauCurrentEvent(int tid){
-	checkTracerVector(tid);
-	ThreadList[tid]->TauCurrentEvent=0;
+	//checkTracerVector(tid);
+	getTracerVector(tid)->TauCurrentEvent=0;
 }
 
 /* Trace file descriptors */
 //static int TauTraceFd[TAU_MAX_THREADS] = {0};
 static inline int setTauTraceFd(int tid, int value){
-	checkTracerVector(tid);
-	ThreadList[tid]->TauTraceFd=value;
+	//checkTracerVector(tid);
+	getTracerVector(tid)->TauTraceFd=value;
 	return value;
 }
 static inline int getTauTraceFd(int tid){
-	checkTracerVector(tid);
-	return ThreadList[tid]->TauTraceFd;
+	//checkTracerVector(tid);
+	return getTracerVector(tid)->TauTraceFd;
 }
 
 /* Flags for whether or not EDF files need to be rewritten when this thread's
@@ -128,21 +172,21 @@ static std::atomic<int> TauTraceFlushEvents{0};
 /* Initialization status flags */
 //static int TauTraceInitialized[TAU_MAX_THREADS] = {0};
 static inline int getTauTraceInitialized(int tid){
-	checkTracerVector(tid);
-	return ThreadList[tid]->TauTraceInitialized;
+	//checkTracerVector(tid);
+	return getTracerVector(tid)->TauTraceInitialized;
 }
 static inline void setTauTraceInitialized(int tid, int value){
-	checkTracerVector(tid);
-	ThreadList[tid]->TauTraceInitialized=value;
+	//checkTracerVector(tid);
+	getTracerVector(tid)->TauTraceInitialized=value;
 }
 //static int TraceFileInitialized[TAU_MAX_THREADS] = {0};
 static inline int getTraceFileInitialized(int tid){
-	checkTracerVector(tid);
-	return ThreadList[tid]->TraceFileInitialized;
+	//checkTracerVector(tid);
+	return getTracerVector(tid)->TraceFileInitialized;
 }
 static inline void setTraceFileInitialized(int tid){
-	checkTracerVector(tid);
-	ThreadList[tid]->TraceFileInitialized=1;
+	//checkTracerVector(tid);
+	getTracerVector(tid)->TraceFileInitialized=1;
 }
 //static double tracerValues[TAU_MAX_COUNTERS] = {0};
 
@@ -336,13 +380,13 @@ bool *TauBufferAllocated() {
 }*/ //TODO: Remove once validated
 
 static inline bool getTauBufferAllocated(int tid){
-	checkTracerVector(tid);
-	return ThreadList[tid]->allocated;
+	//checkTracerVector(tid);
+	return getTracerVector(tid)->allocated;
 }
 
 static inline void setTauBufferAllocated(int tid, bool value){
-	checkTracerVector(tid);
-	ThreadList[tid]->allocated=value;
+	//checkTracerVector(tid);
+	getTracerVector(tid)->allocated=value;
 }
 
 /* Initialize tracing. TauTraceInit should be called in every trace routine to ensure that
