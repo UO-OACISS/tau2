@@ -1,0 +1,58 @@
+In this example the perfstubs library is needed. It can be downloaded from:
+https://github.com/UO-OACISS/perfstubs
+
+
+-For this example to work, first compile TAU with:
+	- ./configure -bfd=download -pthread
+
+
+We use the examples included in perfstubs and the following steps are necessary:
+- Download perfstubs:
+	- git clone https://github.com/UO-OACISS/perfstubs
+- Generate a folder for the compilation:
+	- mkdir compile
+	- cd compile
+- Compile filestubs and the examples:
+	- cmake -DPERFSTUBS_BUILD_EXAMPLES=TRUE ../perfstubs
+	- make
+- Execute TAU
+	- tau_exec -T pthread ./perfstubs_test_api_c_no_tool
+- Check Results
+	- pprof
+
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0           30           31           1           1      31454 .TAU application
+  2.8        0.278        0.891           1           1        891 main 
+  1.9        0.598        0.613           1           5        613 timer
+  0.0        0.007        0.007           1           0          7 iter[0]
+  0.0        0.002        0.002           1           0          2 iter[1]
+  0.0        0.002        0.002           1           0          2 iter[2]
+  0.0        0.002        0.002           1           0          2 iter[3]
+  0.0        0.002        0.002           1           0          2 iter[4]
+---------------------------------------------------------------------------------------
+
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         1         15         15         15          0  counter
+
+
+
+- You can also use "cmake . && make" or "./download_compile.sh" to automatically download and compile the examples,
+	cmake will compile and create a copy of the example file in this directory
+
+
+
+
+- More examples can be generated modifying the code in perfstub/examples
+  if a new example is generated, it should be included in perfstub/examples/CMakeLists.txt
+  for its correct compilation
+
+
