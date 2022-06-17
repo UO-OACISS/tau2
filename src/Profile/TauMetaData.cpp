@@ -361,6 +361,7 @@ int Tau_metadata_fillMetaData()
 {
 #ifndef TAU_DISABLE_METADATA
   if(TauEnv_get_disable_metadata()) {
+    TAU_VERBOSE("Metadata is being skipped because TAU_DISABLE_METADATA is set\n");
     return 0;
   }
   int anonymize=TauEnv_get_anonymize_enabled();
