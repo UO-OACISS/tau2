@@ -592,6 +592,8 @@ on_ompt_callback_parallel_end(
 
     if(once) {
       tau_fix_initialize();
+      // The OpenMP runtime is initialized now, so we can fill OpenMP-runtime-related metadata
+      Tau_metadata_fillOpenMPMetaData();
       once = 0;
     }
 
@@ -1826,8 +1828,6 @@ extern "C" int ompt_initialize(
 
   // Overheads unclear currently
   
-  // The OpenMP runtime is initialized now, so we can fill OpenMP-runtime-related metadata
-  Tau_metadata_fillOpenMPMetaData();
 
   initialized = true;
   initializing = false;
