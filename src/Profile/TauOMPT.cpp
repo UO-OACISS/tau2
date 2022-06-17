@@ -43,6 +43,7 @@
 #include <assert.h>
 #include <unordered_map>
 #include <Profile/TauGpuAdapterOpenMP.h>
+#include <Profile/TauMetaData.h>
 #include <atomic>
 #include <array>
 #include <iostream>
@@ -1824,6 +1825,9 @@ extern "C" int ompt_initialize(
   }
 
   // Overheads unclear currently
+  
+  // The OpenMP runtime is initialized now, so we can fill OpenMP-runtime-related metadata
+  Tau_metadata_fillOpenMPMetaData();
 
   initialized = true;
   initializing = false;

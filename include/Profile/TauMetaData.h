@@ -138,4 +138,6 @@ char* Tau_metadata_get(const char *name, int tid);
 
 void Tau_metadata_push_to_plugins(void);
 
+int Tau_metadata_fillOpenMPMetaData(void);
+
 #endif /* _TAU_METADATA_H_ */

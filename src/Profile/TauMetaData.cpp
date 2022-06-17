@@ -833,6 +833,14 @@ Mems_allowed_list:	0-3
     }
   }
 
+
+#endif // TAU_DISABLE_METADATA
+
+  return 0;
+}
+
+// OpenMP metadata can't be collected until the OpenMP runtime is up.
+int Tau_metadata_fillOpenMPMetaData(void) {
 #ifdef _OPENMP
 #if defined(TAU_OPENMP) && !defined(TAU_MPC) && !defined(TAU_CLANG)
   /* Capture OpenMP version */
@@ -923,9 +931,6 @@ Mems_allowed_list:	0-3
 #endif // TAU_OPENMP && !TAU_MPC
 
 #endif // _OPENMP
-
-#endif // TAU_DISABLE_METADATA
-
   return 0;
 }
 
