@@ -64,29 +64,33 @@ struct TMMUnit
 #endif
 };
 
+std::mutex TMMVectorMutex;
 static vector<TMMUnit*> TMMList;
 
 inline void checkTMMVector(int tid){
 	while(TMMList.size()<=tid){
-        RtsLayer::LockDB();
+    //std::lock_guard<std::mutex> guard(TMMVectorMutex);
 		TMMList.push_back(new TMMUnit());
-        RtsLayer::UnLockDB();
 	}
 }
 
 inline TauMemMgrSummary& getMemSummary(int tid){
+    std::lock_guard<std::mutex> guard(TMMVectorMutex);
     checkTMMVector(tid);
     return TMMList[tid]->memSummary;
 }
 inline TauMemMgrInfo& getMemInfo(int tid,int block){
+    std::lock_guard<std::mutex> guard(TMMVectorMutex);    
     checkTMMVector(tid);
     return TMMList[tid]->memInfo[block];
 }
 inline int getMemSumSize(){
+  std::lock_guard<std::mutex> guard(TMMVectorMutex);
 	return TMMList.size();
 }
 #ifdef USE_RECYCLER
 inline __custom_map_t& getFreeChunks(int tid){
+    std::lock_guard<std::mutex> guard(TMMVectorMutex);
     checkTMMVector(tid);
     return TMMList[tid]->free_chunks;
 }
