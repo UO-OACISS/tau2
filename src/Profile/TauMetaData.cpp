@@ -360,6 +360,9 @@ const char *Tau_metadata_timeFormat = "%lld";
 int Tau_metadata_fillMetaData()
 {
 #ifndef TAU_DISABLE_METADATA
+  if(TauEnv_get_disable_metadata()) {
+    return 0;
+  }
   int anonymize=TauEnv_get_anonymize_enabled();
 
   static int filled = 0;
