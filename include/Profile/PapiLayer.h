@@ -80,13 +80,14 @@ private:
   };
   
   static PapiThreadList & ThePapiThreadList();
-  
+  static std::mutex papiVectorMutex; 
   static inline void checkPAPIVector(int tid){
-	RtsLayer::LockDB();  
+	//RtsLayer::LockDB();
+	std::lock_guard<std::mutex> guard(papiVectorMutex);  
 	while(ThePapiThreadList().size()<=tid){
 	    ThePapiThreadList().push_back(NULL);
 	}
-	RtsLayer::UnLockDB();
+	//RtsLayer::UnLockDB();
 }
 };
 
