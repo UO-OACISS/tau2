@@ -232,6 +232,7 @@ using namespace std;
 #define TAU_PTHREAD_STACK_SIZE_DEFAULT    0
 
 #define TAU_MERGE_METADATA_DEFAULT 0
+#define TAU_DISABLE_METADATA_DEFAULT 0
 
 #define TAU_MEM_CALLPATH_DEFAULT 0
 #define TAU_REGION_ADDRESSES_DEFAULT 0
@@ -373,6 +374,7 @@ static size_t env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
 static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
 static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
 static int env_merge_metadata = 1;
+static int env_disable_metadata = 0;
 
 static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
 static int env_papi_multiplexing = 0;
@@ -1350,6 +1352,10 @@ int TauEnv_get_pthread_stack_size() {
 
 int TauEnv_get_merge_metadata(){
   return env_merge_metadata;
+}
+
+int TauEnv_get_disable_metadata(){
+  return env_disable_metadata;
 }
 
 #ifdef TAU_ANDROID
@@ -2680,6 +2686,15 @@ void TauEnv_initialize()
     } else {
       env_merge_metadata = 0;
       TAU_VERBOSE("TAU: Metadata Merging Disabled\n");
+    }
+
+    tmp = getconf("TAU_DISABLE_METADATA");
+    if (parse_bool(tmp, TAU_DISABLE_METADATA_DEFAULT)) {
+      env_disable_metadata = 1;
+      TAU_VERBOSE("TAU: Metadata Disabled\n");
+    } else {
+      env_disable_metadata = 0;
+      TAU_VERBOSE("TAU: Metadata Enabled\n");
     }
 
 #if defined(TAU_TBB_SUPPORT) && defined(TAU_MPI)
