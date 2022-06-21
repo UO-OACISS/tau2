@@ -847,6 +847,7 @@ Mems_allowed_list:	0-3
 int Tau_metadata_fillOpenMPMetaData(void) {
 #ifdef _OPENMP
 #if defined(TAU_OPENMP) && !defined(TAU_MPC) && !defined(TAU_CLANG)
+  TAU_VERBOSE("Filling OpenMP-related metadata\n");
   /* Capture OpenMP version */
   Tau_metadata_register("OpenMP Version String", _OPENMP);
   Tau_metadata_register("OpenMP Version", TheOpenMPVersionMap().at(_OPENMP).c_str());
