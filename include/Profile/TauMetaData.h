@@ -131,6 +131,8 @@ void Tau_metadata_removeDuplicates(char *buffer, int buflen);
 
 void Tau_metadata_register(const char *name, int value);
 void Tau_metadata_register(const char *name, const char *value);
+void Tau_metadata_register_task(const char *name, int value, int tid);
+void Tau_metadata_register_task(const char *name, const char *value, int tid);
 
 int Tau_metadata_mergeMetaData();
 int Tau_write_metadata_records_in_scorep(int tid);
