@@ -357,6 +357,20 @@ void Tau_metadata_register(const char *name, const std::string &value) {
   Tau_metadata(name, value.c_str());
 }
 
+void Tau_metadata_register_task(const char *name, int value, int tid) {
+  char buf[256];
+  sprintf (buf, "%d", value);
+  Tau_metadata_task(name, buf, tid);
+}
+
+void Tau_metadata_register_task(const char *name, const char *value, int tid) {
+  Tau_metadata_task(name, value, tid);
+}
+
+void Tau_metadata_register_task(const char *name, const std::string &value, int tid) {
+  Tau_metadata_task(name, value.c_str(), tid);
+}
+
 #ifdef TAU_WINDOWS
 const char *Tau_metadata_timeFormat = "%I64d";
 #else
@@ -843,11 +857,24 @@ Mems_allowed_list:	0-3
     }
   }
 
+
+#endif // TAU_DISABLE_METADATA
+
+  return 0;
+}
+
+// OpenMP metadata can't be collected until the OpenMP runtime is up.
+// This function will be called from a helper thread created in TauOMPT.cpp
+// after OMPT is initialized. 
+// Metadata registered in this function is explicitly created on tid 0
+// so that it will propagate to every thread.
+int Tau_metadata_fillOpenMPMetaData(void) {
 #ifdef _OPENMP
 #if defined(TAU_OPENMP) && !defined(TAU_MPC) && !defined(TAU_CLANG)
+  TAU_VERBOSE("Filling OpenMP-related metadata\n");
   /* Capture OpenMP version */
-  Tau_metadata_register("OpenMP Version String", _OPENMP);
-  Tau_metadata_register("OpenMP Version", TheOpenMPVersionMap().at(_OPENMP).c_str());
+  Tau_metadata_register_task("OpenMP Version String", _OPENMP, 0);
+  Tau_metadata_register_task("OpenMP Version", TheOpenMPVersionMap().at(_OPENMP).c_str(), 0);
 
 // MPC wht OpenMP isn't initialized before TAU is, so these function calls will hang.
   const char* schedule;
@@ -865,43 +892,43 @@ Mems_allowed_list:	0-3
   } else {
       schedule = "UNKNOWN";
   }
-  Tau_metadata_register("OMP_SCHEDULE", schedule);
-  Tau_metadata_register("OMP_CHUNK_SIZE", modifier);
-  Tau_metadata_register("OMP_MAX_THREADS", omp_get_max_threads());
-  Tau_metadata_register("OMP_NUM_PROCS", omp_get_num_procs());
-  Tau_metadata_register("OMP_DYNAMIC", omp_get_dynamic() ? "TRUE" : "FALSE");
+  Tau_metadata_register_task("OMP_SCHEDULE", schedule, 0);
+  Tau_metadata_register_task("OMP_CHUNK_SIZE", modifier, 0);
+  Tau_metadata_register_task("OMP_MAX_THREADS", omp_get_max_threads(), 0);
+  Tau_metadata_register_task("OMP_NUM_PROCS", omp_get_num_procs(), 0);
+  Tau_metadata_register_task("OMP_DYNAMIC", omp_get_dynamic() ? "TRUE" : "FALSE", 0);
   // Deprecated
-  //Tau_metadata_register("OMP_NESTED", omp_get_nested() ? "TRUE" : "FALSE");
-  Tau_metadata_register("OMP_MAX_ACTIVE_LEVELS", omp_get_max_active_levels());
-  Tau_metadata_register("OMP_THREAD_LIMIT", omp_get_thread_limit());
+  //Tau_metadata_register_task("OMP_NESTED", omp_get_nested() ? "TRUE" : "FALSE", 0);
+  Tau_metadata_register_task("OMP_MAX_ACTIVE_LEVELS", omp_get_max_active_levels(), 0);
+  Tau_metadata_register_task("OMP_THREAD_LIMIT", omp_get_thread_limit(), 0);
 
 #if _OPENMP >= 201307 // OpenMP 4.0
-  Tau_metadata_register("OMP_PROC_BIND", omp_get_proc_bind() ? "TRUE" : "FALSE");
+  Tau_metadata_register_task("OMP_PROC_BIND", omp_get_proc_bind() ? "TRUE" : "FALSE", 0);
 #if !defined(__INTEL_COMPILER)
 /* Don't make this call for the Intel compiler!  It may compile, but without
  * MIC/KNL offload support, the linker will fail with really esoteric error messages
  * about either missing destructor in ~MetaDataRepo() or missing i_ofldbegin_target.o
  */
 #if !defined(TAU_CRAYCC_USE_CLANG)
-  Tau_metadata_register("OMP_DEFAULT_DEVICE", omp_get_default_device());
+  Tau_metadata_register_task("OMP_DEFAULT_DEVICE", omp_get_default_device(), 0);
 #endif
 #endif
 #if _OPENMP == 201307 && !defined(__PGI) // PGI claims 4.0, but is missing these implementations
-  Tau_metadata_register("OMP_CANCELLATION", omp_get_cancellation() ? "TRUE" : "FALSE");
-  Tau_metadata_register("OMP_NUM_DEVICES", omp_get_num_devices());
+  Tau_metadata_register_task("OMP_CANCELLATION", omp_get_cancellation() ? "TRUE" : "FALSE", 0);
+  Tau_metadata_register_task("OMP_NUM_DEVICES", omp_get_num_devices(), 0);
 #endif
 #endif
 
 #if _OPENMP >= 201511 // OpenMP 4.5
 #if (!defined (__PGI))
   // This API call crashes with NVCHPC 21.7, it doesn't tell us anything anyway
-  //Tau_metadata_register("OMP_MAX_TASK_PRIORITY", omp_get_max_task_priority());
+  //Tau_metadata_register_task("OMP_MAX_TASK_PRIORITY", omp_get_max_task_priority());
   char * omp_var = getenv("OMP_PLACES");
   if (omp_var != NULL) {
-    Tau_metadata_register("OMP_PLACES", omp_var);
+    Tau_metadata_register_task("OMP_PLACES", omp_var, 0);
   }
   auto places = omp_get_num_places();
-  Tau_metadata_register("OMP_NUM_PLACES", places);
+  Tau_metadata_register_task("OMP_NUM_PLACES", places, 0);
   stringstream ss_num;
   stringstream ss_ids;
   ss_num << "{";
@@ -925,17 +952,14 @@ Mems_allowed_list:	0-3
   }
   ss_num << "}";
   ss_ids << "}";
-  Tau_metadata_register("OMP_PLACE_NUM_PROCS", ss_num.str());
-  Tau_metadata_register("OMP_PLACE_PROC_IDS", ss_ids.str());
+  Tau_metadata_register_task("OMP_PLACE_NUM_PROCS", ss_num.str(), 0);
+  Tau_metadata_register_task("OMP_PLACE_PROC_IDS", ss_ids.str(), 0);
 #endif /* PGI - PrgEnv-nvidia */
 #endif
 
 #endif // TAU_OPENMP && !TAU_MPC
 
 #endif // _OPENMP
-
-#endif // TAU_DISABLE_METADATA
-
   return 0;
 }
 

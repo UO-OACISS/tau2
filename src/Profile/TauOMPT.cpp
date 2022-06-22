@@ -43,10 +43,13 @@
 #include <assert.h>
 #include <unordered_map>
 #include <Profile/TauGpuAdapterOpenMP.h>
+#include <Profile/TauMetaData.h>
 #include <atomic>
 #include <array>
 #include <iostream>
 #include <stack>
+
+#include <pthread.h>
 
 /* 16k buffer should be OK, if this is increased, please increase the size
  * of the circular buffer that maps target_id values to the thread IDs that
@@ -1741,6 +1744,13 @@ void Tau_force_ompt_env_initialization() {
 
 #define cb_t(name) (ompt_callback_t)&name
 
+static void * after_ompt_init_thread_fn(void * unused) {
+    (void)unused;
+    // The OpenMP runtime is initialized now, so we can fill OpenMP-runtime-related metadata
+    Tau_metadata_fillOpenMPMetaData();
+    return NULL;
+} 
+
 /* Register callbacks for all events that we are interested in / have to support */
 extern "C" int ompt_initialize(
   ompt_function_lookup_t lookup,
@@ -1824,6 +1834,13 @@ extern "C" int ompt_initialize(
   }
 
   // Overheads unclear currently
+  
+  // We can't make OpenMP calls inside an OMPT callback, but we have to defer reading
+  // OpenMP parameters for metadata purposes until after OpenMP is initialized.
+  // Here we launch another thread which will collect the metadata.
+  pthread_t after_init_thread;
+  pthread_create(&after_init_thread, NULL, after_ompt_init_thread_fn, NULL);
+  pthread_detach(after_init_thread);
 
   initialized = true;
   initializing = false;
