@@ -211,7 +211,10 @@ static thread_local bool destructed_local;
 // for the given tid. Uses thread-local cache if tid = this thread.
 FunctionMetrics* getFunctionMetric(unsigned int tid){
     FunctionMetrics* MOut = NULL;
-    if(destructed||destructed_local)return MOut;
+    //if(destructed||destructed_local){
+//	    fprintf(stderr,"TAU Warning: getting function from destructed thread (check1)!\n");
+//	    return MOut;
+  //  }
     static thread_local const unsigned int local_tid = RtsLayer::myThread();
 
 
@@ -229,9 +232,6 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
             }
         }
     }
-   if(destructed_local || destructed){
-	return MOut;
-   }
     // Not in thread-local cache, or cache not searched.
     // Create a new FunctionMetrics instance.
     std::lock_guard<std::mutex> guard(fInfoVectorMutex);
@@ -256,7 +256,9 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
         // Store the FunctionMetrics pointer in the thread-local cache
         MetricThreadCache.operator[](function_info_id) = MOut;
     }
-
+    if(MOut==NULL){
+	    fprintf(stderr,"TAU Warning: getFunctionMetric returning NULL!\n");
+    }
     return MOut;
 
 }
@@ -353,24 +355,36 @@ public:
   }
 
   void getInclusiveValues(int tid, double *values){
+    FunctionMetrics* tmp = getFunctionMetric(tid);
+    if(tmp==NULL)return;
+ 	  
     for(int i=0; i<Tau_Global_numCounters; i++) {
-        values[i] = getFunctionMetric(tid)->InclTime[i];
+        values[i] = tmp->InclTime[i];
     }
   }
   void getExclusiveValues(int tid, double *values){
+    FunctionMetrics* tmp = getFunctionMetric(tid);
+    if(tmp==NULL)return;
+	  
     for(int i=0; i<Tau_Global_numCounters; i++) {
-        values[i] = getFunctionMetric(tid)->ExclTime[i];
+        values[i] = tmp->ExclTime[i];
     }
   }
 
   void SetExclTimeZero(int tid) {
+    FunctionMetrics* tmp = getFunctionMetric(tid);
+    if(tmp==NULL)return;
+	  
     for(int i=0;i<Tau_Global_numCounters;i++) {
-      getFunctionMetric(tid)->ExclTime[i] = 0;
+      tmp->ExclTime[i] = 0;
     }
   }
   void SetInclTimeZero(int tid) {
+    FunctionMetrics* tmp = getFunctionMetric(tid);
+    if(tmp==NULL)return;
+	  
     for(int i=0;i<Tau_Global_numCounters;i++) {
-      getFunctionMetric(tid)->InclTime[i] = 0;
+      tmp->InclTime[i] = 0;
     }
   }
 
@@ -379,13 +393,17 @@ public:
   double *GetExclTime(int tid);
   double *GetInclTime(int tid);
   inline void SetExclTime(int tid, double *excltime) {
+    FunctionMetrics* tmp = getFunctionMetric(tid);
+      if(tmp==NULL)return;
     for(int i=0;i<Tau_Global_numCounters;i++) {
-      getFunctionMetric(tid)->ExclTime[i] = excltime[i];
+      tmp->ExclTime[i] = excltime[i];
     }
   }
   inline void SetInclTime(int tid, double *incltime) {
+    FunctionMetrics* tmp = getFunctionMetric(tid);
+    if(tmp==NULL)return;	  
     for(int i=0;i<Tau_Global_numCounters;i++)
-      getFunctionMetric(tid)->InclTime[i] = incltime[i];
+      tmp->InclTime[i] = incltime[i];
   }
 
 
@@ -422,21 +440,27 @@ int& TheUsingCompInst(void);
 inline void FunctionInfo::ExcludeTime(double *t, int tid) {
   // called by a function to decrease its parent functions time
   // exclude from it the time spent in child function
+  FunctionMetrics* tmp = getFunctionMetric(tid);
+  if(tmp==NULL)return;
   for (int i=0; i<Tau_Global_numCounters; i++) {
-    getFunctionMetric(tid)->ExclTime[i] -= t[i];
+    tmp->ExclTime[i] -= t[i];
   }
 }
 
 
 inline void FunctionInfo::AddInclTime(double *t, int tid) {
+  FunctionMetrics* tmp = getFunctionMetric(tid);
+  if(tmp==NULL)return;
   for (int i=0; i<Tau_Global_numCounters; i++) {
-    getFunctionMetric(tid)->InclTime[i] += t[i]; // Add Inclusive time
+    tmp->InclTime[i] += t[i]; // Add Inclusive time
   }
 }
 
 inline void FunctionInfo::AddExclTime(double *t, int tid) {
+  FunctionMetrics* tmp = getFunctionMetric(tid);
+  if(tmp==NULL)return;	
   for (int i=0; i<Tau_Global_numCounters; i++) {
-    getFunctionMetric(tid)->ExclTime[i] += t[i]; // Add Total Time to Exclusive time (-ve)
+    tmp->ExclTime[i] += t[i]; // Add Total Time to Exclusive time (-ve)
   }
 }
 
@@ -449,7 +473,9 @@ inline void FunctionInfo::IncrNumSubrs(int tid) {
 }
 
 inline void FunctionInfo::SetAlreadyOnStack(bool value, int tid) {
-  getFunctionMetric(tid)->AlreadyOnStack = value;
+  FunctionMetrics* tmp = getFunctionMetric(tid);
+  if(tmp==NULL)return;
+  tmp->AlreadyOnStack = value;
 }
 
 inline bool FunctionInfo::GetAlreadyOnStack(int tid) {
