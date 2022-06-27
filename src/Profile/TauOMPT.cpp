@@ -1749,6 +1749,7 @@ void Tau_force_ompt_env_initialization() {
 
 void * after_ompt_init_thread_fn(void * unused) {
     (void)unused;
+    internal_thread = true;
     // The OpenMP runtime is initialized now, so we can fill OpenMP-runtime-related metadata
     Tau_metadata_fillOpenMPMetaData();
     return NULL;
