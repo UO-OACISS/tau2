@@ -977,11 +977,13 @@ on_ompt_callback_implicit_task(
       case ompt_scope_begin:
         TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
         TAU_PROFILER_START(handle);
+        //TAU_VERBOSE("********* Entering implicit task!\n");
         task_data->ptr = (void*)handle;
         break;
       case ompt_scope_end:
         if(task_data->ptr != NULL) {
           //TAU_PROFILER_STOP(task_data->ptr);
+        //TAU_VERBOSE("********* Exiting implicit task!\n");
           Tau_global_stop();
         }
         break;
@@ -990,6 +992,7 @@ on_ompt_callback_implicit_task(
 #endif
         default:
         // This indicates a coincident beginning and end of scope. Do nothing?
+        //TAU_VERBOSE("********* What?!\n");
         break;
     }
   }
@@ -1749,7 +1752,7 @@ static void * after_ompt_init_thread_fn(void * unused) {
     // The OpenMP runtime is initialized now, so we can fill OpenMP-runtime-related metadata
     Tau_metadata_fillOpenMPMetaData();
     return NULL;
-} 
+}
 
 /* Register callbacks for all events that we are interested in / have to support */
 extern "C" int ompt_initialize(
@@ -1803,7 +1806,10 @@ extern "C" int ompt_initialize(
   Tau_register_callback(ompt_callback_parallel_end, cb_t(on_ompt_callback_parallel_end));
   Tau_register_callback(ompt_callback_task_create, cb_t(on_ompt_callback_task_create));
   Tau_register_callback(ompt_callback_task_schedule, cb_t(on_ompt_callback_task_schedule));
+  /* Intel doesn't provide the exit callback for implicit tasks... */
+#if !defined(__INTEL_COMPILER) && !defined(__ICC)
   Tau_register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); //Sometimes high-overhead, but unfortunately we cannot avoid this as it is a required event
+#endif
   Tau_register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
   Tau_register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
 
@@ -1834,7 +1840,7 @@ extern "C" int ompt_initialize(
   }
 
   // Overheads unclear currently
-  
+
   // We can't make OpenMP calls inside an OMPT callback, but we have to defer reading
   // OpenMP parameters for metadata purposes until after OpenMP is initialized.
   // Here we launch another thread which will collect the metadata.
@@ -1940,6 +1946,9 @@ extern "C" ompt_start_tool_result_t * ompt_start_tool(
   result.finalize = &ompt_finalize;
   result.tool_data.value = 0L;
   result.tool_data.ptr = NULL;
+#ifdef _OPENMP
+  TAU_VERBOSE("OMPT support configuring, TAU compiled with version %d, running with version %d\n", _OPENMP, omp_version);
+#endif
   return &result;
 }
 #else /*  defined (TAU_USE_OMPT_5_0) */
