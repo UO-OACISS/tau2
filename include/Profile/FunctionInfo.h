@@ -211,10 +211,10 @@ static thread_local bool destructed_local;
 // for the given tid. Uses thread-local cache if tid = this thread.
 FunctionMetrics* getFunctionMetric(unsigned int tid){
     FunctionMetrics* MOut = NULL;
-    //if(destructed||destructed_local){
-//	    fprintf(stderr,"TAU Warning: getting function from destructed thread (check1)!\n");
-//	    return MOut;
-  //  }
+    /*if(destructed||destructed_local){
+	    fprintf(stderr,"TAU Warning: getting function from destructed thread!\n");
+	    return MOut;
+    }*/
     static thread_local const unsigned int local_tid = RtsLayer::myThread();
 
 
@@ -224,7 +224,7 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     // Also don't use the cache during shutdown -- it might have been destructed already,
     // but we can't put a destructor trigger on MetricThreadCache because they are *also*
     // destructed when a thread exits.
-    if(tid!=0 && use_metric_tls && (tid == local_tid) && !destructed && !destructed_local) {
+    if(tid == local_tid){//&& tid!=0 && use_metric_tls && !destructed && !destructed_local) {
         if(MetricThreadCache.size() > function_info_id) {
             MOut = MetricThreadCache.operator[](function_info_id);
             if(MOut != NULL) {
