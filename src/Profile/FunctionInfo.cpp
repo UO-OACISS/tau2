@@ -152,7 +152,7 @@ std::atomic<uint64_t> FunctionInfo::next_id{0};
 
 //thread_local FunctionInfo::FMetricListVector FunctionInfo::MetricThreadCache; //#Fixes opari bug, breaks pthreads
 thread_local FunctionInfo::FMetricListVector_local FunctionInfo::MetricThreadCache;     //vector<FunctionInfo::FunctionMetrics*>* FunctionInfo::MetricThreadCache=new vector<FunctionInfo::FunctionMetrics*>; // One entry per instance
-//bool FunctionInfo::use_metric_tls = true;
+bool FunctionInfo::use_metric_tls = true;
 //bool FunctionInfo::destructed = false;
 //thread_local bool FunctionInfo::destructed_local = false;
 

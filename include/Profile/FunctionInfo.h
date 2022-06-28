@@ -203,7 +203,7 @@ static thread_local FMetricListVector_local  MetricThreadCache;    //vector<Func
 //static thread_local FMetricListVector MetricThreadCache; // One entry per instance #Fixes opari bug, breaks pthreads
 static std::atomic<uint64_t> next_id; // The next available ID; incremented when function_info_id is set.
 uint64_t function_info_id; // This is set in FunctionInfo::FunctionInfoInit()
-//static bool use_metric_tls; // This is set to false to disable the thread-local cache during shutdown.
+static bool use_metric_tls; // This is set to false to disable the thread-local cache during shutdown.
 //static bool destructed;
 //static thread_local bool destructed_local;
 //bool& Tau_is_destroyed(void);
@@ -224,7 +224,7 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     // Also don't use the cache during shutdown -- it might have been destructed already,
     // but we can't put a destructor trigger on MetricThreadCache because they are *also*
     // destructed when a thread exits.
-    if(tid == local_tid){//&& tid!=0 && use_metric_tls && !destructed && !destructed_local) {
+    if(use_metric_tls && tid == local_tid){//&& tid!=0 && use_metric_tls && !destructed && !destructed_local) {
         if(MetricThreadCache.size() > function_info_id) {
             MOut = MetricThreadCache.operator[](function_info_id);
             if(MOut != NULL) {
@@ -248,7 +248,7 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     MOut=FMetricList[tid];
 
     // Use thread-local optimization if the current thread is requesting its own metrics.
-    if(tid == local_tid) {//tid !=0 && use_metric_tls && 
+    if(use_metric_tls && tid == local_tid) {//tid !=0 && use_metric_tls && 
         // Ensure the FMetricList vector is long enough to accomodate the new cached item.
         while(MetricThreadCache.size() <= function_info_id) {
             MetricThreadCache.push_back(NULL);
@@ -419,11 +419,11 @@ public:
   bool IsThrottled() const {
     return ! (RtsLayer::TheEnableInstrumentation() && (MyProfileGroup_ & RtsLayer::TheProfileMask()));
   }
-/*
+
   static void disable_metric_cache() {
     use_metric_tls = false;
   }
-*/
+
 private:
   TauGroup_t MyProfileGroup_;
 };
