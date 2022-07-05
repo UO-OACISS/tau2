@@ -27,4 +27,5 @@ BEGIN_EXCLUDE_LIST
 "# shmem_iput16(#"
 "# shmem_global_exit(#"
 "# #_nbi(#"
+"# shmem_broadcast(#"
 END_EXCLUDE_LIST
