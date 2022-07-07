@@ -85,6 +85,9 @@ static atomic<size_t> active_threads{0};
 std::condition_variable _my_cond;
 std::thread * worker_thread = nullptr;
 
+/* FIXME! Don't use fixed length arrays. No time to fix this now. */
+#define TAU_MAX_THREADS 512
+
 //typedef unsigned long tau_data_t;
 typedef uint64_t tau_data_t;
 

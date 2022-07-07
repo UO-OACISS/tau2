@@ -128,7 +128,7 @@ inline void checkTCFVector(int tid){
 
 static inline Tau_collector_status_flags& getTauCollectorFlags(int tid)
 {
-    checkTCFVector(tid)
+    checkTCFVector(tid);
     return *Tau_collector_flags[tid];
 }
 
