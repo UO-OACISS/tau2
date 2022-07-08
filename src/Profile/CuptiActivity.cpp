@@ -605,6 +605,8 @@ void Tau_cupti_enable_domains()
     CUPTI_CHECK_ERROR(cuptiErr, "cuptiEnableDomain (CUPTI_CB_DOMAIN_SYNCHRONIZE)");
     cuptiErr = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RESOURCE);
     CUPTI_CHECK_ERROR(cuptiErr, "cuptiEnableDomain (CUPTI_CB_DOMAIN_RESOURCE)");
+    cuptiErr = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_NVTX);
+    CUPTI_CHECK_ERROR(cuptiErr, "cuptiEnableDomain (CUPTI_CB_DOMAIN_NVTX)");
     //CUDA_CHECK_ERROR(err2, "Cannot set Domain, check if the CUDA toolkit version is supported by the install CUDA driver.\n");
     /* BEGIN source line info */
     /* Need to check if device is pre-Fermi */
@@ -1166,7 +1168,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
 	    }
         }
     } else if (domain == CUPTI_CB_DOMAIN_INVALID) {
-        TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_RESOURCE event\n");
+        TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_INVALID event\n");
     } else if (domain == CUPTI_CB_DOMAIN_SYNCHRONIZE) {
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_SYNCHRONIZE event\n");
         if (Tau_Global_numGPUCounters > 0) {
