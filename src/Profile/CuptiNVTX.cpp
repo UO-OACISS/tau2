@@ -106,3 +106,12 @@ std::string get_nvtx_message(const nvtxEventAttributes_t * eventAttrib) {
 		std::cout << "TAU-NVTX " << "nvtxDomainRangeEnd " << std::endl;
 		#endif
   }
+
+
+
+
+
+  void handle_nvtx_callback(CUpti_CallbackId id, const void *cbdata){
+
+    return;
+  }
