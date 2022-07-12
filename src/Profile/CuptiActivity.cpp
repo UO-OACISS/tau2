@@ -10,10 +10,15 @@
 #include <assert.h>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+#include <Profile/CuptiNVTX.h>
+
 using namespace std;
+
 
 #if CUPTI_API_VERSION >= 2
 #include <dlfcn.h>
+
+
 
 //#define TAU_DEBUG_CUPTI
 //#define TAU_DEBUG_CUPTI_COUNTERS
