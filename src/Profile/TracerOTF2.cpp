@@ -699,7 +699,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
    * a timestamp should use the previous event timestamp just in case. */
   if (ts == 0 && Tau_is_thread_fake(tid)) {
     use_ts = 1;
-    ts = previous_ts[tid];
+    ts = getPreviousTS(tid);
   }
 #endif
   TauInternalFunctionGuard protects_this_function;
@@ -781,8 +781,8 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     // that could (will?) be after the timer stop.  So, to prevent out-of-order
     // events, make the counter timestamp the previous timer timestamp + 1.
 #if defined(CUPTI) || defined(TAU_ENABLE_ROCTRACER) || defined(TAU_USE_OMPT_5_0)
-    if (my_ts < previous_ts[tid]) {
-      TAU_VERBOSE("ERROR! Timestamps out of sequence. %lu < %lu on thread %d\nevent: node=%u, tid=%d, loc=%d: TauTraceEventWithNodeId(ev=%ld, par=%" PRId64 ", tid=%d, ts=%" PRIu64 ", use_ts=%d, node_id=%d, kind=%d)\n", my_ts, previous_ts[tid], tid, my_node(), tid, my_real_location(node_id, tid), ev, par, tid, ts, use_ts, node_id, kind);
+    if (my_ts < getPreviousTS(tid)) {
+      TAU_VERBOSE("ERROR! Timestamps out of sequence. %lu < %lu on thread %d\nevent: node=%u, tid=%d, loc=%d: TauTraceEventWithNodeId(ev=%ld, par=%" PRId64 ", tid=%d, ts=%" PRIu64 ", use_ts=%d, node_id=%d, kind=%d)\n", my_ts, getPreviousTS(tid), tid, my_node(), tid, my_real_location(node_id, tid), ev, par, tid, ts, use_ts, node_id, kind);
       my_ts = getPreviousTS(tid);
     }
 #endif
