@@ -164,7 +164,7 @@ struct ProfThreadList : vector<ProfilerData*>{
 
 static ProfThreadList & TheProfilerThreadList(){
 	static ProfThreadList profThreads;
-	return profThreads; 
+	return profThreads;
 }
 //static std::lock_guard<std::mutex> guard(ProfilerVectorMutex);
 static std::mutex ProfilerVectorMutex;
@@ -187,7 +187,7 @@ static thread_local int local_tid = RtsLayer::myThread();
 static thread_local ProfilerData* PD_cache=0;
 
 static inline ProfilerData& getProfilerData(int tid){
-    
+
     if(tid == local_tid){
         if(PD_cache!=0){
             return *PD_cache;
@@ -213,17 +213,17 @@ static inline ProfilerData& getProfilerData(int tid){
 //double TheLastTimeStamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS]; //TODO: DYNATHREAD
 inline void setLastTimeStamp(int tid, int counter, double value){
     //printf("SLT: TID: %d, CID: %d\n",tid,counter);
-    
+
     //printf("SLT: Checked\n");
     //if(ProfilerThreadList()[tid]->TheLastTimeStamp==0||)
     //{
     //    printf("SLT: Invalid!\n");
     //}
-    
+
     getProfilerData(tid).TheLastTimeStamp[counter]=value;
 }
 inline double getLastTimeStamp(int tid, int counter){
-    
+
     return getProfilerData(tid).TheLastTimeStamp[counter];
 }
 #endif /* TAU_TRACK_IDLE_THREADS */
@@ -847,6 +847,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
     plugin_data.timer_group = ThisFunction->GetAllGroups();
     plugin_data.tid = tid;
     plugin_data.timestamp = TimeStamp;
+    plugin_data.metrics = &(TotalTime[0]);
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_EXIT, ThisFunction->GetName(), &plugin_data);
   }
 }
@@ -1624,11 +1625,11 @@ static int writeProfile(FILE *fp, char *metricName, int tid, int metric, const c
 
 //static int profileWriteCount[TAU_MAX_THREADS];
 inline void setProfileWriteCount(int tid, int val){//TODO: DYNATHREAD
-    
+
     getProfilerData(tid).profileWriteCount=val;
 }
 inline void incProfileWriteCount(int tid){
-    
+
     //printf("Write count for tid: %d, pre increment: %d\n",tid,ProfilerThreadList[tid]->profileWriteCount);
     //printf("Vector for tid: %d: %p\n",tid,ProfilerThreadList);
     //printf("Pointer for tid: %d, pre increment: %p\n",tid,ProfilerThreadList[tid]);
@@ -1637,7 +1638,7 @@ inline void incProfileWriteCount(int tid){
 
 }
 inline int getProfileWriteCount(int tid){//TODO: DYNATHREAD
-    
+
     return getProfilerData(tid).profileWriteCount;
 }
 static int profileWriteWarningPrinted = 0;
