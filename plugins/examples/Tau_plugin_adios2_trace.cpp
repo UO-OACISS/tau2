@@ -355,7 +355,7 @@ class adios {
         tau_data_t previous_timestamp;
         };
         //A per-thread vector of those structs.
-        vector<adiosThread *> adiosThreadVector;        
+        vector<adiosThread *> adiosThreadVector;
     public:
         std::unordered_map<std::string, int> prog_names;
         std::unordered_map<std::string, int> value_names;
@@ -1018,6 +1018,7 @@ int do_teardown(bool pre) {
             double CurrentTime[TAU_MAX_COUNTERS] = { 0 };
             RtsLayer::getUSecD(tid, CurrentTime);
             exit_data.timestamp = (x_uint64)CurrentTime[0];    // USE COUNTER1 for tracing
+            exit_data.metrics = &(CurrentTime[0]);
             //printf("%d Stopping %s\n", tid, exit_data.timer_name);
             Tau_plugin_adios2_function_exit(&exit_data);
         }
@@ -1264,6 +1265,17 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
     return 0;
 }
 
+typedef struct metric_names_count {
+    const char **counterNames;
+    int numCounters;
+} metric_names_count_t;
+
+metric_names_count& get_metric_names_count() {
+    static metric_names_count_t the_data;
+    TauMetrics_getCounterList(&the_data.counterNames, &the_data.numCounters);
+    return the_data;
+}
+
 /* This happens on Tau_stop() */
 int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data) {
     if (!enabled) return 0;
@@ -1314,6 +1326,26 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
             std::move(tmparray)
         )
     );
+    /* Write the PAPI counters for this timer */
+    static metric_names_count_t metric_data = get_metric_names_count();
+    // Iterate over the metrics
+    for (int i = 1 ; i < metric_data.numCounters ; i++) {
+        int counter_index = my_adios().check_counter(metric_data.counterNames[i]);
+        std::array<tau_data_t, 5> tmparray;
+        tmparray[0] = 0UL;
+        tmparray[1] = (tau_data_t)(global_comm_rank);
+        tmparray[2] = (tau_data_t)(data->tid);
+        tmparray[3] = (tau_data_t)(counter_index);
+        tmparray[4] = (tau_data_t)(data->metrics[i]);
+        auto &tmp = my_adios().getAdiosThread(data->tid)->counter_values;
+        tmp.push_back(
+            std::make_pair(
+                ts,
+                std::move(tmparray)
+            )
+        );
+    }
+
     active_threads--;
     // initialize to a time in the future
     using namespace std::chrono;
