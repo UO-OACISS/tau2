@@ -117,6 +117,7 @@ typedef struct Tau_plugin_event_function_exit_data {
    unsigned int func_id;
    int tid;
    long unsigned int timestamp;
+   double * metrics;
 } Tau_plugin_event_function_exit_data_t;
 
 typedef struct Tau_plugin_event_phase_entry_data {

@@ -340,6 +340,22 @@ class adios {
         int total_valid;
         int time_index;
         int max_threads;
+        // This is a stuct (one per thread)
+        // of vectors (one per timestamp)
+        // of pairs (timestamp, values)...
+        struct adiosThread{
+        timer_values_array_t timer_values;
+        counter_values_array_t counter_values;
+        comm_values_array_t comm_values;
+        // for validation
+#ifdef DO_VALIDATION
+        std::stack<tau_data_t> timer_stack;
+        std::stack<tau_data_t> pre_timer_stack;
+#endif
+        tau_data_t previous_timestamp;
+        };
+        //A per-thread vector of those structs.
+        vector<adiosThread *> adiosThreadVector;
     public:
         std::unordered_map<std::string, int> prog_names;
         std::unordered_map<std::string, int> value_names;
@@ -387,18 +403,13 @@ class adios {
         int get_event_type_count(void) { return event_types.size(); }
         int get_counter_count(void) { return counters.size(); }
         int get_thread_count(void) { return max_threads+1; } // zero-indexed.
-        // This is an array (one per thread)
-        // of vectors (one per timestamp)
-        // of pairs (timestamp, values)...
-        timer_values_array_t timer_values_array[TAU_MAX_THREADS];
-        counter_values_array_t counter_values_array[TAU_MAX_THREADS];
-        comm_values_array_t comm_values_array[TAU_MAX_THREADS];
-        // for validation
-#ifdef DO_VALIDATION
-        std::stack<tau_data_t> timer_stack[TAU_MAX_THREADS];
-        std::stack<tau_data_t> pre_timer_stack[TAU_MAX_THREADS];
-#endif
-        tau_data_t previous_timestamp[TAU_MAX_THREADS];
+
+        adiosThread* getAdiosThread(int tid){
+            while(adiosThreadVector.size()<=tid){
+                adiosThreadVector.push_back(new adiosThread);
+            }
+            return adiosThreadVector[tid];
+        }
 };
 
 void adios::initialize() {
@@ -583,7 +594,7 @@ void adios::write_variables(void)
     writer_gets_control();
 
     try{
-    TAU_VERBOSE("%s: Merging %lu timers from 0...\n", __func__, timer_values_array[0].size());
+    TAU_VERBOSE("%s: Merging %lu timers from 0...\n", __func__, getAdiosThread(0)->timer_values.size());
 #if 0
     /* sort into one big vector from all threads */
     std::vector<event5_t> merged_timers(timer_values_array[0]);
@@ -630,10 +641,10 @@ void adios::write_variables(void)
 #endif
     }
 #endif
-    size_t num_timer_values = timer_values_array[0].size();
+    size_t num_timer_values = getAdiosThread(0)->timer_values.size();
     for (int t = 1 ; t < threads ; t++) {
-        TAU_VERBOSE("%s: %d has %lu timers...\n", __func__, t, timer_values_array[t].size());
-        num_timer_values += timer_values_array[t].size();
+        TAU_VERBOSE("%s: %d has %lu timers...\n", __func__, t, getAdiosThread(t)->timer_values.size());
+        num_timer_values += getAdiosThread(t)->timer_values.size();
     }
     static tau_data_t * all_timers = nullptr;
     static uint64_t prev_all_timers_bytes{0};
@@ -659,7 +670,7 @@ void adios::write_variables(void)
         }
         for (int t = 0 ; t < threads ; t++) {
             TAU_VERBOSE("%s: thread %d...\n", __func__, t);
-            for (auto it : timer_values_array[t]) {
+            for (auto it : getAdiosThread(t)->timer_values) {
                 all_timers[i++] = it.second[0];
                 all_timers[i++] = it.second[1];
                 all_timers[i++] = it.second[2];
@@ -672,17 +683,17 @@ void adios::write_variables(void)
 
     TAU_VERBOSE("%s: Freeing timer_values_array...\n", __func__);
     for (int t = 0 ; t < threads ; t++) {
-        timer_values_array[t].clear();
+        getAdiosThread(t)->timer_values.clear();
     }
 
-    TAU_VERBOSE("%s: Merging %llu counters from %d...\n", __func__, counter_values_array[0].size(), 0);
+    TAU_VERBOSE("%s: Merging %llu counters from %d...\n", __func__, getAdiosThread(0)->counter_values.size(), 0);
     /* sort into one big vector from all threads */
-    std::vector<event5_t> merged_counters(counter_values_array[0]);
+    std::vector<event5_t> merged_counters(getAdiosThread(0)->counter_values);
     for (int t = 1 ; t < threads ; t++) {
-        TAU_VERBOSE("%s: Merging %llu counters from %d...\n", __func__, counter_values_array[t].size(), t);
+        TAU_VERBOSE("%s: Merging %llu counters from %d...\n", __func__, getAdiosThread(t)->counter_values.size(), t);
         merged_counters.insert(merged_counters.end(),
-            counter_values_array[t].begin(),
-            counter_values_array[t].end());
+            getAdiosThread(t)->counter_values.begin(),
+            getAdiosThread(t)->counter_values.end());
     }
     std::sort(merged_counters.begin(), merged_counters.end());
     size_t num_counter_values = merged_counters.size();
@@ -701,17 +712,17 @@ void adios::write_variables(void)
     }
 
     for (int t = 0 ; t < threads ; t++) {
-        counter_values_array[t].clear();
+        getAdiosThread(t)->counter_values.clear();
     }
 
-    TAU_VERBOSE("%s: Merging %llu comms from %d...\n", __func__, comm_values_array[0].size(), 0);
+    TAU_VERBOSE("%s: Merging %llu comms from %d...\n", __func__, getAdiosThread(0)->comm_values.size(), 0);
     /* sort into one big vector from all threads */
-    std::vector<event7_t> merged_comms(comm_values_array[0]);
+    std::vector<event7_t> merged_comms(getAdiosThread(0)->comm_values);
     for (int t = 1 ; t < threads ; t++) {
-        TAU_VERBOSE("%s: Merging %llu comms from %d...\n", __func__, comm_values_array[t].size(), t);
+        TAU_VERBOSE("%s: Merging %llu comms from %d...\n", __func__, getAdiosThread(t)->comm_values.size(), t);
         merged_comms.insert(merged_comms.end(),
-            comm_values_array[t].begin(),
-            comm_values_array[t].end());
+            getAdiosThread(t)->comm_values.begin(),
+            getAdiosThread(t)->comm_values.end());
     }
     std::sort(merged_comms.begin(), merged_comms.end());
     size_t num_comm_values = merged_comms.size();
@@ -731,7 +742,7 @@ void adios::write_variables(void)
     }
 
     for (int t = 0 ; t < threads ; t++) {
-        comm_values_array[t].clear();
+        getAdiosThread(t)->comm_values.clear();
     }
 
     // Need to release the "dumping" flag so that ADIOS2 calls that
@@ -1007,6 +1018,7 @@ int do_teardown(bool pre) {
             double CurrentTime[TAU_MAX_COUNTERS] = { 0 };
             RtsLayer::getUSecD(tid, CurrentTime);
             exit_data.timestamp = (x_uint64)CurrentTime[0];    // USE COUNTER1 for tracing
+            exit_data.metrics = &(CurrentTime[0]);
             //printf("%d Stopping %s\n", tid, exit_data.timer_name);
             Tau_plugin_adios2_function_exit(&exit_data);
         }
@@ -1162,12 +1174,12 @@ int Tau_plugin_adios2_send(Tau_plugin_event_send_data_t* data) {
     tmparray[5] = (tau_data_t)(data->destination);
     tmparray[6] = (tau_data_t)(data->bytes_sent);
 
-    tau_data_t ts = my_adios().previous_timestamp[data->tid] >
-        data->timestamp ? my_adios().previous_timestamp[data->tid] :
+    tau_data_t ts = my_adios().getAdiosThread(data->tid)->previous_timestamp >
+        data->timestamp ? my_adios().getAdiosThread(data->tid)->previous_timestamp :
             data->timestamp;
-    my_adios().previous_timestamp[data->tid] = ts;
+    my_adios().getAdiosThread(data->tid)->previous_timestamp = ts;
 
-    auto &tmp = my_adios().comm_values_array[data->tid];
+    auto &tmp = my_adios().getAdiosThread(data->tid)->comm_values;
     tau_plugin::event_gets_control();
     tmp.push_back(
         std::make_pair(
@@ -1195,12 +1207,12 @@ int Tau_plugin_adios2_recv(Tau_plugin_event_recv_data_t* data) {
     tmparray[5] = (tau_data_t)(data->source);
     tmparray[6] = (tau_data_t)(data->bytes_received);
 
-    tau_data_t ts = my_adios().previous_timestamp[data->tid] >
-        data->timestamp ? my_adios().previous_timestamp[data->tid] :
+    tau_data_t ts = my_adios().getAdiosThread(data->tid)->previous_timestamp >
+        data->timestamp ? my_adios().getAdiosThread(data->tid)->previous_timestamp :
             data->timestamp;
-    my_adios().previous_timestamp[data->tid] = ts;
+    my_adios().getAdiosThread(data->tid)->previous_timestamp = ts;
 
-    auto &tmp = my_adios().comm_values_array[data->tid];
+    auto &tmp = my_adios().getAdiosThread(data->tid)->comm_values;
     tau_plugin::event_gets_control();
     tmp.push_back(
         std::make_pair(
@@ -1234,15 +1246,15 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
     tmparray[3] = (tau_data_t)(event_index);
     tmparray[4] = (tau_data_t)(timer_index);
 
-    tau_data_t ts = my_adios().previous_timestamp[data->tid] > data->timestamp ?
-        my_adios().previous_timestamp[data->tid] : data->timestamp;
-    my_adios().previous_timestamp[data->tid] = ts;
+    tau_data_t ts = my_adios().getAdiosThread(data->tid)->previous_timestamp > data->timestamp ?
+        my_adios().getAdiosThread(data->tid)->previous_timestamp : data->timestamp;
+    my_adios().getAdiosThread(data->tid)->previous_timestamp = ts;
 #ifdef DO_VALIDATION
-    my_adios().pre_timer_stack[data->tid].push(timer_index);
+    my_adios().getAdiosThread(data->tid)->pre_timer_stack.push(timer_index);
     TAU_VERBOSE("Enter:   %d %d %lu %lu %s %s\n", global_comm_rank, data->tid, data->timestamp, ts, (data->timestamp != ts ? "FIXED" : ""), data->timer_name);
 #endif
     tau_plugin::event_gets_control();
-    auto &tmp = my_adios().timer_values_array[data->tid];
+    auto &tmp = my_adios().getAdiosThread(data->tid)->timer_values;
     tmp.push_back(
         std::make_pair(
             ts,
@@ -1251,6 +1263,17 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
     );
     active_threads--;
     return 0;
+}
+
+typedef struct metric_names_count {
+    const char **counterNames;
+    int numCounters;
+} metric_names_count_t;
+
+metric_names_count& get_metric_names_count() {
+    static metric_names_count_t the_data;
+    TauMetrics_getCounterList(&the_data.counterNames, &the_data.numCounters);
+    return the_data;
 }
 
 /* This happens on Tau_stop() */
@@ -1272,10 +1295,10 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     tmparray[3] = (tau_data_t)(event_index);
     tmparray[4] = (tau_data_t)(timer_index);
 
-    tau_data_t ts = my_adios().previous_timestamp[data->tid] >
-        data->timestamp ? my_adios().previous_timestamp[data->tid] :
+    tau_data_t ts = my_adios().getAdiosThread(data->tid)->previous_timestamp >
+        data->timestamp ? my_adios().getAdiosThread(data->tid)->previous_timestamp :
             data->timestamp;
-    my_adios().previous_timestamp[data->tid] = ts;
+    my_adios().getAdiosThread(data->tid)->previous_timestamp = ts;
 #ifdef DO_VALIDATION
     TAU_VERBOSE("Exit:    %d %d %lu %lu %s %s\n", global_comm_rank, data->tid, data->timestamp, ts, (data->timestamp != ts ? "FIXED" : ""), data->timer_name);
     if (my_adios().pre_timer_stack[data->tid].size() == 0) {
@@ -1285,7 +1308,7 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
       active_threads--;
       return 0;
     } else {
-        tau_data_t lhs = (tau_data_t)(my_adios().pre_timer_stack[data->tid].top());
+        tau_data_t lhs = (tau_data_t)(my_adios().getAdiosThread(data->tid)->pre_timer_stack.top());
         tau_data_t rhs = (tau_data_t)(timer_index);
         if (lhs != rhs) {
             TAU_VERBOSE("Pre: Stack violation. %s\n", data->timer_name);
@@ -1296,13 +1319,33 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     }
 #endif
     tau_plugin::event_gets_control();
-    auto &tmp = my_adios().timer_values_array[data->tid];
+    auto &tmp = my_adios().getAdiosThread(data->tid)->timer_values;
     tmp.push_back(
         std::make_pair(
             ts,
             std::move(tmparray)
         )
     );
+    /* Write the PAPI counters for this timer */
+    static metric_names_count_t metric_data = get_metric_names_count();
+    // Iterate over the metrics
+    for (int i = 1 ; i < metric_data.numCounters ; i++) {
+        int counter_index = my_adios().check_counter(metric_data.counterNames[i]);
+        std::array<tau_data_t, 5> tmparray;
+        tmparray[0] = 0UL;
+        tmparray[1] = (tau_data_t)(global_comm_rank);
+        tmparray[2] = (tau_data_t)(data->tid);
+        tmparray[3] = (tau_data_t)(counter_index);
+        tmparray[4] = (tau_data_t)(data->metrics[i]);
+        auto &tmp = my_adios().getAdiosThread(data->tid)->counter_values;
+        tmp.push_back(
+            std::make_pair(
+                ts,
+                std::move(tmparray)
+            )
+        );
+    }
+
     active_threads--;
     // initialize to a time in the future
     using namespace std::chrono;
@@ -1356,15 +1399,15 @@ int Tau_plugin_adios2_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data_
     tmparray[3] = (tau_data_t)(counter_index);
     tmparray[4] = (tau_data_t)(data->value);
 
-    tau_data_t ts = my_adios().previous_timestamp[data->tid] >
-        data->timestamp ? my_adios().previous_timestamp[data->tid] :
+    tau_data_t ts = my_adios().getAdiosThread(data->tid)->previous_timestamp >
+        data->timestamp ? my_adios().getAdiosThread(data->tid)->previous_timestamp :
             data->timestamp;
-    my_adios().previous_timestamp[data->tid] = ts;
+    my_adios().getAdiosThread(data->tid)->previous_timestamp = ts;
 #ifdef DO_VALIDATION
     TAU_VERBOSE("Counter: %d %d %lu %lu %s %s\n", global_comm_rank, data->tid, data->timestamp, ts, (data->timestamp != ts ? "FIXED" : ""), data->counter_name);
 #endif
 
-    auto &tmp = my_adios().counter_values_array[data->tid];
+    auto &tmp = my_adios().getAdiosThread(data->tid)->counter_values;
     tau_plugin::event_gets_control();
     tmp.push_back(
         std::make_pair(

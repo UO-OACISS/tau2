@@ -1,0 +1,62 @@
+This example demonstrates the use of TAU with PyTorch.
+
+To use the quickstart.py example, you will need a install of PyTorch
+If you do not already have one, follow the instructions at 
+    https://pytorch.org/get-started
+to install PyTorch into a Conda environment.
+Make sure the environment containing PyTorch is active.
+
+############################################################################
+
+Building TAU:
+
+Build TAU for use with PyTorch. A simple configuration that can be used is:
+
+    ./configure -bfd=download -unwind=download -pthread -python 
+
+    make install 
+
+This will build TAU against the version of Python which is represented by the
+`python` executable in your $PATH. If you need to use a different Python,
+use -pythoninc, -pythonlib, and -pythonlibrary as arguments to configure to 
+specify the locations of the Python libraries and header files for the specific
+version of Python that you will be using with PyTorch.
+
+Because PyTorch uses pthreads internally, a pthread-compatible version of
+TAU must always be used when profiling PyTorch applications.
+
+############################################################################
+
+Instrumenting PyTorch applications:
+
+The QuickStart example, derived from the PyTorch documentation, can be run with
+
+    python quickstart.py
+
+Run it outside TAU for the first run, as it must download datasets the first 
+time it is run.
+
+To instrument with TAU using the configuration above, run with:
+
+    tau_python -T serial,python,pthread quickstart.py
+
+############################################################################
+
+Using CUPTI to collect GPU performance data:
+
+To collect data on CUDA kernels run by PyTorch, build TAU with 
+support for CUPTI with
+
+    ./configure -python -pthread -bfd=download -unwind=download -cuda=<path to CUDA>
+
+    make install
+
+Note that this should be the exact same version of CUDA that PyTorch
+is using. Errors may occur if TAU and PyTorch are built to use 
+different versions of CUDA.
+
+Collect profiles with:
+
+    tau_python -T serial,python,pthread,cupti -cupti quickstart.py
+
+

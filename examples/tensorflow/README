@@ -1,0 +1,7 @@
+TensorFlow examples:
+
+profiling
+    Demonstration of profiling TensorFlow applications with `tau_python`
+
+callbacks
+    Demonstration of profiling TensorFlow applications with Keras callbacks

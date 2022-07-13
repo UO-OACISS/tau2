@@ -192,7 +192,6 @@ static inline void setPreviousType(int tid, int value){
     checkOtf2ThreadDataVector(tid);
 	Tau_otf2_getThreadData()[tid]->previous_type=value;
 }
-//static uint64_t previous_ts[TAU_MAX_THREADS] = {0};
 static inline uint64_t getPreviousTS(int tid){
     checkOtf2ThreadDataVector(tid);
 	return Tau_otf2_getThreadData()[tid]->previous_ts;
