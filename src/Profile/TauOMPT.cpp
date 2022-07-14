@@ -1827,7 +1827,7 @@ extern "C" int ompt_initialize(
 void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugins_enabled) {
   if(!initialized)
   {
-    fprintf(stderr, "TAU: WARNING: Could not register OMPT plugin callbacks as OMPT was not initialized.\n");
+    TAU_VERBOSE("TAU: WARNING: Could not register OMPT plugin callbacks as OMPT was not initialized.\n");
     return;
   }
 
