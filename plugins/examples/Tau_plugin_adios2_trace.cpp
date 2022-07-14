@@ -1340,7 +1340,7 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
         tmparray2[0] = 0UL;
         tmparray2[1] = (tau_data_t)(global_comm_rank);
         tmparray2[2] = (tau_data_t)(data->tid);
-        tmparray2[3] = (tau_data_t)(metric_data.counter_index);
+        tmparray2[3] = (tau_data_t)(metric_data.counter_index[i]);
         tmparray2[4] = (tau_data_t)(data->metrics[i]);
         tau_plugin::event_gets_control();
         tmp2.push_back( std::make_pair( ts, std::move(tmparray2)));
