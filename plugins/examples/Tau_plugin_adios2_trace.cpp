@@ -1268,11 +1268,15 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
 typedef struct metric_names_count {
     const char **counterNames;
     int numCounters;
+    int counter_index[TAU_MAX_COUNTERS] = {0};
 } metric_names_count_t;
 
 metric_names_count& get_metric_names_count() {
     static metric_names_count_t the_data;
     TauMetrics_getCounterList(&the_data.counterNames, &the_data.numCounters);
+    for (int i = 0 ; i < the_data.numCounters ; i++) {
+        the_data.counter_index[i] = my_adios().check_counter(the_data.counterNames[i]);
+    }
     return the_data;
 }
 
@@ -1326,27 +1330,22 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
             std::move(tmparray)
         )
     );
+    active_threads--;
     /* Write the PAPI counters for this timer */
     static metric_names_count_t metric_data = get_metric_names_count();
     // Iterate over the metrics
-    for (int i = 1 ; i < metric_data.numCounters ; i++) {
-        int counter_index = my_adios().check_counter(metric_data.counterNames[i]);
-        std::array<tau_data_t, 5> tmparray;
-        tmparray[0] = 0UL;
-        tmparray[1] = (tau_data_t)(global_comm_rank);
-        tmparray[2] = (tau_data_t)(data->tid);
-        tmparray[3] = (tau_data_t)(counter_index);
-        tmparray[4] = (tau_data_t)(data->metrics[i]);
-        auto &tmp = my_adios().getAdiosThread(data->tid)->counter_values;
-        tmp.push_back(
-            std::make_pair(
-                ts,
-                std::move(tmparray)
-            )
-        );
+    auto &tmp2 = my_adios().getAdiosThread(data->tid)->counter_values;
+    for (int i = 0 ; i < metric_data.numCounters ; i++) {
+        std::array<tau_data_t, 5> tmparray2;
+        tmparray2[0] = 0UL;
+        tmparray2[1] = (tau_data_t)(global_comm_rank);
+        tmparray2[2] = (tau_data_t)(data->tid);
+        tmparray2[3] = (tau_data_t)(metric_data.counter_index);
+        tmparray2[4] = (tau_data_t)(data->metrics[i]);
+        tau_plugin::event_gets_control();
+        tmp2.push_back( std::make_pair( ts, std::move(tmparray2)));
+        active_threads--;
     }
-
-    active_threads--;
     // initialize to a time in the future
     using namespace std::chrono;
     static time_point<steady_clock> next_write(steady_clock::now() +
