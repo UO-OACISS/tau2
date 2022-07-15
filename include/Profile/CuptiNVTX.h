@@ -28,7 +28,7 @@ https://gitlab.com/nvidia/headers/cuda-individual/nvtx/-/blob/0570d3f68e5bd2f3c9
 /* Fun!  CUPTI doesn't do callbacks for end or push events.  Wheeeeee
  * So, what we'll do is wrap the functions instead of having callbacks. */
 
-//#define TAU_BROKEN_CUPTI_NVTX_PUSH_POP
+#define TAU_BROKEN_CUPTI_NVTX_CALLBACKS
 
 
 // Ranges defined by Start/End can overlap. 
@@ -36,22 +36,23 @@ https://gitlab.com/nvidia/headers/cuda-individual/nvtx/-/blob/0570d3f68e5bd2f3c9
 // Ranges defined by Push/Pop are safe.
 
 
-
+typedef nvtxDomainHandle_t (*nvtxDomainCreateA_p)(const char * name);
+typedef nvtxDomainHandle_t (*nvtxDomainCreateW_p)(const wchar_t* name);
+typedef NVTX_DECLSPEC int NVTX_API (*nvtxDomainRangePushEx_p)(nvtxDomainHandle_t domain, const nvtxEventAttributes_t *eventAttrib);
 
 //Typedefs for wrappers
-#ifdef TAU_BROKEN_CUPTI_NVTX_PUSH_POP
+#ifdef TAU_BROKEN_CUPTI_NVTX_CALLBACKS
 
 typedef NVTX_DECLSPEC int NVTX_API (*nvtxRangePushA_p)(const char * message);
 typedef NVTX_DECLSPEC int NVTX_API (*nvtxRangePushW_p)(const wchar_t * message);
 typedef NVTX_DECLSPEC int NVTX_API (*nvtxRangePushEx_p)(const nvtxEventAttributes_t *eventAttrib);
 typedef NVTX_DECLSPEC int NVTX_API (*nvtxRangePop_p)(void);
-typedef nvtxDomainHandle_t (*nvtxDomainCreateA_p)(const char * name);
-typedef nvtxDomainHandle_t (*nvtxDomainCreateW_p)(const wchar_t* name);
+
 typedef void (*nvtxDomainDestroy_p)(nvtxDomainHandle_t domain);
-typedef NVTX_DECLSPEC int NVTX_API (*nvtxDomainRangePushEx_p)(nvtxDomainHandle_t domain, const nvtxEventAttributes_t *eventAttrib);
+
 typedef NVTX_DECLSPEC int NVTX_API (*nvtxDomainRangePop_p)(nvtxDomainHandle_t domain);
 
-#endif //TAU_BROKEN_CUPTI_NVTX_PUSH_POP
+#endif //TAU_BROKEN_CUPTI_NVTX_CALLBACKS
 
 
 //Auxiliary 
@@ -71,8 +72,15 @@ void tau_nvtxRangePop ();
 
 //Wrappers & Interceptors
 
+nvtxDomainHandle_t tau_nvtxDomainCreateA_wrapper (nvtxDomainCreateA_p nvtxDomainCreateA_call, const char* name);
+nvtxDomainHandle_t tau_nvtxDomainCreateW_wrapper (nvtxDomainCreateW_p nvtxDomainCreateW_call, const wchar_t* name);
+NVTX_DECLSPEC nvtxDomainHandle_t NVTX_API nvtxDomainCreateA(const char* name);
+NVTX_DECLSPEC nvtxDomainHandle_t NVTX_API nvtxDomainCreateW(const wchar_t* name);
 
-#ifdef TAU_BROKEN_CUPTI_NVTX_PUSH_POP
+int tau_nvtxDomainRangePushEx_wrapper (nvtxDomainRangePushEx_p nvtxDomainRangePushEx_call, nvtxDomainHandle_t domain, const nvtxEventAttributes_t* eventAttrib);
+NVTX_DECLSPEC int NVTX_API nvtxDomainRangePushEx(nvtxDomainHandle_t domain, const nvtxEventAttributes_t *eventAttrib);
+
+#ifdef TAU_BROKEN_CUPTI_NVTX_CALLBACKS
 int tau_nvtxRangePushA_wrapper (nvtxRangePushA_p nvtxRangePushA_call, const char * message);
 int tau_nvtxRangePushW_wrapper (nvtxRangePushW_p nvtxRangePushW_call, const wchar_t *message);
 int tau_nvtxRangePushEx_wrapper (nvtxRangePushEx_p nvtxRangePushEx_call, const nvtxEventAttributes_t *eventAttrib);
@@ -83,21 +91,17 @@ NVTX_DECLSPEC int NVTX_API nvtxRangePushW (const wchar_t *message);
 NVTX_DECLSPEC int NVTX_API nvtxRangePushEx (const nvtxEventAttributes_t *eventAttrib);
 NVTX_DECLSPEC int NVTX_API nvtxRangePop (void);
 
-nvtxDomainHandle_t tau_nvtxDomainCreateA_wrapper (nvtxDomainCreateA_p nvtxDomainCreateA_call, const char* name);
-nvtxDomainHandle_t tau_nvtxDomainCreateW_wrapper (nvtxDomainCreateW_p nvtxDomainCreateW_call, const wchar_t* name);
-NVTX_DECLSPEC nvtxDomainHandle_t NVTX_API nvtxDomainCreateA(const char* name);
-NVTX_DECLSPEC nvtxDomainHandle_t NVTX_API nvtxDomainCreateW(const wchar_t* name);
 
 void tau_nvtxDomainDestroy_wrapper (nvtxDomainDestroy_p nvtxDomainDestroy_call, nvtxDomainHandle_t domain);
 NVTX_DECLSPEC void NVTX_API nvtxDomainDestroy(nvtxDomainHandle_t domain);
 
 
-int tau_nvtxDomainRangePushEx_wrapper (nvtxDomainRangePushEx_p nvtxDomainRangePushEx_call, nvtxDomainHandle_t domain, const nvtxEventAttributes_t* eventAttrib);
+
 int tau_nvtxDomainRangePop_wrapper (nvtxDomainRangePop_p nvtxDomainRangePop_call, const wchar_t *message);
-NVTX_DECLSPEC int NVTX_API nvtxDomainRangePushEx(nvtxDomainHandle_t domain, const nvtxEventAttributes_t *eventAttrib);
+
 NVTX_DECLSPEC int NVTX_API nvtxDomainRangePop(nvtxDomainHandle_t domain);
 
-#endif //TAU_BROKEN_CUPTI_NVTX_PUSH_POP
+#endif //TAU_BROKEN_CUPTI_NVTX_CALLBACKS
 
 
 //Handle for CUPTI_CB_DOMAIN_NVTX

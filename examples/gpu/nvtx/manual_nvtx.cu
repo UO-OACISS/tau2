@@ -84,7 +84,7 @@ __global__ void check_results_kernel( int n, double correctvalue, double * x )
 
 void init_host_data( int n, double * x )
 {
-	PUSH_RANGE("init_host_data",1)
+	PUSH_RANGE("NVTX init_host_data",1)
 	for (int i=0; i<n; ++i)
 	{
 		x[i] = i;
@@ -94,7 +94,7 @@ void init_host_data( int n, double * x )
 
 void init_data(int n, double* x, double* x_d, double* y_d)
 {
-	PUSH_RANGE("init_data",2)
+	PUSH_RANGE("NVTX init_data",2)
 	cudaStream_t copy_stream;
 	cudaStream_t compute_stream;
 	cudaStreamCreate(&copy_stream);
@@ -113,7 +113,7 @@ void init_data(int n, double* x, double* x_d, double* y_d)
 
 void daxpy(int n, double a, double* x_d, double* y_d)
 {
-	PUSH_RANGE("daxpy",3)
+	PUSH_RANGE("NVTX daxpy",3)
 	daxpy_kernel<<<ceil(n/256),256>>>(n,a,x_d,y_d);
 	cudaDeviceSynchronize();
 	POP_RANGE
@@ -121,14 +121,14 @@ void daxpy(int n, double a, double* x_d, double* y_d)
 
 void check_results( int n, double correctvalue, double* x_d )
 {
-	PUSH_RANGE("check_results",4)
+	PUSH_RANGE("NVTX check_results",4)
 	check_results_kernel<<<ceil(n/256),256>>>(n,correctvalue,x_d);
 	POP_RANGE
 }
 
 void run_test(int n)
 {
-	PUSH_RANGE("run_test",0)
+	PUSH_RANGE("NVTX run_test",0)
 	double* x;
 	double* x_d;
 	double* y_d;
