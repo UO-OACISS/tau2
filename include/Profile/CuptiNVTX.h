@@ -28,7 +28,7 @@ https://gitlab.com/nvidia/headers/cuda-individual/nvtx/-/blob/0570d3f68e5bd2f3c9
 /* Fun!  CUPTI doesn't do callbacks for end or push events.  Wheeeeee
  * So, what we'll do is wrap the functions instead of having callbacks. */
 
-#define TAU_BROKEN_CUPTI_NVTX_PUSH_POP 1
+//#define TAU_BROKEN_CUPTI_NVTX_PUSH_POP
 
 
 // Ranges defined by Start/End can overlap. 
@@ -82,8 +82,6 @@ NVTX_DECLSPEC int NVTX_API nvtxRangePushA (const char *message);
 NVTX_DECLSPEC int NVTX_API nvtxRangePushW (const wchar_t *message);
 NVTX_DECLSPEC int NVTX_API nvtxRangePushEx (const nvtxEventAttributes_t *eventAttrib);
 NVTX_DECLSPEC int NVTX_API nvtxRangePop (void);
-
-//TO TEST
 
 nvtxDomainHandle_t tau_nvtxDomainCreateA_wrapper (nvtxDomainCreateA_p nvtxDomainCreateA_call, const char* name);
 nvtxDomainHandle_t tau_nvtxDomainCreateW_wrapper (nvtxDomainCreateW_p nvtxDomainCreateW_call, const wchar_t* name);

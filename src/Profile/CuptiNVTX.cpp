@@ -234,13 +234,21 @@ NVTX_DECLSPEC int NVTX_API nvtxRangePop (void) {
 
 nvtxDomainHandle_t tau_nvtxDomainCreateA_wrapper (nvtxDomainCreateA_p nvtxDomainCreateA_call, const char* name){
     auto handle = nvtxDomainCreateA_call(name);
-    std::string tmp{name};
-    get_domain_map().insert(std::pair<nvtxDomainHandle_t, std::string>(handle, tmp));
-	#ifdef NVTX_DEBUG_ENV
-		if (handle == NULL)
-			std:cout << "TAU-NVTX DomainCreateA wrapper obtained NULL domain handle!!!"<< std:endl;
-        std::cout << "TAU-NVTX " << "nvtxDomainCreateA ( " << tmp << ") !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-    #endif
+	if(handle != NULL)
+	{
+		std::string tmp{name};
+		get_domain_map().insert(std::pair<nvtxDomainHandle_t, std::string>(handle, tmp));
+		#ifdef NVTX_DEBUG_ENV
+			std::cout << "TAU-NVTX " << "nvtxDomainCreateA ( " << tmp << ") !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+		#endif
+	}
+	else
+	{
+		#ifdef NVTX_DEBUG_ENV
+			std::cout << "TAU-NVTX " << "nvtxDomainCreateA NULL !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+		#endif
+	}
+
     return handle;
 }
 NVTX_DECLSPEC nvtxDomainHandle_t NVTX_API nvtxDomainCreateA(const char* name){
@@ -251,12 +259,22 @@ NVTX_DECLSPEC nvtxDomainHandle_t NVTX_API nvtxDomainCreateA(const char* name){
 
 nvtxDomainHandle_t tau_nvtxDomainCreateW_wrapper (nvtxDomainCreateW_p nvtxDomainCreateW_call, const wchar_t* name){
 	auto handle = nvtxDomainCreateW_call(name);
-	std::wstring wtmp(name);
-    std::string tmp = std::string(wtmp.begin(), wtmp.end());
-    get_domain_map().insert(std::pair<nvtxDomainHandle_t, std::string>(handle, tmp));
-	#ifdef NVTX_DEBUG_ENV
-        std::cout << "TAU-NVTX " << "nvtxDomainCreateW ( " << tmp << ") !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-    #endif
+	if(handle != NULL)
+	{
+		std::wstring wtmp(name);
+		std::string tmp = std::string(wtmp.begin(), wtmp.end());
+		get_domain_map().insert(std::pair<nvtxDomainHandle_t, std::string>(handle, tmp));
+		#ifdef NVTX_DEBUG_ENV
+			std::cout << "TAU-NVTX " << "nvtxDomainCreateW ( " << tmp << ") !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+		#endif
+	}
+	else
+	{
+		#ifdef NVTX_DEBUG_ENV
+			std::cout << "TAU-NVTX " << "nvtxDomainCreateW NULL !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+		#endif
+	}
+
     return handle;
 }
 
@@ -270,11 +288,20 @@ NVTX_DECLSPEC nvtxDomainHandle_t NVTX_API nvtxDomainCreateW(const wchar_t* name)
 //---------!!!!!!!!!!!!!!!!!!!Should not implement??????????????????!!!!!!!!!!
 void tau_nvtxDomainDestroy_wrapper (nvtxDomainDestroy_p nvtxDomainDestroy_call, nvtxDomainHandle_t domain){
 	nvtxDomainDestroy_call(domain);
-	std::string domain_name(get_domain_map()[domain]);	
-    get_domain_map().erase(domain);
-	#ifdef NVTX_DEBUG_ENV
-        std::cout << "TAU-NVTX " << "nvtxDomainDestroy ( " << domain_name << ") !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-    #endif
+	if(domain != NULL)
+	{
+		std::string domain_name(get_domain_map()[domain]);	
+		get_domain_map().erase(domain);
+		#ifdef NVTX_DEBUG_ENV
+			std::cout << "TAU-NVTX " << "nvtxDomainDestroy ( " << domain_name << ") !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+		#endif
+	}
+	else
+	{
+		#ifdef NVTX_DEBUG_ENV
+			std::cout << "TAU-NVTX " << "nvtxDomainDestroy NULL !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+		#endif
+	}
     return;
 }
 
@@ -331,6 +358,78 @@ NVTX_DECLSPEC int NVTX_API nvtxDomainRangePop(nvtxDomainHandle_t domain){
 
 
   void handle_nvtx_callback(CUpti_CallbackId id, const void *cbdata){
-
+	const CUpti_NvtxData *nvtxInfo = (CUpti_NvtxData *)cbdata;
+	#ifdef NVTX_DEBUG_ENV
+		std::cout << "---handle_nvtx_callback-------************???????????" << std::endl;
+	#endif
+    switch (id) {
+		case CUPTI_CBID_NVTX_nvtxRangePushA:
+		{
+			#ifdef NVTX_DEBUG_ENV
+				std::cout << "---TAU-NVTX CUPTI_CBID_NVTX_nvtxRangePushA !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+			#endif
+			break;
+		}
+		case CUPTI_CBID_NVTX_nvtxRangePushW:
+		{
+			#ifdef NVTX_DEBUG_ENV
+				std::cout << "---TAU-NVTX CUPTI_CBID_NVTX_nvtxRangePushW !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+			#endif
+			break;
+		}
+		case CUPTI_CBID_NVTX_nvtxRangePushEx:
+		{
+			#ifdef NVTX_DEBUG_ENV
+				std::cout << "---TAU-NVTX CUPTI_CBID_NVTX_nvtxRangePushEx !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+			#endif
+			break;
+		}
+		case CUPTI_CBID_NVTX_nvtxRangePop:
+		{
+			#ifdef NVTX_DEBUG_ENV
+				std::cout << "---TAU-NVTX CUPTI_CBID_NVTX_nvtxRangePop !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+			#endif
+			break;
+		}
+		case CUPTI_CBID_NVTX_nvtxDomainCreateA:
+		{
+			#ifdef NVTX_DEBUG_ENV
+				std::cout << "---TAU-NVTX CUPTI_CBID_NVTX_nvtxDomainCreateA !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+			#endif
+			break;
+		}
+		case CUPTI_CBID_NVTX_nvtxDomainCreateW:
+		{
+			#ifdef NVTX_DEBUG_ENV
+				std::cout << "---TAU-NVTX CUPTI_CBID_NVTX_nvtxDomainCreateW !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+			#endif
+			break;
+		}
+		case CUPTI_CBID_NVTX_nvtxDomainDestroy:
+		{
+			#ifdef NVTX_DEBUG_ENV
+				std::cout << "---TAU-NVTX CUPTI_CBID_NVTX_nvtxDomainDestroy !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+			#endif
+			break;
+		}
+		case CUPTI_CBID_NVTX_nvtxDomainRangePushEx:
+		{
+			#ifdef NVTX_DEBUG_ENV
+				std::cout << "---TAU-NVTX CUPTI_CBID_NVTX_nvtxDomainRangePushEx !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+			#endif
+			break;
+		}
+		case CUPTI_CBID_NVTX_nvtxDomainRangePop:
+		{
+			#ifdef NVTX_DEBUG_ENV
+				std::cout << "---TAU-NVTX CUPTI_CBID_NVTX_nvtxDomainRangePop !!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+			#endif
+			break;
+		}
+		
+		
+		
+		
+	}
     return;
   }
