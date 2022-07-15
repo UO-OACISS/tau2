@@ -59,27 +59,14 @@
 static bool initializing = false;
 static bool initialized = false;
 static bool tau_initialized = false;
-#if defined (TAU_USE_TLS)
-__thread bool is_master = false;
-#elif defined (TAU_USE_DTLS)
-__declspec(thread) bool is_master = false;
-#elif defined (TAU_USE_PGS)
-#include "pthread.h"
-pthread_key_t thr_id_key;
-#endif
+static thread_local bool is_master{false};
 static bool tau_ompt_tracing = false;
 /* This is to prevent libotf2 from registering a thread when our worker
  * thread tries to store the asynchronous activity. */
 static thread_local bool internal_thread{false};
 
 int get_ompt_tid(void) {
-#if defined (TAU_USE_TLS)
   if (is_master) return 0;
-#elif defined (TAU_USE_DTLS)
-  if (is_master) return 0;
-#elif defined (TAU_USE_PGS)
-  if (pthread_getspecific(thr_id_key) != NULL) return 0;
-#endif
   return Tau_get_thread();
 }
 
@@ -896,13 +883,7 @@ on_ompt_callback_thread_begin(
   TauInternalFunctionGuard protects_this_function;
   if (internal_thread) { return; }
   if(Tau_ompt_callbacks_enabled[ompt_callback_thread_begin] && Tau_init_check_initialized()) {
-#if defined (TAU_USE_TLS)
     if (is_master) return; // master thread can't be a new worker.
-#elif defined (TAU_USE_DTLS)
-    if (is_master) return; // master thread can't be a new worker.
-#elif defined (TAU_USE_PGS)
-    if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
-#endif
     RtsLayer::RegisterThread();
     void *handle = NULL;
     char timerName[100];
@@ -927,16 +908,11 @@ on_ompt_callback_thread_end(
   ompt_data_t *thread_data)
 {
   TauInternalFunctionGuard protects_this_function;
+  if (internal_thread) { return; }
   // Prevent against callbacks after finalization
   if (Tau_ompt_finalized()) { return; }
   if(Tau_ompt_callbacks_enabled[ompt_callback_thread_end] && Tau_init_check_initialized()) {
-#if defined (TAU_USE_TLS)
     if (is_master) return; // master thread can't be a new worker.
-#elif defined (TAU_USE_DTLS)
-    if (is_master) return; // master thread can't be a new worker.
-#elif defined (TAU_USE_PGS)
-    if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
-#endif
     //TAU_PROFILER_STOP(thread_data->ptr);
     Tau_global_stop();
   }
@@ -1772,14 +1748,7 @@ extern "C" int ompt_initialize(
       TAU_PROFILE_SET_NODE(0);
   }
 
-#if defined (TAU_USE_TLS)
   is_master = true;
-#elif defined (TAU_USE_DTLS)
-  is_master = true;
-#elif defined (TAU_USE_PGS)
-  pthread_key_create(&thr_id_key, NULL);
-  pthread_setspecific(thr_id_key, 1);
-#endif
 
   /* Srinivasan here: This is BAD idea. But we NEED to ensure that the OMPT env
    * variables are initialized correctly before registering callbacks */
@@ -1808,8 +1777,8 @@ extern "C" int ompt_initialize(
   Tau_register_callback(ompt_callback_task_create, cb_t(on_ompt_callback_task_create));
   Tau_register_callback(ompt_callback_task_schedule, cb_t(on_ompt_callback_task_schedule));
   /* Intel doesn't provide the exit callback for implicit tasks... */
-#if !defined(__INTEL_COMPILER) && !defined(__ICC)
-  Tau_register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); //Sometimes high-overhead, but unfortunately we cannot avoid this as it is a required event
+#if !defined(__INTEL_COMPILER) && !defined(__ICC) && !defined(__clang__)
+  //Tau_register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); //Sometimes high-overhead, but unfortunately we cannot avoid this as it is a required event
 #endif
   Tau_register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
   Tau_register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
@@ -1858,7 +1827,7 @@ extern "C" int ompt_initialize(
 void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugins_enabled) {
   if(!initialized)
   {
-    fprintf(stderr, "TAU: WARNING: Could not register OMPT plugin callbacks as OMPT was not initialized.\n");
+    TAU_VERBOSE("TAU: WARNING: Could not register OMPT plugin callbacks as OMPT was not initialized.\n");
     return;
   }
 

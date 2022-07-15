@@ -84,7 +84,8 @@ private:
   static inline void checkPAPIVector(int tid){
 	//RtsLayer::LockDB();
 	std::lock_guard<std::mutex> guard(papiVectorMutex);  
-	while(ThePapiThreadList().size()<=tid){
+	size_t tidSiz = (size_t)tid;
+	while(ThePapiThreadList().size()<=tidSiz){
 	    ThePapiThreadList().push_back(NULL);
 	}
 	//RtsLayer::UnLockDB();
