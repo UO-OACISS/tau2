@@ -71,7 +71,8 @@ static void close_file() {
     if (!enabled || !opened) return;
     Tau_global_incr_insideTAU();
     mtx.lock();
-    uint64_t end = TauMetrics_getTimeOfDay();
+    uint64_t globalStart = TauMetrics_getInitialTimeStamp();
+    uint64_t end = TauMetrics_getTimeOfDay() - globalStart;
     tracefile << "{\"ts\": " << std::fixed << end
               << ", \"dur\": " << std::fixed << 1
               << ", \"ph\": \"X\", \"tid\": 0"
@@ -120,17 +121,20 @@ int Tau_plugin_skel_current_timer_exit(Tau_plugin_event_current_timer_exit_data_
     // get the current time
     // assume time is the first counter!
     // also convert it to microseconds
+    static uint64_t globalStart = TauMetrics_getInitialTimeStamp();
     uint64_t start = p->StartTime[0];
     uint64_t end = TauMetrics_getTimeOfDay();
     //double value = (end - start) * CONVERT_TO_USEC;
     uint64_t value = end - start;
+    start = start - globalStart; // normalize to 0
     mtx.lock();
     (*active_stream) << "{\"ts\": " << std::fixed << start
               << ", \"dur\": " << std::fixed << value
-              << ", \"ph\": \"X\", \"tid\": 0"
+              << ", \"ph\": \"X\", \"tid\": " << RtsLayer::myThread()
               << ", \"pid\": " << std::fixed << (Tau_get_node() == -1 ? 0 : Tau_get_node())
               << ", \"step\": " << std::fixed << step
               << ", " << data->name_prefix << "},\n";
+    active_stream->flush();
     mtx.unlock();
     Tau_global_decr_insideTAU();
     inside = false;
@@ -148,7 +152,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(&cb);
     /* Required event support */
     cb.PostInit = Tau_plugin_skel_post_init;
-    cb.PreEndOfExecution = Tau_plugin_skel_pre_end_of_execution;
+    //cb.PreEndOfExecution = Tau_plugin_skel_pre_end_of_execution;
     cb.EndOfExecution = Tau_plugin_skel_end_of_execution;
     cb.CurrentTimerExit = Tau_plugin_skel_current_timer_exit;
     cb.Dump = Tau_plugin_skel_dump;
