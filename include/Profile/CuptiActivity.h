@@ -260,6 +260,9 @@ extern "C" void Tau_cupti_gpu_exit_event_from_cpu(const char* name, int tid);
 
 extern "C" x_uint64 TauTraceGetTimeStamp();
 
+extern "C" void handle_nvtx_callback(CUpti_CallbackId id, const void *cbdata);
+
+
 void Tau_cupti_process_buffer(CUcontext c, uint32_t stream, uint8_t* buffer, size_t size, size_t validSize);
 
 void Tau_cupti_activity_flush_all();

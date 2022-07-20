@@ -18,6 +18,12 @@
 #define _FUNCTIONINFO_H_
 
 #include <string>
+#include <vector>
+#include <mutex>
+#include <unordered_map>
+#include <atomic>
+
+using namespace std;
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -41,8 +47,9 @@ extern int Tau_Global_numGPUCounters;
 }
 #endif /* __cplusplus */
 
-#define TAU_STORAGE(type, variable) type variable[TAU_MAX_THREADS]
-#define TAU_MULTSTORAGE(type, variable) type variable[TAU_MAX_THREADS][TAU_MAX_COUNTERS]
+//TODO: DYNATHREAD
+#define TAU_STORAGE(type, variable, init) type variable = init 
+#define TAU_MULTSTORAGE(type, variable, init) type variable[TAU_MAX_COUNTERS] = {init}
 
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
 #include <Profile/KtauFuncInfo.h>
@@ -101,7 +108,7 @@ public:
 			bool InitData);
 
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
-  KtauFuncInfo* GetKtauFuncInfo(int tid) { return &(KernelFunc[tid]); }
+  KtauFuncInfo* GetKtauFuncInfo(int tid) { return &( getFunctionMetric(tid)->KernelFunc); }
 #endif /* TAUKTAU && TAUKTAU_MERGE */
 
   inline void ExcludeTime(double *t, int tid);
@@ -124,27 +131,137 @@ public:
 
 #ifdef RENCI_STFF
   // signatures for inclusive time for each counter in each thread
-  TAU_MULTSTORAGE(ApplicationSignature*, Signatures);
   ApplicationSignature** GetSignature(int tid) {
-    return Signatures[tid];
+    return getFunctionMetric(tid)->Signatures;
   }
 #endif //RENCI_STFF
 
 private:
+  bool setPathHistograms=false;
   // A record of the information unique to this function.
   // Statistics about calling this function.
-
+  struct FunctionMetrics{//TODO: DYNATHREAD
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
   TAU_STORAGE(KtauFuncInfo, KernelFunc);
 #endif /* KTAU && KTAU_MERGE */
 
-  TAU_STORAGE(long, NumCalls);
-  TAU_STORAGE(long, NumSubrs);
-  TAU_MULTSTORAGE(double, ExclTime);
-  TAU_MULTSTORAGE(double, InclTime);
-  TAU_STORAGE(bool, AlreadyOnStack);
-  TAU_MULTSTORAGE(double, dumpExclusiveValues);
-  TAU_MULTSTORAGE(double, dumpInclusiveValues);
+#ifdef RENCI_STFF
+  // signatures for inclusive time for each counter in each thread
+  TAU_MULTSTORAGE(ApplicationSignature*, Signatures, NULL);
+#endif //RENCI_STFF
+
+  TAU_STORAGE(long, NumCalls, 0);
+  TAU_STORAGE(long, NumSubrs, 0);
+  TAU_MULTSTORAGE(double, ExclTime, 0);
+  TAU_MULTSTORAGE(double, InclTime, 0);
+  TAU_STORAGE(bool, AlreadyOnStack, false);
+  TAU_MULTSTORAGE(double, dumpExclusiveValues, 0);
+  TAU_MULTSTORAGE(double, dumpInclusiveValues, 0);
+  #ifndef _AIX //TODO: DYNAPROF the dynamic implementation of this needs more work
+    TauPathHashTable<TauPathAccumulator> *pathHistogram=NULL;
+  #endif /* _AIX */
+  };
+
+
+struct FMetricListVector : vector<FunctionMetrics *>{
+    FMetricListVector() {
+        // nothing
+    }
+
+    virtual ~FMetricListVector(){
+	//destructed=true;
+        Tau_destructor_trigger();
+    }
+};
+
+// Metric list -- one entry per thread
+FMetricListVector FMetricList;
+
+// Mutex which protects FMetricList
+std::mutex fInfoVectorMutex;
+
+struct FMetricListVector_local : vector<FunctionMetrics *>{
+    FMetricListVector_local() {
+        // nothing
+    }
+
+    virtual ~FMetricListVector_local(){
+        //destructed_local=true;
+	//Tau_destructor_trigger();
+    }
+};
+
+// Thread-local optimization for the FMetricList.
+// We need a thread-local FMetricList, which means a thread-local member.
+// C++ doesn't allow a thread_local member variable, only thread-local statics.
+// Pthread TLS only allows a maximum of 1,024 such variables,
+// and we need to support more timers than that.
+//
+// This keeps a sequential ID number for each FunctionInfo instance.
+// This is used an an index into the static thread_local MetricThreadCache.
+static thread_local FMetricListVector_local  MetricThreadCache;    //vector<FunctionMetrics*>* MetricThreadCache; // One entry per instance
+//static thread_local FMetricListVector MetricThreadCache; // One entry per instance #Fixes opari bug, breaks pthreads
+static std::atomic<uint64_t> next_id; // The next available ID; incremented when function_info_id is set.
+uint64_t function_info_id; // This is set in FunctionInfo::FunctionInfoInit()
+static bool use_metric_tls; // This is set to false to disable the thread-local cache during shutdown.
+//static bool destructed;
+//static thread_local bool destructed_local;
+//bool& Tau_is_destroyed(void);
+// getFunctionMetric(tid) returns the pointer to this instance's FunctionMetric 
+// for the given tid. Uses thread-local cache if tid = this thread.
+FunctionMetrics* getFunctionMetric(unsigned int tid){
+    FunctionMetrics* MOut = NULL;
+    /*if(destructed||destructed_local){
+	    fprintf(stderr,"TAU Warning: getting function from destructed thread!\n");
+	    return MOut;
+    }*/
+    static thread_local const unsigned int local_tid = RtsLayer::myThread();
+
+
+    // Use thread-local optimization if the current thread is requesting its own metrics.
+    // After the first time a thread requests its own metrics, we no longer have to lock.
+    // (If requesting a *different* thread's metrics, we have to use the slow path.)
+    // Also don't use the cache during shutdown -- it might have been destructed already,
+    // but we can't put a destructor trigger on MetricThreadCache because they are *also*
+    // destructed when a thread exits.
+    if(use_metric_tls && tid == local_tid){//&& tid!=0 && use_metric_tls && !destructed && !destructed_local) {
+        if(MetricThreadCache.size() > function_info_id) {
+            MOut = MetricThreadCache.operator[](function_info_id);
+            if(MOut != NULL) {
+                return MOut;
+            }
+        }
+    }
+    // Not in thread-local cache, or cache not searched.
+    // Create a new FunctionMetrics instance.
+    std::lock_guard<std::mutex> guard(fInfoVectorMutex);
+    while(FMetricList.size()<=tid){
+	FMetricList.push_back(new FunctionMetrics());
+        
+        if(setPathHistograms){//TODO: DYNAPROF
+            int topThread=FMetricList.size()-1;
+            FMetricList[topThread]->pathHistogram=new TauPathHashTable<TauPathAccumulator>(topThread);
+        }
+        
+    }
+    
+    MOut=FMetricList[tid];
+
+    // Use thread-local optimization if the current thread is requesting its own metrics.
+    if(use_metric_tls && tid == local_tid) {//tid !=0 && use_metric_tls && 
+        // Ensure the FMetricList vector is long enough to accomodate the new cached item.
+        while(MetricThreadCache.size() <= function_info_id) {
+            MetricThreadCache.push_back(NULL);
+        }    
+        // Store the FunctionMetrics pointer in the thread-local cache
+        MetricThreadCache.operator[](function_info_id) = MOut;
+    }
+    if(MOut==NULL){
+	    fprintf(stderr,"TAU Warning: getFunctionMetric returning NULL!\n");
+    }
+    return MOut;
+
+}
 
 public:
   char *Name;
@@ -164,7 +281,7 @@ public:
   //  map<unsigned long, unsigned int> *pcHistogram;
 #ifndef TAU_WINDOWS
 //#ifndef _AIX
-  TauPathHashTable<TauPathAccumulator> *pathHistogram[TAU_MAX_THREADS];
+  //TauPathHashTable<TauPathAccumulator> *pathHistogram[TAU_MAX_THREADS];
 
   // For CallSite discovery
   bool isCallSite;
@@ -174,6 +291,13 @@ public:
   char *ShortenedName;
   void SetShortName(std::string& str) { ShortenedName = strdup(str.c_str()); }
   const char* GetShortName() const { return ShortenedName; }
+  inline TauPathHashTable<TauPathAccumulator>* GetPathHistogram(int tid){//TODO: DYNAPROF
+    return getFunctionMetric(tid)->pathHistogram;
+  }
+  inline int getPathHistogramSize()
+  {
+	return FMetricList.size();
+  }
 
   /* EBS Sampling Profiles */
   void addPcSample(unsigned long *pc, int tid, double interval[TAU_MAX_COUNTERS]);
@@ -181,11 +305,11 @@ public:
 #endif // TAU_WINDOWS
 
   inline double *getDumpExclusiveValues(int tid) {
-    return dumpExclusiveValues[tid];
+    return getFunctionMetric(tid)->dumpExclusiveValues;
   }
 
   inline double *getDumpInclusiveValues(int tid) {
-    return dumpInclusiveValues[tid];
+    return getFunctionMetric(tid)->dumpInclusiveValues;
   }
 
   // Cough up the information about this function.
@@ -213,27 +337,54 @@ public:
   char const * GetFullName(); /* created on demand, cached */
 
   x_uint64 GetFunctionId() ;
-  long GetCalls(int tid) { return NumCalls[tid]; }
-  void SetCalls(int tid, long calls) { NumCalls[tid] = calls; }
-  long GetSubrs(int tid) { return NumSubrs[tid]; }
-  void SetSubrs(int tid, long subrs) { NumSubrs[tid] = subrs; }
+  long GetCalls(int tid) { return getFunctionMetric(tid)->NumCalls; }
+  void SetCalls(int tid, long calls) { getFunctionMetric(tid)->NumCalls = calls; }
+  long GetSubrs(int tid) {  return getFunctionMetric(tid)->NumSubrs; }
+  void SetSubrs(int tid, long subrs) { getFunctionMetric(tid)->NumSubrs = subrs; }
   void ResetExclTimeIfNegative(int tid);
 
 
-  double *getInclusiveValues(int tid);
-  double *getExclusiveValues(int tid);
+  double *getInclusiveValues(int tid){
+    printf ("TAU: Warning, potentially evil function called\n");
+    return getFunctionMetric(tid)->InclTime;
+  }
+  
+  double *getExclusiveValues(int tid){
+    printf ("TAU: Warning, potentially evil function called\n");
+    return getFunctionMetric(tid)->ExclTime;
+  }
 
-  void getInclusiveValues(int tid, double *values);
-  void getExclusiveValues(int tid, double *values);
+  void getInclusiveValues(int tid, double *values){
+    FunctionMetrics* tmp = getFunctionMetric(tid);
+    if(tmp==NULL)return;
+ 	  
+    for(int i=0; i<Tau_Global_numCounters; i++) {
+        values[i] = tmp->InclTime[i];
+    }
+  }
+  void getExclusiveValues(int tid, double *values){
+    FunctionMetrics* tmp = getFunctionMetric(tid);
+    if(tmp==NULL)return;
+	  
+    for(int i=0; i<Tau_Global_numCounters; i++) {
+        values[i] = tmp->ExclTime[i];
+    }
+  }
 
   void SetExclTimeZero(int tid) {
+    FunctionMetrics* tmp = getFunctionMetric(tid);
+    if(tmp==NULL)return;
+	  
     for(int i=0;i<Tau_Global_numCounters;i++) {
-      ExclTime[tid][i] = 0;
+      tmp->ExclTime[i] = 0;
     }
   }
   void SetInclTimeZero(int tid) {
+    FunctionMetrics* tmp = getFunctionMetric(tid);
+    if(tmp==NULL)return;
+	  
     for(int i=0;i<Tau_Global_numCounters;i++) {
-      InclTime[tid][i] = 0;
+      tmp->InclTime[i] = 0;
     }
   }
 
@@ -242,26 +393,35 @@ public:
   double *GetExclTime(int tid);
   double *GetInclTime(int tid);
   inline void SetExclTime(int tid, double *excltime) {
+    FunctionMetrics* tmp = getFunctionMetric(tid);
+      if(tmp==NULL)return;
     for(int i=0;i<Tau_Global_numCounters;i++) {
-      ExclTime[tid][i] = excltime[i];
+      tmp->ExclTime[i] = excltime[i];
     }
   }
   inline void SetInclTime(int tid, double *incltime) {
+    FunctionMetrics* tmp = getFunctionMetric(tid);
+    if(tmp==NULL)return;	  
     for(int i=0;i<Tau_Global_numCounters;i++)
-      InclTime[tid][i] = incltime[i];
+      tmp->InclTime[i] = incltime[i];
   }
 
 
-  inline void AddInclTimeForCounter(double value, int tid, int counter) { InclTime[tid][counter] += value; }
-  inline void AddExclTimeForCounter(double value, int tid, int counter) { ExclTime[tid][counter] += value; }
-  inline double GetInclTimeForCounter(int tid, int counter) { return InclTime[tid][counter]; }
-  inline double GetExclTimeForCounter(int tid, int counter) { return ExclTime[tid][counter]; }
+  inline void AddInclTimeForCounter(double value, int tid, int counter) { getFunctionMetric(tid)->InclTime[counter] += value; }
+  inline void AddExclTimeForCounter(double value, int tid, int counter) { getFunctionMetric(tid)->ExclTime[counter] += value; }
+  inline void SetExclTimeForCounter(double value, int tid, int counter) { getFunctionMetric(tid)->ExclTime[counter] = value; }
+  inline double GetInclTimeForCounter(int tid, int counter) { return getFunctionMetric(tid)->InclTime[counter]; }
+  inline double GetExclTimeForCounter(int tid, int counter) { return getFunctionMetric(tid)->ExclTime[counter]; }
 
   TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
   void SetProfileGroup(TauGroup_t gr) {MyProfileGroup_ = gr; }
 
   bool IsThrottled() const {
     return ! (RtsLayer::TheEnableInstrumentation() && (MyProfileGroup_ & RtsLayer::TheProfileMask()));
+  }
+
+  static void disable_metric_cache() {
+    use_metric_tls = false;
   }
 
 private:
@@ -280,38 +440,46 @@ int& TheUsingCompInst(void);
 inline void FunctionInfo::ExcludeTime(double *t, int tid) {
   // called by a function to decrease its parent functions time
   // exclude from it the time spent in child function
+  FunctionMetrics* tmp = getFunctionMetric(tid);
+  if(tmp==NULL)return;
   for (int i=0; i<Tau_Global_numCounters; i++) {
-    ExclTime[tid][i] -= t[i];
+    tmp->ExclTime[i] -= t[i];
   }
 }
 
 
 inline void FunctionInfo::AddInclTime(double *t, int tid) {
+  FunctionMetrics* tmp = getFunctionMetric(tid);
+  if(tmp==NULL)return;
   for (int i=0; i<Tau_Global_numCounters; i++) {
-    InclTime[tid][i] += t[i]; // Add Inclusive time
+    tmp->InclTime[i] += t[i]; // Add Inclusive time
   }
 }
 
 inline void FunctionInfo::AddExclTime(double *t, int tid) {
+  FunctionMetrics* tmp = getFunctionMetric(tid);
+  if(tmp==NULL)return;	
   for (int i=0; i<Tau_Global_numCounters; i++) {
-    ExclTime[tid][i] += t[i]; // Add Total Time to Exclusive time (-ve)
+    tmp->ExclTime[i] += t[i]; // Add Total Time to Exclusive time (-ve)
   }
 }
 
 inline void FunctionInfo::IncrNumCalls(int tid) {
-  NumCalls[tid]++; // Increment number of calls
-}
+  getFunctionMetric(tid)->NumCalls++; // Increment number of calls
+} 
 
 inline void FunctionInfo::IncrNumSubrs(int tid) {
-  NumSubrs[tid]++;  // increment # of subroutines
+  getFunctionMetric(tid)->NumSubrs++;  // increment # of subroutines
 }
 
 inline void FunctionInfo::SetAlreadyOnStack(bool value, int tid) {
-  AlreadyOnStack[tid] = value;
+  FunctionMetrics* tmp = getFunctionMetric(tid);
+  if(tmp==NULL)return;
+  tmp->AlreadyOnStack = value;
 }
 
 inline bool FunctionInfo::GetAlreadyOnStack(int tid) {
-  return AlreadyOnStack[tid];
+  return getFunctionMetric(tid)->AlreadyOnStack;
 }
 
 

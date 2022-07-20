@@ -92,6 +92,37 @@ extern TauUserEvent *TheGatherEvent(void);
 extern TauUserEvent *TheAllgatherEvent(void);
 #endif /* TAU_MPI */
 
+struct clockStamp{//TAU_MAX_THREADS of these
+    double userClock=0;//[TAU_MAX_THREADS];
+    double gpu_timestamp=0;//[TAU_MAX_THREADS];
+    double gpu_counterstamp[TAU_MAX_COUNTERS];//[TAU_MAX_THREADS]
+};
+
+struct TRMThreadList : vector<clockStamp*>{
+    TRMThreadList(){
+         //printf("Creating TRMThreadList at %p\n", this);
+      }
+     virtual ~TRMThreadList(){
+         //printf("Destroying TRMThreadList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
+
+static TRMThreadList & clockStampV(){
+    static TRMThreadList TRMThreads;
+    return TRMThreads;
+}
+inline void checkTRMVector(int tid){
+	while(clockStampV().size()<=tid){
+        RtsLayer::LockDB();
+		clockStampV().push_back(new clockStamp());
+        RtsLayer::UnLockDB();
+	}
+}
+
+int metric_get_num_clocks(){
+    return clockStampV().size();
+}
 
 
 /* null clock that always returns 0 */
@@ -123,14 +154,22 @@ double TauWindowsUsecD(void);
 
 /* user defined clock */
 
-static double userClock[TAU_MAX_THREADS];
+
+static inline double getUserClock(int tid){
+    checkTRMVector(tid);
+    return clockStampV()[tid]->userClock;
+}
+static inline void setUserClock(int tid, double value){
+    checkTRMVector(tid);
+    clockStampV()[tid]->userClock=value;
+}
 
 void metric_write_userClock(int tid, double value) {
-  userClock[tid] = value;
+  setUserClock(tid, value);
 }
 
 void metric_read_userClock(int tid, int idx, double values[]) {
-  values[idx] = userClock[tid];
+  values[idx] = getUserClock(tid);
 }
 
 
@@ -342,18 +381,35 @@ void metric_read_ktau(int tid, int idx, double values[]) {
 
 #define CPU_THREAD 0
 
-double gpu_timestamp[TAU_MAX_THREADS];
-double gpu_counterstamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
+
+inline double getGpuTimestamp(int tid){
+    checkTRMVector(tid);
+    return clockStampV()[tid]->gpu_timestamp;
+}
+inline void setGpuTimestamp(int tid, double value){
+    checkTRMVector(tid);
+    clockStampV()[tid]->gpu_timestamp=value;
+}
+
+inline double getGpuCounterstamp(int tid,int idx){
+    checkTRMVector(tid);
+    return clockStampV()[tid]->gpu_counterstamp[idx];
+}
+
+inline void setGpuCounterstamp(int tid,int idx,double value){
+    checkTRMVector(tid);
+    clockStampV()[tid]->gpu_counterstamp[idx] = value;
+}
 
 extern "C" void metric_set_gpu_timestamp(int tid, double value)
 {
   // printf("TauReadMetrics.cpp: metric_set_gpu_timestamp: tid = %d, value = %f\n", tid, value);
-	gpu_timestamp[tid] = value;
+	setGpuTimestamp(tid, value);
 }
 
 extern "C" void metric_set_gpu_counterstamp(int tid, int idx, double value)
 {
-	gpu_counterstamp[tid][idx] = value;
+	setGpuCounterstamp(tid, idx, value);
 }
 
 void metric_read_cudatime(int tid, int idx, double values[]) {
@@ -371,7 +427,7 @@ void metric_read_cudatime(int tid, int idx, double values[]) {
   // get time from the callback API 
   else
   {
-    values[idx] = gpu_timestamp[tid];
+    values[idx] = getGpuTimestamp(tid);
     //values[idx] = gpu_timestamp[tid][1];
   }
   //printf("metric_read_cudatime: tid %d, values[%d] = %f\n", tid, idx, values[idx]); 
@@ -384,7 +440,7 @@ void metric_read_cupti(int tid, int idx, double values[])
   { 
     values[idx] = 0;
   } else {
-    values[idx] = gpu_counterstamp[tid][Tau_CuptiLayer_get_cupti_event_id(idx)];
+    values[idx] = getGpuCounterstamp(tid, Tau_CuptiLayer_get_cupti_event_id(idx));
   }
 }
 #endif //CUPTI

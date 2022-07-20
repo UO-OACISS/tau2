@@ -21,6 +21,10 @@
 #include <string>
 #include <functional>
 #include <utility>
+#include <vector>
+#include <mutex>
+#include <atomic>
+using namespace std;
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -37,6 +41,7 @@
 typedef std::map<std::string, TauGroup_t, std::less<std::string> > ProfileMap_t;
 
 
+
 double TauWindowsUsecD(void);
 
 class RtsLayer {
@@ -45,6 +50,20 @@ public:
 
   RtsLayer () { }  // defaults
   ~RtsLayer () { }
+
+struct TAULocks{
+    int lockDBCount=0;
+    int lockEnvCount=0;
+};
+ struct LockList : vector<TAULocks *>{
+      LockList(){
+         //printf("Creating CapiThreadList at %p\n", this);
+      }
+     virtual ~LockList(){
+         //printf("Destroying CapiThreadList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
 
   static int _createThread(void);
   static int createThread(void);
@@ -83,7 +102,85 @@ public:
     else return "  ";
   }
 
-	static void Initialize(void);
+  static LockList & TheLockList() {
+    static LockList threadList;
+    return threadList;
+}
+  static std::mutex DBVectorMutex;
+
+  //static thread_local int local_lock_tid = RtsLayer::myThread();
+  //static thread_local TAULocks* TL_cache=0;
+  static std::atomic<int> maxLockTid;
+
+  static inline void checkLockVector(unsigned int tid){
+    if(maxLockTid>=0 && (unsigned int)maxLockTid>=tid){
+        //printf("Tid: %d vs max: %d. No check needed?\n",tid,maxLockTid);
+        return;
+    }
+
+      if(TheLockList().size()<=tid){
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
+      maxLockTid=tid;
+      while(TheLockList().size()<=tid){
+          TheLockList().push_back(new TAULocks());
+
+      }
+      }
+  }
+
+  inline static int getLockVecSize(){
+      return TheLockList().size();
+  }
+
+  static int getDBLock(int tid){
+      checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
+    return TheLockList()[tid]->lockDBCount;
+  }
+
+  inline static void setDBLock(int tid, int value){
+      checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
+    TheLockList()[tid]->lockDBCount=value;
+  }
+
+  inline static void incrementDBLock(int tid){
+      checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
+    TheLockList()[tid]->lockDBCount++;
+  }
+
+  inline static void decrementDBLock(int tid){
+      checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
+    TheLockList()[tid]->lockDBCount--;
+  }
+
+  inline static int getEnvLock(int tid){
+      checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
+    return TheLockList()[tid]->lockEnvCount;
+  }
+
+  inline static void setEnvLock(int tid, int value){
+      checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
+    TheLockList()[tid]->lockEnvCount=value;
+  }
+
+  inline static void incrementEnvLock(int tid){
+      checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
+    TheLockList()[tid]->lockEnvCount++;
+  }
+
+  inline static void decrementEnvLock(int tid){
+      checkLockVector(tid);
+      std::lock_guard<std::mutex> guard(RtsLayer::DBVectorMutex);
+    TheLockList()[tid]->lockEnvCount--;
+  }
+
+  static void Initialize(void);
 
   static int 	SetEventCounter(void);
   static double GetEventCounter(void);

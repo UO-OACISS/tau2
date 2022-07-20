@@ -313,6 +313,8 @@ void tau_pthread_function_cleanup_handler(void * args) {
   delete wrapper_args->pack;
 }
 
+extern void * after_ompt_init_thread_fn(void * unused);
+
 // TAU replaces the function which is to be launched on a new pthread
 // with this wrapper function, which ensures that the thread is registered
 // and starts a timer on it before calling the function that was actually
@@ -419,7 +421,13 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
   }
 
   int retval;
+
+#ifdef TAU_USE_OMPT_5_0
+  bool ignore_thread = !Tau_is_pthread_tracking_enabled() || start_routine == after_ompt_init_thread_fn;
+#else
   bool ignore_thread = !Tau_is_pthread_tracking_enabled();
+#endif
+
 #ifdef CUPTI
 /* This is needed so that TauGpu.cpp can let the rest of TAU know that
  * it has been initialized.  PthreadLayer.cpp needs to know whether

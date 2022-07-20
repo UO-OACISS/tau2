@@ -63,6 +63,7 @@ struct ScopedArray {
 
 void metric_read_nullClock(int tid, int idx, double values[]);
 void metric_write_userClock(int tid, double value);
+int metric_get_num_clocks();
 void metric_read_userClock(int tid, int idx, double values[]);
 void metric_read_logicalClock(int tid, int idx, double values[]);
 void metric_read_gettimeofday(int tid, int idx, double values[]);
@@ -104,7 +105,7 @@ int Tau_Global_numGPUCounters = 0;
 
 static TauUserEvent **traceCounterEvents;
 
-typedef void (*function)(int, int, double[]);
+typedef void (*tau_function)(int, int, double[]);
 
 static char *metricv[TAU_MAX_METRICS];
 static int nmetrics = 0;
@@ -120,7 +121,7 @@ static int nfunctions = 0;
 static int traceMetric = 0;
 
 /* array of function pointers used to get metric data */
-static function functionArray[TAU_MAX_METRICS];
+static tau_function functionArray[TAU_MAX_METRICS];
 
 /* gtod based initial timestamp, used for snapshots and other stuff */
 static x_uint64 initialTimeStamp = 0L;
@@ -931,10 +932,11 @@ int TauMetrics_init() {
             metricv_add (TauEnv_get_ebs_source());}
     }
 
-        /* Set the user clock values to 0 */
-    for (i = 0; i < TAU_MAX_THREADS; i++) {
-        metric_write_userClock(i, 0);
-    }
+		/* Set the user clock values to 0 */
+    int numClocks=metric_get_num_clocks();
+	for (i = 0; i < numClocks; i++) {
+		metric_write_userClock(i, 0);
+	}
 
     read_env_vars();
     //for(i = 0; i < nmetrics; i++)

@@ -30,4 +30,4 @@ ring: $(OBJS)
 	$(F90) -c $(INCLUDE) $< -o $@
 
 clean:
-	/bin/rm -f ring.o ring *.pdb profile.* 
+	/bin/rm -f ring.o ring *.pdb profile.* core core.* *.trc *.edf 

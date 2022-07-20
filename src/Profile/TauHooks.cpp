@@ -38,15 +38,15 @@ using namespace tau;
 
 extern "C" void tau_dyninst_init(int isMPI);
 
-#ifndef __ia64
+/*#ifndef __ia64
 int TheFlag[TAU_MAX_THREADS] ;
 #define TAU_MONITOR_ENTER(tid) if (TheFlag[tid] == 0) {TheFlag[tid] = 1;}  else {return; }
 #define TAU_MONITOR_EXIT(tid) TheFlag[tid] = 0
-#else /* FOR IA64 */
-vector<int> TheFlag(TAU_MAX_THREADS);
-#define TAU_MONITOR_ENTER(tid)  if (TheFlag[tid] == 0) {TheFlag[tid] = 1;}  else {return; }
+#else // FOR IA64 */
+vector<int> TheFlag;//(TAU_MAX_THREADS)
+#define TAU_MONITOR_ENTER(tid)  while(TheFlag.size()<=tid){TheFlag.push_back(0);} if (TheFlag[tid] == 0) {TheFlag[tid] = 1;}  else {return; }
 #define TAU_MONITOR_EXIT(tid) TheFlag[tid] = 0
-#endif /* IA64 */
+//#endif /* IA64 */
 
 
 vector<string> TauLoopNames; /* holds just names of loops */
@@ -291,8 +291,27 @@ int TauRenameTimer(char *oldName, char *newName)
 }
 
 
-static int tauFiniID = -1;
-static int tauDyninstEnabled[TAU_MAX_THREADS];
+static int tauFiniID = -1; 
+static vector <int> tauDyninstEnabled;//[TAU_MAX_THREADS];
+static int defaultDyEn=0;
+std::mutex DyEnVectorMutex;
+static inline void checkDyEnVector(int tid){
+    if(tauDyninstEnabled.size()<=tid){
+      std::lock_guard<std::mutex> guard(DyEnVectorMutex);
+      while(tauDyninstEnabled.size()<=tid){
+        tauDyninstEnabled.push_back(defaultDyEn);
+      }
+    }
+ }
+static inline void setTauDyninstEnabled(int tid, int val){
+    checkDyEnVector(tid);
+    tauDyninstEnabled[tid]=val;
+}
+
+static inline int getTauDyninstEnabled(int tid){
+    checkDyEnVector(tid);
+    return tauDyninstEnabled[tid];
+}
 
 void trace_register_func(char *origname, int id)
 {
@@ -321,7 +340,7 @@ void trace_register_func(char *origname, int id)
   }
   TAU_VERBOSE("trace_register_func: func = %s, id = %d\n", func, id);
   if (invocations == 0) {
-    if (!tauDyninstEnabled[tid]) {
+    if (!getTauDyninstEnabled(tid)) {
 #ifdef TAU_MPI
       tau_dyninst_init(1);
 #else
@@ -348,9 +367,7 @@ void trace_register_func(char *origname, int id)
     TAU_VERBOSE("func=%s, after chopping off the bracket! \n", func);
   }
 
-
-
-  if (!tauDyninstEnabled[tid]) return;
+  if (!getTauDyninstEnabled(tid)) return;
 
   void *taufi;
   TAU_PROFILER_CREATE(taufi, func, " ", TAU_DEFAULT);
@@ -396,7 +413,7 @@ void traceEntry(int id)
 {
   int tid = RtsLayer::myThread();
   if ( !RtsLayer::TheEnableInstrumentation()) return;
-  if (!tauDyninstEnabled[tid]) return;
+  if (!getTauDyninstEnabled(tid)) return;
   void *fi = TheTauBinDynFI()[id];
 
   // Additional sanity checks
@@ -450,7 +467,7 @@ void traceExit(int id)
   if ( !RtsLayer::TheEnableInstrumentation()) return;
   int tid = RtsLayer::myThread();
 
-  if (!tauDyninstEnabled[tid]) return;
+  if (!getTauDyninstEnabled(tid)) return;
   void *fi = TheTauBinDynFI()[id];
 #if 0
   if (fi)
@@ -483,7 +500,7 @@ void traceExit(int id)
     printf("ERROR: traceExit: fi = null!\n");
   }
   if(disableinstr) {
-    tauDyninstEnabled[tid] = false;
+    setTauDyninstEnabled(tid, false);
   }
 
 }
@@ -498,8 +515,8 @@ void my_otf_init(int isMPI)
     TAU_PROFILE_SET_NODE(0);
   }
   int tid = RtsLayer::myThread();
-  if (!tauDyninstEnabled[tid]) {
-    tauDyninstEnabled[tid] = 1;
+  if (!getTauDyninstEnabled(tid)) {
+    setTauDyninstEnabled(tid, 1);
   }
 }
 
@@ -518,10 +535,12 @@ void tau_dyninst_init(int isMPI)
     TAU_PROFILE_SET_NODE(0);
   }
   int tid = RtsLayer::myThread();
-  if (!tauDyninstEnabled[tid]) {
+  if (!getTauDyninstEnabled(tid)) {
+    defaultDyEn=1;
     RtsLayer::LockDB();
-    for (int i = 0; i < TAU_MAX_THREADS; i++)
-      tauDyninstEnabled[i] = 1;
+    int vecSize=tauDyninstEnabled.size();
+    for (int i = 0; i < vecSize; i++)
+      setTauDyninstEnabled(i,1);
     RtsLayer::UnLockDB();
   }
 }

@@ -20,7 +20,7 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) 
+CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) -std=gnu++11 
 
 LIBS 	      	= $(TAU_LIBS) 
 

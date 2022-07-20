@@ -1,0 +1,48 @@
+- For this example to work, first compile TAU with:
+	- ./configure -cuda=/packages/cuda/11.4/ -bfd=download
+
+
+- Add TAU to you PATH
+	- export PATH=$PATH:...
+
+- Compile the example with  lnvToolsExt, change paths to -L and -I for your cuda installation
+	- nvcc manual_nvtx.cu -o manual_nvtx -I/packages/cuda/11.4/include -L/packages/cuda/11.4/lib64 -lnvToolsExt -DUSE_NVTX
+
+- Execute TAU
+	- tau_exec -T serial,cupti -cupti ./manual_nvtx
+
+- Check Results, in this example the events appear with the NVTX prefix.
+	- pprof
+
+FUNCTION SUMMARY (total):
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        2,200        3,043           2           8    1521537 .TAU application
+ 27.6            6          839           1          12     839201 NVTX run_test
+ 25.9          787          787           1           0     787095 cudaMallocHost
+  0.6           19           19           1           0      19644 NVTX init_host_data
+  0.4           12           12           1           0      12596 cudaFreeHost
+  0.3            7            7           3           0       2656 cudaLaunchKernel
+  0.3         0.01            7           1           1       7857 NVTX check_results
+  0.1        0.092            3           1           8       3029 NVTX init_data
+  0.1            2            2           1           0       2780 Memory copy Host to Device
+  0.1            2            2           2           0       1336 cudaStreamSynchronize
+  0.0            1            1           2           0        720 cudaMalloc
+  0.0        0.716        0.716           2           0        358 cudaFree
+  0.0        0.014        0.097           1           2         97 NVTX daxpy
+  0.0        0.084        0.084           1           0         84 cudaMemcpyAsync
+  0.0        0.081        0.081           2           0         40 cudaDeviceSynchronize
+  0.0        0.064        0.064           1           0         64 daxpy_kernel(int, double, double*, double*)
+  0.0         0.05         0.05           2           0         25 cudaStreamCreate
+  0.0       0.0335       0.0335           1           0         34 check_results_kernel(int, double, double*)
+  0.0        0.032        0.032           1           0         32 cudaSetDevice
+  0.0        0.031        0.031           2           0         16 cudaStreamDestroy
+  0.0        0.021        0.021           1           0         21 init_data_kernel(int, double*)
+  0.0         0.02         0.02           2           0         10 Context Synchronize
+  0.0       0.0115       0.0115           1           0         12 Stream Synchronize
+
+
+
+

@@ -24,28 +24,49 @@
 #include <TauMetrics.h>
 #include <TauXML.h>
 #include <TauUnify.h>
+#include <vector>
 
 using namespace std;
 using namespace tau;
 
 static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer);
 static int startNewSnapshotFile(char *threadid, int tid, int to_buffer);
-
+struct SnapshotFileList : vector<Tau_util_outputDevice *>{
+    SnapshotFileList (const SnapshotFileList&) = delete;
+    SnapshotFileList& operator= (const SnapshotFileList&) = delete;
+    SnapshotFileList(){
+         //printf("Creating SnapshotFileList at %p\n", this);
+      }
+     virtual ~SnapshotFileList(){
+         //printf("Destroying SnapshotFileList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
 
 // Static holder for snapshot file handles
-static Tau_util_outputDevice **Tau_snapshot_getFiles() {
-  static Tau_util_outputDevice **snapshotFiles = NULL;
-  int i;
-  if (!snapshotFiles) {
-    snapshotFiles = new Tau_util_outputDevice*[TAU_MAX_THREADS];
-    for (i=0; i<TAU_MAX_THREADS; i++) {
-      snapshotFiles[i] = NULL;
-    }
-  }
- 
-  TAU_VERBOSE("Tau_snapshot_getFiles() end: out=%p\n", snapshotFiles); 
+static SnapshotFileList & Tau_snapshot_getFiles() {
+  static SnapshotFileList snapshotFiles;
+  TAU_VERBOSE("Tau_snapshot_getFiles() end: out=%p\n", &snapshotFiles); 
   return snapshotFiles;
 }
+
+static inline void checkSnapshotFilesVector(int tid){
+	while(Tau_snapshot_getFiles().size()<=tid){
+        RtsLayer::LockDB();
+		Tau_snapshot_getFiles().push_back(NULL);
+        RtsLayer::UnLockDB();
+	}
+}
+
+static inline Tau_util_outputDevice * Tau_snapshot_GetFile(int tid){
+    checkSnapshotFilesVector(tid);
+	return Tau_snapshot_getFiles()[tid];
+}
+static inline void Tau_snapshot_SetFile(int tid, Tau_util_outputDevice * value){
+    checkSnapshotFilesVector(tid);
+	Tau_snapshot_getFiles()[tid]=value;
+}
+
 
 static void writeEventXML(Tau_util_outputDevice *out, int id, FunctionInfo *fi) {
   Tau_util_output (out, "<event id=\"%d\"><name>", id);
@@ -74,32 +95,81 @@ extern "C" int Tau_snapshot_initialization() {
 }
 
 extern "C" void Tau_snapshot_getBuffer(char *buf) {
-	strcpy(buf, Tau_snapshot_getFiles()[0]->buffer);
+	strcpy(buf, Tau_snapshot_GetFile(0)->buffer);
 	for (int tid = 1; tid<RtsLayer::getTotalThreads(); tid++) {
-		strcat(buf, Tau_snapshot_getFiles()[tid]->buffer);
+		strcat(buf, Tau_snapshot_GetFile(tid)->buffer);
 	}
 }
 
 extern "C" int Tau_snapshot_getBufferLength() {
 	int length = 0;
 	for (int tid = 0; tid<RtsLayer::getTotalThreads(); tid++) {
-		length +=	Tau_snapshot_getFiles()[tid]->bufidx; 
+		length +=	Tau_snapshot_GetFile(tid)->bufidx; 
 	}
   return length;
 }
 
 // Static holder for snapshot event counts
-static int *Tau_snapshot_getEventCounts() {
-  static int eventCounts[TAU_MAX_THREADS];
+struct snapshotEventCountList: vector<int>{
+    snapshotEventCountList(){
+        //printf("Creating snapshotEventCountList at %p\n", this);
+    }
+    virtual ~snapshotEventCountList(){
+        //printf("Destroying snapshotEventCountList at %p, with size %ld\n", this, this->size());
+        Tau_destructor_trigger();
+    }
+};
+static snapshotEventCountList & Tau_snapshot_getEventCounts() {
+  static snapshotEventCountList eventCounts;
   return eventCounts;
 }
 
-// Static holder for snapshot user event counts
-static int *Tau_snapshot_getUserEventCounts() {
-  static int userEventCounts[TAU_MAX_THREADS];
-  return userEventCounts;
+static inline void checkEventCountsVector(int tid){
+	while(Tau_snapshot_getEventCounts().size()<=tid){
+        RtsLayer::LockDB();
+		Tau_snapshot_getEventCounts().push_back(0);
+        RtsLayer::UnLockDB();
+	}
 }
 
+static inline int Tau_snapshot_getEventCount(int tid){
+    checkEventCountsVector(tid);
+	return Tau_snapshot_getEventCounts()[tid];
+}
+static inline void Tau_snapshot_setEventCount(int tid, int value){
+    checkEventCountsVector(tid);
+	Tau_snapshot_getEventCounts()[tid]=value;
+}
+
+// Static holder for snapshot user event counts
+struct snapshotUserEventCountList: vector<int>{
+    snapshotUserEventCountList(){
+        //printf("Creating snapshotUserEventCountList at %p\n", this);
+    }
+    virtual ~snapshotUserEventCountList(){
+        //printf("Destroying snapshotUserEventCountList at %p, with size %ld\n", this, this->size());
+        Tau_destructor_trigger();
+    }
+};
+static snapshotUserEventCountList & Tau_snapshot_getUserEventCounts() {
+  static snapshotUserEventCountList userEventCounts;
+  return userEventCounts;
+}
+static inline void checkUserEventCountsVector(int tid){
+	while(Tau_snapshot_getUserEventCounts().size()<=tid){
+        RtsLayer::LockDB();
+		Tau_snapshot_getUserEventCounts().push_back(0);
+        RtsLayer::UnLockDB();
+	}
+}
+static inline int Tau_snapshot_getUserEventCount(int tid){
+    checkUserEventCountsVector(tid);
+	return Tau_snapshot_getUserEventCounts()[tid];
+}
+static inline void Tau_snapshot_setUserEventCount(int tid, int value){
+    checkUserEventCountsVector(tid);
+	Tau_snapshot_getUserEventCounts()[tid]=value;
+}
 
 extern "C" int Tau_snapshot_writeToBuffer(const char *name) {
   Tau_snapshot_writeSnapshot(name, 1);
@@ -122,7 +192,7 @@ extern "C" int Tau_snapshot_writeMetaDataBlock() {
   int tid = RtsLayer::myThread();
   int totalThreads = RtsLayer::getTotalThreads();
   //Tau_util_outputDevice *out = Tau_snapshot_getFiles()[tid];
-  Tau_util_outputDevice *out = Tau_snapshot_getFiles()[0];
+  Tau_util_outputDevice *out = Tau_snapshot_GetFile(0);
   char threadid[4096];
   sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
 
@@ -147,7 +217,7 @@ extern "C" int Tau_snapshot_writeMetaDataBlock() {
 static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
   int tid = RtsLayer::myThread();
   int i, c;
-  Tau_util_outputDevice *out = Tau_snapshot_getFiles()[tid];
+  Tau_util_outputDevice *out = Tau_snapshot_GetFile(tid);
   
   char threadid[4096];
   sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
@@ -158,7 +228,7 @@ static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
 
    if (!out) {
      startNewSnapshotFile(threadid, tid, to_buffer);
-     out = Tau_snapshot_getFiles()[tid];
+     out = Tau_snapshot_GetFile(tid);
    } else {
      Tau_util_output (out, "<profile_xml>\n");
    }
@@ -168,25 +238,25 @@ static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
 	 }
    
    // write out new events since the last snapshot
-   if (Tau_snapshot_getEventCounts()[tid] != numFunc) {
+   if (Tau_snapshot_getEventCount(tid) != numFunc) {
      Tau_util_output (out, "\n<definitions thread=\"%s\">\n", threadid);
-     for (int i=Tau_snapshot_getEventCounts()[tid]; i < numFunc; i++) {
+     for (int i=Tau_snapshot_getEventCount(tid); i < numFunc; i++) {
        FunctionInfo *fi = TheFunctionDB()[i];
        writeEventXML(out, i, fi);
      }
      Tau_util_output (out, "</definitions>\n");
-     Tau_snapshot_getEventCounts()[tid] = numFunc;
+     Tau_snapshot_setEventCount(tid, numFunc);
    }
 
    // write out new user events since the last snapshot
-   if (Tau_snapshot_getUserEventCounts()[tid] != numEvents) {
+   if ( Tau_snapshot_getUserEventCount(tid) != numEvents) {
      Tau_util_output (out, "\n<definitions thread=\"%s\">\n", threadid);
-     for (int i=Tau_snapshot_getUserEventCounts()[tid]; i < numEvents; i++) {
+     for (int i= Tau_snapshot_getUserEventCount(tid); i < numEvents; i++) {
        TauUserEvent *ue = TheEventDB()[i];
        writeUserEventXML(out, i, ue);
      }
      Tau_util_output (out, "</definitions>\n");
-     Tau_snapshot_getUserEventCounts()[tid] = numEvents;
+     Tau_snapshot_setUserEventCount(tid, numEvents);
    }
 
    // now write the actual profile data for this snapshot
@@ -253,7 +323,7 @@ static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
 int Tau_snapshot_writeUnifiedBuffer(int tid) {
   //int tid = RtsLayer::myThread();
   int c;
-  Tau_util_outputDevice *out = Tau_snapshot_getFiles()[tid];
+  Tau_util_outputDevice *out = Tau_snapshot_GetFile(tid);
   
   char threadid[4096];
   sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
@@ -263,7 +333,7 @@ int Tau_snapshot_writeUnifiedBuffer(int tid) {
    if (!out) {
      int to_buffer=1;
      startNewSnapshotFile(threadid, tid, to_buffer);
-     out = Tau_snapshot_getFiles()[tid];
+     out = Tau_snapshot_GetFile(tid);
    } else {
      Tau_util_output (out, "<profile_xml>\n");
    }
@@ -413,7 +483,7 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
   }
     
   // assign it back to the global structure for this thread
-  Tau_snapshot_getFiles()[tid] = out;
+  Tau_snapshot_SetFile(tid, out);
 	
   if (TauEnv_get_summary_only()) { /* skip thread id for summary */
 		return 0;
@@ -440,8 +510,8 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
   }
 
   // set the counts to zero
-  Tau_snapshot_getEventCounts()[tid] = 0;
-  Tau_snapshot_getUserEventCounts()[tid] = 0;
+  Tau_snapshot_setEventCount(tid, 0);
+  Tau_snapshot_setUserEventCount(tid, 0);
 
   Tau_util_output (out, "</definitions>\n");
   return 0;
@@ -451,7 +521,7 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
 
 extern "C" int Tau_snapshot_writeFinal(const char *name) {
   int tid = RtsLayer::myThread();
-  Tau_util_outputDevice *out = Tau_snapshot_getFiles()[tid];
+  Tau_util_outputDevice *out = Tau_snapshot_GetFile(tid);
   int haveWrittenSnapshot = 0;
  
   if (out != NULL) { 
@@ -462,7 +532,7 @@ extern "C" int Tau_snapshot_writeFinal(const char *name) {
   
   if (haveWrittenSnapshot || (TauEnv_get_profile_format() == TAU_FORMAT_SNAPSHOT)) { 
     Tau_snapshot_writeSnapshot(name, 0);
-    out = Tau_snapshot_getFiles()[tid];
+    out = Tau_snapshot_GetFile(tid);
     if (out->type == TAU_UTIL_OUTPUT_FILE) {
       fclose(out->fp);
     }

@@ -1,0 +1,17 @@
+This example demonstrates the use of TensorFlow/Keras callbacks to start and stop TAU timers.
+
+Build TAU for use with TensorFlow; for example,
+
+    ./configure -bfd=download -unwind=download -cuda=/packages/cuda/11.2.2 -pthread -python -useropt=-O2\ -DTAU_MAX_THREADS=4096
+    make
+    make install
+
+Add the library directory containing tau.py to $PYTHONPATH; for example,
+
+    export PYTHONPATH=$HOME/tau2/x86_64/lib/shared-pthread-python-cupti:$PYTHONPATH
+
+ Run the iris example:
+
+    python iris-callbacks.py
+
+ 

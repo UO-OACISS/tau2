@@ -20,6 +20,7 @@
 #include <limits>
 #include <vector>
 #include <map>
+#include <mutex>
 #include <Profile/TauInit.h>
 #include <Profile/TauEnv.h>
 #include <Profile/TauMmapMemMgr.h>
@@ -233,17 +234,48 @@ public:
 
 private:
 
+  std::mutex DataVectorMutex;
+  inline void checkDataVector(unsigned int tid){
+      std::lock_guard<std::mutex> guard(DataVectorMutex);
+      while (Tau_getUserData().size()<=tid){
+          Tau_getUserData().push_back(new Data());
+      }
+  }
   Data & ThreadData() {
-    return eventData[RtsLayer::myThread()];
+    int tid=RtsLayer::myThread();
+    checkDataVector(tid);
+    return *Tau_getUserData()[tid];
   }
 
   Data & ThreadData(int tid) {
-    return eventData[tid];
+    checkDataVector(tid);
+    return *Tau_getUserData()[tid];
+  }
+
+  int ThreadDataSize(){
+	return Tau_getUserData().size();
   }
 
   void AddEventToDB();
 
-  Data eventData[TAU_MAX_THREADS];
+  struct UDataList: vector<Data*>{
+    UDataList (const UDataList&) = delete;
+    UDataList& operator= (const UDataList&) = delete;
+    UDataList(){
+         //printf("Creating UDataList at %p\n", this);
+      }
+     virtual ~UDataList(){
+         //printf("Destroying UDataList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+  };
+  // non-static holder provider for UserData
+  UDataList uDataList;
+  UDataList & Tau_getUserData() {
+      //static UDataList uDataList;
+      return uDataList;
+  }
+  //vector<Data*> eventData;//[TAU_MAX_THREADS]; //TODO: DYNATHREAD
 
   x_uint64 eventId;
   std::string name;

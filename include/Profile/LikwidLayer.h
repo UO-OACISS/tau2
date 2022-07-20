@@ -17,9 +17,11 @@
 #define _LIKWID_LAYER_H_
 
 #ifdef TAU_LIKWID
+#include <vector>
+
 struct ThreadValue {
-  int ThreadID; 
-  long long *CounterValues;
+  int ThreadID=0; 
+  long long *CounterValues=0;
 };
 
 
@@ -29,17 +31,33 @@ public:
   static long long getSingleCounter(int tid);
   static long long *getAllCounters(int tid, int *numValues);
   static int addEvents(const char *name); 
-  static ThreadValue *ThreadList[TAU_MAX_THREADS];
   static int numCounters;
   static int counterList[TAU_MAX_COUNTERS];
   static int* cpus;
   static int gid;
   static int err;
   static bool likwidInitialized;
+  static inline void SetThreadList(int tid, ThreadValue* tv){
+    checkLikwidVector(tid);
+    TheThreadList()[tid]=tv;
+  }
+  static inline ThreadValue* GetThreadList(int tid){
+    checkLikwidVector(tid);
+    return TheThreadList()[tid];
+  }
 private:
   static int initializeSingleCounter();
   static int initializeThread(int tid);
   static double scalingFactor;
+  static vector<ThreadValue *> & TheThreadList();
+  static inline void checkLikwidVector(int tid){
+        while(TheThreadList().size()<=tid){
+        RtsLayer::LockDB();
+            TheThreadList().push_back(NULL);
+        RtsLayer::UnLockDB();
+        }
+}
+
 };
 
 #endif /* TAU_LIKWID */

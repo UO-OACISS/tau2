@@ -44,6 +44,8 @@
 #include <limits.h>
 
 #include <string>
+#include <vector>
+//#include <mutex>
 
 #ifdef TAU_VAMPIRTRACE
 #include <Profile/TauVampirTrace.h>
@@ -142,12 +144,88 @@ extern void TauFlushRocmEventsIfNecessary(int thread_id);
 #endif /* TAU_ENABLE_ROCM */
 
 x_uint64 Tau_get_firstTimeStamp();
+struct ProfilerData{
+    int profileWriteCount=0;
+    #ifdef TAU_TRACK_IDLE_THREADS
+        double TheLastTimeStamp[TAU_MAX_COUNTERS];
+    #endif /* TAU_TRACK_IDLE_THREADS */
+};
+struct ProfThreadList : vector<ProfilerData*>{
+    ProfThreadList (const ProfThreadList&) = delete;
+    ProfThreadList& operator= (const ProfThreadList&) = delete;
+    ProfThreadList(){
+         //printf("Creating ProfilerThreadList at %p\n", this);
+      }
+     virtual ~ProfThreadList(){
+         //printf("Destroying ProfilerThreadList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
+
+static ProfThreadList & TheProfilerThreadList(){
+	static ProfThreadList profThreads;
+	return profThreads;
+}
+//static std::lock_guard<std::mutex> guard(ProfilerVectorMutex);
+static std::mutex ProfilerVectorMutex;
+inline void checkProfilerVector(int tid){
+    //if(TheProfilerThreadList().size()<=tid){
+    //  static std::mutex ProfilerVectorMutex;
+    //  std::lock_guard<std::mutex> guard(ProfilerVectorMutex);
+	while(TheProfilerThreadList().size()<=tid){
+        //RtsLayer::LockDB();
+		TheProfilerThreadList().push_back(new ProfilerData());
+        //ProfilerThreadList.back()->profileWriteCount=0;
+        //RtsLayer::UnLockDB();
+	}
+   // }
+    //printf("Write count for tid: %d, post-check: %d\n",tid,ProfilerThreadList[tid]->profileWriteCount);
+}
+
+
+static thread_local int local_tid = RtsLayer::myThread();
+static thread_local ProfilerData* PD_cache=0;
+
+static inline ProfilerData& getProfilerData(int tid){
+
+    if(tid == local_tid){
+        if(PD_cache!=0){
+            return *PD_cache;
+        }
+    }
+
+    //printf("CACHE MISSED seeking %d on %d!!!\n",tid,local_tid);
+    std::lock_guard<std::mutex> guard(ProfilerVectorMutex);
+    checkProfilerVector(tid);
+    ProfilerData* PDOut=TheProfilerThreadList()[tid];
+    if(tid == local_tid){
+        if(PD_cache==0){
+            PD_cache=PDOut;
+        }
+    }
+    return *PDOut;
+}
 
 //////////////////////////////////////////////////////////////////////
 // For OpenMP
 //////////////////////////////////////////////////////////////////////
 #ifdef TAU_TRACK_IDLE_THREADS
-double TheLastTimeStamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
+//double TheLastTimeStamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS]; //TODO: DYNATHREAD
+inline void setLastTimeStamp(int tid, int counter, double value){
+    //printf("SLT: TID: %d, CID: %d\n",tid,counter);
+
+    //printf("SLT: Checked\n");
+    //if(ProfilerThreadList()[tid]->TheLastTimeStamp==0||)
+    //{
+    //    printf("SLT: Invalid!\n");
+    //}
+
+    getProfilerData(tid).TheLastTimeStamp[counter]=value;
+}
+inline double getLastTimeStamp(int tid, int counter){
+
+    return getProfilerData(tid).TheLastTimeStamp[counter];
+}
 #endif /* TAU_TRACK_IDLE_THREADS */
 
 //////////////////////////////////////////////////////////////////////
@@ -279,7 +357,7 @@ void Profiler::Start(int tid)
   // get the timers read just after initialization.
 #ifndef TAU_SCOREP
   if (TimeStamp == 0L) {
-#if !defined(TAU_USE_OMPT_5_0) || !defined(TAU_GPU) // this can happen with OMPT async threads
+#if !defined(TAU_USE_OMPT_5_0) && !defined(TAU_GPU) // this can happen with OMPT async threads
     printf("Got a bogus start! %d %s\n", tid, ThisFunction->GetName());
 #endif
     TauMetrics_getDefaults(tid, StartTime, 1);
@@ -468,14 +546,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
     /* for openmp parallel regions */
     /* .TAU Application needs to be stopped */
     for (i = 0; i < TAU_MAX_COUNTERS; i++) {
-      CurrentTime[i] = TheLastTimeStamp[tid][i];
+      CurrentTime[i] = getLastTimeStamp(tid,i);
     }
   } else {
     /* use the usual mechanism */
     RtsLayer::getUSecD(tid, CurrentTime);
   }
   for (i = 0; i < TAU_MAX_COUNTERS; i++) {
-    TheLastTimeStamp[tid][i] = CurrentTime[i];
+    setLastTimeStamp(tid,i,CurrentTime[i]);
   }
 #else
   RtsLayer::getUSecD(tid, CurrentTime);
@@ -740,7 +818,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #ifdef TAU_TRACK_IDLE_THREADS /* Check if we need to shut off .TAU applications on other tids */
         if (tid == 0) {
           int i;
-          for (i = 1; i < TAU_MAX_THREADS; i++) {
+          for (i = 1; i < TheProfilerThreadList().size(); i++) {
             /* for all other threads */
             Profiler *cp = TauInternal_CurrentProfiler(i);
             if (cp && strncmp(cp->ThisFunction->GetName(), ".TAU", 4) == 0) {
@@ -769,6 +847,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
     plugin_data.timer_group = ThisFunction->GetAllGroups();
     plugin_data.tid = tid;
     plugin_data.timestamp = TimeStamp;
+    plugin_data.metrics = &(TotalTime[0]);
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_EXIT, ThisFunction->GetName(), &plugin_data);
   }
 }
@@ -1184,7 +1263,10 @@ int TauProfiler_updateIntermediateStatistics(int tid)
   // iterate over all functions in the database.
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
-
+    if(fi==NULL){
+	    TAU_VERBOSE("WARNING: NULL FunctionInfoPointer!");
+	    continue;
+    }
     // get the current "dump" profile for this timer
     double *incltime = fi->getDumpInclusiveValues(tid);
     double *excltime = fi->getDumpExclusiveValues(tid);
@@ -1541,14 +1623,31 @@ static int writeProfile(FILE *fp, char *metricName, int tid, int metric, const c
   return 0;
 }
 
-static int profileWriteCount[TAU_MAX_THREADS];
+//static int profileWriteCount[TAU_MAX_THREADS];
+inline void setProfileWriteCount(int tid, int val){//TODO: DYNATHREAD
+
+    getProfilerData(tid).profileWriteCount=val;
+}
+inline void incProfileWriteCount(int tid){
+
+    //printf("Write count for tid: %d, pre increment: %d\n",tid,ProfilerThreadList[tid]->profileWriteCount);
+    //printf("Vector for tid: %d: %p\n",tid,ProfilerThreadList);
+    //printf("Pointer for tid: %d, pre increment: %p\n",tid,ProfilerThreadList[tid]);
+    //printf("ProfilerThreadList size: %d, checking tid: %d\n",ProfilerThreadList.size(),tid);
+    getProfilerData(tid).profileWriteCount++;
+
+}
+inline int getProfileWriteCount(int tid){//TODO: DYNATHREAD
+
+    return getProfilerData(tid).profileWriteCount;
+}
 static int profileWriteWarningPrinted = 0;
 
 extern "C" int Tau_profiler_initialization()
 {
   int i;
-  for (i = 1; i < TAU_MAX_THREADS; i++) {
-    profileWriteCount[i] = 0;
+  for (i = 1; i < TheProfilerThreadList().size(); i++) {
+    setProfileWriteCount(i,0);
   }
   profileWriteWarningPrinted = 0;
   return 0;
@@ -1604,17 +1703,17 @@ int TauProfiler_StoreData(int tid)
 #ifdef TAU_SCOREP
   Tau_write_metadata_records_in_scorep(tid);
 #endif /* TAU_SCOREP */
-  profileWriteCount[tid]++;
+  incProfileWriteCount(tid);
   // if ((tid != 0) && (profileWriteCount[tid] > 1)) return 0;
 #if !defined(PTHREADS)
   // Rob:  Needed to evaluate for kernels to show in profiles (ignore dreaded #2 thread)!
-  if ((tid != 0) && (profileWriteCount[tid] > 1)) {
-    TAU_VERBOSE("[Profiler]: TauProfiler_StoreData: returning, tid: %i, profileWriteCount[%i]: %i\n", tid, tid, profileWriteCount[tid]);
+  if ((tid != 0) && (getProfileWriteCount(tid) > 1)) {
+    TAU_VERBOSE("[Profiler]: TauProfiler_StoreData: returning, tid: %i, profileWriteCount[%i]: %i\n", tid, tid, getProfileWriteCount(tid));
     return 0;
   }
 #endif
   //TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 2\n", RtsLayer::myNode(), tid);
-  if (profileWriteCount[tid] == 10) {
+  if (getProfileWriteCount(tid) == 10) {
     RtsLayer::LockDB();
     if (profileWriteWarningPrinted == 0) {
       profileWriteWarningPrinted = 1;

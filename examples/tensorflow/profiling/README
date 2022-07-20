@@ -1,0 +1,71 @@
+This example demonstrates the use of TAU with TensorFlow.
+
+To use the hello.py example, you will need a install of TensorFlow. 
+If you do not already have one, follow the instructions at 
+    https://www.tensorflow.org/install/pip
+to install TensorFlow into a Conda environment.
+Make sure the environment containing TensorFlow is active.
+
+############################################################################
+
+Building TAU:
+
+Build TAU for use with TensorFlow. A simple configuration that can be used is:
+
+    ./configure -bfd=download -unwind=download -pthread -python 
+
+    make install 
+
+This will build TAU against the version of Python which is represented by the
+`python` executable in your $PATH. If you need to use a different Python,
+use -pythoninc, -pythonlib, and -pythonlibrary as arguments to configure to 
+specify the locations of the Python libraries and header files for the specific
+version of Python that you will be using with TensorFlow.
+
+Because TensorFlow uses pthreads internally, a pthread-compatible version of
+TAU must always be used when profiling TensorFlow applications.
+
+############################################################################
+
+Instrumenting TensorFlow applications:
+
+The simple "Hello World" example hello.py can be run with
+
+    python hello.py
+
+To instrument with TAU using the configuration above, run with:
+
+    tau_python -T serial,python,pthread hello.py
+
+A slighly more complicated example is in iris.py.
+This example also uses Pandas and Scikit-Learn, so these must be installed
+in your Conda environment to use it.
+
+To run the Iris example without TAU:
+
+    python iris.py
+
+To instrument with TAU using the configuration above, run with:
+    
+    tau_python -T serial,python,pthread iris.py
+
+############################################################################
+
+Using CUPTI to collect GPU performance data:
+
+To collect data on CUDA kernels run by TensorFlow, build TAU with 
+support for CUPTI with
+
+    ./configure -python -pthread -bfd=download -unwind=download -cuda=<path to CUDA>
+
+    make install
+
+Note that this should be the exact same version of CUDA that TensorFlow
+is using. Errors may occur if TAU and TensorFlow are built to use 
+different versions of CUDA.
+
+Collect profiles with:
+
+    tau_python -T serial,python,pthread,cupti -cupti hello.py
+
+

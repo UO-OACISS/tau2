@@ -160,6 +160,7 @@ extern "C" {
   const char*  TAUDECL TauEnv_get_profile_prefix();
   int  TAUDECL TauEnv_get_profile_format();
   int  TAUDECL TauEnv_get_merge_metadata();
+  int  TAUDECL TauEnv_get_disable_metadata();
   int  TAUDECL TauEnv_get_sigusr1_action();
 
   int TAUDECL TauEnv_get_memdbg();

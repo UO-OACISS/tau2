@@ -82,7 +82,7 @@
     OTF2_ErrorCode ec = call; \
     if (ec != OTF2_SUCCESS) { \
         printf("TAU: OTF2 Error (%s:%d): %s, %s\n", __FILE__, __LINE__, OTF2_Error_GetName(ec), OTF2_Error_GetDescription (ec)); \
-		printf("Prevous: %d, %lu tid = %d\n", previous_type[tid], previous_ts[tid], tid); \
+		printf("Prevous: %d, %lu tid = %d\n", getPreviousType(tid), getPreviousTS(tid), tid); \
         abort(); \
     } \
 }
@@ -117,8 +117,7 @@ static uint64_t start_time = 0;
 // Time of last event recorded
 static uint64_t end_time = 0;
 // Type, Time of previous event
-static int previous_type[TAU_MAX_THREADS] = {0};
-static uint64_t previous_ts[TAU_MAX_THREADS] = {0};
+//static int previous_type[TAU_MAX_THREADS] = {0};
 
 static uint64_t global_start_time = 0;
 
@@ -135,8 +134,103 @@ struct temp_buffer_entry {
 // Temporary buffer for events prior to initialization
 // pair.first = FunctionId
 // pair.second = timestamp
-static vector<temp_buffer_entry> * temp_buffers[TAU_MAX_THREADS] = {0};
-static bool buffers_written[TAU_MAX_THREADS] = {0};
+//static vector<temp_buffer_entry> * temp_buffers[TAU_MAX_THREADS] = {0};
+//static bool buffers_written[TAU_MAX_THREADS] = {0};
+
+
+typedef pair<pair<int,int>,int> rma_win_triple_t;
+typedef map<rma_win_triple_t,uint64_t> rma_win_map_t;
+
+//static rma_win_map_t * local_rma_win_maps[TAU_MAX_THREADS];
+
+//static uint64_t next_rma_win[TAU_MAX_THREADS];
+
+
+
+
+struct otf2_thread_data{
+    int previous_type = 0;
+    uint64_t previous_ts = 0;
+    bool buffers_written = false;
+    vector<temp_buffer_entry> * temp_buffers=NULL;
+    uint64_t next_rma_win;
+    rma_win_map_t * local_rma_win_maps;
+};
+
+struct OTF2ThreadList : vector<otf2_thread_data *>{
+    OTF2ThreadList (const OTF2ThreadList&) = delete;
+    OTF2ThreadList& operator= (const OTF2ThreadList&) = delete;
+    OTF2ThreadList(){
+         //printf("Creating OTF2ThreadList at %p\n", this);
+      }
+     virtual ~OTF2ThreadList(){
+         //printf("Destroying OTF2ThreadList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
+
+// Static holder for snapshot file handles
+static OTF2ThreadList & Tau_otf2_getThreadData() {
+  static OTF2ThreadList otf2ThreadList;
+  TAU_VERBOSE("Tau_otf2_getThreadData() end: out=%p\n", &Tau_otf2_getThreadData); 
+  return otf2ThreadList;
+}
+
+static inline void checkOtf2ThreadDataVector(int tid){
+	while(Tau_otf2_getThreadData().size()<=tid){
+        RtsLayer::LockDB();
+		Tau_otf2_getThreadData().push_back(new otf2_thread_data());
+        RtsLayer::UnLockDB();
+	}
+}
+
+static inline int getPreviousType(int tid){
+    checkOtf2ThreadDataVector(tid);
+	return Tau_otf2_getThreadData()[tid]->previous_type;
+}
+static inline void setPreviousType(int tid, int value){
+    checkOtf2ThreadDataVector(tid);
+	Tau_otf2_getThreadData()[tid]->previous_type=value;
+}
+static inline uint64_t getPreviousTS(int tid){
+    checkOtf2ThreadDataVector(tid);
+	return Tau_otf2_getThreadData()[tid]->previous_ts;
+}
+static inline void setPreviousTS(int tid, uint64_t value){
+    checkOtf2ThreadDataVector(tid);
+	Tau_otf2_getThreadData()[tid]->previous_ts=value;
+}
+
+static inline bool getBuffersWritten(int tid){
+    checkOtf2ThreadDataVector(tid);
+	return Tau_otf2_getThreadData()[tid]->buffers_written;
+}
+static inline void setBuffersWritten(int tid, bool value){
+    checkOtf2ThreadDataVector(tid);
+	Tau_otf2_getThreadData()[tid]->buffers_written=value;
+}
+
+static inline vector<temp_buffer_entry>*& getTempBuffer(int tid){
+    checkOtf2ThreadDataVector(tid);
+    return Tau_otf2_getThreadData()[tid]->temp_buffers;
+}
+
+static inline rma_win_map_t * getLocalRMAWinMaps(int tid){
+    checkOtf2ThreadDataVector(tid);
+	return Tau_otf2_getThreadData()[tid]->local_rma_win_maps;
+}
+static inline void setLocalRMAWinMaps(int tid,rma_win_map_t * value){
+    checkOtf2ThreadDataVector(tid);
+	Tau_otf2_getThreadData()[tid]->local_rma_win_maps=value;
+}
+static inline uint64_t getNextRMAWin(int tid){
+    checkOtf2ThreadDataVector(tid);
+	return Tau_otf2_getThreadData()[tid]->next_rma_win;
+}
+static inline void setNextRMAWin(int tid, uint64_t value){
+    checkOtf2ThreadDataVector(tid);
+	Tau_otf2_getThreadData()[tid]->next_rma_win=value;
+}
 
 // For unification data
 static int * num_locations = NULL;
@@ -170,11 +264,7 @@ static metric_param_map_t global_metric_param_map;
 typedef set<uint64_t> metrics_seen_t;
 static metrics_seen_t metrics_seen;
 
-typedef pair<pair<int,int>,int> rma_win_triple_t;
-typedef map<rma_win_triple_t,uint64_t> rma_win_map_t;
 static rma_win_map_t rma_win_map;
-static rma_win_map_t * local_rma_win_maps[TAU_MAX_THREADS];
-static uint64_t next_rma_win[TAU_MAX_THREADS];
 static uint64_t total_rma_wins;
 
 static rma_win_triple_t make_triple(const int x, const int y, const int z) {
@@ -190,20 +280,24 @@ extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_addr
 
 static inline OTF2_LocationRef my_location_offset() {
     const int64_t myNode = RtsLayer::myNode();
-    return myNode == -1 ? 0 : (myNode * TAU_MAX_THREADS);
+    const int64_t myThread = RtsLayer::myThread();
+    int totNodes=tau_totalnodes(0,0);
+    //printf("Max Nodes: %d\n",totNodes);
+    return myNode == -1 ? 0 : (myThread * tau_totalnodes(0,0));//(myNode * TAU_MAX_THREADS);//TODO: DYNATHREAD 
 }
 
 static inline OTF2_LocationRef my_real_location( int64_t myNode, int64_t myThread ) {
      //const int64_t myNode = RtsLayer::myNode();
      //const int64_t myThread = RtsLayer::myThread();
-     return myNode == -1 ? myThread : (myNode * TAU_MAX_THREADS) + myThread;
+     //printf("OTF2 Location: myNode: %ld, myThread: %ld, global: %ld\n",myNode,myThread, myNode==-1 ? myThread : (myThread * tau_totalnodes(0,0)) + myNode);
+     return myNode == -1 ? myThread : (myThread * tau_totalnodes(0,0)) + myNode; //(myNode * TAU_MAX_THREADS) + myThread;
  }
 
 
 static inline OTF2_LocationRef my_location() {
     const int64_t myNode = RtsLayer::myNode();
     const int64_t myThread = RtsLayer::myThread();
-    return myNode == -1 ? myThread : (myNode * TAU_MAX_THREADS) + myThread;
+    return my_real_location(myNode,myThread);//myNode == -1 ? myThread : (myThread * tau_totalnodes(0,0)) + myNode; //(myNode * TAU_MAX_THREADS) + myThread;
 }
 
 static inline uint32_t my_node() {
@@ -566,12 +660,12 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
   fprintf(stderr, "%u: TauTraceOTF2WriteTempBuffer(%d, %d)\n", my_node(), tid, node_id);
 #endif
     TauInternalFunctionGuard protects_this_function;
-    buffers_written[tid] = true;
-    if(temp_buffers[tid] == NULL) {
+    setBuffersWritten(tid, true);
+    if(getTempBuffer(tid) == NULL) {
         return; // Nothing was saved for this thread
     }
     x_uint64 last_ts = 0;
-    for(vector<temp_buffer_entry>::const_iterator it = temp_buffers[tid]->begin(); it != temp_buffers[tid]->end(); ++it) {
+    for(vector<temp_buffer_entry>::const_iterator it = getTempBuffer(tid)->begin(); it != getTempBuffer(tid)->end(); ++it) {
       int kind = it->kind == TAU_TRACE_EVENT_KIND_USEREVENT ? TAU_TRACE_EVENT_KIND_TEMP_USEREVENT : TAU_TRACE_EVENT_KIND_TEMP_FUNC;
       TauTraceOTF2EventWithNodeId(it->ev, it->par, tid, it->ts, true, node_id, kind);
       last_ts = it->ts;
@@ -580,7 +674,7 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
 #if defined(TAU_SHMEM)
     OTF2_EvtWriter_RmaWinCreate(evt_writer, NULL, last_ts+1, TAU_OTF2_COMM_WIN);
 #endif
-    delete temp_buffers[tid];
+    delete getTempBuffer(tid);
 }
 
 extern "C" int Tau_is_thread_fake(int t);
@@ -604,7 +698,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
    * a timestamp should use the previous event timestamp just in case. */
   if (ts == 0 && Tau_is_thread_fake(tid)) {
     use_ts = 1;
-    ts = previous_ts[tid];
+    ts = getPreviousTS(tid);
   }
 #endif
   TauInternalFunctionGuard protects_this_function;
@@ -647,11 +741,11 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
    }
    else
    {
-    if(temp_buffers[tid] == NULL) {
-        temp_buffers[tid] = new vector<temp_buffer_entry>();
+    if(getTempBuffer(tid) == NULL) {
+        getTempBuffer(tid) = new vector<temp_buffer_entry>();
     }
     x_uint64 my_ts = fix_zero_timestamp(use_ts ? ts : TauTraceGetTimeStamp(tid), tid);
-    temp_buffers[tid]->push_back(temp_buffer_entry(ev, my_ts, par, kind));
+    getTempBuffer(tid)->push_back(temp_buffer_entry(ev, my_ts, par, kind));
     return;
    }
 #else
@@ -669,7 +763,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
 
 
   if(TauEnv_get_set_node()==-1){
-    if(!buffers_written[tid] && !otf2_comms_shutdown) {
+    if(!getBuffersWritten(tid) && !otf2_comms_shutdown) {
       TauTraceOTF2WriteTempBuffer(tid, node_id);
     }
   }
@@ -686,9 +780,9 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     // that could (will?) be after the timer stop.  So, to prevent out-of-order
     // events, make the counter timestamp the previous timer timestamp + 1.
 #if defined(CUPTI) || defined(TAU_ENABLE_ROCTRACER) || defined(TAU_USE_OMPT_5_0)
-    if (my_ts < previous_ts[tid]) {
-      TAU_VERBOSE("ERROR! Timestamps out of sequence. %lu < %lu on thread %d\nevent: node=%u, tid=%d, loc=%d: TauTraceEventWithNodeId(ev=%ld, par=%" PRId64 ", tid=%d, ts=%" PRIu64 ", use_ts=%d, node_id=%d, kind=%d)\n", my_ts, previous_ts[tid], tid, my_node(), tid, my_real_location(node_id, tid), ev, par, tid, ts, use_ts, node_id, kind);
-      my_ts = previous_ts[tid];
+    if (my_ts < getPreviousTS(tid)) {
+      TAU_VERBOSE("ERROR! Timestamps out of sequence. %lu < %lu on thread %d\nevent: node=%u, tid=%d, loc=%d: TauTraceEventWithNodeId(ev=%ld, par=%" PRId64 ", tid=%d, ts=%" PRIu64 ", use_ts=%d, node_id=%d, kind=%d)\n", my_ts, getPreviousTS(tid), tid, my_node(), tid, my_real_location(node_id, tid), ev, par, tid, ts, use_ts, node_id, kind);
+      my_ts = getPreviousTS(tid);
     }
 #endif
   if(kind == TAU_TRACE_EVENT_KIND_FUNC || kind == TAU_TRACE_EVENT_KIND_CALLSITE) {
@@ -698,13 +792,13 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
       fprintf(stderr, "%u: writing Enter event on loc %d\n", my_node(), loc);
 #endif
       OTF2_EC2(OTF2_EvtWriter_Enter(evt_writer, NULL, my_ts, ev));
-      previous_type[tid] = 0;
+      setPreviousType(tid, 0);
     } else if(par == -1) { // Exit
 #ifdef TAU_OTF2_DEBUG
       fprintf(stderr, "%u: writing Exit event on loc %d\n", my_node(), loc);
 #endif
       OTF2_EC2(OTF2_EvtWriter_Leave(evt_writer, NULL, my_ts, ev));
-      previous_type[tid] = 1;
+      setPreviousType(tid, 1);
     }
   } else if(kind == TAU_TRACE_EVENT_KIND_USEREVENT) {
     if(otf2_comms_shutdown && metrics_seen.find(ev) == metrics_seen.end()) {
@@ -719,7 +813,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     //printf ("%d %lu Counter: %d\n", tid, my_ts - start_time, ev);
     OTF2_EC2(OTF2_EvtWriter_Metric(evt_writer, NULL, my_ts, ev, 1, types, values))
   }
-  previous_ts[tid] = my_ts;
+  setPreviousTS(tid, my_ts);
   // fix the last timestamp, if necessary - might happen if the program has ended
   // but we are still flushing asynchronous GPU activity.
   if (otf2_flushing_at_exit && end_time > 0 && my_ts > end_time) {
@@ -846,17 +940,18 @@ void TauTraceOTF2RMACollectiveBegin(int tag, int type, int start, int stride, in
     x_uint64 time = TauTraceGetTimeStamp(0);
     const int loc = my_location();
     const int tid = RtsLayer::myThread();
-    if(local_rma_win_maps[tid] == NULL) {
-        local_rma_win_maps[tid] = new rma_win_map_t;
-        next_rma_win[tid] = TAU_OTF2_WIN_FIRST_AVAILABLE;
+    if(getLocalRMAWinMaps(tid) == NULL) {
+       setLocalRMAWinMaps(tid,  new rma_win_map_t);
+        setNextRMAWin(tid, TAU_OTF2_WIN_FIRST_AVAILABLE);
     }
-    rma_win_map_t * local_map = local_rma_win_maps[tid];
+    rma_win_map_t * local_map = getLocalRMAWinMaps(tid);
     rma_win_triple_t triple = make_triple(start, stride, size);
     rma_win_map_t::const_iterator it = local_map->find(triple);
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
     if(it == local_map->end()) {
         // We haven't seen this active set before
-        int active_set_id = next_rma_win[tid]++;
+        int active_set_id = getNextRMAWin(tid)+1;
+		setNextRMAWin(tid,active_set_id);
 #ifdef TAU_OTF2_DEBUG
         fprintf(stderr, "%u: loc %d, new active set (%d, %d, %d) has num %d\n", my_node(), loc, start, stride, size, active_set_id);
 #endif
@@ -882,7 +977,7 @@ void TauTraceOTF2RMACollectiveEnd(int tag, int type, int start, int stride, int 
     const int loc = my_location();
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
     const int tid = RtsLayer::myThread();
-    rma_win_map_t * local_map = local_rma_win_maps[tid];
+    rma_win_map_t * local_map = getLocalRMAWinMaps(tid);
     if(local_map == NULL) {
         fprintf(stderr, "TAU: Error: Got a collective end but have never encountered a start\n");
         abort();
@@ -935,6 +1030,10 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, 0, "" ));
 
     const int nodes = tau_totalnodes(0, 0);
+    int max_threads=*max_element(num_locations,num_locations+nodes);
+    #ifdef TAU_OTF2_DEBUG
+        fprintf(stderr, "Global max threads: %d\n", max_threads);
+    #endif
     for(int node = 0; node < nodes; ++node) {
         // System Tree Node
         char namebuf[256];
@@ -952,10 +1051,11 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, groupName, namebuf));
         OTF2_EC(OTF2_GlobalDefWriter_WriteLocationGroup(global_def_writer, node, groupName, OTF2_LOCATION_GROUP_TYPE_PROCESS, node));
 
-        const int start_loc = node * TAU_MAX_THREADS;
-        const int end_loc = start_loc + num_locations[node];
+        //const int start_loc = my_real_location(node,0);//node + num_locations[node];//max_threads;//TAU_MAX_THREADS; //TODO: DYNATHREAD 
+        //const int end_loc = start_loc + num_locations[node];
         int thread_num = 0;
-        for(int loc = start_loc; loc < end_loc; ++loc) {
+        for(int it_thread = 0; it_thread < num_locations[node]; ++it_thread) {
+            int loc=my_real_location(node,it_thread);
 		    OTF2_LocationType_enum thread_type = OTF2_LOCATION_TYPE_CPU_THREAD;
             if(nodes < 2 && thread_num == 0) {
                 snprintf(namebuf, 256, "Master thread 0");
@@ -1093,7 +1193,8 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     uint64_t nodes_list[nodes];
     uint64_t ranks_list[nodes];
     for(int i = 0; i < nodes; ++i) {
-        nodes_list[i] = i * TAU_MAX_THREADS;
+        int nodelocs = num_locations[nodes];
+        nodes_list[i] = i * nodelocs;//max_threads;//TAU_MAX_THREADS;//TODO: DYNATHREAD
         ranks_list[i] = i;
     }
     OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_LOCS, locsGroupName, OTF2_GROUP_TYPE_COMM_LOCATIONS, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, nodes_list));
@@ -1180,10 +1281,11 @@ static void TauTraceOTF2WriteLocalDefinitions() {
             const uint64_t global_id = global_region_map_ref.find(string(fi->GetName()))->second;
             OTF2_EC(OTF2_IdMap_AddIdPair(loc_region_map, local_id, global_id));
         }
-        const int start_loc = my_location();
+        const int start_loc = 0;//my_location();
         const int end_loc = start_loc + RtsLayer::getTotalThreads();
         for(int loc = start_loc; loc < end_loc; ++loc) {
-            OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
+            int gloc = my_real_location(my_node(),loc);
+            OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, gloc);
             OTF2_EC(OTF2_DefWriter_WriteMappingTable(def_writer, OTF2_MAPPING_REGION, loc_region_map));
         }
         OTF2_IdMap_Free(loc_region_map);
@@ -1210,10 +1312,11 @@ static void TauTraceOTF2WriteLocalDefinitions() {
             const uint64_t global_id = global_id_iter->second;
             OTF2_EC(OTF2_IdMap_AddIdPair(loc_metric_map, local_id, global_id));
         }
-        const int start_loc = my_location();
+        const int start_loc = 0;//my_location();
         const int end_loc = start_loc + RtsLayer::getTotalThreads();
         for(int loc = start_loc; loc < end_loc; ++loc) {
-            OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
+            int gloc = my_real_location(my_node(),loc);
+            OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, gloc);
             OTF2_EC(OTF2_DefWriter_WriteMappingTable(def_writer, OTF2_MAPPING_METRIC, loc_metric_map));
         }
         OTF2_IdMap_Free(loc_metric_map);
@@ -1221,11 +1324,12 @@ static void TauTraceOTF2WriteLocalDefinitions() {
 
     // Write RMA window mapping table
     if(rma_win_map.size() > 0) {
-        const int start_loc = my_location();
+        const int start_loc = 0;//my_location();
         const int end_loc = start_loc + RtsLayer::getTotalThreads();
         int loc_tid = 0;
         for(int loc = start_loc; loc < end_loc; ++loc) {
-            rma_win_map_t * local_map = local_rma_win_maps[loc_tid++];
+            int gloc = my_real_location(my_node(),loc);
+            rma_win_map_t * local_map = getLocalRMAWinMaps(loc_tid++);
             if(local_map == NULL) {
                 continue;
             }
@@ -1246,16 +1350,17 @@ static void TauTraceOTF2WriteLocalDefinitions() {
                 const uint64_t global_id = global_it->second;
                 OTF2_EC(OTF2_IdMap_AddIdPair(loc_rma_map, local_id, global_id));
             }
-            OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
+            OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, gloc);
             OTF2_EC(OTF2_DefWriter_WriteMappingTable(def_writer, OTF2_MAPPING_RMA_WIN, loc_rma_map));
         }
     }
 
     // Close local definition writers
-    const int start_loc = my_location();
+    const int start_loc = 0;//my_location();
     const int end_loc = start_loc + RtsLayer::getTotalThreads();
     for(int loc = start_loc; loc < end_loc; ++loc) {
-        OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
+        int gloc = my_real_location(my_node(),loc);
+        OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, gloc);
         OTF2_EC(OTF2_Archive_CloseDefWriter(otf2_archive, def_writer));
     }
 
@@ -1632,10 +1737,10 @@ static void TauTraceOTF2ExchangeRmaWins() {
     uint64_t my_num_rma_wins[my_num_threads];
     uint64_t my_total_rma_wins = 0;
     for(OTF2_LocationRef i = 0; i < my_num_threads; ++i) {
-        if(local_rma_win_maps[i] == NULL) {
+        if(getLocalRMAWinMaps(i) == NULL) {
             my_num_rma_wins[i] = 0;
         } else {
-            my_num_rma_wins[i] = local_rma_win_maps[i]->size();
+            my_num_rma_wins[i] = getLocalRMAWinMaps(i)->size();
         }
         my_total_rma_wins += my_num_rma_wins[i];
 #ifdef TAU_OTF2_DEBUG
@@ -1681,7 +1786,7 @@ static void TauTraceOTF2ExchangeRmaWins() {
     int * my_rma_win_data = new int[my_total_rma_wins * 4];
     size_t data_offset = 0;
     for(OTF2_LocationRef i = 0; i < my_num_threads; ++i) {
-        rma_win_map_t * local_map = local_rma_win_maps[i];
+        rma_win_map_t * local_map = getLocalRMAWinMaps(i);
         if(local_map == NULL) {
             continue;
         }
@@ -1772,7 +1877,7 @@ static void TauTraceOTF2DestroyRmaWins() {
     for(uint32_t i = 0; i < my_num_threads; ++i) {
         int loc = my_real_location(RtsLayer::myNode(), i);
         OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
-        rma_win_map_t * local_map = local_rma_win_maps[i];
+        rma_win_map_t * local_map = getLocalRMAWinMaps(i);
         if(local_map != NULL) {
             for(rma_win_map_t::const_iterator it = local_map->begin(); it != local_map->end(); ++it) {
                 OTF2_EC(OTF2_EvtWriter_RmaWinDestroy(evt_writer, NULL, TauTraceGetTimeStamp(0), it->second));
@@ -1805,8 +1910,9 @@ void TauTraceOTF2ShutdownComms(int tid) {
   // initialization, and end after MPI/OTF2 finalization.  We want to capture them.
   // The progress threads in Open MPI 4 are such threads.
   if(TauEnv_get_set_node()==-1){
-    for (int tid = 0; tid < TAU_MAX_THREADS; tid++) {
-      if(!buffers_written[tid]) {
+    int threadCount=Tau_otf2_getThreadData().size();
+    for (int tid = 0; tid < threadCount; tid++) {//TODO: DYNATHREAD
+      if(!getBuffersWritten(tid)) {
         TauTraceOTF2WriteTempBuffer(tid, my_node());
       }
     }

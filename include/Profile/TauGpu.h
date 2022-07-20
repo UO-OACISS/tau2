@@ -15,7 +15,7 @@ enum EnvType { SMClock=0, MemoryClock=1, GPUTemperature=2, PowerUtilization=3, F
 #define TAU_GPU_UNKNOWN_TRANSFER_SIZE -1
 #define TAU_GPU_USE_DEFAULT_NAME ""
 
-#define TAU_MAX_NUMBER_OF_GPU_THREADS TAU_MAX_THREADS
+//#define TAU_MAX_NUMBER_OF_GPU_THREADS TAU_MAX_THREADS
 
 #include <Profile/tau_types.h>
 #ifdef __cplusplus

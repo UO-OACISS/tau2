@@ -1969,13 +1969,24 @@ static alloc_stack_t * tau_alloc_stack(void)
 }
 #else
 // worst case - array of flags, one for each thread.
+static thread_local alloc_stack_t * stack_cache=0;
+std::mutex allocStackVectorMutex;
 static inline alloc_stack_t  * tau_alloc_stack(void)
-{
-  static alloc_stack_t * alloc_stack_arr[TAU_MAX_THREADS] = {NULL};
-  if(alloc_stack_arr[Tau_get_local_tid()] == NULL) {
-    alloc_stack_arr[Tau_get_local_tid()] = new alloc_stack_t();
+{ 
+  static vector <alloc_stack_t *> alloc_stack_vec;//[TAU_MAX_THREADS] = {NULL};
+  if(stack_cache!=0){
+    return stack_cache;
   }
-  return alloc_stack_arr[Tau_get_local_tid()];
+  std::lock_guard<std::mutex> guard(allocStackVectorMutex);
+  int tid = Tau_get_local_tid();
+  while(alloc_stack_vec.size()<=tid){
+      alloc_stack_vec.push_back(NULL);
+  }
+  if(alloc_stack_vec[tid] == NULL) {
+    alloc_stack_vec[tid] = new alloc_stack_t();
+  }
+  stack_cache=alloc_stack_vec[tid];
+  return alloc_stack_vec[tid];
 }
 #endif
 

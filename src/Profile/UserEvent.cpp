@@ -335,8 +335,8 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
         (*it)->GetSumSqr() << "\n NumEvents " << (*it)->GetNumEvents()<< endl;);
 
     TotalNumEvents = TotalSumValue = 0;
-
-    for (int tid = 0; tid < TAU_MAX_THREADS; tid++) {
+    int maxThreads=(*it)->ThreadDataSize();
+    for (int tid = 0; tid < maxThreads; tid++) { //TODO: DYNATHREAD
       if ((*it)->GetNumEvents(tid) > 0) {
         // There were some events on this thread
         TotalNumEvents += (*it)->GetNumEvents(tid);

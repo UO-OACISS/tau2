@@ -30,7 +30,18 @@ struct BacktraceFrame
   int lineno;
 };
 
-static int iteration[TAU_MAX_THREADS] = { 0 };
+static vector<int> iteration;//[TAU_MAX_THREADS] = { 0 };
+std::mutex ItVectorMutex;
+inline void checkItVector(int tid){
+      std::lock_guard<std::mutex> guard(ItVectorMutex);
+      while (iteration.size()<=tid){
+          iteration.push_back(0);
+      }
+}
+static inline int& getIterationRef(int tid){
+    checkItVector(tid);
+    return iteration[tid];
+}
 
 static int getBacktraceFromExecinfo(int trim, BacktraceFrame ** oframes)
 {
@@ -140,7 +151,7 @@ int Tau_backtrace_record_backtrace(int trim)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  int & iter = iteration[RtsLayer::myThread()];
+  int & iter = getIterationRef(RtsLayer::myThread());
   ++iter;
 
   BacktraceFrame * frames;

@@ -129,12 +129,18 @@ struct callsiteKey2IdMap_t : public map<TAU_CALLSITE_KEY_ID_MAP_TYPE>
     finalizeCallSites_if_necessary();
   }
 };
-
+static std::mutex KeyVectorMutex;
 static callsiteKey2IdMap_t& TheCallSiteKey2IdMap(void)
 {
-  static callsiteKey2IdMap_t callsiteKey2IdMap[TAU_MAX_THREADS];
+  static vector<callsiteKey2IdMap_t*> callsiteKey2IdMap;//[TAU_MAX_THREADS];
   int tid = RtsLayer::myThread();
-  return callsiteKey2IdMap[tid];
+  if(callsiteKey2IdMap.size()<=tid){
+      std::lock_guard<std::mutex> guard(KeyVectorMutex);
+      while(callsiteKey2IdMap.size()<=tid){
+        callsiteKey2IdMap.push_back(new callsiteKey2IdMap_t());
+      }
+    }
+  return *callsiteKey2IdMap[tid];
 }
 
 struct callsiteId2KeyVec_t : public vector<tau_cs_info_t *>
@@ -147,11 +153,18 @@ struct callsiteId2KeyVec_t : public vector<tau_cs_info_t *>
   }
 };
 
+static std::mutex IDVectorMutex;
 static callsiteId2KeyVec_t& TheCallSiteIdVector(void)
 {
-  static callsiteId2KeyVec_t callsiteId2KeyVec[TAU_MAX_THREADS];
+  static vector<callsiteId2KeyVec_t*> callsiteId2KeyVec;//[TAU_MAX_THREADS];
   int tid = RtsLayer::myThread();
-  return callsiteId2KeyVec[tid];
+  if(callsiteId2KeyVec.size()<=tid){
+      std::lock_guard<std::mutex> guard(IDVectorMutex);
+      while(callsiteId2KeyVec.size()<=tid){
+        callsiteId2KeyVec.push_back(new callsiteId2KeyVec_t());
+      }
+    }
+  return *callsiteId2KeyVec[tid];
 }
 
 struct callsiteFirstKeyMap_t : public map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE>
@@ -183,22 +196,51 @@ struct callsitePathMap_t : public map<TAU_CALLSITE_PATH_MAP_TYPE>
   }
 };
 
+static std::mutex PathMapVectorMutex;
 static callsitePathMap_t& TheCallSitePathMap(void)
 {
   // to avoid initialization problems of non-local static variables
-  static callsitePathMap_t callsitePathMap[TAU_MAX_THREADS];
+  static vector<callsitePathMap_t*> callsitePathMap;//[TAU_MAX_THREADS];
   int tid = RtsLayer::myThread();
-  return callsitePathMap[tid];
+  if(callsitePathMap.size()<=tid){
+      std::lock_guard<std::mutex> guard(PathMapVectorMutex);
+      while(callsitePathMap.size()<=tid){
+        callsitePathMap.push_back(new callsitePathMap_t());
+      }
+    }
+  return *callsitePathMap[tid];
 }
 
-static unsigned long callSiteId[TAU_MAX_THREADS];
+static vector<unsigned long> callSiteId;//[TAU_MAX_THREADS];
+static std::mutex CallSiteVectorMutex;
+static inline void checkCallSiteVector(int tid){
+    if(callSiteId.size()<=tid){
+      std::lock_guard<std::mutex> guard(CallSiteVectorMutex);
+      while(callSiteId.size()<=tid){
+        callSiteId.push_back(0);
+      }
+    }
+}
+static inline unsigned long getCallSiteId(int tid){
+    checkCallSiteVector(tid);
+    return callSiteId[tid];
+}
+static inline void setCallSiteId(int tid, unsigned long value){
+    checkCallSiteVector(tid);
+    callSiteId[tid]=value;
+}
+static inline void incrementCallSiteId(int tid){
+    checkCallSiteVector(tid);
+    callSiteId[tid]++;
+}
 
 void initializeCallSiteDiscoveryIfNecessary()
 {
   static bool initialized = false;
   if (!initialized) {
-    for (int i = 0; i < TAU_MAX_THREADS; i++) {
-      callSiteId[i] = 0;
+    int vecSize=callSiteId.size();
+    for (int i = 0; i < vecSize; i++) {
+      setCallSiteId(i, 0);
     }
     initialized = true;
   }
@@ -640,7 +682,7 @@ void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
       // *CWL* - It is important to make a copy of the callsiteKey for registration.
       unsigned long * callsiteKeyCopy = (unsigned long*)malloc(sizeof(callsiteKey));
       memcpy(callsiteKeyCopy, callsiteKey, sizeof(callsiteKey));
-      callsiteKeyId = callSiteId[tid];
+      callsiteKeyId = getCallSiteId(tid);
       TheCallSiteKey2IdMap().insert(map<TAU_CALLSITE_KEY_ID_MAP_TYPE>::value_type(callsiteKeyCopy, callsiteKeyId));
       tau_cs_info_t *callSiteInfo = (tau_cs_info_t *)malloc(sizeof(tau_cs_info_t));
       callSiteInfo->key = callsiteKeyCopy;
@@ -649,7 +691,7 @@ void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
       callSiteInfo->hasName = false;
       callSiteInfo->resolvedName = NULL;
       TheCallSiteIdVector().push_back(callSiteInfo);
-      callSiteId[tid]++;
+      incrementCallSiteId(tid);
     } else {
       // We've seen this callsite key before.
       callsiteKeyId = (*itCs).second;
@@ -807,14 +849,28 @@ static string getNameAndType(FunctionInfo *fi)
 }
 */
 
+ struct CallsiteFinalThreadList : vector<bool>{
+      CallsiteFinalThreadList(){
+         //printf("Creating CallsiteFinalThreadList at %p\n", this);
+      }
+     virtual ~CallsiteFinalThreadList(){
+         //printf("Destroying CallsiteFinalThreadList at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
+
 extern "C" void finalizeCallSites_if_necessary()
 {
+  //static std::mutex FinCaSiVectorMutex;
   static bool callsiteFinalizationSetup = false;
-  static bool callsiteThreadFinalized[TAU_MAX_THREADS];
+  static CallsiteFinalThreadList callsiteThreadFinalized;//[TAU_MAX_THREADS];
   if (!callsiteFinalizationSetup) {
-    for (int i = 0; i < TAU_MAX_THREADS; i++) {
-      callsiteThreadFinalized[i] = false;
+    int vecSize=RtsLayer::getTotalThreads();
+    //std::lock_guard<std::mutex> guard(FinCaSiVectorMutex);
+    while(callsiteThreadFinalized.size()<=vecSize){
+      callsiteThreadFinalized.push_back(false);
     }
+
     callsiteFinalizationSetup = true;
   }
   int tid = RtsLayer::myThread();
@@ -834,7 +890,7 @@ extern "C" void finalizeCallSites_if_necessary()
 #endif /* TAU_BFD */
 
   string delimiter = string(" --> ");
-  for (unsigned int i = 0; i < callSiteId[tid]; i++) {
+  for (unsigned int i = 0; i < getCallSiteId(tid); i++) {
     tau_cs_info_t *callsiteInfo = TheCallSiteIdVector()[i];
     if (callsiteInfo && callsiteInfo->hasName) {
       // We've already done this in the discovery phase.

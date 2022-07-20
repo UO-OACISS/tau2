@@ -563,7 +563,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
     // if the function name is empty, skip it
     if( prettycallName == "" ) return false;
     // if the instruction count is small, skip it
-    if( instructionCount < minInstructionCount) {
+    if( instructionCount < minInstructionCount && prettycallName.compare("main") != 0) {
         if (verbose) errs() << "Skipping small function '"
             << prettycallName.str() << "' with only "
             << instructionCount << " instructions.\n";

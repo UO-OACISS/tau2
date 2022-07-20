@@ -389,13 +389,59 @@ pthread_key_t tau_sampling_tls_key;
 static inline struct tau_sampling_flags *tau_sampling_flags(void)
 { return (struct tau_sampling_flags*)(pthread_getspecific(tau_sampling_tls_key)); }
 #else
-// worst case - array of flags, one for each thread.
-struct tau_sampling_flags tau_sampling_tls_flags[TAU_MAX_THREADS];
+// worst case - vector of flags, one for each thread.
+struct tau_sampling_flagsList : vector<tau_sampling_flags*> {
+    tau_sampling_flagsList(){
+         //printf("Creating tau_sampling_tls_flags at %p\n", this);
+      }
+     virtual ~tau_sampling_flagsList(){
+         //printf("Destroying tau_sampling_tls_flags at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+   };
+static tau_sampling_flagsList & tau_sampling_tls_flags(){
+	static tau_sampling_flagsList theFlagsList;
+	return theFlagsList;
+}
 static inline struct tau_sampling_flags *tau_sampling_flags(void)
-{ return &tau_sampling_tls_flags[Tau_get_local_tid()]; }
+{ 
+    int tid = Tau_get_local_tid();
+    while(tau_sampling_tls_flags().size()<=tid){
+        RtsLayer::LockDB();
+		tau_sampling_tls_flags().push_back(new struct tau_sampling_flags());
+        RtsLayer::UnLockDB();
+	}
+    return tau_sampling_tls_flags()[tid]; }
 #endif
 
-static bool samplingThrInitialized[TAU_MAX_THREADS] = { false };
+struct sampThrInit:vector<bool>{
+        sampThrInit(){
+         //printf("Creating tau_sampling_tls_flags at %p\n", this);
+      }
+     virtual ~sampThrInit(){
+         //printf("Destroying tau_sampling_tls_flags at %p, with size %ld\n", this, this->size());
+         Tau_destructor_trigger();
+     }
+};
+static sampThrInit & samplingThrInitialized(){
+    static sampThrInit theSamplingThrInitializedList;
+    return theSamplingThrInitializedList;
+}
+void checkSampThrInitVector(int tid){
+	while(samplingThrInitialized().size()<=tid){
+        RtsLayer::LockDB();
+		samplingThrInitialized().push_back(false);
+        RtsLayer::UnLockDB();
+	}
+}
+static inline bool getSamplingThrInitialized(int tid){
+    checkSampThrInitVector(tid);
+	return samplingThrInitialized()[tid];
+}
+static inline void setSamplingThrInitialized(int tid, bool value){
+    checkSampThrInitVector(tid);
+	samplingThrInitialized()[tid]=value;
+}
 
 /* The trace for this node, mulithreaded execution currently not supported */
 //FILE *ebsTrace[TAU_MAX_THREADS] = { NULL };
@@ -1141,14 +1187,14 @@ void Tau_sampling_finalizeProfile(int tid)
           string temp_ss(resolved_address);
           parentTauContext->SetName(temp_ss);
     }
-
-    if ((parentTauContext->pathHistogram[tid] == NULL) || (parentTauContext->pathHistogram[tid]->size() == 0)) {
+    TauPathHashTable<TauPathAccumulator>* pathHistogram=parentTauContext->GetPathHistogram(tid);//pathHistogram[tid]; //TODO:DYNAPROF
+    if ((pathHistogram == NULL) || (pathHistogram->size() == 0)) {
       // No samples encountered in this TAU context. Continue to next TAU context.
 //      DEBUGMSG("Tau Context %s has no samples", parentTauContext->GetName());
       continue;
     }
-    parentTauContext->pathHistogram[tid]->resetIter();
-    pair<unsigned long *, TauPathAccumulator> * item = parentTauContext->pathHistogram[tid]->nextIter();
+    pathHistogram->resetIter();
+    pair<unsigned long *, TauPathAccumulator> * item = pathHistogram->nextIter();
     while (item) {
       // This is a placeholder for more generic pcStack extraction routines.
       CallSiteCandidate * candidate = new CallSiteCandidate(item->first, item->second.count, parentTauContext);
@@ -1158,7 +1204,7 @@ void Tau_sampling_finalizeProfile(int tid)
       }
       candidates.push_back(candidate);
       delete item;
-      item = parentTauContext->pathHistogram[tid]->nextIter();
+      item = pathHistogram->nextIter();
     }
   }
   RtsLayer::UnLockDB();
@@ -1896,9 +1942,9 @@ int Tau_sampling_init(int tid, pid_t pid)
     }
     // Since we've now initialized sigaction, we can start the timer on any deferred threads
     for(DeferredInitVector::iterator it = TheDeferredInitVector().begin(); it != TheDeferredInitVector().end(); ++it) {
-        if(!samplingThrInitialized[it->tid]) {
+        if(!getSamplingThrInitialized(it->tid)) {
             TAU_VERBOSE("Will create sampling timer for deferred thread %d\n", it->tid);
-            samplingThrInitialized[it->tid] = true;
+            setSamplingThrInitialized(it->tid, true);
             Tau_sampling_init(it->tid, it->pid);
         }
     }
@@ -2117,7 +2163,7 @@ extern "C" void Tau_sampling_init_if_necessary(void)
 
   int tid = RtsLayer::localThreadId();
   // have we initialized already?
-  if (samplingThrInitialized[tid]) return;
+  if (getSamplingThrInitialized(tid)) return;
 
   /* Greetings, intrepid thread developer. We had a problem with OpenMP applications
    * which did not call instrumented functions or regions from an OpenMP region. In
@@ -2164,9 +2210,9 @@ extern "C" void Tau_sampling_init_if_necessary(void)
         {
           // Getting the thread ID registers the OpenMP thread.
           int myTid = Tau_get_thread ();
-          if (!samplingThrInitialized[myTid]) {
+          if (!getSamplingThrInitialized(myTid)) {
             Tau_sampling_init(myTid);
-            samplingThrInitialized[myTid] = true;
+            setSamplingThrInitialized(myTid,true);
             TAU_VERBOSE("Thread %d, %d initialized sampling\n", tid, myTid);
           }
         }    // critical
@@ -2184,25 +2230,43 @@ extern "C" void Tau_sampling_init_if_necessary(void)
 
 #else
 // handle all other cases!
-  if (!samplingThrInitialized[tid]) {
-    samplingThrInitialized[tid] = true;
+  if (!getSamplingThrInitialized(tid)) {
+    setSamplingThrInitialized(tid, true);
     Tau_sampling_init(tid, 0);
     TAU_VERBOSE("Thread %d initialized sampling\n", tid);
   }
 #endif
 }
 
+struct thrFinalizedVector:vector<bool>{
+    thrFinalizedVector() {
+        // nothing
+    }
+
+    virtual ~thrFinalizedVector(){
+        Tau_destructor_trigger();
+    }
+};
+
+inline void checkBVector (thrFinalizedVector * v, int tid){
+    RtsLayer::LockDB();
+    while(v->size()<=tid){
+		v->push_back(false);
+	}
+    RtsLayer::UnLockDB();
+}
+
 extern "C"
 void Tau_sampling_finalize_if_necessary(int tid)
 {
-  static bool finalized = false;
-  static bool thrFinalized[TAU_MAX_THREADS] = {false};
-  //int tid = Tau_get_local_tid();
+    static bool finalized = false;
 
-  TAU_VERBOSE("TAU: Finalize(if necessary) <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stderr);
+    TAU_VERBOSE("TAU: Finalize(if necessary) <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stderr);
 
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
+
+    static thrFinalizedVector thrFinalized;
 
     // before wrapping things up, stop listening to signals.
     sigset_t x;
@@ -2213,6 +2277,8 @@ void Tau_sampling_finalize_if_necessary(int tid)
 #else
     sigprocmask(SIG_BLOCK, &x, NULL);
 #endif
+
+    checkBVector(&thrFinalized,tid);
 
     if (!finalized) {
       TAU_VERBOSE("TAU: <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stdout);
@@ -2227,29 +2293,26 @@ void Tau_sampling_finalize_if_necessary(int tid)
       RtsLayer::UnLockEnv();
     }
 
+    RtsLayer::LockEnv();
     if (!thrFinalized[tid]) {
-      RtsLayer::LockEnv();
-      if (!thrFinalized[tid]) {
         tau_sampling_flags()->samplingEnabled = 0;
         thrFinalized[tid] = true;
         Tau_sampling_finalize(tid);
-      }
-      RtsLayer::UnLockEnv();
     }
+    RtsLayer::UnLockEnv();
 
     // Kevin: should we finalize all threads on this process? I think so.
-  if (tid == 0) {
-    for (int i = 0; i < RtsLayer::getTotalThreads(); i++) {
-      if (!thrFinalized[i]) {
-        RtsLayer::LockEnv();
-        if (!thrFinalized[i]) {
-          thrFinalized[i] = true;
-          Tau_sampling_finalize(i);
+    if (tid == 0) {
+        checkBVector(&thrFinalized, RtsLayer::getTotalThreads());
+        for (int i = 0; i < RtsLayer::getTotalThreads(); i++) {
+            RtsLayer::LockEnv();
+            if (!thrFinalized[i]) {
+                thrFinalized[i] = true;
+                Tau_sampling_finalize(i);
+            }
+            RtsLayer::UnLockEnv();
         }
-        RtsLayer::UnLockEnv();
-      }
     }
-  }
 }
 
 void Tau_sampling_stop_sampling() {

@@ -112,11 +112,11 @@ void check_gpu_event(int gpuTask)
 #ifdef DEBUG_PROF
     cerr << "first gpu event" << endl;
 #endif
-    if (gpuTask >= TAU_MAX_THREADS) {
+    /*if (gpuTask >= TAU_MAX_THREADS) {
       cerr << "TAU ERROR: The number of GPU entities exceeds the maximum: " << TAU_MAX_THREADS
           << ". Please reconfigure TAU with '-useropt=-DTAU_MAX_THREADS=<larger number>.'" << endl;
       exit(1);
-    }
+    }*/
     if (seen.count(gpuTask) == 0) {
         Tau_create_top_level_timer_if_necessary_task(gpuTask);
         number_of_top_level_task_events++;

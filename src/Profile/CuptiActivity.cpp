@@ -10,10 +10,15 @@
 #include <assert.h>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+#include <Profile/CuptiNVTX.h>
+
 using namespace std;
+
 
 #if CUPTI_API_VERSION >= 2
 #include <dlfcn.h>
+
+
 
 //#define TAU_DEBUG_CUPTI
 //#define TAU_DEBUG_CUPTI_COUNTERS
@@ -40,13 +45,11 @@ static int currentContextId = -1;
 uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;
 
-int number_of_streams[TAU_MAX_THREADS] = {0};
-std::vector<int> streamIds[TAU_MAX_THREADS];
-
-std::vector<TauContextUserEvent *> counterEvents[TAU_MAX_THREADS];
+//int number_of_streams[TAU_MAX_THREADS] = {0};//Unused??
+//std::vector<int> streamIds[TAU_MAX_THREADS]; //Unused??
 
 bool registered_sync = false;
-eventMap_t eventMap[TAU_MAX_THREADS];
+
 #if CUPTI_API_VERSION >= 3
 std::map<uint32_t, CUpti_ActivitySourceLocator> sourceLocatorMap;
 #endif // CUPTI_API_VERSION >= 3
@@ -80,7 +83,7 @@ std::vector<int> deviceContextThreadVector;
 // just a vector of context IDs, one for each device
 std::vector<int> deviceContextVector;
 // Sanity check.  I (Kevin) Suspect that CUPTI is giving us asynchronous memory events out of order.
-uint64_t previous_ts[TAU_MAX_THREADS] = {0};
+
 class sanity_check {
     public:
         unsigned long memory_out_of_order = 0UL;
@@ -121,11 +124,11 @@ device_map_t & __deviceMap()
     static device_map_t deviceMap;
     return deviceMap;
 }
-std::map<uint32_t, CUPTI_KERNEL_TYPE> kernelMap[TAU_MAX_THREADS];
+
 std::map<uint32_t, CUpti_ActivityContext> contextMap;
 
 std::map<uint32_t, CUpti_ActivityFunction> functionMap;
-std::map<uint32_t, std::list<CUpti_ActivityInstructionExecution *> > instructionMap[TAU_MAX_THREADS];
+
 std::map<uint32_t, CudaEnvironment> environmentMap;
 
 std::map<std::pair<int, int>, CudaOps> map_disassem;
@@ -140,7 +143,59 @@ static uint32_t buffers_queued = 0;
 /* CUPTI API callbacks are called from CUPTI's signal handlers and thus cannot
  * allocate/deallocate memory. So all the counters values need to be allocated
  * on the Stack. */
+struct CuptiActivityData{
+    std::vector<TauContextUserEvent *> counterEvents;
+    std::map<uint32_t, CUPTI_KERNEL_TYPE> kernelMap;
+    std::map<uint32_t, std::list<CUpti_ActivityInstructionExecution *> > instructionMap;
+    eventMap_t eventMap;
+    uint64_t previous_ts=0;
+    uint64_t counters_at_last_launch[TAU_MAX_COUNTERS] = {ULONG_MAX};
+    uint64_t current_counters[TAU_MAX_COUNTERS] = {0};
+    int kernels_encountered=0;
+    int kernels_recorded=0;
+    bool counters_averaged_warning_issued=false;
+    bool counters_bounded_warning_issued=false;
+};    
+struct CADataList: vector<CuptiActivityData*>{
+    CADataList (const CADataList&) = delete;
+    CADataList& operator= (const CADataList&) = delete;
+    CADataList(){
+         //printf("Creating CADataList at %p\n", this);
+      }
+     virtual ~CADataList(){
+         //printf("Destroying CADataList at %p, with size %ld\n", this, this->size());
+        if (TauEnv_get_cuda_track_sass() && TauEnv_get_cuda_csv_output()) {
+            write_sass_output();
+         }
 
+         Tau_destructor_trigger();
+     }
+};
+  
+static CADataList & Tau_getcaData() {
+      static CADataList caDataList;
+      return caDataList;
+}
+
+std::mutex CuptiAVectorMutex;
+void checkCuptiAVector(int tid){
+      while(Tau_getcaData().size()<=tid){
+        Tau_getcaData().push_back(new CuptiActivityData());
+      }
+ }
+ 
+static inline CuptiActivityData& getCuptiActivityData(int tid){
+    std::lock_guard<std::mutex> guard(CuptiAVectorMutex);
+    checkCuptiAVector(tid);
+    return *Tau_getcaData()[tid];
+ }
+
+/*
+std::vector<TauContextUserEvent *> counterEvents[TAU_MAX_THREADS];
+std::map<uint32_t, CUPTI_KERNEL_TYPE> kernelMap[TAU_MAX_THREADS];
+std::map<uint32_t, std::list<CUpti_ActivityInstructionExecution> > instructionMap[TAU_MAX_THREADS];
+eventMap_t eventMap[TAU_MAX_THREADS];
+uint64_t previous_ts[TAU_MAX_THREADS] = {0};
 uint64_t counters_at_last_launch[TAU_MAX_THREADS][TAU_MAX_COUNTERS] = {ULONG_MAX};
 uint64_t current_counters[TAU_MAX_THREADS][TAU_MAX_COUNTERS] = {0};
 
@@ -149,6 +204,7 @@ int kernels_recorded[TAU_MAX_THREADS] = {0};
 
 bool counters_averaged_warning_issued[TAU_MAX_THREADS] = {false};
 bool counters_bounded_warning_issued[TAU_MAX_THREADS] = {false};
+*/
 const char *last_recorded_kernel_name;
 
 /* BEGIN: unified memory */
@@ -554,6 +610,8 @@ void Tau_cupti_enable_domains()
     CUPTI_CHECK_ERROR(cuptiErr, "cuptiEnableDomain (CUPTI_CB_DOMAIN_SYNCHRONIZE)");
     cuptiErr = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RESOURCE);
     CUPTI_CHECK_ERROR(cuptiErr, "cuptiEnableDomain (CUPTI_CB_DOMAIN_RESOURCE)");
+    cuptiErr = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_NVTX);
+    CUPTI_CHECK_ERROR(cuptiErr, "cuptiEnableDomain (CUPTI_CB_DOMAIN_NVTX)");
     //CUDA_CHECK_ERROR(err2, "Cannot set Domain, check if the CUDA toolkit version is supported by the install CUDA driver.\n");
     /* BEGIN source line info */
     /* Need to check if device is pre-Fermi */
@@ -866,7 +924,7 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
              * should probably move to the async handler, so that we don't
              * give up the thread id until all the async events are in.
              */
-
+             
             if (TauEnv_get_thread_per_gpu_stream()) {
                 streamsToRecycle.insert(streamId);
             }
@@ -1115,7 +1173,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
 	    }
         }
     } else if (domain == CUPTI_CB_DOMAIN_INVALID) {
-        TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_RESOURCE event\n");
+        TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_INVALID event\n");
     } else if (domain == CUPTI_CB_DOMAIN_SYNCHRONIZE) {
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_SYNCHRONIZE event\n");
         if (Tau_Global_numGPUCounters > 0) {
@@ -1130,6 +1188,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         }
     } else if (domain == CUPTI_CB_DOMAIN_NVTX) {
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_NVTX event\n");
+        handle_nvtx_callback(id, params);
+        return;
     } else if (domain == CUPTI_CB_DOMAIN_SIZE) {
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_SIZE event\n");
     } else {
@@ -1180,12 +1240,12 @@ extern void Tau_cupti_buffer_processed(void);
 
         //start
 
-#if defined(PTHREADS)
+/*#if defined(PTHREADS)
         if (count_iter > TAU_MAX_THREADS) {
             printf("TAU ERROR: Maximum number of threads (%d) exceeded. Please reconfigure TAU with -useropt=-DTAU_MAX_THREADS=3200 or some higher number\n", TAU_MAX_THREADS);
             exit(1);
-        }
-#else
+        }*/
+#if not defined(PTHREADS)
         if (count_iter > TAU_MAX_GPU_DEVICES) {
             printf("TAU ERROR: Maximum number of devices (%d) exceeded. Please reconfigure TAU with -useropt=-DTAU_MAX_GPU_DEVICES=32 or some higher number\n", TAU_MAX_GPU_DEVICES);
             exit(1);
@@ -1247,15 +1307,16 @@ extern void Tau_cupti_buffer_processed(void);
             //for (int i=0; i < count_iter; i++) {
             for (auto iter : cudaThreadIds) {
                 int i = iter;
+                CuptiActivityData  & caData=getCuptiActivityData(i);
 #ifdef TAU_DEBUG_CUPTI_COUNTERS
-                printf("Thread %d, Kernels encountered/recorded: %d/%d.\n", i, kernels_encountered[i], kernels_recorded[i]);
+                printf("Thread %d, Kernels encountered/recorded: %d/%d.\n", i, caData.kernels_encountered, caData.kernels_recorded);
 #endif
-
-                if (kernels_recorded[i] == kernels_encountered[i])
+                
+                if (caData.kernels_recorded == caData.kernels_encountered)
                 {
                     clear_counters(i);
                     last_recorded_kernel_name = NULL;
-                } else if (kernels_recorded[i] > kernels_encountered[i]) {
+                } else if (caData.kernels_recorded > caData.kernels_encountered) {
                     //printf("TAU: Recorded more kernels than were launched, exiting.\n");
                     //abort();
                     //exit(1);
@@ -1311,22 +1372,23 @@ extern void Tau_cupti_buffer_processed(void);
     }
 
 bool valid_sync_timestamp(uint64_t * start, uint64_t end, int taskId) {
-    if (*start < previous_ts[taskId]) {
+    CuptiActivityData  & caData=getCuptiActivityData(taskId);
+    if (*start < caData.previous_ts) {
         /* This is actually OK.  The synchronization could start before
          * the previous activity finished, that's the point.  We'll
          * move the start up to the previous end, and double check that
          * the synchronization end didn't exceed the previous activity.
          */
-        if (end < previous_ts[taskId]) {
+        if (end < caData.previous_ts) {
             /* OK, bad.  Dont' process this event. */
             sanity.sync_out_of_order++;
             TAU_DEBUG_PRINT("out of order: %f, previous %f\n",
-                (previous_ts[taskId] - *start)/1e3,
-                previous_ts[taskId]/1e3); fflush(stdout);
+                (caData.previous_ts - *start)/1e3,
+                caData.previous_ts/1e3); fflush(stdout);
             /* don't process this event? */
             return false;
         }
-        *start = previous_ts[taskId];
+        *start = caData.previous_ts;
     }
     return true;
 }
@@ -1562,10 +1624,11 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                         }
 
                         int taskId = get_taskid_from_context_id(contextId, streamId);
-                        if (TauEnv_get_tracing() && start < previous_ts[taskId]) {
+                        CuptiActivityData  & caData=getCuptiActivityData(taskId);
+                        if (TauEnv_get_tracing() && start < caData.previous_ts) {
                             sanity.memory_out_of_order++;
                         }
-                        previous_ts[taskId] = end;
+                        caData.previous_ts = end;
                         Tau_cupti_register_memcpy_event(
                                 TAU_GPU_USE_DEFAULT_NAME,
                                 memcpy->srcDeviceId,
@@ -1614,10 +1677,11 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                             direction = MESSAGE_SEND;
                         }
                         int taskId = get_taskid_from_context_id(contextId, streamId);
-                        if (TauEnv_get_tracing() && start < previous_ts[taskId]) {
+                        CuptiActivityData  & caData=getCuptiActivityData(taskId);
+                        if (TauEnv_get_tracing() && start < caData.previous_ts) {
                             sanity.memory_out_of_order++;
                         }
-                        previous_ts[taskId] = end;
+                        caData.previous_ts = end;
 #ifdef TAU_DEBUG_CUPTI
                         cerr << "recording memcpy: " << end - start << "ns.\n" << endl;
                         cerr << "recording memcpy on device: " << deviceId << endl;
@@ -1826,7 +1890,8 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                         localMemoryPerThread = kernel->localMemoryPerThread;
                         registersPerThread = kernel->registersPerThread;
                         taskId = get_taskid_from_context_id(contextId, streamId);
-                        kernelMap[taskId][kernel->correlationId] = *kernel;
+                        CuptiActivityData  & caData=getCuptiActivityData(taskId);
+                        caData.kernelMap[kernel->correlationId] = *kernel;
 			correlationStreamMap[kernel->correlationId] = kernel->streamId;
 #if CUDA_VERSION >= 5050
                     }
@@ -1853,12 +1918,13 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                     }
 
                     taskId = get_taskid_from_context_id(contextId, streamId);
-                        if (TauEnv_get_tracing() && start < previous_ts[taskId]) {
+                    CuptiActivityData  & caData=getCuptiActivityData(taskId);
+                        if (TauEnv_get_tracing() && start < caData.previous_ts) {
                             sanity.kernel_out_of_order++;
                         }
-                        previous_ts[taskId] = end;
+                        caData.previous_ts = end;
 			correlationWritten.insert(correlationId);
-                    eventMap[taskId].erase(eventMap[taskId].begin(), eventMap[taskId].end());
+                    caData.eventMap.erase(caData.eventMap.begin(), caData.eventMap.end());
                     const char* name_og = name;
                     char * dem_name = Tau_demangle_name(name);
                     int number_of_metrics = Tau_CuptiLayer_get_num_events() + 1;
@@ -1868,10 +1934,10 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                     int nullcontext_taskId = get_taskid_from_context_id(contextId, 0);
 #if CUDA_VERSION >= 5050
                     if (record->kind != CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
-                        record_gpu_counters(nullcontext_taskId, dem_name, id, &eventMap[taskId]);
+                        record_gpu_counters(nullcontext_taskId, dem_name, id, &caData.eventMap);
                     }
 #else
-                    record_gpu_counters(taskId, dem_name, id, &eventMap[taskId]);
+                    record_gpu_counters(taskId, dem_name, id, &caData.eventMap);
 #endif
                     if (TauEnv_get_cuda_track_env()) {
 #if CUDA_VERSION >= 5050
@@ -1887,7 +1953,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                                 staticSharedMemory,
                                 deviceId,
                                 dem_name,
-                                &eventMap[taskId]);
+                                &caData.eventMap);
                         static TauContextUserEvent* bs = NULL;
                         static TauContextUserEvent* dm = NULL;
                         static TauContextUserEvent* sm = NULL;
@@ -1909,11 +1975,11 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                         Tau_get_context_userevent((void **) &lr, "Local Registers (per thread)");
                         }
 
-                        eventMap[taskId][bs] = blockX * blockY * blockZ;
-                        eventMap[taskId][dm] = dynamicSharedMemory;
-                        eventMap[taskId][sm] = staticSharedMemory;
-                        eventMap[taskId][lm] = localMemoryPerThread;
-                        eventMap[taskId][lr] = registersPerThread;
+                        caData.eventMap[bs] = blockX * blockY * blockZ;
+                        caData.eventMap[dm] = dynamicSharedMemory;
+                        caData.eventMap[sm] = staticSharedMemory;
+                        caData.eventMap[lm] = localMemoryPerThread;
+                        caData.eventMap[lr] = registersPerThread;
                     }
                     /* If we are tracing (could be through a plugin),
                      * add the correlation ID as a user event */
@@ -1922,14 +1988,14 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                         if (!cid) {
                             Tau_get_context_userevent((void **) &cid, "Correlation ID");
                         }
-                        eventMap[taskId][cid] = correlationId;
+                        caData.eventMap[cid] = correlationId;
                     }
 
                     GpuEventAttributes *map;
-                    int map_size = eventMap[taskId].size();
+                    int map_size = caData.eventMap.size();
                     map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
                     int i = 0;
-                    for (eventMap_t::iterator it = eventMap[taskId].begin(); it != eventMap[taskId].end(); it++)
+                    for (eventMap_t::iterator it = caData.eventMap.begin(); it != caData.eventMap.end(); it++)
                     {
                         /*if(it->first == NULL) {
                           std::cerr << "Event was null!" << std::endl;
@@ -2050,6 +2116,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                 if(TauEnv_get_cuda_track_sass()) {
                     CUpti_ActivityInstructionExecution *instrRecord = (CUpti_ActivityInstructionExecution *)record;
                     int taskId = get_taskid_from_correlation_id(instrRecord->correlationId);
+                    CuptiActivityData  & caData=getCuptiActivityData(taskId);
 #ifdef TAU_DEBUG_SASS
                     printf("INSTRUCTION_EXECUTION corr: %u, executed: %u, flags: %u, functionId: %u, kind: %u, notPredOffThreadsExecuted: %u, pcOffset: %u, sourceLocatorId: %u, threadsExecuted: %u\n",
                     instrRecord->correlationId, instrRecord->executed,
@@ -2058,7 +2125,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                     instrRecord->pcOffset, instrRecord->sourceLocatorId,
                     instrRecord->threadsExecuted);
 #endif
-                    instructionMap[taskId][instrRecord->correlationId].push_back(instrRecord);
+                    caData.instructionMap[instrRecord->correlationId].push_back(instrRecord);
                 }
                 break;
             }
@@ -2083,20 +2150,21 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                 cerr << "global access (cor. id) (source id): " << global_access->correlationId << ", " << global_access->sourceLocatorId << ", " << global_access->threadsExecuted << ".\n" << endl;
 #endif
                 int taskId = get_taskid_from_correlation_id(global_access->correlationId);
-                CUPTI_KERNEL_TYPE *kernel = &kernelMap[taskId][global_access->correlationId];
+                CuptiActivityData  & caData=getCuptiActivityData(taskId);
+                CUPTI_KERNEL_TYPE *kernel = &caData.kernelMap[global_access->correlationId];
                 CUpti_ActivitySourceLocator *source = &sourceLocatorMap[global_access->sourceLocatorId];
 
                 if (kernel->kind != CUPTI_ACTIVITY_KIND_INVALID) {
-                    eventMap[taskId].erase(eventMap[taskId].begin(), eventMap[taskId].end());
+                    caData.eventMap.erase(caData.eventMap.begin(), caData.eventMap.end());
                     std::string name;
                     form_context_event_name(kernel, source, "Accesses to Global Memory", &name);
                     TauContextUserEvent* ga;
                     Tau_cupti_find_context_event(&ga, name.c_str(), false);
-                    eventMap[taskId][ga] = global_access->executed;
-                    int map_size = eventMap[taskId].size();
+                    caData.eventMap[ga] = global_access->executed;
+                    int map_size = caData.eventMap.size();
                     GpuEventAttributes *map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
                     int i = 0;
-                    for (eventMap_t::iterator it = eventMap[taskId].begin(); it != eventMap[taskId].end(); it++) {
+                    for (eventMap_t::iterator it = caData.eventMap.begin(); it != caData.eventMap.end(); it++) {
                         map[i].userEvent = it->first;
                         map[i].data = it->second;
                         i++;
@@ -2123,24 +2191,25 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                 cerr << "branch (cor. id) (source id): " << branch->correlationId << ", " << branch->sourceLocatorId << ", " << branch->threadsExecuted << ".\n" << endl;
 #endif
                 int taskId = get_taskid_from_correlation_id(branch->correlationId);
-                CUPTI_KERNEL_TYPE *kernel = &kernelMap[taskId][branch->correlationId];
+                CuptiActivityData  & caData=getCuptiActivityData(taskId);
+                CUPTI_KERNEL_TYPE *kernel = &caData.kernelMap[branch->correlationId];
                 CUpti_ActivitySourceLocator *source = &sourceLocatorMap[branch->sourceLocatorId];
                 if (kernel->kind != CUPTI_ACTIVITY_KIND_INVALID) {
-                    eventMap[taskId].erase(eventMap[taskId].begin(), eventMap[taskId].end());
+                    caData.eventMap.erase(caData.eventMap.begin(), caData.eventMap.end());
                     std::string name;
                     form_context_event_name(kernel, source, "Branches Executed", &name);
                     TauContextUserEvent* be;
                     Tau_cupti_find_context_event(&be, name.c_str(), false);
-                    eventMap[taskId][be] = branch->executed;
+                    caData.eventMap[be] = branch->executed;
                     form_context_event_name(kernel, source, "Branches Diverged", &name);
                     TauContextUserEvent* de;
                     Tau_cupti_find_context_event(&de, name.c_str(), false);
-                    eventMap[taskId][de] = branch->diverged;
+                    caData.eventMap[de] = branch->diverged;
                     GpuEventAttributes *map;
-                    int map_size = eventMap[taskId].size();
+                    int map_size = caData.eventMap.size();
                     map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
                     int i = 0;
-                    for (eventMap_t::iterator it = eventMap[taskId].begin(); it != eventMap[taskId].end(); it++) {
+                    for (eventMap_t::iterator it = caData.eventMap.begin(); it != caData.eventMap.end(); it++) {
                         map[i].userEvent = it->first;
                         map[i].data = it->second;
                         i++;
@@ -2172,6 +2241,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                     streamId = sync->streamId;
                 }
                 int taskId = get_taskid_from_context_id(sync->contextId, streamId);
+                CuptiActivityData  & caData=getCuptiActivityData(taskId);
                 switch (sync->type) {
                     case CUPTI_ACTIVITY_SYNCHRONIZATION_TYPE_EVENT_SYNCHRONIZE: {
                         if ((!TauEnv_get_thread_per_gpu_stream() || streamId == 0) &&
@@ -2229,7 +2299,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                     default:
                         break;
                 }
-                previous_ts[taskId] = sync->end;
+                caData.previous_ts = sync->end;
                 break;
             }
             case CUPTI_ACTIVITY_KIND_CUDA_EVENT: {
@@ -2278,14 +2348,15 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
 
     void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uint32_t taskId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent * tc)
     {
-        eventMap[taskId][tc] = vec;
+        CuptiActivityData  & caData=getCuptiActivityData(taskId);
+        caData.eventMap[tc] = vec;
 
         GpuEventAttributes *map;
-        int map_size = eventMap[taskId].size();
+        int map_size = caData.eventMap.size();
         map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
         int i = 0;
 
-        for (eventMap_t::iterator it = eventMap[taskId].begin(); it != eventMap[taskId].end(); it++) {
+        for (eventMap_t::iterator it = caData.eventMap.begin(); it != caData.eventMap.end(); it++) {
             map[i].userEvent = it->first;
             map[i].data = it->second;
             i++;
@@ -2298,8 +2369,9 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
 
     int record_imix_counters(const char* name, uint32_t taskId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end) {
         // check if data available
+        CuptiActivityData  & caData=getCuptiActivityData(taskId);
         bool update = false;
-        if (instructionMap[taskId].find(id) == instructionMap[taskId].end()) {
+        if (caData.instructionMap.find(id) == caData.instructionMap.end()) {
             TAU_VERBOSE("[CuptiActivity] warning:  Instruction mix counters not recorded.\n");
 	    return 0;
         }
@@ -2345,7 +2417,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
 #ifdef TAU_DEBUG_SASS
         cout << "[CuptiActivity]: write_runtime_imix begin\n";
 #endif
-
+        CuptiActivityData  & caData=getCuptiActivityData(taskId);
         // look up from map_imix_static
         ImixStats imix_stats;
         string current_kernel = "";
@@ -2356,13 +2428,13 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
         double flops_pct = 0;
         double ctrlops_pct = 0;
         double memops_pct = 0;
-        std::list<CUpti_ActivityInstructionExecution *> instrSampList = instructionMap[taskId].find(corrId)->second;
+        std::list<CUpti_ActivityInstructionExecution *> instrSampList = caData.instructionMap.find(corrId)->second;
 
         if (!instrSampList.empty()) {
             for (std::list<CUpti_ActivityInstructionExecution *>::iterator iter=instrSampList.begin();
                     iter != instrSampList.end();
                     iter++) {
-		CUpti_ActivityInstructionExecution* instr = *iter;
+                CUpti_ActivityInstructionExecution* instr = *iter;
                 int sid = instr->sourceLocatorId;
                 int lineno = -1;
                 if ( sourceLocatorMap.find(sid) != sourceLocatorMap.end() ) {
@@ -2458,25 +2530,26 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
         uint64_t end,
         TauContextUserEvent* tc)
     {
+        CuptiActivityData  & caData=getCuptiActivityData(taskId);
         if (vec.size()==0) {
-            eventMap[taskId][tc] = 0;
+            caData.eventMap[tc] = 0;
         }
         else {
             for(std::vector<uint32_t>::iterator iter=vec.begin(); iter != vec.end(); iter++) {
                 if (envT == PowerUtilization) {
                     uint32_t power_lim = environmentMap.find(contextId)->second.powerLimit;
-                    eventMap[taskId][tc] = ((float)*iter/power_lim)*100.0;
+                    caData.eventMap[tc] = ((float)*iter/power_lim)*100.0;
                 }
                 else {
-                    eventMap[taskId][tc] = *iter;
+                    caData.eventMap[tc] = *iter;
                 }
 
                 GpuEventAttributes *map;
-                int map_size = eventMap[taskId].size();
+                int map_size = caData.eventMap.size();
                 map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
                 int i = 0;
 
-                for (eventMap_t::iterator it = eventMap[taskId].begin(); it != eventMap[taskId].end(); it++) {
+                for (eventMap_t::iterator it = caData.eventMap.begin(); it != caData.eventMap.end(); it++) {
                     map[i].userEvent = it->first;
                     map[i].data = it->second;
                     i++;
@@ -2543,13 +2616,14 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
     void record_gpu_counters(int device_id, const char *name, uint32_t correlationId, eventMap_t *m)
     {
         int taskId = device_id; //get_taskid_from_correlation_id(correlationId);
+        CuptiActivityData  & caData=getCuptiActivityData(taskId);
         if (Tau_CuptiLayer_get_num_events() > 0 &&
-                !counters_bounded_warning_issued[taskId] &&
+                !caData.counters_bounded_warning_issued &&
                 last_recorded_kernel_name != NULL &&
                 strcmp(last_recorded_kernel_name, name) != 0)
         {
             TAU_VERBOSE("TAU Warning: CUPTI events will be bounded, multiple different kernel detected between synchronization points.\n");
-            counters_bounded_warning_issued[taskId] = true;
+            caData.counters_bounded_warning_issued = true;
             for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
                 Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_BOUNDED);
             }
@@ -2561,29 +2635,29 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
             for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
 #ifdef TAU_DEBUG_CUPTI_COUNTERS
                 std::cout << "at record (taskId = " << taskId << ", event num = " << n << "): "<< name << " ====> " << std::endl;
-                std::cout << "\tstart: " << counters_at_last_launch[taskId][n] << std::endl;
-                std::cout << "\t stop: " << current_counters[taskId][n] << std::endl;
+                std::cout << "\tstart: " << caData.counters_at_last_launch[n] << std::endl;
+                std::cout << "\t stop: " << caData.current_counters[n] << std::endl;
 #endif
                 TauContextUserEvent* c;
                 const char *event_name = Tau_CuptiLayer_get_event_name(n);
                 //printf("Event Name: %s\n", event_name);
-                if (n >= counterEvents[taskId].size()) {
+                if (n >= caData.counterEvents.size()) {
                     c = (TauContextUserEvent *) Tau_return_context_userevent(event_name);
-                    counterEvents[taskId].push_back(c);
+                    caData.counterEvents.push_back(c);
                 } else {
-                    c = counterEvents[taskId][n];
+                    c = caData.counterEvents[n];
                 }
                 Tau_set_context_event_name(c, event_name);
-                if (counters_averaged_warning_issued[taskId] == true)
+                if (caData.counters_averaged_warning_issued == true)
                 {
-                    (*m)[c] = (current_counters[taskId][n] - counters_at_last_launch[taskId][n]);
+                    (*m)[c] = (caData.current_counters[n] - caData.counters_at_last_launch[n]);
                 }
                 else {
-                    (*m)[c] = (current_counters[taskId][n] - counters_at_last_launch[taskId][n]) * kernels_encountered[taskId];
+                    (*m)[c] = (caData.current_counters[n] - caData.counters_at_last_launch[n]) * caData.kernels_encountered;
                 }
 
             }
-            kernels_recorded[taskId]++;
+            caData.kernels_recorded++;
         }
     }
     void record_gpu_occupancy(int32_t blockX,
@@ -3020,7 +3094,8 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
     }
 
 int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
-        if (instructionMap[taskId].find(correlationId) == instructionMap[taskId].end()) {
+    CuptiActivityData  & caData=getCuptiActivityData(taskId);
+        if (caData.instructionMap.find(correlationId) == caData.instructionMap.end()) {
 	    return 0;
         }
 	std::string fname = "instruction_" + std::to_string(taskId);
@@ -3035,13 +3110,13 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	if (!fp) {
 	    return 0;
 	}
-	std::list<CUpti_ActivityInstructionExecution *> ie_list = instructionMap[taskId].find(correlationId)->second;
+	std::list<CUpti_ActivityInstructionExecution *> ie_list = caData.instructionMap.find(correlationId)->second;
 	if (ie_list.empty()) {
 	    fclose(fp);
 	    return 0;
 	}
 	for (std::list<CUpti_ActivityInstructionExecution *>::iterator iter = ie_list.begin(); iter != ie_list.end(); iter++) {
-	  CUpti_ActivityInstructionExecution* instr = *iter;
+	    CUpti_ActivityInstructionExecution* instr = *iter;
 	    uint32_t correlationId = instr->correlationId;
 	    uint32_t executed = instr->executed;
 	    uint32_t functionId = instr->functionId;
@@ -3105,10 +3180,10 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	strcat (str,"/sass_");
 	strcat (str, fname.c_str());
 	strcat (str, ".csv");
-
-	if (access (str, F_OK) == 0) {
-	  return 0;
-	}
+    
+ 	if (access (str, F_OK) == 0) {
+ 	  return 0;
+ 	}
 	fp = fopen(str, "w+b");
 
 	if (!fp) {
@@ -3121,23 +3196,24 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 
     void write_sass_counters() {
 
-      if(TauEnv_get_cuda_csv_output()) {
-          output_function_map_to_csv();
-          output_source_map_to_csv();
-      }
-      for (std::set<uint32_t>::iterator iter=correlationWritten.begin(); iter != correlationWritten.end(); iter++) {
+    if(TauEnv_get_cuda_csv_output()) {
+        output_function_map_to_csv();
+        output_source_map_to_csv();
+    }
+	for (std::set<uint32_t>::iterator iter=correlationWritten.begin(); iter != correlationWritten.end(); iter++) {
 	    uint32_t correlationId = *iter;
 	    uint32_t taskId = get_taskid_from_correlation_id(correlationId);
-	    if (kernelMap[taskId].find(correlationId) == kernelMap[taskId].end()) {
+        CuptiActivityData  & caData=getCuptiActivityData(taskId);
+	    if (caData.kernelMap.find(correlationId) == caData.kernelMap.end()) {
 		return;
 	    }
-	    CUPTI_KERNEL_TYPE *kernel = &(kernelMap[taskId].find(correlationId)->second);
+	    CUPTI_KERNEL_TYPE *kernel = &(caData.kernelMap.find(correlationId)->second);
 	    char *kname = Tau_demangle_name(kernel->name);
-	    record_imix_counters(kname, taskId, kernel->streamId, kernel->contextId, correlationId, kernel->end);
-        free(kname);
-	    if (TauEnv_get_cuda_csv_output()) {
-	        create_header_instruction_csv(taskId);
-	        output_instruction_map_to_csv(taskId, correlationId);
+ 	    record_imix_counters(kname, taskId, kernel->streamId, kernel->contextId, correlationId, kernel->end);
+	    free(kname);
+ 	    if (TauEnv_get_cuda_csv_output()) {
+ 	        create_header_instruction_csv(taskId);
+ 	        output_instruction_map_to_csv(taskId, correlationId);
 	    }
 	    correlationWritten.erase(iter);
 	    assert(correlationWritten.find(correlationId) == correlationWritten.end());
@@ -3146,52 +3222,55 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 
     void record_gpu_counters_at_launch(int device, int task)
     {
-        kernels_encountered[task]++;
+        CuptiActivityData  & caData=getCuptiActivityData(task);
+        caData.kernels_encountered++;
         if (Tau_CuptiLayer_get_num_events() > 0 &&
-                !counters_averaged_warning_issued[task] &&
-                kernels_encountered[task] > 1) {
+                !caData.counters_averaged_warning_issued &&
+                caData.kernels_encountered > 1) {
             TAU_VERBOSE("TAU Warning: CUPTI events will be averaged, multiple kernel detected between synchronization points.\n");
-            counters_averaged_warning_issued[task] = true;
+            caData.counters_averaged_warning_issued = true;
             for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
                 Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_AVERAGED);
             }
         }
         int n_counters = Tau_CuptiLayer_get_num_events();
         if (n_counters > 0 /* && counters_at_last_launch[task][0] == ULONG_MAX */) {
-            Tau_CuptiLayer_read_counters(device, task, counters_at_last_launch[task]);
+            Tau_CuptiLayer_read_counters(device, task, caData.counters_at_last_launch);
         }
 #ifdef TAU_CUPTI_DEBUG_COUNTERS
         std::cout << "at launch (device = " << device << ", task = " << task << ") ====> " << std::endl;
         for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
-            std::cout << "\tlast launch:      " << counters_at_last_launch[task][n] << std::endl;
-            std::cout << "\tcurrent counters: " << current_counters[task][n] << std::endl;
+            std::cout << "\tlast launch:      " << caData.counters_at_last_launch[n] << std::endl;
+            std::cout << "\tcurrent counters: " << caData.current_counters[n] << std::endl;
         }
 #endif
     }
 
     void record_gpu_counters_at_sync(int device, int task)
     {
-        if (kernels_encountered[task] == 0) {
+        CuptiActivityData  & caData=getCuptiActivityData(task);
+        if (caData.kernels_encountered == 0) {
             return;
         }
-        Tau_CuptiLayer_read_counters(device, task, current_counters[task]);
+        Tau_CuptiLayer_read_counters(device, task, caData.current_counters);
 #ifdef TAU_CUPTI_DEBUG_COUNTERS
         std::cout << "at sync (device = " << device << ", task = " << task << ") ====> " << std::endl;
         for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
-            std::cout << "\tlast launch:      " << counters_at_last_launch[task][n] << std::endl;
-            std::cout << "\tcurrent counters: " << current_counters[task][n] << std::endl;
+            std::cout << "\tlast launch:      " << caData.counters_at_last_launch[n] << std::endl;
+            std::cout << "\tcurrent counters: " << caData.current_counters[n] << std::endl;
         }
 #endif
     }
 
     void clear_counters(int device)
     {
+        CuptiActivityData  & caData=getCuptiActivityData(device);
         for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
         {
-            counters_at_last_launch[device][n] = ULONG_MAX;
+            caData.counters_at_last_launch[n] = ULONG_MAX;
         }
-        kernels_encountered[device] = 0;
-        kernels_recorded[device] = 0;
+        caData.kernels_encountered = 0;
+        caData.kernels_recorded = 0;
 
     }
 

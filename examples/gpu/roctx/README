@@ -1,0 +1,33 @@
+- For this example to work, first compile TAU with:
+	- ./configure -rocm=/opt/rocm-5.1.0/ -rocprofiler=/opt/rocm-5.1.0/rocprofiler/ -roctracer=/opt/rocm-5.1.0/roctracer/ -fortran=amdflang -c++=hipcc -cc=amdclang -bfd=download && make install -j
+
+- Add TAU to your PATH
+	- export PATH=$PATH:...
+
+- Compile the example with roctx and rocprofiler:
+	- hipcc MatrixTranspose.cpp -o MT -I/opt/rocm-5.1.0/roctracer/include/ -L/opt/rocm-5.1.0/roctracer/lib/ -lroctx64 -lroctracer64
+- Execute TAU
+	- tau_exec -T rocm,rocprofiler,roctracer -rocm ./MT
+- Check Results
+	- pprof
+
+FUNCTION SUMMARY (mean):
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0          438          994           1         169     994714 .TAU application
+ 36.2          360          360    0.333333           0    1081698 [PTHREAD] addr=<0x7f0dd1b59530> 
+ 17.0          169          169     66.6667           0       2542 hipMemcpy
+  2.7        0.111           26     33.3333     33.3333        797 roctx: hipLaunchKernel range
+  2.7        0.378           26     33.3333     66.6667        794 roctx: hipLaunchKernel
+  2.6        0.152           25     33.3333     33.3333        767 roctx: hipMemcpy
+  1.1           10           10     33.3333           0        328 CopyHostToDevice
+  1.1           10           10     33.3333           0        323 CopyDeviceToHost
+  0.3            2            2     33.3333           0         90 KernelExecution matrixTranspose(float*, float*, int)
+  0.1        0.504        0.504     33.3333           0         15 hipLaunchKernel
+  0.0       0.0993       0.0993    0.666667           0        149 hipMalloc
+  0.0       0.0643       0.0643    0.666667           0         96 hipFree
+  0.0        0.016        0.016    0.333333           0         48 pthread_create
+  0.0      0.00333      0.00333    0.333333           0         10 hipGetDeviceProperties
+

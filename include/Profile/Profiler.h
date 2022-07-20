@@ -102,6 +102,8 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 #define TAU_MAX_CALLPATH_DEPTH 200
 #endif
 
+#if (defined(USE_TAU_MAX_THREADS))
+
 #if (defined(PTHREADS) || defined(TAU_MPC) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC) || defined(TAU_PAPI_THREADS))
 
 
@@ -129,7 +131,7 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 #endif /* TAU_GPU */
 #endif /* TAU_MAX_THREADS */
 #endif /* PTHREADS || TULIPTHREADS || JAVA || TAU_WINDOWS || OPENMP || SPROC */
-
+#endif /* USE_TAU_MAX_THREADS */
 
 #ifdef TAU_OPENMP
 #define TAU_TRACK_IDLE_THREADS
