@@ -3104,9 +3104,11 @@ if [ "x$use_opencl" = "xyes" -a "x$openclinclude" = "x" ]; then
   do
 	  echo "OPENCL: CHECKING $d"
     if [ -r $d/libOpenCL.so ]; then
-      #openclinclude=`echo $d | sed -e "s@/lib@@g"`/include
       echo "checking $d"
       openclinclude=`echo $d | sed -e "s@/lib64@@g" -e "s@loader@headers@g" `/include
+      if [ ! -d $openclinclude ]; then
+	      openclinclude=`echo $d | sed -e "s@/lib@@g"`/include
+      fi
       echo "openclinclude=$openclinclude"
       if [ -f "$openclinclude/CL/cl.h" ] ; then
       #                       useropt="$useropt#-DTAU_MAX_THREADS=32"
