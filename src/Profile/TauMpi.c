@@ -82,8 +82,13 @@ extern void Tau_track_mpi_t();
 extern int Tau_mpi_t_cleanup();
 extern int Tau_msg_send_prolog();
 extern int Tau_msg_recv_prolog();
+#ifdef TAU_MPI_T_TRACK_GPU_MSGS
 #define TAU_MSG_SEND_PROLOG() Tau_msg_send_prolog()
 #define TAU_MSG_RECV_PROLOG() Tau_msg_recv_prolog()
+#else // TAU_MPI_T_TRACK_GPU_MSGS 
+#define TAU_MSG_SEND_PROLOG()
+#define TAU_MSG_RECV_PROLOG()
+#endif
 
 #ifdef TAU_BEACON
 extern int TauBeaconSubscribe(char *topic_name, char *topic_scope, void (*handler)(BEACON_receive_topic_t*));
