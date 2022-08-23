@@ -2497,6 +2497,7 @@ extern "C" char const * Tau_append_iteration_to_name(int iteration, char const *
   TauInternalFunctionGuard protects_this_function;
   char * buff = (char*)malloc(slen+128);
   sprintf(buff, "%s[%d]", name, iteration);
+  printf("Appendit! %s\n",buff);
   return buff;
 }
 
@@ -2873,13 +2874,13 @@ extern "C" void Tau_dynamic_start(char const * name, int isPhase)
 #ifndef TAU_PROFILEPHASE
   isPhase = 0;
 #endif
-
   vector<int> *iterationList = getIterationList(name);
-
   int tid = RtsLayer::myThread();
+  while(iterationList->size()<=tid){
+     iterationList->push_back(0);
+  }
   int itcount = (*iterationList)[tid];
-
-  char const * newName = Tau_append_iteration_to_name(itcount, name, strlen(name));
+  const char * newName = Tau_append_iteration_to_name(itcount, name, strlen(name));
   string n(newName);
   free((void*)newName);
   FunctionInfo *fi = Tau_get_function_info_internal(n, "", TAU_USER, "", true, (isPhase != 0));
