@@ -2497,7 +2497,6 @@ extern "C" char const * Tau_append_iteration_to_name(int iteration, char const *
   TauInternalFunctionGuard protects_this_function;
   char * buff = (char*)malloc(slen+128);
   sprintf(buff, "%s[%d]", name, iteration);
-  printf("Appendit! %s\n",buff);
   return buff;
 }
 
