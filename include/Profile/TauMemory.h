@@ -222,7 +222,7 @@ public:
   static TauAllocation * FindContaining(void * ptr);
 
   // Records memory used at the current time
-  static void TriggerHeapMemoryUsageEvent(void);
+  static void TriggerHeapMemoryUsageEvent(const char * prefix = nullptr);
 
   // Records memory remaining at the current time
   static void TriggerMemoryHeadroomEvent(void);

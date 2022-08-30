@@ -247,7 +247,7 @@ void TauTriggerCrayPowerEvent(int fd, const char *event_name)  {
   }
 }
 
-void TauTriggerCrayPowerEvents() {
+void TauTriggerCrayPowerEvents(const char * prefix = nullptr) {
 /*
   static int power_fd=Tau_open_cray_file("/sys/cray/pm_counters/power");
   static int accel_power_fd=Tau_open_cray_file("/sys/cray/pm_counters/accel_power");
@@ -262,10 +262,10 @@ void TauTriggerCrayPowerEvents() {
 */
 }
 
-void TauTriggerPowerEvent(bool in_signal_handler) {
+void TauTriggerPowerEvent(bool in_signal_handler, const char * prefix = nullptr) {
   //printf("Inside TauTriggerPowerEvent\n");
 #ifdef TAU_CRAYCNL
-  TauTriggerCrayPowerEvents();
+  TauTriggerCrayPowerEvents(prefix);
 #else
 #ifdef TAU_PAPI_PERF_RAPL
   PapiLayer::triggerRAPLPowerEvents(in_signal_handler);
@@ -281,19 +281,22 @@ void TauTriggerPowerEvent(bool in_signal_handler) {
  * This function is used only once, to initialize the user event,
  * so that we don't have to allocate memory during the signal
  * handler. */
-void * TauTriggerLoadEvent_helper(void) {
+void * TauTriggerLoadEvent_helper(const char * prefix) {
+  std::string tmpstr{prefix == nullptr ? "" : prefix};
   if (TauEnv_get_tracing()) {
-    return Tau_get_userevent("System load (x100)");
+    tmpstr += "System load (x100)";
+    return Tau_get_userevent(tmpstr.c_str());
   } else {
-    return Tau_get_userevent("System load");
+    tmpstr += "System load";
+    return Tau_get_userevent(tmpstr.c_str());
   }
 }
 
-void TauTriggerLoadEvent(bool use_context) {
+void TauTriggerLoadEvent(bool use_context, const char * prefix = nullptr) {
   double value;
   /* maintain this from call-to-call so we don't have to
    * allocate during a signal handler */
-  static void *ue = TauTriggerLoadEvent_helper();
+  static void *ue = TauTriggerLoadEvent_helper(prefix);
   static int fd = Tau_open_system_file("/proc/loadavg");
   if (fd) {
     Tau_read_load_event(fd, &value);
@@ -317,7 +320,7 @@ void TauTriggerLoadEvent(bool use_context) {
   }
 }
 
-extern "C" int Tau_trigger_memory_rss_hwm(bool use_context);
+extern "C" int Tau_trigger_memory_rss_hwm(bool use_context, const char * prefix = nullptr);
 //////////////////////////////////////////////////////////////////////
 // TAU's alarm signal handler
 //////////////////////////////////////////////////////////////////////
@@ -417,7 +420,7 @@ void TauTrackMemoryUtilization(bool allocated) {
 //////////////////////////////////////////////////////////////////////
 // Track Power
 //////////////////////////////////////////////////////////////////////
-void TauTrackPower(void) {
+void TauTrackPower(const char * prefix) {
   /* Enable tracking power by default */
   static int flag = TauEnableTrackingPower();
   // use the variable to prevent compiler complaints
@@ -426,14 +429,14 @@ void TauTrackPower(void) {
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingPower()) {
     // not in a signal handler, but don't use context
-    TauTriggerPowerEvent(true);
+    TauTriggerPowerEvent(true, prefix);
   }
 }
 
 //////////////////////////////////////////////////////////////////////
 // Track Load
 //////////////////////////////////////////////////////////////////////
-void TauTrackLoad(void) {
+void TauTrackLoad(const char * prefix) {
   /* Enable tracking power by default */
   static int flag = TauEnableTrackingLoad();
   // use the variable to prevent compiler complaints
@@ -442,7 +445,7 @@ void TauTrackLoad(void) {
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingLoad()) {
     // don't use context
-    TauTriggerLoadEvent(false);
+    TauTriggerLoadEvent(false, prefix);
   }
 }
 //////////////////////////////////////////////////////////////////////
@@ -456,7 +459,7 @@ extern "C" void Tau_track_mpi_t(void) {
 //////////////////////////////////////////////////////////////////////
 // Track memory resident set size (RSS) and high water mark (hwm)
 //////////////////////////////////////////////////////////////////////
-void TauTrackMemoryFootPrint(void) {
+void TauTrackMemoryFootPrint(const char * prefix) {
   /* Enable tracking memory by default */
   static int flag = TauEnableTrackingMemoryRSSandHWM();
   // use the variable to prevent compiler complaints
@@ -464,7 +467,7 @@ void TauTrackMemoryFootPrint(void) {
 
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingMemoryRSSandHWM()) {
-    Tau_trigger_memory_rss_hwm(false);
+    Tau_trigger_memory_rss_hwm(false, prefix);
   }
 }
 
@@ -487,7 +490,7 @@ void TauTrackMemoryFootPrintHere(void) {
 //////////////////////////////////////////////////////////////////////
 // Track Memory events at this location in the source code
 //////////////////////////////////////////////////////////////////////
-void TauTrackMemoryHere(void) {
+void TauTrackMemoryHere(const char * prefix) {
   /* Enable tracking memory by default */
   static int flag = TauEnableTrackingMemory();
   // use the variable to prevent compiler complaints
@@ -495,7 +498,7 @@ void TauTrackMemoryHere(void) {
 
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingMemory()) {
-    TauAllocation::TriggerHeapMemoryUsageEvent();
+    TauAllocation::TriggerHeapMemoryUsageEvent(prefix);
   }
 }
 

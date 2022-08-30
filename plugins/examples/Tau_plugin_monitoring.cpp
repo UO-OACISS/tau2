@@ -242,18 +242,18 @@ void * find_user_event(const std::string& name) {
         configuration.count("monitor_counter_prefix") > 0 ?
         configuration["monitor_counter_prefix"] : ""};
     tmpname += name;
-    auto search = event_map.find(name);
+    auto search = event_map.find(tmpname);
     if (search == event_map.end()) {
-        ue = Tau_get_userevent(name.c_str());
-        event_map.insert({name, ue});
+        ue = Tau_get_userevent(tmpname.c_str());
+        event_map.insert({tmpname, ue});
     } else {
         ue = search->second;
     }
     return ue;
 }
 
-void sample_user_event(const std::string& name, double value, bool force = false) {
-    if (TauEnv_get_tracing() || force) {
+void sample_user_event(const std::string& name, double value) {
+    if (TauEnv_get_tracing()) {
         Tau_trigger_userevent(name.c_str(), value);
     } else {
         void * ue = find_user_event(name);
@@ -833,9 +833,9 @@ void parse_proc_self_stat() {
         if (results.size() >= 52) {
             /* Remember that the string is 0-indexed, so subtract 1 from the
              * indexes on https://man7.org/linux/man-pages/man5/proc.5.html */
-            sample_user_event("Page faults (minor)", atof(results[9].c_str()), true);
-            sample_user_event("Page faults (major)", atof(results[11].c_str()), true);
-            sample_user_event("Pages swapped (not maintained)", atof(results[35].c_str()), true);
+            sample_user_event("Page faults (minor)", atof(results[9].c_str()));
+            sample_user_event("Page faults (major)", atof(results[11].c_str()));
+            sample_user_event("Pages swapped (not maintained)", atof(results[35].c_str()));
             //sample_user_event("Threads (stat)", atof(results[19].c_str()), true);
         }
     }
@@ -1061,6 +1061,9 @@ void update_io_stats(const char * source) {
 }
 
 void read_components(void) {
+    static std::string tmpstr{configuration.count("monitor_counter_prefix") > 0 ?
+        configuration["monitor_counter_prefix"] : ""};
+    static const char * prefix = tmpstr.c_str();
 #ifdef TAU_PAPI
     for (size_t index = 0; index < components.size() ; index++) {
         if (components[index]->initialized) {
@@ -1104,10 +1107,10 @@ void read_components(void) {
     /* Also read some OS level metrics. */
 
     /* records the heap, with no context, even though it says "here". */
-    Tau_track_memory_here();
+    TauTrackMemoryHere(prefix);
 #if !defined(__APPLE__)
     /* records the rss/hwm, without context. */
-    Tau_track_memory_rss_and_hwm();
+    TauTrackMemoryFootPrint(prefix);
     /* Get current io stats for the process */
     update_io_stats("/proc/self/io");
     /* Parse overall stats */
@@ -1127,10 +1130,10 @@ void read_components(void) {
 
 #if !defined(__APPLE__)
         /* records the load, without context */
-        Tau_track_load();
+        TauTrackLoad(prefix);
 #endif
         /* records the power, without context */
-        Tau_track_power();
+        TauTrackPower(prefix);
 #if !defined(__APPLE__)
         /* Get the current CPU statistics for the node */
         update_cpu_stats();

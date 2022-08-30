@@ -27,14 +27,14 @@ void TauSetInterruptInterval(int interval);
 int  TauEnableTrackingMemory(void);
 int  TauDisableTrackingMemory(void);
 void TauTrackMemoryUtilization(bool allocated);
-void TauTrackMemoryHere(void);
-void TauTrackPower(void);
+void TauTrackMemoryHere(const char * prefix = nullptr);
+void TauTrackPower(const char * prefix = nullptr);
 void TauTrackPowerHere(void);
-void TauTrackMemoryFootPrint(void);
+void TauTrackMemoryFootPrint(const char * prefix = nullptr);
 void TauTrackMemoryFootPrintHere(void);
 int TauEnableTrackingPower(void);
 int TauDisableTrackingPower(void);
-void TauTrackLoad(void);
+void TauTrackLoad(const char * prefix = nullptr);
 void TauTrackLoadHere(void);
 int TauEnableTrackingLoad(void);
 int TauDisableTrackingLoad(void);
@@ -47,14 +47,14 @@ int Tau_open_system_file(const char *filename);
 int Tau_read_load_event(int fd, double *value);
 
 #endif /* _TAU_HANDLER_H_ */
-  
+
 /***************************************************************************
  * $RCSfile: TauHandler.h,v $   $Author: amorris $
  * $Revision: 1.8 $   $Date: 2009/02/24 20:22:03 $
- * POOMA_VERSION_ID: $Id: TauHandler.h,v 1.8 2009/02/24 20:22:03 amorris Exp $ 
+ * POOMA_VERSION_ID: $Id: TauHandler.h,v 1.8 2009/02/24 20:22:03 amorris Exp $
  ***************************************************************************/
 
-	
+
 
 
 

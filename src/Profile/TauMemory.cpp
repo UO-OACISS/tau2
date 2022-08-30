@@ -98,7 +98,7 @@ bool wrapper_registered = false;
 wrapper_enable_handle_t wrapper_enable_handle = NULL;
 wrapper_disable_handle_t wrapper_disable_handle = NULL;
 
-extern "C" int Tau_trigger_memory_rss_hwm(bool use_context);
+extern "C" int Tau_trigger_memory_rss_hwm(bool use_context, const char * prefix = nullptr);
 
 // Returns true if the given allocation size should be protected
 static inline bool AllocationShouldBeProtected(size_t size)
@@ -715,8 +715,10 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
 //////////////////////////////////////////////////////////////////////
 // Records memory used at the current time
 //////////////////////////////////////////////////////////////////////
-void TauAllocation::TriggerHeapMemoryUsageEvent() {
-  TAU_REGISTER_EVENT(evt, "Heap Memory Used (KB)");
+void TauAllocation::TriggerHeapMemoryUsageEvent(const char * prefix) {
+    std::string tmpstr{prefix == nullptr ? "" : prefix};
+    tmpstr += "Heap Memory Used (KB)";
+  TAU_REGISTER_EVENT(evt, tmpstr.c_str());
   /* Make the measurement on thread 0, because we are
    * recording the heap for the process. */
   int tid = 0;
@@ -1857,7 +1859,7 @@ extern "C" int Tau_close_status(int fd) {
 // Tau_trigger_memory_rss_hwm triggers resident memory size and high water
 // mark events
 //////////////////////////////////////////////////////////////////////
-extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
+extern "C" int Tau_trigger_memory_rss_hwm(bool use_context, const char * prefix) {
   int fd = Tau_open_status();
   if (fd == -1) return 0; // failure
   //printf("***** %d,%d,%s\n", RtsLayer::myNode(), __LINE__, __func__); fflush(stdout);
@@ -1877,22 +1879,33 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context) {
   }
 
     if (use_context) {
-  	TAU_REGISTER_CONTEXT_EVENT(proc_vmhwm, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
-  	TAU_REGISTER_CONTEXT_EVENT(proc_rss, "Memory Footprint (VmRSS) (KB)");
-  	TAU_REGISTER_CONTEXT_EVENT(stat_threads, "Threads");
-  	TAU_REGISTER_CONTEXT_EVENT(stat_voluntary, "Voluntary Context Switches");
-  	TAU_REGISTER_CONTEXT_EVENT(stat_nonvoluntary, "Non-voluntary Context Switches");
+        TAU_REGISTER_CONTEXT_EVENT(proc_vmhwm, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
+        TAU_REGISTER_CONTEXT_EVENT(proc_rss, "Memory Footprint (VmRSS) (KB)");
+        TAU_REGISTER_CONTEXT_EVENT(stat_threads, "Threads");
+        TAU_REGISTER_CONTEXT_EVENT(stat_voluntary, "Voluntary Context Switches");
+        TAU_REGISTER_CONTEXT_EVENT(stat_nonvoluntary, "Non-voluntary Context Switches");
         TAU_CONTEXT_EVENT(proc_rss, (double) vmrss);
         TAU_CONTEXT_EVENT(proc_vmhwm, (double) vmhwm);
         TAU_CONTEXT_EVENT(stat_threads, (double) threads);
         TAU_CONTEXT_EVENT(stat_voluntary, (double) vswitch);
         TAU_CONTEXT_EVENT(stat_nonvoluntary, (double) nvswitch);
     } else {
-  	static void * proc_vmhwm_no_context = Tau_get_userevent("Peak Memory Usage Resident Set Size (VmHWM) (KB)");
-  	static void * proc_rss_no_context = Tau_get_userevent("Memory Footprint (VmRSS) (KB)");
-  	static void * stat_threads_no_context = Tau_get_userevent("Threads");
-  	static void * stat_voluntary_no_context = Tau_get_userevent("Voluntary Context Switches");
-  	static void * stat_nonvoluntary_no_context = Tau_get_userevent("Non-voluntary Context Switches");
+        std::string pfix{prefix == nullptr ? "" : prefix};
+        std::string tmpstr{prefix};
+        tmpstr += "Peak Memory Usage Resident Set Size (VmHWM) (KB)";
+        static void * proc_vmhwm_no_context = Tau_get_userevent(tmpstr.c_str());
+        tmpstr = prefix;
+        tmpstr += "Memory Footprint (VmRSS) (KB)";
+        static void * proc_rss_no_context = Tau_get_userevent(tmpstr.c_str());
+        tmpstr = prefix;
+        tmpstr += "Threads";
+        static void * stat_threads_no_context = Tau_get_userevent(tmpstr.c_str());
+        tmpstr = prefix;
+        tmpstr += "Voluntary Context Switches";
+        static void * stat_voluntary_no_context = Tau_get_userevent(tmpstr.c_str());
+        tmpstr = prefix;
+        tmpstr += "Non-voluntary Context Switches";
+        static void * stat_nonvoluntary_no_context = Tau_get_userevent(tmpstr.c_str());
         Tau_userevent_thread(proc_rss_no_context, (double) vmrss, tid);
         Tau_userevent_thread(proc_vmhwm_no_context, (double) vmhwm, tid);
         Tau_userevent_thread(stat_threads_no_context, (double) threads, tid);
@@ -1972,7 +1985,7 @@ static alloc_stack_t * tau_alloc_stack(void)
 static thread_local alloc_stack_t * stack_cache=0;
 std::mutex allocStackVectorMutex;
 static inline alloc_stack_t  * tau_alloc_stack(void)
-{ 
+{
   static vector <alloc_stack_t *> alloc_stack_vec;//[TAU_MAX_THREADS] = {NULL};
   if(stack_cache!=0){
     return stack_cache;

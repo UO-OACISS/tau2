@@ -497,6 +497,13 @@ int Tau_ompt_stop_trace() {
  * We do NOT want to be adding ugly ifdef's in our code. Thus, the only solution is to hand the
  * responsbility to TAU with a certain loss in accuracy in measured values*/
 
+/* Update: in an attempt to prevent weird errors from using Tau_global_stop(),
+ * we will validate the data returned by the runtime, and abort. This behavior
+ * can be optionally disabled. */
+void stop_correct_timer(ompt_data_t * ompt_data) {
+    TAU_ASSERT(ompt_data->ptr, "ERROR! OpenMP runtime didn't maintain our tool data! Complain to the vendor!");
+    TAU_PROFILER_STOP(ompt_data->ptr);
+}
 
 /*Parallel begin/end callbacks. We need context information (function name, filename, lineno) for these.
  * For context information the user has one of two options:
@@ -585,7 +592,7 @@ on_ompt_callback_parallel_end(
     }
 
     if(codeptr_ra) {
-      TAU_PROFILER_STOP(parallel_data->ptr);
+      stop_correct_timer(parallel_data);
       //Tau_global_stop();
     }
   }
@@ -677,8 +684,8 @@ on_ompt_callback_task_schedule(
     TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_task_schedule] && Tau_init_check_initialized()) {
     if(prior_task_data->ptr) {
-      //TAU_PROFILER_STOP(prior_task_data->ptr);
-      Tau_global_stop();
+      stop_correct_timer(prior_task_data);
+      //Tau_global_stop();
     }
 
     if(next_task_data->ptr) {
@@ -743,8 +750,8 @@ on_ompt_callback_master(
           TAU_PROFILER_START(handle);
           break;
         case ompt_scope_end:
-          //TAU_PROFILER_STOP(task_data->ptr);
-          Tau_global_stop();
+          stop_correct_timer(task_data);
+          //Tau_global_stop();
           break;
 #if defined(ompt_scope_beginend)
         case ompt_scope_beginend:
@@ -842,11 +849,11 @@ on_ompt_callback_work(
         case ompt_scope_begin:
           TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
           TAU_PROFILER_START(handle);
+          task_data->ptr = (void*)handle;
           break;
         case ompt_scope_end:
-          Tau_global_stop();
-          //TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
-          //TAU_PROFILER_STOP(handle);
+          stop_correct_timer(task_data);
+          //Tau_global_stop();
           break;
 #if defined(ompt_scope_beginend) // why did Intel add this early?
         case ompt_scope_beginend:
@@ -913,8 +920,8 @@ on_ompt_callback_thread_end(
   if (Tau_ompt_finalized()) { return; }
   if(Tau_ompt_callbacks_enabled[ompt_callback_thread_end] && Tau_init_check_initialized()) {
     if (is_master) return; // master thread can't be a new worker.
-    //TAU_PROFILER_STOP(thread_data->ptr);
-    Tau_global_stop();
+    stop_correct_timer(thread_data);
+    //Tau_global_stop();
   }
 
   if(Tau_plugins_enabled.ompt_thread_end) {
@@ -958,9 +965,8 @@ on_ompt_callback_implicit_task(
         break;
       case ompt_scope_end:
         if(task_data->ptr != NULL) {
-          //TAU_PROFILER_STOP(task_data->ptr);
-        //TAU_VERBOSE("********* Exiting implicit task!\n");
-          Tau_global_stop();
+          stop_correct_timer(task_data);
+          //Tau_global_stop();
         }
         break;
 #if defined(ompt_scope_beginend)
@@ -1068,11 +1074,11 @@ on_ompt_callback_sync_region(
         case ompt_scope_begin:
           TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
           TAU_PROFILER_START(handle);
+          task_data->ptr = (void*)handle;
           break;
         case ompt_scope_end:
-          //TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
-          //TAU_PROFILER_STOP(task_data->ptr);
-          Tau_global_stop();
+          stop_correct_timer(task_data);
+          //Tau_global_stop();
           break;
 #if defined(ompt_scope_beginend)
         case ompt_scope_beginend:
@@ -1404,7 +1410,7 @@ static void on_ompt_callback_target(
             TAU_PROFILER_STOP(task_data->ptr);
             delete task_data;
 #else
-            TAU_PROFILER_STOP(task_data->ptr);
+            stop_correct_timer(task_data);
 #endif
             break;
         }
