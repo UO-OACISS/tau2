@@ -70,6 +70,8 @@ thread_local bool main_thread = false;
 const char * default_configuration = R"(
 {
   "periodic": false,
+  "node_data_from_all_ranks": false,
+  "monitor_counter_prefix": "",
   "periodicity seconds": 10.0,
   "PAPI metrics": [],
   "/proc/stat": {
@@ -236,6 +238,10 @@ void * find_user_event(const std::string& name) {
     void * ue = NULL;
     /* I can't believe I need a local map to do this... */
     static std::map<std::string, void*> event_map;
+    std::string tmpname{
+        configuration.count("monitor_counter_prefix") > 0 ?
+        configuration["monitor_counter_prefix"] : ""};
+    tmpname += name;
     auto search = event_map.find(name);
     if (search == event_map.end()) {
         ue = Tau_get_userevent(name.c_str());
@@ -244,6 +250,15 @@ void * find_user_event(const std::string& name) {
         ue = search->second;
     }
     return ue;
+}
+
+void sample_user_event(const std::string& name, double value, bool force = false) {
+    if (TauEnv_get_tracing() || force) {
+        Tau_trigger_userevent(name.c_str(), value);
+    } else {
+        void * ue = find_user_event(name);
+        Tau_userevent_thread(ue, value, 0);
+    }
 }
 
 /* Older versions of Clang++ won't compile this regular expression
@@ -700,6 +715,13 @@ int choose_volunteer_rank() {
     PMPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     PMPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 
+    /* If the user wants node health data from all ranks,
+       then every rank participates in reading that data. */
+    if (configuration.count("node_data_from_all_ranks") > 0 &&
+        configuration["node_data_from_all_ranks"]) {
+        return my_rank;
+    }
+
     // get my hostname
     const int hostlength = MPI_MAX_PROCESSOR_NAME;
     char hostname[hostlength] = {0};
@@ -768,12 +790,7 @@ void parse_proc_meminfo() {
                 }
             }
             if (include_event(source, ss.str().c_str())) {
-                if (TauEnv_get_tracing()) {
-                    Tau_trigger_userevent(ss.str().c_str(), d1);
-                } else {
-                    void * ue = find_user_event(ss.str());
-                    Tau_userevent_thread(ue, d1, 0);
-                }
+                sample_user_event(ss.str().c_str(), d1);
             }
         }
     }
@@ -795,12 +812,7 @@ void sample_value(const char * component, const char * cpu, const char * name,
     } else {
         tmp = (value / (double)(total)) * 100.0;
     }
-    if (TauEnv_get_tracing()) {
-        Tau_trigger_userevent(ss.str().c_str(), tmp);
-    } else {
-        void * ue = find_user_event(ss.str());
-        Tau_userevent_thread(ue, tmp, 0);
-    }
+    sample_user_event(ss.str().c_str(), tmp);
 }
 
 extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
@@ -821,10 +833,10 @@ void parse_proc_self_stat() {
         if (results.size() >= 52) {
             /* Remember that the string is 0-indexed, so subtract 1 from the
              * indexes on https://man7.org/linux/man-pages/man5/proc.5.html */
-            Tau_trigger_userevent("Page faults (minor)", atof(results[9].c_str()));
-            Tau_trigger_userevent("Page faults (major)", atof(results[11].c_str()));
-            //Tau_trigger_userevent("Threads (stat)", atof(results[19].c_str()));
-            Tau_trigger_userevent("Pages swapped (not maintained)", atof(results[35].c_str()));
+            sample_user_event("Page faults (minor)", atof(results[9].c_str()), true);
+            sample_user_event("Page faults (major)", atof(results[11].c_str()), true);
+            sample_user_event("Pages swapped (not maintained)", atof(results[35].c_str()), true);
+            //sample_user_event("Threads (stat)", atof(results[19].c_str()), true);
         }
     }
     fclose(f);
@@ -879,37 +891,22 @@ void parse_proc_self_statm() {
         char* pEnd;
         double d1 = strtod (value.c_str(), &pEnd);
         if (pEnd) {
-            if (include_event(source, "program size (kB)")) {
-                if (TauEnv_get_tracing()) {
-                    Tau_trigger_userevent("program size (kB)", d1);
-                } else {
-                    void * ue = find_user_event("program size (kB)");
-                    Tau_userevent_thread(ue, d1, 0);
-                }
+            if (include_event(source, "program size (pages)")) {
+                sample_user_event("program size (pages)", d1);
             }
         }
         value = results[1];
         d1 = strtod (value.c_str(), &pEnd);
         if (pEnd) {
-            if (include_event(source, "resident set size (kB)")) {
-                if (TauEnv_get_tracing()) {
-                    Tau_trigger_userevent("resident set size (kB)", d1);
-                } else {
-                    void * ue = find_user_event("resident set size (kB)");
-                    Tau_userevent_thread(ue, d1, 0);
-                }
+            if (include_event(source, "resident set size (pages)")) {
+                sample_user_event("resident set size (pages)", d1);
             }
         }
         value = results[2];
         d1 = strtod (value.c_str(), &pEnd);
         if (pEnd) {
             if (include_event(source, "resident shared pages")) {
-                if (TauEnv_get_tracing()) {
-                    Tau_trigger_userevent("resident shared pages", d1);
-                } else {
-                    void * ue = find_user_event("resident shared pages");
-                    Tau_userevent_thread(ue, d1, 0);
-                }
+                sample_user_event("resident shared pages", d1);
             }
         }
     }
@@ -1075,14 +1072,8 @@ void read_components(void) {
                 return;
             }
             for (size_t i = 0 ; i < comp->events.size() ; i++) {
-                if (TauEnv_get_tracing()) {
-                    Tau_trigger_userevent(comp->events[i].name.c_str(),
-                        ((double)values[i]) * comp->events[i].conversion);
-                } else {
-                    void * ue = find_user_event(comp->events[i].name);
-                    Tau_userevent_thread(ue,
-                        ((double)values[i]) * comp->events[i].conversion, 0);
-                }
+                sample_user_event(comp->events[i].name,
+                    ((double)values[i]) * comp->events[i].conversion);
             }
             free(values);
         }
@@ -1102,13 +1093,7 @@ void read_components(void) {
                     TAU_VERBOSE("Bogus (probably derived/multiplexed) value: %s %lld\n", metric.c_str(), papi_periodic_values[index]);
                     papi_periodic_values[index] = 0LL;
                 }
-                if (TauEnv_get_tracing()) {
-                    Tau_trigger_userevent(metric.c_str(),
-                        ((double)papi_periodic_values[index]));
-                } else {
-                    void * ue = find_user_event(metric.c_str());
-                    Tau_userevent_thread(ue, ((double)papi_periodic_values[index]), 0);
-                }
+                sample_user_event(metric, (double)papi_periodic_values[index]);
                 // set it back to zero so we can use PAPI_accum and not PAPI_reset
                 papi_periodic_values[index] = 0;
                 index++;
