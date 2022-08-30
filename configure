@@ -698,6 +698,7 @@ usage() {
     echo "                                   e.g. libpython3.10.so"
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
     echo "-mpit ............................... Enable MPI-T profiling interface."
+    echo "-phiprof ................................... Activate Phiprof bindings."
     echo "-llvm_src=<dir> ......................... Path to the LLVM source tree "
     echo "                             (necessary for the instrumentation plugin)"
     echo "-llvm_cxx=<dir.................. Compiler that was used to compile LLVM"
@@ -865,6 +866,7 @@ for arg in "$@"; do
 	echo "-python .. Automatically choose python options based on Python in path."
 	echo "-pythoninc=<dir> ........ Specify location of Python include directory."
 	echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
+	echo "-phiprof ................................... Activate Phiprof bindings."
 	echo "-llvm_src=<dir> ......................... Path to the LLVM source tree "
 	echo "                             (necessary for the instrumentation plugin)"
 	echo "-llvm_cxx=<dir.................. Compiler that was used to compile LLVM"
@@ -1269,6 +1271,7 @@ android_platform=19
 disable_memory_manager=no
 llvm_src_dir=""
 llvm_cxx=""
+phiprof=""
 
 restore_perfdmf_and_paraprof
 
@@ -3040,6 +3043,15 @@ for arg in "$@"; do
 	    fi
 	    shift
 	    ;;
+
+	-phiprof)
+	    phiprof=yes
+	    fixmakeargs="$fixmakeargs PHIPROF"
+#	    fixmakeargs="$fixmakeargs GNU"
+	    tauoptions="${tauoptions}-phiprof"
+	    shift
+	    ;;
+
 	default)
 	    echo "Fixing Makefiles"
 	    ;;
