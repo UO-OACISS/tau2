@@ -889,7 +889,7 @@ int Tau_track_mpi_t_here(void) {
           //TauInternalFunctionGuard protects_this_function; 
           dprintf("MPI_T: pvar initial count=%d, pvar count=%d, pvar index=%d, pvar sub index=%d, pvar value=%llu\n", tau_initial_pvar_count, tau_pvar_count[i], i, j, mydata);
           /*Invoke plugins only if both plugin path and plugins are specified*/
-          if(TauEnv_get_plugins_enabled()) {
+          /*if(TauEnv_get_plugins_enabled()) {
             Tau_plugin_event_mpit_data_t plugin_data;
  
             char * pvar_name_char = Tau_get_pvar_name(i,j);
@@ -898,9 +898,21 @@ int Tau_track_mpi_t_here(void) {
             plugin_data.pvar_value = mydata;
             dprintf("MPI-T invoke callback\n"); 
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_MPIT, plugin_data.pvar_name, &plugin_data);
-          }
+          }*/
  
         }
+        /*Invoke plugins only if both plugin path and plugins are specified*/
+        if(TauEnv_get_plugins_enabled()) {
+          Tau_plugin_event_mpit_data_t plugin_data;
+
+          char * pvar_name_char = Tau_get_pvar_name(i,j);
+          plugin_data.pvar_name = Tau_get_pvar_name(i,j);
+          plugin_data.pvar_index = j;
+          plugin_data.pvar_value = mydata;
+          dprintf("MPI-T invoke callback\n");
+          Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_MPIT, plugin_data.pvar_name, &plugin_data);
+        }
+
       }
     }
 

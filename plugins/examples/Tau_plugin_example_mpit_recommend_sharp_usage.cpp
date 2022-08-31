@@ -28,7 +28,7 @@ extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
  * versus the total application execution time, along with the message size for MPI_Allreduce.
  * If the application spends a signigicant time in MPI_Allreduce, and if the message size involved in MPI_Allreduce
  * is low, then it recommends the user to enable SHArP through a message on TAU_METADATA*/
-extern "C" int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_end_of_execution_data_t* data) {
+extern "C" int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_pre_end_of_execution_data_t* data) {
   double exclusiveTimeAllReduce, inclusiveTimeApp = 0.0;
   double meanAllReduceMessageSize = 0;
 
@@ -89,7 +89,7 @@ extern "C" int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_en
   //std::cout << "Total percentage of MPI_Allreduce() and mean message size are " << (exclusiveTimeAllReduce/inclusiveTimeApp) << "  " << meanAllReduceMessageSize << std::endl;
 
   RtsLayer::UnLockDB();
-
+  TAU_VERBOSE("Ratio: %f . Mean AllReduce Size %f\n",exclusiveTimeAllReduce/inclusiveTimeApp, meanAllReduceMessageSize);
   //Generate recommendation for the user if appropriate conditions are met
   if(((exclusiveTimeAllReduce/inclusiveTimeApp) > .30 ) && meanAllReduceMessageSize < 32.0) {
     TAU_METADATA("TAU_RECOMMENDATION", "MPI_T_RECOMMEND_SHARP_USAGE: You could see potential improvement in performance by configuring MVAPICH with --enable-sharp and enabling MV2_ENABLE_SHARP in MVAPICH version 2.3a and above");
@@ -102,9 +102,9 @@ extern "C" int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_en
  *  * Every plugin MUST implement this function to register callbacks for various events 
  *   * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
-  Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
+  Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
-  cb->EndOfExecution = Tau_plugin_example_mpit_recommend_sharp_usage;
+  cb->PreEndOfExecution = Tau_plugin_example_mpit_recommend_sharp_usage;
   TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
 
   return 0;

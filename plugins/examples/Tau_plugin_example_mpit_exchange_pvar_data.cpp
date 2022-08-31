@@ -35,7 +35,7 @@ int Tau_plugin_event_mpit(Tau_plugin_event_mpit_data_t* data) {
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   #endif
 
-  fprintf(stderr, "PVAR Name %s and value %lld from rank %d\n", data->pvar_name, data->pvar_value, rank);
+  //fprintf(stderr, "PVAR Name %s and value %lld from rank %d\n", data->pvar_name, data->pvar_value, rank);
 
   local_val = data->pvar_value;
 
@@ -43,7 +43,11 @@ int Tau_plugin_event_mpit(Tau_plugin_event_mpit_data_t* data) {
   PMPI_Allreduce(&local_val, &global_val, 1, MPI_LONG, MPI_MAX, MPI_COMM_WORLD);
   #endif
 
-  fprintf(stderr, "Max value: %lld\n", global_val);
+  //fprintf(stderr, "Max value: %lld\n", global_val);
+  if(global_val>0)
+  {
+    fprintf(stderr, "PVAR Name %s and value %lld from rank %d\n Max value: %lld\n", data->pvar_name, data->pvar_value, rank, global_val);
+  }
 
   return 0;
 }
