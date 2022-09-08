@@ -1368,7 +1368,7 @@ static void on_ompt_callback_target(
     TauInternalFunctionGuard protects_this_function;
     //printf("CPU Device: %d\n", device_num);
     // The INtel runtime doesn't manage tool data correctly. So we'll manage it ourselves.
-#ifdef __INTEL_COMPILER
+#ifdef TAU_INTEL_COMPILER
     static std::stack<ompt_data_t*> target_stack;
 #endif
     switch(endpoint) {
@@ -1390,7 +1390,7 @@ static void on_ompt_callback_target(
             }
 
             TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
-#ifdef __INTEL_COMPILER
+#ifdef TAU_INTEL_COMPILER
             // The intel runtime doesn't provide an allocated location.
             task_data = new ompt_data_t();
             task_data->ptr = (void*)handle;
@@ -1404,7 +1404,7 @@ static void on_ompt_callback_target(
             break;
         }
         case ompt_scope_end: {
-#ifdef __INTEL_COMPILER
+#ifdef TAU_INTEL_COMPILER
             task_data = target_stack.top();
             target_stack.pop();
             TAU_PROFILER_STOP(task_data->ptr);
@@ -1449,19 +1449,19 @@ on_ompt_callback_target_data_op(
         size_t bytes,
         const void *codeptr_ra)
 {
-#ifndef __INTEL_COMPILER // intel doesn't always provide a codeptr_ra value.
+#ifndef TAU_INTEL_COMPILER // intel doesn't always provide a codeptr_ra value.
     assert(codeptr_ra != 0);
 #endif
     // Both src and dest must not be null
     assert(src_addr != 0 || dest_addr != 0);
-    /*
+    /* 
     printf("  Callback DataOp: target_id=%lu host_op_id=%lu optype=%d src=%p src_device_num=%d "
 	    "dest=%p dest_device_num=%d bytes=%lu code=%p\n",
 	    target_id, host_op_id, optype, src_addr, src_device_num,
 	    dest_addr, dest_device_num, bytes, codeptr_ra);
     */
     TauInternalFunctionGuard protects_this_function;
-    //printf("CPU Device: %d, %d\n", src_device_num, dest_device_num);
+    // printf("CPU Device: %d, %d\n", src_device_num, dest_device_num);
 
     static std::unordered_map<void*,double> allocations;
     static std::mutex allocation_lock;
@@ -1571,7 +1571,7 @@ on_ompt_callback_target_data_op(
     if (ue != nullptr) {
         Tau_userevent(ue,d_bytes);
         // create a target-specific counter, too
-#ifndef __INTEL_COMPILER // intel doesn't always provide a codeptr_ra value.
+#ifndef TAU_INTEL_COMPILER // intel doesn't always provide a codeptr_ra value.
         if (TauEnv_get_ompt_resolve_address_eagerly()) {
             char resolved_address[1024];
             void * codeptr_ra_copy = (void*) codeptr_ra;
@@ -1783,7 +1783,7 @@ extern "C" int ompt_initialize(
   Tau_register_callback(ompt_callback_task_create, cb_t(on_ompt_callback_task_create));
   Tau_register_callback(ompt_callback_task_schedule, cb_t(on_ompt_callback_task_schedule));
   /* Intel doesn't provide the exit callback for implicit tasks... */
-#if !defined(__INTEL_COMPILER) && !defined(__ICC) && !defined(__clang__)
+#if !defined(TAU_INTEL_COMPILER) && !defined(__ICC) && !defined(__clang__)
   //Tau_register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); //Sometimes high-overhead, but unfortunately we cannot avoid this as it is a required event
 #endif
   Tau_register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));

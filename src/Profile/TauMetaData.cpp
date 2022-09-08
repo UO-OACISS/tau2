@@ -904,7 +904,7 @@ int Tau_metadata_fillOpenMPMetaData(void) {
 
 #if _OPENMP >= 201307 // OpenMP 4.0
   Tau_metadata_register_task("OMP_PROC_BIND", omp_get_proc_bind() ? "TRUE" : "FALSE", 0);
-#if !defined(__INTEL_COMPILER)
+#if !defined(TAU_INTEL_COMPILER)
 /* Don't make this call for the Intel compiler!  It may compile, but without
  * MIC/KNL offload support, the linker will fail with really esoteric error messages
  * about either missing destructor in ~MetaDataRepo() or missing i_ofldbegin_target.o

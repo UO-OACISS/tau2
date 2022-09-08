@@ -260,7 +260,7 @@ struct tau_io_wrapper_event {
     struct timeval t2;
 };
 
-#if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER)
+#if defined(TAU_USE_TLS) && !defined(TAU_INTEL_COMPILER)
 // thread local storage
 static tau_io_wrapper_event * tau_get_io_event_record(void)
 {

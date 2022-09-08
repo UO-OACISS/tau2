@@ -20,7 +20,7 @@
  #if defined(TAU_IBM_OMPT)
   #define OMPT_VERSION 1
   #include <lomp/omp.h>
- #elif defined(__ICC) || defined(__INTEL_COMPILER)
+ #elif defined(__ICC) || defined(TAU_INTEL_COMPILER)
   // check for intel second
   #define OMPT_VERSION 3 // someday we will update this, but in the meantime...
   #define STATES_ARE_TYPE_INT
@@ -496,7 +496,7 @@ char * show_backtrace (int tid, int offset) {
                 else if (strncmp(node->info.funcname,"__ompc_", 7) == 0) { // in OpenUH runtime
                     continue; // keep unwinding
                 }
-#elif defined (__INTEL_COMPILER)
+#elif defined (TAU_INTEL_COMPILER)
                 else if (strncmp(node->info.funcname,"my_parallel_region_create", 25) == 0) { // in OMPT wraper (see below)
                     continue; // keep unwinding
                 } else if (strncmp(node->info.funcname,"__kmp", 5) == 0) { // in Intel runtime
@@ -933,7 +933,7 @@ extern "C" int Tau_initialize_collector_api(void) {
     memcpy(&Tau_collector_api, &temp_fptr, sizeof(temp_fptr));
     if (Tau_collector_api == NULL) {
 
-#if defined (__INTEL_COMPILER)
+#if defined (TAU_INTEL_COMPILER)
         char * libname = "libiomp5.so";
 #elif defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__)
 
