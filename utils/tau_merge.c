@@ -15,6 +15,7 @@
 # include <stdlib.h>
 # include <sys/types.h>
 # include <fcntl.h>
+# include <ctype.h>
 
 
 #define TAU_MAXPROCS 65536
