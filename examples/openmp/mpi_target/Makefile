@@ -2,6 +2,7 @@ MPI_OPTS=$(shell ./mpiopts.sh)
 # Put your own mpi -I -L -l options here. 
 
 HIPCC=hipcc 
+ICPX=icpx
 
 SOURCES = matmult.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
@@ -15,13 +16,15 @@ all: $(EXECUTABLE)
 
 AMD_CXXFLAGS =  -g -fopenmp -target x86_64-pc-linux-gnu -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx908 -DTAU_MPI -DTAU_OPENMP 
 NVIDIA_CXXFLAGS=
-INTEL_CXXFLAGS=
+INTEL_CXXFLAGS=-qnextgen -fiopenmp -fopenmp-targets=spir64
 
 CXXFLAGS=${NVIDIA_CXXFLAGS}
 CXXFLAGS=${INTEL_CXXFLAGS}
 CXXFLAGS=${AMD_CXXFLAGS}
 
-CXX=$(HIPCC)
+CXXFLAGS=${INTEL_CXXFLAGS}
+
+CXX=${ICPX}
 
 
 $(EXECUTABLE): $(OBJECTS) 
