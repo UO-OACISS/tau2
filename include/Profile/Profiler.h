@@ -89,6 +89,10 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 #include <TAU.h>
 
 
+#if (defined(__INTEL_COMPILER) || defined (__INTEL_LLVM_COMPILER))
+#define TAU_INTEL_COMPILER
+#endif 
+
 
 #ifndef TAU_NAME_LENGTH
 #define TAU_NAME_LENGTH 1024
