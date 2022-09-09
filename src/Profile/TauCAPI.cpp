@@ -214,13 +214,13 @@ void checkTCAPIVector(int tid){
 static thread_local int local_tid = RtsLayer::myThread();
 static thread_local Tau_thread_status_flags* flag_cache=0;
 static inline Tau_thread_status_flags& getTauThreadFlag(int tid){
-    
+
     if(tid == local_tid){
         if(flag_cache!=0){
             return *flag_cache;
         }
     }
-    
+
     checkTCAPIVector(tid);
 
     //Tau_thread_status_flags& test = *(TheCAPIThreadList()[tid]);
@@ -3050,6 +3050,10 @@ extern void Tau_ompt_finalize(void);
 extern void TauTraceOTF2ToggleFlushAtExit(bool);
 #endif
 
+#ifdef TAU_ENABLE_LEVEL_ZERO
+void TauL0DisableProfiling(void);
+#endif
+
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
@@ -3075,6 +3079,9 @@ void Tau_destructor_trigger() {
   Tau_global_incr_insideTAU();
 #ifdef TAU_USE_OMPT_5_0
   Tau_ompt_finalize();
+#endif
+#ifdef TAU_ENABLE_LEVEL_ZERO
+  TauL0DisableProfiling();
 #endif
   // prevent any threads from handling their own exit
   tauIsDestroyed = true;

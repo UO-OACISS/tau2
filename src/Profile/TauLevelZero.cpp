@@ -225,7 +225,7 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
 
 // Internal Tool Interface ////////////////////////////////////////////////////
 
-void EnableProfiling() {
+void TauL0EnableProfiling() {
   if (getenv("ZE_ENABLE_TRACING_LAYER") == NULL) {
     // tau_exec -level_zero was not called. Perhaps it is using -opencl
     TAU_VERBOSE("TAU: Disabling Level Zero support as ZE_ENABLE_TRACING_LAYER was not set from tau_exec -l0\n");
@@ -276,7 +276,7 @@ void EnableProfiling() {
   start = std::chrono::steady_clock::now();
 }
 
-void DisableProfiling() {
+void TauL0DisableProfiling() {
   if (kernel_collector != nullptr) {
     kernel_collector->DisableTracing();
     if (TauEnv_get_verbose())
@@ -312,47 +312,4 @@ void DisableProfiling() {
 }
 
 
-// preload.cc
-#if defined(__gnu_linux__)
-
-#include <dlfcn.h>
-
-typedef void (*Exit)(int status) __attribute__ ((noreturn));
-typedef int (*Main)(int argc, char** argv, char** envp);
-typedef int (*Fini)(void);
-typedef int (*LibcStartMain)(Main main, int argc, char** argv, Main init,
-                             Fini fini, Fini rtld_fini, void *stack_end);
-
-// Pointer to original application main() function
-Main original_main = nullptr;
-
-extern "C" int HookedMain(int argc, char **argv, char **envp) {
-  EnableProfiling();
-  int return_code = original_main(argc, argv, envp);
-  DisableProfiling();
-  return return_code;
-}
-
-extern "C" int __libc_start_main(Main main,
-                                 int argc,
-                                 char** argv,
-                                 Main init,
-                                 Fini fini,
-                                 Fini rtld_fini,
-                                 void* stack_end) {
-  original_main = main;
-  LibcStartMain original =
-    (LibcStartMain)dlsym(RTLD_NEXT, "__libc_start_main");
-  return original(HookedMain, argc, argv, init, fini, rtld_fini, stack_end);
-}
-
-extern "C" void exit(int status) {
-  Exit original = (Exit)dlsym(RTLD_NEXT, "exit");
-  DisableProfiling();
-  original(status);
-}
-
-#else
-#error not supported
-#endif
 

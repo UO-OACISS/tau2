@@ -494,6 +494,10 @@ alfred(void *arg)
 }
 #endif
 
+#ifdef TAU_ENABLE_LEVEL_ZERO
+void TauL0EnableProfiling(void);
+#endif
+
 extern "C" int Tau_init_initializeTAU()
 {
 
@@ -572,6 +576,10 @@ extern "C" int Tau_init_initializeTAU()
 #ifdef CUPTI
 	//DO NOT MOVE OR FACE ALISTER'S WRATH.
   Tau_cupti_post_init(); //MUST HAPPEN AFTER TAUMETRICS_INIT()
+#endif
+
+#ifdef TAU_ENABLE_LEVEL_ZERO
+  TauL0EnableProfiling();
 #endif
 
   // Mark initialization complete so calls below can start timers
