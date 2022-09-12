@@ -21,6 +21,7 @@ extern "C" {
 #endif
 
 int Tau_backtrace_record_backtrace(int trim);
+void Tau_print_simple_backtrace(int tid);
 void Tau_backtrace_exit_with_backtrace(int trim, char const * fmt, ...);
 
 #ifdef __cplusplus

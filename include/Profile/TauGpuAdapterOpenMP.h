@@ -10,117 +10,109 @@
 
 class OpenMPGpuEvent : public GpuEvent
 {
-	private:
-		static double offset;
-	public:
-		uint32_t device_id;
-		uint32_t thread_id;
-		uint32_t task_id;
-		uint32_t correlation_id;
+    private:
+        static double offset;
+    public:
+        uint32_t device_id;
+        uint32_t thread_id;
+        uint32_t task_id;
+        uint32_t correlation_id;
 
-		const char* name;
+        const char* name;
 
-		GpuEventAttributes* event_attrs;
-		int num_event_attrs;
+        GpuEventAttributes* event_attrs;
+        int num_event_attrs;
 
-		OpenMPGpuEvent(const char* n, uint32_t device, uint32_t _thread, GpuEventAttributes* evt_attrs, int num_evt_attrs) :
-			name(n), device_id(device), thread_id(_thread), event_attrs(evt_attrs), num_event_attrs(num_evt_attrs)
-		{
-			task_id = 0;
-			correlation_id = 0;
-		}
+        OpenMPGpuEvent(const char* n, uint32_t device, uint32_t _thread,
+            GpuEventAttributes* evt_attrs, int num_evt_attrs) :
+            device_id(device), thread_id(_thread), name(n),
+            event_attrs(evt_attrs), num_event_attrs(num_evt_attrs)
+        {
+            task_id = 0;
+            correlation_id = 0;
+        }
 
-		OpenMPGpuEvent(const char* n, uint32_t device, uint32_t _thread, uint32_t task, uint32_t corr_id,
-				GpuEventAttributes* evt_attrs, int num_evt_attrs) :
-			name(n), device_id(device), thread_id(_thread), task_id(task), correlation_id(corr_id),
-				event_attrs(evt_attrs), num_event_attrs(num_evt_attrs)
-		{}
+        OpenMPGpuEvent(const char* n, uint32_t device, uint32_t _thread,
+            uint32_t task, uint32_t corr_id, GpuEventAttributes* evt_attrs,
+            int num_evt_attrs) : device_id(device), thread_id(_thread),
+            task_id(task), correlation_id(corr_id), name(n),
+            event_attrs(evt_attrs), num_event_attrs(num_evt_attrs)
+        {}
 
-		OpenMPGpuEvent* getCopy() const
-		{
-			OpenMPGpuEvent* c = new OpenMPGpuEvent(*this);
-			return c;
-		}
+        OpenMPGpuEvent* getCopy() const
+        {
+            OpenMPGpuEvent* c = new OpenMPGpuEvent(*this);
+            return c;
+        }
 
-		bool less_than(const GpuEvent* other) const
-		{
-			if (!TauEnv_get_thread_per_gpu_stream() || device_id != ((OpenMPGpuEvent*) other)->device_id) {
-				return device_id < ((OpenMPGpuEvent*) other)->device_id;
-			} else {
-				return thread_id < ((OpenMPGpuEvent*) other)->thread_id;
-			}
-		}
+        bool less_than(const GpuEvent* other) const
+        {
+            if (!TauEnv_get_thread_per_gpu_stream() ||
+                device_id != ((OpenMPGpuEvent*) other)->device_id) {
+                return device_id < ((OpenMPGpuEvent*) other)->device_id;
+            } else {
+                return thread_id < ((OpenMPGpuEvent*) other)->thread_id;
+            }
+        }
 
-		const char* getName() const
-		{
-			return name;
-		}
+        const char* getName() const
+        {
+            return name;
+        }
 
-		int getTaskId() const
-		{
-			return task_id;
-		}
+        int getTaskId() const
+        {
+            return task_id;
+        }
 
-		FunctionInfo* getCallingSite() const
-		{
-			FunctionInfo* funcInfo = NULL;
-			/*// mostly copy-pasta from the non-cdp case of TauGpuAdapaterCupti, this does not work
-			RtsLayer::LockDB();
-			std::map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap_hostLaunch().find(correlation_id);
-      if (it != functionInfoMap_hostLaunch().end())
-      {
-        funcInfo = it->second;
-        //printf("found host launch site: %s.\n", funcInfo->GetName());
-      }
-      RtsLayer::UnLockDB();
-*/
-			if (funcInfo != NULL) {
-				funcInfo->SetPrimaryGroupName("TAU_REMOTE");
-			}
-			return funcInfo;
-		}
+        FunctionInfo* getCallingSite() const
+        {
+            FunctionInfo* funcInfo = NULL;
+            if (funcInfo != NULL) {
+                funcInfo->SetPrimaryGroupName("TAU_REMOTE");
+            }
+            return funcInfo;
+        }
 
-		void getAttributes(GpuEventAttributes *&attrs, int &num) const
-		{
-			num = num_event_attrs;
-			attrs = event_attrs;
-		}
+        void getAttributes(GpuEventAttributes *&attrs, int &num) const
+        {
+            num = num_event_attrs;
+            attrs = event_attrs;
+        }
 
-		void recordMetadata(int id) const
-		{
+        void recordMetadata(int id) const
+        { }
 
-		}
+        double syncOffset() const
+        {
+            return offset;
+        }
 
-		double syncOffset() const
-		{
-			return offset;
-		}
+        const char* gpuIdentifier() const
+        {
+            char* id = (char*) malloc(50*sizeof(char));
+            sprintf(id, "Dev%d/Thrd%d/cor%d/task%d", device_id, thread_id, correlation_id, task_id);
 
-		const char* gpuIdentifier() const
-		{
-			char* id = (char*) malloc(50*sizeof(char));
-			sprintf(id, "Dev%d/Thrd%d/cor%d/task%d", device_id, thread_id, correlation_id, task_id);
+            return id;
+        }
 
-			return id;
-		}
+        // copy-pasta from TauGpuAdapterCupti, what the heck do these even do?
+        x_uint64 id_p1() const
+        {
+            return correlation_id;
+        }
 
-		// copy-pasta from TauGpuAdapterCupti, what the heck do these even do?
-		x_uint64 id_p1() const
-		{
-			return correlation_id;
-		}
+        x_uint64 id_p2() const
+        {
+            return RtsLayer::myNode();
+        }
 
-		x_uint64 id_p2() const
-		{
-			return RtsLayer::myNode();
-		}
-
-		~OpenMPGpuEvent()
-		{
-			if (event_attrs) {
-				free(event_attrs);
-			}
-		}
+        ~OpenMPGpuEvent()
+        {
+            if (event_attrs) {
+                free(event_attrs);
+            }
+        }
 };
 
 //double OpenMPGpuEvent::offset = 0;
