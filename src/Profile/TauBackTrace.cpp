@@ -146,6 +146,33 @@ static int getBacktraceFromGDB(int trim, BacktraceFrame ** oframes)
 
 
 extern "C"
+void Tau_print_simple_backtrace(int tid)
+{
+  BacktraceFrame * frames;
+  int nframes;
+
+  if (TauEnv_get_signals_gdb()) {
+    nframes = getBacktraceFromGDB(0, &frames);
+  } else {
+    nframes = getBacktraceFromExecinfo(0, &frames);
+  }
+
+  if (nframes) {
+    char metadata[128];
+    char field[4096];
+    for (int i=0; i<nframes; ++i) {
+      BacktraceFrame const & info = frames[i];
+      sprintf(metadata, "BACKTRACE(%5d) %3d", tid, i+1);
+      sprintf(field, "[%s] [%s:%d] [%s]", info.funcname, info.filename, info.lineno, info.mapname);
+      fprintf(stderr, "%s | %s\n", metadata, field);
+    }
+    delete[] frames;
+  } else {
+    printf("No frames!");
+  }
+}
+
+extern "C"
 int Tau_backtrace_record_backtrace(int trim)
 {
   // Protect TAU from itself
@@ -177,6 +204,8 @@ int Tau_backtrace_record_backtrace(int trim)
       }
     }
     delete[] frames;
+  } else {
+    printf("No frames!");
   }
 
   return iter;

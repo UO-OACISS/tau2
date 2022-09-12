@@ -428,7 +428,7 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
   bool ignore_thread = !Tau_is_pthread_tracking_enabled();
 #endif
 
-#ifdef CUPTI
+#ifdef TAU_GPU
 /* This is needed so that TauGpu.cpp can let the rest of TAU know that
  * it has been initialized.  PthreadLayer.cpp needs to know whether
  * CUDA/CUPTI has been initialized (for GPU timestamps) - if it starts before

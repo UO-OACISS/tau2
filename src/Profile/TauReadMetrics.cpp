@@ -22,6 +22,8 @@
 #include <iostream>
 
 extern "C" int Tau_is_thread_fake(int t);
+extern "C" int Tau_is_fake_thread_use_cpu_metric(int tid);
+
 
 /* for getrusage */
 #ifndef TAU_WINDOWS
@@ -53,7 +55,7 @@ extern "C" int Tau_is_thread_fake(int t);
 #include <spi/include/kernel/process.h>
 #include <spi/include/kernel/location.h>
 #ifdef __GNUC__
-#include <hwi/include/bqc/A2_inlines.h>   
+#include <hwi/include/bqc/A2_inlines.h>
 #endif
 #include <hwi/include/common/uci.h>
 
@@ -232,8 +234,8 @@ void metric_read_bgtimers(int tid, int idx, double values[]) {
   values[idx] = 0;
 #endif /* TAU_BGPTIMERS */
 #endif /* TAU_BGP */
-  
-#ifdef TAU_BGQ 
+
+#ifdef TAU_BGQ
 #ifdef BGQ_TIMERS
   static double bgq_clockspeed = 0.0;
   if (bgq_clockspeed < 1e-8) {
@@ -248,7 +250,7 @@ void metric_read_bgtimers(int tid, int idx, double values[]) {
   values[idx] = 0;
 #endif /* TAU_BGQTIMERS */
 #endif /* TAU_BGQ */
-  
+
 }
 
 /* cray timers */
@@ -414,8 +416,8 @@ extern "C" void metric_set_gpu_counterstamp(int tid, int idx, double value)
 
 void metric_read_cudatime(int tid, int idx, double values[]) {
   //get time from the CPU clock
-  if (!Tau_is_thread_fake(tid))
-  { 
+  if ((!Tau_is_thread_fake(tid)) || Tau_is_fake_thread_use_cpu_metric(tid))
+  {
 #ifdef TAU_WINDOWS
     values[idx] = TauWindowsUsecD();
 #else
@@ -424,20 +426,20 @@ void metric_read_cudatime(int tid, int idx, double values[]) {
     values[idx] = ((double)tp.tv_sec * 1e6 + tp.tv_usec);
 #endif
   }
-  // get time from the callback API 
+  // get time from the callback API
   else
   {
     values[idx] = getGpuTimestamp(tid);
     //values[idx] = gpu_timestamp[tid][1];
   }
-  //printf("metric_read_cudatime: tid %d, values[%d] = %f\n", tid, idx, values[idx]); 
+  //printf("metric_read_cudatime: tid %d, values[%d] = %f\n", tid, idx, values[idx]);
 }
 
 #ifdef CUPTI
 void metric_read_cupti(int tid, int idx, double values[])
 {
-  if (!Tau_is_thread_fake(tid))
-  { 
+  if ((!Tau_is_thread_fake(tid)) || Tau_is_fake_thread_use_cpu_metric(tid))
+  {
     values[idx] = 0;
   } else {
     values[idx] = getGpuCounterstamp(tid, Tau_CuptiLayer_get_cupti_event_id(idx));
@@ -446,37 +448,37 @@ void metric_read_cupti(int tid, int idx, double values[])
 #endif //CUPTI
 
 
-extern int  Tau_read_cray_power_events(int fd, long long int *value); 
-extern int  Tau_open_system_file(const char *filename); 
-void metric_read_cpuenergy(int tid, int idx, double values[]) 
+extern int  Tau_read_cray_power_events(int fd, long long int *value);
+extern int  Tau_open_system_file(const char *filename);
+void metric_read_cpuenergy(int tid, int idx, double values[])
 {
 
-#ifdef TAU_CRAYCNL  
+#ifdef TAU_CRAYCNL
   static int energy_fd = Tau_open_system_file("/sys/cray/pm_counters/energy");
-  long long int energy;  
+  long long int energy;
   if (energy_fd > 0) {
-    Tau_read_cray_power_events(energy_fd, &energy); 
-    values[idx] = (double) energy; 
+    Tau_read_cray_power_events(energy_fd, &energy);
+    values[idx] = (double) energy;
     return;
   }
 #endif /* TAU_CRAYCNL */
   /* other sources of energy, or else return a 0 */
-  values[idx] = 0.0; 
+  values[idx] = 0.0;
   return;
 }
 
-void metric_read_accelenergy(int tid, int idx, double values[]) 
+void metric_read_accelenergy(int tid, int idx, double values[])
 {
 #ifdef TAU_CRAYCNL
   static int accel_energy_fd = Tau_open_system_file("/sys/cray/pm_counters/accel_energy");
-  long long int accel_energy;  
+  long long int accel_energy;
   if (accel_energy_fd > 0) {
-    Tau_read_cray_power_events(accel_energy_fd, &accel_energy); 
-    values[idx] = (double) accel_energy; 
+    Tau_read_cray_power_events(accel_energy_fd, &accel_energy);
+    values[idx] = (double) accel_energy;
     return;
   }
 #endif /* TAU_CRAYCNL */
   /* other sources of energy, or else return a 0 */
   values[idx] = 0;
-  return; 
+  return;
 }

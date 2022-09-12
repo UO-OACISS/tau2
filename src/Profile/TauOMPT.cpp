@@ -1454,7 +1454,7 @@ on_ompt_callback_target_data_op(
 #endif
     // Both src and dest must not be null
     assert(src_addr != 0 || dest_addr != 0);
-    /* 
+    /*
     printf("  Callback DataOp: target_id=%lu host_op_id=%lu optype=%d src=%p src_device_num=%d "
 	    "dest=%p dest_device_num=%d bytes=%lu code=%p\n",
 	    target_id, host_op_id, optype, src_addr, src_device_num,

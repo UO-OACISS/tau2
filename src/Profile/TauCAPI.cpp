@@ -179,6 +179,7 @@ struct Tau_thread_status_flags {
   int Tau_global_stackpos = -1;
   int Tau_global_insideTAU = 0;
   int Tau_is_thread_fake_for_task_api = 0;
+  int Tau_fake_thread_uses_cpu_metric = 0;
   int lightsOut = 0;
 };
 //#endif
@@ -297,6 +298,17 @@ extern "C" int Tau_is_thread_fake(int tid) {
 
 extern "C" void Tau_set_thread_fake(int tid) {
   getTauThreadFlag(tid).Tau_is_thread_fake_for_task_api = 1;
+  //printf("Thread %d is fake!\n", tid);
+  //Tau_print_simple_backtrace(tid);
+}
+
+extern "C" int Tau_is_fake_thread_use_cpu_metric(int tid) {
+  return getTauThreadFlag(tid).Tau_fake_thread_uses_cpu_metric;
+}
+
+extern "C" void Tau_set_fake_thread_use_cpu_metric(int tid) {
+  getTauThreadFlag(tid).Tau_fake_thread_uses_cpu_metric = 1;
+  //printf("Thread %d uses CPU metric!\n", tid);
 }
 
 extern "C" void Tau_stack_initialization() {
@@ -3115,7 +3127,6 @@ extern "C" int Tau_create_task(void) {
   /* specify taskid is a fake thread used in the Task API */
 
   Tau_set_thread_fake(taskid);
-  // Tau_thread_flags[taskid].Tau_is_thread_fake_for_task_api = 1; /* This thread is fake! */
   return taskid;
 }
 

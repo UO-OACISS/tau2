@@ -226,6 +226,7 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
 // Internal Tool Interface ////////////////////////////////////////////////////
 
 void TauL0EnableProfiling() {
+    //printf("%s\n", __func__);
   if (getenv("ZE_ENABLE_TRACING_LAYER") == NULL) {
     // tau_exec -level_zero was not called. Perhaps it is using -opencl
     TAU_VERBOSE("TAU: Disabling Level Zero support as ZE_ENABLE_TRACING_LAYER was not set from tau_exec -l0\n");
@@ -277,6 +278,7 @@ void TauL0EnableProfiling() {
 }
 
 void TauL0DisableProfiling() {
+    //printf("%s\n", __func__);
   if (kernel_collector != nullptr) {
     kernel_collector->DisableTracing();
     if (TauEnv_get_verbose())

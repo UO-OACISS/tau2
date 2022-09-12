@@ -24,6 +24,7 @@
 #include <iostream>
 #include <iomanip>
 #include <Profile/OpenMPLayer.h>
+#include <Profile/TauGpuAdapterOpenMP.h>
 #include <stdlib.h>
 #include <map>
 #include <set>
@@ -86,6 +87,7 @@ int counted_unifmems = 0;
 
 extern "C" void metric_set_gpu_timestamp(int tid, double value);
 extern "C" void Tau_set_thread_fake(int tid);
+extern "C" void Tau_set_fake_thread_use_cpu_metric(int tid);
 
 extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid);
 extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid);
@@ -357,6 +359,7 @@ void break_gpu_event(const char *name, int gpuTask, double stop_time, FunctionIn
     }
   }
 }
+
 int get_task(GpuEvent *new_task)
 {
   int task = 0;
@@ -369,6 +372,12 @@ int get_task(GpuEvent *new_task)
     TheGpuEventMap.get().insert(pair<GpuEvent *, int>(create_task, task));
     number_of_tasks++;
     Tau_set_thread_fake(task);
+    /* if we have an openmp tools virtual thread, it shouldn't use the
+       GPU counter or any offset */
+    OpenMPGpuEvent* isOMPT = dynamic_cast<OpenMPGpuEvent*> (new_task);
+    if (isOMPT != nullptr) {
+        Tau_set_fake_thread_use_cpu_metric(task);
+    }
     Tau_create_top_level_timer_if_necessary_task(task);
     //TAU_CREATE_TASK(task);
     //printf("new task: %s id: %d.\n", create_task->gpuIdentifier(), task);

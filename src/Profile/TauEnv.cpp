@@ -1433,7 +1433,7 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_VERBOSE_RANK", tmpstr);
       env_verbose_rank = Tau_get_node();
     }
-    
+
     //sprintf(tmpstr, "%d", TAU_MAX_THREADS);//TODO: DYNATHREAD
     TAU_VERBOSE("TAU: Supporting dynamic allocation of threads\n");//, TAU_MAX_THREADS);
     //TAU_METADATA("TAU_MAX_THREADS", tmpstr);
