@@ -69,7 +69,7 @@ static bool plugin_done{false};
 static bool _threaded{false};
 static int global_comm_size = 1;
 static int global_comm_rank = 0;
-std::mutex _my_mutex;    // controlling access to local and TAU variables
+static std::mutex _my_mutex;    // controlling access to local and TAU variables
 
 /* These two variables are used to create something like a "counting semaphore".
  * When dumping, we want to prevent any threads from adding events to the buffers.
@@ -82,8 +82,8 @@ static atomic<bool> dumping{false};
 static atomic<bool> in_async_write{false};
 static atomic<size_t> active_threads{0};
 
-std::condition_variable _my_cond;
-std::thread * worker_thread = nullptr;
+static std::condition_variable _my_cond;
+static std::thread * worker_thread = nullptr;
 
 //typedef unsigned long tau_data_t;
 typedef uint64_t tau_data_t;

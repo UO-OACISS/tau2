@@ -62,7 +62,10 @@ inline void _plugin_assert(const char* expression, const char* file, int line)
     _plugin_assert(#EXPRESSION, __FILE__, __LINE__))
 #endif
 
-thread_local bool main_thread = false;
+bool& main_thread() {
+    static thread_local bool thebool = false;
+    return thebool;
+}
 
 /* Provide a default configuration,
  * to avoid collecting too much data by default */
@@ -211,22 +214,24 @@ typedef tau::papi_plugin::papi_event ppe;
 typedef tau::papi_plugin::CPUStat cpustats_t;
 typedef tau::papi_plugin::NetStat netstats_t;
 typedef std::vector<std::pair<std::string, long long> > iostats_t;
-std::vector<ppc*> components;
-int papi_periodic_event_set = {PAPI_NULL};
-long long * papi_periodic_values;
 
-std::vector<cpustats_t*> * previous_cpu_stats = nullptr;
-std::vector<netstats_t*> * previous_net_stats = nullptr;
-std::vector<netstats_t*> * previous_self_net_stats = nullptr;
-iostats_t * previous_io_stats = nullptr;
-size_t num_metrics = 0;
+// Globals should be defined static so they can't be seen outside this compilation unit (i.e. the plugin library)
+static std::vector<ppc*> components;
+static int papi_periodic_event_set = {PAPI_NULL};
+static long long * papi_periodic_values;
 
-pthread_mutex_t _my_mutex; // for initialization, termination
-pthread_cond_t _my_cond; // for timer
-pthread_t worker_thread;
-bool done;
-int rank_getting_system_data;
-int my_rank = 0;
+static std::vector<cpustats_t*> * previous_cpu_stats = nullptr;
+static std::vector<netstats_t*> * previous_net_stats = nullptr;
+static std::vector<netstats_t*> * previous_self_net_stats = nullptr;
+static iostats_t * previous_io_stats = nullptr;
+static size_t num_metrics = 0;
+
+static pthread_mutex_t _my_mutex; // for initialization, termination
+static pthread_cond_t _my_cond; // for timer
+static pthread_t worker_thread;
+static bool done;
+static int rank_getting_system_data;
+static int my_rank = 0;
 #ifdef CUPTI
 tau::nvml::monitor& get_nvml_reader() {
     static tau::nvml::monitor nvml_reader;
@@ -1326,7 +1331,7 @@ int Tau_plugin_event_pre_end_of_execution_monitoring(Tau_plugin_event_pre_end_of
     if (my_rank == 0)
         TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     //if (RtsLayer::myThread() == 0) {
-    if (main_thread) {
+    if (main_thread()) {
         // only the main thread should cleanup
         do_cleanup();
     }
@@ -1337,7 +1342,7 @@ int Tau_plugin_event_end_of_execution_monitoring(Tau_plugin_event_end_of_executi
     if (my_rank == 0)
         TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
     //if (RtsLayer::myThread() == 0) {
-    if (main_thread) {
+    if (main_thread()) {
         // only the main thread should cleanup
         do_cleanup();
     }
@@ -1426,7 +1431,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
 
     done = false;
-    main_thread = true;
+    main_thread() = true;
 
     read_config_file();
 
