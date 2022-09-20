@@ -8201,7 +8201,7 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
     tauoptions="${tauoptions}-mpi"
 
     mpicompiler=$cxx_compiler
-    msuf=C
+    msuf=c
 
     if [ $machine = t3e ]
     then
@@ -8240,17 +8240,6 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
         mpiwarnings="-Werror"
     fi
 
-    cat <<EOF > mpi_thread_test.$msuf
-  #include <mpi.h>
-
-  int main(int argc, char **argv)
-  {
-    int ret, req, provided;
-    req = 0;
-    ret = PMPI_Init_thread(&argc, &argv, req, &provided);
-    return ret;
-  }
-EOF
   if [ "x$mpiinc" != "x" ]
   then
       # echo "mpiinc is specified"
@@ -8264,297 +8253,6 @@ EOF
   mpi_include="$mpi_include $mpiincargs"
   mpi_include=`echo $mpi_include | sed  -e 's/#/ /g'`
 
-  cat <<EOF > mpi2.$msuf
-  #include <mpi.h>
-
-  int foo(MPI_Win win)
-  {
-    int ret;
-    ret = MPI_Win_fence(MPI_MODE_NOPRECEDE, win);
-    return ret;
-  }
-EOF
-
-cat <<EOF > mpi_f_statuses_ignore.$msuf
-  #include <mpi.h>
-
-  //extern MPI_Fint * MPI_F_STATUSES_IGNORE;
-  MPI_Fint * foo(void) {
-    return MPI_F_STATUSES_IGNORE;
-  }
-EOF
-
-cat <<EOF > mpi2iorequest.$msuf
-  #include <mpi.h>
-
-  int foo (MPI_File fh, void *buf, int count,
-                          MPI_Datatype datatype, MPIO_Request *request)
-  {
-    return MPI_File_iread_shared (fh, buf, count, datatype, request);
-
-  }
-EOF
-
-cat <<EOF > mpi3const.c
-#include <mpi.h>
-
-#ifndef TAU_MPICH3_CONST
-#define TAU_MPICH3_CONST
-#endif
-
-int  MPI_Send( buf, count, datatype, dest, tag, comm )
-TAU_MPICH3_CONST void * buf;
-int count;
-MPI_Datatype datatype;
-int dest;
-int tag;
-MPI_Comm comm;
-{
-  return PMPI_Send(buf, count, datatype, dest, tag, comm);
-}
-
-EOF
-
-cat <<EOF > openmpi3const.c
-#include <mpi.h>
-
-#ifndef TAU_MPICH3_CONST
-#define TAU_MPICH3_CONST
-#endif
-
-int  MPI_Get_address( location, address )
-TAU_MPICH3_CONST void * location;
-MPI_Aint * address;
-{
-  return PMPI_Get_address( location, address );
-}
-
-int  MPI_Type_struct( count, blocklens, indices, old_types, newtype )
-int count;
-TAU_MPICH3_CONST int * blocklens;
-TAU_MPICH3_CONST MPI_Aint * indices;
-TAU_MPICH3_CONST MPI_Datatype * old_types;
-MPI_Datatype * newtype;
-{
-  int  returnVal;
-
-  returnVal = PMPI_Type_struct( count, blocklens, indices, old_types, newtype );
-  return returnVal;
-}
-
-
-EOF
-
-cat <<EOF > mpihindex1.c
-#include <mpi.h>
-
-int  MPI_Type_hindexed( count, blocklens, indices, old_type, newtype )
-int count;
-int * blocklens;
-MPI_Aint * indices;
-MPI_Datatype old_type;
-MPI_Datatype * newtype;
-{
-  return PMPI_Type_hindexed( count, blocklens, indices, old_type, newtype );
-}
-EOF
-
-cat <<EOF > mpihindex2.c
-#include <mpi.h>
-
-int  MPI_Type_hindexed( count, blocklens, indices, old_type, newtype )
-int count;
-const int * blocklens;
-const MPI_Aint * indices;
-MPI_Datatype old_type;
-MPI_Datatype * newtype;
-{
-  return PMPI_Type_hindexed( count, blocklens, indices, old_type, newtype );
-}
-EOF
-
-cat <<EOF > mpi2attr.$msuf
-  #include <mpi.h>
-
-  int foo(MPI_Win_copy_attr_function *f1, MPI_Type_copy_attr_function *f2,
-        MPI_Comm_copy_attr_function *f3)
-  {
-    return 0;
-  }
-
-  int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute, int *flag)
-  {
-    return PMPI_Type_get_attr(type, type_keyval, attribute, flag);
-  }
-EOF
-
-cat <<EOF > mpi2typeex.$msuf
-  #include <mpi.h>
-
-  int f1( void * sendbuf, void * recvbuf, int count, MPI_Datatype datatype
-  , MPI_Op op, MPI_Comm comm)
-  {
-    return MPI_Exscan( sendbuf, recvbuf, count, datatype, op, comm) ;
-  }
-
-  int f2( MPI_Datatype type, MPI_Datatype * newtype)
-  {
-    return MPI_Type_dup( type, newtype) ;
-  }
-
-  int f3( int p, int r, MPI_Datatype * newtype)
-  {
-    return MPI_Type_create_f90_real( p, r, newtype) ;
-  }
-
-  int f4( int p, int r, MPI_Datatype * newtype)
-  {
-    return MPI_Type_create_f90_complex( p, r, newtype) ;
-  }
-
-
-EOF
-
-cat <<EOF > mpi2add.$msuf
-  #include <mpi.h>
-
-  int f1( int * errorclass)
-  {
-    return MPI_Add_error_class( errorclass) ;
-  }
-
-  int f2( char * datarep, int incount, MPI_Datatype datatype, MPI_Aint * size)
-  {
-    return MPI_Pack_external_size( datarep, incount, datatype, size) ;
-  }
-
-EOF
-
-cat <<EOF > mpi2file.$msuf
-  #include <mpi.h>
-  #include <stdio.h>
-
-int main( int argc, char *argv[] )
-{
-    MPI_Fint handleA, handleB;
-    int rc;
-    int errs = 0;
-    int rank;
-    MPI_File cFile;
-
-    MPI_Init( &argc, &argv );
-    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-    rc = MPI_File_open( MPI_COMM_WORLD, "temp", MPI_MODE_RDWR | MPI_MODE_DELETE_ON_CLOSE | MPI_MODE_CREATE, MPI_INFO_NULL, &cFile );
-    if (rc) {
-        printf( "Unable to open file \"temp\"\n" );fflush(stdout);
-    }
-    else {
-        MPI_File_close( &cFile );
-    }
-    MPI_Finalize();
-    return 0;
-}
-
-
-EOF
-
-cat <<EOF > mpit.$msuf
-#include <mpi.h>
-int main(int argc, char **argv) {
-    MPI_T_cvar_handle handle;
-    MPI_T_enum enumtype;
-    int provided, ncvars, npvars;
-
-    MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
-    MPI_Init(&argc, &argv);
-    MPI_T_cvar_get_num(&ncvars);
-    MPI_T_pvar_get_num(&npvars);
-
-    MPI_Finalize();
-}
-
-EOF
-
-cat <<EOF > mpi2grequest.$msuf
-  #include <mpi.h>
-
-  int foo(MPI_Grequest_query_function *grequest_query_fn,
-              MPI_Grequest_free_function *grequest_free_fn,
-              MPI_Grequest_cancel_function *grequest_cancel_fn,
-              void *extra_state, MPI_Request *request)
-  {
-    return MPI_Grequest_start(grequest_query_fn,
-              grequest_free_fn,
-              grequest_cancel_fn,
-              extra_state, request);
-
-  }
-
-  int bar(MPI_Request request)
-  {
-    return MPI_Grequest_complete(request);
-  }
-
-EOF
-  cat <<EOF > mpi2datarep.$msuf
-  #include <mpi.h>
-
-  int foo( char * datarep, MPI_Datarep_conversion_function * read_conversion_fn, MPI_Datarep_conversion_function * write_conversion_fn, MPI_Datarep_extent_function * dtype_file_extent_fn, void * extra_state)
-  {
-    return MPI_Register_datarep( datarep, read_conversion_fn, write_conversion_fn, dtype_file_extent_fn, extra_state);
-
-  }
-
-EOF
-
-cat <<EOF > mpi2errhandler.$msuf
-  #include <mpi.h>
-
-  int foo (MPI_Comm_errhandler_fn *a, MPI_Errhandler *b)
-  {
-    return MPI_Comm_create_errhandler(a,b);
-
-  }
-  int bar (MPI_File_errhandler_fn * function, MPI_Errhandler * errhandler)
-  {
-    return MPI_File_create_errhandler(function, errhandler);
-  }
-EOF
-
-cat <<EOF > mpi2hpconst.$msuf
-  #include <mpi.h>
-  /* HP MPI uses const char * instead of char * in the
-     prototypes of the following routines */
-  int foo(MPI_Info Info, const char *key, const char *value)
-  {
-    return PMPI_Info_set(Info, key, value);
-  }
-  int f1(MPI_Info a, const char * b, int c, char * d, int *e)
-  {
-    return PMPI_Info_get(a,b,c,d,e);
-  }
-  int f2(MPI_Info a, const char *b)
-  {
-    return PMPI_Info_delete(a,b);
-  }
-  int MPI_Info_get_valuelen(MPI_Info a, const char * b, int * c, int * d)
-  { /* above decl triggers an error on T3E */
-    return PMPI_Info_get_valuelen(a,b,c,d);
-  }
-
-EOF
-
-cat << EOF > mpistatus.$msuf
-
-  #include <mpi.h>
-  #include <memory.h>
-  int foo(MPI_Fint *status)
-  {
-    MPI_Status s;
-    return MPI_Status_f2c(status, &s);
-  }
-EOF
-
 
 if [ $machine = sgi64 -a $cxx_compiler = CC ]
 then
@@ -8565,7 +8263,9 @@ $echo "Checking for thread-safe MPI interface... ${nnl}"
 if [ "x$c_compiler" = "xicx" ]; then
   mpiwarnings=""
 fi
-if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi_thread_test.$msuf  1> /dev/null 2>&1 ; then
+echo "$mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi_thread_test.$msuf"
+$mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi_thread_test.$msuf
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi_thread_test.$msuf  1> /dev/null 2>&1 ; then
     echo "yes"
     fixmakeargs="$fixmakeargs MPI_THREADED"
 else
@@ -8574,7 +8274,7 @@ fi
 
 
 $echo "Checking for MPI 3 const interface... ${nnl}"
-if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  1> /dev/null 2>&1 ; then
+if $c_compiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi3const.c  1> /dev/null 2>&1 ; then
     if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_BASEDIR" != "x" ]; then
       echo "yes"
       fixmakeargs="$fixmakeargs MPICH3_CONST"
@@ -8582,7 +8282,7 @@ if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  1> /dev/n
       echo "no"
     fi
 else
-  if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
+  if $c_compiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi3const.c  -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
     echo "yes"
     fixmakeargs="$fixmakeargs MPICH3_CONST"
   else
@@ -8612,21 +8312,20 @@ if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" != "x" -a -r $mpiinc/cray_versio
 fi
 
 $echo "Checking for OpenMPI 3 const interface..... ${nnl}"
-if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c openmpi3const.c -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
+if $c_compiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/openmpi3const.c -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
 # MPICH requires the const keyword
   echo "yes"
   fixmakeargs="$fixmakeargs OPENMPI3_CONST"
 else
   echo "no"
 fi
-rm -f openmpi3const.c openmpi3const.o mpi3const.c mpi3const.o a.out
 
 $echo "Checking for MPI_Type_hindexed const interface... ${nnl}"
-if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpihindex1.c  1> /dev/null 2>&1 ; then
+if $c_compiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpihindex1.c  1> /dev/null 2>&1 ; then
   echo "not needed"
 else
   echo "yes"
-  if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpihindex2.c 1> /dev/null 2>&1 ; then
+  if $c_compiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpihindex2.c 1> /dev/null 2>&1 ; then
     echo "Using const in MPI_Type_hindexed interface "
       fixmakeargs="$fixmakeargs TAU_MPI_HINDEX_CONST"
   fi
@@ -8640,7 +8339,7 @@ if [ -d "$mpiinc/ulm" ] ; then
 fi
 
 $echo "Checking for MPI-2 interface... ${nnl}"
-if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi2.$msuf  1> /dev/null 2>&1 ; then
     echo "yes"
     if [ -r $mpilib/libmpi.so -a -r $mpilib/libmpi++.so -a -r $mpilib/libsma.so -a -r $mpilib/libxmpi.so ] ; then
 	# Do not enable this for SGI Altix. Their MPI2 is not complete
@@ -8675,7 +8374,7 @@ if [ $mpi2 = yes ] ; then
 
     if [ $mpit = yes ]; then
       $echo "Checking for MPI-T  interface... ${nnl}"
-      if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpit.$msuf  1> /dev/null 2>&1 ; then
+      if $mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpit.$msuf  1> /dev/null 2>&1 ; then
     	  echo "yes"
 	  fixmakeargs="$fixmakeargs MPI_T"
       else
@@ -8684,7 +8383,7 @@ if [ $mpi2 = yes ] ; then
     fi
 
     $echo "Checking for MPI-2 Grequest interface... ${nnl}"
-    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2grequest.$msuf  1> /dev/null 2>&1 ; then
+    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi2grequest.$msuf  1> /dev/null 2>&1 ; then
 	echo "yes"
 	fixmakeargs="$fixmakeargs MPIGREQUEST"
     else
@@ -8693,7 +8392,7 @@ if [ $mpi2 = yes ] ; then
 
     $echo "Checking for MPI-2 MPIO_Request interface... ${nnl}"
     if [ -f $mpilib/liblam.a -o -f $mpilib/liblammpi++.a ] ; then
-	if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2iorequest.$msuf  1> /dev/null 2>&1 ; then
+	if $mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi2iorequest.$msuf  1> /dev/null 2>&1 ; then
 	    echo "yes"
 	    fixmakeargs="$fixmakeargs MPIOREQUEST"
 	    mpiio=yes
@@ -8705,7 +8404,7 @@ if [ $mpi2 = yes ] ; then
     fi
 
     $echo "Checking for MPI_Datarep_conversion_function interface... ${nnl}"
-    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2datarep.$msuf  1> /dev/null 2>&1 ; then
+    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi2datarep.$msuf  1> /dev/null 2>&1 ; then
 	echo "yes"
 	fixmakeargs="$fixmakeargs MPIDATAREP"
     else
@@ -8713,7 +8412,7 @@ if [ $mpi2 = yes ] ; then
     fi
 
     $echo "Checking for Comm_create_errhandler interface... ${nnl}"
-    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2errhandler.$msuf  1> /dev/null 2>&1 ; then
+    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi2errhandler.$msuf  1> /dev/null 2>&1 ; then
 	echo "yes"
 	fixmakeargs="$fixmakeargs MPIERRHANDLER"
     else
@@ -8721,7 +8420,7 @@ if [ $mpi2 = yes ] ; then
     fi
 
     $echo "Checking if MPI_Info_set takes const char * instead of char * args... ${nnl}"
-    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2hpconst.$msuf  1> /dev/null 2>&1 ; then
+    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi2hpconst.$msuf  1> /dev/null 2>&1 ; then
 	echo "yes"
 	fixmakeargs="$fixmakeargs MPICONSTCHAR"
     else
@@ -8729,44 +8428,45 @@ if [ $mpi2 = yes ] ; then
     fi
 fi
 
-if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi_f_statuses_ignore.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi_f_statuses_ignore.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI F_STATUSES_IGNORE types are defined..."
 else
     echo "MPI F_STATUSES_IGNORE types are NOT defined..."
     fixmakeargs="$fixmakeargs MPI_F_STATUSES_IGNORE_ABSENT"
 fi
 
-if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2attr.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi2attr.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI-2 MPI*attr_functions are defined..."
     fixmakeargs="$fixmakeargs MPIATTR"
 fi
 
-if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2file.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi2file.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI-2 MPI_File functions are defined..."
     fixmakeargs="$fixmakeargs MPIFILE"
 else
     echo "MPI-2 MPI_File functions are NOT defined..."
-    #echo $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2file.$msuf
+    #echo $mpicompiler $mpiwarnings $orig_useropt $mpi_include mpi2file.$msuf
 fi
 
-if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2typeex.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi2typeex.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI-2 MPI_Type_dup and MPI_Exscan are defined..."
     fixmakeargs="$fixmakeargs MPITYPEEX"
 fi
 
-if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2add.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpi2add.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI-2 MPI_Add_error* functions are defined..."
     fixmakeargs="$fixmakeargs MPIADDERROR"
 fi
 
-if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpistatus.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include tools/src/tests/mpistatus.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI_Status f2c/c2f found..."
 else
     echo "MPI_Status c2f/f2c functions are needed"
     fixmakeargs="$fixmakeargs MPINEEDSTATUSCONV"
 fi
 
-/bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi_f_statuses_ignore.o mpi_f_statuses_ignore.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf mpi2file.$msuf mpi2file.o mpi3const.o mpi3const.$msuf mpit.$msuf mpit.o
+/bin/rm -rf tools/src/tests/*.o tools/src/tests/a.out
+
 else
     if [ $mpi = yes -a $machine != ibm64 ]; then
       mpilibargs="$mpilibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
