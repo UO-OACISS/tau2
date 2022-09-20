@@ -8241,7 +8241,15 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
       fi
   fi
 
-  mpi_include="$mpi_include $mpiincargs"
+  if [ "x$mpilib" != "x" ]
+  then
+      if [[ $mpilib == \-I* ]] ; then
+        mpi_libpath=$mpilib
+      else
+        mpi_libpath=-L$mpilib
+      fi
+  fi
+  mpi_include="$mpi_include $mpiincargs $mpi_libpath $mpilibrary"
   mpi_include=`echo $mpi_include | sed  -e 's/#/ /g'`
 
 
@@ -8254,6 +8262,8 @@ $echo "Checking for thread-safe MPI interface... ${nnl}"
 if [ "x$c_compiler" = "xicx" ]; then
   mpiwarnings=""
 fi
+echo "$mpicompiler tools/src/tests/mpi_thread_test.c $mpiwarnings $orig_useropt $mpi_include"
+$mpicompiler tools/src/tests/mpi_thread_test.c $mpiwarnings $orig_useropt $mpi_include
 if $mpicompiler tools/src/tests/mpi_thread_test.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
     echo "yes"
     fixmakeargs="$fixmakeargs MPI_THREADED"
