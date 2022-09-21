@@ -8241,15 +8241,19 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
       fi
   fi
 
-  if [ "x$mpilib" != "x" ]
-  then
+  if [ "x$mpilib" != "x" ] ; then
       if [[ $mpilib == \-I* ]] ; then
         mpi_libpath=$mpilib
       else
         mpi_libpath=-L$mpilib
       fi
   fi
-  mpi_include="$mpi_include $mpiincargs $mpi_libpath $mpilibrary"
+
+  mpi_libraries=""
+  if [ "x$mpilibrary" != "xno" ] ; then
+      mpi_libraries=$mpilibrary
+  fi
+  mpi_include="$mpi_include $mpiincargs $mpi_libpath $mpi_libraries"
   mpi_include=`echo $mpi_include | sed  -e 's/#/ /g'`
 
 
