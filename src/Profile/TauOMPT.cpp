@@ -890,8 +890,12 @@ on_ompt_callback_thread_begin(
   TauInternalFunctionGuard protects_this_function;
   if (internal_thread) { return; }
   if(Tau_ompt_callbacks_enabled[ompt_callback_thread_begin] && Tau_init_check_initialized()) {
-    if (is_master) return; // master thread can't be a new worker.
+    if (is_master ||
+        thread_type & ompt_task_initial ) {
+        return; // master thread can't be a new worker.
+    }
     RtsLayer::RegisterThread();
+    Tau_create_top_level_timer_if_necessary();
     void *handle = NULL;
     char timerName[100];
     sprintf(timerName, "OpenMP_Thread_Type_%s", ompt_thread_type_t_values[thread_type]);
@@ -920,8 +924,8 @@ on_ompt_callback_thread_end(
   if (Tau_ompt_finalized()) { return; }
   if(Tau_ompt_callbacks_enabled[ompt_callback_thread_end] && Tau_init_check_initialized()) {
     if (is_master) return; // master thread can't be a new worker.
-    stop_correct_timer(thread_data);
-    //Tau_global_stop();
+    int tid = RtsLayer::myThread();
+    Tau_stop_all_timers(tid);
   }
 
   if(Tau_plugins_enabled.ompt_thread_end) {
