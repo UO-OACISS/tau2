@@ -73,6 +73,62 @@ clone()
   git clone "$src" "$dst"
 }
 
+# This function is to extract the cflags from mpi compiler wrappers
+# and try to be more sophisticated than:
+# args=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+
+get_cflags() {
+    compiler=$1
+    args=`$compiler -show | cut -d' ' -f2-`
+    echo "$compiler flags: $args"
+    _got_cflags=""
+
+    for word in $args; do
+        #echo "$word"
+        if [[ "$word" =~ ^-Wl,.* ]]; then
+            : # do nothing
+        elif [[ "$word" =~ ^-l.* ]]; then
+            : # do nothing
+        elif [[ "$word" =~ ^-L.* ]]; then
+            : # do nothing
+        else
+            _got_cflags="$_got_cflags $word"
+        fi
+    done
+    _got_cflags=`echo $_got_cflags | sed -e 's@ @#@g'`
+}
+
+# This function is to extract the ldflags from mpi compiler wrappers
+# and try to be more sophisticated than:
+# args=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+get_ldflags() {
+    compiler=$1
+    args=`$compiler -show | cut -d' ' -f2-`
+    echo "$compiler flags: $args"
+    _got_ldflags=""
+
+    for word in $args; do
+        #echo "$word"
+        if [[ "$word" =~ ^-Wl,.* ]]; then
+            _got_ldflags="$_got_ldflags $word"
+        elif [[ "$word" =~ ^-l.* ]]; then
+            _got_ldflags="$_got_ldflags $word"
+        elif [[ "$word" =~ ^-L.* ]]; then
+            _got_ldflags="$_got_ldflags $word"
+        elif [[ "$word" =~ ^-I.* ]]; then
+            : # do nothing
+        else
+            _got_ldflags="$_got_ldflags $word"
+        fi
+    done
+    _got_ldflags=`echo $_got_ldflags | sed -e 's@ @#@g'`
+}
+
+#get_cflags "mpicxx"
+#get_ldflags "mpicxx"
+#echo "cflags = $_got_cflags"
+#echo "ldflags = $_got_ldflags"
+
 # This function checks the cmake version and even does a "module load cmake" if we don't have a required version. It takes 3 args: major minor "string" and returns 0 if success
 # and 1 if error
 #check_cmake 3 14 "LLVM plugin"
@@ -4782,9 +4838,21 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
   		fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' `
               fi
               if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
-  		mpiinc=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
-  		mpilibargs=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
-  		mpiflibargs=`$mpif90_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
+  		#mpiinc=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+  		#mpilibargs=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+  		#mpiflibargs=`$mpif90_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
+        get_cflags $mpicxx_exe
+        get_ldflags $mpicxx_exe
+  		mpiinc=$_got_cflags
+  		mpilibargs=$_got_ldflags
+        # We have to make sure we set the mpilibrary variable here, because later
+        # mpilib might get reset.
+        mpilibrary=$_got_ldflags
+        get_ldflags $mpif90_exe
+  		mpiflibargs=`echo $_got_ldflags | sed  -e 's@-qthreaded@@g'`
+        echo "Found $mpicxx_exe cflags: $mpiinc"
+        echo "Found $mpicxx_exe ldflags: $mpilibargs"
+        echo "Found $mpif90_exe ldflags: $mpiflibargs"
 
   		mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
   		mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
