@@ -874,6 +874,7 @@ fi
 
 if [ $track_ompt = "true" ]; then
   export OMP_TOOL_LIBRARIES=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+  export OMP_TOOL=enable
 fi
 
 if [ $track_l0 = "true" ]; then

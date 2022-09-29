@@ -31,22 +31,8 @@
 #include <TAU.h>
 #include <stdlib.h>
 
-extern void Tau_init_initializeTAU(void);
 extern void Tau_profile_exit_all_threads(void);
-
-void taupreload_init() {
-  Tau_init_initializeTAU();
-  Tau_create_top_level_timer_if_necessary();
-  int tmp = TAU_PROFILE_GET_NODE();
-  if (tmp == -1) {
-    TAU_PROFILE_SET_NODE(0);
-  }
-}
-
-void taupreload_fini() {
-  Tau_profile_exit_all_threads();
-  Tau_destructor_trigger();
-}
+extern int Tau_init_initializeTAU(void);
 
 #if defined(__GNUC__)
 #define __TAU_FUNCTION__ __PRETTY_FUNCTION__
@@ -64,13 +50,22 @@ int taupreload_main(int argc, char** argv, char** envp) {
     if(_reentry > 0) return -1;
     _reentry = 1;
 
-    taupreload_init();
+    // does little, but does something
+    Tau_init(argc, argv);
+    // apparently is the real initialization.
+    Tau_init_initializeTAU();
+    Tau_create_top_level_timer_if_necessary();
+    int tmp = TAU_PROFILE_GET_NODE();
+    if (tmp == -1) {
+        TAU_PROFILE_SET_NODE(0);
+    }
     void * handle;
     TAU_PROFILER_CREATE(handle, __TAU_FUNCTION__, "", TAU_DEFAULT);
     TAU_PROFILER_START(handle);
     int ret = main_real(argc, argv, envp);
     TAU_PROFILER_STOP(handle);
-    taupreload_fini();
+    Tau_profile_exit_all_threads();
+    Tau_destructor_trigger();
 
     return ret;
 }
