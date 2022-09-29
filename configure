@@ -7935,7 +7935,7 @@ if [ "$ibmxlc" = "yes" ]; then openmp_flag=-qsmp=omp; fi
 if [ "$open64" = "yes" ]; then openmp_flag=-mp; fi
 if [ "$gnu" = "yes" ]; then openmp_flag=-fopenmp; fi
 if [ "$llvm" = "yes" ]; then openmp_flag=-fopenmp; fi
-if [ "$pgi" = "yes" ]; then openmp_flag=-mp; fi
+if [ "$pgi" = "yes" ]; then openmp_flag=-mp=ompt; fi
 if [ "$fujitsu" = "yes" ]; then openmp_flag=-kopenmp; fi
 if [ "$default_fortran" = "cray" ]; then
   if [ "x$CRAY_PE_USE_CLANG" = "x" ]; then
@@ -11950,7 +11950,12 @@ if [ $pgi = yes ] ; then
       fi
     fi
     if [ $openmp = yes ] ; then
-	fixmakeargs="$fixmakeargs PGIOPENMP"
+        if [ $ompt = yes ] ; then
+            echo "Enabling OpenMP Tool support for PGI/NVHPC compiler with -mp=ompt"
+	        fixmakeargs="$fixmakeargs PGIOPENMPT"
+        else
+	        fixmakeargs="$fixmakeargs PGIOPENMP"
+        fi
     fi
 fi
 
