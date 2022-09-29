@@ -1799,7 +1799,7 @@ extern "C" int ompt_initialize(
   Tau_register_callback(ompt_callback_task_schedule, cb_t(on_ompt_callback_task_schedule));
   /* Intel doesn't provide the exit callback for implicit tasks... */
 #if !defined(TAU_INTEL_COMPILER) && !defined(__ICC) && !defined(__clang__)
-  Tau_register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); //Sometimes high-overhead, but unfortunately we cannot avoid this as it is a required event
+  //Tau_register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); //Sometimes high-overhead, but unfortunately we cannot avoid this as it is a required event
 #endif
   Tau_register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
   Tau_register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
