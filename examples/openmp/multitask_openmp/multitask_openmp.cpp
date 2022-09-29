@@ -6,7 +6,6 @@
 
 using namespace std;
 
-int main ( );
 int *prime_table ( int prime_num );
 double *sine_table ( int sine_num );
 void timestamp ( );
