@@ -17,8 +17,8 @@ TAU_MAKEFILE ?=../../../include/Makefile
 include $(TAU_MAKEFILE)
 
 #CXX		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cxx.sh
-#CXX             = tau_cxx.sh
-CXX		= $(TAU_CXX)
+CXX             = tau_cxx.sh
+#CXX		= $(TAU_CXX)
 PRINT	      	= pr
 CFLAGS = -g $(TAU_OPENMP_OPTION)
 LDFLAGS = -g $(TAU_OPENMP_OPTION)
