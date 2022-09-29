@@ -172,7 +172,7 @@ struct OTF2ThreadList : vector<otf2_thread_data *>{
 // Static holder for snapshot file handles
 static OTF2ThreadList & Tau_otf2_getThreadData() {
   static OTF2ThreadList otf2ThreadList;
-  TAU_VERBOSE("Tau_otf2_getThreadData() end: out=%p\n", &Tau_otf2_getThreadData); 
+  //TAU_VERBOSE("Tau_otf2_getThreadData() end: out=%p\n", &Tau_otf2_getThreadData);
   return otf2ThreadList;
 }
 
@@ -283,7 +283,7 @@ static inline OTF2_LocationRef my_location_offset() {
     const int64_t myThread = RtsLayer::myThread();
     int totNodes=tau_totalnodes(0,0);
     //printf("Max Nodes: %d\n",totNodes);
-    return myNode == -1 ? 0 : (myThread * tau_totalnodes(0,0));//(myNode * TAU_MAX_THREADS);//TODO: DYNATHREAD 
+    return myNode == -1 ? 0 : (myThread * tau_totalnodes(0,0));//(myNode * TAU_MAX_THREADS);//TODO: DYNATHREAD
 }
 
 static inline OTF2_LocationRef my_real_location( int64_t myNode, int64_t myThread ) {
@@ -1051,7 +1051,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, groupName, namebuf));
         OTF2_EC(OTF2_GlobalDefWriter_WriteLocationGroup(global_def_writer, node, groupName, OTF2_LOCATION_GROUP_TYPE_PROCESS, node));
 
-        //const int start_loc = my_real_location(node,0);//node + num_locations[node];//max_threads;//TAU_MAX_THREADS; //TODO: DYNATHREAD 
+        //const int start_loc = my_real_location(node,0);//node + num_locations[node];//max_threads;//TAU_MAX_THREADS; //TODO: DYNATHREAD
         //const int end_loc = start_loc + num_locations[node];
         int thread_num = 0;
         for(int it_thread = 0; it_thread < num_locations[node]; ++it_thread) {
@@ -1088,7 +1088,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
 				thread_type = OTF2_LOCATION_TYPE_GPU;
             } else {
                 static int cputhreads = 1;
-                int nodeThread=cputhreads%nodes;
+                int nodeThread=cputhreads%((nodes > 0) ? nodes : 1);
                 snprintf(namebuf, 256, "CPU thread %02d", nodeThread);
 		cputhreads++;
             }

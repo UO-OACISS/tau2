@@ -778,7 +778,9 @@ public:
         if (env_verbose_file == 1 &&
             env_verbose_rank == Tau_get_node()) {
             std::stringstream ss;
-            ss << env_profiledir << "/tau." << Tau_get_node() << ".log";
+            ss << env_profiledir << "/tau." <<
+            (Tau_get_node() < 0 ? 0 : Tau_get_node())
+            << ".log";
             std::string tmp(ss.str());
             pfile = fopen(tmp.c_str(),"w");
         }

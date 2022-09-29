@@ -500,9 +500,10 @@ int Tau_ompt_stop_trace() {
 /* Update: in an attempt to prevent weird errors from using Tau_global_stop(),
  * we will validate the data returned by the runtime, and abort. This behavior
  * can be optionally disabled. */
-void stop_correct_timer(ompt_data_t * ompt_data) {
-    TAU_ASSERT(ompt_data->ptr, "ERROR! OpenMP runtime didn't maintain our tool data! Complain to the vendor!");
-    TAU_PROFILER_STOP(ompt_data->ptr);
+void stop_correct_timer(void * handle) {
+    TAU_ASSERT(handle, "ERROR! OpenMP runtime didn't maintain our tool data! Complain to the vendor!");
+    TAU_PROFILER_STOP(handle);
+    //Tau_global_stop();
 }
 
 /*Parallel begin/end callbacks. We need context information (function name, filename, lineno) for these.
@@ -592,8 +593,7 @@ on_ompt_callback_parallel_end(
     }
 
     if(codeptr_ra) {
-      stop_correct_timer(parallel_data);
-      //Tau_global_stop();
+      stop_correct_timer(parallel_data->ptr);
     }
   }
 
@@ -684,8 +684,7 @@ on_ompt_callback_task_schedule(
     TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_task_schedule] && Tau_init_check_initialized()) {
     if(prior_task_data->ptr) {
-      stop_correct_timer(prior_task_data);
-      //Tau_global_stop();
+      stop_correct_timer(prior_task_data->ptr);
     }
 
     if(next_task_data->ptr) {
@@ -721,6 +720,10 @@ on_ompt_callback_master(
   const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* Per-thread timer stack for this region type.
+     this is necessary because we can't rely on the runtime
+     to not overwrite the task_data pointer :( */
+  thread_local static std::stack<void*> timer_stack;
   if(Tau_ompt_callbacks_enabled[ompt_callback_master] && Tau_init_check_initialized()) {
     char timerName[10240];
     char resolved_address[1024];
@@ -746,12 +749,13 @@ on_ompt_callback_master(
           }
 
           TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
-          task_data->ptr = (void*)handle;
           TAU_PROFILER_START(handle);
+          timer_stack.push(handle);
           break;
         case ompt_scope_end:
-          stop_correct_timer(task_data);
-          //Tau_global_stop();
+          handle = timer_stack.top();
+          stop_correct_timer(handle);
+          timer_stack.pop();
           break;
 #if defined(ompt_scope_beginend)
         case ompt_scope_beginend:
@@ -797,6 +801,10 @@ on_ompt_callback_work(
   const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* Per-thread timer stack for this region type.
+     this is necessary because we can't rely on the runtime
+     to not overwrite the task_data pointer :( */
+  thread_local static std::stack<void*> timer_stack;
   if(Tau_ompt_callbacks_enabled[ompt_callback_work] && Tau_init_check_initialized()) {
     void *handle = NULL;
     char timerName[10240];
@@ -849,11 +857,12 @@ on_ompt_callback_work(
         case ompt_scope_begin:
           TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
           TAU_PROFILER_START(handle);
-          task_data->ptr = (void*)handle;
+          timer_stack.push(handle);
           break;
         case ompt_scope_end:
-          stop_correct_timer(task_data);
-          //Tau_global_stop();
+          handle = timer_stack.top();
+          stop_correct_timer(handle);
+          timer_stack.pop();
           break;
 #if defined(ompt_scope_beginend) // why did Intel add this early?
         case ompt_scope_beginend:
@@ -951,6 +960,10 @@ on_ompt_callback_implicit_task(
     unsigned int thread_num)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* Per-thread timer stack for this region type.
+     this is necessary because we can't rely on the runtime
+     to not overwrite the task_data pointer :( */
+  thread_local static std::stack<void*> timer_stack;
   // protect against calls after finalization
   if(Tau_ompt_finalized()) { return; }
   if(Tau_ompt_callbacks_enabled[ompt_callback_implicit_task] && Tau_init_check_initialized()) {
@@ -965,12 +978,13 @@ on_ompt_callback_implicit_task(
         TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
         TAU_PROFILER_START(handle);
         //TAU_VERBOSE("********* Entering implicit task!\n");
-        task_data->ptr = (void*)handle;
+        timer_stack.push(handle);
         break;
       case ompt_scope_end:
         if(task_data->ptr != NULL) {
-          stop_correct_timer(task_data);
-          //Tau_global_stop();
+          handle = timer_stack.top();
+          stop_correct_timer(handle);
+          timer_stack.pop();
         }
         break;
 #if defined(ompt_scope_beginend)
@@ -1011,6 +1025,10 @@ on_ompt_callback_sync_region(
     const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
+  /* Per-thread timer stack for this region type.
+     this is necessary because we can't rely on the runtime
+     to not overwrite the task_data pointer :( */
+  thread_local static std::stack<void*> timer_stack;
   if(Tau_ompt_callbacks_enabled[ompt_callback_sync_region] && Tau_init_check_initialized()) {
     void *handle = NULL;
     char timerName[10240];
@@ -1078,11 +1096,12 @@ on_ompt_callback_sync_region(
         case ompt_scope_begin:
           TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
           TAU_PROFILER_START(handle);
-          task_data->ptr = (void*)handle;
+          timer_stack.push(handle);
           break;
         case ompt_scope_end:
-          stop_correct_timer(task_data);
-          //Tau_global_stop();
+          handle = timer_stack.top();
+          stop_correct_timer(handle);
+          timer_stack.pop();
           break;
 #if defined(ompt_scope_beginend)
         case ompt_scope_beginend:
@@ -1364,6 +1383,10 @@ static void on_ompt_callback_target(
     ompt_id_t target_id,
     const void *codeptr_ra)
 {
+  /* Per-thread timer stack for this region type.
+     this is necessary because we can't rely on the runtime
+     to not overwrite the task_data pointer :( */
+    thread_local static std::stack<void*> timer_stack;
     assert(codeptr_ra != 0);
     /*
     printf("Callback Target: target_id=%lu kind=%d endpoint=%d device_num=%d code=%p\n",
@@ -1371,16 +1394,12 @@ static void on_ompt_callback_target(
     */
     TauInternalFunctionGuard protects_this_function;
     //printf("CPU Device: %d\n", device_num);
-    // The INtel runtime doesn't manage tool data correctly. So we'll manage it ourselves.
-#ifdef TAU_INTEL_COMPILER
-    static std::stack<ompt_data_t*> target_stack;
-#endif
+    void *handle = NULL;
     switch(endpoint) {
         case ompt_scope_begin: {
             char timerName[10240];
             char resolved_address[1024];
             void * codeptr_ra_copy = (void*) codeptr_ra;
-            void *handle = NULL;
             unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
       /*Resolve addresses at runtime in case the user really wants to pay the price of doing so.
        *Enabling eager resolving of addresses is only useful in situations where
@@ -1394,27 +1413,19 @@ static void on_ompt_callback_target(
             }
 
             TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
-#ifdef TAU_INTEL_COMPILER
-            // The intel runtime doesn't provide an allocated location.
-            task_data = new ompt_data_t();
-            task_data->ptr = (void*)handle;
-            target_stack.push(task_data);
-#else
-            task_data->ptr = (void*)handle;
-#endif
+            timer_stack.push(handle);
             TAU_PROFILER_START(handle);
             TargetMap::instance().add_thread_id(target_id,
                 (device_num == -1 ? 0 : device_num));
             break;
         }
         case ompt_scope_end: {
-#ifdef TAU_INTEL_COMPILER
-            task_data = target_stack.top();
-            target_stack.pop();
-            TAU_PROFILER_STOP(task_data->ptr);
-            delete task_data;
-#else
-            stop_correct_timer(task_data);
+            handle = timer_stack.top();
+            stop_correct_timer(handle);
+            timer_stack.pop();
+#ifndef TAU_INTEL_COMPILER // intel doesn't always provide a codeptr_ra value.
+            // flush the trace to get async events for this target
+            ompt_flush_trace(0);
 #endif
             break;
         }
@@ -1754,10 +1765,10 @@ extern "C" int ompt_initialize(
   initializing = true;
   TauInternalFunctionGuard protects_this_function;
   if (!TauEnv_get_openmp_runtime_enabled()) return 0;
-  if (Tau_get_node() == -1) {
-      TAU_PROFILE_SET_NODE(0);
-  }
-
+#ifndef TAU_MPI
+  TAU_PROFILE_SET_NODE(0);
+#endif
+  Tau_create_top_level_timer_if_necessary();
   is_master = true;
 
   /* Srinivasan here: This is BAD idea. But we NEED to ensure that the OMPT env
@@ -1788,7 +1799,7 @@ extern "C" int ompt_initialize(
   Tau_register_callback(ompt_callback_task_schedule, cb_t(on_ompt_callback_task_schedule));
   /* Intel doesn't provide the exit callback for implicit tasks... */
 #if !defined(TAU_INTEL_COMPILER) && !defined(__ICC) && !defined(__clang__)
-  //Tau_register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); //Sometimes high-overhead, but unfortunately we cannot avoid this as it is a required event
+  Tau_register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); //Sometimes high-overhead, but unfortunately we cannot avoid this as it is a required event
 #endif
   Tau_register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
   Tau_register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
