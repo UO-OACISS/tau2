@@ -13,7 +13,7 @@ void timestamp ( );
 
 //****************************************************************************80
 
-int main ( void )
+int main ( int argc, char ** argv )
 
 //****************************************************************************80
 //
@@ -23,8 +23,8 @@ int main ( void )
 //
 //  Discussion:
 //
-//    This program demonstrates how OpenMP can be used for multitasking, that 
-//    is, a simple kind of parallel processing in which a certain number of 
+//    This program demonstrates how OpenMP can be used for multitasking, that
+//    is, a simple kind of parallel processing in which a certain number of
 //    perhaps quite unrelated tasks must be done.
 //
 //    The OpenMP SECTIONS directive identifies the portion of the program where
@@ -170,7 +170,7 @@ int *prime_table ( int prime_num )
         break;
       }
     }
-      
+
     if ( prime )
     {
       primes[p] = i;
@@ -246,7 +246,7 @@ void timestamp ( )
 //
 //  Licensing:
 //
-//    This code is distributed under the GNU LGPL license. 
+//    This code is distributed under the GNU LGPL license.
 //
 //  Modified:
 //
