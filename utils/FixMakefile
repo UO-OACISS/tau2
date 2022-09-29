@@ -57,12 +57,12 @@ case $1 in
 	;;
     arch_width=32bit)
         echo "s/#ARCH_WIDTH_32#\(.*\)/$bs\1#ARCH_WIDTH_32#/g" >> $sedout
-		
+
   ;;
 
     arch_width=64bit)
         echo "s/#ARCH_WIDTH_64#\(.*\)/$bs\1#ARCH_WIDTH_64#/g" >> $sedout
-		
+
   ;;
 
      ptdir=*)
@@ -703,7 +703,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      TAU_LARGEFILE)
-        echo NOTE: Using the O_LARGEFILE flag to open 
+        echo NOTE: Using the O_LARGEFILE flag to open
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      TAU_BFD)
@@ -778,7 +778,7 @@ case $1 in
 # Set up MPI stuff if possible
 ###############################################################
      MPI)
-        echo "NOTE: Using the TAU MPI Profiling Interface" 
+        echo "NOTE: Using the TAU MPI Profiling Interface"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -917,13 +917,13 @@ case $1 in
      mpilibargs=*)
         mpilib=`echo $1 | sed -e 's/^mpilibargs=//' -e 's/#/ /g'`
 	echo "s@^TAU_MPI_LIB=\(.*\)@TAU_MPI_LIB=$mpilib@g" >> $sedout
-        #echo "MPILIB=$mpilib" 
+        #echo "MPILIB=$mpilib"
         ;;
 
      mpiflibargs=*)
         mpiflib=`echo $1 | sed -e 's/^mpiflibargs=//' -e 's/#/ /g'`
 	echo "s@^TAU_MPI_FLIB=\(.*\)@TAU_MPI_FLIB=$mpiflib@g" >> $sedout
-        #echo "MPIFLIB=$mpiflib" 
+        #echo "MPIFLIB=$mpiflib"
         ;;
 
      mpinowraplibargs=*)
@@ -942,7 +942,7 @@ case $1 in
 	if [ "x$mpilibdir" != "x" ] ; then
 	  echo "s@^TAU_MPILIB_DIRLIB=\(.*\)@TAU_MPILIB_DIRLIB=-L$mpilibdir@g" >> $sedout
 	fi
-        #echo "TAU_MPILIB_DIR=$mpilibdir" 
+        #echo "TAU_MPILIB_DIR=$mpilibdir"
         ;;
 
      TAUENV)
@@ -953,7 +953,7 @@ case $1 in
 # Set up SHMEM stuff if possible
 ###############################################################
      SHMEM)
-        echo NOTE: Using the TAU SHMEM Profiling Interface 
+        echo NOTE: Using the TAU SHMEM Profiling Interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -968,7 +968,7 @@ case $1 in
         ;;
 
      OPENSHMEM)
-        echo NOTE: Using the TAU OpenSHMEM Profiling Interface 
+        echo NOTE: Using the TAU OpenSHMEM Profiling Interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -978,22 +978,22 @@ case $1 in
         ;;
 
      OPENMPI_SHMEM)
-        echo NOTE: Using the TAU OpenMPI OpenSHMEM Profiling Interface 
+        echo NOTE: Using the TAU OpenMPI OpenSHMEM Profiling Interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
      SGI_MPT_SHMEM)
-        echo NOTE: Using the TAU SGI MPT SHMEM Profiling Interface 
+        echo NOTE: Using the TAU SGI MPT SHMEM Profiling Interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
      SGI_MPT_MPI)
-        echo NOTE: Using the TAU SGI MPI Profiling Interface 
+        echo NOTE: Using the TAU SGI MPI Profiling Interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
      SGI_MPT_PSHMEM)
-        echo NOTE: Using the TAU SGI MPT PSHMEM Profiling Interface 
+        echo NOTE: Using the TAU SGI MPT PSHMEM Profiling Interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -1003,7 +1003,7 @@ case $1 in
         ;;
 
      GPSHMEM)
-        echo NOTE: Using the TAU GPSHMEM/PGPSHMEM Profiling Interface 
+        echo NOTE: Using the TAU GPSHMEM/PGPSHMEM Profiling Interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -1022,7 +1022,7 @@ case $1 in
      shmemlibargs=*)
         shmemlib=`echo $1 | sed -e 's/^shmemlibargs=//' -e 's/#/ /g'`
 	echo "s@^TAU_SHMEM_LIB=\(.*\)@TAU_SHMEM_LIB=$shmemlib@g" >> $sedout
-        #echo "SHMEMLIB=$shmemlib" 
+        #echo "SHMEMLIB=$shmemlib"
         ;;
 
      shmemmpiincargs=*)
@@ -1041,7 +1041,7 @@ case $1 in
         ;;
 
      LEVEL_ZERO)
-        echo NOTE: Using the TAU Level Zero Profiling Interface 
+        echo NOTE: Using the TAU Level Zero Profiling Interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -1133,12 +1133,12 @@ case $1 in
         cudainclude=`echo $1 | sed -e 's/^cudainclude=//' -e 's/#/ /g'`
       echo "NOTE: Using CUDA for GPU analysis, source in $cudainclude"
 			echo "s@^TAU_CUDA_INC=\(.*\)@TAU_CUDA_INC=$cudainclude@g" >> $sedout
-		;;	
+		;;
 		openclinclude=*)
         openclinclude=`echo $1 | sed -e 's/^openclinclude=//' -e 's/#/ /g'`
       echo "NOTE: Using OPENCL for GPU analysis, source in $openclinclude"
 			echo "s@^TAU_OPENCL_INC=\(.*\)@TAU_OPENCL_INC=$openclinclude@g" >> $sedout
-		;;	
+		;;
 		cuptiinclude=*)
         cuptiinclude=`echo $1 | sed -e 's/^cuptiinclude=//' -e 's/#/ /g'`
       echo "NOTE: Using CUPTI for GPU analysis, source in $cuptiinclude"
@@ -1196,7 +1196,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      COMPAQ_ALPHA)
-	echo NOTE: Using configuration for Compaq Alpha      
+	echo NOTE: Using configuration for Compaq Alpha
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      USE_IBMXLC)
@@ -1212,7 +1212,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      TAU_NEC_MPI_VH_SX)
-	echo NOTE: Using the NEC VH options with gcc 
+	echo NOTE: Using the NEC VH options with gcc
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      NEC_SX_MPI_FORTRAN)
@@ -1380,11 +1380,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PDTARCH)
-	echo NOTE: Using a different compiler dir for PDT 
+	echo NOTE: Using a different compiler dir for PDT
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PDTARCHITECTURE)
-	echo NOTE: Using a different architecture dir for PDT 
+	echo NOTE: Using a different architecture dir for PDT
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PDTNOFSTMTS)
@@ -1392,7 +1392,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PDTNOUPC)
-	echo NOTE: Disabling UPC statement level instrumentation 
+	echo NOTE: Disabling UPC statement level instrumentation
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PDTALPHACXX)
@@ -1428,23 +1428,23 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CLANG)
-	echo NOTE: Using CLANG C++ compiler 
+	echo NOTE: Using CLANG C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CLANG_OPENMP)
-	echo NOTE: Using CLANG C++ compiler with OpenMP 
+	echo NOTE: Using CLANG C++ compiler with OpenMP
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      BGCLANG)
-	echo NOTE: Using IBM BlueGene CLANG LLVM C++ compiler 
+	echo NOTE: Using IBM BlueGene CLANG LLVM C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      HCC)
-	echo NOTE: Using HCC as a C compiler 
+	echo NOTE: Using HCC as a C compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCC)
-	echo NOTE: Using The Cray T3E CC C++ compiler 
+	echo NOTE: Using The Cray T3E CC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      HIPCC)
@@ -1452,7 +1452,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      GASNET)
-	echo NOTE: Using The GASNET directory 
+	echo NOTE: Using The GASNET directory
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      LLVM_SRC_DIR)
@@ -1463,54 +1463,54 @@ case $1 in
          echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
     CRAYX1CC)
-	echo NOTE: Using The Cray CC C++ compiler 
+	echo NOTE: Using The Cray CC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYKAI)
-	echo NOTE: Using The Cray T3E KAI C++ compiler 
+	echo NOTE: Using The Cray T3E KAI C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     AOCC) 
+     AOCC)
 	echo NOTE: Using PrgEnv-aocc Clang/Flang compiler settings
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     NVIDIA) 
+     NVIDIA)
 	echo NOTE: Using PrgEnv-nvidia NV_FORTRAN compiler settings
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     PGI) 
+     PGI)
 	echo NOTE: Using Portland Group Inc. pgCC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     PGI1.7) 
+     PGI1.7)
 	echo NOTE: Using special switches for PGI 1.7 compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     PGICC) 
+     PGICC)
 	echo NOTE: May use --prelink_objects for PGI 3.0-5.4 compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     PGINOPRELINK) 
+     PGINOPRELINK)
 	echo NOTE: Disabling the use of --prelink_objects for PGI 6.0+ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     PGI_OPENACC) 
+     PGI_OPENACC)
 	echo NOTE: Enabling PGI OpenACC profiling interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     PGI_OPENACC_15x) 
+     PGI_OPENACC_15x)
 	echo NOTE: Enabling PGI v15.x OpenACC profiling interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     OPENACC) 
+     OPENACC)
 	echo NOTE: Enabling OpenACC profiling interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     PGI_NO_LIBSTD) 
+     PGI_NO_LIBSTD)
 	echo NOTE: Disabling linking with -lstd for PGI 16.+ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     FUJITSU) 
+     FUJITSU)
 	echo NOTE: Using Fujitsu FCC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
@@ -1518,7 +1518,7 @@ case $1 in
 	echo NOTE: FreeBSD options will be used
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     FUJITSU_SOLARIS) 
+     FUJITSU_SOLARIS)
 	echo NOTE: Using Fujitsu f90 Fortran compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
@@ -1554,7 +1554,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      APPLE_MACH_PORT_BUG)
-	echo NOTE: Using -DTAU_APPLE_MACH_PORT_BUG compiler option 
+	echo NOTE: Using -DTAU_APPLE_MACH_PORT_BUG compiler option
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      NOFORTRAN)
@@ -1602,7 +1602,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      FORCEIA32)
-        echo NOTE: Using 32 bit mode for x86_64 
+        echo NOTE: Using 32 bit mode for x86_64
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      SP1)
@@ -2024,6 +2024,10 @@ case $1 in
 	echo "NOTE: Using PGI's OpenMP options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PGIOPENMPT)
+	echo "NOTE: Using NVHPC's OpenMP Tool options ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      INTELOPENMP)
 	echo "NOTE: Using Intel's OpenMP options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -2156,15 +2160,15 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCNL_MVAPICH2)
-	echo "NOTE: Using CrayCNL MVAPICH2 info" 
+	echo "NOTE: Using CrayCNL MVAPICH2 info"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCNL_PMI)
-	echo "NOTE: Using CrayCNL PMI (Process Management Interface) to track topology info" 
+	echo "NOTE: Using CrayCNL PMI (Process Management Interface) to track topology info"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCNL_PMI_FOUND)
-	echo "NOTE: Found CrayCNL PMI (Process Management Interface) to track topology info" 
+	echo "NOTE: Found CrayCNL PMI (Process Management Interface) to track topology info"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCNL_CCE)
@@ -2310,7 +2314,7 @@ case $1 in
 	echo "NOTE: Using PAPI with -lpfm option ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     PAPIPFMPERFCTR)	
+     PAPIPFMPERFCTR)
 	echo "NOTE: Using PAPI with -lpfm AND -lperfctr ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
