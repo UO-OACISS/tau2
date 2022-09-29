@@ -66,7 +66,7 @@ int taupreload_main(int argc, char** argv, char** envp) {
 
     taupreload_init();
     void * handle;
-    TAU_PROFILER_CREATE(handle, __TAU_FUNCTION__, "", TAU_OPENMP);
+    TAU_PROFILER_CREATE(handle, __TAU_FUNCTION__, "", TAU_DEFAULT);
     TAU_PROFILER_START(handle);
     int ret = main_real(argc, argv, envp);
     TAU_PROFILER_STOP(handle);
