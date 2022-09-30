@@ -754,6 +754,7 @@ usage() {
     echo "                                   e.g. libpython3.10.so"
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
     echo "-mpit ............................... Enable MPI-T profiling interface."
+    echo "-starpu[=<dir>] ................................ Enable StarPU support."
     echo "-phiprof ................................... Activate Phiprof bindings."
     echo "-llvm_src=<dir> ......................... Path to the LLVM source tree "
     echo "                             (necessary for the instrumentation plugin)"
@@ -922,6 +923,7 @@ for arg in "$@"; do
 	echo "-python .. Automatically choose python options based on Python in path."
 	echo "-pythoninc=<dir> ........ Specify location of Python include directory."
 	echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
+        echo "-starpu[=<dir>] ................................ Enable StarPU support."
 	echo "-phiprof ................................... Activate Phiprof bindings."
 	echo "-llvm_src=<dir> ......................... Path to the LLVM source tree "
 	echo "                             (necessary for the instrumentation plugin)"
@@ -1327,6 +1329,7 @@ android_platform=19
 disable_memory_manager=no
 llvm_src_dir=""
 llvm_cxx=""
+starpu=""
 phiprof=""
 
 restore_perfdmf_and_paraprof
@@ -3097,6 +3100,28 @@ for arg in "$@"; do
 		echo "Error: Cannot find CUPTI headers."
 		exit 1
 	    fi
+	    shift
+	    ;;
+
+	-starpu)
+	    starpu=yes
+	    fixmakeargs="$fixmakeargs STARPU"
+            tauoptions="${tauoptions}-starpu"
+	    pthread=yes
+	    shift
+	    ;;
+
+	-starpu=*)
+	    starpudir=`echo $arg | sed -e 's/-starpu=//' -e 's/ /#/g'`
+            if [ ! -d $starpudir ]; then
+              echo  "Error: Cannot access StarPU directory $starpudir"
+              exit 1
+	    else
+	      fixmakeargs="$fixmakeargs starpudir=$starpudir STARPU"
+              starpu=yes
+            fi
+            tauoptions="${tauoptions}-starpu"
+	    pthread=yes
 	    shift
 	    ;;
 

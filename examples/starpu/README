@@ -1,0 +1,43 @@
+Profiling StarPU applications with TAU
+
+1. Install StarPU
+  
+   As of the writing of these instructions, the latest version of
+   StarPU is 1.3. 
+
+   To install the latest development version of StarPU:
+
+       git clone git@gitlab.inria.fr:starpu/starpu.git
+       cd starpu
+       ./autogen.sh
+       ./configure --prefix=STARPU_INSTALL_DIR
+
+    The following options might be relevant:
+        --with-cuda-dir=$CUDA
+	--enable-blas-lib=openblas
+	--disable-socl
+	--disable-opencl
+	--disable-mpi 
+	--disable-build-doc
+
+2. Build TAU with StarPU support.
+
+   Enable StarPU support with -starpu. The installation directory can be
+   specified using -starpu=<dir>.
+
+   ./configure -bfd=download -starpu=$STARPU -otf=download
+   make install
+
+   Depending on the libraries available on your machine and the options
+   you used to configure StarPU, you might want to add support for Cuda, MPI
+   and/or OpenCl.
+
+3. Run a StarPU application, for instance the example provided in this directory:
+
+   make
+   tau_exec -T starpu,serial ./mult
+
+   This will produce one profile file per task executed within the StarPU
+   application. You can set the number of threads used by StarPU using
+   the STARPU_NCPU environment variable and the number of Cuda devices using
+   the STARPU_NCUDA environment variable.
