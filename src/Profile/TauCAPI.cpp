@@ -1194,6 +1194,12 @@ extern void Tau_rocprofiler_pool_flush(void);
 extern void Tau_ompt_flush_trace(void);
 #endif
 
+
+#ifdef TAU_ENABLE_ROCM
+extern void TauFlushRocmEventsIfNecessary(void);
+#endif /* TAU_ENABLE_ROCM */
+
+
 extern "C" void Tau_flush_gpu_activity(void) {
    TAU_VERBOSE("TAU: flushing asynchronous GPU events...\n");
 #ifdef CUPTI
@@ -1221,6 +1227,9 @@ extern "C" void Tau_flush_gpu_activity(void) {
    TAU_VERBOSE("TAU: flushing asynchronous ROCM/HIP events...\n");
    Tau_roctracer_flush_tracing();
 #endif /* TAU_ENABLE_ROCTRACER */
+#ifdef TAU_ENABLE_ROCM
+  TauFlushRocmEventsIfNecessary();
+#endif /* TAU_ENABLE_ROCM */
 #ifdef TAU_USE_OMPT_5_0
    Tau_ompt_flush_trace();
 #endif
@@ -3086,6 +3095,7 @@ extern void TauTraceOTF2ToggleFlushAtExit(bool);
 #ifdef TAU_ENABLE_LEVEL_ZERO
 void TauL0DisableProfiling(void);
 #endif
+
 
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid

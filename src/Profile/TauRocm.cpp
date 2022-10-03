@@ -101,6 +101,7 @@ double Tau_metric_set_synchronized_gpu_timestamp(int tid, double value){
     offset_timestamp=TauTraceGetTimeStamp() - ((double)value);
   }
   metric_set_gpu_timestamp(tid, offset_timestamp+value);
+  //Tau_create_top_level_timer_if_necessary_task(tid);
   TAU_VERBOSE("metric_set_gpu_timestamp = %llu + %f = %f\n", offset_timestamp, value, offset_timestamp+value);
   return offset_timestamp+value;
 }
@@ -185,18 +186,23 @@ void TauPublishEvent(struct TauRocmEvent event) {
 #endif /* DEBUG_PROF */
     return;
   }
-
   timestamp = event.entry.counters[0]; // Using first element of array
-  Tau_metric_set_synchronized_gpu_timestamp(event.taskid, ((double)timestamp/1e3)); // convert to microseconds
-  TAU_START_TASK(event.name.c_str(), event.taskid);
-  TAU_VERBOSE("Started event %s on task %d timestamp = %lu \n", event.name.c_str(), event.taskid, timestamp);
+  double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(event.taskid, ((double)timestamp/1e3)); // convert to microseconds
+
 
   // then the exit
   timestamp = event.exit.counters[0]; // Using first element of array
   tau_last_timestamp_published = timestamp;
-  Tau_metric_set_synchronized_gpu_timestamp(event.taskid, ((double)timestamp/1e3)); // convert to microseconds
+  double timestamp_exit = Tau_metric_set_synchronized_gpu_timestamp(event.taskid, ((double)timestamp/1e3)); // convert to microseconds
+  
+
+  metric_set_gpu_timestamp(event.taskid, timestamp_entry);
+  TAU_START_TASK(event.name.c_str(), event.taskid);
+  TAU_VERBOSE("Started event %s on task %d timestamp = %lu \n", event.name.c_str(), event.taskid, timestamp_entry);
+  
+  metric_set_gpu_timestamp(event.taskid, timestamp_exit);
   TAU_STOP_TASK(event.name.c_str(), event.taskid);
-  TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", event.name.c_str(), event.taskid, timestamp);
+  TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", event.name.c_str(), event.taskid, timestamp_exit);
 }
 
 
@@ -252,10 +258,10 @@ void Tau_process_rocm_events(struct TauRocmEvent e) {
 }
 
 
-extern void TauFlushRocmEventsIfNecessary(int thread_id) {
+extern void TauFlushRocmEventsIfNecessary() {
 
-  static bool reentrant_flag = false;
-  if (reentrant_flag) {
+  //static bool reentrant_flag = false;
+  /*if (reentrant_flag) {
     TAU_VERBOSE("TauFlushRocmEventsIfNecessary: reentrant_flag = true, tid = %d\n", thread_id);
     return;
   }
@@ -264,14 +270,16 @@ extern void TauFlushRocmEventsIfNecessary(int thread_id) {
   }
   else {
     return;
-  }
-  TAU_VERBOSE("Inside TauFlushRocmEventsIfNecessary: tid = %d\n", thread_id);
+  }*/
+  //TAU_VERBOSE("Inside TauFlushRocmEventsIfNecessary: tid = %d\n", thread_id);
+  TAU_VERBOSE("Inside TauFlushRocmEventsIfNecessary\n");
   //if(!Tau_is_thread_id_rocm_task(thread_id)) return ;
 
   if (TauRocmList.empty()) return;
   TAU_VERBOSE("Inside unload! publishing...\n");
   TauRocmList.sort(Tau_compare_rocm_events);
   while (!TauRocmList.empty()) {
+    //TauPublishEvent(TauRocmList.front(), thread_id);
     TauPublishEvent(TauRocmList.front());
     TauRocmList.pop_front();
   }
@@ -308,7 +316,7 @@ extern void TauFlushRocmEventsIfNecessary(int thread_id) {
     }
   }
 #endif /* TAU_ROCM_USE_MAP_FOR_INIT_QUEUES */
-  reentrant_flag = false;  /* safe */
+  //reentrant_flag = false;  /* safe */
 
 }
 
