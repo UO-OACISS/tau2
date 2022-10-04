@@ -85,7 +85,7 @@ extern void Tau_add_metadata_for_task(const char *key, int value, int taskid);
 extern bool Tau_check_timestamps(unsigned long long last_timestamp, unsigned long long current_timestamp, const char *debug_str, int taskid);
 extern void TauPublishEvent(struct TauRocmEvent event);
 extern void Tau_process_rocm_events(struct TauRocmEvent e);
-extern void TauFlushRocmEventsIfNecessary(int thread_id);
+extern void TauFlushRocmEventsIfNecessary();
 extern TAU_METRIC_TYPE Tau_get_last_timestamp_ns(void);
 extern void Tau_set_last_timestamp_ns(TAU_METRIC_TYPE timestamp);
 

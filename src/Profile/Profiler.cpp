@@ -139,9 +139,9 @@ extern "C" void Tau_profile_exit_most_threads();
 extern "C" int TauCompensateInitialized(void);
 extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address);
 
-#ifdef TAU_ENABLE_ROCM
+/*#ifdef TAU_ENABLE_ROCM
 extern void TauFlushRocmEventsIfNecessary(int thread_id);
-#endif /* TAU_ENABLE_ROCM */
+#endif*/ /* TAU_ENABLE_ROCM */
 
 x_uint64 Tau_get_firstTimeStamp();
 struct ProfilerData{
@@ -1680,9 +1680,9 @@ int TauProfiler_StoreData(int tid)
   if (RtsLayer::myThread() > 0 && Tau_is_destroyed()) {
     return -1;
   }
-#ifdef TAU_ENABLE_ROCM
+/*#ifdef TAU_ENABLE_ROCM
   TauFlushRocmEventsIfNecessary(tid);
-#endif /* TAU_ENABLE_ROCM */
+#endif *//* TAU_ENABLE_ROCM */
   TauMetrics_finalize();
 
 #ifndef TAU_MPI
