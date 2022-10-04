@@ -85,7 +85,8 @@ void myfunction_cb( struct starpu_prof_tool_info* prof_info,  union starpu_prof_
         myts.push(handle);
     }  else {
         if (myts.size() == 0) {
-            TAU_VERBOSE("Timer stack is empty, bug in StarPU support!");
+            TAU_VERBOSE("TAU tid: %u, Pthread tid: %u, Event: %s %s; Timer stack is empty, bug in StarPU support!\n",
+                tid, RtsLayer::getTid(), event_name.c_str(), enter?"entry":"exit"); fflush(stderr);
             return;
         }
         handle = myts.top();
