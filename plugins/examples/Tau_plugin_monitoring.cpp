@@ -213,7 +213,7 @@ typedef tau::papi_plugin::papi_component ppc;
 typedef tau::papi_plugin::papi_event ppe;
 typedef tau::papi_plugin::CPUStat cpustats_t;
 typedef tau::papi_plugin::NetStat netstats_t;
-typedef std::vector<std::pair<std::string, long long> > iostats_t;
+typedef std::map<std::string, long long> iostats_t;
 
 // Globals should be defined static so they can't be seen outside this compilation unit (i.e. the plugin library)
 static std::vector<ppc*> components;
@@ -221,8 +221,8 @@ static int papi_periodic_event_set = {PAPI_NULL};
 static long long * papi_periodic_values;
 
 static std::vector<cpustats_t*> * previous_cpu_stats = nullptr;
-static std::vector<netstats_t*> * previous_net_stats = nullptr;
-static std::vector<netstats_t*> * previous_self_net_stats = nullptr;
+static std::map<std::string, netstats_t*> * previous_net_stats = nullptr;
+static std::map<std::string, netstats_t*> * previous_self_net_stats = nullptr;
 static iostats_t * previous_io_stats = nullptr;
 static size_t num_metrics = 0;
 
@@ -638,9 +638,9 @@ std::vector<cpustats_t*> * read_cpu_stats() {
     return cpu_stats;
 }
 
-std::vector<netstats_t*> * read_net_stats(const char * source) {
+std::map<std::string, netstats_t*> * read_net_stats(const char * source) {
     if (!include_component(source)) { return NULL; }
-    std::vector<netstats_t*> * net_stats = new std::vector<netstats_t*>();
+    std::map<std::string, netstats_t*> * net_stats = new std::map<std::string, netstats_t*>();
     /*  Reading proc/stat as a file  */
     FILE * pFile;
     char line[512] = {0};
@@ -663,10 +663,12 @@ std::vector<netstats_t*> * read_net_stats(const char * source) {
     /* Read each device */
     while (fgets(line, 512, pFile)) {
         std::string outer_tmp(line);
+        std::size_t found = outer_tmp.find(":");
+        if (found == std::string::npos) { continue; }
         outer_tmp = tau::papi_plugin::trim(outer_tmp);
         netstats_t * net_stat = new(netstats_t);
         int nf = sscanf( line,
-            "%s %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld\n",
+            "%s: %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld\n",
             net_stat->name, &net_stat->recv_bytes,
             &net_stat->recv_packets, &net_stat->recv_errors,
             &net_stat->recv_drops, &net_stat->recv_fifo,
@@ -676,10 +678,11 @@ std::vector<netstats_t*> * read_net_stats(const char * source) {
             &net_stat->transmit_drops, &net_stat->transmit_fifo,
             &net_stat->transmit_collisions, &net_stat->transmit_carrier,
             &net_stat->transmit_compressed);
-        if (nf == 0) continue; // error!
-        // strip the colon
-        net_stat->name[strlen(net_stat->name)-1] = '\0';
-        net_stats->push_back(net_stat);
+        if (nf == 0) {
+            printf("%s",line);
+            continue; // error!
+        }
+        (*net_stats)[net_stat->name] = net_stat;
     }
     fclose(pFile);
     return net_stats;
@@ -700,12 +703,10 @@ iostats_t * read_io_stats(const char * source) {
     while (fgets(line, 512, pFile)) {
         char dummy[32] = {0};
         long long tmplong = 0LL;
-        int nf = sscanf( line, "%s %lld\n", dummy, &tmplong);
+        int nf = sscanf( line, "%s: %lld\n", dummy, &tmplong);
         if (nf == 0) continue; // error!
-        // strip the colon
-        dummy[strlen(dummy)-1] = '\0';
         std::string name(dummy);
-        io_stats->push_back(make_pair(name, tmplong));
+        (*io_stats)[name] = tmplong;
     }
     fclose(pFile);
     return io_stats;
@@ -968,83 +969,70 @@ void update_cpu_stats(void) {
     previous_cpu_stats = new_stats;
 }
 
-std::vector<netstats_t*> * update_net_stats(const char * source,
-std::vector<netstats_t*> *previous) {
+std::map<std::string, netstats_t*> * update_net_stats(const char * source,
+std::map<std::string, netstats_t*> *previous) {
     if (!include_component(source)) { return previous; }
     PLUGIN_ASSERT(previous != nullptr);
     /* get the current stats */
-    std::vector<netstats_t*> * new_stats = read_net_stats(source);
+    std::map<std::string, netstats_t*> * new_stats = read_net_stats(source);
     if (new_stats == NULL) return previous;
-    for (size_t i = 0 ; i < new_stats->size() ; i++) {
+    for (auto itr : *new_stats) {
+        // get the name
+        std::string name = itr.first;
+        netstats_t * ns = itr.second;
+        netstats_t * ps = nullptr;
+        // if the previous read didn't have this value, create zeros for the last read
+        auto tmp = previous->find(name);
+        if (tmp == previous->end()) {
+            ps = new(netstats_t);
+        } else {
+            ps = tmp->second;
+        }
         /* we need to take the difference from the last read */
         netstats_t diff;
-        diff.recv_bytes = (*new_stats)[i]->recv_bytes -
-            (*previous)[i]->recv_bytes;
-        sample_value(source,(*new_stats)[i]->name, "rx:bytes",
-            (double)(diff.recv_bytes), 1LL);
-        diff.recv_packets = (*new_stats)[i]->recv_packets -
-            (*previous)[i]->recv_packets;
-        sample_value(source,(*new_stats)[i]->name, "rx:packets",
-            (double)(diff.recv_packets), 1LL);
-        diff.recv_errors = (*new_stats)[i]->recv_errors -
-            (*previous)[i]->recv_errors;
-        sample_value(source,(*new_stats)[i]->name, "rx:errors",
-            (double)(diff.recv_errors), 1LL);
-        diff.recv_drops = (*new_stats)[i]->recv_drops -
-            (*previous)[i]->recv_drops;
-        sample_value(source,(*new_stats)[i]->name, "rx:drops",
-            (double)(diff.recv_drops), 1LL);
-        diff.recv_fifo = (*new_stats)[i]->recv_fifo -
-            (*previous)[i]->recv_fifo;
-        sample_value(source,(*new_stats)[i]->name, "rx:fifo",
-            (double)(diff.recv_fifo), 1LL);
-        diff.recv_frame = (*new_stats)[i]->recv_frame -
-            (*previous)[i]->recv_frame;
-        sample_value(source,(*new_stats)[i]->name, "rx:frames",
-            (double)(diff.recv_frame), 1LL);
-        diff.recv_compressed = (*new_stats)[i]->recv_compressed -
-            (*previous)[i]->recv_compressed;
-        sample_value(source,(*new_stats)[i]->name, "rx:compressed",
-            (double)(diff.recv_compressed), 1LL);
-        diff.recv_multicast = (*new_stats)[i]->recv_multicast -
-            (*previous)[i]->recv_multicast;
-        sample_value(source,(*new_stats)[i]->name, "rx:multicast",
-            (double)(diff.recv_multicast), 1LL);
-        diff.transmit_bytes = (*new_stats)[i]->transmit_bytes -
-            (*previous)[i]->transmit_bytes;
-        sample_value(source,(*new_stats)[i]->name, "tx:bytes",
-            (double)(diff.transmit_bytes), 1LL);
-        diff.transmit_packets = (*new_stats)[i]->transmit_packets -
-            (*previous)[i]->transmit_packets;
-        sample_value(source,(*new_stats)[i]->name, "tx:packets",
-            (double)(diff.transmit_packets), 1LL);
-        diff.transmit_errors = (*new_stats)[i]->transmit_errors -
-            (*previous)[i]->transmit_errors;
-        sample_value(source,(*new_stats)[i]->name, "tx:errors",
-            (double)(diff.transmit_errors), 1LL);
-        diff.transmit_drops = (*new_stats)[i]->transmit_drops -
-            (*previous)[i]->transmit_drops;
-        sample_value(source,(*new_stats)[i]->name, "tx:drops",
-            (double)(diff.transmit_drops), 1LL);
-        diff.transmit_fifo = (*new_stats)[i]->transmit_fifo -
-            (*previous)[i]->transmit_fifo;
-        sample_value(source,(*new_stats)[i]->name, "tx:fifo",
-            (double)(diff.transmit_fifo), 1LL);
-        diff.transmit_collisions = (*new_stats)[i]->transmit_collisions -
-            (*previous)[i]->transmit_collisions;
-        sample_value(source,(*new_stats)[i]->name, "tx:collisions",
-            (double)(diff.transmit_collisions), 1LL);
-        diff.transmit_carrier = (*new_stats)[i]->transmit_carrier -
-            (*previous)[i]->transmit_carrier;
-        sample_value(source,(*new_stats)[i]->name, "tx:carrier",
-            (double)(diff.transmit_carrier), 1LL);
-        diff.transmit_compressed = (*new_stats)[i]->transmit_compressed -
-            (*previous)[i]->transmit_compressed;
-        sample_value(source,(*new_stats)[i]->name, "tx:compressed",
-            (double)(diff.transmit_compressed), 1LL);
+        diff.recv_bytes = ns->recv_bytes - ps->recv_bytes;
+        sample_value(source, name.c_str(), "rx:bytes", (double)(diff.recv_bytes), 1LL);
+        diff.recv_packets = ns->recv_packets - ps->recv_packets;
+        sample_value(source, name.c_str(), "rx:packets", (double)(diff.recv_packets), 1LL);
+        diff.recv_errors = ns->recv_errors - ps->recv_errors;
+        sample_value(source, name.c_str(), "rx:errors", (double)(diff.recv_errors), 1LL);
+        diff.recv_drops = ns->recv_drops - ps->recv_drops;
+        sample_value(source, name.c_str(), "rx:drops", (double)(diff.recv_drops), 1LL);
+        diff.recv_fifo = ns->recv_fifo - ps->recv_fifo;
+        sample_value(source, name.c_str(), "rx:fifo", (double)(diff.recv_fifo), 1LL);
+        diff.recv_frame = ns->recv_frame - ps->recv_frame;
+        sample_value(source, name.c_str(), "rx:frames", (double)(diff.recv_frame), 1LL);
+        diff.recv_compressed = ns->recv_compressed - ps->recv_compressed;
+        sample_value(source, name.c_str(), "rx:compressed", (double)(diff.recv_compressed), 1LL);
+        diff.recv_multicast = ns->recv_multicast - ps->recv_multicast;
+        sample_value(source, name.c_str(), "rx:multicast", (double)(diff.recv_multicast), 1LL);
+        diff.transmit_bytes = ns->transmit_bytes - ps->transmit_bytes;
+        sample_value(source, name.c_str(), "tx:bytes", (double)(diff.transmit_bytes), 1LL);
+        diff.transmit_packets = ns->transmit_packets - ps->transmit_packets;
+        sample_value(source, name.c_str(), "tx:packets", (double)(diff.transmit_packets), 1LL);
+        diff.transmit_errors = ns->transmit_errors - ps->transmit_errors;
+        sample_value(source, name.c_str(), "tx:errors", (double)(diff.transmit_errors), 1LL);
+        diff.transmit_drops = ns->transmit_drops - ps->transmit_drops;
+        sample_value(source, name.c_str(), "tx:drops", (double)(diff.transmit_drops), 1LL);
+        diff.transmit_fifo = ns->transmit_fifo - ps->transmit_fifo;
+        sample_value(source, name.c_str(), "tx:fifo", (double)(diff.transmit_fifo), 1LL);
+        diff.transmit_collisions = ns->transmit_collisions - ps->transmit_collisions;
+        sample_value(source, name.c_str(), "tx:collisions", (double)(diff.transmit_collisions), 1LL);
+        diff.transmit_carrier = ns->transmit_carrier - ps->transmit_carrier;
+        sample_value(source, name.c_str(), "tx:carrier", (double)(diff.transmit_carrier), 1LL);
+        diff.transmit_compressed = ns->transmit_compressed - ps->transmit_compressed;
+        sample_value(source, name.c_str(), "tx:compressed", (double)(diff.transmit_compressed), 1LL);
     }
+    /* If the previous reading had  value we didn't see this time,
+     * move it to the new reading. Otherwise, delete it. */
     for (auto it : *previous) {
-        delete it;
+        std::string name = it.first;
+        auto tmp = new_stats->find(name);
+        if (tmp == new_stats->end()) {
+            (*new_stats)[name] = (*previous)[name];
+        } else {
+            delete it.second;
+        }
     }
     delete previous;
     return new_stats;
@@ -1056,11 +1044,27 @@ void update_io_stats(const char * source) {
     /* get the current stats */
     iostats_t * new_stats = read_io_stats(source);
     if (new_stats == NULL) return;
-    for (size_t i = 0 ; i < new_stats->size() ; i++) {
+    //for (size_t i = 0 ; i < new_stats->size() ; i++) {
+    for(auto itr : *new_stats) {
+        std::string name = itr.first;
+        long long new_value = itr.second;
+        long long old_value = 0;
+        auto tmp = previous_io_stats->find(name);
+        if (tmp != previous_io_stats->end()) {
+            old_value = tmp->second;
+        }
         /* we need to take the difference from the last read */
-        long long tmplong = (*new_stats)[i].second - (*previous_io_stats)[i].second;
-        sample_value(source, "io", (*new_stats)[i].first.c_str(), (double)(tmplong), 1LL);
+        long long tmplong = new_value - old_value;
+        sample_value(source, "io", name.c_str(), (double)(tmplong), 1LL);
     }
+    for (auto it : *previous_io_stats) {
+        std::string name = it.first;
+        auto tmp = new_stats->find(name);
+        if (tmp == new_stats->end()) {
+            (*new_stats)[name] = (*previous_io_stats)[name];
+        }
+    }
+
     delete previous_io_stats;
     previous_io_stats = new_stats;
 }
@@ -1305,14 +1309,14 @@ static void do_cleanup() {
     }
     if (previous_net_stats != nullptr) {
         for (auto it : *previous_net_stats) {
-            delete it;
+            delete it.second;
         }
         delete previous_net_stats;
         previous_net_stats = nullptr;
     }
     if (previous_self_net_stats != nullptr) {
         for (auto it : *previous_self_net_stats) {
-            delete it;
+            delete it.second;
         }
         delete previous_self_net_stats;
         previous_self_net_stats = nullptr;
