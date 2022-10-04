@@ -394,7 +394,8 @@ extern "C" char *TauInternal_CurrentCallsiteTimerName(int tid) {
   return NULL;
 }
 
-#if 0
+#define REPORT_ENTRY_EXIT 1
+#ifdef REPORT_ENTRY_EXIT
 ///////////////////////////////////////////////////////////////////////////
 static void reportEntryExit (bool entry, FunctionInfo *caller, int tid) {
     // Tau_global_stackpos starts at -1.
@@ -408,7 +409,7 @@ static void reportEntryExit (bool entry, FunctionInfo *caller, int tid) {
     }
     static std::mutex mtx_;
     std::lock_guard<std::mutex> lck (mtx_);
-    TAU_VERBOSE("%03d %02d %s%s: %s\n", tid, position, tabs.c_str(),
+    TAU_VERBOSE("%06u %03d %02d %s%s: %s\n", RtsLayer::getTid(), tid, position, tabs.c_str(),
         (entry ? "Entry" : "Exit "), caller->GetName());
     fflush(stderr);
 }
@@ -417,7 +418,9 @@ static void reportEntryExit (bool entry, FunctionInfo *caller, int tid) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   FunctionInfo *fi = (FunctionInfo *) functionInfo;
-  //reportEntryExit(true, fi, tid);
+#ifdef REPORT_ENTRY_EXIT
+  reportEntryExit(true, fi, tid);
+#endif
 
   // Don't start throttled timers
   if (fi && fi->IsThrottled()) return;
@@ -685,7 +688,9 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller, int tid) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_stop_timer(void *function_info, int tid ) {
   FunctionInfo *fi = (FunctionInfo *) function_info;
-  //reportEntryExit(false, fi, tid);
+#ifdef REPORT_ENTRY_EXIT
+  reportEntryExit(false, fi, tid);
+#endif
 
   // Don't stop throttled timers
   if (fi->IsThrottled()) return;

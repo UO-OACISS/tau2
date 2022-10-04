@@ -5,6 +5,8 @@
 #include <starpu.h>
 
 #include <sstream>
+#include <stack> // for stack
+#include <map> // for map
 #include <iostream>
 #include <dlfcn.h> // link with -ldl -rdynamic a
 
@@ -12,289 +14,83 @@
 
 #warning "Compiling StarPU support"
 
-static bool init_done = false;
-
-#define TAU_SET_EVENT_NAME(event_name, str) event_name << str; 
-std::map<int,std::string> dev_type;
-
-
-#ifdef TAU_BFD
-#define HAVE_DECL_BASENAME 1
-#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-#    include <demangle.h>
-#  endif /* HAVE_GNU_DEMANGLE */
-// Add these definitions because the Binutils comedians think all the world uses autotools
-#ifndef PACKAGE
-#define PACKAGE TAU
-#endif
-#ifndef PACKAGE_VERSION
-#define PACKAGE_VERSION 2.25
-#endif
-#  include <bfd.h>
-#endif /* TAU_BFD */
-#define TAU_INTERNAL_DEMANGLE_NAME(name, dem_name)  dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES); \
-        if (dem_name == NULL) { \
-          dem_name = name; \
-        } \
-
-/*
- *-----------------------------------------------------------------------------
- * Simple hash table to map function addresses to region names/identifier
- *-----------------------------------------------------------------------------
- */
-
-struct StarPUHashNode
-{
-    StarPUHashNode() : fi(NULL)
-  { }
-
-  TauBfdInfo info;		///< Filename, line number, etc.
-    FunctionInfo * fi;		///< Function profile information
-    std::string location;
-    std::string function;
-};
-
-struct StarPUHashTable : public TAU_HASH_MAP<unsigned long, StarPUHashNode*>
-{
-  StarPUHashTable() {
-    Tau_init_initializeTAU();
-  }
-  virtual ~StarPUHashTable() {
-    Tau_destructor_trigger();
-  }
-};
-
-static StarPUHashTable & TheHashTable()
-{
-  static StarPUHashTable htab;
-  return htab;
-}
-
-static void Tau_delete_hash_table(void) {
-  // clear the hash map to eliminate memory leaks
-  StarPUHashTable mytab = StarPUHashTable();
-  for ( TAU_HASH_MAP<unsigned long, StarPUHashNode*>::iterator it = mytab.begin(); it != mytab.end(); ++it ) {
-    StarPUHashNode * node = it->second;
-    /* if (node) {
-        	if (node->info) {
-        	free (node->info);
-            }
-            }*/
-    delete node;
-  }
-  mytab.clear();
-  Tau_delete_bfd_units();
-}
-
-static TAU_HASH_MAP<unsigned long, StarPUHashNode*>& TheLocalHashTable(){
-  static thread_local TAU_HASH_MAP<unsigned long, StarPUHashNode*> lhtab;
-  return lhtab;
-}
-
-static tau_bfd_handle_t & TheBfdUnitHandle()
-{
-  static tau_bfd_handle_t StarPUbfdUnitHandle = TAU_BFD_NULL_HANDLE;
-  if (StarPUbfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-    RtsLayer::LockEnv();
-    if (StarPUbfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-      StarPUbfdUnitHandle = Tau_bfd_registerUnit();
-    }
-    RtsLayer::UnLockEnv();
-  }
-  return StarPUbfdUnitHandle;
-}
-
-
-/*
- * Get symbol table by using BFD
- */
-static void issueBfdWarningIfNecessary()
-{
-#ifndef TAU_BFD
-  static bool warningIssued = false;
-  if (!warningIssued) {
-#ifndef __APPLE__
-    fprintf(stderr,"TAU Warning: Comp_gnu - "
-        "BFD is not available during TAU build. Symbols may not be resolved!\n");
-    fflush(stderr);
-#endif
-    warningIssued = true;
-  }
-#endif
-}
-
-static void updateHashTable(unsigned long addr, const char *funcname)
-{
-  StarPUHashNode * hn = TheLocalHashTable()[addr];
-  if (!hn) {
-    RtsLayer::LockDB();
-    hn = TheHashTable()[addr];
-    if (!hn) {
-      hn = new StarPUHashNode;
-      TheHashTable()[addr] = hn;
-    }
-    TheLocalHashTable()[addr] = hn;
-    RtsLayer::UnLockDB();
-  }
-  //  hn->info.funcname = funcname;
-  hn->function = std::string( funcname );
-}
+std::map<int,std::string> device_types;
+std::map<int,std::string> event_types;
 
 extern "C" void Tau_profile_exit_all_threads(void);
 
-static int executionFinished = 0;
-void runOnExitStarPU()
-{
-  executionFinished = 1;
-  Tau_profile_exit_all_threads();
-
-  // clear the hash map to eliminate memory leaks
-  StarPUHashTable & mytab = TheHashTable();
-  for ( TAU_HASH_MAP<unsigned long, StarPUHashNode*>::iterator it = mytab.begin(); it != mytab.end(); ++it ) {
-  	StarPUHashNode * node = it->second;
-    if (node != NULL && node->fi) {
-#ifndef TAU_TBB_SUPPORT
-// At the end of a TBB program, it crashes here.
-		//delete node->fi;
-#endif /* TAU_TBB_SUPPORT */
-	}
-    delete node;
-  }
-  mytab.clear();
-
-#ifdef TAU_BFD
-  Tau_delete_bfd_units();
-#endif
+void runOnExitStarPU() {
   Tau_destructor_trigger();
 }
 
-
-std::pair<std::string,std::string> funcname( void* fun_ptr ){
-    TauBfdInfo dinfo;
-    
-    tau_bfd_handle_t & StarPUbfdUnitHandle = TheBfdUnitHandle();
-    
-    unsigned long addr = Tau_convert_ptr_to_unsigned_long( fun_ptr );
-    StarPUHashNode * node;
-
-    node = TheLocalHashTable()[addr];
-    if( !node ) {
-
-        RtsLayer::LockEnv();
-        node = TheHashTable()[addr];
-        if( !node ) {
-            node = new StarPUHashNode;
-            TheHashTable()[addr] = node;
-        }
-          
-        TheLocalHashTable()[addr] = node;
-        
-        Tau_bfd_resolveBfdInfo( StarPUbfdUnitHandle, addr, dinfo );
-        RtsLayer::UnLockDB();
-           
-        std::stringstream ssret;
-        ssret << dinfo.filename << ":" << dinfo.lineno;
-        node->location = ssret.str();
-        node->function = std::string( dinfo.funcname );
-    }
-    
-    //    std::cout << "res " << node->function << "  " << node->location << "  " << toto << " " << titi << " " << false << std::endl;
-    
-    return  std::pair<std::string,std::string>( node->function, node->location );
-}
+extern "C" void Tau_set_thread_fake(int tid);
+extern "C" void Tau_set_fake_thread_use_cpu_metric(int tid);
+extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address);
 
 /* All the callbacks are handled by this function */
 
 void myfunction_cb( struct starpu_prof_tool_info* prof_info,  union starpu_prof_tool_event_info* event_info, struct starpu_prof_tool_api_info* api_info ){
 
-    std::stringstream event_name;
+    std::string event_name {event_types[prof_info->event_type]};
+    std::string device_name {device_types[prof_info->driver_type]};
     std::stringstream info;
-    const char* name;
-    
     int tag = 0;
 
-    //std::cout << "Callback " << prof_info->event_type << " called" << std::endl;
-    
-    std::pair<std::string, std::string> fun;
-    if( nullptr != prof_info->fun_ptr ){
-        fun = funcname( prof_info->fun_ptr );
-    } else {
-        fun.first = "";
-        fun.second = "";
-    }
-    //    std::cout << "Fun : " << fun.first << " " << fun.second << std::endl;
-        
+    bool enter = true;
     switch(  prof_info->event_type ) {
     case starpu_prof_tool_event_init:
-        Tau_create_top_level_timer_if_necessary(); // ???
-        TAU_SET_EVENT_NAME( event_name, ">StarPU" );
+    case starpu_prof_tool_event_init_begin:
+    case starpu_prof_tool_event_driver_init:
         break;
     case starpu_prof_tool_event_terminate:
-        TAU_SET_EVENT_NAME( event_name, "<StarPU" );
-        break;
-    case starpu_prof_tool_event_init_begin:
-        TAU_SET_EVENT_NAME( event_name, ">StarPU init" );
-        break;
     case starpu_prof_tool_event_init_end:
-        TAU_SET_EVENT_NAME( event_name, "<StarPU init" );
-        break;
-    case starpu_prof_tool_event_driver_init:
-        TAU_SET_EVENT_NAME( event_name, ">StarPU driver" );
-        info << " [{" << dev_type[prof_info->driver_type] << ":" << prof_info->device_number  << "}]";
-       break;       
     case starpu_prof_tool_event_driver_deinit:
-        TAU_SET_EVENT_NAME( event_name, "<StarPU driver" );
-        info << " [{" << dev_type[prof_info->driver_type] << ":" << prof_info->device_number  << "}]";
-        break;
-    case starpu_prof_tool_event_driver_init_start:
-        TAU_SET_EVENT_NAME( event_name, ">StarPU driver init" );
-       info << " [{" << dev_type[prof_info->driver_type] << ":" << prof_info->device_number  << "}]";
-        break;
     case starpu_prof_tool_event_driver_init_end:
-        TAU_SET_EVENT_NAME( event_name, "<StarPU driver init" );
-        info << " [{" << dev_type[prof_info->driver_type] << ":" << prof_info->device_number  << "}]";
-       break;
-    case starpu_prof_tool_event_start_cpu_exec:
-    case starpu_prof_tool_event_start_gpu_exec:
-        TAU_SET_EVENT_NAME( event_name, ">StarPU exec " );
-        info << fun.first.c_str() << " [{" << dev_type[prof_info->driver_type] << ":" << prof_info->device_number << "} function " << prof_info->fun_ptr << " { " << fun.second.c_str() << " }]";
-        break;
     case starpu_prof_tool_event_end_cpu_exec:
     case starpu_prof_tool_event_end_gpu_exec:
-        TAU_SET_EVENT_NAME( event_name, "<StarPU exec " );
-        info << fun.first.c_str() << "[{" << dev_type[prof_info->driver_type] << ":" << prof_info->device_number << "} function " << prof_info->fun_ptr << " { " << fun.second.c_str() << " }]";
+    case starpu_prof_tool_event_end_transfer:
+        enter = false;
+        break;
+    case starpu_prof_tool_event_driver_init_start:
+        info << " : " << device_name.c_str(); // << ":" << prof_info->device_number  << "}]";
+        event_name = event_name + info.str();
+        break;
+    case starpu_prof_tool_event_start_cpu_exec:
+    case starpu_prof_tool_event_start_gpu_exec:
+        if(TauEnv_get_ompt_resolve_address_eagerly()) {
+            char resolved_address[4096] = {0};
+            Tau_ompt_resolve_callsite_eagerly((unsigned long)prof_info->fun_ptr, resolved_address);
+            info << resolved_address;
+        } else {
+            info << " : ADDR <" << std::hex << prof_info->fun_ptr << ">";
+        }
+        event_name = event_name + info.str();
         break;
     case starpu_prof_tool_event_start_transfer:
-        TAU_SET_EVENT_NAME( event_name, ">StarPU_transfer" );
-            //        if( TauEnv_get_track_message() ){
-        //            std::cout<<"toto"<<std::endl;
-            TAU_TRACE_SENDMSG( tag, prof_info->memnode, prof_info->bytes_transfered );
-            //        }
+        TAU_TRACE_SENDMSG( tag, prof_info->memnode, prof_info->bytes_transfered );
         info << " [{ memnode " << prof_info->memnode << " }]";
-        break;
-    case starpu_prof_tool_event_end_transfer:
-        TAU_SET_EVENT_NAME( event_name, "<StarPU_transfer" );
-        // TAU_TRACE_RECVMSG( tag, prof_info->memnode, prof_info->bytes_transfered );
-        info << " [{ memnode " << prof_info->memnode << " }]";
+        event_name = event_name + info.str();
         break;
     default:
         std::cout <<  "Unknown callback " <<  prof_info->event_type << std::endl;
         break;
     }
-    
-    event_name << info.str();
-    // std::cout << "Event: " << event_name.str().c_str() << " " << event_name.str()[0] << std::endl;
-    // std::cout << "Event1: " << event_name.str().c_str() << std::endl;
 
-    if ( event_name.str()[0] == '>') {
-        TAU_VERBOSE("START>>%s\n", &(event_name.str()[1]) );
-        TAU_START( &(event_name.str()[1]) );
-    }  else if ( event_name.str()[0] == '<' ) {
-        TAU_VERBOSE("STOP<<%s\n", &(event_name.str()[1]) );
-        // TAU_STOP( &(event_name.str()[1]) );
-        Tau_global_stop();
-    } else {
-        TAU_VERBOSE("event_name = %s\n", &(event_name.str()[0]) );
+    void * handle = nullptr;
+    static thread_local std::stack<void*> myts;
+    int tid = RtsLayer::myThread();
+    if (enter) {
+        handle = Tau_get_function_info(event_name.c_str(), "", TAU_DEFAULT, "TAU_STARPU");
+        Tau_start_timer(handle,0,tid);
+        myts.push(handle);
+    }  else {
+        if (myts.size() == 0) {
+            TAU_VERBOSE("Timer stack is empty, bug in StarPU support!");
+            return;
+        }
+        handle = myts.top();
+        Tau_stop_timer(handle, tid);
+        myts.pop();
     }
 }
 
@@ -302,8 +98,26 @@ void myfunction_cb( struct starpu_prof_tool_info* prof_info,  union starpu_prof_
 extern "C" {
  void starpu_prof_tool_library_register( starpu_prof_tool_entry_register_func reg, starpu_prof_tool_entry_register_func unreg){
 
-    dev_type[starpu_prof_tool_driver_cpu] = "CPU";
-    dev_type[starpu_prof_tool_driver_gpu] = "GPU";
+    device_types[starpu_prof_tool_driver_cpu] = "CPU";
+    device_types[starpu_prof_tool_driver_gpu] = "GPU";
+
+    event_types[starpu_prof_tool_event_none] = "StarPU None";
+    event_types[starpu_prof_tool_event_init] = "StarPU";
+    event_types[starpu_prof_tool_event_terminate] = "StarPU";
+    event_types[starpu_prof_tool_event_init_begin] = "StarPU init";
+    event_types[starpu_prof_tool_event_init_end] = "StarPU init";
+    event_types[starpu_prof_tool_event_driver_init] = "StarPU driver";
+    event_types[starpu_prof_tool_event_driver_deinit] = "StarPU driver";
+    event_types[starpu_prof_tool_event_driver_init_start] = "StarPU driver init";
+    event_types[starpu_prof_tool_event_driver_init_end] = "StarPU driver init";
+    event_types[starpu_prof_tool_event_start_cpu_exec] = "StarPU exec";
+    event_types[starpu_prof_tool_event_end_cpu_exec] = "StarPU exec";
+    event_types[starpu_prof_tool_event_start_gpu_exec] = "StarPU exec";
+    event_types[starpu_prof_tool_event_end_gpu_exec] = "StarPU exec";
+    event_types[starpu_prof_tool_event_start_transfer] = "StarPU transfer";
+    event_types[starpu_prof_tool_event_end_transfer] = "StarPU transfer";
+    event_types[starpu_prof_tool_event_user_start] = "StarPU user event";
+    event_types[starpu_prof_tool_event_user_end] = "StarPU user event";
 
     enum  starpu_prof_tool_command info = starpu_prof_tool_command_reg;
     reg( starpu_prof_tool_event_init_begin, &myfunction_cb, info );
@@ -321,18 +135,8 @@ extern "C" {
     reg( starpu_prof_tool_event_start_transfer, &myfunction_cb, info );
     reg( starpu_prof_tool_event_end_transfer, &myfunction_cb, info );
 
-    RtsLayer::LockDB();
-     if( !init_done ) {
-        tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
-        issueBfdWarningIfNecessary();
-        Tau_bfd_processBfdExecInfo(bfdUnitHandle, updateHashTable);
-        init_done = true;
-    }
-    RtsLayer::UnLockDB();
-    
     atexit( runOnExitStarPU );
 }
 }
-#undef TAU_SET_EVENT_NAME
 
 

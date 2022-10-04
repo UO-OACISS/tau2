@@ -77,6 +77,7 @@ int PthreadLayer::RegisterThread(void)
     pthread_mutex_lock(&tauThreadcountMutex);
     *id = RtsLayer::_createThread();
     pthread_mutex_unlock(&tauThreadcountMutex);
+    printf("New thread: tid = %u, tau_tid = %u\n", RtsLayer::getTid(), *id);
   }
   return 0;
 }

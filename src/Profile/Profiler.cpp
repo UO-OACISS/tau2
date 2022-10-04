@@ -1529,7 +1529,7 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
             double excltime = fi.getDumpExclusiveValues(tid)[metric];
 
             /*Do not resolve addresses if they have already been resolved eagerly*/
-            if(strcmp(fi.GetPrimaryGroup(), "TAU_OPENMP") == 0 && !TauEnv_get_ompt_resolve_address_eagerly()) {
+            if(strstr(fi.GetName(), " ADDR <") != NULL && !TauEnv_get_ompt_resolve_address_eagerly()) {
               char resolved_address[10240] = "";
               Tau_ompt_resolve_callsite(fi, resolved_address);
               fprintf(fp, "\"%s", resolved_address);
