@@ -2,6 +2,10 @@ This example can be used on one or more cores using MPI, pthread, OpenMP or with
 
 It includes calls to the Phiprof interface.
 
-To use compiler based instrumentation:
-setenv TAU_OPTIONS '-optCompInst -optVerbose'
+One possible way to configure TAU is with intel compilers:
+./configure  -phiprof -ompt -mpi -c++=mpiicpc -cc=mpiicc -fortran=mpiifort -tag=oneapi -bfd=download
+make install -j
+
+Add ${arch}/bin to PATH and ${arch}/lib to LD_LIBRARY_PATH
+and compile the example with:
 make
