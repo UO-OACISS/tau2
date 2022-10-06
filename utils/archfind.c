@@ -180,6 +180,15 @@ ARCHi386_linux
 ARCHx86_64
 #endif
 
+#if defined(__riscv) && defined(linux) 
+#define _havehosttype_
+#if (__INTPTR_WIDTH__==64)
+ARCHriscv64
+#else
+ARCHriscv32
+#endif
+#endif
+
 #if defined(i386) && defined(__EMX__)
 # define _havehosttype_
 ARCHi386_emx

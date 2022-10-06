@@ -7756,6 +7756,12 @@ if [ $machine = mic_linux -o $craymic = yes ] ; then
   libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 fi
 
+if [ $machine = riscv64 ]; then
+  libunwind=libunwind-1.6.2
+  libunwindtgz=$libunwind.tar.gz
+  libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
+fi
+
 if [ $machine = arm64_linux ] ; then
   libunwind=libunwind-1.3-rc1
   libunwindtgz=$libunwind.tar.gz

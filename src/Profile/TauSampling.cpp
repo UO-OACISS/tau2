@@ -555,6 +555,8 @@ unsigned long get_pc(void *p)
   pc = (unsigned long)sc->arm_pc;
 # elif __aarch64__
   pc = (unsigned long)sc->pc;
+# elif __riscv
+  pc = ((ucontext_t *)p)->uc_mcontext.__gregs[REG_PC];
 # elif __NEC__
   pc = (unsigned long)sc->IC;
 #elif defined(TAU_FUJITSU)
