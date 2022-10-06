@@ -343,7 +343,8 @@ class adios {
         // This is a stuct (one per thread)
         // of vectors (one per timestamp)
         // of pairs (timestamp, values)...
-        struct adiosThread{
+        class adiosThread{
+        public:
         timer_values_array_t timer_values;
         counter_values_array_t counter_values;
         comm_values_array_t comm_values;
@@ -353,6 +354,7 @@ class adios {
         std::stack<tau_data_t> pre_timer_stack;
 #endif
         tau_data_t previous_timestamp;
+        adiosThread() : previous_timestamp(0L) { };
         };
         //A per-thread vector of those structs.
         vector<adiosThread *> adiosThreadVector;
@@ -405,8 +407,14 @@ class adios {
         int get_thread_count(void) { return max_threads+1; } // zero-indexed.
 
         adiosThread* getAdiosThread(int tid){
-            while(adiosThreadVector.size()<=tid){
-                adiosThreadVector.push_back(new adiosThread);
+            if(adiosThreadVector.size()<=tid){
+                static std::mutex _mtx;
+                std::unique_lock<std::mutex> lk(_mtx);
+                if(adiosThreadVector.size()<=tid){
+                    while(adiosThreadVector.size()<=tid){
+                        adiosThreadVector.push_back(new adiosThread);
+                    }
+                }
             }
             return adiosThreadVector[tid];
         }
