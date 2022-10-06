@@ -2,9 +2,17 @@ This example can be used on one or more cores using MPI, pthread, OpenMP or with
 
 It includes calls to the Phiprof interface.
 
-One possible way to configure TAU is with intel compilers:
-./configure  -phiprof -ompt -mpi -c++=mpiicpc -cc=mpiicc -fortran=mpiifort -tag=oneapi -bfd=download
-make install -j
+TAU can be configured as follows to use the Phiprof interface:
+./configure  -phiprof -bfd=download
+
+Support for specific compilers can be used by passing them to the configuration line, such as, for the Intel compiler suite, wiht a specific tag for this configuration:
+./configure  -phiprof -c++=mpiicpc -cc=mpiicc -fortran=mpiifort -tag=oneapi -bfd=download
+
+Other interfaces can also be used with the Phiprof interface:
+./configure  -phiprof -ompt -mpi -c++=mpiicpc -cc=mpiicc -fortran=mpiifort -bfd=download
+
+Then TAU can be compiled using make:
+make -j install
 
 Add ${arch}/bin to PATH and ${arch}/lib to LD_LIBRARY_PATH
 and compile the example with:
