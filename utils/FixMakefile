@@ -1104,6 +1104,10 @@ case $1 in
         echo "NOTE: Couldn't locate /usr/lib/libcuda.so. Is it somewhere else? "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     CUPTI_NONVML)
+        echo "NOTE: Couldn't locate libnvidia-ml.so. Is it somewhere else? "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      CUPTI_ACTIVITY)
         echo "NOTE: Using the TAU's CUPTI Activity API "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

@@ -10545,6 +10545,9 @@ EOF
 			# check if -lcuda is available to the linker somehow
 		      fixmakeargs="$fixmakeargs CUPTI_NOCUDA"
                     fi
+		    if [ ! -f $cudadir/lib64/stubs/libnvidia-ml.so ]; then 
+		      fixmakeargs="$fixmakeargs CUPTI_NONVML"
+		    fi
 		fi
 	    fi
 	else
