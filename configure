@@ -79,8 +79,9 @@ clone()
 
 get_cflags() {
     compiler=$1
-    args=`$compiler -show | cut -d' ' -f2-`
-    echo "$compiler flags: $args"
+    option=$2
+    args=`$compiler $option | cut -d' ' -f2-`
+    #echo "$compiler flags: $args"
     _got_cflags=""
 
     for word in $args; do
@@ -96,6 +97,7 @@ get_cflags() {
         fi
     done
     _got_cflags=`echo $_got_cflags | sed -e 's@ @#@g'`
+    #echo "Found MPI compiler flags: $_got_cflags"
 }
 
 # This function is to extract the ldflags from mpi compiler wrappers
@@ -103,8 +105,9 @@ get_cflags() {
 # args=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
 get_ldflags() {
     compiler=$1
-    args=`$compiler -show | cut -d' ' -f2-`
-    echo "$compiler flags: $args"
+    option=$2
+    args=`$compiler $option | cut -d' ' -f2-`
+    #echo "$compiler flags: $args"
     _got_ldflags=""
 
     for word in $args; do
@@ -122,10 +125,15 @@ get_ldflags() {
         fi
     done
     _got_ldflags=`echo $_got_ldflags | sed -e 's@ @#@g'`
+    #echo "Found MPI linker flags: $_got_ldflags"
 }
 
-#get_cflags "mpicxx"
-#get_ldflags "mpicxx"
+#get_cflags "mpicxx" "-show"
+#get_ldflags "mpicxx" "-show"
+#echo "cflags = $_got_cflags"
+#echo "ldflags = $_got_ldflags"
+#get_cflags "cc" "--cray-print-opts=all"
+#get_ldflags "cc" "--cray-print-opts=all"
 #echo "cflags = $_got_cflags"
 #echo "ldflags = $_got_ldflags"
 
@@ -4792,130 +4800,159 @@ fi
 if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes" ] ; then
     cxxloaded=`which $mpicxx_exe 2>/dev/null | wc -l`
     mpi=yes
-    if [ "x$machine" != "xcraycnl" ]
-    then
-      if [ $cxxloaded = 1 ]
-      then
-  	echo "NOTE: Found $mpicxx_exe in the path...trying to auto-configure compilers and flags..."
-  	c_compiler=`$mpicc_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-  	cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-  	f90loaded=`which $mpif90_exe 2>/dev/null | wc -l`
-  	#if [ $f90loaded = 1 -a "x$orig_fortran_compiler" = "xmpif90" ]
-  	if [ $f90loaded = 1 ] ; then
-  	    echo "NOTE: Found $mpif90_exe in the path...trying to auto-configure compilers and flags..."
-              fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-  	    echo "NOTE: detected $fortran_compiler"
-              if [ "x$fortran_compiler" = "xifort" -o "x$fortran_compiler" = "xifx" ]; then
-  		fortran_compiler=intel
-  	    fi
-              if [ "x$fortran_compiler" = "xxlf_r" -o "x$fortran_compiler" = "xxlf90_r"  -o "x$fortran_compiler" = "xxlf90" -o "x$fortran_compiler" = "xxlf2008_r" ]; then
-                  fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
-  	    fi
-              if [ "x$fortran_compiler" = "xxlflang" ]; then
-                  fixmakeargs="$fixmakeargs XLFLANG"
-              fi
-              if [ "x$fortran_compiler" = "xarmflang" ]; then
-                  fixmakeargs="$fixmakeargs ARMFLANG"
-              fi
-              if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" -o "x$fortran_compiler" = "xmdflang" ]; then
-                  fixmakeargs="$fixmakeargs FLANG"
-		  touch foo_compinst.f
-                  test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
-                  if [ $? -eq 1 ]; then
-                  # New flang doesn't support  -Mx,129,0x800 for compiler-based instrumentation
-                    fixmakeargs="$fixmakeargs FLANG_NO_MX_OPTS"
-                  fi
-                  /bin/rm -f foo_compinst.f
-              fi
-  	    if [ "x$orig_fortran_compiler" = "xcaf" ]; then
-  		fortran_compiler=caf
-              fi
-  	    if [ "x$orig_fortran_compiler" = "xpgfortran" ]; then
-  		fortran_compiler=pgfortran
-              fi
-  	else
-  	    echo "Default fortran compiler was '$orig_fortran_compiler'..."
-  	    if [ $f90loaded = 1 ] ; then
-                  fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-  	    else
-                  if [ "x$orig_fortran_compiler" = "xdefault" ]; then
-                    fortran_compiler=no
-                  fi
-              fi
-  	    echo "Setting fortran compiler to '$fortran_compiler'..."
-  	fi
+    if [ $cxxloaded = 1 ] ; then
+        echo "NOTE: Found $mpicxx_exe in the path...trying to auto-configure compilers and flags..."
+        c_compiler=`$mpicc_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+        cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+        f90loaded=`which $mpif90_exe 2>/dev/null | wc -l`
+        #if [ $f90loaded = 1 -a "x$orig_fortran_compiler" = "xmpif90" ]
+        if [ $f90loaded = 1 ] ; then
+            echo "NOTE: Found $mpif90_exe in the path...trying to auto-configure compilers and flags..."
+            fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+            echo "NOTE: detected $fortran_compiler"
+            if [ "x$fortran_compiler" = "xifort" -o "x$fortran_compiler" = "xifx" ]; then
+                fortran_compiler=intel
+            fi
+            if [ "x$fortran_compiler" = "xxlf_r" -o "x$fortran_compiler" = "xxlf90_r"  -o "x$fortran_compiler" = "xxlf90" -o "x$fortran_compiler" = "xxlf2008_r" ]; then
+                fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
+            fi
+            if [ "x$fortran_compiler" = "xxlflang" ]; then
+                fixmakeargs="$fixmakeargs XLFLANG"
+            fi
+            if [ "x$fortran_compiler" = "xarmflang" ]; then
+                fixmakeargs="$fixmakeargs ARMFLANG"
+            fi
+            if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" -o "x$fortran_compiler" = "xmdflang" ]; then
+                fixmakeargs="$fixmakeargs FLANG"
+                touch foo_compinst.f
+                test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
+                if [ $? -eq 1 ]; then
+                # New flang doesn't support  -Mx,129,0x800 for compiler-based instrumentation
+                  fixmakeargs="$fixmakeargs FLANG_NO_MX_OPTS"
+                fi
+                /bin/rm -f foo_compinst.f
+            fi
+            if [ "x$orig_fortran_compiler" = "xcaf" ]; then
+                fortran_compiler=caf
+            fi
+            if [ "x$orig_fortran_compiler" = "xpgfortran" ]; then
+                fortran_compiler=pgfortran
+            fi
+        else
+            echo "Default fortran compiler was '$orig_fortran_compiler'..."
+            if [ $f90loaded = 1 ] ; then
+                fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+            else
+                if [ "x$orig_fortran_compiler" = "xdefault" ]; then
+                  fortran_compiler=no
+                fi
+            fi
+            echo "Setting fortran compiler to '$fortran_compiler'..."
+        fi
 
-  	if [ $machine = bgq -o $machine = bgp ]; then
-              c_compiler=mpicc
-              cxx_compiler=mpicxx
-              is_gnu_compiler=`$cxx_compiler -show  2>/dev/null | awk ' { print $1;}' | xargs grep g++ | wc -l`
-              if [ $is_gnu_compiler = 1 ]; then
-                gnu=yes
-                tauoptions="${tauoptions}-gnu"
-              fi
-  	else
-  	    # All other machines besides IBM BG*
-              is_internal_compiler_loaded=`which $cxx_compiler 2>/dev/null | wc -l`
-              if [ $is_internal_compiler_loaded = 0 ]; then
-  		# Compiler is not loaded, use full path to it
-  		c_compiler=`$mpicc_exe -show | awk '{ print $1;}' `
-  		cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' `
-  		fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' `
-              fi
-              if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
-  		#mpiinc=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
-  		#mpilibargs=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
-  		#mpiflibargs=`$mpif90_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
-        get_cflags $mpicxx_exe
-        get_ldflags $mpicxx_exe
-  		mpiinc=$_got_cflags
-  		mpilibargs=$_got_ldflags
-        # We have to make sure we set the mpilibrary variable here, because later
-        # mpilib might get reset.
-        mpilibrary=$_got_ldflags
-        get_ldflags $mpif90_exe
-  		mpiflibargs=`echo $_got_ldflags | sed  -e 's@-qthreaded@@g'`
-        echo "Found $mpicxx_exe cflags: $mpiinc"
-        echo "Found $mpicxx_exe ldflags: $mpilibargs"
-        echo "Found $mpif90_exe ldflags: $mpiflibargs"
+        if [ $machine = bgq -o $machine = bgp ]; then
+            c_compiler=mpicc
+            cxx_compiler=mpicxx
+            is_gnu_compiler=`$cxx_compiler -show  2>/dev/null | awk ' { print $1;}' | xargs grep g++ | wc -l`
+            if [ $is_gnu_compiler = 1 ]; then
+              gnu=yes
+              tauoptions="${tauoptions}-gnu"
+            fi
+        else
+            # All other machines besides IBM BG*
+            is_internal_compiler_loaded=`which $cxx_compiler 2>/dev/null | wc -l`
+            if [ $is_internal_compiler_loaded = 0 ]; then
+                # Compiler is not loaded, use full path to it
+                c_compiler=`$mpicc_exe -show | awk '{ print $1;}' `
+                cxx_compiler=`$mpicxx_exe -show | awk '{ print $1;}' `
+                fortran_compiler=`$mpif90_exe -show | awk '{ print $1;}' `
+            fi
+            if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
+                #mpiinc=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+                #mpilibargs=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+                #mpiflibargs=`$mpif90_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
+                if [ "x$machine" == "xcraycnl" ] ; then
+                    my_mpicxx_exe=CC
+                    my_mpif90_exe=ftn
+                    mpishow_option="--cray-print-opts=all"
+                    yet_another_option="-I$CRAY_MPICH_PREFIX/include"
+                else
+                    my_mpicxx_exe=$mpicxx_exe
+                    my_mpif90_exe=$mpif90_exe
+                    mpishow_option="-show"
+                    yet_another_option=""
+                fi
+                get_cflags $my_mpicxx_exe $mpishow_option
+                get_ldflags $my_mpicxx_exe $mpishow_option
+                mpiinc="$yet_another_option $_got_cflags"
+                mpilibargs=$_got_ldflags
+                # We have to make sure we set the mpilibrary variable here, because later
+                # mpilib might get reset.
+                mpilibrary=$_got_ldflags
+                get_ldflags $my_mpif90_exe $mpishow_option
+                mpiflibargs=`echo $_got_ldflags | sed  -e 's@-qthreaded@@g'`
+                echo "Found $mpicxx_exe cflags: $mpiinc"
+                echo "Found $mpicxx_exe ldflags: $mpilibargs"
+                echo "Found $mpif90_exe ldflags: $mpiflibargs"
 
-  		mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
-  		mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
-  	        fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpiincargs=$mpiinc"
-  	        mpilibargs_added_to_fixmakeargs=yes
+                mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
+                mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
+                fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpiincargs=$mpiinc"
+                mpilibargs_added_to_fixmakeargs=yes
+            fi
+            full_cxx_compiler=`$mpicxx_exe -show | tail -n 1 | awk '{ print $1; }'`
+            full_cc_compiler=`$mpicc_exe -show | tail -n 1 | awk '{ print $1; }'`
+            fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
+            mpi=yes
+        fi
+        # Do not use the internal compiler from mpicxx when BGP/BGQ is used.
+    else
+        echo "NOTE: Didn't find mpicxx in the path, using default values"
+        gnu=yes
+        tauoptions="${tauoptions}-gnu"
+        if [ $machine = bgq ] ; then
+            if [ -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx -a -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc ] ; then
+                echo "NOTE: Using /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx"
+                cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
+                c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
+            else
+                echo "ERROR: Please set your path to include mpicxx and reconfigure TAU."
+                exit 1
+            fi
+        elif [ $machine = bgp ]; then
+            if [ -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx -a -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicc ]; then
+                echo "NOTE: Using /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx"
+                cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
+                c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
+            else
+                echo "ERROR: Please set your path to include mpicxx and reconfigure TAU."
+                exit 1
+            fi
+        elif [ "x$machine" == "xcraycnl" ] ; then
+            if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
+                my_mpicxx_exe=CC
+                my_mpif90_exe=ftn
+                mpishow_option="--cray-print-opts=all"
+                yet_another_option="-I$CRAY_MPICH_PREFIX/include"
+                get_cflags $my_mpicxx_exe $mpishow_option
+                get_ldflags $my_mpicxx_exe $mpishow_option
+                mpiinc="$yet_another_option $_got_cflags"
+                mpilibargs=$_got_ldflags
+                # We have to make sure we set the mpilibrary variable here, because later
+                # mpilib might get reset.
+                mpilibrary=$_got_ldflags
+                get_ldflags $my_mpif90_exe $mpishow_option
+                mpiflibargs=`echo $_got_ldflags | sed  -e 's@-qthreaded@@g'`
+                echo "Found $mpicxx_exe cflags: $mpiinc"
+                echo "Found $mpicxx_exe ldflags: $mpilibargs"
+                echo "Found $mpif90_exe ldflags: $mpiflibargs"
 
-              fi
-              full_cxx_compiler=`$mpicxx_exe -show | tail -n 1 | awk '{ print $1; }'`
-              full_cc_compiler=`$mpicc_exe -show | tail -n 1 | awk '{ print $1; }'`
-              fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
-              mpi=yes
-  	fi
-  	# Do not use the internal compiler from mpicxx when BGP/BGQ is used.
-      else
-  	echo "NOTE: Didn't find mpicxx in the path, using default values"
-  	gnu=yes
-  	tauoptions="${tauoptions}-gnu"
-  	if [ $machine = bgq ] ; then
-              if [ -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx -a -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc ] ; then
-  		echo "NOTE: Using /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx"
-  		cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
-  		c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
-              else
-  		echo "ERROR: Please set your path to include mpicxx and reconfigure TAU."
-  		exit 1
-              fi
-  	elif [ $machine = bgp ]; then
-              if [ -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx -a -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicc ]; then
-  		echo "NOTE: Using /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx"
-  		cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
-  		c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
-              else
-  		echo "ERROR: Please set your path to include mpicxx and reconfigure TAU."
-  		exit 1
-              fi
-  	fi
-
-      fi
+                mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
+                mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
+                fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpiincargs=$mpiinc"
+                mpilibargs_added_to_fixmakeargs=yes
+            fi
+        fi
     fi
     # Check for BG/P or BG/Q for GNU
     #    is_gnu_compiler=`$cxx_compiler -show  2>/dev/null | awk ' { print $1;}' | xargs grep g++ | wc -l'
@@ -4926,11 +4963,10 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
     #          tauoptions="${tauoptions}-gnu"
     #      elif [ $machine = bgq ]; then
     #          fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU GNU46PLUS"
-    #	  NOTE: FOUND GNU configuration"
+    #          NOTE: FOUND GNU configuration"
     #          tauoptions="${tauoptions}-gnu"
     #      fi
     #    fi
-
 fi
 
 ######################################################################
@@ -4941,7 +4977,7 @@ case $cxx_compiler in
 	fixmakeargs="$fixmakeargs USE_CFRONT"
 	;;
     *llvm*|*clang* | hcc | hipcc )
-	echo "Default C++ compiler will be clang++"
+	echo "Default C++ compiler will be clang++ (or variant)"
         llvm=yes
         fixmakeargs="$fixmakeargs CLANG COMPINST_LLVM"
         tauoptions="${tauoptions}-clang"
@@ -5549,10 +5585,22 @@ if [ $build_llvm_plugin = yes ]; then
   if [ $result -eq 0 ]; then
     fixmakeargs="$fixmakeargs tau_cmake=$cmake_cmd TAU_BUILD_LLVM_PLUGIN"
   # proceed with building the LLVM plugin. But check if the compiler or the LLVM source directories have been specified
+    theclang=`command -v clang`
+    theamdclang=`command -v clang`
+    thegcc=`command -v clang`
     if [ "x$llvm_src_dir" = "x" ]; then
-      llvm_src_dir=`which clang | sed -e 's@bin/clang@@' `
-      echo "TAU: Using LLVM source directory -llvm_src=$llvm_src_dir for building the TAU LLVM plugin."
-      fixmakeargs="$fixmakeargs llvm_src_dir=$llvm_src_dir LLVM_SRC_DIR"
+      if [ "x$theclang" != "x" ] ; then
+        llvm_src_dir=`which clang | sed -e 's@bin/clang@@' `
+        echo "TAU: Using LLVM source directory -llvm_src=$llvm_src_dir for building the TAU LLVM plugin."
+        fixmakeargs="$fixmakeargs llvm_src_dir=$llvm_src_dir LLVM_SRC_DIR"
+      fi
+    fi
+    if [ "x$llvm_src_dir" = "x" ]; then
+      if [ "x$theamdclang" != "x" ] ; then
+        llvm_src_dir=`which amdclang | sed -e 's@bin/clang@@' `
+        echo "TAU: Using LLVM source directory -llvm_src=$llvm_src_dir for building the TAU LLVM plugin."
+        fixmakeargs="$fixmakeargs llvm_src_dir=$llvm_src_dir LLVM_SRC_DIR"
+      fi
     fi
     if [ "x$llvm_cxx" = "x" ]; then
       llvm_cxx=`which g++ `
@@ -6352,7 +6400,7 @@ fi
 
 if [ "x$mpiinc" != "x" ] ; then
     # Check for OpenMPI and add additional include directory
-    if [ -d $mpiinc/openmpi ] ; then
+    if [ -d "$mpiinc/openmpi" ] ; then
 	echo "NOTE: Using OpenMPI"
 	additional_mpiincs="-I$mpiinc/openmpi -I$mpiinc/openmpi/ompi"
     fi
@@ -6362,7 +6410,7 @@ if [ "x$mpiinc" != "x" ] ; then
         additional_mpiincs="$additional_mpiincs -I$mpilib"
     fi
 
-    if [ -d $mpiinc ] ; then
+    if [ -d "$mpiinc" ] ; then
         #echo "Include dir found. adding -I$mpiinc to INC"
 	mpiincargs="$mpiincargs -I$mpiinc $additional_mpiincs"
 	mpiincargs=`echo $mpiincargs | sed  -e 's/ /#/g'`
@@ -8330,9 +8378,9 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
         mpiwarnings="-Werror"
     fi
 
+  #echo "mpiinc is specified as: $mpiinc"
   if [ "x$mpiinc" != "x" ]
   then
-      # echo "mpiinc is specified"
       if [[ $mpiinc == \-I* ]] ; then
         mpi_include=$mpiinc
       else
@@ -8341,11 +8389,13 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
   fi
 
   if [ "x$mpilib" != "x" ] ; then
-      if [[ $mpilib == \-I* ]] ; then
+      if [[ $mpilib == \-L* ]] ; then
         mpi_libpath=$mpilib
       else
         mpi_libpath=-L$mpilib
       fi
+  else
+        mpi_libpath=$mpilibargs
   fi
 
   mpi_libraries=""
