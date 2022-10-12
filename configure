@@ -4875,7 +4875,7 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
                     my_mpicxx_exe=CC
                     my_mpif90_exe=ftn
                     mpishow_option="--cray-print-opts=all"
-                    yet_another_option="-I$CRAY_MPICH_PREFIX/include"
+                    yet_another_option="-I$CRAY_MPICH_PREFIX/include#"
                 else
                     my_mpicxx_exe=$mpicxx_exe
                     my_mpif90_exe=$mpif90_exe
@@ -4884,7 +4884,7 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
                 fi
                 get_cflags $my_mpicxx_exe $mpishow_option
                 get_ldflags $my_mpicxx_exe $mpishow_option
-                mpiinc="$yet_another_option $_got_cflags"
+                mpiinc="${yet_another_option}${_got_cflags}"
                 mpilibargs=$_got_ldflags
                 # We have to make sure we set the mpilibrary variable here, because later
                 # mpilib might get reset.
@@ -10595,7 +10595,7 @@ EOF
 			# check if -lcuda is available to the linker somehow
 		      fixmakeargs="$fixmakeargs CUPTI_NOCUDA"
                     fi
-		    if [ ! -f $cudadir/lib64/stubs/libnvidia-ml.so ]; then 
+		    if [ ! -f $cudadir/lib64/stubs/libnvidia-ml.so ]; then
 		      fixmakeargs="$fixmakeargs CUPTI_NONVML"
 		    fi
 		fi
