@@ -386,6 +386,8 @@ void shorten_timer_name(std::string& name) {
     }
 }
 
+extern void Tau_sampling_finalizeProfile(int tid);
+
 void Tau_plugin_adios2_define_variables(int numThreads, int numCounters,
     const char** counterNames) {
     const std::size_t Nx = numThreads;
@@ -396,6 +398,10 @@ void Tau_plugin_adios2_define_variables(int numThreads, int numCounters,
     // get the FunctionInfo database, and iterate over it
     std::vector<FunctionInfo*>::const_iterator it;
     RtsLayer::LockDB();
+    // UPDATE SAMPLE DATA!
+    if (TauEnv_get_ebs_enabled()) {
+        Tau_sampling_finalizeProfile(0);
+    }
     /* Copy the function info database so we can release the lock */
     std::vector<FunctionInfo*> tmpTimers(TheFunctionDB());
     RtsLayer::UnLockDB();
