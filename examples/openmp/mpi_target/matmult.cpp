@@ -160,7 +160,8 @@ int main (int argc, char *argv[])
 {
   int i;
 #ifdef TAU_MPI
-  int rc; 
+  char name[MPI_MAX_PROCESSOR_NAME];
+  int rc,size,len; 
   rc = MPI_Init(&argc, &argv);
 
   int rank = 0;
@@ -172,6 +173,9 @@ int main (int argc, char *argv[])
         printf("provided is MPI_THREAD_FUNNELED\n");
       }
   }
+  MPI_Comm_size(MPI_COMM_WORLD,&size);
+  MPI_Get_processor_name(name, &len);
+  printf("MPI Rank: %d of %d on %s\n", rank, size, name);fflush(stdout); 
 #endif /* TAU_MPI */
 
   for (i = 0 ; i < MAX_ITERATIONS ; i++) {
