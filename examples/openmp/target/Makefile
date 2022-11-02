@@ -15,7 +15,7 @@ TAU_MAKEFILE ?=../../../include/Makefile
 include $(TAU_MAKEFILE)
 
 CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh
-#CC      = $(TAU_CC)
+CC      = $(TAU_CC)
 PRINT	      	= pr
 RM 	      	= /bin/rm -rf
 TARGET	      	= matmult
@@ -24,6 +24,7 @@ OBJS     	= matmult.o
 #TARGET_FLAGS =-fopenmp -fopenmp-targets=nvptx64-nvidia-cuda --cuda-path=${CUDA}
 #TARGET_FLAGS =-fopenmp -fopenmp-targets=nvptx64-nvidia-cuda,x86_64
 TARGET_FLAGS =-qnextgen -fiopenmp -fopenmp-targets=spir64 
+TARGET_FLAGS =-fopenmp  -mp=gpu -Minfo=mp
 #TARGET_FLAGS =-fopenmp -lomptarget
 CFLAGS=-g -O2 $(TARGET_FLAGS)
 LDFLAGS=-g $(TARGET_FLAGS)
