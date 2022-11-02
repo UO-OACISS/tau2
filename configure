@@ -4907,7 +4907,7 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
                 #mpiinc=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
                 #mpilibargs=`$mpicxx_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
                 #mpiflibargs=`$mpif90_exe -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
-                if [ "x$machine" == "xcraycnl" -a "$mpicxx_exe" != "mpicxx" ] ; then
+                if [ "x$machine" == "xcraycnl" -a "x$orig_cxx_compiler" = "xCC" ] ; then
                     my_mpicxx_exe=CC
                     my_mpif90_exe=ftn
                     mpishow_option="--cray-print-opts=all"
@@ -4926,7 +4926,7 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
                 # mpilib might get reset.
                 mpilibrary=$_got_ldflags
                 get_ldflags $my_mpif90_exe $mpishow_option
-                mpiflibargs=`echo $_got_ldflags | sed  -e 's@-qthreaded@@g'`
+                mpiflibargs=`echo $_got_ldflags | sed  -e 's@-qthreaded@@g' -e 's@-fallow-argument-mismatch@@g'`
                 echo "Found $mpicxx_exe cflags: $mpiinc"
                 echo "Found $mpicxx_exe ldflags: $mpilibargs"
                 echo "Found $mpif90_exe ldflags: $mpiflibargs"
@@ -4965,7 +4965,7 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
                 exit 1
             fi
         elif [ "x$machine" == "xcraycnl" ] ; then
-            if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
+            if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" -a "x$orig_cxx_compiler" = "xCC" ]; then
                 get_cray_mpiflags
             fi
         fi
@@ -4985,7 +4985,7 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
     #    fi
 elif [ $mpi = yes -a "x$mpiinc" = "x" ] ; then
     if [ "x$machine" == "xcraycnl" ] ; then
-        if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
+        if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" -a "x$orig_cxx_compiler" = "xCC" ]; then
             get_cray_mpiflags
         fi
     fi
@@ -6280,13 +6280,15 @@ then
             ;;
         craycnl)
             if [ "x$MPICH_DIR" = "x" ]; then
-              if [ "x$CRAY_MPICH_PREFIX" != "x" ]; then
+              if [ "x$CRAY_MPICH_PREFIX" != "x" -a "x$orig_cxx_compiler" = "xCC" ]; then
                 mpilib=$CRAY_MPICH_PREFIX/lib
               else
                 echo "TAU: mpilib is not set."
               fi
             else
-              mpilib=$MPICH_DIR/lib
+              if [ "x$orig_cxx_compiler" = "xCC" ]; then
+		mpilib=$MPICH_DIR/lib
+	      fi
             fi
             ;;
         solaris2*)
@@ -8073,6 +8075,15 @@ if [ $result = "0" ]; then
     echo " yes"
     ompt_compiler_support=yes
     download_ompt=no
+    # Before we set this, let us check and see if the C compiler also supports OMPT
+    $c_compiler $openmp_flag $openmp_INC $openmp_LINK $orig_useropt -DVERTEST_OMPT_5_0 ompt_ver_test.cpp -o ompt_ver_test $openmp_lib 1>/dev/null 2>&1
+    result=$?
+    if [ $result = "0" ]; then
+      echo "TAU: Both C and C++ compilers support OMPT!"
+    else
+      echo "TAU: C++ compiler supports OMPT but C compiler does not!"
+      fixmakeargs="$fixmakeargs TAU_C_COMPILER_NO_OMPT"
+    fi
 else
     echo " no"
 fi
