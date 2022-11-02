@@ -1291,6 +1291,10 @@ case $1 in
 	echo NOTE: Using OMPT OpenMP options for OMPT 5.0 specification
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     TAU_C_COMPILER_NO_OMPT)
+	echo NOTE: Disabling OMPT for TAU Plugins compiled using C compilers
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      IBMOMPT)
 	echo NOTE: Using IBM OMPT OpenMP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

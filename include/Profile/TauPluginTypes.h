@@ -19,7 +19,9 @@
 #include "TauMetaDataTypes.h"
 
 #if defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0)
+#if ((!defined(TAU_DISABLE_OMPT_5_0_IN_C_COMPILER)) || defined(__cplusplus))
 #define TAU_PLUGIN_OMPT_ON
+#endif /* TAU_DISABLE_OMPT_5_0_IN_C_COMPILER */
 #endif /*  defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
 
 #ifdef TAU_PLUGIN_OMPT_ON
