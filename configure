@@ -5549,7 +5549,21 @@ case $cxx_compiler in
 
     *mpicxx)
         internal_compiler=`$cxx_compiler -show | awk '{ print $1;}'`
+	echo "internal_compiler = $internal_compiler"
         case $internal_compiler in
+            *clang* | hcc | hipcc )
+                tauoptions="${tauoptions}-clang"
+                llvm=yes
+                echo "Using CLANG Compilers"
+                fixmakeargs="$fixmakeargs CLANG"
+                if [ $machine = apple ]; then
+                    # MPI on Apple OS X has issues with shared objects
+                    fixmakeargs="$fixmakeargs NOSHARED"
+                else
+                # We currently do not support building the TAU LLVM plugin for macOS. This may change in the future.
+                    build_llvm_plugin=yes
+                fi
+                ;;
             *bgclang++)
                 tauoptions="${tauoptions}-clang"
                 if [ $machine = bgq ] ; then
@@ -5564,7 +5578,7 @@ case $cxx_compiler in
                     echo "Using GNU Compilers for BGP"
                     fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN COMPINST_GNU"
                 else
-                    echo "ERROR Unknown C++ compiler: $cxx_compiler"
+                    fixmakeargs="$fixmakeargs GNU COMPINST_GNU"
                 fi
                 ;;
             *xlC*)
@@ -5574,19 +5588,6 @@ case $cxx_compiler in
                 extradir=`which xlf90 | sed s/xlf90/../`
                       fixmakeargs="$fixmakeargs IBM_FORTRAN"
 
-                ;;
-            *clang* | hcc | hipcc )
-                tauoptions="${tauoptions}-clang"
-                llvm=yes
-                echo "Using CLANG Compilers"
-                fixmakeargs="$fixmakeargs CLANG"
-                if [ $machine = apple ]; then
-                    # MPI on Apple OS X has issues with shared objects
-                    fixmakeargs="$fixmakeargs NOSHARED"
-                else
-                # We currently do not support building the TAU LLVM plugin for macOS. This may change in the future.
-                    build_llvm_plugin=yes
-                fi
                 ;;
             *)
                 echo "ERROR Unknown C++ compiler in mpicxx: $cxx_compiler"
@@ -8041,7 +8042,7 @@ if [ "$llvm" = "yes" ]; then openmp_flag=-fopenmp; fi
 if [ "$pgi" = "yes" ]; then openmp_flag=-mp=ompt; fi
 if [ "$fujitsu" = "yes" ]; then openmp_flag=-kopenmp; fi
 if [ "$default_fortran" = "cray" ]; then
-  if [ "x$CRAY_PE_USE_CLANG" = "x" ]; then
+  if [ "x$CRAY_PE_USE_CLANG" = "x" -a "x$PE_ENV" = "xCRAY" ]; then
     openmp_flag=-h#omp;
   else
     openmp_flag=-fopenmp;
@@ -8449,7 +8450,7 @@ $echo "Checking for thread-safe MPI interface... ${nnl}"
 if [ "x$c_compiler" = "xicx" ]; then
   mpiwarnings=""
 fi
-echo "$mpicompiler tools/src/tests/mpi_thread_test.c $mpiwarnings $orig_useropt $mpi_include"
+#echo "$mpicompiler tools/src/tests/mpi_thread_test.c $mpiwarnings $orig_useropt $mpi_include"
 $mpicompiler tools/src/tests/mpi_thread_test.c $mpiwarnings $orig_useropt $mpi_include
 if $mpicompiler tools/src/tests/mpi_thread_test.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
     echo "yes"
