@@ -194,7 +194,7 @@ class TargetMap {
             return theMap;
         }
     private:
-        TargetMap() : write_index(0), read_index(0) {};
+        TargetMap() : write_index(0), read_index(UINT64_MAX) {};
         /* This size (1024) should be sufficient, as long as the buffer size
          * doesn't increase from 16*1024.  If the buffer is increased, please
          * increase the size of this circular buffer accordingly! */
@@ -1425,7 +1425,7 @@ static void on_ompt_callback_target(
             timer_stack.pop();
 #ifndef TAU_INTEL_COMPILER // intel doesn't always provide a codeptr_ra value.
             // flush the trace to get async events for this target
-            ompt_flush_trace(0);
+            Tau_ompt_flush_trace();
 #endif
             break;
         }
