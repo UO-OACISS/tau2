@@ -5589,6 +5589,19 @@ case $cxx_compiler in
                       fixmakeargs="$fixmakeargs IBM_FORTRAN"
 
                 ;;
+            nvc++)
+              echo "Default C++ compiler will be NVIDIA nvc++ C++ Compiler"
+              nvhpc=yes
+              pgi=yes
+	      fortran_compiler=nvfortran
+              extradir=`which nvc | sed s/nvc/../`
+              fortran_compiler=yes
+
+              fixmakeargs="$fixmakeargs PGI_FORTRAN NV_FORTRAN"
+              fixmakeargs="$fixmakeargs COMPINST_PGI PGINOPRELINK"
+              fixmakeargs="$fixmakeargs PGI PGICC"
+
+              ;;
             *)
                 echo "ERROR Unknown C++ compiler in mpicxx: $cxx_compiler"
                 ;;
