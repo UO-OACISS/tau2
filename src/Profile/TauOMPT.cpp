@@ -1815,7 +1815,9 @@ extern "C" int ompt_initialize(
 /* Optional events */
 
   if(TauEnv_get_ompt_support_level() >= 1) { /* Only support this when "lowoverhead" mode is enabled. Turns on all required events + other low overhead */
+#ifndef __NVCOMPILER //NVIDIA does not provide endpoints for work callbacks as of 22.9
     Tau_register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
+#endif
 #if _OPENMP < 202011 && defined(ompt_callback_master)
     Tau_register_callback(ompt_callback_master, cb_t(on_ompt_callback_master));
 #endif
