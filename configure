@@ -5549,7 +5549,8 @@ case $cxx_compiler in
 
     *mpicxx)
         internal_compiler=`$cxx_compiler -show | awk '{ print $1;}'`
-        echo "Detected MPI C++ internal compiler = $internal_compiler"
+	internal_c_compiler=`$c_compiler -show | awk '{ print $1;}'`
+        echo "Detected MPI C++ internal compiler = $internal_compiler MPI C internal compiler = $internal_c_compiler"
         case $internal_compiler in
             *clang* | hcc | hipcc )
                 tauoptions="${tauoptions}-clang"
@@ -7903,9 +7904,15 @@ if [ "x$download_unwind" = xyes ] ; then
         unwind_c_compiler=gcc
         unwind_cxx_compiler=g++
       else
-        unwind_c_compiler=${c_compiler}
-        unwind_cxx_compiler=${cxx_compiler}
-        echo "NOTE: Using unwind_c_compiler=$unwind_c_compiler and unwind_cxx_compiler=$unwind_cxx_compiler to compile libunwind"
+	if [ ! -z ${internal_compiler} ]
+	then
+           unwind_c_compiler=${internal_c_compiler}
+           unwind_cxx_compiler=${internal_compiler}
+	else
+	   unwind_c_compiler=${c_compiler}
+           unwind_cxx_compiler=${cxx_compiler}	
+	fi
+	echo "NOTE: Using unwind_c_compiler=$unwind_c_compiler and unwind_cxx_compiler=$unwind_cxx_compiler to compile libunwind"
       fi
 
       if [ $craymic = no -a $machine != mic_linux ]; then
