@@ -135,7 +135,9 @@ static int procid_0;
     PMPI_Comm_rank(comm, &commRank); \
     PMPI_Comm_size(comm, &commSize); \
     if ( commRank == root ) { \
-      PMPI_Type_size( sendtype, &typesize ); \
+      if (sendtype != MPI_DATATYPE_NULL) { \
+        PMPI_Type_size( sendtype, &typesize ); \
+      } \
       for (i = 0; i<commSize; i++) { \
 	sendcount += counts[i]; \
       } \
@@ -659,8 +661,10 @@ MPI_Comm comm;
 
   if (TAU_DO_TIMER_EXIT) {
     double tmp_array[5] = {0.0};
-    int typesize;
-    PMPI_Type_size( sendtype, &typesize );
+    int typesize = 0;
+    if (sendtype != MPI_DATATYPE_NULL) {
+      PMPI_Type_size( sendtype, &typesize );
+    }
     TIMER_EXIT_COLLECTIVE_EXCH_V_EVENT("MPI_Gatherv","sendbytes",sendcnt*typesize,array_stats(recvcnts,recvtype,comm,tmp_array),root,comm);
   }
   TAU_PROFILE_STOP(tautimer);
