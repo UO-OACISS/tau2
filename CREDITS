@@ -1,7 +1,7 @@
 /******************************************************************* 
  *                                                                 *
  *       	Tuning and Analysis Utilities Credits  		   *
- *                           Version 2.28.1                        *
+ *                           Version 2.32                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -23,8 +23,6 @@ Sameer Shende, University of Oregon
 Wyatt Spear, University of Oregon
 Kevin Huck, University of Oregon
 Nicholas Chaimov, ParaTools, Inc.
-Srinivasan Ramesh, University of Oregon
-Robert Lim, University of Oregon
 Izaak Beekman, ParaTools, Inc. 
 Peter Beckman, Argonne National Laboratory
 Bernd Mohr, Research Centre Jülich, ZAM, Germany
@@ -59,6 +57,8 @@ Kurt Windisch
 Darryl Brown
 Julian Cummings
 Stephen Smith
+Srinivasan Ramesh
+Robert Lim
 Bill Humphrey
 John Reynders
 Scott Haney
@@ -66,6 +66,7 @@ James Crotinger
 Timothy Williams
 Susan Post
 Anthony Chan
+Camille Coti
 David Skinner
 Rolf Rabenseifner
 NAS Parallel Benchmarks Group for allowing us to use their code as an example
