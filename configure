@@ -5549,7 +5549,7 @@ case $cxx_compiler in
 
     *mpicxx)
         internal_compiler=`$cxx_compiler -show | awk '{ print $1;}'`
-	echo "internal_compiler = $internal_compiler"
+        echo "Detected MPI C++ internal compiler = $internal_compiler"
         case $internal_compiler in
             *clang* | hcc | hipcc )
                 tauoptions="${tauoptions}-clang"
@@ -5580,6 +5580,7 @@ case $cxx_compiler in
                 else
                     fixmakeargs="$fixmakeargs GNU COMPINST_GNU"
                 fi
+                gnu=yes
                 ;;
             *xlC*)
                 echo "Using IBM Compilers"
@@ -5589,6 +5590,19 @@ case $cxx_compiler in
                       fixmakeargs="$fixmakeargs IBM_FORTRAN"
 
                 ;;
+            nvc++)
+              echo "Default C++ compiler will be NVIDIA nvc++ C++ Compiler"
+              nvhpc=yes
+              pgi=yes
+              fortran_compiler=nvfortran
+              extradir=`which nvc | sed s/nvc/../`
+              fortran_compiler=yes
+
+              fixmakeargs="$fixmakeargs PGI_FORTRAN NV_FORTRAN"
+              fixmakeargs="$fixmakeargs COMPINST_PGI PGINOPRELINK"
+              fixmakeargs="$fixmakeargs PGI PGICC"
+
+              ;;
             *)
                 echo "ERROR Unknown C++ compiler in mpicxx: $cxx_compiler"
                 ;;
@@ -6288,8 +6302,8 @@ then
               fi
             else
               if [ "x$orig_cxx_compiler" = "xCC" ]; then
-		mpilib=$MPICH_DIR/lib
-	      fi
+                mpilib=$MPICH_DIR/lib
+              fi
             fi
             ;;
         solaris2*)
@@ -7970,7 +7984,7 @@ fi #unwind=download
 if [ $ompt = yes -a $download_ompt = no ] ; then
 #checking OMP compiler OMPT support
 echo "Checking Compiler OMPT support : "
-touch ompt_ver_test.cpp  
+touch ompt_ver_test.cpp
 cat <<EOF > ompt_ver_test.cpp
 #include "omp-tools.h"
 #include "omp.h"
