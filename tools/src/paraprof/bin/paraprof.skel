@@ -39,6 +39,7 @@ do
   [ "$arg" = "-32" ] && FLAG32=1 && continue
   [ "$arg" = "-jogl1" ] && FLAGJOGL1=1 && continue
   [ "$arg" = "-jogl2" ] && FLAGJOGL2=1 && continue
+  [ "$arg" = "-fix-xquartz" ] && export JAVA2D_XRENDER_FALSE="-Dsun.java2d.xrender=false" && continue
   set -- "$@" "$arg"
 done
 
@@ -237,7 +238,7 @@ $BINDIR/tau_user_setup.sh
 
 # Launch!
 # Removed: -Dsun.java2d.opengl=true for arm64.
-java $MEMORY ${JAVA2D_OPENGL_OPT} -Dderby.system.home=${HOME}/.ParaProf -Dpython.home=$JAR_HOME/jython -Dpython.verbose=error -Djava.library.path=${LIBDIR}:${javaLocation} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf -j $JARDIR -c $SCHEMADIR $*
+java $MEMORY ${JAVA2D_OPENGL_OPT} ${JAVA2D_XRENDER_FALSE} -Dderby.system.home=${HOME}/.ParaProf -Dpython.home=$JAR_HOME/jython -Dpython.verbose=error -Djava.library.path=${LIBDIR}:${javaLocation} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf -j $JARDIR -c $SCHEMADIR $*
 retVal=$?
 if [ $retVal -ne 0 ]; then
   echo "Some OpenGL/rendering and other errors can be overcome using the following options: "
@@ -246,5 +247,6 @@ if [ $retVal -ne 0 ]; then
   echo "  -disable_java2d_opengl 	(Turns off java2d OpenGl rendering. Can fix title bar rendering errors on OSX. This is now the default, retained for compatability)"
   echo "  -64/-32 			(Disables/Forces 32 bit memory capacity calculation and use of -d32 flag on OSX)"
   echo "  -jogl1/-jogl2 		(force use of old (jogl1)/new(jogl2) 3d libraries)"
+  echo "  -fix-xquartz                  (Turn off java2d xrender. Fixes XQuartz black window bug.)"
 fi
 exit $retVal	
