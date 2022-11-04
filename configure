@@ -7868,7 +7868,12 @@ if [ "x$download_unwind" = xyes ] ; then
   if [ $machine = craycnl ] ; then
     unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}-${PE_ENV}
   else
-    unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
+     if [ ! -z ${internal_c_compiler} ]
+     then
+         unwind_dir=${libunwinddir}/${libunwind}-${internal_c_compiler}
+     else
+         unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
+     fi
   fi
   prebfddir=`pwd`
 
