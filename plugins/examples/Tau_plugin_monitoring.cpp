@@ -225,6 +225,7 @@ static std::map<std::string, netstats_t*> * previous_net_stats = nullptr;
 static std::map<std::string, netstats_t*> * previous_self_net_stats = nullptr;
 static iostats_t * previous_io_stats = nullptr;
 static size_t num_metrics = 0;
+static bool _attached{true};
 
 static pthread_mutex_t _my_mutex; // for initialization, termination
 static pthread_cond_t _my_cond; // for timer
@@ -1193,6 +1194,22 @@ void stop_worker(void) {
     pthread_mutex_lock(&_my_mutex);
     done = true;
     pthread_mutex_unlock(&_my_mutex);
+    // If the thread isn't attached, we can't join it - so just sleep the usual
+    // measurement period and hope it gets the message that we're done.
+    if (!_attached) {
+        /*
+        int microseconds{1};
+        if (configuration.count("periodicity seconds")) {
+            double floating = configuration["periodicity seconds"];
+            double integer;
+            double fractional = modf(floating, &integer);
+            seconds = (int)(integer);
+            int microseconds = (int)(fractional * ONE_MILLIONF);
+            usleep(microseconds);
+        }
+        */
+        return;
+    }
     if (my_rank == 0) TAU_VERBOSE("TAU ADIOS2 thread joining...\n"); fflush(stderr);
     pthread_cond_signal(&_my_cond);
     int ret = pthread_join(worker_thread, NULL);
@@ -1397,6 +1414,21 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
             perror("Error: pthread_create (1) fails\n");
             exit(1);
         }
+        // be free, little thread!
+        ret = pthread_detach(worker_thread);
+        if (ret != 0) {
+            switch (ret) {
+                case ESRCH:
+                    // no thread found?
+                case EINVAL:
+                    // not joinable?
+                default:
+                    errno = ret;
+                    perror("Warning: pthread_detach failed\n");
+                    return;
+            }
+        }
+        _attached = false;
     }
     return 0;
 }
