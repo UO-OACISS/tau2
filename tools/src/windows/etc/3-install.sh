@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh -ex
 
 ROOT=/cygdrive/c/tau
 
@@ -14,24 +14,24 @@ mkdir -p $ROOT/tau-windows/include
 mkdir -p $ROOT/tau-windows/lib
 mkdir -p $ROOT/tau-windows/examples
 mkdir -p $ROOT/tau-windows/JavaDLL
-cp -r $ROOT/tau2/include /c/tau/tau-windows
+cp -r $ROOT/tau2/include $ROOT/tau-windows
 
 
 #cd $ROOT/tau2/tools/src/contrib/jogl/windows; gunzip *.dll.gz
 cd $ROOT/tau2
-rm $ROOT/tau2/win32/bin/TraceInput.exp
-rm $ROOT/tau2/win32/bin/TraceInput.lib
+rm -f $ROOT/tau2/win32/bin/TraceInput.exp
+rm -f $ROOT/tau2/win32/bin/TraceInput.lib
 
-cp $ROOT/tau2/utils/taupin/tau_pin.exe $ROOT/tau-windows/bin
-cp $ROOT/tau2/utils/taupin/*.dll $ROOT/tau-windows/bin
-cp $ROOT/tau2/utils/taupin/README-PIN.txt $ROOT/tau-windows
-cp $ROOT/pin/*.* $ROOT/tau-windows/bin
+#cp $ROOT/tau2/utils/taupin/tau_pin.exe $ROOT/tau-windows/bin
+#cp $ROOT/tau2/utils/taupin/*.dll $ROOT/tau-windows/bin
+#cp $ROOT/tau2/utils/taupin/README-PIN.txt $ROOT/tau-windows
+#cp $ROOT/pin/*.* $ROOT/tau-windows/bin
 
 cp $ROOT/tau2/tools/src/windows/bin/* $ROOT/tau-windows/bin
 cp $ROOT/tau2/src/Profile/TAU.jar $ROOT/tau-windows/bin
 cp -r $ROOT/tau2/tools/src/windows/examples $ROOT/tau-windows
-mkdir $ROOT/tau-windows/examples/pin
-cp $ROOT/pin/examples/** $ROOT/tau-windows/examples/pin
+#mkdir $ROOT/tau-windows/examples/pin
+#cp $ROOT/pin/examples/** $ROOT/tau-windows/examples/pin
 mkdir -p $ROOT/tau-windows/tools/src/perfdmf/etc
 mkdir -p $ROOT/tau-windows/etc
 mkdir -p $ROOT/tau-windows/contrib
@@ -59,11 +59,14 @@ cp tools/src/vis-jogl2/bin/*.jar $ROOT/tau-windows/bin
 #cp tools/src/contrib/jogl/windows64/gluegen-rt.dll $ROOT/tau-windows/bin/jogl64
 #
 
-cp tools/src/contrib/jogl/windows-all/* $ROOT/tau-windows/bin
+#cp tools/src/contrib/jogl
+cp $ROOT/windows-all/* $ROOT/tau-windows/bin
 
 cp tools/src/contrib/slog2sdk/lib/jumpshot.jar $ROOT/tau-windows/bin
 cp win32/lib/*.* $ROOT/tau-windows/lib
-cp win32/java/*.* $ROOT/tau-windows/javadll
+
+#cp win32/java/*.* $ROOT/tau-windows/javadll
+
 cp LICENSE $ROOT/tau-windows
 cp tools/src/windows/etc/Readme.txt $ROOT/tau-windows
 cp tools/src/contrib/LICENSE-* $ROOT/tau-windows/contrib
