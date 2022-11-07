@@ -607,7 +607,7 @@ int RtsLayer::UnLockDB(void) {
 #ifndef TAU_WINDOWS
   int tid=gettid();
 #else
-  int tid=localThreadID();
+  int tid=localThreadId();
 #endif
   lockDBCount()--;
   if (lockDBCount() == 0) {
