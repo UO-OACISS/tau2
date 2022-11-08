@@ -217,20 +217,23 @@ typedef std::map<std::string, long long> iostats_t;
 
 // Globals should be defined static so they can't be seen outside this compilation unit (i.e. the plugin library)
 static std::vector<ppc*> components;
+#ifdef TAU_PAPI
 static int papi_periodic_event_set = {PAPI_NULL};
 static long long * papi_periodic_values;
+static size_t num_metrics = 0;
+#endif
 
 static std::vector<cpustats_t*> * previous_cpu_stats = nullptr;
 static std::map<std::string, netstats_t*> * previous_net_stats = nullptr;
 static std::map<std::string, netstats_t*> * previous_self_net_stats = nullptr;
 static iostats_t * previous_io_stats = nullptr;
-static size_t num_metrics = 0;
 static bool _attached{true};
 
 static pthread_mutex_t _my_mutex; // for initialization, termination
 static pthread_cond_t _my_cond; // for timer
 static pthread_t worker_thread;
-static bool done;
+static std::atomic<bool> done{false};
+static std::atomic<bool> worker_working{false};
 static int rank_getting_system_data;
 static int my_rank = 0;
 #ifdef CUPTI
@@ -826,7 +829,6 @@ extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
 
 void parse_proc_self_stat() {
   static const char * source = "/proc/self/stat";
-  static bool first = true;
   if (!include_component(source)) { return; }
   FILE *f = fopen(source, "r");
   if (f) {
@@ -848,7 +850,6 @@ void parse_proc_self_stat() {
     }
     fclose(f);
   }
-  first = false;
   return;
 }
 
@@ -1135,7 +1136,9 @@ void read_components(void) {
 
     if (my_rank == rank_getting_system_data) {
 #ifdef CUPTI
-        get_nvml_reader().query();
+        if (include_component("nvml")) {
+            get_nvml_reader().query();
+        }
 #endif
 
 #if !defined(__APPLE__)
@@ -1197,6 +1200,8 @@ void stop_worker(void) {
     // If the thread isn't attached, we can't join it - so just sleep the usual
     // measurement period and hope it gets the message that we're done.
     if (!_attached) {
+        // wait for the worker thread to exit.
+        while(worker_working) {}
         /*
         int microseconds{1};
         if (configuration.count("periodicity seconds")) {
@@ -1210,7 +1215,7 @@ void stop_worker(void) {
         */
         return;
     }
-    if (my_rank == 0) TAU_VERBOSE("TAU ADIOS2 thread joining...\n"); fflush(stderr);
+    if (my_rank == 0) TAU_VERBOSE("TAU Monitoring thread joining...\n"); fflush(stderr);
     pthread_cond_signal(&_my_cond);
     int ret = pthread_join(worker_thread, NULL);
     if (ret != 0) {
@@ -1245,7 +1250,9 @@ void * Tau_monitoring_plugin_threaded_function(void* data) {
 
     while (!done) {
         // take a reading...
+        worker_working = true;
         read_components();
+        worker_working = false;
         // wait x seconds for the next batch.  Can be floating!
         gettimeofday(&tp, NULL);
         int seconds = 1;
@@ -1267,6 +1274,8 @@ void * Tau_monitoring_plugin_threaded_function(void* data) {
         }
         // add our seconds of delay
         ts.tv_sec  = (tp.tv_sec + seconds);
+        // before we lock and wait, make sure we haven't exited in the meantime
+        if (done) { break; }
         pthread_mutex_lock(&_my_mutex);
         // wait the time period.
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
@@ -1278,10 +1287,11 @@ void * Tau_monitoring_plugin_threaded_function(void* data) {
             TAU_VERBOSE("Mutex not locked!\n"); fflush(stderr);
         }
     }
+    if (my_rank == 0) TAU_VERBOSE("TAU Monitoring thread exiting...\n"); fflush(stderr);
 
     // unlock after being signalled.
     pthread_mutex_unlock(&_my_mutex);
-    pthread_exit((void*)0L);
+    //pthread_exit((void*)0L);
     return(NULL);
 }
 
@@ -1350,7 +1360,7 @@ static void do_cleanup() {
 
 int Tau_plugin_event_pre_end_of_execution_monitoring(Tau_plugin_event_pre_end_of_execution_data_t *data) {
     if (my_rank == 0)
-        TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+        TAU_VERBOSE("Monitoring Component PLUGIN %s\n", __func__);
     //if (RtsLayer::myThread() == 0) {
     if (main_thread()) {
         // only the main thread should cleanup
@@ -1361,7 +1371,7 @@ int Tau_plugin_event_pre_end_of_execution_monitoring(Tau_plugin_event_pre_end_of
 
 int Tau_plugin_event_end_of_execution_monitoring(Tau_plugin_event_end_of_execution_data_t *data) {
     if (my_rank == 0)
-        TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+        TAU_VERBOSE("Monitoring Component PLUGIN %s\n", __func__);
     //if (RtsLayer::myThread() == 0) {
     if (main_thread()) {
         // only the main thread should cleanup
@@ -1371,12 +1381,12 @@ int Tau_plugin_event_end_of_execution_monitoring(Tau_plugin_event_end_of_executi
 }
 
 int Tau_plugin_metadata_registration_complete_monitoring(Tau_plugin_event_metadata_registration_data_t* data) {
-    //TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+    //TAU_VERBOSE("Monitoring Component PLUGIN %s\n", __func__);
     return 0;
 }
 
 int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* data) {
-    if (my_rank == 0) TAU_VERBOSE("PAPI Component PLUGIN %s\n", __func__);
+    if (my_rank == 0) TAU_VERBOSE("Monitoring Component PLUGIN %s\n", __func__);
 
     rank_getting_system_data = choose_volunteer_rank();
 
@@ -1414,6 +1424,7 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
             perror("Error: pthread_create (1) fails\n");
             exit(1);
         }
+        /*
         // be free, little thread!
         ret = pthread_detach(worker_thread);
         if (ret != 0) {
@@ -1425,10 +1436,12 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
                 default:
                     errno = ret;
                     perror("Warning: pthread_detach failed\n");
-                    return;
+                    return 0;
             }
         }
+        if (my_rank == 0) TAU_VERBOSE("Detached thread.\n");
         _attached = false;
+        */
     }
     return 0;
 }
@@ -1452,7 +1465,7 @@ void read_config_file(void) {
 
 int Tau_plugin_dump_monitoring(Tau_plugin_event_dump_data_t* data) {
     tau::plugins::ScopedTimer(__func__);
-    //printf("PAPI Component PLUGIN %s\n", __func__);
+    //printf("Monitoring Component PLUGIN %s\n", __func__);
     // take a reading...
     read_components();
     return 0;
@@ -1467,6 +1480,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
 
     done = false;
+    worker_working = false;
     main_thread() = true;
 
     read_config_file();

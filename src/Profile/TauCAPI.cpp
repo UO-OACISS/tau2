@@ -394,7 +394,7 @@ extern "C" char *TauInternal_CurrentCallsiteTimerName(int tid) {
   return NULL;
 }
 
-//#define REPORT_ENTRY_EXIT 1
+#define REPORT_ENTRY_EXIT 1
 #ifdef REPORT_ENTRY_EXIT
 ///////////////////////////////////////////////////////////////////////////
 static void reportEntryExit (bool entry, FunctionInfo *caller, int tid) {
@@ -2035,10 +2035,14 @@ class pure_userevent_map_t : public TAU_HASH_MAP<std::string, TauUserEvent*> {
 private:
   int tid;
   static atomic<int> num_threads;
+  bool am_I_master_thread;
 public:
-  pure_userevent_map_t() : tid(RtsLayer::myThread()) { num_threads++; }
+  pure_userevent_map_t() : tid(RtsLayer::myThread()) {
+    num_threads++;
+    am_I_master_thread = (RtsLayer::getPid() == RtsLayer::getTid());
+  }
   virtual ~pure_userevent_map_t() {
-    if (tid == 0 || --num_threads == 0) {
+    if ((tid == 0 || --num_threads == 0) && am_I_master_thread) {
         Tau_destructor_trigger();
     }
   }

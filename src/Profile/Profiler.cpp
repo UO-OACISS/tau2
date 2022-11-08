@@ -1688,7 +1688,7 @@ int TauProfiler_StoreData(int tid)
 #ifndef TAU_MPI
   /*Invoke plugins only if both plugin path and plugins are specified
    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
-  if(Tau_plugins_enabled.pre_end_of_execution) {
+  if(RtsLayer::myThread() == 0 && tid == 0 && Tau_plugins_enabled.pre_end_of_execution) {
     Tau_plugin_event_pre_end_of_execution_data_t plugin_data;
     plugin_data.tid = tid;
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, "*", &plugin_data);
