@@ -215,6 +215,7 @@ struct TAULocks{
 
   static int getPid();
   static int getTid();
+  static bool isMainThread();
 
 #ifdef KTAU_NG
   static int getLinuxKernelTid();

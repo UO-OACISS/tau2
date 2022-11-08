@@ -40,6 +40,8 @@ pid_t tid = syscall(SYS_gettid);
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
+#include <thread>
+
 #include <Profile/Profiler.h>
 #include <Profile/OpenMPLayer.h>
 #include <Profile/TauTrace.h>
@@ -104,6 +106,8 @@ void TraceCallStack(int tid, Profiler *current);
 //////////////////////////////////////////////////////////////////////
 class RtsThread
 {
+private:
+    static const std::thread::id MAIN_THREAD_ID;
 public:
 
 	static int num_threads;
@@ -122,9 +126,15 @@ public:
 			//next_available);
 	}
 
+    // Use whatever means necessary to see if this thread is the main thread
+    static bool isMainThread() {
+        return (std::this_thread::get_id() == MAIN_THREAD_ID);
+    }
 };
 
 int RtsThread::num_threads = 0;
+const std::thread::id RtsThread::MAIN_THREAD_ID{std::this_thread::get_id()};
+bool RtsLayer::isMainThread() { return RtsThread::isMainThread(); }
 
 class TauThreadList : public vector<RtsThread*> {
 public:
@@ -174,7 +184,7 @@ int RtsLayer::createThread()
   threadUnLockEnv();
 
   int numThreads = getTotalThreads();
-  
+
   /*if (numThreads > TAU_MAX_THREADS) {
     fprintf(stderr,
         "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit> or set the environment variable TAU_RECYCLE_THREADS=1\n",
@@ -487,7 +497,7 @@ void RtsLayer::Initialize(void) {
 bool RtsLayer::initLocks(void) {
   threadLockDB();
   int threadCount=getLockVecSize();//TAU_MAX_THREADS;//getDBVecSize();//getTotalThreads();
-  
+
   for (int i=0; i<threadCount; i++) {
     setDBLock(i, 0);
   }
@@ -534,7 +544,7 @@ int RtsLayer::LockDB(void) {
   int tid=gettid();
 #else
   int tid=localThreadId();
-#endif 
+#endif
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 	TAU_ASSERT(Tau_global_get_insideTAU() > 0, "Thread is trying for DB lock but it is not in TAU");
 #ifdef DEBUG_LOCK_PROBLEMS

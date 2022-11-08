@@ -1994,7 +1994,7 @@ private:
 public:
   pure_context_userevent_map_t() : tid(RtsLayer::myThread()) { num_threads++; }
   virtual ~pure_context_userevent_map_t() {
-    if (tid == 0 || --num_threads == 0) {
+    if ((tid == 0 || --num_threads == 0) && RtsLayer::isMainThread()) {
         Tau_destructor_trigger();
     }
   }
@@ -2035,14 +2035,12 @@ class pure_userevent_map_t : public TAU_HASH_MAP<std::string, TauUserEvent*> {
 private:
   int tid;
   static atomic<int> num_threads;
-  bool am_I_master_thread;
 public:
   pure_userevent_map_t() : tid(RtsLayer::myThread()) {
     num_threads++;
-    am_I_master_thread = (RtsLayer::getPid() == RtsLayer::getTid());
   }
   virtual ~pure_userevent_map_t() {
-    if ((tid == 0 || --num_threads == 0) && am_I_master_thread) {
+    if ((tid == 0 || --num_threads == 0) && RtsLayer::isMainThread()) {
         Tau_destructor_trigger();
     }
   }
@@ -2592,7 +2590,7 @@ private:
 public:
   PureMap() : tid(num_threads++) { }
   virtual ~PureMap() {
-    if (tid == 0 || --num_threads == 0) {
+    if ((tid == 0 || --num_threads == 0) && RtsLayer::isMainThread()) {
         Tau_destructor_trigger();
     }
   }
