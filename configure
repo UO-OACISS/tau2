@@ -1446,7 +1446,7 @@ for arg in "$@"; do
 
         -fortran=*)
             myarg=`echo $arg | sed 's/-fortran=//'`
-            if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = ifx -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran-5 -o $myarg = gfortran-6 -o $myarg = gfortran-7 -o $myarg = gfortran-8 -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpiifx -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf -o $myarg = armflang -o $myarg = xlflang -o $myarg = ftn -o $myarg = flang -o $myarg = f18 -o $myarg = nfort -o $myarg = mpinfort -o $myarg = nvfortran -o $myarg = amdflang ] ; then
+            if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = ifx -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran-5 -o $myarg = gfortran-6 -o $myarg = gfortran-7 -o $myarg = gfortran-8 -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpiifx -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpifort -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf -o $myarg = armflang -o $myarg = xlflang -o $myarg = ftn -o $myarg = flang -o $myarg = f18 -o $myarg = nfort -o $myarg = mpinfort -o $myarg = nvfortran -o $myarg = amdflang ] ; then
                 fortran_compiler_specified=yes
                 if [ $myarg = gnu ] ; then
                     fortran_compiler=gfortran
@@ -1454,7 +1454,7 @@ for arg in "$@"; do
                     fortran_compiler=$myarg
                 fi
             else
-                echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'pgf90', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'gfortran-*', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', 'oshfort', 'caf', 'ftn', 'armflang', 'flang', 'f18', 'nfort' , 'mpinfort', or 'amdflang'"
+                echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'pgf90', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'gfortran-*', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpifort', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', 'oshfort', 'caf', 'ftn', 'armflang', 'flang', 'f18', 'nfort' , 'mpinfort', or 'amdflang'"
                 exit 1
             fi
             shift
@@ -5547,7 +5547,7 @@ case $cxx_compiler in
         fi
         ;;
 
-    *mpicxx)
+    *mpicxx | *mpic++)
         internal_compiler=`$cxx_compiler -show | awk '{ print $1;}'`
 	internal_c_compiler=`$c_compiler -show | awk '{ print $1;}'`
         echo "Detected MPI C++ internal compiler = $internal_compiler MPI C internal compiler = $internal_c_compiler"
@@ -5605,7 +5605,7 @@ case $cxx_compiler in
 
               ;;
             *)
-                echo "ERROR Unknown C++ compiler in mpicxx: $cxx_compiler"
+                echo "ERROR Unknown C++ compiler in mpicxx/mpic++: $cxx_compiler"
                 ;;
         esac
         ;;
@@ -7915,7 +7915,7 @@ if [ "x$download_unwind" = xyes ] ; then
            unwind_cxx_compiler=${internal_compiler}
 	else
 	   unwind_c_compiler=${c_compiler}
-           unwind_cxx_compiler=${cxx_compiler}	
+           unwind_cxx_compiler=${cxx_compiler}
 	fi
 	echo "NOTE: Using unwind_c_compiler=$unwind_c_compiler and unwind_cxx_compiler=$unwind_cxx_compiler to compile libunwind"
       fi
