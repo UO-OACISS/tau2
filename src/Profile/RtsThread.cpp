@@ -134,7 +134,16 @@ public:
 
 int RtsThread::num_threads = 0;
 const std::thread::id RtsThread::MAIN_THREAD_ID{std::this_thread::get_id()};
-bool RtsLayer::isMainThread() { return RtsThread::isMainThread(); }
+
+bool RtsLayer::isMainThread() {
+#if defined(__gnu_linux__) || defined(__linux) || defined(__linux__) || defined(linux)
+    // if posix support availalbe, use that.
+    return (RtsLayer::getPid() == RtsLayer::getTid());
+#else
+    // otherwise, use the C++ method and hope that main thread initialized our static var...
+    return RtsThread::isMainThread();
+#endif
+}
 
 class TauThreadList : public vector<RtsThread*> {
 public:
