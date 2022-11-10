@@ -8459,239 +8459,10 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
         mpi_libpath=$mpilibargs
   fi
 
-  mpi_libraries=""
-  if [ "x$mpilibrary" != "xno" ] ; then
-      mpi_libraries=$mpilibrary
-  fi
-  mpi_include="$mpi_include $mpiincargs $mpi_libpath $mpi_libraries"
-  mpi_include=`echo $mpi_include | sed  -e 's/#/ /g'`
+
+###setup wrapperlib###
 
 
-if [ $machine = sgi64 -a $cxx_compiler = CC ]
-then
-    orig_useropt="$orig_useropt -64"
-fi
-
-$echo "Checking for thread-safe MPI interface... ${nnl}"
-if [ "x$c_compiler" = "xicx" ]; then
-  mpiwarnings=""
-fi
-#echo "$mpicompiler tools/src/tests/mpi_thread_test.c $mpiwarnings $orig_useropt $mpi_include"
-$mpicompiler tools/src/tests/mpi_thread_test.c $mpiwarnings $orig_useropt $mpi_include
-if $mpicompiler tools/src/tests/mpi_thread_test.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-    echo "yes"
-    fixmakeargs="$fixmakeargs MPI_THREADED"
-else
-    echo "no"
-fi
-
-
-$echo "Checking for MPI 3 const interface... ${nnl}"
-if $mpicompiler tools/src/tests/mpi3const.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-    if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_BASEDIR" != "x" ]; then
-      echo "yes"
-      fixmakeargs="$fixmakeargs MPICH3_CONST"
-    else
-      echo "no"
-    fi
-else
-  if $mpicompiler tools/src/tests/mpi3const.c $mpiwarnings $orig_useropt $mpi_include  -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
-    echo "yes"
-    fixmakeargs="$fixmakeargs MPICH3_CONST"
-  else
-    if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_BASEDIR" != "x" ]; then
-      echo "yes"
-      fixmakeargs="$fixmakeargs MPICH3_CONST"
-    else
-      echo "no"
-    fi
-  fi
-fi
-
-if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" = "x" -a "x$CRAY_MPICH_PREFIX" != "x" ]; then
-  CRAY_MPICH_DIR=$CRAY_MPICH_PREFIX
-fi
-
-if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" != "x" -a -r $mpiinc/cray_version.h ]; then
-  if [ -r $CRAY_MPICH_DIR/lib/libmpi_cray.a ]; then
-    echo "Found libmpi_cray.a"
-    fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPI_CRAY"
-  else
-    if [ -r $CRAY_MPICH_DIR/lib/libmpich_crayclang.a ]; then
-      echo "Found libmpich_crayclang.a"
-      fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPICH_CRAYCLANG"
-    fi
-  fi
-fi
-
-$echo "Checking for OpenMPI 3 const interface..... ${nnl}"
-if $mpicompiler tools/src/tests/openmpi3const.c $mpiwarnings $orig_useropt $mpi_include -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
-# MPICH requires the const keyword
-  echo "yes"
-  fixmakeargs="$fixmakeargs OPENMPI3_CONST"
-else
-  echo "no"
-fi
-
-$echo "Checking for MPI_Type_hindexed const interface... ${nnl}"
-if $mpicompiler tools/src/tests/mpihindex1.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-  echo "not needed"
-else
-  echo "yes"
-  if $mpicompiler tools/src/tests/mpihindex2.c $mpiwarnings $orig_useropt $mpi_include 1> /dev/null 2>&1 ; then
-    echo "Using const in MPI_Type_hindexed interface "
-      fixmakeargs="$fixmakeargs TAU_MPI_HINDEX_CONST"
-  fi
-fi
-rm -f mpihindex1.c mpihindex2.c mpihindex1.o mpihindex2.o
-
-
-if [ -d "$mpiinc/ulm" ] ; then
-    echo "LA-MPI detected, working around broken MPI_Request_c2f()"
-    fixmakeargs="$fixmakeargs LAMPI"
-fi
-
-$echo "Checking for MPI-2 interface... ${nnl}"
-if $mpicompiler tools/src/tests/mpi2.c  $mpiwarnings $orig_useropt $mpi_include 1> /dev/null 2>&1 ; then
-    echo "yes"
-    if [ -r $mpilib/libmpi.so -a -r $mpilib/libmpi++.so -a -r $mpilib/libsma.so -a -r $mpilib/libxmpi.so ] ; then
-        # Do not enable this for SGI Altix. Their MPI2 is not complete
-        # SGI MPI2 is ok now. We can enable it. Perhaps...
-        useropt="$useropt#-DTAU_MPI_F_STATUSES_IGNORE_ABSENT"
-        fixmakeargs="$fixmakeargs MPI2 useropt=$useropt"
-        echo "SGI MPI detected. Disabling MPI2 wrappers for SGI MPI"
-        fixmakeargs="$fixmakeargs SGI_MPT_MPI"
-    elif [ -r $mpilib/libfmpi.so -a -r $mpilib/libmpio.so  -a -r $mpilib/libtvscampi.so ] ; then
-        # Scali does not use MPI2 PMPI interface properly.
-        echo "Scali MPI detected. Disabling MPI2 wrappers for Scali MPI"
-    elif [ -r $mpilib/liblam.a -o -r $mpilib/liblam.la ] ; then
-        # LAM MPI's MPI2 PMPI interface is broken.
-        echo "LAM MPI detected. Disabling MPI2 wrappers for LAM MPI"
-    elif [ "$mpilibrary" = "-lscmpi" ] ; then
-        # SiCortex's MPI2 interface is broken.
-        echo "SiCortex detected. Disabling MPI2 wrappers"
-        fixmakeargs="$fixmakeargs MPICH_IGNORE_CXX_SEEK"
-    elif [ "$tauarch" = "bgp" -o "$tauarch" = "bgq" ] ; then
-        echo "BGP MPI detected. Disabling MPI2 wrappers"
-        fixmakeargs="$fixmakeargs MPICH_IGNORE_CXX_SEEK"
-    else
-        fixmakeargs="$fixmakeargs MPI2"
-        mpi2=yes
-    fi
-else
-    echo "no"
-fi
-
-
-if [ $mpi2 = yes ] ; then
-
-    if [ $mpit = yes ]; then
-      $echo "Checking for MPI-T  interface... ${nnl}"
-      if $mpicompiler tools/src/tests/mpit.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-              echo "yes"
-          fixmakeargs="$fixmakeargs MPI_T"
-      else
-          echo "no"
-      fi
-    fi
-
-    $echo "Checking for MPI-2 Grequest interface... ${nnl}"
-    if $mpicompiler tools/src/tests/mpi2grequest.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-        echo "yes"
-        fixmakeargs="$fixmakeargs MPIGREQUEST"
-    else
-        echo "no"
-    fi
-
-    $echo "Checking for MPI-2 MPIO_Request interface... ${nnl}"
-    if [ -f $mpilib/liblam.a -o -f $mpilib/liblammpi++.a ] ; then
-        if $mpicompiler tools/src/tests/mpi2iorequest.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-            echo "yes"
-            fixmakeargs="$fixmakeargs MPIOREQUEST"
-            mpiio=yes
-        else
-            echo "no"
-        fi
-    else
-        echo "no"
-    fi
-
-    $echo "Checking for MPI_Datarep_conversion_function interface... ${nnl}"
-    if $mpicompiler tools/src/tests/mpi2datarep.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-        echo "yes"
-        fixmakeargs="$fixmakeargs MPIDATAREP"
-    else
-        echo "no"
-    fi
-
-    $echo "Checking for Comm_create_errhandler interface... ${nnl}"
-    if $mpicompiler tools/src/tests/mpi2errhandler.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-        echo "yes"
-        fixmakeargs="$fixmakeargs MPIERRHANDLER"
-    else
-        echo "no"
-    fi
-
-    $echo "Checking if MPI_Info_set takes const char * instead of char * args... ${nnl}"
-    if $mpicompiler tools/src/tests/mpi2hpconst.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-        echo "yes"
-        fixmakeargs="$fixmakeargs MPICONSTCHAR"
-    else
-        echo "no"
-    fi
-fi
-
-if $mpicompiler tools/src/tests/mpi_f_statuses_ignore.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-    echo "MPI F_STATUSES_IGNORE types are defined..."
-else
-    echo "MPI F_STATUSES_IGNORE types are NOT defined..."
-    fixmakeargs="$fixmakeargs MPI_F_STATUSES_IGNORE_ABSENT"
-fi
-
-if $mpicompiler tools/src/tests/mpi2attr.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-    echo "MPI-2 MPI*attr_functions are defined..."
-    fixmakeargs="$fixmakeargs MPIATTR"
-fi
-
-if $mpicompiler tools/src/tests/mpi2file.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-    echo "MPI-2 MPI_File functions are defined..."
-    fixmakeargs="$fixmakeargs MPIFILE"
-else
-    echo "MPI-2 MPI_File functions are NOT defined..."
-    #echo $mpicompiler tools/src/tests/mpi2file.c $mpiwarnings $orig_useropt $mpi_include
-fi
-
-if $mpicompiler tools/src/tests/mpi2typeex.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-    echo "MPI-2 MPI_Type_dup and MPI_Exscan are defined..."
-    fixmakeargs="$fixmakeargs MPITYPEEX"
-fi
-
-if $mpicompiler tools/src/tests/mpi2add.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-    echo "MPI-2 MPI_Add_error* functions are defined..."
-    fixmakeargs="$fixmakeargs MPIADDERROR"
-fi
-
-if $mpicompiler tools/src/tests/mpistatus.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
-    echo "MPI_Status f2c/c2f found..."
-else
-    echo "MPI_Status c2f/f2c functions are needed"
-    fixmakeargs="$fixmakeargs MPINEEDSTATUSCONV"
-fi
-
-/bin/rm -rf tools/src/tests/*.o tools/src/tests/a.out
-
-else
-    if [ $mpi = yes -a $machine != ibm64 ]; then
-      mpilibargs="$mpilibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
-      mpiflibargs="$mpiflibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
-    fi
-    fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
-    mpilibargs_added_to_fixmakeargs=yes
-fi
-
-
-
-if [ $mpi = yes ] ; then
     #Check for SGI MPI
     mpimptloc=`which mpiexec_mpt 2>/dev/null`
     hasMPT=$?
@@ -8767,6 +8538,7 @@ if [ $mpi = yes ] ; then
     if [ $perf = yes ] ; then
         wrapperlib="-L$\(PERFLIBDIR) \$(PERFLIBRARY)"
     fi
+
 
     mpilibargs="$wrapperlib $mpilibargs"
     wrapperC=$wrapperlib
@@ -9130,7 +8902,6 @@ if [ $mpi = yes ] ; then
             fi # mpi _r check
 
         fi # If -d mpilib
-    fi
 else # if mpilib is specified
     if [ $openmp = yes ] ; then
         if [ $epilog = yes ] ; then
@@ -9157,7 +8928,239 @@ else # if mpilib is specified
     fi
 fi
 
+  mpi_libraries=""
+  if [ "x$mpilibrary" != "xno" ] ; then
+      mpi_libraries=$mpilibrary
+  fi
+  mpi_include="$mpi_include $mpiincargs $mpi_libpath $mpi_libraries"
+  mpi_include=`echo $mpi_include | sed  -e 's/#/ /g'`
 
+
+if [ $machine = sgi64 -a $cxx_compiler = CC ]
+then
+    orig_useropt="$orig_useropt -64"
+fi
+
+$echo "Checking for thread-safe MPI interface... ${nnl}"
+if [ "x$c_compiler" = "xicx" ]; then
+  mpiwarnings=""
+fi
+#echo "$mpicompiler tools/src/tests/mpi_thread_test.c $mpiwarnings $orig_useropt $mpi_include"
+$mpicompiler tools/src/tests/mpi_thread_test.c $mpiwarnings $orig_useropt $mpi_include
+if $mpicompiler tools/src/tests/mpi_thread_test.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+    echo "yes"
+    fixmakeargs="$fixmakeargs MPI_THREADED"
+else
+    echo "no"
+fi
+
+
+$echo "Checking for MPI 3 const interface... ${nnl}"
+if $mpicompiler tools/src/tests/mpi3const.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+    if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_BASEDIR" != "x" ]; then
+      echo "yes"
+      fixmakeargs="$fixmakeargs MPICH3_CONST"
+    else
+      echo "no"
+    fi
+else
+  if $mpicompiler tools/src/tests/mpi3const.c $mpiwarnings $orig_useropt $mpi_include  -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
+    echo "yes"
+    fixmakeargs="$fixmakeargs MPICH3_CONST"
+  else
+    if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_BASEDIR" != "x" ]; then
+      echo "yes"
+      fixmakeargs="$fixmakeargs MPICH3_CONST"
+    else
+      echo "no"
+    fi
+  fi
+fi
+
+if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" = "x" -a "x$CRAY_MPICH_PREFIX" != "x" ]; then
+  CRAY_MPICH_DIR=$CRAY_MPICH_PREFIX
+fi
+
+if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" != "x" -a -r $mpiinc/cray_version.h ]; then
+  if [ -r $CRAY_MPICH_DIR/lib/libmpi_cray.a ]; then
+    echo "Found libmpi_cray.a"
+    fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPI_CRAY"
+  else
+    if [ -r $CRAY_MPICH_DIR/lib/libmpich_crayclang.a ]; then
+      echo "Found libmpich_crayclang.a"
+      fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPICH_CRAYCLANG"
+    fi
+  fi
+fi
+
+$echo "Checking for OpenMPI 3 const interface..... ${nnl}"
+if $mpicompiler tools/src/tests/openmpi3const.c $mpiwarnings $orig_useropt $mpi_include -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
+# MPICH requires the const keyword
+  echo "yes"
+  fixmakeargs="$fixmakeargs OPENMPI3_CONST"
+else
+  echo "no"
+fi
+
+$echo "Checking for MPI_Type_hindexed const interface... ${nnl}"
+if $mpicompiler tools/src/tests/mpihindex1.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+  echo "not needed"
+else
+  echo "yes"
+  if $mpicompiler tools/src/tests/mpihindex2.c $mpiwarnings $orig_useropt $mpi_include 1> /dev/null 2>&1 ; then
+    echo "Using const in MPI_Type_hindexed interface "
+      fixmakeargs="$fixmakeargs TAU_MPI_HINDEX_CONST"
+  fi
+fi
+rm -f mpihindex1.c mpihindex2.c mpihindex1.o mpihindex2.o
+
+
+if [ -d "$mpiinc/ulm" ] ; then
+    echo "LA-MPI detected, working around broken MPI_Request_c2f()"
+    fixmakeargs="$fixmakeargs LAMPI"
+fi
+
+$echo "Checking for MPI-2 interface... ${nnl}"
+if $mpicompiler tools/src/tests/mpi2.c  $mpiwarnings $orig_useropt $mpi_include 1> /dev/null 2>&1 ; then
+    echo "yes"
+    if [ -r $mpilib/libmpi.so -a -r $mpilib/libmpi++.so -a -r $mpilib/libsma.so -a -r $mpilib/libxmpi.so ] ; then
+        # Do not enable this for SGI Altix. Their MPI2 is not complete
+        # SGI MPI2 is ok now. We can enable it. Perhaps...
+        useropt="$useropt#-DTAU_MPI_F_STATUSES_IGNORE_ABSENT"
+        fixmakeargs="$fixmakeargs MPI2 useropt=$useropt"
+        echo "SGI MPI detected. Disabling MPI2 wrappers for SGI MPI"
+        fixmakeargs="$fixmakeargs SGI_MPT_MPI"
+    elif [ -r $mpilib/libfmpi.so -a -r $mpilib/libmpio.so  -a -r $mpilib/libtvscampi.so ] ; then
+        # Scali does not use MPI2 PMPI interface properly.
+        echo "Scali MPI detected. Disabling MPI2 wrappers for Scali MPI"
+    elif [ -r $mpilib/liblam.a -o -r $mpilib/liblam.la ] ; then
+        # LAM MPI's MPI2 PMPI interface is broken.
+        echo "LAM MPI detected. Disabling MPI2 wrappers for LAM MPI"
+    elif [ "$mpilibrary" = "-lscmpi" ] ; then
+        # SiCortex's MPI2 interface is broken.
+        echo "SiCortex detected. Disabling MPI2 wrappers"
+        fixmakeargs="$fixmakeargs MPICH_IGNORE_CXX_SEEK"
+    elif [ "$tauarch" = "bgp" -o "$tauarch" = "bgq" ] ; then
+        echo "BGP MPI detected. Disabling MPI2 wrappers"
+        fixmakeargs="$fixmakeargs MPICH_IGNORE_CXX_SEEK"
+    else
+        fixmakeargs="$fixmakeargs MPI2"
+        mpi2=yes
+    fi
+else
+    echo "no"
+fi
+
+
+if [ $mpi2 = yes ] ; then
+
+    if [ $mpit = yes ]; then
+      $echo "Checking for MPI-T  interface... ${nnl}"
+      if $mpicompiler tools/src/tests/mpit.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+              echo "yes"
+          fixmakeargs="$fixmakeargs MPI_T"
+      else
+          echo "no"
+      fi
+    fi
+
+    $echo "Checking for MPI-2 Grequest interface... ${nnl}"
+    if $mpicompiler tools/src/tests/mpi2grequest.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+        echo "yes"
+        fixmakeargs="$fixmakeargs MPIGREQUEST"
+    else
+        echo "no"
+    fi
+
+    $echo "Checking for MPI-2 MPIO_Request interface... ${nnl}"
+    if [ -f $mpilib/liblam.a -o -f $mpilib/liblammpi++.a ] ; then
+        if $mpicompiler tools/src/tests/mpi2iorequest.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+            echo "yes"
+            fixmakeargs="$fixmakeargs MPIOREQUEST"
+            mpiio=yes
+        else
+            echo "no"
+        fi
+    else
+        echo "no"
+    fi
+
+    $echo "Checking for MPI_Datarep_conversion_function interface... ${nnl}"
+    if $mpicompiler tools/src/tests/mpi2datarep.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+        echo "yes"
+        fixmakeargs="$fixmakeargs MPIDATAREP"
+    else
+        echo "no"
+    fi
+
+    $echo "Checking for Comm_create_errhandler interface... ${nnl}"
+    if $mpicompiler tools/src/tests/mpi2errhandler.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+        echo "yes"
+        fixmakeargs="$fixmakeargs MPIERRHANDLER"
+    else
+        echo "no"
+    fi
+
+    $echo "Checking if MPI_Info_set takes const char * instead of char * args... ${nnl}"
+    if $mpicompiler tools/src/tests/mpi2hpconst.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+        echo "yes"
+        fixmakeargs="$fixmakeargs MPICONSTCHAR"
+    else
+        echo "no"
+    fi
+fi
+
+if $mpicompiler tools/src/tests/mpi_f_statuses_ignore.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+    echo "MPI F_STATUSES_IGNORE types are defined..."
+else
+    echo "MPI F_STATUSES_IGNORE types are NOT defined..."
+    fixmakeargs="$fixmakeargs MPI_F_STATUSES_IGNORE_ABSENT"
+fi
+
+if $mpicompiler tools/src/tests/mpi2attr.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+    echo "MPI-2 MPI*attr_functions are defined..."
+    fixmakeargs="$fixmakeargs MPIATTR"
+fi
+
+if $mpicompiler tools/src/tests/mpi2file.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+    echo "MPI-2 MPI_File functions are defined..."
+    fixmakeargs="$fixmakeargs MPIFILE"
+else
+    echo "MPI-2 MPI_File functions are NOT defined..."
+    #echo $mpicompiler tools/src/tests/mpi2file.c $mpiwarnings $orig_useropt $mpi_include
+fi
+
+if $mpicompiler tools/src/tests/mpi2typeex.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+    echo "MPI-2 MPI_Type_dup and MPI_Exscan are defined..."
+    fixmakeargs="$fixmakeargs MPITYPEEX"
+fi
+
+if $mpicompiler tools/src/tests/mpi2add.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+    echo "MPI-2 MPI_Add_error* functions are defined..."
+    fixmakeargs="$fixmakeargs MPIADDERROR"
+fi
+
+if $mpicompiler tools/src/tests/mpistatus.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
+    echo "MPI_Status f2c/c2f found..."
+else
+    echo "MPI_Status c2f/f2c functions are needed"
+    fixmakeargs="$fixmakeargs MPINEEDSTATUSCONV"
+fi
+
+/bin/rm -rf tools/src/tests/*.o tools/src/tests/a.out
+
+else
+    if [ $mpi = yes -a $machine != ibm64 ]; then
+      mpilibargs="$mpilibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
+      mpiflibargs="$mpiflibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
+    fi
+    fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
+    mpilibargs_added_to_fixmakeargs=yes
+fi
+
+
+
+if [ $mpi = yes ] ; then
 # Checking if we need to add -lmpifort here:
 if [ $mpi = yes -a $mpilibargs_added_to_fixmakeargs = yes ]; then
   if [ $cxx_compiler = icpx -a -r $mpilib/libmpifort.so ]; then
@@ -9183,6 +9186,7 @@ if [ $mpi = yes -a $mpilibargs_added_to_fixmakeargs = no ] ; then
     fi
 fi
 
+fi #mpi=yes
 
 #####################################################################
 # Test for C++ string library
