@@ -12,7 +12,7 @@
 
 #include <stdio.h>
 
-#warning "Compiling StarPU support"
+//#warning "Compiling StarPU support"
 
 std::map<int,std::string> device_types;
 std::map<int,std::string> event_types;
@@ -107,18 +107,18 @@ extern "C" {
     event_types[starpu_prof_tool_event_terminate] = "StarPU";
     event_types[starpu_prof_tool_event_init_begin] = "StarPU init";
     event_types[starpu_prof_tool_event_init_end] = "StarPU init";
-    event_types[starpu_prof_tool_event_driver_init] = "StarPU driver";
-    event_types[starpu_prof_tool_event_driver_deinit] = "StarPU driver";
-    event_types[starpu_prof_tool_event_driver_init_start] = "StarPU driver init";
-    event_types[starpu_prof_tool_event_driver_init_end] = "StarPU driver init";
-    event_types[starpu_prof_tool_event_start_cpu_exec] = "StarPU exec";
-    event_types[starpu_prof_tool_event_end_cpu_exec] = "StarPU exec";
-    event_types[starpu_prof_tool_event_start_gpu_exec] = "StarPU exec";
-    event_types[starpu_prof_tool_event_end_gpu_exec] = "StarPU exec";
-    event_types[starpu_prof_tool_event_start_transfer] = "StarPU transfer";
-    event_types[starpu_prof_tool_event_end_transfer] = "StarPU transfer";
-    event_types[starpu_prof_tool_event_user_start] = "StarPU user event";
-    event_types[starpu_prof_tool_event_user_end] = "StarPU user event";
+    event_types[starpu_prof_tool_event_driver_init] = "StarPU driver ";
+    event_types[starpu_prof_tool_event_driver_deinit] = "StarPU driver ";
+    event_types[starpu_prof_tool_event_driver_init_start] = "StarPU driver init ";
+    event_types[starpu_prof_tool_event_driver_init_end] = "StarPU driver init ";
+    event_types[starpu_prof_tool_event_start_cpu_exec] = "StarPU exec ";
+    event_types[starpu_prof_tool_event_end_cpu_exec] = "StarPU exec ";
+    event_types[starpu_prof_tool_event_start_gpu_exec] = "StarPU exec ";
+    event_types[starpu_prof_tool_event_end_gpu_exec] = "StarPU exec ";
+    event_types[starpu_prof_tool_event_start_transfer] = "StarPU transfer ";
+    event_types[starpu_prof_tool_event_end_transfer] = "StarPU transfer ";
+    event_types[starpu_prof_tool_event_user_start] = "StarPU user event ";
+    event_types[starpu_prof_tool_event_user_end] = "StarPU user event ";
 
     enum  starpu_prof_tool_command info = starpu_prof_tool_command_reg;
     reg( starpu_prof_tool_event_init_begin, &myfunction_cb, info );
