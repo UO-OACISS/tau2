@@ -20,6 +20,7 @@
 #include <level_zero/zet_api.h>
 #include <cstring>
 #include <fstream>
+#include <queue>
 #include <Profile/L0/utils.h>
 #include <Profile/L0/ze_kernel_collector.h>
 #include <Profile/L0/ze_api_collector.h>
@@ -177,6 +178,39 @@ double TAUTranslateGPUtoCPUTimestamp(int tid, uint64_t gpu_ts) {
   return cpu_ts;
 }
 
+/* This code is to somehow link the the kernel from the CPU to the GPU callback.
+   Intel doesn't seem to provide this info. So, when a kernel is pushed onto the
+   command queue, we'll push a unique id onto a local queue. When we are notified
+   that the kernel finished, we'll pop it. This dangerously assumes there is only
+   one command queue. */
+std::queue<uint64_t>& getKernelQueue() {
+    static std::queue<uint64_t> theQueue;
+    return theQueue;
+}
+
+uint64_t pushKernel() {
+    static uint64_t id{0};
+    static std::mutex mtx;
+    std::lock_guard<std::mutex> lck (mtx);
+    id = id + 1;
+    getKernelQueue().push(id);
+    //printf("Pushed %lu\n", id);
+    return id;
+}
+
+uint64_t popKernel() {
+    uint64_t id{0};
+    auto& theQueue = getKernelQueue();
+    static std::mutex mtx;
+    std::lock_guard<std::mutex> lck (mtx);
+    if (theQueue.size() > 0) {
+        id = theQueue.front();
+        theQueue.pop();
+    }
+    //printf("Popped %lu\n", id);
+    return id;
+}
+
 void TAUOnAPIFinishCallback(void *data, const std::string& name, uint64_t started, uint64_t ended) {
   int taskid;
   static bool first_ts = TAUSetFirstGPUTimestamp(started);
@@ -192,6 +226,12 @@ void TAUOnAPIFinishCallback(void *data, const std::string& name, uint64_t starte
 
   metric_set_gpu_timestamp(taskid, started_translated);
   TAU_START_TASK(name.c_str(), taskid);
+  if (name.compare("zeCommandListAppendLaunchKernel") == 0) {
+    // the user event for correlation IDs
+    static void* TraceCorrelationID;
+    Tau_get_context_userevent(&TraceCorrelationID, "Correlation ID");
+    TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, pushKernel(), taskid, started_translated);
+  }
 
   metric_set_gpu_timestamp(taskid, ended_translated);
   TAU_STOP_TASK(name.c_str(), taskid);
@@ -214,7 +254,10 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
   last_gpu_timestamp = ended;
   metric_set_gpu_timestamp(taskid, started_translated);
   TAU_START_TASK(demangled_name, taskid);
-
+  // the user event for correlation IDs
+  static void* TraceCorrelationID;
+  Tau_get_context_userevent(&TraceCorrelationID, "Correlation ID");
+  TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, popKernel(), taskid, started_translated);
 
   metric_set_gpu_timestamp(taskid, ended_translated);
   TAU_STOP_TASK(demangled_name, taskid);
