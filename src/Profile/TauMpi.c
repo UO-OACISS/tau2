@@ -1978,11 +1978,13 @@ char *** argv;
 
 #ifdef TAU_ADIOS2
     int provided;
+    TAU_VERBOSE("%s Initializing with PMPI_Init_thread\n", __func__);
     returnVal = PMPI_Init_thread( argc, argv, MPI_THREAD_MULTIPLE, &provided );
     if (provided != MPI_THREAD_MULTIPLE && provided != MPI_THREAD_FUNNELED) {
       fprintf(stderr, "ERROR!!!  MPI implementation doesn't provide threaded support.\nADIOS2 output from TAU likely won't work.\n");
     }
 #else
+    TAU_VERBOSE("%s Initializing with PMPI_Init_thread\n", __func__);
     returnVal = PMPI_Init( argc, argv );
 #endif
 
@@ -3705,6 +3707,7 @@ int * rank;
 {
   int   returnVal;
 
+  TAU_VERBOSE("%d %s entry\n", Tau_get_local_tid(), __func__); fflush(stderr);
   TAU_PROFILE_TIMER(tautimer, "MPI_Cart_rank()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
@@ -3712,6 +3715,7 @@ int * rank;
   returnVal = PMPI_Cart_rank( comm, coords, rank );
 
   TAU_PROFILE_STOP(tautimer);
+  TAU_VERBOSE("%d %s exit\n", Tau_get_local_tid(), __func__); fflush(stderr);
 
   return returnVal;
 }
