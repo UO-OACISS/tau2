@@ -157,7 +157,8 @@ private:
   TAU_STORAGE(bool, AlreadyOnStack, false);
   TAU_MULTSTORAGE(double, dumpExclusiveValues, 0);
   TAU_MULTSTORAGE(double, dumpInclusiveValues, 0);
-  #ifndef _AIX //TODO: DYNAPROF the dynamic implementation of this needs more work
+  #if !defined(_AIX) && !defined(TAU_WINDOWS)
+    //TODO: DYNAPROF the dynamic implementation of this needs more work
     TauPathHashTable<TauPathAccumulator> *pathHistogram=NULL;
   #endif /* _AIX */
   };
@@ -237,12 +238,12 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     std::lock_guard<std::mutex> guard(fInfoVectorMutex);
     while(FMetricList.size()<=tid){
 	FMetricList.push_back(new FunctionMetrics());
-        
+#ifndef TAU_WINDOWS       
         if(setPathHistograms){//TODO: DYNAPROF
             int topThread=FMetricList.size()-1;
             FMetricList[topThread]->pathHistogram=new TauPathHashTable<TauPathAccumulator>(topThread);
         }
-        
+#endif        
     }
     
     MOut=FMetricList[tid];

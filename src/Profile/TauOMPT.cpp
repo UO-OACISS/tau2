@@ -194,7 +194,7 @@ class TargetMap {
             return theMap;
         }
     private:
-        TargetMap() : write_index(0), read_index(0) {};
+        TargetMap() : write_index(0), read_index(UINT64_MAX) {};
         /* This size (1024) should be sufficient, as long as the buffer size
          * doesn't increase from 16*1024.  If the buffer is increased, please
          * increase the size of this circular buffer accordingly! */
@@ -1425,7 +1425,7 @@ static void on_ompt_callback_target(
             timer_stack.pop();
 #ifndef TAU_INTEL_COMPILER // intel doesn't always provide a codeptr_ra value.
             // flush the trace to get async events for this target
-            ompt_flush_trace(0);
+            Tau_ompt_flush_trace();
 #endif
             break;
         }
@@ -1815,7 +1815,9 @@ extern "C" int ompt_initialize(
 /* Optional events */
 
   if(TauEnv_get_ompt_support_level() >= 1) { /* Only support this when "lowoverhead" mode is enabled. Turns on all required events + other low overhead */
+#ifndef __NVCOMPILER //NVIDIA does not provide endpoints for work callbacks as of 22.9
     Tau_register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
+#endif
 #if _OPENMP < 202011 && defined(ompt_callback_master)
     Tau_register_callback(ompt_callback_master, cb_t(on_ompt_callback_master));
 #endif

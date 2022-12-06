@@ -12,6 +12,11 @@ Change log:
 ------------
 Version 2.32 changes (from 2.31):
 1. Added support for riscv64 (-optCompInst, tau_exec -ebs, mpi). 
+2. Updated support for hipcc as C++ compiler with MVAPICH2 on Cray systems for OMPT. 
+3. Updated default MPI configuration. 
+4. Updated support for ROCm 5.2.1. 
+5. Refactored TAU to use a dynamic threading implementation instead of static arrays.
+6. Updated MPI wrapper interposition library to not invoke PMPI_Type_size when the type is MPI_DATATYPE_NULL.
 
 Version 2.31 changes (from 2.30):
 1. Updates for MPI on craycnl (CRAY_MPICH_PREFIX). 

@@ -14,6 +14,6 @@ if [ "x$PE_MPICH_GTL_DIR_amd_gfx908" != "x" ]; then
   fi
 fi
 
-MPIOPTS=`mpicc -show | awk '{$1=""}1'  `
+MPIOPTS=`mpicc -show | awk '{$1=""}1' | sed -e 's@-fcf-protection@@g' `
 echo ${MPIOPTS}  ${MPI_EXTRA_OPTS}
   

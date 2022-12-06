@@ -2778,8 +2778,8 @@ void TauEnv_initialize()
     //TauSetupHandler();
   }
 
-  TAU_VERBOSE("Calling TAU_ROCTRACER...\n");
 #ifdef TAU_ENABLE_ROCTRACER
+  TAU_VERBOSE("Calling TAU_ROCTRACER...\n");
   Tau_roctracer_start_tracing();
 #endif /* TAU_ENABLE_ROCTRACER */
 }

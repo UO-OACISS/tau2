@@ -14,6 +14,7 @@
 TAU_MAKEFILE ?=../../include/Makefile
 include $(TAU_MAKEFILE)
 F90=TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_f90.sh
+FFLAGS=$(TAU_ALLOW_ARG_MISMATCH)
 
 LIBS= 
 INCLUDE=
@@ -24,7 +25,7 @@ matmult: $(OBJS)
 
 .f90.o: 
 	echo "Building $@ from $<"
-	$(F90) -c $(INCLUDE) $< -o $@
+	$(F90) -c $(INCLUDE) $< -o $@ $(FFLAGS)
 
 clean:
 	/bin/rm -f matmult.o matmult *.pdb profile.* *.inst.* *.continue.*
