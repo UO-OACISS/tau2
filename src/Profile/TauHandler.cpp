@@ -238,10 +238,14 @@ int Tau_open_system_file(const char *filename) {
 
 void TauTriggerCrayPowerEvent(int fd, const char *event_name)  {
   long long int value;
+  int tid = 0;
+  if (TauEnv_get_thread_per_gpu_stream()) {
+    tid = RtsLayer::myThread();
+  }
   if (fd) {
     Tau_read_cray_power_events(fd, &value);
     if (value > 0) {
-      Tau_trigger_context_event_thread(event_name, (double) value, 0);
+      Tau_trigger_context_event_thread(event_name, (double) value, tid);
       TAU_VERBOSE("Triggered %s with %lld\n", event_name, value);
     }
   }
@@ -298,22 +302,26 @@ void TauTriggerLoadEvent(bool use_context, const char * prefix = nullptr) {
    * allocate during a signal handler */
   static void *ue = TauTriggerLoadEvent_helper(prefix);
   static int fd = Tau_open_system_file("/proc/loadavg");
+  int tid = 0;
+  if (TauEnv_get_thread_per_gpu_stream()) {
+    tid = RtsLayer::myThread();
+  }
   if (fd) {
     Tau_read_load_event(fd, &value);
     //Do not bother with recording the load if TAU is uninitialized.
     if (Tau_init_check_initialized() && TheSafeToDumpData()) {
       if (TauEnv_get_tracing()) {
           if(use_context) {
-            Tau_trigger_context_event_thread("System load (x100)", value*100, 0);
+            Tau_trigger_context_event_thread("System load (x100)", value*100, tid);
           } else {
-            Tau_userevent_thread(ue, value*100, 0);
+            Tau_userevent_thread(ue, value*100, tid);
           }
       }
       else  {
           if(use_context) {
-            Tau_trigger_context_event_thread("System load", value, 0);
+            Tau_trigger_context_event_thread("System load", value, tid);
           } else {
-            Tau_userevent_thread(ue, value, 0);
+            Tau_userevent_thread(ue, value, tid);
           }
       }
     }

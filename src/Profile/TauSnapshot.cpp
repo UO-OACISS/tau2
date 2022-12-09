@@ -46,7 +46,6 @@ struct SnapshotFileList : vector<Tau_util_outputDevice *>{
 // Static holder for snapshot file handles
 static SnapshotFileList & Tau_snapshot_getFiles() {
   static SnapshotFileList snapshotFiles;
-  TAU_VERBOSE("Tau_snapshot_getFiles() end: out=%p\n", &snapshotFiles); 
   return snapshotFiles;
 }
 

@@ -394,7 +394,7 @@ extern "C" char *TauInternal_CurrentCallsiteTimerName(int tid) {
   return NULL;
 }
 
-#define REPORT_ENTRY_EXIT 1
+//#define REPORT_ENTRY_EXIT 1
 #ifdef REPORT_ENTRY_EXIT
 ///////////////////////////////////////////////////////////////////////////
 static void reportEntryExit (bool entry, FunctionInfo *caller, int tid) {

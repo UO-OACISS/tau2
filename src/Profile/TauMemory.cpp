@@ -722,7 +722,7 @@ void TauAllocation::TriggerHeapMemoryUsageEvent(const char * prefix) {
   /* Make the measurement on thread 0, because we are
    * recording the heap for the process. */
   int tid = 0;
-  if (TauEnv_get_tracing()) {
+  if (TauEnv_get_thread_per_gpu_stream()) {
     tid = RtsLayer::myThread();
   }
   Tau_userevent_thread(evt, Tau_max_RSS(), tid);
@@ -1874,7 +1874,7 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context, const char * prefix)
   close(fd);
 
   int tid = 0;
-  if (TauEnv_get_tracing()) {
+  if (TauEnv_get_thread_per_gpu_stream()) {
     tid = RtsLayer::myThread();
   }
 

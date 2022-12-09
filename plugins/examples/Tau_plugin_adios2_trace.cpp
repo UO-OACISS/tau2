@@ -53,6 +53,7 @@
 #define TAU_ADIOS2_ONE_FILE_DEFAULT false
 #define TAU_ADIOS2_ENGINE "BPFile"
 #define TAU_ADIOS2_CONFIG_FILE_DEFAULT "./adios2.xml"
+#define TAU_ADIOS2_SELECT_FILE_DEFAULT "./select.tau"
 
 // This will enable some checking to make sure we don't have call stack violations.
 // #define DO_VALIDATION
@@ -121,7 +122,8 @@ class plugin_options {
             env_filename(TAU_ADIOS2_FILENAME),
             env_one_file(TAU_ADIOS2_ONE_FILE_DEFAULT),
             env_engine(TAU_ADIOS2_ENGINE),
-            env_config_file("")
+            env_config_file(""),
+            env_select_file("")
             {}
     public:
         int env_periodic;
@@ -131,6 +133,7 @@ class plugin_options {
         int env_one_file;
         std::string env_engine;
         std::string env_config_file;
+        std::string env_select_file;
         std::set<std::string> included_timers;
         std::set<std::string> excluded_timers;
         std::set<std::string> included_timers_with_wildcards;
@@ -233,6 +236,18 @@ void Tau_ADIOS2_parse_environment_variables(void) {
       } else {
           // file doesn't exist
           thePluginOptions().env_config_file = "";
+      }
+    }
+    tmp = getenv("TAU_ADIOS2_SELECT_FILE");
+    if (tmp != NULL) {
+      thePluginOptions().env_select_file = strdup(tmp);
+    } else {
+      if( access(TAU_ADIOS2_SELECT_FILE_DEFAULT, F_OK ) != -1 ) {
+          // file exists
+          thePluginOptions().env_select_file = strdup(TAU_ADIOS2_SELECT_FILE_DEFAULT);
+      } else {
+          // file doesn't exist
+          thePluginOptions().env_select_file = "";
       }
     }
 }
@@ -354,7 +369,11 @@ class adios {
         std::stack<tau_data_t> pre_timer_stack;
 #endif
         tau_data_t previous_timestamp;
-        adiosThread() : previous_timestamp(0L) { };
+        adiosThread() : previous_timestamp(0L) {
+            timer_values.reserve(1024);
+            counter_values.reserve(1024);
+            comm_values.reserve(1024);
+        };
         };
         //A per-thread vector of those structs.
         vector<adiosThread *> adiosThreadVector;
@@ -381,6 +400,7 @@ class adios {
             initialize();
             open();
             define_variables();
+            adiosThreadVector.reserve(256);
         };
         ~adios() {
             close();
@@ -407,14 +427,10 @@ class adios {
         int get_thread_count(void) { return max_threads+1; } // zero-indexed.
 
         adiosThread* getAdiosThread(int tid){
-            if(adiosThreadVector.size()<=tid){
-                static std::mutex _mtx;
-                std::unique_lock<std::mutex> lk(_mtx);
-                if(adiosThreadVector.size()<=tid){
-                    while(adiosThreadVector.size()<=tid){
-                        adiosThreadVector.push_back(new adiosThread);
-                    }
-                }
+            static std::mutex _mtx;
+            std::unique_lock<std::mutex> lk(_mtx);
+            while(adiosThreadVector.size()<=tid){
+                adiosThreadVector.push_back(new adiosThread);
             }
             return adiosThreadVector[tid];
         }
@@ -552,9 +568,10 @@ void event_gets_control() {
      */
     _my_mutex.lock();
     size_t safety{0};
+    if (dumping) TAU_VERBOSE("ADIOS2 trace plugin: %s: waiting...\n", __func__);
     while(dumping) {
-        if (++safety > 1000000000) {
-            TAU_VERBOSE("%s: Broke deadlock!\n", __func__);
+        if (++safety > 100000000000) {
+            TAU_VERBOSE("ADIOS2 trace plugin: %s: Broke deadlock!\n", __func__);
             abort();
             //PMPI_Abort(MPI_COMM_WORLD, 99);
         }
@@ -564,7 +581,13 @@ void event_gets_control() {
     _my_mutex.unlock();
 }
 
+void writer_gives_control() {
+    TAU_VERBOSE("%s: Done writing.\n", __func__);
+    dumping = false;
+}
+
 void writer_gets_control() {
+    TAU_VERBOSE("%s: Ready to write...\n", __func__);
     /* There's a tiny chance of a race condition because we have to update
      * and check two variables.  So acquire the lock before waiting until it's
      * safe to proceed with the dump.
@@ -692,6 +715,7 @@ void adios::write_variables(void)
     TAU_VERBOSE("%s: Freeing timer_values_array...\n", __func__);
     for (int t = 0 ; t < threads ; t++) {
         getAdiosThread(t)->timer_values.clear();
+        getAdiosThread(t)->timer_values.reserve(1024);
     }
 
     TAU_VERBOSE("%s: Merging %llu counters from %d...\n", __func__, getAdiosThread(0)->counter_values.size(), 0);
@@ -721,6 +745,7 @@ void adios::write_variables(void)
 
     for (int t = 0 ; t < threads ; t++) {
         getAdiosThread(t)->counter_values.clear();
+        getAdiosThread(t)->counter_values.reserve(1024);
     }
 
     TAU_VERBOSE("%s: Merging %llu comms from %d...\n", __func__, getAdiosThread(0)->comm_values.size(), 0);
@@ -751,12 +776,13 @@ void adios::write_variables(void)
 
     for (int t = 0 ; t < threads ; t++) {
         getAdiosThread(t)->comm_values.clear();
+        getAdiosThread(t)->comm_values.reserve(1024);
     }
 
     // Need to release the "dumping" flag so that ADIOS2 calls that
     // result in TAU timers won't deadlock when they enter this
     // plugin
-    dumping = false;
+    writer_gives_control();
 
     tau_plugin::inPlugin() = true;
 
@@ -844,6 +870,7 @@ void adios::write_variables(void)
 
     /* Keep a map of program names to indexes */
     int adios::check_prog_name(char * prog_name) {
+        //std::unique_lock<std::mutex> lk(_my_mutex);
         if (prog_names.count(prog_name) == 0) {
             std::stringstream ss;
             int num = prog_names.size();
@@ -856,6 +883,7 @@ void adios::write_variables(void)
 
     /* Keep a map of event types to indexes */
     int adios::check_event_type(const std::string& event_type) {
+        //std::unique_lock<std::mutex> lk(_my_mutex);
         if (event_types.count(event_type) == 0) {
             std::stringstream ss;
             int num = event_types.size();
@@ -888,6 +916,7 @@ void adios::write_variables(void)
                 define_attribute(ss.str(), tmp, _bpIO, false);
             }
         }
+        //std::unique_lock<std::mutex> lk(_my_mutex);
         return timers[tmp];
     }
 
@@ -910,6 +939,7 @@ void adios::write_variables(void)
                 define_attribute(ss.str(), tmp, _bpIO, false);
             }
         }
+        std::unique_lock<std::mutex> lk(_my_mutex);
         return counters[tmp];
     }
 
@@ -1359,29 +1389,22 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     static time_point<steady_clock> next_write(steady_clock::now() +
         microseconds(tau_plugin::thePluginOptions().env_period));
     static std::mutex timer_lock;
+    static std::atomic<bool> writing{false};
     if (tau_plugin::thePluginOptions().env_periodic &&
         !tau_plugin::thePluginOptions().env_one_file) {
         // is it time to write? (and thread 0, and not in an MPI or ADIOS call)
         if (steady_clock::now() > next_write && !plugin_done &&
-            data->tid == 0 &&
+            !writing && data->tid == 0 &&
             strstr(data->timer_name, "MPI_") == NULL) {
-            bool mine = false;
-            // only let one thread do this
-            timer_lock.lock();
-            if (steady_clock::now() > next_write) {
-                // increment to a time in the future
-                next_write = next_write +
-                    microseconds(tau_plugin::thePluginOptions().env_period);
-                mine = true;
-            }
-            // don't hold the lock while writing, deadlock can happen, apparently.
-            timer_lock.unlock();
-            if (mine) {
-                TAU_VERBOSE("%d Sending data from exit event %s...\n", RtsLayer::myNode(), data->timer_name); fflush(stderr);
-                Tau_plugin_event_dump_data_t dummy_data;
-                Tau_plugin_adios2_dump(&dummy_data);
-                TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
-            }
+            writing = true;
+            TAU_VERBOSE("%d Sending data from exit event %s...\n", RtsLayer::myNode(), data->timer_name); fflush(stderr);
+            Tau_plugin_event_dump_data_t dummy_data;
+            Tau_plugin_adios2_dump(&dummy_data);
+            TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
+            // increment to a time in the future
+            next_write = next_write +
+                microseconds(tau_plugin::thePluginOptions().env_period);
+            writing = false;
         }
     }
     return 0;
@@ -1500,6 +1523,9 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_plugin_callbacks_t cb;
     TAU_VERBOSE("TAU PLUGIN ADIOS2 Init\n"); fflush(stdout);
     tau_plugin::Tau_ADIOS2_parse_environment_variables();
+    if (tau_plugin::thePluginOptions().env_select_file != "") {
+        tau_plugin::Tau_ADIOS2_parse_selection_file(tau_plugin::thePluginOptions().env_select_file.c_str());
+    }
 #if TAU_MPI
     PMPI_Comm_size(MPI_COMM_WORLD, &global_comm_size);
     PMPI_Comm_rank(MPI_COMM_WORLD, &global_comm_rank);

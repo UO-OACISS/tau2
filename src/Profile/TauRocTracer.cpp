@@ -236,11 +236,13 @@ void Tau_roctracer_api_callback(
   }
   const hip_api_data_t* data = reinterpret_cast<const hip_api_data_t*>(callback_data);
   const char *activity_name = roctracer_op_string(ACTIVITY_DOMAIN_HIP_API, cid, 0);
+  /*
   TAU_VERBOSE("<%s id(%u)\tcorrelation_id(%lu) %s> ",
     activity_name,
     cid,
     data->correlation_id,
     (data->phase == ACTIVITY_API_PHASE_ENTER) ? "on-enter" : "on-exit");
+    */
   if (data->phase == ACTIVITY_API_PHASE_ENTER) {
     TAU_START(activity_name);
     switch (cid) {
@@ -312,16 +314,17 @@ void Tau_roctracer_api_callback(
     }
   } else {
     TAU_STOP(activity_name);
+    /*
     switch (cid) {
       case HIP_API_ID_hipMalloc:
-        TAU_VERBOSE("*ptr(0x%p)",
-          *(data->args.hipMalloc.ptr));
+        TAU_VERBOSE("*ptr(0x%p)", *(data->args.hipMalloc.ptr));
         break;
       default:
         break;
     }
+    */
   }
-  TAU_VERBOSE("\n"); fflush(stdout);
+  //TAU_VERBOSE("\n"); fflush(stdout);
 }
 
 // gpu based events
@@ -349,11 +352,11 @@ void Tau_roctracer_hcc_event(const roctracer_record_t *record,
   if (strncmp(joined_name, "Marker", 6) == 0) return;
   // ignore FillBuffer events, not sure where they come from or what they are for
   if (strncmp(joined_name, "FillBuffer", 6) == 0) return;
-  TAU_VERBOSE("*** Begin: %lu, End: %lu\n", begin_us, end_us);
+  //TAU_VERBOSE("*** Begin: %lu, End: %lu\n", begin_us, end_us);
   //double ts = Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(begin_us))); // convert to microseconds
   metric_set_gpu_timestamp(task_id, ((double)(begin_us)));
   TAU_START_TASK(joined_name, task_id);
-  TAU_VERBOSE("Started event %s on task %d timestamp = %lu \n", joined_name, task_id, begin_us);
+  //TAU_VERBOSE("Started event %s on task %d timestamp = %lu \n", joined_name, task_id, begin_us);
 
   // and the context ID
   if (TauEnv_get_thread_per_gpu_stream()) {
@@ -366,7 +369,7 @@ void Tau_roctracer_hcc_event(const roctracer_record_t *record,
   //Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(end_us))); // convert to microseconds
   metric_set_gpu_timestamp(task_id, ((double)(end_us)));
   TAU_STOP_TASK(joined_name, task_id);
-  TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", joined_name, task_id, end_us);
+  //TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", joined_name, task_id, end_us);
   Tau_set_last_timestamp_ns(end_us);
   free (joined_name);
 
@@ -381,15 +384,15 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
   int barrier_task_id = -1;
   const roctracer_record_t* record = reinterpret_cast<const roctracer_record_t*>(begin);
   const roctracer_record_t* end_record = reinterpret_cast<const roctracer_record_t*>(end);
-  TAU_VERBOSE("\tActivity records :\n"); fflush(stdout);
+  //TAU_VERBOSE("\tActivity records :\n"); fflush(stdout);
   while (record < end_record) {
     const char * name = roctracer_op_string(record->domain, record->op, record->kind);
     // adjust the timestamp drift between CPU clock and GPU clock, and
     // TAU uses microseconds, so convert ns to us
     uint64_t begin_us = (record->begin_ns + deltaTimestamp_ns) * 1.0e-3;
     uint64_t end_us = (record->end_ns + deltaTimestamp_ns) * 1.0e-3;
-    TAU_VERBOSE("\t%s\tcorrelation_id(%lu) time_ns(%lu:%lu)\n",
-      name, record->correlation_id, begin_us, end_us);
+    /*TAU_VERBOSE("\t%s\tcorrelation_id(%lu) time_ns(%lu:%lu)\n",
+      name, record->correlation_id, begin_us, end_us);*/
     if (record->domain == ACTIVITY_DOMAIN_HIP_OPS) {
       dispatch_task_id = Tau_get_initialized_queues(record->queue_id);
       if (dispatch_task_id == -1) {
@@ -399,7 +402,7 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
         // So each one needs a unique virtual thread.
         // We lock the DB, so that we can create three consecutive thread
         // IDs with impunity.
-        TAU_VERBOSE("ACTIVITY_DOMAIN_HIP_API: creating task\n");
+        //TAU_VERBOSE("ACTIVITY_DOMAIN_HIP_API: creating task\n");
         // one for dispatch
         TAU_CREATE_TASK(dispatch_task_id);
         Tau_set_initialized_queues(record->queue_id, dispatch_task_id);
@@ -445,10 +448,10 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
               barrier_task_id = dispatch_task_id;
           }
       }
-      TAU_VERBOSE(" device_id(%d) queue_id(%lu)\n",
+      /*TAU_VERBOSE(" device_id(%d) queue_id(%lu)\n",
         record->device_id,
         record->queue_id
-      );
+      );*/
       if (record->op == HIP_OP_ID_COPY) {
         Tau_roctracer_hcc_event(record, copy_task_id, begin_us, end_us);  // on the gpu
       } else if (record->op == HIP_OP_ID_BARRIER) {
@@ -456,15 +459,15 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
       } else if (record->op == HIP_OP_ID_DISPATCH) {
         Tau_roctracer_hcc_event(record, dispatch_task_id, begin_us, end_us);  // on the gpu
       } else {
-        TAU_VERBOSE("# Unhandled event! \n");
+        TAU_VERBOSE("# roctracer Unhandled event! \n");
       }
     } else {
       TAU_VERBOSE("Bad domain %d\n", record->domain);
       abort();
     }
-    if (record->op == HIP_OP_ID_COPY) TAU_VERBOSE(" bytes(0x%zx)", record->bytes);
-    TAU_VERBOSE("\n");
-    fflush(stdout);
+    //if (record->op == HIP_OP_ID_COPY) TAU_VERBOSE(" bytes(0x%zx)", record->bytes);
+    //TAU_VERBOSE("\n");
+    //fflush(stdout);
     ROCTRACER_CALL(roctracer_next_record(record, &record));
   }
     // Why is this here?  Well, to make sure that this thread isn't
@@ -483,7 +486,7 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
 // Init tracing routine
 int Tau_roctracer_init_tracing() {
   //return 0;
-  TAU_VERBOSE("# START init_tracing: #############################\n");
+  TAU_VERBOSE("# START roctracer init_tracing: #############################\n");
 #if (!(defined (TAU_MPI) || (TAU_SHMEM)))
   if (Tau_get_node() == -1) {
       TAU_PROFILE_SET_NODE(0);
@@ -507,7 +510,7 @@ int Tau_roctracer_init_tracing() {
 extern void Tau_roctracer_start_tracing() {
   //return;
   static int flag = Tau_roctracer_init_tracing();
-  TAU_VERBOSE("# START #############################\n");
+  TAU_VERBOSE("# START roctracer start_tracing #############################\n");
   // Enable HIP API callbacks
   ROCTRACER_CALL(roctracer_enable_domain_callback(ACTIVITY_DOMAIN_HIP_API, Tau_roctracer_api_callback, NULL));
   // Enable ROCTX Instrumentation API support
@@ -525,13 +528,13 @@ extern void Tau_roctracer_stop_tracing() {
   ROCTRACER_CALL(roctracer_disable_domain_activity(ACTIVITY_DOMAIN_HIP_OPS));
   ROCTRACER_CALL(roctracer_flush_activity());
   //Tau_stop_top_level_timer_if_necessary(); // check if this is the call for tasks.
-  TAU_VERBOSE("# STOP  #############################\n");
+  TAU_VERBOSE("# STOP roctracer stop_tracing  #############################\n");
 }
 
 // Flush tracing routine
 extern void Tau_roctracer_flush_tracing() {
   //return;
-  TAU_VERBOSE("# FLUSHING ASYNC! ###################\n");
+  TAU_VERBOSE("# roctracer FLUSHING ASYNC! ###################\n");
   ROCTRACER_CALL(roctracer_flush_activity());
 }
 

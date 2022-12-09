@@ -802,6 +802,7 @@ extern "C" { /* C linkage */
 /*********************************************************************
  * Write to stderr if verbose mode is on
  ********************************************************************/
+extern "C" x_uint64 TauMetrics_getTimeOfDay();
 void TAU_VERBOSE(const char *format, ...)
 {
   if (env_verbose == 1) {
@@ -821,6 +822,7 @@ void TAU_VERBOSE(const char *format, ...)
 
 #else
 
+    //fprintf(foo.pfile, "%llu : ", TauMetrics_getTimeOfDay());
     va_start(args, format);
 
 #ifdef TAU_GPI

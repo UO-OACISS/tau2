@@ -1497,7 +1497,7 @@ char * Tau_demangle_name(const char * name) {
     if (dem_name == NULL) {
         dem_name = strdup(name);
     }
-    TAU_VERBOSE("Demangled: '%s'\n", dem_name);
+    //TAU_VERBOSE("Demangled: '%s'\n", dem_name);
     return dem_name;
 }
 /* If no bfd + demangle, and we have C++ support, use it */
@@ -1533,7 +1533,7 @@ char * Tau_demangle_name(const char * name) {
         }
 		dem_name = strdup(name);
     }
-    TAU_VERBOSE("Demangled: '%s'\n", dem_name);
+    //TAU_VERBOSE("Demangled: '%s'\n", dem_name);
     return dem_name;
 }
 /* No support for either, just return the name */

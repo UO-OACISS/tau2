@@ -262,8 +262,12 @@ void * find_user_event(const std::string& name) {
 }
 
 void sample_user_event(const std::string& name, double value) {
-    if (TauEnv_get_tracing()) {
-        Tau_trigger_userevent(name.c_str(), value);
+    if (TauEnv_get_thread_per_gpu_stream()) {
+        std::string tmpname{
+            configuration.count("monitor_counter_prefix") > 0 ?
+            configuration["monitor_counter_prefix"] : ""};
+        tmpname += name;
+        Tau_trigger_userevent(tmpname.c_str(), value);
     } else {
         void * ue = find_user_event(name);
         Tau_userevent_thread(ue, value, 0);
@@ -1072,10 +1076,12 @@ void update_io_stats(const char * source) {
 }
 
 void read_components(void) {
+    TAU_VERBOSE("Tau monitoring : %s\n", __func__);
     static std::string tmpstr{configuration.count("monitor_counter_prefix") > 0 ?
         configuration["monitor_counter_prefix"] : ""};
     static const char * prefix = tmpstr.c_str();
 #ifdef TAU_PAPI
+    TAU_VERBOSE("Tau monitoring : reading papi\n");
     for (size_t index = 0; index < components.size() ; index++) {
         if (components[index]->initialized) {
             ppc * comp = components[index];
@@ -1157,6 +1163,7 @@ void read_components(void) {
 #endif
     }
 
+    TAU_VERBOSE("Tau monitoring : reading done!\n");
     return;
 }
 
@@ -1244,13 +1251,15 @@ void * Tau_monitoring_plugin_threaded_function(void* data) {
 
     /* If we are tracing while doing periodic measurements, then register
      * this thread so we don't collide with events on thread 0 */
-    if (TauEnv_get_tracing()) {
+    if (TauEnv_get_thread_per_gpu_stream()) {
         Tau_register_thread();
     }
 
     while (!done) {
+        TAU_VERBOSE("Tau monitoring thread: waking up\n");
         // take a reading...
         worker_working = true;
+        TAU_VERBOSE("Tau monitoring thread: reading components\n");
         read_components();
         worker_working = false;
         // wait x seconds for the next batch.  Can be floating!
@@ -1406,7 +1415,11 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
     /* Parse status metadata */
     parse_proc_self_status();
     /* Parse general stat */
-    parse_proc_self_stat();
+    /* don't do this yet - wait until the thread does it so we don't 
+       have counters on thread 0 */
+    if (!TauEnv_get_thread_per_gpu_stream()) {
+        parse_proc_self_stat();
+    }
     /* Parse initial process io data */
     previous_io_stats = read_io_stats("/proc/self/io");
     /* Parse initial process network data */
