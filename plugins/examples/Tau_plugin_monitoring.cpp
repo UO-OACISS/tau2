@@ -1415,7 +1415,7 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
     /* Parse status metadata */
     parse_proc_self_status();
     /* Parse general stat */
-    /* don't do this yet - wait until the thread does it so we don't 
+    /* don't do this yet - wait until the thread does it so we don't
        have counters on thread 0 */
     if (!TauEnv_get_thread_per_gpu_stream()) {
         parse_proc_self_stat();
@@ -1437,7 +1437,6 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
             perror("Error: pthread_create (1) fails\n");
             exit(1);
         }
-        /*
         // be free, little thread!
         ret = pthread_detach(worker_thread);
         if (ret != 0) {
@@ -1454,7 +1453,6 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
         }
         if (my_rank == 0) TAU_VERBOSE("Detached thread.\n");
         _attached = false;
-        */
     }
     return 0;
 }
