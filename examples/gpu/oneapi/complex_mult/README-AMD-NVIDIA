@@ -1,0 +1,91 @@
+To use this example with oneAPI for AMD or NVIDIA GPUs, install oneAPI and the plugins if they are not already installed in the system.
+Instructions can be found here:
+https://developer.codeplay.com/home/
+
+
+Once installed, first load oneAPI's files with the path to the files:
+source /opt/intel/oneapi/setvars.sh --include-intel-llvm
+
+For AMD:
+IMPORTANT!! At this point, the plugin for AMD is in beta, and only works with old rocm versions, such as 4.5.0
+//***************************************************************************************************************************************************************
+Configure TAU to measure rocm events, as an example:
+./configure -c++=clang++ -cc=clang -rocm=/opt/rocm-4.5.0/ -rocprofiler=/opt/rocm-4.5.0/rocprofiler -bfd=download -dwarf=download
+make install
+cd examples/gpu/oneapi/complex_mult
+#Modify Makefile to enable compilation for AMD's GPUs, uncommenting the following lines
+#CXX = clang++
+#CXXFLAGS = -fsycl -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx90a -o
+make
+SYCL_DEVICE_FILTER=hip tau_exec -rocm ./complex_mult.exe
+pprof 
+.
+.
+.
+NODE 0;CONTEXT 0;THREAD 1:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.357        0.363           1           1        364 .TAU application
+  1.7      0.00625      0.00625           1           0          6 typeinfo name for DpcppParallel(sycl::_V1::queue&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&)::{lambda(auto:1&)#1}::operator()<sycl::_V1::handler>(sycl::_V1::handler&) const::{lambda(auto:1)#1} [clone .kd]
+---------------------------------------------------------------------------------------
+
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 1
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         1      1E+04      1E+04      1E+04          0  Grid Size : typeinfo name for DpcppParallel(sycl::_V1::queue&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&)::{lambda(auto:1&)#1}::operator()<sycl::_V1::handler>(sycl::_V1::handler&) const::{lambda(auto:1)#1} [clone .kd]
+         1          0          0          0          0  LDS Memory Size : typeinfo name for DpcppParallel(sycl::_V1::queue&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&)::{lambda(auto:1&)#1}::operator()<sycl::_V1::handler>(sycl::_V1::handler&) const::{lambda(auto:1)#1} [clone .kd]
+         1         48         48         48          0  Scalar Register Size (SGPR) : typeinfo name for DpcppParallel(sycl::_V1::queue&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&)::{lambda(auto:1&)#1}::operator()<sycl::_V1::handler>(sycl::_V1::handler&) const::{lambda(auto:1)#1} [clone .kd]
+         1         24         24         24          0  Scratch Memory Size : typeinfo name for DpcppParallel(sycl::_V1::queue&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&)::{lambda(auto:1&)#1}::operator()<sycl::_V1::handler>(sycl::_V1::handler&) const::{lambda(auto:1)#1} [clone .kd]
+         1          8          8          8          0  Vector Register Size (VGPR) : typeinfo name for DpcppParallel(sycl::_V1::queue&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&)::{lambda(auto:1&)#1}::operator()<sycl::_V1::handler>(sycl::_V1::handler&) const::{lambda(auto:1)#1} [clone .kd]
+         1       1000       1000       1000          0  Work Group Size : typeinfo name for DpcppParallel(sycl::_V1::queue&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&)::{lambda(auto:1&)#1}::operator()<sycl::_V1::handler>(sycl::_V1::handler&) const::{lambda(auto:1)#1} [clone .kd]
+         1       6912       6912       6912          0  fbarrier count : typeinfo name for DpcppParallel(sycl::_V1::queue&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&)::{lambda(auto:1&)#1}::operator()<sycl::_V1::handler>(sycl::_V1::handler&) const::{lambda(auto:1)#1} [clone .kd]
+.
+.
+.
+//***************************************************************************************************************************************************************
+
+FOR NVIDIA:
+//***************************************************************************************************************************************************************
+Configure TAU to measure cupti events, as an example:
+./configure -bfd=download -cuda=/packages/cuda/11.5.2/
+make install
+cd examples/gpu/oneapi/complex_mult
+#Modify Makefile to enable compilation for AMD's GPUs, uncommenting the following lines
+#CXX = clang++
+#CXXFLAGS = -fsycl-targets=nvptx64-nvidia-cuda -o
+make
+SYCL_DEVICE_FILTER=cuda tau_exec -cupti ./complex_mult.exe
+pprof
+.
+.
+.
+NODE 0;CONTEXT 0;THREAD 1:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0          606          606           1          25     606936 .TAU application
+  0.0       0.0283       0.0283           3           0          9 Memory copy Host to Device
+  0.0         0.01         0.01           9           0          1 Stream Synchronize
+  0.0      0.00825      0.00825           1           0          8 Memory copy Device to Host
+  0.0       0.0065       0.0065           7           0          1 Event Synchronize
+  0.0      0.00425      0.00425           1           0          4 typeinfo name for DpcppParallel(sycl::_V1::queue&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&, std::vector<Complex2, std::allocator<Complex2> >&)::{lambda(auto:1&)#1}::operator()<sycl::_V1::handler>(sycl::_V1::handler&) const::{lambda(auto:1)#1}
+  0.0        0.002        0.002           4           0          0 Stream Wait
+---------------------------------------------------------------------------------------
+
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 1
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         1      8E+04      8E+04      8E+04          0  Bytes copied from Device to Host
+         1      8E+04      8E+04      8E+04          0  Bytes copied from Device to Host : Memory copy Device to Host
+         3      8E+04      8E+04      8E+04          0  Bytes copied from Host to Device
+         3      8E+04      8E+04      8E+04          0  Bytes copied from Host to Device : Memory copy Host to Device
+.
+.
+.
+//***************************************************************************************************************************************************************
+
