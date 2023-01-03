@@ -270,7 +270,11 @@ void Tau_ADIOS2_parse_selection_file(const char * filename) {
             continue;
         }
         // skip comments
-        if (str.find("#", 0) == 0) {
+        if ((str.find("#", 0) == 0) &&
+            !including_timers &&
+            !excluding_timers &&
+            !including_counters &&
+            !excluding_counters) {
             continue;
         }
         if (str.compare("BEGIN_INCLUDE_TIMERS") == 0) {
@@ -1633,11 +1637,21 @@ bool skip_timer(const char * key) {
     if (!thePluginOptions().env_use_selection) {
         return false;
     }
+    /* We use thread-local copies of the sets to speed things up.
+       First, We want to modify these sets, and we don't want to lock.
+       Also, after we've checked against all the wildcards we want
+       to explicitly include or exclude the timer after the first
+       time we see it. */
+    static thread_local std::set<std::string>
+        my_included_timers{thePluginOptions().included_timers};
+    static thread_local std::set<std::string>
+        my_excluded_timers{thePluginOptions().excluded_timers};
+
     // check to see if this label is excluded
-    if (Tau_ADIOS2_contains(thePluginOptions().excluded_timers, key, false)) {
+    if (Tau_ADIOS2_contains(my_excluded_timers, key, false)) {
         return true;
     // check to see if this label is included
-    } else if (Tau_ADIOS2_contains(thePluginOptions().included_timers, key, false)) {
+    } else if (Tau_ADIOS2_contains(my_included_timers, key, false)) {
         return false;
     } else {
         // check to see if it's in the excluded wildcards
@@ -1646,7 +1660,7 @@ bool skip_timer(const char * key) {
              it!=thePluginOptions().excluded_timers_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
-                thePluginOptions().excluded_timers.insert(key);
+                my_excluded_timers.insert(key);
                 return true;
             }
         }
@@ -1656,7 +1670,7 @@ bool skip_timer(const char * key) {
              it!=thePluginOptions().included_timers_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
-                thePluginOptions().included_timers.insert(key);
+                my_included_timers.insert(key);
                 return false;
             }
         }
@@ -1665,9 +1679,13 @@ bool skip_timer(const char * key) {
     // do we have an inclusion list? If so, then skip (because we didn't match it).
     if (!thePluginOptions().included_timers.empty() ||
         !thePluginOptions().included_timers_with_wildcards.empty()) {
+        // make the lookup faster next time
+        my_excluded_timers.insert(key);
         return true;
     }
     // by default, don't skip it.
+    // make the lookup faster next time
+    my_included_timers.insert(key);
     return false;
 }
 
@@ -1676,11 +1694,21 @@ bool skip_counter(const char * key) {
     if (!thePluginOptions().env_use_selection) {
         return false;
     }
+    /* We use thread-local copies of the sets to speed things up.
+       First, We want to modify these sets, and we don't want to lock.
+       Also, after we've checked against all the wildcards we want
+       to explicitly include or exclude the timer after the first
+       time we see it. */
+    static thread_local std::set<std::string>
+        my_included_counters{thePluginOptions().included_counters};
+    static thread_local std::set<std::string>
+        my_excluded_counters{thePluginOptions().excluded_counters};
+
     // check to see if this label is excluded
-    if (Tau_ADIOS2_contains(thePluginOptions().excluded_counters, key, false)) {
+    if (Tau_ADIOS2_contains(my_excluded_counters, key, false)) {
         return true;
     // check to see if this label is included
-    } else if (Tau_ADIOS2_contains(thePluginOptions().included_counters, key, false)) {
+    } else if (Tau_ADIOS2_contains(my_included_counters, key, false)) {
         return false;
     } else {
         // check to see if it's in the excluded wildcards
@@ -1689,7 +1717,7 @@ bool skip_counter(const char * key) {
              it!=thePluginOptions().excluded_counters_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
-                thePluginOptions().excluded_counters.insert(key);
+                my_excluded_counters.insert(key);
                 return true;
             }
         }
@@ -1699,7 +1727,7 @@ bool skip_counter(const char * key) {
              it!=thePluginOptions().included_counters_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
-                thePluginOptions().included_counters.insert(key);
+                my_included_counters.insert(key);
                 return false;
             }
         }
@@ -1708,8 +1736,12 @@ bool skip_counter(const char * key) {
     // do we have an inclusion list? If so, then skip (because we didn't match it).
     if (!thePluginOptions().included_counters.empty() ||
         !thePluginOptions().included_counters_with_wildcards.empty()) {
+        // make the lookup faster next time
+        my_excluded_counters.insert(key);
         return true;
     }
+    // make the lookup faster next time
+    my_included_counters.insert(key);
     return false;
 }
 
