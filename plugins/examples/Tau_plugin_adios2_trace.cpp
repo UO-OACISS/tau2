@@ -165,7 +165,7 @@ bool& inPlugin() {
 
 void Tau_ADIOS2_parse_environment_variables(void);
 void Tau_ADIOS2_parse_selection_file(const char * filename);
-bool Tau_ADIOS2_contains(std::set<std::string>& myset,
+bool Tau_ADIOS2_contains(std::unordered_set<std::string>& myset,
         const char * key, bool if_empty);
 
 void * Tau_ADIOS2_thread_function(void);
@@ -957,7 +957,7 @@ void adios::write_variables(void)
 /* Necessary to use const char * because UserEvents use TauSafeString objects,
  * not std::string. We use the "if_empty" parameter to tell us how to treat
  * an empty set.  For exclude lists, it's false, for include lists, it's true */
-bool Tau_ADIOS2_contains(std::set<std::string>& myset,
+bool Tau_ADIOS2_contains(std::unordered_set<std::string>& myset,
         const char * key, bool if_empty) {
     // if the set has contents, and we are in the set, then return true.
     std::string _key(key);
@@ -1642,10 +1642,12 @@ bool skip_timer(const char * key) {
        Also, after we've checked against all the wildcards we want
        to explicitly include or exclude the timer after the first
        time we see it. */
-    static thread_local std::set<std::string>
-        my_included_timers{thePluginOptions().included_timers};
-    static thread_local std::set<std::string>
-        my_excluded_timers{thePluginOptions().excluded_timers};
+    static thread_local std::unordered_set<std::string>
+        my_included_timers{std::begin(thePluginOptions().included_timers),
+                           std::end(thePluginOptions().included_timers)};
+    static thread_local std::unordered_set<std::string>
+        my_excluded_timers{std::begin(thePluginOptions().excluded_timers),
+                           std::end(thePluginOptions().excluded_timers)};
 
     // check to see if this label is excluded
     if (Tau_ADIOS2_contains(my_excluded_timers, key, false)) {
@@ -1699,10 +1701,12 @@ bool skip_counter(const char * key) {
        Also, after we've checked against all the wildcards we want
        to explicitly include or exclude the timer after the first
        time we see it. */
-    static thread_local std::set<std::string>
-        my_included_counters{thePluginOptions().included_counters};
-    static thread_local std::set<std::string>
-        my_excluded_counters{thePluginOptions().excluded_counters};
+    static thread_local std::unordered_set<std::string>
+        my_included_counters{std::begin(thePluginOptions().included_counters),
+                           std::end(thePluginOptions().included_counters)};
+    static thread_local std::unordered_set<std::string>
+        my_excluded_counters{std::begin(thePluginOptions().excluded_counters),
+                           std::end(thePluginOptions().excluded_counters)};
 
     // check to see if this label is excluded
     if (Tau_ADIOS2_contains(my_excluded_counters, key, false)) {
