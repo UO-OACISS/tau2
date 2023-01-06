@@ -94,8 +94,13 @@ void Tau_plugin_recvmsg(long unsigned int type, long unsigned int source, long u
 
 /******************************************************/
 #if (defined(sgi) || defined(TAU_MPI_NEEDS_STATUS))
+#ifdef TAU_USE_PMPI_F2C
+#define MPI_Status_f2c PMPI_Status_f2c
+#define MPI_Status_c2f PMPI_Status_c2f
+#else /* TAU_USE_PMPI_F2C */
 #define MPI_Status_c2f(c,f) *(MPI_Status *)f=*(MPI_Status *)c 
 #define MPI_Status_f2c(f,c) *(MPI_Status *)c=*(MPI_Status *)f
+#endif /* TAU_USE_PMPI_F2C */
 #endif /* sgi || TAU_MPI_NEEDS_STATUS */
 
 #endif /* _TAU_UTIL_H_ */

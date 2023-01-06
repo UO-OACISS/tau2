@@ -9143,8 +9143,15 @@ fi
 if $mpicompiler tools/src/tests/mpistatus.c $mpiwarnings $orig_useropt $mpi_include  1> /dev/null 2>&1 ; then
     echo "MPI_Status f2c/c2f found..."
 else
-    echo "MPI_Status c2f/f2c functions are needed"
-    fixmakeargs="$fixmakeargs MPINEEDSTATUSCONV"
+	# In mvapich2 3.0a MPI_Status_f2c is only available as PMPI_Status_f2c. We need to check if -c works
+	# if linking fails. 
+    if $mpicompiler -c tools/src/tests/mpistatus.c $mpiwarnings $orig_useropt $mpiinc  1> /dev/null 2>&1 ; then
+      echo "TAU: Using PMPI_Status_f2c/c2f instead of MPI_Status_f2c/c2f"
+      fixmakeargs="$fixmakeargs USE_PMPI_STATUS_F2C"
+    else	      
+      echo "MPI_Status c2f/f2c functions are needed"
+      fixmakeargs="$fixmakeargs MPINEEDSTATUSCONV"
+    fi
 fi
 
 /bin/rm -rf tools/src/tests/*.o tools/src/tests/a.out

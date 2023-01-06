@@ -898,6 +898,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+    USE_PMPI_STATUS_F2C)
+        echo "NOTE: Using PMPI_Status_c2f/f2c routines"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      MPI_THREADED)
         echo NOTE: Using the TAU MPI_Init_thread Profiling Interface Wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
