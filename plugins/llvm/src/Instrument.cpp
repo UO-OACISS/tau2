@@ -834,11 +834,9 @@ RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible, registerInstrumentPass);
         }};
     }
     
-#ifndef LLVM_BYE_LINK_INTO_TOOLS
     extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
         llvmGetPassPluginInfo() {
         return getInstrumentPluginInfo();
     }
-#endif
 
 #endif
