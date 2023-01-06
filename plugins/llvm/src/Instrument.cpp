@@ -781,8 +781,6 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
    PreservedAnalyses run(Module &module, ModuleAnalysisManager &) {
        bool modified = false;
        for (auto &func : module.getFunctionList()) {
-           auto name = func.getName();
-           
            bool instru = maybeSaveForProfiling( func );
            
            if( TauDryRun ) {
