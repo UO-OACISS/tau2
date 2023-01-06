@@ -1353,8 +1353,13 @@ if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
     # AMD clang version 13.0.0   -> use the 4th column instead of 3rd. 
       clang_version=`$compilerSpecified --version | grep "clang version" | awk {'print $4'} | awk -F'.' {'print $1'}`
     fi
-    if [[ "$clang_version" -ge "13" ]] ; then    
-	CLANG_LEGACY="-flegacy-pass-manager"
+    if [[ "$clang_version" -ge "14" ]] ; then    
+	CLANG_PLUGIN_OPTION="-fpass-plugin"
+    else
+	CLANG_PLUGIN_OPTION="-fplugin"
+	if [[ "$clang_version" -ge "13" ]] ; then    
+	    CLANG_LEGACY="-flegacy-pass-manager"
+	fi
     fi
 fi
 
@@ -2213,10 +2218,10 @@ else
 		       argsRemaining=`echo $argsRemaining | sed -e 's@-finstrument-functions-after-inlining@@g' | sed -e 's@-finstrument-functions@@g'`
 			 if [ "x$tauSelectFile" != "x" ]; then
 			     # TODO check the plugin exists here (done above)
-			     optCompInstOption="-g ${CLANG_LEGACY} -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
+			     optCompInstOption="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
 			 else
 			     # instrument every function -> do not pass any select file
-			     optCompInstOption="-g ${CLANG_LEGACY} -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
+			     optCompInstOption="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
 #			     optCompInstOption="-finstrument-functions"
 			 fi
 		     fi
@@ -2324,10 +2329,10 @@ else
 			     argsRemaining=`echo $argsRemaining | sed -e 's@-finstrument-functions-after-inlining@@g' | sed -e 's@-finstrument-functions@@g'`
 			     if [ "x$tauSelectFile" != "x" ]; then
 				 # TODO check the plugin exists here (done above)
-				 extraopt="-g ${CLANG_LEGACY} -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
+				 extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
 			     else
 				 # instrument every function
-				 extraopt="-g ${CLANG_LEGACY} -fplugin=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
+				 extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
 			     fi
 			 fi
 		     fi
