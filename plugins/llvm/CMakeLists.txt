@@ -30,13 +30,10 @@ endif()
 
 # LLVM 13 is using a new pass manager. Use it, unless asked. 
 OPTION(LEGACY_PM "Use the legacy pass manager with LLVM 13" OFF) 
-if(${CLANG_VERSION_MAJOR} VERSION_GREATER_EQUAL 13)
-  #  if(LEGACY_PM)
-  # TMP
-    ADD_DEFINITIONS(-DLEGACY_PM=1)
-#  else()
-#    ADD_DEFINITIONS(-DLEGACY_PM=0)
-#  endif(LEGACY_PM)
+if(${CLANG_VERSION_MAJOR} VERSION_GREATER_EQUAL 14)
+  # C++14 is not enough anymore
+    set (CMAKE_CXX_STANDARD 17)
+    ADD_DEFINITIONS(-DLEGACY_PM=0)
 else()
   ADD_DEFINITIONS(-DLEGACY_PM=1)
 endif()

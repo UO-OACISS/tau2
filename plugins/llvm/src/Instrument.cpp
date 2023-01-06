@@ -17,14 +17,18 @@
 // https://llvm.org/devmtg/2020-09/slides/Finkel-Changing_Everything_With_Clang_Plugins.pdf
 //
 //===----------------------------------------------------------------------===//
+//
+// Updated to work with the legacy PM (which once was called the new PM)
+// working with LLVM 7 -> 13 (with -flegacy-pm) and LLVM 13 and beyond
+//
+//===----------------------------------------------------------------------===//
 
 #define GLIBCXX_USE_CXX11_ABI 0
 
 #include <fstream>
 #include <regex>
 
-#include "llvm/Pass.h"
-#include "llvm/ADT/Statistic.h"
+#include "llvm/ADT/Statistic.h" //
 #include "llvm/ADT/StringSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/IRBuilder.h"
@@ -41,29 +45,53 @@
 #include <clang/Basic/SourceManager.h>
 
 #if LEGACY_PM
+#include "llvm/Pass.h"
 // Need these to use Sampson's registration technique
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/IR/LegacyPassManager.h"
 
 #else
 // new pass manager
-#include "llvm/IR/PassManager.h"
 #include "clang/Frontend/FrontendPluginRegistry.h"
+#include "clang/AST/AST.h"
+#include "clang/AST/ASTConsumer.h"
+#include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Frontend/CompilerInstance.h"
-#include "llvm/IR/LegacyPassManager.h"
+#include "clang/Sema/Sema.h"
+#include "clang/AST/Stmt.h"
+#include "llvm/Pass.h"
+
+#include "clang/Frontend/FrontendAction.h"
+#include "clang/Tooling/Tooling.h"
+
+#include "llvm/IR/PassManager.h"
+#include "llvm/Passes/PassPlugin.h"
+#include "llvm/Passes/PassBuilder.h"
+
+#include "llvm/IR/Function.h"
+#include "llvm/IR/InstIterator.h"
+#include "llvm/Pass.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/raw_ostream.h"
+
+
+#include "clang/Frontend/FrontendAction.h"
+#include "clang/Tooling/Tooling.h"
+
+
+#include "llvm/IR/PassManager.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/InstIterator.h"
+
+
+#include <clang/Basic/SourceLocation.h>
 #endif
 
 #ifdef TAU_PROF_CXX
 #include <cxxabi.h>
 #endif
-
-/*
-#if LEGACY_PM
-#warning "Compiling using the legacy PM"
-#else
-#warning "Compiling using the new PM"
-#endif
-*/
 
 // Other passes do this, so I assume the macro is useful somewhere
 #define DEBUG_TYPE "tau-profile"
@@ -120,9 +148,7 @@ TauIRegex("tau-iregex",
 
 cl::opt<bool>
 TauDryRun("tau-dry-run",
-         cl::desc("Don't actually instrument the code, just print what would be instrumented"));
-
-
+         cl::desc("Don't actually instrument the code, just print what would be instrumented"));    
 
 auto TauInitFunc = "Tau_init"; // arguments to pass: argc, argv
 auto TauSetNodeFunc = "Tau_set_node"; // argument to pass: 0
@@ -192,19 +218,12 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
     return module->getOrInsertFunction(funcname, funcTy);
 }
 
+/* All the common methods and attributes go in there */
+ 
+ class Tools{
 
-  /*!
-   * The instrumentation pass.
-   */
-#if LEGACY_PM
- struct Instrument : public FunctionPass {
-#else
-     struct Instrument :  public PassInfoMixin<Instrument>, public clang::ASTConsumer  {
-#endif
-    using CallAndName = std::pair<CallInst *, StringRef>;
-
-    static char ID; // Pass identification, replacement for typeid
-    StringSet<> funcsOfInterest;
+ public:
+     StringSet<> funcsOfInterest;
     StringSet<> funcsExcl;
     //StringSet<> funcsOfInterestRegex;
     //StringSet<> funcsExclRegex;
@@ -226,73 +245,8 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
     std::regex irex{TauIRegex,
                     std::regex_constants::ECMAScript | std::regex_constants::icase};
 
-#if LEGACY_PM
-        Instrument() : FunctionPass(ID) {
-#else
-        Instrument() : PassInfoMixin<Instrument>() {
-#endif
-	  char *do_verbose = getenv("TAU_COMPILER_VERBOSE");
-      if (do_verbose != nullptr) {
-        verbose = true;
-      } else {
-        verbose = false;
-      }
-	  char *mic = getenv("TAU_COMPILER_MIN_INSTRUCTION_COUNT");
-      if (mic != nullptr) {
-        minInstructionCount = std::stoul(std::string(mic));
-        if (verbose) errs() << "TAU_COMPILER_MIN_INSTRUCTION_COUNT set to "
-            << minInstructionCount << "\n";
-      } else {
-        minInstructionCount = 50;
-        if (verbose) errs() << "TAU_COMPILER_MIN_INSTRUCTION_COUNT set to "
-            << minInstructionCount << "\n";
-      }
 
-    /* Add some important regular expressions to the exclusion set of regular expressions */
-    // Anything from the standard library
-    funcsExclRegex.push_back( std::regex( "[^(]+ std::.*" ) );
-    funcsExclRegex.push_back( std::regex( "decltype(.*) std::.*" ) );
-    funcsExclRegex.push_back( std::regex( "decltype (.*) std::.*" ) );
-    funcsExclRegex.push_back( std::regex( "std::.*" ) );
-    // Anything from the C++ internals
-    funcsExclRegex.push_back( std::regex( "[^(]+ __cxx.*" ) );
-    funcsExclRegex.push_back( std::regex( "__cxx.*" ) );
-    // Anything from the GNU C++ internals
-    funcsExclRegex.push_back( std::regex( "[^(]+ __gnu_cxx.*" ) );
-    funcsExclRegex.push_back( std::regex( "__gnu_cxx.*" ) );
-    // Anything from the LLVM internals
-    funcsExclRegex.push_back( std::regex( "[^(]+ llvm::.*" ) );
-    funcsExclRegex.push_back( std::regex( "decltype(.*) llvm::.*" ) );
-    funcsExclRegex.push_back( std::regex( "decltype (.*) llvm::.*" ) );
-    funcsExclRegex.push_back( std::regex( "llvm::.*" ) );
-    // Anything that couldn't be demangled
-    funcsExclRegex.push_back( std::regex( "_Z.*" ) );
-    // Other things we've encountered that aren't interesting
-    funcsExclRegex.push_back( std::regex( "__gthread_active_p.*" ) );
-    funcsExclRegex.push_back( std::regex( "_GLOBAL__sub_.*" ) );
-      if(!TauInputFile.empty()) {
-          std::ifstream ifile{TauInputFile};
-          if( !ifile ){
-              errs() << "Could not open input file\n";
-              return;
-          }
-          loadFunctionsFromFile(ifile);
-      } else {
-          if (verbose) errs() << "Checking selective instrumentation file specified in env. variable TAU_COMPILER_SELECT_FILE\n";
-	  char *fname = getenv("TAU_COMPILER_SELECT_FILE");
-	  if (fname) {
-            if (verbose) errs() << "TAU_COMPILER_SELECT_FILE = "<<fname<<"\n";
-            std::ifstream ifile{fname};
-            if( !ifile ){
-              errs() << "Could not open input file: " << fname<<"\n";
-              return;
-            }
-            loadFunctionsFromFile(ifile);
-	  }
-      }
-    }
-
-  /*!
+       /*!
    * Given an open file, a token and two vectors, read what is coming next and
    * put it in the vector or its regex counterpart until the token has been
    * reached.
@@ -454,41 +408,6 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
       }
     }
 
-    /*!
-     *  The FunctionPass interface method, called on each function produced from
-     *  the original source.
-     */
-#if LEGACY_PM
-         bool runOnFunction(Function &func) override {
-#else
-         PreservedAnalyses run(Function &func, FunctionAnalysisManager &AM){
-#endif
-      bool modified = false;
-
-      bool instru = maybeSaveForProfiling( func );
-
-      if( TauDryRun ) {
-        // TODO: Fix this.
-        // getName() doesn't seem to give a properly mangled name
-	/*  auto pretty_name = normalize_name(func.getName());
-        if(pretty_name.empty()) pretty_name = func.getName();
-	errs() << pretty_name << " would be instrumented\n";*/
-#if LEGACY_PM
-        return false; // Dry run does not modify anything
-#else
-      return PreservedAnalyses();
-#endif
-      }
-      if( instru ){
-          modified |= addInstrumentation( func );
-      }
-#if LEGACY_PM
-      return modified;
-#else
-      return PreservedAnalyses();
-#endif
-   }
-
    /* Get the call's location.
     NB: this is obtained from debugging information, and therefore needs
     -g to be acessible.
@@ -497,13 +416,17 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
        std::string filename;
 
        DISubprogram* s = call.getSubprogram();
-       if( s != nullptr ){
+      if( s != nullptr ){
            StringRef theFile = s->getFilename();
            StringRef theDir = s->getDirectory();
            filename = theDir.str() + "/" + theFile.str();
        } else {
             auto pi = inst_begin( &call );
-            Instruction* instruction = &*pi;
+           Instruction* instruction = &*pi;
+           if( nullptr == instruction ){
+               /* TODO what are we doing in this case? */
+               return "";
+           }
             const llvm::DebugLoc &debugInfo = instruction->getDebugLoc();
 
             if( NULL != debugInfo ){ /* if compiled with -g */
@@ -544,7 +467,9 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
      * \param call The CallInst to inspect
      * \param calls Vector to add to, if the CallInst should be profiled
      */
+
   bool maybeSaveForProfiling( Function& call ){
+     /* In this implementation, we enter the function from its call somewhere in the program  */
     StringRef callName = call.getName();
     std::string filename = getFilename( call );
     StringRef prettycallName = normalize_name(callName);
@@ -746,12 +671,144 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
       return mutated;
     }
          };
- }
 
+  /*!
+   * The instrumentation pass.
+   */
+#if LEGACY_PM
+    struct Instrument : public FunctionPass, public Tools {
+#else
+    class Instrument :  public PassInfoMixin<Instrument>, public Tools  {
+#endif
+    using CallAndName = std::pair<CallInst *, StringRef>;
 
+    static char ID; // Pass identification, replacement for typeid
+
+    public:
+         
+#if LEGACY_PM
+        Instrument() : FunctionPass(ID) {
+#else
+            Instrument() {
+#endif
+                
+	  char *do_verbose = getenv("TAU_COMPILER_VERBOSE");
+      if (do_verbose != nullptr) {
+        verbose = true;
+      } else {
+        verbose = false;
+      }
+	  char *mic = getenv("TAU_COMPILER_MIN_INSTRUCTION_COUNT");
+      if (mic != nullptr) {
+        minInstructionCount = std::stoul(std::string(mic));
+        if (verbose) errs() << "TAU_COMPILER_MIN_INSTRUCTION_COUNT set to "
+            << minInstructionCount << "\n";
+      } else {
+        minInstructionCount = 50;
+        if (verbose) errs() << "TAU_COMPILER_MIN_INSTRUCTION_COUNT set to "
+            << minInstructionCount << "\n";
+      }
+
+    /* Add some important regular expressions to the exclusion set of regular expressions */
+    // Anything from the standard library
+    funcsExclRegex.push_back( std::regex( "[^(]+ std::.*" ) );
+    funcsExclRegex.push_back( std::regex( "decltype(.*) std::.*" ) );
+    funcsExclRegex.push_back( std::regex( "decltype (.*) std::.*" ) );
+    funcsExclRegex.push_back( std::regex( "std::.*" ) );
+    // Anything from the C++ internals
+    funcsExclRegex.push_back( std::regex( "[^(]+ __cxx.*" ) );
+    funcsExclRegex.push_back( std::regex( "__cxx.*" ) );
+    // Anything from the GNU C++ internals
+    funcsExclRegex.push_back( std::regex( "[^(]+ __gnu_cxx.*" ) );
+    funcsExclRegex.push_back( std::regex( "__gnu_cxx.*" ) );
+    // Anything from the LLVM internals
+    funcsExclRegex.push_back( std::regex( "[^(]+ llvm::.*" ) );
+    funcsExclRegex.push_back( std::regex( "decltype(.*) llvm::.*" ) );
+    funcsExclRegex.push_back( std::regex( "decltype (.*) llvm::.*" ) );
+    funcsExclRegex.push_back( std::regex( "llvm::.*" ) );
+    // Anything that couldn't be demangled
+    funcsExclRegex.push_back( std::regex( "_Z.*" ) );
+    // Other things we've encountered that aren't interesting
+    funcsExclRegex.push_back( std::regex( "__gthread_active_p.*" ) );
+    funcsExclRegex.push_back( std::regex( "_GLOBAL__sub_.*" ) );
+      if(!TauInputFile.empty()) {
+          std::ifstream ifile{TauInputFile};
+          if( !ifile ){
+              errs() << "Could not open input file\n";
+              return;
+          }
+          loadFunctionsFromFile(ifile);
+      } else {
+          if (verbose) errs() << "Checking selective instrumentation file specified in env. variable TAU_COMPILER_SELECT_FILE\n";
+	  char *fname = getenv("TAU_COMPILER_SELECT_FILE");
+	  if (fname) {
+            if (verbose) errs() << "TAU_COMPILER_SELECT_FILE = "<<fname<<"\n";
+            std::ifstream ifile{fname};
+            if( !ifile ){
+              errs() << "Could not open input file: " << fname<<"\n";
+              return;
+            }
+            loadFunctionsFromFile(ifile);
+  	  }
+    }
+   }
+
+    /*!
+     *  The FunctionPass interface method, called on each function produced from
+     *  the original source.
+     */
+#if LEGACY_PM
+   bool runOnFunction(Function &func) override {
+      bool modified = false;
+
+      bool instru = maybeSaveForProfiling( func );
+              
+      
+      if( TauDryRun ) {
+        // TODO: Fix this.
+        // getName() doesn't seem to give a properly mangled name
+	/*  auto pretty_name = normalize_name(func.getName());
+        if(pretty_name.empty()) pretty_name = func.getName();
+	errs() << pretty_name << " would be instrumented\n";*/
+        return false; // Dry run does not modify anything
+      }
+      if( instru ){
+          modified |= addInstrumentation( func );
+      }
+      return modified;
+   }
+   #else
+   PreservedAnalyses run(Module &module, ModuleAnalysisManager &) {
+       bool modified = false;
+       for (auto &func : module.getFunctionList()) {
+           auto name = func.getName();
+           
+           bool instru = maybeSaveForProfiling( func );
+           
+           if( TauDryRun ) {
+               return PreservedAnalyses::all(); // Dry run does not modify anything
+           }
+           if( instru ){
+               modified |= addInstrumentation( func );
+           }
+           
+       }            
+       if( modified ){
+           return PreservedAnalyses::none();
+       } else {
+           return PreservedAnalyses::all();
+       }
+   }
+   
+   static bool isRequired() { return true; }
+   
+#endif
+      
+        };
 
 #if LEGACY_PM      /* Legacy pass manager */
 
+     }
 char Instrument::ID = 0;
 
 static RegisterPass<Instrument> X("TAU", "TAU Profiling", false, false);
@@ -766,18 +823,22 @@ static RegisterStandardPasses
 RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible, registerInstrumentPass);
 
 #else  /* New pass manager */
-
-class PluginInstrument : public clang::PluginASTAction {
-protected:
-    std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &CI, StringRef file) {
-        return std::make_unique<Instrument>();
+        
+}
+    
+    llvm::PassPluginLibraryInfo getInstrumentPluginInfo() {
+        return {LLVM_PLUGIN_API_VERSION, "TAU", LLVM_VERSION_STRING, []( PassBuilder &PB ) {
+            PB.registerPipelineStartEPCallback( [&](ModulePassManager &MPM, OptimizationLevel Level ) {
+                MPM.addPass( Instrument() );
+            });
+        }};
     }
-
-    bool ParseArgs(const clang::CompilerInstance &CI, const std::vector<std::string> &args) {
-        return true;
+    
+#ifndef LLVM_BYE_LINK_INTO_TOOLS
+    extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
+        llvmGetPassPluginInfo() {
+        return getInstrumentPluginInfo();
     }
-};
-
-static  clang::FrontendPluginRegistry::Add<PluginInstrument> X("TAU", "TAU profiling");
+#endif
 
 #endif
