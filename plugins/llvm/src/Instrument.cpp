@@ -612,7 +612,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
         shorter.resize(80, '.');
       }
       if (verbose) errs() << "Adding instrumentation in " << shorter << '\n';
-            bool mutated = false; // TODO
+      bool mutated = false; // TODO
 
       /* Add TAU init in main */
 
@@ -650,22 +650,29 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
       // Insert instrumentation before the first instruction
       auto pi = inst_begin( &func );
       Instruction* i = &*pi;
-      IRBuilder<> before( i );
-
-      // This is the recommended way of creating a string constant (to be used
-      // as an argument to runtime functions)
-      Value *strArg = before.CreateGlobalStringPtr( ( prettyname + " " + location ).str() );
-      SmallVector<Value *, 1> args{strArg};
-      before.CreateCall( onCallFunc, args );
-      mutated = true;
-
-      // We need to find all the exit points for this function
-
-      for( inst_iterator I = inst_begin( func ), E = inst_end( func ); I != E; ++I){
-          Instruction* e = &*I;
-          if( isa<ReturnInst>( e ) ) {
-              IRBuilder<> fina( e );
-              fina.CreateCall( onRetFunc, args );
+      /* Here we can have a null pointer if the function is empty.
+         By default, this should not happen because the default threshold for the instruction
+         count is > 0. But if we set it to 0, pi is nullptr.
+         In this case, do not do what is next because it does not make any sense 
+         to instrument here. */
+      if( nullptr != i ){
+          IRBuilder<> before( i );
+          
+          // This is the recommended way of creating a string constant (to be used
+          // as an argument to runtime functions)
+          Value *strArg = before.CreateGlobalStringPtr( ( prettyname + " " + location ).str() );
+          SmallVector<Value *, 1> args{strArg};
+          before.CreateCall( onCallFunc, args );
+          mutated = true;
+          
+          // We need to find all the exit points for this function
+          
+          for( inst_iterator I = inst_begin( func ), E = inst_end( func ); I != E; ++I){
+              Instruction* e = &*I;
+              if( isa<ReturnInst>( e ) ) {
+                  IRBuilder<> fina( e );
+                  fina.CreateCall( onRetFunc, args );
+              }
           }
       }
       return mutated;
@@ -731,7 +738,18 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
     // Other things we've encountered that aren't interesting
     funcsExclRegex.push_back( std::regex( "__gthread_active_p.*" ) );
     funcsExclRegex.push_back( std::regex( "_GLOBAL__sub_.*" ) );
-      if(!TauInputFile.empty()) {
+
+    // Let's not instrument TAU stuff. They should normally be eliminated because of their instruction count anyway
+    std::string taufuncname = TauStartFunc + '*';
+    funcsExclRegex.push_back( std::regex( taufuncname ) );
+    taufuncname = TauStopFunc + '*';
+    funcsExclRegex.push_back( std::regex( taufuncname ) );
+    taufuncname = "Tau_init*";
+    funcsExclRegex.push_back( std::regex( taufuncname ) );
+    taufuncname = "Tau_set_node*";
+    funcsExclRegex.push_back( std::regex( taufuncname ) );
+
+    if(!TauInputFile.empty()) {
           std::ifstream ifile{TauInputFile};
           if( !ifile ){
               errs() << "Could not open input file\n";
@@ -777,7 +795,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
       }
       return modified;
    }
-   #else
+#else
    PreservedAnalyses run(Module &module, ModuleAnalysisManager &) {
        bool modified = false;
        for (auto &func : module.getFunctionList()) {
