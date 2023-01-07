@@ -416,15 +416,19 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
        std::string filename;
 
        DISubprogram* s = call.getSubprogram();
-      if( s != nullptr ){
+       if( s != nullptr ){
            StringRef theFile = s->getFilename();
            StringRef theDir = s->getDirectory();
            filename = theDir.str() + "/" + theFile.str();
        } else {
-            auto pi = inst_begin( &call );
+           auto pi = inst_begin( &call );
            Instruction* instruction = &*pi;
            if( nullptr == instruction ){
-               /* TODO what are we doing in this case? */
+               /* We do not have the list of instruction of some functions, 
+                  such as functions defined in external libraries. In this case,
+                  just return an empty string. The used might or might not want
+                  to instrument them, so it is up to them to decide, but not based
+                  on information on the file the function is defined in. */
                return "";
            }
             const llvm::DebugLoc &debugInfo = instruction->getDebugLoc();
