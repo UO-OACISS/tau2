@@ -37,6 +37,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/IR/InstIterator.h"
+#include "llvm/Pass.h"
 
 #include "llvm/ADT/Triple.h"
 
@@ -45,48 +46,16 @@
 #include <clang/Basic/SourceManager.h>
 
 #if LEGACY_PM
-#include "llvm/Pass.h"
 // Need these to use Sampson's registration technique
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/IR/LegacyPassManager.h"
 
 #else
 // new pass manager
-#include "clang/Frontend/FrontendPluginRegistry.h"
-#include "clang/AST/AST.h"
-#include "clang/AST/ASTConsumer.h"
-#include "clang/AST/RecursiveASTVisitor.h"
-#include "clang/Frontend/CompilerInstance.h"
-#include "clang/Sema/Sema.h"
-#include "clang/AST/Stmt.h"
-#include "llvm/Pass.h"
-
-#include "clang/Frontend/FrontendAction.h"
-#include "clang/Tooling/Tooling.h"
-
 #include "llvm/IR/PassManager.h"
 #include "llvm/Passes/PassPlugin.h"
 #include "llvm/Passes/PassBuilder.h"
 
-#include "llvm/IR/Function.h"
-#include "llvm/IR/InstIterator.h"
-#include "llvm/Pass.h"
-#include "llvm/Support/CommandLine.h"
-#include "llvm/Support/raw_ostream.h"
-
-
-#include "clang/Frontend/FrontendAction.h"
-#include "clang/Tooling/Tooling.h"
-
-
-#include "llvm/IR/PassManager.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/Constants.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/InstIterator.h"
-
-
-#include <clang/Basic/SourceLocation.h>
 #endif
 
 #ifdef TAU_PROF_CXX
@@ -681,7 +650,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
       }
       return mutated;
     }
-         };
+ };
 
   /*!
    * The instrumentation pass.
