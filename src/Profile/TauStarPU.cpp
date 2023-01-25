@@ -101,6 +101,8 @@ extern "C" {
 
     device_types[starpu_prof_tool_driver_cpu] = "CPU";
     device_types[starpu_prof_tool_driver_gpu] = "GPU";
+    device_types[starpu_prof_tool_driver_hip] = "HIP";
+    device_types[starpu_prof_tool_driver_ocl] = "OpenCL";
 
     event_types[starpu_prof_tool_event_none] = "StarPU None";
     event_types[starpu_prof_tool_event_init] = "StarPU";
