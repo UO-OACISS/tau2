@@ -1311,6 +1311,7 @@ typedef struct metric_names_count {
     const char **counterNames;
     int numCounters;
     int counter_index[TAU_MAX_COUNTERS] = {0};
+    int firstIndex;
 } metric_names_count_t;
 
 metric_names_count& get_metric_names_count() {
@@ -1318,6 +1319,11 @@ metric_names_count& get_metric_names_count() {
     TauMetrics_getCounterList(&the_data.counterNames, &the_data.numCounters);
     for (int i = 0 ; i < the_data.numCounters ; i++) {
         the_data.counter_index[i] = my_adios().check_counter(the_data.counterNames[i]);
+    }
+    the_data.firstIndex = 1;
+    // if the first metric isn't time, then we should output it
+    if (strstr(the_data.counterNames[0], "TIME") == NULL) {
+        the_data.firstIndex = 0;
     }
     return the_data;
 }
@@ -1377,7 +1383,7 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     static metric_names_count_t metric_data = get_metric_names_count();
     // Iterate over the metrics
     auto &tmp2 = my_adios().getAdiosThread(data->tid)->counter_values;
-    for (int i = 0 ; i < metric_data.numCounters ; i++) {
+    for (int i = metric_data.firstIndex ; i < metric_data.numCounters ; i++) {
         std::array<tau_data_t, 5> tmparray2;
         tmparray2[0] = 0UL;
         tmparray2[1] = (tau_data_t)(global_comm_rank);
