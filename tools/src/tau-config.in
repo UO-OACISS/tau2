@@ -10,6 +10,7 @@ my $SICORTEX="no";
 my $PREFIX="no";
 my $DEFAULT_MAKEFILE="";
 my $DEFAULT_BINDING="";
+my $PYTHONINT="@PYTHONINTV@";
 
 my $TauOptions="";
 my $TauOptionsExclude="";
@@ -43,6 +44,7 @@ if (@ARGV == 0) {
     print "PREFIX=$PREFIX\n";
     print "DEFAULT_MAKEFILE=$DEFAULT_MAKEFILE\n";
     print "DEFAULT_BINDING=\"$DEFAULT_BINDING\"\n";
+    print "PYTHONINT=$PYTHONINT\n";
     exit 0
 }
 

@@ -780,6 +780,7 @@ usage() {
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-darshan=<dir> ............... Specify location of Darshan I/O package."
     echo "-python .. Automatically choose python options based on Python in path."
+    echo "-python3  Automatically choose python options based on Python3 in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-pythonlibrary=<library> ......... Specify name of Python library file."
@@ -953,6 +954,7 @@ for arg in "$@"; do
         echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
         echo "-gasnet=<dir>  ............ Specify location of GASNET for UPC wrapper."
         echo "-python .. Automatically choose python options based on Python in path."
+	echo "-python3  Automatically choose python options based on Python3 in path."
         echo "-pythoninc=<dir> ........ Specify location of Python include directory."
         echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
         echo "-starpu[=<dir>] ................................ Enable StarPU support."
@@ -1131,7 +1133,9 @@ extra_linker_args=
 pythoninc=
 pythonlib=
 python=no
+python3=no
 pythonlibrary=
+pythonintv=python
 sicortex=no
 extradir=
 extrashlibopts=
@@ -2613,6 +2617,17 @@ for arg in "$@"; do
         pthread=yes
             shift
             ;;
+	
+	-python3)
+            pythonbin=`which python3 | sed 's,[^/]*$,,'`
+	    python=yes
+            python3=yes
+	    pythonintv=python3
+        # Python can/will spawn threads
+        pthread=yes
+            shift
+            ;;
+
 
         -pythoninc=*)
             pythoninc=`echo $arg | sed -e 's/-pythoninc=//' -e 's/ /#/g'`
@@ -3193,9 +3208,34 @@ for arg in "$@"; do
 done
 
 # Check for Python
+if [ "x$python3"  = "xyes" ] ; then
+  if [ "x$pythoninc" = "x" ] ; then
+    pythoninc=`echo ${pythonbin}../include/python3* | sed -e 's/ .*//g'`
+    echo "Using Python3 include files from: $pythoninc"
+    if [ ! -d $pythoninc ] ; then
+        echo "Error: Cannot access Python include directory $pythoninc"
+        exit 1
+    fi
+  fi
+  if [ "x$pythonlib" = "x" ] ; then
+    for libdir in "lib64" "lib32" "lib" ; do
+      pythonlib=`echo ${pythonbin}../${libdir}/python3* | sed -e 's/ .*//g'`
+      if [ -d "$pythonlib" ] ; then
+        echo "Using Python3 library files from: $pythonlib"
+        break
+      fi
+    done
+    if [ ! -d $pythonlib ] ; then
+      echo "Error: Cannot access Python lib directory $pythonlib"
+      exit 1
+    fi
+  fi
+else
+
 if [ "x$python"  = "xyes" ] ; then
   if [ "x$pythoninc" = "x" ] ; then
     pythoninc=`echo ${pythonbin}../include/python* | sed -e 's/ .*//g'`
+    echo " Using Python include files from:$pythoninc"
     if [ ! -d $pythoninc ] ; then
         echo "Error: Cannot access Python include directory $pythoninc"
         exit 1
@@ -3205,6 +3245,7 @@ if [ "x$python"  = "xyes" ] ; then
     for libdir in "lib64" "lib32" "lib" ; do
       pythonlib=`echo ${pythonbin}../${libdir}/python* | sed -e 's/ .*//g'`
       if [ -d "$pythonlib" ] ; then
+	echo "Using Python library files from: $pythonlib"
         break
       fi
     done
@@ -3215,6 +3256,7 @@ if [ "x$python"  = "xyes" ] ; then
   fi
 fi
 
+fi
 if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler -a "x$roctracerdir" = "x" ]; then
   rocprofilerdir=$rocmdir/rocprofiler
   fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER TAU_USE_GPU"
@@ -12662,7 +12704,7 @@ cp ${tauroot}/tools/src/tau2slog2/bin/tau2slog2.jar ${targetdir}/${architecture}
 
 
 cat ${tauroot}/tools/src/tau-config.in |
-sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' -e 's,@PYTHONINTV@,'$pythonintv',' \
     > ${targetdir}/${architecture}/bin/tau-config
 chmod a+rx ${targetdir}/${architecture}/bin/tau-config
 

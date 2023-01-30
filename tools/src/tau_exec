@@ -13,7 +13,15 @@ fi
 eval `tau-config`
 
 scriptname=`basename $0`
+
+
+
 python_interpreter=python
+if tau-config | grep -q 'PYTHONINT=python3' 2>/dev/null ; then
+  python_interpreter=python3
+fi
+
+
 if [ "$scriptname" == "tau_python" ] ; then
   python_wrapper=true
   spark_wrapper=false
