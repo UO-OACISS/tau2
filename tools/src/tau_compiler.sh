@@ -2403,10 +2403,10 @@ else
           newCmd="$CMD $listOfObjectFiles $objectFilesForLinking $argsRemaining $OUTPUTARGSFORTAU"
 
           # check for -lc, if found, move it to the end
-          check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc\)\W.*/\1/g'`
-          regularCmd=`echo "$regularCmd" | sed -e 's/-lc\W/ /'`
+          check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc \)\W.*/\1/g'`
+          regularCmd=`echo "$regularCmd" | sed -e 's/-lc \W/ /'`
           if [ "x$check_lc" = "x-lc" ] ; then
-              optLinking="newCmd -lc"
+              optLinking="$newCmd -lc"
           fi
 
           echoIfDebug "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
