@@ -1610,9 +1610,9 @@ if [ $numFiles == 0 ]; then
 
 
     # check for -lc, if found, move it to the end
-    check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc\)\W.*/\1/g'`
-    regularCmd=`echo "$regularCmd" | sed -e 's/-lc\W/ /'`
-    if [ "x$check_lc" = "x-lc" ] ; then
+    check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc \)\W.*/\1/g'`
+    regularCmd=`echo "$regularCmd" | sed -e 's/-lc \W/ /'`
+    if [ "x$check_lc" = "x-lc " ] ; then
         optLinking="$optLinking -lc"
     fi
     if [ $opari2 == $TRUE -a "x$optOpariLibs" != "x" ]; then
@@ -2405,7 +2405,7 @@ else
           # check for -lc, if found, move it to the end
           check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc \)\W.*/\1/g'`
           regularCmd=`echo "$regularCmd" | sed -e 's/-lc \W/ /'`
-          if [ "x$check_lc" = "x-lc" ] ; then
+          if [ "x$check_lc" = "x-lc " ] ; then
               optLinking="$newCmd -lc"
           fi
 
