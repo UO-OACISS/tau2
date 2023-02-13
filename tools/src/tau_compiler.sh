@@ -2004,6 +2004,9 @@ else
               if [ -n "$optSaltConfigFile" ]; then
                   tauCmd="$tauCmd --config_file=\"$optSaltConfigFile\""
               fi
+              if [ "x$groupType" = "x$group_C" ]; then
+                  tauCmd="$tauCmd --tau_use_cxx_api"
+              fi
               tauCmd="$tauCmd -- $optTau $optCompile $optDefs $optIncludes "
               tauCmd="$tauCmd -I${arrFileNameDirectory[$tempCounter]}"
           else
