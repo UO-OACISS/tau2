@@ -1843,7 +1843,7 @@ else
   ####################################################################
   # Parsing the Code
   ####################################################################
-  if [ $gotoNextStep == $TRUE -a $optSaltInst == $FALSE ]; then
+  if [ $gotoNextStep == $TRUE ]; then
       tempCounter=0
 
       while [ $tempCounter -lt $numFiles ]; do
@@ -1905,7 +1905,7 @@ else
           # First we remove the pdb file, otherwise the parse may fail and we can get confused
           /bin/rm -f $pdbOutputFile
 
-          if [ $optCompInst == $FALSE ]; then
+          if [ $optCompInst == $FALSE -a $optSaltInst == $FALSE ]; then
               if [ $disablePdtStep == $FALSE ]; then
           	if [ $pdbFileSpecified == $FALSE ]; then
           	  instFileName=${arrTau[$tempCounter]##*/}
@@ -1988,7 +1988,7 @@ else
           fi
           tempInstFileName=${arrTau[$tempCounter]##*/}
           if [ $optSaltInst == $TRUE ]; then
-              tauCmd="$optSaltParser ${arrFileName[$tempCounter]} --tau_output $tempInstFileName $optTau"
+              tauCmd="$optSaltParser ${arrFileName[$tempCounter]} --tau_output $tempInstFileName"
               saltSelectFile="$(sed -e 's/^[ \t]*//'<<<"${optTauSelectFile}")" # strip leading spaces
               saltSelectFile="$(sed -e 's/^-f //'<<<"${saltSelectFile}")" # strip leading "-f "
               if [ -n "$saltSelectFile" ]; then
