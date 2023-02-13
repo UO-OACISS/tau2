@@ -2004,6 +2004,8 @@ else
               if [ -n "$optSaltConfigFile" ]; then
                   tauCmd="$tauCmd --config_file=\"$optSaltConfigFile\""
               fi
+              tauCmd="$tauCmd -- $optTau $optCompile $optDefs $optIncludes "
+              tauCmd="$tauCmd -I${arrFileNameDirectory[$tempCounter]}"
           else
               tauCmd="$optTauInstr $tempPdbFileName ${arrFileName[$tempCounter]} -o $tempInstFileName "
               tauCmd="$tauCmd $optTau $optTauSelectFile"
