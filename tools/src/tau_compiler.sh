@@ -115,7 +115,8 @@ printUsage () {
     echo -e "  -optPdtCleanscapeParser\tSpecify the Cleanscape Fortran parser"
     echo -e "  -optPdtUser=\"\"\t\tOptional arguments for parsing source code"
     echo -e "  -optTauInstr=\"\"\t\tSpecify location of tau_instrumentor. Typically \$(TAUROOT)/\$(CONFIG_ARCH)/bin/tau_instrumentor"
-    echo -e "  -optSaltParser=\"\"\t\tSpecify location of the SALT parser and instrumentor. Typicall \$(TAUROOT)/\$(CONFIG_ARCH)/bin/cparse-llvm"
+    echo -e "  -optSaltParser=\"\"\t\tSpecify location of the SALT parser and instrumentor. Typically \$(TAUROOT)/\$(CONFIG_ARCH)/bin/cparse-llvm"
+    echo -e "  -optSaltConfigFile=\"\"\t\tSpecify location of the SALT configuration YAML file."
     echo -e "  -optPreProcess\t\tPreprocess the source code before parsing. Uses /usr/bin/cpp -P by default."
     echo -e "  -optContinueBeforeOMP\t\tInsert a CONTINUE statement before !\$OMP directives."
     echo -e "  -optCPP=\"\"\t\t\tSpecify an alternative preprocessor and pre-process the sources."
@@ -895,6 +896,10 @@ for arg in "$@" ; do
                         optCompInst=$FALSE
                         disablePdtStep=$TRUE
                         echoIfDebug "\tUsing SALT LLVM-based Instrumentation"
+                        ;;
+                    -optSaltConfigFile=*)
+                        optSaltConfigFile="${arg#"-optSaltConfigFile="}"
+                        echoIfDebug "\tSALT instrumentor configuration file being used is: $optSaltConfigFile"
                         ;;
         	    -optHeaderInst)
         		optHeaderInst=$TRUE
@@ -1995,6 +2000,9 @@ else
               saltSelectFile="$(sed -e 's/^-f //'<<<"${saltSelectFile}")" # strip leading "-f "
               if [ -n "$saltSelectFile" ]; then
                   tauCmd="$tauCmd --tau_select_file=${saltSelectFile}"
+              fi
+              if [ -n "$optSaltConfigFile" ]; then
+                  tauCmd="$tauCmd --config_file=\"$optSaltConfigFile\""
               fi
           else
               tauCmd="$optTauInstr $tempPdbFileName ${arrFileName[$tempCounter]} -o $tempInstFileName "
