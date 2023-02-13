@@ -70,6 +70,7 @@ declare -i revertOnError=$TRUE
 declare -i revertForced=$FALSE
 
 declare -i optShared=$FALSE
+declare -i optSaltInst=$FALSE
 declare -i optCompInst=$FALSE
 declare -i optHeaderInst=$FALSE
 declare -i disableCompInst=$FALSE
@@ -83,6 +84,7 @@ declare -i optMICOffload=$FALSE
 headerInstFlag=""
 preprocessorOpts="-P  -traditional-cpp"
 defaultParser="noparser"
+defaultSaltParser="cparse-llvm"
 optWrappersDir="/tmp"
 TAU_BIN_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TAUARCH="`grep 'TAU_ARCH=' $TAU_MAKEFILE | sed -e 's@TAU_ARCH=@@g' `"
@@ -534,6 +536,11 @@ for arg in "$@" ; do
         		echoIfDebug "\tTau Instrumentor is: $optTauInstr"
         		;;
 
+                    -optSaltParser*)
+                        optSaltParser=${arg#"-optSaltParser="}
+                        echoIfDebug "\tSALT parser and instrumentor command is: $optSaltParser"
+                        ;;
+
         	    -optTauCC*)
         		optTauCC=${arg#"-optTauCC="}
         		echoIfDebug "\tTau C Compiler is: $optTauCC"
@@ -881,6 +888,12 @@ for arg in "$@" ; do
         		disablePdtStep=$FALSE
         		echoIfDebug "\tUsing PDT-based Instrumentation"
         		;;
+                    -optSaltInst)
+                        optSaltInst=$TRUE
+                        optCompInst=$FALSE
+                        disablePdtStep=$TRUE
+                        echoIfDebug "\tUsing SALT LLVM-based Instrumentation"
+                        ;;
         	    -optHeaderInst)
         		optHeaderInst=$TRUE
         		echoIfDebug "\tUsing Header Instrumentation"
@@ -922,6 +935,12 @@ for arg in "$@" ; do
         	    pdtParserType=cxxparse
                     groupType=$group_C
         	fi
+                if [ -n "$optSaltParser" ]; then
+                    echoIfDebug "\tSaltParser passed to script: $optSaltParser"
+                else
+                    echoIfDebug "\tNo SALT parser passed, setting optSaltParser to ${defaultSaltParser}"
+                    optSaltParser="${defaultSaltParser}"
+                fi
         	;;
 
             *.cu)
@@ -954,6 +973,12 @@ for arg in "$@" ; do
         		groupType=$group_c
                     fi
         	fi
+                if [ -n "$optSaltParser" ]; then
+                    echoIfDebug "\tSaltParser passed to script: $optSaltParser"
+                else
+                    echoIfDebug "\tNo SALT parser passed, setting optSaltParser to ${defaultSaltParser}"
+                    optSaltParser="${defaultSaltParser}"
+                fi
         	;;
 
             *.upc)
@@ -1533,6 +1558,13 @@ if [ $optCompInst == $TRUE ]; then
     optLinking="$optLinking ${optCompInstLinking}"
 fi
 
+if [ $optSaltInst == $TRUE ]; then
+    if [ $linkOnly == $FALSE ]; then
+      echoIfVerbose "Debug: Using SALT instrumentation"
+    fi
+fi
+
+
 if [ $upc == "berkeley" ]; then
     # Make any number of "-Wl," into exactly two "-Wl,"
     optLinking=`echo $optLinking | sed -e 's@\(-Wl,\)\+@-Wl,@g' -e 's@-Wl,@-Wl,-Wl,@g'`
@@ -1811,7 +1843,7 @@ else
   ####################################################################
   # Parsing the Code
   ####################################################################
-  if [ $gotoNextStep == $TRUE ]; then
+  if [ $gotoNextStep == $TRUE -a $optSaltInst == $FALSE ]; then
       tempCounter=0
 
       while [ $tempCounter -lt $numFiles ]; do
@@ -1955,10 +1987,19 @@ else
               tempPdbFileName=${saveTempFile}
           fi
           tempInstFileName=${arrTau[$tempCounter]##*/}
-          tauCmd="$optTauInstr $tempPdbFileName ${arrFileName[$tempCounter]} -o $tempInstFileName "
-          tauCmd="$tauCmd $optTau $optTauSelectFile"
+          if [ $optSaltInst == $TRUE ]; then
+              tauCmd="$optSaltParser ${arrFileName[$tempCounter]} --tau_output $tempInstFileName $optTau"
+              saltSelectFile="$(sed -e 's/^[ \t]*//'<<<"${optTauSelectFile}")" # strip leading spaces
+              saltSelectFile="$(sed -e 's/^-f //'<<<"${saltSelectFile}")" # strip leading "-f "
+              if [ -n "$saltSelectFile" ]; then
+                  tauCmd="$tauCmd --tau_select_file=${saltSelectFile}"
+              fi
+          else
+              tauCmd="$optTauInstr $tempPdbFileName ${arrFileName[$tempCounter]} -o $tempInstFileName "
+              tauCmd="$tauCmd $optTau $optTauSelectFile"
+          fi
 
-          if [ $disablePdtStep == $FALSE ]; then
+          if [ $disablePdtStep == $FALSE -o $optSaltInst == $TRUE ]; then
               echoIfDebug "reuseFiles=$reuseFiles, source $tempInstFileName, output ${arrFileName[$tempCounter]}"
           	if [ $reuseFiles == $TRUE -a $tempInstFileName -nt ${arrFileName[$tempCounter]} ]; then
           	  echoIfDebug "$tempInstFileName is newer than ${arrFileName[$tempCounter]}"
@@ -2023,7 +2064,7 @@ else
   ####################################################################
   # Header file instrumentation
   ####################################################################
-  if [ $optHeaderInst == $TRUE ]; then
+  if [ $optHeaderInst == $TRUE -a $optSaltInst == $FALSE ]; then
   #     echo ""
   #     echo "*****************************"
   #     echo "*** Instrumenting headers ***"
