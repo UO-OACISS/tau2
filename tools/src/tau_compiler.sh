@@ -1048,16 +1048,6 @@ for arg in "$@" ; do
            echoIfDebug "-I without any argument specified"
         	;;
 
-            -isystem)
-                echoIfDebug "-isystem specified"
-                salt_compiler_flags="$salt_compiler_flags -isystem"
-                ;;
-
-            --std=*)
-                echoIfDebug "$arg specified"
-                salt_compiler_flags="$salt_compiler_flags $arg"
-                ;;
-
             -D|-U)
                 processingIncludeOrDefineArg=$arg
                       processingIncludeOrDefine=true
