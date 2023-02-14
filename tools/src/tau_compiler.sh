@@ -2021,7 +2021,7 @@ else
               if [ -n "${salt_compiler_flags## }" ]; then
                   tauCmd="$tauCmd ${salt_compiler_flags## }"
               fi
-              tauCmd="$tauCmd $optTau $optCompile $optDefs $optIncludes "
+              tauCmd="$tauCmd $optTau $optCompile $optDefs $optIncludes $argsRemaining"
               tauCmd="$tauCmd -I${arrFileNameDirectory[$tempCounter]}"
           else
               tauCmd="$optTauInstr $tempPdbFileName ${arrFileName[$tempCounter]} -o $tempInstFileName "
