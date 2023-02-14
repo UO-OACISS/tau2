@@ -1048,6 +1048,16 @@ for arg in "$@" ; do
            echoIfDebug "-I without any argument specified"
         	;;
 
+            -isystem)
+                echoIfDebug "-isystem specified"
+                salt_compiler_flags="$salt_compiler_flags -isystem"
+                ;;
+
+            --std=*)
+                echoIfDebug "$arg specified"
+                salt_compiler_flags="$salt_compiler_flags $arg"
+                ;;
+
             -D|-U)
                 processingIncludeOrDefineArg=$arg
                       processingIncludeOrDefine=true
@@ -2007,7 +2017,11 @@ else
               if [ "x$groupType" = "x$group_C" ]; then
                   tauCmd="$tauCmd --tau_use_cxx_api"
               fi
-              tauCmd="$tauCmd -- $optTau $optCompile $optDefs $optIncludes "
+              tauCmd="$tauCmd --"
+              if [ -n "${salt_compiler_flags## }" ]; then
+                  tauCmd="$tauCmd ${salt_compiler_flags## }"
+              fi
+              tauCmd="$tauCmd $optTau $optCompile $optDefs $optIncludes "
               tauCmd="$tauCmd -I${arrFileNameDirectory[$tempCounter]}"
           else
               tauCmd="$optTauInstr $tempPdbFileName ${arrFileName[$tempCounter]} -o $tempInstFileName "
