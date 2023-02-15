@@ -85,7 +85,7 @@ extern int Tau_msg_recv_prolog();
 #ifdef TAU_MPI_T_TRACK_GPU_MSGS
 #define TAU_MSG_SEND_PROLOG() Tau_msg_send_prolog()
 #define TAU_MSG_RECV_PROLOG() Tau_msg_recv_prolog()
-#else // TAU_MPI_T_TRACK_GPU_MSGS 
+#else // TAU_MPI_T_TRACK_GPU_MSGS
 #define TAU_MSG_SEND_PROLOG()
 #define TAU_MSG_RECV_PROLOG()
 #endif
@@ -406,7 +406,7 @@ MPI_Comm comm;
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Allgather( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm );
-  if (recvtype != MPI_DATATYPE_NULL) { 
+  if (recvtype != MPI_DATATYPE_NULL) {
     PMPI_Type_size( recvtype, &typesize );
   }
   TAU_ALLGATHER_DATA(typesize*recvcount);
@@ -587,7 +587,7 @@ MPI_Comm comm;
   TAU_TRACK_COMM(comm);
 
   returnVal = PMPI_Bcast( buffer, count, datatype, root, comm );
-  if (datatype != MPI_DATATYPE_NULL) { 
+  if (datatype != MPI_DATATYPE_NULL) {
     PMPI_Type_size( datatype, &typesize );
   }
 
@@ -938,6 +938,7 @@ void * attr_value;
 
 #endif /* MPI_VERSION < 2 */
 
+#ifndef TAU_MPI_DISABLE_COMM_WRAPPERS
 int   MPI_Comm_compare( comm1, comm2, result )
 MPI_Comm comm1;
 MPI_Comm comm2;
@@ -1533,6 +1534,7 @@ MPI_Comm * comm_out;
 
   return returnVal;
 }
+#endif // TAU_MPI_DISABLE_COMM_WRAPPERS
 
 // OpenMPI 4 and later have removed some functions deleted in MPI 3.0
 // #if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
@@ -3678,6 +3680,7 @@ MPI_Status * array_of_statuses;
   return returnVal;
 }
 
+#ifndef TAU_MPI_DISABLE_COMM_WRAPPERS
 int   MPI_Cart_coords( comm, rank, maxdims, coords )
 MPI_Comm comm;
 int rank;
@@ -3979,6 +3982,7 @@ int * top_type;
 
   return returnVal;
 }
+#endif // TAU_MPI_DISABLE_COMM_WRAPPERS
 
 
 //For a given process, process is the unique MPI rank
