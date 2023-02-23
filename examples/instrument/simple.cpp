@@ -22,7 +22,7 @@ using namespace std;
 /* the large array is partitioned into 5 elements each 2, 7, 12 etc. are 
 positions of the middle elements in the array */
 
-int size; /* global - size of the array */
+int asize; /* global - size of the array */
 int *M;   /* the median array */
 
 /**************************************************************************
@@ -180,9 +180,9 @@ int i;
   arr[7] = 15;
   arr[8] = 48;
   arr[9] = 19;
-  if (size > 10)
+  if (asize > 10)
   {
-    for (i=10; i< size; i++)
+    for (i=10; i< asize; i++)
       arr[i] = arr[i%10];
   }
   /* Uses the first ten values repeatedly and fills the array */
@@ -261,12 +261,12 @@ void sort_5elements(int *arr)
 **		element
 ** Returns    : kth largest element
 ***************************************************************************/
-int kth_largest_qs(int k, int *arr, int size)
+int kth_largest_qs(int k, int *arr, int asize)
 {
   TAU_PROFILE("int kth_largest_qs(int, int *, int)", " ", TAU_USER);
  /* first we sort the array and then return the kth largest element */
 
-  quicksort(arr, 0, size - 1); /* sort the array */
+  quicksort(arr, 0, asize - 1); /* sort the array */
   return arr[k-1]; /* return the kth largest */
 }
 
@@ -342,10 +342,10 @@ int *A;
 
   /* extract the size of the array and k from the command line parameters */
   if (argc > 1)
-    size = atoi(argv[1]);
+    asize = atoi(argv[1]);
   else
   {
-    size = DEFAULT_SIZE;
+    asize = DEFAULT_SIZE;
     printf(" Usage : main [<no. of elements>] [<k -for kth largest elt>] \n");
     printf(" Calculates kth largest element using two different algorithms\n"); 
     printf(" and returns the value and the time statistics for the two.\n");
@@ -356,21 +356,21 @@ int *A;
   else
     k = DEFAULT_K;     
   
-  if (k > size) 
+  if (k > asize) 
   {
     printf("ERROR: Please specify a value for k (%d) that is less than the array size (%d)\n",
-	k, size);
+	k, asize);
     exit(0);
   }
 
 /* there could be upto 4 leftover elements */
-  A = (int *) malloc((size + 4) * sizeof(int)); /* allocate the array */
+  A = (int *) malloc((asize + 4) * sizeof(int)); /* allocate the array */
   if (A == (int *) NULL)
   {
     perror("Cannot malloc the size of array");
     exit(1);
   }
-  M = (int *) malloc(ceil(size,5)*sizeof(int)); /*allocate memory for Median*/
+  M = (int *) malloc(ceil(asize,5)*sizeof(int)); /*allocate memory for Median*/
 /* its ok to recycle this array so its allocated here instead of doing it 
    in select_kth_largest */
   if (M == (int *) NULL)
@@ -385,10 +385,10 @@ int *A;
   display_array(A,size);
 */
   gettimeofday(&tp1, NULL);  /* timing info. */
-  klarge = select_kth_largest(k, A, size); /* using SELECT O(n) algo. */
+  klarge = select_kth_largest(k, A, asize); /* using SELECT O(n) algo. */
   gettimeofday(&tp2, NULL);  /* timing info. */
   printf("****************************************************\n");
-  printf("Using select_kth_largest, size %d, %d th largest element = %d\n", size,k, klarge);
+  printf("Using select_kth_largest, size %d, %d th largest element = %d\n", asize,k, klarge);
   time_taken = (tp2.tv_sec - tp1.tv_sec) + (tp2.tv_usec - tp1.tv_usec) * 1e-6;
   printf("Time taken (wall clock) = %f secs\n", time_taken);
   printf("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n");
@@ -398,14 +398,14 @@ int *A;
 
   gettimeofday(&tp1, NULL); /* timing info */
 
-  klarge = kth_largest_qs(k, A, size); 
+  klarge = kth_largest_qs(k, A, asize); 
 /* calculates the kth largest element of A */
 
   gettimeofday(&tp2, NULL);
 
 /* print results */
 
-  printf("Using quicksort,          size %d, %d th largest element = %d\n", size, k, klarge);
+  printf("Using quicksort,          size %d, %d th largest element = %d\n", asize, k, klarge);
   time_taken = (tp2.tv_sec - tp1.tv_sec) + (tp2.tv_usec - tp1.tv_usec) * 1e-6;
   printf("Time taken (wall clock) = %f secs\n", time_taken);
 /*  printf("%d 	%f\n", size, time_taken); */
