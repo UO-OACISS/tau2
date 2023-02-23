@@ -5631,14 +5631,23 @@ print_global_def_location( void*                 userData,
     }
 
     char* myname = (char*)otf2_print_get_def_name( defs->strings, name );
-
+    //printf("Init name: %s\n",myname);
     char* tok = strtok(myname," .\"");
     char* nodeC=strtok(NULL," .\"");
     char* threadC=strtok(NULL," .\"");
     //printf("%s --- %s --- %s\n",myname, nodeC,threadC);
 
-    int node = atoi(nodeC);
-    int thread = atoi(threadC);
+    int node = 0;
+    if(nodeC==NULL)
+	printf("Warning: invalid node from location string %s\n",myname);
+    else
+	node=atoi(nodeC);
+
+    int thread = 0;
+    if(threadC==NULL)
+	    printf("Warning: invalid node from location string %s\n",myname);
+    else
+	    thread=atoi(threadC);
     //unsigned int convSelf = (unsigned int)self;
     //cout << "Thread Def: "<< (char*)otf2_print_get_def_name( defs->strings, name ) <<", Node: " << node << ", Thread: " << thread <<", Self: " <<self << endl;//", ConvSelf: " <<convSelf <<", trunkname: " << myname<<endl;
     ThreadDef(node,thread,self,myname);//TODO: Self is the only node?
@@ -6724,7 +6733,7 @@ map_traverse_dense( uint64_t localId,
 {
     const char* sep = *( char** )userData;
     printf( "%s%" PRIu64, sep, globalId );
-    *( char** )userData = ",";
+    *(const char** )userData = ",";
 }
 
 static void
@@ -6734,7 +6743,7 @@ map_traverse_sparse( uint64_t localId,
 {
     const char* sep = *( char** )userData;
     printf( "%s%" PRIu64 "=>%" PRIu64, sep, localId, globalId );
-    *( char** )userData = ",";
+    *( const char** )userData = ",";
 }
 
 OTF2_CallbackCode
