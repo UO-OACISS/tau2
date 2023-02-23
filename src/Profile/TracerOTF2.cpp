@@ -1088,8 +1088,8 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
 				thread_type = OTF2_LOCATION_TYPE_GPU;
             } else {
                 static int cputhreads = 1;
-                //int nodeThread=cputhreads%((nodes > 0) ? nodes : 1);
-                snprintf(namebuf, 256, "CPU thread %02d", thread_num);
+                int nodeThread=cputhreads%((nodes > 0) ? nodes : 1);
+                snprintf(namebuf, 256, "CPU thread %02d", nodeThread);
 		cputhreads++;
             }
 #ifdef TAU_ENABLE_ROCM
