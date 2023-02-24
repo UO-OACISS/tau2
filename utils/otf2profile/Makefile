@@ -28,7 +28,7 @@ $(TAU_BIN_DIR)/otf2profile: otf2profile
 	/bin/cp $< $(TAU_BIN_DIR)
 
 otf2profile:    handlers.o otf2_hash_table.o otf2_vector.o UTILS_Error.o UTILS_IO_Tools.o  otf2profile.o trace2profile.o handlers.o
-		$(CXX) $(CXXFLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -o $@ otf2_hash_table.o  otf2profile.o trace2profile.o handlers.o otf2_vector.o UTILS_Error.o UTILS_IO_Tools.o $(LIBS) $(OTFLIBS)
+		$(CXX) $(CXXFLAGS) -o $@  otf2_hash_table.o otf2profile.o trace2profile.o handlers.o otf2_vector.o UTILS_Error.o UTILS_IO_Tools.o $(LIBS) $(OTFLIBS) 
 	
 otf2profile.o: otf2profile.cpp 
 	$(CXX) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c otf2profile.cpp

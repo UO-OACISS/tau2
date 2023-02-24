@@ -1141,7 +1141,7 @@ string_id++;
                                                         rank,
                                                         string_id,
                                                         OTF2_LOCATION_GROUP_TYPE_PROCESS,
-                                                        0);//( rank / 2 ) + 1 );
+                                                        0, OTF2_UNDEFINED_LOCATION_GROUP);//( rank / 2 ) + 1 );
       check_status( status, "Write location group definition." );
       string_id++;
       master_threads2[rank]=rank;
@@ -1341,7 +1341,7 @@ int COMM_STRING=string_id;
 //#ifdef TAU_OTF2_1_1
 //  status =OTF2_GlobalDefWriter_WriteMpiComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_UINT32 );
 //#else
-  status =OTF2_GlobalDefWriter_WriteComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_COMM);
+  status =OTF2_GlobalDefWriter_WriteComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_COMM, OTF2_COMM_FLAG_NONE);
 
 
 

@@ -102,7 +102,7 @@ typedef struct otf2_hash_table_iter_struct otf2_hash_table_iterator;
  *
  * @return entry Computed hash table index
  */
-typedef size_t ( *otf2_hash_table_hash_func )( const void* key );
+typedef size_t ( * otf2_hash_table_hash_func )( const void* key );
 
 /**
  * Pointer-to-function type describing key comparison functions. It has to
@@ -115,17 +115,17 @@ typedef size_t ( *otf2_hash_table_hash_func )( const void* key );
  * return 0 if the given @a key equals the key of the current item (@a item_key)
  * or a non-zero value otherwise.
  */
-typedef int32_t ( *otf2_hash_table_compare_func )( const void* key,
-                                                   const void* item_key );
+typedef int32_t ( * otf2_hash_table_compare_func )( const void* key,
+                                                    const void* item_key );
 
 /**
  * Pointer-to-function type describing unary processing functions that can
  * be used with otf2_hash_table_foreach(). Here, the current key/value pair will
  * be passed as parameter @a entry.
  *
- * @param Hash table entry
+ * @param entry Hash table entry
  */
-typedef void ( *otf2_hash_table_process_func )( otf2_hash_table_entry* entry );
+typedef void ( * otf2_hash_table_process_func )( otf2_hash_table_entry* entry );
 
 /**
  * Pointer-to-functions type which frees the memory for data item. It is
@@ -133,7 +133,7 @@ typedef void ( *otf2_hash_table_process_func )( otf2_hash_table_entry* entry );
  *
  * @param item The data item which should be deleted.
  */
-typedef void ( *otf2_hash_table_delete_func )( void* item );
+typedef void ( * otf2_hash_table_delete_func )( void* item );
 
 /*
  * --------------------------------------------------------------------------
@@ -512,10 +512,10 @@ otf2_hash_table_compare_pointer( const void* key,
 EXTERN size_t
 otf2_hash_table_hash_string( const void* key );
 
-EXTERN size_t
+size_t
 otf2_hash_table_hash_uint8( const void* key );
 
-EXTERN size_t
+size_t
 otf2_hash_table_hash_uint16( const void* key );
 
 /**

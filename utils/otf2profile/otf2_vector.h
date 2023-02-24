@@ -88,8 +88,8 @@ typedef struct otf2_vector_struct otf2_vector;
  * @return Zero if @a value is equal to @a item, a negative value if @a value
  *         @< @a item, and a positive value if @a value @> @a item.
  */
-typedef int8_t ( *otf2_vector_compare_func )( const void* value,
-                                              const void* item );
+typedef int8_t ( * otf2_vector_compare_func )( const void* value,
+                                               const void* item );
 
 /**
  * Pointer-to-function type describing unary processing functions that can
@@ -98,7 +98,7 @@ typedef int8_t ( *otf2_vector_compare_func )( const void* value,
  *
  * @param item Current array element
  */
-typedef void ( *otf2_vector_processing_func )( void* item );
+typedef void ( * otf2_vector_processing_func )( void* item );
 
 
 /*
@@ -115,7 +115,7 @@ typedef void ( *otf2_vector_processing_func )( void* item );
  * @return Pointer to new instance or NULL if the memory could not be allocated.
  */
 EXTERN otf2_vector*
-otf2_vector_create();
+otf2_vector_create( void );
 
 /**
  * Creates and returns an instance of otf2_vector with the given initial

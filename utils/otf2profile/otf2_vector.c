@@ -70,7 +70,7 @@ struct otf2_vector_struct
 /* Construction & destruction */
 
 otf2_vector*
-otf2_vector_create()
+otf2_vector_create( void )
 {
     otf2_vector* instance;
 
