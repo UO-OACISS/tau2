@@ -37,6 +37,10 @@
 #include <dlfcn.h>
 #endif
 
+#ifndef TAU_MAX_METRICS 
+#define TAU_MAX_METRICS 25 //Temporary
+#endif
+
 #include "sos.h"
 
 SOS_pub *tau_sos_pub = NULL;
@@ -883,7 +887,7 @@ void TAU_SOS_send_data(bool finalizing) {
     /* records the heap, with no context, even though it says "here". */
     Tau_track_memory_here();
     /* records the rss/hwm, without context. */
-    Tau_track_memory_rss_and_hwm();
+    //Tau_track_memory_rss_and_hwm();
     /* records the load, without context */
     Tau_track_load();
     /* Only send a profile update if we aren't tracing */
