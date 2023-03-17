@@ -70,6 +70,9 @@
 #include <errno.h>
 #include <dwarf.h>
 #include <libdwarf.h>
+#ifdef DW_LIBDWARF_VERSION
+#define TAU_USE_NEW_LIBDWARF
+#endif
 #endif
 
 /* When BFD 2.34 was released, some API calls were replaced. */
@@ -1085,8 +1088,13 @@ static void
 simple_error_handler(Dwarf_Error error, Dwarf_Ptr errarg)
 {
     (void)errarg; // intentionally unused
+#ifdef TAU_USE_NEW_LIBDWARF
+    printf("\nTAU: libdwarf error detected: 0x%lx %s\n",
+        (unsigned long) dwarf_errno(error),dwarf_errmsg(error));
+#else
     printf("\nTAU: libdwarf error detected: 0x%" DW_PR_DUx " %s\n",
-        dwarf_errno(error),dwarf_errmsg(error));
+            dwarf_errno(error),dwarf_errmsg(error));
+#endif
     return;
 }
 
@@ -1241,13 +1249,21 @@ static void Tau_get_dwarf_symbols(tau_bfd_handle_t bfd_handle, const char * file
     Dwarf_Ptr errarg = (Dwarf_Ptr)1;
     Dwarf_Error * errp = 0;
 
+#ifndef TAU_USE_NEW_LIBDWARF
     fd = open(filepath, O_RDONLY);
     if(fd < 0) {
         TAU_VERBOSE("TAU_BFD: Unable to open file %s\n", filepath);
         return;
     }
+#endif
 
+#ifdef TAU_USE_NEW_LIBDWARF
+    TAU_VERBOSE("TAU_DWARF: Initializing libdwarf using the new API version (DWARF v5) for %s\n", filepath);
+    res = dwarf_init_path(filepath, NULL, 0, DW_GROUPNUMBER_ANY, errhand, errarg, &dbg, errp);
+#else
+    TAU_VERBOSE("TAU_DWARF: Initializing libdwarf using the old API version (DWARF v4) for %s\n", filepath);
     res = dwarf_init(fd, DW_DLC_READ, errhand, errarg, &dbg, errp);
+#endif
 
     if(res != DW_DLV_OK) {
         fprintf(stderr, "Error opening DWARF session: %d\n", res);
@@ -1298,16 +1314,22 @@ static void Tau_get_dwarf_symbols(tau_bfd_handle_t bfd_handle, const char * file
     }
 
 
+#ifdef TAU_USE_NEW_LIBDWARF
+    res = dwarf_finish(dbg);
+#else
     res = dwarf_finish(dbg, errp);
+#endif
     if(res != DW_DLV_OK) {
         fprintf(stderr, "TAU: Error closing DWARF session: %d\n", res);
         return;
     }
 
+#ifndef TAU_USE_NEW_LIBDWARF
     res = close(fd);
     if(res != 0) {
         fprintf(stderr, "TAU: Error closing dwarf file\n");
     }
+#endif
 }
 
 #endif // TAU_DWARF

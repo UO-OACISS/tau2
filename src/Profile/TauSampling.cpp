@@ -966,6 +966,13 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
             sprintf(buff, "[%s] %s [@] %s [{%s} {0}]",
                 tag, childName, resolvedInfo.funcname,
                 resolvedInfo.filename);
+        } else if (TauEnv_get_ebs_resolution() == TAU_EBS_RESOLUTION_FUNCTION_LINE) {
+            buff = (char*)malloc(strlen(tag) + strlen(childName) +
+                    strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) +
+                    strlen(lineno) + 32);
+            sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
+                tag, childName, resolvedInfo.funcname,
+                resolvedInfo.filename, Tau_get_lineno_for_function(TheBfdUnitHandle(), resolvedInfo.funcname));
         } else { // Line resolution
             buff = (char*)malloc(strlen(tag) + strlen(childName) +
                     strlen(resolvedInfo.funcname) +
@@ -990,6 +997,15 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
             sprintf(buff, "[%s] %s [{%s} {0}]",
                 tag, resolvedInfo.funcname,
                 resolvedInfo.filename);
+            *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + 2);
+            sprintf(*newShortName, "%s", resolvedInfo.funcname);
+        } else if (TauEnv_get_ebs_resolution() == TAU_EBS_RESOLUTION_FUNCTION_LINE) {
+            buff = (char*)malloc(strlen(tag) +
+                    strlen(resolvedInfo.funcname) +
+                    strlen(resolvedInfo.filename) + 32);
+            sprintf(buff, "[%s] %s [{%s} {%d}]",
+                tag, resolvedInfo.funcname,
+                resolvedInfo.filename, Tau_get_lineno_for_function(TheBfdUnitHandle(), resolvedInfo.funcname));
             *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + 2);
             sprintf(*newShortName, "%s", resolvedInfo.funcname);
         } else { // Line resolution
