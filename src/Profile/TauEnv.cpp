@@ -1947,7 +1947,7 @@ void TauEnv_initialize()
     tmp = getconf("TAU_CURRENT_TIMER_EXIT_PARAMS");
     if (parse_bool(tmp, profiling_default)) {
       env_current_timer_exit_params = 1;
-      TAU_VERBOSE("TAU: Profiling Enabled\n");
+      TAU_VERBOSE("TAU: Current Timer Exit Enabled\n");
       TAU_METADATA("TAU_CURRENT_TIMER_EXIT_PARAMS", "on");
     } else {
       env_current_timer_exit_params = 0;
