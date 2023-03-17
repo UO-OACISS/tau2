@@ -45,7 +45,8 @@ json configuration;
 #include "tau_nvml.hpp"
 #endif
 
-#define ONE_BILLION  1000000000
+#define ONE_BILLION  1e9
+#define ONE_MILLION  1e6
 #define ONE_BILLIONF 1000000000.0
 
 inline void _plugin_assert(const char* expression, const char* file, int line)
@@ -76,6 +77,7 @@ const char * default_configuration = R"(
   "node_data_from_all_ranks": false,
   "monitor_counter_prefix": "",
   "periodicity seconds": 10.0,
+  "scatterplot": false,
   "PAPI metrics": [],
   "/proc/stat": {
     "disable": false,
@@ -236,6 +238,8 @@ static std::atomic<bool> done{false};
 static std::atomic<bool> worker_working{false};
 static int rank_getting_system_data;
 static int my_rank = 0;
+static std::stringstream csv_output;
+static uint64_t periodic_index;
 #ifdef CUPTI
 tau::nvml::monitor& get_nvml_reader() {
     static tau::nvml::monitor nvml_reader;
@@ -271,6 +275,15 @@ void sample_user_event(const std::string& name, double value) {
     } else {
         void * ue = find_user_event(name);
         Tau_userevent_thread(ue, value, 0);
+    }
+    double CurrentTime[TAU_MAX_COUNTERS] = { 0 };
+    RtsLayer::getUSecD(0, CurrentTime);
+    if (configuration["scatterplot"]) {
+        auto scatter = configuration["scatterplot"];
+        if (scatter) {
+            csv_output << my_rank << ",\"" << name << "\","
+                << periodic_index << "," << value << "\n";
+        }
     }
 }
 
@@ -607,6 +620,7 @@ void initialize_papi_events(bool do_components) {
 std::vector<cpustats_t*> * read_cpu_stats() {
     static const char * source = "/proc/stat";
     if (!include_component(source)) { return NULL; }
+    if (my_rank == 0) TAU_VERBOSE("Found %s component...\n", source);
     std::vector<cpustats_t*> * cpu_stats = new std::vector<cpustats_t*>();
     /*  Reading proc/stat as a file  */
     FILE * pFile;
@@ -619,12 +633,27 @@ std::vector<cpustats_t*> * read_cpu_stats() {
         while ( fgets( line, 128, pFile)) {
             if ( strncmp (line, "cpu", 3) == 0 ) {
                 cpustats_t * cpu_stat = new(cpustats_t);
-                /*  Note, this will only work on linux 2.6.24 through 3.5  */
-                sscanf(line, "%s %lld %lld %lld %lld %lld %lld %lld %lld %lld\n",
-                       cpu_stat->name, &cpu_stat->user, &cpu_stat->nice,
-                       &cpu_stat->system, &cpu_stat->idle,
-                       &cpu_stat->iowait, &cpu_stat->irq, &cpu_stat->softirq,
-                       &cpu_stat->steal, &cpu_stat->guest);
+                std::string tmp{line};
+                // trim the newline
+                tmp = tau::papi_plugin::trim(tmp);
+                // create a stringstream from the string
+                std::stringstream ss(tmp);
+                std::vector<std::string> out;
+                std::string s;
+                while (std::getline(ss, s, ' ')) {
+                    if (s.size() == 0) { continue; }
+                    out.push_back(s);
+                }
+                snprintf(cpu_stat->name, 32, "%s", out[0].c_str());
+                cpu_stat->user = stol(out[1]);
+                cpu_stat->nice = stol(out[2]);
+                cpu_stat->system =stol(out[3]);
+                cpu_stat->idle = stol(out[4]);
+                cpu_stat->iowait =stol(out[5]);
+                cpu_stat->irq =stol(out[6]);
+                cpu_stat->softirq = stol(out[7]);
+                cpu_stat->steal =stol(out[8]);
+                cpu_stat->guest = stol(out[9]);
                 /* PGI Compiler is non-standard.  It can't handle regular expressions
                  * with range values, so we can't filter out the per-cpu results.
                  * So, we'll just read the first line of the file and quit
@@ -1248,12 +1277,14 @@ void * Tau_monitoring_plugin_threaded_function(void* data) {
     /* Set the wakeup time (ts) to 2 seconds in the future. */
     struct timespec ts;
     struct timeval  tp;
+    gettimeofday(&tp, NULL);
 
     /* If we are tracing while doing periodic measurements, then register
      * this thread so we don't collide with events on thread 0 */
     if (TauEnv_get_thread_per_gpu_stream()) {
         Tau_register_thread();
     }
+    periodic_index = 0;
 
     while (!done) {
         TAU_VERBOSE("Tau monitoring thread: waking up\n");
@@ -1263,7 +1294,6 @@ void * Tau_monitoring_plugin_threaded_function(void* data) {
         read_components();
         worker_working = false;
         // wait x seconds for the next batch.  Can be floating!
-        gettimeofday(&tp, NULL);
         int seconds = 1;
         int nanoseconds = 0;
         // convert the floating seconds to seconds and nanoseconds
@@ -1295,6 +1325,15 @@ void * Tau_monitoring_plugin_threaded_function(void* data) {
         } else if (rc == EPERM) {
             TAU_VERBOSE("Mutex not locked!\n"); fflush(stderr);
         }
+        periodic_index++;
+        tp.tv_usec = tp.tv_usec + (nanoseconds/1000);
+        // check for overflow
+        if (tp.tv_usec > ONE_MILLION){
+            tp.tv_usec = tp.tv_usec - ONE_MILLION;
+            seconds = seconds + 1;
+        }
+        // add our seconds of delay
+        tp.tv_sec  = (tp.tv_sec + seconds);
     }
     if (my_rank == 0) TAU_VERBOSE("TAU Monitoring thread exiting...\n"); fflush(stderr);
 
@@ -1367,7 +1406,112 @@ static void do_cleanup() {
     clean = true;
 }
 
+// Macro to check MPI calls status
+#define MPI_CALL(call) \
+    do { \
+        int err = call; \
+        if (err != MPI_SUCCESS) { \
+            char errstr[MPI_MAX_ERROR_STRING]; \
+            int errlen; \
+            MPI_Error_string(err, errstr, &errlen); \
+            fprintf(stderr, "%s\n", errstr); \
+            MPI_Abort(MPI_COMM_WORLD, 999); \
+        } \
+    } while (0)
+
+inline char filesystem_separator()
+{
+#if defined _WIN32 || defined __CYGWIN__
+    return '\\';
+#else
+    return '/';
+#endif
+}
+
+void reduce_scatterplot(std::stringstream& csv_output, std::string filename) {
+    int commrank = 0;
+    int commsize = 1;
+#if defined(TAU_MPI)
+    int mpi_initialized = 0;
+    MPI_CALL(MPI_Initialized( &mpi_initialized ));
+    if (mpi_initialized) {
+        MPI_CALL(PMPI_Comm_rank(MPI_COMM_WORLD, &commrank));
+        MPI_CALL(PMPI_Comm_size(MPI_COMM_WORLD, &commsize));
+    }
+#endif
+    // if nothing to reduce, just write the data.
+    if (commsize == 1) {
+        std::ofstream csvfile;
+        std::stringstream csvname;
+        csvname << TauEnv_get_profiledir();
+        csvname << filesystem_separator() << filename;
+        std::cout << "Writing: " << csvname.str() << std::endl;
+        csvfile.open(csvname.str(), std::ios::out);
+        csvfile << "\"rank\",\"name\",\"step\",\"value\"\n";
+        csvfile << csv_output.str();
+        csvfile.close();
+        return;
+    }
+
+    size_t length{csv_output.str().size()};
+    size_t max_length{length};
+    // get the longest string from all ranks
+#if defined(TAU_MPI)
+    if (mpi_initialized && commsize > 1) {
+        MPI_CALL(PMPI_Allreduce(&length, &max_length, 1,
+            MPI_UINT64_T, MPI_MAX, MPI_COMM_WORLD));
+    }
+    // so we don't have to specially handle the first string which will append
+    // the second string without a null character (zero).
+    max_length = max_length + 1;
+#endif
+    // allocate the send buffer
+    char * sbuf = (char*)calloc(max_length, sizeof(char));
+    // copy into the send buffer
+    strncpy(sbuf, csv_output.str().c_str(), length);
+    // allocate the memory to hold all output
+    char * rbuf = nullptr;
+    if (commrank == 0) {
+#if defined(TAU_MPI)
+        rbuf = (char*)calloc(max_length * commsize, sizeof(char));
+#else
+        rbuf = sbuf;
+#endif
+    }
+
+#if defined(TAU_MPI)
+    MPI_Gather(sbuf, max_length, MPI_CHAR, rbuf, max_length, MPI_CHAR, 0, MPI_COMM_WORLD);
+#endif
+
+    if (commrank == 0) {
+        std::ofstream csvfile;
+        std::stringstream csvname;
+        csvname << TauEnv_get_profiledir();
+        csvname << filesystem_separator() << filename;
+        std::cout << "Writing: " << csvname.str();
+        csvfile.open(csvname.str(), std::ios::out);
+        csvfile << "\"rank\",\"name\",\"step\",\"value\"\n";
+        char * index = rbuf;
+        for (auto i = 0 ; i < commsize ; i++) {
+            index = rbuf+(i*max_length);
+            std::string tmpstr{index};
+            csvfile << tmpstr;
+            csvfile.flush();
+        }
+        csvfile.close();
+        std::cout << "...done." << std::endl;
+    }
+    free(sbuf);
+    free(rbuf);
+}
+
 int Tau_plugin_event_pre_end_of_execution_monitoring(Tau_plugin_event_pre_end_of_execution_data_t *data) {
+    if (configuration["scatterplot"]) {
+        auto scatter = configuration["scatterplot"];
+        if (scatter) {
+            reduce_scatterplot(csv_output, "monitoring.csv");
+        }
+    }
     if (my_rank == 0)
         TAU_VERBOSE("Monitoring Component PLUGIN %s\n", __func__);
     //if (RtsLayer::myThread() == 0) {
