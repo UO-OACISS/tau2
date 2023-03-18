@@ -141,6 +141,7 @@ using namespace std;
 #define TAU_EBS_RESOLUTION_STR_LINE "line"
 #define TAU_EBS_RESOLUTION_STR_FILE "file"
 #define TAU_EBS_RESOLUTION_STR_FUNCTION "function"
+#define TAU_EBS_RESOLUTION_STR_FUNCTION_LINE "function_line"
 
 /* Experimental feature - pre-computation of statistics */
 //#if (defined(TAU_UNIFY) && defined(TAU_MPI))
@@ -2535,6 +2536,9 @@ void TauEnv_initialize()
           } else if (strcmp(ebs_resolution, TAU_EBS_RESOLUTION_STR_FUNCTION) == 0) {
               env_ebs_resolution = TAU_EBS_RESOLUTION_FUNCTION;
               TAU_METADATA("TAU_EBS_RESOLUTION", TAU_EBS_RESOLUTION_STR_FUNCTION);
+          } else if (strcmp(ebs_resolution, TAU_EBS_RESOLUTION_STR_FUNCTION_LINE) == 0) {
+              env_ebs_resolution = TAU_EBS_RESOLUTION_FUNCTION_LINE;
+              TAU_METADATA("TAU_EBS_RESOLUTION", TAU_EBS_RESOLUTION_STR_FUNCTION_LINE);
           } else if (strcmp(ebs_resolution, TAU_EBS_RESOLUTION_STR_LINE) == 0) { // otherwise, it's the default - line.
               env_ebs_resolution = TAU_EBS_RESOLUTION_LINE;
               TAU_METADATA("TAU_EBS_RESOLUTION", TAU_EBS_RESOLUTION_STR_LINE);
