@@ -278,9 +278,8 @@ void sample_user_event(const std::string& name, double value) {
     }
     double CurrentTime[TAU_MAX_COUNTERS] = { 0 };
     RtsLayer::getUSecD(0, CurrentTime);
-    if (configuration["scatterplot"]) {
-        auto scatter = configuration["scatterplot"];
-        if (scatter) {
+    if (configuration.count("scatterplot") > 0) {
+        if (configuration["scatterplot"]) {
             csv_output << my_rank << ",\"" << name << "\","
                 << periodic_index << "," << value << "\n";
         }
@@ -1506,9 +1505,8 @@ void reduce_scatterplot(std::stringstream& csv_output, std::string filename) {
 }
 
 int Tau_plugin_event_pre_end_of_execution_monitoring(Tau_plugin_event_pre_end_of_execution_data_t *data) {
-    if (configuration["scatterplot"]) {
-        auto scatter = configuration["scatterplot"];
-        if (scatter) {
+    if (configuration.count("scatterplot") > 0) {
+        if (configuration["scatterplot"]) {
             reduce_scatterplot(csv_output, "monitoring.csv");
         }
     }
