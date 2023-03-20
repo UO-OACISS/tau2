@@ -11851,7 +11851,8 @@ fi
 # Install libdwarf if requested
 ######################################################################
 libdwarf=libdwarf
-libdwarf_dirname=libdwarf-20181024
+#libdwarf_dirname=libdwarf-20181024
+libdwarf_dirname=libdwarf-0.6.0
 libdwarftgz=$libdwarf_dirname.tar.gz
 libdwarfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libdwarftgz
 
@@ -12025,7 +12026,16 @@ if [ $dwarf = yes ] ; then
     else
     echo "Using libdwarf at $dwarfdir"
         fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib"
-    fixmakeargs="$fixmakeargs dwarfinc=-I$dwarfdir/include"
+
+    if [ -r $dwarfdir/include/libdwarf.h ] ; then
+        fixmakeargs="$fixmakeargs dwarfinc=-I$dwarfdir/include"
+        echo "Using libdwarf.h at $dwarfdir/include"
+    elif [ -r $dwarfdir/include/libdwarf-0/libdwarf.h ] ; then
+        fixmakeargs="$fixmakeargs dwarfinc=-I$dwarfdir/include/libdwarf-0"
+        echo "Using libdwarf.h at $dwarfdir/include/libdwarf-0"
+    else
+        echo "error: couldn't find libdwarf.h"
+    fi
 
     if [ -r ${libelfdir}/${libelflibdir}/libelf.so ] ; then
        echo "Using libelf at $libelfdir"

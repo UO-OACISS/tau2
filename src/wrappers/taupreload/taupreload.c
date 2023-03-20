@@ -1,3 +1,6 @@
+#if defined(__powerpc64__) || defined(__PPC64__) || defined(__APPLE__)
+#include "taupreload.old.c"
+#else
 // MIT License
 //
 // Copyright (c) 2022 Advanced Micro Devices, Inc. All Rights Reserved.
@@ -101,3 +104,4 @@ __libc_start_main(int (*_main)(int, char**, char**), int _argc, char** _argv,
         return -1;
     }
 }
+#endif // __ppc64le__

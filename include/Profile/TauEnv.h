@@ -49,6 +49,7 @@
 #define TAU_EBS_RESOLUTION_FILE 0
 #define TAU_EBS_RESOLUTION_FUNCTION 1
 #define TAU_EBS_RESOLUTION_LINE 2
+#define TAU_EBS_RESOLUTION_FUNCTION_LINE 3
 
 #ifdef __cplusplus
 extern "C" {

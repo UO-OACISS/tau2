@@ -191,6 +191,7 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
 int Tau_plugin_sos_end_of_execution(Tau_plugin_event_end_of_execution_data_t* data) {
     if (!enabled || data->tid != 0) return 0;
     /* If we are tracing, we need to "stop" all of the remaining timers on the stack */
+#if 0 //To fix for dynamic threading, is this necessary? function_entry and function_exit
     if (thePluginOptions().env_sos_tracing) {
         Tau_plugin_event_function_exit_data_t exit_data;
         // safe to assume 0?
@@ -217,6 +218,7 @@ int Tau_plugin_sos_end_of_execution(Tau_plugin_event_end_of_execution_data_t* da
         }
         RtsLayer::UnLockDB();
     }
+#endif
     enabled = false;
     //fprintf(stdout, "TAU PLUGIN SOS Finalize\n"); fflush(stdout);
     TAU_SOS_finalize();
@@ -276,6 +278,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     enabled = true;
 
     /* If we are tracing, we need to "start" all of the timers on the stack */
+#if 0 //To fix for dynamic threading, is this necessary? function_entry and function_exit
     if (thePluginOptions().env_sos_tracing) {
         RtsLayer::LockDB();
         //int tid = RtsLayer::myThread();
@@ -295,6 +298,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
         }
         RtsLayer::UnLockDB();
     }
+#endif
 #endif
     return 0;
 }

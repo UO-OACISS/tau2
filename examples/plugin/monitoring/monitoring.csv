@@ -1,0 +1,3840 @@
+"rank","name","step","value"
+0,"Page faults (minor)",0,4682
+0,"Page faults (major)",0,24
+0,"Pages swapped (not maintained)",0,0
+0,"program size (pages)",0,79771
+0,"resident set size (pages)",0,2658
+0,"resident shared pages",0,814
+0,"Page faults (minor)",0,4684
+0,"Page faults (major)",0,24
+0,"Pages swapped (not maintained)",0,0
+0,"GPU: Device 0 Utilization %",0,0
+0,"GPU: Device 0 Memory Utilization %",0,0
+0,"GPU: Device 0 Memory Total (GB)",0,16.9455
+0,"GPU: Device 0 Memory Free (GB)",0,16.9428
+0,"GPU: Device 0 Memory Used (GB)",0,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",0,877
+0,"cpu: User %",0,3.5014
+0,"cpu: Nice %",0,0
+0,"cpu: System %",0,0.420168
+0,"cpu: Idle %",0,96.0784
+0,"cpu: I/O Wait %",0,0
+0,"cpu: IRQ %",0,0
+0,"cpu: soft IRQ %",0,0
+0,"cpu: Steal %",0,0
+0,"cpu: Guest %",0,0
+0,"meminfo:MemTotal (MB)",0,630978
+0,"meminfo:MemFree (MB)",0,556484
+0,"meminfo:MemAvailable (MB)",0,588255
+0,"program size (pages)",1,79771
+0,"resident set size (pages)",1,2658
+0,"resident shared pages",1,814
+0,"Page faults (minor)",1,4746
+0,"Page faults (major)",1,24
+0,"Pages swapped (not maintained)",1,0
+0,"GPU: Device 0 Utilization %",1,0
+0,"GPU: Device 0 Memory Utilization %",1,0
+0,"GPU: Device 0 Memory Free (GB)",1,16.9428
+0,"GPU: Device 0 Memory Used (GB)",1,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",1,877
+0,"cpu: User %",1,3.39877
+0,"cpu: Nice %",1,0
+0,"cpu: System %",1,0.038117
+0,"cpu: Idle %",1,96.5631
+0,"cpu: I/O Wait %",1,0
+0,"cpu: IRQ %",1,0
+0,"cpu: soft IRQ %",1,0
+0,"cpu: Steal %",1,0
+0,"cpu: Guest %",1,0
+0,"meminfo:MemTotal (MB)",1,630978
+0,"meminfo:MemFree (MB)",1,556468
+0,"meminfo:MemAvailable (MB)",1,588241
+0,"program size (pages)",2,79771
+0,"resident set size (pages)",2,2658
+0,"resident shared pages",2,814
+0,"Page faults (minor)",2,4746
+0,"Page faults (major)",2,24
+0,"Pages swapped (not maintained)",2,0
+0,"GPU: Device 0 Utilization %",2,0
+0,"GPU: Device 0 Memory Utilization %",2,0
+0,"GPU: Device 0 Memory Free (GB)",2,16.9428
+0,"GPU: Device 0 Memory Used (GB)",2,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",2,877
+0,"cpu: User %",2,3.43357
+0,"cpu: Nice %",2,0
+0,"cpu: System %",2,0.0227389
+0,"cpu: Idle %",2,96.5437
+0,"cpu: I/O Wait %",2,0
+0,"cpu: IRQ %",2,0
+0,"cpu: soft IRQ %",2,0
+0,"cpu: Steal %",2,0
+0,"cpu: Guest %",2,0
+0,"meminfo:MemTotal (MB)",2,630978
+0,"meminfo:MemFree (MB)",2,556467
+0,"meminfo:MemAvailable (MB)",2,588241
+0,"program size (pages)",3,79771
+0,"resident set size (pages)",3,2658
+0,"resident shared pages",3,814
+0,"Page faults (minor)",3,4746
+0,"Page faults (major)",3,24
+0,"Pages swapped (not maintained)",3,0
+0,"GPU: Device 0 Utilization %",3,0
+0,"GPU: Device 0 Memory Utilization %",3,0
+0,"GPU: Device 0 Memory Free (GB)",3,16.9428
+0,"GPU: Device 0 Memory Used (GB)",3,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",3,877
+0,"cpu: User %",3,3.41929
+0,"cpu: Nice %",3,0
+0,"cpu: System %",3,0.00567988
+0,"cpu: Idle %",3,96.5694
+0,"cpu: I/O Wait %",3,0
+0,"cpu: IRQ %",3,0
+0,"cpu: soft IRQ %",3,0.00567988
+0,"cpu: Steal %",3,0
+0,"cpu: Guest %",3,0
+0,"meminfo:MemTotal (MB)",3,630978
+0,"meminfo:MemFree (MB)",3,556467
+0,"meminfo:MemAvailable (MB)",3,588241
+0,"program size (pages)",4,79771
+0,"resident set size (pages)",4,2658
+0,"resident shared pages",4,814
+0,"Page faults (minor)",4,4746
+0,"Page faults (major)",4,24
+0,"Pages swapped (not maintained)",4,0
+0,"GPU: Device 0 Utilization %",4,0
+0,"GPU: Device 0 Memory Utilization %",4,0
+0,"GPU: Device 0 Memory Free (GB)",4,16.9428
+0,"GPU: Device 0 Memory Used (GB)",4,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",4,877
+0,"cpu: User %",4,3.43065
+0,"cpu: Nice %",4,0
+0,"cpu: System %",4,0.0340793
+0,"cpu: Idle %",4,96.5353
+0,"cpu: I/O Wait %",4,0
+0,"cpu: IRQ %",4,0
+0,"cpu: soft IRQ %",4,0
+0,"cpu: Steal %",4,0
+0,"cpu: Guest %",4,0
+0,"meminfo:MemTotal (MB)",4,630978
+0,"meminfo:MemFree (MB)",4,556467
+0,"meminfo:MemAvailable (MB)",4,588241
+0,"program size (pages)",5,79771
+0,"resident set size (pages)",5,2658
+0,"resident shared pages",5,814
+0,"Page faults (minor)",5,4746
+0,"Page faults (major)",5,24
+0,"Pages swapped (not maintained)",5,0
+0,"GPU: Device 0 Utilization %",5,0
+0,"GPU: Device 0 Memory Utilization %",5,0
+0,"GPU: Device 0 Memory Free (GB)",5,16.9428
+0,"GPU: Device 0 Memory Used (GB)",5,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",5,877
+0,"cpu: User %",5,3.43926
+0,"cpu: Nice %",5,0
+0,"cpu: System %",5,0.00568473
+0,"cpu: Idle %",5,96.5551
+0,"cpu: I/O Wait %",5,0
+0,"cpu: IRQ %",5,0
+0,"cpu: soft IRQ %",5,0
+0,"cpu: Steal %",5,0
+0,"cpu: Guest %",5,0
+0,"meminfo:MemTotal (MB)",5,630978
+0,"meminfo:MemFree (MB)",5,556467
+0,"meminfo:MemAvailable (MB)",5,588241
+0,"program size (pages)",6,79771
+0,"resident set size (pages)",6,2658
+0,"resident shared pages",6,814
+0,"Page faults (minor)",6,4746
+0,"Page faults (major)",6,24
+0,"Pages swapped (not maintained)",6,0
+0,"GPU: Device 0 Utilization %",6,0
+0,"GPU: Device 0 Memory Utilization %",6,0
+0,"GPU: Device 0 Memory Free (GB)",6,16.9428
+0,"GPU: Device 0 Memory Used (GB)",6,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",6,877
+0,"cpu: User %",6,3.4029
+0,"cpu: Nice %",6,0
+0,"cpu: System %",6,0.011343
+0,"cpu: Idle %",6,96.5858
+0,"cpu: I/O Wait %",6,0
+0,"cpu: IRQ %",6,0
+0,"cpu: soft IRQ %",6,0
+0,"cpu: Steal %",6,0
+0,"cpu: Guest %",6,0
+0,"meminfo:MemTotal (MB)",6,630978
+0,"meminfo:MemFree (MB)",6,556466
+0,"meminfo:MemAvailable (MB)",6,588240
+0,"program size (pages)",7,79771
+0,"resident set size (pages)",7,2658
+0,"resident shared pages",7,814
+0,"Page faults (minor)",7,4746
+0,"Page faults (major)",7,24
+0,"Pages swapped (not maintained)",7,0
+0,"GPU: Device 0 Utilization %",7,0
+0,"GPU: Device 0 Memory Utilization %",7,0
+0,"GPU: Device 0 Memory Free (GB)",7,16.9428
+0,"GPU: Device 0 Memory Used (GB)",7,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",7,877
+0,"cpu: User %",7,3.45966
+0,"cpu: Nice %",7,0
+0,"cpu: System %",7,0.00569022
+0,"cpu: Idle %",7,96.5347
+0,"cpu: I/O Wait %",7,0
+0,"cpu: IRQ %",7,0
+0,"cpu: soft IRQ %",7,0
+0,"cpu: Steal %",7,0
+0,"cpu: Guest %",7,0
+0,"meminfo:MemTotal (MB)",7,630978
+0,"meminfo:MemFree (MB)",7,556466
+0,"meminfo:MemAvailable (MB)",7,588240
+0,"program size (pages)",8,79771
+0,"resident set size (pages)",8,2658
+0,"resident shared pages",8,814
+0,"Page faults (minor)",8,4746
+0,"Page faults (major)",8,24
+0,"Pages swapped (not maintained)",8,0
+0,"GPU: Device 0 Utilization %",8,0
+0,"GPU: Device 0 Memory Utilization %",8,0
+0,"GPU: Device 0 Memory Free (GB)",8,16.9428
+0,"GPU: Device 0 Memory Used (GB)",8,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",8,877
+0,"cpu: User %",8,3.43299
+0,"cpu: Nice %",8,0
+0,"cpu: System %",8,0.00568376
+0,"cpu: Idle %",8,96.5613
+0,"cpu: I/O Wait %",8,0
+0,"cpu: IRQ %",8,0
+0,"cpu: soft IRQ %",8,0
+0,"cpu: Steal %",8,0
+0,"cpu: Guest %",8,0
+0,"meminfo:MemTotal (MB)",8,630978
+0,"meminfo:MemFree (MB)",8,556466
+0,"meminfo:MemAvailable (MB)",8,588240
+0,"program size (pages)",9,79771
+0,"resident set size (pages)",9,2658
+0,"resident shared pages",9,814
+0,"Page faults (minor)",9,4746
+0,"Page faults (major)",9,24
+0,"Pages swapped (not maintained)",9,0
+0,"GPU: Device 0 Utilization %",9,0
+0,"GPU: Device 0 Memory Utilization %",9,0
+0,"GPU: Device 0 Memory Free (GB)",9,16.9428
+0,"GPU: Device 0 Memory Used (GB)",9,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",9,877
+0,"cpu: User %",9,3.42653
+0,"cpu: Nice %",9,0
+0,"cpu: System %",9,0.0170474
+0,"cpu: Idle %",9,96.5564
+0,"cpu: I/O Wait %",9,0
+0,"cpu: IRQ %",9,0
+0,"cpu: soft IRQ %",9,0
+0,"cpu: Steal %",9,0
+0,"cpu: Guest %",9,0
+0,"meminfo:MemTotal (MB)",9,630978
+0,"meminfo:MemFree (MB)",9,556466
+0,"meminfo:MemAvailable (MB)",9,588240
+0,"program size (pages)",10,79771
+0,"resident set size (pages)",10,2658
+0,"resident shared pages",10,814
+0,"Page faults (minor)",10,4746
+0,"Page faults (major)",10,24
+0,"Pages swapped (not maintained)",10,0
+0,"GPU: Device 0 Utilization %",10,0
+0,"GPU: Device 0 Memory Utilization %",10,0
+0,"GPU: Device 0 Memory Free (GB)",10,16.9428
+0,"GPU: Device 0 Memory Used (GB)",10,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",10,877
+0,"cpu: User %",10,3.41555
+0,"cpu: Nice %",10,0
+0,"cpu: System %",10,0.0113662
+0,"cpu: Idle %",10,96.5731
+0,"cpu: I/O Wait %",10,0
+0,"cpu: IRQ %",10,0
+0,"cpu: soft IRQ %",10,0
+0,"cpu: Steal %",10,0
+0,"cpu: Guest %",10,0
+0,"meminfo:MemTotal (MB)",10,630978
+0,"meminfo:MemFree (MB)",10,556466
+0,"meminfo:MemAvailable (MB)",10,588240
+0,"program size (pages)",11,79771
+0,"resident set size (pages)",11,2658
+0,"resident shared pages",11,814
+0,"Page faults (minor)",11,4746
+0,"Page faults (major)",11,24
+0,"Pages swapped (not maintained)",11,0
+0,"GPU: Device 0 Utilization %",11,0
+0,"GPU: Device 0 Memory Utilization %",11,0
+0,"GPU: Device 0 Memory Free (GB)",11,16.9428
+0,"GPU: Device 0 Memory Used (GB)",11,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",11,877
+0,"cpu: User %",11,3.41322
+0,"cpu: Nice %",11,0
+0,"cpu: System %",11,0.00567924
+0,"cpu: Idle %",11,96.5811
+0,"cpu: I/O Wait %",11,0
+0,"cpu: IRQ %",11,0
+0,"cpu: soft IRQ %",11,0
+0,"cpu: Steal %",11,0
+0,"cpu: Guest %",11,0
+0,"meminfo:MemTotal (MB)",11,630978
+0,"meminfo:MemFree (MB)",11,556466
+0,"meminfo:MemAvailable (MB)",11,588240
+0,"program size (pages)",12,79771
+0,"resident set size (pages)",12,2658
+0,"resident shared pages",12,814
+0,"Page faults (minor)",12,4746
+0,"Page faults (major)",12,24
+0,"Pages swapped (not maintained)",12,0
+0,"GPU: Device 0 Utilization %",12,0
+0,"GPU: Device 0 Memory Utilization %",12,0
+0,"GPU: Device 0 Memory Free (GB)",12,16.9428
+0,"GPU: Device 0 Memory Used (GB)",12,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",12,877
+0,"cpu: User %",12,3.43945
+0,"cpu: Nice %",12,0
+0,"cpu: System %",12,0.0113701
+0,"cpu: Idle %",12,96.5492
+0,"cpu: I/O Wait %",12,0
+0,"cpu: IRQ %",12,0
+0,"cpu: soft IRQ %",12,0
+0,"cpu: Steal %",12,0
+0,"cpu: Guest %",12,0
+0,"meminfo:MemTotal (MB)",12,630978
+0,"meminfo:MemFree (MB)",12,556466
+0,"meminfo:MemAvailable (MB)",12,588240
+0,"program size (pages)",13,79771
+0,"resident set size (pages)",13,2658
+0,"resident shared pages",13,814
+0,"Page faults (minor)",13,4746
+0,"Page faults (major)",13,24
+0,"Pages swapped (not maintained)",13,0
+0,"GPU: Device 0 Utilization %",13,0
+0,"GPU: Device 0 Memory Utilization %",13,0
+0,"GPU: Device 0 Memory Free (GB)",13,16.9428
+0,"GPU: Device 0 Memory Used (GB)",13,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",13,877
+0,"cpu: User %",13,3.42419
+0,"cpu: Nice %",13,0
+0,"cpu: System %",13,0.0170358
+0,"cpu: Idle %",13,96.5588
+0,"cpu: I/O Wait %",13,0
+0,"cpu: IRQ %",13,0
+0,"cpu: soft IRQ %",13,0
+0,"cpu: Steal %",13,0
+0,"cpu: Guest %",13,0
+0,"meminfo:MemTotal (MB)",13,630978
+0,"meminfo:MemFree (MB)",13,556466
+0,"meminfo:MemAvailable (MB)",13,588240
+0,"program size (pages)",14,79771
+0,"resident set size (pages)",14,2658
+0,"resident shared pages",14,814
+0,"Page faults (minor)",14,4746
+0,"Page faults (major)",14,24
+0,"Pages swapped (not maintained)",14,0
+0,"GPU: Device 0 Utilization %",14,0
+0,"GPU: Device 0 Memory Utilization %",14,0
+0,"GPU: Device 0 Memory Free (GB)",14,16.9428
+0,"GPU: Device 0 Memory Used (GB)",14,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",14,877
+0,"cpu: User %",14,3.43045
+0,"cpu: Nice %",14,0
+0,"cpu: System %",14,0.00567956
+0,"cpu: Idle %",14,96.5639
+0,"cpu: I/O Wait %",14,0
+0,"cpu: IRQ %",14,0
+0,"cpu: soft IRQ %",14,0
+0,"cpu: Steal %",14,0
+0,"cpu: Guest %",14,0
+0,"meminfo:MemTotal (MB)",14,630978
+0,"meminfo:MemFree (MB)",14,556466
+0,"meminfo:MemAvailable (MB)",14,588240
+0,"program size (pages)",15,79771
+0,"resident set size (pages)",15,2658
+0,"resident shared pages",15,814
+0,"Page faults (minor)",15,4746
+0,"Page faults (major)",15,24
+0,"Pages swapped (not maintained)",15,0
+0,"GPU: Device 0 Utilization %",15,0
+0,"GPU: Device 0 Memory Utilization %",15,0
+0,"GPU: Device 0 Memory Free (GB)",15,16.9428
+0,"GPU: Device 0 Memory Used (GB)",15,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",15,877
+0,"cpu: User %",15,3.42633
+0,"cpu: Nice %",15,0
+0,"cpu: System %",15,0.0340928
+0,"cpu: Idle %",15,96.5396
+0,"cpu: I/O Wait %",15,0
+0,"cpu: IRQ %",15,0
+0,"cpu: soft IRQ %",15,0
+0,"cpu: Steal %",15,0
+0,"cpu: Guest %",15,0
+0,"meminfo:MemTotal (MB)",15,630978
+0,"meminfo:MemFree (MB)",15,556466
+0,"meminfo:MemAvailable (MB)",15,588240
+0,"program size (pages)",16,79771
+0,"resident set size (pages)",16,2658
+0,"resident shared pages",16,814
+0,"Page faults (minor)",16,4746
+0,"Page faults (major)",16,24
+0,"Pages swapped (not maintained)",16,0
+0,"GPU: Device 0 Utilization %",16,0
+0,"GPU: Device 0 Memory Utilization %",16,0
+0,"GPU: Device 0 Memory Free (GB)",16,16.9428
+0,"GPU: Device 0 Memory Used (GB)",16,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",16,877
+0,"cpu: User %",16,3.44004
+0,"cpu: Nice %",16,0
+0,"cpu: System %",16,0.00568602
+0,"cpu: Idle %",16,96.5543
+0,"cpu: I/O Wait %",16,0
+0,"cpu: IRQ %",16,0
+0,"cpu: soft IRQ %",16,0
+0,"cpu: Steal %",16,0
+0,"cpu: Guest %",16,0
+0,"meminfo:MemTotal (MB)",16,630978
+0,"meminfo:MemFree (MB)",16,556466
+0,"meminfo:MemAvailable (MB)",16,588240
+0,"program size (pages)",17,79771
+0,"resident set size (pages)",17,2658
+0,"resident shared pages",17,814
+0,"Page faults (minor)",17,4746
+0,"Page faults (major)",17,24
+0,"Pages swapped (not maintained)",17,0
+0,"GPU: Device 0 Utilization %",17,0
+0,"GPU: Device 0 Memory Utilization %",17,0
+0,"GPU: Device 0 Memory Free (GB)",17,16.9428
+0,"GPU: Device 0 Memory Used (GB)",17,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",17,877
+0,"cpu: User %",17,3.44043
+0,"cpu: Nice %",17,0
+0,"cpu: System %",17,0.00568666
+0,"cpu: Idle %",17,96.5539
+0,"cpu: I/O Wait %",17,0
+0,"cpu: IRQ %",17,0
+0,"cpu: soft IRQ %",17,0
+0,"cpu: Steal %",17,0
+0,"cpu: Guest %",17,0
+0,"meminfo:MemTotal (MB)",17,630978
+0,"meminfo:MemFree (MB)",17,556466
+0,"meminfo:MemAvailable (MB)",17,588240
+0,"program size (pages)",18,79771
+0,"resident set size (pages)",18,2658
+0,"resident shared pages",18,814
+0,"Page faults (minor)",18,4746
+0,"Page faults (major)",18,24
+0,"Pages swapped (not maintained)",18,0
+0,"GPU: Device 0 Utilization %",18,0
+0,"GPU: Device 0 Memory Utilization %",18,0
+0,"GPU: Device 0 Memory Free (GB)",18,16.9428
+0,"GPU: Device 0 Memory Used (GB)",18,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",18,877
+0,"cpu: User %",18,3.41361
+0,"cpu: Nice %",18,0
+0,"cpu: System %",18,0.00567988
+0,"cpu: Idle %",18,96.5807
+0,"cpu: I/O Wait %",18,0
+0,"cpu: IRQ %",18,0
+0,"cpu: soft IRQ %",18,0
+0,"cpu: Steal %",18,0
+0,"cpu: Guest %",18,0
+0,"meminfo:MemTotal (MB)",18,630978
+0,"meminfo:MemFree (MB)",18,556466
+0,"meminfo:MemAvailable (MB)",18,588240
+0,"program size (pages)",19,79771
+0,"resident set size (pages)",19,2658
+0,"resident shared pages",19,814
+0,"Page faults (minor)",19,4746
+0,"Page faults (major)",19,24
+0,"Pages swapped (not maintained)",19,0
+0,"GPU: Device 0 Utilization %",19,0
+0,"GPU: Device 0 Memory Utilization %",19,0
+0,"GPU: Device 0 Memory Free (GB)",19,16.9428
+0,"GPU: Device 0 Memory Used (GB)",19,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",19,877
+0,"cpu: User %",19,3.4171
+0,"cpu: Nice %",19,0
+0,"cpu: System %",19,0.0227428
+0,"cpu: Idle %",19,96.5602
+0,"cpu: I/O Wait %",19,0
+0,"cpu: IRQ %",19,0
+0,"cpu: soft IRQ %",19,0
+0,"cpu: Steal %",19,0
+0,"cpu: Guest %",19,0
+0,"meminfo:MemTotal (MB)",19,630978
+0,"meminfo:MemFree (MB)",19,556466
+0,"meminfo:MemAvailable (MB)",19,588240
+0,"program size (pages)",20,79771
+0,"resident set size (pages)",20,2658
+0,"resident shared pages",20,814
+0,"Page faults (minor)",20,4746
+0,"Page faults (major)",20,24
+0,"Pages swapped (not maintained)",20,0
+0,"GPU: Device 0 Utilization %",20,0
+0,"GPU: Device 0 Memory Utilization %",20,0
+0,"GPU: Device 0 Memory Free (GB)",20,16.9428
+0,"GPU: Device 0 Memory Used (GB)",20,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",20,877
+0,"cpu: User %",20,3.40761
+0,"cpu: Nice %",20,0
+0,"cpu: System %",20,0.0056699
+0,"cpu: Idle %",20,96.5867
+0,"cpu: I/O Wait %",20,0
+0,"cpu: IRQ %",20,0
+0,"cpu: soft IRQ %",20,0
+0,"cpu: Steal %",20,0
+0,"cpu: Guest %",20,0
+0,"meminfo:MemTotal (MB)",20,630978
+0,"meminfo:MemFree (MB)",20,556466
+0,"meminfo:MemAvailable (MB)",20,588240
+0,"program size (pages)",21,79771
+0,"resident set size (pages)",21,2658
+0,"resident shared pages",21,814
+0,"Page faults (minor)",21,4746
+0,"Page faults (major)",21,24
+0,"Pages swapped (not maintained)",21,0
+0,"GPU: Device 0 Utilization %",21,0
+0,"GPU: Device 0 Memory Utilization %",21,0
+0,"GPU: Device 0 Memory Free (GB)",21,16.9428
+0,"GPU: Device 0 Memory Used (GB)",21,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",21,877
+0,"cpu: User %",21,3.44259
+0,"cpu: Nice %",21,0
+0,"cpu: System %",21,0.00569022
+0,"cpu: Idle %",21,96.5517
+0,"cpu: I/O Wait %",21,0
+0,"cpu: IRQ %",21,0
+0,"cpu: soft IRQ %",21,0
+0,"cpu: Steal %",21,0
+0,"cpu: Guest %",21,0
+0,"meminfo:MemTotal (MB)",21,630978
+0,"meminfo:MemFree (MB)",21,556466
+0,"meminfo:MemAvailable (MB)",21,588240
+0,"program size (pages)",22,79771
+0,"resident set size (pages)",22,2658
+0,"resident shared pages",22,814
+0,"Page faults (minor)",22,4747
+0,"Page faults (major)",22,24
+0,"Pages swapped (not maintained)",22,0
+0,"GPU: Device 0 Utilization %",22,0
+0,"GPU: Device 0 Memory Utilization %",22,0
+0,"GPU: Device 0 Memory Free (GB)",22,16.9428
+0,"GPU: Device 0 Memory Used (GB)",22,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",22,877
+0,"cpu: User %",22,3.41929
+0,"cpu: Nice %",22,0
+0,"cpu: System %",22,0.0170396
+0,"cpu: Idle %",22,96.558
+0,"cpu: I/O Wait %",22,0
+0,"cpu: IRQ %",22,0
+0,"cpu: soft IRQ %",22,0.00567988
+0,"cpu: Steal %",22,0
+0,"cpu: Guest %",22,0
+0,"meminfo:MemTotal (MB)",22,630978
+0,"meminfo:MemFree (MB)",22,556465
+0,"meminfo:MemAvailable (MB)",22,588239
+0,"program size (pages)",23,79771
+0,"resident set size (pages)",23,2658
+0,"resident shared pages",23,814
+0,"Page faults (minor)",23,4747
+0,"Page faults (major)",23,24
+0,"Pages swapped (not maintained)",23,0
+0,"GPU: Device 0 Utilization %",23,0
+0,"GPU: Device 0 Memory Utilization %",23,0
+0,"GPU: Device 0 Memory Free (GB)",23,16.9428
+0,"GPU: Device 0 Memory Used (GB)",23,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",23,877
+0,"cpu: User %",23,3.43849
+0,"cpu: Nice %",23,0
+0,"cpu: System %",23,0.0283704
+0,"cpu: Idle %",23,96.5331
+0,"cpu: I/O Wait %",23,0
+0,"cpu: IRQ %",23,0
+0,"cpu: soft IRQ %",23,0
+0,"cpu: Steal %",23,0
+0,"cpu: Guest %",23,0
+0,"meminfo:MemTotal (MB)",23,630978
+0,"meminfo:MemFree (MB)",23,556465
+0,"meminfo:MemAvailable (MB)",23,588239
+0,"program size (pages)",24,79771
+0,"resident set size (pages)",24,2658
+0,"resident shared pages",24,814
+0,"Page faults (minor)",24,4747
+0,"Page faults (major)",24,24
+0,"Pages swapped (not maintained)",24,0
+0,"GPU: Device 0 Utilization %",24,0
+0,"GPU: Device 0 Memory Utilization %",24,0
+0,"GPU: Device 0 Memory Free (GB)",24,16.9428
+0,"GPU: Device 0 Memory Used (GB)",24,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",24,877
+0,"cpu: User %",24,3.43592
+0,"cpu: Nice %",24,0
+0,"cpu: System %",24,0.00568861
+0,"cpu: Idle %",24,96.5584
+0,"cpu: I/O Wait %",24,0
+0,"cpu: IRQ %",24,0
+0,"cpu: soft IRQ %",24,0
+0,"cpu: Steal %",24,0
+0,"cpu: Guest %",24,0
+0,"meminfo:MemTotal (MB)",24,630978
+0,"meminfo:MemFree (MB)",24,556464
+0,"meminfo:MemAvailable (MB)",24,588238
+0,"program size (pages)",25,79771
+0,"resident set size (pages)",25,2658
+0,"resident shared pages",25,814
+0,"Page faults (minor)",25,4747
+0,"Page faults (major)",25,24
+0,"Pages swapped (not maintained)",25,0
+0,"GPU: Device 0 Utilization %",25,0
+0,"GPU: Device 0 Memory Utilization %",25,0
+0,"GPU: Device 0 Memory Free (GB)",25,16.9428
+0,"GPU: Device 0 Memory Used (GB)",25,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",25,877
+0,"cpu: User %",25,3.44534
+0,"cpu: Nice %",25,0
+0,"cpu: System %",25,0.0227415
+0,"cpu: Idle %",25,96.5319
+0,"cpu: I/O Wait %",25,0
+0,"cpu: IRQ %",25,0
+0,"cpu: soft IRQ %",25,0
+0,"cpu: Steal %",25,0
+0,"cpu: Guest %",25,0
+0,"meminfo:MemTotal (MB)",25,630978
+0,"meminfo:MemFree (MB)",25,556464
+0,"meminfo:MemAvailable (MB)",25,588238
+0,"program size (pages)",26,79771
+0,"resident set size (pages)",26,2658
+0,"resident shared pages",26,814
+0,"Page faults (minor)",26,4747
+0,"Page faults (major)",26,24
+0,"Pages swapped (not maintained)",26,0
+0,"GPU: Device 0 Utilization %",26,0
+0,"GPU: Device 0 Memory Utilization %",26,0
+0,"GPU: Device 0 Memory Free (GB)",26,16.9428
+0,"GPU: Device 0 Memory Used (GB)",26,0.00275251
+0,"GPU: Device 0 Clock Memory (MHz)",26,877
+0,"cpu: User %",26,3.43162
+0,"cpu: Nice %",26,0
+0,"cpu: System %",26,0.0056815
+0,"cpu: Idle %",26,96.5627
+0,"cpu: I/O Wait %",26,0
+0,"cpu: IRQ %",26,0
+0,"cpu: soft IRQ %",26,0
+0,"cpu: Steal %",26,0
+0,"cpu: Guest %",26,0
+0,"meminfo:MemTotal (MB)",26,630978
+0,"meminfo:MemFree (MB)",26,556464
+0,"meminfo:MemAvailable (MB)",26,588238
+1,"Page faults (minor)",0,4683
+1,"Page faults (major)",0,24
+1,"Pages swapped (not maintained)",0,0
+1,"program size (pages)",0,79771
+1,"resident set size (pages)",0,2661
+1,"resident shared pages",0,817
+1,"Page faults (minor)",0,4685
+1,"Page faults (major)",0,24
+1,"Pages swapped (not maintained)",0,0
+1,"GPU: Device 1 Utilization %",0,0
+1,"GPU: Device 1 Memory Utilization %",0,0
+1,"GPU: Device 1 Memory Total (GB)",0,16.9455
+1,"GPU: Device 1 Memory Free (GB)",0,16.9428
+1,"GPU: Device 1 Memory Used (GB)",0,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",0,877
+1,"cpu: User %",0,3.35619
+1,"cpu: Nice %",0,0
+1,"cpu: System %",0,0.360881
+1,"cpu: Idle %",0,96.2829
+1,"cpu: I/O Wait %",0,0
+1,"cpu: IRQ %",0,0
+1,"cpu: soft IRQ %",0,0
+1,"cpu: Steal %",0,0
+1,"cpu: Guest %",0,0
+1,"meminfo:MemTotal (MB)",0,630978
+1,"meminfo:MemFree (MB)",0,556483
+1,"meminfo:MemAvailable (MB)",0,588255
+1,"program size (pages)",1,79771
+1,"resident set size (pages)",1,2661
+1,"resident shared pages",1,817
+1,"Page faults (minor)",1,4747
+1,"Page faults (major)",1,24
+1,"Pages swapped (not maintained)",1,0
+1,"GPU: Device 1 Utilization %",1,0
+1,"GPU: Device 1 Memory Utilization %",1,0
+1,"GPU: Device 1 Memory Free (GB)",1,16.9428
+1,"GPU: Device 1 Memory Used (GB)",1,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",1,877
+1,"cpu: User %",1,3.43712
+1,"cpu: Nice %",1,0
+1,"cpu: System %",1,0.0507324
+1,"cpu: Idle %",1,96.5121
+1,"cpu: I/O Wait %",1,0
+1,"cpu: IRQ %",1,0
+1,"cpu: soft IRQ %",1,0
+1,"cpu: Steal %",1,0
+1,"cpu: Guest %",1,0
+1,"meminfo:MemTotal (MB)",1,630978
+1,"meminfo:MemFree (MB)",1,556468
+1,"meminfo:MemAvailable (MB)",1,588241
+1,"program size (pages)",2,79771
+1,"resident set size (pages)",2,2661
+1,"resident shared pages",2,817
+1,"Page faults (minor)",2,4747
+1,"Page faults (major)",2,24
+1,"Pages swapped (not maintained)",2,0
+1,"GPU: Device 1 Utilization %",2,0
+1,"GPU: Device 1 Memory Utilization %",2,0
+1,"GPU: Device 1 Memory Free (GB)",2,16.9428
+1,"GPU: Device 1 Memory Used (GB)",2,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",2,877
+1,"cpu: User %",2,3.43455
+1,"cpu: Nice %",2,0
+1,"cpu: System %",2,0.0227454
+1,"cpu: Idle %",2,96.5427
+1,"cpu: I/O Wait %",2,0
+1,"cpu: IRQ %",2,0
+1,"cpu: soft IRQ %",2,0
+1,"cpu: Steal %",2,0
+1,"cpu: Guest %",2,0
+1,"meminfo:MemTotal (MB)",2,630978
+1,"meminfo:MemFree (MB)",2,556467
+1,"meminfo:MemAvailable (MB)",2,588241
+1,"program size (pages)",3,79771
+1,"resident set size (pages)",3,2661
+1,"resident shared pages",3,817
+1,"Page faults (minor)",3,4747
+1,"Page faults (major)",3,24
+1,"Pages swapped (not maintained)",3,0
+1,"GPU: Device 1 Utilization %",3,0
+1,"GPU: Device 1 Memory Utilization %",3,0
+1,"GPU: Device 1 Memory Free (GB)",3,16.9428
+1,"GPU: Device 1 Memory Used (GB)",3,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",3,877
+1,"cpu: User %",3,3.41754
+1,"cpu: Nice %",3,0
+1,"cpu: System %",3,0.00567698
+1,"cpu: Idle %",3,96.5711
+1,"cpu: I/O Wait %",3,0
+1,"cpu: IRQ %",3,0
+1,"cpu: soft IRQ %",3,0.00567698
+1,"cpu: Steal %",3,0
+1,"cpu: Guest %",3,0
+1,"meminfo:MemTotal (MB)",3,630978
+1,"meminfo:MemFree (MB)",3,556467
+1,"meminfo:MemAvailable (MB)",3,588241
+1,"program size (pages)",4,79771
+1,"resident set size (pages)",4,2661
+1,"resident shared pages",4,817
+1,"Page faults (minor)",4,4747
+1,"Page faults (major)",4,24
+1,"Pages swapped (not maintained)",4,0
+1,"GPU: Device 1 Utilization %",4,0
+1,"GPU: Device 1 Memory Utilization %",4,0
+1,"GPU: Device 1 Memory Free (GB)",4,16.9428
+1,"GPU: Device 1 Memory Used (GB)",4,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",4,877
+1,"cpu: User %",4,3.42948
+1,"cpu: Nice %",4,0
+1,"cpu: System %",4,0.0340677
+1,"cpu: Idle %",4,96.5365
+1,"cpu: I/O Wait %",4,0
+1,"cpu: IRQ %",4,0
+1,"cpu: soft IRQ %",4,0
+1,"cpu: Steal %",4,0
+1,"cpu: Guest %",4,0
+1,"meminfo:MemTotal (MB)",4,630978
+1,"meminfo:MemFree (MB)",4,556467
+1,"meminfo:MemAvailable (MB)",4,588241
+1,"program size (pages)",5,79771
+1,"resident set size (pages)",5,2661
+1,"resident shared pages",5,817
+1,"Page faults (minor)",5,4747
+1,"Page faults (major)",5,24
+1,"Pages swapped (not maintained)",5,0
+1,"GPU: Device 1 Utilization %",5,0
+1,"GPU: Device 1 Memory Utilization %",5,0
+1,"GPU: Device 1 Memory Free (GB)",5,16.9428
+1,"GPU: Device 1 Memory Used (GB)",5,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",5,877
+1,"cpu: User %",5,3.442
+1,"cpu: Nice %",5,0
+1,"cpu: System %",5,0.00568925
+1,"cpu: Idle %",5,96.5523
+1,"cpu: I/O Wait %",5,0
+1,"cpu: IRQ %",5,0
+1,"cpu: soft IRQ %",5,0
+1,"cpu: Steal %",5,0
+1,"cpu: Guest %",5,0
+1,"meminfo:MemTotal (MB)",5,630978
+1,"meminfo:MemFree (MB)",5,556467
+1,"meminfo:MemAvailable (MB)",5,588241
+1,"program size (pages)",6,79771
+1,"resident set size (pages)",6,2661
+1,"resident shared pages",6,817
+1,"Page faults (minor)",6,4747
+1,"Page faults (major)",6,24
+1,"Pages swapped (not maintained)",6,0
+1,"GPU: Device 1 Utilization %",6,0
+1,"GPU: Device 1 Memory Utilization %",6,0
+1,"GPU: Device 1 Memory Free (GB)",6,16.9428
+1,"GPU: Device 1 Memory Used (GB)",6,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",6,877
+1,"cpu: User %",6,3.3952
+1,"cpu: Nice %",6,0
+1,"cpu: System %",6,0.0113173
+1,"cpu: Idle %",6,96.5935
+1,"cpu: I/O Wait %",6,0
+1,"cpu: IRQ %",6,0
+1,"cpu: soft IRQ %",6,0
+1,"cpu: Steal %",6,0
+1,"cpu: Guest %",6,0
+1,"meminfo:MemTotal (MB)",6,630978
+1,"meminfo:MemFree (MB)",6,556466
+1,"meminfo:MemAvailable (MB)",6,588240
+1,"program size (pages)",7,79771
+1,"resident set size (pages)",7,2661
+1,"resident shared pages",7,817
+1,"Page faults (minor)",7,4747
+1,"Page faults (major)",7,24
+1,"Pages swapped (not maintained)",7,0
+1,"GPU: Device 1 Utilization %",7,0
+1,"GPU: Device 1 Memory Utilization %",7,0
+1,"GPU: Device 1 Memory Free (GB)",7,16.9428
+1,"GPU: Device 1 Memory Used (GB)",7,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",7,877
+1,"cpu: User %",7,3.46814
+1,"cpu: Nice %",7,0
+1,"cpu: System %",7,0.00570418
+1,"cpu: Idle %",7,96.5262
+1,"cpu: I/O Wait %",7,0
+1,"cpu: IRQ %",7,0
+1,"cpu: soft IRQ %",7,0
+1,"cpu: Steal %",7,0
+1,"cpu: Guest %",7,0
+1,"meminfo:MemTotal (MB)",7,630978
+1,"meminfo:MemFree (MB)",7,556466
+1,"meminfo:MemAvailable (MB)",7,588240
+1,"program size (pages)",8,79771
+1,"resident set size (pages)",8,2661
+1,"resident shared pages",8,817
+1,"Page faults (minor)",8,4747
+1,"Page faults (major)",8,24
+1,"Pages swapped (not maintained)",8,0
+1,"GPU: Device 1 Utilization %",8,0
+1,"GPU: Device 1 Memory Utilization %",8,0
+1,"GPU: Device 1 Memory Free (GB)",8,16.9428
+1,"GPU: Device 1 Memory Used (GB)",8,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",8,877
+1,"cpu: User %",8,3.43279
+1,"cpu: Nice %",8,0
+1,"cpu: System %",8,0.00568343
+1,"cpu: Idle %",8,96.5615
+1,"cpu: I/O Wait %",8,0
+1,"cpu: IRQ %",8,0
+1,"cpu: soft IRQ %",8,0
+1,"cpu: Steal %",8,0
+1,"cpu: Guest %",8,0
+1,"meminfo:MemTotal (MB)",8,630978
+1,"meminfo:MemFree (MB)",8,556466
+1,"meminfo:MemAvailable (MB)",8,588240
+1,"program size (pages)",9,79771
+1,"resident set size (pages)",9,2661
+1,"resident shared pages",9,817
+1,"Page faults (minor)",9,4747
+1,"Page faults (major)",9,24
+1,"Pages swapped (not maintained)",9,0
+1,"GPU: Device 1 Utilization %",9,0
+1,"GPU: Device 1 Memory Utilization %",9,0
+1,"GPU: Device 1 Memory Free (GB)",9,16.9428
+1,"GPU: Device 1 Memory Used (GB)",9,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",9,877
+1,"cpu: User %",9,3.42614
+1,"cpu: Nice %",9,0
+1,"cpu: System %",9,0.0170455
+1,"cpu: Idle %",9,96.5568
+1,"cpu: I/O Wait %",9,0
+1,"cpu: IRQ %",9,0
+1,"cpu: soft IRQ %",9,0
+1,"cpu: Steal %",9,0
+1,"cpu: Guest %",9,0
+1,"meminfo:MemTotal (MB)",9,630978
+1,"meminfo:MemFree (MB)",9,556466
+1,"meminfo:MemAvailable (MB)",9,588240
+1,"program size (pages)",10,79771
+1,"resident set size (pages)",10,2661
+1,"resident shared pages",10,817
+1,"Page faults (minor)",10,4747
+1,"Page faults (major)",10,24
+1,"Pages swapped (not maintained)",10,0
+1,"GPU: Device 1 Utilization %",10,0
+1,"GPU: Device 1 Memory Utilization %",10,0
+1,"GPU: Device 1 Memory Free (GB)",10,16.9428
+1,"GPU: Device 1 Memory Used (GB)",10,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",10,877
+1,"cpu: User %",10,3.41555
+1,"cpu: Nice %",10,0
+1,"cpu: System %",10,0.0113662
+1,"cpu: Idle %",10,96.5731
+1,"cpu: I/O Wait %",10,0
+1,"cpu: IRQ %",10,0
+1,"cpu: soft IRQ %",10,0
+1,"cpu: Steal %",10,0
+1,"cpu: Guest %",10,0
+1,"meminfo:MemTotal (MB)",10,630978
+1,"meminfo:MemFree (MB)",10,556466
+1,"meminfo:MemAvailable (MB)",10,588240
+1,"program size (pages)",11,79771
+1,"resident set size (pages)",11,2661
+1,"resident shared pages",11,817
+1,"Page faults (minor)",11,4747
+1,"Page faults (major)",11,24
+1,"Pages swapped (not maintained)",11,0
+1,"GPU: Device 1 Utilization %",11,0
+1,"GPU: Device 1 Memory Utilization %",11,0
+1,"GPU: Device 1 Memory Free (GB)",11,16.9428
+1,"GPU: Device 1 Memory Used (GB)",11,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",11,877
+1,"cpu: User %",11,3.40819
+1,"cpu: Nice %",11,0
+1,"cpu: System %",11,0.00567086
+1,"cpu: Idle %",11,96.5861
+1,"cpu: I/O Wait %",11,0
+1,"cpu: IRQ %",11,0
+1,"cpu: soft IRQ %",11,0
+1,"cpu: Steal %",11,0
+1,"cpu: Guest %",11,0
+1,"meminfo:MemTotal (MB)",11,630978
+1,"meminfo:MemFree (MB)",11,556466
+1,"meminfo:MemAvailable (MB)",11,588240
+1,"program size (pages)",12,79771
+1,"resident set size (pages)",12,2661
+1,"resident shared pages",12,817
+1,"Page faults (minor)",12,4747
+1,"Page faults (major)",12,24
+1,"Pages swapped (not maintained)",12,0
+1,"GPU: Device 1 Utilization %",12,0
+1,"GPU: Device 1 Memory Utilization %",12,0
+1,"GPU: Device 1 Memory Free (GB)",12,16.9428
+1,"GPU: Device 1 Memory Used (GB)",12,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",12,877
+1,"cpu: User %",12,3.44455
+1,"cpu: Nice %",12,0
+1,"cpu: System %",12,0.0113869
+1,"cpu: Idle %",12,96.5441
+1,"cpu: I/O Wait %",12,0
+1,"cpu: IRQ %",12,0
+1,"cpu: soft IRQ %",12,0
+1,"cpu: Steal %",12,0
+1,"cpu: Guest %",12,0
+1,"meminfo:MemTotal (MB)",12,630978
+1,"meminfo:MemFree (MB)",12,556466
+1,"meminfo:MemAvailable (MB)",12,588240
+1,"program size (pages)",13,79771
+1,"resident set size (pages)",13,2661
+1,"resident shared pages",13,817
+1,"Page faults (minor)",13,4747
+1,"Page faults (major)",13,24
+1,"Pages swapped (not maintained)",13,0
+1,"GPU: Device 1 Utilization %",13,0
+1,"GPU: Device 1 Memory Utilization %",13,0
+1,"GPU: Device 1 Memory Free (GB)",13,16.9428
+1,"GPU: Device 1 Memory Used (GB)",13,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",13,877
+1,"cpu: User %",13,3.42458
+1,"cpu: Nice %",13,0
+1,"cpu: System %",13,0.0170377
+1,"cpu: Idle %",13,96.5584
+1,"cpu: I/O Wait %",13,0
+1,"cpu: IRQ %",13,0
+1,"cpu: soft IRQ %",13,0
+1,"cpu: Steal %",13,0
+1,"cpu: Guest %",13,0
+1,"meminfo:MemTotal (MB)",13,630978
+1,"meminfo:MemFree (MB)",13,556466
+1,"meminfo:MemAvailable (MB)",13,588240
+1,"program size (pages)",14,79771
+1,"resident set size (pages)",14,2661
+1,"resident shared pages",14,817
+1,"Page faults (minor)",14,4747
+1,"Page faults (major)",14,24
+1,"Pages swapped (not maintained)",14,0
+1,"GPU: Device 1 Utilization %",14,0
+1,"GPU: Device 1 Memory Utilization %",14,0
+1,"GPU: Device 1 Memory Free (GB)",14,16.9428
+1,"GPU: Device 1 Memory Used (GB)",14,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",14,877
+1,"cpu: User %",14,3.43026
+1,"cpu: Nice %",14,0
+1,"cpu: System %",14,0.00567924
+1,"cpu: Idle %",14,96.5641
+1,"cpu: I/O Wait %",14,0
+1,"cpu: IRQ %",14,0
+1,"cpu: soft IRQ %",14,0
+1,"cpu: Steal %",14,0
+1,"cpu: Guest %",14,0
+1,"meminfo:MemTotal (MB)",14,630978
+1,"meminfo:MemFree (MB)",14,556466
+1,"meminfo:MemAvailable (MB)",14,588240
+1,"program size (pages)",15,79771
+1,"resident set size (pages)",15,2661
+1,"resident shared pages",15,817
+1,"Page faults (minor)",15,4747
+1,"Page faults (major)",15,24
+1,"Pages swapped (not maintained)",15,0
+1,"GPU: Device 1 Utilization %",15,0
+1,"GPU: Device 1 Memory Utilization %",15,0
+1,"GPU: Device 1 Memory Free (GB)",15,16.9428
+1,"GPU: Device 1 Memory Used (GB)",15,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",15,877
+1,"cpu: User %",15,3.41875
+1,"cpu: Nice %",15,0
+1,"cpu: System %",15,0.0340175
+1,"cpu: Idle %",15,96.5472
+1,"cpu: I/O Wait %",15,0
+1,"cpu: IRQ %",15,0
+1,"cpu: soft IRQ %",15,0
+1,"cpu: Steal %",15,0
+1,"cpu: Guest %",15,0
+1,"meminfo:MemTotal (MB)",15,630978
+1,"meminfo:MemFree (MB)",15,556466
+1,"meminfo:MemAvailable (MB)",15,588240
+1,"program size (pages)",16,79771
+1,"resident set size (pages)",16,2661
+1,"resident shared pages",16,817
+1,"Page faults (minor)",16,4747
+1,"Page faults (major)",16,24
+1,"Pages swapped (not maintained)",16,0
+1,"GPU: Device 1 Utilization %",16,0
+1,"GPU: Device 1 Memory Utilization %",16,0
+1,"GPU: Device 1 Memory Free (GB)",16,16.9428
+1,"GPU: Device 1 Memory Used (GB)",16,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",16,877
+1,"cpu: User %",16,3.4471
+1,"cpu: Nice %",16,0
+1,"cpu: System %",16,0.00569768
+1,"cpu: Idle %",16,96.5472
+1,"cpu: I/O Wait %",16,0
+1,"cpu: IRQ %",16,0
+1,"cpu: soft IRQ %",16,0
+1,"cpu: Steal %",16,0
+1,"cpu: Guest %",16,0
+1,"meminfo:MemTotal (MB)",16,630978
+1,"meminfo:MemFree (MB)",16,556466
+1,"meminfo:MemAvailable (MB)",16,588240
+1,"program size (pages)",17,79771
+1,"resident set size (pages)",17,2661
+1,"resident shared pages",17,817
+1,"Page faults (minor)",17,4747
+1,"Page faults (major)",17,24
+1,"Pages swapped (not maintained)",17,0
+1,"GPU: Device 1 Utilization %",17,0
+1,"GPU: Device 1 Memory Utilization %",17,0
+1,"GPU: Device 1 Memory Free (GB)",17,16.9428
+1,"GPU: Device 1 Memory Used (GB)",17,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",17,877
+1,"cpu: User %",17,3.43926
+1,"cpu: Nice %",17,0
+1,"cpu: System %",17,0.00568473
+1,"cpu: Idle %",17,96.5551
+1,"cpu: I/O Wait %",17,0
+1,"cpu: IRQ %",17,0
+1,"cpu: soft IRQ %",17,0
+1,"cpu: Steal %",17,0
+1,"cpu: Guest %",17,0
+1,"meminfo:MemTotal (MB)",17,630978
+1,"meminfo:MemFree (MB)",17,556466
+1,"meminfo:MemAvailable (MB)",17,588240
+1,"program size (pages)",18,79771
+1,"resident set size (pages)",18,2661
+1,"resident shared pages",18,817
+1,"Page faults (minor)",18,4747
+1,"Page faults (major)",18,24
+1,"Pages swapped (not maintained)",18,0
+1,"GPU: Device 1 Utilization %",18,0
+1,"GPU: Device 1 Memory Utilization %",18,0
+1,"GPU: Device 1 Memory Free (GB)",18,16.9428
+1,"GPU: Device 1 Memory Used (GB)",18,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",18,877
+1,"cpu: User %",18,3.41497
+1,"cpu: Nice %",18,0
+1,"cpu: System %",18,0.00568214
+1,"cpu: Idle %",18,96.5794
+1,"cpu: I/O Wait %",18,0
+1,"cpu: IRQ %",18,0
+1,"cpu: soft IRQ %",18,0
+1,"cpu: Steal %",18,0
+1,"cpu: Guest %",18,0
+1,"meminfo:MemTotal (MB)",18,630978
+1,"meminfo:MemFree (MB)",18,556466
+1,"meminfo:MemAvailable (MB)",18,588240
+1,"program size (pages)",19,79771
+1,"resident set size (pages)",19,2661
+1,"resident shared pages",19,817
+1,"Page faults (minor)",19,4747
+1,"Page faults (major)",19,24
+1,"Pages swapped (not maintained)",19,0
+1,"GPU: Device 1 Utilization %",19,0
+1,"GPU: Device 1 Memory Utilization %",19,0
+1,"GPU: Device 1 Memory Free (GB)",19,16.9428
+1,"GPU: Device 1 Memory Used (GB)",19,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",19,877
+1,"cpu: User %",19,3.41555
+1,"cpu: Nice %",19,0
+1,"cpu: System %",19,0.0227324
+1,"cpu: Idle %",19,96.5617
+1,"cpu: I/O Wait %",19,0
+1,"cpu: IRQ %",19,0
+1,"cpu: soft IRQ %",19,0
+1,"cpu: Steal %",19,0
+1,"cpu: Guest %",19,0
+1,"meminfo:MemTotal (MB)",19,630978
+1,"meminfo:MemFree (MB)",19,556466
+1,"meminfo:MemAvailable (MB)",19,588240
+1,"program size (pages)",20,79771
+1,"resident set size (pages)",20,2661
+1,"resident shared pages",20,817
+1,"Page faults (minor)",20,4747
+1,"Page faults (major)",20,24
+1,"Pages swapped (not maintained)",20,0
+1,"GPU: Device 1 Utilization %",20,0
+1,"GPU: Device 1 Memory Utilization %",20,0
+1,"GPU: Device 1 Memory Free (GB)",20,16.9428
+1,"GPU: Device 1 Memory Used (GB)",20,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",20,877
+1,"cpu: User %",20,3.40626
+1,"cpu: Nice %",20,0
+1,"cpu: System %",20,0.00566765
+1,"cpu: Idle %",20,96.5881
+1,"cpu: I/O Wait %",20,0
+1,"cpu: IRQ %",20,0
+1,"cpu: soft IRQ %",20,0
+1,"cpu: Steal %",20,0
+1,"cpu: Guest %",20,0
+1,"meminfo:MemTotal (MB)",20,630978
+1,"meminfo:MemFree (MB)",20,556466
+1,"meminfo:MemAvailable (MB)",20,588240
+1,"program size (pages)",21,79771
+1,"resident set size (pages)",21,2661
+1,"resident shared pages",21,817
+1,"Page faults (minor)",21,4747
+1,"Page faults (major)",21,24
+1,"Pages swapped (not maintained)",21,0
+1,"GPU: Device 1 Utilization %",21,0
+1,"GPU: Device 1 Memory Utilization %",21,0
+1,"GPU: Device 1 Memory Free (GB)",21,16.9428
+1,"GPU: Device 1 Memory Used (GB)",21,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",21,877
+1,"cpu: User %",21,3.44612
+1,"cpu: Nice %",21,0
+1,"cpu: System %",21,0.00569606
+1,"cpu: Idle %",21,96.5482
+1,"cpu: I/O Wait %",21,0
+1,"cpu: IRQ %",21,0
+1,"cpu: soft IRQ %",21,0
+1,"cpu: Steal %",21,0
+1,"cpu: Guest %",21,0
+1,"meminfo:MemTotal (MB)",21,630978
+1,"meminfo:MemFree (MB)",21,556466
+1,"meminfo:MemAvailable (MB)",21,588240
+1,"program size (pages)",22,79771
+1,"resident set size (pages)",22,2661
+1,"resident shared pages",22,817
+1,"Page faults (minor)",22,4748
+1,"Page faults (major)",22,24
+1,"Pages swapped (not maintained)",22,0
+1,"GPU: Device 1 Utilization %",22,0
+1,"GPU: Device 1 Memory Utilization %",22,0
+1,"GPU: Device 1 Memory Free (GB)",22,16.9428
+1,"GPU: Device 1 Memory Used (GB)",22,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",22,877
+1,"cpu: User %",22,3.4189
+1,"cpu: Nice %",22,0
+1,"cpu: System %",22,0.0170377
+1,"cpu: Idle %",22,96.5584
+1,"cpu: I/O Wait %",22,0
+1,"cpu: IRQ %",22,0
+1,"cpu: soft IRQ %",22,0.00567924
+1,"cpu: Steal %",22,0
+1,"cpu: Guest %",22,0
+1,"meminfo:MemTotal (MB)",22,630978
+1,"meminfo:MemFree (MB)",22,556465
+1,"meminfo:MemAvailable (MB)",22,588239
+1,"program size (pages)",23,79771
+1,"resident set size (pages)",23,2661
+1,"resident shared pages",23,817
+1,"Page faults (minor)",23,4748
+1,"Page faults (major)",23,24
+1,"Pages swapped (not maintained)",23,0
+1,"GPU: Device 1 Utilization %",23,0
+1,"GPU: Device 1 Memory Utilization %",23,0
+1,"GPU: Device 1 Memory Free (GB)",23,16.9428
+1,"GPU: Device 1 Memory Used (GB)",23,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",23,877
+1,"cpu: User %",23,3.4424
+1,"cpu: Nice %",23,0
+1,"cpu: System %",23,0.0284026
+1,"cpu: Idle %",23,96.5292
+1,"cpu: I/O Wait %",23,0
+1,"cpu: IRQ %",23,0
+1,"cpu: soft IRQ %",23,0
+1,"cpu: Steal %",23,0
+1,"cpu: Guest %",23,0
+1,"meminfo:MemTotal (MB)",23,630978
+1,"meminfo:MemFree (MB)",23,556465
+1,"meminfo:MemAvailable (MB)",23,588239
+1,"program size (pages)",24,79771
+1,"resident set size (pages)",24,2661
+1,"resident shared pages",24,817
+1,"Page faults (minor)",24,4748
+1,"Page faults (major)",24,24
+1,"Pages swapped (not maintained)",24,0
+1,"GPU: Device 1 Utilization %",24,0
+1,"GPU: Device 1 Memory Utilization %",24,0
+1,"GPU: Device 1 Memory Free (GB)",24,16.9428
+1,"GPU: Device 1 Memory Used (GB)",24,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",24,877
+1,"cpu: User %",24,3.42948
+1,"cpu: Nice %",24,0
+1,"cpu: System %",24,0.00567795
+1,"cpu: Idle %",24,96.5648
+1,"cpu: I/O Wait %",24,0
+1,"cpu: IRQ %",24,0
+1,"cpu: soft IRQ %",24,0
+1,"cpu: Steal %",24,0
+1,"cpu: Guest %",24,0
+1,"meminfo:MemTotal (MB)",24,630978
+1,"meminfo:MemFree (MB)",24,556464
+1,"meminfo:MemAvailable (MB)",24,588238
+1,"program size (pages)",25,79771
+1,"resident set size (pages)",25,2661
+1,"resident shared pages",25,817
+1,"Page faults (minor)",25,4748
+1,"Page faults (major)",25,24
+1,"Pages swapped (not maintained)",25,0
+1,"GPU: Device 1 Utilization %",25,0
+1,"GPU: Device 1 Memory Utilization %",25,0
+1,"GPU: Device 1 Memory Free (GB)",25,16.9428
+1,"GPU: Device 1 Memory Used (GB)",25,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",25,877
+1,"cpu: User %",25,3.4426
+1,"cpu: Nice %",25,0
+1,"cpu: System %",25,0.0227234
+1,"cpu: Idle %",25,96.5347
+1,"cpu: I/O Wait %",25,0
+1,"cpu: IRQ %",25,0
+1,"cpu: soft IRQ %",25,0
+1,"cpu: Steal %",25,0
+1,"cpu: Guest %",25,0
+1,"meminfo:MemTotal (MB)",25,630978
+1,"meminfo:MemFree (MB)",25,556464
+1,"meminfo:MemAvailable (MB)",25,588238
+1,"program size (pages)",26,79771
+1,"resident set size (pages)",26,2661
+1,"resident shared pages",26,817
+1,"Page faults (minor)",26,4748
+1,"Page faults (major)",26,24
+1,"Pages swapped (not maintained)",26,0
+1,"GPU: Device 1 Utilization %",26,0
+1,"GPU: Device 1 Memory Utilization %",26,0
+1,"GPU: Device 1 Memory Free (GB)",26,16.9428
+1,"GPU: Device 1 Memory Used (GB)",26,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",26,877
+1,"cpu: User %",26,3.43709
+1,"cpu: Nice %",26,0
+1,"cpu: System %",26,0.00569055
+1,"cpu: Idle %",26,96.5572
+1,"cpu: I/O Wait %",26,0
+1,"cpu: IRQ %",26,0
+1,"cpu: soft IRQ %",26,0
+1,"cpu: Steal %",26,0
+1,"cpu: Guest %",26,0
+1,"meminfo:MemTotal (MB)",26,630978
+1,"meminfo:MemFree (MB)",26,556464
+1,"meminfo:MemAvailable (MB)",26,588238
+1,"program size (pages)",27,79771
+1,"resident set size (pages)",27,2661
+1,"resident shared pages",27,817
+1,"Page faults (minor)",27,4748
+1,"Page faults (major)",27,24
+1,"Pages swapped (not maintained)",27,0
+1,"GPU: Device 1 Utilization %",27,0
+1,"GPU: Device 1 Memory Utilization %",27,0
+1,"GPU: Device 1 Memory Free (GB)",27,16.9428
+1,"GPU: Device 1 Memory Used (GB)",27,0.00275251
+1,"GPU: Device 1 Clock Memory (MHz)",27,877
+1,"cpu: User %",27,3.42065
+1,"cpu: Nice %",27,0
+1,"cpu: System %",27,0.0170464
+1,"cpu: Idle %",27,96.5623
+1,"cpu: I/O Wait %",27,0
+1,"cpu: IRQ %",27,0
+1,"cpu: soft IRQ %",27,0
+1,"cpu: Steal %",27,0
+1,"cpu: Guest %",27,0
+1,"meminfo:MemTotal (MB)",27,630978
+1,"meminfo:MemFree (MB)",27,556464
+1,"meminfo:MemAvailable (MB)",27,588238
+2,"Page faults (minor)",0,4680
+2,"Page faults (major)",0,25
+2,"Pages swapped (not maintained)",0,0
+2,"program size (pages)",0,79771
+2,"resident set size (pages)",0,2660
+2,"resident shared pages",0,816
+2,"Page faults (minor)",0,4682
+2,"Page faults (major)",0,25
+2,"Pages swapped (not maintained)",0,0
+2,"GPU: Device 2 Utilization %",0,0
+2,"GPU: Device 2 Memory Utilization %",0,0
+2,"GPU: Device 2 Memory Total (GB)",0,16.9455
+2,"GPU: Device 2 Memory Free (GB)",0,16.9428
+2,"GPU: Device 2 Memory Used (GB)",0,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",0,877
+2,"cpu: User %",0,3.4626
+2,"cpu: Nice %",0,0
+2,"cpu: System %",0,0.588643
+2,"cpu: Idle %",0,95.9488
+2,"cpu: I/O Wait %",0,0
+2,"cpu: IRQ %",0,0
+2,"cpu: soft IRQ %",0,0
+2,"cpu: Steal %",0,0
+2,"cpu: Guest %",0,0
+2,"meminfo:MemTotal (MB)",0,630978
+2,"meminfo:MemFree (MB)",0,556484
+2,"meminfo:MemAvailable (MB)",0,588255
+2,"program size (pages)",1,79771
+2,"resident set size (pages)",1,2660
+2,"resident shared pages",1,816
+2,"Page faults (minor)",1,4744
+2,"Page faults (major)",1,25
+2,"Pages swapped (not maintained)",1,0
+2,"GPU: Device 2 Utilization %",1,0
+2,"GPU: Device 2 Memory Utilization %",1,0
+2,"GPU: Device 2 Memory Free (GB)",1,16.9428
+2,"GPU: Device 2 Memory Used (GB)",1,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",1,877
+2,"cpu: User %",1,3.40331
+2,"cpu: Nice %",1,0
+2,"cpu: System %",1,0.0381679
+2,"cpu: Idle %",1,96.5585
+2,"cpu: I/O Wait %",1,0
+2,"cpu: IRQ %",1,0
+2,"cpu: soft IRQ %",1,0
+2,"cpu: Steal %",1,0
+2,"cpu: Guest %",1,0
+2,"meminfo:MemTotal (MB)",1,630978
+2,"meminfo:MemFree (MB)",1,556468
+2,"meminfo:MemAvailable (MB)",1,588241
+2,"program size (pages)",2,79771
+2,"resident set size (pages)",2,2660
+2,"resident shared pages",2,816
+2,"Page faults (minor)",2,4744
+2,"Page faults (major)",2,25
+2,"Pages swapped (not maintained)",2,0
+2,"GPU: Device 2 Utilization %",2,0
+2,"GPU: Device 2 Memory Utilization %",2,0
+2,"GPU: Device 2 Memory Free (GB)",2,16.9428
+2,"GPU: Device 2 Memory Used (GB)",2,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",2,877
+2,"cpu: User %",2,3.43416
+2,"cpu: Nice %",2,0
+2,"cpu: System %",2,0.0227428
+2,"cpu: Idle %",2,96.5431
+2,"cpu: I/O Wait %",2,0
+2,"cpu: IRQ %",2,0
+2,"cpu: soft IRQ %",2,0
+2,"cpu: Steal %",2,0
+2,"cpu: Guest %",2,0
+2,"meminfo:MemTotal (MB)",2,630978
+2,"meminfo:MemFree (MB)",2,556467
+2,"meminfo:MemAvailable (MB)",2,588241
+2,"program size (pages)",3,79771
+2,"resident set size (pages)",3,2660
+2,"resident shared pages",3,816
+2,"Page faults (minor)",3,4744
+2,"Page faults (major)",3,25
+2,"Pages swapped (not maintained)",3,0
+2,"GPU: Device 2 Utilization %",3,0
+2,"GPU: Device 2 Memory Utilization %",3,0
+2,"GPU: Device 2 Memory Free (GB)",3,16.9428
+2,"GPU: Device 2 Memory Used (GB)",3,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",3,877
+2,"cpu: User %",3,3.41715
+2,"cpu: Nice %",3,0
+2,"cpu: System %",3,0.00567634
+2,"cpu: Idle %",3,96.5715
+2,"cpu: I/O Wait %",3,0
+2,"cpu: IRQ %",3,0
+2,"cpu: soft IRQ %",3,0.00567634
+2,"cpu: Steal %",3,0
+2,"cpu: Guest %",3,0
+2,"meminfo:MemTotal (MB)",3,630978
+2,"meminfo:MemFree (MB)",3,556467
+2,"meminfo:MemAvailable (MB)",3,588241
+2,"program size (pages)",4,79771
+2,"resident set size (pages)",4,2660
+2,"resident shared pages",4,816
+2,"Page faults (minor)",4,4744
+2,"Page faults (major)",4,25
+2,"Pages swapped (not maintained)",4,0
+2,"GPU: Device 2 Utilization %",4,0
+2,"GPU: Device 2 Memory Utilization %",4,0
+2,"GPU: Device 2 Memory Free (GB)",4,16.9428
+2,"GPU: Device 2 Memory Used (GB)",4,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",4,877
+2,"cpu: User %",4,3.43221
+2,"cpu: Nice %",4,0
+2,"cpu: System %",4,0.0340948
+2,"cpu: Idle %",4,96.5337
+2,"cpu: I/O Wait %",4,0
+2,"cpu: IRQ %",4,0
+2,"cpu: soft IRQ %",4,0
+2,"cpu: Steal %",4,0
+2,"cpu: Guest %",4,0
+2,"meminfo:MemTotal (MB)",4,630978
+2,"meminfo:MemFree (MB)",4,556467
+2,"meminfo:MemAvailable (MB)",4,588241
+2,"program size (pages)",5,79771
+2,"resident set size (pages)",5,2660
+2,"resident shared pages",5,816
+2,"Page faults (minor)",5,4744
+2,"Page faults (major)",5,25
+2,"Pages swapped (not maintained)",5,0
+2,"GPU: Device 2 Utilization %",5,0
+2,"GPU: Device 2 Memory Utilization %",5,0
+2,"GPU: Device 2 Memory Free (GB)",5,16.9428
+2,"GPU: Device 2 Memory Used (GB)",5,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",5,877
+2,"cpu: User %",5,3.43926
+2,"cpu: Nice %",5,0
+2,"cpu: System %",5,0.00568473
+2,"cpu: Idle %",5,96.5551
+2,"cpu: I/O Wait %",5,0
+2,"cpu: IRQ %",5,0
+2,"cpu: soft IRQ %",5,0
+2,"cpu: Steal %",5,0
+2,"cpu: Guest %",5,0
+2,"meminfo:MemTotal (MB)",5,630978
+2,"meminfo:MemFree (MB)",5,556467
+2,"meminfo:MemAvailable (MB)",5,588241
+2,"program size (pages)",6,79771
+2,"resident set size (pages)",6,2660
+2,"resident shared pages",6,816
+2,"Page faults (minor)",6,4744
+2,"Page faults (major)",6,25
+2,"Pages swapped (not maintained)",6,0
+2,"GPU: Device 2 Utilization %",6,0
+2,"GPU: Device 2 Memory Utilization %",6,0
+2,"GPU: Device 2 Memory Free (GB)",6,16.9428
+2,"GPU: Device 2 Memory Used (GB)",6,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",6,877
+2,"cpu: User %",6,3.40329
+2,"cpu: Nice %",6,0
+2,"cpu: System %",6,0.0113443
+2,"cpu: Idle %",6,96.5854
+2,"cpu: I/O Wait %",6,0
+2,"cpu: IRQ %",6,0
+2,"cpu: soft IRQ %",6,0
+2,"cpu: Steal %",6,0
+2,"cpu: Guest %",6,0
+2,"meminfo:MemTotal (MB)",6,630978
+2,"meminfo:MemFree (MB)",6,556466
+2,"meminfo:MemAvailable (MB)",6,588240
+2,"program size (pages)",7,79771
+2,"resident set size (pages)",7,2660
+2,"resident shared pages",7,816
+2,"Page faults (minor)",7,4744
+2,"Page faults (major)",7,25
+2,"Pages swapped (not maintained)",7,0
+2,"GPU: Device 2 Utilization %",7,0
+2,"GPU: Device 2 Memory Utilization %",7,0
+2,"GPU: Device 2 Memory Free (GB)",7,16.9428
+2,"GPU: Device 2 Memory Used (GB)",7,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",7,877
+2,"cpu: User %",7,3.45926
+2,"cpu: Nice %",7,0
+2,"cpu: System %",7,0.00568958
+2,"cpu: Idle %",7,96.535
+2,"cpu: I/O Wait %",7,0
+2,"cpu: IRQ %",7,0
+2,"cpu: soft IRQ %",7,0
+2,"cpu: Steal %",7,0
+2,"cpu: Guest %",7,0
+2,"meminfo:MemTotal (MB)",7,630978
+2,"meminfo:MemFree (MB)",7,556466
+2,"meminfo:MemAvailable (MB)",7,588240
+2,"program size (pages)",8,79771
+2,"resident set size (pages)",8,2660
+2,"resident shared pages",8,816
+2,"Page faults (minor)",8,4744
+2,"Page faults (major)",8,25
+2,"Pages swapped (not maintained)",8,0
+2,"GPU: Device 2 Utilization %",8,0
+2,"GPU: Device 2 Memory Utilization %",8,0
+2,"GPU: Device 2 Memory Free (GB)",8,16.9428
+2,"GPU: Device 2 Memory Used (GB)",8,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",8,877
+2,"cpu: User %",8,3.43299
+2,"cpu: Nice %",8,0
+2,"cpu: System %",8,0.00568376
+2,"cpu: Idle %",8,96.5613
+2,"cpu: I/O Wait %",8,0
+2,"cpu: IRQ %",8,0
+2,"cpu: soft IRQ %",8,0
+2,"cpu: Steal %",8,0
+2,"cpu: Guest %",8,0
+2,"meminfo:MemTotal (MB)",8,630978
+2,"meminfo:MemFree (MB)",8,556466
+2,"meminfo:MemAvailable (MB)",8,588240
+2,"program size (pages)",9,79771
+2,"resident set size (pages)",9,2660
+2,"resident shared pages",9,816
+2,"Page faults (minor)",9,4744
+2,"Page faults (major)",9,25
+2,"Pages swapped (not maintained)",9,0
+2,"GPU: Device 2 Utilization %",9,0
+2,"GPU: Device 2 Memory Utilization %",9,0
+2,"GPU: Device 2 Memory Free (GB)",9,16.9428
+2,"GPU: Device 2 Memory Used (GB)",9,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",9,877
+2,"cpu: User %",9,3.42653
+2,"cpu: Nice %",9,0
+2,"cpu: System %",9,0.0170474
+2,"cpu: Idle %",9,96.5564
+2,"cpu: I/O Wait %",9,0
+2,"cpu: IRQ %",9,0
+2,"cpu: soft IRQ %",9,0
+2,"cpu: Steal %",9,0
+2,"cpu: Guest %",9,0
+2,"meminfo:MemTotal (MB)",9,630978
+2,"meminfo:MemFree (MB)",9,556466
+2,"meminfo:MemAvailable (MB)",9,588240
+2,"program size (pages)",10,79771
+2,"resident set size (pages)",10,2660
+2,"resident shared pages",10,816
+2,"Page faults (minor)",10,4744
+2,"Page faults (major)",10,25
+2,"Pages swapped (not maintained)",10,0
+2,"GPU: Device 2 Utilization %",10,0
+2,"GPU: Device 2 Memory Utilization %",10,0
+2,"GPU: Device 2 Memory Free (GB)",10,16.9428
+2,"GPU: Device 2 Memory Used (GB)",10,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",10,877
+2,"cpu: User %",10,3.41613
+2,"cpu: Nice %",10,0
+2,"cpu: System %",10,0.0113682
+2,"cpu: Idle %",10,96.5725
+2,"cpu: I/O Wait %",10,0
+2,"cpu: IRQ %",10,0
+2,"cpu: soft IRQ %",10,0
+2,"cpu: Steal %",10,0
+2,"cpu: Guest %",10,0
+2,"meminfo:MemTotal (MB)",10,630978
+2,"meminfo:MemFree (MB)",10,556466
+2,"meminfo:MemAvailable (MB)",10,588240
+2,"program size (pages)",11,79771
+2,"resident set size (pages)",11,2660
+2,"resident shared pages",11,816
+2,"Page faults (minor)",11,4744
+2,"Page faults (major)",11,25
+2,"Pages swapped (not maintained)",11,0
+2,"GPU: Device 2 Utilization %",11,0
+2,"GPU: Device 2 Memory Utilization %",11,0
+2,"GPU: Device 2 Memory Free (GB)",11,16.9428
+2,"GPU: Device 2 Memory Used (GB)",11,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",11,877
+2,"cpu: User %",11,3.41303
+2,"cpu: Nice %",11,0
+2,"cpu: System %",11,0.00567891
+2,"cpu: Idle %",11,96.5813
+2,"cpu: I/O Wait %",11,0
+2,"cpu: IRQ %",11,0
+2,"cpu: soft IRQ %",11,0
+2,"cpu: Steal %",11,0
+2,"cpu: Guest %",11,0
+2,"meminfo:MemTotal (MB)",11,630978
+2,"meminfo:MemFree (MB)",11,556466
+2,"meminfo:MemAvailable (MB)",11,588240
+2,"program size (pages)",12,79771
+2,"resident set size (pages)",12,2660
+2,"resident shared pages",12,816
+2,"Page faults (minor)",12,4744
+2,"Page faults (major)",12,25
+2,"Pages swapped (not maintained)",12,0
+2,"GPU: Device 2 Utilization %",12,0
+2,"GPU: Device 2 Memory Utilization %",12,0
+2,"GPU: Device 2 Memory Free (GB)",12,16.9428
+2,"GPU: Device 2 Memory Used (GB)",12,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",12,877
+2,"cpu: User %",12,3.43945
+2,"cpu: Nice %",12,0
+2,"cpu: System %",12,0.0113701
+2,"cpu: Idle %",12,96.5492
+2,"cpu: I/O Wait %",12,0
+2,"cpu: IRQ %",12,0
+2,"cpu: soft IRQ %",12,0
+2,"cpu: Steal %",12,0
+2,"cpu: Guest %",12,0
+2,"meminfo:MemTotal (MB)",12,630978
+2,"meminfo:MemFree (MB)",12,556466
+2,"meminfo:MemAvailable (MB)",12,588240
+2,"program size (pages)",13,79771
+2,"resident set size (pages)",13,2660
+2,"resident shared pages",13,816
+2,"Page faults (minor)",13,4744
+2,"Page faults (major)",13,25
+2,"Pages swapped (not maintained)",13,0
+2,"GPU: Device 2 Utilization %",13,0
+2,"GPU: Device 2 Memory Utilization %",13,0
+2,"GPU: Device 2 Memory Free (GB)",13,16.9428
+2,"GPU: Device 2 Memory Used (GB)",13,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",13,877
+2,"cpu: User %",13,3.42439
+2,"cpu: Nice %",13,0
+2,"cpu: System %",13,0.0170367
+2,"cpu: Idle %",13,96.5586
+2,"cpu: I/O Wait %",13,0
+2,"cpu: IRQ %",13,0
+2,"cpu: soft IRQ %",13,0
+2,"cpu: Steal %",13,0
+2,"cpu: Guest %",13,0
+2,"meminfo:MemTotal (MB)",13,630978
+2,"meminfo:MemFree (MB)",13,556466
+2,"meminfo:MemAvailable (MB)",13,588240
+2,"program size (pages)",14,79771
+2,"resident set size (pages)",14,2660
+2,"resident shared pages",14,816
+2,"Page faults (minor)",14,4744
+2,"Page faults (major)",14,25
+2,"Pages swapped (not maintained)",14,0
+2,"GPU: Device 2 Utilization %",14,0
+2,"GPU: Device 2 Memory Utilization %",14,0
+2,"GPU: Device 2 Memory Free (GB)",14,16.9428
+2,"GPU: Device 2 Memory Used (GB)",14,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",14,877
+2,"cpu: User %",14,3.43045
+2,"cpu: Nice %",14,0
+2,"cpu: System %",14,0.00567956
+2,"cpu: Idle %",14,96.5639
+2,"cpu: I/O Wait %",14,0
+2,"cpu: IRQ %",14,0
+2,"cpu: soft IRQ %",14,0
+2,"cpu: Steal %",14,0
+2,"cpu: Guest %",14,0
+2,"meminfo:MemTotal (MB)",14,630978
+2,"meminfo:MemFree (MB)",14,556466
+2,"meminfo:MemAvailable (MB)",14,588240
+2,"program size (pages)",15,79771
+2,"resident set size (pages)",15,2660
+2,"resident shared pages",15,816
+2,"Page faults (minor)",15,4744
+2,"Page faults (major)",15,25
+2,"Pages swapped (not maintained)",15,0
+2,"GPU: Device 2 Utilization %",15,0
+2,"GPU: Device 2 Memory Utilization %",15,0
+2,"GPU: Device 2 Memory Free (GB)",15,16.9428
+2,"GPU: Device 2 Memory Used (GB)",15,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",15,877
+2,"cpu: User %",15,3.42419
+2,"cpu: Nice %",15,0
+2,"cpu: System %",15,0.0340716
+2,"cpu: Idle %",15,96.5417
+2,"cpu: I/O Wait %",15,0
+2,"cpu: IRQ %",15,0
+2,"cpu: soft IRQ %",15,0
+2,"cpu: Steal %",15,0
+2,"cpu: Guest %",15,0
+2,"meminfo:MemTotal (MB)",15,630978
+2,"meminfo:MemFree (MB)",15,556466
+2,"meminfo:MemAvailable (MB)",15,588240
+2,"program size (pages)",16,79771
+2,"resident set size (pages)",16,2660
+2,"resident shared pages",16,816
+2,"Page faults (minor)",16,4744
+2,"Page faults (major)",16,25
+2,"Pages swapped (not maintained)",16,0
+2,"GPU: Device 2 Utilization %",16,0
+2,"GPU: Device 2 Memory Utilization %",16,0
+2,"GPU: Device 2 Memory Free (GB)",16,16.9428
+2,"GPU: Device 2 Memory Used (GB)",16,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",16,877
+2,"cpu: User %",16,3.4418
+2,"cpu: Nice %",16,0
+2,"cpu: System %",16,0.00568893
+2,"cpu: Idle %",16,96.5525
+2,"cpu: I/O Wait %",16,0
+2,"cpu: IRQ %",16,0
+2,"cpu: soft IRQ %",16,0
+2,"cpu: Steal %",16,0
+2,"cpu: Guest %",16,0
+2,"meminfo:MemTotal (MB)",16,630978
+2,"meminfo:MemFree (MB)",16,556466
+2,"meminfo:MemAvailable (MB)",16,588240
+2,"program size (pages)",17,79771
+2,"resident set size (pages)",17,2660
+2,"resident shared pages",17,816
+2,"Page faults (minor)",17,4744
+2,"Page faults (major)",17,25
+2,"Pages swapped (not maintained)",17,0
+2,"GPU: Device 2 Utilization %",17,0
+2,"GPU: Device 2 Memory Utilization %",17,0
+2,"GPU: Device 2 Memory Free (GB)",17,16.9428
+2,"GPU: Device 2 Memory Used (GB)",17,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",17,877
+2,"cpu: User %",17,3.43906
+2,"cpu: Nice %",17,0
+2,"cpu: System %",17,0.0056844
+2,"cpu: Idle %",17,96.5553
+2,"cpu: I/O Wait %",17,0
+2,"cpu: IRQ %",17,0
+2,"cpu: soft IRQ %",17,0
+2,"cpu: Steal %",17,0
+2,"cpu: Guest %",17,0
+2,"meminfo:MemTotal (MB)",17,630978
+2,"meminfo:MemFree (MB)",17,556466
+2,"meminfo:MemAvailable (MB)",17,588240
+2,"program size (pages)",18,79771
+2,"resident set size (pages)",18,2660
+2,"resident shared pages",18,816
+2,"Page faults (minor)",18,4744
+2,"Page faults (major)",18,25
+2,"Pages swapped (not maintained)",18,0
+2,"GPU: Device 2 Utilization %",18,0
+2,"GPU: Device 2 Memory Utilization %",18,0
+2,"GPU: Device 2 Memory Free (GB)",18,16.9428
+2,"GPU: Device 2 Memory Used (GB)",18,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",18,877
+2,"cpu: User %",18,3.41535
+2,"cpu: Nice %",18,0
+2,"cpu: System %",18,0.00568279
+2,"cpu: Idle %",18,96.579
+2,"cpu: I/O Wait %",18,0
+2,"cpu: IRQ %",18,0
+2,"cpu: soft IRQ %",18,0
+2,"cpu: Steal %",18,0
+2,"cpu: Guest %",18,0
+2,"meminfo:MemTotal (MB)",18,630978
+2,"meminfo:MemFree (MB)",18,556466
+2,"meminfo:MemAvailable (MB)",18,588240
+2,"program size (pages)",19,79771
+2,"resident set size (pages)",19,2660
+2,"resident shared pages",19,816
+2,"Page faults (minor)",19,4744
+2,"Page faults (major)",19,25
+2,"Pages swapped (not maintained)",19,0
+2,"GPU: Device 2 Utilization %",19,0
+2,"GPU: Device 2 Memory Utilization %",19,0
+2,"GPU: Device 2 Memory Free (GB)",19,16.9428
+2,"GPU: Device 2 Memory Used (GB)",19,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",19,877
+2,"cpu: User %",19,3.41497
+2,"cpu: Nice %",19,0
+2,"cpu: System %",19,0.0227286
+2,"cpu: Idle %",19,96.5623
+2,"cpu: I/O Wait %",19,0
+2,"cpu: IRQ %",19,0
+2,"cpu: soft IRQ %",19,0
+2,"cpu: Steal %",19,0
+2,"cpu: Guest %",19,0
+2,"meminfo:MemTotal (MB)",19,630978
+2,"meminfo:MemFree (MB)",19,556466
+2,"meminfo:MemAvailable (MB)",19,588240
+2,"program size (pages)",20,79771
+2,"resident set size (pages)",20,2660
+2,"resident shared pages",20,816
+2,"Page faults (minor)",20,4744
+2,"Page faults (major)",20,25
+2,"Pages swapped (not maintained)",20,0
+2,"GPU: Device 2 Utilization %",20,0
+2,"GPU: Device 2 Memory Utilization %",20,0
+2,"GPU: Device 2 Memory Free (GB)",20,16.9428
+2,"GPU: Device 2 Memory Used (GB)",20,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",20,877
+2,"cpu: User %",20,3.40916
+2,"cpu: Nice %",20,0
+2,"cpu: System %",20,0.00567247
+2,"cpu: Idle %",20,96.5852
+2,"cpu: I/O Wait %",20,0
+2,"cpu: IRQ %",20,0
+2,"cpu: soft IRQ %",20,0
+2,"cpu: Steal %",20,0
+2,"cpu: Guest %",20,0
+2,"meminfo:MemTotal (MB)",20,630978
+2,"meminfo:MemFree (MB)",20,556466
+2,"meminfo:MemAvailable (MB)",20,588240
+2,"program size (pages)",21,79771
+2,"resident set size (pages)",21,2660
+2,"resident shared pages",21,816
+2,"Page faults (minor)",21,4744
+2,"Page faults (major)",21,25
+2,"Pages swapped (not maintained)",21,0
+2,"GPU: Device 2 Utilization %",21,0
+2,"GPU: Device 2 Memory Utilization %",21,0
+2,"GPU: Device 2 Memory Free (GB)",21,16.9428
+2,"GPU: Device 2 Memory Used (GB)",21,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",21,877
+2,"cpu: User %",21,3.44298
+2,"cpu: Nice %",21,0
+2,"cpu: System %",21,0.00569087
+2,"cpu: Idle %",21,96.5513
+2,"cpu: I/O Wait %",21,0
+2,"cpu: IRQ %",21,0
+2,"cpu: soft IRQ %",21,0
+2,"cpu: Steal %",21,0
+2,"cpu: Guest %",21,0
+2,"meminfo:MemTotal (MB)",21,630978
+2,"meminfo:MemFree (MB)",21,556466
+2,"meminfo:MemAvailable (MB)",21,588240
+2,"program size (pages)",22,79771
+2,"resident set size (pages)",22,2660
+2,"resident shared pages",22,816
+2,"Page faults (minor)",22,4745
+2,"Page faults (major)",22,25
+2,"Pages swapped (not maintained)",22,0
+2,"GPU: Device 2 Utilization %",22,0
+2,"GPU: Device 2 Memory Utilization %",22,0
+2,"GPU: Device 2 Memory Free (GB)",22,16.9428
+2,"GPU: Device 2 Memory Used (GB)",22,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",22,877
+2,"cpu: User %",22,3.41948
+2,"cpu: Nice %",22,0
+2,"cpu: System %",22,0.0170406
+2,"cpu: Idle %",22,96.5578
+2,"cpu: I/O Wait %",22,0
+2,"cpu: IRQ %",22,0
+2,"cpu: soft IRQ %",22,0.0056802
+2,"cpu: Steal %",22,0
+2,"cpu: Guest %",22,0
+2,"meminfo:MemTotal (MB)",22,630978
+2,"meminfo:MemFree (MB)",22,556465
+2,"meminfo:MemAvailable (MB)",22,588239
+2,"program size (pages)",23,79771
+2,"resident set size (pages)",23,2660
+2,"resident shared pages",23,816
+2,"Page faults (minor)",23,4745
+2,"Page faults (major)",23,25
+2,"Pages swapped (not maintained)",23,0
+2,"GPU: Device 2 Utilization %",23,0
+2,"GPU: Device 2 Memory Utilization %",23,0
+2,"GPU: Device 2 Memory Free (GB)",23,16.9428
+2,"GPU: Device 2 Memory Used (GB)",23,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",23,877
+2,"cpu: User %",23,3.4381
+2,"cpu: Nice %",23,0
+2,"cpu: System %",23,0.0283672
+2,"cpu: Idle %",23,96.5335
+2,"cpu: I/O Wait %",23,0
+2,"cpu: IRQ %",23,0
+2,"cpu: soft IRQ %",23,0
+2,"cpu: Steal %",23,0
+2,"cpu: Guest %",23,0
+2,"meminfo:MemTotal (MB)",23,630978
+2,"meminfo:MemFree (MB)",23,556465
+2,"meminfo:MemAvailable (MB)",23,588239
+2,"program size (pages)",24,79771
+2,"resident set size (pages)",24,2660
+2,"resident shared pages",24,816
+2,"Page faults (minor)",24,4745
+2,"Page faults (major)",24,25
+2,"Pages swapped (not maintained)",24,0
+2,"GPU: Device 2 Utilization %",24,0
+2,"GPU: Device 2 Memory Utilization %",24,0
+2,"GPU: Device 2 Memory Free (GB)",24,16.9428
+2,"GPU: Device 2 Memory Used (GB)",24,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",24,877
+2,"cpu: User %",24,3.43631
+2,"cpu: Nice %",24,0
+2,"cpu: System %",24,0.00568925
+2,"cpu: Idle %",24,96.558
+2,"cpu: I/O Wait %",24,0
+2,"cpu: IRQ %",24,0
+2,"cpu: soft IRQ %",24,0
+2,"cpu: Steal %",24,0
+2,"cpu: Guest %",24,0
+2,"meminfo:MemTotal (MB)",24,630978
+2,"meminfo:MemFree (MB)",24,556464
+2,"meminfo:MemAvailable (MB)",24,588238
+2,"program size (pages)",25,79771
+2,"resident set size (pages)",25,2660
+2,"resident shared pages",25,816
+2,"Page faults (minor)",25,4745
+2,"Page faults (major)",25,25
+2,"Pages swapped (not maintained)",25,0
+2,"GPU: Device 2 Utilization %",25,0
+2,"GPU: Device 2 Memory Utilization %",25,0
+2,"GPU: Device 2 Memory Free (GB)",25,16.9428
+2,"GPU: Device 2 Memory Used (GB)",25,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",25,877
+2,"cpu: User %",25,3.44357
+2,"cpu: Nice %",25,0
+2,"cpu: System %",25,0.0227299
+2,"cpu: Idle %",25,96.5337
+2,"cpu: I/O Wait %",25,0
+2,"cpu: IRQ %",25,0
+2,"cpu: soft IRQ %",25,0
+2,"cpu: Steal %",25,0
+2,"cpu: Guest %",25,0
+2,"meminfo:MemTotal (MB)",25,630978
+2,"meminfo:MemFree (MB)",25,556464
+2,"meminfo:MemAvailable (MB)",25,588238
+2,"program size (pages)",26,79771
+2,"resident set size (pages)",26,2660
+2,"resident shared pages",26,816
+2,"Page faults (minor)",26,4745
+2,"Page faults (major)",26,25
+2,"Pages swapped (not maintained)",26,0
+2,"GPU: Device 2 Utilization %",26,0
+2,"GPU: Device 2 Memory Utilization %",26,0
+2,"GPU: Device 2 Memory Free (GB)",26,16.9428
+2,"GPU: Device 2 Memory Used (GB)",26,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",26,877
+2,"cpu: User %",26,3.43318
+2,"cpu: Nice %",26,0
+2,"cpu: System %",26,0.00568408
+2,"cpu: Idle %",26,96.5611
+2,"cpu: I/O Wait %",26,0
+2,"cpu: IRQ %",26,0
+2,"cpu: soft IRQ %",26,0
+2,"cpu: Steal %",26,0
+2,"cpu: Guest %",26,0
+2,"meminfo:MemTotal (MB)",26,630978
+2,"meminfo:MemFree (MB)",26,556464
+2,"meminfo:MemAvailable (MB)",26,588238
+2,"program size (pages)",27,79771
+2,"resident set size (pages)",27,2660
+2,"resident shared pages",27,816
+2,"Page faults (minor)",27,4745
+2,"Page faults (major)",27,25
+2,"Pages swapped (not maintained)",27,0
+2,"GPU: Device 2 Utilization %",27,0
+2,"GPU: Device 2 Memory Utilization %",27,0
+2,"GPU: Device 2 Memory Free (GB)",27,16.9428
+2,"GPU: Device 2 Memory Used (GB)",27,0.00275251
+2,"GPU: Device 2 Clock Memory (MHz)",27,877
+2,"cpu: User %",27,3.42084
+2,"cpu: Nice %",27,0
+2,"cpu: System %",27,0.0170474
+2,"cpu: Idle %",27,96.5621
+2,"cpu: I/O Wait %",27,0
+2,"cpu: IRQ %",27,0
+2,"cpu: soft IRQ %",27,0
+2,"cpu: Steal %",27,0
+2,"cpu: Guest %",27,0
+2,"meminfo:MemTotal (MB)",27,630978
+2,"meminfo:MemFree (MB)",27,556464
+2,"meminfo:MemAvailable (MB)",27,588238
+3,"Page faults (minor)",0,4684
+3,"Page faults (major)",0,24
+3,"Pages swapped (not maintained)",0,0
+3,"program size (pages)",0,79771
+3,"resident set size (pages)",0,2662
+3,"resident shared pages",0,817
+3,"Page faults (minor)",0,4686
+3,"Page faults (major)",0,24
+3,"Pages swapped (not maintained)",0,0
+3,"GPU: Device 3 Utilization %",0,0
+3,"GPU: Device 3 Memory Utilization %",0,0
+3,"GPU: Device 3 Memory Total (GB)",0,16.9455
+3,"GPU: Device 3 Memory Free (GB)",0,16.9428
+3,"GPU: Device 3 Memory Used (GB)",0,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",0,877
+3,"cpu: User %",0,3.30896
+3,"cpu: Nice %",0,0
+3,"cpu: System %",0,0.577145
+3,"cpu: Idle %",0,96.1139
+3,"cpu: I/O Wait %",0,0
+3,"cpu: IRQ %",0,0
+3,"cpu: soft IRQ %",0,0
+3,"cpu: Steal %",0,0
+3,"cpu: Guest %",0,0
+3,"meminfo:MemTotal (MB)",0,630978
+3,"meminfo:MemFree (MB)",0,556483
+3,"meminfo:MemAvailable (MB)",0,588255
+3,"program size (pages)",1,79771
+3,"resident set size (pages)",1,2662
+3,"resident shared pages",1,817
+3,"Page faults (minor)",1,4748
+3,"Page faults (major)",1,24
+3,"Pages swapped (not maintained)",1,0
+3,"GPU: Device 3 Utilization %",1,0
+3,"GPU: Device 3 Memory Utilization %",1,0
+3,"GPU: Device 3 Memory Free (GB)",1,16.9428
+3,"GPU: Device 3 Memory Used (GB)",1,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",1,877
+3,"cpu: User %",1,3.42193
+3,"cpu: Nice %",1,0
+3,"cpu: System %",1,0.0505082
+3,"cpu: Idle %",1,96.5276
+3,"cpu: I/O Wait %",1,0
+3,"cpu: IRQ %",1,0
+3,"cpu: soft IRQ %",1,0
+3,"cpu: Steal %",1,0
+3,"cpu: Guest %",1,0
+3,"meminfo:MemTotal (MB)",1,630978
+3,"meminfo:MemFree (MB)",1,556468
+3,"meminfo:MemAvailable (MB)",1,588241
+3,"program size (pages)",2,79771
+3,"resident set size (pages)",2,2662
+3,"resident shared pages",2,817
+3,"Page faults (minor)",2,4748
+3,"Page faults (major)",2,24
+3,"Pages swapped (not maintained)",2,0
+3,"GPU: Device 3 Utilization %",2,0
+3,"GPU: Device 3 Memory Utilization %",2,0
+3,"GPU: Device 3 Memory Free (GB)",2,16.9428
+3,"GPU: Device 3 Memory Used (GB)",2,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",2,877
+3,"cpu: User %",2,3.43162
+3,"cpu: Nice %",2,0
+3,"cpu: System %",2,0.0170445
+3,"cpu: Idle %",2,96.5513
+3,"cpu: I/O Wait %",2,0
+3,"cpu: IRQ %",2,0
+3,"cpu: soft IRQ %",2,0
+3,"cpu: Steal %",2,0
+3,"cpu: Guest %",2,0
+3,"meminfo:MemTotal (MB)",2,630978
+3,"meminfo:MemFree (MB)",2,556467
+3,"meminfo:MemAvailable (MB)",2,588241
+3,"program size (pages)",3,79771
+3,"resident set size (pages)",3,2662
+3,"resident shared pages",3,817
+3,"Page faults (minor)",3,4748
+3,"Page faults (major)",3,24
+3,"Pages swapped (not maintained)",3,0
+3,"GPU: Device 3 Utilization %",3,0
+3,"GPU: Device 3 Memory Utilization %",3,0
+3,"GPU: Device 3 Memory Free (GB)",3,16.9428
+3,"GPU: Device 3 Memory Used (GB)",3,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",3,877
+3,"cpu: User %",3,3.4156
+3,"cpu: Nice %",3,0
+3,"cpu: System %",3,0.0113475
+3,"cpu: Idle %",3,96.5674
+3,"cpu: I/O Wait %",3,0
+3,"cpu: IRQ %",3,0
+3,"cpu: soft IRQ %",3,0.00567376
+3,"cpu: Steal %",3,0
+3,"cpu: Guest %",3,0
+3,"meminfo:MemTotal (MB)",3,630978
+3,"meminfo:MemFree (MB)",3,556467
+3,"meminfo:MemAvailable (MB)",3,588241
+3,"program size (pages)",4,79771
+3,"resident set size (pages)",4,2662
+3,"resident shared pages",4,817
+3,"Page faults (minor)",4,4748
+3,"Page faults (major)",4,24
+3,"Pages swapped (not maintained)",4,0
+3,"GPU: Device 3 Utilization %",4,0
+3,"GPU: Device 3 Memory Utilization %",4,0
+3,"GPU: Device 3 Memory Free (GB)",4,16.9428
+3,"GPU: Device 3 Memory Used (GB)",4,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",4,877
+3,"cpu: User %",4,3.43026
+3,"cpu: Nice %",4,0
+3,"cpu: System %",4,0.0340754
+3,"cpu: Idle %",4,96.5357
+3,"cpu: I/O Wait %",4,0
+3,"cpu: IRQ %",4,0
+3,"cpu: soft IRQ %",4,0
+3,"cpu: Steal %",4,0
+3,"cpu: Guest %",4,0
+3,"meminfo:MemTotal (MB)",4,630978
+3,"meminfo:MemFree (MB)",4,556467
+3,"meminfo:MemAvailable (MB)",4,588241
+3,"program size (pages)",5,79771
+3,"resident set size (pages)",5,2662
+3,"resident shared pages",5,817
+3,"Page faults (minor)",5,4748
+3,"Page faults (major)",5,24
+3,"Pages swapped (not maintained)",5,0
+3,"GPU: Device 3 Utilization %",5,0
+3,"GPU: Device 3 Memory Utilization %",5,0
+3,"GPU: Device 3 Memory Free (GB)",5,16.9428
+3,"GPU: Device 3 Memory Used (GB)",5,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",5,877
+3,"cpu: User %",5,3.43924
+3,"cpu: Nice %",5,0
+3,"cpu: System %",5,0.00569411
+3,"cpu: Idle %",5,96.5551
+3,"cpu: I/O Wait %",5,0
+3,"cpu: IRQ %",5,0
+3,"cpu: soft IRQ %",5,0
+3,"cpu: Steal %",5,0
+3,"cpu: Guest %",5,0
+3,"meminfo:MemTotal (MB)",5,630978
+3,"meminfo:MemFree (MB)",5,556467
+3,"meminfo:MemAvailable (MB)",5,588241
+3,"program size (pages)",6,79771
+3,"resident set size (pages)",6,2662
+3,"resident shared pages",6,817
+3,"Page faults (minor)",6,4748
+3,"Page faults (major)",6,24
+3,"Pages swapped (not maintained)",6,0
+3,"GPU: Device 3 Utilization %",6,0
+3,"GPU: Device 3 Memory Utilization %",6,0
+3,"GPU: Device 3 Memory Free (GB)",6,16.9428
+3,"GPU: Device 3 Memory Used (GB)",6,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",6,877
+3,"cpu: User %",6,3.43289
+3,"cpu: Nice %",6,0
+3,"cpu: System %",6,0.0169386
+3,"cpu: Idle %",6,96.5502
+3,"cpu: I/O Wait %",6,0
+3,"cpu: IRQ %",6,0
+3,"cpu: soft IRQ %",6,0
+3,"cpu: Steal %",6,0
+3,"cpu: Guest %",6,0
+3,"meminfo:MemTotal (MB)",6,630978
+3,"meminfo:MemFree (MB)",6,556466
+3,"meminfo:MemAvailable (MB)",6,588240
+3,"program size (pages)",7,79771
+3,"resident set size (pages)",7,2662
+3,"resident shared pages",7,817
+3,"Page faults (minor)",7,4748
+3,"Page faults (major)",7,24
+3,"Pages swapped (not maintained)",7,0
+3,"GPU: Device 3 Utilization %",7,0
+3,"GPU: Device 3 Memory Utilization %",7,0
+3,"GPU: Device 3 Memory Free (GB)",7,16.9428
+3,"GPU: Device 3 Memory Used (GB)",7,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",7,877
+3,"cpu: User %",7,3.42564
+3,"cpu: Nice %",7,0
+3,"cpu: System %",7,0
+3,"cpu: Idle %",7,96.5744
+3,"cpu: I/O Wait %",7,0
+3,"cpu: IRQ %",7,0
+3,"cpu: soft IRQ %",7,0
+3,"cpu: Steal %",7,0
+3,"cpu: Guest %",7,0
+3,"meminfo:MemTotal (MB)",7,630978
+3,"meminfo:MemFree (MB)",7,556466
+3,"meminfo:MemAvailable (MB)",7,588240
+3,"program size (pages)",8,79771
+3,"resident set size (pages)",8,2662
+3,"resident shared pages",8,817
+3,"Page faults (minor)",8,4748
+3,"Page faults (major)",8,24
+3,"Pages swapped (not maintained)",8,0
+3,"GPU: Device 3 Utilization %",8,0
+3,"GPU: Device 3 Memory Utilization %",8,0
+3,"GPU: Device 3 Memory Free (GB)",8,16.9428
+3,"GPU: Device 3 Memory Used (GB)",8,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",8,877
+3,"cpu: User %",8,3.44141
+3,"cpu: Nice %",8,0
+3,"cpu: System %",8,0.0113766
+3,"cpu: Idle %",8,96.5472
+3,"cpu: I/O Wait %",8,0
+3,"cpu: IRQ %",8,0
+3,"cpu: soft IRQ %",8,0
+3,"cpu: Steal %",8,0
+3,"cpu: Guest %",8,0
+3,"meminfo:MemTotal (MB)",8,630978
+3,"meminfo:MemFree (MB)",8,556466
+3,"meminfo:MemAvailable (MB)",8,588240
+3,"program size (pages)",9,79771
+3,"resident set size (pages)",9,2662
+3,"resident shared pages",9,817
+3,"Page faults (minor)",9,4748
+3,"Page faults (major)",9,24
+3,"Pages swapped (not maintained)",9,0
+3,"GPU: Device 3 Utilization %",9,0
+3,"GPU: Device 3 Memory Utilization %",9,0
+3,"GPU: Device 3 Memory Free (GB)",9,16.9428
+3,"GPU: Device 3 Memory Used (GB)",9,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",9,877
+3,"cpu: User %",9,3.42614
+3,"cpu: Nice %",9,0
+3,"cpu: System %",9,0.0113636
+3,"cpu: Idle %",9,96.5625
+3,"cpu: I/O Wait %",9,0
+3,"cpu: IRQ %",9,0
+3,"cpu: soft IRQ %",9,0
+3,"cpu: Steal %",9,0
+3,"cpu: Guest %",9,0
+3,"meminfo:MemTotal (MB)",9,630978
+3,"meminfo:MemFree (MB)",9,556466
+3,"meminfo:MemAvailable (MB)",9,588240
+3,"program size (pages)",10,79771
+3,"resident set size (pages)",10,2662
+3,"resident shared pages",10,817
+3,"Page faults (minor)",10,4748
+3,"Page faults (major)",10,24
+3,"Pages swapped (not maintained)",10,0
+3,"GPU: Device 3 Utilization %",10,0
+3,"GPU: Device 3 Memory Utilization %",10,0
+3,"GPU: Device 3 Memory Free (GB)",10,16.9428
+3,"GPU: Device 3 Memory Used (GB)",10,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",10,877
+3,"cpu: User %",10,3.41691
+3,"cpu: Nice %",10,0
+3,"cpu: System %",10,0.0113707
+3,"cpu: Idle %",10,96.5717
+3,"cpu: I/O Wait %",10,0
+3,"cpu: IRQ %",10,0
+3,"cpu: soft IRQ %",10,0
+3,"cpu: Steal %",10,0
+3,"cpu: Guest %",10,0
+3,"meminfo:MemTotal (MB)",10,630978
+3,"meminfo:MemFree (MB)",10,556466
+3,"meminfo:MemAvailable (MB)",10,588240
+3,"program size (pages)",11,79771
+3,"resident set size (pages)",11,2662
+3,"resident shared pages",11,817
+3,"Page faults (minor)",11,4748
+3,"Page faults (major)",11,24
+3,"Pages swapped (not maintained)",11,0
+3,"GPU: Device 3 Utilization %",11,0
+3,"GPU: Device 3 Memory Utilization %",11,0
+3,"GPU: Device 3 Memory Free (GB)",11,16.9428
+3,"GPU: Device 3 Memory Used (GB)",11,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",11,877
+3,"cpu: User %",11,3.40761
+3,"cpu: Nice %",11,0
+3,"cpu: System %",11,0.0056699
+3,"cpu: Idle %",11,96.5867
+3,"cpu: I/O Wait %",11,0
+3,"cpu: IRQ %",11,0
+3,"cpu: soft IRQ %",11,0
+3,"cpu: Steal %",11,0
+3,"cpu: Guest %",11,0
+3,"meminfo:MemTotal (MB)",11,630978
+3,"meminfo:MemFree (MB)",11,556466
+3,"meminfo:MemAvailable (MB)",11,588240
+3,"program size (pages)",12,79771
+3,"resident set size (pages)",12,2662
+3,"resident shared pages",12,817
+3,"Page faults (minor)",12,4748
+3,"Page faults (major)",12,24
+3,"Pages swapped (not maintained)",12,0
+3,"GPU: Device 3 Utilization %",12,0
+3,"GPU: Device 3 Memory Utilization %",12,0
+3,"GPU: Device 3 Memory Free (GB)",12,16.9428
+3,"GPU: Device 3 Memory Used (GB)",12,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",12,877
+3,"cpu: User %",12,3.44415
+3,"cpu: Nice %",12,0
+3,"cpu: System %",12,0.0113856
+3,"cpu: Idle %",12,96.5445
+3,"cpu: I/O Wait %",12,0
+3,"cpu: IRQ %",12,0
+3,"cpu: soft IRQ %",12,0
+3,"cpu: Steal %",12,0
+3,"cpu: Guest %",12,0
+3,"meminfo:MemTotal (MB)",12,630978
+3,"meminfo:MemFree (MB)",12,556466
+3,"meminfo:MemAvailable (MB)",12,588240
+3,"program size (pages)",13,79771
+3,"resident set size (pages)",13,2662
+3,"resident shared pages",13,817
+3,"Page faults (minor)",13,4748
+3,"Page faults (major)",13,24
+3,"Pages swapped (not maintained)",13,0
+3,"GPU: Device 3 Utilization %",13,0
+3,"GPU: Device 3 Memory Utilization %",13,0
+3,"GPU: Device 3 Memory Free (GB)",13,16.9428
+3,"GPU: Device 3 Memory Used (GB)",13,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",13,877
+3,"cpu: User %",13,3.42575
+3,"cpu: Nice %",13,0
+3,"cpu: System %",13,0.0170435
+3,"cpu: Idle %",13,96.5572
+3,"cpu: I/O Wait %",13,0
+3,"cpu: IRQ %",13,0
+3,"cpu: soft IRQ %",13,0
+3,"cpu: Steal %",13,0
+3,"cpu: Guest %",13,0
+3,"meminfo:MemTotal (MB)",13,630978
+3,"meminfo:MemFree (MB)",13,556466
+3,"meminfo:MemAvailable (MB)",13,588240
+3,"program size (pages)",14,79771
+3,"resident set size (pages)",14,2662
+3,"resident shared pages",14,817
+3,"Page faults (minor)",14,4748
+3,"Page faults (major)",14,24
+3,"Pages swapped (not maintained)",14,0
+3,"GPU: Device 3 Utilization %",14,0
+3,"GPU: Device 3 Memory Utilization %",14,0
+3,"GPU: Device 3 Memory Free (GB)",14,16.9428
+3,"GPU: Device 3 Memory Used (GB)",14,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",14,877
+3,"cpu: User %",14,3.42753
+3,"cpu: Nice %",14,0
+3,"cpu: System %",14,0.00567472
+3,"cpu: Idle %",14,96.5668
+3,"cpu: I/O Wait %",14,0
+3,"cpu: IRQ %",14,0
+3,"cpu: soft IRQ %",14,0
+3,"cpu: Steal %",14,0
+3,"cpu: Guest %",14,0
+3,"meminfo:MemTotal (MB)",14,630978
+3,"meminfo:MemFree (MB)",14,556466
+3,"meminfo:MemAvailable (MB)",14,588240
+3,"program size (pages)",15,79771
+3,"resident set size (pages)",15,2662
+3,"resident shared pages",15,817
+3,"Page faults (minor)",15,4748
+3,"Page faults (major)",15,24
+3,"Pages swapped (not maintained)",15,0
+3,"GPU: Device 3 Utilization %",15,0
+3,"GPU: Device 3 Memory Utilization %",15,0
+3,"GPU: Device 3 Memory Free (GB)",15,16.9428
+3,"GPU: Device 3 Memory Used (GB)",15,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",15,877
+3,"cpu: User %",15,3.45727
+3,"cpu: Nice %",15,0
+3,"cpu: System %",15,0.0396735
+3,"cpu: Idle %",15,96.5031
+3,"cpu: I/O Wait %",15,0
+3,"cpu: IRQ %",15,0
+3,"cpu: soft IRQ %",15,0
+3,"cpu: Steal %",15,0
+3,"cpu: Guest %",15,0
+3,"meminfo:MemTotal (MB)",15,630978
+3,"meminfo:MemFree (MB)",15,556466
+3,"meminfo:MemAvailable (MB)",15,588240
+3,"program size (pages)",16,79771
+3,"resident set size (pages)",16,2662
+3,"resident shared pages",16,817
+3,"Page faults (minor)",16,4748
+3,"Page faults (major)",16,24
+3,"Pages swapped (not maintained)",16,0
+3,"GPU: Device 3 Utilization %",16,0
+3,"GPU: Device 3 Memory Utilization %",16,0
+3,"GPU: Device 3 Memory Free (GB)",16,16.9428
+3,"GPU: Device 3 Memory Used (GB)",16,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",16,877
+3,"cpu: User %",16,3.40559
+3,"cpu: Nice %",16,0
+3,"cpu: System %",16,0
+3,"cpu: Idle %",16,96.5944
+3,"cpu: I/O Wait %",16,0
+3,"cpu: IRQ %",16,0
+3,"cpu: soft IRQ %",16,0
+3,"cpu: Steal %",16,0
+3,"cpu: Guest %",16,0
+3,"meminfo:MemTotal (MB)",16,630978
+3,"meminfo:MemFree (MB)",16,556466
+3,"meminfo:MemAvailable (MB)",16,588240
+3,"program size (pages)",17,79771
+3,"resident set size (pages)",17,2662
+3,"resident shared pages",17,817
+3,"Page faults (minor)",17,4748
+3,"Page faults (major)",17,24
+3,"Pages swapped (not maintained)",17,0
+3,"GPU: Device 3 Utilization %",17,0
+3,"GPU: Device 3 Memory Utilization %",17,0
+3,"GPU: Device 3 Memory Free (GB)",17,16.9428
+3,"GPU: Device 3 Memory Used (GB)",17,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",17,877
+3,"cpu: User %",17,3.44318
+3,"cpu: Nice %",17,0
+3,"cpu: System %",17,0.00568182
+3,"cpu: Idle %",17,96.5511
+3,"cpu: I/O Wait %",17,0
+3,"cpu: IRQ %",17,0
+3,"cpu: soft IRQ %",17,0
+3,"cpu: Steal %",17,0
+3,"cpu: Guest %",17,0
+3,"meminfo:MemTotal (MB)",17,630978
+3,"meminfo:MemFree (MB)",17,556466
+3,"meminfo:MemAvailable (MB)",17,588240
+3,"program size (pages)",18,79771
+3,"resident set size (pages)",18,2662
+3,"resident shared pages",18,817
+3,"Page faults (minor)",18,4748
+3,"Page faults (major)",18,24
+3,"Pages swapped (not maintained)",18,0
+3,"GPU: Device 3 Utilization %",18,0
+3,"GPU: Device 3 Memory Utilization %",18,0
+3,"GPU: Device 3 Memory Free (GB)",18,16.9428
+3,"GPU: Device 3 Memory Used (GB)",18,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",18,877
+3,"cpu: User %",18,3.41535
+3,"cpu: Nice %",18,0
+3,"cpu: System %",18,0.00568279
+3,"cpu: Idle %",18,96.579
+3,"cpu: I/O Wait %",18,0
+3,"cpu: IRQ %",18,0
+3,"cpu: soft IRQ %",18,0
+3,"cpu: Steal %",18,0
+3,"cpu: Guest %",18,0
+3,"meminfo:MemTotal (MB)",18,630978
+3,"meminfo:MemFree (MB)",18,556466
+3,"meminfo:MemAvailable (MB)",18,588240
+3,"program size (pages)",19,79771
+3,"resident set size (pages)",19,2662
+3,"resident shared pages",19,817
+3,"Page faults (minor)",19,4748
+3,"Page faults (major)",19,24
+3,"Pages swapped (not maintained)",19,0
+3,"GPU: Device 3 Utilization %",19,0
+3,"GPU: Device 3 Memory Utilization %",19,0
+3,"GPU: Device 3 Memory Free (GB)",19,16.9428
+3,"GPU: Device 3 Memory Used (GB)",19,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",19,877
+3,"cpu: User %",19,3.41535
+3,"cpu: Nice %",19,0
+3,"cpu: System %",19,0.0227311
+3,"cpu: Idle %",19,96.5619
+3,"cpu: I/O Wait %",19,0
+3,"cpu: IRQ %",19,0
+3,"cpu: soft IRQ %",19,0
+3,"cpu: Steal %",19,0
+3,"cpu: Guest %",19,0
+3,"meminfo:MemTotal (MB)",19,630978
+3,"meminfo:MemFree (MB)",19,556466
+3,"meminfo:MemAvailable (MB)",19,588240
+3,"program size (pages)",20,79771
+3,"resident set size (pages)",20,2662
+3,"resident shared pages",20,817
+3,"Page faults (minor)",20,4748
+3,"Page faults (major)",20,24
+3,"Pages swapped (not maintained)",20,0
+3,"GPU: Device 3 Utilization %",20,0
+3,"GPU: Device 3 Memory Utilization %",20,0
+3,"GPU: Device 3 Memory Free (GB)",20,16.9428
+3,"GPU: Device 3 Memory Used (GB)",20,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",20,877
+3,"cpu: User %",20,3.40858
+3,"cpu: Nice %",20,0
+3,"cpu: System %",20,0.00567151
+3,"cpu: Idle %",20,96.5858
+3,"cpu: I/O Wait %",20,0
+3,"cpu: IRQ %",20,0
+3,"cpu: soft IRQ %",20,0
+3,"cpu: Steal %",20,0
+3,"cpu: Guest %",20,0
+3,"meminfo:MemTotal (MB)",20,630978
+3,"meminfo:MemFree (MB)",20,556466
+3,"meminfo:MemAvailable (MB)",20,588240
+3,"program size (pages)",21,79771
+3,"resident set size (pages)",21,2662
+3,"resident shared pages",21,817
+3,"Page faults (minor)",21,4748
+3,"Page faults (major)",21,24
+3,"Pages swapped (not maintained)",21,0
+3,"GPU: Device 3 Utilization %",21,0
+3,"GPU: Device 3 Memory Utilization %",21,0
+3,"GPU: Device 3 Memory Free (GB)",21,16.9428
+3,"GPU: Device 3 Memory Used (GB)",21,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",21,877
+3,"cpu: User %",21,3.43826
+3,"cpu: Nice %",21,0
+3,"cpu: System %",21,0.00569249
+3,"cpu: Idle %",21,96.556
+3,"cpu: I/O Wait %",21,0
+3,"cpu: IRQ %",21,0
+3,"cpu: soft IRQ %",21,0
+3,"cpu: Steal %",21,0
+3,"cpu: Guest %",21,0
+3,"meminfo:MemTotal (MB)",21,630978
+3,"meminfo:MemFree (MB)",21,556466
+3,"meminfo:MemAvailable (MB)",21,588240
+3,"program size (pages)",22,79771
+3,"resident set size (pages)",22,2662
+3,"resident shared pages",22,817
+3,"Page faults (minor)",22,4749
+3,"Page faults (major)",22,24
+3,"Pages swapped (not maintained)",22,0
+3,"GPU: Device 3 Utilization %",22,0
+3,"GPU: Device 3 Memory Utilization %",22,0
+3,"GPU: Device 3 Memory Free (GB)",22,16.9428
+3,"GPU: Device 3 Memory Used (GB)",22,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",22,877
+3,"cpu: User %",22,3.42614
+3,"cpu: Nice %",22,0
+3,"cpu: System %",22,0.0170455
+3,"cpu: Idle %",22,96.5511
+3,"cpu: I/O Wait %",22,0
+3,"cpu: IRQ %",22,0
+3,"cpu: soft IRQ %",22,0.00568182
+3,"cpu: Steal %",22,0
+3,"cpu: Guest %",22,0
+3,"meminfo:MemTotal (MB)",22,630978
+3,"meminfo:MemFree (MB)",22,556465
+3,"meminfo:MemAvailable (MB)",22,588239
+3,"program size (pages)",23,79771
+3,"resident set size (pages)",23,2662
+3,"resident shared pages",23,817
+3,"Page faults (minor)",23,4749
+3,"Page faults (major)",23,24
+3,"Pages swapped (not maintained)",23,0
+3,"GPU: Device 3 Utilization %",23,0
+3,"GPU: Device 3 Memory Utilization %",23,0
+3,"GPU: Device 3 Memory Free (GB)",23,16.9428
+3,"GPU: Device 3 Memory Used (GB)",23,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",23,877
+3,"cpu: User %",23,3.44279
+3,"cpu: Nice %",23,0
+3,"cpu: System %",23,0.0284059
+3,"cpu: Idle %",23,96.5288
+3,"cpu: I/O Wait %",23,0
+3,"cpu: IRQ %",23,0
+3,"cpu: soft IRQ %",23,0
+3,"cpu: Steal %",23,0
+3,"cpu: Guest %",23,0
+3,"meminfo:MemTotal (MB)",23,630978
+3,"meminfo:MemFree (MB)",23,556465
+3,"meminfo:MemAvailable (MB)",23,588239
+3,"program size (pages)",24,79771
+3,"resident set size (pages)",24,2662
+3,"resident shared pages",24,817
+3,"Page faults (minor)",24,4749
+3,"Page faults (major)",24,24
+3,"Pages swapped (not maintained)",24,0
+3,"GPU: Device 3 Utilization %",24,0
+3,"GPU: Device 3 Memory Utilization %",24,0
+3,"GPU: Device 3 Memory Free (GB)",24,16.9428
+3,"GPU: Device 3 Memory Used (GB)",24,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",24,877
+3,"cpu: User %",24,3.42598
+3,"cpu: Nice %",24,0
+3,"cpu: System %",24,0.00567215
+3,"cpu: Idle %",24,96.5683
+3,"cpu: I/O Wait %",24,0
+3,"cpu: IRQ %",24,0
+3,"cpu: soft IRQ %",24,0
+3,"cpu: Steal %",24,0
+3,"cpu: Guest %",24,0
+3,"meminfo:MemTotal (MB)",24,630978
+3,"meminfo:MemFree (MB)",24,556464
+3,"meminfo:MemAvailable (MB)",24,588238
+3,"program size (pages)",25,79771
+3,"resident set size (pages)",25,2662
+3,"resident shared pages",25,817
+3,"Page faults (minor)",25,4749
+3,"Page faults (major)",25,24
+3,"Pages swapped (not maintained)",25,0
+3,"GPU: Device 3 Utilization %",25,0
+3,"GPU: Device 3 Memory Utilization %",25,0
+3,"GPU: Device 3 Memory Free (GB)",25,16.9428
+3,"GPU: Device 3 Memory Used (GB)",25,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",25,877
+3,"cpu: User %",25,3.44847
+3,"cpu: Nice %",25,0
+3,"cpu: System %",25,0.0227622
+3,"cpu: Idle %",25,96.5288
+3,"cpu: I/O Wait %",25,0
+3,"cpu: IRQ %",25,0
+3,"cpu: soft IRQ %",25,0
+3,"cpu: Steal %",25,0
+3,"cpu: Guest %",25,0
+3,"meminfo:MemTotal (MB)",25,630978
+3,"meminfo:MemFree (MB)",25,556464
+3,"meminfo:MemAvailable (MB)",25,588238
+3,"program size (pages)",26,79771
+3,"resident set size (pages)",26,2662
+3,"resident shared pages",26,817
+3,"Page faults (minor)",26,4749
+3,"Page faults (major)",26,24
+3,"Pages swapped (not maintained)",26,0
+3,"GPU: Device 3 Utilization %",26,0
+3,"GPU: Device 3 Memory Utilization %",26,0
+3,"GPU: Device 3 Memory Free (GB)",26,16.9428
+3,"GPU: Device 3 Memory Used (GB)",26,0.00275251
+3,"GPU: Device 3 Clock Memory (MHz)",26,877
+3,"cpu: User %",26,3.4275
+3,"cpu: Nice %",26,0
+3,"cpu: System %",26,0.00568408
+3,"cpu: Idle %",26,96.5668
+3,"cpu: I/O Wait %",26,0
+3,"cpu: IRQ %",26,0
+3,"cpu: soft IRQ %",26,0
+3,"cpu: Steal %",26,0
+3,"cpu: Guest %",26,0
+3,"meminfo:MemTotal (MB)",26,630978
+3,"meminfo:MemFree (MB)",26,556464
+3,"meminfo:MemAvailable (MB)",26,588238
+3,"program size (pages)",27,79771
+3,"resident set size (pages)",27,2662
+3,"resident shared pages",27,817
+3,"Page faults (minor)",27,4749
+3,"Page faults (major)",27,24
+3,"Pages swapped (not maintained)",27,0
+3,"GPU: Device 3 Utilization %",27,0
+3,"GPU: Device 3 Memory Utilization %",27,0
+3,"GPU: Device 3 Memory Free (GB)",27,16.9428
+3,"GPU: Device 3 Memory Used (GB)",27,0.00275251
+4,"Page faults (minor)",0,4675
+4,"Page faults (major)",0,23
+4,"Pages swapped (not maintained)",0,0
+4,"program size (pages)",0,79771
+4,"resident set size (pages)",0,2652
+4,"resident shared pages",0,807
+4,"Page faults (minor)",0,4677
+4,"Page faults (major)",0,23
+4,"Pages swapped (not maintained)",0,0
+4,"GPU: Device 4 Utilization %",0,0
+4,"GPU: Device 4 Memory Utilization %",0,0
+4,"GPU: Device 4 Memory Total (GB)",0,16.9455
+4,"GPU: Device 4 Memory Free (GB)",0,16.9428
+4,"GPU: Device 4 Memory Used (GB)",0,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",0,877
+4,"cpu: User %",0,3.47102
+4,"cpu: Nice %",0,0
+4,"cpu: System %",0,0.624783
+4,"cpu: Idle %",0,95.9042
+4,"cpu: I/O Wait %",0,0
+4,"cpu: IRQ %",0,0
+4,"cpu: soft IRQ %",0,0
+4,"cpu: Steal %",0,0
+4,"cpu: Guest %",0,0
+4,"meminfo:MemTotal (MB)",0,630978
+4,"meminfo:MemFree (MB)",0,556484
+4,"meminfo:MemAvailable (MB)",0,588255
+4,"program size (pages)",1,79771
+4,"resident set size (pages)",1,2652
+4,"resident shared pages",1,807
+4,"Page faults (minor)",1,4739
+4,"Page faults (major)",1,23
+4,"Pages swapped (not maintained)",1,0
+4,"GPU: Device 4 Utilization %",1,0
+4,"GPU: Device 4 Memory Utilization %",1,0
+4,"GPU: Device 4 Memory Free (GB)",1,16.9428
+4,"GPU: Device 4 Memory Used (GB)",1,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",1,877
+4,"cpu: User %",1,3.40179
+4,"cpu: Nice %",1,0
+4,"cpu: System %",1,0.038151
+4,"cpu: Idle %",1,96.5601
+4,"cpu: I/O Wait %",1,0
+4,"cpu: IRQ %",1,0
+4,"cpu: soft IRQ %",1,0
+4,"cpu: Steal %",1,0
+4,"cpu: Guest %",1,0
+4,"meminfo:MemTotal (MB)",1,630978
+4,"meminfo:MemFree (MB)",1,556468
+4,"meminfo:MemAvailable (MB)",1,588241
+4,"program size (pages)",2,79771
+4,"resident set size (pages)",2,2652
+4,"resident shared pages",2,807
+4,"Page faults (minor)",2,4739
+4,"Page faults (major)",2,23
+4,"Pages swapped (not maintained)",2,0
+4,"GPU: Device 4 Utilization %",2,0
+4,"GPU: Device 4 Memory Utilization %",2,0
+4,"GPU: Device 4 Memory Free (GB)",2,16.9428
+4,"GPU: Device 4 Memory Used (GB)",2,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",2,877
+4,"cpu: User %",2,3.43318
+4,"cpu: Nice %",2,0
+4,"cpu: System %",2,0.0227363
+4,"cpu: Idle %",2,96.5441
+4,"cpu: I/O Wait %",2,0
+4,"cpu: IRQ %",2,0
+4,"cpu: soft IRQ %",2,0
+4,"cpu: Steal %",2,0
+4,"cpu: Guest %",2,0
+4,"meminfo:MemTotal (MB)",2,630978
+4,"meminfo:MemFree (MB)",2,556467
+4,"meminfo:MemAvailable (MB)",2,588241
+4,"program size (pages)",3,79771
+4,"resident set size (pages)",3,2652
+4,"resident shared pages",3,807
+4,"Page faults (minor)",3,4739
+4,"Page faults (major)",3,23
+4,"Pages swapped (not maintained)",3,0
+4,"GPU: Device 4 Utilization %",3,0
+4,"GPU: Device 4 Memory Utilization %",3,0
+4,"GPU: Device 4 Memory Free (GB)",3,16.9428
+4,"GPU: Device 4 Memory Used (GB)",3,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",3,877
+4,"cpu: User %",3,3.41812
+4,"cpu: Nice %",3,0
+4,"cpu: System %",3,0.00567795
+4,"cpu: Idle %",3,96.5705
+4,"cpu: I/O Wait %",3,0
+4,"cpu: IRQ %",3,0
+4,"cpu: soft IRQ %",3,0.00567795
+4,"cpu: Steal %",3,0
+4,"cpu: Guest %",3,0
+4,"meminfo:MemTotal (MB)",3,630978
+4,"meminfo:MemFree (MB)",3,556467
+4,"meminfo:MemAvailable (MB)",3,588241
+4,"program size (pages)",4,79771
+4,"resident set size (pages)",4,2652
+4,"resident shared pages",4,807
+4,"Page faults (minor)",4,4739
+4,"Page faults (major)",4,23
+4,"Pages swapped (not maintained)",4,0
+4,"GPU: Device 4 Utilization %",4,0
+4,"GPU: Device 4 Memory Utilization %",4,0
+4,"GPU: Device 4 Memory Free (GB)",4,16.9428
+4,"GPU: Device 4 Memory Used (GB)",4,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",4,877
+4,"cpu: User %",4,3.43221
+4,"cpu: Nice %",4,0
+4,"cpu: System %",4,0.0340948
+4,"cpu: Idle %",4,96.5337
+4,"cpu: I/O Wait %",4,0
+4,"cpu: IRQ %",4,0
+4,"cpu: soft IRQ %",4,0
+4,"cpu: Steal %",4,0
+4,"cpu: Guest %",4,0
+4,"meminfo:MemTotal (MB)",4,630978
+4,"meminfo:MemFree (MB)",4,556467
+4,"meminfo:MemAvailable (MB)",4,588241
+4,"program size (pages)",5,79771
+4,"resident set size (pages)",5,2652
+4,"resident shared pages",5,807
+4,"Page faults (minor)",5,4739
+4,"Page faults (major)",5,23
+4,"Pages swapped (not maintained)",5,0
+4,"GPU: Device 4 Utilization %",5,0
+4,"GPU: Device 4 Memory Utilization %",5,0
+4,"GPU: Device 4 Memory Free (GB)",5,16.9428
+4,"GPU: Device 4 Memory Used (GB)",5,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",5,877
+4,"cpu: User %",5,3.43926
+4,"cpu: Nice %",5,0
+4,"cpu: System %",5,0.00568473
+4,"cpu: Idle %",5,96.5551
+4,"cpu: I/O Wait %",5,0
+4,"cpu: IRQ %",5,0
+4,"cpu: soft IRQ %",5,0
+4,"cpu: Steal %",5,0
+4,"cpu: Guest %",5,0
+4,"meminfo:MemTotal (MB)",5,630978
+4,"meminfo:MemFree (MB)",5,556467
+4,"meminfo:MemAvailable (MB)",5,588241
+4,"program size (pages)",6,79771
+4,"resident set size (pages)",6,2652
+4,"resident shared pages",6,807
+4,"Page faults (minor)",6,4739
+4,"Page faults (major)",6,23
+4,"Pages swapped (not maintained)",6,0
+4,"GPU: Device 4 Utilization %",6,0
+4,"GPU: Device 4 Memory Utilization %",6,0
+4,"GPU: Device 4 Memory Free (GB)",6,16.9428
+4,"GPU: Device 4 Memory Used (GB)",6,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",6,877
+4,"cpu: User %",6,3.40232
+4,"cpu: Nice %",6,0
+4,"cpu: System %",6,0.0113411
+4,"cpu: Idle %",6,96.5863
+4,"cpu: I/O Wait %",6,0
+4,"cpu: IRQ %",6,0
+4,"cpu: soft IRQ %",6,0
+4,"cpu: Steal %",6,0
+4,"cpu: Guest %",6,0
+4,"meminfo:MemTotal (MB)",6,630978
+4,"meminfo:MemFree (MB)",6,556466
+4,"meminfo:MemAvailable (MB)",6,588240
+4,"program size (pages)",7,79771
+4,"resident set size (pages)",7,2652
+4,"resident shared pages",7,807
+4,"Page faults (minor)",7,4739
+4,"Page faults (major)",7,23
+4,"Pages swapped (not maintained)",7,0
+4,"GPU: Device 4 Utilization %",7,0
+4,"GPU: Device 4 Memory Utilization %",7,0
+4,"GPU: Device 4 Memory Free (GB)",7,16.9428
+4,"GPU: Device 4 Memory Used (GB)",7,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",7,877
+4,"cpu: User %",7,3.46025
+4,"cpu: Nice %",7,0
+4,"cpu: System %",7,0.0056912
+4,"cpu: Idle %",7,96.5341
+4,"cpu: I/O Wait %",7,0
+4,"cpu: IRQ %",7,0
+4,"cpu: soft IRQ %",7,0
+4,"cpu: Steal %",7,0
+4,"cpu: Guest %",7,0
+4,"meminfo:MemTotal (MB)",7,630978
+4,"meminfo:MemFree (MB)",7,556466
+4,"meminfo:MemAvailable (MB)",7,588240
+4,"program size (pages)",8,79771
+4,"resident set size (pages)",8,2652
+4,"resident shared pages",8,807
+4,"Page faults (minor)",8,4739
+4,"Page faults (major)",8,23
+4,"Pages swapped (not maintained)",8,0
+4,"GPU: Device 4 Utilization %",8,0
+4,"GPU: Device 4 Memory Utilization %",8,0
+4,"GPU: Device 4 Memory Free (GB)",8,16.9428
+4,"GPU: Device 4 Memory Used (GB)",8,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",8,877
+4,"cpu: User %",8,3.43299
+4,"cpu: Nice %",8,0
+4,"cpu: System %",8,0.00568376
+4,"cpu: Idle %",8,96.5613
+4,"cpu: I/O Wait %",8,0
+4,"cpu: IRQ %",8,0
+4,"cpu: soft IRQ %",8,0
+4,"cpu: Steal %",8,0
+4,"cpu: Guest %",8,0
+4,"meminfo:MemTotal (MB)",8,630978
+4,"meminfo:MemFree (MB)",8,556466
+4,"meminfo:MemAvailable (MB)",8,588240
+4,"program size (pages)",9,79771
+4,"resident set size (pages)",9,2652
+4,"resident shared pages",9,807
+4,"Page faults (minor)",9,4739
+4,"Page faults (major)",9,23
+4,"Pages swapped (not maintained)",9,0
+4,"GPU: Device 4 Utilization %",9,0
+4,"GPU: Device 4 Memory Utilization %",9,0
+4,"GPU: Device 4 Memory Free (GB)",9,16.9428
+4,"GPU: Device 4 Memory Used (GB)",9,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",9,877
+4,"cpu: User %",9,3.42653
+4,"cpu: Nice %",9,0
+4,"cpu: System %",9,0.0170474
+4,"cpu: Idle %",9,96.5564
+4,"cpu: I/O Wait %",9,0
+4,"cpu: IRQ %",9,0
+4,"cpu: soft IRQ %",9,0
+4,"cpu: Steal %",9,0
+4,"cpu: Guest %",9,0
+4,"meminfo:MemTotal (MB)",9,630978
+4,"meminfo:MemFree (MB)",9,556466
+4,"meminfo:MemAvailable (MB)",9,588240
+4,"program size (pages)",10,79771
+4,"resident set size (pages)",10,2652
+4,"resident shared pages",10,807
+4,"Page faults (minor)",10,4739
+4,"Page faults (major)",10,23
+4,"Pages swapped (not maintained)",10,0
+4,"GPU: Device 4 Utilization %",10,0
+4,"GPU: Device 4 Memory Utilization %",10,0
+4,"GPU: Device 4 Memory Free (GB)",10,16.9428
+4,"GPU: Device 4 Memory Used (GB)",10,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",10,877
+4,"cpu: User %",10,3.41497
+4,"cpu: Nice %",10,0
+4,"cpu: System %",10,0.0113643
+4,"cpu: Idle %",10,96.5737
+4,"cpu: I/O Wait %",10,0
+4,"cpu: IRQ %",10,0
+4,"cpu: soft IRQ %",10,0
+4,"cpu: Steal %",10,0
+4,"cpu: Guest %",10,0
+4,"meminfo:MemTotal (MB)",10,630978
+4,"meminfo:MemFree (MB)",10,556466
+4,"meminfo:MemAvailable (MB)",10,588240
+4,"program size (pages)",11,79771
+4,"resident set size (pages)",11,2652
+4,"resident shared pages",11,807
+4,"Page faults (minor)",11,4739
+4,"Page faults (major)",11,23
+4,"Pages swapped (not maintained)",11,0
+4,"GPU: Device 4 Utilization %",11,0
+4,"GPU: Device 4 Memory Utilization %",11,0
+4,"GPU: Device 4 Memory Free (GB)",11,16.9428
+4,"GPU: Device 4 Memory Used (GB)",11,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",11,877
+4,"cpu: User %",11,3.41342
+4,"cpu: Nice %",11,0
+4,"cpu: System %",11,0.00567956
+4,"cpu: Idle %",11,96.5809
+4,"cpu: I/O Wait %",11,0
+4,"cpu: IRQ %",11,0
+4,"cpu: soft IRQ %",11,0
+4,"cpu: Steal %",11,0
+4,"cpu: Guest %",11,0
+4,"meminfo:MemTotal (MB)",11,630978
+4,"meminfo:MemFree (MB)",11,556466
+4,"meminfo:MemAvailable (MB)",11,588240
+4,"program size (pages)",12,79771
+4,"resident set size (pages)",12,2652
+4,"resident shared pages",12,807
+4,"Page faults (minor)",12,4739
+4,"Page faults (major)",12,23
+4,"Pages swapped (not maintained)",12,0
+4,"GPU: Device 4 Utilization %",12,0
+4,"GPU: Device 4 Memory Utilization %",12,0
+4,"GPU: Device 4 Memory Free (GB)",12,16.9428
+4,"GPU: Device 4 Memory Used (GB)",12,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",12,877
+4,"cpu: User %",12,3.43926
+4,"cpu: Nice %",12,0
+4,"cpu: System %",12,0.0113695
+4,"cpu: Idle %",12,96.5494
+4,"cpu: I/O Wait %",12,0
+4,"cpu: IRQ %",12,0
+4,"cpu: soft IRQ %",12,0
+4,"cpu: Steal %",12,0
+4,"cpu: Guest %",12,0
+4,"meminfo:MemTotal (MB)",12,630978
+4,"meminfo:MemFree (MB)",12,556466
+4,"meminfo:MemAvailable (MB)",12,588240
+4,"program size (pages)",13,79771
+4,"resident set size (pages)",13,2652
+4,"resident shared pages",13,807
+4,"Page faults (minor)",13,4739
+4,"Page faults (major)",13,23
+4,"Pages swapped (not maintained)",13,0
+4,"GPU: Device 4 Utilization %",13,0
+4,"GPU: Device 4 Memory Utilization %",13,0
+4,"GPU: Device 4 Memory Free (GB)",13,16.9428
+4,"GPU: Device 4 Memory Used (GB)",13,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",13,877
+4,"cpu: User %",13,3.42419
+4,"cpu: Nice %",13,0
+4,"cpu: System %",13,0.0170358
+4,"cpu: Idle %",13,96.5588
+4,"cpu: I/O Wait %",13,0
+4,"cpu: IRQ %",13,0
+4,"cpu: soft IRQ %",13,0
+4,"cpu: Steal %",13,0
+4,"cpu: Guest %",13,0
+4,"meminfo:MemTotal (MB)",13,630978
+4,"meminfo:MemFree (MB)",13,556466
+4,"meminfo:MemAvailable (MB)",13,588240
+4,"program size (pages)",14,79771
+4,"resident set size (pages)",14,2652
+4,"resident shared pages",14,807
+4,"Page faults (minor)",14,4739
+4,"Page faults (major)",14,23
+4,"Pages swapped (not maintained)",14,0
+4,"GPU: Device 4 Utilization %",14,0
+4,"GPU: Device 4 Memory Utilization %",14,0
+4,"GPU: Device 4 Memory Free (GB)",14,16.9428
+4,"GPU: Device 4 Memory Used (GB)",14,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",14,877
+4,"cpu: User %",14,3.43065
+4,"cpu: Nice %",14,0
+4,"cpu: System %",14,0.00567988
+4,"cpu: Idle %",14,96.5637
+4,"cpu: I/O Wait %",14,0
+4,"cpu: IRQ %",14,0
+4,"cpu: soft IRQ %",14,0
+4,"cpu: Steal %",14,0
+4,"cpu: Guest %",14,0
+4,"meminfo:MemTotal (MB)",14,630978
+4,"meminfo:MemFree (MB)",14,556466
+4,"meminfo:MemAvailable (MB)",14,588240
+4,"program size (pages)",15,79771
+4,"resident set size (pages)",15,2652
+4,"resident shared pages",15,807
+4,"Page faults (minor)",15,4739
+4,"Page faults (major)",15,23
+4,"Pages swapped (not maintained)",15,0
+4,"GPU: Device 4 Utilization %",15,0
+4,"GPU: Device 4 Memory Utilization %",15,0
+4,"GPU: Device 4 Memory Free (GB)",15,16.9428
+4,"GPU: Device 4 Memory Used (GB)",15,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",15,877
+4,"cpu: User %",15,3.42497
+4,"cpu: Nice %",15,0
+4,"cpu: System %",15,0.0340793
+4,"cpu: Idle %",15,96.541
+4,"cpu: I/O Wait %",15,0
+4,"cpu: IRQ %",15,0
+4,"cpu: soft IRQ %",15,0
+4,"cpu: Steal %",15,0
+4,"cpu: Guest %",15,0
+4,"meminfo:MemTotal (MB)",15,630978
+4,"meminfo:MemFree (MB)",15,556466
+4,"meminfo:MemAvailable (MB)",15,588240
+4,"program size (pages)",16,79771
+4,"resident set size (pages)",16,2652
+4,"resident shared pages",16,807
+4,"Page faults (minor)",16,4739
+4,"Page faults (major)",16,23
+4,"Pages swapped (not maintained)",16,0
+4,"GPU: Device 4 Utilization %",16,0
+4,"GPU: Device 4 Memory Utilization %",16,0
+4,"GPU: Device 4 Memory Free (GB)",16,16.9428
+4,"GPU: Device 4 Memory Used (GB)",16,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",16,877
+4,"cpu: User %",16,3.44121
+4,"cpu: Nice %",16,0
+4,"cpu: System %",16,0.00568796
+4,"cpu: Idle %",16,96.5531
+4,"cpu: I/O Wait %",16,0
+4,"cpu: IRQ %",16,0
+4,"cpu: soft IRQ %",16,0
+4,"cpu: Steal %",16,0
+4,"cpu: Guest %",16,0
+4,"meminfo:MemTotal (MB)",16,630978
+4,"meminfo:MemFree (MB)",16,556466
+4,"meminfo:MemAvailable (MB)",16,588240
+4,"program size (pages)",17,79771
+4,"resident set size (pages)",17,2652
+4,"resident shared pages",17,807
+4,"Page faults (minor)",17,4739
+4,"Page faults (major)",17,23
+4,"Pages swapped (not maintained)",17,0
+4,"GPU: Device 4 Utilization %",17,0
+4,"GPU: Device 4 Memory Utilization %",17,0
+4,"GPU: Device 4 Memory Free (GB)",17,16.9428
+4,"GPU: Device 4 Memory Used (GB)",17,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",17,877
+4,"cpu: User %",17,3.43887
+4,"cpu: Nice %",17,0
+4,"cpu: System %",17,0.00568408
+4,"cpu: Idle %",17,96.5554
+4,"cpu: I/O Wait %",17,0
+4,"cpu: IRQ %",17,0
+4,"cpu: soft IRQ %",17,0
+4,"cpu: Steal %",17,0
+4,"cpu: Guest %",17,0
+4,"meminfo:MemTotal (MB)",17,630978
+4,"meminfo:MemFree (MB)",17,556466
+4,"meminfo:MemAvailable (MB)",17,588240
+4,"program size (pages)",18,79771
+4,"resident set size (pages)",18,2652
+4,"resident shared pages",18,807
+4,"Page faults (minor)",18,4739
+4,"Page faults (major)",18,23
+4,"Pages swapped (not maintained)",18,0
+4,"GPU: Device 4 Utilization %",18,0
+4,"GPU: Device 4 Memory Utilization %",18,0
+4,"GPU: Device 4 Memory Free (GB)",18,16.9428
+4,"GPU: Device 4 Memory Used (GB)",18,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",18,877
+4,"cpu: User %",18,3.41516
+4,"cpu: Nice %",18,0
+4,"cpu: System %",18,0.00568246
+4,"cpu: Idle %",18,96.5792
+4,"cpu: I/O Wait %",18,0
+4,"cpu: IRQ %",18,0
+4,"cpu: soft IRQ %",18,0
+4,"cpu: Steal %",18,0
+4,"cpu: Guest %",18,0
+4,"meminfo:MemTotal (MB)",18,630978
+4,"meminfo:MemFree (MB)",18,556466
+4,"meminfo:MemAvailable (MB)",18,588240
+4,"program size (pages)",19,79771
+4,"resident set size (pages)",19,2652
+4,"resident shared pages",19,807
+4,"Page faults (minor)",19,4739
+4,"Page faults (major)",19,23
+4,"Pages swapped (not maintained)",19,0
+4,"GPU: Device 4 Utilization %",19,0
+4,"GPU: Device 4 Memory Utilization %",19,0
+4,"GPU: Device 4 Memory Free (GB)",19,16.9428
+4,"GPU: Device 4 Memory Used (GB)",19,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",19,877
+4,"cpu: User %",19,3.41594
+4,"cpu: Nice %",19,0
+4,"cpu: System %",19,0.022735
+4,"cpu: Idle %",19,96.5613
+4,"cpu: I/O Wait %",19,0
+4,"cpu: IRQ %",19,0
+4,"cpu: soft IRQ %",19,0
+4,"cpu: Steal %",19,0
+4,"cpu: Guest %",19,0
+4,"meminfo:MemTotal (MB)",19,630978
+4,"meminfo:MemFree (MB)",19,556466
+4,"meminfo:MemAvailable (MB)",19,588240
+4,"program size (pages)",20,79771
+4,"resident set size (pages)",20,2652
+4,"resident shared pages",20,807
+4,"Page faults (minor)",20,4739
+4,"Page faults (major)",20,23
+4,"Pages swapped (not maintained)",20,0
+4,"GPU: Device 4 Utilization %",20,0
+4,"GPU: Device 4 Memory Utilization %",20,0
+4,"GPU: Device 4 Memory Free (GB)",20,16.9428
+4,"GPU: Device 4 Memory Used (GB)",20,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",20,877
+4,"cpu: User %",20,3.40916
+4,"cpu: Nice %",20,0
+4,"cpu: System %",20,0.00567247
+4,"cpu: Idle %",20,96.5852
+4,"cpu: I/O Wait %",20,0
+4,"cpu: IRQ %",20,0
+4,"cpu: soft IRQ %",20,0
+4,"cpu: Steal %",20,0
+4,"cpu: Guest %",20,0
+4,"meminfo:MemTotal (MB)",20,630978
+4,"meminfo:MemFree (MB)",20,556466
+4,"meminfo:MemAvailable (MB)",20,588240
+4,"program size (pages)",21,79771
+4,"resident set size (pages)",21,2652
+4,"resident shared pages",21,807
+4,"Page faults (minor)",21,4739
+4,"Page faults (major)",21,23
+4,"Pages swapped (not maintained)",21,0
+4,"GPU: Device 4 Utilization %",21,0
+4,"GPU: Device 4 Memory Utilization %",21,0
+4,"GPU: Device 4 Memory Free (GB)",21,16.9428
+4,"GPU: Device 4 Memory Used (GB)",21,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",21,877
+4,"cpu: User %",21,3.44219
+4,"cpu: Nice %",21,0
+4,"cpu: System %",21,0.00568958
+4,"cpu: Idle %",21,96.5521
+4,"cpu: I/O Wait %",21,0
+4,"cpu: IRQ %",21,0
+4,"cpu: soft IRQ %",21,0
+4,"cpu: Steal %",21,0
+4,"cpu: Guest %",21,0
+4,"meminfo:MemTotal (MB)",21,630978
+4,"meminfo:MemFree (MB)",21,556466
+4,"meminfo:MemAvailable (MB)",21,588240
+4,"program size (pages)",22,79771
+4,"resident set size (pages)",22,2652
+4,"resident shared pages",22,807
+4,"Page faults (minor)",22,4740
+4,"Page faults (major)",22,23
+4,"Pages swapped (not maintained)",22,0
+4,"GPU: Device 4 Utilization %",22,0
+4,"GPU: Device 4 Memory Utilization %",22,0
+4,"GPU: Device 4 Memory Free (GB)",22,16.9428
+4,"GPU: Device 4 Memory Used (GB)",22,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",22,877
+4,"cpu: User %",22,3.41929
+4,"cpu: Nice %",22,0
+4,"cpu: System %",22,0.0170396
+4,"cpu: Idle %",22,96.558
+4,"cpu: I/O Wait %",22,0
+4,"cpu: IRQ %",22,0
+4,"cpu: soft IRQ %",22,0.00567988
+4,"cpu: Steal %",22,0
+4,"cpu: Guest %",22,0
+4,"meminfo:MemTotal (MB)",22,630978
+4,"meminfo:MemFree (MB)",22,556465
+4,"meminfo:MemAvailable (MB)",22,588239
+4,"program size (pages)",23,79771
+4,"resident set size (pages)",23,2652
+4,"resident shared pages",23,807
+4,"Page faults (minor)",23,4740
+4,"Page faults (major)",23,23
+4,"Pages swapped (not maintained)",23,0
+4,"GPU: Device 4 Utilization %",23,0
+4,"GPU: Device 4 Memory Utilization %",23,0
+4,"GPU: Device 4 Memory Free (GB)",23,16.9428
+4,"GPU: Device 4 Memory Used (GB)",23,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",23,877
+4,"cpu: User %",23,3.43927
+4,"cpu: Nice %",23,0
+4,"cpu: System %",23,0.0283768
+4,"cpu: Idle %",23,96.5323
+4,"cpu: I/O Wait %",23,0
+4,"cpu: IRQ %",23,0
+4,"cpu: soft IRQ %",23,0
+4,"cpu: Steal %",23,0
+4,"cpu: Guest %",23,0
+4,"meminfo:MemTotal (MB)",23,630978
+4,"meminfo:MemFree (MB)",23,556465
+4,"meminfo:MemAvailable (MB)",23,588239
+4,"program size (pages)",24,79771
+4,"resident set size (pages)",24,2652
+4,"resident shared pages",24,807
+4,"Page faults (minor)",24,4740
+4,"Page faults (major)",24,23
+4,"Pages swapped (not maintained)",24,0
+4,"GPU: Device 4 Utilization %",24,0
+4,"GPU: Device 4 Memory Utilization %",24,0
+4,"GPU: Device 4 Memory Free (GB)",24,16.9428
+4,"GPU: Device 4 Memory Used (GB)",24,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",24,877
+4,"cpu: User %",24,3.43533
+4,"cpu: Nice %",24,0
+4,"cpu: System %",24,0.00568764
+4,"cpu: Idle %",24,96.559
+4,"cpu: I/O Wait %",24,0
+4,"cpu: IRQ %",24,0
+4,"cpu: soft IRQ %",24,0
+4,"cpu: Steal %",24,0
+4,"cpu: Guest %",24,0
+4,"meminfo:MemTotal (MB)",24,630978
+4,"meminfo:MemFree (MB)",24,556464
+4,"meminfo:MemAvailable (MB)",24,588238
+4,"program size (pages)",25,79771
+4,"resident set size (pages)",25,2652
+4,"resident shared pages",25,807
+4,"Page faults (minor)",25,4740
+4,"Page faults (major)",25,23
+4,"Pages swapped (not maintained)",25,0
+4,"GPU: Device 4 Utilization %",25,0
+4,"GPU: Device 4 Memory Utilization %",25,0
+4,"GPU: Device 4 Memory Free (GB)",25,16.9428
+4,"GPU: Device 4 Memory Used (GB)",25,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",25,877
+4,"cpu: User %",25,3.44357
+4,"cpu: Nice %",25,0
+4,"cpu: System %",25,0.0227299
+4,"cpu: Idle %",25,96.5337
+4,"cpu: I/O Wait %",25,0
+4,"cpu: IRQ %",25,0
+4,"cpu: soft IRQ %",25,0
+4,"cpu: Steal %",25,0
+4,"cpu: Guest %",25,0
+4,"meminfo:MemTotal (MB)",25,630978
+4,"meminfo:MemFree (MB)",25,556464
+4,"meminfo:MemAvailable (MB)",25,588238
+4,"program size (pages)",26,79771
+4,"resident set size (pages)",26,2652
+4,"resident shared pages",26,807
+4,"Page faults (minor)",26,4740
+4,"Page faults (major)",26,23
+4,"Pages swapped (not maintained)",26,0
+4,"GPU: Device 4 Utilization %",26,0
+4,"GPU: Device 4 Memory Utilization %",26,0
+4,"GPU: Device 4 Memory Free (GB)",26,16.9428
+4,"GPU: Device 4 Memory Used (GB)",26,0.00275251
+4,"GPU: Device 4 Clock Memory (MHz)",26,877
+4,"cpu: User %",26,3.43318
+4,"cpu: Nice %",26,0
+4,"cpu: System %",26,0.00568408
+4,"cpu: Idle %",26,96.5611
+4,"cpu: I/O Wait %",26,0
+4,"cpu: IRQ %",26,0
+4,"cpu: soft IRQ %",26,0
+4,"cpu: Steal %",26,0
+4,"cpu: Guest %",26,0
+4,"meminfo:MemTotal (MB)",26,630978
+4,"meminfo:MemFree (MB)",26,556464
+4,"meminfo:MemAvailable (MB)",26,588238
+4,"program size (pages)",27,79771
+4,"resident set size (pages)",27,2652
+4,"resident shared pages",27,807
+4,"Page faults (minor)",27,4740
+4,"Page faults (major)",27,23
+4,"Pages swapped (not maintained)",27,0
+4,"GPU: Device 4 Utilization %",27,0
+4,"GPU: Device 4 Memory Utilization %",27,0
+4,"GPU: Device 4 Memory Free (GB)",27,16.9428
+4,"GPU: Device 4 Memory Used (GB)",27,0.00275251
+5,"Page faults (minor)",0,4681
+5,"Page faults (major)",0,25
+5,"Pages swapped (not maintained)",0,0
+5,"program size (pages)",0,79771
+5,"resident set size (pages)",0,2660
+5,"resident shared pages",0,818
+5,"Page faults (minor)",0,4683
+5,"Page faults (major)",0,25
+5,"Pages swapped (not maintained)",0,0
+5,"GPU: Device 5 Utilization %",0,0
+5,"GPU: Device 5 Memory Utilization %",0,0
+5,"GPU: Device 5 Memory Total (GB)",0,16.9455
+5,"GPU: Device 5 Memory Free (GB)",0,16.9428
+5,"GPU: Device 5 Memory Used (GB)",0,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",0,877
+5,"cpu: User %",0,3.30256
+5,"cpu: Nice %",0,0
+5,"cpu: System %",0,0.568182
+5,"cpu: Idle %",0,96.1293
+5,"cpu: I/O Wait %",0,0
+5,"cpu: IRQ %",0,0
+5,"cpu: soft IRQ %",0,0
+5,"cpu: Steal %",0,0
+5,"cpu: Guest %",0,0
+5,"meminfo:MemTotal (MB)",0,630978
+5,"meminfo:MemFree (MB)",0,556483
+5,"meminfo:MemAvailable (MB)",0,588255
+5,"program size (pages)",1,79771
+5,"resident set size (pages)",1,2660
+5,"resident shared pages",1,818
+5,"Page faults (minor)",1,4745
+5,"Page faults (major)",1,25
+5,"Pages swapped (not maintained)",1,0
+5,"GPU: Device 5 Utilization %",1,0
+5,"GPU: Device 5 Memory Utilization %",1,0
+5,"GPU: Device 5 Memory Free (GB)",1,16.9428
+5,"GPU: Device 5 Memory Used (GB)",1,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",1,877
+5,"cpu: User %",1,3.438
+5,"cpu: Nice %",1,0
+5,"cpu: System %",1,0.0507453
+5,"cpu: Idle %",1,96.5113
+5,"cpu: I/O Wait %",1,0
+5,"cpu: IRQ %",1,0
+5,"cpu: soft IRQ %",1,0
+5,"cpu: Steal %",1,0
+5,"cpu: Guest %",1,0
+5,"meminfo:MemTotal (MB)",1,630978
+5,"meminfo:MemFree (MB)",1,556468
+5,"meminfo:MemAvailable (MB)",1,588241
+5,"program size (pages)",2,79771
+5,"resident set size (pages)",2,2660
+5,"resident shared pages",2,818
+5,"Page faults (minor)",2,4745
+5,"Page faults (major)",2,25
+5,"Pages swapped (not maintained)",2,0
+5,"GPU: Device 5 Utilization %",2,0
+5,"GPU: Device 5 Memory Utilization %",2,0
+5,"GPU: Device 5 Memory Free (GB)",2,16.9428
+5,"GPU: Device 5 Memory Used (GB)",2,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",2,877
+5,"cpu: User %",2,3.43416
+5,"cpu: Nice %",2,0
+5,"cpu: System %",2,0.0227428
+5,"cpu: Idle %",2,96.5431
+5,"cpu: I/O Wait %",2,0
+5,"cpu: IRQ %",2,0
+5,"cpu: soft IRQ %",2,0
+5,"cpu: Steal %",2,0
+5,"cpu: Guest %",2,0
+5,"meminfo:MemTotal (MB)",2,630978
+5,"meminfo:MemFree (MB)",2,556467
+5,"meminfo:MemAvailable (MB)",2,588241
+5,"program size (pages)",3,79771
+5,"resident set size (pages)",3,2660
+5,"resident shared pages",3,818
+5,"Page faults (minor)",3,4745
+5,"Page faults (major)",3,25
+5,"Pages swapped (not maintained)",3,0
+5,"GPU: Device 5 Utilization %",3,0
+5,"GPU: Device 5 Memory Utilization %",3,0
+5,"GPU: Device 5 Memory Free (GB)",3,16.9428
+5,"GPU: Device 5 Memory Used (GB)",3,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",3,877
+5,"cpu: User %",3,3.41793
+5,"cpu: Nice %",3,0
+5,"cpu: System %",3,0.00567762
+5,"cpu: Idle %",3,96.5707
+5,"cpu: I/O Wait %",3,0
+5,"cpu: IRQ %",3,0
+5,"cpu: soft IRQ %",3,0.00567762
+5,"cpu: Steal %",3,0
+5,"cpu: Guest %",3,0
+5,"meminfo:MemTotal (MB)",3,630978
+5,"meminfo:MemFree (MB)",3,556467
+5,"meminfo:MemAvailable (MB)",3,588241
+5,"program size (pages)",4,79771
+5,"resident set size (pages)",4,2660
+5,"resident shared pages",4,818
+5,"Page faults (minor)",4,4745
+5,"Page faults (major)",4,25
+5,"Pages swapped (not maintained)",4,0
+5,"GPU: Device 5 Utilization %",4,0
+5,"GPU: Device 5 Memory Utilization %",4,0
+5,"GPU: Device 5 Memory Free (GB)",4,16.9428
+5,"GPU: Device 5 Memory Used (GB)",4,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",4,877
+5,"cpu: User %",4,3.4324
+5,"cpu: Nice %",4,0
+5,"cpu: System %",4,0.0340967
+5,"cpu: Idle %",4,96.5335
+5,"cpu: I/O Wait %",4,0
+5,"cpu: IRQ %",4,0
+5,"cpu: soft IRQ %",4,0
+5,"cpu: Steal %",4,0
+5,"cpu: Guest %",4,0
+5,"meminfo:MemTotal (MB)",4,630978
+5,"meminfo:MemFree (MB)",4,556467
+5,"meminfo:MemAvailable (MB)",4,588241
+5,"program size (pages)",5,79771
+5,"resident set size (pages)",5,2660
+5,"resident shared pages",5,818
+5,"Page faults (minor)",5,4745
+5,"Page faults (major)",5,25
+5,"Pages swapped (not maintained)",5,0
+5,"GPU: Device 5 Utilization %",5,0
+5,"GPU: Device 5 Memory Utilization %",5,0
+5,"GPU: Device 5 Memory Free (GB)",5,16.9428
+5,"GPU: Device 5 Memory Used (GB)",5,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",5,877
+5,"cpu: User %",5,3.43906
+5,"cpu: Nice %",5,0
+5,"cpu: System %",5,0.0056844
+5,"cpu: Idle %",5,96.5553
+5,"cpu: I/O Wait %",5,0
+5,"cpu: IRQ %",5,0
+5,"cpu: soft IRQ %",5,0
+5,"cpu: Steal %",5,0
+5,"cpu: Guest %",5,0
+5,"meminfo:MemTotal (MB)",5,630978
+5,"meminfo:MemFree (MB)",5,556467
+5,"meminfo:MemAvailable (MB)",5,588241
+5,"program size (pages)",6,79771
+5,"resident set size (pages)",6,2660
+5,"resident shared pages",6,818
+5,"Page faults (minor)",6,4745
+5,"Page faults (major)",6,25
+5,"Pages swapped (not maintained)",6,0
+5,"GPU: Device 5 Utilization %",6,0
+5,"GPU: Device 5 Memory Utilization %",6,0
+5,"GPU: Device 5 Memory Free (GB)",6,16.9428
+5,"GPU: Device 5 Memory Used (GB)",6,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",6,877
+5,"cpu: User %",6,3.39905
+5,"cpu: Nice %",6,0
+5,"cpu: System %",6,0.0113302
+5,"cpu: Idle %",6,96.5896
+5,"cpu: I/O Wait %",6,0
+5,"cpu: IRQ %",6,0
+5,"cpu: soft IRQ %",6,0
+5,"cpu: Steal %",6,0
+5,"cpu: Guest %",6,0
+5,"meminfo:MemTotal (MB)",6,630978
+5,"meminfo:MemFree (MB)",6,556466
+5,"meminfo:MemAvailable (MB)",6,588240
+5,"program size (pages)",7,79771
+5,"resident set size (pages)",7,2660
+5,"resident shared pages",7,818
+5,"Page faults (minor)",7,4745
+5,"Page faults (major)",7,25
+5,"Pages swapped (not maintained)",7,0
+5,"GPU: Device 5 Utilization %",7,0
+5,"GPU: Device 5 Memory Utilization %",7,0
+5,"GPU: Device 5 Memory Free (GB)",7,16.9428
+5,"GPU: Device 5 Memory Used (GB)",7,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",7,877
+5,"cpu: User %",7,3.4636
+5,"cpu: Nice %",7,0
+5,"cpu: System %",7,0.00569671
+5,"cpu: Idle %",7,96.5307
+5,"cpu: I/O Wait %",7,0
+5,"cpu: IRQ %",7,0
+5,"cpu: soft IRQ %",7,0
+5,"cpu: Steal %",7,0
+5,"cpu: Guest %",7,0
+5,"meminfo:MemTotal (MB)",7,630978
+5,"meminfo:MemFree (MB)",7,556466
+5,"meminfo:MemAvailable (MB)",7,588240
+5,"program size (pages)",8,79771
+5,"resident set size (pages)",8,2660
+5,"resident shared pages",8,818
+5,"Page faults (minor)",8,4745
+5,"Page faults (major)",8,25
+5,"Pages swapped (not maintained)",8,0
+5,"GPU: Device 5 Utilization %",8,0
+5,"GPU: Device 5 Memory Utilization %",8,0
+5,"GPU: Device 5 Memory Free (GB)",8,16.9428
+5,"GPU: Device 5 Memory Used (GB)",8,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",8,877
+5,"cpu: User %",8,3.43338
+5,"cpu: Nice %",8,0
+5,"cpu: System %",8,0.0056844
+5,"cpu: Idle %",8,96.5609
+5,"cpu: I/O Wait %",8,0
+5,"cpu: IRQ %",8,0
+5,"cpu: soft IRQ %",8,0
+5,"cpu: Steal %",8,0
+5,"cpu: Guest %",8,0
+5,"meminfo:MemTotal (MB)",8,630978
+5,"meminfo:MemFree (MB)",8,556466
+5,"meminfo:MemAvailable (MB)",8,588240
+5,"program size (pages)",9,79771
+5,"resident set size (pages)",9,2660
+5,"resident shared pages",9,818
+5,"Page faults (minor)",9,4745
+5,"Page faults (major)",9,25
+5,"Pages swapped (not maintained)",9,0
+5,"GPU: Device 5 Utilization %",9,0
+5,"GPU: Device 5 Memory Utilization %",9,0
+5,"GPU: Device 5 Memory Free (GB)",9,16.9428
+5,"GPU: Device 5 Memory Used (GB)",9,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",9,877
+5,"cpu: User %",9,3.42594
+5,"cpu: Nice %",9,0
+5,"cpu: System %",9,0.0170445
+5,"cpu: Idle %",9,96.557
+5,"cpu: I/O Wait %",9,0
+5,"cpu: IRQ %",9,0
+5,"cpu: soft IRQ %",9,0
+5,"cpu: Steal %",9,0
+5,"cpu: Guest %",9,0
+5,"meminfo:MemTotal (MB)",9,630978
+5,"meminfo:MemFree (MB)",9,556466
+5,"meminfo:MemAvailable (MB)",9,588240
+5,"program size (pages)",10,79771
+5,"resident set size (pages)",10,2660
+5,"resident shared pages",10,818
+5,"Page faults (minor)",10,4745
+5,"Page faults (major)",10,25
+5,"Pages swapped (not maintained)",10,0
+5,"GPU: Device 5 Utilization %",10,0
+5,"GPU: Device 5 Memory Utilization %",10,0
+5,"GPU: Device 5 Memory Free (GB)",10,16.9428
+5,"GPU: Device 5 Memory Used (GB)",10,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",10,877
+5,"cpu: User %",10,3.41574
+5,"cpu: Nice %",10,0
+5,"cpu: System %",10,0.0113669
+5,"cpu: Idle %",10,96.5729
+5,"cpu: I/O Wait %",10,0
+5,"cpu: IRQ %",10,0
+5,"cpu: soft IRQ %",10,0
+5,"cpu: Steal %",10,0
+5,"cpu: Guest %",10,0
+5,"meminfo:MemTotal (MB)",10,630978
+5,"meminfo:MemFree (MB)",10,556466
+5,"meminfo:MemAvailable (MB)",10,588240
+5,"program size (pages)",11,79771
+5,"resident set size (pages)",11,2660
+5,"resident shared pages",11,818
+5,"Page faults (minor)",11,4745
+5,"Page faults (major)",11,25
+5,"Pages swapped (not maintained)",11,0
+5,"GPU: Device 5 Utilization %",11,0
+5,"GPU: Device 5 Memory Utilization %",11,0
+5,"GPU: Device 5 Memory Free (GB)",11,16.9428
+5,"GPU: Device 5 Memory Used (GB)",11,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",11,877
+5,"cpu: User %",11,3.41303
+5,"cpu: Nice %",11,0
+5,"cpu: System %",11,0.00567891
+5,"cpu: Idle %",11,96.5813
+5,"cpu: I/O Wait %",11,0
+5,"cpu: IRQ %",11,0
+5,"cpu: soft IRQ %",11,0
+5,"cpu: Steal %",11,0
+5,"cpu: Guest %",11,0
+5,"meminfo:MemTotal (MB)",11,630978
+5,"meminfo:MemFree (MB)",11,556466
+5,"meminfo:MemAvailable (MB)",11,588240
+5,"program size (pages)",12,79771
+5,"resident set size (pages)",12,2660
+5,"resident shared pages",12,818
+5,"Page faults (minor)",12,4745
+5,"Page faults (major)",12,25
+5,"Pages swapped (not maintained)",12,0
+5,"GPU: Device 5 Utilization %",12,0
+5,"GPU: Device 5 Memory Utilization %",12,0
+5,"GPU: Device 5 Memory Free (GB)",12,16.9428
+5,"GPU: Device 5 Memory Used (GB)",12,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",12,877
+5,"cpu: User %",12,3.43945
+5,"cpu: Nice %",12,0
+5,"cpu: System %",12,0.0113701
+5,"cpu: Idle %",12,96.5492
+5,"cpu: I/O Wait %",12,0
+5,"cpu: IRQ %",12,0
+5,"cpu: soft IRQ %",12,0
+5,"cpu: Steal %",12,0
+5,"cpu: Guest %",12,0
+5,"meminfo:MemTotal (MB)",12,630978
+5,"meminfo:MemFree (MB)",12,556466
+5,"meminfo:MemAvailable (MB)",12,588240
+5,"program size (pages)",13,79771
+5,"resident set size (pages)",13,2660
+5,"resident shared pages",13,818
+5,"Page faults (minor)",13,4745
+5,"Page faults (major)",13,25
+5,"Pages swapped (not maintained)",13,0
+5,"GPU: Device 5 Utilization %",13,0
+5,"GPU: Device 5 Memory Utilization %",13,0
+5,"GPU: Device 5 Memory Free (GB)",13,16.9428
+5,"GPU: Device 5 Memory Used (GB)",13,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",13,877
+5,"cpu: User %",13,3.42069
+5,"cpu: Nice %",13,0
+5,"cpu: System %",13,0.0170184
+5,"cpu: Idle %",13,96.5623
+5,"cpu: I/O Wait %",13,0
+5,"cpu: IRQ %",13,0
+5,"cpu: soft IRQ %",13,0
+5,"cpu: Steal %",13,0
+5,"cpu: Guest %",13,0
+5,"meminfo:MemTotal (MB)",13,630978
+5,"meminfo:MemFree (MB)",13,556466
+5,"meminfo:MemAvailable (MB)",13,588240
+5,"program size (pages)",14,79771
+5,"resident set size (pages)",14,2660
+5,"resident shared pages",14,818
+5,"Page faults (minor)",14,4745
+5,"Page faults (major)",14,25
+5,"Pages swapped (not maintained)",14,0
+5,"GPU: Device 5 Utilization %",14,0
+5,"GPU: Device 5 Memory Utilization %",14,0
+5,"GPU: Device 5 Memory Free (GB)",14,16.9428
+5,"GPU: Device 5 Memory Used (GB)",14,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",14,877
+5,"cpu: User %",14,3.43416
+5,"cpu: Nice %",14,0
+5,"cpu: System %",14,0.00568569
+5,"cpu: Idle %",14,96.5602
+5,"cpu: I/O Wait %",14,0
+5,"cpu: IRQ %",14,0
+5,"cpu: soft IRQ %",14,0
+5,"cpu: Steal %",14,0
+5,"cpu: Guest %",14,0
+5,"meminfo:MemTotal (MB)",14,630978
+5,"meminfo:MemFree (MB)",14,556466
+5,"meminfo:MemAvailable (MB)",14,588240
+5,"program size (pages)",15,79771
+5,"resident set size (pages)",15,2660
+5,"resident shared pages",15,818
+5,"Page faults (minor)",15,4745
+5,"Page faults (major)",15,25
+5,"Pages swapped (not maintained)",15,0
+5,"GPU: Device 5 Utilization %",15,0
+5,"GPU: Device 5 Memory Utilization %",15,0
+5,"GPU: Device 5 Memory Free (GB)",15,16.9428
+5,"GPU: Device 5 Memory Used (GB)",15,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",15,877
+5,"cpu: User %",15,3.42419
+5,"cpu: Nice %",15,0
+5,"cpu: System %",15,0.0340716
+5,"cpu: Idle %",15,96.5417
+5,"cpu: I/O Wait %",15,0
+5,"cpu: IRQ %",15,0
+5,"cpu: soft IRQ %",15,0
+5,"cpu: Steal %",15,0
+5,"cpu: Guest %",15,0
+5,"meminfo:MemTotal (MB)",15,630978
+5,"meminfo:MemFree (MB)",15,556466
+5,"meminfo:MemAvailable (MB)",15,588240
+5,"program size (pages)",16,79771
+5,"resident set size (pages)",16,2660
+5,"resident shared pages",16,818
+5,"Page faults (minor)",16,4745
+5,"Page faults (major)",16,25
+5,"Pages swapped (not maintained)",16,0
+5,"GPU: Device 5 Utilization %",16,0
+5,"GPU: Device 5 Memory Utilization %",16,0
+5,"GPU: Device 5 Memory Free (GB)",16,16.9428
+5,"GPU: Device 5 Memory Used (GB)",16,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",16,877
+5,"cpu: User %",16,3.442
+5,"cpu: Nice %",16,0
+5,"cpu: System %",16,0.00568925
+5,"cpu: Idle %",16,96.5523
+5,"cpu: I/O Wait %",16,0
+5,"cpu: IRQ %",16,0
+5,"cpu: soft IRQ %",16,0
+5,"cpu: Steal %",16,0
+5,"cpu: Guest %",16,0
+5,"meminfo:MemTotal (MB)",16,630978
+5,"meminfo:MemFree (MB)",16,556466
+5,"meminfo:MemAvailable (MB)",16,588240
+5,"program size (pages)",17,79771
+5,"resident set size (pages)",17,2660
+5,"resident shared pages",17,818
+5,"Page faults (minor)",17,4745
+5,"Page faults (major)",17,25
+5,"Pages swapped (not maintained)",17,0
+5,"GPU: Device 5 Utilization %",17,0
+5,"GPU: Device 5 Memory Utilization %",17,0
+5,"GPU: Device 5 Memory Free (GB)",17,16.9428
+5,"GPU: Device 5 Memory Used (GB)",17,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",17,877
+5,"cpu: User %",17,3.43848
+5,"cpu: Nice %",17,0
+5,"cpu: System %",17,0.00568343
+5,"cpu: Idle %",17,96.5558
+5,"cpu: I/O Wait %",17,0
+5,"cpu: IRQ %",17,0
+5,"cpu: soft IRQ %",17,0
+5,"cpu: Steal %",17,0
+5,"cpu: Guest %",17,0
+5,"meminfo:MemTotal (MB)",17,630978
+5,"meminfo:MemFree (MB)",17,556466
+5,"meminfo:MemAvailable (MB)",17,588240
+5,"program size (pages)",18,79771
+5,"resident set size (pages)",18,2660
+5,"resident shared pages",18,818
+5,"Page faults (minor)",18,4745
+5,"Page faults (major)",18,25
+5,"Pages swapped (not maintained)",18,0
+5,"GPU: Device 5 Utilization %",18,0
+5,"GPU: Device 5 Memory Utilization %",18,0
+5,"GPU: Device 5 Memory Free (GB)",18,16.9428
+5,"GPU: Device 5 Memory Used (GB)",18,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",18,877
+5,"cpu: User %",18,3.41555
+5,"cpu: Nice %",18,0
+5,"cpu: System %",18,0.00568311
+5,"cpu: Idle %",18,96.5788
+5,"cpu: I/O Wait %",18,0
+5,"cpu: IRQ %",18,0
+5,"cpu: soft IRQ %",18,0
+5,"cpu: Steal %",18,0
+5,"cpu: Guest %",18,0
+5,"meminfo:MemTotal (MB)",18,630978
+5,"meminfo:MemFree (MB)",18,556466
+5,"meminfo:MemAvailable (MB)",18,588240
+5,"program size (pages)",19,79771
+5,"resident set size (pages)",19,2660
+5,"resident shared pages",19,818
+5,"Page faults (minor)",19,4745
+5,"Page faults (major)",19,25
+5,"Pages swapped (not maintained)",19,0
+5,"GPU: Device 5 Utilization %",19,0
+5,"GPU: Device 5 Memory Utilization %",19,0
+5,"GPU: Device 5 Memory Free (GB)",19,16.9428
+5,"GPU: Device 5 Memory Used (GB)",19,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",19,877
+5,"cpu: User %",19,3.41516
+5,"cpu: Nice %",19,0
+5,"cpu: System %",19,0.0227299
+5,"cpu: Idle %",19,96.5621
+5,"cpu: I/O Wait %",19,0
+5,"cpu: IRQ %",19,0
+5,"cpu: soft IRQ %",19,0
+5,"cpu: Steal %",19,0
+5,"cpu: Guest %",19,0
+5,"meminfo:MemTotal (MB)",19,630978
+5,"meminfo:MemFree (MB)",19,556466
+5,"meminfo:MemAvailable (MB)",19,588240
+5,"program size (pages)",20,79771
+5,"resident set size (pages)",20,2660
+5,"resident shared pages",20,818
+5,"Page faults (minor)",20,4745
+5,"Page faults (major)",20,25
+5,"Pages swapped (not maintained)",20,0
+5,"GPU: Device 5 Utilization %",20,0
+5,"GPU: Device 5 Memory Utilization %",20,0
+5,"GPU: Device 5 Memory Free (GB)",20,16.9428
+5,"GPU: Device 5 Memory Used (GB)",20,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",20,877
+5,"cpu: User %",20,3.40954
+5,"cpu: Nice %",20,0
+5,"cpu: System %",20,0.00567312
+5,"cpu: Idle %",20,96.5848
+5,"cpu: I/O Wait %",20,0
+5,"cpu: IRQ %",20,0
+5,"cpu: soft IRQ %",20,0
+5,"cpu: Steal %",20,0
+5,"cpu: Guest %",20,0
+5,"meminfo:MemTotal (MB)",20,630978
+5,"meminfo:MemFree (MB)",20,556466
+5,"meminfo:MemAvailable (MB)",20,588240
+5,"program size (pages)",21,79771
+5,"resident set size (pages)",21,2660
+5,"resident shared pages",21,818
+5,"Page faults (minor)",21,4745
+5,"Page faults (major)",21,25
+5,"Pages swapped (not maintained)",21,0
+5,"GPU: Device 5 Utilization %",21,0
+5,"GPU: Device 5 Memory Utilization %",21,0
+5,"GPU: Device 5 Memory Free (GB)",21,16.9428
+5,"GPU: Device 5 Memory Used (GB)",21,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",21,877
+5,"cpu: User %",21,3.44259
+5,"cpu: Nice %",21,0
+5,"cpu: System %",21,0.00569022
+5,"cpu: Idle %",21,96.5517
+5,"cpu: I/O Wait %",21,0
+5,"cpu: IRQ %",21,0
+5,"cpu: soft IRQ %",21,0
+5,"cpu: Steal %",21,0
+5,"cpu: Guest %",21,0
+5,"meminfo:MemTotal (MB)",21,630978
+5,"meminfo:MemFree (MB)",21,556466
+5,"meminfo:MemAvailable (MB)",21,588240
+5,"program size (pages)",22,79771
+5,"resident set size (pages)",22,2660
+5,"resident shared pages",22,818
+5,"Page faults (minor)",22,4746
+5,"Page faults (major)",22,25
+5,"Pages swapped (not maintained)",22,0
+5,"GPU: Device 5 Utilization %",22,0
+5,"GPU: Device 5 Memory Utilization %",22,0
+5,"GPU: Device 5 Memory Free (GB)",22,16.9428
+5,"GPU: Device 5 Memory Used (GB)",22,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",22,877
+5,"cpu: User %",22,3.41929
+5,"cpu: Nice %",22,0
+5,"cpu: System %",22,0.0170396
+5,"cpu: Idle %",22,96.558
+5,"cpu: I/O Wait %",22,0
+5,"cpu: IRQ %",22,0
+5,"cpu: soft IRQ %",22,0.00567988
+5,"cpu: Steal %",22,0
+5,"cpu: Guest %",22,0
+5,"meminfo:MemTotal (MB)",22,630978
+5,"meminfo:MemFree (MB)",22,556465
+5,"meminfo:MemAvailable (MB)",22,588239
+5,"program size (pages)",23,79771
+5,"resident set size (pages)",23,2660
+5,"resident shared pages",23,818
+5,"Page faults (minor)",23,4746
+5,"Page faults (major)",23,25
+5,"Pages swapped (not maintained)",23,0
+5,"GPU: Device 5 Utilization %",23,0
+5,"GPU: Device 5 Memory Utilization %",23,0
+5,"GPU: Device 5 Memory Free (GB)",23,16.9428
+5,"GPU: Device 5 Memory Used (GB)",23,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",23,877
+5,"cpu: User %",23,3.43888
+5,"cpu: Nice %",23,0
+5,"cpu: System %",23,0.0283736
+5,"cpu: Idle %",23,96.5327
+5,"cpu: I/O Wait %",23,0
+5,"cpu: IRQ %",23,0
+5,"cpu: soft IRQ %",23,0
+5,"cpu: Steal %",23,0
+5,"cpu: Guest %",23,0
+5,"meminfo:MemTotal (MB)",23,630978
+5,"meminfo:MemFree (MB)",23,556465
+5,"meminfo:MemAvailable (MB)",23,588239
+5,"program size (pages)",24,79771
+5,"resident set size (pages)",24,2660
+5,"resident shared pages",24,818
+5,"Page faults (minor)",24,4746
+5,"Page faults (major)",24,25
+5,"Pages swapped (not maintained)",24,0
+5,"GPU: Device 5 Utilization %",24,0
+5,"GPU: Device 5 Memory Utilization %",24,0
+5,"GPU: Device 5 Memory Free (GB)",24,16.9428
+5,"GPU: Device 5 Memory Used (GB)",24,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",24,877
+5,"cpu: User %",24,3.43631
+5,"cpu: Nice %",24,0
+5,"cpu: System %",24,0.00568925
+5,"cpu: Idle %",24,96.558
+5,"cpu: I/O Wait %",24,0
+5,"cpu: IRQ %",24,0
+5,"cpu: soft IRQ %",24,0
+5,"cpu: Steal %",24,0
+5,"cpu: Guest %",24,0
+5,"meminfo:MemTotal (MB)",24,630978
+5,"meminfo:MemFree (MB)",24,556464
+5,"meminfo:MemAvailable (MB)",24,588238
+5,"program size (pages)",25,79771
+5,"resident set size (pages)",25,2660
+5,"resident shared pages",25,818
+5,"Page faults (minor)",25,4746
+5,"Page faults (major)",25,25
+5,"Pages swapped (not maintained)",25,0
+5,"GPU: Device 5 Utilization %",25,0
+5,"GPU: Device 5 Memory Utilization %",25,0
+5,"GPU: Device 5 Memory Free (GB)",25,16.9428
+5,"GPU: Device 5 Memory Used (GB)",25,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",25,877
+5,"cpu: User %",25,3.4426
+5,"cpu: Nice %",25,0
+5,"cpu: System %",25,0.0227234
+5,"cpu: Idle %",25,96.5347
+5,"cpu: I/O Wait %",25,0
+5,"cpu: IRQ %",25,0
+5,"cpu: soft IRQ %",25,0
+5,"cpu: Steal %",25,0
+5,"cpu: Guest %",25,0
+5,"meminfo:MemTotal (MB)",25,630978
+5,"meminfo:MemFree (MB)",25,556464
+5,"meminfo:MemAvailable (MB)",25,588238
+5,"program size (pages)",26,79771
+5,"resident set size (pages)",26,2660
+5,"resident shared pages",26,818
+5,"Page faults (minor)",26,4746
+5,"Page faults (major)",26,25
+5,"Pages swapped (not maintained)",26,0
+5,"GPU: Device 5 Utilization %",26,0
+5,"GPU: Device 5 Memory Utilization %",26,0
+5,"GPU: Device 5 Memory Free (GB)",26,16.9428
+5,"GPU: Device 5 Memory Used (GB)",26,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",26,877
+5,"cpu: User %",26,3.43357
+5,"cpu: Nice %",26,0
+5,"cpu: System %",26,0.00568473
+5,"cpu: Idle %",26,96.5607
+5,"cpu: I/O Wait %",26,0
+5,"cpu: IRQ %",26,0
+5,"cpu: soft IRQ %",26,0
+5,"cpu: Steal %",26,0
+5,"cpu: Guest %",26,0
+5,"meminfo:MemTotal (MB)",26,630978
+5,"meminfo:MemFree (MB)",26,556464
+5,"meminfo:MemAvailable (MB)",26,588238
+5,"program size (pages)",27,79771
+5,"resident set size (pages)",27,2660
+5,"resident shared pages",27,818
+5,"Page faults (minor)",27,4746
+5,"Page faults (major)",27,25
+5,"Pages swapped (not maintained)",27,0
+5,"GPU: Device 5 Utilization %",27,0
+5,"GPU: Device 5 Memory Utilization %",27,0
+5,"GPU: Device 5 Memory Free (GB)",27,16.9428
+5,"GPU: Device 5 Memory Used (GB)",27,0.00275251
+5,"GPU: Device 5 Clock Memory (MHz)",27,877
+5,"cpu: User %",27,3.42104
+5,"cpu: Nice %",27,0
+5,"cpu: System %",27,0.0170484
+5,"cpu: Idle %",27,96.5619
+5,"cpu: I/O Wait %",27,0
+5,"cpu: IRQ %",27,0
+5,"cpu: soft IRQ %",27,0
+5,"cpu: Steal %",27,0
+5,"cpu: Guest %",27,0
+5,"meminfo:MemTotal (MB)",27,630978
+5,"meminfo:MemFree (MB)",27,556464
+5,"meminfo:MemAvailable (MB)",27,588238

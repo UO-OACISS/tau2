@@ -165,8 +165,6 @@ double do_work(int matrix_size) {
   return result;
 }
 
-int Tau_dump(void);
-
 int main (int argc, char *argv[]) 
 {
 
@@ -194,12 +192,8 @@ int main (int argc, char *argv[])
     int matrix_size = (int)(ratio * (double)MATRIX_SIZE);
     // make sure we have at least 1 cell
     matrix_size = matrix_size > 32 ? matrix_size : 32;
-    printf("Matrix size = %d\n", matrix_size);
+    //printf("Matrix size = %d\n", matrix_size);
     do_work(matrix_size);
-    if (i % (ITERATIONS/25) == 0) { 
-        if(rank == 0) { printf("Dumping to ADIOS2...\n"); }
-        Tau_dump();
-    }
   }
 
 #ifdef TAU_MPI

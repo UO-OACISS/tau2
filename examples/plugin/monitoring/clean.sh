@@ -1,0 +1,1 @@
+rm -f TAUtest.* core.* tau.*.log tauprofile.xml monitoring.csv
