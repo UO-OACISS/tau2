@@ -11958,8 +11958,8 @@ if [ "x$download_dwarf" = xyes ] ; then
               fi
               elf=yes
 # Dwarf needs a libelf.h in its libdwarf directory and libelf.so in the lib dir. Symlinks.
-              if [ ! -L libdwarf/libelf.h ]; then
-                cd libdwarf; ln -s ${libelfdir}/include/libelf.h . ; ln -s ${libelfdir}/include/libelf . ; cd ../
+              if [ ! -L src/lib/libdwarf/libelf.h ]; then
+                pushd src/lib/libdwarf; ln -s ${libelfdir}/include/libelf.h . ; ln -s ${libelfdir}/include/libelf . ; popd;
               fi
               if [ ! -L ${dwarfdir}/lib/libelf.so ]; then
                 if [ -r ${libelfdir}/lib64/libelf.so ]; then
