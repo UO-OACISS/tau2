@@ -16,8 +16,8 @@ TAU_MAKEFILE ?=../../../include/Makefile
 
 include $(TAU_MAKEFILE)
 
-CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optShared
-#CC		= mpicc
+#CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optShared
+CC		= mpicc -DTAU_MPI
 
 PRINT	      	= pr
 

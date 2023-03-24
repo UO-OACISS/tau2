@@ -2018,7 +2018,7 @@ char *** argv;
       fprintf(stderr, "ERROR!!!  MPI implementation doesn't provide threaded support.\nADIOS2 output from TAU likely won't work.\n");
     }
 #else
-    TAU_VERBOSE("%s Initializing with PMPI_Init_thread\n", __func__);
+    TAU_VERBOSE("%s Initializing with PMPI_Init\n", __func__);
     returnVal = PMPI_Init( argc, argv );
 #endif
 

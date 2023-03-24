@@ -1,9 +1,8 @@
-This example shows how to use the PAPI component plugin to read from all 
-available PAPI components (except for perf_event).
 
-Configure PAPI with component support - as many or as few as you like
-(i.e. --with-components="rapl nvml lmsensors net")
+This example shows how to use the monitoring plugin on Summit to capture a
+timeline of memory and cpu/gpu utilization data from a sample code.
 
-Configure TAU with:
-./configure -pthread -bfd=download -mpi -papi=/usr/local/packages/papi/5.7.0
-
+To run with applications built with nvhpc, see the jobscript_nvhpc example.
+To run with applications built with gcc, see the jobscript_gcc example.
+Make sure that with your appliation, you use the provided tau_monitoring.json
+file, as-is.

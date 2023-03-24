@@ -1,0 +1,31 @@
+#!/bin/bash
+# Begin LSF Directives
+#BSUB -P FUS123
+#BSUB -W 0:10
+#BSUB -nnodes 1
+#BSUB -q debug
+#BSUB -J TAUtest
+#BSUB -u khuck@cs.uoregon.edu
+
+module reset
+module load gcc/9.1.0
+#module load binutils otf2 papi
+module unload darshan-runtime
+module list
+
+exedir=/gpfs/alpine/world-shared/phy122/lib/install/summit/tau2/2023.03.17/examples/plugin/monitoring
+
+cd ${exedir}
+date
+
+export OMP_NUM_THREADS=7
+export TAU_PROFILE=0
+export PROFILEDIR=`pwd` # where you want the monitoring.csv file to go
+export PATH=/gpfs/alpine/world-shared/phy122/lib/install/summit/tau2/2023.03.17/ibm64linux/bin:$PATH
+
+cmd="tau_exec -vv -T gcc9.1.0-mpi-pthread-cupti -monitoring"
+
+jsrun -n 6 -r 6 -a 1 -g 1 -c 7 -b rs \
+${cmd} \
+./matmult
+
