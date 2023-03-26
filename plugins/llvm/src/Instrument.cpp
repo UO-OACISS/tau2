@@ -192,8 +192,10 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
  class Tools{
 
  public:
+     using CallAndName = std::pair<CallBase *, StringRef>;
+     
      StringSet<> funcsOfInterest;
-    StringSet<> funcsExcl;
+     StringSet<> funcsExcl;
     //StringSet<> funcsOfInterestRegex;
     //StringSet<> funcsExclRegex;
     std::vector<std::regex> funcsOfInterestRegex;
@@ -441,92 +443,105 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
      * \param calls Vector to add to, if the CallInst should be profiled
      */
 
-  bool maybeSaveForProfiling( Function& call ){
-     /* In this implementation, we enter the function from its call somewhere in the program  */
-    StringRef callName = call.getName();
-    std::string filename = getFilename( call );
-    StringRef prettycallName = normalize_name(callName);
-    unsigned instructionCount = call.getInstructionCount();
-    auto *module = call.getParent();
-    const std::string triple = module->getTargetTriple();
-    bool is_host_func = triple.compare(std::string("amdgcn-amd-amdhsa")); // returns 0 if it matches
-    // Compare similarly for other GPUs. If it matches, do not instrument it.
+     //  bool maybeSaveForProfiling( Function& call ){
+     bool maybeSaveForProfiling(CallBase *call, std::vector<CallAndName> &calls) {
+     /* In a previous implementation, we entered the function from its call somewhere in the program.
+        Now we are wrapping the call with the instrumentaiton instructions.  */
+        if( auto fn = call->getCalledFunction() ){
+            StringRef callName = fn->getName();
+            std::string filename = getFilename( *fn );
+            StringRef prettycallName = normalize_name(callName);
+            unsigned instructionCount = fn->getInstructionCount();
+            auto *module = fn->getParent();
+            const std::string triple = module->getTargetTriple();
+            bool is_host_func = triple.compare(std::string("amdgcn-amd-amdhsa")); // returns 0 if it matches
+            // Compare similarly for other GPUs. If it matches, do not instrument it.
+            
+            /* This big test was explanded for readability */
+            bool instrumentHere = false;
+            if (is_host_func == false) {
+                //errs() << "Name " << prettycallName << " GPU bound, instrument = "<<is_host_func<<"\n";
+                return false;
+            }
 
-	/* This big test was explanded for readability */
-	bool instrumentHere = false;
-    if (is_host_func == false) {
-      //errs() << "Name " << prettycallName << " GPU bound, instrument = "<<is_host_func<<"\n";
-      return false;
-    }
-    // if the function name is empty, skip it
-    if( prettycallName == "" ) return false;
-    // if the instruction count is small, skip it
-    if( instructionCount < minInstructionCount && prettycallName.compare("main") != 0) {
-        if (verbose) errs() << "Skipping small function '"
-            << prettycallName.str() << "' with only "
-            << instructionCount << " instructions.\n";
+            // if the function name is empty, skip it
+            if( prettycallName == "" ) return false;
+            // if the instruction count is small, skip it
+            if( instructionCount < minInstructionCount && prettycallName.compare("main") != 0) {
+                if (verbose) errs() << "Skipping small function '"
+                                    << prettycallName.str() << "' with only "
+                                    << instructionCount << " instructions.\n";
+                return false;
+            }
+
+            /* Are we including or excluding some files? */
+            if( (filesIncl.size() + filesInclRegex.size() + filesExcl.size() + filesExclRegex.size() == 0 ) ){
+                instrumentHere = true;
+            } else {                
+                /* Yes: are we in a file where we are instrumenting? */
+                if( ( ( filesIncl.size() + filesInclRegex.size() == 0) // did not specify a list of files to instrument -> instrument them all, except the excluded ones
+                      || ( filesIncl.count( filename ) > 0
+                           || regexFits( filename, filesInclRegex ) ) )
+                    && !( filesExcl.count( filename ) > 0
+                          || regexFits( filename, filesExclRegex ) ) ){
+                    instrumentHere = true;
+                }
+            }
+            
+            // Not doing this file?  Skip it.
+            if (!instrumentHere) {
+                return false;
+            }
+            // Nothing included/excluded?  Instrument it.
+            if (funcsOfInterest.size() == 0 &&
+                funcsExcl.size() == 0 &&
+                funcsOfInterestRegex.size() == 0 &&
+                funcsExclRegex.size() == 0) {
+                if (verbose) errs() << "include everyone, therefore include " << prettycallName << "\n";
+                calls.push_back( { call, prettycallName } );
+                return true;
+            }
+            
+            // simple cases...
+            if (verbose) errs() << "Looking up '" << prettycallName.str() << "'...\n";
+            
+            // Is this function explicitly included?  Instrument it.
+            if (funcsOfInterest.size() > 0 && funcsOfInterest.count( prettycallName ) > 0) {
+                if (verbose) errs() << "include Match\n";
+                calls.push_back( { call, prettycallName } );
+                return true;
+            }
+            // Is this function explicitly excluded?  Skip it.
+            if (funcsExcl.size() > 0 && funcsExcl.count( prettycallName ) > 0) {
+                if (verbose) errs() << "exclude Match\n";
+                return false;
+            }
+            
+            // Ok, now it gets complicated...
+            
+            if (funcsExclRegex.size() > 0 && regexFits( prettycallName, funcsExclRegex, true )) {
+                if (verbose) errs() << "excluded as regex!\n";
+                return false;
+            }
+            
+            if (funcsOfInterestRegex.size() > 0 && regexFits ( prettycallName, funcsOfInterestRegex, true )) {
+                if (verbose) errs() << "included as regex!\n";
+                calls.push_back( { call, prettycallName } );
+                return true;
+            }
+            
+            if (funcsOfInterest.size() == 0 && funcsOfInterestRegex.size() == 0) {
+                // finally, if we didn't match to anything, and there weren't any inclusion
+                // conditions, return true by default.
+                if (verbose) errs() << "Default - Returning true!\n";
+                calls.push_back( { call, prettycallName } );
+                return true;
+            }
+        }
+        
+        // all other cases, return false
+        if (verbose) errs() << "Default - Returning false!\n";
         return false;
-    }
-
-	/* Are we including or excluding some files? */
-	if( (filesIncl.size() + filesInclRegex.size() + filesExcl.size() + filesExclRegex.size() == 0 ) ){
-	  instrumentHere = true;
-	} else {
-        /* Yes: are we in a file where we are instrumenting? */
-        if( ( ( filesIncl.size() + filesInclRegex.size() == 0) // did not specify a list of files to instrument -> instrument them all, except the excluded ones
-              || ( filesIncl.count( filename ) > 0
-                   || regexFits( filename, filesInclRegex ) ) )
-            && !( filesExcl.count( filename )
-                  || regexFits( filename, filesExclRegex ) ) ){
-            instrumentHere = true;
-	  }
-	}
-
-    // Not doing this file?  Skip it.
-    if (!instrumentHere) { return false; }
-
-    // Nothing included/excluded?  Instrument it.
-    if (funcsOfInterest.size() == 0 &&
-        funcsExcl.size() == 0 &&
-        funcsOfInterestRegex.size() == 0 &&
-        funcsExclRegex.size() == 0) { return true; }
-
-    // simple cases...
-    if (verbose) errs() << "Looking up '" << prettycallName.str() << "'...\n";
-
-    // Is this function explicitly included?  Instrument it.
-	if (funcsOfInterest.size() > 0 && funcsOfInterest.count( prettycallName ) > 0) {
-        if (verbose) errs() << "include Match\n";
-        return true;
-    }
-    // Is this function explicitly excluded?  Skip it.
-	if (funcsExcl.size() > 0 && funcsExcl.count( prettycallName ) > 0) {
-        if (verbose) errs() << "exclude Match\n";
-        return false;
-    }
-
-    // Ok, now it gets complicated...
-
-    if (funcsExclRegex.size() > 0 && regexFits( prettycallName, funcsExclRegex, true )) {
-        if (verbose) errs() << "excluded as regex!\n";
-        return false;
-    }
-
-	if (funcsOfInterestRegex.size() > 0 && regexFits ( prettycallName, funcsOfInterestRegex, true )) {
-        if (verbose) errs() << "included as regex!\n";
-        return true;
-    }
-
-    if (funcsOfInterest.size() == 0 && funcsOfInterestRegex.size() == 0) {
-        // finally, if we didn't match to anything, and there weren't any inclusion
-        // conditions, return true by default.
-        if (verbose) errs() << "Default - Returning true!\n";
-        return true;
-    }
-
-    // all other cases, return false
-    if (verbose) errs() << "Default - Returning false!\n";
-	return false;
   }
 
     /*!
@@ -562,7 +577,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
      * \return False if no new instructions were added (only when calls is empty),
      *  True otherwise
      */
-    bool addInstrumentation( Function &func) {
+     bool addInstrumentation( std::vector<CallAndName> &calls, Function &func ) {
 
       // Declare and get handles to the runtime profiling functions
       auto &context = func.getContext();
@@ -584,7 +599,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
         shorter.resize(77);
         shorter.resize(80, '.');
       }
-      if (verbose) errs() << "Adding instrumentation in " << shorter << '\n';
+      if (verbose) errs() << "Instrumenting " << shorter << '\n';
       bool mutated = false; // TODO
 
       /* Add TAU init in main */
@@ -620,6 +635,32 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
       std::string filename = getFilename( func );
       std::string location( "[{" + getFilename( func ) + "} {" +  getLineAndCol( func ) + "}]" );
 
+      for (auto &pair : calls) {
+          auto *op = pair.first;
+          //          auto calleeName = pair.second;
+                    
+          IRBuilder<> builder(op);
+                    
+          // This is the recommended way of creating a string constant (to be used
+          // as an argument to runtime functions)
+          Value *strArg = builder.CreateGlobalStringPtr( ( prettyname + " " + location ).str() );
+          SmallVector<Value *, 1> args{strArg};
+          builder.CreateCall( onCallFunc, args );
+
+          // Set insert point to just after the CallInst
+          /* next non-debug instruction */
+          /* We can't just use  ++builder.GetInsertPoint() because of InvokeIns */
+          auto next = op->getNextNonDebugInstruction( /* true*/ );
+          if( next == nullptr ){ // we have reached the end of the bb
+              BasicBlock::iterator it( op );
+              next = &(*(it++));
+          }                
+          IRBuilder<> builder2( next );
+          builder2.CreateCall(onRetFunc, args);
+          
+          mutated = true;
+      }
+     
       // Insert instrumentation before the first instruction
       auto pi = inst_begin( &func );
       Instruction* i = &*pi;
@@ -660,7 +701,6 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 #else
     class Instrument :  public PassInfoMixin<Instrument>, public Tools  {
 #endif
-    using CallAndName = std::pair<CallInst *, StringRef>;
 
     static char ID; // Pass identification, replacement for typeid
 
@@ -750,11 +790,22 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
      */
 #if LEGACY_PM
    bool runOnFunction(Function &func) override {
-      bool modified = false;
+       std::vector<CallAndName> calls; // too big for a SmallVector
+       bool instru = false;
+       
+       for(BasicBlock &bb: func){
+           for(Instruction &i: bb){
 
-      bool instru = maybeSaveForProfiling( func );
-              
-      
+               if (auto *op = dyn_cast<CallInst>(&i)) {
+                   instru |= maybeSaveForProfiling( op, calls );
+               }
+               if (auto *op = dyn_cast<InvokeInst>(&i)) {
+                   instru |= maybeSaveForProfiling( op, calls );
+               }
+           }
+       }
+                   
+                       
       if( TauDryRun ) {
         // TODO: Fix this.
         // getName() doesn't seem to give a properly mangled name
@@ -763,24 +814,49 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 	errs() << pretty_name << " would be instrumented\n";*/
         return false; // Dry run does not modify anything
       }
-      if( instru ){
-          modified |= addInstrumentation( func );
-      }
-      return modified;
+       if( instru ){
+           return addInstrumentation( calls, func );
+       } else {
+           return false;
+       }
    }
 #else
+
+   bool runOnFunction( Function& func ){
+       std::vector<CallAndName> calls; // too big for a SmallVector
+       bool instru = false;
+       
+       for(BasicBlock &bb: func){
+           for(Instruction &i: bb){
+               
+               if( isa<CallInst>( &i ) ) {
+                   if( auto* op = dyn_cast<CallInst>( &i ) ){
+                       instru |= maybeSaveForProfiling( op, calls );
+                   }
+               }
+               
+               if( isa<InvokeInst>( &i )) {
+                   if( auto* op = dyn_cast<InvokeInst>( &i ) ){
+                       instru |= maybeSaveForProfiling( op, calls );
+                   }
+               }
+           }
+       }
+       if( TauDryRun ){
+           /* TODO */
+           return false; // Dry run does not modify anything
+       }
+       if( instru ){
+           return addInstrumentation( calls, func );
+       } else {
+           return false;
+       }
+   }
+
    PreservedAnalyses run(Module &module, ModuleAnalysisManager &) {
        bool modified = false;
        for (auto &func : module.getFunctionList()) {
-           bool instru = maybeSaveForProfiling( func );
-           
-           if( TauDryRun ) {
-               return PreservedAnalyses::all(); // Dry run does not modify anything
-           }
-           if( instru ){
-               modified |= addInstrumentation( func );
-           }
-           
+           modified |= runOnFunction( func );
        }            
        if( modified ){
            return PreservedAnalyses::none();
