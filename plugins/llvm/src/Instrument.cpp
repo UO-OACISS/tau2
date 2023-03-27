@@ -389,8 +389,9 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
        DISubprogram* s = call.getSubprogram();
        if( s != nullptr ){
            StringRef theFile = s->getFilename();
-           StringRef theDir = s->getDirectory();
-           filename = theDir.str() + "/" + theFile.str();
+           //           StringRef theDir = s->getDirectory();
+           //filename = theDir.str() + "/" + theFile.str();
+           filename = theFile.str();
        } else {
            auto pi = inst_begin( &call );
            Instruction* instruction = &*pi;
@@ -405,7 +406,8 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
             const llvm::DebugLoc &debugInfo = instruction->getDebugLoc();
 
             if( NULL != debugInfo ){ /* if compiled with -g */
-                filename = debugInfo->getDirectory().str() + "/" + debugInfo->getFilename().str();
+                //  filename = debugInfo->getDirectory().str() + "/" + debugInfo->getFilename().str();
+                filename = debugInfo->getFilename().str();
             } else {
                 filename = call.getParent()->getSourceFileName();
             }
