@@ -1000,7 +1000,7 @@ CuptiLayer40.o : CuptiLayer40.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
 TauStarPU.o: TauStarPU.cpp
-	$(CXX) $(CXXFLAGS)  $(BFDINCLUDE) -I$(TAU_STARPU_DIR)/include/starpu/1.3 $(TAU_CUDA_INCLUDE) -c $^
+	$(CXX) $(CXXFLAGS)  $(BFDINCLUDE) -c $^
 
 JVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
