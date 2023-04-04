@@ -11664,10 +11664,15 @@ if [ $otf = yes ] ; then
         echo "Error: No available OTF support. Library not found at $otflib."
         exit 1
     fi
-    if [ ! -d $otfinc ]
+    if [ "$otfinc" = "" ] || [ ! -d $otfinc ]
     then
+	if [ $scorep = yes ] ; then
+	echo "Warning: OTF support not detected with scorep. Disabling OTF support."
+	otf=no
+	else	
         echo "Error: No available OTF support. Headers not found at $otfinc."
         exit 1
+	fi
     fi
     if [ $ebs2otf = yes -a ! -f $otfinc/OTF_Version.h ] ; then
         echo "Error: OTF_Version.h cannot be found. EBS will not support this version of OTF."
@@ -11732,6 +11737,7 @@ if [ -d $otfdir/include/otf2 ]; then
     fi
 else
     if [ $otf = yes ] ; then
+	if [ -r $otfinc/otf.h ]; then
         fixmakeargs="$fixmakeargs OTF otfdir=$otfdir"
         if [ ! -d $otfdir/${architecture} -a -d $otfdir/src ] ; then
             fixmakeargs="$fixmakeargs OTFSRC"
@@ -11739,6 +11745,9 @@ else
         if [ -r $otfdir/lib/libopen-trace-format.a ]; then
             fixmakeargs="$fixmakeargs OTFLIB_LONGNAME"
         fi
+	else
+		echo "WARNING: OTF include file not found. Not using OTF."
+	fi
     fi
 fi
 
