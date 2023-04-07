@@ -1042,7 +1042,11 @@ double Tau_max_RSS(void)
     size_t bytes = TauAllocation::BytesAllocated() - TauAllocation::BytesDeallocated();
     return (double)bytes / 1024.0;
   } else {
-#if defined(HAVE_MALLINFO)
+#if defined(HAVE_MALLINFO_DISABLED)
+    // this doesn't work when the system has more than 4GB memory.
+    // the components in the mallinfo structure are ints, and can't
+    // store the total number of bytes above 4GB without overflow.
+    // use the 'getrusage' method, instead - see below
     struct mallinfo minfo = mallinfo();
     double used = minfo.hblkhd + minfo.usmblks + minfo.uordblks;
     return used / 1024.0;

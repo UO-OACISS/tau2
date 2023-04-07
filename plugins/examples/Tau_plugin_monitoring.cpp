@@ -45,6 +45,10 @@ json configuration;
 #include "tau_nvml.hpp"
 #endif
 
+#ifdef TAU_ROCM_SMI
+#include "tau_rocm_smi.hpp"
+#endif
+
 #define ONE_BILLION  1e9
 #define ONE_MILLION  1e6
 #define ONE_BILLIONF 1000000000.0
@@ -113,6 +117,11 @@ const char * default_configuration = R"(
     "disable": true,
     "comment": "This will include only the utilization metrics.",
     "include": [".*utilization.*"]
+  }
+  "rsmi": {
+    "disable": false,
+    "comment": "This will include only the utilization metrics.",
+    "include": [".*Device Busy.*", ".*Memory Activity.*"]
   }
 }
 )";
@@ -243,6 +252,12 @@ static uint64_t periodic_index;
 tau::nvml::monitor& get_nvml_reader() {
     static tau::nvml::monitor nvml_reader;
     return nvml_reader;
+}
+#endif
+#ifdef TAU_ROCM_SMI
+tau::rsmi::monitor& get_rsmi_reader() {
+    static tau::rsmi::monitor rsmi_reader;
+    return rsmi_reader;
 }
 #endif
 
@@ -528,10 +543,12 @@ void initialize_papi_events(bool do_components) {
             continue;
         }
         /* Skip the nvml component, for non-CUPTI configurations */
-#ifndef CUPTI
+#ifndef TAU_ROCM_SMI
         if (strstr(comp_info->name, "nvml") != NULL) {
             continue;
         }
+#endif
+#ifndef CUPTI
         if (strstr(comp_info->name, "cuda") != NULL) {
             continue;
         }
@@ -1180,6 +1197,11 @@ void read_components(void) {
 #ifdef CUPTI
         if (include_component("nvml")) {
             get_nvml_reader().query();
+        }
+#endif
+#ifdef TAU_ROCM_SMI
+        if (include_component("rsmi")) {
+            get_rsmi_reader().query();
         }
 #endif
 
