@@ -1573,7 +1573,12 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
 
 #ifdef TAU_PAPI
     /* get ready to read metrics! */
-    initialize_papi_events(get_my_rank() == rank_getting_system_data);
+    if (configuration.count("PAPI metrics")) {
+        auto metrics = configuration["PAPI metrics"];
+        if (metrics.size() > 0) {
+            initialize_papi_events(get_my_rank() == rank_getting_system_data);
+        }
+    }
 #endif
 
     if (get_my_rank() == rank_getting_system_data) {
