@@ -146,6 +146,7 @@ void monitor::query(void) {
     static float previous_energy[100] = {0};
     static float previous_gfx_activity[100] = {0};
     static float previous_mem_activity[100] = {0};
+    static uint64_t previous_activity_timestamp[100] = {0L};
 
     for (uint32_t d : indexSet) {
         uint64_t power = 0;
@@ -350,6 +351,14 @@ void monitor::query(void) {
             auto tval = value;
             value = value - previous_gfx_activity[d];
             previous_gfx_activity[d] = tval;
+            /* OK, here's what happens. The utilization is captured every *millisecond*,
+             * so we have to get the number of milliseconds between queries and get the
+             * accumulated utilization, and divide it to get the average over the last
+             * time period. */
+            auto duration = timestamp - previous_activity_timestamp[d];
+            // convert the duration from nanoseconds to milliseconds
+            float ms = duration * 1.0e-6;
+            value = value / ms;
             // validation, dude
             value = value < 0.0 ? 0.0 : value;
             value = value > 100.0 ? 100.0 : value;
@@ -370,6 +379,14 @@ void monitor::query(void) {
             auto tval = value;
             value = value - previous_mem_activity[d];
             previous_mem_activity[d] = tval;
+            /* OK, here's what happens. The utilization is captured every *millisecond*,
+             * so we have to get the number of milliseconds between queries and get the
+             * accumulated utilization, and divide it to get the average over the last
+             * time period. */
+            auto duration = timestamp - previous_activity_timestamp[d];
+            // convert the duration from nanoseconds to milliseconds
+            float ms = duration * 1.0e-6;
+            value = value / ms;
             // validation, dude
             value = value < 0.0 ? 0.0 : value;
             value = value > 100.0 ? 100.0 : value;
@@ -378,6 +395,7 @@ void monitor::query(void) {
                 write_scatterplot_point(tmp.c_str(), value);
             }
         }
+        previous_activity_timestamp[d] = timestamp;
         ss.str("");
 
 		// This function retrieves the gpu metrics information.
