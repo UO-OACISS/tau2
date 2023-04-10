@@ -1004,6 +1004,21 @@ extern "C" void Tau_stop_all_timers(int tid)
   in_here = false;
 }
 
+
+#ifdef TAU_TRACK_IDLE_THREADS
+//Prevent Profile::Stop from internally stopping all threads when using OpenMP
+//if TAU is already closing all threads
+static bool thread_local tauStoppingAllThreads = false;
+
+//Prevent Profile::Stop from internally stopping all threads when using OpenMP
+//if TAU is already closing all threads
+extern "C" bool Tau_check_Stopping_All_Threads(){
+        return tauStoppingAllThreads;
+}
+
+#endif /* TAU_TRACK_IDLE_THREADS */
+
+
 inline void Tau_profile_exit_threads(int begin_index)
 {
   if(!TheSafeToDumpData()) {
@@ -1018,6 +1033,13 @@ inline void Tau_profile_exit_threads(int begin_index)
   //Tau_disable_collector_api();
 #endif
 
+//Prevent Profile::Stop from internally stopping all threads when using OpenMP
+//if TAU is already closing all threads
+
+#ifdef TAU_TRACK_IDLE_THREADS
+  if(begin_index == 0)
+      tauStoppingAllThreads = true;
+#endif /* TAU_TRACK_IDLE_THREADS */
 #ifdef TAU_ANDROID
   bool su = JNIThreadLayer::IsMgmtThread();
 #endif
