@@ -117,7 +117,7 @@ const char * default_configuration = R"(
     "disable": true,
     "comment": "This will include only the utilization metrics.",
     "include": [".*utilization.*"]
-  }
+  },
   "rsmi": {
     "disable": false,
     "comment": "This will include only the utilization metrics.",
