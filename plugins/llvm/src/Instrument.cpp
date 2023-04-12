@@ -639,13 +639,13 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 
       for (auto &pair : calls) {
           auto *op = pair.first;
-          //          auto calleeName = pair.second;
+          auto calleeName = pair.second;
                     
           IRBuilder<> builder(op);
                     
           // This is the recommended way of creating a string constant (to be used
           // as an argument to runtime functions)
-          Value *strArg = builder.CreateGlobalStringPtr( ( prettyname + " " + location ).str() );
+          Value *strArg = builder.CreateGlobalStringPtr( ( calleeName + " " + location ).str() );
           SmallVector<Value *, 1> args{strArg};
           builder.CreateCall( onCallFunc, args );
 
@@ -663,34 +663,6 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
           mutated = true;
       }
      
-      // Insert instrumentation before the first instruction
-      auto pi = inst_begin( &func );
-      Instruction* i = &*pi;
-      /* Here we can have a null pointer if the function is empty.
-         By default, this should not happen because the default threshold for the instruction
-         count is > 0. But if we set it to 0, pi is nullptr.
-         In this case, do not do what is next because it does not make any sense 
-         to instrument here. */
-      if( nullptr != i ){
-          IRBuilder<> before( i );
-          
-          // This is the recommended way of creating a string constant (to be used
-          // as an argument to runtime functions)
-          Value *strArg = before.CreateGlobalStringPtr( ( prettyname + " " + location ).str() );
-          SmallVector<Value *, 1> args{strArg};
-          before.CreateCall( onCallFunc, args );
-          mutated = true;
-          
-          // We need to find all the exit points for this function
-          
-          for( inst_iterator I = inst_begin( func ), E = inst_end( func ); I != E; ++I){
-              Instruction* e = &*I;
-              if( isa<ReturnInst>( e ) ) {
-                  IRBuilder<> fina( e );
-                  fina.CreateCall( onRetFunc, args );
-              }
-          }
-      }
       return mutated;
     }
  };
@@ -844,11 +816,20 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
                }
            }
        }
-       if( TauDryRun ){
-           /* TODO */
+       if( TauDryRun && instru ){           
+           auto pretty_name = normalize_name(func.getName());
+           if(pretty_name.empty()) pretty_name = func.getName();
+           
+           errs() << "In function " << pretty_name
+                  << "\nThe following would be instrumented:\n";
+           for (auto &pair : calls) {
+               errs() <<  pair.second << '\n';
+           }
+           errs() << '\n';
            return false; // Dry run does not modify anything
        }
        if( instru ){
+           errs() << "Instrument " << calls.front().second << "\n";
            return addInstrumentation( calls, func );
        } else {
            return false;
