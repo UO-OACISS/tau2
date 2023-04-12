@@ -436,6 +436,21 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 
        return loc;
    }
+     
+   std::string getLineAndCol( CallBase* call ){
+       std::string loc;
+
+       const DebugLoc &location = call->getDebugLoc();
+       if( location ) {
+           int line = location.getLine();
+           loc = std::to_string( line );
+       } else {
+           // No location metadata available
+           loc = "0,0";
+       }
+
+       return loc;
+   }
 
     /*!
      *  Inspect the given CallInst and, if it should be profiled, add it
@@ -585,6 +600,7 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
       auto &context = func.getContext();
       auto *module = func.getParent();
       StringRef prettyname = normalize_name(func.getName());
+      std::string filename = getFilename( func ); // the file where the calls we are instrumenting are happening
 #if( LLVM_VERSION_MAJOR <= 8 )
       Constant
         *onCallFunc = getVoidFunc(TauStartFunc, context, module),
@@ -634,13 +650,13 @@ static FunctionCallee getVoidFunc(StringRef funcname, LLVMContext &context, Modu
 
       /* Add regular TAU calls */
 
-      std::string filename = getFilename( func );
-      std::string location( "[{" + getFilename( func ) + "} {" +  getLineAndCol( func ) + "}]" );
-
       for (auto &pair : calls) {
           auto *op = pair.first;
           auto calleeName = pair.second;
-                    
+          auto called = op->getCalledFunction(); // getFilename( called ) returns the file where the function is defined
+          
+          std::string location( "[{" + filename + "} {" +  getLineAndCol( op ) + "}]" );
+
           IRBuilder<> builder(op);
                     
           // This is the recommended way of creating a string constant (to be used
