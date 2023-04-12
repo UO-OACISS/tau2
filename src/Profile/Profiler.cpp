@@ -101,6 +101,11 @@ extern "C" void  __real_shmem_finalize() ;
 #endif /* TAU_SHMEM */
 extern "C" int Tau_get_usesSHMEM();
 
+
+#ifdef TAU_TRACK_IDLE_THREADS
+extern "C" bool Tau_check_Stopping_All_Threads();
+#endif /* TAU_TRACK_IDLE_THREADS */
+
 using namespace std;
 using namespace tau;
 
@@ -816,7 +821,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /*TAUKTAU */
 
 #ifdef TAU_TRACK_IDLE_THREADS /* Check if we need to shut off .TAU applications on other tids */
-        if (tid == 0) {
+	//Disable if already stopping all threads
+        if ((tid == 0) && (!Tau_check_Stopping_All_Threads())) {
           int i;
           for (i = 1; i < TheProfilerThreadList().size(); i++) {
             /* for all other threads */

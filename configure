@@ -1381,7 +1381,7 @@ for arg in "$@"; do
 
         -cc=*)
             myarg=`echo $arg | sed 's/-cc=//'`
-            if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = gcc-5 -o $myarg = gcc-6 -o $myarg = gcc-7 -o $myarg = gcc-8 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = icx -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = hcc -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc -o $myarg = armclang  -o $myarg = ncc -o $myarg = hipcc -o $myarg = nvc -o $myarg = amdclang ] || [[ $myarg == "gcc-"* ]] 
+            if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = gcc-5 -o $myarg = gcc-6 -o $myarg = gcc-7 -o $myarg = gcc-8 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = icx -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = hcc -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc -o $myarg = armclang  -o $myarg = ncc -o $myarg = hipcc -o $myarg = nvc -o $myarg = amdclang ] || [[ $myarg == "gcc-"* ]]
             then
                 c_compiler=$myarg
                 c_compiler_specified=yes
@@ -1411,7 +1411,7 @@ for arg in "$@"; do
 
         -c++=*)
             myarg=`echo $arg | sed 's/-c++=//'`
-            if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = g++-5 -o $myarg = g++-6 -o $myarg = g++-7 -o $myarg = g++-8 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = icpx -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx -o $myarg = mpic++ -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiicpx -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = mpc_icpx -o $myarg = clang++ -o $myarg = hcc -o $myarg = hipcc -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx  -o $myarg = armclang++ -o $myarg = nc++  -o $myarg = hipcc -o $myarg = nvc++ -o $myarg = amdclang++ ] || [[ $myarg == "g++-"* ]] 
+            if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = g++-5 -o $myarg = g++-6 -o $myarg = g++-7 -o $myarg = g++-8 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = icpx -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx -o $myarg = mpic++ -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiicpx -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = mpc_icpx -o $myarg = clang++ -o $myarg = hcc -o $myarg = hipcc -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx  -o $myarg = armclang++ -o $myarg = nc++  -o $myarg = hipcc -o $myarg = nvc++ -o $myarg = amdclang++ ] || [[ $myarg == "g++-"* ]]
             then
                 cxx_compiler=$myarg
                 cxx_compiler_specified=yes
@@ -2617,7 +2617,7 @@ for arg in "$@"; do
         pthread=yes
             shift
             ;;
-	
+
 	-python3)
             pythonbin=`which python3 | sed 's,[^/]*$,,'`
 	    python=yes
@@ -3003,6 +3003,7 @@ for arg in "$@"; do
             rocprofiler=yes
             tauoptions="${tauoptions}-rocm"
             pthread=yes
+            fixmakeargs="$fixmakeargs ROCMSMI"
             shift
             ;;
 
@@ -3019,6 +3020,7 @@ for arg in "$@"; do
             rocprofiler=yes
             tauoptions="${tauoptions}-rocm"
             pthread=yes
+            fixmakeargs="$fixmakeargs ROCMSMI"
             shift
             ;;
 
@@ -9198,11 +9200,11 @@ if $mpicompiler tools/src/tests/mpistatus.c $mpiwarnings $orig_useropt $mpi_incl
     echo "MPI_Status f2c/c2f found..."
 else
 	# In mvapich2 3.0a MPI_Status_f2c is only available as PMPI_Status_f2c. We need to check if -c works
-	# if linking fails. 
+	# if linking fails.
     if $mpicompiler -c tools/src/tests/mpistatus.c $mpiwarnings $orig_useropt $mpiinc  1> /dev/null 2>&1 ; then
       echo "TAU: Using PMPI_Status_f2c/c2f instead of MPI_Status_f2c/c2f"
       fixmakeargs="$fixmakeargs USE_PMPI_STATUS_F2C"
-    else	      
+    else
       echo "MPI_Status c2f/f2c functions are needed"
       fixmakeargs="$fixmakeargs MPINEEDSTATUSCONV"
     fi
@@ -11676,10 +11678,15 @@ if [ $otf = yes ] ; then
         echo "Error: No available OTF support. Library not found at $otflib."
         exit 1
     fi
-    if [ ! -d $otfinc ]
+    if [ "$otfinc" = "" ] || [ ! -d $otfinc ]
     then
+	if [ $scorep = yes ] ; then
+	echo "Warning: OTF support not detected with scorep. Disabling OTF support."
+	otf=no
+	else
         echo "Error: No available OTF support. Headers not found at $otfinc."
         exit 1
+	fi
     fi
     if [ $ebs2otf = yes -a ! -f $otfinc/OTF_Version.h ] ; then
         echo "Error: OTF_Version.h cannot be found. EBS will not support this version of OTF."
@@ -11744,6 +11751,7 @@ if [ -d $otfdir/include/otf2 ]; then
     fi
 else
     if [ $otf = yes ] ; then
+	if [ -r $otfinc/otf.h ]; then
         fixmakeargs="$fixmakeargs OTF otfdir=$otfdir"
         if [ ! -d $otfdir/${architecture} -a -d $otfdir/src ] ; then
             fixmakeargs="$fixmakeargs OTFSRC"
@@ -11751,6 +11759,9 @@ else
         if [ -r $otfdir/lib/libopen-trace-format.a ]; then
             fixmakeargs="$fixmakeargs OTFLIB_LONGNAME"
         fi
+	else
+		echo "WARNING: OTF include file not found. Not using OTF."
+	fi
     fi
 fi
 

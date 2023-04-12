@@ -1137,6 +1137,10 @@ case $1 in
         echo "NOTE: Using the TAU's ROCm Options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     ROCMSMI)
+        echo "NOTE: Using the TAU's ROCm SMI Options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      PHIPROF)
         echo "NOTE: Using TAU's Phiprof options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
