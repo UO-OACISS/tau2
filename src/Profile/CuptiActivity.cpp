@@ -163,11 +163,6 @@ struct CADataList: vector<CuptiActivityData*>{
          //printf("Creating CADataList at %p\n", this);
       }
      virtual ~CADataList(){
-         //printf("Destroying CADataList at %p, with size %ld\n", this, this->size());
-        if (TauEnv_get_cuda_track_sass() && TauEnv_get_cuda_csv_output()) {
-            write_sass_output();
-         }
-
          Tau_destructor_trigger();
      }
 };
