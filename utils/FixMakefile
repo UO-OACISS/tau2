@@ -304,7 +304,10 @@ case $1 in
 	 llvm_cxx=`echo $1 | sed -e 's/^llvm_cxx=//' -e 's/#/ /g'`
 	 echo "s,^TAU_LLVM_CXX=.*$,TAU_LLVM_CXX=$llvm_cxx,g" >> $sedout
 	 ;;
-
+     llvm_cc=*)
+	 llvm_cc=`echo $1 | sed -e 's/^llvm_cc=//' -e 's/#/ /g'`
+	 echo "s,^TAU_LLVM_CC=.*$,TAU_LLVM_CC=$llvm_cc,g" >> $sedout
+	 ;;
      sicortexlink=*)
         sicortexlink=`echo $1 | sed -e 's/^sicortexlink=//' -e 's/#/ /g'`
 	echo "s@^SICORTEXLINK=.*\$@SICORTEXLINK=$sicortexlink@g" >> $sedout
@@ -1485,6 +1488,9 @@ case $1 in
          echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      LLVM_CXX)
+         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     LLVM_CC)
          echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
     CRAYX1CC)
