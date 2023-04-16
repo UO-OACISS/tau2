@@ -831,7 +831,7 @@ NB: this is obtained from debugging information, and therefore needs
             if (str == NULL) {
                 return default_value;
             }
-            static char strbuf[128];
+            static char strbuf[129];
             char *ptr = strbuf;
             strncpy(strbuf, str, 128);
             while (*ptr) {

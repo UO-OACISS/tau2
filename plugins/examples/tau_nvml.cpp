@@ -80,7 +80,7 @@ bool include_device(uint32_t index) {
     int dev_per_proc{
         configuration.count("devices_per_process") > 0 ?
         (int)(configuration["devices_per_process"]) : 1};
-    uint32_t my_device{get_my_rank() % dev_per_node};
+    uint32_t my_device{(uint32_t)(get_my_rank() % dev_per_node)};
     //TAU_VERBOSE("Dev/node: %d, dev/proc: %d, my_device: %lu, index: %lu\n", dev_per_node, dev_per_proc, my_device, index);
     if(my_device == index) return true;
     /* need to figure out the method for handling more than 1 device per process */
@@ -401,7 +401,7 @@ void monitor::query(void) {
                 std::stringstream ss;
                 ss << "GPU: Device " << d << " NvLink Throughput Data TX";
                 std::string tmp{ss.str()};
-                double value = convertValue(values[4]);
+                double value = convertValue(values[2]);
                 if(include_event("nvml", tmp.c_str())) {
                     Tau_trigger_userevent(tmp.c_str(), value);
                     write_scatterplot_point(tmp.c_str(), value);
@@ -412,7 +412,7 @@ void monitor::query(void) {
                 std::stringstream ss;
                 ss << "GPU: Device " << d << " NvLink Throughput Data RX";
                 std::string tmp{ss.str()};
-                double value = convertValue(values[5]);
+                double value = convertValue(values[3]);
                 if(include_event("nvml", tmp.c_str())) {
                     Tau_trigger_userevent(tmp.c_str(), value);
                     write_scatterplot_point(tmp.c_str(), value);
@@ -423,7 +423,7 @@ void monitor::query(void) {
                 std::stringstream ss;
                 ss << "GPU: Device " << d << " NvLink Throughput Raw TX";
                 std::string tmp{ss.str()};
-                double value = convertValue(values[6]);
+                double value = convertValue(values[4]);
                 if(include_event("nvml", tmp.c_str())) {
                     Tau_trigger_userevent(tmp.c_str(), value);
                     write_scatterplot_point(tmp.c_str(), value);
@@ -434,7 +434,7 @@ void monitor::query(void) {
                 std::stringstream ss;
                 ss << "GPU: Device " << d << " NvLink Throughput Raw RX";
                 std::string tmp{ss.str()};
-                double value = convertValue(values[7]);
+                double value = convertValue(values[5]);
                 if(include_event("nvml", tmp.c_str())) {
                     Tau_trigger_userevent(tmp.c_str(), value);
                     write_scatterplot_point(tmp.c_str(), value);

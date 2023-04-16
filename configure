@@ -1731,6 +1731,12 @@ for arg in "$@"; do
             shift
             ;;
 
+        -llvm_cc=*)
+            llvm_cc=`echo $arg | sed -e 's/-llvm_cc=//'`
+            fixmakeargs="$fixmakeargs llvm_cc=$llvm_cc LLVM_CC"
+            shift
+            ;;
+
 
         -likwid=download*)
             echo "Downloading LIKWID..."
@@ -5698,8 +5704,11 @@ if [ $build_llvm_plugin = yes ]; then
     fi
     if [ "x$llvm_cxx" = "x" ]; then
       llvm_cxx=`which g++ `
+      llvm_cc=`which gcc `
       echo "TAU: Using -llvm_cxx=$llvm_cxx as the compiler to build the TAU LLVM selective instrumentation plugin. "
+      echo "TAU: Using -llvm_cc=$llvm_cc as the compiler to build the TAU LLVM selective instrumentation plugin. "
       fixmakeargs="$fixmakeargs llvm_cxx=$llvm_cxx LLVM_CXX"
+      fixmakeargs="$fixmakeargs llvm_cc=$llvm_cc LLVM_CC"
     fi
   fi
 fi
