@@ -40,7 +40,7 @@
 #include "llvm/IR/InstIterator.h"
 #include "llvm/Pass.h"
 
-#include "llvm/ADT/Triple.h"
+//#include "llvm/ADT/Triple.h"
 
 #include <llvm/IR/DebugLoc.h>
 #include <llvm/IR/DebugInfoMetadata.h>
