@@ -3139,7 +3139,7 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	    uint32_t contextId = fRes->contextId;
 	    uint32_t functionIndex = fRes->functionIndex;
 	    uint32_t id = fRes->id;
-	    const char* fname = fRes->name;
+	    const char* fname = Tau_demangle_name(fRes->name);
 	    fprintf(fp, "%u,%u,%u,%s\n", functionIndex, id, contextId, fname);
 	}
 	fclose(fp);
