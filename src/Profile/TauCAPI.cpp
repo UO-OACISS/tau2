@@ -412,6 +412,7 @@ static void reportEntryExit (bool entry, FunctionInfo *caller, int tid) {
     TAU_VERBOSE("%06u %03d %02d %s%s: %s\n", RtsLayer::getTid(), tid, position, tabs.c_str(),
         (entry ? "Entry" : "Exit "), caller->GetName());
     fflush(stderr);
+    //Tau_print_simple_backtrace(tid);
 }
 #endif
 
@@ -1172,9 +1173,28 @@ extern "C" void Tau_set_thread(int threadId) {
   cerr << "TAU: ERROR: Unsafe and deprecated call to TAU_SET_THREAD!" << endl;
 }
 
+/* Helper functions for fixing threading */
+#if (!defined(TAU_WINDOWS))
+#include <sys/syscall.h>
+#define gettid() syscall(SYS_gettid)
+bool validate_thread() {
+    long pid = getpid();
+    long tid = gettid();
+    int tau_tid = RtsLayer::myThread();
+    if (tau_tid == 0 && pid != tid) {
+        TAU_VERBOSE("Registering thread! %ld != %ld, so need new thread\n", pid, tid);
+        Tau_register_thread();
+    }
+    return true;
+}
+#else
+bool validate_thread() {} // do nothing
+#endif
+
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_get_thread(void) {
   TauInternalFunctionGuard protects_this_function;
+  thread_local static bool do_once = validate_thread();
   return RtsLayer::myThread();
 }
 
