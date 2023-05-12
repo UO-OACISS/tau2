@@ -188,6 +188,51 @@ namespace {
         return module->getOrInsertFunction(funcname, funcTy);
     }
 
+    #if( LLVM_VERSION_MAJOR <= 8 )
+    static Constant *getVoidFunc_init(StringRef funcname, LLVMContext &context, Module *module)
+#else
+    static FunctionCallee getVoidFunc_init(StringRef funcname, LLVMContext &context, Module *module)
+#endif // LLVM_VERSION_MAJOR <= 8
+    {
+        // Void return type
+        Type *retTy = Type::getVoidTy(context);
+
+        // First argument is an int (argc)
+        Type *argTy0 = Type::getInt32Ty(context);
+
+        // Second argument is an i8* pointer (argv) 
+        Type *argTy1 = Type::getInt8PtrTy(context);
+        
+        SmallVector<Type *, 2> paramTys{argTy0, argTy1};
+
+        // Third param to `get` is `isVarArg`.  It's not documented, but might have
+        // to do with variadic functions?
+        FunctionType *funcTy = FunctionType::get(retTy, paramTys, false);
+        return module->getOrInsertFunction(funcname, funcTy);
+    }
+    
+#if( LLVM_VERSION_MAJOR <= 8 )
+    static Constant *getVoidFunc_set(StringRef funcname, LLVMContext &context, Module *module)
+#else
+    static FunctionCallee getVoidFunc_set(StringRef funcname, LLVMContext &context, Module *module)
+#endif // LLVM_VERSION_MAJOR <= 8
+    {
+        // Void return type
+        Type *retTy = Type::getVoidTy(context);
+
+        // Takes only one argument of type int
+        Type *argTy0 = Type::getInt32Ty(context);
+
+        SmallVector<Type *, 1> paramTys{argTy0};
+
+        // Third param to `get` is `isVarArg`.  It's not documented, but might have
+        // to do with variadic functions?
+        FunctionType *funcTy = FunctionType::get(retTy, paramTys, false);
+        return module->getOrInsertFunction(funcname, funcTy);
+    }
+
+
+
 /* All the common methods and attributes go in there */
 
     class Tools {
@@ -396,9 +441,7 @@ NB: this is obtained from debugging information, and therefore needs
                 //filename = theDir.str() + "/" + theFile.str();
                 filename = theFile.str();
             } else {
-                auto pi = inst_begin( &call );
-                Instruction* instruction = &*pi;
-                if( nullptr == instruction ){
+                if( 0 ==  call.getInstructionCount() ){
                     /* We do not have the list of instruction of some functions,
                        such as functions defined in external libraries. In this case,
                        just return an empty string. The used might or might not want
@@ -406,7 +449,13 @@ NB: this is obtained from debugging information, and therefore needs
                        on information on the file the function is defined in. */
                     return "";
                 }
-                const llvm::DebugLoc &debugInfo = instruction->getDebugLoc();
+                auto pi = inst_begin( &call );
+                Instruction* instruction = &*pi;
+                if( nullptr == instruction ){
+                    /* This should already be handled by the test above, but this is safer */
+                    return "";
+                }
+               const llvm::DebugLoc &debugInfo = instruction->getDebugLoc();
 
                 if( NULL != debugInfo ){ /* if compiled with -g */
                     //  filename = debugInfo->getDirectory().str() + "/" + debugInfo->getFilename().str();
@@ -532,7 +581,8 @@ NB: this is obtained from debugging information, and therefore needs
 
         bool maybeSaveForProfiling( Function& fn ) {
             StringRef callName = fn.getName();
-            std::string filename = getFilename( fn );
+            errs() << callName << "\n";
+            std::string filename = getFilename( fn );            
             StringRef prettycallName = normalize_name(callName);
             unsigned instructionCount = fn.getInstructionCount();
             auto *module = fn.getParent();
@@ -637,8 +687,8 @@ NB: this is obtained from debugging information, and therefore needs
 
             if( 0 == prettyname.compare( "main" ) ){
                 if (verbose) errs() << "\tmain function: adding init\n";
-                auto initfun = getVoidFunc( TauInitFunc, context, module );
-                auto setnodefun = getVoidFunc( TauSetNodeFunc, context, module );
+                auto initfun = getVoidFunc_init( TauInitFunc, context, module );
+                auto setnodefun = getVoidFunc_set( TauSetNodeFunc, context, module );
 
                 auto beg = inst_begin( &func );
                 Instruction* b = &*beg;
