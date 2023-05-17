@@ -297,9 +297,9 @@ void Tau_plugin_adios2_init_adios(void) {
         MPI_Comm_rank(adios_comm, &adios_comm_rank);
         MPI_Comm_size(adios_comm, &adios_comm_size);
         if (config != nullptr) {
-            ad = adios2::ADIOS(config, adios_comm, adios2::DebugON);
+            ad = adios2::ADIOS(config, adios_comm);
         } else {
-            ad = adios2::ADIOS(adios_comm, adios2::DebugON);
+            ad = adios2::ADIOS(adios_comm);
         }
 #else
         if (config != nullptr) {

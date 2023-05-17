@@ -456,24 +456,24 @@ void adios::initialize() {
     if (thePluginOptions().env_config_file != "") {
         // if not using one file, we don't need MPI in ADIOS2
         if (!thePluginOptions().env_one_file) {
-            ad = adios2::ADIOS(thePluginOptions().env_config_file, true);
+            ad = adios2::ADIOS(thePluginOptions().env_config_file);
         } else {
-            ad = adios2::ADIOS(thePluginOptions().env_config_file, adios_comm, true);
+            ad = adios2::ADIOS(thePluginOptions().env_config_file, adios_comm);
         }
     } else {
         // if not using one file, we don't need MPI in ADIOS2
         if (!thePluginOptions().env_one_file) {
-            ad = adios2::ADIOS(true);
+            ad = adios2::ADIOS();
         } else {
-            ad = adios2::ADIOS(adios_comm, true);
+            ad = adios2::ADIOS(adios_comm);
         }
     }
 #else
     /** ADIOS class factory of IO class objects, DebugON is recommended */
     if (thePluginOptions().env_config_file != "") {
-        ad = adios2::ADIOS(thePluginOptions().env_config_file, true);
+        ad = adios2::ADIOS(thePluginOptions().env_config_file);
     } else {
-        ad = adios2::ADIOS(true);
+        ad = adios2::ADIOS();
     }
 #endif
     /*** IO class object: settings and factory of Settings: Variables,
