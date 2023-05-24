@@ -285,34 +285,25 @@ void FlushTracerRecord(rocprofiler_record_tracer_t tracer_record, rocprofiler_se
     TAU_VERBOSE(", Begin(%lu)", tracer_record.timestamps.begin.value);
     TAU_VERBOSE(", End(%lu)", tracer_record.timestamps.end.value);
     TAU_VERBOSE(", Correlation ID(%lu)", tracer_record.correlation_id.value);
-    /*cout << "Record [" << tracer_record.header.id.handle << "], Domain("
-                 << GetDomainName(tracer_record.domain) << "), Begin("
-                 << tracer_record.timestamps.begin.value << "), End("
-                 << tracer_record.timestamps.end.value << "), Correlation ID( "
-                 << tracer_record.correlation_id.value << ")";*/
+
     if (roctx_used){
       TAU_VERBOSE(", ROCTX ID( %lu )", roctx_id);
-     //cout << ", ROCTX ID(" << roctx_id << ")";
     }
     if (roctx_message.size() > 1){
       TAU_VERBOSE(", ROCTX Message( %s )", roctx_message.c_str());
-     //cout<< ", ROCTX Message(" << roctx_message << ")";
      task_name = roctx_message;
     }
     if (function_name.size() > 1){
       TAU_VERBOSE(", Function( %s )", function_name.c_str());
-     //cout << ", Function(" << function_name << ")";
      task_name = function_name;
     }
     if (kernel_name.size() > 1){
       TAU_VERBOSE(", Kernel name( %s )", kernel_name.c_str());
-     //cout << ", Kernel Name(" << kernel_name << ")";
      task_name = kernel_name;
     }
     if((function_name.size() > 1) && (kernel_name.size() > 1)){
       task_name = function_name+ " " + kernel_name;
     }
-    //cout << std::endl;
     TAU_VERBOSE("\n");
 
 
@@ -354,7 +345,6 @@ void FlushProfilerRecord(const rocprofiler_record_profiler_t *profiler_record,
   }
   queueid = profiler_record->queue_id.handle;
   taskid = Tau_get_initialized_queues(queueid);
-  //printf("profiler_record taskid %d\n", taskid);
 
   if (taskid == -1) { // not initialized
     TAU_CREATE_TASK(taskid);
@@ -377,10 +367,10 @@ void FlushProfilerRecord(const rocprofiler_record_profiler_t *profiler_record,
     Tau_add_metadata_for_task("ROCM_THREAD_ID",
                               profiler_record->thread_id.value, taskid);
   }
-  //printf("FlushProfilerRecord %s %s\n", kernel_name_c, kernel_name_dem.c_str());
+  
   TAU_VERBOSE(" --> NEW EVENT --> \n");
-  /*struct TauRocmEvent e(kernel_name_dem.c_str(), profiler_record->timestamps.begin.value,
-                        profiler_record->timestamps.end.value, taskid);*/
+  struct TauRocmEvent e(kernel_name_dem.c_str(), profiler_record->timestamps.begin.value,
+                        profiler_record->timestamps.end.value, taskid);
   TAU_VERBOSE("KERNEL: name: %s entry: %lu exit: %lu ...\n", kernel_name_dem.c_str(),
               profiler_record->timestamps.begin.value,
               profiler_record->timestamps.end.value);
@@ -435,33 +425,27 @@ void FlushProfilerRecord(const rocprofiler_record_profiler_t *profiler_record,
     ss << "Scalar Register Size (SGPR) : " << kernel_name_dem;
     tmp = ss.str();
     ue = Tau_get_userevent(tmp.c_str());
-    // value = (double)((profiler_record->kernel_properties.sgpr_count +
-    // agent_info->sgpr_block_dflt) * agent_info->sgpr_block_size);
+
     value = (double)(profiler_record->kernel_properties.sgpr_count);
     Tau_userevent_thread(ue, value, taskid);
 
-    // ss.str("");
-    // ss << "fbarrier count : " << kernel_name_dem;
-    // tmp = ss.str();
-    // ue = Tau_get_userevent(tmp.c_str());
-    // value = (double)(entry->kernel_properties.fbarrier_count);
-    // Tau_userevent_thread(ue, value, taskid);
+
   }
-  /*Tau_process_rocm_events(e);
+  Tau_process_rocm_events(e);
   timestamp = profiler_record->timestamps.begin.value;
 
   last_timestamp = timestamp;
   timestamp = profiler_record->timestamps.end.value;
   last_timestamp = timestamp;
-  Tau_set_last_timestamp_ns(profiler_record->timestamps.end.value);*/
+  Tau_set_last_timestamp_ns(profiler_record->timestamps.end.value);
 
-  metric_set_gpu_timestamp(taskid, ((double)(profiler_record->timestamps.begin.value)));
+  /*metric_set_gpu_timestamp(taskid, ((double)(profiler_record->timestamps.begin.value)));
   TAU_START_TASK(kernel_name_dem.c_str(), taskid);
 
   metric_set_gpu_timestamp(taskid, ((double)(profiler_record->timestamps.end.value)));
   TAU_STOP_TASK(kernel_name_dem.c_str(), taskid);
   //TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", task_name, taskid, tracer_record.timestamps.end.value);
-  Tau_set_last_timestamp_ns(profiler_record->timestamps.end.value);
+  Tau_set_last_timestamp_ns(profiler_record->timestamps.end.value);*/
 
 }
 
@@ -486,7 +470,7 @@ int WriteBufferRecords(const rocprofiler_record_header_t *begin,
                 break;
               }
             case ROCPROFILER_TRACER_RECORD:{
-              //printf("WriteBufferRecords ROCPROFILER_TRACER_RECORD\n");
+
               rocprofiler_record_tracer_t* tracer_record = const_cast<rocprofiler_record_tracer_t*>(
               reinterpret_cast<const rocprofiler_record_tracer_t*>(begin));
               FlushTracerRecord(*tracer_record, session_id);
@@ -500,31 +484,6 @@ int WriteBufferRecords(const rocprofiler_record_header_t *begin,
             }
             return 0;
 }
-
-/*
-int WriteBufferRecordsTr(const rocprofiler_record_header_t *begin,
-                       const rocprofiler_record_header_t *end,
-                       rocprofiler_session_id_t session_id,
-                       rocprofiler_buffer_id_t buffer_id) 
-{
-  TAU_VERBOSE("WriteBufferTr\n");
-  WriteBufferRecords(begin, end, session_id, buffer_id);
-  return 0;
-}
-
-
-int WriteBufferRecordsPr(const rocprofiler_record_header_t *begin,
-                       const rocprofiler_record_header_t *end,
-                       rocprofiler_session_id_t session_id,
-                       rocprofiler_buffer_id_t buffer_id) 
-{
-  TAU_VERBOSE("WriteBufferPr\n");
-  WriteBufferRecords(begin, end, session_id, buffer_id);
-  return 0;
-}
-
-*/
-
 
 
 extern void Tau_roc_trace_sync_call_v2(rocprofiler_record_tracer_t tracer_record,
@@ -558,7 +517,7 @@ void Tau_rocm_initialize_v2() {
             apis_requested.emplace_back(ACTIVITY_DOMAIN_HIP_OPS);
             apis_requested.emplace_back(ACTIVITY_DOMAIN_HSA_API);
             apis_requested.emplace_back(ACTIVITY_DOMAIN_HSA_OPS);
-            apis_requested.emplace_back(ACTIVITY_DOMAIN_ROCTX);
+            //apis_requested.emplace_back(ACTIVITY_DOMAIN_ROCTX);
 
 
             // Creating Output Buffer for the data
@@ -614,19 +573,6 @@ void Tau_rocm_initialize_v2() {
 }
 
 
-// Flush tracing routine
-extern void Tau_roctracer_flush_tracing() {
-  return;
-  //TAU_VERBOSE("# roctracer FLUSHING ASYNC! ###################\n");
-  //ROCTRACER_CALL(roctracer_flush_activity());
-}
-
-/*void Tau_rocprofiler_pool_flush_v2() {
-            TAU_VERBOSE("Flushing pool %p\n");
-            CHECK_ROCPROFILER(rocprofiler_flush_data(session_id, counter_buffer_id));
-            CHECK_ROCPROFILER(rocprofiler_flush_data(session_id, trace_buffer_id));
-}*/
-
 void Tau_rocprofiler_pool_flush() {
 			TAU_VERBOSE("Inside Tau_rocprofiler_pool_flush_v2\n");
             // Deactivating session
@@ -635,21 +581,12 @@ void Tau_rocprofiler_pool_flush() {
             CHECK_ROCPROFILER(rocprofiler_flush_data(session_id, counter_buffer_id));
             CHECK_ROCPROFILER(rocprofiler_flush_data(session_id, trace_buffer_id));
 
-      /*      // Destroy sessions
-			TAU_VERBOSE("rocprofiler_destroy_session\n");
-            CHECK_ROCPROFILER(rocprofiler_destroy_session(session_id));
-
-            // Destroy all profiling related objects(User buffer, sessions,
-            // filters, etc..)
-			TAU_VERBOSE("rocprofiler_finalize\n");
-            CHECK_ROCPROFILER(rocprofiler_finalize());*/
 }
 
 // Stop tracing routine
 extern void Tau_rocprofv2_stop() {
         TAU_VERBOSE("Inside rocprofiler_terminate_session\n");
             CHECK_ROCPROFILER(rocprofiler_terminate_session(session_id));
-      //Tau_rocprofiler_pool_flush_v2();
               // Destroy sessions
       TAU_VERBOSE("rocprofiler_destroy_session\n");
             CHECK_ROCPROFILER(rocprofiler_destroy_session(session_id));
