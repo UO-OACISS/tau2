@@ -1124,6 +1124,10 @@ case $1 in
         echo "NOTE: Using the TAU's ROCm ROCPROFILER Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     ROCPROFILERV2)
+        echo "NOTE: Using the TAU's ROCm ROCPROFILER Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      HIP)
         echo "NOTE: Using the TAU's ROCm HIP Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

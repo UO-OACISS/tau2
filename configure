@@ -765,6 +765,7 @@ usage() {
     echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
     echo "-rocm[=<dir>] ...... Specify alternate path to ROCm (/opt/rocm default)."
     echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
+    echo "-rocprofv2 .......................................... Enable rocprofv2."
 #   echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
 #   echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
     echo "-level_zero[=<dir>] ................. Specify path to Intel Level Zero."
@@ -928,8 +929,9 @@ for arg in "$@"; do
         echo "            locations to add when linking to the cuda driver libraries."
         echo "-opencl=<dir> ................ Specify location of the top level OpenCL SDK"
         echo "  Note: This option is needed when used with -cuda=<dir> option. "
-        echo "-rocm[=<dir>] ...... Specify alternate path to ROCm (/opt/rocm default)."
+        echo "-rocm[=<dir>] ..... Specify alternate path to ROCm (/opt/rocm default)."
         echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
+	echo "-rocprofv2 .......................................... Enable rocprofv2."
         #echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
         #echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
         echo "-roctracer=<dir> .................. Specify location of ROCm roctracer."
@@ -1354,6 +1356,7 @@ cuda=no
 level_zero=no
 rocm=no
 rocprofiler=no
+rocprofv2=no
 roctracer=no
 hip=no
 use_opencl=no
@@ -3033,6 +3036,15 @@ for arg in "$@"; do
             shift
             ;;
 
+	-rocprofv2)
+            fixmakeargs="$fixmakeargs ROCPROFILERV2"
+            rocprofv2=yes
+            tauoptions="${tauoptions}-rocprofv2"
+            pthread=yes
+            shift
+            ;;
+
+
         -hip=*)
             hipdir=`echo $arg | sed -e 's/-hip=//' -e 's/ /#/g'`
             if [ ! -d $hipdir ]; then
@@ -3280,6 +3292,18 @@ if [ "x$python"  = "xyes" ] ; then
 fi
 
 fi
+
+if [ "x$rocm" = "xyes" -a "x$rocprofv2" = "xyes" ]; then
+    fixmakeargs="$fixmakeargs TAU_USE_GPU"
+    pthread=yes
+    rocprofiler=no
+    rocprofilerinc
+    if [ "x$rocprofilerinc" = "x" ]; then
+     rocprofilerinc="$rocmdir/include/rocprofiler"
+     fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
+    fi
+fi
+
 if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler -a "x$roctracerdir" = "x" ]; then
   rocprofilerdir=$rocmdir/rocprofiler
   fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER TAU_USE_GPU"
