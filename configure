@@ -2996,11 +2996,6 @@ for arg in "$@"; do
               echo  "Error: Cannot access Level Zero libze_loader.so in $l0dir/lib or $l0dir/lib64 or $l0dir/x86_64-linux-gnu"
               exit 1
             fi
-            if [ ! -r $l0_lib_dir/libdrm.so -a ! -r /usr/lib/x86_64-linux-gnu/libdrm.so -a ! -r /usr/lib64/libdrm.so ]; then
-
-              echo  "Error: TAU requires libdrm.so to be installed in $l0_lib_dir. Please install libdrm-devel (Centos) or libdrm-dev (Ubuntu) package."
-              exit 1
-            fi
             fixmakeargs="$fixmakeargs l0_lib_dir=$l0_lib_dir"
             tauoptions="${tauoptions}-level_zero"
             pthread=yes
