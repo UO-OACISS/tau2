@@ -11638,7 +11638,7 @@ if [ "x$download_otf" = xyes ] ; then
             libotf2_log=configure.log
             cd $libotf2_dirname
             echo "configuring $libotf2... (see `pwd`/${libotf2_log} for log)..."
-            ./configure --prefix=${otfdir} CC=${otf2_c_compiler} CXX=${otf2_cxx_compiler} > ${libotf2_log} 2>&1
+            PYTHON_FOR_GENERATOR=: ./configure --prefix=${otfdir} CC=${otf2_c_compiler} CXX=${otf2_cxx_compiler} --disable-PYTHON > ${libotf2_log} 2>&1
             configresult=$?
             if [ $configresult -eq 0 ] ; then
                 libotf2_log=build.log
