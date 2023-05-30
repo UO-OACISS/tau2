@@ -154,6 +154,7 @@ static ompt_flush_trace_t ompt_flush_trace = nullptr;
 static ompt_stop_trace_t ompt_stop_trace = nullptr;
 static ompt_get_record_ompt_t ompt_get_record_ompt = nullptr;
 static ompt_advance_buffer_cursor_t ompt_advance_buffer_cursor = nullptr;
+static ompt_translate_time_t ompt_translate_time = nullptr;
 
 /* Global map for mapping target_id data from the host callback to the device activity. */
 class TargetMap {
@@ -205,6 +206,24 @@ class TargetMap {
         std::atomic<size_t> read_index;
 };
 
+std::map<int, ompt_device_t*>& getDeviceMap(void) {
+    static std::map<int, ompt_device_t*> theMap; 
+    return theMap;
+}
+
+uint64_t translateTime(int device_id, ompt_device_time_t time) {
+    // this time is in seconds, relative to the host
+    if (ompt_translate_time != nullptr) {
+        double tmp = ompt_translate_time(getDeviceMap()[device_id], time);
+        // convert to microseconds
+        uint64_t converted = (uint64_t)(tmp * 1.0e6);
+        return converted;
+    } else {
+        uint64_t converted = (uint64_t)(time) * 1.0e-3;
+        return time;
+    }
+}
+
 /*Externs*/
 extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address);
 
@@ -229,8 +248,8 @@ static void print_record_ompt(ompt_record_ompt_t *rec) {
     static void *codeptr_ra = 0;
     static uint32_t thread_id = 0;
     uint32_t context = 0;
-    uint64_t start = 0;
-    uint64_t end = 0;
+    ompt_device_time_t start = 0;
+    ompt_device_time_t end = 0;
     int map_size = 0;
     int device_num = 0;
     std::string name;
@@ -382,7 +401,8 @@ static void print_record_ompt(ompt_record_ompt_t *rec) {
         }
     }
     if (make_timer) {
-        Tau_openmp_register_gpu_event(name.c_str(), device_num, thread_id, task_id, target_id, nullptr, map_size, start/1e3, end/1e3);
+        // convert the start and end times
+        Tau_openmp_register_gpu_event(name.c_str(), device_num, thread_id, task_id, target_id, nullptr, map_size, translateTime(device_num, start), translateTime(device_num, end));
     }
 }
 
@@ -1322,6 +1342,7 @@ static void on_ompt_callback_device_initialize (
     printf("Trace collection disabled on device %d\n", device_num);
     return;
   }
+  getDeviceMap().insert(std::pair<int,ompt_device_t*>(device_num, device));
 
 #ifdef TAU_OMPT_USE_TARGET_OFFLOAD
   ompt_set_trace_ompt = (ompt_set_trace_ompt_t) lookup("ompt_set_trace_ompt");
@@ -1330,6 +1351,7 @@ static void on_ompt_callback_device_initialize (
   ompt_stop_trace = (ompt_stop_trace_t) lookup("ompt_stop_trace");
   ompt_get_record_ompt = (ompt_get_record_ompt_t) lookup("ompt_get_record_ompt");
   ompt_advance_buffer_cursor = (ompt_advance_buffer_cursor_t) lookup("ompt_advance_buffer_cursor");
+  ompt_translate_time = (ompt_translate_time_t) lookup("ompt_translate_time");
 
   // In many scenarios, this will be a good place to start the
   // trace. If start_trace is called from the main program before this
@@ -1899,6 +1921,19 @@ void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugi
     register_callback(ompt_callback_target_submit, cb_t(on_ompt_callback_target_submit));
 }
 
+/* I don't know why we have OMPT trigger events, but whatever... */
+void Tau_ompt_finalize_trigger() {
+    // make sure this only happens once.
+    static bool once{false};
+    if (once) return;
+    once = true;
+    if(Tau_plugins_enabled.ompt_finalize) {
+        Tau_plugin_event_ompt_finalize_data_t plugin_data;
+        plugin_data.null = 0;
+        Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_FINALIZE, "*", &plugin_data);
+    }
+}
+
 /* This is called by the Tau_destructor_trigger() to prevent
  * callbacks from happening after TAU is shut down */
 void Tau_ompt_finalize(void) {
@@ -1909,8 +1944,14 @@ void Tau_ompt_finalize(void) {
     Tau_ompt_flush_trace();
 #endif
     //Tau_ompt_stop_trace();
-    if (ompt_finalize_tool != nullptr) {
-        ompt_finalize_tool();
+    if (TauEnv_get_ompt_force_finalize()) {
+        if (ompt_finalize_tool != nullptr) {
+            TAU_VERBOSE("Asking the OpenMP runtime to shut down...\n");
+            ompt_finalize_tool();
+        }
+        else {
+            //Tau_ompt_finalize_trigger();
+        }
     }
 }
 
@@ -1920,14 +1961,7 @@ extern "C" void ompt_finalize(ompt_data_t* tool_data)
   TAU_VERBOSE("OpenMP runtime is shutting down...\n");
   /* Just in case... */
   Tau_destructor_trigger();
-
-  if(Tau_plugins_enabled.ompt_finalize) {
-    Tau_plugin_event_ompt_finalize_data_t plugin_data;
-
-    plugin_data.null = 0;
-
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_FINALIZE, "*", &plugin_data);
-  }
+  Tau_ompt_finalize_trigger();
 }
 
 extern "C" ompt_start_tool_result_t * ompt_start_tool(
