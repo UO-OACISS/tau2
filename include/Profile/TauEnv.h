@@ -94,6 +94,7 @@ extern "C" {
   int  TAUDECL TauEnv_set_ompt_resolve_address_eagerly(int value);
   int  TAUDECL TauEnv_get_ompt_support_level();
   int  TAUDECL TauEnv_set_ompt_support_level(int value);
+  int  TAUDECL TauEnv_get_ompt_force_finalize(void);
   int  TAUDECL TauEnv_get_signals_gdb();
   int  TAUDECL TauEnv_get_echo_backtrace();
   int  TAUDECL TauEnv_get_openmp_runtime_enabled();
