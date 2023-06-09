@@ -185,8 +185,9 @@ void Tau_dump_mochi_metadata() {
 }
 
 void Tau_plugin_mochi_init_mochi(void) {
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    my_rank = RtsLayer::myRank();
+    size = tau_totalnodes(0,1);
+
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* Grab my server instance address and other deets */
@@ -224,11 +225,11 @@ void shorten_timer_name(std::string& name) {
     }
 }
 
-/* Iterates over the FunctionInfo DB and EventDB to compile a list of 
+/* Iterates over the FunctionInfo DB and EventDB to compile a list of
  * per-thread metrics and counters. */
 void Tau_plugin_mochi_write_variables() {
 
-    std::string uid = to_string(my_rank); 
+    std::string uid = to_string(my_rank);
 
     RtsLayer::LockDB();
     /* Copy the function info database so we can release the lock */
@@ -242,7 +243,7 @@ void Tau_plugin_mochi_write_variables() {
     TauMetrics_getCounterList(&counterNames, &(numCounters[0]));
 
     std::map<std::string, std::vector<double> >::iterator timer_map_it;
-    
+
     //foreach: TIMER
     std::vector<FunctionInfo*>::const_iterator it;
     for (it = tmpTimers.begin(); it != tmpTimers.end(); it++) {
@@ -262,7 +263,7 @@ void Tau_plugin_mochi_write_variables() {
             /* write the fi->GetCalls(tid) value */
             total_tid_calls += (double)fi->GetCalls(tid);
         }
-       
+
 	soma_collector.soma_update_namespace(ns_handle, uid, timer_name_Calls, total_tid_calls, soma::OVERWRITE);
 
         for (int m = 0 ; m < numCounters.size() ; m++) {
@@ -276,7 +277,7 @@ void Tau_plugin_mochi_write_variables() {
                   inc_time += (fi->getDumpInclusiveValues(tid)[m]);
                   exc_time += (fi->getDumpExclusiveValues(tid)[m]);
                 }
-     
+
             }
 	    soma_collector.soma_update_namespace(ns_handle, uid, timer_name_Inclusive, inc_time, soma::OVERWRITE);
 	    soma_collector.soma_update_namespace(ns_handle, uid, timer_name_Inclusive, exc_time, soma::OVERWRITE);
@@ -368,7 +369,7 @@ int Tau_plugin_mochi_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_
     enabled = false;
 
     if (my_rank == 0) {
-        std::string outfile = "tau_data_soma.txt";	  
+        std::string outfile = "tau_data_soma.txt";
         bool write_done;
         soma_collector.soma_write(outfile, &write_done);
     }

@@ -775,10 +775,9 @@ int choose_volunteer_rank() {
 #ifdef TAU_MPI
     // figure out who should get system stats for this node
     int i;
-    int my_rank = 0;
-    int comm_size = 1;
-    PMPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    PMPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    int my_rank = RtsLayer::myRank();
+    int comm_size = tau_totalnodes(0,1);
+
     // save it somewhere the NVML component can access it
     get_my_rank() = my_rank;
 
@@ -1464,8 +1463,8 @@ void reduce_scatterplot(std::stringstream& csv_output, std::string filename) {
     int mpi_initialized = 0;
     MPI_CALL(MPI_Initialized( &mpi_initialized ));
     if (mpi_initialized) {
-        MPI_CALL(PMPI_Comm_rank(MPI_COMM_WORLD, &commrank));
-        MPI_CALL(PMPI_Comm_size(MPI_COMM_WORLD, &commsize));
+        commrank = RtsLayer::myRank();
+        commsize = tau_totalnodes(0,1);
     }
 #endif
     // if nothing to reduce, just write the data.

@@ -193,8 +193,8 @@ void * Tau_plugin_threaded_analytics(void* data) {
   if(!index)
     PMPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
 
-   PMPI_Comm_rank(comm, &rank);
-   PMPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+   PPI_Comm_rank(comm, &rank);
+   world_rank = RtsLayer::myRank();
 
 #endif
 

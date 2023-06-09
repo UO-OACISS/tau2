@@ -170,7 +170,7 @@ void shorten_timer_name(std::string& name) {
     }
 }
 
-/* Iterates over the FunctionInfo DB and EventDB to compile a list of 
+/* Iterates over the FunctionInfo DB and EventDB to compile a list of
  * per-thread metrics and counters. */
 void Tau_plugin_mochi_write_variables() {
     static uint32_t iteration_counter = 0;
@@ -187,19 +187,15 @@ void Tau_plugin_mochi_write_variables() {
     TauMetrics_getCounterList(&counterNames, &(numCounters[0]));
 
     std::map<std::string, std::vector<double> >::iterator timer_map_it;
-    
-    int rank = 0;
-    int size = 0;
-    #ifdef TAU_MPI
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        MPI_Comm_size(MPI_COMM_WORLD, &size);
-    #endif
+
+    int rank = RtsLayer::myRank();
+    int size = tau_totalnodes(0,1);
 
     stringstream rank_;
     rank_ << rank;
     symbiomon_taglist_t taglist, taglist2;
-    symbiomon_taglist_create(&taglist, 1, (rank_.str()).c_str()); 
-    symbiomon_taglist_create(&taglist2, 2, (rank_.str()).c_str(), "min"); 
+    symbiomon_taglist_create(&taglist, 1, (rank_.str()).c_str());
+    symbiomon_taglist_create(&taglist2, 2, (rank_.str()).c_str(), "min");
 
     //foreach: TIMER
     std::vector<FunctionInfo*>::const_iterator it;
@@ -221,9 +217,9 @@ void Tau_plugin_mochi_write_variables() {
             /* write the fi->GetCalls(tid) value */
             total_tid_calls += (double)fi->GetCalls(tid);
         }
-       
+
 	symbiomon_metric_update(m, total_tid_calls);
- 
+
         for (int m = 0 ; m < numCounters.size() ; m++) {
             symbiomon_metric_t inc, inc_min, exc, exc_min;
             stringstream incl, incl_min;
@@ -254,7 +250,7 @@ void Tau_plugin_mochi_write_variables() {
                   inc_time += (fi->getDumpInclusiveValues(tid)[m]);
                   exc_time += (fi->getDumpExclusiveValues(tid)[m]);
                 }
-     
+
        }
 	    symbiomon_metric_update(inc, inc_time);
 	    symbiomon_metric_update(inc_min, inc_time);

@@ -816,8 +816,8 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     TAU_VERBOSE("TAU PLUGIN ADIOS2 Init\n"); fflush(stdout);
     Tau_ADIOS2_parse_environment_variables();
 #if TAU_MPI
-    PMPI_Comm_size(MPI_COMM_WORLD, &world_comm_size);
-    PMPI_Comm_rank(MPI_COMM_WORLD, &world_comm_rank);
+    world_comm_rank = RtsLayer::myRank();
+    world_comm_size = tau_totalnodes(0,1);
 #endif
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(&cb);

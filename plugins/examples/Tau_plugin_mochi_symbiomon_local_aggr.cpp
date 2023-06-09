@@ -157,8 +157,8 @@ void Tau_plugin_mochi_init_mochi(void) {
         return;
     }
 
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    my_rank = RtsLayer::myRank();
+    size = tau_totalnodes(0,1);
     assert (getenv("TAU_NUM_SOMA_RANKS") != NULL);
     numSomaRanks = atoi(getenv("TAU_NUM_SOMA_RANKS"));
 
@@ -185,7 +185,7 @@ void Tau_plugin_mochi_init_mochi(void) {
         if(ret != 0)
         {
             fprintf(stderr, "Error: sdskv_provider_register()\n");
-            margo_finalize(mid);                                    
+            margo_finalize(mid);
             return;
         }
     }
@@ -202,7 +202,7 @@ void Tau_plugin_mochi_init_mochi(void) {
     char rank_str[20];
     sprintf(rank_str, "%d", my_rank);
     char * path = (char*)malloc((strlen(path_)+20)*sizeof(char));
-    strcpy(path, path_);	
+    strcpy(path, path_);
     strcat(path, rank_str);
 
     sdskv_config_t db_config = {
@@ -213,7 +213,7 @@ void Tau_plugin_mochi_init_mochi(void) {
         .db_no_overwrite = 0
     };
 
-    ret = 0; 
+    ret = 0;
     if(my_rank >= (size - numSomaRanks)) {
         ret = sdskv_provider_attach_database(sdskv_provider, &db_config, &db_id);
     }
@@ -221,7 +221,7 @@ void Tau_plugin_mochi_init_mochi(void) {
     if(ret != 0)
     {
         fprintf(stderr, "Error: sdskv_provider_attach_database()\n");
-        margo_finalize(mid);                                    
+        margo_finalize(mid);
         return;
     }
 
@@ -277,7 +277,7 @@ void Tau_plugin_mochi_init_mochi(void) {
 	                margo_finalize(mid);
 	                return;
 	            }
- 
+
 	            fprintf(fp, "%s %d %s\n", self_addr_str, 1, db_name);
 		    fflush(fp);
 
@@ -285,7 +285,7 @@ void Tau_plugin_mochi_init_mochi(void) {
  	       }
 	       MPI_Barrier(MPI_COMM_WORLD);
 	}
-         
+
         margo_addr_free(mid, self_addr);
     }
 
@@ -332,7 +332,7 @@ void shorten_timer_name(std::string& name) {
     }
 }
 
-/* Iterates over the FunctionInfo DB and EventDB to compile a list of 
+/* Iterates over the FunctionInfo DB and EventDB to compile a list of
  * per-thread metrics and counters. */
 void Tau_plugin_mochi_write_variables() {
     static uint32_t iteration_counter = 0;
@@ -349,12 +349,12 @@ void Tau_plugin_mochi_write_variables() {
     TauMetrics_getCounterList(&counterNames, &(numCounters[0]));
 
     std::map<std::string, std::vector<double> >::iterator timer_map_it;
-    
+
     stringstream rank_;
     rank_ << my_rank;
     symbiomon_taglist_t taglist, taglist2;
-    symbiomon_taglist_create(&taglist, 1, (rank_.str()).c_str()); 
-    symbiomon_taglist_create(&taglist2, 2, (rank_.str()).c_str(), "min"); 
+    symbiomon_taglist_create(&taglist, 1, (rank_.str()).c_str());
+    symbiomon_taglist_create(&taglist2, 2, (rank_.str()).c_str(), "min");
 
     //foreach: TIMER
     std::vector<FunctionInfo*>::const_iterator it;
@@ -376,9 +376,9 @@ void Tau_plugin_mochi_write_variables() {
             /* write the fi->GetCalls(tid) value */
             total_tid_calls += (double)fi->GetCalls(tid);
         }
-       
+
 	symbiomon_metric_update(m, total_tid_calls);
- 
+
         for (int m = 0 ; m < numCounters.size() ; m++) {
             symbiomon_metric_t inc, inc_min, exc, exc_min;
             stringstream incl, incl_min;
@@ -409,7 +409,7 @@ void Tau_plugin_mochi_write_variables() {
                   inc_time += (fi->getDumpInclusiveValues(tid)[m]);
                   exc_time += (fi->getDumpExclusiveValues(tid)[m]);
                 }
-     
+
        }
 	    symbiomon_metric_update(inc, inc_time);
 	    symbiomon_metric_update(inc_min, inc_time);

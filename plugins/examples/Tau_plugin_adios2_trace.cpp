@@ -444,8 +444,9 @@ void adios::initialize() {
 #if TAU_MPI
     // Get the rank and size in the original communicator
     int world_rank, world_size;
-    PMPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-    PMPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    world_rank = RtsLayer::myRank();
+    world_size = tau_totalnodes(0,1);
+
     MPI_Comm adios_comm = MPI_COMM_NULL;
 
     // If we are using one file for the whole communicator, copy it
@@ -1537,8 +1538,8 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
         tau_plugin::Tau_ADIOS2_parse_selection_file(tau_plugin::thePluginOptions().env_select_file.c_str());
     }
 #if TAU_MPI
-    PMPI_Comm_size(MPI_COMM_WORLD, &global_comm_size);
-    PMPI_Comm_rank(MPI_COMM_WORLD, &global_comm_rank);
+    global_world_rank = RtsLayer::myRank();
+    global_world_size = tau_totalnodes(0,1);
 #endif
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(&cb);
