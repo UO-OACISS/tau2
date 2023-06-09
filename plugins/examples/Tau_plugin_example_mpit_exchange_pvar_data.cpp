@@ -31,7 +31,7 @@ int Tau_plugin_event_mpit(Tau_plugin_event_mpit_data_t* data) {
 
   int rank; long long int local_val; long long int global_val;
 
-  rank = RtsLayer::myRank();
+  rank = RtsLayer::myNode();
 
   //fprintf(stderr, "PVAR Name %s and value %lld from rank %d\n", data->pvar_name, data->pvar_value, rank);
 

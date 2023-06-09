@@ -46,7 +46,7 @@ static void open_file() {
     Tau_global_incr_insideTAU();
     mtx.lock();
     /* Open a file for myself to write to */
-    commrank = RtsLayer::myRank();
+    commrank = RtsLayer::myNode();
     commsize = tau_totalnodes(0,1);
 
     std::stringstream filename;

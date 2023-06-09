@@ -185,7 +185,7 @@ void Tau_dump_mochi_metadata() {
 }
 
 void Tau_plugin_mochi_init_mochi(void) {
-    my_rank = RtsLayer::myRank();
+    my_rank = RtsLayer::myNode();
     size = tau_totalnodes(0,1);
 
     MPI_Barrier(MPI_COMM_WORLD);

@@ -188,7 +188,7 @@ void Tau_plugin_mochi_write_variables() {
 
     std::map<std::string, std::vector<double> >::iterator timer_map_it;
 
-    int rank = RtsLayer::myRank();
+    int rank = RtsLayer::myNode();
     int size = tau_totalnodes(0,1);
 
     stringstream rank_;

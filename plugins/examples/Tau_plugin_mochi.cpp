@@ -248,7 +248,7 @@ void Tau_plugin_mochi_write_variables() {
     RESERVE(m_vsizes, metric_size);
     RESERVE(m_vptrs, metric_size);
 
-    int rank = RtsLayer::myRank();
+    int rank = RtsLayer::myNode();
 
     //foreach: TIMER
     std::vector<FunctionInfo*>::const_iterator it;

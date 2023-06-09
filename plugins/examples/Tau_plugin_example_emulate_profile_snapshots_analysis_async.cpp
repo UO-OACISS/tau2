@@ -90,7 +90,7 @@ void * Tau_plugin_threaded_analytics(void* data) {
     struct timespec ts;
     struct timeval  tp;
 
-    int rank = RtsLayer::myRank();
+    int rank = RtsLayer::myNode();
 
     string line;
 

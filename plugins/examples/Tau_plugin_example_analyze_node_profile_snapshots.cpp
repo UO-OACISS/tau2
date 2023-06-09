@@ -84,7 +84,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
     PMPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
 
   PMPI_Comm_rank(comm, &rank);
-  world_rank = RtsLayer::myRank();
+  world_rank = RtsLayer::myNode();
   PMPI_Comm_size(comm, &size);
 
 #endif

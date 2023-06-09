@@ -563,7 +563,7 @@ int Tau_plugin_metadata_registration_complete_sqlite3(Tau_plugin_event_metadata_
 
 int Tau_plugin_event_post_init_sqlite3(Tau_plugin_event_post_init_data_t* data) {
     //printf("NULL PLUGIN %s\n", __func__);
-    commrank = RtsLayer::myRank();
+    commrank = RtsLayer::myNode();
     commsize = tau_totalnodes(0,1);
     return 0;
 }

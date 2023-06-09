@@ -37,7 +37,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
   PMPI_Reduce(&local, &global_min, 1, MPI_INT, MPI_MIN, 0, MPI_COMM_WORLD);
   PMPI_Reduce(&local, &global_max, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
 
-  rank = RtsLayer::myRank();
+  rank = RtsLayer::myNode();
 
   if(rank == 0) {
     sum_ = global_sum;

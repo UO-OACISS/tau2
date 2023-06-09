@@ -448,6 +448,7 @@ int TAUDECL Tau_get_current_stack_depth(int tid);
 int TAUDECL Tau_get_local_tid(void);
 int TAUDECL Tau_get_thread(void);
 int TAUDECL Tau_get_node(void);
+int TAUDECL tau_totalnodes(int set_or_get, int value);
 int  Tau_create_task(void);
 void Tau_destructor_trigger();
 

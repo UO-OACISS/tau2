@@ -189,7 +189,7 @@ void Tau_dump_mochi_metadata() {
 void Tau_plugin_mochi_init_mochi(void) {
     //MPI_Comm_rank(tau_comm, &my_rank);
     //MPI_Comm_size(tau_comm, &size);
-    my_rank = RtsLayer::myRank();
+    my_rank = RtsLayer::myNode();
     size = tau_totalnodes(0,1);
 
     /* Grab my server instance address and other deets */

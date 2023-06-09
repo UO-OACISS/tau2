@@ -106,7 +106,7 @@ void * Tau_plugin_threaded_analytics(void* data) {
   PMPI_Reduce(&latest_work, &global_min, 1, MPI_INT, MPI_MIN, 0, MPI_COMM_WORLD);
   PMPI_Reduce(&latest_work, &global_max, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
 
-  rank = RtsLayer::myRank();
+  rank = RtsLayer::myNode();
 
   if(rank == 0) {
     sum_ = global_sum;

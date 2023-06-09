@@ -120,7 +120,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 
 #ifdef TAU_MPI
 
-  rank = RtsLayer::myRank();
+  rank = RtsLayer::myNode();
   size = tau_totalnodes(0,1);
 
 #endif

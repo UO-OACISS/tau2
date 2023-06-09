@@ -477,7 +477,7 @@ bool TAU_SOS_init() {
     static bool initialized = false;
     TAU_VERBOSE("[TAU_SOS]TAU_SOS_init()...\n");
     if (!initialized) {
-        my_rank = RtsLayer::myRank();
+        my_rank = RtsLayer::myNode();
         comm_size = tau_totalnodes(0,1);
         if (thePluginOptions().env_sos_periodic) {
             _threaded = true;

@@ -157,7 +157,7 @@ void Tau_plugin_mochi_init_mochi(void) {
         return;
     }
 
-    my_rank = RtsLayer::myRank();
+    my_rank = RtsLayer::myNode();
     size = tau_totalnodes(0,1);
     assert (getenv("TAU_NUM_SOMA_RANKS") != NULL);
     numSomaRanks = atoi(getenv("TAU_NUM_SOMA_RANKS"));
