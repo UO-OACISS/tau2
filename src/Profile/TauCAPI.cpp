@@ -1615,6 +1615,7 @@ extern "C" void Tau_disable_instrumentation(void) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_shutdown(void) {
+  TAU_VERBOSE("Tau_shutdown!\n");
   Tau_memory_wrapper_disable();
   if (!TheUsingCompInst()) {
     RtsLayer::TheShutdown() = true;

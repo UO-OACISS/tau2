@@ -121,6 +121,7 @@ namespace {
                 cl::desc("Don't actually instrument the code, just print what would be instrumented"));
 
     auto TauInitFunc = "Tau_init"; // arguments to pass: argc, argv
+    auto TauFiniFunc = "Tau_shutdown"; // arguments to pass:
     auto TauSetNodeFunc = "Tau_set_node"; // argument to pass: 0
 
     // Demangling technique borrowed/modified from
@@ -200,9 +201,9 @@ namespace {
         // First argument is an int (argc)
         Type *argTy0 = Type::getInt32Ty(context);
 
-        // Second argument is an i8* pointer (argv) 
+        // Second argument is an i8* pointer (argv)
         Type *argTy1 = Type::getInt8PtrTy(context);
-        
+
         SmallVector<Type *, 2> paramTys{argTy0, argTy1};
 
         // Third param to `get` is `isVarArg`.  It's not documented, but might have
@@ -210,7 +211,7 @@ namespace {
         FunctionType *funcTy = FunctionType::get(retTy, paramTys, false);
         return module->getOrInsertFunction(funcname, funcTy);
     }
-    
+
 #if( LLVM_VERSION_MAJOR <= 8 )
     static Constant *getVoidFunc_set(StringRef funcname, LLVMContext &context, Module *module)
 #else
@@ -582,7 +583,7 @@ NB: this is obtained from debugging information, and therefore needs
         bool maybeSaveForProfiling( Function& fn ) {
             StringRef callName = fn.getName();
             errs() << callName << "\n";
-            std::string filename = getFilename( fn );            
+            std::string filename = getFilename( fn );
             StringRef prettycallName = normalize_name(callName);
             unsigned instructionCount = fn.getInstructionCount();
             auto *module = fn.getParent();
@@ -665,13 +666,13 @@ NB: this is obtained from debugging information, and therefore needs
             StringRef prettyname = normalize_name(func.getName());
             std::string filename = getFilename( func ); // the file where the calls we are instrumenting are happening
 #if( LLVM_VERSION_MAJOR <= 8 )
-            Constant
-                *onCallFunc = getVoidFunc(TauStartFunc, context, module),
-                *onRetFunc = getVoidFunc(TauStopFunc, context, module);
+            Constant *onCallFunc = getVoidFunc(TauStartFunc, context, module);
+            Constant *onRetFunc = getVoidFunc(TauStopFunc, context, module);
+            Constant *onFiniFunc = getVoidFunc(TauFiniFunc, context, module);
 #else
-            FunctionCallee
-                onCallFunc = getVoidFunc(TauStartFunc, context, module),
-                           onRetFunc = getVoidFunc(TauStopFunc, context, module);
+            FunctionCallee onCallFunc = getVoidFunc(TauStartFunc, context, module);
+            FunctionCallee onRetFunc = getVoidFunc(TauStopFunc, context, module);
+            FunctionCallee onFiniFunc = getVoidFunc(TauFiniFunc, context, module);
 #endif // LLVM_VERSION_MAJOR <= 8
 
             std::string shorter(prettyname);
@@ -768,7 +769,11 @@ NB: this is obtained from debugging information, and therefore needs
                         Instruction* e = &*I;
                         if( isa<ReturnInst>( e ) ) {
                             IRBuilder<> fina( e );
-                            fina.CreateCall( onRetFunc, args );
+                            if( 0 == prettyname.compare( "main" ) ){
+                                fina.CreateCall( onFiniFunc, args );
+                            } else {
+                                fina.CreateCall( onRetFunc, args );
+                            }
                         }
                     }
                 }
@@ -846,6 +851,8 @@ NB: this is obtained from debugging information, and therefore needs
             taufuncname = TauStopFunc + '*';
             funcsExclRegex.push_back( std::regex( taufuncname ) );
             taufuncname = "Tau_init*";
+            funcsExclRegex.push_back( std::regex( taufuncname ) );
+            taufuncname = "Tau_shutdown*";
             funcsExclRegex.push_back( std::regex( taufuncname ) );
             taufuncname = "Tau_set_node*";
             funcsExclRegex.push_back( std::regex( taufuncname ) );
