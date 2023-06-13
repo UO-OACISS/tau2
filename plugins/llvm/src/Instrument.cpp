@@ -233,6 +233,22 @@ namespace {
     }
 
 
+#if( LLVM_VERSION_MAJOR <= 8 )
+    static Constant *getVoidFunc_noargs(StringRef funcname, LLVMContext &context, Module *module)
+#else
+    static FunctionCallee getVoidFunc_noargs(StringRef funcname, LLVMContext &context, Module *module)
+#endif // LLVM_VERSION_MAJOR <= 8
+    {
+        // Void return type
+        Type *retTy = Type::getVoidTy(context);
+
+        // Does not take any argument
+
+        FunctionType *funcTy = FunctionType::get(retTy, false);
+        return module->getOrInsertFunction(funcname, funcTy);
+    }
+
+
 
 /* All the common methods and attributes go in there */
 
@@ -668,11 +684,11 @@ NB: this is obtained from debugging information, and therefore needs
 #if( LLVM_VERSION_MAJOR <= 8 )
             Constant *onCallFunc = getVoidFunc(TauStartFunc, context, module);
             Constant *onRetFunc = getVoidFunc(TauStopFunc, context, module);
-            Constant *onFiniFunc = getVoidFunc(TauFiniFunc, context, module);
+            Constant *onFiniFunc = getVoidFunc_noargs(TauFiniFunc, context, module);
 #else
             FunctionCallee onCallFunc = getVoidFunc(TauStartFunc, context, module);
             FunctionCallee onRetFunc = getVoidFunc(TauStopFunc, context, module);
-            FunctionCallee onFiniFunc = getVoidFunc(TauFiniFunc, context, module);
+            FunctionCallee onFiniFunc = getVoidFunc_noargs(TauFiniFunc, context, module);
 #endif // LLVM_VERSION_MAJOR <= 8
 
             std::string shorter(prettyname);
