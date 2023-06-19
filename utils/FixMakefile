@@ -1884,6 +1884,10 @@ case $1 in
 	echo "NOTE: Using newer version DYNINST 9+ "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     DYNINST12)
+	echo "NOTE: Using newer version DYNINST 12+ "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      DYNINSTDIR)
 	echo "NOTE: -dyninst=DIR specified"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

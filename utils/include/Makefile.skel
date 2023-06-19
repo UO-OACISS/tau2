@@ -140,6 +140,7 @@ INSTALLTRACE2PROFILE	= $(INSTALLDEST)/trace2profile
 # -lelf is for Solaris only
 #DYNINST8#DYNLIBS 	= -L$(DYNINST_LIB_DIR) -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -lsymLite -ldynDwarf #ENDIF#
 #DYNINST9#DYNLIBS 	= -L$(DYNINST_LIB_DIR) -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -ldynDwarf #ENDIF#
+#DYNINST12#DYNLIBS 	= -L$(DYNINST_LIB_DIR) -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -ldynDwarf #ENDIF#
 
 #SOL2CC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS -DSOL2CC #ENDIF#
 #SUNCC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS #ENDIF#
@@ -181,6 +182,7 @@ PDT_CFLAGS = $(PDTCFLAGS) $(PDT_COMPILE_FLAGS)
 #PDTHPACC#PDT_CFLAGS = -AA $(PDT_COMPILE_FLAGS) #ENDIF#
 #DYNINST41##DYN_PKG_OPT = -DTAU_DYNINST -DTAU_DYNINST41PLUS #ENDIF#
 #DYNINST8#DYN_PKG_OPT = -DTAU_DYNINSTAPI_8_PLUS #ENDIF#
+#DYNINST12#DYN_PKG_OPT = -DTAU_DYNINSTAPI_12_PLUS #ENDIF#
 #DYNINST8#DYNINST_PLATFORM= #ENDIF#
 
 #DEBUGPROF#DEBUGOPT = -DDEBUG #ENDIF#
