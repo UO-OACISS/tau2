@@ -7916,6 +7916,7 @@ fi
 # Install libunwind if requested
 ######################################################################
 libunwind=libunwind-1.3.1
+libunwind=libunwind-1.6.2
 libunwindtgz=$libunwind.tar.gz
 libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 if [ "x$unwind_dir" = "x" ]; then
