@@ -57,6 +57,7 @@ include/tau_config.h
 include/tauarch.h
 include/tauroot.h
 libunwind-*
+libdwarf-*
 src/TraceInput/Makefile
 src/wrappers/Makefile
 tools/src/TauIL/Makefile.inc
