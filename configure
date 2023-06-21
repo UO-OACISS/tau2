@@ -11937,7 +11937,8 @@ fi
 ######################################################################
 libdwarf=libdwarf
 #libdwarf_dirname=libdwarf-20181024
-libdwarf_dirname=libdwarf-0.6.0
+#libdwarf_dirname=libdwarf-0.6.0
+libdwarf_dirname=libdwarf-0.7.0
 libdwarftgz=$libdwarf_dirname.tar.gz
 libdwarfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libdwarftgz
 
