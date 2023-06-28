@@ -11910,6 +11910,9 @@ if [ $dyninst = yes ] ; then
     if [ -r $dyninstdir/include/version.h ] ; then
         fixmakeargs="$fixmakeargs DYNINST9"
     fi
+    if [ -r $dyninstdir/include/dyninstversion.h ] ; then
+        fixmakeargs="$fixmakeargs DYNINST12"
+    fi
 fi
 
 
