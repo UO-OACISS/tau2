@@ -702,7 +702,7 @@ NB: this is obtained from debugging information, and therefore needs
 
             /* Add TAU init in main */
 
-            if( 0 == prettyname.compare( "main" ) ){
+            if( 0 == prettyname.compare( "main" ) /*||  0 == prettyname.compare( "_QQmain" ) TODO fix the Fortran call */){
                 if (verbose) errs() << "\tmain function: adding init\n";
                 auto initfun = getVoidFunc_init( TauInitFunc, context, module );
                 auto setnodefun = getVoidFunc_set( TauSetNodeFunc, context, module );
@@ -712,10 +712,17 @@ NB: this is obtained from debugging information, and therefore needs
                 IRBuilder<> b4( b );
 
                 /* TauInitFunc takes two arguments: argc and argv */
-
                 SmallVector<Value *, 2> mainArgsVect;
-                for( Argument &arg : func.args() ){
-                    mainArgsVect.push_back( &arg );
+
+                if( func.args().empty() ){
+                    /* Fortran uses command_argument_count() and get_command_argument() to access the command-line parameters */
+                        mainArgsVect.push_back( 0 );
+                        mainArgsVect.push_back( nullptr );
+
+                } else {
+                    for( Argument &arg : func.args() ){
+                        mainArgsVect.push_back( &arg );
+                    }
                 }
                 b4.CreateCall( initfun, mainArgsVect );
 
@@ -785,8 +792,8 @@ NB: this is obtained from debugging information, and therefore needs
                         Instruction* e = &*I;
                         if( isa<ReturnInst>( e ) ) {
                             IRBuilder<> fina( e );
-                            if( 0 == prettyname.compare( "main" ) ){
-                                fina.CreateCall( onFiniFunc, args );
+                            if( 0 == prettyname.compare( "main" ) ||  0 == prettyname.compare( "_QQmain" ) ){
+                                fina.CreateCall( onFiniFunc );
                             } else {
                                 fina.CreateCall( onRetFunc, args );
                             }
