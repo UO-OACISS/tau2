@@ -577,6 +577,7 @@ void Tau_cupti_subscribe()
     CUPTI_CHECK_ERROR(err, "cuptiActivityRegisterCallbacks");
     subscribed = 1;
     TAU_DEBUG_PRINT("TAU: exiting Tau_cupti_subscribe\n");
+    TAU_VERBOSE("TAU: exiting Tau_cupti_subscribe\n");
 }
 
 
@@ -1122,6 +1123,7 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
 // Extra bool param that tells whether to run code
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         CUpti_CallbackId id, const void *params) {
+    if (Tau_global_get_insideTAU() > 0) { return; }
     // The get_device_count function causes a CUDA driver call.
     // If we're recieving callbacks for driver events, we have to not
     // process that call or we'll end up recursively callling get_device_count
