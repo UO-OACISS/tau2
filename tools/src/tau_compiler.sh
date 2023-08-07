@@ -2225,7 +2225,7 @@ else
 				 # ... and it is not supported (yet) by flang
 				 optCompInstOption="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
 				 if [ $groupType != $group_f_F  ]; then
-				     optCompInstOption=$optCompInstOption " -Xclang -load -Xclang ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -Xclang -mllvm -Xclang -tau-input-file=$tauSelectFile"
+				     optCompInstOption=$optCompInstOption" -Xclang -load -Xclang ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -Xclang -mllvm -Xclang -tau-input-file=$tauSelectFile"
 				 else
 				     export TAU_COMPILER_SELECT_FILE=$tauSelectFile
 				 fi
