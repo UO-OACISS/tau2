@@ -198,13 +198,13 @@ namespace {
         // Void return type
         Type *retTy = Type::getVoidTy(context);
 
-        // First argument is an int (argc)
+        // First argument is an int or i32 in LLVM (argc)
         Type *argTy0 = Type::getInt32Ty(context);
 
-        // Second argument is an i8* pointer (argv)
-        Type *argTy1 = Type::getInt8PtrTy(context);
-
-        SmallVector<Type *, 2> paramTys{argTy0, argTy1};
+        // Second argument is an i8* pointer or i8** in LLVM (argv)
+        Type* argTy1 = PointerType::getUnqual(Type::getInt8PtrTy(context));
+        
+        SmallVector<Type *, 2> paramTys{argTy0,argTy1};
 
         // Third param to `get` is `isVarArg`.  It's not documented, but might have
         // to do with variadic functions?
@@ -716,16 +716,19 @@ NB: this is obtained from debugging information, and therefore needs
 
                 if( func.args().empty() ){
                     /* Fortran uses command_argument_count() and get_command_argument() to access the command-line parameters */
-                        mainArgsVect.push_back( 0 );
+                    /*    mainArgsVect.push_back( 0 );
                         mainArgsVect.push_back( nullptr );
+                    */
 
                 } else {
                     for( Argument &arg : func.args() ){
                         mainArgsVect.push_back( &arg );
                     }
                 }
-                b4.CreateCall( initfun, mainArgsVect );
-
+                if( !func.args().empty() ){
+                    b4.CreateCall( initfun, mainArgsVect );
+                }
+                
                 /* TauSetNodeFunc takes one argument: 0 */
 
                 Value* z = ConstantInt::get( context, llvm::APInt( 32, 0, false ) );
