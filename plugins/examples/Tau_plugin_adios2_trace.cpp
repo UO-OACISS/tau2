@@ -1538,8 +1538,8 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
         tau_plugin::Tau_ADIOS2_parse_selection_file(tau_plugin::thePluginOptions().env_select_file.c_str());
     }
 #if TAU_MPI
-    global_world_rank = RtsLayer::myNode();
-    global_world_size = tau_totalnodes(0,1);
+    global_comm_rank = RtsLayer::myNode();
+    global_comm_size = tau_totalnodes(0,1);
 #endif
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(&cb);

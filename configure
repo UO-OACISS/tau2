@@ -7916,6 +7916,7 @@ fi
 # Install libunwind if requested
 ######################################################################
 libunwind=libunwind-1.3.1
+libunwind=libunwind-1.6.2
 libunwindtgz=$libunwind.tar.gz
 libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 if [ "x$unwind_dir" = "x" ]; then
@@ -9576,6 +9577,7 @@ fi
 # your code, you probably need binutils 2.36 to demangle C++ names.
 binutils=binutils-2.23.2
 binutils=binutils-2.36
+binutils=binutils-2.40
 binutilstgz=$binutils.tar.gz
 binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
 
@@ -9662,6 +9664,10 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       tar -xzf $binutilstgz
       cd $binutils
 
+      # Disable packages that don't build without dependencies on Texinfo 
+      # and that are not required to use BFD in TAU
+      BINUTILS_DISABLED_PKGS="--disable-gas --disable-gprof --disable-gprofng"
+
       # Configure binutils
       echo "Configuring binutils (see $tempdir/$binutils/tau_configure.log for details)..."
       case $machine in
@@ -9671,7 +9677,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc \
             CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++ \
             --prefix=$bfddir \
-            --disable-nls --disable-werror > tau_configure.log 2>&1
+            --disable-nls --disable-werror $BINUTILS_DISABLED_PKGS --enable-shared > tau_configure.log 2>&1
         err=$?
         ;;
       bgq)
@@ -9680,21 +9686,21 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc \
             CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++ \
             --prefix=$bfddir \
-            --disable-nls --disable-werror > tau_configure.log 2>&1
+            --disable-nls --disable-werror $BINUTILS_DISABLED_PKGS --enable-shared > tau_configure.log 2>&1
         err=$?
         ;;
       rs6000)
         ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --prefix=$bfddir \
-            --disable-nls --disable-werror --disable-largefile > tau_configure.log 2>&1
+            --disable-nls --disable-werror --disable-largefile $BINUTILS_DISABLED_PKGS --enable-shared > tau_configure.log 2>&1
         err=$?
         ;;
       ibm64)
         ./configure \
             CFLAGS="-maix64 -fPIC" CXXFLAGS="-maix64 -fPIC" AR="/usr/bin/ar -X64 "\
             --prefix=$bfddir \
-            --disable-nls --disable-werror --disable-largefile > tau_configure.log 2>&1
+            --disable-nls --disable-werror --disable-largefile $BINUTILS_DISABLED_PKGS --enable-shared > tau_configure.log 2>&1
         err=$?
         ;;
 
@@ -9704,7 +9710,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --host=$host \
             --prefix=$bfddir \
-            --disable-nls --disable-werror  --disable-largefile  > tau_configure.log 2>&1
+            --disable-nls --disable-werror  --disable-largefile $BINUTILS_DISABLED_PKGS --enable-shared  > tau_configure.log 2>&1
         err=$?
         ;;
       mic_linux)
@@ -9715,13 +9721,13 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --host=x86_64-k1om-linux \
             --prefix=$bfddir \
-            --disable-nls --disable-werror > tau_configure.log 2>&1
+            --disable-nls --disable-werror $BINUTILS_DISABLED_PKGS --enable-shared > tau_configure.log 2>&1
         err=$?
         ;;
       apple)
         export CFLAGS="-Wno-error=unused-value -Wno-error=deprecated-declarations -fPIC"
         export CXXFLAGS="-Wno-error=unused-value -Wno-error=deprecated-declarations -fPIC"
-        ./configure --prefix=$bfddir --disable-nls --disable-werror > tau_configure.log 2>&1
+        ./configure --prefix=$bfddir --disable-nls --disable-werror $BINUTILS_DISABLED_PKGS --enable-shared > tau_configure.log 2>&1
         err=$?
         ;;
       sparc64fx)
@@ -9737,7 +9743,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
                 AR=sparc64-unknown-linux-gnu-ar \
                 --host=sparc64-unknown-linux-gnu \
                     --prefix=$bfddir \
-                --disable-nls --disable-werror > tau_configure.log 2>&1
+                --disable-nls --disable-werror $BINUTILS_DISABLED_PKGS --enable-shared > tau_configure.log 2>&1
         err=$?
         ;;
       craycnl)
@@ -9750,13 +9756,13 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CFLAGS='-xMIC-AVX512 -fPIC' CXXFLAGS='-xMIC-AVX512 -fPIC' \
             --host=x86_64-k1om-linux \
             --prefix=$bfddir \
-            --disable-nls --disable-werror > tau_configure.log 2>&1
+            --disable-nls --disable-werror $BINUTILS_DISABLED_PKGS --enable-shared > tau_configure.log 2>&1
           err=$?
         else
           ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --prefix=$bfddir \
-            --disable-nls --disable-werror > tau_configure.log 2>&1
+            --disable-nls --disable-werror $BINUTILS_DISABLED_PKGS --enable-shared > tau_configure.log 2>&1
           err=$?
         fi
         ;;
@@ -9776,7 +9782,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         fi
 
         ./configure CC=ncc CXX=nc++ --prefix=$bfddir --disable-nls --disable-werror \
-        CFLAGS="-fPIC -Wno-error" CXXFLAGS="-fPIC -Wno-error" > tau_configure.log 2>&1
+        CFLAGS="-fPIC -Wno-error" CXXFLAGS="-fPIC -Wno-error" $BINUTILS_DISABLED_PKGS --enable-shared > tau_configure.log 2>&1
         err=$?
         ;;
       *)
@@ -9790,7 +9796,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CFLAGS="-fPIC -Wno-error" CXXFLAGS="-fPIC -Wno-error" \
             CC=$mpc_c_compiler CXX=$mpc_cxx_compiler \
             --prefix=$bfddir \
-            --disable-nls --disable-werror > tau_configure.log 2>&1
+            --disable-nls --disable-werror $BINUTILS_DISABLED_PKGS --enable-shared > tau_configure.log 2>&1
             err=$?
         else
           if [ "$base_c_compiler" = pgcc ] || [ "$base_env_c_compiler" = pgcc ]
@@ -9798,13 +9804,13 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             ./configure \
               CFLAGS="-fPIC -noswitcherror" CXX=pgc++ CXXFLAGS=-fPIC \
               --prefix=$bfddir \
-              --disable-nls --disable-werror > tau_configure.log 2>&1
+              --disable-nls --disable-werror $BINUTILS_DISABLED_PKGS --enable-shared > tau_configure.log 2>&1
               err=$?
           else
             ./configure \
               CFLAGS=-fPIC CXXFLAGS=-fPIC \
               --prefix=$bfddir \
-              --disable-nls --disable-werror > tau_configure.log 2>&1
+              --disable-nls --disable-werror $BINUTILS_DISABLED_PKGS --enable-shared > tau_configure.log 2>&1
               err=$?
           fi
         fi
@@ -10042,14 +10048,24 @@ else
                   if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
                     bfd_worked="yes"
                   else
-                    BFDLIBS="-lbfd -lz"
-# Mac BFD
+                    BFDLIBS="-lbfd -lsframe -liberty -lz -ldl"
                     if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
                       bfd_worked="yes"
                     else
-                      BFDLIBS="-lbfd -lintl"
-                      if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+                      BFDLIBS="-lbfd -lsframe -liberty -lintl -lz -ldl"
+                      if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null  2>&1 ; then
                         bfd_worked="yes"
+                      else
+                        BFDLIBS="-lbfd -lz"
+# Mac BFD
+                        if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+                          bfd_worked="yes"
+                        else
+                          BFDLIBS="-lbfd -lintl"
+                          if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+                            bfd_worked="yes"
+ 		  	  fi
+                        fi
                       fi
                     fi
                   fi
@@ -11921,7 +11937,8 @@ fi
 ######################################################################
 libdwarf=libdwarf
 #libdwarf_dirname=libdwarf-20181024
-libdwarf_dirname=libdwarf-0.6.0
+#libdwarf_dirname=libdwarf-0.6.0
+libdwarf_dirname=libdwarf-0.7.0
 libdwarftgz=$libdwarf_dirname.tar.gz
 libdwarfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libdwarftgz
 
