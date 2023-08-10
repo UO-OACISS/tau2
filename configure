@@ -3291,8 +3291,7 @@ fi
 if [ "x$rocm" = "xyes" -a "x$rocprofv2" = "xyes" ]; then
     fixmakeargs="$fixmakeargs TAU_USE_GPU"
     pthread=yes
-    rocprofiler=no
-    rocprofilerinc
+    rocprofiler=no    
     if [ "x$rocprofilerinc" = "x" ]; then
      rocprofilerinc="$rocmdir/include/rocprofiler"
      fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"

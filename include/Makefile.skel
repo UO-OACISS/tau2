@@ -1463,7 +1463,7 @@ TAU_INTERNAL_FLAGS = $(TAU_INTERNAL_FLAG1) $(TAU_INTERNAL_FLAG2)
 
 #PIN#TAU_PIN_LINKER_OPTS= -Wl,--hash-style=sysv $(PIN_ROOT)/intel64/runtime/pincrt/crtbeginS.o -Wl,-Bsymbolic -Wl,--version-script=$(PIN_ROOT)/source/include/pin/pintool.ver -fabi-version=2 -L$(PIN_ROOT)/intel64/runtime/pincrt -L$(PIN_ROOT)/intel64/lib -L$(PIN_ROOT)/intel64/lib-ext -L$(PIN_ROOT)/extras/xed-intel64/lib -lpin -lxed $(PIN_ROOT)/intel64/runtime/pincrt/crtendS.o -lpin3dwarf  -ldl-dynamic -nostdlib -lstlport-dynamic -lm-dynamic -lc-dynamic -lunwind-dynamic #ENDIF#
 #ROCPROFILER#TAU_ROCPROFILER_LINKER_OPTS=-L$(TAU_ROCPROFILER)/lib -lrocprofiler64 $(TAU_ROCM_DIR)/lib/libhsa-runtime64.so -Wl,-rpath,$(TAU_ROCM_DIR)/lib -Wl,-rpath,$(TAU_ROCPROFILER)/lib #ENDIF#
-#ROCPROFILERV2#TAU_ROCPROFILER_LINKER_OPTS=-L$(TAU_ROCM_DIR)/lib -lrocprofiler64 $(TAU_ROCM_DIR)/lib/libhsa-runtime64.so -Wl,-rpath,$(TAU_ROCM_DIR)/lib -Wl,-rpath,$(TAU_ROCPROFILER)/lib #ENDIF#
+#ROCPROFILERV2#TAU_ROCPROFILER_LINKER_OPTS=-L$(TAU_ROCM_DIR)/lib -lrocprofiler64v2 $(TAU_ROCM_DIR)/lib/libhsa-runtime64.so -Wl,-rpath,$(TAU_ROCM_DIR)/lib -Wl,-rpath,$(TAU_ROCPROFILER)/lib #ENDIF#
 #ROCTRACER#TAU_ROCTRACER_LINKER_OPTS=-L$(TAU_ROCTRACER_LIB_DIR) -lroctracer64 -Wl,-rpath,$(TAU_ROCTRACER_LIB_DIR) #ENDIF#
 #ROCMSMI#TAU_ROCMSMI_LINKER_OPTS=-L$(TAU_ROCM_SMI_LIB_DIR) -lrocm_smi64 -Wl,-rpath,$(TAU_ROCM_SMI_LIB_DIR) #ENDIF#
 #LEVEL_ZERO#TAU_LEVEL_ZERO_LINKER_OPTS=-L$(TAU_L0_LIB_DIR) -lze_loader -Wl,-rpath,$(TAU_L0_LIB_DIR) #ENDIF#

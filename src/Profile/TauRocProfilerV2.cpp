@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include <Profile/TauRocm.h>
 #include <Profile/TauBfd.h>  // for name demangling
 //#include <Profile/rocprofilerV2.h>
-#include <rocprofiler/rocprofiler.h>
+#include <rocprofiler/v2/rocprofiler.h>
 
 
 #include <dlfcn.h>
