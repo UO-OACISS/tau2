@@ -38,6 +38,14 @@ else
   on_craycnl=false
 fi
 
+if tau-config | grep -q 'TAUARCH=arm64_linux' 2>/dev/null ; then
+  on_arm64l=true
+else
+  on_arm64l=false
+fi
+
+
+
 echoIfVerbose () {
   if [ $verbose = "true" ] ; then
     echo -e "$1"
@@ -919,8 +927,12 @@ fi
 if [ $track_io = "true" ] ; then
   # Add the io wrapper library to the LD_PRELOAD list
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-iowrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  if [ $on_arm64l ];then
+     unset TAUEX_LD_AUDITOR
+  else
   #use the auditor
   TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
+  fi
   #Needed for the auditor... but DON'T SET IT NOW!
   # Only needed by GDB and the auditor.
   # export LD_BIND_NOW=1
@@ -964,8 +976,12 @@ fi
 if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
   # Add the memory wrapper library to the LD_PRELOAD list
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+   if [ $on_arm64l ];then
+     unset TAUEX_LD_AUDITOR
+  else
   #use the auditor
   TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
+  fi
   #Needed for the auditor... but DON'T SET IT NOW!
   # Only needed by GDB and the auditor.
   #export LD_BIND_NOW=1

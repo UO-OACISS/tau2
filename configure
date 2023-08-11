@@ -4038,7 +4038,7 @@ case $machine in
         if [ "x$cxx_compiler" = "xdefault" -a "x$mpi" = "xyes" ]; then
           # Are we on a Fujitsu FX aarch64 system with Fujitsu compilers in the path?
           found_compiler=`which mpiFCC 2>/dev/null`
-          if [ "x$found_compiler" != "x" -a -x $found_compiler ]; then
+          if [ "x$found_compiler" != "x" -a -x "$found_compiler" ]; then
              echo "TAU: Using mpiFCC, mpifcc, and mpifrt as C++, C, and Fortran compilers respectively."
              cxx_compiler=mpiFCC
              c_compiler=mpifcc
@@ -7434,8 +7434,7 @@ cat << EOF > gccAuditorTest.c
 EOF
 
 $host_prefix$c_compiler $orig_useropt -c gccAuditorTest.c 1> /dev/null 2>&1
-if [ "$?" = "0" ]
-then
+if [ "$?" = "0" ] && [ $machine != "arm64_linux" ]; then
     echo "Using LD AUDITOR."
     fixmakeargs="$fixmakeargs LD_AUDITOR_AVAILABLE"
 else
