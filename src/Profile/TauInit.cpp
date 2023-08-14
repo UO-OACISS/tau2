@@ -498,6 +498,11 @@ alfred(void *arg)
 void TauL0EnableProfiling(void);
 #endif
 
+#ifdef TAU_ENABLE_ROCPROFILERV2
+void Tau_rocm_initialize_v2(void);
+#endif
+
+
 extern "C" int Tau_init_initializeTAU()
 {
 
@@ -580,6 +585,10 @@ extern "C" int Tau_init_initializeTAU()
 
 #ifdef TAU_ENABLE_LEVEL_ZERO
   TauL0EnableProfiling();
+#endif
+
+#ifdef TAU_ENABLE_ROCPROFILERV2 
+  Tau_rocm_initialize_v2();
 #endif
 
   // Mark initialization complete so calls below can start timers

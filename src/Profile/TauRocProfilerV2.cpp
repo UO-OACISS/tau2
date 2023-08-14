@@ -24,7 +24,6 @@ THE SOFTWARE.
 #include <hsa/hsa.h>
 #include <Profile/TauRocm.h>
 #include <Profile/TauBfd.h>  // for name demangling
-//#include <Profile/rocprofilerV2.h>
 #include <rocprofiler/v2/rocprofiler.h>
 
 
@@ -46,10 +45,6 @@ THE SOFTWARE.
 #include <sstream>
 #include <vector>
 
-
-#define PUBLIC_API __attribute__((visibility("default")))
-#define CONSTRUCTOR_API __attribute__((constructor))
-#define DESTRUCTOR_API __attribute__((destructor))
 
 /* I know it's bad form to have this map just hanging out here,
  * but when I wrapped it with a getter function, it failed to work.
@@ -104,8 +99,6 @@ std::string Tau_roctracer_lookup_activity(uint64_t id) {
     return name;
 }
 
-// Dispatch callbacks and context handlers synchronization
-pthread_mutex_t rocm_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 
 // Macro to check ROCProfiler calls status
 #define CHECK_ROCPROFILER(call)                                                \
@@ -118,8 +111,6 @@ rocprofiler_session_id_t session_id;
 rocprofiler_buffer_id_t counter_buffer_id;
 rocprofiler_buffer_id_t trace_buffer_id;
 static std::vector<rocprofiler_filter_id_t> filter_ids;
-// Tool is unloaded
-volatile bool is_loaded = false;
 
   const char* GetDomainName(rocprofiler_tracer_activity_domain_t domain) {
     switch (domain) {
@@ -319,6 +310,9 @@ void FlushTracerRecord(rocprofiler_record_tracer_t tracer_record, rocprofiler_se
   }
   else{
     printf("ACTIVITY_DOMAIN_ROCTX detected, TODO!!!\n");
+    //Unable to idenfity if we are in a Range or Mark. Therefore, at this moment implementing this could easily crash TAU if ROCTX is used.
+    //Only roctxRangeStart could be identified as it has an ID number.
+    //https://github.com/UO-OACISS/tau2/blob/be9105754511d4575bba68a41f1cacb5ffb757e8/src/Profile/TauRocTracer.cpp#L160-L214
   }
 }
 
@@ -597,35 +591,3 @@ extern void Tau_rocprofv2_stop() {
             CHECK_ROCPROFILER(rocprofiler_finalize());
 }
 
-
-// Tool destructor
-extern "C" PUBLIC_API void OnUnloadTool() {
-  TAU_VERBOSE("Inside OnUnloadTool\n");
-
-  if (pthread_mutex_lock(&rocm_mutex) != 0) {
-    perror("pthread_mutex_lock");
-    abort();
-  }
-  if (!is_loaded)
-    return;
-  is_loaded = false;
-  if (pthread_mutex_unlock(&rocm_mutex) != 0) {
-    perror("pthread_mutex_unlock");
-    abort();
-  }
-
-  Tau_stop_top_level_timer_if_necessary();
-}
-
-
-
-extern "C" CONSTRUCTOR_API void constructor() {
-  TAU_VERBOSE("INTT constructor\n");
-  Tau_rocm_initialize_v2();
-  fflush(stdout);
-}
-
-extern "C" DESTRUCTOR_API void destructor() {
-  if (is_loaded == true)
-    OnUnloadTool();
-}
