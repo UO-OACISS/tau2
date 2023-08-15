@@ -23,6 +23,8 @@ Version 2.32 changes (from 2.31):
 10. Added support for DyninstAPI 12.0.
 11. Added support for updated binutils and libunwind external packages.
 12. Fixed trace buffer output on MPI rank 1 bug. 
+13. Updated memory instrumentation for aarch64. 
+14. Updated TAU plugin examples. 
 
 Version 2.31 changes (from 2.30):
 1. Updates for MPI on craycnl (CRAY_MPICH_PREFIX). 
