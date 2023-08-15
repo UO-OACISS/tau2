@@ -1054,8 +1054,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         //const int start_loc = my_real_location(node,0);//node + num_locations[node];//max_threads;//TAU_MAX_THREADS; //TODO: DYNATHREAD
         //const int end_loc = start_loc + num_locations[node];
         int thread_num = 0;
-	static int cputhreads ;
-	cputhreads = 0;
+	int cputhreads = 0;
         for(int it_thread = 0; it_thread < num_locations[node]; ++it_thread) {
             int loc=my_real_location(node,it_thread);
 		    OTF2_LocationType_enum thread_type = OTF2_LOCATION_TYPE_CPU_THREAD;
