@@ -738,6 +738,8 @@ usage() {
     echo "    Note: 'download' will download and build the library automatically."
     echo "-unwind=<dir | download> ... Specify a libunwind directory or download."
     echo "    Note: 'download' will download and build the library automatically."
+    echo "-unwind_gcc ............ Specify gcc as the compiler to build libuwind."
+    echo "-static_libunwind ............ Use libunwind.a instead of libunwind.so."
     echo "-zlib=<dir | download> .......... Specify a zlib directory or download."
     echo "    Note: 'download' will download and build the library automatically."
     echo ""
@@ -897,6 +899,8 @@ for arg in "$@"; do
         echo "    Note: 'download' will download and build the library automatically."
         echo "-unwind=<dir | download> ... Specify a libunwind directory or download."
         echo "    Note: 'download' will download and build the library automatically."
+        echo "-unwind_gcc ............ Specify gcc as the compiler to build libuwind."
+        echo "-static_libunwind ............ Use libunwind.a instead of libunwind.so."
         echo "-zlib=<dir | download> .......... Specify a zlib directory or download."
         echo "    Note: 'download' will download and build the library automatically."
         echo "-cube=<dir> | own.| ext..... Specify location of CUBE or use TAU's jar."
@@ -1260,6 +1264,8 @@ unwind_lib=
 unwind_flag=
 unwind_lib_flag=
 unwind_extras=
+unwind_gcc=no
+static_libunwind=no
 download_unwind=no
 download_scorep=no
 tau_links_rt=no
@@ -1828,26 +1834,38 @@ for arg in "$@"; do
             shift
             ;;
 
-    -unwind=download*)
-        echo "Downloading libunwind..."
-        # So that the user doesn't have to specify the unwinder,
-        # use libunwind as the default.
-        unwinder="libunwind"
-        unwind_flag="-DTAU_USE_LIBUNWIND"
-        unwind_lib_flag="-lunwind"
-        download_unwind=yes
-        shift
-        ;;
+        -unwind=download*)
+            echo "Downloading libunwind..."
+            # So that the user doesn't have to specify the unwinder,
+            # use libunwind as the default.
+            unwinder="libunwind"
+            unwind_flag="-DTAU_USE_LIBUNWIND"
+            unwind_lib_flag="-lunwind"
+            download_unwind=yes
+            shift
+            ;;
+
+	-unwind_gcc)
+            echo "Using GCC to compile libunwind"
+	    unwind_gcc=yes
+            shift
+	    ;; 
+
+	-static_libunwind)
+            echo "Using libunwind.a instead of libunwind.so"
+	    static_libunwind=yes
+            shift
+	    ;;
 
         -unwind=*)
             unwind_dir=`echo $arg | sed -e 's/-unwind=//'`
-        if [ $unwind_dir != "/usr" ]; then
+            if [ $unwind_dir != "/usr" ]; then
               unwind_inc="$unwind_dir/include"
               unwind_lib="$unwind_dir/lib"
               if [ -d "$unwind_dir/lib64" ]; then
                       unwind_lib="$unwind_dir/lib64"
               fi
-        fi
+            fi
             # So that the user doesn't have to specify the unwinder,
             # use libunwind as the default.
             if [ "x$unwinder" = "xnone" ] ; then
@@ -7990,8 +8008,9 @@ if [ "x$download_unwind" = xyes ] ; then
       tar -xzf $libunwindtgz
       echo "removing $libunwindtgz..."
       rm $libunwindtgz
-      if [ ${c_compiler} = mpc_cc -o ${c_compiler} = mpc_icc -o ${c_compiler} = hcc -o "x$PE_ENV" = "xCRAY" ]
+      if [ ${c_compiler} = mpc_cc -o ${c_compiler} = mpc_icc -o ${c_compiler} = hcc -o "x$PE_ENV" = "xCRAY" -o "x${unwind_gcc}" = "xyes" ]
       then
+	echo "NOTE: Using gcc/g++ to compile libunwind"
         unwind_c_compiler=gcc
         unwind_cxx_compiler=g++
       else
@@ -10853,6 +10872,10 @@ if [ "x$unwinder" != "xnone" ] ; then
         if [ "x$unwind_lib" != "x" ] ; then
             unwind_extras="-Wl\,-rpath\,$unwind_lib"
         fi
+    fi
+    if [ "x$static_libunwind" = "xyes" ]; then
+      unwind_lib_flag="$unwind_lib/libunwind.a"
+      echo "NOTE: Using unwind_lib_flag=$unwind_lib_flag"
     fi
     if [ "x$unwind_inc" != "x" ] ; then
       unwind_inc="-I${unwind_inc}"
