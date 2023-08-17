@@ -609,14 +609,23 @@ NB: this is obtained from debugging information, and therefore needs
             // Compare similarly for other GPUs. If it matches, do not instrument it.
 
             // if not running on the CPU, skip it
-            if (is_host_func == false) return false;
+            if (is_host_func == false){
+		    if (verbose) errs() << " Not host function, skip\n";
+		    return false;
+	    }
             // if the function name is empty, skip it
-            if( prettycallName == "" ) return false;
+            if( prettycallName == "" ){
+		    if (verbose) errs() << " Function name is empty, skip\n";
+		    return false;
+	    }
             // if the instruction count is small, skip it
-            if( instructionCount == 0) return false;
+            if( instructionCount == 0){
+		    if (verbose) errs() << " Empty or function from a library, skip\n";
+		    return false;
+	    }
 
             if( instructionCount < minInstructionCount && prettycallName.compare("main") != 0) {
-                //if (verbose) errs() << "Skipping, only " << instructionCount << " instructions.\n";
+                if (verbose) errs() << "Skipping, only " << instructionCount << " instructions, minimum set to " << minInstructionCount << ".\n";
                 return false;
             }
 
@@ -906,6 +915,9 @@ NB: this is obtained from debugging information, and therefore needs
                     }
                     loadFunctionsFromFile(ifile);
                 }
+		else{
+		   if (verbose) errs() << "No selective instrumentation file specified\n";
+		}
             }
         }
         ~Instrument() {
