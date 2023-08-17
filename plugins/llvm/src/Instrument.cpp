@@ -121,6 +121,7 @@ namespace {
                 cl::desc("Don't actually instrument the code, just print what would be instrumented"));
 
     auto TauInitFunc = "Tau_init"; // arguments to pass: argc, argv
+    auto TauDestFunc = "Tau_destructor_trigger"; // arguments to pass:
     auto TauFiniFunc = "Tau_shutdown"; // arguments to pass:
     auto TauSetNodeFunc = "Tau_set_node"; // argument to pass: 0
 
@@ -685,10 +686,12 @@ NB: this is obtained from debugging information, and therefore needs
             Constant *onCallFunc = getVoidFunc(TauStartFunc, context, module);
             Constant *onRetFunc = getVoidFunc(TauStopFunc, context, module);
             Constant *onFiniFunc = getVoidFunc_noargs(TauFiniFunc, context, module);
+            Constant *onDestFunc = getVoidFunc_noargs(TauDestFunc, context, module);
 #else
             FunctionCallee onCallFunc = getVoidFunc(TauStartFunc, context, module);
             FunctionCallee onRetFunc = getVoidFunc(TauStopFunc, context, module);
             FunctionCallee onFiniFunc = getVoidFunc_noargs(TauFiniFunc, context, module);
+            FunctionCallee onDestFunc = getVoidFunc_noargs(TauDestFunc, context, module);
 #endif // LLVM_VERSION_MAJOR <= 8
 
             std::string shorter(prettyname);
@@ -796,8 +799,9 @@ NB: this is obtained from debugging information, and therefore needs
                         if( isa<ReturnInst>( e ) ) {
                             IRBuilder<> fina( e );
                             if( 0 == prettyname.compare( "main" ) ||  0 == prettyname.compare( "_QQmain" ) ){
+                                fina.CreateCall( onDestFunc );
                                 fina.CreateCall( onFiniFunc );
-                            } else {
+                           } else {
                                 fina.CreateCall( onRetFunc, args );
                             }
                         }
