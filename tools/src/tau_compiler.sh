@@ -1349,10 +1349,10 @@ if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
 	echo "Warning: the plugin supposed to be installed at ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} does not exist."
     fi
     # Which version of clang?
-    clang_version=`$compilerSpecified --version | grep "version" | awk {'print $3'} | awk -F'.' {'print $1'}`
+    clang_version=`$compilerSpecified --version | grep "clang version" | awk {'print $3'} | awk -F'.' {'print $1'}`
     if [ "x$clang_version" = "xversion" ]; then
     # AMD clang version 13.0.0   -> use the 4th column instead of 3rd. 
-      clang_version=`$compilerSpecified --version | grep "version" | awk {'print $4'} | awk -F'.' {'print $1'}`
+      clang_version=`$compilerSpecified --version | grep "clang version" | awk {'print $4'} | awk -F'.' {'print $1'}`
     fi
     if [[ "$clang_version" -ge "14" ]] ; then    
 	CLANG_PLUGIN_OPTION="-fpass-plugin"
