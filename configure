@@ -8045,8 +8045,12 @@ if [ "x$download_unwind" = xyes ] ; then
             unwind_cxx_compiler=${CRAY_PE_USE_CLANG}++
           fi
           ./configure --prefix=${unwind_dir}  CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared --disable-minidebuginfo > ${libunwind_log} 2>&1
-        else
-          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} > ${libunwind_log} 2>&1
+         else
+          if [ "x$static_libunwind" = xyes ]; then
+              ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler}  CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared > ${libunwind_log}  2>&1
+          else
+              ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} > ${libunwind_log}  2>&1
+          fi
         fi
         configresult=$?
         if [ $configresult -eq 0 ] ; then
