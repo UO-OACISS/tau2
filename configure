@@ -768,6 +768,7 @@ usage() {
     echo "-rocm[=<dir>] ...... Specify alternate path to ROCm (/opt/rocm default)."
     echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
     echo "-rocprofv2 .......................................... Enable rocprofv2."
+    echo "-rocmsmi=<dir> ..................... Specify location of RoCm rocm_smi."
 #   echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
 #   echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
     echo "-level_zero[=<dir>] ................. Specify path to Intel Level Zero."
@@ -936,6 +937,7 @@ for arg in "$@"; do
         echo "-rocm[=<dir>] ..... Specify alternate path to ROCm (/opt/rocm default)."
         echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
 	echo "-rocprofv2 .......................................... Enable rocprofv2."
+	echo "-rocmsmi=<dir> ..................... Specify location of RoCm rocm_smi."
         #echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
         #echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
         echo "-roctracer=<dir> .................. Specify location of ROCm roctracer."
@@ -1364,6 +1366,7 @@ rocm=no
 rocprofiler=no
 rocprofv2=no
 roctracer=no
+rocmsmi=no
 hip=no
 use_opencl=no
 use_openacc=no
@@ -3056,7 +3059,17 @@ for arg in "$@"; do
             pthread=yes
             shift
             ;;
-
+	-rocmsmi=*)
+            rocmsmidir=`echo $arg | sed -e 's/-rocmsmi=//' -e 's/ /#/g'`
+            if [ ! -d $rocmsmidir ]; then
+              echo  "Error: Cannot access ROCm smi directory $rocmsmidir"
+              exit 1
+            else
+              fixmakeargs="$fixmakeargs rocmsmidir=$rocmsmidir"
+              rocmsmi=yes
+            fi
+            shift
+            ;;
 
         -hip=*)
             hipdir=`echo $arg | sed -e 's/-hip=//' -e 's/ /#/g'`
@@ -3323,6 +3336,12 @@ if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -
   tauoptions="${tauoptions}-rocprofiler"
   pthread=yes
 fi
+
+if [ "x$rocmsmi" = "xno" ]; then
+  echo "No rocmsmi specified, using $rocmdir"
+  fixmakeargs="$fixmakeargs rocmsmidir=$rocmdir"
+fi
+
 
 if [ "x$use_opencl" = "xyes" -a "x$openclinclude" = "x" ]; then
   ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `

@@ -1082,6 +1082,11 @@ case $1 in
         roctracerlibdir=`echo $1 | sed -e 's/^roctracerlibdir=//' -e 's/#/ /g'`
 	echo "s@^TAU_ROCTRACER_LIB_DIR=\(.*\)@TAU_ROCTRACER_LIB_DIR=$roctracerlibdir@g" >> $sedout
         ;;
+     rocmsmidir=*)
+       rocmsmidir=`echo $1 | sed -e 's/^rocmsmidir=//' -e 's/#/ /g'`
+        echo "s@^TAU_ROCM_SMI_DIR=\(.*\)@TAU_ROCM_SMI_DIR=$rocmsmidir@g" >> $sedout
+        ;;
+
      hipdir=*)
         hipdir=`echo $1 | sed -e 's/^hipdir=//' -e 's/#/ /g'`
 	echo "s@^TAU_HIP=\(.*\)@TAU_HIP=$hipdir@g" >> $sedout
