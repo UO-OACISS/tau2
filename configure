@@ -3337,7 +3337,7 @@ if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -
   pthread=yes
 fi
 
-if [ "x$rocmsmi" = "xno" ]; then
+if [ "x$rocm" = "xyes" -a "x$rocmsmi" = "xno" ]; then
   echo "No rocmsmi specified, using $rocmdir"
   fixmakeargs="$fixmakeargs rocmsmidir=$rocmdir"
 fi
