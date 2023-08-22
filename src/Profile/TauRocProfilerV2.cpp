@@ -156,6 +156,8 @@ void FlushTracerRecord(rocprofiler_record_tracer_t tracer_record, rocprofiler_se
   static unsigned long long last_timestamp = Tau_get_last_timestamp_ns();
   queueid = tracer_record.queue_id.handle;
   taskid = Tau_get_initialized_queues(queueid);
+  static std::map<uint64_t, std::string> timer_map;
+  static std::mutex map_lock;
   //printf("tracer_record taskid %d\n", taskid);
   if (taskid == -1) { // not initialized
     TAU_CREATE_TASK(taskid);
@@ -260,6 +262,21 @@ void FlushTracerRecord(rocprofiler_record_tracer_t tracer_record, rocprofiler_se
           roctx_id = std::stoll(std::string(strdup(roctx_id_str)));
           free(roctx_id_str);
         }
+	if(roctx_id > 0){
+		if(roctx_message_size>1){
+	                const std::lock_guard<std::mutex> guard(map_lock);
+			TAU_START(roctx_message.c_str());
+			timer_map.insert( std::pair<uint64_t, std::string>(roctx_id, roctx_message));
+		}
+		else{
+	                const std::lock_guard<std::mutex> guard(map_lock);
+			 auto p = timer_map.find(roctx_id);
+                	if (p != timer_map.end()) {
+                    		TAU_STOP(p->second.c_str());
+                    		timer_map.erase(roctx_id);
+                	}
+		}
+	}
       }
     }
     if (tracer_record.domain == ACTIVITY_DOMAIN_HIP_OPS) {
@@ -307,12 +324,6 @@ void FlushTracerRecord(rocprofiler_record_tracer_t tracer_record, rocprofiler_se
     TAU_STOP_TASK(task_name.c_str(), taskid);
     //TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", task_name, taskid, tracer_record.timestamps.end.value);
     Tau_set_last_timestamp_ns(tracer_record.timestamps.end.value);
-  }
-  else{
-    printf("ACTIVITY_DOMAIN_ROCTX detected, TODO!!!\n");
-    //Unable to idenfity if we are in a Range or Mark. Therefore, at this moment implementing this could easily crash TAU if ROCTX is used.
-    //Only roctxRangeStart could be identified as it has an ID number.
-    //https://github.com/UO-OACISS/tau2/blob/be9105754511d4575bba68a41f1cacb5ffb757e8/src/Profile/TauRocTracer.cpp#L160-L214
   }
 }
 
@@ -511,7 +522,7 @@ void Tau_rocm_initialize_v2() {
             apis_requested.emplace_back(ACTIVITY_DOMAIN_HIP_OPS);
             apis_requested.emplace_back(ACTIVITY_DOMAIN_HSA_API);
             apis_requested.emplace_back(ACTIVITY_DOMAIN_HSA_OPS);
-            //apis_requested.emplace_back(ACTIVITY_DOMAIN_ROCTX);
+            apis_requested.emplace_back(ACTIVITY_DOMAIN_ROCTX);
 
 
             // Creating Output Buffer for the data
