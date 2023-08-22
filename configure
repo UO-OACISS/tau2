@@ -3320,6 +3320,23 @@ fi
 fi
 
 if [ "x$rocm" = "xyes" -a "x$rocprofv2" = "xyes" ]; then
+
+    cat <<EOF > tau_rocprofv2_vtest.c
+#include <include/rocm_version.h>
+
+#if ((ROCM_VERSION_MAJOR != 5) || (ROCM_VERSION_MINOR != 6))
+#error "ROCM version is not 5.6"
+#endif
+EOF
+
+    if $cxx_compiler $orig_useropt -c tau_rocprofv2_vtest.c -I$rocmdir 1> /dev/null 2>&1
+    then
+	echo " Building rocprofv2" >/dev/null
+    else
+       echo "For rocprofv2 use rocm/5.6.0"
+       exit
+    fi
+
     fixmakeargs="$fixmakeargs TAU_USE_GPU"
     pthread=yes
     rocprofiler=no    
