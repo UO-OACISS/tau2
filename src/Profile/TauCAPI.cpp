@@ -1188,7 +1188,7 @@ bool validate_thread() {
     return true;
 }
 #else
-bool validate_thread() {} // do nothing
+bool validate_thread() {return false;} // do nothing
 #endif
 
 //////////////////////////////////////////////////////////////////////
