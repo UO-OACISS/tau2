@@ -41,6 +41,7 @@ CEXTRA =
 
 ##############################################
 #PGICC#PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF#
+#NVIDIA#CEXTRA = -Xcompiler -fPIC #ENDIF#
 #PGINOPRELINK#PRELINK_PHASE = #ENDIF#
 #############################################
 
@@ -248,6 +249,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 #NEC_COMPILERS#AR_SHFLAGS 	= -shared #ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
+#NVIDIA#AR_SHFLAGS              = -shared -Xcompiler -fPIC #ENDIF#
 #APPLEPGI#AR_SHFLAGS 		= -shared #ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
 #FX#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#

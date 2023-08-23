@@ -1395,7 +1395,7 @@ for arg in "$@"; do
 
         -cc=*)
             myarg=`echo $arg | sed 's/-cc=//'`
-            if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = gcc-5 -o $myarg = gcc-6 -o $myarg = gcc-7 -o $myarg = gcc-8 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = icx -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = hcc -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc -o $myarg = armclang  -o $myarg = ncc -o $myarg = hipcc -o $myarg = nvc -o $myarg = amdclang ] || [[ $myarg == "gcc-"* ]]
+            if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = gcc-5 -o $myarg = gcc-6 -o $myarg = gcc-7 -o $myarg = gcc-8 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = icx -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = hcc -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc -o $myarg = armclang  -o $myarg = ncc -o $myarg = hipcc -o $myarg = nvc -o $myarg = nvcc -o $myarg = amdclang ] || [[ $myarg == "gcc-"* ]]
             then
                 c_compiler=$myarg
                 c_compiler_specified=yes
@@ -1409,7 +1409,7 @@ for arg in "$@"; do
                 testmp=`echo $myarg | sed -e 's/^mp//'`
                 if [ "y$testxlc" = "y$myarg"  -a "y$testmp" = "y$myarg" ]
                 then
-                    echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'gcc-*', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'icx', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpc_icc', 'mpifcc', 'mpifccpx', 'clang', 'hcc', 'bgclang', 'mpicc', 'mcc', 'oshcc', 'armclang', 'ncc', 'hipcc' 'nvc', or 'amdclang'"
+                    echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'gcc-*', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'icx', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpc_icc', 'mpifcc', 'mpifccpx', 'clang', 'hcc', 'bgclang', 'mpicc', 'mcc', 'oshcc', 'armclang', 'ncc', 'hipcc' 'nvc', 'nvcc', or 'amdclang'"
                     #       exit 1
                 else
                     if [ "y$testxlc" != "y$myarg" ]
@@ -1425,7 +1425,7 @@ for arg in "$@"; do
 
         -c++=*)
             myarg=`echo $arg | sed 's/-c++=//'`
-            if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = g++-5 -o $myarg = g++-6 -o $myarg = g++-7 -o $myarg = g++-8 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = icpx -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx -o $myarg = mpic++ -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiicpx -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = mpc_icpx -o $myarg = clang++ -o $myarg = hcc -o $myarg = hipcc -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx  -o $myarg = armclang++ -o $myarg = nc++  -o $myarg = hipcc -o $myarg = nvc++ -o $myarg = amdclang++ ] || [[ $myarg == "g++-"* ]]
+            if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = g++-5 -o $myarg = g++-6 -o $myarg = g++-7 -o $myarg = g++-8 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = icpx -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx -o $myarg = mpic++ -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiicpx -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = mpc_icpx -o $myarg = clang++ -o $myarg = hcc -o $myarg = hipcc -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx  -o $myarg = armclang++ -o $myarg = nc++  -o $myarg = hipcc -o $myarg = nvc++ -o $myarg = nvcc -o $myarg = amdclang++ ] || [[ $myarg == "g++-"* ]]
             then
                 cxx_compiler=$myarg
                 cxx_compiler_specified=yes
@@ -5367,7 +5367,18 @@ case $cxx_compiler in
         fi
         ;;
 
-
+    nvcc)
+        echo "Default C++ compiler will be NVIDIA nvcc C++ Compiler"
+        nvhpc=yes
+        pgi=yes
+	nvidia=yes
+        extradir=`which nvc | sed s/nvc/../`
+	
+        fixmakeargs="$fixmakeargs COMPINST_PGI PGINOPRELINK"
+        fixmakeargs="$fixmakeargs NVIDIA PGICC"
+	
+        ;;
+    
 
 
     FCC|mpiFCCpx|mpiFCC)
@@ -5739,8 +5750,18 @@ case $cxx_compiler in
               fixmakeargs="$fixmakeargs PGI_FORTRAN NV_FORTRAN"
               fixmakeargs="$fixmakeargs COMPINST_PGI PGINOPRELINK"
               fixmakeargs="$fixmakeargs PGI PGICC"
+	      ;;
+	    
+            nvcc)
+              echo "Default C++ compiler will be NVIDIA nvcc C++ Compiler"
+              nvhpc=yes
+              pgi=yes
+              extradir=`which nvc | sed s/nvc/../`
 
+              fixmakeargs="$fixmakeargs COMPINST_PGI PGINOPRELINK"
+              fixmakeargs="$fixmakeargs PGI PGICC"
               ;;
+	    
             *)
                 echo "ERROR Unknown C++ compiler in mpicxx/mpic++: $cxx_compiler"
                 ;;
@@ -7285,6 +7306,7 @@ EOF
 
     if [ "$llvm" == "yes" ]; then openacc_flag=-fopenacc; fi
     if [ "$pgi" == "yes" ];  then openacc_flag=-acc; fi
+    if [ "$nvhpc" == "yes" ];  then openacc_flag=-acc; fi
 
     #This deletion is here in case the file was left behind from a previous call to configure
     rm -f ./openacc_test
@@ -10908,7 +10930,7 @@ if [ $vtf = yes ] ; then
 fi
 
 if [ "x$unwinder" != "xnone" ] ; then
-    if [ $c_compiler = gcc -o $c_compiler = icc -o $c_compiler = icx -o $c_compiler = pgcc -o $c_compiler = mpc_icc -o $c_compiler = mpc_cc -o $c_compiler = clang -o $c_compiler = mpicc -o $c_compiler=mpiicc -o $c_compiler = mpiicx -o $c_compiler = hipcc -o $c_compiler = nvc -o $c_compiler = icx -o $c_compiler = amdclang ] ; then
+    if [ $c_compiler = gcc -o $c_compiler = icc -o $c_compiler = icx -o $c_compiler = pgcc -o $c_compiler = mpc_icc -o $c_compiler = mpc_cc -o $c_compiler = clang -o $c_compiler = mpicc -o $c_compiler=mpiicc -o $c_compiler = mpiicx -o $c_compiler = hipcc -o $c_compiler = nvc -o $c_compiler = nvcc -o $c_compiler = icx -o $c_compiler = amdclang ] ; then
         if [ "x$unwind_lib" != "x" ] ; then
             unwind_extras="-Wl\,-rpath\,$unwind_lib"
         fi
@@ -12655,7 +12677,7 @@ apple)
     ;;
 esac
 
-if [ "$enable_export_dynamic" = "yes" -a "$pin" = "no" ] ; then
+if [ "$enable_export_dynamic" = "yes" -a "$pin" = "no" -a "$nvhpc" = "no" ] ; then
     extra_linker_args="${extralinker_args}#-Wl,--export-dynamic"
 fi
 

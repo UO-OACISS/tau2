@@ -155,6 +155,7 @@ TAU_PRELOAD_SHARED=libTAU-preload$(TAU_SHLIBX)
 
 PRELOAD_CC = $(CC)
 #PGI#PRELOAD_CC = $(TAUROOT)/src/wrappers/taupreload/tau_alt_gnu_compiler gcc #ENDIF#
+#NVIDIA#PRELOAD_CC = $(TAUROOT)/src/wrappers/taupreload/tau_alt_gnu_compiler gcc #ENDIF#
 
 #============================ GENERAL =========================================
 

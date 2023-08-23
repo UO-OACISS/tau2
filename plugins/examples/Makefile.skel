@@ -13,13 +13,19 @@ CC = $(TAU_CC)
 
 CXX = $(TAU_CXX)
 
-CFLAGS = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS) -fPIC -I. -g $(TAU_STDCXX11_FLAG)
-CFLAGS14 = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS) -fPIC -I. -g -std=c++14
+CFLAGS = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS) $(FPIC) -I. -g $(TAU_STDCXX11_FLAG)
+CFLAGS14 = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS) $(FPIC) -I. -g -std=c++14
 
 TAU_MONITORING_PLUGIN_USING_JSON=libTAU-monitoring-plugin$(TAU_SHLIBX)
 #FX_AARCH64#TAU_MONITORING_PLUGIN_USING_JSON=  #ENDIF#
 
-LDFLAGS = $(TAU_MPI_LIB) -L$(PLUGININSTALLDIR) -Wl,-rpath,$(PLUGININSTALLDIR) -L$(TAU_LIB_DIR) -Wl,-rpath,$(TAU_LIB_DIR) -lTAUsh$(TAU_CONFIG)
+WLRPATH=-Wl,-rpath,$(PLUGININSTALLDIR)
+#NVIDIA#WLRPATH=-Xcompiler \"-Wl,-rpath,$(PLUGININSTALLDIR)\" #ENDIF#
+
+WLRTAU=-Wl,-rpath,$(TAU_LIB_DIR) 
+#NVIDIA#WLRTAU=-Xcompiler \"-Wl,-rpath,$(TAU_LIB_DIR)\" #ENDIF#
+
+LDFLAGS = $(TAU_MPI_LIB) -L$(PLUGININSTALLDIR) $(WLRPATH) -L$(TAU_LIB_DIR) $(WLRTAU) -lTAUsh$(TAU_CONFIG)
 
 OBJS = Tau_plugin_example_disable_instrumentation_runtime.o Tau_plugin_example_mpit_recommend_sharp_usage.o Tau_plugin_example_free_unused_vbufs.o Tau_plugin_skel.o Tau_plugin_sos.o Tau_plugin_thread_summary.o Tau_plugin_example_selective_tracing.o Tau_plugin_example_profile_snapshot_trigger.o Tau_plugin_example_mpit_exchange_pvar_data.o Tau_plugin_example_analyze_profile_snapshots.o Tau_plugin_example_load_balance_async.o Tau_plugin_example_load_balance.o Tau_plugin_example_analyze_node_profile_snapshots.o Tau_plugin_example_analyze_node_profile_snapshots_async.o Tau_plugin_example_emulate_profile_snapshots_analysis_async.o Tau_plugin_example_memory_usage_async.o Tau_plugin_example_atomic_trigger.o Tau_plugin_gpu_events.o
 
