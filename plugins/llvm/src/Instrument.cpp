@@ -883,6 +883,11 @@ NB: this is obtained from debugging information, and therefore needs
             // Other things we've encountered that aren't interesting
             funcsExclRegex.push_back( std::regex( "__gthread_active_p.*" ) );
             funcsExclRegex.push_back( std::regex( "_GLOBAL__sub_.*" ) );
+	    //rocm functions that should not be measured
+            funcsExclRegex.push_back( std::regex( "__hip_module.*" ) );
+            funcsExclRegex.push_back( std::regex( "__hip_register_globals.*") );
+            funcsExclRegex.push_back( std::regex( "__device_stub__.*" ) );
+
 
             // Let's not instrument TAU stuff. They should normally be eliminated because of their instruction count anyway
             std::string taufuncname = TauStartFunc + '*';
