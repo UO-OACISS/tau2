@@ -45,6 +45,7 @@
 #include <llvm/IR/DebugLoc.h>
 #include <llvm/IR/DebugInfoMetadata.h>
 #include <clang/Basic/SourceManager.h>
+#include <llvm/Analysis/LoopInfo.h>
 
 #if LEGACY_PM
 // Need these to use Sampson's registration technique
@@ -74,6 +75,8 @@
 #define TAU_END_FILE_INCLUDE_LIST_NAME   "END_FILE_INCLUDE_LIST"
 #define TAU_BEGIN_FILE_EXCLUDE_LIST_NAME "BEGIN_FILE_EXCLUDE_LIST"
 #define TAU_END_FILE_EXCLUDE_LIST_NAME   "END_FILE_EXCLUDE_LIST"
+#define TAU_BEGIN_LOOP_LIST_NAME         "BEGIN_LOOPS_LIST"
+#define TAU_END_LOOP_LIST_NAME           "END_LOOPS_LIST"
 
 #define TAU_REGEX_STAR              '#'
 #define TAU_REGEX_FILE_STAR         '*'
@@ -275,6 +278,8 @@ namespace {
         //  StringSet<> filesExclRegex;
         std::vector<std::regex> filesInclRegex;
         std::vector<std::regex> filesExclRegex;
+        StringSet<> loopsIncl;
+        std::vector<std::regex> loopsInclRegex;
 
         // basic ==> POSIX regular expression
         std::regex rex{TauRegex,
@@ -306,7 +311,8 @@ namespace {
                     } else {
                         if (verbose) errs() << "Exclude";
                     }
-                    if( s_token.end() == std::find( s_token.begin(), s_token.end(), 'F' ) ){
+                    if( s_token.end() == std::find( s_token.begin(), s_token.end(), 'F' )
+                        &&  s_token.end() == std::find( s_token.begin(), s_token.end(), 'O' ) ){
                         std::regex par_o( std::string( "\\([\\s]" ) );
                         std::regex par_c( std::string( "[\\s]\\)" ) );
                         std::string s_o( std::string(  "(" ) );
@@ -318,7 +324,12 @@ namespace {
                         if (verbose) errs() << " function: " << funcName;
                         /* TODO: trim whitespaces */
                     } else {
-                        if (verbose) errs() << " file " << funcName;
+                        if( s_token.end() == std::find( s_token.begin(), s_token.end(), 'O' ) ){
+                            if (verbose) errs() << " file " << funcName;
+                        } else {
+                            // TODO regex for loops
+                             if (verbose) errs() << " loop " << funcName;
+                       }
                     }
 
                     /* The regex wildcards are not the same for filenames and function names. */
@@ -399,7 +410,7 @@ namespace {
 
             /* This will be necessary as long as we don't have pattern matching in C++ */
             enum TokenValues { wrong_token, begin_func_include, begin_func_exclude,
-                begin_file_include, begin_file_exclude };
+                               begin_file_include, begin_file_exclude, begin_loop };
 
             static std::map<std::string, TokenValues> s_mapTokenValues;
 
@@ -407,6 +418,7 @@ namespace {
             s_mapTokenValues[ TAU_BEGIN_EXCLUDE_LIST_NAME ] = begin_func_exclude;
             s_mapTokenValues[ TAU_BEGIN_FILE_INCLUDE_LIST_NAME ] = begin_file_include;
             s_mapTokenValues[ TAU_BEGIN_FILE_EXCLUDE_LIST_NAME ] = begin_file_exclude;
+            s_mapTokenValues[ TAU_BEGIN_LOOP_LIST_NAME ] = begin_loop;
 
             while(std::getline(file, funcName)) {
                 if( funcName.find_first_not_of(' ') != std::string::npos ) {
@@ -433,6 +445,11 @@ namespace {
                             readUntilToken( file, filesExcl, filesExclRegex, TAU_END_FILE_EXCLUDE_LIST_NAME );
                             break;
 
+                        case begin_loop:
+                            if (verbose) errs() << "Included loops: \n";
+                            readUntilToken( file, loopsIncl, loopsInclRegex, TAU_END_LOOP_LIST_NAME );
+                            break;
+
                         default:
                             errs() << "Wrong syntax: the lists must be between ";
                             errs() << TAU_BEGIN_INCLUDE_LIST_NAME << " and " << TAU_END_INCLUDE_LIST_NAME;
@@ -446,9 +463,9 @@ namespace {
         }
 
         /* Get the call's location.
-NB: this is obtained from debugging information, and therefore needs
--g to be acessible.
-*/
+           NB: this is obtained from debugging information, and therefore needs
+           -g to be acessible.
+        */
         std::string getFilename( Function& call ){
             std::string filename;
 
@@ -485,7 +502,21 @@ NB: this is obtained from debugging information, and therefore needs
             return filename;
         }
 
-        std::string getLineAndCol( Function& call ){
+         std::string getFilename( const Loop *loop ){
+            std::string filename;
+
+            const llvm::DebugLoc &debugInfo = loop->getStartLoc();
+            if( NULL != debugInfo ){ /* if compiled with -g */
+                //  filename = debugInfo->getDirectory().str() + "/" + debugInfo->getFilename().str();
+                filename = debugInfo->getFilename().str();
+            } else {
+                ///filename = loop.getParent()->getSourceFileName();
+            }
+            
+            return filename;
+        }
+
+       std::string getLineAndCol( Function& call ){
             std::string loc;
             /* Not as precise: gives the line and column numbers of the first instruction */
             /*
@@ -512,6 +543,21 @@ NB: this is obtained from debugging information, and therefore needs
             std::string loc;
 
             const DebugLoc &location = call->getDebugLoc();
+            if( location ) {
+                int line = location.getLine();
+                loc = std::to_string( line );
+            } else {
+                // No location metadata available
+                loc = "0,0";
+            }
+
+            return loc;
+        }
+        
+        std::string getLineAndCol( const Loop *loop ){
+            std::string loc;
+
+            const llvm::DebugLoc &location = loop->getStartLoc();
             if( location ) {
                 int line = location.getLine();
                 loc = std::to_string( line );
@@ -651,6 +697,21 @@ NB: this is obtained from debugging information, and therefore needs
             return false;
         }
 
+        /* Do we want to instrument this loop?
+         */
+
+        bool maybeInstrument( const Loop* loop ){
+            std::string loc = getFilename( loop ) +  ":" + getLineAndCol( loop );
+            if( verbose ) errs() << "Loop: " << loc << "\n";
+            if( loopsIncl.size() + loopsInclRegex.size() == 0 )
+                return false;
+            if( loopsIncl.count( loc ) > 0 )
+                return true;
+            if( regexFits( loc, loopsInclRegex ) )
+                return true;
+            return false;
+        }
+        
         /*!
          * This function determines if the current function name (parameter name)
          * matches a regular expression. Regular expressions can be passed either
@@ -819,6 +880,72 @@ NB: this is obtained from debugging information, and therefore needs
             }
             return mutated;
         }
+
+        /* Instrument a loop */
+        
+#if( LLVM_VERSION_MAJOR > 8 )
+        bool addInstrumentation( const Loop* loop ){
+            bool mutated = false;
+
+            std::string loopname = "LOOP " + getFilename( loop ) +  ":" + getLineAndCol( loop );
+            if( verbose ) errs() << "Instrumenting " << loopname << "\n";
+
+            /* Find the entrance of this loop */
+
+            BasicBlock* const* enterit = loop->block_begin();
+            BasicBlock* enter = *enterit;
+            
+            auto function = enter->getParent();
+            auto &context = function->getContext();
+            auto *module = enter->getModule();
+
+            FunctionCallee onLoopEnter = getVoidFunc(TauStartFunc, context, module);
+            FunctionCallee onLoopExit = getVoidFunc(TauStopFunc, context, module);
+
+            /* We don't want to insert a timer ar the beginning of the first block, but before that */
+
+            for( BasicBlock *pred : predecessors( enter ) ) {
+                if( !loop->contains( &*pred ) ){
+                    Instruction* last = pred->getTerminator();
+
+                    Instruction* i = &*last;                
+                    IRBuilder<> before( i );
+
+                    Value *strArg = before.CreateGlobalStringPtr( loopname );
+                    SmallVector<Value *, 1> args{strArg};
+                    before.CreateCall( onLoopEnter, args );
+
+                    mutated = true;
+                }
+            }
+            
+            /* Find all the exits */
+
+            SmallVector<BasicBlock *> exitblocks;
+            loop->getExitBlocks( exitblocks );
+            
+            for( auto ex : exitblocks ){
+
+                /* Find the last instruction of the block */
+
+                Instruction* last = ex->getTerminator();
+                
+                /* We want to instrument *before* this instruction (the bb ends with an explicit br) */
+
+                Instruction* i = &*last;                
+                IRBuilder<> before2( i );
+
+                Value *strArg = before2.CreateGlobalStringPtr( loopname );
+                SmallVector<Value *, 1> args{strArg};
+                before2.CreateCall( onLoopExit, args );
+
+                mutated = true;
+            }
+
+            return mutated;
+        }
+#endif
+        
     };
 
     /*!
@@ -1046,6 +1173,7 @@ NB: this is obtained from debugging information, and therefore needs
                     }
                 }
             }
+  
             if( TauDryRun && instru ){
                 auto pretty_name = normalize_name(func.getName());
                 if(pretty_name.empty()) pretty_name = func.getName();
@@ -1066,11 +1194,48 @@ NB: this is obtained from debugging information, and therefore needs
             }
         }
 
-        PreservedAnalyses run(Module &module, ModuleAnalysisManager &) {
-            bool modified = false;
-            for (auto &func : module.getFunctionList()) {
-                modified |= runOnFunction( func );
+#if( LLVM_VERSION_MAJOR > 8 )
+        bool runOnloop( const Loop* loop ){
+            bool instru;
+            instru = maybeInstrument( loop );
+            if( verbose ) errs() << "Instrument " << getFilename( loop ) <<  ":" << getLineAndCol( loop ) << "? " << instru << "\n";
+            if( TauDryRun && instru ){
+                std::string loc = getFilename( loop ) +  ":" + getLineAndCol( loop );
+                errs() << "Loop " << loc << " would be instrumented\n";
+                return false;
             }
+
+            if( instru ){
+                addInstrumentation( loop );
+                return true;
+            } else {
+                return false;
+            }            
+        }
+#endif
+
+        PreservedAnalyses run(Module &module, ModuleAnalysisManager &mam ) {
+            bool modified = false;
+            
+            auto &fam = mam.getResult<FunctionAnalysisManagerModuleProxy>( module ).getManager();
+
+            for (auto &func : module.getFunctionList()) {
+
+                /* Functions */
+                modified |= runOnFunction( func );
+
+#if( LLVM_VERSION_MAJOR > 8 )
+                /* Loops */
+                if( 0 !=  func.getInstructionCount() ){
+                    LoopInfo &li = fam.getResult<LoopAnalysis>( func );
+                    SmallVector<Loop *, 16> PreorderLoops = li.getLoopsInPreorder();
+                    for( auto& loop : PreorderLoops ){
+                        modified |= runOnloop( loop );
+                   }
+                }
+#endif
+            }
+
             if( modified ){
                 return PreservedAnalyses::none();
             } else {
