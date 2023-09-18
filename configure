@@ -3032,6 +3032,7 @@ for arg in "$@"; do
             tauoptions="${tauoptions}-rocm"
             pthread=yes
             fixmakeargs="$fixmakeargs ROCMSMI"
+            build_llvm_plugin=yes
             shift
             ;;
 
@@ -3049,6 +3050,7 @@ for arg in "$@"; do
             tauoptions="${tauoptions}-rocm"
             pthread=yes
             fixmakeargs="$fixmakeargs ROCMSMI"
+            build_llvm_plugin=yes
             shift
             ;;
 
