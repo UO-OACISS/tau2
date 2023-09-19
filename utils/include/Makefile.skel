@@ -142,7 +142,7 @@ INSTALLTRACE2PROFILE	= $(INSTALLDEST)/trace2profile
 # -lelf is for Solaris only
 #DYNINST8#DYNLIBS 	= -L$(DYNINST_LIB_DIR) -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -lsymLite -ldynDwarf #ENDIF#
 #DYNINST9#DYNLIBS 	= -L$(DYNINST_LIB_DIR) -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -ldynDwarf #ENDIF#
-#DYNINST12#DYNLIBS 	= -L$(DYNINST_LIB_DIR) -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -ldynDwarf #ENDIF#
+#DYNINST12#DYNLIBS 	= -L$(DYNINST_LIB_DIR) -L$(ELFDIR)/lib -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -ldynDwarf #ENDIF#
 
 #SOL2CC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS -DSOL2CC #ENDIF#
 #SUNCC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS #ENDIF#
@@ -222,6 +222,7 @@ INSTALL_OTF_TOOLS = $(INSTALL_EBS2OTF)
 #OPARI2#INSTALLOPARI2AWK 	=$(INSTALLDEST)/pomp2-parse-init-regions.awk  #ENDIF#
 #DYNINST#INSTALLTAURUN 	= $(INSTALLDEST)/tau_run #ENDIF#
 #DYNINST#INSTALLTAURUN 	= $(INSTALLDEST)/tau_run #ENDIF#
+#TBB#TBBINC 	= -I$(TBBDIR)/include #ENDIF#
 #SP1#LARGEFILEOPT = -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE -D_LARGE_FILE_API #ENDIF#
 
 #CRAYCNL#CRAY_OPARI2_CONFIG= --build=cray CC_FOR_BUILD=cc CXX_FOR_BUILD=CC FC_FOR_BUILD=ftn CC=cc CXX=CC FC=ftn F77_FOR_BUILD=ftn F77=ftn #ENDIF#
@@ -236,7 +237,7 @@ INSTALL_OTF_TOOLS = $(INSTALL_EBS2OTF)
 #GNU_GFORTRAN#CRAY_OPARI2_CONFIG=$(CRAY_OPARI2_CONFIG_CRAYCNL) #ENDIF#
 #CRAY_FORTRAN#CRAY_OPARI2_CONFIG=$(CRAY_OPARI2_CONFIG_CRAYCNL) #ENDIF#
 
-CFLAGS        = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $(COMPILEROPT) $(PKGOPT) $(LARGEFILEOPT) $(DEBUGOPT) $(GNUOPT)
+CFLAGS        = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $(COMPILEROPT) $(PKGOPT) $(LARGEFILEOPT) $(DEBUGOPT) $(GNUOPT) $(TBBINC)
 
 TAU_USEROPT_CFLAGS        = $(CFLAGS) $(TAU_CC_SPECIAL_OPTS)
 # PGI cannot compile tau_convert and tau_merge when -O2 is used. So, we delete this from CFLAGS.
