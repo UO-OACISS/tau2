@@ -544,6 +544,16 @@ case $1 in
 	echo "s,^DWARFLIB=.*$,DWARFLIB=$dwarflib,g" >> $sedout
 	;;
 
+     elfdir=*)
+        elfdir=`echo $1 | sed -e 's/^elfdir=//'  -e 's/#/ /g'`
+	echo "s,^ELFDIR=.*$,ELFDIR=$elfdir,g" >> $sedout
+	;;
+
+     tbbdir=*)
+        tbbdir=`echo $1 | sed -e 's/^tbbdir=//'  -e 's/#/ /g'`
+	echo "s,^TBBDIR=.*$,TBBDIR=$tbbdir,g" >> $sedout
+	;;
+
      jdkdir=*)
         jdkdir=`echo $1 | sed -e 's/^jdkdir=//'`
 	echo "s,^JDKDIR=.*$,JDKDIR=$jdkdir,g" >> $sedout
@@ -711,6 +721,10 @@ case $1 in
         ;;
      TAU_BFD)
         echo NOTE: Using BFD support
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     ELF)
+        echo NOTE: Using ELF support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      TAU_ELF_BFD)
@@ -1765,6 +1779,10 @@ case $1 in
         ;;
      TBB_AVAILABLE)
         echo "NOTE: Using pthreads as the thread package for TBB support. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TBB)
+        echo "NOTE: Using an external TBB directory. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      TAU_PTHREAD_WRAP)
