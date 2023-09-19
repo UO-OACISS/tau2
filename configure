@@ -1813,6 +1813,13 @@ for arg in "$@"; do
         -elf=*)
             elf=yes
             elfdir=`echo $arg | sed -e 's/-elf=//'`
+	    fixmakeargs="$fixmakeargs elfdir=$elfdir ELF"
+            shift
+            ;;
+
+        -tbb=*)
+            tbbdir=`echo $arg | sed -e 's/-tbb=//'`
+	    fixmakeargs="$fixmakeargs tbbdir=$tbbdir TBB"
             shift
             ;;
 
@@ -12030,6 +12037,7 @@ libdwarftgz=$libdwarf_dirname.tar.gz
 libdwarfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libdwarftgz
 
 libelf_dirname=libelf-devel-0.158-6.1.x86_64
+# libelf_dirname=elfutils-0.189.tar.gz
 libelftgz=$libelf_dirname.tgz
 libelfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libelftgz
 if [ "x$elfdir" = "x" ]; then
