@@ -1819,7 +1819,7 @@ for arg in "$@"; do
 
         -tbb=*)
             tbbdir=`echo $arg | sed -e 's/-tbb=//'`
-	    fixmakeargs="$fixmakeargs tbbdir=$tbbdir TBB"
+	    fixmakeargs="$fixmakeargs useropt=-I${tbbdir}/include "
             shift
             ;;
 
