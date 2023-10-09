@@ -1184,6 +1184,7 @@ bool validate_thread() {
     if (tau_tid == 0 && pid != tid) {
         TAU_VERBOSE("Registering thread! %ld != %ld, so need new thread\n", pid, tid);
         Tau_register_thread();
+        Tau_create_top_level_timer_if_necessary();
     }
     return true;
 }
