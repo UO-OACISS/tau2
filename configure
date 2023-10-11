@@ -13277,7 +13277,7 @@ fi
 # bye bye
 echo
 echo "Configuration complete!"
-if [ $dyninst=yes ]; then
+if [ $dyninst = yes ]; then
 	echo "TAU: Please use the following to use DyninstAPI: "
 	echo "export LD_LIBRARY_PATH=${dyninstdir}/lib:$targetdir/$architecture/lib:\$LD_LIBRARY_PATH"
 	echo "export DYNINSTAPI_RT_LIB=${dyninstdir}/lib/libdyninstAPI_RT.so"
