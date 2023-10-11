@@ -2301,9 +2301,10 @@ for arg in "$@"; do
 
         -dyninst=download)
             dyninst=yes
-        boost=yes
-        download_dyninst=yes
-        echo "Downloading Dyninst..."
+            boost=yes
+	    tbb=yes
+            download_dyninst=yes
+            echo "Downloading Dyninst..."
             shift
             ;;
 
@@ -10287,11 +10288,11 @@ fi
 ######################################################################
 # Install Dyninst and its dependencies, if requested
 ######################################################################
-libboost=boost_1_67_0
+libboost=boost_1_79_0
 libboosttgz=$libboost.tar.gz
 libboosturl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libboosttgz
 
-libdyninst=dyninst-9.3.2-working
+libdyninst=dyninst-12.3.0-working
 libdyninsttgz=$libdyninst.tar.gz
 libdyninsturl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libdyninsttgz
 
@@ -10299,9 +10300,13 @@ dynlibiberty=dynlibiberty
 dynlibibertytgz=${dynlibiberty}.tar.gz
 dynlibibertyurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$dynlibibertytgz
 
-dynelfutils=elfutils-0.168
+dynelfutils=elfutils-0.189
 dynelfutilsbz=${dynelfutils}.tar.bz2
 dynelfutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$dynelfutilsbz
+
+dyntbb=intel-tbb-2020.3
+dyntbbtgz=${dyntbb}.tar.gz
+dyntbburl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$dyntbbtgz
 
 if [ "x$dyninstdir" = "x" ]; then
   libdyninstdir=${targetdir}/${architecture}
@@ -10318,6 +10323,55 @@ if [ "x$dyninstdir" != "x" -a -d "$dyninstdir" ] ; then
     download_dyninst=yes
   fi
 fi
+
+## Check for tbb
+if [ "x$tbbdir" != "x" -a -d "$tbbdir" ] ; then
+  dyninsttbbdir=${tbbdir}
+else
+  dyninsttbbdir=${libdyninstdir}/${dyntbb}
+  tbbdir=${dyninsttbbdir}
+fi
+if [ "x$dyninsttbbdir" != "x" -a -d "$dyninsttbbdir" ] ; then
+  echo "TBB : found : $dyninsttbbdir"
+  fixmakeargs="$fixmakeargs useropt=-I${dyninsttbbdir}/include "
+else
+  if [ "x$tbb" = xyes ] ; then
+    echo "TBB : not found, downloading..."
+    download_tbb=yes
+  fi
+fi
+
+## Download and install tbb if necessary
+if [ "x$download_tbb" = xyes ] ; then
+  prebfddir=`pwd`
+  # get the tar file
+  if [ ! -f $dyntbbtgz ] ; then
+    download "$dyntbburl" "$dyntbbtgz"
+  fi
+  # check the tar file
+  if [ ! -f $dyntbbtgz ] ; then
+    echo "$dyntbbtgz did not download.  Please download it manually from: "
+    echo "$dyntbburl"
+    echo "Please enter the directory containing the tarball: ${nnl}"
+    read RESPONSE
+    cp $RESPONSE/$dyntbbtgz .
+  else
+    echo "expanding $dyntbbtgz..."
+    rm -rf $dyninsttbbdir
+    mkdir $dyninsttbbdir
+    tar -xzf $dyntbbtgz -C $dyninsttbbdir --strip-components=1
+    echo "removing $dyntbbtgz..."
+    rm $dyntbbtgz
+    cd $dyninsttbbdir
+    # The make command build in ./build/${tbb_build_prefix}_release
+    make tbb_build_prefix=$dyntbb
+    # Rename it for finding it easily
+    mkdir -p lib
+    cp build/${dyntbb}_release/libtbb* lib/
+    fixmakeargs="$fixmakeargs useropt=-I${dyninsttbbdir}/include "
+  fi
+  cd $prebfddir
+fi #end dowload_tbb
 
 ## Check for boost
 if [ "x$boostdir" != "x" -a -d "$boostdir" ] ; then
@@ -10407,40 +10461,65 @@ if [ "x$download_dyninst" = xyes ] ; then
       rm -rf $dyninstdir # remove and make the build dir
       mkdir $dyninstdir
       cd $dyninstdir     # go to the build dir
-      ## Build shared libiberty
-      mkdir ${dyninstdir}/libiberty
-      download "$dynlibibertyurl" "$dynlibibertytgz"
-      tar -xzf $dynlibibertytgz
-      cd $dynlibiberty/libiberty
-      ./configure --enable-shared --prefix=$PWD
-      make
-      ar rcs libiberty.a pic/*.o
-      cp libiberty.a ${dyninstdir}/libiberty
-      cd ../..
-      rm -rf $dynlibiberty $dynlibibertytgz
+      
+      # Get libiberty 
+      mkdir -p ${dyninstdir}/libiberty/lib 
+      libiberty_root_dir=${dyninstdir}/libiberty/ 
+      if [ -r "$bfddir/lib/libiberty.a"  ] ; then
+	      cp "$bfddir/lib/libiberty.a" ${dyninstdir}/libiberty/lib/
+	      libiberty_root_dir=$bfddir # We need the headers of libiberty, see LibIberty.cmake in libdyninst
+      else
+	      ## Build shared libiberty
+	      download "$dynlibibertyurl" "$dynlibibertytgz"
+	      tar -xzf $dynlibibertytgz
+	      cd $dynlibiberty/libiberty
+	      ./configure --enable-shared --prefix=$PWD # It wrongly says that enable-shared is an unknow flag
+	      make -j8
+	      ar rcs libiberty.a pic/*.o
+	      cp libiberty.a ${dyninstdir}/libiberty/lib/
+	      cd ../
+	      cp -r include/ ${dyninstdir}/libiberty/
+	      cd ../
+	      rm -rf $dynlibiberty $dynlibibertytgz
+      fi
+
       ## Build shared elfutils
       mkdir ${dyninstdir}/elfutils
       download "$dynelfutilsurl" "$dynelfutilsbz"
       tar -xf $dynelfutilsbz -C ${dyninstdir}/elfutils --strip-components=1
       cd ${dyninstdir}/elfutils
-      ./configure --enable-shared --prefix=$PWD
-      make
-      make install
+      ./configure -disable-debuginfod --disable-libdebuginfod --prefix=$PWD
+      make -j8
+      make -j8 install
       cd ..
       rm -rf $dynelfutilsbz
+
+      # Here error when using -bfd=download because it searches for /opt/intel/tbb/ by default
+      # Workaround
+      old_CPATH=$CPATH
+      old_CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH
+      export CPATH=${dyninsttbbdir} # To prevent using wrong tbb/include when building
+      export CMAKE_PREFIX_PATH="" # To prevent looking for tbb installation by bfd
       ## Now we can make Dyninst
-      cmake ${prebfddir}/${libdyninst} -DBoost_INCLUDE_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DIBERTY_LIBRARIES=${dyninstdir}/libiberty/libiberty.a -DLIBDWARF_INCLUDE_DIR=${dyninstdir}/elfutils/include -DLIBDWARF_LIBRARIES=${dyninstdir}/elfutils/lib/libdw.so -DLIBELF_INCLUDE_DIR=${dyninstdir}/elfutils/include -DLIBELF_LIBRARIES=${dyninstdir}/elfutils/lib/libelf.so
+      cmake ${prebfddir}/${libdyninst} -DBoost_INCLUDE_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DLibIberty_ROOT_DIR=${libiberty_root_dir} -DIBERTY_LIBRARIES=${dyninstdir}/libiberty/lib/libiberty.a -DElfUtils_ROOT_DIR=${dyninstdir}/elfutils/ -DTBB_ROOT_DIR=${dyninsttbbdir}
       make -j8
       make install
+      export CPATH=$old_CPATH
+      export CMAKE_PREFIX_PATH=$old_CMAKE_PREFIX_PATH
+
+      mkdir -p ${dyninstdir}/lib/
       if [ -f ${dyninstdir}/elfutils/lib/libdw.so ]; then
-          cp ${dyninstdir}/elfutils/lib/libdw* ${dyninstdir}/lib
+          cp ${dyninstdir}/elfutils/lib/libdw* ${dyninstdir}/lib/
           mv ${dyninstdir}/lib/libdw.so ${dyninstdir}/lib/libdwarf.so
       fi
       if [ -f ${dyninstdir}/elfutils/lib/libelf.so ]; then
-          cp ${dyninstdir}/elfutils/lib/libelf* ${dyninstdir}/lib
+          cp ${dyninstdir}/elfutils/lib/libelf* ${dyninstdir}/lib/
       fi
-      if [ -f ${dyninstdir}/libiberty/libiberty.a ]; then
-          cp ${dyninstdir}/libiberty/libiberty.a ${dyninstdir}/lib
+      if [ -f ${dyninstdir}/libiberty/lib/libiberty.a ]; then
+          cp ${dyninstdir}/libiberty/lib/libiberty.a ${dyninstdir}/lib/
+      fi
+      if [ -f ${dyninsttbbdir}/lib/libtbb.so ]; then
+          cp ${dyninsttbbdir}/lib/libtbb* ${dyninstdir}/lib/
       fi
     fi
   fi
@@ -10480,6 +10559,7 @@ fi
 
 ######################################################################
 # Check that basic librt linkage is supported by this system
+#    Precise functionality support is system-dependent and should
 #    Precise functionality support is system-dependent and should
 #    be controlled by macros inside code accordingly.
 ######################################################################
@@ -13197,6 +13277,11 @@ fi
 # bye bye
 echo
 echo "Configuration complete!"
+if [ $dyninst=yes ]; then
+	echo "TAU: Please use the following to use DyninstAPI: "
+	echo "export LD_LIBRARY_PATH=${dyninstdir}/lib:$targetdir/$architecture/lib:\$LD_LIBRARY_PATH"
+	echo "export DYNINSTAPI_RT_LIB=${dyninstdir}/lib/libdyninstAPI_RT.so"
+fi
 if [ $tauprefix != unknown ] ; then
     echo "   Please add " $tauprefix/$architecture/bin " to your path"
 else
@@ -13226,4 +13311,3 @@ then
    echo  "****************************************************************************************************"
 fi
 
-exit 0

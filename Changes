@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2022						   **
+**    Copyright 1997-2024						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Research Centre Juelich, Germany                                     **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
@@ -10,6 +10,9 @@
 
 Change log:
 ------------
+Version 2.33 changes (from 2.32):
+1. Added -dyninst=download for binary rewriting with DyninstAPI.
+
 Version 2.32 changes (from 2.31):
 1. Added support for riscv64 (-optCompInst, tau_exec -ebs, mpi). 
 2. Updated support for hipcc as C++ compiler with MVAPICH2 on Cray systems for OMPT. 
