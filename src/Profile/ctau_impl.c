@@ -22,6 +22,19 @@
 #define PyVarObject_HEAD_INIT(type, size) PyObject_HEAD_INIT(type) size,
 #endif
 
+// Python 3.11 compatibility
+// This is from https://docs.python.org/3/whatsnew/3.11.html
+// to provide backwards compatibility with Python <3.8
+// (Python 3.8 and later provides PyFrame_GetCode natively)
+// Python 3.11 and later remove the f_code field of frame
+// requiring accessor method instead
+#if PY_VERSION_HEX < 0x030900B1
+static inline PyCodeObject* PyFrame_GetCode(PyFrameObject *frame)
+{
+    Py_INCREF(frame->f_code);
+    return frame->f_code;
+}
+#endif
 
 /************************ rotatingtree.h *************************/
 
@@ -353,7 +366,7 @@ normalizeUserObj(PyObject *obj)
   if (fn->m_self == NULL) {
     /* built-in function: look up the module name */
     PyObject *mod = fn->m_module;
-    char *modname;
+    const char * modname;
     if (mod && PyString_Check(mod)) {
       modname = PyString_AS_STRING(mod);
     }
@@ -401,7 +414,7 @@ normalizeUserObj(PyObject *obj)
 static ProfilerEntry *newProfilerEntry(ProfilerObject *pObj, void *key, PyObject *userObj,
 				       PyFrameObject *frame, char *cname) {
   char routine[4096];
-  char *co_name, *co_filename;
+  const char * co_name, * co_filename;
   int co_firstlineno;
 
   ProfilerEntry *self;
@@ -428,12 +441,13 @@ static ProfilerEntry *newProfilerEntry(ProfilerObject *pObj, void *key, PyObject
   self->calls = EMPTY_ROTATING_TREE;
 
   if (frame != NULL) {
-      co_name = PyString_AsString(frame->f_code->co_name);
-      co_filename = PyString_AsString(frame->f_code->co_filename);
+      PyCodeObject * codeObj = PyFrame_GetCode(frame);
+      co_name = PyString_AsString(codeObj->co_name);
+      co_filename = PyString_AsString(codeObj->co_filename);
       while (strchr(co_filename,'/')) {
 	co_filename = strchr(co_filename,'/')+1;
       }
-      co_firstlineno = frame->f_code->co_firstlineno;
+      co_firstlineno = codeObj->co_firstlineno;
       sprintf (routine,"%s [{%s}{%d}]", co_name, co_filename, co_firstlineno);
       if (strcmp(co_filename,"<string>") != 0) { // suppress "? <string>"
 	TAU_PROFILER_CREATE(handle, routine, "", TAU_PYTHON);
@@ -620,15 +634,21 @@ static int profiler_callback(PyObject *self, PyFrameObject *frame, int what, PyO
     /* the 'frame' of a called function is about to start its execution */
   case PyTrace_CALL:
 /*      printf ("Py Enter: %s\n", routine);  */
-     ptrace_enter_call(self, (void *)frame->f_code,
-		       (PyObject *)frame->f_code, frame, NULL);
+     {
+         PyCodeObject * codeObj = PyFrame_GetCode(frame);
+         ptrace_enter_call(self, (void *)codeObj,
+		           (PyObject *)codeObj, frame, NULL);
+     }
     break;
 
     /* the 'frame' of a called function is about to finish
        (either normally or with an exception) */
   case PyTrace_RETURN:
 /*      printf ("Py Exit: %s\n", routine);  */
-    ptrace_leave_call(self, (void *)frame->f_code);
+    {
+        PyCodeObject * codeObj = PyFrame_GetCode(frame);
+        ptrace_leave_call(self, (void *)codeObj);
+    }
     break;
 
     /* case PyTrace_EXCEPTION:
@@ -827,6 +847,8 @@ static PyObject* profiler_disable(ProfilerObject *self, PyObject* noarg) {
   Py_INCREF(Py_None);
   return Py_None;
 }
+
+extern void Tau_profile_exit_all_threads(void);
 
 PyDoc_STRVAR(exitAllThreads_doc, "\
 exitAllThreads()\n\
