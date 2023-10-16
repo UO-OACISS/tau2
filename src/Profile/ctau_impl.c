@@ -524,20 +524,6 @@ static void Stop(ProfilerObject *pObj, ProfilerContext *self, ProfilerEntry *ent
 
 
 static void ptrace_enter_call(PyObject *self, void *key, PyObject *userObj, PyFrameObject *frame, char *cname) {
-  //  char *name;
-
-  //  PyObject *stringObj;
-  //  printf ("enter:\n");
-
-  //  stringObj = normalizeUserObj(userObj);
-
-  /*   name = PyString_AsString(((PyFrameObject*)(key))->f_code->co_name); */
-  //  TAU_START(name);
-
-  /*   if (PyArg_ParseTuple(stringObj, "|s", &name)) { */
-  /*     printf ("got name: %s\n", name); */
-  /*   } */
-
   /* entering a call to the function identified by 'key'
      (which can be a PyCodeObject or a PyMethodDef pointer) */
   ProfilerObject *pObj = (ProfilerObject*)self;
@@ -557,37 +543,16 @@ static void ptrace_enter_call(PyObject *self, void *key, PyObject *userObj, PyFr
     Tau_start_timer(profEntry->fi,0,Tau_get_thread());
   }
 
-/*   /\* grab a ProfilerContext out of the free list *\/ */
-/*   pContext = pObj->freelistProfilerContext; */
-/*   if (pContext) { */
-/*     pObj->freelistProfilerContext = pContext->previous; */
-/*   } */
-/*   else { */
-/*     /\* free list exhausted, allocate a new one *\/ */
-/*     pContext = (ProfilerContext*) */
-/*       malloc(sizeof(ProfilerContext)); */
-/*     if (pContext == NULL) { */
-/*       pObj->flags |= POF_NOMEMORY; */
-/*       return; */
-/*     } */
-/*   } */
-/*   initContext(pObj, pContext, profEntry); */
 }
 
 static void ptrace_leave_call(PyObject *self, void *key) {
   char *name;
-  /*   name = PyString_AsString(((PyFrameObject*)(key))->f_code->co_name); */
-  //  TAU_STOP(name);
 
-  //printf ("exit:\n");
   /* leaving a call to the function identified by 'key' */
   ProfilerObject *pObj = (ProfilerObject*)self;
   ProfilerEntry *profEntry;
   ProfilerContext *pContext;
 
-/*   pContext = pObj->currentProfilerContext; */
-/*   if (pContext == NULL) */
-/*     return; */
   profEntry = getEntry(pObj, key);
   if (profEntry) {
     if (profEntry->fi) {
@@ -595,12 +560,8 @@ static void ptrace_leave_call(PyObject *self, void *key) {
     }
   }
   else {
-    printf ("Error in Python later!\n");
-/*     pObj->currentProfilerContext = pContext->previous; */
+    printf ("Error in TAU Python profiler: tried to stop timer but timer not found in ptrace_leave_call!\n");
   }
-/*   /\* put pContext into the free list *\/ */
-/*   pContext->previous = pObj->freelistProfilerContext; */
-/*   pObj->freelistProfilerContext = pContext; */
 }
 
 
@@ -615,19 +576,6 @@ static int profiler_callback(PyObject *self, PyFrameObject *frame, int what, PyO
     }
     init = 1;
   }
-
-/*   char routine[4096]; */
-/*   char *co_name, *co_filename; */
-/*   int co_firstlineno; */
-
-
-/*   co_name = PyString_AsString(frame->f_code->co_name); */
-/*   co_filename = PyString_AsString(frame->f_code->co_filename); */
-/*   while (strchr(co_filename,'/')) { */
-/*     co_filename = strchr(co_filename,'/')+1; */
-/*   } */
-/*   co_firstlineno =frame->f_code->co_firstlineno; */
-/*   sprintf (routine,"%s [{%s}{%d}]", co_name, co_filename, co_firstlineno); */
 
   switch (what) {
 
