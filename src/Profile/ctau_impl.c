@@ -444,17 +444,19 @@ static ProfilerEntry *newProfilerEntry(ProfilerObject *pObj, void *key, PyObject
       PyCodeObject * codeObj = PyFrame_GetCode(frame);
       co_name = PyString_AsString(codeObj->co_name);
       co_filename = PyString_AsString(codeObj->co_filename);
+      if(co_filename == NULL) {
+        co_filename = "";
+      }
       while (strchr(co_filename,'/')) {
-	co_filename = strchr(co_filename,'/')+1;
+	    co_filename = strchr(co_filename,'/')+1;
       }
       co_firstlineno = codeObj->co_firstlineno;
       sprintf (routine,"%s [{%s}{%d}]", co_name, co_filename, co_firstlineno);
       if (strcmp(co_filename,"<string>") != 0) { // suppress "? <string>"
-	TAU_PROFILER_CREATE(handle, routine, "", TAU_PYTHON);
+	    TAU_PROFILER_CREATE(handle, routine, "", TAU_PYTHON);
       }
   } else {
     if (strcmp (cname, "profileTimer") && strcmp (cname, "start") && strcmp (cname, "stop") && strcmp (cname, "disable")) {
-/*       sprintf (routine,"C [%s]", cname); */
       sprintf (routine,"%s", cname);
       TAU_PROFILER_CREATE(handle, routine, "", TAU_PYTHON);
     }
