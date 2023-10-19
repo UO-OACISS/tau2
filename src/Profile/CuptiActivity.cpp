@@ -2331,7 +2331,11 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                 device.computeCapabilityMajor == 7 &&
                 device.computeCapabilityMinor > 1)
         {
-            TAU_VERBOSE("TAU Warning: GPU occupancy calculator is not implemented for devices of compute capability > 7.1.");
+            static bool alreadyPrintedWarning = false;
+            if(!alreadyPrintedWarning) { 
+                TAU_VERBOSE("TAU Warning: GPU occupancy calculator is not implemented for devices of compute capability > 7.1.\n");
+                alreadyPrintedWarning = true;
+            }
             return 0;
         }
         //gpu occupancy available.
