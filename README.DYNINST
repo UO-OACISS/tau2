@@ -1,76 +1,22 @@
-Using TAU with Dyninst 6.x.
----------------------------
-Part I) Configuring and installing Dyninst 6.x
+Using TAU with DyninstAPI
+-------------------------
+Configuring and installing DyninstAPI
 
-% tar xzvf  dyninst_linux_x86_6.X.tar.gz
-(Agree to Dyninst licensing terms)
-% cd <dir>/dyninstAPI
+./configure -bfd=download -dyninst=download
 
-Add to .cshrc file: 
+export DYNINSTAPI_RT_LIB=<taudir>/<arch>/dyninst-12.3.0-working/lib/libdyninstAPI_RT.so
+export LD_LIBRARY_PATH=<taudir>/<arch>/lib:$DYNINST_ROOT/$PLATFORM/lib
 
-setenv DYNINST_ROOT <dyninst-dir>/dyninstAPI
-setenv PLATFORM    i386-unknown-linux2.4
-setenv DYNINSTAPI_RT_LIB $DYNINST_ROOT/$PLATFORM/lib/libdyninstAPI_RT.so.1
-setenv LD_LIBRARY_PATH <tau-root>/i386_linux/lib\:$DYNINST_ROOT/$PLATFORM/lib
+make install 
 
-% source ~/.cshrc
-
-Compiling Dyninst (optional, you may download the binary release).
-
-% cd $DYNINST_ROOT/core/
-% make 
-% cd $DYNINST_ROOT/core/dyninstAPI/tests/$PLATFORM
-% make 
-% ./test1
-% ./test2
-% ./test3
-
-if it passes all tests then :
-
-Part 2: Configuring TAU with Dyninst
-------------------------------------
-
-% tar zxvf tau-2.x.tar.gz
-% cd <tau-root>
-% configure -dyninst=$DYNINST_ROOT -mpi
-% make install
-% set path=(<tau-root>/i386_linux/bin $path)
-% cd examples/dyninst
-% make
-% tau_run klargest
-% pprof
 
 If you're using DyninstAPI with an MPI application (works under Linux with 
 MPICH), you need to follow these steps:
 
-1) normally you'd invoke an mpi application using :
-% mpirun -np <np> a.out <args>
-2) With TAU and DyninstAPI, you'll need to invoke it as:
-% mpirun -np <np> tau.shell <args>
+% tau_run -T mpi,<options> a.out -o a.inst
 
-where tau.shell is a shell script that you write as follows:
-#!/bin/tcsh
-<tauroot>/<arch>/bin/taurun -XrunTAUsh[-options] <full path to exec>/a.out $*
-
-Note, by default taurun doesn't need the specification of the TAU library to
-use (in the second -XrunTAUsh[-options] argument) but you can specify it when
-more than one version of TAU is configured. For e.g.,
-
-% mpirun -np 4 tau.papi.sh <args>
-% cat tau.papi.sh 
-#!/bin/tcsh
-/home/users/sameer/tau2/i386_linux/bin/tau_run -XrunTAUsh-papi-mpi-pdt /home/users/sameer/tau2/examples/mpi-ek/ek $*
-
-
-To use tau_run to re-write a binary file, use the -o <outputfile> option. 
-For e.g., 
-% f90 app.f90
-creates a.out
-% tau_run a.out
-does runtime pre-execution instrumentation by spawning a.out.
-% tau_run -o a.out.rewritten a.out
-reads a.out, instruments it and rewrites the binary image as a.out.rewritten
-NOTE: The binary rewriting feature has been tested under Linux x86
+reads a.out, instruments it and rewrites the binary image as a.inst
+NOTE: The binary rewriting feature has been tested under Linux x86_64
 with the application binary files created with the gnu compilers. 
 
 SELECTIVE INSTRUMENTATION FEATURES:
