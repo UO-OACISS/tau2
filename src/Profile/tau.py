@@ -10,6 +10,9 @@ import pytau
 # ____________________________________________________________
 # Simple interface
 
+def get_ctau_python_version():
+    return ctau_impl.Profiler.getPythonCompileVersion()
+
 def writeProfiles(prefix="profile"):
     import pytau
     pytau.dbDump(prefix)
@@ -336,7 +339,10 @@ except Exception:
     pass
 
 try:
+    old_tf_log_level = os.environ.get('TF_CPP_MIN_LOG_LEVEL', default=0)
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = 3
     import tensorflow.keras as keras
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = old_tf_log_level
     class TauTensorFlowCallbacks(keras.callbacks.Callback):
 
         def __init__(self):

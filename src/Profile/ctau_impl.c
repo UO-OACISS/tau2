@@ -443,8 +443,12 @@ static ProfilerEntry *newProfilerEntry(ProfilerObject *pObj, void *key, PyObject
   if (frame != NULL) {
       PyCodeObject * codeObj = PyFrame_GetCode(frame);
       co_name = PyString_AsString(codeObj->co_name);
-      co_filename = PyString_AsString(codeObj->co_filename);
-      if(co_filename == NULL) {
+      if(codeObj->co_filename != NULL) {
+        co_filename = PyString_AsString(codeObj->co_filename);
+        if(co_filename == NULL) {
+            co_filename = "";
+        }
+      } else {
         co_filename = "";
       }
       while (strchr(co_filename,'/')) {
@@ -455,6 +459,7 @@ static ProfilerEntry *newProfilerEntry(ProfilerObject *pObj, void *key, PyObject
       if (strcmp(co_filename,"<string>") != 0) { // suppress "? <string>"
 	    TAU_PROFILER_CREATE(handle, routine, "", TAU_PYTHON);
       }
+      Py_DECREF(codeObj);
   } else {
     if (strcmp (cname, "profileTimer") && strcmp (cname, "start") && strcmp (cname, "stop") && strcmp (cname, "disable")) {
       sprintf (routine,"%s", cname);
@@ -588,6 +593,7 @@ static int profiler_callback(PyObject *self, PyFrameObject *frame, int what, PyO
          PyCodeObject * codeObj = PyFrame_GetCode(frame);
          ptrace_enter_call(self, (void *)codeObj,
 		           (PyObject *)codeObj, frame, NULL);
+         Py_DECREF(codeObj);
      }
     break;
 
@@ -598,6 +604,7 @@ static int profiler_callback(PyObject *self, PyFrameObject *frame, int what, PyO
     {
         PyCodeObject * codeObj = PyFrame_GetCode(frame);
         ptrace_leave_call(self, (void *)codeObj);
+        Py_DECREF(codeObj);
     }
     break;
 
@@ -823,6 +830,20 @@ static PyObject *profiler_clear(ProfilerObject *pObj, PyObject* noarg) {
   return Py_None;
 }
 
+PyDoc_STRVAR(getPythonCompileVersion_doc, "\
+getPythonCompileVersion()\n\
+\n\
+Get the version of Python that the TAU C extension was compiled against.\n\
+");
+
+static PyObject *profiler_getPythonCompileVersion(ProfilerObject *pObj, PyObject* noarg) {
+  int major = PY_MAJOR_VERSION;
+  int minor = PY_MINOR_VERSION;
+  int micro = PY_MICRO_VERSION;
+  PyObject * result = Py_BuildValue("iii", major, minor, micro);
+  return result;
+}
+
 static void profiler_dealloc(ProfilerObject *op) {
   if (op->flags & POF_ENABLED)
     PyEval_SetProfile(NULL, NULL);
@@ -871,6 +892,8 @@ static PyMethodDef profiler_methods[] = {
    METH_NOARGS,			clear_doc},
   {"exitAllThreads",	(PyCFunction)profiler_exitAllThreads,
    METH_NOARGS,			exitAllThreads_doc},
+  {"getPythonCompileVersion",	(PyCFunction)profiler_getPythonCompileVersion,
+   METH_STATIC | METH_NOARGS,  getPythonCompileVersion_doc},
   {NULL, NULL}
 };
 
