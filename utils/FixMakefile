@@ -577,7 +577,7 @@ case $1 in
      pythoninc=*)
         pythoninc=`echo $1 | sed -e 's/^pythoninc=//'`
 	echo "s,^PYTHON_INCDIR=.*$,PYTHON_INCDIR=$pythoninc,g" >> $sedout
-	#echo "Using PYTHON INCLUDE DIR =" $pythoninc
+	echo "Using Python include dir =" $pythoninc
 	;;
 
      pythonlibrary=*)
@@ -588,6 +588,7 @@ case $1 in
         pythonlib=`echo $1 | sed -e 's/^pythonlib=//'`
 	if [ "x$pythonlibrary" != "x"  ] ; then
 	  pythonlib_full="$pythonlib/$pythonlibrary"
+	  pythonso=`echo ${pythonlibrary%.*} | sed -e "s#lib##"`
 	else
 	# Discover python library version
 	for subdir in "" ".." "python*" ; do
