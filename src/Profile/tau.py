@@ -269,9 +269,23 @@ class Profile(ctau_impl.Profiler):
             self.disable()
         return self
 
+    # Python 3.12 and later remove the `imp` module.
+    # We have to use `runpy` instead.
+    def runmodule_runpy(self, modname, newname='__main__'):
+        self.enable()
+        try:
+            import runpy
+            runpy.run_module(modname, run_name=newname, alter_sys=True)
+        finally:
+            self.disable()
+            return self
+
     def runmodule(self, modname, newname='__main__'):
         import sys
-        from imp import find_module, new_module, PY_SOURCE
+        try:
+            from imp import find_module, new_module, PY_SOURCE
+        except ImportError as e:
+            return self.runmodule_runpy(modname, newname)
         replaced = sys.modules.get(newname, None)
         self.enable()
         try:
@@ -339,10 +353,7 @@ except Exception:
     pass
 
 try:
-    old_tf_log_level = os.environ.get('TF_CPP_MIN_LOG_LEVEL', default=0)
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = 3
     import tensorflow.keras as keras
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = old_tf_log_level
     class TauTensorFlowCallbacks(keras.callbacks.Callback):
 
         def __init__(self):
