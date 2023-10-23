@@ -14,6 +14,11 @@
 
 #define SYSCALL TAU_USER
 
+// Signal for the child to send to the parent to stop the tracking with ptrace
+#define SIG_STOP_PTRACE SIGRTMIN
+// Signal to increment the number of threads for TAU
+#define SIG_INCREMENT_TASK SIGRTMIN+1
+
 /******************
  * ERROR HANDLING *
  ******************/
@@ -53,10 +58,12 @@ static const char* const tracee_error_str[TRACEE_ERR_ALREADY_TRACKED + 1] = {
 int track_process(pid_t pid);
 
 /**
- * @brief For the child to be traced by its parent
+ * @brief For the child to be traced by its parent.
+ *        Set the tracer as pid and raise(SIGSTOP) to wait the tracer to be attached.
  * 
- * @param pid of the parent
+ * @param pid of the tracer/parent
  */
 void prepare_to_be_tracked(pid_t pid);
 
 #endif /* TRACEE_H */
+
