@@ -102,7 +102,6 @@ int taupreload_main(int argc, char **argv, char **envp)
     }
     else
     {
-        Tau_CuptiLayer_disable();
         /* Parent */
         TAU_PROFILE_SET_CONTEXT(1);
         Tau_create_top_level_timer_if_necessary();
