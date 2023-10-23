@@ -797,6 +797,7 @@ usage() {
     echo "                             (necessary for the instrumentation plugin)"
     echo "-llvm_cxx=<dir.................. Compiler that was used to compile LLVM"
     echo "                             (necessary for the instrumentation plugin)"
+    echo "-syscall ...................................... Build SYSCALL Wrapper."
     echo ""
     echo "-help ...................................... display this help message."
     echo "-fullhelp .............................. display the full help message."
@@ -1019,6 +1020,7 @@ for arg in "$@"; do
         echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
         echo "-zeptodir=<dir> ............................. ZeptoOS install location."
         echo "                              See http://www-unix.mcs.anl.gov/zeptoos/."
+        echo "-syscall ...................................... Build SYSCALL Wrapper."
         echo "-help ...................................... display this help message."
         echo "-fullhelp .............................. display the full help message."
         exit
@@ -1381,6 +1383,7 @@ llvm_src_dir=""
 llvm_cxx=""
 starpu=""
 phiprof=""
+syscall=no
 
 restore_perfdmf_and_paraprof
 
@@ -2302,7 +2305,7 @@ for arg in "$@"; do
         -dyninst=download)
             dyninst=yes
             boost=yes
-	    tbb=yes
+            tbb=yes
             download_dyninst=yes
             echo "Downloading Dyninst..."
             shift
@@ -3248,6 +3251,11 @@ for arg in "$@"; do
             fixmakeargs="$fixmakeargs PHIPROF"
 #            fixmakeargs="$fixmakeargs GNU"
             tauoptions="${tauoptions}-phiprof"
+            shift
+            ;;
+
+        -syscall)
+            syscall=yes
             shift
             ;;
 
@@ -4909,6 +4917,14 @@ fi
 
 if [ $debugprof = yes ] ; then
     fixmakeargs="$fixmakeargs DEBUGPROF"
+fi
+
+if [ $syscall = yes ] ; then
+    # if [ $machine = something ] ; then
+    #     echo "WARNING!! Architecture does not support ptrace for syscall"
+    # else
+        fixmakeargs="$fixmakeargs SYSCALL"
+    # fi
 fi
 
 ####################################################################
@@ -10560,7 +10576,6 @@ fi
 ######################################################################
 # Check that basic librt linkage is supported by this system
 #    Precise functionality support is system-dependent and should
-#    Precise functionality support is system-dependent and should
 #    be controlled by macros inside code accordingly.
 ######################################################################
 cat <<EOF > conftest_rt_link_test.cpp
@@ -13277,11 +13292,6 @@ fi
 # bye bye
 echo
 echo "Configuration complete!"
-if [ $dyninst = yes ]; then
-	echo "TAU: Please use the following to use DyninstAPI: "
-	echo "export LD_LIBRARY_PATH=${dyninstdir}/lib:$targetdir/$architecture/lib:\$LD_LIBRARY_PATH"
-	echo "export DYNINSTAPI_RT_LIB=${dyninstdir}/lib/libdyninstAPI_RT.so"
-fi
 if [ $tauprefix != unknown ] ; then
     echo "   Please add " $tauprefix/$architecture/bin " to your path"
 else

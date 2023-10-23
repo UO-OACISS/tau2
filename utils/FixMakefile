@@ -2677,6 +2677,10 @@ case $1 in
         echo "NOTE: Using CoreSymbolication for address to line translation."
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     SYSCALL)
+	echo NOTE: Building PTRACE SYSCALL wrapper
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      *)
 	echo "ERROR: Unknown argument directive \`$1' to FixMakefile"
 	;;
