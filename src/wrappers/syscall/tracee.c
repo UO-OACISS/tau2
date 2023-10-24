@@ -14,7 +14,7 @@
 
 #include "tracee.h"
 
-//#define DEBUG_PTRACE
+// #define DEBUG_PTRACE
 
 #ifdef DEBUG_PTRACE
 #define DEBUG_PRINT(...)                                                                                               \
@@ -23,6 +23,25 @@
 #else
 #define DEBUG_PRINT(...)
 #endif
+
+// #define TASK_DEBUG_PTRACE
+
+#ifdef TASK_DEBUG_PTRACE
+#define TASK_DEBUG_PRINT(...)                                                                                          \
+    fprintf(stderr, __VA_ARGS__);                                                                                      \
+    fflush(stderr);
+#else
+#define TASK_DEBUG_PRINT(...)
+#endif
+
+// expands to "return TRACEE_ERR_PARAM" if the parameter is null
+#define CHECK_IF_PARAM_IS_NULL(tt)                                                                                     \
+    if (!tt)                                                                                                           \
+    {                                                                                                                  \
+        fprintf(stderr, "ERROR : %s, parameter is NULL\n", __func__);                                                  \
+        fflush(stderr);                                                                                                \
+        return TRACEE_ERR_PARAM;                                                                                       \
+    }
 
 const int init_array_size = 128;
 int ending_tracking = 0;
@@ -66,9 +85,14 @@ typedef struct tracee_thread
 
 void print_tracee_thread(tracee_thread_t *tracee)
 {
+    if (!tracee)
+    {
+        return;
+    }
     DEBUG_PRINT("tracee->pid = %d\n", tracee->pid);
     DEBUG_PRINT("tracee->tid = %d\n", tracee->tid);
     DEBUG_PRINT("tracee->in_syscall = %d\n", tracee->in_syscall);
+    DEBUG_PRINT("tracee->is_stopped = %d\n", tracee->in_syscall);
 }
 
 tracee_thread_t *create_tracee_thread(pid_t pid, int tid)
@@ -98,14 +122,14 @@ array_tracee_thread_t tracee_threads_array;
 
 void debug_print_array_tracee()
 {
-
     DEBUG_PRINT("tracee_threads_array->capacity = %d\n", tracee_threads_array.capacity);
     DEBUG_PRINT("tracee_threads_array->size = %d\n", tracee_threads_array.size);
     DEBUG_PRINT("tracee_threads_array->lowest_index_free = %d\n", tracee_threads_array.lowest_index_free);
     for (int i = 0; i < tracee_threads_array.size; i++)
     {
         DEBUG_PRINT("[%d] tracee :\n", i);
-        print_tracee_thread(tracee_threads_array.tracee_threads[i]);
+        if (tracee_threads_array.tracee_threads[i])
+            print_tracee_thread(tracee_threads_array.tracee_threads[i]);
     }
 }
 
@@ -123,11 +147,16 @@ void array_tracee_threads_init()
 
 void array_tracee_threads_free()
 {
-    for (int i = tracee_threads_array.size - 1; i >= 0; i++)
+    for (int i = tracee_threads_array.size - 1; i >= 0; i--)
     {
-        free(tracee_threads_array.tracee_threads[i]);
+        if (tracee_threads_array.tracee_threads[i])
+        {
+            free(tracee_threads_array.tracee_threads[i]);
+            tracee_threads_array.tracee_threads[i] = NULL;
+        }
     }
     free(tracee_threads_array.tracee_threads);
+    tracee_threads_array.tracee_threads = NULL;
 }
 
 /**
@@ -163,7 +192,7 @@ void array_tracee_threads_extend()
  * @param pid
  * @param tid
  */
-tracee_thread_t *add_tracee_thread_specific_tid(pid_t pid, int tid)
+tracee_thread_t *add_tracee_thread(pid_t pid, int tid)
 {
     int index_free = tracee_threads_array.lowest_index_free;
     DEBUG_PRINT("tracee_threads_array.lowest_index_free = %d\n", tracee_threads_array.lowest_index_free);
@@ -173,7 +202,7 @@ tracee_thread_t *add_tracee_thread_specific_tid(pid_t pid, int tid)
     {
         array_tracee_threads_extend();
     }
-    tracee_thread_t *tt =  create_tracee_thread(pid, tid);
+    tracee_thread_t *tt = create_tracee_thread(pid, tid);
     tracee_threads_array.tracee_threads[index_free] = tt;
     print_tracee_thread(tt);
 
@@ -187,10 +216,7 @@ tracee_thread_t *add_tracee_thread_specific_tid(pid_t pid, int tid)
     for (int i = index_free; i < tracee_threads_array.size; i++)
     {
         if (tracee_threads_array.tracee_threads[i])
-            if (tracee_threads_array.tracee_threads[i]->pid > 0)
-            {
-                tracee_threads_array.lowest_index_free++;
-            }
+            tracee_threads_array.lowest_index_free++;
     }
 
     DEBUG_PRINT("tracee_threads_array.lowest_index_free = %d\n", tracee_threads_array.lowest_index_free);
@@ -199,22 +225,7 @@ tracee_thread_t *add_tracee_thread_specific_tid(pid_t pid, int tid)
 }
 
 /**
- * @brief Add a tracee_thread to tracee_threads_array
- *
- * @param pid
- **/
-tracee_thread_t *add_tracee_thread(pid_t pid)
-{
-    int tid = tracee_threads_array.size;
-    if (tracee_threads_array.lowest_index_free < tracee_threads_array.size)
-    {
-        tid = tracee_threads_array.lowest_index_free;
-    }
-    return add_tracee_thread_specific_tid(pid, tid);
-}
-
-/**
- * @brief "Remove" the tracee from the array. In fact just reinitialize it.
+ * @brief "Remove" the tracee from the array
  *
  * @param pid
  */
@@ -228,21 +239,15 @@ void remove_tracee_thread(pid_t pid)
         {
             if (tracee_threads_array.tracee_threads[i]->pid == pid)
             {
-                tracee_threads_array.tracee_threads[i]->in_syscall = 0;
-                tracee_threads_array.tracee_threads[i]->pid = 0;
-                tracee_threads_array.tracee_threads[i]->tid = -1;
-                if (tracee_threads_array.lowest_index_free > i)
-                {
-                    tracee_threads_array.lowest_index_free = i;
-                }
+                free(tracee_threads_array.tracee_threads[i]);
+                tracee_threads_array.tracee_threads[i] = NULL;
             }
         }
     }
-
     // Update size
     for (int i = tracee_threads_array.size - 1; i >= 0; i--)
     {
-        if (tracee_threads_array.tracee_threads[i]->pid != 0)
+        if (tracee_threads_array.tracee_threads[i])
         {
             break;
         }
@@ -254,8 +259,10 @@ void remove_tracee_thread(pid_t pid)
  * INTERNAL TRACEE INTERFACE *
  *****************************/
 
-void tracee_handle_stop_syscall(tracee_thread_t *tracee_thread)
+tracee_error_t tracee_handle_stop_syscall(tracee_thread_t *tracee_thread)
 {
+    CHECK_IF_PARAM_IS_NULL(tracee_thread);
+    CHECK_IF_PARAM_IS_NULL(tracee_thread->thread_timer);
     if (tracee_thread->in_syscall)
     {
         DEBUG_PRINT("stop call on %d , tid %d\n", tracee_thread->pid, tracee_thread->tid);
@@ -264,8 +271,10 @@ void tracee_handle_stop_syscall(tracee_thread_t *tracee_thread)
     }
 }
 
-void tracee_stop_all_timers(tracee_thread_t *tracee_thread)
+tracee_error_t tracee_stop_all_timers(tracee_thread_t *tracee_thread)
 {
+    CHECK_IF_PARAM_IS_NULL(tracee_thread);
+    CHECK_IF_PARAM_IS_NULL(tracee_thread->thread_timer);
     tracee_handle_stop_syscall(tracee_thread);
     TAU_PROFILER_STOP_TASK(tracee_thread->thread_timer, tracee_thread->tid);
 }
@@ -278,6 +287,7 @@ void tracee_stop_all_timers(tracee_thread_t *tracee_thread)
  */
 tracee_error_t tracee_interrupt(tracee_thread_t *tt)
 {
+    CHECK_IF_PARAM_IS_NULL(tt);
     long ret = ptrace(PTRACE_INTERRUPT, tt->pid, NULL, NULL);
     DEBUG_PRINT("PTRACE interrupt on %d\n", tt->pid);
 
@@ -300,6 +310,7 @@ tracee_error_t tracee_interrupt(tracee_thread_t *tt)
  */
 tracee_error_t tracee_tracksyscalls_ptrace_with_sig(tracee_thread_t *tt, int sig)
 {
+    CHECK_IF_PARAM_IS_NULL(tt);
     long ret = ptrace(PTRACE_SYSCALL, tt->pid, NULL, sig);
     // DEBUG_PRINT("PTRACE track syscalls on %d with sig %d\n", pid, sig);
 
@@ -318,7 +329,8 @@ tracee_error_t tracee_tracksyscalls_ptrace_with_sig(tracee_thread_t *tt, int sig
  * In the last case, waited_tracee is the child tracee_thread which has stopped or exited
  *
  * @param pid -1 to wait for all childs ; > 0 for a specific pid
- * @param waited_tracee should not be NULL, because is_istopped is modified. Is filled if pid = -1 with the child tracee_thread that has stopped/exited
+ * @param waited_tracee should not be NULL, because is_istopped is modified. Is filled if pid = -1 with the child
+ * tracee_thread that has stopped/exited
  * @param stop_signal is filled only if the child was stopped for another reason than ptrace handling
  * @return tracee_wait_t
  */
@@ -348,7 +360,7 @@ tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_tracee, 
         }
         (*waited_tracee)->is_stopped = 1;
     }
-    
+
     if (WIFEXITED(child_status))
     {
         DEBUG_PRINT("%d has exited\n", tracee_pid);
@@ -397,8 +409,11 @@ tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_tracee, 
             ptrace(PTRACE_GETEVENTMSG, (*waited_tracee)->pid, NULL, &new_tracee_pid);
             DEBUG_PRINT("%d created clone %d\n", (*waited_tracee)->pid, new_tracee_pid);
 
+            TAU_CREATE_TASK(num_tasks);
+            TASK_DEBUG_PRINT("TAU_CREATE_TASK num_tasks = %d\n", num_tasks);
+
             // The new thread is already tracked and will stop at launch
-            add_tracee_thread(new_tracee_pid);
+            add_tracee_thread(new_tracee_pid, num_tasks);
             debug_print_array_tracee();
             return WAIT_SYSCALL_CLONE;
         case (SIGTRAP | (PTRACE_EVENT_STOP << 8)):
@@ -447,6 +462,7 @@ tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_tracee, 
  */
 tracee_error_t tracee_detach(tracee_thread_t *tt)
 {
+    CHECK_IF_PARAM_IS_NULL(tt);
     // (I don't understand why it does not work without SIGCONT)
     long ret = ptrace(PTRACE_DETACH, tt->pid, NULL, SIGCONT);
     DEBUG_PRINT("PTRACE detach on %d, tid %d\n", tt->pid, tt->tid);
@@ -457,14 +473,13 @@ tracee_error_t tracee_detach(tracee_thread_t *tt)
         return TRACEE_ERR_PERM;
     }
 
-    tt->is_stopped = 1;
     return TRACEE_SUCCESS;
 }
 
+/* Syscall detection loop */
 static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
 {
-    /* Syscall detection loop */
-    int taskid;
+    CHECK_IF_PARAM_IS_NULL(tt);
     tracee_error_t ptrace_res;
 
     ptrace_res = tracee_tracksyscalls_ptrace_with_sig(tt, 0);
@@ -474,8 +489,8 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
         return ptrace_res;
     }
 
-    TAU_PROFILER_CREATE(tracee_threads_array.tracee_threads[0]->thread_timer, "[thread]", "", SYSCALL);
-    TAU_PROFILER_START_TASK(tracee_threads_array.tracee_threads[0]->thread_timer, 0);
+    TAU_PROFILER_CREATE(tt->thread_timer, "[thread]", "", SYSCALL);
+    TAU_PROFILER_START_TASK(tt->thread_timer, tt->tid);
 
     while (!ending_tracking)
     {
@@ -502,9 +517,6 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
             break;
 
         case WAIT_STOPPED_NEW_CHILD:
-            TAU_CREATE_TASK(taskid);
-            DEBUG_PRINT("TAU_CREATE_TASK taskid = %d\n", taskid);
-
             TAU_PROFILER_CREATE(tracee_thread->thread_timer, "[thread]", "", SYSCALL);
             TAU_PROFILER_START_TASK(tracee_thread->thread_timer, tracee_thread->tid);
             // No break: it will do the WAIT_STOPPED case
@@ -575,7 +587,9 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
         }
     }
 
-
+    // Detachment of all tracked threads
+    DEBUG_PRINT("Will detach every traced threads\n");
+    debug_print_array_tracee();
     for (int i = tracee_threads_array.size - 1; i >= 0; i--)
     {
         // For each thread, interrupt the thread and detach it
@@ -615,6 +629,7 @@ static void internal_init_once(void)
  **/
 tracee_error_t tracee_seize(tracee_thread_t *tt)
 { /* Wait for stop */
+    CHECK_IF_PARAM_IS_NULL(tt);
     tracee_wait_t res = tracee_wait_for_child(tt->pid, &tt, NULL);
 
     if (res == WAIT_STOPPED)
@@ -646,7 +661,7 @@ tracee_error_t tracee_seize(tracee_thread_t *tt)
  */
 void end_tracking(int signum)
 {
-    // The signal caller should be sent by the main child
+    // The signal should be sent by the main child
     DEBUG_PRINT("Signal %d received. Starting end_tracking()\n", signum);
     ending_tracking = 1;
 }
@@ -657,19 +672,20 @@ void end_tracking(int signum)
 
 int track_process(pid_t pid)
 {
-    internal_init_once();
-    array_tracee_threads_init();
-    tracee_thread_t *tt = add_tracee_thread_specific_tid(pid, num_tasks);
-
     struct sigaction sa;
+
     sa.sa_handler = end_tracking;
+    sa.sa_flags = SA_RESTART;
     sigemptyset(&sa.sa_mask);
     if (sigaction(SIG_STOP_PTRACE, &sa, NULL) == -1)
     {
         perror("sigaction");
     }
 
-    DEBUG_PRINT("Will track %d (thread %d)\n", pid, 0);
+    internal_init_once();
+    array_tracee_threads_init();
+
+    tracee_thread_t *tt = add_tracee_thread(pid, 0);
 
     // The child is supposed to use prepare_to_be_tracked()
     tracee_error_t res = tracee_seize(tt);
@@ -677,10 +693,10 @@ int track_process(pid_t pid)
     {
         // It can be because of permission or because the process is alredy tracked by an other tracer
         perror(tracee_error_str[res]);
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    DEBUG_PRINT("%d (thread %d) attached\n", pid, 0);
+    DEBUG_PRINT("%d (thread %d) attached\n", pid, tt->tid);
 
     // The child_thread is attached and currently stopped
     tracee_error_t ptrace_res = tracee_track_syscall(tt);
@@ -713,4 +729,3 @@ void prepare_to_be_tracked(pid_t pid)
     raise(SIGSTOP);
     DEBUG_PRINT("%d is attached\n", getpid());
 }
-

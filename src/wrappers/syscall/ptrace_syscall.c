@@ -58,31 +58,12 @@ pid_t rpid;
 
 void __attribute__((constructor)) taupreload_init(void);
 
-// The parent and the child are not sharing the same threads counter
-// So, each time one has a new thread, it must informs the other
-void increment_thread_nb(int signum)
-{
-    DEBUG_PRINT("Signal %d received. Starting increment_thread_nb()\n", signum);
-}
-
-
 // Have to do this when using CUPTI, otherwise the initialization is made by
 // Tau_cupti_onload() but we cannot use CUDA before a fork for the child to work
 // properly
 void taupreload_init()
 {
     rpid = fork();
-
-
-    struct sigaction sa;
-
-    sa.sa_handler = increment_thread_nb;
-    sigemptyset(&sa.sa_mask);
-    if (sigaction(SIG_INCREMENT_TASK, &sa, NULL) == -1)
-    {
-        perror("sigaction");
-    }
-
 }
 
 // Trampoline for the real main()
@@ -111,28 +92,30 @@ int taupreload_main(int argc, char **argv, char **envp)
 
     if (rpid == 0)
     {
+        pid_t ppid = getppid();
         /* Child */
         Tau_create_top_level_timer_if_necessary();
         void *handle;
         TAU_PROFILER_CREATE(handle, __TAU_FUNCTION__, "", TAU_DEFAULT);
         TAU_PROFILER_START(handle);
 
-        prepare_to_be_tracked(getppid());
+        prepare_to_be_tracked(ppid);
 
         ret = main_real(argc, argv, envp);
 
         // Tell parent to stop the tracking
-        // Signals ?
-        kill(getppid(), SIG_STOP_PTRACE);
-        DEBUG_PRINT("%d just kill\n", getpid());
-        // Another way ?
+        kill(ppid, SIG_STOP_PTRACE);
+        DEBUG_PRINT("%d just sent signal SIG_STOP_PTRACE to %d\n", getpid(), ppid);
 
         TAU_PROFILER_STOP(handle);
     }
     else
     {
         /* Parent */
+
+        // TODO replace
         TAU_PROFILE_SET_CONTEXT(1);
+
         Tau_create_top_level_timer_if_necessary();
         ret = track_process(rpid);
     }
