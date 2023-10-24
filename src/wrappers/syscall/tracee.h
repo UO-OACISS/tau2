@@ -17,6 +17,9 @@
 // Signal for the child to send to the parent to stop the tracking with ptrace
 #define SIG_STOP_PTRACE SIGRTMIN
 
+
+extern int num_tasks;
+
 /******************
  * ERROR HANDLING *
  ******************/

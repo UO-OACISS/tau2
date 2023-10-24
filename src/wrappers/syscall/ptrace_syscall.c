@@ -83,12 +83,7 @@ int taupreload_main(int argc, char **argv, char **envp)
     TAU_INIT(&argc, &argv);
     // apparently is the real initialization.
     Tau_init_initializeTAU();
-
     int tmp = TAU_PROFILE_GET_NODE();
-    if (tmp == -1)
-    {
-        TAU_PROFILE_SET_NODE(0);
-    }
 
     if (rpid == 0)
     {
@@ -99,6 +94,7 @@ int taupreload_main(int argc, char **argv, char **envp)
         TAU_PROFILER_CREATE(handle, __TAU_FUNCTION__, "", TAU_DEFAULT);
         TAU_PROFILER_START(handle);
 
+        TAU_CREATE_TASK(num_tasks);
         prepare_to_be_tracked(ppid);
 
         ret = main_real(argc, argv, envp);
@@ -112,9 +108,7 @@ int taupreload_main(int argc, char **argv, char **envp)
     else
     {
         /* Parent */
-        // TODO replace this context line
-        TAU_PROFILE_SET_CONTEXT(1);
-
+        TAU_CREATE_TASK(num_tasks);
         ret = track_process(rpid);
     }
 

@@ -595,6 +595,10 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
         }
     }
 
+    // We cannot not dump the profile.0.0.0 file, so we force the parent to dump everything before the child
+    // This way, the child will replace the files like profile.0.0.0 by its ones
+    Tau_destructor_trigger();
+
     // Detachment of all tracked threads
     DEBUG_PRINT("Will detach every traced threads\n");
     debug_print_array_tracee();
@@ -611,7 +615,7 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
                 tracee_wait_t res = tracee_wait_for_child(tt->pid, &tt, NULL);
                 DEBUG_PRINT("%s on %d\n", wait_res_str[res], tt->pid);
             }
-            tracee_stop_all_timers(tt);
+            // tracee_stop_all_timers(tt); // Not needed after Tau_destructor_trigger()
 
             tracee_detach(tt);
             remove_tracee_thread(tt->pid);
@@ -696,7 +700,7 @@ int track_process(pid_t pid)
     internal_init_once();
     array_tracee_threads_init();
 
-    // Here the tid for the main child is set to num_tasks = 0
+    // Here the tid for the main child is set to num_tasks, which is set to 1 before (in ptrace_syscall.c)
     // To try to synchronize the number of tasks with the child, we need to use TAU_CREATE_TASK for each thread created by the child
     // For example, at the start, 
     //
