@@ -602,17 +602,20 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
     {
         // For each thread, interrupt the thread and detach it
         tracee_thread_t *tt = tracee_threads_array.tracee_threads[i];
-        if (!(tt->is_stopped))
+        if (tt)
         {
-            tracee_interrupt(tt);
-            // wait for the pid to stop
-            tracee_wait_t res = tracee_wait_for_child(tt->pid, &tt, NULL);
-            DEBUG_PRINT("%s on %d\n", wait_res_str[res], tt->pid);
-        }
-        tracee_stop_all_timers(tt);
+            if (!(tt->is_stopped))
+            {
+                tracee_interrupt(tt);
+                // wait for the pid to stop
+                tracee_wait_t res = tracee_wait_for_child(tt->pid, &tt, NULL);
+                DEBUG_PRINT("%s on %d\n", wait_res_str[res], tt->pid);
+            }
+            tracee_stop_all_timers(tt);
 
-        tracee_detach(tt);
-        remove_tracee_thread(tt->pid);
+            tracee_detach(tt);
+            remove_tracee_thread(tt->pid);
+        }
     }
 
     return TRACEE_SUCCESS;
