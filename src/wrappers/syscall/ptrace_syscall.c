@@ -44,7 +44,7 @@ extern int Tau_init_initializeTAU(void);
 #define __TAU_FUNCTION__ __func__
 #endif
 
-#define DEBUG_PTRACE
+// #define DEBUG_PTRACE
 
 #ifdef DEBUG_PTRACE
 #define DEBUG_PRINT(...)                                                                                               \
@@ -112,11 +112,9 @@ int taupreload_main(int argc, char **argv, char **envp)
     else
     {
         /* Parent */
-
-        // TODO replace
+        // TODO replace this context line
         TAU_PROFILE_SET_CONTEXT(1);
 
-        Tau_create_top_level_timer_if_necessary();
         ret = track_process(rpid);
     }
 

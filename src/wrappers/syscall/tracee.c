@@ -194,6 +194,9 @@ void array_tracee_threads_extend()
  */
 tracee_thread_t *add_tracee_thread(pid_t pid, int tid)
 {
+    if (tracee_threads_array.lowest_index_free > tracee_threads_array.size)
+        tracee_threads_array.lowest_index_free = tracee_threads_array.size;
+
     int index_free = tracee_threads_array.lowest_index_free;
     DEBUG_PRINT("tracee_threads_array.lowest_index_free = %d\n", tracee_threads_array.lowest_index_free);
     DEBUG_PRINT("tracee_threads_array.size = %d\n", tracee_threads_array.size);
@@ -253,6 +256,8 @@ void remove_tracee_thread(pid_t pid)
         }
         tracee_threads_array.size--;
     }
+    if (tracee_threads_array.lowest_index_free > tracee_threads_array.size)
+        tracee_threads_array.lowest_index_free = tracee_threads_array.size;
 }
 
 /*****************************
@@ -508,9 +513,12 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
         case WAIT_EXITED:
             debug_print_array_tracee();
             tracee_stop_all_timers(tracee_thread);
+
+            int is_main_child = (tt == tracee_thread ? 1 : 0);
+
             remove_tracee_thread(tracee_thread->pid);
 
-            if (tracee_thread->tid == 0)
+            if (is_main_child)
             {
                 return TRACEE_SUCCESS;
             }
@@ -685,7 +693,17 @@ int track_process(pid_t pid)
     internal_init_once();
     array_tracee_threads_init();
 
-    tracee_thread_t *tt = add_tracee_thread(pid, 0);
+    // Here the tid for the main child is set to num_tasks = 0
+    // To try to synchronize the number of tasks with the child, we need to use TAU_CREATE_TASK for each thread created by the child
+    // For example, at the start, 
+    //
+    // TAU_CREATE_TASK(num_tasks);   // Once, because only the main child is created for now
+    // tracee_thread_t *tt = add_tracee_thread(pid, num_tasks);
+    //
+    // In fact, the timer is start in tracee_track_syscall(), so the tt->tid can be set after the creation of the tracee_thread_t object
+    // The issue is that the parent will still create a profile file profile.0.0.0 because of the initialization of TAU
+
+    tracee_thread_t *tt = add_tracee_thread(pid, num_tasks);
 
     // The child is supposed to use prepare_to_be_tracked()
     tracee_error_t res = tracee_seize(tt);
