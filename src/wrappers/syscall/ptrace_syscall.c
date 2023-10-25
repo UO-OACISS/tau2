@@ -56,6 +56,16 @@ extern int Tau_init_initializeTAU(void);
 
 pid_t rpid;
 
+// The parent and the child are not sharing the same threads counter
+void increment_thread_nb(int signum, siginfo_t *info, void *context)
+{
+    pid_t pid_sender = info->si_pid;
+    DEBUG_PRINT("Signal %d received from %d. Starting increment_thread_nb()\n", signum, pid_sender);
+    TAU_CREATE_TASK(num_tasks);
+    DEBUG_PRINT("TAU_GET_TASK = %d\n", num_tasks);
+}
+
+
 void __attribute__((constructor)) taupreload_init(void);
 
 // Have to do this when using CUPTI, otherwise the initialization is made by
@@ -64,6 +74,16 @@ void __attribute__((constructor)) taupreload_init(void);
 void taupreload_init()
 {
     rpid = fork();
+    
+    struct sigaction sa;
+
+    sa.sa_flags = SA_SIGINFO | SA_RESTART;
+    sa.sa_sigaction = increment_thread_nb;
+    sigemptyset(&sa.sa_mask);
+    if (sigaction(SIG_INCREMENT_TASK, &sa, NULL) == -1)
+    {
+        perror("sigaction");
+    }
 }
 
 // Trampoline for the real main()

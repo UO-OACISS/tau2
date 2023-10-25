@@ -17,6 +17,8 @@
 // Signal for the child to send to the parent to stop the tracking with ptrace
 #define SIG_STOP_PTRACE SIGRTMIN
 
+// Signal to increment the number of tasks/threads for TAU
+#define SIG_INCREMENT_TASK SIGRTMIN+1
 
 extern int num_tasks;
 

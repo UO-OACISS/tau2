@@ -419,7 +419,10 @@ tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_tracee, 
 
             // The new thread is already tracked and will stop at launch
             add_tracee_thread(new_tracee_pid, num_tasks);
-            debug_print_array_tracee();
+
+            // Inform the child to update num_tasks
+            kill(tracee_threads_array.tracee_threads[0]->pid, SIG_INCREMENT_TASK);
+
             return WAIT_SYSCALL_CLONE;
         case (SIGTRAP | (PTRACE_EVENT_STOP << 8)):
             // Seems not to happen. We need to check with status>>16
