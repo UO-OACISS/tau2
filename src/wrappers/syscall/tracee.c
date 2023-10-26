@@ -81,8 +81,8 @@ typedef enum
     WAIT_STOPPED,
     // Stopped by PTRACE_EVENT_STOP
     WAIT_STOPPED_NEW_CHILD,
-    // Stopped by another signal SIG_INCREMENT_TASK
-    WAIT_STOPPED_SIG_INCREMENT,
+    // Stopped by another signal SIG_UPDATE_TASK
+    WAIT_STOPPED_SIG_UPDATE_TASK,
     // Stopped by another signal
     WAIT_STOPPED_OTHER,
     WAIT_SYSCALL,
@@ -95,7 +95,7 @@ typedef enum
 } tracee_wait_t;
 
 static const char *const wait_res_str[WAIT_ERROR + 1] = {
-    "WAIT_STOPPED",      "WAIT_STOPPED_NEW_CHILD", "WAIT_STOPPED_SIG_INCREMENT", "WAIT_STOPPED_OTHER", "WAIT_SYSCALL",
+    "WAIT_STOPPED",      "WAIT_STOPPED_NEW_CHILD", "WAIT_STOPPED_SIG_UPDATE_TASK", "WAIT_STOPPED_OTHER", "WAIT_SYSCALL",
     "WAIT_SYSCALL_EXIT", "WAIT_SYSCALL_CLONE",     "WAIT_SYSCALL_FORK",          "WAIT_SYSCALL_VFORK", "WAIT_EXITED",
     "WAIT_ERROR"};
 
@@ -217,10 +217,12 @@ static void array_tracee_threads_extend()
 }
 
 /**
- * @brief Add a tracee_thread to tracee_threads_array
+ * @brief Add a tracee_thread to tracee_threads_array.
  *
  * @param pid
  * @param tid
+ * 
+ * @note tid is set in tracee_start_tracking_tt(), so we may remove the tid parameter from add_tracee_thread() and put it to -1 by default
  */
 static tracee_thread_t *add_tracee_thread(pid_t pid, int tid)
 {
@@ -399,10 +401,10 @@ static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_t
             break;
         }
 
-        if (wstopsig == SIG_INCREMENT_TASK)
+        if (wstopsig == SIG_UPDATE_TASK)
         {
-            DEBUG_PRINT("%d stopped by SIG_INCREMENT_TASK\n", tracee_pid);
-            return WAIT_STOPPED_SIG_INCREMENT;
+            DEBUG_PRINT("%d stopped by SIG_UPDATE_TASK\n", tracee_pid);
+            return WAIT_STOPPED_SIG_UPDATE_TASK;
         }
 
         // No PTRACE_EVENTS
@@ -416,7 +418,7 @@ static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_t
             DEBUG_PRINT("%d stopped by SIGTRAP | 0x80\n", tracee_pid);
             return WAIT_SYSCALL;
 
-            // case SIG_INCREMENT_TASK: // isn't accepted by the compiler
+            // case SIG_UPDATE_TASK: // isn't accepted by the compiler
 
         default:
             // The tracer will need to relaunch the thread by delivering the same signal which stops it
@@ -656,10 +658,10 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
                 ending_tracking = 1;
             }
             break;
-        case WAIT_STOPPED_SIG_INCREMENT:
+        case WAIT_STOPPED_SIG_UPDATE_TASK:
             // We temporarily stop the tracking of syscall in waiting for the child to treat the signal we just sent
             *waiting_for_ack = 1;
-            ptrace_res = tracee_continue(tracee_thread, SIG_INCREMENT_TASK);
+            ptrace_res = tracee_continue(tracee_thread, SIG_UPDATE_TASK);
             CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tracee_thread);
             break;
 
@@ -678,11 +680,11 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
             tracee_handle_stop_syscall(tracee_thread);
 
             // Inform the child to update local_num_tasks
-            kill(tracee_threads_array.tracee_threads[0]->pid, SIG_INCREMENT_TASK);
+            kill(tracee_threads_array.tracee_threads[0]->pid, SIG_UPDATE_TASK);
             *waiting_for_ack = 1;
 
             // We temporarily stop the tracking of syscall in waiting for the child to treat the signal we sent
-            ptrace_res = tracee_continue(tracee_thread, SIG_INCREMENT_TASK);
+            ptrace_res = tracee_continue(tracee_thread, SIG_UPDATE_TASK);
             CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tracee_thread);
             break;
 
@@ -881,7 +883,7 @@ void prepare_to_be_tracked(pid_t pid)
     sa.sa_handler = update_thread_nb;
     sa.sa_flags = SA_RESTART;
     sigemptyset(&sa.sa_mask);
-    if (sigaction(SIG_INCREMENT_TASK, &sa, NULL) == -1)
+    if (sigaction(SIG_UPDATE_TASK, &sa, NULL) == -1)
     {
         perror("sigaction");
     }
