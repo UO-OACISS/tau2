@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
 #include <tracee.h>
 
@@ -44,7 +45,7 @@ extern int Tau_init_initializeTAU(void);
 #define __TAU_FUNCTION__ __func__
 #endif
 
-// #define DEBUG_PTRACE
+#define DEBUG_PTRACE
 
 #ifdef DEBUG_PTRACE
 #define DEBUG_PRINT(...)                                                                                               \
@@ -57,12 +58,23 @@ extern int Tau_init_initializeTAU(void);
 pid_t rpid;
 
 // The parent and the child are not sharing the same threads counter
-void increment_thread_nb(int signum, siginfo_t *info, void *context)
+void update_thread_nb(int signum)
 {
-    pid_t pid_sender = info->si_pid;
-    DEBUG_PRINT("Signal %d received from %d. Starting increment_thread_nb()\n", signum, pid_sender);
-    TAU_CREATE_TASK(num_tasks);
-    DEBUG_PRINT("TAU_GET_TASK = %d\n", num_tasks);
+    DEBUG_PRINT("Signal %d received. Starting update_thread_nb()\n", signum);
+    DEBUG_PRINT("local_num_tasks = %d ; shared_num_tasks = %d\n",local_num_tasks, *shared_num_tasks);
+    
+
+    // TODO Check if it is safe to use shared_num_tasks here
+    while (local_num_tasks < *shared_num_tasks)
+    {
+        // Create false/empty tid to reserve them for the other TAU runtime
+        TAU_CREATE_TASK(local_num_tasks);
+    }
+    DEBUG_PRINT("Ending update_thread_nb(). local_num_tasks = %d ; shared_num_tasks = %d\n", local_num_tasks, *shared_num_tasks);
+
+    *shared_num_tasks = local_num_tasks;
+    *waiting_for_ack = 0;
+    raise(SIGSTOP);
 }
 
 
@@ -73,12 +85,15 @@ void __attribute__((constructor)) taupreload_init(void);
 // properly
 void taupreload_init()
 {
+    shared_num_tasks = (int *) mmap(NULL, sizeof(int), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0); 
+    waiting_for_ack = (int *) mmap(NULL, sizeof(int), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0); 
+
     rpid = fork();
     
     struct sigaction sa;
 
-    sa.sa_flags = SA_SIGINFO | SA_RESTART;
-    sa.sa_sigaction = increment_thread_nb;
+    sa.sa_flags = SA_RESTART;
+    sa.sa_handler = update_thread_nb;
     sigemptyset(&sa.sa_mask);
     if (sigaction(SIG_INCREMENT_TASK, &sa, NULL) == -1)
     {
@@ -114,22 +129,29 @@ int taupreload_main(int argc, char **argv, char **envp)
         TAU_PROFILER_CREATE(handle, __TAU_FUNCTION__, "", TAU_DEFAULT);
         TAU_PROFILER_START(handle);
 
-        TAU_CREATE_TASK(num_tasks);
+        TAU_CREATE_TASK(local_num_tasks);
         prepare_to_be_tracked(ppid);
 
         ret = main_real(argc, argv, envp);
 
         // Tell parent to stop the tracking
+        *waiting_for_ack = 1;
         kill(ppid, SIG_STOP_PTRACE);
         DEBUG_PRINT("%d just sent signal SIG_STOP_PTRACE to %d\n", getpid(), ppid);
+        while (*waiting_for_ack)
+        {
+        }
 
         TAU_PROFILER_STOP(handle);
     }
     else
     {
         /* Parent */
-        TAU_CREATE_TASK(num_tasks);
+        TAU_CREATE_TASK(local_num_tasks);
         ret = track_process(rpid);
+
+        munmap(shared_num_tasks, sizeof(int));
+        munmap(waiting_for_ack, sizeof(int));
     }
 
     Tau_profile_exit_all_threads();

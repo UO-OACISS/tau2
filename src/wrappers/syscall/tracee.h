@@ -20,7 +20,14 @@
 // Signal to increment the number of tasks/threads for TAU
 #define SIG_INCREMENT_TASK SIGRTMIN+1
 
-extern int num_tasks;
+/* Shared variable between the parent and the child. Represent the total number of threads/task for TAU */
+extern int *shared_num_tasks;
+
+// Local to the child/parent
+extern int local_num_tasks;
+
+// Shared variable
+extern int *waiting_for_ack;
 
 /******************
  * ERROR HANDLING *
