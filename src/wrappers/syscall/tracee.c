@@ -607,8 +607,6 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
     CHECK_IF_PARAM_IS_NULL(tt);
     tracee_error_t ptrace_res;
 
-    // Update shared_num_tasks before starting the tracking
-    (*shared_num_tasks)++;
     ptrace_res = tracee_start_tracking_tt(tt);
     CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tt);
 
@@ -831,12 +829,7 @@ int track_process(pid_t pid)
     internal_init_once();
     array_tracee_threads_init();
 
-    // Here the tid for the main child is set to local_num_tasks, which is set to 1 before (in ptrace_syscall.c)
-    // In fact, the timer and the thread is started in tracee_start_tracking_tt(), so the tt->tid is set after the
-    // creation of the tracee_thread_t object. The issue is that the parent will still create a profile file
-    // profile.0.0.0 because of the initialization of TAU
-
-    // The child might be running, so shared_num_tasks is NOT safe to use
+    // Here we use a dummy tid number
     tracee_thread_t *tt = add_tracee_thread(pid, local_num_tasks);
 
     // The child is supposed to use prepare_to_be_tracked()
@@ -892,6 +885,11 @@ void prepare_to_be_tracked(pid_t pid)
     {
         perror("sigaction");
     }
+
+    // We create a false tid, which will not be used, for the parent
+    TAU_CREATE_TASK(local_num_tasks);
+    // And update shared_num_tasks
+    *shared_num_tasks = local_num_tasks;
 
     raise(SIGSTOP);
     DEBUG_PRINT("%d is attached\n", getpid());

@@ -103,7 +103,6 @@ int taupreload_main(int argc, char **argv, char **envp)
         TAU_PROFILER_CREATE(handle, __TAU_FUNCTION__, "", TAU_DEFAULT);
         TAU_PROFILER_START(handle);
 
-        TAU_CREATE_TASK(local_num_tasks);
         prepare_to_be_tracked(ppid);
 
         ret = main_real(argc, argv, envp);
@@ -122,7 +121,6 @@ int taupreload_main(int argc, char **argv, char **envp)
     else
     {
         /* Parent */
-        TAU_CREATE_TASK(local_num_tasks);
         ret = track_process(rpid);
 
         munmap(shared_num_tasks, sizeof(int));
