@@ -31,8 +31,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 #include <tracee.h>
 
@@ -57,27 +57,6 @@ extern int Tau_init_initializeTAU(void);
 
 pid_t rpid;
 
-// The parent and the child are not sharing the same threads counter
-void update_thread_nb(int signum)
-{
-    DEBUG_PRINT("Signal %d received. Starting update_thread_nb()\n", signum);
-    DEBUG_PRINT("local_num_tasks = %d ; shared_num_tasks = %d\n",local_num_tasks, *shared_num_tasks);
-    
-
-    // TODO Check if it is safe to use shared_num_tasks here
-    while (local_num_tasks < *shared_num_tasks)
-    {
-        // Create false/empty tid to reserve them for the other TAU runtime
-        TAU_CREATE_TASK(local_num_tasks);
-    }
-    DEBUG_PRINT("Ending update_thread_nb(). local_num_tasks = %d ; shared_num_tasks = %d\n", local_num_tasks, *shared_num_tasks);
-
-    *shared_num_tasks = local_num_tasks;
-    *waiting_for_ack = 0;
-    raise(SIGSTOP);
-}
-
-
 void __attribute__((constructor)) taupreload_init(void);
 
 // Have to do this when using CUPTI, otherwise the initialization is made by
@@ -85,20 +64,15 @@ void __attribute__((constructor)) taupreload_init(void);
 // properly
 void taupreload_init()
 {
-    shared_num_tasks = (int *) mmap(NULL, sizeof(int), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0); 
-    waiting_for_ack = (int *) mmap(NULL, sizeof(int), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0); 
+    shared_num_tasks = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    waiting_for_ack = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    parent_has_dumped = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+    *shared_num_tasks = 0;
+    *waiting_for_ack = 0;
+    *parent_has_dumped = 0;
 
     rpid = fork();
-    
-    struct sigaction sa;
-
-    sa.sa_flags = SA_RESTART;
-    sa.sa_handler = update_thread_nb;
-    sigemptyset(&sa.sa_mask);
-    if (sigaction(SIG_INCREMENT_TASK, &sa, NULL) == -1)
-    {
-        perror("sigaction");
-    }
 }
 
 // Trampoline for the real main()
@@ -135,10 +109,11 @@ int taupreload_main(int argc, char **argv, char **envp)
         ret = main_real(argc, argv, envp);
 
         // Tell parent to stop the tracking
-        *waiting_for_ack = 1;
         kill(ppid, SIG_STOP_PTRACE);
         DEBUG_PRINT("%d just sent signal SIG_STOP_PTRACE to %d\n", getpid(), ppid);
-        while (*waiting_for_ack)
+
+        // Safe?
+        while (!*parent_has_dumped)
         {
         }
 
@@ -192,4 +167,3 @@ int __libc_start_main(int (*_main)(int, char **, char **), int _argc, char **_ar
     }
 }
 #endif // __ppc64le__
-

@@ -29,6 +29,9 @@ extern int local_num_tasks;
 // Shared variable
 extern int *waiting_for_ack;
 
+// Shared variable. Flag to indicate that the parent has dumped its files
+extern int *parent_has_dumped;
+
 /******************
  * ERROR HANDLING *
  ******************/
