@@ -60,6 +60,10 @@ int *shared_num_tasks;
 int *waiting_for_ack;
 int *parent_has_dumped;
 
+// To use before setting any timer on a (fake) thread
+// Otherwise, it will use the gpu_timers for the fake threads
+extern void Tau_set_fake_thread_use_cpu_metric(int tid);
+
 static void update_local_num_tasks()
 {
     TASK_DEBUG_PRINT("Entering update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks, *shared_num_tasks)
@@ -588,6 +592,7 @@ static tracee_error_t tracee_start_tracking_tt(tracee_thread_t *tt)
     // Main child should be stopped so shared_num_tasks is safe to use
     update_local_num_tasks();
     tt->tid = *shared_num_tasks;
+    Tau_set_fake_thread_use_cpu_metric(tt->tid);
     TAU_PROFILER_CREATE(tt->thread_timer, "[thread]", "", SYSCALL);
     TAU_PROFILER_START_TASK(tt->thread_timer, tt->tid);
     tracee_error_t ptrace_res = tracee_tracksyscalls_ptrace_with_sig(tt, 0);
