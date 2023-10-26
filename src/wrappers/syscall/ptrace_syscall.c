@@ -45,7 +45,7 @@ extern int Tau_init_initializeTAU(void);
 #define __TAU_FUNCTION__ __func__
 #endif
 
-#define DEBUG_PTRACE
+// #define DEBUG_PTRACE
 
 #ifdef DEBUG_PTRACE
 #define DEBUG_PRINT(...)                                                                                               \
@@ -127,6 +127,7 @@ int taupreload_main(int argc, char **argv, char **envp)
 
         munmap(shared_num_tasks, sizeof(int));
         munmap(waiting_for_ack, sizeof(int));
+        munmap(parent_has_dumped, sizeof(int));
     }
 
     Tau_profile_exit_all_threads();

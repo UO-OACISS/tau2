@@ -14,7 +14,7 @@
 
 #include "tracee.h"
 
-#define DEBUG_PTRACE
+// #define DEBUG_PTRACE
 
 #ifdef DEBUG_PTRACE
 #define DEBUG_PRINT(...)                                                                                               \
@@ -24,7 +24,7 @@
 #define DEBUG_PRINT(...)
 #endif
 
-#define TASK_DEBUG_PTRACE
+// #define TASK_DEBUG_PTRACE
 
 #ifdef TASK_DEBUG_PTRACE
 #define TASK_DEBUG_PRINT(...)                                                                                          \
