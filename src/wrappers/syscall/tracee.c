@@ -122,7 +122,7 @@ static void print_tracee_thread(tracee_thread_t *tracee)
     DEBUG_PRINT("tracee->pid = %d\n", tracee->pid);
     DEBUG_PRINT("tracee->tid = %d\n", tracee->tid);
     DEBUG_PRINT("tracee->in_syscall = %d\n", tracee->in_syscall);
-    DEBUG_PRINT("tracee->is_stopped = %d\n", tracee->in_syscall);
+    DEBUG_PRINT("tracee->is_stopped = %d\n", tracee->is_stopped);
 }
 
 static tracee_thread_t *create_tracee_thread(pid_t pid, int tid)
@@ -214,6 +214,8 @@ static void array_tracee_threads_extend()
 {
     tracee_thread_t **tmp = (tracee_thread_t **)realloc(tracee_threads_array.tracee_threads,
                                                         2 * tracee_threads_array.capacity * sizeof(tracee_thread_t *));
+    tracee_threads_array.tracee_threads = tmp;
+    tracee_threads_array.capacity = 2 * tracee_threads_array.capacity;
 }
 
 /**
@@ -328,6 +330,8 @@ static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_t
         if (!(*waited_tracee))
         {
             *waited_tracee = get_tracee_thread(tracee_pid);
+            // TODO, add if NULL
+            // It happens when the CLONE_EVENT notification happens after the STOPPED_NEW_CHILD notification
         }
         (*waited_tracee)->is_stopped = 1;
     }
@@ -373,6 +377,7 @@ static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_t
         // case (SIGTRAP | (PTRACE_EVENT_FORK << 8)):
         // case (SIGTRAP | (PTRACE_EVENT_VFORK << 8)):
         case (SIGTRAP | (PTRACE_EVENT_CLONE << 8)):
+        // TODO : deal with cascades of clone() (a thread creates a thread which creates a new one...)
             DEBUG_PRINT("PTRACE_EVENT_CLONE on %d\n", tracee_pid);
             // Tracee just called clone()
             pid_t new_tracee_pid;
@@ -386,7 +391,7 @@ static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_t
             // Create a new task for the new child
             TAU_CREATE_TASK(local_num_tasks);
             // Safe to update shared_num_tasks since the child is stopped
-            (*shared_num_tasks)++;
+            (*shared_num_tasks)++; // Update: not safe at all
 
             // The new thread is already tracked and will stop at launch
             add_tracee_thread(new_tracee_pid, *shared_num_tasks);
@@ -613,6 +618,7 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
     CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tt);
 
     // To contain the thread (one at a time) created by clone() before we allow it to start
+    // TODO replace
     tracee_thread_t *new_child_tt = NULL;
 
     while (!ending_tracking)

@@ -93,6 +93,11 @@ int taupreload_main(int argc, char **argv, char **envp)
     // apparently is the real initialization.
     Tau_init_initializeTAU();
     int tmp = TAU_PROFILE_GET_NODE();
+    if (tmp == -1)
+    {
+        TAU_PROFILE_SET_NODE(0);
+    }
+
 
     if (rpid == 0)
     {
