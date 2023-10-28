@@ -127,6 +127,10 @@ extern FunctionInfo * Tau_create_thread_state_if_necessary_string(const string &
 extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address);
 extern "C" int Tau_get_usesMPI();
 
+#ifdef TAU_MPI
+extern "C" int PMPI_Initialized(int *inited);
+#endif
+
 #if defined(TAU_OPENMP) && !defined (TAU_USE_OMPT_TR6) && !defined (TAU_USE_OMPT_TR7) && !defined (TAU_USE_OMPT_5_0) && (defined(TAU_USE_OMPT) || defined (TAU_IBM_OMPT))
 extern "C" int Tau_get_thread_omp_state(int tid);
 #endif
@@ -368,6 +372,12 @@ struct tau_sampling_flags {
   x_uint64 previousTimestamp[TAU_MAX_COUNTERS];
   /* The trace for this node, mulithreaded execution currently not supported? */
   FILE *ebsTrace;
+
+  tau_sampling_flags() : samplingEnabled(0), suspendSampling(0), 
+    numSamples(0), samplesDroppedTau(0), samplesDroppedSuspended(0), 
+    previousTimestamp(), ebsTrace(NULL) {
+    
+  };
 };
 
 /* depending on the compiler support, use the fastest solution */
@@ -397,35 +407,43 @@ static std::mutex & TheSamplingFlagsMapMutex() {
     return sampling_flags_map_mutex;
 }
 // thread local storage 
-struct tau_sampling_flags *tau_sampling_flags(void) {
-    static thread_local struct tau_sampling_flags * tau_sampling_tls_flags = NULL;
-    // If we haven't set the thread-local-cache yet, do so
-    if(tau_sampling_tls_flags == NULL) {
-        std::lock_guard<std::mutex> guard(TheSamplingFlagsMapMutex());
-        const int myThread = RtsLayer::myThread();
-        tau_sampling_flagsMap & flagsMap = tau_sampling_tls_flags_map();
-        if(flagsMap.count(myThread) > 0) {
-            // If the map already contains tau_sampling_flags, use that
-            // (and set the thread local cache)
-            tau_sampling_tls_flags = flagsMap[myThread];
-        } else {
-            // Otherwise, create a tau_sampling_flags and insert it into the map
-            // and store it in the thread-local cache
-            tau_sampling_tls_flags = new struct tau_sampling_flags();
-            tau_sampling_tls_flags_map()[RtsLayer::myThread()] = tau_sampling_tls_flags;
-        }
-    }
-    return tau_sampling_tls_flags;
-}
+
 
 struct tau_sampling_flags * tau_sampling_flags_by_tid(int tid) {
-    if(tid == RtsLayer::myThread()) {
-        return tau_sampling_flags();
-    } 
+    const int myThread = RtsLayer::myThread();
+    static thread_local struct tau_sampling_flags * local_cache = NULL;
+
+    // If asking for my own thread's flags, and we've already cached it locally,
+    // return the cached value.
+    if(tid == myThread && local_cache != NULL) {
+        return local_cache;
+    }
+
+    // Otherwise, check the map
     std::lock_guard<std::mutex> guard(TheSamplingFlagsMapMutex());
-    struct tau_sampling_flags * result = tau_sampling_tls_flags_map()[tid];
+    tau_sampling_flagsMap & flagsMap = tau_sampling_tls_flags_map();
+    auto it = flagsMap.find(tid);
+    struct tau_sampling_flags * result;
+    if(it == flagsMap.end()) {
+        // Not in map; create and store
+        result = new struct tau_sampling_flags();
+        flagsMap[tid] = result;
+    } else {
+        // In map
+        result = it->second;
+    }
+
+    if(tid == myThread){
+        local_cache = result;
+    }
+
     return result;
 }
+
+struct tau_sampling_flags *tau_sampling_flags(void) {
+    return tau_sampling_flags_by_tid(RtsLayer::myThread());
+}
+
 #elif defined(TAU_USE_DTLS)
 // thread local storage
 __declspec(thread) struct tau_sampling_flags tau_sampling_tls_flags;
@@ -632,13 +650,13 @@ extern "C" FILE* Tau_sampling_get_ebsTrace()
 }
 
 extern "C" void Tau_sampling_suspend(int tid)
-{
-  tau_sampling_flags_by_tid(tid)->suspendSampling = 1;
+{  
+    tau_sampling_flags_by_tid(tid)->suspendSampling = 1;
 }
 
 extern "C" void Tau_sampling_resume(int tid)
 {
-  tau_sampling_flags_by_tid(tid)->suspendSampling = 0;
+    tau_sampling_flags_by_tid(tid)->suspendSampling = 0;
 }
 
 extern "C" void Tau_sampling_timer_pause() {
@@ -1635,12 +1653,14 @@ void Tau_sampling_event_start(int tid, void **addresses)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  // This is undefined when no unwind capability has been linked into TAU
+  if(getSamplingThrInitialized(tid)) {
+    // This is undefined when no unwind capability has been linked into TAU
 #ifdef TAU_UNWIND
-  if (TauEnv_get_ebs_unwind() == 1) {
-    Tau_sampling_unwindTauContext(tid, addresses);
-  }
+    if (TauEnv_get_ebs_unwind() == 1) {
+        Tau_sampling_unwindTauContext(tid, addresses);
+    }
 #endif /* TAU_UNWIND */
+  }
 
 /* Kevin here. This code is a bad idea. I have disabled it for now.
  * Sampling and instrumentation can play together just fine, if a
@@ -1693,23 +1713,25 @@ int Tau_sampling_event_stop(int tid, double *stopTime)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  tau_sampling_flags_by_tid(tid)->samplingEnabled = 0;
+  if(getSamplingThrInitialized(tid)) {
+    tau_sampling_flags_by_tid(tid)->samplingEnabled = 0;
 
-  Profiler *profiler = TauInternal_CurrentProfiler(tid);
+    Profiler *profiler = TauInternal_CurrentProfiler(tid);
 
-  if (TauEnv_get_tracing()) {
-    if (!profiler->needToRecordStop) {
-      tau_sampling_flags_by_tid(tid)->samplingEnabled = 1;
-      return 0;
+    if (TauEnv_get_tracing()) {
+        if (!profiler->needToRecordStop) {
+        tau_sampling_flags_by_tid(tid)->samplingEnabled = 1;
+        return 0;
+        }
+        Tau_sampling_outputTraceStop(tid, profiler, stopTime);
     }
-    Tau_sampling_outputTraceStop(tid, profiler, stopTime);
-  }
 
-  if (TauEnv_get_profiling()) {
-    Tau_sampling_eventStopProfile(tid, profiler, stopTime);
-  }
+    if (TauEnv_get_profiling()) {
+        Tau_sampling_eventStopProfile(tid, profiler, stopTime);
+    }
 
-  tau_sampling_flags_by_tid(tid)->samplingEnabled = 1;
+    tau_sampling_flags_by_tid(tid)->samplingEnabled = 1;
+  }
 #endif
   return 0;
 }
@@ -2061,15 +2083,24 @@ int Tau_sampling_init(int tid, pid_t pid)
    TAU_VERBOSE(" *** (S%d) send alarm to %d\n", gettid(), sev.sigev_notify_thread_id);
 #endif
    ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
+
    {
      std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
      TheThreadTimerMap()[pid == 0 ? RtsLayer::getTid() : pid] = timerid;
    }
-   TAU_VERBOSE("Created sampling timer for TAU tid = %d, kernel TID = %jd\n", tid, (intmax_t)sev.sigev_notify_thread_id);
-  if (ret != 0) {
-    fprintf(stderr, "TAU: (%d, %d) Sampling error 6: %s\n", RtsLayer::myNode(), RtsLayer::myThread(), strerror(ret));
-    return -1;
-  }
+
+   // If the thread no longer exists, we get EINVAL back from timer_create
+   if(ret == EINVAL && pid != 0) {
+     TAU_VERBOSE("Invalid argument error while initializing sampling on deferred thread %d (pid=%jd). The thread may have exited already.\n", tid, (intmax_t)pid);
+     return -1;
+   } 
+   
+   if (ret != 0) {
+     fprintf(stderr, "TAU: (node=%d, myThread=%d, tid=%d) Sampling error 6: %d: %s\n", RtsLayer::myNode(), RtsLayer::myThread(), tid, ret, strerror(errno));
+     return -1;
+   }
+
+   TAU_VERBOSE("Created sampling timer for TAU tid = %d, kernel TID = %jd, timer id = %jd\n", tid, (intmax_t)sev.sigev_notify_thread_id, (intmax_t)timerid);
    struct itimerspec it;
 
   /* this timer is in nanoseconds, but our parameters are in microseconds. */
@@ -2242,6 +2273,12 @@ extern "C" void Tau_sampling_init_if_necessary(void)
   if(Tau_get_usesMPI() == 0) {
       Tau_sampling_defer_init();
       return;
+  }
+  int mpi_initialized = 0;
+  PMPI_Initialized(&mpi_initialized);
+  if(!mpi_initialized) {
+    Tau_sampling_defer_init();
+    return;
   }
 #endif
 
