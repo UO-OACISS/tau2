@@ -1,7 +1,9 @@
 # SYSCALL wrapper with ptrace
 
 Syscall wrapper that uses ptrace to trace with tau each syscall called.
-The syscalls will be writen in the context 1 when printing with pprof.
+
+WARNING: the current version only track the syscall of the main thread.
+You can unset the flag NO_TRACECLONE in tracee.c to try with multiple threads, but it may result in a blocking process when profiling.
 
 ## Add an architecture
 
@@ -33,7 +35,7 @@ The child will wait to be attached to its parent before starting the main.
 
 Main file.
 
-The child should only use `prepare_to_be_tracked(getppid())` while the parent uses track_process(`child_pid`).
+The child should only use `prepare_to_be_tracked(getppid())` while the parent uses `track_process(child_pid)`.
 The parent attaches the child and then enters in a loop (`tracee_track_syscall`) in which it waits for its child or one of the child's threads to be stopped (`wait_for_pid`).
 The child can be stopped for several reasons (see enum `tracee_wait_t`).
 
