@@ -886,7 +886,10 @@ fi
 
 if [ $track_kokkos = "true" ]; then
     export KOKKOS_PROFILE_LIBRARY=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+    export KOKKOS_PLUGINS=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
 fi
+
+
 
 if [ $track_ompt = "true" ]; then
   export OMP_TOOL_LIBRARIES=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
