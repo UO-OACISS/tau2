@@ -14,7 +14,7 @@
 
 #include "tracee.h"
 
-// #define DEBUG_PTRACE
+#define DEBUG_PTRACE
 
 #ifdef DEBUG_PTRACE
 #define DEBUG_PRINT(...)                                                                                               \
@@ -24,15 +24,6 @@
 #define DEBUG_PRINT(...)
 #endif
 
-// #define TASK_DEBUG_PTRACE
-
-#ifdef TASK_DEBUG_PTRACE
-#define TASK_DEBUG_PRINT(...)                                                                                          \
-    fprintf(stderr, __VA_ARGS__);                                                                                      \
-    fflush(stderr);
-#else
-#define TASK_DEBUG_PRINT(...)
-#endif
 
 // expands to "return TRACEE_ERR_PARAM" if the parameter is null
 #define CHECK_IF_PARAM_IS_NULL(tt)                                                                                     \
@@ -66,13 +57,15 @@ extern void Tau_set_fake_thread_use_cpu_metric(int tid);
 
 static void update_local_num_tasks()
 {
-    TASK_DEBUG_PRINT("Entering update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks, *shared_num_tasks)
+    DEBUG_PTRACE("Entering update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n",
+                     local_num_tasks, *shared_num_tasks);
     while (local_num_tasks < *shared_num_tasks)
     {
         // Create false/empty tid to reserve them for the other TAU runtime
         TAU_CREATE_TASK(local_num_tasks);
     }
-    TASK_DEBUG_PRINT("Exiting update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks, *shared_num_tasks);
+    DEBUG_PTRACE("Exiting update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
+                     *shared_num_tasks);
 }
 
 typedef enum
@@ -94,10 +87,17 @@ typedef enum
     WAIT_ERROR
 } tracee_wait_t;
 
-static const char *const wait_res_str[WAIT_ERROR + 1] = {
-    "WAIT_STOPPED",      "WAIT_STOPPED_NEW_CHILD", "WAIT_STOPPED_SIG_UPDATE_TASK", "WAIT_STOPPED_OTHER", "WAIT_SYSCALL",
-    "WAIT_SYSCALL_EXIT", "WAIT_SYSCALL_CLONE",     "WAIT_SYSCALL_FORK",          "WAIT_SYSCALL_VFORK", "WAIT_EXITED",
-    "WAIT_ERROR"};
+static const char *const wait_res_str[WAIT_ERROR + 1] = {"WAIT_STOPPED",
+                                                         "WAIT_STOPPED_NEW_CHILD",
+                                                         "WAIT_STOPPED_SIG_UPDATE_TASK",
+                                                         "WAIT_STOPPED_OTHER",
+                                                         "WAIT_SYSCALL",
+                                                         "WAIT_SYSCALL_EXIT",
+                                                         "WAIT_SYSCALL_CLONE",
+                                                         "WAIT_SYSCALL_FORK",
+                                                         "WAIT_SYSCALL_VFORK",
+                                                         "WAIT_EXITED",
+                                                         "WAIT_ERROR"};
 
 typedef struct tracee_thread
 {
@@ -107,6 +107,10 @@ typedef struct tracee_thread
     int is_stopped;
     // 1 if has entered in a syscall ; 0 otherwise
     int in_syscall;
+    // 1 if it is a new child to start
+    int is_new_child;
+    // 1 if it has send a signal to increment num_task
+    int has_sent_signal;
     // timer for one syscall
     void *syscall_timer;
     // timer for the whole thread life
@@ -123,6 +127,8 @@ static void print_tracee_thread(tracee_thread_t *tracee)
     DEBUG_PRINT("tracee->tid = %d\n", tracee->tid);
     DEBUG_PRINT("tracee->in_syscall = %d\n", tracee->in_syscall);
     DEBUG_PRINT("tracee->is_stopped = %d\n", tracee->is_stopped);
+    DEBUG_PRINT("tracee->is_new_child = %d\n", tracee->is_new_child);
+    DEBUG_PRINT("tracee->has_sent_signal = %d\n", tracee->has_sent_signal);
 }
 
 static tracee_thread_t *create_tracee_thread(pid_t pid, int tid)
@@ -130,6 +136,8 @@ static tracee_thread_t *create_tracee_thread(pid_t pid, int tid)
     tracee_thread_t *new_tracee = (tracee_thread_t *)malloc(sizeof(tracee_thread_t));
     new_tracee->is_stopped = 1;
     new_tracee->in_syscall = 0;
+    new_tracee->is_new_child = 1;
+    new_tracee->has_sent_signal = 0;
     new_tracee->pid = pid;
     new_tracee->tid = tid;
 
@@ -215,7 +223,7 @@ static void array_tracee_threads_extend()
     tracee_thread_t **tmp = (tracee_thread_t **)realloc(tracee_threads_array.tracee_threads,
                                                         2 * tracee_threads_array.capacity * sizeof(tracee_thread_t *));
     tracee_threads_array.tracee_threads = tmp;
-    tracee_threads_array.capacity = 2 * tracee_threads_array.capacity;
+    tracee_threads_array.capacity *= 2;
 }
 
 /**
@@ -223,8 +231,9 @@ static void array_tracee_threads_extend()
  *
  * @param pid
  * @param tid
- * 
- * @note tid is set in tracee_start_tracking_tt(), so we may remove the tid parameter from add_tracee_thread() and put it to -1 by default
+ *
+ * @note tid is set in tracee_start_tracking_tt(), so we may remove the tid parameter from add_tracee_thread() and put
+ * it to -1 by default
  */
 static tracee_thread_t *add_tracee_thread(pid_t pid, int tid)
 {
@@ -330,8 +339,11 @@ static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_t
         if (!(*waited_tracee))
         {
             *waited_tracee = get_tracee_thread(tracee_pid);
-            // TODO, add if NULL
-            // It happens when the CLONE_EVENT notification happens after the STOPPED_NEW_CHILD notification
+            if (!(*waited_tracee))
+            {
+                // It happens when the CLONE_EVENT notification happens after the STOPPED_NEW_CHILD notification
+                *waited_tracee = add_tracee_thread(tracee_pid, -1);
+            }
         }
         (*waited_tracee)->is_stopped = 1;
     }
@@ -377,24 +389,25 @@ static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_t
         // case (SIGTRAP | (PTRACE_EVENT_FORK << 8)):
         // case (SIGTRAP | (PTRACE_EVENT_VFORK << 8)):
         case (SIGTRAP | (PTRACE_EVENT_CLONE << 8)):
-        // TODO : deal with cascades of clone() (a thread creates a thread which creates a new one...)
+            /* Since the new cloned is automatically tracked, we manage just after the wait */
+            // TODO : deal with cascades of clone() (a thread creates a thread which creates a new one...)
             DEBUG_PRINT("PTRACE_EVENT_CLONE on %d\n", tracee_pid);
             // Tracee just called clone()
-            pid_t new_tracee_pid;
-            // Issue when using tracee_pid?
-            ptrace(PTRACE_GETEVENTMSG, (*waited_tracee)->pid, NULL, &new_tracee_pid);
-            DEBUG_PRINT("%d created clone %d\n", (*waited_tracee)->pid, new_tracee_pid);
+            // pid_t new_tracee_pid;
+            // // Issue when using tracee_pid?
+            // ptrace(PTRACE_GETEVENTMSG, (*waited_tracee)->pid, NULL, &new_tracee_pid);
+            // DEBUG_PRINT("%d created clone %d\n", (*waited_tracee)->pid, new_tracee_pid);
 
-            // Update local_num_threads
-            update_local_num_tasks();
+            // // Update local_num_threads
+            // update_local_num_tasks();
 
-            // Create a new task for the new child
-            TAU_CREATE_TASK(local_num_tasks);
-            // Safe to update shared_num_tasks since the child is stopped
-            (*shared_num_tasks)++; // Update: not safe at all
+            // // Create a new task for the new child
+            // TAU_CREATE_TASK(local_num_tasks);
+            // // Safe to update shared_num_tasks since the child is stopped
+            // (*shared_num_tasks)++; // Update: not safe at all
 
-            // The new thread is already tracked and will stop at launch
-            add_tracee_thread(new_tracee_pid, *shared_num_tasks);
+            // // The new thread is already tracked and will stop at launch
+            // add_tracee_thread(new_tracee_pid, *shared_num_tasks);
 
             return WAIT_SYSCALL_CLONE;
 
@@ -608,6 +621,43 @@ static tracee_error_t tracee_start_tracking_tt(tracee_thread_t *tt)
     return ptrace_res;
 }
 
+// Return the first tracee which has not been start and has sent a signal
+// If there are none, return the first tracee which has not sent a signal
+// Else, return NULL
+static tracee_thread_t *get_waiting_new_child_tt()
+{
+    int i_has_sent = -1;
+    int i_new_child = -1;
+    for (int  i = 0; i < tracee_threads_array.size; i++)
+    {
+        tracee_thread_t *tt = tracee_threads_array.tracee_threads[i];
+        if (tt)
+        {
+            if (tt->is_new_child)
+            {
+                if (tt->has_sent_signal)
+                {
+                    i_has_sent = i;
+                    break;
+                }
+                if (i_new_child < 0)
+                {
+                    i_new_child = i;
+                }
+            }
+        }
+    }
+    if (i_has_sent > 0)
+    {
+        return tracee_threads_array.tracee_threads[i_has_sent];
+    }
+    if (i_new_child > 0)
+    {
+        return tracee_threads_array.tracee_threads[i_new_child];
+    }
+    return NULL;
+}
+
 /* Syscall detection loop */
 static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
 {
@@ -617,9 +667,10 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
     ptrace_res = tracee_start_tracking_tt(tt);
     CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tt);
 
-    // To contain the thread (one at a time) created by clone() before we allow it to start
-    // TODO replace
-    tracee_thread_t *new_child_tt = NULL;
+    tt->has_sent_signal = 1;
+    tt->is_new_child = 0;
+    *waiting_for_ack = 0;
+
 
     while (!ending_tracking)
     {
@@ -636,16 +687,30 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
 
         // The idea is to wait for the main child to update its local threads counter after having created a child
         // Until then, the new thread created by clone() will be waiting
-        if (new_child_tt)
+        if (*waiting_for_ack == 0)
         {
-            // When waiting_for_ack is updated, the child raise SIGSTOP, so this section occurs while the child is
-            // stopped, which means that it is safe to use waiting_for_ack and shared_num_tasks
-            if (!*waiting_for_ack)
+            tracee_thread_t *waiting_new_child_tt = get_waiting_new_child_tt();
+            if (waiting_new_child_tt)
             {
-                DEBUG_PRINT("waiting_for_ack finished: will start %d\n", new_child_tt->pid);
-                ptrace_res = tracee_start_tracking_tt(new_child_tt);
-                CHECK_ERROR_ON_PTRACE_RES(ptrace_res, new_child_tt);
-                new_child_tt = NULL;
+                if (!(waiting_new_child_tt->has_sent_signal))
+                {
+                    DEBUG_PRINT("Will send signal for child %d\n", waiting_new_child_tt->pid);
+                    // We need to send a signal to the child to increment num_task
+                    update_local_num_tasks();
+                    TAU_CREATE_TASK(local_num_tasks);
+                    (*shared_num_tasks)++;
+                    waiting_new_child_tt->has_sent_signal = 1;
+                    *waiting_for_ack = 1;
+                    tgkill(tt->pid, tt->pid, SIG_UPDATE_TASK);
+                }
+                else
+                {
+                    DEBUG_PRINT("waiting_for_ack finished: will start %d\n", waiting_new_child_tt->pid);
+                    ptrace_res = tracee_start_tracking_tt(waiting_new_child_tt);
+                    CHECK_ERROR_ON_PTRACE_RES(ptrace_res, waiting_new_child_tt);
+                    waiting_new_child_tt->is_new_child = 0;
+                    *waiting_for_ack = 0;
+                }
             }
         }
 
@@ -666,14 +731,15 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
             break;
         case WAIT_STOPPED_SIG_UPDATE_TASK:
             // We temporarily stop the tracking of syscall in waiting for the child to treat the signal we just sent
-            *waiting_for_ack = 1;
+            // *waiting_for_ack = 1;
             ptrace_res = tracee_continue(tracee_thread, SIG_UPDATE_TASK);
             CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tracee_thread);
             break;
 
         case WAIT_STOPPED_NEW_CHILD:
-            // Store it to restart it later
-            new_child_tt = tracee_thread;
+            // The child is put in a waiting state and will be restart when we are sure for the tid to set
+            // // Store it to restart it later
+            // new_child_tt = tracee_thread;
             break;
         case WAIT_STOPPED_OTHER:
         case WAIT_STOPPED:
@@ -682,17 +748,17 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
             break;
 
         case WAIT_SYSCALL_CLONE:
-            // Only happen at the end of a clone()
-            tracee_handle_stop_syscall(tracee_thread);
+            // // Only happen at the end of a clone()
+            // tracee_handle_stop_syscall(tracee_thread);
 
-            // Inform the child to update local_num_tasks
-            kill(tracee_threads_array.tracee_threads[0]->pid, SIG_UPDATE_TASK);
-            *waiting_for_ack = 1;
+            // // Inform the child to update local_num_tasks
+            // kill(tracee_threads_array.tracee_threads[0]->pid, SIG_UPDATE_TASK);
+            // *waiting_for_ack = 1;
 
-            // We temporarily stop the tracking of syscall in waiting for the child to treat the signal we sent
-            ptrace_res = tracee_continue(tracee_thread, SIG_UPDATE_TASK);
-            CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tracee_thread);
-            break;
+            // // We temporarily stop the tracking of syscall in waiting for the child to treat the signal we sent
+            // ptrace_res = tracee_continue(tracee_thread, SIG_UPDATE_TASK);
+            // CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tracee_thread);
+            // break;
 
         case WAIT_SYSCALL_FORK:
         case WAIT_SYSCALL_VFORK:
@@ -794,15 +860,14 @@ void end_tracking(int signum)
     ending_tracking = 1;
 }
 
-
 /**
  * @brief Should be used only by the child as a signal handler
- * 
- * @param signum 
+ *
+ * @param signum
  */
 void update_thread_nb(int signum)
 {
-    DEBUG_PRINT("Signal %d received. Starting update_thread_nb()\n", signum);
+    DEBUG_PRINT("%d: Signal %d received. Starting update_thread_nb()\n", getpid(), signum);
 
     // CAUTION: Check if it is safe to use shared_num_tasks here
     update_local_num_tasks();
@@ -812,7 +877,8 @@ void update_thread_nb(int signum)
 
     // Tell the parent that the child has updated shared_num_tasks
     *waiting_for_ack = 0;
-    DEBUG_PRINT("Ending update_thread_nb(). Will raise(SIGSTOP)  local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks, *shared_num_tasks);
+    DEBUG_PRINT("Ending update_thread_nb(). Will raise(SIGSTOP)  local_num_tasks = %d, shared_num_tasks = %d\n",
+                local_num_tasks, *shared_num_tasks);
 
     // Stop this process for the parent to attach it
     raise(SIGSTOP);
@@ -838,7 +904,7 @@ int track_process(pid_t pid)
     array_tracee_threads_init();
 
     // Here we use a dummy tid number
-    tracee_thread_t *tt = add_tracee_thread(pid, local_num_tasks);
+    tracee_thread_t *tt = add_tracee_thread(pid, -1);
 
     // The child is supposed to use prepare_to_be_tracked()
     tracee_error_t res = tracee_seize(tt);
@@ -882,7 +948,7 @@ void prepare_to_be_tracked(pid_t pid)
         perror("prctl");
     }
 
-    DEBUG_PRINT("%d just set ptracer as %d\n", getpid(), pid);
+    DEBUG_PRINT("%d [%d] just set ptracer as %d\n", getpid(), gettid(), pid);
 
     struct sigaction sa;
 
