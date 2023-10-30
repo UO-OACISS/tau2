@@ -91,10 +91,11 @@ usage()
   echo "        -ebs_period=<count> Sampling period (default 1000)"
   echo "        -ebs_source=<counter> Counter (default itimer)"
   echo "        -ebs_resolution=<file|function|line> Choose sampling granularity."
-  echo "        -um          Enable Unified Memory events via CUPTI"
+  echo "        -um           Enable Unified Memory events via CUPTI"
   echo "        -sass=<level> Track GPU events via CUDA with Source Code Locator activity (kernel level or source level)"
-  echo "        -csv         Outputs sass profile in CSV"
-  echo "        -env         Track GPU environment activity (power utilization, SM, memory frequency, temperature)"
+  echo "        -csv          Outputs sass profile in CSV"
+  echo "        -env          Track GPU environment activity (power utilization, SM, memory frequency, temperature)"
+  echo "        -syscall      Track SYSCALL"
   options=`tau-config --list-options`
   echo "        -T <$options> : Specify TAU tags"
   echo "        -loadlib=<file.so>   : Specify additional load library"
@@ -112,7 +113,7 @@ if [ $python_wrapper = "true" ] ; then
   echo "        -skel         Write trace event data to skeleton files"
   echo "        -disable-kokkos  Disable Kokkos profiling (removes fences that hurt performance)"
   echo "        -ugni         Track Cray UGNI network library functions."
-  echo "        -chapel         Track Cray Chapel network atomics library functions."
+  echo "        -chapel       Track Cray Chapel network atomics library functions."
 fi
   echo ""
   echo "Notes:"
@@ -365,6 +366,7 @@ track_chapel=false
 processM=false
 python_launch_module=false
 python_m_arg=""
+track_syscall=false
 
 # This saves the args to tau_exec so they can be reused later.
 # This is used for MPI_Comm_spawn support, in which TAU spawns the child
@@ -505,9 +507,9 @@ for arg in "$@" ; do
         ;;
       -env)
         track_env=true
-	save_arg $arg
-	shift
-	;;
+        save_arg $arg
+        shift
+        ;;
       -opencl)
         track_opencl=true
         save_arg $arg
@@ -608,7 +610,7 @@ for arg in "$@" ; do
         tau_use_ebs=true
         myarg=`echo $arg | sed 's/-ebs_resolution=//'`
         tau_ebs_resolution="$myarg"
-	export TAU_EBS_RESOLUTION=$tau_ebs_resolution
+        export TAU_EBS_RESOLUTION=$tau_ebs_resolution
         save_arg $arg
         shift
         ;;
@@ -644,10 +646,10 @@ for arg in "$@" ; do
         shift
         ;;
       -disable_ld_preload)
-	disable_preload=true
-	save_arg $arg
-	shift
-	;;
+        disable_preload=true
+        save_arg $arg
+        shift
+        ;;
       -XrunTAU-*)
         myarg=`echo $arg | sed 's/-XrunTAU-//'`
         binding_specified="shared-$myarg"
@@ -722,6 +724,11 @@ for arg in "$@" ; do
           echo "Unknown option: $arg" >&2
           exit 1
         fi
+        ;;
+      -syscall)
+        track_syscall=true
+        save_arg $arg
+        shift
         ;;
       --)
         save_arg $arg
@@ -1170,8 +1177,13 @@ if [ $qsub_mode = false ]; then
     exit
   fi
 
-  # always use the basic preload library now
-  TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
+  if [ $track_syscall = true  -a -r $BASEDIR/lib/$theBinding/libTAU-ptrace-syscall$TAU_SHLIBX  ]; then
+    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-ptrace-syscall$TAU_SHLIBX
+  else
+    # always use the basic preload library now
+    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
+  fi
+
 fi
 
 if [ $disable_preload = "true" ]; then

@@ -123,6 +123,11 @@ TAU_IOWRAP_SHARED=libTAU-iowrap$(TAU_SHLIBX)
 #USE_NECCXX#PTHREAD_LDPRELOAD_LIB= #ENDIF#
 #NOSHARED#PTHREAD_LDPRELOAD_LIB= #ENDIF#
 
+#============================ SYSCALL =========================================
+
+#SYSCALL#TAU_SYSCALL_SHARED=libTAU-ptrace-syscall$(TAU_SHLIBX) #ENDIF#
+#NOSHARED#TAU_SYSCALL_SHARED= #ENDIF#
+
 #============================ TAUPRELOAD ======================================
 
 #LD_AUDITOR_AVAILABLE#TAU_AUDITOR_SHARED=libTAU-dl-auditor$(TAU_SHLIBX) #ENDIF#
