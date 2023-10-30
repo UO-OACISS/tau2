@@ -607,10 +607,19 @@ extern "C" int Tau_init_initializeTAU()
   /* initialize sampling if requested */
 #if !defined(TAU_MPI) && !defined(TAU_WINDOWS)
   if (TauEnv_get_ebs_enabled()) {
-    // Work-around for MVAPHICH 2 to move sampling initialization to after MPI_Init()
+    // As a Work-around for MVAPHICH 2 to move sampling initialization to after MPI_Init(),
+    // don't initialize sampling if this is an MPI build of TAU
     Tau_sampling_init_if_necessary();
   }
-#endif /* TAU_MPI && TAU_WINDOWS */
+#endif /* !TAU_MPI && !TAU_WINDOWS */
+
+#if defined(TAU_MPI) && !defined(TAU_WINDOWS)
+  if (TauEnv_get_ebs_enabled()) {
+    // As a Work-around for MVAPHICH 2 to move sampling initialization to after MPI_Init(),
+    // defer sampling to after MPI_Init is called if this is an MPI build of TAU
+    Tau_sampling_defer_init();
+  }
+#endif 
 
 #ifdef TAU_PGI
   sbrk(102400);
