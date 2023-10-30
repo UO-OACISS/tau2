@@ -58,7 +58,7 @@ fi
 # If 3D window has problems, please uncomment
 if [ $MACHINE = bgq -o $MACHINE = arm64_linux ]; then
   JAVA2D_OPENGL_FLAG=0
-  LIBGL_ALWAYS_INDIRECT_FLAG=1
+#  LIBGL_ALWAYS_INDIRECT_FLAG=1
 fi
 
 if [ "$LIBGL_ALWAYS_INDIRECT_FLAG" = "1" ]; then 
