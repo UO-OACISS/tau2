@@ -15,9 +15,9 @@
 #include "tracee.h"
 
 // To disable ptrace on the threads of the child
-// #define NO_TRACECLONE
+#define NO_TRACECLONE
 
-#define DEBUG_PTRACE
+// #define DEBUG_PTRACE
 
 #ifdef DEBUG_PTRACE
 #define DEBUG_PRINT(...)                                                                                               \
@@ -59,15 +59,15 @@ extern void Tau_set_fake_thread_use_cpu_metric(int tid);
 
 static void update_local_num_tasks()
 {
-    DEBUG_PTRACE("Entering update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
-                 *shared_num_tasks);
+    DEBUG_PRINT("Entering update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
+                *shared_num_tasks);
     while (local_num_tasks < *shared_num_tasks)
     {
         // Create false/empty tid to reserve them for the other TAU runtime
         TAU_CREATE_TASK(local_num_tasks);
     }
-    DEBUG_PTRACE("Exiting update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
-                 *shared_num_tasks);
+    DEBUG_PRINT("Exiting update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
+                *shared_num_tasks);
 }
 
 typedef enum
