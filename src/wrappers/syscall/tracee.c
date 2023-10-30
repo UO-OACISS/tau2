@@ -14,6 +14,9 @@
 
 #include "tracee.h"
 
+// To disable ptrace on the threads of the child
+// #define NO_TRACECLONE
+
 #define DEBUG_PTRACE
 
 #ifdef DEBUG_PTRACE
@@ -23,7 +26,6 @@
 #else
 #define DEBUG_PRINT(...)
 #endif
-
 
 // expands to "return TRACEE_ERR_PARAM" if the parameter is null
 #define CHECK_IF_PARAM_IS_NULL(tt)                                                                                     \
@@ -57,15 +59,15 @@ extern void Tau_set_fake_thread_use_cpu_metric(int tid);
 
 static void update_local_num_tasks()
 {
-    DEBUG_PTRACE("Entering update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n",
-                     local_num_tasks, *shared_num_tasks);
+    DEBUG_PTRACE("Entering update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
+                 *shared_num_tasks);
     while (local_num_tasks < *shared_num_tasks)
     {
         // Create false/empty tid to reserve them for the other TAU runtime
         TAU_CREATE_TASK(local_num_tasks);
     }
     DEBUG_PTRACE("Exiting update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
-                     *shared_num_tasks);
+                 *shared_num_tasks);
 }
 
 typedef enum
@@ -559,9 +561,12 @@ static tracee_error_t tracee_seize(tracee_thread_t *tt)
          *  - PTRACE_O_TRACEFORK / PTRACE_O_TRACEVFORK to track the childs threads made with fork/vfork
          */
 
-        // long ret = ptrace(PTRACE_SEIZE, pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT);
+#ifdef NO_TRACECLONE
+        long ret = ptrace(PTRACE_SEIZE, tt->pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT);
+#else
         long ret =
             ptrace(PTRACE_SEIZE, tt->pid, NULL, PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT | PTRACE_O_TRACECLONE);
+#endif
         // PTRACE_O_TRACESYSGOOD | PTRACE_O_TRACEEXIT | PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK);
         if (ret < 0)
         {
@@ -628,7 +633,7 @@ static tracee_thread_t *get_waiting_new_child_tt()
 {
     int i_has_sent = -1;
     int i_new_child = -1;
-    for (int  i = 0; i < tracee_threads_array.size; i++)
+    for (int i = 0; i < tracee_threads_array.size; i++)
     {
         tracee_thread_t *tt = tracee_threads_array.tracee_threads[i];
         if (tt)
@@ -670,7 +675,6 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
     tt->has_sent_signal = 1;
     tt->is_new_child = 0;
     *waiting_for_ack = 0;
-
 
     while (!ending_tracking)
     {
