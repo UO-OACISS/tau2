@@ -100,8 +100,8 @@ print("Fitting")
 
 callbacks = []
 try:
-    import tau
-    callbacks.append(tau.TauTensorFlowCallbacks())
+    import tau_callbacks
+    callbacks.append(tau_callbacks.TauTensorFlowCallbacks())
     print("****** Using TAU TensorFlow callbacks")
 except Exception:
     print("****** Not using TAU TensorFlow callbacks")
