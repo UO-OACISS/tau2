@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include <Profile/Profiler.h>
 
@@ -31,6 +32,9 @@ extern int *waiting_for_ack;
 
 // Shared variable. Flag to indicate that the parent has dumped its files
 extern int *parent_has_dumped;
+
+// For the child
+extern pthread_t task_creater_thread;
 
 /******************
  * ERROR HANDLING *

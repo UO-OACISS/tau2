@@ -98,7 +98,6 @@ int taupreload_main(int argc, char **argv, char **envp)
         TAU_PROFILE_SET_NODE(0);
     }
 
-
     if (rpid == 0)
     {
         pid_t ppid = getppid();
@@ -116,10 +115,12 @@ int taupreload_main(int argc, char **argv, char **envp)
         kill(ppid, SIG_STOP_PTRACE);
         DEBUG_PRINT("%d just sent signal SIG_STOP_PTRACE to %d\n", getpid(), ppid);
 
-        // Safe?
+        // TODO replace with mutex
         while (!*parent_has_dumped)
         {
         }
+
+        pthread_join(task_creater_thread, NULL);
 
         TAU_PROFILER_STOP(handle);
     }

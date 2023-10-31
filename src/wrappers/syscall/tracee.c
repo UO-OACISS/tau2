@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/mman.h>
 #include <sys/prctl.h>
 #include <sys/ptrace.h>
 #include <sys/time.h>
@@ -17,7 +18,7 @@
 // To disable ptrace on the threads of the child
 // #define NO_TRACECLONE
 
-// #define DEBUG_PTRACE
+#define DEBUG_PTRACE
 
 #ifdef DEBUG_PTRACE
 #define DEBUG_PRINT(...)                                                                                               \
@@ -47,6 +48,8 @@ const int init_array_size = 128;
 int ending_tracking = 0;
 
 int local_num_tasks = 0;
+pthread_t task_creater_thread;
+int *task_creater_thread_tid;
 
 // Are initialized with mmap in ptrace_syscall.c
 int *shared_num_tasks;
@@ -60,14 +63,14 @@ extern void Tau_set_fake_thread_use_cpu_metric(int tid);
 static void update_local_num_tasks()
 {
     DEBUG_PRINT("Entering update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
-                 *shared_num_tasks);
+                *shared_num_tasks);
     while (local_num_tasks < *shared_num_tasks)
     {
         // Create false/empty tid to reserve them for the other TAU runtime
         TAU_CREATE_TASK(local_num_tasks);
     }
     DEBUG_PRINT("Exiting update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
-                 *shared_num_tasks);
+                *shared_num_tasks);
 }
 
 typedef enum
@@ -345,6 +348,7 @@ static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_t
             {
                 // It happens when the CLONE_EVENT notification happens after the STOPPED_NEW_CHILD notification
                 *waited_tracee = add_tracee_thread(tracee_pid, -1);
+                return WAIT_STOPPED_NEW_CHILD;
             }
         }
         (*waited_tracee)->is_stopped = 1;
@@ -705,7 +709,7 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
                     (*shared_num_tasks)++;
                     waiting_new_child_tt->has_sent_signal = 1;
                     *waiting_for_ack = 1;
-                    tgkill(tt->pid, tt->pid, SIG_UPDATE_TASK);
+                    // tgkill(tt->pid, tt->pid, SIG_UPDATE_TASK);
                 }
                 else
                 {
@@ -716,6 +720,11 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
                     *waiting_for_ack = 0;
                 }
             }
+        }
+
+        if (tracee_thread->is_new_child)
+        {
+            continue;
         }
 
         switch (wait_res)
@@ -734,13 +743,16 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
             }
             break;
         case WAIT_STOPPED_SIG_UPDATE_TASK:
+            // Not used anymore
             // We temporarily stop the tracking of syscall in waiting for the child to treat the signal we just sent
             // *waiting_for_ack = 1;
-            ptrace_res = tracee_continue(tracee_thread, SIG_UPDATE_TASK);
-            CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tracee_thread);
+            // tracee_handle_stop_syscall(tracee_thread);
+            // ptrace_res = tracee_continue(tracee_thread, SIG_UPDATE_TASK);
+            // CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tracee_thread);
             break;
 
         case WAIT_STOPPED_NEW_CHILD:
+            // Should be already managed with the "continue" some lines above
             // The child is put in a waiting state and will be restart when we are sure for the tid to set
             // // Store it to restart it later
             // new_child_tt = tracee_thread;
@@ -752,7 +764,6 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
             break;
 
         case WAIT_SYSCALL_CLONE:
-            // // Only happen at the end of a clone()
             // tracee_handle_stop_syscall(tracee_thread);
 
             // // Inform the child to update local_num_tasks
@@ -865,27 +876,40 @@ void end_tracking(int signum)
 }
 
 /**
- * @brief Should be used only by the child as a signal handler
+ * @brief Routine for a thread whose only task is to create false tid in TAU when needed
  *
- * @param signum
+ * @param ptr
+ * @return void*
  */
-void update_thread_nb(int signum)
+void *signal_handler_thread_routine(void *ptr)
 {
-    DEBUG_PRINT("%d: Signal %d received. Starting update_thread_nb()\n", getpid(), signum);
+    *task_creater_thread_tid = gettid();
+    DEBUG_PRINT("Task creater thread created with tid = %d\n", gettid());
 
-    // CAUTION: Check if it is safe to use shared_num_tasks here
-    update_local_num_tasks();
+    while (!(*parent_has_dumped))
+    {
+        DEBUG_PRINT("Routine: waiting_for_ack = %d, parent_has_dumped = %d\n", *waiting_for_ack, *parent_has_dumped);
 
-    // The child may have created some tids before updating local_num_threads
-    *shared_num_tasks = local_num_tasks;
+        // TODO Replace with mutex
+        if (*waiting_for_ack)
+        {
+            update_local_num_tasks();
 
-    // Tell the parent that the child has updated shared_num_tasks
-    *waiting_for_ack = 0;
-    DEBUG_PRINT("Ending update_thread_nb(). Will raise(SIGSTOP)  local_num_tasks = %d, shared_num_tasks = %d\n",
-                local_num_tasks, *shared_num_tasks);
+            // The child may have created some tids before updating local_num_threads
+            *shared_num_tasks = local_num_tasks;
 
-    // Stop this process for the parent to attach it
-    raise(SIGSTOP);
+            // Tell the parent that the child has updated shared_num_tasks
+            *waiting_for_ack = 0;
+
+            // Tell the main child to STOP in order for the ptracer to return from waitpid()
+            tgkill(getpid(), getpid(), SIGSTOP);
+            DEBUG_PRINT("Ending update_thread_nb(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
+                        *shared_num_tasks);
+        }
+        // TODO Remove after test
+        sleep(1);
+    }
+    DEBUG_PRINT("Ending task creater routine\n");
 }
 
 /***************************
@@ -954,21 +978,24 @@ void prepare_to_be_tracked(pid_t pid)
 
     DEBUG_PRINT("%d [%d] just set ptracer as %d\n", getpid(), gettid(), pid);
 
-    struct sigaction sa;
-
-    sa.sa_handler = update_thread_nb;
-    sa.sa_flags = SA_RESTART;
-    sigemptyset(&sa.sa_mask);
-    if (sigaction(SIG_UPDATE_TASK, &sa, NULL) == -1)
-    {
-        perror("sigaction");
-    }
+    task_creater_thread_tid = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    *task_creater_thread_tid = -1;
+    pthread_create(&task_creater_thread, NULL, signal_handler_thread_routine, NULL);
 
     // We create a false tid, which will not be used, for the parent
     TAU_CREATE_TASK(local_num_tasks);
     // And update shared_num_tasks
     *shared_num_tasks = local_num_tasks;
 
+    // TODO replace
+    while (*task_creater_thread_tid < 0)
+    {
+    }
+
+    // tgkill(getpid(), getpid(), SIGSTOP); // Doesn't work as we want to, hence the following lines
+
     raise(SIGSTOP);
+    // The previous SIGSTOP stopped the pthread, so we need to relaunch it
+    tgkill(getpid(), *task_creater_thread_tid, SIGCONT);
     DEBUG_PRINT("%d is attached\n", getpid());
 }
