@@ -599,6 +599,7 @@ static tracee_error_t tracee_start_tracking_tt(tracee_thread_t *tt)
     update_local_num_tasks();
     tt->tid = *shared_num_tasks;
     Tau_set_fake_thread_use_cpu_metric(tt->tid);
+    Tau_create_top_level_timer_if_necessary_task(tt->tid);
     tracee_error_t ptrace_res = tracee_tracksyscalls_ptrace_with_sig(tt, 0);
     CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tt);
     DEBUG_PRINT("%d (thread %d) attached and tracked\n", tt->pid, tt->tid);
