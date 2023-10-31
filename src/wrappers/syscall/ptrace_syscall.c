@@ -64,24 +64,15 @@ void __attribute__((constructor)) taupreload_init(void);
 // properly
 void taupreload_init()
 {
-    shared_num_tasks = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    waiting_for_ack = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    parent_has_dumped = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    waiting_for_ack_mutex = (pthread_mutex_t *)mmap(NULL, sizeof(pthread_mutex_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    waiting_for_ack_cond = (pthread_cond_t *)mmap(NULL, sizeof(pthread_cond_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    shared_num_tasks = (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    waiting_for_ack = (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    parent_has_dumped = (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    task_creater_thread_tid = (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
     *shared_num_tasks = 0;
     *waiting_for_ack = 0;
     *parent_has_dumped = 0;
-
-    pthread_mutexattr_t mutex_attr;
-    pthread_condattr_t cond_attr;
-
-    pthread_mutexattr_setpshared(&mutex_attr, PTHREAD_PROCESS_SHARED);
-    pthread_condattr_setpshared(&cond_attr, PTHREAD_PROCESS_SHARED);
-
-    pthread_mutex_init(waiting_for_ack_mutex, &mutex_attr);
-    pthread_cond_init(waiting_for_ack_cond, &cond_attr);
+    *task_creater_thread_tid = -1;
 
     rpid = fork();
 }
@@ -140,14 +131,10 @@ int taupreload_main(int argc, char **argv, char **envp)
         /* Parent */
         ret = track_process(rpid);
 
-        pthread_mutex_destroy(waiting_for_ack_mutex);
-        pthread_cond_destroy(waiting_for_ack_cond);
-
-        munmap(shared_num_tasks, sizeof(int));
-        munmap(waiting_for_ack, sizeof(int));
-        munmap(parent_has_dumped, sizeof(int));
-        munmap(waiting_for_ack_mutex, sizeof(pthread_mutex_t));
-        munmap(waiting_for_ack_cond, sizeof(pthread_cond_t));
+        munmap((int *) shared_num_tasks, sizeof(int));
+        munmap((int *) waiting_for_ack, sizeof(int));
+        munmap((int *) parent_has_dumped, sizeof(int));
+        munmap((int *) task_creater_thread_tid, sizeof(int));
     }
 
     Tau_profile_exit_all_threads();
