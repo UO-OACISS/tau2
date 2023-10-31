@@ -18,24 +18,21 @@
 // Signal for the child to send to the parent to stop the tracking with ptrace
 #define SIG_STOP_PTRACE SIGRTMIN
 
-// Signal to update the number of tasks/threads for TAU
-#define SIG_UPDATE_TASK SIGRTMIN+1
-
-/* Shared variable between the parent and the child. Represent the total number of threads/task for TAU */
+// Shared variable between the parent and the child
+/* Represent the total number of threads/task for TAU */
 extern volatile int *shared_num_tasks;
-
-// Local to the child/parent
-extern int local_num_tasks;
-
-// Shared variable
+// Indicate if the parent is waiting for the child to update its tasks counter
 extern volatile int *waiting_for_ack;
+// Tid of the task creater thread
 extern volatile int *task_creater_thread_tid;
-
-// Shared variable. Flag to indicate that the parent has dumped its files
+// Flag to indicate that the parent has dumped its files
 extern volatile int *parent_has_dumped;
 
-// For the child
+
+// For the child to use pthread_join at the exit
 extern pthread_t task_creater_thread;
+// Local to the child/parent
+extern int local_num_tasks;
 
 /******************
  * ERROR HANDLING *

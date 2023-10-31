@@ -18,7 +18,7 @@
 // To disable ptrace on the threads of the child
 // #define NO_TRACECLONE
 
-#define DEBUG_PTRACE
+// #define DEBUG_PTRACE
 
 #ifdef DEBUG_PTRACE
 #define DEBUG_PRINT(...)                                                                                               \
@@ -51,6 +51,7 @@ int local_num_tasks = 0;
 pthread_t task_creater_thread;
 
 // Are initialized with mmap in ptrace_syscall.c
+
 volatile int *task_creater_thread_tid;
 volatile int *shared_num_tasks;
 volatile int *waiting_for_ack;
@@ -80,8 +81,6 @@ typedef enum
     WAIT_STOPPED,
     // Stopped by PTRACE_EVENT_STOP
     WAIT_STOPPED_NEW_CHILD,
-    // Stopped by another signal SIG_UPDATE_TASK
-    WAIT_STOPPED_SIG_UPDATE_TASK,
     // Stopped by another signal
     WAIT_STOPPED_OTHER,
     WAIT_SYSCALL,
@@ -90,13 +89,11 @@ typedef enum
     WAIT_SYSCALL_FORK,
     WAIT_SYSCALL_VFORK,
     WAIT_EXITED,
-    WAIT_ERROR,
-    WAIT_WNOHANG
+    WAIT_ERROR
 } tracee_wait_t;
 
-static const char *const wait_res_str[WAIT_WNOHANG + 1] = {"WAIT_STOPPED",
+static const char *const wait_res_str[WAIT_ERROR + 1] = {"WAIT_STOPPED",
                                                            "WAIT_STOPPED_NEW_CHILD",
-                                                           "WAIT_STOPPED_SIG_UPDATE_TASK",
                                                            "WAIT_STOPPED_OTHER",
                                                            "WAIT_SYSCALL",
                                                            "WAIT_SYSCALL_EXIT",
@@ -104,8 +101,7 @@ static const char *const wait_res_str[WAIT_WNOHANG + 1] = {"WAIT_STOPPED",
                                                            "WAIT_SYSCALL_FORK",
                                                            "WAIT_SYSCALL_VFORK",
                                                            "WAIT_EXITED",
-                                                           "WAIT_ERROR",
-                                                           "WAIT_WNOHANG"};
+                                                           "WAIT_ERROR"};
 
 typedef struct tracee_thread
 {
@@ -334,11 +330,6 @@ static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_t
     else
     {
         tracee_pid = waitpid(pid, &child_status, 0);
-    }
-
-    if (tracee_pid == 0)
-    {
-        return WAIT_WNOHANG;
     }
 
     if (tracee_pid < 0)
@@ -691,7 +682,6 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
                     (*shared_num_tasks)++;
                     waiting_new_child_tt->has_sent_signal = 1;
                     *waiting_for_ack = 1;
-                    // tgkill(tt->pid, *task_creater_thread_tid, SIG_UPDATE_TASK);
                 }
                 else
                 {
@@ -803,13 +793,11 @@ static tracee_error_t tracee_detach_everything()
                 tracee_wait_t res = tracee_wait_for_child(tt->pid, &tt, NULL);
                 DEBUG_PRINT("%s on %d\n", wait_res_str[res], tt->pid);
             }
-            // tracee_stop_all_timers(tt); // Not needed after Tau_destructor_trigger()
 
             tracee_detach(tt);
             remove_tracee_thread(tt->pid);
         }
     }
-    // *waiting_for_ack = 0;
     return TRACEE_SUCCESS;
 }
 
@@ -838,9 +826,6 @@ void end_tracking(int signum)
 
 /**
  * @brief Routine for a thread whose only task is to create false tid in TAU when needed
- *
- * @param ptr
- * @return void*
  */
 void *signal_handler_thread_routine(void *ptr)
 {
@@ -938,7 +923,7 @@ void prepare_to_be_tracked(pid_t pid)
     // And update shared_num_tasks
     *shared_num_tasks = local_num_tasks;
 
-    // Make sure the thread is created before raise(SIGSTOP)
+    // Make sure the thread is launched before raise(SIGSTOP)
     while (*task_creater_thread_tid < 0)
     {
     }

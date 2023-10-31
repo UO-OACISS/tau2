@@ -94,6 +94,8 @@ int taupreload_main(int argc, char **argv, char **envp)
     TAU_INIT(&argc, &argv);
     // apparently is the real initialization.
     Tau_init_initializeTAU();
+    Tau_create_top_level_timer_if_necessary();
+
     int tmp = TAU_PROFILE_GET_NODE();
     if (tmp == -1)
     {
@@ -104,7 +106,6 @@ int taupreload_main(int argc, char **argv, char **envp)
     {
         pid_t ppid = getppid();
         /* Child */
-        Tau_create_top_level_timer_if_necessary();
         void *handle;
         TAU_PROFILER_CREATE(handle, __TAU_FUNCTION__, "", TAU_DEFAULT);
         TAU_PROFILER_START(handle);
@@ -117,7 +118,6 @@ int taupreload_main(int argc, char **argv, char **envp)
         kill(ppid, SIG_STOP_PTRACE);
         DEBUG_PRINT("%d just sent signal SIG_STOP_PTRACE to %d\n", getpid(), ppid);
 
-        // TODO replace with mutex
         while (!*parent_has_dumped)
         {
         }

@@ -31,13 +31,15 @@ void *handle;
 
 void taupreload_init()
 {
-    shared_num_tasks = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    waiting_for_ack = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    parent_has_dumped = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    shared_num_tasks = (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    waiting_for_ack = (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    parent_has_dumped = (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    task_creater_thread_tid = (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
     *shared_num_tasks = 0;
     *waiting_for_ack = 0;
     *parent_has_dumped = 0;
+    *task_creater_thread_tid = -1;
 
     pid_t rpid = fork();
 
@@ -63,12 +65,13 @@ void taupreload_init()
         /* Parent */
         track_process(rpid);
 
+        munmap((int *) shared_num_tasks, sizeof(int));
+        munmap((int *) waiting_for_ack, sizeof(int));
+        munmap((int *) parent_has_dumped, sizeof(int));
+        munmap((int *) task_creater_thread_tid, sizeof(int));
+
         Tau_profile_exit_all_threads();
         Tau_destructor_trigger();
-
-        munmap(shared_num_tasks, sizeof(int));
-        munmap(waiting_for_ack, sizeof(int));
-        munmap(parent_has_dumped, sizeof(int));
 
         exit(0);
     }
@@ -80,10 +83,11 @@ void taupreload_fini()
     kill(getppid(), SIG_STOP_PTRACE);
     DEBUG_PRINT("%d just sent signal SIG_STOP_PTRACE to %d\n", getpid(), getppid());
 
-    // Safe?
     while (!*parent_has_dumped)
     {
     }
+
+    pthread_join(task_creater_thread, NULL);
 
     TAU_PROFILER_STOP(handle);
 
