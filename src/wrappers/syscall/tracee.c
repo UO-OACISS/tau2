@@ -471,9 +471,10 @@ static tracee_error_t tracee_handle_stop_syscall(tracee_thread_t *tracee_thread)
 static tracee_error_t tracee_stop_all_timers(tracee_thread_t *tracee_thread)
 {
     CHECK_IF_PARAM_IS_NULL(tracee_thread);
-    CHECK_IF_PARAM_IS_NULL(tracee_thread->thread_timer);
+    //CHECK_IF_PARAM_IS_NULL(tracee_thread->thread_timer);
     tracee_handle_stop_syscall(tracee_thread);
-    TAU_PROFILER_STOP_TASK(tracee_thread->thread_timer, tracee_thread->tid);
+    //TAU_PROFILER_STOP_TASK(tracee_thread->thread_timer, tracee_thread->tid);
+    Tau_stop_top_level_timer_if_necessary();
 }
 
 /**
@@ -613,13 +614,15 @@ static tracee_error_t tracee_tracksyscalls_ptrace_with_sig(tracee_thread_t *tt, 
  */
 static tracee_error_t tracee_start_tracking_tt(tracee_thread_t *tt)
 {
+    
     CHECK_IF_PARAM_IS_NULL(tt);
     // Main child should be stopped so shared_num_tasks is safe to use
     update_local_num_tasks();
     tt->tid = *shared_num_tasks;
+    Tau_create_top_level_timer_if_necessary_task(tt->tid);
     Tau_set_fake_thread_use_cpu_metric(tt->tid);
-    TAU_PROFILER_CREATE(tt->thread_timer, "[thread]", "", SYSCALL);
-    TAU_PROFILER_START_TASK(tt->thread_timer, tt->tid);
+    //TAU_PROFILER_CREATE(tt->thread_timer, "[thread]", "", SYSCALL);
+    //TAU_PROFILER_START_TASK(tt->thread_timer, tt->tid);
     tracee_error_t ptrace_res = tracee_tracksyscalls_ptrace_with_sig(tt, 0);
     CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tt);
     DEBUG_PRINT("%d (thread %d) attached and tracked\n", tt->pid, tt->tid);
