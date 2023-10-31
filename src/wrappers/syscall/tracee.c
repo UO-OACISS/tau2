@@ -18,7 +18,7 @@
 // To disable ptrace on the threads of the child
 // #define NO_TRACECLONE
 
-// #define DEBUG_PTRACE
+#define DEBUG_PTRACE
 
 #ifdef DEBUG_PTRACE
 #define DEBUG_PRINT(...)                                                                                               \
@@ -92,7 +92,8 @@ typedef enum
     WAIT_SYSCALL_FORK,
     WAIT_SYSCALL_VFORK,
     WAIT_EXITED,
-    WAIT_ERROR
+    WAIT_ERROR,
+    WAIT_WNOHANG
 } tracee_wait_t;
 
 static const char *const wait_res_str[WAIT_ERROR + 1] = {"WAIT_STOPPED",
@@ -105,7 +106,8 @@ static const char *const wait_res_str[WAIT_ERROR + 1] = {"WAIT_STOPPED",
                                                          "WAIT_SYSCALL_FORK",
                                                          "WAIT_SYSCALL_VFORK",
                                                          "WAIT_EXITED",
-                                                         "WAIT_ERROR"};
+                                                         "WAIT_ERROR",
+                                                         "WAIT_WNOHANG"};
 
 typedef struct tracee_thread
 {
@@ -329,12 +331,28 @@ static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_t
 {
     DEBUG_PRINT("waiting on %d\n", pid);
     int child_status;
-    pid_t tracee_pid;
+    pid_t tracee_pid = 0;
 
     if (pid > 0)
         tracee_pid = waitpid(pid, &child_status, WUNTRACED); // WUNTRACED useful for when attaching the child
     else
-        tracee_pid = waitpid(pid, &child_status, 0);
+    {
+        pthread_mutex_lock(waiting_for_ack_mutex);
+        if (*waiting_for_ack)
+        {
+            tracee_pid = waitpid(pid, &child_status, WNOHANG);
+        }
+        else 
+        {
+            tracee_pid = waitpid(pid, &child_status, 0);
+        }
+        pthread_mutex_unlock(waiting_for_ack_mutex);
+    }
+
+    if (tracee_pid == 0)
+    {
+        return WAIT_WNOHANG;
+    }
 
     if (tracee_pid < 0)
     {
@@ -689,6 +707,13 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
         tracee_thread_t *tracee_thread = NULL;
         tracee_wait_t wait_res = tracee_wait_for_child(-1, &tracee_thread, &wstopsignal);
 
+        if (wait_res == WAIT_WNOHANG)
+        {
+            DEBUG_PRINT("%s\n", wait_res_str[wait_res]);
+            // Then, the tracer_thread need a bit of time to act
+            continue;
+        }
+
         if (ending_tracking || !tracee_thread)
         {
             break;
@@ -727,11 +752,6 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
         }
         pthread_mutex_unlock(waiting_for_ack_mutex);
 
-        if (tracee_thread->is_new_child)
-        {
-            continue;
-        }
-
         switch (wait_res)
         {
         case WAIT_EXITED:
@@ -757,7 +777,6 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
             break;
 
         case WAIT_STOPPED_NEW_CHILD:
-            // Should be already managed with the "continue" some lines above
             // The child is put in a waiting state and will be restart when we are sure for the tid to set
             // // Store it to restart it later
             // new_child_tt = tracee_thread;
@@ -880,6 +899,11 @@ void end_tracking(int signum)
     ending_tracking = 1;
 }
 
+void dummy_sig_handler(int signum)
+{
+    DEBUG_PRINT("Signal %d received by main child\n", signum);
+}
+
 /**
  * @brief Routine for a thread whose only task is to create false tid in TAU when needed
  *
@@ -915,7 +939,8 @@ void *signal_handler_thread_routine(void *ptr)
             *waiting_for_ack = 0;
 
             // Tell the main child to STOP in order for the ptracer to return from waitpid()
-            tgkill(getpid(), getpid(), SIGSTOP);
+            // tgkill(getpid(), getpid(), SIG_STOP_PTRACE);
+            // tgkill(getppid(), getppid(), SIG_UPDATE_TASK);
             DEBUG_PRINT("Ending update_thread_nb(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
                         *shared_num_tasks);
         }
@@ -1001,6 +1026,16 @@ void prepare_to_be_tracked(pid_t pid)
     }
 
     DEBUG_PRINT("%d [%d] just set ptracer as %d\n", getpid(), gettid(), pid);
+
+    struct sigaction sa;
+
+    sa.sa_handler = dummy_sig_handler();
+    sa.sa_flags = SA_RESTART;
+    sigemptyset(&sa.sa_mask);
+    if (sigaction(SIG_STOP_PTRACE, &sa, NULL) == -1)
+    {
+        perror("sigaction");
+    }
 
     task_creater_thread_tid = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     *task_creater_thread_tid = -1;
