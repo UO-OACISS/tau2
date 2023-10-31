@@ -29,6 +29,8 @@ extern int local_num_tasks;
 
 // Shared variable
 extern int *waiting_for_ack;
+extern pthread_mutex_t *waiting_for_ack_mutex;
+extern pthread_cond_t *waiting_for_ack_cond;
 
 // Shared variable. Flag to indicate that the parent has dumped its files
 extern int *parent_has_dumped;

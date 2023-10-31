@@ -18,7 +18,7 @@
 // To disable ptrace on the threads of the child
 // #define NO_TRACECLONE
 
-#define DEBUG_PTRACE
+// #define DEBUG_PTRACE
 
 #ifdef DEBUG_PTRACE
 #define DEBUG_PRINT(...)                                                                                               \
@@ -55,6 +55,9 @@ int *task_creater_thread_tid;
 int *shared_num_tasks;
 int *waiting_for_ack;
 int *parent_has_dumped;
+
+pthread_mutex_t *waiting_for_ack_mutex;
+pthread_cond_t *waiting_for_ack_cond;
 
 // To use before setting any timer on a (fake) thread
 // Otherwise, it will use the gpu_timers for the fake threads
@@ -695,6 +698,7 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
 
         // The idea is to wait for the main child to update its local threads counter after having created a child
         // Until then, the new thread created by clone() will be waiting
+        pthread_mutex_lock(waiting_for_ack_mutex);
         if (*waiting_for_ack == 0)
         {
             tracee_thread_t *waiting_new_child_tt = get_waiting_new_child_tt();
@@ -709,6 +713,7 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
                     (*shared_num_tasks)++;
                     waiting_new_child_tt->has_sent_signal = 1;
                     *waiting_for_ack = 1;
+                    pthread_cond_signal(waiting_for_ack_cond);
                     // tgkill(tt->pid, tt->pid, SIG_UPDATE_TASK);
                 }
                 else
@@ -717,10 +722,10 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
                     ptrace_res = tracee_start_tracking_tt(waiting_new_child_tt);
                     CHECK_ERROR_ON_PTRACE_RES(ptrace_res, waiting_new_child_tt);
                     waiting_new_child_tt->is_new_child = 0;
-                    *waiting_for_ack = 0;
                 }
             }
         }
+        pthread_mutex_unlock(waiting_for_ack_mutex);
 
         if (tracee_thread->is_new_child)
         {
@@ -891,7 +896,15 @@ void *signal_handler_thread_routine(void *ptr)
         DEBUG_PRINT("Routine: waiting_for_ack = %d, parent_has_dumped = %d\n", *waiting_for_ack, *parent_has_dumped);
 
         // TODO Replace with mutex
-        if (*waiting_for_ack)
+        pthread_mutex_lock(waiting_for_ack_mutex);
+        while (!(*waiting_for_ack))
+        {
+            pthread_cond_wait(waiting_for_ack_cond, waiting_for_ack_mutex);
+        }
+        DEBUG_PRINT("pthread_cond_wait done\n");
+
+        // if (*waiting_for_ack)
+        if (!(*parent_has_dumped))
         {
             update_local_num_tasks();
 
@@ -906,8 +919,11 @@ void *signal_handler_thread_routine(void *ptr)
             DEBUG_PRINT("Ending update_thread_nb(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
                         *shared_num_tasks);
         }
+
+        pthread_mutex_unlock(waiting_for_ack_mutex);
+
         // TODO Remove after test
-        sleep(1);
+        // sleep(1);
     }
     DEBUG_PRINT("Ending task creater routine\n");
 }
@@ -942,6 +958,10 @@ int track_process(pid_t pid)
         perror(tracee_error_str[res]);
         Tau_destructor_trigger();
         *parent_has_dumped = 1;
+        pthread_mutex_lock(waiting_for_ack_mutex);
+    *waiting_for_ack = 1;
+        pthread_cond_signal(waiting_for_ack_cond);
+        pthread_mutex_unlock(waiting_for_ack_mutex);
         return EXIT_FAILURE;
     }
 
@@ -952,6 +972,10 @@ int track_process(pid_t pid)
     // This way, the child will replace the files like profile.0.0.0 by its ones
     Tau_destructor_trigger();
     *parent_has_dumped = 1;
+    pthread_mutex_lock(waiting_for_ack_mutex);
+    *waiting_for_ack = 1;
+    pthread_cond_signal(waiting_for_ack_cond);
+    pthread_mutex_unlock(waiting_for_ack_mutex);
 
     res = tracee_detach_everything();
 
@@ -987,9 +1011,11 @@ void prepare_to_be_tracked(pid_t pid)
     // And update shared_num_tasks
     *shared_num_tasks = local_num_tasks;
 
+    // Make sure the thread is created before raise(SIGSTOP)
     // TODO replace
     while (*task_creater_thread_tid < 0)
     {
+        usleep(1000);
     }
 
     // tgkill(getpid(), getpid(), SIGSTOP); // Doesn't work as we want to, hence the following lines
