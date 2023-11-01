@@ -2678,9 +2678,9 @@ for arg in "$@"; do
         -python)
             pythonbin=`which python | sed 's,[^/]*$,,'`
             python=yes
-            pythonintv=python
+            pythonintv=`which python`
         # Python can/will spawn threads
-        pthread=yes
+            pthread=yes
             shift
             ;;
 
@@ -2709,9 +2709,9 @@ for arg in "$@"; do
             pythonbin=`which python3 | sed 's,[^/]*$,,'`
 	    python=yes
             python3=yes
-	    pythonintv=python3
+	    pythonintv=`which python3`
         # Python can/will spawn threads
-        pthread=yes
+            pthread=yes
             shift
             ;;
 
@@ -2725,7 +2725,7 @@ for arg in "$@"; do
             fi
             python=yes
         # Python can/will spawn threads
-        pthread=yes
+            pthread=yes
             shift
             ;;
 
@@ -2738,7 +2738,7 @@ for arg in "$@"; do
             fi
             python=yes
         # Python can/will spawn threads
-        pthread=yes
+            pthread=yes
             shift
             ;;
 
@@ -3329,6 +3329,20 @@ for arg in "$@"; do
             ;;
     esac
 done
+
+if [ "x$pythonintv" = "xpython" -a "x$pythoninc" != "x" ]; then 
+  if [ -f $pythoninc/../bin/python ]; then 
+    pythonintv=$pythoninc/../bin/python
+    pythonbin=$pythonbin/../bin
+  fi 
+fi
+
+if [ "x$pythonintv" = "xpython" -a "x$pythonlib" != "x" ]; then 
+  if [ -f $pythonlib/../bin/python ]; then 
+    pythonintv=$pythonlib/../bin/python
+    pythonbin=$pythonlib/../bin
+  fi 
+fi
 
 # Check for Python
 if [ "x$python3"  = "xyes" ] ; then
