@@ -3072,7 +3072,6 @@ for arg in "$@"; do
             rocprofiler=yes
             tauoptions="${tauoptions}-rocm"
             pthread=yes
-            fixmakeargs="$fixmakeargs ROCMSMI"
             build_llvm_plugin=yes
             shift
             ;;
@@ -3090,7 +3089,6 @@ for arg in "$@"; do
             rocprofiler=yes
             tauoptions="${tauoptions}-rocm"
             pthread=yes
-            fixmakeargs="$fixmakeargs ROCMSMI"
             build_llvm_plugin=yes
             shift
             ;;
@@ -3108,8 +3106,11 @@ for arg in "$@"; do
               echo  "Error: Cannot access ROCm smi directory $rocmsmidir"
               exit 1
             else
-              fixmakeargs="$fixmakeargs rocmsmidir=$rocmsmidir"
-              rocmsmi=yes
+              if [ -r $rocmsmidir/include/rocm_smi/rocm_smi.h ]; then
+                fixmakeargs="$fixmakeargs rocmsmidir=$rocmsmidir"
+                rocmsmi=yes
+                fixmakeargs="$fixmakeargs ROCMSMI"
+              fi
             fi
             shift
             ;;
@@ -3441,8 +3442,11 @@ if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -
 fi
 
 if [ "x$rocm" = "xyes" -a "x$rocmsmi" = "xno" ]; then
-  echo "No rocmsmi specified, using $rocmdir"
-  fixmakeargs="$fixmakeargs rocmsmidir=$rocmdir"
+  if [ -r $rocmdir/include/rocm_smi/rocm_smi.h ]; then
+    echo "No rocmsmi specified, using $rocmdir as $rocmdir/include/rocm_smi/rocm_smi.h is found"
+    fixmakeargs="$fixmakeargs rocmsmidir=$rocmdir"
+    fixmakeargs="$fixmakeargs ROCMSMI"
+  fi
 fi
 
 
