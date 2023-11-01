@@ -2660,12 +2660,18 @@ for arg in "$@"; do
             pythonintv=`echo $arg | sed -e 's/-python=//' -e 's/ /#/g'`
             python=yes
             pythonbin=$( which $( echo $pythonintv ) | sed 's,[^/]*$,,' )
-            if [ ! -f $pythonintv ] ; then
-                echo "Error: Cannot access Python interpreter $pythonintv"
-                exit 1
+            if [ ! -f $pythonbin/$pythonintv ] ; then
+		if [ -f $pythonintv ]; then 
+	           echo "Found $pythonintv"
+	        else
+                  echo "Error: Cannot access Python interpreter $pythonbin/$pythonintv or $pythonintv"
+                  exit 1
+		fi 
+	    else
+	        pythonintv=$pythonbin/$pythonintv
             fi
         # Python can/will spawn threads
-        pthread=yes
+            pthread=yes
             shift
             ;;
 
@@ -2683,12 +2689,19 @@ for arg in "$@"; do
 	    python=yes
             python3=yes
             pythonbin=$( which $( echo $pythonintv ) | sed 's,[^/]*$,,' )
-            if [ ! -f $pythonintv ] ; then
-                echo "Error: Cannot access Python interpreter $pythonintv"
-                exit 1
+	    if [ ! -f $pythonbin/$pythonintv ] ; then
+                if [ -f $pythonintv ]; then
+                   echo "Found $pythonintv"
+                else
+                  echo "Error: Cannot access Python interpreter $pythonbin/$pythonintv or $pythonintv"
+                  exit 1
+                fi
+            else
+                pythonintv=$pythonbin/$pythonintv
             fi
+
         # Python can/will spawn threads
-        pthread=yes
+            pthread=yes
             shift
             ;;
 
