@@ -15,6 +15,22 @@
 
 #include "tracee.h"
 
+// gettid() and tgkill()
+#if !(__GLIBC_PREREQ(2,30))
+#include <sys/syscall.h>
+
+pid_t gettid(void)
+{
+     return syscall(SYS_gettid);
+}
+
+// cf man tkill
+int tgkill(pid_t tgid, pid_t tid, int sig)
+{
+    return syscall(SYS_tkill, tid, sig);
+}
+#endif
+
 // To disable ptrace on the threads of the child
 // #define NO_TRACECLONE
 
