@@ -27,6 +27,7 @@ WLRTAU=-Wl,-rpath,$(TAU_LIB_DIR)
 
 LDFLAGS = $(TAU_MPI_LIB) -L$(PLUGININSTALLDIR) $(WLRPATH) -L$(TAU_LIB_DIR) $(WLRTAU) -lTAUsh$(TAU_CONFIG)
 
+#ROCMSMI#TAU_PLUGIN_ROCM_SMI_O=tau_rocm_smi.o #ENDIF#
 OBJS = Tau_plugin_example_disable_instrumentation_runtime.o Tau_plugin_example_mpit_recommend_sharp_usage.o Tau_plugin_example_free_unused_vbufs.o Tau_plugin_skel.o Tau_plugin_sos.o Tau_plugin_thread_summary.o Tau_plugin_example_selective_tracing.o Tau_plugin_example_profile_snapshot_trigger.o Tau_plugin_example_mpit_exchange_pvar_data.o Tau_plugin_example_analyze_profile_snapshots.o Tau_plugin_example_load_balance_async.o Tau_plugin_example_load_balance.o Tau_plugin_example_analyze_node_profile_snapshots.o Tau_plugin_example_analyze_node_profile_snapshots_async.o Tau_plugin_example_emulate_profile_snapshots_analysis_async.o Tau_plugin_example_memory_usage_async.o Tau_plugin_example_atomic_trigger.o Tau_plugin_gpu_events.o
 
 SHAREDLIBS = libTAU-memory-usage-async$(TAU_SHLIBX) libTAU-emulate-profiles-analysis-async$(TAU_SHLIBX) libTAU-load-balance-async$(TAU_SHLIBX) libTAU-analyze-node-profiles$(TAU_SHLIBX) libTAU-analyze-node-profiles-async$(TAU_SHLIBX) libTAU-filter-plugin$(TAU_SHLIBX) libTAU-mpit-recommend-sharp-usage-plugin$(TAU_SHLIBX) libTAU-mpit-mvapich-free_unused_vbufs$(TAU_SHLIBX) libTAU-skel-plugin$(TAU_SHLIBX) libTAU-sos-plugin$(TAU_SHLIBX) libTAU-thread-summary-plugin$(TAU_SHLIBX) libTAU-selective-tracing$(TAU_SHLIBX) libTAU-snapshot-trigger$(TAU_SHLIBX) libTAU-mpit-exchange-data$(TAU_SHLIBX) libTAU-analyze-profiles$(TAU_SHLIBX) libTAU-load-balance$(TAU_SHLIBX) libTAU-memory-usage-async$(TAU_SHLIBX) libTAU-pthread-stopper-plugin$(TAU_SHLIBX) libTAU-adios2-plugin$(TAU_SHLIBX) libTAU-adios2-trace-plugin$(TAU_SHLIBX) libTAU-atomic-trigger$(TAU_SHLIBX) libTAU-adios2-trace-plugin$(TAU_SHLIBX) libTAU-null-plugin$(TAU_SHLIBX) $(TAU_MONITORING_PLUGIN_USING_JSON) $(TAU_SQLITE3_PLUGIN_LIB) libTAU-gpu-events-plugin$(TAU_SHLIBX) libTAU-mochi-soma-remote-collector-plugin$(TAU_SHLIBX) libTAU-mochi-soma-node-local-collector-plugin$(TAU_SHLIBX)
@@ -71,8 +72,8 @@ libTAU-null-plugin$(TAU_SHLIBX): Tau_plugin_example_null.o
 libTAU-sqlite3-plugin$(TAU_SHLIBX): Tau_plugin_sqlite3.o
 	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_sqlite3.o $(TAU_SQLITE3_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-sqlite3-plugin$(TAU_SHLIBX)
 
-libTAU-monitoring-plugin$(TAU_SHLIBX): Tau_plugin_monitoring.o tau_nvml.o tau_rocm_smi.o
-	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_monitoring.o tau_nvml.o tau_rocm_smi.o $(TAU_PAPI_EXTRA_FLAGS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-monitoring-plugin$(TAU_SHLIBX) $(TAU_SHLIBS) $(TAU_CUDA_LINKER_OPTS) $(TAU_ROCMSMI_LINKER_OPTS)
+libTAU-monitoring-plugin$(TAU_SHLIBX): Tau_plugin_monitoring.o tau_nvml.o $(TAU_PLUGIN_ROCM_SMI_O)
+	$(CXX) $(TAU_STDCXX11_FLAG) Tau_plugin_monitoring.o tau_nvml.o $(TAU_PLUGIN_ROCM_SMI_O) $(TAU_PAPI_EXTRA_FLAGS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-monitoring-plugin$(TAU_SHLIBX) $(TAU_SHLIBS) $(TAU_CUDA_LINKER_OPTS) $(TAU_ROCMSMI_LINKER_OPTS)
 
 libTAU-thread-summary-plugin$(TAU_SHLIBX): Tau_plugin_thread_summary.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-thread-summary-plugin$(TAU_SHLIBX) Tau_plugin_thread_summary.o
