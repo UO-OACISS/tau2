@@ -3336,11 +3336,9 @@ for arg in "$@"; do
 done
 
 if [ "x$python_ver_specified" = "xno" -a "x$pythoninc" != "x" ]; then 
-	echo "HERE: Checking pythonintv= $pythonintv pythoninc=$pythoninc"
   if [ -f $pythoninc/../bin/python ]; then 
     pythonintv=$pythoninc/../bin/python
     pythonbin=$pythonbin/../bin
-    echo "HERE: Using $pythonintv"
     python_ver_specified=yes
   fi 
 fi
