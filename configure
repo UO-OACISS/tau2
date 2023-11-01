@@ -1148,6 +1148,7 @@ python=no
 python3=no
 pythonlibrary=
 pythonintv=python
+python_ver_specified=no
 sicortex=no
 extradir=
 extrashlibopts=
@@ -2660,6 +2661,7 @@ for arg in "$@"; do
             pythonintv=`echo $arg | sed -e 's/-python=//' -e 's/ /#/g'`
             python=yes
             pythonbin=$( which $( echo $pythonintv ) | sed 's,[^/]*$,,' )
+	    python_ver_specified=yes
             if [ ! -f $pythonbin/$pythonintv ] ; then
 		if [ -f $pythonintv ]; then 
 	           echo "Found $pythonintv"
@@ -2681,6 +2683,7 @@ for arg in "$@"; do
             pythonintv=`which python`
         # Python can/will spawn threads
             pthread=yes
+	    python_ver_specified=no
             shift
             ;;
 
@@ -2688,6 +2691,7 @@ for arg in "$@"; do
             pythonintv=`echo $arg | sed -e 's/-python3=//' -e 's/ /#/g'`
 	    python=yes
             python3=yes
+	    python_ver_specified=yes
             pythonbin=$( which $( echo $pythonintv ) | sed 's,[^/]*$,,' )
 	    if [ ! -f $pythonbin/$pythonintv ] ; then
                 if [ -f $pythonintv ]; then
@@ -2710,6 +2714,7 @@ for arg in "$@"; do
 	    python=yes
             python3=yes
 	    pythonintv=`which python3`
+	    python_ver_specified=no
         # Python can/will spawn threads
             pthread=yes
             shift
@@ -3330,14 +3335,17 @@ for arg in "$@"; do
     esac
 done
 
-if [ "x$pythonintv" = "xpython" -a "x$pythoninc" != "x" ]; then 
+if [ "x$python_ver_specified" = "xno" -a "x$pythoninc" != "x" ]; then 
+	echo "HERE: Checking pythonintv= $pythonintv pythoninc=$pythoninc"
   if [ -f $pythoninc/../bin/python ]; then 
     pythonintv=$pythoninc/../bin/python
     pythonbin=$pythonbin/../bin
+    echo "HERE: Using $pythonintv"
+    python_ver_specified=yes
   fi 
 fi
 
-if [ "x$pythonintv" = "xpython" -a "x$pythonlib" != "x" ]; then 
+if [ "x$python_ver_specified" = "xno" -a "x$pythonlib" != "x" ]; then 
   if [ -f $pythonlib/../bin/python ]; then 
     pythonintv=$pythonlib/../bin/python
     pythonbin=$pythonlib/../bin
