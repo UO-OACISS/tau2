@@ -2660,7 +2660,7 @@ for arg in "$@"; do
             pythonintv=`echo $arg | sed -e 's/-python=//' -e 's/ /#/g'`
             python=yes
             pythonbin=$( which $( echo $pythonintv ) | sed 's,[^/]*$,,' )
-            if [ ! -f $pythonbin/$pythonintv ] ; then
+            if [ ! -f $pythonintv ] ; then
                 echo "Error: Cannot access Python interpreter $pythonintv"
                 exit 1
             fi
