@@ -91,6 +91,7 @@ static void update_local_num_tasks()
                 *shared_num_tasks);
 }
 
+
 typedef enum
 {
     // Stopped by SIGSTOP
@@ -410,7 +411,6 @@ static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_t
         // case (SIGTRAP | (PTRACE_EVENT_VFORK << 8)):
         case (SIGTRAP | (PTRACE_EVENT_CLONE << 8)):
             /* Since the new cloned is automatically tracked, we manage just after the wait */
-            // TODO : deal with cascades of clone() (a thread creates a thread which creates a new one...)
             DEBUG_PRINT("PTRACE_EVENT_CLONE on %d\n", tracee_pid);
             // Tracee just called clone()
             // pid_t new_tracee_pid;
@@ -423,7 +423,6 @@ static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_t
 
             // // Create a new task for the new child
             // TAU_CREATE_TASK(local_num_tasks);
-            // // Safe to update shared_num_tasks since the child is stopped
             // (*shared_num_tasks)++; // Update: not safe at all
 
             // // The new thread is already tracked and will stop at launch
@@ -471,6 +470,7 @@ static tracee_error_t tracee_handle_stop_syscall(tracee_thread_t *tracee_thread)
         TAU_PROFILER_STOP_TASK(tracee_thread->syscall_timer, tracee_thread->tid);
         tracee_thread->in_syscall = 0;
     }
+    return TRACEE_SUCCESS;
 }
 
 /**
@@ -621,8 +621,8 @@ static tracee_error_t tracee_start_tracking_tt(tracee_thread_t *tt)
     return ptrace_res;
 }
 
-// Return the first tracee which has not been start and has sent a signal
-// If there are none, return the first tracee which has not sent a signal
+// Return the oldest tracee which has not been start and has sent a signal
+// If there are none, return the oldest tracee which has not sent a signal
 // Else, return NULL
 static tracee_thread_t *get_waiting_new_child_tt()
 {
@@ -864,6 +864,7 @@ static void *tau_task_creator(void *ptr)
         }
     }
     DEBUG_PRINT("Ending task creator routine\n");
+    return NULL;
 }
 
 /***************************
