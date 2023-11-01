@@ -23,14 +23,14 @@
 extern volatile int *shared_num_tasks;
 // Indicate if the parent is waiting for the child to update its tasks counter
 extern volatile int *waiting_for_ack;
-// Tid of the task creater thread
-extern volatile int *task_creater_thread_tid;
+// Tid of the task creator thread
+extern volatile int *task_creator_thread_tid;
 // Flag to indicate that the parent has dumped its files
 extern volatile int *parent_has_dumped;
 
 
 // For the child to use pthread_join at the exit
-extern pthread_t task_creater_thread;
+extern pthread_t task_creator_thread;
 // Local to the child/parent
 extern int local_num_tasks;
 

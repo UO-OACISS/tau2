@@ -64,11 +64,11 @@ const int init_array_size = 128;
 int ending_tracking = 0;
 
 int local_num_tasks = 0;
-pthread_t task_creater_thread;
+pthread_t task_creator_thread;
 
 // Are initialized with mmap in ptrace_syscall.c
 
-volatile int *task_creater_thread_tid;
+volatile int *task_creator_thread_tid;
 volatile int *shared_num_tasks;
 volatile int *waiting_for_ack;
 volatile int *parent_has_dumped;
@@ -496,7 +496,7 @@ static tracee_error_t tracee_interrupt(tracee_thread_t *tt)
 }
 
 /**
- * @brief Send PTRACE_CONT to stop it
+ * @brief Send PTRACE_CONT to continue without tracking the syscall. (not used)
  *
  * @param pid
  * @return tracee_error_t
@@ -834,7 +834,7 @@ static void internal_init_once(void)
  *
  * @param signum signal received (cf sigaction)
  */
-void end_tracking(int signum)
+static void end_tracking(int signum)
 {
     // The signal should be sent by the main child
     DEBUG_PRINT("Signal %d received. Starting end_tracking()\n", signum);
@@ -844,16 +844,16 @@ void end_tracking(int signum)
 /**
  * @brief Routine for a thread whose only task is to create false tid in TAU when needed
  */
-void *signal_handler_thread_routine(void *ptr)
+static void *tau_task_creator(void *ptr)
 {
-    *task_creater_thread_tid = gettid();
-    DEBUG_PRINT("Task creater thread created with tid = %d\n", gettid());
+    *task_creator_thread_tid = gettid();
+    DEBUG_PRINT("Task creator thread created with tid = %d\n", gettid());
 
     while (!(*parent_has_dumped))
     {
         if (*waiting_for_ack)
         {
-            DEBUG_PRINT("Task creater thread need to update\n");
+            DEBUG_PRINT("Task creator thread need to update\n");
             update_local_num_tasks();
 
             // The child may have created some tids before updating local_num_threads
@@ -864,7 +864,7 @@ void *signal_handler_thread_routine(void *ptr)
                         local_num_tasks, *shared_num_tasks);
         }
     }
-    DEBUG_PRINT("Ending task creater routine\n");
+    DEBUG_PRINT("Ending task creator routine\n");
 }
 
 /***************************
@@ -933,7 +933,7 @@ void prepare_to_be_tracked(pid_t pid)
 
     DEBUG_PRINT("%d [%d] just set ptracer as %d\n", getpid(), gettid(), pid);
 
-    pthread_create(&task_creater_thread, NULL, signal_handler_thread_routine, NULL);
+    pthread_create(&task_creator_thread, NULL, tau_task_creator, NULL);
 
     // We create a false tid, which will not be used, for the parent
     TAU_CREATE_TASK(local_num_tasks);
@@ -941,7 +941,7 @@ void prepare_to_be_tracked(pid_t pid)
     *shared_num_tasks = local_num_tasks;
 
     // Make sure the thread is launched before raise(SIGSTOP)
-    while (*task_creater_thread_tid < 0)
+    while (*task_creator_thread_tid < 0)
     {
     }
 
@@ -949,6 +949,6 @@ void prepare_to_be_tracked(pid_t pid)
 
     raise(SIGSTOP);
     // The previous SIGSTOP stopped the pthread, so we need to relaunch it
-    tgkill(getpid(), *task_creater_thread_tid, SIGCONT);
+    tgkill(getpid(), *task_creator_thread_tid, SIGCONT);
     DEBUG_PRINT("%d is attached\n", getpid());
 }

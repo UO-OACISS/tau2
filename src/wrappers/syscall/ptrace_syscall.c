@@ -67,12 +67,12 @@ void taupreload_init()
     shared_num_tasks = (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     waiting_for_ack = (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     parent_has_dumped = (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    task_creater_thread_tid = (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    task_creator_thread_tid = (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
     *shared_num_tasks = 0;
     *waiting_for_ack = 0;
     *parent_has_dumped = 0;
-    *task_creater_thread_tid = -1;
+    *task_creator_thread_tid = -1;
 
     rpid = fork();
 }
@@ -122,7 +122,7 @@ int taupreload_main(int argc, char **argv, char **envp)
         {
         }
 
-        pthread_join(task_creater_thread, NULL);
+        pthread_join(task_creator_thread, NULL);
 
         TAU_PROFILER_STOP(handle);
     }
@@ -134,7 +134,7 @@ int taupreload_main(int argc, char **argv, char **envp)
         munmap((int *) shared_num_tasks, sizeof(int));
         munmap((int *) waiting_for_ack, sizeof(int));
         munmap((int *) parent_has_dumped, sizeof(int));
-        munmap((int *) task_creater_thread_tid, sizeof(int));
+        munmap((int *) task_creator_thread_tid, sizeof(int));
     }
 
     Tau_profile_exit_all_threads();
