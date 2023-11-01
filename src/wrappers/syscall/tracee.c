@@ -326,13 +326,12 @@ static void remove_tracee_thread(pid_t pid)
  *****************************/
 
 /**
- * @brief Should be used for waiting for a specific pid to STOP, or for waiting for all child (pid = -1)
- * In the last case, waited_tracee is the child tracee_thread which has stopped or exited
+ * @brief Should be used for waiting for a specific pid to STOP, or for waiting for any child (pid = -1)
+ * Return in waited_tracee the child tracee_thread which has stopped or exited.
  *
  * @param pid -1 to wait for all childs ; > 0 for a specific pid
- * @param waited_tracee should not be NULL, because is_istopped is modified. Is filled if pid = -1 with the child
- * tracee_thread that has stopped/exited
- * @param stop_signal is filled only if the child was stopped for another reason than ptrace handling
+ * @param waited_tracee is filled with the tracee_thread_t which has stopped or exited
+ * @param stop_signal is filled only if the child was stopped for another reason than ptrace handling, in order to inject the signal back when restarting the thread
  * @return tracee_wait_t
  */
 static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_tracee, int *stop_signal)
