@@ -867,6 +867,7 @@ static void *tau_task_creator(void *ptr)
         // Possible issue:
         // tpp.c:82: __pthread_tpp_change_priority: Assertion `new_prio == -1 || (new_prio >= fifo_min_prio
         // && new_prio <= fifo_max_prio)' failed.
+        // Update: it seems the error is due forgetting to initialize properly mutex_attr in ptrace_syscall.c
         int mutex_res = pthread_mutex_lock(waiting_for_ack_mutex);
         if (mutex_res < 0)
         {

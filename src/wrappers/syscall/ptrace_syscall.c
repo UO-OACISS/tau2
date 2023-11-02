@@ -78,8 +78,8 @@ void taupreload_init()
     *parent_has_dumped = 0;
     *task_creator_thread_tid = -1;
 
-    waiting_for_ack_mutex =
-        (pthread_mutex_t *)mmap(NULL, sizeof(pthread_mutex_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    waiting_for_ack_mutex = (pthread_mutex_t *)mmap(NULL, sizeof(pthread_mutex_t), PROT_READ | PROT_WRITE,
+                                                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     waiting_for_ack_cond =
         (pthread_cond_t *)mmap(NULL, sizeof(pthread_cond_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
@@ -143,6 +143,8 @@ int taupreload_main(int argc, char **argv, char **envp)
 
         while (!*parent_has_dumped)
         {
+            // Lazy solution to a minor problem
+            usleep(100);
         }
 
         pthread_join(task_creator_thread, NULL);
