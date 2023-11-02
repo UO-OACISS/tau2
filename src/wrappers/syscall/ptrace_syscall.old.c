@@ -41,6 +41,25 @@ void taupreload_init()
     *parent_has_dumped = 0;
     *task_creator_thread_tid = -1;
 
+    waiting_for_ack_mutex = (pthread_mutex_t *)mmap(NULL, sizeof(pthread_mutex_t), PROT_READ | PROT_WRITE,
+                                                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    waiting_for_ack_cond =
+        (pthread_cond_t *)mmap(NULL, sizeof(pthread_cond_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+    pthread_mutexattr_t mutex_attr;
+    pthread_condattr_t cond_attr;
+
+    pthread_mutexattr_init(&mutex_attr);
+    pthread_condattr_init(&cond_attr);
+
+    pthread_mutexattr_setpshared(&mutex_attr, PTHREAD_PROCESS_SHARED);
+    pthread_condattr_setpshared(&cond_attr, PTHREAD_PROCESS_SHARED);
+
+    pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_ERRORCHECK); // PTHREAD_MUTEX_RECURSIVE
+
+    pthread_mutex_init(waiting_for_ack_mutex, &mutex_attr);
+    pthread_cond_init(waiting_for_ack_cond, &cond_attr);
+
     pid_t rpid = fork();
 
     Tau_init_initializeTAU();
@@ -69,6 +88,11 @@ void taupreload_init()
         munmap((int *) waiting_for_ack, sizeof(int));
         munmap((int *) parent_has_dumped, sizeof(int));
         munmap((int *) task_creator_thread_tid, sizeof(int));
+
+        pthread_mutex_destroy(waiting_for_ack_mutex);
+        pthread_cond_destroy(waiting_for_ack_cond);
+        munmap(waiting_for_ack_mutex, sizeof(pthread_mutex_t));
+        munmap(waiting_for_ack_cond, sizeof(pthread_cond_t));
 
         Tau_profile_exit_all_threads();
         Tau_destructor_trigger();
