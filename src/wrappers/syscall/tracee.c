@@ -680,7 +680,7 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
         // The idea is to wait for the main child to update its local threads counter after having created a child
         // Until then, the new thread created by clone() will be waiting
         int mutex_res = pthread_mutex_trylock(waiting_for_ack_mutex);
-        if (mutex_res < 0)
+        if (mutex_res == 0)
         {
             if (*waiting_for_ack == 0)
             {
