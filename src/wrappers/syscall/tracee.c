@@ -862,6 +862,9 @@ static void *tau_task_creator(void *ptr)
     while (!(*parent_has_dumped))
     {
         DEBUG_PRINT("Routine: trying to lock mutex\n");
+        // Possible issue:
+        // tpp.c:82: __pthread_tpp_change_priority: Assertion `new_prio == -1 || (new_prio >= fifo_min_prio
+        // && new_prio <= fifo_max_prio)' failed.
         int mutex_res = pthread_mutex_lock(waiting_for_ack_mutex);
         if (mutex_res < 0)
         {
@@ -870,7 +873,7 @@ static void *tau_task_creator(void *ptr)
             break;
         }
         DEBUG_PRINT("Routine: will wait\n");
-        while ((!(*waiting_for_ack)) && (!(*parent_has_dumped)) )
+        while ((!(*waiting_for_ack)) && (!(*parent_has_dumped)))
         {
             mutex_res = pthread_cond_wait(waiting_for_ack_cond, waiting_for_ack_mutex);
             if (mutex_res < 0)
