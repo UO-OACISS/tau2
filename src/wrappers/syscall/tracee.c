@@ -391,38 +391,27 @@ static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_t
             {
                 return WAIT_STOPPED;
             }
+            // Should not be reached anymore because we already managed this case some lines above
             return WAIT_STOPPED_NEW_CHILD;
         }
 
         // PTRACE_EVENT stops (part 2)
+        // None of these are currently used and are treated as any WAIT_SYSCALL in the main loop
         switch ((child_status >> 8))
         {
         case (SIGTRAP | (PTRACE_EVENT_EXIT << 8)):
             DEBUG_PRINT("PTRACE_EVENT_EXIT on %d\n", tracee_pid);
             return WAIT_SYSCALL_EXIT;
-
         // Not sure for fork() with TAU : it may create a new node for tau, so we would have to configure it
-        // case (SIGTRAP | (PTRACE_EVENT_FORK << 8)):
-        // case (SIGTRAP | (PTRACE_EVENT_VFORK << 8)):
+        case (SIGTRAP | (PTRACE_EVENT_FORK << 8)):
+            DEBUG_PRINT("PTRACE_EVENT_FORK on %d\n", tracee_pid);
+            return WAIT_SYSCALL_FORK;
+        case (SIGTRAP | (PTRACE_EVENT_VFORK << 8)):
+            DEBUG_PRINT("PTRACE_EVENT_VFORK on %d\n", tracee_pid);
+            return WAIT_SYSCALL_VFORK;
         case (SIGTRAP | (PTRACE_EVENT_CLONE << 8)):
-            /* Since the new cloned is automatically tracked, we manage just after the wait */
+            /* Since the new cloned is automatically tracked, we manage it just after the wait */
             DEBUG_PRINT("PTRACE_EVENT_CLONE on %d\n", tracee_pid);
-            // Tracee just called clone()
-            // pid_t new_tracee_pid;
-            // // Issue when using tracee_pid?
-            // ptrace(PTRACE_GETEVENTMSG, (*waited_tracee)->pid, NULL, &new_tracee_pid);
-            // DEBUG_PRINT("%d created clone %d\n", (*waited_tracee)->pid, new_tracee_pid);
-
-            // // Update local_num_threads
-            // update_local_num_tasks();
-
-            // // Create a new task for the new child
-            // TAU_CREATE_TASK(local_num_tasks);
-            // (*shared_num_tasks)++; // Update: not safe at all
-
-            // // The new thread is already tracked and will stop at launch
-            // add_tracee_thread(new_tracee_pid, *shared_num_tasks);
-
             return WAIT_SYSCALL_CLONE;
         default:
             break;
@@ -616,9 +605,13 @@ static tracee_error_t tracee_start_tracking_tt(tracee_thread_t *tt)
     return ptrace_res;
 }
 
-// Return the oldest tracee which has not been start and has sent a signal
-// If there are none, return the oldest tracee which has not sent a signal
-// Else, return NULL
+/**
+ * @brief Return the oldest tracee which has not been start and has sent a signal.
+ * If there are none, return the oldest tracee which has not sent a signal.
+ * Else, return NULL
+ *
+ * @return tracee_thread_t*
+ */
 static tracee_thread_t *get_waiting_new_child_tt()
 {
     int i_has_sent = -1;
