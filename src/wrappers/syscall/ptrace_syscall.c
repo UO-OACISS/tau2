@@ -86,6 +86,9 @@ void taupreload_init()
     pthread_mutexattr_t mutex_attr;
     pthread_condattr_t cond_attr;
 
+    pthread_mutexattr_init(&mutex_attr);
+    pthread_condattr_init(&cond_attr);
+
     pthread_mutexattr_setpshared(&mutex_attr, PTHREAD_PROCESS_SHARED);
     pthread_condattr_setpshared(&cond_attr, PTHREAD_PROCESS_SHARED);
 

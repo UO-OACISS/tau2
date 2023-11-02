@@ -719,7 +719,7 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
                 ending_tracking = 1;
                 break;
             }
-            DEBUG_PRINT("Trylock mutex failed because the task creator is using itd\n");
+            DEBUG_PRINT("Trylock mutex failed because the task creator is using it\n");
         }
 
         if (!tracee_thread)
@@ -937,7 +937,6 @@ int track_process(pid_t pid)
         Tau_destructor_trigger();
         *parent_has_dumped = 1;
         pthread_cond_signal(waiting_for_ack_cond);
-
         return EXIT_FAILURE;
     }
 
