@@ -717,7 +717,7 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
                 ending_tracking = 1;
                 break;
             }
-            DEBUG_PRINT("Trylock mutex failed because the task creator is using it %d\n", waiting_new_child_tt->pid);
+            DEBUG_PRINT("Trylock mutex failed because the task creator is using itd\n");
         }
 
         if (!tracee_thread)
@@ -877,8 +877,7 @@ static void *tau_task_creator(void *ptr)
             {
                 perror("Routine: cond_wait");
                 kill(getppid(), SIG_STOP_PTRACE);
-                return;
-
+                return NULL;
             }
         }
         DEBUG_PRINT("Routine: wait done\n");
