@@ -34,6 +34,9 @@ extern pthread_t task_creator_thread;
 // Local to the child/parent
 extern int local_num_tasks;
 
+extern pthread_mutex_t *waiting_for_ack_mutex;
+extern pthread_cond_t *waiting_for_ack_cond;
+
 /******************
  * ERROR HANDLING *
  ******************/
