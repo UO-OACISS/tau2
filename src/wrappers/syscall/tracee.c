@@ -870,7 +870,7 @@ static void *tau_task_creator(void *ptr)
             break;
         }
         DEBUG_PRINT("Routine: will wait\n");
-        while (!(*waiting_for_ack))
+        while ((!(*waiting_for_ack)) && (!(*parent_has_dumped)) )
         {
             mutex_res = pthread_cond_wait(waiting_for_ack_cond, waiting_for_ack_mutex);
             if (mutex_res < 0)
