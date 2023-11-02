@@ -696,6 +696,7 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
                         (*shared_num_tasks)++;
                         waiting_new_child_tt->has_sent_signal = 1;
                         *waiting_for_ack = 1;
+                        pthread_cond_signal(waiting_for_ack_cond);
                     }
                     else
                     {
@@ -713,6 +714,7 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
             // The task creator may be running
             if (mutex_res != EBUSY)
             {
+                DEBUG_PRINT("Error with mutex_lock that returns %d\n", mutex_res);
                 perror("mutex");
                 ending_tracking = 1;
                 break;
@@ -934,6 +936,8 @@ int track_process(pid_t pid)
         perror(tracee_error_str[res]);
         Tau_destructor_trigger();
         *parent_has_dumped = 1;
+        pthread_cond_signal(waiting_for_ack_cond);
+
         return EXIT_FAILURE;
     }
 
@@ -944,6 +948,7 @@ int track_process(pid_t pid)
     // This way, the child will replace the files like profile.0.0.0 by its ones
     Tau_destructor_trigger();
     *parent_has_dumped = 1;
+    pthread_cond_signal(waiting_for_ack_cond);
 
     res = tracee_detach_everything();
 
