@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include <Profile/Profiler.h>
 
@@ -17,20 +18,24 @@
 // Signal for the child to send to the parent to stop the tracking with ptrace
 #define SIG_STOP_PTRACE SIGRTMIN
 
-// Signal to update the number of tasks/threads for TAU
-#define SIG_UPDATE_TASK SIGRTMIN+1
+// Shared variable between the parent and the child
+/* Represent the total number of threads/task for TAU */
+extern volatile int *shared_num_tasks;
+// Indicate if the parent is waiting for the child to update its tasks counter
+extern volatile int *waiting_for_ack;
+// Tid of the task creator thread
+extern volatile int *task_creator_thread_tid;
+// Flag to indicate that the parent has dumped its files
+extern volatile int *parent_has_dumped;
 
-/* Shared variable between the parent and the child. Represent the total number of threads/task for TAU */
-extern int *shared_num_tasks;
 
+// For the child to use pthread_join at the exit
+extern pthread_t task_creator_thread;
 // Local to the child/parent
 extern int local_num_tasks;
 
-// Shared variable
-extern int *waiting_for_ack;
-
-// Shared variable. Flag to indicate that the parent has dumped its files
-extern int *parent_has_dumped;
+extern pthread_mutex_t *waiting_for_ack_mutex;
+extern pthread_cond_t *waiting_for_ack_cond;
 
 /******************
  * ERROR HANDLING *

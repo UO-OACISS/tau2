@@ -31,7 +31,7 @@ const char *get_syscall_name(int id)
 
 // Depends on the architecture!
 
-void scalls_init()
+void scalls_init(void)
 {
     int i;
 
@@ -444,7 +444,7 @@ void scalls_init()
     __scalls[__NR_faccessat2] = "faccessat2";
 }
 
-void printf_regs(struct pt_regs regs)
+static void printf_regs(struct pt_regs regs)
 {
     for (int i = 0; i < 32; i++)
     {

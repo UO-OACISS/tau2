@@ -1,6 +1,3 @@
-#if defined(__powerpc64__) || defined(__PPC64__) || defined(__APPLE__)
-#include "ptrace_syscall.old.c"
-#else
 // MIT License
 //
 // Copyright (c) 2022 Advanced Micro Devices, Inc. All Rights Reserved.
@@ -24,20 +21,18 @@
 // SOFTWARE.
 
 #define _GNU_SOURCE
-
 #include <TAU.h>
 #include <dlfcn.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/mman.h>
-#include <unistd.h>
+
+// For the powerpc implementation, see glibc source code at glibc/sysdeps/unix/sysv/linux/powerpc/libc-start.c
+#if defined(__powerpc64__) || defined(__PPC64__) || defined(__APPLE__)
+#include <link.h>
+#endif
 
 #include <tracee.h>
-
-extern void Tau_profile_exit_all_threads(void);
-extern int Tau_init_initializeTAU(void);
 
 #if defined(__GNUC__)
 #define __TAU_FUNCTION__ __PRETTY_FUNCTION__
@@ -55,30 +50,60 @@ extern int Tau_init_initializeTAU(void);
 #define DEBUG_PRINT(...)
 #endif
 
-pid_t rpid;
+static pid_t rpid;
+
+extern void Tau_profile_exit_all_threads(void);
+extern int Tau_init_initializeTAU(void);
 
 void __attribute__((constructor)) taupreload_init(void);
 
-// Have to do this when using CUPTI, otherwise the initialization is made by
-// Tau_cupti_onload() but we cannot use CUDA before a fork for the child to work
-// properly
-void taupreload_init()
+void taupreload_init(void)
 {
-    shared_num_tasks = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    waiting_for_ack = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    parent_has_dumped = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    shared_num_tasks =
+        (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    waiting_for_ack =
+        (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    parent_has_dumped =
+        (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    task_creator_thread_tid =
+        (volatile int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
     *shared_num_tasks = 0;
     *waiting_for_ack = 0;
     *parent_has_dumped = 0;
+    *task_creator_thread_tid = -1;
+
+    waiting_for_ack_mutex = (pthread_mutex_t *)mmap(NULL, sizeof(pthread_mutex_t), PROT_READ | PROT_WRITE,
+                                                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    waiting_for_ack_cond =
+        (pthread_cond_t *)mmap(NULL, sizeof(pthread_cond_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+    pthread_mutexattr_t mutex_attr;
+    pthread_condattr_t cond_attr;
+
+    pthread_mutexattr_init(&mutex_attr);
+    pthread_condattr_init(&cond_attr);
+
+    pthread_mutexattr_setpshared(&mutex_attr, PTHREAD_PROCESS_SHARED);
+    pthread_condattr_setpshared(&cond_attr, PTHREAD_PROCESS_SHARED);
+
+    pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_ERRORCHECK);
+
+    pthread_mutex_init(waiting_for_ack_mutex, &mutex_attr);
+    pthread_cond_init(waiting_for_ack_cond, &cond_attr);
 
     rpid = fork();
 }
 
-// Trampoline for the real main()
+#if defined(__powerpc64__) || defined(__PPC64__) || defined(__APPLE__)
+static int (*main_real)(int, char **, char **, void *);
+
+int taupreload_main(int argc, char **argv, char **envp, void *other)
+#else
 static int (*main_real)(int, char **, char **);
 
 int taupreload_main(int argc, char **argv, char **envp)
+#endif
 {
     // prevent re-entry
     static int _reentry = 0;
@@ -92,34 +117,40 @@ int taupreload_main(int argc, char **argv, char **envp)
     TAU_INIT(&argc, &argv);
     // apparently is the real initialization.
     Tau_init_initializeTAU();
+    Tau_create_top_level_timer_if_necessary();
+
     int tmp = TAU_PROFILE_GET_NODE();
     if (tmp == -1)
     {
         TAU_PROFILE_SET_NODE(0);
     }
 
-
     if (rpid == 0)
     {
         pid_t ppid = getppid();
         /* Child */
-        Tau_create_top_level_timer_if_necessary();
         void *handle;
         TAU_PROFILER_CREATE(handle, __TAU_FUNCTION__, "", TAU_DEFAULT);
         TAU_PROFILER_START(handle);
 
         prepare_to_be_tracked(ppid);
 
+#if defined(__powerpc64__) || defined(__PPC64__) || defined(__APPLE__)
+        ret = main_real(argc, argv, envp, other);
+#else
         ret = main_real(argc, argv, envp);
+#endif
 
-        // Tell parent to stop the tracking
         kill(ppid, SIG_STOP_PTRACE);
         DEBUG_PRINT("%d just sent signal SIG_STOP_PTRACE to %d\n", getpid(), ppid);
 
-        // Safe?
-        while (!*parent_has_dumped)
+        while (!(*parent_has_dumped))
         {
+            // Lazy solution to a minor problem
+            usleep(100);
         }
+
+        pthread_join(task_creator_thread, NULL);
 
         TAU_PROFILER_STOP(handle);
     }
@@ -127,10 +158,18 @@ int taupreload_main(int argc, char **argv, char **envp)
     {
         /* Parent */
         ret = track_process(rpid);
+        DEBUG_PRINT("track_process done with ret = %d\n", ret);
 
-        munmap(shared_num_tasks, sizeof(int));
-        munmap(waiting_for_ack, sizeof(int));
-        munmap(parent_has_dumped, sizeof(int));
+        munmap((int *)shared_num_tasks, sizeof(int));
+        munmap((int *)waiting_for_ack, sizeof(int));
+        munmap((int *)parent_has_dumped, sizeof(int));
+        munmap((int *)task_creator_thread_tid, sizeof(int));
+
+        pthread_mutex_destroy(waiting_for_ack_mutex);
+        pthread_cond_destroy(waiting_for_ack_cond);
+
+        munmap(waiting_for_ack_mutex, sizeof(pthread_mutex_t));
+        munmap(waiting_for_ack_cond, sizeof(pthread_cond_t));
     }
 
     Tau_profile_exit_all_threads();
@@ -139,11 +178,26 @@ int taupreload_main(int argc, char **argv, char **envp)
     return ret;
 }
 
+#if defined(__powerpc64__) || defined(__PPC64__) || defined(__APPLE__)
+struct startup_info
+{
+    void *sda_base;
+    int (*main)(int, char **, char **, void *);
+    int (*init)(int, char **, char **, void *);
+    void (*fini)(void);
+};
+
+typedef int (*taupreload_libc_start_main)(int, char **, char **, ElfW(auxv_t) *, void (*)(void), struct startup_info *,
+                                          char **);
+int __libc_start_main(int argc, char **argv, char **ev, ElfW(auxv_t) * auxvec, void (*rtld_fini)(void),
+                      struct startup_info *stinfo, char **stack_on_entry)
+#else
 typedef int (*taupreload_libc_start_main)(int (*)(int, char **, char **), int, char **, int (*)(int, char **, char **),
                                           void (*)(void), void (*)(void), void *);
 
 int __libc_start_main(int (*_main)(int, char **, char **), int _argc, char **_argv, int (*_init)(int, char **, char **),
                       void (*_fini)(void), void (*_rtld_fini)(void), void *_stack_end)
+#endif
 {
     // prevent re-entry
     static int _reentry = 0;
@@ -155,19 +209,33 @@ int __libc_start_main(int (*_main)(int, char **, char **), int _argc, char **_ar
     void *_this_func = __builtin_return_address(0);
 
     // Save the real main function address
+#if defined(__powerpc64__) || defined(__PPC64__) || defined(__APPLE__)
+    main_real = stinfo->main;
+#else
     main_real = _main;
+#endif
 
     // Find the real __libc_start_main()
     taupreload_libc_start_main user_main = (taupreload_libc_start_main)dlsym(RTLD_NEXT, "__libc_start_main");
 
     if (user_main && user_main != _this_func)
     {
+#if defined(__powerpc64__) || defined(__PPC64__) || defined(__APPLE__)
+        struct startup_info my_si;
+        my_si.sda_base = stinfo->sda_base;
+        my_si.main = taupreload_main;
+        my_si.init = stinfo->init;
+        my_si.fini = stinfo->fini;
+
+        return user_main(argc, argv, ev, auxvec, rtld_fini, &my_si, stack_on_entry);
+#else
         return user_main(taupreload_main, _argc, _argv, _init, _fini, _rtld_fini, _stack_end);
+#endif
     }
+
     else
     {
         fputs("Error! taupreload could not find __libc_start_main!", stderr);
         return -1;
     }
 }
-#endif // __ppc64le__

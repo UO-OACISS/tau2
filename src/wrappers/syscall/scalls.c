@@ -8,6 +8,10 @@
 // Not implemented
 #include <scalls.h>
 
+void scalls_init(void)
+{
+}
+
 const char *get_syscall_name(int id)
 {
     return "UNKNOWN";

@@ -2,17 +2,17 @@
 
 #include "scalls.h"
 
-#include <stdint.h>
-#include <sys/user.h>
-#include <sys/syscall.h>
-#include <sys/ptrace.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <errno.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ptrace.h>
+#include <sys/syscall.h>
+#include <sys/user.h>
 
-#include <sys/uio.h>
 #include <elf.h> // See /usr/include/elf.h
+#include <sys/uio.h>
 
 /*****************
  * NAME HANDLING *
@@ -34,7 +34,7 @@ const char *get_syscall_name(int id)
 
 // Depends on the architecture!
 
-void scalls_init()
+void scalls_init(void)
 {
     int i;
 
@@ -428,7 +428,7 @@ struct user_regs_struct
        };
 */
 
-void printf_regs(struct user_regs_struct regs)
+static void printf_regs(struct user_regs_struct regs)
 {
     for (int i = 0; i < 32; i++)
     {

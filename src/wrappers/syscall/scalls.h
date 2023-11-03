@@ -3,7 +3,7 @@
 
 #include <sys/types.h>
 
-void scalls_init();
+void scalls_init(void);
 
 const char *get_syscall_name(int id);
 
