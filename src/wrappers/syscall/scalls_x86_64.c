@@ -31,7 +31,7 @@ const char *get_syscall_name(int id)
 
 // Depends on the architecture!
 
-void scalls_init()
+void scalls_init(void)
 {
     int i;
 

@@ -1,6 +1,5 @@
 #define _GNU_SOURCE
 
-#include <assert.h>
 #include <errno.h>
 #include <pthread.h>
 #include <signal.h>
@@ -80,7 +79,7 @@ pthread_cond_t *waiting_for_ack_cond;
 // Otherwise, it will use the gpu_timers for the fake threads
 extern void Tau_set_fake_thread_use_cpu_metric(int tid);
 
-static void update_local_num_tasks()
+static void update_local_num_tasks(void)
 {
     DEBUG_PRINT("Entering update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
                 *shared_num_tasks);
@@ -171,7 +170,7 @@ typedef struct array_tracee_threads
 
 array_tracee_thread_t tracee_threads_array;
 
-static void debug_print_array_tracee()
+static void debug_print_array_tracee(void)
 {
     DEBUG_PRINT("tracee_threads_array->capacity = %d\n", tracee_threads_array.capacity);
     DEBUG_PRINT("tracee_threads_array->size = %d\n", tracee_threads_array.size);
@@ -184,19 +183,21 @@ static void debug_print_array_tracee()
     }
 }
 
-static void array_tracee_threads_init()
+static void array_tracee_threads_init(void)
 {
-    static volatile int init_done = 0;
-    if (!init_done)
+    static volatile int array_init_done = 0;
+    if (array_init_done)
     {
-        tracee_threads_array.capacity = init_array_size;
-        tracee_threads_array.size = 0;
-        tracee_threads_array.lowest_index_free = 0;
-        tracee_threads_array.tracee_threads = (tracee_thread_t **)malloc(init_array_size * sizeof(tracee_thread_t *));
+        return;
     }
+
+    tracee_threads_array.capacity = init_array_size;
+    tracee_threads_array.size = 0;
+    tracee_threads_array.lowest_index_free = 0;
+    tracee_threads_array.tracee_threads = (tracee_thread_t **)malloc(init_array_size * sizeof(tracee_thread_t *));
 }
 
-static void array_tracee_threads_free()
+static void array_tracee_threads_free(void)
 {
     for (int i = tracee_threads_array.size - 1; i >= 0; i--)
     {
@@ -231,7 +232,7 @@ static tracee_thread_t *get_tracee_thread(pid_t pid)
  * @brief Double the capacity of tracee_threads_array
  *
  */
-static void array_tracee_threads_extend()
+static void array_tracee_threads_extend(void)
 {
     tracee_thread_t **tmp = (tracee_thread_t **)realloc(tracee_threads_array.tracee_threads,
                                                         2 * tracee_threads_array.capacity * sizeof(tracee_thread_t *));
@@ -397,6 +398,7 @@ static tracee_wait_t tracee_wait_for_child(pid_t pid, tracee_thread_t **waited_t
 
         // PTRACE_EVENT stops (part 2)
         // None of these are currently used and are treated as any WAIT_SYSCALL in the main loop
+        // Still useful for debugging
         switch ((child_status >> 8))
         {
         case (SIGTRAP | (PTRACE_EVENT_EXIT << 8)):
@@ -612,7 +614,7 @@ static tracee_error_t tracee_start_tracking_tt(tracee_thread_t *tt)
  *
  * @return tracee_thread_t*
  */
-static tracee_thread_t *get_waiting_new_child_tt()
+static tracee_thread_t *get_waiting_new_child_tt(void)
 {
     int i_has_sent = -1;
     int i_new_child = -1;
@@ -747,6 +749,7 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
             CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tracee_thread);
             break;
 
+        // All of these are curently treated as any syscall
         case WAIT_SYSCALL_CLONE:
         case WAIT_SYSCALL_FORK:
         case WAIT_SYSCALL_VFORK:
@@ -797,7 +800,7 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
     return TRACEE_SUCCESS;
 }
 
-static tracee_error_t tracee_detach_everything()
+static tracee_error_t tracee_detach_everything(void)
 {
     // Detachment of all tracked threads
     DEBUG_PRINT("Will detach every traced threads\n");
@@ -823,16 +826,6 @@ static tracee_error_t tracee_detach_everything()
     return TRACEE_SUCCESS;
 }
 
-static void internal_init_once(void)
-{
-    static volatile int scall_init_done = 0;
-
-    if (!scall_init_done)
-    {
-        scalls_init();
-        scall_init_done = 1.;
-    }
-}
 
 /**
  * @brief Signal the parent to stop the tracking
@@ -900,11 +893,7 @@ static void *tau_task_creator(void *ptr)
     return NULL;
 }
 
-/***************************
- * PUBLIC TRACEE INTERFACE *
- ***************************/
-
-int track_process(pid_t pid)
+static void internal_init_once(void)
 {
     struct sigaction sa;
 
@@ -916,8 +905,26 @@ int track_process(pid_t pid)
         perror("sigaction");
     }
 
-    internal_init_once();
+    static volatile int init_done = 0;
+
+    if (init_done)
+    {
+        return;
+    }
+
+    scalls_init();
     array_tracee_threads_init();
+
+    init_done = 1.;
+}
+
+/***************************
+ * PUBLIC TRACEE INTERFACE *
+ ***************************/
+
+int track_process(pid_t pid)
+{
+    internal_init_once();
 
     // Here we use a dummy tid number
     tracee_thread_t *tt = add_tracee_thread(pid, -1);
