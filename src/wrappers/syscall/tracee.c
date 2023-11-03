@@ -79,19 +79,6 @@ pthread_cond_t *waiting_for_ack_cond;
 // Otherwise, it will use the gpu_timers for the fake threads
 extern void Tau_set_fake_thread_use_cpu_metric(int tid);
 
-static void update_local_num_tasks(void)
-{
-    DEBUG_PRINT("Entering update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
-                *shared_num_tasks);
-    while (local_num_tasks < *shared_num_tasks)
-    {
-        // Create false/empty tid to reserve them for the other TAU runtime
-        TAU_CREATE_TASK(local_num_tasks);
-    }
-    DEBUG_PRINT("Exiting update_local_num_tasks(). local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
-                *shared_num_tasks);
-}
-
 typedef enum
 {
     // Stopped by SIGSTOP
@@ -588,8 +575,8 @@ static tracee_error_t tracee_tracksyscalls_ptrace_with_sig(tracee_thread_t *tt, 
 /**
  * @brief Put the correct tid on the thread.
  *        And restart the thread by calling tracee_tracksyscalls_ptrace_with_sig on it and by starting the thread timer
- *
- * @note  To use it, the main child should be stopped in order to safely use shared_num_tasks.
+ * 
+ * @note Be sure that no one else is using shared_num_tasks when entering this function
  *
  * @param tt
  * @return tracee_error_t
@@ -597,12 +584,25 @@ static tracee_error_t tracee_tracksyscalls_ptrace_with_sig(tracee_thread_t *tt, 
 static tracee_error_t tracee_start_tracking_tt(tracee_thread_t *tt)
 {
     CHECK_IF_PARAM_IS_NULL(tt);
-    update_local_num_tasks();
-    tt->tid = *shared_num_tasks;
+
+    DEBUG_PRINT("Will update local_num_tasks. local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
+                *shared_num_tasks);
+    while (local_num_tasks < *shared_num_tasks)
+    {
+        // Create false/empty tid to reserve them for the other TAU runtime
+        TAU_CREATE_TASK(local_num_tasks);
+    }
+    DEBUG_PRINT("Has updated local_num_tasks. local_num_tasks = %d, shared_num_tasks = %d\n", local_num_tasks,
+                *shared_num_tasks);
+
+    // As explained in the task creator routine, local_num_tasks and *shared_num_tasks are now the reserved task id for
+    // the syscalls of the new child
+    tt->tid = local_num_tasks;
     Tau_set_fake_thread_use_cpu_metric(tt->tid);
     Tau_create_top_level_timer_if_necessary_task(tt->tid);
     tracee_error_t ptrace_res = tracee_tracksyscalls_ptrace_with_sig(tt, 0);
     CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tt);
+    tt->is_new_child = 0;
     DEBUG_PRINT("%d (thread %d) attached and tracked\n", tt->pid, tt->tid);
     return ptrace_res;
 }
@@ -654,12 +654,10 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
     CHECK_IF_PARAM_IS_NULL(tt);
     tracee_error_t ptrace_res;
 
+    // Just pretend that the main child has made the same steps as would do any other child to start it
+    tt->has_sent_signal = 1;
     ptrace_res = tracee_start_tracking_tt(tt);
     CHECK_ERROR_ON_PTRACE_RES(ptrace_res, tt);
-
-    tt->has_sent_signal = 1;
-    tt->is_new_child = 0;
-    *waiting_for_ack = 0;
 
     while (!ending_tracking)
     {
@@ -684,21 +682,17 @@ static tracee_error_t tracee_track_syscall(tracee_thread_t *tt)
                 {
                     if (!(waiting_new_child_tt->has_sent_signal))
                     {
-                        DEBUG_PRINT("Will send signal for child %d\n", waiting_new_child_tt->pid);
-                        // We need to send a signal to the child to increment num_task
-                        update_local_num_tasks();
-                        TAU_CREATE_TASK(local_num_tasks);
-                        (*shared_num_tasks)++;
+                        // We need to wake up the task creator to increment and synchronize num_task
+                        DEBUG_PRINT("Will wake up the task creator for child %d\n", waiting_new_child_tt->pid);
                         waiting_new_child_tt->has_sent_signal = 1;
                         *waiting_for_ack = 1;
                         pthread_cond_signal(waiting_for_ack_cond);
                     }
                     else
                     {
-                        DEBUG_PRINT("waiting_for_ack finished: will start %d\n", waiting_new_child_tt->pid);
+                        DEBUG_PRINT("Wait for the task creator finished: will start %d\n", waiting_new_child_tt->pid);
                         ptrace_res = tracee_start_tracking_tt(waiting_new_child_tt);
                         CHECK_ERROR_ON_PTRACE_RES(ptrace_res, waiting_new_child_tt);
-                        waiting_new_child_tt->is_new_child = 0;
                     }
                 }
             }
@@ -826,7 +820,6 @@ static tracee_error_t tracee_detach_everything(void)
     return TRACEE_SUCCESS;
 }
 
-
 /**
  * @brief Signal the parent to stop the tracking
  *
@@ -878,10 +871,15 @@ static void *tau_task_creator(void *ptr)
             break;
         }
 
-        DEBUG_PRINT("Task creator thread need to update\n");
-        update_local_num_tasks();
+        DEBUG_PRINT("Routine: Task creator thread will create a task\n");
+        DEBUG_PRINT("Routine: Before TAU_CREATE_TASK(local_num_tasks). local_num_tasks = %d, shared_num_tasks = %d\n",
+                    local_num_tasks, *shared_num_tasks);
+        // Create false/empty tid to reserve them for the other TAU runtime
+        TAU_CREATE_TASK(local_num_tasks);
+        // local_num_tasks is now the task id to use for the syscall of the new child and also the total number of
+        // thread for this TAU runtime
 
-        // The child may have created some tids before updating local_num_threads
+        // The main child may have created some tids before updating local_num_threads
         *shared_num_tasks = local_num_tasks;
         *waiting_for_ack = 0;
 
