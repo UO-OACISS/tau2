@@ -513,7 +513,7 @@ void write_profile_to_database() {
     if (RtsLayer::myThread() != 0) { return; }
     TauProfiler_updateAllIntermediateStatistics();
     size_t trial_id = 0;
-    if (comm_rank == 0) {
+    if (comm_rank <= 0) {
         create_database();
         trial_id = store_profile(0UL);
         close_database();
@@ -563,8 +563,8 @@ int Tau_plugin_metadata_registration_complete_sqlite3(Tau_plugin_event_metadata_
 
 int Tau_plugin_event_post_init_sqlite3(Tau_plugin_event_post_init_data_t* data) {
     //printf("NULL PLUGIN %s\n", __func__);
-    commrank = RtsLayer::myNode();
-    commsize = tau_totalnodes(0,1);
+    comm_rank = RtsLayer::myNode();
+    comm_size = tau_totalnodes(0,1);
     return 0;
 }
 
