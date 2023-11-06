@@ -820,7 +820,7 @@ int get_vthread_for_cupti_context(const CUpti_ResourceData *handle, bool stream)
     int tid = 0;
     cuptiGetDeviceId(handle->context, &deviceId);
     cuptiGetContextId(handle->context, &contextId);
-    if (contextId != UINT32_MAX && contextId != 0) { // uninitialized context value
+    if (contextId == UINT32_MAX || contextId == 0) { // uninitialized context value
         return 0;
     }
     if (stream) {
@@ -1292,7 +1292,7 @@ extern void Tau_cupti_buffer_processed(void);
             err = cuptiActivityGetNumDroppedRecords(NULL, 0, &number_dropped);
 
             if (number_dropped > 0)
-                printf("TAU WARNING: %d CUDA records dropped, consider increasing the CUPTI_BUFFER size.", number_dropped);
+                printf("TAU WARNING: %ld CUDA records dropped, consider increasing the CUPTI_BUFFER size.", number_dropped);
 
             // With the ASYNC ACTIVITY API CUPTI will take care of calling
             // Tau_cupti_register_buffer_creation() when it needs a new activity buffer so
@@ -1443,7 +1443,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                         {
                             CUpti_ActivityEnvironment* env = (CUpti_ActivityEnvironment*)record;
 #ifdef TAU_DEBUG_ENV
-                            printf("ENVIRONMENT deviceId: %u, timestamp: %u\n", env->deviceId, env->timestamp);
+                            printf("ENVIRONMENT deviceId: %u, timestamp: %lu\n", env->deviceId, env->timestamp);
 #endif
                             double timestamp;
                             uint32_t deviceId;
