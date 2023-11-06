@@ -43,6 +43,7 @@ THE SOFTWARE.
 pthread_mutex_t rocm_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 // Tool is unloaded
 volatile bool is_loaded = false;
+volatile bool is_callback_loaded = false;
 // Profiling features
 //rocprofiler_feature_t* features = NULL;
 //unsigned feature_count = 0;
@@ -286,8 +287,8 @@ bool Tau_rocm_context_handler(const rocprofiler_pool_entry_t* entry, void* arg) 
     perror("pthread_mutex_lock");
     abort();
   }
-
-  Tau_rocm_dump_context_entry(ctx_entry, handler_arg->features, handler_arg->feature_count);
+  if (is_callback_loaded)  
+	  Tau_rocm_dump_context_entry(ctx_entry, handler_arg->features, handler_arg->feature_count);
 
   if (pthread_mutex_unlock(&rocm_mutex) != 0) {
     perror("pthread_mutex_unlock");
@@ -496,7 +497,19 @@ void Tau_rocm_initialize() {
 
 void Tau_rocm_cleanup() {
   // Unregister dispatch callback
-  rocprofiler_remove_queue_callbacks();
+  if (pthread_mutex_lock(&rocm_mutex) != 0) {
+      perror("pthread_mutex_lock");
+      abort();
+  }
+  if (is_callback_loaded){
+	  is_callback_loaded = false;
+	  rocprofiler_remove_queue_callbacks();
+  }
+  if (pthread_mutex_unlock(&rocm_mutex) != 0) {
+      perror("pthread_mutex_unlock");
+      abort();
+    }
+
   // CLose profiling pool
 #if 0
   hsa_status_t status = rocprofiler_pool_flush(pool);
@@ -507,6 +520,7 @@ void Tau_rocm_cleanup() {
 }
 
 void Tau_rocprofiler_pool_flush() {
+    Tau_rocm_cleanup();
     if (pthread_mutex_lock(&rocm_mutex) != 0) {
       perror("pthread_mutex_lock");
       abort();
@@ -542,6 +556,7 @@ extern "C" PUBLIC_API void OnLoadToolProp(rocprofiler_settings_t* settings)
   }
   if (is_loaded) return;
   is_loaded = true;
+  is_callback_loaded = true;
   if (pthread_mutex_unlock(&rocm_mutex) != 0) {
     perror("pthread_mutex_unlock");
     abort();
