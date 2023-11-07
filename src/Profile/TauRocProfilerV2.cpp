@@ -46,6 +46,11 @@ THE SOFTWARE.
 #include <vector>
 
 
+// Dispatch callbacks and context handlers synchronization
+pthread_mutex_t rocm_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+// Tool is unloaded
+volatile bool is_loaded = false;
+
 /* I know it's bad form to have this map just hanging out here,
  * but when I wrapped it with a getter function, it failed to work.
  * A regular map was always empty, and an unordered map would crash
@@ -458,8 +463,14 @@ int WriteBufferRecords(const rocprofiler_record_header_t *begin,
                        const rocprofiler_record_header_t *end,
                        rocprofiler_session_id_t session_id,
                        rocprofiler_buffer_id_t buffer_id) {
+  if (pthread_mutex_lock(&rocm_mutex) != 0) {
+    perror("pthread_mutex_lock");
+    abort();
+  }
 
-            TAU_VERBOSE("\n I am here %s, %d\n", __FILE__, __LINE__);
+    if(is_loaded)
+    {
+            TAU_VERBOSE("WriteBufferRecords\n");
             
             fflush(stdout);
 
@@ -475,7 +486,6 @@ int WriteBufferRecords(const rocprofiler_record_header_t *begin,
                 break;
               }
             case ROCPROFILER_TRACER_RECORD:{
-
               rocprofiler_record_tracer_t* tracer_record = const_cast<rocprofiler_record_tracer_t*>(
               reinterpret_cast<const rocprofiler_record_tracer_t*>(begin));
               FlushTracerRecord(*tracer_record, session_id);
@@ -487,13 +497,35 @@ int WriteBufferRecords(const rocprofiler_record_header_t *begin,
               }
               rocprofiler_next_record(begin, &begin, session_id, buffer_id);
             }
-            return 0;
+
+    }
+  if (pthread_mutex_unlock(&rocm_mutex) != 0) {
+    perror("pthread_mutex_unlock");
+    abort();
+  }
+
+  return 0;
 }
 
 
 extern void Tau_roc_trace_sync_call_v2(rocprofiler_record_tracer_t tracer_record,
                                   rocprofiler_session_id_t session_id){
-    FlushTracerRecord(tracer_record, session_id);
+  TAU_VERBOSE("Tau_roc_trace_sync_call_v2\n");
+    if (pthread_mutex_lock(&rocm_mutex) != 0) {
+      perror("pthread_mutex_lock");
+      abort();
+    }
+
+      if(is_loaded)
+      {
+        FlushTracerRecord(tracer_record, session_id);
+      }
+    if (pthread_mutex_unlock(&rocm_mutex) != 0) {
+      perror("pthread_mutex_unlock");
+      abort();
+    }
+
+
 }
 
 
@@ -502,6 +534,13 @@ ROCPROFILER_EXPORT extern const uint32_t HSA_AMD_TOOL_PRIORITY = 1025;
 
 void Tau_rocm_initialize_v2() {
 
+  if (pthread_mutex_lock(&rocm_mutex) != 0) {
+    perror("pthread_mutex_lock");
+    abort();
+  }
+
+    if (!is_loaded){
+            is_loaded = true;
             TAU_VERBOSE("Inside Tau_rocm_initialize_v2\n");
              if (rocprofiler_version_major() != ROCPROFILER_VERSION_MAJOR ||
                 rocprofiler_version_minor() < ROCPROFILER_VERSION_MINOR) {
@@ -574,31 +613,55 @@ void Tau_rocm_initialize_v2() {
             filter_ids.emplace_back(filter_id1);
 
             CHECK_ROCPROFILER(rocprofiler_start_session(session_id));
+    }
+  if (pthread_mutex_unlock(&rocm_mutex) != 0) {
+    perror("pthread_mutex_unlock");
+    abort();
+  }
 
 }
 
 
+void Tau_rocprofiler_terminate_session()
+{
+      if (pthread_mutex_lock(&rocm_mutex) != 0) {
+        perror("pthread_mutex_lock");
+        abort();
+      }
+        if (is_loaded){
+          is_loaded = false;
+          TAU_VERBOSE("Inside rocprofiler_terminate_session\n");
+                CHECK_ROCPROFILER(rocprofiler_terminate_session(session_id));
+
+        }
+        if (pthread_mutex_unlock(&rocm_mutex) != 0) {
+          perror("pthread_mutex_unlock");
+          abort();
+        }
+}
+
 void Tau_rocprofiler_pool_flush() {
 			TAU_VERBOSE("Inside Tau_rocprofiler_pool_flush_v2\n");
-            // Deactivating session
 
-			TAU_VERBOSE("Tau_rocprofiler_pool_flush\n");
-            CHECK_ROCPROFILER(rocprofiler_flush_data(session_id, counter_buffer_id));
-            CHECK_ROCPROFILER(rocprofiler_flush_data(session_id, trace_buffer_id));
+
+
+          CHECK_ROCPROFILER(rocprofiler_flush_data(session_id, counter_buffer_id));
+          CHECK_ROCPROFILER(rocprofiler_flush_data(session_id, trace_buffer_id));
+
+          Tau_rocprofiler_terminate_session();
 
 }
 
 // Stop tracing routine
 extern void Tau_rocprofv2_stop() {
-        TAU_VERBOSE("Inside rocprofiler_terminate_session\n");
-            CHECK_ROCPROFILER(rocprofiler_terminate_session(session_id));
-              // Destroy sessions
-      TAU_VERBOSE("rocprofiler_destroy_session\n");
-            CHECK_ROCPROFILER(rocprofiler_destroy_session(session_id));
 
-            // Destroy all profiling related objects(User buffer, sessions,
-            // filters, etc..)
-      TAU_VERBOSE("rocprofiler_finalize\n");
+      // Destroy all profiling related objects(User buffer, sessions,
+      // filters, etc..)
+    Tau_rocprofiler_terminate_session();
+                      // Destroy sessions
+    TAU_VERBOSE("rocprofiler_destroy_session\n");
+                CHECK_ROCPROFILER(rocprofiler_destroy_session(session_id));
+    TAU_VERBOSE("rocprofiler_finalize\n");
             CHECK_ROCPROFILER(rocprofiler_finalize());
 }
 
