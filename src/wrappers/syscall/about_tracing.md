@@ -22,7 +22,7 @@ ls tautrace/syscall/
 > events.0.edf  tautrace.0.0.0.trc  tautrace.0.0.1.trc
 ```
 
-The file `tautrace/syscall/tautrace.0.0.0.trc` is useless since a `tautrace.0.0.0.trc` file already exists in `tautrace/syscall`.
+The file `tautrace/syscall/tautrace.0.0.0.trc` is useless since a `tautrace.0.0.0.trc` file already exists in `tautrace/`.
 Other useless files like this may be created depending on the options used with tau_exec (e.g. -cupti -um will also create a useless `tautrace/syscall/tautrace.0.0.1.trc`). 
 Due to the way the files are dumped, only the first files can have the same name.
 
