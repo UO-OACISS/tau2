@@ -139,10 +139,10 @@ int LikwidLayer::addEvents(const char *estr) {
 int LikwidLayer::initializeThread(int tid) {
 	int rc;
 
-	if (tid >= TAU_MAX_THREADS) {
-		fprintf(stderr, "TAU: Exceeded max thread count of TAU_MAX_THREADS\n");
-		return -1;
-	}
+	//if (tid >= TAU_MAX_THREADS) {
+	//	fprintf(stderr, "TAU: Exceeded max thread count of TAU_MAX_THREADS\n");
+	//	return -1;
+	//}
 
 	if (!GetThreadList(tid)) {
 		RtsLayer::LockDB();

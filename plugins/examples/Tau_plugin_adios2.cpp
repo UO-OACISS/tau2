@@ -294,12 +294,12 @@ void Tau_plugin_adios2_init_adios(void) {
         } else {
             PMPI_Comm_dup(MPI_COMM_SELF, &adios_comm);
         }
-        MPI_Comm_rank(adios_comm, &adios_comm_rank);
-        MPI_Comm_size(adios_comm, &adios_comm_size);
+        PMPI_Comm_rank(adios_comm, &adios_comm_rank);
+        PMPI_Comm_size(adios_comm, &adios_comm_size);
         if (config != nullptr) {
-            ad = adios2::ADIOS(config, adios_comm, adios2::DebugON);
+            ad = adios2::ADIOS(config, adios_comm);
         } else {
-            ad = adios2::ADIOS(adios_comm, adios2::DebugON);
+            ad = adios2::ADIOS(adios_comm);
         }
 #else
         if (config != nullptr) {
@@ -815,10 +815,8 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     Tau_plugin_callbacks_t cb;
     TAU_VERBOSE("TAU PLUGIN ADIOS2 Init\n"); fflush(stdout);
     Tau_ADIOS2_parse_environment_variables();
-#if TAU_MPI
-    PMPI_Comm_size(MPI_COMM_WORLD, &world_comm_size);
-    PMPI_Comm_rank(MPI_COMM_WORLD, &world_comm_rank);
-#endif
+    world_comm_rank = RtsLayer::myNode();
+    world_comm_size = tau_totalnodes(0,1);
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(&cb);
     /* Required event support */

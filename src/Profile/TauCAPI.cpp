@@ -412,6 +412,7 @@ static void reportEntryExit (bool entry, FunctionInfo *caller, int tid) {
     TAU_VERBOSE("%06u %03d %02d %s%s: %s\n", RtsLayer::getTid(), tid, position, tabs.c_str(),
         (entry ? "Entry" : "Exit "), caller->GetName());
     fflush(stderr);
+    //Tau_print_simple_backtrace(tid);
 }
 #endif
 
@@ -1004,6 +1005,21 @@ extern "C" void Tau_stop_all_timers(int tid)
   in_here = false;
 }
 
+
+#ifdef TAU_TRACK_IDLE_THREADS
+//Prevent Profile::Stop from internally stopping all threads when using OpenMP
+//if TAU is already closing all threads
+static bool thread_local tauStoppingAllThreads = false;
+
+//Prevent Profile::Stop from internally stopping all threads when using OpenMP
+//if TAU is already closing all threads
+extern "C" bool Tau_check_Stopping_All_Threads(){
+        return tauStoppingAllThreads;
+}
+
+#endif /* TAU_TRACK_IDLE_THREADS */
+
+
 inline void Tau_profile_exit_threads(int begin_index)
 {
   if(!TheSafeToDumpData()) {
@@ -1018,6 +1034,13 @@ inline void Tau_profile_exit_threads(int begin_index)
   //Tau_disable_collector_api();
 #endif
 
+//Prevent Profile::Stop from internally stopping all threads when using OpenMP
+//if TAU is already closing all threads
+
+#ifdef TAU_TRACK_IDLE_THREADS
+  if(begin_index == 0)
+      tauStoppingAllThreads = true;
+#endif /* TAU_TRACK_IDLE_THREADS */
 #ifdef TAU_ANDROID
   bool su = JNIThreadLayer::IsMgmtThread();
 #endif
@@ -1150,9 +1173,29 @@ extern "C" void Tau_set_thread(int threadId) {
   cerr << "TAU: ERROR: Unsafe and deprecated call to TAU_SET_THREAD!" << endl;
 }
 
+/* Helper functions for fixing threading */
+#if (!defined(TAU_WINDOWS))
+#include <sys/syscall.h>
+#define gettid() syscall(SYS_gettid)
+bool validate_thread() {
+    long pid = getpid();
+    long tid = gettid();
+    int tau_tid = RtsLayer::myThread();
+    if (tau_tid == 0 && pid != tid) {
+        TAU_VERBOSE("Registering thread! %ld != %ld, so need new thread\n", pid, tid);
+        Tau_register_thread();
+        Tau_create_top_level_timer_if_necessary();
+    }
+    return true;
+}
+#else
+bool validate_thread() {return false;} // do nothing
+#endif
+
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_get_thread(void) {
   TauInternalFunctionGuard protects_this_function;
+  thread_local static bool do_once = validate_thread();
   return RtsLayer::myThread();
 }
 
@@ -1192,7 +1235,7 @@ void Tau_cupti_buffer_processed(void) {
 extern void Tau_roctracer_flush_tracing(void);
 #endif /* TAU_ENABLE_ROCTRACER */
 
-#ifdef TAU_ENABLE_ROCPROFILER
+#if defined(TAU_ENABLE_ROCPROFILER) || defined(TAU_ENABLE_ROCPROFILERV2)
 extern void Tau_rocprofiler_pool_flush(void);
 #endif
 #ifdef TAU_USE_OMPT_5_0
@@ -1225,7 +1268,7 @@ extern "C" void Tau_flush_gpu_activity(void) {
         }
     }
 #endif
-#ifdef TAU_ENABLE_ROCPROFILER
+#if defined(TAU_ENABLE_ROCPROFILER) || defined(TAU_ENABLE_ROCPROFILERV2)
    Tau_rocprofiler_pool_flush();
 #endif
 #ifdef TAU_ENABLE_ROCTRACER
@@ -1573,6 +1616,7 @@ extern "C" void Tau_disable_instrumentation(void) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_shutdown(void) {
+  TAU_VERBOSE("Tau_shutdown!\n");
   Tau_memory_wrapper_disable();
   if (!TheUsingCompInst()) {
     RtsLayer::TheShutdown() = true;
@@ -2337,6 +2381,11 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 extern void Tau_roctracer_start_tracing(void);
 extern void Tau_roctracer_stop_tracing(void);
 #endif /* TAU_ENABLE_ROCTRACER */
+#ifdef TAU_ENABLE_ROCPROFILERV2
+extern void Tau_rocprofv2_stop(void);
+#endif /* TAU_ENABLE_ROCPROFILERV2 */
+
+
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
   if ((RtsLayer::myNode() == -1) && (Tau_get_thread() != 0)) {
@@ -2379,6 +2428,10 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
 #ifdef TAU_ENABLE_ROCTRACER
    Tau_roctracer_stop_tracing();
 #endif /* TAU_ENABLE_ROCTRACER */
+#ifdef TAU_ENABLE_ROCPROFILERV2
+     Tau_rocprofv2_stop();
+#endif /* TAU_ENABLE_ROCPROFILERV2 */
+
    done = true;
 }
 

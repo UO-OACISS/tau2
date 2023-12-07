@@ -1042,7 +1042,11 @@ double Tau_max_RSS(void)
     size_t bytes = TauAllocation::BytesAllocated() - TauAllocation::BytesDeallocated();
     return (double)bytes / 1024.0;
   } else {
-#if defined(HAVE_MALLINFO)
+#if defined(HAVE_MALLINFO_DISABLED)
+    // this doesn't work when the system has more than 4GB memory.
+    // the components in the mallinfo structure are ints, and can't
+    // store the total number of bytes above 4GB without overflow.
+    // use the 'getrusage' method, instead - see below
     struct mallinfo minfo = mallinfo();
     double used = minfo.hblkhd + minfo.usmblks + minfo.uordblks;
     return used / 1024.0;
@@ -1891,19 +1895,19 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context, const char * prefix)
         TAU_CONTEXT_EVENT(stat_nonvoluntary, (double) nvswitch);
     } else {
         std::string pfix{prefix == nullptr ? "" : prefix};
-        std::string tmpstr{prefix};
+        std::string tmpstr{pfix};
         tmpstr += "Peak Memory Usage Resident Set Size (VmHWM) (KB)";
         static void * proc_vmhwm_no_context = Tau_get_userevent(tmpstr.c_str());
-        tmpstr = prefix;
+        tmpstr = pfix;
         tmpstr += "Memory Footprint (VmRSS) (KB)";
         static void * proc_rss_no_context = Tau_get_userevent(tmpstr.c_str());
-        tmpstr = prefix;
+        tmpstr = pfix;
         tmpstr += "Threads";
         static void * stat_threads_no_context = Tau_get_userevent(tmpstr.c_str());
-        tmpstr = prefix;
+        tmpstr = pfix;
         tmpstr += "Voluntary Context Switches";
         static void * stat_voluntary_no_context = Tau_get_userevent(tmpstr.c_str());
-        tmpstr = prefix;
+        tmpstr = pfix;
         tmpstr += "Non-voluntary Context Switches";
         static void * stat_nonvoluntary_no_context = Tau_get_userevent(tmpstr.c_str());
         Tau_userevent_thread(proc_rss_no_context, (double) vmrss, tid);

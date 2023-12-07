@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2022						   **
+**    Copyright 1997-2024						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Research Centre Juelich, Germany                                     **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
@@ -10,6 +10,11 @@
 
 Change log:
 ------------
+Version 2.33 changes (from 2.32):
+1. Added -dyninst=download for binary rewriting with DyninstAPI.
+2. Added tracking syscalls (configure -syscall, tau_exec -syscall, see examples/syscall). 
+3. Added support for rocm_smi plugin for monitoring in TAU. 
+
 Version 2.32 changes (from 2.31):
 1. Added support for riscv64 (-optCompInst, tau_exec -ebs, mpi). 
 2. Updated support for hipcc as C++ compiler with MVAPICH2 on Cray systems for OMPT. 
@@ -18,6 +23,15 @@ Version 2.32 changes (from 2.31):
 5. Refactored TAU to use a dynamic threading implementation instead of static arrays.
 6. Updated MPI wrapper interposition library to not invoke PMPI_Type_size when the type is MPI_DATATYPE_NULL.
 7. Updated MPI_Status_f2c handling when PMPI_Status_f2c (and c2f) are defined instead. 
+8. Updated LLVM plugin for new pass manager. 
+9. Added support for ROCm 5.6.0.
+10. Added support for DyninstAPI 12.0.
+11. Added support for updated binutils and libunwind external packages.
+12. Fixed trace buffer output on MPI rank 1 bug. 
+13. Updated memory instrumentation for aarch64. 
+14. Updated TAU plugin examples. 
+15. Added support for TAU LLVM plugin environment variables 
+(e.g., TAU_COMPILER_MIN_INSTRUCTION_COUNT - see plugins/llvm/src/README).
 
 Version 2.31 changes (from 2.30):
 1. Updates for MPI on craycnl (CRAY_MPICH_PREFIX). 

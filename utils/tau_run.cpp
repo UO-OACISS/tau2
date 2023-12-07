@@ -50,7 +50,9 @@ int debugPrint = 0;
 int binaryRewrite = 0; /* by default, it is turned off */
  
 
+#ifndef TAU_DYNINSTAPI_12_PLUS
 template class BPatch_Vector<BPatch_variableExpr*>;
+#endif 
 void checkCost(BPatch_snippet snippet);
 
 BPatch *bpatch;
@@ -439,6 +441,7 @@ void checkCost(BPatch_snippet snippet){
 
   // test copy constructor too.
   copy = snippet;
+#ifndef TAU_DYNINSTAPI_12_PLUS
   cost = snippet.getCost();
   if (cost < 0.0)
     printf("*Error*: negative snippet cost\n");
@@ -446,6 +449,9 @@ void checkCost(BPatch_snippet snippet){
     printf("*Warning*: zero snippet cost\n");
   else if (cost > 0.01) 
     printf("*Error*: snippet cost of %f, exceeds max expected of 0.1",cost);
+#else
+  cost = 0.0; 
+#endif /* TAU_DYNINSTAPI_12_PLUS */
 }//checkCost()
 
 int errorPrint = 0; // external "dyninst" tracing
@@ -668,7 +674,8 @@ int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace,
   const char *typeName;
 
   baseAddr = (unsigned long)(f->getBaseAddr());
-#ifndef TAU_DYNINSTAPI_8_PLUS
+#ifndef TAU_DYNINSTAPI_12_PLUS 
+  /* was TAU_DYNINSTAPI_8_PLUS */
   lastAddr = baseAddr + f->getSize();
 #else 
   f->getAddressRange(baseAddr, lastAddr); 
@@ -1237,7 +1244,9 @@ int main(int argc, char **argv){
 
   if (binaryRewrite)
     { // enable dumping 
+#ifndef TAU_DYNINSTAPI_12_PLUS
       appThread->enableDumpPatchedImage();
+#endif /* TAU_DYNINSTAPI_12_PLUS */
     }
 
   //get image
@@ -1411,7 +1420,16 @@ int main(int argc, char **argv){
 #ifdef TAU_DYNINSTAPI_8_PLUS
 	char * directory = "." ; // appThread->dumpImage("a.inst");
 #else
+#ifdef TAU_DYNINSTAPI_12_PLUS
+	char * directory = "." ; // appThread->dumpImage("a.inst");
+	bool retval = appThread->dumpImage(outfile);
+	if (!retval) {
+          printf("ERROR: tau_run: appThread->dumpImage failed:%s\n", outfile);
+	  exit(1); 
+	}
+#else
 	char * directory = appThread->dumpPatchedImage(outfile);
+#endif /* TAU_DYNINSTAPI_12_PLUS */
 #endif /* TAU_DYNINSTAPI_8_PLUS */
 	/* see if it was rewritten properly */ 
 	if (directory) 

@@ -41,6 +41,7 @@ CEXTRA =
 
 ##############################################
 #PGICC#PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF#
+#NVIDIA#CEXTRA = -Xcompiler -fPIC #ENDIF#
 #PGINOPRELINK#PRELINK_PHASE = #ENDIF#
 #############################################
 
@@ -148,6 +149,7 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 # ROCPROFILER OBJECTS
 #############################################
 #ROCPROFILER#ROCPROFILER_O = TauRocProfiler.o #ENDIF#
+#ROCPROFILERV2#ROCPROFILERV2_O = TauRocProfilerV2.o #ENDIF#
 #ROCM#ROCM_O = TauRocm.o #ENDIF#
 #LEVEL_ZERO#TAU_LEVEL_ZERO_O = TauLevelZero.o #ENDIF#
 #ROCTRACER#ROCTRACER_O = TauRocTracer.o #ENDIF#
@@ -167,7 +169,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
 		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O) $(ADIOS_O) \
 		$(OTF2_O) $(CALIPER_O) $(ROCPROFILER_O) $(ROCM_O) $(ROCTRACER_O) \
-		$(TAU_LEVEL_ZERO_O) $(TAU_GPU_O)
+		$(ROCPROFILERV2_O) $(TAU_LEVEL_ZERO_O) $(TAU_GPU_O)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is
@@ -247,6 +249,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 #NEC_COMPILERS#AR_SHFLAGS 	= -shared #ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
+#NVIDIA#AR_SHFLAGS              = -shared -Xcompiler -fPIC #ENDIF#
 #APPLEPGI#AR_SHFLAGS 		= -shared #ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
 #FX#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
@@ -572,6 +575,7 @@ $(PYTAU_INSTALL): $(TAU_SHLIB)
 		@echo Installing Python bindings in $(INSTALLDEST)
 		$(MKDIR) -p $(INSTALLDEST)
 		$(TAU_INSTALL) tau.py $(INSTALLDEST)
+		$(TAU_INSTALL) tau_callbacks.py $(INSTALLDEST)
 		$(TAU_INSTALL) ltau.py $(INSTALLDEST)
 		$(TAU_INSTALL) tau_python_wrapper.py $(INSTALLDEST)
 		$(TAU_INSTALL) tau_pyspark_wrapper.py $(INSTALLDEST)
@@ -951,6 +955,9 @@ TauGpu.o : TauGpu.cpp $(HDRS)
 TauRocProfiler.o : TauRocProfiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) $(ROCPROFILER_FLAGS)
 
+TauRocProfilerV2.o : TauRocProfilerV2.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) $(ROCPROFILER_FLAGS)
+
 TauRocm.o : TauRocm.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
@@ -1000,7 +1007,7 @@ CuptiLayer40.o : CuptiLayer40.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
 TauStarPU.o: TauStarPU.cpp
-	$(CXX) $(CXXFLAGS)  $(BFDINCLUDE) -I$(TAU_STARPU_DIR)/include/starpu/1.3 $(TAU_CUDA_INCLUDE) -c $^
+	$(CXX) $(CXXFLAGS)  $(BFDINCLUDE) -c $^
 
 JVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@

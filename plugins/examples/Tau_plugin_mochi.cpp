@@ -194,7 +194,7 @@ void Tau_plugin_mochi_open_file(void) {
     }
 
     ret = sdskv_open(provider_handle, db_name.c_str(), &db_id);
-    if (ret != 0) 
+    if (ret != 0)
     {
 	std::cerr << "Error: could not open database " <<  db_name << std::endl;
 	sdskv_provider_handle_release(provider_handle);
@@ -216,8 +216,8 @@ void shorten_timer_name(std::string& name) {
     }
 }
 
-/* Iterates over the FunctionInfo DB and EventDB to compile a list of 
- * per-thread metrics and counters. 
+/* Iterates over the FunctionInfo DB and EventDB to compile a list of
+ * per-thread metrics and counters.
  * Subsequently, contacts the remote Mochi SDSKV db to write metrics and counters values
  * on a per-thread basis using two respective sdskv_put_multi() RPC calls. Note that put_multi()
  * is more efficient than a sequence of put() calls as in saves the unnecessary roundtrip RPC times */
@@ -240,18 +240,15 @@ void Tau_plugin_mochi_write_variables() {
     std::vector<const void*> m_kptrs, m_vptrs;
 
     size_t metric_size = 3*numThreadsLocal*tmpTimers.size();
-    
+
     RESERVE(m_keys, metric_size);
     RESERVE(m_vals, metric_size);
     RESERVE(m_ksizes, metric_size);
     RESERVE(m_kptrs, metric_size);
     RESERVE(m_vsizes, metric_size);
     RESERVE(m_vptrs, metric_size);
-    
-    int rank = 0;
-    #ifdef TAU_MPI
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    #endif
+
+    int rank = RtsLayer::myNode();
 
     //foreach: TIMER
     std::vector<FunctionInfo*>::const_iterator it;
@@ -276,7 +273,7 @@ void Tau_plugin_mochi_write_variables() {
             val << (double)fi->GetCalls(tid);
             UPDATE_VAL(m_vals, val.str());
         }
-        
+
         for (int m = 0 ; m < numCounters.size() ; m++) {
             stringstream incl;
             stringstream excl;
@@ -320,7 +317,7 @@ void Tau_plugin_mochi_write_variables() {
     }
 
     //Make a sdskv-put-multi call to the Mochi db
-    int ret = sdskv_put_multi(provider_handle, db_id, 3*numThreadsLocal*tmpTimers.size(), m_kptrs.data(), m_ksizes.data(), m_vptrs.data(), m_vsizes.data());  
+    int ret = sdskv_put_multi(provider_handle, db_id, 3*numThreadsLocal*tmpTimers.size(), m_kptrs.data(), m_ksizes.data(), m_vptrs.data(), m_vsizes.data());
     assert(ret == 0);
 
     /* Lock the counter map */
@@ -331,7 +328,7 @@ void Tau_plugin_mochi_write_variables() {
     std::vector<double>  m_counter_vals;
     std::vector<hg_size_t>   m_counter_ksizes, m_counter_vsizes;
     std::vector<const void*> m_counter_kptrs, m_counter_vptrs;
-   
+
     size_t counter_size = 5*numThreadsLocal*tau::TheEventDB().size();
 
     RESERVE(m_counter_keys, counter_size);
@@ -370,14 +367,14 @@ void Tau_plugin_mochi_write_variables() {
             UPDATE_KEY(m_counter_keys, min.str());
             UPDATE_KEY(m_counter_keys, max.str());
             UPDATE_KEY(m_counter_keys, sumsqr.str());
-            
+
             double num_val, mean_val, min_val, max_val, sumsqr_val;
             num_val = ((double)ue->GetNumEvents(tid));
             mean_val = ((double)ue->GetMean(tid));
             min_val = ((double)ue->GetMin(tid));
             max_val = ((double)ue->GetMax(tid));
             sumsqr_val = ((double)ue->GetSumSqr(tid));
-          
+
             UPDATE_VAL(m_counter_vals, num_val);
             UPDATE_VAL(m_counter_vals, mean_val);
             UPDATE_VAL(m_counter_vals, min_val);
@@ -399,7 +396,7 @@ void Tau_plugin_mochi_write_variables() {
     RtsLayer::UnLockDB();
 
     //Make a sdskv-put-multi call to the Mochi db
-    ret = sdskv_put_multi(provider_handle, db_id, 5*numThreadsLocal*m_counter_ksizes.size(), m_counter_kptrs.data(), m_counter_ksizes.data(), m_counter_vptrs.data(), m_counter_vsizes.data());  
+    ret = sdskv_put_multi(provider_handle, db_id, 5*numThreadsLocal*m_counter_ksizes.size(), m_counter_kptrs.data(), m_counter_ksizes.data(), m_counter_vptrs.data(), m_counter_vsizes.data());
     assert(ret == 0);
 }
 
@@ -507,7 +504,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
     char * db_name_ = strdup(argv[2]);
     removeSpaces(db_name_);
     db_name = db_name_;
-    
+
     /* Register the callback object */
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(&cb, id);
     enabled = true;

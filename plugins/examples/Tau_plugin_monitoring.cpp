@@ -45,6 +45,10 @@ json configuration;
 #include "tau_nvml.hpp"
 #endif
 
+#ifdef TAU_ROCM_SMI
+#include "tau_rocm_smi.hpp"
+#endif
+
 #define ONE_BILLION  1e9
 #define ONE_MILLION  1e6
 #define ONE_BILLIONF 1000000000.0
@@ -113,6 +117,11 @@ const char * default_configuration = R"(
     "disable": true,
     "comment": "This will include only the utilization metrics.",
     "include": [".*utilization.*"]
+  },
+  "rsmi": {
+    "disable": false,
+    "comment": "This will include only the utilization metrics.",
+    "include": [".*Device Busy.*", ".*Memory Activity.*"]
   }
 }
 )";
@@ -243,6 +252,12 @@ static uint64_t periodic_index;
 tau::nvml::monitor& get_nvml_reader() {
     static tau::nvml::monitor nvml_reader;
     return nvml_reader;
+}
+#endif
+#ifdef TAU_ROCM_SMI
+tau::rsmi::monitor& get_rsmi_reader() {
+    static tau::rsmi::monitor rsmi_reader;
+    return rsmi_reader;
 }
 #endif
 
@@ -528,10 +543,12 @@ void initialize_papi_events(bool do_components) {
             continue;
         }
         /* Skip the nvml component, for non-CUPTI configurations */
-#ifndef CUPTI
+#ifndef TAU_ROCM_SMI
         if (strstr(comp_info->name, "nvml") != NULL) {
             continue;
         }
+#endif
+#ifndef CUPTI
         if (strstr(comp_info->name, "cuda") != NULL) {
             continue;
         }
@@ -758,10 +775,9 @@ int choose_volunteer_rank() {
 #ifdef TAU_MPI
     // figure out who should get system stats for this node
     int i;
-    int my_rank = 0;
-    int comm_size = 1;
-    PMPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    PMPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    int my_rank = RtsLayer::myNode();
+    int comm_size = tau_totalnodes(0,1);
+
     // save it somewhere the NVML component can access it
     get_my_rank() = my_rank;
 
@@ -1182,6 +1198,11 @@ void read_components(void) {
             get_nvml_reader().query();
         }
 #endif
+#ifdef TAU_ROCM_SMI
+        if (include_component("rsmi")) {
+            get_rsmi_reader().query();
+        }
+#endif
 
 #if !defined(__APPLE__)
         /* records the load, without context */
@@ -1442,8 +1463,8 @@ void reduce_scatterplot(std::stringstream& csv_output, std::string filename) {
     int mpi_initialized = 0;
     MPI_CALL(MPI_Initialized( &mpi_initialized ));
     if (mpi_initialized) {
-        MPI_CALL(PMPI_Comm_rank(MPI_COMM_WORLD, &commrank));
-        MPI_CALL(PMPI_Comm_size(MPI_COMM_WORLD, &commsize));
+        commrank = RtsLayer::myNode();
+        commsize = tau_totalnodes(0,1);
     }
 #endif
     // if nothing to reduce, just write the data.
@@ -1551,7 +1572,12 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
 
 #ifdef TAU_PAPI
     /* get ready to read metrics! */
-    initialize_papi_events(get_my_rank() == rank_getting_system_data);
+    if (configuration.count("PAPI metrics")) {
+        auto metrics = configuration["PAPI metrics"];
+        if (metrics.size() > 0) {
+            initialize_papi_events(get_my_rank() == rank_getting_system_data);
+        }
+    }
 #endif
 
     if (get_my_rank() == rank_getting_system_data) {

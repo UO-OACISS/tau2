@@ -1,4 +1,11 @@
-BEGIN_EXCLUDE_LIST
+BEGIN_INCLUDE_LIST
 initialize
+END_INCLUDE_LIST
+BEGIN_EXCLUDE_LIST
 compute_interchange
 END_EXCLUDE_LIST
+BEGIN_LOOPS_LIST
+matmult.c:107
+matmult.c:128
+matmult_initialize.c:*
+END_LOOPS_LIST

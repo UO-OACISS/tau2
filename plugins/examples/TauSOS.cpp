@@ -37,7 +37,7 @@
 #include <dlfcn.h>
 #endif
 
-#ifndef TAU_MAX_METRICS 
+#ifndef TAU_MAX_METRICS
 #define TAU_MAX_METRICS 25 //Temporary
 #endif
 
@@ -244,7 +244,7 @@ bool TAU_SOS_fork_exec_sosd(void) {
     char * host_index = allhostnames + (hostlength * my_rank);
     strncpy(host_index, hostname, hostlength);
     // get all hostnames
-    PMPI_Allgather(hostname, hostlength, MPI_CHAR, allhostnames, 
+    PMPI_Allgather(hostname, hostlength, MPI_CHAR, allhostnames,
                    hostlength, MPI_CHAR, MPI_COMM_WORLD);
     daemon_rank = 0;
     // point to the head of the array
@@ -477,17 +477,15 @@ bool TAU_SOS_init() {
     static bool initialized = false;
     TAU_VERBOSE("[TAU_SOS]TAU_SOS_init()...\n");
     if (!initialized) {
-#ifdef TAU_MPI
-        PMPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-        PMPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-#endif
+        my_rank = RtsLayer::myNode();
+        comm_size = tau_totalnodes(0,1);
         if (thePluginOptions().env_sos_periodic) {
             _threaded = true;
         } else {
             _threaded = false;
         }
         init_lock();
-        // if runtime returns null, wait a bit and try again. If 
+        // if runtime returns null, wait a bit and try again. If
         // we fail "too many" times, give an error and continue
         _runtime = NULL;
         TAU_VERBOSE("[TAU_SOS]TAU_SOS_init() trying to connect...\n");
@@ -495,7 +493,7 @@ bool TAU_SOS_init() {
         if(_runtime == NULL) {
             TAU_VERBOSE("[TAU_SOS]Unable to connect to SOS daemon. Spawning...\n");
             shutdown_daemon = TAU_SOS_fork_exec_sosd();
-            if (!shutdown_daemon) { 
+            if (!shutdown_daemon) {
                 // failed.  Don't claim initialized.
                 _runtime = NULL;
                 return false;
@@ -510,7 +508,7 @@ bool TAU_SOS_init() {
             if (_runtime != NULL) {
                 TAU_VERBOSE("[TAU_SOS]Connected to SOS daemon. Continuing...\n");
                 break;
-            } else if (--repeat < 0) { 
+            } else if (--repeat < 0) {
                 TAU_VERBOSE("[TAU_SOS]Unable to connect to SOS daemon. Failing...\n");
                 return false;
             }
@@ -716,10 +714,10 @@ void Tau_SOS_pack_long(const char * name, long int value) {
     SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_LONG, &value);
 }
 
-/* Necessary to use const char * because UserEvents use TauSafeString objects, 
+/* Necessary to use const char * because UserEvents use TauSafeString objects,
  * not std::string. We use the "if_empty" parameter to tell us how to treat
  * an empty set.  For exclude lists, it's false, for include lists, it's true */
-bool Tau_SOS_contains(std::set<std::string>& myset, 
+bool Tau_SOS_contains(std::set<std::string>& myset,
         const char * key, bool if_empty) {
     // if the set has contents, and we are in the set, then return true.
     std::string _key(key);
@@ -781,9 +779,9 @@ void TAU_SOS_pack_profile() {
             const std::string& tmpcalls = calls_str.str();
             // if (strlen(tmpcalls.c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmpcalls.c_str()), tmpcalls.c_str()); }
             SOS_pack(tau_sos_pub, tmpcalls.c_str(), SOS_VAL_TYPE_INT, &calls);
-    
+
             // todo - subroutines
-            // iterate over metrics 
+            // iterate over metrics
             std::stringstream incl_str;
             std::stringstream excl_str;
             for (int m = 0; m < Tau_Global_numCounters; m++) {
@@ -856,7 +854,7 @@ void TAU_SOS_pack_profile() {
     }
     TAU_VERBOSE("[TAU_SOS_send_data]:  RtsLayer::UnLockDB()\n");
     RtsLayer::UnLockDB();
-    
+
     if ((ue_count + fi_count) > SOS_DEFAULT_ELEM_MAX) {
         TAU_VERBOSE("[TAU_SOS]DANGER, WILL ROBINSON! EXCEEDING MAX ELEMENTS IN SOS. Bad things might happen?\n");
     }
@@ -867,9 +865,9 @@ extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm);
 
 void TAU_SOS_send_data(bool finalizing) {
     // have we initialized?
-    if (_runtime == NULL) { 
+    if (_runtime == NULL) {
         fprintf(stderr, "ERROR! No SOS runtime found, did you initialize?\n");
-        return; 
+        return;
     }
     // Do we have a pub handle?
     if (tau_sos_pub == NULL) {
@@ -891,8 +889,8 @@ void TAU_SOS_send_data(bool finalizing) {
     /* records the load, without context */
     Tau_track_load();
     /* Only send a profile update if we aren't tracing */
-    if (finalizing || 
-        (!thePluginOptions().env_sos_tracing && 
+    if (finalizing ||
+        (!thePluginOptions().env_sos_tracing &&
 	     !thePluginOptions().env_sos_trace_adios)) {
         TAU_SOS_pack_profile();
     }
@@ -914,7 +912,7 @@ void TAU_SOS_send_data(bool finalizing) {
 #include <bits/stdc++.h>
 #endif
 using namespace std;
- 
+
 // Function that matches input str with
 // given wildcard pattern
 bool strmatch(const char str[], const char pattern[],
@@ -924,7 +922,7 @@ bool strmatch(const char str[], const char pattern[],
     // empty string
     if (m == 0)
         return (n == 0);
- 
+
     // lookup table for storing results of
     // subproblems
     bool lookup[n + 1][m + 1]; // = {false};
@@ -934,18 +932,18 @@ bool strmatch(const char str[], const char pattern[],
             lookup[i][j] = false;
 		}
 	}
- 
+
     // initailze lookup table to false
     //memset(lookup, false, sizeof(lookup));
- 
+
     // empty pattern can match with empty string
     lookup[0][0] = true;
- 
+
     // Only '#' can match with empty string
     for (int j = 1; j <= m; j++)
         if (pattern[j - 1] == '#')
             lookup[0][j] = lookup[0][j - 1];
- 
+
     // fill the table in bottom-up fashion
     for (int i = 1; i <= n; i++)
     {
@@ -960,7 +958,7 @@ bool strmatch(const char str[], const char pattern[],
             if (pattern[j - 1] == '#')
                 lookup[i][j] = lookup[i][j - 1] ||
                                lookup[i - 1][j];
- 
+
             // Current characters are considered as
             // matching in two cases
             // (a) current character of pattern is '?'
@@ -968,12 +966,12 @@ bool strmatch(const char str[], const char pattern[],
             else if (pattern[j - 1] == '?' ||
                     str[i - 1] == pattern[j - 1])
                 lookup[i][j] = lookup[i - 1][j - 1];
- 
+
             // If characters don't match
             else lookup[i][j] = false;
         }
     }
- 
+
     return lookup[n][m];
 }
 
@@ -991,7 +989,7 @@ bool skip_timer(const char * key) {
     } else {
         // check to see if it's in the excluded wildcards
         for (std::set<std::string>::iterator
-                it=thePluginOptions().excluded_timers_with_wildcards.begin(); 
+                it=thePluginOptions().excluded_timers_with_wildcards.begin();
              it!=thePluginOptions().excluded_timers_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
@@ -1001,7 +999,7 @@ bool skip_timer(const char * key) {
         }
         // check to see if it's in the included wildcards
         for (std::set<std::string>::iterator
-                it=thePluginOptions().included_timers_with_wildcards.begin(); 
+                it=thePluginOptions().included_timers_with_wildcards.begin();
              it!=thePluginOptions().included_timers_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
@@ -1010,7 +1008,7 @@ bool skip_timer(const char * key) {
             }
         }
     }
-    // neither included nor excluded? 
+    // neither included nor excluded?
     // do we have an inclusion list? If so, then skip (because we didn't match it).
     if (!thePluginOptions().included_timers.empty() ||
         !thePluginOptions().included_timers_with_wildcards.empty()) {
@@ -1034,7 +1032,7 @@ bool skip_counter(const char * key) {
     } else {
         // check to see if it's in the excluded wildcards
         for (std::set<std::string>::iterator
-                it=thePluginOptions().excluded_counters_with_wildcards.begin(); 
+                it=thePluginOptions().excluded_counters_with_wildcards.begin();
              it!=thePluginOptions().excluded_counters_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
@@ -1044,7 +1042,7 @@ bool skip_counter(const char * key) {
         }
         // check to see if it's in the included wildcards
         for (std::set<std::string>::iterator
-                it=thePluginOptions().included_counters_with_wildcards.begin(); 
+                it=thePluginOptions().included_counters_with_wildcards.begin();
              it!=thePluginOptions().included_counters_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
@@ -1053,7 +1051,7 @@ bool skip_counter(const char * key) {
             }
         }
     }
-    // neither included nor excluded? 
+    // neither included nor excluded?
     // do we have an inclusion list? If so, then skip (because we didn't match it).
     if (!thePluginOptions().included_counters.empty() ||
         !thePluginOptions().included_counters_with_wildcards.empty()) {

@@ -105,8 +105,8 @@ void * Tau_plugin_threaded_analytics(void* data) {
   PMPI_Reduce(&latest_work, &global_sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
   PMPI_Reduce(&latest_work, &global_min, 1, MPI_INT, MPI_MIN, 0, MPI_COMM_WORLD);
   PMPI_Reduce(&latest_work, &global_max, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
- 
-  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  rank = RtsLayer::myNode();
 
   if(rank == 0) {
     sum_ = global_sum;
@@ -126,7 +126,7 @@ void * Tau_plugin_threaded_analytics(void* data) {
      for(int i = index_ - 5; i < index_; i++) {
        count = count + imbalance_history[i];
      }
-   
+
      if(count == 5) {
        should_rebalance = 1;
        fprintf(stderr, "Rebalancing as load imbalance exists for %d iterations..\n", count);
@@ -160,7 +160,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 }
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
- * Every plugin MUST implement this function to register callbacks for various events 
+ * Every plugin MUST implement this function to register callbacks for various events
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));

@@ -22,6 +22,19 @@
 #define PyVarObject_HEAD_INIT(type, size) PyObject_HEAD_INIT(type) size,
 #endif
 
+// Python 3.11 compatibility
+// This is from https://docs.python.org/3/whatsnew/3.11.html
+// to provide backwards compatibility with Python <3.8
+// (Python 3.8 and later provides PyFrame_GetCode natively)
+// Python 3.11 and later remove the f_code field of frame
+// requiring accessor method instead
+#if PY_VERSION_HEX < 0x030900B1
+static inline PyCodeObject* PyFrame_GetCode(PyFrameObject *frame)
+{
+    Py_INCREF(frame->f_code);
+    return frame->f_code;
+}
+#endif
 
 /************************ rotatingtree.h *************************/
 
@@ -353,7 +366,7 @@ normalizeUserObj(PyObject *obj)
   if (fn->m_self == NULL) {
     /* built-in function: look up the module name */
     PyObject *mod = fn->m_module;
-    char *modname;
+    const char * modname;
     if (mod && PyString_Check(mod)) {
       modname = PyString_AS_STRING(mod);
     }
@@ -401,7 +414,7 @@ normalizeUserObj(PyObject *obj)
 static ProfilerEntry *newProfilerEntry(ProfilerObject *pObj, void *key, PyObject *userObj,
 				       PyFrameObject *frame, char *cname) {
   char routine[4096];
-  char *co_name, *co_filename;
+  const char * co_name, * co_filename;
   int co_firstlineno;
 
   ProfilerEntry *self;
@@ -428,19 +441,27 @@ static ProfilerEntry *newProfilerEntry(ProfilerObject *pObj, void *key, PyObject
   self->calls = EMPTY_ROTATING_TREE;
 
   if (frame != NULL) {
-      co_name = PyString_AsString(frame->f_code->co_name);
-      co_filename = PyString_AsString(frame->f_code->co_filename);
-      while (strchr(co_filename,'/')) {
-	co_filename = strchr(co_filename,'/')+1;
+      PyCodeObject * codeObj = PyFrame_GetCode(frame);
+      co_name = PyString_AsString(codeObj->co_name);
+      if(codeObj->co_filename != NULL) {
+        co_filename = PyString_AsString(codeObj->co_filename);
+        if(co_filename == NULL) {
+            co_filename = "";
+        }
+      } else {
+        co_filename = "";
       }
-      co_firstlineno = frame->f_code->co_firstlineno;
+      while (strchr(co_filename,'/')) {
+	    co_filename = strchr(co_filename,'/')+1;
+      }
+      co_firstlineno = codeObj->co_firstlineno;
       sprintf (routine,"%s [{%s}{%d}]", co_name, co_filename, co_firstlineno);
       if (strcmp(co_filename,"<string>") != 0) { // suppress "? <string>"
-	TAU_PROFILER_CREATE(handle, routine, "", TAU_PYTHON);
+	    TAU_PROFILER_CREATE(handle, routine, "", TAU_PYTHON);
       }
+      Py_DECREF(codeObj);
   } else {
     if (strcmp (cname, "profileTimer") && strcmp (cname, "start") && strcmp (cname, "stop") && strcmp (cname, "disable")) {
-/*       sprintf (routine,"C [%s]", cname); */
       sprintf (routine,"%s", cname);
       TAU_PROFILER_CREATE(handle, routine, "", TAU_PYTHON);
     }
@@ -510,20 +531,6 @@ static void Stop(ProfilerObject *pObj, ProfilerContext *self, ProfilerEntry *ent
 
 
 static void ptrace_enter_call(PyObject *self, void *key, PyObject *userObj, PyFrameObject *frame, char *cname) {
-  //  char *name;
-
-  //  PyObject *stringObj;
-  //  printf ("enter:\n");
-
-  //  stringObj = normalizeUserObj(userObj);
-
-  /*   name = PyString_AsString(((PyFrameObject*)(key))->f_code->co_name); */
-  //  TAU_START(name);
-
-  /*   if (PyArg_ParseTuple(stringObj, "|s", &name)) { */
-  /*     printf ("got name: %s\n", name); */
-  /*   } */
-
   /* entering a call to the function identified by 'key'
      (which can be a PyCodeObject or a PyMethodDef pointer) */
   ProfilerObject *pObj = (ProfilerObject*)self;
@@ -543,37 +550,16 @@ static void ptrace_enter_call(PyObject *self, void *key, PyObject *userObj, PyFr
     Tau_start_timer(profEntry->fi,0,Tau_get_thread());
   }
 
-/*   /\* grab a ProfilerContext out of the free list *\/ */
-/*   pContext = pObj->freelistProfilerContext; */
-/*   if (pContext) { */
-/*     pObj->freelistProfilerContext = pContext->previous; */
-/*   } */
-/*   else { */
-/*     /\* free list exhausted, allocate a new one *\/ */
-/*     pContext = (ProfilerContext*) */
-/*       malloc(sizeof(ProfilerContext)); */
-/*     if (pContext == NULL) { */
-/*       pObj->flags |= POF_NOMEMORY; */
-/*       return; */
-/*     } */
-/*   } */
-/*   initContext(pObj, pContext, profEntry); */
 }
 
 static void ptrace_leave_call(PyObject *self, void *key) {
   char *name;
-  /*   name = PyString_AsString(((PyFrameObject*)(key))->f_code->co_name); */
-  //  TAU_STOP(name);
 
-  //printf ("exit:\n");
   /* leaving a call to the function identified by 'key' */
   ProfilerObject *pObj = (ProfilerObject*)self;
   ProfilerEntry *profEntry;
   ProfilerContext *pContext;
 
-/*   pContext = pObj->currentProfilerContext; */
-/*   if (pContext == NULL) */
-/*     return; */
   profEntry = getEntry(pObj, key);
   if (profEntry) {
     if (profEntry->fi) {
@@ -581,12 +567,8 @@ static void ptrace_leave_call(PyObject *self, void *key) {
     }
   }
   else {
-    printf ("Error in Python later!\n");
-/*     pObj->currentProfilerContext = pContext->previous; */
+    printf ("Error in TAU Python profiler: tried to stop timer but timer not found in ptrace_leave_call!\n");
   }
-/*   /\* put pContext into the free list *\/ */
-/*   pContext->previous = pObj->freelistProfilerContext; */
-/*   pObj->freelistProfilerContext = pContext; */
 }
 
 
@@ -602,33 +584,28 @@ static int profiler_callback(PyObject *self, PyFrameObject *frame, int what, PyO
     init = 1;
   }
 
-/*   char routine[4096]; */
-/*   char *co_name, *co_filename; */
-/*   int co_firstlineno; */
-
-
-/*   co_name = PyString_AsString(frame->f_code->co_name); */
-/*   co_filename = PyString_AsString(frame->f_code->co_filename); */
-/*   while (strchr(co_filename,'/')) { */
-/*     co_filename = strchr(co_filename,'/')+1; */
-/*   } */
-/*   co_firstlineno =frame->f_code->co_firstlineno; */
-/*   sprintf (routine,"%s [{%s}{%d}]", co_name, co_filename, co_firstlineno); */
-
   switch (what) {
 
     /* the 'frame' of a called function is about to start its execution */
   case PyTrace_CALL:
 /*      printf ("Py Enter: %s\n", routine);  */
-     ptrace_enter_call(self, (void *)frame->f_code,
-		       (PyObject *)frame->f_code, frame, NULL);
+     {
+         PyCodeObject * codeObj = PyFrame_GetCode(frame);
+         ptrace_enter_call(self, (void *)codeObj,
+		           (PyObject *)codeObj, frame, NULL);
+         Py_DECREF(codeObj);
+     }
     break;
 
     /* the 'frame' of a called function is about to finish
        (either normally or with an exception) */
   case PyTrace_RETURN:
 /*      printf ("Py Exit: %s\n", routine);  */
-    ptrace_leave_call(self, (void *)frame->f_code);
+    {
+        PyCodeObject * codeObj = PyFrame_GetCode(frame);
+        ptrace_leave_call(self, (void *)codeObj);
+        Py_DECREF(codeObj);
+    }
     break;
 
     /* case PyTrace_EXCEPTION:
@@ -828,6 +805,8 @@ static PyObject* profiler_disable(ProfilerObject *self, PyObject* noarg) {
   return Py_None;
 }
 
+extern void Tau_profile_exit_all_threads(void);
+
 PyDoc_STRVAR(exitAllThreads_doc, "\
 exitAllThreads()\n\
 \n\
@@ -849,6 +828,20 @@ Clear all profiling information collected so far.\n\
 static PyObject *profiler_clear(ProfilerObject *pObj, PyObject* noarg) {
   Py_INCREF(Py_None);
   return Py_None;
+}
+
+PyDoc_STRVAR(getPythonCompileVersion_doc, "\
+getPythonCompileVersion()\n\
+\n\
+Get the version of Python that the TAU C extension was compiled against.\n\
+");
+
+static PyObject *profiler_getPythonCompileVersion(ProfilerObject *pObj, PyObject* noarg) {
+  int major = PY_MAJOR_VERSION;
+  int minor = PY_MINOR_VERSION;
+  int micro = PY_MICRO_VERSION;
+  PyObject * result = Py_BuildValue("iii", major, minor, micro);
+  return result;
 }
 
 static void profiler_dealloc(ProfilerObject *op) {
@@ -899,6 +892,8 @@ static PyMethodDef profiler_methods[] = {
    METH_NOARGS,			clear_doc},
   {"exitAllThreads",	(PyCFunction)profiler_exitAllThreads,
    METH_NOARGS,			exitAllThreads_doc},
+  {"getPythonCompileVersion",	(PyCFunction)profiler_getPythonCompileVersion,
+   METH_STATIC | METH_NOARGS,  getPythonCompileVersion_doc},
   {NULL, NULL}
 };
 

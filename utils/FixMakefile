@@ -304,7 +304,10 @@ case $1 in
 	 llvm_cxx=`echo $1 | sed -e 's/^llvm_cxx=//' -e 's/#/ /g'`
 	 echo "s,^TAU_LLVM_CXX=.*$,TAU_LLVM_CXX=$llvm_cxx,g" >> $sedout
 	 ;;
-
+     llvm_cc=*)
+	 llvm_cc=`echo $1 | sed -e 's/^llvm_cc=//' -e 's/#/ /g'`
+	 echo "s,^TAU_LLVM_CC=.*$,TAU_LLVM_CC=$llvm_cc,g" >> $sedout
+	 ;;
      sicortexlink=*)
         sicortexlink=`echo $1 | sed -e 's/^sicortexlink=//' -e 's/#/ /g'`
 	echo "s@^SICORTEXLINK=.*\$@SICORTEXLINK=$sicortexlink@g" >> $sedout
@@ -541,6 +544,16 @@ case $1 in
 	echo "s,^DWARFLIB=.*$,DWARFLIB=$dwarflib,g" >> $sedout
 	;;
 
+     elfdir=*)
+        elfdir=`echo $1 | sed -e 's/^elfdir=//'  -e 's/#/ /g'`
+	echo "s,^ELFDIR=.*$,ELFDIR=$elfdir,g" >> $sedout
+	;;
+
+     tbbdir=*)
+        tbbdir=`echo $1 | sed -e 's/^tbbdir=//'  -e 's/#/ /g'`
+	echo "s,^TBBDIR=.*$,TBBDIR=$tbbdir,g" >> $sedout
+	;;
+
      jdkdir=*)
         jdkdir=`echo $1 | sed -e 's/^jdkdir=//'`
 	echo "s,^JDKDIR=.*$,JDKDIR=$jdkdir,g" >> $sedout
@@ -564,7 +577,7 @@ case $1 in
      pythoninc=*)
         pythoninc=`echo $1 | sed -e 's/^pythoninc=//'`
 	echo "s,^PYTHON_INCDIR=.*$,PYTHON_INCDIR=$pythoninc,g" >> $sedout
-	#echo "Using PYTHON INCLUDE DIR =" $pythoninc
+	echo "Using Python include dir =" $pythoninc
 	;;
 
      pythonlibrary=*)
@@ -575,6 +588,7 @@ case $1 in
         pythonlib=`echo $1 | sed -e 's/^pythonlib=//'`
 	if [ "x$pythonlibrary" != "x"  ] ; then
 	  pythonlib_full="$pythonlib/$pythonlibrary"
+	  pythonso=`echo ${pythonlibrary%.*} | sed -e "s#lib##"`
 	else
 	# Discover python library version
 	for subdir in "" ".." "python*" ; do
@@ -708,6 +722,10 @@ case $1 in
         ;;
      TAU_BFD)
         echo NOTE: Using BFD support
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     ELF)
+        echo NOTE: Using ELF support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      TAU_ELF_BFD)
@@ -1079,6 +1097,11 @@ case $1 in
         roctracerlibdir=`echo $1 | sed -e 's/^roctracerlibdir=//' -e 's/#/ /g'`
 	echo "s@^TAU_ROCTRACER_LIB_DIR=\(.*\)@TAU_ROCTRACER_LIB_DIR=$roctracerlibdir@g" >> $sedout
         ;;
+     rocmsmidir=*)
+       rocmsmidir=`echo $1 | sed -e 's/^rocmsmidir=//' -e 's/#/ /g'`
+        echo "s@^TAU_ROCM_SMI_DIR=\(.*\)@TAU_ROCM_SMI_DIR=$rocmsmidir@g" >> $sedout
+        ;;
+
      hipdir=*)
         hipdir=`echo $1 | sed -e 's/^hipdir=//' -e 's/#/ /g'`
 	echo "s@^TAU_HIP=\(.*\)@TAU_HIP=$hipdir@g" >> $sedout
@@ -1121,6 +1144,10 @@ case $1 in
         echo "NOTE: Using the TAU's ROCm ROCPROFILER Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     ROCPROFILERV2)
+        echo "NOTE: Using the TAU's ROCm ROCPROFILER Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      HIP)
         echo "NOTE: Using the TAU's ROCm HIP Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1135,6 +1162,10 @@ case $1 in
         ;;
      ROCM)
         echo "NOTE: Using the TAU's ROCm Options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     ROCMSMI)
+        echo "NOTE: Using the TAU's ROCm SMI Options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      PHIPROF)
@@ -1483,6 +1514,9 @@ case $1 in
      LLVM_CXX)
          echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     LLVM_CC)
+         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
     CRAYX1CC)
 	echo NOTE: Using The Cray CC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1496,7 +1530,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      NVIDIA)
-	echo NOTE: Using PrgEnv-nvidia NV_FORTRAN compiler settings
+	 echo NOTE: Using PrgEnv-nvidia NV_FORTRAN compiler settings
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PGI)
@@ -1748,6 +1782,10 @@ case $1 in
         echo "NOTE: Using pthreads as the thread package for TBB support. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     TBB)
+        echo "NOTE: Using an external TBB directory. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      TAU_PTHREAD_WRAP)
         echo "NOTE: Creating LD_PRELOAD wrapper for pthreads. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1868,6 +1906,10 @@ case $1 in
 	;;
      DYNINST9)
 	echo "NOTE: Using newer version DYNINST 9+ "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DYNINST12)
+	echo "NOTE: Using newer version DYNINST 12+ "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      DYNINSTDIR)
@@ -2634,6 +2676,10 @@ case $1 in
         ;;
      CORESYMBOLICATION)
         echo "NOTE: Using CoreSymbolication for address to line translation."
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     SYSCALL)
+	echo NOTE: Building PTRACE SYSCALL wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      *)

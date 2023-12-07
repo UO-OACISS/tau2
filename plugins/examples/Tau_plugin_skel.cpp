@@ -46,10 +46,9 @@ static void open_file() {
     Tau_global_incr_insideTAU();
     mtx.lock();
     /* Open a file for myself to write to */
-#if TAU_MPI
-    MPI_Comm_rank(MPI_COMM_WORLD, &commrank);
-    MPI_Comm_size(MPI_COMM_WORLD, &commsize);
-#endif
+    commrank = RtsLayer::myNode();
+    commsize = tau_totalnodes(0,1);
+
     std::stringstream filename;
     // make the directory
     struct stat st = {0};

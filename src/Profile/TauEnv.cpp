@@ -302,6 +302,7 @@ static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
 static int env_ompt_resolve_address_eagerly = 1;
 static int env_ompt_support_level = 0;
+static int env_ompt_force_finalize = 1;
 static int env_openmp_runtime_enabled = 1;
 static int env_openmp_runtime_states_enabled = 0;
 static int env_openmp_runtime_events_enabled = 1;
@@ -966,6 +967,10 @@ int TauEnv_get_ompt_support_level() {
   return env_ompt_support_level;
 }
 
+int TauEnv_get_ompt_force_finalize() {
+  return env_ompt_force_finalize;
+}
+
 int TauEnv_get_track_mpi_t_pvars() {
   return env_track_mpi_t_pvars;
 }
@@ -1558,6 +1563,15 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "full");
     }
 #endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
+
+    tmp = getconf("TAU_OMPT_FORCE_FINALIZE");
+    if (parse_bool(tmp, env_ompt_force_finalize)) {
+      TAU_VERBOSE("TAU: OMPT Finalize Tool Enabled\n");
+      env_ompt_force_finalize = 1;
+    } else {
+      TAU_VERBOSE("TAU: OMPT Finalize Tool Disabled\n");
+      env_ompt_force_finalize = 0;
+    }
 
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {

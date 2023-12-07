@@ -2022,6 +2022,18 @@ char *** argv;
     returnVal = PMPI_Init( argc, argv );
 #endif
 
+    TAU_PROFILE_STOP(tautimer);
+
+    PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+    TAU_PROFILE_SET_NODE(procid_0 );
+    Tau_set_usesMPI(1);
+
+    PMPI_Comm_size( MPI_COMM_WORLD, &size );
+    tau_totalnodes(1, size); /* Set the totalnodes */
+
+    PMPI_Get_processor_name(procname, &procnamelength);
+    TAU_METADATA("MPI Processor Name", procname);
+
     Tau_enable_pthread_tracking();
 
 #ifdef TAU_MPI_T
@@ -2063,18 +2075,6 @@ char *** argv;
       PMPI_Barrier(MPI_COMM_WORLD);
     }
 #endif /* TAU_BGP */
-    TAU_PROFILE_STOP(tautimer);
-
-    PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
-    TAU_PROFILE_SET_NODE(procid_0 );
-    Tau_set_usesMPI(1);
-
-    PMPI_Comm_size( MPI_COMM_WORLD, &size );
-    tau_totalnodes(1, size); /* Set the totalnodes */
-
-    PMPI_Get_processor_name(procname, &procnamelength);
-    TAU_METADATA("MPI Processor Name", procname);
-
     if (TauEnv_get_synchronize_clocks()) {
       TauSyncClocks();
     }
@@ -2121,6 +2121,18 @@ int *provided;
 
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
 
+  TAU_PROFILE_STOP(tautimer);
+
+  PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+  TAU_PROFILE_SET_NODE(procid_0 );
+  Tau_set_usesMPI(1);
+
+  PMPI_Comm_size( MPI_COMM_WORLD, &size );
+  tau_totalnodes(1, size); /* Set the totalnodes */
+
+  PMPI_Get_processor_name(procname, &procnamelength);
+  TAU_METADATA("MPI Processor Name", procname);
+
 #ifdef TAU_MPI_T
   returnVal = Tau_MPI_T_initialization();
   Tau_track_mpi_t();
@@ -2156,18 +2168,6 @@ int *provided;
     PMPI_Barrier(MPI_COMM_WORLD);
   }
 #endif /* TAU_BGP */
-
-  TAU_PROFILE_STOP(tautimer);
-
-  PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
-  TAU_PROFILE_SET_NODE(procid_0 );
-  Tau_set_usesMPI(1);
-
-  PMPI_Comm_size( MPI_COMM_WORLD, &size );
-  tau_totalnodes(1, size); /* Set the totalnodes */
-
-  PMPI_Get_processor_name(procname, &procnamelength);
-  TAU_METADATA("MPI Processor Name", procname);
 
   if (TauEnv_get_synchronize_clocks()) {
     TauSyncClocks();
