@@ -3773,8 +3773,8 @@ configure_perfexplorer () {
             gunzip -c tools/src/contrib/jogl/apple/libjogl.jnilib.gz > $JARTARGET/libjogl.jnilib
             gunzip -c tools/src/contrib/jogl/apple/libjogl_awt.jnilib.gz > $JARTARGET/libjogl_awt.jnilib
             gunzip -c tools/src/contrib/jogl/apple/libjogl_cg.jnilib.gz > $JARTARGET/libjogl_cg.jnilib
-            cp tools/src/contrib/jogl/apple/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
-            cp tools/src/contrib/jogl/apple/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+            cp tools/src/contrib/jogl/apple/gluegen-rt-natives*.jar $JARTARGET #/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/apple/jogl-all-natives*.jar $JARTARGET #/jogl-all-natives.jar
 
             ;;
 
@@ -3788,8 +3788,8 @@ configure_perfexplorer () {
             gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
             gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
             gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
-            cp tools/src/contrib/jogl/i386_linux/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
-            cp tools/src/contrib/jogl/i386_linux/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+            cp tools/src/contrib/jogl/i386_linux/gluegen-rt-natives*.jar $JARTARGET #/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/i386_linux/jogl-all-natives*.jar $JARTARGET #/jogl-all-natives.jar
 
             ;;
 
@@ -3799,8 +3799,8 @@ configure_perfexplorer () {
             gunzip -c tools/src/contrib/jogl/arm64_linux/libnativewindow_awt.so.gz > $JARTARGET/libnativewindow_awt.so
             gunzip -c tools/src/contrib/jogl/arm64_linux/libnativewindow_x11.so.gz > $JARTARGET/libnativewindow_x11.so
 
-            cp tools/src/contrib/jogl/arm64_linux/gluegen-rt.jar $JARTARGET/gluegen-rt-natives.jar
-            cp tools/src/contrib/jogl/arm64_linux/jogl-all.jar $JARTARGET/jogl-all-natives.jar
+            cp tools/src/contrib/jogl/arm64_linux/gluegen-rt.jar $JARTARGET #/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/arm64_linux/jogl-all.jar $JARTARGET #/jogl-all-natives.jar
             ;;
 
         arm_linux)
@@ -3809,8 +3809,8 @@ configure_perfexplorer () {
             gunzip -c tools/src/contrib/jogl/arm_linux/libjogl.so.gz > $JARTARGET/libjogl.so
             gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 
-            cp tools/src/contrib/jogl/arm_linux/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
-            cp tools/src/contrib/jogl/arm_linux/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+            cp tools/src/contrib/jogl/arm_linux/gluegen-rt-natives*.jar $JARTARGET #/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/arm_linux/jogl-all-natives*.jar $JARTARGET #/jogl-all-natives.jar
 
             if [ -r tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz ] ; then
               gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
