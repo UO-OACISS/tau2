@@ -338,6 +338,10 @@ int GlobalId(int localnodeid, int localthreadid)
 
 }
 
+bool firstState=true;
+double firstRealTime=0;
+
+
 /* implementation of callback routines */
 /***************************************************************************
  * Description: EnterState is called at routine entry by trace input library
@@ -369,6 +373,12 @@ int EnterState(void *userData, double time,
   OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter((OTF2_Archive_struct*)userData, locations[ numthreads[nid] * nid + tid ] );
 
   OTF2_EvtWriter_Enter(evt_writer, attributes, TauGetClockTicksInGHz(time),stateid);
+
+  if(firstState){
+      firstState=false;
+      firstRealTime=TauGetClockTicksInGHz(time);
+  }
+
   return 0;
 }
 
@@ -1343,6 +1353,10 @@ int COMM_STRING=string_id;
 //#else
   status =OTF2_GlobalDefWriter_WriteComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_COMM);
 
+  status = OTF2_GlobalDefWriter_WriteClockProperties( glob_def_writer,
+                                                   1000000000,
+						   firstRealTime,
+                                                   lastt);
 
 
 //#endif /* TAU_OTF2_1_1 */
@@ -1401,12 +1415,10 @@ check_status( status, "Write communicator." );
               //}
 
               /* Write clock offsets to local definitions. */
-              status = OTF2_DefWriter_WriteClockOffset( def_writer,
-                                                        0, 0, 0.0 );
-              check_status( status, "Write start clock offset." );
-              status = OTF2_DefWriter_WriteClockOffset( def_writer,
-                                                        lastt, 0, 0.0 );
-              check_status( status, "Write end clock offset." );
+              //status = OTF2_DefWriter_WriteClockOffset( def_writer,0, 0, 0.0 );
+              //check_status( status, "Write start clock offset." );
+              //status = OTF2_DefWriter_WriteClockOffset( def_writer,lastt, 0, 0.0 );
+              //check_status( status, "Write end clock offset." );
 
 
           }
