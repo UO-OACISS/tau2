@@ -338,6 +338,10 @@ int GlobalId(int localnodeid, int localthreadid)
 
 }
 
+bool firstState=true;
+double firstRealTime=0;
+
+
 /* implementation of callback routines */
 /***************************************************************************
  * Description: EnterState is called at routine entry by trace input library
@@ -369,6 +373,12 @@ int EnterState(void *userData, double time,
   OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter((OTF2_Archive_struct*)userData, locations[ numthreads[nid] * nid + tid ] );
 
   OTF2_EvtWriter_Enter(evt_writer, attributes, TauGetClockTicksInGHz(time),stateid);
+
+  if(firstState){
+      firstState=false;
+      firstRealTime=TauGetClockTicksInGHz(time);
+  }
+
   return 0;
 }
 
@@ -1141,7 +1151,8 @@ string_id++;
                                                         rank,
                                                         string_id,
                                                         OTF2_LOCATION_GROUP_TYPE_PROCESS,
-                                                        0, OTF2_UNDEFINED_LOCATION_GROUP);//( rank / 2 ) + 1 );
+                                                        0, 
+							OTF2_UNDEFINED_LOCATION_GROUP);//( rank / 2 ) + 1 );
       check_status( status, "Write location group definition." );
       string_id++;
       master_threads2[rank]=rank;
@@ -1341,7 +1352,13 @@ int COMM_STRING=string_id;
 //#ifdef TAU_OTF2_1_1
 //  status =OTF2_GlobalDefWriter_WriteMpiComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_UINT32 );
 //#else
-  status =OTF2_GlobalDefWriter_WriteComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_COMM, OTF2_COMM_FLAG_NONE);
+  status =OTF2_GlobalDefWriter_WriteComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_COMM, OTF2_COMM_FLAG_CREATE_DESTROY_EVENTS);
+
+  status = OTF2_GlobalDefWriter_WriteClockProperties( glob_def_writer,
+                                                   1000000000,
+                                                   firstRealTime,
+                                                   lastt,
+                                                   OTF2_UNDEFINED_TIMESTAMP );
 
 
 
@@ -1401,12 +1418,10 @@ check_status( status, "Write communicator." );
               //}
 
               /* Write clock offsets to local definitions. */
-              status = OTF2_DefWriter_WriteClockOffset( def_writer,
-                                                        0, 0, 0.0 );
-              check_status( status, "Write start clock offset." );
-              status = OTF2_DefWriter_WriteClockOffset( def_writer,
-                                                        lastt, 0, 0.0 );
-              check_status( status, "Write end clock offset." );
+              //status = OTF2_DefWriter_WriteClockOffset( def_writer,0, 0, 0.0 );
+              //check_status( status, "Write start clock offset." );
+              //status = OTF2_DefWriter_WriteClockOffset( def_writer,lastt, 0, 0.0 );
+              //check_status( status, "Write end clock offset." );
 
 
           }
