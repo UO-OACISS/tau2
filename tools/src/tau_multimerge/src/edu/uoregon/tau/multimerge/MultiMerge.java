@@ -509,6 +509,7 @@ public class MultiMerge {
 	}
 
 	static boolean quiet = false;
+	static boolean nocomm = false;
 	
 	/**
 	 * @param args
@@ -527,6 +528,11 @@ public class MultiMerge {
 			{quiet=true;
 			continue;
 			}
+			if(args[i].equals("--nocomm"))
+                        {nocomm=true;
+                        continue;
+                        }
+
 			if(args[i].equals("--multidir")){
 				multiDirs=new ArrayList<File>();
 				while(i<args.length){
@@ -601,7 +607,7 @@ public class MultiMerge {
 			 */
 			if(globstate==null){
 				tw.defState(numStates, stateName, stateGroupToken);
-				globstate=new Integer(numStates);
+				globstate=Integer.valueOf(numStates);
 				stateMap.put(stateName, globstate);
 				numStates++;
 			}
@@ -610,7 +616,7 @@ public class MultiMerge {
 			 * Map this local state ID for this thread to the global id used in the merged trace
 			 */
 			TotID tot = (TotID)userData;
-			tot.locToGlobStates.put(new Integer(stateToken), globstate);
+			tot.locToGlobStates.put(Integer.valueOf(stateToken), globstate);
 
 			return 0;
 		}
@@ -631,7 +637,7 @@ public class MultiMerge {
 			if(globevts==null){
 
 				tw.defUserEvent(numStates, userEventName, monotonicallyIncreasing);
-				globevts=new Integer(numStates);
+				globevts=Integer.valueOf(numStates);
 				ueMap.put(userEventName, globevts);
 				numStates++;
 			}
@@ -640,7 +646,7 @@ public class MultiMerge {
 			 * Map this local state ID for this thread to the global id used in the merged trace
 			 */
 
-			tot.locToGlobStates.put(new Integer(userEventToken), globevts);
+			tot.locToGlobStates.put(Integer.valueOf(userEventToken), globevts);
 
 			return 0;
 		}
@@ -666,6 +672,7 @@ public class MultiMerge {
 
 		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken, double userEventValue) {
 			TotID tot = (TotID)userData;
+            if(nocomm)return 0;
 			/**
 			 * Set the message type (first of the 3 event triplet)
 			 */
@@ -782,7 +789,7 @@ public class MultiMerge {
 			if(synch){
 				time+=tot.offset;
 			}
-			int actualID=tot.locToGlobStates.get(new Integer(stateToken)).intValue();
+			int actualID=tot.locToGlobStates.get(Integer.valueOf(stateToken)).intValue();
 
 			tw.enterState(time, nodeToken, threadToken, actualID);
 			return 0;
@@ -792,7 +799,7 @@ public class MultiMerge {
 			if(synch){
 				time+=tot.offset;
 			}
-			tw.leaveState(time, nodeToken, threadToken, tot.locToGlobStates.get(new Integer(stateToken)).intValue());
+			tw.leaveState(time, nodeToken, threadToken, tot.locToGlobStates.get(Integer.valueOf(stateToken)).intValue());
 			return 0;
 		}
 
@@ -800,7 +807,7 @@ public class MultiMerge {
 		public int sendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
 			
-			
+			if(nocomm)return 0;	
 
 			TotID tot = (TotID)userData;
 			if(synch){
@@ -815,6 +822,7 @@ public class MultiMerge {
 
 
 		public int recvMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageCom) {
+			if(nocomm)return 0;
 			TotID tot = (TotID)userData;
 			if(synch){
 				time+=tot.offset;
@@ -833,17 +841,20 @@ public class MultiMerge {
 				time+=tot.offset;
 			}
 			if(userEventToken==ONESIDED_MESSAGE_SEND||userEventToken==ONESIDED_MESSAGE_RECV||userEventToken==ONESIDED_MESSAGE_UNKNOWN||userEventToken==ONESIDED_MESSAGE_RECIPROCAL_SEND||userEventToken==ONESIDED_MESSAGE_RECIPROCAL_RECV){
+                if(nocomm)return 0;
 				tot.oneSideType=userEventToken;
 				tot.size=(int)userEventValue;
 				return 0;
 			}
 			if(userEventToken==ONESIDED_MESSAGE_ID_TriggerValueT1)
 			{
+                if(nocomm)return 0;
 				tot.dp.l1=userEventValue;
 				return 0;
 			}
 			if(userEventToken==ONESIDED_MESSAGE_ID_TriggerValueT2)
 			{
+                if(nocomm)return 0;
 				tot.dp.l2=userEventValue;
 				ToFrom p = idNodes.get(tot.dp.toString());
 				if(p==null){
@@ -911,7 +922,7 @@ public class MultiMerge {
 //				System.out.println("Event from node!");
 //			}
 			
-			int stateid = tot.locToGlobStates.get(new Integer(userEventToken)).intValue();
+			int stateid = tot.locToGlobStates.get(Integer.valueOf(userEventToken)).intValue();
 
 			tw.eventTrigger(time, nodeToken, threadToken, stateid, (long)userEventValue);
 			return 0;}
