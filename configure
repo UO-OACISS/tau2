@@ -11880,8 +11880,8 @@ fi
 # Install libotf2 if requested
 ######################################################################
 libotf2=otf2
-libotf2_dirname=otf2-2.1
-libotf2tgz=$libotf2.tgz
+libotf2_dirname=otf2-3.0.3
+libotf2tgz=otf2-3.0.3.tgz
 libotf2url=http://www.cs.uoregon.edu/research/tau/$libotf2tgz
 
 if [ "x$otfdir" = "x" ]; then
