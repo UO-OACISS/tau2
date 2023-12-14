@@ -12084,14 +12084,6 @@ fi
 
 if [ -d $otfdir/include/otf2 ]; then
     fixmakeargs="$fixmakeargs OTF2 otfdir=$otfdir"
-    otfversion_11=`$otfdir/bin/otf2-config --version | grep "^1.1" | wc -l `
-    if [ $otfversion_11 = 1 ]; then
-      fixmakeargs="$fixmakeargs OTF2_1_1"
-    fi
-    otfversion_12=`$otfdir/bin/otf2-config --version | grep "^1.2" | wc -l `
-    if [ $otfversion_12 = 1 ]; then
-      fixmakeargs="$fixmakeargs OTF2_1_2"
-    fi
 else
     if [ $otf = yes ] ; then
 	if [ -r $otfinc/otf.h ]; then

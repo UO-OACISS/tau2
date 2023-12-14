@@ -618,12 +618,8 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
     OTF2_MetricMemberRef* omr = new OTF2_MetricMemberRef[1];
     	omr[0]=userEventToken;
 
-#ifdef TAU_OTF2_1_1
-          OTF2_GlobalDefWriter_WriteMetricClass (    glob_def_writer, userEventToken, 1, omr,    OTF2_METRIC_SYNCHRONOUS_STRICT);
-#else
-          OTF2_GlobalDefWriter_WriteMetricClass (    glob_def_writer, userEventToken, 1, omr,    OTF2_METRIC_SYNCHRONOUS_STRICT, OTF2_RECORDER_KIND_CPU);
+       OTF2_GlobalDefWriter_WriteMetricClass (    glob_def_writer, userEventToken, 1, omr,    OTF2_METRIC_SYNCHRONOUS_STRICT, OTF2_RECORDER_KIND_CPU);
 
-#endif /* TAU_OTF2_1_1 */
 
 
 
@@ -635,11 +631,9 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
 	  OTF2_GlobalDefWriter_WriteMetricMember(glob_def_writer,userEventToken, userEventToken,  userEventToken,OTF2_METRIC_TYPE_OTHER,OTF2_METRIC_ABSOLUTE_POINT, OTF2_TYPE_UINT64,OTF2_BASE_DECIMAL,0,COUNTS);
 	  OTF2_MetricMemberRef* omr = new OTF2_MetricMemberRef[1];
 	      	omr[0]=userEventToken;
-#ifdef TAU_OTF2_1_1
-	  OTF2_GlobalDefWriter_WriteMetricClass (    glob_def_writer, userEventToken, 1, omr,    OTF2_METRIC_SYNCHRONOUS_STRICT);
-#else
-          OTF2_GlobalDefWriter_WriteMetricClass (    glob_def_writer, userEventToken, 1, omr,    OTF2_METRIC_SYNCHRONOUS_STRICT, OTF2_RECORDER_KIND_CPU);
-#endif /* TAU_OTF2_1_1 */
+
+     OTF2_GlobalDefWriter_WriteMetricClass (    glob_def_writer, userEventToken, 1, omr,    OTF2_METRIC_SYNCHRONOUS_STRICT, OTF2_RECORDER_KIND_CPU);
+
 
     /* NOTE: WE DO NOT HAVE THE DO DIFFERENTIATION PARAMETER YET IN OTF */
   }
@@ -956,13 +950,6 @@ int main(int argc, char **argv)
   status = OTF2_Archive_SetFlushCallbacks( archive, &flush_callbacks, NULL );
   check_status( status, "Set flush callbacks." );
 
-  /* Set master slave mode, description, and creator. */
-#if(defined(TAU_OTF2_1_1) || defined (TAU_OTF2_1_2))
-  status = OTF2_Archive_SetMasterSlaveMode( archive, OTF2_MASTER );
-  check_status( status, "Set master slave mode." );
-#endif /* TAU_OTF2_1_1 || TAU_OTF2_1_2 */
-
-
   OTF2_Archive_SetSerialCollectiveCallbacks( archive );
 
   status = OTF2_Archive_SetDescription( archive, "Data converted from TAU trace output" );
@@ -1229,12 +1216,9 @@ string_id++;
    maxTauStringId=localmax(maxTauStringId,stateGroupToken);
 
    /* create a default activity (group) */
- #ifdef TAU_OTF2_1_1
-   OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, string, OTF2_GROUP_TYPE_REGIONS,0,0);
- #else
    //OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, stateGroupToken,OTF2_PARADIGM_UNKNOWN, OTF2_GROUP_FLAG_NONE,     OTF2_GROUP_TYPE_REGIONS,0,0);
    OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, string_id, OTF2_GROUP_TYPE_REGIONS, OTF2_PARADIGM_UNKNOWN, OTF2_GROUP_FLAG_NONE, nom,membs);
- #endif /* TAU_OTF2_1_1 */
+
 
    dprintf("Writing group %s, id %d to otf2\n",stateGroupName,stateGroupToken);
 
@@ -1320,14 +1304,6 @@ status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
 check_status( status, "Write string definition." );
 int COMM_STRING=string_id;
 
-
-
-
-//#ifdef TAU_OTF2_1_1
-// OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, GROUP_MPI_COMM_WORLD, STRING_EMPTY, OTF2_GROUP_TYPE_MPI_GROUP,nodes,mpi_ranks);
-//#else
- //OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, GROUP_MPI_COMM_WORLD, STRING_EMPTY, OTF2_GROUP_TYPE_COMM_GROUP,OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE,nodes,mpi_ranks);
-
  OTF2_GlobalDefWriter_WriteGroup( glob_def_writer,
 		 	 	 	 	 	 	 	 	 GROUP_MPI_LOCATIONS /* id */,
                                          string_id /* name */,
@@ -1346,12 +1322,6 @@ int COMM_STRING=string_id;
                                           master_threads2 );//master_threads );
 
 
-
- //#endif /* TAU_OTF2_1_1 */
-
-//#ifdef TAU_OTF2_1_1
-//  status =OTF2_GlobalDefWriter_WriteMpiComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_UINT32 );
-//#else
   status =OTF2_GlobalDefWriter_WriteComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_COMM, OTF2_COMM_FLAG_CREATE_DESTROY_EVENTS);
 
   status = OTF2_GlobalDefWriter_WriteClockProperties( glob_def_writer,
@@ -1359,10 +1329,6 @@ int COMM_STRING=string_id;
                                                    firstRealTime,
                                                    lastt,
                                                    OTF2_UNDEFINED_TIMESTAMP );
-
-
-
-//#endif /* TAU_OTF2_1_1 */
 
 check_status( status, "Write communicator." );
 
@@ -1407,11 +1373,9 @@ check_status( status, "Write communicator." );
               //{
                   /* Write MPI Comm mappings to local definitions. */
                   status = OTF2_DefWriter_WriteMappingTable( def_writer,
-#ifdef TAU_OTF2_1_1
-                        OTF2_MAPPING_MPI_COMM,
-#else
+
                         OTF2_MAPPING_COMM,
-#endif /* TAU_OTF2_1_1 */
+
 
                                                              mpi_comm_map );
                   check_status( status, "Write MPI Comm mapping." );
