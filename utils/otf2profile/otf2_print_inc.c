@@ -32,6 +32,7 @@
 struct otf2_print_defs
 {
     otf2_hash_table* paradigms;
+    otf2_hash_table* io_paradigms;
     otf2_hash_table* strings;
     otf2_hash_table* attributes;
     otf2_hash_table* system_tree_nodes;
@@ -51,6 +52,8 @@ struct otf2_print_defs
     otf2_hash_table* source_code_locations;
     otf2_hash_table* calling_contexts;
     otf2_hash_table* interrupt_generators;
+    otf2_hash_table* io_files;
+    otf2_hash_table* io_handles;
 };
 
 
@@ -61,80 +64,92 @@ otf2_print_def_create_hash_tables( struct otf2_print_defs* defs )
         16,
         otf2_hash_table_hash_uint8,
         otf2_hash_table_compare_uint8 );
+    defs->io_paradigms = otf2_hash_table_create_size(
+        1024 * 1024,
+        otf2_hash_table_hash_uint64,
+        otf2_hash_table_compare_uint64 );
     defs->strings = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->attributes = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->system_tree_nodes = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->location_groups = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->locations = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->regions = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->callsites = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->callpaths = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->groups = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->metric_members = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->metrics = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->comms = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->parameters = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->rma_wins = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->cart_dimensions = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->cart_topologys = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->source_code_locations = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->calling_contexts = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
     defs->interrupt_generators = otf2_hash_table_create_size(
-        256,
+        1024 * 1024,
+        otf2_hash_table_hash_uint64,
+        otf2_hash_table_compare_uint64 );
+    defs->io_files = otf2_hash_table_create_size(
+        1024 * 1024,
+        otf2_hash_table_hash_uint64,
+        otf2_hash_table_compare_uint64 );
+    defs->io_handles = otf2_hash_table_create_size(
+        1024 * 1024,
         otf2_hash_table_hash_uint64,
         otf2_hash_table_compare_uint64 );
 }
@@ -144,6 +159,7 @@ static void
 otf2_print_def_destroy_hash_tables( struct otf2_print_defs* defs )
 {
     otf2_hash_table_free_all( defs->paradigms, otf2_hash_table_delete_none, free );
+    otf2_hash_table_free_all( defs->io_paradigms, otf2_hash_table_delete_none, free );
     otf2_hash_table_free_all( defs->strings, otf2_hash_table_delete_none, free );
     otf2_hash_table_free_all( defs->attributes, otf2_hash_table_delete_none, free );
     otf2_hash_table_free_all( defs->system_tree_nodes, otf2_hash_table_delete_none, free );
@@ -163,13 +179,16 @@ otf2_print_def_destroy_hash_tables( struct otf2_print_defs* defs )
     otf2_hash_table_free_all( defs->source_code_locations, otf2_hash_table_delete_none, free );
     otf2_hash_table_free_all( defs->calling_contexts, otf2_hash_table_delete_none, free );
     otf2_hash_table_free_all( defs->interrupt_generators, otf2_hash_table_delete_none, free );
+    otf2_hash_table_free_all( defs->io_files, otf2_hash_table_delete_none, free );
+    otf2_hash_table_free_all( defs->io_handles, otf2_hash_table_delete_none, free );
 }
 
 
 const char*
 otf2_print_get_attribute_value( struct otf2_print_defs* defs,
                                 OTF2_Type               type,
-                                OTF2_AttributeValue     value )
+                                OTF2_AttributeValue     value,
+                                bool                    raw )
 {
     char* value_buffer = otf2_print_get_buffer( BUFFER_SIZE );
 
@@ -226,51 +245,63 @@ otf2_print_get_attribute_value( struct otf2_print_defs* defs,
             break;
 
         case OTF2_TYPE_STRING:
-            value_buffer = ( char* )otf2_print_get_def_name( defs->strings, value.stringRef );
+            value_buffer = ( char* )( raw ? otf2_print_get_def_raw_name : otf2_print_get_def_name )( defs->strings, value.stringRef );
             break;
 
         case OTF2_TYPE_ATTRIBUTE:
-            value_buffer = ( char* )otf2_print_get_def_name( defs->attributes, value.attributeRef );
+            value_buffer = ( char* )( raw ? otf2_print_get_def_raw_name : otf2_print_get_def_name )( defs->attributes, value.attributeRef );
             break;
 
         case OTF2_TYPE_LOCATION:
-            value_buffer = ( char* )otf2_print_get_def64_name( defs->locations, value.locationRef );
+            value_buffer = ( char* )( raw ? otf2_print_get_def64_raw_name : otf2_print_get_def64_name )( defs->locations, value.locationRef );
             break;
 
         case OTF2_TYPE_REGION:
-            value_buffer = ( char* )otf2_print_get_def_name( defs->regions, value.regionRef );
+            value_buffer = ( char* )( raw ? otf2_print_get_def_raw_name : otf2_print_get_def_name )( defs->regions, value.regionRef );
             break;
 
         case OTF2_TYPE_GROUP:
-            value_buffer = ( char* )otf2_print_get_def_name( defs->groups, value.groupRef );
+            value_buffer = ( char* )( raw ? otf2_print_get_def_raw_name : otf2_print_get_def_name )( defs->groups, value.groupRef );
             break;
 
         case OTF2_TYPE_METRIC:
-            value_buffer = ( char* )otf2_print_get_def_name( defs->metrics, value.metricRef );
+            value_buffer = ( char* )( raw ? otf2_print_get_def_raw_name : otf2_print_get_def_name )( defs->metrics, value.metricRef );
             break;
 
         case OTF2_TYPE_COMM:
-            value_buffer = ( char* )otf2_print_get_def_name( defs->comms, value.commRef );
+            value_buffer = ( char* )( raw ? otf2_print_get_def_raw_name : otf2_print_get_def_name )( defs->comms, value.commRef );
             break;
 
         case OTF2_TYPE_PARAMETER:
-            value_buffer = ( char* )otf2_print_get_def_name( defs->parameters, value.parameterRef );
+            value_buffer = ( char* )( raw ? otf2_print_get_def_raw_name : otf2_print_get_def_name )( defs->parameters, value.parameterRef );
             break;
 
         case OTF2_TYPE_RMA_WIN:
-            value_buffer = ( char* )otf2_print_get_def_name( defs->rma_wins, value.rmaWinRef );
+            value_buffer = ( char* )( raw ? otf2_print_get_def_raw_name : otf2_print_get_def_name )( defs->rma_wins, value.rmaWinRef );
             break;
 
         case OTF2_TYPE_SOURCE_CODE_LOCATION:
-            value_buffer = ( char* )otf2_print_get_def_name( defs->source_code_locations, value.sourceCodeLocationRef );
+            value_buffer = ( char* )( raw ? otf2_print_get_def_raw_name : otf2_print_get_def_name )( defs->source_code_locations, value.sourceCodeLocationRef );
             break;
 
         case OTF2_TYPE_CALLING_CONTEXT:
-            value_buffer = ( char* )otf2_print_get_def_name( defs->calling_contexts, value.callingContextRef );
+            value_buffer = ( char* )( raw ? otf2_print_get_def_raw_name : otf2_print_get_def_name )( defs->calling_contexts, value.callingContextRef );
             break;
 
         case OTF2_TYPE_INTERRUPT_GENERATOR:
-            value_buffer = ( char* )otf2_print_get_def_name( defs->interrupt_generators, value.interruptGeneratorRef );
+            value_buffer = ( char* )( raw ? otf2_print_get_def_raw_name : otf2_print_get_def_name )( defs->interrupt_generators, value.interruptGeneratorRef );
+            break;
+
+        case OTF2_TYPE_IO_FILE:
+            value_buffer = ( char* )( raw ? otf2_print_get_def_raw_name : otf2_print_get_def_name )( defs->io_files, value.ioFileRef );
+            break;
+
+        case OTF2_TYPE_IO_HANDLE:
+            value_buffer = ( char* )( raw ? otf2_print_get_def_raw_name : otf2_print_get_def_name )( defs->io_handles, value.ioHandleRef );
+            break;
+
+        case OTF2_TYPE_LOCATION_GROUP:
+            value_buffer = ( char* )( raw ? otf2_print_get_def_raw_name : otf2_print_get_def_name )( defs->location_groups, value.locationGroupRef );
             break;
 
         default:
@@ -287,7 +318,8 @@ static OTF2_CallbackCode
 print_global_def_clock_properties( void*    userData,
                                    uint64_t timerResolution,
                                    uint64_t globalOffset,
-                                   uint64_t traceLength );
+                                   uint64_t traceLength,
+                                   uint64_t realtimeTimestamp );
 
 
 static OTF2_CallbackCode
@@ -306,6 +338,19 @@ print_global_def_paradigm_property( void*                 userData,
 
 
 static OTF2_CallbackCode
+print_global_def_io_paradigm( void*                          userData,
+                              OTF2_IoParadigmRef             self,
+                              OTF2_StringRef                 identification,
+                              OTF2_StringRef                 name,
+                              OTF2_IoParadigmClass           ioParadigmClass,
+                              OTF2_IoParadigmFlag            ioParadigmFlags,
+                              uint8_t                        numberOfProperties,
+                              const OTF2_IoParadigmProperty* properties,
+                              const OTF2_Type*               types,
+                              const OTF2_AttributeValue*     values );
+
+
+static OTF2_CallbackCode
 print_global_def_string( void*          userData,
                          OTF2_StringRef self,
                          const char*    string );
@@ -319,7 +364,8 @@ print_global_def_string( void*          userData,
                              defs->strings,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -358,7 +404,8 @@ print_global_def_attribute( void*             userData,
                              defs->attributes,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -401,7 +448,8 @@ print_global_def_system_tree_node( void*                  userData,
                              defs->system_tree_nodes,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -433,7 +481,8 @@ print_global_def_location_group( void*                  userData,
                                  OTF2_LocationGroupRef  self,
                                  OTF2_StringRef         name,
                                  OTF2_LocationGroupType locationGroupType,
-                                 OTF2_SystemTreeNodeRef systemTreeParent );
+                                 OTF2_SystemTreeNodeRef systemTreeParent,
+                                 OTF2_LocationGroupRef  creatingLocationGroup );
 
 #if 0
 {
@@ -444,7 +493,8 @@ print_global_def_location_group( void*                  userData,
                              defs->location_groups,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -458,12 +508,14 @@ print_global_def_location_group( void*                  userData,
             "name: %s, "
             "locationGroupType: %s, "
             "systemTreeParent: %s, "
+            "creatingLocationGroup: %s, "
             "%s",
             otf2_DEF_COLUMN_WIDTH, "LOCATION_GROUP",
             self,
             otf2_print_get_def_name( defs->strings, name ),
             otf2_print_get_location_group_type( locationGroupType ),
             otf2_print_get_def_name( defs->system_tree_nodes, systemTreeParent ),
+            otf2_print_get_def_name( defs->location_groups, creatingLocationGroup ),
             "\n" );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -488,7 +540,8 @@ print_global_def_location( void*                 userData,
                                defs->locations,
                                defs->strings,
                                self,
-                               OTF2_UNDEFINED_STRING /* name attribute */ );
+                               OTF2_UNDEFINED_STRING /* name attribute */,
+                               true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -539,7 +592,8 @@ print_global_def_region( void*           userData,
                              defs->regions,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -595,7 +649,8 @@ print_global_def_callsite( void*            userData,
                              defs->callsites,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -639,7 +694,8 @@ print_global_def_callpath( void*            userData,
                              defs->callpaths,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -683,7 +739,8 @@ print_global_def_group( void*           userData,
                              defs->groups,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -735,7 +792,8 @@ print_global_def_metric_member( void*                userData,
                              defs->metric_members,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -785,11 +843,12 @@ print_global_def_metric_class( void*                       userData,
     struct otf2_print_data* data = userData;
     struct otf2_print_defs* defs = data->defs;
 
-    otf2_print_add_def_name( "MetricClass",
+    otf2_print_add_def_name( "Metric",
                              defs->metrics,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -829,11 +888,12 @@ print_global_def_metric_instance( void*            userData,
     struct otf2_print_data* data = userData;
     struct otf2_print_defs* defs = data->defs;
 
-    otf2_print_add_def_name( "MetricInstance",
+    otf2_print_add_def_name( "Metric",
                              defs->metrics,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -867,7 +927,8 @@ print_global_def_comm( void*          userData,
                        OTF2_CommRef   self,
                        OTF2_StringRef name,
                        OTF2_GroupRef  group,
-                       OTF2_CommRef   parent );
+                       OTF2_CommRef   parent,
+                       OTF2_CommFlag  flags );
 
 #if 0
 {
@@ -878,7 +939,8 @@ print_global_def_comm( void*          userData,
                              defs->comms,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -892,12 +954,14 @@ print_global_def_comm( void*          userData,
             "name: %s, "
             "group: %s, "
             "parent: %s, "
+            "flags: %s, "
             "%s",
             otf2_DEF_COLUMN_WIDTH, "COMM",
             self,
             otf2_print_get_def_name( defs->strings, name ),
             otf2_print_get_def_name( defs->groups, group ),
             otf2_print_get_def_name( defs->comms, parent ),
+            otf2_print_get_comm_flag( flags ),
             "\n" );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -920,7 +984,8 @@ print_global_def_parameter( void*              userData,
                              defs->parameters,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -946,10 +1011,11 @@ print_global_def_parameter( void*              userData,
 
 
 static OTF2_CallbackCode
-print_global_def_rma_win( void*          userData,
-                          OTF2_RmaWinRef self,
-                          OTF2_StringRef name,
-                          OTF2_CommRef   comm );
+print_global_def_rma_win( void*           userData,
+                          OTF2_RmaWinRef  self,
+                          OTF2_StringRef  name,
+                          OTF2_CommRef    comm,
+                          OTF2_RmaWinFlag flags );
 
 #if 0
 {
@@ -960,7 +1026,8 @@ print_global_def_rma_win( void*          userData,
                              defs->rma_wins,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -973,11 +1040,13 @@ print_global_def_rma_win( void*          userData,
             "  "
             "name: %s, "
             "comm: %s, "
+            "flags: %s, "
             "%s",
             otf2_DEF_COLUMN_WIDTH, "RMA_WIN",
             self,
             otf2_print_get_def_name( defs->strings, name ),
             otf2_print_get_def_name( defs->comms, comm ),
+            otf2_print_get_rma_win_flag( flags ),
             "\n" );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -987,7 +1056,7 @@ print_global_def_rma_win( void*          userData,
 
 static OTF2_CallbackCode
 print_global_def_metric_class_recorder( void*            userData,
-                                        OTF2_MetricRef   metricClass,
+                                        OTF2_MetricRef   metric,
                                         OTF2_LocationRef recorder );
 
 #if 0
@@ -1004,12 +1073,12 @@ print_global_def_metric_class_recorder( void*            userData,
     printf( "%-*s "
             "%12s"
             "  "
-            "metricClass: %s, "
+            "metric: %s, "
             "recorder: %s, "
             "%s",
             otf2_DEF_COLUMN_WIDTH, "METRIC_CLASS_RECORDER",
             "",
-            otf2_print_get_def_name( defs->metrics, metricClass ),
+            otf2_print_get_def_name( defs->metrics, metric ),
             otf2_print_get_def_name( defs->locations, recorder ),
             "\n" );
 
@@ -1184,7 +1253,8 @@ print_global_def_cart_dimension( void*                 userData,
                              defs->cart_dimensions,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -1228,7 +1298,8 @@ print_global_def_cart_topology( void*                        userData,
                              defs->cart_topologys,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -1307,7 +1378,8 @@ print_global_def_source_code_location( void*                      userData,
                              defs->source_code_locations,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -1348,7 +1420,8 @@ print_global_def_calling_context( void*                      userData,
                              defs->calling_contexts,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -1432,7 +1505,8 @@ print_global_def_interrupt_generator( void*                       userData,
                              defs->interrupt_generators,
                              defs->strings,
                              self,
-                             OTF2_UNDEFINED_STRING /* name attribute */ );
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -1463,6 +1537,305 @@ print_global_def_interrupt_generator( void*                       userData,
 #endif
 
 
+static OTF2_CallbackCode
+print_global_def_io_file_property( void*               userData,
+                                   OTF2_IoFileRef      ioFile,
+                                   OTF2_StringRef      name,
+                                   OTF2_Type           type,
+                                   OTF2_AttributeValue value );
+
+#if 0
+{
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    /* Print definition if selected. */
+    if ( !otf2_GLOBDEFS )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    printf( "%-*s "
+            "%12s"
+            "  "
+            "ioFile: %s, "
+            "name: %s, "
+            "type: %s, "
+            "value: %" PRIAttributeValue ", "
+            "%s",
+            otf2_DEF_COLUMN_WIDTH, "IO_FILE_PROPERTY",
+            "",
+            otf2_print_get_def_name( defs->io_files, ioFile ),
+            otf2_print_get_def_name( defs->strings, name ),
+            otf2_print_get_type( type ),
+            value,
+            "\n" );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_global_def_io_regular_file( void*                  userData,
+                                  OTF2_IoFileRef         self,
+                                  OTF2_StringRef         name,
+                                  OTF2_SystemTreeNodeRef scope );
+
+#if 0
+{
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    otf2_print_add_def_name( "IoFile",
+                             defs->io_files,
+                             defs->strings,
+                             self,
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
+
+    /* Print definition if selected. */
+    if ( !otf2_GLOBDEFS )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    printf( "%-*s "
+            "%12" PRIUint32
+            "  "
+            "name: %s, "
+            "scope: %s, "
+            "%s",
+            otf2_DEF_COLUMN_WIDTH, "IO_REGULAR_FILE",
+            self,
+            otf2_print_get_def_name( defs->strings, name ),
+            otf2_print_get_def_name( defs->system_tree_nodes, scope ),
+            "\n" );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_global_def_io_directory( void*                  userData,
+                               OTF2_IoFileRef         self,
+                               OTF2_StringRef         name,
+                               OTF2_SystemTreeNodeRef scope );
+
+#if 0
+{
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    otf2_print_add_def_name( "IoFile",
+                             defs->io_files,
+                             defs->strings,
+                             self,
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
+
+    /* Print definition if selected. */
+    if ( !otf2_GLOBDEFS )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    printf( "%-*s "
+            "%12" PRIUint32
+            "  "
+            "name: %s, "
+            "scope: %s, "
+            "%s",
+            otf2_DEF_COLUMN_WIDTH, "IO_DIRECTORY",
+            self,
+            otf2_print_get_def_name( defs->strings, name ),
+            otf2_print_get_def_name( defs->system_tree_nodes, scope ),
+            "\n" );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_global_def_io_handle( void*              userData,
+                            OTF2_IoHandleRef   self,
+                            OTF2_StringRef     name,
+                            OTF2_IoFileRef     file,
+                            OTF2_IoParadigmRef ioParadigm,
+                            OTF2_IoHandleFlag  ioHandleFlags,
+                            OTF2_CommRef       comm,
+                            OTF2_IoHandleRef   parent );
+
+#if 0
+{
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    otf2_print_add_def_name( "IoHandle",
+                             defs->io_handles,
+                             defs->strings,
+                             self,
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
+
+    /* Print definition if selected. */
+    if ( !otf2_GLOBDEFS )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    printf( "%-*s "
+            "%12" PRIUint32
+            "  "
+            "name: %s, "
+            "file: %s, "
+            "ioParadigm: %s, "
+            "ioHandleFlags: %s, "
+            "comm: %s, "
+            "parent: %s, "
+            "%s",
+            otf2_DEF_COLUMN_WIDTH, "IO_HANDLE",
+            self,
+            otf2_print_get_def_name( defs->strings, name ),
+            otf2_print_get_def_name( defs->io_files, file ),
+            otf2_print_get_def_name( defs->io_paradigms, ioParadigm ),
+            otf2_print_get_io_handle_flag( ioHandleFlags ),
+            otf2_print_get_def_name( defs->comms, comm ),
+            otf2_print_get_def_name( defs->io_handles, parent ),
+            "\n" );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_global_def_io_pre_created_handle_state( void*             userData,
+                                              OTF2_IoHandleRef  ioHandle,
+                                              OTF2_IoAccessMode mode,
+                                              OTF2_IoStatusFlag statusFlags );
+
+#if 0
+{
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    /* Print definition if selected. */
+    if ( !otf2_GLOBDEFS )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    printf( "%-*s "
+            "%12s"
+            "  "
+            "ioHandle: %s, "
+            "mode: %s, "
+            "statusFlags: %s, "
+            "%s",
+            otf2_DEF_COLUMN_WIDTH, "IO_PRE_CREATED_HANDLE_STATE",
+            "",
+            otf2_print_get_def_name( defs->io_handles, ioHandle ),
+            otf2_print_get_io_access_mode( mode ),
+            otf2_print_get_io_status_flag( statusFlags ),
+            "\n" );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_global_def_callpath_parameter( void*               userData,
+                                     OTF2_CallpathRef    callpath,
+                                     OTF2_ParameterRef   parameter,
+                                     OTF2_Type           type,
+                                     OTF2_AttributeValue value );
+
+#if 0
+{
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    /* Print definition if selected. */
+    if ( !otf2_GLOBDEFS )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    printf( "%-*s "
+            "%12s"
+            "  "
+            "callpath: %s, "
+            "parameter: %s, "
+            "type: %s, "
+            "value: %" PRIAttributeValue ", "
+            "%s",
+            otf2_DEF_COLUMN_WIDTH, "CALLPATH_PARAMETER",
+            "",
+            otf2_print_get_def_name( defs->callpaths, callpath ),
+            otf2_print_get_def_name( defs->parameters, parameter ),
+            otf2_print_get_type( type ),
+            value,
+            "\n" );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_global_def_inter_comm( void*          userData,
+                             OTF2_CommRef   self,
+                             OTF2_StringRef name,
+                             OTF2_GroupRef  groupA,
+                             OTF2_GroupRef  groupB,
+                             OTF2_CommRef   commonCommunicator,
+                             OTF2_CommFlag  flags );
+
+#if 0
+{
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    otf2_print_add_def_name( "Comm",
+                             defs->comms,
+                             defs->strings,
+                             self,
+                             OTF2_UNDEFINED_STRING /* name attribute */,
+                             true );
+
+    /* Print definition if selected. */
+    if ( !otf2_GLOBDEFS )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    printf( "%-*s "
+            "%12" PRIUint32
+            "  "
+            "name: %s, "
+            "groupA: %s, "
+            "groupB: %s, "
+            "commonCommunicator: %s, "
+            "flags: %s, "
+            "%s",
+            otf2_DEF_COLUMN_WIDTH, "INTER_COMM",
+            self,
+            otf2_print_get_def_name( defs->strings, name ),
+            otf2_print_get_def_name( defs->groups, groupA ),
+            otf2_print_get_def_name( defs->groups, groupB ),
+            otf2_print_get_def_name( defs->comms, commonCommunicator ),
+            otf2_print_get_comm_flag( flags ),
+            "\n" );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
 static OTF2_GlobalDefReaderCallbacks*
 otf2_print_create_global_def_callbacks( void )
 {
@@ -1472,6 +1845,7 @@ otf2_print_create_global_def_callbacks( void )
     OTF2_GlobalDefReaderCallbacks_SetClockPropertiesCallback( def_callbacks, print_global_def_clock_properties );
     OTF2_GlobalDefReaderCallbacks_SetParadigmCallback( def_callbacks, print_global_def_paradigm );
     OTF2_GlobalDefReaderCallbacks_SetParadigmPropertyCallback( def_callbacks, print_global_def_paradigm_property );
+    //OTF2_GlobalDefReaderCallbacks_SetIoParadigmCallback( def_callbacks, print_global_def_io_paradigm );
     OTF2_GlobalDefReaderCallbacks_SetStringCallback( def_callbacks, print_global_def_string );
     OTF2_GlobalDefReaderCallbacks_SetAttributeCallback( def_callbacks, print_global_def_attribute );
     OTF2_GlobalDefReaderCallbacks_SetSystemTreeNodeCallback( def_callbacks, print_global_def_system_tree_node );
@@ -1499,6 +1873,13 @@ otf2_print_create_global_def_callbacks( void )
     OTF2_GlobalDefReaderCallbacks_SetCallingContextCallback( def_callbacks, print_global_def_calling_context );
     OTF2_GlobalDefReaderCallbacks_SetCallingContextPropertyCallback( def_callbacks, print_global_def_calling_context_property );
     OTF2_GlobalDefReaderCallbacks_SetInterruptGeneratorCallback( def_callbacks, print_global_def_interrupt_generator );
+    //OTF2_GlobalDefReaderCallbacks_SetIoFilePropertyCallback( def_callbacks, print_global_def_io_file_property );
+    //OTF2_GlobalDefReaderCallbacks_SetIoRegularFileCallback( def_callbacks, print_global_def_io_regular_file );
+    //OTF2_GlobalDefReaderCallbacks_SetIoDirectoryCallback( def_callbacks, print_global_def_io_directory );
+    //OTF2_GlobalDefReaderCallbacks_SetIoHandleCallback( def_callbacks, print_global_def_io_handle );
+    //OTF2_GlobalDefReaderCallbacks_SetIoPreCreatedHandleStateCallback( def_callbacks, print_global_def_io_pre_created_handle_state );
+    //OTF2_GlobalDefReaderCallbacks_SetCallpathParameterCallback( def_callbacks, print_global_def_callpath_parameter );
+    //OTF2_GlobalDefReaderCallbacks_SetInterCommCallback( def_callbacks, print_global_def_inter_comm );
 
     return def_callbacks;
 }
@@ -3674,6 +4055,751 @@ print_calling_context_sample( OTF2_LocationRef           location,
 }
 #endif
 
+/*
+static OTF2_CallbackCode
+print_io_create_handle( OTF2_LocationRef    location,
+                        OTF2_TimeStamp      time,
+                        void*               userData,
+                        OTF2_AttributeList* attributes,
+                        OTF2_IoHandleRef    handle,
+                        OTF2_IoAccessMode   mode,
+                        OTF2_IoCreationFlag creationFlags,
+                        OTF2_IoStatusFlag   statusFlags );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "handle: %s, "
+            "mode: %s, "
+            "creationFlags: %s, "
+            "statusFlags: %s, "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "IO_CREATE_HANDLE",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->io_handles, handle ),
+            otf2_print_get_io_access_mode( mode ),
+            otf2_print_get_io_creation_flag( creationFlags ),
+            otf2_print_get_io_status_flag( statusFlags ),
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_io_destroy_handle( OTF2_LocationRef    location,
+                         OTF2_TimeStamp      time,
+                         void*               userData,
+                         OTF2_AttributeList* attributes,
+                         OTF2_IoHandleRef    handle );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "handle: %s, "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "IO_DESTROY_HANDLE",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->io_handles, handle ),
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_io_duplicate_handle( OTF2_LocationRef    location,
+                           OTF2_TimeStamp      time,
+                           void*               userData,
+                           OTF2_AttributeList* attributes,
+                           OTF2_IoHandleRef    oldHandle,
+                           OTF2_IoHandleRef    newHandle,
+                           OTF2_IoStatusFlag   statusFlags );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "oldHandle: %s, "
+            "newHandle: %s, "
+            "statusFlags: %s, "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "IO_DUPLICATE_HANDLE",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->io_handles, oldHandle ),
+            otf2_print_get_def_name( defs->io_handles, newHandle ),
+            otf2_print_get_io_status_flag( statusFlags ),
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_io_seek( OTF2_LocationRef    location,
+               OTF2_TimeStamp      time,
+               void*               userData,
+               OTF2_AttributeList* attributes,
+               OTF2_IoHandleRef    handle,
+               int64_t             offsetRequest,
+               OTF2_IoSeekOption   whence,
+               uint64_t            offsetResult );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "handle: %s, "
+            "offsetRequest: %" PRIInt64 ", "
+            "whence: %s, "
+            "offsetResult: %" PRIUint64 ", "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "IO_SEEK",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->io_handles, handle ),
+            offsetRequest,
+            otf2_print_get_io_seek_option( whence ),
+            offsetResult,
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_io_change_status_flags( OTF2_LocationRef    location,
+                              OTF2_TimeStamp      time,
+                              void*               userData,
+                              OTF2_AttributeList* attributes,
+                              OTF2_IoHandleRef    handle,
+                              OTF2_IoStatusFlag   statusFlags );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "handle: %s, "
+            "statusFlags: %s, "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "IO_CHANGE_STATUS_FLAGS",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->io_handles, handle ),
+            otf2_print_get_io_status_flag( statusFlags ),
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_io_delete_file( OTF2_LocationRef    location,
+                      OTF2_TimeStamp      time,
+                      void*               userData,
+                      OTF2_AttributeList* attributes,
+                      OTF2_IoParadigmRef  ioParadigm,
+                      OTF2_IoFileRef      file );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "ioParadigm: %s, "
+            "file: %s, "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "IO_DELETE_FILE",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->io_paradigms, ioParadigm ),
+            otf2_print_get_def_name( defs->io_files, file ),
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_io_operation_begin( OTF2_LocationRef     location,
+                          OTF2_TimeStamp       time,
+                          void*                userData,
+                          OTF2_AttributeList*  attributes,
+                          OTF2_IoHandleRef     handle,
+                          OTF2_IoOperationMode mode,
+                          OTF2_IoOperationFlag operationFlags,
+                          uint64_t             bytesRequest,
+                          uint64_t             matchingId );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "handle: %s, "
+            "mode: %s, "
+            "operationFlags: %s, "
+            "bytesRequest: %" PRIUint64 ", "
+            "matchingId: %" PRIUint64 ", "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "IO_OPERATION_BEGIN",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->io_handles, handle ),
+            otf2_print_get_io_operation_mode( mode ),
+            otf2_print_get_io_operation_flag( operationFlags ),
+            bytesRequest,
+            matchingId,
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_io_operation_test( OTF2_LocationRef    location,
+                         OTF2_TimeStamp      time,
+                         void*               userData,
+                         OTF2_AttributeList* attributes,
+                         OTF2_IoHandleRef    handle,
+                         uint64_t            matchingId );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "handle: %s, "
+            "matchingId: %" PRIUint64 ", "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "IO_OPERATION_TEST",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->io_handles, handle ),
+            matchingId,
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_io_operation_issued( OTF2_LocationRef    location,
+                           OTF2_TimeStamp      time,
+                           void*               userData,
+                           OTF2_AttributeList* attributes,
+                           OTF2_IoHandleRef    handle,
+                           uint64_t            matchingId );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "handle: %s, "
+            "matchingId: %" PRIUint64 ", "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "IO_OPERATION_ISSUED",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->io_handles, handle ),
+            matchingId,
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_io_operation_complete( OTF2_LocationRef    location,
+                             OTF2_TimeStamp      time,
+                             void*               userData,
+                             OTF2_AttributeList* attributes,
+                             OTF2_IoHandleRef    handle,
+                             uint64_t            bytesResult,
+                             uint64_t            matchingId );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "handle: %s, "
+            "bytesResult: %" PRIUint64 ", "
+            "matchingId: %" PRIUint64 ", "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "IO_OPERATION_COMPLETE",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->io_handles, handle ),
+            bytesResult,
+            matchingId,
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_io_operation_cancelled( OTF2_LocationRef    location,
+                              OTF2_TimeStamp      time,
+                              void*               userData,
+                              OTF2_AttributeList* attributes,
+                              OTF2_IoHandleRef    handle,
+                              uint64_t            matchingId );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "handle: %s, "
+            "matchingId: %" PRIUint64 ", "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "IO_OPERATION_CANCELLED",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->io_handles, handle ),
+            matchingId,
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_io_acquire_lock( OTF2_LocationRef    location,
+                       OTF2_TimeStamp      time,
+                       void*               userData,
+                       OTF2_AttributeList* attributes,
+                       OTF2_IoHandleRef    handle,
+                       OTF2_LockType       lockType );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "handle: %s, "
+            "lockType: %s, "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "IO_ACQUIRE_LOCK",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->io_handles, handle ),
+            otf2_print_get_lock_type( lockType ),
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_io_release_lock( OTF2_LocationRef    location,
+                       OTF2_TimeStamp      time,
+                       void*               userData,
+                       OTF2_AttributeList* attributes,
+                       OTF2_IoHandleRef    handle,
+                       OTF2_LockType       lockType );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "handle: %s, "
+            "lockType: %s, "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "IO_RELEASE_LOCK",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->io_handles, handle ),
+            otf2_print_get_lock_type( lockType ),
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_io_try_lock( OTF2_LocationRef    location,
+                   OTF2_TimeStamp      time,
+                   void*               userData,
+                   OTF2_AttributeList* attributes,
+                   OTF2_IoHandleRef    handle,
+                   OTF2_LockType       lockType );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "handle: %s, "
+            "lockType: %s, "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "IO_TRY_LOCK",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->io_handles, handle ),
+            otf2_print_get_lock_type( lockType ),
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+*/
+
+static OTF2_CallbackCode
+print_program_begin( OTF2_LocationRef      location,
+                     OTF2_TimeStamp        time,
+                     void*                 userData,
+                     OTF2_AttributeList*   attributes,
+                     OTF2_StringRef        programName,
+                     uint32_t              numberOfArguments,
+                     const OTF2_StringRef* programArguments );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "programName: %s, "
+            "numberOfArguments: %" PRIUint32 ", "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "PROGRAM_BEGIN",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->strings, programName ),
+            numberOfArguments,
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_program_end( OTF2_LocationRef    location,
+                   OTF2_TimeStamp      time,
+                   void*               userData,
+                   OTF2_AttributeList* attributes,
+                   int64_t             exitStatus );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "exitStatus: %" PRIInt64 ", "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "PROGRAM_END",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            exitStatus,
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_non_blocking_collective_request( OTF2_LocationRef    location,
+                                       OTF2_TimeStamp      time,
+                                       void*               userData,
+                                       OTF2_AttributeList* attributes,
+                                       uint64_t            requestID );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "requestID: %" PRIUint64 ", "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "NON_BLOCKING_COLLECTIVE_REQUEST",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            requestID,
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_non_blocking_collective_complete( OTF2_LocationRef    location,
+                                        OTF2_TimeStamp      time,
+                                        void*               userData,
+                                        OTF2_AttributeList* attributes,
+                                        OTF2_CollectiveOp   collectiveOp,
+                                        OTF2_CommRef        communicator,
+                                        uint32_t            root,
+                                        uint64_t            sizeSent,
+                                        uint64_t            sizeReceived,
+                                        uint64_t            requestID );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "collectiveOp: %s, "
+            "communicator: %s, "
+            "root: %" PRIUint32 ", "
+            "sizeSent: %" PRIUint64 ", "
+            "sizeReceived: %" PRIUint64 ", "
+            "requestID: %" PRIUint64 ", "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "NON_BLOCKING_COLLECTIVE_COMPLETE",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_collective_op( collectiveOp ),
+            otf2_print_get_def_name( defs->comms, communicator ),
+            root,
+            sizeSent,
+            sizeReceived,
+            requestID,
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+/*
+static OTF2_CallbackCode
+print_comm_create( OTF2_LocationRef    location,
+                   OTF2_TimeStamp      time,
+                   void*               userData,
+                   OTF2_AttributeList* attributes,
+                   OTF2_CommRef        communicator );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "communicator: %s, "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "COMM_CREATE",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->comms, communicator ),
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+
+
+static OTF2_CallbackCode
+print_comm_destroy( OTF2_LocationRef    location,
+                    OTF2_TimeStamp      time,
+                    void*               userData,
+                    OTF2_AttributeList* attributes,
+                    OTF2_CommRef        communicator );
+
+#if 0
+{
+    if ( time < otf2_MINTIME || time > otf2_MAXTIME )
+    {
+        return OTF2_CALLBACK_SUCCESS;
+    }
+
+    struct otf2_print_data* data = userData;
+    struct otf2_print_defs* defs = data->defs;
+
+    printf( "%-*s %15" PRIu64 " %20s  "
+            "communicator: %s, "
+            "%s",
+            otf2_EVENT_COLUMN_WIDTH, "COMM_DESTROY",
+            location,
+            otf2_print_get_timestamp( data, time ),
+            otf2_print_get_def_name( defs->comms, communicator ),
+            "\n" );
+
+    otf2_print_attribute_list( data, attributes );
+
+    return OTF2_CALLBACK_SUCCESS;
+}
+#endif
+*/
 
 
 static OTF2_CallbackCode
@@ -4233,6 +5359,26 @@ otf2_print_create_global_evt_callbacks( void )
     OTF2_GlobalEvtReaderCallbacks_SetCallingContextEnterCallback( evt_callbacks, print_calling_context_enter );
     OTF2_GlobalEvtReaderCallbacks_SetCallingContextLeaveCallback( evt_callbacks, print_calling_context_leave );
     OTF2_GlobalEvtReaderCallbacks_SetCallingContextSampleCallback( evt_callbacks, print_calling_context_sample );
+    /*OTF2_GlobalEvtReaderCallbacks_SetIoCreateHandleCallback( evt_callbacks, print_io_create_handle );
+    OTF2_GlobalEvtReaderCallbacks_SetIoDestroyHandleCallback( evt_callbacks, print_io_destroy_handle );
+    OTF2_GlobalEvtReaderCallbacks_SetIoDuplicateHandleCallback( evt_callbacks, print_io_duplicate_handle );
+    OTF2_GlobalEvtReaderCallbacks_SetIoSeekCallback( evt_callbacks, print_io_seek );
+    OTF2_GlobalEvtReaderCallbacks_SetIoChangeStatusFlagsCallback( evt_callbacks, print_io_change_status_flags );
+    OTF2_GlobalEvtReaderCallbacks_SetIoDeleteFileCallback( evt_callbacks, print_io_delete_file );
+    OTF2_GlobalEvtReaderCallbacks_SetIoOperationBeginCallback( evt_callbacks, print_io_operation_begin );
+    OTF2_GlobalEvtReaderCallbacks_SetIoOperationTestCallback( evt_callbacks, print_io_operation_test );
+    OTF2_GlobalEvtReaderCallbacks_SetIoOperationIssuedCallback( evt_callbacks, print_io_operation_issued );
+    OTF2_GlobalEvtReaderCallbacks_SetIoOperationCompleteCallback( evt_callbacks, print_io_operation_complete );
+    OTF2_GlobalEvtReaderCallbacks_SetIoOperationCancelledCallback( evt_callbacks, print_io_operation_cancelled );
+    OTF2_GlobalEvtReaderCallbacks_SetIoAcquireLockCallback( evt_callbacks, print_io_acquire_lock );
+    OTF2_GlobalEvtReaderCallbacks_SetIoReleaseLockCallback( evt_callbacks, print_io_release_lock );
+    OTF2_GlobalEvtReaderCallbacks_SetIoTryLockCallback( evt_callbacks, print_io_try_lock );
+    OTF2_GlobalEvtReaderCallbacks_SetProgramBeginCallback( evt_callbacks, print_program_begin );
+    OTF2_GlobalEvtReaderCallbacks_SetProgramEndCallback( evt_callbacks, print_program_end );
+    OTF2_GlobalEvtReaderCallbacks_SetNonBlockingCollectiveRequestCallback( evt_callbacks, print_non_blocking_collective_request );
+    OTF2_GlobalEvtReaderCallbacks_SetNonBlockingCollectiveCompleteCallback( evt_callbacks, print_non_blocking_collective_complete );
+    OTF2_GlobalEvtReaderCallbacks_SetCommCreateCallback( evt_callbacks, print_comm_create );
+    OTF2_GlobalEvtReaderCallbacks_SetCommDestroyCallback( evt_callbacks, print_comm_destroy );*/
 
     return evt_callbacks;
 }
