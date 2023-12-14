@@ -334,7 +334,9 @@ OTF_Writer_writeDownto((OTF_Writer*)userData, TauGetClockTicksInGHz(time), state
     }
 
     return 0;
-}double lastt=0;
+}
+
+double lastt=0;
 
 /***************************************************************************
 * Description: EnterState is called at routine exit by trace input library
@@ -342,7 +344,13 @@ OTF_Writer_writeDownto((OTF_Writer*)userData, TauGetClockTicksInGHz(time), state
 * 		trace converter.
 ***************************************************************************/
 int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, unsigned int statetoken)
-{    int cpuid = GlobalId(nid, tid);
+{    
+
+    int cpuid = GlobalId(nid, tid);
+    if(callstack[cpuid].size()<1){
+        printf("FAULT: Exit from empty stack on nid/tid/cpu: %d/%d/%d. Statetoken: %d\n", nid,tid,cpuid,statetoken);
+        return 0;
+    }
     int stateid = callstack[cpuid].top();
     callstack[cpuid].pop();
 
@@ -358,7 +366,7 @@ OTF_Writer_writeUpfrom((OTF_Writer*)userData, TauGetClockTicksInGHz(time), state
 
     /* we can write stateid = 0 if we don't need stack integrity checking */
     OTF2_EvtWriter_Leave(evt_writer, attributes, TauGetClockTicksInGHz(time), statetoken);
-    lastt=TauGetClockTicksInGHz(time);
+    
     return 0;
 }
 
@@ -617,6 +625,9 @@ long long userEventValue)
     1,
     omt,
     omv );
+    
+    lastt=TauGetClockTicksInGHz(time);
+    
     return 0;
 }
 
