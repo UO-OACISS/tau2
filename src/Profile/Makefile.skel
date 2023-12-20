@@ -149,10 +149,12 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 # ROCPROFILER OBJECTS
 #############################################
 #ROCPROFILER#ROCPROFILER_O = TauRocProfiler.o #ENDIF#
+#ROCPROFILERROCM6#ROCPROFILER_O = TauRocProfiler.o #ENDIF#
 #ROCPROFILERV2#ROCPROFILERV2_O = TauRocProfilerV2.o #ENDIF#
 #ROCM#ROCM_O = TauRocm.o #ENDIF#
 #LEVEL_ZERO#TAU_LEVEL_ZERO_O = TauLevelZero.o #ENDIF#
 #ROCTRACER#ROCTRACER_O = TauRocTracer.o #ENDIF#
+#ROCTRACERROCM6#ROCTRACER_O = TauRocTracer.o #ENDIF#
 
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \

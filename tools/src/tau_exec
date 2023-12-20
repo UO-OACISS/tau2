@@ -1085,6 +1085,7 @@ if [ $track_rocm = "true" ] ; then
   options=`echo $theBinding | sed -e 's/shared-//g' `
   mk=$BASEDIR/lib/Makefile.tau-$options
   rocprofdir=`grep "TAU_ROCPROFILER=" $mk | sed -e 's@TAU_ROCPROFILER=@@g'`
+  echo $rocprofdir
   if [ -r $rocprofdir/lib/librocprofiler64.so ]; then
     $dryrun export TAU_HSA_TOOLS_LIB=$rocprofdir/lib/librocprofiler64.so
   fi
