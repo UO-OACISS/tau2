@@ -3453,7 +3453,7 @@ cat <<EOF > tau_rocm6_vtest.c
 #include <rocm_version.h>
 
 #if (ROCM_VERSION_MAJOR < 6)
-#error "ROCM version is  6 lower than 6"
+#error "ROCM version is lower than 6"
 #endif
 EOF
 	if [ -d $rocmdir/include/rocm-core ]; then
@@ -3466,6 +3466,7 @@ EOF
 			rocmv6=yes
             fixmakeargs="$fixmakeargs TAU_USE_GPU"
             pthread=yes
+            tauoptions="${tauoptions}-rocmv6"
 		else
 			#echo "failed compile"
 			rocmv6=no
@@ -3482,7 +3483,7 @@ echo "rocmv6=$rocmv6"
 echo "rocprofv2=$rocprofv2"
 
 if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" ] ; then
-    echo "Rocmv6!"
+    
     if [ "$roctracer" = yes ]; then
         echo "roctracer"
         fixmakeargs="$fixmakeargs ROCTRACERROCM6"
@@ -3501,30 +3502,16 @@ fi
 
 if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" ]; then
 
-    cat <<EOF > tau_rocprofv2_vtest.c
-#include <include/rocm_version.h>
-
-#if ((ROCM_VERSION_MAJOR != 5) || (ROCM_VERSION_MINOR != 6))
-#error "ROCM version is not 5.6"
-#endif
-EOF
-
-    if $cxx_compiler $orig_useropt -c tau_rocprofv2_vtest.c -I$rocmdir 1> /dev/null 2>&1
-    then
-    echo " Building rocprofv2" >/dev/null
-    rm tau_rocprofv2_vtest.c tau_rocprofv2_vtest.o
+    if [ "rocmv6" = "no" ]; then
+      echo "For rocprofv2 use rocm/6 or newer"
+      exit
     else
-       echo "For rocprofv2 use rocm/5.6.0"
-       rm tau_rocprofv2_vtest.c
-       exit
-    fi
-
-    fixmakeargs="$fixmakeargs TAU_USE_GPU"
-    pthread=yes
-    rocprofiler=no    
-    if [ "x$rocprofilerinc" = "x" ]; then
-     rocprofilerinc="$rocmdir/include/rocprofiler"
-     fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
+      echo "Using rocprofv2"
+      fixmakeargs="$fixmakeargs TAU_USE_GPU"
+      pthread=yes
+      rocprofiler=no    
+      rocprofilerinc="$rocmdir/include/rocprofiler"
+      fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
     fi
 fi
 

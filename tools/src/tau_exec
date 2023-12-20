@@ -1082,16 +1082,30 @@ if [ $track_rocm = "true" ] ; then
   $dryrun export ROCP_HSA_INTERCEPT=2
   $dryrun export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
   #export TAU_HSA_TOOLS_LIB=librocprofiler64.so.1
-  options=`echo $theBinding | sed -e 's/shared-//g' `
-  mk=$BASEDIR/lib/Makefile.tau-$options
-  rocprofdir=`grep "TAU_ROCPROFILER=" $mk | sed -e 's@TAU_ROCPROFILER=@@g'`
-  echo $rocprofdir
-  if [ -r $rocprofdir/lib/librocprofiler64.so ]; then
-    $dryrun export TAU_HSA_TOOLS_LIB=$rocprofdir/lib/librocprofiler64.so
-  fi
-  if [ -r $rocprofdir/lib/metrics.xml ]; then
-    $dryrun export ROCP_METRICS=$rocprofdir/lib/metrics.xml
-  fi
+  isRocmv6=`echo $theBinding | grep rocmv6`
+  if [ ! "x$isRocmv6" == "x"  ]; then
+	  options=`echo $theBinding | sed -e 's/shared-//g' `
+	  mk=$BASEDIR/lib/Makefile.tau-$options
+	  rocmdir=`grep "TAU_ROCM_DIR=" $mk | sed -e 's@TAU_ROCM_DIR=@@g'`
+	  if [ -r $rocmdir/lib/librocprofiler64.so ]; then
+		$dryrun export TAU_HSA_TOOLS_LIB=$rocmdir/lib/librocprofiler64.so
+	  fi
+	  if [ -r $rocmdir/lib/rocprofiler/metrics.xml ]; then
+		$dryrun export ROCP_METRICS=$rocmdir/lib/rocprofiler/metrics.xml
+
+	  fi
+  else
+	  options=`echo $theBinding | sed -e 's/shared-//g' `
+	  mk=$BASEDIR/lib/Makefile.tau-$options
+	  rocprofdir=`grep "TAU_ROCPROFILER=" $mk | sed -e 's@TAU_ROCPROFILER=@@g'`
+	  if [ -r $rocprofdir/lib/librocprofiler64.so ]; then
+		$dryrun export TAU_HSA_TOOLS_LIB=$rocprofdir/lib/librocprofiler64.so
+	  fi
+	  if [ -r $rocprofdir/lib/metrics.xml ]; then
+		$dryrun export ROCP_METRICS=$rocprofdir/lib/metrics.xml
+
+	  fi
+	fi
 fi
 
 isRoctracer=`echo $theBinding | grep roctracer`
