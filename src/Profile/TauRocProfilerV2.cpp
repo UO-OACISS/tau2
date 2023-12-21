@@ -162,8 +162,7 @@ void FlushTracerRecord(rocprofiler_record_tracer_t tracer_record, rocprofiler_se
   queueid = tracer_record.queue_id.handle;
   taskid = Tau_get_initialized_queues(queueid);
   static std::map<uint64_t, std::string> timer_map;
-  static std::mutex map_lock;
-  //printf("tracer_record taskid %d\n", taskid);
+
   if (taskid == -1) { // not initialized
     TAU_CREATE_TASK(taskid);
     TAU_VERBOSE(
@@ -184,142 +183,75 @@ void FlushTracerRecord(rocprofiler_record_tracer_t tracer_record, rocprofiler_se
                               taskid);
   }
 
-    std::string kernel_name;
-    std::string function_name;
-    std::string roctx_message;
-    uint64_t roctx_id = 0;
-    bool roctx_used = false;
-        if ((tracer_record.operation_id.id == 0 && tracer_record.domain == ACTIVITY_DOMAIN_HIP_OPS)) {
-      if (tracer_record.api_data_handle.handle &&
-          strlen(reinterpret_cast<const char*>(tracer_record.api_data_handle.handle)) > 1)
-        kernel_name = Tau_demangle_name(
-            reinterpret_cast<const char*>(tracer_record.api_data_handle.handle));
-    }
-    if (tracer_record.domain == ACTIVITY_DOMAIN_HSA_API) {
-      size_t function_name_size = 0;
-      CHECK_ROCPROFILER(rocprofiler_query_hsa_tracer_api_data_info_size(
-          session_id, ROCPROFILER_HSA_FUNCTION_NAME, tracer_record.api_data_handle,
-          tracer_record.operation_id, &function_name_size));
-      if (function_name_size > 1) {
-        char* function_name_c = (char*)malloc(function_name_size);
-        CHECK_ROCPROFILER(rocprofiler_query_hsa_tracer_api_data_info(
-            session_id, ROCPROFILER_HSA_FUNCTION_NAME, tracer_record.api_data_handle,
-            tracer_record.operation_id, &function_name_c));
-        if (function_name_c) function_name = std::string(function_name_c);
-      }
+  std::string kernel_name;
+  bool roctx_used = false;
+  uint32_t roctx_id = 0;
+  std::string roctx_message;
+  std::string function_name;
+  std::string task_name;
+  const char* function_name_c;
 
-      Tau_roctracer_register_activity(tracer_record.correlation_id.value,
-              function_name, kernel_name);
-    }
-    if (tracer_record.domain == ACTIVITY_DOMAIN_HIP_API) {
-      size_t function_name_size = 0;
-      CHECK_ROCPROFILER(rocprofiler_query_hip_tracer_api_data_info_size(
-          session_id, ROCPROFILER_HIP_FUNCTION_NAME, tracer_record.api_data_handle,
-          tracer_record.operation_id, &function_name_size));
-      if (function_name_size > 1) {
-        char* function_name_c = (char*)malloc(function_name_size);
-        CHECK_ROCPROFILER(rocprofiler_query_hip_tracer_api_data_info(
-            session_id, ROCPROFILER_HIP_FUNCTION_NAME, tracer_record.api_data_handle,
-            tracer_record.operation_id, &function_name_c));
-        if (function_name_c) function_name = std::string(function_name_c);
-      }
-      size_t kernel_name_size = 0;
-      CHECK_ROCPROFILER(rocprofiler_query_hip_tracer_api_data_info_size(
-          session_id, ROCPROFILER_HIP_KERNEL_NAME, tracer_record.api_data_handle,
-          tracer_record.operation_id, &kernel_name_size));
-      if (kernel_name_size > 1) {
-        char* kernel_name_str = (char*)malloc(kernel_name_size * sizeof(char));
-        CHECK_ROCPROFILER(rocprofiler_query_hip_tracer_api_data_info(
-            session_id, ROCPROFILER_HIP_KERNEL_NAME, tracer_record.api_data_handle,
-            tracer_record.operation_id, &kernel_name_str));
-        if (kernel_name_str) kernel_name = Tau_demangle_name(kernel_name_str);
-      }
-
-      Tau_roctracer_register_activity(tracer_record.correlation_id.value,
-              function_name, kernel_name);
-    }
-    if (tracer_record.domain == ACTIVITY_DOMAIN_ROCTX) {
-      size_t roctx_message_size = 0;
-      CHECK_ROCPROFILER(rocprofiler_query_roctx_tracer_api_data_info_size(
-          session_id, ROCPROFILER_ROCTX_MESSAGE, tracer_record.api_data_handle,
-          tracer_record.operation_id, &roctx_message_size));
-      if (roctx_message_size > 1) {
-        [[maybe_unused]] char* roctx_message_str =
-            static_cast<char*>(malloc(roctx_message_size * sizeof(char)));
-        CHECK_ROCPROFILER(rocprofiler_query_roctx_tracer_api_data_info(
-            session_id, ROCPROFILER_ROCTX_MESSAGE, tracer_record.api_data_handle,
-            tracer_record.operation_id, &roctx_message_str));
-        if (roctx_message_str)
-          roctx_message = Tau_demangle_name(strdup(roctx_message_str));
-      }
-      size_t roctx_id_size = 0;
-      CHECK_ROCPROFILER(rocprofiler_query_roctx_tracer_api_data_info_size(
-          session_id, ROCPROFILER_ROCTX_ID, tracer_record.api_data_handle, tracer_record.operation_id,
-          &roctx_id_size));
-      if (roctx_id_size > 1) {
-        [[maybe_unused]] char* roctx_id_str =
-            static_cast<char*>(malloc(roctx_id_size * sizeof(char)));
-        CHECK_ROCPROFILER(rocprofiler_query_roctx_tracer_api_data_info(
-            session_id, ROCPROFILER_ROCTX_ID, tracer_record.api_data_handle,
-            tracer_record.operation_id, &roctx_id_str));
-        if (roctx_id_str) {
-          roctx_used = true;
-          roctx_id = std::stoll(std::string(strdup(roctx_id_str)));
-          free(roctx_id_str);
-        }
-	if(roctx_id > 0){
-		if(roctx_message_size>1){
-	                const std::lock_guard<std::mutex> guard(map_lock);
-			TAU_START(roctx_message.c_str());
-			timer_map.insert( std::pair<uint64_t, std::string>(roctx_id, roctx_message));
-		}
-		else{
-	                const std::lock_guard<std::mutex> guard(map_lock);
-			 auto p = timer_map.find(roctx_id);
-                	if (p != timer_map.end()) {
-                    		TAU_STOP(p->second.c_str());
-                    		timer_map.erase(roctx_id);
-                	}
-		}
-	}
-      }
-    }
-    if (tracer_record.domain == ACTIVITY_DOMAIN_HIP_OPS) {
+  switch(tracer_record.domain)
+  {
+    case ACTIVITY_DOMAIN_ROCTX:
+      roctx_used = true;
+      roctx_id = tracer_record.operation_id.id;
+      roctx_message = tracer_record.name;
+      break;
+    case ACTIVITY_DOMAIN_HSA_API:
+      CHECK_ROCPROFILER(rocprofiler_query_tracer_operation_name(
+        tracer_record.domain, tracer_record.operation_id, &function_name_c));
+      function_name = function_name_c ? function_name_c : "";
+      Tau_roctracer_register_activity(tracer_record.correlation_id.value, function_name, kernel_name);
+      break;
+    case ACTIVITY_DOMAIN_HIP_API:
+      CHECK_ROCPROFILER(rocprofiler_query_tracer_operation_name(
+        tracer_record.domain, tracer_record.operation_id, &function_name_c));
+      function_name = function_name_c ? function_name_c : "";
+      Tau_roctracer_register_activity(tracer_record.correlation_id.value, function_name, kernel_name);
+      break;
+    case ACTIVITY_DOMAIN_HSA_OPS:
       function_name = std::string(Tau_roctracer_lookup_activity(tracer_record.correlation_id.value));
-      TAU_VERBOSE("ACTIVITY_DOMAIN_HIP_OPS %lu %s\n", tracer_record.correlation_id.value, function_name.c_str());
-    }
-    if (tracer_record.domain == ACTIVITY_DOMAIN_HSA_OPS) {
+      TAU_VERBOSE("ACTIVITY_DOMAIN_HSA_OPS %lu %s ", tracer_record.correlation_id.value, function_name.c_str());
+      break;
+    case ACTIVITY_DOMAIN_HIP_OPS:
       function_name = std::string(Tau_roctracer_lookup_activity(tracer_record.correlation_id.value));
-      TAU_VERBOSE("ACTIVITY_DOMAIN_HSA_OPS %lu %s\n", tracer_record.correlation_id.value, function_name.c_str());
-    }
-    std::string task_name;
-    TAU_VERBOSE("Record [%lu]", tracer_record.header.id.handle);
-    TAU_VERBOSE(", Domain(%s)", GetDomainName(tracer_record.domain));
-    TAU_VERBOSE(", Begin(%lu)", tracer_record.timestamps.begin.value);
-    TAU_VERBOSE(", End(%lu)", tracer_record.timestamps.end.value);
-    TAU_VERBOSE(", Correlation ID(%lu)", tracer_record.correlation_id.value);
-
-    if (roctx_used){
-      TAU_VERBOSE(", ROCTX ID( %lu )", roctx_id);
-    }
-    if (roctx_message.size() > 1){
-      TAU_VERBOSE(", ROCTX Message( %s )", roctx_message.c_str());
-     task_name = roctx_message;
-    }
-    if (function_name.size() > 1){
-      TAU_VERBOSE(", Function( %s )", function_name.c_str());
-     task_name = function_name;
-    }
-    if (kernel_name.size() > 1){
-      TAU_VERBOSE(", Kernel name( %s )", kernel_name.c_str());
-     task_name = kernel_name;
-    }
-    if((function_name.size() > 1) && (kernel_name.size() > 1)){
-      task_name = function_name+ " " + kernel_name;
-    }
-    TAU_VERBOSE("\n");
+      TAU_VERBOSE("ACTIVITY_DOMAIN_HIP_OPS %lu %s ", tracer_record.correlation_id.value, function_name.c_str());
+      if(tracer_record.name != NULL)
+        kernel_name = Tau_demangle_name(reinterpret_cast<const char*>(tracer_record.name));
+      break;
+    default :
+      printf("DOMAIN DOES NOT EXIST !!!!!!!!\n");
+      break;
+  }
 
 
+  TAU_VERBOSE("Record [%lu]", tracer_record.header.id.handle);
+  TAU_VERBOSE(", Domain(%s)", GetDomainName(tracer_record.domain));
+  TAU_VERBOSE(", Begin(%lu)", tracer_record.timestamps.begin.value);
+  TAU_VERBOSE(", End(%lu)", tracer_record.timestamps.end.value);
+  TAU_VERBOSE(", Correlation ID(%lu)", tracer_record.correlation_id.value);
+
+  if (roctx_used){
+    TAU_VERBOSE(", ROCTX ID( %lu )", roctx_id);
+  }
+  if (roctx_message.size() > 1){
+    TAU_VERBOSE(", ROCTX Message( %s )", roctx_message.c_str());
+   task_name = roctx_message;
+  }
+  if (function_name.size() > 1){
+    TAU_VERBOSE(", Function( %s )", function_name.c_str());
+   task_name = function_name;
+  }
+  if (kernel_name.size() > 1){
+    TAU_VERBOSE(", Kernel name( %s )", kernel_name.c_str());
+   task_name = kernel_name;
+  }
+  if((function_name.size() > 1) && (kernel_name.size() > 1)){
+    task_name = function_name+ " " + kernel_name;
+  }
+  TAU_VERBOSE("\n");
+    
 
   if (tracer_record.domain != ACTIVITY_DOMAIN_ROCTX) {
     metric_set_gpu_timestamp(taskid, ((double)(tracer_record.timestamps.begin.value)));
@@ -330,6 +262,7 @@ void FlushTracerRecord(rocprofiler_record_tracer_t tracer_record, rocprofiler_se
     //TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", task_name, taskid, tracer_record.timestamps.end.value);
     Tau_set_last_timestamp_ns(tracer_record.timestamps.end.value);
   }
+
 }
 
 void FlushProfilerRecord(const rocprofiler_record_profiler_t *profiler_record,
@@ -468,37 +401,39 @@ int WriteBufferRecords(const rocprofiler_record_header_t *begin,
     abort();
   }
 
-    if(is_loaded)
-    {
-            TAU_VERBOSE("WriteBufferRecords\n");
-            
-            fflush(stdout);
+  if(is_loaded)
+  {
+    TAU_VERBOSE("WriteBufferRecords\n");
+    
+    fflush(stdout);
 
-            while (begin < end) {
-              if (!begin)
-                return 0;
-              switch (begin->kind) {
-              case ROCPROFILER_PROFILER_RECORD: {
-                const rocprofiler_record_profiler_t *profiler_record =
-                    reinterpret_cast<const rocprofiler_record_profiler_t *>(
-                        begin);
-                FlushProfilerRecord(profiler_record, session_id);
-                break;
-              }
-            case ROCPROFILER_TRACER_RECORD:{
-              rocprofiler_record_tracer_t* tracer_record = const_cast<rocprofiler_record_tracer_t*>(
-              reinterpret_cast<const rocprofiler_record_tracer_t*>(begin));
-              FlushTracerRecord(*tracer_record, session_id);
-              break;
-            }
-              default: {
-                break;
-              }
-              }
-              rocprofiler_next_record(begin, &begin, session_id, buffer_id);
-            }
-
+    while (begin < end) {
+      if (!begin)
+        return 0;
+      switch (begin->kind) {
+        case ROCPROFILER_PROFILER_RECORD:
+        {
+          const rocprofiler_record_profiler_t *profiler_record =
+              reinterpret_cast<const rocprofiler_record_profiler_t *>(
+                  begin);
+          FlushProfilerRecord(profiler_record, session_id);
+          break;
+        }
+        case ROCPROFILER_TRACER_RECORD:
+        {
+          rocprofiler_record_tracer_t* tracer_record = const_cast<rocprofiler_record_tracer_t*>(
+          reinterpret_cast<const rocprofiler_record_tracer_t*>(begin));
+          FlushTracerRecord(*tracer_record, session_id);
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+      rocprofiler_next_record(begin, &begin, session_id, buffer_id);
     }
+
+  }
   if (pthread_mutex_unlock(&rocm_mutex) != 0) {
     perror("pthread_mutex_unlock");
     abort();
@@ -532,6 +467,10 @@ extern void Tau_roc_trace_sync_call_v2(rocprofiler_record_tracer_t tracer_record
 
 ROCPROFILER_EXPORT extern const uint32_t HSA_AMD_TOOL_PRIORITY = 1025;
 
+
+//Remember to check difference between this function called in TauInit and hsa OnLoad
+//Implemented without ROCPROFILER_COUNTER_LIST NOR ATT, check if necessary and implement after rocprofv2 is working
+//Also, all DOMAINS are traced, should this be changed?
 void Tau_rocm_initialize_v2() {
 
   if (pthread_mutex_lock(&rocm_mutex) != 0) {
@@ -539,81 +478,82 @@ void Tau_rocm_initialize_v2() {
     abort();
   }
 
-    if (!is_loaded){
-            is_loaded = true;
-            TAU_VERBOSE("Inside Tau_rocm_initialize_v2\n");
-             if (rocprofiler_version_major() != ROCPROFILER_VERSION_MAJOR ||
-                rocprofiler_version_minor() < ROCPROFILER_VERSION_MINOR) {
-                printf("!!!!the ROCProfiler API version is not compatible with this tool!!\n");
-                return ;
-            }
 
-            // Initialize the tools
-            CHECK_ROCPROFILER(rocprofiler_initialize());
-
-            CHECK_ROCPROFILER(rocprofiler_create_session(
-                ROCPROFILER_KERNEL_REPLAY_MODE, &session_id));
-
-
-            std::vector<rocprofiler_tracer_activity_domain_t> apis_requested;
-
-            apis_requested.emplace_back(ACTIVITY_DOMAIN_HIP_API);
-            apis_requested.emplace_back(ACTIVITY_DOMAIN_HIP_OPS);
-            apis_requested.emplace_back(ACTIVITY_DOMAIN_HSA_API);
-            apis_requested.emplace_back(ACTIVITY_DOMAIN_HSA_OPS);
-            apis_requested.emplace_back(ACTIVITY_DOMAIN_ROCTX);
-
-
-            // Creating Output Buffer for the data
-
-            CHECK_ROCPROFILER(rocprofiler_create_buffer(
-                session_id,
-                [](const rocprofiler_record_header_t *record,
-                   const rocprofiler_record_header_t *end_record,
-                   rocprofiler_session_id_t session_id,
-                   rocprofiler_buffer_id_t counter_buffer_id) {
-                  WriteBufferRecords(record, end_record, session_id, counter_buffer_id);
-                },
-                1<<20, &counter_buffer_id));
-
-            CHECK_ROCPROFILER(rocprofiler_create_buffer(
-                session_id,
-                [](const rocprofiler_record_header_t *record,
-                   const rocprofiler_record_header_t *end_record,
-                   rocprofiler_session_id_t session_id,
-                   rocprofiler_buffer_id_t trace_buffer_id) {
-                  WriteBufferRecords(record, end_record, session_id, trace_buffer_id);
-                },
-                1<<20, &trace_buffer_id));           
-
-            rocprofiler_filter_id_t filter_id;
-            [[maybe_unused]] rocprofiler_filter_property_t property = {};
-            CHECK_ROCPROFILER(rocprofiler_create_filter(
-                session_id, ROCPROFILER_DISPATCH_TIMESTAMPS_COLLECTION,
-                 rocprofiler_filter_data_t{},
-                0, &filter_id, property));
-
-            CHECK_ROCPROFILER(rocprofiler_set_filter_buffer(
-                session_id, filter_id, counter_buffer_id));
-            
-            filter_ids.emplace_back(filter_id);
-
-            rocprofiler_filter_id_t filter_id1;
-            [[maybe_unused]] rocprofiler_filter_property_t property1 = {};
-            CHECK_ROCPROFILER(rocprofiler_create_filter(
-                session_id, ROCPROFILER_API_TRACE,
-                rocprofiler_filter_data_t{&apis_requested[0]},
-                apis_requested.size(), &filter_id1, property1));
-
-            CHECK_ROCPROFILER(rocprofiler_set_filter_buffer(
-                session_id, filter_id1, trace_buffer_id));
-            CHECK_ROCPROFILER(rocprofiler_set_api_trace_sync_callback( session_id,
-              filter_id1, Tau_roc_trace_sync_call_v2));
-
-            filter_ids.emplace_back(filter_id1);
-
-            CHECK_ROCPROFILER(rocprofiler_start_session(session_id));
+  if (!is_loaded){
+    is_loaded = true;
+    TAU_VERBOSE("Inside Tau_rocm_initialize_v2\n");
+     if (rocprofiler_version_major() != ROCPROFILER_VERSION_MAJOR ||
+        rocprofiler_version_minor() < ROCPROFILER_VERSION_MINOR) {
+        printf("!!!!the ROCProfiler API version is not compatible with this tool!!\n");
+        return ;
     }
+
+    // Initialize the tools
+    CHECK_ROCPROFILER(rocprofiler_initialize());
+
+    CHECK_ROCPROFILER(rocprofiler_create_session(
+        ROCPROFILER_NONE_REPLAY_MODE, &session_id));
+
+
+    std::vector<rocprofiler_tracer_activity_domain_t> apis_requested;
+
+    apis_requested.emplace_back(ACTIVITY_DOMAIN_HIP_API);
+    apis_requested.emplace_back(ACTIVITY_DOMAIN_HIP_OPS);
+    apis_requested.emplace_back(ACTIVITY_DOMAIN_HSA_API);
+    apis_requested.emplace_back(ACTIVITY_DOMAIN_HSA_OPS);
+    apis_requested.emplace_back(ACTIVITY_DOMAIN_ROCTX);
+
+
+    // Creating Output Buffer for the data
+
+    CHECK_ROCPROFILER(rocprofiler_create_buffer(
+        session_id,
+        [](const rocprofiler_record_header_t *record,
+           const rocprofiler_record_header_t *end_record,
+           rocprofiler_session_id_t session_id,
+           rocprofiler_buffer_id_t counter_buffer_id) {
+          WriteBufferRecords(record, end_record, session_id, counter_buffer_id);
+        },
+        1<<20, &counter_buffer_id));
+
+    CHECK_ROCPROFILER(rocprofiler_create_buffer(
+        session_id,
+        [](const rocprofiler_record_header_t *record,
+           const rocprofiler_record_header_t *end_record,
+           rocprofiler_session_id_t session_id,
+           rocprofiler_buffer_id_t trace_buffer_id) {
+          WriteBufferRecords(record, end_record, session_id, trace_buffer_id);
+        },
+        1<<20, &trace_buffer_id));           
+
+    rocprofiler_filter_id_t filter_id;
+    [[maybe_unused]] rocprofiler_filter_property_t property = {};
+    CHECK_ROCPROFILER(rocprofiler_create_filter(
+        session_id, ROCPROFILER_DISPATCH_TIMESTAMPS_COLLECTION,
+         rocprofiler_filter_data_t{},
+        0, &filter_id, property));
+
+    CHECK_ROCPROFILER(rocprofiler_set_filter_buffer(
+        session_id, filter_id, counter_buffer_id));
+    
+    filter_ids.emplace_back(filter_id);
+
+    rocprofiler_filter_id_t filter_id1;
+    [[maybe_unused]] rocprofiler_filter_property_t property1 = {};
+    CHECK_ROCPROFILER(rocprofiler_create_filter(
+        session_id, ROCPROFILER_API_TRACE,
+        rocprofiler_filter_data_t{&apis_requested[0]},
+        apis_requested.size(), &filter_id1, property1));
+
+    CHECK_ROCPROFILER(rocprofiler_set_filter_buffer(
+        session_id, filter_id1, trace_buffer_id));
+    CHECK_ROCPROFILER(rocprofiler_set_api_trace_sync_callback( session_id,
+      filter_id1, Tau_roc_trace_sync_call_v2));
+
+    filter_ids.emplace_back(filter_id1);
+
+    CHECK_ROCPROFILER(rocprofiler_start_session(session_id));
+  }
   if (pthread_mutex_unlock(&rocm_mutex) != 0) {
     perror("pthread_mutex_unlock");
     abort();
