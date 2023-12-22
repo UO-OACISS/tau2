@@ -18,6 +18,7 @@
 #include <stddef.h>
 #include <otf2/otf2.h> /* OTF header file */
 #include <map>
+#include <unordered_map>
 #include <vector>
 #include <stack>
 #include <inttypes.h>
@@ -116,6 +117,14 @@ map< pair<int,int>, int, less< pair<int,int> > > EOF_Trace;
 map< int,int, less<int > > numthreads;
 /* numthreads[k] is no. of threads in rank k */
 
+unordered_map<int,int> regionMap;
+int regionIDTracker=0;
+unordered_map<int,int> metricMap;
+int metricIDTracker=0;
+unordered_map<int,int> groupMap;
+int groupIDTracker=0;
+
+
 int EndOfTrace = 0;  /* false */
 int location_count = 0;
 
@@ -208,13 +217,17 @@ void tau_trim(char * s) {
     while(* p && isspace(* p)) ++p, --l;
 
     memmove(s, p, l + 1);
-}char* tau_strdup(const char* in_string) {
+}
+
+char* tau_strdup(const char* in_string) {
     // add one more character for the null terminator
     int length = strlen(in_string) + 1;
     char* new_string = (char*)calloc(length, sizeof(char));
     strcpy(new_string, in_string);
     return new_string;
-}source_info parseSourceInfo(const char * name){
+}
+
+source_info parseSourceInfo(const char * name){
     source_info info = source_info();
 
     const char* throttled = "[THROTTLED]";
@@ -275,7 +288,9 @@ void tau_trim(char * s) {
     //info.event_name=short_name;
 
     return info;
-}/* FIX GlobalID so it takes into account numthreads */
+}
+
+/* FIX GlobalID so it takes into account numthreads */
 /* utilities */
 int GlobalId(int localnodeid, int localthreadid)
 {    if (multiThreaded) /* do it for both single and multi-threaded */
@@ -305,8 +320,11 @@ double firstRealTime=0;
 * 		trace converter.
 ***************************************************************************/
 int EnterState(void *userData, double time,
-unsigned int nid, unsigned int tid, unsigned int stateid)
+unsigned int nid, unsigned int tid, unsigned int tauStateid)
 {    int cpuid = GlobalId(nid, tid);
+
+    int stateid=regionMap[tauStateid];
+
     dprintf("Entered state %d time %g cpuid %d\n",
     stateid, time, cpuid);
 
@@ -343,9 +361,9 @@ double lastt=0;
 * 		This is a callback routine which must be registered by the
 * 		trace converter.
 ***************************************************************************/
-int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, unsigned int statetoken)
+int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, unsigned int tauStatetoken)
 {    
-
+    int statetoken=regionMap[tauStatetoken];
     int cpuid = GlobalId(nid, tid);
     if(callstack[cpuid].size()<1){
         printf("FAULT: Exit from empty stack on nid/tid/cpu: %d/%d/%d. Statetoken: %d\n", nid,tid,cpuid,statetoken);
@@ -427,21 +445,22 @@ int EndTrace( void *userData, unsigned int nodeToken, unsigned int threadToken)
 * 		This is a callback routine which must be registered by the
 * 		trace converter.
 ***************************************************************************/
-int DefStateGroup( void *userData, unsigned int stateGroupToken,
+int DefStateGroup( void *userData, unsigned int tauStateGroupToken,
 const char *stateGroupName )
-{    dprintf("StateGroup groupid %d, group name %s\n", stateGroupToken,
+{    
+    int stateGroupToken=groupIDTracker;
+    groupMap[tauStateGroupToken]=groupIDTracker++;
+    dprintf("StateGroup groupid %d, group name %s\n", stateGroupToken,
     stateGroupName);
 
     groups[stateGroupToken]=group();
     groups[stateGroupToken].groupid=stateGroupToken;
     groups[stateGroupToken].name=stateGroupName;
     return 0;
-}OTF2_ErrorCode status;
-static inline void
-check_status
-(OTF2_ErrorCode status,
-const char*             description
-){
+}
+
+OTF2_ErrorCode status;
+static inline void check_status (OTF2_ErrorCode status, const char* description){
     if ( status != OTF2_SUCCESS )
     {
         printf( "\nERROR: %s\n\n", description );
@@ -455,9 +474,14 @@ const char*             description
 * 		This is a callback routine which must be registered by the
 * 		trace converter.
 ***************************************************************************/
-int DefState( void *userData, unsigned int stateToken, const char *stateName,
-unsigned int stateGroupToken )
-{    dprintf("DefState stateid %d stateName %s stategroup id %d\n",
+int DefState( void *userData, unsigned int tauStateToken, const char *stateName,
+unsigned int tauStateGroupToken )
+{    
+    int stateToken=regionIDTracker;
+    regionMap[tauStateToken]=regionIDTracker++;
+    int stateGroupToken=groupMap[tauStateGroupToken];
+    
+    dprintf("DefState stateid %d stateName %s stategroup id %d\n",
     stateToken, stateName, stateGroupToken);
 
     /* We need to remove the backslash and quotes from "\"funcname\"" */
@@ -529,9 +553,12 @@ unsigned int stateGroupToken )
 * 		This is a callback routine which must be registered by the
 * 		trace converter.
 ***************************************************************************/
-int DefUserEvent( void *userData, unsigned int userEventToken,
+int DefUserEvent( void *userData, unsigned int tauUserEventToken,
 const char *userEventName , int monotonicallyIncreasing)
-{    dprintf("DefUserEvent event id %d user event name %s\n", userEventToken,
+{   
+    int userEventToken=metricIDTracker;
+    metricMap[tauUserEventToken]=metricIDTracker++;
+    dprintf("DefUserEvent event id %d user event name %s\n", userEventToken,
     userEventName);
     //int dodifferentiation;
 
@@ -600,9 +627,11 @@ NUM_OF_CLASSES+=1;
 int EventTrigger( void *userData, double time,
 unsigned int nid,
 unsigned int tid,
-unsigned int userEventToken,
+unsigned int tauUserEventToken,
 long long userEventValue)
-{    int cpuid = GlobalId (nid, tid); /* GID */
+{    
+    int userEventToken=metricMap[tauUserEventToken];
+    int cpuid = GlobalId (nid, tid); /* GID */
     dprintf("EventTrigger: time %g, cpuid %d event id %d triggered value %lld \n", time, cpuid, userEventToken, userEventValue);
 
     if(userEventToken==7004){
@@ -723,26 +752,25 @@ int ResetEOFTrace(void)
     }
 
     return 0;
-}static OTF2_FlushType
-pre_flush
-(void*         userData,
+}
+
+static OTF2_FlushType pre_flush(void*         userData,
 OTF2_FileType fileType,
 uint64_t      locationId,
 void*         callerData,
 bool          final
 ){
     return OTF2_FLUSH;
-}static OTF2_TimeStamp
-post_flush
-(void*         userData,
+}
+
+static OTF2_TimeStamp post_flush(void*         userData,
 OTF2_FileType fileType,
-uint64_t      locationId
-){
+uint64_t      locationId){
     return get_time();
-}static uint64_t
-get_time
-(void
-){
+}
+
+static uint64_t get_time
+(void){
     static uint64_t sequence;
     return sequence++;
 }
@@ -1080,11 +1108,11 @@ for (i=0; i < nodes; i++)
         }
     }
 
-    unsigned int *idarray = new unsigned int[totalnidtids];
+    /*unsigned int *idarray = new unsigned int[totalnidtids];
     for (i = 0; i < totalnidtids; i++)
-    { /* assign i to each entry */
+    { // assign i to each entry 
         idarray[i] = i+1;
-    }
+    }*/
 
     /* create a callstack on each thread/process id */
     dprintf("totalnidtids  = %d\n", totalnidtids);
@@ -1181,7 +1209,17 @@ cb.LeaveState = 0;
     /* dummy records */
     Ttf_CloseFile(fh);
 
-    sprintf( name_buffer, "MPI_COMM_WORLD" );//PRIu64
+    status = OTF2_GlobalDefWriter_WriteClockProperties( glob_def_writer,
+    1000000000,
+    firstRealTime,
+    lastt,
+    OTF2_UNDEFINED_TIMESTAMP );
+    check_status( status, "Write clock properties." );
+    
+    
+    
+    
+        sprintf( name_buffer, "MPI_COMM_WORLD" );//PRIu64
     status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
     string_id,
     name_buffer );
@@ -1196,6 +1234,7 @@ cb.LeaveState = 0;
     OTF2_GROUP_FLAG_NONE,
     nodes,
     mpi_ranks );
+    
     OTF2_GlobalDefWriter_WriteGroup( glob_def_writer,
     GROUP_MPI_COMM_WORLD /* id */,
     STRING_EMPTY /* name */,
@@ -1206,14 +1245,8 @@ cb.LeaveState = 0;
     master_threads2 );//master_threads );
 
     status =OTF2_GlobalDefWriter_WriteComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_COMM, OTF2_COMM_FLAG_CREATE_DESTROY_EVENTS);
-
-    status = OTF2_GlobalDefWriter_WriteClockProperties( glob_def_writer,
-    1000000000,
-    firstRealTime,
-    lastt,
-    OTF2_UNDEFINED_TIMESTAMP );
-
     check_status( status, "Write communicator." );
+
 
     /* write local mappings for MPI communicators and metrics */
     /* write local mappings for metrics, this is an identity map, just to write
