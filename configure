@@ -3479,21 +3479,14 @@ EOF
 	fi
 fi
 
-echo "rocmv6=$rocmv6"
-echo "rocprofv2=$rocprofv2"
-
 if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" ] ; then
-    
     if [ "$roctracer" = yes ]; then
-        echo "roctracer"
         fixmakeargs="$fixmakeargs ROCTRACERROCM6"
         if [ -r $rocmdir/include/roctracer/roctracer_hsa.h ]; then
-            echo "ROCTRACERROCM6_HSA"
             fixmakeargs="$fixmakeargs ROCTRACERROCM6_HSA"
         fi
     fi
     if [ "$rocprofiler" = yes ]; then
-        echo "rocprofiler"
         fixmakeargs="$fixmakeargs ROCPROFILERROCM6"
     fi
 fi
@@ -3501,12 +3494,10 @@ fi
 
 
 if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" ]; then
-
     if [ "rocmv6" = "no" ]; then
-      echo "For rocprofv2 use rocm/6 or newer"
+      echo "For rocprofv2 use rocm/6 or newer!"
       exit
     else
-      echo "Using rocprofv2"
       fixmakeargs="$fixmakeargs TAU_USE_GPU"
       pthread=yes
       rocprofiler=no    
