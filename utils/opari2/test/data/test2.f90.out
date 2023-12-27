@@ -23,7 +23,7 @@ program test2
 #line 20 "test2.f90"
   integer i
   integer k
-  
+
   integer, save :: j
 #line 24 "test2.f90"
   !$omp threadprivate(j)
@@ -55,14 +55,14 @@ program test2
       call POMP2_Implicit_barrier_exit(opari2_region_2, pomp2_old_task)
       call POMP2_Do_exit(opari2_region_2)
 #line 33 "test2.f90"
-  
+
       call POMP2_Flush_enter(opari2_region_3, &
      opari2_ctc_3 )
 #line 34 "test2.f90"
   !$omp flush(k)
       call POMP2_Flush_exit(opari2_region_3)
 #line 35 "test2.f90"
-  
+
       call POMP2_Do_enter(opari2_region_4, &
      opari2_ctc_4 )
 #line 36 "test2.f90"
@@ -89,14 +89,14 @@ program test2
       call POMP2_Implicit_barrier_exit(opari2_region_4, pomp2_old_task)
       call POMP2_Do_exit(opari2_region_4)
 #line 43 "test2.f90"
-  
+
       call POMP2_Barrier_enter(opari2_region_6,&
       pomp2_old_task, opari2_ctc_6 )
 #line 44 "test2.f90"
   !$omp barrier
       call POMP2_Barrier_exit(opari2_region_6, pomp2_old_task)
 #line 45 "test2.f90"
-  
+
       call POMP2_Sections_enter(opari2_region_7, &
      opari2_ctc_7 )
 #line 46 "test2.f90"
@@ -123,7 +123,7 @@ program test2
       call POMP2_Implicit_barrier_exit(opari2_region_7, pomp2_old_task)
       call POMP2_Sections_exit(opari2_region_7)
 #line 52 "test2.f90"
-  
+
 #line 53 "test2.f90"
   !$omp master
       call POMP2_Master_begin(opari2_region_8, &
@@ -133,7 +133,7 @@ program test2
       call POMP2_Master_end(opari2_region_8)
 #line 55 "test2.f90"
   !$omp end master
-  
+
       call POMP2_Critical_enter(opari2_region_9, &
      opari2_ctc_9 )
 #line 57 "test2.f90"
@@ -146,7 +146,7 @@ program test2
   !$omp end critical
       call POMP2_Critical_exit(opari2_region_9)
 #line 60 "test2.f90"
-  
+
       call POMP2_Critical_enter(opari2_region_10, &
      opari2_ctc_10 )
 #line 61 "test2.f90"
@@ -159,7 +159,7 @@ program test2
   !$omp end critical(foobar)
       call POMP2_Critical_exit(opari2_region_10)
 #line 64 "test2.f90"
-  
+
       call POMP2_Atomic_enter(opari2_region_11, &
      opari2_ctc_11 )
 #line 65 "test2.f90"
@@ -168,7 +168,7 @@ program test2
   i = i + 1
       call POMP2_Atomic_exit(opari2_region_11)
 #line 68 "test2.f90"
-  
+
       call POMP2_Single_enter(opari2_region_12, &
      opari2_ctc_12 )
 #line 69 "test2.f90"
@@ -185,7 +185,7 @@ program test2
       call POMP2_Implicit_barrier_exit(opari2_region_12, pomp2_old_task)
       call POMP2_Single_exit(opari2_region_12)
 #line 72 "test2.f90"
-  
+
       call POMP2_Workshare_enter(opari2_region_13, &
      opari2_ctc_13 )
 #line 73 "test2.f90"
@@ -199,7 +199,7 @@ program test2
       call POMP2_Implicit_barrier_exit(opari2_region_13, pomp2_old_task)
       call POMP2_Workshare_exit(opari2_region_13)
 #line 76 "test2.f90"
-  
+
       call POMP2_Implicit_barrier_enter(opari2_region_1,&
       pomp2_old_task)
 !$omp barrier

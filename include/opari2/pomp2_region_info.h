@@ -49,9 +49,6 @@
  * ctcString by ctcString2RegionInfo().
  *
  */
-#ifdef __cplusplus 
-extern "C" {
-#endif /* __cplusplus */
 
 #include "opari2_region_info.h"
 
@@ -276,8 +273,5 @@ ctcString2RegionInfo( const char         ctcString[],
 void
 freePOMP2RegionInfoMembers( POMP2_Region_info* regionInfo );
 
-#ifdef __cplusplus 
-}
-#endif /* __cplusplus */
 
 #endif /* POMP2_REGION_INFO_H */

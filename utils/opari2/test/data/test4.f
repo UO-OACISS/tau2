@@ -28,18 +28,18 @@
          write(*,*) "do nowait",i
       enddo
 !$omp enddo nowait
-      
+
 !$omp sections
 !$omp section
       write(*,*) "section nowait 1"
 !$omp section
       write(*,*) "section nowait 2"
 !$omp end sections nowait
-      
+
 !$omp single
       write(*,*) "single nowait"
 !$omp end single nowait
-      
+
 !$omp workshare
       a = b + c
 !$omp end workshare nowait
@@ -47,7 +47,6 @@
 !$omp task untied
       write(*,*) "task"
 !$omp end task
-            
+
 !$omp end parallel
       end program test4
-      

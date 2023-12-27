@@ -48,7 +48,7 @@
 !$omp enddo nowait
       call POMP2_Do_exit(opari2_region_2)
 #line 31 "test4.f"
-      
+
       call POMP2_Sections_enter(opari2_region_3,
      &opari2_ctc_3 )
 #line 32 "test4.f"
@@ -71,7 +71,7 @@
 !$omp end sections nowait
       call POMP2_Sections_exit(opari2_region_3)
 #line 38 "test4.f"
-      
+
       call POMP2_Single_enter(opari2_region_4,
      &opari2_ctc_4 )
 #line 39 "test4.f"
@@ -84,7 +84,7 @@
 !$omp end single nowait
       call POMP2_Single_exit(opari2_region_4)
 #line 42 "test4.f"
-      
+
       call POMP2_Workshare_enter(opari2_region_5,
      &opari2_ctc_5 )
 #line 43 "test4.f"
@@ -99,7 +99,7 @@
       if (pomp2_if) then
       call POMP2_Task_create_begin(opari2_region_6,
      &pomp2_new_task,
-     &pomp2_old_task, 
+     &pomp2_old_task,
      &pomp2_if,
      &opari2_ctc_6 )
       end if
@@ -121,7 +121,7 @@
      &pomp2_old_task)
       end if
 #line 50 "test4.f"
-            
+
       call POMP2_Implicit_barrier_enter(opari2_region_1,
      &pomp2_old_task)
 !$omp barrier
@@ -134,20 +134,19 @@
      &pomp2_old_task)
 #line 52 "test4.f"
       end program test4
-      
 
       subroutine POMP2_Init_reg_000()
          include 'test4.f.opari.inc'
-         call POMP2_Assign_handle( opari2_region_1, 
+         call POMP2_Assign_handle( opari2_region_1,
      &   opari2_ctc_1 )
-         call POMP2_Assign_handle( opari2_region_2, 
+         call POMP2_Assign_handle( opari2_region_2,
      &   opari2_ctc_2 )
-         call POMP2_Assign_handle( opari2_region_3, 
+         call POMP2_Assign_handle( opari2_region_3,
      &   opari2_ctc_3 )
-         call POMP2_Assign_handle( opari2_region_4, 
+         call POMP2_Assign_handle( opari2_region_4,
      &   opari2_ctc_4 )
-         call POMP2_Assign_handle( opari2_region_5, 
+         call POMP2_Assign_handle( opari2_region_5,
      &   opari2_ctc_5 )
-         call POMP2_Assign_handle( opari2_region_6, 
+         call POMP2_Assign_handle( opari2_region_6,
      &   opari2_ctc_6 )
       end

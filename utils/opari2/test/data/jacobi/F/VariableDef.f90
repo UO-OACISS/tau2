@@ -10,7 +10,7 @@ module VariableDef
         double precision :: fAlpha
         double precision :: fRelax
         double precision :: fTolerance
-    
+
 !        /* calculated dx & dy */
         double precision :: fDx
         double precision :: fDy
@@ -18,7 +18,7 @@ module VariableDef
 !       /* pointers to the allocated memory */
         double precision, allocatable :: afU(:,:)
         double precision, allocatable :: afF(:,:)
-    
+
 !       /* start and end timestamps */
         double precision :: fTimeStart
         double precision :: fTimeStop
@@ -30,7 +30,7 @@ module VariableDef
 
 !       /* calculated error (output error_check) */
         double precision :: fError
-    
+
 !       /* MPI-Variables */
         integer :: iMyRank   !/* current process rank (number) */
         integer :: iNumProcs !/* how many processes */

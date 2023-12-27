@@ -65,9 +65,9 @@ opari2_config_SOURCES  = $(SRC_ROOT)src/opari/opari2_config.cc \
 BUILT_SOURCES += opari2_usage.h opari2-config_usage.h
 
 opari2_usage.h: $(INC_ROOT)doc/doxygen-user/opari2_usage.dox.in
-	$(AWK) '{print "\"" $$0 "\\n\""}' $(INC_ROOT)doc/doxygen-user/opari2_usage.dox.in > opari2_usage.h
+	$(AM_V_GEN)$(AWK) '{print "\"" $$0 "\\n\""}' $(INC_ROOT)doc/doxygen-user/opari2_usage.dox.in > opari2_usage.h
 
 opari2-config_usage.h: $(INC_ROOT)doc/doxygen-user/opari2-config_usage.dox.in
-	$(AWK) '{print "\"" $$0 "\\n\""}' $(INC_ROOT)doc/doxygen-user/opari2-config_usage.dox.in > opari2-config_usage.h
+	$(AM_V_GEN)$(AWK) '{print "\"" $$0 "\\n\""}' $(INC_ROOT)doc/doxygen-user/opari2-config_usage.dox.in > opari2-config_usage.h
 
 CLEANFILES += opari2_usage.h opari2-config_usage.h

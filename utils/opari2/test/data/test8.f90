@@ -71,5 +71,5 @@ program test8
 
   !$omp parallel shared(num_threads)
   write(*,*) num_threads
-  !$omp end parallel 
+  !$omp end parallel
 end program test8

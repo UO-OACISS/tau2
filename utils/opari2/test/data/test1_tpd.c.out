@@ -74,7 +74,7 @@ int main() {
   POMP2_Parallel_end( &opari2_region_2 ); }
   POMP2_Parallel_join( &opari2_region_2, pomp2_old_task ); }
 #line 44 "test1_tpd.c"
-  
+
   //**************************************
   //* The following should be ignored    *
   //**************************************
@@ -109,7 +109,7 @@ n");
   //**********************************************
   //* Tests for the string parsing part of opari.*
   //**********************************************
-  
+
   printf("");
   printf("\\");
   printf("\\\\");

@@ -29,7 +29,7 @@ program test3
       pomp2_if, pomp2_num_threads, pomp2_old_task, &
       opari2_ctc_1 )
 #line 22 "test3.f90"
-   !$omp parallel  &
+   !$omp parallel &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
   !$omp num_threads(pomp2_num_threads)
       call POMP2_Parallel_begin(opari2_region_1)
@@ -40,9 +40,9 @@ program test3
    !$omp do
    do 12,i = 1,8
      a=a+1
-12 continue 
+12 continue
 #line 26 "test3.f90"
-   !$omp end do  nowait
+   !$omp end do nowait
       call POMP2_Implicit_barrier_enter(opari2_region_2,&
       pomp2_old_task)
 !$omp barrier
@@ -58,7 +58,7 @@ program test3
    !$omp end parallel
       call POMP2_Parallel_join(opari2_region_1, pomp2_old_task)
 #line 28 "test3.f90"
-     
+
       pomp2_num_threads = pomp2_lib_get_max_threads()
       pomp2_if = .true.
       call POMP2_Parallel_fork(opari2_region_3,&
@@ -75,8 +75,8 @@ program test3
    !$omp          do
    do 13,i = 1,8
       a=a+1
-13 continue 
-        
+13 continue
+
 #line 33 "test3.f90"
 !$omp end do nowait
       call POMP2_Implicit_barrier_enter(opari2_region_3,&
@@ -95,7 +95,7 @@ program test3
       pomp2_if, pomp2_num_threads, pomp2_old_task, &
       opari2_ctc_4 )
 #line 34 "test3.f90"
-   !$omp parallel  &
+   !$omp parallel &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
   !$omp num_threads(pomp2_num_threads)
       call POMP2_Parallel_begin(opari2_region_4)
@@ -108,7 +108,7 @@ program test3
       a=a+1
 14 continue
 #line 38 "test3.f90"
-   !$omp end do  nowait
+   !$omp end do nowait
       call POMP2_Implicit_barrier_enter(opari2_region_5,&
       pomp2_old_task)
 !$omp barrier
@@ -131,7 +131,7 @@ program test3
    !$omp end parallel
       call POMP2_Parallel_join(opari2_region_4, pomp2_old_task)
 #line 42 "test3.f90"
-           
+
       pomp2_num_threads = pomp2_lib_get_max_threads()
       pomp2_if = .true.
       call POMP2_Parallel_fork(opari2_region_7,&
@@ -276,7 +276,7 @@ program test3
       call POMP2_Parallel_join(opari2_region_9, pomp2_old_task)
 #line 65 "test3.f90"
 
-              
+
 ! *******************************************
 ! * end pragma substitution in nested loops *
 ! *******************************************
@@ -298,7 +298,7 @@ program test3
       do 16, j = 1,8
          a=a+1
 16    continue
-                    
+
 #line 75 "test3.f90"
 !$omp end do nowait
       call POMP2_Implicit_barrier_enter(opari2_region_13,&

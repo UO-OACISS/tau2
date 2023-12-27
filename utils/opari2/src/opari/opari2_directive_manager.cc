@@ -715,6 +715,12 @@ IsSupportedAPIHeaderFile( const string&     include_file,
     {
         if ( *it == file )
         {
+            if ( file == "omp.h" || file == "omp_lib.h" )
+            {
+                // If we remove the api include, we must generate a
+                // header to include it again via <file>.opari.inc.
+                instrumented_paradigm_type |= OPARI2_PT_OMP;
+            }
             return true;
         }
     }

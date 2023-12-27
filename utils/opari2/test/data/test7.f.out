@@ -138,18 +138,18 @@
 
       subroutine POMP2_Init_reg_000()
          include 'test7.f.opari.inc'
-         call POMP2_Assign_handle( opari2_region_2, 
+         call POMP2_Assign_handle( opari2_region_2,
      &   opari2_ctc_2 )
-         call POMP2_Assign_handle( opari2_region_3, 
+         call POMP2_Assign_handle( opari2_region_3,
      &   opari2_ctc_3 )
-         call POMP2_Assign_handle( opari2_region_4, 
+         call POMP2_Assign_handle( opari2_region_4,
      &   opari2_ctc_4 )
-         call POMP2_Assign_handle( opari2_region_5, 
+         call POMP2_Assign_handle( opari2_region_5,
      &   opari2_ctc_5 )
       end
 
       subroutine POMP2_USER_Init_reg_000()
          include 'test7.f.opari.inc'
-         call POMP2_USER_Assign_handle( opari2_region_1, 
+         call POMP2_USER_Assign_handle( opari2_region_1,
      &   opari2_ctc_1 )
       end

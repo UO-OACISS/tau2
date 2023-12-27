@@ -2,5 +2,7 @@
 
 include ../src/opari/Makefile.inc.am
 include ../src/opari-lib-dummy/Makefile.inc.am
+include ../doc/example/openmp/Makefile.inc.am
+include ../doc/example/pomp/Makefile.inc.am
 
-include ../test/Makefile.inc.am 
+include ../test/Makefile.inc.am

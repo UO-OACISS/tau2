@@ -12,9 +12,9 @@
 
 /** @internal
  *
- *  @file		opari2_directive_entry_offload.h
+ *  @file        opari2_directive_entry_offload.h
  *
- *  @brief		Define Intel Offload directive entries.
+ *  @brief        Define Intel Offload directive entries.
  */
 
 #ifndef OPARI2_DIRECTIVE_ENTRY_OFFLOAD_H
@@ -47,8 +47,8 @@ enum OPARI2_OffloadGroup
 
 /* *INDENT-OFF* */
 #define OPARI2_OFFLOAD_DIRECTIVE_ENTRIES \
-	OPARI2_CREATE_OFFLOAD_TABLE_ENTRY( target, 1.0, G_OFFLOAD_DEFAULT ),\
-	OPARI2_CREATE_OFFLOAD_TABLE_ENTRY( declspec, 1.0, G_OFFLOAD_DEFAULT )
+        OPARI2_CREATE_OFFLOAD_TABLE_ENTRY( target, 1.0, G_OFFLOAD_DEFAULT ),\
+        OPARI2_CREATE_OFFLOAD_TABLE_ENTRY( declspec, 1.0, G_OFFLOAD_DEFAULT )
 
 /* *INDENT-ON* */
 #endif

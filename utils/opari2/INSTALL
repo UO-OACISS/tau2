@@ -20,7 +20,7 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-compiler-suite=(gcc|ibm|intel|pgi|studio)
+  --with-compiler-suite=(gcc|ibm|intel|oneapi|nvhpc|pgi|clang|aocc|amdclang)
                           The compiler suite to build this package with. Needs
                           to be in $PATH [gcc].
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
@@ -443,4 +443,3 @@ operates.
 
 `configure' also accepts some other, not widely useful, options.  Run
 `configure --help' for more details.
-

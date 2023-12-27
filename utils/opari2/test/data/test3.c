@@ -27,7 +27,7 @@
 int main() {
   int i, j;
   int k = 0;
- 
+
   #pragma omp parallel
  {
     #pragma omp for
@@ -65,15 +65,15 @@ int main() {
  // * Testing of nested parallelism         *
  // *****************************************
 
-#pragma omp parallel 
+#pragma omp parallel
  {
-#pragma omp parallel 
+#pragma omp parallel
    {
-#pragma omp parallel 
+#pragma omp parallel
      {
 #pragma omp for nowait
        for (i=0; i<4; ++i) {
-	 printf("do %d\n", i);
+         printf("do %d\n", i);
        }
      }
    }
@@ -96,7 +96,7 @@ int main() {
    for (i=0; i<4; ++i) {
      for (j=0; j<4; ++j) {
        for (k=0; k<4; ++k) {
-	 printf("do %d\n", i);
+         printf("do %d\n", i);
        }
      }
    }
@@ -110,7 +110,7 @@ int main() {
    for (i=0; i<4; ++i)
      for (j=0; j<4; ++j)
        for (k=0; k<4; ++k)
-	 printf("do %d\n", i);
+         printf("do %d\n", i);
 
     #pragma omp for nowait
    for (i=0; i<4; ++i)

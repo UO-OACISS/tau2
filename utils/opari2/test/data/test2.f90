@@ -19,7 +19,7 @@
 program test2
   integer i
   integer k
-  
+
   integer, save :: j
   !$omp threadprivate(j)
 
@@ -30,9 +30,9 @@ program test2
      write(*,*) "do",i
   enddo
   !$omp end do
-  
+
   !$omp flush(k)
-  
+
   !$omp do ordered
   do i=1,4
      !$omp ordered
@@ -40,40 +40,40 @@ program test2
      !$omp end ordered
   enddo
   !$omp end do
-  
+
   !$omp barrier
-  
+
   !$omp sections
   !$omp section
   write(*,*) "section 1"
   !$omp section
   write(*,*) "section 2"
   !$omp end sections
-  
+
   !$omp master
   write(*,*) "master"
   !$omp end master
-  
+
   !$omp critical
   write(*,*) "critical"
   !$omp end critical
-  
+
   !$omp critical(foobar)
   write(*,*) "critical(foobar)"
   !$omp end critical(foobar)
-  
+
   !$omp atomic
   ! do this atomic
   i = i + 1
-  
+
   !$omp single
   write(*,*) "single"
   !$omp end single
-  
+
   !$omp workshare
   a = b + c
   !$omp end workshare
-  
+
   !$omp end parallel
 
   !$omp parallel

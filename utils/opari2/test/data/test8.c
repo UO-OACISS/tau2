@@ -63,7 +63,7 @@ main()
 
 #pragma omp parallel shared(num_threads)
     {
-	printf("num_threads variable is %d\n",num_threads);
+      printf("num_threads variable is %d\n",num_threads);
     }
 }
 

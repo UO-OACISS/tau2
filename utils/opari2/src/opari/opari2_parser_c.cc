@@ -13,7 +13,7 @@
  * Copyright (c) 2009-2013,
  * University of Oregon, Eugene, USA
  *
- * Copyright (c) 2009-2013, 2016,
+ * Copyright (c) 2009-2013, 2016, 2020,
  * Forschungszentrum Juelich GmbH, Germany
  *
  * Copyright (c) 2009-2013,
@@ -502,6 +502,12 @@ OPARI2_CParser::handle_regular_line()
             m_pos++;
             while ( m_line[ m_pos ] != '\"' )
             {
+                // handle C++11 multiline string, see https://en.cppreference.com/w/cpp/language/string_literal
+                if ( m_pos == m_line.size() )
+                {
+                    m_in_string = true;
+                    break;
+                }
                 if ( m_line[ m_pos ] == '\\' )
                 {
                     m_os << '\\';
@@ -551,6 +557,11 @@ OPARI2_CParser::handle_regular_line()
             }
             while ( m_line[ m_pos ] != '\'' );
             m_pos++;
+        }
+        else if ( ( m_options.lang & L_CXX ) && isdigit( m_line[ m_pos ] ) )
+        {
+            // numeric literal, optional sign already processed
+            handle_numeric_literal();
         }
         else if ( isalpha( m_line[ m_pos ] ) || m_line[ m_pos ] == '_' )
         {
@@ -613,6 +624,113 @@ OPARI2_CParser::handle_regular_line()
     if ( !newline_printed )
     {
         m_os << '\n';
+    }
+}
+
+void
+OPARI2_CParser::handle_numeric_literal( void )
+{
+    const bool is_zero_prefixed = ( m_line[ m_pos ] == '0' );
+
+    m_os << m_line[ m_pos++ ];
+    if ( m_pos == m_line.size() )
+    {
+        // EOL => single digit, we're done
+        return;
+    }
+
+    bool is_hex = false;
+    bool is_dec = false;
+    if ( is_zero_prefixed &&
+         ( ( m_line[ m_pos ] == 'b' ) ||
+           ( m_line[ m_pos ] == 'B' ) ) )
+    {
+        m_os << m_line[ m_pos++ ];
+        handle_binary_literal();
+    }
+    else if ( is_zero_prefixed &&
+              ( ( m_line[ m_pos ] == 'x' ) ||
+                ( m_line[ m_pos ] == 'X' ) ) )
+    {
+        is_hex = true;
+        m_os << m_line[ m_pos++ ];
+        handle_hexadecimal_literal();
+    }
+    else if ( isdigit( m_line[ m_pos ] ) )
+    {
+        // We don't distinguish octal/decimal here, as it might be the
+        // integer part of a floating-point literal
+        is_dec = true;
+        handle_decimal_literal();
+    }
+
+    // Optional fractional part of floating-point literal
+    if ( ( m_pos < m_line.size() ) &&
+         ( m_line[ m_pos ] == '.' ) )
+    {
+        if ( is_dec )
+        {
+            m_os << m_line[ m_pos++ ];
+            handle_decimal_literal();
+        }
+        else if ( is_hex )
+        {
+            m_os << m_line[ m_pos++ ];
+            handle_hexadecimal_literal();
+        }
+    }
+
+    // Exponent of floating-point literal
+    if ( ( m_pos < m_line.size() ) &&
+         ( ( is_dec &&
+             ( ( m_line[ m_pos ] == 'e' ) ||
+               ( m_line[ m_pos ] == 'E' ) ) ) ||
+           ( is_hex &&
+             ( ( m_line[ m_pos ] == 'p' ) ||
+               ( m_line[ m_pos ] == 'P' ) ) ) ) )
+    {
+        m_os << m_line[ m_pos++ ];
+        if ( ( m_pos < m_line.size() ) &&
+             ( ( m_line[ m_pos ] == '+' ) ||
+               ( m_line[ m_pos ] == '-' ) ) )
+        {
+            m_os << m_line[ m_pos++ ];
+        }
+        handle_decimal_literal();
+    }
+}
+
+void
+OPARI2_CParser::handle_binary_literal( void )
+{
+    while ( ( m_pos < m_line.size() ) &&
+            ( ( m_line[ m_pos ] == '0' ) ||
+              ( m_line[ m_pos ] == '1' ) ||
+              ( m_line[ m_pos ] == '\'' ) ) )
+    {
+        m_os << m_line[ m_pos++ ];
+    }
+}
+
+void
+OPARI2_CParser::handle_decimal_literal( void )
+{
+    while ( ( m_pos < m_line.size() ) &&
+            ( isdigit( m_line[ m_pos ] ) ||
+              ( m_line[ m_pos ] == '\'' ) ) )
+    {
+        m_os << m_line[ m_pos++ ];
+    }
+}
+
+void
+OPARI2_CParser::handle_hexadecimal_literal( void )
+{
+    while ( ( m_pos < m_line.size() ) &&
+            ( isxdigit( m_line[ m_pos ] ) ||
+              ( m_line[ m_pos ] == '\'' ) ) )
+    {
+        m_os << m_line[ m_pos++ ];
     }
 }
 

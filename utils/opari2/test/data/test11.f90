@@ -13,7 +13,7 @@
 ! *
 ! * Testfile for automated testing of OPARI2
 ! *
-! * @authors Jie Jiang 
+! * @authors Jie Jiang
 ! *
 ! * @brief Test worskshare directives.
 
@@ -26,7 +26,7 @@ program test11
   !$OMP atomic update
     i = 3
 
-  !$OMP workshare 
+  !$OMP workshare
     i = 4
   !$OMP critical
     i = 5

@@ -269,7 +269,7 @@ generate_call_save_task_id( const char*             event,
             {
                 if ( d->GetName() == "task" )
                 {
-                    os << ", \n     &pomp2_if";
+                    os << ",\n     &pomp2_if";
                 }
                 os << ",\n     &" << d->GetCTCStringVariable() << " ";
             }

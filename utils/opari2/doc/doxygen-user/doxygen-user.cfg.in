@@ -237,8 +237,6 @@ ALIASES                = scorep=Score-P \
                          "seclabel{1}=\latexonly\label{sec:\1} \endlatexonly" \
                          "secref{1}=\if LATEX \latexonly~\ref{sec:\1}\xspace \endlatexonly \else &thinsp; '@ref \1' &thinsp; \endif" \
                          "verb{1}=\latexonly\verb+\1+\endlatexonly\htmlonly<tt>\1</tt>\endhtmlonly" \
-                         "tabref{1}=\if LATEX \latexonly~\ref{tab:\1}\xspace \endlatexonly \else &thinsp; @ref \1 &thinsp; \endif" \
-                         "tablabel{1}=\latexonly\label{tab:\1}\endlatexonly" \
                          "htmlimg{3}=@anchor \2 @image html \1 \"Figure \2: \3\"" \
                          "teximg{4}=\latexonly\begin{figure}[hbt]\begin{center}\includegraphics[\4]{@abs_top_srcdir@/doc/images/\1}\caption{\3}\label{fig:\2}\end{center}\end{figure}\endlatexonly" \
                          "img{4}=\if LATEX @teximg{\1.pdf,\2,\3,\4} \else @htmlimg{\1.png,\2,\3} \endif" \
@@ -843,7 +841,7 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       = */.svn/*
+EXCLUDE_PATTERNS       = */.git/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the

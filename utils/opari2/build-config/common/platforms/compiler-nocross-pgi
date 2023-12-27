@@ -1,0 +1,13 @@
+CC=pgcc
+CXX=pgc++
+F77=pgfortran
+FC=pgfortran
+
+#CPPFLAGS=
+# Use -gopt instead of -g as the latter caused problems with 16.1.
+CFLAGS=-gopt -O2
+CXXFLAGS=-gopt -O2
+FFLAGS=-gopt -O2
+FCFLAGS=-gopt -O2
+#LDFLAGS=
+#LIBS=

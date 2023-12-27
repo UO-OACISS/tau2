@@ -26,7 +26,7 @@ cp @abs_srcdir@/../include/opari2/pomp2_lib.h $test_dir/jacobi/C/opari2
 
 cd $test_dir/jacobi/C
 # instrument
-$OPARI2 main.c 
+$OPARI2 main.c
 $OPARI2 jacobi.c
 
 # compile

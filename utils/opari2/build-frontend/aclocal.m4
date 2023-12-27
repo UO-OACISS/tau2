@@ -78,7 +78,7 @@ AC_CHECK_TOOLS([AR], [ar lib "link -lib"], [false])
 AC_CACHE_CHECK([the archiver ($AR) interface], [am_cv_ar_interface],
   [am_cv_ar_interface=ar
    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[int some_variable = 0;]])],
-     [am_ar_try='$AR cru libconftest.a conftest.$ac_objext >&AS_MESSAGE_LOG_FD'
+     [am_ar_try='$AR cr libconftest.a conftest.$ac_objext >&AS_MESSAGE_LOG_FD'
       AC_TRY_EVAL([am_ar_try])
       if test "$ac_status" -eq 0; then
         am_cv_ar_interface=ar
@@ -1218,18 +1218,21 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
-m4_include([../vendor/common/build-config/m4/ac_common_package.m4])
-m4_include([../vendor/common/build-config/m4/ac_recursive_eval.m4])
-m4_include([../vendor/common/build-config/m4/ac_scorep_c99.m4])
-m4_include([../vendor/common/build-config/m4/ac_scorep_compiler_and_flags.m4])
-m4_include([../vendor/common/build-config/m4/ac_scorep_compiler_checks.m4])
-m4_include([../vendor/common/build-config/m4/ac_scorep_fortran_checks.m4])
-m4_include([../vendor/common/build-config/m4/ac_scorep_svn_controlled.m4])
-m4_include([../vendor/common/build-config/m4/ac_scorep_sys_detection.m4])
-m4_include([../vendor/common/build-config/m4/ac_scorep_version_and_revision.m4])
-m4_include([../vendor/common/build-config/m4/afs_am_conditional.m4])
-m4_include([../vendor/common/build-config/m4/afs_maintainer_mode.m4])
-m4_include([../vendor/common/build-config/m4/ax_compiler_vendor.m4])
+m4_include([../build-config/common/m4/ac_common_package.m4])
+m4_include([../build-config/common/m4/ac_recursive_eval.m4])
+m4_include([../build-config/common/m4/ac_scorep_compiler_and_flags.m4])
+m4_include([../build-config/common/m4/ac_scorep_fortran_checks.m4])
+m4_include([../build-config/common/m4/ac_scorep_git_controlled.m4])
+m4_include([../build-config/common/m4/ac_scorep_sys_detection.m4])
+m4_include([../build-config/common/m4/ac_scorep_version_and_revision.m4])
+m4_include([../build-config/common/m4/afs_compilers.m4])
+m4_include([../build-config/common/m4/afs_maintainer_mode.m4])
+m4_include([../build-config/common/m4/afs_summary.m4])
+m4_include([../build-config/common/m4/ax_c_compile_stdc.m4])
+m4_include([../build-config/common/m4/ax_compiler_vendor.m4])
+m4_include([../build-config/common/m4/ax_compiler_version.m4])
+m4_include([../build-config/common/m4/ax_cxx_compile_stdcxx.m4])
+m4_include([../build-config/common/m4/ax_cxx_inttype_macros.m4])
 m4_include([../build-config/m4/libtool.m4])
 m4_include([../build-config/m4/ltoptions.m4])
 m4_include([../build-config/m4/ltsugar.m4])

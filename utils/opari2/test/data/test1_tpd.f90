@@ -28,7 +28,7 @@ program test1
   !$OmP&   default(shared)
   !$OmP    end   &
   !$OmP&   parallel
-  
+
   !$OmP   parallel &
   !$OmP&  default(shared)
   !$OmP end & ! some comment

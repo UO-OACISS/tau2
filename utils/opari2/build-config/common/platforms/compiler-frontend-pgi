@@ -1,0 +1,13 @@
+CC_FOR_BUILD=pgcc
+CXX_FOR_BUILD=pgc++
+F77_FOR_BUILD=pgfortran
+FC_FOR_BUILD=pgfortran
+
+#CPPFLAGS_FOR_BUILD=
+# Use -gopt instead of -g as the latter caused problems with 16.1.
+CFLAGS_FOR_BUILD=-gopt -O2
+CXXFLAGS_FOR_BUILD=-gopt -O2
+FFLAGS_FOR_BUILD=-gopt -O2
+FCFLAGS_FOR_BUILD=-gopt -O2
+#LDFLAGS_FOR_BUILD=
+#LIBS_FOR_BUILD=

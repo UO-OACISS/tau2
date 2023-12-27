@@ -142,7 +142,7 @@ if (pomp2_if)  POMP2_Untied_task_create_end( &opari2_region_5, pomp2_old_task );
 {   POMP2_Parallel_begin( &opari2_region_6 );
 #line 65 "test8.c"
     {
-	printf("num_threads variable is %d\n",num_threads);
+      printf("num_threads variable is %d\n",num_threads);
     }
 { POMP2_Task_handle pomp2_old_task;
   POMP2_Implicit_barrier_enter( &opari2_region_6, &pomp2_old_task );

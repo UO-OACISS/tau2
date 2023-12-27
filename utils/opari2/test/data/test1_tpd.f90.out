@@ -73,7 +73,7 @@ program test1
   !$omp&   parallel
       call POMP2_Parallel_join(opari2_region_3, pomp2_old_task)
 #line 31 "test1_tpd.f90"
-  
+
       pomp2_num_threads = pomp2_lib_get_max_threads()
       pomp2_if = .true.
       call POMP2_Parallel_fork(opari2_region_4,&

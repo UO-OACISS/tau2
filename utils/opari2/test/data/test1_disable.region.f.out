@@ -21,12 +21,12 @@
 
       program test1_disable
       IMPLICIT NONE
-      
+
       SUBROUTINE foo(A,N)
       include 'test1_disable.f.opari.inc'
 #line 24 "test1_disable.f"
       INTEGER I,N,L,T
-      
+
 
       pomp2_num_threads = pomp2_lib_get_max_threads()
       pomp2_if = .true.
@@ -36,7 +36,7 @@
 #line 26 "test1_disable.f"
 c$omp parallel
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
-!$omp& num_threads(pomp2_num_threads) 
+!$omp& num_threads(pomp2_num_threads)
       call POMP2_Parallel_begin(pomp2_region_1)
 #line 27 "test1_disable.f"
       call POMP2_Atomic_enter(pomp2_region_2,
@@ -138,7 +138,7 @@ c$omp end single nowait
       if (pomp2_if) then
       call POMP2_Task_create_begin(pomp2_region_9,
      &pomp2_new_task,
-     &pomp2_old_task, 
+     &pomp2_old_task,
      &pomp2_if,
      &pomp2_ctc_9 )
       end if
@@ -169,7 +169,7 @@ c$omp end task
      &pomp2_old_task)
       call POMP2_Parallel_end(pomp2_region_1)
 #line 67 "test1_disable.f"
-c$omp end parallel      
+c$omp end parallel
       call POMP2_Parallel_join(pomp2_region_1,
      &pomp2_old_task)
 #line 68 "test1_disable.f"
@@ -186,27 +186,27 @@ c$pomp inst altend(user_region)
 
 #line 76 "test1_disable.f"
 c$pomp inst end(user_region)
-      END SUBROUTINE 
+      END SUBROUTINE
       end program test1_free
 
       subroutine POMP2_Init_reg_000()
          include 'test1_disable.f.opari.inc'
-         call POMP2_Assign_handle( pomp2_region_1, 
+         call POMP2_Assign_handle( pomp2_region_1,
      &   pomp2_ctc_1 )
-         call POMP2_Assign_handle( pomp2_region_2, 
+         call POMP2_Assign_handle( pomp2_region_2,
      &   pomp2_ctc_2 )
-         call POMP2_Assign_handle( pomp2_region_3, 
+         call POMP2_Assign_handle( pomp2_region_3,
      &   pomp2_ctc_3 )
-         call POMP2_Assign_handle( pomp2_region_4, 
+         call POMP2_Assign_handle( pomp2_region_4,
      &   pomp2_ctc_4 )
-         call POMP2_Assign_handle( pomp2_region_5, 
+         call POMP2_Assign_handle( pomp2_region_5,
      &   pomp2_ctc_5 )
-         call POMP2_Assign_handle( pomp2_region_6, 
+         call POMP2_Assign_handle( pomp2_region_6,
      &   pomp2_ctc_6 )
-         call POMP2_Assign_handle( pomp2_region_7, 
+         call POMP2_Assign_handle( pomp2_region_7,
      &   pomp2_ctc_7 )
-         call POMP2_Assign_handle( pomp2_region_8, 
+         call POMP2_Assign_handle( pomp2_region_8,
      &   pomp2_ctc_8 )
-         call POMP2_Assign_handle( pomp2_region_9, 
+         call POMP2_Assign_handle( pomp2_region_9,
      &   pomp2_ctc_9 )
       end

@@ -81,5 +81,5 @@ cd $opari_dir
 
 if [ "$error" = "true" ]
 then
-	exit -1
+    exit -1
 fi

@@ -28,7 +28,7 @@
 int main() {
   int i, j;
   int k = 0;
- 
+
 {
   int pomp2_num_threads = omp_get_max_threads();
   int pomp2_if = 1;
@@ -190,7 +190,7 @@ int main() {
   POMP2_Task_handle pomp2_old_task;
   POMP2_Parallel_fork(&opari2_region_11, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_11 );
 #line 68 "test3.c"
-#pragma omp parallel  POMP2_DLIST_00011 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+#pragma omp parallel POMP2_DLIST_00011 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
 {   POMP2_Parallel_begin( &opari2_region_11 );
 #line 69 "test3.c"
  {
@@ -200,7 +200,7 @@ int main() {
   POMP2_Task_handle pomp2_old_task;
   POMP2_Parallel_fork(&opari2_region_12, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_12 );
 #line 70 "test3.c"
-#pragma omp parallel  POMP2_DLIST_00012 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+#pragma omp parallel POMP2_DLIST_00012 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
 {   POMP2_Parallel_begin( &opari2_region_12 );
 #line 71 "test3.c"
    {
@@ -210,7 +210,7 @@ int main() {
   POMP2_Task_handle pomp2_old_task;
   POMP2_Parallel_fork(&opari2_region_13, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_13 );
 #line 72 "test3.c"
-#pragma omp parallel  POMP2_DLIST_00013 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+#pragma omp parallel POMP2_DLIST_00013 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
 {   POMP2_Parallel_begin( &opari2_region_13 );
 #line 73 "test3.c"
      {
@@ -218,7 +218,7 @@ int main() {
 #line 74 "test3.c"
 #pragma omp for nowait
        for (i=0; i<4; ++i) {
-	 printf("do %d\n", i);
+         printf("do %d\n", i);
        }
   POMP2_For_exit( &opari2_region_14 );
  }
@@ -280,7 +280,7 @@ int main() {
    for (i=0; i<4; ++i) {
      for (j=0; j<4; ++j) {
        for (k=0; k<4; ++k) {
-	 printf("do %d\n", i);
+         printf("do %d\n", i);
        }
      }
    }
@@ -304,7 +304,7 @@ int main() {
    for (i=0; i<4; ++i)
      for (j=0; j<4; ++j)
        for (k=0; k<4; ++k)
-	 printf("do %d\n", i);
+         printf("do %d\n", i);
   POMP2_For_exit( &opari2_region_19 );
  }
 #line 114 "test3.c"

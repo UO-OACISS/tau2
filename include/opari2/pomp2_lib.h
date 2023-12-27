@@ -13,7 +13,7 @@
  * Copyright (c) 2009-2013,
  * University of Oregon, Eugene, USA
  *
- * Copyright (c) 2009-2013,
+ * Copyright (c) 2009-2013, 2019,
  * Forschungszentrum Juelich GmbH, Germany
  *
  * Copyright (c) 2009-2013,
@@ -110,6 +110,11 @@ POMP2_Get_opari2_version( void );
 extern POMP2_Task_handle
 POMP2_Get_new_task_handle( void );
 
+/** Create a unique mapping between @a ctc_string and the
+    implementation-defined @a pomp2_handle. Be aware that
+    POMP2_Assign_handle() is called from POMP2_Init_regions()
+    in a serial context but might get called concurrently as well.
+ */
 extern void
 POMP2_Assign_handle( POMP2_Region_handle* pomp2_handle,
                      const char           ctc_string[] );

@@ -1,13 +1,13 @@
 AC_PREREQ([2.69])
-AC_INIT([OPARI2], m4_esyscmd([../vendor/common/build-config/generate-package-version.sh ../build-config/VERSION]), [support@score-p.org], [opari2])
+AC_INIT([OPARI2], m4_esyscmd([../build-config/common/generate-package-version.sh ../build-config/VERSION]), [support@score-p.org], [opari2])
 
 AFS_PACKAGE_BUILD_INIT([frontend])
 
-AC_SUBST([LIBRARY_INTERFACE_VERSION], m4_esyscmd([../vendor/common/build-config/generate-library-version.sh ../build-config/VERSION]))
+AC_SUBST([LIBRARY_INTERFACE_VERSION], m4_esyscmd([../build-config/common/generate-library-version.sh ../build-config/VERSION]))
 
 AC_CONFIG_AUX_DIR([../build-config])
 ## See also ACLOCAL_AMFLAGS in Makefile.am.
-AC_CONFIG_MACRO_DIRS([../build-config/m4 ../vendor/common/build-config/m4])
+AC_CONFIG_MACRO_DIRS([../build-config/m4 ../build-config/common/m4])
 
 AC_CONFIG_HEADERS([../src/config-frontend.h])
 
@@ -37,7 +37,7 @@ AC_SUBST([INCLUDEDIR])
 adl_RECURSIVE_EVAL([${bindir}], [BINDIR])
 AC_SUBST([BINDIR])
 
-AC_SCOREP_SVN_CONTROLLED
+AC_SCOREP_GIT_CONTROLLED
 
 AM_INIT_AUTOMAKE([foreign color-tests 1.13.4 -Wall tar-pax])
 AM_SILENT_RULES([yes])
@@ -51,20 +51,15 @@ AM_CONDITIONAL([BUILD_TESTS], [test 1 -eq 1])
 AC_SCOREP_PLATFORM_SETTINGS
 
 # <AC_OPARI_COMMON_CHECKS>
-AC_PROG_CC
-AC_SCOREP_COMPILER_CHECKS
+AFS_PROG_CC([99])
 
-AC_SCOREP_PROG_CC_C99([], [AC_MSG_ERROR([No ISO C99 support in C compiler.])])
+AFS_PROG_CXX([11], [noext])
 
-AC_PROG_CXX
-
-AM_PROG_CC_C_O
-
-AC_PROG_F77
-AC_SCOREP_HAVE_F77
-
-AC_PROG_FC
+AFS_PROG_FC([optional])
 AC_SCOREP_HAVE_FC
+
+AFS_PROG_F77([optional])
+AC_SCOREP_HAVE_F77
 
 AC_LANG_PUSH([C])
 AC_OPENMP
@@ -129,10 +124,8 @@ AC_CONFIG_FILES([../test/jacobi_c_test.sh], [chmod +x ../test/jacobi_c_test.sh])
 AC_CONFIG_FILES([../test/jacobi_c++_test.sh], [chmod +x ../test/jacobi_c++_test.sh])
 AC_CONFIG_FILES([../test/jacobi_f90_test.sh], [chmod +x ../test/jacobi_f90_test.sh])
 AC_CONFIG_FILES([../test/jacobi_f77_test.sh], [chmod +x ../test/jacobi_f77_test.sh])
-AC_CONFIG_FILES([../doc/example/Makefile])
-AC_CONFIG_FILES([../doc/example_user_instrumentation/Makefile])
+AC_CONFIG_FILES([../doc/example/openmp/Makefile])
+AC_CONFIG_FILES([../doc/example/pomp/Makefile])
 AC_CONFIG_FILES([../src/opari2_config_tool_frontend.h:../src/opari/opari2_config_tool_frontend.h.in])
-AC_CONFIG_FILES([../include/opari2/pomp2_lib.h:../include/opari2/pomp2_lib.h])
-AC_CONFIG_FILES([../include/opari2/pomp2_user_lib.h:../include/opari2/pomp2_user_lib.h])
 
 AC_OUTPUT

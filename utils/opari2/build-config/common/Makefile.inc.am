@@ -1,0 +1,119 @@
+## -*- mode: makefile -*-
+
+##
+## This file is part of the Score-P software ecosystem (http://www.score-p.org)
+##
+## Copyright (c) 2009-2011,
+## RWTH Aachen University, Germany
+##
+## Copyright (c) 2009-2011,
+## Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+##
+## Copyright (c) 2009-2011, 2019,
+## Technische Universitaet Dresden, Germany
+##
+## Copyright (c) 2009-2011,
+## University of Oregon, Eugene, USA
+##
+## Copyright (c) 2009-2011, 2015, 2017, 2019,
+## Forschungszentrum Juelich GmbH, Germany
+##
+## Copyright (c) 2009-2011,
+## German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+##
+## Copyright (c) 2009-2011,
+## Technische Universitaet Muenchen, Germany
+##
+## This software may be modified and distributed under the terms of
+## a BSD-style license.  See the COPYING file in the package base
+## directory for details.
+##
+
+
+EXTRA_DIST =
+BUILT_SOURCES =
+CLEANFILES =
+DISTCLEANFILES =
+
+# Testing framework
+EXTRA_DIST += $(srcdir)/build-config/common/generate-config-backend-for-frontend.sh \
+              $(srcdir)/build-config/common/generate-library-dependencies.sh \
+              $(srcdir)/build-config/common/generate-library-dependencies-la-object.hpp \
+              $(srcdir)/build-config/common/generate-library-version.sh \
+              $(srcdir)/build-config/common/generate-package-version.sh \
+              $(srcdir)/common/utils/test/cutest/CuTest.c \
+              $(srcdir)/common/utils/test/cutest/CuTest.h \
+              $(srcdir)/common/utils/test/cutest/license.txt \
+              $(srcdir)/common/utils/test/cutest/README.txt
+
+DISTCLEANFILES += $(builddir)/config.summary
+DISTCLEANFILES += $(builddir)/@PACKAGE@.summary
+
+CONFIG_STATUS_DEPENDENCIES = $(srcdir)/build-config/VERSION
+CONFIGURE_DEPENDENCIES = $(srcdir)/build-config/VERSION
+
+common-uninstall:
+	rm -rf $(DESTDIR)$(datadir)/@PACKAGE@
+
+
+SCOREP_RECURSIVE_TARGETS=
+
+
+###############################################################################
+## code beautification targets
+##
+if GIT_CONTROLLED
+if HAVE_UNCRUSTIFY
+
+beautify-sp:
+	@$(am__cd) $(srcdir) && ./common/beautifier/beautify
+beautify: beautify-recursive
+SCOREP_RECURSIVE_TARGETS += beautify-recursive
+
+beautify-clean:
+
+endif # HAVE_UNCRUSTIFY
+endif # GIT_CONTROLLED
+                                                                             ##
+                                                                             ##
+###############################################################################
+
+
+###############################################################################
+## trigger build of check_* targets here and in subdirectories.
+##
+
+check-build-sp: $(BUILT_SOURCES) all-am $(check_PROGRAMS) $(check_LTLIBRARIES)
+check-build: check-build-recursive
+SCOREP_RECURSIVE_TARGETS += check-build-recursive
+
+                                                                             ##
+                                                                             ##
+###############################################################################
+
+$(SCOREP_RECURSIVE_TARGETS):
+## Using $failcom allows "-k" to keep its natural meaning when running a
+## recursive rule.
+	@fail= failcom='exit 1'; \
+	for f in x $$MAKEFLAGS; do \
+	  case $$f in \
+	    *=* | --[!k]*);; \
+	    *k*) failcom='fail=yes';; \
+	  esac; \
+	done; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-sp"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	  || eval $$failcom; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-sp" || exit 1; \
+	fi; test -z "$$fail"

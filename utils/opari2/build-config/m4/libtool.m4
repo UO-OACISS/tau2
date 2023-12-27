@@ -1543,9 +1543,7 @@ _LT_DECL([], [archiver_list_spec], [1],
 m4_defun([_LT_CMD_OLD_ARCHIVE],
 [_LT_PROG_AR
 
-# Cray's compiler drivers need STRIP to be an absolute file name when
-# static linking.
-AC_PATH_TOOL(STRIP, strip, :)
+AC_CHECK_TOOL(STRIP, strip, :)
 test -z "$STRIP" && STRIP=:
 _LT_DECL([], [STRIP], [1], [A symbol stripping program])
 
@@ -4395,8 +4393,8 @@ m4_if([$1], [CXX], [
 	    _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fPIC'
 	    _LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
 	    ;;
-	  pgCC* | pgcpp*)
-	    # Portland Group C++ compiler
+	  pgCC* | pgcpp* | pgc++* | nvc++*)
+	    # NVIDIA HPC C++ compiler
 	    _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
 	    _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fpic'
 	    _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
@@ -4428,8 +4426,8 @@ m4_if([$1], [CXX], [
 	      _LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
 	      _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
 	      ;;
-	    *pgCC* | *pgcpp*)
-	      # Portland Group/NVIDIA C++ compiler
+	    *pgCC* | *pgcpp* | *pgc++* | *nvc++*)
+	      # NVIDIA HPC C++ compiler
 	      _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fpic'
 	      _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
 	      _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
@@ -4750,9 +4748,15 @@ m4_if([$1], [CXX], [
 	_LT_TAGVAR(lt_prog_compiler_pic, $1)='-fPIC'
 	_LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
 	;;
-      pgcc* | pgf77* | pgf90* | pgf95* | pgfortran*)
-        # Portland Group compilers (*not* the Pentium gcc compiler,
-	# which looks to be a dead project)
+        # Catch both prefix and suffix variants: armflang, amdflang, flang<number>
+      *flang*)
+        # Flang compiler
+	_LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
+	_LT_TAGVAR(lt_prog_compiler_pic, $1)='-fPIC -DPIC'
+	_LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
+        ;;
+      pgcc* | pgf77* | pgf90* | pgf95* | pgfortran* | nvc* | nvfortran*)
+        # NVIDIA HPC Compilers
 	_LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
 	_LT_TAGVAR(lt_prog_compiler_pic, $1)='-fpic'
 	_LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
@@ -4769,7 +4773,7 @@ m4_if([$1], [CXX], [
 	_LT_TAGVAR(lt_prog_compiler_static, $1)='-qstaticlink'
 	;;
       *)
-	case `$CC -V 2>&1` in
+	case `$CC -V 2>&1``$CC -v 2>&1` in
 	*Sun\ Ceres\ Fortran* | *Sun*Fortran*\ [[1-7]].* | *Sun*Fortran*\ 8.[[0-3]]*)
 	  # Sun Fortran 8.3 passes all unrecognized flags to the linker
 	  _LT_TAGVAR(lt_prog_compiler_pic, $1)='-KPIC'
@@ -4797,7 +4801,7 @@ m4_if([$1], [CXX], [
 	  _LT_TAGVAR(lt_prog_compiler_pic, $1)='-hpic'
 	  _LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
 	  ;;
-	*pgcc* | *pgf77* | *pgf90* | *pgf95* | *pgfortran*)
+	*Portland\ Group* | *NVIDIA\ Compilers* | *PGI\ Compilers*)
 	  _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
 	  _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fpic'
 	  _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
@@ -4806,6 +4810,17 @@ m4_if([$1], [CXX], [
 	  _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
 	  _LT_TAGVAR(lt_prog_compiler_pic, $1)='-Kpic'
 	  _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
+	  ;;
+	*xlf*)
+	  _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
+	  _LT_TAGVAR(lt_prog_compiler_pic, $1)='-qpic'
+	  _LT_TAGVAR(lt_prog_compiler_static, $1)='-qstaticlink'
+	  ;;
+	# Not sure if `flang version` exists, but honor vendor prefix like 'AMD '
+	*clang\ version* | *flang\ version* | *flang-new\ version*)
+	  _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
+	  _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fPIC -DPIC'
+	  _LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
 	  ;;
 	esac
 	;;
@@ -5229,16 +5244,16 @@ _LT_EOF
 	tmp_addflag=' $pic_flag'
 	tmp_sharedflag='-shared'
 	case $cc_basename,$host_cpu in
-        pgcc*)				# Portland Group C compiler
+        pgcc* | nvc*)				# NVIDIA HPC C compiler
 	  _LT_TAGVAR(whole_archive_flag_spec, $1)='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
 	  tmp_addflag=' $pic_flag'
 	  ;;
-	pgCC*)				# Portland Group C++ compiler
+	pgCC* | pgcpp* | pgc++* | nvc++*)				# NVIDIA HPC C++ compiler
 	  _LT_TAGVAR(whole_archive_flag_spec, $1)='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
 	  tmp_addflag=' $pic_flag'
 	  ;;
-	pgf77* | pgf90* | pgf95* | pgfortran*)
-					# Portland Group f77 and f90 compilers
+	pgf77* | pgf90* | pgf95* | pgfortran* | nvfortran*)
+					# NVIDIA HPC Fortran compiler
 	  _LT_TAGVAR(whole_archive_flag_spec, $1)='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
 	  tmp_addflag=' $pic_flag -Mnomain' ;;
 	ecc*,ia64* | icc*,ia64*)	# Intel C compiler on ia64
@@ -5252,21 +5267,39 @@ _LT_EOF
 	  tmp_sharedflag='--shared' ;;
         nagfor*)                        # NAGFOR 5.3
           tmp_sharedflag='-Wl,-shared' ;;
-	xl[[cC]]* | bgxl[[cC]]* | mpixl[[cC]]*) # IBM XL C 8.0 on PPC (deal with xlf below)
+	xl[[cC]]* | bgxl[[cC]]* | mpixl[[cC]]*) # IBM XL C 8.0 on PPC
 	  tmp_sharedflag='-qmkshrobj'
 	  tmp_addflag= ;;
+	xlf* | mpixlf*) # IBM xlf since version 13 knows about -qmkshrobj, see also below
+	  xlf_version=`$CC -qversion=verbose 2>&1 | sed -n 2p | sed -e "s/^Version: //" | cut -d'.' -f 1`
+	  if test $xlf_version -ge 13; then
+	    tmp_sharedflag='-qmkshrobj'
+	    tmp_addflag=
+	  fi
+	;;
 	nvcc*)	# Cuda Compiler Driver 2.2
 	  _LT_TAGVAR(whole_archive_flag_spec, $1)='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
 	  _LT_TAGVAR(compiler_needs_object, $1)=yes
 	  ;;
-	esac
-	case `$CC -V 2>&1 | sed 5q` in
-	*Sun\ C*)			# Sun C 5.9
-	  _LT_TAGVAR(whole_archive_flag_spec, $1)='$wl--whole-archive`new_convenience=; for conv in $convenience\"\"; do test -z \"$conv\" || new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
-	  _LT_TAGVAR(compiler_needs_object, $1)=yes
-	  tmp_sharedflag='-G' ;;
-	*Sun\ F*)			# Sun Fortran 8.3
-	  tmp_sharedflag='-G' ;;
+	*)
+	  case `$CC -V 2>&1 | sed 5q` in
+	  *Sun\ C*)			# Sun C 5.9
+	    _LT_TAGVAR(whole_archive_flag_spec, $1)='$wl--whole-archive`new_convenience=; for conv in $convenience\"\"; do test -z \"$conv\" || new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
+	    _LT_TAGVAR(compiler_needs_object, $1)=yes
+	    tmp_sharedflag='-G' ;;
+	  *Sun\ F*)			# Sun Fortran 8.3
+	    tmp_sharedflag='-G' ;;
+	  *xlc*) # IBM XL C
+	    tmp_sharedflag='-qmkshrobj'
+	    tmp_addflag= ;;
+	  *xlf*) # IBM xlf since version 13 knows about -qmkshrobj
+	    xlf_version=`$CC -qversion=verbose 2>&1 | sed -n 2p | sed -e "s/^Version: //" | cut -d'.' -f 1`
+	    if test $xlf_version -ge 13; then
+	      tmp_sharedflag='-qmkshrobj'
+	      tmp_addflag=
+	    fi
+	    ;;
+	  esac
 	esac
 	_LT_TAGVAR(archive_cmds, $1)='$CC '"$tmp_sharedflag""$tmp_addflag"' $libobjs $deplibs $compiler_flags $wl-soname $wl$soname -o $lib'
 
@@ -5281,7 +5314,21 @@ _LT_EOF
 	tcc*)
 	  _LT_TAGVAR(export_dynamic_flag_spec, $1)='-rdynamic'
 	  ;;
-	xlf* | bgf* | bgxlf* | mpixlf*)
+	xlf* | mpixlf*) # IBM xlf since version 13 knows about -qmkshrobj, see also above
+	  xlf_version=`$CC -qversion=verbose 2>&1 | sed -n 2p | sed -e "s/^Version: //" | cut -d'.' -f 1`
+	  if test $xlf_version -lt 13; then
+	    _LT_TAGVAR(whole_archive_flag_spec, $1)='--whole-archive$convenience --no-whole-archive'
+	    _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='$wl-rpath $wl$libdir'
+	    _LT_TAGVAR(archive_cmds, $1)='$LD -shared $libobjs $deplibs $linker_flags -soname $soname -o $lib'
+	    if test yes = "$supports_anon_versioning"; then
+	      _LT_TAGVAR(archive_expsym_cmds, $1)='echo "{ global:" > $output_objdir/$libname.ver~
+                cat $export_symbols | sed -e "s/\(.*\)/\1;/" >> $output_objdir/$libname.ver~
+                echo "local: *; };" >> $output_objdir/$libname.ver~
+                $LD -shared $libobjs $deplibs $linker_flags -soname $soname -version-script $output_objdir/$libname.ver -o $lib'
+	    fi
+          fi
+          ;;
+	bgf* | bgxlf*)
 	  # IBM XL Fortran 10.1 on PPC cannot create shared libs itself
 	  _LT_TAGVAR(whole_archive_flag_spec, $1)='--whole-archive$convenience --no-whole-archive'
 	  _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='$wl-rpath $wl$libdir'
@@ -7045,7 +7092,7 @@ if test yes != "$_lt_caught_CXX_error"; then
 	    _LT_TAGVAR(whole_archive_flag_spec, $1)='$wl--whole-archive$convenience $wl--no-whole-archive'
 	    ;;
           pgCC* | pgcpp*)
-            # Portland Group C++ compiler
+            # NVIDIA HPC C++ compiler. No special treatment for pgc++ and nvc++.
 	    case `$CC -V` in
 	    *pgCC\ [[1-5]].* | *pgcpp\ [[1-5]].*)
 	      _LT_TAGVAR(prelink_cmds, $1)='tpldir=Template.dir~
@@ -7145,7 +7192,7 @@ if test yes != "$_lt_caught_CXX_error"; then
 	      output_verbose_link_cmd='func_echo_all'
 	      ;;
 	    *pgCC* | *pgcpp*)
-	      # Portland Group C++ compiler
+	      # NVIDIA HPC C++ compiler. No special treatment for pgc++ and nvc++.
 	      case `$CC -V` in
 	      *pgCC\ [[1-5]].* | *pgcpp\ [[1-5]].*)
 	        _LT_TAGVAR(prelink_cmds, $1)='tpldir=Template.dir~
@@ -7176,7 +7223,18 @@ if test yes != "$_lt_caught_CXX_error"; then
 	      _LT_TAGVAR(export_dynamic_flag_spec, $1)='$wl--export-dynamic'
 	      _LT_TAGVAR(whole_archive_flag_spec, $1)='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
 	      ;;
-	    esac
+	    *xlC* | *xlc++* ) # IBM XL 
+	      _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='$wl-rpath $wl$libdir'
+	      _LT_TAGVAR(export_dynamic_flag_spec, $1)='$wl--export-dynamic'
+	      _LT_TAGVAR(archive_cmds, $1)='$CC -qmkshrobj $libobjs $deplibs $compiler_flags $wl-soname $wl$soname -o $lib'
+	      if test yes = "$supports_anon_versioning"; then
+	        _LT_TAGVAR(archive_expsym_cmds, $1)='echo "{ global:" > $output_objdir/$libname.ver~
+	        cat $export_symbols | sed -e "s/\(.*\)/\1;/" >> $output_objdir/$libname.ver~
+	        echo "local: *; };" >> $output_objdir/$libname.ver~
+	        $CC -qmkshrobj $libobjs $deplibs $compiler_flags $wl-soname $wl$soname $wl-version-script $wl$output_objdir/$libname.ver -o $lib'
+	      fi
+	    ;;
+            esac
 	    ;;
 	esac
 	;;

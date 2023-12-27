@@ -39,7 +39,7 @@
          k=k+i
       end do
 !$omp  end parallel do
-      
+
       if(k .gt. 0) l = .true.
 !$omp  parallel sections if(l) num_threads(2) default(shared)
 !$omp+ firstprivate(j) lastprivate(i) copyin(t) reduction(+:l)

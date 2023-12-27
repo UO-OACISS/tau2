@@ -34,8 +34,8 @@ static OPARI2_Region_handle opari2_region_14 = NULL;
 static OPARI2_Region_handle opari2_region_15 = NULL;
     #define opari2_ctc_15 "61*regionType=taskwait*sscl=test2.c:97:97*escl=test2.c:97:97**"
 
-#ifdef __cplusplus 
- extern "C" 
+#ifdef __cplusplus
+extern "C"
 #endif
 void POMP2_Init_reg_000()
 {

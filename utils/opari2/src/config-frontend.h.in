@@ -21,6 +21,12 @@
 /* Makes C variable alignment consistent with Fortran */
 #undef FORTRAN_ALIGNED
 
+/* define if the compiler supports basic C99 syntax */
+#undef HAVE_C99
+
+/* define if the compiler supports basic C++11 syntax */
+#undef HAVE_CXX11
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -36,9 +42,6 @@
 /* Set if we are building for the ALTIX platform */
 #undef HAVE_PLATFORM_ALTIX
 
-/* Set if we are building for the ARM platform */
-#undef HAVE_PLATFORM_ARM
-
 /* Set if we are building for the BG/L platform */
 #undef HAVE_PLATFORM_BGL
 
@@ -50,6 +53,9 @@
 
 /* Set if we are building for the Cray platform */
 #undef HAVE_PLATFORM_CRAY
+
+/* Set if we are building for an unknown Cray */
+#undef HAVE_PLATFORM_CRAYUNKNOWN
 
 /* Set if we are building for the Cray XC platform */
 #undef HAVE_PLATFORM_CRAYXC
@@ -75,7 +81,7 @@
 /* Set if we are building for the Linux platform */
 #undef HAVE_PLATFORM_LINUX
 
-/* Set if we are building for the Mac platform */
+/* Set if we are building for the macOS platform */
 #undef HAVE_PLATFORM_MAC
 
 /* Set if we are building for the Intel MIC platform */
@@ -83,9 +89,6 @@
 
 /* Set if we are building for the MinGW platform */
 #undef HAVE_PLATFORM_MINGW
-
-/* Set if we are building for the NEC SX platform */
-#undef HAVE_PLATFORM_NECSX
 
 /* Set if we are building for the Solaris platform */
 #undef HAVE_PLATFORM_SOLARIS
@@ -141,13 +144,10 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Revision of common repository */
-#undef SCOREP_COMMON_REVISION
-
 /* Revision of OPARI2 */
 #undef SCOREP_COMPONENT_REVISION
 
-/* Defined if we are working from svn. */
+/* Defined if we are working from git. */
 #undef SCOREP_IN_DEVELOPEMENT
 
 /* Defined if we are working from a make dist generated tarball. */
@@ -158,3 +158,15 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* Define to 1 if needed to make fixed-width integer constant macros available
+   in C++ */
+#undef __STDC_CONSTANT_MACROS
+
+/* Define to 1 if needed to make fixed-width integer format macros available
+   in C++ */
+#undef __STDC_FORMAT_MACROS
+
+/* Define to 1 if needed to make fixed-width integer limit macros available in
+   C++ */
+#undef __STDC_LIMIT_MACROS

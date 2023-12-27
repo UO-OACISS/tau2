@@ -30,7 +30,7 @@ integer (kind=omp_lock_kind)      lock
   !$OMP PARALLEL
   i = 1
   !$OMP end PARALLEL
-  
+
   !$OMP PARALLEL DO
     do 100, i = 2, 50
      j++
@@ -57,7 +57,7 @@ integer (kind=omp_lock_kind)      lock
   !$OMP SINGLE
     i = 7
   !$OMP END SINGLE
- 
+
   !$OMP MASTER
    i = 8
   !$OMP END MASTER
@@ -70,11 +70,11 @@ integer (kind=omp_lock_kind)      lock
     i = 10
   !$omp end critical test
 
-  !$OMP workshare 
+  !$OMP workshare
     i = 11
   !$OMP end workshare
 
-  !$OMP workshare 
+  !$OMP workshare
     i = 12
   !$OMP end workshare nowait
 
@@ -95,7 +95,7 @@ integer (kind=omp_lock_kind)      lock
     i = 16
   !$omp section
     i = 17
-  !$omp section 
+  !$omp section
     i = 18
   !$omp end sections nowait
 
@@ -106,14 +106,14 @@ integer (kind=omp_lock_kind)      lock
   !$OMP threadprivate( i )
 
   call omp_init_lock( lock )
-  call omp_destroy_lock( lock ) 
+  call omp_destroy_lock( lock )
 
   !$POMP INSTRUMENT
 
   !$OMP PARALLEL
   i = 1
   !$OMP end PARALLEL
-  
+
   !$OMP PARALLEL DO
     do 100, i = 2, 50
      j++
@@ -140,7 +140,7 @@ integer (kind=omp_lock_kind)      lock
   !$OMP SINGLE
     i = 7
   !$OMP END SINGLE
- 
+
   !$OMP MASTER
    i = 8
   !$OMP END MASTER
@@ -153,11 +153,11 @@ integer (kind=omp_lock_kind)      lock
     i = 10
   !$omp end critical test
 
-  !$OMP workshare 
+  !$OMP workshare
     i = 11
   !$OMP end workshare
 
-  !$OMP workshare 
+  !$OMP workshare
     i = 12
   !$OMP end workshare nowait
 
@@ -178,7 +178,7 @@ integer (kind=omp_lock_kind)      lock
     i = 16
   !$omp section
     i = 17
-  !$omp section 
+  !$omp section
     i = 18
   !$omp end sections nowait
 
@@ -189,7 +189,7 @@ integer (kind=omp_lock_kind)      lock
   !$OMP threadprivate( i )
 
   call omp_init_lock( lock )
-  call omp_destroy_lock( lock ) 
+  call omp_destroy_lock( lock )
 
 
   !$POMP INST FINALIZE

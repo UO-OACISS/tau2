@@ -19,10 +19,10 @@
 
       program test1_disable
       IMPLICIT NONE
-      
+
       SUBROUTINE foo(A,N)
       INTEGER I,N,L,T
-      
+
 c$omp parallel
 
 c$omp atomic
@@ -64,7 +64,7 @@ c$omp task
       N=7
 c$omp end task
 
-c$omp end parallel      
+c$omp end parallel
 
 c$pomp inst init
 
@@ -75,5 +75,5 @@ c$pomp inst altend(user_region)
       end
 c$pomp inst end(user_region)
 
-      END SUBROUTINE 
+      END SUBROUTINE
       end program test1_free

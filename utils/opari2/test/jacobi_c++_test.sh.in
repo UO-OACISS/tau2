@@ -9,7 +9,7 @@ test_data_dir=@abs_srcdir@/data
 CXX="@CXX@"
 CC="@CC@"
 INCDIR=.
-OPARI2=@abs_builddir@/../build-frontend/opari2 
+OPARI2=@abs_builddir@/../build-frontend/opari2
 OPARI2_CONFIG="@abs_builddir@/../build-frontend/opari2-config --build-check"
 LDFLAGS="-lm -L@abs_builddir@/../build-frontend/.libs -lpomp"
 OPENMP="@OPENMP_CXXFLAGS@"
@@ -38,7 +38,7 @@ $CXX -I$INCDIR $OPENMP $CXXFLAGS -c jacobi.mod.cpp
 $CC -I$INCDIR  -c pomp_init_file.c
 $CXX $OPENMP $CXXFLAGS pomp_init_file.o jacobi.mod.o main.mod.o $LDFLAGS -o jacobi.$EXEEXT
 
-#make run 
+#make run
 OMP_NUM_THREADS=4 ./jacobi.$EXEEXT 2>jacobi_test.out
 
 grep 0: jacobi_test.out > jacobi_test_0

@@ -270,7 +270,7 @@ program test8
       call POMP2_Implicit_barrier_exit(opari2_region_10, pomp2_old_task)
       call POMP2_Parallel_end(opari2_region_10)
 #line 74 "test8.f90"
-  !$omp end parallel 
+  !$omp end parallel
       call POMP2_Parallel_join(opari2_region_10, pomp2_old_task)
 #line 75 "test8.f90"
 end program test8

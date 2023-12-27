@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT([OPARI2], m4_esyscmd([vendor/common/build-config/generate-package-version.sh build-config/VERSION]), [support@score-p.org], [opari2])
+AC_INIT([OPARI2], m4_esyscmd([build-config/common/generate-package-version.sh build-config/VERSION]), [support@score-p.org], [opari2])
 
 AFS_PACKAGE_INIT
 
@@ -15,12 +15,12 @@ AC_SCOREP_TOPLEVEL_ARGS
 ## in this directory.
 AC_CONFIG_AUX_DIR([build-config])
 ## See also ACLOCAL_AMFLAGS in Makefile.am.
-AC_CONFIG_MACRO_DIRS([build-config/m4 vendor/common/build-config/m4])
+AC_CONFIG_MACRO_DIRS([build-config/m4 build-config/common/m4])
 
 ## Set the default installation prefix to /opt/opari2 instead of /usr/local
 AC_PREFIX_DEFAULT([/opt/opari2])
 
-AC_SCOREP_SVN_CONTROLLED
+AC_SCOREP_GIT_CONTROLLED
 
 ## Call not before AC_CONFIG_MACRO_DIR
 AM_INIT_AUTOMAKE([foreign color-tests 1.13.4 -Wall tar-pax])
@@ -37,7 +37,7 @@ AS_IF([test "x$ac_scorep_platform_data_provided" = "x" ||
      AS_IF([test "x${afs_custom_compilers_given}" = "xno"],
         [AC_SCOREP_WITH_NOCROSS_COMPILER_SUITE])
      # determine arguments for subdir configures
-     args="`$AWK -f $srcdir/vendor/common/build-config/process_arguments.awk \
+     args="`$AWK -f $srcdir/build-config/common/process_arguments.awk \
             $ac_scorep_compilers_backend                                     \
             $ac_scorep_compilers_frontend                                    \
             user_provided_configure_args`"
@@ -45,7 +45,7 @@ AS_IF([test "x$ac_scorep_platform_data_provided" = "x" ||
     ],
     [AC_MSG_NOTICE([platform data provided by toplevel configure.])
      # determine arguments for subdir configures
-     args="`$AWK -f $srcdir/vendor/common/build-config/process_arguments.awk \
+     args="`$AWK -f $srcdir/build-config/common/process_arguments.awk \
             user_provided_configure_args`"
      AS_IF([test $? -ne 0], [AC_MSG_ERROR([cannot process provided arguments. Please contact <AC_PACKAGE_BUGREPORT> and provide the above output. Thanks.])])
     ])
@@ -53,7 +53,7 @@ AS_IF([test "x$ac_scorep_platform_data_provided" = "x" ||
 AC_SCOREP_UNCRUSTIFY
 
 AC_SCOREP_DOXYGEN
-AS_IF([test "x${ac_scorep_svn_controlled}" = xyes],
+AS_IF([test "x${ac_scorep_git_controlled}" = xyes],
     [AC_CONFIG_FILES([doc/doxygen-user.cfg:doc/doxygen-user/doxygen-user.cfg.in])
      AC_CONFIG_FILES([doc/doxygen-dev.cfg:doc/doxygen-dev/doxygen-dev.cfg.in])])
 
@@ -75,9 +75,10 @@ AC_SUBST([OPARI2_AWK], [`which ${AWK}`])
 
 AC_CONFIG_FILES([
     Makefile
-    src/config-common.h:vendor/common/build-config/config-common.h
+    src/config-common.h:build-config/common/config-common.h
 ])
 AC_CONFIG_FILES([test/c_test.sh], [chmod +x test/c_test.sh])
+AC_CONFIG_FILES([test/cxx_test.sh], [chmod +x test/cxx_test.sh])
 AC_CONFIG_FILES([test/f90_test.sh], [chmod +x test/f90_test.sh])
 AC_CONFIG_FILES([test/f77_test.sh], [chmod +x test/f77_test.sh])
 AC_CONFIG_FILES([test/awk_script_test.sh], [chmod +x test/awk_script_test.sh])

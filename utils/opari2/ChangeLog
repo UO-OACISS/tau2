@@ -1,3 +1,40 @@
+------------------- Released version 2.0.8 ---------------------------
+
+- Fixed compilation error for instrumented OpenMP directives inside
+  'associate' constructs with gfortran.
+
+- Prevent make distclean from erroneously removing source files.
+
+------------------- Released version 2.0.7 ---------------------------
+
+- Include omp.h via <file>.opari.inc if it got removed from
+  <file>. <file>.opari.inc was empty if the compilation unit was
+  lacking any OpenMP directives. Thus, calls to API functions or using
+  OpenMP types issued warnings/errors on compilation of the modfied
+  sources.
+
+- Handle C++14/17 numeric literals (binary integer, hexadecimal
+  floating-point), including seperators.
+
+------------------- Released version 2.0.6 ---------------------------
+
+- make check's test/awk_script_test.sh was reported to fail due to
+  wrong ordering of regions provided by
+  pomp2_parse_init_regions.awk. Fixed.
+
+- Handle C++11 multi line strings literals with arbitrary delimiter
+
+------------------- Released version 2.0.5 ---------------------------
+
+- The number of regions reported by POMP2_Get_num_regions() was too
+  small if OpenMP barrier, flush, or taskwait constructs were present
+  in the code. As a consequence opari-lib-dummy crashed; Score-P
+  handled this situation gracefully. Fixed.
+
+- When working on preprocessed Fortran files, opari2 duplicated line
+  directives. Compiling these files triggered warnings with certain
+  compilers. Fixed.
+
 ------------------- Released version 2.0.4 ---------------------------
 
 - Fixed some bad string accesses, thanks to Orion Poplawski.

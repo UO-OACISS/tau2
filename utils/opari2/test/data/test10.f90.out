@@ -49,7 +49,7 @@ integer (kind=omp_lock_kind)      lock
   !$omp end parallel
       call POMP2_Parallel_join(opari2_region_1, pomp2_old_task)
 #line 33 "test10.f90"
-  
+
       pomp2_num_threads = pomp2_lib_get_max_threads()
       pomp2_if = .true.
       call POMP2_Parallel_fork(opari2_region_2,&
@@ -141,7 +141,7 @@ integer (kind=omp_lock_kind)      lock
   !$omp single
     i = 7
   !$omp end single
- 
+
   !$omp master
    i = 8
   !$omp end master
@@ -154,11 +154,11 @@ integer (kind=omp_lock_kind)      lock
     i = 10
   !$omp end critical test
 
-  !$omp workshare 
+  !$omp workshare
     i = 11
   !$omp end workshare
 
-  !$omp workshare 
+  !$omp workshare
     i = 12
   !$omp end workshare nowait
 
@@ -179,7 +179,7 @@ integer (kind=omp_lock_kind)      lock
     i = 16
   !$omp section
     i = 17
-  !$omp section 
+  !$omp section
     i = 18
   !$omp end sections nowait
 
@@ -190,7 +190,7 @@ integer (kind=omp_lock_kind)      lock
   !$omp threadprivate( i )
 
   call omp_init_lock( lock )
-  call omp_destroy_lock( lock ) 
+  call omp_destroy_lock( lock )
 
 #line 112 "test10.f90"
 
@@ -215,7 +215,7 @@ integer (kind=omp_lock_kind)      lock
   !$omp end parallel
       call POMP2_Parallel_join(opari2_region_6, pomp2_old_task)
 #line 116 "test10.f90"
-  
+
       pomp2_num_threads = pomp2_lib_get_max_threads()
       pomp2_if = .true.
       call POMP2_Parallel_fork(opari2_region_7,&
@@ -361,7 +361,7 @@ integer (kind=omp_lock_kind)      lock
       call POMP2_Implicit_barrier_exit(opari2_region_11, pomp2_old_task)
       call POMP2_Single_exit(opari2_region_11)
 #line 143 "test10.f90"
- 
+
 #line 144 "test10.f90"
   !$omp master
       call POMP2_Master_begin(opari2_region_12, &
@@ -401,7 +401,7 @@ integer (kind=omp_lock_kind)      lock
       call POMP2_Workshare_enter(opari2_region_15, &
      opari2_ctc_15 )
 #line 156 "test10.f90"
-  !$omp workshare 
+  !$omp workshare
     i = 11
 #line 158 "test10.f90"
   !$omp end workshare nowait
@@ -415,7 +415,7 @@ integer (kind=omp_lock_kind)      lock
       call POMP2_Workshare_enter(opari2_region_16, &
      opari2_ctc_16 )
 #line 160 "test10.f90"
-  !$omp workshare 
+  !$omp workshare
     i = 12
 #line 162 "test10.f90"
   !$omp end workshare nowait
@@ -485,7 +485,7 @@ integer (kind=omp_lock_kind)      lock
     i = 17
       call POMP2_Section_end(opari2_region_21)
 #line 181 "test10.f90"
-  !$omp section 
+  !$omp section
       call POMP2_Section_begin(opari2_region_21, &
      opari2_ctc_21 )
 #line 182 "test10.f90"
@@ -514,7 +514,7 @@ integer (kind=omp_lock_kind)      lock
   !$omp threadprivate( i )
 
   call POMP2_Init_lock( lock )
-  call POMP2_Destroy_lock( lock ) 
+  call POMP2_Destroy_lock( lock )
 
 
       call POMP2_Finalize()

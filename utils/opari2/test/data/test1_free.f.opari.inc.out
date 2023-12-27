@@ -1,4 +1,7 @@
 
       integer*4 pomp2_lib_get_max_threads
+      external pomp2_lib_get_max_threads
       logical pomp2_test_lock
+      external pomp2_test_lock
       integer*4 pomp2_test_nest_lock
+      external pomp2_test_nest_lock

@@ -1,0 +1,107 @@
+/*
+ * This file is part of the Score-P software (http://www.score-p.org)
+ *
+ * Copyright (c) 2021,
+ * Forschungszentrum Juelich GmbH, Germany
+ *
+ * This software may be modified and distributed under the terms of
+ * a BSD-style license. See the COPYING file in the package base
+ * directory for details.
+ *
+ * Testfile for automated testing of OPARI2
+ *
+ *
+ * @brief Test the parsers ability to handle C++14/17 numeric literals.
+ */
+
+
+int
+main(int    argc,
+     char** argv)
+{
+    // binary integers
+    auto bin                 = 0b0101010;
+    auto binWithSep          = 0b0'10'10'10;
+    auto binWithSuffix       = 0b0101010L;
+    auto binWithSuffixAndSep = 0b0'10'10'10l;
+
+    // octal integers
+    auto oct                 = 07232;
+    auto octWithSep          = 07'232;
+    auto octWithSuffix       = 07232L;
+    auto octWithSuffixAndSep = 07'232l;
+
+    // decimal integers
+    auto dec                 = 424242;
+    auto decWithSep          = 42'4242;
+    auto decWithSuffix       = 424242L;
+    auto decWithSuffixAndSep = 42'4242l;
+
+    // hexadecimal integers
+    auto hex                 = 0x0420DEAD;
+    auto hexWithSep          = 0x04'20'DE'AD;
+    auto hexWithSuffix       = 0x0420DEADL;
+    auto hexWithSuffixAndSep = 0x04'20'DE'ADl;
+
+    // decimal floating-points
+    auto dfp                 = 424242.0123;
+    auto dfpWithSep          = 42'42'42.01'23;
+    auto dfpWithSuffix       = 424242.0123F;
+    auto dfpWithSuffixAndSep = 42'42'42.01'23f;
+
+    auto dfpExp                 = 424242.0123e-17;
+    auto dfpExpWithSep          = 42'4242.01'23e+1'7;
+    auto dfpExpWithSuffix       = 424242.0123e17F;
+    auto dfpExpWithSuffixAndSep = 42'4242.01'23e-1'7f;
+
+    auto dfpInt                 = 424242.;
+    auto dfpIntWithSep          = 42'4242.;
+    auto dfpIntWithSuffix       = 424242.F;
+    auto dfpIntWithSuffixAndSep = 42'4242.f;
+
+    auto dfpIntExp                 = 424242.e-12;
+    auto dfpIntExpWithSep          = 42'42'42.e+1'2;
+    auto dfpIntExpWithSuffix       = 424242e+12F;
+    auto dfpIntExpWithSuffixAndSep = 42'42'42e-1'2f;
+
+    auto dfpFrac                 = .424242;
+    auto dfpFracWithSep          = .42'4242;
+    auto dfpFracWithSuffix       = .424242F;
+    auto dfpFracWithSuffixAndSep = .42'4242f;
+
+    auto dfpFracExp                 = .424242e+15;
+    auto dfpFracExpWithSep          = .42'42'42e-1'5;
+    auto dfpFracExpWithSuffix       = .424242e-15F;
+    auto dfpFracExpWithSuffixAndSep = .42'42'42e+1'5f;
+
+    // hexadecimal floating-points
+    auto hfp                 = 0xdead.BEEFp10;
+    auto hfpWithSep          = 0xDE'AD.be'efp1'0;
+    auto hfpWithSuffix       = 0XDEad.BeeFp+10F;
+    auto hfpWithSuffixAndSep = 0XdE'Ad.Be'Efp+1'0f;
+
+    auto hfpInt                 = 0XDEAD.p-10;
+    auto hfpIntWithSep          = 0Xd'e'ad.p1'0;
+    auto hfpIntWithSuffix       = 0xdead.p10F;
+    auto hfpIntWithSuffixAndSep = 0xd'e'Ad.p-1'0f;
+
+    auto hfpFrac                 = 0x.beefp+10;
+    auto hfpFracWithSep          = 0x.b'e'efp1'0;
+    auto hfpFracWithSuffix       = 0X.BEEFP-10F;
+    auto hfpFracWithSuffixAndSep = 0X.BE'E'FP1'0f;
+
+    auto expr = 0x.beefp+10
+                + 0xdead.p10F
+                + .42'42'42e+1'5f
+                + .424242
+                + 424242.e-12
+                + 42'4242.
+                + 42'4242.01'23e+1'7
+                + 424242.0123F
+                + 0x04'20'DE'AD
+                + 4
+                + 07'232
+                + 0b0'10'10'10l;
+
+    return 0;
+}
