@@ -32,6 +32,10 @@
  *
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #include "opari2_region_info.h"
 
 #include <stdbool.h>
@@ -132,4 +136,7 @@ void
 freePOMP2UserRegionInfoMembers( POMP2_USER_Region_info* regionInfo );
 
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 #endif /* POMP2_USER_REGION_INFO_H */
