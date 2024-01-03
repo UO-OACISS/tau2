@@ -3146,11 +3146,6 @@ for arg in "$@"; do
             fi
             shift
             ;;
-        -roctracer)
-            roctracer=yes
-            tauoptions="${tauoptions}-roctracer"
-            shift
-            ;;
         -roctracer=*)
             roctracerdir=`echo $arg | sed -e 's/-roctracer=//' -e 's/ /#/g'`
             if [ ! -d $roctracerdir ]; then
@@ -3175,11 +3170,6 @@ for arg in "$@"; do
                   fixmakeargs="$fixmakeargs ROCTRACER_HSA"
               fi
             fi
-            shift
-            ;;
-        -rocprofiler)
-            rocprofiler=yes
-            tauoptions="${tauoptions}-rocprofiler"
             shift
             ;;
         -rocprofiler=*)
@@ -3479,37 +3469,54 @@ EOF
 	fi
 fi
 
+
+
+if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "rocmv6" = "no" ]; then
+    echo "For rocprofv2 use rocm/6 or newer!"
+    exit
+fi
+
+if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "rocmv6" = "yes" ]; then
+    pthread=yes
+    if [ "x$rocprofilerdir" = "x" ]; then
+        rocprofilerdir=$rocmdir
+    fi
+
+    if [ "x$rocprofilerinc" = "x" ]; then
+        rocprofilerinc="$rocprofilerdir/include/rocprofiler"
+        fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
+    fi
+fi
+
 if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" ] ; then
     if [ "$roctracer" = yes ]; then
         fixmakeargs="$fixmakeargs ROCTRACERROCM6"
-        if [ -r $rocmdir/include/roctracer/roctracer_hsa.h ]; then
+        if [ -r $roctracerdir/include/roctracer/roctracer_hsa.h ]; then
             fixmakeargs="$fixmakeargs ROCTRACERROCM6_HSA"
         fi
+
     fi
+
+    if [ "x$rocprofilerdir" = "x" ]; then
+        rocprofilerdir=$rocmdir
+    fi
+
     if [ "$rocprofiler" = yes ]; then
         fixmakeargs="$fixmakeargs ROCPROFILERROCM6"
     fi
-fi
 
+    if [ "x$rocprofilerlibrary" = "x" ]; then
+        rocprofilerlibrary=librocprofiler64.so
+        fixmakeargs="$fixmakeargs rocprofilerlibrary=$rocprofilerlibrary"
+    fi
 
-
-if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" ]; then
-    if [ "rocmv6" = "no" ]; then
-      echo "For rocprofv2 use rocm/6 or newer!"
-      exit
-    else
-      fixmakeargs="$fixmakeargs TAU_USE_GPU"
-      pthread=yes
-      rocprofiler=no    
-      rocprofilerinc="$rocmdir/include/rocprofiler"
-      fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
+    if [ "x$rocprofilerinc" = "x" ]; then
+        rocprofilerinc="$rocprofilerdir/include/rocprofiler"
+        fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
     fi
 fi
 
-
 if [ "rocmv6" = "no" ] ; then
-    echo "----------------------No Rocmv6!"
-
     if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler -a "x$roctracerdir" = "x" ]; then
       rocprofilerdir=$rocmdir/rocprofiler
       fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER TAU_USE_GPU"
@@ -3517,7 +3524,6 @@ if [ "rocmv6" = "no" ] ; then
       tauoptions="${tauoptions}-rocprofiler"
       pthread=yes
     fi
-
     if [ "x$rocm" = "xyes" -a "x$rocmsmi" = "xno" ]; then
       if [ -r $rocmdir/include/rocm_smi/rocm_smi.h ]; then
         echo "No rocmsmi specified, using $rocmdir as $rocmdir/include/rocm_smi/rocm_smi.h is found"
@@ -3525,7 +3531,6 @@ if [ "rocmv6" = "no" ] ; then
         fixmakeargs="$fixmakeargs ROCMSMI"
       fi
     fi
-
     # AMD ROCm rocprofiler directories
     if [ "$rocprofiler" = yes -a "$rocm" = "no" ]; then
        if [ "x$rocmdir" = "x" -a -d /opt/rocm ]; then
@@ -3533,8 +3538,7 @@ if [ "rocmv6" = "no" ] ; then
          fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM"
        fi
     fi
-
-    if [ "$rocprofiler" = yes -a "x$rocprofilerinc" = "x" -a "$rocmv6" = "no" ]; then
+    if [ "$rocprofiler" = yes -a "x$rocprofilerinc" = "x" ]; then
        if [ "x$rocprofilerlibrary" = "x" ];
        then
          rocprofilerlibrary=librocprofiler64.so
@@ -3545,19 +3549,6 @@ if [ "rocmv6" = "no" ] ; then
          fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
        fi
     fi
-
-    if [ "$rocprofiler" = yes -a "x$rocprofilerinc" = "x" -a "$rocmv6" = "yes" ]; then
-       if [ "x$rocprofilerlibrary" = "x" ];
-       then
-         rocprofilerlibrary=librocprofiler64.so
-         fixmakeargs="$fixmakeargs rocprofilerlibrary=$rocprofilerlibrary"
-       fi
-       if [ "x$rocprofilerinc" = "x" ]; then
-         rocprofilerinc="$rocprofilerdir/inc"
-         fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
-       fi
-    fi
-
 fi
 
 if [ "x$use_opencl" = "xyes" -a "x$openclinclude" = "x" ]; then
