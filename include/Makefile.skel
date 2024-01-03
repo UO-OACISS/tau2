@@ -760,19 +760,9 @@ JDKBINDIR = $(JDKDIR)/bin
 #CUDA#PROFILEOPT114 = -DTAU_GPU #ENDIF#
 #CUPTI#PROFILEOPT114 = -DTAU_GPU #ENDIF#
 #OPENCL#PROFILEOPT114 = -DTAU_GPU #ENDIF#
-
-
 #ROCPROFILER#ROCPROFILER_FLAGS = -I$(TAU_ROCM_DIR)/include/hsa -I$(TAU_ROCPROFILER_INC) -I$(TAU_ROCPROFILER)/test  -DAMD_INTERNAL_BUILD -DAQLPROF_NEW_API=1 -DROCP_LD_AQLPROFILE=1 -DDEBUG_TRACE=1 -DHSA_DEPRECATED="" -DHSA_LARGE_MODEL="" -D__HIP_PLATFORM_HCC__ -DLINUX -DLITTLEENDIAN_CPU=1 -DUNIX_OS -D__AMD64__ -D__linux__ -D__x86_64__ -Dintercept_test_EXPORTS  -std=c++11 -Wall -Werror=return-type -fexceptions -fvisibility=hidden -fno-math-errno -fno-threadsafe-statics -fmerge-all-constants -fms-extensions -fmerge-all-constants -Werror=unused-result -fPIC -ggdb -m64  -msse -msse2 -g  #ENDIF#
-
-
 #ROCPROFILERROCM6#ROCPROFILER_FLAGS = -I$(TAU_ROCM_DIR)/include/hsa -I$(TAU_ROCPROFILER_INC) -DAMD_INTERNAL_BUILD -DAQLPROF_NEW_API=1 -DROCP_LD_AQLPROFILE=1 -DDEBUG_TRACE=1 -DHSA_DEPRECATED="" -DHSA_LARGE_MODEL="" -D__HIP_PLATFORM_HCC__ -DLINUX -DLITTLEENDIAN_CPU=1 -DUNIX_OS -D__AMD64__ -D__linux__ -D__x86_64__ -Dintercept_test_EXPORTS  -std=c++11 -Wall -Werror=return-type -fexceptions -fvisibility=hidden -fno-math-errno -fno-threadsafe-statics -fmerge-all-constants -fms-extensions -fmerge-all-constants -Werror=unused-result -fPIC -ggdb -m64  -msse -msse2 -g  #ENDIF#
-
-
 #ROCPROFILERV2#ROCPROFILER_FLAGS = -I$(TAU_ROCM_DIR)/include -I$(TAU_ROCPROFILER_INC)/v2 -DAMD_INTERNAL_BUILD -DAQLPROF_NEW_API=1 -DROCP_LD_AQLPROFILE=1 -DDEBUG_TRACE=1 -DHSA_DEPRECATED="" -DHSA_LARGE_MODEL="" -D__HIP_PLATFORM_HCC__ -DLINUX -DLITTLEENDIAN_CPU=1 -DUNIX_OS -D__AMD64__ -D__linux__ -D__x86_64__ -Dintercept_test_EXPORTS  -std=c++11 -Wall -Werror=return-type -fexceptions -fvisibility=hidden -fno-math-errno -fno-threadsafe-statics -fmerge-all-constants -fms-extensions -fmerge-all-constants -Werror=unused-result -fPIC -ggdb -m64  -msse -msse2 -g  #ENDIF#
-
-
-
-
 #ROCTRACER#PROFILEOPT115 = -DTAU_ENABLE_ROCTRACER -DTAU_GPU -I$(TAU_ROCM_DIR)/include -I$(TAU_ROCM_DIR)/include/hsa -I$(TAU_ROCTRACER)/include/roctracer -I$(TAU_ROCTRACER)/include -DHIP_VDI=1 -DHSA_DEPRECATED="" -DHSA_LARGE_MODEL="" -DAMD_INTERNAL_BUILD -D__HIP_PLATFORM_HCC__ #ENDIF#
 #ROCTRACER_HSA#PROFILEOPT115 = -DTAU_ENABLE_ROCTRACER -DTAU_GPU -I$(TAU_ROCTRACER)/include/roctracer -I$(TAU_ROCTRACER)/include -I$(TAU_ROCPROFILER)/include -I$(TAU_ROCTRACER)/inc -I$(TAU_ROCTRACER) -I$(TAU_ROCM_DIR)/hsa/include/hsa -DAMD_INTERNAL_BUILD -DLOCAL_BUILD=1 -DHIP_VDI=1 #ENDIF#
 #ROCTRACERROCM6#PROFILEOPT115 = -DTAU_ENABLE_ROCTRACER -DTAU_GPU -I$(TAU_ROCM_DIR)/include -I$(TAU_ROCM_DIR)/include/hsa -I$(TAU_ROCTRACER)/include/roctracer -DHIP_VDI=1 -DHSA_DEPRECATED="" -DHSA_LARGE_MODEL="" -DAMD_INTERNAL_BUILD -D__HIP_PLATFORM_HCC__ #ENDIF#
