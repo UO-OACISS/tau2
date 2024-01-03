@@ -1368,6 +1368,7 @@ zeptodir=
 cuda=no
 level_zero=no
 rocm=no
+rocmv6=no
 rocprofiler=no
 rocprofv2=no
 roctracer=no
@@ -3111,14 +3112,14 @@ for arg in "$@"; do
             shift
             ;;
 
-	-rocprofv2)
+	   -rocprofv2)
             fixmakeargs="$fixmakeargs ROCPROFILERV2"
             rocprofv2=yes
             tauoptions="${tauoptions}-rocprofv2"
             pthread=yes
             shift
             ;;
-	-rocmsmi=*)
+	   -rocmsmi=*)
             rocmsmidir=`echo $arg | sed -e 's/-rocmsmi=//' -e 's/ /#/g'`
             if [ ! -d $rocmsmidir ]; then
               echo  "Error: Cannot access ROCm smi directory $rocmsmidir"
@@ -3168,13 +3169,9 @@ for arg in "$@"; do
               if [ -r $roctracerdir/inc/roctracer_hsa.h -o -r $roctracerdir/include/roctracer/roctracer_hsa.h ]; then
                   fixmakeargs="$fixmakeargs ROCTRACER_HSA"
               fi
-
-
-
             fi
             shift
             ;;
-
         -rocprofiler=*)
             rocprofilerdir=`echo $arg | sed -e 's/-rocprofiler=//' -e 's/ /#/g'`
             if [ ! -d $rocprofilerdir ]; then
@@ -3437,51 +3434,122 @@ fi
 
 fi
 
-if [ "x$rocm" = "xyes" -a "x$rocprofv2" = "xyes" ]; then
+#Check for rocm version, rocm-6 has files includes and library files in
+#a different location compared to older versions, include/rocm-core
+#should only exist in rocm-6
+if [ "x$rocm" = "xyes" ]; then
 
-    cat <<EOF > tau_rocprofv2_vtest.c
-#include <include/rocm_version.h>
+cat <<EOF > tau_rocm6_vtest.c
+#include <rocm_version.h>
 
-#if ((ROCM_VERSION_MAJOR != 5) || (ROCM_VERSION_MINOR != 6))
-#error "ROCM version is not 5.6"
+#if (ROCM_VERSION_MAJOR < 6)
+#error "ROCM version is lower than 6"
 #endif
 EOF
+	if [ -d $rocmdir/include/rocm-core ]; then
+		#echo "exists"
+		#echo "$cxx_compiler, $orig_useropt , $rocmdir"
+		if $cxx_compiler $orig_useropt -c tau_rocm6_vtest.c -I$rocmdir/include/rocm-core 1> /dev/null 2>&1
+		then
+			#echo "compiled"
+			rm tau_rocm6_vtest.o
+			rocmv6=yes
+            fixmakeargs="$fixmakeargs TAU_USE_GPU"
+            pthread=yes
+            tauoptions="${tauoptions}-rocmv6"
+		else
+			#echo "failed compile"
+			rocmv6=no
+		fi
+		#echo "removing test"
+		rm tau_rocm6_vtest.c
+	else
+		#echo "does not exist"
+		rocmv6=no
+	fi
+fi
 
-    if $cxx_compiler $orig_useropt -c tau_rocprofv2_vtest.c -I$rocmdir 1> /dev/null 2>&1
-    then
-	echo " Building rocprofv2" >/dev/null
-	rm tau_rocprofv2_vtest.c tau_rocprofv2_vtest.o
-    else
-       echo "For rocprofv2 use rocm/5.6.0"
-       rm tau_rocprofv2_vtest.c
-       exit
-    fi
 
-    fixmakeargs="$fixmakeargs TAU_USE_GPU"
+
+if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "rocmv6" = "no" ]; then
+    echo "For rocprofv2 use rocm/6 or newer!"
+    exit
+fi
+
+if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "rocmv6" = "yes" ]; then
     pthread=yes
-    rocprofiler=no    
+    if [ "x$rocprofilerdir" = "x" ]; then
+        rocprofilerdir=$rocmdir
+    fi
+
     if [ "x$rocprofilerinc" = "x" ]; then
-     rocprofilerinc="$rocmdir/include/rocprofiler"
-     fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
+        rocprofilerinc="$rocprofilerdir/include/rocprofiler"
+        fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
     fi
 fi
 
-if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler -a "x$roctracerdir" = "x" ]; then
-  rocprofilerdir=$rocmdir/rocprofiler
-  fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER TAU_USE_GPU"
-  rocprofiler=yes
-  tauoptions="${tauoptions}-rocprofiler"
-  pthread=yes
+if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" ] ; then
+    if [ "$roctracer" = yes ]; then
+        fixmakeargs="$fixmakeargs ROCTRACERROCM6"
+        if [ -r $roctracerdir/include/roctracer/roctracer_hsa.h ]; then
+            fixmakeargs="$fixmakeargs ROCTRACERROCM6_HSA"
+        fi
+
+    fi
+
+    if [ "x$rocprofilerdir" = "x" ]; then
+        rocprofilerdir=$rocmdir
+    fi
+
+    if [ "$rocprofiler" = yes ]; then
+        fixmakeargs="$fixmakeargs ROCPROFILERROCM6"
+    fi
+
+    if [ "x$rocprofilerlibrary" = "x" ]; then
+        rocprofilerlibrary=librocprofiler64.so
+        fixmakeargs="$fixmakeargs rocprofilerlibrary=$rocprofilerlibrary"
+    fi
+
+    if [ "x$rocprofilerinc" = "x" ]; then
+        rocprofilerinc="$rocprofilerdir/include/rocprofiler"
+        fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
+    fi
 fi
 
-if [ "x$rocm" = "xyes" -a "x$rocmsmi" = "xno" ]; then
-  if [ -r $rocmdir/include/rocm_smi/rocm_smi.h ]; then
-    echo "No rocmsmi specified, using $rocmdir as $rocmdir/include/rocm_smi/rocm_smi.h is found"
-    fixmakeargs="$fixmakeargs rocmsmidir=$rocmdir"
-    fixmakeargs="$fixmakeargs ROCMSMI"
-  fi
+if [ "rocmv6" = "no" ] ; then
+    if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler -a "x$roctracerdir" = "x" ]; then
+      rocprofilerdir=$rocmdir/rocprofiler
+      fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER TAU_USE_GPU"
+      rocprofiler=yes
+      tauoptions="${tauoptions}-rocprofiler"
+      pthread=yes
+    fi
+    if [ "x$rocm" = "xyes" -a "x$rocmsmi" = "xno" ]; then
+      if [ -r $rocmdir/include/rocm_smi/rocm_smi.h ]; then
+        echo "No rocmsmi specified, using $rocmdir as $rocmdir/include/rocm_smi/rocm_smi.h is found"
+        fixmakeargs="$fixmakeargs rocmsmidir=$rocmdir"
+        fixmakeargs="$fixmakeargs ROCMSMI"
+      fi
+    fi
+    # AMD ROCm rocprofiler directories
+    if [ "$rocprofiler" = yes -a "$rocm" = "no" ]; then
+       if [ "x$rocmdir" = "x" -a -d /opt/rocm ]; then
+         rocmdir=/opt/rocm
+         fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM"
+       fi
+    fi
+    if [ "$rocprofiler" = yes -a "x$rocprofilerinc" = "x" ]; then
+       if [ "x$rocprofilerlibrary" = "x" ];
+       then
+         rocprofilerlibrary=librocprofiler64.so
+         fixmakeargs="$fixmakeargs rocprofilerlibrary=$rocprofilerlibrary"
+       fi
+       if [ "x$rocprofilerinc" = "x" ]; then
+         rocprofilerinc="$rocprofilerdir/inc"
+         fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
+       fi
+    fi
 fi
-
 
 if [ "x$use_opencl" = "xyes" -a "x$openclinclude" = "x" ]; then
   ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
@@ -3523,26 +3591,6 @@ else
         #echo "NOTE: Assuming -mpi because -upcnetwork=mpi."
         mpi=yes
     fi
-fi
-
-# AMD ROCm rocprofiler directories
-if [ "$rocprofiler" = yes -a "$rocm" = "no" ]; then
-   if [ "x$rocmdir" = "x" -a -d /opt/rocm ]; then
-     rocmdir=/opt/rocm
-     fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM"
-   fi
-fi
-
-if [ "$rocprofiler" = yes -a "x$rocprofilerinc" = "x" ]; then
-   if [ "x$rocprofilerlibrary" = "x" ];
-   then
-     rocprofilerlibrary=librocprofiler64.so
-     fixmakeargs="$fixmakeargs rocprofilerlibrary=$rocprofilerlibrary"
-   fi
-   if [ "x$rocprofilerinc" = "x" ]; then
-     rocprofilerinc="$rocprofilerdir/inc"
-     fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
-   fi
 fi
 
 # -- some functions
