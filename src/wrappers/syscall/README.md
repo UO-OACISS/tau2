@@ -3,6 +3,11 @@
 Syscall wrapper that uses ptrace to trace with tau each syscall called.
 Configure TAU with the `-syscall` option and run with `tau_exec -syscall`
 
+## Limitations
+
+The syscall wrapper does not work with tracing.
+
+
 ## Add an architecture
 
 See /usr/include/asm/uninstd.h to get the `__NR_` macros corresponding to the id and name of each syscall.
