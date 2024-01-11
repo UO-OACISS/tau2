@@ -575,6 +575,22 @@ void tau_trace_exit(int id) {
   traceExit(id);
 }
 
+void tau_trace_lib_entry(const char * func_name)
+{
+  if(!RtsLayer::TheEnableInstrumentation())
+	  return;
+  TAU_VERBOSE("TAU: tau_trace_lib_entry %s\n", func_name);
+  TAU_START(func_name);
+}
+
+void tau_trace_lib_exit(const char * func_name)
+{
+  if(!RtsLayer::TheEnableInstrumentation())
+	  return;
+  TAU_VERBOSE("TAU: tau_trace_lib_exit %s\n", func_name);
+  TAU_STOP(func_name);
+}
+
 void tau_loop_trace_entry(int id) {
   TAU_VERBOSE("TAU: tau_loop_trace_entry: id = %d\n", id);
   TAU_START(TauLoopNames[id].c_str());

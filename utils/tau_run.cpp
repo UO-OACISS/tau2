@@ -1,15 +1,15 @@
 /****************************************************************************
- **			TAU Portable Profiling Package			   **
- **			http://www.cs.uoregon.edu/research/tau	           **
+ **                  TAU Portable Profiling Package                      **
+ **                  http://www.cs.uoregon.edu/research/tau               **
  *****************************************************************************
- **    Copyright 1999  						   	   **
+ **    Copyright 1999                                                    **
  **    Department of Computer and Information Science, University of Oregon **
  **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
  *****************************************************************************
- **    Description: tau_run is a utility program that spawns a user 	   **
- **		   application and instruments it using DynInst package    **
- **		   (from U. Maryland). 					   **
- **		   Profile/trace data is generated as the program executes **
+ **    Description: tau_run is a utility program that spawns a user      **
+ **              application and instruments it using DynInst package    **
+ **              (from U. Maryland).                                     **
+ **              Profile/trace data is generated as the program executes **
  ****************************************************************************/
 
 
@@ -41,13 +41,14 @@
 //#include <string>
 //using namespace std;
 
-#define MUTNAMELEN 64
+#define MUTNAMELEN 1024
 #define FUNCNAMELEN 32*1024
 #define NO_ERROR -1
 
 int expectError = NO_ERROR;
 int debugPrint = 0;
 int binaryRewrite = 0; /* by default, it is turned off */
+int libraryRewrite = 0; /* by default, it is turned off */
  
 
 #ifndef TAU_DYNINSTAPI_12_PLUS
@@ -70,7 +71,7 @@ extern bool matchName(const string& str1, const string& str2);
 
 /* prototypes for routines below */
 int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace, 
-			    BPatch_function *f, char *newname);
+                         BPatch_function *f, char *newname);
 
 
 /* re-writer */
@@ -93,10 +94,10 @@ int addName(char *name)
 // gets information (line number, filename, and column number) about
 // the instrumented loop and formats it properly.
 void getLoopFileLineInfo(BPatch_image* mutateeImage,
-			 BPatch_flowGraph* cfGraph,
-			 BPatch_basicBlockLoop* loopToInstrument,
-			 BPatch_function *f,
-			 char *newname)
+                      BPatch_flowGraph* cfGraph,
+                      BPatch_basicBlockLoop* loopToInstrument,
+                      BPatch_function *f,
+                      char *newname)
 {
 
   const char *filename;
@@ -128,7 +129,7 @@ void getLoopFileLineInfo(BPatch_image* mutateeImage,
       typeName = returnType->getName();
     }
       else
-	typeName = "void";
+       typeName = "void";
  
   BPatch_Vector< BPatch_statement > lines;
   BPatch_Vector< BPatch_statement > linesEnd;
@@ -165,18 +166,18 @@ void getLoopFileLineInfo(BPatch_image* mutateeImage,
 
 
       if (info2) {
-	row2 = linesEnd[0].lineNumber(); 
-	col2 = linesEnd[0].lineOffset();
-	if (col2 < 0) col2 = 0;
+       row2 = linesEnd[0].lineNumber(); 
+       col2 = linesEnd[0].lineOffset();
+       if (col2 < 0) col2 = 0;
         if (row2 < row1) row1 = row2; /* Fix for wrong line numbers*/
-	sprintf(newname, "Loop: %s %s() [{%s} {%d,%d}-{%d,%d}]", typeName, fname, filename, row1, col1, row2, col2);
+       sprintf(newname, "Loop: %s %s() [{%s} {%d,%d}-{%d,%d}]", typeName, fname, filename, row1, col1, row2, col2);
       } else {
-	sprintf(newname, "Loop: %s %s() [{%s} {%d,%d}]", typeName, fname, filename, row1, col1);
+       sprintf(newname, "Loop: %s %s() [{%s} {%d,%d}]", typeName, fname, filename, row1, col1);
       }
     }
   else
     {
-      strcpy(newname, fname);	
+      strcpy(newname, fname);      
     }
     
 }
@@ -191,9 +192,9 @@ void getLoopFileLineInfo(BPatch_image* mutateeImage,
 void insertTrace(BPatch_function* functionToInstrument, 
                  BPatch_addressSpace* mutatee, 
                  BPatch_function* traceEntryFunc, 
-		 BPatch_function* traceExitFunc,
-		 BPatch_flowGraph* cfGraph,
-		 BPatch_basicBlockLoop* loopToInstrument)
+               BPatch_function* traceExitFunc,
+               BPatch_flowGraph* cfGraph,
+               BPatch_basicBlockLoop* loopToInstrument)
 {
   char name[1024];
   char modname[1024];
@@ -334,9 +335,9 @@ BPatch_function * tauFindFunction (BPatch_image *appImage, const char * function
 // Function "function" is invoked at the point given by location
 //
 BPatchSnippetHandle *invokeRoutineInFunction(BPatch_process *appThread,
-					     BPatch_image *appImage, BPatch_function *function, 
-					     BPatch_procedureLocation loc, BPatch_function *callee, 
-					     BPatch_Vector<BPatch_snippet *> *callee_args){
+                                        BPatch_image *appImage, BPatch_function *function, 
+                                        BPatch_procedureLocation loc, BPatch_function *callee, 
+                                        BPatch_Vector<BPatch_snippet *> *callee_args){
   
   // First create the snippet using the callee and the args 
   const BPatch_snippet *snippet = new BPatch_funcCallExpr(*callee, *callee_args);
@@ -367,9 +368,9 @@ BPatchSnippetHandle *invokeRoutineInFunction(BPatch_process *appThread,
 // Function "function" is invoked at the point given by location
 //
 BPatchSnippetHandle *invokeRoutineInFunction(BPatch_process *appThread,
-					     BPatch_image *appImage, BPatch_Vector<BPatch_point *> points,
-					     BPatch_function *callee, 
-					     BPatch_Vector<BPatch_snippet *> *callee_args){
+                                        BPatch_image *appImage, BPatch_Vector<BPatch_point *> points,
+                                        BPatch_function *callee, 
+                                        BPatch_Vector<BPatch_snippet *> *callee_args){
   
   // First create the snippet using the callee and the args 
   const BPatch_snippet *snippet = new BPatch_funcCallExpr(*callee, *callee_args);
@@ -390,7 +391,7 @@ BPatchSnippetHandle *invokeRoutineInFunction(BPatch_process *appThread,
 // application. It is executed exactly once, before any other routine.
 //
 void Initialize(BPatch_process *appThread, BPatch_image *appImage, 
-		BPatch_Vector<BPatch_snippet *>& initArgs){
+              BPatch_Vector<BPatch_snippet *>& initArgs){
   // Find the initialization function and call it
   BPatch_function *call_func = tauFindFunction(appImage,"TauInitCode");
   if (call_func == NULL) {
@@ -405,21 +406,21 @@ void Initialize(BPatch_process *appThread, BPatch_image *appImage,
       // locate the entry point for main 
       BPatch_function *main_entry = tauFindFunction(appImage, "main");
       if (main_entry == NULL) {
-	fprintf(stderr, "tau_run: Unable to find function main\n");
-	exit(1);
+       fprintf(stderr, "tau_run: Unable to find function main\n");
+       exit(1);
       }
       const BPatch_Vector<BPatch_point *> *points = main_entry->findPoint(BPatch_entry);
       const BPatch_snippet *snippet = new BPatch_funcCallExpr(*call_func, initArgs);
       // We invoke the Init snippet before any other call in main! 
       if((points!=NULL) && (snippet != NULL)){
-	// Insert the given snippet at the given point
-	appThread->insertSnippet(*snippet, *points, BPatch_callBefore, BPatch_firstSnippet);
+       // Insert the given snippet at the given point
+       appThread->insertSnippet(*snippet, *points, BPatch_callBefore, BPatch_firstSnippet);
       }
       else 
-	{
-	  fprintf(stderr, "tau_run: entry points for main or snippet for TauInit are null\n");
-	  exit(1);
-	}
+       {
+         fprintf(stderr, "tau_run: entry points for main or snippet for TauInit are null\n");
+         exit(1);
+       }
     }
   else
     {
@@ -462,11 +463,11 @@ void errorFunc1(BPatchErrorLevel level, int num,  const char* const* params)
     // conditional reporting of warnings and informational messages
     if (errorPrint) {
       if (level == BPatchInfo){ 
-	if (errorPrint > 1) 
-	  printf("%s\n", params[0]); 
+       if (errorPrint > 1) 
+         printf("%s\n", params[0]); 
       }//if
       else
-	printf("%s", params[0]);
+       printf("%s", params[0]);
     }//if
   }//if 
   else {
@@ -478,7 +479,7 @@ void errorFunc1(BPatchErrorLevel level, int num,  const char* const* params)
       printf("Error #%d (level %d): %s\n", num, level, line);        
       // We consider some errors fatal.
       if (num == 101)
-	exit(-1);
+       exit(-1);
     }//if
   }//else
 }//errorFunc1()
@@ -500,39 +501,39 @@ int moduleConstraint(char *fname){ // fname is the name of module/file
     { // there are no user sepecified constraints on modules. Use our default 
       // constraints 
       if ((strcmp(fname, "DEFAULT_MODULE") == 0) ||
-	  ((fname[len-2] == '.') && (fname[len-1] == 'c')) || 
-	  ((fname[len-2] == '.') && (fname[len-1] == 'C')) || 
-	  ((fname[len-3] == '.') && (fname[len-2] == 'c') && (fname[len-1] == 'c')) || 
-	  ((fname[len-4] == '.') && (fname[len-3] == 'c') && (fname[len-2] == 'p') && (fname[len-1] == 'p')) || 
-	  ((fname[len-4] == '.') && (fname[len-3] == 'f') && (fname[len-2] == '9') && (fname[len-1] == '0')) || 
-	  ((fname[len-4] == '.') && (fname[len-3] == 'F') && (fname[len-2] == '9') && (fname[len-1] == '0')) || 
-	  ((fname[len-2] == '.') && (fname[len-1] == 'F')) || 
-	  ((fname[len-2] == '.') && (fname[len-1] == 'f')) || 
-	  //((fname[len-3] == '.') && (fname[len-2] == 's') && (fname[len-1] == 'o'))|| 
-	  (strcmp(fname, "LIBRARY_MODULE") == 0)){
-	/* It is ok to instrument this module. Constraint doesn't exist. */
-	// Wait: first check if it has libTAU* in the name!
-	if (strncmp(fname, "libTAU", 6) == 0)  {
-	  return true;  /* constraint applies - do not instrument! */
-	}
-	else {
-	  return false; /* ok to instrument */
-	}
+         ((fname[len-2] == '.') && (fname[len-1] == 'c')) || 
+         ((fname[len-2] == '.') && (fname[len-1] == 'C')) || 
+         ((fname[len-3] == '.') && (fname[len-2] == 'c') && (fname[len-1] == 'c')) || 
+         ((fname[len-4] == '.') && (fname[len-3] == 'c') && (fname[len-2] == 'p') && (fname[len-1] == 'p')) || 
+         ((fname[len-4] == '.') && (fname[len-3] == 'f') && (fname[len-2] == '9') && (fname[len-1] == '0')) || 
+         ((fname[len-4] == '.') && (fname[len-3] == 'F') && (fname[len-2] == '9') && (fname[len-1] == '0')) || 
+         ((fname[len-2] == '.') && (fname[len-1] == 'F')) || 
+         ((fname[len-2] == '.') && (fname[len-1] == 'f')) || 
+         //((fname[len-3] == '.') && (fname[len-2] == 's') && (fname[len-1] == 'o'))|| 
+         (strcmp(fname, "LIBRARY_MODULE") == 0)){
+       /* It is ok to instrument this module. Constraint doesn't exist. */
+       // Wait: first check if it has libTAU* in the name!
+       if (strncmp(fname, "libTAU", 6) == 0)  {
+         return true;  /* constraint applies - do not instrument! */
+       }
+       else {
+         return false; /* ok to instrument */
+       }
       }//if
       else
-	return true;
+       return true;
     } // the selective instrumentation file lists are not empty! 
   else
     { 
       // See if the file should be instrumented 
       if (processFileForInstrumentation(string(fname)))
-	{ // Yes, it should be instrumented. moduleconstraint should return false! 
-	  return false; 
-	}
+       { // Yes, it should be instrumented. moduleconstraint should return false! 
+         return false; 
+       }
       else
-	{ // No, the file should not be instrumented. Constraint exists return true
-	  return true; 
-	}
+       { // No, the file should not be instrumented. Constraint exists return true
+         return true; 
+       }
 
     }
 }//moduleConstraint()
@@ -549,6 +550,7 @@ int routineConstraint(char *fname){ // fname is the function name
       (strncmp(fname, "DYNINST", 7) == 0) ||
       (strncmp(fname, "PthreadLayer", 12) == 0) ||
       (strncmp(fname, "threaded_func", 13) == 0) ||
+      (strncmp(fname, "targ5", 5) == 0) ||
       (strncmp(fname, "targ8", 5) == 0) ||
       (strncmp(fname, "__intel_", 8) == 0) ||
       (strncmp(fname, "_intel_", 7) == 0) ||
@@ -577,15 +579,15 @@ int routineConstraint(char *fname){ // fname is the function name
 }//routineConstraint()
 
 bool findFuncOrCalls(std::vector<const char *> names, BPatch_Vector<BPatch_point *> &points,
-		     BPatch_image *appImage, BPatch_procedureLocation loc = BPatch_locEntry)
+                   BPatch_image *appImage, BPatch_procedureLocation loc = BPatch_locEntry)
 {
   BPatch_function *func = NULL;
   for (std::vector<const char *>::iterator i = names.begin(); i != names.end(); i++)
     {
       BPatch_function *f = tauFindFunction(appImage, *i);
       if (f && f->getModule()->isSharedLib()) {
-	func = f;
-	break;
+       func = f;
+       break;
       }
     }
   if (func) {
@@ -593,7 +595,7 @@ bool findFuncOrCalls(std::vector<const char *> names, BPatch_Vector<BPatch_point
     BPatch_Vector<BPatch_point *>::iterator k;
     if (fpoints && fpoints->size()) {
       for (k = fpoints->begin(); k != fpoints->end(); k++) {
-	points.push_back(*k);
+       points.push_back(*k);
       }
       return true;
     }
@@ -607,19 +609,19 @@ bool findFuncOrCalls(std::vector<const char *> names, BPatch_Vector<BPatch_point
     BPatch_Vector<BPatch_function *>::iterator j;
     for (j = all_funcs->begin(); j != all_funcs->end(); j++)
       {
-	BPatch_function *f = *j;
-	if (f->getModule()->isSharedLib())
-	  continue;
-	BPatch_Vector<BPatch_point *> *fpoints = f->findPoint(BPatch_locSubroutine);
-	if (!fpoints || !fpoints->size())
-	  continue;
-	BPatch_Vector<BPatch_point *>::iterator j;
-	for (j = fpoints->begin(); j != fpoints->end(); j++) {
-	  std::string callee = (*j)->getCalledFunctionName();
-	  if (callee == std::string(*i)) {
-	    points.push_back(*j);
-	  }
-	}
+       BPatch_function *f = *j;
+       if (f->getModule()->isSharedLib())
+         continue;
+       BPatch_Vector<BPatch_point *> *fpoints = f->findPoint(BPatch_locSubroutine);
+       if (!fpoints || !fpoints->size())
+         continue;
+       BPatch_Vector<BPatch_point *>::iterator j;
+       for (j = fpoints->begin(); j != fpoints->end(); j++) {
+         std::string callee = (*j)->getCalledFunctionName();
+         if (callee == std::string(*i)) {
+           points.push_back(*j);
+         }
+       }
       }
     if (points.size() != initial_points_size)
       return true;
@@ -629,7 +631,7 @@ bool findFuncOrCalls(std::vector<const char *> names, BPatch_Vector<BPatch_point
 }
 
 bool findFuncOrCalls(const char *name, BPatch_Vector<BPatch_point *> &points,
-		     BPatch_image *image, BPatch_procedureLocation loc = BPatch_locEntry)
+                   BPatch_image *image, BPatch_procedureLocation loc = BPatch_locEntry)
 {
   std::vector<const char *> v;
   v.push_back(name);
@@ -640,14 +642,14 @@ bool findFuncOrCalls(const char *name, BPatch_Vector<BPatch_point *> &points,
 // check if the application has an MPI library routine MPI_Comm_rank
 // 
 int checkIfMPI(BPatch_image * appImage, BPatch_Vector<BPatch_point *> &mpiinit,
-	       BPatch_function * & mpiinitstub, bool binaryRewrite)
+              BPatch_function * & mpiinitstub, bool binaryRewrite)
 {
   std::vector<const char *> init_names;
   init_names.push_back("MPI_Init");
   init_names.push_back("PMPI_Init");
   bool ismpi = findFuncOrCalls(init_names, mpiinit, appImage, BPatch_locExit);
 
-  mpiinitstub 	= tauFindFunction(appImage, "TauMPIInitStubInt");
+  mpiinitstub        = tauFindFunction(appImage, "TauMPIInitStubInt");
   if (mpiinitstub == (BPatch_function *) NULL)
     printf("*** TauMPIInitStubInt not found! \n");
   
@@ -661,7 +663,7 @@ int checkIfMPI(BPatch_image * appImage, BPatch_Vector<BPatch_point *> &mpiinit,
 
 /* We create a new name that embeds the file and line information in the name */
 int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace, 
-			    BPatch_function *f, char *newname)
+                         BPatch_function *f, char *newname)
 {
   bool info1, info2;
   unsigned long baseAddr,lastAddr;
@@ -691,7 +693,7 @@ int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace,
       typeName = returnType->getName();
     }
       else
-	typeName = "void";
+       typeName = "void";
 
 
   info1 = mutateeAddressSpace->getSourceLines((unsigned long) baseAddr, lines);
@@ -822,6 +824,134 @@ bool loadDependentLibraries(BPatch_binaryEdit *bedit, char *bindings) {
   return true;
 }
 
+//Only instruments the input library
+int tauRewriteLibrary(BPatch *bpatch, const char *mutateeName, char *outfile, char* libname, char *staticlibname, char *staticmpilibname, char *bindings)
+{
+  using namespace std;
+  dprintf("Inside tauRewriteLibrary, name=%s, out=%s\n", mutateeName, outfile);
+
+  BPatch_binaryEdit* mutateeAddressSpace = bpatch->openBinary(mutateeName, false);
+
+  if( mutateeAddressSpace == NULL ) {
+    fprintf(stderr, "Failed to open binary %s\n",
+           mutateeName);
+    return -1;
+  }
+
+  BPatch_image* mutateeImage = mutateeAddressSpace->getImage();
+
+  bool result = mutateeAddressSpace->loadLibrary(libname);
+  if (!result) {
+    printf("Error: loadLibrary(%s) failed. Please ensure that TAU's lib directory is in your LD_LIBRARY_PATH environment variable and retry.\n", libname);
+    printf("You may also want to use tau_exec while launching the rewritten binary. If TAU relies on some external libraries (Score-P), these may need to specified as tau_exec -loadlib=/path/to/library <mutatee> \n");
+  }
+  assert(result);
+
+  //As libraries do not have main, instrumentation is only inserted into
+  //the entry and exit of function calls, tau_exec, or a program compiled with 
+  //TAU, is necessary to initialize TAU
+  //tau_trace_lib_entry uses TAU_START, tau_trace_lib_exist uses TAU_STOP
+  dprintf("Searching for TAU functions\n");
+  BPatch_function* entryLibTrace = tauFindFunction(mutateeImage, "tau_trace_lib_entry");
+  BPatch_function* exitLibTrace = tauFindFunction(mutateeImage, "tau_trace_lib_exit");
+  name_reg = tauFindFunction(mutateeImage, "trace_register_func");
+
+
+  if(!entryLibTrace || !exitLibTrace )
+  {
+    fprintf(stderr, "Couldn't find TAU hook functions, aborting\n");
+    return -1;
+  }
+
+  mutateeAddressSpace->beginInsertionSet();
+
+  //Get the different modules, which will be the monitoring library(tau) and
+  //the library where we want to insert instrumentation
+  dprintf("Getting modules \n");
+  vector<BPatch_module *> *modules = mutateeImage->getModules();
+  vector<BPatch_module *>::iterator moduleIter;
+
+  //Get only the name of the library from mutateeName, as we can be selecting the
+  //library from its original path, but the module only shows the library name
+  string libpath(mutateeName);
+  const char* mutateefilename = libpath.substr(libpath.find_last_of("/\\") + 1).c_str();
+
+  //Iterate between the different modules and only insert instrumentation into
+  //the desired library
+  for (moduleIter = modules->begin(); moduleIter != modules->end();
+       ++moduleIter) 
+  {
+    char moduleName[1024];
+    (*moduleIter)->getName(moduleName, 1024);
+    dprintf("module %s, mutatee %s ", moduleName, mutateefilename);
+    if( strcmp(moduleName, mutateefilename)!=0)
+    {
+        printf("Skipping module!\n");
+        continue;
+    }
+
+    dprintf("Instrumenting module\n");
+
+    //Some functions that we may not want to monitor, in addition to the ones
+    //in routineConstraint, which are only used for binaries
+    set<string> skipFunctions;
+    skipFunctions.insert("_init");
+    skipFunctions.insert("frame_dummy");
+    skipFunctions.insert("__do_global_dtors_aux");
+    skipFunctions.insert("_fini");
+    skipFunctions.insert("atexit");
+
+    vector<BPatch_function *> *allFunctions = (*moduleIter)->getProcedures();
+    vector<BPatch_function *>::iterator funcIter;
+
+    //Iterate between the different function in the library
+    for (funcIter = allFunctions->begin(); funcIter != allFunctions->end();
+         ++funcIter) 
+    {
+      char funcName[1024];
+      BPatch_function *curFunc = *funcIter;
+      curFunc->getName(funcName, 1024);
+
+      //Do not instrument the listed functions
+      if((skipFunctions.find(funcName) != skipFunctions.end()) || routineConstraint(funcName))
+      {
+        dprintf("Skipping function %s\n", funcName);
+        continue;
+      }
+      dprintf("Instrumenting Function %s\n", funcName);
+
+
+      //Find the entry and exit points of each function
+      BPatch_Vector<BPatch_point*>* funcEntry = curFunc->findPoint(BPatch_entry);
+      BPatch_Vector<BPatch_point*>* funcExit = curFunc->findPoint(BPatch_exit);
+
+      //TAU_START and TAU_STOP need the name of the function, pass it as an argument
+      BPatch_Vector<BPatch_snippet *> regArgs;
+      BPatch_constExpr coverageFunc(funcName);
+      regArgs.push_back(&coverageFunc);
+
+      //Create the function calls with the names of the functions as the input parameter
+      BPatch_funcCallExpr entryTrace(*entryLibTrace, regArgs);
+      BPatch_funcCallExpr exitTrace(*exitLibTrace, regArgs);
+
+      //Insert the snippets to monitor the function calls
+      mutateeAddressSpace->insertSnippet(entryTrace, *funcEntry, BPatch_callBefore, BPatch_lastSnippet);
+      mutateeAddressSpace->insertSnippet(exitTrace, *funcExit, BPatch_callAfter, BPatch_lastSnippet);
+    }
+  }
+
+  mutateeAddressSpace->finalizeInsertionSet(false, NULL);
+
+  dprintf("Library instrumented, writing...\n");
+  std::string modifiedFileName(outfile);
+  chdir("result");
+  mutateeAddressSpace->writeFile(modifiedFileName.c_str());
+  unlink(libname); 
+
+  return 0;
+}
+
+
 
 int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, char* libname, char *staticlibname, char *staticmpilibname, char *bindings)
 {
@@ -835,7 +965,7 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
 
   if( mutateeAddressSpace == NULL ) {
     fprintf(stderr, "Failed to open binary %s\n",
-	    mutateeName);
+           mutateeName);
     return -1;
   }
 
@@ -946,21 +1076,21 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
       // current routine is one that has been passed in the selective instrumentation
       // file
       for(std::vector<tauInstrument*>::iterator instIt=instrumentList.begin();
-	  instIt != instrumentList.end(); instIt++)
-	{
-	  if( (*instIt)->getRoutineSpecified())
-	    {
-	      const char * instRName = (*instIt)->getRoutineName().c_str();
-	      dprintf("Examining %s... \n", instRName);
+         instIt != instrumentList.end(); instIt++)
+       {
+         if( (*instIt)->getRoutineSpecified())
+           {
+             const char * instRName = (*instIt)->getRoutineName().c_str();
+             dprintf("Examining %s... \n", instRName);
 
-	      //if( strcmp((char *)instRName, fname) != 0 && strcmp(fname, "main") != 0 && strcmp(instRName, "#") != 0 && fname[0] != '_')
+             //if( strcmp((char *)instRName, fname) != 0 && strcmp(fname, "main") != 0 && strcmp(instRName, "#") != 0 && fname[0] != '_')
                 if (matchName((*instIt)->getRoutineName(), string(fname)))
-		{
-		  instRoutineAtLoopLevel = true;
-	          dprintf("True: instrumenting %s at the loop level\n", instRName);
-		}
-	    }
-	}
+              {
+                instRoutineAtLoopLevel = true;
+                 dprintf("True: instrumenting %s at the loop level\n", instRName);
+              }
+           }
+       }
 
 
 
@@ -970,44 +1100,44 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
       // -- it appears that something like moduleConstraint would work 
       // well here
       if( isStaticExecutable ) {
-	// Always instrument _fini to ensure instrumentation disabled correctly
+       // Always instrument _fini to ensure instrumentation disabled correctly
         if( hasDebuggingInfo && strcmp(fname, "_fini") != 0) {
-	  BPatch_module *funcModule = (*it)->getModule();
-	  if( funcModule != NULL ) {
-	    char moduleName[MUTNAMELEN];
-	    funcModule->getName(moduleName, MUTNAMELEN);
-	    if( strcmp(moduleName, "DEFAULT_MODULE") == 0 ) okayToInstr = false;
-	  }
+         BPatch_module *funcModule = (*it)->getModule();
+         if( funcModule != NULL ) {
+           char moduleName[MUTNAMELEN];
+           funcModule->getName(moduleName, MUTNAMELEN);
+           if( strcmp(moduleName, "DEFAULT_MODULE") == 0 ) okayToInstr = false;
+         }
         }
       }
 
 
       if (okayToInstr && !routineConstraint(fname) ) { // ok to instrument
 
-	insertTrace(*it, mutateeAddressSpace, entryTrace, exitTrace);
+       insertTrace(*it, mutateeAddressSpace, entryTrace, exitTrace);
       }
       else {
-	dprintf("Not instrumenting %s\n", fname);
+       dprintf("Not instrumenting %s\n", fname);
 
       }
 
       if(okayToInstr && !routineConstraint(fname) && instRoutineAtLoopLevel) // Only occurs when we've defined that the selective file is for loop instrumentation
-	{
-	  dprintf("Generating CFG at loop level: %s\n", fname);
+       {
+         dprintf("Generating CFG at loop level: %s\n", fname);
           BPatch_flowGraph *flow = (*it)->getCFG();
           BPatch_Vector<BPatch_basicBlockLoop*> basicLoop;
-	  dprintf("Generating outer loop info : %s\n", fname);
+         dprintf("Generating outer loop info : %s\n", fname);
           flow->getOuterLoops(basicLoop);
-	  dprintf("Before instrumenting at loop level: %s\n", fname);
+         dprintf("Before instrumenting at loop level: %s\n", fname);
 
-	  for(BPatch_Vector<BPatch_basicBlockLoop*>::iterator loopIt = basicLoop.begin(); 
-	      loopIt != basicLoop.end(); loopIt++)
-	    {
+         for(BPatch_Vector<BPatch_basicBlockLoop*>::iterator loopIt = basicLoop.begin(); 
+             loopIt != basicLoop.end(); loopIt++)
+           {
 
-	      dprintf("Instrumenting at the loop level: %s\n", fname);
-	      insertTrace(*it, mutateeAddressSpace, entryTrace, exitTrace, flow, *loopIt);
-	    }
-	}
+             dprintf("Instrumenting at the loop level: %s\n", fname);
+             insertTrace(*it, mutateeAddressSpace, entryTrace, exitTrace, flow, *loopIt);
+           }
+       }
 
 
     }
@@ -1085,30 +1215,33 @@ int main(int argc, char **argv){
   else{
     opterr = 0; 
      
-    while ((c = getopt (argc, argv, "vT:X:o:f:d:")) != -1)
+    while ((c = getopt (argc, argv, "lvT:X:o:f:d:")) != -1)
       switch (c)
-	{
+       {
         case 'v':
           vflag = 1;
           debugPrint = 1; /* Verbose option set */
           break;
         case 'X':
           xvalue = optarg;
-	  loadlib = true; /* load an external measurement library */
+         loadlib = true; /* load an external measurement library */
           break;
         case 'T':
-	  tvalue = optarg;
+         tvalue = optarg;
           loadlib = true; /* load an external measurement library */
           break;
         case 'f':
           fvalue = optarg; /* choose a selective instrumentation file */
-	  processInstrumentationRequests(fvalue,instrumentList);
-	  dprintf("Loading instrumentation requests file %s\n", fvalue);
-	  break;
-	case 'o':
+         processInstrumentationRequests(fvalue,instrumentList);
+         dprintf("Loading instrumentation requests file %s\n", fvalue);
+         break;
+       case 'o':
           ovalue = optarg;
           binaryRewrite = 1; /* binary rewrite is true */
           strcpy(outfile, ovalue);
+          break;
+       case 'l':
+          libraryRewrite = 1; /* binary rewrite is true */
           break;
         case '?':
           if (optopt == 'X' || optopt == 'f' || optopt == 'o' )
@@ -1117,15 +1250,15 @@ int main(int argc, char **argv){
             fprintf (stderr, "Unknown option `-%c'.\n", optopt);
           else
             fprintf (stderr,
-		     "Unknown option character `\\x%x'.\n",
-		     optopt);
-	  errflag=1;
-	default:
-	  errflag=1;
+                   "Unknown option character `\\x%x'.\n",
+                   optopt);
+         errflag=1;
+       default:
+         errflag=1;
         }
      
     dprintf ("vflag = %d, xvalue = %s, ovalue = %s, fvalue = %s, tvalue = %s\n",
-	     vflag, xvalue, ovalue, fvalue, tvalue);
+            vflag, xvalue, ovalue, fvalue, tvalue);
      
     strncpy(mutname, argv[optind],strlen(argv[optind])+1);
     for (index = optind; index < argc; index++)
@@ -1165,7 +1298,6 @@ int main(int argc, char **argv){
                                          
 
   }
-  
   //did we load a library?  if not, load the default
   if(!loadlib){
     sprintf(staticlibname,"libtau-mpi-pdt.a");
@@ -1205,9 +1337,10 @@ int main(int argc, char **argv){
 
   //has an error occured in the command line arguments?
   if(errflag){
-    fprintf (stderr, "usage: %s [-Xrun<Taulibrary> | -T <bindings_options> ] [-v] [-o outfile] [-f <inst_req> ] <application> [args]\n", argv[0]);
+    fprintf (stderr, "usage: %s [-Xrun<Taulibrary> | -T <bindings_options> ] [-v] [-l] [-o outfile] [-f <inst_req> ] <application> [args]\n", argv[0]);
     fprintf (stderr, "%s instruments and executes <application> to generate performance data\n", argv[0]);
     fprintf (stderr, "-v is an optional verbose option\n"); 
+    fprintf (stderr, "-l the binary to modify is a library\n"); 
     fprintf (stderr, "-o <outfile> is for binary rewriting\n");
     fprintf (stderr, "e.g., \n");
     fprintf (stderr, "%%%s -XrunTAU -f sel.dat a.out 100 \n", argv[0]);
@@ -1226,6 +1359,10 @@ int main(int argc, char **argv){
   // bpatch->setDebugParsing(false); 
   // removed for DyninstAPI 4.0
 
+  if (libraryRewrite){
+    tauRewriteLibrary(bpatch, mutname, outfile, (char *)libname, (char *)staticlibname, (char *)staticmpilibname, bindings);
+    return 0;
+  }
   if (binaryRewrite) {
     tauRewriteBinary(bpatch, mutname, outfile, (char *)libname, (char *)staticlibname, (char *)staticmpilibname, bindings);
     return 0; // exit from the application 
@@ -1264,29 +1401,29 @@ int main(int argc, char **argv){
       //try and load the library
       bool ret = appThread->loadLibrary(libname, true) ; 
       if (ret == true){  
-	//now, check to see if the library is listed as a module in the
-	//application image
-	char name[FUNCNAMELEN];
-	bool found = false;
-	for (i = 0; i < m->size(); i++) {
-	  (*m)[i]->getName(name, sizeof(name));
-	  if (strcmp(name, libname) == 0) {
-	    found = true;
-	    break;
-	  }//if 
-	}//for
-	if (found) {
-	  dprintf("%s loaded properly\n", libname);
-	}//if
-	else {
-	  printf("Error in loading library %s\n", libname);
-	  exit(1);
-	}//else
+       //now, check to see if the library is listed as a module in the
+       //application image
+       char name[FUNCNAMELEN];
+       bool found = false;
+       for (i = 0; i < m->size(); i++) {
+         (*m)[i]->getName(name, sizeof(name));
+         if (strcmp(name, libname) == 0) {
+           found = true;
+           break;
+         }//if 
+       }//for
+       if (found) {
+         dprintf("%s loaded properly\n", libname);
+       }//if
+       else {
+         printf("Error in loading library %s\n", libname);
+         exit(1);
+       }//else
       }//if
       else{
-	printf("ERROR:%s not loaded properly. \n", libname);
-	printf("Please make sure that its path is in your LD_LIBRARY_PATH environment variable.\n");
-	exit(1);
+       printf("ERROR:%s not loaded properly. \n", libname);
+       printf("Please make sure that its path is in your LD_LIBRARY_PATH environment variable.\n");
+       exit(1);
       }//else
     }//loadlib == true
  
@@ -1303,20 +1440,20 @@ int main(int argc, char **argv){
       dprintf("%s", modulename);
 
       if (!moduleConstraint(fname)) { // constraint 
-	for (i=0; i < p->size(); i++) {
-	  // For all procedures within the module, iterate  
-	  (*p)[i]->getName(fname, FUNCNAMELEN);
-	  dprintf("Name %s\n", fname);
-	  if (routineConstraint(fname)){ // The above procedures shouldn't be instrumented
-	    dprintf("don't instrument %s\n", fname);
-	  }//if
-	  else{ // routines that are ok to instrument
-	    // get full source information
-	    getFunctionFileLineInfo(appImage, (*p)[i], fname);
-	    functions.append("|");
-	    functions.append(fname);
-	  }//else
-	}//for
+       for (i=0; i < p->size(); i++) {
+         // For all procedures within the module, iterate  
+         (*p)[i]->getName(fname, FUNCNAMELEN);
+         dprintf("Name %s\n", fname);
+         if (routineConstraint(fname)){ // The above procedures shouldn't be instrumented
+           dprintf("don't instrument %s\n", fname);
+         }//if
+         else{ // routines that are ok to instrument
+           // get full source information
+           getFunctionFileLineInfo(appImage, (*p)[i], fname);
+           functions.append("|");
+           functions.append(fname);
+         }//else
+       }//for
       }//if(!moduleConstraint)
     }//for - Module 
 
@@ -1353,30 +1490,30 @@ int main(int argc, char **argv){
       dprintf("%s", modulename);
 
       if (!moduleConstraint(fname)) { // constraint
-	for (i=0; i < p->size(); i++){
-	  // For all procedures within the module, iterate
-	  (*p)[i]->getName(fname, FUNCNAMELEN);
-	  dprintf("Name %s\n", fname);
-	  if (routineConstraint(fname)){ // The above procedures shouldn't be instrumented
-	    dprintf("don't instrument %s\n", fname);
-	  } // Put the constraints above 
-	  else{ // routines that are ok to instrument
-	    dprintf("Assigning id %d to %s\n", instrumented, fname);
-	    instrumented ++;
-	    BPatch_Vector<BPatch_snippet *> *callee_args = new BPatch_Vector<BPatch_snippet *>();
-	    BPatch_constExpr *constExpr = new BPatch_constExpr(instrumented);
-	    callee_args->push_back(constExpr);
+       for (i=0; i < p->size(); i++){
+         // For all procedures within the module, iterate
+         (*p)[i]->getName(fname, FUNCNAMELEN);
+         dprintf("Name %s\n", fname);
+         if (routineConstraint(fname)){ // The above procedures shouldn't be instrumented
+           dprintf("don't instrument %s\n", fname);
+         } // Put the constraints above 
+         else{ // routines that are ok to instrument
+           dprintf("Assigning id %d to %s\n", instrumented, fname);
+           instrumented ++;
+           BPatch_Vector<BPatch_snippet *> *callee_args = new BPatch_Vector<BPatch_snippet *>();
+           BPatch_constExpr *constExpr = new BPatch_constExpr(instrumented);
+           callee_args->push_back(constExpr);
     
-	    inFunc = (*p)[i];
-	    dprintf("Instrumenting-> %s Entry\n", fname);	  
-	    invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_entry, enterstub, callee_args);
-	    dprintf("Instrumenting-> %s Exit...", fname);	  
-	    invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_exit, exitstub, callee_args);
-	    dprintf("Done\n");
-	    delete callee_args;
-	    delete constExpr;
-	  }//else -- routines that are ok to instrument
-	}//for -- procedures 
+           inFunc = (*p)[i];
+           dprintf("Instrumenting-> %s Entry\n", fname);         
+           invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_entry, enterstub, callee_args);
+           dprintf("Instrumenting-> %s Exit...", fname);         
+           invokeRoutineInFunction(appThread, appImage, inFunc, BPatch_exit, exitstub, callee_args);
+           dprintf("Done\n");
+           delete callee_args;
+           delete constExpr;
+         }//else -- routines that are ok to instrument
+       }//for -- procedures 
       }//if -- module constraint
     }//for -- modules
 
@@ -1418,34 +1555,34 @@ int main(int argc, char **argv){
     if (binaryRewrite)
       {
 #ifdef TAU_DYNINSTAPI_8_PLUS
-	char * directory = "." ; // appThread->dumpImage("a.inst");
+       char * directory = "." ; // appThread->dumpImage("a.inst");
 #else
 #ifdef TAU_DYNINSTAPI_12_PLUS
-	char * directory = "." ; // appThread->dumpImage("a.inst");
-	bool retval = appThread->dumpImage(outfile);
-	if (!retval) {
+       char * directory = "." ; // appThread->dumpImage("a.inst");
+       bool retval = appThread->dumpImage(outfile);
+       if (!retval) {
           printf("ERROR: tau_run: appThread->dumpImage failed:%s\n", outfile);
-	  exit(1); 
-	}
+         exit(1); 
+       }
 #else
-	char * directory = appThread->dumpPatchedImage(outfile);
+       char * directory = appThread->dumpPatchedImage(outfile);
 #endif /* TAU_DYNINSTAPI_12_PLUS */
 #endif /* TAU_DYNINSTAPI_8_PLUS */
-	/* see if it was rewritten properly */ 
-	if (directory) 
-	  {
-	    printf("The instrumented executable image is stored in %s directory\n",
-		   directory);
-	  }
-	else
-	  {
-	    fprintf(stderr, "Error: Binary rewriting did not work: No directory name \
+       /* see if it was rewritten properly */ 
+       if (directory) 
+         {
+           printf("The instrumented executable image is stored in %s directory\n",
+                 directory);
+         }
+       else
+         {
+           fprintf(stderr, "Error: Binary rewriting did not work: No directory name \
 returned\n\nIf you are using Dyninst 5.2 this feature is no longer \
 supported and \
 tau_run will run the application using dynamic instrumentation....\n");
-	  }
-	delete bpatch;
-	return 0;
+         }
+       delete bpatch;
+       return 0;
       }
    
 
