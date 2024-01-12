@@ -1196,9 +1196,11 @@ if [ $qsub_mode = false ]; then
   fi
 
   if [ $track_syscall = true  -a -r $BASEDIR/lib/$theBinding/libTAU-ptrace-syscall$TAU_SHLIBX  ]; then
-    if [ $TAU_TRACE == 1 ]; then
+    if [ ! x"$TAU_TRACE" == "x" ]; then	  
+       if [ $TAU_TRACE == 1 ]; then
 	    echo "-syscall option can't be used with TAU_TRACE=1. Disable tracing when using -syscall."
 	    exit
+       fi
     fi
     TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-ptrace-syscall$TAU_SHLIBX
   else

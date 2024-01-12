@@ -136,31 +136,6 @@ int taupreload_main(int argc, char **argv, char **envp)
         /* Child */
         pid_t ppid = getppid();
 
-        if (TauEnv_get_tracing())
-        {
-            // Here we have a trouble: the events.edf file of the child and the parent are different.
-            // The parent's file contains only the syscalls's metadata; the child's file contains the metadata of everything else.
-            // It may be difficult to merge the two events.edf files, so for the moment, we separate them.
-            // This way, it's still possible to use tools like tau_merge to merge the traces files when using the tau format
-            // (To use tau_merge, we have to specify the correct events file for each tautrace to be associated with.) 
-            const char* tautrace_dir_name = TauEnv_get_tracedir();
-            const int buffer_size = 4096;
-            char buf[buffer_size];
-            // The tautrace directory will contains the events.edf files and the tautraces of the child
-            printf("WARNING: TAU_TRACE enabled. The syscalls tautrace files will be in %s/%s/%s directory\n", tautrace_dir_name, "tautrace", "syscall");
-            printf("         This folder may contain useless and empty tautrace.x.y.z.trc (like tautrace.x.0.0.trc) which have the same name of files in %s/%s.\n", tautrace_dir_name, "tautrace");
-            printf("         The correct ones are always the ones in %s/%s\n", tautrace_dir_name, "tautrace");
-            fflush(stdout);
-            // Create the folders
-            snprintf(buf, buffer_size, "%s/%s", tautrace_dir_name, "tautrace");
-            mkdir(buf, 0700);
-            TauEnv_set_tracedir(buf);
-            // For the parent
-            snprintf(buf, buffer_size, "%s/%s/%s", tautrace_dir_name, "tautrace", "syscall");
-            mkdir(buf, 0700);
-            fflush(stdout);
-        }
-
         void *handle;
         TAU_PROFILER_CREATE(handle, __TAU_FUNCTION__, "", TAU_DEFAULT);
         TAU_PROFILER_START(handle);
@@ -189,17 +164,6 @@ int taupreload_main(int argc, char **argv, char **envp)
     else
     {
         /* Parent */
-
-
-        if (TauEnv_get_tracing())
-        {
-            const char* tautrace_dir_name = TauEnv_get_tracedir();
-            const int buffer_size = 4096;
-            char buf[buffer_size];
-            snprintf(buf, buffer_size, "%s/%s", tautrace_dir_name, "tautrace/syscall");
-            // The child creates the directory
-            TauEnv_set_tracedir(buf);
-        }
 
         ret = track_process(rpid);
         DEBUG_PRINT("track_process done with ret = %d\n", ret);
