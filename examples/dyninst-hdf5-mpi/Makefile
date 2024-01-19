@@ -2,14 +2,9 @@
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
 #****************************************************************************
-#*    Copyright 1997  						   	   **
-#*    Department of Computer and Information Science, University of Oregon **
-#*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+#*    Copyright 2024  						   	   **
+#*    University of Oregon                                                 **
 #****************************************************************************
-#######################################################################
-##                  pC++/Sage++  Copyright (C) 1993,1995             ##
-##  Indiana University  University of Oregon  University of Rennes   ##
-#######################################################################
  
 include ../../include/Makefile 
 include ../Makefile
