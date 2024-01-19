@@ -24,7 +24,8 @@ OBJS     	= matmult.o
 #TARGET_FLAGS =-fopenmp -fopenmp-targets=nvptx64-nvidia-cuda --cuda-path=${CUDA}
 #TARGET_FLAGS =-fopenmp -fopenmp-targets=nvptx64-nvidia-cuda,x86_64
 TARGET_FLAGS =-qnextgen -fiopenmp -fopenmp-targets=spir64 
-TARGET_FLAGS =-fopenmp  -mp=gpu,ompt -Minfo=mp 
+TARGET_FLAGS =-fopenmp -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx90a
+#TARGET_FLAGS =-fopenmp  -mp=gpu,ompt -Minfo=mp 
 #TARGET_FLAGS =-fopenmp -lomptarget
 CFLAGS=-g -O2 $(TARGET_FLAGS)
 LDFLAGS=-g $(TARGET_FLAGS)
