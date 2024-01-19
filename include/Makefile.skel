@@ -864,6 +864,7 @@ TAU_PAPI_EXTRA_FLAGS	       = $(LEXTRA)
 
 #PTHREAD_AVAILABLE#LEXTRA1     = -lpthread -ldl	       #ENDIF#
 #PTHREAD_AVAILABLE#SHLEXTRA1     = -lTAU-pthread        #ENDIF#
+#TBB_AVAILABLE#SHLEXTRA1     = -lTAU        #ENDIF#
 #TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#
 #SMARTS##include $(TAU_INC_DIR)/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
 #SMARTS#LEXTRA1	    = $(LSMARTS)	#ENDIF#
