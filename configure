@@ -5879,6 +5879,10 @@ case $cxx_compiler in
 	internal_c_compiler=`$c_compiler -show | awk '{ print $1;}'`
         echo "Detected MPI C++ internal compiler = $internal_compiler MPI C internal compiler = $internal_c_compiler"
         case $internal_compiler in
+            *icpc | *icpx )
+                fixmakeargs="$fixmakeargs USE_INTELCXX"
+                intel=yes
+                ;;
             *clang* | hcc | hipcc )
                 tauoptions="${tauoptions}-clang"
                 llvm=yes
