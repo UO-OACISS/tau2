@@ -403,7 +403,9 @@ void scalls_init(void)
     __scalls[__NR_fsconfig] = "fsconfig";
     __scalls[__NR_fsmount] = "fsmount";
     __scalls[__NR_fspick] = "fspick";
+    #ifdef __NR_pidfd_open
     __scalls[__NR_pidfd_open] = "pidfd_open";
+    #endif
 #ifdef __ARCH_WANT_SYS_CLONE3
     __scalls[__NR_clone3] = "clone3";
 #endif
