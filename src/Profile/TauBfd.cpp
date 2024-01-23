@@ -25,7 +25,7 @@
 #define PACKAGE_VERSION 2.25
 #endif
 #include <bfd.h>
-#if TAU_BFD >= 022300
+#ifdef TAU_ELF_BFD
 #include <elf-bfd.h>
 #endif
 #include <dirent.h>
@@ -135,7 +135,7 @@ struct TauBfdModule
       return (bfdOpen = false);
     }
 
-#if TAU_BFD >= 022200
+#if defined(BFD_DECOMPRESS)
     // Decompress sections
     bfdImage->flags |= BFD_DECOMPRESS;
 #endif
@@ -1068,7 +1068,7 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   // TauBfdInfo fields without an extra copy.  This also means
   // that the pointers in TauBfdInfo must never be deleted
   // since they point directly into the module's BFD.
-#if (TAU_BFD >= 022200)
+#if defined(bfd_find_nearest_line_discriminator)
   data.found = bfd_find_nearest_line_discriminator(bfdptr, section,
       data.module->syms, (data.info.probeAddr - vma),
       &data.info.filename, &data.info.funcname,
