@@ -14,6 +14,9 @@ Version 2.33 changes (from 2.32):
 1. Added -dyninst=download for binary rewriting with DyninstAPI.
 2. Added tracking syscalls (configure -syscall, tau_exec -syscall, see examples/syscall). 
 3. Added support for rocm_smi plugin for monitoring in TAU. 
+4. Updated -syscall support in TAU. 
+5. Updated bfd=download for aarch64. 
+6. Added initial support for Grace-Grace and Grace-Hopper platforms. 
 
 Version 2.32 changes (from 2.31):
 1. Added support for riscv64 (-optCompInst, tau_exec -ebs, mpi). 
