@@ -4270,11 +4270,16 @@ case $machine in
              fortran_compiler=mpifrt
           else
 	    found_compiler=`which mpicxx 2>/dev/null`
-            if [ "x$found_compiler" != "x" -a -x "$found_compiler" ]; then
+	    if [ "x$found_compiler" != "x" -a -x "$found_compiler" ]; then
                echo "TAU: Using mpicxx, mpicc, and mpif90 as C++, C, and Fortran compilers respectively."
                cxx_compiler=mpicxx
                c_compiler=mpicc
-               fortran_compiler=mpif90
+	       found_compiler=`which gfortran 2>/dev/null`
+               if [ "x$found_compiler" != "x" -a -x "$found_compiler" ]; then
+	          taugcclibdir=`g++ $tau_opt_bits -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
+	          fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir"
+		  fortran_compiler=gfortran
+	       fi
             fi
           fi
 	else
@@ -4284,6 +4289,8 @@ case $machine in
                cxx_compiler=g++
                c_compiler=gcc
                fortran_compiler=gfortran
+	       taugcclibdir=`g++ $tau_opt_bits -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
+	       fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir"
             fi
         fi
         ;;
