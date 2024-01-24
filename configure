@@ -4268,7 +4268,23 @@ case $machine in
              cxx_compiler=mpiFCC
              c_compiler=mpifcc
              fortran_compiler=mpifrt
+          else
+	    found_compiler=`which mpicxx 2>/dev/null`
+            if [ "x$found_compiler" != "x" -a -x "$found_compiler" ]; then
+               echo "TAU: Using mpicxx, mpicc, and mpif90 as C++, C, and Fortran compilers respectively."
+               cxx_compiler=mpicxx
+               c_compiler=mpicc
+               fortran_compiler=mpif90
+            fi
           fi
+	else
+	    found_compiler=`which g++ 2>/dev/null`
+            if [ "x$found_compiler" != "x" -a -x "$found_compiler" ]; then
+               echo "TAU: Using g++, gcc, and gfortran as C++, C, and Fortran compilers respectively."
+               cxx_compiler=g++
+               c_compiler=gcc
+               fortran_compiler=gfortran
+            fi
         fi
         ;;
 
