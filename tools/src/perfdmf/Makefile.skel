@@ -27,9 +27,9 @@ JAVAC=javac
 SOURCES = $(DATABASE_SOURCES) $(DSS_SOURCES) $(LOADER_SOURCES) $(ANALYSIS_SOURCES) $(TAUDB_SOURCES) $(VIEWCREATOR_SOURCES) 
 CLASSES = $(subst ./src/, ./classes/, $(patsubst %.java, %.class, $(SOURCES)))
 
-# We only want to use Java 1.5
-JAVA_FIVE=$(shell java -version 2>&1 | grep version | /usr/bin/awk '{ print $$3; }'| sed -e s/\"//g | sed -e s/1\.5\..*// | wc -c)
-ifeq ($(JAVA_FIVE),1)
+# We only want to use Java 1.8
+JAVA_EIGHT=$(shell java -version 2>&1 | grep version | /usr/bin/awk '{ print $$3; }'| sed -e s/\"//g | sed -e s/1\.8\..*// | wc -c)
+ifeq ($(JAVA_EIGHT),1)
   TARGET=build
 else
   TARGET=badversion
@@ -40,7 +40,7 @@ all: $(TARGET)
 build: bin/perfdmf.jar 
 
 override: build
-    JAVAC=javac -source 1.5 -target 1.5
+    JAVAC=javac -source 1.8 -target 1.8
     #JAVAC=javac
 
 #all: perfdmf.jar javadoc rebuilddb buildtest simple
@@ -69,7 +69,7 @@ javadoc: bin/perfdmf.jar $(SRC_PATH)/package.html
     -header "<b>PerfDMF</b>" \
     -bottom ${BOTTOM} \
     -public \
-    -source 1.5 \
+    -source 1.8 \
     -quiet \
     -version \
     -author \

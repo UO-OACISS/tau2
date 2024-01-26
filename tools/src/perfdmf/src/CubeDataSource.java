@@ -141,6 +141,9 @@ public class CubeDataSource extends DataSource
 			{
 				if (cart.get_ndim() != 3)
 				{
+					//Don't open prompts unless there is a main window already present
+                                        int numwins = java.awt.Window.getWindows().length;
+                                        if(numwins>0){
 					int optionReturn=JOptionPane.YES_OPTION;
 					
 					try {JOptionPane.showConfirmDialog(
@@ -156,7 +159,7 @@ public class CubeDataSource extends DataSource
 					{
 						continue;
 					}
-
+					}
 				}
 				String prefix = "Topo"+num;
 				getMetaData().put(prefix+" Name", cart.get_name());
