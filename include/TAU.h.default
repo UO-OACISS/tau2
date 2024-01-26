@@ -2,7 +2,7 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
-**    Copyright 1997-2022 					   	   **
+**    Copyright 1997-2024 					   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
@@ -16,7 +16,7 @@
 #ifndef _TAU_H_
 #define _TAU_H_
 
-#define TAU_VERSION "2.32-git"
+#define TAU_VERSION "2.33-git"
 #define TAU_MAKEFILE "default"
 
 #if (defined(PROFILING_ON) || defined(TRACING_ON))

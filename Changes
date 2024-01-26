@@ -17,6 +17,7 @@ Version 2.33 changes (from 2.32):
 4. Updated -syscall support in TAU. 
 5. Updated bfd=download for aarch64. 
 6. Added initial support for Grace-Grace and Grace-Hopper platforms. 
+7. Added support for Score-P 8.3 using -scorep=download. 
 
 Version 2.32 changes (from 2.31):
 1. Added support for riscv64 (-optCompInst, tau_exec -ebs, mpi). 
