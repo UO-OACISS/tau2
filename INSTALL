@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.33                          *
+ *                           Version 2.33.1                        *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -143,7 +143,12 @@ To use TAU with AMD GPUs:
 ./configure -rocm=<dir> -rocprofiler=<dir> -c++=clang++ -cc=clang -bfd=download; make install
 and use
 tau_exec -T rocm,rocprofiler,serial -rocm ./a.out
-TAU has been tested with ROCm 3.8.0 and 3.9.0 with rocprofiler. 
+TAU has been tested with ROCm 5.x as well as ROCm 6.0.0 with rocprofiler. 
+With ROCm 6.x, the directories have moved and we need to specify the same directory for 
+rocm and rocprofiler. For e.g.,:
+./configure -rocm=/opt/rocm-6.0.0 -rocprofiler=/opt/rocm-6.0.0 -bfd=download -iowrapper; 
+make install
+tau_exec -T rocm,serial -rocm -ebs ./a.out
 
 To use TAU with Intel GPUs:
 ./configure -opencl=<dir> -level_zero=<dir> -bfd=download ; make install
