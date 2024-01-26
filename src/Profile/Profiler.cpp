@@ -802,7 +802,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
         // Not a destructor of a static object - its a function like main
 
         // Write profile data
+#ifndef TAU_SCOREP
         TauProfiler_StoreData(tid);
+#endif // TAU_SCOREP 
         TAU_VERBOSE("TAU: <Node=%d.Thread=%d>:<pid=%d>: %s initiated TauProfiler_StoreData\n", RtsLayer::myNode(),
             RtsLayer::myThread(), RtsLayer::getPid(), ThisFunction->GetName());
 // Be careful here, we can not disable instrumentation in multithreaded
