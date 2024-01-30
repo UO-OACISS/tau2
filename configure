@@ -4283,14 +4283,16 @@ case $machine in
             fi
           fi
 	else
-	    found_compiler=`which g++ 2>/dev/null`
-            if [ "x$found_compiler" != "x" -a -x "$found_compiler" ]; then
-               echo "TAU: Using g++, gcc, and gfortran as C++, C, and Fortran compilers respectively."
-               cxx_compiler=g++
-               c_compiler=gcc
-               fortran_compiler=gfortran
-	       taugcclibdir=`g++ $tau_opt_bits -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
-	       fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir"
+            if [ "x$cxx_compiler" = "xdefault" ]; then
+	      found_compiler=`which g++ 2>/dev/null`
+              if [ "x$found_compiler" != "x" -a -x "$found_compiler" ]; then
+                echo "TAU: Using g++, gcc, and gfortran as C++, C, and Fortran compilers respectively."
+                cxx_compiler=g++
+                c_compiler=gcc
+                fortran_compiler=gfortran
+	        taugcclibdir=`g++ $tau_opt_bits -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
+	        fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir"
+              fi
             fi
         fi
         ;;
@@ -4685,6 +4687,10 @@ esac
 
 if [ "x$fortran_compiler" = "xarmflang" ]; then
    fixmakeargs="$fixmakeargs ARMFLANG"
+fi
+
+if [ "x$fortran_compiler" = "xnvfortran" ]; then
+   fixmakeargs="$fixmakeargs NVFORTRAN"
 fi
 
 if [ "x$fortran_compiler" = "xxlflang" ]; then
