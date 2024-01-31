@@ -70,8 +70,8 @@ extern bool instrumentEntity(const string& function_name);
 extern bool matchName(const string& str1, const string& str2);
 
 /* prototypes for routines below */
-int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace, 
-                         BPatch_function *f, char *newname);
+void getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace, 
+                         BPatch_function *f, char *newname, unsigned long nameSize);
 
 
 /* re-writer */
@@ -97,7 +97,8 @@ void getLoopFileLineInfo(BPatch_image* mutateeImage,
                       BPatch_flowGraph* cfGraph,
                       BPatch_basicBlockLoop* loopToInstrument,
                       BPatch_function *f,
-                      char *newname)
+                      char *newname,
+		      unsigned long nameSize)
 {
 
   const char *filename;
@@ -170,14 +171,14 @@ void getLoopFileLineInfo(BPatch_image* mutateeImage,
        col2 = linesEnd[0].lineOffset();
        if (col2 < 0) col2 = 0;
         if (row2 < row1) row1 = row2; /* Fix for wrong line numbers*/
-       sprintf(newname, "Loop: %s %s() [{%s} {%d,%d}-{%d,%d}]", typeName, fname, filename, row1, col1, row2, col2);
+       snprintf(newname, nameSize, "Loop: %s %s() [{%s} {%d,%d}-{%d,%d}]", typeName, fname, filename, row1, col1, row2, col2);
       } else {
-       sprintf(newname, "Loop: %s %s() [{%s} {%d,%d}]", typeName, fname, filename, row1, col1);
+       snprintf(newname, nameSize, "Loop: %s %s() [{%s} {%d,%d}]", typeName, fname, filename, row1, col1);
       }
     }
   else
     {
-      strcpy(newname, fname);      
+      strncpy(newname, fname, nameSize);      
     }
     
 }
@@ -204,7 +205,7 @@ void insertTrace(BPatch_function* functionToInstrument,
 
   functionToInstrument->getModuleName(modname, 1024);
 
-  getLoopFileLineInfo(mutatee->getImage(), cfGraph, loopToInstrument, functionToInstrument, name);
+  getLoopFileLineInfo(mutatee->getImage(), cfGraph, loopToInstrument, functionToInstrument, name, sizeof(name));
 
   BPatch_module *module = functionToInstrument->getModule();
 
@@ -253,7 +254,7 @@ void insertTrace(BPatch_function* functionToInstrument,
                  BPatch_function* traceEntryFunc,
                  BPatch_function* traceExitFunc)
 {
-  char name[1024];
+  char name[FUNCNAMELEN];
   char modname[1024];
 
 
@@ -262,7 +263,7 @@ void insertTrace(BPatch_function* functionToInstrument,
     return;
 
   //functionToInstrument->getName(name, 1024);
-  getFunctionFileLineInfo(mutatee->getImage(), functionToInstrument, name);
+  getFunctionFileLineInfo(mutatee->getImage(), functionToInstrument, name, sizeof(name));
 
   int id = addName(name);
   BPatch_Vector<BPatch_snippet *> traceArgs;
@@ -662,8 +663,8 @@ int checkIfMPI(BPatch_image * appImage, BPatch_Vector<BPatch_point *> &mpiinit,
 }//checkIfMPI()
 
 /* We create a new name that embeds the file and line information in the name */
-int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace, 
-                         BPatch_function *f, char *newname)
+void getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace, 
+                         BPatch_function *f, char *newname, unsigned long nameSize)
 {
   bool info1, info2;
   unsigned long baseAddr,lastAddr;
@@ -709,13 +710,13 @@ int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace,
       col2 = lines[1].lineOffset();
       if (col2 < 0) col2 = 0;
       if (row2 < row1) row1 = row2;
-      sprintf(newname, "%s %s() [{%s} {%d,%d}-{%d,%d}]", typeName, fname, filename, row1, col1, row2, col2);
+      snprintf(newname, nameSize, "%s %s() [{%s} {%d,%d}-{%d,%d}]", typeName, fname, filename, row1, col1, row2, col2);
     } else {
-      sprintf(newname, "%s %s() [{%s} {%d,%d}]", typeName, fname, filename, row1, col1);
+      snprintf(newname, nameSize, "%s %s() [{%s} {%d,%d}]", typeName, fname, filename, row1, col1);
     }
   }
   else
-    strcpy(newname, fname);
+    strncpy(newname, fname, nameSize);
 }
 
 
@@ -1449,7 +1450,7 @@ int main(int argc, char **argv){
          }//if
          else{ // routines that are ok to instrument
            // get full source information
-           getFunctionFileLineInfo(appImage, (*p)[i], fname);
+           getFunctionFileLineInfo(appImage, (*p)[i], fname, sizeof(fname));
            functions.append("|");
            functions.append(fname);
          }//else
