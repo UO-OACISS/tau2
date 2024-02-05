@@ -875,7 +875,7 @@ int tauRewriteLibrary(BPatch *bpatch, const char *mutateeName, char *outfile, ch
   //Get only the name of the library from mutateeName, as we can be selecting the
   //library from its original path, but the module only shows the library name
   string libpath(mutateeName);
-  const char* mutateefilename = libpath.substr(libpath.find_last_of("/\\") + 1).c_str();
+  string mutateefilename = libpath.substr(libpath.find_last_of("/\\") + 1);
 
   //Iterate between the different modules and only insert instrumentation into
   //the desired library
@@ -884,8 +884,8 @@ int tauRewriteLibrary(BPatch *bpatch, const char *mutateeName, char *outfile, ch
   {
     char moduleName[1024];
     (*moduleIter)->getName(moduleName, 1024);
-    dprintf("module %s, mutatee %s ", moduleName, mutateefilename);
-    if( strcmp(moduleName, mutateefilename)!=0)
+    dprintf("module %s, mutatee %s ", moduleName, mutateefilename.c_str());
+    if( strcmp(moduleName, mutateefilename.c_str())!=0)
     {
         printf("Skipping module!\n");
         continue;
