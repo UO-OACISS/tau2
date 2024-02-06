@@ -1264,8 +1264,8 @@ extern "C" void Tau_phase_metadata(const char *name, const char *value) {
   while (current != NULL) {
     if (current->GetPhase()) {
       FunctionInfo *fi = current->ThisFunction;
-      const int len = sizeof(char)*(strlen(fi->GetName()) + strlen(fi->GetType()) + 2));
-      char *fname = (char*)(malloc(len);
+      const int len = sizeof(char)*(strlen(fi->GetName()) + strlen(fi->GetType()) + 2);
+      char *fname = (char*)(malloc(len));
       snprintf(fname, len,  "%s %s", fi->GetName(), fi->GetType());
 	  key->timer_context = fname;
 	  key->call_number = fi->GetCalls(tid);

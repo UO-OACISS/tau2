@@ -911,7 +911,6 @@ static void internal_init_once(void)
         return;
     }
 
-    scalls_init();
     array_tracee_threads_init();
 
     init_done = 1.;
