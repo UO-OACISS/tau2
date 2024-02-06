@@ -124,14 +124,14 @@ static int getBacktraceFromGDB(int trim, BacktraceFrame ** oframes)
 
   path[readlink("/proc/self/exe", path, sizeof(path)-1)] = '\0';
 
-  sprintf(gdb_in_file, "tau_gdb_cmds_%d.txt", RtsLayer::getPid());
-  sprintf(gdb_out_file, "tau_gdb_out_%d.txt", RtsLayer::getPid());
+  snprintf(gdb_in_file, sizeof(gdb_in_file),  "tau_gdb_cmds_%d.txt", RtsLayer::getPid());
+  snprintf(gdb_out_file, sizeof(gdb_out_file),  "tau_gdb_out_%d.txt", RtsLayer::getPid());
 
   FILE * gdb_fp = fopen(gdb_in_file, "w+");
   fprintf(gdb_fp, "set logging on %s\nbt\nq\n", gdb_out_file);
   fclose(gdb_fp);
 
-  sprintf(cmd, "gdb -batch -x %s %s -p %d >/dev/null\n", gdb_in_file, path, RtsLayer::getPid());
+  snprintf(cmd, sizeof(cmd),  "gdb -batch -x %s %s -p %d >/dev/null\n", gdb_in_file, path, RtsLayer::getPid());
   TAU_VERBOSE("Calling: str=%s\n", cmd);
   int systemRet = system(cmd);
 
@@ -162,8 +162,8 @@ void Tau_print_simple_backtrace(int tid)
     char field[4096];
     for (int i=0; i<nframes; ++i) {
       BacktraceFrame const & info = frames[i];
-      sprintf(metadata, "BACKTRACE(%5d) %3d", tid, i+1);
-      sprintf(field, "[%s] [%s:%d] [%s]", info.funcname, info.filename, info.lineno, info.mapname);
+      snprintf(metadata, sizeof(metadata),  "BACKTRACE(%5d) %3d", tid, i+1);
+      snprintf(field, sizeof(field),  "[%s] [%s:%d] [%s]", info.funcname, info.filename, info.lineno, info.mapname);
       fprintf(stderr, "%s | %s\n", metadata, field);
     }
     delete[] frames;
@@ -196,8 +196,8 @@ int Tau_backtrace_record_backtrace(int trim)
     bool echo = TauEnv_get_echo_backtrace();
     for (int i=0; i<nframes; ++i) {
       BacktraceFrame const & info = frames[i];
-      sprintf(metadata, "BACKTRACE(%5d) %3d", iter, i+1);
-      sprintf(field, "[%s] [%s:%d] [%s]", info.funcname, info.filename, info.lineno, info.mapname);
+      snprintf(metadata, sizeof(metadata),  "BACKTRACE(%5d) %3d", iter, i+1);
+      snprintf(field, sizeof(field),  "[%s] [%s:%d] [%s]", info.funcname, info.filename, info.lineno, info.mapname);
       TAU_METADATA(metadata, field);
       if (echo) {
         fprintf(stderr, "%s | %s\n", metadata, field);

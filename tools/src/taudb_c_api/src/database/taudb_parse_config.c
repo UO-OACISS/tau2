@@ -50,11 +50,11 @@ TAUDB_CONFIGURATION* taudb_parse_config_file(char* config_name) {
 	} else {
       char* tmp = strtok(line, ":");
       if (tmp != NULL && (strlen(tmp) > 0)) {
-	    strcpy(name, tmp);
+	    strncpy(name,  tmp, sizeof(name)); 
 	  }
       tmp = strtok(NULL, ":");
       if (tmp != NULL && (strlen(tmp) > 0)) {
-	    strcpy(value, tmp);
+	    strncpy(value,  tmp, sizeof(value)); 
 	  }
 	  if (strcmp(name, "jdbc_db_type") == 0) {
 	    config->jdbc_db_type = taudb_strdup(value);

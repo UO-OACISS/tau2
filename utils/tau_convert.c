@@ -599,7 +599,9 @@ static void AddEvent (int id, char *name, char *p, char *state, int tag)
   newev->tag  = tag;
   newev->no   = evno++;
   newev->used = FALSE;
-  newev->name = (char *) malloc (strlen(name) + 1); strcpy (newev->name, name);
+  const int len = strlen(name) + 1;
+  newev->name = (char *) malloc (len);
+  strncpy (newev->name,  name, len); 
   if ( *p && outFormat != pv )
   {
     newev->param = (char *) malloc (strlen(p) + 5);
@@ -620,14 +622,16 @@ static void AddEvent (int id, char *name, char *p, char *state, int tag)
         ptr = newev->name;
       else
         ptr += 2;
-      newev->state = (char *) malloc (strlen(ptr) + 1);
-      strcpy (newev->state, ptr);
+      const int len = strlen(ptr) + 1;
+      newev->state = (char *) malloc (len);
+      strncpy (newev->state,  ptr, len); 
       newev->name[strlen(newev->name)] = '-';
     }
     else
     {
-      newev->state = (char *) malloc (strlen(state) + 1);
-      strcpy (newev->state, state);
+      const int len = strlen(state) + 1;
+      newev->state = (char *) malloc (len);
+      strncpy (newev->state,  state, len); 
     }
   }
   else
@@ -680,8 +684,9 @@ static void AddEventDynamic (int id, char *name, char *p, char *state, int tag)
   else
     newev->param = "";
   if ( state[0] != '-' )
-  {    newev->state = (char *) malloc (strlen(state) + 1);
-    strcpy (newev->state, state);
+  { const int len = strlen(state) + 1;
+    newev->state = (char *) malloc (len);
+    strncpy (newev->state,  state, len); 
   }
   else
     newev->state = "";
@@ -883,7 +888,7 @@ static char *Today (void)
 
   t = time ((time_t *) 0);
   tm = localtime (&t);
-  sprintf (tibuf, "%s-%02d-%02d", Months[tm->tm_mon], tm->tm_mday, 1900+tm->tm_year);
+  snprintf (tibuf, sizeof(tibuf),  "%s-%02d-%02d", Months[tm->tm_mon], tm->tm_mday, 1900+tm->tm_year);
   return (tibuf);
 }
 
@@ -1518,7 +1523,7 @@ int main (int argc, char *argv[])
       name[k-j+1] = '"';
       name[k-j+2] = '\0'; /* terminate name */
 
-      strcpy(param, &linebuf[k+2]);
+      strncpy(param,  &linebuf[k+2], sizeof(param)); 
 
       /* Fix 13/10 to 10 for event files generated with windows */
 /*       if (param[strlen(param)-2] == 13) { */
@@ -1759,7 +1764,7 @@ int main (int argc, char *argv[])
       /* Get the date in the form dd/mm/yy */
 
 #ifdef TAU_WINDOWS
-      sprintf (date, "Unsupported in Win32");
+      snprintf (date, sizeof(date),  "Unsupported in Win32");
 #else
       gettimeofday (&tp, &tzp);
       clock = tp.tv_sec;
@@ -1795,7 +1800,7 @@ int main (int argc, char *argv[])
           if(tempList == (char*)NULL){
             perror("Malloc error-Paraver Header Var. tempList");
           }
-          sprintf(tempList,"%d:%d,",maxtid[i]+1,i+1);
+          snprintf(tempList, size * sizeof (char), "%d:%d,",maxtid[i]+1,i+1);
           if(taskList == (char*)NULL){
             perror("Malloc error-Paraver Header Var. taskList");
           }          
@@ -1803,7 +1808,7 @@ int main (int argc, char *argv[])
         }
         
         else{
-          sprintf(tempList,"%d:%d",maxtid[i]+1,i+1);
+          snprintf(tempList, size * sizeof (char), "%d:%d",maxtid[i]+1,i+1);
           taskList = strcat(taskList,tempList);
         }
         
@@ -1818,7 +1823,7 @@ int main (int argc, char *argv[])
       if(! outFile){
         outfp = stdout;
         pcfFile = (char*)malloc(30 * sizeof(char));
-        strcpy(pcfFile,"config.pcf");
+        strncpy(pcfFile, "config.pcf", 30 * sizeof(char)); 
       }
       else{
         if(strlen(outFile) < 5){
@@ -1827,8 +1832,9 @@ int main (int argc, char *argv[])
         }
 
 
-        pcfFile = (char*)malloc((strlen(outFile)+1) * sizeof (char));
-        pcfFile = (strcpy(pcfFile,outFile));
+        const int len = (strlen(outFile)+1) * sizeof (char);
+        pcfFile = (char*)malloc(len);
+        pcfFile = (strncpy(pcfFile, outFile, len));
         pcfFile[strlen(outFile) - 3] = '\0';
         pcfFile = (strcat(pcfFile,"pcf"));
       }

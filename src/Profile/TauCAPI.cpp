@@ -1481,12 +1481,12 @@ extern "C" int Tau_dump_callpaths() {
 
   //Create temp write to file.
   char filename[1024];
-  sprintf(filename,"%s/callpaths.%d",dirname, pid);
+  snprintf(filename, sizeof(filename), "%s/callpaths.%d",dirname, pid);
 
   FILE* fp;
   if ((fp = fopen (filename, "a+")) == NULL) {
     char errormsg[1064];
-    sprintf(errormsg,"Error: Could not create %s",filename);
+    snprintf(errormsg, sizeof(errormsg), "Error: Could not create %s",filename);
     perror(errormsg);
     return 1;
   }
@@ -1766,7 +1766,7 @@ TauContextUserEvent & TheMsgVolSendContextEvent(int tid) {
 
     if(!sendEvents[tid]) {
         char buff[256];
-        sprintf(buff, "Message size sent to node %d", tid);
+        snprintf(buff, sizeof(buff),  "Message size sent to node %d", tid);
         sendEvents[tid] = new TauContextUserEvent(buff);
     }
 
@@ -1782,7 +1782,7 @@ TauContextUserEvent & TheMsgVolRecvContextEvent(int tid) {
 
     if(!recvEvents[tid]) {
         char buff[256];
-        sprintf(buff, "Message size received from node %d", tid);
+        snprintf(buff, sizeof(buff),  "Message size received from node %d", tid);
         recvEvents[tid] = new TauContextUserEvent(buff);
     }
 
@@ -2565,8 +2565,9 @@ extern "C" void Tau_global_stop(void) {
 extern "C" char * Tau_phase_enable(const char *group) {
   TauInternalFunctionGuard protects_this_function;
 #ifdef TAU_PROFILEPHASE
-  char *newgroup = new char[strlen(group)+16];
-  sprintf(newgroup, "%s|TAU_PHASE", group);
+  const int len = strlen(group)+16;
+  char *newgroup = new char[len];
+  snprintf(newgroup, len,  "%s|TAU_PHASE", group);
   return newgroup;
 #else /* TAU_PROFILEPHASE */
   return (char *) group;
@@ -2598,7 +2599,7 @@ extern "C" void Tau_mark_group_as_phase(void *ptr)
 extern "C" char const * Tau_append_iteration_to_name(int iteration, char const * name, int slen) {
   TauInternalFunctionGuard protects_this_function;
   char * buff = (char*)malloc(slen+128);
-  sprintf(buff, "%s[%d]", name, iteration);
+  snprintf(buff, slen+128,  "%s[%d]", name, iteration);
   return buff;
 }
 
@@ -3053,7 +3054,7 @@ extern "C" pid_t tau_fork() {
 
 extern "C" void Tau_profile_snapshot_1l(const char *name, int number) {
   char buffer[4096];
-  sprintf (buffer, "%s %d", name, number);
+  snprintf (buffer, sizeof(buffer),  "%s %d", name, number);
   Tau_snapshot_writeIntermediate(buffer);
 }
 
@@ -3376,19 +3377,19 @@ void Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_
     }
   }
   if(pvar_count == 1) {
-    sprintf(concat_event_name, "%s (%s)", event_name, description);
+    snprintf(concat_event_name, sizeof(concat_event_name),  "%s (%s)", event_name, description);
     TAU_VERBOSE("Concat Event name = %s\n", concat_event_name);
     (*event)[0] = new TauUserEvent(concat_event_name);
   } else {
     for(i=0; i < pvar_count; i++) {
-      sprintf(concat_event_name, "%s (%s)[%d]", event_name, description, i);
+      snprintf(concat_event_name, sizeof(concat_event_name),  "%s (%s)[%d]", event_name, description, i);
       TAU_VERBOSE("Concat Event name = %s\n", concat_event_name);
       (*event)[i] = new TauUserEvent(concat_event_name);
     }
   }
 
   /* Add a metadata field */
-  sprintf(concat_event_name, "MPI_T PVAR[%d]: %s", pvar_index, event_name);
+  snprintf(concat_event_name, sizeof(concat_event_name),  "MPI_T PVAR[%d]: %s", pvar_index, event_name);
   TAU_METADATA(concat_event_name, description);
 }
 

@@ -35,15 +35,15 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(TAUDB_CONNECTION* connection, 
    */
   char my_query[1024];
   //sprintf(my_query,"select * from timer where trial = %d", trial->id);
-  sprintf(my_query,"select tc.* from timer_callpath tc inner join timer t on tc.timer = t.id");
+  snprintf(my_query, sizeof(my_query), "select tc.* from timer_callpath tc inner join timer t on tc.timer = t.id");
   if (timer != NULL) {
-    sprintf(my_query,"%s inner join timer t on tc.timer = t.id", my_query);
+    snprintf(my_query, sizeof(my_query), "%s inner join timer t on tc.timer = t.id", my_query);
   }
-  sprintf(my_query,"%s where t.trial = %d", my_query, trial->id);
+  snprintf(my_query, sizeof(my_query), "%s where t.trial = %d", my_query, trial->id);
   if (timer != NULL) {
-    sprintf(my_query,"%s and t.id = %d", my_query, timer->id);
+    snprintf(my_query, sizeof(my_query), "%s and t.id = %d", my_query, timer->id);
   }
-  sprintf(my_query,"%s order by parent desc", my_query);
+  snprintf(my_query, sizeof(my_query), "%s order by parent desc", my_query);
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
 #endif
@@ -101,7 +101,7 @@ char* taudb_get_callpath_string(TAUDB_TIMER_CALLPATH* timer_callpath) {
     int new_length = strlen(full_string) + strlen(parent->timer->name) + 5;
     char* tmp_full_string = taudb_strdup(full_string);
     full_string = (char*)realloc(full_string, new_length);
-	sprintf(full_string, "%s => %s", parent->timer->name, tmp_full_string);
+	snprintf(full_string, new_length,  "%s => %s", parent->timer->name, tmp_full_string);
 	free(tmp_full_string);
     parent = parent->parent;
   }
@@ -133,9 +133,9 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths_2005(TAUDB_CONNECTION* connect
    * Fetch rows from table_name, the system catalog of databases
    */
   char my_query[1024];
-  sprintf(my_query,"select name, id from interval_event where trial = %d and name like '%% => %%'", trial->id);
+  snprintf(my_query, sizeof(my_query), "select name, id from interval_event where trial = %d and name like '%% => %%'", trial->id);
   if (timer != NULL) {
-    sprintf(my_query,"%s and name like '%%%s%%'", my_query, timer->name);
+    snprintf(my_query, sizeof(my_query), "%s and name like '%%%s%%'", my_query, timer->name);
   }
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
@@ -373,11 +373,11 @@ extern void taudb_save_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL
     HASH_ITER(hh2, trial->timer_callpaths_by_name, timer_callpath, tmp) {
       const char* paramValues[3] = {0};
       char timer_id[32] = {0};
-      sprintf(timer_id, "%d", timer_callpath->timer->id);
+      snprintf(timer_id, sizeof(timer_id),  "%d", timer_callpath->timer->id);
       paramValues[0] = timer_id;
 		  char parent_id[32] = {0};
 		  if(timer_callpath->parent != NULL) {
-		  	 sprintf(parent_id, "%d", timer_callpath->parent->id);
+		  	 snprintf(parent_id, sizeof(parent_id),  "%d", timer_callpath->parent->id);
 			 paramValues[1] = parent_id;
 		  } else {
 			 paramValues[1] = NULL;
@@ -385,7 +385,7 @@ extern void taudb_save_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL
 
 		char id[32] = {0};			
 		if(update && timer_callpath->id > 0) {
-			sprintf(id, "%d", timer_callpath->id);
+			snprintf(id, sizeof(id),  "%d", timer_callpath->id);
 			paramValues[2] = id;
 		}
 			

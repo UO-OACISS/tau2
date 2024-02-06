@@ -792,7 +792,7 @@ int Tau_sampling_write_maps(int tid, int restart)
   int node = RtsLayer::myNode();
   node = 0;
   char filename[4096];
-  sprintf(filename, "%s/ebstrace.map.%d.%d.%d.%d", profiledir, RtsLayer::getPid(), node, RtsLayer::myContext(), tid);
+  snprintf(filename, sizeof(filename),  "%s/ebstrace.map.%d.%d.%d.%d", profiledir, RtsLayer::getPid(), node, RtsLayer::myContext(), tid);
 
   FILE *output = fopen(filename, "a");
 
@@ -829,7 +829,7 @@ void Tau_sampling_outputTraceDefinitions(int tid)
   char filename[4096];
   int node = RtsLayer::myNode();
   node = 0;
-  sprintf(filename, "%s/ebstrace.def.%d.%d.%d.%d", profiledir, RtsLayer::getPid(), node, RtsLayer::myContext(), tid);
+  snprintf(filename, sizeof(filename),  "%s/ebstrace.def.%d.%d.%d.%d", profiledir, RtsLayer::getPid(), node, RtsLayer::myContext(), tid);
 
   FILE *def = fopen(filename, "w");
 
@@ -1026,7 +1026,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
 	    resolvedInfo.filename = "";
     }
     char lineno[32];
-    sprintf(lineno, "%d", resolvedInfo.lineno);
+    snprintf(lineno, sizeof(lineno),  "%d", resolvedInfo.lineno);
     // make sure we allocate enough space for the buffer!!!!
     if (childName) {
         if (TauEnv_get_ebs_resolution() == TAU_EBS_RESOLUTION_FILE) {
@@ -1503,16 +1503,16 @@ void Tau_sampling_finalizeProfile(int tid)
   //
   char tmpstr[512];
   char tmpname[512];
-  sprintf(tmpname, "TAU_EBS_SAMPLES_TAKEN_%d", tid);
-  sprintf(tmpstr, "%lld", tau_sampling_flags_by_tid(tid)->numSamples);
+  snprintf(tmpname, sizeof(tmpname),  "TAU_EBS_SAMPLES_TAKEN_%d", tid);
+  snprintf(tmpstr, sizeof(tmpstr),  "%lld", tau_sampling_flags_by_tid(tid)->numSamples);
   TAU_METADATA(tmpname, tmpstr);
 
-  sprintf(tmpname, "TAU_EBS_SAMPLES_DROPPED_TAU_%d", tid);
-  sprintf(tmpstr, "%lld", tau_sampling_flags_by_tid(tid)->samplesDroppedTau);
+  snprintf(tmpname, sizeof(tmpname),  "TAU_EBS_SAMPLES_DROPPED_TAU_%d", tid);
+  snprintf(tmpstr, sizeof(tmpstr),  "%lld", tau_sampling_flags_by_tid(tid)->samplesDroppedTau);
   TAU_METADATA(tmpname, tmpstr);
 
-  sprintf(tmpname, "TAU_EBS_SAMPLES_DROPPED_SUSPENDED_%d", tid);
-  sprintf(tmpstr, "%lld", tau_sampling_flags_by_tid(tid)->samplesDroppedSuspended);
+  snprintf(tmpname, sizeof(tmpname),  "TAU_EBS_SAMPLES_DROPPED_SUSPENDED_%d", tid);
+  snprintf(tmpstr, sizeof(tmpstr),  "%lld", tau_sampling_flags_by_tid(tid)->samplesDroppedSuspended);
   TAU_METADATA(tmpname, tmpstr);
 
   while (!candidates.empty()) {
@@ -1883,7 +1883,7 @@ int Tau_sampling_init(int tid, pid_t pid)
   char filename[4096];
 
   if (TauEnv_get_tracing()) {
-    sprintf(filename, "%s/ebstrace.raw.%d.%d.%d.%d", profiledir, RtsLayer::getPid(), node, RtsLayer::myContext(), tid);
+    snprintf(filename, sizeof(filename),  "%s/ebstrace.raw.%d.%d.%d.%d", profiledir, RtsLayer::getPid(), node, RtsLayer::myContext(), tid);
 
     tau_sampling_flags_by_tid(tid)->ebsTrace = fopen(filename, "w");
     if (tau_sampling_flags_by_tid(tid)->ebsTrace == NULL) {

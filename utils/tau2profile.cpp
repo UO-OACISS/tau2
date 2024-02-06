@@ -685,7 +685,7 @@ void PrintProfiles(map<int,Thread> &mainmap){//, less< pair<int,int> >
 	
 	if(snapshot>-1)
 	{
-		sprintf(prefix,"snapshot_%d/",snapshot);
+		snprintf(prefix, sizeof(prefix), "snapshot_%d/",snapshot);
 		s_out+=prefix;
 		cmd="mkdir ";
 		cmd+=s_out;
@@ -710,7 +710,7 @@ void PrintProfiles(map<int,Thread> &mainmap){//, less< pair<int,int> >
 	it != mainmap.end(); it++)
 	{
 		char filename [32];
-		sprintf(filename,"profile.%d.0.%d",((*it).second).nodeToken,((*it).second).threadToken);
+		snprintf(filename, sizeof(filename), "profile.%d.0.%d",((*it).second).nodeToken,((*it).second).threadToken);
 		s_prefix=s_out+filename;
 		profile.open(s_prefix.c_str());
 		profile.precision(16);
@@ -770,7 +770,7 @@ void PrintProfiles(map<int,Thread> &mainmap){//, less< pair<int,int> >
 			s_name="";
 			if(snapshot>-1)
 			{
-				sprintf(prefix,"snapshot_%d/",snapshot);
+				snprintf(prefix, sizeof(prefix), "snapshot_%d/",snapshot);
 				s_name+=prefix;
 				//cmd="mkdir ";
 				//cmd+=s_out;
@@ -794,7 +794,7 @@ void PrintProfiles(map<int,Thread> &mainmap){//, less< pair<int,int> >
 			it != mainmap.end(); it++)
 			{
 				char filename [32];
-				sprintf(filename,"profile.%d.0.%d",(*it).second.nodeToken,((*it).second).threadToken);
+				snprintf(filename, sizeof(filename), "profile.%d.0.%d",(*it).second.nodeToken,((*it).second).threadToken);
 				s_prefix=s_out+filename;
 				profile.open(s_prefix.c_str());
 				profile.precision(16);

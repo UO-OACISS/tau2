@@ -151,7 +151,7 @@ void tau::plugins::Sockets::GetHostInfo(int port) {
     in_addr * address = (in_addr * )record->h_addr;
     const int addrlength = 32;
     char ip_address[addrlength] = {0};
-    sprintf(ip_address, "%s", inet_ntoa(* address));
+    snprintf(ip_address, sizeof(ip_address),  "%s", inet_ntoa(* address));
 
     // make array for all hostnames
     char * allhostnames = (char*)calloc(hostlength * comm_size, sizeof(char));

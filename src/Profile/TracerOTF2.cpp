@@ -548,7 +548,7 @@ void remove_path(const char *pathname) {
         	FILE *file = NULL;
         	char abs_path[4096] = {0};
         	if(*(entry->d_name) != '.') {
-            	sprintf(abs_path, "%s/%s", pathname, entry->d_name);
+            	snprintf(abs_path, sizeof(abs_path),  "%s/%s", pathname, entry->d_name);
             	sub_dir = opendir(abs_path);
             	if(sub_dir != NULL) {
                 	closedir(sub_dir);
@@ -1116,17 +1116,17 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
 		  name = it->first.name;
                   value = it->second;
 		  if (strcmp(name, "ROCM_GPU_ID") == 0) {
-                    sprintf(gpu_id, "%s", value->data.cval);
+                    snprintf(gpu_id, sizeof(gpu_id),  "%s", value->data.cval);
                   }
 		  if (strcmp(name, "ROCM_QUEUE_ID") == 0) {
-                    sprintf(queue_id, "%s", value->data.cval);
+                    snprintf(queue_id, sizeof(queue_id),  "%s", value->data.cval);
                   }
 		  if (strcmp(name, "TAU_TASK_ID") == 0) {
-                    sprintf(tau_task_id, "%s", value->data.cval);
+                    snprintf(tau_task_id, sizeof(tau_task_id),  "%s", value->data.cval);
                   }
          	}
                 if (strlen(gpu_id) > 0) {
-                  sprintf(namebuf, "GPU%s Queue%s", gpu_id, queue_id);
+                  snprintf(namebuf, sizeof(namebuf),  "GPU%s Queue%s", gpu_id, queue_id);
                   TAU_VERBOSE("name = %s\n", namebuf);
                 }
 

@@ -47,7 +47,7 @@ extern "C" {
       in_numMetrics = 0;
       in_name_strings = (char **)malloc(sizeof(char *));
       in_name_strings[0] = (char *)malloc(sizeof(char));
-      strcpy(in_name_strings[0],"");
+      strncpy(in_name_strings[0], "", sizeof(char)); 
     }
     PacketPtr new_packet (new Packet(pin[0]->get_StreamId(),
 				     pin[0]->get_Tag(),

@@ -28,9 +28,9 @@ TAUDB_COUNTER* taudb_query_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* t
    */
   char my_query[256];
   if (taudb_version == TAUDB_2005_SCHEMA) {
-    sprintf(my_query,"select * from atomic_event where trial = %d", trial->id);
+    snprintf(my_query, sizeof(my_query), "select * from atomic_event where trial = %d", trial->id);
   } else {
-    sprintf(my_query,"select * from counter where trial = %d", trial->id);
+    snprintf(my_query, sizeof(my_query), "select * from counter where trial = %d", trial->id);
   }
 #ifdef TAUDB_DEBUG
   printf("'%s'\n",my_query);
@@ -180,13 +180,13 @@ void taudb_save_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boole
     // make array of 3 character pointers
     const char* paramValues[3] = {0};
     char trialid[32] = {0};
-    sprintf(trialid, "%d", trial->id);
+    snprintf(trialid, sizeof(trialid),  "%d", trial->id);
     paramValues[0] = trialid;
     paramValues[1] = counter->name;
 		
 	char id[32] = {0};
 	if(update && counter->id > 0) {
-		sprintf(id, "%d", counter->id);
+		snprintf(id, sizeof(id),  "%d", counter->id);
 		paramValues[2] = id;
 	}
 

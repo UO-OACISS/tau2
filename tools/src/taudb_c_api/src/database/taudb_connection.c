@@ -135,7 +135,7 @@ TAUDB_CONNECTION* taudb_try_connect_config(char* config_name, taudb_error* err, 
    const char* config_prefix = "perfdmf.cfg";
    const char* home = getenv("HOME");
    char config_file[256];
-   sprintf(config_file, "%s/.ParaProf/%s.%s", home, config_prefix, config_name);
+   snprintf(config_file, sizeof(config_file),  "%s/.ParaProf/%s.%s", home, config_prefix, config_name);
    return taudb_try_connect_config_file(config_file, err, taudb_numItems);
 }
 
@@ -195,8 +195,9 @@ void taudb_execute_query(TAUDB_CONNECTION *connection, char* my_query) {
   const char* portal_string = "DECLARE myportal CURSOR FOR";
 
 #ifdef __TAUDB_POSTGRESQL__
-  char* full_query = (char*)malloc(sizeof(char) * (strlen(my_query) + strlen(portal_string) + 2));
-  sprintf(full_query, "%s %s", portal_string, my_query);
+  const int query_size = sizeof(char) * (strlen(my_query) + strlen(portal_string) + 2);
+  char* full_query = (char*)malloc(query_size);
+  snprintf(full_query, query_size,  "%s %s", portal_string, my_query);
 #ifdef TAUDB_DEBUG_DEBUG
   printf("QUERY: '%s'\n", full_query);
 #endif

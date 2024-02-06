@@ -244,8 +244,9 @@ void Tau_cuda_enqueue_kernel_exit_event(CudaGpuEvent *curKernel)
 
 	//printf("recording stop for: %s.\n", curName.c_str());
 
-	char *device_name = (char*) malloc(sizeof(char) * (curName.length() + 1));
-	strcpy(device_name, curName.c_str());
+	const int len = sizeof(char) * (curName.length() + 1);
+	char *device_name = (char*) malloc(len);
+	strncpy(device_name,  curName.c_str(), len); 
 	curKernel->name = device_name;
 	curKernel->enqueue_stop_event();
 

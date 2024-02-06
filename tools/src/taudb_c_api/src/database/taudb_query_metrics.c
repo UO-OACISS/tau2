@@ -27,7 +27,7 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
    * Fetch rows from table_name, the system catalog of databases
    */
   char my_query[256];
-  sprintf(my_query,"select * from metric where trial = %d", trial->id);
+  snprintf(my_query, sizeof(my_query), "select * from metric where trial = %d", trial->id);
 #ifdef TAUDB_DEBUG
   printf("Query: %s\n", my_query);
 #endif
@@ -145,16 +145,16 @@ void taudb_save_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
     // make array of 6 character pointers
     const char* paramValues[4] = {0};
     char trialid[32] = {0};
-    sprintf(trialid, "%d", trial->id);
+    snprintf(trialid, sizeof(trialid),  "%d", trial->id);
     paramValues[0] = trialid;
     paramValues[1] = metric->name;
     char derived[32] = {0};
-    sprintf(derived, "%d", metric->derived);
+    snprintf(derived, sizeof(derived),  "%d", metric->derived);
     paramValues[2] = derived;
 
 	char id[32] = {};		
 	if(update && metric->id > 0) {
-		sprintf(id, "%d", metric->id);
+		snprintf(id, sizeof(id),  "%d", metric->id);
 		paramValues[3] = id;
 	}
 

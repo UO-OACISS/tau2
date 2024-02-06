@@ -213,13 +213,13 @@ bool IsDynamicProfiling(char *filename) {
   size_t len;
   int retval;
   if ((fp = fopen(filename, "r")) == NULL) {
-    sprintf(error_msg,"Error: Could not open %s",filename);
+    snprintf(error_msg, sizeof(error_msg), "Error: Could not open %s",filename);
     perror(error_msg);
     return false;
   }//if
   if ((fgets(line, MAX_LINE_LEN, fp) == NULL))
   {
-    sprintf(error_msg,"Error: Could read line from %s",filename);
+    snprintf(error_msg, sizeof(error_msg), "Error: Could read line from %s",filename);
     return false;
   }
   if (sscanf(line, "%d %s", &numberOfFunctions, version) == EOF) {
@@ -402,11 +402,11 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
   if (read_summary_files) {
     static int invocation = 0;
     if (invocation > 0) return 0;
-    strcpy(filename, prefix);
+    strncpy(filename,  prefix, sizeof(filename)); 
     invocation++;
   }
   else {
-    sprintf(filename,"%s.%d.%d.%d",prefix, node, ctx, thr);
+    snprintf(filename, sizeof(filename), "%s.%d.%d.%d",prefix, node, ctx, thr);
   }
 #ifdef DEBUG
   printf("Inside FillFunctionDB : Filename %s\n",filename);
@@ -414,7 +414,7 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
   if ((fp = fopen(filename, "r")) == NULL) {
     /* did we get a file i/o error? */
 #ifdef DEBUG /* In sweeping through n,c,t tree its ok if a file is not found */
-    sprintf(line,"Error: Could not open file %s", filename);
+    snprintf(line, sizeof(line), "Error: Could not open file %s", filename);
     perror(line);
 #endif /* DEBUG */
     return 0;
@@ -451,19 +451,19 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
     }
   }
   if (line[0] == '#') { // new data format
-    sprintf(header,"# Name Calls Subrs Excl Incl ");
+    snprintf(header, sizeof(header), "# Name Calls Subrs Excl Incl ");
     hlen = strlen(header);
     if (strncmp(line, header, hlen) != 0) {
       printf("Error in reading Format String : Expected %s Got %s\n", header, line);
       exit(1);
     }//if
     else { // Format string parsed correctly. See if PROFILE_STATS is on
-      sprintf(trailer,"SumExclSqr ProfileCalls");
+      snprintf(trailer, sizeof(trailer), "SumExclSqr ProfileCalls");
       tlen = strlen(trailer);
       if (strncmp(line+hlen, trailer, tlen) == 0)
 	profilestats = true;
       else { // doesn't contain SumExclSqr
-        sprintf(trailer, "ProfileCalls");
+        snprintf(trailer, sizeof(trailer),  "ProfileCalls");
 	tlen = strlen(trailer);
 	if (strncmp(line+hlen, trailer, tlen) == 0)
 	  profilestats = false;
@@ -562,8 +562,9 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
     cout << "func = "<< func << endl;
     cout << "numcalls = "<< numcalls << " numsubrs = "<< numsubrs << " excl = "<< excl <<" incl = " << incl << " no profiled invocations " << numinvocations << endl;
 #endif /* DEBUG */
-    functionName = new char[strlen(func)+1]; // create a new storage - STL req.
-    strcpy(functionName,func);
+    const int len = strlen(func)+1;
+    functionName = new char[len]; // create a new storage - STL req.
+    strncpy(functionName, func, len); 
     if ((it = funcDB.find((const char *)functionName)) != funcDB.end()) {
 #ifdef DEBUG
       cout << "Found the name " << functionName << endl;
@@ -578,8 +579,9 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
       //Just added functionName, therefore it will be there.
       //Set the group names for this function.
       if(groupNamesUsed){
-        char *createdGNSpace = new char[strlen(groupNames)+1];
-        strcpy(createdGNSpace, groupNames);
+        const int len = strlen(groupNames)+1;
+        char *createdGNSpace = new char[len];
+        strncpy(createdGNSpace,  groupNames, len); 
         funcDB[functionName].groupNames = createdGNSpace;
       }//if
     }//else
@@ -644,8 +646,9 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
 #endif /* OLDCODE */
 	  // At this point line[j] is '"' and the has a blank after that, so
 	  // line[j+1] corresponds to the beginning of other data.
-	  userEventName = new char[strlen(func)+1]; // create a new storage - STL req.
-	  strcpy(userEventName,func);
+	  const int len = strlen(func)+1;
+	  userEventName = new char[len]; // create a new storage - STL req.
+	  strncpy(userEventName, func, len); 
 	  if ((uit = userEventDB.find((const char *)userEventName)) != userEventDB.end()) {
 #ifdef DEBUG
 	    cout << "FOUND the name " << userEventName << endl;
@@ -728,15 +731,15 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
     static int invocations = 0;
     if (invocations > 0) return 0;
     invocations++;
-    sprintf(filename,prefix);
+    snprintf(filename, sizeof(filename), prefix);
   } else {
-    sprintf(filename,"%s.%d.%d.%d",prefix, node, ctx, thr);     /*  create the file name  */
+    snprintf(filename, sizeof(filename), "%s.%d.%d.%d",prefix, node, ctx, thr);     /*  create the file name  */
   }
 
   //attempt to open the file and read -- if we can't report an error, and return 0
   if ((fp = fopen(filename, "r")) == NULL) {
 #ifdef DEBUG /* In sweeping through n,c,t tree its ok if a file is not found */
-    sprintf(line,"Error: Could not open file %s", filename);
+    snprintf(line, sizeof(line), "Error: Could not open file %s", filename);
     perror(line);
 #endif /* DEBUG */
     return 0;
@@ -1074,9 +1077,9 @@ int FunctionSummaryInfo(int no, int ctx, int thr, int max){
   printf("%s : total = %5.1f top level = %5.1f\n", proffile, total, max_thread_cumusec);
 #endif
   if (hpcxx_flag == FALSE)
-    sprintf(ident_str,"%d", no);
+    snprintf(ident_str, sizeof(ident_str), "%d", no);
   else  /* hpc++ */
-    sprintf(ident_str,"%d,%d,%d", no, ctx, thr);
+    snprintf(ident_str, sizeof(ident_str), "%d,%d,%d", no, ctx, thr);
   /* -- print function profile data table ----------------------------------- */
   if ( nodeprint ) {
     if ( dump ) {
@@ -1405,11 +1408,12 @@ void UserEventSummaryInfo(int node, int ctx, int thr){
 /******************** pC++ /HPC++ profiling code **************************/
 static char *strsave (const char *s){
   char *r;
-  if ( (r = (char *) malloc (strlen(s)+1)) == NULL ) {
+  const int len = strlen(s)+1;
+  if ( (r = (char *) malloc (len)) == NULL ) {
     fprintf (stderr, "error: no more memory\n");
     exit (1);
   }//if
-  strcpy (r, s);
+  strncpy (r,  s, len); 
   return r;
 }//strsave()
 
@@ -1837,7 +1841,7 @@ static void DumpFuncTab (struct p_prof_elem *tab, char *id_str, double total,
 static void ReadNameTable (char file[]){
   int i, tag;
   FILE *in;
-  sprintf (proffile, "%s.ftab", file);
+  snprintf (proffile, sizeof(proffile),  "%s.ftab", file);
 
   if ( (in = fopen (proffile, "r")) == NULL ) {
     perror (proffile);
@@ -1875,7 +1879,7 @@ static void ReadEventTable (char file[]){
   /* reads from profile.ctab the event tables <eid, eventname> */
   int i, j, eventid;
   FILE *in;
-  sprintf (proffile, "%s.ctab", file);
+  snprintf (proffile, sizeof(proffile),  "%s.ctab", file);
 
   if ( (in = fopen (proffile, "r")) == NULL ) {
 	return ; /* there's no .ctab file - no need to fill table */
@@ -1897,7 +1901,7 @@ static void ReadEventTable (char file[]){
     j = 0;
     while((lbuf[j] != '"') && (j < strlen(lbuf))) j++; /* skip */
     if ( j != strlen (lbuf)){
-      strcpy(sbuf, &lbuf[j]);
+      strncpy(sbuf,  &lbuf[j], sizeof(sbuf)); 
       sbuf[strlen(sbuf) - 1] = '\0' ; /* remove \n at the end */
     }
     else {
@@ -1937,11 +1941,11 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
   char aggr_str[32],ident_str[32];
 
   if (longname == FALSE) /* pc++ */
-    sprintf (proffile, "%s.%d", prefix, no);
+    snprintf (proffile, sizeof(proffile),  "%s.%d", prefix, no);
   else  /* hpc++ profile.0.0.0 etc. */
-    sprintf (proffile, "%s.%d.%d.%d", prefix, no, ctx, thr);
+    snprintf (proffile, sizeof(proffile),  "%s.%d.%d.%d", prefix, no, ctx, thr);
   if (read_summary_files) {
-    strcpy(proffile, prefix);
+    strncpy(proffile,  prefix, sizeof(proffile)); 
   }
 
   /* -- read profile data file and set profile data tables ------------------ */
@@ -2184,9 +2188,9 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
   printf("%s : total = %5.1f top level = %5.1f\n", proffile, total, max_thread_cumusec);
 #endif
   if (hpcxx_flag == FALSE)
-    sprintf(ident_str,"%d", no);
+    snprintf(ident_str, sizeof(ident_str), "%d", no);
   else  /* hpc++ */
-    sprintf(ident_str,"%d,%d,%d", no, ctx, thr);
+    snprintf(ident_str, sizeof(ident_str), "%d,%d,%d", no, ctx, thr);
 
   /* -- print function profile data table ----------------------------------- */
   if ( nodeprint ) {
@@ -2716,13 +2720,13 @@ int main (int argc, char *argv[]){
     start = 0;
   else
     start = atoi(argv[optind]);
-  sprintf(proffile,"%s.%d.0.0", file, start);  /*  create profile file name  */
+  snprintf(proffile, sizeof(proffile), "%s.%d.0.0", file, start);  /*  create profile file name  */
   if (!dump) // This statement not in the dump protocol
     printf("Reading Profile files in %s.*\n", file);
 
   if (strstr(file, "profile.")!= 0 && strlen(file) > 10) {
-    strcpy(proffile, file);
-    strcpy(summary_prefix,file);
+    strncpy(proffile,  file, sizeof(proffile)); 
+    strncpy(summary_prefix, file, sizeof(summary_prefix)); 
     read_summary_files=true;
   }
 
@@ -2816,7 +2820,7 @@ int main (int argc, char *argv[]){
       printf ("%%time         msec   total_msec       #call      #subrs  usec/call name\n");
     }
   }
-  sprintf(proffile,"%s.%d", file,start);
+  snprintf(proffile, sizeof(proffile), "%s.%d", file,start);
   if(IsFilePresent(proffile)){
     /* pc++ files - profile.0, etc. Use ctx 0, thr 0 and longname = FALSE */
     if ( optind == argc ) {
@@ -2831,7 +2835,7 @@ int main (int argc, char *argv[]){
     if ( argno ) PrintSummary (max, argno);
   }
   else {
-    sprintf(proffile,"%s.%d.0.0", file, start);
+    snprintf(proffile, sizeof(proffile), "%s.%d.0.0", file, start);
     if (IsFilePresent(proffile)){ /* hpc++ files profile.0.0.0 present  - use longnames = TRUE */
       /* iterate over nodes, contexts and threads */
       if ( optind == argc ) {

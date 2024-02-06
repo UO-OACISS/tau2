@@ -28,9 +28,9 @@ TAUDB_COUNTER_VALUE* taudb_query_counter_values(TAUDB_CONNECTION* connection, TA
    */
   char my_query[256];
   if (taudb_version == TAUDB_2005_SCHEMA) {
-    sprintf(my_query,"select alp.* from atomic_location_profile alp inner join atomic_event ae on ae.id = alp.atomic_event where ae.trial = %d", trial->id);
+    snprintf(my_query, sizeof(my_query), "select alp.* from atomic_location_profile alp inner join atomic_event ae on ae.id = alp.atomic_event where ae.trial = %d", trial->id);
   } else {
-    sprintf(my_query,"select cv.* from counter_value cv inner join counter c on cv.counter = c.id where trial = %d", trial->id);
+    snprintf(my_query, sizeof(my_query), "select cv.* from counter_value cv inner join counter c on cv.counter = c.id where trial = %d", trial->id);
   }
 #ifdef TAUDB_DEBUG
   printf("'%s'\n",my_query);
@@ -155,32 +155,32 @@ void taudb_save_counter_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial,
     // make array of 6 character pointers
     const char* paramValues[8] = {0};
     char counterid[32] = {0};
-    sprintf(counterid, "%d", counter_value->key.counter->id);
+    snprintf(counterid, sizeof(counterid),  "%d", counter_value->key.counter->id);
     paramValues[0] = counterid;
     char context[32] = {0};
 	if (counter_value->key.context != NULL) {
-      sprintf(context, "%d", counter_value->key.context->id);
+      snprintf(context, sizeof(context),  "%d", counter_value->key.context->id);
       paramValues[1] = context;
 	}
 	char thread[32] = {0};
 	if (counter_value->key.thread != NULL) {
-      sprintf(thread, "%d", counter_value->key.thread->id);
+      snprintf(thread, sizeof(thread),  "%d", counter_value->key.thread->id);
       paramValues[2] = thread;
 	}
     char sample_count[32] = {0};
-    sprintf(sample_count, "%d", counter_value->sample_count);
+    snprintf(sample_count, sizeof(sample_count),  "%d", counter_value->sample_count);
     paramValues[3] = sample_count;
     char maximum_value[32] = {0};
-    sprintf(maximum_value, "%f", counter_value->maximum_value);
+    snprintf(maximum_value, sizeof(maximum_value),  "%f", counter_value->maximum_value);
     paramValues[4] = maximum_value;
     char minimum_value[32] = {0};
-    sprintf(minimum_value, "%f", counter_value->minimum_value);
+    snprintf(minimum_value, sizeof(minimum_value),  "%f", counter_value->minimum_value);
     paramValues[5] = minimum_value;
     char mean_value[32] = {0};
-    sprintf(mean_value, "%f", counter_value->mean_value);
+    snprintf(mean_value, sizeof(mean_value),  "%f", counter_value->mean_value);
     paramValues[6] = mean_value;
     char standard_deviation[32] = {0};
-    sprintf(standard_deviation, "%f", counter_value->standard_deviation);
+    snprintf(standard_deviation, sizeof(standard_deviation),  "%f", counter_value->standard_deviation);
     paramValues[7] = standard_deviation;
 
     taudb_execute_statement(connection, statement_name, 8, paramValues);

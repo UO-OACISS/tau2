@@ -731,7 +731,7 @@ char * getGCCHOME(void) {
   }
 
   /* if TAU_GCC_HOME is not set use this */
-  strcpy(command, " tau_cc.sh -show | awk '{c=split($0, s); for(n=1; n<=c; ++n) print s[n] }' | grep gcc | grep '^.L' | sed -e 's/-L//'");
+  strncpy(command,  " tau_cc.sh -show | awk '{c=split($0, s); for(n=1; n<=c; ++n) print s[n] }' | grep gcc | grep '^.L' | sed -e 's/-L//'", sizeof(command)); 
 
   fp=popen(command, "r");
 
@@ -765,7 +765,7 @@ bool loadDependentLibraries(BPatch_binaryEdit *bedit, char *bindings) {
   char bindir[]=TAU_BIN_DIR; 
   char cmd[1024]; 
   dprintf("Inside loadDependentLibraries: bindings=%s\n", bindings);
-  sprintf(cmd, "%s/tau_show_libs %s/../lib/Makefile.tau%s", bindir, bindir, bindings);
+  snprintf(cmd, sizeof(cmd),  "%s/tau_show_libs %s/../lib/Makefile.tau%s", bindir, bindir, bindings);
   dprintf("cmd = %s\n", cmd);
   FILE *fp; 
   fp = popen(cmd, "r"); 
@@ -1239,7 +1239,7 @@ int main(int argc, char **argv){
        case 'o':
           ovalue = optarg;
           binaryRewrite = 1; /* binary rewrite is true */
-          strcpy(outfile, ovalue);
+          strncpy(outfile,  ovalue, sizeof(outfile)); 
           break;
        case 'l':
           libraryRewrite = 1; /* binary rewrite is true */
@@ -1272,7 +1272,7 @@ int main(int argc, char **argv){
   dprintf("mutatee name = %s\n", mutname);
   if (tvalue != (char *) NULL) {
     dprintf("-T <options> specified\n");
-    sprintf(cmd, "echo %s | sed -e 's@,@ @g' | tr '[A-Z]' '[a-z]' | xargs %s/tau-config --binding | sed -e 's@shared@@g'", tvalue, bindir);
+    snprintf(cmd, sizeof(cmd),  "echo %s | sed -e 's@,@ @g' | tr '[A-Z]' '[a-z]' | xargs %s/tau-config --binding | sed -e 's@shared@@g'", tvalue, bindir);
     FILE *fp; 
     fp = popen(cmd, "r"); 
     if (fp == NULL) {
@@ -1301,17 +1301,17 @@ int main(int argc, char **argv){
   }
   //did we load a library?  if not, load the default
   if(!loadlib){
-    sprintf(staticlibname,"libtau-mpi-pdt.a");
-    sprintf(staticmpilibname,"libTauMpi-mpi-pdt.a");
-    sprintf(libname, "libTAU.so");
+    snprintf(staticlibname, sizeof(staticlibname), "libtau-mpi-pdt.a");
+    snprintf(staticmpilibname, sizeof(staticmpilibname), "libTauMpi-mpi-pdt.a");
+    snprintf(libname, sizeof(libname),  "libTAU.so");
     loadlib=true;
   }//if
   else {
     if (xvalue != (char *) NULL) { /* -Xrun<Options> specified */
-      sprintf(staticlibname,"lib%s.a", &xvalue[3]);
-      sprintf(staticmpilibname,"libTauMpi%s.a", &xvalue[6]);
+      snprintf(staticlibname, sizeof(staticlibname), "lib%s.a", &xvalue[3]);
+      snprintf(staticmpilibname, sizeof(staticmpilibname), "libTauMpi%s.a", &xvalue[6]);
       dprintf("staticmpilibname = %s\n", staticmpilibname);
-      sprintf(libname, "lib%s.so", &xvalue[3]);
+      snprintf(libname, sizeof(libname),  "lib%s.so", &xvalue[3]);
       if (xvalue[3] == 'T') {
         fprintf(stderr, "%s> Loading %s ...\n", mutname, libname);
       } else {
@@ -1320,10 +1320,10 @@ int main(int argc, char **argv){
       }
     } else {
       if (tvalue != (char *) NULL) { /* -T <bindings> specified */
-        sprintf(staticlibname,"libtau%s.a", bindings);
-        sprintf(staticmpilibname,"libTauMpi%s.a", bindings);
+        snprintf(staticlibname, sizeof(staticlibname), "libtau%s.a", bindings);
+        snprintf(staticmpilibname, sizeof(staticmpilibname), "libTauMpi%s.a", bindings);
         dprintf("staticmpilibname = %s\n", staticmpilibname);
-        sprintf(libname, "libTAUsh%s.so", bindings);
+        snprintf(libname, sizeof(libname),  "libTAUsh%s.so", bindings);
         /* if (isStaticExecutable) {
           fprintf(stderr, "%s> Loading %s ...\n", mutname, staticlibname);
           fprintf(stderr, "%s> Loading %s ...\n", mutname, staticmpilibname);
@@ -1436,7 +1436,7 @@ int main(int argc, char **argv){
   
     char modulename[256];
     for (j=0; j < m->size(); j++) {
-      sprintf(modulename, "Module %s\n", (*m)[j]->getName(fname, FUNCNAMELEN));
+      snprintf(modulename, sizeof(modulename),  "Module %s\n", (*m)[j]->getName(fname, FUNCNAMELEN));
       BPatch_Vector<BPatch_function *> *p = (*m)[j]->getProcedures();
       dprintf("%s", modulename);
 
@@ -1486,7 +1486,7 @@ int main(int argc, char **argv){
     // instrument these. So, we need to iterate twice. 
 
     for (j=0; j < m->size(); j++) {
-      sprintf(modulename, "Module %s\n", (*m)[j]->getName(fname, FUNCNAMELEN));
+      snprintf(modulename, sizeof(modulename),  "Module %s\n", (*m)[j]->getName(fname, FUNCNAMELEN));
       BPatch_Vector<BPatch_function *> *p = (*m)[j]->getProcedures();
       dprintf("%s", modulename);
 

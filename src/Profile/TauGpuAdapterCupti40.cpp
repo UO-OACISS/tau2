@@ -49,7 +49,7 @@ cuptiGpuId* cuptiGpuId::getCopy() const
 char* cuptiGpuId::printId() const
 {
 	char *rtn = (char*) malloc(50*sizeof(char));
-	sprintf(rtn, "[%ld]", contextUid);
+	snprintf(rtn, 50*sizeof(char),  "[%ld]", contextUid);
 	return rtn;
 };
 x_uint64 cuptiGpuId::id_p1() { return contextUid; };

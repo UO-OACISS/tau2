@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
   me = gpmype();
   master = (me == 0);
   CLEANSTRING(tmps,TMPSTRLEN);
-  (void)sprintf(tmps," ME = %2d, NPROC = %2d ",me,nproc);
+  (void)snprintf(tmps, sizeof(tmps), " ME = %2d, NPROC = %2d ",me,nproc);
   (void)printf_seq(tmps,strlen(tmps));
 /*------------------------------------------------------*\
   Set NN
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
   myrow = me / nn;
   mycol = me % nn;
   CLEANSTRING(tmps,TMPSTRLEN);
-  (void)sprintf(tmps," ME = %2d, NPROC = %2d, row=%3d, col=%3d",
+  (void)snprintf(tmps, sizeof(tmps), " ME = %2d, NPROC = %2d, row=%3d, col=%3d",
 		me,nproc,myrow,mycol);
   (void)printf_seq(tmps,strlen(tmps));
 
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
     (void)fflush(stdout);
   }
   CLEANSTRING(tmps,TMPSTRLEN);
-  (void)sprintf(tmps,"ME=%2d row[low=%4d high=%4d] col[low=%4d high=%4d]",
+  (void)snprintf(tmps, sizeof(tmps), "ME=%2d row[low=%4d high=%4d] col[low=%4d high=%4d]",
 		me,my_low_r,my_high_r,my_low_c,my_high_c);
   (void)printf_seq(tmps,strlen(tmps));
   (void)gpshmem_barrier_all();
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
   norm = diffnorm(C_patch,Z_patch,(local_rank*local_rank),me);
   
   CLEANSTRING(tmps,TMPSTRLEN);
-  (void)sprintf(tmps,"norm = %.20e",norm);
+  (void)snprintf(tmps, sizeof(tmps), "norm = %.20e",norm);
   (void)printf_seq(tmps,strlen(tmps));
   (void) gpshmem_double_sum_to_all(&normall,&norm,1,0,0,nproc,
 				     (double *)NULL,(double *)NULL);
@@ -650,7 +650,7 @@ void printf_seq(char *string,int str_len)
   nproc = gpnumpes();
   me = gpmype();
   s2print = gpshmalloc(sizeof(char)*str_len);
-  (void)strcpy(s2print,string);
+  (void)strncpy(s2print, string, sizeof(char)*str_len); 
   gpshmem_barrier_all();
   if(me==0) {
     (void)printf("<%d> %s\n",me,string);

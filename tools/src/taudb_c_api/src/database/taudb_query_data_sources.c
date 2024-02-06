@@ -25,7 +25,7 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection, int* t
 
   taudb_begin_transaction(connection);
   char my_query[256];
-  sprintf(my_query,"select * from data_source");
+  snprintf(my_query, sizeof(my_query), "select * from data_source");
 #ifdef TAUDB_DEBUG
   printf("Query: %s\n", my_query);
 #endif

@@ -40,7 +40,7 @@ extern "C" void __pgi_cu_init(char* file, char* func, long lineno, long startlin
   TauPgiFile = file;
   TauPgiFunc = func;
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_init %s (enter a region) [{%s}{%ld,0}-{%ld,0}]", TauPgiFunc, TauPgiFile, startlineno, endlineno);
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_init %s (enter a region) [{%s}{%ld,0}-{%ld,0}]", TauPgiFunc, TauPgiFile, startlineno, endlineno);
   
   TAU_START(sourceinfo);
   __pgi_cu_init_p(file, func, lineno, startlineno, endlineno);
@@ -71,7 +71,7 @@ typedef struct __pgi_cuda_module{
 extern "C" void __pgi_cu_module3_p( void* modlist, long lineno );
 extern "C" void __pgi_cu_module3( void* modlist, long lineno ) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_module %s (load a cuda binary to the device) [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_module %s (load a cuda binary to the device) [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
   TAU_START(sourceinfo);
   __pgi_cu_module3_p(modlist, lineno);
   TAU_STOP(sourceinfo);
@@ -83,7 +83,7 @@ extern "C" cuda_function __pgi_cu_module_function3_p( char* Name, long lineno, c
 
 extern "C" cuda_function __pgi_cu_module_function3( char* Name, long lineno, char* Argname, long Argsize, char* Varname, long Varsize, long SWcachesize, void* oldHandle ) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_module_function3 %s (return function handle) name=%s argname=%s, argsize=%ld, varname=%s, varsize=%ld, SWcachesize=%ld [{%s}{%ld}]", TauPgiFunc, Name, Argname, Argsize, Varname, Varsize, SWcachesize, TauPgiFile, lineno);
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_module_function3 %s (return function handle) name=%s argname=%s, argsize=%ld, varname=%s, varsize=%ld, SWcachesize=%ld [{%s}{%ld}]", TauPgiFunc, Name, Argname, Argsize, Varname, Varsize, SWcachesize, TauPgiFile, lineno);
   TAU_START(sourceinfo);
   cuda_function func = __pgi_cu_module_function3_p(Name, lineno, Argname, Argsize, Varname, Varsize, SWcachesize, oldHandle);
   functionMap[func] = Name;
@@ -97,7 +97,7 @@ extern "C" cuda_deviceptr __pgi_cu_alloc_a_p(cuda_deviceptr * ptr, size_t size, 
 
 extern "C" cuda_deviceptr __pgi_cu_alloc_a(cuda_deviceptr * ptr, size_t size, long lineno, char *name, void *hostptr, long flags, long async)
  {  char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_alloc_a %s (allocate user data) size=%d, name=%s, flags=%ld, async=%ld, [{%s}{%ld}]", TauPgiFunc, size, name, flags, async, TauPgiFile, lineno);
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_alloc_a %s (allocate user data) size=%d, name=%s, flags=%ld, async=%ld, [{%s}{%ld}]", TauPgiFunc, size, name, flags, async, TauPgiFile, lineno);
   cuda_deviceptr ret;
   TAU_START(sourceinfo);
   ret = __pgi_cu_alloc_a_p(ptr, size, lineno, name, hostptr, flags, async);
@@ -109,7 +109,7 @@ extern "C" cuda_deviceptr __pgi_cu_alloc_a(cuda_deviceptr * ptr, size_t size, lo
 extern "C" cuda_deviceptr __pgi_cu_allocx_p(cuda_deviceptr * ptr, size_t size, long lineno, char *name, void *hostptr);
 extern "C" cuda_deviceptr __pgi_cu_allocx(cuda_deviceptr * ptr, size_t size, long lineno, char *name, void *hostptr)
  {  char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_allocx %s (actually does the allocate) size=%d, name=%s [{%s}{%ld}]", TauPgiFunc, size, name, TauPgiFile, lineno);
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_allocx %s (actually does the allocate) size=%d, name=%s [{%s}{%ld}]", TauPgiFunc, size, name, TauPgiFile, lineno);
   cuda_deviceptr ret;
   TAU_START(sourceinfo);   
   ret = __pgi_cu_allocx_p(ptr, size, lineno, name, hostptr);
@@ -122,7 +122,7 @@ extern "C" cuda_deviceptr __pgi_cu_allocx(cuda_deviceptr * ptr, size_t size, lon
 extern "C" void __pgi_cu_free_a_p(cuda_deviceptr ptr, long lineno, char* name, long flags, long async);
 extern "C" void __pgi_cu_free_a(cuda_deviceptr ptr, long lineno, char* name, long flags, long async) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_free_a %s (enqueue a deallocate, may be asynchronous) name=%s, flags=%ld, async=%ld [{%s}{%ld}]", TauPgiFunc, name, flags, async, TauPgiFile, lineno);
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_free_a %s (enqueue a deallocate, may be asynchronous) name=%s, flags=%ld, async=%ld [{%s}{%ld}]", TauPgiFunc, name, flags, async, TauPgiFile, lineno);
   TAU_START(sourceinfo);
   __pgi_cu_free_a_p(ptr, lineno, name, flags, async);
   TAU_STOP(sourceinfo);
@@ -132,7 +132,7 @@ extern "C" void __pgi_cu_free_a(cuda_deviceptr ptr, long lineno, char* name, lon
 extern "C" void __pgi_cu_freex_p(cuda_deviceptr ptr, long lineno, char* name);
 extern "C" void __pgi_cu_freex(cuda_deviceptr ptr, long lineno, char* name) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_free %s (actually do the deallocate) name=%s [{%s}{%ld}]", TauPgiFunc, name, TauPgiFile, lineno);
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_free %s (actually do the deallocate) name=%s [{%s}{%ld}]", TauPgiFunc, name, TauPgiFile, lineno);
   TAU_START(sourceinfo);
   __pgi_cu_freex_p(ptr, lineno, name);
   TAU_STOP(sourceinfo);
@@ -142,7 +142,7 @@ extern "C" void __pgi_cu_freex(cuda_deviceptr ptr, long lineno, char* name) {
 extern "C" cuda_deviceptr __pgi_cu_alloc_p(size_t size, long lineno, char *name);
 extern "C" cuda_deviceptr __pgi_cu_alloc(size_t size, long lineno, char *name) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_alloc %s (allocate a compiler temp) [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_alloc %s (allocate a compiler temp) [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
   cuda_deviceptr ret;
   TAU_START(sourceinfo);
   ret = __pgi_cu_alloc_p(size, lineno, name);
@@ -157,7 +157,7 @@ extern "C" void __pgi_cu_launch_a( cuda_function func, void* ptr, memint bytes, 
 
   string name = functionMap[func];
   char routine[TAU_PGI_ACC_NAME_LEN];
-  sprintf (routine, "__pgi_cu_launch_a %s (enqueue launch of kernel) (%s,bytes=%ld,sharedbytes=%ld,nargs=%d, gx=%d,gy=%d,gz=%d,bx=%d,by=%d,bz=%d,flags=%ld,async=%ld) [{%s}{%ld}]",
+  snprintf (routine, sizeof(routine),  "__pgi_cu_launch_a %s (enqueue launch of kernel) (%s,bytes=%ld,sharedbytes=%ld,nargs=%d, gx=%d,gy=%d,gz=%d,bx=%d,by=%d,bz=%d,flags=%ld,async=%ld) [{%s}{%ld}]",
     TauPgiFunc, name.c_str(), bytes, sharedbytes, nargs, gridx, gridy, gridz, 
     blockx, blocky, blockz, flags, async,
     TauPgiFile, lineno);
@@ -178,7 +178,7 @@ extern "C" void __pgi_cu_launchx( cuda_function func, void* ptr, memint bytes, m
 
   string name = functionMap[func];
   char routine[TAU_PGI_ACC_NAME_LEN];
-  sprintf (routine, "__pgi_cu_launchx_p %s (actually launch of kernel) (%s,bytes=%ld,sharedbytes=%ld,nargs=%d, gx=%d,gy=%d,gz=%d,bx=%d,by=%d,bz=%d,flags=%ld) [{%s}{%ld}]",
+  snprintf (routine, sizeof(routine),  "__pgi_cu_launchx_p %s (actually launch of kernel) (%s,bytes=%ld,sharedbytes=%ld,nargs=%d, gx=%d,gy=%d,gz=%d,bx=%d,by=%d,bz=%d,flags=%ld) [{%s}{%ld}]",
     TauPgiFunc, name.c_str(), bytes, sharedbytes, nargs, gridx, gridy, gridz,     blockx, blocky, blockz, flags, 
     TauPgiFile, lineno);
 
@@ -197,7 +197,7 @@ extern "C" void __pgi_cu_launch2(cuda_function func, int gridx, int gridy, int g
 
   string name = functionMap[func];
   char routine[TAU_PGI_ACC_NAME_LEN];
-  sprintf (routine, "__pgi_cu_launch %s (%s,gx=%d,gy=%d,gz=%d,bx=%d,by=%d,bz=%d,flag=%d) [{%s}{%ld}]",
+  snprintf (routine, sizeof(routine),  "__pgi_cu_launch %s (%s,gx=%d,gy=%d,gz=%d,bx=%d,by=%d,bz=%d,flag=%d) [{%s}{%ld}]",
     TauPgiFunc, name.c_str(), gridx, gridy, gridz, blockx, blocky, blockz, flag,
     TauPgiFile, lineno);
 
@@ -240,7 +240,7 @@ extern "C" void __pgi_cu_downloadx_a_p( cuda_deviceptr devptr, void* hostptr, in
 extern "C" void __pgi_cu_downloadx_a( cuda_deviceptr devptr, void* hostptr, int dims,
         __pgi_nv_xdata* desc, long elementsize, long lineno, char* name, long flags, long async) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_downloadx_a %s (enqueue a data download, may be asynchrnonous) var=%s, dims=%d, desc.devx=%ld, desc.devstride=%ld, desc.hoststride=%ld, desc.size=%ld, desc.extent=%ld, elementsize=%ld, flags=%ld, async=%ld [{%s}{%ld}]", 
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_downloadx_a %s (enqueue a data download, may be asynchrnonous) var=%s, dims=%d, desc.devx=%ld, desc.devstride=%ld, desc.hoststride=%ld, desc.size=%ld, desc.extent=%ld, elementsize=%ld, flags=%ld, async=%ld [{%s}{%ld}]", 
 	TauPgiFunc, name, dims, desc->devx, desc->devstride, 
         desc->hoststride, desc->size, desc->extent, elementsize, flags, async,
         TauPgiFile, lineno);
@@ -258,7 +258,7 @@ extern "C" void __pgi_cu_downloadxx_p( cuda_deviceptr devptr, void* hostptr, int
 extern "C" void __pgi_cu_downloadxx( cuda_deviceptr devptr, void* hostptr, int dims,
         __pgi_nv_xdata* desc, long elementsize, long lineno, char* name, long flags, cuda_event_info* eventinfo) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_downloadxx %s (actually do the data download) var=%s, dims=%d, desc.devx=%ld, desc.devstride=%ld, desc.hoststride=%ld, desc.size=%ld, desc.extent=%ld, elementsize=%ld, flags=%ld [{%s}{%ld}]",
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_downloadxx %s (actually do the data download) var=%s, dims=%d, desc.devx=%ld, desc.devstride=%ld, desc.hoststride=%ld, desc.size=%ld, desc.extent=%ld, elementsize=%ld, flags=%ld [{%s}{%ld}]",
         TauPgiFunc, name, dims, desc->devx, desc->devstride,
         desc->hoststride, desc->size, desc->extent, elementsize, flags,         TauPgiFile, lineno);
 
@@ -280,7 +280,7 @@ extern "C" void __pgi_acc_dataon( cuda_deviceptr* devptr, void* hostptr, int dim
         desc->hoststride, desc->size, desc->extent, elementsize, flags, async, 
 	TauPgiFile, lineno);
 */
-  sprintf(sourceinfo, "__pgi_acc_dataon %s (allocate, upload, check for or add to presence at start of region) var=%s, dims=%d, elementsize=%ld, flags=%ld, async=%ld [{%s}{%ld}]",
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_acc_dataon %s (allocate, upload, check for or add to presence at start of region) var=%s, dims=%d, elementsize=%ld, flags=%ld, async=%ld [{%s}{%ld}]",
         TauPgiFunc, name, dims, elementsize, flags, async, 
 	TauPgiFile, lineno);
 
@@ -296,7 +296,7 @@ extern "C" void __pgi_acc_dataoff_p( cuda_deviceptr* devptr, void* hostptr, int 
 
 extern "C" void __pgi_acc_dataoff( cuda_deviceptr* devptr, void* hostptr, int dims, __pgi_nv_pdata* desc, long elementsize, long lineno, char* name, long flags, long async ) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_acc_dataoff %s (deallocate, download, clear presence at end of region) var=%s, dims=%d, elementsize=%ld, flags=%ld, async=%ld [{%s}{%ld}]",
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_acc_dataoff %s (deallocate, download, clear presence at end of region) var=%s, dims=%d, elementsize=%ld, flags=%ld, async=%ld [{%s}{%ld}]",
         TauPgiFunc, name, dims, elementsize, flags, async, TauPgiFile, lineno);
 
   TAU_START(sourceinfo);
@@ -311,7 +311,7 @@ extern "C" void __pgi_acc_dataup_p( cuda_deviceptr devptr, void* hostptr, int di
 
 extern "C" void __pgi_acc_dataup( cuda_deviceptr devptr, void* hostptr, int dims, __pgi_nv_pdata* desc, long elementsize, long lineno, char* name, long flags, long async ) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_acc_dataup %s (enqueue upload data) var=%s, dims=%d, elementsize=%ld, flags=%ld, async=%ld [{%s}{%ld}]",
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_acc_dataup %s (enqueue upload data) var=%s, dims=%d, elementsize=%ld, flags=%ld, async=%ld [{%s}{%ld}]",
         TauPgiFunc, name, dims, elementsize, flags, async, TauPgiFile, lineno);
 
   TAU_START(sourceinfo);
@@ -326,7 +326,7 @@ extern "C" void __pgi_acc_dataupx_p( cuda_deviceptr devptr, void* hostptr, int d
 
 extern "C" void __pgi_acc_dataupx( cuda_deviceptr devptr, void* hostptr, int dims, __pgi_nv_pdata* desc, long elementsize, long lineno, char* name, cuda_event_info* eventinfo ) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_acc_dataupx %s (actually upload data) var=%s, dims=%d, elementsize=%ld, [{%s}{%ld}]",
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_acc_dataupx %s (actually upload data) var=%s, dims=%d, elementsize=%ld, [{%s}{%ld}]",
         TauPgiFunc, name, dims, elementsize, TauPgiFile, lineno);
 
   TAU_START(sourceinfo);
@@ -342,7 +342,7 @@ extern "C" void __pgi_acc_datadown_p ( cuda_deviceptr indevptr, void* hostptr, i
 
 extern "C" void __pgi_acc_datadown ( cuda_deviceptr indevptr, void* hostptr, int dims, __pgi_nv_pdata* desc, long elementsize, long lineno, char* name, long flags, long async ) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_acc_datadown %s (enqueue download data) var=%s, dims=%d, elementsize=%ld, flags=%ld, async=%ld [{%s}{%ld}]",
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_acc_datadown %s (enqueue download data) var=%s, dims=%d, elementsize=%ld, flags=%ld, async=%ld [{%s}{%ld}]",
         TauPgiFunc, name, dims, elementsize, flags, async, TauPgiFile, lineno);
 
   TAU_START(sourceinfo);
@@ -359,7 +359,7 @@ extern "C" void __pgi_acc_datadown ( cuda_deviceptr indevptr, void* hostptr, int
 extern "C" void __pgi_acc_datadownx_p ( cuda_deviceptr indevptr, void* hostptr, int dims, __pgi_nv_pdata* desc, long elementsize, long lineno, char* name, long flags, cuda_event_info* eventinfo);
  extern "C" void __pgi_acc_datadownx ( cuda_deviceptr indevptr, void* hostptr, int dims, __pgi_nv_pdata* desc, long elementsize, long lineno, char* name, long flags, cuda_event_info* eventinfo) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_acc_datadownx %s (actually download data) var=%s, dims=%d, elementsize=%ld, flags=%ld [{%s}{%ld}]",
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_acc_datadownx %s (actually download data) var=%s, dims=%d, elementsize=%ld, flags=%ld [{%s}{%ld}]",
         TauPgiFunc, name, dims, elementsize, flags, TauPgiFile, lineno);
 
   TAU_START(sourceinfo);
@@ -376,7 +376,7 @@ extern "C" void __pgi_cu_uploadc_a_p( char* name, void* hostptr, size_t size, lo
 
 extern "C" void __pgi_cu_uploadc_a( char* name, void* hostptr, size_t size, long lineno, size_t offset, long flags, long async ) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_uploadc_a %s (enqueue upload of compiler temp data) var=%s, size=%ld, offset=%ld, flags=%ld, async=%ld [{%s}{%ld}]",
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_uploadc_a %s (enqueue upload of compiler temp data) var=%s, size=%ld, offset=%ld, flags=%ld, async=%ld [{%s}{%ld}]",
         TauPgiFunc, name, size, offset, flags, async,
         TauPgiFile, lineno);
 
@@ -393,7 +393,7 @@ extern "C" void __pgi_cu_uploadcx_p( char* name, void* hostptr, size_t size, lon
 
 extern "C" void __pgi_cu_uploadcx( char* name, void* hostptr, size_t size, long lineno, size_t offset, cuda_event_info* eventinfo ) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_uploadcx %s (actually upload compiler temp data) var=%s, size=%ld, offset=%ld, [{%s}{%ld}]",
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_uploadcx %s (actually upload compiler temp data) var=%s, size=%ld, offset=%ld, [{%s}{%ld}]",
         TauPgiFunc, name, size, offset, TauPgiFile, lineno);
 
   TAU_START(sourceinfo);
@@ -408,7 +408,7 @@ extern "C" void __pgi_cu_downloadc_a_p( char* name, void* hostptr, size_t size, 
 
 extern "C" void __pgi_cu_downloadc_a( char* name, void* hostptr, size_t size, long lineno, size_t offset, long flags, long async ) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_downloadc %s (enqueue download of compiler temp data) var=%s, size=%ld, offset=%ld, flags=%ld, async=%ld [{%s}{%ld}]",
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_downloadc %s (enqueue download of compiler temp data) var=%s, size=%ld, offset=%ld, flags=%ld, async=%ld [{%s}{%ld}]",
         TauPgiFunc, name, size, offset, flags, async,
         TauPgiFile, lineno);
 
@@ -425,7 +425,7 @@ extern "C" void __pgi_cu_downloadcx_p( char* name, void* hostptr, size_t size, l
 
 extern "C" void __pgi_cu_downloadcx( char* name, void* hostptr, size_t size, long lineno, size_t offset, cuda_event_info* eventinfo) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_downloadcx %s (actually download compiler temp data) var=%s, size=%ld [{%s}{%ld}]",
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_downloadcx %s (actually download compiler temp data) var=%s, size=%ld [{%s}{%ld}]",
         TauPgiFunc, name, size,
         TauPgiFile, lineno);
 
@@ -447,7 +447,7 @@ extern "C" void __pgi_cu_uploadx_a( cuda_deviceptr devptr, void* hostptr,
 	int dims, __pgi_nv_xdata* desc, long elementsize, long lineno, 
 	char* name, long flags, long async ) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_uploadx_a %s (enqueue a data upload, may be asynchronous) var=%s, dims=%d, desc.devx=%ld, desc.devstride=%ld, desc.hoststride=%ld, desc.size=%ld, elementsize=%ld, flags=%ld, async=%ld [{%s}{%ld}]",
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_uploadx_a %s (enqueue a data upload, may be asynchronous) var=%s, dims=%d, desc.devx=%ld, desc.devstride=%ld, desc.hoststride=%ld, desc.size=%ld, elementsize=%ld, flags=%ld, async=%ld [{%s}{%ld}]",
         TauPgiFunc, name, dims, desc->devx, desc->devstride,
         desc->hoststride, desc->size, elementsize, flags, async, TauPgiFile, lineno);
 
@@ -466,7 +466,7 @@ extern "C" void __pgi_cu_uploadxx( cuda_deviceptr devptr, void* hostptr,
         int dims, __pgi_nv_xdata* desc, long elementsize, long lineno,
         char* name, long flags, cuda_event_info* eventinfo ) {
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_uploadxx %s (actually do the data upload) var=%s, dims=%d, desc.devx=%ld, desc.devstride=%ld, desc.hoststride=%ld, desc.size=%ld, elementsize=%ld, flags=%ld [{%s}{%ld}]",
+  snprintf(sourceinfo, sizeof(sourceinfo),  "__pgi_cu_uploadxx %s (actually do the data upload) var=%s, dims=%d, desc.devx=%ld, desc.devstride=%ld, desc.hoststride=%ld, desc.size=%ld, elementsize=%ld, flags=%ld [{%s}{%ld}]",
         TauPgiFunc, name, dims, desc->devx, desc->devstride,
         desc->hoststride, desc->size, elementsize, flags, TauPgiFile, lineno);
 

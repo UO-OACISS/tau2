@@ -320,8 +320,9 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
 
 #ifdef TAU_PROFILEMEMORY
   {
-    char * buff = new char[strlen(Name)+strlen(Type)+100];
-    sprintf(buff, "%s %s - Heap Memory Used (KB)", Name, Type);
+    const int len = strlen(Name)+strlen(Type)+100;
+    char * buff = new char[len];
+    snprintf(buff, len,  "%s %s - Heap Memory Used (KB)", Name, Type);
     MemoryEvent = new tau::TauUserEvent(buff);
     delete buff;
   }

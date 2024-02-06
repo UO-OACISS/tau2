@@ -11,7 +11,7 @@
   using std::cout;
   using std::cerr;
 #include <cstdio>
-  using std::sprintf;
+  using std::snprintf;
   using std::remove;
 #include <cstring>
   using std::strcmp;
@@ -155,10 +155,11 @@ int main (int argc, char *argv[]) {
 
   // generate output file name if necessary
   if ( !errFlag && (a+1) == argc ) {
-    out_filename = new char[strlen(infile)+5];
+    const int len = strlen(infile)+5;
+    out_filename = new char[len];
     char* dot = (char *) strrchr(infile, '.');
     if ( dot != 0 ) {
-      sprintf(out_filename, "%.*s.mod%s", (int)(dot - infile), infile, dot);
+      snprintf(out_filename, len,  "%.*s.mod%s", (int)(dot - infile), infile, dot);
     
       if ( keepSrcInfo && (lang & L_FORTRAN) ) {
         dot = strrchr(out_filename, '.');
@@ -188,8 +189,9 @@ int main (int argc, char *argv[]) {
   // generate opari resource file if necessary
   if ( !rcfile ) {
     rcfile = "opari.rc";
-    rcdir = (char*)(calloc((strlen(".")+1), sizeof(char)));
-	strcpy(rcdir, ".");
+    const int len = strlen(".")+1;
+    rcdir = (char*)(calloc(len, sizeof(char)));
+	strncpy(rcdir,  ".", len); 
   } else {
     const char* sep = strrchr(rcfile, '/');
     if ( sep ) {
@@ -198,8 +200,9 @@ int main (int argc, char *argv[]) {
       strncpy(rcdir, rcfile, dirlen);
       rcdir[dirlen] = '\0';
     } else {
-      rcdir = (char*)(calloc((strlen(".")+1), sizeof(char)));
-	  strcpy(rcdir, ".");
+      const int len = strlen(".")+1;
+      rcdir = (char*)(calloc(len, sizeof(char)));
+	  strncpy(rcdir,  ".", len); 
     }
   }
 
@@ -213,11 +216,13 @@ int main (int argc, char *argv[]) {
     // F: in rcfile directory
     char* incfile = 0;
     if ( lang & L_FORTRAN ) {
-      incfile = new char[strlen(rcdir)+strlen(infile)+13];
-      sprintf(incfile, "%s/%s.opari.inc", rcdir, infile);
+      const int len = strlen(rcdir)+strlen(infile)+13;
+      incfile = new char[len];
+      snprintf(incfile, len,  "%s/%s.opari.inc", rcdir, infile);
     } else {
-      incfile = new char[strlen(infile)+12];
-      sprintf(incfile, "%s.opari.inc", infile);
+      const int len = strlen(infile)+12;
+      incfile = new char[len];
+      snprintf(incfile, len,  "%s.opari.inc", infile);
     }
 
     // transform

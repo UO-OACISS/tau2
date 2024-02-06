@@ -134,7 +134,7 @@ extern "C" void Tau_start_kokkos_timer(string operation, const char* name, const
      * GPU). Last 17 are the instance id (think stream) */
     // TAU doesn't want the stream.  Not here.
     ExecutionSpaceIdentifier space_id = identifier_from_devid(devID);
-	char buf[256]; sprintf(buf," [type = %s, device = %" PRIu32 "]",
+	char buf[256]; snprintf(buf, sizeof(buf), " [type = %s, device = %" PRIu32 "]",
         devicestring_from_type(space_id.type), space_id.device_id);
 	//string region_name(std::string("Kokkos::parallel_for ")+dem_name+buf);
 	string region_name(operation+" "+dem_name+buf);

@@ -144,7 +144,7 @@ VOID Routine(RTN rtn, VOID *v)
     char buf[1024]; 
     string func_name; 
     if (line && !path.empty()) {
-      sprintf(buf, "%d", line);
+      snprintf(buf, sizeof(buf),  "%d", line);
       func_name = name +string(" [{") + path + string("}{")+buf+string("}]");
     } else {
       func_name = name; 

@@ -24,7 +24,7 @@ PERFDMF_EXPERIMENT* perfdmf_query_experiments(TAUDB_CONNECTION* connection, PERF
    * Fetch rows from table_name, the system catalog of databases
    */
   char my_query[256];
-  sprintf(my_query,"select * from experiment where application = %d", application->id);
+  snprintf(my_query, sizeof(my_query), "select * from experiment where application = %d", application->id);
 #ifdef TAUDB_DEBUG
   printf("'%s'\n",my_query);
 #endif

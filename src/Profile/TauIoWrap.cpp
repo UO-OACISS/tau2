@@ -334,7 +334,7 @@ void Tau_app_report_file_read_start(const char * name, size_t size) {
     if(tfio_read_bytes_map->find(nameStr) == tfio_read_bytes_map->end()) {
         void *event = 0;
         char ename[4096];
-        sprintf(ename,"TensorFlow File Read Bytes <file=%s>", name);
+        snprintf(ename, sizeof(ename), "TensorFlow File Read Bytes <file=%s>", name);
         Tau_get_context_userevent(&event, ename);
         tfio_read_bytes_map->insert(std::pair<std::string, void *>(nameStr, event));
     }
@@ -342,7 +342,7 @@ void Tau_app_report_file_read_start(const char * name, size_t size) {
     if(tfio_read_bw_map->find(nameStr) == tfio_read_bw_map->end()) {
         void *event = 0;
         char ename[4096];
-        sprintf(ename,"TensorFlow File Read Bandwidth <file=%s>", name);
+        snprintf(ename, sizeof(ename), "TensorFlow File Read Bandwidth <file=%s>", name);
         Tau_get_context_userevent(&event, ename);
         tfio_read_bw_map->insert(std::pair<std::string, void *>(nameStr, event));
     }
@@ -389,7 +389,7 @@ void Tau_app_report_file_write_start(const char * name, size_t size) {
     if(tfio_write_bytes_map->find(nameStr) == tfio_write_bytes_map->end()) {
         void *event = 0;
         char ename[4096];
-        sprintf(ename,"TensorFlow File Write Bytes <file=%s>", name);
+        snprintf(ename, sizeof(ename), "TensorFlow File Write Bytes <file=%s>", name);
         Tau_get_context_userevent(&event, ename);
         tfio_write_bytes_map->insert(std::pair<std::string, void *>(nameStr, event));
     }
@@ -397,7 +397,7 @@ void Tau_app_report_file_write_start(const char * name, size_t size) {
     if(tfio_write_bw_map->find(nameStr) == tfio_write_bw_map->end()) {
         void *event = 0;
         char ename[4096];
-        sprintf(ename,"TensorFlow File Write Bandwidth <file=%s>", name);
+        snprintf(ename, sizeof(ename), "TensorFlow File Write Bandwidth <file=%s>", name);
         Tau_get_context_userevent(&event, ename);
         tfio_write_bw_map->insert(std::pair<std::string, void *>(nameStr, event));
     }

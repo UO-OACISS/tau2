@@ -791,8 +791,8 @@ int PapiLayer::initializePerfRAPL(int tid) {
 #endif /* DEBUG_PROF */
     // don't exit(1);
   } else {
-    sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_CORES");
-    sprintf(Tau_rapl_units[numCounters], "Joules");
+    snprintf(Tau_rapl_event_names[numCounters], sizeof(Tau_rapl_event_names[numCounters]),  "rapl::RAPL_ENERGY_CORES");
+    snprintf(Tau_rapl_units[numCounters], sizeof(Tau_rapl_units[numCounters]),  "Joules");
     numCounters++;
   }
 
@@ -804,8 +804,8 @@ int PapiLayer::initializePerfRAPL(int tid) {
 // don't    exit(1);
 #endif /* DEBUG_PROF */
   } else {
-    sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_PKG");
-    sprintf(Tau_rapl_units[numCounters], "Joules");
+    snprintf(Tau_rapl_event_names[numCounters], sizeof(Tau_rapl_event_names[numCounters]),  "rapl::RAPL_ENERGY_PKG");
+    snprintf(Tau_rapl_units[numCounters], sizeof(Tau_rapl_units[numCounters]),  "Joules");
     numCounters++;
 #ifdef TAU_BEACON
     TauBeaconInit();
@@ -819,8 +819,8 @@ int PapiLayer::initializePerfRAPL(int tid) {
 #endif /* DEBUG_PROF */
     // exit(1);
   } else {
-    sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_GPU");
-    sprintf(Tau_rapl_units[numCounters], "Joules");
+    snprintf(Tau_rapl_event_names[numCounters], sizeof(Tau_rapl_event_names[numCounters]),  "rapl::RAPL_ENERGY_GPU");
+    snprintf(Tau_rapl_units[numCounters], sizeof(Tau_rapl_units[numCounters]),  "Joules");
     numCounters++;
   }
 
@@ -828,8 +828,8 @@ int PapiLayer::initializePerfRAPL(int tid) {
   if (PAPI_OK != ret) {
    // OK: this event is only available on servers
   } else {
-    sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_DRAM");
-    sprintf(Tau_rapl_units[numCounters], "Joules");
+    snprintf(Tau_rapl_event_names[numCounters], sizeof(Tau_rapl_event_names[numCounters]),  "rapl::RAPL_ENERGY_DRAM");
+    snprintf(Tau_rapl_units[numCounters], sizeof(Tau_rapl_units[numCounters]),  "Joules");
     numCounters++;
   }
 
@@ -1020,7 +1020,7 @@ void PapiLayer::triggerRAPLPowerEvents(bool in_signal_handler) {
         double value = (((double) tmpCounters[i]) *scalingFactor)/elapsedTimeInSecs;
 	dmesg(1,"Counter: %s: value %.9f, units = W\n", Tau_rapl_event_names[i], value);
 	if (value > 1e-5) {
-	  sprintf(ename,"%s (CPU Socket Power in Watts)", Tau_rapl_event_names[i]);
+	  snprintf(ename, sizeof(ename), "%s (CPU Socket Power in Watts)", Tau_rapl_event_names[i]);
       if (in_signal_handler) {
           TAU_REGISTER_EVENT(ue, ename);
           Tau_userevent_thread(ue, value, 0);

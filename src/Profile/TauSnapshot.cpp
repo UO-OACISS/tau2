@@ -193,7 +193,7 @@ extern "C" int Tau_snapshot_writeMetaDataBlock() {
   //Tau_util_outputDevice *out = Tau_snapshot_getFiles()[tid];
   Tau_util_outputDevice *out = Tau_snapshot_GetFile(0);
   char threadid[4096];
-  sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
+  snprintf(threadid, sizeof(threadid),  "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
 
   TAU_VERBOSE("tid=%d, totalThreads=%d\n", tid, totalThreads);
 
@@ -219,7 +219,7 @@ static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
   Tau_util_outputDevice *out = Tau_snapshot_GetFile(tid);
   
   char threadid[4096];
-  sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
+  snprintf(threadid, sizeof(threadid),  "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
   
   RtsLayer::LockDB();
   int numFunc = TheFunctionDB().size();
@@ -325,7 +325,7 @@ int Tau_snapshot_writeUnifiedBuffer(int tid) {
   Tau_util_outputDevice *out = Tau_snapshot_GetFile(tid);
   
   char threadid[4096];
-  sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
+  snprintf(threadid, sizeof(threadid),  "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
   
   RtsLayer::LockDB();
 
@@ -455,7 +455,7 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
   } else {
 
     char filename[4096];
-    sprintf (filename,"%s/snapshot.%d.%d.%d", profiledir, 
+    snprintf (filename, sizeof(filename), "%s/snapshot.%d.%d.%d", profiledir, 
 	     RtsLayer::myNode(), RtsLayer::myContext(), tid);
     FILE *fp;
 
@@ -463,7 +463,7 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
     char *tst = getcwd(cwd, 1024);
 	if (tst == NULL) {
       char errormsg[4096];
-      sprintf(errormsg,"Error: Could not get current working directory");
+      snprintf(errormsg, sizeof(errormsg), "Error: Could not get current working directory");
       perror(errormsg);
       RtsLayer::UnLockDB();
       return 0;
@@ -472,7 +472,7 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
 
     if ((fp = fopen (filename, "w+")) == NULL) {
       char errormsg[4196];
-      sprintf(errormsg,"Error: Could not create %s",filename);
+      snprintf(errormsg, sizeof(errormsg), "Error: Could not create %s",filename);
       perror(errormsg);
       RtsLayer::UnLockDB();
       return 0;

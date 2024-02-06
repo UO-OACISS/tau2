@@ -107,7 +107,7 @@ char *_program_path()
     std::string tmp(path);
     size_t i = tmp.rfind('/', tmp.length());
     if (i != string::npos) {
-        sprintf(executable, "%s", tmp.substr(i+1, ((tmp.length() - i) - 1)).c_str());
+        snprintf(executable, PATH_MAX,  "%s", tmp.substr(i+1, ((tmp.length() - i) - 1)).c_str());
     }
     return executable;
 #endif

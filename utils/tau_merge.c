@@ -980,7 +980,7 @@ int main(int argc, char *argv[])
 	  if (edfspecified == FALSE)
 	  { /* use default edf file names  "events.*.edf" */
 	    char eventfilename[2048];
-	    sprintf(eventfilename, "events.%d.edf", trcdes[numtrc].nid); 
+	    snprintf(eventfilename, sizeof(eventfilename),  "events.%d.edf", trcdes[numtrc].nid); 
 	    open_edf_file(eventfilename, numtrc, TRUE);
 	  }
 	  if (edfspecified && numtrc >= numedfprocessed) {
@@ -1026,11 +1026,12 @@ int main(int argc, char *argv[])
   }
   else
   {
-    trcfile = (char *) malloc ((strlen(argv[argc-1])+5) * sizeof(char));
+    const int len = (strlen(argv[argc-1])+5) * sizeof(char);
+    trcfile = (char *) malloc (len);
     if ( strcmp ((argv[argc-1])+strlen(argv[argc-1])-4, ".trc") == 0 )
-      strcpy (trcfile, argv[argc-1]);
+      strncpy (trcfile,  argv[argc-1], len); 
     else
-      sprintf (trcfile, "%s.trc", argv[argc-1]);
+      snprintf (trcfile, len,  "%s.trc", argv[argc-1]);
 
     if ( access (trcfile, F_EXISTS) == 0 && isatty(2) )
     {

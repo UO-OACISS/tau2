@@ -129,7 +129,7 @@ void ppmwrite(char *fname, field iterations, int maxiter,
   double factor = double(maxiter) / table.numColors();
   const int buflen = 2048;
   char buf[buflen];
-  int b = sprintf(buf, "P6 %5d %5d %d\n", width, height, table.shades()-1);
+  int b = snprintf(buf, sizeof(buf),  "P6 %5d %5d %d\n", width, height, table.shades()-1);
   int total = 0;
 
   for (int iy=0; iy<height; ++iy) {

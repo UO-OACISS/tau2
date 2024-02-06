@@ -1859,9 +1859,9 @@ extern "C" int Tau_collate_writeProfile_MPI() {
 
 
   if (rank == 0) {
-    sprintf (histFileName, "%s/tau.histograms.%d", profiledir, 
+    snprintf (histFileName, sizeof(histFileName),  "%s/tau.histograms.%d", profiledir, 
 	     invocationIndex);
-    sprintf (histFileNameTmp, "%s/.temp.tau.histograms.%d", profiledir,
+    snprintf (histFileNameTmp, sizeof(histFileNameTmp),  "%s/.temp.tau.histograms.%d", profiledir,
 	     invocationIndex);
     histoFile = fopen(histFileNameTmp, "w");
     fprintf (histoFile, "%d\n", numItems);
@@ -1940,16 +1940,16 @@ extern "C" int Tau_collate_writeProfile_MPI() {
     char aggregateMeta[512];
     char histogramMeta[512];
     char monitoringMeta[512];
-    sprintf (profileNameTmp, "%s/.temp.mean.%d.0.0", profiledir,
+    snprintf (profileNameTmp, sizeof(profileNameTmp),  "%s/.temp.mean.%d.0.0", profiledir,
 	     invocationIndex);
-    sprintf (profileName, "%s/mean.%d.0.0", profiledir, invocationIndex);
-    sprintf(unifyMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
+    snprintf (profileName, sizeof(profileName),  "%s/mean.%d.0.0", profiledir, invocationIndex);
+    snprintf(unifyMeta, sizeof(unifyMeta), "<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
 	    "Unification Time", ((double)((double)end_unify-start_unify))/1000000.0f);
-    sprintf(aggregateMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
+    snprintf(aggregateMeta, sizeof(aggregateMeta), "<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
 	    "Mean Aggregation Time", ((double)((double)end_aggregate-start_aggregate))/1000000.0f);
-    sprintf(histogramMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
+    snprintf(histogramMeta, sizeof(histogramMeta), "<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
 	    "Histogramming Time", ((double)((double)end_hist-start_hist))/1000000.0f);
-    sprintf(monitoringMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
+    snprintf(monitoringMeta, sizeof(monitoringMeta), "<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
 	    "Total Monitoring Time", ((double)((double)end-start))/1000000.0f);
     FILE *profile = fopen(profileNameTmp, "w");
     // *CWL* - templated_functions_MULTI_<metric name> should be the
@@ -2115,9 +2115,9 @@ extern "C" int Tau_collate_writeProfile_SHMEM() {
 
 
   if (rank == 0) {
-    sprintf (histFileName, "%s/tau.histograms.%d", profiledir, 
+    snprintf (histFileName, sizeof(histFileName),  "%s/tau.histograms.%d", profiledir, 
 	     invocationIndex);
-    sprintf (histFileNameTmp, "%s/.temp.tau.histograms.%d", profiledir,
+    snprintf (histFileNameTmp, sizeof(histFileNameTmp),  "%s/.temp.tau.histograms.%d", profiledir,
 	     invocationIndex);
     histoFile = fopen(histFileNameTmp, "w");
     fprintf (histoFile, "%d\n", numItems);
@@ -2196,16 +2196,16 @@ extern "C" int Tau_collate_writeProfile_SHMEM() {
     char aggregateMeta[512];
     char histogramMeta[512];
     char monitoringMeta[512];
-    sprintf (profileNameTmp, "%s/.temp.mean.%d.0.0", profiledir,
+    snprintf (profileNameTmp, sizeof(profileNameTmp),  "%s/.temp.mean.%d.0.0", profiledir,
 	     invocationIndex);
-    sprintf (profileName, "%s/mean.%d.0.0", profiledir, invocationIndex);
-    sprintf(unifyMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
+    snprintf (profileName, sizeof(profileName),  "%s/mean.%d.0.0", profiledir, invocationIndex);
+    snprintf(unifyMeta, sizeof(unifyMeta), "<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
 	    "Unification Time", ((double)((double)end_unify-start_unify))/1000000.0f);
-    sprintf(aggregateMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
+    snprintf(aggregateMeta, sizeof(aggregateMeta), "<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
 	    "Mean Aggregation Time", ((double)((double)end_aggregate-start_aggregate))/1000000.0f);
-    sprintf(histogramMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
+    snprintf(histogramMeta, sizeof(histogramMeta), "<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
 	    "Histogramming Time", ((double)((double)end_hist-start_hist))/1000000.0f);
-    sprintf(monitoringMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
+    snprintf(monitoringMeta, sizeof(monitoringMeta), "<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
 	    "Total Monitoring Time", ((double)((double)end-start))/1000000.0f);
     FILE *profile = fopen(profileNameTmp, "w");
     // *CWL* - templated_functions_MULTI_<metric name> should be the

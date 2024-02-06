@@ -369,8 +369,9 @@ char * get_proxy_name(unsigned long ip) {
     tau_bfd_handle_t & OmpbfdUnitHandle = OmpTheBfdUnitHandle();
     if (ip == 0) {
         //printf("IP IS ZERO!!!\n"); fflush(stdout); //abort();
-        location = (char*)malloc(strlen(__UNKNOWN_ADDR__)+1);
-        strcpy(location, __UNKNOWN_ADDR__);
+        const int len = strlen(__UNKNOWN_ADDR__)+1;
+        location = (char*)malloc(len);
+        strncpy(location,  __UNKNOWN_ADDR__, len); 
         return location;
     }
     //TAU_OPENMP_SET_LOCK;
@@ -400,13 +401,13 @@ char * get_proxy_name(unsigned long ip) {
             // Build routine name for TAU function info
             unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
             routine = (char*)malloc(size);
-            sprintf(routine, "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
+            snprintf(routine, size,  "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
         } else {
         char addrString[64];
-        sprintf(addrString, "%p", (void*)ip);
+        snprintf(addrString, sizeof(addrString),  "%p", (void*)ip);
             unsigned int size = strlen(__BFD_UNKNOWN__) + strlen(addrString) + 2;
             routine = (char*)malloc(size);
-            sprintf(routine, "%s %s", __BFD_UNKNOWN__, addrString);
+            snprintf(routine, size,  "%s %s", __BFD_UNKNOWN__, addrString);
         }
     node->location = routine;
         TAU_OPENMP_SET_LOCK;
@@ -414,8 +415,9 @@ char * get_proxy_name(unsigned long ip) {
         TAU_OPENMP_UNSET_LOCK;
     }
 
-    location = (char*)malloc(strlen(node->location)+1);
-    strcpy(location, node->location);
+    const int len = strlen(node->location)+1;
+    location = (char*)malloc(len);
+    strncpy(location,  node->location, len); 
     return location;
 }
 #else /* defined (TAU_BFD) */
@@ -424,12 +426,13 @@ char * get_proxy_name(unsigned long ip) {
     char * location = NULL;
     if (ip == 0) {
         //printf("IP IS ZERO!!!\n"); fflush(stdout); //abort();
-        location = (char*)malloc(strlen(__UNKNOWN_ADDR__)+1);
-        strcpy(location, __UNKNOWN_ADDR__);
+        const int len = strlen(__UNKNOWN_ADDR__)+1;
+        location = (char*)malloc(len);
+        strncpy(location,  __UNKNOWN_ADDR__, len); 
         return location;
     }
     location = (char*)malloc(128);
-    sprintf(location, "UNRESOLVED ADDR %p", (void*)ip);
+    snprintf(location, 128,  "UNRESOLVED ADDR %p", (void*)ip);
     return location;
 }
 #endif /* defined (TAU_BFD) */
@@ -470,13 +473,13 @@ char * show_backtrace (int tid, int offset) {
                 // Build routine name for TAU function info
                 unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
                 routine = (char*)malloc(size);
-                sprintf(routine, "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
+                snprintf(routine, size,  "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
               } else {
             char addrString[64];
-            sprintf(addrString, "%p", (void*)ip);
+            snprintf(addrString, sizeof(addrString),  "%p", (void*)ip);
                 unsigned int size = strlen(__BFD_UNKNOWN__) + strlen(addrString) + 2;
                 routine = (char*)malloc(size);
-                sprintf(routine, "%s %s", __BFD_UNKNOWN__, addrString);
+                snprintf(routine, size,  "%s %s", __BFD_UNKNOWN__, addrString);
               }
               node->location = routine;
             //TAU_OPENMP_SET_LOCK;
@@ -520,8 +523,9 @@ char * show_backtrace (int tid, int offset) {
                 // stop unwinding
                 basedepth = index;
             }
-            location = (char*)malloc(strlen(node->location)+1);
-            strcpy(location, node->location);
+            const int len = strlen(node->location)+1;
+            location = (char*)malloc(len);
+            strncpy(location,  node->location, len); 
             break;
         }
     }
@@ -632,7 +636,7 @@ extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid);
     char * tmpStr = Tau_get_my_region_context(tid, forking, task);
     contextLength = strlen(tmpStr);
     regionIDstr = (char*)malloc(contextLength + 32);
-    sprintf(regionIDstr, "%s: %s", state, tmpStr);
+    snprintf(regionIDstr, contextLength,  "%s: %s", state, tmpStr);
     //fprintf(stderr, "%d: start '%s'\n", tid, regionIDstr); fflush(stderr);
     Tau_pure_start_openmp_task(regionIDstr, tid);
 #if defined(TAU_USE_OMPT) 
@@ -658,7 +662,7 @@ extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid);
         char * tmpStr = Tau_get_my_region_context(tid, 0, task);
         contextLength = strlen(tmpStr);
         regionIDstr = (char*)malloc(contextLength + 32);
-        sprintf(regionIDstr, "%s: %s", state, tmpStr);
+        snprintf(regionIDstr, contextLength,  "%s: %s", state, tmpStr);
     //fprintf(stderr, "%d: stop '%s'\n", tid, regionIDstr); fflush(stderr);
         Tau_pure_stop_openmp_task(regionIDstr, tid);
         free(regionIDstr); 

@@ -1138,7 +1138,7 @@ void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
   for (i=0; i<limit; i++) {
     worldrank = TauTranslateRankToWorld(newcomm, i);
 /*     printf ("comm %p has world member %d\n", newcommhandle, worldrank); */
-    sprintf (catbuffer, "%d ", worldrank);
+    snprintf (catbuffer, sizeof(catbuffer),  "%d ", worldrank);
     strcat(buffer, catbuffer);
   }
   if (limit < newCommSize) {
@@ -1146,7 +1146,7 @@ void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
   }
 
 /*   printf ("buffer is %s\n", buffer); */
-  sprintf (namebuffer, "MPI_Comm %p", newcommhandle);
+  snprintf (namebuffer, sizeof(namebuffer),  "MPI_Comm %p", newcommhandle);
   TAU_METADATA(namebuffer, buffer);
 }
 #endif /* TAU_EXP_TRACK_COMM */
@@ -1940,7 +1940,7 @@ int mkdirp(const char *path) {
             errno = ENAMETOOLONG;
             return -1;
         }
-    strcpy(_path, path);
+    strncpy(_path,  path, sizeof(_path)); 
 
     /* Iterate the string */
     for (p = _path + 1; *p; p++) {
@@ -4053,16 +4053,16 @@ char * Tau_printRanks(void *comm_ptr) {
   for ( i = 0; i < limit; i++) {
     worldrank = TauTranslateRankToWorld(comm, i);
     if (i == 0) {
-      sprintf(rankbuffer, "ranks: %d", worldrank);
+      snprintf(rankbuffer, sizeof(rankbuffer),  "ranks: %d", worldrank);
     } else {
-      sprintf(rankbuffer, ", %d", worldrank);
+      snprintf(rankbuffer, sizeof(rankbuffer),  ", %d", worldrank);
     }
     strcat(name, rankbuffer);
   }
   if (limit < size) {
     strcat(name, " ...");
   }
-  sprintf(rankbuffer,"> <addr=%p", comm_ptr);
+  snprintf(rankbuffer, sizeof(rankbuffer), "> <addr=%p", comm_ptr);
   strcat(name, rankbuffer);
   return strdup(name);
 

@@ -153,8 +153,9 @@ assignString( char**      destination,
               const char* source )
 {
     assert( source );
-    *destination = malloc( strlen( source ) * sizeof( char ) + 1 );
-    strcpy( *destination, source );
+    const int len = strlen( source ) * sizeof( char ) + 1;
+    *destination = malloc( len );
+    strncpy( *destination,  source , len); 
 }
 
 

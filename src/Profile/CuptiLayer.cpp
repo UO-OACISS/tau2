@@ -116,7 +116,7 @@ CuptiCounterEvent::CuptiCounterEvent(int device_n, int event_n, const char * nam
     }
     if (string(buff).compare("event_name") == 0) {
         //sprintf(buff, "%s.%d", name, event);
-        sprintf(buff, "%s", name);
+        snprintf(buff, sizeof(buff),  "%s", name);
         //sprintf(buff, "CUpti_EventID.%s", name);
     }
     event_name = string(buff);
@@ -737,7 +737,7 @@ void Tau_CuptiLayer_Initialize_Map(int off)
                 size_t namelen = 1024;
                 err = cuptiEventGetAttribute(eventIDs[k], CUPTI_EVENT_ATTR_NAME, &namelen, name);
                 CHECK_CUPTI_ERROR(err, "cuptiEventGetAttribute");
-                sprintf(name, "%s.%d", name, eventIDs[k]);
+                snprintf(name, sizeof(name),  "%s.%d", name, eventIDs[k]);
 
                 CuptiCounterEvent* ev = new CuptiCounterEvent(i, eventIDs[k], name);
                 Tau_CuptiLayer_Counter_Map().insert(std::make_pair(ev->tag, ev));

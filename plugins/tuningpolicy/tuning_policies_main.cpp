@@ -591,9 +591,9 @@ Rule *rules[MAX_NB_RULES];
 	if(op->is_pvar_array == 1) { \
           unsigned long long int *value_array = (unsigned long long int *)calloc(tau_pvar_count[op->array_size],sizeof(unsigned long long int)); \
           char *value_cvar_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
-          strcpy(value_cvar_string,""); \
+          strncpy(value_cvar_string, "", sizeof(char)*TAU_NAME_LENGTH);  \
           char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
-          strcpy(value_cvar_value_string,""); \
+          strncpy(value_cvar_value_string, "", sizeof(char)*TAU_NAME_LENGTH);  \
           FOR(op->array_size) { \
             INNEROP(op); \
             for(j=0; j<tau_pvar_count[op->num_pvars]; j++) { \
@@ -608,9 +608,9 @@ Rule *rules[MAX_NB_RULES];
         } else { \
           unsigned long long int value; \
 	  char *value_cvar_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
-          strcpy(value_cvar_string,""); \
+          strncpy(value_cvar_string, "", sizeof(char)*TAU_NAME_LENGTH);  \
           char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
-          strcpy(value_cvar_value_string,""); \
+          strncpy(value_cvar_value_string, "", sizeof(char)*TAU_NAME_LENGTH);  \
           INNEROP(op); \
           for(j=0; j<tau_pvar_count[op->num_pvars]; j++) { \
             if(i == (tau_pvar_count[j]))  { \
@@ -855,16 +855,16 @@ void outerop(Op *op,
   if(op->is_pvar_array == 1) { 
     unsigned long long int *value_array = (unsigned long long int *)calloc(pvar_count[op->array_size],sizeof(unsigned long long int)); 
     char *value_cvar_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
-    strcpy(value_cvar_string,""); 
+    strncpy(value_cvar_string, "", sizeof(char)*TAU_NAME_LENGTH);  
     char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
-    strcpy(value_cvar_value_string,""); 
+    strncpy(value_cvar_value_string, "", sizeof(char)*TAU_NAME_LENGTH);  
     for(i=0; i<op->array_size; i++) {
       /* Call inner operation */
       innerop(op, pvar_value_buffer, 1, i); 
       for(j=0; j<pvar_count[op->num_pvars]; j++) { 
         if(i == (pvar_count[j])) { 
-          sprintf(metric_string, "%s[%d]", op->result, i); 
-          sprintf(value_string, "%llu", value_array[i]); 
+          snprintf(metric_string, sizeof(metric_string),  "%s[%d]", op->result, i); 
+          snprintf(value_string, sizeof(value_string),  "%llu", value_array[i]); 
         } 
       } 
       strcat(value_cvar_string,metric_string); 
@@ -873,15 +873,15 @@ void outerop(Op *op,
   } else { 
     unsigned long long int value; 
     char *value_cvar_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
-    strcpy(value_cvar_string,""); 
+    strncpy(value_cvar_string, "", sizeof(char)*TAU_NAME_LENGTH);  
     char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
-    strcpy(value_cvar_value_string,""); 
+    strncpy(value_cvar_value_string, "", sizeof(char)*TAU_NAME_LENGTH);  
     /* Call inner operation */
     innerop(op, pvar_value_buffer, 0, -1); 
     for(j=0; j<pvar_count[op->num_pvars]; j++) { 
       if(i == (pvar_count[j]))  { 
-        sprintf(metric_string,"%s", op->result); 
-        sprintf(value_string, "%llu", value); 
+        snprintf(metric_string, sizeof(metric_string), "%s", op->result); 
+        snprintf(value_string, sizeof(value_string),  "%llu", value); 
       } 
    } 
    strcat(value_cvar_string,metric_string); 
@@ -1674,9 +1674,9 @@ int plugin_tuning_policy(int argc, void **args) {
       }
       reduced_value_array = (unsigned long long int *)calloc(sizeof(unsigned long long int), tau_pvar_count[pvar_max_vbuf_usage_index]);
       reduced_value_cvar_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH);
-      strcpy(reduced_value_cvar_string, "");
+      strncpy(reduced_value_cvar_string,  "", sizeof(char)*TAU_NAME_LENGTH); 
       reduced_value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH);
-      strcpy(reduced_value_cvar_value_string, "");
+      strncpy(reduced_value_cvar_value_string,  "", sizeof(char)*TAU_NAME_LENGTH); 
   }
 
   if((pvar_max_vbuf_usage_index == -1) || (pvar_vbuf_allocated_index == -1)) {
@@ -1702,11 +1702,11 @@ int plugin_tuning_policy(int argc, void **args) {
     }
 
     if(i == (tau_pvar_count[pvar_max_vbuf_usage_index])) {
-      sprintf(metric_string,"%s[%d]", CVAR_SPECIFYING_REDUCED_POOL_SIZE, i);
-      sprintf(value_string,"%llu", reduced_value_array[i]);
+      snprintf(metric_string, sizeof(metric_string), "%s[%d]", CVAR_SPECIFYING_REDUCED_POOL_SIZE, i);
+      snprintf(value_string, sizeof(value_string), "%llu", reduced_value_array[i]);
     } else {
-      sprintf(metric_string,"%s[%d],", CVAR_SPECIFYING_REDUCED_POOL_SIZE, i);
-      sprintf(value_string,"%llu,", reduced_value_array[i]);
+      snprintf(metric_string, sizeof(metric_string), "%s[%d],", CVAR_SPECIFYING_REDUCED_POOL_SIZE, i);
+      snprintf(value_string, sizeof(value_string), "%llu,", reduced_value_array[i]);
     }
     
     strcat(reduced_value_cvar_string, metric_string);
@@ -1715,13 +1715,13 @@ int plugin_tuning_policy(int argc, void **args) {
   }
 
   if(has_threshold_been_breached_in_any_pool) {
-    sprintf(metric_string,"%s,%s", CVAR_ENABLING_POOL_CONTROL, reduced_value_cvar_string);
-    sprintf(value_string,"%d,%s", 1, reduced_value_cvar_value_string);
+    snprintf(metric_string, sizeof(metric_string), "%s,%s", CVAR_ENABLING_POOL_CONTROL, reduced_value_cvar_string);
+    snprintf(value_string, sizeof(value_string), "%d,%s", 1, reduced_value_cvar_value_string);
     //dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
     //Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
   } else {
-    sprintf(metric_string,"%s", CVAR_ENABLING_POOL_CONTROL);
-    sprintf(value_string,"%d", 0);
+    snprintf(metric_string, sizeof(metric_string), "%s", CVAR_ENABLING_POOL_CONTROL);
+    snprintf(value_string, sizeof(value_string), "%d", 0);
     //dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
     //Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
   }

@@ -237,7 +237,7 @@ int main( int argc, char **argv )
                 exit( 1 );
             }
             else {
-                strcpy( offended_rec, offending_rec );
+                strncpy( offended_rec,  offending_rec , sizeof( offended_rec)); 
                 prev_dobj_etime = curr_dobj_etime;
             }
 
@@ -301,7 +301,7 @@ int main( int argc, char **argv )
                 exit( 1 );
             }
             else {
-                strcpy( offended_rec, offending_rec );
+                strncpy( offended_rec,  offending_rec , sizeof( offended_rec)); 
                 prev_dobj_etime = curr_dobj_etime;
             }
 

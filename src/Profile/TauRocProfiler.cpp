@@ -1214,44 +1214,44 @@ bool HsaRsrcFactory::PrintGpuAgents(const std::string& header) {
     std::clog << ">> Shader Arrays per SE : " << agent_info->shader_arrays_per_se << std::endl;
 */
 
-    sprintf(key, "ROCM_AGENT_%d_NAME", idx);
-    sprintf(value, "%s", agent_info->name);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_NAME", idx);
+    snprintf(value, sizeof(value),  "%s", agent_info->name);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_IS_APU", idx);
-    sprintf(value, "%d", agent_info->is_apu);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_IS_APU", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->is_apu);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_HSA_PROFILE", idx);
-    sprintf(value, "%d", agent_info->profile);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_HSA_PROFILE", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->profile);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_MAX_WAVE_SIZE", idx);
-    sprintf(value, "%d", agent_info->max_wave_size);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_MAX_WAVE_SIZE", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->max_wave_size);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_MAX_QUEUE_SIZE", idx);
-    sprintf(value, "%d", agent_info->max_queue_size);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_MAX_QUEUE_SIZE", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->max_queue_size);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_CU_NUMBER", idx);
-    sprintf(value, "%d", agent_info->cu_num);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_CU_NUMBER", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->cu_num);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_WAVES_PER_CU", idx);
-    sprintf(value, "%d", agent_info->waves_per_cu);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_WAVES_PER_CU", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->waves_per_cu);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_SIMDs_PER_CU", idx);
-    sprintf(value, "%d", agent_info->simds_per_cu);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_SIMDs_PER_CU", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->simds_per_cu);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_SE_NUMBER", idx);
-    sprintf(value, "%d", agent_info->se_num);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_SE_NUMBER", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->se_num);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_SHADER_ARRAYS_PER_SE", idx);
-    sprintf(value, "%d", agent_info->shader_arrays_per_se);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_SHADER_ARRAYS_PER_SE", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->shader_arrays_per_se);
     TAU_METADATA(key, value);
 
   }

@@ -254,7 +254,7 @@
 
 #define TAU_METADATA(name, value)               Tau_metadata(name, value);
 #define TAU_METADATA_ITERATION(name,iteration,value) {char meta_buf[1024]; \
-        sprintf(meta_buf,"%s_|_%d",name,iteration); \
+        snprintf(meta_buf, sizeof(meta_buf), "%s_|_%d",name,iteration); \
         TAU_METADATA(meta_buf,value);}
 
 #define TAU_CONTEXT_METADATA(name, value)       Tau_context_metadata(name, value);
@@ -276,7 +276,7 @@
 #define TAU_METADATA_STRING(name, value)   Tau_metadata_value_t* name = NULL; \
         Tau_metadata_create_value(&name, TAU_METADATA_TYPE_STRING); \
         name->data.cval = malloc((sizeof(char))*(strlen(value))); \
-        strcpy(name->data.cval, value);
+        strncpy(name->data.cval,  value, strlen(value)); 
 
 #define TAU_METADATA_INTEGER(name, value)       Tau_metadata_value_t* name = NULL; \
         Tau_metadata_create_value(&name, TAU_METADATA_TYPE_INTEGER); \

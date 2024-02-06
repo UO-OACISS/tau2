@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     int world_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
-    sprintf(filename, "%d.txt", world_rank);
+    snprintf(filename, sizeof(filename),  "%d.txt", world_rank);
     ptr = fopen(filename, "w");
 
     Tau_enable_plugin_for_trigger_event(TAU_PLUGIN_EVENT_TRIGGER, load_balance_module, 0);

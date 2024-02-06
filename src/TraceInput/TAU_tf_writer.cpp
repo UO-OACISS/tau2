@@ -59,8 +59,9 @@ extern "C" {
 
 
   static char* getNewStringPointer(const char* instr){
-     char* ptr= (char*)(calloc((strlen(instr)+1), sizeof(char)));
-     strcpy(ptr, instr);
+     const int len = strlen(instr)+1;
+     char* ptr= (char*)(calloc(len, sizeof(char)));
+     strncpy(ptr,  instr, len); 
      return ptr;
   }
 

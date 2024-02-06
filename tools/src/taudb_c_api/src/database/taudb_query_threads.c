@@ -73,11 +73,11 @@ TAUDB_THREAD* taudb_query_threads_2012(TAUDB_CONNECTION* connection, TAUDB_TRIAL
    * Fetch rows from table_name, the system catalog of databases
    */
   char my_query[256];
-  sprintf(my_query,"select * from thread where trial = %d", trial->id);
+  snprintf(my_query, sizeof(my_query), "select * from thread where trial = %d", trial->id);
   if (derived) {
-    sprintf(my_query,"%s and thread_index < 0 order by thread_index desc", my_query);
+    snprintf(my_query, sizeof(my_query), "%s and thread_index < 0 order by thread_index desc", my_query);
   } else {
-    sprintf(my_query,"%s and thread_index > -1 order by thread_index asc", my_query);
+    snprintf(my_query, sizeof(my_query), "%s and thread_index > -1 order by thread_index asc", my_query);
   }
 #ifdef TAUDB_DEBUG
   printf("Query: %s\n", my_query);
@@ -197,24 +197,24 @@ void taudb_save_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
     // make array of 6 character pointers
     const char* paramValues[6] = {0};
     char trialid[32] = {0};
-    sprintf(trialid, "%d", trial->id);
+    snprintf(trialid, sizeof(trialid),  "%d", trial->id);
     paramValues[0] = trialid;
     char node_rank[32] = {0};
-    sprintf(node_rank, "%d", thread->node_rank);
+    snprintf(node_rank, sizeof(node_rank),  "%d", thread->node_rank);
     paramValues[1] = node_rank;
     char context_rank[32] = {0};
-    sprintf(context_rank, "%d", thread->context_rank);
+    snprintf(context_rank, sizeof(context_rank),  "%d", thread->context_rank);
     paramValues[2] = context_rank;
     char thread_rank[32] = {0};
-    sprintf(thread_rank, "%d", thread->thread_rank);
+    snprintf(thread_rank, sizeof(thread_rank),  "%d", thread->thread_rank);
     paramValues[3] = thread_rank;
     char thread_index[32] = {0};
-    sprintf(thread_index, "%d", thread->index);
+    snprintf(thread_index, sizeof(thread_index),  "%d", thread->index);
     paramValues[4] = thread_index;
 
 	char id[32] = {0};
 	if(update && thread->id > 0) {
-		sprintf(id, "%d", thread->id);
+		snprintf(id, sizeof(id),  "%d", thread->id);
 		paramValues[5] = id;
 	}
 

@@ -100,7 +100,7 @@ FILE *fopen(const char *path, const char *mode) {
   }
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"fopen\", \"args\": {\"path\": \"%s\", \"mode\": \"%s\", \"return\": \"%p\"}", path, mode, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"fopen\", \"args\": {\"path\": \"%s\", \"mode\": \"%s\", \"return\": \"%p\"}", path, mode, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -140,7 +140,7 @@ FILE *fopen64(const char *path, const char *mode) {
   }
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"fopen64\", \"args\": {\"path\": \"%s\", \"mode\": \"%s\", \"return\": \"%p\"}", path, mode, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"fopen64\", \"args\": {\"path\": \"%s\", \"mode\": \"%s\", \"return\": \"%p\"}", path, mode, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -178,7 +178,7 @@ FILE *fdopen(int fd, const char *mode) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fd);
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"fdopen\", \"args\": {\"fd\": %d, \"mode\": \"%s\", \"pathname\": \"%s\", \"return\": \"%p\"}", fd, mode, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"fdopen\", \"args\": {\"fd\": %d, \"mode\": \"%s\", \"pathname\": \"%s\", \"return\": \"%p\"}", fd, mode, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -217,7 +217,7 @@ FILE *freopen(const char *path, const char *mode, FILE *stream) {
   }
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"freopen\", \"args\": {\"path\": \"%s\", \"mode\": \"%s\", \"fd\": \"%p\", \"return\": \"%p\"}", path, mode, stream, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"freopen\", \"args\": {\"path\": \"%s\", \"mode\": \"%s\", \"fd\": \"%p\", \"return\": \"%p\"}", path, mode, stream, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -255,7 +255,7 @@ int fclose(FILE *fp) {
   ret = _fclose(fp);
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"fclose\", \"args\": {\"fd\": \"%p\", \"return\": %d, \"pathname\": \"%s\"}", fp, ret, tmp);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"fclose\", \"args\": {\"fd\": \"%p\", \"return\": %d, \"pathname\": \"%s\"}", fp, ret, tmp);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -326,7 +326,7 @@ int fprintf(FILE *stream, const char *format, ...) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fileno(stream));
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"fprintf\", \"args\": {\"fd\": \"%p\", \"pathname\": \"%s\", \"return\": %d}", stream, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"fprintf\", \"args\": {\"fd\": \"%p\", \"pathname\": \"%s\", \"return\": %d}", stream, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -395,7 +395,7 @@ int fscanf(FILE *stream, const char *format, ...) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fileno(stream));
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"fscanf\", \"args\": {\"fd\": \"%p\", \"pathname\": \"%s\", \"return\": %d}", stream, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"fscanf\", \"args\": {\"fd\": \"%p\", \"pathname\": \"%s\", \"return\": %d}", stream, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -453,7 +453,7 @@ size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fileno(stream));
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"fwrite\", \"args\": {\"ptr\": \"%p\", \"size\": %" PRIu64 ", \"nmemb\": %" PRIu64 ", \"fd\": \"%p\", \"pathname\": \"%s\", \"return\": %lu}", ptr, size, nmemb, stream, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"fwrite\", \"args\": {\"ptr\": \"%p\", \"size\": %" PRIu64 ", \"nmemb\": %" PRIu64 ", \"fd\": \"%p\", \"pathname\": \"%s\", \"return\": %lu}", ptr, size, nmemb, stream, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -509,7 +509,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fileno(stream));
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"read\", \"args\": {\"ptr\": \"%p\", \"size\": %" PRIu64 ", \"nmemb\": %" PRIu64 ", \"fd\": \"%p\", \"pathname\": \"%s\", \"return\": %d}", ptr, size, nmemb, stream, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"read\", \"args\": {\"ptr\": \"%p\", \"size\": %" PRIu64 ", \"nmemb\": %" PRIu64 ", \"fd\": \"%p\", \"pathname\": \"%s\", \"return\": %d}", ptr, size, nmemb, stream, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -586,7 +586,7 @@ off_t lseek(int fd, off_t offset, int whence) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fd);
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"lseek\", \"args\": {\"fd\": %d, \"offset\": %" PRId64 ", \"whence\": %d, \"pathname\": \"%s\", \"return\": %" PRId64 "}", fd, offset, whence, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"lseek\", \"args\": {\"fd\": %d, \"offset\": %" PRId64 ", \"whence\": %d, \"pathname\": \"%s\", \"return\": %" PRId64 "}", fd, offset, whence, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -619,7 +619,7 @@ off64_t lseek64(int fd, off64_t offset, int whence) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fd);
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"lseek64\", \"args\": {\"fd\": %d, \"offset\": %" PRId64 ", \"whence\": %d, \"pathname\": \"%s\", \"return\": %" PRId64 "}", fd, offset, whence, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"lseek64\", \"args\": {\"fd\": %d, \"offset\": %" PRId64 ", \"whence\": %d, \"pathname\": \"%s\", \"return\": %" PRId64 "}", fd, offset, whence, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -651,7 +651,7 @@ int fseek(FILE *stream, long offset, int whence) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fileno(stream));
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"fseek\", \"args\": {\"fd\": \"%p\", \"pathname\": \"%s\", \"offset\": %ld, \"whence\": %d, \"pathname\": \"%s\", \"return\": %d}", stream, tmp, offset, whence, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"fseek\", \"args\": {\"fd\": \"%p\", \"pathname\": \"%s\", \"offset\": %ld, \"whence\": %d, \"pathname\": \"%s\", \"return\": %d}", stream, tmp, offset, whence, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -682,7 +682,7 @@ void rewind(FILE *stream) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fileno(stream));
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"rewind, \"args\": {\"fd\": \"%p\", \"pathname\": \"%s\"}", stream, tmp);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"rewind, \"args\": {\"fd\": \"%p\", \"pathname\": \"%s\"}", stream, tmp);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -738,7 +738,7 @@ ssize_t write (int fd, const void *buf, size_t count) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fd);
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"write\", \"args\": {\"fd\": %d, \"buf\": \"%p\", \"count\": %" PRIu64 " , \"pathname\": \"%s\", \"return\": %lu}", fd, buf, count, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"write\", \"args\": {\"fd\": %d, \"buf\": \"%p\", \"count\": %" PRIu64 " , \"pathname\": \"%s\", \"return\": %lu}", fd, buf, count, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -794,7 +794,7 @@ ssize_t pwrite (int fd, const void *buf, size_t count, off_t offset) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fd);
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"pwrite\", \"args\": {\"fd\": %d, \"buf\": \"%p\", \"count\": %" PRIu64 " , \"pathname\": \"%s\", \"return\": %lu}", fd, buf, count, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"pwrite\", \"args\": {\"fd\": %d, \"buf\": \"%p\", \"count\": %" PRIu64 " , \"pathname\": \"%s\", \"return\": %lu}", fd, buf, count, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -849,7 +849,7 @@ ssize_t read (int fd, void *buf, size_t count) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fd);
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"read\", \"args\": {\"fd\": %d, \"buf\": \"%p\", \"count\": %" PRIu64 ", \"pathname\": \"%s\", \"return\": %lu}", fd, buf, count, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"read\", \"args\": {\"fd\": %d, \"buf\": \"%p\", \"count\": %" PRIu64 ", \"pathname\": \"%s\", \"return\": %lu}", fd, buf, count, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -905,7 +905,7 @@ ssize_t pread (int fd, void *buf, size_t count, off_t offset) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fd);
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"pread\", \"args\": {\"fd\": %d, \"buf\": \"%p\", \"count\": %" PRIu64 ", \"offset\": %" PRId64 ", \"pathname\": \"%s\", \"return\": %lu}", fd, buf, count, offset, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"pread\", \"args\": {\"fd\": %d, \"buf\": \"%p\", \"count\": %" PRIu64 ", \"offset\": %" PRId64 ", \"pathname\": \"%s\", \"return\": %lu}", fd, buf, count, offset, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -966,7 +966,7 @@ ssize_t readv (int fd, const struct iovec *vec, int count) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fd);
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"readv\", \"args\": {\"fd\": %d, \"vec\": \"%p\", \"count\": %d, \"pathname\": \"%s\", \"return\": %lu}", fd, vec, count, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"readv\", \"args\": {\"fd\": %d, \"vec\": \"%p\", \"count\": %d, \"pathname\": \"%s\", \"return\": %lu}", fd, vec, count, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -1027,7 +1027,7 @@ ssize_t writev (int fd, const struct iovec *vec, int count) {
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
     const char * tmp = Tau_get_pathname_from_fid(fd);
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"writev\", \"args\": {\"fd\": %d, \"vec\": \"%p\", \"count\": %d, \"pathname\": \"%s\", \"return\": %lu}", fd, vec, count, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"writev\", \"args\": {\"fd\": %d, \"vec\": \"%p\", \"count\": %d, \"pathname\": \"%s\", \"return\": %lu}", fd, vec, count, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -1149,7 +1149,7 @@ int open (const char *pathname, int flags, ...) {
   }
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"open\", \"args\": {\"pathname\": \"%s\", \"flags\": %d, \"mode\": %d, \"return\": %d}", pathname, flags, mode, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"open\", \"args\": {\"pathname\": \"%s\", \"flags\": %d, \"mode\": %d, \"return\": %d}", pathname, flags, mode, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -1204,7 +1204,7 @@ int open64 (const char *pathname, int flags, ...) {
   }
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"open64\", \"args\": {\"pathname\": \"%s\", \"flags\": %d, \"mode\": %d, \"return\": %d}", pathname, flags, mode, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"open64\", \"args\": {\"pathname\": \"%s\", \"flags\": %d, \"mode\": %d, \"return\": %d}", pathname, flags, mode, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -1242,7 +1242,7 @@ int creat(const char *pathname, mode_t mode) {
   }
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"creat\", \"args\": {\"pathname\": \"%s\", \"mode\": %d, \"return\": %d}", pathname, mode, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"creat\", \"args\": {\"pathname\": \"%s\", \"mode\": %d, \"return\": %d}", pathname, mode, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -1280,7 +1280,7 @@ int creat64(const char *pathname, mode_t mode) {
   }
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"creat64\", \"args\": {\"pathname\": \"%s\", \"mode\": %d, \"return\": %d}", pathname, mode, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"creat64\", \"args\": {\"pathname\": \"%s\", \"mode\": %d, \"return\": %d}", pathname, mode, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -1317,7 +1317,7 @@ int close(int fd) {
 
   if (TauEnv_get_current_timer_exit_params() == 1) {
     char event_name[4096];
-    sprintf (event_name, "\"cat\": \"POSIX\", \"name\": \"close\", \"args\": {\"fd\": %d, \"pathname\": \"%s\", \"return\": %d}", fd, tmp, ret);
+    snprintf (event_name, sizeof(event_name),  "\"cat\": \"POSIX\", \"name\": \"close\", \"args\": {\"fd\": %d, \"pathname\": \"%s\", \"return\": %d}", fd, tmp, ret);
     Tau_posix_plugin_trace_current_timer(event_name);
   }
   TAU_PROFILE_STOP(t);
@@ -1371,14 +1371,14 @@ char * Tau_get_socket_name(const struct sockaddr *sa, char *s, size_t len) {
   switch (sa->sa_family) {
     case AF_INET:
       inet_ntop(AF_INET, &(((struct sockaddr_in *) sa)->sin_addr), addr, len);
-      sprintf(s,"%s,port=%d",addr,ntohs((((struct sockaddr_in *)sa)->sin_port)));
+      snprintf(s, len, "%s,port=%d",addr,ntohs((((struct sockaddr_in *)sa)->sin_port)));
       break;
     case AF_INET6:
       inet_ntop(AF_INET6, &(((struct sockaddr_in6 *) sa)->sin6_addr), addr, len);
       for (i = 0; i < strlen(addr); i++) {
         if (addr[i] == ':' ) addr[i] = '.';
       }
-      sprintf(s,"%s,port=%d",addr,ntohs((((struct sockaddr_in6 *)sa)->sin6_port)));
+      snprintf(s, len, "%s,port=%d",addr,ntohs((((struct sockaddr_in6 *)sa)->sin6_port)));
       break;
     case AF_UNIX:
       strncpy(s, ((char *)(((struct sockaddr_un *) sa)->sun_path)), len);

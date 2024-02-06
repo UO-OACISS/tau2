@@ -266,7 +266,7 @@ static int checkTraceFileInitialized(int tid) {
     const char *dirname;
     char tracefilename[1024];
     dirname = TauEnv_get_tracedir();
-    sprintf(tracefilename, "%s/tautrace.%d.%d.%d.trc",dirname,
+    snprintf(tracefilename, sizeof(tracefilename),  "%s/tautrace.%d.%d.%d.trc",dirname,
 	    RtsLayer::myNode(), RtsLayer::myContext(), tid);
     if ((setTauTraceFd(tid, open (tracefilename, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND|O_BINARY|LARGEFILE_OPTION, 0666))) < 0) {
       fprintf (stderr, "TAU: TauTraceInit[open]: ");
@@ -666,9 +666,9 @@ int TauTraceDumpEDF(int tid) {
 #endif /* TAU_SHMEM */
   {
 #endif /* TAU_MPI */
-    sprintf(filename,"%s/events.%d.edf",dirname, RtsLayer::myNode());
+    snprintf(filename, sizeof(filename), "%s/events.%d.edf",dirname, RtsLayer::myNode());
     if ((fp = fopen (filename, "w+")) == NULL) {
-      sprintf(errormsg,"Error: Could not create %s",filename);
+      snprintf(errormsg, sizeof(errormsg), "Error: Could not create %s",filename);
       perror(errormsg);
       RtsLayer::UnLockDB();
       return -1;
@@ -783,9 +783,9 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
   int status_code = 0;
 
   /* If we can't find tau2vtf, use tau_convert! */
-  sprintf(converter, "%s/%s/bin/%s",tauroot, tauarch, conv);
+  snprintf(converter, sizeof(converter),  "%s/%s/bin/%s",tauroot, tauarch, conv);
   if ((in = fopen(converter, "r")) == NULL) {
-    sprintf(converter, "%s/%s/bin/tau_convert", tauroot, tauarch);
+    snprintf(converter, sizeof(converter),  "%s/%s/bin/tau_convert", tauroot, tauarch);
   } else {
     fclose(in);
   }
@@ -793,17 +793,17 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
   /* Should we get rid of intermediate trace files? */
   keepfiles = getenv("TAU_KEEP_TRACEFILES");
   if (keepfiles == NULL) {
-    strcpy(rmcmd, "/bin/rm -f app12345678.trc tautrace.*.trc tau.edf events.*.edf");
+    strncpy(rmcmd,  "/bin/rm -f app12345678.trc tautrace.*.trc tau.edf events.*.edf", sizeof(rmcmd)); 
   } else {
-    strcpy(rmcmd," "); /* NOOP */
+    strncpy(rmcmd, " ", sizeof(rmcmd));  /* NOOP */
   }
 
   /* Next, look for trace directory */
   outdir = TauEnv_get_tracedir();
-  sprintf(cdcmd, "cd %s;", outdir);
+  snprintf(cdcmd, sizeof(cdcmd),  "cd %s;", outdir);
 
   /* create the command */
-  sprintf(cmd, "%s /bin/rm -f app12345678.trc; %s/%s/bin/tau_merge tautrace.*.trc app12345678.trc; %s app12345678.trc tau.edf %s; %s", cdcmd,tauroot, tauarch, converter, outfile, rmcmd);
+  snprintf(cmd, sizeof(cmd),  "%s /bin/rm -f app12345678.trc; %s/%s/bin/tau_merge tautrace.*.trc app12345678.trc; %s app12345678.trc tau.edf %s; %s", cdcmd,tauroot, tauarch, converter, outfile, rmcmd);
 #ifdef DEBUG_PROF
   TAU_VERBOSE("The merge/convert cmd is: %s\n", cmd);
 #endif /* DEBUG_PROF */

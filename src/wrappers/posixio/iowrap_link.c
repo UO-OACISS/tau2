@@ -424,14 +424,14 @@ char * Tau_wrapper_get_socket_name(const struct sockaddr *sa, char *s, size_t le
   switch (sa->sa_family) {
     case AF_INET:
       inet_ntop(AF_INET, &(((struct sockaddr_in *) sa)->sin_addr), addr, len);
-      sprintf(s,"%s,port=%d",addr,ntohs((((struct sockaddr_in *)sa)->sin_port)));
+      snprintf(s, len, "%s,port=%d",addr,ntohs((((struct sockaddr_in *)sa)->sin_port)));
       break;
     case AF_INET6:
       inet_ntop(AF_INET6, &(((struct sockaddr_in6 *) sa)->sin6_addr), addr, len);
       for (i = 0; i < strlen(addr); i++) {
         if (addr[i] == ':' ) addr[i] = '.';
       }
-      sprintf(s,"%s,port=%d",addr,ntohs((((struct sockaddr_in6 *)sa)->sin6_port)));
+      snprintf(s, len, "%s,port=%d",addr,ntohs((((struct sockaddr_in6 *)sa)->sin6_port)));
       break;
     case AF_UNIX:
       strncpy(s, ((char *)(((struct sockaddr_un *) sa)->sun_path)), len);

@@ -378,7 +378,7 @@ int get_task_from_id(int id, int task);
 	str_##n << device->n; \
 	int string_length_##n = strlen(str_##n.str().c_str()) + 1; \
 	char *stored_name_##n = (char*) malloc(sizeof(char)*string_length_##n); \
-	strcpy(stored_name_##n, str_##n.str().c_str()); \
+	strncpy(stored_name_##n,  str_##n.str().c_str(), sizeof(char)*string_length_##n);  \
 	metadata[id].name = (char*)("GPU " SX(n)); \
 	metadata[id].value = stored_name_##n; \
 	id++

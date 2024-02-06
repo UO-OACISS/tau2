@@ -327,7 +327,7 @@ int TauKtau::DumpKProfileTWO(int outSize, ktau_output* diffOutput, char* tag)
 	/* 
 	 * Create output directory ./Kprofile 
 	 */
-	sprintf(output_path,"./Kprofile.%d.%d.%s", RtsLayer::myNode(), RtsLayer::myThread(), tag);
+	snprintf(output_path, sizeof(output_path), "./Kprofile.%d.%d.%s", RtsLayer::myNode(), RtsLayer::myThread(), tag);
 	if(mkdir(output_path,777) == -1){
 		perror("TauKtau::DumpKProfile: mkdir");
 		if(errno != EEXIST) { //ignore already-exists errors
@@ -370,7 +370,7 @@ int TauKtau::DumpKProfileTWO(int outSize, ktau_output* diffOutput, char* tag)
 			context = 1;
 		}
 
-		sprintf(output_path,"./Kprofile.%d.%d.%s/profile.%u.0.%d",RtsLayer::myNode(),RtsLayer::myThread(), tag, (diffOutput+i)->pid, context);
+		snprintf(output_path, sizeof(output_path), "./Kprofile.%d.%d.%s/profile.%u.0.%d",RtsLayer::myNode(),RtsLayer::myThread(), tag, (diffOutput+i)->pid, context);
 		ofstream fs_output (output_path , ios::out);
 		if(!fs_output.is_open()){
 			cout << "Error opening file: " << output_path << "\n";
@@ -508,7 +508,7 @@ int TauKtau::DumpKProfile(void)
 	/* 
 	 * Create output directory ./Kprofile 
 	 */
-	sprintf(output_path,"./Kprofile.%d.%d", RtsLayer::myNode(), RtsLayer::myThread());
+	snprintf(output_path, sizeof(output_path), "./Kprofile.%d.%d", RtsLayer::myNode(), RtsLayer::myThread());
 	if(mkdir(output_path,777) == -1){
 		perror("TauKtau::DumpKProfile: mkdir");
 		if(errno != EEXIST) { //ignore already-exists errors
@@ -551,7 +551,7 @@ int TauKtau::DumpKProfile(void)
 			context = 1;
 		}
 
-		sprintf(output_path,"./Kprofile.%d.%d/profile.%u.0.%d",RtsLayer::myNode(),RtsLayer::myThread(),(diffOutput+i)->pid, context);
+		snprintf(output_path, sizeof(output_path), "./Kprofile.%d.%d/profile.%u.0.%d",RtsLayer::myNode(),RtsLayer::myThread(),(diffOutput+i)->pid, context);
 		ofstream fs_output (output_path , ios::out);
 		if(!fs_output.is_open()){
 			cout << "Error opening file: " << output_path << "\n";

@@ -810,14 +810,14 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   if ((info.funcname == NULL) && (info.filename != NULL) && (info.lineno > 0)) {
     info.probeAddr = probeAddr;
     info.funcname = (char*)malloc(32);
-    sprintf((char*)info.funcname, "anonymous");
+    snprintf((char*)info.funcname, 32,  "anonymous");
     return true;
   }
 
   // Couldn't resolve the address so fill in fields as best we can.
   if (info.funcname == NULL) {
     info.funcname = (char*)malloc(128);
-    sprintf((char*)info.funcname, "addr=<%lx>", probeAddr);
+    snprintf((char*)info.funcname, 128,  "addr=<%lx>", probeAddr);
   }
   if (info.filename == NULL) {
     if (matchingIdx != -1) {
@@ -1007,7 +1007,7 @@ static char const * Tau_bfd_internal_getExecutablePath()
     RtsLayer::LockEnv();
     if (!init) {
 #if defined(TAU_AIX)
-      sprintf(path, "/proc/%d/object/a.out", RtsLayer::getPid());
+      snprintf(path, sizeof(path),  "/proc/%d/object/a.out", RtsLayer::getPid());
 #elif defined(TAU_BGP)
       if (Tau_bfd_internal_getBGPExePath(path) != 0) {
         fprintf(stderr, "Tau_bfd_internal_getExecutablePath: "
@@ -1015,7 +1015,7 @@ static char const * Tau_bfd_internal_getExecutablePath()
             "symbols will not be resolved\n", path);
       }
 #elif defined(TAU_BGQ)
-      sprintf(path, "%s", "/proc/self/exe");
+      snprintf(path, sizeof(path),  "%s", "/proc/self/exe");
 #elif defined(__APPLE__)
       uint32_t size = sizeof(path);
       _NSGetExecutablePath(path, &size);
@@ -1023,7 +1023,7 @@ static char const * Tau_bfd_internal_getExecutablePath()
       GetModuleFileName(NULL, path, sizeof(path));
 #else
       // Default: Linux systems
-      sprintf(path, "%s", "/proc/self/exe");
+      snprintf(path, sizeof(path),  "%s", "/proc/self/exe");
 #endif
       init = true;
     }

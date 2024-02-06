@@ -11,18 +11,18 @@ void write_file_metadata(int tid, const char * parent_profiler, int flags,
   /* write a metadata event for linking workflow components! */
   static int index = 0;
   char metadata_name[128] = {0};
-  sprintf(metadata_name, "posix open[%d]", index);
+  snprintf(metadata_name, sizeof(metadata_name),  "posix open[%d]", index);
   index = index + 1;
   char event_type[128] = {0};
   if (flags & O_WRONLY) {
-      sprintf(event_type, "output");
+      snprintf(event_type, sizeof(event_type),  "output");
   } else if (flags & O_RDWR) {
-      sprintf(event_type, "input/output");
+      snprintf(event_type, sizeof(event_type),  "input/output");
   } else { // O_RDONLY is 0, so it's our default.
-      sprintf(event_type, "input");
+      snprintf(event_type, sizeof(event_type),  "input");
   }
   char metadata_value[1024] = {0};
-  sprintf(metadata_value, "{\"event-type\":\"%s\",\"name\":\"%s\",\"time\":\"%llu\",\"node-id\":\"%d\",\"thread-id\":\"%d\",\"filename\":\"%s\"}", event_type, parent_profiler, timestamp, Tau_get_node(), tid, pathname);
+  snprintf(metadata_value, sizeof(metadata_value),  "{\"event-type\":\"%s\",\"name\":\"%s\",\"time\":\"%llu\",\"node-id\":\"%d\",\"thread-id\":\"%d\",\"filename\":\"%s\"}", event_type, parent_profiler, timestamp, Tau_get_node(), tid, pathname);
   TAU_METADATA(metadata_name, metadata_value);
   //printf("%s - %s\n", metadata_name, metadata_value);
 }

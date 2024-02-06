@@ -22,9 +22,9 @@ TAUDB_TIMER* taudb_query_main_timer(TAUDB_CONNECTION* connection, TAUDB_TRIAL* t
    */
   char my_query[1024];
   if (taudb_version == TAUDB_2005_SCHEMA) {
-    sprintf(my_query,"select interval_location_profile.inclusive, interval_event.* from interval_location_profile left outer join interval_event on interval_location_profile.interval_event = interval_event.id where interval_event.trial = %d order by 1 desc limit 1", trial->id);
+    snprintf(my_query, sizeof(my_query), "select interval_location_profile.inclusive, interval_event.* from interval_location_profile left outer join interval_event on interval_location_profile.interval_event = interval_event.id where interval_event.trial = %d order by 1 desc limit 1", trial->id);
   } else {
-    sprintf(my_query,"select * from timer where trial = %d", trial->id);
+    snprintf(my_query, sizeof(my_query), "select * from timer where trial = %d", trial->id);
   }
 #ifdef TAUDB_DEBUG
   printf("Query: %s\n", my_query);

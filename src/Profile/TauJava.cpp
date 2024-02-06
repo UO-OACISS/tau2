@@ -116,8 +116,9 @@ void TauJavaLayer::Init(char *options) {
     // There are problems with strtok. Since this is called twice,
     // we allocate new strings before using with strtok. Crashes otherwise 	
     if (num_tokens == 0) {
-      s1 = new char [strlen (options) + 1];
-      strcpy(s1, options);
+      const int len = strlen (options) + 1;
+      s1 = new char [len];
+      strncpy(s1,  options, len); 
       token=strtok(s1, "=,");
     } else {
       s2 = new char [strlen (options) + 1];
@@ -137,7 +138,7 @@ void TauJavaLayer::Init(char *options) {
       while(token=strtok(NULL,"=,")) {
 	token_len = strlen(token);
 	TauExcludeList[num_tokens]=(char *)malloc(token_len+1);
-	strcpy(TauExcludeList[num_tokens], token);
+	strncpy(TauExcludeList[num_tokens],  token, token_len+1); 
         num_tokens++;
       }
       TauExcludeListSize = num_tokens;
@@ -238,15 +239,15 @@ int origkey = 1;
     /* Create FunctionInfo objects for each of these methods */
 
     if (TauEnv_get_tracing()) {
-      sprintf(funcname, "%s  %s", event->u.class_load.class_name, 
+      snprintf(funcname, sizeof(funcname),  "%s  %s", event->u.class_load.class_name, 
 	      event->u.class_load.methods[i].method_name); 
     } else {
-      sprintf(funcname, "%s  %s %s", event->u.class_load.class_name, 
+      snprintf(funcname, sizeof(funcname),  "%s  %s %s", event->u.class_load.class_name, 
 	      event->u.class_load.methods[i].method_name, 
 	      event->u.class_load.methods[i].method_signature); 
     }
     
-    sprintf(classname, "%s", event->u.class_load.class_name); 
+    snprintf(classname, sizeof(classname),  "%s", event->u.class_load.class_name); 
     groupname = strtok(classname, " /=");
 
 /* old
@@ -336,7 +337,7 @@ void TauJavaLayer::ThreadStart(JVMPI_Event *event) {
 	event->u.thread_start.group_name);
 #endif /* DEBUG_PROF */
   char thread_name[256];
-  sprintf(thread_name, "THREAD=%s; THREAD GROUP=%s", event->u.thread_start.thread_name,
+  snprintf(thread_name, sizeof(thread_name),  "THREAD=%s; THREAD GROUP=%s", event->u.thread_start.thread_name,
 	  event->u.thread_start.group_name); 
   CreateTopLevelRoutine(thread_name, " ", "THREAD", tid); 
 }

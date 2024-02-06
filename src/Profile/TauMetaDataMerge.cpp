@@ -101,7 +101,7 @@ extern "C" int Tau_metadataMerge_mergeMetaData_bis() {
     end = TauMetrics_getTimeOfDay();
     TAU_VERBOSE("TAU: MetaData Merging Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
     char tmpstr[256];
-    sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
+    snprintf(tmpstr, sizeof(tmpstr),  "%.4G seconds", ((double)(end-start))/1000000.0f);
     TAU_METADATA("TAU MetaData Merge Time", tmpstr);
 
 #if 1
@@ -187,7 +187,7 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     end = TauMetrics_getTimeOfDay();
     TAU_VERBOSE("TAU: MetaData Merging Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
     char tmpstr[256];
-    sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
+    snprintf(tmpstr, sizeof(tmpstr),  "%.4G seconds", ((double)(end-start))/1000000.0f);
     TAU_METADATA("TAU MetaData Merge Time", tmpstr);
 
 #if 1
@@ -279,7 +279,7 @@ extern "C" int Tau_metadataMerge_mergeMetaData_SHMEM() {
     end = TauMetrics_getTimeOfDay();
     TAU_VERBOSE("TAU: MetaData Merging Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
     char tmpstr[256];
-    sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
+    snprintf(tmpstr, sizeof(tmpstr),  "%.4G seconds", ((double)(end-start))/1000000.0f);
     TAU_METADATA("TAU MetaData Merge Time", tmpstr);
 #ifdef TAU_SHMEM
 	Tau_util_destroyOutputDevice(out);

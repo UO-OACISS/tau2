@@ -1118,7 +1118,7 @@ int binarytree::writeTree(nodeC* the_root, string * n_destPath, int numsamp,
 
       if(threadrun == 0)
 	{
-	  sprintf(filename, "%s/profile.%d.", destPath.c_str(), cpuID);
+	  snprintf(filename, sizeof(filename),  "%s/profile.%d.", destPath.c_str(), cpuID);
 
 	  /*cat the context onto filename. */
 	  strcat(filename, "0");
@@ -1129,7 +1129,7 @@ int binarytree::writeTree(nodeC* the_root, string * n_destPath, int numsamp,
 	}
       else
 	{
-	  sprintf(filename, "%s/profile.%d.0.%d", destPath.c_str(), cpuA[cpuID], threadA[cpuID]);
+	  snprintf(filename, sizeof(filename),  "%s/profile.%d.0.%d", destPath.c_str(), cpuA[cpuID], threadA[cpuID]);
 	  //cout << threadA[cpuID] << " " << cpuID << endl;
 	}
 
@@ -1250,7 +1250,7 @@ int binarytree::writeTree(	nodeC* the_root,
 	}//if
       fclose(fp);
 
-      sprintf(filename, "%s/profile.%d.0.%d", destPath.c_str(), cpuID, threadID);
+      snprintf(filename, sizeof(filename),  "%s/profile.%d.0.%d", destPath.c_str(), cpuID, threadID);
 
       outFile.open(filename, ios::out|ios::trunc);
 

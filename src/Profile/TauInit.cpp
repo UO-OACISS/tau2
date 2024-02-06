@@ -210,7 +210,7 @@ static void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
 
   // Trigger a context event and record metadata
   char eventname[1024];
-  sprintf(eventname, "TAU_SIGNAL (%s)", strsignal(sig));
+  snprintf(eventname, sizeof(eventname),  "TAU_SIGNAL (%s)", strsignal(sig));
   TAU_REGISTER_CONTEXT_EVENT(evt, eventname);
   TAU_CONTEXT_EVENT(evt, 1);
   TAU_METADATA("SIGNAL", strsignal(sig));

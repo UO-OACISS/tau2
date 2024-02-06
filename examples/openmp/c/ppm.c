@@ -42,7 +42,7 @@ void ppmwrite(char *fname, field iterations, int maxiter) {
 
   total = 0;
   factor = (double)maxiter / NUMCOLORS;
-  b = sprintf(buf, "P6 %5d %5d %d\n", width, height, NUMSHADES);
+  b = snprintf(buf, sizeof(buf),  "P6 %5d %5d %d\n", width, height, NUMSHADES);
 
   for (iy=0; iy<height; ++iy) {
     for (ix=0; ix<width; ++ix) {

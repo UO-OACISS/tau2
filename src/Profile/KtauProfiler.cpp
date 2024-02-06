@@ -484,7 +484,7 @@ FILE* KtauProfiler::OpenOutStream(char* tau_dirname, int node, int context, int 
 	/* 
          * Create output directory <tau-dirname>/Kprofile 
          */
-        sprintf(output_path,"%s/Kprofile", tau_dirname);
+        snprintf(output_path, sizeof(output_path), "%s/Kprofile", tau_dirname);
         if(mkdir(output_path,755) == -1){
 		if(errno != EEXIST) {
 			perror("KtauProfiler::OpenOutStream: mkdir");
@@ -498,11 +498,11 @@ FILE* KtauProfiler::OpenOutStream(char* tau_dirname, int node, int context, int 
 	}
 
 	char filename[OUTPUT_NAME_SIZE];
-        sprintf(filename,"%s/profile.%d.%d.%d",output_path, node,
+        snprintf(filename, sizeof(filename), "%s/profile.%d.%d.%d",output_path, node,
                 context, tid);
         if ((ktau_fp = fopen (filename, "w+")) == NULL) {
                 errormsg = new char[1024];
-                sprintf(errormsg,"Error: Could not create %s",filename);
+                snprintf(errormsg, 1024, "Error: Could not create %s",filename);
                 perror(errormsg);
 		delete errormsg;
                 return NULL;

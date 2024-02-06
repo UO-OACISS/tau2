@@ -655,9 +655,9 @@ static int TauConf_read()
   if (!cfgFile) {
     char const * exedir = Tau_get_cwd_of_exe();
     if (!exedir) {
-      sprintf(conf_file_name, "./tau.conf");
+      snprintf(conf_file_name, sizeof(conf_file_name),  "./tau.conf");
     } else {
-      sprintf(conf_file_name, "%s/tau.conf", exedir);
+      snprintf(conf_file_name, sizeof(conf_file_name),  "%s/tau.conf", exedir);
       free((void*)exedir);
     }
     TAU_VERBOSE("Trying %s\n", conf_file_name);
@@ -667,7 +667,7 @@ static int TauConf_read()
     TauConf_parse(cfgFile, tmp);
     fclose(cfgFile);
   } else {
-    sprintf(conf_file_name, "%s/tau_system_defaults/tau.conf", TAUROOT);
+    snprintf(conf_file_name, sizeof(conf_file_name),  "%s/tau_system_defaults/tau.conf", TAUROOT);
     cfgFile = fopen(conf_file_name, "r");
     if (cfgFile) {
       TauConf_parse(cfgFile, tmp);
@@ -711,7 +711,7 @@ char * Tau_check_dirname(const char * dir)
     char scratchdir[2048];
 #if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ) || (defined(__linux__) && !defined(TAU_ANDROID)))
     if (cuserid(user) == NULL) {
-      sprintf(user,"unknown");
+      snprintf(user, sizeof(user), "unknown");
     }
 #else
 
@@ -727,19 +727,19 @@ char * Tau_check_dirname(const char * dir)
     TAU_VERBOSE("TAU: cuserid returns %s\n", temp);
 #endif // TAU_WINDOWS
     if (temp != NULL) {
-      sprintf(user, "%s", temp);
+      snprintf(user, sizeof(user),  "%s", temp);
     } else {
-      sprintf(user, "unknown");
+      snprintf(user, sizeof(user),  "unknown");
     }
     free(temp);
 #endif /* TAU_BGP */
-    ret = sprintf(logfiledir, "%s/%d/%d/%d/%s_id%s_%d-%d-%d", logdir, (thisTime->tm_year + 1900),
+    ret = snprintf(logfiledir, sizeof(logfiledir),  "%s/%d/%d/%d/%s_id%s_%d-%d-%d", logdir, (thisTime->tm_year + 1900),
         (thisTime->tm_mon + 1), thisTime->tm_mday, user, jobid, (thisTime->tm_mon + 1), thisTime->tm_mday,
         (thisTime->tm_hour * 60 * 60 + thisTime->tm_min * 60 + thisTime->tm_sec));
 #ifndef TAU_WINDOWS
-	if (ret < 0) { TAU_VERBOSE("sprintf failed! %s %s %s", __func__, __FILE__, __LINE__); }
+	if (ret < 0) { TAU_VERBOSE("snprintf failed! %s %s %s", sizeof("snprintf failed! %s %s %s"),  __func__, __FILE__, __LINE__); }
 #else
-        if (ret < 0) { TAU_VERBOSE("sprintf failed! %s %s", __FILE__, __LINE__); }
+        if (ret < 0) { TAU_VERBOSE("snprintf failed! %s %s", sizeof("snprintf failed! %s %s"),  __FILE__, __LINE__); }
 #endif  /* TAU_WINDOWS */
     TAU_VERBOSE("Using logdir = %s\n", logfiledir);
     if (RtsLayer::myNode() < 1) {
@@ -750,11 +750,11 @@ char * Tau_check_dirname(const char * dir)
       mode_t oldmode;
       oldmode = umask(0);
       mkdir(logdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
-      sprintf(scratchdir, "%s/%d", logdir, (thisTime->tm_year + 1900));
+      snprintf(scratchdir, sizeof(scratchdir),  "%s/%d", logdir, (thisTime->tm_year + 1900));
       mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
-      sprintf(scratchdir, "%s/%d/%d", logdir, (thisTime->tm_year + 1900), (thisTime->tm_mon + 1));
+      snprintf(scratchdir, sizeof(scratchdir),  "%s/%d/%d", logdir, (thisTime->tm_year + 1900), (thisTime->tm_mon + 1));
       mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
-      sprintf(scratchdir, "%s/%d/%d/%d", logdir, (thisTime->tm_year + 1900), (thisTime->tm_mon + 1), thisTime->tm_mday);
+      snprintf(scratchdir, sizeof(scratchdir),  "%s/%d/%d/%d", logdir, (thisTime->tm_year + 1900), (thisTime->tm_mon + 1), thisTime->tm_mday);
       mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       TAU_VERBOSE("mkdir %s\n", scratchdir);
 
@@ -1119,7 +1119,7 @@ int TauEnv_get_ebs_keep_unresolved_addr() {
 void TauEnv_force_set_ebs_period(int period) {
   char tmpstr[512];
   env_ebs_period = period;
-  sprintf(tmpstr, "%d", env_ebs_period);
+  snprintf(tmpstr, sizeof(tmpstr),  "%d", env_ebs_period);
   TAU_METADATA("TAU_EBS_PERIOD (FORCED)", tmpstr);
 }
 
@@ -1439,7 +1439,7 @@ void TauEnv_initialize()
     tmp = getconf("TAU_VERBOSE_RANK");
     if (parse_int(tmp,env_verbose_rank)) {
       TAU_VERBOSE("TAU: VERBOSE RANK enabled\n");
-      sprintf(tmpstr, "%d", env_verbose_rank);
+      snprintf(tmpstr, sizeof(tmpstr),  "%d", env_verbose_rank);
       TAU_METADATA("TAU_VERBOSE_RANK", tmpstr);
       env_verbose_rank = Tau_get_node();
     }
@@ -1464,7 +1464,7 @@ void TauEnv_initialize()
       int interval_value = 0;
       sscanf(interval,"%d",&interval_value);
       env_interval = interval_value;
-      sprintf(tmpstr, "%d", env_interval);
+      snprintf(tmpstr, sizeof(tmpstr),  "%d", env_interval);
       TAU_SET_INTERRUPT_INTERVAL(interval_value);
       TAU_METADATA("TAU_INTERRUPT_INTERVAL", tmpstr);
     }
@@ -1710,7 +1710,7 @@ void TauEnv_initialize()
     if(env_memdbg) {
 
       size_t page_size = Tau_page_size();
-      sprintf(tmpstr, "%ld", page_size);
+      snprintf(tmpstr, sizeof(tmpstr),  "%ld", page_size);
       TAU_METADATA("Virtual Memory Page Size", tmpstr);
 
       env_track_signals = 1;
@@ -1765,7 +1765,7 @@ void TauEnv_initialize()
       } else {
         TAU_VERBOSE("TAU: Memory debugging alignment: %ld\n", env_memdbg_alignment);
       }
-      sprintf(tmpstr, "%ld", env_memdbg_alignment);
+      snprintf(tmpstr, sizeof(tmpstr),  "%ld", env_memdbg_alignment);
       TAU_METADATA("TAU_MEMDBG_ALIGNMENT", tmpstr);
 
       tmp = getconf("TAU_MEMDBG_ZERO_MALLOC");
@@ -2036,7 +2036,7 @@ void TauEnv_initialize()
       }
     }
     TAU_VERBOSE("TAU: Callsite Depth Limit = %d\n", env_callsite_depth);
-    sprintf(tmpstr, "%d", env_callsite_depth);
+    snprintf(tmpstr, sizeof(tmpstr),  "%d", env_callsite_depth);
     TAU_METADATA("TAU_CALLSITE_DEPTH", tmpstr);
 
     const char *callsiteOffset = getconf("TAU_CALLSITE_OFFSET");
@@ -2046,7 +2046,7 @@ void TauEnv_initialize()
       if (env_callsite_offset < 0) {
         env_callsite_offset = TAU_CALLSITE_OFFSET_DEFAULT;
       }
-      sprintf(tmpstr, "%d", env_callsite_offset);
+      snprintf(tmpstr, sizeof(tmpstr),  "%d", env_callsite_offset);
       TAU_METADATA("TAU_CALLSITE_OFFSET", tmpstr);
       TAU_VERBOSE("TAU: Callsite Offset = %d\n", env_callsite_offset);
     }
@@ -2143,7 +2143,7 @@ void TauEnv_initialize()
     if (env_callpath) {
       TAU_VERBOSE("TAU: Callpath Depth = %d\n", env_callpath_depth);
     }
-    sprintf(tmpstr, "%d", env_callpath_depth);
+    snprintf(tmpstr, sizeof(tmpstr),  "%d", env_callpath_depth);
     TAU_METADATA("TAU_CALLPATH_DEPTH", tmpstr);
 
 #ifdef TAU_DEPTH_LIMIT
@@ -2154,7 +2154,7 @@ void TauEnv_initialize()
       env_depth_limit = atoi(tmp);
     }
     TAU_VERBOSE("TAU: Depth Limit = %d\n", env_depth_limit);
-    sprintf(tmpstr, "%d", env_depth_limit);
+    snprintf(tmpstr, sizeof(tmpstr),  "%d", env_depth_limit);
     TAU_METADATA("TAU_DEPTH_LIMIT", tmpstr);
 #endif /* TAU_DEPTH_LIMIT */
 
@@ -2212,9 +2212,9 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Throttle PerCall = %g\n", env_throttle_percall);
       TAU_VERBOSE("TAU: Throttle NumCalls = %g\n", env_throttle_numcalls);
 
-      sprintf(tmpstr, "%g", env_throttle_percall);
+      snprintf(tmpstr, sizeof(tmpstr),  "%g", env_throttle_percall);
       TAU_METADATA("TAU_THROTTLE_PERCALL", tmpstr);
-      sprintf(tmpstr, "%g", env_throttle_numcalls);
+      snprintf(tmpstr, sizeof(tmpstr),  "%g", env_throttle_numcalls);
       TAU_METADATA("TAU_THROTTLE_NUMCALLS", tmpstr);
     }
 
@@ -2329,7 +2329,7 @@ void TauEnv_initialize()
           //sprintf(env_plugins,"libTAU-filter-plugin.so(%s)", env_select_file);
           char *plugins = (char *) malloc(1024);
 	  char *filename = strdup(env_select_file);
-          sprintf(plugins, "libTAU-filter-plugin.so(%s)", filename);
+          snprintf(plugins, sizeof(plugins),  "libTAU-filter-plugin.so(%s)", filename);
           env_plugins = plugins;
           TAU_VERBOSE("TAU: TAU plugin is now %s\n", env_plugins);
 	  TAU_METADATA("TAU_SELECT_FILE", filename);
@@ -2448,7 +2448,7 @@ void TauEnv_initialize()
         env_ebs_source = "itimer";
       }
       env_ebs_source_orig = strdup(env_ebs_source);
-      sprintf(tmpstr, "%s", env_ebs_source);
+      snprintf(tmpstr, sizeof(tmpstr),  "%s", env_ebs_source);
       TAU_METADATA("TAU_EBS_SOURCE", tmpstr);
 
       TAU_VERBOSE("TAU: EBS Source: %s\n", env_ebs_source);
@@ -2481,7 +2481,7 @@ void TauEnv_initialize()
         }
       }
       TAU_VERBOSE("TAU: EBS period = %d \n", env_ebs_period);
-      sprintf(tmpstr, "%d", env_ebs_period);
+      snprintf(tmpstr, sizeof(tmpstr),  "%d", env_ebs_period);
       TAU_METADATA("TAU_EBS_PERIOD", tmpstr);
 
       bool ebs_period_forced = false;
@@ -2498,7 +2498,7 @@ void TauEnv_initialize()
       }
 #endif
       if (ebs_period_forced) {
-        sprintf(tmpstr, "%d", env_ebs_period);
+        snprintf(tmpstr, sizeof(tmpstr),  "%d", env_ebs_period);
         TAU_METADATA("TAU_EBS_PERIOD (FORCED)", tmpstr);
       }
 
@@ -2511,7 +2511,7 @@ void TauEnv_initialize()
         }
       }
       TAU_VERBOSE("TAU: EBS inclusive = %d usec\n", env_ebs_inclusive);
-      sprintf(tmpstr, "%d usec", env_ebs_inclusive);
+      snprintf(tmpstr, sizeof(tmpstr),  "%d usec", env_ebs_inclusive);
       TAU_METADATA("TAU_EBS_INCLUSIVE", tmpstr);
 
 #ifdef TAU_UNWIND
@@ -2534,9 +2534,9 @@ void TauEnv_initialize()
           }
         }
 		if (env_ebs_unwind_depth == 0) {
-          sprintf(tmpstr, "auto");
+          snprintf(tmpstr, sizeof(tmpstr),  "auto");
         } else {
-          sprintf(tmpstr, "%d", env_ebs_unwind_depth);
+          snprintf(tmpstr, sizeof(tmpstr),  "%d", env_ebs_unwind_depth);
 		}
         TAU_METADATA("TAU_EBS_UNWIND_DEPTH", tmpstr);
       }
@@ -2649,7 +2649,7 @@ void TauEnv_initialize()
 	env_sass_type = sass_type;
       }
       TAU_VERBOSE("TAU: SASS type = %s \n", env_sass_type);
-      sprintf(tmpstr, "%s", env_sass_type);
+      snprintf(tmpstr, sizeof(tmpstr),  "%s", env_sass_type);
       TAU_METADATA("TAU_SASS_TYPE", tmpstr);
 
     } else {

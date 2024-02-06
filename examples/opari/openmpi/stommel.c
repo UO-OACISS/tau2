@@ -434,13 +434,13 @@ char* unique(char *name) {
     for(i=0;i<40;i++) unique_str[i]=(char)0;
 
     if(myid > 99){
-        sprintf(unique_str,"%s%d",name,myid);
+        snprintf(unique_str, sizeof(unique_str), "%s%d",name,myid);
     }
     else {
         if(myid > 9)
-            sprintf(unique_str,"%s0%d",name,myid);
+            snprintf(unique_str, sizeof(unique_str), "%s0%d",name,myid);
         else 
-            sprintf(unique_str,"%s00%d",name,myid);
+            snprintf(unique_str, sizeof(unique_str), "%s00%d",name,myid);
     }
     return unique_str;
 }

@@ -30,7 +30,7 @@ CuStrCopy( const char* old )
 {
     int   len    = strlen( old );
     char* newStr = CuStrAlloc( len + 1 );
-    strcpy( newStr, old );
+    strncpy( newStr,  old , len + 1); 
     return newStr;
 }
 
@@ -134,7 +134,7 @@ CuStringAppendVFormat( CuString*   str,
                        va_list     argp )
 {
     char buf[ HUGE_STRING_LEN ];
-    vsprintf( buf, format, argp );
+    vsnprintf( buf, sizeof( buf),  format, argp );
     CuStringAppend( str, buf );
 }
 
@@ -229,7 +229,7 @@ CuFailInternal( CuTest*     tc,
 {
     char buf[ HUGE_STRING_LEN ];
 
-    sprintf( buf, "%s:%d: ", file, line );
+    snprintf( buf, sizeof( buf),  "%s:%d: ", file, line );
     CuStringInsert( string, buf, 0 );
 
     tc->failed  = 1;
@@ -343,7 +343,7 @@ CuAssertIntEquals_LineMsg( CuTest*     tc,
         return;
     }
 
-    sprintf( buf, "expected <%d> but was <%d>", expected, actual );
+    snprintf( buf, sizeof( buf),  "expected <%d> but was <%d>", expected, actual );
     CuFail_Line( tc, file, line, message, buf );
 }
 
@@ -372,7 +372,7 @@ CuAssertIntNotEquals_LineMsg( CuTest*     tc,
         return;
     }
 
-    sprintf( buf, "Not expected <%d> but was <%d>", notExpected, actual );
+    snprintf( buf, sizeof( buf),  "Not expected <%d> but was <%d>", notExpected, actual );
     CuFail_Line( tc, file, line, message, buf );
 }
 
@@ -401,7 +401,7 @@ CuAssertDblEquals_LineMsg( CuTest*     tc,
         return;
     }
 
-    sprintf( buf, "expected <%lf> but was <%lf>", expected, actual );
+    snprintf( buf, sizeof( buf),  "expected <%lf> but was <%lf>", expected, actual );
     CuFail_Line( tc, file, line, message, buf );
 }
 
@@ -429,7 +429,7 @@ CuAssertPtrEquals_LineMsg( CuTest*     tc,
         return;
     }
 
-    sprintf( buf, "expected pointer <%p> but was <%p>", expected, actual );
+    snprintf( buf, sizeof( buf),  "expected pointer <%p> but was <%p>", expected, actual );
     CuFail_Line( tc, file, line, message, buf );
 }
 

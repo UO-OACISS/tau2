@@ -300,14 +300,14 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
 #else
     char *demangled_funcname = strdup(resolvedInfo.funcname);
 #endif
-    sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
+    snprintf(resolvedBuffer, length * sizeof(char),  "[%s] [{%s} {%d}]",
         demangled_funcname, resolvedInfo.filename, resolvedInfo.lineno);
     free(demangled_funcname);
   } else {
     // this should be enough...
     length = strlen(mapName) + 32;
     resolvedBuffer = (char*)malloc(length * sizeof(char));
-    sprintf(resolvedBuffer, "[%s] UNRESOLVED ADDR", mapName);
+    snprintf(resolvedBuffer, length * sizeof(char),  "[%s] UNRESOLVED ADDR", mapName);
   }
 
   return resolvedBuffer;

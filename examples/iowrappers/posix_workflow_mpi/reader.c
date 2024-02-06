@@ -28,7 +28,7 @@ int main(int argc, char **argv)
    /* OPEN example */
 
    /* Wait for the file to exist */
-   sprintf(filename, "open_out.%d.dat", me);
+   snprintf(filename, sizeof(filename),  "open_out.%d.dat", me);
    while (stat (filename, &stat_buf) != 0) {
        usleep(100000);
    }
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
    /* FOPEN example */
 
    /* Wait for the file to exist */
-   sprintf(filename, "fopen_out.%d.dat", me);
+   snprintf(filename, sizeof(filename),  "fopen_out.%d.dat", me);
    while (stat (filename, &stat_buf) != 0) {
        usleep(100000);
    }

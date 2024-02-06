@@ -34,9 +34,9 @@ TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial
     /* this odd-looking query will make sure that the flat profile timers
      * will be processed before the callpath timers. */
     // sprintf(my_query,"select *, 0 as order_rank from interval_event where trial = %d and name not like '%% => %%' union select *, 1 as order_rank from interval_event where trial = %d and name like '%% => %%' order by order_rank", trial->id, trial->id);
-    sprintf(my_query,"select * from interval_event where trial = %d and name not like '%% => %%'", trial->id);
+    snprintf(my_query, sizeof(my_query), "select * from interval_event where trial = %d and name not like '%% => %%'", trial->id);
   } else {
-    sprintf(my_query,"select * from timer where trial = %d", trial->id);
+    snprintf(my_query, sizeof(my_query), "select * from timer where trial = %d", trial->id);
   }
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
@@ -289,7 +289,7 @@ void taudb_save_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean
     // make array of 9 character pointers
     const char* paramValues[9] = {0};
     char trialid[32] = {0};
-    sprintf(trialid, "%d", trial->id);
+    snprintf(trialid, sizeof(trialid),  "%d", trial->id);
     paramValues[0] = trialid;
     paramValues[1] = timer->name;
 		if (timer->short_name == NULL) {
@@ -298,21 +298,21 @@ void taudb_save_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean
     paramValues[2] = timer->short_name;
     paramValues[3] = timer->source_file;
     char line_number[32] = {0};
-    sprintf(line_number, "%d", timer->line_number);
+    snprintf(line_number, sizeof(line_number),  "%d", timer->line_number);
     paramValues[4] = line_number;
     char line_number_end[32] = {0};
-    sprintf(line_number_end, "%d", timer->line_number_end);
+    snprintf(line_number_end, sizeof(line_number_end),  "%d", timer->line_number_end);
     paramValues[5] = line_number_end;
     char column_number[32] = {0};
-    sprintf(column_number, "%d", timer->column_number);
+    snprintf(column_number, sizeof(column_number),  "%d", timer->column_number);
     paramValues[6] = column_number;
     char column_number_end[32] = {0};
-    sprintf(column_number_end, "%d", timer->column_number_end);
+    snprintf(column_number_end, sizeof(column_number_end),  "%d", timer->column_number_end);
     paramValues[7] = column_number_end;
 		
 	char id[32] = {0};
 	if(update && timer->id > 0) {
-		sprintf(id, "%d", timer->id);
+		snprintf(id, sizeof(id),  "%d", timer->id);
 		paramValues[8] = id;
 	}
 

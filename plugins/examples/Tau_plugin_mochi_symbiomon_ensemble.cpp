@@ -86,7 +86,7 @@ char *_program_name()
     std::string tmp(path);
     size_t i = tmp.rfind('/', tmp.length());
     if (i != string::npos) {
-        sprintf(path, "%s", tmp.substr(i+1, tmp.length() - i).c_str());
+        snprintf(path, sizeof(path),  "%s", tmp.substr(i+1, tmp.length() - i).c_str());
     }
     return strdup(path);
 #endif

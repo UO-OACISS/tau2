@@ -112,9 +112,9 @@ struct OpenCLGpuEvent : public GpuEvent
       }
       queue = queues[id_p2()];
       char tmpVal[32] = {0};
-      sprintf(tmpVal, "%d", device);
+      snprintf(tmpVal, sizeof(tmpVal),  "%d", device);
       Tau_metadata_task("OpenCL Device", tmpVal, id);
-      sprintf(tmpVal, "%02d", queue);
+      snprintf(tmpVal, sizeof(tmpVal),  "%02d", queue);
       Tau_metadata_task("OpenCL Command Queue", tmpVal, id);
   }
 
@@ -124,7 +124,7 @@ struct OpenCLGpuEvent : public GpuEvent
   const char* gpuIdentifier() const
   {	
     char r[40];
-    sprintf(r, "%d:%lld", id, commandId);
+    snprintf(r, sizeof(r),  "%d:%lld", id, commandId);
     return strdup(r);
   }
 

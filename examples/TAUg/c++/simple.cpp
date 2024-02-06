@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
 
   for (int iter=0; iter<20; iter++) {
     char buf[32];
-    sprintf(buf, "Iteration %d", iter);
+    snprintf(buf, sizeof(buf),  "Iteration %d", iter);
 
     //TAU_PHASE_CREATE_DYNAMIC(phase, buf, "", TAU_USER);
     //TAU_PHASE_START(phase);

@@ -247,7 +247,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #else /* TAU_WINDOWS || TAU_NEC_SX */
 	  char ename[2048];
 #endif /* TAU_WINDOWS || TAU_NEC_SX */
-          sprintf(ename, "[GROUP=MIN_MARKER] %s", name.c_str());
+          snprintf(ename, sizeof(ename),  "[GROUP=MIN_MARKER] %s", name.c_str());
           if (name.find("=>") == std::string::npos) {
             //DEBUGPROFMSG("Marker: "<<ename<<"  d.minVal = "<<d.minVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
 #ifdef TAU_SCOREP
@@ -275,7 +275,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
           char ename[2048];
 #endif /* TAU_WINDOWS || TAU_NEC_SX */
 
-          sprintf(ename, "[GROUP=MAX_MARKER] %s", name.c_str());
+          snprintf(ename, sizeof(ename),  "[GROUP=MAX_MARKER] %s", name.c_str());
           if (name.find("=>") == std::string::npos) {
             //DEBUGPROFMSG("Marker: "<<ename<<"  d.maxVal = "<<d.maxVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
 #ifdef TAU_SCOREP

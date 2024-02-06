@@ -455,7 +455,7 @@ void parseDyninstInstrumentationCommand(char *line, int lineno, vector<tauInstru
 	}
       else
 	{
-	  strcpy(pname, "#");
+	  strncpy(pname,  "#", sizeof(pname)); 
 	}
 #ifdef DEBUG
       printf("loops routine = %s, file = %s\n", pname, pfile);
@@ -583,7 +583,7 @@ void parseDyninstInstrumentationCommand(char *line, int lineno, vector<tauInstru
 		}
 	      else
 		{
-		  strcpy(pname, "#");
+		  strncpy(pname,  "#", sizeof(pname)); 
 		}
 	      if (strncmp(line, "code", 4) == 0)
 		{ 
@@ -663,7 +663,7 @@ void parseDyninstInstrumentationCommand(char *line, int lineno, vector<tauInstru
 		    }
 		  else
 		    {
-		      strcpy(pname, "#");
+		      strncpy(pname,  "#", sizeof(pname)); 
 		    }
 		  if (strncmp(line, "code", 4) == 0)
 		    { 
@@ -746,7 +746,7 @@ void parseDyninstInstrumentationCommand(char *line, int lineno, vector<tauInstru
 			}
 		      else
 			{
-			  strcpy(pname, "#");
+			  strncpy(pname,  "#", sizeof(pname)); 
 			}
 		      if (strncmp(line, "code", 4) == 0)
 			{ 
@@ -1103,7 +1103,7 @@ void parseDyninstInstrumentationCommand(char *line, int lineno, vector<tauInstru
 					}
 				      else
 					{
-					  strcpy(pname, "#");
+					  strncpy(pname,  "#", sizeof(pname)); 
 					}
 				      if (strncmp(line, "code", 4) == 0)
 					{ 

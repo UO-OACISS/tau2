@@ -28,10 +28,10 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
    */
   char my_query[256];
   if (taudb_version == TAUDB_2005_SCHEMA) {
-    sprintf(my_query,"select group_name from interval_event where trial = %d", trial->id);
+    snprintf(my_query, sizeof(my_query), "select group_name from interval_event where trial = %d", trial->id);
 	fprintf(stderr, "WARNING - NOT TESTED!\n");
   } else {
-    sprintf(my_query,"select distinct tg.group_name as name from timer_group tg inner join timer t on tg.timer = t.id where t.trial = %d", trial->id);
+    snprintf(my_query, sizeof(my_query), "select distinct tg.group_name as name from timer_group tg inner join timer t on tg.timer = t.id where t.trial = %d", trial->id);
   }
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
@@ -133,7 +133,7 @@ void taudb_save_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, b
       // make array of 6 character pointers
       const char* paramValues[2] = {0};
       char timerid[32] = {0};
-      sprintf(timerid, "%d", timer->id);
+      snprintf(timerid, sizeof(timerid),  "%d", timer->id);
       paramValues[0] = timerid;
       paramValues[1] = group->name;
       taudb_execute_statement(connection, statement_name, nParams, paramValues);

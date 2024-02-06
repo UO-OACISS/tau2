@@ -223,7 +223,7 @@ char* tau_strdup(const char* in_string) {
     // add one more character for the null terminator
     int length = strlen(in_string) + 1;
     char* new_string = (char*)calloc(length, sizeof(char));
-    strcpy(new_string, in_string);
+    strncpy(new_string,  in_string, length); 
     return new_string;
 }
 
@@ -919,7 +919,7 @@ OTF2_EvtWriter_writeDefCounterGroup((OTF2_EvtWriter *)fcb, TAU_GLOBAL_STREAM_ID,
 
     char name_buffer[ 64 ];
 
-    sprintf( name_buffer, "%s" ,"" );
+    snprintf( name_buffer, sizeof( name_buffer),  "%s" ,"" );
     OTF2_GlobalDefWriter_WriteString( glob_def_writer,string_id, name_buffer );
     STRING_EMPTY=string_id;
     string_id++;
@@ -1038,7 +1038,7 @@ for (i=0; i < nodes; i++)
     /*We can't overlap string ids, so the first location id must be above the last tau event id*/
     //uint32_t string = maxTauStringId + 1;
 
-    sprintf( name_buffer, "System" );//PRIu64
+    snprintf( name_buffer, sizeof( name_buffer),  "System" );//PRIu64
     status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
     string_id,
     name_buffer );
@@ -1052,7 +1052,7 @@ for (i=0; i < nodes; i++)
     {
         char name_buffer[ 64 ];
 
-        sprintf( name_buffer, "Process %d" , (int)rank );//PRIu64
+        snprintf( name_buffer, sizeof( name_buffer),  "Process %d" , (int)rank );//PRIu64
         status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
         string_id,
         name_buffer );
@@ -1073,14 +1073,14 @@ for (i=0; i < nodes; i++)
             if(thread==0){
                 if(nodes<=1)
                 {
-                    sprintf( name_buffer, "Master thread");
+                    snprintf( name_buffer, sizeof( name_buffer),  "Master thread");
                 }
                 else{
-                    sprintf( name_buffer, "Rank");
+                    snprintf( name_buffer, sizeof( name_buffer),  "Rank");
                 }
             }
             else{
-                sprintf( name_buffer, "Thread %d" ,(int)thread );
+                snprintf( name_buffer, sizeof( name_buffer),  "Thread %d" ,(int)thread );
             }
 
             status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
@@ -1219,7 +1219,7 @@ cb.LeaveState = 0;
     
     
     
-        sprintf( name_buffer, "MPI_COMM_WORLD" );//PRIu64
+        snprintf( name_buffer, sizeof( name_buffer),  "MPI_COMM_WORLD" );//PRIu64
     status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
     string_id,
     name_buffer );

@@ -561,8 +561,8 @@ void TauStartOpenMPRegionTimer(struct ompregdescr *r)
   else
   {
     char rname[256], rtype[1024];
-    sprintf(rname, "%s %s", r->name, r->sub_name);
-    sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
+    snprintf(rname, sizeof(rname),  "%s %s", r->name, r->sub_name);
+    snprintf(rtype, sizeof(rtype),  "[OpenMP location: file:%s <%d, %d>]",
         r->file_name, r->begin_first_line, r->end_last_line);
 
     FunctionInfo *f = new FunctionInfo(rname, rtype, OpenMP, "OpenMP");

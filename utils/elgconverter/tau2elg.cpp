@@ -540,7 +540,7 @@ int main(int argc, char **argv)
 		for (i=0; i < nodes; i++)
 		{ 
 			char noden[512];
-			sprintf(noden,"NODE %d\0",i);
+			snprintf(noden, sizeof(noden), "NODE %d\0",i);
 			ElgOut_write_STRING(elgo,strings,0,noden);
 			ElgOut_write_NODE((ElgOut*)elgo, i, 0, threadnumarray[i], strings, clockp);
 			strings++;
@@ -548,14 +548,14 @@ int main(int argc, char **argv)
 			char name[32];
 			for (tid = 0; tid < threadnumarray[i]; tid++)
 			{
-				sprintf(name, "node %d, thread %d", i, tid);
+				snprintf(name, sizeof(name),  "node %d, thread %d", i, tid);
 				int cpuid = GlobalId(i,tid);
 				cpuidarray[tid] = cpuid;
 				ElgOut_write_THREAD((ElgOut*)elgo, cpuid, 0, ELG_NO_ID);
 				ElgOut_write_LOCATION((ElgOut*)elgo, cpuid, 0, i, 0, tid);
 				//VTF3_WriteDefcpuname(fcb, cpuid, name);
 			}
-			sprintf(name, "Node %d", i);
+			snprintf(name, sizeof(name),  "Node %d", i);
 			groupid ++; /* let flat group for samples take the first one */
 			/* Define a group: threadnumarray[i] represents no. of threads in node */
 			//VTF3_WriteDefcpugrp(fcb, groupid, threadnumarray[i], 
@@ -568,7 +568,7 @@ int main(int argc, char **argv)
 		for(unsigned int i =0; i<numthreads.size();i++)
 		{
 			char noden[512];
-			sprintf(noden,"NODE %d\0",i);
+			snprintf(noden, sizeof(noden), "NODE %d\0",i);
 			ElgOut_write_STRING(elgo,strings,0,noden);
 			ElgOut_write_NODE((ElgOut*)elgo, i, 0, 1, strings, clockp);
 			strings++;
@@ -589,7 +589,7 @@ int main(int argc, char **argv)
 	callstack.resize(totalnidtids);
 	/* Define group ids */
 	char name[1024];
-	strcpy(name, "TAU sample group name");
+	strncpy(name,  "TAU sample group name", sizeof(name)); 
 	//VTF3_WriteDefcpugrp(fcb, sampgroupid, totalnidtids, idarray, name);
 	EndOfTrace = 0;
 	/* now reset the position of the trace to the first record */ 

@@ -687,7 +687,7 @@ ReadTraceFile( int    argc, char** argv )
     char dot_path[ 1024 ] = "";
     if ( otf2_DOT )
     {
-        sprintf( dot_path, "%.*s.SystemTree.dot", ( int )strlen( anchor_file ) - 5, anchor_file );
+        snprintf( dot_path, sizeof( dot_path),  "%.*s.SystemTree.dot", ( int )strlen( anchor_file ) - 5, anchor_file );
 
         user_data.dot_file = fopen( dot_path, "w" );
         if ( user_data.dot_file == NULL )

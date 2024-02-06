@@ -117,7 +117,7 @@ void Tau_set_last_timestamp_ns(TAU_METRIC_TYPE timestamp) {
 
 void Tau_add_metadata_for_task(const char *key, int value, int taskid) {
   char buf[1024];
-  sprintf(buf, "%d", value);
+  snprintf(buf, sizeof(buf),  "%d", value);
   Tau_metadata_task(key, buf, taskid);
   TAU_VERBOSE("Adding Metadata: %s, %d, for task %d\n", key, value, taskid);
 }

@@ -149,7 +149,7 @@ int ClockPeriod( void*  userData, double clkPeriod )
 {
   dprintf("Clock period %g\n", clkPeriod);
   char buf[1024];
-  sprintf(buf, "%g", clkPeriod);
+  snprintf(buf, sizeof(buf),  "%g", clkPeriod);
   //my_metadata["clock-period"] = std::to_string(clkPeriod);
   my_metadata["clock-period"] = string(buf);
   my_metadata["clock-units"] = "seconds";

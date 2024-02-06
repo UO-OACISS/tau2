@@ -325,7 +325,7 @@ void CUPTIAPI dumpCudaModule(CUpti_CallbackId cbid, void *resourceDescriptor)
             pCubin = moduleResourceData->pCubin;
             cubinSize = moduleResourceData->cubinSize;
             char str[500];
-            strcpy (str, TauEnv_get_profiledir());
+            strncpy (str,  TauEnv_get_profiledir(), sizeof(str)); 
             strcat (str, "/sass_loaded.cubin");
             cubin = fopen(str, "wb");
             if (cubin == NULL) {
@@ -443,21 +443,21 @@ void Tau_cupti_set_device_props() {
 
     /* save some metadata now */
 	char tmp_name[256];
-	sprintf(tmp_name, "GPU[%d] Total Constant Memory", dev);
+	snprintf(tmp_name, sizeof(tmp_name),  "GPU[%d] Total Constant Memory", dev);
     char tmp_value[256];
-	sprintf(tmp_value, "%lu", props.totalGlobalMem);
+	snprintf(tmp_value, sizeof(tmp_value),  "%lu", props.totalGlobalMem);
     Tau_metadata_register(tmp_name, tmp_value);
-	sprintf(tmp_name, "GPU[%d] L2 Cache Size", dev);
+	snprintf(tmp_name, sizeof(tmp_name),  "GPU[%d] L2 Cache Size", dev);
     Tau_metadata_register(tmp_name, props.l2CacheSize);
-	sprintf(tmp_name, "GPU[%d] Registers per Block", dev);
+	snprintf(tmp_name, sizeof(tmp_name),  "GPU[%d] Registers per Block", dev);
     Tau_metadata_register(tmp_name, props.regsPerBlock);
-	sprintf(tmp_name, "GPU[%d] Shared Memory per Block", dev);
+	snprintf(tmp_name, sizeof(tmp_name),  "GPU[%d] Shared Memory per Block", dev);
     Tau_metadata_register(tmp_name, props.sharedMemPerBlock);
-	sprintf(tmp_name, "GPU[%d] Max Threads per Block", dev);
+	snprintf(tmp_name, sizeof(tmp_name),  "GPU[%d] Max Threads per Block", dev);
     Tau_metadata_register(tmp_name, props.maxThreadsPerBlock);
-	sprintf(tmp_name, "GPU[%d] Max Threads per Multiprocessor", dev);
+	snprintf(tmp_name, sizeof(tmp_name),  "GPU[%d] Max Threads per Multiprocessor", dev);
     Tau_metadata_register(tmp_name, props.maxThreadsPerMultiProcessor);
-	sprintf(tmp_name, "GPU[%d] Warp Size", dev);
+	snprintf(tmp_name, sizeof(tmp_name),  "GPU[%d] Warp Size", dev);
     Tau_metadata_register(tmp_name, props.warpSize);
 
 	__deviceMap()[dev] = dev_record;
@@ -465,51 +465,52 @@ void Tau_cupti_set_device_props() {
 	GpuMetadata* metadata = (GpuMetadata*) malloc(sizeof(GpuMetadata) * nMeta);
 
 	int n = 0;
-	metadata[n].name = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].name, "GPU[%d] Name", dev);
+	const int str_len = sizeof(char)*256;
+	metadata[n].name = (char*) malloc(str_len);
+	snprintf(metadata[n].name, str_len,  "GPU[%d] Name", dev);
 	metadata[n].value = strdup(props.name);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].name, "GPU[%d] Compute Capability Major", dev);
-	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d", props.major);
+	metadata[n].name = (char*) malloc(str_len);
+	snprintf(metadata[n].name, str_len,  "GPU[%d] Compute Capability Major", dev);
+	metadata[n].value = (char*) malloc(str_len);
+	snprintf(metadata[n].value, str_len,  "%d", props.major);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].name, "GPU[%d] Compute Capability Minor", dev);
-	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d", props.minor);
+	metadata[n].name = (char*) malloc(str_len);
+	snprintf(metadata[n].name, str_len,  "GPU[%d] Compute Capability Minor", dev);
+	metadata[n].value = (char*) malloc(str_len);
+	snprintf(metadata[n].value, str_len,  "%d", props.minor);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].name, "GPU[%d] Clock Rate", dev);
-	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d", props.clockRate);
+	metadata[n].name = (char*) malloc(str_len);
+	snprintf(metadata[n].name, str_len,  "GPU[%d] Clock Rate", dev);
+	metadata[n].value = (char*) malloc(str_len);
+	snprintf(metadata[n].value, str_len,  "%d", props.clockRate);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].name, "GPU[%d] Total Global Memory", dev);
-	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%lu", props.totalGlobalMem);
+	metadata[n].name = (char*) malloc(str_len);
+	snprintf(metadata[n].name, str_len,  "GPU[%d] Total Global Memory", dev);
+	metadata[n].value = (char*) malloc(str_len);
+	snprintf(metadata[n].value, str_len,  "%lu", props.totalGlobalMem);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].name, "GPU[%d] Number of Multiprocessors", dev);
-	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d", props.multiProcessorCount);
+	metadata[n].name = (char*) malloc(str_len);
+	snprintf(metadata[n].name, str_len,  "GPU[%d] Number of Multiprocessors", dev);
+	metadata[n].value = (char*) malloc(str_len);
+	snprintf(metadata[n].value, str_len,  "%d", props.multiProcessorCount);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].name, "GPU[%d] Number of Memcpy Engines", dev);
-	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d", props.asyncEngineCount);
+	metadata[n].name = (char*) malloc(str_len);
+	snprintf(metadata[n].name, str_len,  "GPU[%d] Number of Memcpy Engines", dev);
+	metadata[n].value = (char*) malloc(str_len);
+	snprintf(metadata[n].value, str_len,  "%d", props.asyncEngineCount);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
@@ -802,12 +803,12 @@ int insert_context_into_map(uint32_t deviceId, uint32_t contextId, uint32_t stre
         cupti_mtx.unlock();
     }
     char tmpVal[32] = {0};
-    sprintf(tmpVal, "%u", deviceId);
+    snprintf(tmpVal, sizeof(tmpVal),  "%u", deviceId);
     Tau_metadata_task((char*)"CUDA Device", tmpVal, tid);
-    sprintf(tmpVal, "%u", contextId);
+    snprintf(tmpVal, sizeof(tmpVal),  "%u", contextId);
     Tau_metadata_task((char*)"CUDA Context", tmpVal, tid);
     if (TauEnv_get_thread_per_gpu_stream()) {
-        sprintf(tmpVal, "%u", streamId);
+        snprintf(tmpVal, sizeof(tmpVal),  "%u", streamId);
         Tau_metadata_task((char*)"CUDA Stream", tmpVal, tid);
     }
     return tid;
@@ -3075,7 +3076,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
 #endif
 	FILE *fp;
 	char str[500];
-	strcpy (str,TauEnv_get_profiledir());
+	strncpy (str, TauEnv_get_profiledir(), sizeof(str)); 
 	strcat (str,"/sass_");
 	strcat (str, fname.c_str());
 	strcat (str, ".csv");
@@ -3102,7 +3103,7 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	std::string fname = "instruction_" + std::to_string(taskId);
 	FILE* fp;
 	char str[500];
-	strcpy (str,TauEnv_get_profiledir());
+	strncpy (str, TauEnv_get_profiledir(), sizeof(str)); 
 	strcat (str,"/sass_");
 	strcat (str, fname.c_str());
 	strcat (str, ".csv");
@@ -3177,7 +3178,7 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
         std::string fname = "instruction_" + std::to_string(taskId);
 	FILE* fp;
 	char str[500];
-	strcpy (str,TauEnv_get_profiledir());
+	strncpy (str, TauEnv_get_profiledir(), sizeof(str)); 
 	strcat (str,"/sass_");
 	strcat (str, fname.c_str());
 	strcat (str, ".csv");

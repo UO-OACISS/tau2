@@ -579,7 +579,7 @@ int main(int argc, char **argv)
     char name[32];
     for (tid = 0; tid < threadnumarray[i]; tid++)
     {
-      sprintf(name, "node %d, thread %d", i, tid);
+      snprintf(name, sizeof(name),  "node %d, thread %d", i, tid);
       int cpuid = GlobalId(i,tid);
       cpuidarray[tid] = cpuid;
       dprintf("Calling OTF_Writer_writeDefProcess cpuid %d name %s\n", cpuid, name);
@@ -587,7 +587,7 @@ int main(int argc, char **argv)
     }
     if (multiThreaded) 
     { /* define a group for these cpus only if it is a multi-threaded trace */
-      sprintf(name, "Node %d", i);
+      snprintf(name, sizeof(name),  "Node %d", i);
       groupid ++; /* let flat group for samples take the first one */
       /* Define a group: threadnumarray[i] represents no. of threads in node */
     
@@ -611,7 +611,7 @@ int main(int argc, char **argv)
 
   /* Define group ids */
   char name[1024];
-  strcpy(name, "TAU default group");
+  strncpy(name,  "TAU default group", sizeof(name)); 
   OTF_Writer_writeDefProcessGroup((OTF_Writer *)fcb, TAU_GLOBAL_STREAM_ID, sampgroupid, name, totalnidtids, idarray);
 
   EndOfTrace = 0;
