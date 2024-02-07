@@ -10530,7 +10530,7 @@ if [ "x$dyninsttbbdir" != "x" -a -d "$dyninsttbbdir" ] ; then
   compiler_for_dyninst=`make info | awk -F= 'NR==3 {printf $2}'`
   cd $curr_path
   unset curr_path
-  fixmakeargs="$fixmakeargs useropt=-I${dyninsttbbdir}/include "
+  fixmakeargs="$fixmakeargs useropt=-I${dyninsttbbdir}/include#${useropt} "
 else
   if [ "x$tbb" = xyes ] ; then
     echo "TBB : not found, downloading..."
@@ -10565,7 +10565,7 @@ if [ "x$download_tbb" = xyes ] ; then
     # Rename it for finding it easily
     mkdir -p lib
     cp build/${dyntbb}_release/libtbb* lib/
-    fixmakeargs="$fixmakeargs useropt=-I${dyninsttbbdir}/include "
+    fixmakeargs="$fixmakeargs useropt=-I${dyninsttbbdir}/include#${useropt} "
     compiler_for_dyninst=`make info | awk -F= 'NR==3 {printf $2}'`
   fi
   cd $prebfddir
