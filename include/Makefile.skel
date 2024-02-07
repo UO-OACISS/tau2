@@ -385,7 +385,7 @@ CALIPER_O = TauCaliper.o #ENDIF#
 #############################################
 # OpenMP OBJECTS
 #############################################
-#OPENMP#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPI.o TauOMPT.o TauGpuAdapterOpenMP.o #ENDIF#
+#OPENMP#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPIDisable.o TauOMPT.o TauGpuAdapterOpenMP.o #ENDIF#
 #OPARI#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPIDisable.o #ENDIF#
 #OPARI2#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPIDisable.o #ENDIF#
 #PGS_AVAILABLE#OPENMP_PGS_O 	= TauPthreadGlobal.o  #ENDIF#
