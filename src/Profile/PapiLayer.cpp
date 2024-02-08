@@ -514,8 +514,6 @@ int PapiLayer::reinitializePAPI() {
 // note, this only works on linux
 #include <sys/types.h>
 #include <linux/unistd.h>
-_syscall0(pid_t,gettid)
-pid_t gettid(void);
 
 unsigned long papi_thread_gettid(void) {
 #ifdef SYS_gettid
