@@ -532,8 +532,12 @@ otf2_print_get_string( const otf2_hash_table* strings,
 static const char*
 otf2_print_get_attribute_value( struct otf2_print_defs* defs,
                                 OTF2_Type               type,
-                                OTF2_AttributeValue     value,
-                                bool                    raw );
+                                OTF2_AttributeValue     value
+                                #if OTF2_VERSION_MAJOR > 2
+				,
+				bool                    raw 
+				#endif
+				);
 
 static const char*
 otf2_print_get_paradigm_property_value( struct otf2_print_defs* defs,
@@ -545,9 +549,13 @@ otf2_print_get_paradigm_property_value( struct otf2_print_defs* defs,
 static const char*
 otf2_print_get_invalid( uint64_t ID );
 
+#if OTF2_VERSION_MAJOR > 2
 extern "C" {
 #include "otf2_print_types.h"
 }
+#else
+#include "otf2-print-2.3/otf2_print_types.h"
+#endif
 
 /* ___ Prototypes for event callbacks. ______________________________________ */
 
@@ -562,9 +570,11 @@ print_unknown( OTF2_LocationRef    location,
 static OTF2_CallbackCode
 print_global_def_unknown( void* userData );
 
-
+#if OTF2_VERSION_MAJOR > 2
 #include "otf2_print_inc.c"
-
+#else
+#include  "otf2-print-2.3/otf2_print_inc.c"
+#endif
 
 static OTF2_CallbackCode
 print_def_mapping_table( void*             userData,
@@ -2936,7 +2946,11 @@ otf2_print_attribute_list( struct otf2_print_data* data,
                 sep,
                 otf2_print_get_def_name( defs->attributes, id ),
                 otf2_print_get_type( type ),
-                otf2_print_get_attribute_value( defs, type, value, false) );
+                otf2_print_get_attribute_value( defs, type, value
+			#if OTF2_VERSION_MAJOR > 2
+			, false
+			#endif
+			) );
         sep = ", ";
     }
     printf( "\n" );
@@ -5292,8 +5306,12 @@ OTF2_CallbackCode
 print_global_def_clock_properties( void*    userData,
                                    uint64_t timerResolution,
                                    uint64_t globalOffset,
-                                   uint64_t traceLength,
-                                   uint64_t realtimeTimestamp )
+                                   uint64_t traceLength
+				   #if OTF2_VERSION_MAJOR > 2
+				   ,
+                                   uint64_t realtimeTimestamp 
+				   #endif
+				   )
 {
     struct otf2_print_data* data = (otf2_print_data*)userData;
 
@@ -5536,8 +5554,12 @@ print_global_def_location_group( void*                  userData,
                                  OTF2_LocationGroupRef  self,
                                  OTF2_StringRef         name,
                                  OTF2_LocationGroupType locationGroupType,
-                                 OTF2_SystemTreeNodeRef systemTreeParent, 
-                                 OTF2_LocationGroupRef  creatingLocationGroup )
+                                 OTF2_SystemTreeNodeRef systemTreeParent
+				 #if OTF2_VERSION_MAJOR > 2
+				 , 
+                                 OTF2_LocationGroupRef  creatingLocationGroup 
+				 #endif
+				 )
 {
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
@@ -6133,8 +6155,12 @@ print_global_def_comm( void*          userData,
                        OTF2_CommRef   self,
                        OTF2_StringRef name,
                        OTF2_GroupRef  group,
-                       OTF2_CommRef   parent,
-                       OTF2_CommFlag  flags )
+                       OTF2_CommRef   parent
+		       #if OTF2_VERSION_MAJOR > 2
+		       ,
+                       OTF2_CommFlag  flags 
+		       #endif
+		       )
 {
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
@@ -6210,8 +6236,12 @@ OTF2_CallbackCode
 print_global_def_rma_win( void*          userData,
                           OTF2_RmaWinRef self,
                           OTF2_StringRef name,
-                          OTF2_CommRef   comm,
-                          OTF2_RmaWinFlag flags )
+                          OTF2_CommRef   comm
+			  #if OTF2_VERSION_MAJOR > 2
+			  ,
+                          OTF2_RmaWinFlag flags 
+			  #endif
+			  )
 {
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
@@ -6297,7 +6327,11 @@ print_global_def_system_tree_node_property( void*                  userData,
                  systemTreeNode,
                  prop_id,
                  otf2_print_get_string( defs->strings, name ),
-                 otf2_print_get_attribute_value( defs, type, value, false),
+                 otf2_print_get_attribute_value( defs, type, value
+			 #if OTF2_VERSION_MAJOR > 2
+			 , false
+			#endif
+			 ),
                  prop_id, systemTreeNode );
         prop_id++;
     }
@@ -6321,7 +6355,11 @@ print_global_def_system_tree_node_property( void*                  userData,
             otf2_print_get_def_name( defs->system_tree_nodes, systemTreeNode ),
             otf2_print_get_def_name( defs->strings, name ),
             otf2_print_get_type( type ),
-            otf2_print_get_attribute_value( defs, type, value, false),
+            otf2_print_get_attribute_value( defs, type, value
+		    #if OTF2_VERSION_MAJOR > 2
+		    , false
+		    #endif
+		    ),
             "\n" );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -6405,7 +6443,11 @@ print_global_def_location_group_property( void*                 userData,
             otf2_print_get_def_name( defs->location_groups, locationGroup ),
             otf2_print_get_def_name( defs->strings, name ),
             otf2_print_get_type( type ),
-            otf2_print_get_attribute_value( defs, type, value, false),
+            otf2_print_get_attribute_value( defs, type, value
+		    #if OTF2_VERSION_MAJOR > 2
+		    , false
+		    #endif
+		    ),
             "\n" );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -6441,7 +6483,11 @@ print_global_def_location_property( void*               userData,
             otf2_print_get_def64_name( defs->locations, location ),
             otf2_print_get_def_name( defs->strings, name ),
             otf2_print_get_type( type ),
-            otf2_print_get_attribute_value( defs, type, value, false),
+            otf2_print_get_attribute_value( defs, type, value
+		    #if OTF2_VERSION_MAJOR > 2
+		    , false
+		    #endif
+		    ),
             "\n" );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -6658,7 +6704,11 @@ print_global_def_calling_context_property( void*                  userData,
             otf2_print_get_def_name( defs->calling_contexts, callingContext ),
             otf2_print_get_def_name( defs->strings, name ),
             otf2_print_get_type( type ),
-            otf2_print_get_attribute_value( defs, type, value, false),
+            otf2_print_get_attribute_value( defs, type, value
+		    #if OTF2_VERSION_MAJOR > 2
+		    , false
+                    #endif
+		    ),
             "\n" );
 
     return OTF2_CALLBACK_SUCCESS;

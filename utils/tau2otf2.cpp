@@ -1062,8 +1062,12 @@ for (i=0; i < nodes; i++)
         rank,
         string_id,
         OTF2_LOCATION_GROUP_TYPE_PROCESS,
-        0,
-        OTF2_UNDEFINED_LOCATION_GROUP);//( rank / 2 ) + 1 );
+        0
+	#if OTF2_VERSION_MAJOR > 2
+	,
+        OTF2_UNDEFINED_LOCATION_GROUP
+	#endif
+	);//( rank / 2 ) + 1 );
         check_status( status, "Write location group definition." );
         string_id++;
         master_threads2[rank]=rank;
@@ -1212,8 +1216,12 @@ cb.LeaveState = 0;
     status = OTF2_GlobalDefWriter_WriteClockProperties( glob_def_writer,
     1000000000,
     firstRealTime,
-    lastt,
-    OTF2_UNDEFINED_TIMESTAMP );
+    lastt
+    #if OTF2_VERSION_MAJOR > 2
+    ,
+    OTF2_UNDEFINED_TIMESTAMP 
+    #endif 
+    );
     check_status( status, "Write clock properties." );
     
     
@@ -1244,7 +1252,11 @@ cb.LeaveState = 0;
     nodes,
     master_threads2 );//master_threads );
 
-    status =OTF2_GlobalDefWriter_WriteComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_COMM, OTF2_COMM_FLAG_CREATE_DESTROY_EVENTS);
+    status =OTF2_GlobalDefWriter_WriteComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_COMM
+		    #if OTF2_VERSION_MAJOR > 2
+		    , OTF2_COMM_FLAG_CREATE_DESTROY_EVENTS
+		    #endif
+		    );
     check_status( status, "Write communicator." );
 
 

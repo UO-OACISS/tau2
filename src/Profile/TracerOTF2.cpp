@@ -1029,7 +1029,11 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     //global_start_time -= trace_len * 0.02;
     //trace_len = end_time - global_start_time;
     //trace_len *= 1.02;
-    OTF2_GlobalDefWriter_WriteClockProperties(global_def_writer, TAU_OTF2_CLOCK_RES, global_start_time, trace_len, OTF2_UNDEFINED_TIMESTAMP);
+    OTF2_GlobalDefWriter_WriteClockProperties(global_def_writer, TAU_OTF2_CLOCK_RES, global_start_time, trace_len
+		    #if OTF2_VERSION_MAJOR > 2
+		    , OTF2_UNDEFINED_TIMESTAMP
+		    #endif
+		    );
 
     // Write a Location for each thread within each Node (which has a LocationGroup and SystemTreeNode)
 
@@ -1057,7 +1061,11 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         snprintf(namebuf, 256, "group %d", node);
         int groupName = nextString++;
         OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, groupName, namebuf));
-        OTF2_EC(OTF2_GlobalDefWriter_WriteLocationGroup(global_def_writer, node, groupName, OTF2_LOCATION_GROUP_TYPE_PROCESS, node, OTF2_UNDEFINED_LOCATION_GROUP));
+        OTF2_EC(OTF2_GlobalDefWriter_WriteLocationGroup(global_def_writer, node, groupName, OTF2_LOCATION_GROUP_TYPE_PROCESS, node
+				#if OTF2_VERSION_MAJOR > 2
+				, OTF2_UNDEFINED_LOCATION_GROUP
+				#endif
+				));
 
         //const int start_loc = my_real_location(node,0);//node + num_locations[node];//max_threads;//TAU_MAX_THREADS; //TODO: DYNATHREAD
         //const int end_loc = start_loc + num_locations[node];
@@ -1094,7 +1102,12 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
                         snprintf(namebuf, 256, "GPU thread %02d", gputhreads++);
                     }
                 }
-				thread_type = OTF2_LOCATION_TYPE_ACCELERATOR_STREAM;
+				thread_type = 
+					#if OTF2_VERSION_MAJOR > 2
+					OTF2_LOCATION_TYPE_ACCELERATOR_STREAM;
+					#else
+					OTF2_LOCATION_TYPE_GPU;
+				        #endif
             } else {
                 //static int cputhreads = 1;
                 int nodeThread=cputhreads; //%((nodes > 0) ? nodes : 1);
@@ -1211,7 +1224,11 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     }
     OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_LOCS, locsGroupName, OTF2_GROUP_TYPE_COMM_LOCATIONS, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, nodes_list));
     OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_WORLD, worldGroupName, OTF2_GROUP_TYPE_COMM_GROUP, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, ranks_list));
-    OTF2_EC(OTF2_GlobalDefWriter_WriteComm(global_def_writer, TAU_OTF2_COMM_WORLD, commName, TAU_OTF2_GROUP_WORLD, OTF2_UNDEFINED_COMM, OTF2_COMM_FLAG_NONE));
+    OTF2_EC(OTF2_GlobalDefWriter_WriteComm(global_def_writer, TAU_OTF2_COMM_WORLD, commName, TAU_OTF2_GROUP_WORLD, OTF2_UNDEFINED_COMM
+			    #if OTF2_VERSION_MAJOR > 2
+			    , OTF2_COMM_FLAG_NONE
+			    #endif
+			    ));
 
 #if defined(TAU_SHMEM)
     // Write global RMA window
