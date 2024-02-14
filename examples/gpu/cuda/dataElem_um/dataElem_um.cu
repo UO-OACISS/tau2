@@ -27,7 +27,7 @@ int main(void)
 
   e->value = 10;
   cudaMallocManaged((void**)&(e->name), sizeof(char) * (strlen("hello") + 1) );
-  strncpy(e->name,  "hello", sizeof(char) * (strlen("hello") + 1); 
+  strncpy(e->name,  "hello", sizeof(char) * (strlen("hello") + 1)); 
 
   launch(e);
 
