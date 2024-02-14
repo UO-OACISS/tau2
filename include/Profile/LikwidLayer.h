@@ -19,7 +19,7 @@
 #ifdef TAU_LIKWID
 #include <vector>
 
-struct ThreadValue {
+struct LikwidThreadValue {
   int ThreadID=0; 
   long long *CounterValues=0;
 };
@@ -37,11 +37,11 @@ public:
   static int gid;
   static int err;
   static bool likwidInitialized;
-  static inline void SetThreadList(int tid, ThreadValue* tv){
+  static inline void SetThreadList(int tid, LikwidThreadValue* tv){
     checkLikwidVector(tid);
     TheThreadList()[tid]=tv;
   }
-  static inline ThreadValue* GetThreadList(int tid){
+  static inline LikwidThreadValue* GetThreadList(int tid){
     checkLikwidVector(tid);
     return TheThreadList()[tid];
   }
@@ -49,7 +49,7 @@ private:
   static int initializeSingleCounter();
   static int initializeThread(int tid);
   static double scalingFactor;
-  static vector<ThreadValue *> & TheThreadList();
+  static vector<LikwidThreadValue *> & TheThreadList();
   static inline void checkLikwidVector(int tid){
         while(TheThreadList().size()<=tid){
         RtsLayer::LockDB();

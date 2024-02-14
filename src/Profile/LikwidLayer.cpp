@@ -43,8 +43,8 @@ extern "C" {
 #define dmesg(level, fmt, ...)
 
 bool LikwidLayer::likwidInitialized = false;
-vector<ThreadValue *> & LikwidLayer::TheThreadList() {
-    static vector<ThreadValue *> threadList;
+vector<LikwidThreadValue *> & LikwidLayer::TheThreadList() {
+    static vector<LikwidThreadValue *> threadList;
     return threadList;
 }
 //string LikwidLayer::eventString;//[] = "L2_LINES_IN_ALL:PMC0,L2_TRANS_L2_WB:PMC1";
@@ -88,7 +88,7 @@ int LikwidLayer::initializeLikwidLayer() //Tau_initialize_likwid_library(void)
             setenv("LIKWID_FORCE", "1", 1); // Overwrite already running counters because currently there are no stopCounters() or finalize() calls
             {
                 char foo[100];
-                int ret = snprintf(foo, 99, "%lu", getpid());
+                int ret = snprintf(foo, 99, "%u", getpid());
                 if (ret > 0)
                 {
                    foo[ret] = '\0';
@@ -100,7 +100,7 @@ int LikwidLayer::initializeLikwidLayer() //Tau_initialize_likwid_library(void)
 	    num_cpus = topo->activeHWThreads; // Store the number of CPUs to use it later in LikwidLayer::getAllCounters
 	    LikwidLayer::likwidInitialized = true; // we initialized it, so set this to true
     }
-
+    return 0;
 }
 
 extern "C" int Tau_is_thread_fake(int tid);
@@ -153,7 +153,7 @@ int LikwidLayer::initializeThread(int tid) {
 			if (Tau_is_thread_fake(tid) == 1)
 				tid = 0;
 
-			SetThreadList(tid, new ThreadValue);
+			SetThreadList(tid, new LikwidThreadValue);
 			GetThreadList(tid)->ThreadID = tid;
 
 			GetThreadList(tid)->CounterValues = new long long[numCounters];
