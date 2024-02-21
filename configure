@@ -11500,6 +11500,9 @@ if [ $opari = yes ] ; then
     if [ $oparicomp = no ] ; then
         if [ "x$fortran_compiler" = "xintel" ] ; then
             oparicomp="$fortran_compiler"
+            if [ "x$cxx_compiler" = "xicpx" ] ; then
+                    oparicomp="oneapi"
+            fi
         fi
         if [ "x$fortran_compiler" = "xpathscale" ] ; then
             oparicomp="$fortran_compiler"
