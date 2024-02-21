@@ -768,6 +768,7 @@ usage() {
     echo "-rocm[=<dir>] ...... Specify alternate path to ROCm (/opt/rocm default)."
     echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
     echo "-rocprofv2 .......................................... Enable rocprofv2."
+    echo "-rocprofv3 .......................................... Enable rocprofv3."
     echo "-rocmsmi=<dir> ..................... Specify location of RoCm rocm_smi."
 #   echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
 #   echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
@@ -939,6 +940,7 @@ for arg in "$@"; do
         echo "-rocm[=<dir>] ..... Specify alternate path to ROCm (/opt/rocm default)."
         echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
 	echo "-rocprofv2 .......................................... Enable rocprofv2."
+    echo "-rocprofv3 .......................................... Enable rocprofv3."
 	echo "-rocmsmi=<dir> ..................... Specify location of RoCm rocm_smi."
         #echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
         #echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
@@ -1371,6 +1373,7 @@ rocm=no
 rocmv6=no
 rocprofiler=no
 rocprofv2=no
+rocprofv3=no
 roctracer=no
 rocmsmi=no
 hip=no
@@ -3119,6 +3122,15 @@ for arg in "$@"; do
             pthread=yes
             shift
             ;;
+
+       -rocprofv3)
+            fixmakeargs="$fixmakeargs ROCPROFILERV3"
+            rocprofv3=yes
+            tauoptions="${tauoptions}-rocprofv3"
+            pthread=yes
+            shift
+            ;;
+
 	   -rocmsmi=*)
             rocmsmidir=`echo $arg | sed -e 's/-rocmsmi=//' -e 's/ /#/g'`
             if [ ! -d $rocmsmidir ]; then
@@ -3469,17 +3481,27 @@ EOF
 	fi
 fi
 
+echo "$rocm"
+echo "$rocmv6"
+echo "$rocprofv2"
+echo "$rocprofv3"
 
-
-if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "rocmv6" = "no" ]; then
+if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "$rocmv6" = "no" ]; then
     echo "For rocprofv2 use rocm/6 or newer!"
     exit
 fi
 
-if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "rocmv6" = "yes" ]; then
+if [ "x$rocm" = "xyes" -a "$rocprofv3" = "yes" -a "$rocmv6" = "no" ]; then
+    echo "For rocprofv2 use rocm/6 or newer!"
+    exit
+fi
+
+if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "$rocmv6" = "yes" ]; then
+    echo "rocprofv2!!!!!!!!!!!"
     pthread=yes
     if [ "x$rocprofilerdir" = "x" ]; then
         rocprofilerdir=$rocmdir
+        fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir"
     fi
 
     if [ "x$rocprofilerinc" = "x" ]; then
@@ -3488,7 +3510,22 @@ if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "rocmv6" = "yes" ]; then
     fi
 fi
 
-if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" ] ; then
+if [ "x$rocm" = "xyes" -a "$rocprofv3" = "yes" -a "$rocmv6" = "yes" ]; then
+    echo "rocprofv3!!!!!!!!!!!"
+    pthread=yes
+    if [ "x$rocprofilerdir" = "x" ]; then
+        rocprofilerdir=$rocmdir
+        fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir"
+    fi
+
+    if [ "x$rocprofilerinc" = "x" ]; then
+        rocprofilerinc="$rocprofilerdir/include/rocprofiler"
+        fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
+    fi
+fi
+
+if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" -a "$rocprofv3" = no ] ; then
+    echo "rocprof!!!!!!!!!!!"
     if [ "$roctracer" = yes ]; then
         fixmakeargs="$fixmakeargs ROCTRACERROCM6"
         if [ -r $roctracerdir/include/roctracer/roctracer_hsa.h ]; then
