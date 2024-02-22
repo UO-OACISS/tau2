@@ -5126,11 +5126,17 @@ mpif90_exe=mpif90
 intel_cxx=`which mpiicpc 2>/dev/null | wc -l`
 if [ $intel_cxx = 1 ] ; then
     echo "detected Intel in path"
-    if [ "x$cxx_compiler" = "xicpc" -o "x$cxx_compiler" = "xicpx" -o "x$cxx_compiler" = "xmpiicpc" ] ; then
+    if [ "x$cxx_compiler" = "xicpc" -o "x$cxx_compiler" = "xmpiicpc" ] ; then
         echo "using Intel MPI wrappers (with Intel compilers)"
         mpicxx_exe=mpiicpc
         mpicc_exe=mpiicc
         mpif90_exe=mpiifort
+    elif [ "x$cxx_compiler" = "xicpx" -o "x$cxx_compiler" = "xmpiicpx" ] ; then
+        echo "using Intel OneAPI MPI wrappers (with Intel OneAPI compilers)"
+        mpicxx_exe=mpiicpx
+        mpicc_exe=mpiicx
+        mpif90_exe=mpiifx
+
     else
         echo "WARNING: Intel compilers found in your path, but C++ compiler not specified.  Whatever is detected in mpicxx will be used as the compiler.  To force Intel compilers, please pass -c++=icpc, -c++=icpx, or -c++=mpiicpc"
         issue_intel_warning=yes
