@@ -2,16 +2,39 @@
 #include <Profile/TauRocm.h>
 #include <Profile/TauBfd.h>  // for name demangling
 
+#include <rocprofiler-sdk/buffer.h>
+#include <rocprofiler-sdk/buffer_tracing.h>
+#include <rocprofiler-sdk/callback_tracing.h>
+#include <rocprofiler-sdk/external_correlation.h>
+#include <rocprofiler-sdk/fwd.h>
+#include <rocprofiler-sdk/internal_threading.h>
+#include <rocprofiler-sdk/registration.h>
+#include <rocprofiler-sdk/rocprofiler.h>
+
+#include <atomic>
+#include <cassert>
 #include <chrono>
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cstdlib>
+#include <fstream>
+#include <functional>
+#include <iomanip>
 #include <iostream>
+#include <map>
 #include <mutex>
 #include <random>
+#include <sstream>
 #include <stdexcept>
-
-
-#include <cstdint>
+#include <string>
+#include <string_view>
+#include <thread>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 int volatile flushed = 0;
 
@@ -32,64 +55,6 @@ int volatile flushed = 0;
     }
 
 
-#include <cstdint>
-#include <fstream>
-#include <functional>
-#include <iomanip>
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include <cstdint>
-#include <fstream>
-#include <functional>
-#include <iomanip>
-#include <iostream>
-#include <string>
-#include <vector>
-
-
-
-#include <iostream>
-#include <map>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-
-
-#include <rocprofiler-sdk/fwd.h>
-#include <rocprofiler-sdk/rocprofiler.h>
-
-#include <rocprofiler-sdk/buffer.h>
-#include <rocprofiler-sdk/buffer_tracing.h>
-#include <rocprofiler-sdk/callback_tracing.h>
-#include <rocprofiler-sdk/external_correlation.h>
-#include <rocprofiler-sdk/fwd.h>
-#include <rocprofiler-sdk/internal_threading.h>
-#include <rocprofiler-sdk/registration.h>
-#include <rocprofiler-sdk/rocprofiler.h>
-
-
-#include <atomic>
-#include <cassert>
-#include <chrono>
-#include <cstddef>
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <fstream>
-#include <functional>
-#include <iomanip>
-#include <iostream>
-#include <map>
-#include <mutex>
-#include <string>
-#include <string_view>
-#include <thread>
-#include <unordered_set>
-#include <vector>
 
 
 using buffer_kind_names_t = std::map<rocprofiler_buffer_tracing_kind_t, const char*>;
@@ -193,13 +158,13 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
 {
     if(flushed)
       return;
-    printf("----------- %s\n", __FUNCTION__);
+    //printf("----------- %s\n", __FUNCTION__);
     if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
        record.operation == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT_LOAD)
     {
         if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
         {
-            printf("----------- flush %s\n", __FUNCTION__);
+            //printf("----------- flush %s\n", __FUNCTION__);
             // flush the buffer to ensure that any lookups for the client kernel names for the code
             // object are completed
             auto flush_status = rocprofiler_flush_buffer(client_buffer);
@@ -214,12 +179,12 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
         auto* data = static_cast<kernel_symbol_data_t*>(record.payload);
         if(record.phase == ROCPROFILER_CALLBACK_PHASE_LOAD)
         {
-            printf("----------- emplace %s\n", __FUNCTION__);
+            //printf("----------- emplace %s\n", __FUNCTION__);
             client_kernels.emplace(data->kernel_id, *data);
         }
         else if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
         {
-            printf("----------- erase %s\n", __FUNCTION__);   
+            //printf("----------- erase %s\n", __FUNCTION__);   
             client_kernels.erase(data->kernel_id);
         }
     }
@@ -282,7 +247,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
 {
   if(flushed)
     return;
-  printf("----------- %s\n", __FUNCTION__);
+  //printf("----------- %s\n", __FUNCTION__);
       assert(user_data != nullptr);
     assert(drop_count == 0 && "drop count should be zero for lossless policy");
 
@@ -350,11 +315,10 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             //static_cast<common::call_stack_t*>(user_data)->emplace_back(
             //   common::source_location{__FUNCTION__, __FILE__, __LINE__, info.str()});
 
-
             int queueid = 0;
             unsigned long long timestamp = 0L;
 
-            static int taskid = Tau_get_initialized_queues(queueid);
+            int taskid = Tau_get_initialized_queues(queueid);
 
             if (taskid == -1) { // not initialized
               TAU_CREATE_TASK(taskid);
@@ -419,10 +383,10 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             //    common::source_location{__FUNCTION__, __FILE__, __LINE__, info.str()});
 
 
-            int queueid = 1;
+            int queueid = 0;
             unsigned long long timestamp = 0L;
 
-            static int taskid = Tau_get_initialized_queues(queueid);
+            int taskid = Tau_get_initialized_queues(queueid);
 
             if (taskid == -1) { // not initialized
               TAU_CREATE_TASK(taskid);
@@ -476,8 +440,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
                 static_cast<rocprofiler_buffer_tracing_kernel_dispatch_record_t*>(header->payload);
 
             auto info = std::stringstream{};
-
-            info << "agent_id=" << record->agent_id.handle
+            /*info << "agent_id=" << record->agent_id.handle
                  << ", queue_id=" << record->queue_id.handle << ", kernel_id=" << record->kernel_id
                  << ", kernel=" << client_kernels.at(record->kernel_id).kernel_name
                  << ", context=" << context.handle << ", buffer_id=" << buffer_id.handle
@@ -489,19 +452,19 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
                  << ", group_segment_size=" << record->group_segment_size << ", workgroup_size=("
                  << record->workgroup_size.x << "," << record->workgroup_size.y << ","
                  << record->workgroup_size.z << "), grid_size=(" << record->grid_size.x << ","
-                 << record->grid_size.y << "," << record->grid_size.z << ")";
+                 << record->grid_size.y << "," << record->grid_size.z << ")";*/
 
             if(record->start_timestamp > record->end_timestamp)
                 throw std::runtime_error("kernel dispatch: start > end");
-            std::cout << "*" << info.str() << std::endl;
+            //std::cout << "*" << info.str() << std::endl;
             //static_cast<common::call_stack_t*>(user_data)->emplace_back(
              //  common::source_location{__FUNCTION__, __FILE__, __LINE__, info.str()});
 
-
-            int queueid = 2;
+            //printf("KERNEL_DISPATCH %d\n", record->agent_id.handle);
+            int queueid = record->agent_id.handle;
             unsigned long long timestamp = 0L;
 
-            static int taskid = Tau_get_initialized_queues(queueid);
+            int taskid = Tau_get_initialized_queues(queueid);
 
             if (taskid == -1) { // not initialized
               TAU_CREATE_TASK(taskid);
@@ -583,11 +546,11 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             //static_cast<common::call_stack_t*>(user_data)->emplace_back(
             //    common::source_location{__FUNCTION__, __FILE__, __LINE__, info.str()});
 
-
-            int queueid = 3;
+            //printf("ROCPROFILER_BUFFER_TRACING_MEMORY_COPY %d\n", record->src_agent_id.handle);
+            int queueid = record->src_agent_id.handle;
             unsigned long long timestamp = 0L;
 
-            static int taskid = Tau_get_initialized_queues(queueid);
+            int taskid = Tau_get_initialized_queues(queueid);
 
             if (taskid == -1) { // not initialized
               TAU_CREATE_TASK(taskid);
@@ -647,7 +610,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         }
     }
 
-    printf("----------- %s     !!!END\n", __FUNCTION__);
+    //printf("----------- %s     !!!END\n", __FUNCTION__);
 
 }
 
@@ -658,14 +621,14 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
 
 void thread_precreate(rocprofiler_runtime_library_t lib, void* tool_data)
 {
-  printf("----------- %s\n", __FUNCTION__);
+  //printf("----------- %s\n", __FUNCTION__);
   return;
 }
 
 
 void thread_postcreate(rocprofiler_runtime_library_t lib, void* tool_data)
 {
-  printf("----------- %s\n", __FUNCTION__);
+  //printf("----------- %s\n", __FUNCTION__);
   return;
 }
 
@@ -677,7 +640,7 @@ void thread_postcreate(rocprofiler_runtime_library_t lib, void* tool_data)
 int
 tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
 {
-    printf("----------- %s\n", __FUNCTION__);
+    //printf("----------- %s\n", __FUNCTION__);
     assert(tool_data != nullptr);
 
     client_name_info = get_buffer_tracing_names();
@@ -757,7 +720,7 @@ tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
 void
 tool_fini(void* tool_data)
 {
-    printf("----------- %s\n", __FUNCTION__);
+    //printf("----------- %s\n", __FUNCTION__);
     assert(tool_data != nullptr);
 
     //auto* _call_stack = static_cast<common::call_stack_t*>(tool_data);
@@ -773,7 +736,7 @@ tool_fini(void* tool_data)
 void
 setup()
 {
-    printf("----------- %s\n", __FUNCTION__);
+    //printf("----------- %s\n", __FUNCTION__);
     int status = 0;
     if(rocprofiler_is_initialized(&status) == ROCPROFILER_STATUS_SUCCESS && status == 0)
     {
@@ -785,7 +748,7 @@ setup()
 void
 shutdown()
 {
-    printf("----------- %s\n", __FUNCTION__);
+    //printf("----------- %s\n", __FUNCTION__);
     if(client_id)
     {
         ROCPROFILER_CALL(rocprofiler_flush_buffer(client_buffer), "buffer flush");
@@ -796,14 +759,14 @@ shutdown()
 void
 start()
 {
-    printf("----------- %s\n", __FUNCTION__);
+    //printf("----------- %s\n", __FUNCTION__);
     ROCPROFILER_CALL(rocprofiler_start_context(client_ctx), "context start");
 }
 
 void
 identify(uint64_t val)
 {
-    printf("----------- %s\n", __FUNCTION__);
+    //printf("----------- %s\n", __FUNCTION__);
     auto _tid = rocprofiler_thread_id_t{};
     rocprofiler_get_thread_id(&_tid);
     rocprofiler_user_data_t user_data = {};
@@ -814,7 +777,7 @@ identify(uint64_t val)
 void
 stop()
 {
-    printf("----------- %s\n", __FUNCTION__);
+    //printf("----------- %s\n", __FUNCTION__);
     ROCPROFILER_CALL(rocprofiler_stop_context(client_ctx), "context stop");
 }
 
@@ -825,7 +788,7 @@ rocprofiler_configure(uint32_t                 version,
                       uint32_t                 priority,
                       rocprofiler_client_id_t* id)
 {
-    printf("----------- %s\n", __FUNCTION__);
+    //printf("----------- %s\n", __FUNCTION__);
     // only activate if main tool
     if(priority > 0) return nullptr;
 
@@ -876,8 +839,8 @@ rocprofiler_configure(uint32_t                 version,
        #include <unistd.h>
 
 void Tau_rocprofv3_flush(){
-   printf("-----------!! %s\n", __FUNCTION__);
-   printf("%d\n", getpid());
+   //printf("-----------!! %s\n", __FUNCTION__);
+   //printf("%d\n", getpid());
    ROCPROFILER_CALL(rocprofiler_flush_buffer(client_buffer), "buffer flush");
   if(flushed)
     return;
