@@ -412,6 +412,10 @@ void trace_register_func(char *origname, int id)
 
 void traceEntry(int id)
 {
+  
+  TAU_QUERY_DECLARE_EVENT(curr);
+  TAU_QUERY_GET_CURRENT_EVENT(curr);
+
   int tid = RtsLayer::myThread();
   if ( !RtsLayer::TheEnableInstrumentation()) return;
   if (!getTauDyninstEnabled(tid)) return;
@@ -427,9 +431,6 @@ void traceEntry(int id)
   if (!(((FunctionInfo*)(fi))->GetProfileGroup() & RtsLayer::TheProfileMask())) {
     return;
   }
-
-  TAU_QUERY_DECLARE_EVENT(curr);
-  TAU_QUERY_GET_CURRENT_EVENT(curr);
 
   if ( curr && ((Profiler *)curr)->ThisFunction &&
      ((Profiler *)curr)->ThisFunction->GetProfileGroup() == TAU_GROUP_31) {
