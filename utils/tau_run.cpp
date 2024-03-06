@@ -954,7 +954,7 @@ int tauRewriteLibrary(BPatch *bpatch, const char *mutateeName, char *outfile, ch
 
 
 
-int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, char* libname, char *staticlibname, char *staticmpilibname, char *bindings)
+int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, char* libname, char *staticlibname, char *staticmpilibname, char *bindings, int onlyMutatee)
 {
   using namespace std;
   BPatch_Vector<BPatch_point *> mpiinit;
@@ -1060,13 +1060,30 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
     
     mutateeAddressSpace->insertSnippet(initmpi, mpiinit, BPatch_callAfter, BPatch_firstSnippet);
   }
+  
+  
+    string libpath(mutateeName);
+    string mutateemodule= libpath.substr(libpath.find_last_of("/\\") + 1);
+	dprintf("mutatee module %s %s\n", mutateemodule.c_str(), mutateeName);
+  
 
   for (BPatch_Vector<BPatch_function*>::iterator it=allFuncs->begin();
        it != allFuncs->end(); it++)
     {
       char fname[FUNCNAMELEN];
       (*it)->getName(fname, FUNCNAMELEN);
-      dprintf("Processing %s...\n", fname);
+	  char moduleName[FUNCNAMELEN];
+	  (*it)->getModuleName(moduleName, FUNCNAMELEN);
+      dprintf("Processing %s of %s...\n", fname, moduleName);
+	  if(onlyMutatee)
+	  {
+		  if( strcmp(moduleName, mutateemodule.c_str())!=0)
+		  {
+			  printf("Skipping module!\n");
+				continue;
+		  }
+			  
+	  }
 
       bool okayToInstr = true;
       bool instRoutineAtLoopLevel = false;
@@ -1192,6 +1209,7 @@ int main(int argc, char **argv){
   string functions;                              //string variable to hold function names 
   // commandline option processing args
   int vflag = 0;
+  int onlyMutatee = 0;
   char *xvalue = NULL;
   char *tvalue = NULL;
   char *fvalue = NULL;
@@ -1216,7 +1234,7 @@ int main(int argc, char **argv){
   else{
     opterr = 0; 
      
-    while ((c = getopt (argc, argv, "lvT:X:o:f:d:")) != -1)
+    while ((c = getopt (argc, argv, "mlvT:X:o:f:d:")) != -1)
       switch (c)
        {
         case 'v':
@@ -1244,6 +1262,9 @@ int main(int argc, char **argv){
        case 'l':
           libraryRewrite = 1; /* binary rewrite is true */
           break;
+	   case 'm':
+          onlyMutatee = 1; /* only rewrite mutatee, not libraries */
+          break;
         case '?':
           if (optopt == 'X' || optopt == 'f' || optopt == 'o' )
             fprintf (stderr, "Option -%c requires an argument.\n", optopt);
@@ -1258,8 +1279,8 @@ int main(int argc, char **argv){
          errflag=1;
         }
      
-    dprintf ("vflag = %d, xvalue = %s, ovalue = %s, fvalue = %s, tvalue = %s\n",
-            vflag, xvalue, ovalue, fvalue, tvalue);
+    dprintf ("vflag = %d, xvalue = %s, ovalue = %s, fvalue = %s, tvalue = %s, libraryRewrite = %d, onlyMutatee = %d\n",
+            vflag, xvalue, ovalue, fvalue, tvalue, libraryRewrite, onlyMutatee);
      
     strncpy(mutname, argv[optind],strlen(argv[optind])+1);
     for (index = optind; index < argc; index++)
@@ -1365,7 +1386,7 @@ int main(int argc, char **argv){
     return 0;
   }
   if (binaryRewrite) {
-    tauRewriteBinary(bpatch, mutname, outfile, (char *)libname, (char *)staticlibname, (char *)staticmpilibname, bindings);
+    tauRewriteBinary(bpatch, mutname, outfile, (char *)libname, (char *)staticlibname, (char *)staticmpilibname, bindings, onlyMutatee);
     return 0; // exit from the application 
   }
 #ifdef TAU_DYNINST41PLUS
