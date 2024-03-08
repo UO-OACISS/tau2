@@ -584,8 +584,36 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
 
 
         }
+        else if(header->category == ROCPROFILER_BUFFER_CATEGORY_TRACING &&
+                (header->kind == ROCPROFILER_BUFFER_TRACING_MARKER_CORE_API ||
+                header->kind == ROCPROFILER_CALLBACK_TRACING_MARKER_CONTROL_API ||
+                header->kind == ROCPROFILER_CALLBACK_TRACING_MARKER_NAME_API ))
+        {
+			
+		  
+          //printf("MARKER, not implemented, missing id and/or marker message to identify regions \n");
+		  /*
+			auto* record =
+                static_cast<rocprofiler_buffer_tracing_marker_api_record_t*>(header->payload);
+				
+			auto info = std::stringstream{};
 
+            info << ", cid=" << record->correlation_id.internal
+                 << ", extern_cid=" << record->correlation_id.external.value
+                 << ", kind=" << record->kind << ", operation=" << record->operation
+                 << ", start=" << record->start_timestamp << ", stop=" << record->end_timestamp
+                 << ", name=" << client_name_info.operation_names[record->kind][record->operation];
+				//<< ", correlation_id= "<< record->correlation_id			
+			
 
+            if(record->start_timestamp > record->end_timestamp)
+                throw std::runtime_error("memory copy: start > end");
+            std::cout << ": " << info.str() << std::endl;
+			*/
+		
+				
+        }
+			
 
 
 
@@ -631,10 +659,6 @@ void thread_postcreate(rocprofiler_runtime_library_t lib, void* tool_data)
   //printf("----------- %s\n", __FUNCTION__);
   return;
 }
-
-
-
-
 
 
 int
@@ -691,6 +715,23 @@ tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
         rocprofiler_configure_buffer_tracing_service(
             client_ctx, ROCPROFILER_BUFFER_TRACING_MEMORY_COPY, nullptr, 0, client_buffer),
         "buffer tracing service for memory copy configure");
+		
+		
+	ROCPROFILER_CALL(
+        rocprofiler_configure_buffer_tracing_service(
+            client_ctx, ROCPROFILER_BUFFER_TRACING_MARKER_CORE_API, nullptr, 0, client_buffer),
+        "buffer tracing service for memory copy configure");
+	
+	ROCPROFILER_CALL(
+        rocprofiler_configure_buffer_tracing_service(
+            client_ctx, ROCPROFILER_BUFFER_TRACING_MARKER_CONTROL_API, nullptr, 0, client_buffer),
+        "buffer tracing service for memory copy configure");
+
+	ROCPROFILER_CALL(
+        rocprofiler_configure_buffer_tracing_service(
+            client_ctx, ROCPROFILER_BUFFER_TRACING_MARKER_NAME_API, nullptr, 0, client_buffer),
+        "buffer tracing service for memory copy configure");		
+	
 
     auto client_thread = rocprofiler_callback_thread_t{};
     ROCPROFILER_CALL(rocprofiler_create_callback_thread(&client_thread),
