@@ -184,7 +184,11 @@ namespace {
         Type *retTy = Type::getVoidTy(context);
 
         // single i8* argument type (char *)
+#if( LLVM_VERSION_MAJOR <= 17 )
         Type *argTy = Type::getInt8PtrTy(context);
+#else
+		Type *argTy = PointerType::get(context, 0);
+#endif
         SmallVector<Type *, 1> paramTys{argTy};
 
         // Third param to `get` is `isVarArg`.  It's not documented, but might have
@@ -206,7 +210,12 @@ namespace {
         Type *argTy0 = Type::getInt32Ty(context);
 
         // Second argument is an i8* pointer or i8** in LLVM (argv)
+#if( LLVM_VERSION_MAJOR <= 17 )
         Type* argTy1 = PointerType::getUnqual(Type::getInt8PtrTy(context));
+#else
+		Type* argTy1 = PointerType::getUnqual(PointerType::get(context, 0));
+#endif
+        
         
         SmallVector<Type *, 2> paramTys{argTy0,argTy1};
 
