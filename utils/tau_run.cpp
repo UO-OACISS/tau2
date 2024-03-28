@@ -587,6 +587,7 @@ bool findFuncOrCalls(std::vector<const char *> names, BPatch_Vector<BPatch_point
     {
       BPatch_function *f = tauFindFunction(appImage, *i);
       if (f && f->getModule()->isSharedLib()) {
+		  printf("found in shared Lib\n");
        func = f;
        break;
       }
@@ -600,6 +601,7 @@ bool findFuncOrCalls(std::vector<const char *> names, BPatch_Vector<BPatch_point
       }
       return true;
     }
+
   }
 
   //Moderately expensive loop here.  Perhaps we should make a name->point map first
@@ -885,7 +887,9 @@ int tauRewriteLibrary(BPatch *bpatch, const char *mutateeName, char *outfile, ch
     char moduleName[1024];
     (*moduleIter)->getName(moduleName, 1024);
     dprintf("module %s, mutatee %s ", moduleName, mutateefilename.c_str());
-    if( strcmp(moduleName, mutateefilename.c_str())!=0)
+	string mutateefilename = libpath.substr(libpath.find_last_of("/\\") + 1);
+	string module_str = moduleName;
+    if( strcmp(module_str.substr(module_str.find_last_of("/\\") + 1).c_str(), mutateefilename.c_str())!=0)
     {
         printf("Skipping module!\n");
         continue;
@@ -1038,6 +1042,7 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
   funcNames.push_back(&setup_call);
 
   if (ismpi) {
+	  printf("ismpi\n");
     /*
       char *mpilib = "libTAUsh-icpc-mpi-pdt.so";
       if( isStaticExecutable ) {
@@ -1057,6 +1062,8 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
     BPatch_Vector<BPatch_snippet *> mpiinitargs;
     mpiinitargs.push_back(&getrank);
     BPatch_funcCallExpr initmpi(*mpiinitstub, mpiinitargs);
+	assert(mpiinitstub);
+	
     
     mutateeAddressSpace->insertSnippet(initmpi, mpiinit, BPatch_callAfter, BPatch_firstSnippet);
   }
