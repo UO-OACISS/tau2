@@ -10614,7 +10614,6 @@ if [ "x$download_tbb" = xyes ] ; then
 	make install
 	compiler_for_dyninst=`grep "CMAKE_C_COMPILER" -rhw CMakeFiles/ | awk -F'"' '{print $2}'`
 	cd $dyninsttbbdir
-	dyninsttbbdir=${dyninsttbbdir}/install
 	cd ..
     fixmakeargs="$fixmakeargs useropt=-I${dyninsttbbdir}/include#${useropt}"
   fi
@@ -10750,7 +10749,7 @@ if [ "x$download_dyninst" = xyes ] ; then
       export CPATH=${dyninsttbbdir} # To prevent using wrong tbb/include when building
       export CMAKE_PREFIX_PATH="" # To prevent looking for tbb installation by bfd
       ## Now we can make Dyninst
-      CC=$compiler_for_dyninst cmake ${prebfddir}/${libdyninst} -DBoost_ROOT_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DLibIberty_ROOT_DIR=${libiberty_root_dir} -DIBERTY_LIBRARIES=${dyninstdir}/libiberty/lib/libiberty.a -DElfUtils_ROOT_DIR=${dyninstdir}/elfutils/ -DTBB_ROOT_DIR=${dyninsttbbdir}
+      CC=$compiler_for_dyninst cmake ${prebfddir}/${libdyninst} -DBoost_ROOT_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DLibIberty_ROOT_DIR=${libiberty_root_dir} -DIBERTY_LIBRARIES=${dyninstdir}/libiberty/lib/libiberty.a -DElfUtils_ROOT_DIR=${dyninstdir}/elfutils/ -DTBB_ROOT_DIR=${tbbdir}
 	  #exit
       make -j8
       make install
