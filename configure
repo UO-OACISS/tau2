@@ -10532,7 +10532,7 @@ libboost=boost_1_79_0
 libboosttgz=$libboost.tar.gz
 libboosturl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libboosttgz
 
-libdyninst=dyninst-12.3.0-working
+libdyninst=dyninst-13.0.0
 libdyninsttgz=$libdyninst.tar.gz
 libdyninsturl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libdyninsttgz
 
@@ -10544,9 +10544,10 @@ dynelfutils=elfutils-0.189
 dynelfutilsbz=${dynelfutils}.tar.bz2
 dynelfutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$dynelfutilsbz
 
-dyntbb=intel-tbb-2020.3
+dyntbb=intel-tbb-2021.9
 dyntbbtgz=${dyntbb}.tar.gz
 dyntbburl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$dyntbbtgz
+#dyntbburl=https://github.com/oneapi-src/oneTBB/archive/v2021.9.0.tar.gz
 
 if [ "x$dyninstdir" = "x" ]; then
   libdyninstdir=${targetdir}/${architecture}
@@ -10569,16 +10570,18 @@ if [ "x$tbbdir" != "x" -a -d "$tbbdir" ] ; then
   dyninsttbbdir=${tbbdir}
 else
   dyninsttbbdir=${libdyninstdir}/${dyntbb}
-  tbbdir=${dyninsttbbdir}
+  tbbdir=${dyninsttbbdir}/install
 fi
 if [ "x$dyninsttbbdir" != "x" -a -d "$dyninsttbbdir" ] ; then
   echo "TBB : found : $dyninsttbbdir"
-  curr_path=`pwd`
-  cd $dyninsttbbdir
-  compiler_for_dyninst=`make info | awk -F= 'NR==3 {printf $2}'`
-  cd $curr_path
-  unset curr_path
-  fixmakeargs="$fixmakeargs useropt=-I${dyninsttbbdir}/include#${useropt} "
+  #curr_path=`pwd`
+  #cd $dyninsttbbdir
+  #compiler_for_dyninst=`grep "CMAKE_C_COMPILER" -rhw build/CMakeFiles/ | awk -F'"' '{print $2}'`
+  #cd $curr_path
+  #unset curr_path
+  #Need to find an alternative way, if possible. Do not remove previous commented lines.
+  compiler_for_dyninst=gcc
+  fixmakeargs="$fixmakeargs useropt=-I${dyninsttbbdir}/include#${useropt}"
 else
   if [ "x$tbb" = xyes ] ; then
     echo "TBB : not found, downloading..."
@@ -10608,13 +10611,17 @@ if [ "x$download_tbb" = xyes ] ; then
     echo "removing $dyntbbtgz..."
     rm $dyntbbtgz
     cd $dyninsttbbdir
-    # The make command build in ./build/${tbb_build_prefix}_release
-    make tbb_build_prefix=$dyntbb
-    # Rename it for finding it easily
-    mkdir -p lib
-    cp build/${dyntbb}_release/libtbb* lib/
-    fixmakeargs="$fixmakeargs useropt=-I${dyninsttbbdir}/include#${useropt} "
-    compiler_for_dyninst=`make info | awk -F= 'NR==3 {printf $2}'`
+	mkdir build
+	mkdir install
+	cd build
+	#cmake is removing the runtime path, which generate issues when using tbb libraries, the two last flags fix this problem
+	cmake .. -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_INSTALL_PREFIX=${dyninsttbbdir}/install -DTBB_TEST=OFF -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=True -DCMAKE_INSTALL_RPATH=${dyninsttbbdir}/install/lib
+	make -j4
+	make install
+	compiler_for_dyninst=`grep "CMAKE_C_COMPILER" -rhw CMakeFiles/ | awk -F'"' '{print $2}'`
+	cd $dyninsttbbdir
+	cd ..
+    fixmakeargs="$fixmakeargs useropt=-I${dyninsttbbdir}/include#${useropt}"
   fi
   cd $prebfddir
 fi #end dowload_tbb
@@ -10739,6 +10746,7 @@ if [ "x$download_dyninst" = xyes ] ; then
       make -j8 install
       cd ..
       rm -rf $dynelfutilsbz
+	  
 
       # Here error when using -bfd=download because it searches for /opt/intel/tbb/ by default
       # Workaround
@@ -10747,7 +10755,7 @@ if [ "x$download_dyninst" = xyes ] ; then
       export CPATH=${dyninsttbbdir} # To prevent using wrong tbb/include when building
       export CMAKE_PREFIX_PATH="" # To prevent looking for tbb installation by bfd
       ## Now we can make Dyninst
-      CC=$compiler_for_dyninst cmake ${prebfddir}/${libdyninst} -DBoost_INCLUDE_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DLibIberty_ROOT_DIR=${libiberty_root_dir} -DIBERTY_LIBRARIES=${dyninstdir}/libiberty/lib/libiberty.a -DElfUtils_ROOT_DIR=${dyninstdir}/elfutils/ -DTBB_ROOT_DIR=${dyninsttbbdir}
+      CC=$compiler_for_dyninst cmake ${prebfddir}/${libdyninst} -DBoost_ROOT_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DLibIberty_ROOT_DIR=${libiberty_root_dir} -DIBERTY_LIBRARIES=${dyninstdir}/libiberty/lib/libiberty.a -DElfUtils_ROOT_DIR=${dyninstdir}/elfutils/ -DTBB_ROOT_DIR=${tbbdir}
       make -j8
       make install
       export CPATH=$old_CPATH
