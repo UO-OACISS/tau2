@@ -5381,9 +5381,15 @@ case $cxx_compiler in
         fixmakeargs="$fixmakeargs USE_CFRONT"
 	$cxx_compiler --version | grep -q clang
 	isclang=$?
-	if [ $isclang = 0  -a $openmp = yes ]; then
-          fixmakeargs="$fixmakeargs CLANG_OPENMP"
-        fi
+	if [ $isclang = 0 ]; then
+	  if [ $openmp = yes ]; then
+            fixmakeargs="$fixmakeargs CLANG_OPENMP"
+          fi
+	  llvm=yes
+	  #build_llvm_plugin=yes
+	  fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
+	  fixmakeargs="$fixmakeargs CLANG COMPINST_LLVM"
+	fi
         ;;
     *llvm*|*clang* | hcc | hipcc )
         echo "Default C++ compiler will be clang++ (or variant)"
