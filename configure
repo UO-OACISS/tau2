@@ -10573,7 +10573,7 @@ if [ "x$dyninsttbbdir" != "x" -a -d "$dyninsttbbdir" ] ; then
   #compiler_for_dyninst=`grep "CMAKE_C_COMPILER" -rhw build/CMakeFiles/ | awk -F'"' '{print $2}'`
   #cd $curr_path
   #unset curr_path
-  #Need to find an alternative way, if possible.
+  #Need to find an alternative way, if possible. Do not remove previous commented lines.
   compiler_for_dyninst=gcc
   fixmakeargs="$fixmakeargs useropt=-I${dyninsttbbdir}/include#${useropt}"
 else
@@ -10610,7 +10610,7 @@ if [ "x$download_tbb" = xyes ] ; then
 	cd build
 	#cmake is removing the runtime path, which generate issues when using tbb libraries, the two last flags fix this problem
 	cmake .. -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_INSTALL_PREFIX=${dyninsttbbdir}/install -DTBB_TEST=OFF -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=True -DCMAKE_INSTALL_RPATH=${dyninsttbbdir}/install/lib
-	make -j8
+	make -j4
 	make install
 	compiler_for_dyninst=`grep "CMAKE_C_COMPILER" -rhw CMakeFiles/ | awk -F'"' '{print $2}'`
 	cd $dyninsttbbdir
@@ -10750,7 +10750,6 @@ if [ "x$download_dyninst" = xyes ] ; then
       export CMAKE_PREFIX_PATH="" # To prevent looking for tbb installation by bfd
       ## Now we can make Dyninst
       CC=$compiler_for_dyninst cmake ${prebfddir}/${libdyninst} -DBoost_ROOT_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DLibIberty_ROOT_DIR=${libiberty_root_dir} -DIBERTY_LIBRARIES=${dyninstdir}/libiberty/lib/libiberty.a -DElfUtils_ROOT_DIR=${dyninstdir}/elfutils/ -DTBB_ROOT_DIR=${tbbdir}
-	  #exit
       make -j8
       make install
       export CPATH=$old_CPATH
