@@ -5385,10 +5385,10 @@ case $cxx_compiler in
 	  if [ $openmp = yes ]; then
             fixmakeargs="$fixmakeargs CLANG_OPENMP"
           fi
-	  llvm=yes
+	  #llvm=yes
 	  #build_llvm_plugin=yes
-	  fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
-	  fixmakeargs="$fixmakeargs CLANG COMPINST_LLVM"
+	  #fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
+	  #fixmakeargs="$fixmakeargs COMPINST_LLVM"  #CLANG
 	fi
         ;;
     *llvm*|*clang* | hcc | hipcc )
