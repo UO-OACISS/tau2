@@ -5388,7 +5388,7 @@ case $cxx_compiler in
 	  #llvm=yes
 	  #build_llvm_plugin=yes
 	  #fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
-	  #fixmakeargs="$fixmakeargs COMPINST_LLVM"  #CLANG
+	  fixmakeargs="$fixmakeargs FLANG_NO_MX_OPTS" #COMPINST_LLVM"  #CLANG
 	fi
         ;;
     *llvm*|*clang* | hcc | hipcc )
