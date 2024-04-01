@@ -1086,7 +1086,7 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
 	  {
 		  if( strcmp(moduleName, mutateemodule.c_str())!=0)
 		  {
-			  printf("Skipping module!\n");
+			  dprintf("Skipping module!\n");
 				continue;
 		  }
 			  
