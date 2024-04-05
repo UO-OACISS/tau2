@@ -1,3 +1,4 @@
+#ifdef TAU_GPU
 #include <Profile/TauGpuAdapterOpenMP.h>
 #include <Profile/TauGpu.h>
 
@@ -26,3 +27,4 @@ int Tau_openmp_get_taskid_from_gpu_event(uint32_t deviceId, uint32_t threadId) {
     OpenMPGpuEvent gpu_event = OpenMPGpuEvent("", deviceId, threadId, 0, 0, NULL, 0);
     return get_task(&gpu_event);
 }
+#endif
