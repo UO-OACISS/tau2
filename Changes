@@ -20,6 +20,7 @@ Version 2.33 changes (from 2.32):
 7. Added support for Score-P 8.3 using -scorep=download. 
 8. Added support for DyninstAPI 13.0.0 using -dyninst=download.
 9. Added support for Score-P 8.4 using -scorep=download. 
+10. Added support for -no-pie on Ubuntu for instrumenting an application using TAU scripts. 
 
 Version 2.32 changes (from 2.31):
 1. Added support for riscv64 (-optCompInst, tau_exec -ebs, mpi). 
