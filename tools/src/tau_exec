@@ -1160,13 +1160,15 @@ if [ $scorep = true ]; then
     echo "Score-P is specified"
   fi
   scoreplib=`ldd $BASEDIR/lib/$theBinding/libTAU${TAU_SHLIBX} | grep scorep_adapter_mpi_event.so | awk ' { print $3;}'`
-  if [ -f $scoreplib -a $verbose = "true" ]; then
-    echo "Preloading: $scoreplib"
-  fi
-  if [ "x$extraloadlibs" = "x" ]; then
-    extraloadlibs=":$scoreplib"
-  else
-    extraloadlibs=":$scoreplib:$extraloadlibs"
+  if [ "x$scoreplib" != "x" ]; then 
+    if [ -f $scoreplib -a $verbose = "true" ]; then
+      echo "Preloading: $scoreplib"
+    fi
+    if [ "x$extraloadlibs" = "x" ]; then
+      extraloadlibs=":$scoreplib"
+    else
+      extraloadlibs=":$scoreplib:$extraloadlibs"
+    fi
   fi
 fi
 
