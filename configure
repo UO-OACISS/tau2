@@ -11877,7 +11877,7 @@ if [ $scorep = yes ] ; then
         if [ $machine = "mic_linux" ]; then
           mod_scorep_adapter="$mod_scorep_adapter --target=mic "
         fi
-        scorepLibs=`${scorepdir}/bin/scorep-config --libs ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e  's@ @#@g'`
+        scorepLibs=`${scorepdir}/bin/scorep-config --libs ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e  's@ @#@g' -e 's@lscorep_adapter_compiler_mgmt@lscorep_adapter_compiler_mgmt#-lscorep_adapter_compiler_event@g'`
         scorepLD=`${scorepdir}/bin/scorep-config --ldflags ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e  's@ @#@g'`
         echo "Using scorepLD=$scorepLD"
         scorepExtraLibs='-lscorep_adapter_user_event#-lscorep_adapter_user_mgmt'
