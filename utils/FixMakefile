@@ -783,7 +783,12 @@ case $1 in
         ;;
 
      TAU_USELM)
-	echo "NOTE: TAU is adding -lm to the link line. If you do not want this (e.g., -mkl) please use -nolm while configuring."
+	echo "NOTE: TAU is adding -lm to the link line. If you do not want this (e.g., -mkl), please use -nolm while configuring."
+	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     TAU_USE_NO_PIE_ON_UBUNTU)
+	echo "NOTE: TAU is adding -no-pie to the link line. If you do not want this, please use -disable-no-pie-on-ubuntu while configuring."
 	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 

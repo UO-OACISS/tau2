@@ -1017,6 +1017,7 @@ for arg in "$@"; do
         echo "-noex .................. Use no exceptions while compiling the library."
         echo "-noplugins ...................... Do not build support for TAU plugins."
         echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
+        echo "-disable-no-pie-on-ubuntu .On Ubuntu, do not add -no-pie while linking."
         echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
         echo "                       (Note: also disables sampling, marker tracking)."
         echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
@@ -1360,6 +1361,7 @@ stffdir=
 sddf=no
 sddfdir=
 tau_uselm=yes
+tau_use_no_pie=yes
 iowrapper=no
 dmapp=no
 ugni=no
@@ -1514,6 +1516,11 @@ for arg in "$@"; do
 
         -nolm)
             tau_uselm=no
+            shift
+            ;;
+
+        -disable-no-pie-on-ubuntu)
+            tau_use_no_pie=no
             shift
             ;;
 
@@ -7782,9 +7789,14 @@ fi
 ######################################################################
 # Do we need -lm Ubuntu does!
 if [ $machine != apple ]; then
-  if [ -f /etc/issue -a "x$tau_uselm" != "xno" -a `grep Ubuntu /etc/issue | wc -l ` = 1 ]; then
-    tau_uselm=yes
-    fixmakeargs="$fixmakeargs TAU_USELM"
+  if [ -f /etc/issue -a `grep Ubuntu /etc/issue | wc -l ` = 1 ]; then 
+    if [ "x$tau_uselm" != "xno" ]; then 
+      tau_uselm=yes
+      fixmakeargs="$fixmakeargs TAU_USELM"
+    fi 
+    if [ "x$tau_use_no_pie" != "xno" ]; then 
+      fixmakeargs="$fixmakeargs TAU_USE_NO_PIE_ON_UBUNTU"
+    fi
   fi
 fi
 
