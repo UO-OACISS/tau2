@@ -3526,7 +3526,6 @@ if [ "x$rocm" = "xyes" -a "$rocprofv3" = "yes" -a "$rocmv6" = "yes" ]; then
 fi
 
 if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" -a "$rocprofv3" = no ] ; then
-    echo "rocprof!!!!!!!!!!!"
     if [ "$roctracer" = yes ]; then
         fixmakeargs="$fixmakeargs ROCTRACERROCM6"
         if [ -r $roctracerdir/include/roctracer/roctracer_hsa.h ]; then
