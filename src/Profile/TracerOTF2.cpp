@@ -797,13 +797,13 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
     if(par == 1) { // Enter
 #ifdef TAU_OTF2_DEBUG
-      fprintf(stderr, "%u: writing Enter event on loc %d\n", my_node(), loc);
+      fprintf(stderr, "%u: writing Enter event=%d on loc %d\n", my_node(), ev, loc);
 #endif
       OTF2_EC2(OTF2_EvtWriter_Enter(evt_writer, NULL, my_ts, ev));
       setPreviousType(tid, 0);
     } else if(par == -1) { // Exit
 #ifdef TAU_OTF2_DEBUG
-      fprintf(stderr, "%u: writing Exit event on loc %d\n", my_node(), loc);
+      fprintf(stderr, "%u: writing Exit event=%d on loc %d\n", my_node(), ev, loc);
 #endif
       OTF2_EC2(OTF2_EvtWriter_Leave(evt_writer, NULL, my_ts, ev));
       setPreviousType(tid, 1);
@@ -1074,11 +1074,13 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         for(int it_thread = 0; it_thread < num_locations[node]; ++it_thread) {
             int loc=my_real_location(node,it_thread);
 		    OTF2_LocationType_enum thread_type = OTF2_LOCATION_TYPE_CPU_THREAD;
-            if(nodes < 2 && thread_num == 0) {
-                snprintf(namebuf, 256, "Master thread 0");
-            } else if(thread_num == 0) {
-                snprintf(namebuf, 256, "Rank");
-            } else if(Tau_is_thread_fake(thread_num)) {
+            //if(nodes < 2 && thread_num == 0) {
+              //  snprintf(namebuf, 256, "Master thread 0");
+            //} else 
+			//if(thread_num == 0) {
+            //    snprintf(namebuf, 256, "Rank %d", node);
+            //} else 
+			if(Tau_is_thread_fake(thread_num)) {
                 /* Check for CUPTI */
                 char * test = Tau_metadata_get("CUDA Device", thread_num);
                 if (test != NULL && strcmp(test, "") != 0) {
@@ -1108,10 +1110,11 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
 					#else
 					OTF2_LOCATION_TYPE_GPU;
 				        #endif
-            } else {
+            } 
+			else {
                 //static int cputhreads = 1;
                 int nodeThread=cputhreads; //%((nodes > 0) ? nodes : 1);
-                snprintf(namebuf, 256, "CPU thread %02d", nodeThread);
+                snprintf(namebuf, 256, "Rank %d, CPU Thread %02d", node, nodeThread);
 		#ifdef TAU_OTF2_DEBUG
 		printf("nodes: %d, cputhreads: %d, thread_num (used): %d, nodeThread: %d\n", nodes, cputhreads, thread_num, nodeThread);
 		#endif
