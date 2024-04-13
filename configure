@@ -5958,8 +5958,8 @@ case $cxx_compiler in
         ;;
 
     *mpicxx | *mpic++)
-        internal_compiler=`$cxx_compiler -show | awk '{ print $1;}'`
-	internal_c_compiler=`$c_compiler -show | awk '{ print $1;}'`
+        internal_compiler=`$cxx_compiler -show | awk '{ print $1;}'  | awk -F'/' '{ print $NF}'`
+	internal_c_compiler=`$c_compiler -show | awk '{ print $1;}' | awk -F'/' '{ print $NF}'`
         echo "Detected MPI C++ internal compiler = $internal_compiler MPI C internal compiler = $internal_c_compiler"
         case $internal_compiler in
             *icpc | *icpx )
@@ -5985,7 +5985,7 @@ case $cxx_compiler in
                     fixmakeargs="$fixmakeargs CLANG BGCLANG"
                 fi
                 ;;
-            *g++)
+            *g++ | c++)
                 if [ $machine = bgq ] ; then
                     echo "Using GNU Compilers for BGQ"
                     fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU GNU46PLUS"
@@ -6029,7 +6029,7 @@ case $cxx_compiler in
               ;;
 	    
             *)
-                echo "ERROR Unknown C++ compiler in mpicxx/mpic++: $cxx_compiler"
+                echo "ERROR Unknown C++ compiler in mpicxx/mpic++: $internal_compiler"
                 ;;
         esac
         ;;
