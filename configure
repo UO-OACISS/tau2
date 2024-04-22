@@ -945,6 +945,7 @@ for arg in "$@"; do
         #echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
         #echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
         echo "-roctracer=<dir> .................. Specify location of ROCm roctracer."
+	echo "-rocm-core=<dir> ....... Specify location of ROCm Core to detect rocmv6"
         echo "-hip=<dir> .................... Specify location of ROCm HIP directory."
         echo "-level_zero[=<dir>] ................. Specify path to Intel Level Zero."
         echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
@@ -1373,6 +1374,7 @@ cuda=no
 level_zero=no
 rocm=no
 rocmv6=no
+rocmcore_dir=""
 rocprofiler=no
 rocprofv2=no
 rocprofv3=no
@@ -3122,7 +3124,16 @@ for arg in "$@"; do
             shift
             ;;
 
-	   -rocprofv2)
+	-rocm-core=*)
+	    rocmcore_dir=`echo $arg | sed -e 's/-rocm-core=//' -e 's/ /#/g'`
+	    if [ ! -d $rocmcore_dir ]; then
+              echo  "Error: Cannot access ROCm Core directory $rocmcore_dir"
+              exit 1
+	    fi
+	    shift
+	    ;;
+
+	-rocprofv2)
             fixmakeargs="$fixmakeargs ROCPROFILERV2"
             rocprofv2=yes
             tauoptions="${tauoptions}-rocprofv2"
@@ -3465,29 +3476,30 @@ cat <<EOF > tau_rocm6_vtest.c
 #error "ROCM version is lower than 6"
 #endif
 EOF
-	if [ -d $rocmdir/include/rocm-core ]; then
-		#echo "exists"
-		#echo "$cxx_compiler, $orig_useropt , $rocmdir"
-		if $cxx_compiler $orig_useropt -c tau_rocm6_vtest.c -I$rocmdir/include/rocm-core 1> /dev/null 2>&1
+	if [ "x$rocmcore_dir" = "x" ]; then
+		rocmcore_dir=$rocmdir
+	fi
+	if [ -d $rocmcore_dir/include/rocm-core ]; then
+		if [ $c_compiler = default ]
+	        then
+        	    c_compiler=cc
+	        fi
+		if  $c_compiler $orig_useropt -c tau_rocm6_vtest.c -I$rocmcore_dir/include/rocm-core 1> /dev/null 2>&1
 		then
-			#echo "compiled"
 			rm tau_rocm6_vtest.o
 			rocmv6=yes
-            fixmakeargs="$fixmakeargs TAU_USE_GPU"
-            pthread=yes
-            tauoptions="${tauoptions}-rocmv6"
+			fixmakeargs="$fixmakeargs TAU_USE_GPU"
+            		pthread=yes
+            		tauoptions="${tauoptions}-rocmv6"
 		else
-			#echo "failed compile"
 			rocmv6=no
 		fi
-		#echo "removing test"
 		rm tau_rocm6_vtest.c
 	else
-		#echo "does not exist"
 		rocmv6=no
 	fi
 fi
-
+echo $rocmv6
 if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "$rocmv6" = "no" ]; then
     echo "For rocprofv2 use rocm/6 or newer!"
     exit
@@ -3538,7 +3550,7 @@ if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" -a "$rocprofv3" = no ] ; then
         rocprofilerdir=$rocmdir
     fi
 
-    if [ "$rocprofiler" = yes ]; then
+    if [ "$rocprofiler" = yes -a -d $rocprofilerdir/include/rocprofiler ]; then
         fixmakeargs="$fixmakeargs ROCPROFILERROCM6"
     fi
 
@@ -3553,7 +3565,8 @@ if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" -a "$rocprofv3" = no ] ; then
     fi
 fi
 
-if [ "rocmv6" = "no" ] ; then
+if [ "$rocmv6" = "no" ] ; then
+	echo "rocmv6 no!!!!"
     if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler -a "x$roctracerdir" = "x" ]; then
       rocprofilerdir=$rocmdir/rocprofiler
       fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER TAU_USE_GPU"
