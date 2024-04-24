@@ -387,7 +387,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             unsigned long long timestamp = 0L;
 
             int taskid = Tau_get_initialized_queues(queueid);
-
+	
             if (taskid == -1) { // not initialized
               TAU_CREATE_TASK(taskid);
               Tau_set_initialized_queues(queueid, taskid);
@@ -460,10 +460,8 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             //static_cast<common::call_stack_t*>(user_data)->emplace_back(
              //  common::source_location{__FUNCTION__, __FILE__, __LINE__, info.str()});
 
-            //printf("KERNEL_DISPATCH %d\n", record->agent_id.handle);
-            int queueid = record->dispatch_info.agent_id.handle;
+            int queueid = 0;//record->dispatch_info.agent_id.handle;
             unsigned long long timestamp = 0L;
-
             int taskid = Tau_get_initialized_queues(queueid);
 
             if (taskid == -1) { // not initialized
@@ -509,7 +507,6 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
 
 
 
-
             metric_set_gpu_timestamp(taskid, ((double)(record->start_timestamp)));
             TAU_START_TASK(task_name.c_str(), taskid);
 
@@ -546,12 +543,12 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             //static_cast<common::call_stack_t*>(user_data)->emplace_back(
             //    common::source_location{__FUNCTION__, __FILE__, __LINE__, info.str()});
 
-            //printf("ROCPROFILER_BUFFER_TRACING_MEMORY_COPY %d\n", record->src_agent_id.handle);
-            int queueid = record->src_agent_id.handle;
+
+            int queueid = 0;//record->src_agent_id.handle;
             unsigned long long timestamp = 0L;
 
             int taskid = Tau_get_initialized_queues(queueid);
-
+			//queueid = 1;
             if (taskid == -1) { // not initialized
               TAU_CREATE_TASK(taskid);
               Tau_set_initialized_queues(queueid, taskid);
@@ -573,6 +570,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
 
             function_name = get_copy_direction(record->operation);
             task_name = function_name;
+			
 
             metric_set_gpu_timestamp(taskid, ((double)(record->start_timestamp)));
             TAU_START_TASK(task_name.c_str(), taskid);
