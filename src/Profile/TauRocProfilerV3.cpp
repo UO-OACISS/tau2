@@ -160,7 +160,7 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
       return;
     //printf("----------- %s\n", __FUNCTION__);
     if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
-       record.operation == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT_LOAD)
+       record.operation == ROCPROFILER_CODE_OBJECT_LOAD)
     {
         if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
         {
@@ -174,7 +174,7 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
     }
     else if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
             record.operation ==
-                ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT_DEVICE_KERNEL_SYMBOL_REGISTER)
+                ROCPROFILER_CODE_OBJECT_DEVICE_KERNEL_SYMBOL_REGISTER)
     {
         auto* data = static_cast<kernel_symbol_data_t*>(record.payload);
         if(record.phase == ROCPROFILER_CALLBACK_PHASE_LOAD)
@@ -202,22 +202,22 @@ std::string get_copy_direction(int direction)
 
   switch(direction)
   {
-    case ROCPROFILER_BUFFER_TRACING_MEMORY_COPY_NONE:
+    case ROCPROFILER_MEMORY_COPY_NONE:
       mem_cpy_kind = "MEMORY_COPY_NONE";
       break;
-    case ROCPROFILER_BUFFER_TRACING_MEMORY_COPY_HOST_TO_HOST:
+    case ROCPROFILER_MEMORY_COPY_HOST_TO_HOST:
       mem_cpy_kind = "MEMORY_COPY_HOST_TO_HOST";
       break;
-    case ROCPROFILER_BUFFER_TRACING_MEMORY_COPY_HOST_TO_DEVICE:
+    case ROCPROFILER_MEMORY_COPY_HOST_TO_DEVICE:
       mem_cpy_kind = "MEMORY_COPY_HOST_TO_DEVICE";
       break;
-    case ROCPROFILER_BUFFER_TRACING_MEMORY_COPY_DEVICE_TO_HOST:
+    case ROCPROFILER_MEMORY_COPY_DEVICE_TO_HOST:
       mem_cpy_kind = "MEMORY_COPY_DEVICE_TO_HOST";
       break;
-    case ROCPROFILER_BUFFER_TRACING_MEMORY_COPY_DEVICE_TO_DEVICE:
+    case ROCPROFILER_MEMORY_COPY_DEVICE_TO_DEVICE:
       mem_cpy_kind = "MEMORY_COPY_DEVICE_TO_DEVICE";
       break;
-    case ROCPROFILER_BUFFER_TRACING_MEMORY_COPY_LAST:
+    case ROCPROFILER_MEMORY_COPY_LAST:
       mem_cpy_kind = "MEMORY_COPY_LAST";
       break;
     default:
@@ -442,7 +442,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             auto info = std::stringstream{};
             /*info << "agent_id=" << record->agent_id.handle
                  << ", queue_id=" << record->queue_id.handle << ", kernel_id=" << record->kernel_id
-                 << ", kernel=" << client_kernels.at(record->kernel_id).kernel_name
+                 << ", kernel=" << client_kernels.at(record->dispatch_info.kernel_id).kernel_name
                  << ", context=" << context.handle << ", buffer_id=" << buffer_id.handle
                  << ", cid=" << record->correlation_id.internal
                  << ", extern_cid=" << record->correlation_id.external.value
@@ -461,7 +461,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
              //  common::source_location{__FUNCTION__, __FILE__, __LINE__, info.str()});
 
             //printf("KERNEL_DISPATCH %d\n", record->agent_id.handle);
-            int queueid = record->agent_id.handle;
+            int queueid = record->dispatch_info.agent_id.handle;
             unsigned long long timestamp = 0L;
 
             int taskid = Tau_get_initialized_queues(queueid);
@@ -486,7 +486,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             std::string task_name;
 
 
-            function_name = Tau_demangle_name(client_kernels.at(record->kernel_id).kernel_name);
+            function_name = Tau_demangle_name(client_kernels.at(record->dispatch_info.kernel_id).kernel_name);
             task_name = function_name;
 
             //Sizes seem to be bogus, implement later
