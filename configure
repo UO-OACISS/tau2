@@ -1396,6 +1396,7 @@ starpu=""
 phiprof=""
 syscall=no
 compiler_for_dyninst=""
+compilerxx_for_dyninst=""
 restore_perfdmf_and_paraprof
 
 
@@ -3566,7 +3567,6 @@ if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" -a "$rocprofv3" = no ] ; then
 fi
 
 if [ "$rocmv6" = "no" ] ; then
-	echo "rocmv6 no!!!!"
     if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler -a "x$roctracerdir" = "x" ]; then
       rocprofilerdir=$rocmdir/rocprofiler
       fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER TAU_USE_GPU"
@@ -10589,6 +10589,39 @@ if [ "x$dyninstdir" != "x" -a -d "$dyninstdir" ] ; then
   fi
 fi
 
+
+if [ "x$download_dyninst" = xyes ] ; then
+	compiler_for_dyninst=gcc
+	compilerxx_for_dyninst=g++
+cat <<EOF > test.c
+int main() {
+}
+EOF
+
+cat <<EOF > test.cpp
+int main() {
+}
+EOF
+
+	if $compilerxx_for_dyninst -o test test.cpp 1> /dev/null 2>&1 ; then
+		rm test.cpp
+		rm test
+	else
+		rm test.cpp
+		echo "Unable to compile with $compilerxx_for_dyninst (`which $compilerxx_for_dyninst`)"
+		exit 
+	fi
+
+	if $compiler_for_dyninst -o test test.c 1> /dev/null 2>&1 ; then
+		rm test
+		rm test.c
+	else
+		rm test.c
+		echo "Unable to compile with $compiler_for_dyninst (`which $compiler_for_dyninst`)"
+		exit 
+	fi
+fi
+
 ## Check for tbb
 if [ "x$tbbdir" != "x" -a -d "$tbbdir" ] ; then
   dyninsttbbdir=${tbbdir}
@@ -10601,10 +10634,10 @@ if [ "x$dyninsttbbdir" != "x" -a -d "$dyninsttbbdir" ] ; then
   #curr_path=`pwd`
   #cd $dyninsttbbdir
   #compiler_for_dyninst=`grep "CMAKE_C_COMPILER" -rhw build/CMakeFiles/ | awk -F'"' '{print $2}'`
+  #compilerxx_for_dyninst=`grep "CMAKE_CXX_COMPILER" -rhw build/CMakeFiles/ | awk -F'"' '{print $2}'`
   #cd $curr_path
   #unset curr_path
   #Need to find an alternative way, if possible. Do not remove previous commented lines.
-  compiler_for_dyninst=gcc
   fixmakeargs="$fixmakeargs useropt=-I${dyninsttbbdir}/include#${useropt}"
 else
   if [ "x$tbb" = xyes ] ; then
@@ -10639,10 +10672,11 @@ if [ "x$download_tbb" = xyes ] ; then
 	mkdir install
 	cd build
 	#cmake is removing the runtime path, which generate issues when using tbb libraries, the two last flags fix this problem
-	cmake .. -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_INSTALL_PREFIX=${dyninsttbbdir}/install -DTBB_TEST=OFF -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=True -DCMAKE_INSTALL_RPATH=${dyninsttbbdir}/install/lib
+	CC=$compiler_for_dyninst CXX=$compilerxx_for_dyninst cmake .. -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_INSTALL_PREFIX=${dyninsttbbdir}/install -DTBB_TEST=OFF -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=True -DCMAKE_INSTALL_RPATH=${dyninsttbbdir}/install/lib
 	make -j4
 	make install
-	compiler_for_dyninst=`grep "CMAKE_C_COMPILER" -rhw CMakeFiles/ | awk -F'"' '{print $2}'`
+	#compiler_for_dyninst=`grep "CMAKE_C_COMPILER" -rhw CMakeFiles/ | awk -F'"' '{print $2}'`
+	#compilerxx_for_dyninst=`grep "CMAKE_CXX_COMPILER" -rhw CMakeFiles/ | awk -F'"' '{print $2}'`
 	cd $dyninsttbbdir
 	cd ..
     fixmakeargs="$fixmakeargs useropt=-I${dyninsttbbdir}/include#${useropt}"
@@ -10750,7 +10784,7 @@ if [ "x$download_dyninst" = xyes ] ; then
 	      download "$dynlibibertyurl" "$dynlibibertytgz"
 	      tar -xzf $dynlibibertytgz
 	      cd $dynlibiberty/libiberty
-	      ./configure --enable-shared --prefix=$PWD # It wrongly says that enable-shared is an unknow flag
+	      CC=$compiler_for_dyninst CXX=$compilerxx_for_dyninst ./configure --enable-shared --prefix=$PWD # It wrongly says that enable-shared is an unknow flag
 	      make -j8
 	      ar rcs libiberty.a pic/*.o
 	      cp libiberty.a ${dyninstdir}/libiberty/lib/
@@ -10765,7 +10799,7 @@ if [ "x$download_dyninst" = xyes ] ; then
       download "$dynelfutilsurl" "$dynelfutilsbz"
       tar -xf $dynelfutilsbz -C ${dyninstdir}/elfutils --strip-components=1
       cd ${dyninstdir}/elfutils
-      ./configure -disable-debuginfod --disable-libdebuginfod --prefix=$PWD
+      CC=$compiler_for_dyninst CXX=$compilerxx_for_dyninst  ./configure -disable-debuginfod --disable-libdebuginfod --prefix=$PWD
       make -j8
       make -j8 install
       cd ..
@@ -10779,7 +10813,7 @@ if [ "x$download_dyninst" = xyes ] ; then
       export CPATH=${dyninsttbbdir} # To prevent using wrong tbb/include when building
       export CMAKE_PREFIX_PATH="" # To prevent looking for tbb installation by bfd
       ## Now we can make Dyninst
-      CC=$compiler_for_dyninst cmake ${prebfddir}/${libdyninst} -DBoost_ROOT_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DLibIberty_ROOT_DIR=${libiberty_root_dir} -DIBERTY_LIBRARIES=${dyninstdir}/libiberty/lib/libiberty.a -DElfUtils_ROOT_DIR=${dyninstdir}/elfutils/ -DTBB_ROOT_DIR=${tbbdir}
+      CC=$compiler_for_dyninst CXX=$compilerxx_for_dyninst cmake ${prebfddir}/${libdyninst} -DBoost_ROOT_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DLibIberty_ROOT_DIR=${libiberty_root_dir} -DIBERTY_LIBRARIES=${dyninstdir}/libiberty/lib/libiberty.a -DElfUtils_ROOT_DIR=${dyninstdir}/elfutils/ -DTBB_ROOT_DIR=${tbbdir}
       make -j8
       make install
       export CPATH=$old_CPATH
