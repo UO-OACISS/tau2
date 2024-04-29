@@ -293,7 +293,7 @@ extern void TauFlushRocmEventsIfNecessary() {
       if (Tau_get_initialized_queues(i) != -1) {  // contention. Is it still -1?
         TAU_VERBOSE("Closing thread id: %d last timestamp = %llu\n", Tau_get_initialized_queues(i), tau_last_timestamp_ns);
         Tau_metric_set_synchronized_gpu_timestamp(i, ((double)tau_last_timestamp_ns/1e3)); // convert to microseconds
-        Tau_stop_top_level_timer_if_necessary_task(Tau_get_initialized_queues(i));
+        //Tau_stop_top_level_timer_if_necessary_task(Tau_get_initialized_queues(i));
         Tau_set_initialized_queues(i, -1);
       }
       RtsLayer::UnLockDB();
@@ -308,7 +308,7 @@ extern void TauFlushRocmEventsIfNecessary() {
       if (Tau_get_initialized_queues(i) != -1) {  // contention. Is it still -1?
         TAU_VERBOSE("Closing thread id: %d last timestamp = %llu\n", Tau_get_initialized_queues(i), tau_last_timestamp_ns);
         Tau_metric_set_synchronized_gpu_timestamp(i, ((double)tau_last_timestamp_ns/1e3)); // convert to microseconds
-        Tau_stop_top_level_timer_if_necessary_task(Tau_get_initialized_queues(i));
+        //Tau_stop_top_level_timer_if_necessary_task(Tau_get_initialized_queues(i));
 	TAU_VERBOSE("Setting initialized_queues i=%d to -1: \n", i);
         Tau_set_initialized_queues(i, -1);
       }
