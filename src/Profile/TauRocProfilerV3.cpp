@@ -37,6 +37,7 @@
 #include <vector>
 
 int volatile flushed = 0;
+int volatile taskid = 0;
 
 #define ROCPROFILER_CALL(result, msg)                                                              \
     {                                                                                              \
@@ -318,13 +319,13 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             int queueid = 0;
             unsigned long long timestamp = 0L;
 
-            int taskid = Tau_get_initialized_queues(queueid);
+            taskid = Tau_get_initialized_queues(queueid);
 
             if (taskid == -1) { // not initialized
               TAU_CREATE_TASK(taskid);
               Tau_set_initialized_queues(queueid, taskid);
-              timestamp = record->start_timestamp/1e3;
-              Tau_check_timestamps(last_timestamp/1e3, timestamp, "NEW QUEUE", taskid);
+              timestamp = record->start_timestamp;
+              Tau_check_timestamps(last_timestamp, timestamp, "NEW QUEUE", taskid);
               last_timestamp = timestamp;
               // Set the timestamp for TAUGPU_TIME:
               Tau_metric_set_synchronized_gpu_timestamp(taskid,
@@ -342,13 +343,17 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             function_name = client_name_info.operation_names[record->kind][record->operation];
             task_name = function_name;
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->start_timestamp/ 1e3)));
-            TAU_START_TASK(task_name.c_str(), taskid);
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->end_timestamp/ 1e3)));
+            double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->start_timestamp/1e3)); // convert to microseconds
+            metric_set_gpu_timestamp(taskid, timestamp_entry);
+            TAU_START_TASK(task_name.c_str(), taskid);
+            
+
+            double timestamp_exit = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->end_timestamp/1e3)); // convert to microseconds
+            metric_set_gpu_timestamp(taskid, timestamp_exit);
             TAU_STOP_TASK(task_name.c_str(), taskid);
             //TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", task_name, taskid, tracer_record.timestamps.end.value);
-            Tau_set_last_timestamp_ns(record->end_timestamp);
+            Tau_set_last_timestamp_ns(timestamp_exit);
 
 
 
@@ -386,7 +391,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             int queueid = 0;
             unsigned long long timestamp = 0L;
 
-            int taskid = Tau_get_initialized_queues(queueid);
+            taskid = Tau_get_initialized_queues(queueid);
 	
             if (taskid == -1) { // not initialized
               TAU_CREATE_TASK(taskid);
@@ -410,13 +415,16 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             function_name = client_name_info.operation_names[record->kind][record->operation];
             task_name = function_name;
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->start_timestamp/ 1e3)));
+            double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->start_timestamp/1e3)); // convert to microseconds
+            metric_set_gpu_timestamp(taskid, timestamp_entry);
             TAU_START_TASK(task_name.c_str(), taskid);
+            
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->end_timestamp/ 1e3)));
+            double timestamp_exit = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->end_timestamp/1e3)); // convert to microseconds
+            metric_set_gpu_timestamp(taskid, timestamp_exit);
             TAU_STOP_TASK(task_name.c_str(), taskid);
             //TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", task_name, taskid, tracer_record.timestamps.end.value);
-            Tau_set_last_timestamp_ns(record->end_timestamp);
+            Tau_set_last_timestamp_ns(timestamp_exit);
 
 
 
@@ -462,7 +470,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
 
             int queueid = 0;//record->dispatch_info.agent_id.handle;
             unsigned long long timestamp = 0L;
-            int taskid = Tau_get_initialized_queues(queueid);
+            taskid = Tau_get_initialized_queues(queueid);
 
             if (taskid == -1) { // not initialized
               TAU_CREATE_TASK(taskid);
@@ -507,13 +515,17 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
 
 
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->start_timestamp/ 1e3)));
-            TAU_START_TASK(task_name.c_str(), taskid);
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->end_timestamp/ 1e3)));
+            double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->start_timestamp/1e3)); // convert to microseconds
+            metric_set_gpu_timestamp(taskid, timestamp_entry);
+            TAU_START_TASK(task_name.c_str(), taskid);
+            
+
+            double timestamp_exit = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->end_timestamp/1e3)); // convert to microseconds
+            metric_set_gpu_timestamp(taskid, timestamp_exit);
             TAU_STOP_TASK(task_name.c_str(), taskid);
             //TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", task_name, taskid, tracer_record.timestamps.end.value);
-            Tau_set_last_timestamp_ns(record->end_timestamp);
+            Tau_set_last_timestamp_ns(timestamp_exit);
 
 
 
@@ -547,7 +559,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             int queueid = 0;//record->src_agent_id.handle;
             unsigned long long timestamp = 0L;
 
-            int taskid = Tau_get_initialized_queues(queueid);
+            taskid = Tau_get_initialized_queues(queueid);
 			//queueid = 1;
             if (taskid == -1) { // not initialized
               TAU_CREATE_TASK(taskid);
@@ -572,13 +584,17 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             task_name = function_name;
 			
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->start_timestamp/ 1e3)));
-            TAU_START_TASK(task_name.c_str(), taskid);
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->end_timestamp/ 1e3)));
+            double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->start_timestamp/1e3)); // convert to microseconds
+            metric_set_gpu_timestamp(taskid, timestamp_entry);
+            TAU_START_TASK(task_name.c_str(), taskid);
+            
+
+            double timestamp_exit = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->end_timestamp/1e3)); // convert to microseconds
+            metric_set_gpu_timestamp(taskid, timestamp_exit);
             TAU_STOP_TASK(task_name.c_str(), taskid);
             //TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", task_name, taskid, tracer_record.timestamps.end.value);
-            Tau_set_last_timestamp_ns(record->end_timestamp);
+            Tau_set_last_timestamp_ns(timestamp_exit);
 
 
         }
@@ -828,6 +844,7 @@ rocprofiler_configure(uint32_t                 version,
                       rocprofiler_client_id_t* id)
 {
     //printf("----------- %s\n", __FUNCTION__);
+        
     // only activate if main tool
     if(priority > 0) return nullptr;
 
@@ -872,6 +889,7 @@ rocprofiler_configure(uint32_t                 version,
                                             static_cast<void*>(client_tool_data)};
 
     // return pointer to configure data
+    
     return &cfg;
 }
 
@@ -881,6 +899,20 @@ void Tau_rocprofv3_flush(){
    //printf("-----------!! %s\n", __FUNCTION__);
    //printf("%d\n", getpid());
    ROCPROFILER_CALL(rocprofiler_flush_buffer(client_buffer), "buffer flush");
+   
+   for (int i=0; i < TAU_MAX_ROCM_QUEUES; i++) {
+    if (Tau_get_initialized_queues(i) != -1) {
+      RtsLayer::LockDB();
+      if (Tau_get_initialized_queues(i) != -1) {  // contention. Is it still -1?
+        TAU_VERBOSE("Closing thread id: %d last timestamp = %llu\n", Tau_get_initialized_queues(i), Tau_get_last_timestamp_ns());
+        Tau_metric_set_synchronized_gpu_timestamp(i, ((double)Tau_get_last_timestamp_ns()/1e3)); // convert to microseconds
+        //Tau_stop_top_level_timer_if_necessary_task(Tau_get_initialized_queues(i));
+        Tau_set_initialized_queues(i, -1);
+      }
+      RtsLayer::UnLockDB();
+    }
+  }
+  
   if(flushed)
     return;
   else if (flushed==0)
