@@ -153,6 +153,7 @@ https://github.com/UO-OACISS/tau2/blob/a921b0a6a3b1b69979e1801bc1aff8fe21dd9fcc/
 TauEnv_get_thread_per_gpu_stream()
 */
 
+
 void FlushTracerRecord(rocprofiler_record_tracer_t tracer_record, rocprofiler_session_id_t session_id)
 {
 
@@ -163,6 +164,7 @@ void FlushTracerRecord(rocprofiler_record_tracer_t tracer_record, rocprofiler_se
   taskid = Tau_get_initialized_queues(queueid);
   static std::map<uint64_t, std::string> timer_map;
 
+
   if (taskid == -1) { // not initialized
     TAU_CREATE_TASK(taskid);
     TAU_VERBOSE(
@@ -172,9 +174,8 @@ void FlushTracerRecord(rocprofiler_record_tracer_t tracer_record, rocprofiler_se
     timestamp = tracer_record.timestamps.begin.value;
     Tau_check_timestamps(last_timestamp, timestamp, "NEW QUEUE", taskid);
     last_timestamp = timestamp;
-    // Set the timestamp for TAUGPU_TIME:
-    Tau_metric_set_synchronized_gpu_timestamp(taskid,
-                                              ((double)timestamp / 1e3));
+    uint64_t first_cpu_timestamp = TauTraceGetTimeStamp();
+    metric_set_gpu_timestamp(taskid, first_cpu_timestamp);
     Tau_create_top_level_timer_if_necessary_task(taskid);
     Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
     Tau_add_metadata_for_task("ROCM_GPU_ID", tracer_record.agent_id.handle,
@@ -182,6 +183,7 @@ void FlushTracerRecord(rocprofiler_record_tracer_t tracer_record, rocprofiler_se
     Tau_add_metadata_for_task("ROCM_QUEUE_ID", tracer_record.queue_id.handle,
                               taskid);
   }
+
 
   std::string kernel_name;
   bool roctx_used = false;
@@ -225,6 +227,8 @@ void FlushTracerRecord(rocprofiler_record_tracer_t tracer_record, rocprofiler_se
       break;
   }
 
+  if(tracer_record.timestamps.begin.value == 0)
+    return;
 
   TAU_VERBOSE("Record [%lu]", tracer_record.header.id.handle);
   TAU_VERBOSE(", Domain(%s)", GetDomainName(tracer_record.domain));
@@ -251,13 +255,15 @@ void FlushTracerRecord(rocprofiler_record_tracer_t tracer_record, rocprofiler_se
     task_name = function_name+ " " + kernel_name;
   }
   TAU_VERBOSE("\n");
-    
+  
 
   if (tracer_record.domain != ACTIVITY_DOMAIN_ROCTX) {
-    metric_set_gpu_timestamp(taskid, ((double)(tracer_record.timestamps.begin.value)));
+    double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)tracer_record.timestamps.begin.value/1e3)); // convert to microseconds
+    metric_set_gpu_timestamp(taskid, timestamp_entry);
     TAU_START_TASK(task_name.c_str(), taskid);
 
-    metric_set_gpu_timestamp(taskid, ((double)(tracer_record.timestamps.end.value)));
+    double timestamp_exit = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)tracer_record.timestamps.end.value/1e3)); // convert to microseconds
+    metric_set_gpu_timestamp(taskid, timestamp_exit);
     TAU_STOP_TASK(task_name.c_str(), taskid);
     //TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", task_name, taskid, tracer_record.timestamps.end.value);
     Tau_set_last_timestamp_ns(tracer_record.timestamps.end.value);

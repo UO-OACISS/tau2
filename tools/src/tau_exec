@@ -1089,18 +1089,30 @@ if [ $track_rocm = "true" ] ; then
   #export TAU_HSA_TOOLS_LIB=librocprofiler64.so.1
   isRocmv6=`echo $theBinding | grep rocmv6`
   if [ ! "x$isRocmv6" == "x"  ]; then
-	  options=`echo $theBinding | sed -e 's/shared-//g' `
+    options=`echo $theBinding | sed -e 's/shared-//g' `
 	  mk=$BASEDIR/lib/Makefile.tau-$options
 	  rocmdir=`grep "TAU_ROCM_DIR=" $mk | sed -e 's@TAU_ROCM_DIR=@@g'`
-	  if [ -r $rocmdir/lib/librocprofiler64.so ]; then
-		$dryrun export TAU_HSA_TOOLS_LIB=$rocmdir/lib/librocprofiler64.so
-	  fi
+    isRocprofv2=`echo $theBinding | grep rocprofv2`
+    isRocprofv3=`echo $theBinding | grep rocprofv3`
+    if [ ! "x$isRocprofv2" == "x"  ]; then
+      if [ -r $rocmdir/lib/librocprofiler64v2.so ]; then
+  		   $dryrun export TAU_HSA_TOOLS_LIB=$rocmdir/lib/librocprofiler64v2.so
+  	  fi
+    elif [ ! "x$isRocprofv3" == "x"  ]; then
+      if [ -r $rocmdir/lib/librocprofiler-sdk.so ]; then
+  		   $dryrun export TAU_HSA_TOOLS_LIB=$rocmdir/lib/librocprofiler-sdk.so
+  	  fi
+    else
+      if [ -r $rocmdir/lib/librocprofiler64.so ]; then
+  		   $dryrun export TAU_HSA_TOOLS_LIB=$rocmdir/lib/librocprofiler64.so
+  	  fi
+    fi
 	  if [ -r $rocmdir/lib/rocprofiler/metrics.xml ]; then
 		$dryrun export ROCP_METRICS=$rocmdir/lib/rocprofiler/metrics.xml
 
 	  fi
   else
-	  options=`echo $theBinding | sed -e 's/shared-//g' `
+    options=`echo $theBinding | sed -e 's/shared-//g' `
 	  mk=$BASEDIR/lib/Makefile.tau-$options
 	  rocprofdir=`grep "TAU_ROCPROFILER=" $mk | sed -e 's@TAU_ROCPROFILER=@@g'`
 	  if [ -r $rocprofdir/lib/librocprofiler64.so ]; then

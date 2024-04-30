@@ -3209,7 +3209,7 @@ for arg in "$@"; do
               echo  "Error: Cannot access rocprofiler directory $rocprofilerdir"
               exit 1
             else
-              fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER TAU_USE_GPU"
+              fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir TAU_USE_GPU"
               rocprofiler=yes
               tauoptions="${tauoptions}-rocprofiler"
               pthread=yes
@@ -3552,7 +3552,7 @@ if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" -a "$rocprofv3" = no ] ; then
     fi
 
     if [ "$rocprofiler" = yes -a -d $rocprofilerdir/include/rocprofiler ]; then
-        fixmakeargs="$fixmakeargs ROCPROFILERROCM6"
+        fixmakeargs="$fixmakeargs ROCPROFILER ROCPROFILERROCM6"
     fi
 
     if [ "x$rocprofilerlibrary" = "x" ]; then
@@ -3567,12 +3567,15 @@ if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" -a "$rocprofv3" = no ] ; then
 fi
 
 if [ "$rocmv6" = "no" ] ; then
+
     if [ "x$rocm" = "xyes" -a "x$rocprofiler" = "xyes" -a "x$rocprofilerdir" = "x" -a -d $rocmdir/rocprofiler -a "x$roctracerdir" = "x" ]; then
       rocprofilerdir=$rocmdir/rocprofiler
       fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER TAU_USE_GPU"
       rocprofiler=yes
       tauoptions="${tauoptions}-rocprofiler"
       pthread=yes
+    elif [ "x$rocprofiler" = "xyes" ]; then
+      fixmakeargs="$fixmakeargs ROCPROFILER"
     fi
     if [ "x$rocm" = "xyes" -a "x$rocmsmi" = "xno" ]; then
       if [ -r $rocmdir/include/rocm_smi/rocm_smi.h ]; then
