@@ -810,10 +810,10 @@ else
   theBinding=$binding_specified
 fi
 
-isRocprofv3=`echo $theBinding | grep rocprofv3`
-if [ ! "x$isRocprofv3" == "x"  ]; then
-	track_rocm=false
-fi
+#isRocprofv3=`echo $theBinding | grep rocprofv3`
+#if [ ! "x$isRocprofv3" == "x"  ]; then
+#	track_rocm=false
+#fi
 
 if [ $verbose = "true" ] ; then
   echo ""

@@ -323,8 +323,8 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             if (taskid == -1) { // not initialized
               TAU_CREATE_TASK(taskid);
               Tau_set_initialized_queues(queueid, taskid);
-              timestamp = record->start_timestamp;
-              Tau_check_timestamps(last_timestamp, timestamp, "NEW QUEUE", taskid);
+              timestamp = record->start_timestamp/1e3;
+              Tau_check_timestamps(last_timestamp/1e3, timestamp, "NEW QUEUE", taskid);
               last_timestamp = timestamp;
               // Set the timestamp for TAUGPU_TIME:
               Tau_metric_set_synchronized_gpu_timestamp(taskid,
@@ -342,10 +342,10 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             function_name = client_name_info.operation_names[record->kind][record->operation];
             task_name = function_name;
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->start_timestamp)));
+            metric_set_gpu_timestamp(taskid, ((double)(record->start_timestamp/ 1e3)));
             TAU_START_TASK(task_name.c_str(), taskid);
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->end_timestamp)));
+            metric_set_gpu_timestamp(taskid, ((double)(record->end_timestamp/ 1e3)));
             TAU_STOP_TASK(task_name.c_str(), taskid);
             //TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", task_name, taskid, tracer_record.timestamps.end.value);
             Tau_set_last_timestamp_ns(record->end_timestamp);
@@ -410,10 +410,10 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             function_name = client_name_info.operation_names[record->kind][record->operation];
             task_name = function_name;
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->start_timestamp)));
+            metric_set_gpu_timestamp(taskid, ((double)(record->start_timestamp/ 1e3)));
             TAU_START_TASK(task_name.c_str(), taskid);
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->end_timestamp)));
+            metric_set_gpu_timestamp(taskid, ((double)(record->end_timestamp/ 1e3)));
             TAU_STOP_TASK(task_name.c_str(), taskid);
             //TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", task_name, taskid, tracer_record.timestamps.end.value);
             Tau_set_last_timestamp_ns(record->end_timestamp);
@@ -507,10 +507,10 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
 
 
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->start_timestamp)));
+            metric_set_gpu_timestamp(taskid, ((double)(record->start_timestamp/ 1e3)));
             TAU_START_TASK(task_name.c_str(), taskid);
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->end_timestamp)));
+            metric_set_gpu_timestamp(taskid, ((double)(record->end_timestamp/ 1e3)));
             TAU_STOP_TASK(task_name.c_str(), taskid);
             //TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", task_name, taskid, tracer_record.timestamps.end.value);
             Tau_set_last_timestamp_ns(record->end_timestamp);
@@ -572,10 +572,10 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
             task_name = function_name;
 			
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->start_timestamp)));
+            metric_set_gpu_timestamp(taskid, ((double)(record->start_timestamp/ 1e3)));
             TAU_START_TASK(task_name.c_str(), taskid);
 
-            metric_set_gpu_timestamp(taskid, ((double)(record->end_timestamp)));
+            metric_set_gpu_timestamp(taskid, ((double)(record->end_timestamp/ 1e3)));
             TAU_STOP_TASK(task_name.c_str(), taskid);
             //TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", task_name, taskid, tracer_record.timestamps.end.value);
             Tau_set_last_timestamp_ns(record->end_timestamp);
