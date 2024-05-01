@@ -3500,7 +3500,7 @@ EOF
 		rocmv6=no
 	fi
 fi
-echo $rocmv6
+
 if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "$rocmv6" = "no" ]; then
     echo "For rocprofv2 use rocm/6 or newer!"
     exit
@@ -3520,7 +3520,7 @@ if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "$rocmv6" = "yes" ]; then
     fi
 
     if [ "x$rocprofilerinc" = "x" ]; then
-        rocprofilerinc="$rocprofilerdir/include/rocprofiler"
+        rocprofilerinc="$rocprofilerdir/include/"
         fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
     fi
 fi
@@ -3533,7 +3533,7 @@ if [ "x$rocm" = "xyes" -a "$rocprofv3" = "yes" -a "$rocmv6" = "yes" ]; then
     fi
 
     if [ "x$rocprofilerinc" = "x" ]; then
-        rocprofilerinc="$rocprofilerdir/include/rocprofiler"
+        rocprofilerinc="$rocprofilerdir/include/"
         fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
     fi
 fi

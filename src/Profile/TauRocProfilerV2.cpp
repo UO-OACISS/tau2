@@ -37,7 +37,7 @@ THE SOFTWARE.
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <amd_comgr/amd_comgr.h>
+//#include <amd_comgr/amd_comgr.h>
 
 #include <atomic>
 #include <iostream>
