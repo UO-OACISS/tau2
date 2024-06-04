@@ -50,9 +50,9 @@ int __real_fsync( int fd);
 int __wrap_fsync( int fd)
 {
   int ret;
-  
+
   if (Tau_iowrap_checkPassThrough()) {
-    return __real_fsync(fd); 
+    return __real_fsync(fd);
   }
   Tau_global_incr_insideTAU();
   Tau_iowrap_checkInit();
@@ -82,22 +82,22 @@ int __wrap_open(const char *pathname, int flags, ...)
 {
   int ret;
   int mode = 0;
-  int mode_specified = 0; 
-  TAU_VERBOSE("__wrap_open: pathname = %s\n", pathname); 
- 
+  int mode_specified = 0;
+  TAU_VERBOSE("__wrap_open: pathname = %s\n", pathname);
+
   if (flags & O_CREAT) {
     va_list arg;
     va_start(arg, flags);
-    mode = va_arg(arg, int); 
+    mode = va_arg(arg, int);
     va_end(arg);
-    mode_specified = 1; 
+    mode_specified = 1;
   }
 
   if (Tau_iowrap_checkPassThrough()) {
-    if (!mode_specified) 
-      return __real_open(pathname, flags); 
+    if (!mode_specified)
+      return __real_open(pathname, flags);
     else
-      return __real_open(pathname, flags, mode); 
+      return __real_open(pathname, flags, mode);
   }
   Tau_global_incr_insideTAU();
   Tau_iowrap_checkInit();
@@ -108,15 +108,15 @@ int __wrap_open(const char *pathname, int flags, ...)
   TAU_PROFILE_TIMER(t, "open()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
-  if (!mode_specified) 
-    ret = __real_open(pathname, flags); 
+  if (!mode_specified)
+    ret = __real_open(pathname, flags);
   else
-    ret = __real_open(pathname, flags, mode); 
+    ret = __real_open(pathname, flags, mode);
 
   if (ret != -1) {
     Tau_iowrap_registerEvents(ret, pathname);
   }
-  
+
   if (TauEnv_get_track_io_params()) {
     TAU_REGISTER_EVENT(open_fd, "OPEN flags");
     TAU_REGISTER_EVENT(open_ret, "OPEN ret");
@@ -143,7 +143,7 @@ int __wrap_open64(const char *pathname, int flags, ...)
   int ret;
   int mode = 0;
   int mode_specified = 0;
-  
+
   if (flags & O_CREAT) {
     va_list arg;
     va_start(arg, flags);
@@ -197,10 +197,10 @@ int __wrap_open64(const char *pathname, int flags, ...)
  * creat
  ********************************************************************/
 int __real_creat(const char *pathname, mode_t mode);
-int __wrap_creat(const char *pathname, mode_t mode) 
+int __wrap_creat(const char *pathname, mode_t mode)
 {
   int ret;
-  
+
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_creat(pathname, mode);
@@ -373,7 +373,7 @@ FILE * __wrap_fopen64(const char *pathname, const char * mode)
 
 
 
- 
+
 /*********************************************************************
  * pipe
  ********************************************************************/
@@ -417,27 +417,28 @@ int __wrap_pipe(int filedes[2])
 /*********************************************************************
  * Tau_wrapper_get_socketname returns the name of the socket (AF_INET/AF_UNIX)
  ********************************************************************/
-char * Tau_wrapper_get_socket_name(const struct sockaddr *sa, char *s, size_t len) {
+char * Tau_wrapper_get_socket_name(const struct sockaddr *sa, char *s, size_t len, size_t maxlen) {
   int i;
   Tau_iowrap_checkInit();
   char addr[256];
   switch (sa->sa_family) {
     case AF_INET:
       inet_ntop(AF_INET, &(((struct sockaddr_in *) sa)->sin_addr), addr, len);
-      snprintf(s, len, "%s,port=%d",addr,ntohs((((struct sockaddr_in *)sa)->sin_port)));
+      snprintf(s, maxlen, "%s,port=%d",addr,ntohs((((struct sockaddr_in *)sa)->sin_port)));
       break;
     case AF_INET6:
       inet_ntop(AF_INET6, &(((struct sockaddr_in6 *) sa)->sin6_addr), addr, len);
       for (i = 0; i < strlen(addr); i++) {
         if (addr[i] == ':' ) addr[i] = '.';
       }
-      snprintf(s, len, "%s,port=%d",addr,ntohs((((struct sockaddr_in6 *)sa)->sin6_port)));
+      snprintf(s, maxlen, "%s,port=%d",addr,ntohs((((struct sockaddr_in6 *)sa)->sin6_port)));
       break;
     case AF_UNIX:
-      strncpy(s, ((char *)(((struct sockaddr_un *) sa)->sun_path)), len);
+      strncpy(s, ((char *)(((struct sockaddr_un *) sa)->sun_path)), maxlen);
       break;
     default:
-      strncpy(s, "Unknown address family", len);
+      printf("Address family: %d\n", sa->sa_family);
+      strncpy(s, "Unknown address family", maxlen);
       return NULL;
   }
   return s;
@@ -529,11 +530,11 @@ int __wrap_socketpair(int domain, int type, int protocol, int sv[2]) {
  * bind
  ********************************************************************/
 int __real_bind(int socket, const struct sockaddr *address, socklen_t address_len);
-int __wrap_bind(int socket, const struct sockaddr *address, socklen_t address_len) 
+int __wrap_bind(int socket, const struct sockaddr *address, socklen_t address_len)
 {
   int ret;
 
-  char socketname[TAU_MAX_SOCKET_LEN];
+  char socketname[TAU_MAX_SOCKET_LEN] = {0};
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_bind(socket, address, address_len);
@@ -546,7 +547,7 @@ int __wrap_bind(int socket, const struct sockaddr *address, socklen_t address_le
   ret = __real_bind(socket, address, address_len);
 
   if (ret == 0) {
-    Tau_wrapper_get_socket_name(address, (char *) socketname, address_len);
+    Tau_wrapper_get_socket_name(address, (char *) socketname, address_len, TAU_MAX_SOCKET_LEN);
     Tau_iowrap_registerEvents(socket, (const char *) socketname);
   }
 
@@ -574,7 +575,7 @@ int __wrap_connect(int socket, struct sockaddr *address, socklen_t address_len)
 {
   int ret;
 
-  char socketname[TAU_MAX_SOCKET_LEN];
+  char socketname[TAU_MAX_SOCKET_LEN] = {0};
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_connect(socket, address, address_len);
@@ -587,7 +588,7 @@ int __wrap_connect(int socket, struct sockaddr *address, socklen_t address_len)
   ret = __real_connect(socket, address, address_len);
 
   if (ret != -1) {
-    Tau_wrapper_get_socket_name(address, (char *) socketname, (size_t) address_len);
+    Tau_wrapper_get_socket_name(address, (char *) socketname, (size_t) address_len, TAU_MAX_SOCKET_LEN);
     Tau_iowrap_registerEvents(socket, (const char *) socketname);
   }
 
@@ -616,7 +617,7 @@ int __wrap_accept(int socket, struct sockaddr *address, socklen_t* address_len)
 {
   int ret;
 
-  char socketname[TAU_MAX_SOCKET_LEN];
+  char socketname[TAU_MAX_SOCKET_LEN] = {0};
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_accept(socket, address, address_len);
@@ -629,7 +630,7 @@ int __wrap_accept(int socket, struct sockaddr *address, socklen_t* address_len)
   ret = __real_accept(socket, address, address_len);
 
   if (ret != -1) {
-    Tau_wrapper_get_socket_name(address, (char *) socketname, (size_t) (*address_len));
+    Tau_wrapper_get_socket_name(address, (char *) socketname, (size_t) (*address_len), TAU_MAX_SOCKET_LEN);
     Tau_iowrap_registerEvents(ret, (const char *) socketname);
   }
 
@@ -651,7 +652,7 @@ int __wrap_accept(int socket, struct sockaddr *address, socklen_t* address_len)
  * fcntl
  ********************************************************************/
 int __real_fcntl(int fd, int cmd, ...) ;
-int __wrap_fcntl(int fd, int cmd, ...) 
+int __wrap_fcntl(int fd, int cmd, ...)
 {
   va_list ap;
   void *arg;
@@ -698,7 +699,7 @@ size_t __wrap_read(int fd, void *buf, size_t nbytes)
 {
   int ret;
   double currentRead = 0.0;
-  struct timeval t1, t2; 
+  struct timeval t1, t2;
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_read(fd, buf, nbytes);
@@ -750,12 +751,12 @@ size_t __wrap_read(int fd, void *buf, size_t nbytes)
  * fread
  ********************************************************************/
 size_t __real_fread(void *ptr, size_t size, size_t nmemb, FILE *stream) ;
-size_t __wrap_fread(void *ptr, size_t size, size_t nmemb, FILE *stream) 
+size_t __wrap_fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
   size_t ret;
   double currentRead = 0.0;
-  struct timeval t1, t2; 
-  unsigned long long count; 
+  struct timeval t1, t2;
+  unsigned long long count;
   int fd;
   fd = fileno(stream);
 
@@ -777,7 +778,7 @@ size_t __wrap_fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  count = ret * size; 
+  count = ret * size;
 
   if ((currentRead > 1e-12) && (ret > 0)) {
     TAU_CONTEXT_EVENT(re, (double) count/currentRead);
@@ -810,7 +811,7 @@ size_t __wrap_fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
  * readv
  ********************************************************************/
 ssize_t __real_readv(int fd, const struct iovec *vec, int count) ;
-ssize_t __wrap_readv(int fd, const struct iovec *vec, int count) 
+ssize_t __wrap_readv(int fd, const struct iovec *vec, int count)
 {
   ssize_t ret;
   double currentRead = 0.0;
@@ -876,8 +877,8 @@ size_t __wrap_write(int fd, void *buf, size_t nbytes)
 {
   int ret;
   double currentWrite = 0.0;
-  struct timeval t1, t2; 
-  double bw = 0.0; 
+  struct timeval t1, t2;
+  double bw = 0.0;
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_write(fd, buf, nbytes);
@@ -931,8 +932,8 @@ size_t __wrap_fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream)
   size_t ret;
   unsigned long long count;
   double currentWrite = 0.0;
-  struct timeval t1, t2; 
-  double bw = 0.0; 
+  struct timeval t1, t2;
+  double bw = 0.0;
 
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -985,7 +986,7 @@ size_t __wrap_fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream)
  * writev
  ********************************************************************/
 ssize_t __real_writev(int fd,  const struct iovec *vec, int count) ;
-ssize_t __wrap_writev(int fd,  const struct iovec *vec, int count) 
+ssize_t __wrap_writev(int fd,  const struct iovec *vec, int count)
 {
   ssize_t ret;
   double currentWrite = 0.0;
@@ -1029,7 +1030,7 @@ ssize_t __wrap_writev(int fd,  const struct iovec *vec, int count)
   }
 
   TAU_PROFILE_STOP(t);
-  TAU_VERBOSE("Writev fd %d ret %d\n", fd, ret);  
+  TAU_VERBOSE("Writev fd %d ret %d\n", fd, ret);
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -1043,8 +1044,8 @@ ssize_t __wrap_pwrite(int fd, void *buf, size_t nbytes, off_t offset)
 {
   ssize_t ret;
   double currentWrite = 0.0;
-  struct timeval t1, t2; 
-  double bw = 0.0; 
+  struct timeval t1, t2;
+  double bw = 0.0;
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_pwrite(fd, buf, nbytes, offset);
@@ -1155,7 +1156,7 @@ ssize_t __wrap_pread(int fd, void *buf, size_t nbytes, off_t offset)
 {
   ssize_t ret;
   double currentRead = 0.0;
-  struct timeval t1, t2; 
+  struct timeval t1, t2;
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_pread(fd, buf, nbytes, offset);
@@ -1213,7 +1214,7 @@ ssize_t __wrap_pread64(int fd, void *buf, size_t nbytes, off64_t offset)
 {
   ssize_t ret;
   double currentRead = 0.0;
-  struct timeval t1, t2; 
+  struct timeval t1, t2;
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_pread64(fd, buf, nbytes, offset);
@@ -1303,7 +1304,7 @@ int __real_fclose(FILE *fp);
 int __wrap_fclose(FILE *fp)
 {
   int ret;
-  int fd; 
+  int fd;
 
 
   if (Tau_iowrap_checkPassThrough()) {
@@ -1372,7 +1373,7 @@ int __wrap_fdatasync(int fd)
  * lseek
  ********************************************************************/
 off_t __real_lseek(int fd, off_t offset, int whence) ;
-off_t __wrap_lseek(int fd, off_t offset, int whence) 
+off_t __wrap_lseek(int fd, off_t offset, int whence)
 {
   int ret;
 
@@ -1444,7 +1445,7 @@ off64_t __wrap_lseek64(int fd, off64_t offset, int whence)
  * fseek
  ********************************************************************/
 off_t __real_fseek(FILE *stream, long offset, int whence) ;
-off_t __wrap_fseek(FILE *stream, long offset, int whence) 
+off_t __wrap_fseek(FILE *stream, long offset, int whence)
 {
   int ret;
 
@@ -1480,7 +1481,7 @@ off_t __wrap_fseek(FILE *stream, long offset, int whence)
  * stat
  ********************************************************************/
 int __real_stat(const char *path, struct stat *buf) ;
-int __wrap_stat(const char *path, struct stat *buf) 
+int __wrap_stat(const char *path, struct stat *buf)
 {
   int ret;
 
@@ -1750,9 +1751,9 @@ int __wrap_dup2(int filedes1, int filedes2)
 /*********************************************************************
  * select
  ********************************************************************/
-int __real_select(int nfds, fd_set *readfds, fd_set *writefds, 
+int __real_select(int nfds, fd_set *readfds, fd_set *writefds,
   fd_set *exceptfds, const struct timeval *timeout);
-int __wrap_select(int nfds, fd_set *readfds, fd_set *writefds, 
+int __wrap_select(int nfds, fd_set *readfds, fd_set *writefds,
   fd_set *exceptfds, const struct timeval *timeout)
 {
   int ret;
@@ -1765,7 +1766,7 @@ int __wrap_select(int nfds, fd_set *readfds, fd_set *writefds,
   TAU_PROFILE_TIMER(t, "select()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
-  ret = __real_select(nfds, readfds, writefds, exceptfds, timeout); 
+  ret = __real_select(nfds, readfds, writefds, exceptfds, timeout);
 
   if (TauEnv_get_track_io_params()) {
     TAU_REGISTER_EVENT(select_nfds, "select nfds");

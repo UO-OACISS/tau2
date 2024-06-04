@@ -1364,27 +1364,27 @@ int pipe(int filedes[2]) {
 /*********************************************************************
  * Tau_get_socketname returns the name of the socket (AF_INET/AF_UNIX)
  ********************************************************************/
-char * Tau_get_socket_name(const struct sockaddr *sa, char *s, size_t len) {
+char * Tau_get_socket_name(const struct sockaddr *sa, char *s, size_t len, size_t maxlen) {
   int i;
   Tau_iowrap_checkInit();
   char addr[256];
   switch (sa->sa_family) {
     case AF_INET:
       inet_ntop(AF_INET, &(((struct sockaddr_in *) sa)->sin_addr), addr, len);
-      snprintf(s, len, "%s,port=%d",addr,ntohs((((struct sockaddr_in *)sa)->sin_port)));
+      snprintf(s, maxlen, "%s,port=%d",addr,ntohs((((struct sockaddr_in *)sa)->sin_port)));
       break;
     case AF_INET6:
       inet_ntop(AF_INET6, &(((struct sockaddr_in6 *) sa)->sin6_addr), addr, len);
       for (i = 0; i < strlen(addr); i++) {
         if (addr[i] == ':' ) addr[i] = '.';
       }
-      snprintf(s, len, "%s,port=%d",addr,ntohs((((struct sockaddr_in6 *)sa)->sin6_port)));
+      snprintf(s, maxlen, "%s,port=%d",addr,ntohs((((struct sockaddr_in6 *)sa)->sin6_port)));
       break;
     case AF_UNIX:
-      strncpy(s, ((char *)(((struct sockaddr_un *) sa)->sun_path)), len);
+      strncpy(s, ((char *)(((struct sockaddr_un *) sa)->sun_path)), maxlen);
       break;
     default:
-      strncpy(s, "Unknown address family", len);
+      strncpy(s, "Unknown address family", maxlen);
       return NULL;
   }
   return s;
@@ -1462,7 +1462,7 @@ int socketpair(int d, int type, int protocol, int sv[2]) {
 int bind(int socket, const struct sockaddr *address, socklen_t address_len) {
   static int (*_bind) (int socket, const struct sockaddr *address, socklen_t address_len) = NULL;
   int ret;
-  char socketname[TAU_MAX_FILENAME_LEN];
+  char socketname[TAU_MAX_FILENAME_LEN] = {0};
 
   if (_bind == NULL) {
     _bind = (int (*) (int socket, const struct sockaddr *address, socklen_t address_len) ) dlsym(RTLD_NEXT, "bind");
@@ -1480,7 +1480,7 @@ int bind(int socket, const struct sockaddr *address, socklen_t address_len) {
   TAU_PROFILE_STOP(t);
 
   if (ret == 0) {
-    Tau_get_socket_name(address, (char *)socketname, address_len);
+    Tau_get_socket_name(address, (char *)socketname, address_len, TAU_MAX_FILENAME_LEN);
     TAU_VERBOSE("socket name = %s\n", socketname);
     Tau_iowrap_registerEvents(socket, (const char *)socketname);
   }
@@ -1495,7 +1495,7 @@ int bind(int socket, const struct sockaddr *address, socklen_t address_len) {
 int accept(int socket, struct sockaddr *address, socklen_t* address_len) {
   static int (*_accept) (int socket, struct sockaddr *address, socklen_t* address_len) = NULL;
   int current;
-  char socketname[TAU_MAX_FILENAME_LEN];
+  char socketname[TAU_MAX_FILENAME_LEN] = {0};
 
   if (_accept == NULL) {
     _accept = (int (*) (int socket, struct sockaddr *address, socklen_t* address_len) ) dlsym(RTLD_NEXT, "accept");
@@ -1512,7 +1512,7 @@ int accept(int socket, struct sockaddr *address, socklen_t* address_len) {
   current = _accept(socket, address, address_len);
   TAU_PROFILE_STOP(t);
   if (current != -1) {
-    Tau_get_socket_name(address, (char *)socketname, *address_len);
+    Tau_get_socket_name(address, (char *)socketname, *address_len, TAU_MAX_FILENAME_LEN);
     TAU_VERBOSE("socket name = %s\n", socketname);
     Tau_iowrap_registerEvents(current, (const char *)socketname);
   }
@@ -1527,7 +1527,7 @@ int accept(int socket, struct sockaddr *address, socklen_t* address_len) {
 int connect(int socket, const struct sockaddr *address, socklen_t address_len) {
   static int (*_connect) (int socket, const struct sockaddr *address, socklen_t address_len) = NULL;
   int current;
-  char socketname[2048];
+  char socketname[2048] = {0};
 
   if (_connect == NULL) {
     _connect = (int (*) (int socket, const struct sockaddr *address, socklen_t address_len) ) dlsym(RTLD_NEXT, "connect");
@@ -1544,7 +1544,7 @@ int connect(int socket, const struct sockaddr *address, socklen_t address_len) {
   current = _connect(socket, address, address_len);
   TAU_PROFILE_STOP(t);
   if (current != -1) {
-    Tau_get_socket_name(address, (char *)socketname, address_len);
+    Tau_get_socket_name(address, (char *)socketname, address_len, 2048);
     TAU_VERBOSE("socket name = %s\n", socketname);
     Tau_iowrap_registerEvents(socket, (const char *)socketname);
   }
