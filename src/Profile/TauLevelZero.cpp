@@ -233,75 +233,63 @@ static KernelMap GetKernelMap() {
 }
 
 
+double get_metric_value(zet_typed_value_t metric)
+{
+   switch (metric.type) {
+     case ZET_VALUE_TYPE_UINT32:{
+       return (float) metric.value.ui32;
+     }
+     case ZET_VALUE_TYPE_UINT64:{
+       return (float) metric.value.ui64;
+     }
+     case ZET_VALUE_TYPE_FLOAT32:{
+       return (float) metric.value.fp32;
+     }
+     case ZET_VALUE_TYPE_FLOAT64:{
+       return (float) metric.value.fp64;
+     }
+     case ZET_VALUE_TYPE_BOOL8:{
+       return (float) metric.value.b8;
+     }
+     default:{
+       return -1;
+       break;
+     }
+   }
+   
+   return -1;
+}
+
 static void MetricPrintResults() {
-  std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-  std::chrono::duration<uint64_t, std::nano> time = end - start;
 
-  KernelMap kernel_map = GetKernelMap();
-  if (kernel_map.size() == 0) {
+  const KernelReportMap& kernel_report_map = metric_collector->GetKernelReportMap();
+  std::vector<std::string> metriclist = metric_collector->GetMetricList();
+  if (kernel_report_map.size() == 0) {
     return;
   }
-
-  std::set< std::pair<std::string, Kernel>,
-            utils::Comparator > sorted_list(
-      kernel_map.begin(), kernel_map.end());
-
-  uint64_t total_duration = 0;
-  size_t max_name_length = kKernelLength;
-  for (auto& value : sorted_list) {
-    total_duration += value.second.total_time;
-    if (value.first.size() > max_name_length) {
-      max_name_length = value.first.size();
+  
+  std::cerr << "=== Metric Results: ===" << std::endl;
+  for (auto& kernel : kernel_report_map) {
+  
+    std::cerr << "Results Kernel: "<< kernel.first.c_str() << std::endl;
+    std::vector<MetricReport> kernel_reports = kernel.second; 
+    int entry = 0;
+    for (auto& report_entry : kernel_reports) {
+      std::cerr << "Entry "<< entry << " : " << std::endl ;
+      entry++;
+      assert(report_entry.size() == metriclist.size());
+      int i;  
+      for ( i = 0; i < metriclist.size(); i++ ){
+        
+        double metric_value =get_metric_value(report_entry[i]);
+        std::cerr << "\t"<< metriclist[i].c_str() << "Value: " << metric_value << std::endl ;
+      }
+      std:cerr << std::endl;
+          
+          
     }
   }
-
-  if (total_duration == 0) {
-    return;
-  }
-
-  std::cerr << std::endl;
-  std::cerr << "=== Device Metrics: ===" << std::endl;
-  std::cerr << std::endl;
-  std::cerr << "Total Execution Time (ns): " << time.count() << std::endl;
-  std::cerr << "Total Kernel Time (ns): " << total_duration << std::endl;
-  std::cerr << std::endl;
-
-  std::cerr << std::setw(max_name_length) << "Kernel" << "," <<
-    std::setw(kCallsLength) << "Calls" << "," <<
-    std::setw(kTimeLength) << "Time (ns)" << "," <<
-    std::setw(kPercentLength) << "Time (%)" << "," <<
-    std::setw(kTimeLength) << "Average (ns)" << "," <<
-    std::setw(kPercentLength) << "EU Active (%)" << "," <<
-    std::setw(kPercentLength) << "EU Stall (%)" << "," <<
-    std::setw(kPercentLength) << "EU Idle (%)" << std::endl;
-
-  for (auto& value : sorted_list) {
-    const std::string& kernel = value.first;
-    uint64_t call_count = value.second.call_count;
-    uint64_t duration = value.second.total_time;
-    uint64_t avg_duration = duration / call_count;
-    float percent_duration = 100.0f * duration / total_duration;
-    float eu_active = value.second.eu_active;
-    float eu_stall = value.second.eu_stall;
-    float eu_idle = 0.0f;
-    if (eu_active + eu_stall < 100.0f) {
-      eu_idle = 100.f - eu_active - eu_stall;
-    }
-    std::cerr << std::setw(max_name_length) << kernel << "," <<
-      std::setw(kCallsLength) << call_count << "," <<
-      std::setw(kTimeLength) << duration << "," <<
-      std::setw(kPercentLength) << std::setprecision(2) <<
-        std::fixed << percent_duration << "," <<
-      std::setw(kTimeLength) << avg_duration << "," <<
-      std::setw(kPercentLength) << std::setprecision(2) <<
-        std::fixed << eu_active << "," <<
-      std::setw(kPercentLength) << std::setprecision(2) <<
-        std::fixed << eu_stall << "," <<
-      std::setw(kPercentLength) << std::setprecision(2) <<
-        std::fixed << eu_idle << std::endl;
-  }
-
-  std::cerr << std::endl;
+   std::cerr << "======" << std::endl;
 }
 
 
@@ -413,63 +401,27 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
 }
 
 
-double get_metric_value(zet_typed_value_t metric)
-{
-   switch (metric.type) {
-     case ZET_VALUE_TYPE_UINT32:{
-       return (float) metric.value.ui32;
-     }
-     case ZET_VALUE_TYPE_UINT64:{
-       return (float) metric.value.ui64;
-     }
-     case ZET_VALUE_TYPE_FLOAT32:{
-       return (float) metric.value.fp32;
-     }
-     case ZET_VALUE_TYPE_FLOAT64:{
-       return (float) metric.value.fp64;
-     }
-     case ZET_VALUE_TYPE_BOOL8:{
-       return (float) metric.value.b8;
-     }
-     default:{
-       return -1;
-       break;
-     }
-   }
-   
-   return -1;
-}
-
 
 void TAUOnMetricFinishCallback(void *data, const std::string& kernel_name, MetricReport report, std::vector<std::string> metriclist)
 {
-  printf("!!! TAUOnMetricFinishCallback\n");
-  
+
   int taskid;
   taskid = *((int *) data);
-  printf("!!! (raw) name: %s  task id=%d\n", kernel_name.c_str(), taskid);
   assert(report.size() == metriclist.size());
-  std::cout << "!! --size report"<< report.size()   <<  " size metriclist " << metriclist.size() << std::endl;
-  int i;
-  std::cout << "!! --Printing metric list" << std::endl;
+  int i;  
   for ( i = 0; i < metriclist.size(); i++ ){
-    
     std::stringstream ss;
     void* ue = nullptr;
     std::string tmp;
     ss << metriclist[i] <<" Kernel:{" << kernel_name << "}";
     tmp = ss.str();
     ue = Tau_get_userevent(tmp.c_str());
-  
     double metric_value =get_metric_value(report[i]);
-    std::cout << "!! "<< tmp << " ++["<< i << "] : "  << metriclist[i].c_str() << " valuetype: " << report[i].type << " value: " << metric_value << std::endl;
-
-    
+    TAU_VERBOSE("TAU Metric: <kernel>: %s Event %s Value %lf\n", kernel_name.c_str(), metriclist[i].c_str(), metric_value);
     Tau_userevent_thread(ue, metric_value, taskid);
 
   }
-        
-  printf("!!! TAUOnMetricFinishCallback End\n");
+
 }
 
 
