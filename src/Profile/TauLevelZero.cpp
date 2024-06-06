@@ -526,7 +526,7 @@ void TauL0EnableProfiling() {
   std::string value;
   //EBS Metric Groups  
   std::string metric_group("ComputeBasic");
-  value = utils::GetEnv("ONEPROF_MetricGroup");
+  value = utils::GetEnv("L0_MetricGroup");
   if (!value.empty()) {
     metric_group = value;
   }      
