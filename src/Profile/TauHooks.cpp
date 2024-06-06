@@ -412,7 +412,7 @@ void trace_register_func(char *origname, int id)
 
 void traceEntry(int id)
 {
-  
+  TAU_VERBOSE("Inside traceEntry: id = %d\n", id);
   TAU_QUERY_DECLARE_EVENT(curr);
   TAU_QUERY_GET_CURRENT_EVENT(curr);
 
@@ -464,7 +464,7 @@ void traceExit(int id)
 {
   //const char *strcurr;
   //const char *strbin;
-  //TAU_VERBOSE("Inside traceExit: id = %d\n", id);
+  TAU_VERBOSE("Inside traceExit: id = %d\n", id);
 
   if ( !RtsLayer::TheEnableInstrumentation()) return;
   int tid = RtsLayer::myThread();
