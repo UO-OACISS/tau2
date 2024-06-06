@@ -25,7 +25,10 @@
 #include <Profile/L0/utils.h>
 #include <Profile/L0/ze_kernel_collector.h>
 #include <Profile/L0/ze_api_collector.h>
+
+#ifdef L0METRICS
 #include <Profile/L0/ze_metric_collector.h>
+#endif
 
 #include "Profile/Profiler.h"
 #include "Profile/TauBfd.h"
@@ -38,7 +41,9 @@ extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
 
 static ZeApiCollector* api_collector = nullptr;
 static ZeKernelCollector* kernel_collector = nullptr;
+#ifdef L0METRICS
 static ZeMetricCollector* metric_collector = nullptr;
+#endif
 static std::chrono::steady_clock::time_point start;
 static int gpu_task_id = 0;
 static int host_api_task_id = 0;
@@ -157,6 +162,8 @@ static void APIPrintResults() {
   std::cerr << std::endl;
 }
 
+#ifdef L0METRICS
+
 struct Kernel {
   uint64_t total_time;
   uint64_t call_count;
@@ -177,61 +184,6 @@ struct Kernel {
     return true;
   }
 };
-
-using KernelMap = std::map<std::string, Kernel>;
-
-
-const uint32_t kKernelLength = 10;
-const uint32_t kCallsLength = 12;
-const uint32_t kTimeLength = 20;
-const uint32_t kPercentLength = 16;
-
-static KernelMap GetKernelMap() {
-  PTI_ASSERT(metric_collector != nullptr);
-  const KernelReportMap& kernel_report_map = metric_collector->GetKernelReportMap();
-  if (kernel_report_map.size() == 0) {
-    return KernelMap();
-  }
-
-  int gpu_time_id = metric_collector->GetGpuTimeId();
-  PTI_ASSERT(gpu_time_id >= 0);
-  int eu_active_id = metric_collector->GetEuActiveId();
-  PTI_ASSERT(eu_active_id >= 0);
-  int eu_stall_id = metric_collector->GetEuStallId();
-  PTI_ASSERT(eu_stall_id >= 0);
-
-  KernelMap kernel_map;
-  for (auto& kernel : kernel_report_map) {
-    std::string kernel_name = kernel.first;
-    Kernel kernel_info{0, 0, 0.0f, 0.0f};
-
-    for (auto& report : kernel.second) {
-      uint64_t gpu_time = 0;
-      float eu_active = 0.0f, eu_stall = 0.0f;
-
-      PTI_ASSERT(report[gpu_time_id].type == ZET_VALUE_TYPE_UINT64);
-      gpu_time = report[gpu_time_id].value.ui64;
-      PTI_ASSERT(report[eu_active_id].type == ZET_VALUE_TYPE_FLOAT32);
-      eu_active = report[eu_active_id].value.fp32;
-      PTI_ASSERT(report[eu_stall_id].type == ZET_VALUE_TYPE_FLOAT32);
-      eu_stall = report[eu_stall_id].value.fp32;
-
-      kernel_info.total_time += gpu_time;
-      ++(kernel_info.call_count);
-      kernel_info.eu_active += eu_active;
-      kernel_info.eu_stall += eu_stall;
-    }
-
-    PTI_ASSERT(kernel_info.call_count > 0);
-    kernel_info.eu_active /= kernel_info.call_count;
-    kernel_info.eu_stall /= kernel_info.call_count;
-
-    kernel_map[kernel_name] = kernel_info;
-  }
-
-  return kernel_map;
-}
-
 
 double get_metric_value(zet_typed_value_t metric)
 {
@@ -291,7 +243,7 @@ static void MetricPrintResults() {
   }
    std::cerr << "======" << std::endl;
 }
-
+#endif
 
 bool TAUSetFirstGPUTimestamp(uint64_t gpu_ts) {
   TAU_VERBOSE("TAU: First GPU Timestamp = %ld\n", gpu_ts);
@@ -400,8 +352,7 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
   return;
 }
 
-
-
+#ifdef L0METRICS
 void TAUOnMetricFinishCallback(void *data, const std::string& kernel_name, MetricReport report, std::vector<std::string> metriclist)
 {
 
@@ -423,6 +374,7 @@ void TAUOnMetricFinishCallback(void *data, const std::string& kernel_name, Metri
   }
 
 }
+#endif
 
 
 // Internal Tool Interface ////////////////////////////////////////////////////
@@ -473,7 +425,7 @@ void TauL0EnableProfiling() {
   api_collector = ZeApiCollector::Create(driver, TAUOnAPIFinishCallback, ph);
  
  
- 
+   #ifdef L0METRICS
   
   std::string value;
   //EBS Metric Groups  
@@ -488,7 +440,7 @@ void TauL0EnableProfiling() {
     std::cout <<
       "[WARNING] Unable to create metric collector" << std::endl;
   }
-  
+  #endif
   
 
 
@@ -516,13 +468,14 @@ void TauL0DisableProfiling() {
     delete api_collector;
   }
   
-  
+  #ifdef L0METRICS  
   if (metric_collector != nullptr) {
     metric_collector->DisableTracing();
     if (TauEnv_get_verbose())
       MetricPrintResults();
     delete metric_collector;
   }
+  #endif
   
   //uint64_t gpu_end_ts = utils::i915::GetGpuTimestamp() & 0x0FFFFFFFF;
   /*

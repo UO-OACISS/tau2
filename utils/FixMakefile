@@ -1072,6 +1072,11 @@ case $1 in
         echo NOTE: Using the TAU Level Zero Profiling Interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+        
+     LEVEL_ZERO_METRICS)
+        echo NOTE: Using the TAU Level Zero Metrics Interface
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
 
      rocmdir=*)
         rocmdir=`echo $1 | sed -e 's/^rocmdir=//' -e 's/#/ /g'`

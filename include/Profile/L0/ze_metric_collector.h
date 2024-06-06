@@ -194,18 +194,6 @@ class ZeMetricCollector {
     return metriclist_;
   }
 
-
-  int GetGpuTimeId() const {
-    return gpu_time_id_;
-  }
-
-  int GetEuActiveId() const {
-    return eu_active_id_;
-  }
-
-  int GetEuStallId() const {
-    return eu_stall_id_;
-  }
  private: // Implementation
   ZeMetricCollector(
       ze_device_handle_t device, ze_context_handle_t context,
@@ -216,18 +204,10 @@ class ZeMetricCollector {
       : device_(device), context_(context),
         max_kernel_count_(max_kernel_count),
         callback_(callback), callback_data_(callback_data),
-        metriclist_(metriclist),
-        gpu_time_id_(utils::ze::GetMetricId(group, "GpuTime")),
-        eu_active_id_(utils::ze::GetMetricId(group, "XVE_ACTIVE")),
-        eu_stall_id_(utils::ze::GetMetricId(group, "XVE_STALL")) {
+        metriclist_(metriclist) {
     PTI_ASSERT(device_ != nullptr);
     PTI_ASSERT(context_ != nullptr);
-    PTI_ASSERT(max_kernel_count_ > 0);
-    PTI_ASSERT(gpu_time_id_ != -1);
-    PTI_ASSERT(eu_active_id_ != -1); // Note, the names of the same events might vary on different GPU models.
-    PTI_ASSERT(eu_stall_id_ != -1); // In case of this assert, check the corresponding events names (active, stall) using ze_metric_info sample tool.
-
-        
+    PTI_ASSERT(max_kernel_count_ > 0);        
   }
 
   void EnableTracing(zel_tracer_handle_t tracer) {
@@ -570,10 +550,6 @@ class ZeMetricCollector {
   zet_metric_group_handle_t metric_group_ = nullptr;
   zet_metric_query_pool_handle_t metric_query_pool_ = nullptr;
   ze_event_pool_handle_t event_pool_ = nullptr;
-  int gpu_time_id_;
-  int eu_active_id_;
-  int eu_stall_id_;
-  
   
   std::vector<std::string> metriclist_;
 

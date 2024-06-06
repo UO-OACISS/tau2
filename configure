@@ -3068,6 +3068,12 @@ for arg in "$@"; do
                 exit 1
               fi
             fi
+            
+            if [  -r ${l0dir}/include/metrics_discovery_api.h ]; then
+              fixmakeargs="$fixmakeargs LEVEL_ZERO_METRICS"
+              tauoptions="${tauoptions}-L0Metrics"
+            fi
+            
             shift
             ;;
 
