@@ -1882,7 +1882,7 @@ for arg in "$@"; do
             echo "Using GCC to compile libunwind"
 	    unwind_gcc=yes
             shift
-	    ;; 
+	    ;;
 
 	-static_libunwind)
             echo "Using libunwind.a instead of libunwind.so"
@@ -2680,12 +2680,12 @@ for arg in "$@"; do
             pythonbin=$( which $( echo $pythonintv ) | sed 's,[^/]*$,,' )
 	    python_ver_specified=yes
             if [ ! -f $pythonbin/$pythonintv ] ; then
-		if [ -f $pythonintv ]; then 
+		if [ -f $pythonintv ]; then
 	           echo "Found $pythonintv"
 	        else
                   echo "Error: Cannot access Python interpreter $pythonbin/$pythonintv or $pythonintv"
                   exit 1
-		fi 
+		fi
 	    else
 	        pythonintv=$pythonbin/$pythonintv
             fi
@@ -3070,7 +3070,7 @@ for arg in "$@"; do
                 echo "TAU: libze_loader.so not found. Please specify -level_zero=<dir> and reconfigure TAU."
                 exit 1
               fi
-            fi            
+            fi
             shift
             ;;
 
@@ -3098,7 +3098,7 @@ for arg in "$@"; do
             pthread=yes
             shift
             ;;
-      	
+
         -level_metrics)
           level_zero=yes
           tauoptions="${tauoptions}-level_zero"
@@ -3112,10 +3112,10 @@ for arg in "$@"; do
               echo "TAU: metrics_discovery_api.h not found. Please specify directory with -level_metrics=<dir> and reconfigure TAU."
               exit 1
             fi
-          fi           
+          fi
        	shift
       	;;
- 
+
       	-level_metrics=*)
            mdisc_dir=`echo $arg | sed -e 's/-level_metrics=//' -e 's/ /#/g'`
            if [  -r ${mdisc_dir}/include/metrics_discovery_api.h ]; then
@@ -3125,7 +3125,7 @@ for arg in "$@"; do
              echo "TAU: metrics_discovery_api.h not found. Install metrics discovery or disable flag."
              exit 1
            fi
-      
+
       	shift
       	;;
 
@@ -3138,7 +3138,6 @@ for arg in "$@"; do
             rocprofiler=yes
             tauoptions="${tauoptions}-rocm"
             pthread=yes
-            build_llvm_plugin=yes
             shift
             ;;
 
@@ -3155,7 +3154,6 @@ for arg in "$@"; do
             rocprofiler=yes
             tauoptions="${tauoptions}-rocm"
             pthread=yes
-            build_llvm_plugin=yes
             shift
             ;;
 
@@ -3397,19 +3395,19 @@ for arg in "$@"; do
     esac
 done
 
-if [ "x$python_ver_specified" = "xno" -a "x$pythoninc" != "x" ]; then 
-  if [ -f $pythoninc/../bin/python ]; then 
+if [ "x$python_ver_specified" = "xno" -a "x$pythoninc" != "x" ]; then
+  if [ -f $pythoninc/../bin/python ]; then
     pythonintv=$pythoninc/../bin/python
     pythonbin=$pythonbin/../bin
     python_ver_specified=yes
-  fi 
+  fi
 fi
 
-if [ "x$python_ver_specified" = "xno" -a "x$pythonlib" != "x" ]; then 
-  if [ -f $pythonlib/../bin/python ]; then 
+if [ "x$python_ver_specified" = "xno" -a "x$pythonlib" != "x" ]; then
+  if [ -f $pythonlib/../bin/python ]; then
     pythonintv=$pythonlib/../bin/python
     pythonbin=$pythonlib/../bin
-  fi 
+  fi
 fi
 
 # Check for Python
@@ -5685,12 +5683,12 @@ case $cxx_compiler in
         pgi=yes
 	nvidia=yes
         extradir=`which nvc | sed s/nvc/../`
-	
+
         fixmakeargs="$fixmakeargs COMPINST_PGI PGINOPRELINK"
         fixmakeargs="$fixmakeargs NVIDIA PGICC"
-	
+
         ;;
-    
+
 
 
     FCC|mpiFCCpx|mpiFCC)
@@ -6067,7 +6065,7 @@ case $cxx_compiler in
               fixmakeargs="$fixmakeargs COMPINST_PGI PGINOPRELINK"
               fixmakeargs="$fixmakeargs PGI PGICC"
 	      ;;
-	    
+
             nvcc)
               echo "Default C++ compiler will be NVIDIA nvcc C++ Compiler"
               nvhpc=yes
@@ -6077,7 +6075,7 @@ case $cxx_compiler in
               fixmakeargs="$fixmakeargs COMPINST_PGI PGINOPRELINK"
               fixmakeargs="$fixmakeargs PGI PGICC"
               ;;
-	    
+
             *)
                 echo "ERROR Unknown C++ compiler in mpicxx/mpic++: $internal_compiler"
                 ;;
@@ -7838,12 +7836,12 @@ fi
 ######################################################################
 # Do we need -lm Ubuntu does!
 if [ $machine != apple ]; then
-  if [ -f /etc/issue -a `grep Ubuntu /etc/issue | wc -l ` = 1 ]; then 
-    if [ "x$tau_uselm" != "xno" ]; then 
+  if [ -f /etc/issue -a `grep Ubuntu /etc/issue | wc -l ` = 1 ]; then
+    if [ "x$tau_uselm" != "xno" ]; then
       tau_uselm=yes
       fixmakeargs="$fixmakeargs TAU_USELM"
-    fi 
-    if [ "x$tau_use_no_pie" != "xno" ]; then 
+    fi
+    if [ "x$tau_use_no_pie" != "xno" ]; then
       fixmakeargs="$fixmakeargs TAU_USE_NO_PIE_ON_UBUNTU"
     fi
   fi
@@ -10056,7 +10054,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       tar -xzf $binutilstgz
       cd $binutils
 
-      # Disable packages that don't build without dependencies on Texinfo 
+      # Disable packages that don't build without dependencies on Texinfo
       # and that are not required to use BFD in TAU
       BINUTILS_DISABLED_PKGS="--disable-gas --disable-gprof --disable-gprofng"
 
@@ -10646,7 +10644,7 @@ EOF
 	else
 		rm test.cpp
 		echo "Unable to compile with $compilerxx_for_dyninst (`which $compilerxx_for_dyninst`)"
-		exit 
+		exit
 	fi
 
 	if $compiler_for_dyninst -o test test.c 1> /dev/null 2>&1 ; then
@@ -10655,7 +10653,7 @@ EOF
 	else
 		rm test.c
 		echo "Unable to compile with $compiler_for_dyninst (`which $compiler_for_dyninst`)"
-		exit 
+		exit
 	fi
 fi
 
@@ -10809,10 +10807,10 @@ if [ "x$download_dyninst" = xyes ] ; then
       rm -rf $dyninstdir # remove and make the build dir
       mkdir $dyninstdir
       cd $dyninstdir     # go to the build dir
-      
-      # Get libiberty 
-      mkdir -p ${dyninstdir}/libiberty/lib 
-      libiberty_root_dir=${dyninstdir}/libiberty/ 
+
+      # Get libiberty
+      mkdir -p ${dyninstdir}/libiberty/lib
+      libiberty_root_dir=${dyninstdir}/libiberty/
       if [ -r "$bfddir/lib/libiberty.a"  ] ; then
 	      cp "$bfddir/lib/libiberty.a" ${dyninstdir}/libiberty/lib/
 	      libiberty_root_dir=$bfddir # We need the headers of libiberty, see LibIberty.cmake in libdyninst
@@ -10841,7 +10839,7 @@ if [ "x$download_dyninst" = xyes ] ; then
       make -j8 install
       cd ..
       rm -rf $dynelfutilsbz
-	  
+
 
       # Here error when using -bfd=download because it searches for /opt/intel/tbb/ by default
       # Workaround
