@@ -948,7 +948,7 @@ for arg in "$@"; do
         echo "-roctracer=<dir> .................. Specify location of ROCm roctracer."
 	echo "-rocm-core=<dir> ....... Specify location of ROCm Core to detect rocmv6"
         echo "-hip=<dir> .................... Specify location of ROCm HIP directory."
-        echo "-level_zero=<dir>  ................. Specify path to Intel Level Zero."
+        echo "-level_zero[=<dir>]  ................. Specify path to Intel Level Zero."
         echo "-level_metrics[=<dir>] .. Specify path to Level Zero Metrics Discovery."
         echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
         echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
