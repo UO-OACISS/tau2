@@ -7,14 +7,14 @@ JAR_HOME = ${HOME}/.ParaProf
 
 ##########################
 
-JAVA_JVM_VERSION=1.5
+JAVA_JVM_VERSION=1.8
 NOW = $(shell date)
 
 CONFIGFILE = ${JAR_HOME}/perfdmf.cfg
 WEBSTART_DIR = /var/www/html/PerfExplorer/.
 
 CPP = cpp -P -CC
-JAVAC = javac -source 1.5 -target 1.5
+JAVAC = javac -source 1.8 -target 1.8
 RMIC = rmic
 SED = sed
 JAVADOC = javadoc
@@ -418,7 +418,7 @@ doccheck: Makefile src/overview.html ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLU
 	-doclet com.sun.tools.doclets.doccheck.DocCheck -docletpath /home/khuck/Download/doccheck1.2b2/doccheck.jar -J-Xmx20M -d doccheckOut -classlist -docletID -title "DocCheck Sample Code" \
 	-overview src/overview.html \
 	-classpath ${GLUE_BUILD_CLASSPATH} \
-	-source 1.5 \
+	-source 1.8 \
 	edu.uoregon.tau.perfexplorer.glue edu.uoregon.tau.perfexplorer.rules
 
 javadoc: Makefile src/overview.html ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${GLUE_CLASSES}
@@ -438,7 +438,7 @@ javadoc: Makefile src/overview.html ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUS
 	-header "<b>PerfExplorer 2.0</b>" \
 	-bottom ${BOTTOM} \
 	-public \
-	-source 1.5 \
+	-source 1.8 \
 	-quiet \
 	-version \
 	-author \
