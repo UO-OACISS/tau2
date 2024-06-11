@@ -1065,7 +1065,12 @@ case $1 in
 
      l0_lib_dir=*)
         l0_lib_dir=`echo $1 | sed -e 's/^l0_lib_dir=//' -e 's/#/ /g'`
-	echo "s@^TAU_L0_LIB_DIR=\(.*\)@TAU_L0_LIB_DIR=$l0_lib_dir@g" >> $sedout
+	      echo "s@^TAU_L0_LIB_DIR=\(.*\)@TAU_L0_LIB_DIR=$l0_lib_dir@g" >> $sedout
+        ;;
+
+      mdisc_dir=*)
+        mdisc_dir=`echo $1 | sed -e 's/^mdisc_dir=//' -e 's/#/ /g'`
+	      echo "s@^TAU_MDISC_DIR=\(.*\)@TAU_MDISC_DIR=$mdisc_dir@g" >> $sedout
         ;;
 
      LEVEL_ZERO)

@@ -773,6 +773,7 @@ usage() {
 #   echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
 #   echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
     echo "-level_zero[=<dir>] ................. Specify path to Intel Level Zero."
+    echo "-level_metrics[=<dir>]... Specify path to Level Zero Metrics Discovery."
     echo "-roctracer=<dir> .................. Specify location of ROCm roctracer."
     echo "-hip=<dir> .................... Specify location of ROCm HIP directory."
     echo ""
@@ -947,7 +948,8 @@ for arg in "$@"; do
         echo "-roctracer=<dir> .................. Specify location of ROCm roctracer."
 	echo "-rocm-core=<dir> ....... Specify location of ROCm Core to detect rocmv6"
         echo "-hip=<dir> .................... Specify location of ROCm HIP directory."
-        echo "-level_zero[=<dir>] ................. Specify path to Intel Level Zero."
+        echo "-level_zero=<dir>  ................. Specify path to Intel Level Zero."
+        echo "-level_metrics[=<dir>] .. Specify path to Level Zero Metrics Discovery."
         echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
         echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
         echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
@@ -1372,6 +1374,7 @@ zepto=no
 zeptodir=
 cuda=no
 level_zero=no
+mdiscovery=no
 rocm=no
 rocmv6=no
 rocmcore_dir=""
@@ -3067,13 +3070,7 @@ for arg in "$@"; do
                 echo "TAU: libze_loader.so not found. Please specify -level_zero=<dir> and reconfigure TAU."
                 exit 1
               fi
-            fi
-            
-            if [  -r ${l0dir}/include/metrics_discovery_api.h ]; then
-              fixmakeargs="$fixmakeargs LEVEL_ZERO_METRICS"
-              tauoptions="${tauoptions}-L0Metrics"
-            fi
-            
+            fi            
             shift
             ;;
 
@@ -3101,6 +3098,37 @@ for arg in "$@"; do
             pthread=yes
             shift
             ;;
+      	
+        -level_metrics)
+          level_zero=yes
+          tauoptions="${tauoptions}-level_zero"
+          pthread=yes
+
+          if [ "x$mdisc_dir" = "x" ]; then
+            if [ -r /usr//include/metrics_discovery_api.h ]; then
+              fixmakeargs="$fixmakeargs mdisc_dir=$mdisc_dir LEVEL_ZERO_METRICS"
+              tauoptions="${tauoptions}-L0Metrics"
+            else
+              echo "TAU: metrics_discovery_api.h not found. Please specify directory with -level_metrics=<dir> and reconfigure TAU."
+              exit 1
+            fi
+          fi           
+       	shift
+      	;;
+ 
+      	-level_metrics=*)
+           mdisc_dir=`echo $arg | sed -e 's/-level_metrics=//' -e 's/ /#/g'`
+           if [  -r ${mdisc_dir}/include/metrics_discovery_api.h ]; then
+              fixmakeargs="$fixmakeargs mdisc_dir=$mdisc_dir LEVEL_ZERO_METRICS"
+              tauoptions="${tauoptions}-L0Metrics"
+           else
+             echo "TAU: metrics_discovery_api.h not found. Install metrics discovery or disable flag."
+             exit 1
+           fi
+      
+      	shift
+      	;;
+
 
         -rocm)
             rocmdir=/opt/rocm

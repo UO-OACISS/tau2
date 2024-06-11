@@ -129,10 +129,6 @@ class ZeMetricCollector {
     }
     
     std::vector<std::string> metriclist = GroupToMetricList(group);
-    std::cout << "--Printing metric list" << std::endl;
-    for (auto itr : metriclist){
-      std::cout << "++" << itr.c_str() << std::endl;
-    }
 
     ze_context_handle_t context = utils::ze::GetContext(driver);
     PTI_ASSERT(context != nullptr);
