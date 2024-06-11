@@ -85,6 +85,7 @@ void esd_exit (elg_ui4 rid);
 #include <Profile/CuptiLayer.h>
 #endif
 #include <atomic>
+#include <cstdint>
 
 using namespace tau;
 
@@ -1175,11 +1176,24 @@ extern "C" void Tau_set_thread(int threadId) {
 
 /* Helper functions for fixing threading */
 #if (!defined(TAU_WINDOWS))
+#ifdef __APPLE__
+/* SYS_gettid doesn't work on stupid OSX, so we'll fake it. All we really want
+   to know is whether this is the main thread (thread 0) or not. If it is, its
+   thread ID will match the process ID. Unfortunately, using the
+   pthread_threadid_np call on apple doesn't work either. */
+long tau_gettid(void) {
+    static std::atomic<long> threads{0};
+    static thread_local long me{threads++};
+    long pid = getpid();
+    return pid+me;
+}
+#else
 #include <sys/syscall.h>
-#define gettid() syscall(SYS_gettid)
+#define tau_gettid() syscall(SYS_gettid)
+#endif
 bool validate_thread() {
     long pid = getpid();
-    long tid = gettid();
+    long tid = tau_gettid();
     int tau_tid = RtsLayer::myThread();
     if (tau_tid == 0 && pid != tid) {
         TAU_VERBOSE("Registering thread! %ld != %ld, so need new thread\n", pid, tid);
