@@ -1046,7 +1046,7 @@ inline void Tau_profile_exit_threads(int begin_index)
   bool su = JNIThreadLayer::IsMgmtThread();
 #endif
 
-  for(int tid = begin_index; tid < TheCAPIThreadList().size(); ++tid) {
+   for(int tid = TheCAPIThreadList().size() - 1; tid >= begin_index; --tid) {
 #ifdef TAU_ANDROID
     if (su) {
       JNIThreadLayer::SuThread(tid);
