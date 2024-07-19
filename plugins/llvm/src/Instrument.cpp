@@ -40,6 +40,12 @@
 #include "llvm/IR/InstIterator.h"
 #include "llvm/Pass.h"
 
+
+#if( LLVM_VERSION_MAJOR >= 19 )
+#include "llvm/IR/Module.h"
+#endif
+
+
 //#include "llvm/ADT/Triple.h"
 
 #include <llvm/IR/DebugLoc.h>
