@@ -221,6 +221,7 @@ using namespace std;
 #define TAU_MEMDBG_ALLOC_MIN_DEFAULT      0 // 0 => undefined, not zero
 #define TAU_MEMDBG_ALLOC_MAX_DEFAULT      0 // 0 => undefined, not zero
 #define TAU_MEMDBG_OVERHEAD_DEFAULT       0 // 0 => undefined, not zero
+#define TAU_MEMMGR_MAX_MEMBLOCKS          64
 #ifdef TAU_BGQ
 #define TAU_MEMDBG_ALIGNMENT_DEFAULT      64
 #else
@@ -377,6 +378,7 @@ static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
 static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
 static int env_merge_metadata = 1;
 static int env_disable_metadata = 0;
+static int env_memmgr_max_memblocks = TAU_MEMMGR_MAX_MEMBLOCKS;
 
 static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
 static int env_papi_multiplexing = 0;
@@ -1354,6 +1356,10 @@ int TauEnv_get_memdbg_zero_malloc() {
 
 int TauEnv_get_memdbg_attempt_continue() {
   return env_memdbg_attempt_continue;
+}
+
+int TauEnv_get_env_memmgr_max_memblocks() {
+  return env_memmgr_max_memblocks;
 }
 
 int TauEnv_get_pthread_stack_size() {
@@ -2433,6 +2439,15 @@ void TauEnv_initialize()
       env_ebs_keep_unresolved_addr = 0;
       TAU_METADATA("TAU_EBS_KEEP_UNRESOLVED_ADDR", "off");
     }
+    
+    tmp = getconf("TAU_MEMMGR_MAX_BLOCKS");
+    if (tmp) {
+      env_memmgr_max_memblocks = atoi(tmp);
+    }
+    TAU_VERBOSE("TAU: MEMMGR_MAX_BLOCKS = %d\n", TauEnv_get_env_memmgr_max_memblocks());
+    snprintf(tmpstr, sizeof(tmpstr),  "%d", TauEnv_get_env_memmgr_max_memblocks());
+    TAU_METADATA("TAU_MEMMGR_MAX_BLOCKS", tmpstr);
+    
 
     if (TauEnv_get_ebs_enabled()) {
 

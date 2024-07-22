@@ -184,6 +184,7 @@ extern "C" {
   size_t TAUDECL TauEnv_get_memdbg_alignment();
   int TAUDECL TauEnv_get_memdbg_zero_malloc();
   int TAUDECL TauEnv_get_memdbg_attempt_continue();
+  int TAUDECL TauEnv_get_env_memmgr_max_memblocks();
   int TAUDECL TauEnv_get_pthread_stack_size();
   int TAUDECL TauEnv_get_alfred_port();
   int TAUDECL TauEnv_get_papi_multiplexing();
