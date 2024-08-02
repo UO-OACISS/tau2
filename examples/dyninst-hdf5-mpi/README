@@ -10,7 +10,7 @@ To run this example follow the next steps:
 	export LD_LIBRARY_PATH=$HOME/tau2/x86_64/lib/:$LD_LIBRARY_PATH
 	export LD_LIBRARY_PATH=$HOME/dyninst/lib/:$LD_LIBRARY_PATH
 4. Set the DYNINSTAPI_RT_LIB, DYNINSTAPI_RT_LIB=$HOME/dyninst/lib/libdyninstAPI_RT.so
-5. Check the libraries used by the executable with: ldd h5ex_d_hyper
+5. Check the libraries used by the executable with: ldd ./parallel2darray
 6. Instrument the hdf5 library that ldd printed, i.e.: libhdf5.so.310
 	tau_run -v -l -T mpi ${HDF5_PATH}/lib/libhdf5.so.310 -o libhdf5.so.310
 7. If you use ldd again, you will see that the original library is used, export your current path to LD_LIBRARY_PATH

@@ -1093,7 +1093,6 @@ extern "C" void Tau_profile_exit()
 extern "C" void Tau_exit(const char * msg) {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-
   /*Invoke plugins only if both plugin path and plugins are specified
   *    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
   if(Tau_plugins_enabled.function_finalize) {
@@ -1106,8 +1105,11 @@ extern "C" void Tau_exit(const char * msg) {
   Tau_profile_exit_most_threads();
 #elif defined(TAU_CUDA)
 	Tau_profile_exit_all_threads();
+#elif  defined(TAU_ENABLE_ROCM )
+	Tau_profile_exit_all_threads();
+
 #else
-  Tau_profile_exit();
+Tau_profile_exit();
 #endif
 
 #ifdef TAUKTAU
