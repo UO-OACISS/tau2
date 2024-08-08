@@ -311,6 +311,7 @@ int GlobalId(int localnodeid, int localthreadid)
 }
 
 bool firstState=true;
+//Saved as a 'raw' timer value (unix timestamp), converted to ghz as needed
 double firstRealTime=0;
 
 /* implementation of callback routines */
@@ -348,7 +349,7 @@ OTF_Writer_writeDownto((OTF_Writer*)userData, TauGetClockTicksInGHz(time), state
 
     if(firstState){
         firstState=false;
-        firstRealTime=TauGetClockTicksInGHz(time);
+        firstRealTime=time;
     }
 
     return 0;
@@ -857,7 +858,7 @@ int main(int argc, char **argv)
         printf("ERROR:Ttf_OpenFileForInput fails");
         exit(1);
     }
-
+    Ttf_SetSubtractFirstTimestamp(fh,false);
     dprintf("Using %d streams\n", num_streams);
 
     /* Create new archive handle. */
@@ -1165,6 +1166,7 @@ for (i=0; i < nodes; i++)
         exit(1);
     }
 
+    Ttf_SetSubtractFirstTimestamp(fh,false);
     dprintf("Re-analyzing the trace file \n");
 
     Ttf_CallbacksT cb;
@@ -1215,13 +1217,14 @@ cb.LeaveState = 0;
 
     status = OTF2_GlobalDefWriter_WriteClockProperties( glob_def_writer,
     1000000000,
-    firstRealTime,
+    TauGetClockTicksInGHz(firstRealTime),
     lastt
     #if OTF2_VERSION_MAJOR > 2
     ,
-    OTF2_UNDEFINED_TIMESTAMP 
+    firstRealTime 
     #endif 
     );
+
     check_status( status, "Write clock properties." );
     
     
