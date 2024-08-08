@@ -1028,7 +1028,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     //trace_len *= 1.02;
     OTF2_GlobalDefWriter_WriteClockProperties(global_def_writer, TAU_OTF2_CLOCK_RES, global_start_time, trace_len
 		    #if OTF2_VERSION_MAJOR > 2
-		    , OTF2_UNDEFINED_TIMESTAMP
+		    , global_start_time
 		    #endif
 		    );
 
