@@ -27,7 +27,7 @@ Usage: opari2 [OPTION] ... infile [outfile]
   specific directives or groups of directives of a paradigm.
   Furthermore it gives the possibility to suppress the insertion of
   instrumentation functions inside code regions, i.e. only the
-  surrounding instrumentation is inserted. See the paradigm 
+  surrounding instrumentation is inserted. See the paradigm
   sections below.
 
 [--preprocessed]

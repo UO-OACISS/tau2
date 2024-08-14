@@ -14,7 +14,7 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* conne
 
   char my_query[1024];
   if (trial != NULL) { // the user wants a specific trial, so get it
-    sprintf(my_query,"select sm.* from secondary_metadata sm left outer join timer_callpath tcp on sm.timer_callpath = tcp.id left outer join thread h on sm.thread = h.id where sm.trial = %d", trial->id);
+    snprintf(my_query, sizeof(my_query), "select sm.* from secondary_metadata sm left outer join timer_callpath tcp on sm.timer_callpath = tcp.id left outer join thread h on sm.thread = h.id where sm.trial = %d", trial->id);
   } else {
     fprintf(stderr, "You don't want all the metadata. Please specify a trial.\n");
   }
@@ -153,19 +153,19 @@ void taudb_private_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_T
     const char* paramValues[9] = {0};
     paramValues[0] = secondary_metadata->id;
     char trialid[32] = {0};
-    sprintf(trialid, "%d", trial->id);
+    snprintf(trialid, sizeof(trialid),  "%d", trial->id);
     paramValues[1] = trialid;
     char thread[32] = {0};
-    sprintf(thread, "%d", secondary_metadata->key.thread->id);
+    snprintf(thread, sizeof(thread),  "%d", secondary_metadata->key.thread->id);
     paramValues[2] = thread;
     char timer_callpath[32] = {0};
 	if (secondary_metadata->key.timer_callpath != NULL) {
-      sprintf(timer_callpath, "%d", secondary_metadata->key.timer_callpath->id);
+      snprintf(timer_callpath, sizeof(timer_callpath),  "%d", secondary_metadata->key.timer_callpath->id);
       paramValues[3] = timer_callpath;
 	}
     char time_range[32] = {0};
 	if (secondary_metadata->key.time_range != NULL) {
-      sprintf(time_range, "%d", secondary_metadata->key.time_range->id);
+      snprintf(time_range, sizeof(time_range),  "%d", secondary_metadata->key.time_range->id);
       paramValues[4] = time_range;
 	}
 	if (parent != NULL) {
@@ -180,11 +180,11 @@ void taudb_private_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_T
 	    length = length + strlen(secondary_metadata->value[i]) + 1;
 	  }
 	  char *tmpstr = calloc(length, sizeof(char));
-	  sprintf(tmpstr, "[%s", secondary_metadata->value[i]);
+	  snprintf(tmpstr, length,  "[%s", secondary_metadata->value[i]);
 	  for (i = 1 ; i < secondary_metadata->num_values ; i++) {
-	    sprintf(tmpstr, "%s,%s", tmpstr, secondary_metadata->value[i]);
+	    snprintf(tmpstr, length,  "%s,%s", tmpstr, secondary_metadata->value[i]);
 	  }
-	  sprintf(tmpstr, "%s]", tmpstr);
+	  snprintf(tmpstr, length,  "%s]", tmpstr);
       paramValues[7] = tmpstr;
       paramValues[8] = "TRUE";
 	} else {

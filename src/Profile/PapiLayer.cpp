@@ -186,10 +186,10 @@ void Tau_child(void)
 
   rc = PAPI_thread_init((unsigned long (*)(void))(RtsLayer::unsafeThreadId));
 
-  ThreadValue* localThreadValue=PapiLayer::getThreadValue(tid);
+  PapiThreadValue* localThreadValue=PapiLayer::getThreadValue(tid);
   /* Check ThreadList */
   if (localThreadValue == 0) {
-    localThreadValue=new ThreadValue;
+    localThreadValue=new PapiThreadValue;
     PapiLayer::setThreadValue(tid, localThreadValue);
   }
   localThreadValue->ThreadID = tid;
@@ -303,7 +303,7 @@ int PapiLayer::initializeThread(int tid)
 
       /* Task API does not have a real thread associated with it. It is fake */
       if (Tau_is_thread_fake(tid) == 1) tid = 0;
-      ThreadValue* localThreadValue = new ThreadValue;
+      PapiThreadValue* localThreadValue = new PapiThreadValue;
       setThreadValue(tid,localThreadValue);
       localThreadValue->ThreadID = tid;
       localThreadValue->CounterValues = new long long[MAX_PAPI_COUNTERS];
@@ -417,7 +417,7 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
     return NULL;
   }
 
-  ThreadValue* localThreadValue=getThreadValue(tid);
+  PapiThreadValue* localThreadValue=getThreadValue(tid);
   if (localThreadValue==NULL) {
     if(initializeThread(tid)) {
       return NULL;
@@ -493,7 +493,7 @@ int PapiLayer::reinitializePAPI() {
     if (papiInitialized) {
       TAU_VERBOSE("Reinitializing papi...");
       for(int i=0; i<ThePapiThreadList().size(); i++){
-	    ThreadValue* localThreadValue=getThreadValue(i);
+	    PapiThreadValue* localThreadValue=getThreadValue(i);
         if (localThreadValue != NULL) {
           delete localThreadValue->CounterValues;
           delete localThreadValue;
@@ -514,8 +514,6 @@ int PapiLayer::reinitializePAPI() {
 // note, this only works on linux
 #include <sys/types.h>
 #include <linux/unistd.h>
-_syscall0(pid_t,gettid)
-pid_t gettid(void);
 
 unsigned long papi_thread_gettid(void) {
 #ifdef SYS_gettid
@@ -703,7 +701,7 @@ int PapiLayer::initializeAndCheckRAPL(int tid) {
 
       /* Task API does not have a real thread associated with it. It is fake */
       if (Tau_is_thread_fake(tid) == 1) tid = 0;
-      ThreadValue* localThreadValue = new ThreadValue;
+      PapiThreadValue* localThreadValue = new PapiThreadValue;
       setThreadValue(tid,localThreadValue);
       localThreadValue->ThreadID = tid;
       localThreadValue->CounterValues = new long long[MAX_PAPI_COUNTERS];
@@ -743,7 +741,7 @@ int PapiLayer::initializePerfRAPL(int tid) {
     fprintf(stderr,"PAPI_set_granularity\n");
     exit(1);
   }
-  ThreadValue* localThreadValue=getThreadValue(tid);
+  PapiThreadValue* localThreadValue=getThreadValue(tid);
   localThreadValue->EventSet[rapl_cid] = PAPI_NULL;
   ret = PAPI_create_eventset(&(localThreadValue->EventSet[rapl_cid]));
   if (PAPI_OK != ret) {
@@ -791,8 +789,8 @@ int PapiLayer::initializePerfRAPL(int tid) {
 #endif /* DEBUG_PROF */
     // don't exit(1);
   } else {
-    sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_CORES");
-    sprintf(Tau_rapl_units[numCounters], "Joules");
+    snprintf(Tau_rapl_event_names[numCounters], sizeof(Tau_rapl_event_names[numCounters]),  "rapl::RAPL_ENERGY_CORES");
+    snprintf(Tau_rapl_units[numCounters], sizeof(Tau_rapl_units[numCounters]),  "Joules");
     numCounters++;
   }
 
@@ -804,8 +802,8 @@ int PapiLayer::initializePerfRAPL(int tid) {
 // don't    exit(1);
 #endif /* DEBUG_PROF */
   } else {
-    sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_PKG");
-    sprintf(Tau_rapl_units[numCounters], "Joules");
+    snprintf(Tau_rapl_event_names[numCounters], sizeof(Tau_rapl_event_names[numCounters]),  "rapl::RAPL_ENERGY_PKG");
+    snprintf(Tau_rapl_units[numCounters], sizeof(Tau_rapl_units[numCounters]),  "Joules");
     numCounters++;
 #ifdef TAU_BEACON
     TauBeaconInit();
@@ -819,8 +817,8 @@ int PapiLayer::initializePerfRAPL(int tid) {
 #endif /* DEBUG_PROF */
     // exit(1);
   } else {
-    sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_GPU");
-    sprintf(Tau_rapl_units[numCounters], "Joules");
+    snprintf(Tau_rapl_event_names[numCounters], sizeof(Tau_rapl_event_names[numCounters]),  "rapl::RAPL_ENERGY_GPU");
+    snprintf(Tau_rapl_units[numCounters], sizeof(Tau_rapl_units[numCounters]),  "Joules");
     numCounters++;
   }
 
@@ -828,8 +826,8 @@ int PapiLayer::initializePerfRAPL(int tid) {
   if (PAPI_OK != ret) {
    // OK: this event is only available on servers
   } else {
-    sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_DRAM");
-    sprintf(Tau_rapl_units[numCounters], "Joules");
+    snprintf(Tau_rapl_event_names[numCounters], sizeof(Tau_rapl_event_names[numCounters]),  "rapl::RAPL_ENERGY_DRAM");
+    snprintf(Tau_rapl_units[numCounters], sizeof(Tau_rapl_units[numCounters]),  "Joules");
     numCounters++;
   }
 
@@ -865,7 +863,7 @@ int PapiLayer::initializeRAPL(int tid) {
   int num_events = 0;
  
   initializeAndCheckRAPL(tid);
-  ThreadValue* localThreadValue=getThreadValue(tid);
+  PapiThreadValue* localThreadValue=getThreadValue(tid);
   ncomponents = PAPI_num_components();
 
   for (i=0; i < ncomponents; i++) {
@@ -978,7 +976,7 @@ void PapiLayer::triggerRAPLPowerEvents(bool in_signal_handler) {
   double elapsedTimeInSecs = 0.0;
   long long curtime;
   char ename[1024];
-  ThreadValue* localThreadValue=getThreadValue(tid);
+  PapiThreadValue* localThreadValue=getThreadValue(tid);
   /* Have we initialized on this thread yet? */
   if (localThreadValue == 0) return;
   for (i=0; i<numCounters; i++) {
@@ -1020,7 +1018,7 @@ void PapiLayer::triggerRAPLPowerEvents(bool in_signal_handler) {
         double value = (((double) tmpCounters[i]) *scalingFactor)/elapsedTimeInSecs;
 	dmesg(1,"Counter: %s: value %.9f, units = W\n", Tau_rapl_event_names[i], value);
 	if (value > 1e-5) {
-	  sprintf(ename,"%s (CPU Socket Power in Watts)", Tau_rapl_event_names[i]);
+	  snprintf(ename, sizeof(ename), "%s (CPU Socket Power in Watts)", Tau_rapl_event_names[i]);
       if (in_signal_handler) {
           TAU_REGISTER_EVENT(ue, ename);
           Tau_userevent_thread(ue, value, 0);

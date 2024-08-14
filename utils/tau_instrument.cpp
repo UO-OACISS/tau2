@@ -625,7 +625,7 @@ void parseInstrumentationCommand(char *line, int lineno)
       WSPACE(line);
       DEBUG_MSG("GOT routine = %s\n", pname);
     } else {
-      strcpy(pname, "#");
+      strncpy(pname,  "#", sizeof(pname)); 
     }
     if (strncmp(line, "code", 4) == 0) {
       line += 4; /* move 4 spaces */
@@ -688,7 +688,7 @@ void parseInstrumentationCommand(char *line, int lineno)
       WSPACE(line);
       DEBUG_MSG("GOT routine = %s\n", pname);
     } else {
-      strcpy(pname, "#");
+      strncpy(pname,  "#", sizeof(pname)); 
     }
     if (strncmp(line, "code", 4) == 0) {
       line += 4;
@@ -751,7 +751,7 @@ void parseInstrumentationCommand(char *line, int lineno)
       WSPACE(line);
       DEBUG_MSG("GOT routine = %s\n", pname);
     } else {
-      strcpy(pname, "#");
+      strncpy(pname,  "#", sizeof(pname)); 
     }
     if (strncmp(line, "code", 4) == 0) {
       line += 4;
@@ -852,7 +852,7 @@ void parseInstrumentationCommand(char *line, int lineno)
       DEBUG_MSG("GOT routine = %s\n", pname);
 
     } else {
-      strcpy(pname, "#");
+      strncpy(pname,  "#", sizeof(pname)); 
     }
     if (strncmp(line, "code", 4) == 0) {
       line += 4;
@@ -1229,7 +1229,7 @@ void writeAdditionalFortranInvocations(ostream& ostr, const pdbRoutine *ro)
 void getLoopTimerVariableName(string& varname, int line)
 {
   char var[256];
-  sprintf(var, "%d", line);
+  snprintf(var, sizeof(var),  "%d", line);
   varname = string("t_") + var;
   return;
 }
@@ -1242,7 +1242,7 @@ void addFortranLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, co
   char lines[256];
 
   /* first we construct a string with the line numbers */
-  sprintf(lines, "{%d,%d}-{%d,%d}", start.line(), start.col(), stop.line(), stop.col());
+  snprintf(lines, sizeof(lines),  "{%d,%d}-{%d,%d}", start.line(), start.col(), stop.line(), stop.col());
   /* we use the line numbers in building the name of the timer */
 
   const char *filename = f->name().c_str();
@@ -1372,7 +1372,7 @@ void addRequestForUPCInstrumentation(const char *entityName, const pdbRoutine *r
 {
   const pdbFile *f = start.file();
   char lines[256];
-  sprintf(lines, "{%d,%d}-{%d,%d}", start.line(), start.col(), stop_row, stop_col);
+  snprintf(lines, sizeof(lines),  "{%d,%d}-{%d,%d}", start.line(), start.col(), stop_row, stop_col);
 
 
   DEBUG_MSG("addRequestForUPCInstrumentation: entityName = %s\n", entityName);
@@ -1392,7 +1392,7 @@ void addRequestForLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start,
 {
   const pdbFile * f = start.file();
   char lines[256];
-  sprintf(lines, "{%d,%d}-{%d,%d}", start.line(), start.col(), stop.line(), stop.col());
+  snprintf(lines, sizeof(lines),  "{%d,%d}-{%d,%d}", start.line(), start.col(), stop.line(), stop.col());
 
   const char *filename = f->name().c_str();
   while (strchr(filename, TAU_DIR_CHARACTER)) {    // remove path
@@ -1486,7 +1486,7 @@ int processMemBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& i
 void getTauEntityName(const char *prefix, string& varname, int line)
 { /* pass in tio as the prefix */
   char var[256];
-  sprintf(var, "%d", line);
+  snprintf(var, sizeof(var),  "%d", line);
   varname = string(prefix) + var;
   return;
 }
@@ -1498,7 +1498,7 @@ void addFortranIOInstrumentation(const pdbRoutine *ro, const pdbLoc& start, cons
   char lines[256];
 
   /* first we construct a string with the line numbers */
-  sprintf(lines, "%d", start.line());
+  snprintf(lines, sizeof(lines),  "%d", start.line());
 
   /* we use the line numbers in building the name of the timer */
   const pdbFile *f = start.file();

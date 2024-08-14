@@ -196,37 +196,37 @@ Tau_openacc_data_callback( acc_prof_info* prof_info, acc_event_info* event_info,
     switch(prof_info->event_type) {
         case acc_ev_enqueue_upload_start:
             start = 1;
-            sprintf(event_name, "OpenACC enqueue data transfer (HtoD)");
+            snprintf(event_name, sizeof(event_name),  "OpenACC enqueue data transfer (HtoD)");
             break;
         case acc_ev_enqueue_upload_end:
             start = 0;
             break;
         case acc_ev_enqueue_download_start:
             start = 1;
-            sprintf(event_name, "OpenACC enqueue data transfer (DtoH)");
+            snprintf(event_name, sizeof(event_name),  "OpenACC enqueue data transfer (DtoH)");
             break;
         case acc_ev_enqueue_download_end:
             start = 0;
             break;
         case acc_ev_create:
             start = -1;
-            sprintf(event_name, "OpenACC device data create");
+            snprintf(event_name, sizeof(event_name),  "OpenACC device data create");
             break;
         case acc_ev_delete:
             start = -1;
-            sprintf(event_name, "OpenACC device data delete");
+            snprintf(event_name, sizeof(event_name),  "OpenACC device data delete");
             break;
         case acc_ev_alloc:
             start = -1;
-            sprintf(event_name, "OpenACC device alloc");
+            snprintf(event_name, sizeof(event_name),  "OpenACC device alloc");
             break;
         case acc_ev_free:
             start = -1;
-            sprintf(event_name, "OpenACC device free");
+            snprintf(event_name, sizeof(event_name),  "OpenACC device free");
             break;
         default:
             start = -1;
-            sprintf(event_name, "UNKNOWN OPENACC DATA EVENT");
+            snprintf(event_name, sizeof(event_name),  "UNKNOWN OPENACC DATA EVENT");
             fprintf(stderr, "ERROR: Unknown data event passed to OpenACC data event callback.");
     }
 
@@ -244,12 +244,12 @@ Tau_openacc_data_callback( acc_prof_info* prof_info, acc_event_info* event_info,
         return;
     }
 
-    sprintf(file_name, "%s:%s-%s",
+    snprintf(file_name, sizeof(file_name),  "%s:%s-%s",
             prof_info->src_file,
             (prof_info->line_no > 0) ? std::to_string(prof_info->line_no).c_str() : "?",
             (prof_info->end_line_no > 0) ? std::to_string(prof_info->end_line_no).c_str() : "?");
 
-    sprintf(event_data, " ; variable name = %s %s; parent construct = %s (%s)",
+    snprintf(event_data, sizeof(event_data),  " ; variable name = %s %s; parent construct = %s (%s)",
             //                               name ^  ^ (implicit move?)         ^ file and line no.
             (data_event->var_name) ? data_event->var_name : "unknown variable",
             (data_event->implicit) ? "(implicit move)" : "",

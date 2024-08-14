@@ -438,7 +438,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents_MPI(EventLister *eventLister) {
     TAU_VERBOSE("TAU: Unifying Complete, duration = %.4G seconds\n",
 		((double)(end-start))/1000000.0f);
     char tmpstr[256];
-    sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
+    snprintf(tmpstr, sizeof(tmpstr),  "%.4G seconds", ((double)(end-start))/1000000.0f);
     TAU_METADATA("TAU Unification Time", tmpstr);
   }
 
@@ -679,7 +679,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents_SHMEM(EventLister *eventLister) {
     TAU_VERBOSE("TAU: Unifying Complete, duration = %.4G seconds\n",
 		((double)(end-start))/1000000.0f);
     char tmpstr[256];
-    sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
+    snprintf(tmpstr, sizeof(tmpstr),  "%.4G seconds", ((double)(end-start))/1000000.0f);
     TAU_METADATA("TAU Unification Time", tmpstr);
   }
 

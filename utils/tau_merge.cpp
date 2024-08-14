@@ -578,7 +578,7 @@ int main(int argc, char *argv[])
 		} else {
 
 	    	edfFilename = (char *) malloc(2048);
-		    sprintf(edfFilename, "events.%d.edf", getNodeId(traceFilename));
+		    snprintf(edfFilename, 2048,  "events.%d.edf", getNodeId(traceFilename));
 		}
 
 		printf("processing trace: %s, with edf = %s\n", traceFilename, edfFilename);

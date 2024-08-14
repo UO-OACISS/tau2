@@ -585,7 +585,7 @@ int main(int argc, char **argv)
       
       //for (tid = 0; tid < threadnumarray[i]; tid++)
       //{
-        sprintf(name, "node %d, thread %d", nodenum[i], threadnum[i]);
+        snprintf(name, sizeof(name),  "node %d, thread %d", nodenum[i], threadnum[i]);
         int cpuid = GlobalId[pair<int,int>(nodenum[i],threadnum[i])];
         
         VTF3_WriteDefcpuname(fcb, cpuid, name);
@@ -594,7 +594,7 @@ int main(int argc, char **argv)
 	if(thisnode!=nodenum[i])
 	{
 		thisnode=nodenum[i];
-    		sprintf(name, "Node %d", nodenum[i]);
+    		snprintf(name, sizeof(name),  "Node %d", nodenum[i]);
       		groupid ++; /* let flat group for samples take the first one */
       		/* Define a group: threadnumarray[i] represents no. of threads in node */
 		for(int j=0;j<numthreads[thisnode];j++)
@@ -615,7 +615,7 @@ int main(int argc, char **argv)
      for(i=0;i<nodes;i++)
      {
          char name[64];
-	 sprintf(name, "node %d",nodenum[i]);
+	 snprintf(name, sizeof(name),  "node %d",nodenum[i]);
 	 int cpuid = GlobalId[pair<int,int>(nodenum[i],0)];
 	 //printf("id: %d, name: %d\n",cpuid, nodenum[i]);
 	 VTF3_WriteDefcpuname(fcb, cpuid, name);
@@ -636,7 +636,7 @@ int main(int argc, char **argv)
 
   /* Define group ids */
   char name[1024];
-  strcpy(name, "TAU sample group name");
+  strncpy(name,  "TAU sample group name", sizeof(name)); 
   VTF3_WriteDefcpugrp(fcb, sampgroupid, totalnidtids, idarray, name);
 
   EndOfTrace = 0;

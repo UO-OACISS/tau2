@@ -85,6 +85,7 @@ void esd_exit (elg_ui4 rid);
 #include <Profile/CuptiLayer.h>
 #endif
 #include <atomic>
+#include <cstdint>
 
 using namespace tau;
 
@@ -412,6 +413,7 @@ static void reportEntryExit (bool entry, FunctionInfo *caller, int tid) {
     TAU_VERBOSE("%06u %03d %02d %s%s: %s\n", RtsLayer::getTid(), tid, position, tabs.c_str(),
         (entry ? "Entry" : "Exit "), caller->GetName());
     fflush(stderr);
+    //Tau_print_simple_backtrace(tid);
 }
 #endif
 
@@ -1004,6 +1006,21 @@ extern "C" void Tau_stop_all_timers(int tid)
   in_here = false;
 }
 
+
+#ifdef TAU_TRACK_IDLE_THREADS
+//Prevent Profile::Stop from internally stopping all threads when using OpenMP
+//if TAU is already closing all threads
+static bool thread_local tauStoppingAllThreads = false;
+
+//Prevent Profile::Stop from internally stopping all threads when using OpenMP
+//if TAU is already closing all threads
+extern "C" bool Tau_check_Stopping_All_Threads(){
+        return tauStoppingAllThreads;
+}
+
+#endif /* TAU_TRACK_IDLE_THREADS */
+
+
 inline void Tau_profile_exit_threads(int begin_index)
 {
   if(!TheSafeToDumpData()) {
@@ -1018,11 +1035,18 @@ inline void Tau_profile_exit_threads(int begin_index)
   //Tau_disable_collector_api();
 #endif
 
+//Prevent Profile::Stop from internally stopping all threads when using OpenMP
+//if TAU is already closing all threads
+
+#ifdef TAU_TRACK_IDLE_THREADS
+  if(begin_index == 0)
+      tauStoppingAllThreads = true;
+#endif /* TAU_TRACK_IDLE_THREADS */
 #ifdef TAU_ANDROID
   bool su = JNIThreadLayer::IsMgmtThread();
 #endif
 
-  for(int tid = begin_index; tid < TheCAPIThreadList().size(); ++tid) {
+   for(int tid = TheCAPIThreadList().size() - 1; tid >= begin_index; --tid) {
 #ifdef TAU_ANDROID
     if (su) {
       JNIThreadLayer::SuThread(tid);
@@ -1069,7 +1093,6 @@ extern "C" void Tau_profile_exit()
 extern "C" void Tau_exit(const char * msg) {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-
   /*Invoke plugins only if both plugin path and plugins are specified
   *    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
   if(Tau_plugins_enabled.function_finalize) {
@@ -1082,8 +1105,11 @@ extern "C" void Tau_exit(const char * msg) {
   Tau_profile_exit_most_threads();
 #elif defined(TAU_CUDA)
 	Tau_profile_exit_all_threads();
+#elif  defined(TAU_ENABLE_ROCM )
+	Tau_profile_exit_all_threads();
+
 #else
-  Tau_profile_exit();
+Tau_profile_exit();
 #endif
 
 #ifdef TAUKTAU
@@ -1150,9 +1176,42 @@ extern "C" void Tau_set_thread(int threadId) {
   cerr << "TAU: ERROR: Unsafe and deprecated call to TAU_SET_THREAD!" << endl;
 }
 
+/* Helper functions for fixing threading */
+#if (!defined(TAU_WINDOWS))
+#ifdef __APPLE__
+/* SYS_gettid doesn't work on stupid OSX, so we'll fake it. All we really want
+   to know is whether this is the main thread (thread 0) or not. If it is, its
+   thread ID will match the process ID. Unfortunately, using the
+   pthread_threadid_np call on apple doesn't work either. */
+long tau_gettid(void) {
+    static std::atomic<long> threads{0};
+    static thread_local long me{threads++};
+    long pid = getpid();
+    return pid+me;
+}
+#else
+#include <sys/syscall.h>
+#define tau_gettid() syscall(SYS_gettid)
+#endif
+bool validate_thread() {
+    long pid = getpid();
+    long tid = tau_gettid();
+    int tau_tid = RtsLayer::myThread();
+    if (tau_tid == 0 && pid != tid) {
+        TAU_VERBOSE("Registering thread! %ld != %ld, so need new thread\n", pid, tid);
+        Tau_register_thread();
+        Tau_create_top_level_timer_if_necessary();
+    }
+    return true;
+}
+#else
+bool validate_thread() {return false;} // do nothing
+#endif
+
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_get_thread(void) {
   TauInternalFunctionGuard protects_this_function;
+  thread_local static bool do_once = validate_thread();
   return RtsLayer::myThread();
 }
 
@@ -1192,9 +1251,14 @@ void Tau_cupti_buffer_processed(void) {
 extern void Tau_roctracer_flush_tracing(void);
 #endif /* TAU_ENABLE_ROCTRACER */
 
-#ifdef TAU_ENABLE_ROCPROFILER
+#if defined(TAU_ENABLE_ROCPROFILER) || defined(TAU_ENABLE_ROCPROFILERV2)
 extern void Tau_rocprofiler_pool_flush(void);
 #endif
+
+#if defined(TAU_ENABLE_ROCPROFILERV3)
+extern void Tau_rocprofv3_flush(void);
+#endif
+
 #ifdef TAU_USE_OMPT_5_0
 extern void Tau_ompt_flush_trace(void);
 #endif
@@ -1225,8 +1289,11 @@ extern "C" void Tau_flush_gpu_activity(void) {
         }
     }
 #endif
-#ifdef TAU_ENABLE_ROCPROFILER
+#if defined(TAU_ENABLE_ROCPROFILER) || defined(TAU_ENABLE_ROCPROFILERV2)
    Tau_rocprofiler_pool_flush();
+#endif
+#if defined(TAU_ENABLE_ROCPROFILERV3)
+   Tau_rocprofv3_flush();
 #endif
 #ifdef TAU_ENABLE_ROCTRACER
    TAU_VERBOSE("TAU: flushing asynchronous ROCM/HIP events...\n");
@@ -1438,12 +1505,12 @@ extern "C" int Tau_dump_callpaths() {
 
   //Create temp write to file.
   char filename[1024];
-  sprintf(filename,"%s/callpaths.%d",dirname, pid);
+  snprintf(filename, sizeof(filename), "%s/callpaths.%d",dirname, pid);
 
   FILE* fp;
   if ((fp = fopen (filename, "a+")) == NULL) {
     char errormsg[1064];
-    sprintf(errormsg,"Error: Could not create %s",filename);
+    snprintf(errormsg, sizeof(errormsg), "Error: Could not create %s",filename);
     perror(errormsg);
     return 1;
   }
@@ -1573,6 +1640,7 @@ extern "C" void Tau_disable_instrumentation(void) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_shutdown(void) {
+  TAU_VERBOSE("Tau_shutdown!\n");
   Tau_memory_wrapper_disable();
   if (!TheUsingCompInst()) {
     RtsLayer::TheShutdown() = true;
@@ -1722,7 +1790,7 @@ TauContextUserEvent & TheMsgVolSendContextEvent(int tid) {
 
     if(!sendEvents[tid]) {
         char buff[256];
-        sprintf(buff, "Message size sent to node %d", tid);
+        snprintf(buff, sizeof(buff),  "Message size sent to node %d", tid);
         sendEvents[tid] = new TauContextUserEvent(buff);
     }
 
@@ -1738,7 +1806,7 @@ TauContextUserEvent & TheMsgVolRecvContextEvent(int tid) {
 
     if(!recvEvents[tid]) {
         char buff[256];
-        sprintf(buff, "Message size received from node %d", tid);
+        snprintf(buff, sizeof(buff),  "Message size received from node %d", tid);
         recvEvents[tid] = new TauContextUserEvent(buff);
     }
 
@@ -2337,6 +2405,12 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 extern void Tau_roctracer_start_tracing(void);
 extern void Tau_roctracer_stop_tracing(void);
 #endif /* TAU_ENABLE_ROCTRACER */
+#ifdef TAU_ENABLE_ROCPROFILERV2
+extern void Tau_rocprofv2_stop(void);
+#endif /* TAU_ENABLE_ROCPROFILERV2 */
+
+
+
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
   if ((RtsLayer::myNode() == -1) && (Tau_get_thread() != 0)) {
@@ -2379,6 +2453,10 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
 #ifdef TAU_ENABLE_ROCTRACER
    Tau_roctracer_stop_tracing();
 #endif /* TAU_ENABLE_ROCTRACER */
+#ifdef TAU_ENABLE_ROCPROFILERV2
+     Tau_rocprofv2_stop();
+#endif /* TAU_ENABLE_ROCPROFILERV2 */
+
    done = true;
 }
 
@@ -2512,8 +2590,9 @@ extern "C" void Tau_global_stop(void) {
 extern "C" char * Tau_phase_enable(const char *group) {
   TauInternalFunctionGuard protects_this_function;
 #ifdef TAU_PROFILEPHASE
-  char *newgroup = new char[strlen(group)+16];
-  sprintf(newgroup, "%s|TAU_PHASE", group);
+  const int len = strlen(group)+16;
+  char *newgroup = new char[len];
+  snprintf(newgroup, len,  "%s|TAU_PHASE", group);
   return newgroup;
 #else /* TAU_PROFILEPHASE */
   return (char *) group;
@@ -2545,7 +2624,7 @@ extern "C" void Tau_mark_group_as_phase(void *ptr)
 extern "C" char const * Tau_append_iteration_to_name(int iteration, char const * name, int slen) {
   TauInternalFunctionGuard protects_this_function;
   char * buff = (char*)malloc(slen+128);
-  sprintf(buff, "%s[%d]", name, iteration);
+  snprintf(buff, slen+128,  "%s[%d]", name, iteration);
   return buff;
 }
 
@@ -3000,7 +3079,7 @@ extern "C" pid_t tau_fork() {
 
 extern "C" void Tau_profile_snapshot_1l(const char *name, int number) {
   char buffer[4096];
-  sprintf (buffer, "%s %d", name, number);
+  snprintf (buffer, sizeof(buffer),  "%s %d", name, number);
   Tau_snapshot_writeIntermediate(buffer);
 }
 
@@ -3323,19 +3402,19 @@ void Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_
     }
   }
   if(pvar_count == 1) {
-    sprintf(concat_event_name, "%s (%s)", event_name, description);
+    snprintf(concat_event_name, sizeof(concat_event_name),  "%s (%s)", event_name, description);
     TAU_VERBOSE("Concat Event name = %s\n", concat_event_name);
     (*event)[0] = new TauUserEvent(concat_event_name);
   } else {
     for(i=0; i < pvar_count; i++) {
-      sprintf(concat_event_name, "%s (%s)[%d]", event_name, description, i);
+      snprintf(concat_event_name, sizeof(concat_event_name),  "%s (%s)[%d]", event_name, description, i);
       TAU_VERBOSE("Concat Event name = %s\n", concat_event_name);
       (*event)[i] = new TauUserEvent(concat_event_name);
     }
   }
 
   /* Add a metadata field */
-  sprintf(concat_event_name, "MPI_T PVAR[%d]: %s", pvar_index, event_name);
+  snprintf(concat_event_name, sizeof(concat_event_name),  "MPI_T PVAR[%d]: %s", pvar_index, event_name);
   TAU_METADATA(concat_event_name, description);
 }
 

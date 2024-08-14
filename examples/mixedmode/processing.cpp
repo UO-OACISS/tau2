@@ -9,7 +9,7 @@ int work(int rank)
 {
 char buf[64];
   sleep(2);
-  sprintf(buf,"Inside work (called from threaded_func): rank %d, pid = %d\n", rank, getpid());
+  snprintf(buf, sizeof(buf), "Inside work (called from threaded_func): rank %d, pid = %d\n", rank, getpid());
   write(1, buf, strlen(buf));
   return 0;
 }

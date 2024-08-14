@@ -401,9 +401,9 @@ void printShmemMessageBeforeRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
   char processor_arg[256];
 
   if (fortran_interface) {
-    sprintf(processor_arg, "(*a%d)", pe_argument_no);
+    snprintf(processor_arg, sizeof(processor_arg),  "(*a%d)", pe_argument_no);
   } else {
-    sprintf(processor_arg, "a%d", pe_argument_no);
+    snprintf(processor_arg, sizeof(processor_arg),  "a%d", pe_argument_no);
   }
 
   char const * multiplier_string = getMultiplierString(rname);
@@ -412,12 +412,12 @@ void printShmemMessageBeforeRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
 #endif /* DEBUG */
   if (len_argument_no != 0) {
     if (fortran_interface) {
-      sprintf(length_string, "%s (*a%d)", multiplier_string, len_argument_no);
+      snprintf(length_string, sizeof(length_string),  "%s (*a%d)", multiplier_string, len_argument_no);
     } else {
-      sprintf(length_string, "%sa%d", multiplier_string, len_argument_no);
+      snprintf(length_string, sizeof(length_string),  "%sa%d", multiplier_string, len_argument_no);
     }
   } else {
-    sprintf(length_string, "%s1", multiplier_string);
+    snprintf(length_string, sizeof(length_string),  "%s1", multiplier_string);
   }
 
   if (doesRoutineNameContainGet(rname) || doesRoutineNameContainFetchOp(rname)) {
@@ -485,9 +485,9 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
   bool is_it_a_put = false;
 
   if (fortran_interface) {
-    sprintf(processor_arg, "(*a%d)", pe_argument_no);
+    snprintf(processor_arg, sizeof(processor_arg),  "(*a%d)", pe_argument_no);
   } else {
-    sprintf(processor_arg, "a%d", pe_argument_no);
+    snprintf(processor_arg, sizeof(processor_arg),  "a%d", pe_argument_no);
   }
 
   char const * multiplier_string = getMultiplierString(rname);
@@ -496,12 +496,12 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
 #endif /* DEBUG */
   if (len_argument_no != 0) {
     if (fortran_interface) {
-      sprintf(length_string, "%s (*a%d)", multiplier_string, len_argument_no);
+      snprintf(length_string, sizeof(length_string),  "%s (*a%d)", multiplier_string, len_argument_no);
     } else {
-      sprintf(length_string, "%sa%d", multiplier_string, len_argument_no);
+      snprintf(length_string, sizeof(length_string),  "%sa%d", multiplier_string, len_argument_no);
     }
   } else {
-    sprintf(length_string, "%s1", multiplier_string);
+    snprintf(length_string, sizeof(length_string),  "%s1", multiplier_string);
   }
   is_it_a_get = doesRoutineNameContainGet(rname);
   is_it_a_fetchop = doesRoutineNameContainFetchOp(rname);
@@ -537,9 +537,9 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
     if (is_it_a_cond_fetchop && !isVoid) {
       indent=string("  ");
       if (fortran_interface) {
-        sprintf(cond_string, "  if (retval == (*a%d)) { ", cond_argument_no);
+        snprintf(cond_string, sizeof(cond_string),  "  if (retval == (*a%d)) { ", cond_argument_no);
       } else {
-        sprintf(cond_string, "  if (retval == a%d) { ", cond_argument_no);
+        snprintf(cond_string, sizeof(cond_string),  "  if (retval == a%d) { ", cond_argument_no);
       }
       impl <<cond_string<<endl;; 
     }
@@ -670,7 +670,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
     }
 
     char number[256];
-    sprintf(number, "%d", argcount);
+    snprintf(number, sizeof(number),  "%d", argcount);
     const pdbGroup *gr;
     string argtypename;
     string argtypenamefort;
@@ -1182,7 +1182,7 @@ void generateMakefile(string const & package, string const & outFileName,
   }
 
   char buffer[1024];
-  sprintf(buffer, "%s_wrapper/%s", libname.c_str(), makefileName);
+  snprintf(buffer, sizeof(buffer),  "%s_wrapper/%s", libname.c_str(), makefileName);
 
   ofstream makefile(buffer);
 

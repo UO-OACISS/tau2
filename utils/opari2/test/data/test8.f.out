@@ -117,7 +117,7 @@
       if (pomp2_if) then
       call POMP2_Task_create_begin(opari2_region_5,
      &pomp2_new_task,
-     &pomp2_old_task, 
+     &pomp2_old_task,
      &pomp2_if,
      &opari2_ctc_5 )
       end if
@@ -274,22 +274,22 @@
 
       subroutine POMP2_Init_reg_000()
          include 'test8.f.opari.inc'
-         call POMP2_Assign_handle( opari2_region_1, 
+         call POMP2_Assign_handle( opari2_region_1,
      &   opari2_ctc_1 )
-         call POMP2_Assign_handle( opari2_region_2, 
+         call POMP2_Assign_handle( opari2_region_2,
      &   opari2_ctc_2 )
-         call POMP2_Assign_handle( opari2_region_3, 
+         call POMP2_Assign_handle( opari2_region_3,
      &   opari2_ctc_3 )
-         call POMP2_Assign_handle( opari2_region_4, 
+         call POMP2_Assign_handle( opari2_region_4,
      &   opari2_ctc_4 )
-         call POMP2_Assign_handle( opari2_region_5, 
+         call POMP2_Assign_handle( opari2_region_5,
      &   opari2_ctc_5 )
-         call POMP2_Assign_handle( opari2_region_6, 
+         call POMP2_Assign_handle( opari2_region_6,
      &   opari2_ctc_6 )
-         call POMP2_Assign_handle( opari2_region_7, 
+         call POMP2_Assign_handle( opari2_region_7,
      &   opari2_ctc_7 )
-         call POMP2_Assign_handle( opari2_region_8, 
+         call POMP2_Assign_handle( opari2_region_8,
      &   opari2_ctc_8 )
-         call POMP2_Assign_handle( opari2_region_9, 
+         call POMP2_Assign_handle( opari2_region_9,
      &   opari2_ctc_9 )
       end

@@ -1,0 +1,14 @@
+Tau must be configured with -dyninst=download or -dyninst=$PATH_TO_DYNINST
+
+
+To run this example follow the next steps:
+
+1. Compile the application with make
+2. Include the tau executables in your path, export PATH=$HOME/tau2/x86_64/bin/:$PATH
+3. Include both Dyninst and Tau libraries in LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH=$HOME/tau2/x86_64/lib/:$LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH=$HOME/dyninst/lib/:$LD_LIBRARY_PATH
+4. Set the DYNINSTAPI_RT_LIB, DYNINSTAPI_RT_LIB=$HOME/dyninst/lib/libdyninstAPI_RT.so
+5. Modify the executable with tau_run, tau_run -T serial klargest -o klargest.i
+6. Execute the application, ./klargest.i
+7. See the results, pprof -a

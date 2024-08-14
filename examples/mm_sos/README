@@ -41,7 +41,7 @@ cmake -DCMAKE_INSTALL_PREFIX=$SOS_INSTALL_DIR \
 
 
 2.TAU should be configured using the following options:
-./configure -dwarf=download -bdf=download -pthread -mpi -sos=$SOS_INSTALL_PATH -pdt=$PDTOOLKIT_PATH 
+./configure -dwarf=download -bfd=download -pthread -mpi -sos=$SOS_INSTALL_PATH -pdt=$PDTOOLKIT_PATH 
 If you skipped step 1., use -sos=download, the flag -soscomm allows to change communicators, MPI 
 is used by default. The options are evpath, sockets and mpi.
 ./configure -dwarf=download -bdf=download -pthread -mpi -sos=download -soscomm=mpi -pdt=$PDTOOLKIT_PATH

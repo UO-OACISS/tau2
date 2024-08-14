@@ -103,14 +103,14 @@ OPARI2_DirectivePomp::GenerateDescr( ostream& os )
     if ( s_lang & L_FORTRAN )
     {
         s_init_handle_calls << "         call " << s_paradigm_prefix << "_Assign_handle( "
-                            << region_id_prefix << m_id << ", ";
+                            << region_id_prefix << m_id << ",";
         if ( s_format == F_FIX )
         {
             s_init_handle_calls << "\n     &   ";
         }
         else
         {
-            s_init_handle_calls << "&\n         ";
+            s_init_handle_calls << " &\n         ";
         }
 
         s_init_handle_calls << m_ctc_string_variable << " )\n";

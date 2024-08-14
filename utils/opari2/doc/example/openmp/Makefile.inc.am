@@ -1,0 +1,22 @@
+## -*- mode: makefile -*-
+
+##
+## This file is part of the Score-P software (http://www.score-p.org)
+##
+## Copyright (c) 2020,
+## Technische Universitaet Dresden, Germany
+##
+## This software may be modified and distributed under the terms of
+## a BSD-style license.  See the COPYING file in the package base
+## directory for details.
+##
+
+if HAVE_OPENMP_SUPPORT
+
+exampleopenmpdir = $(docdir)/example/openmp
+exampleopenmp_DATA = \
+    $(SRC_ROOT)doc/example/openmp/example.c \
+    $(SRC_ROOT)doc/example/openmp/example.f90 \
+    ../doc/example/openmp/Makefile
+
+endif HAVE_OPENMP_SUPPORT

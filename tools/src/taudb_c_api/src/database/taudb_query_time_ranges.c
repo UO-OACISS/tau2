@@ -27,7 +27,7 @@ TAUDB_TIME_RANGE* taudb_query_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TR
    * Fetch rows from table_name, the system catalog of databases
    */
   char my_query[256];
-  sprintf(my_query,"select * from time_range where trial = %d", trial->id);
+  snprintf(my_query, sizeof(my_query), "select * from time_range where trial = %d", trial->id);
 #ifdef TAUDB_DEBUG
   printf("Query: %s\n", my_query);
 #endif
@@ -122,21 +122,21 @@ void taudb_save_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, bo
     // make array of 5 character pointers
     const char* paramValues[5] = {0};
     char istart[32] = {0};
-    sprintf(istart, "%d", time_range->iteration_start);
+    snprintf(istart, sizeof(istart),  "%d", time_range->iteration_start);
     paramValues[0] = istart;
     char iend[32] = {0};
-    sprintf(iend, "%d", time_range->iteration_end);
+    snprintf(iend, sizeof(iend),  "%d", time_range->iteration_end);
     paramValues[1] = iend;
     char tstart[32] = {0};
-    sprintf(tstart, "%llu", (long long unsigned int)time_range->time_start);
+    snprintf(tstart, sizeof(tstart),  "%llu", (long long unsigned int)time_range->time_start);
     paramValues[2] = tstart;
     char tend[32] = {0};
-    sprintf(tend, "%llu", (long long unsigned int)time_range->time_end);
+    snprintf(tend, sizeof(tend),  "%llu", (long long unsigned int)time_range->time_end);
     paramValues[3] = tend;
 
 	char id[32] = {0};
 	if(update && time_range->id > 0) {
-		sprintf(id, "%d", time_range->id);
+		snprintf(id, sizeof(id),  "%d", time_range->id);
 		paramValues[4] = id;
 	}
 

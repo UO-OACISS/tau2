@@ -63,7 +63,7 @@ struct TauBfdInfo
 		probeAddr = addr;
 		if(!funcname) {
 			char * tmp = (char*)malloc(256);
-			sprintf(tmp, "addr=<%p>", (void*)(addr));
+			snprintf(tmp, 256,  "addr=<%p>", (void*)(addr));
 			funcname = tmp;
 		}
 		if(!filename) filename = "(unknown)";

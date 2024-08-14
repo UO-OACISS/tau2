@@ -85,7 +85,7 @@ extern int Tau_msg_recv_prolog();
 #ifdef TAU_MPI_T_TRACK_GPU_MSGS
 #define TAU_MSG_SEND_PROLOG() Tau_msg_send_prolog()
 #define TAU_MSG_RECV_PROLOG() Tau_msg_recv_prolog()
-#else // TAU_MPI_T_TRACK_GPU_MSGS 
+#else // TAU_MPI_T_TRACK_GPU_MSGS
 #define TAU_MSG_SEND_PROLOG()
 #define TAU_MSG_RECV_PROLOG()
 #endif
@@ -406,7 +406,7 @@ MPI_Comm comm;
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Allgather( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm );
-  if (recvtype != MPI_DATATYPE_NULL) { 
+  if (recvtype != MPI_DATATYPE_NULL) {
     PMPI_Type_size( recvtype, &typesize );
   }
   TAU_ALLGATHER_DATA(typesize*recvcount);
@@ -587,7 +587,7 @@ MPI_Comm comm;
   TAU_TRACK_COMM(comm);
 
   returnVal = PMPI_Bcast( buffer, count, datatype, root, comm );
-  if (datatype != MPI_DATATYPE_NULL) { 
+  if (datatype != MPI_DATATYPE_NULL) {
     PMPI_Type_size( datatype, &typesize );
   }
 
@@ -938,6 +938,7 @@ void * attr_value;
 
 #endif /* MPI_VERSION < 2 */
 
+#ifndef TAU_MPI_DISABLE_COMM_WRAPPERS
 int   MPI_Comm_compare( comm1, comm2, result )
 MPI_Comm comm1;
 MPI_Comm comm2;
@@ -1137,7 +1138,7 @@ void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
   for (i=0; i<limit; i++) {
     worldrank = TauTranslateRankToWorld(newcomm, i);
 /*     printf ("comm %p has world member %d\n", newcommhandle, worldrank); */
-    sprintf (catbuffer, "%d ", worldrank);
+    snprintf (catbuffer, sizeof(catbuffer),  "%d ", worldrank);
     strcat(buffer, catbuffer);
   }
   if (limit < newCommSize) {
@@ -1145,7 +1146,7 @@ void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
   }
 
 /*   printf ("buffer is %s\n", buffer); */
-  sprintf (namebuffer, "MPI_Comm %p", newcommhandle);
+  snprintf (namebuffer, sizeof(namebuffer),  "MPI_Comm %p", newcommhandle);
   TAU_METADATA(namebuffer, buffer);
 }
 #endif /* TAU_EXP_TRACK_COMM */
@@ -1533,6 +1534,7 @@ MPI_Comm * comm_out;
 
   return returnVal;
 }
+#endif // TAU_MPI_DISABLE_COMM_WRAPPERS
 
 // OpenMPI 4 and later have removed some functions deleted in MPI 3.0
 // #if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
@@ -1938,7 +1940,7 @@ int mkdirp(const char *path) {
             errno = ENAMETOOLONG;
             return -1;
         }
-    strcpy(_path, path);
+    strncpy(_path,  path, sizeof(_path)); 
 
     /* Iterate the string */
     for (p = _path + 1; *p; p++) {
@@ -2016,9 +2018,21 @@ char *** argv;
       fprintf(stderr, "ERROR!!!  MPI implementation doesn't provide threaded support.\nADIOS2 output from TAU likely won't work.\n");
     }
 #else
-    TAU_VERBOSE("%s Initializing with PMPI_Init_thread\n", __func__);
+    TAU_VERBOSE("%s Initializing with PMPI_Init\n", __func__);
     returnVal = PMPI_Init( argc, argv );
 #endif
+
+    TAU_PROFILE_STOP(tautimer);
+
+    PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+    TAU_PROFILE_SET_NODE(procid_0 );
+    Tau_set_usesMPI(1);
+
+    PMPI_Comm_size( MPI_COMM_WORLD, &size );
+    tau_totalnodes(1, size); /* Set the totalnodes */
+
+    PMPI_Get_processor_name(procname, &procnamelength);
+    TAU_METADATA("MPI Processor Name", procname);
 
     Tau_enable_pthread_tracking();
 
@@ -2061,18 +2075,6 @@ char *** argv;
       PMPI_Barrier(MPI_COMM_WORLD);
     }
 #endif /* TAU_BGP */
-    TAU_PROFILE_STOP(tautimer);
-
-    PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
-    TAU_PROFILE_SET_NODE(procid_0 );
-    Tau_set_usesMPI(1);
-
-    PMPI_Comm_size( MPI_COMM_WORLD, &size );
-    tau_totalnodes(1, size); /* Set the totalnodes */
-
-    PMPI_Get_processor_name(procname, &procnamelength);
-    TAU_METADATA("MPI Processor Name", procname);
-
     if (TauEnv_get_synchronize_clocks()) {
       TauSyncClocks();
     }
@@ -2119,6 +2121,18 @@ int *provided;
 
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
 
+  TAU_PROFILE_STOP(tautimer);
+
+  PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+  TAU_PROFILE_SET_NODE(procid_0 );
+  Tau_set_usesMPI(1);
+
+  PMPI_Comm_size( MPI_COMM_WORLD, &size );
+  tau_totalnodes(1, size); /* Set the totalnodes */
+
+  PMPI_Get_processor_name(procname, &procnamelength);
+  TAU_METADATA("MPI Processor Name", procname);
+
 #ifdef TAU_MPI_T
   returnVal = Tau_MPI_T_initialization();
   Tau_track_mpi_t();
@@ -2154,18 +2168,6 @@ int *provided;
     PMPI_Barrier(MPI_COMM_WORLD);
   }
 #endif /* TAU_BGP */
-
-  TAU_PROFILE_STOP(tautimer);
-
-  PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
-  TAU_PROFILE_SET_NODE(procid_0 );
-  Tau_set_usesMPI(1);
-
-  PMPI_Comm_size( MPI_COMM_WORLD, &size );
-  tau_totalnodes(1, size); /* Set the totalnodes */
-
-  PMPI_Get_processor_name(procname, &procnamelength);
-  TAU_METADATA("MPI Processor Name", procname);
 
   if (TauEnv_get_synchronize_clocks()) {
     TauSyncClocks();
@@ -3678,6 +3680,7 @@ MPI_Status * array_of_statuses;
   return returnVal;
 }
 
+#ifndef TAU_MPI_DISABLE_COMM_WRAPPERS
 int   MPI_Cart_coords( comm, rank, maxdims, coords )
 MPI_Comm comm;
 int rank;
@@ -3979,6 +3982,7 @@ int * top_type;
 
   return returnVal;
 }
+#endif // TAU_MPI_DISABLE_COMM_WRAPPERS
 
 
 //For a given process, process is the unique MPI rank
@@ -4049,16 +4053,16 @@ char * Tau_printRanks(void *comm_ptr) {
   for ( i = 0; i < limit; i++) {
     worldrank = TauTranslateRankToWorld(comm, i);
     if (i == 0) {
-      sprintf(rankbuffer, "ranks: %d", worldrank);
+      snprintf(rankbuffer, sizeof(rankbuffer),  "ranks: %d", worldrank);
     } else {
-      sprintf(rankbuffer, ", %d", worldrank);
+      snprintf(rankbuffer, sizeof(rankbuffer),  ", %d", worldrank);
     }
     strcat(name, rankbuffer);
   }
   if (limit < size) {
     strcat(name, " ...");
   }
-  sprintf(rankbuffer,"> <addr=%p", comm_ptr);
+  snprintf(rankbuffer, sizeof(rankbuffer), "> <addr=%p", comm_ptr);
   strcat(name, rankbuffer);
   return strdup(name);
 

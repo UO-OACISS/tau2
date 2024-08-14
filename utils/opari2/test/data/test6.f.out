@@ -76,7 +76,6 @@ c     call omp_init_lock(i)
 
 ! Simulation of included header file, nothing should be replaced
 #line 1 omp_lib.h
-#line 1 omp_lib.h
       call omp_init_lock(lock1)
       call omp_init_nest_lock(lock2)
       call omp_set_lock(lock1)

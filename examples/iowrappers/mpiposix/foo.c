@@ -16,7 +16,7 @@ int main(int argc, char **argv)
    MPI_Init(&argc, &argv);
    /* Create a new file */
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-   sprintf(filename, "out.%d.dat", rank);
+   snprintf(filename, sizeof(filename),  "out.%d.dat", rank);
    
    fd = creat(filename, 0655); 
 

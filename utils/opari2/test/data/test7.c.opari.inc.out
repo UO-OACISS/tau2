@@ -24,8 +24,8 @@ static OPARI2_Region_handle opari2_region_7 = NULL;
 static OPARI2_Region_handle opari2_region_8 = NULL;
     #define opari2_ctc_8 "60*regionType=barrier*sscl=test7.c:73:73*escl=test7.c:73:73**"
 
-#ifdef __cplusplus 
- extern "C" 
+#ifdef __cplusplus
+extern "C"
 #endif
 void POMP2_Init_reg_000()
 {
@@ -37,8 +37,8 @@ void POMP2_Init_reg_000()
     POMP2_Assign_handle( &opari2_region_8, opari2_ctc_8 );
 }
 
-#ifdef __cplusplus 
- extern "C" 
+#ifdef __cplusplus
+extern "C"
 #endif
 void POMP2_USER_Init_reg_000()
 {

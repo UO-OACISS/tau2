@@ -93,8 +93,8 @@ void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
   char MPI_group[64];
   char anonymous_event_name[64];
   if (anonymize) {
-    sprintf(anonymous_group, "TAU_ANONYMOUS_GROUP");
-    sprintf(MPI_group, "MPI");
+    snprintf(anonymous_group, sizeof(anonymous_group),  "TAU_ANONYMOUS_GROUP");
+    snprintf(MPI_group, sizeof(MPI_group),  "MPI");
   }
   for (int i=0; i<functionUnifier->globalNumItems; i++) {
     Tau_util_output (&out, "<event id=\"%d\"><name>", i);
@@ -112,7 +112,7 @@ void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
 	}
 	group = MPI_group;  // MPI
       } else { 
-        sprintf(anonymous_name, "FUNCTION_%d", i); 
+        snprintf(anonymous_name, sizeof(anonymous_name),  "FUNCTION_%d", i); 
         group = anonymous_group;
       }
       TAU_VERBOSE("writing: anonymous_name = %s\n", anonymous_name);
@@ -138,7 +138,7 @@ void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
   for (int i=0; i<atomicUnifier->globalNumItems; i++) {
     Tau_util_output (&out, "<userevent id=\"%d\"><name>", i);
     if (anonymize) {
-      sprintf(anonymous_event_name, "EVENT_%d", i); 
+      snprintf(anonymous_event_name, sizeof(anonymous_event_name),  "EVENT_%d", i); 
       Tau_XML_writeString(&out, anonymous_event_name);
     } else {
       Tau_XML_writeString(&out, atomicUnifier->globalStrings[i]);
@@ -159,13 +159,13 @@ FILE *Tau_create_merged_profile(const char *profiledir, const char *profile_pref
   char filename[4096]; 
   FILE *f; 
   if (profile_prefix != NULL) {
-    sprintf (filename,"%s/%s-%s", profiledir, profile_prefix, fname);
+    snprintf (filename, sizeof(filename), "%s/%s-%s", profiledir, profile_prefix, fname);
   } else {
-    sprintf (filename,"%s/%s", profiledir, fname);
+    snprintf (filename, sizeof(filename), "%s/%s", profiledir, fname);
   }
   if ((f = fopen (filename, "w+")) == NULL) {
     char errormsg[4096];
-    sprintf(errormsg, "TAU Error: Could not create %s/%s-%s", profiledir, profile_prefix, fname);
+    snprintf(errormsg, sizeof(errormsg),  "TAU Error: Could not create %s/%s-%s", profiledir, profile_prefix, fname);
     perror(errormsg);
   }
   return f; 
@@ -387,7 +387,7 @@ int Tau_mergeProfiles_MPI()
     TAU_VERBOSE("TAU: Merging Profiles Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
 
     char tmpstr[256];
-    sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
+    snprintf(tmpstr, sizeof(tmpstr),  "%.4G seconds", ((double)(end-start))/1000000.0f);
     TAU_METADATA("TAU Profile Merge Time", tmpstr);
     if (TauEnv_get_stat_precompute() == 1) {
       TAU_METADATA("TAU_PRECOMPUTE", "on");
@@ -776,7 +776,7 @@ int Tau_mergeProfiles_SHMEM()
     TAU_VERBOSE("TAU: Merging Profiles Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
 
     char tmpstr[256];
-    sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
+    snprintf(tmpstr, sizeof(tmpstr),  "%.4G seconds", ((double)(end-start))/1000000.0f);
     TAU_METADATA("TAU Profile Merge Time", tmpstr);
     if (TauEnv_get_stat_precompute() == 1) {
       TAU_METADATA("TAU_PRECOMPUTE", "on");

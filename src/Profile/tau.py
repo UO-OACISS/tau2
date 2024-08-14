@@ -10,9 +10,82 @@ import pytau
 # ____________________________________________________________
 # Simple interface
 
+def get_ctau_python_version():
+    return ctau_impl.Profiler.getPythonCompileVersion()
+
 def writeProfiles(prefix="profile"):
     import pytau
     pytau.dbDump(prefix)
+
+def taupy_write_trace(in_trace):
+    linenum = 0
+    while in_trace:
+        metadata_name = "PY-BACKTRACE( ) {0}".format(linenum)
+        metadata_val = str(in_trace.pop())
+        pytau.metadata(metadata_name, metadata_val)
+        linenum = linenum + 1
+
+
+import signal, sys, traceback,os
+def taupy_signal_handler(signum, frame):
+    ext_trace = []
+    for threadId, stack in sys._current_frames().items():
+        for filename, lineno, funcname, line in traceback.extract_stack(stack):
+            if funcname == sys._getframe().f_code.co_name:
+                continue
+            ext_trace.append("[{0}] [{1}:{2}]".format(funcname, filename, lineno))
+    #Signals do not have the same value in different OS systems
+    #and strsignal(signalnum) is not available until v3.8
+    metadata_name = "PY-SIGNAL"
+    if signum == signal.SIGILL:
+        metadata_val = "Illegal Instruction"
+    if signum == signal.SIGINT:
+        metadava_val = "Keyboard Interruption"
+    if signum == signal.SIGQUIT:
+        metadava_val = "Quit signal"
+    if signum == signal.SIGTERM:
+        metadata_val = "Termination signal"
+    if signum == signal.SIGPIPE:
+        metadata_val = "Broken pipe"
+    elif signum == signal.SIGABRT:
+        metadata_val = "Abort signal"
+    elif signum == signal.SIGFPE:
+        metadata_val = "Floating-point exception"
+    elif signum == signal.SIGBUS:
+        metadata_val = "Bus error(bad memory access)"
+    elif signum == signal.SIGSEGV :
+        metadata_val = "Segmentation Fault"
+    else:
+        metadata_val = "Unknown signal"
+    pytau.metadata(metadata_name, metadata_val)
+    taupy_write_trace(ext_trace)
+    sys.exit(1)
+            
+def taupy_excepthook(type, value, tb):
+    ext_trace = []
+    for filename, lineno, funcname, line in traceback.extract_tb(tb):
+        ext_trace.append("[{0}] [{1}:{2}]".format(funcname, filename, lineno))
+    metadata_name = "PY-Exception"
+    metadata_val = str(value)
+    pytau.metadata(metadata_name, metadata_val)
+    taupy_write_trace(ext_trace)
+
+def taupy_listen_signals():
+    if os.getenv("TAU_TRACK_PYSIGNALS")=='1':
+        signal.signal(signal.SIGILL,  taupy_signal_handler)
+        signal.signal(signal.SIGINT,  taupy_signal_handler)
+        signal.signal(signal.SIGQUIT, taupy_signal_handler)
+        signal.signal(signal.SIGTERM, taupy_signal_handler)
+        signal.signal(signal.SIGPIPE, taupy_signal_handler)
+        signal.signal(signal.SIGABRT, taupy_signal_handler)
+        signal.signal(signal.SIGFPE,  taupy_signal_handler)
+        #TauEnv_get_memdbg
+        signal.signal(signal.SIGBUS,  taupy_signal_handler)
+        signal.signal(signal.SIGSEGV, taupy_signal_handler)
+
+def taupy_enable_excepthook():
+    if os.getenv("TAU_TRACK_PYSIGNALS")=='1':
+        sys.excepthook = taupy_excepthook
 
 def run(statement, filename=None, sort=-1):
     """Run statement under profiler optionally saving results in filename
@@ -25,6 +98,9 @@ def run(statement, filename=None, sort=-1):
     standard name string (file/line/function-name) that is presented in
     each line.
     """
+
+    taupy_listen_signals()
+    taupy_enable_excepthook()
     prof = Profile()
     result = None
     try:
@@ -44,6 +120,8 @@ def runctx(statement, globals, locals, filename=None):
 
     statement and filename have the same semantics as profile.run
     """
+    taupy_listen_signals()
+    taupy_enable_excepthook()
     prof = Profile()
     result = None
     try:
@@ -62,6 +140,8 @@ def runmodule(modname, filename=None):
     """
     Compile and run a module specified by 'modname', setting __main__ to that module.
     """
+    taupy_listen_signals()
+    taupy_enable_excepthook()
     prof = Profile()
     result = None
     try:
@@ -80,6 +160,8 @@ def runmoduledir(modname, filename=None):
     """
     Compile and run a module directory specified by 'modnamedir', setting __main__ to that module.
     """
+    taupy_listen_signals()
+    taupy_enable_excepthook()
     prof = Profile()
     result = None
     try:
@@ -187,9 +269,23 @@ class Profile(ctau_impl.Profiler):
             self.disable()
         return self
 
+    # Python 3.12 and later remove the `imp` module.
+    # We have to use `runpy` instead.
+    def runmodule_runpy(self, modname, newname='__main__'):
+        self.enable()
+        try:
+            import runpy
+            runpy.run_module(modname, run_name=newname, alter_sys=True)
+        finally:
+            self.disable()
+            return self
+
     def runmodule(self, modname, newname='__main__'):
         import sys
-        from imp import find_module, new_module, PY_SOURCE
+        try:
+            from imp import find_module, new_module, PY_SOURCE
+        except ImportError as e:
+            return self.runmodule_runpy(modname, newname)
         replaced = sys.modules.get(newname, None)
         self.enable()
         try:
@@ -256,78 +352,6 @@ except Exception:
     # Do nothing if Spark isn't available
     pass
 
-try:
-    import tensorflow.keras as keras
-    class TauTensorFlowCallbacks(keras.callbacks.Callback):
-
-        def __init__(self):
-            pytau.setNode(0)
-            self.train_stack = []
-            self.epoch_stack = []
-            self.test_stack = []
-            self.predict_stack = []
-            self.train_batch_stack = []
-            self.test_batch_stack = []
-            self.predict_batch_stack = []
-
-        def on_train_begin(self, logs=None):
-            x = pytau.phase("Training")
-            pytau.start(x)
-            self.train_stack.append(x)
-
-        def on_train_end(self, logs=None):
-            pytau.stop(self.train_stack.pop())        
-
-        def on_epoch_begin(self, epoch, logs=None):
-            x = pytau.phase("Epoch {}".format(epoch))
-            pytau.start(x)
-            self.epoch_stack.append(x)
-
-        def on_epoch_end(self, epoch, logs=None):
-            pytau.stop(self.epoch_stack.pop())
-
-        def on_test_begin(self, logs=None):
-            x = pytau.phase("Test")
-            pytau.start(x)
-            self.test_stack.append(x)
-
-        def on_test_end(self, logs=None):
-            pytau.stop(self.test_stack.pop())
-
-        def on_predict_begin(self, logs=None):
-            x = pytau.phase("Predict")
-            pytau.start(x)
-            self.predict_stack.append(x)
-
-        def on_predict_end(self, logs=None):
-            pytau.stop(self.predict_stack.pop())
-
-        def on_train_batch_begin(self, batch, logs=None):
-            x = pytau.phase("Training Batch {}".format(batch))
-            pytau.start(x)
-            self.train_batch_stack.append(x)
-
-        def on_train_batch_end(self, batch, logs=None):
-            pytau.stop(self.train_batch_stack.pop())
-
-        def on_test_batch_begin(self, batch, logs=None):
-            x = pytau.phase("Testing Batch {}".format(batch))
-            pytau.start(x)
-            self.test_batch_stack.append(x)
-
-        def on_test_batch_end(self, batch, logs=None):
-            pytau.stop(self.test_batch_stack.pop())
-
-        def on_predict_batch_begin(self, batch, logs=None):
-            x = pytau.phase("Predict Batch {}".format(batch))
-            pytau.start(x)
-            self.predict_batch_stack.append(x)
-
-        def on_predict_batch_end(self, batch, logs=None):
-            pytau.stop(self.predict_batch_stack.pop())
-except Exception:
-    # Do nothing if TensorFlow isn't available
-    pass
 
 # ____________________________________________________________
 

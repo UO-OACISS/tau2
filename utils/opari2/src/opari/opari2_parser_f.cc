@@ -740,8 +740,11 @@ OPARI2_FortranParser::handle_line_directive( const string::size_type lstart )
         }
         m_os << m_line << std::endl;
     }
-    /*keep other C/C++ preprocessor directives like #if and #endif*/
-    m_os << m_line << std::endl;
+    else
+    {
+        /*keep other C/C++ preprocessor directives like #if and #endif*/
+        m_os << m_line << std::endl;
+    }
 }
 
 void

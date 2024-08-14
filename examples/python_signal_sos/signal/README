@@ -1,0 +1,45 @@
+This is an example illustrating the integration of SOS with 
+Python and signals/exceptions.
+
+1.TAU should be configured using the following options:
+$ ./configure -bfd=download -python3 -sos=download  -dwarf=download
+
+------ IMPORTANT:
+You should add TAU and sos_flow binaries to your path:
+$ export PATH=$PATH:$TAU/$architecture/bin
+$ export PATH=$PATH:$TAU/$architecture/sos/sos_flow_master/inst/bin/
+
+
+2.Compile the report application with the provided Makefile using make.
+$ make
+
+
+3.First remove the files from previous executions and then load the SOS daemon with:
+First load the enviromental variables of SOS and then clean the directory to remove
+the data of previous executions:
+source sosd.env.sourceme && make clean-sos
+Now, execute SOS:
+$ ./sos-nodes.sh &
+When the daemon is running, it will show you the Version, the machine it is being 
+executed on and other information.
+
+4.Once the daemon is running, execute your application with:
+$ ./sos-app.sh
+
+
+5.After the application finishes, you should stop the report with control+c as
+it doesn't know when the application ends, to stop the daemons you should execute:
+$ ./sos_stop.sh
+
+If everything worked, report should have printed something similar to:
+["Query Results","node_id","comm_rank","frame","value_name","value"
+"0","illyad","0","1","TAU_Metadata:0:PY-BACKTRACE( ) 0","[my_test_kill] [read-list.py:5]"
+"1","illyad","0","1","TAU_Metadata:0:PY-BACKTRACE( ) 1","[read_list] [read-list.py:10]"
+"2","illyad","0","1","TAU_Metadata:0:PY-BACKTRACE( ) 2","[<module>] [read-list.py:13]"
+"3","illyad","0","1","TAU_Metadata:0:PY-BACKTRACE( ) 3","[runmodule] [/tau2/x86_64/lib/bindings-pthread-python-sos/tau.py:283]"
+"4","illyad","0","1","TAU_Metadata:0:PY-BACKTRACE( ) 4","[runmodule] [/tau2/x86_64/lib/bindings-pthread-python-sos/tau.py:146]"
+"5","illyad","0","1","TAU_Metadata:0:PY-BACKTRACE( ) 5","[<module>] [/tau2/x86_64/lib/bindings-pthread-python-sos/tau_python_wrapper.py:103]"
+"6","illyad","0","1","TAU_Metadata:0:PY-BACKTRACE( ) 6","[_run_code] [/usr/lib64/python3.6/runpy.py:85]"
+"7","illyad","0","1","TAU_Metadata:0:PY-BACKTRACE( ) 7","[_run_module_as_main] [/usr/lib64/python3.6/runpy.py:193]"
+"8","illyad","0","1","TAU_Metadata:0:PY-SIGNAL","Segmentation Fault"
+

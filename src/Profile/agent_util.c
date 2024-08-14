@@ -276,7 +276,7 @@ add_demo_jar_to_bootclasspath(jvmtiEnv *jvmti, char *demo_name)
     if ( max_len > (int)sizeof(jar_path) ) {
         fatal_error("ERROR: Path to jar file too long\n");
     }
-    (void)strcpy(jar_path, java_home);
+    (void)strncpy(jar_path,  java_home, sizeof(jar_path)); 
     (void)strcat(jar_path, file_sep);
     (void)strcat(jar_path, "demo");
     (void)strcat(jar_path, file_sep);
@@ -289,7 +289,7 @@ add_demo_jar_to_bootclasspath(jvmtiEnv *jvmti, char *demo_name)
     error = (*jvmti)->AddToBootstrapClassLoaderSearch(jvmti, (const char*)jar_path);
     check_jvmti_error(jvmti, error, "Cannot add to boot classpath");
 
-    (void)strcpy(jar_path, java_home);
+    (void)strncpy(jar_path,  java_home, sizeof(jar_path)); 
     (void)strcat(jar_path, file_sep);
     (void)strcat(jar_path, "..");
     (void)strcat(jar_path, file_sep);

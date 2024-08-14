@@ -90,9 +90,8 @@ void * Tau_plugin_threaded_analytics(void* data) {
     struct timespec ts;
     struct timeval  tp;
 
-    int rank;
+    int rank = RtsLayer::myNode();
 
-    PMPI_Comm_rank(newcomm, &rank);
     string line;
 
     while (!done) {
@@ -119,7 +118,7 @@ void * Tau_plugin_threaded_analytics(void* data) {
 
            if(!rank)
              fprintf(stderr, "Max Memory usage = %ld\n", result);
-   
+
         } else if (rc == EINVAL) {
             TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
         } else if (rc == EPERM) {
@@ -133,7 +132,7 @@ void * Tau_plugin_threaded_analytics(void* data) {
 }
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
- * Every plugin MUST implement this function to register callbacks for various events 
+ * Every plugin MUST implement this function to register callbacks for various events
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));

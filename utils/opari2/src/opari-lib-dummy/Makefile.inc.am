@@ -7,7 +7,7 @@
 # Copyright (c) 2009-2013,
 # Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
 
-# Copyright (c) 2009-2013,
+# Copyright (c) 2009-2013, 2020,
 # Technische Universitaet Dresden, Germany
 
 # Copyright (c) 2009-2013,
@@ -28,7 +28,8 @@
 
 if HAVE_OPENMP_SUPPORT
 
-noinst_LTLIBRARIES += libpomp.la
+examplelibdir = $(docdir)/example/lib
+examplelib_LTLIBRARIES = libpomp.la
 libpomp_la_SOURCES =                                          \
     $(SRC_ROOT)src/opari-lib-dummy/pomp2_lib.c                \
     $(PUBLIC_INC_SRC)pomp2_lib.h                              \
@@ -49,6 +50,7 @@ libpomp_la_SOURCES =                                          \
 # CFLAGS are sufficient here, CPPFLAGS would cause duplication
 libpomp_la_CFLAGS   = $(AM_CFLAGS) $(OPENMP_CFLAGS)
 libpomp_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(PUBLIC_INC_DIR)
+libpomp_la_LDFLAGS  = -static -avoid-version
 
 
 if SCOREP_HAVE_F77
@@ -61,7 +63,7 @@ BUILT_SOURCES += pomp2_fwrapper_def.h
 CLEANFILES += pomp2_fwrapper_def.h
 
 pomp2_fwrapper_def.h: Makefile getfname$(EXEEXT)
-	./getfname
+	$(AM_V_GEN)./getfname$(EXEEXT)
 
 
 noinst_PROGRAMS += getfname
@@ -73,3 +75,14 @@ EXTRA_DIST += $(SRC_ROOT)src/opari-lib-dummy/pomp2_parse_init_regions.awk.in
 
 
 endif
+
+pkgdatadeveldir = $(pkgdatadir)/devel
+pkgdatadevel_DATA = \
+    $(SRC_ROOT)src/opari-lib-dummy/opari2_ctc_token.h \
+    $(SRC_ROOT)src/opari-lib-dummy/opari2_region_info.h \
+    $(SRC_ROOT)src/opari-lib-dummy/opari2_ctc_parser.h \
+    $(SRC_ROOT)src/opari-lib-dummy/opari2_ctc_parser.c \
+    $(SRC_ROOT)src/opari-lib-dummy/pomp2_region_info.h \
+    $(SRC_ROOT)src/opari-lib-dummy/pomp2_region_info.c \
+    $(SRC_ROOT)src/opari-lib-dummy/pomp2_user_region_info.h \
+    $(SRC_ROOT)src/opari-lib-dummy/pomp2_user_region_info.c

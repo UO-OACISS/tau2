@@ -77,7 +77,7 @@ void process_directory(const char* directory_name, TAUDB_TRIAL* trial) {
     while (ep != NULL) {
       // check for profile.x.x.x files
       if (strncmp(ep->d_name, profile_prefix, 8) == 0) {
-        sprintf(profile_file, "%s/%s", directory_name, ep->d_name);
+        snprintf(profile_file, sizeof(profile_file),  "%s/%s", directory_name, ep->d_name);
 #ifdef TAUDB_DEBUG
         printf("Parsing profile file %s...\n", profile_file);
 #endif
@@ -85,7 +85,7 @@ void process_directory(const char* directory_name, TAUDB_TRIAL* trial) {
         trial->total_threads++;
       } else if (strncmp(ep->d_name, papi_prefix, 7) == 0) {
       // check for MULTI__* directories
-        sprintf(profile_file, "%s/%s", directory_name, ep->d_name);
+        snprintf(profile_file, sizeof(profile_file),  "%s/%s", directory_name, ep->d_name);
         process_directory(profile_file, trial);
       }
       ep = readdir(dp);
@@ -138,7 +138,7 @@ void count_profiles(const char* directory_name, int* counts) {
 		}
       } else if (strncmp(ep->d_name, papi_prefix, 7) == 0) {
       // check for MULTI__* directories
-        sprintf(subdir, "%s/%s", directory_name, ep->d_name);
+        snprintf(subdir, sizeof(subdir),  "%s/%s", directory_name, ep->d_name);
 	    // recurse
 		int tmp_counts[3] = {0,0,0};
         count_profiles(subdir, tmp_counts);
@@ -301,15 +301,17 @@ void taudb_parse_tau_profile_function(char* line, TAUDB_TRIAL* trial, TAUDB_METR
   printf("taudb_parse_tau_profile_function: %s\n", line);
 #endif
   // it won't be this long, but it will be close.
-  char* timer_name = calloc(strlen(line), sizeof(char));
+  const int line_len = strlen(line);
+  char* timer_name = calloc(line_len, sizeof(char));
   // likewise, the groups
-  char* groups = calloc(strlen(line), sizeof(char));
+  const int line_len = strlen(line);
+  char* groups = calloc(line_len, sizeof(char));
   int calls = 0, subroutines = 0;
   double inclusive = 0.0, exclusive = 0.0, stddev = 0.0;
   // tokenize by quotes first, to get the function name
   char* tmp = strtok(line, "\"");
   if (tmp != NULL && (strlen(tmp) > 0)) {
-    strcpy(timer_name, tmp);
+    strncpy(timer_name,  tmp, line_len); 
 	// as much as I would love to trim the timer names, I can't. :(
 	// it causes downstream problems.
 	//taudb_trim(timer_name);
@@ -338,7 +340,7 @@ void taudb_parse_tau_profile_function(char* line, TAUDB_TRIAL* trial, TAUDB_METR
   tmp = strtok(NULL, "=");
   tmp = strtok(NULL, "\"");
   if (tmp != NULL && (strlen(tmp) > 0)) {
-    strcpy(groups, tmp);
+    strncpy(groups,  tmp, line_len); 
   }
   
   const char* conjunction = " => ";
@@ -407,8 +409,9 @@ TAUDB_TIMER_CALLPATH* taudb_create_timer_callpath(TAUDB_TRIAL* trial, TAUDB_TIME
   if (parent == NULL) {
     tmp_name = timer->name;
   } else {
-    tmp_name = (char*)malloc((sizeof(char))*(strlen(timer_callpath->name) + strlen(parent->name) + 5));
-	sprintf(tmp_name, "%s => %s", parent->name, timer->name);
+    const int size = (sizeof(char))*(strlen(timer_callpath->name) + strlen(parent->name) + 5);
+    tmp_name = (char*)malloc(size);
+	snprintf(tmp_name, size,  "%s => %s", parent->name, timer->name);
   }
   if (trial->timer_callpaths_by_name != NULL) {
     // does this timer_callpath exist?
@@ -694,13 +697,14 @@ void taudb_parse_tau_profile_counter(char* line, TAUDB_TRIAL* trial,  TAUDB_THRE
   printf("taudb_parse_tau_profile_counter: %s\n", line);
 #endif
   // it won't be this long, but it will be close.
-  char* counter_name = calloc(strlen(line), sizeof(char));
+  const int line_len = strlen(line);
+  char* counter_name = calloc(line_len, sizeof(char));
   int numevents = 0;
   double max = 0.0, min = 0.0, mean = 0.0, sumsqr = 0.0;
   // tokenize by quotes first, to get the function name
   char* tmp = strtok(line, "\"");
   if (tmp != NULL && (strlen(tmp) > 0)) {
-    strcpy(counter_name, tmp);
+    strncpy(counter_name,  tmp, line_len); 
 	// as much as I would love to trim the counter names, I can't. :(
 	// it causes downstream problems.
 	//taudb_trim(counter_name);

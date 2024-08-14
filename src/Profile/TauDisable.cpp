@@ -714,6 +714,17 @@ void tau_trace_exit(int id) {
   printf("TAU: tau_trace_exit : id = %d\n", id);
 }
 
+void tau_trace_lib_entry(const char * func_name)
+{
+  printf("TAU: tau_trace_lib_entry %s\n", func_name);
+}
+
+void tau_trace_lib_exit(const char * func_name)
+{
+  printf("TAU: tau_trace_lib_exit %s\n", func_name);
+}
+
+
 void trace_register_func(char *origname, int id) {
   printf("TAU: trace_register_func : name = %s, id = %d\n", origname, id);
 }

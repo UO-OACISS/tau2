@@ -33,54 +33,54 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
    */
   char my_query[1024];
   if (taudb_version == TAUDB_2005_SCHEMA) {
-    sprintf(my_query,"select ilp.*, ie.name as timer_name, ilp.metric from interval_location_profile ilp inner join interval_event ie on ilp.interval_event = ie.id");
+    snprintf(my_query, sizeof(my_query), "select ilp.*, ie.name as timer_name, ilp.metric from interval_location_profile ilp inner join interval_event ie on ilp.interval_event = ie.id");
     char* conjoiner = "where";
     if (trial != NULL) {
-      sprintf(my_query,"%s where ie.trial = %d", my_query, trial->id);
+      snprintf(my_query, sizeof(my_query), "%s where ie.trial = %d", my_query, trial->id);
       conjoiner = "and";
     } 
     if (timer_callpath != NULL) {
       fprintf(stderr, "TODO: THE CALLPATH IS NOT VALID IN PERFDMF\n");
-      sprintf(my_query,"%s %s ie.id = %d", my_query, conjoiner, timer_callpath->id);
+      snprintf(my_query, sizeof(my_query), "%s %s ie.id = %d", my_query, conjoiner, timer_callpath->id);
       conjoiner = "and";
     }
     if (metric != NULL) {
       if ((strcmp(metric->name, "calls") == 0) ||
           (strcmp(metric->name, "subroutines") == 0)) {
           // we need just one metric, but from this trial
-        sprintf(my_query,"%s %s m.id = (select max(id) from metric where trial = %d)", my_query, conjoiner, trial->id);
+        snprintf(my_query, sizeof(my_query), "%s %s m.id = (select max(id) from metric where trial = %d)", my_query, conjoiner, trial->id);
       } else {
-        sprintf(my_query,"%s %s m.id = %d", my_query, conjoiner, metric->id);
+        snprintf(my_query, sizeof(my_query), "%s %s m.id = %d", my_query, conjoiner, metric->id);
       }
       conjoiner = "and";
     }
     if (thread != NULL) {
-      sprintf(my_query,"%s %s node = %d and context = %d and thread = %d", my_query, conjoiner, thread->node_rank, thread->context_rank, thread->thread_rank);
+      snprintf(my_query, sizeof(my_query), "%s %s node = %d and context = %d and thread = %d", my_query, conjoiner, thread->node_rank, thread->context_rank, thread->thread_rank);
     }
   } else {
     //sprintf(my_query,"select * from timer where trial = %d", trial->id);
-    sprintf(my_query,"select tv.*, h.thread_index as index from timer_value tv inner join timer_call_data td on tv.timer_call_data = td.id inner join timer_callpath tc on td.timer_callpath = tc.id left outer join thread h on td.thread = h.id");
+    snprintf(my_query, sizeof(my_query), "select tv.*, h.thread_index as index from timer_value tv inner join timer_call_data td on tv.timer_call_data = td.id inner join timer_callpath tc on td.timer_callpath = tc.id left outer join thread h on td.thread = h.id");
     char* conjoiner = "where";
     if (trial != NULL) {
-      sprintf(my_query,"%s where h.trial = %d", my_query, trial->id);
+      snprintf(my_query, sizeof(my_query), "%s where h.trial = %d", my_query, trial->id);
       conjoiner = "and";
     } 
     if (timer_callpath != NULL) {
-      sprintf(my_query,"%s %s tc.id = %d", my_query, conjoiner, timer_callpath->id);
+      snprintf(my_query, sizeof(my_query), "%s %s tc.id = %d", my_query, conjoiner, timer_callpath->id);
       conjoiner = "and";
     }
     if (metric != NULL) {
-      sprintf(my_query,"%s %s tv.metric = %d", my_query, conjoiner, metric->id);
+      snprintf(my_query, sizeof(my_query), "%s %s tv.metric = %d", my_query, conjoiner, metric->id);
       conjoiner = "and";
     }
     if (thread != NULL) {
-      sprintf(my_query,"%s %s h.thread_index = %d ", my_query, conjoiner, thread->index);
+      snprintf(my_query, sizeof(my_query), "%s %s h.thread_index = %d ", my_query, conjoiner, thread->index);
       conjoiner = "and";
     }
     if (derived) {
-      sprintf(my_query,"%s %s h.thread_index < 0 order by h.thread_index desc", my_query, conjoiner);
+      snprintf(my_query, sizeof(my_query), "%s %s h.thread_index < 0 order by h.thread_index desc", my_query, conjoiner);
     } else {
-      sprintf(my_query,"%s %s h.thread_index > -1 order by h.thread_index asc", my_query, conjoiner);
+      snprintf(my_query, sizeof(my_query), "%s %s h.thread_index > -1 order by h.thread_index asc", my_query, conjoiner);
     }
   }
 #ifdef TAUDB_DEBUG
@@ -299,31 +299,31 @@ extern void taudb_save_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* t
 	  HASH_ITER(hh, timer_call_data->timer_values, timer_value, tmp2) {
 	      const char* paramValues[7] = {0};
 	      char timer_call_data_id[32] = {0};
-	      sprintf(timer_call_data_id, "%d", timer_call_data->id);
+	      snprintf(timer_call_data_id, sizeof(timer_call_data_id),  "%d", timer_call_data->id);
 	      paramValues[0] = timer_call_data_id;
 		  
 		  char metric_id[32] = {0};
-		  sprintf(metric_id, "%d", timer_value->metric->id);
+		  snprintf(metric_id, sizeof(metric_id),  "%d", timer_value->metric->id);
 		  paramValues[1] = metric_id;
 		  
 		  char inclusive_value[64] = {};
-		  sprintf(inclusive_value, "%31.31f", timer_value->inclusive);
+		  snprintf(inclusive_value, sizeof(inclusive_value),  "%31.31f", timer_value->inclusive);
 		  paramValues[2] = inclusive_value;
 		  
 		  char exclusive_value[64] = {};
-		  sprintf(exclusive_value, "%31.31f", timer_value->exclusive);
+		  snprintf(exclusive_value, sizeof(exclusive_value),  "%31.31f", timer_value->exclusive);
 		  paramValues[3] = exclusive_value;
 		  
 		  char inclusive_percent[64] = {};
-		  sprintf(inclusive_percent, "%31.31f", timer_value->inclusive_percentage);
+		  snprintf(inclusive_percent, sizeof(inclusive_percent),  "%31.31f", timer_value->inclusive_percentage);
 		  paramValues[4] = inclusive_percent;
 		  
 		  char exclusive_percent[64] = {};
-		  sprintf(exclusive_percent, "%31.31f", timer_value->exclusive_percentage);
+		  snprintf(exclusive_percent, sizeof(exclusive_percent),  "%31.31f", timer_value->exclusive_percentage);
 		  paramValues[5] = exclusive_percent;
 		  
 		  char sum_exclusive_squared[64] = {};
-		  sprintf(sum_exclusive_squared, "%31.31f", timer_value->sum_exclusive_squared);
+		  snprintf(sum_exclusive_squared, sizeof(sum_exclusive_squared),  "%31.31f", timer_value->sum_exclusive_squared);
 		  paramValues[6] = sum_exclusive_squared;
 
 	    int rows = taudb_execute_statement(connection, statement_name, nParams, paramValues);

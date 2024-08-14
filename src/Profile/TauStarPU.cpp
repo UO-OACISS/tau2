@@ -64,11 +64,13 @@ void myfunction_cb( struct starpu_prof_tool_info* prof_info,  union starpu_prof_
         } else {
             info << " : ADDR <" << std::hex << prof_info->fun_ptr << ">";
         }
+        info << " [{task " << prof_info->task_name <<  " model " << prof_info->model_name << "}]";
         event_name = event_name + info.str();
         break;
     case starpu_prof_tool_event_start_transfer:
         TAU_TRACE_SENDMSG( tag, prof_info->memnode, prof_info->bytes_transfered );
         info << " [{ memnode " << prof_info->memnode << " }]";
+        //        info << " task " << prof_info->task_name <<  " model " << prof_info->model_name;
         event_name = event_name + info.str();
         break;
     default:

@@ -23,7 +23,7 @@
 
 #define MAX_PAPI_COUNTERS TAU_MAX_COUNTERS
 using namespace std;
-struct ThreadValue {
+struct PapiThreadValue {
   int ThreadID;
   int EventSet[TAU_PAPI_MAX_COMPONENTS]; 
   int NumEvents[TAU_PAPI_MAX_COMPONENTS];
@@ -46,12 +46,12 @@ public:
   static int numCounters;
   static int counterList[TAU_MAX_COUNTERS];
   static bool destroyed;
-  inline static void setThreadValue(int tid, ThreadValue* tv){
+  inline static void setThreadValue(int tid, PapiThreadValue* tv){
 	    checkPAPIVector(tid);
         ThePapiThreadList()[tid]=tv;
   }
 
-  inline static ThreadValue* getThreadValue(int tid){
+  inline static PapiThreadValue* getThreadValue(int tid){
 	  if(destroyed)return NULL;
 		checkPAPIVector(tid);
         return ThePapiThreadList()[tid];
@@ -68,7 +68,7 @@ private:
   static bool papiInitialized;
   static double scalingFactor;
   //static ThreadValue *ThreadList[TAU_MAX_THREADS];
-  struct PapiThreadList : vector<ThreadValue*>{
+  struct PapiThreadList : vector<PapiThreadValue*>{
      PapiThreadList(){
         //printf("Creating PapiThreadList at %p\n", this);
      }

@@ -22,9 +22,9 @@ program test4
       include 'test4.f90.opari.inc'
 #line 20 "test4.f90"
   integer i
-  
+
   real a(5,5), b(5,5), c(5,5)
-  
+
       pomp2_num_threads = pomp2_lib_get_max_threads()
       pomp2_if = .true.
       call POMP2_Parallel_fork(opari2_region_1,&
@@ -48,7 +48,7 @@ program test4
   !$omp enddo nowait
       call POMP2_Do_exit(opari2_region_2)
 #line 31 "test4.f90"
-  
+
       call POMP2_Sections_enter(opari2_region_3, &
      opari2_ctc_3 )
 #line 32 "test4.f90"
@@ -71,7 +71,7 @@ program test4
   !$omp end sections nowait
       call POMP2_Sections_exit(opari2_region_3)
 #line 38 "test4.f90"
-  
+
       call POMP2_Single_enter(opari2_region_4, &
      opari2_ctc_4 )
 #line 39 "test4.f90"
@@ -84,7 +84,7 @@ program test4
   !$omp end single nowait
       call POMP2_Single_exit(opari2_region_4)
 #line 42 "test4.f90"
-  
+
       call POMP2_Workshare_enter(opari2_region_5, &
      opari2_ctc_5 )
 #line 43 "test4.f90"
@@ -94,7 +94,7 @@ program test4
   !$omp end workshare nowait
       call POMP2_Workshare_exit(opari2_region_5)
 #line 46 "test4.f90"
-  
+
       pomp2_if = .true.
       if (pomp2_if) then
       call POMP2_Untied_task_create_begin(opari2_region_6, pomp2_new_task,&
@@ -116,7 +116,7 @@ program test4
       call POMP2_Untied_task_create_end(opari2_region_6, pomp2_old_task)
       end if
 #line 50 "test4.f90"
-  
+
       call POMP2_Implicit_barrier_enter(opari2_region_1,&
       pomp2_old_task)
 !$omp barrier

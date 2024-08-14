@@ -73,7 +73,7 @@ void FSUB(POMP2_On)() {
 }
 
 void FSUB(POMP2_Begin)(POMP2_Region_handle* regionHandle,
-		       char*                ctc_string) {
+                       char*                ctc_string) {
   POMP2_Begin(regionHandle, ctc_string);
 }
 

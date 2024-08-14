@@ -202,7 +202,7 @@ void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const Tau_metadata_key *
  ********************************************************************/
 void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const char *name, const int value, bool newline) {
   char str[4096];
-  sprintf (str, "%d", value);
+  snprintf (str, sizeof(str),  "%d", value);
   Tau_XML_writeAttribute(out, name, str, newline);
 }
 

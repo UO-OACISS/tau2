@@ -21,12 +21,12 @@
 
       program test1_disable
       IMPLICIT NONE
-      
+
       SUBROUTINE foo(A,N)
       include 'test1_disable.f.opari.inc'
 #line 24 "test1_disable.f"
       INTEGER I,N,L,T
-      
+
       pomp2_num_threads = pomp2_lib_get_max_threads()
       pomp2_if = .true.
       call POMP2_Parallel_fork(opari2_region_1,
@@ -104,7 +104,7 @@ c$omp end ordered
       END DO
 
 #line 58 "test1_disable.f"
-c$omp end do  nowait
+c$omp end do nowait
       call POMP2_Implicit_barrier_enter(opari2_region_5,
      &pomp2_old_task)
 !$omp barrier
@@ -134,7 +134,7 @@ c$omp end single nowait
       if (pomp2_if) then
       call POMP2_Task_create_begin(opari2_region_8,
      &pomp2_new_task,
-     &pomp2_old_task, 
+     &pomp2_old_task,
      &pomp2_if,
      &opari2_ctc_8 )
       end if
@@ -164,7 +164,7 @@ c$omp end task
      &pomp2_old_task)
       call POMP2_Parallel_end(opari2_region_1)
 #line 67 "test1_disable.f"
-c$omp end parallel      
+c$omp end parallel
       call POMP2_Parallel_join(opari2_region_1,
      &pomp2_old_task)
 #line 68 "test1_disable.f"
@@ -182,31 +182,31 @@ c$omp end parallel
       call POMP2_End(opari2_region_9)
 #line 77 "test1_disable.f"
 
-      END SUBROUTINE 
+      END SUBROUTINE
       end program test1_free
 
       subroutine POMP2_Init_reg_000()
          include 'test1_disable.f.opari.inc'
-         call POMP2_Assign_handle( opari2_region_1, 
+         call POMP2_Assign_handle( opari2_region_1,
      &   opari2_ctc_1 )
-         call POMP2_Assign_handle( opari2_region_2, 
+         call POMP2_Assign_handle( opari2_region_2,
      &   opari2_ctc_2 )
-         call POMP2_Assign_handle( opari2_region_3, 
+         call POMP2_Assign_handle( opari2_region_3,
      &   opari2_ctc_3 )
-         call POMP2_Assign_handle( opari2_region_4, 
+         call POMP2_Assign_handle( opari2_region_4,
      &   opari2_ctc_4 )
-         call POMP2_Assign_handle( opari2_region_5, 
+         call POMP2_Assign_handle( opari2_region_5,
      &   opari2_ctc_5 )
-         call POMP2_Assign_handle( opari2_region_6, 
+         call POMP2_Assign_handle( opari2_region_6,
      &   opari2_ctc_6 )
-         call POMP2_Assign_handle( opari2_region_7, 
+         call POMP2_Assign_handle( opari2_region_7,
      &   opari2_ctc_7 )
-         call POMP2_Assign_handle( opari2_region_8, 
+         call POMP2_Assign_handle( opari2_region_8,
      &   opari2_ctc_8 )
       end
 
       subroutine POMP2_USER_Init_reg_000()
          include 'test1_disable.f.opari.inc'
-         call POMP2_USER_Assign_handle( opari2_region_9, 
+         call POMP2_USER_Assign_handle( opari2_region_9,
      &   opari2_ctc_9 )
       end

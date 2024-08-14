@@ -49,6 +49,7 @@
 #define TAU_EBS_RESOLUTION_FILE 0
 #define TAU_EBS_RESOLUTION_FUNCTION 1
 #define TAU_EBS_RESOLUTION_LINE 2
+#define TAU_EBS_RESOLUTION_FUNCTION_LINE 3
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,6 +94,7 @@ extern "C" {
   int  TAUDECL TauEnv_set_ompt_resolve_address_eagerly(int value);
   int  TAUDECL TauEnv_get_ompt_support_level();
   int  TAUDECL TauEnv_set_ompt_support_level(int value);
+  int  TAUDECL TauEnv_get_ompt_force_finalize(void);
   int  TAUDECL TauEnv_get_signals_gdb();
   int  TAUDECL TauEnv_get_echo_backtrace();
   int  TAUDECL TauEnv_get_openmp_runtime_enabled();
@@ -182,6 +184,7 @@ extern "C" {
   size_t TAUDECL TauEnv_get_memdbg_alignment();
   int TAUDECL TauEnv_get_memdbg_zero_malloc();
   int TAUDECL TauEnv_get_memdbg_attempt_continue();
+  int TAUDECL TauEnv_get_env_memmgr_max_memblocks();
   int TAUDECL TauEnv_get_pthread_stack_size();
   int TAUDECL TauEnv_get_alfred_port();
   int TAUDECL TauEnv_get_papi_multiplexing();

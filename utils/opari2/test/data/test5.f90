@@ -20,13 +20,13 @@ program test5
   integer i,j,k,m
   logical l
   integer, dimension(10,10) :: AA, BB, CC
-  
+
   integer, save :: t
   !$omp threadprivate(t)
-  
-  
+
+
   !$omp   parallel            &   !parallel
-  !$omp & do                  &   !do  
+  !$omp & do                  &   !do
   !$omp & lastprivate(k)      &   !comment
   !$omp & private(i,j),       &   !schedule
   !$omp & lastprivate         &
@@ -39,7 +39,7 @@ program test5
      k=k+i
   end do
   !$omp  end parallel do
-      
+
   if(k .gt. 0) l = .true.
   !$omp  parallel sections if(l) num_threads(2) default(shared)   &
   !$omp &firstprivate(j) lastprivate(i) copyin(t) reduction(+:l)

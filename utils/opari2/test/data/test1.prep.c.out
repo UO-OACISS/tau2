@@ -1534,7 +1534,7 @@ int main() {
 
 
 
-          
+
 # 33 "/private/peterp/work/test/scorep/prep/test1.c"
 {
   int pomp2_num_threads = omp_get_max_threads();
@@ -1559,7 +1559,7 @@ int main() {
 #line 37 "test1.c"
 
 
-                    
+
 # 39 "/private/peterp/work/test/scorep/prep/test1.c"
 {
   int pomp2_num_threads = omp_get_max_threads();

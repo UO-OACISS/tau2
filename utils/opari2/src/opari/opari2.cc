@@ -55,7 +55,7 @@ using std::stringstream;
 using std::cout;
 using std::cerr;
 #include <cstdio>
-using std::sprintf;
+using std::snprintf;
 using std::remove;
 #include <cstring>
 using std::string;
@@ -139,11 +139,11 @@ set_disabled( const string& constructs )
 {
     typedef std::pair<char*, bool> dir_and_inner_t;
 
-    char* str = new char[ constructs.length() + 1 ];
-    std::strcpy( str, constructs.c_str() );
+    char str[ constructs.length() + 1 ];
+    std::strcpy( &str[ 0 ], constructs.c_str() );
 
     std::vector<char*> paradigms;
-    char*              paradigm = strtok( str, "+" );
+    char*              paradigm = strtok( &str[ 0 ], "+" );
 
     while ( paradigm != NULL )
     {
@@ -204,7 +204,6 @@ set_disabled( const string& constructs )
         }
     }
 
-    delete[] str;
     return true;
 }
 

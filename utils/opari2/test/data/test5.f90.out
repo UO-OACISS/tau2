@@ -24,12 +24,12 @@ program test5
   integer i,j,k,m
   logical l
   integer, dimension(10,10) :: AA, BB, CC
-  
+
   integer, save :: t
 #line 25 "test5.f90"
   !$omp threadprivate(t)
-  
-  
+
+
       pomp2_num_threads = pomp2_lib_get_max_threads()
       pomp2_if = .true.
       call POMP2_Parallel_fork(opari2_region_1,&
@@ -44,7 +44,7 @@ program test5
       call POMP2_Do_enter(opari2_region_1, &
      opari2_ctc_1 )
 #line 28 "test5.f90"
-  !$omp   do                  &        
+  !$omp   do                  &      
   !$omp & lastprivate(k)      &           
   !$omp & lastprivate         &
   !$omp & (                   &
@@ -67,7 +67,7 @@ program test5
 !$omp end parallel
       call POMP2_Parallel_join(opari2_region_1, pomp2_old_task)
 #line 42 "test5.f90"
-      
+
   if(k .gt. 0) l = .true.
       pomp2_num_threads = 2
       pomp2_if = ( l )

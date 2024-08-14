@@ -1,0 +1,12 @@
+CC=icc -mmic
+CXX=icpc -mmic
+F77=ifort -mmic
+FC=ifort -mmic
+
+#CPPFLAGS=
+CFLAGS=-g -O2
+CXXFLAGS=-g -O2
+FFLAGS=-g -O2
+FCFLAGS=-g -O2
+#LDFLAGS=
+#LIBS=

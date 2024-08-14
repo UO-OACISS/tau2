@@ -371,8 +371,9 @@ assignSourceCodeLocation( CTCData*  obj,
 
     if ( ( continueExtraction = extractNextToken( &value, ':' ) ) )
     {
-        *filename = malloc( strlen( token ) * sizeof( char ) + 1 );
-        strcpy( *filename, token );
+        const int len = strlen( token ) * sizeof( char ) + 1;
+        *filename = malloc( len );
+        strncpy( *filename,  token , len); 
     }
     token = value;
     if ( continueExtraction &&
@@ -436,8 +437,9 @@ void
 OPARI2_CTC_assignString( char**      aString,
                          const char* value )
 {
-    *aString = malloc( strlen( value ) * sizeof( char ) + 1 );
-    strcpy( *aString, value );
+    const int len = strlen( value ) * sizeof( char ) + 1;
+    *aString = malloc( len );
+    strncpy( *aString,  value , len); 
 }
 
 void

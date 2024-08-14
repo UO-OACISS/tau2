@@ -12,7 +12,7 @@ TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connectio
 
   char my_query[1024];
   if (trial != NULL) { // the user wants a specific trial, so get it
-    sprintf(my_query,"select name, value from primary_metadata where trial = %d", trial->id);
+    snprintf(my_query, sizeof(my_query), "select name, value from primary_metadata where trial = %d", trial->id);
   } else {
     fprintf(stderr, "You don't want all the metadata. Please specify a trial.\n");
   }
@@ -131,7 +131,7 @@ extern void taudb_save_primary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIA
     // make array of 6 character pointers
     const char* paramValues[3] = {0};
     char trialid[32] = {0};
-    sprintf(trialid, "%d", trial->id);
+    snprintf(trialid, sizeof(trialid),  "%d", trial->id);
     paramValues[0] = trialid;
     paramValues[1] = primary_metadata->name;
     paramValues[2] = primary_metadata->value;

@@ -1,5 +1,5 @@
 # This file is part of the Score-P software (http://www.score-p.org)
-# 
+#
 # Copyright (c) 2009-2011,
 #    *    RWTH Aachen University, Germany
 #    *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
@@ -8,12 +8,12 @@
 #    *    Forschungszentrum Juelich GmbH, Germany
 #    *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
 #    *    Technische Universitaet Muenchen, Germany
-#  
+#
 # See the COPYING file in the package base directory for details.
 
 {
     if(match($0,"sscl=")){
-        line = "       "    
+        line = "       "
         for(i = 1; i <= NF; i++){
             source = $i
             if(match($i,"\"//&")){ # ^\"")){

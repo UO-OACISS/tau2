@@ -13,7 +13,7 @@
  * Copyright (c) 2009-2011,
  * University of Oregon, Eugene, USA
  *
- * Copyright (c) 2009-2011, 2013, 2014
+ * Copyright (c) 2009-2011, 2013, 2014, 2019,
  * Forschungszentrum Juelich GmbH, Germany
  *
  * Copyright (c) 2009-2011,
@@ -212,7 +212,6 @@ OPARI2_Directive::EnterRegion( bool new_outer,
     }
 
     DirectiveStackPush( this );
-    this->IncrementRegionCounter();
 }
 
 
@@ -221,6 +220,7 @@ void
 OPARI2_Directive::InitRegion( bool outer )
 {
     m_id = ++s_num_all_regions;
+    this->IncrementRegionCounter();
 
     /** by default, region name is the same as directive name */
     m_begin_last_line = m_begin_first_line + m_lines.size() - 1;
@@ -438,7 +438,7 @@ OPARI2_Directive::GenerateInitHandleCalls( ostream&            os,
         {
             if ( s_lang & L_C )
             {
-                os << "\n#ifdef __cplusplus \n extern \"C\" \n#endif";
+                os << "\n#ifdef __cplusplus\nextern \"C\"\n#endif";
             }
             else if ( s_lang & L_CXX )
             {

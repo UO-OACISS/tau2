@@ -1,0 +1,13 @@
+This directory contains the source code for the TAU LLVM Plugin. 
+This plugin allows a user to specify a selective instrumentation file and
+instrument object code using the LLVM compilers such as clang, clang++, flang,
+hipcc, amdclang, and amdclang++. 
+
+The plugin accepts the following environment variables:
+TAU_COMPILER_VERBOSE: To turn on debugging messages of the TAU LLVM plugin (default: true).
+TAU_COMPILER_CALLSITES: Instrument callsite instrumentation (default: false).
+TAU_COMPILER_DEFINITIONS: Instrument compiler definitions (default: true).
+TAU_COMPILER_MIN_INSTRUCTION_COUNT: The minimum number of instructions to instrument 
+a function (default: 50). If you wish to instrument all the functions, please set:
+export TAU_COMPILER_MIN_INSTRUCTION_COUNT=1
+before compiling the code. 

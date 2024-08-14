@@ -25,7 +25,7 @@ int main(int argc, char **argv)
    /* OPEN */
 
    /* Create a new file */
-   sprintf(filename, "open_out.%d.dat", me);
+   snprintf(filename, sizeof(filename),  "open_out.%d.dat", me);
    fd = open(filename, O_WRONLY | O_CREAT, 0644);
 
    /* fill up our array with some dummy values */
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
    /* FOPEN */
 
    /* Create a new file */
-   sprintf(filename, "fopen_out.%d.dat", me);
+   snprintf(filename, sizeof(filename),  "fopen_out.%d.dat", me);
    FILE * fd2 = fopen(filename, "w");
    if (fd2 != NULL) {
      fputs("Dummy string into fopen_out.dat\n", fd2);
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
    /* CREAT */
 
    /* Create a new file */
-   sprintf(filename, "creat_out.%d.dat", me);
+   snprintf(filename, sizeof(filename),  "creat_out.%d.dat", me);
    fd = creat(filename, 0655);
 
    /* write the matrix in the file */

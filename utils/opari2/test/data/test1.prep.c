@@ -1534,7 +1534,7 @@ int main() {
 
 
 
-          
+
 # 33 "/private/peterp/work/test/scorep/prep/test1.c"
 #pragma omp parallel
 # 33 "/private/peterp/work/test/scorep/prep/test1.c"
@@ -1544,7 +1544,7 @@ int main() {
   }}
 
 
-                    
+
 # 39 "/private/peterp/work/test/scorep/prep/test1.c"
 #pragma omp parallel
 

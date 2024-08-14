@@ -14,7 +14,7 @@
 ## Copyright (c) 2009-2011,
 ## University of Oregon, Eugene, USA
 ##
-## Copyright (c) 2009-2011, 2013, 2014, 2016-2017,
+## Copyright (c) 2009-2011, 2013, 2014, 2016-2017, 2020,
 ## Forschungszentrum Juelich GmbH, Germany
 ##
 ## Copyright (c) 2009-2011,
@@ -63,11 +63,11 @@ function add_region( type_str, regions_arr, n_regions_int )
       }
       else if (index($i,tolower(type_str)) != 0)
       {
-	  separator = tolower(type_str);
+        separator = tolower(type_str);
       }
       else if (index($i,toupper(type_str)) != 0)
       {
-	  separator = toupper(type_str);
+        separator = toupper(type_str);
       }
       else
       {
@@ -135,8 +135,11 @@ END{
     sub(/^\./, "", regions[i]);
   }
 
-  # declare XXXXX_Init_reg_* functions extern
-  for (i in regions)
+  # declare XXXXX_Init_reg_* functions extern.
+  # loop reproducibly as make check (test/awk_script_test.sh) might
+  # fail as it expects an order. For normal operation, order doesn't
+  # matter.
+  for (i = 0 ; i < counter; i++)
   {
     print "extern void " regions[i] "();";
   }

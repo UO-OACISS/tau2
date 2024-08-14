@@ -712,19 +712,19 @@ setparams: File %s doesn't exist. To build the NAS benchmarks\n\
            the file config/make.def.template\n", DEFFILE);
     exit(1);
   }
-  strcpy(mpif77, DEFAULT_MESSAGE);
-  strcpy(flink, DEFAULT_MESSAGE);
-  strcpy(fmpi_lib, DEFAULT_MESSAGE);
-  strcpy(fmpi_inc, DEFAULT_MESSAGE);
-  strcpy(fflags, DEFAULT_MESSAGE);
-  strcpy(flinkflags, DEFAULT_MESSAGE);
-  strcpy(randfile, DEFAULT_MESSAGE);
-  strcpy(mpicc, DEFAULT_MESSAGE);
-  strcpy(cflags, DEFAULT_MESSAGE);
-  strcpy(clink, DEFAULT_MESSAGE);
-  strcpy(clinkflags, DEFAULT_MESSAGE);
-  strcpy(cmpi_lib, DEFAULT_MESSAGE);
-  strcpy(cmpi_inc, DEFAULT_MESSAGE);
+  strncpy(mpif77,  DEFAULT_MESSAGE, sizeof(mpif77)); 
+  strncpy(flink,  DEFAULT_MESSAGE, sizeof(flink)); 
+  strncpy(fmpi_lib,  DEFAULT_MESSAGE, sizeof(fmpi_lib)); 
+  strncpy(fmpi_inc,  DEFAULT_MESSAGE, sizeof(fmpi_inc)); 
+  strncpy(fflags,  DEFAULT_MESSAGE, sizeof(fflags)); 
+  strncpy(flinkflags,  DEFAULT_MESSAGE, sizeof(flinkflags)); 
+  strncpy(randfile,  DEFAULT_MESSAGE, sizeof(randfile)); 
+  strncpy(mpicc,  DEFAULT_MESSAGE, sizeof(mpicc)); 
+  strncpy(cflags,  DEFAULT_MESSAGE, sizeof(cflags)); 
+  strncpy(clink,  DEFAULT_MESSAGE, sizeof(clink)); 
+  strncpy(clinkflags,  DEFAULT_MESSAGE, sizeof(clinkflags)); 
+  strncpy(cmpi_lib,  DEFAULT_MESSAGE, sizeof(cmpi_lib)); 
+  strncpy(cmpi_inc,  DEFAULT_MESSAGE, sizeof(cmpi_inc)); 
 
   while (fgets(line, LL, deffile) != NULL) {
     if (*line == '#') continue;
@@ -745,10 +745,10 @@ setparams: File %s doesn't exist. To build the NAS benchmarks\n\
     /* if the dummy library is used by including make.dummy, we set the
        Fortran and C paths to libraries and headers accordingly     */
     if(check_include_line(line, "../config/make.dummy")) {
-       strcpy(fmpi_lib, "-L../MPI_dummy -lmpi");
-       strcpy(fmpi_inc, "-I../MPI_dummy");
-       strcpy(cmpi_lib, "-L../MPI_dummy -lmpi");
-       strcpy(cmpi_inc, "-I../MPI_dummy");
+       strncpy(fmpi_lib,  "-L../MPI_dummy -lmpi", sizeof(fmpi_lib)); 
+       strncpy(fmpi_inc,  "-I../MPI_dummy", sizeof(fmpi_inc)); 
+       strncpy(cmpi_lib,  "-L../MPI_dummy -lmpi", sizeof(cmpi_lib)); 
+       strncpy(cmpi_inc,  "-I../MPI_dummy", sizeof(cmpi_inc)); 
     }
   }
 

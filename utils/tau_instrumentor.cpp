@@ -2331,7 +2331,7 @@ static void blankQuote(char *str) {
  */
 bool isImpliedDo(char *str) {
   char tmp[4096];
-  strcpy (tmp, str);
+  strncpy (tmp,  str, sizeof(tmp)); 
 
   blankQuote(tmp);
   removeWhitespace(tmp);
@@ -2482,7 +2482,7 @@ public:
 
   virtual void output(char *iostmt, int id) {
     char phrase[4096];
-    sprintf (phrase, "       tio_%d_sz = tio_%d_sz + sizeof(%s)\n", id, id, str.c_str());
+    snprintf (phrase, sizeof(phrase),  "       tio_%d_sz = tio_%d_sz + sizeof(%s)\n", id, id, str.c_str());
     strcat(iostmt, phrase);
   }
 
@@ -2520,7 +2520,7 @@ void recurseCrap(char* &buf, listTreeElement *element) {
 void processImpliedDo(char *iostmt, char *element, int id) {
 
   char tmp[4096];
-  strcpy (tmp, element);
+  strncpy (tmp,  element, sizeof(tmp)); 
 
   blankQuote(tmp);
   removeWhitespace(tmp);
@@ -2790,8 +2790,8 @@ int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemR
       char *p = varname;
       while (p && *p == ' ')
         p++; /* eat up leading space */
-      sprintf(allocstmt, "       call TAU_ALLOC(%s, %d, %s(%s), '", p, (*it)->line, TAU_SIZE_TOK, p);
-      sprintf(suffixstmt, "%s, variable=%s", (*it)->snippet.c_str(), p);
+      snprintf(allocstmt, INBUF_SIZE,  "       call TAU_ALLOC(%s, %d, %s(%s), '", p, (*it)->line, TAU_SIZE_TOK, p);
+      snprintf(suffixstmt, sizeof(suffixstmt),  "%s, variable=%s", (*it)->snippet.c_str(), p);
       string prefix = string(allocstmt);
       string suffix = string(suffixstmt);
       writeLongFortranStatement(ostr, prefix, suffix);
@@ -2893,9 +2893,9 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
      while (p && *p == ' ') p++; /* eat up leading space */
 
 /* new */
-     sprintf(deallocstmt, "       call TAU_DEALLOC(%s, %d, '",
+     snprintf(deallocstmt, INBUF_SIZE,  "       call TAU_DEALLOC(%s, %d, '",
         p, (*it)->line);
-     sprintf(suffixstmt, "%s, variable=%s", (*it)->snippet.c_str(), p);
+     snprintf(suffixstmt, sizeof(suffixstmt),  "%s, variable=%s", (*it)->snippet.c_str(), p);
      string prefix=string(deallocstmt);
      string suffix=string(suffixstmt);
      writeLongFortranStatement(ostr, prefix, suffix);
@@ -3034,7 +3034,7 @@ int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef 
   printf ("After checking format string: line = %s\n", line);
 #endif /* DEBUG */
   
-  sprintf(iostmt, "      tio_%d_sz = 0",lineno);
+  snprintf(iostmt, INBUF_SIZE,  "      tio_%d_sz = 0",lineno);
   while (!done)
   {
     done = getNextToken(line, varname);
@@ -3049,12 +3049,12 @@ int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef 
       while (p && *p == ' ') p++; /* eat up leading space */
       if (strlen(p) == 0) continue ; /* don't put sizeof() */
       
-      sprintf(string_containing_sizeof, "+sizeof(%s)", p); 
+      snprintf(string_containing_sizeof, sizeof(string_containing_sizeof),  "+sizeof(%s)", p); 
       origlen = strlen(iostmt);
       sizeoflen = strlen(string_containing_sizeof);
       
       if (origlen+sizeoflen >= 72) { /* exceeds 72 columns -- break it up! */
-	sprintf(string_containing_sizeof, "\n      tio_%d_sz = tio_%d_sz+sizeof(%s)",
+	snprintf(string_containing_sizeof, sizeof(string_containing_sizeof),  "\n      tio_%d_sz = tio_%d_sz+sizeof(%s)",
 		lineno, lineno, p);
       }
       strcat(iostmt, string_containing_sizeof);
@@ -3723,7 +3723,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  additionalLinesRead=printTauAllocStmt(istr, ostr, &inbuf[alloccol-1], it, previousline);
 		  inputLineNo += additionalLinesRead; 
                   if (additionalLinesRead)
-		    strcpy(inbuf, previousline); /* update last line read */
+		    strncpy(inbuf,  previousline, sizeof(inbuf));  /* update last line read */
                   ostr<<"\t endif"<<endl;
                 }
 		else
@@ -3763,7 +3763,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		    additionalLinesRead = printTauAllocStmt(istr, ostr, inbuf, it, previousline); 
 		    inputLineNo += additionalLinesRead;
                     if (additionalLinesRead)
-                      strcpy(inbuf, previousline); /* update last line read */
+                      strncpy(inbuf,  previousline, sizeof(inbuf));  /* update last line read */
 		  }
 		}	
                 instrumented = true;
@@ -3793,7 +3793,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                   additionalLinesRead=printTauDeallocStmt(istr, ostr, &inbuf[dealloccol-1], it, true, previousline);
 		  inputLineNo+=additionalLinesRead;
 		  if (additionalLinesRead)
-		    strcpy(inbuf, previousline); /* update last line read */
+		    strncpy(inbuf,  previousline, sizeof(inbuf));  /* update last line read */
 		  /* now the deallocate stmt */
                   ostr<<"\t endif"<<endl;
                 }
@@ -3821,7 +3821,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                     additionalLinesRead=printTauDeallocStmt(istr, ostr, inbuf, it, false, previousline);
 		    inputLineNo+=additionalLinesRead;
 		    if (additionalLinesRead)
-		      strcpy(inbuf, previousline); /* update last line read */
+		      strncpy(inbuf,  previousline, sizeof(inbuf));  /* update last line read */
 /* 
 		    ostr<<inbuf<<endl;
 */
@@ -3863,7 +3863,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                   additionalLinesRead=printTauIOStmt(istr, ostr, &inbuf[iocol-1], it, true, previousline);
 		  inputLineNo+=additionalLinesRead;
 		  if (additionalLinesRead)
-		    strcpy(inbuf, previousline); /* update last line read */
+		    strncpy(inbuf,  previousline, sizeof(inbuf));  /* update last line read */
 		  /* now the IO stmt */
                   ostr<<"\t endif"<<endl;
                 }
@@ -3889,7 +3889,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
                     additionalLinesRead=printTauIOStmt(istr, ostr, inbuf, it, false, previousline);
 		    inputLineNo+=additionalLinesRead;
 		    if (additionalLinesRead)
-		      strcpy(inbuf, previousline); /* update last line read */
+		      strncpy(inbuf,  previousline, sizeof(inbuf));  /* update last line read */
                   }
                 }
 #ifdef DEBUG

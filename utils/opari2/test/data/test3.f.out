@@ -43,7 +43,7 @@ c$omp do
          a=a+1
  12   continue
 #line 27 "test3.f"
-c$omp end do  nowait
+c$omp end do nowait
       call POMP2_Implicit_barrier_enter(opari2_region_2,
      &pomp2_old_task)
 !$omp barrier
@@ -114,7 +114,7 @@ c$omp do
          a=a+1
  14   continue
 #line 39 "test3.f"
-c$omp end do  nowait
+c$omp end do nowait
       call POMP2_Implicit_barrier_enter(opari2_region_5,
      &pomp2_old_task)
 !$omp barrier
@@ -403,37 +403,36 @@ c$omp          do
 #line 90 "test3.f"
       end program test3
 
-
       subroutine POMP2_Init_reg_000()
          include 'test3.f.opari.inc'
-         call POMP2_Assign_handle( opari2_region_1, 
+         call POMP2_Assign_handle( opari2_region_1,
      &   opari2_ctc_1 )
-         call POMP2_Assign_handle( opari2_region_2, 
+         call POMP2_Assign_handle( opari2_region_2,
      &   opari2_ctc_2 )
-         call POMP2_Assign_handle( opari2_region_3, 
+         call POMP2_Assign_handle( opari2_region_3,
      &   opari2_ctc_3 )
-         call POMP2_Assign_handle( opari2_region_4, 
+         call POMP2_Assign_handle( opari2_region_4,
      &   opari2_ctc_4 )
-         call POMP2_Assign_handle( opari2_region_5, 
+         call POMP2_Assign_handle( opari2_region_5,
      &   opari2_ctc_5 )
-         call POMP2_Assign_handle( opari2_region_6, 
+         call POMP2_Assign_handle( opari2_region_6,
      &   opari2_ctc_6 )
-         call POMP2_Assign_handle( opari2_region_7, 
+         call POMP2_Assign_handle( opari2_region_7,
      &   opari2_ctc_7 )
-         call POMP2_Assign_handle( opari2_region_8, 
+         call POMP2_Assign_handle( opari2_region_8,
      &   opari2_ctc_8 )
-         call POMP2_Assign_handle( opari2_region_9, 
+         call POMP2_Assign_handle( opari2_region_9,
      &   opari2_ctc_9 )
-         call POMP2_Assign_handle( opari2_region_10, 
+         call POMP2_Assign_handle( opari2_region_10,
      &   opari2_ctc_10 )
-         call POMP2_Assign_handle( opari2_region_11, 
+         call POMP2_Assign_handle( opari2_region_11,
      &   opari2_ctc_11 )
-         call POMP2_Assign_handle( opari2_region_12, 
+         call POMP2_Assign_handle( opari2_region_12,
      &   opari2_ctc_12 )
-         call POMP2_Assign_handle( opari2_region_13, 
+         call POMP2_Assign_handle( opari2_region_13,
      &   opari2_ctc_13 )
-         call POMP2_Assign_handle( opari2_region_14, 
+         call POMP2_Assign_handle( opari2_region_14,
      &   opari2_ctc_14 )
-         call POMP2_Assign_handle( opari2_region_15, 
+         call POMP2_Assign_handle( opari2_region_15,
      &   opari2_ctc_15 )
       end

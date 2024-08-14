@@ -157,8 +157,9 @@ static PyObject * createTimer(PyObject * self, PyObject * args, PyObject * kwarg
   }
 
   // Format function name
-  char * buff = new char[strlen(name) + strlen(type) + 5];
-  sprintf(buff, "%s %s", name, type);
+  const auto len = strlen(name) + strlen(type) + 5;
+  char * buff = new char[len];
+  snprintf(buff, len,  "%s %s", name, type);
   string functionName(buff);
   delete[] buff;
 

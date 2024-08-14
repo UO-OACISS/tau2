@@ -30,16 +30,23 @@ LDFLAGS=-g $(TAU_OPENMP_OPTION)
 
 ##############################################
 
-all:		$(TARGET)
+all:		$(TARGET)	$(TARGET)_mpi
 
-install: 	$(TARGET)
+install: 	$(TARGET)	$(TARGET)_mpi
 
 $(TARGET):	$(OBJS)
 	$(CXX) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
+$(TARGET)_mpi:	main_mpi.o
+	$(CXX) $(LDFLAGS) main_mpi.o -o $@ $(LIBS)
+
 main.o: main.cxx headers1/A.h headers2/B.h
 	export TAU_COMPILER_VERBOSE=1
 	$(CXX) $(CFLAGS) -c $< -o $@
+
+main_mpi.o: main.cxx headers1/A.h headers2/B.h
+	export TAU_COMPILER_VERBOSE=1
+	$(CXX) $(CFLAGS) -c $< -o $@ -DUSE_MPI
 
 clean:
 	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog

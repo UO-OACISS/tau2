@@ -63,15 +63,15 @@ call omp_set_max_active_levels(2)
 ! call omp_init_lock(i)
 
   write(*,*) "omp_init_lock(i)",  'omp_init_lock(i)'    ! call omp_init_lock(i)
-  write(*,*)  "omp_init_lock(i)""test", """omp_init_lock(i)", "omp_init_lock(i)""",  """", """""""", &  
+  write(*,*)  "omp_init_lock(i)""test", """omp_init_lock(i)", "omp_init_lock(i)""",  """", """""""", &
               "omp_init_lock(i) ",&
               !        ",&
               "  + call omp_init_lock(i)"
-    
+
 !  call omp_init_lock(i)       ! call omp_init_lock(i)
 !  call omp_init_lock(i) ; call omp_set_lock(i)
 !  write(*,*) "call omp_init_lock(i)" ; call omp_init_lock(i)
-  
+
 !$C99 call omp_init_lock(i)
     !$DOMP  call omp_init_lock(i)
 end program test6

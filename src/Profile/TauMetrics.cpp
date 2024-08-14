@@ -241,11 +241,11 @@ static void metricv_add(const char *name) {
                 exit(EXIT_FAILURE);
             }
             if (numMetricEvents == 1) {
-                sprintf(buff, "%s", name);
+                snprintf(buff, sizeof(buff),  "%s", name);
             } else {
                 // some events don't have proper names, so just use event id instead
                 if (std::string(buff).compare("event_name") == 0) {
-                    sprintf(buff, "%s.%d", name, event);
+                    snprintf(buff, sizeof(buff),  "%s.%d", name, event);
                     //sprintf(buff, "CUpti_EventID.%s", name);
                 }
             }
@@ -382,7 +382,7 @@ static void read_env_vars() {
     } else {
         char counterName[256];
         for (int i = 1; i < 26; i++) {
-            sprintf(counterName, "COUNTER%d", i);
+            snprintf(counterName, sizeof(counterName),  "COUNTER%d", i);
             char *metric = getenv(counterName);
             if (metric && strlen(metric) == 0) {
                 metric = NULL;

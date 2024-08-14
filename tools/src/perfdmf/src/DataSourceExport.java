@@ -536,7 +536,7 @@ public class DataSourceExport {
 						if (i == 0) {
 							groupStrings[idx] = group.getName();
 						} else {
-							groupStrings[idx] = groupStrings[idx] + " | "
+							groupStrings[idx] = groupStrings[idx] + "|"
 									+ group.getName();
 						}
 					}
@@ -627,7 +627,7 @@ public class DataSourceExport {
 						if (i == 0) {
 							groupStrings[idx] = group.getName();
 						} else {
-							groupStrings[idx] = groupStrings[idx] + " | "
+							groupStrings[idx] = groupStrings[idx] + "|"
 									+ group.getName();
 						}
 					}

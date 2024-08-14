@@ -282,7 +282,7 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
   // Alignment must be a multiple of the minimum alignment (a power of two)
   if (min_align && ((align < min_align) || (align & (min_align-1)))) {
     char s[256];
-    sprintf(s, "Alignment is not a multiple of %ld", min_align);
+    snprintf(s, sizeof(s),  "Alignment is not a multiple of %ld", min_align);
     TriggerErrorEvent(s, filename, lineno);
     return NULL;
   }
@@ -763,8 +763,9 @@ void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, i
         {
         event = new TauContextUserEvent("Heap Allocate");
         } else {
-        char * name = new char[strlen(filename)+128];
-        sprintf(name, "Heap Allocate <file=%s, line=%d>", filename, lineno);
+        const int len = strlen(filename)+128;
+        char * name = new char[len];
+        snprintf(name, len,  "Heap Allocate <file=%s, line=%d>", filename, lineno);
         event = new TauContextUserEvent(name);
         delete[] name;
         }
@@ -798,8 +799,9 @@ void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename,
         {
         e = new TauContextUserEvent("Heap Free");
         } else {
-        char * name = new char[strlen(filename)+128];
-        sprintf(name, "Heap Free <file=%s, line=%d>", filename, lineno);
+        const int len = strlen(filename)+128;
+        char * name = new char[len];
+        snprintf(name, len,  "Heap Free <file=%s, line=%d>", filename, lineno);
         e = new TauContextUserEvent(name);
         delete[] name;
         }
@@ -831,11 +833,13 @@ void TauAllocation::TriggerErrorEvent(char const * descript, char const * filena
         if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
             !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
         {
-        name = new char[strlen(descript)+128];
-        sprintf(name, "Memory Error! %s", descript);
+        const int len = strlen(descript)+128;
+        name = new char[len];
+        snprintf(name, len,  "Memory Error! %s", descript);
         } else {
-        name = new char[strlen(descript)+strlen(filename)+128];
-        sprintf(name, "Memory Error! %s <file=%s, line=%d>", descript, filename, lineno);
+        const int len = strlen(descript)+strlen(filename)+128;
+        name = new char[len];
+        snprintf(name, len,  "Memory Error! %s <file=%s, line=%d>", descript, filename, lineno);
         }
         e = new TauContextUserEvent(name);
         event_map[file_hash] = e;
@@ -1042,7 +1046,11 @@ double Tau_max_RSS(void)
     size_t bytes = TauAllocation::BytesAllocated() - TauAllocation::BytesDeallocated();
     return (double)bytes / 1024.0;
   } else {
-#if defined(HAVE_MALLINFO)
+#if defined(HAVE_MALLINFO_DISABLED)
+    // this doesn't work when the system has more than 4GB memory.
+    // the components in the mallinfo structure are ints, and can't
+    // store the total number of bytes above 4GB without overflow.
+    // use the 'getrusage' method, instead - see below
     struct mallinfo minfo = mallinfo();
     double used = minfo.hblkhd + minfo.usmblks + minfo.uordblks;
     return used / 1024.0;
@@ -1891,19 +1899,19 @@ extern "C" int Tau_trigger_memory_rss_hwm(bool use_context, const char * prefix)
         TAU_CONTEXT_EVENT(stat_nonvoluntary, (double) nvswitch);
     } else {
         std::string pfix{prefix == nullptr ? "" : prefix};
-        std::string tmpstr{prefix};
+        std::string tmpstr{pfix};
         tmpstr += "Peak Memory Usage Resident Set Size (VmHWM) (KB)";
         static void * proc_vmhwm_no_context = Tau_get_userevent(tmpstr.c_str());
-        tmpstr = prefix;
+        tmpstr = pfix;
         tmpstr += "Memory Footprint (VmRSS) (KB)";
         static void * proc_rss_no_context = Tau_get_userevent(tmpstr.c_str());
-        tmpstr = prefix;
+        tmpstr = pfix;
         tmpstr += "Threads";
         static void * stat_threads_no_context = Tau_get_userevent(tmpstr.c_str());
-        tmpstr = prefix;
+        tmpstr = pfix;
         tmpstr += "Voluntary Context Switches";
         static void * stat_voluntary_no_context = Tau_get_userevent(tmpstr.c_str());
-        tmpstr = prefix;
+        tmpstr = pfix;
         tmpstr += "Non-voluntary Context Switches";
         static void * stat_nonvoluntary_no_context = Tau_get_userevent(tmpstr.c_str());
         Tau_userevent_thread(proc_rss_no_context, (double) vmrss, tid);
@@ -1931,7 +1939,7 @@ extern "C" void Tau_track_mem_event_always(const char * name, const char * prefi
 #else
   char event_name[event_len];
 #endif /* TAU_NEC_SX */
-  sprintf(event_name, "%s %s", prefix, name);
+  snprintf(event_name, sizeof(event_name),  "%s %s", prefix, name);
   if(TauEnv_get_mem_callpath()) {
     TAU_TRIGGER_CONTEXT_EVENT(event_name, (double)size);
   } else {

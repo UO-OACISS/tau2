@@ -1,0 +1,12 @@
+CC=icc
+CXX=icpc
+F77=ifort
+FC=ifort
+
+#CPPFLAGS=
+CFLAGS=-g -O2 -fp-model=precise
+CXXFLAGS=-g -O2 -fp-model=precise
+FFLAGS=-g -O2 -fp-model=precise
+FCFLAGS=-g -O2 -fp-model=precise
+#LDFLAGS=
+#LIBS=

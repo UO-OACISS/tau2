@@ -155,16 +155,16 @@ c     comment
 
       subroutine POMP2_Init_reg_000()
          include 'test1.f.opari.inc'
-         call POMP2_Assign_handle( opari2_region_1, 
+         call POMP2_Assign_handle( opari2_region_1,
      &   opari2_ctc_1 )
-         call POMP2_Assign_handle( opari2_region_2, 
+         call POMP2_Assign_handle( opari2_region_2,
      &   opari2_ctc_2 )
-         call POMP2_Assign_handle( opari2_region_3, 
+         call POMP2_Assign_handle( opari2_region_3,
      &   opari2_ctc_3 )
-         call POMP2_Assign_handle( opari2_region_4, 
+         call POMP2_Assign_handle( opari2_region_4,
      &   opari2_ctc_4 )
-         call POMP2_Assign_handle( opari2_region_5, 
+         call POMP2_Assign_handle( opari2_region_5,
      &   opari2_ctc_5 )
-         call POMP2_Assign_handle( opari2_region_6, 
+         call POMP2_Assign_handle( opari2_region_6,
      &   opari2_ctc_6 )
       end

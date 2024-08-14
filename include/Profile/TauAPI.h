@@ -254,7 +254,7 @@
 
 #define TAU_METADATA(name, value)               Tau_metadata(name, value);
 #define TAU_METADATA_ITERATION(name,iteration,value) {char meta_buf[1024]; \
-        sprintf(meta_buf,"%s_|_%d",name,iteration); \
+        snprintf(meta_buf, sizeof(meta_buf), "%s_|_%d",name,iteration); \
         TAU_METADATA(meta_buf,value);}
 
 #define TAU_CONTEXT_METADATA(name, value)       Tau_context_metadata(name, value);
@@ -276,7 +276,7 @@
 #define TAU_METADATA_STRING(name, value)   Tau_metadata_value_t* name = NULL; \
         Tau_metadata_create_value(&name, TAU_METADATA_TYPE_STRING); \
         name->data.cval = malloc((sizeof(char))*(strlen(value))); \
-        strcpy(name->data.cval, value);
+        strncpy(name->data.cval,  value, strlen(value)); 
 
 #define TAU_METADATA_INTEGER(name, value)       Tau_metadata_value_t* name = NULL; \
         Tau_metadata_create_value(&name, TAU_METADATA_TYPE_INTEGER); \
@@ -448,6 +448,7 @@ int TAUDECL Tau_get_current_stack_depth(int tid);
 int TAUDECL Tau_get_local_tid(void);
 int TAUDECL Tau_get_thread(void);
 int TAUDECL Tau_get_node(void);
+int TAUDECL tau_totalnodes(int set_or_get, int value);
 int  Tau_create_task(void);
 void Tau_destructor_trigger();
 

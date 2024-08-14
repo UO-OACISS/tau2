@@ -11,6 +11,8 @@
 #include <map>
 #include <mutex>
 
+#include <Profile/TauEnv.h>
+
 #define TAU_MEMMGR_MAP_CREATION_FAILED -1
 #define TAU_MEMMGR_MAX_MEMBLOCKS_REACHED -2
 
@@ -58,7 +60,7 @@ typedef std::map<std::size_t, __custom_vector_t*, std::less<std::size_t>, TauSig
 struct TMMUnit
 {
     TauMemMgrSummary memSummary;
-    TauMemMgrInfo memInfo [TAU_MEMMGR_MAX_MEMBLOCKS];
+    TauMemMgrInfo* memInfo;
 #ifdef USE_RECYCLER
     __custom_map_t free_chunks;
 #endif
@@ -70,7 +72,17 @@ static vector<TMMUnit*> TMMList;
 inline void checkTMMVector(int tid){
 	while(TMMList.size()<=tid){
     //std::lock_guard<std::mutex> guard(TMMVectorMutex);
-		TMMList.push_back(new TMMUnit());
+    TMMUnit* thread_TTM = new TMMUnit();
+    thread_TTM->memInfo = (TauMemMgrInfo*) malloc(TauEnv_get_env_memmgr_max_memblocks()*sizeof(TauMemMgrInfo));
+		TMMList.push_back(thread_TTM);
+	}
+}
+
+inline void freeTMMVector(){
+  int tid;
+  for( tid=0; tid<TMMList.size(); tid++ )
+	while(TMMList.size()<=tid){
+		free(TMMList[tid]->memInfo);
 	}
 }
 
@@ -129,6 +141,7 @@ extern "C" void Tau_MemMgr_finalizeIfNecessary(void) {
     std::lock_guard<std::mutex> lck (getMapMutex());
     // check again, someone else might already have initialized by now.
     if (!finalized) {
+      freeTMMVector();
       finalized = true;
     }
     Tau_global_decr_insideTAU();
@@ -197,13 +210,14 @@ int Tau_MemMgr_findFit(int tid, size_t size)
   }
 
   // Didn't find any suitable block. Attempt to acquire a new one.
-  if (numBlocks < TAU_MEMMGR_MAX_MEMBLOCKS) {
+  if (numBlocks < TauEnv_get_env_memmgr_max_memblocks()) {
     if (!Tau_MemMgr_mmap(tid, blockSize)) {
       return TAU_MEMMGR_MAP_CREATION_FAILED;
     }
     // return index to new block
     return getMemSummary(tid).numBlocks - 1;
   } else {
+    printf("********* TAU_MEMMGR_MAX_MEMBLOCKS_REACHED\n Current is %d, increase environmental variable TAU_MMEMGR_MAX_MEMBLOCS \n", TauEnv_get_env_memmgr_max_memblocks()); fflush(stdout);
     return TAU_MEMMGR_MAX_MEMBLOCKS_REACHED;
   }
 }
@@ -270,6 +284,7 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
       break;
     case TAU_MEMMGR_MAX_MEMBLOCKS_REACHED:
       printf("Tau_MemMgr_malloc: MMAP MAX MEMBLOCKS REACHED!\n");
+      printf("Current is %d, increase environmental variable TAU_MMEMGR_MAX_MEMBLOCS \n", TauEnv_get_env_memmgr_max_memblocks()); fflush(stdout);
       break;
     default:
       printf("Tau_MemMgr_malloc: UNKNOWN ERROR!\n");

@@ -1,9 +1,9 @@
 dnl -*- mode: autoconf -*-
 
-dnl 
+dnl
 dnl This file is part of the Score-P software (http://www.score-p.org)
 dnl
-dnl Copyright (c) 2013
+dnl Copyright (c) 2013, 2019,
 dnl Forschungszentrum Juelich GmbH, Germany
 dnl
 dnl This software may be modified and distributed under the terms of
@@ -56,15 +56,14 @@ else
     ac_scorep_compiler_suite_called="yes"
 fi
 
+m4_define([_accepted_compiler_suites], [gcc|ibm|intel|oneapi|nvhpc|pgi|clang|aocc|amdclang])
+
 AC_ARG_WITH([compiler-suite],
-            [AS_HELP_STRING([--with-compiler-suite=(gcc|ibm|intel|pgi|studio)], 
+            [AS_HELP_STRING([--with-compiler-suite=(]_accepted_compiler_suites[)],
                             [The compiler suite used to build this package. Needs to be in $PATH [gcc].])],
             [AS_CASE([$withval],
-                     ["gcc"],       [ac_scorep_compilers_frontend="compiler-nocross-gcc"],
-                     ["ibm"],       [ac_scorep_compilers_frontend="compiler-nocross-ibm"],
-                     ["intel"],     [ac_scorep_compilers_frontend="compiler-nocross-intel"],
-                     ["pgi"],       [ac_scorep_compilers_frontend="compiler-nocross-pgi"],
-                     ["studio"],    [ac_scorep_compilers_frontend="compiler-nocross-studio"],
+                 _accepted_compiler_suites,
+                     [ac_scorep_compilers_frontend="compiler-nocross-$withval"],
                      ["no"],        [AC_MSG_ERROR([option --without-compiler-suite makes no sense.])],
                      [AC_MSG_ERROR([compiler suite "${withval}" not supported by --with-compiler-suite.])])])
 AS_IF([test -f "AFS_COMPILER_FILES_PACKAGE/${ac_scorep_compilers_frontend}"],

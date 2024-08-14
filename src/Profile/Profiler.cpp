@@ -101,6 +101,11 @@ extern "C" void  __real_shmem_finalize() ;
 #endif /* TAU_SHMEM */
 extern "C" int Tau_get_usesSHMEM();
 
+
+#ifdef TAU_TRACK_IDLE_THREADS
+extern "C" bool Tau_check_Stopping_All_Threads();
+#endif /* TAU_TRACK_IDLE_THREADS */
+
 using namespace std;
 using namespace tau;
 
@@ -245,7 +250,7 @@ const char *TauGetCounterString(void)
 #endif /* TAU_PAPI */
   if (tau_env) {
     char *header = new char[1024];
-    sprintf(header, "templated_functions_MULTI_%s", tau_env);
+    snprintf(header, 1024,  "templated_functions_MULTI_%s", tau_env);
     return header;
   } else {
 #ifdef TAU_PAPI_WALLCLOCKTIME
@@ -505,13 +510,13 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   if (GetPhase()) {
     static int sequence=0;
     char annotation[4096];
-    sprintf (annotation, "TAU^seq^%d^phase^%s^nct^%d:%d:%d^timestamp^%lld^start^%lld^", sequence,
+    snprintf (annotation, sizeof(annotation),  "TAU^seq^%d^phase^%s^nct^%d:%d:%d^timestamp^%lld^start^%lld^", sequence,
         ThisFunction->GetName(), RtsLayer::myNode(), RtsLayer::myContext(), RtsLayer::myThread(),
         getTimeStamp(), Tau_get_firstTimeStamp());
     printf ("tau-perfsuite: stopping %s\n", ThisFunction->GetName());
     setenv("PS_HWPC_ANNOTATION", annotation, 1);
     char seqstring[256];
-    sprintf (seqstring, "TAU.%d", sequence);
+    snprintf (seqstring, sizeof(seqstring),  "TAU.%d", sequence);
     int ierr;
 
     ierr = ps_hwpc_suspend();
@@ -797,7 +802,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
         // Not a destructor of a static object - its a function like main
 
         // Write profile data
+#ifndef TAU_SCOREP
         TauProfiler_StoreData(tid);
+#endif // TAU_SCOREP 
         TAU_VERBOSE("TAU: <Node=%d.Thread=%d>:<pid=%d>: %s initiated TauProfiler_StoreData\n", RtsLayer::myNode(),
             RtsLayer::myThread(), RtsLayer::getPid(), ThisFunction->GetName());
 // Be careful here, we can not disable instrumentation in multithreaded
@@ -816,7 +823,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /*TAUKTAU */
 
 #ifdef TAU_TRACK_IDLE_THREADS /* Check if we need to shut off .TAU applications on other tids */
-        if (tid == 0) {
+	//Disable if already stopping all threads
+        if ((tid == 0) && (!Tau_check_Stopping_All_Threads())) {
           int i;
           for (i = 1; i < TheProfilerThreadList().size(); i++) {
             /* for all other threads */
@@ -892,12 +900,12 @@ void TauProfiler_dumpFunctionNames()
 
   //Create temp write to file.
   char filename[1024];
-  sprintf(filename, "%s/temp.%d.%d.%d", dirname, RtsLayer::myNode(), RtsLayer::myContext(), RtsLayer::myThread());
+  snprintf(filename, sizeof(filename),  "%s/temp.%d.%d.%d", dirname, RtsLayer::myNode(), RtsLayer::myContext(), RtsLayer::myThread());
 
   FILE* fp;
   if ((fp = fopen(filename, "w+")) == NULL) {
     char errormsg[1048];
-    sprintf(errormsg, "Error: Could not create %s", filename);
+    snprintf(errormsg, sizeof(errormsg),  "Error: Could not create %s", filename);
     perror(errormsg);
     return;
   }
@@ -911,7 +919,7 @@ void TauProfiler_dumpFunctionNames()
 
   //Rename from the temp filename.
   char dumpfile[1024];
-  sprintf(dumpfile, "%s/dump_functionnames_n,c,t.%d.%d.%d", dirname, RtsLayer::myNode(), RtsLayer::myContext(),
+  snprintf(dumpfile, sizeof(dumpfile),  "%s/dump_functionnames_n,c,t.%d.%d.%d", dirname, RtsLayer::myNode(), RtsLayer::myContext(),
       RtsLayer::myThread());
   rename(filename, dumpfile);
 }
@@ -1225,7 +1233,7 @@ static int writeUserEvents(FILE *fp, int tid)
 static int writeHeader(FILE *fp, int numFunc, char *metricName)
 {
   char header[2096];
-  sprintf(header, "%d %s\n", numFunc, metricName);
+  snprintf(header, sizeof(header),  "%d %s\n", numFunc, metricName);
   strcat(header, "# Name Calls Subrs Excl Incl ");
 
   strcat(header, "ProfileCalls");
@@ -1834,7 +1842,7 @@ static int getProfileLocation(int metric, char *str)
     int written_bytes = 0;
     unsigned int profile_dir_len = KTAU_NG_PREFIX_LEN + HOSTNAME_LEN;
     profiledir = new char[profile_dir_len];
-    written_bytes = sprintf(profiledir, "%s.", KTAU_NG_PREFIX);
+    written_bytes = snprintf(profiledir, profile_dir_len,  "%s.", KTAU_NG_PREFIX);
     gethostname(profiledir + written_bytes, profile_dir_len - written_bytes);
 #else
     profiledir = TauEnv_get_profiledir();
@@ -1988,14 +1996,14 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
         // remove newline
         year[4] = '\0';
         char newStringTime[64];
-        sprintf(newStringTime, "%s-%s-%s-%s-%s", day, month, dayInt, time, year);
+        snprintf(newStringTime, sizeof(newStringTime),  "%s-%s-%s-%s-%s", day, month, dayInt, time, year);
 
-        sprintf(dumpfile, "%s/%s%s__%s__.%d.%d.%d", profileLocation, selectivePrefix, prefix, newStringTime,
+        snprintf(dumpfile, sizeof(dumpfile),  "%s/%s%s__%s__.%d.%d.%d", profileLocation, selectivePrefix, prefix, newStringTime,
             RtsLayer::myNode(), RtsLayer::myContext(), tid);
 
         if ((fp = fopen(dumpfile, "w+")) == NULL) {
           char errormsg[1256];
-          sprintf(errormsg, "Error: Could not create %s", dumpfile);
+          snprintf(errormsg, sizeof(errormsg),  "Error: Could not create %s", dumpfile);
           perror(errormsg);
           return 0;
         }
@@ -2004,7 +2012,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
         char *tst = getcwd(cwd, 1024);
 		if (tst == NULL) {
           char errormsg[1024];
-          sprintf(errormsg, "Error: Could not get current working directory");
+          snprintf(errormsg, sizeof(errormsg),  "Error: Could not get current working directory");
           perror(errormsg);
           return 0;
 		}
@@ -2018,7 +2026,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 #endif
         int node = RtsLayer::myNode();
 
-        sprintf(dumpfile, "%s/%s%s.%d.%d.%d", profileLocation, selectivePrefix, prefix, node, RtsLayer::myContext(),
+        snprintf(dumpfile, sizeof(dumpfile),  "%s/%s%s.%d.%d.%d", profileLocation, selectivePrefix, prefix, node, RtsLayer::myContext(),
             tid);
 
         int sicortex = 0;
@@ -2030,13 +2038,13 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
           int test = open(dumpfile, flags, mode);
           while (test == -1 && node < 99999) {
             node++;
-            sprintf(dumpfile, "%s/%s%s.%d.%d.%d", profileLocation, selectivePrefix, prefix, node, RtsLayer::myContext(),
+            snprintf(dumpfile, sizeof(dumpfile),  "%s/%s%s.%d.%d.%d", profileLocation, selectivePrefix, prefix, node, RtsLayer::myContext(),
                 tid);
             test = open(dumpfile, flags, mode);
           }
           if ((fp = fdopen(test, "w")) == NULL) {
             char errormsg[1256];
-            sprintf(errormsg, "Error: Could not create %s", dumpfile);
+            snprintf(errormsg, sizeof(errormsg),  "Error: Could not create %s", dumpfile);
             perror(errormsg);
             return 0;
           }
@@ -2050,7 +2058,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 #endif /* TAU_MPI */
           if ((fp = fopen(dumpfile, "w+")) == NULL) {
             char errormsg[1256];
-            sprintf(errormsg, "Error: Could not create %s", dumpfile);
+            snprintf(errormsg, sizeof(errormsg),  "Error: Could not create %s", dumpfile);
             perror(errormsg);
             return 0;
           }
@@ -2061,7 +2069,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
           char *tst = getcwd(cwd, 1024);
 		  if (tst == NULL) {
             char errormsg[1024];
-            sprintf(errormsg, "Error: Could not get current working directory");
+            snprintf(errormsg, sizeof(errormsg),  "Error: Could not get current working directory");
             perror(errormsg);
             return 0;
 		  }

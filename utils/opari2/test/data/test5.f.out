@@ -69,7 +69,7 @@
       call POMP2_Parallel_join(opari2_region_1,
      &pomp2_old_task)
 #line 42 "test5.f"
-      
+
       if(k .gt. 0) l = .true.
       pomp2_num_threads = 2
       pomp2_if = ( l )
@@ -156,10 +156,10 @@
 
       subroutine POMP2_Init_reg_000()
          include 'test5.f.opari.inc'
-         call POMP2_Assign_handle( opari2_region_1, 
+         call POMP2_Assign_handle( opari2_region_1,
      &   opari2_ctc_1 )
-         call POMP2_Assign_handle( opari2_region_2, 
+         call POMP2_Assign_handle( opari2_region_2,
      &   opari2_ctc_2 )
-         call POMP2_Assign_handle( opari2_region_3, 
+         call POMP2_Assign_handle( opari2_region_3,
      &   opari2_ctc_3 )
       end

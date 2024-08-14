@@ -99,7 +99,7 @@ private:
   static int tau_timer_counter = 0; \
   void *tauFInfo = NULL; \
   char tau_timer_iteration_number[128]; \
-  sprintf(tau_timer_iteration_number, " [%d]", ++tau_timer_counter); \
+  snprintf(tau_timer_iteration_number, sizeof(tau_timer_iteration_number),  " [%d]", ++tau_timer_counter); \
   tauCreateFI(&tauFInfo, string(name)+string(tau_timer_iteration_number), type, tau_dy_group, #group); \
   Tau_Profile_Wrapper tauFProf(tauFInfo);
 
@@ -108,7 +108,7 @@ private:
   static int tau_timer_counter = 0; \
   void *tauFInfo = NULL; \
   char tau_timer_iteration_number[128]; \
-  sprintf(tau_timer_iteration_number, " [%d]", ++tau_timer_counter); \
+  snprintf(tau_timer_iteration_number, sizeof(tau_timer_iteration_number),  " [%d]", ++tau_timer_counter); \
   tauCreateFI(&tauFInfo, string(name)+string(tau_timer_iteration_number), type, tau_dy_group, #group); \
   Tau_Profile_Wrapper tauFProf(tauFInfo, 1);
 

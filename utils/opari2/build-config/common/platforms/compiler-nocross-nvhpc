@@ -1,0 +1,12 @@
+CC=nvc
+CXX=nvc++
+F77=nvfortran
+FC=nvfortran
+
+#CPPFLAGS=
+CFLAGS=-gopt -O2
+CXXFLAGS=-gopt -O2
+FFLAGS=-gopt -O2
+FCFLAGS=-gopt -O2
+#LDFLAGS=
+#LIBS=

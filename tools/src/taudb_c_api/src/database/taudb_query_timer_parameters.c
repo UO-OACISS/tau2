@@ -30,10 +30,10 @@ TAUDB_TIMER_PARAMETER* taudb_query_timer_parameters(TAUDB_CONNECTION* connection
    */
   char my_query[1024];
   //sprintf(my_query,"select * from timer where trial = %d", trial->id);
-  sprintf(my_query,"select tp.*, t.id as timerid from timer_parameter tp inner join timer t on tc.timer = t.id");
-  sprintf(my_query,"%s where t.trial = %d", my_query, trial->id);
+  snprintf(my_query, sizeof(my_query), "select tp.*, t.id as timerid from timer_parameter tp inner join timer t on tc.timer = t.id");
+  snprintf(my_query, sizeof(my_query), "%s where t.trial = %d", my_query, trial->id);
   if (timer != NULL) {
-    sprintf(my_query,"%s and t.id = %d", my_query, timer->id);
+    snprintf(my_query, sizeof(my_query), "%s and t.id = %d", my_query, timer->id);
   }
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
@@ -128,7 +128,7 @@ void taudb_save_timer_parameters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tria
       // make array of 6 character pointers
       const char* paramValues[3] = {0};
       char timerid[32] = {0};
-      sprintf(timerid, "%d", timer->id);
+      snprintf(timerid, sizeof(timerid),  "%d", timer->id);
       paramValues[0] = timerid;
       paramValues[1] = parameter->name;
       paramValues[2] = parameter->value;

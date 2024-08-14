@@ -241,7 +241,8 @@ int main (int argc, char *argv[])
 
 #ifdef TAU_MPI
   int rc = MPI_SUCCESS;
-  int rank = 0;
+  int rank, size, len = 0;
+  char name[MPI_MAX_PROCESSOR_NAME]; 
 #if defined(PTHREADS)
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -257,6 +258,7 @@ int main (int argc, char *argv[])
 #else
   rc = MPI_Init(&argc, &argv);
 #endif /* THREADS */
+
   if (rc != MPI_SUCCESS) {
     char *errorstring;
     int length = 0;
@@ -264,6 +266,10 @@ int main (int argc, char *argv[])
     printf("Error: MPI_Init failed, rc = %d\n%s\n", rc, errorstring);
     exit(1);
   }
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  MPI_Get_processor_name(name, &len);
+  printf("MPI: Rank %d out of %d on %s\n", rank, size, name); 
 #endif /* TAU_MPI */
 
 #ifdef PTHREADS

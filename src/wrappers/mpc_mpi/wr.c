@@ -2310,7 +2310,7 @@ int genProfile()
     end = TauMetrics_getTimeOfDay();
     TAU_VERBOSE("TAU: MetaData Merging Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
     char tmpstr[256];
-    sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
+    snprintf(tmpstr, sizeof(tmpstr),  "%.4G seconds", ((double)(end-start))/1000000.0f);
     TAU_METADATA("TAU MetaData Merge Time", tmpstr);
 
 #if 1

@@ -1373,6 +1373,7 @@ if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
 	    TAU_LLVM_PLUGIN="TAU_Profiling_CXX.so"
             ;;
 	$group_f_F)
+	    TAU_LLVM_PLUGIN="TAU_Profiling.so"
 	    ;;
     esac
     # Does it exist?
@@ -2271,14 +2272,27 @@ else
                          echoIfDebug "$optCompInstOption=$optCompInstOption"
                        fi
                      fi
-
+	
 		   if [ "x$TAUCOMP" == "xclang" ]; then
 		       optExcludeFuncs=""
 		       # We are going to use the LLVM plugin. Remove -finstrument-functions or -finstrument-functions-after-inlining from the options, in order for the LLVM plugin to take precedence
 		       argsRemaining=`echo $argsRemaining | sed -e 's@-finstrument-functions-after-inlining@@g' | sed -e 's@-finstrument-functions@@g'`
-			 if [ "x$tauSelectFile" != "x" ]; then
-			     # TODO check the plugin exists here (done above)
-			     optCompInstOption="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
+		       if [ "x$tauSelectFile" != "x" ]; then
+			     if [ "$clang_version" -ge "14" ] ; then
+				 # For the moment, this is the only way to pass arguments to the LLVM plugin on the command line
+				 # see https://github.com/llvm/llvm-project/issues/56137#issuecomment-1200957606
+				 # The other way we can pass the select file is to use the TAU_COMPILER_SELECT_FILE environment variable.
+				 # ... and it is not supported (yet) by flang
+				 optCompInstOption="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
+				 if [ $groupType != $group_f_F  ]; then
+				     optCompInstOption=$optCompInstOption" -Xclang -load -Xclang ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -Xclang -mllvm -Xclang -tau-input-file=$tauSelectFile"
+				 else
+				     export TAU_COMPILER_SELECT_FILE=$tauSelectFile
+				 fi
+			     else
+				 # TODO check the plugin exists here (done above)
+				 optCompInstOption="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
+			     fi
 			 else
 			     # instrument every function -> do not pass any select file
 			     optCompInstOption="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
@@ -2378,18 +2392,31 @@ else
           	fi
           	if [ "x$useCompInst" = "xyes" ]; then
           	    extraopt=$optCompInstOption
-                    if [ $groupType == $group_f_F ]; then
+                    if [ $groupType == $group_f_F  ] && [ "x$TAUCOMP" != "xclang" ]; then
           		 extraopt=$optCompInstFortranOption
           		 echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
-		     else
+		    else
 			 # Not working with fortran (yet)
 			 if [ "x$TAUCOMP" == "xclang" ]; then
 			     optExcludeFuncs=""
 			     # We are going to use the LLVM plugin. Remove -finstrument-functions or -finstrument-functions-after-inlining from the options, in order for the LLVM plugin to take precedence
 			     argsRemaining=`echo $argsRemaining | sed -e 's@-finstrument-functions-after-inlining@@g' | sed -e 's@-finstrument-functions@@g'`
 			     if [ "x$tauSelectFile" != "x" ]; then
-				 # TODO check the plugin exists here (done above)
-				 extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
+				 if [[ "$clang_version" -ge "14" ]]; then
+				     # For the moment, this is the only way to pass arguments to the LLVM plugin on the command line
+				     # see https://github.com/llvm/llvm-project/issues/56137#issuecomment-1200957606
+				     # The other way we can pass the select file is to use the TAU_COMPILER_SELECT_FILE environment variable.
+				     # ... and it is not supported (yet) by flang
+				     extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"				     
+				     if [ $groupType != $group_f_F  ]; then
+					 extraopt=$extraopt " -Xclang -load -Xclang ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -Xclang -mllvm -Xclang -tau-input-file=$tauSelectFile"
+				     else
+					 export TAU_COMPILER_SELECT_FILE=$tauSelectFile
+				     fi
+				 else
+				     # TODO check the plugin exists here (done above)
+				     extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
+				 fi
 			     else
 				 # instrument every function
 				 extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"

@@ -331,8 +331,9 @@ void trace_register_func(char *origname, int id)
       }
     }
     char *dem = Tau_demangle_name(mirror);
-    char *newname = (char *) malloc(strlen(dem)+funclen-i+3);
-    sprintf(newname, "%s %s", dem, &func[i-1]);
+    const int len = strlen(dem)+funclen-i+3;
+    char *newname = (char *) malloc(len);
+    snprintf(newname, len,  "%s %s", dem, &func[i-1]);
     TAU_VERBOSE("name=%s, newname = %s\n", func, newname);
     free(mirror);
     free(dem);
@@ -411,6 +412,10 @@ void trace_register_func(char *origname, int id)
 
 void traceEntry(int id)
 {
+  TAU_VERBOSE("Inside traceEntry: id = %d\n", id);
+  TAU_QUERY_DECLARE_EVENT(curr);
+  TAU_QUERY_GET_CURRENT_EVENT(curr);
+
   int tid = RtsLayer::myThread();
   if ( !RtsLayer::TheEnableInstrumentation()) return;
   if (!getTauDyninstEnabled(tid)) return;
@@ -426,9 +431,6 @@ void traceEntry(int id)
   if (!(((FunctionInfo*)(fi))->GetProfileGroup() & RtsLayer::TheProfileMask())) {
     return;
   }
-
-  TAU_QUERY_DECLARE_EVENT(curr);
-  TAU_QUERY_GET_CURRENT_EVENT(curr);
 
   if ( curr && ((Profiler *)curr)->ThisFunction &&
      ((Profiler *)curr)->ThisFunction->GetProfileGroup() == TAU_GROUP_31) {
@@ -462,7 +464,7 @@ void traceExit(int id)
 {
   //const char *strcurr;
   //const char *strbin;
-  //TAU_VERBOSE("Inside traceExit: id = %d\n", id);
+  TAU_VERBOSE("Inside traceExit: id = %d\n", id);
 
   if ( !RtsLayer::TheEnableInstrumentation()) return;
   int tid = RtsLayer::myThread();
@@ -558,7 +560,7 @@ void  tau_register_func(char **func, char** file, int* lineno,
       trace_register_func(tmpstr, id);
     } else {
       char funcname[2048];
-      sprintf(funcname, "%s [{%s}{%d}]", tmpstr, *file, *lineno);
+      snprintf(funcname, sizeof(funcname),  "%s [{%s}{%d}]", tmpstr, *file, *lineno);
       trace_register_func(funcname, id);
       TAU_VERBOSE("TAU : tau_register_func: name = %s, id = %d\n", funcname, id);
     }
@@ -573,6 +575,22 @@ void tau_trace_entry(int id) {
 void tau_trace_exit(int id) {
   TAU_VERBOSE("TAU: tau_trace_exit : id = %d\n", id);
   traceExit(id);
+}
+
+void tau_trace_lib_entry(const char * func_name)
+{
+  if(!RtsLayer::TheEnableInstrumentation())
+	  return;
+  TAU_VERBOSE("TAU: tau_trace_lib_entry %s\n", func_name);
+  TAU_START(func_name);
+}
+
+void tau_trace_lib_exit(const char * func_name)
+{
+  if(!RtsLayer::TheEnableInstrumentation())
+	  return;
+  TAU_VERBOSE("TAU: tau_trace_lib_exit %s\n", func_name);
+  TAU_STOP(func_name);
 }
 
 void tau_loop_trace_entry(int id) {
@@ -619,9 +637,9 @@ void  tau_register_loop(char **func, char** file, int* lineno,
   char lname[2048];
   char *loopname;
   if (((*file) != (char *)NULL) && (*lineno != 0)) {
-    sprintf(lname, "Loop: %s [{%s}{%d}]", *func, *file, *lineno);
+    snprintf(lname, sizeof(lname),  "Loop: %s [{%s}{%d}]", *func, *file, *lineno);
   } else {
-    sprintf(lname, "Loop: %s ",*func);
+    snprintf(lname, sizeof(lname),  "Loop: %s ",*func);
   }
   loopname = strdup(lname);
   tau_register_func(&loopname, file, lineno, id);

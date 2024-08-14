@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2014-2020 Kevin Huck
- * Copyright (c) 2014-2020 University of Oregon
+ * Copyright (c) 2014-2022 Kevin Huck
+ * Copyright (c) 2014-2022 University of Oregon
  *
  * Distributed under the Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -18,6 +18,11 @@
 #include <Profile/TauMetaData.h>
 #include <sstream>
 
+#include "json.h"
+using json = nlohmann::json;
+extern json configuration;
+int& get_my_rank(void);
+
 #define NVML_CALL(call)                                                      \
 do {                                                                         \
     nvmlReturn_t _status = call;                                             \
@@ -34,6 +39,10 @@ do {                                                                         \
 #define PCIE_THROUGHPUT 1.0e-3  // to scale KB to MB
 #define NVLINK_BW 1.0e-3  // to scale MB/s to GB/s
 #define WATTS 1.0e-3  // scale mW to W
+
+void write_scatterplot_point(const std::string& name, double value);
+
+bool include_event(const char * component, const char * event_name);
 
 namespace tau { namespace nvml {
 
@@ -64,6 +73,21 @@ monitor::~monitor (void) {
     NVML_CALL(nvmlShutdown());
 }
 
+bool include_device(uint32_t index) {
+    int dev_per_node{
+        configuration.count("devices_per_node") > 0 ?
+        (int)(configuration["devices_per_node"]) : 1};
+    int dev_per_proc{
+        configuration.count("devices_per_process") > 0 ?
+        (int)(configuration["devices_per_process"]) : 1};
+    uint32_t my_device{(uint32_t)(get_my_rank() % dev_per_node)};
+    //TAU_VERBOSE("Dev/node: %d, dev/proc: %d, my_device: %lu, index: %lu\n", dev_per_node, dev_per_proc, my_device, index);
+    if(my_device == index) return true;
+    /* need to figure out the method for handling more than 1 device per process */
+    //if(dev_per_node == dev_per_proc) return true;
+    return false;
+}
+
 void monitor::query(void) {
     TAU_VERBOSE("NVML query!\n");
     indexMutex.lock();
@@ -72,6 +96,8 @@ void monitor::query(void) {
     indexMutex.unlock();
 
     for (uint32_t d : indexSet) {
+        //TAU_VERBOSE("Trying device index: %lu\n", d);
+        if (!include_device(d)) { continue; }
         /* Get overall utilization percentages */
         nvmlUtilization_t utilization;
         nvmlDevice_t dev = devices[d];
@@ -81,14 +107,20 @@ void monitor::query(void) {
             ss << "GPU: Device " << d << " Utilization %";
             std::string tmp{ss.str()};
             double value = (double)(utilization.gpu);
-            Tau_trigger_userevent(tmp.c_str(), value);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), value);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
         {
             std::stringstream ss;
             ss << "GPU: Device " << d << " Memory Utilization %";
             std::string tmp{ss.str()};
             double value = (double)(utilization.memory);
-            Tau_trigger_userevent(tmp.c_str(), value);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), value);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
 
         /* Get memory bytes allocated */
@@ -100,21 +132,30 @@ void monitor::query(void) {
             ss << "GPU: Device " << d << " Memory Total (GB)";
             std::string tmp{ss.str()};
             double value = (double)(memory.total) * BILLIONTH;
-            Tau_trigger_userevent(tmp.c_str(), value);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), value);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
         {
             std::stringstream ss;
             ss << "GPU: Device " << d << " Memory Free (GB)";
             std::string tmp{ss.str()};
             double value = (double)(memory.free) * BILLIONTH;
-            Tau_trigger_userevent(tmp.c_str(), value);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), value);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
         {
             std::stringstream ss;
             ss << "GPU: Device " << d << " Memory Used (GB)";
             std::string tmp{ss.str()};
             double value = (double)(memory.used) * BILLIONTH;
-            Tau_trigger_userevent(tmp.c_str(), value);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), value);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
 
         /* Get clock settings */
@@ -126,7 +167,10 @@ void monitor::query(void) {
             ss << "GPU: Device " << d << " Clock SM (MHz)";
             std::string tmp{ss.str()};
             double value = (double)(clock);
-            Tau_trigger_userevent(tmp.c_str(), value);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), value);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
         NVML_CALL(nvmlDeviceGetClock(devices[d], NVML_CLOCK_MEM,
             NVML_CLOCK_ID_CURRENT, &clock));
@@ -135,7 +179,10 @@ void monitor::query(void) {
             ss << "GPU: Device " << d << " Clock Memory (MHz)";
             std::string tmp{ss.str()};
             double value = (double)(clock);
-            Tau_trigger_userevent(tmp.c_str(), value);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), value);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
 
         /* Get clock throttle reasons */
@@ -147,43 +194,64 @@ void monitor::query(void) {
             std::stringstream ss;
             ss << "GPU: Device " << d << " Throttle Idle";
             std::string tmp{ss.str()};
-            Tau_trigger_userevent(tmp.c_str(), 1);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), 1);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
         if (reasons && nvmlClocksThrottleReasonHwPowerBrakeSlowdown) {
             std::stringstream ss;
             ss << "GPU: Device " << d << " Throttle Power Break Slowdown";
             std::string tmp{ss.str()};
-            Tau_trigger_userevent(tmp.c_str(), 1);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), 1);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
         if (reasons && nvmlClocksThrottleReasonHwSlowdown) {
             std::stringstream ss;
             ss << "GPU: Device " << d << " Throttle HW Break Slowdown";
             std::string tmp{ss.str()};
-            Tau_trigger_userevent(tmp.c_str(), 1);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), 1);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
         if (reasons && nvmlClocksThrottleReasonHwThermalSlowdown) {
             std::stringstream ss;
             ss << "GPU: Device " << d << " Throttle HW Thermal Slowdown";
             std::string tmp{ss.str()};
-            Tau_trigger_userevent(tmp.c_str(), 1);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), 1);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
         if (reasons && nvmlClocksThrottleReasonSwPowerCap) {
             std::stringstream ss;
             ss << "GPU: Device " << d << " Throttle SW Power Cap Slowdown";
             std::string tmp{ss.str()};
-            Tau_trigger_userevent(tmp.c_str(), 1);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), 1);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
         if (reasons && nvmlClocksThrottleReasonSwThermalSlowdown) {
             std::stringstream ss;
             ss << "GPU: Device " << d << " Throttle SW Thermal Slowdown";
             std::string tmp{ss.str()};
-            Tau_trigger_userevent(tmp.c_str(), 1);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), 1);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
         if (reasons && nvmlClocksThrottleReasonSyncBoost) {
             std::stringstream ss;
             ss << "GPU: Device " << d << " Throttle Sync Boost";
             std::string tmp{ss.str()};
-            Tau_trigger_userevent(tmp.c_str(), 1);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), 1);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
 #endif
 
@@ -196,7 +264,10 @@ void monitor::query(void) {
             ss << "GPU: Device " << d << " Fan Speed %";
             std::string tmp{ss.str()};
             double value = (double)(clock);
-            Tau_trigger_userevent(tmp.c_str(), value);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), value);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
 #endif
 
@@ -209,7 +280,10 @@ void monitor::query(void) {
             ss << "GPU: Device " << d << " PCIe TX Throughput (MB/s)";
             std::string tmp{ss.str()};
             double value = (double)(throughput) * PCIE_THROUGHPUT;
-            Tau_trigger_userevent(tmp.c_str(), value);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), value);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
         NVML_CALL(nvmlDeviceGetPcieThroughput(devices[d],
             NVML_PCIE_UTIL_RX_BYTES, &throughput));
@@ -218,7 +292,10 @@ void monitor::query(void) {
             ss << "GPU: Device " << d << " PCIe RX Throughput (MB/s)";
             std::string tmp{ss.str()};
             double value = (double)(throughput) * PCIE_THROUGHPUT;
-            Tau_trigger_userevent(tmp.c_str(), value);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), value);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
 
         uint32_t power = 0;
@@ -228,7 +305,10 @@ void monitor::query(void) {
             ss << "GPU: Device " << d << " Power (W)";
             std::string tmp{ss.str()};
             double value = (double)(power) * WATTS;
-            Tau_trigger_userevent(tmp.c_str(), value);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), value);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
 
         uint32_t temperature = 0;
@@ -239,7 +319,10 @@ void monitor::query(void) {
             ss << "GPU: Device " << d << " Temperature (C)";
             std::string tmp{ss.str()};
             double value = (double)(temperature);
-            Tau_trigger_userevent(tmp.c_str(), value);
+            if(include_event("nvml", tmp.c_str())) {
+                Tau_trigger_userevent(tmp.c_str(), value);
+                write_scatterplot_point(tmp.c_str(), value);
+            }
         }
 
         if (!queried_once[d]) {
@@ -255,7 +338,10 @@ void monitor::query(void) {
                     ss << "GPU: Device " << d << " NvLink Speed (GB/s)";
                     std::string tmp{ss.str()};
                     double value = convertValue(values[0]) * NVLINK_BW;
-                    Tau_trigger_userevent(tmp.c_str(), value);
+                    if(include_event("nvml", tmp.c_str())) {
+                        Tau_trigger_userevent(tmp.c_str(), value);
+                        write_scatterplot_point(tmp.c_str(), value);
+                    }
                 }
             if (values[1].nvmlReturn == NVML_SUCCESS)
                 {
@@ -263,10 +349,13 @@ void monitor::query(void) {
                     ss << "GPU: Device " << d << " NvLink Link Count";
                     std::string tmp{ss.str()};
                     double value = convertValue(values[1]);
-                    Tau_trigger_userevent(tmp.c_str(), value);
+                    if(include_event("nvml", tmp.c_str())) {
+                        Tau_trigger_userevent(tmp.c_str(), value);
+                        write_scatterplot_point(tmp.c_str(), value);
+                    }
                 }
         }
-        nvmlFieldValue_t values[2];
+        nvmlFieldValue_t values[7];
         values[0].fieldId = NVML_FI_DEV_NVLINK_BANDWIDTH_C0_TOTAL;
         values[1].fieldId = NVML_FI_DEV_NVLINK_BANDWIDTH_C1_TOTAL;
 #if defined(NVML_FI_DEV_NVLINK_THROUGHPUT_DATA_TX)
@@ -290,7 +379,10 @@ void monitor::query(void) {
                 ss << "GPU: Device " << d << " NvLink Bandwidth C0 Total";
                 std::string tmp{ss.str()};
                 double value = convertValue(values[0]);
-                Tau_trigger_userevent(tmp.c_str(), value);
+                if(include_event("nvml", tmp.c_str())) {
+                    Tau_trigger_userevent(tmp.c_str(), value);
+                    write_scatterplot_point(tmp.c_str(), value);
+                }
             }
         if (values[1].nvmlReturn == NVML_SUCCESS)
             {
@@ -298,7 +390,10 @@ void monitor::query(void) {
                 ss << "GPU: Device " << d << " NvLink Bandwidth C1 Total";
                 std::string tmp{ss.str()};
                 double value = convertValue(values[1]);
-                Tau_trigger_userevent(tmp.c_str(), value);
+                if(include_event("nvml", tmp.c_str())) {
+                    Tau_trigger_userevent(tmp.c_str(), value);
+                    write_scatterplot_point(tmp.c_str(), value);
+                }
             }
 #if defined(NVML_FI_DEV_NVLINK_THROUGHPUT_DATA_TX)
         if (values[2].nvmlReturn == NVML_SUCCESS)
@@ -306,32 +401,44 @@ void monitor::query(void) {
                 std::stringstream ss;
                 ss << "GPU: Device " << d << " NvLink Throughput Data TX";
                 std::string tmp{ss.str()};
-                double value = convertValue(values[4]);
-                Tau_trigger_userevent(tmp.c_str(), value);
+                double value = convertValue(values[2]);
+                if(include_event("nvml", tmp.c_str())) {
+                    Tau_trigger_userevent(tmp.c_str(), value);
+                    write_scatterplot_point(tmp.c_str(), value);
+                }
             }
         if (values[3].nvmlReturn == NVML_SUCCESS)
             {
                 std::stringstream ss;
                 ss << "GPU: Device " << d << " NvLink Throughput Data RX";
                 std::string tmp{ss.str()};
-                double value = convertValue(values[5]);
-                Tau_trigger_userevent(tmp.c_str(), value);
+                double value = convertValue(values[3]);
+                if(include_event("nvml", tmp.c_str())) {
+                    Tau_trigger_userevent(tmp.c_str(), value);
+                    write_scatterplot_point(tmp.c_str(), value);
+                }
             }
         if (values[4].nvmlReturn == NVML_SUCCESS)
             {
                 std::stringstream ss;
                 ss << "GPU: Device " << d << " NvLink Throughput Raw TX";
                 std::string tmp{ss.str()};
-                double value = convertValue(values[6]);
-                Tau_trigger_userevent(tmp.c_str(), value);
+                double value = convertValue(values[4]);
+                if(include_event("nvml", tmp.c_str())) {
+                    Tau_trigger_userevent(tmp.c_str(), value);
+                    write_scatterplot_point(tmp.c_str(), value);
+                }
             }
         if (values[5].nvmlReturn == NVML_SUCCESS)
             {
                 std::stringstream ss;
                 ss << "GPU: Device " << d << " NvLink Throughput Raw RX";
                 std::string tmp{ss.str()};
-                double value = convertValue(values[7]);
-                Tau_trigger_userevent(tmp.c_str(), value);
+                double value = convertValue(values[5]);
+                if(include_event("nvml", tmp.c_str())) {
+                    Tau_trigger_userevent(tmp.c_str(), value);
+                    write_scatterplot_point(tmp.c_str(), value);
+                }
             }
 #endif
         queried_once[d] = true;

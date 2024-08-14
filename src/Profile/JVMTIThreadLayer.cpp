@@ -62,7 +62,7 @@ int * JVMTIThreadLayer::RegisterThread(jthread this_thread)
   // Lock the mutex guarding the thread count before incrementing it.
   jvmti->RawMonitorEnter(tauNumThreadsLock); 
 
-  if (tauThreadCount == TAU_MAX_THREADS)
+/*  if (tauThreadCount == TAU_MAX_THREADS)
   {
     fprintf(stderr, "TAU>ERROR number of threads exceeds TAU_MAX_THREADS\n");
     fprintf(stderr, "Change TAU_MAX_THREADS parameter in <tau>/include/Profile/Profiler.h\n");
@@ -70,7 +70,7 @@ int * JVMTIThreadLayer::RegisterThread(jthread this_thread)
     fprintf(stderr, "******************************************************************\n");
     exit(1);
   }
-
+*/
   // Increment the number of threads present (after assignment)
   (*threadId) = tauThreadCount ++;
 

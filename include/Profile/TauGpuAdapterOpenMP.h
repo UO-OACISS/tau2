@@ -91,7 +91,7 @@ class OpenMPGpuEvent : public GpuEvent
         const char* gpuIdentifier() const
         {
             char* id = (char*) malloc(50*sizeof(char));
-            sprintf(id, "Dev%d/Thrd%d/cor%d/task%d", device_id, thread_id, correlation_id, task_id);
+            snprintf(id, 50*sizeof(char),  "Dev%d/Thrd%d/cor%d/task%d", device_id, thread_id, correlation_id, task_id);
 
             return id;
         }

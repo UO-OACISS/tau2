@@ -25,11 +25,11 @@
       f0 = 5
       return
       end function f0
-      
+
       subroutine s0
       write (*,*) "subroutine s0"
       end subroutine s0
-      
+
       integer function f1(a)    !interface
       implicit
      >none
@@ -53,7 +53,7 @@
 
       program otest
       integer :: i, f0, f1, function
-      
+
       function = 0
       write (*,*) 'program otest'
       i = f0()
@@ -61,4 +61,3 @@
       call s0
       call s1(4)
       end program otest
-      

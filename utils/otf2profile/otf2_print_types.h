@@ -7,7 +7,7 @@
  * Copyright (c) 2009-2013,
  * Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
  *
- * Copyright (c) 2009-2014,
+ * Copyright (c) 2009-2014, 2016,
  * Technische Universitaet Dresden, Germany
  *
  * Copyright (c) 2009-2013,
@@ -30,22 +30,18 @@
 
 /** @internal
  *  @brief width of the column with the definition names. */
-static int otf2_DEF_COLUMN_WIDTH = 25;
+static int otf2_DEF_COLUMN_WIDTH = 27;
 
 /** @internal
  *  @brief width of the column with the event names. */
-static int otf2_EVENT_COLUMN_WIDTH = 28;
-
-/** @internal
- *  @brief width of the column with the snap names. */
-static int otf2_SNAPSHOT_COLUMN_WIDTH = 22;
+static int otf2_EVENT_COLUMN_WIDTH = 32;
 
 /** @internal
  *  @brief max value of an OTF2_Paradigm entry + 1. */
-static int otf2_max_known_paradigm = 22 + 1;
+static int otf2_max_known_paradigm = 24 + 1;
 
 static inline const char*
-otf2_print_get_boolean( OTF2_Boolean boolean )
+otf2_print_get_raw_boolean( OTF2_Boolean boolean )
 {
     switch ( boolean )
     {
@@ -55,13 +51,26 @@ otf2_print_get_boolean( OTF2_Boolean boolean )
             return "TRUE";
 
         default:
-            return otf2_print_get_invalid( boolean );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_file_type( OTF2_FileType fileType )
+otf2_print_get_boolean( OTF2_Boolean boolean )
+{
+    const char* result = otf2_print_get_raw_boolean( boolean );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( boolean );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_file_type( OTF2_FileType fileType )
 {
     switch ( fileType )
     {
@@ -83,13 +92,26 @@ otf2_print_get_file_type( OTF2_FileType fileType )
             return "SIONRANKMAP";
 
         default:
-            return otf2_print_get_invalid( fileType );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_file_substrate( OTF2_FileSubstrate fileSubstrate )
+otf2_print_get_file_type( OTF2_FileType fileType )
+{
+    const char* result = otf2_print_get_raw_file_type( fileType );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( fileType );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_file_substrate( OTF2_FileSubstrate fileSubstrate )
 {
     switch ( fileSubstrate )
     {
@@ -103,13 +125,26 @@ otf2_print_get_file_substrate( OTF2_FileSubstrate fileSubstrate )
             return "NONE";
 
         default:
-            return otf2_print_get_invalid( fileSubstrate );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_mapping_type( OTF2_MappingType mappingType )
+otf2_print_get_file_substrate( OTF2_FileSubstrate fileSubstrate )
+{
+    const char* result = otf2_print_get_raw_file_substrate( fileSubstrate );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( fileSubstrate );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_mapping_type( OTF2_MappingType mappingType )
 {
     switch ( mappingType )
     {
@@ -137,15 +172,34 @@ otf2_print_get_mapping_type( OTF2_MappingType mappingType )
             return "CALLING_CONTEXT";
         case OTF2_MAPPING_INTERRUPT_GENERATOR:
             return "INTERRUPT_GENERATOR";
+        case OTF2_MAPPING_IO_FILE:
+            return "IO_FILE";
+        case OTF2_MAPPING_IO_HANDLE:
+            return "IO_HANDLE";
+        case OTF2_MAPPING_LOCATION_GROUP:
+            return "LOCATION_GROUP";
 
         default:
-            return otf2_print_get_invalid( mappingType );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_type( OTF2_Type type )
+otf2_print_get_mapping_type( OTF2_MappingType mappingType )
+{
+    const char* result = otf2_print_get_raw_mapping_type( mappingType );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( mappingType );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_type( OTF2_Type type )
 {
     switch ( type )
     {
@@ -195,15 +249,34 @@ otf2_print_get_type( OTF2_Type type )
             return "CALLING_CONTEXT";
         case OTF2_TYPE_INTERRUPT_GENERATOR:
             return "INTERRUPT_GENERATOR";
+        case OTF2_TYPE_IO_FILE:
+            return "IO_FILE";
+        case OTF2_TYPE_IO_HANDLE:
+            return "IO_HANDLE";
+        case OTF2_TYPE_LOCATION_GROUP:
+            return "LOCATION_GROUP";
 
         default:
-            return otf2_print_get_invalid( type );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_paradigm( OTF2_Paradigm paradigm )
+otf2_print_get_type( OTF2_Type type )
+{
+    const char* result = otf2_print_get_raw_type( type );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( type );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_paradigm( OTF2_Paradigm paradigm )
 {
     switch ( paradigm )
     {
@@ -253,15 +326,32 @@ otf2_print_get_paradigm( OTF2_Paradigm paradigm )
             return "SAMPLING";
         case OTF2_PARADIGM_NONE:
             return "NONE";
+        case OTF2_PARADIGM_HIP:
+            return "HIP";
+        case OTF2_PARADIGM_KOKKOS:
+            return "KOKKOS";
 
         default:
-            return otf2_print_get_invalid( paradigm );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_paradigm_class( OTF2_ParadigmClass paradigmClass )
+otf2_print_get_paradigm( OTF2_Paradigm paradigm )
+{
+    const char* result = otf2_print_get_raw_paradigm( paradigm );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( paradigm );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_paradigm_class( OTF2_ParadigmClass paradigmClass )
 {
     switch ( paradigmClass )
     {
@@ -275,13 +365,26 @@ otf2_print_get_paradigm_class( OTF2_ParadigmClass paradigmClass )
             return "ACCELERATOR";
 
         default:
-            return otf2_print_get_invalid( paradigmClass );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_paradigm_property( OTF2_ParadigmProperty paradigmProperty )
+otf2_print_get_paradigm_class( OTF2_ParadigmClass paradigmClass )
+{
+    const char* result = otf2_print_get_raw_paradigm_class( paradigmClass );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( paradigmClass );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_paradigm_property( OTF2_ParadigmProperty paradigmProperty )
 {
     switch ( paradigmProperty )
     {
@@ -293,13 +396,26 @@ otf2_print_get_paradigm_property( OTF2_ParadigmProperty paradigmProperty )
             return "RMA_ONLY";
 
         default:
-            return otf2_print_get_invalid( paradigmProperty );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_thumbnail_type( OTF2_ThumbnailType thumbnailType )
+otf2_print_get_paradigm_property( OTF2_ParadigmProperty paradigmProperty )
+{
+    const char* result = otf2_print_get_raw_paradigm_property( paradigmProperty );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( paradigmProperty );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_thumbnail_type( OTF2_ThumbnailType thumbnailType )
 {
     switch ( thumbnailType )
     {
@@ -311,13 +427,26 @@ otf2_print_get_thumbnail_type( OTF2_ThumbnailType thumbnailType )
             return "ATTRIBUTES";
 
         default:
-            return otf2_print_get_invalid( thumbnailType );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_system_tree_domain( OTF2_SystemTreeDomain systemTreeDomain )
+otf2_print_get_thumbnail_type( OTF2_ThumbnailType thumbnailType )
+{
+    const char* result = otf2_print_get_raw_thumbnail_type( thumbnailType );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( thumbnailType );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_system_tree_domain( OTF2_SystemTreeDomain systemTreeDomain )
 {
     switch ( systemTreeDomain )
     {
@@ -335,15 +464,32 @@ otf2_print_get_system_tree_domain( OTF2_SystemTreeDomain systemTreeDomain )
             return "CORE";
         case OTF2_SYSTEM_TREE_DOMAIN_PU:
             return "PU";
+        case OTF2_SYSTEM_TREE_DOMAIN_ACCELERATOR_DEVICE:
+            return "ACCELERATOR_DEVICE";
+        case OTF2_SYSTEM_TREE_DOMAIN_NETWORKING_DEVICE:
+            return "NETWORKING_DEVICE";
 
         default:
-            return otf2_print_get_invalid( systemTreeDomain );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_location_group_type( OTF2_LocationGroupType locationGroupType )
+otf2_print_get_system_tree_domain( OTF2_SystemTreeDomain systemTreeDomain )
+{
+    const char* result = otf2_print_get_raw_system_tree_domain( systemTreeDomain );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( systemTreeDomain );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_location_group_type( OTF2_LocationGroupType locationGroupType )
 {
     switch ( locationGroupType )
     {
@@ -351,15 +497,30 @@ otf2_print_get_location_group_type( OTF2_LocationGroupType locationGroupType )
             return "UNKNOWN";
         case OTF2_LOCATION_GROUP_TYPE_PROCESS:
             return "PROCESS";
+        case OTF2_LOCATION_GROUP_TYPE_ACCELERATOR:
+            return "ACCELERATOR";
 
         default:
-            return otf2_print_get_invalid( locationGroupType );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_location_type( OTF2_LocationType locationType )
+otf2_print_get_location_group_type( OTF2_LocationGroupType locationGroupType )
+{
+    const char* result = otf2_print_get_raw_location_group_type( locationGroupType );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( locationGroupType );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_location_type( OTF2_LocationType locationType )
 {
     switch ( locationType )
     {
@@ -367,19 +528,32 @@ otf2_print_get_location_type( OTF2_LocationType locationType )
             return "UNKNOWN";
         case OTF2_LOCATION_TYPE_CPU_THREAD:
             return "CPU_THREAD";
-        case OTF2_LOCATION_TYPE_GPU:
-            return "GPU";
+        case OTF2_LOCATION_TYPE_ACCELERATOR_STREAM:
+            return "ACCELERATOR_STREAM";
         case OTF2_LOCATION_TYPE_METRIC:
             return "METRIC";
 
         default:
-            return otf2_print_get_invalid( locationType );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_region_role( OTF2_RegionRole regionRole )
+otf2_print_get_location_type( OTF2_LocationType locationType )
+{
+    const char* result = otf2_print_get_raw_location_type( locationType );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( locationType );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_region_role( OTF2_RegionRole regionRole )
 {
     switch ( regionRole )
     {
@@ -459,10 +633,25 @@ otf2_print_get_region_role( OTF2_RegionRole regionRole )
             return "DEALLOCATE";
         case OTF2_REGION_ROLE_REALLOCATE:
             return "REALLOCATE";
+        case OTF2_REGION_ROLE_FILE_IO_METADATA:
+            return "FILE_IO_METADATA";
 
         default:
-            return otf2_print_get_invalid( regionRole );
+            return NULL;
     }
+}
+
+
+static inline const char*
+otf2_print_get_region_role( OTF2_RegionRole regionRole )
+{
+    const char* result = otf2_print_get_raw_region_role( regionRole );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( regionRole );
+    }
+
+    return result;
 }
 
 
@@ -514,7 +703,7 @@ otf2_print_get_region_flag( OTF2_RegionFlag regionFlag )
 
 
 static inline const char*
-otf2_print_get_group_type( OTF2_GroupType groupType )
+otf2_print_get_raw_group_type( OTF2_GroupType groupType )
 {
     switch ( groupType )
     {
@@ -534,8 +723,21 @@ otf2_print_get_group_type( OTF2_GroupType groupType )
             return "COMM_SELF";
 
         default:
-            return otf2_print_get_invalid( groupType );
+            return NULL;
     }
+}
+
+
+static inline const char*
+otf2_print_get_group_type( OTF2_GroupType groupType )
+{
+    const char* result = otf2_print_get_raw_group_type( groupType );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( groupType );
+    }
+
+    return result;
 }
 
 
@@ -579,7 +781,7 @@ otf2_print_get_group_flag( OTF2_GroupFlag groupFlag )
 
 
 static inline const char*
-otf2_print_get_base( OTF2_Base base )
+otf2_print_get_raw_base( OTF2_Base base )
 {
     switch ( base )
     {
@@ -589,13 +791,26 @@ otf2_print_get_base( OTF2_Base base )
             return "DECIMAL";
 
         default:
-            return otf2_print_get_invalid( base );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_metric_occurrence( OTF2_MetricOccurrence metricOccurrence )
+otf2_print_get_base( OTF2_Base base )
+{
+    const char* result = otf2_print_get_raw_base( base );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( base );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_metric_occurrence( OTF2_MetricOccurrence metricOccurrence )
 {
     switch ( metricOccurrence )
     {
@@ -607,13 +822,26 @@ otf2_print_get_metric_occurrence( OTF2_MetricOccurrence metricOccurrence )
             return "ASYNCHRONOUS";
 
         default:
-            return otf2_print_get_invalid( metricOccurrence );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_metric_type( OTF2_MetricType metricType )
+otf2_print_get_metric_occurrence( OTF2_MetricOccurrence metricOccurrence )
+{
+    const char* result = otf2_print_get_raw_metric_occurrence( metricOccurrence );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( metricOccurrence );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_metric_type( OTF2_MetricType metricType )
 {
     switch ( metricType )
     {
@@ -627,13 +855,26 @@ otf2_print_get_metric_type( OTF2_MetricType metricType )
             return "USER";
 
         default:
-            return otf2_print_get_invalid( metricType );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_metric_value_property( OTF2_MetricValueProperty metricValueProperty )
+otf2_print_get_metric_type( OTF2_MetricType metricType )
+{
+    const char* result = otf2_print_get_raw_metric_type( metricType );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( metricType );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_metric_value_property( OTF2_MetricValueProperty metricValueProperty )
 {
     switch ( metricValueProperty )
     {
@@ -645,13 +886,26 @@ otf2_print_get_metric_value_property( OTF2_MetricValueProperty metricValueProper
             return "RELATIVE";
 
         default:
-            return otf2_print_get_invalid( metricValueProperty );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_metric_timing( OTF2_MetricTiming metricTiming )
+otf2_print_get_metric_value_property( OTF2_MetricValueProperty metricValueProperty )
+{
+    const char* result = otf2_print_get_raw_metric_value_property( metricValueProperty );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( metricValueProperty );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_metric_timing( OTF2_MetricTiming metricTiming )
 {
     switch ( metricTiming )
     {
@@ -665,13 +919,26 @@ otf2_print_get_metric_timing( OTF2_MetricTiming metricTiming )
             return "NEXT";
 
         default:
-            return otf2_print_get_invalid( metricTiming );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_metric_mode( OTF2_MetricMode metricMode )
+otf2_print_get_metric_timing( OTF2_MetricTiming metricTiming )
+{
+    const char* result = otf2_print_get_raw_metric_timing( metricTiming );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( metricTiming );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_metric_mode( OTF2_MetricMode metricMode )
 {
     switch ( metricMode )
     {
@@ -697,13 +964,26 @@ otf2_print_get_metric_mode( OTF2_MetricMode metricMode )
             return "RELATIVE_NEXT";
 
         default:
-            return otf2_print_get_invalid( metricMode );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_metric_scope( OTF2_MetricScope metricScope )
+otf2_print_get_metric_mode( OTF2_MetricMode metricMode )
+{
+    const char* result = otf2_print_get_raw_metric_mode( metricMode );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( metricMode );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_metric_scope( OTF2_MetricScope metricScope )
 {
     switch ( metricScope )
     {
@@ -717,13 +997,26 @@ otf2_print_get_metric_scope( OTF2_MetricScope metricScope )
             return "GROUP";
 
         default:
-            return otf2_print_get_invalid( metricScope );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_recorder_kind( OTF2_RecorderKind recorderKind )
+otf2_print_get_metric_scope( OTF2_MetricScope metricScope )
+{
+    const char* result = otf2_print_get_raw_metric_scope( metricScope );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( metricScope );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_recorder_kind( OTF2_RecorderKind recorderKind )
 {
     switch ( recorderKind )
     {
@@ -737,13 +1030,26 @@ otf2_print_get_recorder_kind( OTF2_RecorderKind recorderKind )
             return "GPU";
 
         default:
-            return otf2_print_get_invalid( recorderKind );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_parameter_type( OTF2_ParameterType parameterType )
+otf2_print_get_recorder_kind( OTF2_RecorderKind recorderKind )
+{
+    const char* result = otf2_print_get_raw_recorder_kind( recorderKind );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( recorderKind );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_parameter_type( OTF2_ParameterType parameterType )
 {
     switch ( parameterType )
     {
@@ -755,13 +1061,26 @@ otf2_print_get_parameter_type( OTF2_ParameterType parameterType )
             return "UINT64";
 
         default:
-            return otf2_print_get_invalid( parameterType );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_cart_periodicity( OTF2_CartPeriodicity cartPeriodicity )
+otf2_print_get_parameter_type( OTF2_ParameterType parameterType )
+{
+    const char* result = otf2_print_get_raw_parameter_type( parameterType );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( parameterType );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_cart_periodicity( OTF2_CartPeriodicity cartPeriodicity )
 {
     switch ( cartPeriodicity )
     {
@@ -771,13 +1090,26 @@ otf2_print_get_cart_periodicity( OTF2_CartPeriodicity cartPeriodicity )
             return "TRUE";
 
         default:
-            return otf2_print_get_invalid( cartPeriodicity );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_interrupt_generator_mode( OTF2_InterruptGeneratorMode interruptGeneratorMode )
+otf2_print_get_cart_periodicity( OTF2_CartPeriodicity cartPeriodicity )
+{
+    const char* result = otf2_print_get_raw_cart_periodicity( cartPeriodicity );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( cartPeriodicity );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_interrupt_generator_mode( OTF2_InterruptGeneratorMode interruptGeneratorMode )
 {
     switch ( interruptGeneratorMode )
     {
@@ -787,13 +1119,26 @@ otf2_print_get_interrupt_generator_mode( OTF2_InterruptGeneratorMode interruptGe
             return "COUNT";
 
         default:
-            return otf2_print_get_invalid( interruptGeneratorMode );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_measurement_mode( OTF2_MeasurementMode measurementMode )
+otf2_print_get_interrupt_generator_mode( OTF2_InterruptGeneratorMode interruptGeneratorMode )
+{
+    const char* result = otf2_print_get_raw_interrupt_generator_mode( interruptGeneratorMode );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( interruptGeneratorMode );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_measurement_mode( OTF2_MeasurementMode measurementMode )
 {
     switch ( measurementMode )
     {
@@ -803,13 +1148,26 @@ otf2_print_get_measurement_mode( OTF2_MeasurementMode measurementMode )
             return "OFF";
 
         default:
-            return otf2_print_get_invalid( measurementMode );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_collective_op( OTF2_CollectiveOp collectiveOp )
+otf2_print_get_measurement_mode( OTF2_MeasurementMode measurementMode )
+{
+    const char* result = otf2_print_get_raw_measurement_mode( measurementMode );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( measurementMode );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_collective_op( OTF2_CollectiveOp collectiveOp )
 {
     switch ( collectiveOp )
     {
@@ -861,13 +1219,26 @@ otf2_print_get_collective_op( OTF2_CollectiveOp collectiveOp )
             return "DESTROY_HANDLE_AND_DEALLOCATE";
 
         default:
-            return otf2_print_get_invalid( collectiveOp );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_rma_sync_type( OTF2_RmaSyncType rmaSyncType )
+otf2_print_get_collective_op( OTF2_CollectiveOp collectiveOp )
+{
+    const char* result = otf2_print_get_raw_collective_op( collectiveOp );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( collectiveOp );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_rma_sync_type( OTF2_RmaSyncType rmaSyncType )
 {
     switch ( rmaSyncType )
     {
@@ -879,8 +1250,21 @@ otf2_print_get_rma_sync_type( OTF2_RmaSyncType rmaSyncType )
             return "NOTIFY_OUT";
 
         default:
-            return otf2_print_get_invalid( rmaSyncType );
+            return NULL;
     }
+}
+
+
+static inline const char*
+otf2_print_get_rma_sync_type( OTF2_RmaSyncType rmaSyncType )
+{
+    const char* result = otf2_print_get_raw_rma_sync_type( rmaSyncType );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( rmaSyncType );
+    }
+
+    return result;
 }
 
 
@@ -932,7 +1316,7 @@ otf2_print_get_rma_sync_level( OTF2_RmaSyncLevel rmaSyncLevel )
 
 
 static inline const char*
-otf2_print_get_lock_type( OTF2_LockType lockType )
+otf2_print_get_raw_lock_type( OTF2_LockType lockType )
 {
     switch ( lockType )
     {
@@ -942,13 +1326,26 @@ otf2_print_get_lock_type( OTF2_LockType lockType )
             return "SHARED";
 
         default:
-            return otf2_print_get_invalid( lockType );
+            return NULL;
     }
 }
 
 
 static inline const char*
-otf2_print_get_rma_atomic_type( OTF2_RmaAtomicType rmaAtomicType )
+otf2_print_get_lock_type( OTF2_LockType lockType )
+{
+    const char* result = otf2_print_get_raw_lock_type( lockType );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( lockType );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_rma_atomic_type( OTF2_RmaAtomicType rmaAtomicType )
 {
     switch ( rmaAtomicType )
     {
@@ -966,8 +1363,644 @@ otf2_print_get_rma_atomic_type( OTF2_RmaAtomicType rmaAtomicType )
             return "FETCH_AND_ADD";
         case OTF2_RMA_ATOMIC_TYPE_FETCH_AND_INCREMENT:
             return "FETCH_AND_INCREMENT";
+        case OTF2_RMA_ATOMIC_TYPE_FETCH_AND_ACCUMULATE:
+            return "FETCH_AND_ACCUMULATE";
 
         default:
-            return otf2_print_get_invalid( rmaAtomicType );
+            return NULL;
     }
+}
+
+
+static inline const char*
+otf2_print_get_rma_atomic_type( OTF2_RmaAtomicType rmaAtomicType )
+{
+    const char* result = otf2_print_get_raw_rma_atomic_type( rmaAtomicType );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( rmaAtomicType );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_io_paradigm_class( OTF2_IoParadigmClass ioParadigmClass )
+{
+    switch ( ioParadigmClass )
+    {
+        case OTF2_IO_PARADIGM_CLASS_SERIAL:
+            return "SERIAL";
+        case OTF2_IO_PARADIGM_CLASS_PARALLEL:
+            return "PARALLEL";
+
+        default:
+            return NULL;
+    }
+}
+
+
+static inline const char*
+otf2_print_get_io_paradigm_class( OTF2_IoParadigmClass ioParadigmClass )
+{
+    const char* result = otf2_print_get_raw_io_paradigm_class( ioParadigmClass );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( ioParadigmClass );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_io_paradigm_flag( OTF2_IoParadigmFlag ioParadigmFlag )
+{
+    size_t buffer_size =
+        2 + ( 2 * 2 )
+        + sizeof( "NONE" )
+        + sizeof( "OS" )
+        + 1 + sizeof( "INVALID <0x00000000>" );
+    char* buffer = otf2_print_get_buffer( buffer_size );
+
+    buffer[ 0 ] = '\0';
+    if ( ioParadigmFlag == OTF2_IO_PARADIGM_FLAG_NONE )
+    {
+        strcat( buffer, "NONE" );
+        return buffer;
+    }
+
+    const char* sep = "";
+    strcat( buffer, "{" );
+    if ( ioParadigmFlag & OTF2_IO_PARADIGM_FLAG_OS )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "OS" );
+        sep             = ", ";
+        ioParadigmFlag &= ~OTF2_IO_PARADIGM_FLAG_OS;
+    }
+    if ( ioParadigmFlag )
+    {
+        snprintf( buffer + strlen( buffer ),
+                  2 + sizeof( "INVALID <0x00000000>" ),
+                  "%sINVALID <0x%" PRIx32 ">",
+                  sep, ioParadigmFlag );
+    }
+    strcat( buffer, "}" );
+
+    return buffer;
+}
+
+
+static inline const char*
+otf2_print_get_raw_io_paradigm_property( OTF2_IoParadigmProperty ioParadigmProperty )
+{
+    switch ( ioParadigmProperty )
+    {
+        case OTF2_IO_PARADIGM_PROPERTY_VERSION:
+            return "VERSION";
+
+        default:
+            return NULL;
+    }
+}
+
+
+static inline const char*
+otf2_print_get_io_paradigm_property( OTF2_IoParadigmProperty ioParadigmProperty )
+{
+    const char* result = otf2_print_get_raw_io_paradigm_property( ioParadigmProperty );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( ioParadigmProperty );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_io_handle_flag( OTF2_IoHandleFlag ioHandleFlag )
+{
+    size_t buffer_size =
+        2 + ( 2 * 3 )
+        + sizeof( "NONE" )
+        + sizeof( "PRE_CREATED" )
+        + sizeof( "ALL_PROXY" )
+        + 1 + sizeof( "INVALID <0x00000000>" );
+    char* buffer = otf2_print_get_buffer( buffer_size );
+
+    buffer[ 0 ] = '\0';
+    if ( ioHandleFlag == OTF2_IO_HANDLE_FLAG_NONE )
+    {
+        strcat( buffer, "NONE" );
+        return buffer;
+    }
+
+    const char* sep = "";
+    strcat( buffer, "{" );
+    if ( ioHandleFlag & OTF2_IO_HANDLE_FLAG_PRE_CREATED )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "PRE_CREATED" );
+        sep           = ", ";
+        ioHandleFlag &= ~OTF2_IO_HANDLE_FLAG_PRE_CREATED;
+    }
+    if ( ioHandleFlag & OTF2_IO_HANDLE_FLAG_ALL_PROXY )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "ALL_PROXY" );
+        sep           = ", ";
+        ioHandleFlag &= ~OTF2_IO_HANDLE_FLAG_ALL_PROXY;
+    }
+    if ( ioHandleFlag )
+    {
+        snprintf( buffer + strlen( buffer ),
+                  2 + sizeof( "INVALID <0x00000000>" ),
+                  "%sINVALID <0x%" PRIx32 ">",
+                  sep, ioHandleFlag );
+    }
+    strcat( buffer, "}" );
+
+    return buffer;
+}
+
+
+static inline const char*
+otf2_print_get_raw_io_access_mode( OTF2_IoAccessMode ioAccessMode )
+{
+    switch ( ioAccessMode )
+    {
+        case OTF2_IO_ACCESS_MODE_READ_ONLY:
+            return "READ_ONLY";
+        case OTF2_IO_ACCESS_MODE_WRITE_ONLY:
+            return "WRITE_ONLY";
+        case OTF2_IO_ACCESS_MODE_READ_WRITE:
+            return "READ_WRITE";
+        case OTF2_IO_ACCESS_MODE_EXECUTE_ONLY:
+            return "EXECUTE_ONLY";
+        case OTF2_IO_ACCESS_MODE_SEARCH_ONLY:
+            return "SEARCH_ONLY";
+
+        default:
+            return NULL;
+    }
+}
+
+
+static inline const char*
+otf2_print_get_io_access_mode( OTF2_IoAccessMode ioAccessMode )
+{
+    const char* result = otf2_print_get_raw_io_access_mode( ioAccessMode );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( ioAccessMode );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_io_creation_flag( OTF2_IoCreationFlag ioCreationFlag )
+{
+    size_t buffer_size =
+        2 + ( 2 * 12 )
+        + sizeof( "NONE" )
+        + sizeof( "CREATE" )
+        + sizeof( "TRUNCATE" )
+        + sizeof( "DIRECTORY" )
+        + sizeof( "EXCLUSIVE" )
+        + sizeof( "NO_CONTROLLING_TERMINAL" )
+        + sizeof( "NO_FOLLOW" )
+        + sizeof( "PATH" )
+        + sizeof( "TEMPORARY_FILE" )
+        + sizeof( "LARGEFILE" )
+        + sizeof( "NO_SEEK" )
+        + sizeof( "UNIQUE" )
+        + 1 + sizeof( "INVALID <0x00000000>" );
+    char* buffer = otf2_print_get_buffer( buffer_size );
+
+    buffer[ 0 ] = '\0';
+    if ( ioCreationFlag == OTF2_IO_CREATION_FLAG_NONE )
+    {
+        strcat( buffer, "NONE" );
+        return buffer;
+    }
+
+    const char* sep = "";
+    strcat( buffer, "{" );
+    if ( ioCreationFlag & OTF2_IO_CREATION_FLAG_CREATE )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "CREATE" );
+        sep             = ", ";
+        ioCreationFlag &= ~OTF2_IO_CREATION_FLAG_CREATE;
+    }
+    if ( ioCreationFlag & OTF2_IO_CREATION_FLAG_TRUNCATE )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "TRUNCATE" );
+        sep             = ", ";
+        ioCreationFlag &= ~OTF2_IO_CREATION_FLAG_TRUNCATE;
+    }
+    if ( ioCreationFlag & OTF2_IO_CREATION_FLAG_DIRECTORY )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "DIRECTORY" );
+        sep             = ", ";
+        ioCreationFlag &= ~OTF2_IO_CREATION_FLAG_DIRECTORY;
+    }
+    if ( ioCreationFlag & OTF2_IO_CREATION_FLAG_EXCLUSIVE )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "EXCLUSIVE" );
+        sep             = ", ";
+        ioCreationFlag &= ~OTF2_IO_CREATION_FLAG_EXCLUSIVE;
+    }
+    if ( ioCreationFlag & OTF2_IO_CREATION_FLAG_NO_CONTROLLING_TERMINAL )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "NO_CONTROLLING_TERMINAL" );
+        sep             = ", ";
+        ioCreationFlag &= ~OTF2_IO_CREATION_FLAG_NO_CONTROLLING_TERMINAL;
+    }
+    if ( ioCreationFlag & OTF2_IO_CREATION_FLAG_NO_FOLLOW )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "NO_FOLLOW" );
+        sep             = ", ";
+        ioCreationFlag &= ~OTF2_IO_CREATION_FLAG_NO_FOLLOW;
+    }
+    if ( ioCreationFlag & OTF2_IO_CREATION_FLAG_PATH )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "PATH" );
+        sep             = ", ";
+        ioCreationFlag &= ~OTF2_IO_CREATION_FLAG_PATH;
+    }
+    if ( ioCreationFlag & OTF2_IO_CREATION_FLAG_TEMPORARY_FILE )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "TEMPORARY_FILE" );
+        sep             = ", ";
+        ioCreationFlag &= ~OTF2_IO_CREATION_FLAG_TEMPORARY_FILE;
+    }
+    if ( ioCreationFlag & OTF2_IO_CREATION_FLAG_LARGEFILE )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "LARGEFILE" );
+        sep             = ", ";
+        ioCreationFlag &= ~OTF2_IO_CREATION_FLAG_LARGEFILE;
+    }
+    if ( ioCreationFlag & OTF2_IO_CREATION_FLAG_NO_SEEK )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "NO_SEEK" );
+        sep             = ", ";
+        ioCreationFlag &= ~OTF2_IO_CREATION_FLAG_NO_SEEK;
+    }
+    if ( ioCreationFlag & OTF2_IO_CREATION_FLAG_UNIQUE )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "UNIQUE" );
+        sep             = ", ";
+        ioCreationFlag &= ~OTF2_IO_CREATION_FLAG_UNIQUE;
+    }
+    if ( ioCreationFlag )
+    {
+        snprintf( buffer + strlen( buffer ),
+                  2 + sizeof( "INVALID <0x00000000>" ),
+                  "%sINVALID <0x%" PRIx32 ">",
+                  sep, ioCreationFlag );
+    }
+    strcat( buffer, "}" );
+
+    return buffer;
+}
+
+
+static inline const char*
+otf2_print_get_io_status_flag( OTF2_IoStatusFlag ioStatusFlag )
+{
+    size_t buffer_size =
+        2 + ( 2 * 10 )
+        + sizeof( "NONE" )
+        + sizeof( "CLOSE_ON_EXEC" )
+        + sizeof( "APPEND" )
+        + sizeof( "NON_BLOCKING" )
+        + sizeof( "ASYNC" )
+        + sizeof( "SYNC" )
+        + sizeof( "DATA_SYNC" )
+        + sizeof( "AVOID_CACHING" )
+        + sizeof( "NO_ACCESS_TIME" )
+        + sizeof( "DELETE_ON_CLOSE" )
+        + 1 + sizeof( "INVALID <0x00000000>" );
+    char* buffer = otf2_print_get_buffer( buffer_size );
+
+    buffer[ 0 ] = '\0';
+    if ( ioStatusFlag == OTF2_IO_STATUS_FLAG_NONE )
+    {
+        strcat( buffer, "NONE" );
+        return buffer;
+    }
+
+    const char* sep = "";
+    strcat( buffer, "{" );
+    if ( ioStatusFlag & OTF2_IO_STATUS_FLAG_CLOSE_ON_EXEC )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "CLOSE_ON_EXEC" );
+        sep           = ", ";
+        ioStatusFlag &= ~OTF2_IO_STATUS_FLAG_CLOSE_ON_EXEC;
+    }
+    if ( ioStatusFlag & OTF2_IO_STATUS_FLAG_APPEND )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "APPEND" );
+        sep           = ", ";
+        ioStatusFlag &= ~OTF2_IO_STATUS_FLAG_APPEND;
+    }
+    if ( ioStatusFlag & OTF2_IO_STATUS_FLAG_NON_BLOCKING )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "NON_BLOCKING" );
+        sep           = ", ";
+        ioStatusFlag &= ~OTF2_IO_STATUS_FLAG_NON_BLOCKING;
+    }
+    if ( ioStatusFlag & OTF2_IO_STATUS_FLAG_ASYNC )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "ASYNC" );
+        sep           = ", ";
+        ioStatusFlag &= ~OTF2_IO_STATUS_FLAG_ASYNC;
+    }
+    if ( ioStatusFlag & OTF2_IO_STATUS_FLAG_SYNC )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "SYNC" );
+        sep           = ", ";
+        ioStatusFlag &= ~OTF2_IO_STATUS_FLAG_SYNC;
+    }
+    if ( ioStatusFlag & OTF2_IO_STATUS_FLAG_DATA_SYNC )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "DATA_SYNC" );
+        sep           = ", ";
+        ioStatusFlag &= ~OTF2_IO_STATUS_FLAG_DATA_SYNC;
+    }
+    if ( ioStatusFlag & OTF2_IO_STATUS_FLAG_AVOID_CACHING )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "AVOID_CACHING" );
+        sep           = ", ";
+        ioStatusFlag &= ~OTF2_IO_STATUS_FLAG_AVOID_CACHING;
+    }
+    if ( ioStatusFlag & OTF2_IO_STATUS_FLAG_NO_ACCESS_TIME )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "NO_ACCESS_TIME" );
+        sep           = ", ";
+        ioStatusFlag &= ~OTF2_IO_STATUS_FLAG_NO_ACCESS_TIME;
+    }
+    if ( ioStatusFlag & OTF2_IO_STATUS_FLAG_DELETE_ON_CLOSE )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "DELETE_ON_CLOSE" );
+        sep           = ", ";
+        ioStatusFlag &= ~OTF2_IO_STATUS_FLAG_DELETE_ON_CLOSE;
+    }
+    if ( ioStatusFlag )
+    {
+        snprintf( buffer + strlen( buffer ),
+                  2 + sizeof( "INVALID <0x00000000>" ),
+                  "%sINVALID <0x%" PRIx32 ">",
+                  sep, ioStatusFlag );
+    }
+    strcat( buffer, "}" );
+
+    return buffer;
+}
+
+
+static inline const char*
+otf2_print_get_raw_io_seek_option( OTF2_IoSeekOption ioSeekOption )
+{
+    switch ( ioSeekOption )
+    {
+        case OTF2_IO_SEEK_FROM_START:
+            return "FROM_START";
+        case OTF2_IO_SEEK_FROM_CURRENT:
+            return "FROM_CURRENT";
+        case OTF2_IO_SEEK_FROM_END:
+            return "FROM_END";
+        case OTF2_IO_SEEK_DATA:
+            return "DATA";
+        case OTF2_IO_SEEK_HOLE:
+            return "HOLE";
+
+        default:
+            return NULL;
+    }
+}
+
+
+static inline const char*
+otf2_print_get_io_seek_option( OTF2_IoSeekOption ioSeekOption )
+{
+    const char* result = otf2_print_get_raw_io_seek_option( ioSeekOption );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( ioSeekOption );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_raw_io_operation_mode( OTF2_IoOperationMode ioOperationMode )
+{
+    switch ( ioOperationMode )
+    {
+        case OTF2_IO_OPERATION_MODE_READ:
+            return "READ";
+        case OTF2_IO_OPERATION_MODE_WRITE:
+            return "WRITE";
+        case OTF2_IO_OPERATION_MODE_FLUSH:
+            return "FLUSH";
+
+        default:
+            return NULL;
+    }
+}
+
+
+static inline const char*
+otf2_print_get_io_operation_mode( OTF2_IoOperationMode ioOperationMode )
+{
+    const char* result = otf2_print_get_raw_io_operation_mode( ioOperationMode );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( ioOperationMode );
+    }
+
+    return result;
+}
+
+
+static inline const char*
+otf2_print_get_io_operation_flag( OTF2_IoOperationFlag ioOperationFlag )
+{
+    size_t buffer_size =
+        2 + ( 2 * 3 )
+        + sizeof( "NONE" )
+        + sizeof( "NON_BLOCKING" )
+        + sizeof( "COLLECTIVE" )
+        + 1 + sizeof( "INVALID <0x00000000>" );
+    char* buffer = otf2_print_get_buffer( buffer_size );
+
+    buffer[ 0 ] = '\0';
+    if ( ioOperationFlag == OTF2_IO_OPERATION_FLAG_NONE )
+    {
+        strcat( buffer, "NONE" );
+        return buffer;
+    }
+
+    const char* sep = "";
+    strcat( buffer, "{" );
+    if ( ioOperationFlag & OTF2_IO_OPERATION_FLAG_NON_BLOCKING )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "NON_BLOCKING" );
+        sep              = ", ";
+        ioOperationFlag &= ~OTF2_IO_OPERATION_FLAG_NON_BLOCKING;
+    }
+    if ( ioOperationFlag & OTF2_IO_OPERATION_FLAG_COLLECTIVE )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "COLLECTIVE" );
+        sep              = ", ";
+        ioOperationFlag &= ~OTF2_IO_OPERATION_FLAG_COLLECTIVE;
+    }
+    if ( ioOperationFlag )
+    {
+        snprintf( buffer + strlen( buffer ),
+                  2 + sizeof( "INVALID <0x00000000>" ),
+                  "%sINVALID <0x%" PRIx32 ">",
+                  sep, ioOperationFlag );
+    }
+    strcat( buffer, "}" );
+
+    return buffer;
+}
+
+
+static inline const char*
+otf2_print_get_comm_flag( OTF2_CommFlag commFlag )
+{
+    size_t buffer_size =
+        2 + ( 2 * 2 )
+        + sizeof( "NONE" )
+        + sizeof( "CREATE_DESTROY_EVENTS" )
+        + 1 + sizeof( "INVALID <0x00000000>" );
+    char* buffer = otf2_print_get_buffer( buffer_size );
+
+    buffer[ 0 ] = '\0';
+    if ( commFlag == OTF2_COMM_FLAG_NONE )
+    {
+        strcat( buffer, "NONE" );
+        return buffer;
+    }
+
+    const char* sep = "";
+    strcat( buffer, "{" );
+    if ( commFlag & OTF2_COMM_FLAG_CREATE_DESTROY_EVENTS )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "CREATE_DESTROY_EVENTS" );
+        sep       = ", ";
+        commFlag &= ~OTF2_COMM_FLAG_CREATE_DESTROY_EVENTS;
+    }
+    if ( commFlag )
+    {
+        snprintf( buffer + strlen( buffer ),
+                  2 + sizeof( "INVALID <0x00000000>" ),
+                  "%sINVALID <0x%" PRIx32 ">",
+                  sep, commFlag );
+    }
+    strcat( buffer, "}" );
+
+    return buffer;
+}
+
+
+static inline const char*
+otf2_print_get_rma_win_flag( OTF2_RmaWinFlag rmaWinFlag )
+{
+    size_t buffer_size =
+        2 + ( 2 * 2 )
+        + sizeof( "NONE" )
+        + sizeof( "CREATE_DESTROY_EVENTS" )
+        + 1 + sizeof( "INVALID <0x00000000>" );
+    char* buffer = otf2_print_get_buffer( buffer_size );
+
+    buffer[ 0 ] = '\0';
+    if ( rmaWinFlag == OTF2_RMA_WIN_FLAG_NONE )
+    {
+        strcat( buffer, "NONE" );
+        return buffer;
+    }
+
+    const char* sep = "";
+    strcat( buffer, "{" );
+    if ( rmaWinFlag & OTF2_RMA_WIN_FLAG_CREATE_DESTROY_EVENTS )
+    {
+        strcat( buffer, sep );
+        strcat( buffer, "CREATE_DESTROY_EVENTS" );
+        sep         = ", ";
+        rmaWinFlag &= ~OTF2_RMA_WIN_FLAG_CREATE_DESTROY_EVENTS;
+    }
+    if ( rmaWinFlag )
+    {
+        snprintf( buffer + strlen( buffer ),
+                  2 + sizeof( "INVALID <0x00000000>" ),
+                  "%sINVALID <0x%" PRIx32 ">",
+                  sep, rmaWinFlag );
+    }
+    strcat( buffer, "}" );
+
+    return buffer;
+}
+
+
+static inline const char*
+otf2_print_get_raw_collective_root( OTF2_CollectiveRoot collectiveRoot )
+{
+    switch ( collectiveRoot )
+    {
+        case OTF2_COLLECTIVE_ROOT_NONE:
+            return "NONE";
+        case OTF2_COLLECTIVE_ROOT_SELF:
+            return "SELF";
+        case OTF2_COLLECTIVE_ROOT_THIS_GROUP:
+            return "THIS_GROUP";
+
+        default:
+            return NULL;
+    }
+}
+
+
+static inline const char*
+otf2_print_get_collective_root( OTF2_CollectiveRoot collectiveRoot )
+{
+    const char* result = otf2_print_get_raw_collective_root( collectiveRoot );
+    if ( result == NULL )
+    {
+        result = otf2_print_get_invalid( collectiveRoot );
+    }
+
+    return result;
 }

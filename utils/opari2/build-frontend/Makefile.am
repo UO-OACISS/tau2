@@ -9,7 +9,7 @@
 ## Copyright (c) 2009-2011,
 ## Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
 ##
-## Copyright (c) 2009-2011,
+## Copyright (c) 2009-2011, 2020,
 ## Technische Universitaet Dresden, Germany
 ##
 ## Copyright (c) 2009-2011,
@@ -36,7 +36,7 @@
 ## ACLOCAL_AMFLAGS should be replaced by AC_CONFIG_MACRO_DIRS, aclocal-1.13.4
 ## doesn't honor the paths provided to AC_CONFIG_MACRO_DIRS. See
 ## https://debbugs.gnu.org/cgi/bugreport.cgi?bug=21352
-ACLOCAL_AMFLAGS = -I ../build-config/m4 -I ../vendor/common/build-config/m4
+ACLOCAL_AMFLAGS = -I ../build-config/m4 -I ../build-config/common/m4
 
 include ../build-includes/common.am
 
@@ -51,44 +51,13 @@ clean-local:
 if SCOREP_HAVE_F77
 if HAVE_OPENMP_SUPPORT
 installcheck-local:
-	@$(am__cd) $(DESTDIR)$(docdir)/example/ && $(MAKE) $(AM_MAKEFLAGS)
-	@$(am__cd) $(DESTDIR)$(docdir)/example_user_instrumentation/ && $(MAKE) $(AM_MAKEFLAGS)
+	@$(am__cd) $(DESTDIR)$(docdir)/example/openmp && $(MAKE) $(AM_MAKEFLAGS)
+	@$(am__cd) $(DESTDIR)$(docdir)/example/pomp   && $(MAKE) $(AM_MAKEFLAGS)
 endif
 else
 if HAVE_OPENMP_SUPPORT
 installcheck-local:
-	@$(am__cd) $(DESTDIR)$(docdir)/example/ && $(MAKE) $(AM_MAKEFLAGS) c
-	@$(am__cd) $(DESTDIR)$(docdir)/example_user_instrumentation/ && $(MAKE) $(AM_MAKEFLAGS) c
+	@$(am__cd) $(DESTDIR)$(docdir)/example/openmp && $(MAKE) $(AM_MAKEFLAGS) c
+	@$(am__cd) $(DESTDIR)$(docdir)/example/pomp   && $(MAKE) $(AM_MAKEFLAGS) c
 endif
 endif
-
-install-example:
-if HAVE_OPENMP_SUPPORT
-	$(MKDIR_P) $(DESTDIR)$(docdir)/example
-	$(INSTALL_DATA) $(abs_srcdir)/../doc/example/example.*            $(DESTDIR)$(docdir)/example/
-	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h       $(DESTDIR)$(docdir)/example/
-	$(INSTALL_DATA) $(abs_builddir)/../doc/example/Makefile           $(DESTDIR)$(docdir)/example/
-	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.* $(DESTDIR)$(docdir)/example/
-	rm -f $(DESTDIR)$(docdir)/example/libpomp.la
-endif
-	$(MKDIR_P) $(DESTDIR)$(docdir)/example_user_instrumentation
-	$(INSTALL_DATA) $(abs_srcdir)/../doc/example_user_instrumentation/example_user_instrumentation.*  $(DESTDIR)$(docdir)/example_user_instrumentation/
-	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_user_lib.h                                  $(DESTDIR)$(docdir)/example_user_instrumentation/
-	$(INSTALL_DATA) $(abs_builddir)/../doc/example_user_instrumentation/Makefile                      $(DESTDIR)$(docdir)/example_user_instrumentation/
-if HAVE_OPENMP_SUPPORT
-	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.*                                 $(DESTDIR)$(docdir)/example_user_instrumentation/
-endif
-	rm -f $(DESTDIR)$(docdir)/example_user_instrumentation/libpomp.la
-
-install-pomp2_region_info:
-	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE@/devel
-	$(INSTALL_DATA) $(abs_srcdir)/../src/opari-lib-dummy/opari2_ctc_token.h $(DESTDIR)$(datadir)/@PACKAGE@/devel/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/opari-lib-dummy/opari2_region_info.h $(DESTDIR)$(datadir)/@PACKAGE@/devel/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/opari-lib-dummy/opari2_ctc_parser.h $(DESTDIR)$(datadir)/@PACKAGE@/devel/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/opari-lib-dummy/opari2_ctc_parser.c $(DESTDIR)$(datadir)/@PACKAGE@/devel/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/opari-lib-dummy/pomp2_region_info.h $(DESTDIR)$(datadir)/@PACKAGE@/devel/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/opari-lib-dummy/pomp2_region_info.c $(DESTDIR)$(datadir)/@PACKAGE@/devel/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/opari-lib-dummy/pomp2_user_region_info.h $(DESTDIR)$(datadir)/@PACKAGE@/devel/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/opari-lib-dummy/pomp2_user_region_info.c $(DESTDIR)$(datadir)/@PACKAGE@/devel/
-
-install-data-local: install-example install-pomp2_region_info

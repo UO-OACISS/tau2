@@ -137,16 +137,11 @@ struct temp_buffer_entry {
 //static vector<temp_buffer_entry> * temp_buffers[TAU_MAX_THREADS] = {0};
 //static bool buffers_written[TAU_MAX_THREADS] = {0};
 
-
 typedef pair<pair<int,int>,int> rma_win_triple_t;
 typedef map<rma_win_triple_t,uint64_t> rma_win_map_t;
 
 //static rma_win_map_t * local_rma_win_maps[TAU_MAX_THREADS];
-
 //static uint64_t next_rma_win[TAU_MAX_THREADS];
-
-
-
 
 struct otf2_thread_data{
     int previous_type = 0;
@@ -177,10 +172,12 @@ static OTF2ThreadList & Tau_otf2_getThreadData() {
 }
 
 static inline void checkOtf2ThreadDataVector(int tid){
-	while(Tau_otf2_getThreadData().size()<=tid){
-        RtsLayer::LockDB();
-		Tau_otf2_getThreadData().push_back(new otf2_thread_data());
-        RtsLayer::UnLockDB();
+	if(Tau_otf2_getThreadData().size()<=tid){
+		 RtsLayer::LockDB();
+		while(Tau_otf2_getThreadData().size()<=tid){
+			Tau_otf2_getThreadData().push_back(new otf2_thread_data());
+		}
+		RtsLayer::UnLockDB();
 	}
 }
 
@@ -277,7 +274,7 @@ extern "C" void finalizeCallSites_if_necessary();
 extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address);
 
 // Helper functions
-
+/*
 static inline OTF2_LocationRef my_location_offset() {
     const int64_t myNode = RtsLayer::myNode();
     const int64_t myThread = RtsLayer::myThread();
@@ -285,12 +282,20 @@ static inline OTF2_LocationRef my_location_offset() {
     //printf("Max Nodes: %d\n",totNodes);
     return myNode == -1 ? 0 : (myThread * tau_totalnodes(0,0));//(myNode * TAU_MAX_THREADS);//TODO: DYNATHREAD
 }
-
+*/
 static inline OTF2_LocationRef my_real_location( int64_t myNode, int64_t myThread ) {
      //const int64_t myNode = RtsLayer::myNode();
      //const int64_t myThread = RtsLayer::myThread();
      //printf("OTF2 Location: myNode: %ld, myThread: %ld, global: %ld\n",myNode,myThread, myNode==-1 ? myThread : (myThread * tau_totalnodes(0,0)) + myNode);
-     return myNode == -1 ? myThread : (myThread * tau_totalnodes(0,0)) + myNode; //(myNode * TAU_MAX_THREADS) + myThread;
+     //return myNode == -1 ? myThread : (myThread * tau_totalnodes(0,0)) + myNode; //(myNode * TAU_MAX_THREADS) + myThread;
+     //return myNode == -1 ? myThread : ((myNode+myThread-2)*(myNode+myThread-1)/2)+myNode;
+     //Generate unique location id using Szudzik's pairing function
+     if(myNode == -1) return myThread;
+     if(myNode>=myThread)
+       return myNode*myNode+myNode+myThread;
+     else
+       return myNode+myThread*myThread;
+
  }
 
 
@@ -325,7 +330,7 @@ static inline x_uint64 fix_zero_timestamp(x_uint64 my_ts, int tid) {
     my_ts = (x_uint64)(tmpTime[0]);
     // if so, the start time is possibly wrong, too.
     if (start_time == 0) {
-	  printf("Fixing Start! %" PRIu64 " = %" PRIu64 "\n", start_time, my_ts);
+	  printf("Fixing Start! %" PRIu64 " = %llu\n", start_time, my_ts);
       start_time = my_ts;
     }
   }
@@ -540,7 +545,7 @@ void remove_path(const char *pathname) {
         	FILE *file = NULL;
         	char abs_path[4096] = {0};
         	if(*(entry->d_name) != '.') {
-            	sprintf(abs_path, "%s/%s", pathname, entry->d_name);
+            	snprintf(abs_path, sizeof(abs_path),  "%s/%s", pathname, entry->d_name);
             	sub_dir = opendir(abs_path);
             	if(sub_dir != NULL) {
                 	closedir(sub_dir);
@@ -562,7 +567,7 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
 {
   TauInternalFunctionGuard protects_this_function;
 #ifdef TAU_OTF2_DEBUG
-  fprintf(stderr, "%u: TauTraceOTF2InitTS(%d, %" PRIu64 ")\n", my_node(), tid, ts);
+  fprintf(stderr, "%u: TauTraceOTF2InitTS(%d, %llu)\n", my_node(), tid, ts);
 #endif
   if(otf2_initialized || otf2_finished) {
       return 0;
@@ -686,7 +691,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     return;
   }
 #ifdef TAU_OTF2_DEBUG
-  fprintf(stderr, "node=%u, tid=%d, loc=%d: TauTraceEventWithNodeId(ev=%ld, par=%" PRId64 ", tid=%d, ts=%" PRIu64 ", use_ts=%d, node_id=%d, kind=%d)\n", my_node(), tid, my_real_location(node_id, tid), ev, par, tid, ts, use_ts, node_id, kind);
+  fprintf(stderr, "node=%u, tid=%d, loc=%lu: TauTraceEventWithNodeId(ev=%ld, par=%lld, tid=%d, ts=%llu, use_ts=%d, node_id=%d, kind=%d)\n", my_node(), tid, my_real_location(node_id, tid), ev, par, tid, ts, use_ts, node_id, kind);
 #endif
 #ifdef CUPTI_disabled
   /* OK, this looks bad, but hear me out... CUDA events are in-order on a
@@ -789,13 +794,13 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
     if(par == 1) { // Enter
 #ifdef TAU_OTF2_DEBUG
-      fprintf(stderr, "%u: writing Enter event on loc %d\n", my_node(), loc);
+      fprintf(stderr, "%u: writing Enter event=%ld on loc %d\n", my_node(), ev, loc);
 #endif
       OTF2_EC2(OTF2_EvtWriter_Enter(evt_writer, NULL, my_ts, ev));
       setPreviousType(tid, 0);
     } else if(par == -1) { // Exit
 #ifdef TAU_OTF2_DEBUG
-      fprintf(stderr, "%u: writing Exit event on loc %d\n", my_node(), loc);
+      fprintf(stderr, "%u: writing Exit event=%ld on loc %d\n", my_node(), ev, loc);
 #endif
       OTF2_EC2(OTF2_EvtWriter_Leave(evt_writer, NULL, my_ts, ev));
       setPreviousType(tid, 1);
@@ -828,7 +833,7 @@ extern "C" void TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int le
         return;
     }
 #ifdef TAU_OTF2_DEBUG
-  fprintf(stderr, "%d: TauTraceOTF2Msg(%d, %d, %d, %d, %" PRIu64 ", %d, %d)\n", my_node(), send_or_recv, type, other_id, length, ts, use_ts, node_id);
+  fprintf(stderr, "%d: TauTraceOTF2Msg(%d, %d, %d, %d, %llu, %d, %d)\n", my_node(), send_or_recv, type, other_id, length, ts, use_ts, node_id);
 #endif
     TauInternalFunctionGuard protects_this_function;
     if(!otf2_initialized) {
@@ -1021,7 +1026,11 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     //global_start_time -= trace_len * 0.02;
     //trace_len = end_time - global_start_time;
     //trace_len *= 1.02;
-    OTF2_GlobalDefWriter_WriteClockProperties(global_def_writer, TAU_OTF2_CLOCK_RES, global_start_time, trace_len);
+    OTF2_GlobalDefWriter_WriteClockProperties(global_def_writer, TAU_OTF2_CLOCK_RES, global_start_time, trace_len
+		    #if OTF2_VERSION_MAJOR > 2
+		    , global_start_time
+		    #endif
+		    );
 
     // Write a Location for each thread within each Node (which has a LocationGroup and SystemTreeNode)
 
@@ -1049,19 +1058,26 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         snprintf(namebuf, 256, "group %d", node);
         int groupName = nextString++;
         OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, groupName, namebuf));
-        OTF2_EC(OTF2_GlobalDefWriter_WriteLocationGroup(global_def_writer, node, groupName, OTF2_LOCATION_GROUP_TYPE_PROCESS, node));
+        OTF2_EC(OTF2_GlobalDefWriter_WriteLocationGroup(global_def_writer, node, groupName, OTF2_LOCATION_GROUP_TYPE_PROCESS, node
+				#if OTF2_VERSION_MAJOR > 2
+				, OTF2_UNDEFINED_LOCATION_GROUP
+				#endif
+				));
 
         //const int start_loc = my_real_location(node,0);//node + num_locations[node];//max_threads;//TAU_MAX_THREADS; //TODO: DYNATHREAD
         //const int end_loc = start_loc + num_locations[node];
         int thread_num = 0;
+	int cputhreads = 0;
         for(int it_thread = 0; it_thread < num_locations[node]; ++it_thread) {
             int loc=my_real_location(node,it_thread);
 		    OTF2_LocationType_enum thread_type = OTF2_LOCATION_TYPE_CPU_THREAD;
-            if(nodes < 2 && thread_num == 0) {
-                snprintf(namebuf, 256, "Master thread 0");
-            } else if(thread_num == 0) {
-                snprintf(namebuf, 256, "Rank");
-            } else if(Tau_is_thread_fake(thread_num)) {
+            //if(nodes < 2 && thread_num == 0) {
+              //  snprintf(namebuf, 256, "Master thread 0");
+            //} else 
+			//if(thread_num == 0) {
+            //    snprintf(namebuf, 256, "Rank %d", node);
+            //} else 
+			if(Tau_is_thread_fake(thread_num)) {
                 /* Check for CUPTI */
                 char * test = Tau_metadata_get("CUDA Device", thread_num);
                 if (test != NULL && strcmp(test, "") != 0) {
@@ -1085,11 +1101,20 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
                         snprintf(namebuf, 256, "GPU thread %02d", gputhreads++);
                     }
                 }
-				thread_type = OTF2_LOCATION_TYPE_GPU;
-            } else {
-                static int cputhreads = 1;
-                //int nodeThread=cputhreads%((nodes > 0) ? nodes : 1);
-                snprintf(namebuf, 256, "CPU thread %02d", thread_num);
+				thread_type = 
+					#if OTF2_VERSION_MAJOR > 2
+					OTF2_LOCATION_TYPE_ACCELERATOR_STREAM;
+					#else
+					OTF2_LOCATION_TYPE_GPU;
+				        #endif
+            } 
+			else {
+                //static int cputhreads = 1;
+                int nodeThread=cputhreads; //%((nodes > 0) ? nodes : 1);
+                snprintf(namebuf, 256, "Rank %d, CPU Thread %02d", node, nodeThread);
+		#ifdef TAU_OTF2_DEBUG
+		printf("nodes: %d, cputhreads: %d, thread_num (used): %d, nodeThread: %d\n", nodes, cputhreads, thread_num, nodeThread);
+		#endif
 		cputhreads++;
             }
 #ifdef TAU_ENABLE_ROCM
@@ -1104,17 +1129,17 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
 		  name = it->first.name;
                   value = it->second;
 		  if (strcmp(name, "ROCM_GPU_ID") == 0) {
-                    sprintf(gpu_id, "%s", value->data.cval);
+                    snprintf(gpu_id, sizeof(gpu_id),  "%s", value->data.cval);
                   }
 		  if (strcmp(name, "ROCM_QUEUE_ID") == 0) {
-                    sprintf(queue_id, "%s", value->data.cval);
+                    snprintf(queue_id, sizeof(queue_id),  "%s", value->data.cval);
                   }
 		  if (strcmp(name, "TAU_TASK_ID") == 0) {
-                    sprintf(tau_task_id, "%s", value->data.cval);
+                    snprintf(tau_task_id, sizeof(tau_task_id),  "%s", value->data.cval);
                   }
          	}
                 if (strlen(gpu_id) > 0) {
-                  sprintf(namebuf, "GPU%s Queue%s", gpu_id, queue_id);
+                  snprintf(namebuf, sizeof(namebuf),  "GPU%s Queue%s", gpu_id, queue_id);
                   TAU_VERBOSE("name = %s\n", namebuf);
                 }
 
@@ -1124,7 +1149,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
             OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, locName, namebuf));
             OTF2_EC(OTF2_GlobalDefWriter_WriteLocation(global_def_writer, loc, locName, thread_type, num_events_written[node], node));
 #ifdef TAU_OTF2_DEBUG
-            fprintf(stderr, "%u: wrote loc %d \"%s\" num events=%d\n", my_node(), loc, namebuf, num_events_written[node]);
+            fprintf(stderr, "%u (loop node %d): wrote loc %d \"%s\" num events=%ld\n", my_node(), node, loc, namebuf, num_events_written[node]);
 #endif
         }
 
@@ -1199,7 +1224,11 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     }
     OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_LOCS, locsGroupName, OTF2_GROUP_TYPE_COMM_LOCATIONS, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, nodes_list));
     OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_WORLD, worldGroupName, OTF2_GROUP_TYPE_COMM_GROUP, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, ranks_list));
-    OTF2_EC(OTF2_GlobalDefWriter_WriteComm(global_def_writer, TAU_OTF2_COMM_WORLD, commName, TAU_OTF2_GROUP_WORLD, OTF2_UNDEFINED_COMM));
+    OTF2_EC(OTF2_GlobalDefWriter_WriteComm(global_def_writer, TAU_OTF2_COMM_WORLD, commName, TAU_OTF2_GROUP_WORLD, OTF2_UNDEFINED_COMM
+			    #if OTF2_VERSION_MAJOR > 2
+			    , OTF2_COMM_FLAG_NONE
+			    #endif
+			    ));
 
 #if defined(TAU_SHMEM)
     // Write global RMA window
@@ -1415,13 +1444,13 @@ static void TauTraceOTF2ExchangeEventsWritten() {
     }
     const uint32_t my_num_threads = RtsLayer::getTotalThreads();
     uint64_t my_num_events[my_num_threads];
-    const int offset = my_location_offset();
+    //const int offset = my_location_offset();
     for(OTF2_LocationRef i = 0; i < my_num_threads; ++i) {
-        OTF2_EvtWriter * evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, offset + i);
+        OTF2_EvtWriter * evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, my_real_location(my_node(),i));
         TAU_ASSERT(evt_writer != NULL, "Failed to get event writer");
         OTF2_EC(OTF2_EvtWriter_GetNumberOfEvents(evt_writer, my_num_events + i));
 #ifdef TAU_OTF2_DEBUG
-        fprintf(stderr, "%u: loc %d has written %u events.\n", my_node(), i, my_num_events[i]);
+        fprintf(stderr, "%u: loc %ld has written %lu events.\n", my_node(), i, my_num_events[i]);
 #endif
     }
 
@@ -1744,7 +1773,7 @@ static void TauTraceOTF2ExchangeRmaWins() {
         }
         my_total_rma_wins += my_num_rma_wins[i];
 #ifdef TAU_OTF2_DEBUG
-        fprintf(stderr, "%u: thread %d has %" PRIu64 " RMA windows.\n", my_node(), i, my_num_rma_wins[i]);
+        fprintf(stderr, "%u: thread %lu has %" PRIu64 " RMA windows.\n", my_node(), i, my_num_rma_wins[i]);
 #endif
     }
 

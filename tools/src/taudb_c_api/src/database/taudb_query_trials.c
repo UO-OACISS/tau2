@@ -196,22 +196,22 @@ TAUDB_TRIAL* taudb_query_trials(TAUDB_CONNECTION* connection, boolean full, TAUD
 #endif
   char my_query[4096]; // hopefully, this is long enough!
   if (trial->id > 0) { // the user wants a specific trial, so get it
-    sprintf(my_query,"select * from trial where id = %d", trial->id);
+    snprintf(my_query, sizeof(my_query), "select * from trial where id = %d", trial->id);
   } else if (trial->name != NULL) {
-    sprintf(my_query,"select * from trial where name = '%s'", trial->name);
+    snprintf(my_query, sizeof(my_query), "select * from trial where name = '%s'", trial->name);
   } else { 
-    sprintf(my_query,"select * from trial ");
+    snprintf(my_query, sizeof(my_query), "select * from trial ");
     char *where1 = "where id in (select pm0.trial from primary_metadata pm0 ";
     char *join = "inner join primary_metadata pm%d on pm%d.trial = pm%d.trial";
     char conjunction[128];
-	strcpy(conjunction, where1);
+	strncpy(conjunction,  where1, sizeof(conjunction)); 
 	int index = 1;
 	// are there metadata fields?
     TAUDB_PRIMARY_METADATA * current;
     for (current = trial->primary_metadata; current != NULL;
          current = taudb_next_primary_metadata_by_name_from_trial(current)) {
-      sprintf(my_query, "%s %s ", my_query, conjunction);
-      sprintf(conjunction, join, index, index, index-1);
+      snprintf(my_query, sizeof(my_query),  "%s %s ", my_query, conjunction);
+      snprintf(conjunction, sizeof(conjunction),  join, index, index, index-1);
 	  index = index + 1;
     }
 	index = 0;
@@ -228,12 +228,12 @@ TAUDB_TRIAL* taudb_query_trials(TAUDB_CONNECTION* connection, boolean full, TAUD
       } else {
 	    comparison = like;
       }
-      sprintf(my_query, "%s %s pm%d.name = '%s' and pm%d.value %s '%s' ", my_query, conjunction2, index, current->name, index, comparison, current->value);
+      snprintf(my_query, sizeof(my_query),  "%s %s pm%d.name = '%s' and pm%d.value %s '%s' ", my_query, conjunction2, index, current->name, index, comparison, current->value);
       conjunction2 = and;
 	  index = index + 1;
     }
 	if (conjunction2 == and) {
-      sprintf(my_query, "%s)", my_query);
+      snprintf(my_query, sizeof(my_query),  "%s)", my_query);
 	}
   }
   printf("%s\n", my_query);
@@ -245,7 +245,7 @@ TAUDB_TRIAL* perfdmf_query_trials(TAUDB_CONNECTION* connection, PERFDMF_EXPERIME
   printf("Calling perfdmf_query_trials(%p)\n", experiment);
 #endif
   char my_query[256];
-  sprintf(my_query,"select * from trial where experiment = %d", experiment->id);
+  snprintf(my_query, sizeof(my_query), "select * from trial where experiment = %d", experiment->id);
 
   return taudb_private_query_trials(connection, FALSE, my_query, taudb_numItems);
 }
@@ -293,26 +293,26 @@ void taudb_save_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean 
   if (trial->data_source == NULL) {
     paramValues[1] = NULL;
   } else {
-    sprintf(data_source, "%d", trial->data_source->id);
+    snprintf(data_source, sizeof(data_source),  "%d", trial->data_source->id);
     paramValues[1] = data_source;
   }
   char nodes[32] = {0};
-  sprintf(nodes, "%d", trial->node_count);
+  snprintf(nodes, sizeof(nodes),  "%d", trial->node_count);
   paramValues[2] = nodes;
   char contexts[32] = {0};
-  sprintf(contexts, "%d", trial->contexts_per_node);
+  snprintf(contexts, sizeof(contexts),  "%d", trial->contexts_per_node);
   paramValues[3] = contexts;
   char threads[32] = {0};
-  sprintf(threads, "%d", trial->threads_per_context);
+  snprintf(threads, sizeof(threads),  "%d", trial->threads_per_context);
   paramValues[4] = threads;
   char total[32] = {0};
-  sprintf(total, "%d", trial->total_threads);
+  snprintf(total, sizeof(total),  "%d", trial->total_threads);
   paramValues[5] = total;
 
   // if we are updating, add the ID to the query
   char id[32] = {0};
   if (update && trial->id > 0) {
-    sprintf(id, "%d", trial->id);
+    snprintf(id, sizeof(id),  "%d", trial->id);
     paramValues[6] = id;
   }
 	

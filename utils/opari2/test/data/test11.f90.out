@@ -15,7 +15,7 @@
 ! *
 ! * Testfile for automated testing of OPARI2
 ! *
-! * @authors Jie Jiang 
+! * @authors Jie Jiang
 ! *
 ! * @brief Test worskshare directives.
 
@@ -47,7 +47,7 @@ program test11
       call POMP2_Workshare_enter(opari2_region_3, &
      opari2_ctc_3 )
 #line 29 "test11.f90"
-  !$omp workshare 
+  !$omp workshare
     i = 4
   !$omp critical
     i = 5

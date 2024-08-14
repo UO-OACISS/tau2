@@ -390,8 +390,8 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
      // make sure some other thread hasn't created it.
     if (flist[index] == NULL) {
       char rname[1024], rtype[1024];
-      sprintf(rname, "%s (%s)",  r->rtype, omp_names[index]);
-      sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
+      snprintf(rname, sizeof(rname),  "%s (%s)",  r->rtype, omp_names[index]);
+      snprintf(rtype, sizeof(rtype),  "[OpenMP location: file:%s <%d, %d>]",
       r->start_file_name, r->start_line_1, r->end_line_1);
       flist[index] = Tau_make_openmp_timer(rname, rtype);
     }
@@ -407,8 +407,8 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
     if (!r->data) {
       // create the timer for this region
       char rname[1024], rtype[1024];
-      sprintf(rname, "%s", r->rtype);
-      sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
+      snprintf(rname, sizeof(rname),  "%s", r->rtype);
+      snprintf(rtype, sizeof(rtype),  "[OpenMP location: file:%s <%d, %d>]",
 	      r->start_file_name, r->start_line_1, r->end_line_1);
 
       FunctionInfo *f = Tau_make_openmp_timer(rname, rtype);

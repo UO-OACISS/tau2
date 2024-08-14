@@ -9,7 +9,7 @@ test_data_dir=@abs_srcdir@/data
 CC="@CC@"
 F77="@F77@"
 INCDIR=.
-OPARI2=@abs_builddir@/../build-frontend/opari2 
+OPARI2=@abs_builddir@/../build-frontend/opari2
 OPARI2_CONFIG="@abs_builddir@/../build-frontend/opari2-config --build-check"
 LDFLAGS="-lm -L@abs_builddir@/../build-frontend/.libs -lpomp"
 FFLAGS="@FFLAGS@"
@@ -22,7 +22,7 @@ cp -r $test_data_dir/jacobi/F77/main.f $test_dir/jacobi/F77
 
 cd $test_dir/jacobi/F77
 #make instrument
-$OPARI2 main.f 
+$OPARI2 main.f
 $OPARI2 jacobi.f
 
 #make compile
@@ -80,4 +80,3 @@ if diff $test_data_dir/jacobi/F77/jacobi_test_3.out jacobi_test_3 > /dev/null
 fi
 
 cd $opari_dir
-

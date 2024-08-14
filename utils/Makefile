@@ -61,7 +61,7 @@ tau2otf2: 	tau2otf2.o
 		$(CXX) $(CFLAGS) tau2otf2.o -o tau2otf2 -lm $(LEXTRAUTIL) $(OTFLIBS)
 
 tau2otf2.o:	tau2otf2.cpp
-		$(CXX) $(CFLAGS) $(TAU_OTF2_1_1_FLAGS) $(TAU_OTF2_1_2_FLAGS)  tau2otf2.cpp -c -I$(OTFDIR)/include
+		$(CXX) $(CFLAGS) tau2otf2.cpp -c -I$(OTFDIR)/include
 
 ebs2otf/ebs2otf.so:
 		cd ebs2otf ; $(MAKE)
@@ -112,10 +112,10 @@ tau_selective_dyn.o: tau_selective.dyn.cpp
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -DTAU_DYNINST -DTAU_DYNINST41PLUS  -I$(PDTDIR)/include -c tau_selective.dyn.cpp -o tau_selective_dyn.o
 
 tau_run: 	tau_run.o tau_selective_dyn.o  tau_instrument.dyn.o
-		$(CXX) $(CFLAGS) tau_run.o tau_selective_dyn.o tau_instrument.dyn.o -o $@ $(DYNLIBS) $(LEXTRAUTIL) $(TAU_BOOSTLIB)
+		$(CXX) $(CFLAGS) tau_run.o tau_selective_dyn.o tau_instrument.dyn.o -o $@ $(DYNLIBS) $(LEXTRAUTIL) $(TAU_BOOSTLIB) $(BFDLINK) 
 
 tau_run.o: 	tau_run.cpp
-		$(CXX) $(CFLAGS) $(DYNINC) -DTAU_DYNINST -DTAU_DYNINST41PLUS $(DYN_PKG_OPT) -c tau_run.cpp $(TAU_BOOSTINC)
+		$(CXX) $(CFLAGS) $(DYNINC) -DTAU_DYNINST -DTAU_DYNINST41PLUS $(DYN_PKG_OPT) -c tau_run.cpp $(TAU_BOOSTINC) 
 
 tau_trace2json: tau_trace2json.o 
 		$(CXX) $(CFLAGS) tau_trace2json.o -o $@ -lm $(TAU_TRACE_INPUT_LIB) 

@@ -15,6 +15,7 @@ s@^PAPISUBDIR=\(.*\)@PAPISUBDIR=@g
 s@^GPIDIR=\(.*\)@GPIDIR=@g
 s@^PDTDIR=\(.*\)@PDTDIR=@g
 s@^TAU_L0_DIR=\(.*\)@TAU_L0_DIR=@g
+s@^TAU_MDISC_DIR=\(.*\)@TAU_MDISC_DIR=@g
 s@^OMPTLIB=\(.*\)@OMPTLIB=@g
 s@^PDTCOMPDIR=\(.*\)@PDTCOMPDIR=@g
 s@^DYNINSTDIR=\(.*\)@DYNINSTDIR=@g

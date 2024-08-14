@@ -21,10 +21,14 @@
 #include <cstring>
 #include <fstream>
 #include <queue>
+#include <sstream>
 #include <Profile/L0/utils.h>
 #include <Profile/L0/ze_kernel_collector.h>
 #include <Profile/L0/ze_api_collector.h>
 
+#ifdef L0METRICS
+#include <Profile/L0/ze_metric_collector.h>
+#endif
 
 #include "Profile/Profiler.h"
 #include "Profile/TauBfd.h"
@@ -37,6 +41,9 @@ extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
 
 static ZeApiCollector* api_collector = nullptr;
 static ZeKernelCollector* kernel_collector = nullptr;
+#ifdef L0METRICS
+static ZeMetricCollector* metric_collector = nullptr;
+#endif
 static std::chrono::steady_clock::time_point start;
 static int gpu_task_id = 0;
 static int host_api_task_id = 0;
@@ -155,8 +162,88 @@ static void APIPrintResults() {
   std::cerr << std::endl;
 }
 
+#ifdef L0METRICS
 
+struct Kernel {
+  uint64_t total_time;
+  uint64_t call_count;
+  float eu_active;
+  float eu_stall;
 
+  bool operator>(const Kernel& r) const {
+    if (total_time != r.total_time) {
+      return total_time > r.total_time;
+    }
+    return call_count > r.call_count;
+  }
+
+  bool operator!=(const Kernel& r) const {
+    if (total_time == r.total_time) {
+      return call_count != r.call_count;
+    }
+    return true;
+  }
+};
+
+double get_metric_value(zet_typed_value_t metric)
+{
+   switch (metric.type) {
+     case ZET_VALUE_TYPE_UINT32:{
+       return (float) metric.value.ui32;
+     }
+     case ZET_VALUE_TYPE_UINT64:{
+       return (float) metric.value.ui64;
+     }
+     case ZET_VALUE_TYPE_FLOAT32:{
+       return (float) metric.value.fp32;
+     }
+     case ZET_VALUE_TYPE_FLOAT64:{
+       return (float) metric.value.fp64;
+     }
+     case ZET_VALUE_TYPE_BOOL8:{
+       return (float) metric.value.b8;
+     }
+     default:{
+       return -1;
+       break;
+     }
+   }
+   
+   return -1;
+}
+
+static void MetricPrintResults() {
+
+  const KernelReportMap& kernel_report_map = metric_collector->GetKernelReportMap();
+  std::vector<std::string> metriclist = metric_collector->GetMetricList();
+  if (kernel_report_map.size() == 0) {
+    return;
+  }
+  
+  std::cerr << "=== Metric Results: ===" << std::endl;
+  for (auto& kernel : kernel_report_map) {
+  
+    std::cerr << "Results Kernel: "<< kernel.first.c_str() << std::endl;
+    std::vector<MetricReport> kernel_reports = kernel.second; 
+    int entry = 0;
+    for (auto& report_entry : kernel_reports) {
+      std::cerr << "Entry "<< entry << " : " << std::endl ;
+      entry++;
+      assert(report_entry.size() == metriclist.size());
+      int i;  
+      for ( i = 0; i < metriclist.size(); i++ ){
+        
+        double metric_value =get_metric_value(report_entry[i]);
+        std::cerr << "\t"<< metriclist[i].c_str() << "Value: " << metric_value << std::endl ;
+      }
+      std:cerr << std::endl;
+          
+          
+    }
+  }
+   std::cerr << "======" << std::endl;
+}
+#endif
 
 bool TAUSetFirstGPUTimestamp(uint64_t gpu_ts) {
   TAU_VERBOSE("TAU: First GPU Timestamp = %ld\n", gpu_ts);
@@ -265,6 +352,30 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
   return;
 }
 
+#ifdef L0METRICS
+void TAUOnMetricFinishCallback(void *data, const std::string& kernel_name, MetricReport report, std::vector<std::string> metriclist)
+{
+
+  int taskid;
+  taskid = *((int *) data);
+  assert(report.size() == metriclist.size());
+  int i;  
+  for ( i = 0; i < metriclist.size(); i++ ){
+    std::stringstream ss;
+    void* ue = nullptr;
+    std::string tmp;
+    ss << metriclist[i] <<" Kernel:{" << kernel_name << "}";
+    tmp = ss.str();
+    ue = Tau_get_userevent(tmp.c_str());
+    double metric_value =get_metric_value(report[i]);
+    TAU_VERBOSE("TAU Metric: <kernel>: %s Event %s Value %lf\n", kernel_name.c_str(), metriclist[i].c_str(), metric_value);
+    Tau_userevent_thread(ue, metric_value, taskid);
+
+  }
+
+}
+#endif
+
 
 // Internal Tool Interface ////////////////////////////////////////////////////
 
@@ -312,6 +423,28 @@ void TauL0EnableProfiling() {
 
   void *ph = (void *) api_taskid;
   api_collector = ZeApiCollector::Create(driver, TAUOnAPIFinishCallback, ph);
+ 
+ 
+   #ifdef L0METRICS
+  
+  std::string value;
+  //EBS Metric Groups  
+  std::string metric_group("ComputeBasic");
+  value = utils::GetEnv("L0_MetricGroup");
+  if (!value.empty()) {
+    metric_group = value;
+  }      
+  metric_collector = ZeMetricCollector::Create( driver, device, metric_group.c_str(), TAUOnMetricFinishCallback, pk);
+
+  if (metric_collector == nullptr) {
+    std::cout <<
+      "[WARNING] Unable to create metric collector" << std::endl;
+  }
+  #endif
+  
+
+
+
 
   metric_set_gpu_timestamp(host_api_task_id, first_cpu_timestamp);
   Tau_create_top_level_timer_if_necessary_task(host_api_task_id);
@@ -334,6 +467,16 @@ void TauL0DisableProfiling() {
       APIPrintResults();
     delete api_collector;
   }
+  
+  #ifdef L0METRICS  
+  if (metric_collector != nullptr) {
+    metric_collector->DisableTracing();
+    if (TauEnv_get_verbose())
+      MetricPrintResults();
+    delete metric_collector;
+  }
+  #endif
+  
   //uint64_t gpu_end_ts = utils::i915::GetGpuTimestamp() & 0x0FFFFFFFF;
   /*
   uint64_t gpu_end_ts = utils::i915::GetGpuTimestamp();

@@ -178,7 +178,7 @@ int JNIThreadLayer::RegisterThread(pid_t sid, char *tname)
 
     // Lock the mutex guarding the thread count before incrementing it.
     tauNumThreadsLock.lock();
-
+/*
     if (tauThreadCount == TAU_MAX_THREADS)
     {
 	fprintf(stderr, "TAU>ERROR number of threads exceeds TAU_MAX_THREADS\n");
@@ -187,7 +187,7 @@ int JNIThreadLayer::RegisterThread(pid_t sid, char *tname)
 	fprintf(stderr, "******************************************************************\n");
 	exit(1);
     }
-
+*/
     int tid = tauThreadCount;
 
     tauTidMap[sid] = tid;

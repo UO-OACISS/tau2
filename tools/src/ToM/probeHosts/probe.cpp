@@ -44,11 +44,12 @@ int main(int argc, char **argv)
     FILE *outfile;
     char *outname = getenv("PROFILEDIR");
     if (outname == NULL) {
-      outname = (char *)malloc((strlen(".")+1)*sizeof(char));
-      strcpy(outname,".");
+      const int len = (strlen(".")+1)*sizeof(char);
+      outname = (char *)malloc(len);
+      strncpy(outname, ".", len); 
     }
     char outfileString[512];
-    sprintf(outfileString,"%s/allhosts.txt",outname);
+    snprintf(outfileString, sizeof(outfileString), "%s/allhosts.txt",outname);
     outfile = fopen(outfileString,"w");
     for (it=hostHash.begin(); it!=hostHash.end(); it++) {
       fprintf(outfile,"%d:%s\n",(*it).second,(*it).first.c_str());

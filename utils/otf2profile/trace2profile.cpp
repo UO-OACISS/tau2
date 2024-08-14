@@ -206,7 +206,7 @@ void InitSnapshot(){
 		s_out+="/";
 	}
 	char filename [32];
-	sprintf(filename,"profile.xml");//%d.0.%d",((*it).second).nodeToken,((*it).second).threadToken);
+	snprintf(filename, sizeof(filename), "profile.xml");//%d.0.%d",((*it).second).nodeToken,((*it).second).threadToken);
 	s_prefix=s_out+filename;
 	snapshot.open(s_prefix.c_str());//, ofstream::app|ofstream::out
 	snapshot.precision(16);
@@ -528,7 +528,7 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 	{
 		s_out+="MULTI__GET_TIME_OF_DAY/";
 		cmd="mkdir "+s_out;
-		system(cmd.c_str());
+		int sysres=system(cmd.c_str());
 	}
 
 	string profileUDEs="";
@@ -542,7 +542,7 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 	}
 	//for (map< int,Thread >:: iterator it = mainmap.begin(); it != mainmap.end(); it++){
 		char filename [32];
-		sprintf(filename,"profile.%d.0.%d",finalizer.nodeToken,finalizer.threadToken);//((*it).second)
+		snprintf(filename, sizeof(filename), "profile.%d.0.%d",finalizer.nodeToken,finalizer.threadToken);//((*it).second)
 		s_prefix=s_out+filename;
 		profile.open(s_prefix.c_str());
 		profile.precision(16);
@@ -622,7 +622,7 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 			s_name+=eventname;
 			s_out=base+s_name+"/";
 			cmd="mkdir "+s_out;
-			system(cmd.c_str());
+			int sysres=system(cmd.c_str());
 
 			countFunc=0;
 			for(map<unsigned int,State*>:: iterator stateCount = Converter::allstate.begin(); stateCount!=Converter::allstate.end(); stateCount++)
@@ -632,7 +632,7 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 			}
 			//for (map< int,Thread >:: iterator it = mainmap.begin(); it != mainmap.end(); it++)
 				char filename [32];
-				sprintf(filename,"profile.%d.0.%d",finalizer.nodeToken,finalizer.threadToken);
+				snprintf(filename, sizeof(filename), "profile.%d.0.%d",finalizer.nodeToken,finalizer.threadToken);
 				s_prefix=s_out+filename;
 				profile.open(s_prefix.c_str());
 				profile.precision(16);

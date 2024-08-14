@@ -13,7 +13,7 @@
  * Copyright (c) 2009-2013,
  * University of Oregon, Eugene, USA
  *
- * Copyright (c) 2009-2013, 2014, 2016,
+ * Copyright (c) 2009-2013, 2014, 2016, 2023,
  * Forschungszentrum Juelich GmbH, Germany
  *
  * Copyright (c) 2009-2013,
@@ -153,8 +153,9 @@ assignString( char**      destination,
               const char* source )
 {
     assert( source );
-    *destination = malloc( strlen( source ) * sizeof( char ) + 1 );
-    strcpy( *destination, source );
+    const int len = strlen( source ) * sizeof( char ) + 1;
+    *destination = malloc( len );
+    strncpy( *destination,  source , len); 
 }
 
 
@@ -352,7 +353,7 @@ POMP2_USER_Assign_handle( POMP2_USER_Region_handle* pomp2_handle,
                           const char                ctc_string[] )
 {
     static size_t count = 0;
-    assert( count < POMP2_Get_num_regions() );
+    assert( count < POMP2_USER_Get_num_regions() );
 
     POMP2_USER_Region_info pomp2RegionInfo;
     ctcString2UserRegionInfo( ctc_string, &pomp2RegionInfo );
@@ -468,7 +469,7 @@ POMP2_Barrier_exit( POMP2_Region_handle* pomp2_handle,
 
 void
 POMP2_Flush_enter( POMP2_Region_handle* pomp2_handle,
-		   const char           ctc_string[] )
+                   const char           ctc_string[] )
 {
 #pragma omp critical
     if ( *pomp2_handle == NULL )

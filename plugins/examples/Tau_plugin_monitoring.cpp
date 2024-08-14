@@ -45,7 +45,12 @@ json configuration;
 #include "tau_nvml.hpp"
 #endif
 
-#define ONE_BILLION  1000000000
+#ifdef TAU_ROCM_SMI
+#include "tau_rocm_smi.hpp"
+#endif
+
+#define ONE_BILLION  1e9
+#define ONE_MILLION  1e6
 #define ONE_BILLIONF 1000000000.0
 
 inline void _plugin_assert(const char* expression, const char* file, int line)
@@ -76,6 +81,7 @@ const char * default_configuration = R"(
   "node_data_from_all_ranks": false,
   "monitor_counter_prefix": "",
   "periodicity seconds": 10.0,
+  "scatterplot": false,
   "PAPI metrics": [],
   "/proc/stat": {
     "disable": false,
@@ -111,6 +117,11 @@ const char * default_configuration = R"(
     "disable": true,
     "comment": "This will include only the utilization metrics.",
     "include": [".*utilization.*"]
+  },
+  "rsmi": {
+    "disable": false,
+    "comment": "This will include only the utilization metrics.",
+    "include": [".*Device Busy.*", ".*Memory Activity.*"]
   }
 }
 )";
@@ -235,13 +246,25 @@ static pthread_t worker_thread;
 static std::atomic<bool> done{false};
 static std::atomic<bool> worker_working{false};
 static int rank_getting_system_data;
-static int my_rank = 0;
+static std::stringstream csv_output;
+static uint64_t periodic_index;
 #ifdef CUPTI
 tau::nvml::monitor& get_nvml_reader() {
     static tau::nvml::monitor nvml_reader;
     return nvml_reader;
 }
 #endif
+#ifdef TAU_ROCM_SMI
+tau::rsmi::monitor& get_rsmi_reader() {
+    static tau::rsmi::monitor rsmi_reader;
+    return rsmi_reader;
+}
+#endif
+
+int& get_my_rank() {
+    static int my_rank = 0;
+    return my_rank;
+}
 
 void * find_user_event(const std::string& name) {
     void * ue = NULL;
@@ -261,6 +284,15 @@ void * find_user_event(const std::string& name) {
     return ue;
 }
 
+void write_scatterplot_point(const std::string& name, double value) {
+    if (configuration.count("scatterplot") > 0) {
+        if (configuration["scatterplot"]) {
+            csv_output << get_my_rank() << ",\"" << name << "\","
+                << periodic_index << "," << value << "\n";
+        }
+    }
+}
+
 void sample_user_event(const std::string& name, double value) {
     if (TauEnv_get_thread_per_gpu_stream()) {
         std::string tmpname{
@@ -272,6 +304,7 @@ void sample_user_event(const std::string& name, double value) {
         void * ue = find_user_event(name);
         Tau_userevent_thread(ue, value, 0);
     }
+    write_scatterplot_point(name, value);
 }
 
 /* Older versions of Clang++ won't compile this regular expression
@@ -510,16 +543,18 @@ void initialize_papi_events(bool do_components) {
             continue;
         }
         /* Skip the nvml component, for non-CUPTI configurations */
-#ifndef CUPTI
+#ifndef TAU_ROCM_SMI
         if (strstr(comp_info->name, "nvml") != NULL) {
             continue;
         }
+#endif
+#ifndef CUPTI
         if (strstr(comp_info->name, "cuda") != NULL) {
             continue;
         }
 #endif
         if (!include_component(comp_info->name)) { return; }
-        if (my_rank == 0) TAU_VERBOSE("Found %s component...\n", comp_info->name);
+        if (get_my_rank() == 0) TAU_VERBOSE("Found %s component...\n", comp_info->name);
         /* Does this component have available events? */
         if (comp_info->num_native_events == 0) {
             TAU_VERBOSE("Error: No %s events found.\n", comp_info->name);
@@ -569,7 +604,7 @@ void initialize_papi_events(bool do_components) {
             char unit[PAPI_MAX_STR_LEN] = {0};
             strncpy(unit,evinfo.units,PAPI_MAX_STR_LEN);
             // save the event info
-            if (my_rank == 0) TAU_VERBOSE("Found event '%s (%s)'\n", event_name, unit);
+            if (get_my_rank() == 0) TAU_VERBOSE("Found event '%s (%s)'\n", event_name, unit);
             ppe this_event(event_name, unit, code, evinfo.data_type);
             if(strcmp(unit, "nJ") == 0) {
                 this_event.units = "J";
@@ -607,6 +642,7 @@ void initialize_papi_events(bool do_components) {
 std::vector<cpustats_t*> * read_cpu_stats() {
     static const char * source = "/proc/stat";
     if (!include_component(source)) { return NULL; }
+    if (get_my_rank() == 0) TAU_VERBOSE("Found %s component...\n", source);
     std::vector<cpustats_t*> * cpu_stats = new std::vector<cpustats_t*>();
     /*  Reading proc/stat as a file  */
     FILE * pFile;
@@ -619,12 +655,27 @@ std::vector<cpustats_t*> * read_cpu_stats() {
         while ( fgets( line, 128, pFile)) {
             if ( strncmp (line, "cpu", 3) == 0 ) {
                 cpustats_t * cpu_stat = new(cpustats_t);
-                /*  Note, this will only work on linux 2.6.24 through 3.5  */
-                sscanf(line, "%s %lld %lld %lld %lld %lld %lld %lld %lld %lld\n",
-                       cpu_stat->name, &cpu_stat->user, &cpu_stat->nice,
-                       &cpu_stat->system, &cpu_stat->idle,
-                       &cpu_stat->iowait, &cpu_stat->irq, &cpu_stat->softirq,
-                       &cpu_stat->steal, &cpu_stat->guest);
+                std::string tmp{line};
+                // trim the newline
+                tmp = tau::papi_plugin::trim(tmp);
+                // create a stringstream from the string
+                std::stringstream ss(tmp);
+                std::vector<std::string> out;
+                std::string s;
+                while (std::getline(ss, s, ' ')) {
+                    if (s.size() == 0) { continue; }
+                    out.push_back(s);
+                }
+                snprintf(cpu_stat->name, 32, "%s", out[0].c_str());
+                cpu_stat->user = stol(out[1]);
+                cpu_stat->nice = stol(out[2]);
+                cpu_stat->system =stol(out[3]);
+                cpu_stat->idle = stol(out[4]);
+                cpu_stat->iowait =stol(out[5]);
+                cpu_stat->irq =stol(out[6]);
+                cpu_stat->softirq = stol(out[7]);
+                cpu_stat->steal =stol(out[8]);
+                cpu_stat->guest = stol(out[9]);
                 /* PGI Compiler is non-standard.  It can't handle regular expressions
                  * with range values, so we can't filter out the per-cpu results.
                  * So, we'll just read the first line of the file and quit
@@ -724,10 +775,11 @@ int choose_volunteer_rank() {
 #ifdef TAU_MPI
     // figure out who should get system stats for this node
     int i;
-    my_rank = 0;
-    int comm_size = 1;
-    PMPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    PMPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    int my_rank = RtsLayer::myNode();
+    int comm_size = tau_totalnodes(0,1);
+
+    // save it somewhere the NVML component can access it
+    get_my_rank() = my_rank;
 
     /* If the user wants node health data from all ranks,
        then every rank participates in reading that data. */
@@ -1140,10 +1192,15 @@ void read_components(void) {
     previous_self_net_stats = update_net_stats("/proc/self/net/dev", previous_self_net_stats);
 #endif
 
-    if (my_rank == rank_getting_system_data) {
+    if (get_my_rank() == rank_getting_system_data) {
 #ifdef CUPTI
         if (include_component("nvml")) {
             get_nvml_reader().query();
+        }
+#endif
+#ifdef TAU_ROCM_SMI
+        if (include_component("rsmi")) {
+            get_rsmi_reader().query();
         }
 #endif
 
@@ -1222,7 +1279,7 @@ void stop_worker(void) {
         */
         return;
     }
-    if (my_rank == 0) TAU_VERBOSE("TAU Monitoring thread joining...\n"); fflush(stderr);
+    if (get_my_rank() == 0) TAU_VERBOSE("TAU Monitoring thread joining...\n"); fflush(stderr);
     pthread_cond_signal(&_my_cond);
     int ret = pthread_join(worker_thread, NULL);
     if (ret != 0) {
@@ -1248,12 +1305,14 @@ void * Tau_monitoring_plugin_threaded_function(void* data) {
     /* Set the wakeup time (ts) to 2 seconds in the future. */
     struct timespec ts;
     struct timeval  tp;
+    gettimeofday(&tp, NULL);
 
     /* If we are tracing while doing periodic measurements, then register
      * this thread so we don't collide with events on thread 0 */
     if (TauEnv_get_thread_per_gpu_stream()) {
         Tau_register_thread();
     }
+    periodic_index = 0;
 
     while (!done) {
         TAU_VERBOSE("Tau monitoring thread: waking up\n");
@@ -1263,7 +1322,6 @@ void * Tau_monitoring_plugin_threaded_function(void* data) {
         read_components();
         worker_working = false;
         // wait x seconds for the next batch.  Can be floating!
-        gettimeofday(&tp, NULL);
         int seconds = 1;
         int nanoseconds = 0;
         // convert the floating seconds to seconds and nanoseconds
@@ -1295,8 +1353,17 @@ void * Tau_monitoring_plugin_threaded_function(void* data) {
         } else if (rc == EPERM) {
             TAU_VERBOSE("Mutex not locked!\n"); fflush(stderr);
         }
+        periodic_index++;
+        tp.tv_usec = tp.tv_usec + (nanoseconds/1000);
+        // check for overflow
+        if (tp.tv_usec > ONE_MILLION){
+            tp.tv_usec = tp.tv_usec - ONE_MILLION;
+            seconds = seconds + 1;
+        }
+        // add our seconds of delay
+        tp.tv_sec  = (tp.tv_sec + seconds);
     }
-    if (my_rank == 0) TAU_VERBOSE("TAU Monitoring thread exiting...\n"); fflush(stderr);
+    if (get_my_rank() == 0) TAU_VERBOSE("TAU Monitoring thread exiting...\n"); fflush(stderr);
 
     // unlock after being signalled.
     pthread_mutex_unlock(&_my_mutex);
@@ -1332,7 +1399,7 @@ static void do_cleanup() {
     }
 #ifdef TAU_PAPI
     /* clean up papi */
-    if (my_rank == rank_getting_system_data) {
+    if (get_my_rank() == rank_getting_system_data) {
         free_papi_components();
     }
 #endif
@@ -1367,8 +1434,112 @@ static void do_cleanup() {
     clean = true;
 }
 
+// Macro to check MPI calls status
+#define MPI_CALL(call) \
+    do { \
+        int err = call; \
+        if (err != MPI_SUCCESS) { \
+            char errstr[MPI_MAX_ERROR_STRING]; \
+            int errlen; \
+            MPI_Error_string(err, errstr, &errlen); \
+            fprintf(stderr, "%s\n", errstr); \
+            MPI_Abort(MPI_COMM_WORLD, 999); \
+        } \
+    } while (0)
+
+inline char filesystem_separator()
+{
+#if defined _WIN32 || defined __CYGWIN__
+    return '\\';
+#else
+    return '/';
+#endif
+}
+
+void reduce_scatterplot(std::stringstream& csv_output, std::string filename) {
+    int commrank = 0;
+    int commsize = 1;
+#if defined(TAU_MPI)
+    int mpi_initialized = 0;
+    MPI_CALL(MPI_Initialized( &mpi_initialized ));
+    if (mpi_initialized) {
+        commrank = RtsLayer::myNode();
+        commsize = tau_totalnodes(0,1);
+    }
+#endif
+    // if nothing to reduce, just write the data.
+    if (commsize == 1) {
+        std::ofstream csvfile;
+        std::stringstream csvname;
+        csvname << TauEnv_get_profiledir();
+        csvname << filesystem_separator() << filename;
+        std::cout << "Writing: " << csvname.str() << std::endl;
+        csvfile.open(csvname.str(), std::ios::out);
+        csvfile << "\"rank\",\"name\",\"step\",\"value\"\n";
+        csvfile << csv_output.str();
+        csvfile.close();
+        return;
+    }
+
+    size_t length{csv_output.str().size()};
+    size_t max_length{length};
+    // get the longest string from all ranks
+#if defined(TAU_MPI)
+    if (mpi_initialized && commsize > 1) {
+        MPI_CALL(PMPI_Allreduce(&length, &max_length, 1,
+            MPI_UINT64_T, MPI_MAX, MPI_COMM_WORLD));
+    }
+    // so we don't have to specially handle the first string which will append
+    // the second string without a null character (zero).
+    max_length = max_length + 1;
+#endif
+    // allocate the send buffer
+    char * sbuf = (char*)calloc(max_length, sizeof(char));
+    // copy into the send buffer
+    strncpy(sbuf, csv_output.str().c_str(), length);
+    // allocate the memory to hold all output
+    char * rbuf = nullptr;
+    if (commrank == 0) {
+#if defined(TAU_MPI)
+        rbuf = (char*)calloc(max_length * commsize, sizeof(char));
+#else
+        rbuf = sbuf;
+#endif
+    }
+
+#if defined(TAU_MPI)
+    MPI_Gather(sbuf, max_length, MPI_CHAR, rbuf, max_length, MPI_CHAR, 0, MPI_COMM_WORLD);
+#endif
+
+    if (commrank == 0) {
+        std::ofstream csvfile;
+        std::stringstream csvname;
+        csvname << TauEnv_get_profiledir();
+        csvname << filesystem_separator() << filename;
+        std::cout << "Writing: " << csvname.str();
+        csvfile.open(csvname.str(), std::ios::out);
+        csvfile << "\"rank\",\"name\",\"step\",\"value\"\n";
+        char * index = rbuf;
+        for (auto i = 0 ; i < commsize ; i++) {
+            index = rbuf+(i*max_length);
+            std::string tmpstr{index};
+            csvfile << tmpstr;
+            csvfile.flush();
+        }
+        csvfile.close();
+        std::cout << "...done." << std::endl;
+    }
+    free(sbuf);
+    free(rbuf);
+}
+
 int Tau_plugin_event_pre_end_of_execution_monitoring(Tau_plugin_event_pre_end_of_execution_data_t *data) {
-    if (my_rank == 0)
+    if (configuration.count("scatterplot") > 0) {
+        if (configuration["scatterplot"]) {
+            reduce_scatterplot(csv_output, "monitoring.csv");
+        }
+    }
+    if (get_my_rank() == 0)
         TAU_VERBOSE("Monitoring Component PLUGIN %s\n", __func__);
     //if (RtsLayer::myThread() == 0) {
     if (main_thread()) {
@@ -1379,7 +1550,7 @@ int Tau_plugin_event_pre_end_of_execution_monitoring(Tau_plugin_event_pre_end_of
 }
 
 int Tau_plugin_event_end_of_execution_monitoring(Tau_plugin_event_end_of_execution_data_t *data) {
-    if (my_rank == 0)
+    if (get_my_rank() == 0)
         TAU_VERBOSE("Monitoring Component PLUGIN %s\n", __func__);
     //if (RtsLayer::myThread() == 0) {
     if (main_thread()) {
@@ -1395,16 +1566,21 @@ int Tau_plugin_metadata_registration_complete_monitoring(Tau_plugin_event_metada
 }
 
 int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* data) {
-    if (my_rank == 0) TAU_VERBOSE("Monitoring Component PLUGIN %s\n", __func__);
+    if (get_my_rank() == 0) TAU_VERBOSE("Monitoring Component PLUGIN %s\n", __func__);
 
     rank_getting_system_data = choose_volunteer_rank();
 
 #ifdef TAU_PAPI
     /* get ready to read metrics! */
-    initialize_papi_events(my_rank == rank_getting_system_data);
+    if (configuration.count("PAPI metrics")) {
+        auto metrics = configuration["PAPI metrics"];
+        if (metrics.size() > 0) {
+            initialize_papi_events(get_my_rank() == rank_getting_system_data);
+        }
+    }
 #endif
 
-    if (my_rank == rank_getting_system_data) {
+    if (get_my_rank() == rank_getting_system_data) {
 #if !defined(__APPLE__)
         previous_cpu_stats = read_cpu_stats();
         /* Parse initial node network data */
@@ -1429,7 +1605,7 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
         configuration["periodic"]) {
         /* spawn the worker thread to do the reading */
         init_lock(&_my_mutex);
-        if (my_rank == 0) TAU_VERBOSE("Spawning thread.\n");
+        if (get_my_rank() == 0) TAU_VERBOSE("Spawning thread.\n");
         int ret = pthread_create(&worker_thread, NULL,
         &Tau_monitoring_plugin_threaded_function, NULL);
         if (ret != 0) {
@@ -1451,7 +1627,7 @@ int Tau_plugin_event_post_init_monitoring(Tau_plugin_event_post_init_data_t* dat
                     return 0;
             }
         }
-        if (my_rank == 0) TAU_VERBOSE("Detached thread.\n");
+        if (get_my_rank() == 0) TAU_VERBOSE("Detached thread.\n");
         _attached = false;
     }
     return 0;

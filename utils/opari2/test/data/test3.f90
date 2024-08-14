@@ -19,19 +19,19 @@
 program test3
   integer i, j, k
 
-   !$OMP parallel 
+   !$OMP parallel
    !$OMP do
    do 12,i = 1,8
      a=a+1
-12 continue 
+12 continue
    !$OMP end parallel
-     
+
    !$OMP parallel do
    do 13,i = 1,8
       a=a+1
-13 continue 
-        
-   !$OMP parallel 
+13 continue
+
+   !$OMP parallel
    !$OMP do
    do 14,i = 1,8
       a=a+1
@@ -39,7 +39,7 @@ program test3
    !$OMP atomic
    me = me + omp_get_thread_num()
    !$OMP end parallel
-           
+
    !$OMP parallel do
    do 15,i = 1,8
 15    a=a+1
@@ -63,7 +63,7 @@ program test3
   !$omp end parallel
   !$omp end parallel
 
-              
+
 ! *******************************************
 ! * end pragma substitution in nested loops *
 ! *******************************************
@@ -72,7 +72,7 @@ program test3
       do 16, j = 1,8
          a=a+1
 16    continue
-                    
+
    do 17,i = 1,8
       !$OMP parallel do
       do 18, j = 1,8

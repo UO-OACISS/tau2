@@ -166,7 +166,7 @@ int RtsLayer::_createThread()
 {
 	RtsThread* newThread;
 
-	if (nextThread > TheThreadList().size())
+	if (nextThread >= TheThreadList().size())
 	{
 		newThread = new RtsThread();
 		TheThreadList().push_back(newThread);

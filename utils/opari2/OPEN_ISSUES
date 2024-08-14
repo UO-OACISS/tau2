@@ -1,7 +1,7 @@
 
-                        OPARI2 2.0.4 OPEN ISSUES
-                        ========================
-                                                         Effective: October 2018
+                           OPARI2 2.0.8 OPEN ISSUES
+                           ========================
+                                                           Effective: Sep 2023
 
 This file lists known limitations and unimplemented features of
 the OPARI2 component.
@@ -11,25 +11,22 @@ the OPARI2 component.
 * Platform support
 
   - OPARI2 has been tested on the following platforms:
-    + Cray XC systems
-    + K Computer
-    + various Linux/Intel (x86/x64/Power8/ARM AArch32/AArch64) clusters
+    + HPE/Cray XC and EX systems with all available PrgEnvs
+    + various Linux (Intel, AMD, IBM, ARM) clusters with GNU, Intel,
+      Nvidia, IBM, and AMD compilers. Note that some compilers are
+      based on Clang.
     The provided configure options (see INSTALL) may provide a good
     basis for building and testing the toolset on other systems.
 
   - The following platforms have not been tested recently:
-    + IBM Blue Gene/Q
-    + IBM Blue Gene/P
+    + Intel Xeon Phi (KNL)
+    + IBM Blue Gene
     + Cray XT, XE, XK
-    + Sun Solaris/SPARC-based clusters
     However the supplied buildsystem might still work on these
     systems.
 
   - The following platforms have not been tested:
-    + NEC SX-9
-    + IBM Blue Gene/L
-    + SiCortex systems
-    + other NEC SX systems
+    + NEC systems
 
 --------------------------------------------------------------------------------
 
@@ -115,6 +112,14 @@ the OPARI2 component.
         chuncksize into a temporary variable prior to its usage in the
         schedule clause.
 
+
+      + For combined constructs (like 'omp parallel <construct>'),
+        some clauses not yet handled by OPARI2 (such as 'simd') may be
+        incorrectly added to the 'omp parallel' clause during the
+        source-to-source translation. As a workaround, the combined
+        construct can be manually split into an 'omp parallel' region
+        and the remaining construct.
+
   - Fortran:
 
       + The !$OMP END DO and !$OMP END PARALLEL DO directives are required
@@ -182,6 +187,11 @@ the OPARI2 component.
         needs to appear on a line following the end quotation mark of
         the string. Otherwise, include statements might appear not at
         the correct place.
+
+      + OPARI2 does not handle 'interface ... end interface'
+        correctly. If the name 'interface' (case-insensitive) appears
+        in a variable name, OPARI2 might produce non-functional
+        code. As a workaround, rename this variable.
 
   - C/C++:
 

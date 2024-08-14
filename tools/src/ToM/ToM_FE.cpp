@@ -92,7 +92,7 @@ void write_be_connections(vector<NetworkTopology::Node *>& leaves,
    FILE *f;
 
    char connfile[512];
-   sprintf(connfile,"%s/attachBE_connections",profiledir);
+   snprintf(connfile, sizeof(connfile), "%s/attachBE_connections",profiledir);
    if ((f = fopen(connfile, (const char *)"w+")) == NULL)
    {
       perror("fopen");
@@ -133,8 +133,9 @@ int main(int argc, char **argv)
 
     profiledir = getenv("PROFILEDIR");
     if (profiledir == NULL) {
-      profiledir = (char *)malloc((strlen(".")+1)*sizeof(char));
-      strcpy(profiledir,".");
+      const int len = (strlen(".")+1)*sizeof(char);
+      profiledir = (char *)malloc(len);
+      strncpy(profiledir, ".", len); 
     }
 
     char* topology_file = argv[1];
@@ -179,7 +180,7 @@ int main(int argc, char **argv)
     // Write an atomic probe file for Backends to wait on.
     FILE *atomicFile;
     char atomicFilename[512];
-    sprintf(atomicFilename,"%s/ToM_FE_Atomic",profiledir);
+    snprintf(atomicFilename, sizeof(atomicFilename), "%s/ToM_FE_Atomic",profiledir);
     if ((atomicFile = fopen(atomicFilename,"w")) == NULL) {
       perror("Failed to create ToM_FE_Atomic\n");
       exit(-1);
@@ -417,10 +418,10 @@ void protocolBaseStats() {
   char profileName[512];
   char profileNameTmp[512];
   char aggregateMeta[512];
-  sprintf(profileNameTmp, "%s/.temp.mean.%d.0.0",profiledir,
+  snprintf(profileNameTmp, sizeof(profileNameTmp),  "%s/.temp.mean.%d.0.0",profiledir,
 	  invocationIndex);
-  sprintf(profileName, "%s/mean.%d.0.0",profiledir, invocationIndex);
-  sprintf(aggregateMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
+  snprintf(profileName, sizeof(profileName),  "%s/mean.%d.0.0",profiledir, invocationIndex);
+  snprintf(aggregateMeta, sizeof(aggregateMeta), "<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
 	  "Mean Aggregation Time",time_aggregate/1000000.0f);
   FILE *profile = fopen(profileNameTmp,"w");
   // *CWL* - templated_functions_MULTI_<metric name> should be the            
@@ -485,9 +486,9 @@ void protocolHistogram() {
   FILE *histoFile;
   char histFileNameTmp[512];
   char histFileName[512];
-  sprintf (histFileName, "%s/tau.histograms.%d", profiledir,
+  snprintf (histFileName, sizeof(histFileName),  "%s/tau.histograms.%d", profiledir,
 	   invocationIndex);
-  sprintf (histFileNameTmp, "%s/.temp.tau.histograms.%d", profiledir,
+  snprintf (histFileNameTmp, sizeof(histFileNameTmp),  "%s/.temp.tau.histograms.%d", profiledir,
 	   invocationIndex);
   int numHistogramsPerEvent = numCounters*TOM_NUM_CTR_VAL+TOM_NUM_FUN_VAL;
   histoFile = fopen(histFileNameTmp, "w");
@@ -757,12 +758,12 @@ void protocolClustering() {
   char clusterFileNameTmp[512];
   char clusterFileName[512];
   char clusterMeta[4096];
-  sprintf(clusterDirName, "%s/cluster_%d",profiledir, invocationIndex);
+  snprintf(clusterDirName, sizeof(clusterDirName),  "%s/cluster_%d",profiledir, invocationIndex);
   mkdir(clusterDirName,0755);
   for (int k=0; k<numK; k++) {
-    sprintf(clusterFileNameTmp, "%s/.temp.profile.%d.0.0",clusterDirName,k);
-    sprintf(clusterFileName, "%s/profile.%d.0.0",clusterDirName,k);
-    sprintf(clusterMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute><attribute><name>%s</name><value>%d</value></attribute><attribute><name>%s</name><value>%d</value></attribute>",
+    snprintf(clusterFileNameTmp, sizeof(clusterFileNameTmp),  "%s/.temp.profile.%d.0.0",clusterDirName,k);
+    snprintf(clusterFileName, sizeof(clusterFileName),  "%s/profile.%d.0.0",clusterDirName,k);
+    snprintf(clusterMeta, sizeof(clusterMeta), "<attribute><name>%s</name><value>%.4G seconds</value></attribute><attribute><name>%s</name><value>%d</value></attribute><attribute><name>%s</name><value>%d</value></attribute>",
 	    "Clustering Time",time_cluster/1000000.0f,
 	    "cluster-membership", clusterNumMembers[k],
 	    "Clustering Convergence Steps", iterationCount);

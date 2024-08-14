@@ -28,7 +28,7 @@ void iteration(cudaStream_t &stream)
 
   e->value = 10;
   cudaMallocManaged((void**)&(e->name), sizeof(char) * (strlen("hello") + 1) );
-  strcpy(e->name, "hello");
+  strncpy(e->name,  "hello", sizeof(char) * (strlen("hello") + 1)); 
 
   launch(e, stream);
 

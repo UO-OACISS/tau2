@@ -19,4 +19,3 @@ if diff $test_dir/../awk_script_test.output $test_dir/awk_script.out > /dev/null
     cd $opari_dir
     exit
 fi
-

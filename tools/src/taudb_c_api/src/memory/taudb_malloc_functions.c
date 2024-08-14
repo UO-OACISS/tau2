@@ -126,27 +126,27 @@ char* taudb_strdup(const char* in_string) {
   // add one more character for the null terminator
   int length = strlen(in_string) + 1;
   char* new_string = (char*)calloc(length, sizeof(char));
-  strcpy(new_string, in_string);
+  strncpy(new_string,  in_string, length); 
   return new_string;
 }
 
 char* taudb_create_hash_key_2(int thread, const char* timer) {
   char str_thread[15];
-  sprintf(str_thread, "%d", thread);
+  snprintf(str_thread, sizeof(str_thread),  "%d", thread);
   // add colon character and null terminator
   int length = strlen(str_thread) + strlen(timer) + 2;
   char* key = (char*)calloc(length, sizeof(char));
-  sprintf(key, "%d:%s", thread, timer);
+  snprintf(key, length,  "%d:%s", thread, timer);
   return key;
 }
 
 char* taudb_create_hash_key_3(int thread, const char* timer, const char* metric) {
   char str_thread[15];
-  sprintf(str_thread, "%d", thread);
+  snprintf(str_thread, sizeof(str_thread),  "%d", thread);
   // add colon characters and null terminator
   int length = strlen(str_thread) + strlen(timer) + strlen(metric) + 3;
   char* key = (char*)calloc(length, sizeof(char));
-  sprintf(key, "%d:%s:%s", thread, timer, metric);
+  snprintf(key, length,  "%d:%s:%s", thread, timer, metric);
   return key;
 }
 

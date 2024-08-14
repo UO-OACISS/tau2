@@ -171,7 +171,7 @@ extern "C" void ___rouent2(struct s1 *p) {
 			 before main and get called repeatedly when <iostream> and cout are used
 			 in a C++ application. We need to create a top level timer if necessary */
   	char routine[2048];
-    sprintf (routine, "%s [{%s} {%ld,0}]", p->rout, p->file, p->lineno);
+    snprintf (routine, sizeof(routine),  "%s [{%s} {%ld,0}]", p->rout, p->file, p->lineno);
     char* modpos;
     
     /* fix opari output file names */

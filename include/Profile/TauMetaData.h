@@ -66,14 +66,14 @@ struct Tau_Metadata_Compare: std::binary_function<Tau_metadata_key,Tau_metadata_
     } else {
 	    allocate_left = strlen(lhs.name)+strlen(lhs.timer_context)+64;
         left = (char *) calloc(allocate_left, sizeof(char));
-        sprintf(left, "%s%s%d:%llu", lhs.name, lhs.timer_context, lhs.call_number, lhs.timestamp);
+        snprintf(left, allocate_left,  "%s%s%d:%llu", lhs.name, lhs.timer_context, lhs.call_number, lhs.timestamp);
     }
     if (rhs.timer_context == NULL) {
         right = rhs.name;
     } else {
         allocate_right = strlen(rhs.name)+strlen(rhs.timer_context)+64;
         right = (char *) calloc(allocate_right, sizeof(char));
-        sprintf(right, "%s%s%d:%llu", rhs.name, rhs.timer_context, rhs.call_number, rhs.timestamp);
+        snprintf(right, allocate_right,  "%s%s%d:%llu", rhs.name, rhs.timer_context, rhs.call_number, rhs.timestamp);
     }
     bool result = strcmp(left, right) < 0;
 	if (allocate_left > 0) {

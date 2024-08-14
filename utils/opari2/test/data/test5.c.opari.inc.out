@@ -7,8 +7,8 @@ static OPARI2_Region_handle opari2_region_1 = NULL;
 static OPARI2_Region_handle opari2_region_2 = NULL;
     #define opari2_ctc_2 "109*regionType=parallelsections*sscl=test5.c:44:44*escl=test5.c:58:58*hasIf=1*hasNum_threads=1*hasReduction=1**"
 
-#ifdef __cplusplus 
- extern "C" 
+#ifdef __cplusplus
+extern "C"
 #endif
 void POMP2_Init_reg_000()
 {

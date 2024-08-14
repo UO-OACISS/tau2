@@ -1,7 +1,7 @@
 /*
  * This file is part of the Score-P software (http://www.score-p.org)
  *
- * Copyright (c) 2013, 2014
+ * Copyright (c) 2013, 2014, 2021,
  * Forschungszentrum Juelich GmbH, Germany
  *
  * This software may be modified and distributed under the terms of
@@ -86,6 +86,18 @@ private:
 
     void
     handle_regular_line();
+
+    void
+    handle_numeric_literal();
+
+    void
+    handle_binary_literal();
+
+    void
+    handle_decimal_literal();
+
+    void
+    handle_hexadecimal_literal();
 
     bool
     get_next_line( void );

@@ -113,7 +113,7 @@ extern "C" void Tau_mon_connect() {
 
     // Do not proceed until front-end has written the atomic probe file.
     char atomicFileName[512];
-    sprintf(atomicFileName,"%s/ToM_FE_Atomic",profiledir);
+    snprintf(atomicFileName, sizeof(atomicFileName), "%s/ToM_FE_Atomic",profiledir);
     FILE *atomicFile;
     while ((atomicFile = fopen(atomicFileName,"r")) == NULL) {
       sleep(1);
@@ -121,7 +121,7 @@ extern "C" void Tau_mon_connect() {
     fclose(atomicFile);
 
     char connectionName[512];
-    sprintf(connectionName,"%s/attachBE_connections",profiledir);
+    snprintf(connectionName, sizeof(connectionName), "%s/attachBE_connections",profiledir);
     FILE *connections = fopen(connectionName,"r");
     // assume there are exactly size entries in the connection file.
     for (int i=0; i<size; i++) {
@@ -157,9 +157,9 @@ extern "C" void Tau_mon_connect() {
   char mrnetPortString[10];
   char mrnetRankString[10];
 
-  sprintf(beRankString, "%d", beRank);
-  sprintf(mrnetPortString, "%d", mrnetPort);
-  sprintf(mrnetRankString, "%d", mrnetRank);
+  snprintf(beRankString, sizeof(beRankString),  "%d", beRank);
+  snprintf(mrnetPortString, sizeof(mrnetPortString),  "%d", mrnetPort);
+  snprintf(mrnetRankString, sizeof(mrnetRankString),  "%d", mrnetRank);
 
   mrnet_argv[0] = (char *)malloc(strlen("")*sizeof(char));
   mrnet_argv[0] = strcpy(mrnet_argv[0],""); // dummy process name string

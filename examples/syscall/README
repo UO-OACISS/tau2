@@ -1,0 +1,41 @@
+This is an example of TAU reading system calls.
+
+Configure TAU with:
+
+./configure -bfd=download -syscall
+
+Compile the example:
+make
+
+Execute the example:
+tau_exec -syscall ./syscall_test
+
+Obtain the profiling information:
+pprof
+
+
+At this moment, only single thread applications are profiled with -syscall, the system calls appear in Thread 1
+Example:
+
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.281        1,006           1           1    1006133 .TAU application
+100.0        1,005        1,005           1           0    1005852 taupreload_main
+
+NODE 0;CONTEXT 0;THREAD 1:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0         0.63        1,003           1           7    1003748 .TAU application
+ 99.6        1,000        1,000           1           0    1000231 clock_nanosleep
+  0.3            2            2           1           0       2528 kill
+  0.0        0.332        0.332           3           0        111 write
+  0.0        0.016        0.016           1           0         16 newfstatat
+  0.0        0.011        0.011           1           0         11 getpid
+
+

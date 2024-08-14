@@ -16,7 +16,7 @@ READTRACE=readTrace.o readTrace.*.~*
 MAKEFILE=Makefile.~*
 
 CXXFLAGS = $(USER_OPT) 
-OTF2FLAGS = -DNOCROSS_BUILD -D__STDC_FORMAT_MACROS -DFRONTEND_BUILD  $(TAU_OTF2_1_1_FLAGS)
+OTF2FLAGS = -DNOCROSS_BUILD -D__STDC_FORMAT_MACROS -DFRONTEND_BUILD 
 
 OTFLIBS=-L$(OTFLIB) -lotf2 $(TAU_LINKER_OPT16)  #Only include -lrt (opt16) when it is found by TAU
 
@@ -28,7 +28,7 @@ $(TAU_BIN_DIR)/otf2profile: otf2profile
 	/bin/cp $< $(TAU_BIN_DIR)
 
 otf2profile:    handlers.o otf2_hash_table.o otf2_vector.o UTILS_Error.o UTILS_IO_Tools.o  otf2profile.o trace2profile.o handlers.o
-		$(CXX) $(CXXFLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -o $@ otf2_hash_table.o  otf2profile.o trace2profile.o handlers.o otf2_vector.o UTILS_Error.o UTILS_IO_Tools.o $(LIBS) $(OTFLIBS)
+		$(TAU_CXX) $(CXXFLAGS) -o $@  otf2_hash_table.o otf2profile.o trace2profile.o handlers.o otf2_vector.o UTILS_Error.o UTILS_IO_Tools.o $(LIBS) $(OTFLIBS) 
 	
 otf2profile.o: otf2profile.cpp 
 	$(CXX) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c otf2profile.cpp
@@ -46,7 +46,7 @@ otf2_vector.o: otf2_vector.h
 	$(CC) $(TAU_CC_SPECIAL_OPTS) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c otf2_vector.c
 	
 UTILS_Error.o: UTILS_Error.h
-	$(CC) $(TAU_CC_SPECIAL_OPTS) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c UTILS_Error.c
+	$(CC) $(TAU_CC_SPECIAL_OPTS) -fPIE $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c UTILS_Error.c
 	
 UTILS_IO_Tools.o: UTILS_IO.h
 	$(CC) $(TAU_CC_SPECIAL_OPTS) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c UTILS_IO_Tools.c

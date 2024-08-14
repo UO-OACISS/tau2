@@ -93,8 +93,8 @@ struct EventDescr {
     {
       gid = evGlobalId;
       tag = evTag;
-      strcpy(state, evState);
-      strcpy(param, evParam);
+      strncpy(state,  evState, sizeof(state)); 
+      strncpy(param,  evParam, sizeof(param)); 
     }
     EventDescr()
     {
@@ -103,15 +103,15 @@ struct EventDescr {
     {
       gid = X.gid;
       tag = X.tag;
-      strcpy(state, X.state);
-      strcpy(param, X.param);
+      strncpy(state,  X.state, sizeof(state)); 
+      strncpy(param,  X.param, sizeof(param)); 
     }
     EventDescr& operator= (const EventDescr& X) 
     {
       gid = X.gid;
       tag = X.tag;
-      strcpy(state, X.state);
-      strcpy(param, X.param);
+      strncpy(state,  X.state, sizeof(state)); 
+      strncpy(param,  X.param, sizeof(param)); 
       return *this;
     }  
     ~EventDescr() { }
@@ -162,11 +162,11 @@ int open_edf_file(char *prefix, int nodeid, int prefix_is_filename)
 
   if (prefix_is_filename)
   { /* Use prefix as the file name. Don't add any numbers to it. */
-    strcpy(filename, prefix);
+    strncpy(filename,  prefix, sizeof(filename)); 
   }
   else 
   { /* default mode of operation, use prefix and node id */
-    sprintf(filename, "%s.%d.edf", prefix,nodeid);
+    snprintf(filename, sizeof(filename),  "%s.%d.edf", prefix,nodeid);
   }
 
   if ( (edfFiles[nodeid] = fopen (filename, "r")) == NULL )
@@ -206,7 +206,7 @@ int parse_edf_file(int node)
     {
       if (linebuf[0] == '#') /* store header for output file */
       {
-	strcpy(header, linebuf);
+	strncpy(header,  linebuf, sizeof(header)); 
       }
       /* -- skip empty and comment lines -- */
       i--;
@@ -237,7 +237,7 @@ int parse_edf_file(int node)
       }
 
       string eventnameString = line.substr(firstQuote, lastQuote - firstQuote + 1);
-      strcpy (eventname, eventnameString.c_str());
+      strncpy (eventname,  eventnameString.c_str(), sizeof(eventname)); 
 
       string paramString = line.substr(lastQuote+2);
       strcpy (inputev.param, paramString.c_str());
@@ -247,8 +247,9 @@ int parse_edf_file(int node)
 #endif /* DEBUG */
       /* now that we have eventname, see if it exists in the map */
       /* Since pointers create a problem with stl we have to do this */
-      stlEvName = new char[strlen(eventname)+1];
-      strcpy(stlEvName, eventname);
+      const int len = strlen(eventname)+1;
+      stlEvName = new char[len];
+      strncpy(stlEvName,  eventname, len); 
       if((iter = eventNameMap.find((const char *)stlEvName)) != eventNameMap.end()) 
       {
 	/* Found eventname in the map */
@@ -330,8 +331,9 @@ int store_merged_edffile(char *filename)
   map<const char*, EventDescr *, ltstr>::iterator it;
 
   if ((fp = fopen (filename, "w+")) == NULL) {
-    errormsg = new char[strlen(filename)+32]; 
-    sprintf(errormsg,"Error: Could not create %s",filename);
+    const int len = strlen(filename)+32;
+    errormsg = new char[len]; 
+    snprintf(errormsg, len, "Error: Could not create %s",filename);
     perror(errormsg);
     return 0;
   }
@@ -385,7 +387,7 @@ int GID(int node, long local)
     if (edfspecified == FALSE)
     {
       char eventfilename[2048];
-      sprintf(eventfilename, "events.%d.edf", get_nodeid(node));
+      snprintf(eventfilename, sizeof(eventfilename),  "events.%d.edf", get_nodeid(node));
       open_edf_file(eventfilename, node, TRUE);
 #ifdef DEBUG
       printf("re-opening %s\n", eventfilename);

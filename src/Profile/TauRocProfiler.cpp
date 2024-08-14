@@ -43,6 +43,7 @@ THE SOFTWARE.
 pthread_mutex_t rocm_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 // Tool is unloaded
 volatile bool is_loaded = false;
+volatile bool is_callback_loaded = false;
 // Profiling features
 //rocprofiler_feature_t* features = NULL;
 //unsigned feature_count = 0;
@@ -286,8 +287,8 @@ bool Tau_rocm_context_handler(const rocprofiler_pool_entry_t* entry, void* arg) 
     perror("pthread_mutex_lock");
     abort();
   }
-
-  Tau_rocm_dump_context_entry(ctx_entry, handler_arg->features, handler_arg->feature_count);
+  if (is_callback_loaded)  
+	  Tau_rocm_dump_context_entry(ctx_entry, handler_arg->features, handler_arg->feature_count);
 
   if (pthread_mutex_unlock(&rocm_mutex) != 0) {
     perror("pthread_mutex_unlock");
@@ -496,7 +497,19 @@ void Tau_rocm_initialize() {
 
 void Tau_rocm_cleanup() {
   // Unregister dispatch callback
-  rocprofiler_remove_queue_callbacks();
+  if (pthread_mutex_lock(&rocm_mutex) != 0) {
+      perror("pthread_mutex_lock");
+      abort();
+  }
+  if (is_callback_loaded){
+	  is_callback_loaded = false;
+	  rocprofiler_remove_queue_callbacks();
+  }
+  if (pthread_mutex_unlock(&rocm_mutex) != 0) {
+      perror("pthread_mutex_unlock");
+      abort();
+    }
+
   // CLose profiling pool
 #if 0
   hsa_status_t status = rocprofiler_pool_flush(pool);
@@ -507,6 +520,7 @@ void Tau_rocm_cleanup() {
 }
 
 void Tau_rocprofiler_pool_flush() {
+    Tau_rocm_cleanup();
     if (pthread_mutex_lock(&rocm_mutex) != 0) {
       perror("pthread_mutex_lock");
       abort();
@@ -542,6 +556,7 @@ extern "C" PUBLIC_API void OnLoadToolProp(rocprofiler_settings_t* settings)
   }
   if (is_loaded) return;
   is_loaded = true;
+  is_callback_loaded = true;
   if (pthread_mutex_unlock(&rocm_mutex) != 0) {
     perror("pthread_mutex_unlock");
     abort();
@@ -1199,44 +1214,44 @@ bool HsaRsrcFactory::PrintGpuAgents(const std::string& header) {
     std::clog << ">> Shader Arrays per SE : " << agent_info->shader_arrays_per_se << std::endl;
 */
 
-    sprintf(key, "ROCM_AGENT_%d_NAME", idx);
-    sprintf(value, "%s", agent_info->name);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_NAME", idx);
+    snprintf(value, sizeof(value),  "%s", agent_info->name);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_IS_APU", idx);
-    sprintf(value, "%d", agent_info->is_apu);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_IS_APU", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->is_apu);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_HSA_PROFILE", idx);
-    sprintf(value, "%d", agent_info->profile);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_HSA_PROFILE", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->profile);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_MAX_WAVE_SIZE", idx);
-    sprintf(value, "%d", agent_info->max_wave_size);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_MAX_WAVE_SIZE", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->max_wave_size);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_MAX_QUEUE_SIZE", idx);
-    sprintf(value, "%d", agent_info->max_queue_size);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_MAX_QUEUE_SIZE", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->max_queue_size);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_CU_NUMBER", idx);
-    sprintf(value, "%d", agent_info->cu_num);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_CU_NUMBER", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->cu_num);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_WAVES_PER_CU", idx);
-    sprintf(value, "%d", agent_info->waves_per_cu);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_WAVES_PER_CU", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->waves_per_cu);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_SIMDs_PER_CU", idx);
-    sprintf(value, "%d", agent_info->simds_per_cu);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_SIMDs_PER_CU", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->simds_per_cu);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_SE_NUMBER", idx);
-    sprintf(value, "%d", agent_info->se_num);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_SE_NUMBER", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->se_num);
     TAU_METADATA(key, value);
 
-    sprintf(key, "ROCM_AGENT_%d_SHADER_ARRAYS_PER_SE", idx);
-    sprintf(value, "%d", agent_info->shader_arrays_per_se);
+    snprintf(key, sizeof(key),  "ROCM_AGENT_%d_SHADER_ARRAYS_PER_SE", idx);
+    snprintf(value, sizeof(value),  "%d", agent_info->shader_arrays_per_se);
     TAU_METADATA(key, value);
 
   }

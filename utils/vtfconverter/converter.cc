@@ -321,7 +321,7 @@ void displayCommandLine(void)
 	double startTime = -1;
 	double endTime = -1;
 
-	strcpy(destPath, "./");
+	strncpy(destPath,  "./", sizeof(destPath)); 
 
 	while(1)
 	{

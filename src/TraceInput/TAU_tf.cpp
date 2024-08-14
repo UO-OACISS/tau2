@@ -585,7 +585,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
       /*
       sprintf(nodename, "Node %d Thread %d", nid, tid);
       */
-      sprintf(nodename, "process %d:%d", nid, tid);
+      snprintf(nodename, sizeof(nodename),  "process %d:%d", nid, tid);
 
       /* invoke callback routine */
       if (*callbacks.DefThread)
@@ -826,7 +826,7 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
       eventname[k-j+1] = '"';
       eventname[k-j+2] = '\0'; /* terminate eventname */
 
-      strcpy(param, &linebuf[k+2]);
+      strncpy(param,  &linebuf[k+2], sizeof(param)); 
 
       // Fix 13/10 to 10 for event files generated with windows
       if (param[strlen(param)-2] == 13) {

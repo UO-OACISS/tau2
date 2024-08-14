@@ -300,14 +300,14 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
 #else
     char *demangled_funcname = strdup(resolvedInfo.funcname);
 #endif
-    sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
+    snprintf(resolvedBuffer, length * sizeof(char),  "[%s] [{%s} {%d}]",
         demangled_funcname, resolvedInfo.filename, resolvedInfo.lineno);
     free(demangled_funcname);
   } else {
     // this should be enough...
     length = strlen(mapName) + 32;
     resolvedBuffer = (char*)malloc(length * sizeof(char));
-    sprintf(resolvedBuffer, "[%s] UNRESOLVED ADDR", mapName);
+    snprintf(resolvedBuffer, length * sizeof(char),  "[%s] UNRESOLVED ADDR", mapName);
   }
 
   return resolvedBuffer;
@@ -415,9 +415,19 @@ size_t trimwhitespace(char *out, size_t len, const char *str)
 //         Also look for "tau*/include/" where * has no "/".
 bool nameInTau(const char *name)
 {
-  if (strstr(name, "UNRESOLVED ADDR") != NULL)
+  //if (strstr(name, "UNRESOLVED ADDR") != NULL)
+    //return false;
+  const char * tmp_name = strchr(name, '{');
+  // no leading '{'?
+  if (tmp_name == nullptr) {
+    tmp_name = strchr(name, '[');
+  }
+  // no leading '[', either? Then return false.
+  if (tmp_name == nullptr) {
     return false;
-  name = strchr(name, '{') + 1;
+  }
+  tmp_name = tmp_name+1;
+
   static char const * libprefix[] = {"libtau", "libTAU", NULL};
   static char const * libsuffix[] = {".a", ".so", ".dylib", NULL};
   int offset = 0;
@@ -425,7 +435,7 @@ bool nameInTau(const char *name)
   // Check libTAU and varients.
   char const * prefix;
   for (char const ** p=libprefix; (prefix = *p); ++p) {
-    char const * head = strstr(name, prefix);
+    char const * head = strstr(tmp_name, prefix);
     if (!head) continue;
     char const * suffix;
     for (char const ** s=libsuffix; (suffix = *s); ++s) {
@@ -436,7 +446,7 @@ bool nameInTau(const char *name)
     }
   }
   // Pretty ugly hack, I foresee much trouble ahead.
-  const char *strPtr = strstr(name, "tau");
+  const char *strPtr = strstr(tmp_name, "tau");
   if (strPtr != NULL) {
     length = strlen(strPtr);
     offset = strcspn(strPtr, "/");

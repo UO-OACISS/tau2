@@ -388,10 +388,10 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 #ifdef DEBUG_PROF
           printf("name = %s, dem_name = %s\n", node->info.funcname, dem_name);
 #endif /* DEBUG_PROF */
-          sprintf(routine, "%s [{%s} {%d,0}]", dem_name, node->info.filename, node->info.lineno);
+          snprintf(routine, size,  "%s [{%s} {%d,0}]", dem_name, node->info.filename, node->info.lineno);
           free(dem_name);
         } else {
-          sprintf(routine, "[%s] UNRESOLVED %s ADDR %lx", node->info.funcname, node->info.filename, addr);
+          snprintf(routine, size,  "[%s] UNRESOLVED %s ADDR %lx", node->info.funcname, node->info.filename, addr);
         }
 
         // Create function info

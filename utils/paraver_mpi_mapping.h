@@ -216,7 +216,7 @@ int mapMPINameToTypeValue (char *name, int *type, int *value, int *state) {
   int i;
   char localName[128] = "";
   char *tmpPtr = strchr(name, 'M'); // trim the leading quote mark
-  strcpy (localName, tmpPtr);
+  strncpy (localName, tmpPtr, sizeof(localName));
   int lastchar = strcspn(localName, "() ");
   localName[lastchar] = '\0';
   for (i = 0 ; i < NUM_MPI_FUNCTIONS ; i++) {

@@ -1,0 +1,12 @@
+CC=amdclang
+CXX=amdclang++
+F77=amdflang
+FC=amdflang
+
+#CPPFLAGS=
+CFLAGS=-g -O2
+CXXFLAGS=-g -O2
+FFLAGS=-g -O2
+FCFLAGS=-g -O2
+#LDFLAGS=
+#LIBS=

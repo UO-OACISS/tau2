@@ -163,11 +163,6 @@ struct CADataList: vector<CuptiActivityData*>{
          //printf("Creating CADataList at %p\n", this);
       }
      virtual ~CADataList(){
-         //printf("Destroying CADataList at %p, with size %ld\n", this, this->size());
-        if (TauEnv_get_cuda_track_sass() && TauEnv_get_cuda_csv_output()) {
-            write_sass_output();
-         }
-
          Tau_destructor_trigger();
      }
 };
@@ -330,7 +325,7 @@ void CUPTIAPI dumpCudaModule(CUpti_CallbackId cbid, void *resourceDescriptor)
             pCubin = moduleResourceData->pCubin;
             cubinSize = moduleResourceData->cubinSize;
             char str[500];
-            strcpy (str, TauEnv_get_profiledir());
+            strncpy (str,  TauEnv_get_profiledir(), sizeof(str)); 
             strcat (str, "/sass_loaded.cubin");
             cubin = fopen(str, "wb");
             if (cubin == NULL) {
@@ -448,21 +443,21 @@ void Tau_cupti_set_device_props() {
 
     /* save some metadata now */
 	char tmp_name[256];
-	sprintf(tmp_name, "GPU[%d] Total Constant Memory", dev);
+	snprintf(tmp_name, sizeof(tmp_name),  "GPU[%d] Total Constant Memory", dev);
     char tmp_value[256];
-	sprintf(tmp_value, "%lu", props.totalGlobalMem);
+	snprintf(tmp_value, sizeof(tmp_value),  "%lu", props.totalGlobalMem);
     Tau_metadata_register(tmp_name, tmp_value);
-	sprintf(tmp_name, "GPU[%d] L2 Cache Size", dev);
+	snprintf(tmp_name, sizeof(tmp_name),  "GPU[%d] L2 Cache Size", dev);
     Tau_metadata_register(tmp_name, props.l2CacheSize);
-	sprintf(tmp_name, "GPU[%d] Registers per Block", dev);
+	snprintf(tmp_name, sizeof(tmp_name),  "GPU[%d] Registers per Block", dev);
     Tau_metadata_register(tmp_name, props.regsPerBlock);
-	sprintf(tmp_name, "GPU[%d] Shared Memory per Block", dev);
+	snprintf(tmp_name, sizeof(tmp_name),  "GPU[%d] Shared Memory per Block", dev);
     Tau_metadata_register(tmp_name, props.sharedMemPerBlock);
-	sprintf(tmp_name, "GPU[%d] Max Threads per Block", dev);
+	snprintf(tmp_name, sizeof(tmp_name),  "GPU[%d] Max Threads per Block", dev);
     Tau_metadata_register(tmp_name, props.maxThreadsPerBlock);
-	sprintf(tmp_name, "GPU[%d] Max Threads per Multiprocessor", dev);
+	snprintf(tmp_name, sizeof(tmp_name),  "GPU[%d] Max Threads per Multiprocessor", dev);
     Tau_metadata_register(tmp_name, props.maxThreadsPerMultiProcessor);
-	sprintf(tmp_name, "GPU[%d] Warp Size", dev);
+	snprintf(tmp_name, sizeof(tmp_name),  "GPU[%d] Warp Size", dev);
     Tau_metadata_register(tmp_name, props.warpSize);
 
 	__deviceMap()[dev] = dev_record;
@@ -470,51 +465,52 @@ void Tau_cupti_set_device_props() {
 	GpuMetadata* metadata = (GpuMetadata*) malloc(sizeof(GpuMetadata) * nMeta);
 
 	int n = 0;
-	metadata[n].name = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].name, "GPU[%d] Name", dev);
+	const int str_len = sizeof(char)*256;
+	metadata[n].name = (char*) malloc(str_len);
+	snprintf(metadata[n].name, str_len,  "GPU[%d] Name", dev);
 	metadata[n].value = strdup(props.name);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].name, "GPU[%d] Compute Capability Major", dev);
-	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d", props.major);
+	metadata[n].name = (char*) malloc(str_len);
+	snprintf(metadata[n].name, str_len,  "GPU[%d] Compute Capability Major", dev);
+	metadata[n].value = (char*) malloc(str_len);
+	snprintf(metadata[n].value, str_len,  "%d", props.major);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].name, "GPU[%d] Compute Capability Minor", dev);
-	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d", props.minor);
+	metadata[n].name = (char*) malloc(str_len);
+	snprintf(metadata[n].name, str_len,  "GPU[%d] Compute Capability Minor", dev);
+	metadata[n].value = (char*) malloc(str_len);
+	snprintf(metadata[n].value, str_len,  "%d", props.minor);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].name, "GPU[%d] Clock Rate", dev);
-	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d", props.clockRate);
+	metadata[n].name = (char*) malloc(str_len);
+	snprintf(metadata[n].name, str_len,  "GPU[%d] Clock Rate", dev);
+	metadata[n].value = (char*) malloc(str_len);
+	snprintf(metadata[n].value, str_len,  "%d", props.clockRate);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].name, "GPU[%d] Total Global Memory", dev);
-	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%lu", props.totalGlobalMem);
+	metadata[n].name = (char*) malloc(str_len);
+	snprintf(metadata[n].name, str_len,  "GPU[%d] Total Global Memory", dev);
+	metadata[n].value = (char*) malloc(str_len);
+	snprintf(metadata[n].value, str_len,  "%lu", props.totalGlobalMem);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].name, "GPU[%d] Number of Multiprocessors", dev);
-	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d", props.multiProcessorCount);
+	metadata[n].name = (char*) malloc(str_len);
+	snprintf(metadata[n].name, str_len,  "GPU[%d] Number of Multiprocessors", dev);
+	metadata[n].value = (char*) malloc(str_len);
+	snprintf(metadata[n].value, str_len,  "%d", props.multiProcessorCount);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
-	metadata[n].name = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].name, "GPU[%d] Number of Memcpy Engines", dev);
-	metadata[n].value = (char*) malloc(sizeof(char)*256);
-	sprintf(metadata[n].value, "%d", props.asyncEngineCount);
+	metadata[n].name = (char*) malloc(str_len);
+	snprintf(metadata[n].name, str_len,  "GPU[%d] Number of Memcpy Engines", dev);
+	metadata[n].value = (char*) malloc(str_len);
+	snprintf(metadata[n].value, str_len,  "%d", props.asyncEngineCount);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
@@ -582,6 +578,7 @@ void Tau_cupti_subscribe()
     CUPTI_CHECK_ERROR(err, "cuptiActivityRegisterCallbacks");
     subscribed = 1;
     TAU_DEBUG_PRINT("TAU: exiting Tau_cupti_subscribe\n");
+    TAU_VERBOSE("TAU: exiting Tau_cupti_subscribe\n");
 }
 
 
@@ -806,12 +803,12 @@ int insert_context_into_map(uint32_t deviceId, uint32_t contextId, uint32_t stre
         cupti_mtx.unlock();
     }
     char tmpVal[32] = {0};
-    sprintf(tmpVal, "%u", deviceId);
+    snprintf(tmpVal, sizeof(tmpVal),  "%u", deviceId);
     Tau_metadata_task((char*)"CUDA Device", tmpVal, tid);
-    sprintf(tmpVal, "%u", contextId);
+    snprintf(tmpVal, sizeof(tmpVal),  "%u", contextId);
     Tau_metadata_task((char*)"CUDA Context", tmpVal, tid);
     if (TauEnv_get_thread_per_gpu_stream()) {
-        sprintf(tmpVal, "%u", streamId);
+        snprintf(tmpVal, sizeof(tmpVal),  "%u", streamId);
         Tau_metadata_task((char*)"CUDA Stream", tmpVal, tid);
     }
     return tid;
@@ -824,7 +821,7 @@ int get_vthread_for_cupti_context(const CUpti_ResourceData *handle, bool stream)
     int tid = 0;
     cuptiGetDeviceId(handle->context, &deviceId);
     cuptiGetContextId(handle->context, &contextId);
-    if (contextId != UINT32_MAX && contextId != 0) { // uninitialized context value
+    if (contextId == UINT32_MAX || contextId == 0) { // uninitialized context value
         return 0;
     }
     if (stream) {
@@ -1127,6 +1124,7 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
 // Extra bool param that tells whether to run code
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         CUpti_CallbackId id, const void *params) {
+    if (Tau_global_get_insideTAU() > 0) { return; }
     // The get_device_count function causes a CUDA driver call.
     // If we're recieving callbacks for driver events, we have to not
     // process that call or we'll end up recursively callling get_device_count
@@ -1295,7 +1293,7 @@ extern void Tau_cupti_buffer_processed(void);
             err = cuptiActivityGetNumDroppedRecords(NULL, 0, &number_dropped);
 
             if (number_dropped > 0)
-                printf("TAU WARNING: %d CUDA records dropped, consider increasing the CUPTI_BUFFER size.", number_dropped);
+                printf("TAU WARNING: %ld CUDA records dropped, consider increasing the CUPTI_BUFFER size.", number_dropped);
 
             // With the ASYNC ACTIVITY API CUPTI will take care of calling
             // Tau_cupti_register_buffer_creation() when it needs a new activity buffer so
@@ -1446,7 +1444,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                         {
                             CUpti_ActivityEnvironment* env = (CUpti_ActivityEnvironment*)record;
 #ifdef TAU_DEBUG_ENV
-                            printf("ENVIRONMENT deviceId: %u, timestamp: %u\n", env->deviceId, env->timestamp);
+                            printf("ENVIRONMENT deviceId: %u, timestamp: %lu\n", env->deviceId, env->timestamp);
 #endif
                             double timestamp;
                             uint32_t deviceId;
@@ -2334,7 +2332,11 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                 device.computeCapabilityMajor == 7 &&
                 device.computeCapabilityMinor > 1)
         {
-            TAU_VERBOSE("TAU Warning: GPU occupancy calculator is not implemented for devices of compute capability > 7.1.");
+            static bool alreadyPrintedWarning = false;
+            if(!alreadyPrintedWarning) { 
+                TAU_VERBOSE("TAU Warning: GPU occupancy calculator is not implemented for devices of compute capability > 7.1.\n");
+                alreadyPrintedWarning = true;
+            }
             return 0;
         }
         //gpu occupancy available.
@@ -3074,7 +3076,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
 #endif
 	FILE *fp;
 	char str[500];
-	strcpy (str,TauEnv_get_profiledir());
+	strncpy (str, TauEnv_get_profiledir(), sizeof(str)); 
 	strcat (str,"/sass_");
 	strcat (str, fname.c_str());
 	strcat (str, ".csv");
@@ -3101,7 +3103,7 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	std::string fname = "instruction_" + std::to_string(taskId);
 	FILE* fp;
 	char str[500];
-	strcpy (str,TauEnv_get_profiledir());
+	strncpy (str, TauEnv_get_profiledir(), sizeof(str)); 
 	strcat (str,"/sass_");
 	strcat (str, fname.c_str());
 	strcat (str, ".csv");
@@ -3144,7 +3146,7 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
 	    uint32_t contextId = fRes->contextId;
 	    uint32_t functionIndex = fRes->functionIndex;
 	    uint32_t id = fRes->id;
-	    const char* fname = fRes->name;
+	    const char* fname = Tau_demangle_name(fRes->name);
 	    fprintf(fp, "%u,%u,%u,%s\n", functionIndex, id, contextId, fname);
 	}
 	fclose(fp);
@@ -3176,7 +3178,7 @@ int output_instruction_map_to_csv(uint32_t taskId, uint32_t correlationId) {
         std::string fname = "instruction_" + std::to_string(taskId);
 	FILE* fp;
 	char str[500];
-	strcpy (str,TauEnv_get_profiledir());
+	strncpy (str, TauEnv_get_profiledir(), sizeof(str)); 
 	strcat (str,"/sass_");
 	strcat (str, fname.c_str());
 	strcat (str, ".csv");

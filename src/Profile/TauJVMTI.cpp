@@ -232,7 +232,7 @@ mnum_callback(const unsigned cnum, const unsigned mnum, const char *class_name, 
     char funcname[2048];
     int tid = 0;
     long unique_method_id;
-    sprintf(funcname, "%s %s %s", class_name, method_name, method_sig);
+    snprintf(funcname, sizeof(funcname),  "%s %s %s", class_name, method_name, method_sig);
     unique_method_id = make_unique_method_id(cnum, mnum);
     //Use of dummy TID is fine, library doesn't use it anyways.
     DEBUGPROFMSG("Mapping (" << cnum << ", " << mnum << ")=" << \
@@ -466,7 +466,7 @@ cbThreadStart(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 	    dprintf("Before RegisterThread in cbThreadStart\n");
 	    tid = JVMTIThreadLayer::RegisterThread(thread);
             get_thread_group_name(jvmti, thread, gname, sizeof(gname));
-	    sprintf(final_thread_name,"%s GROUP=%s",tname, gname);
+	    snprintf(final_thread_name, sizeof(final_thread_name), "%s GROUP=%s",tname, gname);
 	    CreateTopLevelRoutine(final_thread_name, " ", gname, *tid); 
         }
     } exit_critical_section(jvmti);
@@ -541,7 +541,7 @@ cbException(jvmtiEnv *jvmti, JNIEnv* env,
         // If so, stop the associated timer
         if(instrumented) {
             char timer_name[2048];
-            sprintf(timer_name, "%s %s %s", className, name, sig);
+            snprintf(timer_name, sizeof(timer_name),  "%s %s %s", className, name, sig);
             // which we have to look up in the map because we don't
             // know cnum and mnum in this callback
             map<std::string,long>::const_iterator it = name_to_id_map.find(timer_name);

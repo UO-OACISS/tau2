@@ -150,7 +150,7 @@ public:
 	const char* gpuIdentifier() const
 	{
 			char *rtn = (char*) malloc(50*sizeof(char));
-			sprintf(rtn, "[%d:%d]", device, stream);
+			snprintf(rtn, 50*sizeof(char),  "[%d:%d]", device, stream);
 			return rtn;
 	}
 	x_uint64 id_p1(void) const { return device; }
@@ -225,7 +225,7 @@ public:
 	const char* gpuIdentifier() const
 	{
 			char *rtn = (char*) malloc(50*sizeof(char));
-			sprintf(rtn, "%d:%d:%d (Device,Context,Stream)", device, context, stream);
+			snprintf(rtn, 50*sizeof(char),  "%d:%d:%d (Device,Context,Stream)", device, context, stream);
 			return rtn;
 	}
 	x_uint64 id_p1(void) const { return device; }

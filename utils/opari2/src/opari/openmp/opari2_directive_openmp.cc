@@ -13,7 +13,7 @@
  * Copyright (c) 2009-2011,
  * University of Oregon, Eugene, USA
  *
- * Copyright (c) 2009-2011, 2013, 2014, 2017,
+ * Copyright (c) 2009-2011, 2013, 2014, 2017, 2023,
  * Forschungszentrum Juelich GmbH, Germany
  *
  * Copyright (c) 2009-2011,
@@ -439,14 +439,14 @@ OPARI2_DirectiveOpenmp::GenerateDescr( ostream& os )
     {
         s_init_handle_calls << "         call " << s_paradigm_prefix
                             << "_Assign_handle( "
-                            << region_id_prefix << m_id << ", ";
+                            << region_id_prefix << m_id << ",";
         if ( s_format == F_FIX )
         {
             s_init_handle_calls << "\n     &   ";
         }
         else
         {
-            s_init_handle_calls << "&\n         ";
+            s_init_handle_calls << " &\n         ";
         }
 
         s_init_handle_calls << m_ctc_string_variable << " )\n";
@@ -623,14 +623,17 @@ OPARI2_DirectiveOpenmp::FinalizeDescrs( ostream& os )
         if ( s_lang & L_F77 )
         {
             os << "\n      integer*4 pomp2_lib_get_max_threads";
+            os << "\n      external pomp2_lib_get_max_threads";
             os << "\n      logical pomp2_test_lock";
-            os << "\n      integer*4 pomp2_test_nest_lock\n";
+            os << "\n      external pomp2_test_lock";
+            os << "\n      integer*4 pomp2_test_nest_lock";
+            os << "\n      external pomp2_test_nest_lock\n";
         }
         else if ( s_lang & L_F90 )
         {
-            os << "\n      integer ( kind=4 ) :: pomp2_lib_get_max_threads";
-            os << "\n      logical :: pomp2_test_lock";
-            os << "\n      integer ( kind=4 ) :: pomp2_test_nest_lock\n";
+            os << "\n      integer ( kind=4 ), external :: pomp2_lib_get_max_threads";
+            os << "\n      logical, external :: pomp2_test_lock";
+            os << "\n      integer ( kind=4 ), external :: pomp2_test_nest_lock\n";
         }
 
         if ( !s_common_block.empty() )
@@ -639,27 +642,27 @@ OPARI2_DirectiveOpenmp::FinalizeDescrs( ostream& os )
             {
                 if ( s_lang & L_F77 )
                 {
-                    os << "      integer*8 pomp_tpd \n";
+                    os << "      integer*8 pomp_tpd\n";
                 }
                 else
                 {
-                    os << "      integer( kind=8 ) pomp_tpd \n";
+                    os << "      integer( kind=8 ) pomp_tpd\n";
                 }
-                os << "      common /pomp_tpd/ pomp_tpd \n";
+                os << "      common /pomp_tpd/ pomp_tpd\n";
                 os << "!$omp threadprivate(/pomp_tpd/)\n";
             }
 
             if ( s_lang & L_F77 )
             {
-                os << "      integer*8 pomp2_old_task, pomp2_new_task \n";
-                os << "      logical pomp2_if \n";
-                os << "      integer*4 pomp2_num_threads \n";
+                os << "      integer*8 pomp2_old_task, pomp2_new_task\n";
+                os << "      logical pomp2_if\n";
+                os << "      integer*4 pomp2_num_threads\n";
             }
             else
             {
-                os << "      integer ( kind=8 ) :: pomp2_old_task, pomp2_new_task \n";
-                os << "      logical :: pomp2_if \n";
-                os << "      integer ( kind=4 ) :: pomp2_num_threads \n";
+                os << "      integer ( kind=8 ) :: pomp2_old_task, pomp2_new_task\n";
+                os << "      logical :: pomp2_if\n";
+                os << "      integer ( kind=4 ) :: pomp2_num_threads\n";
             }
         }
     }
@@ -684,11 +687,11 @@ OPARI2_DirectiveOpenmp::EndLoopDirective( const int lineno )
 
         if ( m_name == "do" )
         {
-            pragma += " end do ";
+            pragma += " end do";
         }
         else if ( m_name == "paralleldo" )
         {
-            pragma += " end parallel do ";
+            pragma += " end parallel do";
         }
 
         vector<string> lines;

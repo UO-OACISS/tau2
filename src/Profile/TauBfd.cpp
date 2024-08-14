@@ -25,7 +25,7 @@
 #define PACKAGE_VERSION 2.25
 #endif
 #include <bfd.h>
-#if TAU_BFD >= 022300
+#ifdef TAU_ELF_BFD
 #include <elf-bfd.h>
 #endif
 #include <dirent.h>
@@ -70,6 +70,9 @@
 #include <errno.h>
 #include <dwarf.h>
 #include <libdwarf.h>
+#ifdef DW_LIBDWARF_VERSION
+#define TAU_USE_NEW_LIBDWARF
+#endif
 #endif
 
 /* When BFD 2.34 was released, some API calls were replaced. */
@@ -132,7 +135,7 @@ struct TauBfdModule
       return (bfdOpen = false);
     }
 
-#if TAU_BFD >= 022200
+#if defined(BFD_DECOMPRESS)
     // Decompress sections
     bfdImage->flags |= BFD_DECOMPRESS;
 #endif
@@ -807,14 +810,14 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   if ((info.funcname == NULL) && (info.filename != NULL) && (info.lineno > 0)) {
     info.probeAddr = probeAddr;
     info.funcname = (char*)malloc(32);
-    sprintf((char*)info.funcname, "anonymous");
+    snprintf((char*)info.funcname, 32,  "anonymous");
     return true;
   }
 
   // Couldn't resolve the address so fill in fields as best we can.
   if (info.funcname == NULL) {
     info.funcname = (char*)malloc(128);
-    sprintf((char*)info.funcname, "addr=<%lx>", probeAddr);
+    snprintf((char*)info.funcname, 128,  "addr=<%lx>", probeAddr);
   }
   if (info.filename == NULL) {
     if (matchingIdx != -1) {
@@ -1004,7 +1007,7 @@ static char const * Tau_bfd_internal_getExecutablePath()
     RtsLayer::LockEnv();
     if (!init) {
 #if defined(TAU_AIX)
-      sprintf(path, "/proc/%d/object/a.out", RtsLayer::getPid());
+      snprintf(path, sizeof(path),  "/proc/%d/object/a.out", RtsLayer::getPid());
 #elif defined(TAU_BGP)
       if (Tau_bfd_internal_getBGPExePath(path) != 0) {
         fprintf(stderr, "Tau_bfd_internal_getExecutablePath: "
@@ -1012,7 +1015,7 @@ static char const * Tau_bfd_internal_getExecutablePath()
             "symbols will not be resolved\n", path);
       }
 #elif defined(TAU_BGQ)
-      sprintf(path, "%s", "/proc/self/exe");
+      snprintf(path, sizeof(path),  "%s", "/proc/self/exe");
 #elif defined(__APPLE__)
       uint32_t size = sizeof(path);
       _NSGetExecutablePath(path, &size);
@@ -1020,7 +1023,7 @@ static char const * Tau_bfd_internal_getExecutablePath()
       GetModuleFileName(NULL, path, sizeof(path));
 #else
       // Default: Linux systems
-      sprintf(path, "%s", "/proc/self/exe");
+      snprintf(path, sizeof(path),  "%s", "/proc/self/exe");
 #endif
       init = true;
     }
@@ -1065,7 +1068,7 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   // TauBfdInfo fields without an extra copy.  This also means
   // that the pointers in TauBfdInfo must never be deleted
   // since they point directly into the module's BFD.
-#if (TAU_BFD >= 022200)
+#if defined(bfd_find_nearest_line_discriminator)
   data.found = bfd_find_nearest_line_discriminator(bfdptr, section,
       data.module->syms, (data.info.probeAddr - vma),
       &data.info.filename, &data.info.funcname,
@@ -1085,8 +1088,13 @@ static void
 simple_error_handler(Dwarf_Error error, Dwarf_Ptr errarg)
 {
     (void)errarg; // intentionally unused
+#ifdef TAU_USE_NEW_LIBDWARF
+    printf("\nTAU: libdwarf error detected: 0x%lx %s\n",
+        (unsigned long) dwarf_errno(error),dwarf_errmsg(error));
+#else
     printf("\nTAU: libdwarf error detected: 0x%" DW_PR_DUx " %s\n",
-        dwarf_errno(error),dwarf_errmsg(error));
+            dwarf_errno(error),dwarf_errmsg(error));
+#endif
     return;
 }
 
@@ -1241,13 +1249,21 @@ static void Tau_get_dwarf_symbols(tau_bfd_handle_t bfd_handle, const char * file
     Dwarf_Ptr errarg = (Dwarf_Ptr)1;
     Dwarf_Error * errp = 0;
 
+#ifndef TAU_USE_NEW_LIBDWARF
     fd = open(filepath, O_RDONLY);
     if(fd < 0) {
         TAU_VERBOSE("TAU_BFD: Unable to open file %s\n", filepath);
         return;
     }
+#endif
 
+#ifdef TAU_USE_NEW_LIBDWARF
+    TAU_VERBOSE("TAU_DWARF: Initializing libdwarf using the new API version (DWARF v5) for %s\n", filepath);
+    res = dwarf_init_path(filepath, NULL, 0, DW_GROUPNUMBER_ANY, errhand, errarg, &dbg, errp);
+#else
+    TAU_VERBOSE("TAU_DWARF: Initializing libdwarf using the old API version (DWARF v4) for %s\n", filepath);
     res = dwarf_init(fd, DW_DLC_READ, errhand, errarg, &dbg, errp);
+#endif
 
     if(res != DW_DLV_OK) {
         fprintf(stderr, "Error opening DWARF session: %d\n", res);
@@ -1298,16 +1314,22 @@ static void Tau_get_dwarf_symbols(tau_bfd_handle_t bfd_handle, const char * file
     }
 
 
+#ifdef TAU_USE_NEW_LIBDWARF
+    res = dwarf_finish(dbg);
+#else
     res = dwarf_finish(dbg, errp);
+#endif
     if(res != DW_DLV_OK) {
         fprintf(stderr, "TAU: Error closing DWARF session: %d\n", res);
         return;
     }
 
+#ifndef TAU_USE_NEW_LIBDWARF
     res = close(fd);
     if(res != 0) {
         fprintf(stderr, "TAU: Error closing dwarf file\n");
     }
+#endif
 }
 
 #endif // TAU_DWARF

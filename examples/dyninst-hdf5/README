@@ -1,0 +1,19 @@
+TAU must be configured with -dyninst=download or -dyninst=$PATH_TO_DYNINST
+
+This example works with hdf5, install it with: spack install hdf5 -mpi
+
+To run this example follow the next steps:
+
+1. Compile the application with make (Change the path to hdf5)
+2. Include the TAU executables in your path, export PATH=$HOME/tau2/x86_64/bin/:$PATH
+3. Include both Dyninst and TAU libraries in LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH=$HOME/tau2/x86_64/lib/:$LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH=$HOME/dyninst/lib/:$LD_LIBRARY_PATH
+4. Set the DYNINSTAPI_RT_LIB, DYNINSTAPI_RT_LIB=$HOME/dyninst/lib/libdyninstAPI_RT.so
+5. Check the libraries used by the executable with: ldd h5ex_d_hyper
+6. Instrument the hdf5 library that ldd printed, i.e.: libhdf5.so.310
+	tau_run -v -l -T serial /storage/users/jalcaraz/spack/opt/spack/linux-ubuntu22.04-icelake/gcc-11.4.0/hdf5-1.14.3-niejd7ngst5d42hij6b34767qh6v5qwg/lib/libhdf5.so.310 -o libhdf5.so.310
+7. If you use ldd again, you will see that the original library is used, export your current path to LD_LIBRARY_PATH
+8. Check again and you should see that now the modified library is shown
+9. Execute the program with TAU, tau_exec -T serial ./h5ex_d_hyper
+10. See the results, pprof -a

@@ -123,7 +123,7 @@ class OpenACCGpuEvent : public GpuEvent
 		const char* gpuIdentifier() const
 		{
 			char* id = (char*) malloc(50*sizeof(char));
-			sprintf(id, "Dev%d/Ctx%d/Strm%d/cor%d/task%d", device_id, stream_id, context_id, correlation_id, task_id);
+			snprintf(id, 50*sizeof(char),  "Dev%d/Ctx%d/Strm%d/cor%d/task%d", device_id, stream_id, context_id, correlation_id, task_id);
 
 			return id;
 		}

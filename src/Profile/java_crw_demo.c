@@ -261,7 +261,7 @@ assert_error(CrwClassImage *ci, const char *condition,
         byte_code_offset=-1;
     }
 
-    (void)sprintf(buf,
+    (void)snprintf(buf, sizeof(buf), 
                 "CRW ASSERTION FAILURE: %s (%s:%s:%d)",
                 condition,
                 ci->name==NULL?"?":ci->name,

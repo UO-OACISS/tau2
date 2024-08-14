@@ -38,6 +38,14 @@ else
   on_craycnl=false
 fi
 
+if tau-config | grep -q 'TAUARCH=arm64_linux' 2>/dev/null ; then
+  on_arm64l=true
+else
+  on_arm64l=false
+fi
+
+
+
 echoIfVerbose () {
   if [ $verbose = "true" ] ; then
     echo -e "$1"
@@ -83,10 +91,11 @@ usage()
   echo "        -ebs_period=<count> Sampling period (default 1000)"
   echo "        -ebs_source=<counter> Counter (default itimer)"
   echo "        -ebs_resolution=<file|function|line> Choose sampling granularity."
-  echo "        -um          Enable Unified Memory events via CUPTI"
+  echo "        -um           Enable Unified Memory events via CUPTI"
   echo "        -sass=<level> Track GPU events via CUDA with Source Code Locator activity (kernel level or source level)"
-  echo "        -csv         Outputs sass profile in CSV"
-  echo "        -env         Track GPU environment activity (power utilization, SM, memory frequency, temperature)"
+  echo "        -csv          Outputs sass profile in CSV"
+  echo "        -env          Track GPU environment activity (power utilization, SM, memory frequency, temperature)"
+  echo "        -syscall      Track SYSCALL"
   options=`tau-config --list-options`
   echo "        -T <$options> : Specify TAU tags"
   echo "        -loadlib=<file.so>   : Specify additional load library"
@@ -104,7 +113,7 @@ if [ $python_wrapper = "true" ] ; then
   echo "        -skel         Write trace event data to skeleton files"
   echo "        -disable-kokkos  Disable Kokkos profiling (removes fences that hurt performance)"
   echo "        -ugni         Track Cray UGNI network library functions."
-  echo "        -chapel         Track Cray Chapel network atomics library functions."
+  echo "        -chapel       Track Cray Chapel network atomics library functions."
 fi
   echo ""
   echo "Notes:"
@@ -357,6 +366,7 @@ track_chapel=false
 processM=false
 python_launch_module=false
 python_m_arg=""
+track_syscall=false
 
 # This saves the args to tau_exec so they can be reused later.
 # This is used for MPI_Comm_spawn support, in which TAU spawns the child
@@ -497,9 +507,9 @@ for arg in "$@" ; do
         ;;
       -env)
         track_env=true
-	save_arg $arg
-	shift
-	;;
+        save_arg $arg
+        shift
+        ;;
       -opencl)
         track_opencl=true
         save_arg $arg
@@ -600,7 +610,7 @@ for arg in "$@" ; do
         tau_use_ebs=true
         myarg=`echo $arg | sed 's/-ebs_resolution=//'`
         tau_ebs_resolution="$myarg"
-	export TAU_EBS_RESOLUTION=$tau_ebs_resolution
+        export TAU_EBS_RESOLUTION=$tau_ebs_resolution
         save_arg $arg
         shift
         ;;
@@ -636,10 +646,10 @@ for arg in "$@" ; do
         shift
         ;;
       -disable_ld_preload)
-	disable_preload=true
-	save_arg $arg
-	shift
-	;;
+        disable_preload=true
+        save_arg $arg
+        shift
+        ;;
       -XrunTAU-*)
         myarg=`echo $arg | sed 's/-XrunTAU-//'`
         binding_specified="shared-$myarg"
@@ -714,6 +724,11 @@ for arg in "$@" ; do
           echo "Unknown option: $arg" >&2
           exit 1
         fi
+        ;;
+      -syscall)
+        track_syscall=true
+        save_arg $arg
+        shift
         ;;
       --)
         save_arg $arg
@@ -794,6 +809,11 @@ if [ "x$binding_specified" = "x" ] && ! $use_pin ; then
 else
   theBinding=$binding_specified
 fi
+
+#isRocprofv3=`echo $theBinding | grep rocprofv3`
+#if [ ! "x$isRocprofv3" == "x"  ]; then
+#	track_rocm=false
+#fi
 
 if [ $verbose = "true" ] ; then
   echo ""
@@ -878,7 +898,11 @@ fi
 
 if [ $track_kokkos = "true" ]; then
     export KOKKOS_PROFILE_LIBRARY=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+    export KOKKOS_TOOLS_LIBS=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+    export KOKKOS_PLUGINS=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
 fi
+
+
 
 if [ $track_ompt = "true" ]; then
   export OMP_TOOL_LIBRARIES=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
@@ -889,6 +913,10 @@ if [ $track_l0 = "true" ]; then
   export PTI_ENABLE=1
   export ZE_ENABLE_TRACING_LAYER=1
   export ZET_ENABLE_API_TRACING_EXP=1
+  isL0Metrics=`echo $theBinding | grep L0Metrics`
+  if [ ! "x$isL0Metrics" == "x" ]; then
+    export ZET_ENABLE_METRICS=1
+  fi
 fi
 
 if [ $track_rocm = "true" ] ; then
@@ -919,8 +947,12 @@ fi
 if [ $track_io = "true" ] ; then
   # Add the io wrapper library to the LD_PRELOAD list
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-iowrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  if [ $on_arm64l ];then
+     unset TAUEX_LD_AUDITOR
+  else
   #use the auditor
   TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
+  fi
   #Needed for the auditor... but DON'T SET IT NOW!
   # Only needed by GDB and the auditor.
   # export LD_BIND_NOW=1
@@ -964,8 +996,12 @@ fi
 if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
   # Add the memory wrapper library to the LD_PRELOAD list
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+   if [ $on_arm64l ];then
+     unset TAUEX_LD_AUDITOR
+  else
   #use the auditor
   TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
+  fi
   #Needed for the auditor... but DON'T SET IT NOW!
   # Only needed by GDB and the auditor.
   #export LD_BIND_NOW=1
@@ -1056,15 +1092,42 @@ if [ $track_rocm = "true" ] ; then
   $dryrun export ROCP_HSA_INTERCEPT=2
   $dryrun export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
   #export TAU_HSA_TOOLS_LIB=librocprofiler64.so.1
-  options=`echo $theBinding | sed -e 's/shared-//g' `
-  mk=$BASEDIR/lib/Makefile.tau-$options
-  rocprofdir=`grep "TAU_ROCPROFILER=" $mk | sed -e 's@TAU_ROCPROFILER=@@g'`
-  if [ -r $rocprofdir/lib/librocprofiler64.so ]; then
-    $dryrun export TAU_HSA_TOOLS_LIB=$rocprofdir/lib/librocprofiler64.so
-  fi
-  if [ -r $rocprofdir/lib/metrics.xml ]; then
-    $dryrun export ROCP_METRICS=$rocprofdir/lib/metrics.xml
-  fi
+  isRocmv6=`echo $theBinding | grep rocmv6`
+  if [ ! "x$isRocmv6" == "x"  ]; then
+    options=`echo $theBinding | sed -e 's/shared-//g' `
+	  mk=$BASEDIR/lib/Makefile.tau-$options
+	  rocmdir=`grep "TAU_ROCM_DIR=" $mk | sed -e 's@TAU_ROCM_DIR=@@g'`
+    isRocprofv2=`echo $theBinding | grep rocprofv2`
+    isRocprofv3=`echo $theBinding | grep rocprofv3`
+    if [ ! "x$isRocprofv2" == "x"  ]; then
+      if [ -r $rocmdir/lib/librocprofiler64v2.so ]; then
+  		   $dryrun export TAU_HSA_TOOLS_LIB=$rocmdir/lib/librocprofiler64v2.so
+  	  fi
+    elif [ ! "x$isRocprofv3" == "x"  ]; then
+      if [ -r $rocmdir/lib/librocprofiler-sdk.so ]; then
+  		   $dryrun export TAU_HSA_TOOLS_LIB=$rocmdir/lib/librocprofiler-sdk.so
+  	  fi
+    else
+      if [ -r $rocmdir/lib/librocprofiler64.so ]; then
+  		   $dryrun export TAU_HSA_TOOLS_LIB=$rocmdir/lib/librocprofiler64.so
+  	  fi
+    fi
+	  if [ -r $rocmdir/lib/rocprofiler/metrics.xml ]; then
+		$dryrun export ROCP_METRICS=$rocmdir/lib/rocprofiler/metrics.xml
+
+	  fi
+  else
+    options=`echo $theBinding | sed -e 's/shared-//g' `
+	  mk=$BASEDIR/lib/Makefile.tau-$options
+	  rocprofdir=`grep "TAU_ROCPROFILER=" $mk | sed -e 's@TAU_ROCPROFILER=@@g'`
+	  if [ -r $rocprofdir/lib/librocprofiler64.so ]; then
+		$dryrun export TAU_HSA_TOOLS_LIB=$rocprofdir/lib/librocprofiler64.so
+	  fi
+	  if [ -r $rocprofdir/lib/metrics.xml ]; then
+		$dryrun export ROCP_METRICS=$rocprofdir/lib/metrics.xml
+
+	  fi
+	fi
 fi
 
 isRoctracer=`echo $theBinding | grep roctracer`
@@ -1119,13 +1182,15 @@ if [ $scorep = true ]; then
     echo "Score-P is specified"
   fi
   scoreplib=`ldd $BASEDIR/lib/$theBinding/libTAU${TAU_SHLIBX} | grep scorep_adapter_mpi_event.so | awk ' { print $3;}'`
-  if [ -f $scoreplib -a $verbose = "true" ]; then
-    echo "Preloading: $scoreplib"
-  fi
-  if [ "x$extraloadlibs" = "x" ]; then
-    extraloadlibs=":$scoreplib"
-  else
-    extraloadlibs=":$scoreplib:$extraloadlibs"
+  if [ "x$scoreplib" != "x" ]; then 
+    if [ -f $scoreplib -a $verbose = "true" ]; then
+      echo "Preloading: $scoreplib"
+    fi
+    if [ "x$extraloadlibs" = "x" ]; then
+      extraloadlibs=":$scoreplib"
+    else
+      extraloadlibs=":$scoreplib:$extraloadlibs"
+    fi
   fi
 fi
 
@@ -1154,8 +1219,19 @@ if [ $qsub_mode = false ]; then
     exit
   fi
 
-  # always use the basic preload library now
-  TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
+  if [ $track_syscall = true  -a -r $BASEDIR/lib/$theBinding/libTAU-ptrace-syscall$TAU_SHLIBX  ]; then
+    if [ ! x"$TAU_TRACE" == "x" ]; then	  
+       if [ $TAU_TRACE == 1 ]; then
+	    echo "-syscall option can't be used with TAU_TRACE=1. Disable tracing when using -syscall."
+	    exit
+       fi
+    fi
+    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-ptrace-syscall$TAU_SHLIBX
+  else
+    # always use the basic preload library now
+    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
+  fi
+
 fi
 
 if [ $disable_preload = "true" ]; then

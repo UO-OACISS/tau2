@@ -34,7 +34,7 @@ void foo (int x) {
 
   // a metadata field with context
   char message[256];
-  sprintf(message,"Thread %d of %d in foo(x = %d)", tid, tcount, x);
+  snprintf(message, sizeof(message), "Thread %d of %d in foo(x = %d)", tid, tcount, x);
   TAU_CONTEXT_METADATA("Foo Parameters", message);
   TAU_METADATA("Foo Parameters", message);
 

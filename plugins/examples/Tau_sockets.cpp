@@ -135,10 +135,8 @@ void tau::plugins::Sockets::GetHostInfo(int port) {
 #ifdef TAU_MPI
     // figure out who should get system stats for this node
     int i;
-    int my_rank = 0;
-    int comm_size = 1;
-    PMPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    PMPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    int my_rank = RtsLayer::myNode();
+    int comm_size = tau_totalnodes(0,1);
 
     // get my hostname
     const int hostlength = 128;
@@ -153,7 +151,7 @@ void tau::plugins::Sockets::GetHostInfo(int port) {
     in_addr * address = (in_addr * )record->h_addr;
     const int addrlength = 32;
     char ip_address[addrlength] = {0};
-    sprintf(ip_address, "%s", inet_ntoa(* address));
+    snprintf(ip_address, sizeof(ip_address),  "%s", inet_ntoa(* address));
 
     // make array for all hostnames
     char * allhostnames = (char*)calloc(hostlength * comm_size, sizeof(char));

@@ -228,7 +228,7 @@ void Tau_Bg_hwp_counters_output(int* numCounters, uint64_t counters[], int* mode
           fprintf(outFile, "%3i  %-56s %15llu %15llu %15llu\n", i, eventName, core01Min[i], core01Max[i],
                             core01Av[i]/core01Count);
 #endif /* TAU_WRITE_COUNTER_FILE */
-          sprintf(metadata_string,"%15llu %15llu %15llu",  core01Min[i], core01Max[i],
+          snprintf(metadata_string, sizeof(metadata_string), "%15llu %15llu %15llu",  core01Min[i], core01Max[i],
                             core01Av[i]/core01Count);
 	  TAU_METADATA(eventName, metadata_string);
 
@@ -238,7 +238,7 @@ void Tau_Bg_hwp_counters_output(int* numCounters, uint64_t counters[], int* mode
           BGP_UPC_Get_Event_Name(COUNTER_ARRAY_LENGTH+i, BGP_UPC_MAXIMUM_LENGTH_EVENT_NAME, eventName);
           fprintf(outFile, "%3i  %-56s %15llu %15llu %15llu\n", COUNTER_ARRAY_LENGTH+i, eventName, core23Min[i],
                   core23Max[i], core23Av[i]/core23Count);
-          sprintf(metadata_string,"%15llu %15llu %15llu", core23Min[i],
+          snprintf(metadata_string, sizeof(metadata_string), "%15llu %15llu %15llu", core23Min[i],
                   core23Max[i], core23Av[i]/core23Count);
 	  TAU_METADATA(eventName, metadata_string);
         }
@@ -250,7 +250,7 @@ void Tau_Bg_hwp_counters_output(int* numCounters, uint64_t counters[], int* mode
     } else {
       if (*mode == COUNTER_MODE_CORES01 || *mode == COUNTER_MODE_CORES23) {
         char fileName[128];
-        sprintf(fileName, "%s-%06i", QUOTE(OUTPUT_FILE), rank);
+        snprintf(fileName, sizeof(fileName),  "%s-%06i", QUOTE(OUTPUT_FILE), rank);
        
         FILE *outFile = fopen(fileName, "w");
         if (outFile == NULL) {

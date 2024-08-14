@@ -28,28 +28,28 @@ TAUDB_TIMER_CALL_DATA* taudb_private_query_timer_call_data(TAUDB_CONNECTION* con
    */
   char my_query[1024];
   if (taudb_version == TAUDB_2005_SCHEMA) {
-    sprintf(my_query,"select distinct node, context, thread, call, subroutines, interval_event from interval_location_profile ilp left outer join interval_event ie on ilp.interval_event = ie.id");
-    sprintf(my_query,"%s where ie.trial = %d", my_query, trial->id);
+    snprintf(my_query, sizeof(my_query), "select distinct node, context, thread, call, subroutines, interval_event from interval_location_profile ilp left outer join interval_event ie on ilp.interval_event = ie.id");
+    snprintf(my_query, sizeof(my_query), "%s where ie.trial = %d", my_query, trial->id);
     if (timer_callpath != NULL) {
-      sprintf(my_query,"%s and ie.id = %d", my_query, timer_callpath->id);
+      snprintf(my_query, sizeof(my_query), "%s and ie.id = %d", my_query, timer_callpath->id);
     }
     if (thread != NULL) {
-      sprintf(my_query,"%s and node = %d and context = %d and thread = %d", my_query, thread->node_rank, thread->context_rank, thread->thread_rank);
+      snprintf(my_query, sizeof(my_query), "%s and node = %d and context = %d and thread = %d", my_query, thread->node_rank, thread->context_rank, thread->thread_rank);
     }
   } else {
     //sprintf(my_query,"select * from timer where trial = %d", trial->id);
-    sprintf(my_query,"select h.node_rank as node, h.context_rank as context, h.thread_rank as thread, h.thread_index as index, td.calls as call, td.subroutines as subroutines, td.timer_callpath, td.id from timer_call_data td inner join thread h on td.thread = h.id");
-    sprintf(my_query,"%s where h.trial = %d", my_query, trial->id);
+    snprintf(my_query, sizeof(my_query), "select h.node_rank as node, h.context_rank as context, h.thread_rank as thread, h.thread_index as index, td.calls as call, td.subroutines as subroutines, td.timer_callpath, td.id from timer_call_data td inner join thread h on td.thread = h.id");
+    snprintf(my_query, sizeof(my_query), "%s where h.trial = %d", my_query, trial->id);
     if (timer_callpath != NULL) {
-      sprintf(my_query,"%s and td.timer_callpath = %d", my_query, timer_callpath->id);
+      snprintf(my_query, sizeof(my_query), "%s and td.timer_callpath = %d", my_query, timer_callpath->id);
     }
     if (thread != NULL) {
-      sprintf(my_query,"%s and h.node_rank = %d and h.context_rank = %d and h.thread_rank = %d", my_query, thread->node_rank, thread->context_rank, thread->thread_rank);
+      snprintf(my_query, sizeof(my_query), "%s and h.node_rank = %d and h.context_rank = %d and h.thread_rank = %d", my_query, thread->node_rank, thread->context_rank, thread->thread_rank);
     }
     if (derived) {
-      sprintf(my_query,"%s and h.thread_index < 0 order by h.thread_index desc", my_query);
+      snprintf(my_query, sizeof(my_query), "%s and h.thread_index < 0 order by h.thread_index desc", my_query);
     } else {
-      sprintf(my_query,"%s and h.thread_index > -1 order by h.thread_index asc", my_query);
+      snprintf(my_query, sizeof(my_query), "%s and h.thread_index > -1 order by h.thread_index asc", my_query);
     }
   }
 #ifdef TAUDB_DEBUG
@@ -252,22 +252,22 @@ extern void taudb_save_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL
     HASH_ITER(hh2, trial->timer_call_data_by_key, timer_call_data, tmp) {
       const char* paramValues[6] = {0};
       char timer_callpath_id[32] = {0};
-      sprintf(timer_callpath_id, "%d", timer_call_data->key.timer_callpath->id);
+      snprintf(timer_callpath_id, sizeof(timer_callpath_id),  "%d", timer_call_data->key.timer_callpath->id);
       paramValues[0] = timer_callpath_id;
 		char thread_id[32] = {0};
-		sprintf(thread_id, "%d", timer_call_data->key.thread->id);
+		snprintf(thread_id, sizeof(thread_id),  "%d", timer_call_data->key.thread->id);
 		paramValues[1] = thread_id;
 		char calls[32] = {0};
-		sprintf(calls, "%d", timer_call_data->calls);
+		snprintf(calls, sizeof(calls),  "%d", timer_call_data->calls);
 		paramValues[2] = calls;
 		char subroutines[32] = {0};
-		sprintf(subroutines, "%d", timer_call_data->subroutines);
+		snprintf(subroutines, sizeof(subroutines),  "%d", timer_call_data->subroutines);
 		paramValues[3] = subroutines;
 		paramValues[4] = NULL; // TODO: Update this when support for saving time ranges is added
 	  
 		char id[32] = {0};
 		if(update && timer_call_data->id > 0) {
-			sprintf(id, "%d", timer_call_data->id);
+			snprintf(id, sizeof(id),  "%d", timer_call_data->id);
 			paramValues[5] = id;
 		}
 		
