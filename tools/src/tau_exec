@@ -91,6 +91,7 @@ usage()
   echo "        -ebs_period=<count> Sampling period (default 1000)"
   echo "        -ebs_source=<counter> Counter (default itimer)"
   echo "        -ebs_resolution=<file|function|line> Choose sampling granularity."
+  echo "        -ebs_unwind   Enable callstack unwinding for sampling"
   echo "        -um           Enable Unified Memory events via CUPTI"
   echo "        -sass=<level> Track GPU events via CUDA with Source Code Locator activity (kernel level or source level)"
   echo "        -csv          Outputs sass profile in CSV"
@@ -589,6 +590,11 @@ for arg in "$@" ; do
         ;;
       -ebs)
         tau_use_ebs=true
+        save_arg $arg
+        shift
+        ;;
+      -ebs_unwind)
+        tau_use_ebs_unwind=true
         save_arg $arg
         shift
         ;;
@@ -1155,6 +1161,9 @@ if [ $tau_use_ebs = "true" ] ; then
   if [ "x$tau_ebs_source" != "x" ] ; then
     export TAU_EBS_SOURCE=$tau_ebs_source
   fi
+  if [ "x$tau_ebs_unwind" != "x" ] ; then
+    export TAU_EBS_UNWIND=1
+  fi
 fi
 
 if [ $track_power = "true" ]; then
@@ -1182,7 +1191,7 @@ if [ $scorep = true ]; then
     echo "Score-P is specified"
   fi
   scoreplib=`ldd $BASEDIR/lib/$theBinding/libTAU${TAU_SHLIBX} | grep scorep_adapter_mpi_event.so | awk ' { print $3;}'`
-  if [ "x$scoreplib" != "x" ]; then 
+  if [ "x$scoreplib" != "x" ]; then
     if [ -f $scoreplib -a $verbose = "true" ]; then
       echo "Preloading: $scoreplib"
     fi
@@ -1220,7 +1229,7 @@ if [ $qsub_mode = false ]; then
   fi
 
   if [ $track_syscall = true  -a -r $BASEDIR/lib/$theBinding/libTAU-ptrace-syscall$TAU_SHLIBX  ]; then
-    if [ ! x"$TAU_TRACE" == "x" ]; then	  
+    if [ ! x"$TAU_TRACE" == "x" ]; then
        if [ $TAU_TRACE == 1 ]; then
 	    echo "-syscall option can't be used with TAU_TRACE=1. Disable tracing when using -syscall."
 	    exit
