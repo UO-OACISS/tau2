@@ -891,7 +891,7 @@ int tauRewriteLibrary(BPatch *bpatch, const char *mutateeName, char *outfile, ch
 	string module_str = moduleName;
     if( strcmp(module_str.substr(module_str.find_last_of("/\\") + 1).c_str(), mutateefilename.c_str())!=0)
     {
-        printf("Skipping module!\n");
+        dprintf("Skipping module!\n");
         continue;
     }
 
