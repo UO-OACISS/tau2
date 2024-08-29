@@ -7788,7 +7788,13 @@ then
 fi
 
 ######################################################################
-if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = g++-5 -o $cxx_compiler = g++-6 -o $cxx_compiler = g++-7 -o $cxx_compiler = g++-8 -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ -o $cxx_compiler = mips64el-gentoo-linux-gnu-g++  -o $cxx_compiler = powerpc-bgp-linux-g++ -o $cxx_compiler = x86_64-w64-mingw32-g++ -o $cxx_compiler = powerpc64-bgq-linux-g++ ]
+
+real_cxx_compiler=$cxx_compiler
+if [ $real_cxx_compiler = mpicxx ]; then
+    real_cxx_compiler=$internal_compiler
+fi
+
+if [ $real_cxx_compiler = g++ -o $real_cxx_compiler = g++4 -o $real_cxx_compiler = g++-5 -o $real_cxx_compiler = g++-6 -o $real_cxx_compiler = g++-7 -o $real_cxx_compiler = g++-8 -o $real_cxx_compiler = egcs -o $real_cxx_compiler = powerpc64-linux-g++ -o $real_cxx_compiler = c++ -o $real_cxx_compiler = scg++ -o $real_cxx_compiler = mips64el-gentoo-linux-gnu-g++  -o $real_cxx_compiler = powerpc-bgp-linux-g++ -o $real_cxx_compiler = x86_64-w64-mingw32-g++ -o $real_cxx_compiler = powerpc64-bgq-linux-g++ ]
 then
     if [ $machine != crayxmt ]
     then
@@ -7811,6 +7817,7 @@ then
     echo "Using GNU stdc++ lib dir as $taugccstdcxxlibdir"
     fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir taugccstdcxxlibdir=$taugccstdcxxlibdir"
 fi
+
 ######################################################################
 # Checking the availability of the LD auditor. We need glibc 2.4 or greater and
 # link.h and dlfn.h
