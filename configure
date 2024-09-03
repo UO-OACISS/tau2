@@ -3030,6 +3030,7 @@ for arg in "$@"; do
             fi
             #                useropt="$useropt#-DTAU_MAX_THREADS=32"
             cuda=yes
+	    pthread=yes
             shift
             ;;
         -cudalibrary=*)
