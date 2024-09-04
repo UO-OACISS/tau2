@@ -64,7 +64,7 @@ verbose=false
 binding_options=
 command_options=
 
-if [ $# == 0 ]; then
+if [ $# -eq 0 ]; then
   usage
 fi
 
