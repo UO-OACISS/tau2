@@ -1028,10 +1028,9 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     //trace_len *= 1.02;
     OTF2_GlobalDefWriter_WriteClockProperties(global_def_writer, TAU_OTF2_CLOCK_RES, global_start_time, trace_len
 		    #if OTF2_VERSION_MAJOR > 2
-		    , global_start_time
+		    , global_start_time*1000
 		    #endif
 		    );
-
     // Write a Location for each thread within each Node (which has a LocationGroup and SystemTreeNode)
 
     int nextString = 1;
