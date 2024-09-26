@@ -3585,7 +3585,7 @@ if [ "$rocmv6" = "yes" -a "$rocprofv2" = "no" -a "$rocprofv3" = no ] ; then
     fi
 
     if [ "$rocprofiler" = yes -a -d $rocprofilerdir/include/rocprofiler ]; then
-        fixmakeargs="$fixmakeargs ROCPROFILER ROCPROFILERROCM6"
+        fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir  ROCPROFILER ROCPROFILERROCM6"
     fi
 
     if [ "x$rocprofilerlibrary" = "x" ]; then
