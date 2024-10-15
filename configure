@@ -12456,6 +12456,9 @@ if [ $dyninst = yes ] ; then
     if [ -r $dyninstdir/include/dyninstversion.h ] ; then
         fixmakeargs="$fixmakeargs DYNINST12"
     fi
+    if [ ! -f $dyninstdir/$PLATFORM/lib/libdynDwarf.so ] ; then
+        fixmakeargs="$fixmakeargs DYNINST14"
+    fi
 fi
 
 

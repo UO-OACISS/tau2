@@ -141,6 +141,7 @@ INSTALLTRACE2PROFILE	= $(INSTALLDEST)/trace2profile
 #DYNINST8#DYNLIBS 	= -L$(DYNINST_LIB_DIR) -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -lsymLite -ldynDwarf #ENDIF#
 #DYNINST9#DYNLIBS 	= -L$(DYNINST_LIB_DIR) -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -ldynDwarf #ENDIF#
 #DYNINST12#DYNLIBS 	= -L$(DYNINST_LIB_DIR) -Wl,-rpath,$(DYNINST_LIB_DIR) -L$(ELFDIR)/lib -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -ldynDwarf #ENDIF#
+#DYNINST14#DYNLIBS     = -L$(DYNINST_LIB_DIR) -Wl,-rpath,$(DYNINST_LIB_DIR) -ldyninstAPI -lcommon -lparseAPI -lsymtabAPI -linstructionAPI -lstackwalk -lpcontrol -lpatchAPI #ENDIF#
 
 #SOL2CC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS -DSOL2CC #ENDIF#
 #SUNCC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS #ENDIF#
