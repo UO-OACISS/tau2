@@ -1413,7 +1413,7 @@ for arg in "$@"; do
 
         -cc=*)
             myarg=`echo $arg | sed 's/-cc=//'`
-            if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = gcc-5 -o $myarg = gcc-6 -o $myarg = gcc-7 -o $myarg = gcc-8 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = icx -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = hcc -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc -o $myarg = armclang  -o $myarg = ncc -o $myarg = hipcc -o $myarg = nvc -o $myarg = nvcc -o $myarg = amdclang ] || [[ $myarg == "gcc-"* ]]
+            if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = gcc-5 -o $myarg = gcc-6 -o $myarg = gcc-7 -o $myarg = gcc-8 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = icx -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = parascc -o $myarg = hcc -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc -o $myarg = armclang  -o $myarg = ncc -o $myarg = hipcc -o $myarg = nvc -o $myarg = nvcc -o $myarg = amdclang ] || [[ $myarg == "gcc-"* ]]
             then
                 c_compiler=$myarg
                 c_compiler_specified=yes
@@ -1427,7 +1427,7 @@ for arg in "$@"; do
                 testmp=`echo $myarg | sed -e 's/^mp//'`
                 if [ "y$testxlc" = "y$myarg"  -a "y$testmp" = "y$myarg" ]
                 then
-                    echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'gcc-*', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'icx', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpc_icc', 'mpifcc', 'mpifccpx', 'clang', 'hcc', 'bgclang', 'mpicc', 'mcc', 'oshcc', 'armclang', 'ncc', 'hipcc' 'nvc', 'nvcc', or 'amdclang'"
+                    echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'gcc-*', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'icx', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpc_icc', 'mpifcc', 'mpifccpx', 'clang', 'parascc', 'hcc', 'bgclang', 'mpicc', 'mcc', 'oshcc', 'armclang', 'ncc', 'hipcc' 'nvc', 'nvcc', or 'amdclang'"
                     #       exit 1
                 else
                     if [ "y$testxlc" != "y$myarg" ]
@@ -1443,7 +1443,7 @@ for arg in "$@"; do
 
         -c++=*)
             myarg=`echo $arg | sed 's/-c++=//'`
-            if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = g++-5 -o $myarg = g++-6 -o $myarg = g++-7 -o $myarg = g++-8 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = icpx -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx -o $myarg = mpic++ -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiicpx -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = mpc_icpx -o $myarg = clang++ -o $myarg = hcc -o $myarg = hipcc -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx  -o $myarg = armclang++ -o $myarg = nc++  -o $myarg = hipcc -o $myarg = nvc++ -o $myarg = nvcc -o $myarg = amdclang++ ] || [[ $myarg == "g++-"* ]]
+            if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = g++-5 -o $myarg = g++-6 -o $myarg = g++-7 -o $myarg = g++-8 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = icpx -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx -o $myarg = mpic++ -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiicpx -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = mpc_icpx -o $myarg = clang++ -o $myarg = hcc -o $myarg = hipcc -o $myarg = bgclang++ -o $myarg = parascc -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx  -o $myarg = armclang++ -o $myarg = nc++  -o $myarg = hipcc -o $myarg = nvc++ -o $myarg = nvcc -o $myarg = amdclang++ ] || [[ $myarg == "g++-"* ]]
             then
                 cxx_compiler=$myarg
                 cxx_compiler_specified=yes
@@ -1458,7 +1458,7 @@ for arg in "$@"; do
                 testmp=`echo $myarg | sed -e 's/^mp//'`
                 if [ "y$testxlc" = "y$myarg" -a "y$testmp" = "y$myarg" ]
                 then
-                    echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', 'g++-*', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'icpx', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', 'mpiicpx', 'mpiFCC', 'mpiFCCpx', 'orCC', 'openCC', 'mpc_cxx',  'mpc_icpc', 'mpc_icpx', 'clang++', 'hcc', 'hipcc', 'bgclang++', 'mpicxx', 'mpic++', 'mcxx', 'oshCC', oshcxx, 'oshc++', 'armclang++', 'nc++', 'hipcc', or 'amdclang++' "
+                    echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', 'g++-*', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'icpx', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', 'mpiicpx', 'mpiFCC', 'mpiFCCpx', 'orCC', 'openCC', 'mpc_cxx',  'mpc_icpc', 'mpc_icpx', 'clang++', 'parascc', 'hcc', 'hipcc', 'bgclang++', 'mpicxx', 'mpic++', 'mcxx', 'oshCC', oshcxx, 'oshc++', 'armclang++', 'nc++', 'hipcc', or 'amdclang++' "
                     #       exit 1
                 else
                     if [ "y$testxlc" != "y$myarg" ]
@@ -4799,7 +4799,7 @@ if [ "x$fortran_compiler" = "xno" ]; then
     fixmakeargs="$fixmakeargs NOFORTRAN"
 fi
 
-if [ $cxx_compiler = clang++ -o $cxx_compiler = bgclang++ -o $cxx_compiler = hcc  -o $cxx_compiler = hipcc ]; then
+if [ $cxx_compiler = clang++ -o $cxx_compiler = bgclang++ -o $cxx_compiler = hcc  -o $cxx_compiler = hipcc  -o $cxx_compiler = parascc ]; then
     fixmakeargs="$fixmakeargs CLANG"
 fi
 
@@ -5446,7 +5446,7 @@ case $cxx_compiler in
 	  fixmakeargs="$fixmakeargs FLANG_NO_MX_OPTS" #COMPINST_LLVM"  #CLANG
 	fi
         ;;
-    *llvm*|*clang* | hcc | hipcc )
+    *llvm*|*clang* | hcc | hipcc | parascc )
         echo "Default C++ compiler will be clang++ (or variant)"
         llvm=yes
         fixmakeargs="$fixmakeargs CLANG COMPINST_LLVM"
@@ -6015,7 +6015,7 @@ case $cxx_compiler in
                 fixmakeargs="$fixmakeargs USE_INTELCXX"
                 intel=yes
                 ;;
-            *clang* | hcc | hipcc )
+            *clang* | hcc | hipcc | parascc )
                 tauoptions="${tauoptions}-clang"
                 llvm=yes
                 echo "Using CLANG Compilers"

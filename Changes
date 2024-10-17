@@ -10,6 +10,9 @@
 
 Change log:
 ------------
+Version 2.34 changes (from 2.33):
+1. Added support for new LLVM compilers (-c++=parascc).
+
 Version 2.33 changes (from 2.32):
 1. Added -dyninst=download for binary rewriting with DyninstAPI.
 2. Added tracking syscalls (configure -syscall, tau_exec -syscall, see examples/syscall). 
