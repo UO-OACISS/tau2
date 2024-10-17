@@ -10686,9 +10686,9 @@ else
   if [ "x$tbb" = xyes ] ; then
     echo "TBB : not found, downloading..."
     download_tbb=yes
-  else
-    echo "ERROR: Dyninst requires TBB and it was not found in the Dyninst directory. Reconfigure TAU with TBB."
-    exit 1
+#  else
+#    echo "ERROR: Dyninst requires TBB and it was not found in the Dyninst directory. Reconfigure TAU with TBB."
+#    exit 1
   fi
 fi
 
