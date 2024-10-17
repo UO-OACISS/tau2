@@ -36,6 +36,17 @@ else
     echo "GUI_LIBDIR is set. GUI_LIBDIR = "${GUI_LIBDIR}
 fi
 
+
+
+for arg
+do
+  shift
+  [ "$arg" = "-fix-xquartz" ] && export JAVA2D_XRENDER_FALSE="-Dsun.java2d.xrender=false" && continue
+  set -- "$@" "$arg"
+done
+
+
+
 INPUT="$@"
 
 if [ "$1" == "-merge" ] ; then
@@ -72,7 +83,7 @@ TAU Options:
 	[-convert <.trc file> <.edf file> {-o <.slog2 file>}] 	Convert 
 	                the given .trc and .edf files to tau.slog2 or the 
 			file specified after -o for display
+	[-fix-xquartz]  Turn off java2d xrender to bypass xquartz bug
 	"
 fi
-
-java -Xmx500m -Xms32m -jar ${MAIN_LIB} $INPUT
+java -Xmx500m -Xms32m $JAVA2D_XRENDER_FALSE -jar ${MAIN_LIB} $INPUT
