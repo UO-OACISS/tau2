@@ -291,7 +291,6 @@ installsosdeps()
         tar -xvf "$3"
         rm -f "$3"
 
-        set -x
         #Install dill
         cd dill/source
         cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/dill/source
@@ -6034,7 +6033,7 @@ case $cxx_compiler in
                     fixmakeargs="$fixmakeargs CLANG BGCLANG"
                 fi
                 ;;
-            *g++ | c++)
+            *g++* | c++)
                 if [ $machine = bgq ] ; then
                     echo "Using GNU Compilers for BGQ"
                     fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU GNU46PLUS"
