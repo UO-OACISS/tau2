@@ -99,8 +99,9 @@
             call MPI_SEND(buffer, matsize, MPI_DOUBLE_PRECISION, sender,&
               numsent+1, MPI_COMM_WORLD, ierr) 
             numsent = numsent+1 
-          else 
-            call MPI_SEND(1.0, 1, MPI_DOUBLE_PRECISION, sender, 0,      &
+          else
+            buffer(1) = 1.0 
+            call MPI_SEND(buffer, 1, MPI_DOUBLE_PRECISION, sender, 0,      &
                  MPI_COMM_WORLD, ierr) 
           endif 
         end do
