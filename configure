@@ -835,7 +835,7 @@ for arg in "$@"; do
         echo "-c++=<compiler>  ............................ specify the C++ compiler."
         echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
         echo "       armclang++|clang++|bgclang++|hcc|hipcc|icpc|icpx|scgcc|scpathCC|pathCC|"
-        ecbo "       orCC|hipcc|amdclang++]."
+        echo "       orCC|hipcc|amdclang++]."
         echo "-cc=<compiler> ................................ specify the C compiler."
         echo "   options [cc|gcc|gcc4|scgcc|clang|hcc|pgcc|guidec|*xlc*|ecc|pathcc|orcc|"
         echo "   armclang|hipcc|amdclang]."
