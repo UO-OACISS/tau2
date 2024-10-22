@@ -20,6 +20,8 @@
 * invoke the corresponding C routines. 
 *****************************************************************************/
 #include <stdio.h>
+#include <string>
+#include <string.h>
 
 typedef unsigned int TauGroup_t;
 
@@ -728,6 +730,17 @@ void tau_trace_lib_exit(const char * func_name)
 void trace_register_func(char *origname, int id) {
   printf("TAU: trace_register_func : name = %s, id = %d\n", origname, id);
 }
+#ifdef DYNINSTARMLINUX64
+void trace_register_func_dyn(char *id_origname) {
+  int id = std::stoi(strtok(id_origname, ","));
+  char *origname = strtok(NULL, ",");
+  printf("TAU: trace_register_func : name = %s, id = %d\n", origname, id);
+}
+#else
+void trace_register_func_dyn(char *origname, int id) {
+  printf("TAU: trace_register_func : name = %s, id = %d\n", origname, id);
+}
+#endif
 
 void tau_dyninst_cleanup() {
   printf("TAU: Inside tau_dyninst_cleanup\n");

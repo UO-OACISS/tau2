@@ -1947,6 +1947,10 @@ case $1 in
 	echo "NOTE: Using newer version DYNINST 5.2 "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     DYN_ARMLINUX64)
+	echo "NOTE: Using modified version for ARMLINUX64 Dyninst"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      JAVA)
 	echo "NOTE: Using Java Virtual Machine Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
