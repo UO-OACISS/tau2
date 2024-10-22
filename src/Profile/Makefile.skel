@@ -847,7 +847,7 @@ TauMapping.o   : TauMapping.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauHooks.o   : TauHooks.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(DYNINST_ARCH) -c $(@:.o=.cpp)
 
 TauJava.o :	TauJava.cpp
 	$(CXX) $(CXXFLAGS) -c TauJava.cpp

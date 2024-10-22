@@ -80,12 +80,18 @@ BPatch_Vector<BPatch_snippet *> funcNames;
 int addName(char *name)
 {
   static int funcID = 0;
+  #ifdef DYNINSTARMLINUX64
+  string id_name = std::to_string(funcID)+","+name;
+  BPatch_constExpr *id_name_param = new BPatch_constExpr(id_name.c_str());
+  BPatch_Vector<BPatch_snippet *> params;
+  params.push_back(id_name_param);
+  #else
   BPatch_constExpr *name_param = new BPatch_constExpr(name);
   BPatch_constExpr *id_param = new BPatch_constExpr(funcID);
   BPatch_Vector<BPatch_snippet *> params;
   params.push_back(name_param);
   params.push_back(id_param);
-
+  #endif
   BPatch_funcCallExpr *call = new BPatch_funcCallExpr(*name_reg, params);
   funcNames.push_back(call);
   return funcID++;
@@ -857,7 +863,7 @@ int tauRewriteLibrary(BPatch *bpatch, const char *mutateeName, char *outfile, ch
   dprintf("Searching for TAU functions\n");
   BPatch_function* entryLibTrace = tauFindFunction(mutateeImage, "tau_trace_lib_entry");
   BPatch_function* exitLibTrace = tauFindFunction(mutateeImage, "tau_trace_lib_exit");
-  name_reg = tauFindFunction(mutateeImage, "trace_register_func");
+  name_reg = tauFindFunction(mutateeImage, "trace_register_func_dyn");
 
 
   if(!entryLibTrace || !exitLibTrace )
@@ -1004,7 +1010,7 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
   BPatch_function* setupFunc = tauFindFunction(mutateeImage, "tau_dyninst_init");
   BPatch_function* cleanupFunc = tauFindFunction(mutateeImage, "tau_dyninst_cleanup");
   BPatch_function* mainFunc = tauFindFunction(mutateeImage, "main");
-  name_reg = tauFindFunction(mutateeImage, "trace_register_func");
+  name_reg = tauFindFunction(mutateeImage, "trace_register_func_dyn");
 
   // This heuristic guesses that debugging info. is available if main
   // is not defined in the DEFAULT_MODULE

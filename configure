@@ -10932,7 +10932,6 @@ if [ "x$download_dyninst" = xyes ] ; then
   cd $prebfddir
 fi #dyninst=download
 
-
 ######################################################################
 # Check that the Sampling allocator code is supported by compiler
 ######################################################################
@@ -12509,6 +12508,9 @@ if [ $dyninst = yes ] ; then
     fi
     if [ ! -f $dyninstdir/$PLATFORM/lib/libdynDwarf.so ] ; then
         fixmakeargs="$fixmakeargs DYNINST14"
+    fi
+    if [ $machine = arm64_linux ]; then
+      fixmakeargs="$fixmakeargs DYN_ARMLINUX64"
     fi
 fi
 

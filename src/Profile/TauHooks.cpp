@@ -315,6 +315,7 @@ static inline int getTauDyninstEnabled(int tid){
 
 void trace_register_func(char *origname, int id)
 {
+
   static int invocations = 0;
   int i;
   int tid = RtsLayer::myThread();
@@ -409,6 +410,21 @@ void trace_register_func(char *origname, int id)
   invocations ++;
   TAU_VERBOSE("Exiting trace_register_func\n");
 }
+
+#ifdef DYNINSTARMLINUX64
+void trace_register_func_dyn(char *id_origname)
+{
+  
+  int id = std::stoi(strtok(id_origname, ","));
+  char *origname = strtok(NULL, ",");
+#else
+void trace_register_func_dyn(char *origname, int id)
+{
+#endif
+  trace_register_func(origname, id);  
+}
+
+
 
 void traceEntry(int id)
 {
@@ -552,11 +568,13 @@ void tau_dyninst_cleanup()
   TAU_VERBOSE("Inside tau_dyninst_cleanup\n");
 }
 
+
 void  tau_register_func(char **func, char** file, int* lineno,
   int id) {
     char * tmpstr = Tau_demangle_name(*func);
     if (*file == NULL){
       TAU_VERBOSE("TAU: tau_register_func: name = %s, id = %d\n", *func, id);
+      
       trace_register_func(tmpstr, id);
     } else {
       char funcname[2048];
@@ -633,7 +651,6 @@ void  tau_trace_register_loop(int id, char *loopname) {
 
 void  tau_register_loop(char **func, char** file, int* lineno,
   int id) {
-
   char lname[2048];
   char *loopname;
   if (((*file) != (char *)NULL) && (*lineno != 0)) {

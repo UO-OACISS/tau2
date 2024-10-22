@@ -115,7 +115,7 @@ tau_run: 	tau_run.o tau_selective_dyn.o  tau_instrument.dyn.o
 		$(CXX) $(CFLAGS) tau_run.o tau_selective_dyn.o tau_instrument.dyn.o -o $@ $(DYNLIBS) $(LEXTRAUTIL) $(TAU_BOOSTLIB) $(BFDLINK) 
 
 tau_run.o: 	tau_run.cpp
-		$(CXX) $(CFLAGS) $(DYNINC) -DTAU_DYNINST -DTAU_DYNINST41PLUS $(DYN_PKG_OPT) -c tau_run.cpp $(TAU_BOOSTINC) 
+		$(CXX) $(CFLAGS) $(DYNINC) $(DYNINST_ARCH) -DTAU_DYNINST -DTAU_DYNINST41PLUS $(DYN_PKG_OPT) -c tau_run.cpp $(TAU_BOOSTINC) 
 
 tau_trace2json: tau_trace2json.o 
 		$(CXX) $(CFLAGS) tau_trace2json.o -o $@ -lm $(TAU_TRACE_INPUT_LIB) 

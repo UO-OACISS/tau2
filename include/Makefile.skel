@@ -435,6 +435,8 @@ OPARI_O 	= TauKojakOpariDisable.o #ENDIF#
 # DYNINST DEFAULT ARCH
 #############################################
 DYNINST_PLATFORM 	= $(PLATFORM)
+#Dyninst 13 has issues with ARMLINUX64 when there are more than one function parameters, compile slightly modified tau_run.cpp and TauHooks.cpp
+#DYN_ARMLINUX64#DYNINST_ARCH = -DDYNINSTARMLINUX64
 
 ############# OpenMP Fortran Option ########
 TAU_OPENMP_OPTION =
