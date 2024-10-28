@@ -217,7 +217,7 @@ int Tau_MemMgr_findFit(int tid, size_t size)
     // return index to new block
     return getMemSummary(tid).numBlocks - 1;
   } else {
-    printf("********* TAU_MEMMGR_MAX_MEMBLOCKS_REACHED\n Current is %d, increase environmental variable TAU_MMEMGR_MAX_MEMBLOCS \n", TauEnv_get_env_memmgr_max_memblocks()); fflush(stdout);
+    printf("********* TAU_MEMMGR_MAX_MEMBLOCKS_REACHED\n Current is %d, increase environmental variable TAU_MEMMGR_MAX_BLOCKS\n", TauEnv_get_env_memmgr_max_memblocks()); fflush(stdout);
     return TAU_MEMMGR_MAX_MEMBLOCKS_REACHED;
   }
 }
@@ -284,7 +284,7 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
       break;
     case TAU_MEMMGR_MAX_MEMBLOCKS_REACHED:
       printf("Tau_MemMgr_malloc: MMAP MAX MEMBLOCKS REACHED!\n");
-      printf("Current is %d, increase environmental variable TAU_MMEMGR_MAX_MEMBLOCS \n", TauEnv_get_env_memmgr_max_memblocks()); fflush(stdout);
+      printf("Current is %d, increase environmental variable TAU_MEMMGR_MAX_BLOCKS\n", TauEnv_get_env_memmgr_max_memblocks()); fflush(stdout);
       break;
     default:
       printf("Tau_MemMgr_malloc: UNKNOWN ERROR!\n");
