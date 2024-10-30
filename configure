@@ -11277,7 +11277,14 @@ if [ $python = yes ] ; then
         pythonlibrary=`${pythonintv} ./utils/python_get_paths.py libname | sed -e 's/ .*//g'`
     fi
     if [ "x$pythonlibrary" != "x" ] ; then
+	#If the python library directory exists but the library is not found we may be in a
+	#virtual environment. Query the library and include paths directly.
         if [ ! -f $pythonlib/$pythonlibrary ] ; then
+		pythonlib=`${pythonintv} ./utils/python_get_paths.py libdir | sed -e 's/ .*//g'`
+		pythoninc=`${pythonintv} ./utils/python_get_paths.py inc | sed -e 's/ .*//g'`
+	fi
+
+	if [ ! -f $pythonlib/$pythonlibrary ] ; then
                 echo "ERROR: Python library $pythonlib/$pythonlibrary not found."
                 exit 1
         fi
