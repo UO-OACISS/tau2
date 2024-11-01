@@ -11605,49 +11605,51 @@ fi
 
 build_apex()
 {
-if [ $apex = yes ] ; then
-    cd ${START_DIR}
-    if [ $boost = no -a ${architecture} = "mic_linux" ] ; then
-            echo "Error: APEX requires Boost 1.54 or newer. Please specify the Boost installation location with the -boost option."
+    if [ $apex = yes ] ; then
+        cd ${START_DIR}
+        check_cmake 3 20 "APEX"
+        result=$?
+        if [ $result -eq 1 ]; then
+            echo 'ERROR: cmake version 3.20 or higher required to build APEX.'
             exit 1;
         fi
-    if [ $openmp = no -a $pthread = no ] ; then
-            echo "Error: APEX is for multithreaded runtimes. Please configure TAU with thread support (pthread or OpenMP)."
-            exit 1;
-        fi
-    check_cmake 2 8 "APEX"
-    result=$?
-    if [ $result -eq 1 ]; then
-        echo 'ERROR: cmake version 2.8 or higher required to build APEX.'
-        exit 1;
-    fi
-
         echo "NOTE: Building APEX"
+        if [ ! -d apex ] ; then
+            git submodule update --init --recursive
+        fi
         apex_include_file=apex/apex.mk
         rm -f ${apex_include_file}
         touch ${apex_include_file}
         echo "CC=${c_compiler}" >> ${apex_include_file}
-    echo "CXX=${cxx_compiler}" >> ${apex_include_file}
-    echo "PREFIX=${targetdir}" >> ${apex_include_file}
-    echo "TAUARCH=${architecture}" >> ${apex_include_file}
-    echo "TAUOPTIONS=${tauoptions}" >> ${apex_include_file}
-    echo "BOOSTROOT=${boostdir}" >> ${apex_include_file}
+        echo "CXX=${cxx_compiler}" >> ${apex_include_file}
+        echo "PREFIX=${targetdir}" >> ${apex_include_file}
+        echo "TAUARCH=${architecture}" >> ${apex_include_file}
+        echo "TAUOPTIONS=${tauoptions}" >> ${apex_include_file}
         if [ ! "x${bfddir}" = "x" ] ; then
-        echo "BFDOPT=-USE_BFD=TRUE -DBFD_ROOT=${bfddir}" >> ${apex_include_file}
+            echo "BFDOPT=-DAPEX_WITH_BFD=TRUE -DBFD_ROOT=${bfddir}" >> ${apex_include_file}
         else
-                if [ ${bfd_worked} = "yes" ] ; then
-                echo 'BFDOPT=-DUSE_BFD=TRUE' >> ${apex_include_file}
-                fi
-        fi
-        if [ ${architecture} = "mic_linux" ] ; then
-                echo 'TAUCFLAGS=-DCMAKE_C_FLAGS=-xMIC-AVX512' >> ${apex_include_file}
-                echo 'TAUCXXFLAGS=-DCMAKE_CXX_FLAGS="-xMIC-AVX512 -DBOOST_NO_CXX11_ALLOCATOR"' >> ${apex_include_file}
+            if [ ${bfd_worked} = "yes" ] ; then
+                echo 'BFDOPT=-DAPEX_WITH_BFD=TRUE' >> ${apex_include_file}
+            fi
         fi
         if [ ! "x${omptlib}" = "x" ] ; then
-                echo "TAUOMPT=-DUSE_OMPT=TRUE -DOMPT_ROOT=${omptlib}" >> ${apex_include_file}
+            echo "TAUOMPT=-DAPEX_WITH_OMPT=TRUE" >> ${apex_include_file}
         fi
+        if [ "${cuda}" = "yes" ] ; then
+            echo "TAUCUDA=-DAPEX_WITH_CUDA=TRUE -DCUDAToolkit_ROOT=${cudadir}" >> ${apex_include_file}
+        fi
+        if [ "${rocm}" = "yes" ] ; then
+            echo "TAUHIP=-DAPEX_WITH_HIP=TRUE" >> ${apex_include_file}
+        fi
+        if [ "${level_zero}" = "yes" ] ; then
+            echo "TAUSYCL=-DAPEX_WITH_LEVEL0=TRUE" >> ${apex_include_file}
+        fi
+        if [ "${mpi}" = "yes" ] ; then
+            echo "TAUMPI=-DAPEX_WITH_MPI=TRUE" >> ${apex_include_file}
+        fi
+        echo "TAUOPENCL=-DAPEX_WITH_OPENCL=TRUE" >> ${apex_include_file}
         cp etc/Makefile.apex apex/Makefile
-    fixmakeargs="$fixmakeargs APEX "
+        fixmakeargs="$fixmakeargs APEX "
         make -C apex clean
 fi
 }
