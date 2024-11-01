@@ -901,6 +901,7 @@ for arg in "$@"; do
         echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
         echo "-boost=<dir> ....................... Specify location of Boost package."
         echo "-apex ......................................... Build the APEX package."
+        echo "-zerosum ................................... Build the ZeroSum package."
         echo "-mochi ............................ Add MOCHI backend database support."
         echo "-dyninst=<dir> ................... Specify location of DynInst package."
         echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
@@ -1376,6 +1377,7 @@ sqlite3dir=
 #caliper=no
 #caliperdir=
 apex=no
+zerosum=no
 dyninst=no
 dyninstinc=no
 dyninstlib=no
@@ -2271,6 +2273,11 @@ for arg in "$@"; do
 
         -apex)
             apex=yes
+            shift
+            ;;
+
+        -zerosum)
+            zerosum=yes
             shift
             ;;
 
@@ -3443,6 +3450,13 @@ for arg in "$@"; do
             ;;
     esac
 done
+
+# make sure we have the perfstubs headers
+if [ ! -d perfstubs ] ; then
+    if [ ! -f perfstubs/CMakeLists.txt ] ; then
+        git submodule update --init --recursive perfstubs
+    fi
+fi
 
 if [ "x$python_ver_specified" = "xno" -a "x$pythoninc" != "x" ]; then
   if [ -f $pythoninc/../bin/python ]; then
@@ -11603,55 +11617,94 @@ EOF
     /bin/rm -f vttest.cpp vttest.o
 fi
 
-build_apex()
-{
-    if [ $apex = yes ] ; then
-        cd ${START_DIR}
-        check_cmake 3 20 "APEX"
-        result=$?
-        if [ $result -eq 1 ]; then
-            echo 'ERROR: cmake version 3.20 or higher required to build APEX.'
-            exit 1;
+build_apex() {
+    cd ${START_DIR}
+    check_cmake 3 20 "APEX"
+    result=$?
+    if [ $result -eq 1 ]; then
+        echo 'ERROR: cmake version 3.20 or higher required to build APEX.'
+        exit 1;
+    fi
+    echo "NOTE: Building APEX"
+    if [ ! -d apex ] ; then
+        git submodule update --init --recursive apex
+    fi
+    apex_include_file=apex/apex.mk
+    rm -f ${apex_include_file}
+    touch ${apex_include_file}
+    echo "CC=${c_compiler}" >> ${apex_include_file}
+    echo "CXX=${cxx_compiler}" >> ${apex_include_file}
+    echo "PREFIX=${targetdir}" >> ${apex_include_file}
+    echo "TAUARCH=${architecture}" >> ${apex_include_file}
+    echo "TAUOPTIONS=${tauoptions}" >> ${apex_include_file}
+    if [ ! "x${bfddir}" = "x" ] ; then
+        echo "BFDOPT=-DAPEX_WITH_BFD=TRUE -DBFD_ROOT=${bfddir}" >> ${apex_include_file}
+    else
+        if [ ${bfd_worked} = "yes" ] ; then
+            echo 'BFDOPT=-DAPEX_WITH_BFD=TRUE' >> ${apex_include_file}
         fi
-        echo "NOTE: Building APEX"
-        if [ ! -d apex ] ; then
-            git submodule update --init --recursive
-        fi
-        apex_include_file=apex/apex.mk
-        rm -f ${apex_include_file}
-        touch ${apex_include_file}
-        echo "CC=${c_compiler}" >> ${apex_include_file}
-        echo "CXX=${cxx_compiler}" >> ${apex_include_file}
-        echo "PREFIX=${targetdir}" >> ${apex_include_file}
-        echo "TAUARCH=${architecture}" >> ${apex_include_file}
-        echo "TAUOPTIONS=${tauoptions}" >> ${apex_include_file}
-        if [ ! "x${bfddir}" = "x" ] ; then
-            echo "BFDOPT=-DAPEX_WITH_BFD=TRUE -DBFD_ROOT=${bfddir}" >> ${apex_include_file}
-        else
-            if [ ${bfd_worked} = "yes" ] ; then
-                echo 'BFDOPT=-DAPEX_WITH_BFD=TRUE' >> ${apex_include_file}
-            fi
-        fi
-        if [ ! "x${omptlib}" = "x" ] ; then
-            echo "TAUOMPT=-DAPEX_WITH_OMPT=TRUE" >> ${apex_include_file}
-        fi
-        if [ "${cuda}" = "yes" ] ; then
-            echo "TAUCUDA=-DAPEX_WITH_CUDA=TRUE -DCUDAToolkit_ROOT=${cudadir}" >> ${apex_include_file}
-        fi
-        if [ "${rocm}" = "yes" ] ; then
-            echo "TAUHIP=-DAPEX_WITH_HIP=TRUE" >> ${apex_include_file}
-        fi
-        if [ "${level_zero}" = "yes" ] ; then
-            echo "TAUSYCL=-DAPEX_WITH_LEVEL0=TRUE" >> ${apex_include_file}
-        fi
-        if [ "${mpi}" = "yes" ] ; then
-            echo "TAUMPI=-DAPEX_WITH_MPI=TRUE" >> ${apex_include_file}
-        fi
-        echo "TAUOPENCL=-DAPEX_WITH_OPENCL=TRUE" >> ${apex_include_file}
-        cp etc/Makefile.apex apex/Makefile
-        fixmakeargs="$fixmakeargs APEX "
-        make -C apex clean
-fi
+    fi
+    if [ ! "x${omptlib}" = "x" ] ; then
+        echo "TAUOMPT=-DAPEX_WITH_OMPT=TRUE" >> ${apex_include_file}
+    fi
+    if [ "${cuda}" = "yes" ] ; then
+        echo "TAUCUDA=-DAPEX_WITH_CUDA=TRUE -DCUDAToolkit_ROOT=${cudadir}" >> ${apex_include_file}
+    fi
+    if [ "${rocm}" = "yes" ] ; then
+        echo "TAUHIP=-DAPEX_WITH_HIP=TRUE" >> ${apex_include_file}
+    fi
+    if [ "${level_zero}" = "yes" ] ; then
+        echo "TAUSYCL=-DAPEX_WITH_LEVEL0=TRUE" >> ${apex_include_file}
+    fi
+    if [ "${mpi}" = "yes" ] ; then
+        echo "TAUMPI=-DAPEX_WITH_MPI=TRUE" >> ${apex_include_file}
+    fi
+    echo "TAUOPENCL=-DAPEX_WITH_OPENCL=TRUE" >> ${apex_include_file}
+    cp etc/Makefile.apex apex/Makefile
+    fixmakeargs="$fixmakeargs APEX "
+    make -C apex clean
+    make -C apex
+}
+
+build_zerosum() {
+    cd ${START_DIR}
+    #check_cmake 3 20 "ZeroSum"
+    #result=$?
+    #if [ $result -eq 1 ]; then
+    #    echo 'ERROR: cmake version 3.20 or higher required to build ZeroSum.'
+    #    exit 1;
+    #fi
+    echo "NOTE: Building ZeroSum"
+    if [ ! -d zerosum ] ; then
+        git submodule update --init --recursive zerosum
+    fi
+    zerosum_include_file=zerosum/zerosum.mk
+    rm -f ${zerosum_include_file}
+    touch ${zerosum_include_file}
+    echo "CC=${c_compiler}" >> ${zerosum_include_file}
+    echo "CXX=${cxx_compiler}" >> ${zerosum_include_file}
+    echo "PREFIX=${targetdir}" >> ${zerosum_include_file}
+    echo "TAUARCH=${architecture}" >> ${zerosum_include_file}
+    echo "TAUOPTIONS=${tauoptions}" >> ${zerosum_include_file}
+    if [ ! "x${omptlib}" = "x" ] ; then
+        echo "TAUOMPT=-DZeroSum_WITH_OMPT=TRUE" >> ${zerosum_include_file}
+    fi
+    if [ "${cuda}" = "yes" ] ; then
+        echo "TAUCUDA=-DZeroSum_WITH_CUDA=TRUE -DCUDAToolkit_ROOT=${cudadir}" >> ${zerosum_include_file}
+    fi
+    if [ "${rocm}" = "yes" ] ; then
+        echo "TAUHIP=-DZeroSum_WITH_HIP=TRUE" >> ${zerosum_include_file}
+    fi
+    if [ "${level_zero}" = "yes" ] ; then
+        echo "TAUSYCL=-DZeroSum_WITH_SYCL=TRUE" >> ${zerosum_include_file}
+    fi
+    if [ "${mpi}" = "yes" ] ; then
+        echo "TAUMPI=-DZeroSum_WITH_MPI=TRUE" >> ${zerosum_include_file}
+    fi
+    cp etc/Makefile.zerosum zerosum/Makefile
+    fixmakeargs="$fixmakeargs ZeroSum "
+    make -C zerosum clean
+    make -C zerosum
 }
 
 if [ $java = yes ] ; then
@@ -13500,7 +13553,12 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_static}/lib${libom
 fi
 
 # doing this now, so that tauoptions is defined.
-build_apex
+if [ $apex = yes ] ; then
+    build_apex
+fi
+if [ $zerosum = yes ] ; then
+    build_zerosum
+fi
 
 # Save the FixMakefile args
 # Clear any old data

@@ -37,39 +37,10 @@ using namespace std;
 #include "Profile/UserEvent.h"
 #include "Profile/TauMetrics.h"
 #include "Profile/TauMetaData.h"
+// from perfstubs/perfstubs_api
+#include "perfstubs_api/tool.h"
 
 extern "C" {
-
-/* Data Structures */
-
-    typedef struct ps_tool_timer_data
-    {
-        unsigned int num_timers;
-        unsigned int num_threads;
-        unsigned int num_metrics;
-        char **timer_names;
-        char **metric_names;
-        double *values;
-    } ps_tool_timer_data_t;
-
-    typedef struct ps_tool_counter_data
-    {
-        unsigned int num_counters;
-        unsigned int num_threads;
-        char **counter_names;
-        double *num_samples;
-        double *value_total;
-        double *value_min;
-        double *value_max;
-        double *value_sumsqr;
-    } ps_tool_counter_data_t;
-
-    typedef struct ps_tool_metadata
-    {
-        unsigned int num_values;
-        char **names;
-        char **values;
-    } ps_tool_metadata_t;
 
 /* Function pointers */
 

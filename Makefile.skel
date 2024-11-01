@@ -65,6 +65,9 @@ examples/cthreads examples/fortran examples/f90 $(MPIEXAMPLES) $(PDTEXAMPLE)
 # APEX Support
 #APEX#APEX=apex#ENDIF#
 
+# ZeroSum Support
+#ZeroSum#ZeroSum=zerosum#ENDIF#
+
 # Trace Reader Library
 TRACEINPUT=src/TraceInput
 TRACE2PROFILE=utils/trace2profile
@@ -151,7 +154,7 @@ SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
           $(PTHREAD_WRAPPER) \
           $(MEMORYWRAPPER) $(TAUCUDA) $(TAU_CUPTI_AVAIL) $(TAU_ENV) $(TAUOPENCL) \
           $(GPIWRAPPER) $(ARMCIWRAPPER) $(DMAPPWRAPPER) $(UGNIWRAPPER) $(CHAPELWRAPPER) $(UPCWRAPPER) \
-          $(GOMP_WRAPPER) $(OTF2PROFILE) $(MPC_MPI_WRAPPER) $(APEX) \
+          $(GOMP_WRAPPER) $(OTF2PROFILE) $(MPC_MPI_WRAPPER) $(APEX) $(ZeroSum) \
           $(SHMEM_WRAPPER) $(PLUGINS) $(LLVM_PLUGIN) \
           $(SYSCALL_WRAPPER)
 
