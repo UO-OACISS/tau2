@@ -11668,12 +11668,12 @@ build_apex() {
 
 build_zerosum() {
     cd ${START_DIR}
-    #check_cmake 3 20 "ZeroSum"
-    #result=$?
-    #if [ $result -eq 1 ]; then
-    #    echo 'ERROR: cmake version 3.20 or higher required to build ZeroSum.'
-    #    exit 1;
-    #fi
+    check_cmake 3 20 "ZeroSum"
+    result=$?
+    if [ $result -eq 1 ]; then
+        echo 'ERROR: cmake version 3.20 or higher required to build ZeroSum.'
+        exit 1;
+    fi
     echo "NOTE: Building ZeroSum"
     if [ ! -d zerosum ] ; then
         git submodule update --init --recursive zerosum
@@ -11705,6 +11705,35 @@ build_zerosum() {
     fixmakeargs="$fixmakeargs ZeroSum "
     make -C zerosum clean
     make -C zerosum
+}
+
+build_perfstubs() {
+    cd ${START_DIR}
+    check_cmake 3 20 "ZeroSum"
+    result=$?
+    if [ $result -eq 1 ]; then
+        echo 'ERROR: cmake version 3.20 or higher required to build ZeroSum.'
+        exit 1;
+    fi
+    echo "NOTE: Building PerfStubs with Python3.12+ support"
+    if [ ! -d perfstubs ] ; then
+        git submodule update --init --recursive perfstubs
+    fi
+    perfstubs_include_file=perfstubs/perfstubs.mk
+    Python3_BIN_DIR=`dirname ${pythonintv}`
+    Python3_ROOT_DIR=`dirname ${Python3_BIN_DIR}`
+    rm -f ${perfstubs_include_file}
+    touch ${perfstubs_include_file}
+    echo "CC=${c_compiler}" >> ${perfstubs_include_file}
+    echo "CXX=${cxx_compiler}" >> ${perfstubs_include_file}
+    echo "PREFIX=${targetdir}" >> ${perfstubs_include_file}
+    echo "TAUARCH=${architecture}" >> ${perfstubs_include_file}
+    echo "TAUOPTIONS=${tauoptions}" >> ${perfstubs_include_file}
+    echo "TAUPYTHON=-DPERFSTUBS_WITH_PYTHON=TRUE -DPython3_ROOT_DIR=${Python3_ROOT_DIR} -DPython3_VERSION_MINOR=${Python3_VERSION_MINOR}" >> ${perfstubs_include_file}
+    cp etc/Makefile.perfstubs perfstubs/Makefile
+    fixmakeargs="$fixmakeargs PerfStubs "
+    make -C perfstubs clean
+    make -C perfstubs
 }
 
 if [ $java = yes ] ; then
@@ -13558,6 +13587,16 @@ if [ $apex = yes ] ; then
 fi
 if [ $zerosum = yes ] ; then
     build_zerosum
+fi
+if [ $python3 = yes ] ; then
+    python_version=`${pythonintv} --version | awk '{print $NF}'`
+    version_array=( ${python_version//./ } )
+    if [ "${version_array[0]}" == 3 ] ; then
+        if [ "${version_array[1]}" -gt 11 ] ; then
+            Python3_VERSION_MINOR=${version_array[1]}
+            build_perfstubs
+        fi
+    fi
 fi
 
 # Save the FixMakefile args

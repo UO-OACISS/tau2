@@ -21,6 +21,14 @@ if tau-config | grep -q 'PYTHONINT=python3' 2>/dev/null ; then
   python_interpreter=python3
 fi
 
+python_module_name=tau_python_wrapper
+python_version=`${python_interpreter} --version | awk '{print $NF}'`
+version_array=( ${python_version//./ } )
+if [ "${version_array[0]}" == 3 ] ; then
+    if [ "${version_array[1]}" -gt 11 ] ; then
+        python_module_name=pstubs
+    fi
+fi
 
 if [ "$scriptname" == "tau_python" ] ; then
   python_wrapper=true
@@ -106,6 +114,8 @@ usage()
 if [ $python_wrapper = "true" ] ; then
   echo "        -tau-python-args=<\"arguments\"> Arguments to the python interpreter"
   echo "        -tau-python-interpreter=<\"python\"> name of python interpreter (e.g, python, python3.6)"
+  echo "        -tau-python-filter=<\"filename\"> name of selective measurement JSON file"
+fi
   echo "        -adios2       Write output to ADIOS2 archive"
   echo "        -adios2_trace Write trace output to ADIOS2 archive"
   echo "        -monitoring   Periodically read available OS/HW monitoring counters"
@@ -115,7 +125,6 @@ if [ $python_wrapper = "true" ] ; then
   echo "        -disable-kokkos  Disable Kokkos profiling (removes fences that hurt performance)"
   echo "        -ugni         Track Cray UGNI network library functions."
   echo "        -chapel       Track Cray Chapel network atomics library functions."
-fi
   echo ""
   echo "Notes:"
   echo "    Defaults if unspecified: -T $default_tags"
@@ -695,6 +704,18 @@ for arg in "$@" ; do
           exit 1
         fi
         ;;
+      -tau-python-filter=*)
+        if [ $python_wrapper = "true" ] ; then
+          myarg=`echo $arg | sed 's/-tau-python-filter=//'`
+          python_filter="$myarg"
+          export PERFSTUBS_PYTHON_FILTER_FILENAME=$python_filter
+          save_arg $arg
+          shift
+        else
+          echo "Unknown option: $arg" >&2
+          exit 1
+        fi
+        ;;
       -ugni)
         track_ugni=true
         save_arg $arg
@@ -837,7 +858,7 @@ else
 fi
 
 python_bindings=`echo $theBinding | sed -e 's/shared/bindings/'`
-export PYTHONPATH=$BASEDIR/lib/$python_bindings:$PYTHONPATH
+export PYTHONPATH=${BASEDIR}/lib:$BASEDIR/lib/$python_bindings:$PYTHONPATH
 
 if [ "x$LD_LIBRARY_PATH" = "x" ] ; then
   TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding:$BASEDIR/lib
@@ -1416,9 +1437,9 @@ else
     $dryrun $python_interpreter $py_interp_args -m tau_pyspark_wrapper "$@"
   elif $python_wrapper ; then
     if [ $python_launch_module = "true" ] ; then
-        $dryrun $python_interpreter $py_interp_args -m tau_python_wrapper -m $python_m_arg "$@"
+        $dryrun $python_interpreter $py_interp_args -m ${python_module_name} -m $python_m_arg "$@"
     else
-        $dryrun $python_interpreter $py_interp_args -m tau_python_wrapper "$@"
+        $dryrun $python_interpreter $py_interp_args -m ${python_module_name} "$@"
     fi
     retval=$?
   elif $use_ptts ; then

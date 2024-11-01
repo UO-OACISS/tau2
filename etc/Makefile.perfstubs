@@ -1,0 +1,14 @@
+include perfstubs.mk
+
+build/CMakeCache.txt:
+	cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=$(CC) -DCMAKE_CXX_COMPILER=$(CXX) -DCMAKE_INSTALL_PREFIX=$(PREFIX)/$(TAUARCH) $(TAUPYTHON) $(TAUCFLAGS) $(TAUCXXFLAGS)
+
+all : build/CMakeCache.txt
+	$(MAKE) -C build all
+
+install: all
+	$(MAKE) -C build install
+
+clean:
+	rm -rf build
+
