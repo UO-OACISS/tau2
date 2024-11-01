@@ -114,7 +114,9 @@ usage()
 if [ $python_wrapper = "true" ] ; then
   echo "        -tau-python-args=<\"arguments\"> Arguments to the python interpreter"
   echo "        -tau-python-interpreter=<\"python\"> name of python interpreter (e.g, python, python3.6)"
+if [ $python_module_name = "pstubs" ] ; then
   echo "        -tau-python-filter=<\"filename\"> name of selective measurement JSON file"
+fi
 fi
   echo "        -adios2       Write output to ADIOS2 archive"
   echo "        -adios2_trace Write trace output to ADIOS2 archive"
@@ -706,14 +708,19 @@ for arg in "$@" ; do
         ;;
       -tau-python-filter=*)
         if [ $python_wrapper = "true" ] ; then
-          myarg=`echo $arg | sed 's/-tau-python-filter=//'`
-          python_filter="$myarg"
-          export PERFSTUBS_PYTHON_FILTER_FILENAME=$python_filter
-          save_arg $arg
-          shift
+            if [ $python_module_name = "pstubs" ] ; then
+                myarg=`echo $arg | sed 's/-tau-python-filter=//'`
+                python_filter="$myarg"
+                export PERFSTUBS_PYTHON_FILTER_FILENAME=$python_filter
+                save_arg $arg
+                shift
+            else
+                echo "Unknown option: $arg" >&2
+                exit 1
+            fi
         else
-          echo "Unknown option: $arg" >&2
-          exit 1
+            echo "Unknown option: $arg" >&2
+            exit 1
         fi
         ;;
       -ugni)
