@@ -3452,10 +3452,8 @@ for arg in "$@"; do
 done
 
 # make sure we have the perfstubs headers
-if [ ! -d perfstubs ] ; then
-    if [ ! -f perfstubs/CMakeLists.txt ] ; then
-        git submodule update --init --recursive perfstubs
-    fi
+if [ ! -d perfstubs ] || [ ! -f perfstubs/CMakeLists.txt ] ; then
+    git submodule update --init --recursive perfstubs
 fi
 
 if [ "x$python_ver_specified" = "xno" -a "x$pythoninc" != "x" ]; then
