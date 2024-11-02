@@ -11624,7 +11624,7 @@ build_apex() {
         exit 1;
     fi
     echo "NOTE: Building APEX"
-    if [ ! -d apex ] ; then
+    if [ ! -d apex ] || [ ! -f apex/CMakeLists.txt ] ; then
         git submodule update --init --recursive apex
     fi
     apex_include_file=apex/apex.mk
@@ -11673,7 +11673,7 @@ build_zerosum() {
         exit 1;
     fi
     echo "NOTE: Building ZeroSum"
-    if [ ! -d zerosum ] ; then
+    if [ ! -d zerosum ] || [ ! -f zerosum/CMakeLists.txt ] ; then
         git submodule update --init --recursive zerosum
     fi
     zerosum_include_file=zerosum/zerosum.mk
@@ -11714,7 +11714,7 @@ build_perfstubs() {
         exit 1;
     fi
     echo "NOTE: Building PerfStubs with Python3.12+ support"
-    if [ ! -d perfstubs ] ; then
+    if [ ! -d perfstubs ] || [ ! -f perfstubs/CMakeLists.txt ] ; then
         git submodule update --init --recursive perfstubs
     fi
     perfstubs_include_file=perfstubs/perfstubs.mk
