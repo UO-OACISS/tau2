@@ -11698,6 +11698,8 @@ build_zerosum() {
     fi
     if [ "${mpi}" = "yes" ] ; then
         echo "TAUMPI=-DZeroSum_WITH_MPI=TRUE" >> ${zerosum_include_file}
+    else
+        echo "TAUMPI=-DZeroSum_WITH_MPI=FALSE" >> ${zerosum_include_file}
     fi
     cp etc/Makefile.zerosum zerosum/Makefile
     fixmakeargs="$fixmakeargs ZeroSum "
