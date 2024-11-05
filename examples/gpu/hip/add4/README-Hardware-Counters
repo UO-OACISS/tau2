@@ -1,0 +1,162 @@
+Add4
+=========
+This benchmark is derived from the GPU-STREAM benchmark. 
+To increase the portion of read in the benchmark "add" kernel, we increase the number of array for "add" from two to four.
+After modification, we could achieve 90% efficiency for FIJI Nano GPU.
+
+
+GPU-STREAM
+==========
+
+Measure memory transfer rates to/from global device memory on GPUs.
+This benchmark is similar in spirit, and based on, the STREAM benchmark [1] for CPUs.
+
+Unlike other GPU memory bandwidth benchmarks this does *not* include the PCIe transfer time.
+
+Usage
+=================================
+This example has a makefile that can be used to compile the application, follow the provided steps:
+
+
+make clean
+make
+ROCM_METRICS=SQ_WAVES:VALUInsts:SQ_ITEMS tau_exec -rocm ./gpu-stream-hip
+
+Check available hardware counters
+=================================
+
+To obtain  a list of all available hardware counters and their characteristics, use rocprofv3 -L
+A list will be printed where gpu-agent[number] is a ROCm device and the name of the hardware counter.
+The hardware counters to profile should be included in the ROCM_METRICS environmental variable.
+As an example:
+ROCM_METRICS=MAX_WAVE_SIZE:SE_NUM:SIMD_NUM
+
+gpu-agent2:     MAX_WAVE_SIZE
+Description: Max wave size constant
+Expression: wave_front_size
+Dimensions: DIMENSION_INSTANCE[0:0]
+
+gpu-agent2:     SE_NUM
+Description: SE_NUM
+Expression: array_count/simd_arrays_per_engine
+Dimensions: DIMENSION_INSTANCE[0:0]
+
+gpu-agent2:     SIMD_NUM
+Description: SIMD Number
+Expression: simd_per_cu/CU_NUM
+Dimensions: DIMENSION_INSTANCE[0:0]
+
+gpu-agent2:     CU_NUM
+Description: CU_NUM
+Expression: cu_per_simd_array*array_count
+Dimensions: DIMENSION_INSTANCE[0:0]
+
+gpu-agent2:     SQ_WAIT_INST_LDS
+Description:    Number of wave-cycles spent waiting for LDS instruction issue. In units of 4 cycles. (per-simd, no                                                                                                                                                                ndeterministic)
+Block:  SQ
+Dimensions:     DIMENSION_INSTANCE[0:0] DIMENSION_SHADER_ENGINE[0:7]
+
+
+Output
+======
+The generated output will be similar to other TAU outputs and the values of the hardware performance counters
+can be seen in the thread that also included the kernels executed as USER EVENTS. Example:
+
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 4
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+        10  2.621E+07  2.621E+07  2.621E+07          0  Grid size X: void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd]
+        10  2.621E+07  2.621E+07  2.621E+07          0  Grid size X: void copy<double>(double const*, double*) [clone .kd]
+        10  2.621E+07  2.621E+07  2.621E+07          0  Grid size X: void mul<double>(double*, double const*) [clone .kd]
+        10  2.621E+07  2.621E+07  2.621E+07          0  Grid size X: void triad<double>(double*, double const*, double const*) [clone .kd]
+        10          1          1          1          0  Grid size Y: void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd]
+        10          1          1          1          0  Grid size Y: void copy<double>(double const*, double*) [clone .kd]
+        10          1          1          1          0  Grid size Y: void mul<double>(double*, double const*) [clone .kd]
+        10          1          1          1          0  Grid size Y: void triad<double>(double*, double const*, double const*) [clone .kd]
+        10          1          1          1          0  Grid size Z: void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd]
+        10          1          1          1          0  Grid size Z: void copy<double>(double const*, double*) [clone .kd]
+        10          1          1          1          0  Grid size Z: void mul<double>(double*, double const*) [clone .kd]
+        10          1          1          1          0  Grid size Z: void triad<double>(double*, double const*, double const*) [clone .kd]
+        10          0          0          0          0  Group segment size : void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd]
+        10          0          0          0          0  Group segment size : void copy<double>(double const*, double*) [clone .kd]
+        10          0          0          0          0  Group segment size : void mul<double>(double*, double const*) [clone .kd]
+        10          0          0          0          0  Group segment size : void triad<double>(double*, double const*, double const*) [clone .kd]
+        10          0          0          0          0  Private segment size : void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd]
+        10          0          0          0          0  Private segment size : void copy<double>(double const*, double*) [clone .kd]
+        10          0          0          0          0  Private segment size : void mul<double>(double*, double const*) [clone .kd]
+        10          0          0          0          0  Private segment size : void triad<double>(double*, double const*, double const*) [clone .kd]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 0]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 1]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 2]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 3]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 4]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 5]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 6]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 7]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 0]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 1]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 2]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 3]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 4]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 5]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 6]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 7]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 0]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 1]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 2]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 3]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 4]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 5]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 6]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 7]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 0]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 1]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 2]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 3]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 4]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 5]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 6]
+        10  3.277E+06  3.277E+06  3.277E+06          0  SQ_ITEMS void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 7]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 0]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 1]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 2]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 3]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 4]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 5]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 6]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 7]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 0]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 1]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 2]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 3]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 4]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 5]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 6]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 7]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 0]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 1]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 2]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 3]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 4]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 5]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 6]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 7]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 0]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 1]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 2]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 3]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 4]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 5]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 6]
+        10   5.12E+04   5.12E+04   5.12E+04          0  SQ_WAVES void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0 DIMENSION_SHADER_ENGINE: 7]
+        10         21         21         21          0  VALUInsts void add<double>(double const*, double const*, double const*, double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0]
+        10          9          9          9          0  VALUInsts void copy<double>(double const*, double*) [clone .kd] [ DIMENSION_INSTANCE: 0]
+        10         10         10         10          0  VALUInsts void mul<double>(double*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0]
+        10         13         13         13          0  VALUInsts void triad<double>(double*, double const*, double const*) [clone .kd] [ DIMENSION_INSTANCE: 0]
+
+
+
+
+
+
