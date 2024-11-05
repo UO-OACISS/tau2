@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2024						   **
+**    Copyright 1997-2025						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Research Centre Juelich, Germany                                     **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
@@ -12,6 +12,8 @@ Change log:
 ------------
 Version 2.34 changes (from 2.33):
 1. Added support for new LLVM compilers (-c++=parascc).
+2. Updated support for ROCm 6.2.3. 
+3. Added ZeroSum and PerfStubs repos as git submodules. 
 
 Version 2.33 changes (from 2.32):
 1. Added -dyninst=download for binary rewriting with DyninstAPI.
