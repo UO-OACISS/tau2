@@ -996,7 +996,7 @@ get_gpu_device_agents()
     return agents;
 }
 
-
+#if 0
 // PC sampling
 
 void
@@ -1007,6 +1007,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                                  void* /*data*/,
                                  uint64_t drop_count)
 {
+
     std::stringstream ss;
     ss << "The number of delivered samples is: " << num_headers << ", "
        << "while the number of dropped samples is: " << drop_count << std::endl;
@@ -1295,7 +1296,9 @@ int enable_pc_sampling ()
 	return 0;
 }
 
+
 //PC Sampling...end
+#endif
 
 //Modified from TauMetrics.cpp
 //This is executed before TAU is initialized
@@ -1519,7 +1522,7 @@ tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
 					 
 					 
 	//Setting PC sampling
-	
+	/*
 	if(enable_pc_sampling())
 	{
 		std::cout << "Enabling PC sampling..." << std::endl;
@@ -1570,7 +1573,7 @@ tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
 		}
 		
 	}
-	
+	*/
 	
 	// End of setting PC sampling		 
 
