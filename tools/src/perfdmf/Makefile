@@ -40,7 +40,7 @@ all: $(TARGET)
 build: bin/perfdmf.jar 
 
 override: build
-    JAVAC=javac -Xlint:unchecked -source 1.8 -target 1.8
+    JAVAC=javac -source 1.8 -target 1.8
     #JAVAC=javac
 
 #all: perfdmf.jar javadoc rebuilddb buildtest simple

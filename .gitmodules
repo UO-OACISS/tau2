@@ -1,3 +1,12 @@
 [submodule "apex"]
 	path = apex
-	url = git.nic.uoregon.edu:/gitroot/xpress-apex
+	url = https://github.com/UO-OACISS/apex.git
+	branch = master
+[submodule "perfstubs"]
+	path = perfstubs
+	url = https://github.com/UO-OACISS/perfstubs.git
+	branch = master
+[submodule "zerosum"]
+	path = zerosum
+	url = https://github.com/UO-OACISS/zerosum.git
+	branch = main

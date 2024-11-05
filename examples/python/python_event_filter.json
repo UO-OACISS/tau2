@@ -1,0 +1,17 @@
+{
+    "exclude_timers comment":
+        "Use this entry as an array of regular expression strings for timers to exclude (all others will be included). Remove the '_disabled' part of the name to enable it.",
+    "exclude_timers_disabled": ["_find_and_load.*"],
+
+    "exclude_files comment":
+        "Use this entry as an array of regular expression strings for files/paths to exclude (all others will be included). Remove the '_disabled' part of the name to enable it.",
+    "exclude_files": ["<frozen.*", "/usr/lib/python.*"],
+
+    "exclude_timers comment":
+        "Use this entry as an array of regular expression strings for timers to include (all others will be excluded). Remove the '_disabled' part of the name to enable it.",
+    "include_timers_disabled": ["firstPrimeAfter.*"],
+
+    "exclude_files comment":
+        "Use this entry as an array of regular expression strings for files/paths to include (all others will be excluded). Remove the '_disabled' part of the name to enable it.",
+    "include_files_disabled": ["/path/to/included/file"]
+}

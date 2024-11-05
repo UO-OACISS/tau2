@@ -688,7 +688,7 @@ TauADIOS.o  : TauADIOS.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauGenericAPI.o  : TauGenericAPI.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -I$(TAUROOT)/perfstubs -c $(@:.o=.cpp)
 
 TauCaliper.o 	: TauCaliper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)

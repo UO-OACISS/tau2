@@ -69,6 +69,7 @@ Anthony Chan
 Camille Coti
 David Skinner
 Rolf Rabenseifner
+Jordi Rodriguez
 NAS Parallel Benchmarks Group for allowing us to use their code as an example
 of TAU instrumentation with Fortran and MPI (http://www.nas.nasa.gov/NAS/NPB/).
 The Jumpshot group at Argonne National Laboratories for providing Jumpshot
