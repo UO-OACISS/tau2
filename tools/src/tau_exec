@@ -14,19 +14,31 @@ eval `tau-config`
 
 scriptname=`basename $0`
 
-
-
 python_interpreter=python
+found=yes
+# Check if python is in the user's path
+if ! [ -x "$(command -v $python_interpreter)" ]; then
+    python_interpreter=python3
+    # Check if python3 is in the user's path
+    if ! [ -x "$(command -v $python_interpreter)" ]; then
+        found=no
+    fi
+fi
+# Check if python3 is the explicit python executable used at configuration time
 if tau-config | grep -q 'PYTHONINT=python3' 2>/dev/null ; then
   python_interpreter=python3
 fi
 
+# For Python < 3.12, use the old python support
 python_module_name=tau_python_wrapper
-python_version=`${python_interpreter} --version | awk '{print $NF}'`
-version_array=( ${python_version//./ } )
-if [ "${version_array[0]}" == 3 ] ; then
-    if [ "${version_array[1]}" -gt 11 ] ; then
-        python_module_name=pstubs
+if [ $found == "yes" ]; then
+    python_version=`${python_interpreter} --version | awk '{print $NF}'`
+    version_array=( ${python_version//./ } )
+    if [ "${version_array[0]}" == 3 ] ; then
+        if [ "${version_array[1]}" -gt 11 ] ; then
+            # For Python >= 3.12, use the new python support
+            python_module_name=pstubs
+        fi
     fi
 fi
 
