@@ -4641,7 +4641,7 @@ case $machine in
             tauoptions="${tauoptions}-nvidia"
             cray_nvhpc=yes
             default_fortran=nvfortran
-            fixmakeargs="$fixmakeargs NVIDIA NVFORTRAN"
+            fixmakeargs="$fixmakeargs NVIDIA NV_FORTRAN"
         elif [ "x$PE_ENV" = xAOCC ] ; then
             tauoptions="${tauoptions}-aocc"
             aocc=yes
@@ -4836,7 +4836,7 @@ if [ "x$fortran_compiler" = "xarmflang" ]; then
 fi
 
 if [ "x$fortran_compiler" = "xnvfortran" ]; then
-   fixmakeargs="$fixmakeargs NVFORTRAN"
+   fixmakeargs="$fixmakeargs NV_FORTRAN"
 fi
 
 if [ "x$fortran_compiler" = "xxlflang" ]; then
