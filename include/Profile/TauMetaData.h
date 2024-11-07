@@ -25,6 +25,11 @@
 #include <map>
 #include <string.h>
 #include <sstream>
+
+#ifdef TAU_WINDOWS
+#include <functional>
+#endif
+
 using namespace std;
 
 // the actual metadata key structure, can be nested.
