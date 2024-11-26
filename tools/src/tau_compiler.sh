@@ -1392,6 +1392,9 @@ if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
     if [ "x$clang_version" = "x" ]; then
       clang_version=`$compilerSpecified --version | grep "flang-classic version" | awk {'print $3'} | awk -F'.' {'print $1'}`
     fi
+    if [ "x$clang_version" = "x" ]; then
+      clang_version=`$compilerSpecified --version | grep "flang-new version" | awk {'print $3'} | awk -F'.' {'print $1'}`
+    fi
     if [[ "$clang_version" -ge "14" ]] ; then    
 	CLANG_PLUGIN_OPTION="-fpass-plugin"
     else
