@@ -3188,16 +3188,16 @@ for arg in "$@"; do
 
         -rocm)
             rocmdir=/opt/rocm
-            #fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM ROCPROFILER"
             fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM"
             rocm=yes
-            rocprofiler=yes
+            echo $roctracer
             tauoptions="${tauoptions}-rocm"
             pthread=yes
             shift
             ;;
 
         -rocm=*)
+        echo $roctracer
             rocmdir=`echo $arg | sed -e 's/-rocm=//' -e 's/ /#/g'`
             if [ ! -d $rocmdir ]; then
               echo  "Error: Cannot access ROCm directory $rocmdir"
@@ -3206,23 +3206,21 @@ for arg in "$@"; do
               fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM"
               rocm=yes
             fi
-            #fixmakeargs="$fixmakeargs ROCPROFILER"
-            rocprofiler=yes
             tauoptions="${tauoptions}-rocm"
             pthread=yes
             shift
             ;;
 
-	-rocm-core=*)
-	    rocmcore_dir=`echo $arg | sed -e 's/-rocm-core=//' -e 's/ /#/g'`
-	    if [ ! -d $rocmcore_dir ]; then
-              echo  "Error: Cannot access ROCm Core directory $rocmcore_dir"
-              exit 1
-	    fi
-	    shift
-	    ;;
-
-	-rocprofv2)
+    	-rocm-core=*)
+    	    rocmcore_dir=`echo $arg | sed -e 's/-rocm-core=//' -e 's/ /#/g'`
+    	    if [ ! -d $rocmcore_dir ]; then
+                  echo  "Error: Cannot access ROCm Core directory $rocmcore_dir"
+                  exit 1
+    	    fi
+    	    shift
+    	    ;;
+    
+    	-rocprofv2)
             fixmakeargs="$fixmakeargs ROCPROFILERV2"
             rocprofv2=yes
             tauoptions="${tauoptions}-rocprofv2"
