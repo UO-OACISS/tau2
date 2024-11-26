@@ -1386,6 +1386,12 @@ if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
     # AMD clang version 13.0.0   -> use the 4th column instead of 3rd. 
       clang_version=`$compilerSpecified --version | grep "clang version" | awk {'print $4'} | awk -F'.' {'print $1'}`
     fi
+    if [ "x$clang_version" = "x" ]; then
+      clang_version=`$compilerSpecified --version | grep "flang version" | awk {'print $3'} | awk -F'.' {'print $1'}`
+    fi
+    if [ "x$clang_version" = "x" ]; then
+      clang_version=`$compilerSpecified --version | grep "flang-classic version" | awk {'print $3'} | awk -F'.' {'print $1'}`
+    fi
     if [[ "$clang_version" -ge "14" ]] ; then    
 	CLANG_PLUGIN_OPTION="-fpass-plugin"
     else
@@ -2300,12 +2306,14 @@ else
 			 fi
 		     fi
           	     extraopt=$optCompInstOption
+		     if [ "$clang_version" -lt "14" ] ; then
                      if [ $groupType == $group_f_F ]; then
 # If we need to tweak the Fortran options, we should do it here
 # For e.g., if Nagware needs a -Wc,<opt>, or if we want to remove file-exclude.
           	       extraopt="$optExcludeFuncs $optCompInstFortranOption"
           	       echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
                      fi
+	     	     fi
           	fi
               fi
 
