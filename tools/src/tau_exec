@@ -355,7 +355,7 @@ binary_exe=""
 track_env=false
 track_opencl=false
 track_rocm=false
-#track_rocm_pc=false
+track_rocm_pc=false
 track_openacc=false
 track_armci=false
 tau_use_ebs=false
@@ -550,11 +550,11 @@ for arg in "$@" ; do
         save_arg $arg
         shift
         ;;
-      #-rocm_pc)
-      #  track_rocm_pc=true
-      #  save_arg $arg
-      #  shift
-      #  ;;
+      -rocm_pc)
+        track_rocm_pc=true
+        save_arg $arg
+        shift
+        ;;
       -gomp)
         track_gomp=true
         save_arg $arg
@@ -862,11 +862,6 @@ else
   theBinding=$binding_specified
 fi
 
-#isRocprofv3=`echo $theBinding | grep rocprofv3`
-#if [ ! "x$isRocprofv3" == "x"  ]; then
-#	track_rocm=false
-#fi
-
 if [ $verbose = "true" ] ; then
   echo ""
   echo "Program to run : $@"
@@ -979,9 +974,9 @@ if [ $track_rocm = "true" ] ; then
   else
     $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
   fi
-  #if [ $track_rocm_pc = "true" ] ; then
-  #  export ROCPROFILER_PC_SAMPLING_BETA_ENABLED=1
-  #fi
+  if [ $track_rocm_pc = "true" ] ; then
+    export ROCPROFILER_PC_SAMPLING_BETA_ENABLED=1
+  fi
 fi
 
 isTBB=`echo $theBinding | grep tbb`
@@ -1153,12 +1148,16 @@ if [ $track_rocm = "true" ] ; then
 	  mk=$BASEDIR/lib/Makefile.tau-$options
 	  rocmdir=`grep "TAU_ROCM_DIR=" $mk | sed -e 's@TAU_ROCM_DIR=@@g'`
     isRocprofv2=`echo $theBinding | grep rocprofv2`
-    isRocprofv3=`echo $theBinding | grep rocprofv3`
+    isRocprofsdk=`echo $theBinding | grep rocprofsdk`
     if [ ! "x$isRocprofv2" == "x"  ]; then
       if [ -r $rocmdir/lib/librocprofiler64v2.so ]; then
   		   $dryrun export TAU_HSA_TOOLS_LIB=$rocmdir/lib/librocprofiler64v2.so
   	  fi
-    elif [ ! "x$isRocprofv3" == "x"  ]; then
+    elif [ ! "x$isRocprofsdk" == "x"  ]; then
+      #Needs to be modified, rocprofsdk removed this dependency,
+      #will remove after refactoring rocprofsdk implementation
+      #Also, I think that, ROCP_TOOL flags are not needed
+      #have to check, may need to divide rocm and rocprofilder-sdk                         
       if [ -r $rocmdir/lib/librocprofiler-sdk.so ]; then
   		   $dryrun export TAU_HSA_TOOLS_LIB=$rocmdir/lib/librocprofiler-sdk.so
   	  fi

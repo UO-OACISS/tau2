@@ -1255,8 +1255,8 @@ extern void Tau_roctracer_flush_tracing(void);
 extern void Tau_rocprofiler_pool_flush(void);
 #endif
 
-#if defined(TAU_ENABLE_ROCPROFILERV3)
-extern void Tau_rocprofv3_flush(void);
+#if defined(TAU_ENABLE_ROCPROFILERSDK)
+extern void Tau_rocprofsdk_flush(void);
 #endif
 
 #ifdef TAU_USE_OMPT_5_0
@@ -1292,8 +1292,8 @@ extern "C" void Tau_flush_gpu_activity(void) {
 #if defined(TAU_ENABLE_ROCPROFILER) || defined(TAU_ENABLE_ROCPROFILERV2)
    Tau_rocprofiler_pool_flush();
 #endif
-#if defined(TAU_ENABLE_ROCPROFILERV3)
-   Tau_rocprofv3_flush();
+#if defined(TAU_ENABLE_ROCPROFILERSDK)
+   Tau_rocprofsdk_flush();
 #endif
 #ifdef TAU_ENABLE_ROCTRACER
    TAU_VERBOSE("TAU: flushing asynchronous ROCM/HIP events...\n");

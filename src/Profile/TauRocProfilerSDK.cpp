@@ -10,8 +10,18 @@
 #include <rocprofiler-sdk/internal_threading.h>
 #include <rocprofiler-sdk/registration.h>
 #include <rocprofiler-sdk/rocprofiler.h>
+#include <rocprofiler-sdk/version.h>
+
+//Only available at 0.5.0 and later versions
+#if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0)
+#define PROFILE_SDKCOUNTERS
 #include <rocprofiler-sdk/device_counting_service.h>
 #include <rocprofiler-sdk/dispatch_counting_service.h>
+#elif (ROCPROFILER_VERSION_MAJOR > 0)//Files may change in newer versions, change it here
+#define PROFILE_SDKCOUNTERS
+#include <rocprofiler-sdk/device_counting_service.h>
+#include <rocprofiler-sdk/dispatch_counting_service.h>
+#endif
 
 #include <atomic>
 #include <cassert>
@@ -752,9 +762,11 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
 
 
 		//Use the headers to idenfity the kernels
+
 		else if(header->category == ROCPROFILER_BUFFER_CATEGORY_COUNTERS &&
            header->kind == ROCPROFILER_COUNTER_RECORD_PROFILE_COUNTING_DISPATCH_HEADER)
 		{
+#ifdef PROFILE_SDKCOUNTERS
 				//We will use this information to identify correlate dispatch ids and kernel ids
 				//with the kernel ids, we can identify the kernel's name.
 				//Not all dispatches ids may appear in the same call to this function, we need to store them.
@@ -768,12 +780,12 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
 			 
 					//std::map<rocprofiler_dispatch_id_t, rocprofiler_kernel_id_t> dispatch_id_name_map;
 			dispatch_id_kernel_map.emplace(record->dispatch_info.dispatch_id, record->dispatch_info.kernel_id);
-				
+#endif//PROFILE_SDKCOUNTERS			
 		}//Read the values and store the events
 		else if(header->category == ROCPROFILER_BUFFER_CATEGORY_COUNTERS &&
 				header->kind == ROCPROFILER_COUNTER_RECORD_VALUE)
 		{
-			
+#ifdef PROFILE_SDKCOUNTERS			
 			// Print the returned counter data.
 			auto* record = static_cast<rocprofiler_record_counter_t*>(header->payload);
 			rocprofiler_counter_id_t counter_id = {.handle = 0};
@@ -817,7 +829,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
 			ue = Tau_get_userevent(tmp.c_str());
 			value = (double)(record->counter_value);
 			Tau_userevent_thread(ue, value, taskid);
-      
+#endif //PROFILE_SDKCOUNTERS
 		}
 
 
@@ -867,6 +879,7 @@ get_profile_cache()
     return profile_cache;
 }
 
+#ifdef PROFILE_SDKCOUNTERS
 /**
  * Callback from rocprofiler when an kernel dispatch is enqueued into the HSA queue.
  * rocprofiler_profile_config_id_t* is a return to specify what counters to collect
@@ -900,6 +913,7 @@ dispatch_callback(rocprofiler_dispatch_counting_service_data_t dispatch_data,
         exit(-1);
     }
 }
+#endif//PROFILE_SDKCOUNTERS
 
 /**
  * Construct a profile config for an agent. This function takes an agent (obtained from
@@ -1300,6 +1314,7 @@ int enable_pc_sampling ()
 //PC Sampling...end
 #endif
 
+#ifdef PROFILE_SDKCOUNTERS
 //Modified from TauMetrics.cpp
 //This is executed before TAU is initialized
 template <typename T> profile_metrics get_set_metrics(const char* rocm_metrics, T agents)
@@ -1390,12 +1405,12 @@ template <typename T> profile_metrics set_rocm_metrics(T agents)
   
   return return_value;
 }
-
+#endif//PROFILE_SDKCOUNTERS
 
 int
 tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
 {
-	std::cout << "tool_init" << std::endl;
+	//std::cout << "tool_init" << std::endl;
     //printf("----------- %s\n", __FUNCTION__);
     assert(tool_data != nullptr);
 	
@@ -1406,7 +1421,8 @@ tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
         std::cerr << "No ROCm GPUs found" << std::endl;
         return 1;
     }
-	
+
+#ifdef PROFILE_SDKCOUNTERS
 	//Try to set the profiling for the metrics in ROCM_METRICS environmental variable
 	int flag_metrics_set = set_rocm_metrics(agents); 
 	if(flag_metrics_set == WRONG_NAME)
@@ -1417,7 +1433,7 @@ tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
 	
 	}
 	
-	
+#endif//PROFILE_SDKCOUNTERS	
 
     client_name_info = get_buffer_tracing_names();
 
@@ -1589,7 +1605,7 @@ tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
     }
 	
 	
-	
+#ifdef PROFILE_SDKCOUNTERS	
 	
 	if( flag_metrics_set == PROFILE_METRICS)
 	{
@@ -1602,13 +1618,13 @@ tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
 							 client_ctx, client_buffer, dispatch_callback, nullptr),
 						 "Could not setup buffered service");
 	}
-	
+#endif//PROFILE_SDKCOUNTERS
 	
 	
 
     ROCPROFILER_CALL(rocprofiler_start_context(client_ctx), "rocprofiler context start");
 		
-	std::cout << "END tool_init " << flag_metrics_set <<  std::endl;
+	  //std::cout << "END tool_init " << flag_metrics_set <<  std::endl;
     // no errors
     return 0;
 }
@@ -1736,9 +1752,9 @@ rocprofiler_configure(uint32_t                 version,
 }
 
 
-
-void Tau_rocprofv3_flush(){
-   //printf("-----------!! %s\n", __FUNCTION__);
+void Tau_rocprofsdk_flush(){
+   printf("-----------!! %s\n", __FUNCTION__);
+   TAU_VERBOSE("Tau_rocprofsdk_flush\n");
    //printf("%d\n", getpid());
    ROCPROFILER_CALL(rocprofiler_flush_buffer(client_buffer), "buffer flush");
    
