@@ -52,6 +52,7 @@
 
 
 int volatile flushed = 0;
+int volatile rocprofsdk_initialized = 0;
 
 
 #define ROCPROFILER_CALL(result, msg)                                                              \
@@ -1694,6 +1695,19 @@ stop()
     ROCPROFILER_CALL(rocprofiler_stop_context(client_ctx), "context stop");
 }
 
+int use_rocprofilersdk()
+{
+
+   const char* use_rocprofiler =  std::getenv("TAU_USE_ROCPROFILERSDK");
+   if( use_rocprofiler )
+   {
+     if ( atoi(use_rocprofiler) == 1)
+     {
+       return 1;
+     }
+   } 
+   return 0;
+}
 
 extern "C" rocprofiler_tool_configure_result_t*
 rocprofiler_configure(uint32_t                 version,
@@ -1705,7 +1719,10 @@ rocprofiler_configure(uint32_t                 version,
         
     // only activate if main tool
     //if(priority > 0) return nullptr;
-
+    
+    if(use_rocprofilersdk() == 0)
+      return nullptr;
+    
     // set the client name
     id->name = "TAU";
 
@@ -1747,13 +1764,19 @@ rocprofiler_configure(uint32_t                 version,
                                             static_cast<void*>(client_tool_data)};
 
     // return pointer to configure data
-    
+    rocprofsdk_initialized = 1;
     return &cfg;
 }
 
 
 void Tau_rocprofsdk_flush(){
-   printf("-----------!! %s\n", __FUNCTION__);
+  if(rocprofsdk_initialized==0)
+  {
+    TAU_VERBOSE("Flag -rocm not set, rocm is not profiled\n");
+    return;
+  }
+
+   //printf("-----------!! %s\n", __FUNCTION__);
    TAU_VERBOSE("Tau_rocprofsdk_flush\n");
    //printf("%d\n", getpid());
    ROCPROFILER_CALL(rocprofiler_flush_buffer(client_buffer), "buffer flush");

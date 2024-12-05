@@ -49,7 +49,8 @@ THE SOFTWARE.
 // Dispatch callbacks and context handlers synchronization
 pthread_mutex_t rocm_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 // Tool is unloaded
-volatile bool is_loaded = false;
+volatile bool rocprofv2_is_loaded = false;
+
 
 /* I know it's bad form to have this map just hanging out here,
  * but when I wrapped it with a getter function, it failed to work.
@@ -407,7 +408,7 @@ int WriteBufferRecords(const rocprofiler_record_header_t *begin,
     abort();
   }
 
-  if(is_loaded)
+  if(rocprofv2_is_loaded)
   {
     TAU_VERBOSE("WriteBufferRecords\n");
     
@@ -457,7 +458,7 @@ extern void Tau_roc_trace_sync_call_v2(rocprofiler_record_tracer_t tracer_record
       abort();
     }
 
-      if(is_loaded)
+      if(rocprofv2_is_loaded)
       {
         FlushTracerRecord(tracer_record, session_id);
       }
@@ -474,19 +475,40 @@ extern void Tau_roc_trace_sync_call_v2(rocprofiler_record_tracer_t tracer_record
 ROCPROFILER_EXPORT extern const uint32_t HSA_AMD_TOOL_PRIORITY = 1025;
 
 
+int use_rocprofilerv2()
+{
+
+   const char* use_rocprofiler =  std::getenv("TAU_USE_ROCPROFV2");
+   if( use_rocprofiler )
+   {
+     printf("--TAU_USE_ROCPROFV2\n");
+     if ( atoi(use_rocprofiler) == 1)
+     {
+       printf("--TAU_USE_ROCPROFV2=1\n");
+       return 1;
+     }
+   } 
+   return 0;
+}
+
 //Remember to check difference between this function called in TauInit and hsa OnLoad
 //Implemented without ROCPROFILER_COUNTER_LIST NOR ATT, check if necessary and implement after rocprofv2 is working
 //Also, all DOMAINS are traced, should this be changed?
 void Tau_rocm_initialize_v2() {
-
+  printf("Tau_rocm_initialize_v2\n");
+  
+  if (use_rocprofilerv2() == 0)
+      return;
+  printf("Use rocprofilerv2\n");
+  
   if (pthread_mutex_lock(&rocm_mutex) != 0) {
     perror("pthread_mutex_lock");
     abort();
   }
 
 
-  if (!is_loaded){
-    is_loaded = true;
+  if (!rocprofv2_is_loaded){
+    rocprofv2_is_loaded = true;
     TAU_VERBOSE("Inside Tau_rocm_initialize_v2\n");
      if (rocprofiler_version_major() != ROCPROFILER_VERSION_MAJOR ||
         rocprofiler_version_minor() < ROCPROFILER_VERSION_MINOR) {
@@ -570,12 +592,14 @@ void Tau_rocm_initialize_v2() {
 
 void Tau_rocprofiler_terminate_session()
 {
+      if (rocprofv2_is_loaded == 0)
+        return;
       if (pthread_mutex_lock(&rocm_mutex) != 0) {
         perror("pthread_mutex_lock");
         abort();
       }
-        if (is_loaded){
-          is_loaded = false;
+        if (rocprofv2_is_loaded){
+          rocprofv2_is_loaded = false;
           TAU_VERBOSE("Inside rocprofiler_terminate_session\n");
                 CHECK_ROCPROFILER(rocprofiler_terminate_session(session_id));
 
@@ -587,20 +611,21 @@ void Tau_rocprofiler_terminate_session()
 }
 
 void Tau_rocprofiler_pool_flush() {
+      if (rocprofv2_is_loaded == 0)
+        return;
 			TAU_VERBOSE("Inside Tau_rocprofiler_pool_flush_v2\n");
 
+      CHECK_ROCPROFILER(rocprofiler_flush_data(session_id, counter_buffer_id));
+      CHECK_ROCPROFILER(rocprofiler_flush_data(session_id, trace_buffer_id));
 
-
-          CHECK_ROCPROFILER(rocprofiler_flush_data(session_id, counter_buffer_id));
-          CHECK_ROCPROFILER(rocprofiler_flush_data(session_id, trace_buffer_id));
-
-          Tau_rocprofiler_terminate_session();
+      Tau_rocprofiler_terminate_session();
 
 }
 
 // Stop tracing routine
 extern void Tau_rocprofv2_stop() {
-
+    if (rocprofv2_is_loaded == 0)
+      return;
       // Destroy all profiling related objects(User buffer, sessions,
       // filters, etc..)
     Tau_rocprofiler_terminate_session();
