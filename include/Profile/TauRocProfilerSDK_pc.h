@@ -1,4 +1,6 @@
 //TauRocProfilerSDK_pc.h
+#include <rocprofiler-sdk/version.h>
+#include <rocprofiler-sdk/agent.h>
 
 #ifndef ROCPROFILER_CALL
 #define ROCPROFILER_CALL(result, msg)                                                              \
