@@ -1,16 +1,14 @@
-//TauRocProfilerSDK_hc.h
+//TauRocProfilerSDK_pc.h
 
-#ifndef  PROFILE_SDKCOUNTERS_H
-#define PROFILE_SDKCOUNTERS_H
-
-#include <Profile/TauBfd.h>  // for name demangling
+#ifndef SAMPLING_SDKPC_H
+#define SAMPLING_SDKPC_H
 
 #include <rocprofiler-sdk/version.h>
 #include <rocprofiler-sdk/agent.h>
 #include <rocprofiler-sdk/fwd.h>
-#include <rocprofiler-sdk/registration.h>
+#include <rocprofiler-sdk/version.h>
 #include <rocprofiler-sdk/rocprofiler.h>
-#include <rocprofiler-sdk/callback_tracing.h>
+#include <rocprofiler-sdk/registration.h>
 
 #include <vector>
 #include <cstdint>
@@ -24,12 +22,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
-
-
-//Map to identify kernels and some of their information
-using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
-using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_symbol_data_t>;
-
+#include <iomanip>
 
 #ifndef ROCPROFILER_CALL
 #define ROCPROFILER_CALL(result, msg)                                                              \
@@ -46,37 +39,44 @@ using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_
                    << status_msg << ")";                                                           \
             throw std::runtime_error(errmsg.str());                                                \
         }                                                                                          \
-    }
+    } 
 #endif
 
-//Enum to enable or disable metric profiling
-typedef enum profile_metrics {
-	NO_METRICS = 1,
-	WRONG_NAME,
-	PROFILE_METRICS
-};
+  
+//Due to some bugs, PC Sampling is available, but does not work in older versions
+// do not compile for 4.0 and older
+//Also, the implementation is not fully done, in future releases, we may
+// be able to get stall reasons
+#if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0) && defined(TAU_ENABLE_ROCPROFILERSDK_PC)
+#define SAMPLING_SDKPC
+#include "Profile/RocProfilerSDK/TauRocProfilerSDK_add_tr.hpp"
 
+constexpr size_t BUFFER_SIZE_BYTES = 8192;
+constexpr size_t WATERMARK         = (BUFFER_SIZE_BYTES / 4);
 
-//Compatible Hardware Counter Profiling is only available at Rocprofiler 0.5 and newer versions
-#if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0)
-#define PROFILE_SDKCOUNTERS
+using avail_configs_vec_t         = std::vector<rocprofiler_pc_sampling_configuration_t>;
 
-
-std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value);
-int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
-
-#else
-
-std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value)
+struct tool_agent_info
 {
-  return std::string();
+    rocprofiler_agent_id_t               agent_id;
+    std::unique_ptr<avail_configs_vec_t> avail_configs;
+    const rocprofiler_agent_t*           agent;
+};
+using tool_agent_info_vec_t       = std::vector<std::unique_ptr<tool_agent_info>>;
+using pc_sampling_buffer_id_vec_t = std::vector<rocprofiler_buffer_id_t>;
+
+int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
+void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
+#else
+int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
+{
+    return 0;
 }
-int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer)
-{ 
-  return NO_METRICS;
+void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
+{
+    return ;
 }
-#endif //PROFILE_SDKCOUNTERS
 
-
-
-#endif //PROFILE_SDKCOUNTERS_H
+#endif //VERSION OR ENABLED
+    
+#endif //SAMPLING_SDKPC_H

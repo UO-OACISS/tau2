@@ -1382,6 +1382,10 @@ dyninst=no
 dyninstinc=no
 dyninstlib=no
 dwarf=no
+elfutils=no
+elfutilsdir=
+elfutilslib=
+elfutilsinc=
 java=no
 asmdex=download
 openmp=no
@@ -2446,6 +2450,24 @@ for arg in "$@"; do
             fi
             fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir#-Wl\,-rpath\,$dwarfdir"
             dwarfdir=""
+            shift
+            ;;
+        
+        -elfutils=download)
+            elfutils=yes
+            download_elfutils=yes
+            echo "Downloading elfutils"
+            shift
+            ;;
+
+        -elfutils=*)
+            elfutils=yes
+            elfutilsdir=`echo $arg | sed -e 's/-elfutils=//'`
+            if [ ! -d $elfutilsdir ]
+            then
+                echo "Error: Cannot access elfutils directory $elfutilsdir"
+                exit 1
+            fi
             shift
             ;;
 
@@ -3594,13 +3616,13 @@ fi
 
 if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "$rocmv6" = "no" ]; then
     echo "For rocprofv2 use rocm/6 or newer!"
-    exit
+    exit 1
 fi
 
 
 if [ "x$rocm" = "xyes" -a "$rocprofsdk" = "yes" -a "$rocmv6" = "no" ]; then
     echo "For rocprof-sdk use rocm/6 or newer!"
-    exit
+    exit 1
 fi
 
 if [ "x$rocm" = "xyes" -a "$rocprofv2" = "yes" -a "$rocmv6" = "yes" ]; then
@@ -3626,6 +3648,9 @@ if [ "x$rocm" = "xyes" -a "$rocprofsdk" = "yes" -a "$rocmv6" = "yes" ]; then
     if [ "x$rocprofilerinc" = "x" ]; then
         rocprofilerinc="$rocprofilerdir/include/"
         fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
+    fi
+    if [  "$elfutils" = "yes" ]; then
+        fixmakeargs="$fixmakeargs ROCPROFILERSDK_PC"
     fi
 fi
 
@@ -10685,7 +10710,7 @@ libdyninst_name=dyninst
 if [ "x$dyninstdir" != "x" -a -d "$dyninstdir" ] ; then
   if [ -r $dyninstdir/$libdyninsttgz ]; then
     echo "NOTE: Copying $dyninstdir/$libdyninsttgz "
-    cp $dyninstdir/$libunwindtgz .
+    cp $dyninstdir/$libdyninsttgz .
     download_dyninst=yes
   fi
 fi
@@ -10941,6 +10966,68 @@ if [ "x$download_dyninst" = xyes ] ; then
   fi
   cd $prebfddir
 fi #dyninst=download
+
+
+
+######################################################################
+# Install elfutils if requested
+######################################################################
+
+if [ "x$elfutilsdir" = "x" ]; then
+  libelfutilsdir=${targetdir}/${architecture}
+fi
+
+
+
+dynelfutils=elfutils-0.189
+dynelfutilsbz=${dynelfutils}.tar.bz2
+dynelfutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$dynelfutilsbz
+
+if [ "x$download_elfutils" = xyes ] ; then
+
+    predowndir=`pwd`
+    elfutilsdir=$libelfutilsdir/elfutils
+    
+    if [ -r "$elfutilsdir/lib/libdw.so" -a -r "$elfutilsdir/include/elfutils/libdw.h" ]; then
+        echo "Found elfutils"
+        echo "elfutils download skipping"
+    else
+        ## Build shared elfutils
+        mkdir ${libelfutilsdir}/${dynelfutils}
+        mkdir ${elfutilsdir}
+        download "$dynelfutilsurl" "$dynelfutilsbz"
+        tar -xf $dynelfutilsbz -C ${libelfutilsdir}/${dynelfutils} --strip-components=1
+        cd ${libelfutilsdir}/${dynelfutils}
+        CC=gcc CXX=g++  ./configure -disable-debuginfod --disable-libdebuginfod --prefix=${elfutilsdir}
+        make -j8
+        make -j8 install
+        cd ..
+        rm -rf $dynelfutilsbz
+        rm -rf $dynelfutils
+    fi
+    cd $predowndir
+fi
+
+if [ "$elfutils" = "yes" ]; then
+    if [ -r "$elfutilsdir/include/elfutils/libdw.h" ]; then
+        elfutilsinc=$elfutilsdir/include
+    else
+        echo "Could not find elfutils $elfutilsdir/include/elfutils/libdw.h"
+        exit 1
+    fi
+    if [ -r "$elfutilsdir/lib/libdw.so" ]; then
+        elfutilslib=$elfutilsdir/lib
+    else
+        echo "Could not find elfutils $elfutilsdir/lib/libdw.so"
+        exit 1
+    fi
+    
+
+    fixmakeargs="$fixmakeargs elfutilsincdir=$elfutilsinc"
+    fixmakeargs="$fixmakeargs elfutilslibdir=$elfutilslib"
+fi ##download elfutils
+
+
 
 ######################################################################
 # Check that the Sampling allocator code is supported by compiler

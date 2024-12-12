@@ -3,7 +3,7 @@
 //https://github.com/ROCm/rocprofiler-sdk/blob/amd-mainline/samples/counter_collection/client.cpp
 
 
-#include "Profile/TauRocProfilerSDK_hc.h"
+#include "Profile/RocProfilerSDK/TauRocProfilerSDK_hc.h"
 
 #ifdef PROFILE_SDKCOUNTERS
 
@@ -169,8 +169,6 @@ std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t cli
     rocprofiler_query_record_counter_id(record->id, &counter_id);
     
     std::string tmp;
-    void* ue = nullptr;
-    double value;
     ss << "Counter: (" ;
     ss << used_counter_id_map[counter_id.handle] << ") [ROCm Kernel]";
     ss << Tau_demangle_name(client_kernels.at(dispatch_id_kernel_map[record->dispatch_id]).kernel_name);
@@ -295,4 +293,4 @@ int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_co
 }
 
 
-#endif
+#endif //PROFILE_SDKCOUNTERS

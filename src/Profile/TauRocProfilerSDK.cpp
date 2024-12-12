@@ -4,8 +4,8 @@
 #include <Profile/TauRocm.h>
 
 #include "Profile/Profiler.h"
-#include "Profile/TauRocProfilerSDK_hc.h"
-#include "Profile/TauRocProfilerSDK_pc.h"
+#include "Profile/RocProfilerSDK/TauRocProfilerSDK_hc.h"
+#include "Profile/RocProfilerSDK/TauRocProfilerSDK_pc.h"
 
 //Need to check, are they all needed? 
 #include <rocprofiler-sdk/buffer.h>
@@ -852,6 +852,7 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
   if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
      record.operation == ROCPROFILER_CODE_OBJECT_LOAD)
   {
+    printf("ROCPROFILER_CODE_OBJECT_LOAD\n");
     if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
     {
       // flush the buffer to ensure that any lookups for the client kernel names for the code
@@ -859,6 +860,17 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
       auto flush_status = rocprofiler_flush_buffer(client_buffer);
       if(flush_status != ROCPROFILER_STATUS_ERROR_BUFFER_BUSY)
         ROCPROFILER_CALL(flush_status, "buffer flush");
+    }
+    //Only execute if PC Sampling enabled
+    if(pc_sampling == 1)
+    {
+      printf("codeobj_tracing_callback\n");
+      codeobj_tracing_callback(record);
+    }
+    else
+    {
+
+      printf("No codeobj_tracing_callback\n");
     }
   }
   else if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
@@ -902,8 +914,8 @@ int tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
   ROCPROFILER_CALL(
                     rocprofiler_configure_callback_tracing_service(client_ctx,
                                                        ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT,
-                                                       code_object_ops.data(),
-                                                       code_object_ops.size(),
+                                                       nullptr,
+                                                       0,
                                                        tool_code_object_callback,
                                                        nullptr),
                                                        "code object tracing service configure");                                                   
@@ -963,8 +975,12 @@ int tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
   }
   
   hc_profiling = init_hc_profiling(agents, client_ctx, client_buffer);
+  if(hc_profiling == PROFILE_METRICS)
+    pc_sampling = init_pc_sampling(client_ctx, 1);
+  else
+    pc_sampling = init_pc_sampling(client_ctx, 0);
   
-  if( hc_profiling && pc_sampling)
+  if( (hc_profiling == PROFILE_METRICS) && pc_sampling)
   {
     std::cerr << "Unable to profile hardware counter and perform pc sampling at the same time \n Select only one" << std::endl;
     return -1;
