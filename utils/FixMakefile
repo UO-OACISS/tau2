@@ -1178,7 +1178,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      ROCPROFILERSDK_PC)
-        echo "NOTE: Using the TAU's ROCm ROCPROFILER SDK Interface "
+        echo "NOTE: Using the TAU's ROCm ROCPROFILER SDK PC Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      ROCPROFILERROCM6)
