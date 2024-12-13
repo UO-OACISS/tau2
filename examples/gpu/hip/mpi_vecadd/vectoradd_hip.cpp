@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include <stdlib.h>
 #include<iostream>
 #include "hip/hip_runtime.h"
-
+#include <unistd.h>
 
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 
@@ -74,7 +74,7 @@ __kernel__ void vectoradd_float(float* a, const float* b, const float* c, int wi
 using namespace std;
 
 int main(int argc, char **argv) {
-  
+  sleep(1);
   float* hostA;
   float* hostB;
   float* hostC;
@@ -93,14 +93,14 @@ int main(int argc, char **argv) {
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   MPI_Get_processor_name(name, &len);
 
-  hipGetDeviceProperties(&devProp, 0);
-  cout << " System minor " << devProp.minor << endl;
-  cout << " System major " << devProp.major << endl;
-  cout << " agent prop name " << devProp.name << endl;
+  //hipGetDeviceProperties(&devProp, 0);
+  //cout << " System minor " << devProp.minor << endl;
+  //cout << " System major " << devProp.major << endl;
+  //cout << " agent prop name " << devProp.name << endl;
 
 
 
-  cout << "hip Device prop succeeded " << endl ;
+  //cout << "hip Device prop succeeded " << endl ;
 
 
   int i;
@@ -158,5 +158,6 @@ int main(int argc, char **argv) {
 
 
   MPI_Finalize();
+  sleep(1);
   return errors;
 }

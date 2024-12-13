@@ -15,7 +15,7 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-HDF5_ROOT	= /storage/users/jalcaraz/spack/opt/spack/linux-ubuntu22.04-icelake/gcc-11.4.0/hdf5-1.14.3-ct7dv7muxqd6beytmokixsfiblbc3qjq
+HDF5_ROOT	= /storage/users/jalcaraz/spackkkk/spack/opt/spack/linux-ubuntu22.04-icelake/gcc-11.4.0/hdf5-1.14.3-3wwhkm44ysdb2dfa3ifk3y6xl5rlgcaz
 
 CFLAGS		= -I$(HDF5_ROOT)/include
 #CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS)

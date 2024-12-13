@@ -549,6 +549,16 @@ case $1 in
 	echo "s,^ELFDIR=.*$,ELFDIR=$elfdir,g" >> $sedout
 	;;
 
+     elfutilsincdir=*)
+        elfdir=`echo $1 | sed -e 's/^elfdir=//'  -e 's/#/ /g'`
+	echo "s,^ELFUTILS_INC_DIR=.*$,ELFUTILS_INC_DIR=$elfdir,g" >> $sedout
+	;;
+
+     elfutilslibdir=*)
+        elfdir=`echo $1 | sed -e 's/^elfdir=//'  -e 's/#/ /g'`
+	echo "s,^ELFUTILS_LIB_DIR=.*$,ELFUTILS_LIB_DIR=$elfdir,g" >> $sedout
+	;;
+
      tbbdir=*)
         tbbdir=`echo $1 | sed -e 's/^tbbdir=//'  -e 's/#/ /g'`
 	echo "s,^TBBDIR=.*$,TBBDIR=$tbbdir,g" >> $sedout
@@ -1164,6 +1174,10 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      ROCPROFILERSDK)
+        echo "NOTE: Using the TAU's ROCm ROCPROFILER SDK Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     ROCPROFILERSDK_PC)
         echo "NOTE: Using the TAU's ROCm ROCPROFILER SDK Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;

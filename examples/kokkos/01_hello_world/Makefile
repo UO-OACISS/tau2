@@ -1,4 +1,4 @@
-KOKKOS_PATH = /usr/local/packages/kokkos/2021-11-18/hipcc-4.3.0
+KOKKOS_PATH = /storage/users/jalcaraz/spackkkk/spack/opt/spack/linux-ubuntu20.04-cascadelake/gcc-9.4.0/kokkos-4.3.00-sdwsar4ewnadahzp6g3oyz44yftjxrwv
 SRC = $(wildcard *.cpp)
 vpath %.cpp $(sort $(dir $(SRC)))
 
@@ -8,8 +8,8 @@ default: build
 OBJ = $(notdir $(SRC:.cpp=.o))
 EXE = $(notdir $(SRC:.cpp=.exe))
 LIB =
-LINK=tau_cxx.sh
-CXX=tau_cxx.sh
+LINK=g++
+CXX=g++
 KOKKOS_LIBS=-L$(KOKKOS_PATH)/lib64 -lkokkoscore -ldl
 KOKKOS_CXXFLAGS=-I$(KOKKOS_PATH)/include -std=c++14 -fopenmp
 KOKKOS_LDFLAGS=-std=c++14 -fopenmp
