@@ -67,6 +67,7 @@ using pc_sampling_buffer_id_vec_t = std::vector<rocprofiler_buffer_id_t>;
 
 int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
 void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
+void show_results_pc();
 #else
 int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
 {
@@ -76,7 +77,10 @@ void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
 {
     return ;
 }
-
+void show_results_pc()
+{
+    return;
+}
 #endif //VERSION OR ENABLED
     
 #endif //SAMPLING_SDKPC_H

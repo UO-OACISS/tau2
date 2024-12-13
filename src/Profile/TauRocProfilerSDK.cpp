@@ -997,6 +997,9 @@ void
 tool_fini(void* tool_data)
 {
     assert(tool_data != nullptr);
+    if(pc_sampling)
+      show_results_pc();
+
 }
 
 

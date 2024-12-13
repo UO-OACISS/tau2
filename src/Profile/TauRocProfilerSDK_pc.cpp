@@ -523,6 +523,12 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
   
   return 1;
 }
+
+
+void show_results_pc()
+{
+    sdk_pc_sampling::address_translation::dump_flat_profile();
+}
 #endif //SAMPLING_SDKPC
 
 
