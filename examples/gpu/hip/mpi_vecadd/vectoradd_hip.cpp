@@ -84,7 +84,14 @@ int main(int argc, char **argv) {
   float* deviceC;
 
   hipDeviceProp_t devProp;
-  MPI_Init(&argc, &argv);
+
+  int rank, nprocs, len;
+  char name[MPI_MAX_PROCESSOR_NAME];
+
+  MPI_Init(&argc,&argv);
+  MPI_Comm_size(MPI_COMM_WORLD,&nprocs);
+  MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+  MPI_Get_processor_name(name, &len);
 
   hipGetDeviceProperties(&devProp, 0);
   cout << " System minor " << devProp.minor << endl;
@@ -136,7 +143,7 @@ int main(int argc, char **argv) {
   if (errors!=0) {
     printf("FAILED: %d errors\n",errors);
   } else {
-      printf ("PASSED!\n");
+      printf ("PASSED! MPI rank  %d of %d on %s\n", rank, nprocs, name);
   }
 
   HIP_ASSERT(hipFree(deviceA));
@@ -148,6 +155,7 @@ int main(int argc, char **argv) {
   free(hostC);
 
   //hipResetDefaultAccelerator();
+
 
   MPI_Finalize();
   return errors;
