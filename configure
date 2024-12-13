@@ -5452,7 +5452,7 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
                 echo "Found $mpif90_exe ldflags: $mpiflibargs"
 
                 tmp_mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
-                tmp_mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
+                tmp_mpiflibargs="-g#-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
                 fixmakeargs="$fixmakeargs mpilibargs=$tmp_mpilibargs mpiflibargs=$tmp_mpiflibargs mpiincargs=$mpiinc"
                 mpilibargs_added_to_fixmakeargs=yes
             fi
@@ -9195,7 +9195,7 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
                             mpiflibargs="-L$mpilib -lmpi_f77 $wrapperlib"
                         else
                             #echo "No Fortran interface found"
-                            mpiflibargs="$mpiflibargs $wrapperlib -L$mpilib"
+                            mpiflibargs="-g $wrapperlib $mpiflibargs  -L$mpilib"
                         fi
                     fi
                 fi
