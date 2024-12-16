@@ -757,17 +757,17 @@ usage() {
     echo "-ompt ............................................ Enable OMPT support."
     echo ""
     echo "OpenACC Options:"
-    echo "-openacc ................................................... Use OpenACC"
-    echo "-openacclib=<dir> ...... Specify location of the OpenACC library and use"
-    echo "                            the TAU MPI Profiling and Tracing Interface."
+    echo "-openacc ................................................. Use OpenACC."
+    echo "-openacclib=<dir> .... Specify location of the OpenACC library and use."
+    echo "                           the TAU MPI Profiling and Tracing Interface."
     echo ""
     echo "GPGPU Options:"
-    echo "-cuda=<dir> ................ Specify location of the top level CUDA SDK"
+    echo "-cuda=<dir> ............... Specify location of the top level CUDA SDK."
     echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
-    echo "-rocm[=<dir>] ...... Specify alternate path to ROCm (/opt/rocm default)."
+    echo "-rocm[=<dir>] ..... Specify alternate path to ROCm (/opt/rocm default)."
     echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
     echo "-rocprofv2 .......................................... Enable rocprofv2."
-    echo "-rocprofsdk ......................................... Enable rocprof-sdk."
+    echo "-rocprofsdk[=<dir>] ................................Enable rocprof-sdk."
     echo "-rocmsmi=<dir> ..................... Specify location of RoCm rocm_smi."
 #   echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
 #   echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
@@ -795,11 +795,11 @@ usage() {
     echo "-mpit ............................... Enable MPI-T profiling interface."
     echo "-starpu[=<dir>] ................................ Enable StarPU support."
     echo "-phiprof ................................... Activate Phiprof bindings."
-    echo "-llvm_src=<dir> ......................... Path to the LLVM source tree "
-    echo "                             (necessary for the instrumentation plugin)"
-    echo "-llvm_cxx=<dir.................. Compiler that was used to compile LLVM"
-    echo "                             (necessary for the instrumentation plugin)"
-    echo "-syscall ...................................... Build SYSCALL Wrapper."
+    echo "-llvm_src=<dir> ......................... Path to the LLVM source tree."
+    echo "                            (necessary for the instrumentation plugin)."
+    echo "-llvm_cxx=<dir................. Compiler that was used to compile LLVM."
+    echo "                            (necessary for the instrumentation plugin)."
+    echo "-syscall ......................................  Build SYSCALL Wrapper."
     echo ""
     echo "-help ...................................... display this help message."
     echo "-fullhelp .............................. display the full help message."
@@ -855,7 +855,7 @@ for arg in "$@"; do
         echo "                                     this is used for cross-compilation"
         echo "-host_sysroot=<path> ............................ host compiler sysroot"
         echo "-hostutils..............................build TAU utils for <host-type>"
-        echo "                                     this is used for cross-compilation"
+        echo "                                    this is used for cross-compilation."
         echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
         echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
         echo "   options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
@@ -955,7 +955,7 @@ for arg in "$@"; do
         echo "-rocm[=<dir>] ..... Specify alternate path to ROCm (/opt/rocm default)."
         echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
         echo "-rocprofv2 .......................................... Enable rocprofv2."
-        echo "-rocprofsdk ....................................... Enable rocprof-sdk."
+        echo "-rocprofsdk[=<dir>] ..................................Enable rocprof-sdk."
         echo "-rocmsmi=<dir> ..................... Specify location of RoCm rocm_smi."
         echo "-rocm-core=<dir> ...... Specify location of ROCm Core to detect rocmv6."
         #echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
@@ -1435,6 +1435,7 @@ rocmcore_dir=""
 rocprofiler=no
 rocprofv2=no
 rocprofsdk=no
+rocprofsdk_dir=""
 roctracer=no
 rocmsmi=no
 hip=no
@@ -3257,6 +3258,26 @@ for arg in "$@"; do
             pthread=yes
             shift
             ;;
+        
+        -rocprofsdk=*)
+            fixmakeargs="$fixmakeargs ROCPROFILERSDK"
+            rocprofsdk=yes
+            tauoptions="${tauoptions}-rocprofsdk"
+            pthread=yes
+            rocprofsdk_dir=`echo $arg | sed -e 's/-rocprofsdk=//' -e 's/ /#/g'`
+            if [ ! -d $rocprofsdk_dir ]; then
+                echo "Error: Cannot access ROCprofiler-SDK directory $rocprofsdk_dir"
+                exit 1
+            else
+                if [ -r $rocprofsdk_dir/include/rocprofiler-sdk/version.h ]; then
+                    fixmakeargs="$fixmakeargs rocprofsdk_dir=$rocprofsdk_dir"
+                else
+                    echo "Error: Cannot find version.h in directory $rocprofsdk_dir/include/rocprofiler-sdk/"
+                    exit 1
+                fi
+            fi
+            shift
+            ;;
 
 	   -rocmsmi=*)
             rocmsmidir=`echo $arg | sed -e 's/-rocmsmi=//' -e 's/ /#/g'`
@@ -3640,14 +3661,9 @@ fi
 
 if [ "x$rocm" = "xyes" -a "$rocprofsdk" = "yes" -a "$rocmv6" = "yes" ]; then
     pthread=yes
-    if [ "x$rocprofilerdir" = "x" ]; then
-        rocprofilerdir=$rocmdir
-        fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir"
-    fi
-
-    if [ "x$rocprofilerinc" = "x" ]; then
-        rocprofilerinc="$rocprofilerdir/include/"
-        fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
+    if [ "x$rocprofsdk_dir" = "x" ]; then
+        rocprofsdk_dir=$rocmdir
+        fixmakeargs="$fixmakeargs rocprofsdk_dir=$rocprofsdk_dir"
     fi
     if [  "$elfutils" = "yes" ]; then
         fixmakeargs="$fixmakeargs ROCPROFILERSDK_PC"

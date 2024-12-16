@@ -4,8 +4,6 @@
 #include <Profile/TauRocm.h>
 
 #include "Profile/Profiler.h"
-#include "Profile/RocProfilerSDK/TauRocProfilerSDK_hc.h"
-#include "Profile/RocProfilerSDK/TauRocProfilerSDK_pc.h"
 
 //Need to check, are they all needed? 
 #include <rocprofiler-sdk/buffer.h>
@@ -47,7 +45,24 @@
 #include <set>
 #include <unistd.h>
 
+//Enum to enable or disable metric profiling
+typedef enum profile_metrics {
+	NO_METRICS = 1,
+	WRONG_NAME = 2,
+	PROFILE_METRICS = 3
+};
 
+
+//Map to identify kernels and some of their information
+using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
+using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_symbol_data_t>;
+
+extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
+extern void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
+extern void show_results_pc();
+
+extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value);
+extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
 
 #ifndef ROCPROFILER_CALL
 #define ROCPROFILER_CALL(result, msg)                                                              \

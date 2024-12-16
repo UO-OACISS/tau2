@@ -40,7 +40,7 @@
             throw std::runtime_error(errmsg.str());                                                \
         }                                                                                          \
     } 
-#endif
+#endif // ROCPROFILER_CALL
 
   
 //Due to some bugs, PC Sampling is available, but does not work in older versions
@@ -65,11 +65,11 @@ struct tool_agent_info
 using tool_agent_info_vec_t       = std::vector<std::unique_ptr<tool_agent_info>>;
 using pc_sampling_buffer_id_vec_t = std::vector<rocprofiler_buffer_id_t>;
 
-int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
-void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
-void show_results_pc();
+extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
+extern void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
+extern void show_results_pc();
 #else
-int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
+extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
 {
     return 0;
 }

@@ -447,7 +447,7 @@ int enable_pc_sampling ()
 
 int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
 {
-
+    
   int enabled_sampling = enable_pc_sampling();
   if(!enabled_sampling)
   {

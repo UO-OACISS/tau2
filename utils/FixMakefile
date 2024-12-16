@@ -1126,6 +1126,10 @@ case $1 in
        rocmsmidir=`echo $1 | sed -e 's/^rocmsmidir=//' -e 's/#/ /g'`
         echo "s@^TAU_ROCM_SMI_DIR=\(.*\)@TAU_ROCM_SMI_DIR=$rocmsmidir@g" >> $sedout
         ;;
+     rocprofsdk_dir=*)
+       rocmsmidir=`echo $1 | sed -e 's/^rocprofsdk_dir=//' -e 's/#/ /g'`
+        echo "s@^TAUROCPROFSDK_DIR=\(.*\)@TAUROCPROFSDK_DIR=$rocmsmidir@g" >> $sedout
+        ;;
 
      hipdir=*)
         hipdir=`echo $1 | sed -e 's/^hipdir=//' -e 's/#/ /g'`
