@@ -1159,20 +1159,17 @@ if [ $track_rocm = "true" ] ; then
     isRocmv6=`echo $theBinding | grep rocmv6`
     #if rocmv6
     if [ ! "x$isRocmv6" == "x"  ]; then
-      echo "rocmv6"
       options=`echo $theBinding | sed -e 's/shared-//g' `
   	  mk=$BASEDIR/lib/Makefile.tau-$options
   	  rocmdir=`grep "TAU_ROCM_DIR=" $mk | sed -e 's@TAU_ROCM_DIR=@@g'`
       isRocprofv2=`echo $theBinding | grep rocprofv2`
       #if rocprofv2
       if [ ! "x$isRocprofv2" == "x"  ]; then
-        echo "rocprofv2"
         if [ -r $rocmdir/lib/librocprofiler64v2.so ]; then
           echo "set TAU_USE_ROCPROFV2"
       		$dryrun export TAU_USE_ROCPROFV2=1
         fi
       else
-        echo "not rocprofv2"
         $dryrun export ROCP_HSA_INTERCEPT=2
         $dryrun export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
         if [ -r $rocmdir/lib/librocprofiler64.so ]; then
@@ -1183,7 +1180,6 @@ if [ $track_rocm = "true" ] ; then
   		  $dryrun export ROCP_METRICS=$rocmdir/lib/rocprofiler/metrics.xml
   	  fi
     else
-      echo "not rocmv6"
       $dryrun export ROCP_HSA_INTERCEPT=2
       $dryrun export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
       options=`echo $theBinding | sed -e 's/shared-//g' `
