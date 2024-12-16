@@ -1018,7 +1018,7 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
 /****** CRAY RELATED DATA *********/
 #ifdef TAU_CRAYCNL
   FILE* procfile = fopen("/proc/self/stat", "r");
-  long to_read = 8192;
+  const size_t to_read = 8192;
   char buffer[to_read];
   if (procfile != NULL) {
     int read = fread(buffer, sizeof(char), to_read, procfile);

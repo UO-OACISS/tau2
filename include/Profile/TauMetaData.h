@@ -55,8 +55,11 @@ class Tau_metadata_key {
 };
 
 
-struct Tau_Metadata_Compare: std::binary_function<Tau_metadata_key,Tau_metadata_key,bool>
+struct Tau_Metadata_Compare
 {
+  using result_type = bool;
+  using first_argument_type = Tau_metadata_key;
+  using second_argument_type = Tau_metadata_key;
   bool operator()(const Tau_metadata_key& lhs, const Tau_metadata_key& rhs) const {
 
     char *left;

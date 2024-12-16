@@ -84,13 +84,15 @@ typedef struct {
 
 
 /** Comparator class used to create a sort map for unification */
-class EventComparator : public binary_function<int, int, bool> {
+class EventComparator {
 
 private:
   EventLister *eventLister;
 
 public:
-
+  using result_type = bool;
+  using first_argument_type = int;
+  using second_argument_type = int;
   /** Constructor takes an EventLister, stores it for use with comparison */
   EventComparator(EventLister *eventLister) {
     this->eventLister = eventLister;
