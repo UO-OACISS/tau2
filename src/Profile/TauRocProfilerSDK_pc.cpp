@@ -184,7 +184,7 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
             {
                 auto  lock       = std::unique_lock{global_mut};
                 auto& translator = sdk_pc_sampling::address_translation::get_address_translator();
-                translator.removeDecoder(data->code_object_id, data->load_delta);
+                //translator.removeDecoder(data->code_object_id, data->load_delta);
             }
 
             info << "code object unload :: ";

@@ -896,10 +896,10 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
     {
       client_kernels.emplace(data->kernel_id, *data);
     }
-    else if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
+    /*else if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
     {
       client_kernels.erase(data->kernel_id);
-    }
+    }*/
   }
 }
 
