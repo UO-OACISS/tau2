@@ -25,7 +25,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
     auto& flat_profile = sdk_pc_sampling::address_translation::get_flat_profile();
     auto& translator   = sdk_pc_sampling::address_translation::get_address_translator();
     auto& global_mut   = sdk_pc_sampling::address_translation::get_global_mutex();
-
+    auto lock = std::unique_lock{global_mut};
     for(size_t i = 0; i < num_headers; i++)
     {
         auto* cur_header = headers[i];
@@ -157,10 +157,7 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
                                           data->load_size);
                 }
                 else
-                {
-                    printf("return\n");
                     return;
-                }
 
                 // extract symbols from code object
                 auto& kernel_object_map = sdk_pc_sampling::address_translation::get_kernel_object_map();
@@ -280,7 +277,7 @@ int query_avail_configs_for_agent(tool_agent_info* agent_info)
         // No available configuration at the moment, so mark the PC sampling as unsupported.
         return false;
     }
-
+/*
     ss << "The agent with the id: " << agent_info->agent_id.handle << " supports the "
        << agent_info->avail_configs->size() << " configurations: " << std::endl;
     size_t ind = 0;
@@ -293,13 +290,13 @@ int query_avail_configs_for_agent(tool_agent_info* agent_info)
            << "max_interval: " << cfg.max_interval << ", "
            << "flags: " << std::hex << cfg.flags << std::dec << std::endl;
     }
-
-    std::cout << ss.str() << std::flush;
+*/
+    //std::cout << ss.str() << std::flush;
 
     return true;
 }
 
-void
+int
 configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
                                         rocprofiler_context_id_t context_id,
                                         rocprofiler_buffer_id_t  buffer_id)
@@ -358,14 +355,15 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
                                                                 buffer_id);
         if(status == ROCPROFILER_STATUS_SUCCESS)
         {
-            std::cout
+            /*std::cout
                 << ">>> We chose PC sampling interval: " << interval
-                << " on the agent: " << agent_info->agent->id.handle << std::endl;
-            return;
+                << " on the agent: " << agent_info->agent->id.handle << std::endl;*/
+            return 1;
         }
         else if(status != ROCPROFILER_STATUS_ERROR_NOT_AVAILABLE)
         {
             ROCPROFILER_CALL(status, " pc sampling not available, may be in use");
+            return 0;
         }
         // status ==  ROCPROFILER_STATUS_ERROR_NOT_AVAILABLE
         // means another process P2 already configured PC sampling.
@@ -385,6 +383,7 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
     // The process failed too many times configuring PC sampling,
     // report this to user;
     ROCPROFILER_CALL(ROCPROFILER_STATUS_ERROR, "failed too many times configuring PC sampling");
+    return 0;
 }
 
 rocprofiler_status_t
@@ -418,10 +417,11 @@ find_all_gpu_agents_supporting_pc_sampling_impl(rocprofiler_agent_version_t vers
       if(query_avail_configs_for_agent(tool_gpu_agent.get()))
         _out_agents->push_back(std::move(tool_gpu_agent));
     }
-
+    /*
     ss << "[" << __FUNCTION__ << "] " << _agents[i]->name << " :: "
        << "id=" << _agents[i]->id.handle << ", "
        << "type=" << _agents[i]->type << "\n";
+    */
   }
 
   std::cout << ss.str() << std::endl;
@@ -494,18 +494,22 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
                             &buffer_id),
                 "buffer for agent in pc sampling");
 
-      configure_pc_sampling_prefer_stochastic(
-        gpu_agent.get(), client_ctx, buffer_id);
+        int status =  configure_pc_sampling_prefer_stochastic(
+            gpu_agent.get(), client_ctx, buffer_id);
+        
+        if(!status)
+            return 0;
 
-      // One helper thread per GPU agent's buffer.
-      auto client_agent_thread = rocprofiler_callback_thread_t{};
-      ROCPROFILER_CALL(rocprofiler_create_callback_thread(&client_agent_thread),
+
+        // One helper thread per GPU agent's buffer.
+        auto client_agent_thread = rocprofiler_callback_thread_t{};
+        ROCPROFILER_CALL(rocprofiler_create_callback_thread(&client_agent_thread),
                 "create callback thread for pc sampling");
 
-      ROCPROFILER_CALL(rocprofiler_assign_callback_thread(buffer_id, client_agent_thread),
+        ROCPROFILER_CALL(rocprofiler_assign_callback_thread(buffer_id, client_agent_thread),
                 "assign callback thread for pc sampling");
 
-      pc_buffer_ids->emplace_back(buffer_id);
+        pc_buffer_ids->emplace_back(buffer_id);
     }
     //https://github.com/ROCm/rocprofiler-sdk/blob/ad48201912995e1db4f6e65266bce2792056b3c6/tests/pc_sampling/client.cpp#L86C9-L86C55
      // Enable code object tracing service, to match PC samples to corresponding code object
