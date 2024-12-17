@@ -24,6 +24,8 @@
 #pragma once
 
 #include <rocprofiler-sdk/cxx/codeobj/code_printing.hpp>
+#include <rocprofiler-sdk/pc_sampling.h>
+//#include "Profile/RocProfilerSDK/parser_types_names.h"
 
 #include <algorithm>
 #include <cassert>
@@ -184,7 +186,7 @@ public:
     {}
 
     // write lock required
-    void add_sample(uint64_t exec_mask)
+    void add_sample(uint64_t exec_mask, rocprofiler_pc_sampling_snapshot_v1_t snapshot, rocprofiler_pc_sampling_header_v1_t flags)
     {
         auto lock = std::unique_lock{mut};
 
@@ -194,6 +196,11 @@ public:
         }
         exec_mask_counts_[exec_mask]++;
         sample_count_++;
+        if(flags.valid == 1)
+        {
+            valid_++;
+
+        }
     }
 
     // read lock required
@@ -208,8 +215,11 @@ public:
     // In case an instruction is samples with different exec masks,
     // keep track of how many time each exec_mask was observed.
     const std::map<uint64_t, uint64_t>& exec_mask_counts() const { return exec_mask_counts_; }
-    // How many time this instruction is samples
+    // How many times this instruction is sampled
     uint64_t sample_count() const { return sample_count_; };
+    // How many times this instruction stall is valid
+    uint64_t valid_count() const { return valid_; };
+
 
 private:
     mutable std::shared_mutex mut;
@@ -222,6 +232,11 @@ private:
     std::map<uint64_t, uint64_t> exec_mask_counts_;
     // How many time this instruction is samples
     uint64_t sample_count_ = 0;
+    uint64_t valid_ = 0;
+    //Must add maps/variables for fields in rocprofiler_pc_sampling_snapshot_v1_t
+    //and maybe for rocprofiler_pc_sampling_header_v1_t when they are available
+    //in future versions of rocprofiler-SDK
+
 };
 
 class FlatProfile
@@ -230,7 +245,7 @@ public:
     FlatProfile() = default;
 
     // write lock required
-    void add_sample(std::unique_ptr<Instruction> instruction, uint64_t exec_mask)
+    void add_sample(std::unique_ptr<Instruction> instruction, uint64_t exec_mask, rocprofiler_pc_sampling_snapshot_v1_t snapshot, rocprofiler_pc_sampling_header_v1_t flags)
     {
         auto lock = std::unique_lock{mut};
 
@@ -245,7 +260,7 @@ public:
         }
 
         auto* sample_instruction = itr->second.get();
-        sample_instruction->add_sample(exec_mask);
+        sample_instruction->add_sample(exec_mask, snapshot, flags);
     }
 
     // read lock required
@@ -281,7 +296,7 @@ FlatProfile&
 get_flat_profile();
 
 void
-dump_flat_profile();
+dump_flat_profile(const char* output_filename);
 
 void
 init();

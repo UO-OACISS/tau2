@@ -94,7 +94,7 @@ KernelObject::KernelObject(uint64_t    code_object_id,
 }
 
 void
-dump_flat_profile()
+dump_flat_profile(const char* output_filename)
 {
     // It seems that an instruction can be part of multiple
     // instances of the same kernel loaded on two different devices.
@@ -115,14 +115,20 @@ dump_flat_profile()
             ss << "\t";
             ss << inst.inst << "\t";
             ss << inst.comment << "\t";
-            ss << "samples: ";
             const auto* _sample_instruction = flat_profile.get_sample_instruction(inst);
-            if(_sample_instruction == nullptr)
-                ss << "0";
-            else
+            /*if(_sample_instruction == nullptr)
+            {
+                //ss << "0";
+            }
+            else*/
+            if(_sample_instruction != nullptr)
             {
                 _sample_instruction->process([&](const SampleInstruction& sample_instruction) {
+
+                    ss << "samples: ";
                     ss << sample_instruction.sample_count();
+                    ss << " with stall info : ";
+                    ss << sample_instruction.valid_count();
                     // Each instruction should be visited exactly once.
                     // Otherwise, code object loading/unloading and relocations
                     // are not handled properly.
@@ -170,7 +176,11 @@ dump_flat_profile()
     ss << "The total number of collected samples: " << sdk_pc_sampling::get_total_samples_num()
        << std::endl;
 
-    std::cout << ss.str() << std::endl;
+    //std::cout << ss.str() << std::endl;
+    
+    std::ofstream out(output_filename);
+    out << ss.str();
+    out.close();
 
     assert(samples_num == get_total_samples_num());
     // We expect at least one PC sample to be decoded/delivered;

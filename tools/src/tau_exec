@@ -1142,7 +1142,7 @@ if [ $track_rocm = "true" ] ; then
   isRocprofsdk=`echo $theBinding | grep rocprofsdk`
   #if rocprofiler-sdk
   if [ ! "x$isRocprofsdk" == "x"  ]; then
-    echo "rocprof-sdk"
+    #echo "rocprof-sdk"
     options=`echo $theBinding | sed -e 's/shared-//g' `
 	  mk=$BASEDIR/lib/Makefile.tau-$options
 	  rocmdir=`grep "TAU_ROCM_DIR=" $mk | sed -e 's@TAU_ROCM_DIR=@@g'`
@@ -1152,7 +1152,7 @@ if [ $track_rocm = "true" ] ; then
     #have to check, may need to divide rocm and rocprofilder-sdk
                                 
     if [ -r $rocmdir/lib/librocprofiler-sdk.so ]; then
-      echo "Setting USE_ROCPROFILERSDK"
+      #echo "Setting USE_ROCPROFILERSDK"
       $dryrun export TAU_USE_ROCPROFILERSDK=1
 	  fi
   else
@@ -1166,7 +1166,7 @@ if [ $track_rocm = "true" ] ; then
       #if rocprofv2
       if [ ! "x$isRocprofv2" == "x"  ]; then
         if [ -r $rocmdir/lib/librocprofiler64v2.so ]; then
-          echo "set TAU_USE_ROCPROFV2"
+          #echo "set TAU_USE_ROCPROFV2"
       		$dryrun export TAU_USE_ROCPROFV2=1
         fi
       else

@@ -7,6 +7,9 @@
 
 constexpr bool COPY_MEMORY_CODEOBJ = true;
 
+const char* pc_sampling_filename = "ROCm_sampling.log";
+
+
 pc_sampling_buffer_id_vec_t* pc_buffer_ids = nullptr;
 void
 rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
@@ -93,7 +96,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     // Decoding the PC
                     auto inst = translator.get(pc_sample->pc.loaded_code_object_id,
                                                pc_sample->pc.loaded_code_object_offset);
-                    flat_profile.add_sample(std::move(inst), pc_sample->exec_mask);
+                    flat_profile.add_sample(std::move(inst), pc_sample->exec_mask, pc_sample->snapshot, pc_sample->flags);
             }
             else
             {
@@ -109,7 +112,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
         }
     }
 
-    std::cout << ss.str() << std::endl;
+    //std::cout << ss.str() << std::endl;
 }
 
 template <typename Tp>
@@ -231,7 +234,7 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
         info << std::endl;
     }*/
 
-    std::cout << info.str() << std::endl;
+    //std::cout << info.str() << std::endl;
 }
 
 
@@ -451,14 +454,14 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
   int enabled_sampling = enable_pc_sampling();
   if(!enabled_sampling)
   {
-    std::cout << "Disabled ROCm pc sampling" << std::endl;
+    //std::cout << "Disabled ROCm pc sampling" << std::endl;
     return 0;
   }
   else if(enabled_hc)
     return 1;
 
 
-  std::cout << "Enabling ROCm PC sampling..." << std::endl;
+  //std::cout << "Enabling ROCm PC sampling..." << std::endl;
   pc_buffer_ids = new pc_sampling_buffer_id_vec_t();
 
   tool_agent_info_vec_t pc_gpu_agents;
@@ -531,7 +534,8 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
 
 void show_results_pc()
 {
-    sdk_pc_sampling::address_translation::dump_flat_profile();
+    const char* filename = pc_sampling_filename;
+    sdk_pc_sampling::address_translation::dump_flat_profile(filename);
 }
 #endif //SAMPLING_SDKPC
 

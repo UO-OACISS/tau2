@@ -797,7 +797,7 @@ tool_roctx_callback(rocprofiler_callback_tracing_record_t record,
         {
           //std::cout << "TAU! roctxRangePush message: " << marker_data->args.roctxRangePushA.message << std::endl;
           roctx_push_pop.emplace_back(marker_data->args.roctxRangePushA.message);
-          std::string event_name = "roctx: ";
+          std::string event_name = "[roctx] ";
           event_name += marker_data->args.roctxRangePushA.message;
           TAU_START(event_name.c_str());
         }
@@ -815,7 +815,7 @@ tool_roctx_callback(rocprofiler_callback_tracing_record_t record,
           auto push_name = roctx_push_pop.back();
           roctx_push_pop.pop_back();
           //std::cout << "TAU! roctxRangePop message:" << push_name << std::endl;
-          std::string event_name = "roctx: ";
+          std::string event_name = "[roctx] ";
           event_name += push_name;
           TAU_STOP(event_name.c_str());
         }
@@ -830,7 +830,7 @@ tool_roctx_callback(rocprofiler_callback_tracing_record_t record,
            marker_data->args.roctxRangeStartA.message)
         {
           roctx_start_stop[marker_data->retval.roctx_range_id_t_retval] = marker_data->args.roctxRangeStartA.message;
-          std::string event_name = "roctx: ";
+          std::string event_name = "[roctx] ";
           event_name += marker_data->args.roctxRangeStartA.message;
           TAU_START(event_name.c_str());
         }
@@ -846,7 +846,7 @@ tool_roctx_callback(rocprofiler_callback_tracing_record_t record,
           std::cerr << "Failed to find RangeStart with requested id\n" << std::endl;
           return;
         }
-        std::string event_name = "roctx: ";
+        std::string event_name = "[roctx] ";
         event_name += start_name->second;
         TAU_STOP(event_name.c_str());
         roctx_start_stop.erase(req_id);
@@ -867,7 +867,7 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
   if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
      record.operation == ROCPROFILER_CODE_OBJECT_LOAD)
   {
-    printf("ROCPROFILER_CODE_OBJECT_LOAD\n");
+    //printf("ROCPROFILER_CODE_OBJECT_LOAD\n");
     if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
     {
       // flush the buffer to ensure that any lookups for the client kernel names for the code
@@ -879,13 +879,13 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
     //Only execute if PC Sampling enabled
     if(pc_sampling == 1)
     {
-      printf("codeobj_tracing_callback\n");
+      //printf("codeobj_tracing_callback\n");
       codeobj_tracing_callback(record);
     }
     else
     {
 
-      printf("No codeobj_tracing_callback\n");
+      //printf("No codeobj_tracing_callback\n");
     }
   }
   else if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&

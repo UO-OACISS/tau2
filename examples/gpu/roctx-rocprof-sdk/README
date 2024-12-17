@@ -1,0 +1,24 @@
+- For this example to work, first compile TAU with:
+	- ./configure -rocm=/opt/rocm-6.2.3/ -rocprofsdk -bfd=download && make install -j
+
+- Add TAU to your PATH
+	- export PATH=$PATH:...
+
+- Compile the example with roctx and rocprofiler:
+	- hipcc MatrixTranspose.cpp -o MT -I/opt/rocm-6.2.3/include/rocprofiler-sdk-roctx/ -L/opt/rocm-6.2.3/lib/ -lrocprofiler-sdk-roctx
+- Execute TAU
+	- tau_exec -T rocm,rocprofiler,roctracer -rocm ./MT
+- Check Results
+	- pprof
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0            3          772           1           1     772163 .TAU application
+ 99.6          734          768           1         100     768958 taupreload_main
+  4.5         0.32           34         100         100        348 [roctx] hipLaunchKernel range
+  4.5            2           34         100         100        345 [roctx] hipLaunchKernel
+  4.2           32           32         100           0        324 [roctx] hipMemcpy
+
