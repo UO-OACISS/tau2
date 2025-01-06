@@ -860,8 +860,6 @@ void CUPTIAPI Tau_cupti_activity_flush_at_exit() {
 void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
         CUpti_CallbackId id, const CUpti_ResourceData *handle) {
     TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_RESOURCE event\n");
-    // make sure we have a null stream thread for this context
-    get_vthread_for_cupti_context(handle, false);
     switch (id) {
         case CUPTI_CBID_RESOURCE_INVALID: {
             TAU_DEBUG_PRINT("CUPTI_CBID_RESOURCE_INVALID\n");
@@ -902,6 +900,8 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
             uint32_t contextId = 0;
             uint32_t deviceId = 0;
             uint32_t streamId = 0;
+            // make sure we have a null stream thread for this context
+            get_vthread_for_cupti_context(handle, false);
             cuptiGetDeviceId(handle->context, &deviceId);
             cuptiGetContextId(handle->context, &contextId);
             uint8_t perThreadStream = 1;
@@ -953,6 +953,8 @@ void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
     // if we want runtime cubin dump
     if(TauEnv_get_cuda_track_sass()) {
         if (map_disassem.empty()) {
+            // make sure we have a null stream thread for this context
+            get_vthread_for_cupti_context(handle, false);
             handleResource(id, handle);
         }
     }
