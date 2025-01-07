@@ -376,14 +376,33 @@ void Tau_roctracer_hcc_event(const roctracer_record_t *record,
   return;
 }
 
+//In some cases, such as srun, the pool is unsorted
+uint64_t get_lowest_timestamp(const char* begin, const char* end)
+{
+  const roctracer_record_t* record = reinterpret_cast<const roctracer_record_t*>(begin);
+  const roctracer_record_t* end_record = reinterpret_cast<const roctracer_record_t*>(end);
+  uint64_t lowest = record->begin_ns;
+  while (record < end_record) {
+    if(record->begin_ns < lowest)
+      lowest = record->begin_ns;
+    ROCTRACER_CALL(roctracer_next_record(record, &record));
+  }
+  return lowest;
+}
+
+
 // Activity tracing callback
 void Tau_roctracer_activity_callback(const char* begin, const char* end, void* arg) {
+  TAU_VERBOSE("Tau_roctracer_activity_callback\n"); fflush(stdout);
   //bool dummy = run_once();  // actually, run it every time we process the buffer
   int dispatch_task_id=-1;
   int copy_task_id = -1;
   int barrier_task_id = -1;
   const roctracer_record_t* record = reinterpret_cast<const roctracer_record_t*>(begin);
   const roctracer_record_t* end_record = reinterpret_cast<const roctracer_record_t*>(end);
+  TAU_VERBOSE("\tActivity records :\n"); fflush(stdout);
+  uint64_t lowest_timestamp = (get_lowest_timestamp(begin, end) + deltaTimestamp_ns) * 1.0e-3;
+
   //TAU_VERBOSE("\tActivity records :\n"); fflush(stdout);
   while (record < end_record) {
     const char * name = roctracer_op_string(record->domain, record->op, record->kind);
@@ -417,20 +436,21 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
             barrier_task_id = dispatch_task_id;
         }
         //Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)begin_us));
-        metric_set_gpu_timestamp(dispatch_task_id, ((double)(begin_us)));
+        metric_set_gpu_timestamp(dispatch_task_id, ((double)(lowest_timestamp)));
         Tau_create_top_level_timer_if_necessary_task(dispatch_task_id);
         Tau_add_metadata_for_task("TAU_TASK_ID", dispatch_task_id, dispatch_task_id);
         Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, dispatch_task_id);
         Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, dispatch_task_id);
         Tau_metadata_task("ROCM_QUEUE_TYPE", "Kernel Dispatch", dispatch_task_id);
+        //Use the same timestamp to simplify things
         if (TauEnv_get_thread_per_gpu_stream()) {
-            metric_set_gpu_timestamp(copy_task_id, ((double)(begin_us)));
+            metric_set_gpu_timestamp(copy_task_id, ((double)(lowest_timestamp)));
             Tau_create_top_level_timer_if_necessary_task(copy_task_id);
             Tau_add_metadata_for_task("TAU_TASK_ID", copy_task_id, copy_task_id);
             Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, copy_task_id);
             Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, copy_task_id);
             Tau_metadata_task("ROCM_QUEUE_TYPE", "Memory Transfers", copy_task_id);
-            metric_set_gpu_timestamp(barrier_task_id, ((double)(begin_us)));
+            metric_set_gpu_timestamp(barrier_task_id, ((double)(lowest_timestamp)));
             Tau_create_top_level_timer_if_necessary_task(barrier_task_id);
             Tau_add_metadata_for_task("TAU_TASK_ID", barrier_task_id, barrier_task_id);
             Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, barrier_task_id);
