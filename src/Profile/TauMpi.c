@@ -82,6 +82,8 @@ extern void Tau_track_mpi_t();
 extern int Tau_mpi_t_cleanup();
 extern int Tau_msg_send_prolog();
 extern int Tau_msg_recv_prolog();
+extern void Tau_flush_gpu_activity();
+extern void Tau_profile_exit_most_threads();
 #ifdef TAU_MPI_T_TRACK_GPU_MSGS
 #define TAU_MSG_SEND_PROLOG() Tau_msg_send_prolog()
 #define TAU_MSG_RECV_PROLOG() Tau_msg_recv_prolog()
@@ -1848,6 +1850,8 @@ int  MPI_Finalize(  )
     /* KAH - NO! this is the wrong time to do this. THis is also done in the
      * snapshot writer. If you do it twice, you get double values for main... */
     //TauProfiler_updateAllIntermediateStatistics();
+    Tau_flush_gpu_activity();
+    Tau_profile_exit_most_threads();
     Tau_mergeProfiles_MPI();
   }
 
