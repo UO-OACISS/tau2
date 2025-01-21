@@ -67,9 +67,9 @@ extern "C" {
 }
 #endif /* TAU_PAPI */
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 #include "Profile/CuptiLayer.h"
-#endif //CUPTI
+#endif //TAU_CUPTI
 
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
@@ -435,7 +435,7 @@ void metric_read_cudatime(int tid, int idx, double values[]) {
   //printf("metric_read_cudatime: tid %d, values[%d] = %f\n", tid, idx, values[idx]);
 }
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 void metric_read_cupti(int tid, int idx, double values[])
 {
   if ((!Tau_is_thread_fake(tid)) || Tau_is_fake_thread_use_cpu_metric(tid))
@@ -445,7 +445,7 @@ void metric_read_cupti(int tid, int idx, double values[])
     values[idx] = getGpuCounterstamp(tid, Tau_CuptiLayer_get_cupti_event_id(idx));
   }
 }
-#endif //CUPTI
+#endif //TAU_CUPTI
 
 
 extern int  Tau_read_cray_power_events(int fd, long long int *value);

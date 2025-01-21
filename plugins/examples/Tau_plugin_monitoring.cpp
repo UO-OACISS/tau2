@@ -41,9 +41,9 @@
 using json = nlohmann::json;
 json configuration;
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 #include "tau_nvml.hpp"
-#endif
+#endif //TAU_CUPTI
 
 #ifdef TAU_ROCM_SMI
 #include "tau_rocm_smi.hpp"
@@ -248,12 +248,12 @@ static std::atomic<bool> worker_working{false};
 static int rank_getting_system_data;
 static std::stringstream csv_output;
 static uint64_t periodic_index;
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 tau::nvml::monitor& get_nvml_reader() {
     static tau::nvml::monitor nvml_reader;
     return nvml_reader;
 }
-#endif
+#endif //TAU_CUPTI
 #ifdef TAU_ROCM_SMI
 tau::rsmi::monitor& get_rsmi_reader() {
     static tau::rsmi::monitor rsmi_reader;
@@ -548,11 +548,11 @@ void initialize_papi_events(bool do_components) {
             continue;
         }
 #endif
-#ifndef CUPTI
+#ifndef TAU_CUPTI
         if (strstr(comp_info->name, "cuda") != NULL) {
             continue;
         }
-#endif
+#endif //TAU_CUPTI
         if (!include_component(comp_info->name)) { return; }
         if (get_my_rank() == 0) TAU_VERBOSE("Found %s component...\n", comp_info->name);
         /* Does this component have available events? */
@@ -1193,11 +1193,11 @@ void read_components(void) {
 #endif
 
     if (get_my_rank() == rank_getting_system_data) {
-#ifdef CUPTI
+#ifdef TAU_CUPTI
         if (include_component("nvml")) {
             get_nvml_reader().query();
         }
-#endif
+#endif //TAU_CUPTI
 #ifdef TAU_ROCM_SMI
         if (include_component("rsmi")) {
             get_rsmi_reader().query();

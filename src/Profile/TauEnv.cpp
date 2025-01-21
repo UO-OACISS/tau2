@@ -199,6 +199,7 @@ using namespace std;
 #endif /* TAU_MPI */
 
 #define TAU_CUPTI_API_DEFAULT "runtime"
+#define TAU_CUPTI_PC_DEFAULT 0
 #define TAU_CUDA_DEVICE_NAME_DEFAULT NULL
 #define TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT ""
 #define TAU_TRACK_CUDA_CDP_DEFAULT 0
@@ -352,6 +353,7 @@ static int env_node_set = -1;
 
 static int env_cudatotalthreads = 0;
 static int env_taucuptiavail = 0;
+static int env_taucuptipc = 0;
 static int env_nodenegoneseen = 0;
 static int env_mic_offload = 0;
 static int env_bfd_lookup = 0;
@@ -1251,6 +1253,10 @@ void TauEnv_set_tauCuptiAvail(int off) {
 }
 int TauEnv_get_tauCuptiAvail() {
     return env_taucuptiavail;
+}
+
+int TauEnv_get_tauCuptiPC() {
+    return env_taucuptipc;
 }
 
 void TauEnv_set_nodeNegOneSeen(int nthreads) {
@@ -2618,6 +2624,17 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
       TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
 		}
+
+    tmp = getconf("TAU_CUPTI_PC");
+    if (parse_bool(tmp, TAU_CUPTI_PC_DEFAULT)) {
+      env_taucuptipc = 1;
+      TAU_VERBOSE("TAU: CUPTI PC sampling Enabled\n");
+      TAU_METADATA("TAU_CUPTI_PC", "on");
+    } else {
+      TAU_VERBOSE("TAU: CUPTI PC sampling Disabled\n");
+      TAU_METADATA("TAU_CUPTI_PC", "off");
+    }
+
     env_cuda_device_name = getconf("TAU_CUDA_DEVICE_NAME");
     if (!env_cuda_device_name || 0 == strcasecmp(env_cuda_device_name, "")) {
         env_cuda_device_name = TAU_CUDA_DEVICE_NAME_DEFAULT;

@@ -81,9 +81,9 @@ void esd_exit (elg_ui4 rid);
 #include <Profile/TauPluginInternals.h>
 #include <Profile/TauPluginCPPTypes.h>
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 #include <Profile/CuptiLayer.h>
-#endif
+#endif //TAU_CUPTI
 #include <atomic>
 #include <cstdint>
 
@@ -1215,7 +1215,7 @@ extern "C" int Tau_get_thread(void) {
   return RtsLayer::myThread();
 }
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 class cupti_buffer_tracking {
 public:
     cupti_buffer_tracking() {
@@ -1245,7 +1245,7 @@ void Tau_cupti_buffer_processed(void) {
     //printf("BUFFERS! Created: %d, processed: %d\n", Tau_get_cupti_buffer_tracker().created, Tau_get_cupti_buffer_tracker().processed);
     //fflush(stdout);
 }
-#endif
+#endif //TAU_CUPTI
 
 #ifdef TAU_ENABLE_ROCTRACER
 extern void Tau_roctracer_flush_tracing(void);
@@ -1271,7 +1271,7 @@ extern void TauFlushRocmEventsIfNecessary(void);
 
 extern "C" void Tau_flush_gpu_activity(void) {
    TAU_VERBOSE("TAU: flushing asynchronous GPU events...\n");
-#ifdef CUPTI
+#ifdef TAU_CUPTI
     static bool did_once = false;
     if (RtsLayer::myThread() != 0) return;
     if (Tau_init_check_initialized() &&
@@ -1288,7 +1288,7 @@ extern "C" void Tau_flush_gpu_activity(void) {
             cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
         }
     }
-#endif
+#endif //TAU_CUPTI
 #if defined(TAU_ENABLE_ROCPROFILER) || defined(TAU_ENABLE_ROCPROFILERV2)
    Tau_rocprofiler_pool_flush();
 #endif

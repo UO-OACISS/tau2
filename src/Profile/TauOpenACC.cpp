@@ -26,10 +26,10 @@
 #include <openacc.h>
 #include "pgi_acc_prof.h"
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 #include <cupti.h>
 #include <cuda.h>
-#endif
+#endif //TAU_CUPTI
 
 #include <sstream>
 
@@ -431,7 +431,7 @@ const char* openacc_event_names[] = {
 };
 
 static size_t openacc_records = 0;
-#ifdef CUPTI
+#ifdef TAU_CUPTI
     void
 Tau_openacc_process_cupti_activity(CUpti_Activity *record)
 {
@@ -568,18 +568,18 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
 
     free(buffer);
 }
-#endif
+#endif //TAU_CUPTI
 void finalize()
 {
-#ifdef CUPTI
+#ifdef TAU_CUPTI
     cuptiActivityFlushAll(0);
-#endif
+#endif //TAU_CUPTI
     printf("Found %llu OpenACC records\n", (long long unsigned) openacc_records);
 }
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 //void Tau_cupti_onload(void);
-#endif
+#endif //TAU_CUPTI
 
 ////////////////////////////////////////////////////////////////////////////
     extern "C" void
@@ -625,7 +625,7 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
     reg( acc_ev_wait_end,                  Tau_openacc_other_callback, acc_reg );
 
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
     if (cuptiOpenACCInitialize((void*)reg, (void*)unreg, (void*)lookup) != CUPTI_SUCCESS) {
         printf("ERROR: failed to initialize CUPTI OpenACC support\n");
     }
@@ -653,7 +653,7 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
        printf("ERROR: unable to register buffers with CUPTI\n");
        }
        */
-#endif
+#endif //TAU_CUPTI
     atexit(finalize);
 
 } // acc_register_library

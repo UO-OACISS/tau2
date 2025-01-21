@@ -6,7 +6,7 @@
  * file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 
 #include "tau_nvml.hpp"
 #include "nvml.h"
@@ -469,4 +469,4 @@ void monitor::activateDeviceIndex(uint32_t index) {
 } // namespace nvml
 } // namespace tau
 
-#endif // #ifdef CUPTI
+#endif // #ifdef TAU_CUPTI

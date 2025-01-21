@@ -89,6 +89,7 @@ usage()
   echo "        -memory_debug Enable memory debugger"
   echo "        -cuda         Track GPU events via CUDA"
   echo "        -cupti        Track GPU events via CUPTI (Also see env. variable TAU_CUPTI_API)"
+  echo "        -cupti_pc        Track GPU events via CUPTI and enables PC Sampling(Also see env. variable TAU_CUPTI_API)"
   echo "        -opencl       Track GPU events via OpenCL"
   echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
   echo "        -rocm         Track ROCm events via rocprofiler "
@@ -347,6 +348,7 @@ track_ompt=false
 track_l0=false
 track_power=false
 track_cupti=false
+track_cupti_pc=false
 unified_memory=false
 track_sass=false
 sass_type=""
@@ -510,6 +512,12 @@ for arg in "$@" ; do
         ;;
       -cupti)
         track_cupti=true
+        save_arg $arg
+        shift
+        ;;
+      -cupti_pc)
+        track_cupti=true
+        track_cupti_pc=true
         save_arg $arg
         shift
         ;;
@@ -1115,6 +1123,9 @@ if [ $track_cupti = "true" ] ; then
   #echo "api found: $TAU_CUPTI_API"
   if [ $python_wrapper = "true" ] ; then
     export TAU_CUPTI_API=both
+  fi
+  if [ $track_cupti_pc = "true" ] ; then
+    export TAU_CUPTI_PC=1
   fi
 fi
 if [ $track_opencl = "true" ] ; then

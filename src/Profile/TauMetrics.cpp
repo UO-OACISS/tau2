@@ -24,9 +24,9 @@
 #include <Profile/TauMetrics.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauTrace.h>
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 #include <Profile/CuptiLayer.h>
-#endif //CUPTI
+#endif //TAU_CUPTI
 
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
@@ -131,7 +131,7 @@ static x_uint64 finalTimeStamp = 0L;
 /* flags for atomic metrics */
 char *TauMetrics_atomicMetrics[TAU_MAX_METRICS] = { NULL };
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 static int cuda_device_count() {
     int deviceCount;
     CUresult result = cuDeviceGetCount(&deviceCount);
@@ -176,7 +176,7 @@ static void metricv_add(const char *name) {
 
     check_max_metrics();
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
     char const * const tau_cuda_device_name = TauEnv_get_cuda_device_name();
 
     // Get events required to compute CUPTI metric
@@ -280,7 +280,7 @@ static void metricv_add(const char *name) {
             }
         } // for (event)
     } // for (dev)
-#endif //CUPTI
+#endif //TAU_CUPTI
 
     check_max_metrics();
     metricv[nmetrics] = strdup(name);
@@ -455,7 +455,7 @@ static int is_likwid_metric(char *str) {
     return 0;
 }
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 /*********************************************************************
  * Query if a string is a CUPTI event
  ********************************************************************/
@@ -488,7 +488,7 @@ static int is_cupti_metric(char const * const str)
     return 0;
 }
 
-#endif //CUPTI
+#endif //TAU_CUPTI
 
 /*********************************************************************
  * Initialize the function array
@@ -581,7 +581,7 @@ static void initialize_functionArray() {
             functionArray[pos++] = metric_read_craytimers;
         } else if (strcasecmp(metricv[i], "TAU_MPI_MESSAGE_SIZE") == 0) {
             functionArray[pos++] = metric_read_messagesize;
-#ifdef CUPTI
+#ifdef TAU_CUPTI
         } else if (is_cupti_event(metricv[i])) {
             /* CUPTI handled separately */
             /* setup CUPTI metrics */
@@ -591,7 +591,7 @@ static void initialize_functionArray() {
             functionArray[pos++] = metric_read_cupti;
         } else if(is_cupti_metric(metricv[i])) {
             /* Cupti metrics handled separately */
-#endif //CUPTI
+#endif //TAU_CUPTI
 #ifdef TAU_PAPI
         } else if (strcasecmp(metricv[i], "P_WALL_CLOCK_TIME") == 0) {
             usingPAPI = 1;
@@ -760,7 +760,7 @@ static void initialize_functionArray() {
  ********************************************************************/
 extern "C" const char *TauMetrics_getMetricName(int metric) {
     char const * metric_name = metricv[metric];
-#ifdef CUPTI
+#ifdef TAU_CUPTI
     // Don't bother checking if it's a CUPTI counter if it's obviously not.
     if( (strncmp(metric_name, "TAU", 3) == 0)
             || (strncmp(metric_name, "TIME", 4) == 0)
@@ -772,7 +772,7 @@ extern "C" const char *TauMetrics_getMetricName(int metric) {
         event_id < Tau_CuptiLayer_get_num_events()) {
         return Tau_CuptiLayer_get_event_name(event_id);
     }
-#endif
+#endif //TAU_CUPTI
     return metric_name;
 }
 
@@ -805,11 +805,11 @@ const char* TauMetrics_getMetricAtomic(int metric) {
  * Get id of time metric
  ********************************************************************/
 int TauMetrics_getTimeMetric() {
-#ifdef CUPTI
+#ifdef TAU_CUPTI
     char const * const time = "TAUGPU_TIME";
 #else
     char const * const time = "TIME";
-#endif
+#endif //TAU_CUPTI
     for (int i = 0; i < nmetrics; i++) {
         if (strcasecmp(metricv[i], time) == 0)
             return i;
