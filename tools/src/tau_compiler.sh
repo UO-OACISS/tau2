@@ -84,7 +84,7 @@ declare -i optMICOffload=$FALSE
 headerInstFlag=""
 preprocessorOpts="-P  -traditional-cpp"
 defaultParser="noparser"
-defaultSaltParser="cparse-llvm"
+defaultSaltParser="saltfm"
 optWrappersDir="/tmp"
 TAU_BIN_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TAUARCH="`grep 'TAU_ARCH=' $TAU_MAKEFILE | sed -e 's@TAU_ARCH=@@g' `"
