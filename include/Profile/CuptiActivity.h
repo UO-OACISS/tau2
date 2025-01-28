@@ -3,6 +3,7 @@
 
 #include <Profile/TauGpu.h>
 #include <Profile/CudaSass.h>
+#include <Profile/CuptiPCSampling.h>
 #include <cuda.h>
 #include <cupti.h>
 #include <math.h>

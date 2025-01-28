@@ -11,6 +11,7 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <Profile/CuptiNVTX.h>
+#include <Profile/CuptiPCSampling.h>
 
 using namespace std;
 
@@ -694,8 +695,12 @@ void Tau_cupti_setup_offset()
 
 void Tau_cupti_init()
 {
-
     TAU_DEBUG_PRINT("TAU: entering Tau_cupti_init\n");
+    if(TauEnv_get_tauCuptiPC())
+    {
+        cupti_pcsampling_init();
+        return;
+    }
 
     Tau_gpu_init();
     Tau_cupti_set_device_props();
@@ -760,6 +765,13 @@ void Tau_cupti_onload()
 }
 
 void Tau_cupti_onunload() {
+    if(TauEnv_get_tauCuptiPC())
+    {
+        cupti_pcsampling_exit();
+        return;
+    }
+
+
     if(TauEnv_get_cuda_track_unified_memory()) {
         CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
     }
@@ -1120,103 +1132,6 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
     }
 }
 
-
-
-// CUPTI headers
-#include <cupti_pcsampling_util.h>
-#include <cupti_pcsampling.h>
-
-
-using namespace CUPTI::PcSamplingUtil;
-
-// Global structures and variables
-typedef struct ContextInfo_st
-{
-    uint32_t contextUid;
-    CUpti_PCSamplingData pcSamplingData;
-    std::vector<CUpti_PCSamplingConfigurationInfo> pcSamplingConfigurationInfo;
-    PcSamplingStallReasons pcSamplingStallReasons;
-} ContextInfo;
-
-// Variables related to context info book keeping.
-std::map<CUcontext, ContextInfo *> g_contextInfoMap;
-std::mutex g_contextInfoMutex;
-std::vector<ContextInfo *> g_contextInfoToFreeInEndVector;
-
-
-void Tau_handle_pc_sampling(void *ud, CUpti_CallbackDomain domain,
-        CUpti_CallbackId callbackId, const void *pCallbackData)
-{
-    TAU_VERBOSE("handle_pc_sampling\n");
-
-    switch(domain)
-    {
-        case CUPTI_CB_DOMAIN_DRIVER_API:
-        {
-            TAU_VERBOSE("CUPTI_CB_DOMAIN_DRIVER_API\n");
-            const CUpti_CallbackData *pCallbackInfo = (CUpti_CallbackData *)pCallbackData;
-            switch(callbackId)
-            {
-                case CUPTI_DRIVER_TRACE_CBID_cuLaunch:
-                case CUPTI_DRIVER_TRACE_CBID_cuLaunchGrid:
-                case CUPTI_DRIVER_TRACE_CBID_cuLaunchGridAsync:
-                case CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel:
-                case CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel_ptsz:
-                case CUPTI_DRIVER_TRACE_CBID_cuGraphLaunch:
-                case CUPTI_DRIVER_TRACE_CBID_cuGraphLaunch_ptsz:
-                case CUPTI_DRIVER_TRACE_CBID_cuLaunchCooperativeKernel:
-                case CUPTI_DRIVER_TRACE_CBID_cuLaunchCooperativeKernel_ptsz:
-                case CUPTI_DRIVER_TRACE_CBID_cuLaunchCooperativeKernelMultiDevice:
-                {
-                    if (pCallbackInfo->callbackSite == CUPTI_API_EXIT)
-                    {
-
-                    }
-                }
-                break;
-            }
-
-        }
-        break;
-        case CUPTI_CB_DOMAIN_RESOURCE:
-        {
-            TAU_VERBOSE("CUPTI_CB_DOMAIN_RESOURCE\n");
-            const CUpti_ResourceData *pResourceData = (CUpti_ResourceData *)pCallbackData;
-            cupti_pc_sampling = 1;
-
-            switch(callbackId)
-            {
-                case CUPTI_CBID_RESOURCE_CONTEXT_CREATED:
-                {
-                    //A
-                }
-                break;
-                case CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING:
-                {
-                    //A
-                }
-                break;
-                case CUPTI_CBID_RESOURCE_MODULE_LOADED:
-                {
-                    //A
-                }
-                break;
-            }
-        }
-        break;
-    }
-
-}
-
-
-
-
-
-
-
-
-
-
 /* This callback handles synchronous things */
 // Extra bool param that tells whether to run code
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
@@ -1290,8 +1205,6 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
     } else {
         // do nothing
     }
-    if(TauEnv_get_tauCuptiPC)
-        Tau_handle_pc_sampling(ud, domain, id, params);
     // Why is this here?  Well, to make sure that this thread isn't
     // holding the lock!  FOR SOME REASON, the TauGpu code will finish
     // without releasing the lock...

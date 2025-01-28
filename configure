@@ -3213,14 +3213,12 @@ for arg in "$@"; do
             rocmdir=/opt/rocm
             fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM"
             rocm=yes
-            echo $roctracer
             tauoptions="${tauoptions}-rocm"
             pthread=yes
             shift
             ;;
 
         -rocm=*)
-        echo $roctracer
             rocmdir=`echo $arg | sed -e 's/-rocm=//' -e 's/ /#/g'`
             if [ ! -d $rocmdir ]; then
               echo  "Error: Cannot access ROCm directory $rocmdir"
