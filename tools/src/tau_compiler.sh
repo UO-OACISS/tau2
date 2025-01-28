@@ -2005,7 +2005,7 @@ else
           fi
           tempInstFileName=${arrTau[$tempCounter]##*/}
           if [ $optSaltInst == $TRUE ]; then
-              tauCmd="$optSaltParser ${arrFileName[$tempCounter]} --tau_output $tempInstFileName"
+              tauCmd="$optSaltParser ${arrFileName[$tempCounter]} --tau_output=$tempInstFileName"
               saltSelectFile="$(sed -e 's/^[ \t]*//'<<<"${optTauSelectFile}")" # strip leading spaces
               saltSelectFile="$(sed -e 's/^-f //'<<<"${saltSelectFile}")" # strip leading "-f "
               if [ -n "$saltSelectFile" ]; then
