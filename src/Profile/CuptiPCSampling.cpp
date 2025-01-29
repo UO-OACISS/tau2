@@ -175,9 +175,6 @@ static void StorePcSampDataInDat(CUpti_PCSamplingData* pcSamplingData, ContextIn
 static void
 FillCrcModuleMap(uint32_t r_moduleId)
 {
-
-    /*for (auto it = crc_moduleIds.begin(); it != crc_moduleIds.end(); ++it)
-    {*/
         ModuleDetails moduleDetailsStruct = {};
         std::string cubinFileName = std::to_string(r_moduleId) + ".cubin";
 
@@ -214,7 +211,6 @@ FillCrcModuleMap(uint32_t r_moduleId)
 
         uint64_t cubinCrc = cubinCrcParams.cubinCrc;
         crcModuleMap.insert(std::make_pair(cubinCrc, moduleDetailsStruct));
-    //}
 }
 
 static bool
