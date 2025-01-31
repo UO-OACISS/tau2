@@ -111,7 +111,7 @@ std::map<uint64_t, ModuleDetails> crcModuleMap;
 PcSamplingStallReasons pcSamplingStallReasonsRetrieve;
 std::vector<uint32_t> crc_moduleIds;
 
-//std::vector<TAUCuptiSamples> tau_cupti_samples;
+std::mutex map_tau_cupti_samples_lock;
 std::map<TAUCuptiIdSamples, TAUCuptiStalls> map_tau_cupti_samples;
 /**
  * Function Info :
@@ -202,6 +202,7 @@ void Tau_process_all_CUPTIPC_samples()
                 << ", lineNumber:0"
                 << ", fileName: " << "ERROR_NO_CUBIN"
                 << ", dirName: "
+                << ", contextUid: " << curr_sample.first.contextUid
                 << ", stallReasons: " << curr_sample.second.stallReasonCount;
             ss  << ", ";
             for (auto curr_stall : curr_sample.second.stallReason)
@@ -229,6 +230,7 @@ void Tau_process_all_CUPTIPC_samples()
                     << ", lineNumber: " << pCSamplingGetSassToSourceCorrelationParams.lineNumber
                     << ", fileName: " << pCSamplingGetSassToSourceCorrelationParams.fileName
                     << ", dirName: " << pCSamplingGetSassToSourceCorrelationParams.dirName
+                    << ", contextUid: " << curr_sample.first.contextUid
                     << ", stallReasons: " << curr_sample.second.stallReasonCount;
                 ss  << ", ";
                 free(pCSamplingGetSassToSourceCorrelationParams.fileName);
@@ -242,6 +244,7 @@ void Tau_process_all_CUPTIPC_samples()
                     << ", lineNumber:0"
                     << ", fileName: " << "ERROR_NO_CUBIN"
                     << ", dirName: "
+                    << ", contextUid: " << curr_sample.first.contextUid
                     << ", stallReasons: " << curr_sample.second.stallReasonCount;
                 ss  << ", ";
             }
@@ -263,77 +266,84 @@ void Tau_process_all_CUPTIPC_samples()
     std::ofstream out("samples.log");
     out << ss.str();
     out.close();
+}
 
-    /*for(auto& curr_sample: tau_cupti_samples)
+void GetSamplesFromSamplingData(CUpti_PCSamplingData SamplingData, ContextInfo *pContextInfo)
+{
+    std::cout << "!! GetSamplesFromSamplingData: " << SamplingData.totalNumPcs << std:: endl;
+    //insert lock
+    map_tau_cupti_samples_lock.lock();
+    for(size_t i = 0 ; i < SamplingData.totalNumPcs; i++)
     {
-        auto itr = crcModuleMap.find(curr_sample.cubinCrc);
-        std::cout << std::endl;
-        //No CUBIN available for this PC sample
-        if (itr == crcModuleMap.end())
+        TAUCuptiIdSamples curr_sample_id;
+        curr_sample_id.cubinCrc = SamplingData.pPcData[i].cubinCrc;
+        curr_sample_id.pcOffset = SamplingData.pPcData[i].pcOffset;
+        curr_sample_id.functionName = SamplingData.pPcData[i].functionName;
+        curr_sample_id.functionIndex = SamplingData.pPcData[i].functionIndex;
+        curr_sample_id.contextUid = pContextInfo->contextUid;
+        std::map<TAUCuptiIdSamples, TAUCuptiStalls>::iterator iter_samples = map_tau_cupti_samples.find(curr_sample_id);
+
+        //This name string might be shared across all the records including records from activity APIs representing the same function, 
+        // and so it should not be modified or freed until post processing of all the records is done. Once done, 
+        // it is user’s responsibility to free the memory using free() function. 
+        functions.insert( SamplingData.pPcData[i].functionName);
+
+        if( iter_samples == map_tau_cupti_samples.end())
         {
-            int status;
-            std::cout << "functionName: " << abi::__cxa_demangle(curr_sample.functionName.c_str(), 0, 0, &status)
-                        << ", pcOffset: " << curr_sample.pcOffset
-                        << ", lineNumber:0"
-                        << ", fileName: " << "ERROR_NO_CUBIN"
-                        << ", dirName: "
-                        << ", stallReasonCount: " << curr_sample.stallReasonCount;
-            std::cout << std::endl;
-            for (auto curr_stall : curr_sample.stallReason)
+            TAUCuptiStalls curr_stalls;
+            curr_stalls.stallReasonCount = SamplingData.pPcData[i].stallReasonCount;
+            for (size_t k=0; k < SamplingData.pPcData[i].stallReasonCount; k++)
             {
-                std::cout << ", " << GetStallReason(curr_stall.first)
-                            << ": " << curr_stall.second;
+                
+                curr_stalls.stallReason[SamplingData.pPcData[i].stallReason[k].pcSamplingStallReasonIndex] =
+                            SamplingData.pPcData[i].stallReason[k].samples;
             }
-            std::cout << std::endl;
+
+            map_tau_cupti_samples[curr_sample_id] = curr_stalls;
+
+            if(map_tau_cupti_samples.find(curr_sample_id)== map_tau_cupti_samples.end())
+            {
+                printf("!! Error!! Samples not inserted\n ");
+                std::cout << "Failed to insert "
+                      << "[ Crc: " << SamplingData.pPcData[i].cubinCrc
+                      << " pcOffset: " << SamplingData.pPcData[i].pcOffset
+                      << " functionName: " << SamplingData.pPcData[i].functionName
+                      << " functionIndex: " << SamplingData.pPcData[i].functionIndex
+                      << " contextUid: " << pContextInfo->contextUid
+                      << std::endl;
+            }
+
+
         }
-        //CUBIN found
         else
         {
-            CUpti_GetSassToSourceCorrelationParams pCSamplingGetSassToSourceCorrelationParams = {0};
-            pCSamplingGetSassToSourceCorrelationParams.size = CUpti_GetSassToSourceCorrelationParamsSize;
-            pCSamplingGetSassToSourceCorrelationParams.functionName = curr_sample.functionName.c_str();
-            pCSamplingGetSassToSourceCorrelationParams.pcOffset = curr_sample.pcOffset;
-            pCSamplingGetSassToSourceCorrelationParams.cubin = itr->second.pCubinImage;
-            pCSamplingGetSassToSourceCorrelationParams.cubinSize = itr->second.cubinSize;
-            CUptiResult cuptiResult = cuptiGetSassToSourceCorrelation(&pCSamplingGetSassToSourceCorrelationParams);
-            if(cuptiResult == CUPTI_SUCCESS)
+            for (size_t k=0; k < SamplingData.pPcData[i].stallReasonCount; k++)
             {
-                std::cout << "functionName: " << abi::__cxa_demangle(curr_sample.functionName.c_str(), 0, 0, &status)
-                        << ", pcOffset: " << curr_sample.pcOffset
-                        << ", lineNumber: " << pCSamplingGetSassToSourceCorrelationParams.lineNumber
-                        << ", fileName: " << pCSamplingGetSassToSourceCorrelationParams.fileName
-                        << ", dirName: " << pCSamplingGetSassToSourceCorrelationParams.dirName
-                        << ", stallReasonCount: " << curr_sample.stallReasonCount;
-
-                        free(pCSamplingGetSassToSourceCorrelationParams.fileName);
-                        free(pCSamplingGetSassToSourceCorrelationParams.dirName);
+                uint32_t stallIndex = SamplingData.pPcData[i].stallReason[k].pcSamplingStallReasonIndex;
+                uint32_t samplesSCount = SamplingData.pPcData[i].stallReason[k].samples;
+                std::map<uint32_t, uint32_t>::iterator iter_stalls = iter_samples->second.stallReason.find(stallIndex);
+                if(iter_stalls == iter_samples->second.stallReason.end())
+                {
+                    iter_samples->second.stallReason[stallIndex] = samplesSCount;
+                }
+                else
+                {
+                    iter_stalls->second += samplesSCount;
+                }
             }
-            //Failed
-            else
-            {
-                std::cout << "functionName: " << abi::__cxa_demangle(curr_sample.functionName.c_str(), 0, 0, &status)
-                        << ", pcOffset: " << curr_sample.pcOffset
-                        << ", lineNumber:0"
-                        << ", fileName: " << "ERROR_NO_CUBIN"
-                        << ", dirName: "
-                        << ", stallReasonCount: " << curr_sample.stallReasonCount;
-            }
-            std::cout  << std::endl << "[ ";
-            for (auto curr_stall : curr_sample.stallReason)
-            {
-                std::cout << ", " << GetStallReason(curr_stall.first)
-                            << ": " << curr_stall.second;
-            }
-            std::cout << " ]" << std::endl;
+            iter_samples->second.stallReasonCount = iter_samples->second.stallReason.size();
         }
-    }*/
+    }
+    map_tau_cupti_samples_lock.unlock();
 }
+
 
 static bool
 GetPcSamplingDataFromCupti(
     CUpti_PCSamplingGetDataParams &pcSamplingGetDataParams,
     ContextInfo *pContextInfo)
 {
+    printf("GetPcSamplingDataFromCupti\n");
     CUPTI_PC_BufferMutex.lock(); 
     pcSamplingGetDataParams.pcSamplingData = (void *)&CUPTI_PC_Buffer;
     CUptiResult cuptiStatus = cuptiPCSamplingGetData(&pcSamplingGetDataParams);
@@ -348,113 +358,13 @@ GetPcSamplingDataFromCupti(
         }
     }
 
-    for(size_t i = 0 ; i < CUPTI_PC_Buffer.totalNumPcs; i++)
-    {
-        TAUCuptiIdSamples curr_sample_id;
-        curr_sample_id.cubinCrc = CUPTI_PC_Buffer.pPcData[i].cubinCrc;
-        curr_sample_id.pcOffset = CUPTI_PC_Buffer.pPcData[i].pcOffset;
-        curr_sample_id.functionName = CUPTI_PC_Buffer.pPcData[i].functionName;
-        curr_sample_id.functionIndex = CUPTI_PC_Buffer.pPcData[i].functionIndex;
-        curr_sample_id.contextUid = pContextInfo->contextUid;
-        std::map<TAUCuptiIdSamples, TAUCuptiStalls>::iterator iter_samples = map_tau_cupti_samples.find(curr_sample_id);
-
-        //This name string might be shared across all the records including records from activity APIs representing the same function, 
-        // and so it should not be modified or freed until post processing of all the records is done. Once done, 
-        // it is user’s responsibility to free the memory using free() function. 
-        functions.insert( CUPTI_PC_Buffer.pPcData[i].functionName);
-
-
-        /*std:: cout << CUPTI_PC_Buffer.pPcData[i].functionName 
-                   << " O " << CUPTI_PC_Buffer.pPcData[i].pcOffset 
-                   << " C " << CUPTI_PC_Buffer.pPcData[i].stallReasonCount;
-
-        for (size_t k=0; k < CUPTI_PC_Buffer.pPcData[i].stallReasonCount; k++)
-        {
-            
-            std::cout << " RI: "<< CUPTI_PC_Buffer.pPcData[i].stallReason[k].pcSamplingStallReasonIndex
-                      << " S: " << CUPTI_PC_Buffer.pPcData[i].stallReason[k].samples;
-        }
-
-        std::cout << std::endl;*/
-
-        if( iter_samples == map_tau_cupti_samples.end())
-        {
-            TAUCuptiStalls curr_stalls;
-            curr_stalls.stallReasonCount = CUPTI_PC_Buffer.pPcData[i].stallReasonCount;
-            for (size_t k=0; k < CUPTI_PC_Buffer.pPcData[i].stallReasonCount; k++)
-            {
-                
-                curr_stalls.stallReason[CUPTI_PC_Buffer.pPcData[i].stallReason[k].pcSamplingStallReasonIndex] =
-                            CUPTI_PC_Buffer.pPcData[i].stallReason[k].samples;
-            }
-
-            /*std::cout << "Insert "
-                      << CUPTI_PC_Buffer.pPcData[i].functionName 
-                      << " O " << CUPTI_PC_Buffer.pPcData[i].pcOffset
-                      << " C " << CUPTI_PC_Buffer.pPcData[i].stallReasonCount
-                      << std::endl;*/
-
-            map_tau_cupti_samples[curr_sample_id] = curr_stalls;
-
-            if(map_tau_cupti_samples.find(curr_sample_id)== map_tau_cupti_samples.end())
-            {
-                printf("!! Error!! Samples not inserted\n ");
-                std::cout << "Failed to insert "
-                      << "[ Crc: " << CUPTI_PC_Buffer.pPcData[i].cubinCrc
-                      << " pcOffset: " << CUPTI_PC_Buffer.pPcData[i].pcOffset
-                      << " functionName: " << CUPTI_PC_Buffer.pPcData[i].functionName
-                      << " functionIndex: " << CUPTI_PC_Buffer.pPcData[i].functionIndex
-                      << " contextUid: " << pContextInfo->contextUid
-                      << std::endl;
-            }
-
-
-        }
-        else
-        {
-            for (size_t k=0; k < CUPTI_PC_Buffer.pPcData[i].stallReasonCount; k++)
-            {
-                uint32_t stallIndex = CUPTI_PC_Buffer.pPcData[i].stallReason[k].pcSamplingStallReasonIndex;
-                uint32_t samplesSCount = CUPTI_PC_Buffer.pPcData[i].stallReason[k].samples;
-                std::map<uint32_t, uint32_t>::iterator iter_stalls = iter_samples->second.stallReason.find(stallIndex);
-                if(iter_stalls == iter_samples->second.stallReason.end())
-                {
-                    iter_samples->second.stallReason[stallIndex] = samplesSCount;
-                }
-                else
-                {
-                    iter_stalls->second += samplesSCount;
-                }
-            }
-            iter_samples->second.stallReasonCount = iter_samples->second.stallReason.size();
-        }
-    }
-
-
-    /*printf("START ====================================================================\n");
-    for(auto& sample: map_tau_cupti_samples)
-    {
-        std::cout << "[ Crc: " << sample.first.cubinCrc
-                  << " pcOffset: " << sample.first.pcOffset
-                  << " functionName: " << sample.first.functionName
-                  << " functionIndex: " << sample.first.functionIndex
-                  << " contextUid: " << sample.first.contextUid
-                  << " SCount:" << sample.second.stallReasonCount;
-        for(auto& stall_reason : sample.second.stallReason)
-        {
-            std::cout << " RIndex: " << stall_reason.first << " RCount: " << stall_reason.second ;
-        }
-        std::cout << " ]" << std::endl;
-    }
-    printf("END =======================================================================\n");*/
-
-
-
-
+    GetSamplesFromSamplingData( CUPTI_PC_Buffer,  pContextInfo);
+    
     CUPTI_PC_BufferMutex.unlock();
 
     return true;
 }
+
 
 
 static void
@@ -545,12 +455,12 @@ PCSamplingThread()
         }
         else
         {
+            //Need to add lock
             for (auto& itr: g_contextInfoMap)
             {
                 printf("StorePcSampDataInFileThread col %d rem %d tot %d\n", itr.second->pcSamplingData.collectNumPcs, itr.second->pcSamplingData.remainingNumPcs, itr.second->pcSamplingData.totalNumPcs);
                 if(itr.second->pcSamplingData.remainingNumPcs > 100)
                 {
-                    //A
                     printf("There are samples to process\n");
                     CUpti_PCSamplingGetDataParams pcSamplingGetDataParams = {};
                     pcSamplingGetDataParams.size = CUpti_PCSamplingGetDataParamsSize;
@@ -784,6 +694,7 @@ void CallbackHandler(
                 case CUPTI_DRIVER_TRACE_CBID_cuLaunchCooperativeKernel_ptsz:
                 case CUPTI_DRIVER_TRACE_CBID_cuLaunchCooperativeKernelMultiDevice:
                 {
+                    printf("CUPTI_CB_DOMAIN_DRIVER_API\n");
                     if (pCallbackInfo->callbackSite == CUPTI_API_EXIT)
                     {
                         std::map<CUcontext, ContextInfo*>::iterator contextStateMapItr = g_contextInfoMap.find(pCallbackInfo->context);
@@ -902,7 +813,7 @@ void CallbackHandler(
                     // which reports CUPTI_ERROR_OUT_OF_MEMORY for this case.
                     if (itr->second->pcSamplingData.remainingNumPcs == 0)
                     {
-
+                        std::cout << "!! In Destroy "<< itr->second->pcSamplingData.remainingNumPcs << std::endl;
                         if (!GetPcSamplingDataFromCupti(pcSamplingGetDataParams, itr->second))
                         {
                             printf("Failed to get pc sampling data from Cupti\n");
@@ -912,7 +823,7 @@ void CallbackHandler(
 
                     while (itr->second->pcSamplingData.remainingNumPcs > 0 || itr->second->pcSamplingData.totalNumPcs > 0)
                     {
-
+                        std::cout << "!! In Destroy "<< itr->second->pcSamplingData.remainingNumPcs << " " << itr->second->pcSamplingData.totalNumPcs << std::endl;
                         if (!GetPcSamplingDataFromCupti(pcSamplingGetDataParams, itr->second))
                         {
                             printf("Failed to get pc sampling data from Cupti\n");
@@ -924,18 +835,16 @@ void CallbackHandler(
                     pcSamplingDisableParams.size = CUpti_PCSamplingDisableParamsSize;
                     pcSamplingDisableParams.ctx = pResourceData->context;
                     CUPTI_API_CALL(cuptiPCSamplingDisable(&pcSamplingDisableParams));
-
+                    std::cout << "!! In Destroy - Called cuptiPCSamplingDisable " << std::endl;
                     // It is quite possible that after pc sampling disabled cupti fill remaining records
                     // collected lately from hardware in provided buffer during configuration.
                     if (itr->second->pcSamplingData.totalNumPcs > 0)
                     {
                         printf("!! CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING totalNumPcs > 0\n");
-                        /*g_pcSampDataQueueMutex.lock();
-                        g_pcSampDataQueue.push(std::make_pair(&itr->second->pcSamplingData, itr->second));
-                        g_pcSampDataQueueMutex.unlock();*/
-                        
-                    }
 
+                        GetSamplesFromSamplingData(itr->second->pcSamplingData, itr->second);
+                    }
+                    std::cout << "!! In Destroy - Called cuptiPCSamplingDisable tot:" << itr->second->pcSamplingData.totalNumPcs  << std::endl;
                     g_contextInfoMutex.lock();
                     g_contextInfoToFreeInEndVector.push_back(itr->second);
                     g_contextInfoMap.erase(itr);
@@ -1130,12 +1039,7 @@ cupti_pcsampling_exit()
                               << " records are discarded during cuptiPCSamplingDisable() since these can't be accommodated "
                               << "in the PC sampling buffer provided during the PC sampling configuration. Bigger buffer can mitigate this issue." << std::endl;
                 }
-
-               /* g_pcSampDataQueueMutex.lock();
-                // It is quite possible that after pc sampling disabled cupti fill remaining records
-                // collected lately from hardware in provided buffer during configuration.
-                g_pcSampDataQueue.push(std::make_pair(&itr.second->pcSamplingData, itr.second));
-                g_pcSampDataQueueMutex.unlock();*/
+                GetSamplesFromSamplingData(itr.second->pcSamplingData, itr.second);
             }
         }
 

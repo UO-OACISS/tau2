@@ -208,20 +208,20 @@ typedef struct TAUCuptiIdSamples_st
     uint32_t functionIndex;
 
     bool operator!=(const TAUCuptiIdSamples_st &o) const{
-        return std:: tie(cubinCrc, pcOffset, contextUid, functionIndex)
-                != std:: tie(o.cubinCrc, o.pcOffset, o.contextUid, o.functionIndex);
+        return std:: tie(cubinCrc, functionIndex, pcOffset, contextUid)
+                != std:: tie(o.cubinCrc, o.functionIndex, o.pcOffset, o.contextUid);
     }
     bool operator==(const TAUCuptiIdSamples_st &o) const{
-        return std:: tie(cubinCrc, pcOffset, contextUid, functionIndex)
-                == std:: tie(o.cubinCrc, o.pcOffset, o.contextUid, o.functionIndex);
+        return std:: tie(cubinCrc, functionIndex, pcOffset, contextUid)
+                == std:: tie(o.cubinCrc, o.functionIndex, o.pcOffset, o.contextUid);
     }
     bool operator>(const TAUCuptiIdSamples_st &o) const{
-        return std:: tie(cubinCrc, pcOffset, contextUid, functionIndex)
-                > std:: tie(o.cubinCrc, o.pcOffset, o.contextUid, o.functionIndex);
+        return std:: tie(cubinCrc, functionIndex, pcOffset, contextUid)
+                > std:: tie(o.cubinCrc, o.functionIndex, o.pcOffset, o.contextUid);
     }
     bool operator<(const TAUCuptiIdSamples_st &o) const{
-        return std:: tie(cubinCrc, pcOffset, contextUid, functionIndex)
-                < std:: tie(o.cubinCrc, o.pcOffset, o.contextUid, o.functionIndex);
+        return std:: tie(cubinCrc, functionIndex, pcOffset, contextUid)
+                < std:: tie(o.cubinCrc, o.functionIndex, o.pcOffset, o.contextUid);
     }
 } TAUCuptiIdSamples;
 
