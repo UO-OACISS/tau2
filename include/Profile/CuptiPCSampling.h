@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <iostream>
+#include <sstream>
 // CUDA headers
 #include <cuda.h>
 
@@ -181,9 +182,53 @@ typedef struct ContextInfo_st
     PcSamplingStallReasons pcSamplingStallReasons;
 } ContextInfo;
 
+typedef struct TAUCuptiSamples_st
+{
+    uint64_t cubinCrc;
+    uint64_t pcOffset;
+    std::string functionName;
+    size_t stallReasonCount;
+    std::vector<std::pair<uint32_t, uint32_t>> stallReason;
+    uint32_t contextUid;
+} TAUCuptiSamples;
+
+
+typedef struct TAUCuptiStalls_st
+{
+    size_t stallReasonCount;
+    std::map<uint32_t, uint32_t> stallReason;
+} TAUCuptiStalls;
+
+typedef struct TAUCuptiIdSamples_st
+{
+    uint64_t cubinCrc;
+    uint64_t pcOffset;
+    std::string functionName;
+    uint32_t contextUid;
+    uint32_t functionIndex;
+
+    bool operator!=(const TAUCuptiIdSamples_st &o) const{
+        return std:: tie(cubinCrc, pcOffset, contextUid, functionIndex)
+                != std:: tie(o.cubinCrc, o.pcOffset, o.contextUid, o.functionIndex);
+    }
+    bool operator==(const TAUCuptiIdSamples_st &o) const{
+        return std:: tie(cubinCrc, pcOffset, contextUid, functionIndex)
+                == std:: tie(o.cubinCrc, o.pcOffset, o.contextUid, o.functionIndex);
+    }
+    bool operator>(const TAUCuptiIdSamples_st &o) const{
+        return std:: tie(cubinCrc, pcOffset, contextUid, functionIndex)
+                > std:: tie(o.cubinCrc, o.pcOffset, o.contextUid, o.functionIndex);
+    }
+    bool operator<(const TAUCuptiIdSamples_st &o) const{
+        return std:: tie(cubinCrc, pcOffset, contextUid, functionIndex)
+                < std:: tie(o.cubinCrc, o.pcOffset, o.contextUid, o.functionIndex);
+    }
+} TAUCuptiIdSamples;
+
+
+
 static std::string GetStallReason( uint32_t pcSamplingStallReasonIndex );
 static bool GetPcSamplingDataFromCupti( CUpti_PCSamplingGetDataParams &pcSamplingGetDataParams, ContextInfo *pContextInfo );
-static void StorePcSampDataInFile();
 static void StorePcSampDataInFileThread();
 static void PreallocateBuffersForRecords();
 static void FreePreallocatedMemory();
