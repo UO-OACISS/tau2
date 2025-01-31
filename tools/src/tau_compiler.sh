@@ -115,7 +115,7 @@ printUsage () {
     echo -e "  -optPdtCleanscapeParser\tSpecify the Cleanscape Fortran parser"
     echo -e "  -optPdtUser=\"\"\t\tOptional arguments for parsing source code"
     echo -e "  -optTauInstr=\"\"\t\tSpecify location of tau_instrumentor. Typically \$(TAUROOT)/\$(CONFIG_ARCH)/bin/tau_instrumentor"
-    echo -e "  -optSaltParser=\"\"\t\tSpecify location of the SALT parser and instrumentor. Typically \$(TAUROOT)/\$(CONFIG_ARCH)/bin/cparse-llvm"
+    echo -e "  -optSaltParser=\"\"\t\tSpecify location of the SALT parser and instrumentor. Typically saltfm"
     echo -e "  -optSaltConfigFile=\"\"\t\tSpecify location of the SALT configuration YAML file."
     echo -e "  -optPreProcess\t\tPreprocess the source code before parsing. Uses /usr/bin/cpp -P by default."
     echo -e "  -optContinueBeforeOMP\t\tInsert a CONTINUE statement before !\$OMP directives."
@@ -942,12 +942,6 @@ for arg in "$@" ; do
         	    pdtParserType=cxxparse
                     groupType=$group_C
         	fi
-                if [ -n "$optSaltParser" ]; then
-                    echoIfDebug "\tSaltParser passed to script: $optSaltParser"
-                else
-                    echoIfDebug "\tNo SALT parser passed, setting optSaltParser to ${defaultSaltParser}"
-                    optSaltParser="${defaultSaltParser}"
-                fi
         	;;
 
             *.cu)
@@ -980,12 +974,6 @@ for arg in "$@" ; do
         		groupType=$group_c
                     fi
         	fi
-                if [ -n "$optSaltParser" ]; then
-                    echoIfDebug "\tSaltParser passed to script: $optSaltParser"
-                else
-                    echoIfDebug "\tNo SALT parser passed, setting optSaltParser to ${defaultSaltParser}"
-                    optSaltParser="${defaultSaltParser}"
-                fi
         	;;
 
             *.upc)
@@ -2005,6 +1993,12 @@ else
           fi
           tempInstFileName=${arrTau[$tempCounter]##*/}
           if [ $optSaltInst == $TRUE ]; then
+              if [ -n "$optSaltParser" ]; then
+                  echoIfDebug "\tSaltParser passed to script: $optSaltParser"
+              else
+                  echoIfDebug "\tNo SALT parser passed, setting optSaltParser to ${defaultSaltParser}"
+                  optSaltParser="${defaultSaltParser}"
+              fi
               tauCmd="$optSaltParser ${arrFileName[$tempCounter]} --tau_output=$tempInstFileName"
               saltSelectFile="$(sed -e 's/^[ \t]*//'<<<"${optTauSelectFile}")" # strip leading spaces
               saltSelectFile="$(sed -e 's/^-f //'<<<"${saltSelectFile}")" # strip leading "-f "
