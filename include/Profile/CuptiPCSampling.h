@@ -174,6 +174,12 @@ do                                                                              
     }                                                                               \
 } while (0)
 
+typedef struct ModuleDetails_st
+{
+    uint32_t cubinSize;
+    void *pCubinImage;
+} ModuleDetails;
+
 typedef struct ContextInfo_st
 {
     uint32_t contextUid;
