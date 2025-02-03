@@ -97,6 +97,8 @@ rocprofiler_buffer_id_t       client_buffer    = {};
 int volatile hc_profiling = 0;
 int volatile pc_sampling = 0;
 
+double last_record_timestamp = 0.0;
+
 //Buffer to identify names of ROCm calls
 using buffer_kind_names_t = std::map<rocprofiler_buffer_tracing_kind_t, const char*>;
 using buffer_kind_operation_names_t = std::map<rocprofiler_buffer_tracing_kind_t, 
@@ -364,6 +366,15 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
   
   static unsigned long long last_timestamp = Tau_get_last_timestamp_ns();
   
+  TAU_VERBOSE("tool_tracing_callback\n");
+  
+  //Sort events by timestap?
+  /*
+  //Temporary solution,  discard if timestamp is lower than previous timestamp
+  */
+  
+
+  
   for(size_t i = 0; i < num_headers; ++i)
   {
     auto* header = headers[i];
@@ -384,7 +395,12 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           std::cerr << "threw an exception " << msg.str() << "\n" << std::flush;
           // throw std::runtime_error{msg.str()};
         }
-        
+        else if( last_record_timestamp > record->start_timestamp)
+        {
+          TAU_VERBOSE("New timestamp is older than previous timestamp, ROCm is giving unsorted timestamps. Discarded entry\n");
+          continue;          
+        }          
+        last_record_timestamp = record->end_timestamp;
         //Different types of events will appear as different threads in the profile
         //This is to differenciate kernels, API calls and other events
         int queueid = 0;
@@ -406,6 +422,8 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         
         std::string task_name;
         task_name = client_name_info.operation_names[record->kind][record->operation];
+
+        TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf\n", taskid, (double)record->start_timestamp/1e3, (double)record->end_timestamp/1e3);
 
         double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->start_timestamp/1e3)); // convert to microseconds
         metric_set_gpu_timestamp(taskid, timestamp_entry);
@@ -429,7 +447,12 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           std::cerr << "threw an exception " << msg.str() << "\n" << std::flush;
           // throw std::runtime_error{msg.str()};
         }
-        
+        else if( last_record_timestamp > record->start_timestamp)
+        {
+          TAU_VERBOSE("New timestamp is older than previous timestamp, ROCm is giving unsorted timestamps. Discarded entry\n");
+          continue;          
+        }          
+        last_record_timestamp = record->end_timestamp;
         int queueid = 1;
         unsigned long long timestamp = 0L;
         int taskid = Tau_get_initialized_queues(queueid);
@@ -450,6 +473,8 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         std::string task_name;
         task_name = client_name_info.operation_names[record->kind][record->operation];
 
+        TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf\n", taskid, (double)record->start_timestamp/1e3, (double)record->end_timestamp/1e3);
+
         double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->start_timestamp/1e3)); // convert to microseconds
         metric_set_gpu_timestamp(taskid, timestamp_entry);
         TAU_START_TASK(task_name.c_str(), taskid);
@@ -465,7 +490,12 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         auto* record = static_cast<rocprofiler_buffer_tracing_kernel_dispatch_record_t*>(header->payload);
         if(record->start_timestamp > record->end_timestamp)
           throw std::runtime_error("kernel dispatch: start > end");
-        
+        else if( last_record_timestamp > record->start_timestamp)
+        {
+          TAU_VERBOSE("New timestamp is older than previous timestamp, ROCm is giving unsorted timestamps. Discarded entry\n");
+          continue;          
+        }          
+        last_record_timestamp = record->end_timestamp;
         //This should be related to the GPU id(agent_id.handle which is uint64_t)
         //int queueid = 1 + (int)record->dispatch_info.agent_id.handle;
         auto agent_id = record->dispatch_info.agent_id.handle;
@@ -473,7 +503,8 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         if(agent_id_elem == tau_rocm_agent_id.end())
         {
           tau_rocm_agent_id[agent_id] = tau_rocm_agent_id.size();
-        }        
+        }
+   
 
         int queueid = 3 + tau_rocm_agent_id[agent_id];
         unsigned long long timestamp = 0L;
@@ -565,6 +596,8 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         
         std::string kernel_name = "[ROCm Kernel] ";
         kernel_name += task_name;
+        
+        TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf\n", taskid, (double)record->start_timestamp/1e3, (double)record->end_timestamp/1e3);
   
         double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->start_timestamp/1e3)); // convert to microseconds
         metric_set_gpu_timestamp(taskid, timestamp_entry);
@@ -582,7 +615,12 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         auto* record = static_cast<rocprofiler_buffer_tracing_memory_copy_record_t*>(header->payload);
         if(record->start_timestamp > record->end_timestamp)
           throw std::runtime_error("memory copy: start > end");
-        
+        else if( last_record_timestamp > record->start_timestamp)
+        {
+          TAU_VERBOSE("New timestamp is older than previous timestamp, ROCm is giving unsorted timestamps. Discarded entry\n");
+          continue;          
+        }          
+        last_record_timestamp = record->end_timestamp;
         //We want to tie, if possible, the copy to a GPU
         //Looking at the type of copy and the destination
         //and source, we may be able to. If not, set it to
@@ -611,15 +649,16 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
   			std::string tmp;
   			void* ue = nullptr;
   			double value;
+        
   			
-  			ss.str("");
+  			/*ss.str("");
   			ss << "bytes copied : " << task_name;
   			tmp = ss.str();
   			ue = Tau_get_userevent(tmp.c_str());
   			value = (double)(record->bytes);
-  			Tau_userevent_thread(ue, value, taskid);
+  			Tau_userevent_thread(ue, value, taskid);*/
 
-
+        TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf\n", taskid, (double)record->start_timestamp/1e3, (double)record->end_timestamp/1e3);
 
         double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->start_timestamp/1e3)); // convert to microseconds
         metric_set_gpu_timestamp(taskid, timestamp_entry);
@@ -767,6 +806,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         printf("ROCPROFILER_BUFFER_CATEGORY_LAST events should not be obtained in tool_tracing_callback\n");*/
     }
   }
+  TAU_VERBOSE("tool_tracing_callback\n");
 }
 
 
