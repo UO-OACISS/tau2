@@ -44,11 +44,7 @@ bool g_verbose = false;
 
 bool g_running = false;
 
-typedef struct ModuleDetails_st
-{
-    uint32_t cubinSize;
-    void *pCubinImage;
-} ModuleDetails;
+
 
 std::map<uint64_t, ModuleDetails> crcModuleMap;
 
@@ -205,7 +201,7 @@ void Tau_store_all_CUPTIPC_samples()
     }
     map_tau_cupti_samples_lock.unlock();
 
-    TAU_VERBOSE("%s\n", ss.str());
+    TAU_VERBOSE("%s\n", ss.str().c_str());
 
 
     std::ofstream out("samples.log");
@@ -403,10 +399,10 @@ PCSamplingThread()
             //Need to add lock
             for (auto& itr: g_contextInfoMap)
             {
-                TAU_VERBOSE("StorePcSampDataInFileThread col %d rem %d tot %d\n", 
-                        itr.second->pcSamplingData.collectNumPcs, 
-                        itr.second->pcSamplingData.remainingNumPcs, 
-                        itr.second->pcSamplingData.totalNumPcs);
+                //TAU_VERBOSE("StorePcSampDataInFileThread col %d rem %d tot %d\n", 
+                //        itr.second->pcSamplingData.collectNumPcs, 
+                //        itr.second->pcSamplingData.remainingNumPcs, 
+                //        itr.second->pcSamplingData.totalNumPcs);
                 while(itr.second->pcSamplingData.remainingNumPcs > CUPTI_PC_bufSize)
                 {
                     TAU_VERBOSE("There are samples to process\n");
