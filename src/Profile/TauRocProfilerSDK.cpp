@@ -778,7 +778,9 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
       if(header->category == ROCPROFILER_BUFFER_CATEGORY_PC_SAMPLING)
         printf("ROCPROFILER_BUFFER_CATEGORY_PC_SAMPLING events should not be obtained in tool_tracing_callback\n");*/
       //Hardware Counter Profiling
-      if(header->category == ROCPROFILER_BUFFER_CATEGORY_COUNTERS)
+      if(disable_user_events)
+        continue;
+      else if(header->category == ROCPROFILER_BUFFER_CATEGORY_COUNTERS )
       {
         uint64_t agent_id = 0;
         double counter_value;
