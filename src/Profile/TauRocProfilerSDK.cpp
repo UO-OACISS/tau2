@@ -1,56 +1,5 @@
 //TauRocProfilerSDK.cpp
-
-#include <Profile/TauBfd.h>  // for name demangling
-#include <Profile/TauRocm.h>
-
-#include "Profile/Profiler.h"
-
-//Need to check, are they all needed? 
-#include <rocprofiler-sdk/buffer.h>
-#include <rocprofiler-sdk/buffer_tracing.h>
-#include <rocprofiler-sdk/callback_tracing.h>
-#include <rocprofiler-sdk/external_correlation.h>
-#include <rocprofiler-sdk/fwd.h>
-#include <rocprofiler-sdk/agent.h>
-#include <rocprofiler-sdk/internal_threading.h>
-#include <rocprofiler-sdk/registration.h>
-#include <rocprofiler-sdk/rocprofiler.h>
-#include <rocprofiler-sdk/version.h>
-
-
-//Need to check, are they all needed? 
-#include <atomic>
-#include <cassert>
-#include <chrono>
-#include <cstddef>
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <cstdlib>
-#include <fstream>
-#include <functional>
-#include <iomanip>
-#include <iostream>
-#include <map>
-#include <mutex>
-#include <random>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <thread>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
-#include <set>
-#include <unistd.h>
-
-//Enum to enable or disable metric profiling
-typedef enum profile_metrics {
-	NO_METRICS = 1,
-	WRONG_NAME = 2,
-	PROFILE_METRICS = 3
-};
+#include "Profile/RocProfilerSDK/TauRocProfilerSDK.h"
 
 
 //Map to identify kernels and some of their information
@@ -63,24 +12,6 @@ extern void show_results_pc();
 
 extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value);
 extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
-
-#ifndef ROCPROFILER_CALL
-#define ROCPROFILER_CALL(result, msg)                                                              \
-    {                                                                                              \
-        rocprofiler_status_t CHECKSTATUS = result;                                                 \
-        if(CHECKSTATUS != ROCPROFILER_STATUS_SUCCESS)                                              \
-        {                                                                                          \
-            std::string status_msg = rocprofiler_get_status_string(CHECKSTATUS);                   \
-            std::cerr << "[" #result "][" << __FILE__ << ":" << __LINE__ << "] " << msg            \
-                      << " failed with error code " << CHECKSTATUS << ": " << status_msg           \
-                      << std::endl;                                                                \
-            std::stringstream errmsg{};                                                            \
-            errmsg << "[" #result "][" << __FILE__ << ":" << __LINE__ << "] " << msg << " failure ("  \
-                   << status_msg << ")";                                                           \
-            throw std::runtime_error(errmsg.str());                                                \
-        }                                                                                          \
-    }
-#endif
 
 
 //Flag to check if TAU called the flush function
@@ -96,8 +27,6 @@ rocprofiler_buffer_id_t       client_buffer    = {};
 //Flag to enable/disable profiling
 int volatile hc_profiling = 0;
 int volatile pc_sampling = 0;
-
-double last_record_timestamp = 0.0;
 
 //Buffer to identify names of ROCm calls
 using buffer_kind_names_t = std::map<rocprofiler_buffer_tracing_kind_t, const char*>;
@@ -126,6 +55,14 @@ std::vector<const char*> roctx_push_pop = {};
 
 //Map to idenfity agent_id(GPU) with our own identifier
 std::map<uint64_t , int> tau_rocm_agent_id = {};
+
+//List of events, used  to sort events by timestamp
+std::list<struct TauSDKEvent> TauRocmSDKList;
+std::mutex SDKList_mtx;
+
+std::map<int, rocprofiler_timestamp_t> tau_last_timestamp_published;
+std::mutex last_mtx;
+//static rocprofiler_timestamp_t tau_last_timestamp_published = 0;
 
 //------------------------------------------------------------------------------------------------
 //Check if -rocm is set with env variable TAU_USE_ROCPROFILERSDK
@@ -169,7 +106,7 @@ void rocsdk_version_check(uint32_t                 version,
 //Not all kinds are supported, look at the definitions in new rocprofiler-sdk versions and implement if supported
 static const auto supported_kinds = std::unordered_set<rocprofiler_buffer_tracing_kind_t>{
     ROCPROFILER_BUFFER_TRACING_HSA_CORE_API,
-    ROCPROFILER_BUFFER_TRACING_HSA_AMD_EXT_API,
+    //ROCPROFILER_BUFFER_TRACING_HSA_AMD_EXT_API,
     ROCPROFILER_BUFFER_TRACING_HSA_IMAGE_EXT_API,
     ROCPROFILER_BUFFER_TRACING_HSA_FINALIZE_EXT_API,
     ROCPROFILER_BUFFER_TRACING_HIP_RUNTIME_API,
@@ -341,6 +278,74 @@ std::string get_copy_direction(int direction, int* queueid, uint64_t source, uin
   return mem_cpy_kind;
 }
 
+//Publish event to TAU
+void TAU_publish_sdk_event(TauSDKEvent sdk_event)
+{
+  TAU_VERBOSE("TAU_publish_sdk_event \n");
+  last_mtx.lock();
+  rocprofiler_timestamp_t last_timestamp;
+  
+  std::map<int, rocprofiler_timestamp_t>::iterator it = tau_last_timestamp_published.find(sdk_event.taskid);
+  if(it == tau_last_timestamp_published.end())
+  {
+    tau_last_timestamp_published[sdk_event.taskid] = 0;
+    last_timestamp = 0;
+  }
+  else
+  {
+    last_timestamp = it->second;
+  }
+
+  if( sdk_event.entry < last_timestamp )
+  {
+    TAU_VERBOSE("ERROR: new event's timestamp is older than previous event timestamp, current look ahead window is %d\n", TAU_ROCMSDK_LOOK_AHEAD);
+    TAU_VERBOSE("ERROR: modify TAU_ROCMSDK_LOOK_AHEAD with -useropt=-DTAU_ROCMSDK_LOOK_AHEAD=%d or bigger\n", TAU_ROCMSDK_LOOK_AHEAD*2);
+    TAU_VERBOSE("ERROR: if this is a hsa_* task [task: %s], some may overlap and this error should be ignored\n", sdk_event.name.c_str());
+    //TAU_VERBOSE("- Entry: %u Exit: %u %s task: %d\n", sdk_event.entry, sdk_event.exit, sdk_event.name.c_str(), sdk_event.taskid);
+    last_mtx.unlock();
+    return;
+  }
+  //TAU_VERBOSE("Add Entry: %u Exit: %u %s task: %d\n", sdk_event.entry, sdk_event.exit, sdk_event.name.c_str(), sdk_event.taskid);
+
+  tau_last_timestamp_published[sdk_event.taskid] = sdk_event.exit;
+
+  last_mtx.unlock();
+
+  double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(sdk_event.taskid, ((double)sdk_event.entry/1e3)); // convert to microseconds
+  metric_set_gpu_timestamp(sdk_event.taskid, timestamp_entry);
+  TAU_START_TASK(sdk_event.name.c_str(), sdk_event.taskid);
+
+
+  double timestamp_exit = Tau_metric_set_synchronized_gpu_timestamp(sdk_event.taskid, ((double)sdk_event.exit/1e3)); // convert to microseconds
+  metric_set_gpu_timestamp(sdk_event.taskid, timestamp_exit);
+  TAU_STOP_TASK(sdk_event.name.c_str(), sdk_event.taskid);
+  Tau_set_last_timestamp_ns(timestamp_exit);
+  
+}
+
+//Process event into the list, add to TAU if needed
+void TAU_process_sdk_event(TauSDKEvent sdk_event)
+{
+  TAU_VERBOSE("TAU_process_sdk_event\n");
+  //TauRocmSDKList // TauSDKEvent
+  SDKList_mtx.lock();
+  TauRocmSDKList.push_back(sdk_event);
+  TauRocmSDKList.sort();
+
+  if(TauRocmSDKList.size() < TAU_ROCMSDK_LOOK_AHEAD)
+  {
+    SDKList_mtx.unlock();
+    return;
+  }
+  else
+  {
+    TAU_publish_sdk_event(TauRocmSDKList.front());
+    TauRocmSDKList.pop_front();
+  }
+  SDKList_mtx.unlock();
+}
+
+
 //Buffered tracing callback
 void
 tool_tracing_callback(rocprofiler_context_id_t      context,
@@ -366,15 +371,10 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
   
   static unsigned long long last_timestamp = Tau_get_last_timestamp_ns();
   
-  TAU_VERBOSE("tool_tracing_callback\n");
-  
-  //Sort events by timestap?
-  /*
-  //Temporary solution,  discard if timestamp is lower than previous timestamp
-  */
-  
+  //TAU_VERBOSE("tool_tracing_callback\n");
 
-  
+  static int disable_user_events = TauEnv_get_tracing();
+
   for(size_t i = 0; i < num_headers; ++i)
   {
     auto* header = headers[i];
@@ -395,12 +395,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           std::cerr << "threw an exception " << msg.str() << "\n" << std::flush;
           // throw std::runtime_error{msg.str()};
         }
-        else if( last_record_timestamp > record->start_timestamp)
-        {
-          TAU_VERBOSE("New timestamp is older than previous timestamp, ROCm is giving unsorted timestamps. Discarded entry\n");
-          continue;          
-        }          
-        last_record_timestamp = record->end_timestamp;
+
         //Different types of events will appear as different threads in the profile
         //This is to differenciate kernels, API calls and other events
         int queueid = 0;
@@ -423,6 +418,11 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         std::string task_name;
         task_name = client_name_info.operation_names[record->kind][record->operation];
 
+        struct TauSDKEvent e(task_name, record->start_timestamp, record->end_timestamp, taskid);
+        //TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf\n", e.taskid, (double)e.entry, (double)e.exit);
+        TAU_process_sdk_event(e);
+        /*
+
         TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf\n", taskid, (double)record->start_timestamp/1e3, (double)record->end_timestamp/1e3);
 
         double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->start_timestamp/1e3)); // convert to microseconds
@@ -432,7 +432,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         double timestamp_exit = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->end_timestamp/1e3)); // convert to microseconds
         metric_set_gpu_timestamp(taskid, timestamp_exit);
         TAU_STOP_TASK(task_name.c_str(), taskid);
-        Tau_set_last_timestamp_ns(timestamp_exit);
+        Tau_set_last_timestamp_ns(timestamp_exit);*/
           
       }
       else if(header->kind == ROCPROFILER_BUFFER_TRACING_HIP_RUNTIME_API)
@@ -447,12 +447,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           std::cerr << "threw an exception " << msg.str() << "\n" << std::flush;
           // throw std::runtime_error{msg.str()};
         }
-        else if( last_record_timestamp > record->start_timestamp)
-        {
-          TAU_VERBOSE("New timestamp is older than previous timestamp, ROCm is giving unsorted timestamps. Discarded entry\n");
-          continue;          
-        }          
-        last_record_timestamp = record->end_timestamp;
+
         int queueid = 1;
         unsigned long long timestamp = 0L;
         int taskid = Tau_get_initialized_queues(queueid);
@@ -473,8 +468,10 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         std::string task_name;
         task_name = client_name_info.operation_names[record->kind][record->operation];
 
-        TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf\n", taskid, (double)record->start_timestamp/1e3, (double)record->end_timestamp/1e3);
-
+        struct TauSDKEvent e(task_name, record->start_timestamp, record->end_timestamp, taskid);
+        //TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf\n", e.taskid, (double)e.entry, (double)e.exit);
+        TAU_process_sdk_event(e);
+        /*
         double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->start_timestamp/1e3)); // convert to microseconds
         metric_set_gpu_timestamp(taskid, timestamp_entry);
         TAU_START_TASK(task_name.c_str(), taskid);
@@ -482,7 +479,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         double timestamp_exit = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->end_timestamp/1e3)); // convert to microseconds
         metric_set_gpu_timestamp(taskid, timestamp_exit);
         TAU_STOP_TASK(task_name.c_str(), taskid);
-        Tau_set_last_timestamp_ns(timestamp_exit);
+        Tau_set_last_timestamp_ns(timestamp_exit);*/
         
       }
       else if(header->kind == ROCPROFILER_BUFFER_TRACING_KERNEL_DISPATCH)
@@ -490,12 +487,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         auto* record = static_cast<rocprofiler_buffer_tracing_kernel_dispatch_record_t*>(header->payload);
         if(record->start_timestamp > record->end_timestamp)
           throw std::runtime_error("kernel dispatch: start > end");
-        else if( last_record_timestamp > record->start_timestamp)
-        {
-          TAU_VERBOSE("New timestamp is older than previous timestamp, ROCm is giving unsorted timestamps. Discarded entry\n");
-          continue;          
-        }          
-        last_record_timestamp = record->end_timestamp;
+
         //This should be related to the GPU id(agent_id.handle which is uint64_t)
         //int queueid = 1 + (int)record->dispatch_info.agent_id.handle;
         auto agent_id = record->dispatch_info.agent_id.handle;
@@ -526,79 +518,85 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         std::string task_name;
         task_name = Tau_demangle_name(client_kernels.at(record->dispatch_info.kernel_id).kernel_name);
         
-        std::stringstream ss;
-  			std::string tmp;
-  			void* ue = nullptr;
-  			double value;
-  			
-  			ss.str("");
-  			ss << "Private segment size : " << task_name;
-  			tmp = ss.str();
-  			ue = Tau_get_userevent(tmp.c_str());
-  			value = (double)(record->dispatch_info.private_segment_size);
-  			Tau_userevent_thread(ue, value, taskid);
-  			
-  			ss.str("");
-  			ss << "Group segment size : " << task_name;
-  			tmp = ss.str();
-  			ue = Tau_get_userevent(tmp.c_str());
-  			value = (double)(record->dispatch_info.group_segment_size);
-  			Tau_userevent_thread(ue, value, taskid);
-  			
-  			ss.str("");
-  			ss << "Workgroup size X: " << task_name;
-  			tmp = ss.str();
-  			ue = Tau_get_userevent(tmp.c_str());
-  			value = (double)(record->dispatch_info.group_segment_size);
-  			Tau_userevent_thread(ue, value, taskid);
-  			
-  			ss.str("");
-  			ss << "Workgroup size X: " << task_name;
-  			tmp = ss.str();
-  			ue = Tau_get_userevent(tmp.c_str());
-  			value = (double)(record->dispatch_info.workgroup_size.x);
-  			Tau_userevent_thread(ue, value, taskid);
-  			
-  			ss.str("");
-  			ss << "Workgroup size Y: " << task_name;
-  			tmp = ss.str();
-  			ue = Tau_get_userevent(tmp.c_str());
-  			value = (double)(record->dispatch_info.workgroup_size.y);
-  			Tau_userevent_thread(ue, value, taskid);
-  			
-  			ss.str("");
-  			ss << "Workgroup size Z: " << task_name;
-  			tmp = ss.str();
-  			ue = Tau_get_userevent(tmp.c_str());
-  			value = (double)(record->dispatch_info.workgroup_size.z);
-  			Tau_userevent_thread(ue, value, taskid);
-  			
-  			ss.str("");
-  			ss << "Grid size X: " << task_name;
-  			tmp = ss.str();
-  			ue = Tau_get_userevent(tmp.c_str());
-  			value = (double)(record->dispatch_info.grid_size.x);
-  			Tau_userevent_thread(ue, value, taskid);
-  			
-  			ss.str("");
-  			ss << "Grid size Y: " << task_name;
-  			tmp = ss.str();
-  			ue = Tau_get_userevent(tmp.c_str());
-  			value = (double)(record->dispatch_info.grid_size.y);
-  			Tau_userevent_thread(ue, value, taskid);
-  			
-  			ss.str("");
-  			ss << "Grid size Z: " << task_name;
-  			tmp = ss.str();
-  			ue = Tau_get_userevent(tmp.c_str());
-  			value = (double)(record->dispatch_info.grid_size.z);
-  			Tau_userevent_thread(ue, value, taskid);
+        if(!disable_user_events)
+        {
+          std::stringstream ss;
+          std::string tmp;
+          void* ue = nullptr;
+          double value;
+          
+          ss.str("");
+          ss << "Private segment size : " << task_name;
+          tmp = ss.str();
+          ue = Tau_get_userevent(tmp.c_str());
+          value = (double)(record->dispatch_info.private_segment_size);
+          Tau_userevent_thread(ue, value, taskid);
+          
+          ss.str("");
+          ss << "Group segment size : " << task_name;
+          tmp = ss.str();
+          ue = Tau_get_userevent(tmp.c_str());
+          value = (double)(record->dispatch_info.group_segment_size);
+          Tau_userevent_thread(ue, value, taskid);
+          
+          ss.str("");
+          ss << "Workgroup size X: " << task_name;
+          tmp = ss.str();
+          ue = Tau_get_userevent(tmp.c_str());
+          value = (double)(record->dispatch_info.group_segment_size);
+          Tau_userevent_thread(ue, value, taskid);
+          
+          ss.str("");
+          ss << "Workgroup size X: " << task_name;
+          tmp = ss.str();
+          ue = Tau_get_userevent(tmp.c_str());
+          value = (double)(record->dispatch_info.workgroup_size.x);
+          Tau_userevent_thread(ue, value, taskid);
+          
+          ss.str("");
+          ss << "Workgroup size Y: " << task_name;
+          tmp = ss.str();
+          ue = Tau_get_userevent(tmp.c_str());
+          value = (double)(record->dispatch_info.workgroup_size.y);
+          Tau_userevent_thread(ue, value, taskid);
+          
+          ss.str("");
+          ss << "Workgroup size Z: " << task_name;
+          tmp = ss.str();
+          ue = Tau_get_userevent(tmp.c_str());
+          value = (double)(record->dispatch_info.workgroup_size.z);
+          Tau_userevent_thread(ue, value, taskid);
+          
+          ss.str("");
+          ss << "Grid size X: " << task_name;
+          tmp = ss.str();
+          ue = Tau_get_userevent(tmp.c_str());
+          value = (double)(record->dispatch_info.grid_size.x);
+          Tau_userevent_thread(ue, value, taskid);
+          
+          ss.str("");
+          ss << "Grid size Y: " << task_name;
+          tmp = ss.str();
+          ue = Tau_get_userevent(tmp.c_str());
+          value = (double)(record->dispatch_info.grid_size.y);
+          Tau_userevent_thread(ue, value, taskid);
+          
+          ss.str("");
+          ss << "Grid size Z: " << task_name;
+          tmp = ss.str();
+          ue = Tau_get_userevent(tmp.c_str());
+          value = (double)(record->dispatch_info.grid_size.z);
+          Tau_userevent_thread(ue, value, taskid);
+        }
         
         std::string kernel_name = "[ROCm Kernel] ";
         kernel_name += task_name;
-        
-        TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf\n", taskid, (double)record->start_timestamp/1e3, (double)record->end_timestamp/1e3);
-  
+        struct TauSDKEvent e(kernel_name, record->start_timestamp, record->end_timestamp, taskid);
+        //TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf\n", e.taskid, (double)e.entry, (double)e.exit);
+
+        TAU_process_sdk_event(e);
+
+        /*
         double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->start_timestamp/1e3)); // convert to microseconds
         metric_set_gpu_timestamp(taskid, timestamp_entry);
         TAU_START_TASK(kernel_name.c_str(), taskid);
@@ -607,7 +605,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         double timestamp_exit = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->end_timestamp/1e3)); // convert to microseconds
         metric_set_gpu_timestamp(taskid, timestamp_exit);
         TAU_STOP_TASK(kernel_name.c_str(), taskid);
-        Tau_set_last_timestamp_ns(timestamp_exit);
+        Tau_set_last_timestamp_ns(timestamp_exit);*/
         
       }
       else if(header->kind == ROCPROFILER_BUFFER_TRACING_MEMORY_COPY)
@@ -615,12 +613,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         auto* record = static_cast<rocprofiler_buffer_tracing_memory_copy_record_t*>(header->payload);
         if(record->start_timestamp > record->end_timestamp)
           throw std::runtime_error("memory copy: start > end");
-        else if( last_record_timestamp > record->start_timestamp)
-        {
-          TAU_VERBOSE("New timestamp is older than previous timestamp, ROCm is giving unsorted timestamps. Discarded entry\n");
-          continue;          
-        }          
-        last_record_timestamp = record->end_timestamp;
+
         //We want to tie, if possible, the copy to a GPU
         //Looking at the type of copy and the destination
         //and source, we may be able to. If not, set it to
@@ -650,16 +643,21 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
   			void* ue = nullptr;
   			double value;
         
-  			
-  			/*ss.str("");
-  			ss << "bytes copied : " << task_name;
-  			tmp = ss.str();
-  			ue = Tau_get_userevent(tmp.c_str());
-  			value = (double)(record->bytes);
-  			Tau_userevent_thread(ue, value, taskid);*/
+  			if(!disable_user_events)
+        {
+          ss.str("");
+          ss << "bytes copied : " << task_name;
+          tmp = ss.str();
+          ue = Tau_get_userevent(tmp.c_str());
+          value = (double)(record->bytes);
+          Tau_userevent_thread(ue, value, taskid);
+        }
 
-        TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf\n", taskid, (double)record->start_timestamp/1e3, (double)record->end_timestamp/1e3);
+        struct TauSDKEvent e(task_name, record->start_timestamp, record->end_timestamp, taskid);
+        //("taskid: %d start_ts: %lf end_ts: %lf\n", e.taskid, (double)e.entry, (double)e.exit);
+        TAU_process_sdk_event(e);
 
+        /*
         double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->start_timestamp/1e3)); // convert to microseconds
         metric_set_gpu_timestamp(taskid, timestamp_entry);
         TAU_START_TASK(task_name.c_str(), taskid);
@@ -667,7 +665,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         double timestamp_exit = Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)record->end_timestamp/1e3)); // convert to microseconds
         metric_set_gpu_timestamp(taskid, timestamp_exit);
         TAU_STOP_TASK(task_name.c_str(), taskid);
-        Tau_set_last_timestamp_ns(timestamp_exit);    
+        Tau_set_last_timestamp_ns(timestamp_exit); */
       }
       //https://github.com/ROCm/rocprofiler-sdk/blob/ad48201912995e1db4f6e65266bce2792056b3c6/samples/api_buffered_tracing/client.cpp#L284
       /*else if(header->kind == ROCPROFILER_BUFFER_TRACING_PAGE_MIGRATION)
@@ -806,7 +804,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         printf("ROCPROFILER_BUFFER_CATEGORY_LAST events should not be obtained in tool_tracing_callback\n");*/
     }
   }
-  TAU_VERBOSE("tool_tracing_callback\n");
+  //TAU_VERBOSE("tool_tracing_callback-end\n");
 }
 
 
@@ -1094,5 +1092,13 @@ void Tau_rocprofsdk_flush(){
   TAU_VERBOSE("Tau_rocprofsdk_flush\n");
   ROCPROFILER_CALL(rocprofiler_flush_buffer(client_buffer), "buffer flush");
   
+  
+  
+  TauRocmSDKList.sort();
+  while(!TauRocmSDKList.empty())
+  {
+    TAU_publish_sdk_event(TauRocmSDKList.front());
+    TauRocmSDKList.pop_front();
+  }
   flushed = 1;
 }
