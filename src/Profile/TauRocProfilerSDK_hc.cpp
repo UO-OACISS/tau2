@@ -26,7 +26,7 @@ get_profile_cache()
 std::map<uint64_t, const char*> used_counter_id_map ;
 
 //Map to identify kernels using dispatch id and kernel_id. Used for hardware counter profiling
-std::map<rocprofiler_dispatch_id_t, rocprofiler_kernel_id_t> dispatch_id_kernel_map;
+std::map<rocprofiler_dispatch_id_t, Tau_SDK_hc_timestamp> dispatch_id_kernel_map;
 
 /**
  * Callback from rocprofiler when an kernel dispatch is enqueued into the HSA queue.
@@ -151,14 +151,19 @@ counter_dimensions(rocprofiler_counter_id_t counter)
 // provides information to correlate dispatch ID and kernel ID to identify the profiled kernel
 //ROCPROFILER_COUNTER_RECORD_VALUE
 // provides the counter value, as only one value is provided in each callback
-std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value)
+std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value, rocprofiler_timestamp_t* c_timestamp)
 {
   std::stringstream ss;
   //Information about the kernel executed
   if(kind == ROCPROFILER_COUNTER_RECORD_PROFILE_COUNTING_DISPATCH_HEADER)
   {
     auto* record = static_cast<rocprofiler_dispatch_counting_service_record_t*>(payload);
-    dispatch_id_kernel_map.emplace(record->dispatch_info.dispatch_id, record->dispatch_info.kernel_id);
+
+    Tau_SDK_hc_timestamp e;
+    e.id = record->dispatch_info.kernel_id;
+    e.last_timestamp = record->end_timestamp;
+    dispatch_id_kernel_map.emplace(record->dispatch_info.dispatch_id, e);
+    //printf("ROCPROFILER_COUNTER_RECORD %lu\n", record->end_timestamp);
   }
   //Hardware counter values
   else if(kind == ROCPROFILER_COUNTER_RECORD_VALUE)
@@ -171,7 +176,7 @@ std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t cli
     std::string tmp;
     ss << "Counter: (" ;
     ss << used_counter_id_map[counter_id.handle] << ") [ROCm Kernel]";
-    ss << Tau_demangle_name(client_kernels.at(dispatch_id_kernel_map[record->dispatch_id]).kernel_name);
+    ss << Tau_demangle_name(client_kernels.at(dispatch_id_kernel_map[record->dispatch_id].id).kernel_name);
     ss << " ["; 
     for(auto& dim : counter_dimensions(counter_id))
     {
@@ -181,7 +186,8 @@ std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t cli
     }
     ss << "]";
     *counter_value = record->counter_value ;			
-    *agentid = record->agent_id.handle;              
+    *agentid = record->agent_id.handle; 
+    *c_timestamp = dispatch_id_kernel_map[record->dispatch_id].last_timestamp;
   }
   
   return ss.str();

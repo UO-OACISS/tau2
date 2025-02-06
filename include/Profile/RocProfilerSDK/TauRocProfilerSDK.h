@@ -52,7 +52,7 @@
 // This is for the windows buffer, similar to the one in TauRocm.cpp
 //re-implemented here, as the SDK and Rocm will be separated in the future
 #ifndef TAU_ROCMSDK_LOOK_AHEAD
-#define TAU_ROCMSDK_LOOK_AHEAD 256
+#define TAU_ROCMSDK_LOOK_AHEAD 1024
 #endif /* TAU_ROCMSDK_LOOK_AHEAD */
 
 //Enum to enable or disable metric profiling
@@ -62,6 +62,16 @@ typedef enum profile_metrics {
 	PROFILE_METRICS = 3
 };
 
+struct TauSDKUserEvent {
+    double value;
+    std::string ev_name;
+    TauSDKUserEvent(double value_i, std::string name_in)
+    {
+        value = value_i;
+        ev_name = name_in;
+    }
+};
+
 
 struct TauSDKEvent {
 
@@ -69,12 +79,15 @@ struct TauSDKEvent {
     rocprofiler_timestamp_t exit;
     std::string name;
     int taskid;
+    vector<TauSDKUserEvent> userevents;
 
     TauSDKEvent(): taskid(0) {}
-    TauSDKEvent(string event_name, rocprofiler_timestamp_t begin, rocprofiler_timestamp_t end, int t) : name(event_name), taskid(t)
+    TauSDKEvent(string event_name, rocprofiler_timestamp_t begin, rocprofiler_timestamp_t end, int t, vector<TauSDKUserEvent> inevents) : name(event_name), taskid(t)
     {
         entry = begin;
         exit  = end;
+        
+        userevents = inevents;
     }
     void printEvent() {
         std::cout <<name<<" Task: "<<taskid<<", \t\tEntry: "<<entry<<" , Exit = "<<exit;
