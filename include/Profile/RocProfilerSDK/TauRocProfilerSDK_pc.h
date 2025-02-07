@@ -3,6 +3,8 @@
 #ifndef SAMPLING_SDKPC_H
 #define SAMPLING_SDKPC_H
 
+#include "Profile/Profiler.h"
+
 #include <rocprofiler-sdk/version.h>
 #include <rocprofiler-sdk/agent.h>
 #include <rocprofiler-sdk/fwd.h>

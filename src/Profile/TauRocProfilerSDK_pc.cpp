@@ -1,13 +1,13 @@
 //TauRocProfilerSDK_pc.cpp
 //RocProfiler SDK PC Sampling
 #include "Profile/RocProfilerSDK/TauRocProfilerSDK_pc.h"
-
+#include <TAU.h>
 
 #ifdef SAMPLING_SDKPC
 
 constexpr bool COPY_MEMORY_CODEOBJ = true;
 
-const char* pc_sampling_filename = "ROCm_sampling.log";
+const char* pc_sampling_filename = NULL;
 
 
 pc_sampling_buffer_id_vec_t* pc_buffer_ids = nullptr;
@@ -19,6 +19,14 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                                  void* /*data*/,
                                  uint64_t drop_count)
 {
+    //At this point, TAU must be initialized, so read the variables filled by TAU
+    // at this point just in case it dissapears when exiting TAU
+    static bool execute_once = false;
+    if(!execute_once)
+    {
+        pc_sampling_filename = TauEnv_get_sdk_log();
+        execute_once=true;
+    }
 
     std::stringstream ss;
     ss << "The number of delivered samples is: " << num_headers << ", "

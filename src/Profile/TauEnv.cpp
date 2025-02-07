@@ -397,6 +397,8 @@ static int env_recycle_threads = TAU_RECYCLE_THREADS_DEFAULT;
 static const char *env_tau_exec_args = NULL;
 static const char *env_tau_exec_path = NULL;
 
+static const char *env_rocsdk_pcfile = NULL;
+
 } // extern "C"
 
 /*********************************************************************
@@ -1406,6 +1408,9 @@ const char * TauEnv_get_tau_exec_path() {
   return env_tau_exec_path;
 }
 
+const char * TAUDECL TauEnv_get_sdk_log(){
+  return env_rocsdk_pcfile;
+}
 
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
@@ -2788,6 +2793,31 @@ void TauEnv_initialize()
     } else {
       TAU_VERBOSE("TAU: TAU_EXEC_PATH is \"%s\"\n", env_tau_exec_path);
     }
+
+    tmp = getconf("ROCPROFILER_PC_SAMPLING_BETA_ENABLED");
+    if (parse_bool(tmp, 1)) {
+      env_bfd_lookup = 1;
+      TAU_VERBOSE("TAU: RocprofilerSDK Enabled\n");
+      TAU_METADATA("TAU_ROCSDK_ENABLEPC", "on");
+
+      tmp = getconf("TAU_ROCSDK_LOG");
+      if(tmp)
+      {
+        TAU_VERBOSE("TAU: TAU_ROCSDK_LOG has name\n");
+        env_rocsdk_pcfile = strdup(tmp);
+        TAU_METADATA("TAU_ROCSDK_LOG", env_rocsdk_pcfile);
+      }
+      else
+      {
+        TAU_VERBOSE("TAU: TAU_ROCSDK_LOG has no name\n");
+         env_rocsdk_pcfile = "ROCm_PC_sampling.log";
+         TAU_METADATA("TAU_ROCSDK_LOG", env_rocsdk_pcfile);
+      }
+
+
+    }
+
+
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
