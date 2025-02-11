@@ -5204,7 +5204,7 @@ if [ $machine = mic_linux ] ; then
 fi
 
 if [ $machine = apple -o $machine = arm64_apple ] ; then
-    if [ $cxx_compiler = g++ -o $cxx_compiler = g++-5 -o $cxx_compiler = g++-6 -o $cxx_compiler = g++-7 -o $cxx_compiler = g++-8 -o $cxx_compiler = c++  -o $cxx_compiler = icpc  -o $cxx_compiler = icpx ] ; then
+    if [[ "$cxx_compiler" == g++* || "$cxx_compiler" == clang++ || "$cxx_compiler" == c++  || "$cxx_compiler" == icpc  || "$cxx_compiler" == icpx ]] ; then
         fixmakeargs="$fixmakeargs APPLECXX"
     fi
     if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp ] ; then
@@ -5550,7 +5550,7 @@ case $cxx_compiler in
         llvm=yes
         fixmakeargs="$fixmakeargs CLANG COMPINST_LLVM"
         tauoptions="${tauoptions}-clang"
-        if [ $machine = apple ]; then
+        if [ $machine = apple -o $machine = arm64_apple ]; then
             gnu=yes
             fixmakeargs="$fixmakeargs taugcclibdir=/usr/lib taugccstdcxxlibdir=/usr/lib"
             fixmakeargs="$fixmakeargs APPLECXX"
@@ -6119,7 +6119,7 @@ case $cxx_compiler in
                 llvm=yes
                 echo "Using CLANG Compilers"
                 fixmakeargs="$fixmakeargs CLANG"
-                if [ $machine = apple ]; then
+                if [ $machine = apple -o $machine = arm64_apple ]; then
                     # MPI on Apple OS X has issues with shared objects
                     fixmakeargs="$fixmakeargs NOSHARED"
                 else
@@ -7942,7 +7942,7 @@ fi
 
 ######################################################################
 # Do we need -lm Ubuntu does!
-if [ $machine != apple ]; then
+if [ $machine != apple -a $machine != arm64_apple ]; then
   if [ -f /etc/issue -a `grep Ubuntu /etc/issue | wc -l ` = 1 ]; then
     if [ "x$tau_uselm" != "xno" ]; then
       tau_uselm=yes
