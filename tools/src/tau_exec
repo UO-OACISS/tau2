@@ -1401,6 +1401,14 @@ if [ $qsub_mode = true ] ; then
 else
 
   if [ $use_gdb = "true" ]; then
+    python_gdb_cmd=""
+    if [ $python_wrapper = "true" ] ; then
+      if [ $python_launch_module = "true" ] ; then
+          python_gdb_cmd="$python_interpreter $py_interp_args -m ${python_module_name} -m $python_m_arg"
+      else
+          python_gdb_cmd="$dryrun $python_interpreter $py_interp_args -m ${python_module_name}"
+      fi
+    fi
     envcmd="set env"
     if [ $apple = 1 ]; then
         envcmd="_regexp-env"
@@ -1416,6 +1424,9 @@ else
       echo "_regexp-env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands
       echo "_regexp-env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands
       echo "_regexp-env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands
+      if [ $python_wrapper = "true" ] ; then
+        echo "_regexp-env PYTHONPATH=$PYTHONPATH" >> .gdb_commands
+      fi
       if [ $# -gt 1 ] ; then
         echo "settings set target.run-args ${*:2}" >> .gdb_commands
       fi
@@ -1428,11 +1439,16 @@ else
         echo "set env TAU_MEMDBG_PROTECT_ABOVE=1">> .gdb_commands
       fi
       echo "set env LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands
+      if [ $python_wrapper = "true" ] ; then
+        echo "set env PYTHONPATH=$PYTHONPATH" >> .gdb_commands
+      fi
     fi
+    # If Python is not used ${python_gdb_cmd} is the empty string
+    # If Python is used, ${python_gdb_cmd} is the command to use the TAU python wrapper.
     if [ $apple = 1 ]; then
-        lldb -s .gdb_commands -- "$@"
+      lldb -s .gdb_commands -- ${python_gdb_cmd} "$@"
     else
-        gdb -x .gdb_commands --args "$@"
+      gdb -x .gdb_commands --args ${python_gdb_cmd} "$@"
     fi
     rm -f ./.gdb_commands
     exit 0;
@@ -1475,6 +1491,7 @@ else
     $dryrun export PYTHONPATH=$PYTHONPATH
     $dryrun $python_interpreter $py_interp_args -m tau_pyspark_wrapper "$@"
   elif $python_wrapper ; then
+    $dryrun export PYTHONPATH=$PYTHONPATH
     if [ $python_launch_module = "true" ] ; then
         $dryrun $python_interpreter $py_interp_args -m ${python_module_name} -m $python_m_arg "$@"
     else
