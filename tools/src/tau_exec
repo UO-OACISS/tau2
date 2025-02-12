@@ -967,12 +967,14 @@ if [ $track_l0 = "true" ]; then
 fi
 
 if [ $track_rocm = "true" ] ; then
-  if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-    if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then
-      $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+  if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
+    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+        if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then
+        $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+        fi
+    else
+        $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
     fi
-  else
-    $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
   fi
   if [ $track_rocm_pc = "true" ] ; then
     export ROCPROFILER_PC_SAMPLING_BETA_ENABLED=1
@@ -1070,10 +1072,12 @@ if [ $track_cuda = "true" ] ; then
   #TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA$TAU_SHLIBX:$TAUEX_LD_PRELOAD
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDArt$TAU_SHLIBX:$TAUEX_LD_PRELOAD
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-  if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-    export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-  else
-    export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+  if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
+    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+        export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+    else
+        export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+    fi
   fi
 fi
 if [ $track_cupti = "true" ] ; then
@@ -1087,10 +1091,12 @@ if [ $track_cupti = "true" ] ; then
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUact$TAU_SHLIBX:$TAUEX_LD_PRELOAD
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX:$TAUEX_LD_PRELOAD
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-      export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-    else
-      export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+    if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
+      if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+        export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+      else
+        export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+      fi
     fi
   fi
 
@@ -1121,17 +1127,21 @@ if [ $track_opencl = "true" ] ; then
   # Add the OpenCL wrapper library to the LD_PRELOAD list
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL$TAU_SHLIBX:$TAUEX_LD_PRELOAD
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OCLci$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-  if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-    export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-  else
-    export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
+  if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
+    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+      export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+    else
+      export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
+    fi
   fi
 fi
 if [ $track_l0 = "true" -a $track_opencl = "false" ]; then
-  if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-    export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-  else
-    export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
+  if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
+    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+      export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+    else
+      export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
+    fi
   fi
 fi
 if [ $track_openacc = "true" ] ; then
@@ -1471,14 +1481,16 @@ else
     $dryrun export HSA_TOOLS_LIB=$TAU_HSA_TOOLS_LIB
     #$dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
     if [ $track_rocm = "true" ] ; then
-      if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-        if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then
-          $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-        fi
-      else
+      if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
+        if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+          if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then
+            $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+          fi
+        else
         $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
       fi
-    fi
+     fi
+  fi
     $dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
   fi
   fi
