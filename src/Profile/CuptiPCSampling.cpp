@@ -125,6 +125,10 @@ FillCrcModuleMap(uint32_t r_moduleId)
 void Tau_store_all_CUPTIPC_samples()
 {
     TAU_VERBOSE("Store all CUPTI PC Samples\n");
+    if(map_tau_cupti_samples.size() == 0)
+    {
+        return;
+    }
     for(auto& r_moduleId : crc_moduleIds)
         FillCrcModuleMap(r_moduleId);
 
@@ -167,6 +171,11 @@ void Tau_store_all_CUPTIPC_samples()
             CUptiResult cuptiResult = cuptiGetSassToSourceCorrelation(&pCSamplingGetSassToSourceCorrelationParams);
             if(cuptiResult == CUPTI_SUCCESS)
             {
+                if(pCSamplingGetSassToSourceCorrelationParams.fileName == NULL || pCSamplingGetSassToSourceCorrelationParams.dirName == NULL)
+                {
+                    std:cerr << "[TAU ERROR]: Could not find the file nor directore names in the CUPTI cubin files. Check that application was compiled with -lineinfo." << std::endl;
+                    return;
+                }
                 ss  << "functionName: " << abi::__cxa_demangle(curr_sample.first.functionName.c_str(), 0, 0, &status)
                     << ", pcOffset: " << curr_sample.first.pcOffset
                     << ", lineNumber: " << pCSamplingGetSassToSourceCorrelationParams.lineNumber
@@ -201,10 +210,15 @@ void Tau_store_all_CUPTIPC_samples()
     }
     map_tau_cupti_samples_lock.unlock();
 
-    TAU_VERBOSE("%s\n", ss.str().c_str());
+    //TAU_VERBOSE("%s\n", ss.str().c_str());
 
-
-    std::ofstream out("samples.log");
+    #ifdef TAU_MPI
+        char filename_pc[50];
+        snprintf(filename_pc, 50, "CUPTI_PC_Sampling.%d.log", RtsLayer::myNode());
+        std::ofstream out(filename_pc);
+    #else
+        std::ofstream out("CUPTI_PC_Sampling.0.log");
+    #endif
     out << ss.str();
     out.close();
 }
@@ -640,6 +654,7 @@ void CallbackHandler(
                     TAU_VERBOSE("CUPTI_CB_DOMAIN_DRIVER_API\n");
                     if (pCallbackInfo->callbackSite == CUPTI_API_EXIT)
                     {
+                        //printf("%u %d\n", pCallbackInfo->contextUid, RtsLayer::myNode());
                         std::map<CUcontext, ContextInfo*>::iterator contextStateMapItr = g_contextInfoMap.find(pCallbackInfo->context);
                         if (contextStateMapItr == g_contextInfoMap.end())
                         {

@@ -35,7 +35,7 @@
 #include <cupti_pcsampling_util.h>
 #include <cupti_pcsampling.h>
 #include <cupti.h>
-
+#include "Profile/Profiler.h"
 #include <Profile/TauEnv.h>
 
 using namespace CUPTI::PcSamplingUtil;
