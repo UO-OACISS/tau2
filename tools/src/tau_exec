@@ -975,12 +975,14 @@ if [ $track_l0 = "true" ]; then
 fi
 
 if [ $track_rocm = "true" ] ; then
-  if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-    if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then
-      $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+  if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
+    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+        if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then
+        $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+        fi
+    else
+        $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
     fi
-  else
-    $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
   fi
   if [ $track_rocm_pc = "true" ] ; then
     export ROCPROFILER_PC_SAMPLING_BETA_ENABLED=1
@@ -1078,10 +1080,12 @@ if [ $track_cuda = "true" ] ; then
   #TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA$TAU_SHLIBX:$TAUEX_LD_PRELOAD
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDArt$TAU_SHLIBX:$TAUEX_LD_PRELOAD
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-  if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-    export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-  else
-    export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+  if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
+    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+        export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+    else
+        export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+    fi
   fi
 fi
 if [ $track_cupti = "true" ] ; then
@@ -1095,10 +1099,12 @@ if [ $track_cupti = "true" ] ; then
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUact$TAU_SHLIBX:$TAUEX_LD_PRELOAD
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX:$TAUEX_LD_PRELOAD
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-      export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-    else
-      export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+    if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
+      if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+        export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+      else
+        export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+      fi
     fi
   fi
 
@@ -1132,17 +1138,21 @@ if [ $track_opencl = "true" ] ; then
   # Add the OpenCL wrapper library to the LD_PRELOAD list
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL$TAU_SHLIBX:$TAUEX_LD_PRELOAD
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OCLci$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-  if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-    export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-  else
-    export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
+  if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
+    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+      export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+    else
+      export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
+    fi
   fi
 fi
 if [ $track_l0 = "true" -a $track_opencl = "false" ]; then
-  if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-    export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-  else
-    export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
+  if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
+    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+      export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+    else
+      export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
+    fi
   fi
 fi
 if [ $track_openacc = "true" ] ; then
@@ -1412,6 +1422,14 @@ if [ $qsub_mode = true ] ; then
 else
 
   if [ $use_gdb = "true" ]; then
+    python_gdb_cmd=""
+    if [ $python_wrapper = "true" ] ; then
+      if [ $python_launch_module = "true" ] ; then
+          python_gdb_cmd="$python_interpreter $py_interp_args -m ${python_module_name} -m $python_m_arg"
+      else
+          python_gdb_cmd="$dryrun $python_interpreter $py_interp_args -m ${python_module_name}"
+      fi
+    fi
     envcmd="set env"
     if [ $apple = 1 ]; then
         envcmd="_regexp-env"
@@ -1427,6 +1445,9 @@ else
       echo "_regexp-env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands
       echo "_regexp-env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands
       echo "_regexp-env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands
+      if [ $python_wrapper = "true" ] ; then
+        echo "_regexp-env PYTHONPATH=$PYTHONPATH" >> .gdb_commands
+      fi
       if [ $# -gt 1 ] ; then
         echo "settings set target.run-args ${*:2}" >> .gdb_commands
       fi
@@ -1439,11 +1460,16 @@ else
         echo "set env TAU_MEMDBG_PROTECT_ABOVE=1">> .gdb_commands
       fi
       echo "set env LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands
+      if [ $python_wrapper = "true" ] ; then
+        echo "set env PYTHONPATH=$PYTHONPATH" >> .gdb_commands
+      fi
     fi
+    # If Python is not used ${python_gdb_cmd} is the empty string
+    # If Python is used, ${python_gdb_cmd} is the command to use the TAU python wrapper.
     if [ $apple = 1 ]; then
-        lldb -s .gdb_commands -- "$@"
+      lldb -s .gdb_commands -- ${python_gdb_cmd} "$@"
     else
-        gdb -x .gdb_commands --args "$@"
+      gdb -x .gdb_commands --args ${python_gdb_cmd} "$@"
     fi
     rm -f ./.gdb_commands
     exit 0;
@@ -1466,14 +1492,16 @@ else
     $dryrun export HSA_TOOLS_LIB=$TAU_HSA_TOOLS_LIB
     #$dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
     if [ $track_rocm = "true" ] ; then
-      if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-        if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then
-          $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-        fi
-      else
+      if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
+        if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+          if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then
+            $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+          fi
+        else
         $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
       fi
-    fi
+     fi
+  fi
     $dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
   fi
   fi
@@ -1486,6 +1514,7 @@ else
     $dryrun export PYTHONPATH=$PYTHONPATH
     $dryrun $python_interpreter $py_interp_args -m tau_pyspark_wrapper "$@"
   elif $python_wrapper ; then
+    $dryrun export PYTHONPATH=$PYTHONPATH
     if [ $python_launch_module = "true" ] ; then
         $dryrun $python_interpreter $py_interp_args -m ${python_module_name} -m $python_m_arg "$@"
     else
