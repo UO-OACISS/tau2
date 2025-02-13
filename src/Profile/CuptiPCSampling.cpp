@@ -690,7 +690,7 @@ void CallbackHandler(
                 case CUPTI_CBID_RESOURCE_CONTEXT_CREATED:
                 {
                     {
-                        TAU_VERBOSE("Injection - Context created/n");
+                        TAU_VERBOSE("Injection - Context created\n");
 
                         // insert new entry for context.
                         ContextInfo *pContextInfo = (ContextInfo *)calloc(1, sizeof(ContextInfo));
