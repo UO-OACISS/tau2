@@ -878,7 +878,7 @@ else
 fi
 
 python_bindings=`echo $theBinding | sed -e 's/shared/bindings/'`
-export PYTHONPATH=${BASEDIR}/lib:$BASEDIR/lib/$python_bindings:$PYTHONPATH
+export PYTHONPATH=$BASEDIR/lib/$python_bindings:${BASEDIR}/lib:$PYTHONPATH
 
 if [ "x$LD_LIBRARY_PATH" = "x" ] ; then
   TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding:$BASEDIR/lib

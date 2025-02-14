@@ -230,8 +230,11 @@ hpTimerUnit(void)
 #else
 #include <sys/resource.h>
 #include <sys/times.h>
+#if PY_VERSION_HEX > 0x030D0000 // Python versions after 3.13
+    // Include sys/time.h because pyport.h no longer does so.
+    #include <sys/time.h>
 #endif
-
+#endif
 static PY_LONG_LONG
 hpTimer(void)
 {
