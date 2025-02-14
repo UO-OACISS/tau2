@@ -11830,7 +11830,8 @@ build_perfstubs() {
     echo "PREFIX=${targetdir}" >> ${perfstubs_include_file}
     echo "TAUARCH=${architecture}" >> ${perfstubs_include_file}
     echo "TAUOPTIONS=${tauoptions}" >> ${perfstubs_include_file}
-    echo "TAUPYTHON=-DPERFSTUBS_WITH_PYTHON=TRUE -DPython3_ROOT_DIR=${Python3_ROOT_DIR} -DPython3_VERSION_MINOR=${Python3_VERSION_MINOR}" >> ${perfstubs_include_file}
+    # Let CMake find Python
+    echo "TAUPYTHON=-DPERFSTUBS_WITH_PYTHON=TRUE -DCMAKE_PREFIX_PATH=${Python3_ROOT_DIR}" >> ${perfstubs_include_file}
     cp etc/Makefile.perfstubs perfstubs/Makefile
     fixmakeargs="$fixmakeargs PerfStubs "
     make -C perfstubs clean
