@@ -2453,7 +2453,7 @@ for arg in "$@"; do
             dwarfdir=""
             shift
             ;;
-        
+
         -elfutils=download)
             elfutils=yes
             download_elfutils=yes
@@ -3242,7 +3242,7 @@ for arg in "$@"; do
     	    fi
     	    shift
     	    ;;
-    
+
     	-rocprofv2)
             fixmakeargs="$fixmakeargs ROCPROFILERV2"
             rocprofv2=yes
@@ -3258,7 +3258,7 @@ for arg in "$@"; do
             pthread=yes
             shift
             ;;
-        
+
         -rocprofsdk=*)
             fixmakeargs="$fixmakeargs ROCPROFILERSDK"
             rocprofsdk=yes
@@ -3374,7 +3374,8 @@ for arg in "$@"; do
             shift
             ;;
         -opencl=*)
-            openclinclude=`echo $arg | sed -e 's/-opencl=//' -e 's/ /#/g'`/include
+            opencldir=`echo $arg | sed -e 's/-opencl=//' -e 's/ /#/g'`
+            openclinclude=$opencldir/include
             if [ ! -d $openclinclude ] ; then
                 echo "Error: Cannot access GPU include directory $openclinclude"
                 if [ `uname -s ` = "Darwin" ];  then
@@ -3396,8 +3397,21 @@ for arg in "$@"; do
                     use_opencl=yes
                 else
                     echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+                    exit 0
                 fi
             fi
+            opencllib="libOpenCL.so"
+            for d in "OpenCL" "amdocl64" ; do
+                libname="lib${d}.so"
+                echo "Looking for ${libname} in ${opencldir}"
+                exists=`find ${opencldir} -name ${libname} | head -n 1`
+                if [ -r "${exists}" ]; then
+                    echo "found $exists"
+                    opencllib=${exists}
+                    fixmakeargs="$fixmakeargs OPENCL opencllib=${opencllib}"
+                    break
+                fi
+            done
             shift
             ;;
 
@@ -3738,9 +3752,8 @@ fi
 
 if [ "x$use_opencl" = "xyes" -a "x$openclinclude" = "x" ]; then
   ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
-  for d in $ld_lib_path
-  do
-          echo "OPENCL: CHECKING $d"
+  for d in $ld_lib_path ; do
+    echo "OPENCL: CHECKING $d"
     if [ -r $d/libOpenCL.so ]; then
       echo "checking $d"
       openclinclude=`echo $d | sed -e "s@/lib64@@g" -e "s@loader@headers@g" `/include
@@ -3757,6 +3770,7 @@ if [ "x$use_opencl" = "xyes" -a "x$openclinclude" = "x" ]; then
           fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude/sycl"
         else
             echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+            exit 0
         fi
       fi
     fi
@@ -11003,7 +11017,7 @@ if [ "x$download_elfutils" = xyes ] ; then
 
     predowndir=`pwd`
     elfutilsdir=$libelfutilsdir/elfutils
-    
+
     if [ -r "$elfutilsdir/lib/libdw.so" -a -r "$elfutilsdir/include/elfutils/libdw.h" ]; then
         echo "Found elfutils"
         echo "elfutils download skipping"
@@ -11037,7 +11051,7 @@ if [ "$elfutils" = "yes" ]; then
         echo "Could not find elfutils $elfutilsdir/lib/libdw.so"
         exit 1
     fi
-    
+
 
     fixmakeargs="$fixmakeargs elfutilsincdir=$elfutilsinc"
     fixmakeargs="$fixmakeargs elfutilslibdir=$elfutilslib"

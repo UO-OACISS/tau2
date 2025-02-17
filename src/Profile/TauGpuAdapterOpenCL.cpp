@@ -146,9 +146,9 @@ cl_int clGetEventProfilingInfo_noinst(cl_event a1, cl_profiling_info a2, size_t 
 }
 
 cl_int clEnqueueWriteBuffer_noinst(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4, size_t a5, const void * a6,
-                                   cl_uint a7, const cl_event * a8, cl_event * a9) 
+                                   cl_uint a7, const cl_event * a8, cl_event * a9)
 {
-  HANDLE(cl_int, clEnqueueWriteBuffer, cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, 
+  HANDLE(cl_int, clEnqueueWriteBuffer, cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint,
          const cl_event *, cl_event *);
   return clEnqueueWriteBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
 }
@@ -182,7 +182,7 @@ static double Tau_opencl_get_gpu_timestamp(cl_command_queue commandQueue, cl_con
     if (err == CL_INVALID_CONTEXT) {
       printf("Invalid context.\n");
     }
-    abort();	
+    abort();
   }
 
   struct timeval tp;
@@ -200,7 +200,7 @@ static double Tau_opencl_get_gpu_timestamp(cl_command_queue commandQueue, cl_con
   err = clGetEventProfilingInfo_noinst(sync_event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &gpu_timestamp, NULL);
   if (err != CL_SUCCESS) {
     printf("Cannot get end time for Sync event: %s\n", clGetErrorString(err));
-    abort();	
+    abort();
   }
 
   return gpu_timestamp;
@@ -226,7 +226,7 @@ static double Tau_opencl_sync_clocks(cl_command_queue commandQueue, cl_context c
     if (err == CL_INVALID_CONTEXT) {
       printf("Invalid context.\n");
     }
-    abort();	
+    abort();
   }
 
   double cpu_timestamp;
@@ -251,7 +251,7 @@ static double Tau_opencl_sync_clocks(cl_command_queue commandQueue, cl_context c
     abort();
   }
 
-  //printf("SYNC: CPU= %f GPU= %f.\n", cpu_timestamp, ((double)gpu_timestamp/1e3)); 
+  //printf("SYNC: CPU= %f GPU= %f.\n", cpu_timestamp, ((double)gpu_timestamp/1e3));
   return cpu_timestamp - (((double)gpu_timestamp)/1e3);
 }
 
@@ -260,21 +260,21 @@ void * Tau_opencl_get_handle(char const * fnc_name)
 #ifdef __APPLE__
   static char const * libname = "/System/Library/Frameworks/OpenCL.framework/OpenCL";
 #else
-  static char const * libname = "libOpenCL.so";
+  static char const * libname = TAU_OPENCL_LIBRARY;
 #endif /* __APPLE__ */
 
   static void * handle = NULL;
   if (!handle) {
-    handle = (void *)dlopen(libname, RTLD_NOW); 
+    handle = (void *)dlopen(libname, RTLD_NOW);
   }
   if (!handle) {
-    perror("Error opening library in dlopen call"); 
+    perror("Error opening library in dlopen call");
     return NULL;
   }
 
   void * fnc_sym = dlsym(handle, fnc_name);
   if (!fnc_sym) {
-    perror("Error obtaining symbol info from dlopen'ed lib"); 
+    perror("Error obtaining symbol info from dlopen'ed lib");
     return NULL;
   }
   return fnc_sym;
@@ -299,8 +299,8 @@ OpenCLGpuEvent * Tau_opencl_retrieve_gpu(cl_command_queue q)
   cl_uint vendor;
   err = clGetCommandQueueInfo(q, CL_QUEUE_DEVICE, sizeof(cl_device_id), &id, NULL);
   if (err != CL_SUCCESS)
-  {	
-    printf("error in clGetCommandQueueInfo DEVICE.\n"); 
+  {
+    printf("error in clGetCommandQueueInfo DEVICE.\n");
     if (err == CL_INVALID_COMMAND_QUEUE)
       printf("invalid command queue.\n");
   }
@@ -320,7 +320,7 @@ OpenCLGpuEvent * Tau_opencl_retrieve_gpu(cl_command_queue q)
   int taskid = TAU_CREATE_TASK(taskid);
   double cpu_timestamp = Tau_opencl_get_cpu_timestamp();
   metric_set_gpu_timestamp(taskid, cpu_timestamp);
-  Tau_create_top_level_timer_if_necessary_task(taskid); 
+  Tau_create_top_level_timer_if_necessary_task(taskid);
   OpenCLGpuEvent *gId = new OpenCLGpuEvent(id, (x_uint64) q, sync_offset, taskid);
 #ifdef TAU_DEBUG_OPENCL
   fprintf(stderr, "Created OpenCLGpuEvent with taskid %d\n", taskid);
@@ -341,7 +341,7 @@ OpenCLGpuEvent * Tau_opencl_new_gpu_event(cl_command_queue queue, char const * n
   Profiler * p = TauInternal_CurrentProfiler(RtsLayer::myThread());
   if (p) {
     OpenCLGpuEvent * gpu_event = Tau_opencl_retrieve_gpu(queue)->getCopy();
-    gpu_event->name = name;                     
+    gpu_event->name = name;
     gpu_event->event = NULL;
     gpu_event->callingSite = p->CallPathFunction;
     gpu_event->memcpy_type = memcpy_type;
@@ -369,7 +369,7 @@ void Tau_opencl_register_memcpy_event(OpenCLGpuEvent *evId, double start, double
 {
   Tau_gpu_register_memcpy_event(evId, start/1e3, stop/1e3, transferSize, MemcpyType, MESSAGE_UNKNOWN);
 }
- 
+
 void Tau_opencl_enqueue_event(OpenCLGpuEvent * event)
 {
   KernelBuffer().push(event);
@@ -409,26 +409,26 @@ void Tau_opencl_register_sync_event()
         sizeof(cl_ulong), &queuedTime, NULL);
     if (err != CL_SUCCESS) {
       printf("Cannot get queued time for Kernel event.\n");
-      abort();	
+      abort();
     }
     err = clGetEventProfilingInfo_noinst(kernel_data->event, CL_PROFILING_COMMAND_SUBMIT,
         sizeof(cl_ulong), &submitTime, NULL);
     if (err != CL_SUCCESS) {
       printf("Cannot get submit time for Kernel event.\n");
-      abort();	
+      abort();
     }
     err = clGetEventProfilingInfo_noinst(kernel_data->event, CL_PROFILING_COMMAND_START,
         sizeof(cl_ulong), &startTime, NULL);
     if (err != CL_SUCCESS) {
       printf("Cannot get start time for Kernel event.\n");
-      abort();	
+      abort();
     }
 
     err = clGetEventProfilingInfo_noinst(kernel_data->event, CL_PROFILING_COMMAND_END,
         sizeof(cl_ulong), &endTime, NULL);
     if (err != CL_SUCCESS) {
       printf("Cannot get end time for Kernel event.\n");
-      abort();	
+      abort();
     }
 
     //Add context events to gpu event.

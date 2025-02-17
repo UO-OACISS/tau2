@@ -107,8 +107,8 @@ extern "C" int entry(int argc, char**argv)
 		block_mult = ceil(SIZE_OF_MATRIX / ((float) SIZE_OF_BLOCK));
 	else
 		 block_mult = 1;
- 	 
-	
+
+
 	number_of_blocks = SIZE_OF_BLOCK * block_mult;
 
 	unsigned int matsize = SIZE_OF_MATRIX*SIZE_OF_MATRIX*sizeof(float);
@@ -143,18 +143,17 @@ extern "C" int entry(int argc, char**argv)
 
 	cl_uint nDevices, count;
 	cl_device_id *cdDevices = NULL;
-	ci = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_ALL, 0, NULL, &count);
-	
+	ci = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 0, NULL, &count);
+
 	cdDevices = (cl_device_id *)malloc(count * sizeof(cl_device_id));
-	//ci = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_ALL, count, cdDevices, NULL);
-	ci = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 1, cdDevices, NULL);
+	ci = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, count, cdDevices, NULL);
 	CHECK_CL_ERROR(ci);
 
 	cout << count << " devices found." << endl;
 
 	string device_list("");
 	int number_of_iterations = 1;
-	
+
 	int opt = getopt(argc, argv, "d:i:");
 	while(opt != -1) {
 		stringstream str;
@@ -206,7 +205,7 @@ extern "C" int entry(int argc, char**argv)
 	}
 	//cout << "finnished mapping devices." << endl;
 
-	//cl_context GPUContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ci);
+	//cl_context GPUContext = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, &ci);
 	cl_context GPUContext = clCreateContext(0, nDevices, devices, NULL, NULL, &ci);
 	CHECK_CL_ERROR(ci);
 
@@ -217,7 +216,7 @@ extern "C" int entry(int argc, char**argv)
 		char name[256];
 		clGetDeviceInfo(devices[d], CL_DEVICE_NAME, sizeof(name), &name, NULL);
 		cout << "Using device name: " << name << endl;
-	
+
 		cqCommandQueue[d] = clCreateCommandQueue(GPUContext, devices[0], CL_QUEUE_PROFILING_ENABLE, &ci);
 		CHECK_CL_ERROR(ci);
 
@@ -236,23 +235,23 @@ extern "C" int entry(int argc, char**argv)
 	60000, log, NULL);
 
 	CHECK_CL_ERROR(ci);
-	
+
 	//printf("build log: %s\n", log);
 	//cout << log << endl;
 
 	size_t thread_size[] = {number_of_threads, number_of_threads};
 	size_t block_size[] = {number_of_blocks, number_of_blocks};
-  /*	
+  /*
 	cl_mem sub_a = clCreateBuffer(GPUContext, CL_MEM_ALLOC_HOST_PTR, submatsize,
 	NULL, NULL);
 	cl_mem sub_b = clCreateBuffer(GPUContext, CL_MEM_ALLOC_HOST_PTR, submatsize,
 	NULL, NULL);
-	
+
 	cl_kernel OpenCL_multiply_matrices_shared_blocks = clCreateKernel(OpenCLProgram,
 	"multiply_matrices_shared_blocks", &ci);
-	
+
 	CHECK_CL_ERROR(ci);
-	
+
 	ci = clSetKernelArg(OpenCL_multiply_matrices_shared_blocks, 0, sizeof(cl_mem), (void *) &d_a);
 	CHECK_CL_ERROR(ci);
 	ci = clSetKernelArg(OpenCL_multiply_matrices_shared_blocks, 1, sizeof(cl_mem), (void *) &d_b);
@@ -305,14 +304,14 @@ extern "C" int entry(int argc, char**argv)
 		clEnqueueWriteBuffer(cCQ, d_a, CL_TRUE, 0, matsize, a, 0, NULL, &event_mem);
 		clEnqueueWriteBuffer(cCQ, d_b, CL_TRUE, 0, matsize, b, 0, NULL, &event_mem);
 		clWaitForEvents(1, &event_mem);
-		
+
 		event = clCreateUserEvent(GPUContext, &ci);
 		CHECK_CL_ERROR(ci);
 
 		ci = clEnqueueNDRangeKernel(cCQ, OpenCL_multiply_matrices, 2, NULL,
 		block_size, thread_size, 0, NULL, &event);
 		CHECK_CL_ERROR(ci);
-		
+
 		//clWaitForEvents(1, &shared_event);
 		clWaitForEvents(1, &event);
 		CHECK_CL_ERROR(ci);
@@ -324,7 +323,7 @@ extern "C" int entry(int argc, char**argv)
 		//clFinish(cCQ);
 
 	}
-	
+
 	cout << "Finished " << number_of_iterations << " iterations on " << nDevices << " devices." << endl;
 	/*
 	std::cout << " results: " << std::endl;
@@ -334,7 +333,7 @@ extern "C" int entry(int argc, char**argv)
 		}
 		std::cout << std::endl;
 	}
-	*/	
+	*/
 
 	free(a);
 	free(b);

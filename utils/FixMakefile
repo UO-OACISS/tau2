@@ -1139,6 +1139,10 @@ case $1 in
         starpudir=`echo $1 | sed -e 's/^starpudir=//' -e 's/#/ /g'`
 	echo "s@^TAU_STARPU_DIR=\(.*\)@TAU_STARPU_DIR=$starpudir@g" >> $sedout
         ;;
+     opencllib=*)
+        opencllib=`echo $1 | sed -e 's/^opencllib=//' -e 's/#/ /g'`
+		echo "s@^TAU_OPENCL_LIBRARY=\(.*\)@TAU_OPENCL_LIBRARY=$opencllib@g" >> $sedout
+        ;;
 ###############################################################
 # Set the TAU_GPU variables.
 ###############################################################
@@ -1223,6 +1227,10 @@ case $1 in
         ;;
      STARPU)
         echo "NOTE: Using TAU's StarPU Options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     OPENCL)
+        echo "NOTE: Using the TAU's OPENCL Profiling Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
