@@ -10,7 +10,8 @@
 // CUDA headers
 #include <cuda.h>
 
-#if CUDA_VERSION  >= 12050
+#define CUDA_MIN 12030
+#if CUDA_VERSION  >= CUDA_MIN
 #include <string>
 #include <vector>
 #include <inttypes.h>
@@ -241,107 +242,8 @@ static void FreePreallocatedMemory();
 void ConfigureActivity( CUcontext cuCtx );
 void CallbackHandler( void *pUserdata, CUpti_CallbackDomain domain, CUpti_CallbackId callbackId, void *pCallbackData );
 
-#endif //CUDA_VERSION  >= 12050
+#endif //CUDA_VERSION  >= CUDA_MIN
 void cupti_pcsampling_init();
 void cupti_pcsampling_exit();
 
 #endif //CUPTI_PCSAMPLING_H
-
-
-/*
-    std::cout << "========================== PC Records Buffer Info ==========================" << std::endl;
-    std::cout   << ", Range Id: " << pPcSamplingData->rangeId
-                << ", Count of PC records: " << pPcSamplingData->totalNumPcs
-                << ", Total Samples: " << pPcSamplingData->totalSamples
-                << ", Total Dropped Samples: " << pPcSamplingData->droppedSamples;
-    if (CHECK_PC_SAMPLING_STRUCT_FIELD_EXISTS(CUpti_PCSamplingData, nonUsrKernelsTotalSamples, pPcSamplingData->size))
-    {
-        std::cout << ", Non User Kernels Total Samples: " << pPcSamplingData->nonUsrKernelsTotalSamples;
-    }
-    std::cout << std::endl;
-*/
-
-
-//    for(size_t i = 0 ; i < pPcSamplingData->totalNumPcs; i++)
- //   {
-        // find matching cubinCrc entry in map
-        /*itr = crcModuleMap.find(pPcSamplingData->pPcData[i].cubinCrc);
-
-        if (itr == crcModuleMap.end())
-        {
-            numPcNoCubin++;
-
-            if (!disablePcInfoPrints)
-            {*/
- /*             int status;
-                std::cout << "functionName: " << pPcSamplingData->pPcData[i].functionName
-                            << ", demangled: " << abi::__cxa_demangle(pPcSamplingData->pPcData[i].functionName, 0, 0, &status)
-                            << ", functionIndex: " << pPcSamplingData->pPcData[i].functionIndex
-                            << ", correlationId: " << pPcSamplingData->pPcData[i].correlationId
-                            << ", pcOffset: " << pPcSamplingData->pPcData[i].pcOffset
-                            << ", lineNumber:0"
-                            << ", fileName: " << "ERROR_NO_CUBIN"
-                            << ", dirName: "
-                            << ", stallReasonCount: " << pPcSamplingData->pPcData[i].stallReasonCount;
-
-                for (size_t k=0; k < pPcSamplingData->pPcData[i].stallReasonCount; k++)
-                {
-                    std::cout << ", " << GetStallReason(pPcSamplingData->pPcData[i].stallReason[k].pcSamplingStallReasonIndex)
-                                << ": " << pPcSamplingData->pPcData[i].stallReason[k].samples;
-                }
-                std::cout << std::endl;
-            //}
-
-            continue;*/
-        //}
-        /*
-        if (!disablePcInfoPrints)
-        {
-            int status;
-            std::cout << "functionName: " << pPcSamplingData->pPcData[i].functionName
-                        << ", demangled: " << abi::__cxa_demangle(pPcSamplingData->pPcData[i].functionName, 0, 0, &status)
-                        << ", functionIndex: " << pPcSamplingData->pPcData[i].functionIndex
-                        << ", correlationId: " << pPcSamplingData->pPcData[i].correlationId
-                        << ", pcOffset: " << pPcSamplingData->pPcData[i].pcOffset;
-        }
-
-        CUpti_GetSassToSourceCorrelationParams pCSamplingGetSassToSourceCorrelationParams = {0};
-        pCSamplingGetSassToSourceCorrelationParams.size = CUpti_GetSassToSourceCorrelationParamsSize;
-        pCSamplingGetSassToSourceCorrelationParams.functionName = pPcSamplingData->pPcData[i].functionName;
-        pCSamplingGetSassToSourceCorrelationParams.pcOffset = pPcSamplingData->pPcData[i].pcOffset;
-        pCSamplingGetSassToSourceCorrelationParams.cubin = itr->second.pCubinImage;
-        pCSamplingGetSassToSourceCorrelationParams.cubinSize = itr->second.cubinSize;
-
-        CUptiResult cuptiResult = cuptiGetSassToSourceCorrelation(&pCSamplingGetSassToSourceCorrelationParams);
-
-        if (!disablePcInfoPrints)
-        {
-            if (cuptiResult == CUPTI_SUCCESS)
-            {
-                std::cout << ", lineNumber: " << pCSamplingGetSassToSourceCorrelationParams.lineNumber
-                            << ", fileName: " << pCSamplingGetSassToSourceCorrelationParams.fileName
-                            << ", dirName: " << pCSamplingGetSassToSourceCorrelationParams.dirName;
-
-                free(pCSamplingGetSassToSourceCorrelationParams.fileName);
-                free(pCSamplingGetSassToSourceCorrelationParams.dirName);
-            }
-            else
-            {
-                // It is possible that extracted cubins does not have lineinfo.
-                // It is recommended to build application/libraries with nvcc option lineinfo.
-                numPcNoLineinfo++;
-                std::cout << ", lineNumber: 0"
-                            << ", fileName: " << "ERROR_NO_LINEINFO"
-                            << ", dirName: ";
-            }
-
-            std::cout << ", stallReasonCount: " <<pPcSamplingData->pPcData[i].stallReasonCount;
-
-            for (size_t k=0; k < pPcSamplingData->pPcData[i].stallReasonCount; k++)
-            {
-                std::cout << ", " << GetStallReason(pPcSamplingData->pPcData[i].stallReason[k].pcSamplingStallReasonIndex)
-                            << ": " << pPcSamplingData->pPcData[i].stallReason[k].samples;
-            }
-            std::cout << std::endl;
-        }*/
-    //}

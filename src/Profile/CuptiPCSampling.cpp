@@ -1,6 +1,6 @@
 #include <Profile/CuptiPCSampling.h>
 
-#if CUDA_VERSION  >= 12050
+#if CUDA_VERSION  >= CUDA_MIN
 // Global structures and variables
 
 // For multi-gpu we are preallocating buffers only for first context creation,
@@ -36,14 +36,14 @@ CUpti_PCSamplingCollectionMode g_pcSamplingCollectionMode = CUPTI_PC_SAMPLING_CO
 uint32_t g_samplingPeriod = 0;
 size_t g_scratchBufSize = 0;
 size_t g_hwBufSize = 0;
-size_t g_pcConfigBufRecordCount = 5000;
-size_t CUPTI_PC_bufCount = 10;
+uint32_t g_sleep_span = 10;
+size_t g_pcConfigBufRecordCount = 10000;
 size_t CUPTI_PC_bufSize = 500;
 
 bool g_verbose = false;
 
 bool g_running = false;
-
+bool disabled = false;
 
 
 std::map<uint64_t, ModuleDetails> crcModuleMap;
@@ -85,7 +85,8 @@ static void
 FillCrcModuleMap(uint32_t r_moduleId)
 {
         ModuleDetails moduleDetailsStruct = {};
-        std::string cubinFileName = std::to_string(r_moduleId) + ".cubin";
+        std::string cubinFileName =  std::to_string(RtsLayer::myNode())+"_"+std::to_string(r_moduleId)+".cubin";
+        //std::cout << "!! " << cubinFileName  << std::endl;
 
         std::ifstream fileHandler(cubinFileName, std::ios::binary | std::ios::ate);
 
@@ -120,6 +121,7 @@ FillCrcModuleMap(uint32_t r_moduleId)
 
         uint64_t cubinCrc = cubinCrcParams.cubinCrc;
         crcModuleMap.insert(std::make_pair(cubinCrc, moduleDetailsStruct));
+        //std::cout << "!! " << r_moduleId << " " << cubinCrc  << std::endl;
 }
 
 void Tau_store_all_CUPTIPC_samples()
@@ -143,25 +145,26 @@ void Tau_store_all_CUPTIPC_samples()
         //No CUBIN available for this sample
         if(itr == crcModuleMap.end())
         {
-            ss  << "functionName: " << abi::__cxa_demangle(curr_sample.first.functionName.c_str(), 0, 0, &status)
-                << ", pcOffset: " << curr_sample.first.pcOffset
-                << ", lineNumber:0"
-                << ", fileName: " << "ERROR_NO_CUBIN"
-                << ", dirName: "
-                << ", contextUid: " << curr_sample.first.contextUid
-                << ", stallReasons: " << curr_sample.second.stallReasonCount;
-            ss  << ", ";
+            ss  << "[functionName: " << abi::__cxa_demangle(curr_sample.first.functionName.c_str(), 0, 0, &status)
+                << "; pcOffset: " << curr_sample.first.pcOffset
+                << "; lineNumber:0"
+                << "; fileName: " << "ERROR_NO_CUBIN"
+                << "; dirName: "
+                << "; contextUid: " << curr_sample.first.contextUid
+                << "; stallReasons: " << curr_sample.second.stallReasonCount;
+            ss  << "; ";
             for (auto curr_stall : curr_sample.second.stallReason)
             {
                 ss << "(" << GetStallReason(curr_stall.first)
                           << ": " << curr_stall.second 
-                          << "),";
+                          << ");";
             }
-            ss << std::endl;
+            ss << "]" << std::endl;
         }
         //CUBIN available for this sample
         else
         {
+            //std::cout << "!! find " << itr->first  << std::endl;
             CUpti_GetSassToSourceCorrelationParams pCSamplingGetSassToSourceCorrelationParams = {0};
             pCSamplingGetSassToSourceCorrelationParams.size = CUpti_GetSassToSourceCorrelationParamsSize;
             pCSamplingGetSassToSourceCorrelationParams.functionName = curr_sample.first.functionName.c_str();
@@ -171,41 +174,47 @@ void Tau_store_all_CUPTIPC_samples()
             CUptiResult cuptiResult = cuptiGetSassToSourceCorrelation(&pCSamplingGetSassToSourceCorrelationParams);
             if(cuptiResult == CUPTI_SUCCESS)
             {
-                if(pCSamplingGetSassToSourceCorrelationParams.fileName == NULL || pCSamplingGetSassToSourceCorrelationParams.dirName == NULL)
+ 
+                /*if(pCSamplingGetSassToSourceCorrelationParams.fileName == NULL || pCSamplingGetSassToSourceCorrelationParams.dirName == NULL)
                 {
-                    std:cerr << "[TAU ERROR]: Could not find the file nor directore names in the CUPTI cubin files. Check that application was compiled with -lineinfo." << std::endl;
+                    std::cerr << "[TAU ERROR]: Could not find the file nor directory names in the CUPTI cubin files. Check that application was compiled with -lineinfo." << std::endl;
                     return;
                 }
-                ss  << "functionName: " << abi::__cxa_demangle(curr_sample.first.functionName.c_str(), 0, 0, &status)
-                    << ", pcOffset: " << curr_sample.first.pcOffset
-                    << ", lineNumber: " << pCSamplingGetSassToSourceCorrelationParams.lineNumber
-                    << ", fileName: " << pCSamplingGetSassToSourceCorrelationParams.fileName
-                    << ", dirName: " << pCSamplingGetSassToSourceCorrelationParams.dirName
-                    << ", contextUid: " << curr_sample.first.contextUid
-                    << ", stallReasons: " << curr_sample.second.stallReasonCount;
-                ss  << ", ";
+                if(pCSamplingGetSassToSourceCorrelationParams.fileName[0] == '\0' || pCSamplingGetSassToSourceCorrelationParams.dirName[0] == '\0')
+                {
+                    std::cerr << "[TAU ERROR]: Could not find the file nor directory names in the CUPTI cubin files. Check that application was compiled with -lineinfo." << std::endl;
+                    return;
+                }*/
+                ss  << "[functionName: " << abi::__cxa_demangle(curr_sample.first.functionName.c_str(), 0, 0, &status)
+                    << "; pcOffset: " << curr_sample.first.pcOffset
+                    << "; lineNumber: " << pCSamplingGetSassToSourceCorrelationParams.lineNumber
+                    << "; fileName: " << pCSamplingGetSassToSourceCorrelationParams.fileName
+                    << "; dirName: " << pCSamplingGetSassToSourceCorrelationParams.dirName
+                    << "; contextUid: " << curr_sample.first.contextUid
+                    << "; stallReasons: " << curr_sample.second.stallReasonCount;
+                ss  << "; ";
                 free(pCSamplingGetSassToSourceCorrelationParams.fileName);
                 free(pCSamplingGetSassToSourceCorrelationParams.dirName);
             }
             //Failed
             else
             {
-                ss  << "functionName: " << abi::__cxa_demangle(curr_sample.first.functionName.c_str(), 0, 0, &status)
-                    << ", pcOffset: " << curr_sample.first.pcOffset
-                    << ", lineNumber:0"
-                    << ", fileName: " << "ERROR_NO_CUBIN"
-                    << ", dirName: "
-                    << ", contextUid: " << curr_sample.first.contextUid
-                    << ", stallReasons: " << curr_sample.second.stallReasonCount;
-                ss  << ", ";
+                ss  << "[functionName: " << abi::__cxa_demangle(curr_sample.first.functionName.c_str(), 0, 0, &status)
+                    << "; pcOffset: " << curr_sample.first.pcOffset
+                    << "; lineNumber:0"
+                    << "; fileName: " << "ERROR_NO_CUBIN"
+                    << "; dirName: "
+                    << "; contextUid: " << curr_sample.first.contextUid
+                    << "; stallReasons: " << curr_sample.second.stallReasonCount;
+                ss  << "; ";
             }
             for (auto curr_stall : curr_sample.second.stallReason)
             {
                 ss << "(" << GetStallReason(curr_stall.first)
                           << ": " << curr_stall.second 
-                          << "),";
+                          << ");";
             }
-            ss << std::endl;
+            ss << "]" << std::endl;
         }
     }
     map_tau_cupti_samples_lock.unlock();
@@ -297,15 +306,38 @@ GetPcSamplingDataFromCupti(
     CUpti_PCSamplingGetDataParams &pcSamplingGetDataParams,
     ContextInfo *pContextInfo)
 {
+    /*
+    
+    */
     //printf("GetPcSamplingDataFromCupti\n");
+    if(disabled)
+        return false;
     TAU_VERBOSE("Request all samples in CUPTI GPU buffers\n");
+    TAU_VERBOSE("-StorePcSampDataInFileThread col %d rem %d tot %d, full %u ?\n", 
+        pContextInfo->pcSamplingData.collectNumPcs, 
+        pContextInfo->pcSamplingData.remainingNumPcs, 
+        pContextInfo->pcSamplingData.totalNumPcs,
+        pContextInfo->pcSamplingData.hardwareBufferFull);
     CUPTI_PC_BufferMutex.lock(); 
     pcSamplingGetDataParams.pcSamplingData = (void *)&CUPTI_PC_Buffer;
     CUptiResult cuptiStatus = cuptiPCSamplingGetData(&pcSamplingGetDataParams);
     if (cuptiStatus != CUPTI_SUCCESS)
     {
+        const char *pErrorString;                                                   
+        cuptiGetResultString(cuptiStatus, &pErrorString);                               
+                                                                                    
+        std::cerr << "\n\nError:" << __FILE__ << ":" << __LINE__ 
+            << " failed with error(" << cuptiStatus << "): "            
+            << pErrorString << ".\n\n";
+
         CUpti_PCSamplingData *samplingData = (CUpti_PCSamplingData*)pcSamplingGetDataParams.pcSamplingData;
-        if (samplingData->hardwareBufferFull)
+        
+        TAU_VERBOSE("--StorePcSampDataInFileThread col %d rem %d tot %d, full %u ?\n", 
+            samplingData->collectNumPcs, 
+            samplingData->remainingNumPcs, 
+            samplingData->totalNumPcs,
+            samplingData->hardwareBufferFull);
+        if (samplingData->hardwareBufferFull )
         {
             printf("ERROR!! hardware buffer is full, need to increase hardware buffer size or frequency of pc sample data decoding\n");
             CUPTI_PC_BufferMutex.unlock();
@@ -403,7 +435,7 @@ PCSamplingThread()
 {
     
     while (1)
-    {          
+    {   
         if (g_waitAtJoin)
         {
             return;
@@ -413,10 +445,10 @@ PCSamplingThread()
             //Need to add lock
             for (auto& itr: g_contextInfoMap)
             {
-                //TAU_VERBOSE("StorePcSampDataInFileThread col %d rem %d tot %d\n", 
-                //        itr.second->pcSamplingData.collectNumPcs, 
-                //        itr.second->pcSamplingData.remainingNumPcs, 
-                //        itr.second->pcSamplingData.totalNumPcs);
+                /*TAU_VERBOSE("StorePcSampDataInFileThread col %d rem %d tot %d\n", 
+                        itr.second->pcSamplingData.collectNumPcs, 
+                        itr.second->pcSamplingData.remainingNumPcs, 
+                        itr.second->pcSamplingData.totalNumPcs);*/
                 while(itr.second->pcSamplingData.remainingNumPcs > CUPTI_PC_bufSize)
                 {
                     TAU_VERBOSE("There are samples to process\n");
@@ -450,6 +482,7 @@ ConfigureActivity(
     CUpti_PCSamplingConfigurationInfo collectionMode = {};
     CUpti_PCSamplingConfigurationInfo enableStartStop = {};
     CUpti_PCSamplingConfigurationInfo outputDataFormat = {};
+    CUpti_PCSamplingConfigurationInfo sleep_span = {};
 
     // Get number of supported counters and counter names.
     size_t numStallReasons = 0;
@@ -532,6 +565,14 @@ ConfigureActivity(
         pcSamplingConfigurationInfo.push_back(hwBufferSize);
     }
 
+    sleep_span.attributeType = CUPTI_PC_SAMPLING_CONFIGURATION_ATTR_TYPE_WORKER_THREAD_PERIODIC_SLEEP_SPAN;
+    if (g_sleep_span)
+    {
+        //printf("g_sleep_span\n");
+        hwBufferSize.attributeData.workerThreadPeriodicSleepSpanData.workerThreadPeriodicSleepSpan = 10;
+        pcSamplingConfigurationInfo.push_back(sleep_span);
+    }
+
     collectionMode.attributeType = CUPTI_PC_SAMPLING_CONFIGURATION_ATTR_TYPE_COLLECTION_MODE;
     collectionMode.attributeData.collectionModeData.collectionMode = g_pcSamplingCollectionMode;
     pcSamplingConfigurationInfo.push_back(collectionMode);
@@ -545,7 +586,7 @@ ConfigureActivity(
     pcSamplingConfigurationInfoParams.ctx = cuCtx;
     pcSamplingConfigurationInfoParams.numAttributes = pcSamplingConfigurationInfo.size();
     pcSamplingConfigurationInfoParams.pPCSamplingConfigurationInfo = pcSamplingConfigurationInfo.data();
-
+    //printf("attributes %d\n",  pcSamplingConfigurationInfo.size());
     CUPTI_API_CALL(cuptiPCSamplingSetConfigurationAttribute(&pcSamplingConfigurationInfoParams));
 
     // Store all stall reasons info in context info to dump into the file.
@@ -559,12 +600,14 @@ ConfigureActivity(
     enableStartStop.attributeType = CUPTI_PC_SAMPLING_CONFIGURATION_ATTR_TYPE_ENABLE_START_STOP_CONTROL;
     outputDataFormat.attributeType = CUPTI_PC_SAMPLING_CONFIGURATION_ATTR_TYPE_OUTPUT_DATA_FORMAT;
     outputDataFormat.attributeData.outputDataFormatData.outputDataFormat = CUPTI_PC_SAMPLING_OUTPUT_DATA_FORMAT_PARSED;
+    sleep_span.attributeType = CUPTI_PC_SAMPLING_CONFIGURATION_ATTR_TYPE_WORKER_THREAD_PERIODIC_SLEEP_SPAN;
 
     std::vector<CUpti_PCSamplingConfigurationInfo> pcSamplingRetrieveConfigurationInfo;
     pcSamplingRetrieveConfigurationInfo.push_back(collectionMode);
     pcSamplingRetrieveConfigurationInfo.push_back(sampPeriod);
     pcSamplingRetrieveConfigurationInfo.push_back(scratchBufferSize);
     pcSamplingRetrieveConfigurationInfo.push_back(hwBufferSize);
+    pcSamplingRetrieveConfigurationInfo.push_back(sleep_span);
     pcSamplingRetrieveConfigurationInfo.push_back(enableStartStop);
 
     CUpti_PCSamplingConfigurationInfoParams getPcSamplingConfigurationInfoParams = {};
@@ -573,7 +616,7 @@ ConfigureActivity(
     getPcSamplingConfigurationInfoParams.ctx = cuCtx;
     getPcSamplingConfigurationInfoParams.numAttributes = pcSamplingRetrieveConfigurationInfo.size();
     getPcSamplingConfigurationInfoParams.pPCSamplingConfigurationInfo = pcSamplingRetrieveConfigurationInfo.data();
-
+    //printf("attributes %d\n",  pcSamplingRetrieveConfigurationInfo.size());
     CUPTI_API_CALL(cuptiPCSamplingGetConfigurationAttribute(&getPcSamplingConfigurationInfoParams));
 
     for (size_t i = 0; i < getPcSamplingConfigurationInfoParams.numAttributes; i++)
@@ -593,7 +636,7 @@ ConfigureActivity(
     g_workerThreadMutex.unlock();
 
     /*if (g_verbose)
-    {
+    {*/
         std::cout << std::endl;
         std::cout << "============ Configuration Details : ============" << std::endl;
         std::cout << "requested stall reason count : " << numStallReasons << std::endl;
@@ -601,12 +644,11 @@ ConfigureActivity(
         std::cout << "sampling period              : " << getPcSamplingConfigurationInfoParams.pPCSamplingConfigurationInfo[1].attributeData.samplingPeriodData.samplingPeriod << std::endl;
         std::cout << "scratch buffer size (Bytes)  : " << getPcSamplingConfigurationInfoParams.pPCSamplingConfigurationInfo[2].attributeData.scratchBufferSizeData.scratchBufferSize << std::endl;
         std::cout << "hardware buffer size (Bytes) : " << getPcSamplingConfigurationInfoParams.pPCSamplingConfigurationInfo[3].attributeData.hardwareBufferSizeData.hardwareBufferSize << std::endl;
-        std::cout << "start stop control           : " << getPcSamplingConfigurationInfoParams.pPCSamplingConfigurationInfo[4].attributeData.enableStartStopControlData.enableStartStopControl << std::endl;
-        std::cout << "configuration buffer size    : " << g_pcConfigBufRecordCount << std::endl;
-        std::cout << "circular buffer record count : " << CUPTI_PC_bufSize << std::endl;
+        std::cout << "sleep span                   : " << getPcSamplingConfigurationInfoParams.pPCSamplingConfigurationInfo[4].attributeData.workerThreadPeriodicSleepSpanData.workerThreadPeriodicSleepSpan << std::endl;
+        std::cout << "start stop control           : " << getPcSamplingConfigurationInfoParams.pPCSamplingConfigurationInfo[5].attributeData.enableStartStopControlData.enableStartStopControl << std::endl;
         std::cout << "=================================================" << std::endl;
         std::cout << std::endl;
-    }*/
+    /*}*/
 
     return;
 }
@@ -632,6 +674,7 @@ void CallbackHandler(
     CUpti_CallbackId callbackId,
     void *pCallbackData)
 {
+    //printf("CallbackHandler\n");
     switch (domain)
     {
         case CUPTI_CB_DOMAIN_DRIVER_API:
@@ -784,6 +827,7 @@ void CallbackHandler(
                     const CUpti_ResourceData *pResourceData = (CUpti_ResourceData *) pCallbackData;
                     const CUpti_ModuleResourceData *pModuleResourceData = (CUpti_ModuleResourceData *)pResourceData->resourceDescriptor;
                     uint32_t r_moduleId = pModuleResourceData->moduleId;
+                    //
                     if(std::find(crc_moduleIds.begin(), crc_moduleIds.end(), r_moduleId) == crc_moduleIds.end())
                     {
                         const char *pCubin;
@@ -793,7 +837,8 @@ void CallbackHandler(
                         cubinSize = pModuleResourceData->cubinSize;
 
                         FILE *pCubinFileHandle;
-                        std::string file_name = std::to_string(r_moduleId)+".cubin";
+                        std::string file_name = std::to_string(RtsLayer::myNode())+"_"+std::to_string(r_moduleId)+".cubin";
+                        //std::cout << "!! " << file_name  << std::endl;
                         pCubinFileHandle = fopen(file_name.c_str(), "wb");
                         fwrite(pCubin, sizeof(uint8_t), cubinSize, pCubinFileHandle);
                         fclose(pCubinFileHandle);
@@ -880,6 +925,7 @@ void cupti_pcsampling_init()
 //Needs to be re-implemented
 void cupti_pcsampling_exit()
 {
+    //printf("cupti_pcsampling_exit\n");
     TAU_VERBOSE("cupti_pcsampling_exit\n");
     //Stops thread that reads PC Samples
     g_waitAtJoin = true;
@@ -913,6 +959,7 @@ void cupti_pcsampling_exit()
                 GetSamplesFromSamplingData(itr.second->pcSamplingData, itr.second);
             }
         }
+        disabled=true;
         Tau_store_all_CUPTIPC_samples();
         FreePreallocatedMemory();
     }
@@ -934,7 +981,7 @@ void cupti_pcsampling_exit()
     return;
 }
 
-#endif //CUDA_VERSION  >= 12050
+#endif //CUDA_VERSION  >= CUDA_MIN
 
 
 
