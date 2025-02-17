@@ -124,6 +124,13 @@ FillCrcModuleMap(uint32_t r_moduleId)
         //std::cout << "!! " << r_moduleId << " " << cubinCrc  << std::endl;
 }
 
+bool warn_once()
+{
+    //std::cout << "!! find " << itr->first  << std::endl;
+    std::cout << "[TAU ERROR]: Could not find the file nor directory names in the CUPTI cubin files. Check that application was compiled with -lineinfo -G." << std::endl;
+    return true;
+}
+
 void Tau_store_all_CUPTIPC_samples()
 {
     TAU_VERBOSE("Store all CUPTI PC Samples\n");
@@ -145,11 +152,12 @@ void Tau_store_all_CUPTIPC_samples()
         //No CUBIN available for this sample
         if(itr == crcModuleMap.end())
         {
+            static bool this_warn = warn_once();
             ss  << "[functionName: " << abi::__cxa_demangle(curr_sample.first.functionName.c_str(), 0, 0, &status)
                 << "; pcOffset: " << curr_sample.first.pcOffset
-                << "; lineNumber:0"
-                << "; fileName: " << "ERROR_NO_CUBIN"
-                << "; dirName: "
+                << "; lineNumber: 0"
+                << "; fileName: ERROR_NO_CUBIN"
+                << "; dirName: ERROR_NO_CUBIN"
                 << "; contextUid: " << curr_sample.first.contextUid
                 << "; stallReasons: " << curr_sample.second.stallReasonCount;
             ss  << "; ";
@@ -175,35 +183,43 @@ void Tau_store_all_CUPTIPC_samples()
             if(cuptiResult == CUPTI_SUCCESS)
             {
  
-                /*if(pCSamplingGetSassToSourceCorrelationParams.fileName == NULL || pCSamplingGetSassToSourceCorrelationParams.dirName == NULL)
+                if(pCSamplingGetSassToSourceCorrelationParams.fileName == NULL || pCSamplingGetSassToSourceCorrelationParams.dirName == NULL
+                    || pCSamplingGetSassToSourceCorrelationParams.fileName[0]=='\0')
                 {
-                    std::cerr << "[TAU ERROR]: Could not find the file nor directory names in the CUPTI cubin files. Check that application was compiled with -lineinfo." << std::endl;
-                    return;
+                    static bool this_warn = warn_once();
+                    ss  << "[functionName: " << abi::__cxa_demangle(curr_sample.first.functionName.c_str(), 0, 0, &status)
+                        << "; pcOffset: " << curr_sample.first.pcOffset
+                        << "; lineNumber: 0"  
+                        << "; fileName: ERROR_NO_CUBIN" 
+                        << "; dirName: ERROR_NO_CUBIN"
+                        << "; contextUid: " << curr_sample.first.contextUid
+                        << "; stallReasons: " << curr_sample.second.stallReasonCount;
+                    ss  << "; ";
+                    //return;
                 }
-                if(pCSamplingGetSassToSourceCorrelationParams.fileName[0] == '\0' || pCSamplingGetSassToSourceCorrelationParams.dirName[0] == '\0')
+                else
                 {
-                    std::cerr << "[TAU ERROR]: Could not find the file nor directory names in the CUPTI cubin files. Check that application was compiled with -lineinfo." << std::endl;
-                    return;
-                }*/
-                ss  << "[functionName: " << abi::__cxa_demangle(curr_sample.first.functionName.c_str(), 0, 0, &status)
-                    << "; pcOffset: " << curr_sample.first.pcOffset
-                    << "; lineNumber: " << pCSamplingGetSassToSourceCorrelationParams.lineNumber
-                    << "; fileName: " << pCSamplingGetSassToSourceCorrelationParams.fileName
-                    << "; dirName: " << pCSamplingGetSassToSourceCorrelationParams.dirName
-                    << "; contextUid: " << curr_sample.first.contextUid
-                    << "; stallReasons: " << curr_sample.second.stallReasonCount;
-                ss  << "; ";
+                    ss  << "[functionName: " << abi::__cxa_demangle(curr_sample.first.functionName.c_str(), 0, 0, &status)
+                        << "; pcOffset: " << curr_sample.first.pcOffset
+                        << "; lineNumber: " << pCSamplingGetSassToSourceCorrelationParams.lineNumber
+                        << "; fileName: " << pCSamplingGetSassToSourceCorrelationParams.fileName
+                        << "; dirName: " << pCSamplingGetSassToSourceCorrelationParams.dirName
+                        << "; contextUid: " << curr_sample.first.contextUid
+                        << "; stallReasons: " << curr_sample.second.stallReasonCount;
+                    ss  << "; ";
+                }
                 free(pCSamplingGetSassToSourceCorrelationParams.fileName);
                 free(pCSamplingGetSassToSourceCorrelationParams.dirName);
             }
             //Failed
             else
             {
+                static bool this_warn = warn_once();
                 ss  << "[functionName: " << abi::__cxa_demangle(curr_sample.first.functionName.c_str(), 0, 0, &status)
                     << "; pcOffset: " << curr_sample.first.pcOffset
-                    << "; lineNumber:0"
-                    << "; fileName: " << "ERROR_NO_CUBIN"
-                    << "; dirName: "
+                    << "; lineNumber: 0"
+                    << "; fileName: ERROR_NO_CUBIN"
+                    << "; dirName: ERROR_NO_CUBIN"
                     << "; contextUid: " << curr_sample.first.contextUid
                     << "; stallReasons: " << curr_sample.second.stallReasonCount;
                 ss  << "; ";
@@ -636,7 +652,7 @@ ConfigureActivity(
     g_workerThreadMutex.unlock();
 
     /*if (g_verbose)
-    {*/
+    {
         std::cout << std::endl;
         std::cout << "============ Configuration Details : ============" << std::endl;
         std::cout << "requested stall reason count : " << numStallReasons << std::endl;
@@ -648,7 +664,7 @@ ConfigureActivity(
         std::cout << "start stop control           : " << getPcSamplingConfigurationInfoParams.pPCSamplingConfigurationInfo[5].attributeData.enableStartStopControlData.enableStartStopControl << std::endl;
         std::cout << "=================================================" << std::endl;
         std::cout << std::endl;
-    /*}*/
+    }*/
 
     return;
 }
