@@ -2794,7 +2794,7 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: TAU_EXEC_PATH is \"%s\"\n", env_tau_exec_path);
     }
 
-    tmp = getconf("ROCPROFILER_PC_SAMPLING_BETA_ENABLED");
+    /*tmp = getconf("ROCPROFILER_PC_SAMPLING_BETA_ENABLED");
     if (parse_bool(tmp, 1)) {
       env_bfd_lookup = 1;
       TAU_VERBOSE("TAU: RocprofilerSDK Enabled\n");
@@ -2815,7 +2815,7 @@ void TauEnv_initialize()
       }
 
 
-    }
+    }*/
 
 
 
