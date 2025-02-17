@@ -1,0 +1,2 @@
+This example will build a library that calls OpenCL and call that library from a python script.
+This example demonstrates TAU support with Python and OpenCL.
