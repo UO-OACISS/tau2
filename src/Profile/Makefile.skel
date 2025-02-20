@@ -160,6 +160,12 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #ROCTRACER#ROCTRACER_O = TauRocTracer.o #ENDIF#
 #ROCTRACERROCM6#ROCTRACER_O = TauRocTracer.o #ENDIF#
 
+#############################################
+# CUPTI SAMPLING OBJECTS
+#############################################
+#CUPTI#TAU_CUPTI_SAMPLING_OBJS=CuptiPCSampling.o #ENDIF#
+
+
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o TauMetaData.o TauEnv.o \
@@ -175,6 +181,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
 		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O) $(ADIOS_O) \
 		$(OTF2_O) $(CALIPER_O) $(ROCPROFILER_O) $(ROCM_O) $(ROCTRACER_O) \
+		$(TAU_CUPTI_SAMPLING_OBJS) \
 		$(ROCPROFILERV2_O) $(ROCPROFILERSDK_O) $(TAU_LEVEL_ZERO_O) $(TAU_GPU_O)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
@@ -396,10 +403,10 @@ CRAY_PGI_HACK=
 #CUPTI_ACTIVITY#TAU_CUPTI_OBJS=TauGpuAdapterCupti.o #ENDIF#
 #CUPTI_ACTIVITY#TAU_CUPTI_NVTX_OBJS=CuptiNVTX.o #ENDIF#
 #CUPTI_ACTIVITY#TAU_CUPTI_ACTIVITY_LIB=libTAU-CUact$(TAU_SHLIBX) #ENDIF#
-#CUPTI_ACTIVITY#TAU_CUPTI_ACTIVITY_OBJS=CuptiPCSampling.o #ENDIF#
 #CUPTI_ACTIVITY#TAU_CUPTI_ACTIVITY_OBJS+=CuptiActivity.o #ENDIF#
 #CUPTI_ACTIVITY#GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_CUPTI_ACTIVITY_LIB)  #ENDIF#
 #CUPTI#GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB)  #ENDIF#
+
 
 CXXFLAGS+= $(TAU_CUDA_DEF) $(TAU_CUPTI_DEF) $(TAU_OPENCL_DEF)
 

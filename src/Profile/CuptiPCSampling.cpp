@@ -38,7 +38,7 @@ size_t g_scratchBufSize = 0;
 size_t g_hwBufSize = 0;
 uint32_t g_sleep_span = 0;
 size_t g_pcConfigBufRecordCount = 10000;
-size_t CUPTI_PC_bufSize = 500;
+size_t CUPTI_PC_bufSize = 100;
 
 bool g_verbose = false;
 
@@ -127,7 +127,7 @@ FillCrcModuleMap(uint32_t r_moduleId)
 bool warn_once()
 {
     //std::cout << "!! find " << itr->first  << std::endl;
-    std::cout << "[TAU ERROR]: Could not find the file nor directory names in the CUPTI cubin files. Check that application was compiled with -lineinfo -G." << std::endl;
+    std::cout << "[TAU ERROR]: Could not find the file nor directory names in the CUPTI cubin file. Check that application was compiled with -lineinfo -G." << std::endl;
     return true;
 }
 
@@ -345,7 +345,7 @@ GetPcSamplingDataFromCupti(
 
         CUpti_PCSamplingData *samplingData = (CUpti_PCSamplingData*)pcSamplingGetDataParams.pcSamplingData;
         
-        TAU_VERBOSE("--StorePcSampDataInFileThread col %d rem %d tot %d, full %u ?\n", 
+        TAU_VERBOSE("--StorePcSampDataInFileThread col %d rem %d tot %d, full ? %u \n", 
             samplingData->collectNumPcs, 
             samplingData->remainingNumPcs, 
             samplingData->totalNumPcs,
@@ -951,6 +951,15 @@ void cupti_pcsampling_exit()
 {
     //printf("cupti_pcsampling_exit\n");
     TAU_VERBOSE("cupti_pcsampling_exit\n");
+
+    //Gives an error "CUPTI_ERROR_LEGACY_PROFILER_NOT_SUPPORTED"
+    /*CUptiResult cuptiStatus = cuptiGetLastError();
+    if (cuptiStatus != CUPTI_SUCCESS)
+    {
+        const char *pErrorString;
+        cuptiGetResultString(cuptiStatus, &pErrorString);
+        printf("%s: %d: error: function cuptiGetLastError() failed with error %s.\n", __FILE__, __LINE__, pErrorString);
+    }*/
     //Stops thread that reads PC Samples
     g_waitAtJoin = true;
     if (g_process_pcsamples_ThreadHandle.joinable())

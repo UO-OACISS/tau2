@@ -516,7 +516,6 @@ for arg in "$@" ; do
         shift
         ;;
       -cupti_pc)
-        track_cupti=true
         track_cupti_pc=true
         save_arg $arg
         shift
@@ -1130,10 +1129,30 @@ if [ $track_cupti = "true" ] ; then
   if [ $python_wrapper = "true" ] ; then
     export TAU_CUPTI_API=both
   fi
-  if [ $track_cupti_pc = "true" ] ; then
+fi
+
+if [ $track_cupti_pc = "true" ] ; then
+  if [ $track_cupti = "true" ] ; then
+    echo "-cupti_pc is not compatible with -cupti, select only one."
+  fi
+  cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX`
+  if [ $? != 0 ] ; then
+    #tell the user to add cupti to bindings list.
+    echo "ERROR: CUPTI library not found. Please ensure that 'cupti' is on the list of bindings specified with the '-T' option."
+    exit
+  else
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX:$TAUEX_LD_PRELOAD
     export TAU_CUPTI_PC=1
+    if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
+      if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+        export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+      else
+        export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+      fi
+    fi
   fi
 fi
+
 if [ $track_opencl = "true" ] ; then
   # Add the OpenCL wrapper library to the LD_PRELOAD list
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL$TAU_SHLIBX:$TAUEX_LD_PRELOAD

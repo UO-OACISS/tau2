@@ -83,6 +83,7 @@ void esd_exit (elg_ui4 rid);
 
 #ifdef TAU_CUPTI
 #include <Profile/CuptiLayer.h>
+#include <Profile/CuptiPCSampling.h>
 #endif //TAU_CUPTI
 #include <atomic>
 #include <cstdint>
@@ -1287,6 +1288,10 @@ extern "C" void Tau_flush_gpu_activity(void) {
             }
             cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
         }
+    }
+    if(TauEnv_get_tauCuptiPC())
+    {
+      cupti_pcsampling_exit();
     }
 #endif //TAU_CUPTI
 #if defined(TAU_ENABLE_ROCPROFILER) || defined(TAU_ENABLE_ROCPROFILERV2)
