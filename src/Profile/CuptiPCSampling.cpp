@@ -36,7 +36,7 @@ CUpti_PCSamplingCollectionMode g_pcSamplingCollectionMode = CUPTI_PC_SAMPLING_CO
 uint32_t g_samplingPeriod = 0;
 size_t g_scratchBufSize = 0;
 size_t g_hwBufSize = 0;
-uint32_t g_sleep_span = 10;
+uint32_t g_sleep_span = 0;
 size_t g_pcConfigBufRecordCount = 10000;
 size_t CUPTI_PC_bufSize = 500;
 
@@ -322,9 +322,6 @@ GetPcSamplingDataFromCupti(
     CUpti_PCSamplingGetDataParams &pcSamplingGetDataParams,
     ContextInfo *pContextInfo)
 {
-    /*
-    
-    */
     //printf("GetPcSamplingDataFromCupti\n");
     if(disabled)
         return false;
@@ -449,7 +446,7 @@ static void FreePreallocatedMemory()
 static void
 PCSamplingThread()
 {
-    
+    return;
     while (1)
     {   
         if (g_waitAtJoin)
@@ -458,7 +455,7 @@ PCSamplingThread()
         }
         else
         {
-            //Need to add lock
+            //May need to add lock
             for (auto& itr: g_contextInfoMap)
             {
                 /*TAU_VERBOSE("StorePcSampDataInFileThread col %d rem %d tot %d\n", 
@@ -581,11 +578,12 @@ ConfigureActivity(
         pcSamplingConfigurationInfo.push_back(hwBufferSize);
     }
 
+
     sleep_span.attributeType = CUPTI_PC_SAMPLING_CONFIGURATION_ATTR_TYPE_WORKER_THREAD_PERIODIC_SLEEP_SPAN;
     if (g_sleep_span)
     {
         //printf("g_sleep_span\n");
-        hwBufferSize.attributeData.workerThreadPeriodicSleepSpanData.workerThreadPeriodicSleepSpan = 10;
+        sleep_span.attributeData.workerThreadPeriodicSleepSpanData.workerThreadPeriodicSleepSpan = g_sleep_span;
         pcSamplingConfigurationInfo.push_back(sleep_span);
     }
 
@@ -616,7 +614,7 @@ ConfigureActivity(
     enableStartStop.attributeType = CUPTI_PC_SAMPLING_CONFIGURATION_ATTR_TYPE_ENABLE_START_STOP_CONTROL;
     outputDataFormat.attributeType = CUPTI_PC_SAMPLING_CONFIGURATION_ATTR_TYPE_OUTPUT_DATA_FORMAT;
     outputDataFormat.attributeData.outputDataFormatData.outputDataFormat = CUPTI_PC_SAMPLING_OUTPUT_DATA_FORMAT_PARSED;
-    sleep_span.attributeType = CUPTI_PC_SAMPLING_CONFIGURATION_ATTR_TYPE_WORKER_THREAD_PERIODIC_SLEEP_SPAN;
+    //sleep_span.attributeType = CUPTI_PC_SAMPLING_CONFIGURATION_ATTR_TYPE_WORKER_THREAD_PERIODIC_SLEEP_SPAN;
 
     std::vector<CUpti_PCSamplingConfigurationInfo> pcSamplingRetrieveConfigurationInfo;
     pcSamplingRetrieveConfigurationInfo.push_back(collectionMode);
@@ -652,7 +650,7 @@ ConfigureActivity(
     g_workerThreadMutex.unlock();
 
     /*if (g_verbose)
-    {
+    {*/
         std::cout << std::endl;
         std::cout << "============ Configuration Details : ============" << std::endl;
         std::cout << "requested stall reason count : " << numStallReasons << std::endl;
@@ -664,7 +662,7 @@ ConfigureActivity(
         std::cout << "start stop control           : " << getPcSamplingConfigurationInfoParams.pPCSamplingConfigurationInfo[5].attributeData.enableStartStopControlData.enableStartStopControl << std::endl;
         std::cout << "=================================================" << std::endl;
         std::cout << std::endl;
-    }*/
+    //}
 
     return;
 }
@@ -690,15 +688,18 @@ void CallbackHandler(
     CUpti_CallbackId callbackId,
     void *pCallbackData)
 {
-    //printf("CallbackHandler\n");
+
+    TAU_VERBOSE("CallbackHandler\n");
+
     switch (domain)
     {
         case CUPTI_CB_DOMAIN_DRIVER_API:
         {
-            const CUpti_CallbackData *pCallbackInfo = (CUpti_CallbackData *)pCallbackData;
 
+            const CUpti_CallbackData *pCallbackInfo = (CUpti_CallbackData *)pCallbackData;
             switch (callbackId)
             {
+
                 case CUPTI_DRIVER_TRACE_CBID_cuLaunch:
                 case CUPTI_DRIVER_TRACE_CBID_cuLaunchGrid:
                 case CUPTI_DRIVER_TRACE_CBID_cuLaunchGridAsync:
@@ -721,9 +722,13 @@ void CallbackHandler(
                             exit(EXIT_FAILURE);
                         }
                         if (!contextStateMapItr->second->contextUid)
+                        {
                             contextStateMapItr->second->contextUid = pCallbackInfo->contextUid;
+                            TAU_VERBOSE("CUPTI_CB_DOMAIN_DRIVER_API 1\n");
+                        }
                         while (contextStateMapItr->second->pcSamplingData.remainingNumPcs > 0)
                         {
+                            TAU_VERBOSE("CUPTI_CB_DOMAIN_DRIVER_API 2\n");
                             CUpti_PCSamplingGetDataParams pcSamplingGetDataParams = {};
                             pcSamplingGetDataParams.size = CUpti_PCSamplingGetDataParamsSize;
                             pcSamplingGetDataParams.ctx = pCallbackInfo->context;
@@ -741,6 +746,7 @@ void CallbackHandler(
         break;
         case CUPTI_CB_DOMAIN_RESOURCE:
         {
+            
             const CUpti_ResourceData *pResourceData = (CUpti_ResourceData *)pCallbackData;
             g_running = true;
 
@@ -777,6 +783,7 @@ void CallbackHandler(
                 break;
                 case CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING:
                 {
+
                     TAU_VERBOSE("Injection - Context destroy starting\n");
 
                     std::map<CUcontext, ContextInfo *>::iterator itr;
@@ -899,6 +906,7 @@ void CallbackHandler(
         default :
             break;
     }
+    TAU_VERBOSE(" End - CallbackHandler\n");
 }
 
 

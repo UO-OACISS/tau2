@@ -2810,30 +2810,33 @@ void TauEnv_initialize()
     } else {
       TAU_VERBOSE("TAU: TAU_EXEC_PATH is \"%s\"\n", env_tau_exec_path);
     }
-
+    /*
     tmp = getconf("ROCPROFILER_PC_SAMPLING_BETA_ENABLED");
-    if (parse_bool(tmp, 1)) {
-      env_bfd_lookup = 1;
-      TAU_VERBOSE("TAU: RocprofilerSDK Enabled\n");
-      TAU_METADATA("TAU_ROCSDK_ENABLEPC", "on");
+    if(tmp !=NULL)
+    {
+      if (parse_bool(tmp, 1)) {
+        env_bfd_lookup = 1;
+        TAU_VERBOSE("TAU: RocprofilerSDK Enabled\n");
+        TAU_METADATA("TAU_ROCSDK_ENABLEPC", "on");
 
-      tmp = getconf("TAU_ROCSDK_LOG");
-      if(tmp)
-      {
-        TAU_VERBOSE("TAU: TAU_ROCSDK_LOG has name\n");
-        env_rocsdk_pcfile = strdup(tmp);
-        TAU_METADATA("TAU_ROCSDK_LOG", env_rocsdk_pcfile);
+        tmp = getconf("TAU_ROCSDK_LOG");
+        if(tmp)
+        {
+          TAU_VERBOSE("TAU: TAU_ROCSDK_LOG has name\n");
+          env_rocsdk_pcfile = strdup(tmp);
+          TAU_METADATA("TAU_ROCSDK_LOG", env_rocsdk_pcfile);
+        }
+        else
+        {
+          TAU_VERBOSE("TAU: TAU_ROCSDK_LOG has no name\n");
+          env_rocsdk_pcfile = "ROCm_PC_sampling.log";
+          TAU_METADATA("TAU_ROCSDK_LOG", env_rocsdk_pcfile);
+        }
+
+
       }
-      else
-      {
-        TAU_VERBOSE("TAU: TAU_ROCSDK_LOG has no name\n");
-         env_rocsdk_pcfile = "ROCm_PC_sampling.log";
-         TAU_METADATA("TAU_ROCSDK_LOG", env_rocsdk_pcfile);
-      }
-
-
     }
-
+  */
 
 
     initialized = 1;

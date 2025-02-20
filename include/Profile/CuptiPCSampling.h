@@ -10,7 +10,7 @@
 // CUDA headers
 #include <cuda.h>
 
-#define CUDA_MIN 12030
+#define CUDA_MIN 12050
 #if CUDA_VERSION  >= CUDA_MIN
 #include <string>
 #include <vector>
