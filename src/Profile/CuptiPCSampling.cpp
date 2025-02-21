@@ -155,9 +155,9 @@ void Tau_store_all_CUPTIPC_samples()
             static bool this_warn = warn_once();
             ss  << "[functionName: " << abi::__cxa_demangle(curr_sample.first.functionName.c_str(), 0, 0, &status)
                 << "; pcOffset: " << curr_sample.first.pcOffset
-                << "; lineNumber: 0"
-                << "; fileName: ERROR_NO_CUBIN"
-                << "; dirName: ERROR_NO_CUBIN"
+                << "; lineNumber: UNRESOLVED"
+                << "; fileName: UNRESOLVED"
+                << "; dirName: UNRESOLVED"
                 << "; contextUid: " << curr_sample.first.contextUid
                 << "; stallReasons: " << curr_sample.second.stallReasonCount;
             ss  << "; ";
@@ -182,16 +182,16 @@ void Tau_store_all_CUPTIPC_samples()
             CUptiResult cuptiResult = cuptiGetSassToSourceCorrelation(&pCSamplingGetSassToSourceCorrelationParams);
             if(cuptiResult == CUPTI_SUCCESS)
             {
- 
+                //Cubin file exists but there is no debug information
                 if(pCSamplingGetSassToSourceCorrelationParams.fileName == NULL || pCSamplingGetSassToSourceCorrelationParams.dirName == NULL
                     || pCSamplingGetSassToSourceCorrelationParams.fileName[0]=='\0')
                 {
                     static bool this_warn = warn_once();
                     ss  << "[functionName: " << abi::__cxa_demangle(curr_sample.first.functionName.c_str(), 0, 0, &status)
                         << "; pcOffset: " << curr_sample.first.pcOffset
-                        << "; lineNumber: 0"  
-                        << "; fileName: ERROR_NO_CUBIN" 
-                        << "; dirName: ERROR_NO_CUBIN"
+                        << "; lineNumber: UNRESOLVED"  
+                        << "; fileName: UNRESOLVED" 
+                        << "; dirName: UNRESOLVED"
                         << "; contextUid: " << curr_sample.first.contextUid
                         << "; stallReasons: " << curr_sample.second.stallReasonCount;
                     ss  << "; ";
