@@ -35,7 +35,7 @@ std::thread g_process_pcsamples_ThreadHandle;
 CUpti_PCSamplingCollectionMode g_pcSamplingCollectionMode = CUPTI_PC_SAMPLING_COLLECTION_MODE_CONTINUOUS;
 uint32_t g_samplingPeriod = 0;
 size_t g_scratchBufSize = 0;
-size_t g_hwBufSize = 0;
+size_t g_hwBufSize = 5368709120;
 uint32_t g_sleep_span = 0;
 size_t g_pcConfigBufRecordCount = 10000;
 size_t CUPTI_PC_bufSize = 100;
