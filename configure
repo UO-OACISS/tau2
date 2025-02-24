@@ -8554,13 +8554,16 @@ if [ "x$download_unwind" = xyes ] ; then
         if [ $configresult -eq 0 ] ; then
           libunwind_log=build.log
           echo "building ${libunwind}... (see `pwd`/${libunwind_log} for log)..."
-          make -i > $libunwind_log  2>&1
+          make  > $libunwind_log  2>&1
           makeresult=$?
           if [ $makeresult -eq 0 ] ; then
           libunwind_log=install.log
           echo "installing ${libunwind} to ${unwind_dir}... (see `pwd`/${libunwind_log} for log)..."
-            make -i install > $libunwind_log  2>&1
+            make install > $libunwind_log  2>&1
           makeresult=$?
+          else
+          echo "libunwind build failed"
+	  exit 1
           fi
         fi
         if [ $machine = arm64_linux ]; then
