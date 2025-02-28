@@ -39,6 +39,9 @@
 #include "Profile/Profiler.h"
 #include <Profile/TauEnv.h>
 
+extern "C" x_uint64 TauTraceGetTimeStamp();
+extern "C" void Tau_metadata_task(const char *name, const char* value, int tid);
+
 using namespace CUPTI::PcSamplingUtil;
 
 // Macros

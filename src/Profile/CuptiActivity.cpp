@@ -11,7 +11,6 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <Profile/CuptiNVTX.h>
-//#include <Profile/CuptiPCSampling.h>
 
 using namespace std;
 
@@ -41,7 +40,7 @@ using namespace std;
 static int subscribed = 0;
 static unsigned int parent_tid = 0;
 static int currentContextId = -1;
-//static int cupti_pc_sampling = 0;
+
 // From CuptiActivity.h
 uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;
@@ -696,11 +695,6 @@ void Tau_cupti_setup_offset()
 void Tau_cupti_init()
 {
     TAU_DEBUG_PRINT("TAU: entering Tau_cupti_init\n");
-    /*if(TauEnv_get_tauCuptiPC())
-    {
-        cupti_pcsampling_init();
-        return;
-    }*/
 
     Tau_gpu_init();
     Tau_cupti_set_device_props();
@@ -765,12 +759,6 @@ void Tau_cupti_onload()
 }
 
 void Tau_cupti_onunload() {
-    /*if(TauEnv_get_tauCuptiPC())
-    {
-        cupti_pcsampling_exit();
-        return;
-    }*/
-
 
     if(TauEnv_get_cuda_track_unified_memory()) {
         CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
