@@ -66,9 +66,9 @@
 #endif
 #endif /* TAU_INCLUDE_MPI_H_HEADER */
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 #include <Profile/CuptiLayer.h>
-#endif
+#endif //TAU_CUPTI
 
 #define OTF2_EC(call) { \
     OTF2_ErrorCode ec = call; \
@@ -784,7 +784,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     // in between the start and the stop, but the counter will get a timestamp
     // that could (will?) be after the timer stop.  So, to prevent out-of-order
     // events, make the counter timestamp the previous timer timestamp + 1.
-#if defined(CUPTI) || defined(TAU_ENABLE_ROCTRACER) || defined(TAU_USE_OMPT_5_0)
+#if defined(TAU_CUPTI) || defined(TAU_ENABLE_ROCTRACER) || defined(TAU_USE_OMPT_5_0)
     if (my_ts < getPreviousTS(tid)) {
       TAU_VERBOSE("ERROR! Timestamps out of sequence. %lu < %lu on thread %d\nevent: node=%u, tid=%d, loc=%d: TauTraceEventWithNodeId(ev=%ld, par=%" PRId64 ", tid=%d, ts=%" PRIu64 ", use_ts=%d, node_id=%d, kind=%d)\n", my_ts, getPreviousTS(tid), tid, my_node(), tid, my_real_location(node_id, tid), ev, par, tid, ts, use_ts, node_id, kind);
       my_ts = getPreviousTS(tid);
@@ -1993,7 +1993,7 @@ void TauTraceOTF2Close(int tid) {
     if(tid != 0 || otf2_finished || !otf2_initialized) {
         return;
     }
-#if defined(CUPTI) || defined(DTAU_ENABLE_ROCTRACER)
+#if defined(TAU_CUPTI) || defined(TAU_ENABLE_ROCTRACER)
     TauTraceOTF2ToggleFlushAtExit(true);
     Tau_flush_gpu_activity();
     TauTraceOTF2ToggleFlushAtExit(false);

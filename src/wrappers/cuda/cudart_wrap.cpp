@@ -18,10 +18,10 @@ using namespace std;
 //#define REGISTER_SYNC() Tau_cupti_register_sync_event()
 #define REGISTER_SYNC() Tau_cuda_register_sync_event()
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 extern void Tau_CuptiLayer_finalize();
 extern void Tau_cupti_register_sync_event();
-#endif //CUPTI
+#endif //TAU_CUPTI
 
 const char * cudart_orig_libname = "libcudart.so";
 static void *cudart_handle = NULL;
@@ -82,9 +82,9 @@ cudaError_t cudaDeviceReset() {
 	REGISTER_SYNC();
 //#endif 
   TAU_PROFILE_START(t);
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 	Tau_CuptiLayer_finalize();
-#endif //CUPTI
+#endif //TAU_CUPTI
   retval  =  (*cudaDeviceReset_h)();
   TAU_PROFILE_STOP(t);
 
@@ -124,9 +124,9 @@ cudaError_t cudaThreadExit() {
 	//REGISTER_SYNC();
 //#endif 
   TAU_PROFILE_START(t);
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 	Tau_CuptiLayer_finalize();
-#endif //CUPTI
+#endif //TAU_CUPTI
   retval  =  (*cudaThreadExit_h)();
   TAU_PROFILE_STOP(t);
 

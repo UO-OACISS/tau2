@@ -57,9 +57,10 @@
 #include <Profile/TauSCOREP.h>
 #endif
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 #include <Profile/CuptiLayer.h>
-#endif
+#include <Profile/CuptiPCSampling.h>
+#endif //TAU_CUPTI
 
 #ifdef TAU_ANDROID
 
@@ -578,10 +579,14 @@ extern "C" int Tau_init_initializeTAU()
 
   Tau_call_post_init_callbacks();
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 	//DO NOT MOVE OR FACE ALISTER'S WRATH.
   Tau_cupti_post_init(); //MUST HAPPEN AFTER TAUMETRICS_INIT()
-#endif
+  if(TauEnv_get_tauCuptiPC())
+  {
+      cupti_pcsampling_init();
+  }
+#endif //TAU_CUPTI
 
 #ifdef TAU_ENABLE_LEVEL_ZERO
   TauL0EnableProfiling();

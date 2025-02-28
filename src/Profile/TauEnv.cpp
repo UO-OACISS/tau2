@@ -199,6 +199,9 @@ using namespace std;
 #endif /* TAU_MPI */
 
 #define TAU_CUPTI_API_DEFAULT "runtime"
+#define TAU_CUPTI_PC_DEFAULT 0
+#define TAU_CUPTI_PC_HWS_DEFAULT 0
+#define TAU_CUPTI_PC_PERIOD 0
 #define TAU_CUDA_DEVICE_NAME_DEFAULT NULL
 #define TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT ""
 #define TAU_TRACK_CUDA_CDP_DEFAULT 0
@@ -352,6 +355,10 @@ static int env_node_set = -1;
 
 static int env_cudatotalthreads = 0;
 static int env_taucuptiavail = 0;
+static int env_taucuptipc = 0;
+static int env_taucuptipc_hwsize = 0;
+static int env_taucuptipc_period = 0;
+
 static int env_nodenegoneseen = 0;
 static int env_mic_offload = 0;
 static int env_bfd_lookup = 0;
@@ -1253,6 +1260,18 @@ void TauEnv_set_tauCuptiAvail(int off) {
 }
 int TauEnv_get_tauCuptiAvail() {
     return env_taucuptiavail;
+}
+
+int TauEnv_get_tauCuptiPC() {
+    return env_taucuptipc;
+}
+
+int TauEnv_get_tauCuptiPC_hwsize() {
+  return env_taucuptipc_hwsize;
+}
+
+int TauEnv_get_tauCuptiPC_period() {
+  return env_taucuptipc_period;
 }
 
 void TauEnv_set_nodeNegOneSeen(int nthreads) {
@@ -2623,6 +2642,61 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
       TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
 		}
+
+    tmp = getconf("TAU_CUPTI_PC");
+    if (parse_bool(tmp, TAU_CUPTI_PC_DEFAULT)) {
+      env_taucuptipc = 1;
+      TAU_VERBOSE("TAU: CUPTI PC sampling Enabled\n");
+      TAU_METADATA("TAU_CUPTI_PC", "on");
+    } else {
+      TAU_VERBOSE("TAU: CUPTI PC sampling Disabled\n");
+      TAU_METADATA("TAU_CUPTI_PC", "off");
+    }
+
+    if(env_taucuptipc)
+    {
+      tmp = getconf("TAU_CUPTI_PC_HWB");
+      if (tmp) {
+        env_taucuptipc_hwsize = atoi(tmp);
+        if(env_taucuptipc_hwsize < 1)
+        {
+          env_taucuptipc_hwsize = 0;
+          TAU_VERBOSE("TAU: CUPTI PC sampling hardware buffer size: default\n");
+          TAU_METADATA("TAU_CUPTI_PC_HWB", "default");
+        }
+        else
+        {
+          TAU_VERBOSE("TAU: CUPTI PC sampling hardware buffer size: %d\n", env_taucuptipc_hwsize);
+          snprintf(tmpstr, sizeof(tmpstr),  "%d MB", env_taucuptipc_hwsize);
+          TAU_METADATA("TAU_CUPTI_PC_HWB", tmpstr);
+        }
+      } else {
+        TAU_VERBOSE("TAU: CUPTI PC sampling hardware buffer size: default\n");
+        TAU_METADATA("TAU_CUPTI_PC_HWB", "default");
+      }
+
+      //default values are defined by CUDA, and will be set when variable equals 0
+      tmp = getconf("TAU_CUPTI_PC_PERIOD");
+      if (tmp) {
+        env_taucuptipc_period = atoi(tmp);
+        if(env_taucuptipc_period < 1)
+        {
+          env_taucuptipc_period = 0;
+          TAU_VERBOSE("TAU: CUPTI PC sampling period: default\n");
+          TAU_METADATA("TAU_CUPTI_PC_PERIOD", "default");
+        }
+        else
+        {
+          TAU_VERBOSE("TAU: CUPTI PC sampling period: %d\n", env_taucuptipc_period);
+          snprintf(tmpstr, sizeof(tmpstr),  "2^%d cycles", env_taucuptipc_period);
+          TAU_METADATA("TAU_CUPTI_PC_PERIOD", tmpstr);
+        }
+      } else {
+        TAU_VERBOSE("TAU: CUPTI PC sampling period: default\n");
+        TAU_METADATA("TAU_CUPTI_PC_PERIOD", "default");
+      }
+    }
+
     env_cuda_device_name = getconf("TAU_CUDA_DEVICE_NAME");
     if (!env_cuda_device_name || 0 == strcasecmp(env_cuda_device_name, "")) {
         env_cuda_device_name = TAU_CUDA_DEVICE_NAME_DEFAULT;
@@ -2793,31 +2867,33 @@ void TauEnv_initialize()
     } else {
       TAU_VERBOSE("TAU: TAU_EXEC_PATH is \"%s\"\n", env_tau_exec_path);
     }
+    /*
+    tmp = getconf("ROCPROFILER_PC_SAMPLING_BETA_ENABLED");
+    if(tmp !=NULL)
+    {
+      if (parse_bool(tmp, 1)) {
+        env_bfd_lookup = 1;
+        TAU_VERBOSE("TAU: RocprofilerSDK Enabled\n");
+        TAU_METADATA("TAU_ROCSDK_ENABLEPC", "on");
 
-    /*tmp = getconf("ROCPROFILER_PC_SAMPLING_BETA_ENABLED");
-    if (parse_bool(tmp, 1)) {
-      env_bfd_lookup = 1;
-      TAU_VERBOSE("TAU: RocprofilerSDK Enabled\n");
-      TAU_METADATA("TAU_ROCSDK_ENABLEPC", "on");
+        tmp = getconf("TAU_ROCSDK_LOG");
+        if(tmp)
+        {
+          TAU_VERBOSE("TAU: TAU_ROCSDK_LOG has name\n");
+          env_rocsdk_pcfile = strdup(tmp);
+          TAU_METADATA("TAU_ROCSDK_LOG", env_rocsdk_pcfile);
+        }
+        else
+        {
+          TAU_VERBOSE("TAU: TAU_ROCSDK_LOG has no name\n");
+          env_rocsdk_pcfile = "ROCm_PC_sampling.log";
+          TAU_METADATA("TAU_ROCSDK_LOG", env_rocsdk_pcfile);
+        }
 
-      tmp = getconf("TAU_ROCSDK_LOG");
-      if(tmp)
-      {
-        TAU_VERBOSE("TAU: TAU_ROCSDK_LOG has name\n");
-        env_rocsdk_pcfile = strdup(tmp);
-        TAU_METADATA("TAU_ROCSDK_LOG", env_rocsdk_pcfile);
+
       }
-      else
-      {
-        TAU_VERBOSE("TAU: TAU_ROCSDK_LOG has no name\n");
-         env_rocsdk_pcfile = "ROCm_PC_sampling.log";
-         TAU_METADATA("TAU_ROCSDK_LOG", env_rocsdk_pcfile);
-      }
-
-
-    }*/
-
-
+    }
+  */
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");

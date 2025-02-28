@@ -694,7 +694,6 @@ void Tau_cupti_setup_offset()
 
 void Tau_cupti_init()
 {
-
     TAU_DEBUG_PRINT("TAU: entering Tau_cupti_init\n");
 
     Tau_gpu_init();
@@ -760,6 +759,7 @@ void Tau_cupti_onload()
 }
 
 void Tau_cupti_onunload() {
+
     if(TauEnv_get_cuda_track_unified_memory()) {
         CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
     }
@@ -856,7 +856,6 @@ void CUPTIAPI Tau_cupti_activity_flush_at_exit() {
 }
 
 /* Handler for Synchronous CUPTI_CB_DOMAIN_RESOURCE callbacks */
-
 void Tau_handle_resource (void *ud, CUpti_CallbackDomain domain,
         CUpti_CallbackId id, const CUpti_ResourceData *handle) {
     TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_RESOURCE event\n");
@@ -1122,7 +1121,6 @@ void Tau_handle_cupti_api_exit (void *ud, CUpti_CallbackDomain domain,
 }
 
 /* This callback handles synchronous things */
-
 // Extra bool param that tells whether to run code
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
         CUpti_CallbackId id, const void *params) {

@@ -82,14 +82,14 @@ extern "C" void esd_exit (elg_ui4 rid);
 double TauWindowsUsecD(void);
 #endif
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
 #ifdef __GNUC__
 #include "cupti_version.h"
 #include "cupti_events.h"
 #include "cupti_metrics.h"
 #include <cuda_runtime_api.h>
 #endif //__GNUC__
-#endif //CUPTI
+#endif //TAU_CUPTI
 
 #ifdef TAU_ENABLE_ROCTRACER
 extern void Tau_roctracer_stop_tracing(void);
@@ -1426,7 +1426,7 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
 
         if (found_one) continue;
 
-#ifdef CUPTI
+#ifdef TAU_CUPTI
         // Is a Cupti metric
         if (TauMetrics_getIsCuptiMetric(metric) == TAU_METRIC_CUPTI_METRIC) {
             char const * const metric_name = TauMetrics_getMetricName(metric);
@@ -1532,7 +1532,7 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
                         exclmetric.metricValueDouble, inclmetric.metricValueDouble);
             } // for (dev)
         } else {
-#endif // CUPTI
+#endif // TAU_CUPTI
             double incltime = fi.getDumpInclusiveValues(tid)[metric];
             double excltime = fi.getDumpExclusiveValues(tid)[metric];
 
@@ -1550,9 +1550,9 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
                 fprintf(fp, "[{%#lx}-{%#lx}]", fi.StartAddr, fi.StopAddr);
             }
             fprintf(fp, "\" %ld %ld %.16G %.16G ", fi.GetCalls(tid), fi.GetSubrs(tid), excltime, incltime);
-#ifdef CUPTI
+#ifdef TAU_CUPTI
         }
-#endif //CUPTI
+#endif //TAU_CUPTI
 
         fprintf(fp, "0 ");    // Indicating that profile calls is turned off
         fprintf(fp, "GROUP=\"%s\" \n", fi.GetAllGroups());
@@ -1909,7 +1909,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
         createdDirectories=true;
       }
    }
-//#ifdef CUPTI
+//#ifdef TAU_CUPTI
 //  CUdevice device;
 //  int retval;
 //  int er, err;
@@ -1935,7 +1935,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 //      }
 //    }
 //  }
-//#endif //CUPTI
+//#endif //TAU_CUPTI
 
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     if (TauMetrics_getMetricUsed(i)) {
@@ -1949,7 +1949,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
       if (TauMetrics_getIsCuptiMetric(i) == TAU_METRIC_CUPTI_EVENT) continue;
 
       //cout << "metric name: " << metricHeader << endl;
-#ifdef CUPTI
+#ifdef TAU_CUPTI
       // Is a Cupti event, do not record
       //if(TauMetrics_getIsCuptiMetric(i) == 1) continue;
       // Is a Cupti metric
@@ -1972,7 +1972,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
       //                                   NULL, //uint64_t timeDuration,
       //                                   &metricValue);
       //}
-#endif //CUPTI
+#endif //TAU_CUPTI
       getProfileLocation(i, profileLocation);
 //       sprintf(filename, "%s/temp.%d.%d.%d", profileLocation,
 //         RtsLayer::myNode(), RtsLayer::myContext(), tid);
