@@ -404,8 +404,6 @@ static int env_recycle_threads = TAU_RECYCLE_THREADS_DEFAULT;
 static const char *env_tau_exec_args = NULL;
 static const char *env_tau_exec_path = NULL;
 
-static const char *env_rocsdk_pcfile = NULL;
-
 } // extern "C"
 
 /*********************************************************************
@@ -1425,10 +1423,6 @@ const char * TauEnv_get_tau_exec_args() {
 
 const char * TauEnv_get_tau_exec_path() {
   return env_tau_exec_path;
-}
-
-const char * TAUDECL TauEnv_get_sdk_log(){
-  return env_rocsdk_pcfile;
 }
 
 /*********************************************************************

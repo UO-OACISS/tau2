@@ -7,8 +7,6 @@
 
 constexpr bool COPY_MEMORY_CODEOBJ = true;
 
-const char* pc_sampling_filename = NULL;
-
 
 pc_sampling_buffer_id_vec_t* pc_buffer_ids = nullptr;
 void
@@ -19,14 +17,6 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                                  void* /*data*/,
                                  uint64_t drop_count)
 {
-    //At this point, TAU must be initialized, so read the variables filled by TAU
-    // at this point just in case it dissapears when exiting TAU
-    static bool execute_once = false;
-    if(!execute_once)
-    {
-        pc_sampling_filename = TauEnv_get_sdk_log();
-        execute_once=true;
-    }
 
     std::stringstream ss;
     ss << "The number of delivered samples is: " << num_headers << ", "
@@ -542,8 +532,16 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
 
 void show_results_pc()
 {
-    const char* filename = pc_sampling_filename;
-    sdk_pc_sampling::address_translation::dump_flat_profile(filename);
+
+    
+    #ifdef TAU_MPI
+        char filename[50];
+        snprintf(filename, 50, "ROCm_PC_sampling.%d.log", RtsLayer::myNode());
+        sdk_pc_sampling::address_translation::dump_flat_profile(filename);
+    #else
+        const char* filename = "ROCm_PC_sampling.0.log";
+        sdk_pc_sampling::address_translation::dump_flat_profile(filename);
+    #endif
 }
 #endif //SAMPLING_SDKPC
 
