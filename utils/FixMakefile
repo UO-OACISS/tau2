@@ -550,13 +550,13 @@ case $1 in
 	;;
 
      elfutilsincdir=*)
-        elfdir=`echo $1 | sed -e 's/^elfdir=//'  -e 's/#/ /g'`
-	echo "s,^ELFUTILS_INC_DIR=.*$,ELFUTILS_INC_DIR=$elfdir,g" >> $sedout
+        elfutilsincdir=`echo $1 | sed -e 's/^elfutilsincdir=//'  -e 's/#/ /g'`
+	echo "s,^ELFUTILS_INC_DIR=.*$,ELFUTILS_INC_DIR=$elfutilsincdir,g" >> $sedout
 	;;
 
      elfutilslibdir=*)
-        elfdir=`echo $1 | sed -e 's/^elfdir=//'  -e 's/#/ /g'`
-	echo "s,^ELFUTILS_LIB_DIR=.*$,ELFUTILS_LIB_DIR=$elfdir,g" >> $sedout
+        elfutilslibdir=`echo $1 | sed -e 's/^elfutilslibdir=//'  -e 's/#/ /g'`
+	echo "s,^ELFUTILS_LIB_DIR=.*$,ELFUTILS_LIB_DIR=$elfutilslibdir,g" >> $sedout
 	;;
 
      tbbdir=*)
