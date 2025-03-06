@@ -3,13 +3,23 @@
 #ifndef SAMPLING_SDKPC_H
 #define SAMPLING_SDKPC_H
 
+#include <rocprofiler-sdk/version.h>
+#include <rocprofiler-sdk/rocprofiler.h>
+
+//Due to some bugs, PC Sampling is available, but does not work in older versions
+// do not compile for 4.0 and older
+//Also, the implementation is not fully done, in future releases, we may
+// be able to get stall reasons
+#if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0) && defined(TAU_ENABLE_ROCPROFILERSDK_PC)
+#define SAMPLING_SDKPC
+#include "Profile/RocProfilerSDK/TauRocProfilerSDK_add_tr.hpp"
+
 #include "Profile/Profiler.h"
 
-#include <rocprofiler-sdk/version.h>
+
 #include <rocprofiler-sdk/agent.h>
 #include <rocprofiler-sdk/fwd.h>
 #include <rocprofiler-sdk/version.h>
-#include <rocprofiler-sdk/rocprofiler.h>
 #include <rocprofiler-sdk/registration.h>
 
 #include <vector>
@@ -45,13 +55,7 @@
 #endif // ROCPROFILER_CALL
 
   
-//Due to some bugs, PC Sampling is available, but does not work in older versions
-// do not compile for 4.0 and older
-//Also, the implementation is not fully done, in future releases, we may
-// be able to get stall reasons
-#if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0) && defined(TAU_ENABLE_ROCPROFILERSDK_PC)
-#define SAMPLING_SDKPC
-#include "Profile/RocProfilerSDK/TauRocProfilerSDK_add_tr.hpp"
+
 
 constexpr size_t BUFFER_SIZE_BYTES = 8192;
 constexpr size_t WATERMARK         = (BUFFER_SIZE_BYTES / 4);
@@ -73,6 +77,7 @@ extern void show_results_pc();
 #else
 extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
 {
+    printf("[TAU] PC Sampling not available for this rocprofiler-sdk version.\n");
     return 0;
 }
 void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)

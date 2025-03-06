@@ -1,4 +1,6 @@
+
 #include "Profile/RocProfilerSDK/TauRocProfilerSDK_add_tr.hpp"
+#ifdef SAMPLING_SDKADD
 #include <atomic>
 
 
@@ -189,3 +191,4 @@ dump_flat_profile(const char* output_filename)
 
 }  // namespace address_translation
 }  // namespace sdk_pc_sampling
+#endif //SAMPLING_SDKADD

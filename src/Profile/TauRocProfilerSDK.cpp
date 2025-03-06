@@ -1129,7 +1129,9 @@ int tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
   
   if( (hc_profiling == PROFILE_METRICS) && pc_sampling)
   {
-    std::cerr << "Unable to profile hardware counter and perform pc sampling at the same time \n Select only one" << std::endl;
+    std::cerr << "[TAU] rocprofiler-sdk is unable to profile hardware counter and perform pc sampling at the same time \n Select only one" << std::endl;
+    pc_sampling = 0;
+    hc_profiling = NO_METRICS;
     return -1;
   }
 

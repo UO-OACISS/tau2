@@ -21,7 +21,14 @@
 // SOFTWARE.
 //https://github.com/ROCm/rocprofiler-sdk/blob/ad48201912995e1db4f6e65266bce2792056b3c6/tests/pc_sampling/address_translation.hpp
 //Modified
-#pragma once
+
+#ifndef SAMPLING_SDKADD_H
+#define SAMPLING_SDKADD_H
+
+#include <rocprofiler-sdk/version.h>
+#if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0) && defined(TAU_ENABLE_ROCPROFILERSDK_PC)
+#define SAMPLING_SDKADD
+
 
 #include <rocprofiler-sdk/cxx/codeobj/code_printing.hpp>
 #include <rocprofiler-sdk/pc_sampling.h>
@@ -305,3 +312,7 @@ void
 fini();
 }  // namespace address_translation
 }  // namespace sdk_pc_sampling
+
+#endif //SAMPLING_SDKADD
+
+#endif //SAMPLING_SDKADD_H

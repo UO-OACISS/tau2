@@ -5,12 +5,12 @@
 
 #include <Profile/TauBfd.h>  // for name demangling
 
-#include <rocprofiler-sdk/version.h>
-#include <rocprofiler-sdk/agent.h>
-#include <rocprofiler-sdk/fwd.h>
-#include <rocprofiler-sdk/registration.h>
-#include <rocprofiler-sdk/rocprofiler.h>
-#include <rocprofiler-sdk/callback_tracing.h>
+//Enum to enable or disable metric profiling
+typedef enum profile_metrics {
+	NO_METRICS = 1,
+	WRONG_NAME = 2,
+	PROFILE_METRICS = 3
+};
 
 #include <vector>
 #include <cstdint>
@@ -25,6 +25,9 @@
 #include <string>
 #include <string_view>
 
+
+#include <rocprofiler-sdk/version.h>
+#include <rocprofiler-sdk/rocprofiler.h>
 
 //Map to identify kernels and some of their information
 using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
@@ -53,19 +56,15 @@ struct Tau_SDK_hc_timestamp{
     }
 #endif
 
-//Enum to enable or disable metric profiling
-typedef enum profile_metrics {
-	NO_METRICS = 1,
-	WRONG_NAME = 2,
-	PROFILE_METRICS = 3
-};
-
-
 //Compatible Hardware Counter Profiling is only available at Rocprofiler 0.5 and newer versions
 #if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0)
 #define PROFILE_SDKCOUNTERS
 #include <rocprofiler-sdk/device_counting_service.h>
 #include <rocprofiler-sdk/dispatch_counting_service.h>
+#include <rocprofiler-sdk/agent.h>
+#include <rocprofiler-sdk/fwd.h>
+#include <rocprofiler-sdk/registration.h>
+#include <rocprofiler-sdk/callback_tracing.h>
 
 extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value, rocprofiler_timestamp_t* c_timestamp);
 extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
@@ -78,6 +77,9 @@ std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t cli
 }
 int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer)
 { 
+  const char* rocm_metrics=std::getenv("ROCM_METRICS");
+  if( rocm_metrics )
+    printf("[TAU] ROCM Metrics not available for this rocprofiler-sdk version.\n");
   return NO_METRICS;
 }
 #endif //PROFILE_SDKCOUNTERS
