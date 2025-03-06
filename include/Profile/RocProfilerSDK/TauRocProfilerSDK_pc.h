@@ -77,7 +77,11 @@ extern void show_results_pc();
 #else
 extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
 {
-    printf("[TAU] PC Sampling not available for this rocprofiler-sdk version.\n");
+    #ifdef TAU_ENABLE_ROCPROFILERSDK_PC
+        printf("[TAU] PC Sampling not available for this rocprofiler-sdk version.\n");
+    #else
+        printf("[TAU] PC Sampling not available for rocprofiler-sdk [compile with -elfutils=download]\n");
+    #endif
     return 0;
 }
 void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
