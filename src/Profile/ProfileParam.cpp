@@ -164,7 +164,7 @@ FunctionInfo * TauGetProfileParamFI(int tid, long key, string& keyname) {
     
     FunctionInfo *fnew = new FunctionInfo(name, " ", 
 					  f->GetProfileGroup(),
-					  (const char *)grname.c_str(), true, tid); 
+					  (const char *)grname.c_str(), true); 
     TheTimerProfileParamMap().insert(map<TAU_PROFILE_PARAM_TYPE >::value_type(ary, fnew)); /* Add it to the map */
     return fnew; 
   } else { 
