@@ -26,6 +26,7 @@
 #include <sstream>
 #include <iomanip>
 
+
 using namespace std;
 int debugPrint = 0;
 int jsonPrint = 1;
@@ -33,6 +34,10 @@ int chromeFormat = 0;
 int ignoreAtomic = 0;
 int printstdout = 0;
 const char* filename="events.json";
+unsigned int message_id = 0;
+//To link a recv to a send, we need an id
+std::map<tuple<unsigned int, unsigned int, unsigned int, unsigned int>, unsigned int> message_id_map;
+
 #define dprintf if (debugPrint) printf
 
 ofstream json_event_out;
@@ -296,6 +301,9 @@ int SendMessage( void *userData, double time,
 		  destinationNodeToken, destinationThreadToken,
 		  messageSize, messageTag);
 			if(chromeFormat){
+				tuple<unsigned int, unsigned int, unsigned int, unsigned int> source_dest
+					(sourceNodeToken,sourceThreadToken,destinationNodeToken, destinationThreadToken);
+				message_id_map[source_dest] = message_id;
 				json_event_out << "{ ";
 				json_event_out << "\"name\": \"MPI\", ";
 			  json_event_out << "\"cat\": \"Message\", ";
@@ -304,10 +312,11 @@ int SendMessage( void *userData, double time,
 			  json_event_out << "\"tid\": \"" << sourceThreadToken << "\", ";
 				json_event_out << "\"ph\": \"s\", ";
 				json_event_out << "\"bp\": \"e\", ";
-			  json_event_out << "\"id\": \"" << destinationNodeToken << "\", ";
+			  json_event_out << "\"id\": \"" << message_id << "\", ";
 				json_event_out << "\"scope\": \"" << messageTag << "\", ";
 				json_event_out << "\"args\": {\"destNode\": " << destinationNodeToken << ",\"destThread\": " << destinationThreadToken << ",\"message-size\": " << messageSize << ",\"message-tag\": " << messageTag << "} ";
 			  json_event_out << "},\n";
+			  message_id++;
 			}
 			else{
   json_event_out << "{ ";
@@ -347,7 +356,15 @@ int RecvMessage( void *userData, double time,
 			  json_event_out << "\"tid\": \"" << destinationThreadToken << "\", ";
 				json_event_out << "\"ph\": \"f\", ";
 				json_event_out << "\"bp\": \"e\", ";
-			  json_event_out << "\"id\": \"" << destinationNodeToken << "\", ";
+				std::map<tuple<unsigned int, unsigned int, unsigned int, unsigned int>, unsigned int>::iterator it;
+				 tuple<unsigned int, unsigned int, unsigned int, unsigned int> source_dest                                                                    (sourceNodeToken,sourceThreadToken,destinationNodeToken, destinationThreadToken);
+				it = message_id_map.find(source_dest);
+				if(it!=message_id_map.end())
+				{
+					json_event_out << "\"id\": \"" << it->second << "\", ";
+					message_id_map.erase(it);
+				}
+				//json_event_out << "\"id\": \"" << message_id << "\", ";
 				json_event_out << "\"scope\": \"" << messageTag << "\", ";
 				json_event_out << "\"args\": {\"destNode\": " << destinationNodeToken << ",\"destThread\": " << destinationThreadToken << ",\"message-size\": " << messageSize << ",\"message-tag\": " << messageTag << "} ";
 			  json_event_out << "},\n";
@@ -576,6 +593,7 @@ int main(int argc, char **argv)
   }
   else
   {
+
     cb.SendMessage = SendMessage;
     cb.RecvMessage = RecvMessage;
   }
