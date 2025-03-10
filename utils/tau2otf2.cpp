@@ -46,6 +46,9 @@ uint32_t string_id = 0;
 /* Convert each time stamp to 1000 times its value and pass it as uint64_t */
 #define TAU_MULT 10000
 
+
+static const uint64_t TAU_OTF2_CLOCK_RES = 1000000;
+
 static inline int
 localmax(int a,int b){
     if(a>b)return a;
@@ -109,7 +112,7 @@ get_time
 uint64_t* locations;//[ locations ];
 
 uint64_t TauGetClockTicksInGHz(double time)
-{    return (uint64_t) (time * TAU_MULT);
+{    return (uint64_t) (time);// * TAU_MULT);
 }/* any unique id */
 
 /* implementation of callback routines */
@@ -1214,14 +1217,14 @@ cb.LeaveState = 0;
 
     /* dummy records */
     Ttf_CloseFile(fh);
-
+	x_uint64 trace_len = lastt - firstRealTime;
     status = OTF2_GlobalDefWriter_WriteClockProperties( glob_def_writer,
-    1000000000,
+    TAU_OTF2_CLOCK_RES, //1000000000,
     TauGetClockTicksInGHz(firstRealTime),
-    lastt
+    trace_len
     #if OTF2_VERSION_MAJOR > 2
     ,
-    firstRealTime 
+    firstRealTime*1000 
     #endif 
     );
 
