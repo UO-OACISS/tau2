@@ -304,6 +304,14 @@ int SendMessage( void *userData, double time,
 				tuple<unsigned int, unsigned int, unsigned int, unsigned int> source_dest
 					(sourceNodeToken,sourceThreadToken,destinationNodeToken, destinationThreadToken);
 				message_id_map[source_dest] = message_id;
+        json_event_out << "{ ";
+				json_event_out << "\"name\": \"MPI\", ";
+			  json_event_out << "\"cat\": \"Message\", ";
+			  json_event_out << "\"ts\": \"" << time << "\", ";
+			  json_event_out << "\"pid\": \"" << sourceNodeToken << "\", ";
+			  json_event_out << "\"tid\": \"" << sourceThreadToken << "\", ";
+				json_event_out << "\"ph\": \"R\"";
+			  json_event_out << "},\n";
 				json_event_out << "{ ";
 				json_event_out << "\"name\": \"MPI\", ";
 			  json_event_out << "\"cat\": \"Message\", ";
@@ -348,6 +356,14 @@ int RecvMessage( void *userData, double time,
 		  destinationNodeToken, destinationThreadToken,
 		  messageSize, messageTag);
 			if(chromeFormat){
+        json_event_out << "{ ";
+				json_event_out << "\"name\": \"MPI\", ";
+			  json_event_out << "\"cat\": \"Message\", ";
+			  json_event_out << "\"ts\": \"" << time << "\", ";
+			  json_event_out << "\"pid\": \"" << destinationNodeToken << "\", ";
+			  json_event_out << "\"tid\": \"" << destinationThreadToken << "\", ";
+				json_event_out << "\"ph\": \"R\"";
+        json_event_out << "},\n";
 				json_event_out << "{ ";
 				json_event_out << "\"name\": \"MPI\", ";
 			  json_event_out << "\"cat\": \"Message\", ";
