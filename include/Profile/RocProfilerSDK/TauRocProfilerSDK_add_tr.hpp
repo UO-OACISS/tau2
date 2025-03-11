@@ -32,9 +32,6 @@
 
 #include <rocprofiler-sdk/cxx/codeobj/code_printing.hpp>
 #include <rocprofiler-sdk/pc_sampling.h>
-#pragma once
-
-#include <rocprofiler-sdk/cxx/codeobj/code_printing.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -308,6 +305,6 @@ namespace sdk_pc_sampling
     fini();
 }  // namespace address_translation
 }  // namespace sdk_pc_sampling
-#endif //SAMPLING_SDKADD
+#endif //version check
 
 #endif //SAMPLING_SDKADD_H
