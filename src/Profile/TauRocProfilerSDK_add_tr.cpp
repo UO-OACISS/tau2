@@ -118,19 +118,14 @@ dump_flat_profile(const char* output_filename)
             ss << inst.inst << "\t";
             ss << inst.comment << "\t";
             const auto* _sample_instruction = flat_profile.get_sample_instruction(inst);
-            /*if(_sample_instruction == nullptr)
-            {
-                //ss << "0";
-            }
-            else*/
+
             if(_sample_instruction != nullptr)
             {
                 _sample_instruction->process([&](const SampleInstruction& sample_instruction) {
 
                     ss << "samples: ";
                     ss << sample_instruction.sample_count();
-                    ss << " with stall info : ";
-                    ss << sample_instruction.valid_count();
+
                     // Each instruction should be visited exactly once.
                     // Otherwise, code object loading/unloading and relocations
                     // are not handled properly.

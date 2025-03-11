@@ -43,6 +43,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
         }
         else if(cur_header->category == ROCPROFILER_BUFFER_CATEGORY_PC_SAMPLING)
         {
+#if (ROCPROFILER_VERSION_MINOR < 7) && (ROCPROFILER_VERSION_MAJOR == 0)
             if(cur_header->kind == ROCPROFILER_PC_SAMPLING_RECORD_SAMPLE)
             {
                 ss << "ROCPROFILER_PC_SAMPLING_RECORD_SAMPLE" <<std::endl;
@@ -54,7 +55,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     ss << "ROCPROFILER_PC_SAMPLING_RECORD_SAMPLE NONE" <<std::endl;
                     continue;
                 }
-                ss << "(code_obj_id, offset): (" << pc_sample->pc.loaded_code_object_id
+                /*ss << "(code_obj_id, offset): (" << pc_sample->pc.loaded_code_object_id
                     << ", 0x" << std::hex << pc_sample->pc.loaded_code_object_offset << "), "
                     << "timestamp: " << std::dec << pc_sample->timestamp << ", "
                     << "exec: " << std::hex << std::setw(16) << pc_sample->exec_mask << ", "
@@ -84,17 +85,50 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     << " has_wave_cnt: " << std::setw(2) << static_cast<unsigned int>(pc_sample->flags.has_wave_cnt)
                     << " reserved: " << std::setw(2) << static_cast<unsigned int>(pc_sample->flags.reserved)
                     << " +!!" 
-                    << std::endl;
+                    << std::endl;*/
 
                     //Need to check if needed
                     //https://github.com/ROCm/rocprofiler-sdk/blob/ad48201912995e1db4f6e65266bce2792056b3c6/tests/pc_sampling/pcs.cpp#L368
 
-                    sdk_pc_sampling::inc_total_samples_num();
+                sdk_pc_sampling::inc_total_samples_num();
 
-                    // Decoding the PC
-                    auto inst = translator.get(pc_sample->pc.loaded_code_object_id,
-                                               pc_sample->pc.loaded_code_object_offset);
-                    flat_profile.add_sample(std::move(inst), pc_sample->exec_mask, pc_sample->snapshot, pc_sample->flags);
+                // Decoding the PC
+                auto inst = translator.get(pc_sample->pc.loaded_code_object_id,
+                                            pc_sample->pc.loaded_code_object_offset);
+                flat_profile.add_sample(std::move(inst), pc_sample->exec_mask);
+#else
+            if(cur_header->kind == ROCPROFILER_PC_SAMPLING_RECORD_HOST_TRAP_V0_SAMPLE)
+            {
+                auto* pc_sample = static_cast<rocprofiler_pc_sampling_record_host_trap_v0_t*>(
+                    cur_header->payload);
+
+                /*ss << "(code_obj_id, offset): (" << pc_sample->pc.code_object_id << ", 0x"
+                       << std::hex << pc_sample->pc.code_object_offset << "), "
+                       << "timestamp: " << std::dec << pc_sample->timestamp << ", "
+                       << "exec: " << std::hex << std::setw(16) << pc_sample->exec_mask << ", "
+                       << "workgroup_id_(x=" << std::dec << std::setw(5)
+                       << pc_sample->workgroup_id.x << ", "
+                       << "y=" << std::setw(5) << pc_sample->workgroup_id.y << ", "
+                       << "z=" << std::setw(5) << pc_sample->workgroup_id.z << "), "
+                       << "wave_in_group: " << std::setw(2)
+                       << static_cast<unsigned int>(pc_sample->wave_in_group) << ", "
+                       << "chiplet: " << std::setw(2)
+                       << static_cast<unsigned int>(pc_sample->hw_id.chiplet) << ", "
+                       << "dispatch_id: " << std::setw(7) << pc_sample->dispatch_id << ","
+                       << "correlation: {internal=" << std::setw(7)
+                       << pc_sample->correlation_id.internal << ", "
+                       << "external=" << std::setw(5) << pc_sample->correlation_id.external.value
+                       << "}" << std::endl;*/
+                
+                if(pc_sample->correlation_id.internal == ROCPROFILER_CORRELATION_ID_INTERNAL_NONE)
+                    continue;
+                sdk_pc_sampling::inc_total_samples_num();
+                // Decoding the PC
+                auto inst = translator.get(pc_sample->pc.code_object_id,
+                    pc_sample->pc.code_object_offset);
+                flat_profile.add_sample(std::move(inst), pc_sample->exec_mask);
+                
+#endif
             }
             else
             {
@@ -302,7 +336,7 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
                                         rocprofiler_context_id_t context_id,
                                         rocprofiler_buffer_id_t  buffer_id)
 {
-    int    failures = 10;
+    int    failures = MAX_FAILURES;
     size_t interval = 0;
     do
     {
@@ -324,13 +358,14 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
         {
             if(cfg.method == ROCPROFILER_PC_SAMPLING_METHOD_STOCHASTIC)
             {
-                first_stochastic_config = &cfg;
-                break;
+                //first_stochastic_config = &cfg;
+                //break;
             }
             else if(!first_host_trap_config &&
                     cfg.method == ROCPROFILER_PC_SAMPLING_METHOD_HOST_TRAP)
             {
                 first_host_trap_config = &cfg;
+                break;
             }
         }
 
@@ -340,20 +375,32 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
 
         if(picked_cfg->min_interval == picked_cfg->max_interval)
         {
-            // Another process already configured PC sampling, so use the intreval it set up.
+            // Another process already configured PC sampling, so use the interval it set up.
             interval = picked_cfg->min_interval;
         }
         else
         {
-            interval = 10000;
+            //This is nanoseconds when using ROCPROFILER_PC_SAMPLING_UNIT_TIME
+            interval = 1000;
         }
 
+
+#if (ROCPROFILER_VERSION_MINOR < 7) && (ROCPROFILER_VERSION_MAJOR == 0)
         auto status = rocprofiler_configure_pc_sampling_service(context_id,
                                                                 agent_info->agent_id,
                                                                 picked_cfg->method,
                                                                 picked_cfg->unit,
                                                                 interval,
                                                                 buffer_id);
+#else
+        auto status = rocprofiler_configure_pc_sampling_service(context_id,
+                                                                agent_info->agent_id,
+                                                                picked_cfg->method,
+                                                                picked_cfg->unit,
+                                                                interval,
+                                                                buffer_id,
+                                                                0);
+#endif
         if(status == ROCPROFILER_STATUS_SUCCESS)
         {
             /*std::cout
@@ -544,7 +591,3 @@ void show_results_pc()
     #endif
 }
 #endif //SAMPLING_SDKPC
-
-
-
-
