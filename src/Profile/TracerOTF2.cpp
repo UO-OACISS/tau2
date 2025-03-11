@@ -832,8 +832,9 @@ extern "C" void TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int le
     if(otf2_disable) {
         return;
     }
+
 #ifdef TAU_OTF2_DEBUG
-  fprintf(stderr, "%d: TauTraceOTF2Msg(%d, %d, %d, %d, %llu, %d, %d)\n", my_node(), send_or_recv, type, other_id, length, ts, use_ts, node_id);
+  fprintf(stderr, "my_node=%d: TauTraceOTF2Msg(send_or_recv=%d, type=%d, other_id=%d, length=%d, ts=%llu, use_ts=%d, node_id=%d)\n", my_node(), send_or_recv, type, other_id, length, ts, use_ts, node_id);
 #endif
     TauInternalFunctionGuard protects_this_function;
     if(!otf2_initialized) {
@@ -863,9 +864,11 @@ extern "C" void TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int le
     }
 #else
     if(send_or_recv == TAU_MESSAGE_SEND) {
-        OTF2_EC(OTF2_EvtWriter_MpiSend(evt_writer, NULL, time, other_id, TAU_OTF2_COMM_WORLD, type, length));
+		//fprintf(stderr, "my_node=%d: OTF2 Writing MpiSend. Dest: %d\n", my_real_location(node_id,0),my_real_location(other_id,0));
+        OTF2_EC(OTF2_EvtWriter_MpiSend(evt_writer, NULL, time,other_id, TAU_OTF2_COMM_WORLD, type, length));//my_real_location(other_id,0)
     } else if(send_or_recv == TAU_MESSAGE_RECV) {
-        OTF2_EC(OTF2_EvtWriter_MpiRecv(evt_writer, NULL, time, other_id, TAU_OTF2_COMM_WORLD, type, length));
+		//fprintf(stderr, "my_node=%d: OTF2 Writing MpiRecv. Source: %d\n", my_real_location(node_id,0),my_real_location(other_id,0));
+        OTF2_EC(OTF2_EvtWriter_MpiRecv(evt_writer, NULL, time, other_id, TAU_OTF2_COMM_WORLD, type, length));// my_real_location(other_id,0)
     }
 #endif
 }
@@ -1217,8 +1220,8 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     uint64_t nodes_list[nodes];
     uint64_t ranks_list[nodes];
     for(int i = 0; i < nodes; ++i) {
-        int nodelocs = num_locations[nodes];
-        nodes_list[i] = i * nodelocs;//max_threads;//TAU_MAX_THREADS;//TODO: DYNATHREAD
+        //int nodelocs = num_locations[nodes];
+        nodes_list[i] = my_real_location(i,0); //i * nodelocs;//max_threads;//TAU_MAX_THREADS;//TODO: DYNATHREAD
         ranks_list[i] = i;
     }
     OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_LOCS, locsGroupName, OTF2_GROUP_TYPE_COMM_LOCATIONS, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, nodes_list));
