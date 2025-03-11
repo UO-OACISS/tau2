@@ -169,15 +169,20 @@ cl_command_queue clCreateCommandQueueWithProperties(cl_context a1, cl_device_id 
 #ifdef TAU_DEBUG_OPENCL
     fprintf(stderr, "clCreateCommandQueueWithProperties list contained CL_QUEUE_PROFILING_EVENT\n");
 #endif
-      cl_queue_properties props[size+1];
-      for(size_t i = 0; i < size; ++i) {
+      cl_queue_properties props[size+2];
+      for(size_t i = 0; i < size+1; ++i) {
         if(i == prop_bitmask_index) {
-          props[i] = a3[i] | CL_QUEUE_PROFILING_ENABLE;
+          props[i] = a3[i-1] | CL_QUEUE_PROFILING_ENABLE;
         } else {
           props[i] = a3[i];
         }
       }
-      props[size] = 0;
+      props[size+1] = 0;
+#ifdef TAU_DEBUG_OPENCL
+      for(size_t i = 0; i < size+2; ++i) {
+        fprintf(stderr, "b_index=%d, i=%d size=%d, value_i=%lu value_o=%lu\n", prop_bitmask_index, i, size, a3[i], props[i]);
+      }
+#endif
       return clCreateCommandQueueWithProperties_h(a1, a2, props, a4);
     } else {
 #ifdef TAU_DEBUG_OPENCL
