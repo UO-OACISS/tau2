@@ -59,6 +59,7 @@
 
 constexpr size_t BUFFER_SIZE_BYTES = 8192;
 constexpr size_t WATERMARK         = (BUFFER_SIZE_BYTES / 4);
+constexpr int    MAX_FAILURES      = 10;
 
 using avail_configs_vec_t         = std::vector<rocprofiler_pc_sampling_configuration_t>;
 
