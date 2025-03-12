@@ -1,0 +1,4 @@
+This is an MPI+Python+OpenCL program.
+
+mpirun -np 4 tau_python -opencl -rocm ./hi_ocl.py
+for AMD GPUs. 
