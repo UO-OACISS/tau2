@@ -3389,6 +3389,9 @@ for arg in "$@"; do
                 libname="lib${d}.so"
                 echo "Looking for ${libname} in ${opencldir}"
                 exists=`find ${opencldir} -name ${libname} | head -n 1`
+                if [ "x$d" == "xamdocl64" -a -r ${opencldir}/lib/libamdocl64.so ]; then 
+                    exists=${opencldir}/lib/libamdocl64.so 
+                fi
                 if [ -r "${exists}" ]; then
                     echo "found $exists"
                     opencllib=${exists}
@@ -13691,7 +13694,7 @@ fi
 if [ $zerosum = yes ] ; then
     build_zerosum
 fi
-if [ $python3 = yes ] ; then
+if [ $python3 = yes -o $python = yes ] ; then
     python_version=`${pythonintv} --version | awk '{print $NF}'`
     version_array=( ${python_version//./ } )
     if [ "${version_array[0]}" == 3 ] ; then

@@ -6,6 +6,7 @@ TAU_OPENCL_INC=${ROCM_PATH}/include
 #TAU_OPENCL_LIB=-L/opt/intel/oneapi/compiler/2021.1-beta10/linux/lib -lOpenCL
 #TAU_CXX=clang++
 TAU_OPENCL_LIB=-L$(TAU_OPENCL_INC)/../lib/x86_64 -L$(TAU_OPENCL_INC)/../lib -L${ROCM_PATH}/lib -Wl,-rpath,${ROCM_PATH}/lib -lamdocl64
+TAU_OPENCL_LIB=$(TAU_OPENCL_LIBRARY)
 
 all: libmatmult.so
 
