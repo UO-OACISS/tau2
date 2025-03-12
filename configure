@@ -1457,7 +1457,40 @@ compiler_for_dyninst=""
 compilerxx_for_dyninst=""
 restore_perfdmf_and_paraprof
 
+handle_python_option() {
+    local arg_value="$1" #full path to interpreter if provided
+    local default_interpreter="$2" #python or python3
 
+    if [[ -n "$arg_value" ]]; then
+        pythonintv="$arg_value"
+        if [[ ! -x "$pythonintv" ]]; then
+            echo "Error: Specified Python interpreter '$pythonintv' is not executable or does not exist."
+            exit 1
+        fi
+    else
+        pythonintv=$(command -v "$default_interpreter")
+
+        # If -python was given and 'python' doesn't exist, fallback to python3
+        if [[ -z "$pythonintv" && "$default_interpreter" == "python" ]]; then
+            pythonintv=$(command -v python3)
+        fi
+
+        if [[ -z "$pythonintv" ]]; then
+            echo "Error: No suitable Python interpreter found for '$default_interpreter'."
+            exit 1
+        fi
+    fi
+
+    pythonbin=$(dirname "$pythonintv")
+    python=yes
+    pthread=yes  # Python can spawn threads
+
+    if [[ "$default_interpreter" == "python3" ]]; then
+        python3=yes
+    fi
+
+    python_ver_specified=$([[ -n "$arg_value" ]] && echo "yes" || echo "no")
+}
 
 ###############################################################
 # PARSE OPTIONS
@@ -2752,69 +2785,22 @@ for arg in "$@"; do
             shift
             ;;
 
-        -python=*)
-            pythonintv=`echo $arg | sed -e 's/-python=//' -e 's/ /#/g'`
-            python=yes
-            pythonbin=$( which $( echo $pythonintv ) | sed 's,[^/]*$,,' )
-	    python_ver_specified=yes
-            if [ ! -f $pythonbin/$pythonintv ] ; then
-		if [ -f $pythonintv ]; then
-	           echo "Found $pythonintv"
-	        else
-                  echo "Error: Cannot access Python interpreter $pythonbin/$pythonintv or $pythonintv"
-                  exit 1
-		fi
-	    else
-	        pythonintv=$pythonbin/$pythonintv
-            fi
-        # Python can/will spawn threads
-            pthread=yes
-            shift
-            ;;
-
-        -python)
-            pythonbin=`which python | sed 's,[^/]*$,,'`
-            python=yes
-            pythonintv=`which python`
-        # Python can/will spawn threads
-            pthread=yes
-	    python_ver_specified=no
-            shift
-            ;;
-
-	-python3=*)
-            pythonintv=`echo $arg | sed -e 's/-python3=//' -e 's/ /#/g'`
-	    python=yes
-            python3=yes
-	    python_ver_specified=yes
-            pythonbin=$( which $( echo $pythonintv ) | sed 's,[^/]*$,,' )
-	    if [ ! -f $pythonbin/$pythonintv ] ; then
-                if [ -f $pythonintv ]; then
-                   echo "Found $pythonintv"
-                else
-                  echo "Error: Cannot access Python interpreter $pythonbin/$pythonintv or $pythonintv"
-                  exit 1
-                fi
-            else
-                pythonintv=$pythonbin/$pythonintv
-            fi
-
-        # Python can/will spawn threads
-            pthread=yes
-            shift
-            ;;
-
-	-python3)
-            pythonbin=`which python3 | sed 's,[^/]*$,,'`
-	    python=yes
-            python3=yes
-	    pythonintv=`which python3`
-	    python_ver_specified=no
-        # Python can/will spawn threads
-            pthread=yes
-            shift
-            ;;
-
+		-python3=*)
+			handle_python_option "${arg#*=}" "python3"
+			shift
+			;;
+		-python3)
+			handle_python_option "" "python3"
+			shift
+			;;
+		-python=*)
+			handle_python_option "${arg#*=}" "python"
+			shift
+			;;
+		-python)
+			handle_python_option "" "python"
+			shift
+			;;
 
         -pythoninc=*)
             pythoninc=`echo $arg | sed -e 's/-pythoninc=//' -e 's/ /#/g'`
@@ -5406,7 +5392,7 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
             if [ "x$fortran_compiler" = "xarmflang" ]; then
                 fixmakeargs="$fixmakeargs ARMFLANG"
             fi
-            if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" -o "x$fortran_compiler" = "xmdflang" -o "x$fortran_compiler" = "flang-new" ]; then
+            if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" -o "x$fortran_compiler" = "xmdflang" -o "x$fortran_compiler" = "xflang-new" ]; then
                 fixmakeargs="$fixmakeargs FLANG"
                 touch foo_compinst.f
                 test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
