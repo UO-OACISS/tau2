@@ -42,6 +42,7 @@
 #include <shared_mutex>
 #include <string>
 #include <vector>
+#include <sstream>
 
 namespace sdk_pc_sampling
 {
