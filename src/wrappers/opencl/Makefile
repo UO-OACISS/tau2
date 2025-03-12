@@ -10,7 +10,7 @@ install:$(TAU_OPENCL_SHARED)
 	$(TAU_SHARED_INSTALL_CMD)
 
 $(TAU_OPENCL_SHARED): cl_wrap.o
-	$(TAU_CXX) $(TAU_SHFLAGS) $@ $< -L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) -lTAU $(TAU_LINKER_RPATH_OPT) -ldl
+	$(TAU_CXX) $(TAU_SHFLAGS) $@ $< -L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) -lTAU $(TAU_LINKER_RPATH_OPT) -ldl -Wl,-rpath,$(TAU_LIB_DIR)/shared$(TAU_CONFIG)
 
 cl_wrap.o: cl_wrap.cpp $(TAU_INC_DIR)/Profile/TauGpuAdapterOpenCL.h
 	$(TAU_CXX) -g $(CFLAGS) $(TAU_OPENCL_INCLUDE) $(BFDINCLUDE) -c $< -o $@
