@@ -3403,6 +3403,9 @@ for arg in "$@"; do
                 libname="lib${d}.so"
                 echo "Looking for ${libname} in ${opencldir}"
                 exists=`find ${opencldir} -name ${libname} | head -n 1`
+                if [ "x$d" == "xamdocl64" -a -r ${opencldir}/lib/libamdocl64.so ]; then 
+                    exists=${opencldir}/lib/libamdocl64.so 
+                fi
                 if [ -r "${exists}" ]; then
                     echo "found $exists"
                     opencllib=${exists}
