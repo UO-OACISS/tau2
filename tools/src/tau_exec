@@ -972,13 +972,13 @@ if [ $track_l0 = "true" ]; then
     export ZET_ENABLE_METRICS=1
   fi
 fi
-
+if [ -v $TAU_METRICS ]; then
+  export TAU_METRICS=TIME
+fi
 if [ $track_rocm = "true" ] ; then
   if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
     if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-        if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then
         $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-        fi
     else
         $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
     fi
