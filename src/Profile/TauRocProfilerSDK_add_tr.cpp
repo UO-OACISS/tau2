@@ -114,9 +114,14 @@ dump_flat_profile(const char* output_filename)
            << " with the begin address: " << kernel_obj->begin_address()
            << " from code object with id: " << kernel_obj->code_object_id() << std::endl;
         kernel_obj->iterate_instrunctions([&](const Instruction& inst) {
+            ss << kernel_obj->kernel_name() ;
             ss << "\t";
             ss << inst.inst << "\t";
             ss << inst.comment << "\t";
+            ss << inst.faddr << "\t";
+            ss << inst.vaddr << "\t";
+            ss << inst.ld_addr << "\t";
+            ss << inst.codeobj_id << "\t";
             const auto* _sample_instruction = flat_profile.get_sample_instruction(inst);
 
             if(_sample_instruction != nullptr)

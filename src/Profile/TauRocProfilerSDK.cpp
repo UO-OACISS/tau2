@@ -1185,9 +1185,10 @@ void Tau_rocprofsdk_flush(){
     TAU_VERBOSE("Flag -rocm not set, rocm is not profiled\n");
     return;
   }
+  if(flushed==1)
+    return;
   TAU_VERBOSE("Tau_rocprofsdk_flush\n");
   ROCPROFILER_CALL(rocprofiler_flush_buffer(client_buffer), "buffer flush");
-  
   
   
   TauRocmSDKList.sort();
@@ -1197,4 +1198,5 @@ void Tau_rocprofsdk_flush(){
     TauRocmSDKList.pop_front();
   }
   flushed = 1;
+  ROCPROFILER_CALL(rocprofiler_stop_context(client_ctx), "rocprofiler context stop");
 }

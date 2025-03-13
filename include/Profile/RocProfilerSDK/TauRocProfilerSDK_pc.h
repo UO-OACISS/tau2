@@ -13,7 +13,7 @@
 #if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0) && defined(TAU_ENABLE_ROCPROFILERSDK_PC)
 #define SAMPLING_SDKPC
 #include "Profile/RocProfilerSDK/TauRocProfilerSDK_add_tr.hpp"
-
+#include <Profile/TauBfd.h>  // for name demangling
 #include "Profile/Profiler.h"
 
 
@@ -21,6 +21,7 @@
 #include <rocprofiler-sdk/fwd.h>
 #include <rocprofiler-sdk/version.h>
 #include <rocprofiler-sdk/registration.h>
+#include <rocprofiler-sdk/cxx/codeobj/code_printing.hpp>
 
 #include <vector>
 #include <cstdint>
@@ -71,6 +72,7 @@ struct tool_agent_info
 };
 using tool_agent_info_vec_t       = std::vector<std::unique_ptr<tool_agent_info>>;
 using pc_sampling_buffer_id_vec_t = std::vector<rocprofiler_buffer_id_t>;
+
 
 extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
 extern void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);

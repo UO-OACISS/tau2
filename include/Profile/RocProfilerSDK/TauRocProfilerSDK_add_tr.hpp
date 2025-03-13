@@ -259,7 +259,6 @@ namespace sdk_pc_sampling
                 samples.insert({inst_id, std::make_unique<SampleInstruction>(std::move(instruction))});
                 itr = samples.find(inst_id);
             }
-    
             auto* sample_instruction = itr->second.get();
             sample_instruction->add_sample(exec_mask);
         }

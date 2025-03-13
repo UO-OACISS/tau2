@@ -3,9 +3,172 @@
 #include "Profile/RocProfilerSDK/TauRocProfilerSDK_pc.h"
 #include <TAU.h>
 
+#define ROCSDK_PC_DEBUG
+
 #ifdef SAMPLING_SDKPC
 
+#define TAU_ROCMSDK_SAMPLE_LOOK_AHEAD 1024
+
 constexpr bool COPY_MEMORY_CODEOBJ = true;
+
+using marker_id_t = rocprofiler::sdk::codeobj::disassembly::marker_id_t;
+
+struct rocsdk_instruction
+{
+    rocsdk_instruction() = default;
+    rocsdk_instruction(std::string _inst, std::string _kernel_name, std::string _comment, uint64_t _ld_addr)
+    : inst(_inst)
+    , kernel_name(_kernel_name)
+    , comment(_comment)
+    , ld_addr(_ld_addr)
+    {}
+    std::string inst{};
+    std::string kernel_name{};
+    std::string comment{};
+    uint64_t    ld_addr{0};     // Instruction load address, if from loaded codeobj
+};
+
+struct TauSDKSampleEvent {
+
+    rocprofiler_timestamp_t entry;
+    rocprofiler_timestamp_t exit;
+    std::string name;
+    int taskid;
+
+    TauSDKSampleEvent(): taskid(0) {}
+    TauSDKSampleEvent(string event_name, rocprofiler_timestamp_t begin, rocprofiler_timestamp_t end, int t) : name(event_name), taskid(t)
+    {
+        entry = begin;
+        exit  = end;
+    }
+    void printEvent() {
+        std::cout <<name<<" Task: "<<taskid<<", \t\tEntry: "<<entry<<" , Exit = "<<exit;
+    }
+    bool appearsBefore(struct TauSDKSampleEvent other_event) {
+        if ((taskid == other_event.taskid) &&
+            (entry < other_event.entry) &&
+            (exit < other_event.entry))  {
+            // both entry and exit of my event is before the entry of the other event.
+            return true;
+        } else
+            return false;
+    }
+
+    bool operator < (struct TauSDKSampleEvent two) {
+        if (entry < two.entry) 
+            return true;
+        else 
+            return false;
+    }
+  
+};
+
+size_t interval = 0;
+
+using rocsdk_map_inst_key = std::pair<marker_id_t, uint64_t>;
+
+std::map<rocsdk_map_inst_key, rocsdk_instruction> code_object_map;
+
+//List of events, used  to sort events by timestamp
+std::list<struct TauSDKSampleEvent> TauRocmSampleSDKList;
+std::mutex sample_mtx;
+std::mutex sample_list_mtx;
+
+uint64_t last_sample_timestamp = 0;
+
+/* The delta timestamp is in nanoseconds. */
+int64_t deltaTimestamp_ns = 0;
+
+extern "C" void metric_set_gpu_timestamp(int tid, double value);
+
+/* TAU uses microsecond clock for timestamps, but the GPU provides the
+ * stamps in nanoseconds.  So, in order to compute the delta between
+ * the CPU clock and GPU clock, we need to take a CPU timestamp in nanoseconds
+ * and then get the delta.  The delta will be in nanoseconds.  So when we
+ * adjust for the asynchronous activity, we will apply the nanosecond delta
+ * and then convert to microseconds.
+ */
+ #define MYCLOCK std::chrono::system_clock
+ static uint64_t time_point_to_nanoseconds(std::chrono::time_point<MYCLOCK> tp) {
+     auto value = tp.time_since_epoch();
+     uint64_t duration =
+         std::chrono::duration_cast<std::chrono::nanoseconds>(value).count();
+     return duration;
+ }
+ static uint64_t now_ns() {
+     return time_point_to_nanoseconds(MYCLOCK::now());
+ }
+
+bool run_once() {
+    // synchronize timestamps
+    // We'll take a CPU timestamp before and after taking a GPU timestmp, then
+    // take the average of those two, hoping that it's roughly at the same time
+    // as the GPU timestamp.
+    uint64_t startTimestampCPU = now_ns(); //TauTraceGetTimeStamp(); // TAU is in microseconds!
+    uint64_t startTimestampGPU;
+    rocprofiler_get_timestamp(&startTimestampGPU);
+    startTimestampCPU += now_ns(); //TauTraceGetTimeStamp(); // TAU is in microseconds!
+    startTimestampCPU = startTimestampCPU / 2;
+
+    // assume CPU timestamp is greater than GPU
+    TAU_VERBOSE("HIP timestamp: %lu\n", startTimestampGPU);
+    TAU_VERBOSE("CPU timestamp: %lu\n", startTimestampCPU);
+    deltaTimestamp_ns = (int64_t)(startTimestampCPU) - (int64_t)(startTimestampGPU);
+    TAU_VERBOSE("HIP delta timestamp: %ld\n", deltaTimestamp_ns);
+    return true;
+}
+
+void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
+{
+    TAU_VERBOSE("TAU_publish_sdk_sample_event\n");
+    sample_mtx.lock();
+
+    if(sdk_sample_event.entry < last_sample_timestamp)
+    {
+        TAU_VERBOSE("ERROR: Sample discarded due to timestamp being lower than last published sample\n");
+        TAU_VERBOSE("ERROR: Last: %lu, Current:%lu\n", last_sample_timestamp, sdk_sample_event.entry);
+        sample_mtx.unlock();
+        return;
+    }
+    last_sample_timestamp = sdk_sample_event.entry;
+    //interval - exit
+/*
+    double timestamp_entry = (double)(sdk_sample_event.entry+deltaTimestamp_ns)/1e3; // convert to microseconds
+    metric_set_gpu_timestamp(sdk_sample_event.taskid, timestamp_entry);
+    TAU_START_TASK(sdk_sample_event.name.c_str(), sdk_sample_event.taskid);
+
+
+    double timestamp_exit = (double)(sdk_sample_event.exit+deltaTimestamp_ns)/1e3; // convert to microseconds
+    metric_set_gpu_timestamp(sdk_sample_event.taskid, timestamp_exit);
+    TAU_STOP_TASK(sdk_sample_event.name.c_str(), sdk_sample_event.taskid);
+*/
+    sample_mtx.unlock();
+}
+
+void TAU_process_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
+{
+  TAU_VERBOSE("TAU_process_sdk_sample_event\n");
+
+  sample_list_mtx.lock();
+  TauRocmSampleSDKList.push_back(sdk_sample_event);
+  TauRocmSampleSDKList.sort();
+
+  if(TauRocmSampleSDKList.size() < TAU_ROCMSDK_SAMPLE_LOOK_AHEAD)
+  {
+    sample_list_mtx.unlock();
+    return;
+  }
+  else
+  {
+    TAU_publish_sdk_sample_event(TauRocmSampleSDKList.front());
+    TauRocmSampleSDKList.pop_front();
+  }
+  sample_list_mtx.unlock();
+}
+
+
+
+
 
 
 pc_sampling_buffer_id_vec_t* pc_buffer_ids = nullptr;
@@ -17,11 +180,11 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                                  void* /*data*/,
                                  uint64_t drop_count)
 {
-
+    #ifdef ROCSDK_PC_DEBUG    
     std::stringstream ss;
     ss << "The number of delivered samples is: " << num_headers << ", "
        << "while the number of dropped samples is: " << drop_count << std::endl;
-
+    #endif
 
     auto& flat_profile = sdk_pc_sampling::address_translation::get_flat_profile();
     auto& translator   = sdk_pc_sampling::address_translation::get_address_translator();
@@ -46,16 +209,19 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
 #if (ROCPROFILER_VERSION_MINOR < 7) && (ROCPROFILER_VERSION_MAJOR == 0)
             if(cur_header->kind == ROCPROFILER_PC_SAMPLING_RECORD_SAMPLE)
             {
-                ss << "ROCPROFILER_PC_SAMPLING_RECORD_SAMPLE" <<std::endl;
                 auto* pc_sample =
                     static_cast<rocprofiler_pc_sampling_record_t*>(cur_header->payload);
                 //Ignore incorrectly generated sample
                 if(pc_sample->correlation_id.internal == ROCPROFILER_CORRELATION_ID_INTERNAL_NONE)
                 {
-                    ss << "ROCPROFILER_PC_SAMPLING_RECORD_SAMPLE NONE" <<std::endl;
+                    #ifdef ROCSDK_PC_DEBUG    
+                    ss << "ROCPROFILER_CORRELATION_ID_INTERNAL_NONE" <<std::endl;
+                    #endif
                     continue;
                 }
-                /*ss << "(code_obj_id, offset): (" << pc_sample->pc.loaded_code_object_id
+                #ifdef ROCSDK_PC_DEBUG
+                ss << "ROCPROFILER_PC_SAMPLING_RECORD_SAMPLE" <<std::endl;
+                ss << "(code_obj_id, offset): (" << pc_sample->pc.loaded_code_object_id
                     << ", 0x" << std::hex << pc_sample->pc.loaded_code_object_offset << "), "
                     << "timestamp: " << std::dec << pc_sample->timestamp << ", "
                     << "exec: " << std::hex << std::setw(16) << pc_sample->exec_mask << ", "
@@ -71,22 +237,9 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     << "correlation: {internal=" << std::setw(7)
                     << pc_sample->correlation_id.internal << ", "
                     << "external=" << std::setw(5) << pc_sample->correlation_id.external.value
-                    << "} !!-" 
-                    << " dual_issue_valu: " << std::setw(2) << static_cast<unsigned int>(pc_sample->snapshot.dual_issue_valu)
-                    << " inst_type: " << static_cast<unsigned int>(pc_sample->snapshot.inst_type)
-                    << " reason_not_issued : " << std::setw(2) << static_cast<unsigned int>(pc_sample->snapshot.reason_not_issued)
-                    << " arb_state_issue: " << std::setw(2) << static_cast<unsigned int>(pc_sample->snapshot.arb_state_issue)
-                    << " arb_state_stall: " << std::setw(2) << static_cast<unsigned int>(pc_sample->snapshot.arb_state_stall)
-                    << " -!!" 
-                    << " !!+" 
-                    << " valid: " << std::setw(2) << static_cast<unsigned int>(pc_sample->flags.valid)
-                    << " type: " << static_cast<unsigned int>(pc_sample->flags.type)
-                    << " has_stall_reason: " << std::setw(2) << static_cast<unsigned int>(pc_sample->flags.has_stall_reason)
-                    << " has_wave_cnt: " << std::setw(2) << static_cast<unsigned int>(pc_sample->flags.has_wave_cnt)
-                    << " reserved: " << std::setw(2) << static_cast<unsigned int>(pc_sample->flags.reserved)
-                    << " +!!" 
-                    << std::endl;*/
-
+                    << "}" 
+                    << std::endl;
+                #endif
                     //Need to check if needed
                     //https://github.com/ROCm/rocprofiler-sdk/blob/ad48201912995e1db4f6e65266bce2792056b3c6/tests/pc_sampling/pcs.cpp#L368
 
@@ -95,17 +248,54 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 // Decoding the PC
                 auto inst = translator.get(pc_sample->pc.loaded_code_object_id,
                                             pc_sample->pc.loaded_code_object_offset);
+
+                #ifdef ROCSDK_PC_DEBUG
+                ss   << " faddr " << inst->faddr 
+                    << " vaddr " << inst->vaddr 
+                    << " ld_addr " << inst->ld_addr 
+                    << " codeobj_id " << inst->codeobj_id
+                    << std::endl;
+                #endif
+
+                rocsdk_map_inst_key curr_index = {pc_sample->pc.loaded_code_object_id, inst->ld_addr};
+                auto elem = code_object_map.find(curr_index);
+                if(elem != code_object_map.end())
+                {
+                    std::cout   << " timestamp: " << pc_sample->timestamp
+                                << " id: " << elem->first.first
+                                << " ld_adrr: " << elem->first.second
+                                << " inst: " << elem->second.inst
+                                << " comment: " << elem->second.comment
+                                << " kernel: " << Tau_demangle_name(elem->second.kernel_name.c_str())
+                                //<< " ld_adrr: " << elem->second.ld_addr
+                                //<< " same instruction? " << (elem->second.ld_addr==elem->first.second ? "same":"diff")
+                                << std::endl;
+                }
+
                 flat_profile.add_sample(std::move(inst), pc_sample->exec_mask);
+
 #else
             if(cur_header->kind == ROCPROFILER_PC_SAMPLING_RECORD_HOST_TRAP_V0_SAMPLE)
             {
+                
                 auto* pc_sample = static_cast<rocprofiler_pc_sampling_record_host_trap_v0_t*>(
                     cur_header->payload);
 
-                /*ss << "(code_obj_id, offset): (" << pc_sample->pc.code_object_id << ", 0x"
+                //Ignore incorrectly generated sample
+                if(pc_sample->correlation_id.internal == ROCPROFILER_CORRELATION_ID_INTERNAL_NONE)
+                {
+                    #ifdef ROCSDK_PC_DEBUG    
+                    ss << "ROCPROFILER_CORRELATION_ID_INTERNAL_NONE" <<std::endl;
+                    #endif
+                    continue;
+                }
+                
+                #ifdef ROCSDK_PC_DEBUG     
+                ss << "ROCPROFILER_PC_SAMPLING_RECORD_HOST_TRAP_V0_SAMPLE" <<std::endl;
+                ss << "(code_obj_id, offset): (" << pc_sample->pc.code_object_id << ", 0x"
                        << std::hex << pc_sample->pc.code_object_offset << "), "
                        << "timestamp: " << std::dec << pc_sample->timestamp << ", "
-                       << "exec: " << std::hex << std::setw(16) << pc_sample->exec_mask << ", "
+                       << "exec_mask: " << std::hex << std::setw(16) << pc_sample->exec_mask << ", "
                        << "workgroup_id_(x=" << std::dec << std::setw(5)
                        << pc_sample->workgroup_id.x << ", "
                        << "y=" << std::setw(5) << pc_sample->workgroup_id.y << ", "
@@ -118,17 +308,63 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                        << "correlation: {internal=" << std::setw(7)
                        << pc_sample->correlation_id.internal << ", "
                        << "external=" << std::setw(5) << pc_sample->correlation_id.external.value
-                       << "}" << std::endl;*/
-                
-                if(pc_sample->correlation_id.internal == ROCPROFILER_CORRELATION_ID_INTERNAL_NONE)
-                    continue;
+                       << "}" << std::endl;
+                #endif
                 sdk_pc_sampling::inc_total_samples_num();
                 // Decoding the PC
                 auto inst = translator.get(pc_sample->pc.code_object_id,
                     pc_sample->pc.code_object_offset);
+                
+                #ifdef ROCSDK_PC_DEBUG
+                ss   << " faddr " << inst->faddr 
+                    << " vaddr " << inst->vaddr 
+                    << " ld_addr " << inst->ld_addr 
+                    << " codeobj_id " << inst->codeobj_id
+                    << std::endl;
+                #endif
+
+                rocsdk_map_inst_key curr_index = {pc_sample->pc.code_object_id, inst->ld_addr};
+                auto elem = code_object_map.find(curr_index);
+                /*if(elem != code_object_map.end())
+                {
+                    std::cout   << " timestamp: " << pc_sample->timestamp
+                                << " id: " << elem->first.first
+                                << " ld_adrr: " << elem->first.second
+                                << " inst: " << elem->second.inst
+                                << " comment: " << elem->second.comment
+                                << " kernel: " << Tau_demangle_name(elem->second.kernel_name.c_str())
+                                //<< " ld_adrr: " << elem->second.ld_addr
+                                //<< " same instruction? " << (elem->second.ld_addr==elem->first.second ? "same":"diff")
+                                << std::endl;
+                }*/
+                
+                std::string task_name;
+                if(elem->second.comment.empty())
+                {
+                    std::stringstream ss;
+                    ss << Tau_demangle_name(elem->second.kernel_name.c_str());
+                    ss << " " << elem->second.inst;
+                    task_name = ss.str();
+                }
+                else
+                {
+                    std::stringstream ss;
+                    ss << Tau_demangle_name(elem->second.kernel_name.c_str());
+                    ss << " " << elem->second.inst;
+                    ss << " " << elem->second.comment;
+                    task_name = ss.str();
+                }
+                int taskid=-1;
+                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp+interval, taskid);
+                
+                TAU_process_sdk_sample_event(sample_event);
+
+
                 flat_profile.add_sample(std::move(inst), pc_sample->exec_mask);
                 
 #endif
+                
+
             }
             else
             {
@@ -144,7 +380,9 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
         }
     }
 
-    //std::cout << ss.str() << std::endl;
+    #ifdef ROCSDK_PC_DEBUG
+    std::cout << ss.str() << std::endl;
+    #endif
 }
 
 template <typename Tp>
@@ -162,7 +400,7 @@ void
 codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
 {
     std::stringstream info;
-
+    static bool dummy = run_once();
     info << "-----------------------------\n";
     if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
        record.operation == ROCPROFILER_CODE_OBJECT_LOAD)
@@ -192,7 +430,10 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
                                           data->load_size);
                 }
                 else
+                {
                     return;
+                }
+
 
                 // extract symbols from code object
                 auto& kernel_object_map = sdk_pc_sampling::address_translation::get_kernel_object_map();
@@ -201,10 +442,57 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
                 {
                     kernel_object_map.add_kernel(
                         data->code_object_id, symbol.name, vaddr, vaddr + symbol.mem_size);
+                        
+                        info   << "symbol.name: " << symbol.name 
+                                    << " , vaddr: " << vaddr
+                                    << " , vaddr + symbol.mem_size: " << vaddr + symbol.mem_size
+                                    << std::endl;
                 }
+                //We want to store information in an easier to access way, for example
+                // One map which divides the information into different "code_object_id"s
+                // and each element of the map, maybe another map, where the key is the
+                // address to an instruction and it has the instruction information plus
+                // information we may need for TAU
+
+
+                //code_object_map
+                
+
+                for(auto& [vaddr, symbol] : symbolmap)
+                {
+                    auto& translator = sdk_pc_sampling::address_translation::get_address_translator();
+                    uint64_t curr_address = vaddr;
+                    uint64_t end_address = vaddr + symbol.mem_size;
+                    while(curr_address < end_address)
+                    {
+                        auto inst = translator.get(data->code_object_id, curr_address);
+                        curr_address += inst->size;
+                        //if(!inst->comment.empty())
+                        //    std::cout << "!! - "<< inst->comment << std::endl;
+                        rocsdk_instruction curr_inst(inst->inst, symbol.name, inst->comment, inst->ld_addr);
+                        rocsdk_map_inst_key curr_index = {data->code_object_id, inst->ld_addr};
+                        code_object_map[curr_index] = curr_inst;
+                    }
+                }
+                
             }
 
             info << "code object load :: ";
+            info << "code_object_id=" << data->code_object_id
+            << ", rocp_agent=" << data->rocp_agent.handle << ", uri=" << data->uri
+            << ", load_base=" << as_hex(data->load_base) << ", load_size=" << data->load_size
+            << ", load_delta=" << as_hex(data->load_delta);
+           if(data->storage_type == ROCPROFILER_CODE_OBJECT_STORAGE_TYPE_FILE)
+           {
+               info << ", storage_file_descr=" << data->storage_file;
+           }
+           else if(data->storage_type == ROCPROFILER_CODE_OBJECT_STORAGE_TYPE_MEMORY)
+           {
+               info << ", storage_memory_base=" << as_hex(data->memory_base)
+                   << ", storage_memory_size=" << data->memory_size;
+           }
+
+           info << std::endl;
         }
         else if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
         {
@@ -216,23 +504,28 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
             {
                 auto  lock       = std::unique_lock{global_mut};
                 auto& translator = sdk_pc_sampling::address_translation::get_address_translator();
-                //translator.removeDecoder(data->code_object_id, data->load_delta);
+                translator.removeDecoder(data->code_object_id, data->load_delta);
             }
 
             info << "code object unload :: ";
-        }
-
-        info << "code_object_id=" << data->code_object_id
+            info << "code_object_id=" << data->code_object_id
              << ", rocp_agent=" << data->rocp_agent.handle << ", uri=" << data->uri
              << ", load_base=" << as_hex(data->load_base) << ", load_size=" << data->load_size
              << ", load_delta=" << as_hex(data->load_delta);
-        if(data->storage_type == ROCPROFILER_CODE_OBJECT_STORAGE_TYPE_FILE)
-            info << ", storage_file_descr=" << data->storage_file;
-        else if(data->storage_type == ROCPROFILER_CODE_OBJECT_STORAGE_TYPE_MEMORY)
-            info << ", storage_memory_base=" << as_hex(data->memory_base)
-                 << ", storage_memory_size=" << data->memory_size;
+            if(data->storage_type == ROCPROFILER_CODE_OBJECT_STORAGE_TYPE_FILE)
+            {
+                info << ", storage_file_descr=" << data->storage_file;
+            }
+            else if(data->storage_type == ROCPROFILER_CODE_OBJECT_STORAGE_TYPE_MEMORY)
+            {
+                info << ", storage_memory_base=" << as_hex(data->memory_base)
+                    << ", storage_memory_size=" << data->memory_size;
+            }
 
-        info << std::endl;
+            info << std::endl;
+        }
+
+        
     }/*
     if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
        record.operation == ROCPROFILER_CODE_OBJECT_DEVICE_KERNEL_SYMBOL_REGISTER)
@@ -265,8 +558,9 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
 
         info << std::endl;
     }*/
-
-    //std::cout << info.str() << std::endl;
+    #ifdef ROCSDK_PC_DEBUG
+    std::cout << info.str() << std::endl;
+    #endif
 }
 
 
@@ -296,15 +590,19 @@ int query_avail_configs_for_agent(tool_agent_info* agent_info)
     auto status = rocprofiler_query_pc_sampling_agent_configurations(
         agent_info->agent_id, cb, agent_info->avail_configs.get());
 
+    #ifdef ROCSDK_PC_DEBUG
     std::stringstream ss;
+    #endif
 
     if(status != ROCPROFILER_STATUS_SUCCESS)
     {
         // The query operation failed, so consider the PC sampling is unsupported at the agent.
         // This can happen if the PC sampling service is invoked within the ROCgdb.
+        #ifdef ROCSDK_PC_DEBUG
         ss << "Querying PC sampling capabilities failed with status=" << status
            << " :: " << rocprofiler_get_status_string(status) << std::endl;
         std::cout  << ss.str() << std::endl;
+        #endif
         return false;
     }
     else if(agent_info->avail_configs->empty())
@@ -337,7 +635,7 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
                                         rocprofiler_buffer_id_t  buffer_id)
 {
     int    failures = MAX_FAILURES;
-    size_t interval = 0;
+
     do
     {
         // Update the list of available configurations
@@ -444,8 +742,6 @@ find_all_gpu_agents_supporting_pc_sampling_impl(rocprofiler_agent_version_t vers
   // user_data represent the pointer to the array where gpu_agent will be stored
   if(!user_data) return ROCPROFILER_STATUS_ERROR;
 
-  std::stringstream ss;
-
   auto* _out_agents = static_cast<tool_agent_info_vec_t*>(user_data);
   auto* _agents     = reinterpret_cast<const rocprofiler_agent_t**>(agents);
   for(size_t i = 0; i < num_agents; i++)
@@ -471,8 +767,7 @@ find_all_gpu_agents_supporting_pc_sampling_impl(rocprofiler_agent_version_t vers
        << "type=" << _agents[i]->type << "\n";
     */
   }
-
-  std::cout << ss.str() << std::endl;
+  //std::cout << ss.str() << std::endl;
 
   return ROCPROFILER_STATUS_SUCCESS;
 }
