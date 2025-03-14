@@ -32,7 +32,7 @@ using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_
 
 extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
 extern void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
-extern void show_results_pc();
+extern void sdk_pc_sampling_flush();
 
 extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value, rocprofiler_timestamp_t* c_timestamp);
 extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
@@ -1189,9 +1189,6 @@ void
 tool_fini(void* tool_data)
 {
     assert(tool_data != nullptr);
-    if(pc_sampling)
-      show_results_pc();
-
 }
 
 
@@ -1240,6 +1237,12 @@ void Tau_rocprofsdk_flush(){
     TAU_publish_sdk_event(TauRocmSDKList.front());
     TauRocmSDKList.pop_front();
   }
+  if(pc_sampling == 1)
+  {
+    sdk_pc_sampling_flush();
+  }
+  
+
   flushed = 1;
   ROCPROFILER_CALL(rocprofiler_stop_context(client_ctx), "rocprofiler context stop");
 }

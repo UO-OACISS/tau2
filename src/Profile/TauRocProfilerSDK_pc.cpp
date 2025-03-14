@@ -13,6 +13,11 @@ constexpr bool COPY_MEMORY_CODEOBJ = true;
 
 using marker_id_t = rocprofiler::sdk::codeobj::disassembly::marker_id_t;
 
+//Flag to check if TAU called the flush function
+//we want to avoid flushing after TAU has written the profile files
+int volatile pc_flushed = 0;
+
+
 struct rocsdk_instruction
 {
     rocsdk_instruction() = default;
@@ -73,6 +78,7 @@ std::map<rocsdk_map_inst_key, rocsdk_instruction> code_object_map;
 std::list<struct TauSDKSampleEvent> TauRocmSampleSDKList;
 std::mutex sample_mtx;
 std::mutex sample_list_mtx;
+std::mutex codeobj_mtx;
 
 uint64_t last_sample_timestamp = 0;
 
@@ -211,7 +217,7 @@ void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
         metric_set_gpu_timestamp(taskid, (double)(sdk_sample_event.entry+deltaTimestamp_ns)/1e3);
         Tau_create_top_level_timer_if_necessary_task(taskid);
         Tau_add_metadata_for_task1("PC Sampling Wave", taskid, taskid);
-        std::cout << "queueid: " << queueid << " taskid: " << taskid << std::endl;
+        //std::cout << "queueid: " << queueid << " taskid: " << taskid << std::endl;
     }
 
     last_sample_timestamp = sdk_sample_event.entry;
@@ -264,6 +270,8 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                                  void* /*data*/,
                                  uint64_t drop_count)
 {
+    if(pc_flushed == 1)
+        return;
     #ifdef ROCSDK_PC_DEBUG    
     std::stringstream ss;
     ss << "The number of delivered samples is: " << num_headers << ", "
@@ -272,8 +280,6 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
 
     auto& flat_profile = sdk_pc_sampling::address_translation::get_flat_profile();
     auto& translator   = sdk_pc_sampling::address_translation::get_address_translator();
-    auto& global_mut   = sdk_pc_sampling::address_translation::get_global_mutex();
-    auto lock = std::unique_lock{global_mut};
     for(size_t i = 0; i < num_headers; i++)
     {
         auto* cur_header = headers[i];
@@ -333,6 +339,11 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 auto inst = translator.get(pc_sample->pc.loaded_code_object_id,
                                             pc_sample->pc.loaded_code_object_offset);
 
+                //If instruction is not found, skip it. Should not happen.
+                if(elem == code_object_map.end())
+                {
+                    continue;
+                }
                 #ifdef ROCSDK_PC_DEBUG
                 ss   << " faddr " << inst->faddr 
                     << " vaddr " << inst->vaddr 
@@ -357,7 +368,8 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 }
 
                 flat_profile.add_sample(std::move(inst), pc_sample->exec_mask);
-
+                
+            }
 #else
             if(cur_header->kind == ROCPROFILER_PC_SAMPLING_RECORD_HOST_TRAP_V0_SAMPLE)
             {
@@ -400,9 +412,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     pc_sample->pc.code_object_offset);
                 
                 #ifdef ROCSDK_PC_DEBUG
-                ss   << " faddr " << inst->faddr 
-                    << " vaddr " << inst->vaddr 
-                    << " ld_addr " << inst->ld_addr 
+                ss   << " ld_addr " << inst->ld_addr 
                     << " codeobj_id " << inst->codeobj_id
                     << std::endl;
                 #endif
@@ -421,6 +431,22 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                                 //<< " same instruction? " << (elem->second.ld_addr==elem->first.second ? "same":"diff")
                                 << std::endl;
                 }*/
+                //If instruction is not found, skip it. Should not happen.
+                if(elem == code_object_map.end())
+                {
+                    std::cout << "Instruction not found" << std::endl;
+                    continue;
+                }
+                if(elem->second.kernel_name.empty())
+                {
+                    std::cout << "Kernel name not found" << std::endl;
+                    continue;
+                }
+                if(elem->second.inst.empty())
+                {
+                    std::cout << "Instruction  not found" << std::endl;
+                    continue;
+                }
                 
                 std::string task_name;
                 if(elem->second.comment.empty())
@@ -447,10 +473,10 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
 
                 flat_profile.add_sample(std::move(inst), pc_sample->exec_mask);
                 
+            }
 #endif
                 
 
-            }
             else
             {
                 if(cur_header->kind == ROCPROFILER_PC_SAMPLING_RECORD_NONE)
@@ -484,9 +510,12 @@ as_hex(Tp _v, size_t _width = 16)
 void
 codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
 {
+    if(pc_flushed == 1)
+        return;
     std::stringstream info;
     static bool dummy = run_once();
     info << "-----------------------------\n";
+    
     if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
        record.operation == ROCPROFILER_CODE_OBJECT_LOAD)
     {
@@ -495,10 +524,9 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
 
         if(record.phase == ROCPROFILER_CALLBACK_PHASE_LOAD)
         {
+            codeobj_mtx.lock();
             auto& global_mut = sdk_pc_sampling::address_translation::get_global_mutex();
             {
-                auto lock = std::unique_lock{global_mut};
-
                 auto& translator = sdk_pc_sampling::address_translation::get_address_translator();
                 // register code object inside the decoder
                 if(std::string_view(data->uri).find("file:///") == 0)
@@ -516,6 +544,7 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
                 }
                 else
                 {
+                    codeobj_mtx.unlock();
                     return;
                 }
 
@@ -533,15 +562,7 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
                                     << " , vaddr + symbol.mem_size: " << vaddr + symbol.mem_size
                                     << std::endl;
                 }
-                //We want to store information in an easier to access way, for example
-                // One map which divides the information into different "code_object_id"s
-                // and each element of the map, maybe another map, where the key is the
-                // address to an instruction and it has the instruction information plus
-                // information we may need for TAU
-
-
-                //code_object_map
-                
+               
 
                 for(auto& [vaddr, symbol] : symbolmap)
                 {
@@ -576,18 +597,22 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
                info << ", storage_memory_base=" << as_hex(data->memory_base)
                    << ", storage_memory_size=" << data->memory_size;
            }
+           codeobj_mtx.unlock();
 
            info << std::endl;
         }
+        
         else if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
         {
+            for( auto it_id : *pc_buffer_ids)
+                ROCPROFILER_CALL(rocprofiler_flush_buffer(it_id), "buffer flush");
+            /*
             // Ensure all PC samples of the unloaded code object are decoded,
             // prior to removing the decoder.
             //Done before calling this function
             //sdk_pc_sampling::sync();
             auto& global_mut = sdk_pc_sampling::address_translation::get_global_mutex();
             {
-                auto  lock       = std::unique_lock{global_mut};
                 auto& translator = sdk_pc_sampling::address_translation::get_address_translator();
                 translator.removeDecoder(data->code_object_id, data->load_delta);
             }
@@ -608,41 +633,12 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
             }
 
             info << std::endl;
+            */
         }
+        
 
         
-    }/*
-    if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
-       record.operation == ROCPROFILER_CODE_OBJECT_DEVICE_KERNEL_SYMBOL_REGISTER)
-    {
-        auto* data =
-            static_cast<rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t*>(
-                record.payload);
-
-        if(record.phase == ROCPROFILER_CALLBACK_PHASE_LOAD)
-        {
-            info << "kernel symbol load :: ";
-        }
-        else if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
-        {
-            info << "kernel symbol unload :: ";
-            // client_kernels.erase(data->kernel_id);
-        }
-
-        auto kernel_name     = std::regex_replace(data->kernel_name, std::regex{"(\\.kd)$"}, "");
-        int  demangle_status = 0;
-        kernel_name          = cxa_demangle(kernel_name, &demangle_status);
-
-        info << "code_object_id=" << data->code_object_id << ", kernel_id=" << data->kernel_id
-             << ", kernel_object=" << as_hex(data->kernel_object)
-             << ", kernarg_segment_size=" << data->kernarg_segment_size
-             << ", kernarg_segment_alignment=" << data->kernarg_segment_alignment
-             << ", group_segment_size=" << data->group_segment_size
-             << ", private_segment_size=" << data->private_segment_size
-             << ", kernel_name=" << kernel_name;
-
-        info << std::endl;
-    }*/
+    }
     #ifdef ROCSDK_PC_DEBUG
     std::cout << info.str() << std::endl;
     #endif
@@ -956,18 +952,20 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
   return 1;
 }
 
-
-void show_results_pc()
+void sdk_pc_sampling_flush()
 {
+    if(pc_flushed==1)
+        return;
 
-    
-    #ifdef TAU_MPI
-        char filename[50];
-        snprintf(filename, 50, "ROCm_PC_sampling.%d.log", RtsLayer::myNode());
-        sdk_pc_sampling::address_translation::dump_flat_profile(filename);
-    #else
-        const char* filename = "ROCm_PC_sampling.0.log";
-        sdk_pc_sampling::address_translation::dump_flat_profile(filename);
-    #endif
+    TauRocmSampleSDKList.sort();
+    while(!TauRocmSampleSDKList.empty())
+    {
+        TAU_publish_sdk_sample_event(TauRocmSampleSDKList.front());
+        TauRocmSampleSDKList.pop_front();
+    }
+
+    pc_flushed = 1;
 }
+
+
 #endif //SAMPLING_SDKPC
