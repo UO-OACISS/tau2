@@ -3,7 +3,7 @@
 #include "Profile/RocProfilerSDK/TauRocProfilerSDK_pc.h"
 #include <TAU.h>
 
-//#define ROCSDK_PC_DEBUG
+#define ROCSDK_PC_DEBUG
 
 #ifdef SAMPLING_SDKPC
 
@@ -80,13 +80,13 @@ std::mutex sample_mtx;
 std::mutex sample_list_mtx;
 std::mutex codeobj_mtx;
 
-uint64_t last_sample_timestamp = 0;
-
+std::map<int, rocprofiler_timestamp_t> tau_last_pc_timestamp_published;
 /* The delta timestamp is in nanoseconds. */
 int64_t deltaTimestamp_ns = 0;
 
 extern "C" void metric_set_gpu_timestamp(int tid, double value);
-
+extern void Tau_add_metadata_for_task(const char *key, int value, int taskid);
+extern "C" void Tau_metadata_task(const char *name, const char *value, int tid);
 /* TAU uses microsecond clock for timestamps, but the GPU provides the
  * stamps in nanoseconds.  So, in order to compute the delta between
  * the CPU clock and GPU clock, we need to take a CPU timestamp in nanoseconds
@@ -138,7 +138,7 @@ static std::map<int, int, less<int> >& TheTauInitializedQueues_pc() {
 #endif /* TAU_ROCM_USE_MAP_FOR_INIT_QUEUES */
 //Different queue functions as I want the variables not to be shared with 
 // TauRocProfilerSDK, so the queues get different ids.
-int Tau_initialize_queues1(void) {
+int Tau_initialize_queues_pc(void) {
     int i;
     for (i=0; i < TAU_MAX_ROCM_QUEUES; i++) {
       tau_initialized_queues_pc[i] = -1;
@@ -146,10 +146,10 @@ int Tau_initialize_queues1(void) {
     return 1;
 }
 
-int Tau_get_initialized_queues1(int queue_id) {
+int Tau_get_initialized_queues_pc(int queue_id) {
     //TAU_VERBOSE("Tau_get_initialized_queues: queue_id = %d ", queue_id);
   #ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
-    static int flag = Tau_initialize_queues1();
+    static int flag = Tau_initialize_queues_pc();
     //TAU_VERBOSE("value = %d\n", tau_initialized_queues[queue_id]);
     return tau_initialized_queues_pc[queue_id];
   #else
@@ -169,7 +169,7 @@ int Tau_get_initialized_queues1(int queue_id) {
 
 }
 
-void Tau_set_initialized_queues1(int queue_id, int value) {
+void Tau_set_initialized_queues_pc(int queue_id, int value) {
     TAU_VERBOSE("Tau_set_initialized_queues: queue_id = %d, value = %d\n", queue_id, value);
   #ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
     tau_initialized_queues_pc[queue_id]=value;
@@ -180,48 +180,52 @@ void Tau_set_initialized_queues1(int queue_id, int value) {
     return;
 }
 
-extern "C" void Tau_metadata_task(const char *name, const char *value, int tid);
-
-void Tau_add_metadata_for_task1(const char *key, int value, int taskid) {
-    char buf[1024];
-    snprintf(buf, sizeof(buf),  "%d", value);
-    Tau_metadata_task(key, buf, taskid);
-    TAU_VERBOSE("Adding Metadata: %s, %d, for task %d\n", key, value, taskid);
-  }
-
-
   
 void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
 {
-    //TAU_VERBOSE("TAU_publish_sdk_sample_event\n");
-    sample_mtx.lock();
-
-    /*if(sdk_sample_event.entry < last_sample_timestamp)
-    {
-        TAU_VERBOSE("ERROR: Sample discarded due to timestamp being lower than last published sample\n");
-        TAU_VERBOSE("ERROR: Last: %lu, Current:%lu\n", last_sample_timestamp, sdk_sample_event.entry);
-        sample_mtx.unlock();
-        return;
-    }*/
-
+    TAU_VERBOSE("TAU_publish_sdk_sample_event\n");
 
     //Different types of events will appear as different threads in the profile
     //This is to differenciate kernels, API calls and other events
     int queueid = sdk_sample_event.taskid;
     unsigned long long timestamp = sdk_sample_event.entry+deltaTimestamp_ns;
-    int taskid = Tau_get_initialized_queues1(queueid);
+    int taskid = Tau_get_initialized_queues_pc(queueid);
     if (taskid == -1) { // not initialized
         TAU_CREATE_TASK(taskid);
-        Tau_set_initialized_queues1(queueid, taskid);
+        Tau_set_initialized_queues_pc(queueid, taskid);
         // Set the timestamp for TAUGPU_TIME:
         metric_set_gpu_timestamp(taskid, (double)(sdk_sample_event.entry+deltaTimestamp_ns)/1e3);
         Tau_create_top_level_timer_if_necessary_task(taskid);
-        Tau_add_metadata_for_task1("PC Sampling Wave", taskid, taskid);
+        Tau_add_metadata_for_task("PC Sampling Wave", taskid, taskid);
         //std::cout << "queueid: " << queueid << " taskid: " << taskid << std::endl;
     }
 
-    last_sample_timestamp = sdk_sample_event.entry;
-    //interval - exit
+
+    sample_mtx.lock();
+    /*
+    rocprofiler_timestamp_t last_timestamp;
+    
+    std::map<int, rocprofiler_timestamp_t>::iterator it = tau_last_pc_timestamp_published.find(taskid);
+    if(it == tau_last_pc_timestamp_published.end())
+    {
+        tau_last_pc_timestamp_published[taskid] = 0;
+        last_timestamp = 0;
+    }
+    else
+    {
+      last_timestamp = it->second;
+    }
+  
+    if( sdk_sample_event.entry < last_timestamp )
+    {
+      TAU_VERBOSE("ERROR: new event's timestamp is older than previous event timestamp, current look ahead window is %d\n", TAU_ROCMSDK_SAMPLE_LOOK_AHEAD);
+      TAU_VERBOSE("ERROR: modify TAU_ROCMSDK_SAMPLE_LOOK_AHEAD with -useropt=-DTAU_ROCMSDK_LOOK_AHEAD=%d or bigger\n", TAU_ROCMSDK_SAMPLE_LOOK_AHEAD*2);
+      //TAU_VERBOSE("- Last: %lu Entry: %lu Exit: %lu %s task: %d\n", last_timestamp, sdk_sample_event.entry, sdk_sample_event.exit, sdk_sample_event.name.c_str(), taskid);
+      sample_mtx.unlock();
+      return;
+    }
+  
+    tau_last_pc_timestamp_published[taskid] = sdk_sample_event.exit;*/
     
     double timestamp_entry = (double)(sdk_sample_event.entry+deltaTimestamp_ns)/1e3; // convert to microseconds
     metric_set_gpu_timestamp(taskid, timestamp_entry);
@@ -237,7 +241,7 @@ void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
 
 void TAU_process_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
 {
-  //TAU_VERBOSE("TAU_process_sdk_sample_event\n");
+  TAU_VERBOSE("TAU_process_sdk_sample_event\n");
 
   sample_list_mtx.lock();
   TauRocmSampleSDKList.push_back(sdk_sample_event);
@@ -272,13 +276,13 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
 {
     if(pc_flushed == 1)
         return;
+    TAU_VERBOSE("rocprofiler_pc_sampling_callback\n");
     #ifdef ROCSDK_PC_DEBUG    
     std::stringstream ss;
     ss << "The number of delivered samples is: " << num_headers << ", "
        << "while the number of dropped samples is: " << drop_count << std::endl;
     #endif
 
-    auto& flat_profile = sdk_pc_sampling::address_translation::get_flat_profile();
     auto& translator   = sdk_pc_sampling::address_translation::get_address_translator();
     for(size_t i = 0; i < num_headers; i++)
     {
@@ -330,10 +334,6 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     << "}" 
                     << std::endl;
                 #endif
-                    //Need to check if needed
-                    //https://github.com/ROCm/rocprofiler-sdk/blob/ad48201912995e1db4f6e65266bce2792056b3c6/tests/pc_sampling/pcs.cpp#L368
-
-                sdk_pc_sampling::inc_total_samples_num();
 
                 // Decoding the PC
                 auto inst = translator.get(pc_sample->pc.loaded_code_object_id,
@@ -366,9 +366,44 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                                 //<< " same instruction? " << (elem->second.ld_addr==elem->first.second ? "same":"diff")
                                 << std::endl;
                 }
-
-                flat_profile.add_sample(std::move(inst), pc_sample->exec_mask);
+                //If instruction not found, skip. It should not happen
+                if(elem == code_object_map.end())
+                {
+                    //std::cout << "Instruction not found" << std::endl;
+                    continue;
+                }
+                if(elem->second.kernel_name.empty())
+                {
+                    //std::cout << "Kernel name not found" << std::endl;
+                    continue;
+                }
+                if(elem->second.inst.empty())
+                {
+                    //std::cout << "Instruction  not found" << std::endl;
+                    continue;
+                }
                 
+                std::string task_name;
+                if(elem->second.comment.empty())
+                {
+                    std::stringstream ss;
+                    ss << Tau_demangle_name(elem->second.kernel_name.c_str());
+                    ss << " " << elem->second.inst;
+                    task_name = ss.str();
+                }
+                else
+                {
+                    std::stringstream ss;
+                    ss << Tau_demangle_name(elem->second.kernel_name.c_str());
+                    ss << " " << elem->second.comment;
+                    ss << " { " << elem->second.inst;
+                    ss << " }";
+                    task_name = ss.str();
+                }
+
+                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp+interval, pc_sample->wave_in_group);
+                
+                TAU_process_sdk_sample_event(sample_event);
             }
 #else
             if(cur_header->kind == ROCPROFILER_PC_SAMPLING_RECORD_HOST_TRAP_V0_SAMPLE)
@@ -406,7 +441,6 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                        << "external=" << std::setw(5) << pc_sample->correlation_id.external.value
                        << "}" << std::endl;
                 #endif
-                sdk_pc_sampling::inc_total_samples_num();
                 // Decoding the PC
                 auto inst = translator.get(pc_sample->pc.code_object_id,
                     pc_sample->pc.code_object_offset);
@@ -434,17 +468,17 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 //If instruction is not found, skip it. Should not happen.
                 if(elem == code_object_map.end())
                 {
-                    std::cout << "Instruction not found" << std::endl;
+                    //std::cout << "Instruction not found" << std::endl;
                     continue;
                 }
                 if(elem->second.kernel_name.empty())
                 {
-                    std::cout << "Kernel name not found" << std::endl;
+                    //std::cout << "Kernel name not found" << std::endl;
                     continue;
                 }
                 if(elem->second.inst.empty())
                 {
-                    std::cout << "Instruction  not found" << std::endl;
+                    //std::cout << "Instruction  not found" << std::endl;
                     continue;
                 }
                 
@@ -470,20 +504,9 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 
                 TAU_process_sdk_sample_event(sample_event);
 
-
-                flat_profile.add_sample(std::move(inst), pc_sample->exec_mask);
                 
             }
 #endif
-                
-
-            else
-            {
-                if(cur_header->kind == ROCPROFILER_PC_SAMPLING_RECORD_NONE)
-					std::cout << "ROCPROFILER_PC_SAMPLING_RECORD_NONE" <<std::endl;
-				if(cur_header->kind == ROCPROFILER_PC_SAMPLING_RECORD_LAST)
-					std::cout << "ROCPROFILER_PC_SAMPLING_RECORD_LAST" <<std::endl;			
-            }
         }
         else
         {
@@ -506,12 +529,13 @@ as_hex(Tp _v, size_t _width = 16)
     return _ss.str();
 }
 
-//https://github.com/ROCm/rocprofiler-sdk/blob/ad48201912995e1db4f6e65266bce2792056b3c6/tests/pc_sampling/codeobj.cpp#L147
+
 void
 codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
 {
     if(pc_flushed == 1)
         return;
+    TAU_VERBOSE("codeobj_tracing_callback\n");
     std::stringstream info;
     static bool dummy = run_once();
     info << "-----------------------------\n";
@@ -519,11 +543,14 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
     if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
        record.operation == ROCPROFILER_CODE_OBJECT_LOAD)
     {
+        TAU_VERBOSE("codeobj_tracing_callback ROCPROFILER_CODE_OBJECT_LOAD\n");
         auto* data =
             static_cast<rocprofiler_callback_tracing_code_object_load_data_t*>(record.payload);
 
         if(record.phase == ROCPROFILER_CALLBACK_PHASE_LOAD)
         {
+            TAU_VERBOSE("codeobj_tracing_callback ROCPROFILER_CALLBACK_PHASE_LOAD\n");
+            info << "code object load :: ";
             codeobj_mtx.lock();
             auto& global_mut = sdk_pc_sampling::address_translation::get_global_mutex();
             {
@@ -544,25 +571,17 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
                 }
                 else
                 {
+                    info << std::endl;
                     codeobj_mtx.unlock();
+                    #ifdef ROCSDK_PC_DEBUG
+                    std::cout << info.str() << std::endl;
+                    #endif
                     return;
                 }
 
 
                 // extract symbols from code object
-                auto& kernel_object_map = sdk_pc_sampling::address_translation::get_kernel_object_map();
-                auto  symbolmap         = translator.getSymbolMap(data->code_object_id);
-                for(auto& [vaddr, symbol] : symbolmap)
-                {
-                    kernel_object_map.add_kernel(
-                        data->code_object_id, symbol.name, vaddr, vaddr + symbol.mem_size);
-                        
-                        info   << "symbol.name: " << symbol.name 
-                                    << " , vaddr: " << vaddr
-                                    << " , vaddr + symbol.mem_size: " << vaddr + symbol.mem_size
-                                    << std::endl;
-                }
-               
+                auto  symbolmap         = translator.getSymbolMap(data->code_object_id);            
 
                 for(auto& [vaddr, symbol] : symbolmap)
                 {
@@ -582,35 +601,27 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
                 }
                 
             }
-
-            info << "code object load :: ";
-            info << "code_object_id=" << data->code_object_id
-            << ", rocp_agent=" << data->rocp_agent.handle << ", uri=" << data->uri
-            << ", load_base=" << as_hex(data->load_base) << ", load_size=" << data->load_size
-            << ", load_delta=" << as_hex(data->load_delta);
-           if(data->storage_type == ROCPROFILER_CODE_OBJECT_STORAGE_TYPE_FILE)
-           {
-               info << ", storage_file_descr=" << data->storage_file;
-           }
-           else if(data->storage_type == ROCPROFILER_CODE_OBJECT_STORAGE_TYPE_MEMORY)
-           {
-               info << ", storage_memory_base=" << as_hex(data->memory_base)
-                   << ", storage_memory_size=" << data->memory_size;
-           }
            codeobj_mtx.unlock();
-
+            info << "code_object_id=" << data->code_object_id
+                << ", rocp_agent=" << data->rocp_agent.handle << ", uri=" << data->uri
+                << ", load_base=" << as_hex(data->load_base) << ", load_size=" << data->load_size
+                << ", load_delta=" << as_hex(data->load_delta);
+            if(data->storage_type == ROCPROFILER_CODE_OBJECT_STORAGE_TYPE_FILE)
+                info << ", storage_file_descr=" << data->storage_file;
+            else if(data->storage_type == ROCPROFILER_CODE_OBJECT_STORAGE_TYPE_MEMORY)
+                info << ", storage_memory_base=" << as_hex(data->memory_base)
+                    << ", storage_memory_size=" << data->memory_size;
            info << std::endl;
         }
         
         else if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
         {
+            TAU_VERBOSE("codeobj_tracing_callback ROCPROFILER_CALLBACK_PHASE_UNLOAD\n");
             for( auto it_id : *pc_buffer_ids)
                 ROCPROFILER_CALL(rocprofiler_flush_buffer(it_id), "buffer flush");
-            /*
+            
             // Ensure all PC samples of the unloaded code object are decoded,
             // prior to removing the decoder.
-            //Done before calling this function
-            //sdk_pc_sampling::sync();
             auto& global_mut = sdk_pc_sampling::address_translation::get_global_mutex();
             {
                 auto& translator = sdk_pc_sampling::address_translation::get_address_translator();
@@ -633,7 +644,7 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
             }
 
             info << std::endl;
-            */
+
         }
         
 
@@ -691,21 +702,6 @@ int query_avail_configs_for_agent(tool_agent_info* agent_info)
         // No available configuration at the moment, so mark the PC sampling as unsupported.
         return false;
     }
-/*
-    ss << "The agent with the id: " << agent_info->agent_id.handle << " supports the "
-       << agent_info->avail_configs->size() << " configurations: " << std::endl;
-    size_t ind = 0;
-    for(auto& cfg : *agent_info->avail_configs)
-    {
-        ss << "(" << ++ind << ".) "
-           << "method: " << cfg.method << ", "
-           << "unit: " << cfg.unit << ", "
-           << "min_interval: " << cfg.min_interval << ", "
-           << "max_interval: " << cfg.max_interval << ", "
-           << "flags: " << std::hex << cfg.flags << std::dec << std::endl;
-    }
-*/
-    //std::cout << ss.str() << std::flush;
 
     return true;
 }
@@ -881,7 +877,6 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
   else if(enabled_hc)
     return 1;
 
-
   //std::cout << "Enabling ROCm PC sampling..." << std::endl;
   pc_buffer_ids = new pc_sampling_buffer_id_vec_t();
 
@@ -893,8 +888,6 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
                         sizeof(rocprofiler_agent_t),
                         static_cast<void*>(&pc_gpu_agents)),
             "query available gpus with pc sampling");
-  //https://github.com/ROCm/rocprofiler-sdk/blob/ad48201912995e1db4f6e65266bce2792056b3c6/tests/pc_sampling/client.cpp#L82
-  //https://github.com/ROCm/rocprofiler-sdk/blob/ad48201912995e1db4f6e65266bce2792056b3c6/tests/pc_sampling/pcs.cpp#L416
   if(pc_gpu_agents.empty())
   {
     std::cout << "No availabe gpu agents supporting PC sampling" << std::endl;
@@ -935,20 +928,9 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
 
         pc_buffer_ids->emplace_back(buffer_id);
     }
-    //https://github.com/ROCm/rocprofiler-sdk/blob/ad48201912995e1db4f6e65266bce2792056b3c6/tests/pc_sampling/client.cpp#L86C9-L86C55
-     // Enable code object tracing service, to match PC samples to corresponding code object
-    // printf("!!!!!!!!!!!!!!Needs to be implemented!!\n");
-    /*ROCPROFILER_CALL(rocprofiler_configure_callback_tracing_service(client_ctx,
-                                        ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT,
-                                        nullptr,
-                                        0,
-                                        codeobj_tracing_callback,
-                                        nullptr),
-                    "code object tracing service configure");*/
-
   }
   
-  
+  //std::cout << "Enabled ROCM pc sampling" << std::endl;
   return 1;
 }
 
