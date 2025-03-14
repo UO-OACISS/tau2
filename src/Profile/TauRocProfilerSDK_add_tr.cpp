@@ -1,3 +1,25 @@
+// MIT License
+//
+// Copyright (c) 2024-2025 ROCm Developer Tools
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//https://github.com/ROCm/rocprofiler-sdk/blob/ccd1e54293768a756fb95c21bff51d95d5f6b20c/tests/pc_sampling/address_translation.cpp
 
 #include "Profile/RocProfilerSDK/TauRocProfilerSDK_add_tr.hpp"
 #ifdef SAMPLING_SDKADD
@@ -93,95 +115,6 @@ KernelObject::KernelObject(uint64_t    code_object_id,
         vaddr += inst->size;
         this->add_instruction(std::move(inst));
     }
-}
-
-void
-dump_flat_profile(const char* output_filename)
-{
-    // It seems that an instruction can be part of multiple
-    // instances of the same kernel loaded on two different devices.
-    // We need to prevent counting the same instruction multiple times.
-    std::unordered_set<Instruction*> visited_instructions;
-
-    const auto& kernel_object_map = get_kernel_object_map();
-    const auto& flat_profile      = get_flat_profile();
-
-    std::stringstream ss;
-    uint64_t          samples_num = 0;
-    kernel_object_map.iterate_kernel_objects([&](const KernelObject* kernel_obj) {
-        ss << "\n====================================";
-        ss << "The kernel: " << kernel_obj->kernel_name()
-           << " with the begin address: " << kernel_obj->begin_address()
-           << " from code object with id: " << kernel_obj->code_object_id() << std::endl;
-        kernel_obj->iterate_instrunctions([&](const Instruction& inst) {
-            ss << "\t";
-            ss << inst.inst << "\t";
-            ss << inst.comment << "\t";
-            const auto* _sample_instruction = flat_profile.get_sample_instruction(inst);
-
-            if(_sample_instruction != nullptr)
-            {
-                _sample_instruction->process([&](const SampleInstruction& sample_instruction) {
-
-                    ss << "samples: ";
-                    ss << sample_instruction.sample_count();
-
-                    // Each instruction should be visited exactly once.
-                    // Otherwise, code object loading/unloading and relocations
-                    // are not handled properly.
-                    assert(visited_instructions.count(sample_instruction.inst()) == 0);
-                    // Assure that each instruction is counted once.
-                    if(visited_instructions.count(sample_instruction.inst()) == 0)
-                    {
-                        samples_num += sample_instruction.sample_count();
-                        visited_instructions.insert(sample_instruction.inst());
-                    }
-
-                    if(sample_instruction.exec_mask_counts().size() <= 1)
-                    {
-                        ss << ", exec_mask: " << std::hex;
-                        ss << sample_instruction.exec_mask_counts().begin()->first;
-                        ss << std::dec;
-                        assert(sample_instruction.sample_count() ==
-                               sample_instruction.exec_mask_counts().begin()->second);
-                    }
-                    else
-                    {
-                        uint64_t num_samples_sum = 0;
-                        // More than one exec_mask
-                        for(auto& [exec_mask, samples_per_exec] :
-                            sample_instruction.exec_mask_counts())
-                        {
-                            ss << std::endl;
-                            ss << "\t\t"
-                               << "exec_mask: " << std::hex << exec_mask;
-                            ss << "\t"
-                               << "samples: " << std::dec << samples_per_exec;
-                            num_samples_sum += samples_per_exec;
-                            ss << std::endl;
-                        }
-                        assert(sample_instruction.sample_count() == num_samples_sum);
-                    }
-                });
-            }
-            ss << std::endl;
-        });
-        ss << "====================================\n" << std::endl;
-    });
-
-    ss << "The total number of decoded   samples: " << samples_num << std::endl;
-    ss << "The total number of collected samples: " << sdk_pc_sampling::get_total_samples_num()
-       << std::endl;
-
-    //std::cout << ss.str() << std::endl;
-    
-    std::ofstream out(output_filename);
-    out << ss.str();
-    out.close();
-
-    assert(samples_num == get_total_samples_num());
-    // We expect at least one PC sample to be decoded/delivered;
-    assert(samples_num > 0);
 }
 
 }  // namespace address_translation

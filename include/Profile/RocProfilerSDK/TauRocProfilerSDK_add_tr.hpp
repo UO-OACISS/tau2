@@ -20,7 +20,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //https://github.com/ROCm/rocprofiler-sdk/blob/ad48201912995e1db4f6e65266bce2792056b3c6/tests/pc_sampling/address_translation.hpp
-//Modified
 
 #ifndef SAMPLING_SDKADD_H
 #define SAMPLING_SDKADD_H
@@ -259,7 +258,6 @@ namespace sdk_pc_sampling
                 samples.insert({inst_id, std::make_unique<SampleInstruction>(std::move(instruction))});
                 itr = samples.find(inst_id);
             }
-    
             auto* sample_instruction = itr->second.get();
             sample_instruction->add_sample(exec_mask);
         }
