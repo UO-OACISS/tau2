@@ -20,7 +20,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //https://github.com/ROCm/rocprofiler-sdk/blob/ad48201912995e1db4f6e65266bce2792056b3c6/tests/pc_sampling/address_translation.hpp
-//Modified
 
 #ifndef SAMPLING_SDKADD_H
 #define SAMPLING_SDKADD_H

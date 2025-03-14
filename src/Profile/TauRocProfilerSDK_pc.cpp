@@ -3,11 +3,11 @@
 #include "Profile/RocProfilerSDK/TauRocProfilerSDK_pc.h"
 #include <TAU.h>
 
-#define ROCSDK_PC_DEBUG
+//#define ROCSDK_PC_DEBUG
 
 #ifdef SAMPLING_SDKPC
 
-#define TAU_ROCMSDK_SAMPLE_LOOK_AHEAD 1024
+#define TAU_ROCMSDK_SAMPLE_LOOK_AHEAD 256
 
 constexpr bool COPY_MEMORY_CODEOBJ = true;
 
@@ -89,14 +89,14 @@ extern "C" void metric_set_gpu_timestamp(int tid, double value);
  * and then convert to microseconds.
  */
  #define MYCLOCK std::chrono::system_clock
- static uint64_t time_point_to_nanoseconds(std::chrono::time_point<MYCLOCK> tp) {
+ static uint64_t time_point_to_nanoseconds1(std::chrono::time_point<MYCLOCK> tp) {
      auto value = tp.time_since_epoch();
      uint64_t duration =
          std::chrono::duration_cast<std::chrono::nanoseconds>(value).count();
      return duration;
  }
  static uint64_t now_ns() {
-     return time_point_to_nanoseconds(MYCLOCK::now());
+     return time_point_to_nanoseconds1(MYCLOCK::now());
  }
 
 bool run_once() {
@@ -118,36 +118,120 @@ bool run_once() {
     return true;
 }
 
+#ifndef TAU_MAX_ROCM_QUEUES
+#define TAU_MAX_ROCM_QUEUES 512
+#endif /* TAU_MAX_ROCM_QUEUES */
+
+#ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
+static int tau_initialized_queues_pc[TAU_MAX_ROCM_QUEUES];
+#else
+static std::map<int, int, less<int> >& TheTauInitializedQueues_pc() {
+  static std::map<int, int, less<int> > initialized_queues;
+  return initialized_queues;
+}
+#endif /* TAU_ROCM_USE_MAP_FOR_INIT_QUEUES */
+//Different queue functions as I want the variables not to be shared with 
+// TauRocProfilerSDK, so the queues get different ids.
+int Tau_initialize_queues1(void) {
+    int i;
+    for (i=0; i < TAU_MAX_ROCM_QUEUES; i++) {
+      tau_initialized_queues_pc[i] = -1;
+    }
+    return 1;
+}
+
+int Tau_get_initialized_queues1(int queue_id) {
+    //TAU_VERBOSE("Tau_get_initialized_queues: queue_id = %d ", queue_id);
+  #ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
+    static int flag = Tau_initialize_queues1();
+    //TAU_VERBOSE("value = %d\n", tau_initialized_queues[queue_id]);
+    return tau_initialized_queues_pc[queue_id];
+  #else
+  
+    std::map<int, int, less<int> >::iterator it;
+    it = TheTauInitializedQueues_pc().find(queue_id);
+    if (it == TheTauInitializedQueues_pc().end()) { // not found!
+      TAU_VERBOSE("Tau_get_initialized_queues: queue_id = %d not found. Returning -1\n", queue_id);
+      TAU_VERBOSE("value = -1\n");
+      return -1;
+    } else {
+      TAU_VERBOSE("Tau_get_initialized_queues: queue_id = %d found. Returning %d\n", queue_id, it->second);
+      TAU_VERBOSE("value = %d\n", it->second);
+      return it->second;
+    }
+  #endif
+
+}
+
+void Tau_set_initialized_queues1(int queue_id, int value) {
+    TAU_VERBOSE("Tau_set_initialized_queues: queue_id = %d, value = %d\n", queue_id, value);
+  #ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
+    tau_initialized_queues_pc[queue_id]=value;
+  #else
+    TheTauInitializedQueues_pc()[queue_id]=value;
+    TAU_VERBOSE("Tau_set_initialized_queues: queue_id = %d, value = %d\n", queue_id,  TheTauInitializedQueues()[queue_id]);
+  #endif /* TAU_ROCM_USE_MAP_FOR_INIT_QUEUES */
+    return;
+}
+
+extern "C" void Tau_metadata_task(const char *name, const char *value, int tid);
+
+void Tau_add_metadata_for_task1(const char *key, int value, int taskid) {
+    char buf[1024];
+    snprintf(buf, sizeof(buf),  "%d", value);
+    Tau_metadata_task(key, buf, taskid);
+    TAU_VERBOSE("Adding Metadata: %s, %d, for task %d\n", key, value, taskid);
+  }
+
+
+  
 void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
 {
-    TAU_VERBOSE("TAU_publish_sdk_sample_event\n");
+    //TAU_VERBOSE("TAU_publish_sdk_sample_event\n");
     sample_mtx.lock();
 
-    if(sdk_sample_event.entry < last_sample_timestamp)
+    /*if(sdk_sample_event.entry < last_sample_timestamp)
     {
         TAU_VERBOSE("ERROR: Sample discarded due to timestamp being lower than last published sample\n");
         TAU_VERBOSE("ERROR: Last: %lu, Current:%lu\n", last_sample_timestamp, sdk_sample_event.entry);
         sample_mtx.unlock();
         return;
+    }*/
+
+
+    //Different types of events will appear as different threads in the profile
+    //This is to differenciate kernels, API calls and other events
+    int queueid = sdk_sample_event.taskid;
+    unsigned long long timestamp = sdk_sample_event.entry+deltaTimestamp_ns;
+    int taskid = Tau_get_initialized_queues1(queueid);
+    if (taskid == -1) { // not initialized
+        TAU_CREATE_TASK(taskid);
+        Tau_set_initialized_queues1(queueid, taskid);
+        // Set the timestamp for TAUGPU_TIME:
+        metric_set_gpu_timestamp(taskid, (double)(sdk_sample_event.entry+deltaTimestamp_ns)/1e3);
+        Tau_create_top_level_timer_if_necessary_task(taskid);
+        Tau_add_metadata_for_task1("PC Sampling Wave", taskid, taskid);
+        std::cout << "queueid: " << queueid << " taskid: " << taskid << std::endl;
     }
+
     last_sample_timestamp = sdk_sample_event.entry;
     //interval - exit
-/*
+    
     double timestamp_entry = (double)(sdk_sample_event.entry+deltaTimestamp_ns)/1e3; // convert to microseconds
-    metric_set_gpu_timestamp(sdk_sample_event.taskid, timestamp_entry);
-    TAU_START_TASK(sdk_sample_event.name.c_str(), sdk_sample_event.taskid);
+    metric_set_gpu_timestamp(taskid, timestamp_entry);
+    TAU_START_TASK(sdk_sample_event.name.c_str(), taskid);
 
 
     double timestamp_exit = (double)(sdk_sample_event.exit+deltaTimestamp_ns)/1e3; // convert to microseconds
-    metric_set_gpu_timestamp(sdk_sample_event.taskid, timestamp_exit);
-    TAU_STOP_TASK(sdk_sample_event.name.c_str(), sdk_sample_event.taskid);
-*/
+    metric_set_gpu_timestamp(taskid, timestamp_exit);
+    TAU_STOP_TASK(sdk_sample_event.name.c_str(), taskid);
     sample_mtx.unlock();
+    //TAU_VERBOSE("TAU_publish_sdk_sample_event - End\n");
 }
 
 void TAU_process_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
 {
-  TAU_VERBOSE("TAU_process_sdk_sample_event\n");
+  //TAU_VERBOSE("TAU_process_sdk_sample_event\n");
 
   sample_list_mtx.lock();
   TauRocmSampleSDKList.push_back(sdk_sample_event);
@@ -350,12 +434,13 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 {
                     std::stringstream ss;
                     ss << Tau_demangle_name(elem->second.kernel_name.c_str());
-                    ss << " " << elem->second.inst;
                     ss << " " << elem->second.comment;
+                    ss << " { " << elem->second.inst;
+                    ss << " }";
                     task_name = ss.str();
                 }
-                int taskid=-1;
-                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp+interval, taskid);
+
+                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp+interval, pc_sample->wave_in_group);
                 
                 TAU_process_sdk_sample_event(sample_event);
 
