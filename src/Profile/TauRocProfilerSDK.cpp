@@ -93,34 +93,30 @@ std::mutex last_mtx;
 //As TAU has not initialized, needs to read the variable here
 int use_rocprofilersdk()
 {
+
    const char* use_rocprofiler =  std::getenv("TAU_USE_ROCPROFILERSDK");
    if( use_rocprofiler )
    {
      if ( atoi(use_rocprofiler) == 1)
      {
+      /*const char* t_metrics =  std::getenv("TAU_METRICS");
+      if( t_metrics )
+      {
+        if ( std::strstr(t_metrics,"TAUGPU_TIME") ==NULL )
+        {
+          std::cout << "TAU_METRICS does not contain TAUGPU_TIME, timers will not be valid" << std::endl;
+          return 0;
+        }
+      }
+      else
+      {
+        std::cout << "TAU_METRICS does not contain TAUGPU_TIME, timers will not be valid" << std::endl;
+        return 0;
+      }*/
        return 1;
      }
    }
-   /*
-   const char* t_metrics =  std::getenv("TAU_METRICS");
-   if( t_metrics )
-   {
-    if ( std::strstr(t_metrics,"TAUGPU_TIME") !=NULL )
-    {
-       return 1;
-    }
-    else
-    {
-      std:cerr << "TAU_METRICS does not contain TAUGPU_TIME, timers will not be valid" << std::endl;
-      return 0;
-    }
-   }
-   else
-   {
-    std:cerr << "TAU_METRICS does not contain TAUGPU_TIME, timers will not be valid" << std::endl;
-    return 0;
-   }
-   */
+   
    return 0;
 }
 

@@ -3,7 +3,7 @@
 #include "Profile/RocProfilerSDK/TauRocProfilerSDK_pc.h"
 #include <TAU.h>
 
-#define ROCSDK_PC_DEBUG
+//#define ROCSDK_PC_DEBUG
 
 #ifdef SAMPLING_SDKPC
 
@@ -187,7 +187,8 @@ void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
 
     //Different types of events will appear as different threads in the profile
     //This is to differenciate kernels, API calls and other events
-    int queueid = sdk_sample_event.taskid;
+    //int queueid = sdk_sample_event.taskid;
+    int queueid = 0;
     unsigned long long timestamp = sdk_sample_event.entry+deltaTimestamp_ns;
     int taskid = Tau_get_initialized_queues_pc(queueid);
     if (taskid == -1) { // not initialized
@@ -387,6 +388,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 if(elem->second.comment.empty())
                 {
                     std::stringstream ss;
+                    ss << "[rocm sample] ";
                     ss << Tau_demangle_name(elem->second.kernel_name.c_str());
                     ss << " " << elem->second.inst;
                     task_name = ss.str();
@@ -394,6 +396,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 else
                 {
                     std::stringstream ss;
+                    ss << "[rocm sample] ";
                     ss << Tau_demangle_name(elem->second.kernel_name.c_str());
                     ss << " " << elem->second.comment;
                     ss << " { " << elem->second.inst;
@@ -486,6 +489,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 if(elem->second.comment.empty())
                 {
                     std::stringstream ss;
+                    ss << "[rocm sample] ";
                     ss << Tau_demangle_name(elem->second.kernel_name.c_str());
                     ss << " " << elem->second.inst;
                     task_name = ss.str();
@@ -493,6 +497,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 else
                 {
                     std::stringstream ss;
+                    ss << "[rocm sample] ";
                     ss << Tau_demangle_name(elem->second.kernel_name.c_str());
                     ss << " " << elem->second.comment;
                     ss << " { " << elem->second.inst;
