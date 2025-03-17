@@ -182,7 +182,7 @@ int Tau_test_for_MPI_comm_rank() {
 		return commrank;
     }
 	// PBS/Torque
-    tmpvar = getenv("PBS_TASKNUM");
+    tmpvar = getenv("PBS_NODENUM");
 	if (tmpvar != NULL) {
         commrank = atoi(tmpvar);
         Tau_set_usesMPI(1);
