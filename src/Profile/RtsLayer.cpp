@@ -173,6 +173,14 @@ int Tau_test_for_MPI_comm_rank() {
         Tau_set_usesMPI(1);
         return commrank;
     }
+    // PALS (Cray Parallel Application Launch Service)
+    tmpvar = getenv("PALS_RANKID");
+    if (tmpvar != NULL) {
+        commrank = atoi(tmpvar);
+	//printf("Found the rank! '%s', %d\n", tmpvar, commrank);
+        Tau_set_usesMPI(1);
+        return commrank;
+    }
     // ALPS on Cray
     tmpvar = getenv("ALPS_APP_PE");
     if (tmpvar != NULL) {
@@ -186,13 +194,6 @@ int Tau_test_for_MPI_comm_rank() {
 	if (tmpvar != NULL) {
         commrank = atoi(tmpvar);
 		// printf("Changing openMPI rank to %lu\n", commrank);
-        Tau_set_usesMPI(1);
-		return commrank;
-    }
-	// PBS/Torque
-    tmpvar = getenv("PBS_TASKNUM");
-	if (tmpvar != NULL) {
-        commrank = atoi(tmpvar);
         Tau_set_usesMPI(1);
 		return commrank;
     }
