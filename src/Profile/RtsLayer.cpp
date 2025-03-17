@@ -165,6 +165,14 @@ int Tau_test_for_MPI_comm_rank() {
         Tau_set_usesMPI(1);
 		return commrank;
     }
+    // PMIx (Process Management Interface for Exascale)
+    tmpvar = getenv("PMIX_RANK");
+    if (tmpvar != NULL) {
+        commrank = atoi(tmpvar);
+	//printf("Found the rank! '%s', %d\n", tmpvar, commrank);
+        Tau_set_usesMPI(1);
+        return commrank;
+    }
     // ALPS on Cray
     tmpvar = getenv("ALPS_APP_PE");
     if (tmpvar != NULL) {
@@ -182,7 +190,7 @@ int Tau_test_for_MPI_comm_rank() {
 		return commrank;
     }
 	// PBS/Torque
-    tmpvar = getenv("PBS_NODENUM");
+    tmpvar = getenv("PBS_TASKNUM");
 	if (tmpvar != NULL) {
         commrank = atoi(tmpvar);
         Tau_set_usesMPI(1);
