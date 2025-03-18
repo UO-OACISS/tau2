@@ -169,6 +169,8 @@ class TargetMap {
             return (++thread_count)-1;
         }
         void add_thread_id(ompt_id_t target_id, int device_id) {
+            if(target_id == ompt_id_none)
+              return;
             static thread_local int tid = get_tid();
             size_t location = (size_t)target_id % map_size;
             launching_thread[location] = tid;
@@ -184,6 +186,8 @@ class TargetMap {
             //printf("%s %lu %d\n", __func__, location, tid);
         }
         int get_thread_id(ompt_id_t target_id) {
+            if(target_id == ompt_id_none)
+              return 0;
             size_t location = (size_t)target_id % map_size;
             read_index = location;
             int tid = launching_thread[location];
@@ -472,39 +476,51 @@ static void on_ompt_callback_buffer_complete (
 }
 
 // Utility routine to enable the desired tracing modes
-ompt_set_result_t Tau_ompt_set_trace() {
+ompt_set_result_t Tau_ompt_set_trace(ompt_device_t *device) {
     //printf("%s\n", __func__);
   if (!ompt_set_trace_ompt) return ompt_set_error;
 
-  ompt_set_trace_ompt(0, 1, ompt_callback_target);
-  ompt_set_trace_ompt(0, 1, ompt_callback_target_data_op);
-  ompt_set_trace_ompt(0, 1, ompt_callback_target_submit);
+  ompt_set_trace_ompt(device, 1, ompt_callback_target);
+  ompt_set_trace_ompt(device, 1, ompt_callback_target_data_op);
+  ompt_set_trace_ompt(device, 1, ompt_callback_target_submit);
 
   return ompt_set_always;
 }
 
-int Tau_ompt_start_trace() {
+int Tau_ompt_start_trace(ompt_device_t *device) {
     //printf("%s\n", __func__);
   if (!ompt_start_trace) return 0;
   tau_ompt_tracing = true;
-  return ompt_start_trace(0, &on_ompt_callback_buffer_request,
+  return ompt_start_trace(device, &on_ompt_callback_buffer_request,
 			  &on_ompt_callback_buffer_complete);
 }
 
 #endif // TAU_OMPT_USE_TARGET_OFFLOAD
 
-int Tau_ompt_flush_trace() {
+int Tau_ompt_flush_trace(ompt_device_t *device) {
     //printf("%s\n", __func__);
   if (!ompt_flush_trace) return 0;
   if (!tau_ompt_tracing) return 0;
-  return ompt_flush_trace(0);
+  return ompt_flush_trace(device);
 }
 
-int Tau_ompt_stop_trace() {
+int Tau_ompt_flush_trace() {
+  std::map<int, ompt_device_t*>::iterator it_dev_map;
+  std::map<int, ompt_device_t*> dev_map = getDeviceMap();
+  for(it_dev_map = dev_map.begin(); it_dev_map !=dev_map.end(); it_dev_map++ )
+  {
+    if(it_dev_map->first==-1)
+      return 1;
+    Tau_ompt_flush_trace(it_dev_map->second);
+  }
+  return 0;
+}
+
+int Tau_ompt_stop_trace(ompt_device_t *device) {
     //printf("%s\n", __func__);
   tau_ompt_tracing = false;
   if (!ompt_stop_trace) return 0;
-  return ompt_stop_trace(0);
+  return ompt_stop_trace(device);
 }
 
 /* End Asynchronous device target offload support! */
@@ -1359,8 +1375,8 @@ static void on_ompt_callback_device_initialize (
   // is because this device_init callback is invoked during the first
   // target construct implementation.
 
-  Tau_ompt_set_trace();
-  Tau_ompt_start_trace();
+  Tau_ompt_set_trace(device);
+  Tau_ompt_start_trace(device);
 #endif
 }
 
@@ -1369,8 +1385,8 @@ static void on_ompt_callback_device_finalize ( int device_num) {
     TauInternalFunctionGuard protects_this_function;
   //printf("Callback Fini: device_num=%d\n", device_num);
 #ifdef TAU_OMPT_USE_TARGET_OFFLOAD
-  Tau_ompt_flush_trace();
-  Tau_ompt_stop_trace();
+  Tau_ompt_flush_trace(getDeviceMap()[device_num]);
+  Tau_ompt_stop_trace(getDeviceMap()[device_num]);
 #endif
 }
 
@@ -1397,6 +1413,7 @@ static void on_ompt_callback_device_load
  * seem to be called when registered by TAU, but
  * are called when registered by another tool. I
  * did not have the time to figure out why. */
+//Surprise!! They are called with ROCm compilers
 static void on_ompt_callback_target(
     ompt_target_t kind,
     ompt_scope_endpoint_t endpoint,
@@ -1415,7 +1432,6 @@ static void on_ompt_callback_target(
 	    target_id, kind, endpoint, device_num, codeptr_ra);
     */
     TauInternalFunctionGuard protects_this_function;
-    //printf("CPU Device: %d\n", device_num);
     void *handle = NULL;
     switch(endpoint) {
         case ompt_scope_begin: {
@@ -1437,6 +1453,7 @@ static void on_ompt_callback_target(
             TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
             timer_stack.push(handle);
             TAU_PROFILER_START(handle);
+            //printf("Timer name: %s , target_id  %lu, device %d \n", timerName, target_id, device_num);
             TargetMap::instance().add_thread_id(target_id,
                 (device_num == -1 ? 0 : device_num));
             break;
@@ -1447,7 +1464,7 @@ static void on_ompt_callback_target(
             timer_stack.pop();
 #ifndef TAU_INTEL_COMPILER // intel doesn't always provide a codeptr_ra value.
             // flush the trace to get async events for this target
-            Tau_ompt_flush_trace();
+            Tau_ompt_flush_trace(getDeviceMap()[device_num]);
 #endif
             break;
         }
@@ -1673,8 +1690,14 @@ inline static int register_callback(ompt_callbacks_t name, ompt_callback_t cb) {
 
   switch(ret) {
     case ompt_set_never:
-      TAU_VERBOSE("TAU: WARNING: OMPT Callback for event %d could not be registered\n", name);
+      TAU_VERBOSE("TAU: WARNING: OMPT Callback for event %d could not be registered (never)\n", name);
       break;
+    case ompt_set_error:
+      TAU_VERBOSE("TAU: WARNING: OMPT Callback for event %d could not be registered (error)\n", name);
+      break;
+    /*case ompt_set_impossible:
+      TAU_VERBOSE("TAU: WARNING: OMPT Callback for event %d could not be registered (impossible)\n", name);
+      break;*/
     case ompt_set_sometimes:
       TAU_VERBOSE("TAU: OMPT Callback for event %d registered with return value %s\n", name, "ompt_set_sometimes");
       break;
@@ -1693,8 +1716,13 @@ inline static int register_callback(ompt_callbacks_t name, ompt_callback_t cb) {
 inline static void Tau_register_callback(ompt_callbacks_t name, ompt_callback_t cb) {
   int ret = register_callback(name, cb);
 
-  if(ret != ompt_set_never)
-    Tau_ompt_callbacks_enabled[name] = 1;
+  if(ret == ompt_set_never)
+    return;
+  /*if(ret == ompt_set_impossible)
+    return;*/
+  if(ret == ompt_set_error)
+    return;
+  Tau_ompt_callbacks_enabled[name] = 1;
 }
 
 
@@ -1862,7 +1890,6 @@ extern "C" int ompt_initialize(
   pthread_t after_init_thread;
   pthread_create(&after_init_thread, NULL, after_ompt_init_thread_fn, NULL);
   pthread_detach(after_init_thread);
-
   initialized = true;
   initializing = false;
   return 1; //success
