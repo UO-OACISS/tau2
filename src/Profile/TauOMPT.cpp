@@ -1413,7 +1413,7 @@ static void on_ompt_callback_device_load
  * seem to be called when registered by TAU, but
  * are called when registered by another tool. I
  * did not have the time to figure out why. */
-//Surprise!! They are called with ROCm compilers
+//They are called with ROCm compilers
 static void on_ompt_callback_target(
     ompt_target_t kind,
     ompt_scope_endpoint_t endpoint,
