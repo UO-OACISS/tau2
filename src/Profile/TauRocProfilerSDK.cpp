@@ -128,8 +128,6 @@ void rocsdk_version_check(uint32_t                 version,
 //https://github.com/ROCm/rocprofiler-sdk/blob/ad48201912995e1db4f6e65266bce2792056b3c6/source/include/rocprofiler-sdk/fwd.h#L181
 //Not all kinds are supported, look at the definitions in new rocprofiler-sdk versions and implement if supported
 static const auto supported_kinds = std::unordered_set<rocprofiler_buffer_tracing_kind_t>{
-    //ROCPROFILER_BUFFER_TRACING_PAGE_MIGRATION,
-    //ROCPROFILER_BUFFER_TRACING_SCRATCH_MEMORY
     //ROCPROFILER_BUFFER_TRACING_NONE = 0,
     ROCPROFILER_BUFFER_TRACING_HSA_CORE_API,          ///< @see ::rocprofiler_hsa_core_api_id_t
     ROCPROFILER_BUFFER_TRACING_HSA_AMD_EXT_API,       ///< @see ::rocprofiler_hsa_amd_ext_api_id_t
@@ -659,7 +657,28 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         struct TauSDKEvent e(task_name, record->start_timestamp, record->end_timestamp, taskid, record_events);
         //("taskid: %d start_ts: %lf end_ts: %lf\n", e.taskid, (double)e.entry, (double)e.exit);
         TAU_process_sdk_event(e);
-      }      
+      }
+      //Seems to only measure start and end of omp calls and no relation between calls can be extracted
+      // one example is omp_parallel_begin and omp_parallel_end that should be related
+      //size: 96, kind: OMPT, operation: omp_parallel_begin, cid=200, extern_cid=0, start_timestamp: 12013877082218858, end_timestamp: 12013877082218858, thread_id: 2640336
+      //size: 96, kind: OMPT, operation: omp_parallel_end,   cid=224, extern_cid=0, start_timestamp: 12013877102301825, end_timestamp: 12013877102301825, thread_id: 2640336
+      //Better to use TAU's OMPT implementation, as it also seems to conflict with it.
+      /*
+      else if(header->kind == ROCPROFILER_BUFFER_TRACING_OMPT)
+      {
+        auto* record =
+                    static_cast<rocprofiler_buffer_tracing_ompt_record_t*>(header->payload);
+        std::cout << "size: " << record->size
+                  << ", kind: " << client_name_info.kind_names[record->kind]
+                  << ", operation: " <<  client_name_info.operation_names[record->kind][record->operation]
+                  << ", cid=" << record->correlation_id.internal
+                  << ", extern_cid=" << record->correlation_id.external.value
+                  << ", start_timestamp: " << record->start_timestamp
+                  << ", end_timestamp: " << record->end_timestamp
+                  << ", thread_id: " << record->thread_id
+                  << std::endl;
+
+      }*/
     }
     else
     {
