@@ -16,58 +16,6 @@ using marker_id_t = rocprofiler::sdk::codeobj::disassembly::marker_id_t;
 //Flag to check if TAU called the flush function
 //we want to avoid flushing after TAU has written the profile files
 int volatile pc_flushed = 0;
-
-
-struct rocsdk_instruction
-{
-    rocsdk_instruction() = default;
-    rocsdk_instruction(std::string _inst, std::string _kernel_name, std::string _comment, uint64_t _ld_addr)
-    : inst(_inst)
-    , kernel_name(_kernel_name)
-    , comment(_comment)
-    , ld_addr(_ld_addr)
-    {}
-    std::string inst{};
-    std::string kernel_name{};
-    std::string comment{};
-    uint64_t    ld_addr{0};     // Instruction load address, if from loaded codeobj
-};
-
-struct TauSDKSampleEvent {
-
-    rocprofiler_timestamp_t entry;
-    rocprofiler_timestamp_t exit;
-    std::string name;
-    int taskid;
-
-    TauSDKSampleEvent(): taskid(0) {}
-    TauSDKSampleEvent(string event_name, rocprofiler_timestamp_t begin, rocprofiler_timestamp_t end, int t) : name(event_name), taskid(t)
-    {
-        entry = begin;
-        exit  = end;
-    }
-    void printEvent() {
-        std::cout <<name<<" Task: "<<taskid<<", \t\tEntry: "<<entry<<" , Exit = "<<exit;
-    }
-    bool appearsBefore(struct TauSDKSampleEvent other_event) {
-        if ((taskid == other_event.taskid) &&
-            (entry < other_event.entry) &&
-            (exit < other_event.entry))  {
-            // both entry and exit of my event is before the entry of the other event.
-            return true;
-        } else
-            return false;
-    }
-
-    bool operator < (struct TauSDKSampleEvent two) {
-        if (entry < two.entry) 
-            return true;
-        else 
-            return false;
-    }
-  
-};
-
 size_t interval = 0;
 
 using rocsdk_map_inst_key = std::pair<marker_id_t, uint64_t>;
@@ -856,17 +804,7 @@ find_all_gpu_agents_supporting_pc_sampling_impl(rocprofiler_agent_version_t vers
 
 int enable_pc_sampling ()
 {
-	const char* env_pc_sampling=std::getenv("ROCPROFILER_PC_SAMPLING_BETA_ENABLED");
-
-	if(env_pc_sampling)
-	{
-		int len = strlen(env_pc_sampling);
-		if (len == 0)
-			return 1;
-		if(atoi(env_pc_sampling)==1)
-			return 1;
-	}
-	return 0;
+	return TauEnv_get_rocsdk_pcs_enable();
 }
 
 

@@ -74,6 +74,57 @@ using tool_agent_info_vec_t       = std::vector<std::unique_ptr<tool_agent_info>
 using pc_sampling_buffer_id_vec_t = std::vector<rocprofiler_buffer_id_t>;
 
 
+
+struct rocsdk_instruction
+{
+    rocsdk_instruction() = default;
+    rocsdk_instruction(std::string _inst, std::string _kernel_name, std::string _comment, uint64_t _ld_addr)
+    : inst(_inst)
+    , kernel_name(_kernel_name)
+    , comment(_comment)
+    , ld_addr(_ld_addr)
+    {}
+    std::string inst{};
+    std::string kernel_name{};
+    std::string comment{};
+    uint64_t    ld_addr{0};     // Instruction load address, if from loaded codeobj
+};
+
+struct TauSDKSampleEvent {
+
+    rocprofiler_timestamp_t entry;
+    rocprofiler_timestamp_t exit;
+    std::string name;
+    int taskid;
+
+    TauSDKSampleEvent(): taskid(0) {}
+    TauSDKSampleEvent(string event_name, rocprofiler_timestamp_t begin, rocprofiler_timestamp_t end, int t) : name(event_name), taskid(t)
+    {
+        entry = begin;
+        exit  = end;
+    }
+    void printEvent() {
+        std::cout <<name<<" Task: "<<taskid<<", \t\tEntry: "<<entry<<" , Exit = "<<exit;
+    }
+    bool appearsBefore(struct TauSDKSampleEvent other_event) {
+        if ((taskid == other_event.taskid) &&
+            (entry < other_event.entry) &&
+            (exit < other_event.entry))  {
+            // both entry and exit of my event is before the entry of the other event.
+            return true;
+        } else
+            return false;
+    }
+
+    bool operator < (struct TauSDKSampleEvent two) {
+        if (entry < two.entry) 
+            return true;
+        else 
+            return false;
+    }
+  
+};
+
 extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
 extern void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
 extern void sdk_pc_sampling_flush();

@@ -245,6 +245,10 @@ using namespace std;
 /* Thread recycling */
 #define TAU_RECYCLE_THREADS_DEFAULT 0
 
+/* Rocprofiler-sdk related variables*/
+#define TAU_USE_ROCPROFILERSDK_DEFAULT 0
+#define TAU_USE_ROCSDK_SAMPLING_DEFAULT 0
+
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
 
@@ -389,6 +393,9 @@ static int env_memmgr_max_memblocks = TAU_MEMMGR_MAX_MEMBLOCKS;
 
 static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
 static int env_papi_multiplexing = 0;
+
+static int env_rocsdk_enable = 0;
+static int env_rocsdk_pcs_enable = 0;
 
 #ifdef TAU_ANDROID
 static int env_alfred_port = 6113;
@@ -1415,6 +1422,13 @@ int TauEnv_get_mem_class_present(const char * name) {
         return 0;
     }
     return env_mem_classes_set->count(name);
+}
+
+int TauEnv_get_rocsdk_enable(){
+  return env_rocsdk_enable;
+}
+int TauEnv_get_rocsdk_pcs_enable(){
+  return env_rocsdk_pcs_enable;
 }
 
 const char * TauEnv_get_tau_exec_args() {
@@ -2861,33 +2875,23 @@ void TauEnv_initialize()
     } else {
       TAU_VERBOSE("TAU: TAU_EXEC_PATH is \"%s\"\n", env_tau_exec_path);
     }
-    /*
-    tmp = getconf("ROCPROFILER_PC_SAMPLING_BETA_ENABLED");
-    if(tmp !=NULL)
+
+    tmp = getconf("TAU_USE_ROCPROFILERSDK");
+    if (parse_bool(tmp, TAU_USE_ROCPROFILERSDK_DEFAULT)) {
+      env_rocsdk_enable = 1;
+      TAU_VERBOSE("TAU: Rocprofiler-SDK Enabled\n");
+      TAU_METADATA("TAU_ROCPROFILERSDK", "on");
+		}
+
+    if(env_rocsdk_enable)
     {
-      if (parse_bool(tmp, 1)) {
-        env_bfd_lookup = 1;
-        TAU_VERBOSE("TAU: RocprofilerSDK Enabled\n");
-        TAU_METADATA("TAU_ROCSDK_ENABLEPC", "on");
-
-        tmp = getconf("TAU_ROCSDK_LOG");
-        if(tmp)
-        {
-          TAU_VERBOSE("TAU: TAU_ROCSDK_LOG has name\n");
-          env_rocsdk_pcfile = strdup(tmp);
-          TAU_METADATA("TAU_ROCSDK_LOG", env_rocsdk_pcfile);
-        }
-        else
-        {
-          TAU_VERBOSE("TAU: TAU_ROCSDK_LOG has no name\n");
-          env_rocsdk_pcfile = "ROCm_PC_sampling.log";
-          TAU_METADATA("TAU_ROCSDK_LOG", env_rocsdk_pcfile);
-        }
-
-
+      tmp = getconf("ROCPROFILER_PC_SAMPLING_BETA_ENABLED");
+      if (parse_bool(tmp, TAU_USE_ROCSDK_SAMPLING_DEFAULT)) {
+        env_rocsdk_pcs_enable = 1;
+        TAU_VERBOSE("TAU: Rocprofiler-SDK PC Sampling Enabled\n");
+        TAU_METADATA("TAU_ROCPROFILERSDK_PC_SAMPLING", "on");
       }
     }
-  */
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");

@@ -199,6 +199,8 @@ extern "C" {
   const char * TAUDECL TauEnv_get_tau_exec_args();
   const char * TAUDECL TauEnv_get_tau_exec_path();
   int TAUDECL TauEnv_get_recycle_threads();
+  int TAUDECL TauEnv_get_rocsdk_enable();
+  int TAUDECL TauEnv_get_rocsdk_pcs_enable();
 #ifdef __cplusplus
   void Tau_util_replaceStringInPlace(std::string& subject, const std::string& search,
                           const std::string& replace);
