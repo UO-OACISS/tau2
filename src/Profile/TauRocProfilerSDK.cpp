@@ -128,18 +128,35 @@ void rocsdk_version_check(uint32_t                 version,
 //https://github.com/ROCm/rocprofiler-sdk/blob/ad48201912995e1db4f6e65266bce2792056b3c6/source/include/rocprofiler-sdk/fwd.h#L181
 //Not all kinds are supported, look at the definitions in new rocprofiler-sdk versions and implement if supported
 static const auto supported_kinds = std::unordered_set<rocprofiler_buffer_tracing_kind_t>{
-    ROCPROFILER_BUFFER_TRACING_HSA_CORE_API,
-    //ROCPROFILER_BUFFER_TRACING_HSA_AMD_EXT_API,
-    ROCPROFILER_BUFFER_TRACING_HSA_IMAGE_EXT_API,
-    ROCPROFILER_BUFFER_TRACING_HSA_FINALIZE_EXT_API,
-    ROCPROFILER_BUFFER_TRACING_HIP_RUNTIME_API,
-    ROCPROFILER_BUFFER_TRACING_HIP_COMPILER_API,
-    ROCPROFILER_BUFFER_TRACING_MARKER_CONTROL_API,
-    ROCPROFILER_BUFFER_TRACING_MARKER_NAME_API,
-    ROCPROFILER_BUFFER_TRACING_MEMORY_COPY,
-    ROCPROFILER_BUFFER_TRACING_KERNEL_DISPATCH,
     //ROCPROFILER_BUFFER_TRACING_PAGE_MIGRATION,
     //ROCPROFILER_BUFFER_TRACING_SCRATCH_MEMORY
+    //ROCPROFILER_BUFFER_TRACING_NONE = 0,
+    ROCPROFILER_BUFFER_TRACING_HSA_CORE_API,          ///< @see ::rocprofiler_hsa_core_api_id_t
+    ROCPROFILER_BUFFER_TRACING_HSA_AMD_EXT_API,       ///< @see ::rocprofiler_hsa_amd_ext_api_id_t
+    ROCPROFILER_BUFFER_TRACING_HSA_IMAGE_EXT_API,     ///< @see ::rocprofiler_hsa_image_ext_api_id_t
+    ROCPROFILER_BUFFER_TRACING_HSA_FINALIZE_EXT_API,  ///< @see
+                                                      ///< ::rocprofiler_hsa_finalize_ext_api_id_t
+    ROCPROFILER_BUFFER_TRACING_HIP_RUNTIME_API,       ///< @see ::rocprofiler_hip_runtime_api_id_t
+    //ROCPROFILER_BUFFER_TRACING_HIP_COMPILER_API,      ///< @see ::rocprofiler_hip_compiler_api_id_t
+    ROCPROFILER_BUFFER_TRACING_MARKER_CORE_API,       ///< @see ::rocprofiler_marker_core_api_id_t
+    ROCPROFILER_BUFFER_TRACING_MARKER_CONTROL_API,  ///< @see ::rocprofiler_marker_control_api_id_t
+    ROCPROFILER_BUFFER_TRACING_MARKER_NAME_API,     ///< @see ::rocprofiler_marker_name_api_id_t
+    ROCPROFILER_BUFFER_TRACING_MEMORY_COPY,         ///< @see ::rocprofiler_memory_copy_operation_t
+    ROCPROFILER_BUFFER_TRACING_KERNEL_DISPATCH,     ///< Buffer kernel dispatch info
+    //ROCPROFILER_BUFFER_TRACING_PAGE_MIGRATION,      ///< Buffer page migration info
+    //ROCPROFILER_BUFFER_TRACING_SCRATCH_MEMORY,      ///< Buffer scratch memory reclaimation info
+    //ROCPROFILER_BUFFER_TRACING_CORRELATION_ID_RETIREMENT,  ///< Correlation ID in no longer in use
+    //ROCPROFILER_BUFFER_TRACING_RCCL_API,                   ///< RCCL tracing
+    //ROCPROFILER_BUFFER_TRACING_OMPT,                       ///< @see ::rocprofiler_ompt_operation_t
+    //ROCPROFILER_BUFFER_TRACING_MEMORY_ALLOCATION,          ///< @see
+    //                                               ///< ::rocprofiler_memory_allocation_operation_t
+    //ROCPROFILER_BUFFER_TRACING_RUNTIME_INITIALIZATION,  ///< Record indicating a runtime library has
+    //                                                    ///< been initialized. @see
+    //                                                    ///< ::rocprofiler_runtime_initialization_operation_t
+    //ROCPROFILER_BUFFER_TRACING_ROCDECODE_API,   ///< rocDecode tracing
+    //ROCPROFILER_BUFFER_TRACING_ROCJPEG_API,     ///< rocJPEG tracing
+    //ROCPROFILER_BUFFER_TRACING_HIP_STREAM_API,  ///< Display HIP Stream
+    //ROCPROFILER_BUFFER_TRACING_LAST,
 };
 
 //This is a bit different from the ROCm samples,
