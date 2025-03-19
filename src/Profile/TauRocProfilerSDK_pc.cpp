@@ -249,7 +249,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
         }
         else if(cur_header->category == ROCPROFILER_BUFFER_CATEGORY_PC_SAMPLING)
         {
-#if (ROCPROFILER_VERSION_MINOR < 7) && (ROCPROFILER_VERSION_MAJOR == 0)
+#if (ROCPROFILER_VERSION_MINOR < 6) && (ROCPROFILER_VERSION_MAJOR == 0)
             if(cur_header->kind == ROCPROFILER_PC_SAMPLING_RECORD_SAMPLE)
             {
                 auto* pc_sample =
@@ -713,7 +713,7 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
         }
 
 
-#if (ROCPROFILER_VERSION_MINOR < 7) && (ROCPROFILER_VERSION_MAJOR == 0)
+#if (ROCPROFILER_VERSION_MINOR < 6) && (ROCPROFILER_VERSION_MAJOR == 0)
         auto status = rocprofiler_configure_pc_sampling_service(context_id,
                                                                 agent_info->agent_id,
                                                                 picked_cfg->method,
