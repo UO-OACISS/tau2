@@ -8417,7 +8417,7 @@ fi
 # Install libunwind if requested
 ######################################################################
 libunwind=libunwind-1.3.1
-libunwind=libunwind-1.6.2
+libunwind=libunwind-1.8.1
 libunwindtgz=$libunwind.tar.gz
 libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 if [ "x$unwind_dir" = "x" ]; then
@@ -10038,7 +10038,7 @@ fi
 ######################################################################
 # Install ZLIB if requested
 ######################################################################
-zlibs=zlib-1.2.11
+zlibs=zlib-1.3.1
 zlibtgz=$zlibs.tar.gz
 zliburl=https://www.zlib.net/$zlibtgz
 build_zlib() {
