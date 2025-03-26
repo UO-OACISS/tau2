@@ -12,7 +12,7 @@ Configure TAU with:
 
 or 
 
-./configure -opencl=<opencl headaers/libaries>
+./configure -opencl=<opencl headers/libaries>
 
 Then:
 
