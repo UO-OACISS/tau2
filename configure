@@ -1436,6 +1436,7 @@ rocprofiler=no
 rocprofv2=no
 rocprofsdk=no
 rocprofsdk_dir=""
+comgr_dir=""
 roctracer=no
 rocmsmi=no
 hip=no
@@ -3263,6 +3264,17 @@ for arg in "$@"; do
             shift
             ;;
 
+        -comgr=*)
+            comgr_dir=`echo $arg | sed -e 's/-comgr=//' -e 's/ /#/g'`
+            if [ -r $comgr_dir/include/amd_comgr/amd_comgr.h ]; then
+                    fixmakeargs="$fixmakeargs comgr_dir=$comgr_dir"
+            else
+                echo "Error: Cannot find amd_comgr.h in directory $comgr_dir/include/amd_comgr/"
+                exit 1
+            fi
+            shift
+            ;;
+
 	   -rocmsmi=*)
             rocmsmidir=`echo $arg | sed -e 's/-rocmsmi=//' -e 's/ /#/g'`
             if [ ! -d $rocmsmidir ]; then
@@ -3668,6 +3680,15 @@ if [ "x$rocm" = "xyes" -a "$rocprofsdk" = "yes" -a "$rocmv6" = "yes" ]; then
     fi
     if [  "$elfutils" = "yes" ]; then
         fixmakeargs="$fixmakeargs ROCPROFILERSDK_PC"
+        if [ "x$comgr_dir" = "x"]; then
+            comgr_dir=$rocprofsdk_dir
+            if [ -r $comgr_dir/include/amd_comgr/amd_comgr.h ]; then
+                    fixmakeargs="$fixmakeargs comgr_dir=$comgr_dir"
+            else
+                echo "Error: Cannot find amd_comgr.h in directory $comgr_dir/include/amd_comgr/"
+                exit 1
+            fi
+        fi
     fi
 fi
 

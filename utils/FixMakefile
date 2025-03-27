@@ -1131,6 +1131,11 @@ case $1 in
         echo "s@^TAUROCPROFSDK_DIR=\(.*\)@TAUROCPROFSDK_DIR=$rocmsmidir@g" >> $sedout
         ;;
 
+     comgr_dir=*)
+       comgrdir=`echo $1 | sed -e 's/^comgr_dir=//' -e 's/#/ /g'`
+        echo "s@^TAUROCCOMGR_DIR=\(.*\)@TAUROCCOMGR_DIR=$comgrdir@g" >> $sedout
+        ;;     
+
      hipdir=*)
         hipdir=`echo $1 | sed -e 's/^hipdir=//' -e 's/#/ /g'`
 	echo "s@^TAU_HIP=\(.*\)@TAU_HIP=$hipdir@g" >> $sedout

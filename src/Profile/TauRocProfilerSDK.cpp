@@ -79,6 +79,12 @@ std::vector<const char*> roctx_push_pop = {};
 
 //Map to idenfity agent_id(GPU) with our own identifier
 std::map<uint64_t , int> tau_rocm_agent_id = {};
+//Map of all available agents, helps identify if agent is CPU or GPU
+//  ROCPROFILER_AGENT_TYPE_NONE = 0,  ///< Agent type is unknown
+//  ROCPROFILER_AGENT_TYPE_CPU,       ///< Agent type is a CPU
+//  ROCPROFILER_AGENT_TYPE_GPU,       ///< Agent type is a GPU
+//  ROCPROFILER_AGENT_TYPE_LAST,
+std::map<uint64_t , rocprofiler_agent_type_t> tau_rocm_all_agent_id = {};
 
 //List of events, used  to sort events by timestamp
 std::list<struct TauSDKEvent> TauRocmSDKList;
@@ -238,6 +244,11 @@ get_gpu_device_agents()
         {
             const auto* agent = static_cast<const rocprofiler_agent_v0_t*>(agents_arr[i]);
             if(agent->type == ROCPROFILER_AGENT_TYPE_GPU) agents_v->emplace_back(*agent);
+            /*auto* _agents     = reinterpret_cast<const rocprofiler_agent_t**>(agents_arr);
+            std::cout << "[" << __FUNCTION__ << "] " << agent->name << " :: "
+            << "id=" << agent->id.handle << ", "
+            << "type=" << agent->type << "\n";*/
+            tau_rocm_all_agent_id[agent->id.handle] = agent->type;
         }
         return ROCPROFILER_STATUS_SUCCESS;
     };
@@ -515,7 +526,8 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         task_name = client_name_info.operation_names[record->kind][record->operation];
         std::vector<TauSDKUserEvent> record_events;
         struct TauSDKEvent e(task_name, record->start_timestamp, record->end_timestamp, taskid, record_events);
-        //TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf\n", e.taskid, (double)e.entry, (double)e.exit);
+        //TAU_VERBOSE("%s taskid: %d start_ts: %lu end_ts: %lu\n", task_name.c_str(), e.taskid, e.entry, e.exit);
+        //std::cout << task_name << e.taskid, e.entry, e.exit<< std::endl;
         TAU_process_sdk_event(e);
         
       }
@@ -658,13 +670,40 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         //("taskid: %d start_ts: %lf end_ts: %lf\n", e.taskid, (double)e.entry, (double)e.exit);
         TAU_process_sdk_event(e);
       }
-      //Seems to only measure start and end of omp calls and no relation between calls can be extracted
-      // one example is omp_parallel_begin and omp_parallel_end that should be related
-      //size: 96, kind: OMPT, operation: omp_parallel_begin, cid=200, extern_cid=0, start_timestamp: 12013877082218858, end_timestamp: 12013877082218858, thread_id: 2640336
-      //size: 96, kind: OMPT, operation: omp_parallel_end,   cid=224, extern_cid=0, start_timestamp: 12013877102301825, end_timestamp: 12013877102301825, thread_id: 2640336
+      /*else if(header->kind == ROCPROFILER_BUFFER_TRACING_RCCL_API)
+      {
+        auto* record = static_cast<rocprofiler_buffer_tracing_rccl_api_record_t*>(header->payload);
+        std::cout << "size: " << record->size
+                  << ", kind: " << client_name_info.kind_names[record->kind]
+                  << ", operation: " <<  client_name_info.operation_names[record->kind][record->operation]
+                  << ", cid=" << record->correlation_id.internal
+                  << ", extern_cid=" << record->correlation_id.external.value
+                  << ", start_timestamp: " << record->start_timestamp
+                  << ", end_timestamp: " << record->end_timestamp
+                  << ", thread_id: " << record->thread_id
+                  << std::endl;
+      }*/
+      /*else if(header->kind == ROCPROFILER_BUFFER_TRACING_MEMORY_ALLOCATION)
+      {
+        auto* record =
+                    static_cast<rocprofiler_buffer_tracing_memory_allocation_record_t*>(header->payload);
+        
+        std::cout << "size: " << record->size
+                    << ", kind: " << client_name_info.kind_names[record->kind]
+                    << ", operation: " <<  client_name_info.operation_names[record->kind][record->operation]
+                    << ", cid=" << record->correlation_id.internal
+                    << ", extern_cid=" << record->correlation_id.external.value
+                    << ", start_timestamp: " << record->start_timestamp
+                    << ", end_timestamp: " << record->end_timestamp
+                    << ", thread_id: " << record->thread_id
+                    << ", agent_id: " << record->agent_id.handle
+                    << ", agent type: " << tau_rocm_all_agent_id[record->agent_id.handle]
+                    << ", address: " << record->address.handle
+                    << ", allocation_size: " << record->allocation_size
+                    << std::endl;
+      }*/
       //Better to use TAU's OMPT implementation, as it also seems to conflict with it.
-      /*
-      else if(header->kind == ROCPROFILER_BUFFER_TRACING_OMPT)
+      /*else if(header->kind == ROCPROFILER_BUFFER_TRACING_OMPT)
       {
         auto* record =
                     static_cast<rocprofiler_buffer_tracing_ompt_record_t*>(header->payload);
@@ -975,7 +1014,6 @@ rocprofiler_configure(uint32_t                 version,
                       rocprofiler_client_id_t* id)
 {
 
-  TAU_VERBOSE("Inside rocprofiler_configure\n");
   Tau_init_initializeTAU();
 
   #if (!(defined (TAU_MPI) || (TAU_SHMEM)))
@@ -983,10 +1021,13 @@ rocprofiler_configure(uint32_t                 version,
       TAU_PROFILE_SET_NODE(0);
   }
   #endif // TAU_MPI || TAU_SHMEM 
-
+  TAU_VERBOSE("Inside rocprofiler_configure\n");
   // Check in case the tool is launched but we don't need it
   if(use_rocprofilersdk() == 0)
+  {
+    TAU_VERBOSE("Do not use rocprofiler-sdk\n");
     return nullptr;
+  }
 
   rocsdk_version_check(version, runtime_version);
   
