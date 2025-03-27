@@ -28,6 +28,7 @@ import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Observer;
 
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
@@ -490,6 +491,42 @@ public class ParaProfUtils {
     	 JOptionPane.showMessageDialog(parentFrame, area);
     }
 
+	 private static void refreshWindowsMenu(final JMenu windowsMenu, final ParaProfTrial pptrial) {
+	        // Remove only previously added window items
+	        for (int i = windowsMenu.getItemCount() - 1; i >= 0; i--) {
+	            JMenuItem item = windowsMenu.getItem(i);
+	            if (item != null && "DYNAMIC_WINDOW_ITEM".equals(item.getActionCommand())) {
+	                windowsMenu.remove(i);
+	            }
+	        }
+
+	     // Create a copy to avoid ConcurrentModificationException
+	        List<Observer> observers = new ArrayList<Observer>(pptrial.getObservers());
+
+	        for (int i = 0; i< observers.size(); i++) {
+	        	final Object obs = observers.get(i);
+	            if (obs instanceof JFrame) {
+	                final JFrame window = (JFrame) obs;
+	                
+	               if(!window.isShowing()) {
+	            	   pptrial.deleteObserver((Observer)obs);
+	            	   continue;
+	               }
+	                
+	                JMenuItem windowItem = new JMenuItem(window.getTitle());
+
+	                windowItem.setActionCommand("DYNAMIC_WINDOW_ITEM"); // Mark it for future removal
+	                windowItem.addActionListener(new ActionListener() {
+	                	public void actionPerformed(ActionEvent e) {
+	                    window.toFront();
+	                    window.requestFocus();
+	                	}});
+
+	                windowsMenu.add(windowItem);
+	            }
+	        }
+	    }
+    
     public static JMenu createWindowsMenu(final ParaProfTrial ppTrial, final JFrame owner) {
 
         ActionListener actionListener = new ActionListener() {
@@ -531,7 +568,7 @@ public class ParaProfUtils {
 
         };
 
-        JMenu windowsMenu = new JMenu("Windows");
+        final JMenu windowsMenu = new JMenu("Windows");
 
         JMenuItem menuItem;
 
@@ -721,12 +758,13 @@ public class ParaProfUtils {
         menuItem = new JMenuItem("Close All Sub-Windows");
         menuItem.addActionListener(actionListener);
         windowsMenu.add(menuItem);
-
+        windowsMenu.add(new JSeparator());
         MenuListener menuListener = new MenuListener() {
             public void menuSelected(MenuEvent evt) {
                 try {
                     groupLedger.setEnabled(ppTrial.groupNamesPresent());
                     userEventLedger.setEnabled(ppTrial.userEventsPresent());
+                    refreshWindowsMenu(windowsMenu,ppTrial);
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
                 }

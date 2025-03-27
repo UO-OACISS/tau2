@@ -265,11 +265,11 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
 
         JButton applyButton = new JButton("Apply");
         applyButton.addActionListener(this);
-        JButton cancelButton = new JButton("Cancel");
-        cancelButton.addActionListener(this);
+        //JButton cancelButton = new JButton("Cancel");
+        //cancelButton.addActionListener(this);
 
         applyCancelPanel.add(applyButton);
-        applyCancelPanel.add(cancelButton);
+        //applyCancelPanel.add(cancelButton);
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.EAST;
         gbc.weightx = 0;
@@ -277,7 +277,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         addCompItem(applyCancelPanel, gbc, 1, 2, 1, 1);
 
         setSavedPreferences();
-
+        this.pack();
     }
 
     void setControls() {
