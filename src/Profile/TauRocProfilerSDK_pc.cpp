@@ -288,11 +288,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 auto inst = translator.get(pc_sample->pc.loaded_code_object_id,
                                             pc_sample->pc.loaded_code_object_offset);
 
-                //If instruction is not found, skip it. Should not happen.
-                if(elem == code_object_map.end())
-                {
-                    continue;
-                }
+                
                 #ifdef ROCSDK_PC_DEBUG
                 ss   << " faddr " << inst->faddr 
                     << " vaddr " << inst->vaddr 
@@ -352,7 +348,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     task_name = ss.str();
                 }
 
-                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp+interval, pc_sample->wave_in_group);
+                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp+interval, pc_sample->wave_id);
                 
                 TAU_process_sdk_sample_event(sample_event);
             }
