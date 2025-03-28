@@ -128,6 +128,6 @@ classes:
 
 
 badversion:
-	@echo "Error, ParaProf must be compiled with Java 1.5, use 'make override' to proceed anyway"
+	@echo "Error, ParaProf must be compiled with Java 1.8, use 'make override' to proceed anyway"
 
 

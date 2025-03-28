@@ -136,10 +136,10 @@ public class CubeDataSource extends DataSource
 
 			progress_message = "Construct TAU topologies out of CUBE topologies...";
 			progress_value = 0.40; // sofar 40% done
-			int num =1;
+			//int num =1;
 			for (scalasca.cubex.cube.Cartesian cart: topologies)
 			{
-				if (cart.get_ndim() != 3)
+				if (cart.get_ndim() > 3)
 				{
 					//Don't open prompts unless there is a main window already present
                                         int numwins = java.awt.Window.getWindows().length;
@@ -148,7 +148,7 @@ public class CubeDataSource extends DataSource
 					
 					try {JOptionPane.showConfirmDialog(
 							null,
-							new String("Topology " + num + "( "+cart.get_name()+") has a different number of coordinates ("+ cart.get_ndim()+") than 3. \n Visualization of this topology will fail. \n Add to TAU profile anyway?"),
+							new String("Topology: ( "+cart.get_name()+") has more coordinates ("+ cart.get_ndim()+") than 3. \n Visualization of this topology may fail. \n Add to TAU profile anyway?"),
 							"No supported topologies are detected",
 							JOptionPane.YES_NO_OPTION);}
 					catch(Exception e){
@@ -161,8 +161,8 @@ public class CubeDataSource extends DataSource
 					}
 					}
 				}
-				String prefix = "Topo"+num;
-				getMetaData().put(prefix+" Name", cart.get_name());
+				String prefix = cart.get_name(); //"Topo"+num;
+				//getMetaData().put(prefix+" Name", cart.get_name());
 				getMetaData().put(prefix+" Size", createDimString(cart.get_dimv()));
 				getMetaData().put(prefix+" isTorus", createPeriodicityString(cart.get_periodv()));
 
@@ -170,7 +170,7 @@ public class CubeDataSource extends DataSource
 				{
 					addThreadCoordinates(prefix, cart, loc);
 				}
-				num++;
+				//num++;
 			}
 			progress_message = "Cube object filled with data...";
 			progress_value = 0.55; // sofar 55% done
