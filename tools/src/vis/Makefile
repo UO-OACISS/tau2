@@ -12,7 +12,7 @@ SOURCES = $(wildcard src/*.java)
 
 
 bin/vis.jar: $(SOURCES) classes
-	javac -target 1.5 -source 1.5 -d ./classes -classpath $(TOOLS_SRC)/contrib/jogl/jogl.jar:$(TOOLS_SRC)/common/bin/tau-common.jar $(SOURCES)
+	javac -target 1.8 -source 1.8 -d ./classes -classpath $(TOOLS_SRC)/contrib/jogl/jogl.jar:$(TOOLS_SRC)/common/bin/tau-common.jar $(SOURCES)
 	jar -cvf bin/vis.jar -C ./classes edu
 	cp bin/vis.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
 
