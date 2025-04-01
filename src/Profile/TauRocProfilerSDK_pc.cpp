@@ -705,7 +705,7 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
         else
         {
             //This is nanoseconds when using ROCPROFILER_PC_SAMPLING_UNIT_TIME
-            interval = 1000;
+            interval = 10;
         }
 
 
