@@ -332,7 +332,32 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
   const char *kernel_name = name.c_str();
   double started_translated = TAUTranslateGPUtoCPUTimestamp(taskid, started);
   double ended_translated = TAUTranslateGPUtoCPUTimestamp(taskid, ended);
-  char *demangled_name = Tau_demangle_name(kernel_name);
+
+  static std::string omp_off_string = "__omp_offloading";
+
+  char *demangled_name;
+
+  if( strncmp(name.c_str(), omp_off_string.c_str(), omp_off_string.length())==0)
+  {
+    /*
+      __omp_offloading_3d_2c4a55__Z14compute_target_l105
+      __omp_offloading      :  standard prefex
+      3d                   : DeviceID
+      2c4a55               : FileID
+      _Z14compute_target   : Mangled function name.  Use C++filt
+      L105                 :  line number in the file.  Line-105
+    */
+
+    int pos_key=omp_off_string.length();
+    for(int i =0; i<3; i++)
+    {
+        pos_key = name.find_first_of('_', pos_key + 1);
+    }
+      demangled_name = Tau_demangle_name(name.substr(pos_key,name.find_last_of("l")-pos_key-1).c_str());
+  }
+  else
+    demangled_name = Tau_demangle_name(kernel_name);
+
   TAU_VERBOSE("TAU: <kernel>: (raw) name: %s  started: %ld ended: %ld task id=%d\n",
 		  name.c_str(), started, ended, taskid);
   TAU_VERBOSE("TAU: <kernel>: (raw) name: %s started: %g ended: %g task id=%d\n",
