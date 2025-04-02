@@ -334,8 +334,7 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
   double ended_translated = TAUTranslateGPUtoCPUTimestamp(taskid, ended);
 
   static std::string omp_off_string = "__omp_offloading";
-
-  char *demangled_name;
+  std::string event = "GPU: ";
 
   if( strncmp(name.c_str(), omp_off_string.c_str(), omp_off_string.length())==0)
   {
@@ -353,10 +352,12 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
     {
         pos_key = name.find_first_of('_', pos_key + 1);
     }
-      demangled_name = Tau_demangle_name(name.substr(pos_key,name.find_last_of("l")-pos_key-1).c_str());
+      event = event + Tau_demangle_name(name.substr(pos_key,name.find_last_of("l")-pos_key-1).c_str());
   }
   else
-    demangled_name = Tau_demangle_name(kernel_name);
+  event = event + Tau_demangle_name(kernel_name);
+
+  const char *demangled_name = event.c_str();
 
   TAU_VERBOSE("TAU: <kernel>: (raw) name: %s  started: %ld ended: %ld task id=%d\n",
 		  name.c_str(), started, ended, taskid);
@@ -373,7 +374,7 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
 
   metric_set_gpu_timestamp(taskid, ended_translated);
   TAU_STOP_TASK(demangled_name, taskid);
-  free(demangled_name);
+
   return;
 }
 
