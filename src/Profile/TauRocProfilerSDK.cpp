@@ -586,7 +586,6 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         {
           task_name = Tau_demangle_name(name.c_str());
         }
-        std::cout << task_name << std::endl;
 
         std::vector<TauSDKUserEvent> record_events;
 
