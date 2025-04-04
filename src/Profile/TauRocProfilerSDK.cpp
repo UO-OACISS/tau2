@@ -566,7 +566,28 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         }
         
         std::string task_name;
-        task_name = Tau_demangle_name(client_kernels.at(record->dispatch_info.kernel_id).kernel_name);
+        std::string name = client_kernels.at(record->dispatch_info.kernel_id).kernel_name;
+        std::cout << name << std::endl;
+
+        static std::string omp_off_string = "__omp_offloading";
+        //Each GPU implementation shows the name in a similar way,
+        // but some are demangled and anothers demangled,
+        // in the case of AMD, they seem to be demangled
+        if( strncmp(name.c_str(), omp_off_string.c_str(), omp_off_string.length())==0)
+        {
+          int pos_key=omp_off_string.length();
+          for(int i =0; i<2; i++)
+          {
+              pos_key = name.find_first_of('_', pos_key + 1);
+          }
+          task_name = task_name  + Tau_demangle_name(name.substr(pos_key+1,name.find_last_of("l")-pos_key-2).c_str());
+        }
+        else
+        {
+          task_name = Tau_demangle_name(name.c_str());
+        }
+        std::cout << task_name << std::endl;
+
         std::vector<TauSDKUserEvent> record_events;
 
         std::string event_name = "Private segment size : ";
