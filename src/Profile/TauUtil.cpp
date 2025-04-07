@@ -738,6 +738,7 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->OmptMutexReleased = 0;
   cb->OmptTarget = 0;
   cb->OmptTargetDataOp = 0;
+  cb->OmptTargetDataOpEmi = 0;
   cb->OmptTargetSubmit = 0;
   cb->OmptFinalize = 0;
   cb->GpuInit = 0;
@@ -785,6 +786,7 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->OmptMutexReleased = src->OmptMutexReleased;
   dest->OmptTarget = src->OmptTarget;
   dest->OmptTargetDataOp = src->OmptTargetDataOp;
+  dest->OmptTargetDataOpEmi = src->OmptTargetDataOpEmi;
   dest->OmptTargetSubmit = src->OmptTargetSubmit;
   dest->OmptFinalize = src->OmptFinalize;
   dest->GpuInit = src->GpuInit;
@@ -846,6 +848,7 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
   if (cb->OmptMutexReleased != 0) { Tau_plugins_enabled.ompt_mutex_released = 1; }
   if (cb->OmptTarget != 0) { Tau_plugins_enabled.ompt_target = 1; }
   if (cb->OmptTargetDataOp != 0) { Tau_plugins_enabled.ompt_target_data_op = 1; }
+  if (cb->OmptTargetDataOpEmi != 0) { Tau_plugins_enabled.ompt_target_data_op_emi = 1; }
   if (cb->OmptTargetSubmit != 0) { Tau_plugins_enabled.ompt_target_submit = 1; }
   if (cb->OmptFinalize != 0) { Tau_plugins_enabled.ompt_finalize = 1; }
   if (cb->GpuInit != 0) { Tau_plugins_enabled.gpu_init = 1; }
@@ -1330,6 +1333,20 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_target_data_op_data_t* dat
       Tau_get_plugin_callback_map()[id]->OmptTargetDataOp(data);
   }
 }
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the ompt_target_data_op_emi event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_ompt_target_data_op_emi_data_t* data, PluginKey key) {
+
+  unsigned int ev = key.plugin_event;
+  for(unsigned int i = 0; i < plugins_for_ompt_event[ev].size(); ++i) {
+    unsigned int id = plugins_for_ompt_event[ev][i];
+    if (Tau_get_plugin_callback_map()[id]->OmptTargetDataOpEmi != 0)
+      Tau_get_plugin_callback_map()[id]->OmptTargetDataOpEmi(data);
+  }
+}
+
 
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the ompt_target_submit event
