@@ -12281,7 +12281,7 @@ if [ $scorep = yes ] ; then
         fi
     fi
     #scorepLibs="$scorepLD $scorepLibs $scorepExtraLibs"
-    scorepLibs="$scorepExtraLibs#$scorepLD#$scorepLibs"
+    scorepLibs="$scorepExtraLibs#$scorepLD#-Wl,--no-as-needed#$scorepLibs"
     scorepLDflags=`${scorepdir}/bin/scorep-config --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e 's@ @#@g'`
     #fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
     fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#$scorepLDflags#$scorepLibs"
