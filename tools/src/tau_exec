@@ -93,6 +93,7 @@ usage()
   echo "        -opencl       Track GPU events via OpenCL"
   echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
   echo "        -rocm         Track ROCm events via rocprofiler "
+  echo "	-rocm_pc      Track ROCm PC Sampling events (needs -rocm)"
   echo "        -ompt         Track OpenMP events via OMPT interface"
   echo "        -oneapi       Track Intel OneAPI Level Zero events"
   echo "        -power        Track power events via PAPI's perf RAPL interface"
