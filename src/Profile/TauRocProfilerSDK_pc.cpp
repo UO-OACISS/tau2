@@ -441,11 +441,12 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 else
                 {
                     std::stringstream ss;
+                    int pos_key = elem->second.comment.find_last_of(':');
                     ss << "[rocm sample] ";
                     ss << Tau_demangle_name(elem->second.kernel_name.c_str());
-                    ss << " " << elem->second.comment;
-                    ss << " { " << elem->second.inst;
-                    ss << " }";
+                    ss << " [{" << elem->second.comment.substr(0,pos_key-1);
+                    ss << "}" << "{" << elem->second.comment.substr(pos_key+1);
+                    ss << "}] { " << elem->second.inst << " }";
                     task_name = ss.str();
                 }
 
