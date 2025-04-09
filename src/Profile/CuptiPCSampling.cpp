@@ -158,9 +158,9 @@ std::string resolved_sample(  TAUCuptiIdSamples sample, TAUCuptiStalls stalls,
     int status;
     std::stringstream st_sample;
     st_sample << abi::__cxa_demangle(sample.functionName.c_str(), 0, 0, &status)
-        << "[F: " << pCSamplingGetSassToSourceCorrelationParams.fileName
-        << ", L: " << pCSamplingGetSassToSourceCorrelationParams.lineNumber
-        << ", D: " << pCSamplingGetSassToSourceCorrelationParams.dirName;
+        << " [{" << pCSamplingGetSassToSourceCorrelationParams.dirName
+        << "/" << pCSamplingGetSassToSourceCorrelationParams.fileName
+        << "},{" << pCSamplingGetSassToSourceCorrelationParams.lineNumber << "}]";
         //<< "; pcOffset: " << sample.pcOffset
         //<< "; contextUid: " << sample.contextUid
         //<< "; stallReasons: " << stalls.stallReasonCount;
