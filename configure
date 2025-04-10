@@ -3680,10 +3680,11 @@ if [ "x$rocm" = "xyes" -a "$rocprofsdk" = "yes" -a "$rocmv6" = "yes" ]; then
     fi
     if [  "$elfutils" = "yes" ]; then
         fixmakeargs="$fixmakeargs ROCPROFILERSDK_PC"
-        if [ "x$comgr_dir" = "x"]; then
-            comgr_dir=$rocprofsdk_dir
+        if [ "x$comgr_dir" = "x" ]; then
+            comgr_dir=$rocmdir
             if [ -r $comgr_dir/include/amd_comgr/amd_comgr.h ]; then
                     fixmakeargs="$fixmakeargs comgr_dir=$comgr_dir"
+                    #echo "Found amd_comgr.h in directory $comgr_dir/include/amd_comgr/"
             else
                 echo "Error: Cannot find amd_comgr.h in directory $comgr_dir/include/amd_comgr/"
                 exit 1

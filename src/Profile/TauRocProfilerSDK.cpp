@@ -567,7 +567,6 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         
         std::string task_name;
         std::string name = client_kernels.at(record->dispatch_info.kernel_id).kernel_name;
-        std::cout << name << std::endl;
 
         static std::string omp_off_string = "__omp_offloading";
         //Each GPU implementation shows the name in a similar way,

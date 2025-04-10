@@ -560,6 +560,7 @@ for arg in "$@" ; do
         ;;
       -rocm_pc)
         track_rocm_pc=true
+	      track_rocm=true
         save_arg $arg
         shift
         ;;
