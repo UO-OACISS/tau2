@@ -25,8 +25,23 @@
 #define SAMPLING_SDKADD_H
 
 #include <rocprofiler-sdk/version.h>
-#if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0) && defined(TAU_ENABLE_ROCPROFILERSDK_PC)
-#define SAMPLING_SDKADD
+
+
+
+#ifdef TAU_ENABLE_ROCPROFILERSDK_PC
+    #if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0)
+        #define SAMPLING_SDKADD
+    #elif (ROCPROFILER_VERSION_MAJOR >= 1)
+        #define SAMPLING_SDKADD
+        
+    #else
+        #warning "This rocprofiler-sdk version is unable to use PC Sampling"
+    #endif
+#endif
+
+
+
+#ifdef SAMPLING_SDKADD
 
 
 #include <rocprofiler-sdk/cxx/codeobj/code_printing.hpp>

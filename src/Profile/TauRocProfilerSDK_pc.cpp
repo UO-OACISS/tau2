@@ -299,6 +299,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
 
                 rocsdk_map_inst_key curr_index = {pc_sample->pc.loaded_code_object_id, inst->ld_addr};
                 auto elem = code_object_map.find(curr_index);
+                /*
                 if(elem != code_object_map.end())
                 {
                     std::cout   << " timestamp: " << pc_sample->timestamp
@@ -310,21 +311,22 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                                 //<< " ld_adrr: " << elem->second.ld_addr
                                 //<< " same instruction? " << (elem->second.ld_addr==elem->first.second ? "same":"diff")
                                 << std::endl;
-                }
+                }*/
+
                 //If instruction not found, skip. It should not happen
                 if(elem == code_object_map.end())
                 {
-                    //std::cout << "Instruction not found" << std::endl;
+                    std::cout << "Instruction not found" << std::endl;
                     continue;
                 }
                 if(elem->second.kernel_name.empty())
                 {
-                    //std::cout << "Kernel name not found" << std::endl;
+                    std::cout << "Kernel name not found" << std::endl;
                     continue;
                 }
                 if(elem->second.inst.empty())
                 {
-                    //std::cout << "Instruction  not found" << std::endl;
+                    std::cout << "Instruction  not found" << std::endl;
                     continue;
                 }
                 
@@ -340,11 +342,12 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 else
                 {
                     std::stringstream ss;
+                    int pos_key = elem->second.comment.find_last_of(':');
                     ss << "[rocm sample] ";
                     ss << Tau_demangle_name(elem->second.kernel_name.c_str());
-                    ss << " " << elem->second.comment;
-                    ss << " { " << elem->second.inst;
-                    ss << " }";
+                    ss << " [{" << elem->second.comment.substr(0,pos_key-1);
+                    ss << "}" << "{" << elem->second.comment.substr(pos_key+1);
+                    ss << "}] { " << elem->second.inst << " }";
                     task_name = ss.str();
                 }
 
@@ -820,7 +823,7 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
   //std::cout << "Enabling ROCm PC sampling..." << std::endl;
   pc_buffer_ids = new pc_sampling_buffer_id_vec_t();
 
-  tool_agent_info_vec_t pc_gpu_agents;
+  tool_agent_info_vec_t pc_gpu_agents = {};
 
   ROCPROFILER_CALL(
     rocprofiler_query_available_agents(ROCPROFILER_AGENT_INFO_VERSION_0,

@@ -15,10 +15,10 @@
  * to select the profile config (and in turn counters) to use when a kernel dispatch
  * is received.
  */
-std::unordered_map<uint64_t, rocprofiler_profile_config_id_t>&
+std::unordered_map<uint64_t, rocprofiler_counter_config_id_t>&
 get_profile_cache()
 {
-    static std::unordered_map<uint64_t, rocprofiler_profile_config_id_t> profile_cache;
+    static std::unordered_map<uint64_t, rocprofiler_counter_config_id_t> profile_cache;
     return profile_cache;
 }
 
@@ -30,13 +30,13 @@ std::map<rocprofiler_dispatch_id_t, Tau_SDK_hc_timestamp> dispatch_id_kernel_map
 
 /**
  * Callback from rocprofiler when an kernel dispatch is enqueued into the HSA queue.
- * rocprofiler_profile_config_id_t* is a return to specify what counters to collect
+ * rocprofiler_counter_config_id_t* is a return to specify what counters to collect
  * for this dispatch (dispatch_packet). This example function creates a profile
  * to collect the counter SQ_WAVES for all kernel dispatch packets.
  */
 void
 dispatch_callback(rocprofiler_dispatch_counting_service_data_t dispatch_data,
-                  rocprofiler_profile_config_id_t*             config,
+                  rocprofiler_counter_config_id_t* config,
                   rocprofiler_user_data_t* /*user_data*/,
                   void* /*callback_data_args*/)
 {
@@ -70,7 +70,7 @@ dispatch_callback(rocprofiler_dispatch_counting_service_data_t dispatch_data,
  * to consturct them once in advance (i.e. in tool_init()) since there are non-trivial
  * costs associated with constructing the profile.
  */
-rocprofiler_profile_config_id_t
+rocprofiler_counter_config_id_t
 build_profile_for_agent(rocprofiler_agent_id_t       agent,
                         const std::set<std::string>& counters_to_collect)
 {
@@ -98,20 +98,21 @@ build_profile_for_agent(rocprofiler_agent_id_t       agent,
   std::vector<rocprofiler_counter_id_t> collect_counters;
   for(auto& counter : gpu_counters)
   {
-    rocprofiler_counter_info_v0_t version;
+    rocprofiler_counter_info_v0_t info;
     ROCPROFILER_CALL(
         rocprofiler_query_counter_info(
-            counter, ROCPROFILER_COUNTER_INFO_VERSION_0, static_cast<void*>(&version)),
+            counter, ROCPROFILER_COUNTER_INFO_VERSION_0, static_cast<void*>(&info)),
         "Could not query info for counter");
-    if(counters_to_collect.count(std::string(version.name)) > 0)
+    if(counters_to_collect.count(std::string(info.name)) > 0)
     {
         collect_counters.push_back(counter);
-        used_counter_id_map[counter.handle]=version.name;
+        used_counter_id_map[counter.handle]=info.name;
     }
   }
 
   // Create and return the profile
-  rocprofiler_profile_config_id_t profile = {.handle = 0};
+  
+  rocprofiler_counter_config_id_t profile = {.handle = 0};
   ROCPROFILER_CALL(rocprofiler_create_profile_config(
                        agent, collect_counters.data(), collect_counters.size(), &profile),
                    "Could not construct profile cfg");
@@ -290,9 +291,15 @@ int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_co
 		// counters to collect by returning a profile config id. In this example, we create the profile
 		// configs above and store them in the map get_profile_cache() so we can look them up at
 		// dispatch.
-		ROCPROFILER_CALL(rocprofiler_configure_buffered_dispatch_counting_service(
-                     client_ctx, client_buffer, dispatch_callback, nullptr),
-                     "Could not setup buffered service");
+    #ifdef PROFILE_SDKCOUNTERS_v1
+      ROCPROFILER_CALL(rocprofiler_configure_buffer_dispatch_counting_service(
+                    client_ctx, client_buffer, dispatch_callback, nullptr),
+                    "Could not setup buffered service");
+    #else
+		  ROCPROFILER_CALL(rocprofiler_configure_buffered_dispatch_counting_service(
+                    client_ctx, client_buffer, dispatch_callback, nullptr),
+                    "Could not setup buffered service");
+    #endif
 	}
   
   return flag_metrics_set;

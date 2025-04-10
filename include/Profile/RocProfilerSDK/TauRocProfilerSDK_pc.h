@@ -10,8 +10,18 @@
 // do not compile for 4.0 and older
 //Also, the implementation is not fully done, in future releases, we may
 // be able to get stall reasons
-#if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0) && defined(TAU_ENABLE_ROCPROFILERSDK_PC)
-#define SAMPLING_SDKPC
+#ifdef TAU_ENABLE_ROCPROFILERSDK_PC
+    #if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0)
+        #define SAMPLING_SDKPC
+    #elif (ROCPROFILER_VERSION_MAJOR >= 1)
+        #define SAMPLING_SDKPC
+        
+    #else
+        #warning "This rocprofiler-sdk version is unable to use PC Sampling"
+    #endif
+#endif
+
+#ifdef SAMPLING_SDKPC
 #include "Profile/RocProfilerSDK/TauRocProfilerSDK_add_tr.hpp"
 #include <Profile/TauBfd.h>  // for name demangling
 #include "Profile/Profiler.h"
