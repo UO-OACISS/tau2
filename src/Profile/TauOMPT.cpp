@@ -1891,6 +1891,8 @@ on_ompt_callback_target_submit(
         ompt_id_t host_op_id,
         unsigned int requested_num_teams)
 {
+  if(requested_num_teams>0)
+  {
     TauInternalFunctionGuard protects_this_function;
     //printf("requested_num_teams %u %u\n", requested_num_teams, UINT_MAX);
     static void * ue = Tau_get_userevent("OpenMP Target Submit Num Teams");
@@ -1905,6 +1907,7 @@ on_ompt_callback_target_submit(
 
         Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_OMPT_TARGET_SUBMIT, "*", &plugin_data);
     }
+  }
 }
 
 
