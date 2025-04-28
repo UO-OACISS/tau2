@@ -334,7 +334,7 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
   double ended_translated = TAUTranslateGPUtoCPUTimestamp(taskid, ended);
 
   static std::string omp_off_string = "__omp_offloading";
-  std::string event = "GPU: ";
+  std::string event = "[L0] GPU: ";
 
   if( strncmp(name.c_str(), omp_off_string.c_str(), omp_off_string.length())==0)
   {
@@ -352,10 +352,16 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
     {
         pos_key = name.find_first_of('_', pos_key + 1);
     }
+      event = event + "OMP OFFLOADING ";
       event = event + Tau_demangle_name(name.substr(pos_key,name.find_last_of("l")-pos_key-1).c_str());
+      event = event +" [{UNRESOLVED} {";
+      event = event + name.substr(name.find_last_of("l")+1);
+      event = event +" ,0}]";
   }
   else
-  event = event + Tau_demangle_name(kernel_name);
+  {
+    event = event + Tau_demangle_name(kernel_name);
+  }
 
   const char *demangled_name = event.c_str();
 

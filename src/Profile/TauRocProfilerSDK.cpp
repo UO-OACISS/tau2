@@ -572,6 +572,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           {
               pos_key = name.find_first_of('_', pos_key + 1);
           }
+          task_name = "OMP OFFLOADING ";
           task_name = task_name  + Tau_demangle_name(name.substr(pos_key+1,name.find_last_of("l")-pos_key-2).c_str());
           pos_key = name.find_last_of("l");
           std::string s_omp_line = name.substr(pos_key+1,name.find_last_of(".")-pos_key-1);
