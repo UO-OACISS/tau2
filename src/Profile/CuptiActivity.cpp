@@ -1924,7 +1924,36 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
 			correlationWritten.insert(correlationId);
                     caData.eventMap.erase(caData.eventMap.begin(), caData.eventMap.end());
                     const char* name_og = name;
-                    char * dem_name = Tau_demangle_name(name);
+
+                    //nvkernel_compute_target_F1L107_5
+
+                    static std::string omp_off_string = "nvkernel_";
+                    std::string event = "";
+                    char * dem_name;
+                    char * dem_name_register;
+
+                    if( strncmp(name, omp_off_string.c_str(), omp_off_string.length())==0)
+                    {               
+                        std::string name_aux = name;
+                        int pos_key=name_aux.find_first_of('_')+1;
+                        event = event + Tau_demangle_name(name_aux.substr(pos_key,name_aux.find_last_of("F")-pos_key-1).c_str());
+                        dem_name = (char*)event.c_str();
+                        pos_key = name_aux.find_last_of("L");
+                        std::string s_omp_line = name_aux.substr(pos_key+1,name_aux.find_last_of("_")-pos_key-1);
+                        event = event +" [{UNRESOLVED} {";
+                        event = event + s_omp_line;
+                        event = event +" ,0}]";
+                        dem_name_register = (char*)event.c_str();
+                    }
+                    else
+                    {
+                        event = event + Tau_demangle_name(name);
+                        dem_name = (char*)event.c_str();
+                        dem_name_register = (char*)event.c_str();
+                    }
+
+
+                    
                     int number_of_metrics = Tau_CuptiLayer_get_num_events() + 1;
                     double metrics_start[number_of_metrics];
                     double metrics_end[number_of_metrics];
@@ -2009,14 +2038,14 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
 #if CUDA_VERSION >= 5050
                     if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
                         if (TauEnv_get_cuda_track_cdp()) {
-                            Tau_cupti_register_gpu_event(dem_name, deviceId,
+                            Tau_cupti_register_gpu_event(dem_name_register, deviceId,
                                     streamId, contextId, id, parentGridId,
                                     true, map, map_size,
                                     start / 1e3, end / 1e3, taskId);
                         }
                     } else {
 #endif
-                        Tau_cupti_register_gpu_event(dem_name, deviceId,
+                        Tau_cupti_register_gpu_event(dem_name_register, deviceId,
                                 streamId, contextId, id, 0, false, map, map_size,
                                 start / 1e3, end / 1e3, taskId);
 #if CUDA_VERSION >= 5050
@@ -2041,7 +2070,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                         RtsLayer::recycleThread(taskId);
                     }
 
-                    free(dem_name);
+                    //free(dem_name);
                     break;
                 }
 
