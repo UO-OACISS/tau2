@@ -119,14 +119,7 @@ void rocsdk_version_check(uint32_t                 version,
     uint32_t major = version / 10000;
     uint32_t minor = (version % 10000) / 100;
     uint32_t patch = version % 100;
-
-    // generate info string
-    auto info = std::stringstream{};
-    info << "TAU is using rocprofiler-sdk v" << major << "." << minor << "." << patch
-         << " (" << runtime_version << ")";
-
-    std::clog << info.str() << std::endl; 
-  
+    TAU_VERBOSE("TAU is using rocprofiler-sdk v%u.%u.%u (%s)\n", major, minor, patch, runtime_version); 
 }
 
 //------------------------------------------------------------------------------------------------
@@ -567,7 +560,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         
         std::string task_name;
         std::string name = client_kernels.at(record->dispatch_info.kernel_id).kernel_name;
-
+        //__omp_offloading_36_523fe22f_compute_target_l105.kd
         static std::string omp_off_string = "__omp_offloading";
         //Each GPU implementation shows the name in a similar way,
         // but some are demangled and anothers demangled,
@@ -580,6 +573,11 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
               pos_key = name.find_first_of('_', pos_key + 1);
           }
           task_name = task_name  + Tau_demangle_name(name.substr(pos_key+1,name.find_last_of("l")-pos_key-2).c_str());
+          pos_key = name.find_last_of("l");
+          std::string s_omp_line = name.substr(pos_key+1,name.find_last_of(".")-pos_key-1);
+          task_name = task_name +" [{UNRESOLVED} {";
+          task_name = task_name + s_omp_line;
+          task_name = task_name +" ,0}]";
         }
         else
         {
