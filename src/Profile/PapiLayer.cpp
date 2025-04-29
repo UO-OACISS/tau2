@@ -207,6 +207,11 @@ void Tau_child(void)
       return;
     }
     if(TauEnv_get_papi_multiplexing()) {
+      rc = PAPI_multiplex_init();
+      if ( PAPI_OK != rc ) {
+        fprintf(stderr, "PAPI_multiplex_init failed (%s)\n", PAPI_strerror(rc));
+        exit(1);
+      }
       rc = PAPI_assign_eventset_component( localThreadValue->EventSet[i], 0 );
       if ( PAPI_OK != rc ) {
         fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(rc));
@@ -319,6 +324,11 @@ int PapiLayer::initializeThread(int tid)
           return -1;
         }
         if(TauEnv_get_papi_multiplexing()) {
+	  rc = PAPI_multiplex_init();
+          if ( PAPI_OK != rc ) {
+            fprintf(stderr, "PAPI_multiplex_init failed (%s)\n", PAPI_strerror(rc));
+            exit(1);
+          }
           rc = PAPI_assign_eventset_component( localThreadValue->EventSet[i], 0 );
           if ( PAPI_OK != rc ) {
             fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(rc));
