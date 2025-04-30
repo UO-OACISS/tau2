@@ -33,6 +33,7 @@ using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_
 extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
 extern void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
 extern void sdk_pc_sampling_flush();
+extern std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename);
 
 extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value, rocprofiler_timestamp_t* c_timestamp);
 extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
@@ -558,32 +559,9 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
 
         }
         
-        std::string task_name;
-        std::string name = client_kernels.at(record->dispatch_info.kernel_id).kernel_name;
-        //__omp_offloading_36_523fe22f_compute_target_l105.kd
-        static std::string omp_off_string = "__omp_offloading";
-        //Each GPU implementation shows the name in a similar way,
-        // but some are demangled and anothers demangled,
-        // in the case of AMD, they seem to be demangled
-        if( strncmp(name.c_str(), omp_off_string.c_str(), omp_off_string.length())==0)
-        {
-          int pos_key=omp_off_string.length();
-          for(int i =0; i<2; i++)
-          {
-              pos_key = name.find_first_of('_', pos_key + 1);
-          }
-          task_name = "OMP OFFLOADING ";
-          task_name = task_name  + Tau_demangle_name(name.substr(pos_key+1,name.find_last_of("l")-pos_key-2).c_str());
-          pos_key = name.find_last_of("l");
-          std::string s_omp_line = name.substr(pos_key+1,name.find_last_of(".")-pos_key-1);
-          task_name = task_name +" [{UNRESOLVED} {";
-          task_name = task_name + s_omp_line;
-          task_name = task_name +" ,0}]";
-        }
-        else
-        {
-          task_name = Tau_demangle_name(name.c_str());
-        }
+        std::string task_name = demangle_kernel_rocprofsdk(
+                                        client_kernels.at(
+                                          record->dispatch_info.kernel_id).kernel_name, 1);
 
         std::vector<TauSDKUserEvent> record_events;
 
