@@ -1,0 +1,36 @@
+This is the standard matmult example, hand-instrumented using the ITTNotify API.
+It demonstrates the use of the ITTNotify Collector in TAU to capture 
+performance annotations which target Intel VTune.
+
+To run this example:
+
+    - Build TAU with ITTNotify Collector support by configuring with `-ittnotify`,
+    for example:
+
+        ./configure -cc=gcc -c++=g++ -fortran=gfortran -pthread -bfd=download -unwind=download -dwarf=download -otf=download -ittnotify
+
+    - Build the example:
+
+        make
+
+    - Run the example with `tau_exec` with the `-ittnotify` option,,
+    for example:
+
+        tau_exec -T serial,pthread,ittnotify -ittnotify ./matmult
+
+The doWork() function is annotated with __itt_task_begin() and __itt_task_end() in
+a domain named "matmult". You should see a timer named "matmult::doWork" in the
+resulting profile:
+
+        Reading Profile files in profile.*
+
+        NODE 0;CONTEXT 0;THREAD 0:
+        ---------------------------------------------------------------------------------------
+        %Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+                    msec   total msec                          usec/call
+        ---------------------------------------------------------------------------------------
+        100.0        0.314          635           1           1     635816 .TAU application
+        100.0        0.351          635           1           1     635502 taupreload_main
+        99.9          635          635           1           0     635151 matmult::doWork
+
+

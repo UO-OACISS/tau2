@@ -1445,6 +1445,10 @@ case $1 in
 	echo NOTE: Building Cray Chapel wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     ITTNOTIFY)
+	echo NOTE: Building Intel ITTNotify wrapper
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      ARMCI)
 	echo NOTE: Building ARMCI wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

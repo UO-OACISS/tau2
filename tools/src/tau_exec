@@ -141,6 +141,7 @@ fi
   echo "        -disable-kokkos  Disable Kokkos profiling (removes fences that hurt performance)"
   echo "        -ugni         Track Cray UGNI network library functions."
   echo "        -chapel       Track Cray Chapel network atomics library functions."
+  echo "        -ittnotify    Track Intel ITTNotify tasks."
   echo ""
   echo "Notes:"
   echo "    Defaults if unspecified: -T $default_tags"
@@ -391,6 +392,7 @@ adios2_trace=false
 sos=false
 track_ugni=false
 track_chapel=false
+track_ittnotify=false
 processM=false
 python_launch_module=false
 python_m_arg=""
@@ -765,6 +767,11 @@ for arg in "$@" ; do
         save_arg $arg
         shift
         ;;
+      -ittnotify)
+        track_ittnotify=true
+        save_arg $arg
+        shift
+        ;;
       -c)
         if [ $python_wrapper = "true" ] ; then
           save_arg $arg
@@ -1029,6 +1036,10 @@ fi
 if [ $track_chapel = "true" ] ; then
   # Add the Chapel wrapper library to the LD_PRELOAD list
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-chapel-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+fi
+
+if [ $track_ittnotify = "true" ] ; then
+  export INTEL_LIBITTNOTIFY64=$BASEDIR/lib/$theBinding/libTAU-ittnotify-collector$TAU_SHLIBX
 fi
 
 if [ $track_numa = "true" ]; then
