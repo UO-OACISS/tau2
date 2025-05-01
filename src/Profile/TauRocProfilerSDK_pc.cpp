@@ -8,7 +8,7 @@
 #ifdef SAMPLING_SDKPC
 
 #define TAU_ROCMSDK_SAMPLE_LOOK_AHEAD 256
-
+#define DEFAULT_SAMPLING_INTERVAL_RSDK 10
 constexpr bool COPY_MEMORY_CODEOBJ = true;
 
 using marker_id_t = rocprofiler::sdk::codeobj::disassembly::marker_id_t;
@@ -767,17 +767,31 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
 
         if(picked_cfg->min_interval == picked_cfg->max_interval)
         {
+
             // Another process already configured PC sampling, so use the interval it set up.
             interval = picked_cfg->min_interval;
-            printf("[TAU] Another process has set the sampling interval to: %d nanoseconds\n" 
-                      "\t If the interval is too high, no samples may appear, default: 10\n", interval);
+            static int show_once = 1;
+            if(show_once && (interval!=DEFAULT_SAMPLING_INTERVAL_RSDK))
+            {
+                #ifdef TAU_MPI 
+                std::cout << "[TAU:node=" << RtsLayer::myNode()
+                          << "] Another process has set the sampling interval to: " << interval 
+                          << "nanoseconds\n If the interval is too high, no samples may appear, default: 10"
+                          << std::endl;
+                #else
+                std::cout << "[TAU] Another process has set the sampling interval to: " << interval 
+                          << "nanoseconds\n If the interval is too high, no samples may appear, default: 10"
+                          << std::endl;
+                #endif
+                show_once = 0;
+            }
         }
         else
         {
             //This is nanoseconds when using ROCPROFILER_PC_SAMPLING_UNIT_TIME
             // when using stochastic, if it is enabled again, try to set unit 
             // to ROCPROFILER_PC_SAMPLING_UNIT_TIME instead of cycles
-            interval = 10;
+            interval = DEFAULT_SAMPLING_INTERVAL_RSDK;
             //printf("Setting interval to 10\n");
         }
 
