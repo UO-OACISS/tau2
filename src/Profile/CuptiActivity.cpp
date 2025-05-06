@@ -10,7 +10,7 @@
 #include <assert.h>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
-#include <Profile/CuptiNVTX.h>
+
 
 using namespace std;
 
@@ -1187,7 +1187,6 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
     } else if (domain == CUPTI_CB_DOMAIN_NVTX) {
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_NVTX event\n");
         handle_nvtx_callback(id, params);
-        return;
     } else if (domain == CUPTI_CB_DOMAIN_SIZE) {
         TAU_DEBUG_PRINT("CUPTI_CB_DOMAIN_SIZE event\n");
     } else {

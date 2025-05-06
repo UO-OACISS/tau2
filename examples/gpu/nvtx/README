@@ -5,7 +5,10 @@
 - Add TAU to you PATH
 	- export PATH=$PATH:...
 
-- Compile the example with  lnvToolsExt, change paths to -L and -I for your cuda installation
+- With CUDA12+, compile with:
+	-make
+
+- Without CUDA12, compile the example with  lnvToolsExt, change paths to -L and -I for your cuda installation
 	- nvcc manual_nvtx.cu -o manual_nvtx -I/packages/cuda/11.4/include -L/packages/cuda/11.4/lib64 -lnvToolsExt -DUSE_NVTX
 
 - Execute TAU

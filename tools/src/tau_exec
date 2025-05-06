@@ -1113,6 +1113,8 @@ if [ $track_cupti = "true" ] ; then
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUact$TAU_SHLIBX:$TAUEX_LD_PRELOAD
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX:$TAUEX_LD_PRELOAD
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    #export NVTX_INJECTION64_PATH=/packages/cuda/12.8.1/extras/CUPTI/lib64/libcupti.so
+    export NVTX_INJECTION64_PATH=$BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX
     if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
       if [ `echo $TAU_METRICS | grep "TIME"` ]; then
         export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
