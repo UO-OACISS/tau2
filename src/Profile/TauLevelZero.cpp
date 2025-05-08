@@ -300,9 +300,15 @@ uint64_t popKernel() {
 
 void TAUOnAPIFinishCallback(void *data, const std::string& name, uint64_t started, uint64_t ended) {
   int taskid;
-  static bool first_ts = TAUSetFirstGPUTimestamp(started);
+  static bool first_ts = TAUSetFirstGPUTimestamp(started); 
+  static std::mutex api_mutex; // TODO investigate whether it makes more sense to use a task per thread
+                                  // instead of a single task for all threads, rather than locking
+  
 
   taskid = *((int *) data);
+#ifdef TAU_DEBUG_L0
+  fprintf(stderr, "pid=%d, tid=%d, myThread=%d, task=%d, func=%s\n", RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myThread(), taskid, name.c_str());
+#endif
   double started_translated = TAUTranslateGPUtoCPUTimestamp(taskid, started);
   double ended_translated = TAUTranslateGPUtoCPUTimestamp(taskid, ended);
   TAU_VERBOSE("TAU: OnAPIFinishCallback: (raw) name: %s started: %g ended: %g task id=%d\n",
@@ -311,6 +317,7 @@ void TAUOnAPIFinishCallback(void *data, const std::string& name, uint64_t starte
 		  name.c_str(), started_translated, ended_translated, taskid);
   // We now need to start a timer on a task at the started_translated time and end at ended_translated
 
+  std::lock_guard<std::mutex> guard(api_mutex); // Lock before we start touching task-specific state
   metric_set_gpu_timestamp(taskid, started_translated);
   TAU_START_TASK(name.c_str(), taskid);
   if (name.compare("zeCommandListAppendLaunchKernel") == 0) {
@@ -328,6 +335,9 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
 
   static bool first_call = TAUSetFirstGPUTimestamp(started);
   int taskid;
+  static std::mutex kernel_mutex; // TODO investigate whether it makes more sense to use a task per thread
+                                  // instead of a single task for all threads, rather than locking
+
   taskid = *((int *) data);
   const char *kernel_name = name.c_str();
   double started_translated = TAUTranslateGPUtoCPUTimestamp(taskid, started);
@@ -371,6 +381,7 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
     name.c_str(),  started_translated, ended_translated, taskid);
 
   last_gpu_timestamp = ended;
+  std::lock_guard<std::mutex> guard(kernel_mutex); // Lock before we start touching task-specific state
   metric_set_gpu_timestamp(taskid, started_translated);
   TAU_START_TASK(demangled_name, taskid);
   // the user event for correlation IDs
