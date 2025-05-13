@@ -33,6 +33,41 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 */
 
+/* This implements a basic ITTNotify collector for TAU.
+   Intel ITTNotify is an API for applications to report information for use by Intel
+   performance tools, such as VTune, among others.
+   It consists of two parts:
+
+     - The static part, a static library which the application links against.
+       It provides an implementation of the ITTNotify API which will search
+       for a collector and call corresponding functions in the collector if
+       one exists.
+
+     - The dynamic part, or the collector, a dynamic library which is called
+       by the static part. Intel's tools provide a collector. This file implements
+       a collector for TAU.
+
+   A collector is set with the env var $INTEL_LIBITTNOTIFY64.
+
+   A complication is that once a collector is registered, the static part will delegate all
+   work to the dynamic part instead of performing the work itself. Thus, the collector
+   must implement itself all API functions that are necessary for its functioning.
+   This is why this collector must implement __itt_string_handle_create and __itt_domain_create.
+   See https://github.com/intel/ittapi/issues/178 for more information.
+
+   Useful resources:
+
+     - Implementation of static part: 
+         https://github.com/intel/ittapi/tree/master/src/ittnotify
+   
+     - Implementation of dynamic part:
+         https://github.com/intel/ittapi/tree/master/src/ittnotify_refcol
+
+     - API documentation:
+         https://www.intel.com/content/www/us/en/docs/vtune-profiler/user-guide/2025-0/instrumentation-tracing-technology-api-reference.html
+*/
+
+
 //#define TAU_DEBUG_ITTNOTIFY
 
 #include <stdio.h>
@@ -49,6 +84,29 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 #include "Profile/Profiler.h"
 
+// Lock the mutex for access to ITTNotify shared linked lists.
+// Adapted from https://github.com/intel/ittapi/blob/master/src/ittnotify/ittnotify_static.c
+#define ITT_MUTEX_INIT_AND_LOCK(p) {                                 \
+    if (PTHREAD_SYMBOLS)                                             \
+    {                                                                \
+        if (!p->mutex_initialized)                                    \
+        {                                                            \
+            if (__itt_interlocked_compare_exchange(&p->atomic_counter, 1, 0) == 0) \
+            {                                                        \
+                __itt_mutex_init(&p->mutex);                          \
+                p->mutex_initialized = 1;                             \
+            }                                                        \
+            else                                                     \
+                while (!p->mutex_initialized)                         \
+                    __itt_thread_yield();                            \
+        }                                                            \
+        __itt_mutex_lock(&p->mutex);                                  \
+    }                                                                \
+}
+
+
+// Maintain a stack for each domain. 
+// __itt_task_end stops the most recently started task for a given domain.
 using itt_stack_t = std::map<std::string, std::stack<std::string>>;
 
 static itt_stack_t & itt_stack() {
@@ -56,6 +114,13 @@ static itt_stack_t & itt_stack() {
     return theStack;
 }
 
+// The __itt_global holds pointers to global data, such as the 
+// domain list and string handle list.
+static __itt_global * itt_global_ptr = NULL;
+
+
+// Fill in function pointers for the ITTNotify functions implemented
+// by this collector.
 static void fill_func_ptr_per_lib(__itt_global* p) {
     __itt_api_info* api_list = (__itt_api_info*)p->api_list_ptr;
 
@@ -70,10 +135,12 @@ static void fill_func_ptr_per_lib(__itt_global* p) {
     }
 }
 
+// Fill in function pointers and save pointer to global state.
 ITT_EXTERN_C void ITTAPI __itt_api_init(__itt_global* p, __itt_group_id init_groups) {
     if (p != NULL) {
         (void)init_groups;
         fill_func_ptr_per_lib(p);
+		itt_global_ptr = p;
 #ifdef TAU_DEBUG_ITTNOTIFY
         fprintf(stderr, "__itt_api_init\n");
 #endif
@@ -83,6 +150,117 @@ ITT_EXTERN_C void ITTAPI __itt_api_init(__itt_global* p, __itt_group_id init_gro
     }
 }
 
+// Used by ITT_MUTEX_INIT_AND_LOCK
+// Adapted from https://github.com/intel/ittapi/blob/master/src/ittnotify/ittnotify_static.c
+static void __itt_report_error(int code, ...) {
+    va_list args;
+    va_start(args, code);
+    if (itt_global_ptr->error_handler != NULL)
+    {
+        __itt_error_handler_t* handler = (__itt_error_handler_t*)(size_t)itt_global_ptr->error_handler;
+        handler((__itt_error_code)code, args);
+    }
+    va_end(args);
+}
+
+// Create string handle.
+// Stores in same linked list used by the static part.
+// Adapted from https://github.com/intel/ittapi/blob/master/src/ittnotify/ittnotify_static.c
+ITT_EXTERN_C __itt_string_handle * ITTAPI __itt_string_handle_create(const char *name) {
+    if(name == NULL) {
+        return NULL;
+    }
+
+    __itt_string_handle * head = itt_global_ptr->string_list;
+    __itt_string_handle * tail = NULL;
+    __itt_string_handle * result = NULL;
+    
+    if(PTHREAD_SYMBOLS) {
+        ITT_MUTEX_INIT_AND_LOCK(itt_global_ptr);
+    }
+
+    // Search for existing
+    
+    for(__itt_string_handle * cur = head; cur != NULL; cur = cur->next) {
+        tail = cur;
+        if(cur->strA != NULL && !__itt_fstrcmp(cur->strA, name)) {
+            result = cur;
+#ifdef TAU_DEBUG_ITTNOTIFY
+            fprintf(stderr, "Found string handle %s\n", result->strA);
+#endif
+            break;
+        }
+    }
+
+    // Create if not existing
+
+    if(result == NULL) {
+        NEW_STRING_HANDLE_A(itt_global_ptr, result, tail, name);
+#ifdef TAU_DEBUG_ITTNOTIFY
+        fprintf(stderr, "Placed new string handle %s after %s\n", name, tail->strA);
+#endif
+    }
+
+    if(PTHREAD_SYMBOLS) {
+        __itt_mutex_unlock(&itt_global_ptr->mutex);
+    }
+
+#ifdef TAU_DEBUG_ITTNOTIFY
+    fprintf(stderr, "Returning string handle %p for %s\n", result, name);
+#endif
+    return result;
+}
+
+// Create domain.
+// Stores in same linked list used by the static part.
+// Adapted from https://github.com/intel/ittapi/blob/master/src/ittnotify/ittnotify_static.c
+ITT_EXTERN_C __itt_domain * ITTAPI __itt_domain_create(const char * name) {
+    if(name == NULL) {
+        return NULL;
+    }
+
+    __itt_domain * head = itt_global_ptr->domain_list;
+    __itt_domain * tail = NULL;
+    __itt_domain * result = NULL;
+
+    if(PTHREAD_SYMBOLS) {
+        ITT_MUTEX_INIT_AND_LOCK(itt_global_ptr);
+    }
+
+    // Search for existing
+    
+    for(__itt_domain * cur = head; cur != NULL; cur = cur->next) {
+        tail = cur;
+        if(cur->nameA != NULL && !__itt_fstrcmp(cur->nameA, name)) {
+            result = cur;
+#ifdef TAU_DEBUG_ITTNOTIFY
+            fprintf(stderr, "Found domain %s\n", result->nameA);
+#endif
+            break;
+        }
+    }
+
+    // Create if not existing
+
+    if(result == NULL) {
+        NEW_DOMAIN_A(itt_global_ptr, result, tail, name);
+#ifdef TAU_DEBUG_ITTNOTIFY
+        fprintf(stderr, "Placed new domain %s after %s\n", name, tail->nameA);
+#endif
+    }
+
+    if(PTHREAD_SYMBOLS) {
+        __itt_mutex_unlock(&itt_global_ptr->mutex);
+    }
+
+#ifdef TAU_DEBUG_ITTNOTIFY
+    fprintf(stderr, "Returning domain %p for %s\n", result, name);
+#endif
+    return result;
+}
+
+
+// Start TAU timer for task and store the name in the stack for this domain.
 ITT_EXTERN_C void ITTAPI __itt_task_begin(
     const __itt_domain *domain, __itt_id taskid, __itt_id parentid, __itt_string_handle *name) {
     if(domain == NULL) {
@@ -101,6 +279,7 @@ ITT_EXTERN_C void ITTAPI __itt_task_begin(
 #endif
 }
 
+// Stop the TAU timer for the most-recently-started task for this domain.
 ITT_EXTERN_C void ITTAPI __itt_task_end(const __itt_domain *domain)
 {
     if(domain == NULL) {
