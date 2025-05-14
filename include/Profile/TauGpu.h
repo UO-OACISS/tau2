@@ -44,6 +44,9 @@ typedef struct {
 attr.userEvent = event; \
 attr.data = data;
 
+static uint64_t cupti_init_timestamp = 0L;
+void set_first_ts_cupti();
+
 /*
  * GPU Event class. This a virtual class that is extended by each GPU adapter.
  * It contains all the information that TAU needs to know about the GPU and the

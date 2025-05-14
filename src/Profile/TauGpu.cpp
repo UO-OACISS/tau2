@@ -96,6 +96,8 @@ extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid);
 
 extern "C" int Tau_is_thread_fake(int tid);
 
+extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
+
 #include<map>
 using namespace std;
 
@@ -107,6 +109,11 @@ static inline void record_context_event(TauContextUserEvent * e, TAU_EVENT_DATAT
   } else {
     TAU_CONTEXT_EVENT_THREAD(e, event_data, task);
   }
+}
+
+void set_first_ts_cupti()
+{
+  cupti_init_timestamp = TauTraceGetTimeStamp(0);
 }
 
 void check_gpu_event(int gpuTask)
@@ -334,7 +341,6 @@ void stage_gpu_event(const char *name, int gpuTask, double start_time, FunctionI
   cerr << "setting gpu timestamp for start " << setprecision(16) << start_time << endl;
 #endif
   metric_set_gpu_timestamp(gpuTask, start_time);
-
   check_gpu_event(gpuTask);
   if (TauEnv_get_callpath()) {
     //printf("Profiler: %s \n", parent->GetName());
@@ -382,6 +388,7 @@ int get_task(GpuEvent *new_task)
         Tau_set_fake_thread_use_cpu_metric(task);
     }
 #endif
+    metric_set_gpu_timestamp(task, (double) cupti_init_timestamp);
     Tau_create_top_level_timer_if_necessary_task(task);
     //TAU_CREATE_TASK(task);
     //printf("new task: %s id: %d.\n", create_task->gpuIdentifier(), task);
@@ -455,6 +462,7 @@ void Tau_gpu_register_sync_event(GpuEvent *id, double startTime, double endTime)
 void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTime, int transferSize, int memcpyType,
 				   int direction)
 {
+
   int task = get_task(id);
   const char* functionName = id->getName();
   if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0) {

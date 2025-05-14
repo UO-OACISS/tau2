@@ -754,6 +754,7 @@ void Tau_cupti_onload()
 	    Tau_cupti_init();
     }
 
+    set_first_ts_cupti();
 	TAU_DEBUG_PRINT("TAU: exiting Tau_cupti_onload\n");
 
 }
@@ -772,6 +773,7 @@ void Tau_cupti_onunload() {
 }
 
 extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
+
 
 /* TAU will create a unique virutal thread ID for each unique combination of:
  *  - Device
