@@ -1,0 +1,37 @@
+This example demonstrates the use of TAU with Horovod on Aurora, using:
+
+    - Keras callbacks to collect timers for training batches and epochs.
+    - Intel Level Zero callbacks to collect Level Zero API calls and Intel XPU kernel executions.
+    - TAU's MPI wrapper to collect timers for MPI calls.
+
+Build TAU for use with Horovod; for example,
+
+     ./configure -python -papi=/soft/perftools/tau/papi/papi-7.2.0b1/ \
+       -useropt=-L/soft/perftools/tau/drm-devel/usr/lib64#-Wl,-rpath,/soft/perftools/tau/drm-devel/usr/lib64 \
+       -iowrapper -bfd=download -unwind=download -pdt=/soft/perftools/tau/pdtoolkit-3.25.1 \
+       -c++=icpx -cc=icx -fortran=ifx -otf=download -dwarf=download -level_zero=/usr -mpi
+
+    make
+    make install
+
+Then get an interactive allocation on Aurora, for example with
+
+     qsub -I  -l walltime=0:59:00 -lfilesystems=home:flare -A ${YOUR_PROJECT} -q debug -l select=1
+
+Set $TAU_ROOT to the path to your TAU installation.
+
+If you built TAU with other options than specified above, set:
+
+    - $TAU_TAGS to the hyphen-separated list of tags that specifies your TAU configuration
+        (by default, matches above configuration: "level_zero-icpx-papi-mpi-pthread-python-pdt")
+    - $TAU_EXEC_ARGS to arguments to be passed to tau_exec
+        (by default, matches above configuration: "-l0")
+
+and run the script:
+
+     ./run-aurora-tau.sh 
+
+By default, the script runs with two ranks per node.
+Set $NRANKS_PER_NODE to change this. 
+
+The script run-aurora.sh runs the application without TAU.

@@ -40,7 +40,11 @@ pthread_mutex_t mutexsum;
 #define NCB MATRIX_SIZE                 /* number of columns in matrix B */
       
 __itt_domain* myDomain;
+__itt_domain* mainDomain;
 __itt_string_handle* doWorkStrHandle;
+__itt_string_handle* mainStrHandle;
+__itt_string_handle* computeStrHandle;
+__itt_string_handle* computeInterchangeStrHandle;
 
 double** allocateMatrix(int rows, int cols) {
   int i;
@@ -104,6 +108,7 @@ void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, 
 /////////////////////////////////////////////////////////////////////
 void compute(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
   int i,j,k;
+  __itt_task_begin(myDomain, __itt_null, __itt_null, computeStrHandle); 
 #pragma omp parallel private(i,j,k) shared(a,b,c)
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
@@ -117,6 +122,7 @@ void compute(double **a, double **b, double **c, int rows_a, int cols_a, int col
       }
     }
   }   /*** End of parallel region ***/
+  __itt_task_end(myDomain);
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -125,6 +131,7 @@ void compute(double **a, double **b, double **c, int rows_a, int cols_a, int col
 ///////////////////////////////////////////////////////////////////////
 void compute_interchange(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
   int i,j,k;
+  __itt_task_begin(myDomain, __itt_null, __itt_null, computeInterchangeStrHandle); 
 #pragma omp parallel private(i,j,k) shared(a,b,c)
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
@@ -138,6 +145,7 @@ void compute_interchange(double **a, double **b, double **c, int rows_a, int col
       }
     }
   }   /*** End of parallel region ***/
+  __itt_task_end(myDomain);
 }
 
 double do_work(void) {
@@ -232,7 +240,12 @@ int main (int argc, char *argv[])
 {
   printf ("Starting...\n"); fflush(stdout);
   myDomain = __itt_domain_create("matmult");
+  mainDomain = __itt_domain_create("main");
   doWorkStrHandle = __itt_string_handle_create("doWork");
+  mainStrHandle = __itt_string_handle_create("main");
+  computeStrHandle = __itt_string_handle_create("compute");
+  computeInterchangeStrHandle = __itt_string_handle_create("compute_interchange");
+  __itt_task_begin(mainDomain, __itt_null, __itt_null, mainStrHandle); 
 #ifdef PTHREADS
   int ret;
   pthread_attr_t  attr;
@@ -336,6 +349,7 @@ int main (int argc, char *argv[])
   MPI_Finalize();
 #endif /* TAU_MPI */
   printf ("Done.\n");
+  __itt_task_end(mainDomain);
 
   return 0;
 }
