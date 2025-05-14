@@ -1,0 +1,50 @@
+This example demonstrates the use of TAU with PyTorch on Aurora, using:
+
+    - Intel ITTNotify to collect timers for PyTorch operations
+    - Intel Level Zero callbacks to collect Level Zero API calls and Intel XPU kernel executions.
+
+Build TAU for use with PyTorch; for example,
+
+     ./configure -python -papi=/soft/perftools/tau/papi/papi-7.2.0b1/ \
+       -useropt=-L/soft/perftools/tau/drm-devel/usr/lib64#-Wl,-rpath,/soft/perftools/tau/drm-devel/usr/lib64 \
+       -iowrapper -bfd=download -unwind=download -pdt=/soft/perftools/tau/pdtoolkit-3.25.1 \
+       -c++=icpx -cc=icx -fortran=ifx -otf=download -dwarf=download -level_zero=/usr -ittnotify
+
+    make
+    make install
+
+Then get an interactive allocation on Aurora, for example with
+
+     qsub -I  -l walltime=0:59:00 -lfilesystems=home:flare -A ${YOUR_PROJECT} -q debug -l select=1
+
+Run the application
+
+     tau_exec -T serial,level_zero,ittnotify,icpx,papi,pthread,python,pdt -l0 -ittnotify python pytorch_xpu.py 
+
+
+--------------
+
+To enable ITTNotify, the application is modified by placing
+
+    with torch.autograd.profiler.emit_itt():
+
+prior to the loop which executes the epochs.
+This will cause PyTorch autograd to emit ITT instrumentation for each operation
+which are intercepted by TAU's ITTNotify collector.
+
+Specifically, the epoch loop in pytorch_xpu.py becomes:
+
+    with torch.autograd.profiler.emit_itt():
+        for epoch in range(10):
+            print(f'Epoch {epoch}')
+            for source, targets in loader:
+                source = source.to(device)
+                targets = targets.to(device)
+                optimizer.zero_grad()
+
+                output = model(source, targets)
+                loss = criterion(output, targets)
+
+                loss.backward()
+                optimizer.step()
+
