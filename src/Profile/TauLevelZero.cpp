@@ -51,6 +51,8 @@ static uint64_t first_cpu_timestamp = 0L;
 static uint64_t first_gpu_timestamp = 0L;
 static uint64_t last_gpu_timestamp = 0L;
 static uint64_t gpu_offset = 0L;
+static std::mutex gpu_mutex; // TODO investigate whether it makes more sense to use a task per thread
+                             // instead of a single task for all threads, rather than locking
 extern "C" void metric_set_gpu_timestamp(int tid, double value);
 
 
@@ -245,15 +247,6 @@ static void MetricPrintResults() {
 }
 #endif
 
-bool TAUSetFirstGPUTimestamp(uint64_t gpu_ts) {
-  TAU_VERBOSE("TAU: First GPU Timestamp = %ld\n", gpu_ts);
-  if (first_gpu_timestamp == 0L) {
-    first_gpu_timestamp = gpu_ts;
-
-  }
-  return true;
-}
-
 double TAUTranslateGPUtoCPUTimestamp(int tid, uint64_t gpu_ts) {
   // gpu_ts is in nanoseconds. We need the CPU timestamp result in microseconds.
 
@@ -264,6 +257,16 @@ double TAUTranslateGPUtoCPUTimestamp(int tid, uint64_t gpu_ts) {
 
   return cpu_ts;
 }
+
+bool TAUSetFirstGPUTimestamp(uint64_t gpu_ts) {
+  TAU_VERBOSE("TAU: First GPU Timestamp = %ld\n", gpu_ts);
+  if (first_gpu_timestamp == 0L) {
+    first_gpu_timestamp = gpu_ts;
+    TAUTranslateGPUtoCPUTimestamp(gpu_task_id, gpu_ts); // To start top-level timer on GPU thread
+  }
+  return true;
+}
+
 
 /* This code is to somehow link the the kernel from the CPU to the GPU callback.
    Intel doesn't seem to provide this info. So, when a kernel is pushed onto the
@@ -299,10 +302,9 @@ uint64_t popKernel() {
 }
 
 void TAUOnAPIFinishCallback(void *data, const std::string& name, uint64_t started, uint64_t ended) {
+  std::lock_guard<std::mutex> guard(gpu_mutex); // Lock before we start touching task-specific state
   int taskid;
   static bool first_ts = TAUSetFirstGPUTimestamp(started); 
-  static std::mutex api_mutex; // TODO investigate whether it makes more sense to use a task per thread
-                                  // instead of a single task for all threads, rather than locking
   
 
   taskid = *((int *) data);
@@ -317,7 +319,6 @@ void TAUOnAPIFinishCallback(void *data, const std::string& name, uint64_t starte
 		  name.c_str(), started_translated, ended_translated, taskid);
   // We now need to start a timer on a task at the started_translated time and end at ended_translated
 
-  std::lock_guard<std::mutex> guard(api_mutex); // Lock before we start touching task-specific state
   metric_set_gpu_timestamp(taskid, started_translated);
   TAU_START_TASK(name.c_str(), taskid);
   if (name.compare("zeCommandListAppendLaunchKernel") == 0) {
@@ -332,11 +333,10 @@ void TAUOnAPIFinishCallback(void *data, const std::string& name, uint64_t starte
 }
 
 void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t started, uint64_t ended) {
+  std::lock_guard<std::mutex> guard(gpu_mutex); // Lock before we start touching task-specific state
 
   static bool first_call = TAUSetFirstGPUTimestamp(started);
   int taskid;
-  static std::mutex kernel_mutex; // TODO investigate whether it makes more sense to use a task per thread
-                                  // instead of a single task for all threads, rather than locking
 
   taskid = *((int *) data);
   const char *kernel_name = name.c_str();
@@ -381,7 +381,6 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
     name.c_str(),  started_translated, ended_translated, taskid);
 
   last_gpu_timestamp = ended;
-  std::lock_guard<std::mutex> guard(kernel_mutex); // Lock before we start touching task-specific state
   metric_set_gpu_timestamp(taskid, started_translated);
   TAU_START_TASK(demangled_name, taskid);
   // the user event for correlation IDs
@@ -525,11 +524,14 @@ void TauL0DisableProfiling() {
   uint64_t gpu_end_ts = utils::i915::GetGpuTimestamp();
   std::cout <<"TAU: Latest GPU timestamp "<<gpu_end_ts<<std::endl;
   */
+
+
   int taskid = gpu_task_id;  // GPU task id is 1;
   uint64_t last_gpu_translated = TAUTranslateGPUtoCPUTimestamp(1, last_gpu_timestamp);
   TAU_VERBOSE("TAU: Latest GPU timestamp (raw) =%ld\n", last_gpu_timestamp);
   TAU_VERBOSE("TAU: Latest GPU timestamp (translated) =%ld\n",last_gpu_translated);
   uint64_t cpu_end_ts = TauTraceGetTimeStamp(0);
+
   metric_set_gpu_timestamp(taskid, last_gpu_translated);
   Tau_stop_top_level_timer_if_necessary_task(taskid);
 
