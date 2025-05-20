@@ -7,7 +7,6 @@ try:
     class TauTensorFlowCallbacks(keras.callbacks.Callback):
 
         def __init__(self):
-            pytau.setNode(0)
             self.train_stack = []
             self.epoch_stack = []
             self.test_stack = []
