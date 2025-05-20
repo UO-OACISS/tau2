@@ -527,6 +527,7 @@ TAU_OPENMP_OPTION =
 #INTEL_IFX#TAU_F90           = ifx 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #INTELIFORT#TAU_F90     = ifort 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #MPIIFORT#TAU_F90       = mpiifort $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#INTEL_MPIIFX#TAU_F90        = mpiifx           $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #MPIF90#TAU_F90       = mpiifort $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #FX#TAU_F90       = mpifrtpx $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #FX_AARCH64#TAU_F90       = mpifrt $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
