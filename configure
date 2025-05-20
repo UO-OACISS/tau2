@@ -6022,7 +6022,7 @@ case $cxx_compiler in
         ;;
     mpiicpx)
         echo "Default C++ compiler will be Intel mpiicpx C++ compiler"
-        fixmakeargs="$fixmakeargs MPIICPC USE_INTELCXX"
+        fixmakeargs="$fixmakeargs MPIICPC USE_INTELCXX COMPINST_INTEL9"
         tauoptions="${tauoptions}-icpx"
         intel=yes
         if [ $fortran_compiler = no  -o $fortran_compiler = mpiifort -o $fortran_compiler = intel ]
@@ -6032,6 +6032,15 @@ case $cxx_compiler in
                 fortran_compiler=intel
                 extradir=`which mpiifort | sed -e 's/\/bin\/mpiifort$//'`
                 fixmakeargs="$fixmakeargs MPIIFORT"
+            fi
+        fi
+	if [ $fortran_compiler = mpiifx ] ; then
+            intelmifx=`which mpiifx 2>/dev/null`
+	    echo $intelmifx
+            if [ "y$intelmifx" != "y"  -a -x "$y$intelmifx" ] ; then
+                fortran_compiler=intel
+                extradir=`which mpiifx | sed -e 's/\/bin\/mpiifort$//'`
+                fixmakeargs="$fixmakeargs INTEL_MPIIFX"
             fi
         fi
         ;;
