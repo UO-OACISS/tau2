@@ -5994,9 +5994,9 @@ case $cxx_compiler in
         then
             intelifort=`which ifx 2>/dev/null`
             if [ "y$intelifort" != "y"  -a -x "$intelifort" ] ; then
-                fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
+                fixmakeargs="$fixmakeargs INTEL_IFX"
                 fortran_compiler=intel
-                extradir=`which ifort | sed -e 's/\/bin\/ifort$//'`
+                extradir=`which ifx | sed -e 's/\/bin\/ifx$//'`
             fi
         fi
         if [ $intelcxxlibicc = yes ]
@@ -6469,7 +6469,7 @@ case $fortran_compiler in
         if [ $cxx_compiler = icpx ]
         then
           echo "Default Fortran compiler will be Intel ifx"
-          fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
+          fixmakeargs="$fixmakeargs INTEL_IFX"
           intelifort=`which ifx 2>/dev/null`
           if [ "y$intelifort" != "y" -a -x "$intelifort" ]
           then
@@ -13208,22 +13208,28 @@ if [ $cxx_compiler = icpc -o $cxx_compiler = icpx -o $cxx_compiler = mpiicpx -o 
         echo "Intel v10.0+ compilers NOT found"
     fi
 
-    var=`which ifort | sed 's/\/bin\/ifort$//'`
-    libdir="$var/lib"
-    if [ ! -d "$var" ] ; then
+    if [ "x$intelifort" = "xifort" ]; then
+      var=`which ifort | sed 's/\/bin\/ifort$//'`
+      libdir="$var/lib"
+      if [ ! -d "$var" ] ; then
         var=`which ifort | sed 's/\/bin\/intel64\/ifort$//'`
         libdir="$var/lib/intel64"
-    fi
-    if [ ! -d "$var" ] ; then
+      fi
+      if [ ! -d "$var" ] ; then
         var=`which ifort | sed 's/\/bin\/ia32\/ifort$//'`
         libdir="$var/lib/ia32"
-    fi
-    if [ ! -d "$var" ] ; then
+      fi
+      if [ ! -d "$var" ] ; then
         var=`which ifort | sed 's/\/bin\/ia64\/ifort$//'`
         libdir="$var/lib/ia64"
-    fi
+      fi
+    fi 
     if [ ! -d "$var" ] ; then
-        echo "Error: Unable to identify ifort lib directory"
+        var=`which ifx | sed 's/\/bin\/ifx$//'`
+        libdir="$var/lib"
+	if [ ! -d "$var" ]; then 
+          echo "Error: Unable to identify Intel Fortran lib directory"
+	fi
     fi
     if   [ -f "$libdir/for_main.o" ] ; then
        echo "Found $libdir/for_main.o"

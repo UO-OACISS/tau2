@@ -524,6 +524,7 @@ TAU_OPENMP_OPTION =
 #HITACHI_FORTRAN#TAU_F90     = f90 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #INTEL_FORTRAN#TAU_F90       = ifort 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #INTEL32_FORTRAN#TAU_F90     = ifort 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#INTEL_IFX#TAU_F90           = ifx 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #INTELIFORT#TAU_F90     = ifort 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #MPIIFORT#TAU_F90       = mpiifort $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #MPIF90#TAU_F90       = mpiifort $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
