@@ -69,6 +69,8 @@ export CCL_KVS_CONNECTION_TIMEOUT=600
 export CCL_ZE_CACHE_OPEN_IPC_HANDLES_THRESHOLD=1024
 export CCL_KVS_USE_MPI_RANKS=1
 
+export NUMEXPR_MAX_THREADS=208
+
 #####################################################################
 # End of environment setup section
 #####################################################################
