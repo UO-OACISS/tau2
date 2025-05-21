@@ -142,6 +142,7 @@ fi
   echo "        -ugni         Track Cray UGNI network library functions."
   echo "        -chapel       Track Cray Chapel network atomics library functions."
   echo "        -ittnotify    Track Intel ITTNotify tasks."
+  echo "        -gptl         Track GPTL timers."
   echo ""
   echo "Notes:"
   echo "    Defaults if unspecified: -T $default_tags"
@@ -393,6 +394,7 @@ sos=false
 track_ugni=false
 track_chapel=false
 track_ittnotify=false
+track_gptl=false
 processM=false
 python_launch_module=false
 python_m_arg=""
@@ -772,6 +774,11 @@ for arg in "$@" ; do
         save_arg $arg
         shift
         ;;
+      -gptl)
+        track_gptl=true
+        save_arg $arg
+        shift
+        ;;
       -c)
         if [ $python_wrapper = "true" ] ; then
           save_arg $arg
@@ -1036,6 +1043,11 @@ fi
 if [ $track_chapel = "true" ] ; then
   # Add the Chapel wrapper library to the LD_PRELOAD list
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-chapel-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+fi
+
+if [ $track_gptl = "true" ] ; then
+  # Add the GPTL wrapper library to the LD_PRELOAD list
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gptl-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
 if [ $track_ittnotify = "true" ] ; then
