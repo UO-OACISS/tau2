@@ -19,8 +19,10 @@ extern int Tau_init_initializeTAU(void);
     } while(0)
 
 
-int GPTLsetoption (const int, const int) {
+int GPTLsetoption (const int option, const int val) {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)option;
+    (void)val;
     return 0;
 }
 
@@ -60,18 +62,23 @@ int GPTLstop_handle (const char * name, int * handle) {
     return 0;
 }
 
-int GPTLstamp (double *, double *, double *) {
+int GPTLstamp (double *wall, double *usr, double *sys) {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)wall;
+    (void)usr;
+    (void)sys;
     return 0;
 }
 
-int GPTLpr (const int) {
+int GPTLpr (const int id) {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)id;
     return 0;
 }
 
-int GPTLpr_file (const char *) {
+int GPTLpr_file (const char *outfile) {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)outfile;
     return 0;
 }
     
@@ -80,8 +87,9 @@ int GPTLreset (void) {
     return 0;
 }
 
-int GPTLreset_timer (const char *) {
+int GPTLreset_timer (const char * name) {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)name;
     return 0;
 }
 
@@ -91,26 +99,37 @@ int GPTLfinalize (void) {
     return 0;
 }
 
-int GPTLget_memusage (float *) {
+int GPTLget_memusage (float *usage) {
     TAU_GPTL_UNIMPLEMENTED();
+    if(usage != NULL) {
+        *usage = 0.0f;
+    }
     return 0;
 
 }
 
-int GPTLprint_memusage (const char *) {
+int GPTLprint_memusage (const char * str) {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)str;
     return 0;
 
 }
 
-int GPTLprint_rusage (const char *) {
+int GPTLprint_rusage (const char * str) {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)str;
     return 0;
 
 }                                      
 
-int GPTLget_procsiz (float *, float *) {
+int GPTLget_procsiz (float * procsiz_out, float * rss_out) {
     TAU_GPTL_UNIMPLEMENTED();
+    if(procsiz_out != NULL) {
+        *procsiz_out = 0.0f;
+    }
+    if(rss_out != NULL) {
+        *rss_out = 0.0f;
+    }
     return 0;
 
 } 
@@ -127,51 +146,100 @@ int GPTLdisable (void) {
 
 } 
 
-int GPTLsetutr (const int) {
+int GPTLsetutr (const int option) {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)option;
     return 0;
 
 } 
 
-int GPTLquery (const char *, int, int *, int *, double *, double *, double *,
-       long long *, const int) {
+int GPTLquery (const char *name, int t, int *count, int *onflg, double *wallclock,
+        double *dusr, double *dsys, long long *papicounters_out, const int maxcounters) {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)name;
+    if(onflg != NULL) {
+        *onflg = 0;
+    }
+    if(count != NULL) {
+        *count = 0;
+    }
+    if(wallclock !=  NULL) {
+        *wallclock = 0.0;
+    }
+    if(dusr != NULL) {
+        *dusr = 0.0;
+    }
+    if(dsys != NULL) {
+        *dsys = 0.0;
+    }
+    if(papicounters_out != NULL) {
+        *papicounters_out = 0;
+    }
     return 0;
 
 } 
 
-int GPTLget_wallclock (const char *, int, double *)  {
+int GPTLget_wallclock (const char *timername, int t, double *value)  {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)timername;
+    (void)t;
+    if(value != NULL) {
+        *value = 0.0;
+    }
     return 0;
 
 } 
 
-int GPTLget_wallclock_latest (const char *, int, double *)   {
+int GPTLget_wallclock_latest (const char * timername, int t, double *value) {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)timername;
+    (void)t;
+    if(value != NULL) {
+        *value = 0.0;
+    }
     return 0;
 
 } 
 
-int GPTLget_threadwork (const char *, double *, double *)   {
+int GPTLget_threadwork (const char *name, double *maxwork, double *imbal)   {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)name;
+    if(maxwork != NULL) {
+        *maxwork = 0.0;
+    }
+    if(imbal != NULL) {
+        *imbal = 0.0;
+    }
     return 0;
 
 } 
 
-int GPTLstartstop_val (const char *, double)   {
+int GPTLstartstop_val (const char *name, double value)   {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)name;
+    (void)value;
     return 0;
 
 } 
 
-int GPTLget_nregions (int, int *)  {
+int GPTLget_nregions (int t, int * nregions)  {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)t;
+    if(nregions != NULL) {
+        *nregions = 0;
+    }
     return 0;
 
 } 
 
-int GPTLget_regionname (int, int, char *, int)   {
+int GPTLget_regionname (int t, int region, char * name, int nc)   {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)t;
+    (void)region;
+    (void)nc;
+    if(name != NULL) {
+        *name = '\0';
+    }
     return 0;
 
 } 
@@ -182,20 +250,33 @@ int GPTL_PAPIlibraryinit (void)   {
 
 } 
 
-int GPTLevent_name_to_code (const char *, int *)   {
+int GPTLevent_name_to_code (const char *name, int *code)   {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)name;
+    if(code != NULL) {
+        *code = 0;
+    }
     return 0;
 
 } 
 
-int GPTLevent_code_to_name (const int, char *)   {
+int GPTLevent_code_to_name (const int code, char * name)   {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)code;
+    if(name != NULL) {
+        *name = '\0';
+    }
     return 0;
 
 } 
 
-int GPTLget_eventvalue (const char *, const char *, int, double *)   {
+int GPTLget_eventvalue (const char *timername, const char *eventname, int, double *value)   {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)timername;
+    (void)eventname;
+    if(value != NULL) {
+        *value = 0.0;
+    }
     return 0;
 
 } 
@@ -212,8 +293,12 @@ int GPTLnum_warn (void)      {
 
 } 
 
-int GPTLget_count (const char *, int, int *)   {
+int GPTLget_count (const char *timername, int t, int *count)   {
     TAU_GPTL_UNIMPLEMENTED();
+    (void)timername;
+    (void)t;
+    if(count != NULL) {
+        *count = 0;
+    }
     return 0;
-
 } 
