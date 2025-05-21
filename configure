@@ -875,6 +875,7 @@ for arg in "$@"; do
         echo "-ugni ..................................... Build UGNI network wrapper."
         echo "-chapel .................... Build Cray Chapel network atomics wrapper."
         echo "-ittnotify  .......................... Build Intel ITTNotify collector."
+        echo "-gptl  ............................................ Build GPTL wrapper."
         echo "-pthread .................................. Use pthread thread package."
         echo "-no_pthread_create ................... Suppress pthread_create wrapper."
         echo "-papithread .................................. Use PAPI thread package."
@@ -1426,6 +1427,7 @@ ugni=no
 tauoptions_has_ugni=no
 chapel=no
 ittnotify=no
+gptl=no
 zepto=no
 zeptodir=
 cuda=no
@@ -1694,6 +1696,11 @@ for arg in "$@"; do
 
         -ittnotify)
             ittnotify=yes
+            shift
+            ;;
+
+        -gptl)
+            gptl=yes
             shift
             ;;
 
@@ -5142,6 +5149,11 @@ fi
 if [ $ittnotify = yes ] ; then
     fixmakeargs="$fixmakeargs ITTNOTIFY"
     tauoptions="${tauoptions}-ittnotify"
+fi
+
+if [ $gptl = yes ] ; then
+    fixmakeargs="$fixmakeargs GPTL"
+    tauoptions="${tauoptions}-gptl"
 fi
 
 if [ $stff = yes ] ; then
