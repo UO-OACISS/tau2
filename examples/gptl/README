@@ -1,0 +1,42 @@
+This is the standard matmult example, hand-instrumented using the GPTL library.
+It demonstrates the use of TAU to collect timers from GPTL instrumentation.
+
+To run this example:
+
+    - Install GPTL from https://github.com/jmrosinski/GPTL
+
+    - Build TAU with GPTL support by configuring with `-gptl`,
+    for example:
+
+        ./configure -cc=gcc -c++=g++ -fortran=gfortran -pthread -bfd=download -unwind=download -dwarf=download -otf=download -gptl
+
+    - Build the example:
+
+        make GPTL_ROOT=/path/to/gptl
+
+      where GPTL_ROOT is set to the path to your GPTL installation
+      (where the include and lib directories for GPTL are located).
+
+    - Run the example with `tau_exec` with the `-gptl` option,,
+    for example:
+
+        tau_exec -T serial,pthread,gptl -gptl ./matmult
+
+The main function calls GPTLinitialize() to initialize profiling.
+Functions are annotated with GPTLstart() and GPTLstop().
+
+pprof output should be similar to:
+
+    NODE 0;CONTEXT 0;THREAD 0:
+    ---------------------------------------------------------------------------------------
+    %Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+                msec   total msec                          usec/call
+    ---------------------------------------------------------------------------------------
+    100.0        0.294          615           1           1     615187 .TAU application
+    100.0        0.028          614           1           1     614893 taupreload_main
+    99.9         0.01          614           1           1     614865 main
+    99.9            6          614           1           2     614855 do_work
+    58.2          357          357           1           0     357742 compute
+    40.7          250          250           1           0     250553 compute_interchange
+
+
