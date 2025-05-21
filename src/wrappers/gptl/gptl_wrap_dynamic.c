@@ -36,15 +36,16 @@ int GPTLstart (const char * name) {
 }
 
 int GPTLinit_handle (const char * name, int * result) {
-    TAU_PROFILE_TIMER(timer, name, "", TAU_DEFAULT); 
-    result = (int *)timer;
+    // TODO Create map from int to TAU timer handle
+    // For now just start and stop based on name
+    *result = 0;
     return 0;
 }
 
 int GPTLstart_handle (const char * name, int * handle) {
-    (void)name;
-    void * timer = (void *)handle;
-    TAU_PROFILE_START(timer);
+    // TODO Save timer to avoid lookup by name
+    (void)handle;
+    TAU_START(name);
     return 0;
 }
 
@@ -54,9 +55,8 @@ int GPTLstop (const char * name) {
 }
 
 int GPTLstop_handle (const char * name, int * handle) {
-    (void)name;
-    void * timer = (void *)handle;
-    TAU_PROFILE_STOP(timer);
+    (void)handle;
+    TAU_STOP(name);
     return 0;
 }
 
