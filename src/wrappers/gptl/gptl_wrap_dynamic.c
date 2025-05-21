@@ -270,10 +270,11 @@ int GPTLevent_code_to_name (const int code, char * name)   {
 
 } 
 
-int GPTLget_eventvalue (const char *timername, const char *eventname, int, double *value)   {
+int GPTLget_eventvalue (const char *timername, const char *eventname, int t, double *value)   {
     TAU_GPTL_UNIMPLEMENTED();
     (void)timername;
     (void)eventname;
+    (void)t;
     if(value != NULL) {
         *value = 0.0;
     }
