@@ -424,6 +424,12 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         return numBins;
     }
 
+    private static String shortenMiddle(String input, int keepStart, int keepEnd) {
+        if (input == null) return "";
+        if (input.length() <= keepStart + keepEnd + 19) return input;
+        return input.substring(0, keepStart) + "<<...TRUNCATED...>>" + input.substring(input.length() - keepEnd);
+    }
+
     private JFreeChart createChart() {
         HistogramDataset dataset = new HistogramDataset();
 
@@ -457,7 +463,10 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                     + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric(),dataSorter.getSelectedMetric().getName()) + ")";
         }
 
-        JFreeChart chart = ChartFactory.createHistogram(function.getName(), xAxis, "Threads", dataset, PlotOrientation.VERTICAL,
+	String fullTitle = function.getName();
+        String shortTitle = shortenMiddle(fullTitle, 100, 100); // keep first & last 100 chars
+								//
+        JFreeChart chart = ChartFactory.createHistogram(shortTitle, xAxis, "Threads", dataset, PlotOrientation.VERTICAL,
                 false, // legend
                 true, // tooltips
                 false); // urls
