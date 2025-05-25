@@ -1,0 +1,25 @@
+This example demonstrates the use of TAU with PyTorch,
+using Intel ITTNotify to collect timers for PyTorch operations.
+
+Build TAU for use with PyTorch; for example,
+
+    ./configure -cc=gcc -c++=g++ -fortran=gfortran -pthread -bfd=download -unwind=download -dwarf=download -otf=download -ittnotify -python
+
+    make
+    make install
+
+Run the application
+
+    tau_exec -T serial,ittnotify,pthread,python -ittnotify python quickstart.py
+
+
+----------
+
+To enable ITTNotify, the application is modified by placing
+
+    with torch.autograd.profiler.emit_itt():
+
+prior to the loop which executes the epochs.
+This will cause PyTorch autograd to emit ITT instrumentation for each operation
+which are intercepted by TAU's ITTNotify collector.
+

@@ -549,6 +549,8 @@ extern "C" int Tau_init_initializeTAU()
   SCOREP_Tau_InitMeasurement();
   SCOREP_Tau_RegisterExitCallback(Tau_profile_exit_scorep);
   initialized = true;
+  tau_inside_initialize() = false;
+  tau_initialized() = 1;
   return 0;
 #endif
 

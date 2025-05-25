@@ -1166,6 +1166,10 @@ case $1 in
         echo "NOTE: Using the TAU's CUPTI Profiling Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     CUPTIPC)
+        echo "NOTE: Enabling TAU's CUPTI PC Sampling "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      CUPTI_NOCUDA)
         echo "NOTE: Couldn't locate /usr/lib/libcuda.so. Is it somewhere else? "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1443,6 +1447,14 @@ case $1 in
         ;;
      CHAPEL)
 	echo NOTE: Building Cray Chapel wrapper
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     ITTNOTIFY)
+	echo NOTE: Building Intel ITTNotify wrapper
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     GPTL)
+	echo NOTE: Building GPTL wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      ARMCI)
@@ -2672,6 +2684,14 @@ case $1 in
 	echo "NOTE: Intel efc compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     INTEL_IFX)
+	echo "NOTE: Intel ifx compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     INTEL_MPIIFX)
+        echo "NOTE: Intel mpiifx compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      INTEL32_FORTRAN)
 	echo "NOTE: Intel ifc compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

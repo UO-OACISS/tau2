@@ -874,6 +874,8 @@ for arg in "$@"; do
         echo "-iowrapper .................................... Build POSIX IO Wrapper."
         echo "-ugni ..................................... Build UGNI network wrapper."
         echo "-chapel .................... Build Cray Chapel network atomics wrapper."
+        echo "-ittnotify  .......................... Build Intel ITTNotify collector."
+        echo "-gptl  ............................................ Build GPTL wrapper."
         echo "-pthread .................................. Use pthread thread package."
         echo "-no_pthread_create ................... Suppress pthread_create wrapper."
         echo "-papithread .................................. Use PAPI thread package."
@@ -1424,6 +1426,8 @@ dmapp=no
 ugni=no
 tauoptions_has_ugni=no
 chapel=no
+ittnotify=no
+gptl=no
 zepto=no
 zeptodir=
 cuda=no
@@ -1687,6 +1691,16 @@ for arg in "$@"; do
 
         -chapel)
             chapel=yes
+            shift
+            ;;
+
+        -ittnotify)
+            ittnotify=yes
+            shift
+            ;;
+
+        -gptl)
+            gptl=yes
             shift
             ;;
 
@@ -3095,7 +3109,7 @@ for arg in "$@"; do
             fi
             #                useropt="$useropt#-DTAU_MAX_THREADS=32"
             cuda=yes
-	    pthread=yes
+	        pthread=yes
             shift
             ;;
         -cudalibrary=*)
@@ -3424,6 +3438,12 @@ for arg in "$@"; do
             if [ -f "$cupti/include/cupti_events.h" ] ; then
                 fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
                 cupti=yes
+                if [ -f "$cupti/lib/libpcsamplingutil.so" ]; then
+                    fixmakeargs="$fixmakeargs CUPTIPC"
+                fi
+                if [ -f "$cupti/lib64/libpcsamplingutil.so" ]; then
+                    fixmakeargs="$fixmakeargs CUPTIPC"
+                fi
             else
                 echo "Error: Cannot find CUPTI headers."
                 exit 1
@@ -3680,10 +3700,11 @@ if [ "x$rocm" = "xyes" -a "$rocprofsdk" = "yes" -a "$rocmv6" = "yes" ]; then
     fi
     if [  "$elfutils" = "yes" ]; then
         fixmakeargs="$fixmakeargs ROCPROFILERSDK_PC"
-        if [ "x$comgr_dir" = "x"]; then
-            comgr_dir=$rocprofsdk_dir
+        if [ "x$comgr_dir" = "x" ]; then
+            comgr_dir=$rocmdir
             if [ -r $comgr_dir/include/amd_comgr/amd_comgr.h ]; then
                     fixmakeargs="$fixmakeargs comgr_dir=$comgr_dir"
+                    #echo "Found amd_comgr.h in directory $comgr_dir/include/amd_comgr/"
             else
                 echo "Error: Cannot find amd_comgr.h in directory $comgr_dir/include/amd_comgr/"
                 exit 1
@@ -5125,6 +5146,16 @@ if [ $chapel = yes ] ; then
     tauoptions="${tauoptions}-chapel"
 fi
 
+if [ $ittnotify = yes ] ; then
+    fixmakeargs="$fixmakeargs ITTNOTIFY"
+    tauoptions="${tauoptions}-ittnotify"
+fi
+
+if [ $gptl = yes ] ; then
+    fixmakeargs="$fixmakeargs GPTL"
+    tauoptions="${tauoptions}-gptl"
+fi
+
 if [ $stff = yes ] ; then
     fixmakeargs="$fixmakeargs RENCI_STFF stffdir=${stffdir} sddfdir=${sddfdir}"
     tauoptions="${tauoptions}-stff"
@@ -5975,9 +6006,9 @@ case $cxx_compiler in
         then
             intelifort=`which ifx 2>/dev/null`
             if [ "y$intelifort" != "y"  -a -x "$intelifort" ] ; then
-                fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
+                fixmakeargs="$fixmakeargs INTEL_IFX"
                 fortran_compiler=intel
-                extradir=`which ifort | sed -e 's/\/bin\/ifort$//'`
+                extradir=`which ifx | sed -e 's/\/bin\/ifx$//'`
             fi
         fi
         if [ $intelcxxlibicc = yes ]
@@ -6003,7 +6034,7 @@ case $cxx_compiler in
         ;;
     mpiicpx)
         echo "Default C++ compiler will be Intel mpiicpx C++ compiler"
-        fixmakeargs="$fixmakeargs MPIICPC USE_INTELCXX"
+        fixmakeargs="$fixmakeargs MPIICPC USE_INTELCXX COMPINST_INTEL9"
         tauoptions="${tauoptions}-icpx"
         intel=yes
         if [ $fortran_compiler = no  -o $fortran_compiler = mpiifort -o $fortran_compiler = intel ]
@@ -6013,6 +6044,15 @@ case $cxx_compiler in
                 fortran_compiler=intel
                 extradir=`which mpiifort | sed -e 's/\/bin\/mpiifort$//'`
                 fixmakeargs="$fixmakeargs MPIIFORT"
+            fi
+        fi
+	if [ $fortran_compiler = mpiifx ] ; then
+            intelmifx=`which mpiifx 2>/dev/null`
+	    echo $intelmifx
+            if [ "y$intelmifx" != "y"  -a -x "$y$intelmifx" ] ; then
+                fortran_compiler=intel
+                extradir=`which mpiifx | sed -e 's/\/bin\/mpiifort$//'`
+                fixmakeargs="$fixmakeargs INTEL_MPIIFX"
             fi
         fi
         ;;
@@ -6450,7 +6490,7 @@ case $fortran_compiler in
         if [ $cxx_compiler = icpx ]
         then
           echo "Default Fortran compiler will be Intel ifx"
-          fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
+          fixmakeargs="$fixmakeargs INTEL_IFX"
           intelifort=`which ifx 2>/dev/null`
           if [ "y$intelifort" != "y" -a -x "$intelifort" ]
           then
@@ -11458,8 +11498,8 @@ EOF
                 cuda_version=$(cat "$cudadir"/include/cuda.h | grep "define CUDA_VERSION")
                 vers_arr=($cuda_version)
                 cupti_event_path=""
-        cuda_arch=`arch | awk '{print tolower($0)}'`
-        cuda_uname=`uname | awk '{print tolower($0)}'`
+                cuda_arch=`arch | awk '{print tolower($0)}'`
+                cuda_uname=`uname | awk '{print tolower($0)}'`
                 if [ -f "$cudadir/extras/CUPTI/include/cupti_events.h" ] ; then
                     # check if usual path exists, otherwise use fallback
                     cupti_event_path="$cudadir/extras/CUPTI/include/cupti_events.h"
@@ -11495,6 +11535,12 @@ EOF
                     fi
                     if [ ! -f $cudadir/lib64/stubs/libnvidia-ml.so ]; then
                       fixmakeargs="$fixmakeargs CUPTI_NONVML"
+                    fi
+                    if [ -f "$cupti/lib/libpcsamplingutil.so" ]; then
+                        fixmakeargs="$fixmakeargs CUPTIPC"
+                    fi
+                    if [ -f "$cupti/lib64/libpcsamplingutil.so" ]; then
+                        fixmakeargs="$fixmakeargs CUPTIPC"
                     fi
                 fi
             fi
@@ -12109,7 +12155,7 @@ if [ "x$download_scorep" = xyes ] ; then
     if [ $configresult -eq 0 ] ; then
       tauscorep_log=build.log
       echo "building ${tauscorep}... (see `pwd`/${tauscorep_log} for log)..."
-      make -i -j 4 > ${tauscorep_log} 2>&1 ;
+      make -i -j 32 > ${tauscorep_log} 2>&1 ;
       makeresult=$?
       if [ $makeresult -eq 0 ] ; then
         tauscorep_log=install.log
@@ -12281,7 +12327,7 @@ if [ $scorep = yes ] ; then
         fi
     fi
     #scorepLibs="$scorepLD $scorepLibs $scorepExtraLibs"
-    scorepLibs="$scorepExtraLibs#$scorepLD#$scorepLibs"
+    scorepLibs="$scorepExtraLibs#$scorepLD#-Wl,--no-as-needed#$scorepLibs"
     scorepLDflags=`${scorepdir}/bin/scorep-config --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e 's@ @#@g'`
     #fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
     fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#$scorepLDflags#$scorepLibs"
@@ -13183,22 +13229,28 @@ if [ $cxx_compiler = icpc -o $cxx_compiler = icpx -o $cxx_compiler = mpiicpx -o 
         echo "Intel v10.0+ compilers NOT found"
     fi
 
-    var=`which ifort | sed 's/\/bin\/ifort$//'`
-    libdir="$var/lib"
-    if [ ! -d "$var" ] ; then
+    if [ "x$intelifort" = "xifort" ]; then
+      var=`which ifort | sed 's/\/bin\/ifort$//'`
+      libdir="$var/lib"
+      if [ ! -d "$var" ] ; then
         var=`which ifort | sed 's/\/bin\/intel64\/ifort$//'`
         libdir="$var/lib/intel64"
-    fi
-    if [ ! -d "$var" ] ; then
+      fi
+      if [ ! -d "$var" ] ; then
         var=`which ifort | sed 's/\/bin\/ia32\/ifort$//'`
         libdir="$var/lib/ia32"
-    fi
-    if [ ! -d "$var" ] ; then
+      fi
+      if [ ! -d "$var" ] ; then
         var=`which ifort | sed 's/\/bin\/ia64\/ifort$//'`
         libdir="$var/lib/ia64"
-    fi
+      fi
+    fi 
     if [ ! -d "$var" ] ; then
-        echo "Error: Unable to identify ifort lib directory"
+        var=`which ifx | sed 's/\/bin\/ifx$//'`
+        libdir="$var/lib"
+	if [ ! -d "$var" ]; then 
+          echo "Error: Unable to identify Intel Fortran lib directory"
+	fi
     fi
     if   [ -f "$libdir/for_main.o" ] ; then
        echo "Found $libdir/for_main.o"

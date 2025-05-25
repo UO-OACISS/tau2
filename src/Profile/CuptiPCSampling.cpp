@@ -47,10 +47,14 @@ bool g_verbose = false;
 bool g_running = false;
 bool disabled = false;
 
+extern "C" void metric_set_gpu_timestamp(int tid, double value);
+uint64_t cpu_first_ts;
+
 CUpti_SubscriberHandle subscriber;
 
 std::map<uint64_t, ModuleDetails> crcModuleMap;
 
+static int taskid=-1;
 
 PcSamplingStallReasons pcSamplingStallReasonsRetrieve;
 std::vector<uint32_t> crc_moduleIds;
@@ -158,9 +162,9 @@ std::string resolved_sample(  TAUCuptiIdSamples sample, TAUCuptiStalls stalls,
     int status;
     std::stringstream st_sample;
     st_sample << abi::__cxa_demangle(sample.functionName.c_str(), 0, 0, &status)
-        << "[F: " << pCSamplingGetSassToSourceCorrelationParams.fileName
-        << ", L: " << pCSamplingGetSassToSourceCorrelationParams.lineNumber
-        << ", D: " << pCSamplingGetSassToSourceCorrelationParams.dirName;
+        << " [{" << pCSamplingGetSassToSourceCorrelationParams.dirName
+        << "/" << pCSamplingGetSassToSourceCorrelationParams.fileName
+        << "},{" << pCSamplingGetSassToSourceCorrelationParams.lineNumber << "}]";
         //<< "; pcOffset: " << sample.pcOffset
         //<< "; contextUid: " << sample.contextUid
         //<< "; stallReasons: " << stalls.stallReasonCount;
@@ -188,13 +192,14 @@ void Tau_store_all_CUPTIPC_samples()
 
     std::map<uint64_t, ModuleDetails>::iterator itr;
     int status;
-    static int taskid=-1;
+    /*static int taskid=-1;
     if(taskid == -1)
     {
         TAU_CREATE_TASK(taskid);
+	metric_set_gpu_timestamp(taskid, cpu_first_ts);
         Tau_create_top_level_timer_if_necessary_task(taskid);
         Tau_add_metadata_for_task("CUPTI SAMPLES", taskid, taskid);
-    }
+    }*/
 
     map_tau_cupti_samples_lock.lock();
     for(auto& curr_sample: map_tau_cupti_samples)
@@ -251,7 +256,7 @@ void Tau_store_all_CUPTIPC_samples()
 
     }
     map_tau_cupti_samples_lock.unlock();
-
+    //Tau_create_top_level_timer_if_necessary_task(taskid);
 }
 
 void GetSamplesFromSamplingData(CUpti_PCSamplingData SamplingData, ContextInfo *pContextInfo)
@@ -950,6 +955,7 @@ void CallbackHandler(
 
 void cupti_pcsampling_init()
 {
+    cpu_first_ts = TauTraceGetTimeStamp(0);
     g_initializeInjectionMutex.lock();
     if (!g_initializedInjection)
     {
@@ -974,7 +980,15 @@ void cupti_pcsampling_init()
         CUPTI_API_CALL(cuptiEnableCallback(1, subscriber, CUPTI_CB_DOMAIN_RUNTIME_API, CUPTI_RUNTIME_TRACE_CBID_cudaDeviceReset_v3020));
         g_initializedInjection = true;
     }
+    if(taskid == -1)
+    {
+        TAU_CREATE_TASK(taskid);
+	metric_set_gpu_timestamp(taskid, cpu_first_ts);
+        Tau_create_top_level_timer_if_necessary_task(taskid);
+        Tau_add_metadata_for_task("CUPTI SAMPLES", taskid, taskid);
+    }
     g_initializeInjectionMutex.unlock();
+
 }
 
 
@@ -1043,6 +1057,11 @@ void cupti_pcsampling_exit()
         FreePreallocatedMemory();
         CUPTI_API_CALL(cuptiUnsubscribe(subscriber));
     }
+    if(taskid == -1)
+	    return;
+    uint64_t cpu_end_ts = TauTraceGetTimeStamp(0);
+    metric_set_gpu_timestamp(taskid, cpu_end_ts);
+    Tau_create_top_level_timer_if_necessary_task(taskid);
 }
 
 #else

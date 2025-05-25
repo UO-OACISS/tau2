@@ -52,10 +52,10 @@ public:
     FlatProfiler()  = default;
     ~FlatProfiler() = default;
 
-    CodeobjAddressTranslate translator;
-    KernelObjectMap         kernel_object_map;
-    FlatProfile             flat_profile;
-    std::mutex              global_mut;
+    CodeobjAddressTranslate translator = {};
+    KernelObjectMap         kernel_object_map = {};
+    FlatProfile             flat_profile = {};
+    std::mutex              global_mut = {};
 };
 }  // namespace
 

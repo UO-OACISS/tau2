@@ -57,8 +57,19 @@ struct Tau_SDK_hc_timestamp{
 #endif
 
 //Compatible Hardware Counter Profiling is only available at Rocprofiler 0.5 and newer versions
-#if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0)
-#define PROFILE_SDKCOUNTERS
+#ifdef TAU_ENABLE_ROCPROFILERSDK_PC
+    #if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0)
+        #define PROFILE_SDKCOUNTERS
+    #elif (ROCPROFILER_VERSION_MAJOR >= 1)
+        #define PROFILE_SDKCOUNTERS
+        #define PROFILE_SDKCOUNTERS_v1
+    #else
+        #warning "This rocprofiler-sdk version is unable to profile hardware counters"
+    #endif
+#endif
+
+
+#ifdef PROFILE_SDKCOUNTERS
 #include <rocprofiler-sdk/device_counting_service.h>
 #include <rocprofiler-sdk/dispatch_counting_service.h>
 #include <rocprofiler-sdk/agent.h>
@@ -68,6 +79,10 @@ struct Tau_SDK_hc_timestamp{
 
 extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value, rocprofiler_timestamp_t* c_timestamp);
 extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
+
+#ifndef PROFILE_SDKCOUNTERS_v1
+typedef rocprofiler_profile_config_id_t rocprofiler_counter_config_id_t;
+#endif
 
 #else
 

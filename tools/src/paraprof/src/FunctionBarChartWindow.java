@@ -10,7 +10,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -23,6 +22,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTextArea;
@@ -50,13 +50,13 @@ import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
- * The FunctionBarChartWindow displays performance data in many ways.  
+ * The FunctionBarChartWindow displays performance data in many ways.
  * All functions for one thread, all threads for one function, all phases for one function.
- * 
- * TODO : 
+ *
+ * TODO :
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
- * 2) Need to track all ppTrials (Observers) for comparisonChart 
- * 
+ * 2) Need to track all ppTrials (Observers) for comparisonChart
+ *
  * <P>CVS $Id: FunctionBarChartWindow.java,v 1.25 2010/01/14 01:31:39 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
  * @version $Revision: 1.25 $
@@ -67,7 +67,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         Observer, ChangeListener, ParaProfWindow, UnitListener, SortListener {
 
     /**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 3984568716635957738L;
 	private ParaProfTrial ppTrial;
@@ -106,6 +106,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     private String phaseString;
     // we keep these around to speed things up
     private JTextArea jTextArea;
+    private JScrollPane jTextAreaScrollPane;
     private Component headerView;
 
     private FunctionBarChartWindow() {
@@ -224,7 +225,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         setLocation(WindowPlacer.getNewLocation(this, parent));
 
         addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosing(java.awt.event.WindowEvent evt) {
+            @Override
+			public void windowClosing(java.awt.event.WindowEvent evt) {
                 thisWindowClosing(evt);
             }
         });
@@ -321,7 +323,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         optionsMenu.add(new JSeparator());
 
         ActionListener sortData = new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
+            @Override
+			public void actionPerformed(ActionEvent evt) {
                 sortLocalData();
                 panel.repaint();
             }
@@ -366,7 +369,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         setJMenuBar(mainMenu);
     }
 
-    public void actionPerformed(ActionEvent evt) {
+    @Override
+	public void actionPerformed(ActionEvent evt) {
         try {
             Object EventSrc = evt.getSource();
 
@@ -395,7 +399,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         }
     }
 
-    public void stateChanged(ChangeEvent event) {
+    @Override
+	public void stateChanged(ChangeEvent event) {
         try {
             panel.getBarChart().setBarLength(barLengthSlider.getValue());
             panel.repaint();
@@ -404,7 +409,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         }
     }
 
-    public void menuSelected(MenuEvent evt) {
+    @Override
+	public void menuSelected(MenuEvent evt) {
         try {
 
             if (dataSorter.getValueType() == ValueType.EXCLUSIVE || dataSorter.getValueType() == ValueType.INCLUSIVE
@@ -440,24 +446,27 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         }
     }
 
-    public void menuDeselected(MenuEvent evt) {}
+    @Override
+	public void menuDeselected(MenuEvent evt) {}
 
-    public void menuCanceled(MenuEvent evt) {}
+    @Override
+	public void menuCanceled(MenuEvent evt) {}
 
-    public void update(Observable o, Object arg) {
+    @Override
+	public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
         if (tmpString.equals("prefEvent")) {
-        	if(this.comparisonChart==false&&this.ppThread!=null){
+        	if(!this.comparisonChart&&this.ppThread!=null){
         	this.setTitle("TAU: ParaProf: " + ParaProfUtils.getThreadLabel(ppThread.getThread()) + " - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
         	}
-        	
-        	
+
+
             this.setHeader();
             panel.repaint();
-            
-            
-            
+
+
+
         } else if (tmpString.equals("colorEvent")) {
             panel.repaint();
         } else if (tmpString.equals("dataEvent")) {
@@ -471,7 +480,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         }
     }
 
-    public void help(boolean display) {
+    @Override
+	public void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.getHelpWindow().clearText();
         if (display) {
@@ -529,10 +539,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     }
 
     public int units() {
-        if (showValuesAsPercent.isEnabled() && showValuesAsPercent.isSelected()) {
-            return 0;
-        }
-        if (!dataSorter.isTimeMetric()) {
+        if ((showValuesAsPercent.isEnabled() && showValuesAsPercent.isSelected()) || !dataSorter.isTimeMetric()) {
             // we don't do units for non-time metrics
             return 0;
         }
@@ -555,8 +562,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         scrollBar.setValue(position);
     }
 
-    // This process is separated into two functions to provide the option of obtaining the current 
-    // header string being used for the panel without resetting the actual header. 
+    // This process is separated into two functions to provide the option of obtaining the current
+    // header string being used for the panel without resetting the actual header.
     // Printing and image generation use this functionality.
 
     public void setHeader() {
@@ -570,8 +577,16 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                 jTextArea.setFont(ParaProf.preferencesWindow.getFont());
                 jTextArea.addKeyListener(this);
                 jTextArea.setMargin(new Insets(3, 3, 3, 3));
+                
+                jTextAreaScrollPane = new JScrollPane(jTextArea);
+                jTextAreaScrollPane.setBorder(null);
+                jTextAreaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+                jTextAreaScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+                jTextAreaScrollPane.setPreferredSize(new Dimension(100,100));
             }
-            jTextArea.setText(this.getHeaderString());
+            String headerString=this.getHeaderString();
+            
+            jTextArea.setText(headerString);
 
             if (comparisonChart) {
                 jTextArea.setSize(new Dimension(250, 200));
@@ -592,9 +607,9 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                 panel.setColumnHeaderView(holder);
                 headerView = holder;
             } else {
-                if (headerView != jTextArea) {
-                    panel.setColumnHeaderView(jTextArea);
-                    headerView = jTextArea;
+                if (headerView != jTextAreaScrollPane) {
+                    panel.setColumnHeaderView(jTextAreaScrollPane);
+                    headerView = jTextAreaScrollPane;
                 }
             }
         } else {
@@ -605,23 +620,22 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
     public String getHeaderString() {
         if (function != null) {
-            String header = "";
+            StringBuilder header = new StringBuilder();
             if (ppTrial.getDataSource().getPhasesPresent() && function.isCallPathFunction()) {
-                header += "Phase: " + UtilFncs.getLeftSide(function.getName()) + "\nName: "
-                        + UtilFncs.getRightSide(function.getName());
+                header.append("Phase: ").append(UtilFncs.getLeftSide(function.getName())).append("\nName: ").append(UtilFncs.getRightSide(function.getName()));
             } else {
-                header += "Name: " + function.getName();
+                header.append("Name: ").append(function.getName());
             }
 
-            header += "\nMetric Name: " + dataSorter.getSelectedMetric().getName() + "\nValue: " + dataSorter.getValueType();
+            header.append("\nMetric Name: ").append(dataSorter.getSelectedMetric().getName()).append("\nValue: ").append(dataSorter.getValueType());
 
             if ((dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
                     || showValuesAsPercent.isSelected()) {
                 // nothing
             } else {
-                header += "\nUnits: " + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric(),dataSorter.getSelectedMetric().getName());
+                header.append("\nUnits: ").append(UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric(),dataSorter.getSelectedMetric().getName()));
             }
-            return header + "\n";
+            return header.append("\n").toString();
         } else {
             String starter;
 
@@ -639,7 +653,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                 starter += "\nUnits: "
                         + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric(),dataSorter.getSelectedMetric().getName()) + "\n";
             }
-            
+
             if(dataSorter.getSortType()==SortType.NAME){
         		starter+="Sorted By: Name";
         	}
@@ -649,7 +663,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         			starter+=" ("+dataSorter.getSortMetric()+")";
         		}
         	}
-            
+
             return starter;
         }
     }
@@ -694,7 +708,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         validate();
     }
 
-    public void showSearchPanel(boolean show) {
+    @Override
+	public void showSearchPanel(boolean show) {
         if (show) {
             if (searchPanel == null) {
                 searchPanel = new SearchPanel(this, panel.getBarChart().getSearcher());
@@ -729,15 +744,15 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         closeThisWindow();
     }
 
-    public void closeThisWindow() {
+    @Override
+	public void closeThisWindow() {
         try {
             setVisible(false);
 
             if (comparisonChart) {
                 ParaProf.theComparisonWindow = null;
                 List<ParaProfTrial> trialList = ((ComparisonBarChartModel) model).getPpTrials();
-                for (Iterator<ParaProfTrial> it = trialList.iterator(); it.hasNext();) {
-                    ParaProfTrial trial = it.next();
+                for (ParaProfTrial trial : trialList) {
                     trial.deleteObserver(this);
                 }
             } else {
@@ -755,7 +770,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         return units;
     }
 
-    public void setUnits(int units) {
+    @Override
+	public void setUnits(int units) {
         this.units = units;
         this.setHeader();
         model.reloadData();
@@ -774,15 +790,18 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         return ppThread.getThread();
     }
 
-    public void keyPressed(KeyEvent e) {
+    @Override
+	public void keyPressed(KeyEvent e) {
         if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_F) {
             showSearchPanel(true);
         }
     }
 
-    public void keyReleased(KeyEvent e) {}
+    @Override
+	public void keyReleased(KeyEvent e) {}
 
-    public void keyTyped(KeyEvent e) {}
+    @Override
+	public void keyTyped(KeyEvent e) {}
 
     public Function getPhase() {
         return phase;
@@ -802,7 +821,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         return descendingOrderCheckBox.isSelected();
     }
 
-    public void resort() {
+    @Override
+	public void resort() {
         sortLocalData();
         panel.repaint();
     }
@@ -811,7 +831,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         return panel;
     }
 
-    public JFrame getFrame() {
+    @Override
+	public JFrame getFrame() {
         return this;
     }
 

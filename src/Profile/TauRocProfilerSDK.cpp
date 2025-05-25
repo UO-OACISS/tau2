@@ -33,6 +33,7 @@ using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_
 extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
 extern void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
 extern void sdk_pc_sampling_flush();
+extern std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename);
 
 extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value, rocprofiler_timestamp_t* c_timestamp);
 extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
@@ -119,14 +120,7 @@ void rocsdk_version_check(uint32_t                 version,
     uint32_t major = version / 10000;
     uint32_t minor = (version % 10000) / 100;
     uint32_t patch = version % 100;
-
-    // generate info string
-    auto info = std::stringstream{};
-    info << "TAU is using rocprofiler-sdk v" << major << "." << minor << "." << patch
-         << " (" << runtime_version << ")";
-
-    std::clog << info.str() << std::endl; 
-  
+    TAU_VERBOSE("TAU is using rocprofiler-sdk v%u.%u.%u (%s)\n", major, minor, patch, runtime_version); 
 }
 
 //------------------------------------------------------------------------------------------------
@@ -565,8 +559,10 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
 
         }
         
-        std::string task_name;
-        task_name = Tau_demangle_name(client_kernels.at(record->dispatch_info.kernel_id).kernel_name);
+        std::string task_name = demangle_kernel_rocprofsdk(
+                                        client_kernels.at(
+                                          record->dispatch_info.kernel_id).kernel_name, 1);
+
         std::vector<TauSDKUserEvent> record_events;
 
         std::string event_name = "Private segment size : ";

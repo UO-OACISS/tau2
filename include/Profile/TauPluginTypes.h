@@ -466,6 +466,28 @@ typedef struct Tau_plugin_event_ompt_target_data_op_data {
 #endif /* TAU_PLUGIN_OMPT_ON */
 } Tau_plugin_event_ompt_target_data_op_data_t;
 
+typedef struct Tau_plugin_event_ompt_target_data_op_emi_data {
+#ifdef TAU_PLUGIN_OMPT_ON
+  ompt_scope_endpoint_t endpoint; 
+  ompt_data_t *target_task_data;
+  ompt_data_t *target_data;
+  ompt_id_t *host_op_id;
+  ompt_target_data_op_t optype;
+  void *src_addr;
+  int src_device_num;
+  void *dest_addr;
+  int dest_device_num;
+  size_t bytes;
+  const void *codeptr_ra;
+#else /* TAU_PLUGIN_OMPT_ON */
+   /* This is here for the sole purpose of preventing a warning saying that
+    * empty struct have a size of 0 in C but 1 in C++.
+    * This struct should never * be used if OMPT is not enabled */
+   int null;
+#endif /* TAU_PLUGIN_OMPT_ON */
+} Tau_plugin_event_ompt_target_data_op_emi_data_t;
+
+
 typedef struct Tau_plugin_event_ompt_target_submit_data {
 #ifdef TAU_PLUGIN_OMPT_ON
    ompt_id_t target_id;
@@ -525,6 +547,7 @@ typedef int (*Tau_plugin_ompt_device_finalize)(Tau_plugin_event_ompt_device_fina
 typedef int (*Tau_plugin_ompt_device_load)(Tau_plugin_event_ompt_device_load_data_t*);
 typedef int (*Tau_plugin_ompt_target)(Tau_plugin_event_ompt_target_data_t*);
 typedef int (*Tau_plugin_ompt_target_data_op)(Tau_plugin_event_ompt_target_data_op_data_t*);
+typedef int (*Tau_plugin_ompt_target_data_op_emi)(Tau_plugin_event_ompt_target_data_op_emi_data_t*);
 typedef int (*Tau_plugin_ompt_target_submit)(Tau_plugin_event_ompt_target_submit_data_t*);
 typedef int (*Tau_plugin_ompt_finalize)(Tau_plugin_event_ompt_finalize_data_t*);
 /* GPU EVENTS BEGIN */
@@ -575,6 +598,7 @@ typedef struct Tau_plugin_callbacks {
    Tau_plugin_ompt_device_load OmptDeviceLoad;
    Tau_plugin_ompt_target OmptTarget;
    Tau_plugin_ompt_target_data_op OmptTargetDataOp;
+   Tau_plugin_ompt_target_data_op_emi OmptTargetDataOpEmi;
    Tau_plugin_ompt_target_submit OmptTargetSubmit;
    Tau_plugin_ompt_finalize OmptFinalize;
 /* GPU EVENTS BEGIN */
@@ -678,6 +702,7 @@ typedef struct Tau_plugin_callbacks_active {
     unsigned int ompt_device_load;
     unsigned int ompt_target;
     unsigned int ompt_target_data_op;
+    unsigned int ompt_target_data_op_emi;
     unsigned int ompt_target_submit;
     unsigned int ompt_finalize;
     /* GPU KERNEL START */

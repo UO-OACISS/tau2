@@ -93,6 +93,7 @@ usage()
   echo "        -opencl       Track GPU events via OpenCL"
   echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
   echo "        -rocm         Track ROCm events via rocprofiler "
+  echo "	-rocm_pc      Track ROCm PC Sampling events (needs -rocm)"
   echo "        -ompt         Track OpenMP events via OMPT interface"
   echo "        -oneapi       Track Intel OneAPI Level Zero events"
   echo "        -power        Track power events via PAPI's perf RAPL interface"
@@ -140,6 +141,8 @@ fi
   echo "        -disable-kokkos  Disable Kokkos profiling (removes fences that hurt performance)"
   echo "        -ugni         Track Cray UGNI network library functions."
   echo "        -chapel       Track Cray Chapel network atomics library functions."
+  echo "        -ittnotify    Track Intel ITTNotify tasks."
+  echo "        -gptl         Track GPTL timers."
   echo ""
   echo "Notes:"
   echo "    Defaults if unspecified: -T $default_tags"
@@ -390,6 +393,8 @@ adios2_trace=false
 sos=false
 track_ugni=false
 track_chapel=false
+track_ittnotify=false
+track_gptl=false
 processM=false
 python_launch_module=false
 python_m_arg=""
@@ -559,6 +564,7 @@ for arg in "$@" ; do
         ;;
       -rocm_pc)
         track_rocm_pc=true
+	      track_rocm=true
         save_arg $arg
         shift
         ;;
@@ -760,6 +766,16 @@ for arg in "$@" ; do
         ;;
       -chapel)
         track_chapel=true
+        save_arg $arg
+        shift
+        ;;
+      -ittnotify)
+        track_ittnotify=true
+        save_arg $arg
+        shift
+        ;;
+      -gptl)
+        track_gptl=true
         save_arg $arg
         shift
         ;;
@@ -1029,6 +1045,15 @@ if [ $track_chapel = "true" ] ; then
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-chapel-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
+if [ $track_gptl = "true" ] ; then
+  # Add the GPTL wrapper library to the LD_PRELOAD list
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gptl-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+fi
+
+if [ $track_ittnotify = "true" ] ; then
+  export INTEL_LIBITTNOTIFY64=$BASEDIR/lib/$theBinding/libTAU-ittnotify-collector$TAU_SHLIBX
+fi
+
 if [ $track_numa = "true" ]; then
   options=`echo $theBinding | sed -e 's/shared-//g' `
   mk=$BASEDIR/lib/Makefile.tau-$options
@@ -1100,6 +1125,8 @@ if [ $track_cupti = "true" ] ; then
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUact$TAU_SHLIBX:$TAUEX_LD_PRELOAD
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX:$TAUEX_LD_PRELOAD
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    #export NVTX_INJECTION64_PATH=/packages/cuda/12.8.1/extras/CUPTI/lib64/libcupti.so
+    export NVTX_INJECTION64_PATH=$BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX
     if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
       if [ `echo $TAU_METRICS | grep "TIME"` ]; then
         export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
