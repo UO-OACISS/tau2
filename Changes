@@ -14,6 +14,16 @@ Version 2.34 changes (from 2.33):
 1. Added support for new LLVM compilers (-c++=parascc).
 2. Updated support for ROCm 6.2.3. 
 3. Added ZeroSum and PerfStubs repos as git submodules. 
+4. Added Python 3.12 support. 
+5. Added support for ROCm 6.4.0. 
+6. Added GPTL support (configure -gptl; tau_exec -gptl). See examples/gptl.
+7. Added support for PyTorch on Intel GPUs with configure -ittnotify; tau_exec -ittnotify. 
+8. Added initial support for PC sampling on GPUs (tau_exec -cupti_pc; tau_exec -rocm_pc). 
+9. Added support for accessing hardware performance counters on AMD GPUs (ROCM_METRICS). 
+10. Improvements in Paraprof (scrollbars for long function names, preferences window). 
+11. Added initial support for Score-P 9.0. 
+12. Improved support for demangling OMPT offloaded GPU kernel names on Intel GPUs.
+
 
 Version 2.33 changes (from 2.32):
 1. Added -dyninst=download for binary rewriting with DyninstAPI.
