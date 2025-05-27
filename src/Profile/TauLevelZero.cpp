@@ -56,6 +56,7 @@ static uint64_t last_gpu_timestamp = 0L;
 static uint64_t gpu_offset = 0L;
 static std::mutex gpu_mutex; // TODO investigate whether it makes more sense to use a task per thread
                              // instead of a single task for all threads, rather than locking
+static std::mutex queue_mutex;
 extern "C" void metric_set_gpu_timestamp(int tid, double value);
 
 
@@ -281,8 +282,7 @@ std::queue<uint64_t>& getKernelQueue() {
 
 uint64_t pushKernel() {
     static uint64_t id{0};
-    static std::mutex mtx;
-    std::lock_guard<std::mutex> lck (mtx);
+    std::lock_guard<std::mutex> lck(queue_mutex);
     id = id + 1;
     getKernelQueue().push(id);
     //printf("Pushed %lu\n", id);
@@ -292,8 +292,7 @@ uint64_t pushKernel() {
 uint64_t popKernel() {
     uint64_t id{0};
     auto& theQueue = getKernelQueue();
-    static std::mutex mtx;
-    std::lock_guard<std::mutex> lck (mtx);
+    std::lock_guard<std::mutex> lck(queue_mutex);
     if (theQueue.size() > 0) {
         id = theQueue.front();
         theQueue.pop();
