@@ -352,6 +352,9 @@ int Tau_get_initialized_queues(int thread)
   else
   {
     TAU_CREATE_TASK(queue_id);
+    // losing resolution from nanoseconds to microseconds.
+    metric_set_gpu_timestamp(queue_id, first_cpu_timestamp);
+    Tau_create_top_level_timer_if_necessary_task(queue_id);
     //std::cout << " NEW TASK: " << queue_id << std::endl;
     map_thread_queue[thread] = queue_id;
     if(set_queue_metrics_once==0)
