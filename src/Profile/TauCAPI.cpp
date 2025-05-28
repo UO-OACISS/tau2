@@ -2819,6 +2819,24 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
     Tau_pure_start_task_group(n, tid, "TAU_USER");
 }
 
+/* This adds an amount of time and a number of calls to a given timer on a given tid.
+ * This is to support the GPTL wrapper for E3SM. */
+extern "C" void Tau_pure_increment_task(const char * n, double time, int calls, int tid) {
+    static int do_this_once = Tau_init_initializeTAU();
+    string name = n; 
+    FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_USER, "TAU_USER");
+    double timeToAdd[TAU_MAX_COUNTERS] = { 0 };
+    timeToAdd[0] = time;
+    fi->AddInclTime(timeToAdd, tid);
+    for(int i = 0; i < calls; ++i) {
+        fi->IncrNumCalls(tid);
+    }
+}
+
+extern "C" void Tau_pure_increment(const char * n, double time, int calls) {
+    Tau_pure_increment_task(n, time, calls, Tau_get_thread());
+}
+
 FunctionInfo* Tau_make_cupti_sample_timer(const char * filename, const char * function, int lineno)
 {
   TauInternalFunctionGuard protects_this_function;
