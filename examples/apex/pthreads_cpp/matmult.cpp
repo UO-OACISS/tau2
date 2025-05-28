@@ -161,8 +161,8 @@ void * threaded_func(void *data)
 
 int main (int argc, char *argv[]) 
 {
-  apex::init(argc, argv, NULL);
-  apex::set_node_id(0);
+  apex::init("Apex Matmult Test", 0, 1);
+  //apex::set_node_id(0);
   apex::profiler* p = apex::start(__func__);
 
 #ifdef PTHREADS

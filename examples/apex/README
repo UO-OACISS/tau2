@@ -1,143 +1,383 @@
 To build this example, configure TAU with APEX and either pthread 
 or OpenMP support (using -apex -pthread or -apex -openmp -ompt=download).
 
+Example:
+./configure -bfd=download -apex -pthread
+
+#Needs a compiler with OMPT, here we use icpx
+./configure -bfd=download -apex -ompt -c++=icpx -cc=icx -fortran=ifx
+
 Then build the example that matches the configuration - either pthread or OpenMP.
 
-To see the APEX output, set APEX_SCREEN_OUTPUT=1 before executing:
+To see the APEX output, set APEX_SCREEN_OUTPUT=1 before executing.
 
 $ cd pthreads_cpp
 $ make
-$ export APEX_SCREEN_OUPTUT=1
-$ ./matmult
-v0.5-rc0-4b144d8-develop
-Built on: 16:29:26 Apr 25 2016
-C++ Language Standard version : 201300
-GCC Compiler version : 4.9.3
-APEX_DISABLE : 0
-APEX_SUSPEND : 0
-APEX_PAPI_SUSPEND : 0
-APEX_TAU : 1
-APEX_POLICY : 1
-APEX_MEASURE_CONCURRENCY : 0
-APEX_MEASURE_CONCURRENCY_PERIOD : 1000000
-APEX_SCREEN_OUTPUT : 1
-APEX_PROFILE_OUTPUT : 0
-APEX_CSV_OUTPUT : 0
-APEX_TASKGRAPH_OUTPUT : 0
-APEX_PROC_CPUINFO : 0
-APEX_PROC_MEMINFO : 0
-APEX_PROC_NET_DEV : 0
-APEX_PROC_SELF_STATUS : 0
-APEX_PROC_STAT : 1
-APEX_THROTTLE_CONCURRENCY : 0
-APEX_THROTTLING_MAX_THREADS : 24
-APEX_THROTTLING_MIN_THREADS : 1
-APEX_THROTTLE_ENERGY : 0
-APEX_THROTTLING_MAX_WATTS : 300
-APEX_THROTTLING_MIN_WATTS : 150
-APEX_PTHREAD_WRAPPER_STACK_SIZE : 0
-APEX_PAPI_METRICS : 
-APEX_PLUGINS : 
-APEX_PLUGINS_PATH : ./
+$ APEX_TAU=1 tau_exec -T serial -loadlib=/home/users/jalcaraz/tau2/x86_64/lib/libapex.so ./matmult       ___  ______ _______   __
+ / _ \ | ___ \  ___\ \ / /
+/ /_\ \| |_/ / |__  \ V /
+|  _  ||  __/|  __| /   \
+| | | || |   | |___/ /^\ \
+\_| |_/\_|   \____/\/   \/
+
+APEX Version: v2.7.0-6edfb929-HEAD
+Built on: 03:59:15 May 28 2025 (RelWithDebInfo)
+C++ Language Standard version : 201703
+GCC Compiler version : 11.4.0
+Configured features: Pthread, BFD, PLUGINS
+
+Executing command line: ./matmult
+
 Spawned thread 1...
 Spawned thread 2...
 Spawned thread 3...
 Done.
-CPU is 2.40043e+09 Hz.
-Elapsed time: 0.621796
-Cores detected: 24
-Worker Threads observed: 4
-Available CPU time: 2.48718
-Action                         :  #calls  |  minimum |    mean  |  maximum |   total  |  stddev  |  % total  
-------------------------------------------------------------------------------------------------------------
-                   CPU Guest % :        1      0.000      0.000      0.000      0.000      0.000    --n/a-- 
-                CPU I/O Wait % :        1      0.000      0.000      0.000      0.000      0.000    --n/a-- 
-                     CPU IRQ % :        1      0.000      0.000      0.000      0.000      0.000    --n/a-- 
-                    CPU Idle % :        1     87.895     87.895     87.895     87.895      0.000    --n/a-- 
-                    CPU Nice % :        1      0.000      0.000      0.000      0.000      0.000    --n/a-- 
-                   CPU Steal % :        1      0.000      0.000      0.000      0.000      0.000    --n/a-- 
-                  CPU System % :        1      0.672      0.672      0.672      0.672      0.000    --n/a-- 
-                    CPU User % :        1     11.432     11.432     11.432     11.432      0.000    --n/a-- 
-                CPU soft IRQ % :        1      0.000      0.000      0.000      0.000      0.000    --n/a-- 
-                allocateMatrix :       12    --n/a--   2.27e-02    --n/a--   2.72e-01    --n/a--     10.945
-                       compute :        4    --n/a--   3.43e-01    --n/a--   1.37e+00    --n/a--     55.168
-           compute_interchange :        4    --n/a--   7.68e-02    --n/a--   3.07e-01    --n/a--     12.347
-                       do_work :        4    --n/a--   4.91e-01    --n/a--   1.96e+00    --n/a--     78.886
-                    freeMatrix :       12    --n/a--   2.87e-05    --n/a--   3.45e-04    --n/a--      0.014
-                    initialize :       12    --n/a--   7.48e-04    --n/a--   8.98e-03    --n/a--      0.361
-                          main :        1    --n/a--   6.20e-01    --n/a--   6.20e-01    --n/a--     24.921
-                     APEX Idle :  --n/a--    --n/a--    --n/a--    --n/a--    --n/a--    --n/a--    --n/a--   
-------------------------------------------------------------------------------------------------------------
+
+$pprof
+
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0           18          235           1           1     235509 .TAU application
+ 92.1            2          216           1           2     216912 taupreload_main
+ 91.2        0.015          214           1           1     214783 int apex_preload_main(int, char**, char**)
+ 91.2        0.344          214           1           7     214768 main
+ 83.3        0.073          196           1          11     196082 do_work
+ 59.2          139          139           1           0     139320 compute
+ 22.3           52           52           1           0      52468 compute_interchange
+  7.7           18           18           3           0       6083 pthread_join
+  1.5            3            3           3           0       1189 allocateMatrix
+  0.3        0.614        0.614           3           0        205 initialize
+  0.1        0.138        0.138           4           0         34 pthread_create
+  0.0         0.04         0.04           3           0         13 freeMatrix
+---------------------------------------------------------------------------------------
+
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         1        2.5        2.5        2.5          0  1 Minute Load average
+         1        2.5        2.5        2.5          0  1 Minute Load average : do_work => allocateMatrix
+         1          5          5          5          0  status:Threads
+         1          5          5          5          0  status:Threads : do_work => allocateMatrix
+         1  3.448E+04  3.448E+04  3.448E+04          0  status:VmData kB
+         1  3.448E+04  3.448E+04  3.448E+04          0  status:VmData kB : do_work => allocateMatrix
+         1          8          8          8          0  status:VmExe kB
+         1          8          8          8          0  status:VmExe kB : do_work => allocateMatrix
+         1       7340       7340       7340          0  status:VmHWM kB
+         1       7340       7340       7340          0  status:VmHWM kB : do_work => allocateMatrix
+         1          0          0          0          0  status:VmLck kB
+         1          0          0          0          0  status:VmLck kB : do_work => allocateMatrix
+         1       6216       6216       6216          0  status:VmLib kB
+         1       6216       6216       6216          0  status:VmLib kB : do_work => allocateMatrix
+         1         92         92         92          0  status:VmPTE kB
+         1         92         92         92          0  status:VmPTE kB : do_work => allocateMatrix
+         1  3.548E+05  3.548E+05  3.548E+05          0  status:VmPeak kB
+         1  3.548E+05  3.548E+05  3.548E+05          0  status:VmPeak kB : do_work => allocateMatrix
+         1          0          0          0          0  status:VmPin kB
+         1          0          0          0          0  status:VmPin kB : do_work => allocateMatrix
+         1       7340       7340       7340          0  status:VmRSS kB
+         1       7340       7340       7340          0  status:VmRSS kB : do_work => allocateMatrix
+         1  3.063E+05  3.063E+05  3.063E+05          0  status:VmSize kB
+         1  3.063E+05  3.063E+05  3.063E+05          0  status:VmSize kB : do_work => allocateMatrix
+         1        132        132        132          0  status:VmStk kB
+         1        132        132        132          0  status:VmStk kB : do_work => allocateMatrix
+         1          0          0          0          0  status:VmSwap kB
+         1          0          0          0          0  status:VmSwap kB : do_work => allocateMatrix
+         1          0          0          0          0  status:nonvoluntary_ctxt_switches
+         1          0          0          0          0  status:nonvoluntary_ctxt_switches : do_work => allocateMatrix
+         1         11         11         11          0  status:voluntary_ctxt_switches
+         1         11         11         11          0  status:voluntary_ctxt_switches : do_work => allocateMatrix
+---------------------------------------------------------------------------------------
+
+NODE 0;CONTEXT 0;THREAD 1:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0        0.561          214           1           1     214781 .TAU application
+ 99.7        0.081          214           1           1     214220 [PTHREAD] addr=<0x7fa7b1a7b240>
+ 99.7          214          214           1           0     214139 proc_data_reader::read_proc
+
+NODE 0;CONTEXT 0;THREAD 2:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0           12          199           1           1     199234 .TAU application
+ 93.9        0.039          187           1           1     187172 [PTHREAD] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_data() const
+ 93.9         0.04          187           1          11     187133 do_work
+ 66.4          132          132           1           0     132276 compute
+ 20.2           40           40           1           0      40178 compute_interchange
+  7.0           14           14           3           0       4680 allocateMatrix
+  0.3        0.557        0.557           3           0        186 initialize
+  0.0        0.043        0.043           3           0         14 freeMatrix
+
+NODE 0;CONTEXT 0;THREAD 3:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0           12          200           1           1     200790 .TAU application
+ 94.0        0.036          188           1           1     188723 [PTHREAD] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_data() const
+ 94.0        0.041          188           1          11     188687 do_work
+ 66.5          133          133           1           0     133564 compute
+ 20.0           40           40           1           0      40224 compute_interchange
+  7.1           14           14           3           0       4741 allocateMatrix
+  0.3        0.593        0.593           3           0        198 initialize
+  0.0        0.041        0.041           3           0         14 freeMatrix
+
+NODE 0;CONTEXT 0;THREAD 4:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0           12          213           1           1     213145 .TAU application
+ 94.4        0.044          201           1           1     201109 [PTHREAD] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_data() const
+ 94.3        0.043          201           1          11     201065 do_work
+ 64.5          137          137           1           0     137432 compute
+ 22.9           48           48           1           0      48835 compute_interchange
+  6.6           14           14           3           0       4706 allocateMatrix
+  0.3        0.589        0.589           3           0        196 initialize
+  0.0        0.048        0.048           3           0         16 freeMatrix
+
+FUNCTION SUMMARY (total):
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0           55        1,063           5           5     212692 .TAU application
+ 72.7        0.197          772           4          44     193242 do_work
+ 54.3        0.119          577           3           3     192335 [PTHREAD] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_data() const
+ 51.0          542          542           4           0     135648 compute
+ 20.4            2          216           1           2     216912 taupreload_main
+ 20.2        0.015          214           1           1     214783 int apex_preload_main(int, char**, char**)
+ 20.2        0.344          214           1           7     214768 main
+ 20.1        0.081          214           1           1     214220 [PTHREAD] addr=<0x7fa7b1a7b240>
+ 20.1          214          214           1           0     214139 proc_data_reader::read_proc
+ 17.1          181          181           4           0      45426 compute_interchange
+  4.3           45           45          12           0       3829 allocateMatrix
+  1.7           18           18           3           0       6083 pthread_join
+  0.2            2            2          12           0        196 initialize
+  0.0        0.172        0.172          12           0         14 freeMatrix
+  0.0        0.138        0.138           4           0         34 pthread_create
+
+FUNCTION SUMMARY (mean):
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0           11          212           1           1     212692 .TAU application
+ 72.7       0.0394          154         0.8         8.8     193242 do_work
+ 54.3       0.0238          115         0.6         0.6     192335 [PTHREAD] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_data() const
+ 51.0          108          108         0.8           0     135648 compute
+ 20.4        0.417           43         0.2         0.4     216912 taupreload_main
+ 20.2        0.003           42         0.2         0.2     214783 int apex_preload_main(int, char**, char**)
+ 20.2       0.0688           42         0.2         1.4     214768 main
+ 20.1       0.0162           42         0.2         0.2     214220 [PTHREAD] addr=<0x7fa7b1a7b240>
+ 20.1           42           42         0.2           0     214139 proc_data_reader::read_proc
+ 17.1           36           36         0.8           0      45426 compute_interchange
+  4.3            9            9         2.4           0       3829 allocateMatrix
+  1.7            3            3         0.6           0       6083 pthread_join
+  0.2        0.471        0.471         2.4           0        196 initialize
+  0.0       0.0344       0.0344         2.4           0         14 freeMatrix
+  0.0       0.0276       0.0276         0.8           0         34 pthread_create
 
 
-...or...
 
 $ cd openmp_cpp
 $ make
-$ export APEX_SCREEN_OUPTUT=1
-$ ./openmp_test 
-Registering OMPT events...done.
-v0.5-rc0-4b144d8-develop
-Built on: 16:26:41 Apr 25 2016
-C++ Language Standard version : 201300
-GCC Compiler version : 4.9.3
-APEX_DISABLE : 0
-APEX_SUSPEND : 0
-APEX_PAPI_SUSPEND : 0
-APEX_TAU : 1
-APEX_POLICY : 1
-APEX_MEASURE_CONCURRENCY : 0
-APEX_MEASURE_CONCURRENCY_PERIOD : 1000000
-APEX_SCREEN_OUTPUT : 1
-APEX_PROFILE_OUTPUT : 0
-APEX_CSV_OUTPUT : 0
-APEX_TASKGRAPH_OUTPUT : 0
-APEX_PROC_CPUINFO : 0
-APEX_PROC_MEMINFO : 0
-APEX_PROC_NET_DEV : 0
-APEX_PROC_SELF_STATUS : 0
-APEX_PROC_STAT : 1
-APEX_THROTTLE_CONCURRENCY : 0
-APEX_THROTTLING_MAX_THREADS : 24
-APEX_THROTTLING_MIN_THREADS : 1
-APEX_THROTTLE_ENERGY : 0
-APEX_THROTTLING_MAX_WATTS : 300
-APEX_THROTTLING_MIN_WATTS : 150
-APEX_PTHREAD_WRAPPER_STACK_SIZE : 0
-APEX_PAPI_METRICS : 
-APEX_PLUGINS : 
-APEX_PLUGINS_PATH : ./
+$ OMP_NUM_THREADS=4 APEX_TAU=1 tau_exec -T serial -loadlib=/home/users/jalcaraz/tau2/x86_64/lib/libapex.so ./openmp_test
+  ___  ______ _______   __
+ / _ \ | ___ \  ___\ \ / /
+/ /_\ \| |_/ / |__  \ V /
+|  _  ||  __/|  __| /   \
+| | | || |   | |___/ /^\ \
+\_| |_/\_|   \____/\/   \/
+
+APEX Version: v2.7.1-06cf1ff3-develop
+Built on: 04:40:43 May 28 2025 (RelWithDebInfo)
+C++ Language Standard version : 201703
+Intel Compiler version : Intel(R) oneAPI DPC++/C++ Compiler 2025.0.4 (2025.0.4.20241205)
+Configured features: Pthread, BFD, PLUGINS
+
+Executing command line: ./openmp_test
+
 Initializing...
 Initializing...
 True sharing...
-Result: 43049100.372098
+Result: 50602349.757802
 Reduction sharing...
-Result: 43049100.362144
+Result: 50602349.771012
 False sharing...
-Result: 43049100.362144
+Result: 50602349.765872
 No Sharing...
-Result: 43049100.362144
-CPU is 2.40037e+09 Hz.
-Elapsed time: 1.74094
-Cores detected: 24
-Worker Threads observed: 24
-Available CPU time: 41.7827
-Action                         :  #calls  |  minimum |    mean  |  maximum |   total  |  stddev  |  % total  
-------------------------------------------------------------------------------------------------------------
-                   CPU Guest % :        2      0.000      0.000      0.000      0.000      0.000    --n/a-- 
-                CPU I/O Wait % :        2      0.000      0.000      0.000      0.000      0.000    --n/a-- 
-                     CPU IRQ % :        2      0.000      0.000      0.000      0.000      0.000    --n/a-- 
-                    CPU Idle % :        2     34.374     46.194     58.014     92.387     11.820    --n/a-- 
-                    CPU Nice % :        2      0.000      0.000      0.000      0.000      0.000    --n/a-- 
-                   CPU Steal % :        2      0.000      0.000      0.000      0.000      0.000    --n/a-- 
-                  CPU System % :        2      0.169      0.542      0.916      1.085      0.373    --n/a-- 
-                    CPU User % :        2     41.817     53.243     64.669    106.486     11.426    --n/a-- 
-                CPU soft IRQ % :        2      0.000      0.021      0.042      0.042      0.021    --n/a-- 
-OpenMP_PARALLEL_REGION: ope... :        1    --n/a--   3.21e-02    --n/a--   3.21e-02    --n/a--      0.077
-OpenMP_PARALLEL_REGION: tru... :        1    --n/a--   1.60e+00    --n/a--   1.60e+00    --n/a--      3.825
-OpenMP_PARALLEL_REGION: fal... :        1    --n/a--   2.69e-02    --n/a--   2.69e-02    --n/a--      0.064
-OpenMP_PARALLEL_REGION: no_... :        1    --n/a--   2.63e-02    --n/a--   2.63e-02    --n/a--      0.063
-OpenMP_PARALLEL_REGION: my_... :        2    --n/a--   2.76e-02    --n/a--   5.52e-02    --n/a--      0.132
-                     APEX Idle :  --n/a--    --n/a--    --n/a--    --n/a--   4.00e+01    --n/a--     95.839
-------------------------------------------------------------------------------------------------------------
+Result: 50602349.765872
+
+
+$ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0           19        1,206           1           1    1206143 .TAU application
+ 98.4            8        1,187           1           1    1187077 int taupreload_main(int, char **, char **)
+ 97.7           82        1,178           1           6    1178340 int apex_preload_main(int, char **, char **)
+ 80.7          973          973           1           0     973376 OpenMP_Parallel_Region true_sharing(double*, double*)
+  6.2           74           74           1           0      74896 OpenMP_Parallel_Region openmp_reduction(double*, double*)
+  3.2           38           38           2           0      19198 OpenMP_Parallel_Region main
+  0.4            4            4           1           0       4690 OpenMP_Parallel_Region false_sharing(double*, double*)
+  0.4            4            4           1           0       4632 OpenMP_Parallel_Region no_sharing(double*, double*)
+---------------------------------------------------------------------------------------
+
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         2       2.12       2.12       2.12          0  1 Minute Load average
+         1       2.12       2.12       2.12          0  1 Minute Load average : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1       2.12       2.12       2.12          0  1 Minute Load average : int taupreload_main(int, char **, char **)
+         1          0          0          0          0  CPU Guest %
+         1          0          0          0          0  CPU Guest % : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1    0.02494    0.02494    0.02494  3.293E-10  CPU I/O Wait %
+         1    0.02494    0.02494    0.02494  3.293E-10  CPU I/O Wait % : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1          0          0          0          0  CPU IRQ %
+         1          0          0          0          0  CPU IRQ % : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1      85.44      85.44      85.44          0  CPU Idle %
+         1      85.44      85.44      85.44          0  CPU Idle % : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1          0          0          0          0  CPU Nice %
+         1          0          0          0          0  CPU Nice % : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1          0          0          0          0  CPU Steal %
+         1          0          0          0          0  CPU Steal % : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1      1.945      1.945      1.945  2.107E-08  CPU System %
+         1      1.945      1.945      1.945  2.107E-08  CPU System % : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1      12.42      12.42      12.42  3.372E-07  CPU User %
+         1      12.42      12.42      12.42  3.372E-07  CPU User % : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1     0.1746     0.1746     0.1746  2.634E-09  CPU soft IRQ %
+         1     0.1746     0.1746     0.1746  2.634E-09  CPU soft IRQ % : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1          0          0          0          0  DRAM Energy
+         1          0          0          0          0  DRAM Energy : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1          0          0          0          0  Package-0 Energy
+         1          0          0          0          0  Package-0 Energy : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         2          5          2        3.5        1.5  status:Threads
+         1          5          5          5          0  status:Threads : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1          2          2          2          0  status:Threads : int taupreload_main(int, char **, char **)
+         2  3.115E+05  2.719E+05  2.917E+05  1.979E+04  status:VmData kB
+         1  3.115E+05  3.115E+05  3.115E+05          0  status:VmData kB : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1  2.719E+05  2.719E+05  2.719E+05          0  status:VmData kB : int taupreload_main(int, char **, char **)
+         2         68         68         68          0  status:VmExe kB
+         1         68         68         68          0  status:VmExe kB : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1         68         68         68          0  status:VmExe kB : int taupreload_main(int, char **, char **)
+         2  2.766E+05  1.015E+04  1.434E+05  1.332E+05  status:VmHWM kB
+         1  2.766E+05  2.766E+05  2.766E+05          0  status:VmHWM kB : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1  1.015E+04  1.015E+04  1.015E+04          0  status:VmHWM kB : int taupreload_main(int, char **, char **)
+         2          0          0          0          0  status:VmLck kB
+         1          0          0          0          0  status:VmLck kB : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1          0          0          0          0  status:VmLck kB : int taupreload_main(int, char **, char **)
+         2  2.124E+04  2.064E+04  2.094E+04        300  status:VmLib kB
+         1  2.124E+04  2.124E+04  2.124E+04          0  status:VmLib kB : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1  2.064E+04  2.064E+04  2.064E+04          0  status:VmLib kB : int taupreload_main(int, char **, char **)
+         2        652         92        372        280  status:VmPTE kB
+         1        652        652        652          0  status:VmPTE kB : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1         92         92         92          0  status:VmPTE kB : int taupreload_main(int, char **, char **)
+         2  6.854E+05  4.449E+05  5.651E+05  1.203E+05  status:VmPeak kB
+         1  6.854E+05  6.854E+05  6.854E+05          0  status:VmPeak kB : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1  4.449E+05  4.449E+05  4.449E+05          0  status:VmPeak kB : int taupreload_main(int, char **, char **)
+         2          0          0          0          0  status:VmPin kB
+         1          0          0          0          0  status:VmPin kB : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1          0          0          0          0  status:VmPin kB : int taupreload_main(int, char **, char **)
+         2  2.766E+05  1.015E+04  1.434E+05  1.332E+05  status:VmRSS kB
+         1  2.766E+05  2.766E+05  2.766E+05          0  status:VmRSS kB : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1  1.015E+04  1.015E+04  1.015E+04          0  status:VmRSS kB : int taupreload_main(int, char **, char **)
+         2  6.199E+05  3.793E+05  4.996E+05  1.203E+05  status:VmSize kB
+         1  6.199E+05  6.199E+05  6.199E+05          0  status:VmSize kB : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1  3.793E+05  3.793E+05  3.793E+05          0  status:VmSize kB : int taupreload_main(int, char **, char **)
+         2        136        136        136          0  status:VmStk kB
+         1        136        136        136          0  status:VmStk kB : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1        136        136        136          0  status:VmStk kB : int taupreload_main(int, char **, char **)
+         2          0          0          0          0  status:VmSwap kB
+         1          0          0          0          0  status:VmSwap kB : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1          0          0          0          0  status:VmSwap kB : int taupreload_main(int, char **, char **)
+         2        247          1        124        123  status:nonvoluntary_ctxt_switches
+         1        247        247        247          0  status:nonvoluntary_ctxt_switches : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1          1          1          1          0  status:nonvoluntary_ctxt_switches : int taupreload_main(int, char **, char **)
+         2         87         68       77.5        9.5  status:voluntary_ctxt_switches
+         1         87         87         87          0  status:voluntary_ctxt_switches : int apex_preload_main(int, char **, char **) => OpenMP_Parallel_Region true_sharing(double*, double*)
+         1         68         68         68          0  status:voluntary_ctxt_switches : int taupreload_main(int, char **, char **)
+---------------------------------------------------------------------------------------
+
+NODE 0;CONTEXT 0;THREAD 1:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0            3        1,183           1           1    1183071 .TAU application
+ 99.7        1,179        1,180           1           1    1180026 proc_data_reader::read_proc
+  0.0        0.268        0.268           1           0        268 proc_data_reader::read_proc: main loop
+
+NODE 0;CONTEXT 0;THREAD 2:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0        0.016        1,098           1           1    1098452 .TAU application
+100.0        1,098        1,098           1           0    1098436 OpenMP_Thread_Type_ompt_thread_worker
+
+NODE 0;CONTEXT 0;THREAD 3:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0        0.033        1,097           1           1    1097669 .TAU application
+100.0        1,097        1,097           1           0    1097636 OpenMP_Thread_Type_ompt_thread_worker
+
+NODE 0;CONTEXT 0;THREAD 4:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0         0.03        1,095           1           1    1095895 .TAU application
+100.0        1,095        1,095           1           0    1095865 OpenMP_Thread_Type_ompt_thread_worker
+
+FUNCTION SUMMARY (total):
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0           22        5,681           5           5    1136246 .TAU application
+ 57.9        3,291        3,291           3           0    1097312 OpenMP_Thread_Type_ompt_thread_worker
+ 20.9            8        1,187           1           1    1187077 int taupreload_main(int, char **, char **)
+ 20.8        1,179        1,180           1           1    1180026 proc_data_reader::read_proc
+ 20.7           82        1,178           1           6    1178340 int apex_preload_main(int, char **, char **)
+ 17.1          973          973           1           0     973376 OpenMP_Parallel_Region true_sharing(double*, double*)
+  1.3           74           74           1           0      74896 OpenMP_Parallel_Region openmp_reduction(double*, double*)
+  0.7           38           38           2           0      19198 OpenMP_Parallel_Region main
+  0.1            4            4           1           0       4690 OpenMP_Parallel_Region false_sharing(double*, double*)
+  0.1            4            4           1           0       4632 OpenMP_Parallel_Region no_sharing(double*, double*)
+  0.0        0.268        0.268           1           0        268 proc_data_reader::read_proc: main loop
+
+FUNCTION SUMMARY (mean):
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0            4        1,136           1           1    1136246 .TAU application
+ 57.9          658          658         0.6           0    1097312 OpenMP_Thread_Type_ompt_thread_worker
+ 20.9            1          237         0.2         0.2    1187077 int taupreload_main(int, char **, char **)
+ 20.8          235          236         0.2         0.2    1180026 proc_data_reader::read_proc
+ 20.7           16          235         0.2         1.2    1178340 int apex_preload_main(int, char **, char **)
+ 17.1          194          194         0.2           0     973376 OpenMP_Parallel_Region true_sharing(double*, double*)
+  1.3           14           14         0.2           0      74896 OpenMP_Parallel_Region openmp_reduction(double*, double*)
+  0.7            7            7         0.4           0      19198 OpenMP_Parallel_Region main
+  0.1        0.938        0.938         0.2           0       4690 OpenMP_Parallel_Region false_sharing(double*, double*)
+  0.1        0.926        0.926         0.2           0       4632 OpenMP_Parallel_Region no_sharing(double*, double*)
+  0.0       0.0536       0.0536         0.2           0        268 proc_data_reader::read_proc: main loop
+
 
