@@ -316,18 +316,24 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 //If instruction not found, skip. It should not happen
                 if(elem == code_object_map.end())
                 {
+                    #ifdef ROCSDK_PC_DEBUG
                     std::cout << "Instruction not found" << std::endl;
+                    #endif
                     continue;
                 }
                 if(elem->second.kernel_name.empty())
                 {
+                    #ifdef ROCSDK_PC_DEBUG
                     std::cout << "Kernel name not found" << std::endl;
+                    #endif
                     continue;
                 }
 
                 if(elem->second.inst.empty())
                 {
+                    #ifdef ROCSDK_PC_DEBUG
                     std::cout << "Instruction  not found" << std::endl;
+                    #endif
                     continue;
                 }
                 
@@ -896,14 +902,11 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
     
   int enabled_sampling = enable_pc_sampling();
   if(!enabled_sampling)
-  {
-    std::cout << "Disabled ROCm pc sampling" << std::endl;
     return 0;
-  }
   else if(enabled_hc)
     return 1;
 
-  std::cout << "Enabling ROCm PC sampling..." << std::endl;
+  TAU_VERBOSE("Enabling ROCm PC sampling...\n");
   pc_buffer_ids = new pc_sampling_buffer_id_vec_t();
 
   tool_agent_info_vec_t pc_gpu_agents = {};
@@ -954,8 +957,6 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
         pc_buffer_ids->emplace_back(buffer_id);
     }
   }
-  
-  std::cout << "Enabled ROCM pc sampling" << std::endl;
   return 1;
 }
 
