@@ -37,6 +37,9 @@ int GPTLinitialize (void) {
 
     if(gptl_handle == NULL) {
         gptl_handle = (void *)dlopen(gptl_orig_libname, RTLD_NOW);
+        if(gptl_handle == NULL) {
+            fprintf(stderr, "TAU: Warning: could not load GPTL library %s. Is it in your LD_LIBRARY_PATH?\n%s\n", gptl_orig_libname, dlerror());
+        }
     }
 
     if(gptl_handle != NULL) {
