@@ -11,10 +11,12 @@
 #include "gptl.h"
 
 static bool gptl_enabled = true;
+static char * gptl_prefix = NULL;
 
 extern void Tau_profile_exit_all_threads(void);
 extern int Tau_init_initializeTAU(void);
 extern void Tau_pure_increment(const char * n, double time, int calls);
+
 
 #define TAU_GPTL_UNIMPLEMENTED() \
     do { \
@@ -25,7 +27,49 @@ extern void Tau_pure_increment(const char * n, double time, int calls);
         } \
     } while(0)
 
+static char * gptl_prefixed_name(const char * name) {
+    char * result;
+    if(gptl_prefix != NULL) {
+        size_t len = strlen(name) + strlen(gptl_prefix);
+        char prefixed_name[len + 1];
+        snprintf(result, sizeof(prefixed_name), "%s%s", gptl_prefix, name);
+        result = strdup(prefixed_name);
+    } else {
+        result = strdup(name);
+    }
+    return result;
+}
 
+static void gptl_tau_start(const char * name) {
+    if(gptl_prefix != NULL) {
+        char * timername = gptl_prefixed_name(name);
+        TAU_START(timername);
+        free(timername);
+    } else {
+        TAU_START(name);
+    }
+}
+
+static void gptl_tau_stop(const char * name) {
+    if(gptl_prefix != NULL) {
+        char * timername = gptl_prefixed_name(name);
+        TAU_STOP(timername);
+        free(timername);
+    } else {
+        TAU_STOP(name);
+    }
+}
+
+static void gptl_tau_increment(const char * name, const double add_time, const int add_count) {
+    if(gptl_prefix != NULL) {
+        char * timername = gptl_prefixed_name(name);
+        // GPTL uses seconds for time
+        Tau_pure_increment(timername, add_time * 1000.0 * 1000.0, add_count);
+        free(timername);
+    } else {
+        Tau_pure_increment(name, add_time * 1000.0 * 1000.0, add_count);
+    }
+}
 
 int GPTLinitialize (void) {
     int result = 0;
@@ -75,7 +119,7 @@ int GPTLstart (const char * name) {
     }
 
     if(gptl_enabled) {
-        TAU_START(name);
+        gptl_tau_start(name);
     }
     return result;
 }
@@ -107,7 +151,7 @@ int GPTLstart_handle (const char * name, int * handle) {
     }
 
     if(gptl_enabled) {
-        TAU_START(name);
+        gptl_tau_start(name);
     }
     return result;
 }
@@ -124,7 +168,7 @@ int GPTLstop (const char * name) {
     }
 
     if(gptl_enabled) {
-        TAU_STOP(name);
+        gptl_tau_stop(name);
     }
     return result;
 }
@@ -141,7 +185,7 @@ int GPTLstop_handle (const char * name, int * handle) {
     }
 
     if(gptl_enabled) {
-        TAU_STOP(name);
+        gptl_tau_stop(name);
     }
     return result;
 }
@@ -403,8 +447,9 @@ int GPTLstartstop_val (const char *name, double value)   {
         result = (*GPTLstartstop_val_h)(name, value);
     }
 
-    // TODO is unit conversion needed?
-    Tau_pure_increment(name, value, 1);
+    if(gptl_enabled) {
+        gptl_tau_increment(name, value, 1);
+    }
     return result;
 } 
 
@@ -533,4 +578,199 @@ int GPTLget_count (const char *timername, int t, int *count)   {
 
     return result;
 } 
+
+// E3SM-specific functions
+
+int GPTLprefix_set(const char * prefixname) {
+    int result = 0;
+
+    static int (*GPTLprefix_set_h)(const char * prefixname) = NULL;
+    if(GPTLprefix_set_h == NULL) {
+        GPTLprefix_set_h = dlsym(RTLD_NEXT, "GPTLprefix_set");
+    }
+    if(GPTLprefix_set_h != NULL) {
+        result = (*GPTLprefix_set_h)(prefixname);
+    }
+
+    if(gptl_prefix != NULL) {
+        free(gptl_prefix);
+    }
+    gptl_prefix = strdup(prefixname);
+
+    return result;
+}
+
+int GPTLprefix_setf(const char * prefixname, const int prefixlen) {
+    int result = 0;
+
+    static int (*GPTLprefix_setf_h)(const char * prefixname, const int prefixlen) = NULL;
+    if(GPTLprefix_setf_h == NULL) {
+        GPTLprefix_setf_h = dlsym(RTLD_NEXT, "GPTLprefix_setf");
+    }
+    if(GPTLprefix_setf_h != NULL) {
+        result = (*GPTLprefix_setf_h)(prefixname, prefixlen);
+    }
+
+    if(gptl_prefix != NULL) {
+        free(gptl_prefix);
+    }
+
+    char * nullterm_name = (char *)malloc(prefixlen + 1);
+    memcpy(nullterm_name, prefixname, prefixlen);
+    nullterm_name[prefixlen] = '\0';
+    gptl_prefix = nullterm_name;
+    return result;
+}
+
+int GPTLprefix_unset(void) {
+    int result = 0;
+
+    static int (*GPTLprefix_unset_h)(void) = NULL;
+    if(GPTLprefix_unset_h == NULL) {
+        GPTLprefix_unset_h = dlsym(RTLD_NEXT, "GPTLprefix_unset");
+    }
+    if(GPTLprefix_unset_h != NULL) {
+        result = (*GPTLprefix_unset_h)();
+    }
+
+    if(gptl_prefix != NULL) {
+        free(gptl_prefix);
+    }
+
+    gptl_prefix = NULL;
+
+    return result;
+}
+
+int GPTLstartf(const char * timername, const int namelen) {
+    int result = 0;
+
+    static int (*GPTLstartf_h)(const char * timername, const int namelen) = NULL;
+    if(GPTLstartf_h == NULL) {
+        GPTLstartf_h = dlsym(RTLD_NEXT, "GPTLstartf");
+    }
+    if(GPTLstartf_h != NULL) {
+        result = (*GPTLstartf_h)(timername, namelen);
+    }
+
+    if(gptl_enabled) {
+        char nullterm_name[namelen + 1];
+        memcpy(nullterm_name, timername, namelen);
+        nullterm_name[namelen] = '\0';
+        gptl_tau_start(nullterm_name);
+    }
+
+    return result;
+}
+
+int GPTLstartf_handle (const char * timername, const int namelen, void ** handle) {
+    int result = 0;
+
+    static int (*GPTLstartf_handle_h)(const char * timername, const int namelen, void ** handle) = NULL;
+    if(GPTLstartf_handle_h == NULL) {
+        GPTLstartf_handle_h = dlsym(RTLD_NEXT, "GPTLstartf_handle");
+    }
+    if(GPTLstartf_handle_h != NULL) {
+        result = (*GPTLstartf_handle_h)(timername, namelen, handle);
+    }
+
+    if(gptl_enabled) {
+        char nullterm_name[namelen + 1];
+        memcpy(nullterm_name, timername, namelen);
+        nullterm_name[namelen] = '\0';
+        gptl_tau_start(nullterm_name);
+    }
+
+    return result;
+}
+
+
+int GPTLstopf (const char * timername, const int namelen) {
+    int result = 0;
+
+    static int (*GPTLstopf_h)(const char * timername, const int namelen) = NULL;
+    if(GPTLstopf_h == NULL) {
+        GPTLstopf_h = dlsym(RTLD_NEXT, "GPTLstopf");
+    }
+    if(GPTLstopf_h != NULL) {
+        result = (*GPTLstopf_h)(timername, namelen);
+    }
+
+    if(gptl_enabled) {
+        char nullterm_name[namelen + 1];
+        memcpy(nullterm_name, timername, namelen);
+        nullterm_name[namelen] = '\0';
+        gptl_tau_stop(nullterm_name);
+    }
+
+    return result;
+
+}
+
+
+int GPTLstopf_handle (const char * timername, const int namelen, void ** handle) {
+    int result = 0;
+
+    static int (*GPTLstopf_handle_h)(const char * timername, const int namelen, void ** handle) = NULL;
+    if(GPTLstopf_handle_h == NULL) {
+        GPTLstopf_handle_h = dlsym(RTLD_NEXT, "GPTLstopf_handle");
+    }
+    if(GPTLstopf_handle_h != NULL) {
+        result = (*GPTLstopf_handle_h)(timername, namelen, handle);
+    }
+
+    if(gptl_enabled) {
+        char nullterm_name[namelen + 1];
+        memcpy(nullterm_name, timername, namelen);
+        nullterm_name[namelen] = '\0';
+        gptl_tau_stop(nullterm_name);
+    }
+
+    return result;
+}
+
+int GPTLstartstop_vals (const char * timername, double add_time, int add_count) {
+    int result = 0;
+
+    static int (*GPTLstartstop_vals_h)(const char * timername, double add_time, int add_count)  = NULL;
+    if(GPTLstartstop_vals_h == NULL) {
+        GPTLstartstop_vals_h = dlsym(RTLD_NEXT, "GPTLstartstop_vals");
+    }
+    if(GPTLstartstop_vals_h != NULL) {
+        result = (*GPTLstartstop_vals_h)(timername, add_time, add_count);
+    }
+
+    if(gptl_enabled) {
+        gptl_tau_increment(timername, add_time, add_count);
+    }
+    return result;
+}
+
+int GPTLstartstop_valsf (const char * timername, const int namelen, double add_time, int add_count) {
+    int result = 0;
+
+    static int (*GPTLstartstop_valsf_h)(const char * timername, const int namelen, double add_time, int add_count)  = NULL;
+    if(GPTLstartstop_valsf_h == NULL) {
+        GPTLstartstop_valsf_h = dlsym(RTLD_NEXT, "GPTLstartstop_valsf");
+    }
+    if(GPTLstartstop_valsf_h != NULL) {
+        result = (*GPTLstartstop_valsf_h)(timername, namelen, add_time, add_count);
+    }
+
+    if(gptl_enabled) {
+        char nullterm_name[namelen + 1];
+        memcpy(nullterm_name, timername, namelen);
+        nullterm_name[namelen] = '\0';
+        gptl_tau_increment(nullterm_name, add_time, add_count);
+    }
+    return result;
+
+}
+
+
+
+
+
+
+
 
