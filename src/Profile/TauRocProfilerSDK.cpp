@@ -436,8 +436,6 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
   
   //TAU_VERBOSE("tool_tracing_callback\n");
 
-  static int disable_user_events = TauEnv_get_tracing();
-
   for(size_t i = 0; i < num_headers; ++i)
   {
     auto* header = headers[i];
@@ -652,8 +650,6 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         
         std::stringstream ss;
   			std::string tmp;
-  			void* ue = nullptr;
-  			double value;
         std::vector<TauSDKUserEvent> record_events;
 
         std::string event_name = "bytes copied : ";

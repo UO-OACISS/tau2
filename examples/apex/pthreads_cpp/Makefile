@@ -13,12 +13,14 @@
  
 TAU_MAKEFILE ?=../../../include/Makefile
 include $(TAU_MAKEFILE)
-CXX      =g++
+#CXX      =g++
+CC      = $(TAU_CC)
+CXX      = $(TAU_CXX)
 PRINT	      	=pr
 RM 	      	=/bin/rm -rf
 TARGET	      	=matmult
 OBJS     	=matmult.o matmult_initialize.o
-CXXFLAGS=-g -O3 -pthread -DPTHREADS $(shell PKG_CONFIG_PATH=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/pkgconfig pkg-config --cflags apex) -std=c++11
+CXXFLAGS=-g -O3 -pthread -DPTHREADS $(shell PKG_CONFIG_PATH=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/pkgconfig pkg-config --cflags apex) -std=c++17
 LDFLAGS=-g -O3 -pthread
 LIBS=$(shell PKG_CONFIG_PATH=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/pkgconfig pkg-config --libs apex)
 

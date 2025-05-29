@@ -180,7 +180,8 @@ extern void sdk_pc_sampling_flush();
 extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
 {
     #ifdef TAU_ENABLE_ROCPROFILERSDK_PC
-        printf("[TAU] PC Sampling not available for this rocprofiler-sdk version.\n");
+        if(TauEnv_get_rocsdk_pcs_enable())
+            printf("[TAU] PC Sampling not available for this rocprofiler-sdk version.\n");
     #else
         if(TauEnv_get_rocsdk_pcs_enable())
             printf("[TAU] PC Sampling not available for rocprofiler-sdk [compile with -elfutils=download]\n");
