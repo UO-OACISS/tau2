@@ -131,6 +131,22 @@ extern int GPTLget_eventvalue (const char *, const char *, int, double *);
 extern int GPTLnum_errors (void);
 extern int GPTLnum_warn (void);
 extern int GPTLget_count (const char *, int, int *);
+
+
+// E3SM-specific functions
+
+extern int GPTLprefix_set (const char *);
+extern int GPTLprefix_setf (const char *, const int);
+extern int GPTLprefix_unset (void);
+extern int GPTLstartf (const char *, const int);
+extern int GPTLstartf_handle (const char *, const int, void **);
+extern int GPTLstopf (const char *, const int);
+extern int GPTLstopf_handle (const char *, const int, void **);
+extern int GPTLstartstop_vals (const char *, double, int);
+extern int GPTLstartstop_valsf (const char *, const int, double, int);
+
+
+
 #ifdef __cplusplus
 }
 #endif
