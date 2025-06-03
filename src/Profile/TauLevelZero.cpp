@@ -6,9 +6,6 @@
 
 //#include "tool.h"
 
-#define CURRENT_L0_TAU_IMPL
-
-#ifdef CURRENT_L0_TAU_IMPL
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -51,14 +48,17 @@ static std::chrono::steady_clock::time_point start;
 static int gpu_task_id = -1;
 static int host_api_task_id = -1;
 static uint64_t first_cpu_timestamp = 0L;
-static uint64_t first_gpu_timestamp = 0L;
-static uint64_t last_gpu_timestamp = 0L;
+static uint64_t first_gpu_kernel_timestamp = 0L;
+static uint64_t first_gpu_api_timestamp = 0L;
+static uint64_t last_gpu_kernel_timestamp = 0L;
+static uint64_t last_gpu_api_timestamp = 0L;
 static uint64_t gpu_offset = 0L;
 static std::mutex gpu_mutex; // TODO investigate whether it makes more sense to use a task per thread
                              // instead of a single task for all threads, rather than locking
 static std::mutex queue_mutex;
 extern "C" void metric_set_gpu_timestamp(int tid, double value);
 
+static std::map<int, int> map_thread_queue;
 
 ///////////////////////////////////////////////////////////////////////////////
 void Tau_metric_set_synchronized_gpu_timestamp(int tid, double value) {
@@ -251,9 +251,9 @@ static void MetricPrintResults() {
 }
 #endif
 
-double TAUTranslateGPUtoCPUTimestamp(int tid, uint64_t gpu_ts) {
+double TAUTranslateGPUtoCPUAPITimestamp(int tid, uint64_t gpu_ts) {
   // gpu_ts is in nanoseconds. We need the CPU timestamp result in microseconds.
-  double cpu_ts = first_cpu_timestamp + ((gpu_ts - first_gpu_timestamp)/1e3);
+  double cpu_ts = first_cpu_timestamp + ((gpu_ts - first_gpu_api_timestamp)/1e3);
   // losing resolution from nanoseconds to microseconds.
   metric_set_gpu_timestamp(tid, cpu_ts);
   Tau_create_top_level_timer_if_necessary_task(tid);
@@ -261,10 +261,28 @@ double TAUTranslateGPUtoCPUTimestamp(int tid, uint64_t gpu_ts) {
   return cpu_ts;
 }
 
-bool TAUSetFirstGPUTimestamp(uint64_t gpu_ts) {
-  TAU_VERBOSE("TAU: First GPU Timestamp = %ld\n", gpu_ts);
-  if (first_gpu_timestamp == 0L) {
-    first_gpu_timestamp = gpu_ts;
+double TAUTranslateGPUtoCPUKernelTimestamp(int tid, uint64_t gpu_ts) {
+  // gpu_ts is in nanoseconds. We need the CPU timestamp result in microseconds.
+  double cpu_ts = first_cpu_timestamp + ((gpu_ts - first_gpu_kernel_timestamp)/1e3);
+  // losing resolution from nanoseconds to microseconds.
+  metric_set_gpu_timestamp(tid, cpu_ts);
+  Tau_create_top_level_timer_if_necessary_task(tid);
+
+  return cpu_ts;
+}
+
+bool TAUSetFirstGPUAPITimestamp(uint64_t gpu_ts) {
+  if (first_gpu_api_timestamp == 0L) {
+  TAU_VERBOSE("TAU: First GPU API Timestamp = %ld\n", gpu_ts);
+    first_gpu_api_timestamp = gpu_ts;
+  }
+  return true;
+}
+
+bool TAUSetFirstGPUKernelTimestamp(uint64_t gpu_ts) {
+  if (first_gpu_kernel_timestamp == 0L) {
+    TAU_VERBOSE("TAU: First GPU Kernel Timestamp = %ld\n", gpu_ts);
+    first_gpu_kernel_timestamp = gpu_ts;
   }
   return true;
 }
@@ -303,7 +321,7 @@ uint64_t popKernel() {
 
 void TAUOnAPIFinishCallback(void *data, const std::string& name, uint64_t started, uint64_t ended) {
   std::lock_guard<std::mutex> guard(gpu_mutex); // Lock before we start touching task-specific state
-  static bool first_ts = TAUSetFirstGPUTimestamp(started); 
+  static bool first_ts = TAUSetFirstGPUAPITimestamp(started); 
 
   int taskid = host_api_task_id;
   if(taskid == -1)
@@ -315,8 +333,8 @@ void TAUOnAPIFinishCallback(void *data, const std::string& name, uint64_t starte
 #ifdef TAU_DEBUG_L0
   fprintf(stderr, "pid=%d, tid=%d, myThread=%d, task=%d, func=%s\n", RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myThread(), taskid, name.c_str());
 #endif
-  double started_translated = TAUTranslateGPUtoCPUTimestamp(taskid, started);
-  double ended_translated = TAUTranslateGPUtoCPUTimestamp(taskid, ended);
+  double started_translated = TAUTranslateGPUtoCPUAPITimestamp(taskid, started);
+  double ended_translated = TAUTranslateGPUtoCPUAPITimestamp(taskid, ended);
   TAU_VERBOSE("TAU: OnAPIFinishCallback: (raw) name: %s started: %g ended: %g task id=%d\n",
 		  name.c_str(), started, ended, taskid);
   TAU_VERBOSE("TAU: OnAPIFinishCallback: (translated) name: %s started: %g ended: %g task id=%d\n",
@@ -339,7 +357,6 @@ void TAUOnAPIFinishCallback(void *data, const std::string& name, uint64_t starte
 //Only call inside functions that use lock_guard, not implemented lock inside to prevent deadlocks.
 int Tau_get_initialized_queues(int thread)
 {
-  static std::map<int, int> map_thread_queue;
   int queue_id;
   auto it = map_thread_queue.find(thread);
   //Metrics will only be shown in one thread for all L0 threads
@@ -365,16 +382,30 @@ int Tau_get_initialized_queues(int thread)
   return queue_id;
 }
 
+//Only call inside functions that use lock_guard, not implemented lock inside to prevent deadlocks.
+void Tau_remove_initialized_queues(uint64_t cpu_end_ts)
+{
+  std::map<int, int>::iterator it;
+  for(it = map_thread_queue.begin(); it != map_thread_queue.end(); it++)
+  {
+    int taskid = it->second;
+    metric_set_gpu_timestamp(taskid, cpu_end_ts);
+    Tau_stop_top_level_timer_if_necessary_task(taskid);    
+  }
+  map_thread_queue.clear();
+}
+
+
 void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t started, uint64_t ended) {
   std::lock_guard<std::mutex> guard(gpu_mutex); // Lock before we start touching task-specific state
 
-  static bool first_call = TAUSetFirstGPUTimestamp(started);
+  static bool first_call = TAUSetFirstGPUKernelTimestamp(started);
   int current_thread = RtsLayer::myThread();
   int taskid = Tau_get_initialized_queues(current_thread);
 
   const char *kernel_name = name.c_str();
-  double started_translated = TAUTranslateGPUtoCPUTimestamp(taskid, started);
-  double ended_translated = TAUTranslateGPUtoCPUTimestamp(taskid, ended);
+  double started_translated = TAUTranslateGPUtoCPUKernelTimestamp(taskid, started);
+  double ended_translated = TAUTranslateGPUtoCPUKernelTimestamp(taskid, ended);
 
   static std::string omp_off_string = "__omp_offloading";
   std::string event = "[L0] GPU: ";
@@ -413,7 +444,7 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
   TAU_VERBOSE("TAU: <kernel>: (raw) name: %s started: %g ended: %g task id=%d\n",
     name.c_str(),  started_translated, ended_translated, taskid);
 
-  last_gpu_timestamp = ended;
+  last_gpu_kernel_timestamp = ended;
   metric_set_gpu_timestamp(taskid, started_translated);
   TAU_START_TASK(demangled_name, taskid);
   // the user event for correlation IDs
@@ -540,182 +571,7 @@ void TauL0DisableProfiling() {
     delete metric_collector;
   }
   #endif
-  
-  //uint64_t gpu_end_ts = utils::i915::GetGpuTimestamp() & 0x0FFFFFFFF;
-  /*
-  uint64_t gpu_end_ts = utils::i915::GetGpuTimestamp();
-  std::cout <<"TAU: Latest GPU timestamp "<<gpu_end_ts<<std::endl;
-  */
-
-
-  uint64_t last_gpu_translated = TAUTranslateGPUtoCPUTimestamp(1, last_gpu_timestamp);
-  TAU_VERBOSE("TAU: Latest GPU timestamp (raw) =%ld\n", last_gpu_timestamp);
-  TAU_VERBOSE("TAU: Latest GPU timestamp (translated) =%ld\n",last_gpu_translated);
   uint64_t cpu_end_ts = TauTraceGetTimeStamp(0);
-
-  TAU_VERBOSE("TAU: Latest CPU timestamp =%ld\n", cpu_end_ts);
-  std::chrono::steady_clock::time_point chrono_end = std::chrono::steady_clock::now();
-  std::chrono::duration<uint64_t, std::nano> chrono_dt = chrono_end - start;
-  TAU_VERBOSE("TAU: Diff (chrono) =%ld \n", chrono_dt.count());
+  Tau_remove_initialized_queues(cpu_end_ts);
 }
 
-
-
-#else //#undef CURRENT_L0_TAU_IMPL //Using unitrace implementation
-/*
-#ifdef L0METRICS
-#include <Profile/L0/ze_metric_collector.h>
-#endif
-
-#ifdef L0METRICS
-static ZeMetricCollector* metric_collector = nullptr;
-#endif
-
-
-#ifdef L0METRICS
-
-struct Kernel {
-  uint64_t total_time;
-  uint64_t call_count;
-  float eu_active;
-  float eu_stall;
-
-  bool operator>(const Kernel& r) const {
-    if (total_time != r.total_time) {
-      return total_time > r.total_time;
-    }
-    return call_count > r.call_count;
-  }
-
-  bool operator!=(const Kernel& r) const {
-    if (total_time == r.total_time) {
-      return call_count != r.call_count;
-    }
-    return true;
-  }
-};
-
-double get_metric_value(zet_typed_value_t metric)
-{
-   switch (metric.type) {
-     case ZET_VALUE_TYPE_UINT32:{
-       return (float) metric.value.ui32;
-     }
-     case ZET_VALUE_TYPE_UINT64:{
-       return (float) metric.value.ui64;
-     }
-     case ZET_VALUE_TYPE_FLOAT32:{
-       return (float) metric.value.fp32;
-     }
-     case ZET_VALUE_TYPE_FLOAT64:{
-       return (float) metric.value.fp64;
-     }
-     case ZET_VALUE_TYPE_BOOL8:{
-       return (float) metric.value.b8;
-     }
-     default:{
-       return -1;
-       break;
-     }
-   }
-   
-   return -1;
-}
-
-static void MetricPrintResults() {
-
-  const KernelReportMap& kernel_report_map = metric_collector->GetKernelReportMap();
-  std::vector<std::string> metriclist = metric_collector->GetMetricList();
-  if (kernel_report_map.size() == 0) {
-    return;
-  }
-  
-  std::cerr << "=== Metric Results: ===" << std::endl;
-  for (auto& kernel : kernel_report_map) {
-  
-    std::cerr << "Results Kernel: "<< kernel.first.c_str() << std::endl;
-    std::vector<MetricReport> kernel_reports = kernel.second; 
-    int entry = 0;
-    for (auto& report_entry : kernel_reports) {
-      std::cerr << "Entry "<< entry << " : " << std::endl ;
-      entry++;
-      assert(report_entry.size() == metriclist.size());
-      int i;  
-      for ( i = 0; i < metriclist.size(); i++ ){
-        
-        double metric_value =get_metric_value(report_entry[i]);
-        std::cerr << "\t"<< metriclist[i].c_str() << "Value: " << metric_value << std::endl ;
-      }
-      std:cerr << std::endl;
-          
-          
-    }
-  }
-   std::cerr << "======" << std::endl;
-}
-#endif
-*/
-
-
-static ZeMetricProfiler* metric_profiler = nullptr;
-
-void TauL0EnableProfiling() 
-{
-
-  if (getenv("ZE_ENABLE_TRACING_LAYER") == NULL) 
-  {
-    // tau_exec -level_zero was not called. Perhaps it is using -opencl
-    TAU_VERBOSE("TAU: Disabling Level Zero support as ZE_ENABLE_TRACING_LAYER was not set from tau_exec -l0\n");
-    return;
-  }
-
-  ze_result_t status = ZE_RESULT_SUCCESS;
-  status = zeInit(ZE_INIT_FLAG_GPU_ONLY);
-  PTI_ASSERT(status == ZE_RESULT_SUCCESS);
-
-  metric_profiler = ZeMetricProfiler::Create(dir, logfile, idle_sampling);
-
-
-
-  /*
-  #ifdef L0METRICS
-  
-  std::string value;
-  //EBS Metric Groups  
-  std::string metric_group("ComputeBasic");
-  value = utils::GetEnv("L0_MetricGroup");
-  if (!value.empty()) {
-    metric_group = value;
-  }      
-  metric_collector = ZeMetricCollector::Create( driver, device, metric_group.c_str(), TAUOnMetricFinishCallback, nullptr);
-
-  if (metric_collector == nullptr) {
-    std::cout <<
-      "[WARNING] Unable to create metric collector" << std::endl;
-  }
-  #endif
-  */
-
-}
-
-void TauL0DisableProfiling()
-{
-
-  if (metric_profiler != nullptr) 
-  {
-    delete metric_profiler;
-  }
-
-  /*
-  #ifdef L0METRICS  
-  if (metric_collector != nullptr) {
-    metric_collector->DisableTracing();
-    if (TauEnv_get_verbose())
-      MetricPrintResults();
-    delete metric_collector;
-  }
-  #endif
-  */
-}
-
-#endif
