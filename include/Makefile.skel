@@ -1765,3 +1765,7 @@ TAU_SHLIBX              = .so
 # I had to comment the following out, with IBM make, this becomes the default
 # make target, so it will screw up any makefile that includes the TAU stub makefile
 #print-%:; @echo $($*)
+
+GPTL_DEFINES=                                 
+#E3SM#GPTL_DEFINES=-DTAU_GPTL_E3SM#ENDIF#
+

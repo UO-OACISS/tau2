@@ -8,16 +8,13 @@
 
 #include <dlfcn.h>
 
-#include "gptl.h"
+//#define TAU_GPTL_DEBUG
 
-static bool gptl_enabled = true;
-static char * gptl_prefix = NULL;
+#include "gptl.h"
 
 extern void Tau_profile_exit_all_threads(void);
 extern int Tau_init_initializeTAU(void);
 extern void Tau_pure_increment(const char * n, double time, int calls);
-
-#define TAU_GPTL_DEBUG
 
 #define TAU_GPTL_UNIMPLEMENTED() \
     do { \
@@ -44,6 +41,8 @@ extern void Tau_pure_increment(const char * n, double time, int calls);
 #define TAU_GPTL_LOG_NAME(name)
 #endif // TAU_GPTL_DEBUG
 
+static bool gptl_enabled = true;
+static char * gptl_prefix = NULL;
 
 static char * gptl_prefixed_name(const char * name) {
     TAU_GPTL_LOG_NAME(name);
@@ -165,11 +164,19 @@ int GPTLinit_handle (const char * name, int * result) {
     return status;
 }
 
+#ifdef TAU_GPTL_E3SM
+int GPTLstart_handle(const char * name, void ** handle) {
+#else
 int GPTLstart_handle (const char * name, int * handle) {
+#endif
     TAU_GPTL_LOG_NAME(name);
     int result = 0;
 
+#ifdef TAU_GPTL_E3SM
+    static int (*GPTLstart_handle_h)(const char * name, void ** handle) = NULL;
+#else
     static int (*GPTLstart_handle_h)(const char * name, int * handle) = NULL;
+#endif
     if(GPTLstart_handle_h == NULL) {
         GPTLstart_handle_h = dlsym(RTLD_NEXT, "GPTLstart_handle");
     }
@@ -201,11 +208,19 @@ int GPTLstop (const char * name) {
     return result;
 }
 
+#ifdef TAU_GPTL_E3SM
+int GPTLstop_handle (const char * name, void ** handle) {
+#else
 int GPTLstop_handle (const char * name, int * handle) {
+#endif
     TAU_GPTL_LOG_NAME(name);
     int result = 0;
 
+#ifdef TAU_GPTL_E3SM
+    static int (*GPTLstop_handle_h)(const char * name, void ** handle) = NULL;
+#else
     static int (*GPTLstop_handle_h)(const char * name, int * handle) = NULL;
+#endif
     if(GPTLstop_handle_h == NULL) {
         GPTLstop_handle_h = dlsym(RTLD_NEXT, "GPTLstop_handle");
     }
@@ -313,16 +328,28 @@ int GPTLfinalize (void) {
     return result;
 }
 
+#ifdef TAU_GPTL_E3SM
+int GPTLget_memusage (int *size, int *rss, int *share, int *text, int *datastack) {
+#else
 int GPTLget_memusage (float *usage) {
+#endif
     TAU_GPTL_LOG();
     int result = 0;
 
+#ifdef TAU_GPTL_E3SM
+    static int (*GPTLget_memusage_h)(int *size, int *rss, int *share, int *text, int *datastack) = NULL;
+#else
     static int (*GPTLget_memusage_h)(float * usage) = NULL;
+#endif
     if(GPTLget_memusage_h == NULL) {
         GPTLget_memusage_h = dlsym(RTLD_NEXT, "GPTLget_memusage");
     }
     if(GPTLget_memusage_h != NULL) {
+#ifdef TAU_GPTL_E3SM
+        result = (*GPTLget_memusage_h)(size, rss, share, text, datastack);
+#else
         result = (*GPTLget_memusage_h)(usage);
+#endif
     }
 
     return result;

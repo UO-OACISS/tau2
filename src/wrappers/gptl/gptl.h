@@ -100,16 +100,34 @@ extern int GPTLsetoption (const int, const int);
 extern int GPTLinitialize (void);
 extern int GPTLstart (const char *);
 extern int GPTLinit_handle (const char *, int *);
+
+#ifdef TAU_GPTL_E3SM
+extern int GPTLstart_handle (const char *, void **);
+#else
 extern int GPTLstart_handle (const char *, int *);
+#endif
+
 extern int GPTLstop (const char *);
+
+#ifdef TAU_GPTL_E3SM
+extern int GPTLstop_handle (const char *, void **);
+#else
 extern int GPTLstop_handle (const char *, int *);
+#endif
+
 extern int GPTLstamp (double *, double *, double *);
 extern int GPTLpr (const int);
 extern int GPTLpr_file (const char *);
 extern int GPTLreset (void);
 extern int GPTLreset_timer (const char *);
 extern int GPTLfinalize (void);
+
+#ifdef TAU_GPTL_E3SM
+extern int GPTLget_memusage (int *, int *, int *, int *, int *);
+#else
 extern int GPTLget_memusage (float *);
+#endif
+
 extern int GPTLprint_memusage (const char *);
 extern int GPTLprint_rusage (const char *);
 extern int GPTLget_procsiz (float *, float *);
