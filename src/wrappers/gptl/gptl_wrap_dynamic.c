@@ -32,12 +32,12 @@ extern void Tau_pure_increment(const char * n, double time, int calls);
 #ifdef TAU_GPTL_DEBUG
 #define TAU_GPTL_LOG() \
     do { \
-        fprintf(stderr, "%s\n", __func__); \
+        fprintf(stderr, "[TAU GPTL] %s\n", __func__); \
     } while(0)
 
 #define TAU_GPTL_LOG_NAME(name) \
     do { \
-        fprintf(stderr, "%s(%s)\n", __func__, name); \
+        fprintf(stderr, "[TAU GPTL] %s(\"%s\")\n", __func__, name); \
     } while(0)
 #else // TAU_GPTL_DEBUG
 #define TAU_GPTL_LOG()
@@ -483,7 +483,7 @@ int GPTLget_threadwork (const char *name, double *maxwork, double *imbal)   {
 } 
 
 int GPTLstartstop_val (const char *name, double value)   {
-    TAU_GPTL_LOG();
+    TAU_GPTL_LOG_NAME(name);
     int result = 0;
 
     static int (*GPTLstartstop_val_h)(const char * name, double value) = NULL;
