@@ -17,6 +17,7 @@ extern void Tau_profile_exit_all_threads(void);
 extern int Tau_init_initializeTAU(void);
 extern void Tau_pure_increment(const char * n, double time, int calls);
 
+#define TAU_GPTL_DEBUG
 
 #define TAU_GPTL_UNIMPLEMENTED() \
     do { \
@@ -27,7 +28,25 @@ extern void Tau_pure_increment(const char * n, double time, int calls);
         } \
     } while(0)
 
+
+#ifdef TAU_GPTL_DEBUG
+#define TAU_GPTL_LOG() \
+    do { \
+        fprintf(stderr, "%s\n", __func__); \
+    } while(0)
+
+#define TAU_GPTL_LOG_NAME(name) \
+    do { \
+        fprintf(stderr, "%s(%s)\n", __func__, name); \
+    } while(0)
+#else // TAU_GPTL_DEBUG
+#define TAU_GPTL_LOG()
+#define TAU_GPTL_LOG_NAME(name)
+#endif // TAU_GPTL_DEBUG
+
+
 static char * gptl_prefixed_name(const char * name) {
+    TAU_GPTL_LOG_NAME(name);
     char * result;
     if(gptl_prefix != NULL) {
         size_t len = strlen(name) + strlen(gptl_prefix);
@@ -43,6 +62,7 @@ static char * gptl_prefixed_name(const char * name) {
 static void gptl_tau_start(const char * name) {
     if(gptl_prefix != NULL) {
         char * timername = gptl_prefixed_name(name);
+        TAU_GPTL_LOG_NAME(timername);
         TAU_START(timername);
         free(timername);
     } else {
@@ -53,6 +73,7 @@ static void gptl_tau_start(const char * name) {
 static void gptl_tau_stop(const char * name) {
     if(gptl_prefix != NULL) {
         char * timername = gptl_prefixed_name(name);
+        TAU_GPTL_LOG_NAME(timername);
         TAU_STOP(timername);
         free(timername);
     } else {
@@ -63,6 +84,7 @@ static void gptl_tau_stop(const char * name) {
 static void gptl_tau_increment(const char * name, const double add_time, const int add_count) {
     if(gptl_prefix != NULL) {
         char * timername = gptl_prefixed_name(name);
+        TAU_GPTL_LOG_NAME(timername);
         // GPTL uses seconds for time
         Tau_pure_increment(timername, add_time * 1000.0 * 1000.0, add_count);
         free(timername);
@@ -72,6 +94,7 @@ static void gptl_tau_increment(const char * name, const double add_time, const i
 }
 
 int GPTLinitialize (void) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     Tau_init_initializeTAU();
@@ -93,6 +116,7 @@ int GPTLinitialize (void) {
 }
 
 int GPTLsetoption (const int option, const int val) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLsetoption_h)(const int option, const int val) = NULL;
@@ -108,6 +132,7 @@ int GPTLsetoption (const int option, const int val) {
 
 
 int GPTLstart (const char * name) {
+    TAU_GPTL_LOG_NAME(name);
     int result = 0;
 
     static int (*GPTLstart_h)(const char * name) = NULL;
@@ -125,6 +150,7 @@ int GPTLstart (const char * name) {
 }
 
 int GPTLinit_handle (const char * name, int * result) {
+    TAU_GPTL_LOG_NAME(name);
     int status = 0;
     *result = 0;
 
@@ -140,6 +166,7 @@ int GPTLinit_handle (const char * name, int * result) {
 }
 
 int GPTLstart_handle (const char * name, int * handle) {
+    TAU_GPTL_LOG_NAME(name);
     int result = 0;
 
     static int (*GPTLstart_handle_h)(const char * name, int * handle) = NULL;
@@ -157,6 +184,7 @@ int GPTLstart_handle (const char * name, int * handle) {
 }
 
 int GPTLstop (const char * name) {
+    TAU_GPTL_LOG_NAME(name);
     int result = 0;
 
     static int (*GPTLstop_h)(const char * name) = NULL;
@@ -174,6 +202,7 @@ int GPTLstop (const char * name) {
 }
 
 int GPTLstop_handle (const char * name, int * handle) {
+    TAU_GPTL_LOG_NAME(name);
     int result = 0;
 
     static int (*GPTLstop_handle_h)(const char * name, int * handle) = NULL;
@@ -191,6 +220,7 @@ int GPTLstop_handle (const char * name, int * handle) {
 }
 
 int GPTLstamp (double *wall, double *usr, double *sys) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLstamp_h)(double * wall, double * usr, double * sys) = NULL;
@@ -205,6 +235,7 @@ int GPTLstamp (double *wall, double *usr, double *sys) {
 }
 
 int GPTLpr (const int id) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLpr_h)(const int id) = NULL;
@@ -219,6 +250,7 @@ int GPTLpr (const int id) {
 }
 
 int GPTLpr_file (const char *outfile) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLpr_file_h)(const char * outfile) = NULL;
@@ -233,6 +265,7 @@ int GPTLpr_file (const char *outfile) {
 }
     
 int GPTLreset (void) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLreset_h)(void) = NULL;
@@ -248,6 +281,7 @@ int GPTLreset (void) {
 }
 
 int GPTLreset_timer (const char * name) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLreset_timer_h)(const char * name) = NULL;
@@ -263,6 +297,7 @@ int GPTLreset_timer (const char * name) {
 }
 
 int GPTLfinalize (void) {
+    TAU_GPTL_LOG();
     int result = 0;
     Tau_profile_exit_all_threads();
     Tau_destructor_trigger();
@@ -279,6 +314,7 @@ int GPTLfinalize (void) {
 }
 
 int GPTLget_memusage (float *usage) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLget_memusage_h)(float * usage) = NULL;
@@ -293,6 +329,7 @@ int GPTLget_memusage (float *usage) {
 }
 
 int GPTLprint_memusage (const char * str) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLprint_memusage_h)(const char * str) = NULL;
@@ -307,6 +344,7 @@ int GPTLprint_memusage (const char * str) {
 }
 
 int GPTLprint_rusage (const char * str) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLprint_rusage_h)(const char * str) = NULL;
@@ -321,6 +359,7 @@ int GPTLprint_rusage (const char * str) {
 }                                      
 
 int GPTLget_procsiz (float * procsiz_out, float * rss_out) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLget_procsiz_h)(float * procsiz_out, float * rss_out) = NULL;
@@ -335,6 +374,7 @@ int GPTLget_procsiz (float * procsiz_out, float * rss_out) {
 } 
 
 int GPTLenable (void) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLenable_h)(void) = NULL;
@@ -350,6 +390,7 @@ int GPTLenable (void) {
 } 
 
 int GPTLdisable (void) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLdisable_h)(void) = NULL;
@@ -365,6 +406,7 @@ int GPTLdisable (void) {
 } 
 
 int GPTLsetutr (const int option) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLsetutr_h)(const int option) = NULL;
@@ -380,6 +422,7 @@ int GPTLsetutr (const int option) {
 
 int GPTLquery (const char *name, int t, int *count, int *onflg, double *wallclock,
         double *dusr, double *dsys, long long *papicounters_out, const int maxcounters) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLquery_h)(const char *name, int t, int *count, int *onflg, double *wallclock,
@@ -395,6 +438,7 @@ int GPTLquery (const char *name, int t, int *count, int *onflg, double *wallcloc
 } 
 
 int GPTLget_wallclock (const char *timername, int t, double *value)  {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLget_wallclock_h)(const char * timername, int t, double * value) = NULL;
@@ -409,6 +453,7 @@ int GPTLget_wallclock (const char *timername, int t, double *value)  {
 } 
 
 int GPTLget_wallclock_latest (const char * timername, int t, double *value) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLget_wallclock_latest_h)(const char * timername, int t, double * value) = NULL;
@@ -423,6 +468,7 @@ int GPTLget_wallclock_latest (const char * timername, int t, double *value) {
 } 
 
 int GPTLget_threadwork (const char *name, double *maxwork, double *imbal)   {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLget_threadwork_h)(const char * name, double * maxwork, double * imbal) = NULL;
@@ -437,6 +483,7 @@ int GPTLget_threadwork (const char *name, double *maxwork, double *imbal)   {
 } 
 
 int GPTLstartstop_val (const char *name, double value)   {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLstartstop_val_h)(const char * name, double value) = NULL;
@@ -454,6 +501,7 @@ int GPTLstartstop_val (const char *name, double value)   {
 } 
 
 int GPTLget_nregions (int t, int * nregions)  {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLget_nregions_h)(int t, int * nregions) = NULL;
@@ -468,6 +516,7 @@ int GPTLget_nregions (int t, int * nregions)  {
 } 
 
 int GPTLget_regionname (int t, int region, char * name, int nc)   {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLget_regionname_h)(int t, int region, char * name, int nc) = NULL;
@@ -482,6 +531,7 @@ int GPTLget_regionname (int t, int region, char * name, int nc)   {
 } 
 
 int GPTL_PAPIlibraryinit (void)   {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTL_PAPIlibraryinit_h)(void) = NULL;
@@ -496,6 +546,7 @@ int GPTL_PAPIlibraryinit (void)   {
 } 
 
 int GPTLevent_name_to_code (const char *name, int *code)   {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLevent_name_to_code_h)(const char * name, int * code) = NULL;
@@ -510,6 +561,7 @@ int GPTLevent_name_to_code (const char *name, int *code)   {
 } 
 
 int GPTLevent_code_to_name (const int code, char * name)   {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLevent_code_to_name_h)(const int code, char * name) = NULL;
@@ -524,6 +576,7 @@ int GPTLevent_code_to_name (const int code, char * name)   {
 } 
 
 int GPTLget_eventvalue (const char *timername, const char *eventname, int t, double *value)   {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLget_eventvalue_h)(const char * timername, const char * eventname, double * value) = NULL;
@@ -538,6 +591,7 @@ int GPTLget_eventvalue (const char *timername, const char *eventname, int t, dou
 } 
 
 int GPTLnum_errors (void) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLnum_errors_h)(void) = NULL;
@@ -552,6 +606,7 @@ int GPTLnum_errors (void) {
 } 
 
 int GPTLnum_warn (void) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLnum_warn_h)(void) = NULL;
@@ -566,6 +621,7 @@ int GPTLnum_warn (void) {
 } 
 
 int GPTLget_count (const char *timername, int t, int *count)   {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLget_count_h)(const char * timername, int t, int * count) = NULL;
@@ -582,6 +638,7 @@ int GPTLget_count (const char *timername, int t, int *count)   {
 // E3SM-specific functions
 
 int GPTLprefix_set(const char * prefixname) {
+    TAU_GPTL_LOG_NAME(prefixname);
     int result = 0;
 
     static int (*GPTLprefix_set_h)(const char * prefixname) = NULL;
@@ -618,6 +675,7 @@ int GPTLprefix_setf(const char * prefixname, const int prefixlen) {
     char * nullterm_name = (char *)malloc(prefixlen + 1);
     memcpy(nullterm_name, prefixname, prefixlen);
     nullterm_name[prefixlen] = '\0';
+    TAU_GPTL_LOG_NAME(nullterm_name);
     gptl_prefix = nullterm_name;
     return result;
 }
@@ -657,6 +715,7 @@ int GPTLstartf(const char * timername, const int namelen) {
         char nullterm_name[namelen + 1];
         memcpy(nullterm_name, timername, namelen);
         nullterm_name[namelen] = '\0';
+        TAU_GPTL_LOG_NAME(nullterm_name);
         gptl_tau_start(nullterm_name);
     }
 
@@ -678,6 +737,7 @@ int GPTLstartf_handle (const char * timername, const int namelen, void ** handle
         char nullterm_name[namelen + 1];
         memcpy(nullterm_name, timername, namelen);
         nullterm_name[namelen] = '\0';
+        TAU_GPTL_LOG_NAME(nullterm_name);
         gptl_tau_start(nullterm_name);
     }
 
@@ -700,6 +760,7 @@ int GPTLstopf (const char * timername, const int namelen) {
         char nullterm_name[namelen + 1];
         memcpy(nullterm_name, timername, namelen);
         nullterm_name[namelen] = '\0';
+        TAU_GPTL_LOG_NAME(nullterm_name);
         gptl_tau_stop(nullterm_name);
     }
 
@@ -723,6 +784,7 @@ int GPTLstopf_handle (const char * timername, const int namelen, void ** handle)
         char nullterm_name[namelen + 1];
         memcpy(nullterm_name, timername, namelen);
         nullterm_name[namelen] = '\0';
+        TAU_GPTL_LOG_NAME(nullterm_name);
         gptl_tau_stop(nullterm_name);
     }
 
@@ -730,6 +792,7 @@ int GPTLstopf_handle (const char * timername, const int namelen, void ** handle)
 }
 
 int GPTLstartstop_vals (const char * timername, double add_time, int add_count) {
+    TAU_GPTL_LOG_NAME(timername);
     int result = 0;
 
     static int (*GPTLstartstop_vals_h)(const char * timername, double add_time, int add_count)  = NULL;
@@ -761,6 +824,7 @@ int GPTLstartstop_valsf (const char * timername, const int namelen, double add_t
         char nullterm_name[namelen + 1];
         memcpy(nullterm_name, timername, namelen);
         nullterm_name[namelen] = '\0';
+        TAU_GPTL_LOG_NAME(nullterm_name);
         gptl_tau_increment(nullterm_name, add_time, add_count);
     }
     return result;
