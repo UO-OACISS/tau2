@@ -571,7 +571,7 @@ void TauL0DisableProfiling() {
     delete metric_collector;
   }
   #endif
-  
-  
+  uint64_t cpu_end_ts = TauTraceGetTimeStamp(0);
+  Tau_remove_initialized_queues(cpu_end_ts);
 }
 
