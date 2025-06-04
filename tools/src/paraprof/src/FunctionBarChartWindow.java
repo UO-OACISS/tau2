@@ -2,6 +2,7 @@ package edu.uoregon.tau.paraprof;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FontMetrics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -582,7 +583,13 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                 jTextAreaScrollPane.setBorder(null);
                 jTextAreaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
                 jTextAreaScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-                jTextAreaScrollPane.setPreferredSize(new Dimension(100,100));
+                FontMetrics fm = jTextArea.getFontMetrics(jTextArea.getFont());
+                Insets textAreaInsets = jTextArea.getInsets();
+                Insets scrollAreaInsets = jTextAreaScrollPane.getInsets();
+                int textInsets=textAreaInsets.top+textAreaInsets.bottom;
+                int scrollInsets=scrollAreaInsets.top+scrollAreaInsets.bottom;
+                int boxHeight=fm.getHeight()*5;
+                jTextAreaScrollPane.setPreferredSize(new Dimension(250,boxHeight+textInsets+scrollInsets));
             }
             String headerString=this.getHeaderString();
             
