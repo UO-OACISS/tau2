@@ -23,7 +23,13 @@ Version 2.34 changes (from 2.33):
 10. Improvements in Paraprof (scrollbars for long function names, preferences window). 
 11. Added initial support for Score-P 9.0. 
 12. Improved support for demangling OMPT offloaded GPU kernel names on Intel GPUs.
-
+13. Improved support for L0 profiling (unitrace) for kernels launched on Intel GPUs. 
+14. Improved ParaProf support for long function names with scroll bars. 
+15. Fixes for OpenACC instrumentation.
+16. Added an ES3M specific version of GPTL (configure -gptl=es3m). 
+17. Improved configuration and build support for Intel ifx compilers. 
+18. Added initial support for SALT static analysis toolkit for source instrumentation. 
+19. Updated Perfstubs support. 
 
 Version 2.33 changes (from 2.32):
 1. Added -dyninst=download for binary rewriting with DyninstAPI.
