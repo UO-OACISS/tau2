@@ -588,12 +588,15 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                 Insets scrollAreaInsets = jTextAreaScrollPane.getInsets();
                 int textInsets=textAreaInsets.top+textAreaInsets.bottom;
                 int scrollInsets=scrollAreaInsets.top+scrollAreaInsets.bottom;
-                int boxHeight=fm.getHeight()*5;
+                int boxHeight=fm.getHeight()*6;
                 jTextAreaScrollPane.setPreferredSize(new Dimension(250,boxHeight+textInsets+scrollInsets));
             }
             String headerString=this.getHeaderString();
             
             jTextArea.setText(headerString);
+
+	    //Puts scrollbar at top
+	    jTextArea.setCaretPosition(0);
 
             if (comparisonChart) {
                 jTextArea.setSize(new Dimension(250, 200));
