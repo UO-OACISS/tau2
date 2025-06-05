@@ -50,7 +50,7 @@ static char * gptl_prefixed_name(const char * name) {
     if(gptl_prefix != NULL) {
         size_t len = strlen(name) + strlen(gptl_prefix);
         char prefixed_name[len + 1];
-        snprintf(result, sizeof(prefixed_name), "%s%s", gptl_prefix, name);
+        snprintf(prefixed_name, sizeof(prefixed_name), "%s%s", gptl_prefix, name);
         result = strdup(prefixed_name);
     } else {
         result = strdup(name);
@@ -65,6 +65,7 @@ static void gptl_tau_start(const char * name) {
         TAU_START(timername);
         free(timername);
     } else {
+        TAU_GPTL_LOG_NAME(name);
         TAU_START(name);
     }
 }
@@ -76,6 +77,7 @@ static void gptl_tau_stop(const char * name) {
         TAU_STOP(timername);
         free(timername);
     } else {
+        TAU_GPTL_LOG_NAME(name);
         TAU_STOP(name);
     }
 }
