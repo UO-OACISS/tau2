@@ -29,12 +29,12 @@ extern void Tau_pure_increment(const char * n, double time, int calls);
 #ifdef TAU_GPTL_DEBUG
 #define TAU_GPTL_LOG() \
     do { \
-        fprintf(stderr, "[TAU GPTL] %s\n", __func__); \
+        fprintf(stderr, "[TAU GPTL %d:%d] %s\n", Tau_get_node(), Tau_get_thread(), __func__); \
     } while(0)
 
 #define TAU_GPTL_LOG_NAME(name) \
     do { \
-        fprintf(stderr, "[TAU GPTL] %s(\"%s\")\n", __func__, name); \
+        fprintf(stderr, "[TAU GPTL %d:%d] %s(\"%s\")\n", Tau_get_node(), Tau_get_thread(), __func__, name); \
     } while(0)
 #else // TAU_GPTL_DEBUG
 #define TAU_GPTL_LOG()
@@ -710,6 +710,7 @@ int GPTLprefix_setf(const char * prefixname, const int prefixlen) {
 }
 
 int GPTLprefix_unset(void) {
+    TAU_GPTL_LOG();
     int result = 0;
 
     static int (*GPTLprefix_unset_h)(void) = NULL;
