@@ -88,7 +88,7 @@ extern "C" int nv_main(int argc, char *argv[])
 #pragma omp parallel
     {
         unsigned int cpu_thread_id = 0; // omp_get_thread_num();
-                unsigned int num_cpu_threads = 0; // omp_get_num_threads();
+                unsigned int num_cpu_threads = 1; // omp_get_num_threads();
 // local_sleep();
                 // set and check the CUDA device for this CPU thread
                 int gpu_id = -1;
