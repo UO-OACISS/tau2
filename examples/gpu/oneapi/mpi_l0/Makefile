@@ -47,7 +47,7 @@ $(KERNEL_SPV): $(KERNEL_SRC)
 	$(OCLOC) -file $(KERNEL_SRC) -device $(GPU_ARCH) -spv_only
 	# 2. Rename the known quirky output to the simple name our program expects.
 	@echo "Renaming ocloc output to $(KERNEL_SPV)..."
-	mv $(OCLOC_OUTPUT_BASE)_$(GPU_ARCH).spv $(KERNEL_SPV)
+	mv $(OCLOC_OUTPUT_BASE)*.spv $(KERNEL_SPV)
 
 # Rule to build the main application
 # It depends on the C++ source and the compiled SPIR-V kernel
