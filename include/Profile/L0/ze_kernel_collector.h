@@ -25,6 +25,7 @@ struct ZeKernelCommand {
   ze_event_pool_handle_t event_pool;
   ze_event_handle_t event;
   uint64_t timer_frequency;
+  uint64_t timer_mask;
 };
 
 struct ZeKernelInfo {
@@ -170,6 +171,12 @@ class ZeKernelCollector {
     return kernel_interval_list_;
   }
 
+  uint64_t GetTimestamp() const {
+    std::chrono::duration<uint64_t, std::nano> timestamp =
+      std::chrono::steady_clock::now() - base_time_;
+    return timestamp.count();
+  }
+
  private: // Implementation
 
   ZeKernelCollector(ze_context_handle_t context,
@@ -293,6 +300,8 @@ class ZeKernelCollector {
     uint64_t end = timestamp.global.kernelEnd;
     uint64_t freq = call->timer_frequency;
     PTI_ASSERT(freq > 0);
+    uint64_t mask = call->timer_mask;
+    PTI_ASSERT(mask > 0);
 
     uint64_t time = 0, start_ns = 0, end_ns = 0;
 
@@ -307,7 +316,8 @@ class ZeKernelCollector {
         static_cast<uint64_t>(NSEC_IN_SEC) / freq;
     }
     time = end_ns - start_ns;
-
+    //mask -> max value before overflow, appears as 343597383600 nanoseconds, aprox 343 seconds
+    //printf("%lu %lu %lu %lu %lu %lu\n", mask, mask*static_cast<uint64_t>(NSEC_IN_SEC) / freq, (mask*static_cast<uint64_t>(NSEC_IN_SEC) / freq)/NSEC_IN_SEC, freq, start_ns, end_ns);
     AddKernelInfo(call->name, time, call->simd_width);
     AddKernelInterval(call->name, start_ns, end_ns);
     
@@ -560,6 +570,8 @@ class ZeKernelCollector {
     PTI_ASSERT(device != nullptr);
     command->timer_frequency = utils::ze::GetDeviceTimerFrequency(device);
     PTI_ASSERT(command->timer_frequency > 0);
+      command->timer_mask = utils::ze::GetDeviceTimestampMask(device);
+    PTI_ASSERT(command->timer_frequency > 0);
 
     if (signal_event == nullptr) {
       ze_context_handle_t context =
@@ -722,6 +734,7 @@ class ZeKernelCollector {
       collector->ProcessCalls();
     }
   }
+  
 
  private: // Data
   zel_tracer_handle_t tracer_ = nullptr;
@@ -735,6 +748,7 @@ class ZeKernelCollector {
   ZeKernelIntervalList kernel_interval_list_;
   std::list<const ZeKernelCommand*> kernel_call_list_;
   ZeCommandListMap command_list_map_;
+  std::chrono::time_point<std::chrono::steady_clock> base_time_;
 
   static const uint32_t kKernelLength = 10;
   static const uint32_t kCallsLength = 12;

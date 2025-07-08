@@ -5,7 +5,7 @@
 // =============================================================
 
 //#include "tool.h"
-
+#include <regex>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -261,16 +261,6 @@ double TAUTranslateGPUtoCPUAPITimestamp(int tid, uint64_t gpu_ts) {
   return cpu_ts;
 }
 
-double TAUTranslateGPUtoCPUKernelTimestamp(int tid, uint64_t gpu_ts) {
-  // gpu_ts is in nanoseconds. We need the CPU timestamp result in microseconds.
-  double cpu_ts = first_cpu_timestamp + ((gpu_ts - first_gpu_kernel_timestamp)/1e3);
-  // losing resolution from nanoseconds to microseconds.
-  metric_set_gpu_timestamp(tid, cpu_ts);
-  Tau_create_top_level_timer_if_necessary_task(tid);
-
-  return cpu_ts;
-}
-
 bool TAUSetFirstGPUAPITimestamp(uint64_t gpu_ts) {
   if (first_gpu_api_timestamp == 0L) {
   TAU_VERBOSE("TAU: First GPU API Timestamp = %ld\n", gpu_ts);
@@ -278,16 +268,7 @@ bool TAUSetFirstGPUAPITimestamp(uint64_t gpu_ts) {
   }
   return true;
 }
-
-bool TAUSetFirstGPUKernelTimestamp(uint64_t gpu_ts) {
-  if (first_gpu_kernel_timestamp == 0L) {
-    TAU_VERBOSE("TAU: First GPU Kernel Timestamp = %ld\n", gpu_ts);
-    first_gpu_kernel_timestamp = gpu_ts;
-  }
-  return true;
-}
-
-
+ 
 /* This code is to somehow link the the kernel from the CPU to the GPU callback.
    Intel doesn't seem to provide this info. So, when a kernel is pushed onto the
    command queue, we'll push a unique id onto a local queue. When we are notified
@@ -396,16 +377,42 @@ void Tau_remove_initialized_queues(uint64_t cpu_end_ts)
 }
 
 
+bool TAUSetFirstGPUKernelTimestamp(uint64_t offset) {
+  if (first_gpu_kernel_timestamp == 0L) {
+    first_gpu_kernel_timestamp = kernel_collector->GetTimestamp()-offset;
+    TAU_VERBOSE("TAU: First GPU Kernel Timestamp = %ld\n", first_gpu_kernel_timestamp);
+  }
+  return true;
+}
+
+double TAUTranslateGPUtoCPUKernelTimestamp(int tid, uint64_t gpu_ts) {
+  // gpu_ts is in nanoseconds. We need the CPU timestamp result in microseconds.
+  double cpu_ts = first_cpu_timestamp + ((gpu_ts - first_gpu_kernel_timestamp)/1e3);
+  // losing resolution from nanoseconds to microseconds.
+  metric_set_gpu_timestamp(tid, cpu_ts);
+  Tau_create_top_level_timer_if_necessary_task(tid);
+
+  return cpu_ts;
+}
+
+
+
+//There is a problem with overflows using the timers provided by L0
+// difficult to detect overflows as the kernels are not sorted by time before being reported
+// and also the counter overflows every 343 seconds if it uses 32 bits.
+//Changing the behaviour to read the current time and use the difference between start and end,
+// this is how APEX processes the kernels.
+// Note: some kernels may overlap if using tracing and are in the same reporting group
 void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t started, uint64_t ended) {
   std::lock_guard<std::mutex> guard(gpu_mutex); // Lock before we start touching task-specific state
-
-  static bool first_call = TAUSetFirstGPUKernelTimestamp(started);
+  static bool first_call = TAUSetFirstGPUKernelTimestamp(ended-started);
   int current_thread = RtsLayer::myThread();
   int taskid = Tau_get_initialized_queues(current_thread);
 
   const char *kernel_name = name.c_str();
-  double started_translated = TAUTranslateGPUtoCPUKernelTimestamp(taskid, started);
-  double ended_translated = TAUTranslateGPUtoCPUKernelTimestamp(taskid, ended);
+  uint64_t ended_g = kernel_collector->GetTimestamp();
+  double started_translated = TAUTranslateGPUtoCPUKernelTimestamp(taskid, ended_g-(ended-started));
+  double ended_translated = TAUTranslateGPUtoCPUKernelTimestamp(taskid, ended_g);
 
   static std::string omp_off_string = "__omp_offloading";
   std::string event = "[L0] GPU: ";
@@ -434,7 +441,7 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
   }
   else
   {
-    event = event + Tau_demangle_name(kernel_name);
+    event = event + std::regex_replace(Tau_demangle_name(kernel_name), std::regex("typeinfo name for "), "");
   }
 
   const char *demangled_name = event.c_str();
