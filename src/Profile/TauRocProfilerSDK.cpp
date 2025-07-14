@@ -100,14 +100,14 @@ std::mutex last_mtx;
 //As TAU has not initialized, needs to read the variable here
 int use_rocprofilersdk()
 {
-  int check_metric = TauMetrics_getMetricIndexFromName("TAUGPU_TIME");
+  //int check_metric = TauMetrics_getMetricIndexFromName("TAUGPU_TIME");
   int check_enable = TauEnv_get_rocsdk_enable();
 
-  if((check_enable == 1) && (check_metric == -1))
-  {
-    std::cout << "[TAU] TAUGPU_TIME was not set, to avoid incorrect timers, rocprofiler-sdk is disabled" << std::endl;
-    return 0;
-  }
+  //if((check_enable == 1) && (check_metric == -1))
+  //{
+  //  std::cout << "[TAU] TAUGPU_TIME was not set, to avoid incorrect timers, rocprofiler-sdk is disabled" << std::endl;
+  //  return 0;
+  //}
   return check_enable;
 }
 
