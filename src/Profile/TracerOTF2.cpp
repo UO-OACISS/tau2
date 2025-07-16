@@ -1236,7 +1236,11 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     // Write global RMA window
     const int commWinName = nextString++;
     OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, commWinName, "RMA_WIN_WORLD"));
-    OTF2_EC(OTF2_GlobalDefWriter_WriteRmaWin(global_def_writer, TAU_OTF2_COMM_WIN, commWinName, TAU_OTF2_COMM_WORLD));
+    OTF2_EC(OTF2_GlobalDefWriter_WriteRmaWin(global_def_writer, TAU_OTF2_COMM_WIN, commWinName, TAU_OTF2_COMM_WORLD
+			    #if OTF2_VERSION_MAJOR > 2
+			    , OTF2_RMA_WIN_FLAG_NONE
+			    #endif
+                ));
 
     OTF2_GroupRef next_group = TAU_OTF2_GROUP_FIRST_AVAILABLE;
     OTF2_CommRef next_comm = TAU_OTF2_COMM_FIRST_AVAILABLE;
@@ -1266,8 +1270,16 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         const OTF2_GroupRef rmaGroupID = next_group++;
         OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, rmaGroupID, rmaGroupName, OTF2_GROUP_TYPE_COMM_GROUP, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, pe_size, rma_win_list));
         const OTF2_CommRef rmaCommID = next_comm++;
-        OTF2_EC(OTF2_GlobalDefWriter_WriteComm(global_def_writer, rmaCommID, rmaGroupName, rmaGroupID, OTF2_UNDEFINED_COMM));
-        OTF2_EC(OTF2_GlobalDefWriter_WriteRmaWin(global_def_writer, rma_win_id, rmaGroupName, rmaCommID));
+        OTF2_EC(OTF2_GlobalDefWriter_WriteComm(global_def_writer, rmaCommID, rmaGroupName, rmaGroupID, OTF2_UNDEFINED_COMM
+			    #if OTF2_VERSION_MAJOR > 2
+			    , OTF2_COMM_FLAG_NONE
+			    #endif
+			    ));
+        OTF2_EC(OTF2_GlobalDefWriter_WriteRmaWin(global_def_writer, rma_win_id, rmaGroupName, rmaCommID
+			    #if OTF2_VERSION_MAJOR > 2
+			    , OTF2_RMA_WIN_FLAG_NONE
+			    #endif
+                ));
     }
 #else
     OTF2_GroupRef next_group = TAU_OTF2_GROUP_FIRST_AVAILABLE;
