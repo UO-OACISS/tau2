@@ -12119,12 +12119,9 @@ if [ "x$download_scorep" = xyes ] ; then
     rm $tauscoreptgz
   # Now we build Score-P
     cd scorep-*; mkdir -p build; cd build
-    tau_scorep_config_options="../configure --prefix=${scorepdir} --enable-shared --without-otf2 --without-opari2 --without-cube --without-gui --with-libgotcha=download ${TAU_SCOREP_CONFIGURATION_OPTIONS}"
+    tau_scorep_config_options="../configure --prefix=${scorepdir} --enable-shared --without-opari2 --without-gui --with-libgotcha=download ${TAU_SCOREP_CONFIGURATION_OPTIONS}"
     if [ $papi = yes ]; then
       tau_scorep_config_options="${tau_scorep_config_options} --with-papi=$papidir --with-papi-header=$papidir/include --with-papi-lib=$papidir/$papisubdir"
-    fi
-    if [ $machine = craycnl ]; then
-      tau_scorep_config_options="${tau_scorep_config_options} ac_scorep_platform=crayxc"
     fi
     if [ $pdt = yes ]; then
       tau_scorep_config_options="${tau_scorep_config_options} --with-pdt=$pdtdir/${architecture}/bin"
@@ -12156,6 +12153,13 @@ if [ "x$download_scorep" = xyes ] ; then
       if [ $pgi = yes ]; then
         tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=pgi"
       fi
+      #if [ $c_compiler = amdclang ]; then
+      #  tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=amdclang"
+      #fi
+      #if [ $c_compiler = clang ]; then
+      #  tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=clang"
+      #fi
+
       # Add MS studio here
     fi # machine  = x86_64 or ibm64linux
     echo "Score-P will be configured using $tau_scorep_config_options"
