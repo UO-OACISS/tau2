@@ -191,7 +191,9 @@ static bool doesRoutineNameContainGet(string const & rname)
   return (((rname.find("get") != string::npos) || 
           ((rname[namelen-2] == '_') && (rname[namelen-1] == 'g')))
           && (rname.find("name") == string::npos
-          && rname.find("version") == string::npos));
+          && rname.find("version") == string::npos
+          && rname.find("ctx_get_team") == string::npos
+          && rname.find("config") == string::npos));
 }
 
 static bool doesRoutineNameContainPut(string const & rname)
@@ -706,10 +708,11 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
         argtypenamefort.erase(0, 3);
         argtypenamefort.insert(0, "SHMEM_FINT");
       }
-      if(argtypenamefort.compare(0, 6, "size_t") == 0) {
-        argtypenamefort.erase(0, 6);
-        argtypenamefort.insert(0, "SHMEM_FINT");
-      }
+      // Disabling -- size_t is not necessarily the same as SHMEM_FINT 
+      //if(argtypenamefort.compare(0, 6, "size_t") == 0) {
+      //  argtypenamefort.erase(0, 6);
+      //  argtypenamefort.insert(0, "SHMEM_FINT");
+      //}
     }
     int pos3 = argtypenamefort.find("*");
     if(pos3 == string::npos) {
