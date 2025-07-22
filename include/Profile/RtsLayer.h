@@ -75,6 +75,7 @@ struct TAULocks{
 #endif
 
   static TauGroup_t & TheProfileMask(void);
+  static TauGroup_t & TheProfileBlackMask(void);
   static bool& TheEnableInstrumentation(void);
   static bool& TheShutdown(void);
   static int& TheNode(void);

@@ -418,6 +418,31 @@ public:
   void SetProfileGroup(TauGroup_t gr) {MyProfileGroup_ = gr; }
 
   bool IsThrottled() const {
+
+	if (!RtsLayer::TheEnableInstrumentation()) {
+		return true;
+	}
+	// Get a reference to the global blacklist mask.
+  	const TauGroup_t& blacklist = RtsLayer::TheProfileBlackMask();
+
+  	if (blacklist == 0) {
+    // ===================================================================
+    // FAST PATH: The blacklist is not being used at all.
+    // Just confirm that the profile group includes a bit in the mask
+    // ===================================================================
+    	return !(MyProfileGroup_ & RtsLayer::TheProfileMask());
+  	} else {
+    // ===================================================================
+    // SLOW PATH: The blacklist is active.
+    // This will only be executed if a user has explicitly disabled an event.
+    // ===================================================================
+    bool is_whitelisted = (MyProfileGroup_ & RtsLayer::TheProfileMask());
+    bool is_blacklisted =  ((MyProfileGroup_ & blacklist) && (MyProfileGroup_ != TAU_DEFAULT)); //  (MyProfileGroup_ & blacklist);
+    if(is_blacklisted){
+	    printf("FOUND BLACKLIST!!!\n");
+    }
+    return !is_whitelisted || is_blacklisted;
+  }
     return ! (RtsLayer::TheEnableInstrumentation() && (MyProfileGroup_ & RtsLayer::TheProfileMask()));
   }
 

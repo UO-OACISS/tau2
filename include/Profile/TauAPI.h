@@ -130,6 +130,8 @@
 #define TAU_PROFILE_TIMER_GET_TYPE(timer) Tau_profile_get_type(timer)
 #define TAU_PROFILE_TIMER_GET_GROUP(timer) Tau_profile_get_group(timer)
 #define TAU_PROFILE_TIMER_GET_GROUP_NAME(timer) Tau_profile_get_group_name(timer)
+#define TAU_ENABLE_EVENT(timer)                 Tau_enable_event(timer)
+#define TAU_DISABLE_EVENT(timer)                 Tau_disable_event(timer)
 
 #define TAU_REGISTER_THREAD()			Tau_register_thread();
 #define TAU_REGISTER_FORK(nodeid, op) 		Tau_register_fork(nodeid, op);
@@ -456,6 +458,8 @@ void Tau_profile_set_name(void *ptr, const char *name);
 void Tau_profile_set_type(void *ptr, const char *type);
 void Tau_profile_set_group(void *ptr, TauGroup_t group);
 void Tau_profile_set_group_name(void *ptr, const char *groupname);
+void Tau_enable_event(void *ptr);
+void Tau_disable_event(void *ptr);
 
 const char *Tau_profile_get_group_name(void *ptr);
 const char *Tau_profile_get_name(void *ptr);

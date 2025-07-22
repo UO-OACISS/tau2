@@ -46,9 +46,9 @@ enum TauFork_t { TAU_EXCLUDE_PARENT_DATA, TAU_INCLUDE_PARENT_DATA};
 #define TAU_PAWS1		0x00400000   /* PAWS1  'paws1' */
 #define TAU_PAWS2		0x00800000   /* PAWS2  'paws2' */
 #define TAU_PAWS3 		0x01000000   /* PAWS3  'paws3' */
-/* SPACE for			0x02000000
-   SPACE for			0x04000000
-*/
+/* SPACE for 			0x02000000   */
+#define TAU_EXCLUDE		0x04000000   /* Add/remove this group to deactivate/activate individual events */
+
 #define TAU_USER4   		0x08000000   /* User4 	      '4' */
 #define TAU_USER3   		0x10000000   /* User3 	      '3' */	 
 #define TAU_USER2   		0x20000000   /* User2 	      '2' */

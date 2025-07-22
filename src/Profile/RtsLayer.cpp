@@ -125,6 +125,14 @@ TauGroup_t& RtsLayer::TheProfileMask(void) {
   return ProfileMask;
 }
 
+TauGroup_t& RtsLayer::TheProfileBlackMask(void) {
+  // to avoid initialization problems of non-local static variables
+  // This is set to TAU_EXCLUDE if an event is deactivated
+  static TauGroup_t ProfileBlackMask = 0;
+
+  return ProfileBlackMask;
+}
+
 /////////////////////////////////////////////////////////////////////////
 bool& RtsLayer::TheEnableInstrumentation(void) {
   // to avoid initialization problems of non-local static variables
@@ -287,6 +295,12 @@ TauGroup_t RtsLayer::enableProfileGroupName(char const * ProfileGroup) {
 TauGroup_t RtsLayer::generateProfileGroup(void) {
   static TauGroup_t key =  0x00000001;
   key = key << 1;
+  /*
+   * TAU_EXCLUDE is reserved for shutting off events. Do not use it as a general id. 
+   */
+  if (key == TAU_EXCLUDE) {
+    key = key << 1;
+  }
   if (!key) key = 0x1; // cycle
   return key;
 }
@@ -639,7 +653,8 @@ int RtsLayer::setAndParseProfileGroups(char *prog, char *str) {
 	  RtsLayer::enableProfileGroup(TAU_GROUP_4);
 	  break;
 	case '5' :
-	  RtsLayer::enableProfileGroup(TAU_GROUP_5);
+           printf("WARNING: TAU_GROUP_5 is unavailable. Reserved for TAU_EXCLUDE\n");
+	  //RtsLayer::enableProfileGroup(TAU_GROUP_5);
 	  break;
 	case '6' :
 	  RtsLayer::enableProfileGroup(TAU_GROUP_6);

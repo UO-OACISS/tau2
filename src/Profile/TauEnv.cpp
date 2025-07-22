@@ -1473,6 +1473,49 @@ const char * TauEnv_get_tau_exec_path() {
   return env_tau_exec_path;
 }
 
+
+/* Runtime Event Control 
+const char * TauEnv_get_runtime_disable_trigger(void) {
+  static const char *runtime_disable_trigger = NULL;
+  static bool inited = false;
+  if (!inited) {
+    runtime_disable_trigger = getenv("TAU_RUNTIME_DISABLE_TRIGGER");
+    inited = true;
+  }
+  return runtime_disable_trigger;
+}
+
+const char * TauEnv_get_runtime_disable_target(void) {
+  static const char *runtime_disable_target = NULL;
+  static bool inited = false;
+  if (!inited) {
+    runtime_disable_target = getenv("TAU_RUNTIME_DISABLE_TARGET");
+    inited = true;
+  }
+  return runtime_disable_target;
+}
+
+const char * TauEnv_get_runtime_enable_trigger(void) {
+  static const char *runtime_enable_trigger = NULL;
+  static bool inited = false;
+  if (!inited) {
+    runtime_enable_trigger = getenv("TAU_RUNTIME_ENABLE_TRIGGER");
+    inited = true;
+  }
+  return runtime_enable_trigger;
+}
+
+const char * TauEnv_get_runtime_enable_target(void) {
+  static const char *runtime_enable_target = NULL;
+  static bool inited = false;
+  if (!inited) {
+    runtime_enable_target = getenv("TAU_RUNTIME_ENABLE_TARGET");
+    inited = true;
+  }
+  return runtime_enable_target;
+}
+ End Runtime Event Control */
+
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
  ********************************************************************/

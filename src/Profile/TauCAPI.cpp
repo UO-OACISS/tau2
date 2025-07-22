@@ -396,6 +396,62 @@ extern "C" char *TauInternal_CurrentCallsiteTimerName(int tid) {
   return NULL;
 }
 
+static void Tau_check_runtime_triggers(FunctionInfo *current_function) {
+if (!current_function) {
+    return;
+  }
+//printf("Name Check: %s\n",current_function->GetName());
+if (strcmp(current_function->GetName(), "cycleTracking(MonteCarlo*) [{/home/wspear/Code/Quicksilver/src/main.cc} {139,0}]") == 0) {
+	printf("TEST NAME MATCH! Calls: %ld\n",current_function->GetCalls(0));
+	if(current_function->GetCalls(0)==2){
+		printf("TEST DIS MATCH\n");
+		Tau_disable_event(current_function);
+	}
+
+	if(current_function->GetCalls(0)==8){
+		printf("TEST EN MATCH");
+                Tau_enable_event(current_function);
+        }
+}
+}
+/*  // Get the values from our TauEnv functions.
+  const char *disable_trigger = TauEnv_get_runtime_disable_trigger();
+  const char *enable_trigger  = TauEnv_get_runtime_enable_trigger();
+
+  if (!disable_trigger && !enable_trigger) {
+    return;
+  }
+
+  const char *disable_target  = TauEnv_get_runtime_disable_target();
+  const char *enable_target   = TauEnv_get_runtime_enable_target();
+
+  // --- Handle DISABLE Logic ---
+  if (disable_trigger && disable_target) {
+    if (strcmp(current_function->GetName(), disable_trigger) == 0) {
+      FunctionInfo *target_function = RtsLayer::getFunctionInfo(disable_target);
+      if (target_function) {
+        Tau_disable_event(target_function);
+        TAU_VERBOSE("TAU: Runtime trigger '%s' fired. Disabling event '%s'.\n",
+                    disable_trigger, disable_target);
+      }
+    }
+  }
+
+  // --- Handle ENABLE Logic ---
+  if (enable_trigger && enable_target) {
+    if (strcmp(current_function->GetName(), enable_trigger) == 0) {
+      FunctionInfo *target_function = RtsLayer::getFunctionInfo(enable_target);
+      if (target_function) {
+        Tau_enable_event(target_function);
+        TAU_VERBOSE("TAU: Runtime trigger '%s' fired. Enabling event '%s'.\n",
+                    enable_trigger, enable_target);
+      }
+    }
+  }
+
+*/
+//}
+
 //#define REPORT_ENTRY_EXIT 1
 #ifdef REPORT_ENTRY_EXIT
 ///////////////////////////////////////////////////////////////////////////
@@ -425,6 +481,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   reportEntryExit(true, fi, tid);
 #endif
 
+  //Tau_check_runtime_triggers(fi); //TODO
   // Don't start throttled timers
   if (fi && fi->IsThrottled()) return;
   if (Tau_global_getLightsOut()) return;
@@ -607,6 +664,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 extern "C" void Tau_lite_start_timer(void *functionInfo, int phase)
 {
   FunctionInfo *fi = (FunctionInfo *)functionInfo;
+  Tau_check_runtime_triggers(fi);
   // Don't start throttled timers
   if (fi->IsThrottled()) return;
   if (Tau_global_getLightsOut()) return;
@@ -1738,6 +1796,48 @@ extern "C" TauGroup_t Tau_enable_all_groups(void) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" TauGroup_t Tau_disable_all_groups(void) {
   return RtsLayer::disableAllGroups();
+}
+
+
+extern "C" void Tau_disable_event(void *ptr) {
+  // --- ONE-TIME INITIALIZATION ---
+  if (RtsLayer::TheProfileBlackMask() == 0) {
+    RtsLayer::LockDB();
+    if (RtsLayer::TheProfileBlackMask() == 0) {
+      RtsLayer::TheProfileBlackMask() = TAU_EXCLUDE;
+    }
+    RtsLayer::UnLockDB();
+  }
+
+  FunctionInfo *f = (FunctionInfo*)ptr;
+  if (f == NULL) return;
+  printf("Setting exclude group!\n");
+  TauGroup_t current_group = f->GetProfileGroup();
+  // Add the blacklist bit to this event's group mask.
+  if (current_group == TAU_DEFAULT) {
+    f->SetProfileGroup(TAU_EXCLUDE);
+  } else {
+    // For any other group, just add the EXCLUDE bit.
+    f->SetProfileGroup(current_group | TAU_EXCLUDE);
+  }
+  //f->SetProfileGroup(f->GetProfileGroup() | RtsLayer::TheProfileBlackMask());
+}
+
+extern "C" void Tau_enable_event(void *ptr) {
+  FunctionInfo *f = (FunctionInfo*)ptr;
+  if (f == NULL) return;
+  // Remove the blacklist bit from this event's group mask
+  printf("Removing exclude group!\n");
+ //f->SetProfileGroup(f->GetProfileGroup() & ~RtsLayer::TheProfileBlackMask());
+  TauGroup_t current_group = f->GetProfileGroup();
+
+  //If the group is TAU_EXCLUDE that means it was originally TAU_DEFAULT
+  if (current_group == TAU_EXCLUDE) {
+    f->SetProfileGroup(TAU_DEFAULT);
+  } else {
+    // For any other case remove the EXCLUDE bit.
+    f->SetProfileGroup(current_group & ~TAU_EXCLUDE);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////

@@ -208,6 +208,13 @@ extern "C" {
   int TAUDECL TauEnv_get_perfetto_compress(void);
   int TAUDECL TauEnv_get_perfetto_merge(void);
 
+  /*TAU enable/disable events
+  const char* TAUDECL TauEnv_get_runtime_disable_trigger(void); 
+  const char* TAUDECL TauEnv_get_runtime_disable_target(void);
+  const char* TAUDECL TauEnv_get_runtime_enable_trigger(void);
+  const char* TAUDECL TauEnv_get_runtime_enable_target(void);
+*/
+
 #ifdef __cplusplus
   void Tau_util_replaceStringInPlace(std::string& subject, const std::string& search,
                           const std::string& replace);
