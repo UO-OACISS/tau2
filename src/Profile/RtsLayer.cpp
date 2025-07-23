@@ -125,12 +125,19 @@ TauGroup_t& RtsLayer::TheProfileMask(void) {
   return ProfileMask;
 }
 
+/////////////////////////////////////////////////////////////////////////
 TauGroup_t& RtsLayer::TheProfileBlackMask(void) {
   // to avoid initialization problems of non-local static variables
   // This is set to TAU_EXCLUDE if an event is deactivated
   static TauGroup_t ProfileBlackMask = 0;
 
   return ProfileBlackMask;
+}
+
+/////////////////////////////////////////////////////////////////////////
+std::atomic<bool>& RtsLayer::TheExcludeDefaultGroup(void) {
+  static std::atomic<bool> is_default_group_excluded = { false };
+  return is_default_group_excluded;
 }
 
 /////////////////////////////////////////////////////////////////////////

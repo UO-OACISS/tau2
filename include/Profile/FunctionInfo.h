@@ -424,8 +424,10 @@ public:
 	}
 	// Get a reference to the global blacklist mask.
   	const TauGroup_t& blacklist = RtsLayer::TheProfileBlackMask();
+	const bool exclude_default =
+        RtsLayer::TheExcludeDefaultGroup().load(std::memory_order_relaxed);
 
-  	if (blacklist == 0) {
+  	if (blacklist == 0 && !exclude_default ) {
     // ===================================================================
     // FAST PATH: The blacklist is not being used at all.
     // Just confirm that the profile group includes a bit in the mask
@@ -437,13 +439,15 @@ public:
     // This will only be executed if a user has explicitly disabled an event.
     // ===================================================================
     bool is_whitelisted = (MyProfileGroup_ & RtsLayer::TheProfileMask());
-    bool is_blacklisted =  ((MyProfileGroup_ & blacklist) && (MyProfileGroup_ != TAU_DEFAULT)); //  (MyProfileGroup_ & blacklist);
+    bool is_blacklisted =  ((MyProfileGroup_ & blacklist) && (MyProfileGroup_ != TAU_DEFAULT)); //Everyt bit is set in TAU_DEFAULT so we exclude it from the TAU_EXCLUDE check
     if(is_blacklisted){
 	    printf("FOUND BLACKLIST!!!\n");
     }
-    return !is_whitelisted || is_blacklisted;
+	
+	bool blacklisted_as_default =
+            (exclude_default && (MyProfileGroup_ == TAU_DEFAULT));
+    return !is_whitelisted || is_blacklisted || blacklisted_as_default;
   }
-    return ! (RtsLayer::TheEnableInstrumentation() && (MyProfileGroup_ & RtsLayer::TheProfileMask()));
   }
 
   static void disable_metric_cache() {

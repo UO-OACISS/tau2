@@ -130,13 +130,21 @@
 #define TAU_PROFILE_TIMER_GET_TYPE(timer) Tau_profile_get_type(timer)
 #define TAU_PROFILE_TIMER_GET_GROUP(timer) Tau_profile_get_group(timer)
 #define TAU_PROFILE_TIMER_GET_GROUP_NAME(timer) Tau_profile_get_group_name(timer)
-#define TAU_ENABLE_EVENT(timer)                 Tau_enable_event(timer)
-#define TAU_DISABLE_EVENT(timer)                 Tau_disable_event(timer)
 
 #define TAU_REGISTER_THREAD()			Tau_register_thread();
 #define TAU_REGISTER_FORK(nodeid, op) 		Tau_register_fork(nodeid, op);
 #define TAU_ENABLE_INSTRUMENTATION()		Tau_enable_instrumentation();
 #define TAU_DISABLE_INSTRUMENTATION()		Tau_disable_instrumentation();
+
+/* Runtime Control */
+#define TAU_INCLUDE_FUNCTION(timer)                 Tau_include_function(timer)
+#define TAU_EXCLUDE_FUNCTION(timer)                 Tau_exclude_function(timer)
+#define TAU_INCLUDE_FUNCTION_BY_NAME(timer_name)        Tau_include_function_by_name(timer_name)
+#define TAU_EXCLUDE_FUNCTION_BY_NAME(timer_name)        Tau_exclude_function_by_name(timer_name)
+#define TAU_ENABLE_FUNCTION_EXCLUSION()					Tau_enable_function_exclusion()
+#define TAU_DISABLE_FUNCTION_EXCLUSION()				Tau_disable_function_exclusion()
+#define TAU_EXCLUDE_DEFAULT_GROUP()						Tau_exclude_default_group()
+#define TAU_INCLUDE_DEFAULT_GROUP()						Tau_include_default_group()
 
 /* DB Access */
 #define TAU_DB_DUMP()                           Tau_dump();
@@ -458,8 +466,15 @@ void Tau_profile_set_name(void *ptr, const char *name);
 void Tau_profile_set_type(void *ptr, const char *type);
 void Tau_profile_set_group(void *ptr, TauGroup_t group);
 void Tau_profile_set_group_name(void *ptr, const char *groupname);
-void Tau_enable_event(void *ptr);
-void Tau_disable_event(void *ptr);
+
+void Tau_exclude_function(void *ptr);
+void Tau_include_function(void *ptr);
+void Tau_exclude_function_by_name(const char *event_name);
+void Tau_include_function_by_name(const char *event_name);
+void Tau_enable_function_exclusion(); //This turns on function exclusion. No function will be excluded until this is called (but they can be set for exclusion first).
+void Tau_disable_function_exclusion(); //This fully deactivates function exclusion. All excluded functions are recorded again (but their excluded status is retained and they can be re-excluded by Tau_enable_function_exclusion)
+void Tau_exclude_default_group(); //Exclude every function in TAU_DEFAULT. This is most events, except threading/communication and specially recognized API's. It should result in fairly lightweight instrumentation.
+void Tau_include_default_group(); //Record events from TAU_DEFAULT again.
 
 const char *Tau_profile_get_group_name(void *ptr);
 const char *Tau_profile_get_name(void *ptr);
