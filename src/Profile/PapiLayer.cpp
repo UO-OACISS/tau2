@@ -314,6 +314,14 @@ int PapiLayer::initializeThread(int tid)
       localThreadValue->CounterValues = new long long[MAX_PAPI_COUNTERS];
       memset(localThreadValue->CounterValues, 0, MAX_PAPI_COUNTERS*sizeof(long long));
       
+	  if(TauEnv_get_papi_multiplexing()) {
+	      rc = PAPI_multiplex_init();
+          if ( PAPI_OK != rc ) {
+            fprintf(stderr, "PAPI_multiplex_init failed (%s)\n", PAPI_strerror(rc));
+            exit(1);
+          }
+      }
+	  
       for (int i=0; i<TAU_PAPI_MAX_COMPONENTS; i++) {
         localThreadValue->NumEvents[i] = 0;
         localThreadValue->EventSet[i] = PAPI_NULL;
@@ -322,23 +330,6 @@ int PapiLayer::initializeThread(int tid)
           fprintf (stderr, "TAU: Error creating PAPI event set: %s\n", PAPI_strerror(rc));
           RtsLayer::UnLockDB();
           return -1;
-        }
-        if(TauEnv_get_papi_multiplexing()) {
-	  rc = PAPI_multiplex_init();
-          if ( PAPI_OK != rc ) {
-            fprintf(stderr, "PAPI_multiplex_init failed (%s)\n", PAPI_strerror(rc));
-            exit(1);
-          }
-          rc = PAPI_assign_eventset_component( localThreadValue->EventSet[i], 0 );
-          if ( PAPI_OK != rc ) {
-            fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(rc));
-            exit(1);
-          }
-          rc = PAPI_set_multiplex(localThreadValue->EventSet[i]);
-          if ( PAPI_OK != rc ) {
-            fprintf(stderr, "PAPI_set_multiplex failed (%s)\n", PAPI_strerror(rc));
-            return -1;
-          }
         }
       }
 
@@ -353,7 +344,23 @@ int PapiLayer::initializeThread(int tid)
 #elif (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 3)
       /* PAPI 3 support goes here */
       for (int i=0; i<numCounters; i++) {
-        int comp = PAPI_COMPONENT_INDEX (counterList[i]);
+	    int comp = PAPI_COMPONENT_INDEX (counterList[i]);
+		if(TauEnv_get_papi_multiplexing() && localThreadValue->NumEvents[comp] == 0) {
+		 rc = PAPI_assign_eventset_component( localThreadValue->EventSet[comp], comp );
+          if ( PAPI_OK != rc ) {
+            fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(rc));
+			RtsLayer::UnLockDB();
+            return -1;
+          }
+          rc = PAPI_set_multiplex(localThreadValue->EventSet[comp]);
+          if ( PAPI_OK != rc ) {
+            fprintf(stderr, "PAPI_set_multiplex failed for component %d: (%s)\n", comp, PAPI_strerror(rc));
+			RtsLayer::UnLockDB();
+            return -1;
+          }  
+		}
+		  
+
         rc = PAPI_add_event(localThreadValue->EventSet[comp], counterList[i]);
         if (rc != PAPI_OK) {
           fprintf (stderr, "TAU: Error adding PAPI events: %s\n", PAPI_strerror(rc));
