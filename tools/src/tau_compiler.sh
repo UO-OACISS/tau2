@@ -2303,14 +2303,12 @@ else
 			 fi
 		     fi
           	     extraopt=$optCompInstOption
-		     if [ -n "$clang_version" ] && [ "$clang_version" -lt "14" ] ; then
                      if [ $groupType == $group_f_F ]; then
 # If we need to tweak the Fortran options, we should do it here
 # For e.g., if Nagware needs a -Wc,<opt>, or if we want to remove file-exclude.
           	       extraopt="$optExcludeFuncs $optCompInstFortranOption"
           	       echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
                      fi
-	     	     fi
           	fi
               fi
 
