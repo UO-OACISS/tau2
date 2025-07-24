@@ -61,3 +61,4 @@ extern void tau_GOMP_sections_end_nowait(GOMP_sections_end_nowait_p GOMP_section
 extern bool tau_GOMP_single_start(GOMP_single_start_p GOMP_single_start_h) ;
 extern void * tau_GOMP_single_copy_start(GOMP_single_copy_start_p GOMP_single_copy_start_h) ;
 extern void tau_GOMP_single_copy_end(GOMP_single_copy_end_p GOMP_single_copy_end_h, void * a1) ;
+extern int tau_gomp_pthread_create_wrapper(int (*real_pthread_create)(pthread_t *, const pthread_attr_t *, void *(*)(void *), void *), pthread_t * thread, const pthread_attr_t * attr, void *(*start_routine)(void *), void * arg);

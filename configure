@@ -11409,7 +11409,7 @@ fi
 # GOMP wrapping is only available for openmp
 if [ $openmp = yes ] ; then
     # GOMP wrapping is only available for GCC
-    if [ $c_compiler = gcc ] || [ $machine = craycnl -a "x$PE_ENV" = xGNU ] ; then
+    if  $c_compiler --version 2>/dev/null | grep -q "gcc"  || [ $machine = craycnl -a "x$PE_ENV" = xGNU ] ; then
           # GOMP wrapping is not compatible with Opari.
           if [ $opari = no ] ; then
               if [ $opari1 = no ] ; then
