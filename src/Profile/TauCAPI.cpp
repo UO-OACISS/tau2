@@ -2869,7 +2869,7 @@ void Tau_pure_start_task_string(const string name, int tid)
    * potentially construct a top level timer, which will recursively enter
    * this function. */
   static int do_this_once = Tau_init_initializeTAU();
-  FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_DEFAULT, "TAU_DEFAULT");
+  FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_UTILITY, "TAU_UTILITY"); //This is only used to initialize .TAU application, which should be in the TAU_UTILITY group, not TAU_DEFAULT
   Tau_start_timer(fi,0, tid);
 }
 
@@ -3708,7 +3708,10 @@ extern "C" void Tau_exclude_function_by_name(const char *event_name) {
       false);                   // signal_safe is irrelevant here
 
   if (fi != NULL) {
+	  printf("EXCLUDING %s\n",event_name);
     Tau_exclude_function((void *)fi);
+  }else{ 
+  printf("Warning: Function %s not found\n",event_name);
   }
 }
 
