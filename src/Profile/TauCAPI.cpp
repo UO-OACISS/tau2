@@ -2869,7 +2869,7 @@ void Tau_pure_start_task_string(const string name, int tid)
    * potentially construct a top level timer, which will recursively enter
    * this function. */
   static int do_this_once = Tau_init_initializeTAU();
-  FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_UTILITY, "TAU_UTILITY"); //This is only used to initialize .TAU application, which should be in the TAU_UTILITY group, not TAU_DEFAULT
+  FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_UTILITY, "TAU_UTILITY"); //This is only used to initialize .TAU application, which should be in the TAU_UTILITY group, not TAU_DEFAULT. TODO? Make this group choice optional.
   Tau_start_timer(fi,0, tid);
 }
 
@@ -3750,14 +3750,77 @@ extern "C" void Tau_disable_function_exclusion(){
   }
 }
 
-void Tau_exclude_default_group() {
+extern "C" void Tau_exclude_default_group() {
   RtsLayer::TheExcludeDefaultGroup().store(true);
 }
 
-void Tau_include_default_group() {
+extern "C" void Tau_include_default_group() {
   RtsLayer::TheExcludeDefaultGroup().store(false);
 }
 
+void ParseIdList(const std::string& id_list_str, std::unordered_set<int>& id_set) {
+    std::stringstream ss(id_list_str);
+    std::string token;
+
+    while (std::getline(ss, token, ',')) {
+        try {
+            size_t range_pos = token.find('-');
+            if (range_pos != std::string::npos) {
+                // Handle range, e.g., "8-12"
+                int start = std::stoi(token.substr(0, range_pos));
+                int end = std::stoi(token.substr(range_pos + 1));
+                if (start > end) std::swap(start, end);
+                for (int i = start; i <= end; ++i) {
+                    id_set.insert(i);
+                }
+            } else {
+                // Handle single number
+                id_set.insert(std::stoi(token));
+            }
+        } catch (const std::exception& e) {
+            // Be robust against bad user input
+            std::cerr << "TAU WARNING: Could not parse token '" << token
+                      << "' in spatial exclusion list. Skipping. Error: " << e.what() << std::endl;
+        }
+    }
+}
+
+void Tau_exclude_rank_list() {
+    //std::lock_guard<std::mutex> lock(g_spatial_api_mutex);
+    RtsLayer::TheRankExclusionMode() = RtsLayer::SpatialExclusionMode::EXCLUDE;
+    //g_rank_set.clear(); // Clear the list to ensure a clean state
+}
+
+void Tau_include_rank_list() {
+    //std::lock_guard<std::mutex> lock(g_spatial_api_mutex);
+    RtsLayer::TheRankExclusionMode() = RtsLayer::SpatialExclusionMode::INCLUDE;
+    //g_rank_set.clear();
+}
+
+void Tau_ignore_rank_list() {
+    //std::lock_guard<std::mutex> lock(g_spatial_api_mutex);
+    RtsLayer::TheRankExclusionMode() = RtsLayer::SpatialExclusionMode::UNSET;
+    //gex_rank_set.clear();
+}
+
+
+extern "C" void Tau_set_rank_exclusion_list(const char* rank_list_str) {
+    //std::lock_guard<std::mutex> lock(g_spatial_api_mutex);
+
+   std::unordered_set<int>& rank_set = RtsLayer::TheRankExclusionSet();
+
+    if (rank_list_str == NULL || *rank_list_str == '\0') {
+        Tau_ignore_rank_list();
+        rank_set.clear();
+        return;
+    }
+    // Set the mode and clear the old set to ensure a clean "replace" operation.
+    //g_rank_mode = SpatialExclusionMode::EXCLUDE;
+    rank_set.clear();
+
+    // Reuse the parser to populate the now-empty set.
+    ParseIdList(std::string(rank_list_str), rank_set);
+}
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $

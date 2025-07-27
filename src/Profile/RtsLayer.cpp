@@ -140,6 +140,23 @@ std::atomic<bool>& RtsLayer::TheExcludeDefaultGroup(void) {
   return is_default_group_excluded;
 }
 
+// --- For Thread Exclusion ---
+//static std::unordered_set<int> gex_thread_set;
+
+//static SpatialExclusion gex_thread_mode = SpatialExclusionMode::UNSET;
+
+// --- For MPI Rank Exclusion ---
+std::unordered_set<int>& RtsLayer::TheRankExclusionSet(void)
+{
+	static std::unordered_set<int> exclusion_rank_set;
+	return exclusion_rank_set;
+}
+
+RtsLayer::SpatialExclusionMode& RtsLayer::TheRankExclusionMode(void){
+	static SpatialExclusionMode rankex_mode=SpatialExclusionMode::UNSET;
+	return rankex_mode;
+}
+
 /////////////////////////////////////////////////////////////////////////
 bool& RtsLayer::TheEnableInstrumentation(void) {
   // to avoid initialization problems of non-local static variables

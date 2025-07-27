@@ -475,6 +475,10 @@ void Tau_enable_function_exclusion(); //This turns on function exclusion. No fun
 void Tau_disable_function_exclusion(); //This fully deactivates function exclusion. All excluded functions are recorded again (but their excluded status is retained and they can be re-excluded by Tau_enable_function_exclusion)
 void Tau_exclude_default_group(); //Exclude every function in TAU_DEFAULT. This is most events, except threading/communication and specially recognized API's. It should result in fairly lightweight instrumentation.
 void Tau_include_default_group(); //Record events from TAU_DEFAULT again.
+void Tau_set_rank_exclusion_list(const char* rank_list_str);
+  void Tau_exclude_rank_list();
+  void Tau_include_rank_list();
+  void Tau_ignore_rank_list();
 
 const char *Tau_profile_get_group_name(void *ptr);
 const char *Tau_profile_get_name(void *ptr);

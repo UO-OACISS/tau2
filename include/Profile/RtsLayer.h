@@ -24,6 +24,7 @@
 #include <vector>
 #include <mutex>
 #include <atomic>
+#include <unordered_set>
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////
@@ -76,7 +77,11 @@ struct TAULocks{
 
   static TauGroup_t & TheProfileMask(void);
   static TauGroup_t & TheProfileBlackMask(void);
+  // Enum to define the spatical exclusion mode 
+  enum class SpatialExclusionMode { UNSET, INCLUDE, EXCLUDE };
   static std::atomic<bool>& TheExcludeDefaultGroup(void);
+  static std::unordered_set<int>& TheRankExclusionSet(void);
+  static SpatialExclusionMode& TheRankExclusionMode(void);
   static bool& TheEnableInstrumentation(void);
   static bool& TheShutdown(void);
   static int& TheNode(void);

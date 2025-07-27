@@ -422,6 +422,21 @@ public:
 	if (!RtsLayer::TheEnableInstrumentation()) {
 		return true;
 	}
+	
+	 if (RtsLayer::TheRankExclusionMode() != RtsLayer::SpatialExclusionMode::UNSET) {
+        const int my_rank = RtsLayer::TheNode(); // Get current MPI rank
+        switch (RtsLayer::TheRankExclusionMode()) {
+            case RtsLayer::SpatialExclusionMode::INCLUDE:
+                if (RtsLayer::TheRankExclusionSet().count(my_rank) == 0) return true;
+                break;
+            case RtsLayer::SpatialExclusionMode::EXCLUDE:
+                if (RtsLayer::TheRankExclusionSet().count(my_rank) > 0) return true;
+                break;
+            case RtsLayer::SpatialExclusionMode::UNSET:
+                 break;
+        }
+    }
+	
 	// Get a reference to the global blacklist mask.
   	const TauGroup_t& blacklist = RtsLayer::TheProfileBlackMask();
 	const bool exclude_default =
