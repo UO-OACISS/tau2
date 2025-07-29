@@ -30,6 +30,11 @@
 #ifdef TAU_GPU
 #include <Profile/TauGpu.h>
 #endif
+
+#ifdef TAU_SHMEM
+extern "C" int Tau_get_usesSHMEM();
+#endif
+
 #include <execinfo.h>
 
 // FIXME: Duplicated in pthread_wrap.c
@@ -436,6 +441,17 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
  * TAU is initialized, then we could have problems.  This prevents that. */
   ignore_thread = !Tau_gpu_initialized() || !Tau_is_pthread_tracking_enabled();
 #endif
+
+#ifdef TAU_SHMEM
+  // Ignore threads launched before/during shmem_init().
+  // HPC-X starts a thread inside shmem_init which loads a shared library
+  // which runs a constructor. This causes a deadlock because loading a
+  // shared library and initializing thread-local storage on a new thread
+  // acquire the same lock.
+  ignore_thread = ignore_thread || !Tau_get_usesSHMEM();
+#endif
+
+
   if(*wrapped || Tau_global_getLightsOut() ||
      !Tau_init_check_initialized() || ignore_thread) {
     // Another wrapper has already intercepted the call so just pass through
