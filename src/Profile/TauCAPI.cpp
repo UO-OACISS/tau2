@@ -401,7 +401,7 @@ if (!current_function) {
     return;
   }
 //printf("Name Check: %s\n",current_function->GetName());
-if (strcmp(current_function->GetName(), "cycleTracking(MonteCarlo*) [{/home/wspear/Code/Quicksilver/src/main.cc} {139,0}]") == 0) {
+/*if (strcmp(current_function->GetName(), "cycleTracking(MonteCarlo*) [{/home/wspear/Code/Quicksilver/src/main.cc} {139,0}]") == 0) {
 	printf("TEST NAME MATCH! Calls: %ld\n",current_function->GetCalls(0));
 	if(current_function->GetCalls(0)==2){
 		printf("TEST DIS MATCH\n");
@@ -412,7 +412,7 @@ if (strcmp(current_function->GetName(), "cycleTracking(MonteCarlo*) [{/home/wspe
 		printf("TEST EN MATCH");
                 Tau_include_function(current_function);
         }
-}
+}*/
 }
 /*  // Get the values from our TauEnv functions.
   const char *disable_trigger = TauEnv_get_runtime_disable_trigger();
@@ -3820,6 +3820,7 @@ extern "C" void Tau_set_rank_exclusion_list(const char* rank_list_str) {
 
     // Reuse the parser to populate the now-empty set.
     ParseIdList(std::string(rank_list_str), rank_set);
+	RtsLayer::InvalidateRankCache();
 }
 
 /***************************************************************************

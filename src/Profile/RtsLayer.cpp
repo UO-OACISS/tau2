@@ -157,6 +157,11 @@ RtsLayer::SpatialExclusionMode& RtsLayer::TheRankExclusionMode(void){
 	return rankex_mode;
 }
 
+std::atomic<uint64_t>& RtsLayer::TheRankExclusionVersion() {
+    static std::atomic<uint64_t> version{0};
+    return version;
+}
+
 /////////////////////////////////////////////////////////////////////////
 bool& RtsLayer::TheEnableInstrumentation(void) {
   // to avoid initialization problems of non-local static variables

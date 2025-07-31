@@ -417,13 +417,8 @@ public:
   TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
   void SetProfileGroup(TauGroup_t gr) {MyProfileGroup_ = gr; }
 
-  bool IsThrottled() const {
 
-	if (!RtsLayer::TheEnableInstrumentation()) {
-		return true;
-	}
-	
-	 if (RtsLayer::TheRankExclusionMode() != RtsLayer::SpatialExclusionMode::UNSET) {
+ /*if (RtsLayer::TheRankExclusionMode() != RtsLayer::SpatialExclusionMode::UNSET) {
         const int my_rank = RtsLayer::TheNode(); // Get current MPI rank
         switch (RtsLayer::TheRankExclusionMode()) {
             case RtsLayer::SpatialExclusionMode::INCLUDE:
@@ -435,35 +430,69 @@ public:
             case RtsLayer::SpatialExclusionMode::UNSET:
                  break;
         }
-    }
+    }*/
+
+
+
+
+
+  inline bool IsExcluded() const {
+
+    if (RtsLayer::TheRankExclusionMode() != RtsLayer::SpatialExclusionMode::UNSET) {
+        static thread_local uint64_t cached_rank_version = -1; // Start with invalid version
+        static thread_local bool is_this_rank_excluded = false;
+
+        uint64_t current_rank_version = RtsLayer::TheRankExclusionVersion().load(std::memory_order_relaxed);
+
+        if (cached_rank_version != current_rank_version) {
+            // Cache is invalid, must recompute the result for this thread
+            const int my_rank = RtsLayer::TheNode();
+            const auto& rank_set = RtsLayer::TheRankExclusionSet();
+            const bool rank_in_set = rank_set.count(my_rank) > 0;
+
+            if (RtsLayer::TheRankExclusionMode() == RtsLayer::SpatialExclusionMode::INCLUDE) {
+                is_this_rank_excluded = !rank_in_set;
+            } else { // Mode is EXCLUDE
+                is_this_rank_excluded = rank_in_set;
+            }
+            cached_rank_version = current_rank_version;
+        }
+
+        if (is_this_rank_excluded) return true;
+    }	
 	
 	// Get a reference to the global blacklist mask.
   	const TauGroup_t& blacklist = RtsLayer::TheProfileBlackMask();
 	const bool exclude_default =
         RtsLayer::TheExcludeDefaultGroup().load(std::memory_order_relaxed);
 
-  	if (blacklist == 0 && !exclude_default ) {
-    // ===================================================================
-    // FAST PATH: The blacklist is not being used at all.
-    // Just confirm that the profile group includes a bit in the mask
-    // ===================================================================
-    	return !(MyProfileGroup_ & RtsLayer::TheProfileMask());
-  	} else {
-    // ===================================================================
-    // SLOW PATH: The blacklist is active.
-    // This will only be executed if a user has explicitly disabled an event.
-    // ===================================================================
-    bool is_whitelisted = (MyProfileGroup_ & RtsLayer::TheProfileMask());
+  	if (blacklist != 0 || exclude_default ) {
     bool is_blacklisted =  ((MyProfileGroup_ & blacklist) && (MyProfileGroup_ != TAU_DEFAULT)); //Everyt bit is set in TAU_DEFAULT so we exclude it from the TAU_EXCLUDE check
     if(is_blacklisted){
 	    printf("FOUND BLACKLIST!!!\n");
+		return(true);
     }
 	
 	bool blacklisted_as_default =
             (exclude_default && (MyProfileGroup_ == TAU_DEFAULT));
-    return !is_whitelisted || is_blacklisted || blacklisted_as_default;
+    if (blacklisted_as_default)
+	{return true;}
   }
+  return false;
   }
+  
+  bool IsThrottled() const {
+    if (!RtsLayer::TheEnableInstrumentation()) {
+        return true;
+    }
+
+    if (!(MyProfileGroup_ & RtsLayer::TheProfileMask())) {
+        return true;
+    }
+
+    return this->IsExcluded();
+}
+
 
   static void disable_metric_cache() {
     use_metric_tls = false;
