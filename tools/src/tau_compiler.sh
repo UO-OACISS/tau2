@@ -2261,13 +2261,13 @@ else
                    if [ `echo $optCompInstOption | grep finstrument-functions | wc -l ` != 0 ]; then
                        echoIfDebug "Has GNU CompInst option"
 		     if [ "x$tauSelectFile" != "x" ] ; then
-                       optExcludeFuncsList=$(sed -e 's/^#.*//g' -e '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $tauSelectFile | \
-                                             sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e 's/#/\.\*/g' -e 's/"//g' -e 's/^/"/' -e 's/$/"/' | \
-                                             sed -n '1h;2,$H;${g;s/\n/,/g;p}' | \
-                                             sed -e 's/"",//g' -e 's/,""//g' -e 's/,/ /g' | \
-                                             sed -e 's/"//g' | \
-                                             sed -e 's/  */,/g' | \
-                                             sed -e 's/^,*//' -e 's/,*$//')
+                        optExcludeFuncsList=$(sed -n '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p' "$tauSelectFile" | \
+                          grep -v 'BEGIN_EXCLUDE_LIST\|END_EXCLUDE_LIST' | \
+                          grep -v -e '^#' -e '^$' | \
+                          tr '\n' ',' | \
+                          sed 's/,$//')
+			#Gnu does not match function signatures reliably. Use a minimal token instead
+                        optExcludeFuncsList=$(echo "$optExcludeFuncsList" | sed -E 's/\([^)]*\)//g')
                      fi
                      if [ "x$optExcludeFuncsList" != "x" ]; then
                        optExcludeFuncs="-finstrument-functions-exclude-function-list='$optExcludeFuncsList'"
