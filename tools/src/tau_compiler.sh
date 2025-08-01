@@ -2270,7 +2270,7 @@ else
                                              sed -e 's/^,*//' -e 's/,*$//')
                      fi
                      if [ "x$optExcludeFuncsList" != "x" ]; then
-                       optExcludeFuncs=-finstrument-functions-exclude-function-list=$optExcludeFuncsList
+                       optExcludeFuncs="-finstrument-functions-exclude-function-list='$optExcludeFuncsList'"
                          optCompInstOption="$optExcludeFuncs $optCompInstOption"
                          echoIfDebug "$optCompInstOption=$optCompInstOption"
                        fi
