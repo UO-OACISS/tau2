@@ -207,6 +207,7 @@ extern "C" {
   int TAUDECL TauEnv_get_l0_stall_sampling_enable();
   int TAUDECL TauEnv_get_perfetto_compress(void);
   int TAUDECL TauEnv_get_perfetto_merge(void);
+  void TAUDECL TauEnv_set_tracing(int tracing);
 
   /*TAU enable/disable events
   const char* TAUDECL TauEnv_get_runtime_disable_trigger(void); 

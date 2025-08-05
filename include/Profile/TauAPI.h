@@ -479,6 +479,8 @@ void Tau_set_rank_exclusion_list(const char* rank_list_str);
   void Tau_exclude_rank_list();
   void Tau_include_rank_list();
   void Tau_ignore_rank_list();
+  void Tau_tracing_off();
+  void Tau_tracing_on();
 
 const char *Tau_profile_get_group_name(void *ptr);
 const char *Tau_profile_get_name(void *ptr);

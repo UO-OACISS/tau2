@@ -1105,6 +1105,10 @@ int TauEnv_get_perfetto_merge() {
   return env_perfetto_merge;
 }
 
+void TauEnv_set_tracing(int tracing) {
+	env_tracing=tracing;
+}
+
 int TauEnv_get_thread_per_gpu_stream() {
   return env_thread_per_gpu_stream;
 }

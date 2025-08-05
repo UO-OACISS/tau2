@@ -3823,6 +3823,14 @@ extern "C" void Tau_set_rank_exclusion_list(const char* rank_list_str) {
 	RtsLayer::InvalidateRankCache();
 }
 
+extern "C" void Tau_tracing_off(){
+	TauEnv_set_tracing(0);
+}
+
+
+extern "C" void Tau_tracing_on(){
+	TauEnv_set_tracing(1);
+}
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
  * $Revision: 1.158 $   $Date: 2010/05/28 17:45:49 $
