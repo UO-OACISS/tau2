@@ -2820,7 +2820,7 @@ FunctionInfo * Tau_get_function_info_internal(
             }
 			//printf("Pattern: %s matched %s in internal\n",pattern.c_str(),fname.c_str());
 			//printf("DEBUG-CREATE: Function '%s' (%p) group set to %lx\n",
-           fi->GetName(), (void*)fi, fi->GetProfileGroup());
+           //fi->GetName(), (void*)fi, fi->GetProfileGroup());
             break; // Found a match, no need to check other patterns
         }
     }
