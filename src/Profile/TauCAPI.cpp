@@ -214,6 +214,11 @@ void checkTCAPIVector(int tid){
     }
  }
 
+
+static std::unordered_set<std::string> g_exclusion_patterns;
+static std::mutex g_exclusion_patterns_mutex;
+static std::mutex g_event_modification_mutex;
+
 static thread_local int local_tid = RtsLayer::myThread();
 static thread_local Tau_thread_status_flags* flag_cache=0;
 static inline Tau_thread_status_flags& getTauThreadFlag(int tid){
@@ -2742,6 +2747,16 @@ public:
 
 atomic<int> PureMap::num_threads{0};
 
+static std::mutex& get_pure_map_mutex() {
+    static std::mutex m;
+    return m;
+}
+
+static PureMap& get_pure_map() {
+    static PureMap p;
+    return p;
+}
+
 FunctionInfo * Tau_get_function_info_internal(
     string fname, const char *type,
     TauGroup_t group, const char *gr_name,
@@ -2763,13 +2778,13 @@ FunctionInfo * Tau_get_function_info_internal(
   }
 
   /* Not found, so check the shared map */
-  static std::mutex mtx;
-  static PureMap pure;
+  //static std::mutex mtx;
+  //static PureMap pure;
   /* Acquire control of the map */
-  std::lock_guard<std::mutex> lck (mtx);
-  it = pure.find(fname);
+  std::lock_guard<std::mutex> lck (get_pure_map_mutex());
+  it = get_pure_map().find(fname);
   /* Found? */
-  if (it != pure.end()) {
+  if (it != get_pure_map().end()) {
     fi = it->second;
     /* Save to local map to speed up next search */
     local_pure[fname] = fi;
@@ -2782,10 +2797,24 @@ FunctionInfo * Tau_get_function_info_internal(
     } else {
         tauCreateFI((void**)&fi, fname, type, group, gr_name);
     }
-    pure[fname] = fi;
+    get_pure_map()[fname] = fi;
     local_pure[fname] = fi;
     if (phase) {
         Tau_mark_group_as_phase(fi);
+    }
+	
+	std::lock_guard<std::mutex> lock(g_exclusion_patterns_mutex);
+    for (const auto& pattern : g_exclusion_patterns) {
+            // Check if the newly created function's name contains the pattern
+        if (fname.find(pattern) != std::string::npos) {
+                // Apply exclusion logic directly.
+                // call the logic directly instead of the helper to avoid re-locking the same mutex.
+            fi->SetProfileGroup(fi->GetProfileGroup() | TAU_EXCLUDE);
+			printf("Pattern: %s matched %s in internal\n",pattern.c_str(),fname.c_str());
+			printf("DEBUG-CREATE: Function '%s' (%p) group set to %lx\n",
+           fi->GetName(), (void*)fi, fi->GetProfileGroup());
+            break; // Found a match, no need to check other patterns
+        }
     }
 	
 	//Manage target events//
@@ -2804,6 +2833,20 @@ FunctionInfo * Tau_get_function_info_internal(
   /* return the fi pointer, might be nullptr if not created. */
   return fi;
 }
+
+static std::vector<FunctionInfo*> find_functions_by_substring(const std::string& pattern) {
+    std::vector<FunctionInfo*> found_functions;
+    std::lock_guard<std::mutex> lck(get_pure_map_mutex());
+
+    for (const auto& pair : get_pure_map()) {
+        if (pair.first.find(pattern) != std::string::npos) {
+            found_functions.push_back(pair.second);
+			printf("Pattern %s matched function %s in find_functions\n",pattern.c_str(),pair.first.c_str());
+        }
+    }
+    return found_functions;
+}
+
 
 map<string, vector<int> *>& TheIterationMap() {
   static map<string, vector<int> *> iterationMap;
@@ -3657,76 +3700,65 @@ extern "C" int Tau_time_traced_api_call() {
     return 1;
 }
 
+static void ModifyFunctionExclusionState(void* ptr, bool do_exclude) {
+    FunctionInfo* f = (FunctionInfo*)ptr;
+    if (f == NULL) return;
+
+    // We assume a mutex protects the modification of the function's group
+    std::lock_guard<std::mutex> lock(g_event_modification_mutex); 
+
+    TauGroup_t current_group = f->GetProfileGroup();
+
+    if (do_exclude) {
+        // --- LOGIC TO EXCLUDE ---
+        if (current_group == TAU_DEFAULT) {
+            f->SetProfileGroup(TAU_EXCLUDE);
+        } else if ((current_group & TAU_EXCLUDE) == 0) { // Check if bit isn't already set
+            f->SetProfileGroup(current_group | TAU_EXCLUDE);
+        }
+    } else {
+        // --- LOGIC TO INCLUDE (remove exclusion) ---
+        if (current_group == TAU_EXCLUDE) {
+            f->SetProfileGroup(TAU_DEFAULT);
+        } else if ((current_group & TAU_EXCLUDE) != 0) { // Check if bit is set
+            f->SetProfileGroup(current_group & ~TAU_EXCLUDE);
+        }
+    }
+}
+
+static void UpdateExclusionForPattern(const char* pattern_str, bool do_exclude) {
+    if (pattern_str == NULL) return;
+    std::string pattern(pattern_str);
+
+    // 1. Handle already-existing functions
+    std::vector<FunctionInfo*> matching_functions = find_functions_by_substring(pattern);
+    for (FunctionInfo* fi : matching_functions) {
+        ModifyFunctionExclusionState((void*)fi, do_exclude);
+    }
+
+    // 2. Update the Intent Registry for future functions
+    std::lock_guard<std::mutex> lock(g_exclusion_patterns_mutex);
+    if (do_exclude) {
+        g_exclusion_patterns.insert(pattern);
+    } else {
+        g_exclusion_patterns.erase(pattern);
+    }
+}
 
 extern "C" void Tau_exclude_function(void *ptr) {
-  // --- ONE-TIME INITIALIZATION ---?
-  // Tau_activate_event_toggle
-
-  FunctionInfo *f = (FunctionInfo*)ptr;
-  if (f == NULL) return;
-  printf("Setting exclude group!\n");
-  TauGroup_t current_group = f->GetProfileGroup();
-  // Add the blacklist bit to this event's group mask.
-  if (current_group == TAU_DEFAULT) {
-    f->SetProfileGroup(TAU_EXCLUDE);
-  } else {
-    // For any other group, just add the EXCLUDE bit.
-    f->SetProfileGroup(current_group | TAU_EXCLUDE);
-  }
-  //f->SetProfileGroup(f->GetProfileGroup() | RtsLayer::TheProfileBlackMask());
+	ModifyFunctionExclusionState(ptr, true);
 }
 
 extern "C" void Tau_include_function(void *ptr) {
-  FunctionInfo *f = (FunctionInfo*)ptr;
-  if (f == NULL) return;
-  // Remove the blacklist bit from this event's group mask
-  printf("Removing exclude group!\n");
- //f->SetProfileGroup(f->GetProfileGroup() & ~RtsLayer::TheProfileBlackMask());
-  TauGroup_t current_group = f->GetProfileGroup();
-
-  //If the group is TAU_EXCLUDE that means it was originally TAU_DEFAULT
-  if (current_group == TAU_EXCLUDE) {
-    f->SetProfileGroup(TAU_DEFAULT);
-  } else {
-    // For any other case remove the EXCLUDE bit.
-    f->SetProfileGroup(current_group & ~TAU_EXCLUDE);
-  }
+	ModifyFunctionExclusionState(ptr, false);
 }
 
 extern "C" void Tau_exclude_function_by_name(const char *event_name) {
-  if (event_name == NULL) {
-    return;
-  }
-
-  FunctionInfo *fi = Tau_get_function_info_internal(
-      std::string(event_name),  // The name to find
-      NULL,                     // type is irrelevant for lookup
-      0,                        // group is irrelevant for lookup
-      NULL,                     // group_name is irrelevant for lookup
-      false,                    // IMPORTANT: Do NOT create if not found
-      false,                    // phase is irrelevant
-      false);                   // signal_safe is irrelevant here
-
-  if (fi != NULL) {
-	  printf("EXCLUDING %s\n",event_name);
-    Tau_exclude_function((void *)fi);
-  }else{ 
-  printf("Warning: Function %s not found\n",event_name);
-  }
+  UpdateExclusionForPattern(event_name, true);
 }
 
 extern "C" void Tau_include_function_by_name(const char *event_name) {
-  // 1. Check for null input for safety.
-  if (event_name == NULL) {
-    return;
-  }
-
-  FunctionInfo *fi = Tau_get_function_info_internal(      std::string(event_name),      NULL,      0,      NULL,      false,      false,      false);
-
-  if (fi != NULL) {
-    Tau_include_function((void *)fi);
-  }
-
+ UpdateExclusionForPattern(event_name, false);
 }
 
 extern "C" void Tau_enable_function_exclusion(){
