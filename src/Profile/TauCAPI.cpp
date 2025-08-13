@@ -2809,9 +2809,17 @@ FunctionInfo * Tau_get_function_info_internal(
         if (fname.find(pattern) != std::string::npos) {
                 // Apply exclusion logic directly.
                 // call the logic directly instead of the helper to avoid re-locking the same mutex.
-            fi->SetProfileGroup(fi->GetProfileGroup() | TAU_EXCLUDE);
-			printf("Pattern: %s matched %s in internal\n",pattern.c_str(),fname.c_str());
-			printf("DEBUG-CREATE: Function '%s' (%p) group set to %lx\n",
+            TauGroup_t current_group = fi->GetProfileGroup();
+
+            // If the group is TAU_DEFAULT, it should become *only* TAU_EXCLUDE.
+            if (current_group == TAU_DEFAULT) {
+                fi->SetProfileGroup(TAU_EXCLUDE);
+            } else {
+                // For any other group, we can safely add the bit.
+                fi->SetProfileGroup(current_group | TAU_EXCLUDE);
+            }
+			//printf("Pattern: %s matched %s in internal\n",pattern.c_str(),fname.c_str());
+			//printf("DEBUG-CREATE: Function '%s' (%p) group set to %lx\n",
            fi->GetName(), (void*)fi, fi->GetProfileGroup());
             break; // Found a match, no need to check other patterns
         }

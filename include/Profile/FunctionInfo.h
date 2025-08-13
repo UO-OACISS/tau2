@@ -469,7 +469,7 @@ public:
   	if (blacklist != 0 || exclude_default ) {
     bool is_blacklisted =  ((MyProfileGroup_ & blacklist) && (MyProfileGroup_ != TAU_DEFAULT)); //Everyt bit is set in TAU_DEFAULT so we exclude it from the TAU_EXCLUDE check
     if(is_blacklisted){
-	    printf("FOUND BLACKLIST!!!\n");
+	    //printf("FOUND BLACKLIST!!!\n");
 		return(true);
     }
 	
