@@ -472,7 +472,7 @@ public:
 	    //printf("FOUND BLACKLIST!!!\n");
 		return(true);
     }
-	
+	//printf("Excluding Default: %d, for group: %#lx\n",exclude_default, MyProfileGroup_);
 	bool blacklisted_as_default =
             (exclude_default && (MyProfileGroup_ == TAU_DEFAULT));
     if (blacklisted_as_default)

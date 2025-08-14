@@ -32,6 +32,7 @@
 #define TAU_ACTION_DUMP_PROFILES 1
 #define TAU_ACTION_DUMP_CALLPATHS 2
 #define TAU_ACTION_DUMP_BACKTRACES 3
+#define TAU_ACTION_RUN_CONTROLFILE 4
 
 #define TAU_PLUGIN_ENABLED 1
 
@@ -167,6 +168,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_profile_format();
   int  TAUDECL TauEnv_get_merge_metadata();
   int  TAUDECL TauEnv_get_disable_metadata();
+  const char* TAUDECL TauEnv_get_control_file();
   int  TAUDECL TauEnv_get_sigusr1_action();
 
   int TAUDECL TauEnv_get_memdbg();

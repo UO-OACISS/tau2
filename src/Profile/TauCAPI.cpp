@@ -3791,10 +3791,12 @@ extern "C" void Tau_disable_function_exclusion(){
 }
 
 extern "C" void Tau_exclude_default_group() {
+	printf("TAU: TAU_DEFAULT GROUP DISABLED\n");
   RtsLayer::TheExcludeDefaultGroup().store(true);
 }
 
 extern "C" void Tau_include_default_group() {
+	printf("TAU: TAU_DEFAULT GROUP ENABLED\n");
   RtsLayer::TheExcludeDefaultGroup().store(false);
 }
 

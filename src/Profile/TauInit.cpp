@@ -152,6 +152,148 @@ int dl_initialized = 0;
 int dl_initialized = 1;
 #endif
 
+
+static void trim_trailing_whitespace(char* str) {
+    if (str == NULL) return;
+    int len = strlen(str);
+    while (len > 0 && isspace((unsigned char)str[len - 1])) {
+        str[--len] = '\0';
+    }
+}
+
+/**
+ * Reads and processes a TAU control file to dynamically change profiling settings.
+ *
+ * NOTE ON FILE LIFECYCLE MANAGEMENT:
+ * This function does not rename or delete the control file after
+ * processing. It is the responsibility of the external user or script to manage
+ * the state of this file.
+ *
+ * To ensure all ranks/threads in a job process the exact same command set, the
+ * following "atomic update" procedure is recommended:
+ *
+ * 1.  Write the desired commands to a temporary file (e.g., commands.tmp).
+ *
+ * 2.  Once the file is complete, use the 'mv' command to atomically rename it
+ *     to the target control file path (e.g., 'mv commands.tmp .tau_command.conf').
+ *     The 'rename' operation is atomic on POSIX filesystems, guaranteeing that
+ *     no rank will read a partially written or incomplete file. Do not use 'cp'.
+ *
+ * 3.  Send the signal after the rename operation is complete.
+ *
+ * 4.  The external script is responsible for deleting or clearing the control
+ *     file before the next signal is sent to prevent reprocessing old commands.
+ */
+ void TauRunControlFile() {
+    // Get the path from the environment wrapper function.
+    const char* control_file_path = TauEnv_get_control_file();
+
+    if (control_file_path == NULL || *control_file_path == '\0') {
+        fprintf(stderr, "TAU ERROR: SIGUSR1 action is 'RunControlFile' but no control file path is set.\n");
+        return;
+    }
+
+    // Verify the file exists and open it.
+    FILE* fp = fopen(control_file_path, "r");
+    if (fp == NULL) {
+        // This is not necessarily an error. The user may not have created the file yet.
+        fprintf(stderr, "TAU INFO: Control file '%s' not found, nothing to do.\n", control_file_path);
+        return;
+    }
+
+    fprintf(stderr, "TAU INFO: Processing control file '%s'...\n", control_file_path);
+
+    char line_buffer[2048];
+
+    // Read the file line-by-line.
+    while (fgets(line_buffer, sizeof(line_buffer), fp)) {
+        char* line_ptr = line_buffer;
+
+        // Skip leading whitespace
+        while (isspace(*line_ptr)) line_ptr++;
+
+        // Skip comments and empty lines
+        if (*line_ptr == '#' || *line_ptr == '\0') {
+            continue;
+        }
+        
+        // Trim trailing whitespace/newline from the whole line
+        trim_trailing_whitespace(line_ptr);
+
+        char* command = line_ptr;
+        char* arg = NULL;
+
+        // Check for a arg using the ':' delimiter
+        char* colon = strchr(line_ptr, ':');
+        if (colon != NULL) {
+            *colon = '\0'; // Terminate the command string
+            arg = colon + 1;
+
+            // Trim command and arg
+            trim_trailing_whitespace(command);
+            while (isspace(*arg)) arg++;
+            // Trailing space on arg is already handled by the initial line trim
+        }
+
+        // --- COMMAND DISPATCHER ---
+        if (strcasecmp(command, "exclude_ranks") == 0) {
+            fprintf(stderr, "TAU  > Command: 'exclude_ranks', Argument: '%s'\n", arg ? arg : "N/A");
+            if (arg) Tau_set_rank_exclusion_list(arg);
+            else fprintf(stderr, "TAU WARNING: 'exclude_ranks' command requires an argument.\n");
+        } else if (strcasecmp(command, "exclude_function") == 0) {
+            fprintf(stderr, "TAU  > Command: 'exclude_function', Argument: '%s'\n", arg ? arg : "N/A");
+            if (arg) Tau_exclude_function_by_name(arg);
+            else fprintf(stderr, "TAU WARNING: 'exclude_function' command requires an arg.\n");
+
+        } else if (strcasecmp(command, "include_function") == 0) {
+            fprintf(stderr, "TAU  > Command: 'include_function', Argument: '%s'\n", arg ? arg : "N/A");
+            if (arg) Tau_include_function_by_name(arg);
+            else fprintf(stderr, "TAU WARNING: 'include_function' command requires an arg.\n");
+
+        } else if (strcasecmp(command, "set_rank_mode_exclude") == 0) {
+            fprintf(stderr, "TAU  > Command: 'set_rank_mode_exclude'\n");
+            Tau_exclude_rank_list();
+        
+        } else if (strcasecmp(command, "set_rank_mode_include") == 0) {
+            fprintf(stderr, "TAU  > Command: 'set_rank_mode_include'\n");
+            Tau_include_rank_list();
+        
+        } else if (strcasecmp(command, "set_rank_mode_ignore") == 0) {
+            fprintf(stderr, "TAU  > Command: 'set_rank_mode_ignore'\n");
+            Tau_ignore_rank_list();
+
+        } else if (strcasecmp(command, "tracing_on") == 0) {
+            fprintf(stderr, "TAU  > Command: 'tracing_on'\n");
+            Tau_tracing_on();
+
+        } else if (strcasecmp(command, "tracing_off") == 0) {
+            fprintf(stderr, "TAU  > Command: 'tracing_off'\n");
+            Tau_tracing_off();
+
+        } else if (strcasecmp(command, "enable_function_exclusion") == 0) {
+            fprintf(stderr, "TAU  > Command: 'enable_function_exclusion'\n");
+            Tau_enable_function_exclusion();
+
+        } else if (strcasecmp(command, "disable_function_exclusion") == 0) {
+            fprintf(stderr, "TAU  > Command: 'disable_function_exclusion'\n");
+            Tau_disable_function_exclusion();
+
+        } else if (strcasecmp(command, "exclude_default_group") == 0) {
+            fprintf(stderr, "TAU  > Command: 'exclude_default_group'\n");
+            Tau_exclude_default_group();
+
+        } else if (strcasecmp(command, "include_default_group") == 0) {
+            fprintf(stderr, "TAU  > Command: 'include_default_group'\n");
+            Tau_include_default_group();
+
+        } else {
+            fprintf(stderr, "TAU WARNING: Unknown command in control file: '%s'\n", command);
+        }
+    }
+
+    fclose(fp);
+}
+
 #ifndef TAU_DISABLE_SIGUSR
 
 static void tauSignalHandler(int sig)
@@ -164,7 +306,10 @@ static void tauSignalHandler(int sig)
     Tau_dump_callpaths();
   } else if (TauEnv_get_sigusr1_action() == TAU_ACTION_DUMP_BACKTRACES) {
     fprintf(stderr, "Caught SIGUSR1, dumping backtrace data\n");
-  } else {
+  } else if (TauEnv_get_sigusr1_action() == TAU_ACTION_RUN_CONTROLFILE) {
+    fprintf(stderr, "Caught SIGUSR1, running control file\n");
+	TauRunControlFile();
+  }else {
     fprintf(stderr, "Caught SIGUSR1, dumping TAU profile data\n");
     //TAU_DB_DUMP_PREFIX("profile");
     TauInternalFunctionGuard protects_this_function;
