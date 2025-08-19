@@ -151,7 +151,7 @@ void Tau_gpu_enter_event(const char* name)
   Tau_start_timer(handle, 0, Tau_get_thread());
 }
 
-void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent *device, int transferSize, int memcpyType)
+void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent *device, size_t transferSize, int memcpyType)
 {
 #ifdef DEBUG_PROF
   //TAU_VERBOSE("entering Memcpy event type: %d.\n", memcpyType);
@@ -208,7 +208,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent *device, int 
   }
 }
 
-void Tau_gpu_enter_unifmem_event(const char *functionName, GpuEvent *device, int transferSize, int unifmemType)
+void Tau_gpu_enter_unifmem_event(const char *functionName, GpuEvent *device, size_t transferSize, int unifmemType)
 {
 #ifdef DEBUG_PROF
   //TAU_VERBOSE("entering Memcpy event type: %d.\n", memcpyType);
@@ -459,7 +459,7 @@ void Tau_gpu_register_sync_event(GpuEvent *id, double startTime, double endTime)
   break_gpu_event(id->getName(), task, syncEndTime, id->getCallingSite());
 }
 
-void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTime, int transferSize, int memcpyType,
+void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTime, size_t transferSize, int memcpyType,
 				   int direction)
 {
 
@@ -475,7 +475,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
     }
     //printf("using default name: %s.\n", functionName);
   }
-
+  
 #ifdef DEBUG_PROF
   TAU_VERBOSE("recording memcopy event.\n");
   TAU_VERBOSE("time is: %f:%f.\n", startTime, endTime);
@@ -604,7 +604,7 @@ void Tau_gpu_register_envt_event(GpuEvent *event, double startTime, double endTi
 	}
 }
 
-void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTime, int transferSize, int unifmemType,
+void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTime, size_t transferSize, int unifmemType,
     int direction)
 {
   int task = get_task(id);
@@ -720,20 +720,20 @@ void Tau_gpu_register_imix_event(GpuEvent *event, double startTime, double endTi
   printf("IMIX type is %d, contextId: %i.\n", dataType, task);
   const char* functionName = event->getName();
   if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
-    {
-      if (dataType == FlPtOps) {
-	functionName = "Floating Point Operations";
-      }
-      else if (dataType == MemOps)
-	{
-	  functionName = "Memory Operations";
-	}
-      else if (dataType == CtrlOps)
-	{
-	  functionName = "Control Operations";
-	}
-      printf("using default name: %s.\n", functionName);
+  {
+    if (dataType == FlPtOps) {
+      functionName = "Floating Point Operations";
     }
+    else if (dataType == MemOps)
+    {
+      functionName = "Memory Operations";
+    }
+    else if (dataType == CtrlOps)
+    {
+      functionName = "Control Operations";
+    }
+      //printf("using default name: %s.\n", functionName);
+  }
 #ifdef DEBUG_PROF
   TAU_VERBOSE("recording instruction mix event.\n");
   TAU_VERBOSE("time is: %f:%f.\n", startTime, endTime);

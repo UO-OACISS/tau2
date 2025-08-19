@@ -66,7 +66,7 @@ extern "C" void Tau_cupti_enter_memcpy_event(
         uint32_t streamId,
         uint32_t contextId,
         uint32_t correlationId,
-        int bytes_copied,
+        size_t bytes_copied,
         int memcpy_type,
         int taskId) {
     //Empty list of gpu attributes
@@ -81,7 +81,7 @@ extern "C" void Tau_cupti_exit_memcpy_event(
         uint32_t streamId,
         uint32_t contextId,
         uint32_t correlationId,
-        int bytes_copied,
+        size_t bytes_copied,
         int memcpy_type,
         int taskId) {
     //Empty list of gpu attributes
@@ -98,7 +98,7 @@ extern "C" void Tau_cupti_register_memcpy_event(
         uint32_t correlationId,
         double start,
         double stop,
-        int bytes_copied,
+        size_t bytes_copied,
         int memcpy_type,
         int direction,
         int taskId) {

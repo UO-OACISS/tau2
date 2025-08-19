@@ -824,7 +824,7 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
 
 #ifdef TAU_GPU
 
-void TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int threadId, x_uint64 ts = 0UL)
+void TauTraceOneSidedMsg(int type, GpuEvent *gpu, size_t length, int threadId, x_uint64 ts = 0UL)
 {
     int use_ts = 0;
     if (ts > 0UL) {

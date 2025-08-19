@@ -147,7 +147,7 @@ extern "C" void Tau_cupti_enter_memcpy_event(
 						uint32_t streamId,
 						uint32_t contextId,
 						uint32_t correlationId,
-						int bytes_copied,
+						size_t bytes_copied,
 						int memcpy_type,
 						int taskId);
 
@@ -157,7 +157,7 @@ extern "C" void Tau_cupti_exit_memcpy_event(
 						uint32_t streamId,
 						uint32_t contextId,
 						uint32_t correlationId,
-						int bytes_copied,
+						size_t bytes_copied,
 						int memcpy_type,
 						int taskId);
 
@@ -281,7 +281,7 @@ void Tau_cupti_init(void);
 
 void __attribute__ ((destructor)) Tau_cupti_onunload(void);
 
-void get_values_from_memcpy(const CUpti_CallbackData *info, CUpti_CallbackId id, CUpti_CallbackDomain domain, int &kind, int &count);
+void get_values_from_memcpy(const CUpti_CallbackData *info, CUpti_CallbackId id, CUpti_CallbackDomain domain, int &kind, size_t &count);
 
 int getMemcpyType(int kind);
 int getUnifmemType(int kind);

@@ -114,11 +114,11 @@ extern "C" void Tau_gpu_enter_event_from_cpu(const char *functionName, int tid, 
 
 /* Entry point for CPU routines that initiate a memory copy to the GPU */
 extern "C" void Tau_gpu_enter_memcpy_event(const char *functionName,
-GpuEvent *gpu, int transferSize, int memcpyType);
+GpuEvent *gpu, size_t transferSize, int memcpyType);
 
 /* Entry point for CPU routines that initiate a unified memory copy to the GPU */
 extern "C" void Tau_gpu_enter_unifmem_event(const char *functionName,
-GpuEvent *gpu, int transferSize, int unifmemType);
+GpuEvent *gpu, size_t transferSize, int unifmemType);
 
 /* Exit point for CPU routines */
 extern "C" void Tau_gpu_exit_event(const char *functionName);
@@ -143,7 +143,7 @@ extern "C" void Tau_gpu_register_gpu_event(GpuEvent *event, double startTime, do
 
 /* Callback for a Memcpy event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
-extern "C" void Tau_gpu_register_memcpy_event(GpuEvent *event, double startTime, double endTime, int transferSize, int memcpyType, int direction);
+extern "C" void Tau_gpu_register_memcpy_event(GpuEvent *event, double startTime, double endTime, size_t transferSize, int memcpyType, int direction);
 
 /* Callback for a UnifMem event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
@@ -157,7 +157,7 @@ extern "C" void Tau_gpu_register_sync_event(GpuEvent *event, double startTime, d
 /* Callback for a GPU atomic event that is associated with this gpu event. */
 extern "C" void Tau_gpu_register_gpu_atomic_event(GpuEvent *event);
 
-extern "C" void TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int thread, x_uint64 ts);
+extern "C" void TauTraceOneSidedMsg(int type, GpuEvent *gpu, size_t length, int thread, x_uint64 ts);
 
 #endif // __cplusplus
 #endif // _TAU_GPU_INTERFACE

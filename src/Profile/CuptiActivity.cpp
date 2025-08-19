@@ -967,7 +967,7 @@ void Tau_handle_driver_api_memcpy (void *ud, CUpti_CallbackDomain domain,
         CUpti_CallbackId id, const CUpti_CallbackData *cbInfo) {
     TAU_DEBUG_PRINT("TAU: CUPTI callback for memcpy\n");
     int kind;
-    int count;
+    size_t count;
     get_values_from_memcpy(cbInfo, id, domain, kind, count);
     int taskId = get_taskid_from_context_id(cbInfo->contextUid, 0);
     if (cbInfo->callbackSite == CUPTI_API_ENTER) {
@@ -2935,7 +2935,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
         }
     }
 
-    void get_values_from_memcpy(const CUpti_CallbackData *info, CUpti_CallbackId id, CUpti_CallbackDomain domain, int &kind, int &count)
+    void get_values_from_memcpy(const CUpti_CallbackData *info, CUpti_CallbackId id, CUpti_CallbackDomain domain, int &kind, size_t &count)
     {
         if (domain == CUPTI_CB_DOMAIN_RUNTIME_API)
         {
