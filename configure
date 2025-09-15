@@ -196,6 +196,12 @@ function check_cmake() {
       fi;
   fi
   cmake_major_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f1`; cmake_minor_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f2 `; cmake_cmd=`which cmake`
+
+  if [ "x$cmake_cmd" = "x" ] || [ -z "$cmake_major_version" ]; then
+    echo "ERROR: Failed to determine cmake version. Is cmake in your PATH and executable?"
+    return 1
+  fi
+
   if (($cmake_major_version == $1)) ; then
     if (($cmake_minor_version >= $2)) ; then
       echo "TAU: CMAKE version check passes. Using $cmake_major_version.$cmake_minor_version  "
@@ -11893,10 +11899,10 @@ build_zerosum() {
 
 build_perfstubs() {
     cd ${START_DIR}
-    check_cmake 3 20 "ZeroSum"
+    check_cmake 3 20 "PerfStubs"
     result=$?
     if [ $result -eq 1 ]; then
-        echo 'ERROR: cmake version 3.20 or higher required to build ZeroSum.'
+        echo 'ERROR: cmake version 3.20 or higher required to build PerfStubs.'
         exit 1;
     fi
     echo "NOTE: Building PerfStubs with Python3.12+ support"
