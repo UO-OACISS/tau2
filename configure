@@ -12029,7 +12029,7 @@ if [ $vampirtrace = yes ] ; then
     fi
 fi
 
-#if [ $scorep = yes ] ; then
+if [ $scorep = yes ] ; then
 #    fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
 #    tauoptions="${tauoptions}-scorep"
 #    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lscorep_utilities"
@@ -12196,7 +12196,7 @@ if [ "x$download_scorep" = xyes ] ; then
 fi # -scorep=download
 
 
-if [ $scorep = yes ] ; then
+#if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
     tauoptions="${tauoptions}-scorep"
     scorep11=`${scorepdir}/bin/scorep-config --version | grep "^1.1" | wc -l`
@@ -12387,7 +12387,7 @@ if [ $scorep = yes ] ; then
         echo "********scorep and phase are on"
     fi
 
-fi
+fi #end scorep
 
 
 
