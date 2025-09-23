@@ -1013,7 +1013,15 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #PGI_FORTRAN#TAU_CXXLIBS       	= -L$(EXTRADIR)/lib $(TAU_PGI_STD_LIB) -lstdc++ $(TAU_PGI_ATOMIC) #ENDIF#
 #NVIDIA#TAU_CXXLIBS_NVIDIA_CNL       	= -lstdc++     #ENDIF#
 #PATHSCALE_FORTRAN#TAU_CXXLIBS_PATHSCALE_CNL      	= -L$(EXTRADIR)/lib -lstdc++     #ENDIF#
-#GNU_GFORTRAN#TAU_CXXLIBS_GNU_CNL      	= -L$(EXTRADIR)/lib -lstdc++ -lgcc_eh    #ENDIF#
+
+# 32-bit if ABI contains "32"; else prefer lib64 only if it actually has libgcc_s.so.1
+#GNU_GFORTRAN#ifneq ($(findstring 32,$(ABI)),)      #ENDIF#
+#GNU_GFORTRAN#  TAU_CNL_LIBPATH := $(EXTRADIR)/lib    #ENDIF#
+#GNU_GFORTRAN#else    #ENDIF#
+#GNU_GFORTRAN#  TAU_CNL_LIBPATH := $(if $(wildcard $(EXTRADIR)/lib64/libgcc_s.so.1),$(EXTRADIR)/lib64,$(EXTRADIR)/lib)     #ENDIF#
+#GNU_GFORTRAN#endif     #ENDIF#
+#GNU_GFORTRAN#TAU_CXXLIBS_GNU_CNL = -L$(TAU_CNL_LIBPATH) -lstdc++ -lgcc_eh    #ENDIF#
+
 #INTELIFORT#TAU_CXXLIBS_INTEL_CNL      	= -lstdc++   #ENDIF#
 TAU_MPICHCXX_CNL_SHARED_LIB = -lmpichcxx
 #CRAYCNL_CCE#TAU_MPICHCXX_CNL_SHARED_LIB = -lmpichcxx_cray #ENDIF#
