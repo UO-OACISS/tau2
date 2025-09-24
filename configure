@@ -12029,32 +12029,11 @@ if [ $vampirtrace = yes ] ; then
     fi
 fi
 
+
+######################################################################
+# SCOREP HANDLER
+######################################################################
 if [ $scorep = yes ] ; then
-#    fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
-#    tauoptions="${tauoptions}-scorep"
-#    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lscorep_utilities"
-#    if [ $mpi = yes ] ; then
-#      if [ $openmp = yes ] ; then
-#        fixmakeargs="$fixmakeargs SCOREPOMPI"
-#        scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
-#      else
-#        fixmakeargs="$fixmakeargs SCOREPMPI"
-#        scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
-#      fi
-#    else
-#      if [ $openmp = yes ] ; then
-#        fixmakeargs="$fixmakeargs SCOREPOMP"
-#        scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
-#      else
-#        scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
-#      fi
-#    fi
-
-#    fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
-#    fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
-#    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
-
-
 ######################################################################
 # Install scorep if requested
 ######################################################################
@@ -12138,6 +12117,13 @@ if [ "x$download_scorep" = xyes ] ; then
     if [ $shmem = no ]; then
       tau_scorep_config_options="${tau_scorep_config_options} --without-shmem"
     fi
+	if [ $cuda = yes ]; then
+		tau_scorep_config_options="${tau_scorep_config_options} --with-libcudart=$(dirname $cudainclude)"
+	  fi
+	if [ $rocm = yes ] ; then
+		tau_scorep_config_options="${tau_scorep_config_options} --with-rocm=${rocmdir}"
+	  fi
+	
     if [ "x$bfddir" != "x" ] ; then
       tau_scorep_config_options="${tau_scorep_config_options} --with-libbfd=$bfddir"
 
@@ -12181,7 +12167,7 @@ if [ "x$download_scorep" = xyes ] ; then
       makeresult=$?
       if [ $makeresult -eq 0 ] ; then
         tauscorep_log=install.log
-        echo "installing ${tauscorep} to ${scorepdir}... (see `pwd`/${tau_scorep_log} for log)..."
+        echo "installing ${tauscorep} to ${scorepdir}... (see `pwd`/${tauscorep_log} for log)..."
         make install > ${tauscorep_log} 2>&1 ;
       else
         echo "Error building ${tauscorep}... (see `pwd`/${tauscorep_log} for log)..."
@@ -12195,200 +12181,131 @@ if [ "x$download_scorep" = xyes ] ; then
   cd $prescorepdir
 fi # -scorep=download
 
-
-#if [ $scorep = yes ] ; then
+######################################################################
+# SCOREP Configuration
+######################################################################
+    #Version check
+    scorep_version=$(${scorepdir}/bin/scorep-config --version)
+    scorep_major_version=$(echo "$scorep_version" | cut -d. -f1)
+    if [ "$scorep_major_version" -lt 2 ]; then
+        echo "ERROR: Unsupported Score-P Version Detected: ${scorep_version}" >&2
+        exit 1
+    fi
+    echo "NOTE: Detected Score-P ${scorep_version}."
     fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
     tauoptions="${tauoptions}-scorep"
-    scorep11=`${scorepdir}/bin/scorep-config --version | grep "^1.1" | wc -l`
-    scorepmetadata=`nm -A ${scorepdir}/lib/*.a | grep SCOREP_Tau_AddLocationProperty | wc -l `
-    if [ $scorepmetadata != 0 ]; then
+
+    #Metadata check and activation
+    scorepmetadata=$(nm -A ${scorepdir}/lib/*.a ${scorepdir}/lib/*.so 2>/dev/null | grep -c SCOREP_Tau_AddLocationProperty)
+    if [ "$scorepmetadata" != 0 ]; then
       fixmakeargs="$fixmakeargs SCOREPMETADATA"
-      #echo "SCOREP: Adding TAU metadata..."
     fi
-    x=`${scorepdir}/bin/scorep-config --adapter-init > /dev/null 2>&1`
-    if [ $? = 0 ]; then
-      scorep_adapter_init=yes
-      fixmakeargs="$fixmakeargs SCOREP_ADAPTER_INIT"
-      scorep_adapter="--adapter-init"
-      if [ $opari = yes -a "x$oparidir" = "x" ]; then
-        if [ `${scorepdir}/bin/scorep-info config-summary | grep "opari2 support:" | grep internal | wc -l` = 1 ]; then
-          oparidir=${scorepdir}
+
+    ###Construct adapter arguments
+    adapter_string="--user"
+
+    # MPP (MPI/SHMEM)
+    if [ "$mpi" = "yes" ]; then
+      adapter_string="$adapter_string --mpp=mpi"
+    elif [ "$shmem" = "yes" ]; then
+      adapter_string="$adapter_string --mpp=shmem"
+    else
+      adapter_string="$adapter_string --mpp=none"
+    fi
+
+    # Accelerator flags
+	#use_component naming scheme helps with iteration
+    use_cuda="${cuda}"
+    for component in cuda opencl openacc; do
+  # read use_<component> into requested
+  eval requested=\$use_${component}
+  echo ${requested}
+
+  if [ "x${requested}" = "xyes" ]; then
+    # Try to enable: only keep it if scorep-config accepts it for a real command
+    if "${scorepdir}/bin/scorep-config" --libs ${adapter_string} --${component} >/dev/null 2>&1; then
+      adapter_string="${adapter_string} --${component}"
+    else
+      echo "WARNING: '${component}' requested, but Score-P cannot enable it; forcing --no${component}." >&2
+      if "${scorepdir}/bin/scorep-config" --libs ${adapter_string} --no${component} >/dev/null 2>&1; then
+        adapter_string="${adapter_string} --no${component}"
+      fi
+    fi
+  else
+    # Not requested.
+    if "${scorepdir}/bin/scorep-config" --libs ${adapter_string} --no${component} >/dev/null 2>&1; then
+      adapter_string="${adapter_string} --no${component}"
+    fi
+  fi
+	done
+
+    # Threads
+    if [ "$pthread" = "yes" ]; then
+      adapter_string="$adapter_string --thread=pthread"
+    fi
+
+    # OpenMP policy:
+    # - If opari=yes: honor it, detect dir, and set SCOREPOPARI2
+    # - Else if openmp=yes: prefer non-Opari backend
+    #   If scorep-config tries to provide Opari/POMP, do not pass --thread=omp to adapter-init.
+    #   Instead, add the basic fork-join OpenMP lib manually to the link line.
+    extra_manual_libs=""
+    use_manual_forkjoin_omp="no"
+    if [ "$openmp" = "yes" ]; then
+      if [ "$opari" = "yes" ]; then
+        echo "NOTE: Using legacy Opari2 backend for OpenMP."
+        adapter_string="$adapter_string --thread=omp --pomp"
+        # Opari2 bin dir detection/specification
+        scorep_opari_support=$(${scorepdir}/bin/scorep-info config-summary 2>/dev/null | grep -iE 'opari[2-9] support')
+        if echo "$scorep_opari_support" | grep -q "internal"; then
+          scorep_opari_bin_dir="${scorepdir}/bin"
         else
-          oparidir=`${scorepdir}/bin/scorep-info config-summary | grep "opari2 support:" | awk '{ print $7;}' | sed -e 's/opari2-config/../g'`
+          scorep_opari_bin_dir=$(echo "$scorep_opari_support" | sed -e 's@.*via @@g' -e 's@opari2-config@@g')
         fi
-        echo "NOTE: Using Opari from $oparidir"
-        fixmakeargs="$fixmakeargs oparidir=$oparidir"
-      fi
-    else
-      scorep_adapter_init=no
-    fi
-
-    if [ $mpi = yes ]; then
-      scorep_adapter="$scorep_adapter --mpp=mpi"
-    else
-      if [ $shmem = no ]; then
-        scorep_adapter="$scorep_adapter --mpp=none"
-      fi
-    fi
-
-    if [ $cuda = yes ]; then
-      scorep_adapter="$scorep_adapter --cuda"
-    else
-      scorep_adapter="$scorep_adapter --nocuda"
-    fi
-
-    scorep_supports_opencl=no
-    if [ -x $scorepdir/bin/scorep-config ]; then
-       retval=`$scorepdir/bin/scorep-config --noopencl &>/dev/null `
-       if [ $? = 0 ]; then
-         scorep_supports_opencl=yes
-         echo "NOTE: Score-P's scorep-config supports --noopencl option"
-       fi
-    fi
-
-    if [ $scorep_supports_opencl = yes ]; then
-       if [ $use_opencl = no ] ; then
-         scorep_adapter="$scorep_adapter --noopencl"
-       else
-         scorep_adapter="$scorep_adapter --opencl"
-       fi
-    fi
-
-    scorep_supports_openacc=no
-    if [ -x $scorepdir/bin/scorep-config ]; then
-       retval=`$scorepdir/bin/scorep-config --noopenacc &>/dev/null `
-       if [ $? = 0 ]; then
-         scorep_supports_openacc=yes
-         echo "NOTE: Score-P's scorep-config supports --noopenacc option"
-       fi
-    fi
-
-    if [ $scorep_supports_openacc = yes ]; then
-       if [ $use_openacc = no ] ; then
-         scorep_adapter="$scorep_adapter --noopenacc"
-       else
-         scorep_adapter="$scorep_adapter --openacc"
-       fi
-    fi
-
-    if [ $shmem = yes ]; then
-      scorep_adapter="$scorep_adapter --mpp=shmem"
-    fi
-
-    if [ $pthread = yes ]; then
-      scorep_adapter="$scorep_adapter --thread=pthread"
-    fi
-
-    if [ $openmp = yes ]; then
-      if [ $opari = yes ]; then
-        #scorep_adapter="$scorep_adapter --thread=omp:pomp_tpd --pomp"
-        scorep_adapter="$scorep_adapter --thread=omp --pomp"
+        if [ -x "$scorep_opari_bin_dir/opari2" ]; then
+          fixmakeargs="$fixmakeargs scorep_opari_bin_dir=$scorep_opari_bin_dir SCOREPOPARI2"
+        fi
       else
-        if [ $ompt = yes ]; then
-          #scorep_adapter="$scorep_adapter --thread=omp:ompt"
-          scorep_adapter="$scorep_adapter --thread=omp"
+        # Probe what scorep-config would do for --thread=omp
+        test_libs=$(${scorepdir}/bin/scorep-config --libs ${adapter_string} --thread=omp 2>/dev/null)
+        if echo "${test_libs}" | grep -qiE 'opari|pomp'; then
+          echo "NOTE: scorep-config emits Opari/POMP for OpenMP; avoiding --thread=omp and using fork-join OpenMP wrapper."
+          use_manual_forkjoin_omp="yes"
+          # Do NOT append --thread=omp to adapter_string; avoid Opari in adapter-init
+          extra_manual_libs="-lscorep_thread_fork_join_omp"
         else
-          scorep_adapter="$scorep_adapter --thread=omp:ancestry"
-# Should we make an explicit option to enable Score-P thread=ancestry?
-# It is enabled if ompt is not specified and opari is not specified.
+          echo "NOTE: Using Score-P OpenMP wrapper"
+          adapter_string="$adapter_string --thread=omp"
         fi
       fi
     fi
+    ###Adapter arguments complete.
 
-    scorep_adapter="$scorep_adapter --user"
+    ###Collect flags from scorep-config
+    rpath_fix_expr='s@-Wl,-rpath[[:space:]]-Wl,/@-Wl,-rpath,/@g'
+    scorepLDflags=$(${scorepdir}/bin/scorep-config --ldflags ${adapter_string} | sed -e "$rpath_fix_expr" -e 's@ @#@g')
 
-    if [ $scorep_adapter_init = yes ]; then
-      echo ${scorepdir}/bin/scorep-config ${scorep_adapter}
-      x=`${scorepdir}/bin/scorep-config ${scorep_adapter} > src/Profile/TauScorePAdapterInit.c`
-      if [ $? = 0 ]; then
-        echo "NOTE: Built TauScorePAdapterInit.c with scorep-config ${scorep_adapter}"
-      else
-       x=`${scorepdir}/bin/scorep-config --adapter-init >  src/Profile/TauScorePAdapterInit.c `
-       echo "NOTE: Using the default adapter-init code in Score-P"
-      fi
+    scorepLibs=$(${scorepdir}/bin/scorep-config --libs ${adapter_string})
+    # If we drop --thread=omp to avoid Opari add the fork-join OpenMP lib explicitly
+    if [ "$use_manual_forkjoin_omp" = "yes" ]; then
+      scorepLibs="${scorepLibs} ${extra_manual_libs}"
     fi
-    #echo "SCORE-P version is 1.1? $scorep11"
-    if [ $scorep11 = 0 ] ; then
-        # default flags for Score-P 1.2+
-        mod_scorep_adapter=`echo ${scorep_adapter} | sed -e 's/--adapter-init//g'`
-        #echo "WE HAVE mod_scorep_adapter = ${mod_scorep_adapter}"
-        if [ $machine = "mic_linux" ]; then
-          mod_scorep_adapter="$mod_scorep_adapter --target=mic "
-        fi
-        scorepLibs=`${scorepdir}/bin/scorep-config --libs ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e  's@ @#@g' -e 's@lscorep_adapter_compiler_mgmt@lscorep_adapter_compiler_mgmt#-lscorep_adapter_compiler_event@g'`
-        scorepLD=`${scorepdir}/bin/scorep-config --ldflags ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e  's@ @#@g'`
-        echo "Using scorepLD=$scorepLD"
-        scorepExtraLibs='-lscorep_adapter_user_event#-lscorep_adapter_user_mgmt'
-    fi
-    # in Score-P version 1.1+... < 1.2 we needed to explicitly specify --hyb --omp --seq --mpi to get the right flags
-    if [ $mpi = yes ] ; then
-        if [ $openmp = yes ] ; then
-            fixmakeargs="$fixmakeargs SCOREPOMPI"
-            if [ $scorep11 = 1 ]; then
-                scorepLibs=`${scorepdir}/bin/scorep-config --hyb --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-                scorepLD=`${scorepdir}/bin/scorep-config --hyb --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-            fi
-        else
-            fixmakeargs="$fixmakeargs SCOREPMPI"
-            if [ $scorep11 = 1 ]; then
-                scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-                scorepLD=`${scorepdir}/bin/scorep-config --mpi --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-            fi
-        fi
-    else
-        if [ $openmp = yes ] ; then
-            fixmakeargs="$fixmakeargs SCOREPOMP"
-            if [ $scorep11 = 1 ]; then
-                scorepLD=`${scorepdir}/bin/scorep-config --omp --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-                scorepLibs=`${scorepdir}/bin/scorep-config --omp --libs  | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-            fi
-        else
-            if [ $scorep11 = 1 ]; then
-                scorepLibs=`${scorepdir}/bin/scorep-config --seq --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-                scorepLD=`${scorepdir}/bin/scorep-config --seq --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-            fi
-        fi
-    fi
-    #scorepLibs="$scorepLD $scorepLibs $scorepExtraLibs"
-    scorepLibs="$scorepExtraLibs#$scorepLD#-Wl,--no-as-needed#$scorepLibs"
-    scorepLDflags=`${scorepdir}/bin/scorep-config --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e 's@ @#@g'`
-    #fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
-    fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#$scorepLDflags#$scorepLibs"
-    if [ $mpi = no ]; then
-      #fixmakeargs="$fixmakeargs scoreplibs=-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
-      fixmakeargs="$fixmakeargs scoreplibs=-L$scorepdir/lib#$scorepLDflags#$scorepLibs"
-    fi
-    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
+    scorepLibs=$(echo "$scorepLibs" | sed -e 's@ @#@g')
 
+    scorepIncs=$(${scorepdir}/bin/scorep-config --cppflags | sed -e 's@ @#@g')
 
-    if [ $opari = yes ] ; then
-        # We should use the Opari2 provided by Score-P instead of TAU's Opari2 which may be older in some cases.
-        scorep_opari_support=`${scorepdir}/bin/scorep-info config-summary | grep -iE 'opari[2-9] support' `
-        if [ `echo $scorep_opari_support | grep internal | wc -l ` = 0 ]; then
-            scorep_opari_bin_dir=`echo $scorep_opari_support | sed -e 's@.*via @@g' -e 's@opari2-config@@g' `
-            if [ -x $scorep_opari_bin_dir/opari2 ]; then
-                echo "NOTE: Using external Opari2 from $scorep_opari for OpenMP instrumentation"
-            fi
-            # When Score-P 1.1.1's internal Opari2 is usable, we should move this line outside the if statement
-            # so it applies to both the clauses internal as well as external
-            fixmakeargs="$fixmakeargs scorep_opari_bin_dir=$scorep_opari_bin_dir SCOREPOPARI2"
-        else
-            scorep_opari_bin_dir=${scorepdir}/bin
-            if [ -x $scorep_opari_bin_dir/opari2 -a $scorep11 = 0 ]; then
-                echo "NOTE: Using Score-Ps internal Opari2 from ${scorep_opari_bin_dir}/opari2"
-                fixmakeargs="$fixmakeargs scorep_opari_bin_dir=$scorep_opari_bin_dir SCOREPOPARI2"
-                # If it is scorep-1.1.1, please use TAU's Opari2. The internal Opari2 from Score-P 1.1.1 crashes.
-                # It is ok to use Opari2 from Score-P 1.2+.
-            fi
-        fi
+    ###Set make variables
+    fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#${scorepLDflags}\#${scorepLibs}"
+    if [ "$mpi" = "no" ]; then
+      fixmakeargs="$fixmakeargs scoreplibs=-L${scorepdir}/lib\#${scorepLDflags}\#${scorepLibs}"
     fi
+    fixmakeargs="$fixmakeargs scorepincs=${scorepIncs}"
 
-    if [ $phase = yes ] ; then
-        echo "********scorep and phase are on"
-    fi
-
-fi #end scorep
-
+    ### Generate scorep adapter code
+    fixmakeargs="$fixmakeargs SCOREP_ADAPTER_INIT"
+    echo "${scorepdir}/bin/scorep-config ${adapter_string} --adapter-init"
+    ${scorepdir}/bin/scorep-config ${adapter_string} --adapter-init > src/Profile/TauScorePAdapterInit.c
+fi
 
 
 ######################################################################
