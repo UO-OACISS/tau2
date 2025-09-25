@@ -12216,10 +12216,10 @@ fi # -scorep=download
     # Accelerator flags
 	#use_component naming scheme helps with iteration
     use_cuda="${cuda}"
-    for component in cuda opencl openacc; do
+	use_hip="${rocm}"
+    for component in cuda opencl openacc hip; do
   # read use_<component> into requested
   eval requested=\$use_${component}
-  echo ${requested}
 
   if [ "x${requested}" = "xyes" ]; then
     # Try to enable: only keep it if scorep-config accepts it for a real command
@@ -12253,7 +12253,7 @@ fi # -scorep=download
     use_manual_forkjoin_omp="no"
     if [ "$openmp" = "yes" ]; then
       if [ "$opari" = "yes" ]; then
-        echo "NOTE: Using legacy Opari2 backend for OpenMP."
+        echo "NOTE: Using Opari2 backend for OpenMP."
         adapter_string="$adapter_string --thread=omp --pomp"
         # Opari2 bin dir detection/specification
         scorep_opari_support=$(${scorepdir}/bin/scorep-info config-summary 2>/dev/null | grep -iE 'opari[2-9] support')
