@@ -12145,12 +12145,12 @@ if [ "x$download_scorep" = xyes ] ; then
       if [ $pgi = yes ]; then
         tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=pgi"
       fi
-      #if [ $c_compiler = amdclang ]; then
-      #  tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=amdclang"
-      #fi
-      #if [ $c_compiler = clang ]; then
-      #  tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=clang"
-      #fi
+      if [ $c_compiler = amdclang ]; then
+        tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=amdclang"
+      fi
+      if [ $c_compiler = clang ]; then
+        tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=clang"
+      fi
 
       # Add MS studio here
     fi # machine  = x86_64 or ibm64linux
