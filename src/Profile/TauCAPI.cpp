@@ -1289,10 +1289,12 @@ extern "C" void Tau_flush_gpu_activity(void) {
             cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
         }
     }
+#ifdef TAU_CUPTIPC
     if(TauEnv_get_tauCuptiPC())
     {
       cupti_pcsampling_exit();
     }
+#endif //TAU_CUPTIPC
 #endif //TAU_CUPTI
 #if defined(TAU_ENABLE_ROCPROFILER) || defined(TAU_ENABLE_ROCPROFILERV2)
    Tau_rocprofiler_pool_flush();
