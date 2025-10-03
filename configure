@@ -3201,7 +3201,7 @@ for arg in "$@"; do
           if [ "x$mdisc_dir" = "x" ]; then
             if [ -r /usr//include/metrics_discovery_api.h ]; then
               fixmakeargs="$fixmakeargs mdisc_dir=$mdisc_dir LEVEL_ZERO_METRICS"
-              tauoptions="${tauoptions}-L0Metrics"
+              tauoptions="${tauoptions}-l0metrics"
             else
               echo "TAU: metrics_discovery_api.h not found. Please specify directory with -level_metrics=<dir> and reconfigure TAU."
               exit 1

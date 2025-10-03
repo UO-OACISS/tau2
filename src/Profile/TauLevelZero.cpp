@@ -538,12 +538,13 @@ void TauL0EnableProfiling() {
    #ifdef L0METRICS
   
   std::string value;
-  //EBS Metric Groups  
+ 
   std::string metric_group("ComputeBasic");
-  value = utils::GetEnv("L0_MetricGroup");
+  value = utils::GetEnv("L0_METRICGROUP");
   if (!value.empty()) {
     metric_group = value;
   }      
+  TAU_VERBOSE("TAU: L0 Metric Group to measure: %s\n", metric_group.c_str());
   metric_collector = ZeMetricCollector::Create( driver, device, metric_group.c_str(), TAUOnMetricFinishCallback, nullptr);
 
   if (metric_collector == nullptr) {

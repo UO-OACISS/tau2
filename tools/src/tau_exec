@@ -983,8 +983,8 @@ if [ $track_l0 = "true" ]; then
   export PTI_ENABLE=1
   export ZE_ENABLE_TRACING_LAYER=1
   export ZET_ENABLE_API_TRACING_EXP=1
-  isL0Metrics=`echo $theBinding | grep L0Metrics`
-  if [ ! "x$isL0Metrics" == "x" ]; then
+  isl0metrics=`echo $theBinding | grep l0metrics`
+  if [ ! "x$isl0metrics" == "x" ]; then
     export ZET_ENABLE_METRICS=1
   fi
 fi

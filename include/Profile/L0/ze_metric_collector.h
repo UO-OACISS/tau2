@@ -112,7 +112,6 @@ class ZeMetricCollector {
     PTI_ASSERT(device != nullptr);
     PTI_ASSERT(group_name != nullptr);
     PTI_ASSERT(callback != nullptr);
-    PTI_ASSERT(callback_data != nullptr);
     PTI_ASSERT(max_kernel_count > 0);
 
     if(!utils::metrics::SufficientPrivilegesForMetrics()) {
