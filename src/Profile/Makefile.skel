@@ -156,7 +156,7 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #ROCPROFILERSDK#ROCPROFILERSDK_O += TauRocProfilerSDK_pc.o #ENDIF#
 #ROCPROFILERSDK_PC#ROCPROFILERSDK_O += TauRocProfilerSDK_add_tr.o #ENDIF#
 #ROCM#ROCM_O = TauRocm.o #ENDIF#
-#LEVEL_ZERO#TAU_LEVEL_ZERO_O = TauLevelZero.o #ENDIF#
+#LEVEL_ZERO#TAU_LEVEL_ZERO_O = TauLevelZero_new.o #ENDIF#
 #ROCTRACER#ROCTRACER_O = TauRocTracer.o #ENDIF#
 #ROCTRACERROCM6#ROCTRACER_O = TauRocTracer.o #ENDIF#
 
@@ -990,6 +990,9 @@ TauRocm.o : TauRocm.cpp $(HDRS)
 
 TauLevelZero.o : TauLevelZero.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
+
+TauLevelZero_new.o : TauLevelZero_new.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp) -std=c++17
 
 TauRocTracer.o : TauRocTracer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)

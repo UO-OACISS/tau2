@@ -1,0 +1,12 @@
+HOW TO UPDATE L0 HEADERS
+------------------------
+git clone https://github.com/oneapi-src/level-zero.git
+mkdir level_zero
+mkdir level_zero/layers
+cp level-zero/include/ze_api.h level_zero/ze_api.h
+cp level-zero/include/zet_api.h level_zero/zet_api.h
+cp level-zero/include/zes_api.h level_zero/zes_api.h
+cp level-zero/include/layers/zel_tracing_api.h level_zero/layers/zel_tracing_api.h
+cp level-zero/include/layers/zel_tracing_register_cb.h level_zero/layers/zel_tracing_register_cb.h
+rm -rf level-zero
+
