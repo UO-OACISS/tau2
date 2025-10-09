@@ -32,6 +32,10 @@
 #include <Profile/TauTraceOTF2.h>
 #include <Profile/TauMetrics.h>
 
+#ifdef TAU_PERFETTO
+#include <Profile/TauTracePerfetto.h>
+#endif
+
 #include <iostream>
 #include <vector>
 #include <atomic>
@@ -307,6 +311,12 @@ void TauTraceFlushBuffer(int tid)
     return;
   }
 #endif
+#ifdef TAU_PERFETTO
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_PERFETTO) {
+    TauTracePerfettoFlushBuffer(tid);
+    return;
+  }
+#endif
 
   checkTraceFileInitialized(tid);
 
@@ -400,6 +410,12 @@ int TauTraceInit(int tid)
       return TauTraceOTF2Init(tid);
   }
 #endif
+#ifdef TAU_PERFETTO
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_PERFETTO) {
+      return TauTracePerfettoInit(tid);
+  }
+#endif
+
    if (!getTauBufferAllocated(tid)) {
      TauMaxTraceRecords = (unsigned long long) TauEnv_get_max_records(); 
      TauBufferSize = sizeof(TAU_EV)*TauMaxTraceRecords; 
@@ -471,6 +487,12 @@ void TauTraceUnInitialize(int tid) {
     return;
   }
 #endif
+#ifdef TAU_PERFETTO
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_PERFETTO) {
+    TauTracePerfettoUnInitialize(tid);
+    return;
+  }
+#endif
   /* to set the trace as uninitialized and clear the current buffers (for forked
      child process, trying to clear its parent records) */
   setTauTraceInitialized(tid,0);
@@ -494,6 +516,12 @@ void TauTraceEventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int
 #ifdef TAU_OTF2
   if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_OTF2) {
     TauTraceOTF2EventWithNodeId(ev, par, tid, ts, use_ts, node_id, kind);
+    return;
+  }
+#endif
+#ifdef TAU_PERFETTO
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_PERFETTO) {
+    TauTracePerfettoEventWithNodeId(ev, par, tid, ts, use_ts, node_id, kind);
     return;
   }
 #endif
@@ -587,7 +615,12 @@ void TauTraceClose(int tid) {
       return;
   }
 #endif
-
+#ifdef TAU_PERFETTO
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_PERFETTO) {
+      TauTracePerfettoClose(tid);
+      return;
+  }
+#endif
   TauTraceEventSimple (TAU_EV_CLOSE, 0, tid, TAU_TRACE_EVENT_KIND_FUNC);
   TauTraceEventSimple (TAU_EV_WALL_CLOCK, time((time_t *)0), tid, TAU_TRACE_EVENT_KIND_FUNC);
   TauTraceDumpEDF(tid);
@@ -856,6 +889,11 @@ extern "C" void TauTraceMsg(int send_or_recv, int type, int other_id, int length
       TauTraceOTF2Msg(send_or_recv, type, other_id, length, ts, use_ts, node_id);
   }
 #endif
+#ifdef TAU_PERFETTO
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_PERFETTO) {
+      TauTracePerfettoMsg(send_or_recv, type, other_id, length, ts, use_ts, node_id);
+  }
+#endif
 
   x_int64 parameter;
   x_uint64 xother, xtype, xlength, xcomm;
@@ -944,12 +982,22 @@ void TauTraceBarrierAllStart(int tag) {
       TauTraceOTF2BarrierAllStart(tag);
   }
 #endif
+#ifdef TAU_PERFETTO
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_PERFETTO) {
+      TauTracePerfettoBarrierAllStart(tag);
+  }
+#endif
 }
 
 void TauTraceBarrierAllEnd(int tag) {
 #ifdef TAU_OTF2
   if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_OTF2) {
       TauTraceOTF2BarrierAllEnd(tag);
+  }
+#endif
+#ifdef TAU_PERFETTO
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_PERFETTO) {
+      TauTracePerfettoBarrierAllEnd(tag);
   }
 #endif
 }
@@ -961,12 +1009,22 @@ void TauTraceRMACollectiveBegin(int tag, int type, int start, int stride, int si
       TauTraceOTF2RMACollectiveBegin(tag, type, start, stride, size, data_in, data_out, root);
   }
 #endif
+#ifdef TAU_PERFETTO
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_PERFETTO) {
+      TauTracePerfettoRMACollectiveBegin(tag, type, start, stride, size, data_in, data_out, root);
+  }
+#endif
 }
 
 void TauTraceRMACollectiveEnd(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root) {
 #ifdef TAU_OTF2
   if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_OTF2) {
       TauTraceOTF2RMACollectiveEnd(tag, type, start, stride, size, data_in, data_out, root);
+  }
+#endif
+#ifdef TAU_PERFETTO
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_PERFETTO) {
+      TauTracePerfettoRMACollectiveEnd(tag, type, start, stride, size, data_in, data_out, root);
   }
 #endif
 }

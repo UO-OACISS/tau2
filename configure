@@ -789,6 +789,7 @@ usage() {
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
     echo "-likwid=<dir> ............................. Specify location of LIKWID."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
+    echo "-perfetto ............................... Enable Perfetto trace output."
     echo "-darshan=<dir> ............... Specify location of Darshan I/O package."
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-python=<interp> .... Choose Python options based on named interpreter."
@@ -1324,6 +1325,8 @@ otfdir=
 otfinc=
 otflib=
 download_otf=no
+perfetto=no
+download_perfetto=no
 download_likwid=no
 cubedir=own
 ebs2otf=no
@@ -2332,6 +2335,12 @@ for arg in "$@"; do
             fi
             shift
             ;;
+
+	-perfetto)
+		perfetto=yes
+		fixmakeargs="$fixmakeargs PERFETTO"
+		shift
+		;;
 
         -ebs2otf)
             ebs2otf=yes

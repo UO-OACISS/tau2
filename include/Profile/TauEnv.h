@@ -45,6 +45,7 @@
 
 #define TAU_TRACE_FORMAT_TAU 0
 #define TAU_TRACE_FORMAT_OTF2 1
+#define TAU_TRACE_FORMAT_PERFETTO 2
 
 #define TAU_EBS_RESOLUTION_FILE 0
 #define TAU_EBS_RESOLUTION_FUNCTION 1
@@ -201,6 +202,7 @@ extern "C" {
   int TAUDECL TauEnv_get_recycle_threads();
   int TAUDECL TauEnv_get_rocsdk_enable();
   int TAUDECL TauEnv_get_rocsdk_pcs_enable();
+  int TAUDECL TauEnv_get_perfetto_disable_compression(void);
 #ifdef __cplusplus
   void Tau_util_replaceStringInPlace(std::string& subject, const std::string& search,
                           const std::string& replace);
