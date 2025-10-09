@@ -1648,6 +1648,11 @@ class ZeCollector {
     }
   }
 
+  std::vector<std::string> reportMetricNames(zet_metric_group_handle_t group)
+  {
+    return GetMetricNames(group);
+  }
+
  private: // Implementation
 
   ZeCollector(
