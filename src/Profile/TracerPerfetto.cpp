@@ -54,8 +54,13 @@ using namespace tau;
 
 #ifdef TAU_PERFETTO
 
-// Disable automerge. Too expensive.
-static constexpr bool kEnableAutoMerge = false;
+// Fixed default buffer size (KB)
+static constexpr uint32_t kPerfettoBufferKB = 16384; // 16 MB
+
+static inline bool is_rank0() {
+  int n = RtsLayer::myNode();
+  return (n == 0 || n == -1);
+}
 
 /* ------------------------------------------------------------------------- *
  * Perfetto categories
@@ -83,11 +88,6 @@ static inline int64_t get_os_tid_now() {
   return out;
 }
 #endif
-
-static inline bool is_rank0() {
-  int n = RtsLayer::myNode();
-  return (n == 0 || n == -1); // treat -1 as single process before node set
-}
 
 /* ------------------------------------------------------------------------- *
  * Temporary buffered event prior to init
@@ -129,9 +129,6 @@ struct PerfettoGlobal {
     std::atomic<bool> finished{false};
     std::atomic<bool> disabled{false};
 
-    // Fixed default buffer size (KB);
-    uint32_t buffer_kb = 16384; // 16 MB
-
     int file_fd = -1;
     std::string per_rank_path;
     std::unique_ptr<perfetto::TracingSession> session;
@@ -140,9 +137,6 @@ struct PerfettoGlobal {
     std::vector<PerfettoThreadData*> thread_data;
     std::unordered_map<uint64_t, PerfettoCounterInfo> counter_map;
     std::unordered_map<long, FunctionInfo*> function_cache;
-
-    // Session id shared by all ranks via a filesystem token.
-    long long session_id = -1;
 
     // Aggregated metadata
     std::vector<std::pair<std::string, std::string>> metadata_kv;
@@ -229,91 +223,6 @@ static inline bool contains_str(const char* hay, const char* needle) {
 }
 
 /* ------------------------------------------------------------------------- *
- * Session token using filesystem
- * ------------------------------------------------------------------------- */
-static long long now_ns_monotonicish() {
-#if defined(CLOCK_REALTIME)
-    struct timespec ts;
-    if (clock_gettime(CLOCK_REALTIME, &ts) == 0) {
-        return (long long)ts.tv_sec * 1000000000LL + (long long)ts.tv_nsec;
-    }
-#endif
-    return (long long)time(nullptr) * 1000000000LL;
-}
-
-static long long read_session_file_blocking(const char* path) {
-    for (int attempt = 0; attempt < 200; ++attempt) { // up to ~2s
-        int fd = open(path, O_RDONLY);
-        if (fd >= 0) {
-            char buf[64] = {0};
-            ssize_t rd = read(fd, buf, sizeof(buf)-1);
-            close(fd);
-            if (rd > 0) {
-                char* endp = nullptr;
-                long long sid = strtoll(buf, &endp, 10);
-                if (sid > 0) return sid;
-            }
-        }
-        usleep(10000); // 10ms
-    }
-    return -1;
-}
-
-static long long get_or_create_session_id() {
-    const char* dir = TauEnv_get_tracedir();
-    char path[1024];
-    snprintf(path, sizeof(path), "%s/.tau.perfetto.session", dir ? dir : ".");
-
-    int fd = open(path, O_CREAT | O_EXCL | O_WRONLY, 0644);
-    if (fd >= 0) {
-        long long sid = now_ns_monotonicish();
-        char buf[64];
-        int len = snprintf(buf, sizeof(buf), "%lld\n", sid);
-        if (len > 0) {
-            (void)write(fd, buf, (size_t)len);
-            fsync(fd);
-        }
-        close(fd);
-        if (is_rank0()) {
-            TAU_VERBOSE("TAU: Perfetto: created session file %s\n", path);
-        }
-        return sid;
-    }
-
-    if (errno == EEXIST) {
-        long long sid = read_session_file_blocking(path);
-        if (sid > 0) {
-            if (is_rank0()) {
-                TAU_VERBOSE("TAU: Perfetto: joined session id %lld via %s\n", sid, path);
-            }
-            return sid;
-        }
-        // Attempt recovery if the file was empty/unreadable
-        fd = open(path, O_CREAT | O_EXCL | O_WRONLY, 0644);
-        if (fd >= 0) {
-            long long sid2 = now_ns_monotonicish();
-            char buf[64];
-            int len = snprintf(buf, sizeof(buf), "%lld\n", sid2);
-            if (len > 0) {
-                (void)write(fd, buf, (size_t)len);
-                fsync(fd);
-            }
-            close(fd);
-            if (is_rank0()) {
-                TAU_VERBOSE("TAU: Perfetto: recovered session id %lld via %s\n", sid2, path);
-            }
-            return sid2;
-        }
-    }
-
-    long long fallback = ((long long)getpid() << 32) ^ now_ns_monotonicish();
-    if (is_rank0()) {
-        TAU_VERBOSE("TAU: Perfetto: using fallback session id %lld (token unavailable)\n", fallback);
-    }
-    return fallback;
-}
-
-/* ------------------------------------------------------------------------- *
  * Initialization
  * ------------------------------------------------------------------------- */
 static void emit_process_descriptor(int rank) {
@@ -344,19 +253,15 @@ static void emit_thread_descriptor(PerfettoThreadData* td, int tid) {
 static void perfetto_init_locked() {
     if (g_perfetto.initialized) return;
 
-    // Establish a cross-rank session id without MPI via filesystem rendezvous.
-    g_perfetto.session_id = get_or_create_session_id();
-
     perfetto::TracingInitArgs args;
     args.backends = perfetto::kInProcessBackend;
     perfetto::Tracing::Initialize(args);
     perfetto::TrackEvent::Register();
 
-    // Per-rank file: ${TRACEDIR}/tau.<session>.rank_<rank>.perfetto
+    // Per-rank file: ${TRACEDIR}/tau.rank_<rank>.perfetto
     char path_buf[1024];
-    snprintf(path_buf, sizeof(path_buf), "%s/tau.%lld.rank_%d.perfetto",
-             TauEnv_get_tracedir(),
-             g_perfetto.session_id,
+    snprintf(path_buf, sizeof(path_buf), "%s/tau.rank_%d.perfetto",
+             TauEnv_get_tracedir() ? TauEnv_get_tracedir() : ".",
              (int)get_rank());
     g_perfetto.per_rank_path = path_buf;
 
@@ -373,7 +278,7 @@ static void perfetto_init_locked() {
 
     perfetto::TraceConfig cfg;
     auto* buf = cfg.add_buffers();
-    buf->set_size_kb(g_perfetto.buffer_kb);
+    buf->set_size_kb(kPerfettoBufferKB);
     cfg.set_flush_period_ms(1000);
 
     auto* ds = cfg.add_data_sources();
@@ -390,7 +295,7 @@ static void perfetto_init_locked() {
         m->set_disable_incremental_timestamps(true);
         ds->mutable_config()->set_track_event_config_raw(te_cfg.SerializeAsString());
     }
-    // Intentionally avoid periodic incremental state clears.
+    // Avoid periodic incremental state clears (reduce name fallback blips).
 
     g_perfetto.session = perfetto::Tracing::NewTrace();
     g_perfetto.session->Setup(cfg, g_perfetto.file_fd);
@@ -401,7 +306,7 @@ static void perfetto_init_locked() {
     emit_process_descriptor(rank);
     if (is_rank0()) {
         TAU_VERBOSE("TAU: Perfetto started (rank=%d, buffer=%uKB, file=%s, pid=%d)\n",
-                    rank, g_perfetto.buffer_kb, path_buf, (int)getpid());
+                    rank, kPerfettoBufferKB, path_buf, (int)getpid());
     }
 
     g_perfetto.initialized = true;
@@ -546,7 +451,7 @@ static inline bool is_user(int k){
 }
 
 /* ------------------------------------------------------------------------- *
- * Metadata capture (aggregate; no per-item emission/logging)
+ * Metadata capture (aggregate)
  * ------------------------------------------------------------------------- */
 void TauTracePerfettoMetadata(const char* name, const char* value, int tid) {
     if (g_perfetto.finished || g_perfetto.disabled) return;
@@ -828,104 +733,6 @@ void TauTracePerfettoFlushBuffer(int tid){
 }
 
 /* ------------------------------------------------------------------------- *
- * Merge traces (disabled by default; only used if kEnableAutoMerge == true)
- * ------------------------------------------------------------------------- */
-static void merge_rank_traces_dirscan_and_cleanup() {
-    if (!kEnableAutoMerge) return;
-    if (RtsLayer::myNode() != 0) return;
-
-    const char* outdir = TauEnv_get_tracedir();
-    if (!outdir || !*outdir) outdir = ".";
-    std::string out_path = std::string(outdir) + "/tau.perfetto";
-
-    // Gather all rank files for this session id
-    char prefix[256];
-    snprintf(prefix, sizeof(prefix), "tau.%lld.rank_", g_perfetto.session_id);
-    const char* suffix = ".perfetto";
-
-    std::vector<std::pair<int,std::string>> rank_files;
-    DIR* d = opendir(outdir);
-    if (d) {
-        struct dirent* ent;
-        while ((ent = readdir(d)) != nullptr) {
-            const char* nm = ent->d_name;
-            if (!nm) continue;
-            size_t ln = strlen(nm), lp = strlen(prefix), ls = strlen(suffix);
-            if (ln > lp + ls && strncmp(nm, prefix, lp) == 0 &&
-                strcmp(nm + (ln - ls), suffix) == 0) {
-
-                std::string full = std::string(outdir) + "/" + nm;
-                struct stat st{};
-                if (stat(full.c_str(), &st) != 0) continue;
-                if (st.st_size <= 0) continue;
-
-                std::string mid(nm + lp, nm + ln - ls);
-                char* endp = nullptr;
-                long r = strtol(mid.c_str(), &endp, 10);
-                if (endp && *endp == '\0' && r >= 0) {
-                    rank_files.emplace_back((int)r, full);
-                }
-            }
-        }
-        closedir(d);
-    }
-    std::sort(rank_files.begin(), rank_files.end(),
-              [](const auto& a, const auto& b){ return a.first < b.first; });
-
-    int out_fd = open(out_path.c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644);
-    if (out_fd < 0) {
-        if (is_rank0()) {
-            TAU_VERBOSE("TAU: Perfetto merge: cannot open %s\n", out_path.c_str());
-        }
-        return;
-    }
-
-    bool wrote_any = false;
-    std::vector<char> buffer(1<<22); // 4MB buffer to reduce syscalls if enabled
-    for (const auto& rf : rank_files) {
-        int in_fd = open(rf.second.c_str(), O_RDONLY);
-        if (in_fd < 0) {
-            if (is_rank0()) {
-                TAU_VERBOSE("TAU: Perfetto merge: missing %s (skipping)\n", rf.second.c_str());
-            }
-            continue;
-        }
-        ssize_t rd;
-        while ((rd = read(in_fd, buffer.data(), buffer.size())) > 0) {
-            ssize_t off = 0;
-            while (off < rd) {
-                ssize_t wr = write(out_fd, buffer.data() + off, (size_t)(rd - off));
-                if (wr < 0) { if (is_rank0()) TAU_VERBOSE("TAU: Perfetto merge: write error\n"); break; }
-                off += wr;
-            }
-            wrote_any = true;
-        }
-        close(in_fd);
-    }
-    fsync(out_fd);
-    close(out_fd);
-
-    if (wrote_any) {
-        if (is_rank0()) {
-            TAU_VERBOSE("TAU: Perfetto: concatenated %zu rank traces into %s\n",
-                        rank_files.size(), out_path.c_str());
-        }
-        // Delete original per-rank files
-        for (const auto& rf : rank_files) {
-            (void)unlink(rf.second.c_str());
-        }
-        // Delete session token file
-        char sess_path[1024];
-        snprintf(sess_path, sizeof(sess_path), "%s/.tau.perfetto.session", outdir);
-        (void)unlink(sess_path);
-    } else {
-        if (is_rank0()) {
-            TAU_VERBOSE("TAU: Perfetto: merge wrote no data; leaving per-rank files in place\n");
-        }
-    }
-}
-
-/* ------------------------------------------------------------------------- *
  * Shutdown
  * ------------------------------------------------------------------------- */
 void TauTracePerfettoShutdownComms(int tid){
@@ -963,7 +770,7 @@ void TauTracePerfettoClose(int tid){
     }
 
     if (tid == 0) {
-        // Emit aggregated metadata at the end-of-run on main thread.
+        // Emit the aggregated metadata once, on main thread.
         emit_aggregated_metadata_on_main_thread();
 
         {
@@ -971,19 +778,15 @@ void TauTracePerfettoClose(int tid){
             perfetto_finalize_locked();
         }
 
-        // By default, do NOT merge automatically.
-        merge_rank_traces_dirscan_and_cleanup();
-
-        // Rank-0: print user-facing instructions (concatenate then compress).
+        // Rank-0: print user-facing info about per-rank files.
         if (is_rank0()) {
             const char* outdir = TauEnv_get_tracedir();
             if (!outdir || !*outdir) outdir = ".";
-            // Inform where per-rank files are and how to merge/compress later.
             printf("TAU: Perfetto trace files written to %s\n", outdir);
-            printf("TAU: To merge per-rank traces for this run:\n");
-            printf("TAU:   cd %s && cat tau.%lld.rank_*.perfetto > tau.perfetto\n", outdir, g_perfetto.session_id);
-            printf("TAU: To compress the merged trace:\n");
-            printf("TAU:   cd %s && gzip -c tau.perfetto > tau.perfetto.gz\n", outdir);
+            printf("TAU: To merge per-rank traces:\n");
+            printf("TAU:   cat tau.rank_*.perfetto > tau.perfetto\n");
+            printf("TAU: To compress the trace:\n");
+            printf("TAU:   gzip -c tau.perfetto > tau.perfetto.gz\n", outdir);
             fflush(stdout);
         }
     }
