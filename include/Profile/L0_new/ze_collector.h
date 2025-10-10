@@ -2217,7 +2217,7 @@ class ZeCollector {
 
 #else /* _WIN32 */
 
-    std::string logfile = logger_->GetLogFileName();
+    std::string logfile = "";
     Logger *metric_logger = nullptr;
     std::string filename;
     if (logfile.empty()) {
@@ -2277,13 +2277,13 @@ class ZeCollector {
           group = it2->second.metric_group_;
           metric_names = GetMetricNames(it2->second.metric_group_);
           PTI_ASSERT(!metric_names.empty());
-          metric_logger->Log("\n=== Device #" + std::to_string(did) + " Metrics ===\n");
+          //metric_logger->Log("\n=== Device #" + std::to_string(did) + " Metrics ===\n");
           std::string header("\nKernel,GlobalInstanceId,SubDeviceId");
           for (auto& metric : metric_names) {
             header += "," + metric;
           }
           header += "\n";
-          metric_logger->Log(header);
+          //metric_logger->Log(header);
         }
         else {
           if (it->second.device_ != device) {
@@ -2328,7 +2328,7 @@ class ZeCollector {
             }
             str += "\n";
       
-            metric_logger->Log(str);
+            //metric_logger->Log(str);
           }
           else {
             std::cerr << "[WARNING] Not able to calculate metrics" << std::endl;
@@ -2342,7 +2342,6 @@ class ZeCollector {
     }
 
     if (metric_logger != logger_) {
-      std::cerr << "[INFO] Kernel metrics are stored in " << filename << std::endl;
       delete metric_logger; // close metric data file
     }
 #endif /* _WIN32 */

@@ -249,6 +249,9 @@ using namespace std;
 #define TAU_USE_ROCPROFILERSDK_DEFAULT 0
 #define TAU_USE_ROCSDK_SAMPLING_DEFAULT 0
 
+/* L0 related variables*/
+#define TAU_ENABLE_L0_DEFAULT 0
+
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
 
@@ -397,6 +400,10 @@ static int env_papi_multiplexing = 0;
 static int env_rocsdk_enable = 0;
 static int env_rocsdk_pcs_enable = 0;
 
+static int env_l0_enable = 0;
+static int env_l0_metrics_enable = 0;
+static int env_l0_stall_sampling_enable = 0;
+
 #ifdef TAU_ANDROID
 static int env_alfred_port = 6113;
 #endif
@@ -410,6 +417,8 @@ static int env_recycle_threads = TAU_RECYCLE_THREADS_DEFAULT;
 
 static const char *env_tau_exec_args = NULL;
 static const char *env_tau_exec_path = NULL;
+
+static const char *unitrace_metrics = NULL;
 
 } // extern "C"
 
@@ -1427,8 +1436,23 @@ int TauEnv_get_mem_class_present(const char * name) {
 int TauEnv_get_rocsdk_enable(){
   return env_rocsdk_enable;
 }
+
 int TauEnv_get_rocsdk_pcs_enable(){
   return env_rocsdk_pcs_enable;
+}
+
+int TauEnv_get_l0_enable(){
+  return env_l0_enable;
+}
+
+int TauEnv_get_l0_metrics_enable()
+{
+  return env_l0_metrics_enable;
+}
+
+int TauEnv_get_l0_stall_sampling_enable()
+{
+  return env_l0_stall_sampling_enable;
 }
 
 const char * TauEnv_get_tau_exec_args() {
@@ -2892,6 +2916,34 @@ void TauEnv_initialize()
         TAU_METADATA("TAU_ROCPROFILERSDK_PC_SAMPLING", "on");
       }
     }
+
+    tmp = getconf("ZE_ENABLE_TRACING_LAYER");
+    if (parse_bool(tmp, TAU_ENABLE_L0_DEFAULT)) {
+      env_l0_enable = 1;
+      TAU_VERBOSE("TAU: L0 profiling Enabled\n");
+    } else {
+      env_l0_enable = 0;
+      TAU_VERBOSE("TAU: L0 profiling Disabled\n");
+    }
+
+    if ((unitrace_metrics = getconf("UNITRACE_MetricGroup")) == NULL) {
+      unitrace_metrics = "";
+      env_l0_metrics_enable = 0;
+      TAU_VERBOSE("TAU: UNITRACE_MetricGroup is not set\n");
+    } else {
+      TAU_VERBOSE("TAU: UNITRACE_MetricGroup is \"%s\"\n", unitrace_metrics);
+      env_l0_metrics_enable = 1;
+    }
+
+    tmp = getconf("ZE_ENABLE_STALL_SAMPLING");
+    if (parse_bool(tmp, TAU_ENABLE_L0_DEFAULT)) {
+      env_l0_stall_sampling_enable = 1;
+      TAU_VERBOSE("TAU: L0 stall sampling Enabled\n");
+    } else {
+      env_l0_stall_sampling_enable = 0;
+      TAU_VERBOSE("TAU: L0 stall sampling Disabled\n");
+    }
+
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");

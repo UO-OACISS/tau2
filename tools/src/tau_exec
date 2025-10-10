@@ -349,6 +349,7 @@ memory_debug=false
 track_cuda=false
 track_ompt=false
 track_l0=false
+track_l0_stall_sampling=false
 track_power=false
 track_cupti=false
 track_cupti_pc=false
@@ -475,6 +476,11 @@ for arg in "$@" ; do
         ;;
       -l0|-L0|-oneapi|-level_zero|-levelzero)
         track_l0=true
+        save_arg $arg
+        shift
+        ;;
+      -l0_sampling)
+        track_l0_stall_sampling=true
         save_arg $arg
         shift
         ;;
@@ -979,18 +985,31 @@ if [ $track_ompt = "true" ]; then
   export OMP_TOOL=enabled
 fi
 
+
+
+if [ -v TAU_METRICS ]; then
+  export TAU_METRICS=TIME
+fi
+
 if [ $track_l0 = "true" ]; then
   export PTI_ENABLE=1
   export ZE_ENABLE_TRACING_LAYER=1
-  export ZET_ENABLE_API_TRACING_EXP=1
+  if [ -v UNITRACE_MetricGroup ]; then
+    export ZET_ENABLE_METRICS=1
+  fi
+
+  if [ $track_l0_stall_sampling = "true" ]; then
+    export ZE_ENABLE_STALL_SAMPLING=1
+  fi
+
+
+  #Need to remove
   isl0metrics=`echo $theBinding | grep l0metrics`
   if [ ! "x$isl0metrics" == "x" ]; then
     export ZET_ENABLE_METRICS=1
   fi
 fi
-if [ -v $TAU_METRICS ]; then
-  export TAU_METRICS=TIME
-fi
+
 if [ $track_rocm = "true" ] ; then
   if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
     if [ `echo $TAU_METRICS | grep "TIME"` ]; then

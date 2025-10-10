@@ -41,7 +41,7 @@ extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid);
 extern "C" void metric_set_gpu_timestamp(int tid, double value);
 extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
 
-//Disabled options, except Metric_Query and Stall_sampling
+//Disabled options, except Metric_Query and Stall_sampling,
 // can help debug if changed to true, do not remove their code
 // from ze_collector.h
 struct CollectorOptions {
@@ -57,7 +57,7 @@ struct CollectorOptions {
   bool verbose = true;
   bool demangle = true;
   bool kernels_per_tile = true;
-  bool metric_query = true;
+  bool metric_query = false;
   bool metric_stream = false;
   bool stall_sampling = false;
 };
@@ -84,18 +84,32 @@ OnZeFunctionFinishCallback L0_a_callback = nullptr;
 CollectorOptions init_collector_options()
 {
     CollectorOptions init_options;
-    /*
-    if()
-        init_options.metric_query = true;
-    */
-    /*
-    if()
+    
+    if(TauEnv_get_l0_metrics_enable() && !TauEnv_get_l0_stall_sampling_enable())
     {
+        if(strcmp("EuStallSampling", utils::GetEnv("UNITRACE_MetricGroup").c_str())==0)
+        {
+            printf("Error: EuStallSampling cannot be used as a metric\n");
+            return init_options;
+        }
+        printf("l0 metrics enable\n");
+        init_options.metric_query = true;
+    }
+    else if(TauEnv_get_l0_metrics_enable() && TauEnv_get_l0_stall_sampling_enable())//EuStallSampling
+    {
+        printf("Error: L0 cannot enable both Metric Profiling and Sampling\n");
+        return init_options;
+    }
+    
+    
+    if(TauEnv_get_l0_stall_sampling_enable())
+    {
+        printf("stall sampling\n");
         init_options.stall_sampling = true;
         //Check if metrics requested, if requested, throw error, as not compatible 
         init_options.metric_query = false;
     }
-    */
+    
     
     return init_options;
 }
@@ -268,10 +282,10 @@ std::vector<std::string> TAU_L0_get_metric_names(zet_metric_group_handle_t metri
     std::vector<std::string> metric_names = ze_collector_->reportMetricNames(metric_group);
     assert(metric_names.size() != 0);
 
-    for(auto it_metric_names = metric_names.begin(); it_metric_names != metric_names.end(); it_metric_names++)
+    /*for(auto it_metric_names = metric_names.begin(); it_metric_names != metric_names.end(); it_metric_names++)
     {
         std::cout << "[!!] " << *it_metric_names << std::endl;
-    }
+    }*/
     return metric_names;
 }
 
@@ -380,7 +394,6 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             std::cout << "kernel_duration " << kernel_dutarion << std::endl;
             std::cout << "Instance ID " << command->instance_id_  << std::endl;
         #endif
-        printf("[!!] Instace ID %lu\n", command->instance_id_);
 
  
 
@@ -456,10 +469,10 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             for (auto it = local_device_submissions_.metric_queries_submitted_.begin(); it != local_device_submissions_.metric_queries_submitted_.end();it++) 
             {
                 ZeCommandMetricQuery* curr_mq = *it;
-                printf("[!!] Metric query id %lu\n", curr_mq->instance_id_);
+                //printf("[!!] Metric query id %lu\n", curr_mq->instance_id_);
                 if(command->instance_id_ == curr_mq->instance_id_)
                 {
-                    printf("[!!] Processing metrics\n");
+                    //printf("[!!] Processing metrics\n");
                     ze_result_t mq_status;
                     ZeCommandMetricQuery *command_metric_query = *it;
                     mq_status = ZE_FUNC(zeEventQueryStatus)(command_metric_query->metric_query_event_);
@@ -478,8 +491,6 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
                             static zet_metric_group_handle_t metric_group = TAU_L0_get_metric_group(command->device_);
                             assert(metric_group != NULL);
                             static std::vector<std::string> metric_names = TAU_L0_get_metric_names(metric_group);
-
-                            //https://github.com/intel/pti-gpu/blob/0be8d49d441bbcfc8ab801534afa9e4a5a0b93f7/tools/unitrace/src/levelzero/ze_collector.h#L2269
                             
                             uint32_t value_count = 0;
                             mq_status = ZE_FUNC(zetMetricGroupCalculateMetricValues)(
@@ -527,7 +538,8 @@ void TauL0EnableProfiling()
 {
     printf("To enable metrics: ZET_ENABLE_METRICS=1 UNITRACE_MetricGroup=ComputeBasic\n");
 
-    if (getenv("ZE_ENABLE_TRACING_LAYER") == NULL) 
+    //if (getenv("ZE_ENABLE_TRACING_LAYER") == NULL) 
+    if(!TauEnv_get_l0_enable())
     {
         // tau_exec -level_zero was not called. Perhaps it is using -opencl
         TAU_VERBOSE("TAU: Disabling Level Zero support as ZE_ENABLE_TRACING_LAYER was not set from tau_exec -l0\n");
@@ -553,7 +565,7 @@ void TauL0EnableProfiling()
 void TauL0DisableProfiling()
 {
 
-    if(disabled)
+    if(disabled || !initialized)
         return;
     L0_TAU_DEBUG_MSG("Disabling Tau L0");
 
