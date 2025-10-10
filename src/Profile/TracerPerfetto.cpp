@@ -40,6 +40,7 @@
 #include <Profile/TauTracePerfetto.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/UserEvent.h>
+#include <Profile/TauMetaData.h>
 
 #ifdef TAU_PERFETTO
 #ifndef PERFETTO_ENABLE_LEGACY_TRACE_EVENTS
@@ -49,6 +50,7 @@
 #endif
 
 extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
+extern "C" int Tau_is_thread_fake(int t);
 
 using namespace tau;
 
@@ -57,6 +59,7 @@ using namespace tau;
 // Fixed default buffer size (KB)
 static constexpr uint32_t kPerfettoBufferKB = 16384; // 16 MB
 
+// Rank 0 is defined as node 0 or node -1 (for serial execution with MPI configured)
 static inline bool is_rank0() {
   int n = RtsLayer::myNode();
   return (n == 0 || n == -1);
@@ -147,6 +150,7 @@ static PerfettoGlobal g_perfetto;
 /* ------------------------------------------------------------------------- *
  * Helpers
  * ------------------------------------------------------------------------- */
+// Returns the rank, treating -1 as 0 for serial execution with MPI configured
 static inline uint64_t get_rank() {
     int r = RtsLayer::myNode();
     if (r < 0) r = 0;
@@ -174,6 +178,7 @@ static bool is_monotonic_user_event(uint64_t id) {
     return false;
 }
 
+// Compute unique flow ID from MPI message parameters
 static uint64_t compute_flow_id(int src, int dst, int tag, int comm) {
     uint64_t s = (uint64_t)(src & 0xFFFF);
     uint64_t d = (uint64_t)(dst & 0xFFFF);
@@ -237,11 +242,62 @@ static void emit_process_descriptor(int rank) {
     }
 }
 
+// Generate thread name with GPU context detection for CUDA, OpenCL, ROCm
+static std::string get_thread_name(int rank, int tid) {
+    if (tid == 0) {
+        return "main thread";
+    }
+    
+    // Check if this is a fake thread (GPU context)
+    if (Tau_is_thread_fake(tid)) {
+        // CUDA thread detection
+        const char* cuda_dev = Tau_metadata_get("CUDA Device", tid);
+        if (cuda_dev && strcmp(cuda_dev, "") != 0) {
+            const char* cuda_ctx = Tau_metadata_get("CUDA Context", tid);
+            const char* cuda_stream = Tau_metadata_get("CUDA Stream", tid);
+            char buf[256];
+            if (cuda_stream && strcmp(cuda_stream, "0") == 0) {
+                snprintf(buf, sizeof(buf), "CUDA [%s:%s:0]", cuda_dev, cuda_ctx);
+            } else {
+                snprintf(buf, sizeof(buf), "CUDA [%s:%s:%s]", cuda_dev, cuda_ctx, 
+                         cuda_stream ? cuda_stream : "?");
+            }
+            return std::string(buf);
+        }
+        
+        // OpenCL thread detection
+        const char* opencl_dev = Tau_metadata_get("OpenCL Device", tid);
+        if (opencl_dev && strcmp(opencl_dev, "") != 0) {
+            const char* opencl_queue = Tau_metadata_get("OpenCL Command Queue", tid);
+            char buf[256];
+            snprintf(buf, sizeof(buf), "GPU dev%s:que%s", opencl_dev, 
+                     opencl_queue ? opencl_queue : "?");
+            return std::string(buf);
+        }
+        
+        // ROCm thread detection
+        const char* rocm_gpu = Tau_metadata_get("ROCM_GPU_ID", tid);
+        if (rocm_gpu && strcmp(rocm_gpu, "") != 0) {
+            const char* rocm_queue = Tau_metadata_get("ROCM_QUEUE_ID", tid);
+            char buf[256];
+            snprintf(buf, sizeof(buf), "GPU%s Queue%s", rocm_gpu, 
+                     rocm_queue ? rocm_queue : "?");
+            return std::string(buf);
+        }
+        
+        // Generic GPU thread fallback
+        return std::string("GPU thread ") + std::to_string(tid);
+    }
+    
+    // Regular CPU thread
+    return std::string("Rank ") + std::to_string(rank) + 
+           ", CPU Thread " + std::to_string(tid);
+}
+
 static void emit_thread_descriptor(PerfettoThreadData* td, int tid) {
     auto track = perfetto::ThreadTrack::ForThread((uint64_t)td->os_tid);
     auto desc = track.Serialize();
-    std::string tname = (tid == 0) ? "main thread"
-                                   : (std::string("TAU TID ") + std::to_string(tid));
+    std::string tname = get_thread_name((int)get_rank(), tid);
     desc.mutable_thread()->set_thread_name(tname.c_str());
     perfetto::TrackEvent::SetTrackDescriptor(track, desc);
     if (is_rank0()) {
@@ -291,17 +347,16 @@ static void perfetto_init_locked() {
         m->add_enabled_categories("tau_meta");
         m->add_enabled_categories("tau_counter");
         m->add_enabled_categories("tau_mpi");
-        // Use explicit timestamps
+        // Use explicit timestamps rather than incremental encoding
         m->set_disable_incremental_timestamps(true);
         ds->mutable_config()->set_track_event_config_raw(te_cfg.SerializeAsString());
     }
-    // Avoid periodic incremental state clears (reduce name fallback blips).
 
     g_perfetto.session = perfetto::Tracing::NewTrace();
     g_perfetto.session->Setup(cfg, g_perfetto.file_fd);
     g_perfetto.session->StartBlocking();
 
-    // Emit the process descriptor immediately so the UI always has a name.
+    // Emit process descriptor immediately so UI always has a name
     int rank = (int)get_rank();
     emit_process_descriptor(rank);
     if (is_rank0()) {
@@ -399,7 +454,7 @@ static void emit_aggregated_metadata_on_main_thread() {
     PerfettoThreadData* td = g_perfetto.thread_data[tid];
     auto track = perfetto::ThreadTrack::ForThread((uint64_t)td->os_tid);
 
-    // Emit at end-of-run (current timestamp) so it's easy to find at the timeline end
+    // Emit at end-of-run (current timestamp) for easy discovery at timeline end
     uint64_t ts_ns = current_ts_ns_for_thread(tid);
     TRACE_EVENT_INSTANT("tau_meta", "TAU Metadata", track, ts_ns,
                         "data", joined.c_str());
@@ -421,7 +476,7 @@ int TauTracePerfettoInitTS(int tid, x_uint64 /*ts*/) {
     TauInternalFunctionGuard guard;
     if (g_perfetto.initialized || g_perfetto.finished) return 0;
 
-    // If node id is not set yet, defer initialization.
+    // Defer initialization until node id is set (handle MPI configured but serial execution)
     if (RtsLayer::myNode() <= -1) {
         return 1;
     }
@@ -483,6 +538,7 @@ static void emit_function(long func_id, bool is_enter, int rank, int tid,
     const char* name = get_function_name(func_id, name_buf, sizeof(name_buf));
     const char* ftype = get_function_type(func_id);
 
+    // Skip internal TAU clock offset functions
     if (contains_str(name, "TauTraceClockOffset")) {
         return;
     }
@@ -503,33 +559,37 @@ static void emit_function(long func_id, bool is_enter, int rank, int tid,
 }
 
 /* ------------------------------------------------------------------------- *
- * User events
+ * User events (counters)
  * ------------------------------------------------------------------------- */
 static void emit_user_event(uint64_t event_id, x_int64 raw_value,
                             int rank, int tid, uint64_t ts_ns) {
     ensure_thread_metadata(rank, tid);
 
-    auto it = g_perfetto.counter_map.find(event_id);
-    if (it == g_perfetto.counter_map.end()) {
-        std::string ev_name("UserEvent");
-        bool mono = is_monotonic_user_event(event_id);
+    PerfettoCounterInfo ci;
+    {
+        // Thread-safe counter map access
+        std::lock_guard<std::mutex> lk(g_perfetto.mutex);
+        auto it = g_perfetto.counter_map.find(event_id);
+        if (it == g_perfetto.counter_map.end()) {
+            std::string ev_name("UserEvent");
+            bool mono = is_monotonic_user_event(event_id);
 
-        for (auto uit = TheEventDB().begin(); uit != TheEventDB().end(); ++uit) {
-            if ((*uit)->GetId() == event_id) {
-                ev_name = (*uit)->GetName();
-                break;
+            for (auto uit = TheEventDB().begin(); uit != TheEventDB().end(); ++uit) {
+                if ((*uit)->GetId() == event_id) {
+                    ev_name = (*uit)->GetName();
+                    break;
+                }
             }
+            ci.monotonic = mono;
+            ci.defined = true;
+            ci.name = ev_name;
+            g_perfetto.counter_map[event_id] = ci;
+        } else {
+            ci = it->second;
         }
-        PerfettoCounterInfo ci;
-        ci.monotonic = mono;
-        ci.defined = true;
-        ci.name = ev_name;
-        g_perfetto.counter_map[event_id] = ci;
-        it = g_perfetto.counter_map.find(event_id);
     }
 
-    const PerfettoCounterInfo& ci = it->second;
-
+    // Emit monotonic counters as global tracks, others as instant events
     if (ci.monotonic) {
         TRACE_COUNTER("tau_counter", perfetto::DynamicString{ci.name.c_str()}, ts_ns, (int64_t)raw_value);
     } else {
@@ -585,6 +645,7 @@ void TauTracePerfettoEventWithNodeId(long int ev, x_int64 par, int tid,
 
     if (!g_perfetto.initialized) {
 #if defined(TAU_MPI) || defined(TAU_SHMEM)
+        // For MPI/SHMEM, buffer events until initialization completes
         ensure_thread_vector(tid);
         PerfettoThreadData* td = g_perfetto.thread_data[tid];
         if (!td->temp_buffers) td->temp_buffers = new std::vector<temp_buffer_entry>();
@@ -601,6 +662,7 @@ void TauTracePerfettoEventWithNodeId(long int ev, x_int64 par, int tid,
     }
 
 #if defined(TAU_MPI) || defined(TAU_SHMEM)
+    // Replay buffered events on first event after init
     ensure_thread_vector(tid);
     if (!g_perfetto.thread_data[tid]->buffers_written) {
         write_temp_buffer(tid, node_id);
@@ -643,7 +705,9 @@ void TauTracePerfettoMsg(int send_or_recv, int type, int other_id, int length,
     int my_rank = (int)get_rank();
     int src_rank = (send_or_recv == TAU_MESSAGE_SEND) ? my_rank : other_id;
     int dst_rank = (send_or_recv == TAU_MESSAGE_SEND) ? other_id : my_rank;
-    uint64_t flow_id = compute_flow_id(src_rank, dst_rank, type, 0);
+    
+    // Use node_id as communicator parameter for proper flow ID generation
+    uint64_t flow_id = compute_flow_id(src_rank, dst_rank, type, node_id);
     int t = RtsLayer::myThread();
 
     uint64_t actual_ts_us = use_ts ? ts_us : TauTraceGetTimeStamp(t);
@@ -651,8 +715,6 @@ void TauTracePerfettoMsg(int send_or_recv, int type, int other_id, int length,
 
     emit_mpi_message(send_or_recv == TAU_MESSAGE_SEND, flow_id,
                      src_rank, dst_rank, type, length, my_rank, t, ts_ns);
-
-    (void)node_id;
 }
 
 /* ------------------------------------------------------------------------- *
@@ -770,7 +832,7 @@ void TauTracePerfettoClose(int tid){
     }
 
     if (tid == 0) {
-        // Emit the aggregated metadata once, on main thread.
+        // Emit aggregated metadata once on main thread
         emit_aggregated_metadata_on_main_thread();
 
         {
@@ -778,7 +840,7 @@ void TauTracePerfettoClose(int tid){
             perfetto_finalize_locked();
         }
 
-        // Rank-0: print user-facing info about per-rank files.
+        // Rank-0: print user-facing info about per-rank files
         if (is_rank0()) {
             const char* outdir = TauEnv_get_tracedir();
             if (!outdir || !*outdir) outdir = ".";
@@ -786,7 +848,7 @@ void TauTracePerfettoClose(int tid){
             printf("TAU: To merge per-rank traces:\n");
             printf("TAU:   cat tau.rank_*.perfetto > tau.perfetto\n");
             printf("TAU: To compress the trace:\n");
-            printf("TAU:   gzip -c tau.perfetto > tau.perfetto.gz\n", outdir);
+            printf("TAU:   gzip -c tau.perfetto > tau.perfetto.gz\n");
             fflush(stdout);
         }
     }
