@@ -151,9 +151,9 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #############################################
 #PERFETTO#PERFETTO_O = TracerPerfetto.o #ENDIF#
 #PERFETTO#PERFETTO_LIB = $(TAUROOT)/utils/perfetto/libperfetto.a #ENDIF#
-$(TAUROOT)/src/perfetto/libperfetto.a:
+$(TAUROOT)/utils/perfetto/libperfetto.a:
 	@echo "Building Perfetto static library..."
-	(cd $(TAUROOT)/src/perfetto && $(MAKE))
+	(cd $(TAUROOT)/utils/perfetto && $(MAKE))
 
 #############################################
 # ROCPROFILER OBJECTS
