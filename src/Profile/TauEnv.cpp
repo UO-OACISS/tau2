@@ -283,7 +283,8 @@ static int env_profiling = 0;
 static int env_tracing = 0;
 static int env_thread_per_gpu_stream = 0;
 static int env_trace_format = TAU_TRACE_FORMAT_DEFAULT;
-static int env_perfetto_disable_compression = 0;
+static int env_perfetto_merge = 1;
+static int env_perfetto_compress = 1;
 static int env_callpath_depth = 0;
 static int env_depth_limit = 0;
 static int env_track_message = 0;
@@ -1087,8 +1088,12 @@ int TauEnv_get_tracing() {
   return env_tracing;
 }
 
-int TauEnv_get_perfetto_disable_compression() {
-  return env_perfetto_disable_compression;
+int TauEnv_get_perfetto_compress() {
+  return env_perfetto_compress;
+}
+
+int TauEnv_get_perfetto_merge() {
+  return env_perfetto_merge;
 }
 
 int TauEnv_get_thread_per_gpu_stream() {
@@ -1991,11 +1996,19 @@ void TauEnv_initialize()
     }
 	
 	/* Perfetto compression disable flag */
-    tmp = getconf("TAU_PERFETTO_DISABLE_COMPRESSION");
+    tmp = getconf("TAU_PERFETTO_COMPRESS");
     if(tmp != NULL) {
-      if(!strcasecmp(tmp,"1") || !strcasecmp(tmp,"true") ||
-         !strcasecmp(tmp,"yes") || !strcasecmp(tmp,"on")) {
-        env_perfetto_disable_compression = 1;
+      if(!strcasecmp(tmp,"0") || !strcasecmp(tmp,"false") ||
+         !strcasecmp(tmp,"no") || !strcasecmp(tmp,"off")) {
+        env_perfetto_compress = 0;
+      }
+    }
+	
+	tmp = getconf("TAU_PERFETTO_MERGE");
+    if(tmp != NULL) {
+      if(!strcasecmp(tmp,"0") || !strcasecmp(tmp,"false") ||
+         !strcasecmp(tmp,"no") || !strcasecmp(tmp,"off")) {
+        env_perfetto_merge = 0;
       }
     }
 	

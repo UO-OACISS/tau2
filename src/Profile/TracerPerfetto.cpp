@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <dirent.h>
 #include <time.h>
+#include <zlib.h>
 
 #include <tau_internal.h>
 #include <Profile/Profiler.h>
@@ -323,9 +324,9 @@ static void perfetto_init_locked() {
 
     g_perfetto.file_fd = open(path_buf, O_CREAT | O_TRUNC | O_WRONLY, 0644);
     if (g_perfetto.file_fd < 0) {
-        if (is_rank0()) {
-            TAU_VERBOSE("TAU: Perfetto: Failed to open %s\n", path_buf);
-        }
+        
+        TAU_VERBOSE("TAU: Perfetto: Failed to open %s\n", path_buf);
+        
         g_perfetto.disabled = true;
         g_perfetto.initialized = true;
         g_perfetto.finished = true;
@@ -384,6 +385,15 @@ static void perfetto_finalize_locked() {
         close(g_perfetto.file_fd);
         g_perfetto.file_fd = -1;
     }
+	
+	char done_path[1024];
+    snprintf(done_path, sizeof(done_path), "%s.done", g_perfetto.per_rank_path.c_str());
+    int fd = open(done_path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    if (fd >= 0) {
+        write(fd, "done\n", 5);
+        close(fd);
+    }
+	
     g_perfetto.finished = true;
     if (is_rank0()) {
         TAU_VERBOSE("TAU: Perfetto finalized (rank=%d)\n", (int)get_rank());
@@ -810,6 +820,175 @@ void TauTracePerfettoShutdownComms(int tid){
     TauTracePerfettoFlushBuffer(tid);
 }
 
+
+/* ------------------------------------------------------------------------- *
+ * Perfetto merge
+ * ------------------------------------------------------------------------- */
+
+static inline bool file_exists(const std::string& name) {
+    struct stat buffer;
+    return (stat(name.c_str(), &buffer) == 0);
+}
+
+static void TauPerfettoMergeAllRanks(const char* dir, int num_ranks) {
+
+    if (num_ranks <= 0) {
+        printf("TAU: Perfetto merge skipped: number of ranks provided was %d.\n", num_ranks);
+        return;
+    }    
+
+    bool do_gzip = TauEnv_get_perfetto_compress();
+    std::string base_path = std::string(dir) + "/tau.perfetto";
+    if (do_gzip) base_path += ".gz";
+    std::string out_path = base_path;
+
+    int version = 1;
+    while (file_exists(out_path)) {
+        out_path = base_path + "." + std::to_string(version++);
+    }
+
+    if (out_path != base_path) {
+        printf("TAU: Perfetto: WARNING: Output file %s already exists. Saving to %s instead.\n",
+               base_path.c_str(), out_path.c_str());
+    }
+
+    printf("TAU: Merging traces for %d ranks into %s\n", num_ranks, out_path.c_str());
+    fflush(stdout);
+
+    bool success = true;
+    char* buf = new char[1 << 20]; // 1 MiB buffer
+    int files_merged_count = 0;
+
+    if (do_gzip) {
+        gzFile out = gzopen(out_path.c_str(), "wb9");
+        if (!out) {
+            fprintf(stderr, "TAU: Perfetto: failed to open %s for gzip output\n", out_path.c_str());
+            success = false;
+        } else {
+            for (int i = 0; i < num_ranks; ++i) {
+                char rank_path[1024];
+                snprintf(rank_path, sizeof(rank_path), "%s/tau.rank_%d.perfetto", dir, i);
+
+                int in_fd = open(rank_path, O_RDONLY);
+                if (in_fd < 0) {
+                    fprintf(stderr, "TAU: Perfetto: WARNING: Could not open trace for rank %d at %s. Skipping.\n", i, rank_path);
+                    continue;
+                }
+                files_merged_count++;
+
+                ssize_t n_read;
+                while ((n_read = read(in_fd, buf, sizeof(char) * (1 << 20))) > 0) {
+                    if (gzwrite(out, buf, (unsigned)n_read) != n_read) {
+                        int errnum = 0;
+                        const char* zerr_msg = gzerror(out, &errnum);
+                        fprintf(stderr, "TAU: Perfetto: write error: %s. Aborting merge.\n", zerr_msg);
+                        success = false;
+                        break;
+                    }
+                }
+                close(in_fd);
+                if (!success) break;
+            }
+            gzclose(out);
+        }
+    } else { // Not gzipped
+        int out_fd = open(out_path.c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644);
+        if (out_fd < 0) {
+            fprintf(stderr, "TAU: Perfetto: failed to open %s for output\n", out_path.c_str());
+            success = false;
+        } else {
+            for (int i = 0; i < num_ranks; ++i) {
+                char rank_path[1024];
+                snprintf(rank_path, sizeof(rank_path), "%s/tau.rank_%d.perfetto", dir, i);
+
+                int in_fd = open(rank_path, O_RDONLY);
+                if (in_fd < 0) {
+                    fprintf(stderr, "TAU: Perfetto: WARNING: Could not open trace for rank %d at %s. Skipping.\n", i, rank_path);
+                    continue;
+                }
+                files_merged_count++;
+
+                ssize_t n_read;
+                while ((n_read = read(in_fd, buf, sizeof(char) * (1 << 20))) > 0) {
+                    if (write(out_fd, buf, n_read) != n_read) {
+                        perror("TAU: Perfetto: write error. Aborting merge");
+                        success = false;
+                        break;
+                    }
+                }
+                close(in_fd);
+                if (!success) break;
+            }
+            fsync(out_fd);
+            close(out_fd);
+        }
+    }
+    delete[] buf;
+
+	if (success) {
+        printf("TAU: Perfetto merge complete (%d of %d expected files merged).\n", files_merged_count, num_ranks);
+        printf("TAU: Perfetto: Cleaning up per-rank trace files.\n");
+        for (int i = 0; i < num_ranks; ++i) {
+            char rank_path[1024];
+            snprintf(rank_path, sizeof(rank_path), "%s/tau.rank_%d.perfetto", dir, i);
+            unlink(rank_path);
+        }
+    } else {
+        fprintf(stderr, "TAU: Perfetto merge failed.\n");
+        fprintf(stderr, "TAU: Perfetto: Deleting incomplete output file %s.\n", out_path.c_str());
+        unlink(out_path.c_str());
+    }
+    fflush(stdout);
+}
+
+static bool TauPerfettoWaitForSentinels(const char* dir, int total_ranks) {
+    const int max_wait_sec = 120;
+    const int check_interval_ms = 250;
+
+    printf("TAU: Perfetto: Rank 0 waiting for %d ranks to complete (timeout: %d seconds)...\n",
+           total_ranks, max_wait_sec);
+    fflush(stdout);
+
+    auto start_time = time(nullptr);
+
+    while (true) {
+        std::vector<int> missing_ranks;
+        for (int i = 0; i < total_ranks; ++i) {
+            char sentinel_path[1024];
+            snprintf(sentinel_path, sizeof(sentinel_path), "%s/tau.rank_%d.perfetto.done", dir, i);
+            
+            if (!file_exists(sentinel_path)) {
+                missing_ranks.push_back(i);
+            }
+        }
+
+        if (missing_ranks.empty()) {
+            printf("TAU: Perfetto: All %d ranks complete.\n", total_ranks);
+            fflush(stdout);
+            return true;
+        }
+
+        if (difftime(time(nullptr), start_time) > max_wait_sec) {
+            fprintf(stderr, "TAU: Perfetto: ERROR: Timed out after %d seconds waiting for sentinel files.\n", max_wait_sec);
+            
+            std::string missing_list_str;
+            for(size_t i = 0; i < missing_ranks.size(); ++i) {
+                if (i >= 5) { // Don't print a huge list
+                    missing_list_str += "and " + std::to_string(missing_ranks.size() - i) + " more...";
+                    break;
+                }
+                missing_list_str += std::to_string(missing_ranks[i]) + (i < missing_ranks.size() - 1 ? ", " : "");
+            }
+            fprintf(stderr, "TAU: Perfetto: Missing sentinel files from the following ranks: %s\n", missing_list_str.c_str());
+            fprintf(stderr, "TAU: Perfetto: Aborting merge.\n");
+            fflush(stderr);
+            return false;
+        }
+
+        usleep(check_interval_ms * 1000);
+    }
+}
+
 /* ------------------------------------------------------------------------- *
  * Close
  * ------------------------------------------------------------------------- */
@@ -842,6 +1021,13 @@ void TauTracePerfettoClose(int tid){
 
         // Rank-0: print user-facing info about per-rank files
         if (is_rank0()) {
+			 if (TauEnv_get_perfetto_merge()) { 
+				const char* outdir = TauEnv_get_tracedir();
+				if (!outdir || !*outdir) outdir = ".";
+				int nodes=tau_totalnodes(0,0);
+				TauPerfettoWaitForSentinels(outdir, nodes);
+                TauPerfettoMergeAllRanks(outdir, nodes);
+            } else {
             const char* outdir = TauEnv_get_tracedir();
             if (!outdir || !*outdir) outdir = ".";
             printf("TAU: Perfetto trace files written to %s\n", outdir);
@@ -850,6 +1036,7 @@ void TauTracePerfettoClose(int tid){
             printf("TAU: To compress the trace:\n");
             printf("TAU:   gzip -c tau.perfetto > tau.perfetto.gz\n");
             fflush(stdout);
+			}
         }
     }
 }
