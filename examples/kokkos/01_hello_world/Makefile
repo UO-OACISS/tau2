@@ -1,4 +1,28 @@
-KOKKOS_PATH = /storage/users/jalcaraz/spackkkk/spack/opt/spack/linux-ubuntu20.04-cascadelake/gcc-9.4.0/kokkos-4.3.00-sdwsar4ewnadahzp6g3oyz44yftjxrwv
+KOKKOS_PATH ?=
+
+ifeq ($(KOKKOS_PATH),)
+    KOKKOS_COMPILER_PATH := $(shell which kokkos_launch_compiler)
+
+    ifeq ($(KOKKOS_COMPILER_PATH),)
+        $(error KOKKOS_PATH is not set and 'kokkos_launch_compiler' could not be found in your PATH.)
+    else
+        KOKKOS_PATH := $(shell dirname $(shell dirname $(KOKKOS_COMPILER_PATH)))
+        $(info KOKKOS_PATH automatically set to: $(KOKKOS_PATH))
+    endif
+endif
+
+KOKKOS_LIB64_EXISTS := $(wildcard $(KOKKOS_PATH)/lib64)
+
+ifeq ($(KOKKOS_LIB64_EXISTS),)
+    KOKKOS_LIBDIR := $(KOKKOS_PATH)/lib
+    $(info KOKKOS library directory detected as: $(KOKKOS_PATH)/lib)
+else
+    KOKKOS_LIBDIR := $(KOKKOS_PATH)/lib64
+    $(info KOKKOS library directory detected as: $(KOKKOS_PATH)/lib64)
+endif
+
+KOKKOS_LIBS = -L$(KOKKOS_LIBDIR) -lkokkoscore -ldl
+
 SRC = $(wildcard *.cpp)
 vpath %.cpp $(sort $(dir $(SRC)))
 
@@ -10,9 +34,8 @@ EXE = $(notdir $(SRC:.cpp=.exe))
 LIB =
 LINK=g++
 CXX=g++
-KOKKOS_LIBS=-L$(KOKKOS_PATH)/lib64 -lkokkoscore -ldl
-KOKKOS_CXXFLAGS=-I$(KOKKOS_PATH)/include -std=c++14 -fopenmp
-KOKKOS_LDFLAGS=-std=c++14 -fopenmp
+KOKKOS_CXXFLAGS=-I$(KOKKOS_PATH)/include -std=c++17 -fopenmp
+KOKKOS_LDFLAGS=-std=c++17 -fopenmp
 
 build: $(EXE)
 
