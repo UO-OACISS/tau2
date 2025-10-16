@@ -33,6 +33,7 @@
 #include <dirent.h>
 #include <time.h>
 #include <zlib.h>
+#include <sched.h>
 
 #include <tau_internal.h>
 #include <Profile/Profiler.h>
@@ -114,6 +115,7 @@ struct PerfettoThreadData {
     bool thread_closed = false;
     std::vector<temp_buffer_entry>* temp_buffers = nullptr;
     int64_t os_tid = 0;
+    uint64_t last_ts_ns = 0;
 };
 
 /* ------------------------------------------------------------------------- *
@@ -125,6 +127,12 @@ struct PerfettoCounterInfo {
     std::string name;
 };
 
+struct CachedFuncInfo {
+    const char* name = "";
+    const char* type = "";
+    bool is_tau_internal = false;
+};
+
 /* ------------------------------------------------------------------------- *
  * Global Perfetto state
  * ------------------------------------------------------------------------- */
@@ -132,21 +140,27 @@ struct PerfettoGlobal {
     std::atomic<bool> initialized{false};
     std::atomic<bool> finished{false};
     std::atomic<bool> disabled{false};
+	std::atomic<bool> initializing{false};
 
     int file_fd = -1;
     std::string per_rank_path;
     std::unique_ptr<perfetto::TracingSession> session;
 
-    std::mutex mutex;
+    std::mutex global_state_mutex;
     std::vector<PerfettoThreadData*> thread_data;
     std::unordered_map<uint64_t, PerfettoCounterInfo> counter_map;
-    std::unordered_map<long, FunctionInfo*> function_cache;
+    std::unordered_map<long, CachedFuncInfo> function_cache;
 
     // Aggregated metadata
     std::vector<std::pair<std::string, std::string>> metadata_kv;
 };
 
 static PerfettoGlobal g_perfetto;
+static std::atomic<uint64_t> g_fake_os_tid_counter{10000000};
+// This flag prevents re-entrancy during initialization.
+// If a thread is already in TauTracePerfettoInit, it should not
+// try to record trace events that would lead back to initialization.
+static std::atomic<bool> g_perfetto_initializing{false};
 
 /* ------------------------------------------------------------------------- *
  * Helpers
@@ -160,7 +174,7 @@ static inline uint64_t get_rank() {
 
 static void ensure_thread_vector(int tid) {
     if ((int)g_perfetto.thread_data.size() <= tid) {
-        std::lock_guard<std::mutex> lk(g_perfetto.mutex);
+        std::lock_guard<std::mutex> lk(g_perfetto.global_state_mutex);
         while ((int)g_perfetto.thread_data.size() <= tid) {
             g_perfetto.thread_data.push_back(new PerfettoThreadData());
         }
@@ -174,6 +188,7 @@ static inline uint64_t current_ts_ns_for_thread(int tid) {
 }
 
 static bool is_monotonic_user_event(uint64_t id) {
+    TauInternalFunctionGuard guard;
     for (auto it = TheEventDB().begin(); it != TheEventDB().end(); ++it)
         if ((*it)->GetId() == id) return (*it)->IsMonotonicallyIncreasing();
     return false;
@@ -188,11 +203,29 @@ static uint64_t compute_flow_id(int src, int dst, int tag, int comm) {
     return (s << 48) | (d << 32) | (t << 16) | c;
 }
 
-static FunctionInfo* get_function_info(long func_id) {
+static inline bool contains_str(const char* hay, const char* needle) {
+    if (!hay || !needle) return false;
+    return strstr(hay, needle) != nullptr;
+}
+
+static const CachedFuncInfo& get_cached_function_info(long func_id) {
+	// Fast
     auto it = g_perfetto.function_cache.find(func_id);
     if (it != g_perfetto.function_cache.end()) {
         return it->second;
     }
+
+    // Slow: The function is not in the cache. We must acquire a lock to write.
+    std::lock_guard<std::mutex> lk(g_perfetto.global_state_mutex);
+
+    // Double-check: Another thread might have added the entry while we waited for the lock.
+    it = g_perfetto.function_cache.find(func_id);
+    if (it != g_perfetto.function_cache.end()) {
+        return it->second;
+    }
+
+    // This is the only thread that will compute and insert this func_id.
+    TauInternalFunctionGuard guard;
     FunctionInfo* fi = nullptr;
     for (auto fit = TheFunctionDB().begin(); fit != TheFunctionDB().end(); ++fit) {
         if ((*fit)->GetFunctionId() == func_id) {
@@ -200,32 +233,23 @@ static FunctionInfo* get_function_info(long func_id) {
             break;
         }
     }
-    g_perfetto.function_cache[func_id] = fi;
-    return fi;
-}
 
-static const char* get_function_name(long func_id, char* fallback_buf, size_t buf_size) {
-    FunctionInfo* fi = get_function_info(func_id);
+    CachedFuncInfo new_info;
     if (fi) {
-        const char* name = fi->GetName();
-        if (name && name[0] != '\0') return name;
+        new_info.name = fi->GetName() ? fi->GetName() : "";
+        new_info.type = fi->GetType() ? fi->GetType() : "";
+        // Intentionally filter internal TAU events to keep the trace clean.
+        new_info.is_tau_internal = contains_str(new_info.name, "TauTraceClockOffset");
+    } else {
+        // Use a thread_local buffer for the fallback name to ensure thread safety.
+        static thread_local char fallback_buf[256];
+        snprintf(fallback_buf, sizeof(fallback_buf), "Function_%ld", func_id);
+        new_info.name = fallback_buf;
     }
-    snprintf(fallback_buf, buf_size, "Function_%ld", func_id);
-    return fallback_buf;
-}
 
-static const char* get_function_type(long func_id) {
-    FunctionInfo* fi = get_function_info(func_id);
-    if (fi) {
-        const char* type = fi->GetType();
-        if (type && type[0] != '\0') return type;
-    }
-    return "";
-}
-
-static inline bool contains_str(const char* hay, const char* needle) {
-    if (!hay || !needle) return false;
-    return strstr(hay, needle) != nullptr;
+    // Insert the newly computed info into the cache and return a reference to it.
+    auto result = g_perfetto.function_cache.emplace(func_id, new_info);
+    return result.first->second;
 }
 
 /* ------------------------------------------------------------------------- *
@@ -245,6 +269,7 @@ static void emit_process_descriptor(int rank) {
 
 // Generate thread name with GPU context detection for CUDA, OpenCL, ROCm
 static std::string get_thread_name(int rank, int tid) {
+    TauInternalFunctionGuard guard;
     if (tid == 0) {
         return "main thread";
     }
@@ -307,7 +332,7 @@ static void emit_thread_descriptor(PerfettoThreadData* td, int tid) {
     }
 }
 
-static void perfetto_init_locked() {
+static void perfetto_do_init() {
     if (g_perfetto.initialized) return;
 
     perfetto::TracingInitArgs args;
@@ -404,12 +429,22 @@ static void perfetto_finalize_locked() {
  * Thread metadata
  * ------------------------------------------------------------------------- */
 static void ensure_thread_metadata(int rank, int tid) {
+    TauInternalFunctionGuard guard;
     (void)rank;
     ensure_thread_vector(tid);
     PerfettoThreadData* td = g_perfetto.thread_data[tid];
     if (td->track_defined) return;
 
-    td->os_tid = get_os_tid_now();
+    if (Tau_is_thread_fake(tid)) {
+        // This is a GPU stream or other logical thread. It doesn't have a real
+        // OS TID. Assign a unique ID from our counter to guarantee a unique
+        // Perfetto track.
+        td->os_tid = g_fake_os_tid_counter++;
+    } else {
+        // This is a real CPU thread. Use the actual OS thread ID.
+        td->os_tid = get_os_tid_now();
+    }
+
     emit_thread_descriptor(td, tid);
     td->track_defined = true;
 }
@@ -440,7 +475,7 @@ static void write_temp_buffer(int tid, int node_id) {
 static void emit_aggregated_metadata_on_main_thread() {
     std::vector<std::pair<std::string, std::string>> local_kv;
     {
-        std::lock_guard<std::mutex> lk(g_perfetto.mutex);
+        std::lock_guard<std::mutex> lk(g_perfetto.global_state_mutex);
         if (g_perfetto.metadata_kv.empty()) return;
         local_kv.swap(g_perfetto.metadata_kv);
     }
@@ -479,24 +514,40 @@ static void emit_aggregated_metadata_on_main_thread() {
  * Public init
  * ------------------------------------------------------------------------- */
 int TauTracePerfettoInit(int tid) {
+    TauInternalFunctionGuard guard;
     return TauTracePerfettoInitTS(tid, TauTraceGetTimeStamp(tid));
 }
 
 int TauTracePerfettoInitTS(int tid, x_uint64 /*ts*/) {
     TauInternalFunctionGuard guard;
-    if (g_perfetto.initialized || g_perfetto.finished) return 0;
-
-    // Defer initialization until node id is set (handle MPI configured but serial execution)
-    if (RtsLayer::myNode() <= -1) {
-        return 1;
+    if (g_perfetto.initialized.load() || g_perfetto.finished.load()) {
+        return 0;
     }
 
-    std::lock_guard<std::mutex> lk(g_perfetto.mutex);
-    if (!g_perfetto.initialized) {
-        perfetto_init_locked();
+    // Use compare_exchange to safely elect one thread as the initializer.
+    bool expected = false;
+    if (g_perfetto.initializing.compare_exchange_strong(expected, true)) {
+        // This thread is the initializer.
+        perfetto_do_init(); // This call no longer happens under a lock.
+
+        // After init is attempted, mark initialization as complete.
+        // Other threads can now proceed.
+        if (!g_perfetto.disabled.load()) {
+            g_perfetto.initialized.store(true);
+        }
+        g_perfetto.initializing.store(false);
+
+    } else {
+        // Another thread is already initializing. Wait for it to finish.
+        int spins = 0;
+        while (g_perfetto.initializing.load()) {
+            if ((++spins & 0xFF) == 0) sched_yield();
+            if ((spins & 0xFFF) == 0) usleep(100); // Small backoff
+        }
     }
+
     (void)tid;
-    return 0;
+    return g_perfetto.initialized.load() ? 0 : 1;
 }
 
 void TauTracePerfettoUnInitialize(int tid){(void)tid;}
@@ -528,7 +579,7 @@ void TauTracePerfettoMetadata(const char* name, const char* value, int tid) {
         if (!g_perfetto.initialized) return;
     }
 
-    std::lock_guard<std::mutex> lk(g_perfetto.mutex);
+    std::lock_guard<std::mutex> lk(g_perfetto.global_state_mutex);
     g_perfetto.metadata_kv.emplace_back(
         std::string(name ? name : ""),
         std::string(value ? value : ""));
@@ -541,27 +592,22 @@ static void emit_function(long func_id, bool is_enter, int rank, int tid,
                           uint64_t ts_ns) {
     ensure_thread_metadata(rank, tid);
     ensure_thread_vector(tid);
-    PerfettoThreadData* td = g_perfetto.thread_data[tid];
-    auto track = perfetto::ThreadTrack::ForThread((uint64_t)td->os_tid);
-
-    static thread_local char name_buf[256];
-    const char* name = get_function_name(func_id, name_buf, sizeof(name_buf));
-    const char* ftype = get_function_type(func_id);
-
-    // Skip internal TAU clock offset functions
-    if (contains_str(name, "TauTraceClockOffset")) {
+	
+	const CachedFuncInfo& info = get_cached_function_info(func_id);
+	if (info.is_tau_internal) {
         return;
     }
-
-    if (ftype && ftype[0] != '\0') {
+	PerfettoThreadData* td = g_perfetto.thread_data[tid];
+	auto track = perfetto::ThreadTrack::ForThread((uint64_t)td->os_tid);
+    if (info.type[0] != '\0') {
         if (is_enter) {
-            TRACE_EVENT_BEGIN("tau", perfetto::DynamicString{name}, track, ts_ns, "type", ftype);
+            TRACE_EVENT_BEGIN("tau", perfetto::DynamicString{info.name}, track, ts_ns, "type", info.type);
         } else {
             TRACE_EVENT_END("tau", track, ts_ns);
         }
     } else {
         if (is_enter) {
-            TRACE_EVENT_BEGIN("tau", perfetto::DynamicString{name}, track, ts_ns);
+            TRACE_EVENT_BEGIN("tau", perfetto::DynamicString{info.name}, track, ts_ns);
         } else {
             TRACE_EVENT_END("tau", track, ts_ns);
         }
@@ -578,7 +624,7 @@ static void emit_user_event(uint64_t event_id, x_int64 raw_value,
     PerfettoCounterInfo ci;
     {
         // Thread-safe counter map access
-        std::lock_guard<std::mutex> lk(g_perfetto.mutex);
+        std::lock_guard<std::mutex> lk(g_perfetto.global_state_mutex);
         auto it = g_perfetto.counter_map.find(event_id);
         if (it == g_perfetto.counter_map.end()) {
             std::string ev_name("UserEvent");
@@ -641,56 +687,90 @@ static void emit_mpi_message(bool is_send, uint64_t flow_id,
     }
 }
 
+static const char* get_kind_string(int kind) {
+    switch(kind) {
+        case TAU_TRACE_EVENT_KIND_FUNC: return "FUNC";
+        case TAU_TRACE_EVENT_KIND_CALLSITE: return "CALLSITE";
+        case TAU_TRACE_EVENT_KIND_TEMP_FUNC: return "TEMP_FUNC";
+        case TAU_TRACE_EVENT_KIND_USEREVENT: return "USEREVENT";
+        case TAU_TRACE_EVENT_KIND_TEMP_USEREVENT: return "TEMP_USEREVENT";
+        default: return "UNKNOWN";
+    }
+}
+
+
 /* ------------------------------------------------------------------------- *
  * Main event dispatcher
  * ------------------------------------------------------------------------- */
 void TauTracePerfettoEventWithNodeId(long int ev, x_int64 par, int tid,
                                      x_uint64 ts_us, int use_ts, int node_id, int kind) {
-    if (g_perfetto.finished || g_perfetto.disabled) return;
+    if (g_perfetto.finished.load() || g_perfetto.disabled.load()) return;
 
     TauInternalFunctionGuard guard;
+	
+	    if (RtsLayer::myNode() <= -1) {
+        TAU_VERBOSE("TAU: Perfetto: Dropping event (tid=%d, kind=%d) because rank is not yet set.\n", tid, kind);
+        return;
+		}
 
     if (kind == TAU_TRACE_EVENT_KIND_TEMP_FUNC) kind = TAU_TRACE_EVENT_KIND_FUNC;
     else if (kind == TAU_TRACE_EVENT_KIND_TEMP_USEREVENT) kind = TAU_TRACE_EVENT_KIND_USEREVENT;
 
-    if (!g_perfetto.initialized) {
-#if defined(TAU_MPI) || defined(TAU_SHMEM)
-        // For MPI/SHMEM, buffer events until initialization completes
-        ensure_thread_vector(tid);
-        PerfettoThreadData* td = g_perfetto.thread_data[tid];
-        if (!td->temp_buffers) td->temp_buffers = new std::vector<temp_buffer_entry>();
-        x_uint64 t_us = use_ts ? ts_us : TauTraceGetTimeStamp(tid);
-        td->temp_buffers->emplace_back(ev, t_us, par, kind);
-        return;
-#else
-        if (use_ts)
+    if (!g_perfetto.initialized.load()) {
+        // If another thread is already initializing, buffer this event and
+        // return immediately. This avoids blocking and preserves the event.
+        if (g_perfetto.initializing.load()) {
+            ensure_thread_vector(tid);
+            PerfettoThreadData* td = g_perfetto.thread_data[tid];
+            if (!td->temp_buffers) td->temp_buffers = new std::vector<temp_buffer_entry>();
+            x_uint64 t_us = use_ts ? ts_us : TauTraceGetTimeStamp(tid);
+            td->temp_buffers->emplace_back(ev, t_us, par, kind);
+            return;
+        }
+
+        // Otherwise, this thread is responsible for kicking off initialization.
+        if (use_ts) {
             TauTracePerfettoInitTS(tid, ts_us);
-        else
+        } else {
             TauTracePerfettoInit(tid);
-        if (!g_perfetto.initialized) return;
-#endif
+        }
+
+        // If initialization failed, we must drop the event, but warn the user.
+        if (!g_perfetto.initialized.load()) {
+            fprintf(stderr,
+                    "TAU: [PERFETTO_CRITICAL] Tracer initialization failed. "
+                    "The current event will be dropped. "
+                    "Check for permissions issues or other errors reported above.\n");
+            fflush(stderr);
+            return;
+        }
     }
 
-#if defined(TAU_MPI) || defined(TAU_SHMEM)
-    // Replay buffered events on first event after init
+    // ---- Buffer Replay Logic ----
+    // This ensures buffered startup events from all threads are replayed.
     ensure_thread_vector(tid);
     if (!g_perfetto.thread_data[tid]->buffers_written) {
         write_temp_buffer(tid, node_id);
     }
-#endif
 
+    // ---- Normal Event Emission Logic ----
     int rank = node_id;
     uint64_t actual_ts_us = use_ts ? ts_us : TauTraceGetTimeStamp(tid);
     uint64_t ts_ns = us_to_ns(actual_ts_us);
 
+    PerfettoThreadData* td = g_perfetto.thread_data[tid];
+    if (ts_ns < td->last_ts_ns) {
+        ts_ns = td->last_ts_ns;
+    }
+
     if (is_func(kind)) {
         bool is_enter = (par == 1);
         emit_function(ev, is_enter, rank, tid, ts_ns);
-
     } else if (is_user(kind)) {
         emit_user_event((uint64_t)ev, par, rank, tid, ts_ns);
-
     }
+
+    td->last_ts_ns = ts_ns;
 }
 
 void TauTracePerfettoEvent(long int ev, x_int64 par, int tid,
@@ -798,6 +878,7 @@ void TauTracePerfettoRMACollectiveEnd(int tag, int type, int start, int stride,
  * Flush
  * ------------------------------------------------------------------------- */
 void TauTracePerfettoFlushBuffer(int tid){
+    TauInternalFunctionGuard guard;
     if (g_perfetto.session && g_perfetto.initialized && !g_perfetto.finished) {
         g_perfetto.session->FlushBlocking();
     }
@@ -852,7 +933,7 @@ static void TauPerfettoMergeAllRanks(const char* dir, int num_ranks) {
                base_path.c_str(), out_path.c_str());
     }
 
-    printf("TAU: Merging traces for %d ranks into %s\n", num_ranks, out_path.c_str());
+    printf("TAU: Perfetto: Merging traces for %d ranks into %s\n", num_ranks, out_path.c_str());
     fflush(stdout);
 
     bool success = true;
@@ -932,6 +1013,9 @@ static void TauPerfettoMergeAllRanks(const char* dir, int num_ranks) {
             char rank_path[1024];
             snprintf(rank_path, sizeof(rank_path), "%s/tau.rank_%d.perfetto", dir, i);
             unlink(rank_path);
+			char done_path[1024];
+            snprintf(done_path, sizeof(done_path), "%s/tau.rank_%d.perfetto.done", dir, i);
+            unlink(done_path);
         }
     } else {
         fprintf(stderr, "TAU: Perfetto merge failed.\n");
@@ -944,6 +1028,10 @@ static void TauPerfettoMergeAllRanks(const char* dir, int num_ranks) {
 static bool TauPerfettoWaitForSentinels(const char* dir, int total_ranks) {
     const int max_wait_sec = 120;
     const int check_interval_ms = 250;
+	
+	if(total_ranks <= 1) {
+        return true;
+    }
 
     printf("TAU: Perfetto: Rank 0 waiting for %d ranks to complete (timeout: %d seconds)...\n",
            total_ranks, max_wait_sec);
@@ -1015,7 +1103,7 @@ void TauTracePerfettoClose(int tid){
         emit_aggregated_metadata_on_main_thread();
 
         {
-            std::lock_guard<std::mutex> lk(g_perfetto.mutex);
+            std::lock_guard<std::mutex> lk(g_perfetto.global_state_mutex);
             perfetto_finalize_locked();
         }
 
