@@ -708,18 +708,13 @@ void TauTracePerfettoEventWithNodeId(long int ev, x_int64 par, int tid,
 
     TauInternalFunctionGuard guard;
 	
-	    if (RtsLayer::myNode() <= -1) {
-        TAU_VERBOSE("TAU: Perfetto: Dropping event (tid=%d, kind=%d) because rank is not yet set.\n", tid, kind);
-        return;
-		}
-
     if (kind == TAU_TRACE_EVENT_KIND_TEMP_FUNC) kind = TAU_TRACE_EVENT_KIND_FUNC;
     else if (kind == TAU_TRACE_EVENT_KIND_TEMP_USEREVENT) kind = TAU_TRACE_EVENT_KIND_USEREVENT;
 
-    if (!g_perfetto.initialized.load()) {
+    if (RtsLayer::myNode() <= -1 || !g_perfetto.initialized.load()) {
         // If another thread is already initializing, buffer this event and
         // return immediately. This avoids blocking and preserves the event.
-        if (g_perfetto.initializing.load()) {
+        if (RtsLayer::myNode() <= -1 || g_perfetto.initializing.load()) {
             ensure_thread_vector(tid);
             PerfettoThreadData* td = g_perfetto.thread_data[tid];
             if (!td->temp_buffers) td->temp_buffers = new std::vector<temp_buffer_entry>();
@@ -759,8 +754,8 @@ void TauTracePerfettoEventWithNodeId(long int ev, x_int64 par, int tid,
     uint64_t ts_ns = us_to_ns(actual_ts_us);
 
     PerfettoThreadData* td = g_perfetto.thread_data[tid];
-    if (ts_ns < td->last_ts_ns) {
-        ts_ns = td->last_ts_ns;
+    if (ts_ns <= td->last_ts_ns) {
+        ts_ns = td->last_ts_ns+1;
     }
 
     if (is_func(kind)) {
