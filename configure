@@ -11547,6 +11547,7 @@ EOF
                     fi
                     fixmakeargs="$fixmakeargs CUPTI TAU_USE_GPU cuptiinclude=${cupti_path}/include"
                     echo "Using CUPTI library found in $cupti."
+		    cupti=yes
                     if [ $machine = craycnl ]; then
                         # check if -lcuda is available to the linker somehow
                       fixmakeargs="$fixmakeargs CUPTI_NOCUDA"
