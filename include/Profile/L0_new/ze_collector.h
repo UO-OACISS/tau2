@@ -1181,8 +1181,6 @@ class ZeCollector {
 
   static ZeCollector* Create(
       CollectorOptions options,
-      OnZeKernelFinishCallback kcallback = nullptr,
-      OnZeFunctionFinishCallback fcallback = nullptr,
       void* callback_data = nullptr) {
     ze_api_version_t version = GetZeVersion();
     PTI_ASSERT(
@@ -1197,7 +1195,7 @@ class ZeCollector {
     }
 
     ZeCollector* collector = new ZeCollector(
-        options, kcallback, fcallback, callback_data, reset_event_on_device);
+        options, callback_data, reset_event_on_device);
     UniMemory::ExitIfOutOfMemory((void *)(collector));
 
     ze_result_t status = ZE_RESULT_SUCCESS;
@@ -1278,7 +1276,6 @@ class ZeCollector {
       metric_contexts_.clear();
     }
 
-    DumpKernelProfiles();
   }
 
   uint64_t CalculateTotalKernelTime() const {
@@ -1295,253 +1292,13 @@ class ZeCollector {
     return total_time;
   }
 
-  void PrintKernelsTable() const {
-    uint64_t total_time = 0;
-    std::vector<std::string> knames;
-    size_t max_name_size = 0;
-    global_device_time_stats_mutex_.lock();
-
-    AggregateDeviceTimeStats();
-
-    std::set<std::pair<ZeKernelCommandNameKey, ZeKernelCommandTime>, utils::Comparator> sorted_list(
-        global_device_time_stats_->begin(), global_device_time_stats_->end());
-
-    for (auto& it : sorted_list) {
-      total_time += it.second.execute_time_;
-      std::string kname;
-      if (it.first.tile_ >= 0) {
-        kname = "Tile #" + std::to_string(it.first.tile_) + ": " + GetZeKernelCommandName(it.first.kernel_command_id_, it.first.group_count_, it.first.mem_size_, options_.verbose);
-      }
-      else {
-        kname = GetZeKernelCommandName(it.first.kernel_command_id_, it.first.group_count_, it.first.mem_size_, options_.verbose);
-      }
-      if (kname.size() > max_name_size) {
-        max_name_size = kname.size();
-      }
-      knames.push_back(kname);
-    }
-
-    if (total_time != 0) {
-      // sizeof("Kernel") is 7, not 6 
-      std::string str(std::max(int(max_name_size - sizeof("Kernel") + 1), 0), ' ');
-      str += "Kernel, " +
-      std::string(std::max(int(kCallsLength - sizeof("Calls") + 1), 0), ' ') + "Calls, " +
-      std::string(std::max(int(kTimeLength - sizeof("Time (ns)") + 1), 0), ' ') + "Time (ns), " +
-        "    Time (%), " +
-      std::string(std::max(int(kTimeLength - sizeof("Average (ns)") + 1), 0), ' ') + "Average (ns), " +
-      std::string(std::max(int(kTimeLength - sizeof("Min (ns)") + 1), 0), ' ') + "Min (ns), " +
-      std::string(std::max(int(kTimeLength - sizeof("Max (ns)") + 1), 0), ' ') + "Max (ns)\n";
-      std::cout << str;
-      int i = 0;
-      for (auto& it : sorted_list) {
-        uint64_t call_count = it.second.call_count_;
-        uint64_t time = it.second.execute_time_;
-        uint64_t avg_time = time / call_count;
-        uint64_t min_time = it.second.min_time_;
-        uint64_t max_time = it.second.max_time_;
-        float percent_time = (100.0f * time / total_time);
-        
-        str = std::string(std::max(int(max_name_size - knames[i].length()), 0), ' ');
-        str += knames[i] + ", " +
-        std::string(std::max(int(kCallsLength - std::to_string(call_count).length()), 0), ' ') +  std::to_string(call_count) + ", " +
-        std::string(std::max(int(kTimeLength - std::to_string(time).length()), 0), ' ') + std::to_string(time) + ", " +
-        std::string(std::max(int(sizeof("   Time (%)") - std::to_string(percent_time).length()), 0), ' ') +
-        std::to_string(percent_time) + ", " +
-        std::string(std::max(int(kTimeLength - std::to_string(avg_time).length()), 0), ' ') + std::to_string(avg_time) + ", " +
-        std::string(std::max(int(kTimeLength - std::to_string(min_time).length()), 0), ' ') + std::to_string(min_time) + ", " +
-        std::string(std::max(int(kTimeLength - std::to_string(max_time).length()), 0), ' ') + std::to_string(max_time) + "\n";
-        std::cout << str;
-        i++;
-      }
-  
-      
-      str = "\n\n=== Kernel Properties ===\n\n";
-      str = str + std::string(std::max(int(max_name_size - sizeof("Kernel") + 1), 0), ' ') +
-        "Kernel, Compiled, SIMD, Number of Arguments, SLM Per Work Group, Private Memory Per Thread, Spill Memory Per Thread, Register File Size Per Thread\n";
-      std::cout << str;
-  
-      i = -1; 
-      for (auto& it : sorted_list) {
-        ++i;
-        auto kit = kernel_command_properties_->find(it.first.kernel_command_id_);
-        if (kit == kernel_command_properties_->end()) {
-          continue;
-        }
-        if (kit->second.type_ != KERNEL_COMMAND_TYPE_COMPUTE) {
-          continue;
-        }
-        
-        str = std::string(std::max(int(max_name_size - knames[i].length()), 0), ' ');
-        str = str + knames[i] + "," +
-          std::string(sizeof("Compiled") - sizeof("AOT") + 1, ' ') +
-          (kit->second.aot_ ? "AOT" : "JIT") + "," +
-          std::string(std::max(int(sizeof("SIMD") - ((kit->second.simd_width_ != 1) ? std::to_string(kit->second.simd_width_).length() : sizeof("ANY") - 1)), 0), ' ') +
-          ((kit->second.simd_width_ != 1) ? std::to_string(kit->second.simd_width_) : "ANY") + "," +
-          std::string(std::max(int(sizeof("Number of Arguments") - std::to_string(kit->second.nargs_).length()), 0), ' ') +
-          std::to_string(kit->second.nargs_) + "," +
-          std::string(std::max(int(sizeof("SLM Per Work Group") - std::to_string(kit->second.slmsize_).length()), 0), ' ') + 
-          std::to_string(kit->second.slmsize_) + "," +
-          std::string(std::max(int(sizeof("Private Memory Per Thread") - std::to_string(kit->second.private_mem_size_).length()), 0), ' ') + 
-          std::to_string(kit->second.private_mem_size_) + "," +
-          std::string(std::max(int(sizeof("Spill Memory Per Thread") - std::to_string(kit->second.spill_mem_size_).length()), 0), ' ') +
-          std::to_string(kit->second.spill_mem_size_) + ",";
-        if (kit->second.regsize_) {
-          // report size if size is available
-          str += std::string(std::max(int(sizeof("Register File Size Per Thread") - std::to_string(kit->second.regsize_).length()), 0), ' ') +
-                 std::to_string(kit->second.regsize_) + "\n";
-          }
-        else {
-          // report "unknown" otherwise
-          str += std::string(sizeof("Register File Size Per Thread") - sizeof("unknown") + 1, ' ') +
-                 "unknown\n";
-        }
-        std::cout << str;
-      }
-    }
-
-    global_device_time_stats_mutex_.unlock();
-
-  }
-
-  void PrintSubmissionTable() const {
-    uint64_t total_submit_time = 0;
-    uint64_t total_append_time = 0;
-    uint64_t total_device_time = 0;
-    std::vector<std::string> knames;
-    size_t max_name_size = 0;
-    global_device_time_stats_mutex_.lock();
-
-    AggregateDeviceTimeStats();
-
-    std::set<std::pair<ZeKernelCommandNameKey, ZeKernelCommandTime>, utils::Comparator> sorted_list(
-        global_device_time_stats_->begin(), global_device_time_stats_->end());
-
-    for (auto& it : sorted_list) {
-      total_device_time += it.second.execute_time_;
-      total_append_time += it.second.append_time_;
-      total_submit_time += it.second.submit_time_;
-      std::string kname;
-      if (it.first.tile_ >= 0) {
-        kname = "Tile #" + std::to_string(it.first.tile_) + ": " + GetZeKernelCommandName(it.first.kernel_command_id_, it.first.group_count_, it.first.mem_size_, options_.verbose);
-      }
-      else {
-        kname = GetZeKernelCommandName(it.first.kernel_command_id_, it.first.group_count_, it.first.mem_size_, options_.verbose);
-      }
-      if (kname.size() > max_name_size) {
-        max_name_size = kname.size();
-      }
-      knames.push_back(std::move(kname));
-    }
-
-    if (total_device_time != 0) {
-
-      //sizeof("Kernel") is 7, not 6
-      std::string str(std::max(int(max_name_size - sizeof("Kernel") + 1), 0), ' ');
-      
-      str += "Kernel, " + std::string(std::max(int(kCallsLength - sizeof("Calls") + 1), 0), ' ') +
-             "Calls, " + std::string(std::max(int(kTimeLength - sizeof("Append (ns)") + 1), 0), ' ') +
-             "Append (ns),  Append (%), " +
-             std::string(std::max(int(kTimeLength - sizeof("Submit (ns)") + 1), 0), ' ') +
-             "Submit (ns),  Submit (%), " +
-             std::string(std::max(int(kTimeLength - sizeof("Execute (ns)") + 1), 0), ' ') +
-             "Execute (ns),  Execute (%)\n";
-     
-      std::cout << str;
-
-      int i = 0;
-      for (auto& it : sorted_list) {
-        uint64_t call_count = it.second.call_count_;
-        float append_percent = 100.0f * it.second.append_time_ / total_append_time;
-        float submit_percent = 100.0f * it.second.submit_time_ / total_submit_time;
-        float device_percent = 100.0f * it.second.execute_time_ / total_device_time;
-        str = std::string(std::max(int(max_name_size - knames[i].length()), 0), ' ') + knames[i] + ", ";
-        str += std::string(std::max(int(kCallsLength - std::to_string(call_count).length()), 0), ' ') + std::to_string(call_count) + ", " +
-               std::string(std::max(int(kTimeLength - std::to_string(it.second.append_time_).length()), 0), ' ') +
-               std::to_string(it.second.append_time_) + ", " +
-               std::string(std::max(int(sizeof("Append (%)") - std::to_string(append_percent).length()), 0), ' ') +
-               std::to_string(append_percent) + ", " +
-               std::string(std::max(int(kTimeLength - std::to_string(it.second.submit_time_).length()), 0), ' ') +
-               std::to_string(it.second.submit_time_) + ", " +
-               std::string(std::max(int(sizeof("Submit (%)") - std::to_string(submit_percent).length()), 0), ' ') +
-               std::to_string(submit_percent) + ", " +
-               std::string(std::max(int(kTimeLength - std::to_string(it.second.execute_time_).length()), 0), ' ') +
-               std::to_string(it.second.execute_time_) + ", " +
-               std::string(std::max(int(sizeof("Execute (%)") - std::to_string(device_percent).length()), 0), ' ') +
-               std::to_string(device_percent) + "\n";
-        std::cout << str;
-        i++;
-      }
-    }
-
-    global_device_time_stats_mutex_.unlock();
-
-  }
-
+ 
   void DisableTracing() {
     // Win_Todo: For windows zelTracerSetEnabled() returns ZE_RESULT_ERROR_UNINITIALIZED error
 #ifndef _WIN32
     ze_result_t status = ZE_FUNC(zelTracerSetEnabled)(tracer_, false);
     PTI_ASSERT(status == ZE_RESULT_SUCCESS);
 #endif /* _WIN32 */
-  }
-
-  uint64_t CalculateTotalFunctionTime() const {
-    global_host_time_stats_mutex_.lock();
-
-    uint64_t total_time = 0;
-    for (auto it = global_host_time_stats_->begin(); it != global_host_time_stats_->end(); it++) {
-      total_time += it->second.total_time_;
-    }
-
-    global_host_time_stats_mutex_.unlock();
- 
-    return total_time;
-  }
-
-  void PrintFunctionsTable() const {
-    global_host_time_stats_mutex_.lock();
-    std::set<std::pair<uint32_t, ZeFunctionTime>, utils::Comparator> sorted_list(
-      global_host_time_stats_->begin(), global_host_time_stats_->end());
-
-    uint64_t total_time = 0;
-    size_t max_name_size = 0;
-    for (auto& stat : sorted_list) {
-      total_time += stat.second.total_time_;
-      if (get_symbol(API_TRACING_ID(stat.first)).size() > max_name_size) {
-        max_name_size = get_symbol(API_TRACING_ID(stat.first)).size();
-      }
-    }
-
-    if (total_time != 0) {
-      std::string str(std::max(int(max_name_size - sizeof("Function") + 1), 0), ' ');
-      str += "Function, " + std::string(std::max(int(kCallsLength - sizeof("Calls") + 1), 0), ' ') +
-             "Calls, " + std::string(std::max(int(kTimeLength - sizeof("Time (ns)") + 1), 0), ' ') +
-             "Time (ns),      Time (%), " + std::string(std::max(int(kTimeLength - sizeof("Average (ns)") + 1), 0), ' ') +
-             "Average (ns), " + std::string(std::max(int(kTimeLength - sizeof("Min (ns)") + 1), 0), ' ') +
-             "Min (ns), " + std::string(std::max(int(kTimeLength - sizeof("Max (ns)") + 1), 0), ' ') +
-             "Max (ns)\n";
-      std::cout << str;
-      for (auto& stat : sorted_list) {
-        const std::string function = get_symbol(API_TRACING_ID(stat.first));
-        uint64_t time = stat.second.total_time_;
-        uint64_t call_count = stat.second.call_count_;
-        uint64_t avg_time = time / call_count;
-        uint64_t min_time = stat.second.min_time_;
-        uint64_t max_time = stat.second.max_time_;
-        float percent_time = 100.0f * time / total_time;
-        str = std::string(std::max(int(max_name_size - function.length()), 0), ' ') + function + ", " +
-              std::string(std::max(int(kCallsLength - std::to_string(call_count).length()), 0), ' ') + std::to_string(call_count) + ", " +
-              std::string(std::max(int(kTimeLength - std::to_string(time).length()), 0), ' ') + std::to_string(time) + ", " +
-              std::string(std::max(int(sizeof("    Time (%)") - std::to_string(percent_time).length()), 0), ' ') +
-              std::to_string(percent_time) + ", " + 
-              std::string(std::max(int(kTimeLength - std::to_string(avg_time).length()), 0), ' ') + std::to_string(avg_time) + ", " +
-              std::string(std::max(int(kTimeLength - std::to_string(min_time).length()), 0), ' ') + std::to_string(min_time) + ", " +
-              std::string(std::max(int(kTimeLength - std::to_string(max_time).length()), 0), ' ') + std::to_string(max_time) + "\n";
-        std::cout << str;
-  
-      }
-    }
-    global_host_time_stats_mutex_.unlock();
   }
 
   void ProcessCommandsSubmitted(std::vector<uint64_t> *kids) {
@@ -1666,13 +1423,9 @@ class ZeCollector {
 
   ZeCollector(
       CollectorOptions options,
-      OnZeKernelFinishCallback kcallback,
-      OnZeFunctionFinishCallback fcallback,
       void* /* callback_data */,
       bool reset_event_on_device)
       : options_(options),
-        kcallback_(kcallback),
-        fcallback_(fcallback),
         reset_event_on_device_(reset_event_on_device),
         event_cache_(ZE_EVENT_POOL_FLAG_KERNEL_TIMESTAMP) {
     EnumerateAndSetupDevices();
@@ -1705,8 +1458,6 @@ class ZeCollector {
       else {
         desc.type_ = KERNEL_COMMAND_TYPE_COMMAND;
       }
-
-      //printf("%s %d\n", desc.name_.c_str(), desc.type_);
       
       ZeKernelCommandProperties desc2;
       desc2 = desc;
@@ -2047,282 +1798,6 @@ class ZeCollector {
         it++;
       }
     }
-  }
-
-  void DumpKernelProfiles(void) {
-
-    if (options_.stall_sampling) {
-      kernel_command_properties_mutex_.lock();
-      std::map<int32_t, std::map<uint64_t, ZeKernelCommandProperties *>> device_kprops; // sorted by device id then base address;
-      for (auto it = kernel_command_properties_->begin(); it != kernel_command_properties_->end(); it++) {
-        if (it->second.type_ != KERNEL_COMMAND_TYPE_COMPUTE) {
-          continue;
-        }
-        auto dkit = device_kprops.find(it->second.device_id_);
-        if (dkit == device_kprops.end()) {
-          std::map<uint64_t, ZeKernelCommandProperties *> kprops;
-          kprops.insert({it->second.base_addr_, &(it->second)});
-          device_kprops.insert({it->second.device_id_, std::move(kprops)});
-        }
-        else {
-          if (dkit->second.find(it->second.base_addr_) != dkit->second.end()) {
-            // already inserted
-            continue;
-          }
-          dkit->second.insert({it->second.base_addr_, &(it->second)});
-        }
-      }
-
-      for (auto& props : device_kprops) {
-        // kernel properties file path: data_dir/.kprops.<device_id>.<pid>.txt
-        std::string fpath = data_dir_name_ + "/.kprops."  + std::to_string(props.first) + "." + std::to_string(utils::GetPid()) + ".txt";
-        std::ofstream kpfs = std::ofstream(fpath, std::ios::out | std::ios::trunc);
-        uint64_t prev_base = 0;
-        for (auto it = props.second.crbegin(); it != props.second.crend(); it++) {
-          // quote kernel name which may contain "," 
-          kpfs << "\"" << utils::Demangle(it->second->name_.c_str()) << "\"" << std::endl;
-          kpfs << std::to_string(it->second->base_addr_) << std::endl;
-          if (prev_base == 0) {
-            kpfs << std::to_string(it->second->size_) << std::endl;
-          }
-          else {
-            size_t size = prev_base - it->second->base_addr_;
-            if (size > it->second->size_) {
-              size = it->second->size_;
-            }
-            kpfs << std::to_string(size) << std::endl;
-          }
-          prev_base = it->second->base_addr_;
-        }
-        kpfs.close();
-      }
-
-      kernel_command_properties_mutex_.unlock();
-    }
-    
-    const std::lock_guard<std::mutex> lock(global_kernel_profiles_mutex_);
-    if (global_kernel_profiles_.size() == 0) {
-      return;
-    }
-    
-    if (options_.metric_stream) {
-      devices_mutex_.lock_shared();
-      std::map<int32_t, std::vector<ZeKernelProfileRecord *>> device_kprofiles; // kernel profiles by device;
-      for (auto it = global_kernel_profiles_.begin(); it != global_kernel_profiles_.end(); it++) {
-        int32_t device_id = -1;
-        auto dit = devices_->find(it->second.device_);
-        if (dit != devices_->end()) {
-          device_id = dit->second.id_;
-        }
-        if (device_id == -1) {
-          continue;
-        }
-        auto dpit = device_kprofiles.find(device_id);
-        if (dpit == device_kprofiles.end()) {
-          std::vector<ZeKernelProfileRecord *> kprofiles;
-          kprofiles.push_back(&(it->second));
-          device_kprofiles.insert({device_id, std::move(kprofiles)});
-        }
-        else {
-          dpit->second.push_back(&(it->second));
-        }
-      }
-      devices_mutex_.unlock_shared();
-
-      for (auto& profiles : device_kprofiles) {
-        std::ofstream ouf;
-        // kernel instance time file path: <data_dir>/.ktime.<device_id>.<pid>.txt
-        std::string fpath = data_dir_name_ + "/.ktime."  + std::to_string(profiles.first) + "." + std::to_string(utils::GetPid()) + ".txt";
-        ouf = std::ofstream(fpath, std::ios::out | std::ios::trunc);
-        for (auto& prof : profiles.second) {
-          for (auto& ts : prof->timestamps_) {
-            std::string kname = GetZeKernelCommandName(prof->kernel_command_id_, prof->group_count_, prof->mem_size_);
-            ouf << std::to_string(ts.subdevice_id) << std::endl;
-            ouf << std::to_string(prof->instance_id_) << std::endl;
-            ouf << std::to_string(ts.metric_start) << std::endl;
-            ouf << std::to_string(ts.metric_end) << std::endl;
-            ouf << kname << std::endl;
-          }
-        }
-        ouf.close();
-      }
-
-      return;
-    }
-
-    if (!options_.metric_query) {
-      return;
-    }
-
-    // metric query
-    
-#ifdef _WIN32
-    // On Windows, L0 may have been unloaded or be being unloaded at this point
-    // So we save the metric data in a file and the saved metrics will be computed in the parent process
-    // The metric data file path: <data_dir>/.metrics.<pid>.q
-    // The format of each entry in the file is: device id (int32_t), size of kernel name (size_t), kernel name, instance (uin64_t), size of metric data (uint64_t), metric data
-
-    std::string fpath = data_dir_name_ + "/.metrics." + std::to_string(utils::GetPid()) + ".q";
-    std::ofstream mf(fpath, std::ios::binary);
-
-    if (!mf) {
-        std::cerr << "[ERROR] Failed to create metric data file" << std::endl;
-        exit(-1);
-    }
-
-    while (1) {
-      if (global_kernel_profiles_.empty()) {
-        break;	// done
-      }
-      ze_device_handle_t device = nullptr;
-      int32_t did = -1;
-      for (auto it = global_kernel_profiles_.begin(); it != global_kernel_profiles_.end();) {
-        if ((it->second.metrics_ == nullptr) || it->second.metrics_->empty() || (it->second.device_ == nullptr)) {
-          // skip empty entries
-          it = global_kernel_profiles_.erase(it);
-          continue;
-        }
-  
-        if (device == nullptr) {
-          auto it2 = devices_->find(it->second.device_);
-          
-          if (it2 == devices_->end()) {
-            // should never get here
-            it = global_kernel_profiles_.erase(it);
-            continue;
-          }
-  
-          device = it->second.device_;
-          did = it2->second.id_;
-        }
-        else {
-          if (it->second.device_ != device) {
-            it++;  // different device, dump later
-            continue;
-          }
-        }
-
-        std::string kname = GetZeKernelCommandName(it->second.kernel_command_id_, it->second.group_count_, it->second.mem_size_);
-        if (kname.empty()) {
-          // skip invalid kernels
-          // should never get here
-          it = global_kernel_profiles_.erase(it);
-          continue;
-        }
-  
-        mf.write(reinterpret_cast<char *>(&did), sizeof(int32_t));
-        size_t kname_size = kname.size();
-        mf.write(reinterpret_cast<char *>(&(kname_size)), sizeof(size_t));
-        mf.write(kname.c_str(), kname_size);
-        mf.write(reinterpret_cast<char *>(&(it->second.instance_id_)), sizeof(uint64_t));
-        uint64_t metrics_size =  it->second.metrics_->size();
-        mf.write(reinterpret_cast<char *>(&(metrics_size)), sizeof(uint64_t));
-        mf.write(reinterpret_cast<char *>(it->second.metrics_->data()), it->second.metrics_->size());
-        it = global_kernel_profiles_.erase(it);
-      }
-    }
-
-    mf.close();
-
-#else /* _WIN32 */
-    
-    while (1) {
-      if (global_kernel_profiles_.empty()) {
-        break;	// done
-      }
-      ze_device_handle_t device = nullptr;
-      int did = -1;
-      zet_metric_group_handle_t group = nullptr;
-      std::vector<std::string> metric_names;
-      for (auto it = global_kernel_profiles_.begin(); it != global_kernel_profiles_.end();) {
-        if ((it->second.metrics_ == nullptr) || it->second.metrics_->empty()) {
-          it = global_kernel_profiles_.erase(it);
-          continue;
-        }
-  
-        if (it->second.device_ == nullptr) {
-          // shoule never get here
-          it = global_kernel_profiles_.erase(it);
-          continue;
-        }
-
-        if (device == nullptr) {
-          auto it2 = devices_->find(it->second.device_);
-          
-          if (it2 == devices_->end()) {
-            // should never get here
-            it = global_kernel_profiles_.erase(it);
-            continue;
-          }
-  
-          device = it->second.device_;
-          did = it2->second.id_;
-          group = it2->second.metric_group_;
-          metric_names = GetMetricNames(it2->second.metric_group_);
-          PTI_ASSERT(!metric_names.empty());
-          std::string header("\nKernel,GlobalInstanceId,SubDeviceId");
-          for (auto& metric : metric_names) {
-            header += "," + metric;
-          }
-          header += "\n";
-        }
-        else {
-          if (it->second.device_ != device) {
-            it++;  // different device, dump later
-            continue;
-          }
-        }
-  
-        std::string kname = GetZeKernelCommandName(it->second.kernel_command_id_, it->second.group_count_, it->second.mem_size_);
-        uint32_t num_samples = 0;
-        uint32_t num_metrics = 0;
-        ze_result_t status = ZE_FUNC(zetMetricGroupCalculateMultipleMetricValuesExp)(
-          group, ZET_METRIC_GROUP_CALCULATION_TYPE_METRIC_VALUES,
-          it->second.metrics_->size(), it->second.metrics_->data(), &num_samples, &num_metrics,
-          nullptr, nullptr);
-  
-        if ((status == ZE_RESULT_SUCCESS) && (num_samples > 0) && (num_metrics > 0)) {
-          std::vector<uint32_t> samples(num_samples);
-          std::vector<zet_typed_value_t> metrics(num_metrics);
-  
-          status = ZE_FUNC(zetMetricGroupCalculateMultipleMetricValuesExp)(
-            group, ZET_METRIC_GROUP_CALCULATION_TYPE_METRIC_VALUES,
-            it->second.metrics_->size(), it->second.metrics_->data(), &num_samples, &num_metrics,
-            samples.data(), metrics.data());
-  
-          if (status == ZE_RESULT_SUCCESS) {
-            std::string str;
-            for (uint32_t i = 0; i < num_samples; ++i) {
-              str = kname + ",";
-              str += std::to_string(it->second.instance_id_) + ",";
-              str += std::to_string(i);
-      
-              uint32_t size = samples[i];
-              PTI_ASSERT(size == metric_names.size());
-      
-              const zet_typed_value_t *value = metrics.data() + i * size;
-              for (uint32_t j = 0; j < size; ++j) {
-                str += ",";
-                str += PrintTypedValue(value[j]);
-              }
-              str += "\n";
-            }
-            str += "\n";
-      
-            //std::cout << str ;
-          }
-          else {
-            std::cerr << "[WARNING] Not able to calculate metrics" << std::endl;
-          }
-        }
-        else {
-          std::cerr << "[WARNING] Not able to calculate metrics" << std::endl;
-        }
-        it = global_kernel_profiles_.erase(it);
-      }
-    }
-
-#endif /* _WIN32 */
   }
 
   void ProcessCommandsSubmittedOnSignaledEvent(ze_event_handle_t event, std::vector<uint64_t> *kids) {
@@ -4958,8 +4433,6 @@ typedef struct _zex_kernel_register_file_size_exp_t {
 
  private: // Data
   CollectorOptions options_;
-  OnZeKernelFinishCallback kcallback_ = nullptr;
-  OnZeFunctionFinishCallback fcallback_ = nullptr;
   bool reset_event_on_device_; // support event reset on device
   ZeEventCache event_cache_;
 
