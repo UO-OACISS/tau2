@@ -144,6 +144,7 @@ static std::mutex queue_mutex;
   command queue, we'll push a unique id onto a local queue. When we are notified
   that the kernel finished, we'll pop it. This dangerously assumes there is only
   one command queue. */
+
 std::queue<uint64_t>& getKernelQueue() {
     static std::queue<uint64_t> theQueue;
     return theQueue;
@@ -184,19 +185,6 @@ void Tau_remove_initialized_queues(uint64_t cpu_end_ts)
   map_thread_queue.clear();
 }
 
-
-void TAU_L0_metric_callback()
-{
-    TAU_VERBOSE("L0_metric_callback\n");
-    if(!initialized || disabled)
-    {
-        L0_TAU_DEBUG_MSG("L0_metric_callback !initialized || disabled !!\n");
-        return;
-    }
-    //TODO
-
-}
-
 //Should not need tasks, as the thread executing the call, executes this callback.
 //Need to test with threads
 //API calls
@@ -212,18 +200,39 @@ void TAU_L0_enter_event(const char* nameAPIcall)
     uint64_t current_timestamp = TauTraceGetTimeStamp(0);
     L0_TAU_DEBUG_MSG("TAU_L0_enter_event " << nameAPIcall << " thread " << current_thread << " ts " <<  current_timestamp);
     TAU_START(nameAPIcall);
+
+    //Only Correlate when kernels are involved.
     static std::string launch_name = "zeCommandListAppendLaunchKernel";
-    if (launch_name.compare(nameAPIcall) == 0) {
+    static std::string launch_name1 = "zeCommandListAppendLaunchCooperativeKernel";
+    static std::string launch_name2 = "zeCommandListAppendLaunchKernelIndirect";
+    
+    //This is a bit dumb, but I plan to change this part. However, the change required a lot of
+    // changes. Will do them after the TAU release as I have to do a Python script to update the
+    // callbacks for newer L0 versions and change hundreds of callbacks.
+    if((launch_name.compare(nameAPIcall) == 0) || (launch_name1.compare(nameAPIcall) == 0)  || (launch_name2.compare(nameAPIcall) == 0) ) 
+    {
+        static void* TraceCorrelationID;
+        Tau_get_context_userevent(&TraceCorrelationID, "Correlation ID");
+        TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, pushKernel(), current_thread, current_timestamp);
+    }
+
+
+    // May need to be added in the future ? They don't seem to be used at this moment
+    // zeCommandListAppendLaunchKernelWithParameters
+    // zeCommandListAppendLaunchKernelWithArguments
+
+    //Will be used in the future update, will also work for memory operations
+    /*
+    if (corr_id_ != 0) {
         //printf("!! Launch\n");
         // the user event for correlation IDs
         static void* TraceCorrelationID;
         //printf("!! TraceCorrelationID\n");
         Tau_get_context_userevent(&TraceCorrelationID, "Correlation ID");
         //printf("!! Tau_get_context_userevent\n");
-        TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, pushKernel(), current_thread, current_timestamp);
+        TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, corr_id_, current_thread, current_timestamp);
         //printf("!! TAU_CONTEXT_EVENT_THREAD\n");
-    }
-
+    }*/
 }
 
 //Should not need tasks, as the thread executing the call, executes this callback.
@@ -355,7 +364,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         }
         else
         {
-        event_name = event_name + Tau_demangle_name(name.c_str());
+            event_name = event_name + Tau_demangle_name(name.c_str());
         }
 
         #ifdef L0_TAU_DEBUG  
@@ -398,6 +407,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             TAU_STOP_TASK(event_name.c_str(), task_id);
             void* TraceCorrelationID;
             Tau_get_context_userevent(&TraceCorrelationID, "Correlation ID");
+            //TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, command->corr_id_, task_id, translated_start);
             TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, popKernel(), task_id, translated_start);
 
             #ifdef L0_TAU_DEBUG  
@@ -407,6 +417,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             std::cout << "it->second.group_size_.x " << it->second.group_size_.x << std::endl;
             std::cout << "it->second.group_size_.y " << it->second.group_size_.y << std::endl;
             std::cout << "it->second.group_size_.z " << it->second.group_size_.z << std::endl;
+            std::cout << "corr_id_: " << command->corr_id_ << std::endl;
             #endif
 
             void* ue = nullptr;
@@ -422,6 +433,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             TAU_CONTEXT_EVENT_THREAD_TS(ue, it->second.group_size_.y, task_id, translated_end);
             Tau_get_context_userevent(&ue, "Group Size Z");
             TAU_CONTEXT_EVENT_THREAD_TS(ue, it->second.group_size_.z, task_id, translated_end);
+            
         }
         else if((it->second.type_ == KERNEL_COMMAND_TYPE_MEMORY) && (command->mem_size_ > 0))
         {
@@ -430,12 +442,15 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             TAU_START_TASK(event_name.c_str(), task_id);
             metric_set_gpu_timestamp(task_id, translated_end);
             TAU_STOP_TASK(event_name.c_str(), task_id);
+            //For future update
             //void* TraceCorrelationID;
             //Tau_get_context_userevent(&TraceCorrelationID, "Correlation ID");
-            //TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, popKernel(), task_id, translated_start);
+            //TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, command->corr_id_, task_id, translated_start);
             #ifdef L0_TAU_DEBUG 
             std::cout << "Memory: " << command->mem_size_ << std::endl;
+            std::cout << "corr_id_: " << command->corr_id_ << std::endl;
             #endif // L0_TAU_DEBUG 
+            
 
             void* ue = nullptr;
             std::size_t pos =  it->second.name_.find("zeCommandListAppend");

@@ -39,6 +39,16 @@
 #include "Profile/L0_new/common_header.h"
 
 
+class TAUL0CorrelationId{
+  public:
+    static uint64_t TAUGetL0CorrelationId(void) {
+        return TAU_l0_corr_id_.fetch_add(1, std::memory_order::memory_order_relaxed);
+    }
+
+  private:
+    inline static std::atomic<uint64_t> TAU_l0_corr_id_ = 1;	//start with 0
+};
+
 struct ZeMetricQueryPoolKey {
   ze_context_handle_t context_;
   ze_device_handle_t device_;
@@ -716,6 +726,7 @@ struct ZeCommandMetricQuery {
 struct ZeCommand {
   uint64_t kernel_command_id_;  // kernel or command identifier
   uint64_t instance_id_;        // unique kernel or command instance identifier
+  uint64_t corr_id_;        // identifier used by TAU for correlation IDs
   ze_event_handle_t event_;
   ze_event_handle_t timestamp_event_;
   ze_event_handle_t in_order_counter_event_;
@@ -827,6 +838,7 @@ struct ZeDeviceSubmissions {
 
     // Explicitly initialize ZeCommand members.
     command->instance_id_ = 0;
+    command->corr_id_ = 0;
     command->event_ = nullptr;
     command->in_order_counter_event_ = nullptr;
     command->device_ = nullptr;
@@ -2464,11 +2476,7 @@ class ZeCollector {
       PrintCommandCompleted(command, kernel_start, kernel_end);
     }
 
-    if (kcallback_) {
-      bool implicit_scaling = ((tile >= 0) && command->implicit_scaling_);
-      
-      kcallback_(command->instance_id_, command->tid_, kernel_start, kernel_end, command->engine_ordinal_, command->engine_index_, tile, command->device_, command->kernel_command_id_, implicit_scaling, command->group_count_, command->mem_size_);
-    }
+
     TAU_L0_kernel_event(command, kernel_start, kernel_end, tile);
   }
 
@@ -3205,7 +3213,7 @@ class ZeCollector {
     ze_instance_data.timestamp_device = device_timestamp;
   }
 
-  void AppendLaunchKernel(
+  uint64_t AppendLaunchKernel(
     ze_kernel_handle_t kernel,
     const ze_group_count_t *group_count,
     ze_event_handle_t& event_to_signal,
@@ -3213,12 +3221,13 @@ class ZeCollector {
     ze_command_list_handle_t command_list,
     std::vector<uint64_t> *kids) {
 
+    uint64_t corr_id_ = 0;
     uint64_t kernel_id;
     ZeKernelGroupSize group_size;
     bool found = false;
 
     if (local_device_submissions_.IsFinalized()) {
-      return;
+      return corr_id_;
     }
 
     kernel_command_properties_mutex_.lock_shared();
@@ -3232,7 +3241,7 @@ class ZeCollector {
 
     if (!found) {
       std::cerr << "[ERROR] Kernel (" << kernel << ") is not found." << std::endl;
-      return;
+      return corr_id_;
     }
 
     command_lists_mutex_.lock_shared();
@@ -3286,8 +3295,10 @@ class ZeCollector {
         desc_query->metric_query_ = query;
         desc_query->device_ = it->second->device_;
       }
-
+      corr_id_ = TAUL0CorrelationId::TAUGetL0CorrelationId();
+      desc->corr_id_ = corr_id_;
       uint64_t host_timestamp = ze_instance_data.timestamp_host;
+
       if (it->second->immediate_) {
         desc->timestamps_on_event_reset_ = nullptr;
         desc->timestamps_on_commands_completion_ = nullptr;
@@ -3345,6 +3356,7 @@ class ZeCollector {
     else {
       command_lists_mutex_.unlock_shared();
     }
+    return corr_id_;
   }
 
   void AppendMemoryCommand(
@@ -3436,6 +3448,8 @@ class ZeCollector {
       }
 
       uint64_t host_timestamp = ze_instance_data.timestamp_host;
+      desc->corr_id_ = TAUL0CorrelationId::TAUGetL0CorrelationId();
+
       if (it->second->immediate_) {
         desc->immediate_ = true;
         desc->instance_id_ = UniKernelInstanceId::GetKernelInstanceId();
@@ -3561,6 +3575,7 @@ class ZeCollector {
       }
 
       uint64_t host_timestamp = ze_instance_data.timestamp_host;
+      desc->corr_id_ = TAUL0CorrelationId::TAUGetL0CorrelationId();
       if (it->second->immediate_) {
         desc->immediate_ = true;
         desc->instance_id_ = UniKernelInstanceId::GetKernelInstanceId();
@@ -3689,6 +3704,7 @@ class ZeCollector {
       }
 
       uint64_t host_timestamp = ze_instance_data.timestamp_host;
+      desc->corr_id_ = TAUL0CorrelationId::TAUGetL0CorrelationId();
       if (it->second->immediate_) {
         desc->immediate_ = true;
         desc->instance_id_ = UniKernelInstanceId::GetKernelInstanceId();
@@ -3802,6 +3818,7 @@ class ZeCollector {
       }
 
       uint64_t host_timestamp = ze_instance_data.timestamp_host;
+
       if (it->second->immediate_) {
         desc->immediate_ = true;
         desc->instance_id_ = UniKernelInstanceId::GetKernelInstanceId();
@@ -3898,6 +3915,7 @@ class ZeCollector {
       desc->timestamp_event_ = cl->timestamp_event_to_signal_;
       
       uint64_t host_timestamp = ze_instance_data.timestamp_host;
+
       if (cl->immediate_) {
         desc->immediate_ = true;
         desc->instance_id_ = UniKernelInstanceId::GetKernelInstanceId();
@@ -3926,13 +3944,13 @@ class ZeCollector {
 
   }
 
-  static void OnExitCommandListAppendLaunchKernel(
+  static uint64_t OnExitCommandListAppendLaunchKernel(
     ze_command_list_append_launch_kernel_params_t* params,
     ze_result_t result, void* global_data, void** /* instance_data */, std::vector<uint64_t> *kids) {
 
     ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
     if (result == ZE_RESULT_SUCCESS && ze_instance_data.instrument_) {
-      collector->AppendLaunchKernel(
+      return collector->AppendLaunchKernel(
         *(params->phKernel),
         *(params->ppLaunchFuncArgs),
         *(params->phSignalEvent),
@@ -3944,6 +3962,7 @@ class ZeCollector {
       collector->query_pools_.PutQuery(ze_instance_data.query_);
       collector->event_cache_.ReleaseEvent(*(params->phSignalEvent));
     }
+    return 0;
   }
 
   static void OnEnterCommandListAppendLaunchCooperativeKernel(
@@ -3953,12 +3972,12 @@ class ZeCollector {
       PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true);
   }
 
-  static void OnExitCommandListAppendLaunchCooperativeKernel(
+  static uint64_t OnExitCommandListAppendLaunchCooperativeKernel(
       ze_command_list_append_launch_cooperative_kernel_params_t* params,
       ze_result_t result, void* global_data, void** /* instance_data */, std::vector<uint64_t> *kids) {
     ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
     if ((result == ZE_RESULT_SUCCESS) && ze_instance_data.instrument_) {
-        collector->AppendLaunchKernel(
+        return collector->AppendLaunchKernel(
           *(params->phKernel),
           *(params->ppLaunchFuncArgs),
           *(params->phSignalEvent),
@@ -3970,6 +3989,7 @@ class ZeCollector {
       collector->query_pools_.PutQuery(ze_instance_data.query_);
       collector->event_cache_.ReleaseEvent(*(params->phSignalEvent));
     }
+    return 0;
   }
 
   static void OnEnterCommandListAppendLaunchKernelIndirect(
@@ -3979,12 +3999,12 @@ class ZeCollector {
       PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true);
   }
 
-  static void OnExitCommandListAppendLaunchKernelIndirect(
+  static uint64_t OnExitCommandListAppendLaunchKernelIndirect(
       ze_command_list_append_launch_kernel_indirect_params_t* params,
       ze_result_t result, void* global_data, void** /* instance_data */, std::vector<uint64_t> *kids) {
     ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
     if ((result == ZE_RESULT_SUCCESS) && ze_instance_data.instrument_) {
-        collector->AppendLaunchKernel(
+        return collector->AppendLaunchKernel(
           *(params->phKernel),
           *(params->ppLaunchArgumentsBuffer),
           *(params->phSignalEvent),
@@ -3996,6 +4016,7 @@ class ZeCollector {
       collector->query_pools_.PutQuery(ze_instance_data.query_);
       collector->event_cache_.ReleaseEvent(*(params->phSignalEvent));
     }
+    return 0;
   }
 
   int GetMemoryTransferType(ze_context_handle_t src_context, const void *src) {
