@@ -156,6 +156,7 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #ROCPROFILERSDK#ROCPROFILERSDK_O += TauRocProfilerSDK_pc.o #ENDIF#
 #ROCPROFILERSDK_PC#ROCPROFILERSDK_O += TauRocProfilerSDK_add_tr.o #ENDIF#
 #ROCM#ROCM_O = TauRocm.o #ENDIF#
+#LEVEL_ZERO_OLD#TAU_LEVEL_ZERO_O = TauLevelZero.o #ENDIF#
 #LEVEL_ZERO#TAU_LEVEL_ZERO_O = TauLevelZero_new.o #ENDIF#
 #ROCTRACER#ROCTRACER_O = TauRocTracer.o #ENDIF#
 #ROCTRACERROCM6#ROCTRACER_O = TauRocTracer.o #ENDIF#

@@ -499,7 +499,7 @@ void TAUOnMetricFinishCallback(void *data, const std::string& kernel_name, Metri
 // Internal Tool Interface ////////////////////////////////////////////////////
 
 void TauL0EnableProfiling() {
-    //printf("%s\n", __func__);
+  TAU_VERBOSE("TauL0EnableProfiling\n");
   if (getenv("ZE_ENABLE_TRACING_LAYER") == NULL) {
     // tau_exec -level_zero was not called. Perhaps it is using -opencl
     TAU_VERBOSE("TAU: Disabling Level Zero support as ZE_ENABLE_TRACING_LAYER was not set from tau_exec -l0\n");

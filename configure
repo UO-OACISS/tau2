@@ -3142,7 +3142,7 @@ for arg in "$@"; do
               if [ -r $d/libze_loader.so ]; then
                 l0_lib_dir=$d
                 l0dir=$d/..
-                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir"
                 break;
               fi
             done
@@ -3151,15 +3151,15 @@ for arg in "$@"; do
               if [ -r /usr/lib64/libze_loader.so ]; then
                 l0dir="/usr"
                 l0_lib_dir="/usr/lib64"
-                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir"
               elif [ -r /usr/lib/x86_64-linux-gnu/libze_loader.so ]; then
                 l0dir="/usr"
                 l0_lib_dir="/usr/lib/x86_64-linux-gnu"
-                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir"
               elif [ -r /usr/local/lib/libze_loader.so ]; then
                 l0dir="/usr/local"
                 l0_lib_dir="/usr/local/lib"
-                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir LEVEL_ZERO"
+                fixmakeargs="$fixmakeargs l0dir=$l0dir l0_lib_dir=$l0_lib_dir"
               else
                 echo "TAU: libze_loader.so not found. Please specify -level_zero=<dir> and reconfigure TAU."
                 exit 1
@@ -3174,7 +3174,7 @@ for arg in "$@"; do
               echo  "Error: Cannot access Level Zero directory $l0dir"
               exit 1
             else
-              fixmakeargs="$fixmakeargs l0dir=$l0dir LEVEL_ZERO"
+              fixmakeargs="$fixmakeargs l0dir=$l0dir"
               level_zero=yes
             fi
             if [ -r $l0dir/lib64/libze_loader.so ]; then
@@ -13399,6 +13399,83 @@ fi
 fixmakeargs="$fixmakeargs extra_linker_args=$extra_linker_args"
 
 
+
+if [ "${level_zero}" = "yes" ] ; then
+
+cat <<EOF > test_l0.c
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "level_zero/ze_api.h"
+#include "level_zero/zes_api.h"
+#include "level_zero/zet_api.h"
+#include <vector>
+
+#define PTI_ASSERT(x) assert(x)
+
+inline ze_api_version_t GetDriverVersion(ze_driver_handle_t driver) {
+  PTI_ASSERT(driver != nullptr);
+  ze_api_version_t version = ZE_API_VERSION_FORCE_UINT32;
+  ze_result_t status = zeDriverGetApiVersion(driver, &version);
+  PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+  return version;
+}
+
+inline std::vector<ze_driver_handle_t> GetDriverList() {
+  ze_result_t status = ZE_RESULT_SUCCESS;
+  uint32_t driver_count = 0;
+  status = zeDriverGet(&driver_count, nullptr);
+  PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+  if (driver_count == 0)
+    return std::vector<ze_driver_handle_t>();
+  std::vector<ze_driver_handle_t> driver_list(driver_count);
+  status = zeDriverGet(&driver_count, driver_list.data());
+  PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+  return driver_list;
+}
+
+inline ze_api_version_t GetZeVersion() {
+  auto driver_list = GetDriverList();
+  if (driver_list.empty())
+    return ZE_API_VERSION_FORCE_UINT32;
+  return GetDriverVersion(driver_list.front());
+}
+
+int main()
+{
+        ze_result_t status = ZE_RESULT_SUCCESS;
+        status = zeInit(ZE_INIT_FLAG_GPU_ONLY);
+        assert(status == ZE_RESULT_SUCCESS);
+        ze_api_version_t version = GetZeVersion();
+        if ((ZE_MAJOR_VERSION(version)==1)&&(ZE_MINOR_VERSION(version)<6))
+                return 1;
+        return 0;
+}
+EOF
+
+    if $cxx_compiler test_l0.c -lze_loader -I$l0dir/include -o test_l0 1> /dev/null 2>&1 ; then
+        #echo "$cxx_compiler test_l0.c -lze_loader -I$l0dir/include -o test_l0"
+        ./test_l0 1> /dev/null 2>&1
+            result=$?
+        rm -f ./openacc_test openacc_test.c
+
+        if [ $result = "0" ]; then
+            fixmakeargs="$fixmakeargs LEVEL_ZERO"
+        else
+            fixmakeargs="$fixmakeargs LEVEL_ZERO_OLD"
+        fi
+
+    else
+        echo "Error compiling L0 version check"
+        exit 1
+    fi
+
+    
+    #fixmakeargs="$fixmakeargs LEVEL_ZERO"
+    #fixmakeargs="$fixmakeargs LEVEL_ZERO_OLD"
+
+    rm test_l0.c test_l0
+fi
 
 
 #### END OF TAU OPTIONS. Make changes above this line

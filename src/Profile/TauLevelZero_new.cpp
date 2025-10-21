@@ -570,7 +570,6 @@ void TauL0EnableProfiling()
     ze_result_t status = ZE_RESULT_SUCCESS;
     status = zeInit(ZE_INIT_FLAG_GPU_ONLY);
     assert(status == ZE_RESULT_SUCCESS);
-    //logger_ = new Logger(my_log);
     ze_collector_ = ZeCollector::Create(L0_collector_options);
     initialized = 1;
     TAU_VERBOSE("Initialized L0 Collector\n");
