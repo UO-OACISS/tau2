@@ -195,19 +195,19 @@ double get_metric_value(zet_typed_value_t metric)
 {
    switch (metric.type) {
      case ZET_VALUE_TYPE_UINT32:{
-       return (float) metric.value.ui32;
+       return (double) metric.value.ui32;
      }
      case ZET_VALUE_TYPE_UINT64:{
-       return (float) metric.value.ui64;
+       return (double) metric.value.ui64;
      }
      case ZET_VALUE_TYPE_FLOAT32:{
-       return (float) metric.value.fp32;
+       return (double) metric.value.fp32;
      }
      case ZET_VALUE_TYPE_FLOAT64:{
-       return (float) metric.value.fp64;
+       return (double) metric.value.fp64;
      }
      case ZET_VALUE_TYPE_BOOL8:{
-       return (float) metric.value.b8;
+       return (double) metric.value.b8;
      }
      default:{
        return -1;
@@ -239,7 +239,7 @@ static void MetricPrintResults() {
       int i;  
       for ( i = 0; i < metriclist.size(); i++ ){
         
-        double metric_value =get_metric_value(report_entry[i]);
+        double metric_value = get_metric_value(report_entry[i]);
         std::cerr << "\t"<< metriclist[i].c_str() << "Value: " << metric_value << std::endl ;
       }
       std:cerr << std::endl;

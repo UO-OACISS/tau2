@@ -20,9 +20,10 @@
 #include "Profile/L0_new/level_zero/ze_api.h"
 #include "Profile/L0_new/level_zero/zes_api.h"
 #include "Profile/L0_new/level_zero/zet_api.h"
+
 #include "Profile/L0_new/level_zero/layers/zel_tracing_api.h"
 #include "Profile/L0_new/level_zero/layers/zel_tracing_register_cb.h"
-#include "Profile/L0_new/common_header.gen"
+#include "Profile/L0_new/common_header.h"
 #include "Profile/L0_new/unimemory.h"
 //#define PTI_ASSERT(X) assert(X)
 
@@ -62,8 +63,8 @@ struct CollectorOptions {
   bool stall_sampling = false;
 };
 
-std::string my_log ;
-Logger *logger_ = nullptr;
+//std::string my_log ;
+//Logger *logger_ = nullptr;
 
 
 #include "Profile/L0_new/ze_collector.h"
@@ -92,7 +93,7 @@ CollectorOptions init_collector_options()
             printf("Error: EuStallSampling cannot be used as a metric\n");
             return init_options;
         }
-        printf("l0 metrics enable\n");
+        TAU_VERBOSE("L0 metrics enabled\n");
         init_options.metric_query = true;
     }
     else if(TauEnv_get_l0_metrics_enable() && TauEnv_get_l0_stall_sampling_enable())//EuStallSampling
@@ -104,7 +105,7 @@ CollectorOptions init_collector_options()
     
     if(TauEnv_get_l0_stall_sampling_enable())
     {
-        printf("stall sampling\n");
+        printf("Stall sampling is not working at this moment.\n");
         init_options.stall_sampling = true;
         //Check if metrics requested, if requested, throw error, as not compatible 
         init_options.metric_query = false;
@@ -242,30 +243,6 @@ void TAU_L0_exit_event(const char* nameAPIcall)
     TAU_STOP(nameAPIcall);
 }
 
-
-int not_kernel(const char* k_name )
-{
-    int found = 0;
-    for (uint32_t i = 0; i <= uint32_t(ZeDeviceCommandHandle::LastCommand); i++) 
-    {
-        if(strcmp(k_name, device_command_names[i])==0)
-        {
-            found = 1;
-            break;
-        }
-    }
-
-    if( found )
-    {
-        //printf("Not a kernel : %s\n", k_name);
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
-}
-
 zet_metric_group_handle_t TAU_L0_get_metric_group(ze_device_handle_t curr_device_handle)
 {
     auto it2 = devices_->find(curr_device_handle);
@@ -336,6 +313,17 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
     auto it = kernel_command_properties_->find(command->kernel_command_id_);
     if (it != kernel_command_properties_->end()) {
 
+        //There are issues with some callbacks from commands(such as barriers)
+        // which are shown concurrently, according to Intel, this issue should not appear 
+        // with newer drivers. Therefore, we ignore them as they are already shown in the host thread
+        // and do not provide additional information.
+        //printf("%d\n", it->second.type_);
+        if((it->second.type_ == KERNEL_COMMAND_TYPE_COMMAND) || (it->second.type_ == KERNEL_COMMAND_TYPE_INVALID))
+        {
+            kernel_command_properties_mutex_.unlock_shared();
+            return;
+        }
+
         //OMP Offloaded function names appear as a string with
         // multiple information fields, parse them
         //May change if the string changes in the future
@@ -354,11 +342,11 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             L105                 :  line number in the file.  Line-105
         */
 
-        int pos_key=omp_off_string.length();
-        for(int i =0; i<3; i++)
-        {
-            pos_key = name.find_first_of('_', pos_key + 1);
-        }
+            int pos_key=omp_off_string.length();
+            for(int i =0; i<3; i++)
+            {
+                pos_key = name.find_first_of('_', pos_key + 1);
+            }
             event_name = event_name + "OMP OFFLOADING ";
             event_name = event_name + Tau_demangle_name(name.substr(pos_key,name.find_last_of("l")-pos_key-1).c_str());
             event_name = event_name +" [{UNRESOLVED} {";
@@ -368,17 +356,6 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         else
         {
         event_name = event_name + Tau_demangle_name(name.c_str());
-        }
-        
-        //if(not_kernel(name.c_str()))
-        if(it->second.type_ != KERNEL_COMMAND_TYPE_COMPUTE)
-        {
-            #ifdef L0_TAU_DEBUG  
-                std::string output_msg = "Not a kernel "+ event_name;
-                L0_TAU_DEBUG_MSG(output_msg.c_str());
-            #endif
-            kernel_command_properties_mutex_.unlock_shared();
-            return;
         }
 
         #ifdef L0_TAU_DEBUG  
@@ -403,23 +380,25 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         tuple<uintptr_t, int> dev_tile(curr_device, curr_tile);
         //tau2-intel --> ze_collector.h 792 TAU_L0_kernel_event
 
-        int task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_));
         static uint64_t firstTauTraceGetTimeStamp = TauTraceGetTimeStamp(0);
         static uint64_t firstkernel_end = kernel_end;
         static double time_shift = TauTraceGetTimeStamp(0) - (kernel_end/1e3);
         double translated_start = time_shift + (kernel_start/1e3);
         double translated_end = time_shift + (kernel_end/1e3);
 
-        metric_set_gpu_timestamp(task_id, translated_start);
-        TAU_START_TASK(event_name.c_str(), task_id);
-        metric_set_gpu_timestamp(task_id, translated_end);
-        TAU_STOP_TASK(event_name.c_str(), task_id);
-        void* TraceCorrelationID;
-        Tau_get_context_userevent(&TraceCorrelationID, "Correlation ID");
-        TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, popKernel(), task_id, translated_start);
+        
+        int task_id = -1;
 
         if(it->second.type_ == KERNEL_COMMAND_TYPE_COMPUTE)
         {
+            task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_));
+            metric_set_gpu_timestamp(task_id, translated_start);
+            TAU_START_TASK(event_name.c_str(), task_id);
+            metric_set_gpu_timestamp(task_id, translated_end);
+            TAU_STOP_TASK(event_name.c_str(), task_id);
+            void* TraceCorrelationID;
+            Tau_get_context_userevent(&TraceCorrelationID, "Correlation ID");
+            TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, popKernel(), task_id, translated_start);
 
             #ifdef L0_TAU_DEBUG  
             std::cout << "group_count.groupCountX " << command->group_count_.groupCountX << std::endl;
@@ -446,14 +425,34 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         }
         else if((it->second.type_ == KERNEL_COMMAND_TYPE_MEMORY) && (command->mem_size_ > 0))
         {
-
+            task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_));
+            metric_set_gpu_timestamp(task_id, translated_start);
+            TAU_START_TASK(event_name.c_str(), task_id);
+            metric_set_gpu_timestamp(task_id, translated_end);
+            TAU_STOP_TASK(event_name.c_str(), task_id);
+            //void* TraceCorrelationID;
+            //Tau_get_context_userevent(&TraceCorrelationID, "Correlation ID");
+            //TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, popKernel(), task_id, translated_start);
             #ifdef L0_TAU_DEBUG 
             std::cout << "Memory: " << command->mem_size_ << std::endl;
             #endif // L0_TAU_DEBUG 
 
             void* ue = nullptr;
-            Tau_get_context_userevent(&ue, "Memory Copy Size");
+            std::size_t pos =  it->second.name_.find("zeCommandListAppend");
+            if(pos == string::npos)
+                pos = 0;
+            else
+                pos = 19;
+            std::string event_name = "Memory Copy Size [" + it->second.name_.substr(pos) + "]";
+            Tau_get_context_userevent(&ue, event_name.c_str());
             TAU_CONTEXT_EVENT_THREAD_TS(ue, command->mem_size_, task_id, translated_end);
+        }
+
+        if(task_id == -1)
+        {
+            printf("Error with task_id, skipping %s\n", event_name.c_str());
+            kernel_command_properties_mutex_.unlock_shared();
+            return;
         }
 
         #ifdef L0_TAU_DEBUG 
@@ -536,7 +535,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
 
 void TauL0EnableProfiling()
 {
-    printf("To enable metrics: ZET_ENABLE_METRICS=1 UNITRACE_MetricGroup=ComputeBasic\n");
+    TAU_VERBOSE("To enable metrics: UNITRACE_MetricGroup=ComputeBasic\n");
 
     //if (getenv("ZE_ENABLE_TRACING_LAYER") == NULL) 
     if(!TauEnv_get_l0_enable())
@@ -556,8 +555,8 @@ void TauL0EnableProfiling()
     ze_result_t status = ZE_RESULT_SUCCESS;
     status = zeInit(ZE_INIT_FLAG_GPU_ONLY);
     assert(status == ZE_RESULT_SUCCESS);
-    logger_ = new Logger(my_log);
-    ze_collector_ = ZeCollector::Create(logger_, L0_collector_options);
+    //logger_ = new Logger(my_log);
+    ze_collector_ = ZeCollector::Create(L0_collector_options);
     initialized = 1;
     TAU_VERBOSE("Initialized L0 Collector\n");
 }
