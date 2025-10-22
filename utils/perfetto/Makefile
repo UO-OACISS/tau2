@@ -13,10 +13,9 @@ LIB = libperfetto.a
 SRCS = perfetto.cc
 OBJS = $(SRCS:.cc=.o)
 
-PERFETTO_CXXFLAGS = -std=c++17 -fPIC -O3 -DNDEBUG
+PERFETTO_CXXFLAGS = -std=c++17 -fPIC -DNDEBUG
 
-CXXFLAGS = $(TAU_CXXFLAGS) $(PERFETTO_CXXFLAGS)
-
+CXXFLAGS = $(TAU_CXXFLAGS) $(PERFETTO_CXXFLAGS) -O2 -fno-inline 
 all: $(LIB)
 
 $(LIB): $(OBJS)
