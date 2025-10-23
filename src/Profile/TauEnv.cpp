@@ -2926,12 +2926,12 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: L0 profiling Disabled\n");
     }
 
-    if ((unitrace_metrics = getconf("UNITRACE_MetricGroup")) == NULL) {
+    if ((unitrace_metrics = getconf("L0_METRICGROUP")) == NULL) {
       unitrace_metrics = "";
       env_l0_metrics_enable = 0;
-      TAU_VERBOSE("TAU: UNITRACE_MetricGroup is not set\n");
+      TAU_VERBOSE("TAU: L0_METRICGROUP is not set\n");
     } else {
-      TAU_VERBOSE("TAU: UNITRACE_MetricGroup is \"%s\"\n", unitrace_metrics);
+      TAU_VERBOSE("TAU: L0_METRICGROUP is \"%s\"\n", unitrace_metrics);
       env_l0_metrics_enable = 1;
     }
 

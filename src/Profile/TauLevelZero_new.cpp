@@ -85,10 +85,11 @@ OnZeFunctionFinishCallback L0_a_callback = nullptr;
 CollectorOptions init_collector_options()
 {
     CollectorOptions init_options;
-    
+    TAU_VERBOSE("Initializing collector options\n");
+    #ifdef L0METRICS
     if(TauEnv_get_l0_metrics_enable() && !TauEnv_get_l0_stall_sampling_enable())
     {
-        if(strcmp("EuStallSampling", utils::GetEnv("UNITRACE_MetricGroup").c_str())==0)
+        if(strcmp("EuStallSampling", utils::GetEnv("L0_METRICGROUP").c_str())==0)
         {
             printf("Error: EuStallSampling cannot be used as a metric\n");
             return init_options;
@@ -101,6 +102,10 @@ CollectorOptions init_collector_options()
         printf("Error: L0 cannot enable both Metric Profiling and Sampling\n");
         return init_options;
     }
+    else
+    {
+        TAU_VERBOSE("No L0 metrics requested\n");
+    }
     
     
     if(TauEnv_get_l0_stall_sampling_enable())
@@ -110,6 +115,7 @@ CollectorOptions init_collector_options()
         //Check if metrics requested, if requested, throw error, as not compatible 
         init_options.metric_query = false;
     }
+    #endif
     
     
     return init_options;
@@ -550,12 +556,10 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
 
 void TauL0EnableProfiling()
 {
-    TAU_VERBOSE("To enable metrics: UNITRACE_MetricGroup=ComputeBasic\n");
+    //TAU_VERBOSE("To enable metrics: L0_METRICGROUP=ComputeBasic\n");
 
-    //if (getenv("ZE_ENABLE_TRACING_LAYER") == NULL) 
     if(!TauEnv_get_l0_enable())
     {
-        // tau_exec -level_zero was not called. Perhaps it is using -opencl
         TAU_VERBOSE("TAU: Disabling Level Zero support as ZE_ENABLE_TRACING_LAYER was not set from tau_exec -l0\n");
         return;
     }
@@ -569,6 +573,28 @@ void TauL0EnableProfiling()
     L0_init_timestamp = TauTraceGetTimeStamp(0);
     ze_result_t status = ZE_RESULT_SUCCESS;
     status = zeInit(ZE_INIT_FLAG_GPU_ONLY);
+    #ifdef L0METRICS
+    if(status != ZE_RESULT_SUCCESS)
+    {
+        printf("L0 failed to initialize\n");
+        if(TauEnv_get_l0_metrics_enable())
+        {
+            printf("Ensure that either /proc/sys/dev/i915/perf_stream_paranoid or /proc/sys/dev/xe/observation_paranoid is set to 0\n");
+            if(status == ZE_RESULT_ERROR_DEPENDENCY_UNAVAILABLE)
+                printf("System is missing metrics-discovery [https://github.com/intel/metrics-discovery]\n");
+        }
+    }
+    #else
+    if(status != ZE_RESULT_SUCCESS)
+    {
+        if(TauEnv_get_l0_metrics_enable())
+        {
+            printf("Was  metrics_discovery_api.h found while configuring?\n");
+
+        }
+        printf("L0 failed to initialize\n");
+    }
+    #endif
     assert(status == ZE_RESULT_SUCCESS);
     ze_collector_ = ZeCollector::Create(L0_collector_options);
     initialized = 1;

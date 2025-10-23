@@ -1,2 +1,17 @@
 complex_mult is a Level Zero example. 
 oneCCL is an OpenCL example. 
+
+Example configuration:
+./configure -level_zero -bfd=download
+
+Example usage:
+tau_exec -T serial,level_zero -l0 ./ze_gemm
+
+How to profile metrics:
+L0_METRICS=ComputeBasic tau_exec -T serial,level_zero -l0 ./ze_gemm
+
+To check the metrics available use the tool at examples/gpu/oneapi/l0_check_metrics
+
+Possible Errors with metrics:
+System is missing metrics-discovery [https://github.com/intel/metrics-discovery]
+Ensure that either /proc/sys/dev/i915/perf_stream_paranoid or /proc/sys/dev/xe/observation_paranoid is set to 0

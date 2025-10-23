@@ -223,7 +223,7 @@ class ZeMetricProfiler {
 #ifdef _WIN32
   static void ComputeMetricsQueried(uint32_t pid) {
 
-    std::string metric_group_name = utils::GetEnv("UNITRACE_MetricGroup");
+    std::string metric_group_name = utils::GetEnv("L0_METRICGROUP");
     std::vector<zet_metric_group_handle_t> groups;
     ze_result_t status = ZE_RESULT_SUCCESS;
  
@@ -508,7 +508,7 @@ class ZeMetricProfiler {
 
   void EnumerateDevices(uint32_t app_pid, char *dir) {
 
-    std::string metric_group = utils::GetEnv("UNITRACE_MetricGroup");
+    std::string metric_group = utils::GetEnv("L0_METRICGROUP");
     std::string output_dir = utils::GetEnv("UNITRACE_TraceOutputDir");
 
     bool stall_sampling = false;

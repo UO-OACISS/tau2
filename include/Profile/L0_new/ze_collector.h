@@ -1552,7 +1552,6 @@ class ZeCollector {
             else {
               desc.num_subdevices_ = num_sub_devices;
             }
-
             if (options_.metric_query) {
               L0_TAU_DEBUG_MSG("Need to check metric initialization, does not work with iGPU, as there are no groups");
               uint32_t num_groups = 0;
@@ -1569,7 +1568,6 @@ class ZeCollector {
                   std::cerr << "[ERROR] Unable to get metric group" << std::endl;
                   exit(-1);
                 }
-
                 for (uint32_t k = 0; k < num_groups; ++k) {
                   zet_metric_group_properties_t group_props{};
                   group_props.stype = ZET_STRUCTURE_TYPE_METRIC_GROUP_PROPERTIES;
@@ -1579,22 +1577,32 @@ class ZeCollector {
                     exit(-1);
                   }
                   
-                  if ((strcmp(group_props.name, utils::GetEnv("UNITRACE_MetricGroup").c_str()) == 0) && (group_props.samplingType & ZET_METRIC_GROUP_SAMPLING_TYPE_FLAG_EVENT_BASED)) {
+                  if ((strcmp(group_props.name, utils::GetEnv("L0_METRICGROUP").c_str()) == 0) && (group_props.samplingType & ZET_METRIC_GROUP_SAMPLING_TYPE_FLAG_EVENT_BASED)) {
                     group = groups[k];
                     break;
                   }
                 }
-                status = ZE_FUNC(zetContextActivateMetricGroups)(context, device, 1, &group);
-                if (status != ZE_RESULT_SUCCESS) {
-                    std::cerr << "[ERROR] Unable to activate metric groups" << std::endl;
-                    exit(-1);
+                if(group == nullptr)
+                {
+                  std::cerr << "[ERROR] Metric group name not found, maybe the name is wrong?" << std::endl;
+                  options_.metric_query = false;
+                  desc.metric_group_ = nullptr;
                 }
-                metric_activations_.insert({context, device});
+                else
+                {
+                  status = ZE_FUNC(zetContextActivateMetricGroups)(context, device, 1, &group);
+                  if (status != ZE_RESULT_SUCCESS) {
+                      std::cerr << "[ERROR] Unable to activate metric group" << std::endl;
+                      exit(-1);
+                  }
+                  metric_activations_.insert({context, device});
 
-                desc.metric_group_ = group;
+                  desc.metric_group_ = group;
+                }
               }
               else{
-                L0_TAU_DEBUG_MSG("No groups, disabling metric profiling");
+                L0_TAU_DEBUG_MSG("No groups available, disabling metric profiling");
+                std::cerr << "There are no metric groups available" << std::endl;
                 options_.metric_query = false;
                 desc.metric_group_ = nullptr;
               }
@@ -1602,7 +1610,6 @@ class ZeCollector {
             else {
               desc.metric_group_ = nullptr;
             }
-
             uint64_t host_time;
             uint64_t ticks;
 
