@@ -992,6 +992,7 @@ if [ -v TAU_METRICS ]; then
 fi
 
 if [ $track_l0 = "true" ]; then
+  $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
   $dryrun export PTI_ENABLE=1
   $dryrun export ZE_ENABLE_TRACING_LAYER=1
   if [ -v L0_METRICGROUP ]; then
@@ -1001,7 +1002,6 @@ if [ $track_l0 = "true" ]; then
   if [ $track_l0_stall_sampling = "true" ]; then
     $dryrun export ZE_ENABLE_STALL_SAMPLING=1
   fi
-
 fi
 
 if [ $track_rocm = "true" ] ; then
