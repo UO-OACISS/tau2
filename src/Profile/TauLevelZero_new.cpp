@@ -69,7 +69,9 @@ struct CollectorOptions {
 
 #include "Profile/L0_new/ze_collector.h"
 
-static double L0_init_timestamp;
+static double L0_TAU_init_timestamp;
+static double L0_TAU_first_timestamp;
+static uint64_t L0_Driver_init_timestamp;
 static int initialized = 0;
 static int disabled = 0;
 static CollectorOptions L0_collector_options;
@@ -135,7 +137,7 @@ int Tau_get_initialized_queues(tuple<uintptr_t, int> dev_tile)
   {
     TAU_CREATE_TASK(queue_id);
     // losing resolution from nanoseconds to microseconds.
-    metric_set_gpu_timestamp(queue_id, L0_init_timestamp);
+    metric_set_gpu_timestamp(queue_id, L0_TAU_first_timestamp);
     Tau_create_top_level_timer_if_necessary_task(queue_id);
     //std::cout << " NEW TASK: " << queue_id << std::endl;
     map_thread_queue[dev_tile] = queue_id;
@@ -387,7 +389,18 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             std::cout << "Instance ID " << command->instance_id_  << std::endl;
         #endif
 
+        //This is already inside a mutex
+        static int init_first_timer = 0;
+        if(!init_first_timer)
+        {
  
+            L0_TAU_init_timestamp = TauTraceGetTimeStamp(0);
+            uint64_t device_timestamp;	// in ticks
+
+            ze_result_t status = ZE_FUNC(zeDeviceGetGlobalTimestamps)(command->device_, &L0_Driver_init_timestamp, &device_timestamp);
+            PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+            init_first_timer = 1;
+        }
 
 
         int curr_tile = tile<0? 0:tile;
@@ -395,17 +408,25 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         tuple<uintptr_t, int> dev_tile(curr_device, curr_tile);
         //tau2-intel --> ze_collector.h 792 TAU_L0_kernel_event
 
-        static uint64_t firstTauTraceGetTimeStamp = TauTraceGetTimeStamp(0);
-        static uint64_t firstkernel_end = kernel_end;
-        static double time_shift = TauTraceGetTimeStamp(0) - (kernel_end/1e3);
+
+        static double time_shift = L0_TAU_init_timestamp - (L0_Driver_init_timestamp/1e3);
         double translated_start = time_shift + (kernel_start/1e3);
         double translated_end = time_shift + (kernel_end/1e3);
 
-        
         int task_id = -1;
 
         if(it->second.type_ == KERNEL_COMMAND_TYPE_COMPUTE)
         {
+            //std::cout  << "L0_TAU_init_timestamp   " << setprecision(numeric_limits<double>::max_digits10) << L0_TAU_init_timestamp << std::endl;
+            //std::cout << "L0_Driver_init_timestamp " << L0_Driver_init_timestamp << std::endl;
+            //std::cout << "kernel_start " << kernel_start << std::endl;
+            //std::cout << "kernel_end " << kernel_end << std::endl;
+            //std::cout << "time_shift " << setprecision(numeric_limits<double>::max_digits10) << time_shift << std::endl;
+            //std::cout << "translated_start         " << setprecision(numeric_limits<double>::max_digits10)<< translated_start << std::endl;
+            //std::cout << "translated_end           " << setprecision(numeric_limits<double>::max_digits10)<< translated_end << std::endl;
+            //std::cout << "k_diff " << kernel_end - kernel_start << std::endl;
+            //std::cout << "t_diff " << setprecision(numeric_limits<double>::max_digits10)<<  translated_end - translated_start << std::endl;
+        
             task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_));
             metric_set_gpu_timestamp(task_id, translated_start);
             TAU_START_TASK(event_name.c_str(), task_id);
@@ -570,7 +591,8 @@ void TauL0EnableProfiling()
 
     L0_collector_options = init_collector_options();
 
-    L0_init_timestamp = TauTraceGetTimeStamp(0);
+
+    
     ze_result_t status = ZE_RESULT_SUCCESS;
     status = zeInit(ZE_INIT_FLAG_GPU_ONLY);
     #ifdef L0METRICS
@@ -596,6 +618,7 @@ void TauL0EnableProfiling()
     }
     #endif
     assert(status == ZE_RESULT_SUCCESS);
+    L0_TAU_first_timestamp = TauTraceGetTimeStamp(0);
     ze_collector_ = ZeCollector::Create(L0_collector_options);
     initialized = 1;
     TAU_VERBOSE("Initialized L0 Collector\n");
