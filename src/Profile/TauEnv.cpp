@@ -286,6 +286,8 @@ static int env_profiling = 0;
 static int env_tracing = 0;
 static int env_thread_per_gpu_stream = 0;
 static int env_trace_format = TAU_TRACE_FORMAT_DEFAULT;
+static int env_perfetto_merge = 1;
+static int env_perfetto_compress = 1;
 static int env_callpath_depth = 0;
 static int env_depth_limit = 0;
 static int env_track_message = 0;
@@ -1093,6 +1095,14 @@ int TauEnv_get_profiling() {
 
 int TauEnv_get_tracing() {
   return env_tracing;
+}
+
+int TauEnv_get_perfetto_compress() {
+  return env_perfetto_compress;
+}
+
+int TauEnv_get_perfetto_merge() {
+  return env_perfetto_merge;
 }
 
 int TauEnv_get_thread_per_gpu_stream() {
@@ -1997,16 +2007,45 @@ void TauEnv_initialize()
 #endif
       } else if(strcasecmp(tmp, "tau") == 0) {
         env_trace_format = TAU_TRACE_FORMAT_TAU;
+      }
+		else if(strcasecmp(tmp, "perfetto") == 0) {
+#ifdef TAU_PERFETTO
+        env_trace_format = TAU_TRACE_FORMAT_PERFETTO;
+#else
+        fprintf(stderr, "TAU: Warning: requested Perfetto trace but TAU built without Perfetto support, using default instead.\n");
+#endif
       } else {
         fprintf(stderr, "TAU: Warning: unrecognized trace format %s, using default instead.\n", tmp);
       }
     }
+	
+	/* Perfetto compression disable flag */
+    tmp = getconf("TAU_PERFETTO_COMPRESS");
+    if(tmp != NULL) {
+      if(!strcasecmp(tmp,"0") || !strcasecmp(tmp,"false") ||
+         !strcasecmp(tmp,"no") || !strcasecmp(tmp,"off")) {
+        env_perfetto_compress = 0;
+      }
+    }
+	
+	tmp = getconf("TAU_PERFETTO_MERGE");
+    if(tmp != NULL) {
+      if(!strcasecmp(tmp,"0") || !strcasecmp(tmp,"false") ||
+         !strcasecmp(tmp,"no") || !strcasecmp(tmp,"off")) {
+        env_perfetto_merge = 0;
+      }
+    }
+	
+	
     if(env_trace_format == TAU_TRACE_FORMAT_TAU) {
       TAU_VERBOSE("TAU: Trace format is tau\n");
       TAU_METADATA("TAU_TRACE_FORMAT", "tau")
     } else if(env_trace_format == TAU_TRACE_FORMAT_OTF2) {
       TAU_VERBOSE("TAU: Trace format is otf2\n");
       TAU_METADATA("TAU_TRACE_FORMAT", "otf2")
+    } else if(env_trace_format == TAU_TRACE_FORMAT_PERFETTO) {
+      TAU_VERBOSE("TAU: Trace format is perfetto\n");
+      TAU_METADATA("TAU_TRACE_FORMAT", "perfetto")
     }
 
     /* profiling */

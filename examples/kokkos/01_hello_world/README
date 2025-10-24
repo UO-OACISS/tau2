@@ -1,0 +1,7 @@
+To test with TAU do minimally:
+tau_exec -T serial ./hello_world.exe
+If needed, use a more specific -T argument to match your TAU library to your Kokkos backend. tau_exec arguments, such as -cupti for cuda builds, can catch additional gpu activity and threads.
+The resulting profile(s) should include at least an event like: 
+"Kokkos::parallel_for HelloWorld [type = Cuda, device = 0]" 1 0 5474 5474 0 GROUP="TAU_KOKKOS"
+
+Type will vary depending on backend used.

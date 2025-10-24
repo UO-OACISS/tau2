@@ -1941,6 +1941,10 @@ case $1 in
 	echo "NOTE: Using -lopen-trace-format instead of -lotf to link the OTF library ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PERFETTO)
+        echo "NOTE: Using PERFETTO library for trace output ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      TAU2EPILOG)
 	echo "NOTE: Using Kojak 2.1+ Epilog write interface to build tau2elg ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

@@ -81,7 +81,8 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/PyBindings.h   $(INCDIR)/PyTimer.h          \
 		$(INCDIR)/RenciSTFF.h    $(INCDIR)/PapiThreadLayer.h  \
 		$(INCDIR)/TauEnv.h	 $(INCDIR)/TauInit.h          \
-		$(INCDIR)/TauTrace.h     $(INCDIR)/TauTraceOTF2.h $(INCDIR)/TauSilc.h          \
+		$(INCDIR)/TauTrace.h     $(INCDIR)/TauTraceOTF2.h     \
+		$(TAUROOT)/utils/perfetto/perfetto.h $(INCDIR)/TauSilc.h          \
 		$(TAUROOT)/include/tau_internal.h $(INCDIR)/TauSampling.h $(INCDIR)/TauMetaData.h \
 		$(INCDIR)/TauSnapshot.h  $(INCDIR)/TauGASP.h          \
 	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h $(INCDIR)/TauCollate.h \
@@ -146,6 +147,15 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #OTF2#OTF2_O = TracerOTF2.o TauCollectives.o #ENDIF#
 
 #############################################
+# PERFETTO OBJECTS
+#############################################
+#PERFETTO#PERFETTO_O = TracerPerfetto.o #ENDIF#
+#PERFETTO#PERFETTO_LIB = $(TAUROOT)/utils/perfetto/libperfetto.a #ENDIF#
+$(TAUROOT)/utils/perfetto/libperfetto.a:
+	@echo "Building Perfetto static library..."
+	(cd $(TAUROOT)/utils/perfetto && $(MAKE))
+
+#############################################
 # ROCPROFILER OBJECTS
 #############################################
 #ROCPROFILER#ROCPROFILER_O = TauRocProfiler.o #ENDIF#
@@ -182,7 +192,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
 		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O) $(ADIOS_O) \
 		$(OTF2_O) $(CALIPER_O) $(ROCPROFILER_O) $(ROCM_O) $(ROCTRACER_O) \
-		$(TAU_CUPTI_SAMPLING_OBJS) \
+		$(TAU_CUPTI_SAMPLING_OBJS) $(PERFETTO_O) \
 		$(ROCPROFILERV2_O) $(ROCPROFILERSDK_O) $(TAU_LEVEL_ZERO_O) $(TAU_GPU_O)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
@@ -426,7 +436,7 @@ all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) \
 $(PYTAU) $(SHMEM_WRAPPER) $(POELIB) $(TAU_CUDA_LIB) $(TAU_PYCUDA_LIB) \
 $(TAU_OPENCL_LIB) $(TAU_CUPTI_LIB) $(TAU_CUPTI_ACTIVITY_LIB)
 
-$(TAU_TARGET):	$(OBJS) $(STATIC_OBJS)
+$(TAU_TARGET):	$(OBJS) $(STATIC_OBJS) $(PERFETTO_LIB)
 		$(PRELINK_PHASE)
 		$(AR) $(ARFLAGS) $(TAU_TARGET) $(OBJS) $(STATIC_OBJS) $(EXTRAOBJS)
 		$(TAU_RANLIB) $(TAU_TARGET)
@@ -822,6 +832,9 @@ TracerOTF2.o : TracerOTF2.cpp $(HDRS)
 
 TauCollectives.o : TauCollectives.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+
+TracerPerfetto.o : TracerPerfetto.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE)  $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauMetrics.o   	: TauMetrics.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)

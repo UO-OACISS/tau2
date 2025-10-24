@@ -789,6 +789,7 @@ usage() {
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
     echo "-likwid=<dir> ............................. Specify location of LIKWID."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
+    echo "-perfetto ............................... Enable Perfetto trace output."
     echo "-darshan=<dir> ............... Specify location of Darshan I/O package."
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-python=<interp> .... Choose Python options based on named interpreter."
@@ -1324,6 +1325,8 @@ otfdir=
 otfinc=
 otflib=
 download_otf=no
+perfetto=no
+download_perfetto=no
 download_likwid=no
 cubedir=own
 ebs2otf=no
@@ -2332,6 +2335,12 @@ for arg in "$@"; do
             fi
             shift
             ;;
+
+	-perfetto)
+		perfetto=yes
+		fixmakeargs="$fixmakeargs PERFETTO"
+		shift
+		;;
 
         -ebs2otf)
             ebs2otf=yes
@@ -3447,18 +3456,18 @@ for arg in "$@"; do
 
         -cupti=*)
             tauoptions="${tauoptions}-cupti"
-            cupti=`echo $arg | sed -e 's/-cupti=//' -e 's/ /#/g'`
-            if [ ! -d $cupti ] ; then
-                echo "Error: Cannot access CUPTI include directory $cupti"
+            cupti_path=`echo $arg | sed -e 's/-cupti=//' -e 's/ /#/g'`
+            if [ ! -d ${cupti_path} ] ; then
+                echo "Error: Cannot access CUPTI include directory ${cupti_path}"
                 exit 1
             fi
-            if [ -f "$cupti/include/cupti_events.h" ] ; then
-                fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
+            if [ -f "${cupti_path}/include/cupti_events.h" ] ; then
+                fixmakeargs="$fixmakeargs CUPTI cuptiinclude=${cupti_path}/include"
                 cupti=yes
-                if [ -f "$cupti/lib/libpcsamplingutil.so" ]; then
+                if [ -f "${cupti_path}/lib/libpcsamplingutil.so" ]; then
                     fixmakeargs="$fixmakeargs CUPTIPC"
                 fi
-                if [ -f "$cupti/lib64/libpcsamplingutil.so" ]; then
+                if [ -f "${cupti_path}/lib64/libpcsamplingutil.so" ]; then
                     fixmakeargs="$fixmakeargs CUPTIPC"
                 fi
             else
@@ -11538,18 +11547,19 @@ EOF
                 fi
                 if [ $cupti = no -a -f $cupti_event_path ] ; then
                     tauoptions="${tauoptions}-cupti"
-                    cupti=""
+                    cupti_path=""
                     if [ -d "$cudadir/extras/CUPTI" ] ; then
                         # check if usual path exists, otherwise use fallback
-                        cupti="$cudadir/extras/CUPTI"
+                        cupti_path="$cudadir/extras/CUPTI"
                     else
-                        cupti="$cudadir/extras/CUPTI.orig"
+                        cupti_path="$cudadir/extras/CUPTI.orig"
                         if [ -f "$cudadir/targets/aarch64-linux/include/cupti_events.h" ]; then
-                          cupti="$cudadir/targets/aarch64-linux"
+                          cupti_path="$cudadir/targets/aarch64-linux"
                         fi
                     fi
-                    fixmakeargs="$fixmakeargs CUPTI TAU_USE_GPU cuptiinclude=$cupti/include"
+                    fixmakeargs="$fixmakeargs CUPTI TAU_USE_GPU cuptiinclude=${cupti_path}/include"
                     echo "Using CUPTI library found in $cupti."
+		    cupti=yes
                     if [ $machine = craycnl ]; then
                         # check if -lcuda is available to the linker somehow
                       fixmakeargs="$fixmakeargs CUPTI_NOCUDA"
@@ -11557,10 +11567,10 @@ EOF
                     if [ ! -f $cudadir/lib64/stubs/libnvidia-ml.so ]; then
                       fixmakeargs="$fixmakeargs CUPTI_NONVML"
                     fi
-                    if [ -f "$cupti/lib/libpcsamplingutil.so" ]; then
+                    if [ -f "${cupti_path}/lib/libpcsamplingutil.so" ]; then
                         fixmakeargs="$fixmakeargs CUPTIPC"
                     fi
-                    if [ -f "$cupti/lib64/libpcsamplingutil.so" ]; then
+                    if [ -f "${cupti_path}/lib64/libpcsamplingutil.so" ]; then
                         fixmakeargs="$fixmakeargs CUPTIPC"
                     fi
                 fi
@@ -11596,14 +11606,14 @@ if [ $python = yes -a $cuda = yes -a $boost = yes ] ; then
 fi
 
 if [ ! $cupti = no ]; then
-    echo "Checking CUPTI version at $cupti/include ... ${nnl}"
+    echo "Checking CUPTI version at ${cupti_path}/include ... ${nnl}"
     cat <<EOF > cupti_version.C
 #include <cupti_version.h>
 #if CUPTI_API_VERSION >= 2
 #error CUPTI version >= 4.1 found.
 #endif
 EOF
-    if $cxx_compiler -I$cupti/include -c cupti_version.C 1>/dev/null 2>&1 ; then
+    if $cxx_compiler -I${cupti_path}/include -c cupti_version.C 1>/dev/null 2>&1 ; then
         echo "CUPTI version 4.0 found."
     else
         echo "CUPTI version >= 4.1 found."

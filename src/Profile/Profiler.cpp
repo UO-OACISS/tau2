@@ -22,7 +22,9 @@
 #include <Profile/TauSampling.h>
 #include <Profile/TauMetaDataMerge.h>
 #include <Profile/TauPluginInternals.h>
-
+#ifdef TAU_PERFETTO
+#include <Profile/TauTracePerfetto.h>
+#endif
 // Define DEBUG_PROF if you want to debug timers
 // #define DEBUG_PROF 1
 
@@ -1662,13 +1664,27 @@ extern "C" int Tau_profiler_initialization()
 }
 
 extern "C" int Tau_print_metadata_for_traces(int tid) {
+  MetaDataRepo *localRepo = &(Tau_metadata_getMetaData(tid));
+  bool usePerfetto = false;
 
-  MetaDataRepo *localRepo = NULL;
-    localRepo = &(Tau_metadata_getMetaData(tid));
+#ifdef TAU_PERFETTO
+  if (TauEnv_get_trace_format() == TAU_TRACE_FORMAT_PERFETTO) {
+    usePerfetto = true;
+  }
+#endif
 
-   for (MetaDataRepo::iterator it = (*localRepo).begin(); it != (*localRepo).end(); it++) {
-      string metadata_str(it->first.name + string(" | ") + string(it->second->data.cval));
+  for (MetaDataRepo::iterator it = (*localRepo).begin(); it != (*localRepo).end(); it++) {
+#ifdef TAU_PERFETTO
+    if (usePerfetto) {
+      const char* key = it->first.name;
+      const char* val = it->second->data.cval;
+      TauTracePerfettoMetadata(key, val, tid);
+    } else 
+#endif	
+    {
+      std::string metadata_str(std::string(it->first.name) + " | " + std::string(it->second->data.cval));
       Tau_trigger_userevent(metadata_str.c_str(), 1.0);
+    }
   }
   return 0;
 }
