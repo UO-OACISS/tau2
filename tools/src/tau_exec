@@ -987,9 +987,9 @@ fi
 
 
 
-if [ -v TAU_METRICS ]; then
-  export TAU_METRICS=TIME
-fi
+#if [ -v TAU_METRICS ]; then
+#  export TAU_METRICS=TIME
+#fi
 
 if [ $track_l0 = "true" ]; then
   $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
