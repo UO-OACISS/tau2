@@ -35,6 +35,10 @@
 extern "C" int Tau_get_usesSHMEM();
 #endif
 
+#ifdef TAU_MPI
+extern "C" int Tau_get_usesMPI();
+#endif
+
 #include <execinfo.h>
 
 // FIXME: Duplicated in pthread_wrap.c
@@ -449,6 +453,16 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
   // shared library and initializing thread-local storage on a new thread
   // acquire the same lock.
   ignore_thread = ignore_thread || !Tau_get_usesSHMEM();
+#endif
+
+#ifdef TAU_MPI
+  // Ignore threads launched before/during MPI_Init().
+  // Some programs (NEMO, XIOS) when using npmd 
+  // which loads a shared library  which runs a constructor.
+  // This causes a deadlock because loading a
+  // shared library and initializing thread-local storage on a new thread
+  // acquire the same lock.
+  ignore_thread = ignore_thread || !Tau_get_usesMPI();
 #endif
 
 
