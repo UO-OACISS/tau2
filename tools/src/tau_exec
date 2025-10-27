@@ -986,13 +986,20 @@ if [ $track_ompt = "true" ]; then
 fi
 
 
-
-#if [ -v TAU_METRICS ]; then
-#  export TAU_METRICS=TIME
-#fi
+#Check if TAU_METRICS is set
+if [ -v TAU_METRICS ]; then
+  #only add TIME if not found at the start, or between : or comma, or 
+  # at the ends preceded by one of the separators 
+  if [ ! `echo $TAU_METRICS | grep -E "(^|[:,])TIME($|[:,])"` ]; then
+    export TAU_METRICS=TIME,$TAU_METRICS
+  fi
+#If TAU_METRICS is not set, set it with TIME
+else
+  export TAU_METRICS=TIME
+fi
 
 if [ $track_l0 = "true" ]; then
-  $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+  $dryrun export TAU_METRICS=TAUGPU_TIME,$TAU_METRICS
   $dryrun export PTI_ENABLE=1
   $dryrun export ZE_ENABLE_TRACING_LAYER=1
   if [ -v L0_METRICGROUP ]; then
@@ -1009,7 +1016,7 @@ if [ $track_rocm = "true" ] ; then
     if [ `echo $TAU_METRICS | grep "TIME"` ]; then
         $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
     else
-        $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+        $dryrun export TAU_METRICS=TAUGPU_TIME,$TAU_METRICS
     fi
   fi
   if [ $track_rocm_pc = "true" ] ; then
@@ -1123,7 +1130,7 @@ if [ $track_cuda = "true" ] ; then
     if [ `echo $TAU_METRICS | grep "TIME"` ]; then
         export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
     else
-        export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+        export TAU_METRICS=TAUGPU_TIME,$TAU_METRICS
     fi
   fi
 fi
@@ -1144,7 +1151,7 @@ if [ $track_cupti = "true" ] ; then
       if [ `echo $TAU_METRICS | grep "TIME"` ]; then
         export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
       else
-        export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+        export TAU_METRICS=TAUGPU_TIME,$TAU_METRICS
       fi
     fi
   fi
@@ -1189,7 +1196,7 @@ if [ $track_cupti_pc = "true" ] ; then
       if [ `echo $TAU_METRICS | grep "TIME"` ]; then
         export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
       else
-        export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+        export TAU_METRICS=TAUGPU_TIME,$TAU_METRICS
       fi
     fi
   fi
@@ -1203,7 +1210,7 @@ if [ $track_opencl = "true" ] ; then
     if [ `echo $TAU_METRICS | grep "TIME"` ]; then
       export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
     else
-      export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
+      export TAU_METRICS=$TAU_METRICS,TAUGPU_TIME
     fi
   fi
 fi
@@ -1212,7 +1219,7 @@ if [ $track_l0 = "true" -a $track_opencl = "false" ]; then
     if [ `echo $TAU_METRICS | grep "TIME"` ]; then
       export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
     else
-      export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
+      export TAU_METRICS=$TAU_METRICS,TAUGPU_TIME
     fi
   fi
 fi
@@ -1548,7 +1555,7 @@ else
             $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
           fi
         else
-        $dryrun export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS
+        $dryrun export TAU_METRICS=TAUGPU_TIME,$TAU_METRICS
       fi
      fi
   fi
