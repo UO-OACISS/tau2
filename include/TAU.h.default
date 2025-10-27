@@ -16,7 +16,7 @@
 #ifndef _TAU_H_
 #define _TAU_H_
 
-#define TAU_VERSION "2.34-git"
+#define TAU_VERSION "2.35-git"
 #define TAU_MAKEFILE "default"
 
 #if (defined(PROFILING_ON) || defined(TRACING_ON))
