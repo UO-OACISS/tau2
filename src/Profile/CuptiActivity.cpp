@@ -427,7 +427,9 @@ void Tau_cupti_set_device_props() {
 	dev_record.computeCapabilityMajor = props.major;
 	dev_record.computeCapabilityMinor = props.minor;
 	dev_record.constantMemorySize = props.totalConstMem;
+    #if CUDA_VERSION < 13000
 	dev_record.coreClockRate = props.clockRate;
+    #endif
 	//dev_record->globalMemoryBandwidth = props.
 	dev_record.globalMemorySize = props.totalGlobalMem;
 	dev_record.l2CacheSize = props.l2CacheSize;
@@ -486,12 +488,14 @@ void Tau_cupti_set_device_props() {
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
 
+    #if CUDA_VERSION < 13000
 	metadata[n].name = (char*) malloc(str_len);
 	snprintf(metadata[n].name, str_len,  "GPU[%d] Clock Rate", dev);
 	metadata[n].value = (char*) malloc(str_len);
 	snprintf(metadata[n].value, str_len,  "%d", props.clockRate);
     Tau_metadata_register(metadata[n].name, metadata[n].value);
 	n++;
+    #endif
 
 	metadata[n].name = (char*) malloc(str_len);
 	snprintf(metadata[n].name, str_len,  "GPU[%d] Total Global Memory", dev);
@@ -515,8 +519,9 @@ void Tau_cupti_set_device_props() {
 	n++;
 
 	Tau_cupti_register_metadata(dev, metadata, nMeta);
-    }
 
+    }
+    
 #if CUDA_VERSION < 5000
     if (__deviceMap().size() > 1 && Tau_CuptiLayer_get_num_events() > 0)
     {
@@ -526,7 +531,7 @@ void Tau_cupti_set_device_props() {
 
 
 		TAU_DEBUG_PRINT("TAU: exiting Tau_cupti_set_device_props\n");
-
+    
 }
 
 /*
