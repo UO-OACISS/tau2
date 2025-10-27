@@ -414,7 +414,11 @@ void Tau_cupti_set_device_props() {
     cudaError cuda_err = cudaSuccess;
 
     int num_devices;
+    #if CUDA_VERSION < 13000
     int nMeta = 7;
+    #elif CUDA_VERSION >= 1300
+    int nMeta = 6;
+    #endif
 
     cuda_err = cudaGetDeviceCount(&num_devices);
 
@@ -1821,6 +1825,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
 #if CUDA_VERSION >= 5000
             case CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL:
 #endif
+
 #if CUDA_VERSION >= 5050
             case CUPTI_ACTIVITY_KIND_CDP_KERNEL:
 #endif
@@ -2040,7 +2045,6 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                         map[i].data = it->second;
                         i++;
                     }
-
 #if CUDA_VERSION >= 5050
                     if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
                         if (TauEnv_get_cuda_track_cdp()) {
