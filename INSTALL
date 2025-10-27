@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.34                          *
+ *                           Version 2.35                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -128,22 +128,21 @@ For CUDA profiling on GPUs, please use -cuda=<dir> to configure TAU and use tau_
 
 % mpirun -np 256 tau_exec -T papi,cupti,pdt -cupti ./a.out
 
-TAU has been tested with CUDA 10.1, 10.2, 11.0 and earlier versions. 
+TAU has been tested with CUDA 10.1, 10.2, 11.0, 12.x, and 13.x and earlier versions. 
 No special -cuda options are needed when configuring TAU for OpenACC profiling 
-with PGI compilers:
-% module load PrgEnv-pgi
 % ./configure -arch=craycnl -mpi -bfd=download -pdt=<dir> -papi=<dir> ; 
 % make install
-% aprun -n 256 tau_exec -T pgi,pdt,mpi -openacc ./a.out
+% aprun -n 256 tau_exec -T pdt,mpi -openacc ./a.out
 
 To periodically sample the memory footprint of your application, please set:
 % export TAU_TRACK_MEMORY_FOOTPRINT=1
 
 To use TAU with AMD GPUs:
-./configure -rocm=<dir> -rocprofiler=<dir> -c++=clang++ -cc=clang -bfd=download; make install
+./configure -rocm=<dir> -rocprofsdk  -c++=clang++ -cc=clang -bfd=download; make install
 and use
-tau_exec -T rocm,rocprofiler,serial -rocm ./a.out
-TAU has been tested with ROCm 5.x as well as ROCm 6.0.0 with rocprofiler. 
+tau_exec -T rocm,serial -rocm ./a.out
+TAU has been tested with ROCm 5.x as well as ROCm 6.0.0 with rocprofiler and rocprofsdk 
+with ROCm 7.x. 
 With ROCm 6.x, the directories have moved and we need to specify the same directory for 
 rocm and rocprofiler. For e.g.,:
 ./configure -rocm=/opt/rocm-6.0.0 -rocprofiler=/opt/rocm-6.0.0 -bfd=download -iowrapper; 
@@ -155,7 +154,7 @@ To use TAU with Intel GPUs:
 and use:
 tau_exec -T level_zero,serial -l0 ./ze_gemm
 TAU has been tested with level-zero-devel-1.0.16-i405.el8.x86_64 RPM on an
-Intel TigerLake CPU on a laptop with a Gen 12LP GPU. It needs libdrm-devel RPM. 
+Intel PVC. It needs libdrm-devel RPM. 
 
 Please see http://tau.uoregon.edu/tau.pptx for sample TAU slides. Please drop us
 an e-mail at tau-bugs@cs.uoregon.edu if you get stuck or have a question. 
