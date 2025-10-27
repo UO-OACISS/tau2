@@ -10,6 +10,21 @@
 
 Change log:
 ------------
+Version 2.35 changes (from 2.34):
+1. Updates for Grace-Blackwell and Blackwell+x86_64 with CUDA 13. 
+2. Fixes for overflows with Level Zero. 
+3. Added support for OpenSHMEM with OTF. 
+4. Updates for PAPI multiplexing of hardware performance counters. 
+5. Added tau_diff.py utility to compare individual or directories of profiles. 
+6. Updates for Cray ftn compiler for compiler-based instrumentation. 
+7. Updates for Python3 when configuring perfstubs for Python 3.12. 
+8. Updated Likwid to 5.4.1. 
+9. Updated Score-P to 9.3. 
+10. Added initial support for ROCm and CUDA with Score-P 9.3. 
+11. Added support for Level Zero metric profiling (-level_metrics configure option). 
+12. Added initial support for Unitrace and sampling on Intel GPU (WIP, -l0_sampling). 
+13. Initial support for TAU_TRACE_FORMAT=perfetto to write out perfetto trace files natively.
+
 Version 2.34 changes (from 2.33):
 1. Added support for new LLVM compilers (-c++=parascc).
 2. Updated support for ROCm 6.2.3. 
