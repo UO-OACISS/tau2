@@ -64,7 +64,8 @@ else ifeq ($(KOKKOS_HAVE_HIP), yes)
     # Add rpath to help the executable find shared libraries at runtime
     KOKKOS_LDFLAGS += -Wl,-rpath,$(KOKKOS_LIBDIR) -Wl,-rpath,$(ROCM_HOME)/lib
 
-else
+endif
+
     # If not a GPU backend, check for OpenMP
     KOKKOS_HAVE_OPENMP := $(shell grep -q "^#define KOKKOS_ENABLE_OPENMP" $(KOKKOS_CONFIG_H) && echo "yes")
     ifeq ($(KOKKOS_HAVE_OPENMP), yes)
@@ -74,7 +75,6 @@ else
     else
         $(info Detected Kokkos Serial backend)
     endif
-endif
 
 
 KOKKOS_LIBS := -L$(KOKKOS_LIBDIR) -lkokkoscore -ldl
@@ -100,4 +100,4 @@ $(EXE): $(OBJ)
 	$(CXX) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $< -o $(notdir $@)
 
 clean:
-	rm -f *.o *.exe
+	rm -f *.o *.exe profile.*
