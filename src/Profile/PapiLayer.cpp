@@ -345,6 +345,11 @@ int PapiLayer::initializeThread(int tid)
       /* PAPI 3 support goes here */
       for (int i=0; i<numCounters; i++) {
 	    int comp = PAPI_COMPONENT_INDEX (counterList[i]);
+        if(comp > TAU_PAPI_MAX_COMPONENTS) {
+          fprintf(stderr, "TAU: PAPI component index %d greater than maximum %d; increase TAU_PAPI_MAX_COMPONENTS\n", comp, TAU_PAPI_MAX_COMPONENTS);
+          RtsLayer::UnLockDB();
+          return -1;
+        }
 		if(TauEnv_get_papi_multiplexing() && localThreadValue->NumEvents[comp] == 0) {
 		 rc = PAPI_assign_eventset_component( localThreadValue->EventSet[comp], comp );
           if ( PAPI_OK != rc ) {
@@ -404,11 +409,11 @@ int PapiLayer::initializeThread(int tid)
           }
         }
       }
+    dmesg(10, "ThreadList[%d] = %p\n", tid, localThreadValue);
     } /*if (!ThreadList[tid]) */
     RtsLayer::UnLockDB();
   } /*if (!ThreadList[tid]) */
 
-  dmesg(10, "ThreadList[%d] = %p\n", tid, localThreadValue);
   return 0;
 }
 
@@ -468,8 +473,8 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
         break;
       // map back to original indices
       for (int j=0; j<localThreadValue->NumEvents[comp]; j++) {
-	int index = localThreadValue->Comp2Metric[comp][j];
-	localThreadValue->CounterValues[index] += tmpCounters[j];
+        int index = localThreadValue->Comp2Metric[comp][j];
+        localThreadValue->CounterValues[index] += tmpCounters[j];
         dmesg(10, "ThreadList[%d]->CounterValues[%d] = %lld\n", tid, index, localThreadValue->CounterValues[index]);
       }
     }

@@ -18,8 +18,10 @@
 
 #ifdef TAU_PAPI
 
-
-#define TAU_PAPI_MAX_COMPONENTS 4
+// TODO Make this dynamically sized 
+#ifndef TAU_PAPI_MAX_COMPONENTS
+#define TAU_PAPI_MAX_COMPONENTS 16
+#endif
 
 #define MAX_PAPI_COUNTERS TAU_MAX_COUNTERS
 using namespace std;
