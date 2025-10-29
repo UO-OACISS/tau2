@@ -503,6 +503,10 @@ void TauL0EnableProfiling(void);
 void Tau_rocm_initialize_v2(void);
 #endif
 
+#ifdef TAU_ENABLE_ROCPROFILERSDK
+void Tau_rocm_initialize_v3(void);
+#endif
+
 
 extern "C" int Tau_init_initializeTAU()
 {
@@ -599,6 +603,11 @@ extern "C" int Tau_init_initializeTAU()
 #ifdef TAU_ENABLE_ROCPROFILERV2 
   Tau_rocm_initialize_v2();
 #endif
+
+#ifdef TAU_ENABLE_ROCPROFILERSDK
+  Tau_rocm_initialize_v3();
+#endif
+
 
   // Mark initialization complete so calls below can start timers
   tau_initialized() = 1;

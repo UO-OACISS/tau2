@@ -52,6 +52,7 @@ rocprofiler_buffer_id_t       client_buffer    = {};
 //Flag to enable/disable profiling
 int volatile hc_profiling = 0;
 int volatile pc_sampling = 0;
+static int initialized_v3 = 0;
 
 //Buffer to identify names of ROCm calls
 using buffer_kind_names_t = std::map<rocprofiler_buffer_tracing_kind_t, const char*>;
@@ -90,6 +91,8 @@ std::map<uint64_t , rocprofiler_agent_type_t> tau_rocm_all_agent_id = {};
 //List of events, used  to sort events by timestamp
 std::list<struct TauSDKEvent> TauRocmSDKList;
 std::mutex SDKList_mtx;
+
+std::mutex SDK_init_lock;
 
 std::map<int, rocprofiler_timestamp_t> tau_last_timestamp_published;
 std::mutex last_mtx;
@@ -1000,19 +1003,24 @@ tool_fini(void* tool_data)
 //Configure rocprofiler-sdk when executing the application
 //executed before TAU starts
 extern "C" rocprofiler_tool_configure_result_t*
-rocprofiler_configure(uint32_t                 version,
+rocprofiler_configure_(uint32_t                 version,
                       const char*              runtime_version,
                       uint32_t                 priority,
                       rocprofiler_client_id_t* id)
 {
-
-  Tau_init_initializeTAU();
+  //Removed for rocprofiler_force_configure, as TAU calls this part
+  // previously, this function was called before TAU.
+  //Changed due to issues with ROCm aware MPI, where it deadlocked.
+  //Another alternative, would be to make the RocProfilerSDK part a library,
+  // similar to Cupti, and use LD_PRELOAD, if errors appear with other frameworks.
+  /*Tau_init_initializeTAU();
 
   #if (!(defined (TAU_MPI) || (TAU_SHMEM)))
   if (Tau_get_node() == -1) {
       TAU_PROFILE_SET_NODE(0);
   }
   #endif // TAU_MPI || TAU_SHMEM 
+  */
   TAU_VERBOSE("Inside rocprofiler_configure\n");
   // Check in case the tool is launched but we don't need it
   if(use_rocprofilersdk() == 0)
@@ -1031,6 +1039,7 @@ rocprofiler_configure(uint32_t                 version,
                                           &tool_fini,
                                           static_cast<void*>(client_tool_data)};
   
+  initialized_v3 = 1;
   // return pointer to configure data
   return &cfg;
 }
@@ -1063,4 +1072,24 @@ void Tau_rocprofsdk_flush(){
 
   flushed = 1;
   ROCPROFILER_CALL(rocprofiler_stop_context(client_ctx), "rocprofiler context stop");
+}
+
+
+void
+Tau_rocm_initialize_v3()
+{
+    if(use_rocprofilersdk() == 0)
+     return;
+    int status = 0;
+
+    SDK_init_lock.lock();
+
+    if(initialized_v3 == 0)
+    {
+        ROCPROFILER_CALL(rocprofiler_force_configure(&rocprofiler_configure_),
+                         "force configuration");
+        initialized_v3 = 1;
+    }
+    SDK_init_lock.unlock();
+
 }
