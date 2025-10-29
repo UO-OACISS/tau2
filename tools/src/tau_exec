@@ -999,7 +999,13 @@ else
 fi
 
 if [ $track_l0 = "true" ]; then
-  $dryrun export TAU_METRICS=TAUGPU_TIME,$TAU_METRICS
+  if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
+    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+        $dryrun export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+    else
+        $dryrun export TAU_METRICS=TAUGPU_TIME,$TAU_METRICS
+    fi
+  fi
   $dryrun export PTI_ENABLE=1
   $dryrun export ZE_ENABLE_TRACING_LAYER=1
   if [ -v L0_METRICGROUP ]; then

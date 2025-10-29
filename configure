@@ -3174,15 +3174,6 @@ for arg in "$@"; do
                 exit 1
               fi
             fi
-            if [ "x${mdisc_dir}" = "x" ]; then
-                if [ -r /usr/include/metrics_discovery_api.h ]; then
-                    fixmakeargs="$fixmakeargs mdisc_dir=$mdisc_dir LEVEL_ZERO_METRICS"
-                    tauoptions="${tauoptions}-l0metrics"
-                else
-                    echo "Not found metrics_discovery_api.h L0 metrics not available."
-                    echo " If the header is available, use -level_metrics=<dir> and reconfigure TAU."
-                fi
-            fi
             shift
             ;;
 
@@ -3208,17 +3199,6 @@ for arg in "$@"; do
             fixmakeargs="$fixmakeargs l0_lib_dir=$l0_lib_dir"
             tauoptions="${tauoptions}-level_zero"
             pthread=yes
-            if [ "x${mdisc_dir}" = "x" ]; then
-                if [ -r /usr/include/metrics_discovery_api.h ]; then
-                    echo "Enabling LEVEL_ZERO_METRICS"
-                    fixmakeargs="$fixmakeargs mdisc_dir=$mdisc_dir LEVEL_ZERO_METRICS"
-                    tauoptions="${tauoptions}-l0metrics"
-                else
-                    echo "Not found metrics_discovery_api.h , L0 metrics not available."
-                    echo " If the header is available, use -level_metrics=<dir> and reconfigure TAU."
-                fi
-            fi
-
             shift
             ;;
 
@@ -13482,10 +13462,19 @@ EOF
         echo "Error compiling L0 version check"
         exit 1
     fi
-
     
     #fixmakeargs="$fixmakeargs LEVEL_ZERO"
     #fixmakeargs="$fixmakeargs LEVEL_ZERO_OLD"
+
+    if [ "x${mdisc_dir}" = "x" ]; then
+        if [ -r /usr/include/metrics_discovery_api.h ]; then
+            fixmakeargs="$fixmakeargs mdisc_dir=$mdisc_dir LEVEL_ZERO_METRICS"
+            tauoptions="${tauoptions}-l0metrics"
+        else
+            echo " /usr/include/metrics_discovery_api.h not found, L0 metrics not available."
+            echo " If the header is available, use -level_metrics=<dir> and reconfigure TAU."
+        fi
+    fi
 
     rm test_l0.c test_l0
 fi
