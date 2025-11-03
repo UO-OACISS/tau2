@@ -779,6 +779,8 @@ usage() {
 #   echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
     echo "-level_zero[=<dir>] ................. Specify path to Intel Level Zero."
     echo "-level_metrics[=<dir>]... Specify path to Level Zero Metrics Discovery."
+    echo "-force_new_l0 .................... Force the use of the new L0 profiler"
+    echo "-force_legacy_l0 ...............Force the use of the legacy L0 profiler"
     echo "-roctracer=<dir> .................. Specify location of ROCm roctracer."
     echo "-hip=<dir> .................... Specify location of ROCm HIP directory."
     echo ""
@@ -965,7 +967,7 @@ for arg in "$@"; do
         echo "-rocm[=<dir>] ..... Specify alternate path to ROCm (/opt/rocm default)."
         echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
         echo "-rocprofv2 .......................................... Enable rocprofv2."
-        echo "-rocprofsdk[=<dir>] ..................................Enable rocprof-sdk."
+        echo "-rocprofsdk[=<dir>] ................................Enable rocprof-sdk."
         echo "-rocmsmi=<dir> ..................... Specify location of RoCm rocm_smi."
         echo "-rocm-core=<dir> ...... Specify location of ROCm Core to detect rocmv6."
         #echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
@@ -975,6 +977,8 @@ for arg in "$@"; do
         echo "-hip=<dir> .................... Specify location of ROCm HIP directory."
         echo "-level_zero[=<dir>]  ................ Specify path to Intel Level Zero."
         echo "-level_metrics[=<dir>] .. Specify path to Level Zero Metrics Discovery."
+	    echo "-force_new_l0 .................... Force the use of the new L0 profiler"
+	    echo "-force_legacy_l0 ...............Force the use of the legacy L0 profiler"
         echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
         echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
         echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
@@ -1443,6 +1447,8 @@ zepto=no
 zeptodir=
 cuda=no
 level_zero=no
+level_zero_legacy=no
+level_zero_new=no
 mdisc_dir=""
 rocm=no
 rocmv6=no
@@ -3214,6 +3220,16 @@ for arg in "$@"; do
 
       	shift
       	;;
+
+        -force_new_l0)
+            level_zero_new=yes
+        shift
+        ;;
+
+        -force_legacy_l0)
+            level_zero_legacy=yes
+        shift
+        ;;
 
 
         -rocm)
@@ -13392,8 +13408,35 @@ fi
 fixmakeargs="$fixmakeargs extra_linker_args=$extra_linker_args"
 
 
+if [ "${level_zero}" = "yes" -a "${level_zero_legacy}" = "yes" ] ; then
+    echo "Forcing legacy Level Zero"
+    fixmakeargs="$fixmakeargs LEVEL_ZERO_OLD"
+    tauoptions="${tauoptions}-l0legacy"
+    if [ "x${mdisc_dir}" = "x" ]; then
+        if [ -r /usr/include/metrics_discovery_api.h ]; then
+            fixmakeargs="$fixmakeargs mdisc_dir=$mdisc_dir LEVEL_ZERO_METRICS"
+            tauoptions="${tauoptions}-l0metrics"
+        else
+            echo " /usr/include/metrics_discovery_api.h not found, L0 metrics not available."
+            echo " If the header is available, use -level_metrics=<dir> and reconfigure TAU."
+        fi
+    fi
 
-if [ "${level_zero}" = "yes" ] ; then
+elif [ "${level_zero}" = "yes" -a "${level_zero_new}" = "yes" ] ; then
+    echo "Forcing new Level Zero"
+    fixmakeargs="$fixmakeargs LEVEL_ZERO"
+
+    if [ "x${mdisc_dir}" = "x" ]; then
+        if [ -r /usr/include/metrics_discovery_api.h ]; then
+            fixmakeargs="$fixmakeargs mdisc_dir=$mdisc_dir LEVEL_ZERO_METRICS"
+            tauoptions="${tauoptions}-l0metrics"
+        else
+            echo " /usr/include/metrics_discovery_api.h not found, L0 metrics not available."
+            echo " If the header is available, use -level_metrics=<dir> and reconfigure TAU."
+        fi
+    fi
+
+elif [ "${level_zero}" = "yes" ] ; then
 
 cat <<EOF > test_l0.c
 #include <assert.h>
@@ -13445,6 +13488,8 @@ int main()
         return 0;
 }
 EOF
+
+
 
     if $cxx_compiler test_l0.c -lze_loader -I$l0dir/include -o test_l0 1> /dev/null 2>&1 ; then
         #echo "$cxx_compiler test_l0.c -lze_loader -I$l0dir/include -o test_l0"
