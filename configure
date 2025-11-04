@@ -10797,7 +10797,8 @@ dynlibiberty=dynlibiberty
 dynlibibertytgz=${dynlibiberty}.tar.gz
 dynlibibertyurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$dynlibibertytgz
 
-dynelfutils=elfutils-0.189
+#dynelfutils=elfutils-0.189
+dynelfutils=elfutils-latest
 dynelfutilsbz=${dynelfutils}.tar.bz2
 dynelfutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$dynelfutilsbz
 
@@ -11035,7 +11036,7 @@ if [ "x$download_dyninst" = xyes ] ; then
       download "$dynelfutilsurl" "$dynelfutilsbz"
       tar -xf $dynelfutilsbz -C ${dyninstdir}/elfutils --strip-components=1
       cd ${dyninstdir}/elfutils
-      CC=$compiler_for_dyninst CXX=$compilerxx_for_dyninst  ./configure -disable-debuginfod --disable-libdebuginfod --prefix=$PWD
+      CC=$compiler_for_dyninst CXX=$compilerxx_for_dyninst  ./configure --prefix=$PWD
       make -j8
       make -j8 install
       cd ..
@@ -11086,7 +11087,8 @@ fi
 
 
 
-dynelfutils=elfutils-0.189
+#dynelfutils=elfutils-0.189
+dynelfutils=elfutils-latest
 dynelfutilsbz=${dynelfutils}.tar.bz2
 dynelfutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$dynelfutilsbz
 
@@ -11105,7 +11107,7 @@ if [ "x$download_elfutils" = xyes ] ; then
         download "$dynelfutilsurl" "$dynelfutilsbz"
         tar -xf $dynelfutilsbz -C ${libelfutilsdir}/${dynelfutils} --strip-components=1
         cd ${libelfutilsdir}/${dynelfutils}
-        CC=gcc CXX=g++  ./configure -disable-debuginfod --disable-libdebuginfod --prefix=${elfutilsdir}
+        CC=gcc CXX=g++  ./configure --prefix=${elfutilsdir}
         make -j8
         make -j8 install
         cd ..
@@ -12739,7 +12741,7 @@ libdwarftgz=$libdwarf_dirname.tar.gz
 libdwarfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libdwarftgz
 
 libelf_dirname=libelf-devel-0.158-6.1.x86_64
-# libelf_dirname=elfutils-0.189.tar.gz
+
 libelftgz=$libelf_dirname.tgz
 libelfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libelftgz
 if [ "x$elfdir" = "x" ]; then
