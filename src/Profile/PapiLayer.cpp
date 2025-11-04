@@ -384,7 +384,13 @@ int PapiLayer::initializeThread(int tid)
 
         rc = PAPI_add_event(localThreadValue->EventSet[comp], counterList[i]);
         if (rc != PAPI_OK) {
-          fprintf (stderr, "TAU: Error adding PAPI events: %s\n", PAPI_strerror(rc));
+          char event_name[PAPI_MAX_STR_LEN];
+          int name_rc = PAPI_event_code_to_name(counterList[i], event_name);
+          if(name_rc == PAPI_OK) {
+            fprintf(stderr, "TAU: Error adding PAPI event named \"%s\": %s\n", event_name, PAPI_strerror(rc));
+          } else {
+            fprintf (stderr, "TAU: Error adding PAPI event (unknown name): %s\n", PAPI_strerror(rc));
+          }
           RtsLayer::UnLockDB();
           return -1;
         }
