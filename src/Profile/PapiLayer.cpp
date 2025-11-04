@@ -351,18 +351,34 @@ int PapiLayer::initializeThread(int tid)
           return -1;
         }
 		if(TauEnv_get_papi_multiplexing() && localThreadValue->NumEvents[comp] == 0) {
-		 rc = PAPI_assign_eventset_component( localThreadValue->EventSet[comp], comp );
+		  rc = PAPI_assign_eventset_component( localThreadValue->EventSet[comp], comp );
           if ( PAPI_OK != rc ) {
             fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(rc));
 			RtsLayer::UnLockDB();
             return -1;
           }
-          rc = PAPI_set_multiplex(localThreadValue->EventSet[comp]);
-          if ( PAPI_OK != rc ) {
-            fprintf(stderr, "PAPI_set_multiplex failed for component %d: (%s)\n", comp, PAPI_strerror(rc));
-			RtsLayer::UnLockDB();
-            return -1;
-          }  
+          // Not all components support multiplexing, so we need to check
+          // whether this component does before enabling it for the EventSet
+          // that corresponds to a given component.
+          const PAPI_component_info_t * comp_info = PAPI_get_component_info(comp);
+          bool supports_multiplex = false;
+          const char * comp_name = NULL;
+          if(comp_info != NULL) {
+            supports_multiplex = comp_info->kernel_multiplex;
+            comp_name = comp_info->name;
+          }
+          TAU_VERBOSE("TAU: PAPI: Configuring PAPI component %d \"%s\"\n", comp, comp_name);
+          if(supports_multiplex) {
+            TAU_VERBOSE("TAU: PAPI: Component %d \"%s\" supports multiplexing, will enable multiplexing\n", comp, comp_name);
+            rc = PAPI_set_multiplex(localThreadValue->EventSet[comp]);
+            if ( PAPI_OK != rc ) {
+                fprintf(stderr, "PAPI_set_multiplex failed for component %d: (%s)\n", comp, PAPI_strerror(rc));
+                RtsLayer::UnLockDB();
+                return -1;
+            }  
+          } else {
+            TAU_VERBOSE("TAU: PAPI: Component %d \"%s\" does not support multiplexing, not enabling multiplexing\n", comp, comp_name);
+          }
 		}
 		  
 
@@ -401,6 +417,7 @@ int PapiLayer::initializeThread(int tid)
 
       for (int i=0; i<TAU_PAPI_MAX_COMPONENTS; i++) {
         if (localThreadValue->NumEvents[i] > 0) { // if there were active counters for this component
+          TAU_VERBOSE("TAU: PAPI: Starting event set %d\n", i);
           rc = PAPI_start(localThreadValue->EventSet[i]);
           if (rc != PAPI_OK) {
             fprintf (stderr, "pid=%d: TAU(initializeThread): Error calling PAPI_start: %s, tid = %d\n", RtsLayer::getPid(), PAPI_strerror(rc), tid);
