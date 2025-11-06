@@ -33,6 +33,10 @@
 
 #ifndef TAU_WINDOWS
 #include <unistd.h>
+#include <strings.h> /* For strcasecmp() on POSIX systems */
+#else
+/* For Windows, define strcasecmp as _stricmp */
+#define strcasecmp _stricmp
 #endif
 
 #include <Profile/TauEnv.h>
