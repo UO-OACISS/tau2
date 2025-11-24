@@ -8798,7 +8798,7 @@ if [ $result = "0" ]; then
 else
     echo " no"
 fi
-rm -f ./ompt_ver_test
+rm -f ./ompt_ver_test ./ompt_ver_test.cpp
 
 if [ $ompt_compiler_support = no ] ; then
         echo -n "Compiler does not support OMPT ... "
@@ -10961,12 +10961,13 @@ if [ "x$download_boost" = xyes ] ; then
     rm $libboosttgz
     cd $dyninstboostdir
     ./bootstrap.sh --prefix=${dyninstboostdir} # dyninst wants boost to be built in its src dir
-    ./b2 install -j4
+    ./b2 install -j8
     fixmakeargs="$fixmakeargs boostinc=-I${dyninstboostdir}/include"
   fi
   cd $prebfddir
 fi #end dowload_boost
 
+#set -x
 if [ "x$download_dyninst" = xyes ] ; then
 
   dyninstdir=${libdyninstdir}/${libdyninst}
@@ -11036,7 +11037,7 @@ if [ "x$download_dyninst" = xyes ] ; then
       download "$dynelfutilsurl" "$dynelfutilsbz"
       tar -xf $dynelfutilsbz -C ${dyninstdir}/elfutils --strip-components=1
       cd ${dyninstdir}/elfutils
-      CC=$compiler_for_dyninst CXX=$compilerxx_for_dyninst  ./configure --prefix=$PWD
+      CC=$compiler_for_dyninst CXX=$compilerxx_for_dyninst  ./configure --prefix=$PWD --disable-libdebuginfod --disable-debuginfod
       make -j8
       make -j8 install
       cd ..
@@ -11075,7 +11076,7 @@ if [ "x$download_dyninst" = xyes ] ; then
   cd $prebfddir
 fi #dyninst=download
 
-
+#exit 0
 
 ######################################################################
 # Install elfutils if requested
@@ -11107,7 +11108,7 @@ if [ "x$download_elfutils" = xyes ] ; then
         download "$dynelfutilsurl" "$dynelfutilsbz"
         tar -xf $dynelfutilsbz -C ${libelfutilsdir}/${dynelfutils} --strip-components=1
         cd ${libelfutilsdir}/${dynelfutils}
-        CC=gcc CXX=g++  ./configure --prefix=${elfutilsdir}
+        CC=gcc CXX=g++  ./configure --prefix=${elfutilsdir} --disable-libdebuginfod --disable-debuginfod
         make -j8
         make -j8 install
         cd ..
