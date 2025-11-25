@@ -6294,7 +6294,7 @@ if [ $build_llvm_plugin = yes ]; then
     fi
     if [ "x$llvm_src_dir" = "x" ]; then
       if [ "x$theamdclang" != "x" ] ; then
-        llvm_src_dir=`which amdclang | sed -e 's@bin/clang@@' `
+        llvm_src_dir=`which amdclang | sed -e 's@bin/amdclang@@' `
         echo "TAU: Using LLVM source directory -llvm_src=$llvm_src_dir for building the TAU LLVM plugin."
         fixmakeargs="$fixmakeargs llvm_src_dir=$llvm_src_dir LLVM_SRC_DIR"
       fi
