@@ -225,6 +225,31 @@ evalWithDebugMessage() {
 #        echoIfVerbose "....."
 }
 
+#Compile with the original compiler when using LLVM
+# needed in case MPI modifies the FULL_CC to another compiler
+#Reads the configuration compiler and compares it to the TAU_RUN_CXX or TAU_RUN_CC
+#Only used for source files when using CC or CXX
+#linking will be done with the original $compilerSpecified
+evalLLVMcompiler() {
+    conf_comp=""
+    if [ $1 == $group_c ]; then
+        conf_comp="`grep '^CONFIG_CC=' $TAU_MAKEFILE | sed -e 's@CONFIG_CC=@@g' `"
+    fi
+    if [ $1 == $group_C ]; then
+        conf_comp="`grep '^CONFIG_CXX=' $TAU_MAKEFILE | sed -e 's@CONFIG_CXX=@@g' `"
+    fi
+    full_conf_comp=`which ${conf_comp}`
+    full_in_comp=`which $2`
+    if [ ${full_in_comp} != ${full_conf_comp} ]; then
+        echo "LLVM instrumentation:"
+        echo "     $2 is not the same compiler as the configuration compiler ${conf_comp}"
+        echo "     Changing compilerSpecified to ${conf_comp}"
+        echo "     Changing CMD to ${conf_comp}"
+        compilerSpecified=${conf_comp}
+        CMD=${conf_comp}
+    fi
+}
+
 if [ $isDebug == $TRUE ]; then
     echoIfDebug "\nRunning in Debug Mode."
     echoIfDebug "Set \$isDebug in the script to \$FALSE to switch off Debug Mode."
@@ -1356,9 +1381,11 @@ if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
     case $groupType in
 	$group_c )
 	    TAU_LLVM_PLUGIN="TAU_Profiling.so"
+        evalLLVMcompiler $groupType $compilerSpecified
             ;;
 	$group_C)
 	    TAU_LLVM_PLUGIN="TAU_Profiling_CXX.so"
+        evalLLVMcompiler $groupType $compilerSpecified
             ;;
 	$group_f_F)
 	    TAU_LLVM_PLUGIN="TAU_Profiling.so"
@@ -1384,12 +1411,12 @@ if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
       clang_version=`$compilerSpecified --version | grep "flang-new version" | awk {'print $3'} | awk -F'.' {'print $1'}`
     fi
     if [[ "$clang_version" -ge "14" ]] ; then    
-	CLANG_PLUGIN_OPTION="-fpass-plugin"
+       CLANG_PLUGIN_OPTION="-fpass-plugin"
     else
-	CLANG_PLUGIN_OPTION="-fplugin"
-	if [[ "$clang_version" -ge "13" ]] ; then    
-	    CLANG_LEGACY="-flegacy-pass-manager"
-	fi
+       CLANG_PLUGIN_OPTION="-fplugin"
+       if [[ "$clang_version" -ge "13" ]] ; then
+           CLANG_LEGACY="-flegacy-pass-manager"
+       fi
     fi
 fi
 
