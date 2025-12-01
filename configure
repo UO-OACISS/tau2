@@ -774,6 +774,7 @@ usage() {
     echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
     echo "-rocprofv2 .......................................... Enable rocprofv2."
     echo "-rocprofsdk[=<dir>] ................................Enable rocprof-sdk."
+    echo "                      -elfutils is required to Enable ROCm PC Sampling."
     echo "-rocmsmi=<dir> ..................... Specify location of RoCm rocm_smi."
 #   echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
 #   echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
@@ -968,6 +969,7 @@ for arg in "$@"; do
         echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
         echo "-rocprofv2 .......................................... Enable rocprofv2."
         echo "-rocprofsdk[=<dir>] ................................Enable rocprof-sdk."
+        echo "                      -elfutils is required to Enable ROCm PC Sampling."
         echo "-rocmsmi=<dir> ..................... Specify location of RoCm rocm_smi."
         echo "-rocm-core=<dir> ...... Specify location of ROCm Core to detect rocmv6."
         #echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
@@ -3732,6 +3734,9 @@ if [ "x$rocm" = "xyes" -a "$rocprofsdk" = "yes" -a "$rocmv6" = "yes" ]; then
                 exit 1
             fi
         fi
+    else
+        echo "NOTE: TAU's ROCm ROCPROFILER SDK PC Sampling Interface Unavailable."
+        echo "      Configure with -elfutils=download to enable PC Sampling."
     fi
 fi
 
