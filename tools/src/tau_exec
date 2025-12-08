@@ -13,20 +13,31 @@ fi
 eval `tau-config`
 
 scriptname=`basename $0`
-
-python_interpreter=python
-found=yes
-# Check if python is in the user's path
-if ! [ -x "$(command -v $python_interpreter)" ]; then
-    python_interpreter=python3
-    # Check if python3 is in the user's path
-    if ! [ -x "$(command -v $python_interpreter)" ]; then
-        found=no
+#Get the interpreter from tau-config
+python_interpreter=$(tau-config | grep "PYTHONINT" | sed 's/^PYTHONINT=//')
+#Check if the interpreter exists and if it is python3 or not
+#if the interpreter does not exist, use the old interpreter setting lines
+if [ -x "$(command -v $python_interpreter)" ] ; then
+    if [[ "$(python3 -V)" =~ "Python 3" ]] ; then
+	found=yes
+    else
+	found=no
     fi
-fi
-# Check if python3 is the explicit python executable used at configuration time
-if tau-config | grep -q 'PYTHONINT=python3' 2>/dev/null ; then
-  python_interpreter=python3
+else
+	python_interpreter=python
+	found=yes
+	# Check if python is in the user's path
+	if ! [ -x "$(command -v $python_interpreter)" ]; then
+	    python_interpreter=python3
+	    # Check if python3 is in the user's path
+	    if ! [ -x "$(command -v $python_interpreter)" ]; then
+	        found=no
+	    fi
+	fi
+	# Check if python3 is the explicit python executable used at configuration time
+	if tau-config | grep -q 'PYTHONINT=python3' 2>/dev/null ; then
+	  python_interpreter=python3
+	fi
 fi
 
 # For Python < 3.12, use the old python support
