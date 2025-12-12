@@ -3346,7 +3346,7 @@ for arg in "$@"; do
               echo  "Error: Cannot access roctracer directory $roctracerdir"
               exit 1
             else
-              fixmakeargs="$fixmakeargs roctracerdir=$roctracerdir ROCTRACER"
+              fixmakeargs="$fixmakeargs roctracerdir=$roctracerdir ROCTRACER TAU_USE_GPU"
               roctracer=yes
               tauoptions="${tauoptions}-roctracer"
               # Check the roctracerlib directory. Is it in build or lib? Source/installed package?
