@@ -1088,7 +1088,12 @@ if [ $track_gptl = "true" ] ; then
 fi
 
 if [ $track_ittnotify = "true" ] ; then
+  # Use ITTNotify collector with applications linked to Intel ITT stub
   export INTEL_LIBITTNOTIFY64=$BASEDIR/lib/$theBinding/libTAU-ittnotify-collector$TAU_SHLIBX
+  # Use Intel JIT Events collector with applications linked to Intel JIT Events stub
+  export INTEL_JIT_PROFILER64=$BASEDIR/lib/$theBinding/libTAU-ittnotify-collector$TAU_SHLIBX
+  # Use v1 JIT events
+  export INTEL_JIT_BACKWARD_COMPATIBILITY=1
 fi
 
 if [ $track_numa = "true" ]; then

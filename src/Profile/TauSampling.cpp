@@ -84,6 +84,7 @@
 #include <strings.h>
 #include <stdint.h>
 #include <mutex>
+#include <cinttypes>
 
 /* Android didn't provide <ucontext.h> so we make our own */
 #ifdef TAU_ANDROID
@@ -342,6 +343,24 @@ static DeferredInitVector & TheDeferredInitVector() {
 static CallSiteCacheMap & TheCallSiteCache() {
   static CallSiteCacheMap map;
   return map;
+}
+
+struct ExternalRangeNode {
+  uintptr_t start;
+  uintptr_t end;
+  char * name;
+};
+
+typedef TAU_HASH_MAP<uintptr_t, ExternalRangeNode*> ExternalRangeMap;
+
+static ExternalRangeMap & TheExternalRangeMap() {
+  static ExternalRangeMap map;
+  return map;
+}
+
+static std::mutex & TheExternalRangeMapMutex() {
+  static std::mutex external_range_map_mutex;
+  return external_range_map_mutex;
 }
 
 static tau_bfd_handle_t & TheBfdUnitHandle()
@@ -952,6 +971,58 @@ int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcna
 }
 #endif /* TAU_BFD */
 
+// Flag to check whether any external range has been registered
+// (if not, can skip lookup)
+static bool is_any_external_range_registered(bool set) {
+    static bool result = false;
+    if(set) {
+      result = true;
+    }
+    return result;
+}
+
+// Check if an address is in an external range
+static char * lookup_external_range(uintptr_t addr) {
+  static thread_local ExternalRangeMap * local_map = new ExternalRangeMap;
+
+  if(!is_any_external_range_registered(false)) {
+    return NULL;
+  }
+
+  // First, check local cache
+  auto it = local_map->lower_bound(addr);
+  // If in local cache, return from cache
+  if(it != local_map->end()) {
+    ExternalRangeNode * node = it->second;
+    if(addr >= node->start && addr <= node->end) {
+      return node->name;
+    }
+  } else {
+    // Otherwise, look up in global map
+    std::lock_guard<std::mutex> guard(TheExternalRangeMapMutex());
+    auto global_it = TheExternalRangeMap().lower_bound(addr);
+    if(global_it != TheExternalRangeMap().end()) {
+      ExternalRangeNode * node = global_it->second;
+      if(addr >= node->start && addr <= node->end) {
+        // If match, store in local cache and return
+        local_map->emplace(addr, node);
+        return node->name;
+      }
+    }
+  }
+  return NULL;
+}
+
+void Tau_sampling_register_external_range(uintptr_t start, uintptr_t end, char * funcname) {
+  is_any_external_range_registered(true);
+  ExternalRangeNode * node = new ExternalRangeNode;
+  node->start = start;
+  node->end = end;
+  node->name = funcname;
+  std::lock_guard<std::mutex> guard(TheExternalRangeMapMutex());
+  TheExternalRangeMap().emplace(start, node);
+}                                                              
+
 extern "C"
 CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag,
     char const * childName, char **newShortName, bool addAddress)
@@ -1005,6 +1076,18 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
         node->resolved = Tau_bfd_resolveBfdInfo(TheBfdUnitHandle(), addr, node->info);
       } else {
         node->resolved = false;
+      }
+      if(!node->resolved) {
+        if(is_any_external_range_registered(false)) {
+            char * external_name = lookup_external_range(addr);  
+            if(external_name != NULL) {
+                node->resolved = true;
+                node->info.probeAddr = addr;
+                node->info.filename = ""; // TODO handle external filenames ~nchaimov
+                node->info.funcname = strdup(external_name);
+                node->info.lineno = 0; // TODO handle external line number ~nchaimov
+            }
+        }
       }
 #endif
       callSiteCache[addr] = node;

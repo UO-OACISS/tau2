@@ -72,6 +72,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 #include <stdio.h>
 
+#include <cstdint>
+#include <cinttypes>
 #include <string>
 #include <sstream>
 #include <stack>
@@ -81,6 +83,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #define INTEL_ITTNOTIFY_API_PRIVATE
 #include "ittnotify.h"
 #include "ittnotify_config.h"
+#include "jitprofiling.h"
 
 #include "Profile/Profiler.h"
 
@@ -264,7 +267,7 @@ ITT_EXTERN_C __itt_domain * ITTAPI __itt_domain_create(const char * name) {
 ITT_EXTERN_C void ITTAPI __itt_task_begin(
     const __itt_domain *domain, __itt_id taskid, __itt_id parentid, __itt_string_handle *name) {
     if(domain == NULL) {
-        fprintf(stderr, "TAU ITTNotify Collector: __itt_task_begin: domain should not be NULL");
+        fprintf(stderr, "TAU ITTNotify Collector: __itt_task_begin: domain should not be NULL\n");
         return;
     }
     const std::string domainName{domain->nameA};
@@ -283,7 +286,7 @@ ITT_EXTERN_C void ITTAPI __itt_task_begin(
 ITT_EXTERN_C void ITTAPI __itt_task_end(const __itt_domain *domain)
 {
     if(domain == NULL) {
-        fprintf(stderr, "TAU ITTNotify Collector: __itt_task_end: domain should not be NULL");
+        fprintf(stderr, "TAU ITTNotify Collector: __itt_task_end: domain should not be NULL\n");
         return;
     }
     const std::string domainName{domain->nameA};
@@ -295,4 +298,65 @@ ITT_EXTERN_C void ITTAPI __itt_task_end(const __itt_domain *domain)
 #endif
 }
 
+// Initialize JIT profiler
+ITT_EXTERN_C iJIT_IsProfilingActiveFlags JITAPI Initialize(void) {
+#ifdef TAU_DEBUG_ITTNOTIFY
+    fprintf(stderr, "Initializing TAU ITT JIT Event Collector\n");
+#endif
+    return iJIT_SAMPLING_ON;
+}
+
+#ifdef TAU_DEBUG_ITTNOTIFY
+static const char * jit_event_to_string(iJIT_JVM_EVENT event_type) {
+    switch(event_type) {
+        case iJVM_EVENT_TYPE_SHUTDOWN: return "iJVM_EVENT_TYPE_SHUTDOWN";
+        case iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED: return "iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED";
+        case iJVM_EVENT_TYPE_METHOD_UNLOAD_START: return "iJVM_EVENT_TYPE_METHOD_UNLOAD_START";
+        case iJVM_EVENT_TYPE_METHOD_UPDATE: return "iJVM_EVENT_TYPE_METHOD_UPDATE";
+        case iJVM_EVENT_TYPE_METHOD_INLINE_LOAD_FINISHED: return "iJVM_EVENT_TYPE_METHOD_INLINE_LOAD_FINISHED";
+        case iJVM_EVENT_TYPE_METHOD_UPDATE_V2: return "iJVM_EVENT_TYPE_METHOD_UPDATE_V2";
+        case iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V2: return "iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V2";
+        case iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V3: return "iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V3";
+        default: return "<UNKNOWN iJIT_JVM_EVENT>";
+    }
+}
+
+static void jit_debug_print(iJIT_JVM_EVENT event_type, void *EventSpecificData) {
+    fprintf(stderr, "JIT NotifyEvent: event_type=%s ", jit_event_to_string(event_type));
+    
+    if(event_type == iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED) {
+        piJIT_Method_Load method_load_data = (piJIT_Method_Load)EventSpecificData;
+        fprintf(stderr, "method_id=%u ", method_load_data->method_id);
+        fprintf(stderr, "method_name=%s ", method_load_data->method_name);
+        fprintf(stderr, "method_load_address=%p ", method_load_data->method_load_address);
+        fprintf(stderr, "method_size=%u ", method_load_data->method_size);
+        fprintf(stderr, "line_number_size=%u n", method_load_data->line_number_size);
+        fprintf(stderr, "class_file_name=%s ", method_load_data->class_file_name);
+        fprintf(stderr, "source_file_name=%s\n", method_load_data->source_file_name);
+    }
+}
+#endif
+
+// Register JIT address with TAU Sampling
+ITT_EXTERN_C int JITAPI NotifyEvent(iJIT_JVM_EVENT event_type, void *EventSpecificData) {
+#ifdef TAU_DEBUG_ITTNOTIFY
+    jit_debug_print(event_type, EventSpecificData);
+#endif
+    if(event_type == iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED) {
+        piJIT_Method_Load method_load_data = (piJIT_Method_Load)EventSpecificData;
+        if(method_load_data->method_name == NULL) {
+            fprintf(stderr, "TAU ITTNotify Collector: JIT method_name should not be NULL\n");
+            return 0;
+        }
+        uintptr_t start = (uintptr_t) method_load_data->method_load_address;
+        uintptr_t end = start + ((uintptr_t) method_load_data->method_size);
+        char * name = strdup(method_load_data->method_name);
+#ifdef TAU_DEBUG_ITTNOTIFY
+        fprintf(stderr, "Registering range 0x%" PRIxPTR " to 0x%" PRIxPTR " with name %s\n", start, end, name);
+#endif
+        Tau_sampling_register_external_range(start, end, name);
+    }
+
+    return 0;
+}
 

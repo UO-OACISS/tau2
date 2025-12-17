@@ -65,6 +65,7 @@
 #define _TAU_SAMPLING_H_
 
 #include <stdio.h>
+#include <cstdint>
 #include <tau_internal.h>
 
 #if (defined(TAU_CRAYXMT) || defined(TAU_BGL) || defined(TAU_DISABLE_SAMPLING))
@@ -83,6 +84,7 @@
 #define Tau_sampling_finalize_if_necessary(tid)
 #define Tau_sampling_outputTraceCallpath(tid, pc, context)
 #define Tau_sampling_outputTraceCallstack(tid, pc, context)
+#define Tau_sampling_register_external_range(start, end, funcname)
 
 #else
 void Tau_sampling_event_start(int tid, void** address);
@@ -110,6 +112,9 @@ void Tau_sampling_defer_init(void);
 /* For TauMpi.c to invoke sampling finalization at MPI_Finalize */
 void Tau_sampling_finalize_if_necessary(int tid);
 void Tau_sampling_stop_sampling();
+
+/* Allows an external source to register address ranges for sample resolution */
+void Tau_sampling_register_external_range(uintptr_t start, uintptr_t end, char * funcname);
 #ifdef __cplusplus
 }
 #endif
