@@ -63,6 +63,13 @@ else
   default_tags="MPI"
 fi
 
+if [ "$scriptname" == "tau_julia" ] ; then
+  julia_wrapper=true
+  python_wrapper=false
+  spark_wrapper=false
+  default_tags="julia,MPI"
+fi
+
 if tau-config | grep -q 'TAUARCH=craycnl' 2>/dev/null ; then
   on_craycnl=true
 else
@@ -1383,9 +1390,11 @@ if [ $qsub_mode = false ]; then
     prog=`which $prog 2>/dev/null`
   fi
 
-  if [ "$python_wrapper" != "true" -a ! -x "$prog" ] ; then
-    echo "$scriptname: $1: command not found"
-    exit
+  if [ "$julia_wrapper" != "true" ] ; then
+    if [ "$python_wrapper" != "true" -a ! -x "$prog" ] ; then
+      echo "$scriptname: $1: command not found"
+      exit
+    fi
   fi
 
   if [ $track_syscall = true  -a -r $BASEDIR/lib/$theBinding/libTAU-ptrace-syscall$TAU_SHLIBX  ]; then
@@ -1600,6 +1609,12 @@ else
         $dryrun $python_interpreter $py_interp_args -m ${python_module_name} "$@"
     fi
     retval=$?
+  elif $julia_wrapper ; then
+    $dryrun export JULIA_LOAD_PATH="$BASEDIR/lib/$theBinding:$JULIA_LOAD_PATH"
+    $dryrun export ENABLE_JITPROFILING=1
+    $dryrun export INTEL_JIT_BACKWARD_COMPATIBILITY=1
+    $dryrun export TAU_JULIA_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+    $dryrun julia "$@"
   elif $use_ptts ; then
     # Can't dryrun because `$dryrun CMD >$logfile 2>&1` creates $logfile
     if [ -n "$dryrun" ] ; then

@@ -801,6 +801,7 @@ usage() {
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-pythonlibrary=<library> ......... Specify name of Python library file."
     echo "                                   e.g. libpython3.10.so"
+    echo "-julia ......................... Install Julia instrumentation library."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
     echo "-mpit ............................... Enable MPI-T profiling interface."
     echo "-starpu[=<dir>] ................................ Enable StarPU support."
@@ -1005,6 +1006,7 @@ for arg in "$@"; do
         echo "-pythoninc=<dir> ........ Specify location of Python include directory."
         echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
         echo "-pythonlibrary=<library> ......... Specify name of Python library file."
+        echo "-julia ......................... Install Julia instrumentation library."
         echo "-starpu[=<dir>] ................................ Enable StarPU support."
         echo "-phiprof ................................... Activate Phiprof bindings."
         echo "-llvm_cc   Compiler to build TAU LLVM selective instrumentation plugin."
@@ -1715,6 +1717,11 @@ for arg in "$@"; do
 
         -ittnotify)
             ittnotify=yes
+            shift
+            ;;
+
+        -julia)
+            julia=yes
             shift
             ;;
 
@@ -5176,6 +5183,11 @@ fi
 if [ $ittnotify = yes ] ; then
     fixmakeargs="$fixmakeargs ITTNOTIFY"
     tauoptions="${tauoptions}-ittnotify"
+fi
+
+if [ $julia = yes ] ; then
+    fixmakeargs="$fixmakeargs JULIA"
+    tauoptions="${tauoptions}-julia"
 fi
 
 if [ $gptl = yes ] ; then
@@ -13632,6 +13644,10 @@ cp ${tauroot}/tools/src/tau_spark_python $BINTARGET/tau_spark_python
 cp ${tauroot}/tools/src/tau_spark-submit $BINTARGET/tau_spark-submit
 cp ${tauroot}/tools/src/tau_spark-submit $BINTARGET/tau_pyspark
 cp ${tauroot}/tools/src/tau_diff.py $BINTARGET/tau_diff.py
+
+if [ $julia = yes ] ; then
+    cp ${tauroot}/tools/src/tau_exec $BINTARGET/tau_julia
+fi
 
 if [ $machine = nec-sx-aurora ]; then
 # NEC needs VE_LD_LIBRARY_PATH and VE_LD_PRELOAD

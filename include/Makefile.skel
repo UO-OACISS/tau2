@@ -1705,6 +1705,9 @@ TAU_SHAREDDIR=$(TAU_LIB_DIR)/shared$(TAU_CONFIG)
 TAU_SHARED_INSTALL_CMD=\
 		if [ "X$?" != "X" ]; then mkdir -p $(TAU_SHAREDDIR) && cp $? $(TAU_SHAREDDIR); fi
 
+TAU_SHARED_INSTALL_DIR_CMD=\
+		if [ "X$?" != "X" ]; then mkdir -p $(TAU_SHAREDDIR) && cp -r $? $(TAU_SHAREDDIR); fi
+
 #CRAYXMT#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's DSOs" #ENDIF#
 #BGL#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's DSOs" #ENDIF#
 #CATAMOUNT#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's DSOs" #ENDIF#

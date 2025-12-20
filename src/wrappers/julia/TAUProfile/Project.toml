@@ -1,0 +1,10 @@
+name = "TAUProfile"
+uuid = "33839dc5-b46e-4b71-8209-33fe77383070"
+version = "0.1.0"
+authors = ["Nicholas Chaimov <nchaimov@paratools.com>"]
+
+[deps]
+IRTools = "7869d1d1-7146-5819-86e3-90919afe41df"
+
+[compat]
+IRTools = "0.4.15"
