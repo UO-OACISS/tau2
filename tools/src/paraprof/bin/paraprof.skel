@@ -2,6 +2,31 @@
 TAUROOT=@TAUROOTDIR@
 MACHINE=@ARCH@
 
+# --- Hardware Acceleration Check Logic (Fast/Minimal) ---
+# Returns 0 if we should force software, 1 if hardware seems fine.
+should_force_llvmpipe() {
+    # 1. Trust VirtualGL if active
+    if [ -n "$VGL_ISACTIVE" ]; then
+        return 1
+    fi
+
+    # 2. Force software for SSH sessions (fixes JOGL blank screen on forwarded X11)
+    if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+        return 0
+    fi
+
+    # 3. Force software for Headless/Virtual Nvidia (e.g. A100 on display :4)
+    # If Nvidia driver is present but display is not physical (:0), JOGL often fails.
+    if [ -f /proc/driver/nvidia/version ]; then
+        case "$DISPLAY" in
+            :0|:0.*) ;;
+            *) return 0 ;;
+        esac
+    fi
+
+    return 1
+}
+
 
 if [ ! -d "$TAUROOT" ]; then #If the original root directory is not found find and work from this script's bin directory
 
@@ -40,6 +65,10 @@ do
   [ "$arg" = "-jogl1" ] && FLAGJOGL1=1 && continue
   [ "$arg" = "-jogl2" ] && FLAGJOGL2=1 && continue
   [ "$arg" = "-fix-xquartz" ] && export JAVA2D_XRENDER_FALSE="-Dsun.java2d.xrender=false" && continue
+
+  # New flags for rendering control
+  [ "$arg" = "-force-software-rendering" ] && FORCE_SOFTWARE_FLAG=1 && continue
+  [ "$arg" = "-disable-rendering-check" ] && DISABLE_SOFTWARE_CHECK_FLAG=1 && continue
   set -- "$@" "$arg"
 done
 
@@ -49,7 +78,7 @@ if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_apple" ] ; then
 	fi
 fi
 
-if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_linux" ] || [ "$MACHINE" = "ibm64linux" ] || [ "$MACHINE" = "arm64_apple" ] || [ "$MACHINE" = "craycnl"  -a "`uname -m`" = "aarch64" ]; then
+if [ "$MACHINE" = "x86_64" ] || [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_linux" ] || [ "$MACHINE" = "ibm64linux" ] || [ "$MACHINE" = "arm64_apple" ] || [ "$MACHINE" = "craycnl"  -a "`uname -m`" = "aarch64" ]; then
 	if [ "$FLAGJOGL1" != "1" ]; then
 		FLAGJOGL2=1
 	fi
@@ -230,11 +259,24 @@ then
   export LD_LIBRARY_PATH=$javaLocation:${LIBDIR}:${LD_LIBRARY_PATH}
 fi
 
-
-
-
 # run the user setup script
 $BINDIR/tau_user_setup.sh
+
+# --- Check / Enable Software Rendering ---
+# Check if hardware acceleration is viable, unless disabled by user
+DO_CHECK=1
+if [ "$DISABLE_SOFTWARE_CHECK_FLAG" = "1" ]; then
+    DO_CHECK=0
+fi
+
+if [ "$DO_CHECK" = "1" ]; then
+    if [ "$FORCE_SOFTWARE_FLAG" = "1" ] || should_force_llvmpipe; then
+        echo "Note: Forcing software rendering fallback (llvmpipe)."
+        export __GLX_VENDOR_LIBRARY_NAME=mesa
+        export GALLIUM_DRIVER=llvmpipe
+    fi
+fi
+# --- End Rendering Check ---
 
 # Launch!
 # Removed: -Dsun.java2d.opengl=true for arm64.
@@ -248,5 +290,7 @@ if [ $retVal -ne 0 ]; then
   echo "  -64/-32 			(Disables/Forces 32 bit memory capacity calculation and use of -d32 flag on OSX)"
   echo "  -jogl1/-jogl2 		(force use of old (jogl1)/new(jogl2) 3d libraries)"
   echo "  -fix-xquartz                  (Turn off java2d xrender. Fixes XQuartz black window bug.)"
+  echo "  -force-software-rendering     (Manually enable llvmpipe software rendering)"
+  echo "  -disable-rendering-check      (Disable automatic software rendering enforcement)"
 fi
-exit $retVal	
+exit $retVal
