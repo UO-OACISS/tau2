@@ -47,50 +47,63 @@ class MessageEvent{
 	int com;
 }
 
-class PrimEvent
-{
-	PrimEvent(long t,int s){
-		time = t;
-		stateToken = s;
-	}
-	long time;
-	int stateToken;
-}
+// A stack that uses primitive arrays to avoid object allocation
+class PrimitiveStack {
+    private long[] times;
+    private int[] tokens;
+    private int size = 0;
 
-class EZStack extends ArrayList<PrimEvent>{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 4135823375949466058L;
-
-	public EZStack() {
+    public PrimitiveStack(int initialCapacity) {
+        times = new long[initialCapacity];
+        tokens = new int[initialCapacity];
     }
-	public void push(PrimEvent o){
-		add(o);
-	}
-	
-	public PrimEvent peek(){
-		int	len = size();
 
-		if (len == 0)
-		    throw new EmptyStackException();
-		return get(len - 1);
-	}
-	
-	public PrimEvent pop(){
-		PrimEvent obj;
-		
-		int	len = size();
+    public void push(long time, int token) {
+        ensureCapacity(size + 1);
+        times[size] = time;
+        tokens[size] = token;
+        size++;
+    }
 
-		obj = peek();
-		remove(len - 1);
+    public long peekTime() {
+        if (size == 0) throw new java.util.EmptyStackException();
+        return times[size - 1];
+    }
+    
+    public int peekToken() {
+        if (size == 0) throw new java.util.EmptyStackException();
+        return tokens[size - 1];
+    }
 
-		return obj;
-	}
+    // Pop effectively just decrements the pointer
+    public void pop() {
+        if (size == 0) throw new java.util.EmptyStackException();
+        size--; 
+    }
+    
+    // Helper to retrieve data before popping (replaces the 'leave' object)
+    public long getLastTime() { return times[size - 1]; }
+    public int getLastToken() { return tokens[size - 1]; }
+
+    public boolean isEmpty() { return size == 0; }
+    
+    public int size() { return size; }
+
+    private void ensureCapacity(int minCapacity) {
+        if (minCapacity > times.length) {
+            int newCapacity = times.length * 2;
+            times = java.util.Arrays.copyOf(times, newCapacity);
+            tokens = java.util.Arrays.copyOf(tokens, newCapacity);
+        }
+    }
 	
-	public boolean empty() {
-		return size() == 0;
-	    }
+	public int getTokenAt(int index) { 
+		return tokens[index]; 
+	}
+
+	public long getTimeAt(int index) { 
+		return times[index]; 
+	}
 }
 
 
@@ -148,9 +161,9 @@ public class InputLog implements base.drawable.InputAPI
 {
 	//private static String filespec;
 	
-	private static Integer ZERO = new Integer(0);
-	private static Integer ONE = new Integer(1);
-	private static Integer TWO = new Integer(2);
+	private static Integer ZERO = Integer.valueOf(0);
+	private static Integer ONE = Integer.valueOf(1);
+	private static Integer TWO = Integer.valueOf(2);
 	
 	private TraceReaderCallbacks ev_cb;
 	private static long filehandle;
@@ -158,7 +171,7 @@ public class InputLog implements base.drawable.InputAPI
 
 	private TraceReader tFileEvRead;
 	private static double clockP;
-	private static boolean eventReady;
+	//private static boolean eventReady;
 	private static boolean doneReading;
 	
 	private static Set<Integer> papiEvents = new HashSet<Integer>();
@@ -167,7 +180,7 @@ public class InputLog implements base.drawable.InputAPI
 	//private static int numcats;
 	//private static int maxcats;
 	//private static base.drawable.YCoordMap ymap;
-	private static base.drawable.Primitive prime;
+	private static java.util.LinkedList<base.drawable.Primitive> primeQueue = new java.util.LinkedList<base.drawable.Primitive>();
 	private static base.drawable.Primitive lastPrime;
 	private base.drawable.Category statedef;
 	
@@ -176,7 +189,7 @@ public class InputLog implements base.drawable.InputAPI
 	//private static int numthreads;
 	private static int maxnode;
 	private static int maxthread;
-	private static HashMap<Integer, EZStack> eventstack;
+	private static HashMap<Integer, PrimitiveStack> eventstack;
 	private static HashMap<ComSource, List<MessageEvent>> msgRecStack;
 	private static HashMap<ComSource, List<MessageEvent>> msgSenStack;
 	//private static int[] offset;
@@ -268,10 +281,11 @@ public class InputLog implements base.drawable.InputAPI
 		//categories.add(newobj);//put(new Integer(numcats), newobj);
 		//numcats=0;
 		//maxcats=0;
-		prime=null;
+		//prime=null;
+		primeQueue.clear();
 		lastPrime=null;
 		clockP=1;
-		eventReady=false;
+		//eventReady=false;
 		doneReading=false;
 		
 		//numthreads=0;
@@ -312,7 +326,7 @@ public class InputLog implements base.drawable.InputAPI
 					offset[i+1]=offset[i]+maxthread+1;
 			}
 		}*/
-		eventstack = new HashMap<Integer, EZStack>();// Stack[maxnode+1][maxthread+1];
+		eventstack = new HashMap<Integer, PrimitiveStack>();// Stack[maxnode+1][maxthread+1];
 		msgRecStack = new HashMap<ComSource, List<MessageEvent>>();// Stack[maxnode+1][maxthread+1];
 		msgSenStack = new HashMap<ComSource, List<MessageEvent>>();
 		noMonEventCycle = new HashMap<Integer, Integer>();//[maxnode+1][maxthread+1];
@@ -347,7 +361,7 @@ public class InputLog implements base.drawable.InputAPI
 
 		if(!doneReading)
 		{
-			while(!eventReady)
+			while(primeQueue.isEmpty())
 			{
 				
 				if(categories.size()>0)//maxcats<categories.size())//numcats)
@@ -355,7 +369,7 @@ public class InputLog implements base.drawable.InputAPI
 					return popCategory();
 				}
 				
-				if(tFileEvRead.readNumEvents(ev_cb, 1, null)==0)
+				if(tFileEvRead.readNumEvents(ev_cb, 1024, null)==0)
 				{
 					doneReading=true;
 					if(maxthread>0)//maxnode>=0&&
@@ -373,7 +387,7 @@ public class InputLog implements base.drawable.InputAPI
 					}
 				}
 			}
-			eventReady=false;
+			//eventReady=false;
 			//System.out.println("returning prime");
 			return Kind.PRIMITIVE_ID;
 		}
@@ -405,7 +419,10 @@ public class InputLog implements base.drawable.InputAPI
 
 	public Primitive getNextPrimitive()
 	{
-		return prime;
+		if (!primeQueue.isEmpty()) {
+			return primeQueue.removeFirst();
+		}
+		return null;
 	}
 
 	public Composite getNextComposite()
@@ -536,7 +553,7 @@ public class InputLog implements base.drawable.InputAPI
 			
 			if(monotonicallyIncreasing==0)
 			{
-				noMonEvents.add(new Integer(userEventToken));
+				noMonEvents.add(Integer.valueOf(userEventToken));
 			}
 			
 			String name = userEventName;
@@ -571,35 +588,28 @@ public class InputLog implements base.drawable.InputAPI
 	
 	private static class TAUReader implements TraceReaderCallbacks{
 		
-		private int badEnter=0;
-		private int badExit=0;
-		
-		ArrayList<String> badEvents = new ArrayList<String>();
-		
 		public int enterState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
 			//System.out.println("Entered state "+stateToken+" time "+time+" nid "+nodeToken+" tid "+threadToken);
 			//eventstack[nodeToken][threadToken];
 			//System.out.println("enter "+stateToken);
-			if(stateToken==1521){
-				badEnter+=1;
-			}
 			
-			Integer glob = new Integer(GlobalID(nodeToken,threadToken));
-			if(!eventstack.containsKey(glob))//  eventstack[nodeToken][threadToken]==null
-				eventstack.put(glob, new EZStack());  //[nodeToken][threadToken]=new Stack();
-			eventstack.get(glob).push(new PrimEvent(time,stateToken));//eventstack[nodeToken][threadToken].push(new PrimEvent(time,stateToken));
+			Integer glob = Integer.valueOf(GlobalID(nodeToken,threadToken));
+			PrimitiveStack stack = eventstack.get(glob);
+			if (stack == null) {
+				stack =  new PrimitiveStack(128);
+				eventstack.put(glob, stack);
+			}
+			stack.push(time,stateToken);
 			return 0;
 		}
 		
 		public int leaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
 			//System.out.println("Leaving state "+stateToken+" time "+time+" nid "+nodeToken+" tid "+threadToken);
 			//System.out.println("exit "+stateToken);
-			if(stateToken==1521){
-				badExit+=1;
-			}
 			
-			Integer glob = new Integer(GlobalID(nodeToken,threadToken));
-			if(!eventstack.containsKey(glob)||eventstack.get(glob).size()==0)//if(eventstack[nodeToken][threadToken]==null||eventstack[nodeToken][threadToken].size()==0)
+			Integer glob = Integer.valueOf(GlobalID(nodeToken,threadToken));
+			PrimitiveStack stack = eventstack.get(glob);
+			if(stack == null || stack.isEmpty())
 			{
 				System.out.println("node "+ nodeToken+" thd "+" glob "+ glob +" size: ");
 				if(eventstack.get(glob)!=null)
@@ -609,26 +619,67 @@ public class InputLog implements base.drawable.InputAPI
 				return -1;
 				//System.exit(1);
 			}
-			PrimEvent leave = (PrimEvent) (eventstack.get(glob).pop());
-			if(leave.stateToken!=stateToken)
-			{
-				System.err.println("Fault: Event order failure.");
-				badEvents.add("evt: "+stateToken+" at: "+time+" found on stack(enter): "+leave.stateToken);
-				return -1;
-				//System.exit(1);
+    
+    if (stack.peekToken() != stateToken) {
+        // The top of the stack is NOT what we want to close.
+        // Check if the state we want to close is buried deeper in the stack.
+        boolean found = false;
+       
+        for (int i = stack.size() - 1; i >= 0; i--) {
+            if (stack.getTokenAt(i) == stateToken) {
+                found = true;
+                break;
+            }
+        }
+
+        if (found) {
+            // CASE A: The state exists deeper. The top states are "orphaned" children.
+            // We must implicitly close them to reach our target.
+            System.err.println("Fixing mismatch: Implicitly closing children to reach state: " + stateToken+ " on node: "+nodeToken+", thread: "+threadToken);
+            
+            while (!stack.isEmpty()) {
+                if (stack.peekToken() == stateToken) {
+                    break; // We found our target! Stop unwinding.
+                }
+                
+                // Pop and auto-close the orphan
+				long orphanTime = stack.getLastTime();
+                int orphanToken = stack.getLastToken();
+                stack.pop();
+                
+                // Record the orphaned event using the current time as its end time.
+                // This ensures the bar shows up in the viewer, even if it runs a bit long.
+                base.drawable.Primitive p = new base.drawable.Primitive(
+                    orphanToken, orphanTime * clockP, time * clockP,
+                    new double[]{orphanTime * clockP, time * clockP},
+                    new int[]{GlobalID(nodeToken, threadToken), GlobalID(nodeToken, threadToken)}, null
+                );
+                if (lastPrime == null || comparePrimatives(p, lastPrime)) {
+                    primeQueue.add(p);
+                    lastPrime = p;
+                }
+            }
+        } else {
+            // CASE B: The state is NOT in the stack. This is a spurious exit event.
+            // We should ignore it to protect the stack integrity.
+            System.err.println("Skipping spurious exit for state " + stateToken);
+            return 0;
+        }
+    }
+			
+			
+			
+		long entryTime = stack.getLastTime();
+		stack.pop();
+		
+			base.drawable.Primitive p = new base.drawable.Primitive(
+			stateToken,entryTime*clockP,time*clockP,
+					new double[]{entryTime*clockP,time*clockP} ,new int[]{GlobalID(nodeToken,threadToken),GlobalID(nodeToken,threadToken)},null); // create local 'p'
+			
+			if(lastPrime==null||(comparePrimatives(p,lastPrime))) {
+				primeQueue.add(p); // Add to queue
+				lastPrime=p;
 			}
-			prime = new base.drawable.Primitive(stateToken,leave.time*clockP,time*clockP,
-					new double[]{leave.time*clockP,time*clockP} ,new int[]{GlobalID(nodeToken,threadToken),GlobalID(nodeToken,threadToken)},null);//((Integer)global.get(new Point(nodeToken,threadToken))).intValue(),((Integer)global.get(new Point(nodeToken,threadToken))).intValue()
-			
-			
-			if(lastPrime==null||(
-					comparePrimatives(prime,lastPrime)
-					))
-			{	
-				eventReady=true;
-				lastPrime=prime;
-			}
-			
 			
 			//System.out.println(nodeToken+" "+threadToken+" vs. "+((Integer)global.get(new Point(nodeToken,threadToken))).intValue()+" "+((Integer)global.get(new Point(nodeToken,threadToken))).intValue());
 			return 0;
@@ -674,7 +725,7 @@ public class InputLog implements base.drawable.InputAPI
 			 * If we have a new tag ID we need to register a new object type for it
 			 * (Is there a faster way to do this?)
 			 */
-			if(msgtags.add(new Integer(messageTag)))
+			if(msgtags.add(Integer.valueOf(messageTag)))
 			{
 				logformat.trace.DobjDef newobj= new logformat.trace.DobjDef(messageTagShift, "message "+messageTag, Topology.ARROW_ID, 
 						255,255,255, 255, 3, "msg_tag=%d, msg_size=%d, msg_comm=%d", null);
@@ -703,18 +754,18 @@ public class InputLog implements base.drawable.InputAPI
 					System.out.println("Reversed Message: time "+time+", source nid "+ sourceNodeToken +
 							" tid "+sourceThreadToken+", destination nid "+destinationNodeToken+" tid "+
 							destinationThreadToken+", size "+messageSize+", tag "+messageTag);
-					prime = new base.drawable.Primitive(messageTagShift,leave.time*clockP,time*clockP,
+					base.drawable.Primitive p = new base.drawable.Primitive(messageTagShift,leave.time*clockP,time*clockP,
 							new double[]{time*clockP,leave.time*clockP,} ,
 							new int[]{sourceGlob,destGlob},
 							getInfoVals(new int[]{messageTag,messageSize,messageComm}));
 					
 					
 					if(lastPrime==null||(
-							comparePrimatives(prime,lastPrime)
+							comparePrimatives(p,lastPrime)
 							))
 					{	
-						eventReady=true;
-						lastPrime=prime;
+						primeQueue.add(p);
+						lastPrime=p;
 					}
 					
 					//eventReady=true;
@@ -752,7 +803,7 @@ public class InputLog implements base.drawable.InputAPI
 			MessageEvent leave;
 			if(msgSenStack.containsKey(cs) && msgSenStack.get(cs).size()>0 && (leave=(MessageEvent)msgSenStack.get(cs).remove(0))!=null)
 			{
-					prime = new base.drawable.Primitive(messageTagShift,leave.time*clockP,time*clockP,
+					base.drawable.Primitive p = new base.drawable.Primitive(messageTagShift,leave.time*clockP,time*clockP,
 							new double[]{leave.time*clockP,time*clockP},
 							new int[]{
 							sourceGlob,destGlob
@@ -760,11 +811,11 @@ public class InputLog implements base.drawable.InputAPI
 							getInfoVals(new int[]{messageTag,messageSize,messageComm}));
 					
 					if(lastPrime==null||(
-							comparePrimatives(prime,lastPrime)
+							comparePrimatives(p,lastPrime)
 							))
 					{	
-						eventReady=true;
-						lastPrime=prime;
+						primeQueue.add(p);
+						lastPrime=p;
 					}
 					
 					//eventReady=true;
@@ -795,11 +846,11 @@ public class InputLog implements base.drawable.InputAPI
 			}
 			
 			//System.out.println("EventTrigger: time "+time+", nid "+nodeToken+" tid "+threadToken+" event id "+userEventToken+" triggered value "+userEventValue);
-			if(noMonEvents.contains(new Integer(userEventToken)))
+			if(noMonEvents.contains(Integer.valueOf(userEventToken)))
 			{
 				//System.out.println(noMonEventCycle[nodeToken][threadToken]);
 				
-				Integer glob = new Integer(GlobalID(nodeToken,threadToken));
+				Integer glob = Integer.valueOf(GlobalID(nodeToken,threadToken));
 				
 				if(!noMonEventCycle.containsKey(glob))noMonEventCycle.put(glob, ZERO);
 				
@@ -821,18 +872,18 @@ public class InputLog implements base.drawable.InputAPI
 				}
 			}
 			//System.out.println("Test Evt Double: "+userEventValue+" vs: "+(long)userEventValue);
-			prime = new base.drawable.Primitive(userEventToken,time*clockP,time*clockP,
+			base.drawable.Primitive p = new base.drawable.Primitive(userEventToken,time*clockP,time*clockP,
 					new double[]{time*clockP} ,new int[]{
 					GlobalID(nodeToken,threadToken)
 					//((Integer)global.get(new Point(nodeToken,threadToken))).intValue()
 					},
 					getInfoVals(new double[]{userEventValue}));
 			if(lastPrime==null||(
-					comparePrimatives(prime,lastPrime)
+					comparePrimatives(p,lastPrime)
 					))
 			{	
-				eventReady=true;
-				lastPrime=prime;
+				primeQueue.add(p);
+				lastPrime=p;
 			}
 			//eventReady=true;
 			return 0;
@@ -854,15 +905,7 @@ public class InputLog implements base.drawable.InputAPI
 		public int defUserEvent(Object userData, int userEventToken, String userEventName, int monotonicallyIncreasing) {return 0;}
 
 		public int endTrace(Object userData, int nodeToken, int threadToken) {
-			
-			
-			for(int i=0;i<badEvents.size();i++){
-				System.out.println(badEvents.get(i));
-			}
-			
-			System.out.println("1521 enters: "+ badEnter + " exits: " +badExit);
-			
-			
-			return 0;}
+			return 0;
+		}
 	}
 }
