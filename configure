@@ -11611,6 +11611,9 @@ fi
 if [ $python = yes -a $cuda = yes -a $boost = yes ] ; then
         fixmakeargs="$fixmakeargs PYCUDA_BOOST"
 fi
+}
+#END of PYCUDA disabled part
+
 
 if [ ! $cupti = no ]; then
     echo "Checking CUPTI version at ${cupti_path}/include ... ${nnl}"
@@ -11628,9 +11631,6 @@ EOF
     fi
     rm -f cupti_version.C cupti_version.o
 fi
-
-}
-#END of PYCUDA disabled part
 
 if [ $zepto = yes ] ; then
     tauoptions="${tauoptions}-zepto"
