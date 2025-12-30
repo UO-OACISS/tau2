@@ -11,7 +11,33 @@ SERVER_RMIREGISTRY_PORT=@SERVER_RMIREGISTRY_PORT@
 JAR_HOME=${HOME}/.ParaProf
 CONFIGFILE_BASE=$JAR_HOME/perfdmf.cfg
 CONFIGFILE=""
+MACHINE=$CONFIG_ARCH
+JARDIR=${TAUROOT}/${MACHINE}/lib
 
+# --- Hardware Acceleration Check Logic (Fast/Minimal) ---
+# Returns 0 if we should force software, 1 if hardware seems fine.
+should_force_llvmpipe() {
+    # 1. Trust VirtualGL if active
+    if [ -n "$VGL_ISACTIVE" ]; then
+        return 1
+    fi
+
+    # 2. Force software for SSH sessions (fixes JOGL blank screen on forwarded X11)
+    if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+        return 0
+    fi
+
+    # 3. Force software for Headless/Virtual Nvidia (e.g. A100 on display :4)
+    # If Nvidia driver is present but display is not physical (:0), JOGL often fails.
+    if [ -f /proc/driver/nvidia/version ]; then
+        case "$DISPLAY" in
+            :0|:0.*) ;;
+            *) return 0 ;;
+        esac
+    fi
+
+    return 1
+}
 
 if [ ! -d "$TAUROOT" ]; then #If the original root directory is not found find and work from this script's bin directory
 
@@ -28,8 +54,6 @@ if [ ! -d "$TAUROOT" ]; then #If the original root directory is not found find a
   TAUROOT=`dirname $TAUROOT`
 
 fi #End backup root search
-
-
 
 SCHEMADIR=${TAUROOT}/etc
 BINDIR=${TAUROOT}/${CONFIG_ARCH}/bin
@@ -49,6 +73,7 @@ redirect=""
 RMIOptions=""
 gui=""
 script=""
+JAVA2D_OPENGL_FLAG=0
 
 CLIENT_DYLD_LIBRARY_PATH=$TAUROOT/$CONFIG_ARCH/lib
 
@@ -61,15 +86,12 @@ WEKA_JAR=$JAR_HOME/weka-3-6-1.jar
 PERFEXPLORER_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfexplorer.jar
 JFREECHART_JAR=$TAUROOT/$CONFIG_ARCH/lib/jfreechart-1.0.12.jar
 JCOMMON_JAR=$TAUROOT/$CONFIG_ARCH/lib/jcommon-1.0.15.jar
-JOGL_JAR=$TAUROOT/$CONFIG_ARCH/lib/jogl.jar
-VIS_JAR=$TAUROOT/$CONFIG_ARCH/lib/vis.jar
 TAUCOMMON_JAR=$TAUROOT/$CONFIG_ARCH/lib/tau-common.jar
 BATIK_JAR=$TAUROOT/$CONFIG_ARCH/lib/batik-combined.jar
 XERCES_JAR=$TAUROOT/$CONFIG_ARCH/lib/xerces.jar
 JUNIT_JAR=$TAUROOT/$CONFIG_ARCH/junit-3.8.1.jar
 
 # JBoss Rules jars
-
 ANTLR2_JAR=$JAR_HOME/antlr-2.7.6.jar
 ANTLR3_JAR=$JAR_HOME/antlr-3.0ea8.jar
 COMMONS_JCI_CORE_JAR=$JAR_HOME/commons-jci-core-1.0-406301.jar
@@ -101,8 +123,6 @@ if [ "x$JAVA_VERSION" = "x4" ] ; then
                 ${TAUROOT}/${CONFIG_ARCH}/bin/bin-1.4/perfexplorer_configure
         fi
         ${TAUROOT}/${CONFIG_ARCH}/bin/bin-1.4/perfexplorer
-
-
         exit 0
 fi
 
@@ -146,15 +166,47 @@ do
     shift
     ;;
 
-   --jogl2)
-     FLAGJOGL2=1
-    shift
-    ;;
-
-   --jogl1)
+   # --- Parity with Paraprof Flags ---
+   -libgl_indirect)
+     LIBGL_ALWAYS_INDIRECT_FLAG=1
+     shift
+     ;;
+   -disable_java2d_opengl)
+     JAVA2D_OPENGL_FLAG=0
+     shift
+     ;;
+   -enable_java2d_opengl)
+     JAVA2D_OPENGL_FLAG=1
+     shift
+     ;;
+   -64)
+     FLAG64=1
+     shift
+     ;;
+   -32)
+     FLAG32=1
+     shift
+     ;;
+   -jogl1|--jogl1)
      FLAGJOGL1=1
-    shift
-    ;;
+     shift
+     ;;
+   -jogl2|--jogl2)
+     FLAGJOGL2=1
+     shift
+     ;;
+   -fix-xquartz)
+     export JAVA2D_XRENDER_FALSE="-Dsun.java2d.xrender=false"
+     shift
+     ;;
+   -force-software-rendering|--force-software-rendering)
+     FORCE_SOFTWARE_FLAG=1
+     shift
+     ;;
+   -disable-rendering-check|--disable-rendering-check)
+     DISABLE_SOFTWARE_CHECK_FLAG=1
+     shift
+     ;;
 
   '')
     #echo "NULL switch!"
@@ -169,19 +221,48 @@ do
 done
 
 
-if [ "$CONFIG_ARCH" = "apple" ] || [ "$CONFIG_ARCH" = "arm64_linux" ] || [ "$CONFIG_ARCH" = "ibm64linux" ]; then
+# --- JOGL / Architecture Logic (Parity with Paraprof) ---
+
+if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_apple" ] ; then
+	if [ "$FLAG32" != "1" ]; then
+		FLAG64=1
+	fi
+fi
+
+if [ "$MACHINE" = "x86_64" ] || [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_linux" ] || [ "$MACHINE" = "ibm64linux" ] || [ "$MACHINE" = "arm64_apple" ] || [ "$MACHINE" = "craycnl"  -a "`uname -m`" = "aarch64" ]; then
 	if [ "$FLAGJOGL1" != "1" ]; then
 		FLAGJOGL2=1
 	fi
 fi
 
-
-if [ "$FLAGJOGL2" = "1" ]; then
-     JOGL_JAR=$TAUROOT/$CONFIG_ARCH/lib/jogl-all.jar:$TAUROOT/$CONFIG_ARCH/lib/gluegen-rt.jar:$TAUROOT/$CONFIG_ARCH/lib/jogl-all-natives.jar:$TAUROOT/$CONFIG_ARCH/lib/gluegen-rt-natives.jar
-     VIS_JAR=$TAUROOT/$CONFIG_ARCH/lib/vis-jogl2.jar
+# If 3D window has problems, please uncomment
+if [ $MACHINE = bgq -o $MACHINE = arm64_linux ]; then
+  JAVA2D_OPENGL_FLAG=0
+#  LIBGL_ALWAYS_INDIRECT_FLAG=1
 fi
 
-#
+if [ "$LIBGL_ALWAYS_INDIRECT_FLAG" = "1" ]; then
+  export LIBGL_ALWAYS_INDIRECT=1
+fi
+
+if [ "$JAVA2D_OPENGL_FLAG" = "1" ]; then
+  JAVA2D_OPENGL_OPT="-Dsun.java2d.opengl=true"
+fi
+
+JOGL1_JARS=${JARDIR}/vis.jar:${JARDIR}/jogl.jar
+DEFAULT_JOGL2_JARS=${JARDIR}/vis-jogl2.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar:${JARDIR}/jogl-all-natives.jar:${JARDIR}/gluegen-rt-natives.jar:${JARDIR}
+ARM_OSX_JOGL2_JARS=${JARDIR}/vis-jogl2.jar:${JARDIR}/jogl-java3d.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar
+
+JOGL_JARS=${JOGL1_JARS}
+
+if [ "$FLAGJOGL2" = "1" ]; then
+	JOGL_JARS=${DEFAULT_JOGL2_JARS}
+	if [ "$MACHINE" = "arm64_apple" ]; then
+		JOGL_JARS=${ARM_OSX_JOGL2_JARS}
+	fi
+fi
+# --- End JOGL Logic ---
+
 # get the jdbc jar file from the configuration file
 if [ "x$CONFIGFILE" != "x" ]; then
 	JDBC_JAR=`grep jdbc_db_jarfile $CONFIGFILE 2>/dev/null | sed s/jdbc_db_jarfile://`
@@ -194,7 +275,7 @@ if [ "x$CONFIGFILE" != "x" ]; then
 	fi
 fi
 
-if [ "$CONFIG_ARCH" = "apple" ]; then
+if [ "$CONFIG_ARCH" = "apple" ] || [ "$CONFIG_ARCH" = "arm64_apple" ]; then
 	EXTRA_OPTIONS="-Xdock:name=PerfExplorer -Xdock:icon=${TAUROOT}/${CONFIG_ARCH}/lib/tau-medium.png -Dapple.laf.useScreenMenuBar=true -Dcom.apple.mrj.application.growbox.intrudes=true"
 else
 	EXTRA_OPTIONS=""
@@ -203,40 +284,109 @@ fi
 # check for right java version
 PERFEXPLORER_OPTS="-w"
 
-
-
+# --- Memory and Heap Logic (Parity with Paraprof) ---
 # Default to 800m heap space
 MEMORY=-Xmx800m
 
 # Check machine type for a heap space boost
 machine=`uname -m`
 platform=`uname -s`
-if [ "x$machine" = "xx86_64" ] ; then
+if [ "x$MACHINE" = "xx86_64" ] ; then
     MEMORY=-Xmx2000m
 fi
 
 testmax=`$BINDIR/tau_javamax.sh`
-if [ "x$testmax" != "xfailed" -a "x$platform" != "xDarwin" ] ; then
+#if [ "x$testmax" != "xfailed" -a "x$platform" != "xDarwin" ] ; then
+if [ "x$testmax" != "xfailed" ] ; then
     MEMORY="-Xmx${testmax}m"
 fi
+if [ "x$platform" = "xDarwin" ] ; then
+   if [ $testmax -gt 819200 -a $testmax -lt 819200000 ] ; then
+      MEMORY="-Xmx2000m"
+    if [ "$FLAG64" = "1" ]; then
+	testmax=$(($testmax/1024))
+        MEMORY="-Xmx"$testmax"m"
+    fi
+   fi
+fi
+# --- End Memory Logic ---
+
+
+# --- Java Bin / Library Path Logic (Parity with Paraprof) ---
+# locate the java bin directory so that we can add it to the java.library.path.
+# IBM JRE has libjawt.so in the bin directory and it needs to be hardcoded in
+# here.
+# Skip this step on Mac OS X, readlink fails in some cases.
+javaLocation=`which java`
+# check for readlink first
+readlink=`which readlink`
+if [ "x$readlink" != "x" -a "x$platform" != "xDarwin" ] ; then
+    if [ -x "$readlink" ] ; then
+	javaLocation=`readlink -f $javaLocation`
+    fi
+fi
+javaLocation=`dirname $javaLocation`
+
+# If libjawt.so is not in the java bin directory, it might be in the lib or lib/arch dir
+# It is needed for the 3D window.
+if [ ! -r $javaLocation/libjawt.so -a -r $javaLocation/../lib/x86_64/libjawt.so ]
+then
+  javaLocation="$javaLocation:$javaLocation/../lib:$javaLocation/../lib/x86_64"
+fi
+
+if [ ! -r $javaLocation/libjawt.so -a -r $javaLocation/../lib/amd64/libjawt.so ]
+then
+  javaLocation="$javaLocation:$javaLocation/../lib:$javaLocation/../lib/amd64"
+fi
+
+if [ $MACHINE = arm_linux ]
+then
+  javaLocation="$javaLocation:$javaLocation/../lib:$javaLocation/../lib/arm:$javaLocation/../lib/arm/server"
+  export LD_LIBRARY_PATH=$javaLocation:${LIBDIR}:${LD_LIBRARY_PATH}
+fi
+
+if [ $MACHINE = bgq  -o $MACHINE = bgp -o $MACHINE = bgl -o $MACHINE = ppc64 ]
+then
+  javaLocation="$javaLocation:$javaLocation/../lib:$javaLocation/../lib/ppc64"
+  export LD_LIBRARY_PATH=$javaLocation:${LIBDIR}:${LD_LIBRARY_PATH}
+fi
+# --- End Java Bin Logic ---
+
+# --- Check / Enable Software Rendering ---
+# Check if hardware acceleration is viable, unless disabled by user
+DO_CHECK=1
+if [ "$DISABLE_SOFTWARE_CHECK_FLAG" = "1" ]; then
+    DO_CHECK=0
+fi
+
+if [ "$DO_CHECK" = "1" ]; then
+    if [ "$FORCE_SOFTWARE_FLAG" = "1" ] || should_force_llvmpipe; then
+        echo "Note: Forcing software rendering fallback (llvmpipe)."
+        export __GLX_VENDOR_LIBRARY_NAME=mesa
+        export GALLIUM_DRIVER=llvmpipe
+    fi
+fi
+# --- End Rendering Check ---
+
 
 if [ $mode = "standalone" ] ; then
-	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$GSON_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS:$JARDIR/postgresql.jar
-	java $MEMORY $EXTRA_OPTIONS \
+    # Note: Using JOGL_JARS (plural) instead of JOGL_JAR (singular)
+	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JARS:$JARGS_JAR:$GSON_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS:$JARDIR/postgresql.jar
+	java $MEMORY ${JAVA2D_OPENGL_OPT} ${JAVA2D_XRENDER_FALSE} $EXTRA_OPTIONS \
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
-	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
+	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH:${javaLocation} \
 	-Dpython.home=$JAR_HOME/jython \
 	edu.uoregon.tau.perfexplorer.client.PerfExplorerClient -s $PERFEXPLORER_OPTS -t $JARDIR -a $SCHEMADIR $@
 fi
 
 if [ $mode = "test" ] ; then
-	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$GSON_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS
+	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JARS:$JARGS_JAR:$GSON_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS
 
-	java $MEMORY \
+	java $MEMORY ${JAVA2D_OPENGL_OPT} ${JAVA2D_XRENDER_FALSE} \
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
-	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
+	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH:${javaLocation} \
 	-Dpython.home=$JAR_HOME/jython \
 	edu.uoregon.tau.perfexplorer.client.TestHarness -s -t $testName $arguments
 fi
@@ -246,14 +396,14 @@ if [ $mode = "server" ] ; then
 	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JYTHON_JAR:$JARGS_JAR:$GSON_JAR:$TAUCOMMON_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS
 
 	echo "Starting rmiregistry..."
-	rmiregistry $SERVER_RMIREGISTRY_PORT & 
+	rmiregistry $SERVER_RMIREGISTRY_PORT &
 	echo "Starting server..."
 
 	java $MEMORY $EXTRA_OPTIONS \
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
 	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
-	-Djava.library.path=$SERVER_DYLD_LIBRARY_PATH \
+	-Djava.library.path=$SERVER_DYLD_LIBRARY_PATH:${javaLocation} \
 	${RMIOptions} \
 	-Dsun.rmi.server.exceptionTrace=true \
 	-Dpython.home=$JAR_HOME/jython \
@@ -265,14 +415,13 @@ fi
 
 if [ $mode = "client" ] ; then
 
-	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$JOGL_JAR:$VIS_JAR:$JYTHON_JAR:$JARGS_JAR:$GSON_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS
+	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$JOGL_JARS:$JYTHON_JAR:$JARGS_JAR:$GSON_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS
 
-	java $MEMORY $EXTRA_OPTIONS \
+	java $MEMORY ${JAVA2D_OPENGL_OPT} ${JAVA2D_XRENDER_FALSE} $EXTRA_OPTIONS \
 	-classpath $CLASSPATH \
 	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
-	-Djava.library.path=${CLIENT_DYLD_LIBRARY_PATH} \
+	-Djava.library.path=${CLIENT_DYLD_LIBRARY_PATH}:${javaLocation} \
 	-Djava.rmi.server.hostname=$SERVER_HOSTNAME \
 	-Dpython.home=$JAR_HOME/jython \
 	edu.uoregon.tau.perfexplorer.client.PerfExplorerClient -t $JARDIR -a $SCHEMADIR $arguments
 fi
-
