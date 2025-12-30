@@ -11588,6 +11588,9 @@ EOF
     fi
 fi
 
+
+#PYCUDA is not needed. Leave the code in case it is needed at some point
+configure_pycuda() {
 if [ $python = yes -a $cuda = yes ] ; then
     #We need the boost/python libraries to build the TAU's pycuda interface.
     echo "Checking for boost/python ... ${nnl}"
@@ -11625,6 +11628,9 @@ EOF
     fi
     rm -f cupti_version.C cupti_version.o
 fi
+
+}
+#END of PYCUDA disabled part
 
 if [ $zepto = yes ] ; then
     tauoptions="${tauoptions}-zepto"
