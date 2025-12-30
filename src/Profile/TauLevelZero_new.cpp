@@ -101,22 +101,27 @@ CollectorOptions init_collector_options()
     }
     else if(TauEnv_get_l0_metrics_enable() && TauEnv_get_l0_stall_sampling_enable())//EuStallSampling
     {
-        printf("Error: L0 cannot enable both Metric Profiling and Sampling\n");
-        return init_options;
+        if(strcmp("EuStallSampling", utils::GetEnv("L0_METRICGROUP").c_str())==0)
+        {
+            printf("Stall sampling is not working at this moment.\n");
+            //return init_options;
+            init_options.stall_sampling = true;
+            init_options.metric_stream = true;
+            //Check if metrics requested, if requested, throw error, as not compatible 
+            init_options.metric_query = false;
+
+        }
+        else
+        {
+            printf("Error: L0 cannot enable both Metric Profiling and Sampling\n");
+            return init_options;
+        }
     }
     else
     {
         TAU_VERBOSE("No L0 metrics requested\n");
     }
-    
-    
-    if(TauEnv_get_l0_stall_sampling_enable())
-    {
-        printf("Stall sampling is not working at this moment.\n");
-        init_options.stall_sampling = true;
-        //Check if metrics requested, if requested, throw error, as not compatible 
-        init_options.metric_query = false;
-    }
+
     #endif
     
     
