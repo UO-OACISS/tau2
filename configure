@@ -1278,6 +1278,7 @@ intelcxxlibicc=no
 intelifort=no
 intel_icpx=no
 intel=no
+inteloneapi=no
 llvm=no
 mpiwarnings=
 gnu=no
@@ -6032,6 +6033,7 @@ case $cxx_compiler in
         fixmakeargs="$fixmakeargs USE_INTELCXX COMPINST_INTEL9"
         tauoptions="${tauoptions}-icpx"
         intel=yes
+        inteloneapi=yes
         if [ $fortran_compiler = no ]
         then
             intelifort=`which ifx 2>/dev/null`
@@ -6067,6 +6069,7 @@ case $cxx_compiler in
         fixmakeargs="$fixmakeargs MPIICPC USE_INTELCXX COMPINST_INTEL9"
         tauoptions="${tauoptions}-icpx"
         intel=yes
+        inteloneapi=yes
         if [ $fortran_compiler = no  -o $fortran_compiler = mpiifort -o $fortran_compiler = intel ]
         then
             intelifort=`which mpiifort 2>/dev/null`
@@ -6205,6 +6208,7 @@ case $cxx_compiler in
             *icpc | *icpx )
                 fixmakeargs="$fixmakeargs USE_INTELCXX"
                 intel=yes
+                inteloneapi=yes
                 ;;
             *clang* | hcc | hipcc | parascc )
                 tauoptions="${tauoptions}-clang"
@@ -12159,8 +12163,11 @@ if [ "x$download_scorep" = xyes ] ; then
       if [ $gnu = yes ]; then
         tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=gcc"
       fi
-      if [ $intel = yes ]; then
+      if [ $intel = yes -a $inteloneapi = no ]; then
         tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=intel"
+      fi
+      if [ $intel = yes -a $inteloneapi = yes ]; then
+        tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=oneapi"
       fi
       if [ $ibmxlc = yes  -o $ibmxlc_r = yes ]; then
         tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=ibm"
