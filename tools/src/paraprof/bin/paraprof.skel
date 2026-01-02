@@ -274,6 +274,7 @@ if [ "$DO_CHECK" = "1" ]; then
         echo "Note: Forcing software rendering fallback (llvmpipe)."
         export __GLX_VENDOR_LIBRARY_NAME=mesa
         export GALLIUM_DRIVER=llvmpipe
+	export LIBGL_ALWAYS_SOFTWARE=1
     fi
 fi
 # --- End Rendering Check ---
