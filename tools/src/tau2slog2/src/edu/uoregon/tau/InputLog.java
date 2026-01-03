@@ -9,11 +9,12 @@ package edu.uoregon.tau;
 
 import java.io.DataOutputStream;
 import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -184,40 +185,45 @@ public class InputLog implements base.drawable.InputAPI
 	private static base.drawable.Primitive lastPrime;
 	private base.drawable.Category statedef;
 	
-	//private static Map global;
-//	private static Map threadspernode;
-	//private static int numthreads;
+	/**
+	 * Per-node data structure using dynamic HashMaps for thread-specific state.
+	 * Similar pattern to ThreadTracker in TraceReader - avoids fixed allocation
+	 * and global ID computation by using two-level node->thread lookups.
+	 */
+	public static class NodeData {
+		public final Map<Integer, PrimitiveStack> eventstacks = new HashMap<>();
+		public final Map<Integer, Integer> noMonCycles = new HashMap<>();
+	}
+	
 	private static int maxnode;
 	private static int maxthread;
-	private static HashMap<Integer, PrimitiveStack> eventstack;
-	private static HashMap<ComSource, List<MessageEvent>> msgRecStack;
-	private static HashMap<ComSource, List<MessageEvent>> msgSenStack;
-	//private static int[] offset;
+	private static HashMap<Integer, NodeData> nodeData;
+	private static HashMap<ComSource, ArrayDeque<MessageEvent>> msgRecStack;
+	private static HashMap<ComSource, ArrayDeque<MessageEvent>> msgSenStack;
 	
-	private static boolean papiEnabled=false;
+	// Cache last accessed node to reduce HashMap lookups in hot path
+	private static int cachedNodeID = -1;
+	private static NodeData cachedNodeData = null;
+	
+	private static boolean papiEnabled = false;
 	
 	private static Random getcolors;
 	private static Set<Integer> msgtags;
-	/**
-	 * Associates each thread with a state of 0,1 or 2 with 1 indicating an actual event containing data, 
-	 * and 0 or 2 indicating leading and trailing 'empty' events.
-	 */
-	private static HashMap<Integer, Integer> noMonEventCycle;
 	private static Set<Integer> noMonEvents;
 	
 	private static int maxEvtId;
 	
 	private long arch_read;
-	private long count_read=0;
-	private long stepsize=0;
+	private long count_read = 0;
+	private long stepsize = 0;
 	
-	public void enablePAPI(boolean enable){
-		papiEnabled=enable;
+	public void enablePAPI(boolean enable) {
+		papiEnabled = enable;
 	}
 	
-	private static int GlobalID(int tid, int nid){
-		//System.out.println("n: "+nid+ " t: "+tid);
-		return (nid << 16)+tid;
+	// Combine node and thread IDs into single integer
+	private static int GlobalID(int tid, int nid) {
+		return (nid << 16) + tid;
 	}
 	
 //	private static long SourceDest(int source,int dest, int tag)
@@ -326,10 +332,11 @@ public class InputLog implements base.drawable.InputAPI
 					offset[i+1]=offset[i]+maxthread+1;
 			}
 		}*/
-		eventstack = new HashMap<Integer, PrimitiveStack>();// Stack[maxnode+1][maxthread+1];
-		msgRecStack = new HashMap<ComSource, List<MessageEvent>>();// Stack[maxnode+1][maxthread+1];
-		msgSenStack = new HashMap<ComSource, List<MessageEvent>>();
-		noMonEventCycle = new HashMap<Integer, Integer>();//[maxnode+1][maxthread+1];
+		nodeData = new HashMap<Integer, NodeData>();
+		msgRecStack = new HashMap<ComSource, ArrayDeque<MessageEvent>>();// Stack[maxnode+1][maxthread+1];
+		msgSenStack = new HashMap<ComSource, ArrayDeque<MessageEvent>>();
+		cachedNodeID = -1;
+		cachedNodeData = null;
 		
 		ev_cb = new TAUReader();
 		tFileEvRead=new TraceReader(tautrc,tauedf);
@@ -593,12 +600,25 @@ public class InputLog implements base.drawable.InputAPI
 			//eventstack[nodeToken][threadToken];
 			//System.out.println("enter "+stateToken);
 			
-			Integer glob = Integer.valueOf(GlobalID(nodeToken,threadToken));
-			PrimitiveStack stack = eventstack.get(glob);
-			if (stack == null) {
-				stack =  new PrimitiveStack(128);
-				eventstack.put(glob, stack);
+			NodeData node;
+			if (cachedNodeID == nodeToken) {
+				node = cachedNodeData;
+			} else {
+				node = nodeData.get(nodeToken);
+				if (node == null) {
+					node = new NodeData();
+					nodeData.put(nodeToken, node);
+				}
+				cachedNodeID = nodeToken;
+				cachedNodeData = node;
 			}
+			
+			PrimitiveStack stack = node.eventstacks.get(threadToken);
+			if (stack == null) {
+				stack = new PrimitiveStack(128);
+				node.eventstacks.put(threadToken, stack);
+			}
+			
 			stack.push(time,stateToken);
 			return 0;
 		}
@@ -607,13 +627,20 @@ public class InputLog implements base.drawable.InputAPI
 			//System.out.println("Leaving state "+stateToken+" time "+time+" nid "+nodeToken+" tid "+threadToken);
 			//System.out.println("exit "+stateToken);
 			
-			Integer glob = Integer.valueOf(GlobalID(nodeToken,threadToken));
-			PrimitiveStack stack = eventstack.get(glob);
+			NodeData node;
+			if (cachedNodeID == nodeToken) {
+				node = cachedNodeData;
+			} else {
+				node = nodeData.get(nodeToken);
+			}
+			
+			PrimitiveStack stack = (node != null) ? node.eventstacks.get(threadToken) : null;
+			
 			if(stack == null || stack.isEmpty())
 			{
-				System.out.println("node "+ nodeToken+" thd "+" glob "+ glob +" size: ");
-				if(eventstack.get(glob)!=null)
-					System.out.println(eventstack.get(glob).size());
+				System.out.println("node "+ nodeToken+" thd "+threadToken);
+				if(stack != null)
+					System.out.println("size: " + stack.size());
 				
 				System.err.println("Fault: Exit from empty or uninitialized thread");
 				return -1;
@@ -725,7 +752,8 @@ public class InputLog implements base.drawable.InputAPI
 			 * If we have a new tag ID we need to register a new object type for it
 			 * (Is there a faster way to do this?)
 			 */
-			if(msgtags.add(Integer.valueOf(messageTag)))
+			Integer msgTagKey = Integer.valueOf(messageTag);
+			if(msgtags.add(msgTagKey))
 			{
 				logformat.trace.DobjDef newobj= new logformat.trace.DobjDef(messageTagShift, "message "+messageTag, Topology.ARROW_ID, 
 						255,255,255, 255, 3, "msg_tag=%d, msg_size=%d, msg_comm=%d", null);
@@ -744,12 +772,13 @@ public class InputLog implements base.drawable.InputAPI
 			
 			MessageEvent sndE=new MessageEvent(time,messageTag,sourceGlob,destGlob,messageSize,messageComm);
 			
-			MessageEvent leave;
+			MessageEvent leave = null;
 			/*
 			 * If we have a message event in the recieved list then there has been a recieve sent before its send.
 			 * Match this send with the advanced recieve and submit the event.  (Is this always correct?)
 			 */
-			if(msgRecStack.containsKey(cs) && msgRecStack.get(cs).size()>0 &&(leave=(MessageEvent)msgRecStack.get(cs).remove(0))!=null)
+			ArrayDeque<MessageEvent> recList = msgRecStack.get(cs);
+			if(recList != null && !recList.isEmpty() && (leave = recList.removeFirst()) != null)
 			{
 					System.out.println("Reversed Message: time "+time+", source nid "+ sourceNodeToken +
 							" tid "+sourceThreadToken+", destination nid "+destinationNodeToken+" tid "+
@@ -776,9 +805,12 @@ public class InputLog implements base.drawable.InputAPI
 			 * If we do not yet have an event source-list list for this transaction ID, create one
 			 * Put this event in the source list
 			 */
-			if(!msgSenStack.containsKey(cs))
-				msgSenStack.put(cs, new LinkedList<MessageEvent>());
-			msgSenStack.get(cs).add(sndE);
+			ArrayDeque<MessageEvent> senList = msgSenStack.get(cs);
+			if(senList == null) {
+				senList = new ArrayDeque<MessageEvent>();
+				msgSenStack.put(cs, senList);
+			}
+			senList.add(sndE);
 			return 0;
 		}//sendMessage
 		
@@ -800,8 +832,9 @@ public class InputLog implements base.drawable.InputAPI
 			ComSource cs = new ComSource(sourceGlob,destGlob,messageTag);
 			MessageEvent recE=new MessageEvent(time,messageTag, sourceGlob,destGlob,messageSize,messageComm);
 			
-			MessageEvent leave;
-			if(msgSenStack.containsKey(cs) && msgSenStack.get(cs).size()>0 && (leave=(MessageEvent)msgSenStack.get(cs).remove(0))!=null)
+			MessageEvent leave = null;
+			ArrayDeque<MessageEvent> senList = msgSenStack.get(cs);
+			if(senList != null && !senList.isEmpty() && (leave = senList.removeFirst()) != null)
 			{
 					base.drawable.Primitive p = new base.drawable.Primitive(messageTagShift,leave.time*clockP,time*clockP,
 							new double[]{leave.time*clockP,time*clockP},
@@ -822,9 +855,12 @@ public class InputLog implements base.drawable.InputAPI
 					return 0;
 			}
 			
-			if(!msgRecStack.containsKey(cs))
-				msgRecStack.put(cs, new LinkedList<MessageEvent>());
-			msgRecStack.get(cs).add(recE);
+			ArrayDeque<MessageEvent> recList = msgRecStack.get(cs);
+			if(recList == null) {
+				recList = new ArrayDeque<MessageEvent>();
+				msgRecStack.put(cs, recList);
+			}
+			recList.add(recE);
 			return 0;
 		}//recvMessage
 		
@@ -846,28 +882,32 @@ public class InputLog implements base.drawable.InputAPI
 			}
 			
 			//System.out.println("EventTrigger: time "+time+", nid "+nodeToken+" tid "+threadToken+" event id "+userEventToken+" triggered value "+userEventValue);
-			if(noMonEvents.contains(Integer.valueOf(userEventToken)))
+			Integer userEventKey = Integer.valueOf(userEventToken);
+			if(noMonEvents.contains(userEventKey))
 			{
 				//System.out.println(noMonEventCycle[nodeToken][threadToken]);
 				
-				Integer glob = Integer.valueOf(GlobalID(nodeToken,threadToken));
+				NodeData node = nodeData.get(nodeToken);
+				if (node == null) {
+				node = new NodeData();
+					nodeData.put(nodeToken, node);
+				}
 				
-				if(!noMonEventCycle.containsKey(glob))noMonEventCycle.put(glob, ZERO);
+Integer cycle = node.noMonCycles.get(threadToken);
+		if (cycle == null) cycle = Integer.valueOf(0);
 				
-				if(noMonEventCycle.get(glob).equals(ZERO))
+				if(cycle == 0)
 				{
-					noMonEventCycle.put(glob, ONE);
+					node.noMonCycles.put(threadToken, 1);
 					return 0;
 				}
-				else
-				if(noMonEventCycle.get(glob).equals(ONE))
+				else if(cycle == 1)
 				{
-					noMonEventCycle.put(glob, TWO);
+					node.noMonCycles.put(threadToken, 2);
 				}
-				else
-				if(noMonEventCycle.get(glob).equals(TWO))
+				else if(cycle == 2)
 				{
-					noMonEventCycle.put(glob, ZERO);
+					node.noMonCycles.put(threadToken, 0);
 					return 0;
 				}
 			}

@@ -168,7 +168,7 @@ class DoublePair{
 		return match;
 	}
 	public int hashCode(){
-		System.out.println(this.toString().hashCode());
+		//System.out.println(this.toString().hashCode());
 		return this.toString().hashCode();
 	}
 }
@@ -257,22 +257,16 @@ public class MultiMerge {
 	 * @return
 	 */
 	static int minTime(long[] times){
-		int least=-1;
-		long min=-1;
-
-		for(int i=0;i<times.length;i++){
-			if(times[i]>=0){
-				min=times[i];
-				break;
-			}
+	int least = -1;
+	long min = Long.MAX_VALUE;
+	for (int i = 0; i < times.length; i++) {
+		long t = times[i];
+		if (t >= 0 && t < min) {
+			min = t;
+			least = i;
 		}
-		for(int i=0; i<times.length;i++){
-			if(times[i]>=0&&times[i]<=min){
-				min=times[i];
-				least=i;
-			}
-		}
-		return least;
+	}
+	return least;
 	}
 
 	/**

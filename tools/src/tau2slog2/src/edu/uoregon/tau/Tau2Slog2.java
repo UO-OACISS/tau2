@@ -103,7 +103,7 @@ public class Tau2Slog2
             if ( next_kind == Kind.TOPOLOGY ) {
                 topo = dobj_ins.getNextTopology();
                 objdef = Category.getShadowCategory( topo );
-                objdefs.put( new Integer( objdef.getIndex() ), objdef );
+                objdefs.put( Integer.valueOf(objdef.getIndex()), objdef );
                 shadefs.put( topo, objdef );
             }
             else if ( next_kind == Kind.YCOORDMAP ) {
@@ -112,7 +112,7 @@ public class Tau2Slog2
             }
             else if ( next_kind == Kind.CATEGORY ) {
                 objdef = dobj_ins.getNextCategory();
-                objdefs.put( new Integer(objdef.getIndex() ),objdef );
+                objdefs.put( Integer.valueOf(objdef.getIndex()), objdef );
             }
             else if ( next_kind == Kind.PRIMITIVE ) {
                 prime_obj = dobj_ins.getNextPrimitive();

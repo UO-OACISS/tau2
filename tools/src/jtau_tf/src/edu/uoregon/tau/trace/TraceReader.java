@@ -18,40 +18,92 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Map;
+import java.util.BitSet;
 
-public class TraceReader extends TraceFile{	
+public class TraceReader extends TraceFile {
 	
-	private final static int FORMAT_NATIVE =0;//Java default
+	private final static int FORMAT_NATIVE = 0;
 	private final static int FORMAT_32 = 1;
 	private final static int FORMAT_32_SWAP = 2;
-	private final static int FORMAT_64 =3;
-	private final static int FORMAT_64_SWAP=4;
-	//long FirstTimestamp;
+	private final static int FORMAT_64 = 3;
+	private final static int FORMAT_64_SWAP = 4;
+	private static final int IO_BUFFER_SIZE = 64 * 1024;
+	
+	// Event buffering: maintain two Event objects to avoid allocation on every read
+	private Event currentEvent = new Event();
+	private Event spareEvent = new Event();
+	private boolean hasBufferedEvent = false;
+	
 	boolean ClkInitialized;
 	boolean subtractFirstTimestamp;
 	boolean nonBlocking;
-	boolean definitionsOnly=false;
-	boolean done =false;
+	boolean definitionsOnly = false;
+	boolean done = false;
 	int format;
-	long totalRecords=0;
-	long totalRead=0;
-	char nid_offset=0;
-	//int eventSize;
+	long totalRecords = 0;
+	long totalRead = 0;
+	char nid_offset = 0;
 	
-	HashSet<Integer> nidTidSeen = new HashSet<Integer>();
-	HashSet<Integer> nidTidDone = new HashSet<Integer>();
+	ThreadTracker tracker = new ThreadTracker();
+	private int cachedNid = Integer.MIN_VALUE;
+	private ThreadTracker.NodeState cachedNodeState;
 	
-	public TraceReader(String trace, String edf,char nid_offset){
-		this.nid_offset=nid_offset;
-		initialize(trace,edf);
-		//System.out.println("reader nid offset: "+(int)nid_offset);
+	/**
+	 * Tracks thread state per node using BitSets for memory efficiency.
+	 * Uses a two-level map structure: NodeID -> NodeState -> ThreadID
+	 * to avoid computing global IDs and to support dynamic thread counts.
+	 */
+	public static class ThreadTracker {
+		public static class NodeState {
+			public final BitSet seen = new BitSet();
+			public final BitSet done = new BitSet();
+		}
+
+		private final Map<Integer, NodeState> nodeStates = new HashMap<>();
+
+		public boolean checkAndMarkSeen(int nid, int tid) {
+			NodeState state = getNodeState(nid);
+			if (state.seen.get(tid)) {
+				return true;
+			}
+			state.seen.set(tid);
+			return false;
+		}
+
+		public void markDone(int nid, int tid) {
+			getNodeState(nid).done.set(tid);
+		}
+		
+		public boolean isDone(int nid, int tid) {
+			NodeState state = nodeStates.get(nid);
+			return state != null && state.done.get(tid);
+		}
+
+		public NodeState getNodeState(int nid) {
+			NodeState state = nodeStates.get(nid);
+			if (state == null) {
+				state = new NodeState();
+				nodeStates.put(nid, state);
+			}
+			return state;
+		}
 	}
 	
-	public TraceReader(String trace, String edf){
-		
-		initialize(trace,edf);
-
+	public TraceReader(String trace, String edf, char nid_offset) {
+		this.nid_offset = nid_offset;
+		initialize(trace, edf);
+		// Read first event into buffer for immediate availability
+		try {
+			advance();
+		} catch (IOException e) {
+			e.printStackTrace();
+			this.done = true;
+		}
+	}
+	
+	public TraceReader(String trace, String edf) {
+		this(trace, edf, (char)0);
 	}
 	
 	
@@ -65,7 +117,7 @@ public class TraceReader extends TraceFile{
 		
 		try {	  
 			istream = new FileInputStream(trace);
-			BufferedInputStream bw = new BufferedInputStream(istream);
+			BufferedInputStream bw = new BufferedInputStream(istream, IO_BUFFER_SIZE);
 			Fiid = new DataInputStream(bw);
 			format=TraceReader.determineFormat(Fiid);
 		
@@ -87,91 +139,75 @@ public class TraceReader extends TraceFile{
 			context=Integer.parseInt(cutname[2]);
 			thread=Integer.parseInt(cutname[3]);
 		}
-		/* Allocate space for nodeid, thread id map */
-		//tFile.NidTidMap=new HashMap();
-		/* Allocate space for event id map */
-		EventIdMap = new HashMap<Integer, EventDescr>();
-		/* Allocate space for group id map */
-		GroupIdMap = new HashMap<String, Integer>();
-		/* initialize clock */
-		ClkInitialized = false;
-		/* initialize the first timestamp for the trace */
-		//tFile.FirstTimestamp = 0;
-		/* determine the format */
-		//determineFormat (tFile);
-		/* return file handle */
+	/* Allocate space for event id map */
+	EventIdMap = new HashMap<Integer, EventDescr>();
+	/* Allocate space for group id map */
+	GroupIdMap = new HashMap<String, Integer>();
+	/* initialize clock */
+	ClkInitialized = false;
+	}
+
+	// Advance to next event by swapping buffers and reading into spare
+	private void advance() throws IOException {
+		Event temp = currentEvent;
+		currentEvent = spareEvent;
+		spareEvent = temp;
+
+		hasBufferedEvent = readInto(currentEvent, Fiid, format);
 		
+		if (!hasBufferedEvent) {
+			this.done = true;
+		}
 	}
 	
-	public static long getNumRecords(String name){
+	public static long getNumRecords(String name) {
 		File f = new File(name);
-		return f.length()/24;
+		return f.length() / 24;
 	}
 	
-	public long getNumRecords(){
+	public long getNumRecords() {
 		return totalRecords;
 	}
 	
-	public String getTraceFile(){
+	public String getTraceFile() {
 		return this.TrcFile;
 	}
 	
-	private static int CharPair(int nid, int tid){
-		return (nid << 16)+tid;
+	final private static char charReverseBytes(char value) {
+		return (char)(((value >> 8) & 0x000000ff) | ((value << 8) & 0x0000ff00));
 	}
 	
-	
-	final private static char charReverseBytes(char value){
-		return(char)(((value >> 8)&0x000000ff)|((value << 8)&0x0000ff00));
+	final private static int intReverseBytes(int value) {
+		return ((((int)charReverseBytes((char)value)) << 16) | charReverseBytes((char)(value >>> 16)));
 	}
-	
-	final private static int intReverseBytes(int value){
-		return((((int)charReverseBytes((char)value))<<16)|charReverseBytes((char)(value>>>16)));
-	}
-	
-
 	
 	public static long longReverseBytes(long i) {
-        i = (i & 0x00ff00ff00ff00ffL) << 8 | (i >>> 8) & 0x00ff00ff00ff00ffL;
-        return (i << 48) | ((i & 0xffff0000L) << 16) |
-            ((i >>> 16) & 0xffff0000L) | (i >>> 48);
-    }
+		i = (i & 0x00ff00ff00ff00ffL) << 8 | (i >>> 8) & 0x00ff00ff00ff00ffL;
+		return (i << 48) | ((i & 0xffff0000L) << 16) |
+		       ((i >>> 16) & 0xffff0000L) | (i >>> 48);
+	}
 	
-	/*final private static long longReverseBytes(long value){
-	return((((long)intReverseBytes((int)value))<<32)|((long)intReverseBytes((int)(value>>>32))));
-}*/
+	DataInputStream Fiid;
 	
-	DataInputStream Fiid;//The trace file input handle
-	
-	//private final static int TAU_BUFSIZE = 1024;
 	private final static int TAU_MESSAGE_SEND_EVENT = -7;
 	private final static int TAU_MESSAGE_RECV_EVENT = -8;
 
-	/* for 32 bit platforms (24 bytes)*/
-	
-	static int determineFormat(DataInputStream Fiid) throws IOException{
-		Event evt = new Event();//Fiid.readInt(),Fiid.readChar(),Fiid.readChar(),Fiid.readLong(),Fiid.readLong());
+	// Determine trace file format (32/64 bit, native/swapped endianness)
+	static int determineFormat(DataInputStream Fiid) throws IOException {
+		Event evt = new Event();
 		Fiid.mark(128);
 		evt.setEventID(Fiid.readInt());
 		evt.setNodeID(Fiid.readChar());
 		evt.setThreadID(Fiid.readChar());
 		evt.setParameter(Fiid.readLong());
 		evt.setTime(Fiid.readLong());
-		int format=FORMAT_NATIVE;
-		if(evt.getParameter()==3)
-		{
-			format=FORMAT_32;
-			//eventSize=24;
-			//System.out.println("Default!");
-		}
-		else
-		if(longReverseBytes(evt.getParameter())==3)
-		{
-			format=FORMAT_32_SWAP;
-			//eventSize=24;
-			//System.out.println("Swapping!");
-		}
-		else{
+		
+		int format = FORMAT_NATIVE;
+		if (evt.getParameter() == 3) {
+			format = FORMAT_32;
+		} else if (longReverseBytes(evt.getParameter()) == 3) {
+			format = FORMAT_32_SWAP;
+		} else {
 			Fiid.reset();
 			//Event64 evt64 = new Event64();
 			evt.setEventID((int)Fiid.readLong());
@@ -204,67 +240,56 @@ public class TraceReader extends TraceFile{
 	}
 	
 	
-	
-
-	private static Event readEvent(int format, DataInputStream Fiid, char nid_offset) throws IOException{
-
-		Event evt=new Event();// = new Event();
-		evt.nid_offset=nid_offset;
-		//System.out.println("nid offset reading:"+(int)evt.nid_offset);
-		try{		
-		if(format<2)
-		{
-				evt.setEventID(Fiid.readInt());
-				evt.setNodeID(Fiid.readChar());
-				evt.setThreadID(Fiid.readChar());
-				evt.setParameter(Fiid.readLong());
-				evt.setTime(Fiid.readLong());
-			}
-		else
-		if(format==2)
-		{
-				//evt = new Event();
-				evt.setEventID(intReverseBytes(Fiid.readInt()));
-				evt.setNodeID(charReverseBytes(Fiid.readChar()));
-				evt.setThreadID(charReverseBytes(Fiid.readChar()));
-				evt.setParameter(longReverseBytes(Fiid.readLong()));
-				evt.setTime(longReverseBytes(Fiid.readLong()));
-		}
-		else
-		if(format==3)
-		{
-				//evt = new Event();
-				evt.setEventID((int)Fiid.readLong());
-				evt.setNodeID(Fiid.readChar());
-				evt.setThreadID(Fiid.readChar());
-				Fiid.readInt();
-				evt.setParameter(Fiid.readLong());
-				evt.setTime(Fiid.readLong());
-		}
-		else
-		if(format==4)
-		{
-				//evt = new Event();
-				evt.setEventID((int)longReverseBytes(Fiid.readLong()));
-				evt.setNodeID(charReverseBytes(Fiid.readChar()));
-				evt.setThreadID(charReverseBytes(Fiid.readChar()));
-				Fiid.readInt();
-				evt.setParameter(longReverseBytes(Fiid.readLong()));
-				evt.setTime(longReverseBytes(Fiid.readLong()));	
-		}
-		
-		}catch(EOFException e){
-			System.out.println("Reached end of trace file."); 
-			return null;
-		}
-		
-		return evt;
-	}
+	 /**
+     * Internal method to populate an existing Event object from the stream.
+     * Replaces the old static readEvent().
+     */
+    private boolean readInto(Event evt, DataInputStream stream, int fmt) throws IOException {
+        if (stream == null) return false;
+        
+        try {
+            // Check for EOF before starting to read
+            // Note: DataInputStream doesn't always handle available() reliably for EOF, 
+            // but the read methods throw EOFException.
+            
+            if (fmt < 2) {
+                evt.setEventID(stream.readInt());
+                evt.setNodeID(stream.readChar());
+                evt.setThreadID(stream.readChar());
+                evt.setParameter(stream.readLong());
+                evt.setTime(stream.readLong());
+            } else if (fmt == 2) {
+                evt.setEventID(intReverseBytes(stream.readInt()));
+                evt.setNodeID(charReverseBytes(stream.readChar()));
+                evt.setThreadID(charReverseBytes(stream.readChar()));
+                evt.setParameter(longReverseBytes(stream.readLong()));
+                evt.setTime(longReverseBytes(stream.readLong()));
+            } else if (fmt == 3) {
+                evt.setEventID((int) stream.readLong());
+                evt.setNodeID(stream.readChar());
+                evt.setThreadID(stream.readChar());
+                stream.readInt(); // Padding
+                evt.setParameter(stream.readLong());
+                evt.setTime(stream.readLong());
+            } else if (fmt == 4) {
+                evt.setEventID((int) longReverseBytes(stream.readLong()));
+                evt.setNodeID(charReverseBytes(stream.readChar()));
+                evt.setThreadID(charReverseBytes(stream.readChar()));
+                stream.readInt(); // Padding
+                evt.setParameter(longReverseBytes(stream.readLong()));
+                evt.setTime(longReverseBytes(stream.readLong()));
+            }
+            evt.nid_offset = this.nid_offset;
+            return true;
+        } catch (EOFException e) {
+            return false;
+        }
+    }
 	
 	/* Look for an event in the event map */
 	/*private boolean isEventIDRegistered(int event)
 	{
-		return EventIdMap.containsKey(new Integer(event));
+		return EventIdMap.containsKey(Integer.valueOf(event));
 	}	*/
 	
 	/* Event ID is not found in the event map. Re-read the event 
@@ -329,13 +354,13 @@ public class TraceReader extends TraceFile{
 				}
 				
 				/* see if the event id exists in the map */
-				if (!EventIdMap.containsKey(new Integer(localEventId)))//isEventIDRegistered(localEventId))
+				if (!EventIdMap.containsKey(Integer.valueOf(localEventId)))//isEventIDRegistered(localEventId))
 				{
 					/* couldn't locate the event id */
 					/* fill an event description object */
 					EventDescr eventDescr = new EventDescr(localEventId, new String(group), new String(eventname),(long)tag,new String(param));
 
-					EventIdMap.put(new Integer(localEventId),eventDescr); /* add it to the map */
+					EventIdMap.put(Integer.valueOf(localEventId),eventDescr); /* add it to the map */
 
 					if (!GroupIdMap.containsKey(eventDescr.getGroup()))
 					{ 
@@ -346,7 +371,7 @@ public class TraceReader extends TraceFile{
 						/* check Param to see if its a user defined event */
 						if (eventDescr.getParameter().equals("EntryExit"))
 						{ /* it is not a user defined event */
-							GroupIdMap.put(eventDescr.getGroup(),new Integer(groupid));
+							GroupIdMap.put(eventDescr.getGroup(),Integer.valueOf(groupid));
 							//if (cb.DefStateGroup!=null)
 								cb.defStateGroup(userData, groupid, eventDescr.getGroup()); 
 						}
@@ -415,16 +440,6 @@ public class TraceReader extends TraceFile{
 	public int absSeek(int eventPosition ){
 		return 0;
 	}
-	
-//	public void reset(){
-//		try {
-//			Fiid.reset();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		totalRead=0;
-//		this.done=false;
-//	}
 
 	/* seek to a event position relative to the current position (just for completeness!) 
 	 * Returns the position if successful or 0 if an error occured */
@@ -443,38 +458,28 @@ public class TraceReader extends TraceFile{
 	public boolean isDone(){
 		return this.done;
 	}
-	
-	public long peekTime(){
-		
-		if(totalRecords==totalRead){
-			return -1;
-		}
-		
-		Fiid.mark(64);
-		Event evt=null;
-		try {
-			evt = readEvent(format, Fiid, nid_offset);
-		
-			Fiid.reset();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		if(evt==null){
-			return -1;
-		}
-		
-		return evt.getTime();
-	}
+
+    /**
+     * Optimized peekTime. O(1) cost, no file IO.
+     */
+    public long peekTime() {
+        if (!hasBufferedEvent || done) {
+            return -1; 
+        }
+        return currentEvent.getTime();
+    }
 	
 	/* read n events and call appropriate handlers.
 	 * Returns the number of records read (can be 0).
 	 * Returns a -1 value when an error takes place. Check errno */
 	public int readNumEvents(TraceReaderCallbacks callbacks, int nOEvents, Object userData){
 		int recordsRead=0;
-		long otherTid, otherNid, msgLen, msgTag,numberOfEvents;
+		long numberOfEvents = (nOEvents <= 0) ? (totalRecords - totalRead) : nOEvents;
+		long otherTid, otherNid, msgLen, msgTag;//,numberOfEvents;
 		
-
+		if(this.done){
+		return 0;
+		}
 		//if (tFile == null)
 		//	return 0; /* ERROR */
 
@@ -504,13 +509,13 @@ public class TraceReader extends TraceFile{
 			
 		}//!clkinit
 
-		if(nOEvents<=0){
+		/*if(nOEvents<=0){
 			
 			numberOfEvents=totalRecords-totalRead;
 		}
 		else{
 			numberOfEvents=nOEvents;
-		}
+		}*/
 		
 
 		
@@ -520,30 +525,30 @@ public class TraceReader extends TraceFile{
 		
 		/* Read n records and go through each event record */
 		String nodename ="";
-		Integer nidtid;
 		/* the number of records read */
 		/* See if the events are all present */
 		for (int i = 0; i < numberOfEvents; i++)
 		{
-			Event evt=null;
-			try{
-				evt = readEvent(this.format, Fiid, nid_offset);
-			}catch (IOException e) {e.printStackTrace(); return -1;}
-			if(evt==null){
-				break;
-			}else
-			{
-				recordsRead++;
-				totalRead++;
-			}
+	            if (!hasBufferedEvent) break;
+
+	            Event evt = currentEvent; // Use the already loaded event
+	            recordsRead++;
+	            totalRead++;
+
+	            ThreadTracker.NodeState state;
+	            if (evt.nid == cachedNid && cachedNodeState != null) {
+	            	state = cachedNodeState;
+	            } else {
+	            	state = tracker.getNodeState(evt.nid);
+	            	cachedNodeState = state;
+	            	cachedNid = evt.nid;
+	            }
 			
 		    /* event is OK. Examine each event and invoke callbacks for Entry/Exit/Node*/
 		    /* first check nodeid, threadid */
 
-			nidtid=new Integer(CharPair(evt.nid, evt.tid));
-			//nidtid=nid+":"+tid;
-			
-			if (!nidTidSeen.contains(nidtid))
+			boolean alreadySeen = state.seen.get(evt.tid);
+			if (!alreadySeen)
 			{
 				/* this pair of node and thread has not been encountered before*/
 				nodename="process "+(int)evt.nid+":"+(int)evt.tid;
@@ -552,7 +557,8 @@ public class TraceReader extends TraceFile{
 				//System.out.println("Nodename: "+nodename);
 				/* add it to the map! */
 				//NidTidMap.put(nidtid, one);
-				nidTidSeen.add(nidtid);
+				//nidTidSeen.add(nidtid);
+				state.seen.set(evt.tid);
 			}
 		    /* check the event to see if it is entry or exit */
 			//time=traceBuffer[i].getTime();//event_GetTi(traceBuffer, i);
@@ -567,9 +573,15 @@ public class TraceReader extends TraceFile{
 //				System.out.println("Built In Event");
 //			}
 			
-			EventDescr eventDescr = EventIdMap.get(new Integer(evt.evid));
+			EventDescr eventDescr = EventIdMap.get(Integer.valueOf(evt.evid));
 			if(eventDescr==null){
 				System.out.println("Warning: no event definiton for event ID "+evt.evid);
+				try {
+					advance();
+				} catch (IOException e) {
+					e.printStackTrace();
+					return -1;
+				}				
 				continue;
 			}
 			if ((eventDescr.getParameter() != null) && ((eventDescr.getParameter().equals("EntryExit"))))
@@ -652,7 +664,7 @@ public class TraceReader extends TraceFile{
 			}
 			if ((evt.parameter == 0) && (eventDescr.getEventName()!= null) &&(eventDescr.getEventName().equals("\"FLUSH_CLOSE\"")||eventDescr.getEventName().equals("FLUSH_CLOSE"))) {
 				/* reset the flag in NidTidMap to 0 (from 1) */
-				nidTidDone.add(nidtid);//NidTidMap.put(nidtid,zero);
+				state.done.set(evt.tid);//nidTidDone.add(nidtid);//NidTidMap.put(nidtid,zero);
 				//callbacks.eventTrigger(userData, evt.time, evt.nid, evt.tid, evt.evid, evt.parameter);
 				/* setting this flag to 0 tells us that a flush close has taken place 
 				 * on this node, thread */
@@ -669,15 +681,29 @@ public class TraceReader extends TraceFile{
 					//{/*printf("LAST WALL_CLOCK! End of trace file detected \n");*/
 						/* see if an end of the trace callback is registered and 
 						 * if it is, invoke it.*/
-					if(nidTidDone.contains(nidtid))//if(NidTidMap.get(nidtid).equals(zero))//if (callbacks.EndTrace!=null) 
-					{	callbacks.endTrace(userData, evt.nid, evt.tid);
+					if(state.done.get(evt.tid))//if(NidTidMap.get(nidtid).equals(zero))//if (callbacks.EndTrace!=null) 
+					{	
+						callbacks.endTrace(userData, evt.nid, evt.tid);
 						this.done=true;
+						    try {
+								advance(); 
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
 						return recordsRead;
 					}
 						//System.out.println("Wallclock at "+ts);
 					//}
 				}
-			} /* is it a WALL_CLOCK record? */      
+			} /* is it a WALL_CLOCK record? */
+
+			try {
+                advance();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return -1;
+            }
+			
 		} /* cycle through all records */
 		/* return the number of event records read */
 		return recordsRead;
