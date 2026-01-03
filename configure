@@ -1280,6 +1280,7 @@ intelcxxlibicc=no
 intelifort=no
 intel_icpx=no
 intel=no
+inteloneapi=no
 llvm=no
 mpiwarnings=
 gnu=no
@@ -6044,6 +6045,7 @@ case $cxx_compiler in
         fixmakeargs="$fixmakeargs USE_INTELCXX COMPINST_INTEL9"
         tauoptions="${tauoptions}-icpx"
         intel=yes
+        inteloneapi=yes
         if [ $fortran_compiler = no ]
         then
             intelifort=`which ifx 2>/dev/null`
@@ -6079,6 +6081,7 @@ case $cxx_compiler in
         fixmakeargs="$fixmakeargs MPIICPC USE_INTELCXX COMPINST_INTEL9"
         tauoptions="${tauoptions}-icpx"
         intel=yes
+        inteloneapi=yes
         if [ $fortran_compiler = no  -o $fortran_compiler = mpiifort -o $fortran_compiler = intel ]
         then
             intelifort=`which mpiifort 2>/dev/null`
@@ -6217,6 +6220,7 @@ case $cxx_compiler in
             *icpc | *icpx )
                 fixmakeargs="$fixmakeargs USE_INTELCXX"
                 intel=yes
+                inteloneapi=yes
                 ;;
             *clang* | hcc | hipcc | parascc )
                 tauoptions="${tauoptions}-clang"
@@ -11068,7 +11072,7 @@ if [ "x$download_dyninst" = xyes ] ; then
       export CPATH=${dyninsttbbdir} # To prevent using wrong tbb/include when building
       export CMAKE_PREFIX_PATH="" # To prevent looking for tbb installation by bfd
       ## Now we can make Dyninst
-      CC=$compiler_for_dyninst CXX=$compilerxx_for_dyninst cmake ${prebfddir}/${libdyninst} -DBoost_ROOT_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DLibIberty_ROOT_DIR=${libiberty_root_dir} -DIBERTY_LIBRARIES=${dyninstdir}/libiberty/lib/libiberty.a -DElfUtils_ROOT_DIR=${dyninstdir}/elfutils/ -DTBB_ROOT_DIR=${tbbdir}
+      CC=$compiler_for_dyninst CXX=$compilerxx_for_dyninst cmake ${prebfddir}/${libdyninst} -DBoost_ROOT_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DLibIberty_ROOT_DIR=${libiberty_root_dir} -DLibIberty_LIBRARIES=${dyninstdir}/libiberty/lib/libiberty.a -DElfUtils_ROOT_DIR=${dyninstdir}/elfutils/ -DTBB_ROOT_DIR=${tbbdir}
       make -j8
       make install
       export CPATH=$old_CPATH
@@ -11600,6 +11604,9 @@ EOF
     fi
 fi
 
+
+#PYCUDA is not needed. Leave the code in case it is needed at some point
+configure_pycuda() {
 if [ $python = yes -a $cuda = yes ] ; then
     #We need the boost/python libraries to build the TAU's pycuda interface.
     echo "Checking for boost/python ... ${nnl}"
@@ -11620,6 +11627,9 @@ fi
 if [ $python = yes -a $cuda = yes -a $boost = yes ] ; then
         fixmakeargs="$fixmakeargs PYCUDA_BOOST"
 fi
+}
+#END of PYCUDA disabled part
+
 
 if [ ! $cupti = no ]; then
     echo "Checking CUPTI version at ${cupti_path}/include ... ${nnl}"
@@ -12165,8 +12175,11 @@ if [ "x$download_scorep" = xyes ] ; then
       if [ $gnu = yes ]; then
         tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=gcc"
       fi
-      if [ $intel = yes ]; then
+      if [ $intel = yes -a $inteloneapi = no ]; then
         tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=intel"
+      fi
+      if [ $intel = yes -a $inteloneapi = yes ]; then
+        tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=oneapi"
       fi
       if [ $ibmxlc = yes  -o $ibmxlc_r = yes ]; then
         tau_scorep_config_options="${tau_scorep_config_options} --with-nocross-compiler-suite=ibm"
