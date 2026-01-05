@@ -665,7 +665,11 @@ namespace {
             StringRef prettycallName = normalize_name(callName);
             unsigned instructionCount = fn.getInstructionCount();
             auto *module = fn.getParent();
-            const std::string triple = module->getTargetTriple();
+#if( LLVM_VERSION_MAJOR <= 20 )
+	     const std::string triple = module->getTargetTriple();
+#else
+            const std::string triple = module->getTargetTriple().str();
+#endif //LLVM_VERSION_MAJOR <= 20
             bool is_host_func = triple.compare(std::string("amdgcn-amd-amdhsa")); // returns 0 if it matches
             // Compare similarly for other GPUs. If it matches, do not instrument it.
 
@@ -845,7 +849,11 @@ namespace {
                 // Set insert point to just after the CallInst
                 /* next non-debug instruction */
                 /* We can't just use  ++builder.GetInsertPoint() because of InvokeIns */
+#if( LLVM_VERSION_MAJOR <= 20 )
                 auto next = op->getNextNonDebugInstruction( /* true*/ );
+#else
+		auto next = op->getNextNode( /* true*/ );
+#endif //LLVM_VERSION_MAJOR <= 20
                 if( next == nullptr ){ // we have reached the end of the bb
                     BasicBlock::iterator it( op );
                     next = &(*(it++));
