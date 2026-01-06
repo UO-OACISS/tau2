@@ -2066,21 +2066,27 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
           }
 
         } else {
-#ifdef TAU_MPI
-#ifndef TAU_SHMEM
-        if (Tau_get_usesMPI())
-#endif /* TAU_SHMEM */
-        {
-#endif /* TAU_MPI */
+//Comment this part of code to test if there are cases failing to write.
+// There is an issue where serial programs fails to write if TAU was configured with MPI.
+// TAU tries to write with a NULL file pointer, so it crashes.
+// If not, check https://github.com/UO-OACISS/tau2/commit/9043a518636c4a28906a594595e2190d744903b1
+// and implement the file check as written there. So the user knows why there is no profile and can
+// execute TAU correctly.
+//#ifdef TAU_MPI
+//#ifndef TAU_SHMEM
+//        if (Tau_get_usesMPI())
+//#endif /* TAU_SHMEM */
+//        {
+//#endif /* TAU_MPI */
           if ((fp = fopen(dumpfile, "w+")) == NULL) {
             char errormsg[1256];
             snprintf(errormsg, sizeof(errormsg),  "Error: Could not create %s", dumpfile);
             perror(errormsg);
             return 0;
           }
-#ifdef TAU_MPI
-        }
-#endif /* TAU_MPI */
+//#ifdef TAU_MPI      
+//        }
+//#endif /* TAU_MPI */
           char cwd[1024];
           char *tst = getcwd(cwd, 1024);
 		  if (tst == NULL) {
@@ -2093,6 +2099,11 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
         }
       }
       TAU_VERBOSE("[pid=%d], TAU: Uses MPI Rank=%d\n", RtsLayer::getPid(), RtsLayer::myNode());
+      //Do not write if there is not pointer to a file
+      if(fp == NULL){
+        printf("Error: filepointer to %s is NULL. If you see this error, please report it.\n", dumpfile);
+        return 0;
+      }
       writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
     }
   }
