@@ -1,8 +1,9 @@
 module TAUProfile
 
-export tau_start, tau_stop, @tau, @tau_func
+export tau_start, tau_stop, tau_entry_hook, tau_exit_hook, tau_exception_hook, tau_rewrite_function, @tau, @tau_func, @tau_rewrite
 
-using IRTools: @dynamo, IR, xcall, arguments, insertafter!, recurse!
+using IRTools: @dynamo, IR, xcall, arguments, recurse!, blocks, branches, isreturn,
+               returnvalue, push!, block!, branch!, argument!, var, return!, Variable, Branch, insertafter!
 
 # Global variable to store the library path
 const libTAU = Ref{String}()
@@ -196,20 +197,65 @@ function tau_exception_hook(f, exc)
 end
 
 # Functions to exclude from instrumentation
-const EXCLUDED_FUNCTIONS = Set([
+const TAU_EXCLUDED_FUNCTIONS = Set([
     typeof(tau_start),
     typeof(tau_stop),
+    typeof(tau_entry_hook),
+    typeof(tau_exit_hook),
+    typeof(tau_exception_hook),
+    typeof(println),
+    typeof(print),
+    typeof(write), 
+    typeof(join),
 ])
 
 
 
 @dynamo function tau_rewrite_function(m...)
   # Skip instrumentation for excluded functions
-  if length(m) > 0 && m[1] in EXCLUDED_FUNCTIONS
+  if length(m) > 0 && m[1] in TAU_EXCLUDED_FUNCTIONS
     return
   end
 
-  ir = IR(m...)
+  # Skip instrumentation for lock modules to prevent deadlocks
+  if length(m) > 0
+    try
+      ftype = m[1]
+      modname = string(parentmodule(ftype))
+      ftype_str = string(ftype)
+
+      # Exclude problematic modules entirely
+      if occursin("Base.Threads", modname) ||
+         occursin("Base.GC", modname) ||
+         occursin("TAUProfile", modname) ||
+         occursin("Core.Intrinsics", modname)
+        return
+      end
+
+      # Exclude problematic patterns in function/module names
+      # Check both the module name and the function type string representation
+      problematic_patterns = ["lock", "Lock", "swap", "Swap", "preserve_handle",
+                              "iolock", "finalizer", "getfield", "setfield",
+                              "setproperty", "getproperty"]
+      for pattern in problematic_patterns
+        if occursin(pattern, ftype_str) || occursin(pattern, modname)
+          return
+        end
+      end
+    catch e
+      # Skip instrumentation if we can't identify the module
+      return
+    end
+  end
+
+  # Some functions (such as compiler intrinsics) don't have IR 
+  # at all, in which case getting IR for them will fail.
+  # In that case, don't attempt to rewrite.
+  ir = try
+    ir = IR(m...)
+  catch e
+    nothing
+  end
   ir == nothing && return
   recurse!(ir) # Recurse into functions called by this function
 
