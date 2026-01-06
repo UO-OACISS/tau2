@@ -1226,6 +1226,7 @@ sicortex=no
 extradir=
 extrashlibopts=
 pthread=no
+julia=no
 suppress_pthread_create_wrapper=no
 tbb=no
 papithread=no
