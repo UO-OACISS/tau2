@@ -24,6 +24,11 @@ Version 2.35 changes (from 2.34):
 11. Added support for Level Zero metric profiling (-level_metrics configure option). 
 12. Added initial support for Unitrace and sampling on Intel GPU (WIP, -l0_sampling). 
 13. Initial support for TAU_TRACE_FORMAT=perfetto to write out perfetto trace files natively.
+14. Added support for ROCm 7.1.1. 
+15. Updated support for DyninstAPI. 
+16. Added initial support for Julia (examples/julia/README). 
+17. Updated ParaProf 3D support. 
+
 
 Version 2.34 changes (from 2.33):
 1. Added support for new LLVM compilers (-c++=parascc).
