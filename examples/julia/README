@@ -1,0 +1,253 @@
+This directory contains examples for four different methods of profiling Julia code.
+
+Note that Julia support in TAU is experimental and at an early stage of development.
+For each method, this file contains instructions on using the method and lists
+the current known issues and limitations of the method.
+
+To use TAU with Julia support:
+
+    - Install Julia 1.12 and ensure that the `julia` interpreter is on your path
+      and you are able to run uninstrumented Julia code. For example, you should
+      be able to run the `Uninstrumented.jl` file in this directory with:
+
+          julia Uninstrumented.jl
+
+     and should get output like:
+     
+          Running loop of size 1
+          Running loop of size 1000
+          Running loop of size 10000
+          Done
+
+    - Build TAU with Julia, pthread, and ITTNotify support.
+      For example:
+
+          ./configure -bfd=download -unwind=download -dwarf=download -pthread -ittnotify -julia
+          make install
+
+When TAU is built with Julia support, a variant of `tau_exec` named `tau_julia` is installed
+which should be used in place of the Julia interpreter. Using `tau_julia` will place the 
+TAUProfile.jl module in the $JULIA_LOAD path and enable Julia's use of Intel JIT events to support
+sampling.
+
+-----------------------------------------------------
+
+Example 1: Manual Instrumentation
+
+TAUProfile.jl provides access to methods to start and stop TAU timers from Julia code.
+Importing the module will initialize TAU. Methods `tau_start(s::String)` and `tau_stop(s::String)`
+are exposed. 
+
+The file `ManualInst.jl` contains an example of using manual instrumentation with the TAU Julia interface.
+To use it (assuming that you have built TAU as described above), run the command:
+
+    tau_julia -T serial,julia,ittnotify,pthread ManualInst.jl
+
+This will generate a profile.0.0.0 file which you can view with `pprof`:
+
+    pprof
+
+    Reading Profile files in profile.*
+
+    NODE 0;CONTEXT 0;THREAD 0:
+    ---------------------------------------------------------------------------------------
+    %Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+                msec   total msec                          usec/call
+    ---------------------------------------------------------------------------------------
+    100.0        0.286          745           1           1     745936 .TAU application
+    100.0          238          745           1           4     745650 taupreload_main
+    68.0           506          506           1           0     506986 manual_timing_example
+    0.0          0.321        0.321           1           0        321 pthread_barrier_wait
+    0.0          0.118        0.118           2           0         59 pthread_create
+
+Note that the timer for `manual_timing_example` is present; this is the timer that was created with 
+tau_start() in the code.
+
+-----------------------------------------------------
+
+Example 2: Instrumentation Macros
+
+It is inconvenient to have to manually instrument the entry and every exit from functions.
+Julia itself provides profiling macros (albeit ones that use sampling rather than direct
+instrumentation) of the form `@profile <expr>` which enables profiling while executing the
+given expression. TAUProfile.jl provides similar macros:
+
+    @tau <name> <expr>           Start a TAU timer named <name>, evaluate the expression
+                                 <expr>, and stop the timer.
+
+    @tau_func <func defn>        Wrap an entire function in a TAU timer. The name of the 
+                                 timer will be inferred from the name of the function.
+
+The file `MacroInst.jl` contains examples of manual instrumentation using macros.
+It demonstrates single-level and nested expression profiling and function profiling
+using both the `function foo() ... end` syntax and the `foo() = ...` syntax.
+
+To use it, run the command:
+
+    tau_julia -T serial,julia,ittnotify,pthread MacroInst.jl
+
+This will generate a profile.0.0.0 file which you can view with `pprof`:
+
+    pprof
+
+	NODE 0;CONTEXT 0;THREAD 0:
+	---------------------------------------------------------------------------------------
+	%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+				msec   total msec                          usec/call
+	---------------------------------------------------------------------------------------
+	100.0        0.293        1,120           1           1    1120326 .TAU application
+	100.0          410        1,120           1           7    1120033 taupreload_main
+	36.1           201          404           1           2     404806 outer_timer
+	27.1           304          304           1           0     304140 macro_timer
+	9.1            101          101           1           0     101874 inner_computation_2
+	9.1            101          101           1           0     101440 inner_computation_1
+	0.0          0.413        0.413           1           0        413 pthread_barrier_wait
+	0.0          0.035        0.394           1           3        394 tau_func_example
+	0.0          0.355        0.355           1           0        355 matrix_multiply
+	0.0          0.107        0.107           2           0         54 pthread_create
+	0.0          0.073        0.073         177         176          0 fibonnaci
+	0.0          0.003        0.003           1           0          3 vector_operations
+	0.0          0.001        0.001           1           0          1 quick_sum
+
+-----------------------------------------------------
+
+Example 3: Sampling of Uninstrumented Code
+
+Sampling can be used to profile unmodified code. Because Julia uses just-in-time
+compilation, compiling functions at runtime upon invocation once the argument
+types are known, debug information for symbol resolution is not available through
+the standard debug symbol tables. The Julia runtime can be configured to
+provide information on address ranges as functions are compiled so that
+debuggers and profilers can resolve addresses to function names. 
+To do this, the JIT Events API within the Intel ITTNotify interface are used.
+
+Julia must be built with the compile-time option USE_INTEL_JITEVENTS=1.
+This is the default for the standard distribution of Julia on x86_64 Linux, but
+is *not* the default on other platforms. 
+
+If you are running on any platform other than x86_64 Linux, you will have to build
+Julia from source and explicitly enable USE_INTEL_JITEVENTS=1.
+Build instructions are located at https://docs.julialang.org/en/v1/devdocs/build/build/
+User-configurable options like USE_INTEL_JITEVENTS=1 are specified in the
+`Make.user` file.
+ 
+In this early version of Julia support in TAU, sampling has the following limitations,
+which will be resolved in a future release of TAU.
+
+SAMPLING LIMITATIONS:
+
+    - Unwinding (TAU_EBS_UNWIND) is not supported.
+
+    - Names for JIT-compiled functions do not include source location.
+      (For libraries that include debug information, such as the standard
+      library, source location is included.)
+
+To use sampling, specify both `-ebs` and `-ittnotify` as arguments to `tau_julia`.
+The argument -ebs enabled event-based sampling, while -ittnotify enabled TAU's 
+Intel ITTNotify collector, which is used to map addresses to names.
+
+The example `Uninstrumented.jl` is a code without any TAU instrumentation.
+It can be profiled with sampling by running:
+
+    tau_julia -T serial,julia,ittnotify,pthread -ebs -ittnotify Uninstrumented.jl
+
+Run `pprof -a` to view the profile. 
+
+-----------------------------------------------------
+
+Example 4: IR Rewriting
+
+For Python, TAU features a `tau_python` tool which allows for automatic
+profiling of all functions invoked by the Python interpreter using a profiling
+interface provided by Python. Julia does not have such an interface, but
+similar results can be achieved by recursively rewriting the intermediate
+representations of Julia functions. While this still requires modification to the code,
+so long as there is a single entry-point to the code, only a single modification is
+needed. 
+
+To use IR rewriting, the entry point to a Julia code should be annotated with 
+the `@tau_rewrite` macro. For example, if the script calls a function
+
+    main()
+
+This will be changed to 
+
+    @tau_rewrite main()
+
+Note that this recurses into every function call made by the function or any child.
+This introduces overhead during startup, as the modified versions of every called function
+must be compiled.
+
+In this early version of Julia support in TAU, rewriting has the following limitations,
+which will be resolved in a future release of TAU.
+
+REWRITING LIMITATIONS:
+
+    - There is no support for selective instrumentation; however,
+      selective instrumentation is required to achieve reasonable overhead
+      for some codes. For example, this code which sums a 1000x1000 matrix:
+        
+          sum(rand(1000, 1000))
+
+      ultimately results in 10 million function calls. If this expression
+      is instrumented with @tau_rewrite, all 10 million calls will be timed
+      by TAU, introducing very high overhead.
+
+      Selective instrumentation and a recursion limit will be introduced
+      in a future release of TAU to avoid this issue.
+
+    - Timers generated by @tau_rewrite include only the function name and 
+      do not include source location information.
+     
+The example `RewriteInst.jl` contains an example of IR rewriting.
+Rewriting is enabled by adding
+    
+    using TAUProfile
+
+at the beginning and marking the entrypoint with @tau_rewrite:
+
+    @tau_rewrite rewrite_example()
+
+The example can be run with:
+
+    tau_julia -T serial,julia,ittnotify,pthread RewriteInst.jl
+
+and the profile viewed with `pprof`:
+
+    pprof
+
+    NODE 0;CONTEXT 0;THREAD 0:
+    ---------------------------------------------------------------------------------------
+    %Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+                msec   total msec                          usec/call
+    ---------------------------------------------------------------------------------------
+    100.0         0.307       13,463           1           1   13463316 .TAU application
+    100.0        13,430       13,463           1           4   13463009 taupreload_main
+    0.2              18           31           1           4      31880 rewrite_example
+    0.1           0.004            8           1           1       8737 my_sum
+    0.1           0.012            8           1           3       8733 sum
+    0.1           0.011            8           1           4       8084 #sum#735
+    0.1            0.01            7           2           6       3884 _sum
+    0.1           0.006            7           1           4       7156 #_sum#737
+    0.0           0.008            6           1           4       6251 #_sum#738
+    0.0           0.007            5           1           2       5950 mapreduce
+    0.0           0.004            5           1           1       5941 #mapreduce#728
+    0.0           0.006            5           1           2       5937 _mapreduce_dim
+    0.0           0.013            5           1           8       5925 _mapreduce
+    0.0           0.292            5           2         608       2926 mapreduce_impl
+    0.0           0.186            4          98         294         46 simd_index
+    0.0           0.006            3           1           1       3831 collect
+    0.0           0.298            3           1           1       3825 Array
+    0.0               1            3           2         305       1764 Vector{Int64}
+    0.0             0.2            2          98         294         30 firstindex
+    0.0           0.085            2          98          98         22 eachindex
+    0.0           0.108            2         100         200         21 axes1
+    0.0            0.13            1         101         202         19 axes
+
+    [...]
+
+This truncated example output shows that the @tau_rewrite macro instruments not only
+the rewrite_example function, but also all functions within the script itself
+as well as all library functions called.
+
+
