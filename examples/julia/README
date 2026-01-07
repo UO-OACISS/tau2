@@ -22,8 +22,10 @@ To use TAU with Julia support:
     - Build TAU with Julia, pthread, and ITTNotify support.
       For example:
 
-          ./configure -bfd=download -unwind=download -dwarf=download -pthread -ittnotify -julia
+          ./configure -bfd=download -dwarf=download -pthread -ittnotify -julia
           make install
+
+      In order to work with rewriting, at present TAU must be built without -unwind.
 
 When TAU is built with Julia support, a variant of `tau_exec` named `tau_julia` is installed
 which should be used in place of the Julia interpreter. Using `tau_julia` will place the 
@@ -182,6 +184,8 @@ In this early version of Julia support in TAU, rewriting has the following limit
 which will be resolved in a future release of TAU.
 
 REWRITING LIMITATIONS:
+
+    - TAU must be built without `-unwind` when using the IR rewriter.
 
     - There is no support for selective instrumentation; however,
       selective instrumentation is required to achieve reasonable overhead
