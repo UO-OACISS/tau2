@@ -56,10 +56,12 @@ fi
 if [ "$scriptname" == "tau_python" ] ; then
   python_wrapper=true
   spark_wrapper=false
+  julia_wrapper=false
   default_tags="python,MPI"
 else
   python_wrapper=false
   spark_wrapper=false
+  julia_wrapper=false
   default_tags="MPI"
 fi
 
