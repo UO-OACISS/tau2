@@ -218,8 +218,10 @@ namespace {
         // Second argument is an i8* pointer or i8** in LLVM (argv)
 #if( LLVM_VERSION_MAJOR <= 17 )
         Type* argTy1 = PointerType::getUnqual(Type::getInt8PtrTy(context));
+#elif( LLVM_VERSION_MAJOR <= 20 )
+        Type* argTy1 = PointerType::getUnqual(PointerType::get(context, 0));
 #else
-		Type* argTy1 = PointerType::getUnqual(PointerType::get(context, 0));
+		Type* argTy1 = PointerType::getUnqual(context);
 #endif
         
         
@@ -842,7 +844,11 @@ namespace {
 
                 // This is the recommended way of creating a string constant (to be used
                 // as an argument to runtime functions)
+#if( LLVM_VERSION_MAJOR <= 20 )
                 Value *strArg = builder.CreateGlobalStringPtr( ( calleeName + " " + location ).str() );
+#else
+                Value *strArg = builder.CreateGlobalString( ( calleeName + " " + location ).str() );
+#endif
                 SmallVector<Value *, 1> args{strArg};
                 builder.CreateCall( onCallFunc, args );
 
@@ -880,7 +886,11 @@ namespace {
 
                     // This is the recommended way of creating a string constant (to be used
                     // as an argument to runtime functions)
+#if( LLVM_VERSION_MAJOR <= 20 )
                     Value *strArg = before.CreateGlobalStringPtr( ( prettyname + " " + location ).str() );
+#else
+                    Value *strArg = before.CreateGlobalString( ( prettyname + " " + location ).str() );
+#endif
                     SmallVector<Value *, 1> args{strArg};
                     before.CreateCall( onCallFunc, args );
                     mutated = true;
@@ -934,7 +944,11 @@ namespace {
                     Instruction* i = &*last;                
                     IRBuilder<> before( i );
 
+#if( LLVM_VERSION_MAJOR <= 20 )
                     Value *strArg = before.CreateGlobalStringPtr( loopname );
+#else
+                    Value *strArg = before.CreateGlobalString( loopname );
+#endif
                     SmallVector<Value *, 1> args{strArg};
                     before.CreateCall( onLoopEnter, args );
 
@@ -958,7 +972,11 @@ namespace {
                 Instruction* i = &*last;                
                 IRBuilder<> before2( i );
 
+#if( LLVM_VERSION_MAJOR <= 20 )
                 Value *strArg = before2.CreateGlobalStringPtr( loopname );
+#else
+                Value *strArg = before2.CreateGlobalString( loopname );
+#endif
                 SmallVector<Value *, 1> args{strArg};
                 before2.CreateCall( onLoopExit, args );
 
