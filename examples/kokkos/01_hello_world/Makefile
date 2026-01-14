@@ -45,6 +45,9 @@ ifeq ($(KOKKOS_HAVE_CUDA), yes)
     CXX  := $(KOKKOS_PATH)/bin/nvcc_wrapper
     LINK := $(CXX)
 
+    # Required for Kokkos lambda support in CUDA device code
+    KOKKOS_CXXFLAGS += --expt-extended-lambda
+
     # Allow user to specify CUDA location, otherwise use a common default
     CUDA_HOME ?= /usr/local/cuda
     BACKEND_LDFLAGS := -L$(CUDA_HOME)/lib64 -lcudart
@@ -66,15 +69,15 @@ else ifeq ($(KOKKOS_HAVE_HIP), yes)
 
 endif
 
-    # If not a GPU backend, check for OpenMP
-    KOKKOS_HAVE_OPENMP := $(shell grep -q "^#define KOKKOS_ENABLE_OPENMP" $(KOKKOS_CONFIG_H) && echo "yes")
-    ifeq ($(KOKKOS_HAVE_OPENMP), yes)
-        $(info Detected Kokkos OpenMP backend)
-        KOKKOS_CXXFLAGS += -fopenmp
-        KOKKOS_LDFLAGS  += -fopenmp
-    else
-        $(info Detected Kokkos Serial backend)
-    endif
+# If not a GPU backend, check for OpenMP
+KOKKOS_HAVE_OPENMP := $(shell grep -q "^#define KOKKOS_ENABLE_OPENMP" $(KOKKOS_CONFIG_H) && echo "yes")
+ifeq ($(KOKKOS_HAVE_OPENMP), yes)
+    $(info Detected Kokkos OpenMP backend)
+    KOKKOS_CXXFLAGS += -fopenmp
+    KOKKOS_LDFLAGS  += -fopenmp
+else
+    $(info Detected Kokkos Serial backend)
+endif
 
 
 KOKKOS_LIBS := -L$(KOKKOS_LIBDIR) -lkokkoscore -ldl
@@ -84,7 +87,7 @@ SRC := $(wildcard *.cpp)
 OBJ := $(notdir $(SRC:.cpp=.o))
 EXE := $(notdir $(SRC:.cpp=.exe))
 
-KOKKOS_CXXFLAGS += -I$(KOKKOS_PATH)/include -std=c++17
+KOKKOS_CXXFLAGS += -I$(KOKKOS_PATH)/include -std=c++20
 
 default: build
 
