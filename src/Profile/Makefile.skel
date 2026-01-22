@@ -149,11 +149,7 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #############################################
 # PERFETTO OBJECTS
 #############################################
-#PERFETTO#PERFETTO_O = TracerPerfetto.o #ENDIF#
-#PERFETTO#PERFETTO_LIB = $(TAUROOT)/utils/perfetto/libperfetto.a #ENDIF#
-$(TAUROOT)/utils/perfetto/libperfetto.a:
-	@echo "Building Perfetto static library..."
-	(cd $(TAUROOT)/utils/perfetto && $(MAKE))
+#PERFETTO#PERFETTO_O = TracerPerfetto.o Perfetto.o #ENDIF#
 
 #############################################
 # ROCPROFILER OBJECTS
@@ -436,7 +432,7 @@ all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) \
 $(PYTAU) $(SHMEM_WRAPPER) $(POELIB) $(TAU_CUDA_LIB) $(TAU_PYCUDA_LIB) \
 $(TAU_OPENCL_LIB) $(TAU_CUPTI_LIB) $(TAU_CUPTI_ACTIVITY_LIB)
 
-$(TAU_TARGET):	$(OBJS) $(STATIC_OBJS) $(PERFETTO_LIB)
+$(TAU_TARGET):	$(OBJS) $(STATIC_OBJS)
 		$(PRELINK_PHASE)
 		$(AR) $(ARFLAGS) $(TAU_TARGET) $(OBJS) $(STATIC_OBJS) $(EXTRAOBJS)
 		$(TAU_RANLIB) $(TAU_TARGET)
@@ -835,6 +831,9 @@ TauCollectives.o : TauCollectives.cpp $(HDRS)
 
 TracerPerfetto.o : TracerPerfetto.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE)  $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+
+#PERFETTO#Perfetto.o : $(TAUROOT)/utils/perfetto/perfetto.cc $(TAUROOT)/utils/perfetto/perfetto.h #ENDIF#
+#PERFETTO#	$(CXX) $(CXXFLAGS) -I$(TAUROOT)/utils/perfetto -c $< -o $@ #ENDIF#
 
 TauMetrics.o   	: TauMetrics.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)

@@ -183,7 +183,6 @@ clean:
 		cd otf2profile ; make clean
 		cd opari2 ; /bin/rm -rf _build
 		cd ebs2otf ; $(MAKE) clean
-		cd perfetto ; $(MAKE) clean
 
 $(INSTALLDEST)/pprof: pprof
 		@echo Installing $? in $(INSTALLDEST)
