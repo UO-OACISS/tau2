@@ -152,8 +152,8 @@ static int cuda_device_count() {
 static void check_max_metrics() {
     if (nmetrics >= TAU_MAX_METRICS) {
         fprintf(stderr,
-                "Number of counters exceeds TAU_MAX_METRICS (%d), "
-                        "please reconfigure TAU with -useropt=-DTAU_MAX_METRICS=<higher number>.\n",
+                "TAU: Error: Number of counters exceeds TAU_MAX_METRICS (%d), "
+                        "please rerun with fewer metrics or reconfigure TAU with -useropt=\"-DTAU_MAX_METRICS=<higher number> -DTAU_MAX_COUNTERS=<higher number>\".\n",
                 TAU_MAX_METRICS);
         exit (EXIT_FAILURE);
     }

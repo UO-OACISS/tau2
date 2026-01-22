@@ -283,6 +283,11 @@ int PapiLayer::addCounter(char *name)
     return -1;
   }
 
+  if (numCounters >= MAX_PAPI_COUNTERS) {
+    fprintf(stderr, "TAU: Error: Cannot add counter %s. Maximum number of PAPI counters (%d) reached. Please rerun with fewer counters or reconfigure TAU with  -useropt=\"-DTAU_MAX_METRICS=<higher number> -DTAU_MAX_COUNTERS=<higher number>\".\n", name, MAX_PAPI_COUNTERS);
+    exit(EXIT_FAILURE);
+  }
+
   int counterID = numCounters++;
   counterList[counterID] = code;
 
@@ -515,6 +520,27 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
     }
   }
 #endif
+
+//#define TAU_PAPI_NEGATIVE_DEBUG 1
+
+//#ifdef TAU_PAPI_NEGATIVE_DEBUG
+for (int comp=0; comp<TAU_PAPI_MAX_COMPONENTS; comp++) {
+    if (localThreadValue->NumEvents[comp] > 0) {
+      for (int j=0; j<localThreadValue->NumEvents[comp]; j++) {
+        int index = localThreadValue->Comp2Metric[comp][j];
+        if (tmpCounters[j] < 0) {
+          char event_name[PAPI_MAX_STR_LEN];
+          PAPI_event_code_to_name(counterList[index], event_name);
+          fprintf(stderr, "TAU PAPI DEBUG: Negative raw value from PAPI_read: "
+                  "tid=%d, comp=%d, event=%s, value=%lld, multiplexing=%d\n",
+                  tid, comp, event_name, tmpCounters[j],
+                  TauEnv_get_papi_multiplexing());
+        }
+      }
+    }
+  }
+//#endif
+
 
   if (rc != PAPI_OK) {
     fprintf (stderr, "pid=%d, TAU: Error reading PAPI counters: %s\n", RtsLayer::getPid(), PAPI_strerror(rc));
