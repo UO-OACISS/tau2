@@ -35,6 +35,10 @@
 #include <zlib.h>
 #include <sched.h>
 
+#ifdef TAU_MPI
+#include <mpi.h>
+#endif
+
 #include <tau_internal.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauEnv.h>
@@ -524,6 +528,16 @@ int TauTracePerfettoInitTS(int tid, x_uint64 /*ts*/) {
         return 0;
     }
 
+#if defined(TAU_MPI)
+    // Do not start Perfetto before MPI is initialized; some MPI
+    // implementations do not tolerate background threads pre-MPI_Init.
+    int mpi_initialized = 0;
+    MPI_Initialized(&mpi_initialized);
+    if (!mpi_initialized && TauEnv_get_set_node() <= -1) {
+        return 1; // Defer init; caller will buffer the event.
+    }
+#endif
+
     // Use compare_exchange to safely elect one thread as the initializer.
     bool expected = false;
     if (g_perfetto.initializing.compare_exchange_strong(expected, true)) {
@@ -730,13 +744,14 @@ void TauTracePerfettoEventWithNodeId(long int ev, x_int64 par, int tid,
             TauTracePerfettoInit(tid);
         }
 
-        // If initialization failed, we must drop the event, but warn the user.
+        // If initialization is still pending (e.g., MPI not yet initialized),
+        // buffer the event instead of dropping it.
         if (!g_perfetto.initialized.load()) {
-            fprintf(stderr,
-                    "TAU: [PERFETTO_CRITICAL] Tracer initialization failed. "
-                    "The current event will be dropped. "
-                    "Check for permissions issues or other errors reported above.\n");
-            fflush(stderr);
+            ensure_thread_vector(tid);
+            PerfettoThreadData* td = g_perfetto.thread_data[tid];
+            if (!td->temp_buffers) td->temp_buffers = new std::vector<temp_buffer_entry>();
+            x_uint64 t_us = use_ts ? ts_us : TauTraceGetTimeStamp(tid);
+            td->temp_buffers->emplace_back(ev, t_us, par, kind);
             return;
         }
     }
