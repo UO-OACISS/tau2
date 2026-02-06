@@ -1604,9 +1604,12 @@ if [ $upc == "berkeley" ]; then
 fi
 
 if [ $useNVCC == $TRUE ]; then
+    # This does not work with recent cuda versions, -Xlinker should not be followed by -Wl
     # Make any number of "-Wl," into exactly -Xlinker "-Wl,"
-    optLinking=`echo $optLinking | sed -e 's@-Wl,@-Xlinker -Wl,@g'`
-    echoIfDebug "optLinking modified to accomodate -Xlinker -Wl for nvcc optLinking=$optLinking"
+    #optLinking=`echo $optLinking | sed -e 's@-Wl,@-Xlinker -Wl,@g'`
+    #echoIfDebug "optLinking modified to accomodate -Xlinker -Wl for nvcc optLinking=$optLinking"
+    optLinking=`echo $optLinking | sed -e 's@-Wl,@-Xlinker @g'`
+    echoIfDebug "optLinking modified to accomodate -Xlinker for nvcc optLinking=$optLinking"
 fi
 
 if [ $optMICOffload == $TRUE ]; then
