@@ -62,8 +62,8 @@ using namespace tau;
 
 #ifdef TAU_PERFETTO
 
-// Fixed default buffer size (KB)
-static constexpr uint32_t kPerfettoBufferKB = 16384; // 16 MB
+// Default buffer size (KB) and flush period (ms) — overridden by
+// TAU_PERFETTO_BUFFER_SIZE and TAU_PERFETTO_FLUSH_PERIOD env vars.
 
 // Rank 0 is defined as node 0 or node -1 (for serial execution with MPI configured)
 static inline bool is_rank0() {
@@ -362,10 +362,13 @@ static void perfetto_do_init() {
         return;
     }
 
+    uint32_t buffer_kb = (uint32_t)TauEnv_get_perfetto_buffer_size();
+    uint32_t flush_ms = (uint32_t)TauEnv_get_perfetto_flush_period();
+
     perfetto::TraceConfig cfg;
     auto* buf = cfg.add_buffers();
-    buf->set_size_kb(kPerfettoBufferKB);
-    cfg.set_flush_period_ms(1000);
+    buf->set_size_kb(buffer_kb);
+    cfg.set_flush_period_ms(flush_ms);
 
     auto* ds = cfg.add_data_sources();
     ds->mutable_config()->set_name("track_event");
@@ -390,8 +393,8 @@ static void perfetto_do_init() {
     int rank = (int)get_rank();
     emit_process_descriptor(rank);
     if (is_rank0()) {
-        TAU_VERBOSE("TAU: Perfetto started (rank=%d, buffer=%uKB, file=%s, pid=%d)\n",
-                    rank, kPerfettoBufferKB, path_buf, (int)getpid());
+        TAU_VERBOSE("TAU: Perfetto started (rank=%d, buffer=%uKB, flush=%ums, file=%s, pid=%d)\n",
+                    rank, buffer_kb, flush_ms, path_buf, (int)getpid());
     }
 
     g_perfetto.initialized = true;
@@ -929,18 +932,18 @@ static void TauPerfettoMergeAllRanks(const char* dir, int num_ranks) {
     }    
 
     bool do_gzip = TauEnv_get_perfetto_compress();
-    std::string base_path = std::string(dir) + "/tau.perfetto";
-    if (do_gzip) base_path += ".gz";
-    std::string out_path = base_path;
+    std::string stem = std::string(dir) + "/tau.perfetto";
+    std::string ext = do_gzip ? ".gz" : "";
+    std::string out_path = stem + ext;
 
     int version = 1;
     while (file_exists(out_path)) {
-        out_path = base_path + "." + std::to_string(version++);
+        out_path = stem + "." + std::to_string(version++) + ext;
     }
 
-    if (out_path != base_path) {
-        printf("TAU: Perfetto: WARNING: Output file %s already exists. Saving to %s instead.\n",
-               base_path.c_str(), out_path.c_str());
+    if (out_path != stem + ext) {
+        printf("TAU: Perfetto: WARNING: Output file %s%s already exists. Saving to %s instead.\n",
+               stem.c_str(), ext.c_str(), out_path.c_str());
     }
 
     printf("TAU: Perfetto: Merging traces for %d ranks into %s\n", num_ranks, out_path.c_str());
