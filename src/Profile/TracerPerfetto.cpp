@@ -37,6 +37,7 @@
 
 #ifdef TAU_MPI
 #include <mpi.h>
+extern "C" int Tau_get_usesMPI(void);
 #endif
 
 #include <tau_internal.h>
@@ -165,6 +166,7 @@ static std::atomic<uint64_t> g_fake_os_tid_counter{10000000};
 // If a thread is already in TauTracePerfettoInit, it should not
 // try to record trace events that would lead back to initialization.
 static std::atomic<bool> g_perfetto_initializing{false};
+
 
 /* ------------------------------------------------------------------------- *
  * Helpers
@@ -536,9 +538,10 @@ int TauTracePerfettoInitTS(int tid, x_uint64 /*ts*/) {
     // implementations do not tolerate background threads pre-MPI_Init.
     int mpi_initialized = 0;
     MPI_Initialized(&mpi_initialized);
-    if (!mpi_initialized && TauEnv_get_set_node() <= -1) {
+    if ((!mpi_initialized || !Tau_get_usesMPI()) && TauEnv_get_set_node() <= -1) {
         return 1; // Defer init; caller will buffer the event.
     }
+    //printf(" %d %d %d\n", mpi_initialized, Tau_get_usesMPI(), TauEnv_get_set_node());
 #endif
 
     // Use compare_exchange to safely elect one thread as the initializer.
