@@ -820,6 +820,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     MPI3)
+        echo "NOTE: Using TAU's MPI-3 extensions"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      LAMPI)
         echo "NOTE: Using LA-MPI MPI_Request_c2f workaround"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
