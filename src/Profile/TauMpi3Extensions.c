@@ -176,6 +176,60 @@ int MPI_Igatherv(const void* sendbuf, int sendcount, MPI_Datatype
   return retvalue; 
 }
 
+int MPI_Iscatter(const void* sendbuf, int sendcount, MPI_Datatype
+    sendtype, void* recvbuf, int recvcount, MPI_Datatype recvtype,
+    int root, MPI_Comm comm, MPI_Request* request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Iscatter()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Iscatter( sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                            recvtype, root, comm, request ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+int MPI_Iscatterv(const void* sendbuf, const int sendcounts[], const
+    int displs[], MPI_Datatype sendtype, void* recvbuf, int
+    recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm,
+    MPI_Request* request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Iscatterv()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Iscatterv( sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                            recvtype, root, comm, request ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+int MPI_Iallgather(const void* sendbuf, int sendcount, MPI_Datatype
+    sendtype, void* recvbuf, int recvcount, MPI_Datatype recvtype,
+    MPI_Comm comm, MPI_Request* request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Iallgather()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Iallgather( sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                            recvtype, comm, request ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+int MPI_Iallgatherv(const void* sendbuf, int sendcount, MPI_Datatype
+    sendtype, void* recvbuf, const int recvcounts[], const int
+    displs[], MPI_Datatype recvtype, MPI_Comm comm, MPI_Request*
+    request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Iallgatherv()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Iallgatherv( sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                            displs, recvtype, comm, request ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
 int MPI_Ialltoall(const void* sendbuf, int sendcount, MPI_Datatype
     sendtype, void* recvbuf, int recvcount, MPI_Datatype recvtype,
     MPI_Comm comm, MPI_Request* request)
@@ -265,6 +319,19 @@ int MPI_Ireduce_scatter_block(const void* sendbuf, void* recvbuf,
   TAU_PROFILE_TIMER(t, "MPI_Ireduce_scatter_block()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
   retvalue = PMPI_Ireduce_scatter_block( sendbuf, recvbuf, recvcount,
+                           datatype, op, comm, request ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+int MPI_Ireduce_scatter(const void* sendbuf, void* recvbuf, const
+    int recvcounts[], MPI_Datatype datatype, MPI_Op op, MPI_Comm
+    comm, MPI_Request* request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Ireduce_scatter()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Ireduce_scatter( sendbuf, recvbuf, recvcounts,
                            datatype, op, comm, request ) ; 
   TAU_PROFILE_STOP(t); 
   return retvalue; 
