@@ -680,7 +680,7 @@ int MPI_Rget_accumulate(const void* origin_addr, int origin_count,
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Rget_accumulate()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
-  retvalue = PMPI_Rget_accumulatee( origin_addr, origin_count, origin_datatype,
+  retvalue = PMPI_Rget_accumulate( origin_addr, origin_count, origin_datatype,
                         result_addr, result_count, result_datatype,
                         target_rank, target_disp, target_count,
                         target_datatype, op, win, request ) ; 
@@ -745,15 +745,3 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win* win)
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
-
-/*
-int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win* win)
-{
-  int retvalue; 
-  TAU_PROFILE_TIMER(t, "MPI_Win_create_dynamic()", "", TAU_MESSAGE); 
-  TAU_PROFILE_START(t); 
-  retvalue = PMPI_Win_create_dynamic( info, comm, win ) ; 
-  TAU_PROFILE_STOP(t); 
-  return retvalue; 
-}
-*/
