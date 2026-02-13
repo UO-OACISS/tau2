@@ -211,6 +211,8 @@ extern "C" {
   int TAUDECL TauEnv_get_perfetto_merge(void);
   int TAUDECL TauEnv_get_perfetto_buffer_size(void);
   int TAUDECL TauEnv_get_perfetto_flush_period(void);
+  int TAUDECL TauEnv_get_perfetto_keep_files(void);
+  int TAUDECL TauEnv_get_perfetto_debug(void);
   void TAUDECL TauEnv_set_tracing(int tracing);
 
   /*TAU enable/disable events

@@ -72,6 +72,7 @@ void TauSyncClocks();
 void TauSyncFinalClocks();
 int Tau_mergeProfiles_MPI();
 void TAUDECL Tau_set_usesMPI(int value);
+void TAUDECL Tau_set_node_confirmed(int value);
 int TAUDECL tau_totalnodes(int set_or_get, int value);
 char * Tau_printRanks(void * comm_ptr);
 extern int Tau_signal_initialization();
@@ -1052,8 +1053,12 @@ int * rank;
 
   /* Set the node as we did in MPI_Init */
   if (comm == MPI_COMM_WORLD) {
-    TAU_PROFILE_SET_NODE(*rank);
+    int size;
+    PMPI_Comm_size( MPI_COMM_WORLD, &size );
+    tau_totalnodes(1, size);
     Tau_set_usesMPI(1);
+    Tau_set_node_confirmed(1); /* rank from PMPI_Comm_rank is authoritative */
+    TAU_PROFILE_SET_NODE(*rank);
   }
 
   return returnVal;
@@ -1785,9 +1790,13 @@ int  MPI_Finalize(  )
 
   if (Tau_get_node() < 0) {
     /* Grab the node id, we don't always wrap mpi_init */
+    int size;
     PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
-    TAU_PROFILE_SET_NODE(procid_0 );
+    PMPI_Comm_size( MPI_COMM_WORLD, &size );
+    tau_totalnodes(1, size);
     Tau_set_usesMPI(1);
+    Tau_set_node_confirmed(1); /* rank from PMPI_Comm_rank is authoritative */
+    TAU_PROFILE_SET_NODE(procid_0 );
   }
 
 #ifdef TAU_BGP
@@ -2029,11 +2038,11 @@ char *** argv;
     TAU_PROFILE_STOP(tautimer);
 
     PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
-    TAU_PROFILE_SET_NODE(procid_0 );
-    Tau_set_usesMPI(1);
-
     PMPI_Comm_size( MPI_COMM_WORLD, &size );
     tau_totalnodes(1, size); /* Set the totalnodes */
+    Tau_set_usesMPI(1);
+    Tau_set_node_confirmed(1); /* rank from PMPI_Comm_rank is authoritative */
+    TAU_PROFILE_SET_NODE(procid_0 );
 
     PMPI_Get_processor_name(procname, &procnamelength);
     TAU_METADATA("MPI Processor Name", procname);
@@ -2083,8 +2092,15 @@ char *** argv;
       TauSyncClocks();
     }
   } else {
+    /* MPI was already initialized (e.g. SHMEM or mpirun_rsh).
+     * Still need to set the rank and total nodes for TAU. */
     returnVal = MPI_SUCCESS;
+    PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+    PMPI_Comm_size( MPI_COMM_WORLD, &size );
+    tau_totalnodes(1, size);
     Tau_set_usesMPI(1);
+    Tau_set_node_confirmed(1);
+    TAU_PROFILE_SET_NODE(procid_0 );
   }
 
   writeMetaDataAfterMPI_Init();
@@ -2128,11 +2144,11 @@ int *provided;
   TAU_PROFILE_STOP(tautimer);
 
   PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
-  TAU_PROFILE_SET_NODE(procid_0 );
-  Tau_set_usesMPI(1);
-
   PMPI_Comm_size( MPI_COMM_WORLD, &size );
   tau_totalnodes(1, size); /* Set the totalnodes */
+  Tau_set_usesMPI(1);
+  Tau_set_node_confirmed(1); /* rank from PMPI_Comm_rank is authoritative */
+  TAU_PROFILE_SET_NODE(procid_0 );
 
   PMPI_Get_processor_name(procname, &procnamelength);
   TAU_METADATA("MPI Processor Name", procname);

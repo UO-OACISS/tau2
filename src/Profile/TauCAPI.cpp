@@ -3244,6 +3244,18 @@ extern "C" int Tau_get_usesMPI() {
   return Tau_usesMPI;
 }
 
+/* Flag indicating whether setMyNode has been called explicitly,
+   confirming the rank is trustworthy (not just guessed from env vars
+   like PMI_RANK which may be wrong with mpirun_rsh). */
+static int Tau_nodeConfirmed = 0;
+extern "C" void Tau_set_node_confirmed(int value) {
+  Tau_nodeConfirmed = value;
+}
+
+extern "C" int Tau_get_node_confirmed() {
+  return Tau_nodeConfirmed;
+}
+
 static int Tau_usesSHMEM = 0;
 extern "C" void Tau_set_usesSHMEM(int value) {
   Tau_usesSHMEM = value;

@@ -182,6 +182,7 @@ long RtsLayer::GenerateUniqueId(void) {
 }
 
 extern "C" void Tau_set_usesMPI(int value);
+extern "C" void Tau_set_node_confirmed(int value);
 
 int Tau_test_for_MPI_comm_rank() {
 #ifdef TAU_SETNODE0
@@ -397,6 +398,13 @@ int RtsLayer::setMyNode(int NodeId, int tid)
 #endif // TRACING WITH THREADS
 
   TheNode() = NodeId;
+  // NOTE: Tau_set_node_confirmed(1) is intentionally NOT called here.
+  // It is called from the MPI wrappers (MPI_Init, MPI_Init_thread,
+  // MPI_Comm_rank, MPI_Finalize) only after PMPI_Comm_rank returns the
+  // authoritative rank.  Calling it here would prematurely confirm a
+  // rank that came from env-var guessing (e.g. PMI_RANK=0 for all
+  // ranks under mpirun_rsh), causing Perfetto to initialize with the
+  // wrong rank on every process.
 
   // At this stage, we should create the trace file because we know the node id
   if (TauEnv_get_tracing()) {

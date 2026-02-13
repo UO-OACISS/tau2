@@ -470,6 +470,12 @@ void TauTraceReinitialize(int oldid, int newid, int tid) {
   TAU_VERBOSE("Inside TauTraceReinitialize : oldid = %d, newid = %d, tid = %d\n",
 	oldid, newid, tid);
 #endif
+#ifdef TAU_PERFETTO
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_PERFETTO) {
+    TauTracePerfettoReinitialize(oldid, newid, tid);
+    return;
+  }
+#endif
   /* We should put a record in the trace that says that oldid is mapped to newid this
      way and have an offline program clean and transform it. Otherwise if we do it
      online, we'd have to lock the multithreaded execution, and do if for all threads
