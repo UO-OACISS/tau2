@@ -1191,6 +1191,7 @@ orig_useropt="-O2 -g"
 mpi=no
 mpi2=no
 mpi3=no
+mpi4=no
 mpiio=no
 mpiinc=
 mpilib=
@@ -9915,6 +9916,21 @@ if $mpicompiler tools/src/tests/mpiversion.c $mpiwarnings $orig_useropt $mpi_inc
 else
     echo "no"
 fi
+
+$echo "Checking for MPI-4 interface ... ${nnl}"
+if [ $mpi3 = yes ] ; then
+    mpi_ver=$(./test_mpi_version)
+    if [ "$mpi_ver" -ge 4 ]; then
+        echo "yes"
+        fixmakeargs="$fixmakeargs MPI4"
+        mpi4=yes
+    else
+        echo "no"
+    fi
+else
+    echo "no"
+fi
+
 rm test_mpi_version
 
 

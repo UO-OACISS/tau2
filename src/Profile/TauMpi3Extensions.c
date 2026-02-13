@@ -8,8 +8,6 @@
 #include <Profile/TauUtil.h>
 #include <Profile/TauEnv.h>
 
-//https://www.mpi-forum.org/docs/mpi-3.0/mpi30-report.pdf page 788-
-
 int MPI_Get_library_version ( char *version, int *resultlen )
 {
   int retvalue; 

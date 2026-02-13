@@ -820,6 +820,7 @@ SDDF_DIR=
 FWRAPPER	       = TauFMpi.o
 #MPI2#MPI2EXTENSIONS	       = TauMpiExtensions.o       #ENDIF#
 #MPI3#MPI3EXTENSIONS	       = TauMpi3Extensions.o       #ENDIF#
+#MPI4#MPI4EXTENSIONS	       = TauMpi4Extensions.o       #ENDIF#
 #MPC#MPI2EXTENSIONS	       =        #ENDIF#
 #APPLECXX#MPI2EXTENSIONS	       =  #ENDIF#
 #CRAYX1CC#MPI2EXTENSIONS	       =        #ENDIF#
