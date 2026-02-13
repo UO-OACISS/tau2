@@ -142,3 +142,57 @@ int MPI_File_iwrite_all(MPI_File fh, const void* buf, int count,
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
+
+MPI_Aint MPI_Aint_add(MPI_Aint base, MPI_Aint disp)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Aint_add()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Aint_add(  base, disp ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+MPI_Aint MPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Aint_diff()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Aint_diff(  addr1, addr2 ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+//Large count functions
+
+int MPI_Accumulate_c(const void* origin_addr, MPI_Count
+    origin_count, MPI_Datatype origin_datatype, int target_rank,
+    MPI_Aint target_disp, MPI_Count target_count, MPI_Datatype
+    target_datatype, MPI_Op op, MPI_Win win)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Accumulate_c()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Accumulate_c(  origin_addr, origin_count, origin_datatype,
+                                target_rank, target_disp, target_count, 
+                                target_datatype, op, win ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+int MPI_Raccumulate_c(const void* origin_addr, MPI_Count
+    origin_count, MPI_Datatype origin_datatype, int target_rank,
+    MPI_Aint target_disp, MPI_Count target_count, MPI_Datatype
+    target_datatype, MPI_Op op, MPI_Win win, MPI_Request* request)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Raccumulate_c()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Raccumulate_c(  origin_addr, origin_count, origin_datatype,
+                                target_rank, target_disp, target_count, 
+                                target_datatype, op, win, request ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue; 
+}
+
+
