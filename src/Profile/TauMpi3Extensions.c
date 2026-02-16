@@ -823,3 +823,149 @@ MPI_Aint MPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
+
+int MPI_Open_port(MPI_Info info, char* port_name)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Open_port()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Open_port( info, port_name ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue;
+}
+
+int MPI_Publish_name(const char* service_name, MPI_Info info, const
+    char* port_name)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Publish_name()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Publish_name( service_name, info, port_name ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue;
+}
+
+int MPI_Reduce_local(const void* inbuf, void* inoutbuf, int count,
+    MPI_Datatype datatype, MPI_Op op)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Reduce_local()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Reduce_local( inbuf, inoutbuf, count, datatype, op ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue;
+}
+
+int MPI_Unpublish_name(const char* service_name, MPI_Info info,
+    const char* port_name)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Unpublish_name()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Unpublish_name( service_name, info, port_name ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue;
+}
+
+int MPI_Win_attach(MPI_Win win, void* base, MPI_Aint size)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Win_attach()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Win_attach( win, base, size ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue;
+}
+
+int MPI_Win_detach(MPI_Win win, const void* base)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Win_detach()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Win_detach( win, base ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue;
+}
+
+int MPI_Win_flush(int rank, MPI_Win win)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Win_flush()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Win_flush( rank, win ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue;
+}
+
+int MPI_Win_flush_all(MPI_Win win)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Win_flush_all()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Win_flush_all( win ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue;
+}
+
+int MPI_Win_flush_local(int rank, MPI_Win win)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Win_flush_local()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Win_flush_local( rank, win ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue;
+}
+
+int MPI_Win_flush_local_all(MPI_Win win)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Win_flush_local_all()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Win_flush_local_all( win ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue;
+}
+
+int MPI_Win_lock_all(int assert, MPI_Win win)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Win_lock_all()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Win_lock_all( assert, win ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue;
+}
+
+int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint* size, int*
+    disp_unit, void* baseptr)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Win_shared_query()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Win_shared_query( win, rank, size, disp_unit, baseptr ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue;
+}
+
+int MPI_Win_sync(MPI_Win win)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Win_sync()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Win_sync( win ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue;
+}
+
+int MPI_Win_unlock_all(MPI_Win win)
+{
+  int retvalue; 
+  TAU_PROFILE_TIMER(t, "MPI_Win_unlock_all()", "", TAU_MESSAGE); 
+  TAU_PROFILE_START(t); 
+  retvalue = PMPI_Win_unlock_all( win ) ; 
+  TAU_PROFILE_STOP(t); 
+  return retvalue;
+}
+
+
