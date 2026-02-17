@@ -114,7 +114,7 @@ void Tau_sampling_finalize_if_necessary(int tid);
 void Tau_sampling_stop_sampling();
 
 /* Allows an external source to register address ranges for sample resolution */
-void Tau_sampling_register_external_range(uintptr_t start, uintptr_t end, char * funcname);
+void Tau_sampling_register_external_range(uintptr_t start, uintptr_t end, char * funcname, char * filename, unsigned int line_number_size, unsigned int * line_number_table);
 #ifdef __cplusplus
 }
 #endif

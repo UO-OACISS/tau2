@@ -351,10 +351,11 @@ ITT_EXTERN_C int JITAPI NotifyEvent(iJIT_JVM_EVENT event_type, void *EventSpecif
         uintptr_t start = (uintptr_t) method_load_data->method_load_address;
         uintptr_t end = start + ((uintptr_t) method_load_data->method_size);
         char * name = strdup(method_load_data->method_name);
+        char * filename = method_load_data->source_file_name ? strdup(method_load_data->source_file_name) : NULL;
 #ifdef TAU_DEBUG_ITTNOTIFY
-        fprintf(stderr, "Registering range 0x%" PRIxPTR " to 0x%" PRIxPTR " with name %s\n", start, end, name);
+        fprintf(stderr, "Registering range 0x%" PRIxPTR " to 0x%" PRIxPTR " with name %s, filename %s\n", start, end, name, filename);
 #endif
-        Tau_sampling_register_external_range(start, end, name);
+        Tau_sampling_register_external_range(start, end, name, filename, 0, NULL);
     }
 
     return 0;

@@ -345,10 +345,18 @@ static CallSiteCacheMap & TheCallSiteCache() {
   return map;
 }
 
+struct ExternalLineNumberInfo {
+  unsigned int offset;
+  unsigned int line_number;
+};
+
 struct ExternalRangeNode {
   uintptr_t start;
   uintptr_t end;
   char * name;
+  char * source_file_name;
+  unsigned int line_number_size;
+  ExternalLineNumberInfo * line_number_table;
 };
 
 typedef TAU_HASH_MAP<uintptr_t, ExternalRangeNode*> ExternalRangeMap;
@@ -982,7 +990,7 @@ static bool is_any_external_range_registered(bool set) {
 }
 
 // Check if an address is in an external range
-static char * lookup_external_range(uintptr_t addr) {
+ExternalRangeNode * lookup_external_range(uintptr_t addr) {
   static thread_local ExternalRangeMap * local_map = new ExternalRangeMap;
 
   if(!is_any_external_range_registered(false)) {
@@ -995,7 +1003,7 @@ static char * lookup_external_range(uintptr_t addr) {
   if(it != local_map->end()) {
     ExternalRangeNode * node = it->second;
     if(addr >= node->start && addr <= node->end) {
-      return node->name;
+      return node;
     }
   } else {
     // Otherwise, look up in global map
@@ -1006,19 +1014,22 @@ static char * lookup_external_range(uintptr_t addr) {
       if(addr >= node->start && addr <= node->end) {
         // If match, store in local cache and return
         local_map->emplace(addr, node);
-        return node->name;
+        return node;
       }
     }
   }
   return NULL;
 }
 
-void Tau_sampling_register_external_range(uintptr_t start, uintptr_t end, char * funcname) {
+void Tau_sampling_register_external_range(uintptr_t start, uintptr_t end, char * funcname, char * filename, unsigned int line_number_size, unsigned int * line_number_table) {
   is_any_external_range_registered(true);
   ExternalRangeNode * node = new ExternalRangeNode;
   node->start = start;
   node->end = end;
   node->name = funcname;
+  node->source_file_name = filename;
+  node->line_number_size = line_number_size;
+  node->line_number_table = NULL;
   std::lock_guard<std::mutex> guard(TheExternalRangeMapMutex());
   TheExternalRangeMap().emplace(start, node);
 }                                                              
@@ -1079,12 +1090,16 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       }
       if(!node->resolved) {
         if(is_any_external_range_registered(false)) {
-            char * external_name = lookup_external_range(addr);  
-            if(external_name != NULL) {
+            ExternalRangeNode * external_range = lookup_external_range(addr);  
+            if(external_range != NULL) {
                 node->resolved = true;
                 node->info.probeAddr = addr;
-                node->info.filename = ""; // TODO handle external filenames ~nchaimov
-                node->info.funcname = strdup(external_name);
+                if(external_range->source_file_name != NULL) {
+                  node->info.filename = strdup(external_range->source_file_name);
+                } else {
+                  node->info.filename = "";
+                }
+                node->info.funcname = strdup(external_range->name);
                 node->info.lineno = 0; // TODO handle external line number ~nchaimov
             }
         }
