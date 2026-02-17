@@ -158,7 +158,9 @@ void Tau_sampling_unwind(int tid, Profiler *profiler,
   data.addrs = &pcStack[1];
   data.index = 0;
   data.max = TauEnv_get_ebs_unwind_depth();
-  if (data.max == 0) data.max = INT_MAX; //allow for "unlimited"
+  if (data.max == 0 || data.max > TAU_SAMP_NUM_ADDRESSES) {
+    data.max = TAU_SAMP_NUM_ADDRESSES;
+  }
   data.pc = (uintptr_t)pc;
   data.profiler = profiler->address;
   data.foundpc = false;

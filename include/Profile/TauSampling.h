@@ -124,7 +124,9 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc, void *context);
 
 #endif /* TAU_CRAYXMT */
 
+#ifndef TAU_SAMP_NUM_ADDRESSES
 #define TAU_SAMP_NUM_ADDRESSES 10
+#endif /* TAU_SAMP_NUM_ADDRESSES */
 
 /* The trace for this node, mulithreaded execution currently not supported */
 #ifdef __cplusplus

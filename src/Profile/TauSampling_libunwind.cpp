@@ -156,6 +156,9 @@ void Tau_sampling_unwind(int tid, Profiler *profiler,
 
   int unwindDepth = 1; // We need to include the PC in unwind depth calculations
   int depthCutoff = TauEnv_get_ebs_unwind_depth();
+  if(depthCutoff == 0 || depthCutoff > TAU_SAMP_NUM_ADDRESSES) {
+    depthCutoff = TAU_SAMP_NUM_ADDRESSES;
+  }
 
   int index = 1;
   pcStack[index++] = (unsigned long)pc;
