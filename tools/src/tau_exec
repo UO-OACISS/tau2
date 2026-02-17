@@ -1527,8 +1527,12 @@ else
       if [ $python_launch_module = "true" ] ; then
           python_gdb_cmd="$python_interpreter $py_interp_args -m ${python_module_name} -m $python_m_arg"
       else
-          python_gdb_cmd="$dryrun $python_interpreter $py_interp_args -m ${python_module_name}"
+          python_gdb_cmd="$python_interpreter $py_interp_args -m ${python_module_name}"
       fi
+    fi
+    julia_gdb_cmd=""
+    if [ $julia_wrapper = "true" ] ; then
+      julia_gdb_cmd="julia"
     fi
     envcmd="set env"
     if [ $apple = 1 ]; then
@@ -1564,12 +1568,21 @@ else
         echo "set env PYTHONPATH=$PYTHONPATH" >> .gdb_commands
       fi
     fi
+    if [ $julia_wrapper = "true" ] ; then
+      echo "set env JULIA_LOAD_PATH=\"$BASEDIR/lib/$theBinding:$JULIA_LOAD_PATH\"" >> .gdb_commands
+      echo "set env ENABLE_JITPROFILING=1" >> .gdb_commands
+      echo "set env INTEL_JIT_BACKWARD_COMPATIBILITY=1" >> .gdb_commands
+      echo "set env TAU_JULIA_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX" >> .gdb_commands
+    fi
     # If Python is not used ${python_gdb_cmd} is the empty string
     # If Python is used, ${python_gdb_cmd} is the command to use the TAU python wrapper.
+    if [ "x$dryrun" = "xecho" ] ; then
+      cat ./.gdb_commands
+    fi
     if [ $apple = 1 ]; then
-      lldb -s .gdb_commands -- ${python_gdb_cmd} "$@"
+      $dryrun lldb -s .gdb_commands -- ${python_gdb_cmd} ${julia_gdb_cmd} "$@"
     else
-      gdb -x .gdb_commands --args ${python_gdb_cmd} "$@"
+      $dryrun gdb -x .gdb_commands --args ${python_gdb_cmd} ${julia_gdb_cmd} "$@"
     fi
     rm -f ./.gdb_commands
     exit 0;
