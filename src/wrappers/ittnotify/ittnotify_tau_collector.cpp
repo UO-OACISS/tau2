@@ -330,9 +330,14 @@ static void jit_debug_print(iJIT_JVM_EVENT event_type, void *EventSpecificData) 
         fprintf(stderr, "method_name=%s ", method_load_data->method_name);
         fprintf(stderr, "method_load_address=%p ", method_load_data->method_load_address);
         fprintf(stderr, "method_size=%u ", method_load_data->method_size);
-        fprintf(stderr, "line_number_size=%u n", method_load_data->line_number_size);
         fprintf(stderr, "class_file_name=%s ", method_load_data->class_file_name);
         fprintf(stderr, "source_file_name=%s\n", method_load_data->source_file_name);
+        fprintf(stderr, "line_number_size=%u n", method_load_data->line_number_size);
+        fprintf(stderr, "line_number_table={");
+        for(unsigned int line = 0; line < method_load_data->line_number_size ; ++line) {
+            fprintf(stderr, "{%u,%u}", method_load_data->line_number_table[line].Offset, method_load_data->line_number_table[line].LineNumber);
+        }
+        fprintf(stderr, "}\n");
     }
 }
 #endif
@@ -352,10 +357,23 @@ ITT_EXTERN_C int JITAPI NotifyEvent(iJIT_JVM_EVENT event_type, void *EventSpecif
         uintptr_t end = start + ((uintptr_t) method_load_data->method_size);
         char * name = strdup(method_load_data->method_name);
         char * filename = method_load_data->source_file_name ? strdup(method_load_data->source_file_name) : NULL;
+        unsigned int line_number_size = method_load_data->line_number_size;
+        unsigned int * line_number_table = NULL;
+        if(line_number_size > 0) {
+            line_number_table = (unsigned int *)malloc(2*line_number_size*sizeof(unsigned int));
+            size_t table_offset = 0;
+            for(unsigned int line = 0; line < line_number_size; ++line) {
+                line_number_table[table_offset++] = method_load_data->line_number_table[line].Offset;
+                line_number_table[table_offset++] = method_load_data->line_number_table[line].LineNumber;
+            }
+        }
 #ifdef TAU_DEBUG_ITTNOTIFY
         fprintf(stderr, "Registering range 0x%" PRIxPTR " to 0x%" PRIxPTR " with name %s, filename %s\n", start, end, name, filename);
 #endif
-        Tau_sampling_register_external_range(start, end, name, filename, 0, NULL);
+        Tau_sampling_register_external_range(start, end, name, filename, line_number_size, line_number_table);
+        if(line_number_table != NULL) {
+            free(line_number_table);
+        }
     }
 
     return 0;

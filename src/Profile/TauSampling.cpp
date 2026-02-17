@@ -1029,7 +1029,16 @@ void Tau_sampling_register_external_range(uintptr_t start, uintptr_t end, char *
   node->name = funcname;
   node->source_file_name = filename;
   node->line_number_size = line_number_size;
-  node->line_number_table = NULL;
+  if(line_number_size > 0) {
+    size_t table_offset = 0;
+    node->line_number_table = (ExternalLineNumberInfo *)malloc(line_number_size*sizeof(ExternalLineNumberInfo));
+    for(unsigned int line_entry = 0; line_entry < line_number_size; line_entry++) {
+        node->line_number_table[line_entry].offset = line_number_table[table_offset++];
+        node->line_number_table[line_entry].line_number = line_number_table[table_offset++];
+    }                         
+  } else {
+    node->line_number_table = NULL;
+  }
   std::lock_guard<std::mutex> guard(TheExternalRangeMapMutex());
   TheExternalRangeMap().emplace(start, node);
 }                                                              
@@ -1100,7 +1109,15 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
                   node->info.filename = "";
                 }
                 node->info.funcname = strdup(external_range->name);
-                node->info.lineno = 0; // TODO handle external line number ~nchaimov
+                node->info.lineno = 0;
+                for(unsigned int line_entry = 0; line_entry < external_range->line_number_size; ++line_entry) {
+                  const ExternalLineNumberInfo & line_info = external_range->line_number_table[line_entry];
+                  uintptr_t candidate_addr = external_range->start + line_info.offset;
+                  if(candidate_addr > addr) {
+                    break;
+                  }
+                  node->info.lineno = line_info.line_number;
+                }
             }
         }
       }
