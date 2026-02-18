@@ -1013,8 +1013,10 @@ void TauTracePerfettoMsg(int send_or_recv, int type, int other_id, int length,
     int src_rank = (send_or_recv == TAU_MESSAGE_SEND) ? my_rank : other_id;
     int dst_rank = (send_or_recv == TAU_MESSAGE_SEND) ? other_id : my_rank;
     
-    // Use node_id as communicator parameter for proper flow ID generation
-    uint64_t flow_id = compute_flow_id(src_rank, dst_rank, type, node_id);
+    // Flow ID must be identical on sender and receiver.  Use 0 for the
+    // communicator component because node_id (= local rank) differs
+    // between the two sides, which would produce mismatched IDs.
+    uint64_t flow_id = compute_flow_id(src_rank, dst_rank, type, 0);
     int t = RtsLayer::myThread();
 
     uint64_t actual_ts_us = use_ts ? ts_us : TauTraceGetTimeStamp(t);
@@ -1210,7 +1212,7 @@ static bool skip_field(const uint8_t* data, size_t len, size_t* pos, int wire_ty
  * When new_thread_name is non-null, replaces field 5 (thread_name)
  * in ThreadDescriptor.  The Perfetto UI displays thread tracks as
  * "{thread_name} {tid}".
- * PIDs are preserved as-is (real OS PIDs from the originating rank).
+ * Numeric PIDs/TIDs are preserved as-is (real OS values, not rewritten).
  * Returns a new submessage with modifications applied. */
 static std::vector<uint8_t> rewrite_pid_in_submessage(
         const uint8_t* data, size_t len,
@@ -1421,9 +1423,6 @@ struct PacketRewriteInfo {
     bool is_descriptor;
     bool is_process_desc;
     uint64_t descriptor_uuid;   // TrackDescriptor.uuid, 0 if not a descriptor
-    int event_type;             // TrackEvent type: 0=none, 1=BEGIN, 2=END, etc.
-    uint64_t track_uuid;        // TrackEvent.track_uuid, 0 if none
-    uint64_t seq_id;            // rewritten trusted_packet_sequence_id
 };
 
 /* Rewrite a TracePacket during merge, extracting all metadata needed
@@ -1436,8 +1435,7 @@ struct PacketRewriteInfo {
  *   4. Rewrite TrackDescriptor (field 60) names/PIDs.
  *   5. Set descriptor timestamps to rank_index+1 for deterministic
  *      ordering (eliminates separate packet_rewrite_timestamp call).
- *   6. Extract TrackEvent type/track_uuid (field 11) for Phase 1b.
- *   7. Extract TrackDescriptor uuid and ProcessDescriptor presence.
+ *   6. Extract TrackDescriptor uuid and ProcessDescriptor presence.
  *
  * Returns PacketRewriteInfo with the rewritten packet and all metadata.
  * An empty data vector signals the packet should be dropped.
@@ -1520,34 +1518,24 @@ static PacketRewriteInfo rewrite_packet(
             uint8_t vbuf[10];
             int vlen = encode_varint(new_seq, vbuf);
             new_payload.insert(new_payload.end(), vbuf, vbuf + vlen);
-            result.seq_id = new_seq;
             seq_written = true;
         } else if (field_number == 11 && wire_type == 2) {
-            // TrackEvent — copy as-is, extract type and track_uuid
+            // TrackEvent — copy verbatim (no per-event metadata needed)
             uint64_t te_len = decode_varint(packet_data, packet_len, &pos);
             size_t te_end = pos + (size_t)te_len;
             if (te_end > packet_len) break;
-            // Peek inside TrackEvent for type (field 9) and track_uuid (field 11)
-            size_t q = pos;
-            while (q < te_end) {
-                uint64_t t2 = decode_varint(packet_data, te_end, &q);
-                uint32_t fn2 = (uint32_t)(t2 >> 3);
-                int wt2 = (int)(t2 & 0x07);
-                if (fn2 == 9 && wt2 == 0) {
-                    result.event_type = (int)decode_varint(packet_data, te_end, &q);
-                } else if (fn2 == 11 && wt2 == 0) {
-                    result.track_uuid = decode_varint(packet_data, te_end, &q);
-                } else {
-                    if (!skip_field(packet_data, te_end, &q, wt2)) break;
-                }
-            }
-            // Copy entire field verbatim (tag + length + data)
             new_payload.insert(new_payload.end(),
                                packet_data + field_start,
                                packet_data + te_end);
             pos = te_end;
         } else if (field_number == 13 && result.is_descriptor) {
-            // sequence_flags — strip from descriptor packets
+            // sequence_flags — strip from descriptor packets.
+            // Descriptors are re-sorted to appear first in the merged
+            // output.  Keeping SEQ_INCREMENTAL_STATE_CLEARED on them
+            // causes the trace processor to reset incremental state at
+            // the descriptor's synthetic timestamp, breaking track
+            // association for subsequent events before the next SDK
+            // flush re-establishes it.  Event packets keep their flags.
             if (!skip_field(packet_data, packet_len, &pos, wire_type)) break;
         } else if (field_number == 60 && wire_type == 2) {
             // TrackDescriptor — rewrite names/PIDs, extract uuid
@@ -1592,7 +1580,6 @@ static PacketRewriteInfo rewrite_packet(
         uint8_t vbuf[10];
         int vlen = encode_varint(injected_seq, vbuf);
         new_payload.insert(new_payload.end(), vbuf, vbuf + vlen);
-        result.seq_id = injected_seq;
     }
 
     // Inject timestamp for descriptor packets that had no field 8
@@ -1624,9 +1611,6 @@ struct MergePacket {
     int rank;
     bool is_descriptor;    // Track/process descriptors go first
     bool is_process_desc;  // Process descs must come before thread descs
-    int event_type;        // TrackEvent type: 0=none, 1=BEGIN, 2=END, etc.
-    uint64_t track_uuid;   // TrackEvent.track_uuid, 0 if none
-    uint64_t seq_id;       // Rewritten trusted_packet_sequence_id
     uint64_t descriptor_uuid; // TrackDescriptor.uuid, 0 if not a descriptor
 };
 
@@ -1689,9 +1673,6 @@ static bool parse_rank_file_for_merge(
             mp.rank = rank_index;
             mp.is_descriptor = true;
             mp.is_process_desc = false;
-            mp.event_type = 0;
-            mp.track_uuid = 0;
-            mp.seq_id = 0;
             mp.descriptor_uuid = 0;
             out_packets.push_back(std::move(mp));
             continue;
@@ -1721,9 +1702,6 @@ static bool parse_rank_file_for_merge(
                 mp.rank = rank_index;
                 mp.is_descriptor = info.is_descriptor;
                 mp.is_process_desc = info.is_process_desc;
-                mp.event_type = info.event_type;
-                mp.track_uuid = info.track_uuid;
-                mp.seq_id = info.seq_id;
                 mp.descriptor_uuid = info.descriptor_uuid;
 
                 out_packets.push_back(std::move(mp));
@@ -1737,9 +1715,6 @@ static bool parse_rank_file_for_merge(
             mp.rank = rank_index;
             mp.is_descriptor = true;
             mp.is_process_desc = false;
-            mp.event_type = 0;
-            mp.track_uuid = 0;
-            mp.seq_id = 0;
             mp.descriptor_uuid = 0;
             out_packets.push_back(std::move(mp));
         }
@@ -1818,151 +1793,14 @@ static void TauPerfettoMergeAllRanks(const char* dir, int num_ranks) {
            all_packets.size(), files_merged_count);
     fflush(stdout);
 
-    // Map of track_uuid -> seq_id, populated by Phase 1b for use in
-    // Phase 2 padding.  Ensures padding events use the same
-    // trusted_packet_sequence_id as real events on each track.
-    std::unordered_map<uint64_t, uint64_t> track_seq_ids;
-
     // Count event packets (non-descriptor, non-empty) per rank for
     // adaptive padding in Phase 2.
     std::vector<int> rank_event_counts(num_ranks, 0);
-
-    // ---- Phase 1b: Detect and repair orphan BEGIN/END events ----
-    // The Perfetto SDK's ring buffer can drop events when the
-    // buffer fills between flushes, creating orphan BEGINs (no
-    // matching END) or orphan ENDs (no matching BEGIN).
-    // This single O(n) pass detects and repairs imbalances:
-    //   - Orphan ENDs are removed (their BEGIN was lost)
-    //   - Orphan BEGINs get a synthetic closing END at the last
-    //     known timestamp so the UI renders them correctly
-    // A warning is printed directing the user to increase
-    // TAU_PERFETTO_BUFFER_SIZE or decrease TAU_PERFETTO_FLUSH_PERIOD.
-    {
-        struct TrackState {
-            int depth = 0;
-            uint64_t last_ts = 0;
-            uint64_t track_uuid = 0;
-            int rank = -1;
-            uint64_t seq_id = 0;  // seq_id of real events on this track
-        };
-        std::unordered_map<uint64_t, TrackState> track_depths;
-        int orphan_ends_removed = 0;
-
-        for (size_t i = 0; i < all_packets.size(); ++i) {
-            MergePacket& mp = all_packets[i];
-            if (mp.is_descriptor || mp.data.empty()) continue;
-
-            // Count all event packets per rank for adaptive padding
-            if (mp.rank >= 0 && mp.rank < num_ranks)
-                rank_event_counts[mp.rank]++;
-
-            int etype = mp.event_type;
-            uint64_t track_uuid = mp.track_uuid;
-            if (etype != 1 && etype != 2) continue;  // Only BEGIN/END
-
-            uint64_t key = (uint64_t)mp.rank * 0x100000001ULL + track_uuid;
-            TrackState& ts = track_depths[key];
-            if (ts.rank < 0) {
-                ts.rank = mp.rank;
-                ts.track_uuid = track_uuid;
-            }
-            // Record the seq_id of real events for this track
-            if (ts.seq_id == 0 && mp.seq_id != 0)
-                ts.seq_id = mp.seq_id;
-
-            if (etype == 1) {  // BEGIN
-                ts.depth++;
-                ts.last_ts = mp.timestamp;
-            } else {  // END
-                if (ts.depth <= 0) {
-                    // Orphan END — its matching BEGIN was lost.  Remove it.
-                    mp.data.clear();
-                    orphan_ends_removed++;
-                } else {
-                    ts.depth--;
-                    ts.last_ts = mp.timestamp;
-                }
-            }
-        }
-
-        // Add synthetic closing ENDs for unclosed BEGINs
-        int orphan_begins_closed = 0;
-        for (auto& kv : track_depths) {
-            TrackState& ts = kv.second;
-            while (ts.depth > 0) {
-                uint64_t close_ts = ts.last_ts + 1;
-                // Use the same seq_id as real events on this track
-                uint64_t seq_id = ts.seq_id ? ts.seq_id
-                    : (uint64_t)(ts.rank + 1) * SEQ_ID_STRIDE;
-
-                std::vector<uint8_t> te;
-                uint8_t buf[10]; int n;
-                n = encode_varint((9 << 3) | 0, buf);
-                te.insert(te.end(), buf, buf + n);
-                n = encode_varint(2, buf);  // TYPE_SLICE_END
-                te.insert(te.end(), buf, buf + n);
-                n = encode_varint((11 << 3) | 0, buf);
-                te.insert(te.end(), buf, buf + n);
-                n = encode_varint(ts.track_uuid, buf);
-                te.insert(te.end(), buf, buf + n);
-
-                std::vector<uint8_t> payload;
-                n = encode_varint((8 << 3) | 0, buf);
-                payload.insert(payload.end(), buf, buf + n);
-                n = encode_varint(close_ts, buf);
-                payload.insert(payload.end(), buf, buf + n);
-                n = encode_varint((10 << 3) | 0, buf);
-                payload.insert(payload.end(), buf, buf + n);
-                n = encode_varint(seq_id, buf);
-                payload.insert(payload.end(), buf, buf + n);
-                n = encode_varint((11 << 3) | 2, buf);
-                payload.insert(payload.end(), buf, buf + n);
-                n = encode_varint(te.size(), buf);
-                payload.insert(payload.end(), buf, buf + n);
-                payload.insert(payload.end(), te.begin(), te.end());
-
-                std::vector<uint8_t> pkt;
-                pkt.push_back(0x0A);  // field 1, wire type 2
-                n = encode_varint(payload.size(), buf);
-                pkt.insert(pkt.end(), buf, buf + n);
-                pkt.insert(pkt.end(), payload.begin(), payload.end());
-
-                MergePacket mp;
-                mp.data = std::move(pkt);
-                mp.timestamp = close_ts;
-                mp.rank = ts.rank;
-                mp.is_descriptor = false;
-                mp.is_process_desc = false;
-                mp.event_type = 2;  // END
-                mp.track_uuid = ts.track_uuid;
-                mp.seq_id = seq_id;
-                mp.descriptor_uuid = 0;
-                all_packets.push_back(std::move(mp));
-
-                ts.depth--;
-                ts.last_ts = close_ts;
-                orphan_begins_closed++;
-            }
-        }
-
-        if (orphan_ends_removed > 0 || orphan_begins_closed > 0) {
-            fprintf(stderr,
-                "TAU: Perfetto WARNING: Detected event loss in trace data — "
-                "%d orphan END(s) removed, %d synthetic closing END(s) added.\n"
-                "     This is caused by the Perfetto SDK ring buffer dropping events.\n"
-                "     To prevent event loss, increase TAU_PERFETTO_BUFFER_SIZE (current: %dKB)\n"
-                "     or decrease TAU_PERFETTO_FLUSH_PERIOD (current: %dms).\n",
-                orphan_ends_removed, orphan_begins_closed,
-                TauEnv_get_perfetto_buffer_size(), TauEnv_get_perfetto_flush_period());
-            fflush(stderr);
-        }
-
-        // Export track_uuid -> seq_id map for Phase 2 padding
-        for (const auto& kv : track_depths) {
-            const TrackState& ts = kv.second;
-            if (ts.seq_id != 0 && ts.track_uuid != 0)
-                track_seq_ids[ts.track_uuid] = ts.seq_id;
-        }
+    for (size_t i = 0; i < all_packets.size(); ++i) {
+        const MergePacket& mp = all_packets[i];
+        if (!mp.is_descriptor && !mp.data.empty() &&
+            mp.rank >= 0 && mp.rank < num_ranks)
+            rank_event_counts[mp.rank]++;
     }
 
     // ---- Phase 2: Padding for deterministic process ordering ----
@@ -2008,11 +1846,9 @@ static void TauPerfettoMergeAllRanks(const char* dir, int num_ranks) {
             if (uuid_it == rank_thread_uuids.end()) continue;
             uint64_t track_uuid = uuid_it->second;
 
-            // Use the same seq_id as real events on this track
-            // (populated by Phase 1b), falling back to the base offset.
+            // Rank-unique seq_id for padding; BEGIN packets include
+            // SEQ_INCREMENTAL_STATE_CLEARED so any valid id works.
             uint64_t pad_seq_id = (uint64_t)(r + 1) * SEQ_ID_STRIDE;
-            auto seq_it = track_seq_ids.find(track_uuid);
-            if (seq_it != track_seq_ids.end()) pad_seq_id = seq_it->second;
 
             for (int p = 0; p < pad_count; ++p) {
                 // Use stride of 2 so BEGIN (even) sorts before END (odd)
@@ -2078,9 +1914,6 @@ static void TauPerfettoMergeAllRanks(const char* dir, int num_ranks) {
                     mp.rank = r;
                     mp.is_descriptor = false;
                     mp.is_process_desc = false;
-                    mp.event_type = 1;
-                    mp.track_uuid = track_uuid;
-                    mp.seq_id = pad_seq_id;
                     mp.descriptor_uuid = 0;
                     all_packets.push_back(std::move(mp));
                 }
@@ -2125,9 +1958,6 @@ static void TauPerfettoMergeAllRanks(const char* dir, int num_ranks) {
                     mp.rank = r;
                     mp.is_descriptor = false;
                     mp.is_process_desc = false;
-                    mp.event_type = 2;
-                    mp.track_uuid = track_uuid;
-                    mp.seq_id = pad_seq_id;
                     mp.descriptor_uuid = 0;
                     all_packets.push_back(std::move(mp));
                 }
@@ -2150,7 +1980,7 @@ static void TauPerfettoMergeAllRanks(const char* dir, int num_ranks) {
     // Process descriptors MUST appear before thread descriptors for the
     // same rank so the trace processor creates the process entry first.
     //
-    // Remove packets with empty data (orphan events cleared in Phase 1b).
+    // Remove any packets with empty data (safety — none expected).
     all_packets.erase(
         std::remove_if(all_packets.begin(), all_packets.end(),
                        [](const MergePacket& mp) { return mp.data.empty(); }),
