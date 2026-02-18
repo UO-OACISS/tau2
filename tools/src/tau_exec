@@ -1219,6 +1219,9 @@ if [ $track_cupti = "true" ] ; then
   if [ $python_wrapper = "true" ] ; then
     export TAU_CUPTI_API=both
   fi
+  if [ $julia_wrapper = "true" ] ; then
+    export TAU_CUPTI_API=both
+  fi
 fi
 
 if [ $track_cupti_pc = "true" ] ; then
