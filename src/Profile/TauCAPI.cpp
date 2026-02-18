@@ -1165,15 +1165,12 @@ extern "C" void Tau_exit(const char * msg) {
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, "*", &plugin_data);
   }
 
-#if defined(TAU_OPENMP)
+#if defined(TAU_CUPTI) || defined(TAU_ENABLE_ROCM)
+  Tau_profile_exit_all_threads();
+#elif defined(TAU_OPENMP)
   Tau_profile_exit_most_threads();
-#elif defined(TAU_CUDA)
-	Tau_profile_exit_all_threads();
-#elif  defined(TAU_ENABLE_ROCM )
-	Tau_profile_exit_all_threads();
-
 #else
-Tau_profile_exit();
+  Tau_profile_exit();
 #endif
 
 #ifdef TAUKTAU
