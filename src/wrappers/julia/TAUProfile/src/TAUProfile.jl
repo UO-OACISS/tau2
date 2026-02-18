@@ -1,6 +1,9 @@
 module TAUProfile
 
-export tau_start, tau_stop, tau_entry_hook, tau_exit_hook, tau_exception_hook, tau_rewrite_function, @tau, @tau_func, @tau_rewrite
+export tau_start, tau_stop, tau_entry_hook, tau_exit_hook, tau_exception_hook,
+       tau_rewrite_function, @tau, @tau_func, @tau_rewrite,
+       tau_exclude_module, tau_exclude_function, tau_exclude_function_pattern,
+       tau_reset_exclusions
 
 using IRTools: @dynamo, IR, xcall, arguments, recurse!, blocks, branches, isreturn,
                returnvalue, push!, block!, branch!, argument!, var, return!, Variable, Branch, insertafter!
@@ -205,15 +208,61 @@ const TAU_EXCLUDED_FUNCTIONS = Set([
     typeof(tau_exception_hook),
     typeof(println),
     typeof(print),
-    typeof(write), 
+    typeof(write),
     typeof(join),
 ])
 
+# User-configurable additional exclusions (added via tau_exclude_* functions)
+const TAU_USER_EXCLUDED_FUNCTIONS = Set{Any}()
+const TAU_USER_EXCLUDED_MODULES = Set{String}()
+const TAU_USER_EXCLUDED_FUNCTION_PATTERNS = Set{String}()
+
+"""
+    tau_exclude_module(pattern::String)
+
+Add a module name pattern to exclude from `@tau_rewrite` instrumentation.
+Any function whose parent module name contains `pattern` will be skipped.
+"""
+function tau_exclude_module(pattern::String)
+    push!(TAU_USER_EXCLUDED_MODULES, pattern)
+end
+
+"""
+    tau_exclude_function(f)
+
+Exclude a specific function from `@tau_rewrite` instrumentation.
+Accepts a function reference (e.g., `tau_exclude_function(MyModule.my_func)`).
+"""
+function tau_exclude_function(f)
+    push!(TAU_USER_EXCLUDED_FUNCTIONS, typeof(f))
+end
+
+"""
+    tau_exclude_function_pattern(pattern::String)
+
+Exclude functions whose type string representation contains `pattern`
+from `@tau_rewrite` instrumentation.
+"""
+function tau_exclude_function_pattern(pattern::String)
+    push!(TAU_USER_EXCLUDED_FUNCTION_PATTERNS, pattern)
+end
+
+"""
+    tau_reset_exclusions()
+
+Clear all user-defined exclusions added via `tau_exclude_*` functions.
+The default exclusions (TAU internal functions, Base.Threads, locks, etc.) are unaffected.
+"""
+function tau_reset_exclusions()
+    empty!(TAU_USER_EXCLUDED_FUNCTIONS)
+    empty!(TAU_USER_EXCLUDED_MODULES)
+    empty!(TAU_USER_EXCLUDED_FUNCTION_PATTERNS)
+end
 
 
 @dynamo function tau_rewrite_function(m...)
   # Skip instrumentation for excluded functions
-  if length(m) > 0 && m[1] in TAU_EXCLUDED_FUNCTIONS
+  if length(m) > 0 && (m[1] in TAU_EXCLUDED_FUNCTIONS || m[1] in TAU_USER_EXCLUDED_FUNCTIONS)
     return
   end
 
@@ -242,6 +291,20 @@ const TAU_EXCLUDED_FUNCTIONS = Set([
           return
         end
       end
+
+      # User-defined module exclusions
+      for pattern in TAU_USER_EXCLUDED_MODULES
+        if occursin(pattern, modname)
+          return
+        end
+      end
+
+      # User-defined function pattern exclusions
+      for pattern in TAU_USER_EXCLUDED_FUNCTION_PATTERNS
+        if occursin(pattern, ftype_str)
+          return
+        end
+      end
     catch e
       # Skip instrumentation if we can't identify the module
       return
@@ -257,6 +320,7 @@ const TAU_EXCLUDED_FUNCTIONS = Set([
     nothing
   end
   ir == nothing && return
+
   recurse!(ir) # Recurse into functions called by this function
 
   f = arguments(ir)[1]
@@ -301,8 +365,8 @@ const TAU_EXCLUDED_FUNCTIONS = Set([
         new_blk = block!(ir, new_block_id)
 
         push!(new_blk, Expr(:leave, token))
-        logged_ret = push!(new_blk, xcall(Main, :tau_exit_hook, f, retval))
-        return!(new_blk, logged_ret)
+        instrumented_ret = push!(new_blk, xcall(Main, :tau_exit_hook, f, retval))
+        return!(new_blk, instrumented_ret)
 
         branches(block)[br_idx] = Branch(nothing, new_block_id, [])
       end
