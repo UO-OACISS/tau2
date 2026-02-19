@@ -133,6 +133,7 @@ struct PerfettoThreadData {
 struct PerfettoCounterInfo {
     bool monotonic = false;
     bool defined = false;
+    bool skip = false;  // true for events redundant with Perfetto flow events
     std::string name;
 };
 
@@ -862,11 +863,19 @@ static void emit_user_event(uint64_t event_id, x_int64 raw_value,
             ci.monotonic = mono;
             ci.defined = true;
             ci.name = ev_name;
+            // The point-to-point message-size user events are redundant
+            // with the Perfetto flow events emitted by emit_mpi_message,
+            // which already carry bytes, peer rank, and flow arrows.
+            // Suppress them to avoid overlapping instant markers.
+            ci.skip = (ev_name == "Message size sent to all nodes" ||
+                       ev_name == "Message size received from all nodes");
             g_perfetto.counter_map[event_id] = ci;
         } else {
             ci = it->second;
         }
     }
+
+    if (ci.skip) return;
 
     // Emit monotonic counters as global tracks, others as instant events
     if (ci.monotonic) {
