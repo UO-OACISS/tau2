@@ -9899,10 +9899,8 @@ if [ $mpi = yes -a $mpilibargs_added_to_fixmakeargs = no ] ; then
     fi
 fi
 
-fi #mpi=yes
 
 $echo "Checking for MPI-3 interface ... ${nnl}"
-$mpicompiler tools/src/tests/mpiversion.c $mpiwarnings $orig_useropt $mpi_include
 if $mpicompiler tools/src/tests/mpiversion.c $mpiwarnings $orig_useropt $mpi_include -o test_mpi_version 1> /dev/null 2>&1 ; then
     mpi_ver=$(./test_mpi_version)
     if [ "$mpi_ver" -ge 3 ]; then
@@ -9916,6 +9914,9 @@ else
     echo "no"
 fi
 rm test_mpi_version
+
+
+fi #mpi=yes
 
 
 #####################################################################
