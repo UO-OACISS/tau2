@@ -1,14 +1,11 @@
 module TAUProfile
 
-export tau_start, tau_stop, tau_entry_hook, tau_exit_hook, tau_exception_hook,
-       tau_rewrite_function, @tau, @tau_func, @tau_rewrite,
-       tau_exclude_module, tau_exclude_function, tau_exclude_function_pattern,
-       tau_reset_exclusions
+export tau_start, tau_stop, @tau, @tau_func, tau_rewrite, @tau_rewrite
 
-using IRTools: @dynamo, IR, xcall, arguments, recurse!, blocks, branches, isreturn,
-               returnvalue, push!, block!, branch!, argument!, var, return!, Variable, Branch, insertafter!
+using Core: SSAValue, ReturnNode, Argument, OpaqueClosure
+using Core.Compiler: IRCode, NewInstruction, insert_node!, compact!
 
-# Global variable to store the library path
+# Path to libTAU.so
 const libTAU = Ref{String}()
 
 """
@@ -29,17 +26,10 @@ function __init__()
         libTAU[] = ""
     else
         libTAU[] = tau_lib_path
-        #@info "TAU library loaded from: $tau_lib_path"
-
-        # Initialize TAU
         init_result = ccall((:Tau_init_initializeTAU, libTAU[]), Cint, ())
-        #if init_result != 0
-        #    @info "TAU initialized successfully (return code: $init_result)"
-        #end
 
         # Create top-level timer
         ccall((:Tau_create_top_level_timer_if_necessary, libTAU[]), Cvoid, ())
-        #@info "TAU top-level timer created"
     end
 end
 
@@ -184,234 +174,394 @@ macro tau_func(func_expr)
     end
 end
 
+############################################################################################
 
-function tau_entry_hook(f, args...)
-    tau_start(string(f))
+# IR Rewriter
+
+
+# ============================================================================
+# Trace hooks — all tracing output funnels through these functions,
+# making it easy to swap println for logging, profiling, etc.
+# ============================================================================
+
+"""
+    _entry_hook(fname::String)
+
+Called at function entry. Override or replace to customize tracing output.
+"""
+function _entry_hook(fname::String)
+    tau_start(fname)
 end
 
-function tau_exit_hook(f, result)
-    tau_stop(string(f))
-    return result
+"""
+    _exit_hook(fname::String)
+
+Called at normal function exit (via ReturnNode).
+"""
+function _exit_hook(fname::String)
+    tau_stop(fname)
 end
 
-function tau_exception_hook(f, exc)
-    tau_stop(string(f))
-    return exc
+"""
+    _exit_hook(fname::String, exception::Bool)
+
+Called at function exit via exception.
+"""
+function _exit_hook(fname::String, exception::Bool)
+    tau_stop(fname)
 end
 
-# Functions to exclude from instrumentation
-const TAU_EXCLUDED_FUNCTIONS = Set([
-    typeof(tau_start),
-    typeof(tau_stop),
-    typeof(tau_entry_hook),
-    typeof(tau_exit_hook),
-    typeof(tau_exception_hook),
-    typeof(println),
-    typeof(print),
-    typeof(write),
-    typeof(join),
+"""
+    LazyRewrittenCall(f)
+
+When recursing downward through function calls, first replace
+calls with calls to the original function, as otherwise we can
+get stuck in an infinite loop when instrumenting recursive functions.
+Target function is replaced with instrumented version when
+returning from recursive instrumentation.
+"""
+mutable struct LazyRewrittenCall
+    target::Any
+end
+(lt::LazyRewrittenCall)(args...) = lt.target(args...)
+
+"""
+    _wrap_for_exceptions(oc, fname::String) -> callable
+
+Wraps OpaqueClosure in try/catch so that we can stop the timer
+when we exit a function via an exception.
+"""
+function _wrap_for_exceptions(oc, fname::String)
+    return (args...) -> begin
+        try
+            return oc(args...)
+        catch
+            _exit_hook(fname, true)
+            rethrow()
+        end
+    end
+end
+
+"""
+    _instrument_ir!(ir::IRCode, fname::String) -> IRCode
+
+Modify `ir` in-place to add entry/exit tracing calls via `_entry_hook`
+and `_exit_hook`. A call to `_entry_hook` is added as the first instruction,
+and every return is instrumented with a call to `_exit_hook`.
+"""
+function _instrument_ir!(ir::IRCode, fname::String)
+    _insert_hook!(ir, :_entry_hook, fname, SSAValue(1))
+
+    # Iterate backwards so insertions don't shift later return positions
+    for i in length(ir.stmts):-1:1
+        if ir.stmts[i][:stmt] isa ReturnNode
+            _insert_hook!(ir, :_exit_hook, fname, SSAValue(i))
+        end
+    end
+
+    return compact!(ir)
+end
+
+"""
+    _insert_hook!(ir::IRCode, hook::Symbol, fname::String, pos::SSAValue)
+
+Insert call to a given symbol into the IR at a given position.
+"""
+function _insert_hook!(ir::IRCode, hook::Symbol, fname::String, pos::SSAValue)
+    call = Expr(:call, GlobalRef(TAUProfile, hook), fname)
+    insert_node!(ir, pos, NewInstruction(call, Nothing), false)
+end
+
+"""
+Cache of already-instrumented functions to avoid re-instrumenting
+the same function multiple times.
+"""
+const REWRITE_CACHE = Dict{Any, Any}()
+
+# Blacklist of functions to not instrument. Avoid printing functions
+# as we might print an error and can't println in a println.
+# Avoid arithmetic operations as instrumentation overhead is high.
+const BLACKLIST = Set{Symbol}([
+    # I/O functions
+    :println, :print, :string, :write, :error,
+    # Our own instrumentation hooks
+    :_entry_hook, :_exit_hook,
+    # Arithmetic and comparison operators
+    Symbol("+"), Symbol("-"), Symbol("*"), Symbol("/"),
+    Symbol("<"), Symbol(">"), Symbol("=="), Symbol("<="), Symbol(">="),
+    Symbol("!="), Symbol("≠"), Symbol("≤"), Symbol("≥"),
+    Symbol("\\"), Symbol("÷"), Symbol("^"), Symbol("%"),
+    Symbol("!"), Symbol("&&"), Symbol("||"), Symbol("~"),
+    Symbol("&"), Symbol("|"), Symbol("⊻"), Symbol("⊼"),
+    Symbol(">>>"), Symbol(">>"), Symbol("<<"), Symbol("="),
+    Symbol("+="), Symbol("-="), Symbol("*="), Symbol("/="),
+    Symbol("\\="), Symbol("÷="), Symbol("%="), Symbol("^="),
+    Symbol("&="), Symbol("|="), Symbol("⊻="), Symbol(">>>="),
+    Symbol(">>="), Symbol("<<="),
+    :isequal, :isfinite, :isinf, :isnan,
+    # Type conversion
+    :convert, :promote, :cconvert, :unsafe_convert,
+    # Array primitives
+    :arrayref, :arrayset, :arraysize,
 ])
 
-# User-configurable additional exclusions (added via tau_exclude_* functions)
-const TAU_USER_EXCLUDED_FUNCTIONS = Set{Any}()
-const TAU_USER_EXCLUDED_MODULES = Set{String}()
-const TAU_USER_EXCLUDED_FUNCTION_PATTERNS = Set{String}()
-
 """
-    tau_exclude_module(pattern::String)
+    _should_rewrite(@nospecialize(f))  
 
-Add a module name pattern to exclude from `@tau_rewrite` instrumentation.
-Any function whose parent module name contains `pattern` will be skipped.
+Check if a function should be rewritten based on the blacklist.
+Also avoid instrumenting Builtins and Intrinsics as they
+don't have code to modify.
 """
-function tau_exclude_module(pattern::String)
-    push!(TAU_USER_EXCLUDED_MODULES, pattern)
+function _should_rewrite(@nospecialize(f))
+    f isa Core.Builtin && return false
+    f isa Core.IntrinsicFunction && return false
+
+    fname = try nameof(f) catch; return false end
+    fname in BLACKLIST && return false
+
+    mod = try parentmodule(f) catch; return false end
+    mod === Core && return false
+
+    return true
 end
 
 """
-    tau_exclude_function(f)
+    _replace_self_argument!(ir::IRCode, f) -> IRCode
 
-Exclude a specific function from `@tau_rewrite` instrumentation.
-Accepts a function reference (e.g., `tau_exclude_function(MyModule.my_func)`).
+Replace all references to `Argument(1)` (the function/self slot) in the IR
+with the literal function value `f` so as to preserve the original argument
+types of the function.
 """
-function tau_exclude_function(f)
-    push!(TAU_USER_EXCLUDED_FUNCTIONS, typeof(f))
-end
-
-"""
-    tau_exclude_function_pattern(pattern::String)
-
-Exclude functions whose type string representation contains `pattern`
-from `@tau_rewrite` instrumentation.
-"""
-function tau_exclude_function_pattern(pattern::String)
-    push!(TAU_USER_EXCLUDED_FUNCTION_PATTERNS, pattern)
-end
-
-"""
-    tau_reset_exclusions()
-
-Clear all user-defined exclusions added via `tau_exclude_*` functions.
-The default exclusions (TAU internal functions, Base.Threads, locks, etc.) are unaffected.
-"""
-function tau_reset_exclusions()
-    empty!(TAU_USER_EXCLUDED_FUNCTIONS)
-    empty!(TAU_USER_EXCLUDED_MODULES)
-    empty!(TAU_USER_EXCLUDED_FUNCTION_PATTERNS)
-end
-
-
-@dynamo function tau_rewrite_function(m...)
-  # Skip instrumentation for excluded functions
-  if length(m) > 0 && (m[1] in TAU_EXCLUDED_FUNCTIONS || m[1] in TAU_USER_EXCLUDED_FUNCTIONS)
-    return
-  end
-
-  # Skip instrumentation for lock modules to prevent deadlocks
-  if length(m) > 0
-    try
-      ftype = m[1]
-      modname = string(parentmodule(ftype))
-      ftype_str = string(ftype)
-
-      # Exclude problematic modules entirely
-      if occursin("Base.Threads", modname) ||
-         occursin("Base.GC", modname) ||
-         occursin("TAUProfile", modname) ||
-         occursin("Core.Intrinsics", modname)
-        return
-      end
-
-      # Exclude problematic patterns in function/module names
-      # Check both the module name and the function type string representation
-      problematic_patterns = ["lock", "Lock", "swap", "Swap", "preserve_handle",
-                              "iolock", "finalizer", "getfield", "setfield",
-                              "setproperty", "getproperty"]
-      for pattern in problematic_patterns
-        if occursin(pattern, ftype_str) || occursin(pattern, modname)
-          return
+function _replace_self_argument!(ir::IRCode, @nospecialize(f))
+    for i in 1:length(ir.stmts)
+        stmt = ir.stmts[i][:stmt]
+        if stmt isa Expr
+            for (j, arg) in enumerate(stmt.args)
+                if arg isa Argument && arg.n == 1
+                    stmt.args[j] = f
+                end
+            end
         end
-      end
-
-      # User-defined module exclusions
-      for pattern in TAU_USER_EXCLUDED_MODULES
-        if occursin(pattern, modname)
-          return
-        end
-      end
-
-      # User-defined function pattern exclusions
-      for pattern in TAU_USER_EXCLUDED_FUNCTION_PATTERNS
-        if occursin(pattern, ftype_str)
-          return
-        end
-      end
-    catch e
-      # Skip instrumentation if we can't identify the module
-      return
     end
-  end
-
-  # Some functions (such as compiler intrinsics) don't have IR 
-  # at all, in which case getting IR for them will fail.
-  # In that case, don't attempt to rewrite.
-  ir = try
-    ir = IR(m...)
-  catch e
-    nothing
-  end
-  ir == nothing && return
-
-  recurse!(ir) # Recurse into functions called by this function
-
-  f = arguments(ir)[1]
-
-  # Instrument entry to function
-  pushfirst!(ir, xcall(Main, :tau_entry_hook, arguments(ir)...))
-
-  # We need to add a block to handle leaving the try/finally block
-  # before each return. To do this, we need to count the number
-  # of returns so that we know how to number the added catch block.
-  num_returns = 0
-  for block in blocks(ir)
-    for branch in branches(block)
-      if isreturn(branch)
-        num_returns += 1
-      end
-    end
-  end
-
-  # Calculate catch block ID
-  # The catch block ID will be: the number of existing blocks,
-  # plus the number of returns (for each of which we have to add a block),
-  # plus one for the catch block itself
-  catch_block_id = length(blocks(ir)) + num_returns + 1
-
-  # Wrap the whole function in a catch/finally so that we can
-  # stop the TAU timer upon exit, no matter how we exit.
-  # This refers to the ID of the block which will be added
-  # at the end of the function.
-  token = pushfirst!(ir, Expr(:enter, catch_block_id))
-  insertafter!(ir, token, Expr(:catch, catch_block_id))
-
-  # Create new blocks for each return.
-  # We have to leave the try/finally context before any return.
-  for (block_idx, block) in enumerate(blocks(ir))
-    brs = branches(block)
-    for (br_idx, branch) in enumerate(brs)
-      if isreturn(branch)
-        retval = returnvalue(branch)
-
-        new_block_id = length(blocks(ir)) + 1
-        new_blk = block!(ir, new_block_id)
-
-        push!(new_blk, Expr(:leave, token))
-        instrumented_ret = push!(new_blk, xcall(Main, :tau_exit_hook, f, retval))
-        return!(new_blk, instrumented_ret)
-
-        branches(block)[br_idx] = Branch(nothing, new_block_id, [])
-      end
-    end
-  end
-
-  # Create catch block at end of function
-  catch_blk = block!(ir, catch_block_id)
-  exc = push!(catch_blk, Expr(:the_exception))
-  push!(catch_blk, xcall(Main, :tau_exception_hook, f, exc))
-  rethrow_result = push!(catch_blk, xcall(:rethrow))
-  push!(catch_blk, Expr(:pop_exception, token))
-  return!(catch_blk, rethrow_result)
-
-  return ir
+    return ir
 end
 
 """
-    @tau(expr)
+    _function_label(f, argtypes::Tuple) -> String
 
-Convenience macro to automatically rewrite the IR of a function call with TAU timing.
-This recurses into all functions called within the expression 
-and inserts TAU instrumentation around each function.
-Invokes tau_rewrite_function on the supplied function.
+For a function `f` with argument types `argtypes`, construct a timer name
+in TAU format: `funcname(arg1type, arg2type, ...) [{file} {line}]`.
+"""            
+function _function_label(@nospecialize(f), @nospecialize(argtypes::Tuple))
+    # Special case for kwcall
+    if f === Core.kwcall && length(argtypes) >= 2
+        target_type = argtypes[2]
+        if isconcretetype(target_type) && target_type <: Function && isdefined(target_type, :instance)
+            target_f = target_type.instance
+            pos_types = argtypes[3:end]
+            name = string(target_f) * "(" * join(string.(pos_types), ", ") * ")"
+            return name
+        end
+    end
 
-# Arguments
-- `expr`: The expression to instrument.
+    fname_str = string(f)
 
-# Example
-```julia
-function add(x, y)
-    return x + y
+    # Special case for kwarg body: transform `#fname#NNN` into `fname`
+    m_kw = match(r"^#(.+)#\d+$", fname_str)
+    if m_kw !== nothing
+        fname_str = m_kw.captures[1]
+    end
+
+    # Default case
+    name = fname_str * "(" * join(string.(argtypes), ", ") * ")"
+
+    # Get file name and line number if available
+    ms = methods(f, Tuple{argtypes...})
+    if length(ms) == 1
+        m = only(ms)
+        file = string(m.file)
+        line = m.line
+        return "$name [{$file} {$line}]"
+    end
+
+    # Otherwise return default without file/line
+    return name
 end
 
-result = @tau_rewrite add(3, 4)
-```
 """
-macro tau_rewrite(expr)
-    if expr.head == :call
-        func = expr.args[1]
-        args = expr.args[2:end]
-        return :(tau_rewrite_function($(esc(func)), $(map(esc, args)...)))
+    _ir_arg_type(ir::IRCode, arg) -> Type
+
+Extract the widened concrete type of an IR argument (Argument, SSAValue, or literal).
+"""
+function _ir_arg_type(ir::IRCode, @nospecialize(arg))
+    if arg isa Argument
+        return Core.Compiler.widenconst(ir.argtypes[arg.n])
+    elseif arg isa SSAValue
+        return Core.Compiler.widenconst(ir.stmts[arg.id][:type])
+    elseif arg isa QuoteNode
+        return typeof(arg.value)
+    elseif arg isa GlobalRef
+        return typeof(getfield(arg.mod, arg.name))
     else
-        error("@tau_rewrite expects a function call expression, got: $expr")
+        return typeof(arg)
     end
+end
+
+"""
+    _resolve_callee(ir::IRCode, callee) -> Union{Function, Nothing}
+
+Try to resolve a call-site callee to a concrete function value.
+
+Handles three cases:
+  - `GlobalRef` — direct module lookup
+  - `Argument` / `SSAValue` — if the IR type is a concrete singleton function
+    type (e.g. `typeof(double)`), extract its `.instance`. This enables tracing
+    of higher-order calls like `f(x)` where `f` is passed as an argument but
+    the IR is specialized for a specific function.
+"""
+function _resolve_callee(ir::IRCode, @nospecialize(callee))
+    if callee isa GlobalRef
+        return try getfield(callee.mod, callee.name) catch; nothing end
+    end
+    if callee isa Argument || callee isa SSAValue
+        T = _ir_arg_type(ir, callee)
+        # Singleton function types have exactly one instance (e.g. typeof(double))
+        if isconcretetype(T) && T <: Function && isdefined(T, :instance)
+            return T.instance
+        end
+    end
+    return nothing
+end
+
+"""
+    tau_rewrite(f, argtypes::Tuple) -> callable
+
+Recursively instrument function `f`. Uses partially-optimized, pre-inlining IR
+(`optimize_until="compact 1"`) so that call sites are still visible, then
+rewrites each rewritable call to use a recursively-rewritten OpaqueClosure.
+"""
+
+const DEFAULT_MAX_DEPTH = 20
+
+function tau_rewrite(@nospecialize(f), @nospecialize(argtypes::Tuple);
+                                   max_depth::Int = DEFAULT_MAX_DEPTH)
+    empty!(REWRITE_CACHE)
+    return _tau_rewrite_recursive(f, argtypes, 0, max_depth)
+end
+
+"""
+    @tau_rewrite f(args...)
+
+Convenience macro: instruments `f` and all its callees with entry/exit
+tracing, then immediately calls the rewritten version with the given arguments.
+
+    @tau_rewrite foo(5.0, -6.0)
+"""
+macro tau_rewrite(call_expr)
+    Meta.isexpr(call_expr, :call) || error("@tau_rewrite expects a function call, got: $call_expr")
+    f = call_expr.args[1]
+    args = call_expr.args[2:end]
+    return quote
+        let _args = ($(esc.(args)...),)
+            _rewritten = tau_rewrite($(esc(f)), map(typeof, _args))
+            _rewritten(_args...)
+        end
+    end
+end
+
+function _tau_rewrite_recursive(@nospecialize(f), @nospecialize(argtypes::Tuple),
+                           depth::Int, max_depth::Int)
+    key = (f, argtypes)
+    haskey(REWRITE_CACHE, key) && return REWRITE_CACHE[key]
+
+    # Get pre-inlining IR ("compact 1") -- calls are still visible as :call with GlobalRef
+    # If we fully optimize the code, some calls will have already been inlined and
+    # we won't be able to instrument them.
+    results = Base.code_ircode(f, argtypes; optimize_until="compact 1")
+    if length(results) != 1
+        error("Expected exactly 1 IRCode result for $f with argument types $argtypes, got $(length(results))")
+    end
+    ir, rettype = results[1]
+
+    fname = _function_label(f, argtypes)
+
+    _replace_self_argument!(ir, f)
+    lazy = LazyRewrittenCall(f)  # initially calls uninstrumented function as fallback
+    REWRITE_CACHE[key] = lazy
+
+    # Walk IR and rewrite target call sites to use instrumented OpaqueClosures
+    if depth < max_depth
+        for i in 1:length(ir.stmts)
+            stmt = ir.stmts[i][:stmt]
+            if stmt isa Expr && stmt.head === :call
+                callee_ref = stmt.args[1]
+                callee_f = _resolve_callee(ir, callee_ref)
+                # If we can't find the callee of the call, give up.
+                callee_f === nothing && continue
+
+                # Special case for instrumenting kwcalls. Allow instrumentation even though
+                # it is in the Core module.
+                if callee_f === Core.kwcall && length(stmt.args) >= 3
+                    kwcall_argtypes = tuple([_ir_arg_type(ir, a) for a in stmt.args[2:end]]...)
+                    rewritten_kwcall = try
+                        _tau_rewrite_recursive(Core.kwcall, kwcall_argtypes, depth + 1, max_depth)
+                    catch ex
+                        @warn "Could not instrument Core.kwcall: $ex"
+                        continue
+                    end
+                    stmt.args[1] = rewritten_kwcall
+                    continue
+                end
+
+                _should_rewrite(callee_f) || continue
+
+                # Determine callee argument types from IR type annotations
+                call_argtypes = tuple([_ir_arg_type(ir, a) for a in stmt.args[2:end]]...)
+                # Skip methods where we can't tell the callee's argtypes
+                ms = try methods(callee_f, Tuple{call_argtypes...}) catch; continue end
+                if length(ms) == 1 && only(ms).sig isa UnionAll
+                    continue
+                end
+                # Recursively rewrite the callee (returns cached entry if already rewritten)
+                rewritten_callee = try
+                    _tau_rewrite_recursive(callee_f, call_argtypes, depth + 1, max_depth)
+                catch ex
+                    @warn "Could not instrument $callee_f: $ex"
+                    continue
+                end
+                stmt.args[1] = rewritten_callee
+            end
+        end
+    end
+
+    # Instrument this method
+    ir = _instrument_ir!(ir, fname)
+    ir.argtypes[1] = Tuple{}
+
+    # Special case for varargs
+    n_ir_args = length(ir.argtypes) - 1   # subtract closure env slot
+    caller_sig = Tuple{argtypes...}
+    oc_sig = Tuple{(Core.Compiler.widenconst.(ir.argtypes[2:end]))...}
+    last_oc_type = n_ir_args > 0 ? Core.Compiler.widenconst(ir.argtypes[end]) : Nothing
+    is_varargs = !(caller_sig <: oc_sig) && last_oc_type <: Tuple
+
+    oc = OpaqueClosure(ir)
+    wrapped = _wrap_for_exceptions(oc, fname)
+
+    # If varargs packing occurred, insert a shim that repacks the separate
+    # caller args into the single tuple the OC expects.
+    if is_varargs
+        n_fixed = n_ir_args - 1
+        wrapped = let w = wrapped, nf = n_fixed
+            (args...) -> w(args[1:nf]..., args[nf+1:end])
+        end
+    end
+
+    # Now that we've returned from the recursion and instrumented this function,
+    # replace calls to this function with calls to the instrumented OpaqueClosure.
+    lazy.target = wrapped
+
+    return lazy
 end
 
 end # module TAUProfile
