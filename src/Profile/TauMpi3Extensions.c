@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <Profile/TauUtil.h>
 #include <Profile/TauEnv.h>
+#include "check_mpi_version.h"
 
 int MPI_Get_library_version ( char *version, int *resultlen )
 {
@@ -781,13 +782,13 @@ int MPI_File_iread_at_all(MPI_File fh, MPI_Offset offset, void* buf,
   return retvalue; 
 }
 
-int PI_File_iwrite_all(MPI_File fh, const void* buf, int count,
+int MPI_File_iwrite_all(MPI_File fh, const void* buf, int count,
     MPI_Datatype datatype, MPI_Request* request)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_iwrite_all()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
-  retvalue = PPI_File_iwrite_all( fh, buf, count, datatype, request ) ; 
+  retvalue = MPI_File_iwrite_all( fh, buf, count, datatype, request ) ; 
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }

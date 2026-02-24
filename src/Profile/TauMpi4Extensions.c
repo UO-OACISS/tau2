@@ -7,8 +7,7 @@
 #include <sys/types.h>
 #include <Profile/TauUtil.h>
 #include <Profile/TauEnv.h>
-
-//https://www.mpi-forum.org/docs/mpi-4.0/mpi40-report.pdf
+#include "check_mpi_version.h"
 
 int MPI_Isendrecv(const void* sendbuf, int sendcount, MPI_Datatype
     sendtype, int dest, int sendtag, void* recvbuf, int recvcount,
@@ -1541,9 +1540,9 @@ int MPI_Reduce_c(const void* sendbuf, void* recvbuf, MPI_Count
     comm)
 {
   int retvalue; 
-  TAU_PROFILE_TIMER(t, "MPI_Irecv_c()", "", TAU_MESSAGE); 
+  TAU_PROFILE_TIMER(t, "MPI_Reduce_c()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
-  retvalue = PMPI_Irecv_c( sendbuf, recvbuf, count, datatype, 
+  retvalue = PMPI_Reduce_c( sendbuf, recvbuf, count, datatype, 
                            op, root, comm ) ; 
   TAU_PROFILE_STOP(t); 
   return retvalue;
@@ -2615,16 +2614,3 @@ int MPI_Win_shared_query_c(MPI_Win win, int rank, MPI_Aint* size,
   TAU_PROFILE_STOP(t); 
   return retvalue;
 }
-
-
-
-
-
-
-
-//https://docs.open-mpi.org/en/main/man-openmpi/man3/MPI_Iscatterv.3.html
-//https://www.mpi-forum.org/docs/mpi-4.0/mpi40-report.pdf
-//https://www.mpi-forum.org/docs/mpi-4.1/mpi41-report/node606.htm
-//MPI_SESSION_
-//MPI_SESSION_{. . . }_ERRHANDLER
-//MPI_SESSION_GET_
