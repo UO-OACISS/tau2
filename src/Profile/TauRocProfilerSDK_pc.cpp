@@ -131,7 +131,7 @@ void Tau_set_initialized_queues_pc(int queue_id, int value) {
   
 void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
 {
-    TAU_VERBOSE("TAU_publish_sdk_sample_event\n");
+    //TAU_VERBOSE("TAU_publish_sdk_sample_event\n");
 
     //Different types of events will appear as different threads in the profile
     //This is to differenciate kernels, API calls and other events
@@ -190,11 +190,13 @@ void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
 
 void TAU_process_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
 {
-  TAU_VERBOSE("TAU_process_sdk_sample_event\n");
+  //TAU_VERBOSE("TAU_process_sdk_sample_event\n");
 
   sample_list_mtx.lock();
-  TauRocmSampleSDKList.push_back(sdk_sample_event);
-  TauRocmSampleSDKList.sort();
+  //TauRocmSampleSDKList.push_back(sdk_sample_event);
+  //TauRocmSampleSDKList.sort();
+  auto it = std::lower_bound(TauRocmSampleSDKList.begin(), TauRocmSampleSDKList.end(), sdk_sample_event);
+  TauRocmSampleSDKList.insert(it, sdk_sample_event);
 
   if(TauRocmSampleSDKList.size() < TAU_ROCMSDK_SAMPLE_LOOK_AHEAD)
   {
@@ -907,6 +909,7 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
     return 1;
 
   TAU_VERBOSE("Enabling ROCm PC sampling...\n");
+  TAU_VERBOSE("To see filenames and line numbers compile with -g...\n");
   pc_buffer_ids = new pc_sampling_buffer_id_vec_t();
 
   tool_agent_info_vec_t pc_gpu_agents = {};
