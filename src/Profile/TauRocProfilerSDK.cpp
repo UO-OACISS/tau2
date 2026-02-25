@@ -86,10 +86,11 @@ std::map<uint64_t , int> tau_rocm_agent_id = {};
 //  ROCPROFILER_AGENT_TYPE_CPU,       ///< Agent type is a CPU
 //  ROCPROFILER_AGENT_TYPE_GPU,       ///< Agent type is a GPU
 //  ROCPROFILER_AGENT_TYPE_LAST,
-std::map<uint64_t , rocprofiler_agent_type_t> tau_rocm_all_agent_id = {};
 
-//List of events, used  to sort events by timestamp
-std::list<struct TauSDKEvent> TauRocmSDKList;
+//std::map<uint64_t , rocprofiler_agent_type_t> tau_rocm_all_agent_id = {};
+
+//Map of list of events, used  to sort events by timestamp, each taskid is a different list
+std::map<int, std::list<struct TauSDKEvent>> TauRocmSDKListMap;
 std::mutex SDKList_mtx;
 
 std::mutex SDK_init_lock;
@@ -135,8 +136,7 @@ static const auto supported_kinds = std::unordered_set<rocprofiler_buffer_tracin
     ROCPROFILER_BUFFER_TRACING_HSA_CORE_API,          ///< @see ::rocprofiler_hsa_core_api_id_t
     ROCPROFILER_BUFFER_TRACING_HSA_AMD_EXT_API,       ///< @see ::rocprofiler_hsa_amd_ext_api_id_t
     ROCPROFILER_BUFFER_TRACING_HSA_IMAGE_EXT_API,     ///< @see ::rocprofiler_hsa_image_ext_api_id_t
-    ROCPROFILER_BUFFER_TRACING_HSA_FINALIZE_EXT_API,  ///< @see
-                                                      ///< ::rocprofiler_hsa_finalize_ext_api_id_t
+    ROCPROFILER_BUFFER_TRACING_HSA_FINALIZE_EXT_API,  ///< @see ::rocprofiler_hsa_finalize_ext_api_id_t
     ROCPROFILER_BUFFER_TRACING_HIP_RUNTIME_API,       ///< @see ::rocprofiler_hip_runtime_api_id_t
     //ROCPROFILER_BUFFER_TRACING_HIP_COMPILER_API,      ///< @see ::rocprofiler_hip_compiler_api_id_t
     ROCPROFILER_BUFFER_TRACING_MARKER_CORE_API,       ///< @see ::rocprofiler_marker_core_api_id_t
@@ -241,11 +241,6 @@ get_gpu_device_agents()
         {
             const auto* agent = static_cast<const rocprofiler_agent_v0_t*>(agents_arr[i]);
             if(agent->type == ROCPROFILER_AGENT_TYPE_GPU) agents_v->emplace_back(*agent);
-            /*auto* _agents     = reinterpret_cast<const rocprofiler_agent_t**>(agents_arr);
-            std::cout << "[" << __FUNCTION__ << "] " << agent->name << " :: "
-            << "id=" << agent->id.handle << ", "
-            << "type=" << agent->type << "\n";*/
-            tau_rocm_all_agent_id[agent->id.handle] = agent->type;
         }
         return ROCPROFILER_STATUS_SUCCESS;
     };
@@ -260,7 +255,6 @@ get_gpu_device_agents()
         "query available agents");
     return agents;
 }
-
 
 std::string get_copy_direction(int direction, int* queueid, uint64_t source, uint64_t destination)
 {
@@ -327,7 +321,7 @@ std::string get_copy_direction(int direction, int* queueid, uint64_t source, uin
 //Publish event to TAU
 void TAU_publish_sdk_event(TauSDKEvent sdk_event)
 {
-  TAU_VERBOSE("TAU_publish_sdk_event \n");
+  //TAU_VERBOSE("TAU_publish_sdk_event \n");
   last_mtx.lock();
   rocprofiler_timestamp_t last_timestamp;
   
@@ -341,16 +335,18 @@ void TAU_publish_sdk_event(TauSDKEvent sdk_event)
   {
     last_timestamp = it->second;
   }
-
+  //TAU_VERBOSE("? Entry: %lu Exit: %lu %s task: %d\n", sdk_event.entry, sdk_event.exit, sdk_event.name.c_str(), sdk_event.taskid);
   if( sdk_event.entry < last_timestamp )
   {
     TAU_VERBOSE("ERROR: new event's timestamp is older than previous event timestamp, current look ahead window is %d\n", TAU_ROCMSDK_LOOK_AHEAD);
     TAU_VERBOSE("ERROR: modify TAU_ROCMSDK_LOOK_AHEAD with -useropt=-DTAU_ROCMSDK_LOOK_AHEAD=%d or bigger\n", TAU_ROCMSDK_LOOK_AHEAD*2);
     TAU_VERBOSE("ERROR: if this is a hsa_* task [task: %s], some may overlap and this error should be ignored\n", sdk_event.name.c_str());
-    //TAU_VERBOSE("- Entry: %u Exit: %u %s task: %d\n", sdk_event.entry, sdk_event.exit, sdk_event.name.c_str(), sdk_event.taskid);
+    //TAU_VERBOSE("- Entry: %lu Exit: %lu %s task: %d\n", sdk_event.entry, sdk_event.exit, sdk_event.name.c_str(), sdk_event.taskid);
+    //TAU_VERBOSE("- last_timestamp: %lu \n", last_timestamp);
     last_mtx.unlock();
     return;
   }
+  
   //TAU_VERBOSE("Add Entry: %u Exit: %u %s task: %d\n", sdk_event.entry, sdk_event.exit, sdk_event.name.c_str(), sdk_event.taskid);
 
   tau_last_timestamp_published[sdk_event.taskid] = sdk_event.exit;
@@ -392,21 +388,25 @@ void TAU_publish_sdk_event(TauSDKEvent sdk_event)
 //Process event into the list, add to TAU if needed
 void TAU_process_sdk_event(TauSDKEvent sdk_event)
 {
-  TAU_VERBOSE("TAU_process_sdk_event\n");
-  //TauRocmSDKList // TauSDKEvent
+  //TAU_VERBOSE("TAU_process_sdk_event\n");
+  //TauRocmSDKListMap
   SDKList_mtx.lock();
-  TauRocmSDKList.push_back(sdk_event);
-  TauRocmSDKList.sort();
+  //We do not need to sort all the elements, we only want to insert an element
+  // into the correct position of the buffer list, the sort was wasting too much time
+  //TauRocmSDKListMap[sdk_event.taskid].push_back(sdk_event);
+  //TauRocmSDKListMap[sdk_event.taskid].sort();
+  auto it = std::lower_bound(TauRocmSDKListMap[sdk_event.taskid].begin(), TauRocmSDKListMap[sdk_event.taskid].end(), sdk_event);
+  TauRocmSDKListMap[sdk_event.taskid].insert(it, sdk_event);
 
-  if(TauRocmSDKList.size() < TAU_ROCMSDK_LOOK_AHEAD)
+  if(TauRocmSDKListMap[sdk_event.taskid].size() < TAU_ROCMSDK_LOOK_AHEAD)
   {
     SDKList_mtx.unlock();
     return;
   }
   else
   {
-    TAU_publish_sdk_event(TauRocmSDKList.front());
-    TauRocmSDKList.pop_front();
+    TAU_publish_sdk_event(TauRocmSDKListMap[sdk_event.taskid].front());
+    TauRocmSDKListMap[sdk_event.taskid].pop_front();
   }
   SDKList_mtx.unlock();
 }
@@ -476,7 +476,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
                                                     ((double)timestamp / 1e3));
           Tau_create_top_level_timer_if_necessary_task(taskid);
           Tau_add_metadata_for_task("HSA_API_ID", taskid, taskid);
-
+          
         }
         
         std::string task_name;
@@ -542,6 +542,18 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           tau_rocm_agent_id[agent_id] = tau_rocm_agent_id.size();
         }
    
+        
+        std::string task_name = demangle_kernel_rocprofsdk(
+                                        client_kernels.at(
+                                          record->dispatch_info.kernel_id).kernel_name, 1);
+        
+        //Need to look into this type of kernels that ROCm inserts, some of them overlap, but
+        // are removed by the check before inserting, but may remove user kernels.
+        // Maybe use another virtual thread for them?
+        if(task_name.compare(0, 13, "__amd_rocclr_") == 0)
+        {
+          return;
+        }
 
         int queueid = 3 + tau_rocm_agent_id[agent_id];
         unsigned long long timestamp = 0L;
@@ -557,12 +569,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
                                                     ((double)timestamp / 1e3));
           Tau_create_top_level_timer_if_necessary_task(taskid);
           Tau_add_metadata_for_task("HIP_RUNTIME_API_ID", taskid, taskid);
-
         }
-        
-        std::string task_name = demangle_kernel_rocprofsdk(
-                                        client_kernels.at(
-                                          record->dispatch_info.kernel_id).kernel_name, 1);
 
         std::vector<TauSDKUserEvent> record_events;
 
@@ -616,7 +623,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         std::string kernel_name = "[ROCm Kernel] ";
         kernel_name += task_name;
         struct TauSDKEvent e(kernel_name, record->start_timestamp, record->end_timestamp, taskid, record_events);
-        //TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf\n", e.taskid, (double)e.entry, (double)e.exit);
+        //TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf tid: %u event: %s queueid: %lu agent: %lu\n", e.taskid, (double)e.entry, (double)e.exit, record->thread_id, kernel_name.c_str(), record->dispatch_info.queue_id, queueid);
 
         TAU_process_sdk_event(e);
         
@@ -1057,17 +1064,21 @@ void Tau_rocprofsdk_flush(){
   TAU_VERBOSE("Tau_rocprofsdk_flush\n");
   ROCPROFILER_CALL(rocprofiler_flush_buffer(client_buffer), "buffer flush");
   
-  
-  TauRocmSDKList.sort();
-  while(!TauRocmSDKList.empty())
-  {
-    TAU_publish_sdk_event(TauRocmSDKList.front());
-    TauRocmSDKList.pop_front();
+  SDKList_mtx.lock();
+  for(auto& [taskif, TauRocmSDKList] : TauRocmSDKListMap)
+  {  
+    TauRocmSDKList.sort();
+    while(!TauRocmSDKList.empty())
+    {
+      TAU_publish_sdk_event(TauRocmSDKList.front());
+      TauRocmSDKList.pop_front();
+    }
+    if(pc_sampling == 1)
+    {
+      sdk_pc_sampling_flush();
+    }
   }
-  if(pc_sampling == 1)
-  {
-    sdk_pc_sampling_flush();
-  }
+  SDKList_mtx.unlock();
   
 
   flushed = 1;
