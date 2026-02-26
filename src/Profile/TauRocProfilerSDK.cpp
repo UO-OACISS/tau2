@@ -217,6 +217,22 @@ get_buffer_tracing_names()
     return cb_name_info;
 }
 
+rocprofiler_status_t
+query_available_agents(rocprofiler_agent_version_t agents_ver,
+                       const void** agents_arr,
+                       size_t       num_agents,
+                       void*        udata)
+{
+    if(agents_ver != ROCPROFILER_AGENT_INFO_VERSION_0)
+            throw std::runtime_error{"unexpected rocprofiler agent version"};
+        auto* agents_v = static_cast<std::vector<rocprofiler_agent_v0_t>*>(udata);
+        for(size_t i = 0; i < num_agents; ++i)
+        {
+            const auto* agent = static_cast<const rocprofiler_agent_v0_t*>(agents_arr[i]);
+            if(agent->type == ROCPROFILER_AGENT_TYPE_GPU) agents_v->emplace_back(*agent);
+        }
+        return ROCPROFILER_STATUS_SUCCESS;
+}
 
 
 /**
@@ -226,30 +242,11 @@ std::vector<rocprofiler_agent_v0_t>
 get_gpu_device_agents()
 {
     std::vector<rocprofiler_agent_v0_t> agents;
-
-    // Callback used by rocprofiler_query_available_agents to return
-    // agents on the device. This can include CPU agents as well. We
-    // select GPU agents only (i.e. type == ROCPROFILER_AGENT_TYPE_GPU)
-    rocprofiler_query_available_agents_cb_t iterate_cb = [](rocprofiler_agent_version_t agents_ver,
-                                                            const void**                agents_arr,
-                                                            size_t                      num_agents,
-                                                            void*                       udata) {
-        if(agents_ver != ROCPROFILER_AGENT_INFO_VERSION_0)
-            throw std::runtime_error{"unexpected rocprofiler agent version"};
-        auto* agents_v = static_cast<std::vector<rocprofiler_agent_v0_t>*>(udata);
-        for(size_t i = 0; i < num_agents; ++i)
-        {
-            const auto* agent = static_cast<const rocprofiler_agent_v0_t*>(agents_arr[i]);
-            if(agent->type == ROCPROFILER_AGENT_TYPE_GPU) agents_v->emplace_back(*agent);
-        }
-        return ROCPROFILER_STATUS_SUCCESS;
-    };
-
     // Query the agents, only a single callback is made that contains a vector
     // of all agents.
     ROCPROFILER_CALL(
         rocprofiler_query_available_agents(ROCPROFILER_AGENT_INFO_VERSION_0,
-                                           iterate_cb,
+                                           &query_available_agents,
                                            sizeof(rocprofiler_agent_t),
                                            const_cast<void*>(static_cast<const void*>(&agents))),
         "query available agents");
@@ -474,9 +471,9 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           // Set the timestamp for TAUGPU_TIME:
           Tau_metric_set_synchronized_gpu_timestamp(taskid,
                                                     ((double)timestamp / 1e3));
+          Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
+          Tau_add_metadata_for_task("ROCM_GPU_ID", taskid, taskid);
           Tau_create_top_level_timer_if_necessary_task(taskid);
-          Tau_add_metadata_for_task("HSA_API_ID", taskid, taskid);
-          
         }
         
         std::string task_name;
@@ -512,9 +509,9 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           // Set the timestamp for TAUGPU_TIME:
           Tau_metric_set_synchronized_gpu_timestamp(taskid,
                                                     ((double)timestamp / 1e3));
+          Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
+          Tau_add_metadata_for_task("ROCM_GPU_ID", taskid, taskid);
           Tau_create_top_level_timer_if_necessary_task(taskid);
-          Tau_add_metadata_for_task("HIP_RUNTIME_API_ID", taskid, taskid);
-
         }
         
         std::string task_name;
@@ -567,8 +564,9 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           // Set the timestamp for TAUGPU_TIME:
           Tau_metric_set_synchronized_gpu_timestamp(taskid,
                                                     ((double)timestamp / 1e3));
+          Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
+          Tau_add_metadata_for_task("ROCM_GPU_ID", taskid, taskid);
           Tau_create_top_level_timer_if_necessary_task(taskid);
-          Tau_add_metadata_for_task("HIP_RUNTIME_API_ID", taskid, taskid);
         }
 
         std::vector<TauSDKUserEvent> record_events;
@@ -653,9 +651,9 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           // Set the timestamp for TAUGPU_TIME:
           Tau_metric_set_synchronized_gpu_timestamp(taskid,
                                                     ((double)timestamp / 1e3));
+          Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
+          Tau_add_metadata_for_task("ROCM_GPU_ID", taskid, taskid);
           Tau_create_top_level_timer_if_necessary_task(taskid);
-          Tau_add_metadata_for_task("ROCM_MEMORY_ID", taskid, taskid);
-
         }
         
         std::stringstream ss;

@@ -144,8 +144,10 @@ void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
         Tau_set_initialized_queues_pc(queueid, taskid);
         // Set the timestamp for TAUGPU_TIME:
         metric_set_gpu_timestamp(taskid, (double)(sdk_sample_event.entry+deltaTimestamp_ns)/1e3);
+
+        Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
+        Tau_add_metadata_for_task("ROCM_GPU_ID", taskid, taskid);
         Tau_create_top_level_timer_if_necessary_task(taskid);
-        Tau_add_metadata_for_task("PC Sampling Wave", taskid, taskid);
         //std::cout << "queueid: " << queueid << " taskid: " << taskid << std::endl;
     }
 

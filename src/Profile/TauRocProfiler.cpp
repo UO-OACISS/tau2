@@ -148,11 +148,11 @@ void Tau_rocm_dump_context_entry(context_entry_t* entry, rocprofiler_feature_t* 
     last_timestamp = timestamp;
     // Set the timestamp for TAUGPU_TIME:
     Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp/1e3));
-    Tau_create_top_level_timer_if_necessary_task(taskid);
     Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
     Tau_add_metadata_for_task("ROCM_GPU_ID", HsaRsrcFactory::Instance().GetAgentInfo(entry->agent)->dev_index, taskid);
     Tau_add_metadata_for_task("ROCM_QUEUE_ID", entry->data.queue_id, taskid);
     Tau_add_metadata_for_task("ROCM_THREAD_ID", entry->data.thread_id, taskid);
+    Tau_create_top_level_timer_if_necessary_task(taskid);
   }
 
   TAU_VERBOSE(" --> NEW EVENT --> \n");
