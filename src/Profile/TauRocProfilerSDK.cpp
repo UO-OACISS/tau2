@@ -229,7 +229,7 @@ query_available_agents(rocprofiler_agent_version_t agents_ver,
         for(size_t i = 0; i < num_agents; ++i)
         {
             const auto* agent = static_cast<const rocprofiler_agent_v0_t*>(agents_arr[i]);
-            if(agent->type == ROCPROFILER_AGENT_TYPE_GPU) agents_v->emplace_back(*agent);
+            agents_v->emplace_back(*agent);
         }
         return ROCPROFILER_STATUS_SUCCESS;
 }
@@ -242,6 +242,7 @@ std::vector<rocprofiler_agent_v0_t>
 get_gpu_device_agents()
 {
     std::vector<rocprofiler_agent_v0_t> agents;
+    std::vector<rocprofiler_agent_v0_t> gpu_agents;
     // Query the agents, only a single callback is made that contains a vector
     // of all agents.
     ROCPROFILER_CALL(
@@ -250,7 +251,15 @@ get_gpu_device_agents()
                                            sizeof(rocprofiler_agent_t),
                                            const_cast<void*>(static_cast<const void*>(&agents))),
         "query available agents");
-    return agents;
+    for(const auto& agent : agents)
+    {
+
+      if(agent.type == ROCPROFILER_AGENT_TYPE_GPU) 
+      {
+        gpu_agents.push_back(agent);
+      }
+    }
+    return gpu_agents;
 }
 
 std::string get_copy_direction(int direction, int* queueid, uint64_t source, uint64_t destination)
@@ -472,7 +481,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           Tau_metric_set_synchronized_gpu_timestamp(taskid,
                                                     ((double)timestamp / 1e3));
           Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
-          Tau_add_metadata_for_task("ROCM_GPU_ID", taskid, taskid);
+          Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
           Tau_create_top_level_timer_if_necessary_task(taskid);
         }
         
@@ -510,7 +519,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           Tau_metric_set_synchronized_gpu_timestamp(taskid,
                                                     ((double)timestamp / 1e3));
           Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
-          Tau_add_metadata_for_task("ROCM_GPU_ID", taskid, taskid);
+          Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
           Tau_create_top_level_timer_if_necessary_task(taskid);
         }
         
@@ -565,7 +574,9 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           Tau_metric_set_synchronized_gpu_timestamp(taskid,
                                                     ((double)timestamp / 1e3));
           Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
-          Tau_add_metadata_for_task("ROCM_GPU_ID", taskid, taskid);
+          Tau_add_metadata_for_task("ROCM_GPU_ID", tau_rocm_agent_id[agent_id], taskid);
+          Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
+          Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->dispatch_info.queue_id.handle, taskid);
           Tau_create_top_level_timer_if_necessary_task(taskid);
         }
 
@@ -652,7 +663,8 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           Tau_metric_set_synchronized_gpu_timestamp(taskid,
                                                     ((double)timestamp / 1e3));
           Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
-          Tau_add_metadata_for_task("ROCM_GPU_ID", taskid, taskid);
+          Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
+          Tau_add_metadata_for_task("ROCM_GPU_ID", 3-taskid, taskid);
           Tau_create_top_level_timer_if_necessary_task(taskid);
         }
         
