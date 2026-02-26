@@ -25,6 +25,7 @@
 #include "Profile/L0_new/level_zero/layers/zel_tracing_register_cb.h"
 #include "Profile/L0_new/common_header.h"
 #include "Profile/L0_new/unimemory.h"
+
 //#define PTI_ASSERT(X) assert(X)
 
 
@@ -41,6 +42,7 @@
 extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid);
 extern "C" void metric_set_gpu_timestamp(int tid, double value);
 extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
+extern "C" void Tau_metadata_task(const char *name, const char *value, int tid);
 
 //Disabled options, except Metric_Query and Stall_sampling,
 // can help debug if changed to true, do not remove their code
@@ -78,6 +80,9 @@ static CollectorOptions L0_collector_options;
 
 //Map a device and tile to a task
 static std::map<tuple<uintptr_t, int>, int> map_thread_queue;
+
+static std::map<ze_command_queue_handle_t, int> command_queue_map;
+static int comm_queue = 0;
 
 ZeCollector* ze_collector_ = nullptr;
 
@@ -128,9 +133,16 @@ CollectorOptions init_collector_options()
     return init_options;
 }
 
+void Tau_add_metadata_for_task(const char *key, int value, int taskid) {
+  char buf[1024];
+  snprintf(buf, sizeof(buf),  "%d", value);
+  Tau_metadata_task(key, buf, taskid);
+  TAU_VERBOSE("Adding Metadata: %s, %d, for task %d\n", key, value, taskid);
+}
+
 //Only call inside functions that use lock_guard, not implemented lock inside to prevent deadlocks.
 //Check implementation for metrics
-int Tau_get_initialized_queues(tuple<uintptr_t, int> dev_tile)
+int Tau_get_initialized_queues(tuple<uintptr_t, int> dev_tile, ze_command_queue_handle_t comm_queue_id)
 {
   int queue_id;
   auto it = map_thread_queue.find(dev_tile);
@@ -140,9 +152,32 @@ int Tau_get_initialized_queues(tuple<uintptr_t, int> dev_tile)
   }
   else
   {
+
+    ze_device_properties_t props = { ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES };
+    zeDeviceGetProperties(reinterpret_cast<ze_device_handle_t>(std::get<0>(dev_tile)), &props);
+    //printf("Running on: %s , deviceId %d uuid %d\n", props.name, props.deviceId, props.uuid);
+
     TAU_CREATE_TASK(queue_id);
     // losing resolution from nanoseconds to microseconds.
     metric_set_gpu_timestamp(queue_id, L0_TAU_first_timestamp);
+    Tau_add_metadata_for_task("TAU_TASK_ID", queue_id, queue_id);
+    Tau_add_metadata_for_task("L0_GPU_ID", props.deviceId, queue_id);
+    //Similar to streams
+    //Tau_add_metadata_for_task("L0_GPU_TILE", std::get<1>(dev_tile), queue_id);
+    Tau_metadata_task("L0_GPU_NAME", props.name, queue_id);
+    
+    auto it_comm_q = command_queue_map.find(comm_queue_id);
+    int curr_comm_queue = comm_queue;
+    if(it_comm_q !=command_queue_map.end())
+    {
+        curr_comm_queue = it_comm_q->second;
+    }
+    else
+    {
+        command_queue_map[comm_queue_id] = comm_queue;
+    } 
+    Tau_add_metadata_for_task("L0_QUEUE_ID", curr_comm_queue, queue_id);
+    comm_queue++;
     Tau_create_top_level_timer_if_necessary_task(queue_id);
     //std::cout << " NEW TASK: " << queue_id << std::endl;
     map_thread_queue[dev_tile] = queue_id;
@@ -432,7 +467,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             //std::cout << "k_diff " << kernel_end - kernel_start << std::endl;
             //std::cout << "t_diff " << setprecision(numeric_limits<double>::max_digits10)<<  translated_end - translated_start << std::endl;
         
-            task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_));
+            task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_), command->queue_);
             metric_set_gpu_timestamp(task_id, translated_start);
             TAU_START_TASK(event_name.c_str(), task_id);
             metric_set_gpu_timestamp(task_id, translated_end);
@@ -469,7 +504,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         }
         else if((it->second.type_ == KERNEL_COMMAND_TYPE_MEMORY) && (command->mem_size_ > 0))
         {
-            task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_));
+            task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_), command->queue_);
             metric_set_gpu_timestamp(task_id, translated_start);
             TAU_START_TASK(event_name.c_str(), task_id);
             metric_set_gpu_timestamp(task_id, translated_end);
