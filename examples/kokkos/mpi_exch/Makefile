@@ -24,15 +24,15 @@ else
     KOKKOS_LIBDIR := $(KOKKOS_PATH)/lib64
     $(info KOKKOS library directory detected as: $(KOKKOS_PATH)/lib64)
 endif
-KOKKOS_LDFLAGS += -Wl,-rpath,$(KOKKOS_LIBDIR)
+KOKKOS_LDFLAGS := -Wl,-rpath,$(KOKKOS_LIBDIR)
 
 # II. --- Backend Detection ---
 # Introspect the KokkosCore_config.h header to determine the primary backend.
 # The order of checks is important: CUDA -> HIP -> OpenMP -> Serial.
 
 # Default to a standard C++ compiler. These will be overridden if a backend is detected.
-CXX := g++
-LINK := g++
+CXX := mpicxx 
+LINK := mpicxx
 BACKEND_LDFLAGS :=
 
 # Path to the configuration header
@@ -45,7 +45,7 @@ ifeq ($(KOKKOS_HAVE_CUDA), yes)
     $(info Detected Kokkos CUDA backend)
     CXX  := $(KOKKOS_PATH)/bin/nvcc_wrapper
     LINK := $(CXX)
-
+    export NVCC_WRAPPER_DEFAULT_COMPILER := $(CXX)
     # Required for Kokkos lambda support in CUDA device code
     KOKKOS_CXXFLAGS += --expt-extended-lambda
 
@@ -58,7 +58,10 @@ ifeq ($(KOKKOS_HAVE_CUDA), yes)
 
 else ifeq ($(KOKKOS_HAVE_HIP), yes)
     $(info Detected Kokkos ROCm/HIP backend)
-    CXX  := hipcc
+    #CXX  := hipcc
+    export OMPI_CXX := hipcc
+    export MPICH_CXX := hipcc
+    CXX := mpicxx
     LINK := $(CXX)
 
     # Allow user to specify ROCm location, otherwise use a common default

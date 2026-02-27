@@ -1,0 +1,6 @@
+To test with TAU load kokkos@5: run make and do minimally:
+mpirun -np 4 tau_exec  ./mpi_exch.exe
+If needed, use a more specific -T argument to match your TAU library to your Kokkos backend. tau_exec arguments, such as -cupti for cuda builds, can catch additional gpu activity and threads.
+The resulting profiles should include Kokkos events such as "Kokkos::parallel_for" 
+
+This test comes from kokkos-tutorials: https://github.com/kokkos/kokkos-tutorials. Commit 18a92ee
