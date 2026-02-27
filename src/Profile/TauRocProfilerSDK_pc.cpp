@@ -9,6 +9,7 @@
 
 #define TAU_ROCMSDK_SAMPLE_LOOK_AHEAD 256
 #define DEFAULT_SAMPLING_INTERVAL_RSDK 10
+#define DEFAULT_SAMPLING_ST_INTERVAL_RSDK 1048576
 constexpr bool COPY_MEMORY_CODEOBJ = true;
 
 using marker_id_t = rocprofiler::sdk::codeobj::disassembly::marker_id_t;
@@ -214,8 +215,145 @@ void TAU_process_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
 }
 
 
+/*
+std::string process_snapshot_sdk(rocprofiler_pc_sampling_snapshot_v0_t snapshot)
+{
+    int issued=0;
+    int stalled=0;
+    std::cout << "Dual? " << snapshot.dual_issue_valu;
+    std::cout << " arbiter state: {pipe issued: ("
+        << "VALU: " << static_cast<unsigned int>(snapshot.arb_state_issue_valu) << "\n, "
+        << "MATRIX: " << static_cast<unsigned int>(snapshot.arb_state_issue_matrix) << "\n, "
+        << "LDS: " << static_cast<unsigned int>(snapshot.arb_state_issue_lds) << "\n, "
+        << "LDS_DIRECT: " << static_cast<unsigned int>(snapshot.arb_state_issue_lds_direct) << "\n, "
+        << "SCALAR: " << static_cast<unsigned int>(snapshot.arb_state_issue_scalar) << "\n, "
+        << "TEX: " << static_cast<unsigned int>(snapshot.arb_state_issue_vmem_tex) << "\n, "
+        << "FLAT: " << static_cast<unsigned int>(snapshot.arb_state_issue_flat) << "\n, "
+        << "EXPORT: " << static_cast<unsigned int>(snapshot.arb_state_issue_exp) << "\n, "
+        << "MISC: " << static_cast<unsigned int>(snapshot.arb_state_issue_misc) << ")\n, "
+        << "pipe stalled: ("
+        << "VALU: " << static_cast<unsigned int>(snapshot.arb_state_stall_valu) << "\n, "
+        << "MATRIX: " << static_cast<unsigned int>(snapshot.arb_state_stall_matrix) << "\n, "
+        << "LDS: " << static_cast<unsigned int>(snapshot.arb_state_stall_lds) << "\n, "
+        << "LDS_DIRECT: " << static_cast<unsigned int>(snapshot.arb_state_stall_lds_direct) << "\n, "
+        << "SCALAR: " << static_cast<unsigned int>(snapshot.arb_state_stall_scalar) << "\n, "
+        << "TEX: " << static_cast<unsigned int>(snapshot.arb_state_stall_vmem_tex) << "\n, "
+        << "FLAT: " << static_cast<unsigned int>(snapshot.arb_state_stall_flat) << "\n, "
+        << "EXPORT: " << static_cast<unsigned int>(snapshot.arb_state_stall_exp) << "\n, "
+        << "MISC: " << static_cast<unsigned int>(snapshot.arb_state_stall_misc) << ")}\n";
+ 
+    //Instructions issued
+    std::string snap_string = (snapshot.dual_issue_valu)? "Dual instruction [": "Single instruction [" ;
+    if(snapshot.arb_state_issue_brmsg)
+    {
+        snap_string += " Branch/Message,";
+        issued++;
+    }
+    if(snapshot.arb_state_issue_exp)
+    {
+        snap_string += " Export,";
+        issued++;
+    }
+    if(snapshot.arb_state_issue_flat)
+    {
+        snap_string += " FLAT,";
+        issued++;
+    }
+    if(snapshot.arb_state_issue_lds)
+    {
+        snap_string += " LDS,";
+        issued++;
+    }
+    if(snapshot.arb_state_issue_lds_direct)
+    {
+        snap_string += " LDS direct,";
+        issued++;
+    }
+    if(snapshot.arb_state_issue_matrix)
+    {
+        snap_string += " Matrix,";
+        issued++;
+    }
+    if(snapshot.arb_state_issue_misc)
+    {
+        snap_string += " Misc,";
+        issued++;
+    }
+    if(snapshot.arb_state_issue_scalar)
+    {
+        snap_string += " Scalar,";
+        issued++;
+    }
+    if(snapshot.arb_state_issue_valu)
+    {
+        snap_string += " VALU,";
+        issued++;
+    }
+    if(snapshot.arb_state_issue_vmem_tex)
+    {
+        snap_string += " Texture,";
+        issued++;
+    }
+    snap_string+="]";
+    snap_string = (issued==0)? "" : snap_string;
+    //Stalls
+    std::string stall_string = "Stalled at [";
+    if(snapshot.arb_state_stall_brmsg)
+    {
+        stall_string += " Branch/Message,";
+        stalled++;
+    }
+    if(snapshot.arb_state_stall_exp)
+    {
+        stall_string += " Export,";
+        stalled++;
+    }
+    if(snapshot.arb_state_stall_flat)
+    {
+        stall_string += " FLAT,";
+        stalled++;
+    }
+    if(snapshot.arb_state_stall_lds)
+    {
+        stall_string += " LDS,";
+        stalled++;
+    }
+    if(snapshot.arb_state_stall_lds_direct)
+    {
+        stall_string += " LDS direct,";
+        stalled++;
+    }
+    if(snapshot.arb_state_stall_matrix)
+    {
+        stall_string += " Matrix,";
+        stalled++;
+    }
+    if(snapshot.arb_state_stall_misc)
+    {
+        stall_string += " Misc,";
+        stalled++;
+    }
+    if(snapshot.arb_state_stall_scalar)
+    {
+        stall_string += " Scalar,";
+        stalled++;
+    }
+    if(snapshot.arb_state_stall_valu)
+    {
+        stall_string += " VALU,";
+        stalled++;
+    }
+    if(snapshot.arb_state_stall_vmem_tex)
+    {
+        stall_string += " Texture,";
+        stalled++;
+    }
+    stall_string+="]";
+    stall_string = (stalled==0)? "" : stall_string;
 
-
+    std::cout << snap_string  << " " << stall_string << std::endl;
+    return "";
+}*/
 
 
 pc_sampling_buffer_id_vec_t* pc_buffer_ids = nullptr;
@@ -501,10 +639,114 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
 
                 
             }
-            /*if(cur_header->kind == ROCPROFILER_PC_SAMPLING_RECORD_STOCHASTIC_V0_SAMPLE)
+            if(cur_header->kind == ROCPROFILER_PC_SAMPLING_RECORD_STOCHASTIC_V0_SAMPLE)
             {
-                std::cout << "ROCPROFILER_PC_SAMPLING_RECORD_STOCHASTIC_V0_SAMPLE" << std::endl;
-            }*/
+
+
+                //std::cout << "ROCPROFILER_PC_SAMPLING_RECORD_STOCHASTIC_V0_SAMPLE" << std::endl;
+                auto* pc_sample = static_cast<rocprofiler_pc_sampling_record_stochastic_v0_t*>(
+                    cur_header->payload);
+                
+                if(pc_sample->correlation_id.internal == ROCPROFILER_CORRELATION_ID_INTERNAL_NONE)
+                    continue;
+                
+                auto inst = translator.get(pc_sample->pc.code_object_id,
+                    pc_sample->pc.code_object_offset);
+
+                rocsdk_map_inst_key curr_index = {pc_sample->pc.code_object_id, inst->ld_addr};
+                auto elem = code_object_map.find(curr_index);
+
+                //If instruction is not found, skip it. Should not happen.
+                if(elem == code_object_map.end())
+                {
+                    #ifdef ROCSDK_PC_DEBUG
+                    std::cout << "Instruction not found" << std::endl;
+                    #endif
+                    continue;
+                }
+
+                if(elem->second.kernel_name.empty())
+                {
+                    #ifdef ROCSDK_PC_DEBUG
+                    std::cout << "Kernel name not found" << std::endl;
+                    #endif
+                    continue;
+                }
+
+                if(elem->second.inst.empty())
+                {
+                    #ifdef ROCSDK_PC_DEBUG
+                    std::cout << "Instruction  not found" << std::endl;
+                    #endif
+                    continue;
+                }
+
+                std::string task_name = "";
+
+                
+                if(pc_sample->wave_issued)
+                {
+
+                    
+                    auto* inst_c_str = rocprofiler_get_pc_sampling_instruction_type_name(
+                        static_cast<rocprofiler_pc_sampling_instruction_type_t>(pc_sample->inst_type));
+                    assert(inst_c_str != nullptr);
+                    //std::cout << "wave issued " << std::string(inst_c_str) << " instruction, ";
+                    
+                   task_name = "[rocm sample] Issued " + std::string(inst_c_str) + " ";
+                }
+                else
+                {
+
+                    
+                    auto* reason_c_str = rocprofiler_get_pc_sampling_instruction_not_issued_reason_name(
+                        static_cast<rocprofiler_pc_sampling_instruction_not_issued_reason_t>(
+                            pc_sample->snapshot.reason_not_issued));
+                    assert(reason_c_str != nullptr);
+                    //std::cout << "wave is stalled due to: " << std::string(reason_c_str) << " reason, ";
+                    
+                   task_name = "[rocm sample] Stalled at " + std::string(reason_c_str) + " ";
+                }
+
+                if(elem->second.comment.empty())
+                {
+                    std::string c_kernel_name =  demangle_kernel_rocprofsdk(elem->second.kernel_name,1);
+                    std::stringstream ss;
+                    ss << Tau_demangle_name(c_kernel_name.c_str());
+                    ss << " " << elem->second.inst;
+                    task_name += ss.str();
+
+                    #ifdef ROCSDK_PC_DEBUG
+                    ss_debug << "\n" << ss.str() << "\n";
+                    #endif
+                }
+                else
+                {
+                    std::string c_kernel_name =  demangle_kernel_rocprofsdk(elem->second.kernel_name,0);
+                    std::stringstream ss;
+                    int pos_key = elem->second.comment.find_last_of(':');
+                    ss << Tau_demangle_name(c_kernel_name.c_str());
+                    ss << " [{" << elem->second.comment.substr(0,pos_key);
+                    ss << "}" << "{" << elem->second.comment.substr(pos_key+1);
+                    ss << "}] { " << elem->second.inst << " }";
+                    task_name += ss.str();
+
+                    #ifdef ROCSDK_PC_DEBUG
+                    ss_debug << " " << elem->second.comment << "\n";
+                    ss_debug << ss.str() << "\n";
+                    #endif
+                }
+                //std::cout << std::endl;
+                
+
+                //Additional information, but not required, may be useful to debug
+                //rocprofiler_pc_sampling_snapshot_v0_t snapshot = pc_sample->snapshot;
+                //process_snapshot_sdk(snapshot);
+
+                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp+interval, pc_sample->wave_in_group);
+                
+                TAU_process_sdk_sample_event(sample_event);
+            }
 #endif
         }
         else
@@ -732,7 +974,7 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
                                         rocprofiler_buffer_id_t  buffer_id)
 {
     int    failures = MAX_FAILURES;
-
+    auto   stochastic_picked = false;
     do
     {
         // Update the list of available configurations
@@ -753,28 +995,28 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
         // Otherwise, use the host trap config
         for(auto const& cfg : *agent_info->avail_configs)
         {
-            /*#if (ROCPROFILER_VERSION_MAJOR >= 1)
+            #if (ROCPROFILER_VERSION_MAJOR >= 1)
+            //printf("Checking if ROCPROFILER_PC_SAMPLING_METHOD_STOCHASTIC is available %d\n", ROCPROFILER_PC_SAMPLING_METHOD_STOCHASTIC);
             if(cfg.method == ROCPROFILER_PC_SAMPLING_METHOD_STOCHASTIC)
             {
                 //printf("ROCPROFILER_PC_SAMPLING_METHOD_STOCHASTIC\n");
                 first_stochastic_config = &cfg;
+                stochastic_picked       = true;
                 break;
             }
             else 
-            #endif*/
+            #endif
             if(!first_host_trap_config &&
                     cfg.method == ROCPROFILER_PC_SAMPLING_METHOD_HOST_TRAP)
             {
                 //printf("ROCPROFILER_PC_SAMPLING_METHOD_HOST_TRAP\n");
                 first_host_trap_config = &cfg;
-                break;
             }
         }
 
         // Check if the stochastic config is found. Use host trap config otherwise.
         const rocprofiler_pc_sampling_configuration_t* picked_cfg =
             (first_stochastic_config != nullptr) ? first_stochastic_config : first_host_trap_config;
-
         if(picked_cfg->min_interval == picked_cfg->max_interval)
         {
 
@@ -801,7 +1043,8 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
             //This is nanoseconds when using ROCPROFILER_PC_SAMPLING_UNIT_TIME
             // when using stochastic, if it is enabled again, try to set unit 
             // to ROCPROFILER_PC_SAMPLING_UNIT_TIME instead of cycles
-            interval = DEFAULT_SAMPLING_INTERVAL_RSDK;
+            
+            interval = stochastic_picked ? DEFAULT_SAMPLING_ST_INTERVAL_RSDK : DEFAULT_SAMPLING_INTERVAL_RSDK;
             //printf("Setting interval to 10\n");
         }
 
@@ -824,15 +1067,21 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
 #endif
         if(status == ROCPROFILER_STATUS_SUCCESS)
         {
-            /*std::cout
-                << ">>> We chose PC sampling interval: " << interval
-                << " on the agent: " << agent_info->agent->id.handle << std::endl;*/
+            std::cout
+                << ">>> We chose " << (stochastic_picked ? "stochastic" : "Host-Trap")
+                << " PC sampling with the interval: " << interval << " "
+                << (stochastic_picked ? "clock-cycles" : "micro seconds")
+                << " on the agent: " << agent_info->agent->id.handle << std::endl;
             return 1;
         }
         else if(status != ROCPROFILER_STATUS_ERROR_NOT_AVAILABLE)
         {
+            std::cout
+                << ">>> We chose " << (stochastic_picked ? "stochastic" : "Host-Trap")
+                << " PC sampling with the interval: " << interval << " "
+                << (stochastic_picked ? "clock-cycles" : "micro seconds")
+                << " on the agent: " << agent_info->agent->id.handle << std::endl;
             ROCPROFILER_CALL(status, " pc sampling not available, may be in use");
-            return 0;
         }
         // status ==  ROCPROFILER_STATUS_ERROR_NOT_AVAILABLE
         // means another process P2 already configured PC sampling.
