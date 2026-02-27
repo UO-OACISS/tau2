@@ -691,9 +691,13 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     auto* inst_c_str = rocprofiler_get_pc_sampling_instruction_type_name(
                         static_cast<rocprofiler_pc_sampling_instruction_type_t>(pc_sample->inst_type));
                     assert(inst_c_str != nullptr);
+                    std::string inst_c_str_ = inst_c_str;
                     //std::cout << "wave issued " << std::string(inst_c_str) << " instruction, ";
-                    
-                   task_name = "[rocm sample] Issued " + std::string(inst_c_str) + " ";
+                    static std::string itype_prefix = "ROCPROFILER_PC_SAMPLING_INSTRUCTION_TYPE_";
+                    std::string str_inst = (inst_c_str_.compare(0, 41, itype_prefix)==0)? 
+                                            inst_c_str_.erase(0,41) : inst_c_str_;
+
+                    task_name = "[rocm sample] Issued instruction [" + str_inst + "] ";
                 }
                 else
                 {
@@ -703,9 +707,13 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                         static_cast<rocprofiler_pc_sampling_instruction_not_issued_reason_t>(
                             pc_sample->snapshot.reason_not_issued));
                     assert(reason_c_str != nullptr);
+                    std::string reason_c_str_ = reason_c_str;
                     //std::cout << "wave is stalled due to: " << std::string(reason_c_str) << " reason, ";
-                    
-                   task_name = "[rocm sample] Stalled at " + std::string(reason_c_str) + " ";
+                    static std::string sreason_prefix = "ROCPROFILER_PC_SAMPLING_INSTRUCTION_NOT_ISSUED_REASON_";
+                    std::string stall_reason = (reason_c_str_.compare(0, 54, sreason_prefix)==0)? 
+                                            reason_c_str_.erase(0,54) : reason_c_str_;
+
+                    task_name = "[rocm sample] Stall reason [" + stall_reason + "] ";
                 }
 
                 if(elem->second.comment.empty())
