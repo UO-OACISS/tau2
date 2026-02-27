@@ -72,8 +72,8 @@ struct CollectorOptions {
 #include "Profile/L0_new/ze_collector.h"
 
 static double L0_TAU_init_timestamp;
-static double L0_TAU_first_timestamp;
 static uint64_t L0_Driver_init_timestamp;
+static uint64_t L0_Driver_init_timestamp1;
 static int initialized = 0;
 static int disabled = 0;
 static CollectorOptions L0_collector_options;
@@ -142,7 +142,7 @@ void Tau_add_metadata_for_task(const char *key, int value, int taskid) {
 
 //Only call inside functions that use lock_guard, not implemented lock inside to prevent deadlocks.
 //Check implementation for metrics
-int Tau_get_initialized_queues(tuple<uintptr_t, int> dev_tile, ze_command_queue_handle_t comm_queue_id)
+int Tau_get_initialized_queues(tuple<uintptr_t, int> dev_tile, ze_command_queue_handle_t comm_queue_id, double first_ts)
 {
   int queue_id;
   auto it = map_thread_queue.find(dev_tile);
@@ -159,7 +159,7 @@ int Tau_get_initialized_queues(tuple<uintptr_t, int> dev_tile, ze_command_queue_
 
     TAU_CREATE_TASK(queue_id);
     // losing resolution from nanoseconds to microseconds.
-    metric_set_gpu_timestamp(queue_id, L0_TAU_first_timestamp);
+    metric_set_gpu_timestamp(queue_id, first_ts);
     Tau_add_metadata_for_task("TAU_TASK_ID", queue_id, queue_id);
     Tau_add_metadata_for_task("L0_GPU_ID", props.deviceId, queue_id);
     //Similar to streams
@@ -433,13 +433,13 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         static int init_first_timer = 0;
         if(!init_first_timer)
         {
- 
-            L0_TAU_init_timestamp = TauTraceGetTimeStamp(0);
             uint64_t device_timestamp;	// in ticks
-
             ze_result_t status = ZE_FUNC(zeDeviceGetGlobalTimestamps)(command->device_, &L0_Driver_init_timestamp, &device_timestamp);
+            L0_TAU_init_timestamp = TauTraceGetTimeStamp(0);
+            status = ZE_FUNC(zeDeviceGetGlobalTimestamps)(command->device_, &L0_Driver_init_timestamp1, &device_timestamp);
             PTI_ASSERT(status == ZE_RESULT_SUCCESS);
             init_first_timer = 1;
+            L0_Driver_init_timestamp = (L0_Driver_init_timestamp1+L0_Driver_init_timestamp)/2;
         }
 
 
@@ -467,7 +467,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             //std::cout << "k_diff " << kernel_end - kernel_start << std::endl;
             //std::cout << "t_diff " << setprecision(numeric_limits<double>::max_digits10)<<  translated_end - translated_start << std::endl;
         
-            task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_), command->queue_);
+            task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_), command->queue_, translated_start);
             metric_set_gpu_timestamp(task_id, translated_start);
             TAU_START_TASK(event_name.c_str(), task_id);
             metric_set_gpu_timestamp(task_id, translated_end);
@@ -504,7 +504,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         }
         else if((it->second.type_ == KERNEL_COMMAND_TYPE_MEMORY) && (command->mem_size_ > 0))
         {
-            task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_), command->queue_);
+            task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_), command->queue_, translated_start);
             metric_set_gpu_timestamp(task_id, translated_start);
             TAU_START_TASK(event_name.c_str(), task_id);
             metric_set_gpu_timestamp(task_id, translated_end);
@@ -658,7 +658,6 @@ void TauL0EnableProfiling()
     }
     #endif
     assert(status == ZE_RESULT_SUCCESS);
-    L0_TAU_first_timestamp = TauTraceGetTimeStamp(0);
     ze_collector_ = ZeCollector::Create(L0_collector_options);
     initialized = 1;
     TAU_VERBOSE("Initialized L0 Collector\n");
