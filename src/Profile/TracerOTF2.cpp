@@ -815,7 +815,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     OTF2_Type types[1] = {OTF2_TYPE_UINT64};
     OTF2_MetricValue values[1];
     values[0].unsigned_int = par;
-    //printf ("%d %lu Counter: %d\n", tid, my_ts - start_time, ev);
+    //printf ("%d %lu Counter: %d, my_ts %lu, start %lu\n", tid, my_ts - start_time, ev, my_ts, start_time);
     OTF2_EC2(OTF2_EvtWriter_Metric(evt_writer, NULL, my_ts, ev, 1, types, values))
   }
   setPreviousTS(tid, my_ts);
@@ -1114,38 +1114,67 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
                 //static int cputhreads = 1;
                 int nodeThread=cputhreads; //%((nodes > 0) ? nodes : 1);
                 snprintf(namebuf, 256, "Rank %d, CPU Thread %02d", node, nodeThread);
-		#ifdef TAU_OTF2_DEBUG
-		printf("nodes: %d, cputhreads: %d, thread_num (used): %d, nodeThread: %d\n", nodes, cputhreads, thread_num, nodeThread);
-		#endif
-		cputhreads++;
+                #ifdef TAU_OTF2_DEBUG
+                printf("nodes: %d, cputhreads: %d, thread_num (used): %d, nodeThread: %d\n", nodes, cputhreads, thread_num, nodeThread);
+                #endif
+                cputhreads++;
             }
 #ifdef TAU_ENABLE_ROCM
-                //snprintf(namebuf, 256, "Thread %d (ROCM GPU ID:%d, Queue ID:%d, Thread ID:%d)", thread_num, 1, 2, 3);
-                const char *name;
-   		Tau_metadata_value_t * value;
-                char queue_id[256] = "";
-                char gpu_id[256] = "";
-                char tau_task_id[256] = "";
-                // We need to capture the thread name as "queue<2>/device<1> [31]".
+        //snprintf(namebuf, 256, "Thread %d (ROCM GPU ID:%d, Queue ID:%d, Thread ID:%d)", thread_num, 1, 2, 3);
+        const char *name;
+        Tau_metadata_value_t * value;
+        char queue_id[256] = "";
+        char gpu_id[256] = "";
+        char tau_task_id[256] = "";
+        // We need to capture the thread name as "queue<2>/device<1> [31]".
  		for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(thread_num).begin(); it != Tau_metadata_getMetaData(thread_num).end(); it++) {
-		  name = it->first.name;
-                  value = it->second;
-		  if (strcmp(name, "ROCM_GPU_ID") == 0) {
-                    snprintf(gpu_id, sizeof(gpu_id),  "%s", value->data.cval);
-                  }
-		  if (strcmp(name, "ROCM_QUEUE_ID") == 0) {
-                    snprintf(queue_id, sizeof(queue_id),  "%s", value->data.cval);
-                  }
-		  if (strcmp(name, "TAU_TASK_ID") == 0) {
-                    snprintf(tau_task_id, sizeof(tau_task_id),  "%s", value->data.cval);
-                  }
-         	}
-                if (strlen(gpu_id) > 0) {
-                  snprintf(namebuf, sizeof(namebuf),  "GPU%s Queue%s", gpu_id, queue_id);
-                  TAU_VERBOSE("name = %s\n", namebuf);
-                }
+            name = it->first.name;
+            value = it->second;
+            if (strcmp(name, "ROCM_GPU_ID") == 0) {
+                        snprintf(gpu_id, sizeof(gpu_id),  "%s", value->data.cval);
+            }
+            if (strcmp(name, "ROCM_QUEUE_ID") == 0) {
+                snprintf(queue_id, sizeof(queue_id),  "%s", value->data.cval);
+            }
+                if (strcmp(name, "TAU_TASK_ID") == 0) {
+                snprintf(tau_task_id, sizeof(tau_task_id),  "%s", value->data.cval);
+            }
+        }
+
+        if (strlen(gpu_id) > 0) {
+            snprintf(namebuf, sizeof(namebuf),  "GPU%s Queue%s", gpu_id, queue_id);
+            TAU_VERBOSE("name = %s\n", namebuf);
+        }
 
 #endif /* TAU_ROCM */
+
+#ifdef TAU_ENABLE_LEVEL_ZERO
+        const char *name;
+        Tau_metadata_value_t * value;
+        char queue_id[256] = "";
+        char gpu_id[256] = "";
+        char tau_task_id[256] = "";
+        // We need to capture the thread name as "queue<2>/device<1> [31]".
+ 		for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(thread_num).begin(); it != Tau_metadata_getMetaData(thread_num).end(); it++) {
+            name = it->first.name;
+            value = it->second;
+            if (strcmp(name, "L0_GPU_ID") == 0) {
+                        snprintf(gpu_id, sizeof(gpu_id),  "%s", value->data.cval);
+            }
+            if (strcmp(name, "L0_QUEUE_ID") == 0) {
+                snprintf(queue_id, sizeof(queue_id),  "%s", value->data.cval);
+            }
+                if (strcmp(name, "TAU_TASK_ID") == 0) {
+                snprintf(tau_task_id, sizeof(tau_task_id),  "%s", value->data.cval);
+            }
+        }
+
+        if (strlen(gpu_id) > 0) {
+            snprintf(namebuf, sizeof(namebuf),  "GPU%s Queue%s", gpu_id, queue_id);
+            TAU_VERBOSE("name = %s\n", namebuf);
+        }
+
+#endif
             ++thread_num;
             int locName = nextString++;
             OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, locName, namebuf));

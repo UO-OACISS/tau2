@@ -261,6 +261,7 @@ void TAU_L0_enter_event(const char* nameAPIcall)
     {
         static void* TraceCorrelationID;
         Tau_get_context_userevent(&TraceCorrelationID, "Correlation ID");
+        current_timestamp = TauTraceGetTimeStamp(0);
         TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, pushKernel(), current_thread, current_timestamp);
     }
 
@@ -470,12 +471,13 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_), command->queue_, translated_start);
             metric_set_gpu_timestamp(task_id, translated_start);
             TAU_START_TASK(event_name.c_str(), task_id);
-            metric_set_gpu_timestamp(task_id, translated_end);
-            TAU_STOP_TASK(event_name.c_str(), task_id);
             void* TraceCorrelationID;
             Tau_get_context_userevent(&TraceCorrelationID, "Correlation ID");
             //TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, command->corr_id_, task_id, translated_start);
             TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, popKernel(), task_id, translated_start);
+            metric_set_gpu_timestamp(task_id, translated_end);
+            TAU_STOP_TASK(event_name.c_str(), task_id);
+
 
             #ifdef L0_TAU_DEBUG  
             std::cout << "group_count.groupCountX " << command->group_count_.groupCountX << std::endl;
