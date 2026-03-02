@@ -1528,7 +1528,8 @@ on_ompt_callback_target_data_op_emi(
   const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
-  static  std::map<int, const char*> endpoint_names = {{ompt_scope_begin,"begin"},{ompt_scope_end,"end"},{ompt_scope_beginend,"begin-end"}}; 
+
+  //static std::map<int, const char*> endpoint_names = {{ompt_scope_begin,"begin"},{ompt_scope_end,"end"},{ompt_scope_beginend,"begin-end"}}; 
   /*printf("  Callback Data Emi: endpoint= %d[%s] host_op_id %lu optype=%d src=%p src_device_num=%d "
 	    "dest=%p dest_device_num=%d bytes=%lu code=%p\n",
     endpoint, endpoint_names[endpoint], host_op_id, optype, src_addr, src_device_num,
