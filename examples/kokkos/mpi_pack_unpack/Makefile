@@ -43,9 +43,9 @@ KOKKOS_HAVE_HIP := $(shell grep -q "^#define KOKKOS_ENABLE_HIP" $(KOKKOS_CONFIG_
 
 ifeq ($(KOKKOS_HAVE_CUDA), yes)
     $(info Detected Kokkos CUDA backend)
+    export NVCC_WRAPPER_DEFAULT_COMPILER := $(CXX)
     CXX  := $(KOKKOS_PATH)/bin/nvcc_wrapper
     LINK := $(CXX)
-    export NVCC_WRAPPER_DEFAULT_COMPILER := $(CXX)
     # Required for Kokkos lambda support in CUDA device code
     KOKKOS_CXXFLAGS += --expt-extended-lambda
 

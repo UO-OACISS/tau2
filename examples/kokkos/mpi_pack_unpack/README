@@ -1,7 +1,13 @@
 To test with TAU load kokkos@5: run make and do minimally:
-mpirun -np 2 tau_exec ./mpi_pack_unpack_solution.exe
+
+export OMP_NUM_THREADS=4
+export  OMP_PROC_BIND=spread
+
+mpirun -np 2 tau_exec ./mpi_pack_unpack_solution.exe 10000000  100000  10 0
 
 If needed, use a more specific -T argument to match your TAU library to your Kokkos backend. tau_exec arguments, such as -cupti for cuda builds, can catch additional gpu activity and threads.
+
+Note that the final 0 in the suggested arguments is required for successful gpu execution (enables device copy). Other values can be varied freely. See the source for more information.
 
 The resulting profiles should include Kokkos events such as "Kokkos::parallel_for" 
 
