@@ -983,6 +983,9 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
 {
     int    failures = MAX_FAILURES;
     auto   stochastic_picked = false;
+    int pc_sampling_kind = TauEnv_get_rocsdk_pcs_kind();
+    printf("pc_sampling_kind %d\n", pc_sampling_kind);
+
     do
     {
         // Update the list of available configurations
@@ -1005,7 +1008,7 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
         {
             #if (ROCPROFILER_VERSION_MAJOR >= 1)
             //printf("Checking if ROCPROFILER_PC_SAMPLING_METHOD_STOCHASTIC is available %d\n", ROCPROFILER_PC_SAMPLING_METHOD_STOCHASTIC);
-            if(cfg.method == ROCPROFILER_PC_SAMPLING_METHOD_STOCHASTIC)
+            if((cfg.method == ROCPROFILER_PC_SAMPLING_METHOD_STOCHASTIC) && (pc_sampling_kind != 1))
             {
                 //printf("ROCPROFILER_PC_SAMPLING_METHOD_STOCHASTIC\n");
                 first_stochastic_config = &cfg;
@@ -1015,13 +1018,18 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
             else 
             #endif
             if(!first_host_trap_config &&
-                    cfg.method == ROCPROFILER_PC_SAMPLING_METHOD_HOST_TRAP)
+                    cfg.method == ROCPROFILER_PC_SAMPLING_METHOD_HOST_TRAP && (pc_sampling_kind != 2))
             {
                 //printf("ROCPROFILER_PC_SAMPLING_METHOD_HOST_TRAP\n");
                 first_host_trap_config = &cfg;
             }
         }
-
+        if((first_host_trap_config == nullptr ) && (first_stochastic_config == nullptr))
+        {
+            printf("Error - no configuratin for PC Sampling is available. If you forced a configuration\n");
+            printf("        it may not be available.\n");
+            return 0;
+        }
         // Check if the stochastic config is found. Use host trap config otherwise.
         const rocprofiler_pc_sampling_configuration_t* picked_cfg =
             (first_stochastic_config != nullptr) ? first_stochastic_config : first_host_trap_config;
@@ -1076,7 +1084,7 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
         if(status == ROCPROFILER_STATUS_SUCCESS)
         {
             std::cout
-                << ">>> We chose " << (stochastic_picked ? "stochastic" : "Host-Trap")
+                << "[TAU] PC Sampling configured with " << (stochastic_picked ? "stochastic" : "Host-Trap")
                 << " PC sampling with the interval: " << interval << " "
                 << (stochastic_picked ? "clock-cycles" : "micro seconds")
                 << " on the agent: " << agent_info->agent->id.handle << std::endl;
@@ -1085,7 +1093,7 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
         else if(status != ROCPROFILER_STATUS_ERROR_NOT_AVAILABLE)
         {
             std::cout
-                << ">>> We chose " << (stochastic_picked ? "stochastic" : "Host-Trap")
+                << "[TAU] PC Sampling configured with " << (stochastic_picked ? "stochastic" : "Host-Trap")
                 << " PC sampling with the interval: " << interval << " "
                 << (stochastic_picked ? "clock-cycles" : "micro seconds")
                 << " on the agent: " << agent_info->agent->id.handle << std::endl;
