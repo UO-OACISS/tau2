@@ -40,6 +40,7 @@ KOKKOS_CONFIG_H := $(KOKKOS_PATH)/include/KokkosCore_config.h
 
 KOKKOS_HAVE_CUDA := $(shell grep -q "^#define KOKKOS_ENABLE_CUDA" $(KOKKOS_CONFIG_H) && echo "yes")
 KOKKOS_HAVE_HIP := $(shell grep -q "^#define KOKKOS_ENABLE_HIP" $(KOKKOS_CONFIG_H) && echo "yes")
+KOKKOS_HAVE_SYCL   := $(shell grep -q "^#define KOKKOS_ENABLE_SYCL"   $(KOKKOS_CONFIG_H) && echo "yes")
 
 ifeq ($(KOKKOS_HAVE_CUDA), yes)
     $(info Detected Kokkos CUDA backend)
@@ -71,14 +72,34 @@ else ifeq ($(KOKKOS_HAVE_HIP), yes)
     # Add rpath to help the executable find shared libraries at runtime
     KOKKOS_LDFLAGS += -Wl,-rpath,$(ROCM_HOME)/lib
 
+else ifeq ($(KOKKOS_HAVE_SYCL), yes)
+    $(info Detected Kokkos SYCL backend)
+    # Intel oneAPI MPI wrapper for icpx. Override if your wrapper is named differently.
+    ONEAPI_MPI_CXX ?= mpiicpx
+    CXX  := $(ONEAPI_MPI_CXX)
+    LINK := $(CXX)
+    KOKKOS_CXXFLAGS += -fsycl
+    KOKKOS_LDFLAGS  += -fsycl
+    # Optional: add sycl lib rpath if needed (usually handled by icpx automatically)
+    # ONEAPI_ROOT ?= /opt/intel/oneapi
+    # BACKEND_LDFLAGS := -L$(ONEAPI_ROOT)/compiler/latest/linux/compiler/lib/intel64_lin
+    # KOKKOS_LDFLAGS  += -Wl,-rpath,$(ONEAPI_ROOT)/compiler/latest/linux/compiler/lib/intel64_lin
 endif
 
 # If not a GPU backend, check for OpenMP
 KOKKOS_HAVE_OPENMP := $(shell grep -q "^#define KOKKOS_ENABLE_OPENMP" $(KOKKOS_CONFIG_H) && echo "yes")
 ifeq ($(KOKKOS_HAVE_OPENMP), yes)
     $(info Detected Kokkos OpenMP backend)
-    KOKKOS_CXXFLAGS += -fopenmp
-    KOKKOS_LDFLAGS  += -fopenmp
+    ifeq ($(findstring icpx,$(CXX)),icpx)
+        KOKKOS_CXXFLAGS += -qopenmp
+        KOKKOS_LDFLAGS  += -qopenmp
+    else ifeq ($(findstring mpiicpx,$(CXX)),mpiicpx)
+        KOKKOS_CXXFLAGS += -qopenmp
+        KOKKOS_LDFLAGS  += -qopenmp
+    else
+        KOKKOS_CXXFLAGS += -fopenmp
+        KOKKOS_LDFLAGS  += -fopenmp
+    endif
 else
     $(info Detected Kokkos Serial backend)
 endif

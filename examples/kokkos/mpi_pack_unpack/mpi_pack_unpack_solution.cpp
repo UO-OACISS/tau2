@@ -174,6 +174,24 @@ int main(int argc, char* argv[]) {
     run<Kokkos::HIPSpace,Kokkos::HIPSpace>(N,B,R,use_device_buffer);
     run<Kokkos::HIPSpace,Kokkos::HIPHostPinnedSpace>(N,B,R,use_device_buffer);
     #endif
+    #ifdef KOKKOS_ENABLE_SYCL
+    auto sycl_queue = Kokkos::Experimental::SYCL().sycl_queue();
+    int has_fp64 = sycl_queue.get_device().has(sycl::aspect::fp64) ? 1 : 0;
+    // All ranks must agree, broadcast from rank 0
+    MPI_Bcast(&has_fp64, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    if (has_fp64) {
+    run<Kokkos::Experimental::SYCLDeviceUSMSpace,Kokkos::Experimental::SYCLDeviceUSMSpace>(N,B,R,use_device_buffer);
+    run<Kokkos::Experimental::SYCLDeviceUSMSpace,Kokkos::Experimental::SYCLSharedUSMSpace>(N,B,R,use_device_buffer);
+    run<Kokkos::Experimental::SYCLSharedUSMSpace,Kokkos::Experimental::SYCLSharedUSMSpace>(N,B,R,use_device_buffer);
+    } else { 
+	if (Kokkos::Experimental::SYCL().sycl_queue().get_device().is_cpu() == false) {
+        int me; MPI_Comm_rank(MPI_COMM_WORLD, &me);
+        if (me == 0)
+          std::cout << "Skipping SYCL fp64 runs: device does not support fp64\n";
+      }
+      // TODO: Try float implementation for sycl 
+    }
+    #endif
     run<Kokkos::HostSpace,Kokkos::HostSpace>(N,B,R,use_device_buffer);
   }
   Kokkos::finalize();
