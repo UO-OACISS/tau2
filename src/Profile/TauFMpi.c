@@ -7878,6 +7878,15 @@ MPI_Fint * comm, MPI_Fint * ierr)
   TAU_ALLOC_LOCAL(MPI_Datatype, local_send_types, *sendcounts);
   TAU_ASSIGN_VALUES(local_send_types, sendtypes, *sendcounts, MPI_Type_f2c);
   TAU_ASSIGN_VALUES(local_recv_types, recvtypes, *recvcounts, MPI_Type_f2c);
+  if (sendbuf == *(mpi_predef_in_place())) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom())) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom())) {
+    recvbuf = MPI_BOTTOM;
+  }
   *ierr = MPI_Neighbor_alltoallw(sendbuf, sendcounts, sdispls, local_send_types,
     recvbuf, recvcounts, rdispls, local_recv_types, MPI_Comm_f2c(*comm));
   return ;
@@ -7889,12 +7898,116 @@ MPI_Fint * comm, MPI_Fint * ierr)
 void MPI_INEIGHBOR_ALLGATHER(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
 MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
+  if (sendbuf == *(mpi_predef_in_place())) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom())) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom())) {
+    recvbuf = MPI_BOTTOM;
+  }
   MPI_Request local_request;
   *ierr = MPI_Ineighbor_allgather(sendbuf, *sendcount, MPI_Type_f2c(*sendtype), recvbuf, *recvcount,
     MPI_Type_f2c(*recvtype),  MPI_Comm_f2c(*comm), &local_request);
   *request = MPI_Request_c2f(local_request);
   return ;
 }
+
+/******************************************************
+***      MPI_INEIGHBOR_ALLGATHERV wrapper function
+******************************************************/
+void MPI_INEIGHBOR_ALLGATHERV(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
+{
+  if (sendbuf == *(mpi_predef_in_place())) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom())) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom())) {
+    recvbuf = MPI_BOTTOM;
+  }
+  MPI_Request local_request;
+  *ierr = MPI_Ineighbor_allgatherv(sendbuf, *sendcount, MPI_Type_f2c(*sendtype), recvbuf, recvcounts, displs, MPI_Type_f2c(*recvtype),
+    MPI_Comm_f2c(*comm), &local_request);
+  *request = MPI_Request_c2f(local_request);
+  return ;
+}
+
+/******************************************************
+***      MPI_INEIGHBOR_ALLTOALL wrapper function
+******************************************************/
+void MPI_INEIGHBOR_ALLTOALL(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
+{
+  if (sendbuf == *(mpi_predef_in_place())) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom())) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom())) {
+    recvbuf = MPI_BOTTOM;
+  }
+  MPI_Request local_request;
+  *ierr = MPI_Ineighbor_alltoall(sendbuf, *sendcount, MPI_Type_f2c(*sendtype), recvbuf, *recvcount,
+    MPI_Type_f2c(*recvtype), MPI_Comm_f2c(*comm), &local_request);
+  *request = MPI_Request_c2f(local_request);
+  return ;
+}
+
+/******************************************************
+***      MPI_Ineighbor_alltoallv wrapper function
+******************************************************/
+void MPI_INEIGHBOR_ALLTOALLV(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
+{
+  if (sendbuf == *(mpi_predef_in_place())) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom())) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom())) {
+    recvbuf = MPI_BOTTOM;
+  }
+  MPI_Request local_request;
+  *ierr = MPI_Ineighbor_alltoallv(sendbuf, sendcounts, sdispls, MPI_Type_f2c(*sendtype),
+    recvbuf, recvcounts, rdispls, MPI_Type_f2c(recvtype), MPI_Comm_f2c(*comm), &local_request);
+  *request = MPI_Request_c2f(local_request);
+  return ;
+}
+
+/******************************************************
+***      MPI_Ineighbor_alltoallw wrapper function
+******************************************************/
+void MPI_INEIGHBOR_ALLTOALLW(MPI_Aint * sendbuf, int * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, int * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
+{
+  TAU_DECL_LOCAL(MPI_Datatype, local_send_types);
+  TAU_DECL_ALLOC_LOCAL(MPI_Datatype, local_recv_types, *recvcounts);
+  TAU_ALLOC_LOCAL(MPI_Datatype, local_send_types, *sendcounts);
+  TAU_ASSIGN_VALUES(local_send_types, sendtypes, *sendcounts, MPI_Type_f2c);
+  TAU_ASSIGN_VALUES(local_recv_types, recvtypes, *recvcounts, MPI_Type_f2c);
+  if (sendbuf == *(mpi_predef_in_place())) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom())) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom())) {
+    recvbuf = MPI_BOTTOM;
+  }
+  MPI_Request local_request;
+  *ierr = MPI_Ineighbor_alltoallw(sendbuf, sendcounts, sdispls, local_send_types,
+    recvbuf, recvcounts, rdispls, local_recv_types,  MPI_Comm_f2c(*comm), &local_request);
+  *request = MPI_Request_c2f(local_request);
+  return ;
+}
+
 
 
 

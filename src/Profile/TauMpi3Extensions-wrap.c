@@ -2288,12 +2288,12 @@ MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
   return ;
 }
 
-!!!
+
 /******************************************************
 ***      MPI_Ineighbor_allgatherv wrapper function 
 ******************************************************/
-int MPI_Ineighbor_allgatherv(TAU_MPICH3_CONST void* sendbuf, int sendcount, MPI_Datatype sendtype, void* recvbuf, TAU_MPICH3_CONST int recvcounts[],
-TAU_MPICH3_CONST int displs[], MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
+int MPI_Ineighbor_allgatherv(TAU_MPICH3_CONST void* sendbuf, int sendcount, MPI_Datatype sendtype, void* recvbuf, TAU_MPICH3_CONST int * recvcounts,
+TAU_MPICH3_CONST int * displs, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_allgatherv()", "", TAU_MESSAGE);
@@ -2307,21 +2307,14 @@ TAU_MPICH3_CONST int displs[], MPI_Datatype recvtype, MPI_Comm comm, MPI_Request
 /******************************************************
 ***      MPI_Ineighbor_allgatherv wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_INEIGHBOR_ALLGATHERV(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Ineighbor_allgatherv(sendbuf, /* MPI_HANDLE_TYPES */ sendcount,
-    /* MPI_HANDLE_TYPES */ sendtype, recvbuf, recvcounts, displs, /* MPI_HANDLE_TYPES */ recvtype,
-    /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_INEIGHBOR_ALLGATHERV(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Ineighbor_allgatherv wrapper function (lowercase)
 ******************************************************/
-void mpi_ineighbor_allgatherv(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ineighbor_allgatherv(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLGATHERV(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
     comm, request, ierr);
@@ -2331,8 +2324,8 @@ int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ier
 /******************************************************
 ***      MPI_Ineighbor_allgatherv wrapper function (lowercase_)
 ******************************************************/
-void mpi_ineighbor_allgatherv_(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ineighbor_allgatherv_(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLGATHERV(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
     comm, request, ierr);
@@ -2342,8 +2335,8 @@ int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ier
 /******************************************************
 ***      MPI_Ineighbor_allgatherv wrapper function (lowercase__)
 ******************************************************/
-void mpi_ineighbor_allgatherv__(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ineighbor_allgatherv__(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLGATHERV(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
     comm, request, ierr);
@@ -2368,21 +2361,14 @@ MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 /******************************************************
 ***      MPI_Ineighbor_alltoall wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_INEIGHBOR_ALLTOALL(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Ineighbor_alltoall(sendbuf, /* MPI_HANDLE_TYPES */ sendcount,
-    /* MPI_HANDLE_TYPES */ sendtype, recvbuf, /* MPI_HANDLE_TYPES */ recvcount,
-    /* MPI_HANDLE_TYPES */ recvtype, /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_INEIGHBOR_ALLTOALL(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Ineighbor_alltoall wrapper function (lowercase)
 ******************************************************/
-void mpi_ineighbor_alltoall(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ineighbor_alltoall(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLTOALL(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request,
     ierr);
@@ -2392,8 +2378,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ineighbor_alltoall wrapper function (lowercase_)
 ******************************************************/
-void mpi_ineighbor_alltoall_(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ineighbor_alltoall_(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLTOALL(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request,
     ierr);
@@ -2403,8 +2389,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ineighbor_alltoall wrapper function (lowercase__)
 ******************************************************/
-void mpi_ineighbor_alltoall__(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ineighbor_alltoall__(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLTOALL(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request,
     ierr);
@@ -2415,9 +2401,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ineighbor_alltoallv wrapper function 
 ******************************************************/
-int MPI_Ineighbor_alltoallv(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int sendcounts[], TAU_MPICH3_CONST int sdispls[], MPI_Datatype sendtype,
-void* recvbuf, TAU_MPICH3_CONST int recvcounts[], TAU_MPICH3_CONST int rdispls[], MPI_Datatype recvtype, MPI_Comm comm,
-MPI_Request* request)
+int MPI_Ineighbor_alltoallv(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int * sendcounts, TAU_MPICH3_CONST int * sdispls, MPI_Datatype sendtype,
+void* recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST int * rdispls, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_alltoallv()", "", TAU_MESSAGE);
@@ -2431,23 +2416,13 @@ MPI_Request* request)
 /******************************************************
 ***      MPI_Ineighbor_alltoallv wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_INEIGHBOR_ALLTOALLV(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtype, MPI_Aint recvbuf,
-int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Ineighbor_alltoallv(sendbuf, sendcounts, sdispls, /* MPI_HANDLE_TYPES */ sendtype,
-    recvbuf, recvcounts, rdispls, /* MPI_HANDLE_TYPES */ recvtype, /* MPI_HANDLE_TYPES */ comm,
-    /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
-
+extern void MPI_INEIGHBOR_ALLTOALLV(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 /******************************************************
 ***      MPI_Ineighbor_alltoallv wrapper function (lowercase)
 ******************************************************/
-void mpi_ineighbor_alltoallv(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtype, MPI_Aint recvbuf,
-int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
+void mpi_ineighbor_alltoallv(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLTOALLV(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm, request, ierr);
@@ -2457,9 +2432,8 @@ MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ineighbor_alltoallv wrapper function (lowercase_)
 ******************************************************/
-void mpi_ineighbor_alltoallv_(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtype, MPI_Aint recvbuf,
-int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
+void mpi_ineighbor_alltoallv_(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLTOALLV(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm, request, ierr);
@@ -2469,9 +2443,8 @@ MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ineighbor_alltoallv wrapper function (lowercase__)
 ******************************************************/
-void mpi_ineighbor_alltoallv__(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtype, MPI_Aint recvbuf,
-int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
+void mpi_ineighbor_alltoallv__(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLTOALLV(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm, request, ierr);
@@ -2482,9 +2455,9 @@ MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ineighbor_alltoallw wrapper function 
 ******************************************************/
-int MPI_Ineighbor_alltoallw(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int sendcounts[], TAU_MPICH3_CONST MPI_Aint sdispls[],
-TAU_MPICH3_CONST MPI_Datatype sendtypes[], void* recvbuf, TAU_MPICH3_CONST int recvcounts[], TAU_MPICH3_CONST MPI_Aint rdispls[],
-TAU_MPICH3_CONST MPI_Datatype recvtypes[], MPI_Comm comm, MPI_Request* request)
+int MPI_Ineighbor_alltoallw(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int * sendcounts, TAU_MPICH3_CONST MPI_Aint * sdispls,
+TAU_MPICH3_CONST MPI_Datatype * sendtypes, void* recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST MPI_Aint * rdispls,
+TAU_MPICH3_CONST MPI_Datatype * recvtypes, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_alltoallw()", "", TAU_MESSAGE);
@@ -2498,23 +2471,16 @@ TAU_MPICH3_CONST MPI_Datatype recvtypes[], MPI_Comm comm, MPI_Request* request)
 /******************************************************
 ***      MPI_Ineighbor_alltoallw wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_INEIGHBOR_ALLTOALLW(MPI_Aint sendbuf, int sendcounts[], MPI_Aint sdispls[], MPI_Fint sendtypes[],
-MPI_Aint recvbuf, int recvcounts[], MPI_Aint rdispls[], MPI_Fint recvtypes[],
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Ineighbor_alltoallw(sendbuf, sendcounts, sdispls, /* MPI_HANDLE_TYPES */ sendtypes,
-    recvbuf, recvcounts, rdispls, /* MPI_HANDLE_TYPES */ recvtypes, /* MPI_HANDLE_TYPES */ comm,
-    /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_INEIGHBOR_ALLTOALLW(MPI_Aint * sendbuf, int * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, int * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Ineighbor_alltoallw wrapper function (lowercase)
 ******************************************************/
-void mpi_ineighbor_alltoallw(MPI_Aint sendbuf, int sendcounts[], MPI_Aint sdispls[], MPI_Fint sendtypes[],
-MPI_Aint recvbuf, int recvcounts[], MPI_Aint rdispls[], MPI_Fint recvtypes[],
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ineighbor_alltoallw(MPI_Aint * sendbuf, int * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, int * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLTOALLW(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
     recvtypes, comm, request, ierr);
@@ -2524,9 +2490,9 @@ MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ineighbor_alltoallw wrapper function (lowercase_)
 ******************************************************/
-void mpi_ineighbor_alltoallw_(MPI_Aint sendbuf, int sendcounts[], MPI_Aint sdispls[], MPI_Fint sendtypes[],
-MPI_Aint recvbuf, int recvcounts[], MPI_Aint rdispls[], MPI_Fint recvtypes[],
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ineighbor_alltoallw_(MPI_Aint * sendbuf, int * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, int * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLTOALLW(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
     recvtypes, comm, request, ierr);
@@ -2536,21 +2502,21 @@ MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ineighbor_alltoallw wrapper function (lowercase__)
 ******************************************************/
-void mpi_ineighbor_alltoallw__(MPI_Aint sendbuf, int sendcounts[], MPI_Aint sdispls[], MPI_Fint sendtypes[],
-MPI_Aint recvbuf, int recvcounts[], MPI_Aint rdispls[], MPI_Fint recvtypes[],
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ineighbor_alltoallw__(MPI_Aint * sendbuf, int * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, int * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLTOALLW(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
     recvtypes, comm, request, ierr);
   return ;
 }
 
-
+!!!
 /******************************************************
 ***      MPI_Dist_graph_neighbors wrapper function 
 ******************************************************/
-int MPI_Dist_graph_neighbors(MPI_Comm comm, int maxindegree, int sources[], int sourceweights[], int maxoutdegree,
-int destinations[], int destweights[])
+int MPI_Dist_graph_neighbors(MPI_Comm comm, int maxindegree, int * sources, int * sourceweights, int maxoutdegree,
+int * destinations, int * destweights)
 {
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Dist_graph_neighbors()", "", TAU_MESSAGE);
@@ -2564,8 +2530,8 @@ int destinations[], int destweights[])
 /******************************************************
 ***      MPI_Dist_graph_neighbors wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_DIST_GRAPH_NEIGHBORS(MPI_Fint comm, MPI_Fint maxindegree, MPI_Fint sources[], MPI_Fint sourceweights[],
-MPI_Fint maxoutdegree, MPI_Fint destinations[], MPI_Fint destweights[], MPI_Fint * ierr)
+void MPI_DIST_GRAPH_NEIGHBORS(MPI_Fint * comm, MPI_Fint * maxindegree, MPI_Fint * sources, MPI_Fint * sourceweights,
+MPI_Fint * maxoutdegree, MPI_Fint * destinations, MPI_Fint * destweights, MPI_Fint * ierr)
 {
 
   *ierr = MPI_Dist_graph_neighbors(/* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ maxindegree,
@@ -2578,8 +2544,8 @@ MPI_Fint maxoutdegree, MPI_Fint destinations[], MPI_Fint destweights[], MPI_Fint
 /******************************************************
 ***      MPI_Dist_graph_neighbors wrapper function (lowercase)
 ******************************************************/
-void mpi_dist_graph_neighbors(MPI_Fint comm, MPI_Fint maxindegree, MPI_Fint sources[], MPI_Fint sourceweights[],
-MPI_Fint maxoutdegree, MPI_Fint destinations[], MPI_Fint destweights[], MPI_Fint * ierr)
+void mpi_dist_graph_neighbors(MPI_Fint * comm, MPI_Fint * maxindegree, MPI_Fint * sources, MPI_Fint * sourceweights,
+MPI_Fint * maxoutdegree, MPI_Fint * destinations, MPI_Fint * destweights, MPI_Fint * ierr)
 {
   MPI_DIST_GRAPH_NEIGHBORS(comm, maxindegree, sources, sourceweights, maxoutdegree, destinations,
     destweights, ierr);
@@ -2589,8 +2555,8 @@ MPI_Fint maxoutdegree, MPI_Fint destinations[], MPI_Fint destweights[], MPI_Fint
 /******************************************************
 ***      MPI_Dist_graph_neighbors wrapper function (lowercase_)
 ******************************************************/
-void mpi_dist_graph_neighbors_(MPI_Fint comm, MPI_Fint maxindegree, MPI_Fint sources[], MPI_Fint sourceweights[],
-MPI_Fint maxoutdegree, MPI_Fint destinations[], MPI_Fint destweights[], MPI_Fint * ierr)
+void mpi_dist_graph_neighbors_(MPI_Fint * comm, MPI_Fint * maxindegree, MPI_Fint * sources, MPI_Fint * sourceweights,
+MPI_Fint * maxoutdegree, MPI_Fint * destinations, MPI_Fint * destweights, MPI_Fint * ierr)
 {
   MPI_DIST_GRAPH_NEIGHBORS(comm, maxindegree, sources, sourceweights, maxoutdegree, destinations,
     destweights, ierr);
@@ -2600,8 +2566,8 @@ MPI_Fint maxoutdegree, MPI_Fint destinations[], MPI_Fint destweights[], MPI_Fint
 /******************************************************
 ***      MPI_Dist_graph_neighbors wrapper function (lowercase__)
 ******************************************************/
-void mpi_dist_graph_neighbors__(MPI_Fint comm, MPI_Fint maxindegree, MPI_Fint sources[], MPI_Fint sourceweights[],
-MPI_Fint maxoutdegree, MPI_Fint destinations[], MPI_Fint destweights[], MPI_Fint * ierr)
+void mpi_dist_graph_neighbors__(MPI_Fint * comm, MPI_Fint * maxindegree, MPI_Fint * sources, MPI_Fint * sourceweights,
+MPI_Fint * maxoutdegree, MPI_Fint * destinations, MPI_Fint * destweights, MPI_Fint * ierr)
 {
   MPI_DIST_GRAPH_NEIGHBORS(comm, maxindegree, sources, sourceweights, maxoutdegree, destinations,
     destweights, ierr);
