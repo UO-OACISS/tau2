@@ -12,7 +12,7 @@
 /******************************************************
 ***      MPI_Get_library_version wrapper function 
 ******************************************************/
-int MPI_Get_library_version(char *v ersion, int * resultlen)
+int MPI_Get_library_version(char *version, int * resultlen)
 {
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Get_library_version()", "", TAU_MESSAGE);
@@ -178,17 +178,19 @@ int MPI_Get_elements_x(TAU_MPICH3_CONST MPI_Status * status, MPI_Datatype dataty
 /******************************************************
 ***      MPI_Get_elements_x wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_GET_ELEMENTS_X(MPI_Fint status, MPI_Fint datatype, MPI_Count* count, MPI_Fint * ierr)
+void MPI_GET_ELEMENTS_X(MPI_Fint * status, MPI_Fint * datatype, MPI_Count* count, MPI_Fint * ierr)
 {
-
-  *ierr = MPI_Get_elements_x( MPI_Status_f2c(*status), MPI_Type_f2c(*datatype), count);
+  MPI_Status local_status; 
+  MPI_Status_f2c(status, &local_status);
+  *ierr = MPI_Get_elements_x( &local_status, MPI_Type_f2c(*datatype), count);
+  MPI_Status_c2f(&local_status, status);
   return ;
 }
 
 /******************************************************
 ***      MPI_Get_elements_x wrapper function (lowercase)
 ******************************************************/
-void mpi_get_elements_x(MPI_Fint status, MPI_Fint datatype, MPI_Count* count, MPI_Fint * ierr)
+void mpi_get_elements_x(MPI_Fint * status, MPI_Fint * datatype, MPI_Count* count, MPI_Fint * ierr)
 {
   MPI_GET_ELEMENTS_X(status, datatype, count, ierr);
   return ;
@@ -197,7 +199,7 @@ void mpi_get_elements_x(MPI_Fint status, MPI_Fint datatype, MPI_Count* count, MP
 /******************************************************
 ***      MPI_Get_elements_x wrapper function (lowercase_)
 ******************************************************/
-void mpi_get_elements_x_(MPI_Fint status, MPI_Fint datatype, MPI_Count* count, MPI_Fint * ierr)
+void mpi_get_elements_x_(MPI_Fint * status, MPI_Fint * datatype, MPI_Count* count, MPI_Fint * ierr)
 {
   MPI_GET_ELEMENTS_X(status, datatype, count, ierr);
   return ;
@@ -206,7 +208,7 @@ void mpi_get_elements_x_(MPI_Fint status, MPI_Fint datatype, MPI_Count* count, M
 /******************************************************
 ***      MPI_Get_elements_x wrapper function (lowercase__)
 ******************************************************/
-void mpi_get_elements_x__(MPI_Fint status, MPI_Fint datatype, MPI_Count* count, MPI_Fint * ierr)
+void mpi_get_elements_x__(MPI_Fint * status, MPI_Fint * datatype, MPI_Count* count, MPI_Fint * ierr)
 {
   MPI_GET_ELEMENTS_X(status, datatype, count, ierr);
   return ;
@@ -285,7 +287,7 @@ void MPI_STATUS_SET_ELEMENTS_X(MPI_Fint * status, MPI_Fint * datatype, MPI_Count
   MPI_Status local_status; 
   MPI_Status_f2c(status, &local_status);
   *ierr = MPI_Status_set_elements_x(&local_status, MPI_Type_f2c(*datatype),
-    *count);
+                                    *count);
   MPI_Status_c2f(&local_status, status);
   return ;
 }
@@ -329,22 +331,26 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message* message, MPI_Sta
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
-!!!
+
+
 /******************************************************
 ***      MPI_Mprobe wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_MPROBE(MPI_Fint source, MPI_Fint tag, MPI_Fint comm, MPI_Fint message, MPI_Fint status, MPI_Fint * ierr)
+void MPI_MPROBE(MPI_Fint * source, MPI_Fint * tag, MPI_Fint * comm, MPI_Fint * message, MPI_Fint * status, MPI_Fint * ierr)
 {
-
-  *ierr = MPI_Mprobe(/* MPI_HANDLE_TYPES */ source, /* MPI_HANDLE_TYPES */ tag,
-    /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ message, /* MPI_HANDLE_TYPES */ status);
+  MPI_Status local_status; 
+  MPI_Message local_message;
+  *ierr = MPI_Mprobe(*source, *tag,
+                      MPI_Comm_f2c(*comm), &message, &local_status);
+  MPI_Status_c2f(&local_status, status);
+  *message = MPI_Message_c2f(local_message);
   return ;
 }
 
 /******************************************************
 ***      MPI_Mprobe wrapper function (lowercase)
 ******************************************************/
-void mpi_mprobe(MPI_Fint source, MPI_Fint tag, MPI_Fint comm, MPI_Fint message, MPI_Fint status, MPI_Fint * ierr)
+void mpi_mprobe(MPI_Fint * source, MPI_Fint * tag, MPI_Fint * comm, MPI_Fint * message, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_MPROBE(source, tag, comm, message, status, ierr);
   return ;
@@ -353,7 +359,7 @@ void mpi_mprobe(MPI_Fint source, MPI_Fint tag, MPI_Fint comm, MPI_Fint message, 
 /******************************************************
 ***      MPI_Mprobe wrapper function (lowercase_)
 ******************************************************/
-void mpi_mprobe_(MPI_Fint source, MPI_Fint tag, MPI_Fint comm, MPI_Fint message, MPI_Fint status, MPI_Fint * ierr)
+void mpi_mprobe_(MPI_Fint * source, MPI_Fint * tag, MPI_Fint * comm, MPI_Fint * message, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_MPROBE(source, tag, comm, message, status, ierr);
   return ;
@@ -362,7 +368,7 @@ void mpi_mprobe_(MPI_Fint source, MPI_Fint tag, MPI_Fint comm, MPI_Fint message,
 /******************************************************
 ***      MPI_Mprobe wrapper function (lowercase__)
 ******************************************************/
-void mpi_mprobe__(MPI_Fint source, MPI_Fint tag, MPI_Fint comm, MPI_Fint message, MPI_Fint status, MPI_Fint * ierr)
+void mpi_mprobe__(MPI_Fint * source, MPI_Fint * tag, MPI_Fint * comm, MPI_Fint * message, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_MPROBE(source, tag, comm, message, status, ierr);
   return ;
@@ -385,19 +391,22 @@ int MPI_Improbe(int source, int tag, MPI_Comm comm, int* flag, MPI_Message* mess
 /******************************************************
 ***      MPI_Improbe wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IMPROBE(MPI_Fint source, MPI_Fint tag, MPI_Fint comm, int* flag, MPI_Fint message, MPI_Fint status,
+void MPI_IMPROBE(MPI_Fint * source, MPI_Fint * tag, MPI_Fint * comm, MPI_Fint * flag, MPI_Fint * message, MPI_Fint * status,
 MPI_Fint * ierr)
 {
-
-  *ierr = MPI_Improbe(/* MPI_HANDLE_TYPES */ source, /* MPI_HANDLE_TYPES */ tag,
-    /* MPI_HANDLE_TYPES */ comm, flag, /* MPI_HANDLE_TYPES */ message, /* MPI_HANDLE_TYPES */ status);
+  MPI_Status local_status; 
+  MPI_Message local_message;
+  *ierr = MPI_Improbe( *source, *tag, 
+                       MPI_Comm_f2c(*comm), flag, &message, &local_status);
+  MPI_Status_c2f(&local_status, status);
+  *message = MPI_Message_c2f(local_message);
   return ;
 }
 
 /******************************************************
 ***      MPI_Improbe wrapper function (lowercase)
 ******************************************************/
-void mpi_improbe(MPI_Fint source, MPI_Fint tag, MPI_Fint comm, int* flag, MPI_Fint message, MPI_Fint status,
+void mpi_improbe(MPI_Fint * source, MPI_Fint * tag, MPI_Fint * comm, MPI_Fint * flag, MPI_Fint * message, MPI_Fint * status,
 MPI_Fint * ierr)
 {
   MPI_IMPROBE(source, tag, comm, flag, message, status, ierr);
@@ -407,7 +416,7 @@ MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Improbe wrapper function (lowercase_)
 ******************************************************/
-void mpi_improbe_(MPI_Fint source, MPI_Fint tag, MPI_Fint comm, int* flag, MPI_Fint message, MPI_Fint status,
+void mpi_improbe_(MPI_Fint * source, MPI_Fint * tag, MPI_Fint * comm, MPI_Fint * flag, MPI_Fint * message, MPI_Fint * status,
 MPI_Fint * ierr)
 {
   MPI_IMPROBE(source, tag, comm, flag, message, status, ierr);
@@ -417,7 +426,7 @@ MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Improbe wrapper function (lowercase__)
 ******************************************************/
-void mpi_improbe__(MPI_Fint source, MPI_Fint tag, MPI_Fint comm, int* flag, MPI_Fint message, MPI_Fint status,
+void mpi_improbe__(MPI_Fint * source, MPI_Fint * tag, MPI_Fint * comm, MPI_Fint * flag, MPI_Fint * message, MPI_Fint * status,
 MPI_Fint * ierr)
 {
   MPI_IMPROBE(source, tag, comm, flag, message, status, ierr);
@@ -441,18 +450,22 @@ int MPI_Mrecv(void* buf, int count, MPI_Datatype datatype, MPI_Message* message,
 /******************************************************
 ***      MPI_Mrecv wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_MRECV(MPI_Aint buf, MPI_Fint count, MPI_Fint datatype, MPI_Fint message, MPI_Fint status, MPI_Fint * ierr)
+void MPI_MRECV(MPI_Aint * buf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * message, MPI_Fint * status, MPI_Fint * ierr)
 {
-
-  *ierr = MPI_Mrecv(buf, /* MPI_HANDLE_TYPES */ count, /* MPI_HANDLE_TYPES */ datatype,
-    /* MPI_HANDLE_TYPES */ message, /* MPI_HANDLE_TYPES */ status);
+  MPI_Status local_status; 
+  MPI_Message local_message;
+  local_message = MPI_Message_f2c(*message);
+  *ierr = MPI_Mrecv(buf, *count, MPI_Type_f2c(*datatype),
+                    &local_message, &local_status);
+  MPI_Status_c2f(&local_status, status);
+  *message = MPI_Message_c2f(local_message);
   return ;
 }
 
 /******************************************************
 ***      MPI_Mrecv wrapper function (lowercase)
 ******************************************************/
-void mpi_mrecv(MPI_Aint buf, MPI_Fint count, MPI_Fint datatype, MPI_Fint message, MPI_Fint status, MPI_Fint * ierr)
+void mpi_mrecv(MPI_Aint * buf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * message, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_MRECV(buf, count, datatype, message, status, ierr);
   return ;
@@ -461,7 +474,7 @@ void mpi_mrecv(MPI_Aint buf, MPI_Fint count, MPI_Fint datatype, MPI_Fint message
 /******************************************************
 ***      MPI_Mrecv wrapper function (lowercase_)
 ******************************************************/
-void mpi_mrecv_(MPI_Aint buf, MPI_Fint count, MPI_Fint datatype, MPI_Fint message, MPI_Fint status, MPI_Fint * ierr)
+void mpi_mrecv_(MPI_Aint * buf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * message, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_MRECV(buf, count, datatype, message, status, ierr);
   return ;
@@ -470,7 +483,7 @@ void mpi_mrecv_(MPI_Aint buf, MPI_Fint count, MPI_Fint datatype, MPI_Fint messag
 /******************************************************
 ***      MPI_Mrecv wrapper function (lowercase__)
 ******************************************************/
-void mpi_mrecv__(MPI_Aint buf, MPI_Fint count, MPI_Fint datatype, MPI_Fint message, MPI_Fint status, MPI_Fint * ierr)
+void mpi_mrecv__(MPI_Aint * buf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * message, MPI_Fint * status, MPI_Fint * ierr)
 {
   MPI_MRECV(buf, count, datatype, message, status, ierr);
   return ;
@@ -493,18 +506,22 @@ int MPI_Imrecv(void* buf, int count, MPI_Datatype datatype, MPI_Message* message
 /******************************************************
 ***      MPI_Imrecv wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IMRECV(MPI_Aint buf, MPI_Fint count, MPI_Fint datatype, MPI_Fint message, MPI_Fint request, MPI_Fint * ierr)
+void MPI_IMRECV(MPI_Aint * buf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * message, MPI_Fint * request, MPI_Fint * ierr)
 {
-
-  *ierr = MPI_Imrecv(buf, /* MPI_HANDLE_TYPES */ count, /* MPI_HANDLE_TYPES */ datatype,
-    /* MPI_HANDLE_TYPES */ message, /* MPI_HANDLE_TYPES */ request);
+  MPI_Message local_message;
+  MPI_Request local_request;
+  local_message = MPI_Message_f2c(*message);
+  *ierr = MPI_Imrecv(buf, *count, MPI_Type_f2c(*datatype),
+    &local_message, &local_request);
+  *message = MPI_Message_c2f(local_message);
+  *request = MPI_Request_c2f(local_request);
   return ;
 }
 
 /******************************************************
 ***      MPI_Imrecv wrapper function (lowercase)
 ******************************************************/
-void mpi_imrecv(MPI_Aint buf, MPI_Fint count, MPI_Fint datatype, MPI_Fint message, MPI_Fint request, MPI_Fint * ierr)
+void mpi_imrecv(MPI_Aint * buf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * message, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IMRECV(buf, count, datatype, message, request, ierr);
   return ;
@@ -513,7 +530,7 @@ void mpi_imrecv(MPI_Aint buf, MPI_Fint count, MPI_Fint datatype, MPI_Fint messag
 /******************************************************
 ***      MPI_Imrecv wrapper function (lowercase_)
 ******************************************************/
-void mpi_imrecv_(MPI_Aint buf, MPI_Fint count, MPI_Fint datatype, MPI_Fint message, MPI_Fint request, MPI_Fint * ierr)
+void mpi_imrecv_(MPI_Aint * buf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * message, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IMRECV(buf, count, datatype, message, request, ierr);
   return ;
@@ -522,17 +539,16 @@ void mpi_imrecv_(MPI_Aint buf, MPI_Fint count, MPI_Fint datatype, MPI_Fint messa
 /******************************************************
 ***      MPI_Imrecv wrapper function (lowercase__)
 ******************************************************/
-void mpi_imrecv__(MPI_Aint buf, MPI_Fint count, MPI_Fint datatype, MPI_Fint message, MPI_Fint request, MPI_Fint * ierr)
+void mpi_imrecv__(MPI_Aint * buf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * message, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IMRECV(buf, count, datatype, message, request, ierr);
   return ;
 }
 
-
 /******************************************************
 ***      MPI_Type_create_hindexed_block wrapper function 
 ******************************************************/
-int MPI_Type_create_hindexed_block(int count, int blocklength, TAU_MPICH3_CONST MPI_Aint array_of_displacements[], MPI_Datatype oldtype,
+int MPI_Type_create_hindexed_block(int count, int blocklength, TAU_MPICH3_CONST MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
 MPI_Datatype* newtype)
 {
   int retvalue;
@@ -546,21 +562,21 @@ MPI_Datatype* newtype)
 /******************************************************
 ***      MPI_Type_create_hindexed_block wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_TYPE_CREATE_HINDEXED_BLOCK(MPI_Fint count, MPI_Fint blocklength, MPI_Aint array_of_displacements[], MPI_Fint oldtype,
-MPI_Fint newtype, MPI_Fint * ierr)
+void MPI_TYPE_CREATE_HINDEXED_BLOCK(MPI_Fint * count, MPI_Fint * blocklength, MPI_Aint * array_of_displacements, MPI_Fint * oldtype,
+MPI_Fint * newtype, MPI_Fint * ierr)
 {
-
-  *ierr = MPI_Type_create_hindexed_block(/* MPI_HANDLE_TYPES */ count,
-    /* MPI_HANDLE_TYPES */ blocklength, array_of_displacements, /* MPI_HANDLE_TYPES */ oldtype,
-    /* MPI_HANDLE_TYPES */ newtype);
+  MPI_Datatype local_type;
+  *ierr = MPI_Type_create_hindexed_block( *count, *blocklength, array_of_displacements, 
+              MPI_Type_f2c(*oldtype), &local_type);
+  *newtype = MPI_Type_c2f(local_type);
   return ;
 }
 
 /******************************************************
 ***      MPI_Type_create_hindexed_block wrapper function (lowercase)
 ******************************************************/
-void mpi_type_create_hindexed_block(MPI_Fint count, MPI_Fint blocklength, MPI_Aint array_of_displacements[], MPI_Fint oldtype,
-MPI_Fint newtype, MPI_Fint * ierr)
+void mpi_type_create_hindexed_block(MPI_Fint * count, MPI_Fint * blocklength, MPI_Aint * array_of_displacements, MPI_Fint * oldtype,
+MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_HINDEXED_BLOCK(count, blocklength, array_of_displacements, oldtype, newtype, ierr);
   return ;
@@ -569,8 +585,8 @@ MPI_Fint newtype, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Type_create_hindexed_block wrapper function (lowercase_)
 ******************************************************/
-void mpi_type_create_hindexed_block_(MPI_Fint count, MPI_Fint blocklength, MPI_Aint array_of_displacements[], MPI_Fint oldtype,
-MPI_Fint newtype, MPI_Fint * ierr)
+void mpi_type_create_hindexed_block_(MPI_Fint * count, MPI_Fint * blocklength, MPI_Aint * array_of_displacements, MPI_Fint * oldtype,
+MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_HINDEXED_BLOCK(count, blocklength, array_of_displacements, oldtype, newtype, ierr);
   return ;
@@ -579,12 +595,13 @@ MPI_Fint newtype, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Type_create_hindexed_block wrapper function (lowercase__)
 ******************************************************/
-void mpi_type_create_hindexed_block__(MPI_Fint count, MPI_Fint blocklength, MPI_Aint array_of_displacements[], MPI_Fint oldtype,
-MPI_Fint newtype, MPI_Fint * ierr)
+void mpi_type_create_hindexed_block__(MPI_Fint * count, MPI_Fint * blocklength, MPI_Aint * array_of_displacements, MPI_Fint * oldtype,
+MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_HINDEXED_BLOCK(count, blocklength, array_of_displacements, oldtype, newtype, ierr);
   return ;
 }
+
 
 
 /******************************************************
@@ -603,17 +620,18 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request* request)
 /******************************************************
 ***      MPI_Ibarrier wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IBARRIER(MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void MPI_IBARRIER(MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
-
-  *ierr = MPI_Ibarrier(/* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
+  MPI_Request local_request;
+  *ierr = MPI_Ibarrier(MPI_Comm_f2c(*comm), &local_request);
+  *request = MPI_Request_c2f(local_request);
   return ;
 }
 
 /******************************************************
 ***      MPI_Ibarrier wrapper function (lowercase)
 ******************************************************/
-void mpi_ibarrier(MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ibarrier(MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IBARRIER(comm, request, ierr);
   return ;
@@ -622,7 +640,7 @@ void mpi_ibarrier(MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ibarrier wrapper function (lowercase_)
 ******************************************************/
-void mpi_ibarrier_(MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ibarrier_(MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IBARRIER(comm, request, ierr);
   return ;
@@ -631,7 +649,7 @@ void mpi_ibarrier_(MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ibarrier wrapper function (lowercase__)
 ******************************************************/
-void mpi_ibarrier__(MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ibarrier__(MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IBARRIER(comm, request, ierr);
   return ;
@@ -650,24 +668,18 @@ int MPI_Ibcast(void* buffer, int count, MPI_Datatype datatype, int root, MPI_Com
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
-
+MPI_BOTTOM
 /******************************************************
 ***      MPI_Ibcast wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IBCAST(MPI_Aint buffer, MPI_Fint count, MPI_Fint datatype, MPI_Fint root, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Ibcast(buffer, /* MPI_HANDLE_TYPES */ count, /* MPI_HANDLE_TYPES */ datatype,
-    /* MPI_HANDLE_TYPES */ root, /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_IBCAST(MPI_Aint * buffer, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request,
+MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Ibcast wrapper function (lowercase)
 ******************************************************/
-void mpi_ibcast(MPI_Aint buffer, MPI_Fint count, MPI_Fint datatype, MPI_Fint root, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
+void mpi_ibcast(MPI_Aint * buffer, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request,
+MPI_Fint * ierr);
 {
   MPI_IBCAST(buffer, count, datatype, root, comm, request, ierr);
   return ;
@@ -676,8 +688,8 @@ MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ibcast wrapper function (lowercase_)
 ******************************************************/
-void mpi_ibcast_(MPI_Aint buffer, MPI_Fint count, MPI_Fint datatype, MPI_Fint root, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
+void mpi_ibcast_(MPI_Aint * buffer, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request,
+MPI_Fint * ierr);
 {
   MPI_IBCAST(buffer, count, datatype, root, comm, request, ierr);
   return ;
@@ -686,7 +698,7 @@ MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ibcast wrapper function (lowercase__)
 ******************************************************/
-void mpi_ibcast__(MPI_Aint buffer, MPI_Fint count, MPI_Fint datatype, MPI_Fint root, MPI_Fint comm, MPI_Fint request,
+void mpi_ibcast__(MPI_Aint * buffer, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request,
 MPI_Fint * ierr)
 {
   MPI_IBCAST(buffer, count, datatype, root, comm, request, ierr);
@@ -711,21 +723,15 @@ MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request* request)
 /******************************************************
 ***      MPI_Igather wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IGATHER(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Igather(sendbuf, /* MPI_HANDLE_TYPES */ sendcount, /* MPI_HANDLE_TYPES */ sendtype,
-    recvbuf, /* MPI_HANDLE_TYPES */ recvcount, /* MPI_HANDLE_TYPES */ recvtype,
-    /* MPI_HANDLE_TYPES */ root, /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_IGATHER(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Igather wrapper function (lowercase)
 ******************************************************/
-void mpi_igather(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_igather(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
+
 {
   MPI_IGATHER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, request, ierr);
   return ;
@@ -734,8 +740,9 @@ MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request, MPI_Fint * ie
 /******************************************************
 ***      MPI_Igather wrapper function (lowercase_)
 ******************************************************/
-void mpi_igather_(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_igather_(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
+
 {
   MPI_IGATHER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, request, ierr);
   return ;
@@ -744,8 +751,8 @@ MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request, MPI_Fint * ie
 /******************************************************
 ***      MPI_Igather wrapper function (lowercase__)
 ******************************************************/
-void mpi_igather__(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_igather__(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IGATHER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, request, ierr);
   return ;
@@ -755,8 +762,8 @@ MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request, MPI_Fint * ie
 /******************************************************
 ***      MPI_Igatherv wrapper function 
 ******************************************************/
-int MPI_Igatherv(TAU_MPICH3_CONST void* sendbuf, int sendcount, MPI_Datatype sendtype, void* recvbuf, TAU_MPICH3_CONST int recvcounts[],
-TAU_MPICH3_CONST int displs[], MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request* request)
+int MPI_Igatherv(TAU_MPICH3_CONST void* sendbuf, int sendcount, MPI_Datatype sendtype, void* recvbuf, TAU_MPICH3_CONST int * recvcounts,
+TAU_MPICH3_CONST int * displs, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Igatherv()", "", TAU_MESSAGE);
@@ -770,23 +777,15 @@ TAU_MPICH3_CONST int displs[], MPI_Datatype recvtype, int root, MPI_Comm comm, M
 /******************************************************
 ***      MPI_Igatherv wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IGATHERV(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
-{
+void MPI_IGATHERV(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 
-  *ierr = MPI_Igatherv(sendbuf, /* MPI_HANDLE_TYPES */ sendcount, /* MPI_HANDLE_TYPES */ sendtype,
-    recvbuf, recvcounts, displs, /* MPI_HANDLE_TYPES */ recvtype, /* MPI_HANDLE_TYPES */ root,
-    /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
 
 /******************************************************
 ***      MPI_Igatherv wrapper function (lowercase)
 ******************************************************/
-void mpi_igatherv(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
+void mpi_igatherv(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IGATHERV(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm,
     request, ierr);
@@ -796,9 +795,8 @@ MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Igatherv wrapper function (lowercase_)
 ******************************************************/
-void mpi_igatherv_(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
+void mpi_igatherv_(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IGATHERV(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm,
     request, ierr);
@@ -808,16 +806,15 @@ MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Igatherv wrapper function (lowercase__)
 ******************************************************/
-void mpi_igatherv__(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
+void mpi_igatherv__(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IGATHERV(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm,
     request, ierr);
   return ;
 }
 
-
+!!!
 /******************************************************
 ***      MPI_Iscatter wrapper function 
 ******************************************************/
@@ -835,21 +832,13 @@ MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request* request)
 /******************************************************
 ***      MPI_Iscatter wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_ISCATTER(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Iscatter(sendbuf, /* MPI_HANDLE_TYPES */ sendcount, /* MPI_HANDLE_TYPES */ sendtype,
-    recvbuf, /* MPI_HANDLE_TYPES */ recvcount, /* MPI_HANDLE_TYPES */ recvtype,
-    /* MPI_HANDLE_TYPES */ root, /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
-
+extern void MPI_ISCATTER(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 /******************************************************
 ***      MPI_Iscatter wrapper function (lowercase)
 ******************************************************/
-void mpi_iscatter(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_iscatter(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_ISCATTER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, request, ierr);
   return ;
@@ -858,8 +847,8 @@ MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request, MPI_Fint * ie
 /******************************************************
 ***      MPI_Iscatter wrapper function (lowercase_)
 ******************************************************/
-void mpi_iscatter_(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_iscatter_(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_ISCATTER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, request, ierr);
   return ;
@@ -868,8 +857,8 @@ MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request, MPI_Fint * ie
 /******************************************************
 ***      MPI_Iscatter wrapper function (lowercase__)
 ******************************************************/
-void mpi_iscatter__(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_iscatter__(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_ISCATTER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, request, ierr);
   return ;
@@ -879,8 +868,8 @@ MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request, MPI_Fint * ie
 /******************************************************
 ***      MPI_Iscatterv wrapper function 
 ******************************************************/
-int MPI_Iscatterv(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int sendcounts[], TAU_MPICH3_CONST int displs[], MPI_Datatype sendtype,
-void* recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request* request)
+int MPI_Iscatterv(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int * sendcounts, TAU_MPICH3_CONST int * displs, MPI_Datatype sendtype,
+void* recvbuf, int * recvcount, MPI_Datatype recvtype, int * root, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Iscatterv()", "", TAU_MESSAGE);
@@ -894,23 +883,14 @@ void* recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MP
 /******************************************************
 ***      MPI_Iscatterv wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_ISCATTERV(MPI_Aint sendbuf, int sendcounts[], int displs[], MPI_Fint sendtype, MPI_Aint recvbuf,
-MPI_Fint recvcount, MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Iscatterv(sendbuf, sendcounts, displs, /* MPI_HANDLE_TYPES */ sendtype, recvbuf,
-    /* MPI_HANDLE_TYPES */ recvcount, /* MPI_HANDLE_TYPES */ recvtype, /* MPI_HANDLE_TYPES */ root,
-    /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_ISCATTERV(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * displs, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+MPI_Fint * recvcount, MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Iscatterv wrapper function (lowercase)
 ******************************************************/
-void mpi_iscatterv(MPI_Aint sendbuf, int sendcounts[], int displs[], MPI_Fint sendtype, MPI_Aint recvbuf,
-MPI_Fint recvcount, MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
+void mpi_iscatterv(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * displs, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+MPI_Fint * recvcount, MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_ISCATTERV(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm,
     request, ierr);
@@ -920,9 +900,8 @@ MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Iscatterv wrapper function (lowercase_)
 ******************************************************/
-void mpi_iscatterv_(MPI_Aint sendbuf, int sendcounts[], int displs[], MPI_Fint sendtype, MPI_Aint recvbuf,
-MPI_Fint recvcount, MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
+void mpi_iscatterv_(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * displs, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+MPI_Fint * recvcount, MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_ISCATTERV(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm,
     request, ierr);
@@ -932,9 +911,8 @@ MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Iscatterv wrapper function (lowercase__)
 ******************************************************/
-void mpi_iscatterv__(MPI_Aint sendbuf, int sendcounts[], int displs[], MPI_Fint sendtype, MPI_Aint recvbuf,
-MPI_Fint recvcount, MPI_Fint recvtype, MPI_Fint root, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
+void mpi_iscatterv__(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * displs, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+MPI_Fint * recvcount, MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_ISCATTERV(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm,
     request, ierr);
@@ -959,21 +937,14 @@ MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 /******************************************************
 ***      MPI_Iallgather wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IALLGATHER(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Iallgather(sendbuf, /* MPI_HANDLE_TYPES */ sendcount, /* MPI_HANDLE_TYPES */ sendtype,
-    recvbuf, /* MPI_HANDLE_TYPES */ recvcount, /* MPI_HANDLE_TYPES */ recvtype,
-    /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_IALLGATHER(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Iallgather wrapper function (lowercase)
 ******************************************************/
-void mpi_iallgather(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_iallgather(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLGATHER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request, ierr);
   return ;
@@ -982,8 +953,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Iallgather wrapper function (lowercase_)
 ******************************************************/
-void mpi_iallgather_(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_iallgather_(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLGATHER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request, ierr);
   return ;
@@ -992,8 +963,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Iallgather wrapper function (lowercase__)
 ******************************************************/
-void mpi_iallgather__(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_iallgather__(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLGATHER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request, ierr);
   return ;
@@ -1003,8 +974,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Iallgatherv wrapper function 
 ******************************************************/
-int MPI_Iallgatherv(TAU_MPICH3_CONST void* sendbuf, int sendcount, MPI_Datatype sendtype, void* recvbuf, TAU_MPICH3_CONST int recvcounts[],
-TAU_MPICH3_CONST int displs[], MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
+int MPI_Iallgatherv(TAU_MPICH3_CONST void* sendbuf, int sendcount, MPI_Datatype sendtype, void* recvbuf, TAU_MPICH3_CONST int * recvcounts,
+TAU_MPICH3_CONST int * displs, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Iallgatherv()", "", TAU_MESSAGE);
@@ -1018,21 +989,14 @@ TAU_MPICH3_CONST int displs[], MPI_Datatype recvtype, MPI_Comm comm, MPI_Request
 /******************************************************
 ***      MPI_Iallgatherv wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IALLGATHERV(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Iallgatherv(sendbuf, /* MPI_HANDLE_TYPES */ sendcount,
-    /* MPI_HANDLE_TYPES */ sendtype, recvbuf, recvcounts, displs, /* MPI_HANDLE_TYPES */ recvtype,
-    /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_IALLGATHERV(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+int * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Iallgatherv wrapper function (lowercase)
 ******************************************************/
-void mpi_iallgatherv(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_iallgatherv(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+int * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLGATHERV(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm,
     request, ierr);
@@ -1042,8 +1006,8 @@ int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ier
 /******************************************************
 ***      MPI_Iallgatherv wrapper function (lowercase_)
 ******************************************************/
-void mpi_iallgatherv_(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_iallgatherv_(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+int * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLGATHERV(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm,
     request, ierr);
@@ -1053,8 +1017,8 @@ int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ier
 /******************************************************
 ***      MPI_Iallgatherv wrapper function (lowercase__)
 ******************************************************/
-void mpi_iallgatherv__(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_iallgatherv__(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+int * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLGATHERV(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm,
     request, ierr);
@@ -1079,21 +1043,14 @@ MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 /******************************************************
 ***      MPI_Ialltoall wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IALLTOALL(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Ialltoall(sendbuf, /* MPI_HANDLE_TYPES */ sendcount, /* MPI_HANDLE_TYPES */ sendtype,
-    recvbuf, /* MPI_HANDLE_TYPES */ recvcount, /* MPI_HANDLE_TYPES */ recvtype,
-    /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_IALLTOALL(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint - recvbuf, MPI_Fint - recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Ialltoall wrapper function (lowercase)
 ******************************************************/
-void mpi_ialltoall(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ialltoall(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint - recvbuf, MPI_Fint - recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLTOALL(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request, ierr);
   return ;
@@ -1102,8 +1059,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ialltoall wrapper function (lowercase_)
 ******************************************************/
-void mpi_ialltoall_(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ialltoall_(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint - recvbuf, MPI_Fint - recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLTOALL(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request, ierr);
   return ;
@@ -1112,8 +1069,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ialltoall wrapper function (lowercase__)
 ******************************************************/
-void mpi_ialltoall__(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ialltoall__(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint - recvbuf, MPI_Fint - recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLTOALL(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request, ierr);
   return ;
@@ -1123,9 +1080,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ialltoallv wrapper function 
 ******************************************************/
-int MPI_Ialltoallv(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int sendcounts[], TAU_MPICH3_CONST int sdispls[], MPI_Datatype sendtype,
-void* recvbuf, TAU_MPICH3_CONST int recvcounts[], TAU_MPICH3_CONST int rdispls[], MPI_Datatype recvtype, MPI_Comm comm,
-MPI_Request* request)
+int MPI_Ialltoallv(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int * sendcounts, TAU_MPICH3_CONST int * sdispls, MPI_Datatype sendtype,
+void* recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST int * rdispls, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ialltoallv()", "", TAU_MESSAGE);
@@ -1139,23 +1095,14 @@ MPI_Request* request)
 /******************************************************
 ***      MPI_Ialltoallv wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IALLTOALLV(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtype, MPI_Aint recvbuf,
-int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Ialltoallv(sendbuf, sendcounts, sdispls, /* MPI_HANDLE_TYPES */ sendtype, recvbuf,
-    recvcounts, rdispls, /* MPI_HANDLE_TYPES */ recvtype, /* MPI_HANDLE_TYPES */ comm,
-    /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_IALLTOALLV(MPI_Aint sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint sendtype, MPI_Aint recvbuf,
+MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Ialltoallv wrapper function (lowercase)
 ******************************************************/
-void mpi_ialltoallv(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtype, MPI_Aint recvbuf,
-int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
+void mpi_ialltoallv(MPI_Aint sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint sendtype, MPI_Aint recvbuf,
+MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 {
   MPI_IALLTOALLV(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype,
     comm, request, ierr);
@@ -1165,9 +1112,8 @@ MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ialltoallv wrapper function (lowercase_)
 ******************************************************/
-void mpi_ialltoallv_(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtype, MPI_Aint recvbuf,
-int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
+void mpi_ialltoallv_(MPI_Aint sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint sendtype, MPI_Aint recvbuf,
+MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 {
   MPI_IALLTOALLV(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype,
     comm, request, ierr);
@@ -1177,9 +1123,8 @@ MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ialltoallv wrapper function (lowercase__)
 ******************************************************/
-void mpi_ialltoallv__(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtype, MPI_Aint recvbuf,
-int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request,
-MPI_Fint * ierr)
+void mpi_ialltoallv__(MPI_Aint sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint sendtype, MPI_Aint recvbuf,
+MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 {
   MPI_IALLTOALLV(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype,
     comm, request, ierr);
@@ -1190,8 +1135,8 @@ MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ialltoallw wrapper function 
 ******************************************************/
-int MPI_Ialltoallw(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int sendcounts[], TAU_MPICH3_CONST int sdispls[], TAU_MPICH3_CONST MPI_Datatype sendtypes[],
-void* recvbuf, TAU_MPICH3_CONST int recvcounts[], TAU_MPICH3_CONST int rdispls[], TAU_MPICH3_CONST MPI_Datatype recvtypes[],
+int MPI_Ialltoallw(TAU_MPICH3_CONST void * sendbuf, TAU_MPICH3_CONST int * sendcounts, TAU_MPICH3_CONST int * sdispls, TAU_MPICH3_CONST MPI_Datatype * sendtypes,
+void * recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST int * rdispls, TAU_MPICH3_CONST MPI_Datatype * recvtypes,
 MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
@@ -1206,23 +1151,16 @@ MPI_Comm comm, MPI_Request* request)
 /******************************************************
 ***      MPI_Ialltoallw wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IALLTOALLW(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtypes[],
-MPI_Aint recvbuf, int recvcounts[], int rdispls[], MPI_Fint recvtypes[], MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Ialltoallw(sendbuf, sendcounts, sdispls, /* MPI_HANDLE_TYPES */ sendtypes, recvbuf,
-    recvcounts, rdispls, /* MPI_HANDLE_TYPES */ recvtypes, /* MPI_HANDLE_TYPES */ comm,
-    /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_IALLTOALLW(MPI_Aint sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtypes, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Ialltoallw wrapper function (lowercase)
 ******************************************************/
-void mpi_ialltoallw(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtypes[],
-MPI_Aint recvbuf, int recvcounts[], int rdispls[], MPI_Fint recvtypes[], MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
+void mpi_ialltoallw(MPI_Aint sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtypes, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLTOALLW(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes,
     comm, request, ierr);
@@ -1232,9 +1170,9 @@ MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ialltoallw wrapper function (lowercase_)
 ******************************************************/
-void mpi_ialltoallw_(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtypes[],
-MPI_Aint recvbuf, int recvcounts[], int rdispls[], MPI_Fint recvtypes[], MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
+void mpi_ialltoallw_(MPI_Aint sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtypes, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLTOALLW(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes,
     comm, request, ierr);
@@ -1244,9 +1182,9 @@ MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ialltoallw wrapper function (lowercase__)
 ******************************************************/
-void mpi_ialltoallw__(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtypes[],
-MPI_Aint recvbuf, int recvcounts[], int rdispls[], MPI_Fint recvtypes[], MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
+void mpi_ialltoallw__(MPI_Aint sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtypes, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLTOALLW(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes,
     comm, request, ierr);
@@ -1271,21 +1209,14 @@ MPI_Request* request)
 /******************************************************
 ***      MPI_Iallreduce wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IALLREDUCE(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Iallreduce(sendbuf, recvbuf, /* MPI_HANDLE_TYPES */ count,
-    /* MPI_HANDLE_TYPES */ datatype, /* MPI_HANDLE_TYPES */ op, /* MPI_HANDLE_TYPES */ comm,
-    /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_IALLREDUCE(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Iallreduce wrapper function (lowercase)
 ******************************************************/
-void mpi_iallreduce(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
+void mpi_iallreduce(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLREDUCE(sendbuf, recvbuf, count, datatype, op, comm, request, ierr);
   return ;
@@ -1294,8 +1225,8 @@ MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Iallreduce wrapper function (lowercase_)
 ******************************************************/
-void mpi_iallreduce_(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
+void mpi_iallreduce_(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLREDUCE(sendbuf, recvbuf, count, datatype, op, comm, request, ierr);
   return ;
@@ -1304,8 +1235,8 @@ MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Iallreduce wrapper function (lowercase__)
 ******************************************************/
-void mpi_iallreduce__(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
+void mpi_iallreduce__(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IALLREDUCE(sendbuf, recvbuf, count, datatype, op, comm, request, ierr);
   return ;
@@ -1329,21 +1260,14 @@ MPI_Comm comm, MPI_Request* request)
 /******************************************************
 ***      MPI_Ireduce wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IREDUCE(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint root,
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Ireduce(sendbuf, recvbuf, /* MPI_HANDLE_TYPES */ count,
-    /* MPI_HANDLE_TYPES */ datatype, /* MPI_HANDLE_TYPES */ op, /* MPI_HANDLE_TYPES */ root,
-    /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_IREDUCE(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * root,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Ireduce wrapper function (lowercase)
 ******************************************************/
-void mpi_ireduce(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint root,
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ireduce(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * root,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IREDUCE(sendbuf, recvbuf, count, datatype, op, root, comm, request, ierr);
   return ;
@@ -1352,8 +1276,8 @@ MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ireduce wrapper function (lowercase_)
 ******************************************************/
-void mpi_ireduce_(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint root,
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ireduce_(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * root,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IREDUCE(sendbuf, recvbuf, count, datatype, op, root, comm, request, ierr);
   return ;
@@ -1362,8 +1286,8 @@ MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ireduce wrapper function (lowercase__)
 ******************************************************/
-void mpi_ireduce__(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint root,
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ireduce__(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * root,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IREDUCE(sendbuf, recvbuf, count, datatype, op, root, comm, request, ierr);
   return ;
@@ -1387,20 +1311,14 @@ int MPI_Reduce_scatter_block(TAU_MPICH3_CONST void* sendbuf, void* recvbuf, int 
 /******************************************************
 ***      MPI_Reduce_scatter_block wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_REDUCE_SCATTER_BLOCK(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint recvcount, MPI_Fint datatype, MPI_Fint op,
-MPI_Fint comm, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Reduce_scatter_block(sendbuf, recvbuf, /* MPI_HANDLE_TYPES */ recvcount,
-    /* MPI_HANDLE_TYPES */ datatype, /* MPI_HANDLE_TYPES */ op, /* MPI_HANDLE_TYPES */ comm);
-  return ;
-}
+extern void MPI_REDUCE_SCATTER_BLOCK(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * recvcount, MPI_Fint * datatype, MPI_Fint * op,
+MPI_Fint * comm, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Reduce_scatter_block wrapper function (lowercase)
 ******************************************************/
-void mpi_reduce_scatter_block(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint recvcount, MPI_Fint datatype, MPI_Fint op,
-MPI_Fint comm, MPI_Fint * ierr)
+void mpi_reduce_scatter_block(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * recvcount, MPI_Fint * datatype, MPI_Fint * op,
+MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_REDUCE_SCATTER_BLOCK(sendbuf, recvbuf, recvcount, datatype, op, comm, ierr);
   return ;
@@ -1409,8 +1327,8 @@ MPI_Fint comm, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Reduce_scatter_block wrapper function (lowercase_)
 ******************************************************/
-void mpi_reduce_scatter_block_(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint recvcount, MPI_Fint datatype, MPI_Fint op,
-MPI_Fint comm, MPI_Fint * ierr)
+void mpi_reduce_scatter_block_(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * recvcount, MPI_Fint * datatype, MPI_Fint * op,
+MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_REDUCE_SCATTER_BLOCK(sendbuf, recvbuf, recvcount, datatype, op, comm, ierr);
   return ;
@@ -1419,8 +1337,8 @@ MPI_Fint comm, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Reduce_scatter_block wrapper function (lowercase__)
 ******************************************************/
-void mpi_reduce_scatter_block__(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint recvcount, MPI_Fint datatype, MPI_Fint op,
-MPI_Fint comm, MPI_Fint * ierr)
+void mpi_reduce_scatter_block__(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * recvcount, MPI_Fint * datatype, MPI_Fint * op,
+MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_REDUCE_SCATTER_BLOCK(sendbuf, recvbuf, recvcount, datatype, op, comm, ierr);
   return ;
@@ -1444,21 +1362,14 @@ MPI_Request* request)
 /******************************************************
 ***      MPI_Ireduce_scatter_block wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IREDUCE_SCATTER_BLOCK(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint recvcount, MPI_Fint datatype, MPI_Fint op,
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Ireduce_scatter_block(sendbuf, recvbuf, /* MPI_HANDLE_TYPES */ recvcount,
-    /* MPI_HANDLE_TYPES */ datatype, /* MPI_HANDLE_TYPES */ op, /* MPI_HANDLE_TYPES */ comm,
-    /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_IREDUCE_SCATTER_BLOCK(MPI_Aint sendbuf, MPI_Aint * recvbuf, MPI_Fint * recvcount, MPI_Fint * datatype, MPI_Fint * op,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Ireduce_scatter_block wrapper function (lowercase)
 ******************************************************/
-void mpi_ireduce_scatter_block(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint recvcount, MPI_Fint datatype, MPI_Fint op,
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ireduce_scatter_block(MPI_Aint sendbuf, MPI_Aint * recvbuf, MPI_Fint * recvcount, MPI_Fint * datatype, MPI_Fint * op,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IREDUCE_SCATTER_BLOCK(sendbuf, recvbuf, recvcount, datatype, op, comm, request, ierr);
   return ;
@@ -1467,8 +1378,8 @@ MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ireduce_scatter_block wrapper function (lowercase_)
 ******************************************************/
-void mpi_ireduce_scatter_block_(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint recvcount, MPI_Fint datatype, MPI_Fint op,
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ireduce_scatter_block_(MPI_Aint sendbuf, MPI_Aint * recvbuf, MPI_Fint * recvcount, MPI_Fint * datatype, MPI_Fint * op,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IREDUCE_SCATTER_BLOCK(sendbuf, recvbuf, recvcount, datatype, op, comm, request, ierr);
   return ;
@@ -1477,8 +1388,8 @@ MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ireduce_scatter_block wrapper function (lowercase__)
 ******************************************************/
-void mpi_ireduce_scatter_block__(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint recvcount, MPI_Fint datatype, MPI_Fint op,
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ireduce_scatter_block__(MMPI_Aint sendbuf, MPI_Aint * recvbuf, MPI_Fint * recvcount, MPI_Fint * datatype, MPI_Fint * op,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IREDUCE_SCATTER_BLOCK(sendbuf, recvbuf, recvcount, datatype, op, comm, request, ierr);
   return ;
@@ -1488,7 +1399,7 @@ MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ireduce_scatter wrapper function 
 ******************************************************/
-int MPI_Ireduce_scatter(TAU_MPICH3_CONST void* sendbuf, void* recvbuf, TAU_MPICH3_CONST int recvcounts[], MPI_Datatype datatype, MPI_Op op,
+int MPI_Ireduce_scatter(TAU_MPICH3_CONST void* sendbuf, void* recvbuf, TAU_MPICH3_CONST int * recvcounts, MPI_Datatype datatype, MPI_Op op,
 MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
@@ -1502,20 +1413,14 @@ MPI_Comm comm, MPI_Request* request)
 /******************************************************
 ***      MPI_Ireduce_scatter wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IREDUCE_SCATTER(MPI_Aint sendbuf, MPI_Aint recvbuf, int recvcounts[], MPI_Fint datatype, MPI_Fint op,
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Ireduce_scatter(sendbuf, recvbuf, recvcounts, /* MPI_HANDLE_TYPES */ datatype,
-    /* MPI_HANDLE_TYPES */ op, /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_IREDUCE_SCATTER(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Fint * datatype, MPI_Fint * op,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Ireduce_scatter wrapper function (lowercase)
 ******************************************************/
-void mpi_ireduce_scatter(MPI_Aint sendbuf, MPI_Aint recvbuf, int recvcounts[], MPI_Fint datatype, MPI_Fint op,
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ireduce_scatter(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Fint * datatype, MPI_Fint * op,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IREDUCE_SCATTER(sendbuf, recvbuf, recvcounts, datatype, op, comm, request, ierr);
   return ;
@@ -1524,8 +1429,8 @@ MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ireduce_scatter wrapper function (lowercase_)
 ******************************************************/
-void mpi_ireduce_scatter_(MPI_Aint sendbuf, MPI_Aint recvbuf, int recvcounts[], MPI_Fint datatype, MPI_Fint op,
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ireduce_scatter_(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Fint * datatype, MPI_Fint * op,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IREDUCE_SCATTER(sendbuf, recvbuf, recvcounts, datatype, op, comm, request, ierr);
   return ;
@@ -1534,8 +1439,8 @@ MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ireduce_scatter wrapper function (lowercase__)
 ******************************************************/
-void mpi_ireduce_scatter__(MPI_Aint sendbuf, MPI_Aint recvbuf, int recvcounts[], MPI_Fint datatype, MPI_Fint op,
-MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ireduce_scatter__(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Fint * datatype, MPI_Fint * op,
+MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IREDUCE_SCATTER(sendbuf, recvbuf, recvcounts, datatype, op, comm, request, ierr);
   return ;
@@ -1559,20 +1464,14 @@ MPI_Request* request)
 /******************************************************
 ***      MPI_Iscan wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_ISCAN(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Iscan(sendbuf, recvbuf, /* MPI_HANDLE_TYPES */ count, /* MPI_HANDLE_TYPES */ datatype,
-    /* MPI_HANDLE_TYPES */ op, /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_ISCAN(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Iscan wrapper function (lowercase)
 ******************************************************/
-void mpi_iscan(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
+void mpi_iscan(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_ISCAN(sendbuf, recvbuf, count, datatype, op, comm, request, ierr);
   return ;
@@ -1581,8 +1480,8 @@ MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Iscan wrapper function (lowercase_)
 ******************************************************/
-void mpi_iscan_(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
+void mpi_iscan_(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_ISCAN(sendbuf, recvbuf, count, datatype, op, comm, request, ierr);
   return ;
@@ -1591,8 +1490,8 @@ MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Iscan wrapper function (lowercase__)
 ******************************************************/
-void mpi_iscan__(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
+void mpi_iscan__(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_ISCAN(sendbuf, recvbuf, count, datatype, op, comm, request, ierr);
   return ;
@@ -1616,21 +1515,14 @@ MPI_Request* request)
 /******************************************************
 ***      MPI_Iexscan wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_IEXSCAN(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Iexscan(sendbuf, recvbuf, /* MPI_HANDLE_TYPES */ count,
-    /* MPI_HANDLE_TYPES */ datatype, /* MPI_HANDLE_TYPES */ op, /* MPI_HANDLE_TYPES */ comm,
-    /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
+extern void MPI_IEXSCAN(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Iexscan wrapper function (lowercase)
 ******************************************************/
-void mpi_iexscan(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
+void mpi_iexscan(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IEXSCAN(sendbuf, recvbuf, count, datatype, op, comm, request, ierr);
   return ;
@@ -1639,8 +1531,8 @@ MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Iexscan wrapper function (lowercase_)
 ******************************************************/
-void mpi_iexscan_(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
+void mpi_iexscan_(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IEXSCAN(sendbuf, recvbuf, count, datatype, op, comm, request, ierr);
   return ;
@@ -1649,8 +1541,8 @@ MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Iexscan wrapper function (lowercase__)
 ******************************************************/
-void mpi_iexscan__(MPI_Aint sendbuf, MPI_Aint recvbuf, MPI_Fint count, MPI_Fint datatype, MPI_Fint op, MPI_Fint comm,
-MPI_Fint request, MPI_Fint * ierr)
+void mpi_iexscan__(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * op, MPI_Fint * comm,
+MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_IEXSCAN(sendbuf, recvbuf, count, datatype, op, comm, request, ierr);
   return ;
@@ -1673,18 +1565,18 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm* newcomm)
 /******************************************************
 ***      MPI_Comm_dup_with_info wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_COMM_DUP_WITH_INFO(MPI_Fint comm, MPI_Fint info, MPI_Fint newcomm, MPI_Fint * ierr)
+void MPI_COMM_DUP_WITH_INFO(MPI_Fint * comm, MPI_Fint * info, MPI_Fint * newcomm, MPI_Fint * ierr)
 {
-
-  *ierr = MPI_Comm_dup_with_info(/* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ info,
-    /* MPI_HANDLE_TYPES */ newcomm);
+  MPI_Comm local_newcomm;
+  *ierr = MPI_Comm_dup_with_info(MPI_Comm_f2c(*comm), MPI_Info_f2c(*info), &local_newcomm);
+  *newcomm = MPI_Comm_c2f(local_newcomm);
   return ;
 }
 
 /******************************************************
 ***      MPI_Comm_dup_with_info wrapper function (lowercase)
 ******************************************************/
-void mpi_comm_dup_with_info(MPI_Fint comm, MPI_Fint info, MPI_Fint newcomm, MPI_Fint * ierr)
+void mpi_comm_dup_with_info(MPI_Fint * comm, MPI_Fint * info, MPI_Fint * newcomm, MPI_Fint * ierr)
 {
   MPI_COMM_DUP_WITH_INFO(comm, info, newcomm, ierr);
   return ;
@@ -1693,7 +1585,7 @@ void mpi_comm_dup_with_info(MPI_Fint comm, MPI_Fint info, MPI_Fint newcomm, MPI_
 /******************************************************
 ***      MPI_Comm_dup_with_info wrapper function (lowercase_)
 ******************************************************/
-void mpi_comm_dup_with_info_(MPI_Fint comm, MPI_Fint info, MPI_Fint newcomm, MPI_Fint * ierr)
+void mpi_comm_dup_with_info_(MPI_Fint * comm, MPI_Fint * info, MPI_Fint * newcomm, MPI_Fint * ierr)
 {
   MPI_COMM_DUP_WITH_INFO(comm, info, newcomm, ierr);
   return ;
@@ -1702,7 +1594,7 @@ void mpi_comm_dup_with_info_(MPI_Fint comm, MPI_Fint info, MPI_Fint newcomm, MPI
 /******************************************************
 ***      MPI_Comm_dup_with_info wrapper function (lowercase__)
 ******************************************************/
-void mpi_comm_dup_with_info__(MPI_Fint comm, MPI_Fint info, MPI_Fint newcomm, MPI_Fint * ierr)
+void mpi_comm_dup_with_info__(MPI_Fint * comm, MPI_Fint * info, MPI_Fint * newcomm, MPI_Fint * ierr)
 {
   MPI_COMM_DUP_WITH_INFO(comm, info, newcomm, ierr);
   return ;
@@ -1725,17 +1617,17 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
 /******************************************************
 ***      MPI_Comm_set_info wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_COMM_SET_INFO(MPI_Fint comm, MPI_Fint info, MPI_Fint * ierr)
+void MPI_COMM_SET_INFO(MPI_Fint * comm, MPI_Fint * info, MPI_Fint * ierr)
 {
 
-  *ierr = MPI_Comm_set_info(/* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ info);
+  *ierr = MPI_Comm_set_info(MPI_Comm_f2c(*comm), MPI_Info_f2c(*info));
   return ;
 }
 
 /******************************************************
 ***      MPI_Comm_set_info wrapper function (lowercase)
 ******************************************************/
-void mpi_comm_set_info(MPI_Fint comm, MPI_Fint info, MPI_Fint * ierr)
+void mpi_comm_set_info(MPI_Fint * comm, MPI_Fint * info, MPI_Fint * ierr)
 {
   MPI_COMM_SET_INFO(comm, info, ierr);
   return ;
@@ -1744,7 +1636,7 @@ void mpi_comm_set_info(MPI_Fint comm, MPI_Fint info, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Comm_set_info wrapper function (lowercase_)
 ******************************************************/
-void mpi_comm_set_info_(MPI_Fint comm, MPI_Fint info, MPI_Fint * ierr)
+void mpi_comm_set_info_(MPI_Fint * comm, MPI_Fint * info, MPI_Fint * ierr)
 {
   MPI_COMM_SET_INFO(comm, info, ierr);
   return ;
@@ -1753,7 +1645,7 @@ void mpi_comm_set_info_(MPI_Fint comm, MPI_Fint info, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Comm_set_info wrapper function (lowercase__)
 ******************************************************/
-void mpi_comm_set_info__(MPI_Fint comm, MPI_Fint info, MPI_Fint * ierr)
+void mpi_comm_set_info__(MPI_Fint * comm, MPI_Fint * info, MPI_Fint * ierr)
 {
   MPI_COMM_SET_INFO(comm, info, ierr);
   return ;
@@ -1776,17 +1668,18 @@ int MPI_Comm_get_info(MPI_Comm comm, MPI_Info* info_used)
 /******************************************************
 ***      MPI_Comm_get_info wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_COMM_GET_INFO(MPI_Fint comm, MPI_Fint info_used, MPI_Fint * ierr)
+void MPI_COMM_GET_INFO(MPI_Fint * comm, MPI_Fint * info_used, MPI_Fint * ierr)
 {
-
-  *ierr = MPI_Comm_get_info(/* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ info_used);
+  MPI_Info local_info_used;
+  *ierr = MPI_Comm_get_info(MPI_Comm_f2c(*comm), local_info_used);
+  *info_used = MPI_Info_f2c(local_info_used);
   return ;
 }
 
 /******************************************************
 ***      MPI_Comm_get_info wrapper function (lowercase)
 ******************************************************/
-void mpi_comm_get_info(MPI_Fint comm, MPI_Fint info_used, MPI_Fint * ierr)
+void mpi_comm_get_info(MPI_Fint * comm, MPI_Fint * info_used, MPI_Fint * ierr)
 {
   MPI_COMM_GET_INFO(comm, info_used, ierr);
   return ;
@@ -1795,7 +1688,7 @@ void mpi_comm_get_info(MPI_Fint comm, MPI_Fint info_used, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Comm_get_info wrapper function (lowercase_)
 ******************************************************/
-void mpi_comm_get_info_(MPI_Fint comm, MPI_Fint info_used, MPI_Fint * ierr)
+void mpi_comm_get_info_(MPI_Fint * comm, MPI_Fint * info_used, MPI_Fint * ierr)
 {
   MPI_COMM_GET_INFO(comm, info_used, ierr);
   return ;
@@ -1804,7 +1697,7 @@ void mpi_comm_get_info_(MPI_Fint comm, MPI_Fint info_used, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Comm_get_info wrapper function (lowercase__)
 ******************************************************/
-void mpi_comm_get_info__(MPI_Fint comm, MPI_Fint info_used, MPI_Fint * ierr)
+void mpi_comm_get_info__(MPI_Fint * comm, MPI_Fint * info_used, MPI_Fint * ierr)
 {
   MPI_COMM_GET_INFO(comm, info_used, ierr);
   return ;
@@ -1827,17 +1720,17 @@ int MPI_Win_set_info(MPI_Win win, MPI_Info info)
 /******************************************************
 ***      MPI_Win_set_info wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_WIN_SET_INFO(MPI_Fint win, MPI_Fint info, MPI_Fint * ierr)
+void MPI_WIN_SET_INFO(MPI_Fint * win, MPI_Fint * info, MPI_Fint * ierr)
 {
 
-  *ierr = MPI_Win_set_info(/* MPI_HANDLE_TYPES */ win, /* MPI_HANDLE_TYPES */ info);
+  *ierr = MPI_Win_set_info(MPI_Win_f2c(*win), MPI_Info_f2c(*info));
   return ;
 }
 
 /******************************************************
 ***      MPI_Win_set_info wrapper function (lowercase)
 ******************************************************/
-void mpi_win_set_info(MPI_Fint win, MPI_Fint info, MPI_Fint * ierr)
+void mpi_win_set_info(MPI_Fint * win, MPI_Fint * info, MPI_Fint * ierr)
 {
   MPI_WIN_SET_INFO(win, info, ierr);
   return ;
@@ -1846,7 +1739,7 @@ void mpi_win_set_info(MPI_Fint win, MPI_Fint info, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Win_set_info wrapper function (lowercase_)
 ******************************************************/
-void mpi_win_set_info_(MPI_Fint win, MPI_Fint info, MPI_Fint * ierr)
+void mpi_win_set_info_(MPI_Fint * win, MPI_Fint * info, MPI_Fint * ierr)
 {
   MPI_WIN_SET_INFO(win, info, ierr);
   return ;
@@ -1855,7 +1748,7 @@ void mpi_win_set_info_(MPI_Fint win, MPI_Fint info, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Win_set_info wrapper function (lowercase__)
 ******************************************************/
-void mpi_win_set_info__(MPI_Fint win, MPI_Fint info, MPI_Fint * ierr)
+void mpi_win_set_info__(MPI_Fint * win, MPI_Fint * info, MPI_Fint * ierr)
 {
   MPI_WIN_SET_INFO(win, info, ierr);
   return ;
@@ -1878,17 +1771,18 @@ int MPI_Win_get_info(MPI_Win win, MPI_Info* info_used)
 /******************************************************
 ***      MPI_Win_get_info wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_WIN_GET_INFO(MPI_Fint win, MPI_Fint info_used, MPI_Fint * ierr)
+void MPI_WIN_GET_INFO(MPI_Fint * win, MPI_Fint * info_used, MPI_Fint * ierr)
 {
-
-  *ierr = MPI_Win_get_info(/* MPI_HANDLE_TYPES */ win, /* MPI_HANDLE_TYPES */ info_used);
+  MPI_Info local_info_used;
+  *ierr = MPI_Win_get_info(MPI_Win_f2c(*win), local_info_used);
+  *info_used = MPI_Info_f2c(local_info_used);
   return ;
 }
 
 /******************************************************
 ***      MPI_Win_get_info wrapper function (lowercase)
 ******************************************************/
-void mpi_win_get_info(MPI_Fint win, MPI_Fint info_used, MPI_Fint * ierr)
+void mpi_win_get_info(MPI_Fint * win, MPI_Fint * info_used, MPI_Fint * ierr)
 {
   MPI_WIN_GET_INFO(win, info_used, ierr);
   return ;
@@ -1897,7 +1791,7 @@ void mpi_win_get_info(MPI_Fint win, MPI_Fint info_used, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Win_get_info wrapper function (lowercase_)
 ******************************************************/
-void mpi_win_get_info_(MPI_Fint win, MPI_Fint info_used, MPI_Fint * ierr)
+void mpi_win_get_info_(MPI_Fint * win, MPI_Fint * info_used, MPI_Fint * ierr)
 {
   MPI_WIN_GET_INFO(win, info_used, ierr);
   return ;
@@ -1906,7 +1800,7 @@ void mpi_win_get_info_(MPI_Fint win, MPI_Fint info_used, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Win_get_info wrapper function (lowercase__)
 ******************************************************/
-void mpi_win_get_info__(MPI_Fint win, MPI_Fint info_used, MPI_Fint * ierr)
+void mpi_win_get_info__(MPI_Fint * win, MPI_Fint * info_used, MPI_Fint * ierr)
 {
   MPI_WIN_GET_INFO(win, info_used, ierr);
   return ;
@@ -1929,18 +1823,20 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm* newcomm, MPI_Request* request)
 /******************************************************
 ***      MPI_Comm_idup wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_COMM_IDUP(MPI_Fint comm, MPI_Fint newcomm, MPI_Fint request, MPI_Fint * ierr)
+void MPI_COMM_IDUP(MPI_Fint * comm, MPI_Fint * newcomm, MPI_Fint * request, MPI_Fint * ierr)
 {
-
-  *ierr = MPI_Comm_idup(/* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ newcomm,
-    /* MPI_HANDLE_TYPES */ request);
+  MPI_Comm local_newcomm;
+  MPI_Request local_request;
+  *ierr = MPI_Comm_idup(MPI_Comm_f2c(*comm), &local_newcomm, &local_request);
+  *newcomm = MPI_Comm_c2f(local_newcomm);
+  *request = MPI_Request_c2f(local_request);
   return ;
 }
 
 /******************************************************
 ***      MPI_Comm_idup wrapper function (lowercase)
 ******************************************************/
-void mpi_comm_idup(MPI_Fint comm, MPI_Fint newcomm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_comm_idup(MPI_Fint * comm, MPI_Fint * newcomm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_COMM_IDUP(comm, newcomm, request, ierr);
   return ;
@@ -1949,7 +1845,7 @@ void mpi_comm_idup(MPI_Fint comm, MPI_Fint newcomm, MPI_Fint request, MPI_Fint *
 /******************************************************
 ***      MPI_Comm_idup wrapper function (lowercase_)
 ******************************************************/
-void mpi_comm_idup_(MPI_Fint comm, MPI_Fint newcomm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_comm_idup_(MPI_Fint * comm, MPI_Fint * newcomm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_COMM_IDUP(comm, newcomm, request, ierr);
   return ;
@@ -1958,7 +1854,7 @@ void mpi_comm_idup_(MPI_Fint comm, MPI_Fint newcomm, MPI_Fint request, MPI_Fint 
 /******************************************************
 ***      MPI_Comm_idup wrapper function (lowercase__)
 ******************************************************/
-void mpi_comm_idup__(MPI_Fint comm, MPI_Fint newcomm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_comm_idup__(MPI_Fint * comm, MPI_Fint * newcomm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_COMM_IDUP(comm, newcomm, request, ierr);
   return ;
@@ -1981,18 +1877,18 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm* new
 /******************************************************
 ***      MPI_Comm_create_group wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_COMM_CREATE_GROUP(MPI_Fint comm, MPI_Fint group, MPI_Fint tag, MPI_Fint newcomm, MPI_Fint * ierr)
+void MPI_COMM_CREATE_GROUP(MPI_Fint * comm, MPI_Fint * group, MPI_Fint * tag, MPI_Fint * newcomm, MPI_Fint * ierr)
 {
-
-  *ierr = MPI_Comm_create_group(/* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ group,
-    /* MPI_HANDLE_TYPES */ tag, /* MPI_HANDLE_TYPES */ newcomm);
+   MPI_Comm local_newcomm;
+  *ierr = MPI_Comm_create_group(MPI_Comm_f2c(*comm), MPI_Group_f2c(*group),  *tag,  &local_newcomm);
+  *newcomm = MPI_Comm_c2f(local_newcomm);
   return ;
 }
 
 /******************************************************
 ***      MPI_Comm_create_group wrapper function (lowercase)
 ******************************************************/
-void mpi_comm_create_group(MPI_Fint comm, MPI_Fint group, MPI_Fint tag, MPI_Fint newcomm, MPI_Fint * ierr)
+void mpi_comm_create_group(MPI_Fint * comm, MPI_Fint * group, MPI_Fint * tag, MPI_Fint * newcomm, MPI_Fint * ierr)
 {
   MPI_COMM_CREATE_GROUP(comm, group, tag, newcomm, ierr);
   return ;
@@ -2001,7 +1897,7 @@ void mpi_comm_create_group(MPI_Fint comm, MPI_Fint group, MPI_Fint tag, MPI_Fint
 /******************************************************
 ***      MPI_Comm_create_group wrapper function (lowercase_)
 ******************************************************/
-void mpi_comm_create_group_(MPI_Fint comm, MPI_Fint group, MPI_Fint tag, MPI_Fint newcomm, MPI_Fint * ierr)
+void mpi_comm_create_group_(MPI_Fint * comm, MPI_Fint * group, MPI_Fint * tag, MPI_Fint * newcomm, MPI_Fint * ierr)
 {
   MPI_COMM_CREATE_GROUP(comm, group, tag, newcomm, ierr);
   return ;
@@ -2010,7 +1906,7 @@ void mpi_comm_create_group_(MPI_Fint comm, MPI_Fint group, MPI_Fint tag, MPI_Fin
 /******************************************************
 ***      MPI_Comm_create_group wrapper function (lowercase__)
 ******************************************************/
-void mpi_comm_create_group__(MPI_Fint comm, MPI_Fint group, MPI_Fint tag, MPI_Fint newcomm, MPI_Fint * ierr)
+void mpi_comm_create_group__(MPI_Fint * comm, MPI_Fint * group, MPI_Fint * tag, MPI_Fint * newcomm, MPI_Fint * ierr)
 {
   MPI_COMM_CREATE_GROUP(comm, group, tag, newcomm, ierr);
   return ;
@@ -2033,18 +1929,18 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 /******************************************************
 ***      MPI_Comm_split_type wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_COMM_SPLIT_TYPE(MPI_Fint comm, MPI_Fint split_type, MPI_Fint key, MPI_Fint info, MPI_Fint newcomm, MPI_Fint * ierr)
+void MPI_COMM_SPLIT_TYPE(MPI_Fint * comm, MPI_Fint * split_type, MPI_Fint * key, MPI_Fint * info, MPI_Fint * newcomm, MPI_Fint * ierr)
 {
-
-  *ierr = MPI_Comm_split_type(/* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ split_type,
-    /* MPI_HANDLE_TYPES */ key, /* MPI_HANDLE_TYPES */ info, /* MPI_HANDLE_TYPES */ newcomm);
+  MPI_Comm local_newcomm;
+  *ierr = MPI_Comm_split_type(MPI_Comm_f2c(*comm), *split_type, *key, MPI_Info_f2c(*info), &local_newcomm);
+  *newcomm = MPI_Comm_c2f(local_newcomm);
   return ;
 }
 
 /******************************************************
 ***      MPI_Comm_split_type wrapper function (lowercase)
 ******************************************************/
-void mpi_comm_split_type(MPI_Fint comm, MPI_Fint split_type, MPI_Fint key, MPI_Fint info, MPI_Fint newcomm, MPI_Fint * ierr)
+void mpi_comm_split_type(MPI_Fint * comm, MPI_Fint * split_type, MPI_Fint * key, MPI_Fint * info, MPI_Fint * newcomm, MPI_Fint * ierr)
 {
   MPI_COMM_SPLIT_TYPE(comm, split_type, key, info, newcomm, ierr);
   return ;
@@ -2053,7 +1949,7 @@ void mpi_comm_split_type(MPI_Fint comm, MPI_Fint split_type, MPI_Fint key, MPI_F
 /******************************************************
 ***      MPI_Comm_split_type wrapper function (lowercase_)
 ******************************************************/
-void mpi_comm_split_type_(MPI_Fint comm, MPI_Fint split_type, MPI_Fint key, MPI_Fint info, MPI_Fint newcomm, MPI_Fint * ierr)
+void mpi_comm_split_type_(MPI_Fint * comm, MPI_Fint * split_type, MPI_Fint * key, MPI_Fint * info, MPI_Fint * newcomm, MPI_Fint * ierr)
 {
   MPI_COMM_SPLIT_TYPE(comm, split_type, key, info, newcomm, ierr);
   return ;
@@ -2062,7 +1958,7 @@ void mpi_comm_split_type_(MPI_Fint comm, MPI_Fint split_type, MPI_Fint key, MPI_
 /******************************************************
 ***      MPI_Comm_split_type wrapper function (lowercase__)
 ******************************************************/
-void mpi_comm_split_type__(MPI_Fint comm, MPI_Fint split_type, MPI_Fint key, MPI_Fint info, MPI_Fint newcomm, MPI_Fint * ierr)
+void mpi_comm_split_type__(MPI_Fint * comm, MPI_Fint * split_type, MPI_Fint * key, MPI_Fint * info, MPI_Fint * newcomm, MPI_Fint * ierr)
 {
   MPI_COMM_SPLIT_TYPE(comm, split_type, key, info, newcomm, ierr);
   return ;
@@ -2086,21 +1982,14 @@ MPI_Datatype recvtype, MPI_Comm comm)
 /******************************************************
 ***      MPI_Neighbor_allgather wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_NEIGHBOR_ALLGATHER(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Neighbor_allgather(sendbuf, /* MPI_HANDLE_TYPES */ sendcount,
-    /* MPI_HANDLE_TYPES */ sendtype, recvbuf, /* MPI_HANDLE_TYPES */ recvcount,
-    /* MPI_HANDLE_TYPES */ recvtype, /* MPI_HANDLE_TYPES */ comm);
-  return ;
-}
+extern void MPI_NEIGHBOR_ALLGATHER(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Neighbor_allgather wrapper function (lowercase)
 ******************************************************/
-void mpi_neighbor_allgather(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_allgather(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLGATHER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, ierr);
   return ;
@@ -2109,8 +1998,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Neighbor_allgather wrapper function (lowercase_)
 ******************************************************/
-void mpi_neighbor_allgather_(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_allgather_(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLGATHER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, ierr);
   return ;
@@ -2119,8 +2008,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Neighbor_allgather wrapper function (lowercase__)
 ******************************************************/
-void mpi_neighbor_allgather__(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_allgather__(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLGATHER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, ierr);
   return ;
@@ -2130,8 +2019,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Neighbor_allgatherv wrapper function 
 ******************************************************/
-int MPI_Neighbor_allgatherv(TAU_MPICH3_CONST void* sendbuf, int sendcount, MPI_Datatype sendtype, void* recvbuf, TAU_MPICH3_CONST int recvcounts[],
-TAU_MPICH3_CONST int displs[], MPI_Datatype recvtype, MPI_Comm comm)
+int MPI_Neighbor_allgatherv(TAU_MPICH3_CONST void* sendbuf, int sendcount, MPI_Datatype sendtype, void* recvbuf, TAU_MPICH3_CONST int * recvcounts,
+TAU_MPICH3_CONST int * displs, MPI_Datatype recvtype, MPI_Comm comm)
 {
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_allgatherv()", "", TAU_MESSAGE);
@@ -2144,21 +2033,14 @@ TAU_MPICH3_CONST int displs[], MPI_Datatype recvtype, MPI_Comm comm)
 /******************************************************
 ***      MPI_Neighbor_allgatherv wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_NEIGHBOR_ALLGATHERV(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Neighbor_allgatherv(sendbuf, /* MPI_HANDLE_TYPES */ sendcount,
-    /* MPI_HANDLE_TYPES */ sendtype, recvbuf, recvcounts, displs, /* MPI_HANDLE_TYPES */ recvtype,
-    /* MPI_HANDLE_TYPES */ comm);
-  return ;
-}
+extern void MPI_NEIGHBOR_ALLGATHERV(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Neighbor_allgatherv wrapper function (lowercase)
 ******************************************************/
-void mpi_neighbor_allgatherv(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_allgatherv(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr);
 {
   MPI_NEIGHBOR_ALLGATHERV(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm,
     ierr);
@@ -2168,8 +2050,8 @@ int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Neighbor_allgatherv wrapper function (lowercase_)
 ******************************************************/
-void mpi_neighbor_allgatherv_(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_allgatherv_(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr);
 {
   MPI_NEIGHBOR_ALLGATHERV(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm,
     ierr);
@@ -2179,8 +2061,8 @@ int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Neighbor_allgatherv wrapper function (lowercase__)
 ******************************************************/
-void mpi_neighbor_allgatherv__(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, int recvcounts[],
-int displs[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_allgatherv__(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcounts,
+MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr);
 {
   MPI_NEIGHBOR_ALLGATHERV(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm,
     ierr);
@@ -2205,21 +2087,14 @@ MPI_Datatype recvtype, MPI_Comm comm)
 /******************************************************
 ***      MPI_Neighbor_alltoall wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_NEIGHBOR_ALLTOALL(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Neighbor_alltoall(sendbuf, /* MPI_HANDLE_TYPES */ sendcount,
-    /* MPI_HANDLE_TYPES */ sendtype, recvbuf, /* MPI_HANDLE_TYPES */ recvcount,
-    /* MPI_HANDLE_TYPES */ recvtype, /* MPI_HANDLE_TYPES */ comm);
-  return ;
-}
+extern void MPI_NEIGHBOR_ALLTOALL(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Neighbor_alltoall wrapper function (lowercase)
 ******************************************************/
-void mpi_neighbor_alltoall(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_alltoall(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLTOALL(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, ierr);
   return ;
@@ -2228,8 +2103,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Neighbor_alltoall wrapper function (lowercase_)
 ******************************************************/
-void mpi_neighbor_alltoall_(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_alltoall_(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLTOALL(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, ierr);
   return ;
@@ -2238,8 +2113,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Neighbor_alltoall wrapper function (lowercase__)
 ******************************************************/
-void mpi_neighbor_alltoall__(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_alltoall__(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLTOALL(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, ierr);
   return ;
@@ -2249,8 +2124,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Neighbor_alltoallv wrapper function 
 ******************************************************/
-int MPI_Neighbor_alltoallv(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int sendcounts[], TAU_MPICH3_CONST int sdispls[], MPI_Datatype sendtype,
-void* recvbuf, TAU_MPICH3_CONST int recvcounts[], TAU_MPICH3_CONST int rdispls[], MPI_Datatype recvtype, MPI_Comm comm)
+int MPI_Neighbor_alltoallv(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int * sendcounts, TAU_MPICH3_CONST int * sdispls, MPI_Datatype sendtype,
+void* recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST int * rdispls, MPI_Datatype recvtype, MPI_Comm comm)
 {
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_alltoallv()", "", TAU_MESSAGE);
@@ -2264,20 +2139,14 @@ void* recvbuf, TAU_MPICH3_CONST int recvcounts[], TAU_MPICH3_CONST int rdispls[]
 /******************************************************
 ***      MPI_Neighbor_alltoallv wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_NEIGHBOR_ALLTOALLV(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtype, MPI_Aint recvbuf,
-int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Neighbor_alltoallv(sendbuf, sendcounts, sdispls, /* MPI_HANDLE_TYPES */ sendtype,
-    recvbuf, recvcounts, rdispls, /* MPI_HANDLE_TYPES */ recvtype, /* MPI_HANDLE_TYPES */ comm);
-  return ;
-}
+extern void MPI_NEIGHBOR_ALLTOALLV(MPI_Aint * sendbuf, int * sendcounts, int * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+int * recvcounts, int * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Neighbor_alltoallv wrapper function (lowercase)
 ******************************************************/
-void mpi_neighbor_alltoallv(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtype, MPI_Aint recvbuf,
-int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_alltoallv(MPI_Aint * sendbuf, int * sendcounts, int * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+int * recvcounts, int * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLTOALLV(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm, ierr);
@@ -2287,8 +2156,8 @@ int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ie
 /******************************************************
 ***      MPI_Neighbor_alltoallv wrapper function (lowercase_)
 ******************************************************/
-void mpi_neighbor_alltoallv_(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtype, MPI_Aint recvbuf,
-int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_alltoallv_(MPI_Aint * sendbuf, int * sendcounts, int * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+int * recvcounts, int * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLTOALLV(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm, ierr);
@@ -2298,8 +2167,8 @@ int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ie
 /******************************************************
 ***      MPI_Neighbor_alltoallv wrapper function (lowercase__)
 ******************************************************/
-void mpi_neighbor_alltoallv__(MPI_Aint sendbuf, int sendcounts[], int sdispls[], MPI_Fint sendtype, MPI_Aint recvbuf,
-int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_alltoallv__(MPI_Aint * sendbuf, int * sendcounts, int * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+int * recvcounts, int * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLTOALLV(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm, ierr);
@@ -2310,9 +2179,9 @@ int recvcounts[], int rdispls[], MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ie
 /******************************************************
 ***      MPI_Neighbor_alltoallw wrapper function 
 ******************************************************/
-int MPI_Neighbor_alltoallw(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int sendcounts[], TAU_MPICH3_CONST MPI_Aint sdispls[],
-TAU_MPICH3_CONST MPI_Datatype sendtypes[], void* recvbuf, TAU_MPICH3_CONST int recvcounts[], TAU_MPICH3_CONST MPI_Aint rdispls[],
-TAU_MPICH3_CONST MPI_Datatype recvtypes[], MPI_Comm comm)
+int MPI_Neighbor_alltoallw(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int * sendcounts, TAU_MPICH3_CONST MPI_Aint * sdispls,
+TAU_MPICH3_CONST MPI_Datatype * sendtypes, void* recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST MPI_Aint * rdispls,
+TAU_MPICH3_CONST MPI_Datatype * recvtypes, MPI_Comm comm)
 {
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_alltoallw()", "", TAU_MESSAGE);
@@ -2326,22 +2195,16 @@ TAU_MPICH3_CONST MPI_Datatype recvtypes[], MPI_Comm comm)
 /******************************************************
 ***      MPI_Neighbor_alltoallw wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_NEIGHBOR_ALLTOALLW(MPI_Aint sendbuf, int sendcounts[], MPI_Aint sdispls[], MPI_Fint sendtypes[],
-MPI_Aint recvbuf, int recvcounts[], MPI_Aint rdispls[], MPI_Fint recvtypes[],
-MPI_Fint comm, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Neighbor_alltoallw(sendbuf, sendcounts, sdispls, /* MPI_HANDLE_TYPES */ sendtypes,
-    recvbuf, recvcounts, rdispls, /* MPI_HANDLE_TYPES */ recvtypes, /* MPI_HANDLE_TYPES */ comm);
-  return ;
-}
+extern void MPI_NEIGHBOR_ALLTOALLW(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
+MPI_Fint * comm, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Neighbor_alltoallw wrapper function (lowercase)
 ******************************************************/
-void mpi_neighbor_alltoallw(MPI_Aint sendbuf, int sendcounts[], MPI_Aint sdispls[], MPI_Fint sendtypes[],
-MPI_Aint recvbuf, int recvcounts[], MPI_Aint rdispls[], MPI_Fint recvtypes[],
-MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_alltoallw(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
+MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLTOALLW(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
     recvtypes, comm, ierr);
@@ -2351,9 +2214,9 @@ MPI_Fint comm, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Neighbor_alltoallw wrapper function (lowercase_)
 ******************************************************/
-void mpi_neighbor_alltoallw_(MPI_Aint sendbuf, int sendcounts[], MPI_Aint sdispls[], MPI_Fint sendtypes[],
-MPI_Aint recvbuf, int recvcounts[], MPI_Aint rdispls[], MPI_Fint recvtypes[],
-MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_alltoallw_(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
+MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLTOALLW(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
     recvtypes, comm, ierr);
@@ -2363,9 +2226,9 @@ MPI_Fint comm, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Neighbor_alltoallw wrapper function (lowercase__)
 ******************************************************/
-void mpi_neighbor_alltoallw__(MPI_Aint sendbuf, int sendcounts[], MPI_Aint sdispls[], MPI_Fint sendtypes[],
-MPI_Aint recvbuf, int recvcounts[], MPI_Aint rdispls[], MPI_Fint recvtypes[],
-MPI_Fint comm, MPI_Fint * ierr)
+void mpi_neighbor_alltoallw__(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
+MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLTOALLW(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
     recvtypes, comm, ierr);
@@ -2390,21 +2253,13 @@ MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 /******************************************************
 ***      MPI_Ineighbor_allgather wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_INEIGHBOR_ALLGATHER(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
-{
-
-  *ierr = MPI_Ineighbor_allgather(sendbuf, /* MPI_HANDLE_TYPES */ sendcount,
-    /* MPI_HANDLE_TYPES */ sendtype, recvbuf, /* MPI_HANDLE_TYPES */ recvcount,
-    /* MPI_HANDLE_TYPES */ recvtype, /* MPI_HANDLE_TYPES */ comm, /* MPI_HANDLE_TYPES */ request);
-  return ;
-}
-
+extern void MPI_INEIGHBOR_ALLGATHER(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 /******************************************************
 ***      MPI_Ineighbor_allgather wrapper function (lowercase)
 ******************************************************/
-void mpi_ineighbor_allgather(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ineighbor_allgather(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLGATHER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request,
     ierr);
@@ -2414,8 +2269,8 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ineighbor_allgather wrapper function (lowercase_)
 ******************************************************/
-void mpi_ineighbor_allgather_(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ineighbor_allgather_(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLGATHER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request,
     ierr);
@@ -2425,15 +2280,15 @@ MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ineighbor_allgather wrapper function (lowercase__)
 ******************************************************/
-void mpi_ineighbor_allgather__(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void mpi_ineighbor_allgather__(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLGATHER(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request,
     ierr);
   return ;
 }
 
-
+!!!
 /******************************************************
 ***      MPI_Ineighbor_allgatherv wrapper function 
 ******************************************************/
