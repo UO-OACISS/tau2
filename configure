@@ -8874,9 +8874,11 @@ if [ $ompt = yes ]; then
 fi
 
 if [ "x$download_ompt_5_0" = "xyes" ] ; then
-  libomp_oss=LLVM-openmp-8.0
+  #When  updating LLVM, you also need https://github.com/llvm/llvm-project/releases/download/llvmorg-21.1.8/cmake21.1.8.src.tar.xz
+  # move the files to the LLVM-openmp package and change the folder name to cmake-src
+  libomp_oss=LLVM-openmp-21.1.8
   libomp_osstgz=${libomp_oss}.tar.gz
-  libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
+  libomp_ossurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/${libomp_osstgz}
 fi
 
 libomp_oss_name=iomp5
@@ -8984,9 +8986,9 @@ if [ "x$download_ompt" = "xyes" ] ; then
       if [ "x$cuda" == "xyes" ] ; then
         # It probably doesn't make sense to have target offload support.
             #cmake_cmd="cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} -DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_70 -DLIBOMPTARGET_ENABLE_DEBUG=on -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=35,60,70 ${specialflags} .. "
-            cmake_cmd="cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. "
+            cmake_cmd="cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_MODULE_PATH=${preomptdir}/${libomp_oss}/cmake-src/Modules -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. "
       else
-            cmake_cmd="cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. "
+            cmake_cmd="cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_MODULE_PATH=${preomptdir}/${libomp_oss}/cmake-src/Modules -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. "
       fi
       echo $cmake_cmd
       $cmake_cmd > $libomp_oss_log 2>&1
