@@ -734,8 +734,7 @@ struct ZeCommand {
   uint64_t host_time_origin_;   // in ns
   uint64_t device_timer_frequency_;
   uint64_t device_timer_mask_;
-  uint64_t metric_timer_frequency_;
-  uint64_t metric_timer_mask_;
+  double device_ns_per_cycle_;
   uint64_t append_time_;
   uint64_t submit_time_;        // in ns
   uint64_t submit_time_device_; // in ticks
@@ -915,6 +914,30 @@ struct ZeDeviceSubmissions {
     metric_queries_staged_.clear();
   }
 
+  inline void RevertStagedKernelCommandAndMetricQueriesForEvent(ze_event_handle_t event) {
+    auto cit = commands_staged_.begin();
+    auto mit = metric_queries_staged_.begin();
+    while (cit != commands_staged_.end()) {
+      ZeCommand *cmd = *cit;
+      ZeCommandMetricQuery *cmd_query = *mit;
+
+      if (cmd->event_ != event) {
+        cit++;
+        mit++;
+        continue;
+      }
+
+      // remove from staged lists
+      cit = commands_staged_.erase(cit);
+      mit = metric_queries_staged_.erase(mit);
+
+      commands_free_pool_.push_back(cmd);
+      if (cmd_query != nullptr) {
+        metric_queries_free_pool_.push_back(cmd_query);
+      }
+    }
+  }
+
   inline ZeCommandMetricQuery *GetCommandMetricQuery(void) {
     ZeCommandMetricQuery *query;
 
@@ -1017,6 +1040,7 @@ struct ZeKernelCommandProperties {
   uint32_t regsize_;	// GRF size per thread
   bool aot_;		// AOT or JIT
   std::string name_;	// kernel or command name
+  bool skip_;  // skip this kernel in the trace
 };
 
 // these will not go away when ZeCollector is destructed
@@ -1034,14 +1058,20 @@ struct ZeModule {
 static std::shared_mutex modules_on_devices_mutex_;
 static std::map<ze_module_handle_t, ZeModule> modules_on_devices_; //module to ZeModule map
 
+enum ZeQueueEngineType {
+  ZE_QUEUE_COMPUTE_ENGINE,
+  ZE_QUEUE_COPY_ENGINE,
+  // Add any new engine type
+  ZE_QUEUE_UNKNOWN_ENGINE
+};
+
 struct ZeDevice {
   ze_device_handle_t device_;
   ze_device_handle_t parent_device_;
   uint64_t host_time_origin_;	// in ns
   uint64_t device_timer_frequency_;
   uint64_t device_timer_mask_;
-  uint64_t metric_timer_frequency_;
-  uint64_t metric_timer_mask_;
+  double device_ns_per_cycle_;
   ze_driver_handle_t driver_;
   ze_context_handle_t context_;
   zet_metric_group_handle_t metric_group_;
@@ -1050,6 +1080,8 @@ struct ZeDevice {
   int32_t subdevice_id_;
   int32_t num_subdevices_;
   ze_pci_ext_properties_t pci_properties_;
+  std::string device_name_;
+  std::vector<ZeQueueEngineType> queue_engine_prop_;
 };
 
 // these will no go away when ZeCollector is destructed
@@ -1075,8 +1107,7 @@ struct ZeCommandList {
   uint64_t host_time_origin_;	// in ns
   uint64_t device_timer_frequency_;
   uint64_t device_timer_mask_;
-  uint64_t metric_timer_frequency_;
-  uint64_t metric_timer_mask_;
+  double device_ns_per_cycle_;
   uint32_t engine_ordinal_;	// valid if immediate command list
   uint32_t engine_index_;	// valid if immediate command list
   bool immediate_;
@@ -1100,7 +1131,7 @@ typedef void (*OnZeFunctionFinishCallback)(std::vector<uint64_t> *kids, FLOW_DIR
 
 typedef void (*OnZeKernelFinishCallback)(uint64_t kid, uint64_t tid, uint64_t start, uint64_t end, uint32_t ordinal, uint32_t index, int32_t tile, const ze_device_handle_t device, const uint64_t kernel_command_id, bool implicit_scaling, const ze_group_count_t& group_count, size_t mem_size);
 
-ze_result_t (*zexKernelGetBaseAddress)(ze_kernel_handle_t hKernel, uint64_t *baseAddress) = nullptr;
+ze_result_t (*ZexKernelGetBaseAddress)(ze_kernel_handle_t hKernel, uint64_t *baseAddress) = nullptr;
 
 inline std::string GetZeKernelCommandName(uint64_t id, const ze_group_count_t& group_count, size_t size, bool detailed = true) {
   std::string str;
@@ -1131,7 +1162,7 @@ inline std::string GetZeKernelCommandName(uint64_t id, const ze_group_count_t& g
         str = str + "[" + std::to_string(size) + "]";
       }
     }
-    str += "\"";	// quoate kernel name
+    str += "\"";	// quote kernel name
   }
 
   kernel_command_properties_mutex_.unlock_shared();
@@ -1142,6 +1173,38 @@ inline std::string GetZeKernelCommandName(uint64_t id, const ze_group_count_t& g
 inline std::string GetZeKernelCommandName(uint64_t id, ze_group_count_t& group_count, size_t size, bool detailed = true) {
   const ze_group_count_t& gcount = group_count;
   return GetZeKernelCommandName(id, gcount, size, detailed);
+}
+
+inline std::string GetZeDeviceName(ze_device_handle_t device) {
+  std::string device_name = "";
+  devices_mutex_.lock_shared();
+  if (devices_ != nullptr) {
+    auto it = devices_->find(device);
+    if (it != devices_->end()) {
+      device_name = it->second.device_name_;
+    }
+  }
+  devices_mutex_.unlock_shared();
+  return device_name;
+}
+
+inline std::string GetZeEngineName(ze_device_handle_t device, uint32_t ordinal) {
+  std::string engine_name = "";
+  devices_mutex_.lock_shared();
+  if (devices_ != nullptr) {
+    auto it = devices_->find(device);
+    if (it != devices_->end()) {
+      if (it->second.queue_engine_prop_[ordinal] == ZE_QUEUE_COMPUTE_ENGINE) {
+        engine_name = "L0 Compute Engine";
+      } else if (it->second.queue_engine_prop_[ordinal] == ZE_QUEUE_COPY_ENGINE) {
+        engine_name = "L0 Copy Engine";
+      } else {
+        engine_name = "L0 Engine";
+      }
+    }
+  }
+  devices_mutex_.unlock_shared();
+  return engine_name;
 }
 
 inline ze_pci_ext_properties_t *GetZeDevicePciPropertiesAndId(ze_device_handle_t device, int32_t *parent_device_id, int32_t *device_id, int32_t *subdevice_id){
@@ -1169,7 +1232,6 @@ inline ze_pci_ext_properties_t *GetZeDevicePciPropertiesAndId(ze_device_handle_t
   return props;
   
 }
-
 
 extern "C" void TAU_L0_enter_event(const char* nameAPIcall);
 extern "C" void TAU_L0_exit_event(const char* nameAPIcall);
@@ -1216,8 +1278,8 @@ class ZeCollector {
     ze_driver_handle_t driver;
     uint32_t count = 1;
     if (ZE_FUNC(zeDriverGet)(&count, &driver) == ZE_RESULT_SUCCESS) {
-      if (ZE_FUNC(zeDriverGetExtensionFunctionAddress)(driver, "zexKernelGetBaseAddress", (void **)&zexKernelGetBaseAddress) != ZE_RESULT_SUCCESS) {
-        zexKernelGetBaseAddress = nullptr;
+      if (ZE_FUNC(zeDriverGetExtensionFunctionAddress)(driver, "zexKernelGetBaseAddress", (void **)&ZexKernelGetBaseAddress) != ZE_RESULT_SUCCESS) {
+        ZexKernelGetBaseAddress = nullptr;
       }
     }
 
@@ -1526,13 +1588,18 @@ class ZeCollector {
             desc.parent_id_ = -1;	// no parent
             desc.parent_device_ = nullptr;
             desc.subdevice_id_ = -1;	// not a subdevice
-            desc.device_timer_frequency_ = GetDeviceTimerFrequency(device);
-            desc.device_timer_mask_ = GetDeviceTimestampMask(device);
-            desc.metric_timer_frequency_ = GetMetricTimerFrequency(device);
-            desc.metric_timer_mask_ = GetMetricTimestampMask(device);
+
+            ze_device_properties_t props{ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES_1_2, };
+            ze_result_t status = ZE_FUNC(zeDeviceGetProperties)(device, &props);
+            PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+            PTI_ASSERT(props.timerResolution != 0);
+
+            desc.device_timer_frequency_ = props.timerResolution;
+            desc.device_timer_mask_ = (props.kernelTimestampValidBits == 64) ? (std::numeric_limits<uint64_t>::max)() : ((1ull << props.kernelTimestampValidBits) - 1ull);
+            desc.device_ns_per_cycle_ = static_cast<double>(NSEC_IN_SEC) / static_cast<double>(props.timerResolution);
 
             ze_pci_ext_properties_t pci_device_properties;
-            ze_result_t status = ZE_FUNC(zeDevicePciGetPropertiesExt)(device, &pci_device_properties);
+            status = ZE_FUNC(zeDevicePciGetPropertiesExt)(device, &pci_device_properties);
             if (status != ZE_RESULT_SUCCESS) {
               std::cerr << "[WARNING] Unable to get device PCI properties" << std::endl;
               memset(&pci_device_properties, 0, sizeof(pci_device_properties));  // dummy device properties
@@ -1621,6 +1688,43 @@ class ZeCollector {
 
             desc.host_time_origin_ = host_time;
 
+            // Get device name
+            ze_device_properties_t device_properties = {};
+            device_properties.stype = ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES;
+            status = ZE_FUNC(zeDeviceGetProperties)(device, &device_properties);
+            if (status == ZE_RESULT_SUCCESS) {
+              desc.device_name_ = std::move(std::string(device_properties.name));
+            } else {
+              desc.device_name_ = "";
+              std::cerr << "[WARNING] zeDeviceGetProperties failed with error code : " << status << std::endl;
+            }
+
+            // query group ordinal
+            uint32_t count = 0;
+            status = ZE_FUNC(zeDeviceGetCommandQueueGroupProperties)(device, &count, nullptr);
+            if (status != ZE_RESULT_SUCCESS || count == 0) {
+              std::cerr << "[WARNING] zeDeviceGetCommandQueueGroupProperties failed with error code : " << status << std::endl;
+            } else {
+              std::vector<ze_command_queue_group_properties_t> props(count);
+              status = ZE_FUNC(zeDeviceGetCommandQueueGroupProperties)(device, &count, props.data());
+              if (status != ZE_RESULT_SUCCESS) {
+                std::cerr << "[WARNING] zeDeviceGetCommandQueueGroupProperties failed with error code : " << status << std::endl;
+              } else {
+                desc.queue_engine_prop_.resize(count);
+                for (uint32_t i = 0; i < count; ++i) {
+                  if (props[i].flags & ZE_COMMAND_QUEUE_GROUP_PROPERTY_FLAG_COMPUTE) {
+                    desc.queue_engine_prop_[i] = ZE_QUEUE_COMPUTE_ENGINE;
+                  } else if (props[i].flags & ZE_COMMAND_QUEUE_GROUP_PROPERTY_FLAG_COPY) {
+                    desc.queue_engine_prop_[i] = ZE_QUEUE_COPY_ENGINE;
+                  } else {
+                    desc.queue_engine_prop_[i] = ZE_QUEUE_UNKNOWN_ENGINE;
+                  }
+                }
+              }
+            }
+
+
+
             devices_->insert({device, std::move(desc)});
 
             if (num_sub_devices > 0) {
@@ -1641,13 +1745,18 @@ class ZeCollector {
                 sub_desc.num_subdevices_ = 0;
                 sub_desc.subdevice_id_ = j;
                 sub_desc.id_ = did;	// take parent device's id
-                sub_desc.device_timer_frequency_ = GetDeviceTimerFrequency(sub_devices[j]);
-                sub_desc.device_timer_mask_ = GetDeviceTimestampMask(sub_devices[j]);
-                sub_desc.metric_timer_frequency_ = GetMetricTimerFrequency(sub_devices[j]);
-                sub_desc.metric_timer_mask_ = GetMetricTimestampMask(sub_devices[j]);
-  
+                
+                ze_device_properties_t props{ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES_1_2, };
+                ze_result_t status = ZE_FUNC(zeDeviceGetProperties)(sub_devices[j], &props);
+                PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+                PTI_ASSERT(props.timerResolution != 0);
+
+                sub_desc.device_timer_frequency_ = props.timerResolution;
+                sub_desc.device_timer_mask_ = (props.kernelTimestampValidBits == 64) ? (std::numeric_limits<uint64_t>::max)() : ((1ull << props.kernelTimestampValidBits) - 1ull);
+                sub_desc.device_ns_per_cycle_ = static_cast<double>(NSEC_IN_SEC) / static_cast<double>(props.timerResolution);
+
                 ze_pci_ext_properties_t pci_device_properties;
-                ze_result_t status = ZE_FUNC(zeDevicePciGetPropertiesExt)(sub_devices[j], &pci_device_properties);
+                status = ZE_FUNC(zeDevicePciGetPropertiesExt)(sub_devices[j], &pci_device_properties);
                 if (status != ZE_RESULT_SUCCESS) {
                   std::cerr << "[WARNING] Unable to get device PCI properties" << std::endl;
                   memset(&pci_device_properties, 0, sizeof(pci_device_properties)); // dummy device properties
@@ -1668,6 +1777,41 @@ class ZeCollector {
                 sub_desc.context_ = context;
             
                 sub_desc.metric_group_ = nullptr;
+
+                // Get sub-device name
+                ze_device_properties_t device_properties = {};
+                device_properties.stype = ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES;
+                status = ZE_FUNC(zeDeviceGetProperties)(sub_devices[j], &device_properties);
+                if (status == ZE_RESULT_SUCCESS) {
+                  sub_desc.device_name_ = std::move(std::string(device_properties.name));
+                } else {
+                  sub_desc.device_name_ = "";
+                  std::cerr << "[WARNING] zeDeviceGetProperties failed with error code : " << status << std::endl;
+                }
+
+                // query group ordinal
+                count = 0;
+                status = ZE_FUNC(zeDeviceGetCommandQueueGroupProperties)(sub_devices[j], &count, nullptr);
+                if (status != ZE_RESULT_SUCCESS || count == 0) {
+                  std::cerr << "[WARNING] zeDeviceGetCommandQueueGroupProperties failed with error code : " << status << std::endl;
+                } else {
+                  std::vector<ze_command_queue_group_properties_t> props(count);
+                  status = ZE_FUNC(zeDeviceGetCommandQueueGroupProperties)(sub_devices[j], &count, props.data());
+                  if (status != ZE_RESULT_SUCCESS) {
+                    std::cerr << "[WARNING] zeDeviceGetCommandQueueGroupProperties failed with error code : " << status << std::endl;
+                  } else {
+                    sub_desc.queue_engine_prop_.resize(count);
+                    for (uint32_t i = 0; i < count; ++i) {
+                      if (props[i].flags & ZE_COMMAND_QUEUE_GROUP_PROPERTY_FLAG_COMPUTE) {
+                        sub_desc.queue_engine_prop_[i] = ZE_QUEUE_COMPUTE_ENGINE;
+                      } else if (props[i].flags & ZE_COMMAND_QUEUE_GROUP_PROPERTY_FLAG_COPY) {
+                        sub_desc.queue_engine_prop_[i] = ZE_QUEUE_COPY_ENGINE;
+                      } else {
+                        sub_desc.queue_engine_prop_[i] = ZE_QUEUE_UNKNOWN_ENGINE;
+                      }
+                    }
+                  }
+                }
 
                 devices_->insert({sub_devices[j], std::move(sub_desc)});
               }
@@ -1897,12 +2041,12 @@ class ZeCollector {
     global_device_submissions_mutex_.unlock_shared();
   }
 
-  inline uint64_t ComputeDuration(uint64_t start, uint64_t end, uint64_t freq, uint64_t mask) {
+  inline uint64_t ComputeDuration(uint64_t start, uint64_t end, uint64_t freq, uint64_t mask, double ns_per_cycle) {
     uint64_t duration = 0;
     if (start <= end) {
-      duration = (end - start) * static_cast<uint64_t>(NSEC_IN_SEC) / freq;
+      duration = static_cast<double>(end - start) * ns_per_cycle;
     } else { // Timer Overflow
-      duration = (mask - start + 1 + end) * static_cast<uint64_t>(NSEC_IN_SEC) / freq;
+      duration = static_cast<double>(mask - start + 1 + end) * ns_per_cycle;
     }
     return duration;
   }
@@ -1910,6 +2054,7 @@ class ZeCollector {
   inline void GetHostTime(const ZeCommand *command, const ze_kernel_timestamp_result_t& ts, uint64_t& start, uint64_t& end) {
     uint64_t device_freq = command->device_timer_frequency_;
     uint64_t device_mask = command->device_timer_mask_;
+    double ns_per_cycle = command->device_ns_per_cycle_;
 
     uint64_t device_start = ts.global.kernelStart & device_mask;
     uint64_t device_end = ts.global.kernelEnd & device_mask;
@@ -1919,14 +2064,14 @@ class ZeCollector {
     uint64_t time_shift;
 
     if (device_start > device_submit_time) {
-      time_shift = (device_start - device_submit_time) * NSEC_IN_SEC / device_freq;
+      time_shift = static_cast<double>(device_start - device_submit_time) * ns_per_cycle;
     }
     else {
       // overflow
-      time_shift = (device_mask - device_submit_time + 1 + device_start) * NSEC_IN_SEC / device_freq;
+      time_shift = static_cast<double>(device_mask - device_submit_time + 1 + device_start) * ns_per_cycle;
     }
 
-    uint64_t duration = ComputeDuration(device_start, device_end, device_freq, device_mask);
+    uint64_t duration = ComputeDuration(device_start, device_end, device_freq, device_mask, ns_per_cycle);
 
     start = command->submit_time_ + time_shift;
     end = start + duration;
@@ -2008,10 +2153,12 @@ class ZeCollector {
       }
     }
     else {
-      ze_result_t status = ZE_FUNC(zeEventQueryKernelTimestamp)(command->event_, &timestamp);
-      if (status != ZE_RESULT_SUCCESS) {
-        std::cerr << "[ERROR] Unable to query event for timestamps" << std::endl;
-        return;
+      if (command->event_ != nullptr) {
+        ze_result_t status = ZE_FUNC(zeEventQueryKernelTimestamp)(command->event_, &timestamp);
+        if (status != ZE_RESULT_SUCCESS) {
+          std::cerr << "[ERROR] Unable to query event for timestamps" << std::endl;
+          return;
+        }
       }
     }
 
@@ -2163,8 +2310,7 @@ class ZeCollector {
       desc->host_time_origin_ = it2->second.host_time_origin_;
       desc->device_timer_frequency_ = it2->second.device_timer_frequency_;
       desc->device_timer_mask_ = it2->second.device_timer_mask_;
-      desc->metric_timer_frequency_ = it2->second.metric_timer_frequency_;
-      desc->metric_timer_mask_ = it2->second.metric_timer_mask_;
+      desc->device_ns_per_cycle_ = it2->second.device_ns_per_cycle_;
       desc->implicit_scaling_ = (it2->second.num_subdevices_ != 0);
     }
     devices_mutex_.unlock_shared();
@@ -2495,8 +2641,45 @@ class ZeCollector {
       if (ZE_FUNC(zeEventQueryStatus)(*(params->phEvent)) == ZE_RESULT_SUCCESS) {
         collector->ProcessCommandsSubmittedOnSignaledEvent(*(params->phEvent), kids);
       }
+      else {
+        // Event is not signaled on destroy, removing associated commands
+        global_device_submissions_mutex_.lock_shared();
+        // discard event associated staged commands
+        local_device_submissions_.RevertStagedKernelCommandAndMetricQueriesForEvent(*(params->phEvent));
+        // discard event associated submitted commands
+        auto it_cmd = local_device_submissions_.commands_submitted_.begin();
+        while (it_cmd != local_device_submissions_.commands_submitted_.end()) {
+          ZeCommand *command = *it_cmd;
+          if (command->event_ == *(params->phEvent)) {
+            std::cerr << "[INFO] Remove command from submitted commands on event destroy" << std::endl;
+            local_device_submissions_.commands_free_pool_.push_back(command);
+            it_cmd = local_device_submissions_.commands_submitted_.erase(it_cmd);
+            continue;
+          }
+          ++it_cmd;
+        }
+        global_device_submissions_mutex_.unlock_shared();
+        // Non immediate command list
+        collector->command_lists_mutex_.lock();
+        auto it = collector->command_lists_.begin();
+        while (it != collector->command_lists_.end()) {
+          auto cmd_it = it->second->commands_.begin();
+          while (cmd_it != it->second->commands_.end()) {
+            ZeCommand *command = *cmd_it;
+            if (command->event_ == *(params->phEvent)) {
+              std::cerr << "[INFO] Remove command from command list on event destroy" << std::endl;
+              cmd_it = it->second->commands_.erase(cmd_it);
+              continue;
+            }
+            ++cmd_it;
+          }
+          ++it;
+        }
+        collector->command_lists_mutex_.unlock();
+      }
     }
   }
+
 
   static void OnExitEventDestroy(
       ze_event_destroy_params_t *params, ze_result_t result,
@@ -2609,7 +2792,8 @@ class ZeCollector {
     ZeCollector* collector,
     ze_event_handle_t& signal_event,
     ze_command_list_handle_t command_list,
-    bool iskernel) {
+    bool iskernel,
+    ze_kernel_handle_t kernel = nullptr) {
 
     ze_context_handle_t context = nullptr;
     ze_device_handle_t device = nullptr;
@@ -2618,6 +2802,24 @@ class ZeCollector {
     ze_instance_data.query_ = nullptr;
     ze_instance_data.in_order_counter_event_ = nullptr;
     ze_instance_data.instrument_ = true;
+
+    if (iskernel) {
+      if (kernel == nullptr) {
+        std::cerr << "[ERROR] Kernel handle is null for kernel command." << std::endl;
+        ze_instance_data.instrument_ = false;
+        return;
+      }
+      kernel_command_properties_mutex_.lock_shared();
+      auto kit = active_kernel_properties_->find(kernel);
+      if (kit != active_kernel_properties_->end()) {
+          if (kit->second.skip_) {
+            ze_instance_data.instrument_ = false;
+            kernel_command_properties_mutex_.unlock_shared();
+            return;
+          }
+      }
+      kernel_command_properties_mutex_.unlock_shared();
+    }
 
     collector->command_lists_mutex_.lock_shared();
 
@@ -2745,8 +2947,7 @@ class ZeCollector {
       desc->host_time_origin_ = it->second->host_time_origin_;	// in ns
       desc->device_timer_frequency_ = it->second->device_timer_frequency_;
       desc->device_timer_mask_ = it->second->device_timer_mask_;
-      desc->metric_timer_frequency_ = it->second->metric_timer_frequency_;
-      desc->metric_timer_mask_ = it->second->metric_timer_mask_;
+      desc->device_ns_per_cycle_ = it->second->device_ns_per_cycle_;
       desc->implicit_scaling_ = it->second->implicit_scaling_;
       desc->device_ = it->second->device_;
       ze_context_handle_t context = it->second->context_;
@@ -2891,8 +3092,7 @@ class ZeCollector {
       desc->host_time_origin_ = it->second->host_time_origin_;	// in ns
       desc->device_timer_frequency_ = it->second->device_timer_frequency_;
       desc->device_timer_mask_ = it->second->device_timer_mask_;
-      desc->metric_timer_frequency_ = it->second->metric_timer_frequency_;
-      desc->metric_timer_mask_ = it->second->metric_timer_mask_;
+      desc->device_ns_per_cycle_ = it->second->device_ns_per_cycle_;
       desc->event_ = event_to_signal;
       desc->in_order_counter_event_ = ze_instance_data.in_order_counter_event_;
       desc->device_ = it->second->device_;
@@ -3019,8 +3219,7 @@ class ZeCollector {
       desc->host_time_origin_ = it->second->host_time_origin_;	// in ns
       desc->device_timer_frequency_ = it->second->device_timer_frequency_;
       desc->device_timer_mask_ = it->second->device_timer_mask_;
-      desc->metric_timer_frequency_ = it->second->metric_timer_frequency_;
-      desc->metric_timer_mask_ = it->second->metric_timer_mask_;
+      desc->device_ns_per_cycle_ = it->second->device_ns_per_cycle_;
       desc->event_ = event_to_signal;
       desc->in_order_counter_event_ = ze_instance_data.in_order_counter_event_;
       desc->device_ = it->second->device_;
@@ -3148,8 +3347,7 @@ class ZeCollector {
       desc->host_time_origin_ = it->second->host_time_origin_;	// in ns
       desc->device_timer_frequency_ = it->second->device_timer_frequency_;
       desc->device_timer_mask_ = it->second->device_timer_mask_;
-      desc->metric_timer_frequency_ = it->second->metric_timer_frequency_;
-      desc->metric_timer_mask_ = it->second->metric_timer_mask_;
+      desc->device_ns_per_cycle_ = it->second->device_ns_per_cycle_;
       desc->device_ = it->second->device_;
       ze_context_handle_t context = it->second->context_;
       command_lists_mutex_.unlock_shared();
@@ -3263,8 +3461,7 @@ class ZeCollector {
       desc->host_time_origin_ = it->second->host_time_origin_;	// in ns
       desc->device_timer_frequency_ = it->second->device_timer_frequency_;
       desc->device_timer_mask_ = it->second->device_timer_mask_;
-      desc->metric_timer_frequency_ = it->second->metric_timer_frequency_;
-      desc->metric_timer_mask_ = it->second->metric_timer_mask_;
+      desc->device_ns_per_cycle_ = it->second->device_ns_per_cycle_;
       desc->device_ = it->second->device_;
       ze_context_handle_t context = it->second->context_;
       command_lists_mutex_.unlock_shared();
@@ -3373,8 +3570,7 @@ class ZeCollector {
       desc->host_time_origin_ = cl->host_time_origin_;	// in ns
       desc->device_timer_frequency_ = cl->device_timer_frequency_;
       desc->device_timer_mask_ = cl->device_timer_mask_;
-      desc->metric_timer_frequency_ = cl->metric_timer_frequency_;
-      desc->metric_timer_mask_ = cl->metric_timer_mask_;
+      desc->device_ns_per_cycle_ = cl->device_ns_per_cycle_;
       desc->device_ = cl->device_;
 
       desc->group_count_ = {0, 0, 0};
@@ -3422,7 +3618,7 @@ class ZeCollector {
       ze_command_list_append_launch_kernel_params_t* params,
       void* global_data, void** instance_data) {
     ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
-    PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true);
+    PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true, *(params->phKernel));
 
   }
 
@@ -3446,12 +3642,65 @@ class ZeCollector {
     }
     return 0;
   }
+//Need to update L0_mod_callbacks.h and level_zero files to enable WithArguments and WithParameters callbacks
+
+  // static void OnEnterCommandListAppendLaunchKernelWithArguments(
+  //     ze_command_list_append_launch_kernel_with_arguments_params_t* params,
+  //     void* global_data, void** instance_data) {
+  //     ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
+  //     PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true, *(params->phKernel));
+  // }
+
+  // static void OnExitCommandListAppendLaunchKernelWithArguments(
+  //     ze_command_list_append_launch_kernel_with_arguments_params_t* params,
+  //     ze_result_t result, void* global_data, void** /* instance_data */, std::vector<uint64_t> *kids) {
+  //   ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
+  //   if ((result == ZE_RESULT_SUCCESS) && ze_instance_data.instrument_) {
+  //       collector->AppendLaunchKernel(
+  //         *(params->phKernel),
+  //         params->pgroupCounts,
+  //         *(params->phSignalEvent),
+  //         ze_instance_data.query_,
+  //         *(params->phCommandList),
+  //         kids);
+  //   }
+  //   else {
+  //     collector->query_pools_.PutQuery(ze_instance_data.query_);
+  //     collector->event_cache_.ReleaseEvent(*(params->phSignalEvent));
+  //   }
+  // }
+
+  // static void OnEnterCommandListAppendLaunchKernelWithParameters(
+  //     ze_command_list_append_launch_kernel_with_parameters_params_t* params,
+  //     void* global_data, void** instance_data) {
+  //     ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
+  //     PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true, *(params->phKernel));
+  // }
+
+  // static void OnExitCommandListAppendLaunchKernelWithParameters(
+  //     ze_command_list_append_launch_kernel_with_parameters_params_t* params,
+  //     ze_result_t result, void* global_data, void** /* instance_data */, std::vector<uint64_t> *kids) {
+  //   ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
+  //   if ((result == ZE_RESULT_SUCCESS) && ze_instance_data.instrument_) {
+  //       collector->AppendLaunchKernel(
+  //         *(params->phKernel),
+  //         *(params->ppGroupCounts),
+  //         *(params->phSignalEvent),
+  //         ze_instance_data.query_,
+  //         *(params->phCommandList),
+  //         kids);
+  //   }
+  //   else {
+  //     collector->query_pools_.PutQuery(ze_instance_data.query_);
+  //     collector->event_cache_.ReleaseEvent(*(params->phSignalEvent));
+  //   }
+  // }
 
   static void OnEnterCommandListAppendLaunchCooperativeKernel(
       ze_command_list_append_launch_cooperative_kernel_params_t* params,
       void* global_data, void** /* instance_data */) {
       ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
-      PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true);
+      PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true, *(params->phKernel));
   }
 
   static uint64_t OnExitCommandListAppendLaunchCooperativeKernel(
@@ -3478,7 +3727,7 @@ class ZeCollector {
       ze_command_list_append_launch_kernel_indirect_params_t* params,
       void* global_data, void** /* instance_data */) {
       ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
-      PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true);
+      PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true, *(params->phKernel));
   }
 
   static uint64_t OnExitCommandListAppendLaunchKernelIndirect(
@@ -3858,8 +4107,42 @@ class ZeCollector {
 
     collector->command_lists_mutex_.lock();
     auto it = collector->command_lists_.find(*(params->phCommandList));
+    if (it != collector->command_lists_.end()) {
+      if (it->second->immediate_) {
+        if (!it->second->in_order_) {
+          std::cerr << "[WARNING] Event reset in out-of-order immediate command list" << std::endl;
+        }
+        // handle immediate command list
+        global_device_submissions_mutex_.lock_shared();
+        auto it_cmd = local_device_submissions_.commands_submitted_.begin();
+        bool process_commands = false;
+        while (it_cmd != local_device_submissions_.commands_submitted_.end()) {
+          ZeCommand *command = *it_cmd;
+          if (command->command_list_ == *(params->phCommandList)) {
+            // check if reset event is associated with any command
+            if (command->event_ == *(params->phEvent)) {
+                // found a command associated with this event
+                // wait for the event to be signaled before processing commands
+                auto status = ZE_FUNC(zeEventHostSynchronize)(command->event_, UINT64_MAX);
+                if (status != ZE_RESULT_SUCCESS) {
+                  process_commands = false;
+                  std::cerr << "[ERROR] Failed to synchronize event when tracing event reset on device" << std::endl;
+                  break;
+                }
+                process_commands = true;
+            }
+          }
+          ++it_cmd;
+        }
+        if (process_commands) {
+          // Associated commands found for immediate command list, process them
+          collector->ProcessCommandsSubmitted(nullptr);
+        }
+        global_device_submissions_mutex_.unlock_shared();
+      }
+    }
+
     if ((it != collector->command_lists_.end()) && !(it->second->immediate_)) {
-      // TODO: handle immediate command list?
       auto it2 = it->second->event_to_timestamp_seq_.find(*(params->phEvent));
       if (it2 != it->second->event_to_timestamp_seq_.end()) {
         int slot = it->second->num_timestamps_on_event_reset_++;
@@ -3888,33 +4171,34 @@ class ZeCollector {
         it->second->event_to_timestamp_seq_.erase(it2);
       }
 
-        // each command or kernel needs two slots: one for start and one for end
-        uint64_t *dts = nullptr;
-        size_t slice = it->second->num_device_global_timestamps_ / (2 * number_timestamps_per_slice_);
-        if (it->second->device_global_timestamps_.size() <= slice) {
-          ze_host_mem_alloc_desc_t host_alloc_desc = {ZE_STRUCTURE_TYPE_HOST_MEM_ALLOC_DESC, nullptr, 0};
-          auto status = ZE_FUNC(zeMemAllocHost)(it->second->context_, &host_alloc_desc, number_timestamps_per_slice_ * sizeof(uint64_t) * 2, cache_line_size_, (void **)&dts);
-          UniMemory::ExitIfOutOfMemory((void *)(dts));
-          if (status != ZE_RESULT_SUCCESS) {
-            std::cerr << "[ERROR] Failed to allocate host memory for timestamps (status = 0x" << std::hex << status << std::dec << ")" << std::endl;
-            exit(-1);
-          }
-          it->second->device_global_timestamps_.push_back(dts);
-        }
-        else {
-          dts = it->second->device_global_timestamps_.at(slice);
-        }
-	      int idx = it->second->num_device_global_timestamps_ % (2 * number_timestamps_per_slice_);
-        auto status = ZE_FUNC(zeCommandListAppendWriteGlobalTimestamp)(*(params->phCommandList), (uint64_t *)&(dts[idx]), nullptr, 0, nullptr);
+
+      // each command or kernel needs two slots: one for start and one for end
+      uint64_t *dts = nullptr;
+      size_t slice = it->second->num_device_global_timestamps_ / (2 * number_timestamps_per_slice_);
+      if (it->second->device_global_timestamps_.size() <= slice) {
+        ze_host_mem_alloc_desc_t host_alloc_desc = {ZE_STRUCTURE_TYPE_HOST_MEM_ALLOC_DESC, nullptr, 0};
+        auto status = ZE_FUNC(zeMemAllocHost)(it->second->context_, &host_alloc_desc, number_timestamps_per_slice_ * sizeof(uint64_t) * 2, cache_line_size_, (void **)&dts);
+        UniMemory::ExitIfOutOfMemory((void *)(dts));
         if (status != ZE_RESULT_SUCCESS) {
-          std::cerr << "[ERROR] Failed to get device global timestamps (status = 0x" << std::hex << status << std::dec << ")" << std::endl;
+          std::cerr << "[ERROR] Failed to allocate host memory for timestamps (status = 0x" << std::hex << status << std::dec << ")" << std::endl;
           exit(-1);
         }
-        
-        collector->PrepareToAppendKernelCommand(it->second);
+        it->second->device_global_timestamps_.push_back(dts);
+      }
+      else {
+        dts = it->second->device_global_timestamps_.at(slice);
+      }
+      int idx = it->second->num_device_global_timestamps_ % (2 * number_timestamps_per_slice_);
+      auto status = ZE_FUNC(zeCommandListAppendWriteGlobalTimestamp)(*(params->phCommandList), (uint64_t *)&(dts[idx]), nullptr, 0, nullptr);
+      if (status != ZE_RESULT_SUCCESS) {
+        std::cerr << "[ERROR] Failed to get device global timestamps (status = 0x" << std::hex << status << std::dec << ")" << std::endl;
+        exit(-1);
+      }
+      
+      collector->PrepareToAppendKernelCommand(it->second);
 
-        *instance_data = reinterpret_cast<void *>(&(dts[idx]) + 1);
-        it->second->num_device_global_timestamps_ += 2; // start timestamp and end timestamp
+      *instance_data = reinterpret_cast<void *>(&(dts[idx]) + 1);
+      it->second->num_device_global_timestamps_ += 2; // start timestamp and end timestamp
 
     }
     collector->command_lists_mutex_.unlock();
@@ -4003,7 +4287,7 @@ class ZeCollector {
     }
   }
 
-  static void OnEnterCommandListClose (ze_command_list_close_params_t* params, void* global_data, void** /* instance_data */) {
+  static void OnEnterCommandListClose(ze_command_list_close_params_t* params, void* global_data, void** /* instance_data */) {
     ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
 
     collector->command_lists_mutex_.lock();
@@ -4047,7 +4331,7 @@ class ZeCollector {
         // signal event if events were reset earlier
         auto status = ZE_FUNC(zeCommandListAppendSignalEvent)(*(params->phCommandList), it->second->timestamp_event_to_signal_);
         if (status != ZE_RESULT_SUCCESS){
-          std::cerr << "[ERROR] Failed to signal command list timstamps event (status = 0x" << std::hex << status << std::dec << ")" << std::endl;
+          std::cerr << "[ERROR] Failed to signal command list timestamps event (status = 0x" << std::hex << status << std::dec << ")" << std::endl;
         }
       }
 
@@ -4320,7 +4604,7 @@ typedef struct _zex_kernel_register_file_size_exp_t {
       // for stall sampling
       uint64_t base_addr = 0;
       uint64_t binary_size = 0;
-      if (collector->options_.stall_sampling && (zexKernelGetBaseAddress != nullptr) && (zexKernelGetBaseAddress(kernel, &base_addr) == ZE_RESULT_SUCCESS)) {
+      if (collector->options_.stall_sampling && (ZexKernelGetBaseAddress != nullptr) && (ZexKernelGetBaseAddress(kernel, &base_addr) == ZE_RESULT_SUCCESS)) {
         base_addr &= 0xFFFFFFFF;
         binary_size = module_binary_size;	// store module binary size. only an upper bound is needed
       }
