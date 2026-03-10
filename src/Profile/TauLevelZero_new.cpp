@@ -79,7 +79,7 @@ static int disabled = 0;
 static CollectorOptions L0_collector_options;
 
 //Map a device and tile to a task
-static std::map<tuple<uintptr_t, int>, int> map_thread_queue;
+static std::map<tuple<uintptr_t, int, size_t>, int> map_thread_queue;
 
 static std::map<ze_command_queue_handle_t, int> command_queue_map;
 static int comm_queue = 0;
@@ -142,7 +142,7 @@ void Tau_add_metadata_for_task(const char *key, int value, int taskid) {
 
 //Only call inside functions that use lock_guard, not implemented lock inside to prevent deadlocks.
 //Check implementation for metrics
-int Tau_get_initialized_queues(tuple<uintptr_t, int> dev_tile, ze_command_queue_handle_t comm_queue_id, double first_ts)
+int Tau_get_initialized_queues(tuple<uintptr_t, int, size_t> dev_tile, ze_command_queue_handle_t comm_queue_id, double first_ts)
 {
   int queue_id;
   auto it = map_thread_queue.find(dev_tile);
@@ -177,6 +177,7 @@ int Tau_get_initialized_queues(tuple<uintptr_t, int> dev_tile, ze_command_queue_
         command_queue_map[comm_queue_id] = comm_queue;
     } 
     Tau_add_metadata_for_task("L0_QUEUE_ID", curr_comm_queue, queue_id);
+    Tau_add_metadata_for_task("L0_VQUEUE_ID", std::get<2>(dev_tile), queue_id);
     comm_queue++;
     Tau_create_top_level_timer_if_necessary_task(queue_id);
     //std::cout << " NEW TASK: " << queue_id << std::endl;
@@ -223,7 +224,7 @@ uint64_t popKernel() {
 //Only call inside functions that use lock_guard, not implemented lock inside to prevent deadlocks.
 void Tau_remove_initialized_queues(uint64_t cpu_end_ts)
 {
-  std::map<tuple<uintptr_t, int>, int>::iterator it;
+  std::map<tuple<uintptr_t, int, size_t>, int>::iterator it;
   for(it = map_thread_queue.begin(); it != map_thread_queue.end(); it++)
   {
     int taskid = it->second;
@@ -345,6 +346,39 @@ double TAU_LO_translate_metric_value(const zet_typed_value_t& typed_value)
     return translated_value;
 }
 
+
+//There are overlaps when using examples such as ze_gemm due to how
+// command lists work. A list of command to execute is created and command
+// that are inside a region before a barrier can be executed concurrently,
+// which happens with ze_gemm and the memory copies. As we cannot detect the barrier
+// with the same logic as the command list, we check for overlaps, and use a virtual
+// queue id identifier to simulate that we have multiple queues
+size_t check_overlap(uintptr_t curr_device, int curr_tile, uint64_t kernel_start, uint64_t kernel_end)
+{
+    //Map keys are current device and current tile
+    //Inside each position, we want to have the start and end timestamps
+    static std::map<tuple<uintptr_t, int>, vector<tuple<uint64_t, uint64_t>>> map_overlaps;
+    auto key = make_tuple(curr_device, curr_tile);
+    auto& vec = map_overlaps[key]; // creates empty vector if key does not exist
+
+    for (size_t i = 0; i < vec.size(); ++i) {
+        auto& t = vec[i];
+        uint64_t prev_start = get<0>(t);
+        uint64_t prev_end   = get<1>(t);
+
+        if (kernel_start >= prev_end) {
+            t = make_tuple(kernel_start, kernel_end);
+            return i;
+        }
+    }
+
+    // All tuples overlap → create a new tuple (new virtual queue)
+    vec.push_back(make_tuple(kernel_start, kernel_end));
+    return vec.size() - 1; // last index = new queue
+
+    return 0;
+}
+
 //GPU events, needs a task per device and tile(concurrent kernels)
 // need a map with device and tile to task_id
 //Also, there are some things detected as Kernel which really aren't
@@ -428,6 +462,12 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             uint64_t kernel_dutarion = (kernel_end - kernel_start);
             std::cout << "kernel_duration " << kernel_dutarion << std::endl;
             std::cout << "Instance ID " << command->instance_id_  << std::endl;
+            std::cout << "tile " << tile  << std::endl;
+            std::cout << "queue_ " << command->queue_  << std::endl;
+            std::cout << "engine_ordinal_ " << command->engine_ordinal_  << std::endl;
+            std::cout << "engine_index_ " << command->engine_index_  << std::endl;
+            std::cout << "command_list_ " << command->command_list_  << std::endl;
+            //std::cout << "v_comm_list " << command->v_comm_list_  << std::endl;
         #endif
 
         //This is already inside a mutex
@@ -446,9 +486,10 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
 
         int curr_tile = tile<0? 0:tile;
         uintptr_t curr_device = reinterpret_cast<uintptr_t>(command->device_);
-        tuple<uintptr_t, int> dev_tile(curr_device, curr_tile);
-        //tau2-intel --> ze_collector.h 792 TAU_L0_kernel_event
 
+        size_t v_queue_id = check_overlap(curr_device, curr_tile, kernel_start, kernel_end);
+
+        tuple<uintptr_t, int, size_t> dev_tile(curr_device, curr_tile, v_queue_id);
 
         static double time_shift = L0_TAU_init_timestamp - (L0_Driver_init_timestamp/1e3);
         double translated_start = time_shift + (kernel_start/1e3);
@@ -468,7 +509,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             //std::cout << "k_diff " << kernel_end - kernel_start << std::endl;
             //std::cout << "t_diff " << setprecision(numeric_limits<double>::max_digits10)<<  translated_end - translated_start << std::endl;
         
-            task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_), command->queue_, translated_start);
+            task_id = Tau_get_initialized_queues(dev_tile, command->queue_, translated_start);
             metric_set_gpu_timestamp(task_id, translated_start);
             TAU_START_TASK(event_name.c_str(), task_id);
             void* TraceCorrelationID;
@@ -506,7 +547,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         }
         else if((it->second.type_ == KERNEL_COMMAND_TYPE_MEMORY) && (command->mem_size_ > 0))
         {
-            task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_), command->queue_, translated_start);
+            task_id = Tau_get_initialized_queues(dev_tile, command->queue_, translated_start);
             metric_set_gpu_timestamp(task_id, translated_start);
             TAU_START_TASK(event_name.c_str(), task_id);
             metric_set_gpu_timestamp(task_id, translated_end);

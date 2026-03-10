@@ -1152,6 +1152,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         const char *name;
         Tau_metadata_value_t * value;
         char queue_id[256] = "";
+        char vqueue_id[256] = "";
         char gpu_id[256] = "";
         char tau_task_id[256] = "";
         // We need to capture the thread name as "queue<2>/device<1> [31]".
@@ -1164,13 +1165,16 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
             if (strcmp(name, "L0_QUEUE_ID") == 0) {
                 snprintf(queue_id, sizeof(queue_id),  "%s", value->data.cval);
             }
-                if (strcmp(name, "TAU_TASK_ID") == 0) {
+            if (strcmp(name, "L0_VQUEUE_ID") == 0) {
+                snprintf(vqueue_id, sizeof(vqueue_id),  "%s", value->data.cval);
+            }
+            if (strcmp(name, "TAU_TASK_ID") == 0) {
                 snprintf(tau_task_id, sizeof(tau_task_id),  "%s", value->data.cval);
             }
         }
 
         if (strlen(gpu_id) > 0) {
-            snprintf(namebuf, sizeof(namebuf),  "GPU%s Queue%s", gpu_id, queue_id);
+            snprintf(namebuf, sizeof(namebuf),  "GPU%s Queue%s:%s", gpu_id, queue_id, vqueue_id);
             TAU_VERBOSE("name = %s\n", namebuf);
         }
 

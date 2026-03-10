@@ -757,6 +757,7 @@ struct ZeCommand {
   std::vector<int> *index_timestamps_on_event_reset_;	// indices to timestamps_on_event_reset_
   bool implicit_scaling_;
   bool immediate_;
+  //uint64_t v_comm_list_;
 };
 
 
@@ -2473,6 +2474,7 @@ class ZeCollector {
     status = ZE_FUNC(zeDeviceGetGlobalTimestamps)(device, &host_timestamp, &device_timestamp);
     PTI_ASSERT(status == ZE_RESULT_SUCCESS);
 
+    //static uint64_t v_comm_list = 0;
     for (uint32_t i = 0; i < count; i++) {
       ze_command_list_handle_t cmdlist = cmdlists[i];
       auto it = command_lists_.find(cmdlist);
@@ -2499,6 +2501,8 @@ class ZeCollector {
           cmd->submit_time_device_ = device_timestamp;	//in ticks
           cmd->tid_ = utils::GetTid();;
           cmd->fence_ = fence;
+          //cmd->v_comm_list_ = v_comm_list;
+          
           // Exit callback will reset cmd->event_ and backfill cmd->instance_id_
           local_device_submissions_.StageKernelCommand(cmd);
 
@@ -2513,6 +2517,7 @@ class ZeCollector {
         }
       }
     }
+    //v_comm_list++;
   }
 
   void CreateImage(ze_image_handle_t image, size_t size) {

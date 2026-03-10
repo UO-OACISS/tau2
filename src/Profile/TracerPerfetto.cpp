@@ -372,9 +372,10 @@ static std::string get_thread_name(int rank, int tid) {
         const char* l0_gpu = Tau_metadata_get("L0_GPU_ID", tid);
         if (l0_gpu && strcmp(l0_gpu, "") != 0) {
             const char* l0_queue = Tau_metadata_get("L0_QUEUE_ID", tid);
+            const char* l0_vqueue = Tau_metadata_get("L0_VQUEUE_ID", tid);
             char buf[256];
-            snprintf(buf, sizeof(buf), "GPU dev%s:que%s", l0_gpu, 
-                     l0_queue ? l0_queue : "?");
+            snprintf(buf, sizeof(buf), "GPU dev%s:que%s:%s", l0_gpu, 
+                     l0_queue ? l0_queue : "?", l0_vqueue ? l0_vqueue : "?");
             return std::string(buf);
         }
         
