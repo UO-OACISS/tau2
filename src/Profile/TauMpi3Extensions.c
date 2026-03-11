@@ -9,6 +9,21 @@
 #include <Profile/TauEnv.h>
 #include "check_mpi_version.h"
 
+#define track_vector( call, counts, typesize ) { \
+    int typesize, commSize, commRank, sendcount = 0, i; \
+    PMPI_Comm_rank(comm, &commRank); \
+    PMPI_Comm_size(comm, &commSize); \
+    if ( commRank == root ) { \
+      if (sendtype != MPI_DATATYPE_NULL) { \
+        PMPI_Type_size( sendtype, &typesize ); \
+      } \
+      for (i = 0; i<commSize; i++) { \
+	            sendcount += counts[i]; \
+      } \
+      call(typesize*sendcount); \
+    } \
+  }
+
 /******************************************************
 ***      MPI_Get_library_version wrapper function 
 ******************************************************/
@@ -17,7 +32,7 @@ int MPI_Get_library_version(char *version, int * resultlen)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Get_library_version()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Get_library_version(version, resultlen);
+  retvalue = PMPI_Get_library_version(version, resultlen);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -68,7 +83,7 @@ int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count * size)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Type_size_x()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Type_size_x(datatype, size);
+  retvalue = PMPI_Type_size_x(datatype, size);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -119,7 +134,7 @@ int MPI_Type_get_extent_x(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * ext
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Type_get_extent_x()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Type_get_extent_x(datatype, lb, extent);
+  retvalue = PMPI_Type_get_extent_x(datatype, lb, extent);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -170,7 +185,7 @@ int MPI_Get_elements_x(TAU_MPICH3_CONST MPI_Status * status, MPI_Datatype dataty
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Get_elements_x()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Get_elements_x(status, datatype, count);
+  retvalue = PMPI_Get_elements_x(status, datatype, count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -223,7 +238,7 @@ int MPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count* true_lb, MPI_Co
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Type_get_true_extent_x()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Type_get_true_extent_x(datatype, true_lb, true_extent);
+  retvalue = PMPI_Type_get_true_extent_x(datatype, true_lb, true_extent);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -274,7 +289,7 @@ int MPI_Status_set_elements_x(MPI_Status* status, MPI_Datatype datatype, MPI_Cou
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Status_set_elements_x()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Status_set_elements_x(status, datatype, count);
+  retvalue = PMPI_Status_set_elements_x(status, datatype, count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -326,7 +341,7 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message* message, MPI_Sta
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Mprobe()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Mprobe(source, tag, comm, message, status);
+  retvalue = PMPI_Mprobe(source, tag, comm, message, status);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -381,7 +396,7 @@ int MPI_Improbe(int source, int tag, MPI_Comm comm, int* flag, MPI_Message* mess
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Improbe()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Improbe(source, tag, comm, flag, message, status);
+  retvalue = PMPI_Improbe(source, tag, comm, flag, message, status);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -439,7 +454,7 @@ int MPI_Mrecv(void* buf, int count, MPI_Datatype datatype, MPI_Message* message,
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Mrecv()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Mrecv(buf, count, datatype, message, status);
+  retvalue = PMPI_Mrecv(buf, count, datatype, message, status);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -494,7 +509,7 @@ int MPI_Imrecv(void* buf, int count, MPI_Datatype datatype, MPI_Message* message
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Imrecv()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Imrecv(buf, count, datatype, message, request);
+  retvalue = PMPI_Imrecv(buf, count, datatype, message, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -549,7 +564,7 @@ MPI_Datatype* newtype)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Type_create_hindexed_block()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Type_create_hindexed_block(count, blocklength, array_of_displacements, oldtype, newtype);
+  retvalue = PMPI_Type_create_hindexed_block(count, blocklength, array_of_displacements, oldtype, newtype);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -607,7 +622,7 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ibarrier()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Ibarrier(comm, request);
+  retvalue = PMPI_Ibarrier(comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -657,9 +672,14 @@ void mpi_ibarrier__(MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 int MPI_Ibcast(void* buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ibcast()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Ibcast(buffer, count, datatype, root, comm, request);
+  retvalue = PMPI_Ibcast(buffer, count, datatype, root, comm, request);
+  if (datatype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_IBCAST_DATA(typesize*count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -708,9 +728,18 @@ int MPI_Igather(TAU_MPICH3_CONST void* sendbuf, int sendcount, MPI_Datatype send
 MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
+  int rank;
   TAU_PROFILE_TIMER(t, "MPI_Igather()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Igather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, request);
+  retvalue = PMPI_Igather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, request);
+  PMPI_Comm_rank ( comm, &rank );
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize );
+  }
+  if (rank == root) {
+    TAU_IGATHER_DATA(typesize*recvcount);
+  }
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -763,8 +792,9 @@ TAU_MPICH3_CONST int * displs, MPI_Datatype recvtype, int root, MPI_Comm comm, M
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Igatherv()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Igatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm,
+  retvalue = PMPI_Igatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm,
     request);
+  track_vector(TAU_IGATHERV_DATA, recvcounts, recvtype);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -817,9 +847,14 @@ int MPI_Iscatter(TAU_MPICH3_CONST void* sendbuf, int sendcount, MPI_Datatype sen
 MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Iscatter()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, request);
+  retvalue = PMPI_Iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, request);
+  if (sendtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( sendtype, &typesize );
+  }
+  TAU_ISCATTER_DATA(typesize*sendcount);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -869,7 +904,7 @@ void* recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MP
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Iscatterv()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Iscatterv(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm,
+  retvalue = PMPI_Iscatterv(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm,
     request);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -924,7 +959,7 @@ MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Iallgather()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Iallgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request);
+  retvalue = PMPI_Iallgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -975,7 +1010,7 @@ TAU_MPICH3_CONST int * displs, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Iallgatherv()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Iallgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm,
+  retvalue = PMPI_Iallgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm,
     request);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -1030,7 +1065,7 @@ MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ialltoall()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Ialltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request);
+  retvalue = PMPI_Ialltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1081,7 +1116,7 @@ void* recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST int * rdispls
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ialltoallv()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype,
+  retvalue = PMPI_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype,
     comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -1137,7 +1172,7 @@ MPI_Comm comm, MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ialltoallw()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Ialltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes,
+  retvalue = PMPI_Ialltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes,
     comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -1196,7 +1231,7 @@ MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Iallreduce()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm, request);
+  retvalue = PMPI_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1248,7 +1283,7 @@ MPI_Comm comm, MPI_Request* request)
   int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ireduce()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Ireduce(sendbuf, recvbuf, count, datatype, op, root, comm, request);
+  retvalue = PMPI_Ireduce(sendbuf, recvbuf, count, datatype, op, root, comm, request);
   if (datatype != MPI_DATATYPE_NULL) {
     PMPI_Type_size( datatype, &typesize );
   }
@@ -1294,7 +1329,7 @@ MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 }
 
 
-//MPI_Reduce_scatter_block should be from MPI-2
+
 /******************************************************
 ***      MPI_Reduce_scatter_block wrapper function 
 ******************************************************/
@@ -1303,7 +1338,7 @@ int MPI_Reduce_scatter_block(TAU_MPICH3_CONST void* sendbuf, void* recvbuf, int 
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Reduce_scatter_block()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm);
+  retvalue = PMPI_Reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1354,7 +1389,7 @@ MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ireduce_scatter_block()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm, request);
+  retvalue = PMPI_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1405,7 +1440,7 @@ MPI_Comm comm, MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ireduce_scatter()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Ireduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm, request);
+  retvalue = PMPI_Ireduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1456,7 +1491,7 @@ MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Iscan()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Iscan(sendbuf, recvbuf, count, datatype, op, comm, request);
+  retvalue = PMPI_Iscan(sendbuf, recvbuf, count, datatype, op, comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1507,7 +1542,7 @@ MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Iexscan()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Iexscan(sendbuf, recvbuf, count, datatype, op, comm, request);
+  retvalue = PMPI_Iexscan(sendbuf, recvbuf, count, datatype, op, comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1557,7 +1592,7 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm* newcomm)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Comm_dup_with_info()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Comm_dup_with_info(comm, info, newcomm);
+  retvalue = PMPI_Comm_dup_with_info(comm, info, newcomm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1609,7 +1644,7 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Comm_set_info()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Comm_set_info(comm, info);
+  retvalue = PMPI_Comm_set_info(comm, info);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1660,7 +1695,7 @@ int MPI_Comm_get_info(MPI_Comm comm, MPI_Info* info_used)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Comm_get_info()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Comm_get_info(comm, info_used);
+  retvalue = PMPI_Comm_get_info(comm, info_used);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1712,7 +1747,7 @@ int MPI_Win_set_info(MPI_Win win, MPI_Info info)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_set_info()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_set_info(win, info);
+  retvalue = PMPI_Win_set_info(win, info);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1763,7 +1798,7 @@ int MPI_Win_get_info(MPI_Win win, MPI_Info* info_used)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_get_info()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_get_info(win, info_used);
+  retvalue = PMPI_Win_get_info(win, info_used);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1815,7 +1850,7 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm* newcomm, MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Comm_idup()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Comm_idup(comm, newcomm, request);
+  retvalue = PMPI_Comm_idup(comm, newcomm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1869,7 +1904,7 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm* new
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Comm_create_group()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Comm_create_group(comm, group, tag, newcomm);
+  retvalue = PMPI_Comm_create_group(comm, group, tag, newcomm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1921,7 +1956,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Comm_split_type()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Comm_split_type(comm, split_type, key, info, newcomm);
+  retvalue = PMPI_Comm_split_type(comm, split_type, key, info, newcomm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1974,7 +2009,7 @@ MPI_Datatype recvtype, MPI_Comm comm)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_allgather()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Neighbor_allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm);
+  retvalue = PMPI_Neighbor_allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -2025,7 +2060,7 @@ TAU_MPICH3_CONST int * displs, MPI_Datatype recvtype, MPI_Comm comm)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_allgatherv()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Neighbor_allgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm);
+  retvalue = PMPI_Neighbor_allgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -2079,7 +2114,7 @@ MPI_Datatype recvtype, MPI_Comm comm)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_alltoall()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Neighbor_alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm);
+  retvalue = PMPI_Neighbor_alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -2130,7 +2165,7 @@ void* recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST int * rdispls
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_alltoallv()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Neighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
+  retvalue = PMPI_Neighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -2186,7 +2221,7 @@ TAU_MPICH3_CONST MPI_Datatype * recvtypes, MPI_Comm comm)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_alltoallw()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
+  retvalue = PMPI_Neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
     recvtypes, comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -2245,7 +2280,7 @@ MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_allgather()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Ineighbor_allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request);
+  retvalue = PMPI_Ineighbor_allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -2298,7 +2333,7 @@ TAU_MPICH3_CONST int * displs, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_allgatherv()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Ineighbor_allgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
+  retvalue = PMPI_Ineighbor_allgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
     comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -2353,7 +2388,7 @@ MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_alltoall()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Ineighbor_alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request);
+  retvalue = PMPI_Ineighbor_alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -2407,7 +2442,7 @@ void* recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST int * rdispls
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_alltoallv()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Ineighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
+  retvalue = PMPI_Ineighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -2462,7 +2497,7 @@ TAU_MPICH3_CONST MPI_Datatype * recvtypes, MPI_Comm comm, MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_alltoallw()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Ineighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
+  retvalue = PMPI_Ineighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
     recvtypes, comm, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -2521,7 +2556,7 @@ int * destinations, int * destweights)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Dist_graph_neighbors()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Dist_graph_neighbors(comm, maxindegree, sources, sourceweights, maxoutdegree, destinations,
+  retvalue = PMPI_Dist_graph_neighbors(comm, maxindegree, sources, sourceweights, maxoutdegree, destinations,
     destweights);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -2582,7 +2617,7 @@ TAU_MPICH3_CONST int * destinations, TAU_MPICH3_CONST int * destweights, MPI_Inf
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Dist_graph_create_adjacent()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Dist_graph_create_adjacent(comm_old, indegree, sources, sourceweights, outdegree,
+  retvalue = PMPI_Dist_graph_create_adjacent(comm_old, indegree, sources, sourceweights, outdegree,
     destinations, destweights, info, reorder, comm_dist_graph);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -2651,7 +2686,7 @@ MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Rput()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Rput(origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count,
+  retvalue = PMPI_Rput(origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count,
     target_datatype, win, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -2718,7 +2753,7 @@ MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Rget()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Rget(origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count,
+  retvalue = PMPI_Rget(origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count,
     target_datatype, win, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -2785,7 +2820,7 @@ MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Raccumulate()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Raccumulate(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
+  retvalue = PMPI_Raccumulate(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
     target_count, target_datatype, op, win, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -2852,7 +2887,7 @@ int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Get_accumulate()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Get_accumulate(origin_addr, origin_count, origin_datatype, result_addr, result_count,
+  retvalue = PMPI_Get_accumulate(origin_addr, origin_count, origin_datatype, result_addr, result_count,
     result_datatype, target_rank, target_disp, target_count, target_datatype, op, win);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -2919,7 +2954,7 @@ int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win, MPI_Requ
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Rget_accumulate()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Rget_accumulate(origin_addr, origin_count, origin_datatype, result_addr, result_count,
+  retvalue = PMPI_Rget_accumulate(origin_addr, origin_count, origin_datatype, result_addr, result_count,
     result_datatype, target_rank, target_disp, target_count, target_datatype, op, win, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -2990,7 +3025,7 @@ MPI_Aint target_disp, MPI_Op op, MPI_Win win)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Fetch_and_op()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Fetch_and_op(origin_addr, result_addr, datatype, target_rank, target_disp, op, win);
+  retvalue = PMPI_Fetch_and_op(origin_addr, result_addr, datatype, target_rank, target_disp, op, win);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3047,7 +3082,7 @@ int target_rank, MPI_Aint target_disp, MPI_Win win)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Compare_and_swap()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Compare_and_swap(origin_addr, compare_addr, result_addr, datatype, target_rank, target_disp,
+  retvalue = PMPI_Compare_and_swap(origin_addr, compare_addr, result_addr, datatype, target_rank, target_disp,
     win);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -3098,7 +3133,7 @@ MPI_Fint * target_rank, MPI_Aint * target_disp, MPI_Fint * win, MPI_Fint * ierr)
   return ;
 }
 
-//--!!!
+
 /******************************************************
 ***      MPI_Win_allocate wrapper function 
 ******************************************************/
@@ -3107,7 +3142,7 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm,
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_allocate()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_allocate(size, disp_unit, info, comm, baseptr, win);
+  retvalue = PMPI_Win_allocate(size, disp_unit, info, comm, baseptr, win);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3164,7 +3199,7 @@ int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Com
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_allocate_shared()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_allocate_shared(size, disp_unit, info, comm, baseptr, win);
+  retvalue = PMPI_Win_allocate_shared(size, disp_unit, info, comm, baseptr, win);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3221,7 +3256,7 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win* win)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_create_dynamic()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_create_dynamic(info, comm, win);
+  retvalue = PMPI_Win_create_dynamic(info, comm, win);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3274,7 +3309,7 @@ TAU_MPICH3_CONST int * weights, MPI_Info info, int reorder, MPI_Comm* comm_dist_
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Dist_graph_create()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Dist_graph_create(comm_old, n, sources, degrees, destinations, weights, info, reorder,
+  retvalue = PMPI_Dist_graph_create(comm_old, n, sources, degrees, destinations, weights, info, reorder,
     comm_dist_graph);
   TAU_PROFILE_STOP(t);
   return retvalue;
@@ -3336,7 +3371,7 @@ int MPI_File_iread_all(MPI_File fh, void* buf, int count, MPI_Datatype datatype,
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_File_iread_all()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_File_iread_all(fh, buf, count, datatype, request);
+  retvalue = PMPI_File_iread_all(fh, buf, count, datatype, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3390,7 +3425,7 @@ int MPI_File_iread_at_all(MPI_File fh, MPI_Offset offset, void* buf, int count, 
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_File_iread_at_all()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_File_iread_at_all(fh, offset, buf, count, datatype, request);
+  retvalue = PMPI_File_iread_at_all(fh, offset, buf, count, datatype, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3449,7 +3484,7 @@ MPI_Request* request)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_File_iwrite_at_all()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_File_iwrite_at_all(fh, offset, buf, count, datatype, request);
+  retvalue = PMPI_File_iwrite_at_all(fh, offset, buf, count, datatype, request);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3507,7 +3542,7 @@ int MPI_Open_port(MPI_Info info, char* port_name)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Open_port()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Open_port(info, port_name);
+  retvalue = PMPI_Open_port(info, port_name);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3558,7 +3593,7 @@ int MPI_Publish_name(TAU_MPICH3_CONST char* service_name, MPI_Info info, TAU_MPI
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Publish_name()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Publish_name(service_name, info, port_name);
+  retvalue = PMPI_Publish_name(service_name, info, port_name);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3609,7 +3644,7 @@ int MPI_Reduce_local(TAU_MPICH3_CONST void* inbuf, void* inoutbuf, int count, MP
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Reduce_local()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Reduce_local(inbuf, inoutbuf, count, datatype, op);
+  retvalue = PMPI_Reduce_local(inbuf, inoutbuf, count, datatype, op);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3660,7 +3695,7 @@ int MPI_Unpublish_name(TAU_MPICH3_CONST char* service_name, MPI_Info info, TAU_M
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Unpublish_name()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Unpublish_name(service_name, info, port_name);
+  retvalue = PMPI_Unpublish_name(service_name, info, port_name);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3711,7 +3746,7 @@ int MPI_Win_attach(MPI_Win win, void* base, MPI_Aint size)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_attach()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_attach(win, base, size);
+  retvalue = PMPI_Win_attach(win, base, size);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3762,7 +3797,7 @@ int MPI_Win_detach(MPI_Win win, TAU_MPICH3_CONST void* base)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_detach()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_detach(win, base);
+  retvalue = PMPI_Win_detach(win, base);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3813,7 +3848,7 @@ int MPI_Win_flush(int rank, MPI_Win win)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_flush()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_flush(rank, win);
+  retvalue = PMPI_Win_flush(rank, win);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3864,7 +3899,7 @@ int MPI_Win_flush_all(MPI_Win win)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_flush_all()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_flush_all(win);
+  retvalue = PMPI_Win_flush_all(win);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3915,7 +3950,7 @@ int MPI_Win_flush_local(int rank, MPI_Win win)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_flush_local()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_flush_local(rank, win);
+  retvalue = PMPI_Win_flush_local(rank, win);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -3966,7 +4001,7 @@ int MPI_Win_flush_local_all(MPI_Win win)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_flush_local_all()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_flush_local_all(win);
+  retvalue = PMPI_Win_flush_local_all(win);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -4017,7 +4052,7 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_lock_all()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_lock_all(assert, win);
+  retvalue = PMPI_Win_lock_all(assert, win);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -4068,7 +4103,7 @@ int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint* size, int* disp_unit, 
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_shared_query()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_shared_query(win, rank, size, disp_unit, baseptr);
+  retvalue = PMPI_Win_shared_query(win, rank, size, disp_unit, baseptr);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -4119,7 +4154,7 @@ int MPI_Win_sync(MPI_Win win)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_sync()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_sync(win);
+  retvalue = PMPI_Win_sync(win);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -4170,7 +4205,7 @@ int MPI_Win_unlock_all(MPI_Win win)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Win_unlock_all()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
-  PMPI_Win_unlock_all(win);
+  retvalue = PMPI_Win_unlock_all(win);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }

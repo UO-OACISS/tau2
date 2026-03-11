@@ -639,7 +639,15 @@ void Tau_scatter_data(int data)
 {
 }
 
+void Tau_scatterv_data(int data)
+{
+}
+
 void Tau_gather_data(int data)
+{
+}
+
+void Tau_gatherv_data(int data)
 {
 }
 
@@ -663,6 +671,21 @@ void Tau_ireduce_data(int data)
 {
 }
 
+void Tau_ibcast_data(int data)
+{
+}
+
+void Tau_igather_data(int data)
+{
+}
+
+void Tau_igatherv_data(int data)
+{
+}
+
+void Tau_iscatter_data(int data)
+{
+}
 
 /* alloc/dealloc */
 void TAU_ALLOC(void ** ptr, int* line, int *size, char *name, int slen)

@@ -1847,10 +1847,17 @@ TAU_GEN_EVENT(TheScanEvent,"Message size for scan")
 TAU_GEN_EVENT(TheAllReduceEvent,"Message size for all-reduce")
 TAU_GEN_EVENT(TheAlltoallEvent,"Message size for all-to-all")
 TAU_GEN_EVENT(TheScatterEvent,"Message size for scatter")
+TAU_GEN_EVENT(TheScattervEvent,"Message size for scatterv")
 TAU_GEN_EVENT(TheGatherEvent,"Message size for gather")
+TAU_GEN_EVENT(TheGathervEvent,"Message size for gatherv")
 TAU_GEN_EVENT(TheAllgatherEvent,"Message size for all-gather")
-TAU_GEN_EVENT(TheIReduceEvent,"Message size for ireduce")
 TAU_GEN_CONTEXT_EVENT(TheWaitEvent,"Message size received in wait")
+
+TAU_GEN_EVENT(TheIReduceEvent,"Message size for ireduce")
+TAU_GEN_EVENT(TheIbcastEvent,"Message size for ibroadcast")
+TAU_GEN_EVENT(TheIgatherEvent,"Message size for igather")
+TAU_GEN_EVENT(TheIgathervEvent,"Message size for igatherv")
+TAU_GEN_EVENT(TheIscatterEvent,"Message size for iscatter")
 
 TauContextUserEvent & TheMsgVolSendContextEvent(int tid) {
     static TauContextUserEvent ** sendEvents = NULL;
@@ -2059,8 +2066,16 @@ extern "C" void Tau_scatter_data(int data) {
   TAU_EVENT(TheScatterEvent(), data);
 }
 
+extern "C" void Tau_scatterv_data(int data) {
+  TAU_EVENT(TheScattervEvent(), data);
+}
+
 extern "C" void Tau_gather_data(int data) {
   TAU_EVENT(TheGatherEvent(), data);
+}
+
+extern "C" void Tau_gatherv_data(int data) {
+  TAU_EVENT(TheGathervEvent(), data);
 }
 
 extern "C" void Tau_allgather_data(int data) {
@@ -2085,6 +2100,22 @@ extern "C" void Tau_reducescatter_data(int data) {
 
 extern "C" void Tau_ireduce_data(int data) {
   TAU_EVENT(TheIReduceEvent(), data);
+}
+
+extern "C" void Tau_ibcast_data(int data) {
+  TAU_EVENT(TheIbcastEvent(), data);
+}
+
+extern "C" void Tau_igather_data(int data) {
+  TAU_EVENT(TheIgatherEvent(), data);
+}
+
+extern "C" void Tau_igatherv_data(int data) {
+  TAU_EVENT(TheIgathervEvent(), data);
+}
+
+extern "C" void Tau_iscatter_data(int data) {
+  TAU_EVENT(TheIscatterEvent(), data);
 }
 
 #else /* !(TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_GPI)*/

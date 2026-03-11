@@ -371,13 +371,20 @@
 #define TAU_REDUCE_DATA(data)  	                Tau_reduce_data(data)
 #define TAU_ALLTOALL_DATA(data)                 Tau_alltoall_data(data)
 #define TAU_SCATTER_DATA(data)                  Tau_scatter_data(data)
+#define TAU_SCATTERV_DATA(data)                  Tau_scatterv_data(data)
 #define TAU_GATHER_DATA(data)  	                Tau_gather_data(data)
+#define TAU_GATHERV_DATA(data)  	        Tau_gatherv_data(data)
 #define TAU_ALLREDUCE_DATA(data)  	        Tau_allreduce_data(data)
 #define TAU_WAIT_DATA(data)  	        	Tau_wait_data(data)
 #define TAU_ALLGATHER_DATA(data)  	        Tau_allgather_data(data)
 #define TAU_REDUCESCATTER_DATA(data)  	        Tau_reducescatter_data(data)
 #define TAU_SCAN_DATA(data)  		        Tau_scan_data(data)
+
 #define TAU_IREDUCE_DATA(data)  	        Tau_ireduce_data(data)
+#define TAU_IBCAST_DATA(data)  	                Tau_ibcast_data(data)
+#define TAU_IGATHER_DATA(data)  	        Tau_igather_data(data)
+#define TAU_IGATHERV_DATA(data)  	        Tau_igatherv_data(data)
+#define TAU_ISCATTER_DATA(data)  	        Tau_iscatter_data(data)
 
 /* dead macros */
 #define TAU_PROFILE_CALLSTACK()
@@ -477,11 +484,11 @@ void Tau_disable_function_exclusion(); //This fully deactivates function exclusi
 void Tau_exclude_default_group(); //Exclude every function in TAU_DEFAULT. This is most events, except threading/communication and specially recognized API's. It should result in fairly lightweight instrumentation.
 void Tau_include_default_group(); //Record events from TAU_DEFAULT again.
 void Tau_set_rank_exclusion_list(const char* rank_list_str);
-  void Tau_exclude_rank_list();
-  void Tau_include_rank_list();
-  void Tau_ignore_rank_list();
-  void Tau_tracing_off();
-  void Tau_tracing_on();
+void Tau_exclude_rank_list();
+void Tau_include_rank_list();
+void Tau_ignore_rank_list();
+void Tau_tracing_off();
+void Tau_tracing_on();
 
 const char *Tau_profile_get_group_name(void *ptr);
 const char *Tau_profile_get_name(void *ptr);
@@ -527,11 +534,20 @@ void TAUDECL Tau_bcast_data(int data);
 void TAUDECL Tau_reduce_data(int data);
 void TAUDECL Tau_alltoall_data(int data);
 void TAUDECL Tau_scatter_data(int data);
+void TAUDECL Tau_scatterv_data(int data);
 void TAUDECL Tau_gather_data(int data);
+void TAUDECL Tau_gatherv_data(int data);
 void TAUDECL Tau_allreduce_data(int data);
 void TAUDECL Tau_allgather_data(int data);
 void TAUDECL Tau_wait_data(int data);
 void TAUDECL Tau_reducescatter_data(int data);
+
+void TAUDECL Tau_ireduce_data(int data);
+void TAUDECL Tau_ibcast_data(int data);
+void TAUDECL Tau_igather_data(int data);
+void TAUDECL Tau_igatherv_data(int data);
+void TAUDECL Tau_iscatter_data(int data);
+
 void TAUDECL Tau_scan_data(int data);
 void TAUDECL Tau_set_node(int node);
 
