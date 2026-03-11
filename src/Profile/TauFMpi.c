@@ -7392,7 +7392,8 @@ void MPI_ALLTOALLW( void * sendbuf, MPI_Fint *  sendcounts, MPI_Fint *  sdispls,
   if (recvbuf == *(mpi_predef_bottom())) {
     recvbuf = MPI_BOTTOM;
   }
-  *ierr = MPI_Alltoallw( sendbuf, sendcounts, sdispls, local_send_types, recvbuf, recvcounts, rdispls, local_recv_types, MPI_Comm_f2c(*comm)) ; 
+  *ierr = MPI_Alltoallw( sendbuf, sendcounts, sdispls, local_send_types, recvbuf, recvcounts, 
+    rdispls, local_recv_types, MPI_Comm_f2c(*comm)) ; 
   return ; 
 }
 #endif /* TAU_MPI_EXTENSIONS */
@@ -7402,14 +7403,14 @@ void MPI_ALLTOALLW( void * sendbuf, MPI_Fint *  sendcounts, MPI_Fint *  sdispls,
 /******************************************************
 ***      MPI_IBCAST wrapper function 
 ******************************************************/
-void MPI_IBCAST(MPI_Aint * buffer, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
+void MPI_IBCAST(MPI_Aint * buffer, MPI_Fint * count, MPI_Fint * datatype, MPI_Fint * root, MPI_Fint * 
+  comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_Request local_request;
   if (buffer == *(mpi_predef_bottom())) {
     buffer = MPI_BOTTOM;
   }
-  *ierr = MPI_Ibcast( buffer, *count, MPI_Type_f2c(*datatype),
-    *root, MPI_Comm_f2c(*comm), &local_request);
+  *ierr = MPI_Ibcast( buffer, *count, MPI_Type_f2c(*datatype), *root, MPI_Comm_f2c(*comm), &local_request);
   *request = MPI_Request_c2f(local_request);
   return ;
 }
@@ -7431,7 +7432,7 @@ MPI_Fint * recvtype, MPI_Fint * root, MPI_Fint * comm, MPI_Fint * request, MPI_F
     recvbuf = MPI_BOTTOM;
   }
   *ierr = MPI_Igather(sendbuf, *sendcount, MPI_Type_f2c(*sendtype),
-    recvbuf, *recvcount, MPI_Type_f2c(*sendtype),
+    recvbuf, *recvcount, MPI_Type_f2c(*recvtype),
     *root, MPI_Comm_f2c(*comm), &local_request);
   *request = MPI_Request_c2f(local_request);
   return ;
@@ -7735,7 +7736,7 @@ MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
     recvbuf = MPI_BOTTOM;
   }
   MPI_Request local_request;
-  *ierr = MPI_Ireduce_scatter(sendbuf, recvbuf, *recvcounts, MPI_Type_f2c(*datatype),
+  *ierr = MPI_Ireduce_scatter(sendbuf, recvbuf, recvcounts, MPI_Type_f2c(*datatype),
     MPI_Op_f2c(*op), MPI_Comm_f2c(*comm), &local_request);
   *request = MPI_Request_c2f(local_request);
   return ;
@@ -8007,8 +8008,6 @@ MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
   *request = MPI_Request_c2f(local_request);
   return ;
 }
-
-
 
 
 

@@ -1849,6 +1849,7 @@ TAU_GEN_EVENT(TheAlltoallEvent,"Message size for all-to-all")
 TAU_GEN_EVENT(TheScatterEvent,"Message size for scatter")
 TAU_GEN_EVENT(TheGatherEvent,"Message size for gather")
 TAU_GEN_EVENT(TheAllgatherEvent,"Message size for all-gather")
+TAU_GEN_EVENT(TheIReduceEvent,"Message size for ireduce")
 TAU_GEN_CONTEXT_EVENT(TheWaitEvent,"Message size received in wait")
 
 TauContextUserEvent & TheMsgVolSendContextEvent(int tid) {
@@ -2080,6 +2081,10 @@ extern "C" void Tau_scan_data(int data) {
 
 extern "C" void Tau_reducescatter_data(int data) {
   TAU_EVENT(TheReduceScatterEvent(), data);
+}
+
+extern "C" void Tau_ireduce_data(int data) {
+  TAU_EVENT(TheIReduceEvent(), data);
 }
 
 #else /* !(TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_GPI)*/

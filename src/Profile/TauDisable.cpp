@@ -659,6 +659,11 @@ void Tau_reducescatter_data(int data)
 {
 }
 
+void Tau_ireduce_data(int data)
+{
+}
+
+
 /* alloc/dealloc */
 void TAU_ALLOC(void ** ptr, int* line, int *size, char *name, int slen)
 {

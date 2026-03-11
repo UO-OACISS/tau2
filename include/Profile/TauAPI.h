@@ -377,6 +377,7 @@
 #define TAU_ALLGATHER_DATA(data)  	        Tau_allgather_data(data)
 #define TAU_REDUCESCATTER_DATA(data)  	        Tau_reducescatter_data(data)
 #define TAU_SCAN_DATA(data)  		        Tau_scan_data(data)
+#define TAU_IREDUCE_DATA(data)  	        Tau_ireduce_data(data)
 
 /* dead macros */
 #define TAU_PROFILE_CALLSTACK()
