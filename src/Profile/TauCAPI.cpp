@@ -1858,6 +1858,18 @@ TAU_GEN_EVENT(TheIbcastEvent,"Message size for ibroadcast")
 TAU_GEN_EVENT(TheIgatherEvent,"Message size for igather")
 TAU_GEN_EVENT(TheIgathervEvent,"Message size for igatherv")
 TAU_GEN_EVENT(TheIscatterEvent,"Message size for iscatter")
+TAU_GEN_EVENT(TheIscattervEvent,"Message size for iscatterv")
+TAU_GEN_EVENT(TheIallgatherEvent,"Message size for iall-gather")
+TAU_GEN_EVENT(TheIallgathervEvent,"Message size for iall-gatherv")
+TAU_GEN_EVENT(TheIalltoallEvent,"Message size for iall-to-all")
+TAU_GEN_EVENT(TheIalltoallvEvent,"Message size for iall-to-allv")
+TAU_GEN_EVENT(TheIalltoallwEvent,"Message size for iall-to-allw")
+TAU_GEN_EVENT(TheIallreduceEvent,"Message size for iall-reduce")
+TAU_GEN_EVENT(TheIreducescatterEvent,"Message size for ireduces-catter")
+TAU_GEN_EVENT(TheIscanEvent,"Message size for iscan")
+TAU_GEN_EVENT(TheIexscanEvent,"Message size for iexscan")
+TAU_GEN_EVENT(TheNallgatherEvent,"Message size for neighbor-all-gather")
+TAU_GEN_EVENT(TheNallgathervEvent,"Message size for neighbor-all-gatherv")
 
 TauContextUserEvent & TheMsgVolSendContextEvent(int tid) {
     static TauContextUserEvent ** sendEvents = NULL;
@@ -2117,6 +2129,56 @@ extern "C" void Tau_igatherv_data(int data) {
 extern "C" void Tau_iscatter_data(int data) {
   TAU_EVENT(TheIscatterEvent(), data);
 }
+
+extern "C" void Tau_iscatterv_data(int data) {
+  TAU_EVENT(TheIscattervEvent(), data);
+}
+
+extern "C" void Tau_iallgather_data(int data) {
+  TAU_EVENT(TheIallgatherEvent(), data);
+}
+
+extern "C" void Tau_iallgatherv_data(int data) {
+  TAU_EVENT(TheIallgathervEvent(), data);
+}
+
+extern "C" void Tau_ialltoall_data(int data) {
+  TAU_EVENT(TheIalltoallEvent(), data);
+}
+
+extern "C" void Tau_ialltoallv_data(int data) {
+  TAU_EVENT(TheIalltoallvEvent(), data);
+}
+
+extern "C" void Tau_ialltoallw_data(int data) {
+  TAU_EVENT(TheIalltoallwEvent(), data);
+}
+
+extern "C" void Tau_iallreduce_data(int data) {
+  TAU_EVENT(TheIallreduceEvent(), data);
+}
+
+extern "C" void Tau_ireducescatter_data(int data) {
+  TAU_EVENT(TheIreducescatterEvent(), data);
+}
+
+extern "C" void Tau_iscan_data(int data) {
+  TAU_EVENT(TheIscanEvent(), data);
+}
+
+extern "C" void Tau_iexscan_data(int data) {
+  TAU_EVENT(TheIexscanEvent(), data);
+}
+
+extern "C" void Tau_nallgather_data(int data) {
+  TAU_EVENT(TheNallgatherEvent(), data);
+}
+
+extern "C" void Tau_nallgatherv_data(int data) {
+  TAU_EVENT(TheNallgathervEvent(), data);
+}
+
+
 
 #else /* !(TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_GPI)*/
 
