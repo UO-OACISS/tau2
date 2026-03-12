@@ -1297,7 +1297,6 @@ for arg in "$@" ; do
 done
 
 if [ $useNVCC == $TRUE ]; then
-  echo "$optLinking"
   optLinking=`echo "$optLinking" | sed -e 's/-fopenmp/-Xcompiler -fopenmp/g' -e 's/-qsmp=omp/-Xcompiler -qsmp=omp/g' -e 's/-qopenmp/-Xcompiler -qopenmp/g'`
   echoIfDebug "Modified (after -Xcompiler substitution) optLinking = $optLinking"
 fi
