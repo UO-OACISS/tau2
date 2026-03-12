@@ -1187,7 +1187,7 @@ void* recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST int * rdispls
   
   tracksize = sum_array(sendcounts, sendtype, comm);
   tracksize += sum_array(recvcounts, recvtype, comm);
-  TAU_ALLTOALL_DATA(tracksize);
+  TAU_IALLTOALLV_DATA(tracksize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1240,7 +1240,7 @@ void * recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST int * rdispl
 MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
-  int tracksize;
+  int tracksize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ialltoallw()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ialltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes,
@@ -2207,7 +2207,7 @@ MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
   return ;
 }
 
-//!!!
+
 /******************************************************
 ***      MPI_Neighbor_alltoall wrapper function 
 ******************************************************/
@@ -2215,9 +2215,18 @@ int MPI_Neighbor_alltoall(TAU_MPICH3_CONST void* sendbuf, int sendcount, MPI_Dat
 MPI_Datatype recvtype, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
+  int typesize2 = 0;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_alltoall()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Neighbor_alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm);
+  if (sendtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( sendtype, &typesize );
+  }
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize2 );
+  }
+  TAU_NALLTOALL_DATA((typesize*recvcount)+(typesize2*sendcount));
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -2266,10 +2275,14 @@ int MPI_Neighbor_alltoallv(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int 
 void* recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST int * rdispls, MPI_Datatype recvtype, MPI_Comm comm)
 {
   int retvalue;
+  int tracksize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_alltoallv()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Neighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm);
+  tracksize = sum_array(sendcounts, sendtype, comm);
+  tracksize += sum_array(recvcounts, recvtype, comm);
+  TAU_NALLTOALLV_DATA(tracksize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -2322,10 +2335,14 @@ TAU_MPICH3_CONST MPI_Datatype * sendtypes, void* recvbuf, TAU_MPICH3_CONST int *
 TAU_MPICH3_CONST MPI_Datatype * recvtypes, MPI_Comm comm)
 {
   int retvalue;
+  int tracksize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_alltoallw()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
     recvtypes, comm);
+  tracksize = sum_array_w(sendcounts, sendtypes, comm);
+  tracksize += sum_array_w(recvcounts, recvtypes, comm);
+  TAU_NALLTOALLW_DATA(tracksize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -2381,9 +2398,14 @@ int MPI_Ineighbor_allgather(TAU_MPICH3_CONST void* sendbuf, int sendcount, MPI_D
 MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_allgather()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ineighbor_allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request);
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize );
+  }
+  TAU_INALLGATHER_DATA(typesize*recvcount);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -2438,6 +2460,7 @@ TAU_MPICH3_CONST int * displs, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ineighbor_allgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
     comm, request);
+  track_allvector(TAU_INALLGATHERV_DATA, recvcounts, recvtype);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -2489,9 +2512,18 @@ int MPI_Ineighbor_alltoall(TAU_MPICH3_CONST void* sendbuf, int sendcount, MPI_Da
 MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
+  int typesize2 = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_alltoall()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ineighbor_alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request);
+  if (sendtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( sendtype, &typesize );
+  }
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize2 );
+  }
+  TAU_INALLTOALL_DATA((typesize*recvcount)+(typesize2*sendcount));
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -2543,10 +2575,14 @@ int MPI_Ineighbor_alltoallv(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST int
 void* recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST int * rdispls, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int tracksize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_alltoallv()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ineighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm, request);
+  tracksize = sum_array(sendcounts, sendtype, comm);
+  tracksize += sum_array(recvcounts, recvtype, comm);
+  TAU_INALLTOALLV_DATA(tracksize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -2598,10 +2634,14 @@ TAU_MPICH3_CONST MPI_Datatype * sendtypes, void* recvbuf, TAU_MPICH3_CONST int *
 TAU_MPICH3_CONST MPI_Datatype * recvtypes, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int tracksize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_alltoallw()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ineighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
     recvtypes, comm, request);
+  tracksize = sum_array_w(sendcounts, sendtypes, comm);
+  tracksize += sum_array_w(recvcounts, recvtypes, comm);
+  TAU_INALLTOALLW_DATA(tracksize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }

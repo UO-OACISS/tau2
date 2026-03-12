@@ -1870,6 +1870,14 @@ TAU_GEN_EVENT(TheIscanEvent,"Message size for iscan")
 TAU_GEN_EVENT(TheIexscanEvent,"Message size for iexscan")
 TAU_GEN_EVENT(TheNallgatherEvent,"Message size for neighbor-all-gather")
 TAU_GEN_EVENT(TheNallgathervEvent,"Message size for neighbor-all-gatherv")
+TAU_GEN_EVENT(TheNalltoallEvent,"Message size for neighbor-all-to-all")
+TAU_GEN_EVENT(TheNalltoallvEvent,"Message size for neighbor-all-to-allv")
+TAU_GEN_EVENT(TheNalltoallwEvent,"Message size for neighbor-all-to-allw")
+TAU_GEN_EVENT(TheInallgatherEvent,"Message size for ineighbor-all-gather")
+TAU_GEN_EVENT(TheInallgathervEvent,"Message size for ineighbor-all-gatherv")
+TAU_GEN_EVENT(TheInalltoallEvent,"Message size for ineighbor-all-to-all")
+TAU_GEN_EVENT(TheInalltoallvEvent,"Message size for ineighbor-all-to-allv")
+TAU_GEN_EVENT(TheInalltoallwEvent,"Message size for ineighbor-all-to-allw")
 
 TauContextUserEvent & TheMsgVolSendContextEvent(int tid) {
     static TauContextUserEvent ** sendEvents = NULL;
@@ -2178,6 +2186,37 @@ extern "C" void Tau_nallgatherv_data(int data) {
   TAU_EVENT(TheNallgathervEvent(), data);
 }
 
+extern "C" void Tau_nalltoall_data(int data) {
+  TAU_EVENT(TheNalltoallEvent(), data);
+}
+
+extern "C" void Tau_nalltoallv_data(int data) {
+  TAU_EVENT(TheNalltoallvEvent(), data);
+}
+
+extern "C" void Tau_nalltoallw_data(int data) {
+  TAU_EVENT(TheNalltoallwEvent(), data);
+}
+
+extern "C" void Tau_inallgather_data(int data) {
+  TAU_EVENT(TheInallgatherEvent(), data);
+}
+
+extern "C" void Tau_inallgatherv_data(int data) {
+  TAU_EVENT(TheInallgathervEvent(), data);
+}
+
+extern "C" void Tau_inalltoall_data(int data) {
+  TAU_EVENT(TheInalltoallEvent(), data);
+}
+
+extern "C" void Tau_inalltoallv_data(int data) {
+  TAU_EVENT(TheInalltoallvEvent(), data);
+}
+
+extern "C" void Tau_inalltoallw_data(int data) {
+  TAU_EVENT(TheInalltoallwEvent(), data);
+}
 
 
 #else /* !(TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_GPI)*/

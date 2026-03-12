@@ -731,6 +731,39 @@ void Tau_nallgatherv_data(int data)
 {
 }
 
+void Tau_nalltoall_data(int data)
+{
+}
+
+void Tau_nalltoallv_data(int data)
+{
+}
+
+void Tau_nalltoallw_data(int data)
+{
+}
+
+void Tau_inallgather_data(int data)
+{
+}
+
+void Tau_inallgatherv_data(int data)
+{
+}
+
+void Tau_inalltoall_data(int data)
+{
+}
+
+void Tau_inalltoallv_data(int data)
+{
+}
+
+void Tau_inalltoallw_data(int data)
+{
+}
+
+
 
 /* alloc/dealloc */
 void TAU_ALLOC(void ** ptr, int* line, int *size, char *name, int slen)

@@ -493,6 +493,7 @@ MPI_Comm comm;
 {
   int  returnVal;
   int   typesize = 0;
+  int   typesize2 = 0;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Alltoall()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
@@ -504,7 +505,10 @@ MPI_Comm comm;
   if (sendtype != MPI_DATATYPE_NULL) {
     PMPI_Type_size( sendtype, &typesize );
   }
-  TAU_ALLTOALL_DATA(typesize*sendcount);
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize2 );
+  }
+  TAU_ALLTOALL_DATA((typesize*recvcnt)+(typesize2*sendcount));
 
   TIMER_EXIT_COLLECTIVE_EXCH_ALL_EVENT("MPI_Alltoall",typesize*sendcount,typesize*recvcnt,0,comm);
   TAU_PROFILE_STOP(tautimer);

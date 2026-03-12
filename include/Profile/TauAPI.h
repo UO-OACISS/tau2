@@ -397,6 +397,15 @@
 #define TAU_IEXSCAN_DATA(data)  	        Tau_iexscan_data(data)
 #define TAU_NALLGATHER_DATA(data)  	        Tau_nallgather_data(data)
 #define TAU_NALLGATHERV_DATA(data)  	        Tau_nallgatherv_data(data)
+#define TAU_NALLTOALL_DATA(data)  	        Tau_nalltoall_data(data)
+#define TAU_NALLTOALLV_DATA(data)  	        Tau_nalltoallv_data(data)
+#define TAU_NALLTOALLW_DATA(data)  	        Tau_nalltoallw_data(data)
+#define TAU_INALLGATHER_DATA(data)  	        Tau_inallgather_data(data)
+#define TAU_INALLGATHERV_DATA(data)  	        Tau_inallgatherv_data(data)
+#define TAU_INALLTOALL_DATA(data)  	        Tau_inalltoall_data(data)
+#define TAU_INALLTOALLV_DATA(data)  	        Tau_inalltoallv_data(data)
+#define TAU_INALLTOALLW_DATA(data)  	        Tau_inalltoallw_data(data)
+
 
 /* dead macros */
 #define TAU_PROFILE_CALLSTACK()
@@ -571,6 +580,15 @@ void TAUDECL Tau_iscan_data(int data);
 void TAUDECL Tau_iexscan_data(int data);
 void TAUDECL Tau_nallgather_data(int data);
 void TAUDECL Tau_nallgatherv_data(int data);
+void TAUDECL Tau_nalltoall_data(int data);
+void TAUDECL Tau_nalltoallv_data(int data);
+void TAUDECL Tau_nalltoallw_data(int data);
+void TAUDECL Tau_inallgather_data(int data);
+void TAUDECL Tau_inallgatherv_data(int data);
+void TAUDECL Tau_inalltoall_data(int data);
+void TAUDECL Tau_inalltoallv_data(int data);
+void TAUDECL Tau_inalltoallw_data(int data);
+
 
 void TAUDECL Tau_scan_data(int data);
 void TAUDECL Tau_set_node(int node);
