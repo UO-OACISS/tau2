@@ -7377,11 +7377,14 @@ void mpi_exscan__( void * sendbuf, void * recvbuf, MPI_Fint *  count, MPI_Fint *
 ******************************************************/
 void MPI_ALLTOALLW( void * sendbuf, MPI_Fint *  sendcounts, MPI_Fint *  sdispls, MPI_Fint * sendtypes, void * recvbuf, MPI_Fint *  recvcounts, MPI_Fint *  rdispls, MPI_Fint * recvtypes, MPI_Fint *  comm, MPI_Fint * ierr)
 {
+  int comm_size;
+  MPI_Comm local_comm = MPI_Comm_f2c(*comm);
+  MPI_Comm_size(local_comm, &comm_size);
   TAU_DECL_LOCAL(MPI_Datatype, local_send_types);
-  TAU_DECL_ALLOC_LOCAL(MPI_Datatype, local_recv_types, *recvcounts);
-  TAU_ALLOC_LOCAL(MPI_Datatype, local_send_types, *sendcounts);
-  TAU_ASSIGN_VALUES(local_send_types, sendtypes, *sendcounts, MPI_Type_f2c);
-  TAU_ASSIGN_VALUES(local_recv_types, recvtypes, *recvcounts, MPI_Type_f2c);
+  TAU_DECL_ALLOC_LOCAL(MPI_Datatype, local_recv_types, comm_size);
+  TAU_ALLOC_LOCAL(MPI_Datatype, local_send_types, comm_size);
+  TAU_ASSIGN_VALUES(local_send_types, sendtypes, comm_size, MPI_Type_f2c);
+  TAU_ASSIGN_VALUES(local_recv_types, recvtypes, comm_size, MPI_Type_f2c);
 
   if (sendbuf == *(mpi_predef_in_place())) {
     sendbuf = MPI_IN_PLACE;
@@ -7393,9 +7396,13 @@ void MPI_ALLTOALLW( void * sendbuf, MPI_Fint *  sendcounts, MPI_Fint *  sdispls,
     recvbuf = MPI_BOTTOM;
   }
   *ierr = MPI_Alltoallw( sendbuf, sendcounts, sdispls, local_send_types, recvbuf, recvcounts, 
-    rdispls, local_recv_types, MPI_Comm_f2c(*comm)) ; 
+    rdispls, local_recv_types, local_comm) ;
+  TAU_FREE_LOCAL(local_send_types);
+  TAU_FREE_LOCAL(local_recv_types); 
   return ; 
 }
+
+
 #endif /* TAU_MPI_EXTENSIONS */
 
 #ifdef TAU_MPI3_EXTENSIONS
@@ -7608,11 +7615,14 @@ void MPI_IALLTOALLW(MPI_Aint sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls,
 MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtypes, MPI_Fint * comm,
 MPI_Fint * request, MPI_Fint * ierr)
 {
+  int comm_size;
+  MPI_Comm local_comm = MPI_Comm_f2c(*comm);
+  MPI_Comm_size(local_comm, &comm_size);
   TAU_DECL_LOCAL(MPI_Datatype, local_send_types);
-  TAU_DECL_ALLOC_LOCAL(MPI_Datatype, local_recv_types, *recvcounts);
-  TAU_ALLOC_LOCAL(MPI_Datatype, local_send_types, *sendcounts);
-  TAU_ASSIGN_VALUES(local_send_types, sendtypes, *sendcounts, MPI_Type_f2c);
-  TAU_ASSIGN_VALUES(local_recv_types, recvtypes, *recvcounts, MPI_Type_f2c);
+  TAU_DECL_ALLOC_LOCAL(MPI_Datatype, local_recv_types, comm_size);
+  TAU_ALLOC_LOCAL(MPI_Datatype, local_send_types, comm_size);
+  TAU_ASSIGN_VALUES(local_send_types, sendtypes, comm_size, MPI_Type_f2c);
+  TAU_ASSIGN_VALUES(local_recv_types, recvtypes, comm_size, MPI_Type_f2c);
   if (sendbuf == *(mpi_predef_in_place())) {
     sendbuf = MPI_IN_PLACE;
   }
@@ -7624,9 +7634,10 @@ MPI_Fint * request, MPI_Fint * ierr)
   }
   MPI_Request local_request;
   *ierr = MPI_Ialltoallw(sendbuf, sendcounts, sdispls, local_send_types, recvbuf,
-    recvcounts, rdispls, local_recv_types,  MPI_Comm_f2c(*comm),
-    &local_request);
+    recvcounts, rdispls, local_recv_types, local_comm, &local_request);
   *request = MPI_Request_c2f(local_request);
+  TAU_FREE_LOCAL(local_send_types);
+  TAU_FREE_LOCAL(local_recv_types);
   return ;
 }
 
@@ -7874,11 +7885,14 @@ void MPI_NEIGHBOR_ALLTOALLW(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Aint 
 MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
 MPI_Fint * comm, MPI_Fint * ierr)
 {
+  int comm_size;
+  MPI_Comm local_comm = MPI_Comm_f2c(*comm);
+  MPI_Comm_size(local_comm, &comm_size);
   TAU_DECL_LOCAL(MPI_Datatype, local_send_types);
-  TAU_DECL_ALLOC_LOCAL(MPI_Datatype, local_recv_types, *recvcounts);
-  TAU_ALLOC_LOCAL(MPI_Datatype, local_send_types, *sendcounts);
-  TAU_ASSIGN_VALUES(local_send_types, sendtypes, *sendcounts, MPI_Type_f2c);
-  TAU_ASSIGN_VALUES(local_recv_types, recvtypes, *recvcounts, MPI_Type_f2c);
+  TAU_DECL_ALLOC_LOCAL(MPI_Datatype, local_recv_types, comm_size);
+  TAU_ALLOC_LOCAL(MPI_Datatype, local_send_types, comm_size);
+  TAU_ASSIGN_VALUES(local_send_types, sendtypes, comm_size, MPI_Type_f2c);
+  TAU_ASSIGN_VALUES(local_recv_types, recvtypes, comm_size, MPI_Type_f2c);
   if (sendbuf == *(mpi_predef_in_place())) {
     sendbuf = MPI_IN_PLACE;
   }
@@ -7889,7 +7903,9 @@ MPI_Fint * comm, MPI_Fint * ierr)
     recvbuf = MPI_BOTTOM;
   }
   *ierr = MPI_Neighbor_alltoallw(sendbuf, sendcounts, sdispls, local_send_types,
-    recvbuf, recvcounts, rdispls, local_recv_types, MPI_Comm_f2c(*comm));
+    recvbuf, recvcounts, rdispls, local_recv_types, local_comm);
+  TAU_FREE_LOCAL(local_send_types);
+  TAU_FREE_LOCAL(local_recv_types); 
   return ;
 }
 
@@ -7988,11 +8004,14 @@ void MPI_INEIGHBOR_ALLTOALLW(MPI_Aint * sendbuf, int * sendcounts, MPI_Aint * sd
 MPI_Aint * recvbuf, int * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
 MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
+  int comm_size;
+  MPI_Comm local_comm = MPI_Comm_f2c(*comm);
+  MPI_Comm_size(local_comm, &comm_size);
   TAU_DECL_LOCAL(MPI_Datatype, local_send_types);
-  TAU_DECL_ALLOC_LOCAL(MPI_Datatype, local_recv_types, *recvcounts);
-  TAU_ALLOC_LOCAL(MPI_Datatype, local_send_types, *sendcounts);
-  TAU_ASSIGN_VALUES(local_send_types, sendtypes, *sendcounts, MPI_Type_f2c);
-  TAU_ASSIGN_VALUES(local_recv_types, recvtypes, *recvcounts, MPI_Type_f2c);
+  TAU_DECL_ALLOC_LOCAL(MPI_Datatype, local_recv_types, comm_size);
+  TAU_ALLOC_LOCAL(MPI_Datatype, local_send_types, comm_size);
+  TAU_ASSIGN_VALUES(local_send_types, sendtypes, comm_size, MPI_Type_f2c);
+  TAU_ASSIGN_VALUES(local_recv_types, recvtypes, comm_size, MPI_Type_f2c);
   if (sendbuf == *(mpi_predef_in_place())) {
     sendbuf = MPI_IN_PLACE;
   }
@@ -8004,8 +8023,10 @@ MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
   }
   MPI_Request local_request;
   *ierr = MPI_Ineighbor_alltoallw(sendbuf, sendcounts, sdispls, local_send_types,
-    recvbuf, recvcounts, rdispls, local_recv_types,  MPI_Comm_f2c(*comm), &local_request);
+    recvbuf, recvcounts, rdispls, local_recv_types, local_comm, &local_request);
   *request = MPI_Request_c2f(local_request);
+  TAU_FREE_LOCAL(local_send_types);
+  TAU_FREE_LOCAL(local_recv_types); 
   return ;
 }
 
