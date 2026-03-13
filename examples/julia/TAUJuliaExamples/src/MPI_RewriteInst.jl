@@ -33,4 +33,4 @@ end
 
 MPI.Init()
 @tau_rewrite main()
-
+MPI.Finalize()

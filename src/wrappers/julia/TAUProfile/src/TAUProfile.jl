@@ -1,6 +1,8 @@
 module TAUProfile
 
-export tau_start, tau_stop, @tau, @tau_func, tau_rewrite, @tau_rewrite
+export tau_start, tau_stop, @tau, @tau_func, tau_rewrite, @tau_rewrite,
+       set_rewrite_recursion_limit, set_rewrite_variant_limit, set_rewrite_ccall,
+       rewrite_exclude_function, rewrite_exclude_module, rewrite_reset_exclusions
 
 using Core: SSAValue, ReturnNode, Argument, OpaqueClosure
 using Core.Compiler: IRCode, NewInstruction, insert_node!, compact!
@@ -178,16 +180,14 @@ end
 
 # IR Rewriter
 
-
-# ============================================================================
-# Trace hooks — all tracing output funnels through these functions,
-# making it easy to swap println for logging, profiling, etc.
-# ============================================================================
+# Trace hooks:
+#   _entry_hook is called on function entry
+#   _exit_hook is called on function exit by normal return or exception
 
 """
     _entry_hook(fname::String)
 
-Called at function entry. Override or replace to customize tracing output.
+Called at function entry. 
 """
 function _entry_hook(fname::String)
     tau_start(fname)
@@ -196,87 +196,46 @@ end
 """
     _exit_hook(fname::String)
 
-Called at normal function exit (via ReturnNode).
+Called at normal function exit or exit via exception.
 """
 function _exit_hook(fname::String)
     tau_stop(fname)
 end
 
-"""
-    _exit_hook(fname::String, exception::Bool)
-
-Called at function exit via exception.
-"""
-function _exit_hook(fname::String, exception::Bool)
-    tau_stop(fname)
-end
 
 """
-    LazyRewrittenCall(f)
+    LazyTraced(f)
 
-When recursing downward through function calls, first replace
-calls with calls to the original function, as otherwise we can
-get stuck in an infinite loop when instrumenting recursive functions.
-Target function is replaced with instrumented version when
-returning from recursive instrumentation.
+A mutable callable wrapper used to break circular dependencies during
+instrumentation of self-recursive or mutually-recursive functions.
+
+Initially calls the original uninstrumented function `f`. Once the traced
+version is ready, `target` is updated and all subsequent calls go through
+the traced version.
 """
-mutable struct LazyRewrittenCall
+mutable struct LazyTraced
     target::Any
 end
-(lt::LazyRewrittenCall)(args...) = lt.target(args...)
+(lt::LazyTraced)(args...) = lt.target(args...)
+
 
 """
-    _wrap_for_exceptions(oc, fname::String) -> callable
+    _wrap_with_hooks(oc, fname::String) -> callable
 
-Wraps OpaqueClosure in try/catch so that we can stop the timer
-when we exit a function via an exception.
+Wrap an instrumented OpaqueClosure with entry/exit tracing.
+Calls `_entry_hook` before the OC and `_exit_hook` in a `finally` block,
+ensuring the exit hook runs on both normal return and exception paths.
 """
-function _wrap_for_exceptions(oc, fname::String)
+function _wrap_with_hooks(oc, fname::String)
     return (args...) -> begin
+        _entry_hook(fname)
         try
             return oc(args...)
-        catch
-            _exit_hook(fname, true)
-            rethrow()
+        finally
+            _exit_hook(fname)
         end
     end
 end
-
-"""
-    _instrument_ir!(ir::IRCode, fname::String) -> IRCode
-
-Modify `ir` in-place to add entry/exit tracing calls via `_entry_hook`
-and `_exit_hook`. A call to `_entry_hook` is added as the first instruction,
-and every return is instrumented with a call to `_exit_hook`.
-"""
-function _instrument_ir!(ir::IRCode, fname::String)
-    _insert_hook!(ir, :_entry_hook, fname, SSAValue(1))
-
-    # Iterate backwards so insertions don't shift later return positions
-    for i in length(ir.stmts):-1:1
-        if ir.stmts[i][:stmt] isa ReturnNode
-            _insert_hook!(ir, :_exit_hook, fname, SSAValue(i))
-        end
-    end
-
-    return compact!(ir)
-end
-
-"""
-    _insert_hook!(ir::IRCode, hook::Symbol, fname::String, pos::SSAValue)
-
-Insert call to a given symbol into the IR at a given position.
-"""
-function _insert_hook!(ir::IRCode, hook::Symbol, fname::String, pos::SSAValue)
-    call = Expr(:call, GlobalRef(TAUProfile, hook), fname)
-    insert_node!(ir, pos, NewInstruction(call, Nothing), false)
-end
-
-"""
-Cache of already-instrumented functions to avoid re-instrumenting
-the same function multiple times.
-"""
-const REWRITE_CACHE = Dict{Any, Any}()
 
 # Blacklist of functions to not instrument. Avoid printing functions
 # as we might print an error and can't println in a println.
@@ -305,22 +264,102 @@ const BLACKLIST = Set{Symbol}([
     :arrayref, :arrayset, :arraysize,
 ])
 
-"""
-    _should_rewrite(@nospecialize(f))  
+"""User-specified function objects to exclude from tracing."""
+const USER_BLACKLIST_FUNCS = Set{Any}()
 
-Check if a function should be rewritten based on the blacklist.
-Also avoid instrumenting Builtins and Intrinsics as they
-don't have code to modify.
+"""User-specified function names (as Symbols) to exclude from tracing."""
+const USER_BLACKLIST_NAMES = Set{Symbol}()
+
+"""User-specified modules to exclude from tracing."""
+const USER_BLACKLIST_MODULES = Set{Module}()
+
+"""User-specified module names (as Symbols) to exclude from tracing."""
+const USER_BLACKLIST_MODULE_NAMES = Set{Symbol}()
+
+"""Per-module recursion depth limits (by Module object)."""
+const _module_depth_limits = Dict{Module, Int}()
+
+"""Per-module recursion depth limits (by module name as Symbol)."""
+const _module_depth_name_limits = Dict{Symbol, Int}()
+
 """
-function _should_rewrite(@nospecialize(f))
+    rewrite_exclude_function(f)
+    rewrite_exclude_function(name::Symbol)
+    rewrite_exclude_function(name::String)
+
+Exclude a function from being instrumented.
+Accepts a function object, a `Symbol` (e.g. `:add`), or a `String` (e.g. `"add"`).
+"""
+function rewrite_exclude_function(@nospecialize(f))
+    push!(USER_BLACKLIST_FUNCS, f)
+    return nothing
+end
+
+function rewrite_exclude_function(name::Symbol)
+    push!(USER_BLACKLIST_NAMES, name)
+    return nothing
+end
+
+function rewrite_exclude_function(name::String)
+    push!(USER_BLACKLIST_NAMES, Symbol(name))
+    return nothing
+end
+
+"""
+    rewrite_exclude_module(m::Module)
+    rewrite_exclude_module(name::Symbol)
+    rewrite_exclude_module(name::String)
+
+Exclude all functions in a module from being instrumented.
+Accepts a `Module` object, a `Symbol` (e.g. `:Base`), or a `String` (e.g. `"Base"`).
+"""
+function rewrite_exclude_module(m::Module)
+    push!(USER_BLACKLIST_MODULES, m)
+    return nothing
+end
+
+function rewrite_exclude_module(name::Symbol)
+    push!(USER_BLACKLIST_MODULE_NAMES, name)
+    return nothing
+end
+
+function rewrite_exclude_module(name::String)
+    push!(USER_BLACKLIST_MODULE_NAMES, Symbol(name))
+    return nothing
+end
+
+"""
+    rewrite_reset_exclusions()
+
+Clear all user-specified exclusions set via `rewrite_exclude_function` and `rewrite_exclude_module`.
+"""
+function rewrite_reset_exclusions()
+    empty!(USER_BLACKLIST_FUNCS)
+    empty!(USER_BLACKLIST_NAMES)
+    empty!(USER_BLACKLIST_MODULES)
+    empty!(USER_BLACKLIST_MODULE_NAMES)
+    empty!(_module_depth_limits)
+    empty!(_module_depth_name_limits)
+    _rewrite_ccall_enabled[] = false
+    return nothing
+end
+
+"""
+Check if a function should be traced based on the blacklist.
+"""
+function _should_trace(@nospecialize(f))
     f isa Core.Builtin && return false
     f isa Core.IntrinsicFunction && return false
+    f in USER_BLACKLIST_FUNCS && return false
 
     fname = try nameof(f) catch; return false end
     fname in BLACKLIST && return false
+    fname in USER_BLACKLIST_NAMES && return false
 
     mod = try parentmodule(f) catch; return false end
     mod === Core && return false
+    mod in USER_BLACKLIST_MODULES && return false
+    nameof(mod) in USER_BLACKLIST_MODULE_NAMES && return false
 
     return true
 end
@@ -329,8 +368,8 @@ end
     _replace_self_argument!(ir::IRCode, f) -> IRCode
 
 Replace all references to `Argument(1)` (the function/self slot) in the IR
-with the literal function value `f` so as to preserve the original argument
-types of the function.
+with the literal function value `f`.  By substituting the actual function constant, 
+Argument(1) is no longer referenced and the argtypes[1] = Tuple{} replacement is safe.
 """
 function _replace_self_argument!(ir::IRCode, @nospecialize(f))
     for i in 1:length(ir.stmts)
@@ -347,35 +386,90 @@ function _replace_self_argument!(ir::IRCode, @nospecialize(f))
 end
 
 """
+    _substitute_static_parameters!(ir::IRCode, f, argtypes::Tuple) -> Bool
+
+Resolve `Expr(:static_parameter, N)` nodes in the IR by looking up concrete
+sparam values from the MethodInstance. Returns `true` if all static parameters
+were successfully substituted (or there were none), `false` if substitution
+is not possible (e.g. abstract TypeVars).
+"""
+function _substitute_static_parameters!(ir::IRCode, @nospecialize(f), @nospecialize(argtypes::Tuple))
+    # Get concrete sparam values from the MethodInstance
+    tt = Tuple{typeof(f), argtypes...}
+    matches = Base._methods_by_ftype(tt, -1, Base.get_world_counter())
+    (matches === nothing || isempty(matches)) && return true  # no method match
+    mi = Core.Compiler.specialize_method(matches[1])
+    sparam_vals = mi.sparam_vals
+
+    # Check that all sparams are concrete (not TypeVar)
+    for i in 1:length(sparam_vals)
+        if sparam_vals[i] isa TypeVar
+            return false
+        end
+    end
+
+    # When sparams are available, substitute them in a single walk.
+    for i in 1:length(ir.stmts)
+        if length(sparam_vals) > 0
+            ir.stmts[i][:stmt] = _subst_sparams(ir.stmts[i][:stmt], sparam_vals)
+        elseif _has_static_parameter(ir.stmts[i][:stmt])
+            return false
+        end
+    end
+    return true
+end
+
+"""Check recursively whether an IR node contains any :static_parameter Expr."""
+function _has_static_parameter(@nospecialize(node))
+    if node isa Expr
+        node.head === :static_parameter && return true
+        for arg in node.args
+            _has_static_parameter(arg) && return true
+        end
+    end
+    return false
+end
+
+"""Recursively substitute :static_parameter nodes with concrete values."""
+function _subst_sparams(@nospecialize(node), sparam_vals::Core.SimpleVector)
+    if node isa Expr
+        if node.head === :static_parameter
+            return sparam_vals[node.args[1]::Int]
+        end
+        for (j, arg) in enumerate(node.args)
+            node.args[j] = _subst_sparams(arg, sparam_vals)
+        end
+    end
+    return node
+end
+
+"""Module prefix string for a function, e.g. `"Base."`. Returns `""` on failure."""
+_mod_prefix(@nospecialize(f)) = try string(parentmodule(f)) * "." catch; "" end
+
+"""
     _function_label(f, argtypes::Tuple) -> String
 
-For a function `f` with argument types `argtypes`, construct a timer name
-in TAU format: `funcname(arg1type, arg2type, ...) [{file} {line}]`.
-"""            
+Build a TAU timer name for a function including its name, argument types,
+and source location.
+"""
 function _function_label(@nospecialize(f), @nospecialize(argtypes::Tuple))
-    # Special case for kwcall
     if f === Core.kwcall && length(argtypes) >= 2
         target_type = argtypes[2]
         if isconcretetype(target_type) && target_type <: Function && isdefined(target_type, :instance)
             target_f = target_type.instance
             pos_types = argtypes[3:end]
-            name = string(target_f) * "(" * join(string.(pos_types), ", ") * ")"
-            return name
+            return _mod_prefix(target_f) * string(target_f) * "(" * join(string.(pos_types), ", ") * ")"
         end
     end
 
+    mod_prefix = _mod_prefix(f)
     fname_str = string(f)
-
-    # Special case for kwarg body: transform `#fname#NNN` into `fname`
+    # Transform `#fname#NNN` kwarg body names into `fname`
     m_kw = match(r"^#(.+)#\d+$", fname_str)
     if m_kw !== nothing
         fname_str = m_kw.captures[1]
     end
-
-    # Default case
-    name = fname_str * "(" * join(string.(argtypes), ", ") * ")"
-
-    # Get file name and line number if available
+    name = mod_prefix * fname_str * "(" * join(string.(argtypes), ", ") * ")"
     ms = methods(f, Tuple{argtypes...})
     if length(ms) == 1
         m = only(ms)
@@ -383,15 +477,13 @@ function _function_label(@nospecialize(f), @nospecialize(argtypes::Tuple))
         line = m.line
         return "$name [{$file} {$line}]"
     end
-
-    # Otherwise return default without file/line
     return name
 end
 
 """
     _ir_arg_type(ir::IRCode, arg) -> Type
 
-Extract the widened concrete type of an IR argument (Argument, SSAValue, or literal).
+Extract the widened concrete type of an IR argument.
 """
 function _ir_arg_type(ir::IRCode, @nospecialize(arg))
     if arg isa Argument
@@ -411,13 +503,6 @@ end
     _resolve_callee(ir::IRCode, callee) -> Union{Function, Nothing}
 
 Try to resolve a call-site callee to a concrete function value.
-
-Handles three cases:
-  - `GlobalRef` — direct module lookup
-  - `Argument` / `SSAValue` — if the IR type is a concrete singleton function
-    type (e.g. `typeof(double)`), extract its `.instance`. This enables tracing
-    of higher-order calls like `f(x)` where `f` is passed as an argument but
-    the IR is specialized for a specific function.
 """
 function _resolve_callee(ir::IRCode, @nospecialize(callee))
     if callee isa GlobalRef
@@ -425,7 +510,6 @@ function _resolve_callee(ir::IRCode, @nospecialize(callee))
     end
     if callee isa Argument || callee isa SSAValue
         T = _ir_arg_type(ir, callee)
-        # Singleton function types have exactly one instance (e.g. typeof(double))
         if isconcretetype(T) && T <: Function && isdefined(T, :instance)
             return T.instance
         end
@@ -434,28 +518,344 @@ function _resolve_callee(ir::IRCode, @nospecialize(callee))
 end
 
 """
+    _detect_varargs(ir::IRCode, argtypes::Tuple) -> (is_varargs::Bool, n_fixed::Int)
+
+Check whether the IR expects a packed varargs tuple as its last argument.
+Returns `(true, n_fixed)` if so, where `n_fixed` is the number of non-varargs parameters.
+"""
+function _detect_varargs(ir::IRCode, @nospecialize(argtypes::Tuple))
+    n_ir_args = length(ir.argtypes) - 1
+    caller_sig = Tuple{argtypes...}
+    oc_sig = Tuple{(Core.Compiler.widenconst.(ir.argtypes[2:end]))...}
+    last_oc_type = n_ir_args > 0 ? Core.Compiler.widenconst(ir.argtypes[end]) : Nothing
+    is_varargs = !(caller_sig <: oc_sig) && last_oc_type <: Tuple
+    return (is_varargs, n_ir_args - 1)
+end
+
+"""Check whether any matching method for `f(argtypes...)` has a UnionAll signature."""
+function _has_unionall_method(@nospecialize(f), @nospecialize(argtypes::Tuple))
+    ms = try methods(f, Tuple{argtypes...}) catch; return false end
+    return any(m -> m.sig isa UnionAll, ms)
+end
+
+"""
+    _max_depth_for(f, global_max::Int) -> Int
+
+Resolve the effective max recursion depth for function `f` based on per-module limits.
+Falls back to `global_max` if no per-module limit is set.
+"""
+function _max_depth_for(@nospecialize(f), global_max::Int)
+    mod = try parentmodule(f) catch; return global_max end
+    haskey(_module_depth_limits, mod) && return _module_depth_limits[mod]
+    haskey(_module_depth_name_limits, nameof(mod)) && return _module_depth_name_limits[nameof(mod)]
+    return global_max
+end
+
+"""
+    _foreigncall_label(stmt::Expr) -> String
+
+Extract a TAU timer name from a :foreigncall expression.
+"""
+function _foreigncall_label(stmt::Expr)
+    name = stmt.args[1]
+    if name isa QuoteNode
+        name = name.value
+    end
+    return "@ccall $name"
+end
+
+"""
+    _instrument_single_ir(f, ir::IRCode, argtypes::Tuple, depth::Int, max_depth::Int, cache::Dict{Any,Any}) -> callable or nothing
+
+Instrument an already-obtained IRCode.
+Returns the wrapped callable on success, or `nothing` on failure.
+"""
+function _instrument_single_ir(@nospecialize(f), ir::IRCode, @nospecialize(argtypes::Tuple),
+                                depth::Int, max_depth::Int, cache::Dict{Any,Any})
+    fname = _function_label(f, argtypes)
+
+    _replace_self_argument!(ir, f)
+
+    # Walk IR and rewrite traceable call sites to use traced OpaqueClosures
+    for i in 1:length(ir.stmts)
+        stmt = ir.stmts[i][:stmt]
+        if stmt isa Expr && stmt.head === :call
+            callee_ref = stmt.args[1]
+            callee_f = _resolve_callee(ir, callee_ref)
+            callee_f === nothing && continue
+
+            # Special-case: Core.kwcall
+            if callee_f === Core.kwcall && length(stmt.args) >= 3
+                callee_max = _max_depth_for(Core.kwcall, max_depth)
+                depth < callee_max || continue
+                kwcall_argtypes = tuple([_ir_arg_type(ir, a) for a in stmt.args[2:end]]...)
+                traced_kwcall = try
+                    _tau_rewrite_recursive(Core.kwcall, kwcall_argtypes, depth + 1, callee_max, cache)
+                catch ex
+                    @warn "Could not trace Core.kwcall: $ex"
+                    continue
+                end
+                stmt.args[1] = traced_kwcall
+                continue
+            end
+
+            _should_trace(callee_f) || continue
+
+            callee_max = _max_depth_for(callee_f, max_depth)
+            depth < callee_max || continue
+
+            call_argtypes = tuple([_ir_arg_type(ir, a) for a in stmt.args[2:end]]...)
+
+            traced_callee = try
+                _tau_rewrite_recursive(callee_f, call_argtypes, depth + 1, callee_max, cache)
+            catch ex
+                @warn "Could not trace $callee_f: $ex"
+                continue
+            end
+            stmt.args[1] = traced_callee
+        end
+    end
+
+    # Optionally wrap foreigncall sites with entry/exit hooks
+    if _rewrite_ccall_enabled[]
+        foreigncall_positions = Int[]
+        for i in 1:length(ir.stmts)
+            stmt = ir.stmts[i][:stmt]
+            if stmt isa Expr && stmt.head === :foreigncall
+                push!(foreigncall_positions, i)
+            end
+        end
+        for pos in reverse(foreigncall_positions)
+            label = _foreigncall_label(ir.stmts[pos][:stmt])
+            entry_call = Expr(:call, GlobalRef(TAUProfile, :_entry_hook), label)
+            exit_call = Expr(:call, GlobalRef(TAUProfile, :_exit_hook), label)
+            insert_node!(ir, pos, NewInstruction(entry_call, Nothing), false)
+            insert_node!(ir, pos, NewInstruction(exit_call, Nothing), true)
+        end
+    end
+
+    # Compact IR after callee rewriting
+    ir = compact!(ir)
+
+    # Fix argtypes[1] for OpaqueClosure
+    ir.argtypes[1] = Tuple{}
+
+    # Detect varargs (uses caller argtypes vs OC argtypes to detect packing)
+    is_varargs, n_fixed = _detect_varargs(ir, argtypes)
+
+    # Substitute static_parameter references with concrete values from MethodInstance.
+    # OpaqueClosure's codegen segfaults on these because it has no sparam_vals.
+    if !_substitute_static_parameters!(ir, f, argtypes)
+        @debug "Skipping $f: could not resolve static parameters"
+        return nothing
+    end
+
+    oc = try
+        OpaqueClosure(ir)
+    catch ex
+        @warn "OpaqueClosure creation failed for $f: $ex"
+        return nothing
+    end
+    wrapped = _wrap_with_hooks(oc, fname)
+
+    if is_varargs
+        wrapped = let w = wrapped, nf = n_fixed
+            (args...) -> w(args[1:nf]..., args[nf+1:end])
+        end
+    end
+
+    return wrapped
+end
+
+# Maximum number of IR results to handle before bailing out
+const _max_multi_results = Ref{Int}(100)
+
+"""Validate and normalize a non-negative limit: 0 means unlimited"""
+function _normalize_limit(n::Int, name::String)
+    n < 0 && throw(ArgumentError("$name must be non-negative, got $n"))
+    return n == 0 ? typemax(Int) : n
+end
+
+"""
+    set_rewrite_variant_limit(n::Int)
+
+Set the maximum number of IR results (method specializations) to handle
+per function before falling back to the uninstrumented version.
+"""
+function set_rewrite_variant_limit(n::Int)
+    _max_multi_results[] = _normalize_limit(n, "variant limit")
+end
+
+"""
+    _rewrite_multi_result(f, argtypes::Tuple, results::Vector, depth::Int, max_depth::Int, cache::Dict{Any,Any}) -> LazyTraced
+
+Handle the case where `code_ircode` returns multiple results (one per matching
+method). Builds a runtime dispatch shim when multiple results are successfully traced,
+with more specific type matches tried first.
+"""
+function _rewrite_multi_result(@nospecialize(f), @nospecialize(argtypes::Tuple),
+                              results::Vector, depth::Int, max_depth::Int,
+                              cache::Dict{Any,Any})
+    key = (f, argtypes)
+
+    # Cache sentinel to prevent infinite recursion (also used as fallback on early return)
+    lazy = LazyTraced(f)
+    cache[key] = lazy
+
+    # Explosion guard
+    if length(results) > _max_multi_results[]
+        @debug "Too many IR results ($(length(results))) for $f, skipping"
+        return lazy
+    end
+
+    traced_pairs = Tuple{Tuple, Any}[]
+
+    for (ir, rettype) in results
+        # Extract concrete argtypes from this IR's specialization (skip slot 1 = function)
+        concrete_argtypes = Tuple(Core.Compiler.widenconst.(ir.argtypes[2:end]))
+
+        # Skip if already traced
+        concrete_key = (f, concrete_argtypes)
+        if haskey(cache, concrete_key) && concrete_key != key
+            cached = cache[concrete_key]
+            push!(traced_pairs, (concrete_argtypes, cached))
+            continue
+        end
+
+        # UnionAll method sig guard — skip to avoid runtime recursion issues
+        _has_unionall_method(f, concrete_argtypes) && continue
+
+        wrapped = try
+            _instrument_single_ir(f, ir, concrete_argtypes, depth, max_depth, cache)
+        catch ex
+            @warn "Multi-result: could not instrument $f with $concrete_argtypes: $ex"
+            nothing
+        end
+
+        if wrapped !== nothing
+            # Cache under the concrete key
+            concrete_lazy = LazyTraced(wrapped)
+            cache[concrete_key] = concrete_lazy
+            push!(traced_pairs, (concrete_argtypes, concrete_lazy))
+        end
+    end
+
+    if isempty(traced_pairs)
+        return lazy
+    end
+
+    # Always use dispatch closure with fallback, even for 1 pair,
+    # because the single traced version may only cover one specialization.
+    lazy.target = (args...) -> begin
+        for (types, traced_f) in traced_pairs
+            if length(args) == length(types) && all(i -> args[i] isa types[i], 1:length(types))
+                return traced_f(args...)
+            end
+        end
+        return f(args...)
+    end
+    return lazy
+end
+
+function _tau_rewrite_recursive(@nospecialize(f), @nospecialize(argtypes::Tuple),
+                           depth::Int, max_depth::Int, cache::Dict{Any,Any})
+    key = (f, argtypes)
+    haskey(cache, key) && return cache[key]
+
+    # Get pre-inlining IR — calls are still visible as :call with GlobalRef
+    results = Base.code_ircode(f, argtypes; optimize_until="compact 1")
+    if length(results) != 1
+        return _rewrite_multi_result(f, argtypes, results, depth, max_depth, cache)
+    end
+    ir, rettype = results[1]
+
+    lazy = LazyTraced(f)
+    cache[key] = lazy
+
+    _has_unionall_method(f, argtypes) && return lazy
+
+    wrapped = _instrument_single_ir(f, ir, argtypes, depth, max_depth, cache)
+    if wrapped !== nothing
+        lazy.target = wrapped
+    end
+
+    return lazy
+end
+
+# Maximum recursion depth for tracing into callees.
+# 0 for unlimited.
+const _max_depth = Ref{Int}(20)
+
+const _rewrite_ccall_enabled = Ref{Bool}(false)
+
+"""
+    set_rewrite_recursion_limit(n::Int)
+
+Set the maximum recursion depth for tracing into callees.
+"""
+function set_rewrite_recursion_limit(n::Int)
+    _max_depth[] = _normalize_limit(n, "recursion limit")
+end
+
+function set_rewrite_recursion_limit(m::Module, n::Int)
+    _module_depth_limits[m] = _normalize_limit(n, "recursion limit")
+end
+
+function set_rewrite_recursion_limit(name::Symbol, n::Int)
+    _module_depth_name_limits[name] = _normalize_limit(n, "recursion limit")
+end
+
+function set_rewrite_recursion_limit(name::String, n::Int)
+    set_rewrite_recursion_limit(Symbol(name), n)
+end
+
+"""
+    set_rewrite_ccall(enabled::Bool)
+
+Enable or disable tracing of `@ccall` / `foreigncall` invocations.
+When enabled, entry/exit hooks are inserted around each foreigncall in instrumented IR.
+Disabled by default.
+"""
+function set_rewrite_ccall(enabled::Bool)
+    _rewrite_ccall_enabled[] = enabled
+    return nothing
+end
+
+
+
+"""
     tau_rewrite(f, argtypes::Tuple) -> callable
 
-Recursively instrument function `f`. Uses partially-optimized, pre-inlining IR
+Recursively instrument `f` AND all functions it calls. Uses pre-inlining IR
 (`optimize_until="compact 1"`) so that call sites are still visible, then
-rewrites each rewritable call to use a recursively-rewritten OpaqueClosure.
+rewrites each traceable call to use a recursively-traced OpaqueClosure.
+
+This avoids re-inference: each function is compiled once from IRCode -> LLVM,
+rather than triggering full type inference of the call graph.
+
+Each call creates its own local instrumentation cache, making it safe to call
+from multiple threads simultaneously.
 """
-
-const DEFAULT_MAX_DEPTH = 20
-
 function tau_rewrite(@nospecialize(f), @nospecialize(argtypes::Tuple);
-                                   max_depth::Int = DEFAULT_MAX_DEPTH)
-    empty!(REWRITE_CACHE)
-    return _tau_rewrite_recursive(f, argtypes, 0, max_depth)
+                                   max_depth::Int = _max_depth[])
+    cache = Dict{Any, Any}()
+    return _tau_rewrite_recursive(f, argtypes, 0, max_depth, cache)
 end
 
 """
     @tau_rewrite f(args...)
 
 Convenience macro: instruments `f` and all its callees with entry/exit
-tracing, then immediately calls the rewritten version with the given arguments.
+tracing, then immediately calls the traced version with the given arguments.
 
-    @tau_rewrite foo(5.0, -6.0)
+    @tau_rewrite composite(5.0, -6.0)
+
+is equivalent to:
+
+    let args = (5.0, -6.0)
+        traced = tau_rewrite(composite, map(typeof, args))
+        traced(args...)
+    end
 """
 macro tau_rewrite(call_expr)
     Meta.isexpr(call_expr, :call) || error("@tau_rewrite expects a function call, got: $call_expr")
@@ -463,105 +863,10 @@ macro tau_rewrite(call_expr)
     args = call_expr.args[2:end]
     return quote
         let _args = ($(esc.(args)...),)
-            _rewritten = tau_rewrite($(esc(f)), map(typeof, _args))
-            _rewritten(_args...)
+            _traced = tau_rewrite($(esc(f)), map(typeof, _args))
+            _traced(_args...)
         end
     end
-end
-
-function _tau_rewrite_recursive(@nospecialize(f), @nospecialize(argtypes::Tuple),
-                           depth::Int, max_depth::Int)
-    key = (f, argtypes)
-    haskey(REWRITE_CACHE, key) && return REWRITE_CACHE[key]
-
-    # Get pre-inlining IR ("compact 1") -- calls are still visible as :call with GlobalRef
-    # If we fully optimize the code, some calls will have already been inlined and
-    # we won't be able to instrument them.
-    results = Base.code_ircode(f, argtypes; optimize_until="compact 1")
-    if length(results) != 1
-        error("Expected exactly 1 IRCode result for $f with argument types $argtypes, got $(length(results))")
-    end
-    ir, rettype = results[1]
-
-    fname = _function_label(f, argtypes)
-
-    _replace_self_argument!(ir, f)
-    lazy = LazyRewrittenCall(f)  # initially calls uninstrumented function as fallback
-    REWRITE_CACHE[key] = lazy
-
-    # Walk IR and rewrite target call sites to use instrumented OpaqueClosures
-    if depth < max_depth
-        for i in 1:length(ir.stmts)
-            stmt = ir.stmts[i][:stmt]
-            if stmt isa Expr && stmt.head === :call
-                callee_ref = stmt.args[1]
-                callee_f = _resolve_callee(ir, callee_ref)
-                # If we can't find the callee of the call, give up.
-                callee_f === nothing && continue
-
-                # Special case for instrumenting kwcalls. Allow instrumentation even though
-                # it is in the Core module.
-                if callee_f === Core.kwcall && length(stmt.args) >= 3
-                    kwcall_argtypes = tuple([_ir_arg_type(ir, a) for a in stmt.args[2:end]]...)
-                    rewritten_kwcall = try
-                        _tau_rewrite_recursive(Core.kwcall, kwcall_argtypes, depth + 1, max_depth)
-                    catch ex
-                        @warn "Could not instrument Core.kwcall: $ex"
-                        continue
-                    end
-                    stmt.args[1] = rewritten_kwcall
-                    continue
-                end
-
-                _should_rewrite(callee_f) || continue
-
-                # Determine callee argument types from IR type annotations
-                call_argtypes = tuple([_ir_arg_type(ir, a) for a in stmt.args[2:end]]...)
-                # Skip methods where we can't tell the callee's argtypes
-                ms = try methods(callee_f, Tuple{call_argtypes...}) catch; continue end
-                if length(ms) == 1 && only(ms).sig isa UnionAll
-                    continue
-                end
-                # Recursively rewrite the callee (returns cached entry if already rewritten)
-                rewritten_callee = try
-                    _tau_rewrite_recursive(callee_f, call_argtypes, depth + 1, max_depth)
-                catch ex
-                    @warn "Could not instrument $callee_f: $ex"
-                    continue
-                end
-                stmt.args[1] = rewritten_callee
-            end
-        end
-    end
-
-    # Instrument this method
-    ir = _instrument_ir!(ir, fname)
-    ir.argtypes[1] = Tuple{}
-
-    # Special case for varargs
-    n_ir_args = length(ir.argtypes) - 1   # subtract closure env slot
-    caller_sig = Tuple{argtypes...}
-    oc_sig = Tuple{(Core.Compiler.widenconst.(ir.argtypes[2:end]))...}
-    last_oc_type = n_ir_args > 0 ? Core.Compiler.widenconst(ir.argtypes[end]) : Nothing
-    is_varargs = !(caller_sig <: oc_sig) && last_oc_type <: Tuple
-
-    oc = OpaqueClosure(ir)
-    wrapped = _wrap_for_exceptions(oc, fname)
-
-    # If varargs packing occurred, insert a shim that repacks the separate
-    # caller args into the single tuple the OC expects.
-    if is_varargs
-        n_fixed = n_ir_args - 1
-        wrapped = let w = wrapped, nf = n_fixed
-            (args...) -> w(args[1:nf]..., args[nf+1:end])
-        end
-    end
-
-    # Now that we've returned from the recursion and instrumented this function,
-    # replace calls to this function with calls to the instrumented OpaqueClosure.
-    lazy.target = wrapped
-
-    return lazy
 end
 
 end # module TAUProfile
