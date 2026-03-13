@@ -367,6 +367,17 @@ static std::string get_thread_name(int rank, int tid) {
                      rocm_queue ? rocm_queue : "?");
             return std::string(buf);
         }
+
+        // L0 thread detection
+        const char* l0_gpu = Tau_metadata_get("L0_GPU_ID", tid);
+        if (l0_gpu && strcmp(l0_gpu, "") != 0) {
+            const char* l0_queue = Tau_metadata_get("L0_QUEUE_ID", tid);
+            const char* l0_vqueue = Tau_metadata_get("L0_VQUEUE_ID", tid);
+            char buf[256];
+            snprintf(buf, sizeof(buf), "GPU dev%s:que%s:%s", l0_gpu, 
+                     l0_queue ? l0_queue : "?", l0_vqueue ? l0_vqueue : "?");
+            return std::string(buf);
+        }
         
         // Generic GPU thread fallback
         return std::string("GPU thread ") + std::to_string(tid);
@@ -1212,6 +1223,25 @@ static bool skip_field(const uint8_t* data, size_t len, size_t* pos, int wire_ty
     }
 }
 
+static std::string extract_thread_name(const uint8_t* data, size_t len) {
+    size_t pos = 0;
+    while (pos < len) {
+        uint64_t tag = decode_varint(data, len, &pos);
+        uint32_t fn = (uint32_t)(tag >> 3);
+        int wt = (int)(tag & 0x07);
+        if (fn == 5 && wt == 2) {
+            uint64_t slen = decode_varint(data, len, &pos);
+            if (pos + slen <= len) {
+                return std::string((const char*)(data + pos), slen);
+            }
+            break;
+        } else {
+            if (!skip_field(data, len, &pos, wt)) break;
+        }
+    }
+    return "";
+}
+
 /* Rewrite fields inside a ProcessDescriptor or ThreadDescriptor
  * submessage for merge-time naming.
  * When new_process_name is non-null, replaces field 6 (process_name)
@@ -1387,10 +1417,18 @@ static std::vector<uint8_t> rewrite_track_descriptor(
             uint64_t sub_len = decode_varint(data, len, &pos);
             size_t sub_end = pos + sub_len;
             if (sub_end > len) break;
-            int tidx = thread_counter[rank_index]++;
-            char tname_buf[128];
-            snprintf(tname_buf, sizeof(tname_buf),
-                     "Rank %d, CPU Thread %d", rank_index, tidx);
+            
+            std::string old_tname = extract_thread_name(data + pos, (size_t)sub_len);
+            char tname_buf[256];
+            if (old_tname.empty() || old_tname.find("Rank ") == 0) {
+                int tidx = thread_counter[rank_index]++;
+                snprintf(tname_buf, sizeof(tname_buf),
+                         "Rank %d, CPU Thread %d", rank_index, tidx);
+            } else {
+                // Preserve GPU thread names
+                snprintf(tname_buf, sizeof(tname_buf), "%s", old_tname.c_str());
+            }
+            
             std::vector<uint8_t> rewritten =
                 rewrite_pid_in_submessage(data + pos, (size_t)sub_len,
                                           /*new_process_name=*/nullptr,

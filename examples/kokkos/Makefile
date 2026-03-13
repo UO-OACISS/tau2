@@ -1,0 +1,131 @@
+# Allow KOKKOS_PATH to be set from the environment or command line
+KOKKOS_PATH ?=
+
+# I. --- Find Kokkos Installation ---
+# If KOKKOS_PATH is not set, try to find it using kokkos_launch_compiler
+ifeq ($(KOKKOS_PATH),)
+    KOKKOS_COMPILER_PATH := $(shell which kokkos_launch_compiler)
+
+    ifeq ($(KOKKOS_COMPILER_PATH),)
+        $(error KOKKOS_PATH is not set and 'kokkos_launch_compiler' could not be found in your PATH.)
+    else
+        # Infer KOKKOS_PATH from the location of the compiler script
+        KOKKOS_PATH := $(shell dirname $(shell dirname $(KOKKOS_COMPILER_PATH)))
+        $(info KOKKOS_PATH automatically set to: $(KOKKOS_PATH))
+    endif
+endif
+
+# Check if the installation uses /lib or /lib64
+KOKKOS_LIB64_EXISTS := $(wildcard $(KOKKOS_PATH)/lib64)
+ifeq ($(KOKKOS_LIB64_EXISTS),)
+    KOKKOS_LIBDIR := $(KOKKOS_PATH)/lib
+    $(info KOKKOS library directory detected as: $(KOKKOS_PATH)/lib)
+else
+    KOKKOS_LIBDIR := $(KOKKOS_PATH)/lib64
+    $(info KOKKOS library directory detected as: $(KOKKOS_PATH)/lib64)
+endif
+KOKKOS_LDFLAGS := -Wl,-rpath,$(KOKKOS_LIBDIR)
+
+# II. --- Backend Detection ---
+# Introspect the KokkosCore_config.h header to determine the primary backend.
+# The order of checks is important: CUDA -> HIP -> OpenMP -> Serial.
+
+# Default to a standard C++ compiler. These will be overridden if a backend is detected.
+CXX := mpicxx 
+LINK := mpicxx
+BACKEND_LDFLAGS :=
+
+# Path to the configuration header
+KOKKOS_CONFIG_H := $(KOKKOS_PATH)/include/KokkosCore_config.h
+
+KOKKOS_HAVE_CUDA := $(shell grep -q "^#define KOKKOS_ENABLE_CUDA" $(KOKKOS_CONFIG_H) && echo "yes")
+KOKKOS_HAVE_HIP := $(shell grep -q "^#define KOKKOS_ENABLE_HIP" $(KOKKOS_CONFIG_H) && echo "yes")
+KOKKOS_HAVE_SYCL   := $(shell grep -q "^#define KOKKOS_ENABLE_SYCL"   $(KOKKOS_CONFIG_H) && echo "yes")
+
+ifeq ($(KOKKOS_HAVE_CUDA), yes)
+    $(info Detected Kokkos CUDA backend)
+    export NVCC_WRAPPER_DEFAULT_COMPILER := $(CXX)
+    CXX  := $(KOKKOS_PATH)/bin/nvcc_wrapper
+    LINK := $(CXX)
+    # Required for Kokkos lambda support in CUDA device code
+    KOKKOS_CXXFLAGS += --expt-extended-lambda
+
+    # Allow user to specify CUDA location, otherwise use a common default
+    CUDA_HOME ?= /usr/local/cuda
+    BACKEND_LDFLAGS := -L$(CUDA_HOME)/lib64 -lcudart
+
+    # Add rpath to help the executable find shared libraries at runtime
+    KOKKOS_LDFLAGS += -Wl,-rpath,$(CUDA_HOME)/lib64
+
+else ifeq ($(KOKKOS_HAVE_HIP), yes)
+    $(info Detected Kokkos ROCm/HIP backend)
+    #CXX  := hipcc
+    export OMPI_CXX := hipcc
+    export MPICH_CXX := hipcc
+    CXX := mpicxx
+    LINK := $(CXX)
+
+    # Allow user to specify ROCm location, otherwise use a common default
+    ROCM_HOME ?= /opt/rocm
+    BACKEND_LDFLAGS := -L$(ROCM_HOME)/lib -lamdhip64
+
+    # Add rpath to help the executable find shared libraries at runtime
+    KOKKOS_LDFLAGS += -Wl,-rpath,$(ROCM_HOME)/lib
+
+else ifeq ($(KOKKOS_HAVE_SYCL), yes)
+    $(info Detected Kokkos SYCL backend)
+    # Intel oneAPI MPI wrapper for icpx. Override if your wrapper is named differently.
+    ONEAPI_MPI_CXX ?= mpiicpx
+    CXX  := $(ONEAPI_MPI_CXX)
+    LINK := $(CXX)
+    KOKKOS_CXXFLAGS += -fsycl
+    KOKKOS_LDFLAGS  += -fsycl
+    # Optional: add sycl lib rpath if needed (usually handled by icpx automatically)
+    # ONEAPI_ROOT ?= /opt/intel/oneapi
+    # BACKEND_LDFLAGS := -L$(ONEAPI_ROOT)/compiler/latest/linux/compiler/lib/intel64_lin
+    # KOKKOS_LDFLAGS  += -Wl,-rpath,$(ONEAPI_ROOT)/compiler/latest/linux/compiler/lib/intel64_lin
+endif
+
+# If not a GPU backend, check for OpenMP
+KOKKOS_HAVE_OPENMP := $(shell grep -q "^#define KOKKOS_ENABLE_OPENMP" $(KOKKOS_CONFIG_H) && echo "yes")
+ifeq ($(KOKKOS_HAVE_OPENMP), yes)
+    $(info Detected Kokkos OpenMP backend)
+    ifeq ($(findstring icpx,$(CXX)),icpx)
+        KOKKOS_CXXFLAGS += -qopenmp
+        KOKKOS_LDFLAGS  += -qopenmp
+    else ifeq ($(findstring mpiicpx,$(CXX)),mpiicpx)
+        KOKKOS_CXXFLAGS += -qopenmp
+        KOKKOS_LDFLAGS  += -qopenmp
+    else
+        KOKKOS_CXXFLAGS += -fopenmp
+        KOKKOS_LDFLAGS  += -fopenmp
+    endif
+else
+    $(info Detected Kokkos Serial backend)
+endif
+
+
+KOKKOS_LIBS := -L$(KOKKOS_LIBDIR) -lkokkoscore -ldl
+KOKKOS_LIBS += $(BACKEND_LDFLAGS)
+
+SRC := $(wildcard *.cpp)
+OBJ := $(notdir $(SRC:.cpp=.o))
+EXE := $(notdir $(SRC:.cpp=.exe))
+
+KOKKOS_CXXFLAGS += -I$(KOKKOS_PATH)/include -std=c++20
+
+default: build
+
+build: $(EXE)
+
+test: build
+	./$(EXE)
+
+$(EXE): $(OBJ)
+	$(LINK) $(KOKKOS_LDFLAGS) $(OBJ) $(KOKKOS_LIBS) -o $@
+
+%.o: %.cpp
+	$(CXX) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $< -o $(notdir $@)
+
+clean:
+	rm -f *.o *.exe profile.*

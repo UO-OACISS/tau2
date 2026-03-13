@@ -40,47 +40,49 @@ int lda)
 	unsigned int col = threadIdx.x + blockDim.x * blockIdx.x;
 	unsigned int id  = idx(row,col,lda);
 
-	//submatrices
-	double *sub_a, *sub_b;
 
 	//shared submatrices
 	__shared__ double a[SIZE_OF_BLOCK][SIZE_OF_BLOCK], b[SIZE_OF_BLOCK][SIZE_OF_BLOCK];
 	//temp element of d_c
 	double c = 0;
 
-	//top-level row,col of block
-	int block_row = blockIdx.y * bs;
-	int block_col = blockIdx.x * bs;
-
 	//id inside each block
 	int sub_row = threadIdx.y;
 	int sub_col = threadIdx.x;
+        for (int k = 0; k < (M + bs - 1) / bs; k++)
+        {
+                // Load 'a' submatrix into shared memory with boundary checks
+                if (row < M && (bs * k + sub_col) < M) {
+                        a[sub_row][sub_col] = d_a[idx(row, bs * k + sub_col, lda)];
+                } else {
+                        a[sub_row][sub_col] = 0.0;
+                }
 
-	//for each block
-	for (int k = 0; k < (M / bs); k++)
-	{
+                // Load 'b' submatrix into shared memory with boundary checks
+                if ((bs * k + sub_row) < M && col < M) {
+                        b[sub_row][sub_col] = d_b[idx(bs * k + sub_row, col, lda)];
+                } else {
+                        b[sub_row][sub_col] = 0.0;
+                }
 
-	  sub_a = &d_a[idx(block_row, bs*k, lda)];
-		sub_b = &d_b[idx(bs*k, block_col, lda)];
-		a[sub_row][sub_col] = sub_a[idx(sub_row, sub_col, lda)];
-		b[sub_row][sub_col] = sub_b[idx(sub_row, sub_col, lda)];
+                //wait for all threads to complete copy to shared memory.
+                __syncthreads();
 
-		//wait for all threads to complete copy to shared memory.
-		__syncthreads();
+                //multiply each submatrix
+                for (int j = 0; j < bs; j++)
+                {
+                        c = c + a[sub_row][j] * b[j][sub_col];
+                }
 
-		//multiply each submatrix
-		for (int j=0; j < bs; j++)
-		{
-			c = c + a[sub_row][j] * b[j][sub_col];
-		}
+                // wait for multiplication to finish before moving onto the next submatrix.
+                __syncthreads();
+        }
 
-		// move results to device memory.
-		d_c[id] = c;
-
-		// wait for multiplication to finish before moving onto the next submatrix.
-		__syncthreads();
-
-	}
+        // move results to device memory OUTSIDE the loop, checking matrix bounds
+        if (row < M && col < M)
+        {
+                d_c[id] = c;
+        }
 }
 
 void multiply_by_element(dim3 grid, dim3 threads, double *d_a, double *d_b, double *d_c, int m, cudaStream_t cStream)

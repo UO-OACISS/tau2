@@ -52,7 +52,7 @@
 // This is for the windows buffer, similar to the one in TauRocm.cpp
 //re-implemented here, as the SDK and Rocm will be separated in the future
 #ifndef TAU_ROCMSDK_LOOK_AHEAD
-#define TAU_ROCMSDK_LOOK_AHEAD 1024
+#define TAU_ROCMSDK_LOOK_AHEAD 32
 #endif /* TAU_ROCMSDK_LOOK_AHEAD */
 
 //Enum to enable or disable metric profiling

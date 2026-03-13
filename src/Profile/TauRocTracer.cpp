@@ -437,25 +437,25 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
         }
         //Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)begin_us));
         metric_set_gpu_timestamp(dispatch_task_id, ((double)(lowest_timestamp)));
-        Tau_create_top_level_timer_if_necessary_task(dispatch_task_id);
         Tau_add_metadata_for_task("TAU_TASK_ID", dispatch_task_id, dispatch_task_id);
         Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, dispatch_task_id);
         Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, dispatch_task_id);
         Tau_metadata_task("ROCM_QUEUE_TYPE", "Kernel Dispatch", dispatch_task_id);
+        Tau_create_top_level_timer_if_necessary_task(dispatch_task_id);
         //Use the same timestamp to simplify things
         if (TauEnv_get_thread_per_gpu_stream()) {
             metric_set_gpu_timestamp(copy_task_id, ((double)(lowest_timestamp)));
-            Tau_create_top_level_timer_if_necessary_task(copy_task_id);
             Tau_add_metadata_for_task("TAU_TASK_ID", copy_task_id, copy_task_id);
             Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, copy_task_id);
             Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, copy_task_id);
             Tau_metadata_task("ROCM_QUEUE_TYPE", "Memory Transfers", copy_task_id);
+            Tau_create_top_level_timer_if_necessary_task(copy_task_id);
             metric_set_gpu_timestamp(barrier_task_id, ((double)(lowest_timestamp)));
-            Tau_create_top_level_timer_if_necessary_task(barrier_task_id);
             Tau_add_metadata_for_task("TAU_TASK_ID", barrier_task_id, barrier_task_id);
             Tau_add_metadata_for_task("ROCM_GPU_ID", record->device_id, barrier_task_id);
             Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->queue_id, barrier_task_id);
             Tau_metadata_task("ROCM_QUEUE_TYPE", "Synchronization", barrier_task_id);
+            Tau_create_top_level_timer_if_necessary_task(barrier_task_id);
         }
       } else {
           if (TauEnv_get_thread_per_gpu_stream()) {

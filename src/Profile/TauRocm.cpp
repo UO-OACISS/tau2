@@ -215,9 +215,12 @@ void Tau_process_rocm_events(struct TauRocmEvent e) {
   cout <<endl;
 #endif /* DEBUG_PROF */
 
-  TauRocmList.push_back(e);
+  //TauRocmList.push_back(e);
 
-  TauRocmList.sort(Tau_compare_rocm_events);
+  //TauRocmList.sort(Tau_compare_rocm_events);
+  auto e_it = std::lower_bound(TauRocmList.begin(), TauRocmList.end(), e, Tau_compare_rocm_events);
+  TauRocmList.insert(e_it, e);
+
   int listsize = TauRocmList.size();
 
   if (listsize < TAU_ROCM_LOOK_AHEAD) {

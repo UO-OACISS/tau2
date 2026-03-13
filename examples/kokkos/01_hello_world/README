@@ -5,3 +5,7 @@ The resulting profile(s) should include at least an event like:
 "Kokkos::parallel_for HelloWorld [type = Cuda, device = 0]" 1 0 5474 5474 0 GROUP="TAU_KOKKOS"
 
 Type will vary depending on backend used.
+
+It may be necessary to add the location of your kokkos lib directory to LD_LIBRARY_PATH.
+
+This test comes from the kokkos source tree, 5.0 series.

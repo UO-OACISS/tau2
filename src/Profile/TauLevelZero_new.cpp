@@ -25,6 +25,7 @@
 #include "Profile/L0_new/level_zero/layers/zel_tracing_register_cb.h"
 #include "Profile/L0_new/common_header.h"
 #include "Profile/L0_new/unimemory.h"
+
 //#define PTI_ASSERT(X) assert(X)
 
 
@@ -41,6 +42,7 @@
 extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid);
 extern "C" void metric_set_gpu_timestamp(int tid, double value);
 extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
+extern "C" void Tau_metadata_task(const char *name, const char *value, int tid);
 
 //Disabled options, except Metric_Query and Stall_sampling,
 // can help debug if changed to true, do not remove their code
@@ -70,14 +72,17 @@ struct CollectorOptions {
 #include "Profile/L0_new/ze_collector.h"
 
 static double L0_TAU_init_timestamp;
-static double L0_TAU_first_timestamp;
 static uint64_t L0_Driver_init_timestamp;
+static uint64_t L0_Driver_init_timestamp1;
 static int initialized = 0;
 static int disabled = 0;
 static CollectorOptions L0_collector_options;
 
 //Map a device and tile to a task
-static std::map<tuple<uintptr_t, int>, int> map_thread_queue;
+static std::map<tuple<uintptr_t, int, size_t>, int> map_thread_queue;
+
+static std::map<ze_command_queue_handle_t, int> command_queue_map;
+static int comm_queue = 0;
 
 ZeCollector* ze_collector_ = nullptr;
 
@@ -128,9 +133,16 @@ CollectorOptions init_collector_options()
     return init_options;
 }
 
+void Tau_add_metadata_for_task(const char *key, int value, int taskid) {
+  char buf[1024];
+  snprintf(buf, sizeof(buf),  "%d", value);
+  Tau_metadata_task(key, buf, taskid);
+  TAU_VERBOSE("Adding Metadata: %s, %d, for task %d\n", key, value, taskid);
+}
+
 //Only call inside functions that use lock_guard, not implemented lock inside to prevent deadlocks.
 //Check implementation for metrics
-int Tau_get_initialized_queues(tuple<uintptr_t, int> dev_tile)
+int Tau_get_initialized_queues(tuple<uintptr_t, int, size_t> dev_tile, ze_command_queue_handle_t comm_queue_id, double first_ts)
 {
   int queue_id;
   auto it = map_thread_queue.find(dev_tile);
@@ -140,9 +152,33 @@ int Tau_get_initialized_queues(tuple<uintptr_t, int> dev_tile)
   }
   else
   {
+
+    ze_device_properties_t props = { ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES };
+    zeDeviceGetProperties(reinterpret_cast<ze_device_handle_t>(std::get<0>(dev_tile)), &props);
+    //printf("Running on: %s , deviceId %d uuid %d\n", props.name, props.deviceId, props.uuid);
+
     TAU_CREATE_TASK(queue_id);
     // losing resolution from nanoseconds to microseconds.
-    metric_set_gpu_timestamp(queue_id, L0_TAU_first_timestamp);
+    metric_set_gpu_timestamp(queue_id, first_ts);
+    Tau_add_metadata_for_task("TAU_TASK_ID", queue_id, queue_id);
+    Tau_add_metadata_for_task("L0_GPU_ID", props.deviceId, queue_id);
+    //Similar to streams
+    //Tau_add_metadata_for_task("L0_GPU_TILE", std::get<1>(dev_tile), queue_id);
+    Tau_metadata_task("L0_GPU_NAME", props.name, queue_id);
+    
+    auto it_comm_q = command_queue_map.find(comm_queue_id);
+    int curr_comm_queue = comm_queue;
+    if(it_comm_q !=command_queue_map.end())
+    {
+        curr_comm_queue = it_comm_q->second;
+    }
+    else
+    {
+        command_queue_map[comm_queue_id] = comm_queue;
+    } 
+    Tau_add_metadata_for_task("L0_QUEUE_ID", curr_comm_queue, queue_id);
+    Tau_add_metadata_for_task("L0_VQUEUE_ID", std::get<2>(dev_tile), queue_id);
+    comm_queue++;
     Tau_create_top_level_timer_if_necessary_task(queue_id);
     //std::cout << " NEW TASK: " << queue_id << std::endl;
     map_thread_queue[dev_tile] = queue_id;
@@ -188,7 +224,7 @@ uint64_t popKernel() {
 //Only call inside functions that use lock_guard, not implemented lock inside to prevent deadlocks.
 void Tau_remove_initialized_queues(uint64_t cpu_end_ts)
 {
-  std::map<tuple<uintptr_t, int>, int>::iterator it;
+  std::map<tuple<uintptr_t, int, size_t>, int>::iterator it;
   for(it = map_thread_queue.begin(); it != map_thread_queue.end(); it++)
   {
     int taskid = it->second;
@@ -226,6 +262,7 @@ void TAU_L0_enter_event(const char* nameAPIcall)
     {
         static void* TraceCorrelationID;
         Tau_get_context_userevent(&TraceCorrelationID, "Correlation ID");
+        current_timestamp = TauTraceGetTimeStamp(0);
         TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, pushKernel(), current_thread, current_timestamp);
     }
 
@@ -307,6 +344,39 @@ double TAU_LO_translate_metric_value(const zet_typed_value_t& typed_value)
         break;
     }
     return translated_value;
+}
+
+
+//There are overlaps when using examples such as ze_gemm due to how
+// command lists work. A list of command to execute is created and command
+// that are inside a region before a barrier can be executed concurrently,
+// which happens with ze_gemm and the memory copies. As we cannot detect the barrier
+// with the same logic as the command list, we check for overlaps, and use a virtual
+// queue id identifier to simulate that we have multiple queues
+size_t check_overlap(uintptr_t curr_device, int curr_tile, uint64_t kernel_start, uint64_t kernel_end)
+{
+    //Map keys are current device and current tile
+    //Inside each position, we want to have the start and end timestamps
+    static std::map<tuple<uintptr_t, int>, vector<tuple<uint64_t, uint64_t>>> map_overlaps;
+    auto key = make_tuple(curr_device, curr_tile);
+    auto& vec = map_overlaps[key]; // creates empty vector if key does not exist
+
+    for (size_t i = 0; i < vec.size(); ++i) {
+        auto& t = vec[i];
+        uint64_t prev_start = get<0>(t);
+        uint64_t prev_end   = get<1>(t);
+
+        if (kernel_start >= prev_end) {
+            t = make_tuple(kernel_start, kernel_end);
+            return i;
+        }
+    }
+
+    // All tuples overlap → create a new tuple (new virtual queue)
+    vec.push_back(make_tuple(kernel_start, kernel_end));
+    return vec.size() - 1; // last index = new queue
+
+    return 0;
 }
 
 //GPU events, needs a task per device and tile(concurrent kernels)
@@ -392,27 +462,34 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             uint64_t kernel_dutarion = (kernel_end - kernel_start);
             std::cout << "kernel_duration " << kernel_dutarion << std::endl;
             std::cout << "Instance ID " << command->instance_id_  << std::endl;
+            std::cout << "tile " << tile  << std::endl;
+            std::cout << "queue_ " << command->queue_  << std::endl;
+            std::cout << "engine_ordinal_ " << command->engine_ordinal_  << std::endl;
+            std::cout << "engine_index_ " << command->engine_index_  << std::endl;
+            std::cout << "command_list_ " << command->command_list_  << std::endl;
+            //std::cout << "v_comm_list " << command->v_comm_list_  << std::endl;
         #endif
 
         //This is already inside a mutex
         static int init_first_timer = 0;
         if(!init_first_timer)
         {
- 
-            L0_TAU_init_timestamp = TauTraceGetTimeStamp(0);
             uint64_t device_timestamp;	// in ticks
-
             ze_result_t status = ZE_FUNC(zeDeviceGetGlobalTimestamps)(command->device_, &L0_Driver_init_timestamp, &device_timestamp);
+            L0_TAU_init_timestamp = TauTraceGetTimeStamp(0);
+            status = ZE_FUNC(zeDeviceGetGlobalTimestamps)(command->device_, &L0_Driver_init_timestamp1, &device_timestamp);
             PTI_ASSERT(status == ZE_RESULT_SUCCESS);
             init_first_timer = 1;
+            L0_Driver_init_timestamp = (L0_Driver_init_timestamp1+L0_Driver_init_timestamp)/2;
         }
 
 
         int curr_tile = tile<0? 0:tile;
         uintptr_t curr_device = reinterpret_cast<uintptr_t>(command->device_);
-        tuple<uintptr_t, int> dev_tile(curr_device, curr_tile);
-        //tau2-intel --> ze_collector.h 792 TAU_L0_kernel_event
 
+        size_t v_queue_id = check_overlap(curr_device, curr_tile, kernel_start, kernel_end);
+
+        tuple<uintptr_t, int, size_t> dev_tile(curr_device, curr_tile, v_queue_id);
 
         static double time_shift = L0_TAU_init_timestamp - (L0_Driver_init_timestamp/1e3);
         double translated_start = time_shift + (kernel_start/1e3);
@@ -432,15 +509,16 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             //std::cout << "k_diff " << kernel_end - kernel_start << std::endl;
             //std::cout << "t_diff " << setprecision(numeric_limits<double>::max_digits10)<<  translated_end - translated_start << std::endl;
         
-            task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_));
+            task_id = Tau_get_initialized_queues(dev_tile, command->queue_, translated_start);
             metric_set_gpu_timestamp(task_id, translated_start);
             TAU_START_TASK(event_name.c_str(), task_id);
-            metric_set_gpu_timestamp(task_id, translated_end);
-            TAU_STOP_TASK(event_name.c_str(), task_id);
             void* TraceCorrelationID;
             Tau_get_context_userevent(&TraceCorrelationID, "Correlation ID");
             //TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, command->corr_id_, task_id, translated_start);
             TAU_CONTEXT_EVENT_THREAD_TS(TraceCorrelationID, popKernel(), task_id, translated_start);
+            metric_set_gpu_timestamp(task_id, translated_end);
+            TAU_STOP_TASK(event_name.c_str(), task_id);
+
 
             #ifdef L0_TAU_DEBUG  
             std::cout << "group_count.groupCountX " << command->group_count_.groupCountX << std::endl;
@@ -469,7 +547,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         }
         else if((it->second.type_ == KERNEL_COMMAND_TYPE_MEMORY) && (command->mem_size_ > 0))
         {
-            task_id = Tau_get_initialized_queues(tuple(curr_device,command->tid_));
+            task_id = Tau_get_initialized_queues(dev_tile, command->queue_, translated_start);
             metric_set_gpu_timestamp(task_id, translated_start);
             TAU_START_TASK(event_name.c_str(), task_id);
             metric_set_gpu_timestamp(task_id, translated_end);
@@ -623,7 +701,6 @@ void TauL0EnableProfiling()
     }
     #endif
     assert(status == ZE_RESULT_SUCCESS);
-    L0_TAU_first_timestamp = TauTraceGetTimeStamp(0);
     ze_collector_ = ZeCollector::Create(L0_collector_options);
     initialized = 1;
     TAU_VERBOSE("Initialized L0 Collector\n");

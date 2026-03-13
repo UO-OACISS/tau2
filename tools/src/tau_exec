@@ -113,7 +113,9 @@ usage()
   echo "        -opencl       Track GPU events via OpenCL"
   echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
   echo "        -rocm         Track ROCm events via rocprofiler "
-  echo "        -rocm_pc      Track ROCm PC Sampling events (needs -rocm)"
+  echo "        -rocm_pc      Track ROCm PC Sampling events"
+  echo "        -rocm_pc_host Track ROCm PC Sampling events using host trap approach."
+  echo "        -rocm_pc_stoc Track ROCm PC Sampling events using stochastic approach (detects issues instructions and stalls)."
   echo "        -ompt         Track OpenMP events via OMPT interface"
   echo "        -oneapi       Track Intel OneAPI Level Zero events"
   echo "        -power        Track power events via PAPI's perf RAPL interface"
@@ -382,6 +384,8 @@ track_env=false
 track_opencl=false
 track_rocm=false
 track_rocm_pc=false
+track_rocm_host=false
+track_rocm_stoc=false
 track_openacc=false
 track_armci=false
 tau_use_ebs=false
@@ -591,6 +595,20 @@ for arg in "$@" ; do
         ;;
       -rocm_pc)
         track_rocm_pc=true
+	      track_rocm=true
+        save_arg $arg
+        shift
+        ;;
+      -rocm_pc_host)
+        track_rocm_pc=true
+        track_rocm_host=true
+	      track_rocm=true
+        save_arg $arg
+        shift
+        ;;
+      -rocm_pc_stoc)
+        track_rocm_pc=true
+        track_rocm_stoc=true
 	      track_rocm=true
         save_arg $arg
         shift
@@ -1059,6 +1077,12 @@ if [ $track_rocm = "true" ] ; then
     #This environmental variable is needed by current versions of rocprofiler-sdk
     # a variable is needed to enable ROCm pc sampling inside TAU (name could be modified then)
     export ROCPROFILER_PC_SAMPLING_BETA_ENABLED=1
+    if [ $track_rocm_host = "true" ] ; then
+      export ROCPROFILER_PCS_HOST=1
+    fi
+    if [ $track_rocm_stoc = "true" ] ; then
+      export ROCPROFILER_PCS_STOC=1
+    fi
   fi
 fi
 
