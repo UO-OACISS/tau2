@@ -53,6 +53,8 @@ function tau_start(name::String)
         return  # Silently skip if library not loaded
     end
 
+    # TODO remove forcing task sticky when we can handle task migration ~nchaimov
+    current_task().sticky = true # workaround for lack of handling of task migration
     ccall((:Tau_start, libTAU[]), Cvoid, (Cstring,), name)
 end
 
