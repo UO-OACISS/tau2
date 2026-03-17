@@ -9,6 +9,18 @@
 #include <Profile/TauEnv.h>
 #include "check_mpi_version.h"
 
+
+static char const * trim_fortran_string(char const * fstr, size_t const fstrlen)
+{
+  char const * head;
+  char const * tail;
+  for (head=fstr; head < fstr+fstrlen && *head == ' '; ++head)
+    ; // Intentional
+  for (tail=fstr+fstrlen-1; tail > head && *tail == ' '; --tail)
+    ; // Intentional
+  return strndup(head, tail-head+1);
+}
+
 #define track_vector( call, counts, typesize ) { \
     int typesize, commSize, commRank, sendcount = 0, i; \
     PMPI_Comm_rank(comm, &commRank); \
@@ -91,34 +103,35 @@ int MPI_Get_library_version(char *version, int * resultlen)
 /******************************************************
 ***      MPI_Get_library_version wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_GET_LIBRARY_VERSION(char * version, MPI_Fint * resultlen, MPI_Fint * ierr)
+void MPI_GET_LIBRARY_VERSION(char * version, MPI_Fint * resultlen, MPI_Fint * ierr, int str_len)
 {
-
-  *ierr = MPI_Get_library_version( version, resultlen);
+  TAU_MPICH3_CONST char * local_version = (TAU_MPICH3_CONST char *)trim_fortran_string(version, str_len);
+  *ierr = MPI_Get_library_version( local_version, resultlen);
+  free((void*)local_version);
 }
 
 /******************************************************
 ***      MPI_Get_library_version wrapper function (lowercase)
 ******************************************************/
-void mpi_get_library_version(char * version, MPI_Fint * resultlen, MPI_Fint * ierr)
+void mpi_get_library_version(char * version, MPI_Fint * resultlen, MPI_Fint * ierr, int str_len)
 {
-  MPI_GET_LIBRARY_VERSION(version, resultlen, ierr);
+  MPI_GET_LIBRARY_VERSION(version, resultlen, ierr, str_len);
 }
 
 /******************************************************
 ***      MPI_Get_library_version wrapper function (lowercase_)
 ******************************************************/
-void mpi_get_library_version_(char * version, MPI_Fint * resultlen, MPI_Fint * ierr)
+void mpi_get_library_version_(char * version, MPI_Fint * resultlen, MPI_Fint * ierr, int str_len)
 {
-  MPI_GET_LIBRARY_VERSION(version, resultlen, ierr);
+  MPI_GET_LIBRARY_VERSION(version, resultlen, ierr, str_len);
 }
 
 /******************************************************
 ***      MPI_Get_library_version wrapper function (lowercase__)
 ******************************************************/
-void mpi_get_library_version__(char * version, MPI_Fint * resultlen, MPI_Fint * ierr)
+void mpi_get_library_version__(char * version, MPI_Fint * resultlen, MPI_Fint * ierr, int str_len)
 {
-  MPI_GET_LIBRARY_VERSION(version, resultlen, ierr);
+  MPI_GET_LIBRARY_VERSION(version, resultlen, ierr, str_len);
 }
 
 
@@ -2150,14 +2163,14 @@ void* recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST int * rdispls
 /******************************************************
 ***      MPI_Neighbor_alltoallv wrapper function (uppercase Fortran)
 ******************************************************/
-extern void MPI_NEIGHBOR_ALLTOALLV(MPI_Aint * sendbuf, int * sendcounts, int * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
-int * recvcounts, int * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr);
+extern void MPI_NEIGHBOR_ALLTOALLV(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+int * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Neighbor_alltoallv wrapper function (lowercase)
 ******************************************************/
-void mpi_neighbor_alltoallv(MPI_Aint * sendbuf, int * sendcounts, int * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
-int * recvcounts, int * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
+void mpi_neighbor_alltoallv(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+int * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLTOALLV(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm, ierr);
@@ -2166,8 +2179,8 @@ int * recvcounts, int * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint 
 /******************************************************
 ***      MPI_Neighbor_alltoallv wrapper function (lowercase_)
 ******************************************************/
-void mpi_neighbor_alltoallv_(MPI_Aint * sendbuf, int * sendcounts, int * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
-int * recvcounts, int * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
+void mpi_neighbor_alltoallv_(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+int * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLTOALLV(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm, ierr);
@@ -2176,8 +2189,8 @@ int * recvcounts, int * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint 
 /******************************************************
 ***      MPI_Neighbor_alltoallv wrapper function (lowercase__)
 ******************************************************/
-void mpi_neighbor_alltoallv__(MPI_Aint * sendbuf, int * sendcounts, int * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
-int * recvcounts, int * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
+void mpi_neighbor_alltoallv__(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+int * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
 {
   MPI_NEIGHBOR_ALLTOALLV(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm, ierr);
@@ -2491,15 +2504,15 @@ TAU_MPICH3_CONST MPI_Datatype * recvtypes, MPI_Comm comm, MPI_Request* request)
 /******************************************************
 ***      MPI_Ineighbor_alltoallw wrapper function (uppercase Fortran)
 ******************************************************/
-extern void MPI_INEIGHBOR_ALLTOALLW(MPI_Aint * sendbuf, int * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
-MPI_Aint * recvbuf, int * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
+extern void MPI_INEIGHBOR_ALLTOALLW(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
 MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr);
 
 /******************************************************
 ***      MPI_Ineighbor_alltoallw wrapper function (lowercase)
 ******************************************************/
-void mpi_ineighbor_alltoallw(MPI_Aint * sendbuf, int * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
-MPI_Aint * recvbuf, int * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
+void mpi_ineighbor_alltoallw(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
 MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLTOALLW(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
@@ -2509,8 +2522,8 @@ MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ineighbor_alltoallw wrapper function (lowercase_)
 ******************************************************/
-void mpi_ineighbor_alltoallw_(MPI_Aint * sendbuf, int * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
-MPI_Aint * recvbuf, int * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
+void mpi_ineighbor_alltoallw_(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
 MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLTOALLW(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
@@ -2520,8 +2533,8 @@ MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Ineighbor_alltoallw wrapper function (lowercase__)
 ******************************************************/
-void mpi_ineighbor_alltoallw__(MPI_Aint * sendbuf, int * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
-MPI_Aint * recvbuf, int * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
+void mpi_ineighbor_alltoallw__(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Aint * sdispls, MPI_Fint * sendtypes,
+MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes,
 MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_INEIGHBOR_ALLTOALLW(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
@@ -2604,8 +2617,8 @@ TAU_MPICH3_CONST int * destinations, TAU_MPICH3_CONST int * destweights, MPI_Inf
 /******************************************************
 ***      MPI_Dist_graph_create_adjacent wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_DIST_GRAPH_CREATE_ADJACENT(MPI_Fint * comm_old, MPI_Fint * indegree, int * sources, int * sourceweights,
-MPI_Fint * outdegree, int * destinations, int * destweights, MPI_Fint * info,
+void MPI_DIST_GRAPH_CREATE_ADJACENT(MPI_Fint * comm_old, MPI_Fint * indegree, MPI_Fint * sources, MPI_Fint * sourceweights,
+MPI_Fint * outdegree, MPI_Fint * destinations, MPI_Fint * destweights, MPI_Fint * info,
 MPI_Fint * reorder, MPI_Fint * comm_dist_graph, MPI_Fint * ierr)
 {
   MPI_Comm local_comm_dist_graph;
@@ -2619,8 +2632,8 @@ MPI_Fint * reorder, MPI_Fint * comm_dist_graph, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Dist_graph_create_adjacent wrapper function (lowercase)
 ******************************************************/
-void mpi_dist_graph_create_adjacent(MPI_Fint * comm_old, MPI_Fint * indegree, int * sources, int * sourceweights,
-MPI_Fint * outdegree, int * destinations, int * destweights, MPI_Fint * info,
+void mpi_dist_graph_create_adjacent(MPI_Fint * comm_old, MPI_Fint * indegree, MPI_Fint * sources, MPI_Fint * sourceweights,
+MPI_Fint * outdegree, MPI_Fint * destinations, MPI_Fint * destweights, MPI_Fint * info,
 MPI_Fint * reorder, MPI_Fint * comm_dist_graph, MPI_Fint * ierr)
 {
   MPI_DIST_GRAPH_CREATE_ADJACENT(comm_old, indegree, sources, sourceweights, outdegree,
@@ -2630,8 +2643,8 @@ MPI_Fint * reorder, MPI_Fint * comm_dist_graph, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Dist_graph_create_adjacent wrapper function (lowercase_)
 ******************************************************/
-void mpi_dist_graph_create_adjacent_(MPI_Fint * comm_old, MPI_Fint * indegree, int * sources, int * sourceweights,
-MPI_Fint * outdegree, int * destinations, int * destweights, MPI_Fint * info,
+void mpi_dist_graph_create_adjacent_(MPI_Fint * comm_old, MPI_Fint * indegree, MPI_Fint * sources, MPI_Fint * sourceweights,
+MPI_Fint * outdegree, MPI_Fint * destinations, MPI_Fint * destweights, MPI_Fint * info,
 MPI_Fint * reorder, MPI_Fint * comm_dist_graph, MPI_Fint * ierr)
 {
   MPI_DIST_GRAPH_CREATE_ADJACENT(comm_old, indegree, sources, sourceweights, outdegree,
@@ -2641,8 +2654,8 @@ MPI_Fint * reorder, MPI_Fint * comm_dist_graph, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Dist_graph_create_adjacent wrapper function (lowercase__)
 ******************************************************/
-void mpi_dist_graph_create_adjacent__(MPI_Fint * comm_old, MPI_Fint * indegree, int * sources, int * sourceweights,
-MPI_Fint * outdegree, int * destinations, int * destweights, MPI_Fint * info,
+void mpi_dist_graph_create_adjacent__(MPI_Fint * comm_old, MPI_Fint * indegree, MPI_Fint * sources, MPI_Fint * sourceweights,
+MPI_Fint * outdegree, MPI_Fint * destinations, MPI_Fint * destweights, MPI_Fint * info,
 MPI_Fint * reorder, MPI_Fint * comm_dist_graph, MPI_Fint * ierr)
 {
   MPI_DIST_GRAPH_CREATE_ADJACENT(comm_old, indegree, sources, sourceweights, outdegree,
@@ -3252,7 +3265,7 @@ TAU_MPICH3_CONST int * weights, MPI_Info info, int reorder, MPI_Comm* comm_dist_
 /******************************************************
 ***      MPI_Dist_graph_create wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_DIST_GRAPH_CREATE(MPI_Fint * comm_old, MPI_Fint * n, int * sources, int * degrees, int * destinations,
+void MPI_DIST_GRAPH_CREATE(MPI_Fint * comm_old, MPI_Fint * n, MPI_Fint * sources, MPI_Fint * degrees, MPI_Fint * destinations,
 int * weights, MPI_Fint * info, MPI_Fint * reorder, MPI_Fint * comm_dist_graph, MPI_Fint * ierr)
 {
   MPI_Comm local_comm_dist_graph;
@@ -3265,7 +3278,7 @@ int * weights, MPI_Fint * info, MPI_Fint * reorder, MPI_Fint * comm_dist_graph, 
 /******************************************************
 ***      MPI_Dist_graph_create wrapper function (lowercase)
 ******************************************************/
-void mpi_dist_graph_create(MPI_Fint * comm_old, MPI_Fint * n, int * sources, int * degrees, int * destinations,
+void mpi_dist_graph_create(MPI_Fint * comm_old, MPI_Fint * n, MPI_Fint * sources, MPI_Fint * degrees, MPI_Fint * destinations,
 int * weights, MPI_Fint * info, MPI_Fint * reorder, MPI_Fint * comm_dist_graph, MPI_Fint * ierr)
 {
   MPI_DIST_GRAPH_CREATE(comm_old, n, sources, degrees, destinations, weights, info, reorder,
@@ -3275,7 +3288,7 @@ int * weights, MPI_Fint * info, MPI_Fint * reorder, MPI_Fint * comm_dist_graph, 
 /******************************************************
 ***      MPI_Dist_graph_create wrapper function (lowercase_)
 ******************************************************/
-void mpi_dist_graph_create_(MPI_Fint * comm_old, MPI_Fint * n, int * sources, int * degrees, int * destinations,
+void mpi_dist_graph_create_(MPI_Fint * comm_old, MPI_Fint * n, MPI_Fint * sources, MPI_Fint * degrees, MPI_Fint * destinations,
 int * weights, MPI_Fint * info, MPI_Fint * reorder, MPI_Fint * comm_dist_graph, MPI_Fint * ierr)
 {
   MPI_DIST_GRAPH_CREATE(comm_old, n, sources, degrees, destinations, weights, info, reorder,
@@ -3285,7 +3298,7 @@ int * weights, MPI_Fint * info, MPI_Fint * reorder, MPI_Fint * comm_dist_graph, 
 /******************************************************
 ***      MPI_Dist_graph_create wrapper function (lowercase__)
 ******************************************************/
-void mpi_dist_graph_create__(MPI_Fint * comm_old, MPI_Fint * n, int * sources, int * degrees, int * destinations,
+void mpi_dist_graph_create__(MPI_Fint * comm_old, MPI_Fint * n, MPI_Fint * sources, MPI_Fint * degrees, MPI_Fint * destinations,
 int * weights, MPI_Fint * info, MPI_Fint * reorder, MPI_Fint * comm_dist_graph, MPI_Fint * ierr)
 {
   MPI_DIST_GRAPH_CREATE(comm_old, n, sources, degrees, destinations, weights, info, reorder,
@@ -3315,6 +3328,7 @@ void MPI_FILE_IREAD_ALL(MPI_Fint * fh, MPI_Aint * buf, MPI_Fint * count, MPI_Fin
   MPI_Request local_request;
   local_fh = MPI_File_f2c(*fh);
   *ierr = MPI_File_iread_all( local_fh, buf, *count, MPI_Type_f2c(*datatype), &local_request);
+  *fh = MPI_File_c2f(local_fh);
   *request = MPI_Request_c2f(local_request);
 }
 
@@ -3366,6 +3380,7 @@ MPI_Fint * ierr)
   MPI_Request local_request;
   local_fh = MPI_File_f2c(*fh);
   *ierr = MPI_File_iread_at_all( local_fh, *offset, buf, *count, MPI_Type_f2c(*datatype), &local_request);
+  *fh = MPI_File_c2f(local_fh);
   *request = MPI_Request_c2f(local_request);
 }
 
@@ -3421,6 +3436,7 @@ MPI_Fint * ierr)
   MPI_Request local_request;
   local_fh = MPI_File_f2c(*fh);
   *ierr = MPI_File_iwrite_at_all( local_fh, *offset, buf, *count, MPI_Type_f2c(*datatype), &local_request);
+  *fh = MPI_File_c2f(local_fh);
   *request = MPI_Request_c2f(local_request);
 }
 
@@ -3515,34 +3531,37 @@ int MPI_Publish_name(TAU_MPICH3_CONST char* service_name, MPI_Info info, TAU_MPI
 /******************************************************
 ***      MPI_Publish_name wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_PUBLISH_NAME(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr)
+void MPI_PUBLISH_NAME(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr, int sn_len, int pt_len)
 {
-
-  *ierr = MPI_Publish_name( service_name, MPI_Info_f2c(*info), port_name);
+  TAU_MPICH3_CONST char * local_service_name = (TAU_MPICH3_CONST char *)trim_fortran_string(service_name, sn_len);
+  TAU_MPICH3_CONST char * local_port_name = (TAU_MPICH3_CONST char *)trim_fortran_string(port_name, pt_len);
+  *ierr = MPI_Publish_name( local_service_name, MPI_Info_f2c(*info), local_port_name);
+  free((void*)local_service_name);
+  free((void*)local_port_name);
 }
 
 /******************************************************
 ***      MPI_Publish_name wrapper function (lowercase)
 ******************************************************/
-void mpi_publish_name(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr)
+void mpi_publish_name(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr, int sn_len, int pt_len)
 {
-  MPI_PUBLISH_NAME(service_name, info, port_name, ierr);
+  MPI_PUBLISH_NAME(service_name, info, port_name, ierr, sn_len, pt_len);
 }
 
 /******************************************************
 ***      MPI_Publish_name wrapper function (lowercase_)
 ******************************************************/
-void mpi_publish_name_(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr)
+void mpi_publish_name_(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr, int sn_len, int pt_len)
 {
-  MPI_PUBLISH_NAME(service_name, info, port_name, ierr);
+  MPI_PUBLISH_NAME(service_name, info, port_name, ierr, sn_len, pt_len);
 }
 
 /******************************************************
 ***      MPI_Publish_name wrapper function (lowercase__)
 ******************************************************/
-void mpi_publish_name__(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr)
+void mpi_publish_name__(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr, int sn_len, int pt_len)
 {
-  MPI_PUBLISH_NAME(service_name, info, port_name, ierr);
+  MPI_PUBLISH_NAME(service_name, info, port_name, ierr, sn_len, pt_len);
 }
 
 
@@ -3609,34 +3628,38 @@ int MPI_Unpublish_name(TAU_MPICH3_CONST char* service_name, MPI_Info info, TAU_M
 /******************************************************
 ***      MPI_Unpublish_name wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_UNPUBLISH_NAME(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr)
+void MPI_UNPUBLISH_NAME(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr, int sn_len, int pt_len)
 {
-
-  *ierr = MPI_Unpublish_name(service_name, MPI_Info_f2c(*info), port_name);
+  TAU_MPICH3_CONST char * local_service_name = (TAU_MPICH3_CONST char *)trim_fortran_string(service_name, sn_len);
+  TAU_MPICH3_CONST char * local_port_name = (TAU_MPICH3_CONST char *)trim_fortran_string(port_name, pt_len);
+  *ierr = MPI_Unpublish_name(local_service_name, MPI_Info_f2c(*info), local_port_name);
+  free((void*)local_service_name);
+  free((void*)local_port_name);
 }
+
 
 /******************************************************
 ***      MPI_Unpublish_name wrapper function (lowercase)
 ******************************************************/
-void mpi_unpublish_name(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr)
+void mpi_unpublish_name(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr,  int sn_len, int pt_len)
 {
-  MPI_UNPUBLISH_NAME(service_name, info, port_name, ierr);
+  MPI_UNPUBLISH_NAME(service_name, info, port_name, ierr, sn_len, pt_len);
 }
 
 /******************************************************
 ***      MPI_Unpublish_name wrapper function (lowercase_)
 ******************************************************/
-void mpi_unpublish_name_(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr)
+void mpi_unpublish_name_(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr,  int sn_len, int pt_len)
 {
-  MPI_UNPUBLISH_NAME(service_name, info, port_name, ierr);
+  MPI_UNPUBLISH_NAME(service_name, info, port_name, ierr, sn_len, pt_len);
 }
 
 /******************************************************
 ***      MPI_Unpublish_name wrapper function (lowercase__)
 ******************************************************/
-void mpi_unpublish_name__(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr)
+void mpi_unpublish_name__(char * service_name, MPI_Fint * info, char * port_name, MPI_Fint * ierr,  int sn_len, int pt_len)
 {
-  MPI_UNPUBLISH_NAME(service_name, info, port_name, ierr);
+  MPI_UNPUBLISH_NAME(service_name, info, port_name, ierr, sn_len, pt_len);
 }
 
 
@@ -3985,7 +4008,7 @@ int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint* size, int* disp_unit, 
 /******************************************************
 ***      MPI_Win_shared_query wrapper function (uppercase Fortran)
 ******************************************************/
-void MPI_WIN_SHARED_QUERY(MPI_Fint * win, MPI_Fint * rank, MPI_Aint * size, int * disp_unit, MPI_Aint * baseptr, MPI_Fint * ierr)
+void MPI_WIN_SHARED_QUERY(MPI_Fint * win, MPI_Fint * rank, MPI_Aint * size, MPI_Fint * disp_unit, MPI_Aint * baseptr, MPI_Fint * ierr)
 {
 
   *ierr = MPI_Win_shared_query( MPI_Win_f2c(*win), *rank, size, disp_unit, baseptr);
@@ -3994,7 +4017,7 @@ void MPI_WIN_SHARED_QUERY(MPI_Fint * win, MPI_Fint * rank, MPI_Aint * size, int 
 /******************************************************
 ***      MPI_Win_shared_query wrapper function (lowercase)
 ******************************************************/
-void mpi_win_shared_query(MPI_Fint * win, MPI_Fint * rank, MPI_Aint * size, int * disp_unit, MPI_Aint * baseptr, MPI_Fint * ierr)
+void mpi_win_shared_query(MPI_Fint * win, MPI_Fint * rank, MPI_Aint * size, MPI_Fint * disp_unit, MPI_Aint * baseptr, MPI_Fint * ierr)
 {
   MPI_WIN_SHARED_QUERY(win, rank, size, disp_unit, baseptr, ierr);
 }
@@ -4002,7 +4025,7 @@ void mpi_win_shared_query(MPI_Fint * win, MPI_Fint * rank, MPI_Aint * size, int 
 /******************************************************
 ***      MPI_Win_shared_query wrapper function (lowercase_)
 ******************************************************/
-void mpi_win_shared_query_(MPI_Fint * win, MPI_Fint * rank, MPI_Aint * size, int * disp_unit, MPI_Aint * baseptr, MPI_Fint * ierr)
+void mpi_win_shared_query_(MPI_Fint * win, MPI_Fint * rank, MPI_Aint * size, MPI_Fint * disp_unit, MPI_Aint * baseptr, MPI_Fint * ierr)
 {
   MPI_WIN_SHARED_QUERY(win, rank, size, disp_unit, baseptr, ierr);
 }
@@ -4010,7 +4033,7 @@ void mpi_win_shared_query_(MPI_Fint * win, MPI_Fint * rank, MPI_Aint * size, int
 /******************************************************
 ***      MPI_Win_shared_query wrapper function (lowercase__)
 ******************************************************/
-void mpi_win_shared_query__(MPI_Fint * win, MPI_Fint * rank, MPI_Aint * size, int * disp_unit, MPI_Aint * baseptr, MPI_Fint * ierr)
+void mpi_win_shared_query__(MPI_Fint * win, MPI_Fint * rank, MPI_Aint * size, MPI_Fint * disp_unit, MPI_Aint * baseptr, MPI_Fint * ierr)
 {
   MPI_WIN_SHARED_QUERY(win, rank, size, disp_unit, baseptr, ierr);
 }
