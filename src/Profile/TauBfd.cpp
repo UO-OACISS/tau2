@@ -1174,7 +1174,7 @@ static void Tau_get_dwarf_line_number(tau_bfd_handle_t bfd_handle, Dwarf_Debug d
     }
 
 #ifdef DEBUG_PROF
-    fprintf(stderr, "Name: %s, Linkage name: %s, line = %" DW_PR_DUu "\n", name, linkage_name_str, line_number_u);
+    //fprintf(stderr, "Name: %s, Linkage name: %s, line = %" DW_PR_DUu "\n", name, linkage_name_str, line_number_u);
 #endif
 
     // Add linkage name to the map, if it exists.
