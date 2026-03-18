@@ -1,6 +1,6 @@
 module TAUProfile
 
-export tau_start, tau_stop, @tau, @tau_func, tau_rewrite, @tau_rewrite,
+export tau_start, tau_stop, @tau, @tau_func, tau_rewrite, @tau_rewrite, @tau_prepare_rewrite,
        set_rewrite_recursion_limit, set_rewrite_variant_limit, set_rewrite_ccall,
        rewrite_exclude_function, rewrite_exclude_module, rewrite_reset_exclusions
 
@@ -1348,6 +1348,52 @@ macro tau_rewrite(call_expr)
         let _args = ($(esc.(args)...),)
             _rewritten = tau_rewrite($(esc(f)), map(typeof, _args))
             _rewritten(_args...)
+        end
+    end
+end
+
+"""
+    @tau_prepare_rewrite f(args...)
+    @tau_prepare_rewrite f(::Type1, ::Type2, ...)
+
+Instruments `f` and all its callees with entry/exit tracing, but does **not**
+call the function. Returns the traced callable so it can be reused across
+multiple invocations.
+
+Arguments can be **values** (types inferred via `typeof`) or **type
+annotations** using `::` syntax (types used directly), following the same
+convention as Julia's `@code_typed`.
+
+    # Using values — types are inferred
+    traced = @tau_prepare_rewrite composite(5.0, -6.0)
+
+    # Using type annotations — no values needed
+    traced = @tau_prepare_rewrite composite(::Float64, ::Float64)
+
+    # Reuse without re-instrumentation
+    traced(5.0, -6.0)
+    traced(1.0, 2.0)
+"""
+macro tau_prepare_rewrite(call_expr)
+    Meta.isexpr(call_expr, :call) || error("@tau_prepare_rewrite expects a function call, got: $call_expr")
+    f = call_expr.args[1]
+    args = call_expr.args[2:end]
+
+    # Check if all arguments are type annotations (::T syntax)
+    all_typed = all(a -> Meta.isexpr(a, :(::)) && length(a.args) == 1, args)
+
+    if all_typed && !isempty(args)
+        # Type annotation form: @tau_prepare_rewrite f(::Int, ::Float64)
+        types = [a.args[1] for a in args]
+        return quote
+            tau_rewrite($(esc(f)), ($(esc.(types)...),))
+        end
+    else
+        # Value form: @tau_prepare_rewrite f(1, 2.0)
+        return quote
+            let _args = ($(esc.(args)...),)
+                tau_rewrite($(esc(f)), map(typeof, _args))
+            end
         end
     end
 end

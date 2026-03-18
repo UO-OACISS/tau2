@@ -11,17 +11,13 @@ function worker(id::Int, n::Int)
     return total
 end
 
-function worker_inst(id::Int, n::Int)
-    @tau_rewrite worker(id, n)
-end
-
-function main()
+function main(f)
     println("Running with $(nthreads()) thread(s)\n")
 
     num_workers = 100
     chunk_size  = 1_000_000
 
-    tasks = [@spawn(worker_inst(i, chunk_size)) for i in 1:num_workers]
+    tasks = [@spawn(f(i, chunk_size)) for i in 1:num_workers]
 
     results = fetch.(tasks)
 
@@ -30,7 +26,8 @@ function main()
     println("Sum:     $(round(sum(results); digits=4))")
 end
 
-set_rewrite_recursion_limit(Base, 2)
-@tau_rewrite main()
+rewrite_exclude_module(Base)
+worker_inst = @tau_prepare_rewrite worker(::Int, ::Int)
+@tau_rewrite main(worker_inst)
 #main()
 

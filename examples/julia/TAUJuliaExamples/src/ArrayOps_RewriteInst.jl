@@ -22,6 +22,6 @@ function main()
     println("Done")
 end
 
-set_rewrite_recursion_limit(Base, 2)
+set_rewrite_recursion_limit(Base, 1)
 @tau_rewrite main()
 
