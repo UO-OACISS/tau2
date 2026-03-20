@@ -7,7 +7,7 @@ export tau_start, tau_stop, @tau, @tau_func, tau_rewrite_and_call, tau_rewrite, 
        tau_rewrite_deferred_contexts, tau_rewrite_set_min_complexity,
        tau_rewrite_include_types
 
-using Core: SSAValue, ReturnNode, CodeInstance, MethodInstance
+using Core: SSAValue, ReturnNode, CodeInstance, MethodInstance, EnterNode
 
 const CC = Core.Compiler
 
