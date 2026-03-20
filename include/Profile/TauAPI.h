@@ -380,6 +380,7 @@
 #define TAU_REDUCESCATTER_DATA(data)  	        Tau_reducescatter_data(data)
 #define TAU_SCAN_DATA(data)  		        Tau_scan_data(data)
 
+//MPI-3
 #define TAU_IREDUCE_DATA(data)  	        Tau_ireduce_data(data)
 #define TAU_IBCAST_DATA(data)  	                Tau_ibcast_data(data)
 #define TAU_IGATHER_DATA(data)  	        Tau_igather_data(data)
@@ -405,6 +406,75 @@
 #define TAU_INALLTOALL_DATA(data)  	        Tau_inalltoall_data(data)
 #define TAU_INALLTOALLV_DATA(data)  	        Tau_inalltoallv_data(data)
 #define TAU_INALLTOALLW_DATA(data)  	        Tau_inalltoallw_data(data)
+#define TAU_REDUCESCATTER_BLOCK_DATA(data)  	Tau_reducescatterblock_data(data)
+#define TAU_IREDUCESCATTER_BLOCK_DATA(data)  	Tau_ireducescatterblock_data(data)
+
+
+//MPI-4
+#define TAU_ISENDRECV_DATA(data)  	        Tau_isendrecv_data(data)
+#define TAU_ISENDRECV_REP_DATA(data)  	        Tau_isendrecv_rep_data(data)
+#define TAU_ALLGATHERC_DATA(data)  	        Tau_allgatherc_data(data)
+#define TAU_IALLGATHERC_DATA(data)  	        Tau_iallgatherc_data(data)
+#define TAU_ALLGATHERVC_DATA(data)  	        Tau_allgathervc_data(data)
+#define TAU_IALLGATHERVC_DATA(data)  	        Tau_iallgathervc_data(data)
+#define TAU_ALLREDUCEC_DATA(data)  	        Tau_allreducec_data(data)
+#define TAU_IALLREDUCEC_DATA(data)  	        Tau_iallreducec_data(data)
+#define TAU_ALLTOALLC_DATA(data)  	        Tau_alltoallc_data(data)
+#define TAU_IALLTOALLC_DATA(data)  	        Tau_ialltoallc_data(data)
+#define TAU_ALLTOALLVC_DATA(data)  	        Tau_alltoallvc_data(data)
+#define TAU_IALLTOALLVC_DATA(data)  	        Tau_ialltoallvc_data(data)
+#define TAU_ALLTOALLWC_DATA(data)  	        Tau_alltoallwc_data(data)
+#define TAU_IALLTOALLWC_DATA(data)  	        Tau_ialltoallwc_data(data)
+#define TAU_BCASTC_DATA(data)  	                Tau_bcastc_data(data)
+#define TAU_IBCASTC_DATA(data)  	        Tau_ibcastc_data(data)
+#define TAU_GATHERC_DATA(data)  	        Tau_gatherc_data(data)
+#define TAU_IGATHERC_DATA(data)  	        Tau_igatherc_data(data)
+#define TAU_GATHERVC_DATA(data)  	        Tau_gathervc_data(data)
+#define TAU_IGATHERVC_DATA(data)  	        Tau_igathervc_data(data)
+#define TAU_REDUCEC_DATA(data)  	        Tau_reducec_data(data)
+#define TAU_IREDUCEC_DATA(data)  	        Tau_ireducec_data(data)
+#define TAU_REDUCESCATTERC_DATA(data)  	        Tau_reducescatterc_data(data)
+#define TAU_IREDUCESCATTERC_DATA(data)  	Tau_ireducescatterc_data(data)
+#define TAU_SCANC_DATA(data)  	                Tau_scanc_data(data)
+#define TAU_ISCANC_DATA(data)  	                Tau_iscanc_data(data)
+#define TAU_SCATTERC_DATA(data)  	        Tau_scatterc_data(data)
+#define TAU_ISCATTERC_DATA(data)  	        Tau_iscatterc_data(data)
+#define TAU_SCATTERVC_DATA(data)  	        Tau_scattervc_data(data)
+#define TAU_ISCATTERVC_DATA(data)  	        Tau_iscattervc_data(data)
+#define TAU_SENDC_DATA(data)  	                Tau_sendc_data(data)
+#define TAU_ISENDC_DATA(data)  	                Tau_isendc_data(data)
+#define TAU_RECVC_DATA(data)  	                Tau_recvc_data(data)
+#define TAU_IRECVC_DATA(data)  	                Tau_irecvc_data(data)
+#define TAU_SENDRECVC_DATA(data)  	        Tau_sendrecvc_data(data)
+#define TAU_ISENDRECVC_DATA(data)  	        Tau_isendrecvc_data(data)
+#define TAU_SSENDC_DATA(data)  	                Tau_ssendc_data(data)
+#define TAU_ISSENDC_DATA(data)  	        Tau_issendc_data(data)
+#define TAU_REDUCESCATTER_BLOCKC_DATA(data)  	Tau_reducescatterblockc_data(data)
+#define TAU_IREDUCESCATTER_BLOCKC_DATA(data)  	Tau_ireducescatterblockc_data(data)
+
+#define TAU_NALLGATHERC_DATA(data)  	        Tau_nallgatherc_data(data)
+#define TAU_INALLGATHERC_DATA(data)  	        Tau_inallgatherc_data(data)
+#define TAU_NALLGATHERVC_DATA(data)  	        Tau_nallgathervc_data(data)
+#define TAU_INALLGATHERVC_DATA(data)  	        Tau_inallgathervc_data(data)
+#define TAU_NALLTOALLC_DATA(data)  	        Tau_nalltoallc_data(data)
+#define TAU_INALLTOALLC_DATA(data)  	        Tau_inalltoallc_data(data)
+#define TAU_NALLTOALLVC_DATA(data)  	        Tau_nalltoallvc_data(data)
+#define TAU_INALLTOALLVC_DATA(data)  	        Tau_inalltoallvc_data(data)
+#define TAU_NALLTOALLWC_DATA(data)  	        Tau_nalltoallwc_data(data)
+#define TAU_INALLTOALLWC_DATA(data)  	        Tau_inalltoallwc_data(data)
+
+
+//They do not exist, may exist in the future?
+/*
+#define TAU_NALLREDUCEC_DATA(data)  	        Tau_nallreducec_data(data)
+#define TAU_INALLREDUCEC_DATA(data)  	        Tau_inallreducec_data(data)
+#define TAU_NBCASTC_DATA(data)  	        Tau_nbcastc_data(data)
+#define TAU_INBCASTC_DATA(data)  	        Tau_inbcastc_data(data)
+#define TAU_NGATHERC_DATA(data)  	        Tau_ngatherc_data(data)
+#define TAU_INGATHERC_DATA(data)  	        Tau_ingatherc_data(data)
+#define TAU_NGATHERVC_DATA(data)  	        Tau_ngathervc_data(data)
+#define TAU_INGATHERVC_DATA(data)  	        Tau_ingathervc_data(data)
+*/
 
 
 /* dead macros */
@@ -563,6 +633,7 @@ void TAUDECL Tau_allgather_data(int data);
 void TAUDECL Tau_wait_data(int data);
 void TAUDECL Tau_reducescatter_data(int data);
 
+//MPI-3
 void TAUDECL Tau_ireduce_data(int data);
 void TAUDECL Tau_ibcast_data(int data);
 void TAUDECL Tau_igather_data(int data);
@@ -578,6 +649,7 @@ void TAUDECL Tau_iallreduce_data(int data);
 void TAUDECL Tau_ireducescatter_data(int data);
 void TAUDECL Tau_iscan_data(int data);
 void TAUDECL Tau_iexscan_data(int data);
+
 void TAUDECL Tau_nallgather_data(int data);
 void TAUDECL Tau_nallgatherv_data(int data);
 void TAUDECL Tau_nalltoall_data(int data);
@@ -588,6 +660,67 @@ void TAUDECL Tau_inallgatherv_data(int data);
 void TAUDECL Tau_inalltoall_data(int data);
 void TAUDECL Tau_inalltoallv_data(int data);
 void TAUDECL Tau_inalltoallw_data(int data);
+void TAUDECL Tau_reducescatterblock_data(int data);
+void TAUDECL Tau_ireducescatterblock_data(int data);
+
+//MPI-4
+void TAUDECL Tau_isendrecv_data(int data);
+void TAUDECL Tau_isendrecv_rep_data(int data);
+void TAUDECL Tau_allgatherc_data(int data);
+void TAUDECL Tau_iallgatherc_data(int data);
+void TAUDECL Tau_allgathervc_data(int data);
+void TAUDECL Tau_iallgathervc_data(int data);
+void TAUDECL Tau_allreducec_data(int data);
+void TAUDECL Tau_iallreducec_data(int data);
+void TAUDECL Tau_alltoallc_data(int data);
+void TAUDECL Tau_ialltoallc_data(int data);
+void TAUDECL Tau_alltoallvc_data(int data);
+void TAUDECL Tau_ialltoallvc_data(int data);
+void TAUDECL Tau_alltoallwc_data(int data);
+void TAUDECL Tau_ialltoallwc_data(int data);
+void TAUDECL Tau_bcastc_data(int data);
+void TAUDECL Tau_ibcastc_data(int data);
+void TAUDECL Tau_gatherc_data(int data);
+void TAUDECL Tau_igatherc_data(int data);
+void TAUDECL Tau_gathervc_data(int data);
+void TAUDECL Tau_igathervc_data(int data);
+void TAUDECL Tau_reducec_data(int data);
+void TAUDECL Tau_ireducec_data(int data);
+void TAUDECL Tau_reducescatterc_data(int data);
+void TAUDECL Tau_ireducescatterc_data(int data);
+void TAUDECL Tau_scanc_data(int data);
+void TAUDECL Tau_iscanc_data(int data);
+void TAUDECL Tau_scatterc_data(int data);
+void TAUDECL Tau_iscatterc_data(int data);
+void TAUDECL Tau_scattervc_data(int data);
+void TAUDECL Tau_iscattervc_data(int data);
+void TAUDECL Tau_sendc_data(int data);
+void TAUDECL Tau_isendc_data(int data);
+void TAUDECL Tau_recvc_data(int data);
+void TAUDECL Tau_irecvc_data(int data);
+void TAUDECL Tau_sendrecvc_data(int data);
+void TAUDECL Tau_isendrecvc_data(int data);
+void TAUDECL Tau_ssendc_data(int data);
+void TAUDECL Tau_issendc_data(int data);
+void TAUDECL Tau_reducescatterblockc_data(int data);
+void TAUDECL Tau_ireducescatterblockc_data(int data);
+
+void TAUDECL Tau_nallgatherc_data(int data);
+void TAUDECL Tau_inallgatherc_data(int data);
+void TAUDECL Tau_nallgathervc_data(int data);
+void TAUDECL Tau_inallgathervc_data(int data);
+void TAUDECL Tau_nalltoallc_data(int data);
+void TAUDECL Tau_inalltoallc_data(int data);
+void TAUDECL Tau_nalltoallvc_data(int data);
+void TAUDECL Tau_inalltoallvc_data(int data);
+void TAUDECL Tau_nalltoallwc_data(int data);
+void TAUDECL Tau_inalltoallwc_data(int data);
+
+
+
+//-----------------
+
+
 
 
 void TAUDECL Tau_scan_data(int data);

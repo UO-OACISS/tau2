@@ -8,6 +8,11 @@
 #include <Profile/TauUtil.h>
 #include <Profile/TauEnv.h>
 #include "check_mpi_version.h"
+#include "mpi_tracing_plugin_macros.h"
+
+//In the case of _init, we may need to track the request
+// if we want to identify which *_init function is used with
+// MPI_Start and MPI_Wait.
 
 static char const * trim_fortran_string(char const * fstr, size_t const fstrlen)
 {
@@ -21,7 +26,8 @@ static char const * trim_fortran_string(char const * fstr, size_t const fstrlen)
 }
 
 #define track_vector( call, counts, typesize ) { \
-    int typesize, commSize, commRank, sendcount = 0, i; \
+    int typesize, commSize, commRank, i; \
+    MPI_Count sendcount = 0; \
     PMPI_Comm_rank(comm, &commRank); \
     PMPI_Comm_size(comm, &commSize); \
     if ( commRank == root ) { \
@@ -36,7 +42,8 @@ static char const * trim_fortran_string(char const * fstr, size_t const fstrlen)
   }
 
 #define track_allvector( call, counts, typesize ) { \
-    int typesize, commSize, commRank, sendcount = 0, i; \
+    int typesize, commSize, commRank, i; \
+    MPI_Count sendcount = 0; \
     PMPI_Comm_rank(comm, &commRank); \
     PMPI_Comm_size(comm, &commSize); \
     if(sendtype != MPI_DATATYPE_NULL) { \
@@ -52,7 +59,30 @@ static char const * trim_fortran_string(char const * fstr, size_t const fstrlen)
     call(typesize*sendcount); \
   }
 
+/* This macro captures the time spent synchronizing at collectives. */
+#define TAU_MPI_COLLECTIVE_SYNC(__comm) \
+    TAU_PROFILE_TIMER(synctautimer, "MPI Collective Sync", " ", TAU_MESSAGE); \
+    TAU_PROFILE_START(synctautimer); \
+    PMPI_Barrier(__comm); \
+    TAU_PROFILE_STOP(synctautimer);
+
 static int sum_array (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI_Comm comm) {
+
+  int typesize, commSize, commRank, i = 0;
+  int total = 0;
+  PMPI_Comm_rank(comm, &commRank);
+  PMPI_Comm_size(comm, &commSize);
+  if (type != MPI_DATATYPE_NULL) {
+    PMPI_Type_size(type, &typesize );
+  }
+
+  for (i = 0; i<commSize; i++) {
+    total += counts[i]; // sum
+  }
+  return total * typesize;
+}
+
+static MPI_Count sum_array_count (TAU_MPICH3_CONST MPI_Count *counts, MPI_Datatype type, MPI_Comm comm) {
 
   int typesize, commSize, commRank, i = 0;
   int total = 0;
@@ -86,6 +116,26 @@ static int sum_array_w (TAU_MPICH3_CONST int *counts, TAU_MPICH3_CONST  MPI_Data
   return total ;
 }
 
+static MPI_Count sum_array_w_count (TAU_MPICH3_CONST MPI_Count *counts, TAU_MPICH3_CONST  MPI_Datatype *type, MPI_Comm comm) {
+
+  int typesize, commSize, commRank, i = 0;
+  int total = 0;
+  PMPI_Comm_rank(comm, &commRank);
+  PMPI_Comm_size(comm, &commSize);
+
+  for (i = 0; i<commSize; i++)
+  {
+    if (type[i] != MPI_DATATYPE_NULL) {
+      PMPI_Type_size(type[i], &typesize );
+      total += (counts[i] * typesize); // sum
+    }
+  }
+
+  return total ;
+}
+
+
+
 /******************************************************
 ***      MPI_Isendrecv wrapper function 
 ******************************************************/
@@ -93,10 +143,19 @@ int MPI_Isendrecv(TAU_MPICH3_CONST void* sendbuf, int sendcount, MPI_Datatype se
 int recvcount, MPI_Datatype recvtype, int source, int recvtag, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
+  int typesize1 = 0;
   TAU_PROFILE_TIMER(t, "MPI_Isendrecv()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Isendrecv(sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source,
     recvtag, comm, request);
+  if (sendtype != MPI_DATATYPE_NULL) {
+      PMPI_Type_size( sendtype, &typesize );
+  }
+  if (recvtype != MPI_DATATYPE_NULL) {
+      PMPI_Type_size( recvtype, &typesize1 );
+  }
+  TAU_ISENDRECV_DATA((typesize*sendcount)+(typesize1*recvcount));
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -156,9 +215,15 @@ int MPI_Isendrecv_replace(void * buf, int count, MPI_Datatype datatype, int dest
 MPI_Comm comm, MPI_Request * request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Isendrecv_replace()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Isendrecv_replace(buf, count, datatype, dest, sendtag, source, recvtag, comm, request);
+  if (datatype != MPI_DATATYPE_NULL) {
+      PMPI_Type_size( datatype, &typesize );
+  }
+
+  TAU_ISENDRECV_REP_DATA(typesize*count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -272,7 +337,18 @@ int MPI_Info_get_string(MPI_Info info, TAU_MPICH3_CONST char* key, int* buflen, 
 void MPI_INFO_GET_STRING(MPI_Fint * info, char * key, MPI_Fint * buflen, char * value, MPI_Fint * flag, MPI_Fint * ierr, int len_key, int len_val)
 {
   TAU_MPICH3_CONST char * local_key = (TAU_MPICH3_CONST char *)trim_fortran_string(key, len_key);
-  *ierr = MPI_Info_get_string( MPI_Info_f2c(*info), local_key, buflen, value, flag);
+
+  char local_value[len_val];
+  memset(local_value, ' ', len_val);
+
+  *ierr = MPI_Info_get_string( MPI_Info_f2c(*info), local_key, buflen, local_value, flag);
+  //Copy the local value back to the original variable, needed with C to Fortran
+  if (*flag) {
+    memcpy(value, local_value, len_val);
+  } else {
+      memset(value, ' ', len_val);
+  }
+
   free((void*)local_key);
 }
 
@@ -341,12 +417,21 @@ void mpi_info_create_env_(MPI_Fint * argc, char **argv, MPI_Info * info, MPI_Fin
 }
 
 /******************************************************
+***      MPI_Info_create_env wrapper function (lowercase_)
+******************************************************/
+void mpi_info_create_env_f08_(MPI_Fint * argc, char **argv, MPI_Info * info, MPI_Fint * ierr)
+{
+  MPI_INFO_CREATE_ENV(argc, argv, info, ierr);
+}
+
+/******************************************************
 ***      MPI_Info_create_env wrapper function (lowercase__)
 ******************************************************/
 void mpi_info_create_env__(MPI_Fint * argc, char **argv, MPI_Info * info, MPI_Fint * ierr)
 {
   MPI_INFO_CREATE_ENV(argc, argv, info, ierr);
 }
+
 
 
 //Large count functions and _init
@@ -478,10 +563,22 @@ int MPI_Allgather_c(TAU_MPICH3_CONST void* sendbuf, MPI_Count sendcount, MPI_Dat
 MPI_Datatype recvtype, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
+
+
   TAU_PROFILE_TIMER(t, "MPI_Allgather_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
+
   retvalue = PMPI_Allgather_c(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm);
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize );
+  }
+  TAU_ALLGATHERC_DATA(typesize*recvcount);
+
+  TIMER_EXIT_COLLECTIVE_EXCH_ALL_EVENT("MPI_Allgather_c",typesize*sendcount,typesize*recvcount,0,comm);
   TAU_PROFILE_STOP(t);
+
   return retvalue;
 }
 
@@ -526,9 +623,14 @@ int MPI_Iallgather_c(TAU_MPICH3_CONST void* sendbuf, MPI_Count sendcount, MPI_Da
 MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Iallgather_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Iallgather_c(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request);
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize );
+  }
+  TAU_IALLGATHERC_DATA(typesize*recvcount);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -677,9 +779,15 @@ int MPI_Allgatherv_c(TAU_MPICH3_CONST void* sendbuf, MPI_Count sendcount, MPI_Da
 TAU_MPICH3_CONST MPI_Count *recvcounts, TAU_MPICH3_CONST MPI_Aint *displs, MPI_Datatype recvtype, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Allgatherv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Allgatherv_c(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm);
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize );
+  }
+  track_allvector(TAU_ALLGATHERVC_DATA, recvcounts, typesize);
+
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -726,10 +834,15 @@ TAU_MPICH3_CONST MPI_Count *recvcounts, TAU_MPICH3_CONST MPI_Aint *displs, MPI_D
 MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Iallgatherv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Iallgatherv_c(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm,
     request);
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize );
+  }
+  track_allvector(TAU_IALLGATHERVC_DATA, recvcounts, typesize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -881,9 +994,18 @@ MPI_Fint * info, MPI_Request * request, MPI_Fint * ierr)
 int MPI_Allreduce_c(TAU_MPICH3_CONST void* sendbuf, void* recvbuf, MPI_Count count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Allreduce_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
+
   retvalue = PMPI_Allreduce_c(sendbuf, recvbuf, count, datatype, op, comm);
+
+  if (datatype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_ALLREDUCEC_DATA(typesize*count);
+  TIMER_EXIT_COLLECTIVE_EXCH_EVENT("MPI_Allreduce_c",typesize*count,0,comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -929,9 +1051,14 @@ int MPI_Iallreduce_c(TAU_MPICH3_CONST void * sendbuf, void * recvbuf, MPI_Count 
 MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Iallreduce_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Iallreduce_c(sendbuf, recvbuf, count, datatype, op, comm, request);
+  if (datatype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_IALLREDUCEC_DATA(typesize*count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1073,9 +1200,22 @@ int MPI_Alltoall_c(TAU_MPICH3_CONST void* sendbuf, MPI_Count sendcount, MPI_Data
 MPI_Datatype recvtype, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
+  int typesize2 = 0;
   TAU_PROFILE_TIMER(t, "MPI_Alltoall_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
+
   retvalue = PMPI_Alltoall_c(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm);
+  if (sendtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( sendtype, &typesize );
+  }
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize2 );
+  }
+  TAU_ALLTOALLC_DATA((typesize*recvcount)+(typesize2*sendcount));
+
+  TIMER_EXIT_COLLECTIVE_EXCH_ALL_EVENT("MPI_Alltoall_c",typesize*sendcount,typesize*recvcount,0,comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1121,9 +1261,18 @@ int MPI_Ialltoall_c(TAU_MPICH3_CONST void* sendbuf, MPI_Count sendcount, MPI_Dat
 MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
+  int typesize2 = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ialltoall_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ialltoall_c(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, request);
+  if (sendtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( sendtype, &typesize );
+  }
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize2 );
+  }
+  TAU_IALLTOALLC_DATA((typesize*recvcount)+(typesize2*sendcount));
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1272,10 +1421,18 @@ MPI_Datatype sendtype, void * recvbuf, TAU_MPICH3_CONST MPI_Count * recvcounts, 
 MPI_Datatype recvtype, MPI_Comm comm)
 {
   int retvalue;
+  MPI_Count tracksize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Alltoallv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
+
   retvalue = PMPI_Alltoallv_c(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype,
     comm);
+  
+  tracksize = sum_array_count(sendcounts, sendtype, comm);
+  tracksize += sum_array_count(recvcounts, recvtype, comm);
+  TAU_ALLTOALLVC_DATA(tracksize);
+
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1325,10 +1482,16 @@ MPI_Datatype sendtype,void* recvbuf, TAU_MPICH3_CONST MPI_Count * recvcounts, TA
 MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  MPI_Count tracksize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ialltoallv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+
   retvalue = PMPI_Ialltoallv_c(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype,
     comm, request);
+    
+  tracksize = sum_array_count(sendcounts, sendtype, comm);
+  tracksize += sum_array_count(recvcounts, recvtype, comm);
+  TAU_IALLTOALLVC_DATA(tracksize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1492,10 +1655,16 @@ TAU_MPICH3_CONST MPI_Datatype * sendtypes, void* recvbuf, TAU_MPICH3_CONST MPI_C
 TAU_MPICH3_CONST MPI_Aint * rdispls, TAU_MPICH3_CONST MPI_Datatype * recvtypes, MPI_Comm comm)
 {
   int retvalue;
+  MPI_Count tracksize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Alltoallw_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
+
   retvalue = PMPI_Alltoallw_c(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes,
     comm);
+  tracksize =  sum_array_w_count(sendcounts, sendtypes, comm);
+  tracksize += sum_array_w_count(recvcounts, recvtypes, comm);
+  TAU_ALLTOALLWC_DATA(tracksize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1540,15 +1709,19 @@ MPI_Count * recvcounts, MPI_Aint * rdispls, MPI_Fint * recvtypes, MPI_Fint * com
 /******************************************************
 ***      MPI_Ialltoallw_c wrapper function 
 ******************************************************/
-int MPI_Ialltoallw_c(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST MPI_Count * sendcounts, TAU_MPICH3_CONST MPI_Aint sdispls[],
+int MPI_Ialltoallw_c(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST MPI_Count * sendcounts, TAU_MPICH3_CONST MPI_Aint * sdispls,
 TAU_MPICH3_CONST MPI_Datatype * sendtypes, void* recvbuf, TAU_MPICH3_CONST MPI_Count * recvcounts,
 TAU_MPICH3_CONST MPI_Aint * rdispls, TAU_MPICH3_CONST MPI_Datatype * recvtypes, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  MPI_Count tracksize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ialltoallw_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ialltoallw_c(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
     recvtypes, comm, request);
+  tracksize =  sum_array_w_count(sendcounts, sendtypes, comm);
+  tracksize += sum_array_w_count(recvcounts, recvtypes, comm);
+  TAU_IALLTOALLWC_DATA(tracksize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1767,9 +1940,16 @@ void mpi_barrier_init__(MPI_Fint * comm, MPI_Fint * info, MPI_Request * request,
 int MPI_Bcast_c(void* buffer, MPI_Count count, MPI_Datatype datatype, int root, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Bcast_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
   retvalue = PMPI_Bcast_c(buffer, count, datatype, root, comm);
+  if (datatype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( datatype, &typesize );
+  }
+
+  TAU_BCASTC_DATA(typesize*count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -1810,9 +1990,15 @@ void mpi_bcast_c__(MPI_Aint * buffer, MPI_Count * count, MPI_Fint * datatype, MP
 int MPI_Ibcast_c(void* buffer, MPI_Count count, MPI_Datatype datatype, int root, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ibcast_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+
   retvalue = PMPI_Ibcast_c(buffer, count, datatype, root, comm, request);
+  if (datatype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_IBCASTC_DATA(typesize*count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -2565,7 +2751,7 @@ void MPI_GROUP_FROM_SESSION_PSET(MPI_Fint * session, char * pset_name, MPI_Group
 {
   MPI_Group local_newgroup;
   TAU_MPICH3_CONST char * local_pset_name = (TAU_MPICH3_CONST char *)trim_fortran_string(pset_name, str_len);
-  *ierr = MPI_Group_from_session_pset( MPI_Session_f2c(session), local_pset_name, &local_newgroup);
+  *ierr = MPI_Group_from_session_pset( MPI_Session_f2c(*session), local_pset_name, &local_newgroup);
   free((void*)local_pset_name);
   *newgroup = MPI_Group_c2f(local_newgroup);
 }
@@ -2665,10 +2851,19 @@ void* recvbuf, MPI_Count recvcount, MPI_Datatype recvtype, int source, int recvt
 MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
+  int typesize1 = 0;
   TAU_PROFILE_TIMER(t, "MPI_Isendrecv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Isendrecv_c(sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype,
     source, recvtag, comm, request);
+  if (sendtype != MPI_DATATYPE_NULL) {
+      PMPI_Type_size( sendtype, &typesize );
+  }
+  if (recvtype != MPI_DATATYPE_NULL) {
+      PMPI_Type_size( recvtype, &typesize1 );
+  }
+  TAU_ISENDRECVC_DATA((typesize*sendcount)+(typesize1*recvcount));
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -4080,9 +4275,25 @@ int MPI_Gather_c(TAU_MPICH3_CONST void* sendbuf, MPI_Count sendcount, MPI_Dataty
 MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
+  int rank;
+
+
   TAU_PROFILE_TIMER(t, "MPI_Gather_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
+
   retvalue = PMPI_Gather_c(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm);
+
+  PMPI_Comm_rank ( comm, &rank );
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize );
+  }
+  if (rank == root) {
+    TAU_GATHERC_DATA(typesize*recvcount);
+  }
+
+  TIMER_EXIT_COLLECTIVE_EXCH_ALL_EVENT("MPI_Gather_c",typesize*sendcount,typesize*recvcount,root,comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -4128,9 +4339,20 @@ int MPI_Igather_c(TAU_MPICH3_CONST void* sendbuf, MPI_Count sendcount, MPI_Datat
 MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
+  int rank;
   TAU_PROFILE_TIMER(t, "MPI_Igather_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Igather_c(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, request);
+
+  PMPI_Comm_rank ( comm, &rank );
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize );
+  }
+  if (rank == root) {
+    TAU_IGATHERC_DATA(typesize*recvcount);
+  }
+  TIMER_EXIT_COLLECTIVE_EXCH_ALL_EVENT("MPI_Igather_c",typesize*sendcount,typesize*recvcount,root,comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -4286,7 +4508,12 @@ MPI_Comm comm)
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_Gatherv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
+
   retvalue = PMPI_Gatherv_c(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm);
+
+  track_vector(TAU_GATHERVC_DATA, recvcounts, recvtype);
+  
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -4339,6 +4566,7 @@ MPI_Comm comm, MPI_Request* request)
   TAU_PROFILE_START(t);
   retvalue = PMPI_Igatherv_c(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm,
     request);
+  track_vector(TAU_IGATHERVC_DATA, recvcounts, recvtype);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -4947,9 +5175,14 @@ int MPI_Neighbor_allgather_c(TAU_MPICH3_CONST void* sendbuf, MPI_Count sendcount
 MPI_Datatype recvtype, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_allgather_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Neighbor_allgather_c(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm);
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize );
+  }
+  TAU_NALLGATHERC_DATA(typesize*recvcount);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -4995,10 +5228,15 @@ int MPI_Ineighbor_allgather_c(TAU_MPICH3_CONST void* sendbuf, MPI_Count sendcoun
 MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_allgather_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ineighbor_allgather_c(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
     request);
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize );
+  }
+  TAU_INALLGATHERC_DATA(typesize*recvcount);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -5151,10 +5389,15 @@ int MPI_Neighbor_allgatherv_c(TAU_MPICH3_CONST void* sendbuf, MPI_Count sendcoun
 TAU_MPICH3_CONST MPI_Count *recvcounts, TAU_MPICH3_CONST MPI_Aint *displs, MPI_Datatype recvtype, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_allgatherv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Neighbor_allgatherv_c(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
     comm);
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize );
+  }
+  track_allvector(TAU_NALLGATHERVC_DATA, recvcounts, typesize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -5204,10 +5447,15 @@ TAU_MPICH3_CONST MPI_Count *recvcounts, TAU_MPICH3_CONST MPI_Aint *displs, MPI_D
 MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_allgatherv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ineighbor_allgatherv_c(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
     comm, request);
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize );
+  }
+  track_allvector(TAU_INALLGATHERVC_DATA, recvcounts, typesize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -5361,9 +5609,18 @@ int MPI_Neighbor_alltoall_c(TAU_MPICH3_CONST void* sendbuf, MPI_Count sendcount,
 MPI_Datatype recvtype, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
+  int typesize2 = 0;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_alltoall_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Neighbor_alltoall_c(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm);
+  if (sendtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( sendtype, &typesize );
+  }
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize2 );
+  }
+  TAU_NALLTOALLC_DATA((typesize*recvcount)+(typesize2*sendcount));
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -5409,10 +5666,19 @@ int MPI_Ineighbor_alltoall_c(TAU_MPICH3_CONST void* sendbuf, MPI_Count sendcount
 MPI_Datatype recvtype, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
+  int typesize2 = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_alltoall_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ineighbor_alltoall_c(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
     request);
+  if (sendtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( sendtype, &typesize );
+  }
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize2 );
+  }
+  TAU_INALLTOALLC_DATA((typesize*recvcount)+(typesize2*sendcount));
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -5565,10 +5831,16 @@ int MPI_Neighbor_alltoallv_c(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST MP
 void* recvbuf, TAU_MPICH3_CONST MPI_Count *recvcounts, TAU_MPICH3_CONST MPI_Aint *rdispls, MPI_Datatype recvtype, MPI_Comm comm)
 {
   int retvalue;
+  MPI_Count tracksize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_alltoallv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Neighbor_alltoallv_c(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm);
+  
+  tracksize = sum_array_count(sendcounts, sendtype, comm);
+  tracksize += sum_array_count(recvcounts, recvtype, comm);
+  TAU_NALLTOALLVC_DATA(tracksize);
+
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -5618,10 +5890,14 @@ MPI_Datatype sendtype, void* recvbuf, TAU_MPICH3_CONST MPI_Count *recvcounts, TA
 MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  MPI_Count tracksize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_alltoallv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ineighbor_alltoallv_c(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
     recvtype, comm, request);
+  tracksize = sum_array_count(sendcounts, sendtype, comm);
+  tracksize += sum_array_count(recvcounts, recvtype, comm);
+  TAU_INALLTOALLVC_DATA(tracksize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -5785,10 +6061,14 @@ TAU_MPICH3_CONST MPI_Datatype *sendtypes, void* recvbuf, TAU_MPICH3_CONST MPI_Co
 TAU_MPICH3_CONST MPI_Aint *rdispls, TAU_MPICH3_CONST MPI_Datatype *recvtypes, MPI_Comm comm)
 {
   int retvalue;
+  MPI_Count tracksize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Neighbor_alltoallw_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Neighbor_alltoallw_c(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
     recvtypes, comm);
+  tracksize =  sum_array_w_count(sendcounts, sendtypes, comm);
+  tracksize += sum_array_w_count(recvcounts, recvtypes, comm);
+  TAU_NALLTOALLWC_DATA(tracksize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -5842,10 +6122,14 @@ TAU_MPICH3_CONST MPI_Datatype *sendtypes, void* recvbuf, TAU_MPICH3_CONST MPI_Co
 TAU_MPICH3_CONST MPI_Aint *rdispls, TAU_MPICH3_CONST MPI_Datatype *recvtypes, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  MPI_Count tracksize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ineighbor_alltoallw_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ineighbor_alltoallw_c(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
     recvtypes, comm, request);
+  tracksize =  sum_array_w_count(sendcounts, sendtypes, comm);
+  tracksize += sum_array_w_count(recvcounts, recvtypes, comm);
+  TAU_INALLTOALLWC_DATA(tracksize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -6008,9 +6292,14 @@ int MPI_Irecv_c(void* buf, MPI_Count count, MPI_Datatype datatype, int source, i
 MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Irecv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Irecv_c(buf, count, datatype, source, tag, comm, request);
+  if (datatype != MPI_DATATYPE_NULL) {
+      PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_IRECVC_DATA(typesize*count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -6061,9 +6350,17 @@ int MPI_Reduce_c(TAU_MPICH3_CONST void* sendbuf, void* recvbuf, MPI_Count count,
 MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Reduce_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
   retvalue = PMPI_Reduce_c(sendbuf, recvbuf, count, datatype, op, root, comm);
+  if (datatype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_REDUCEC_DATA(typesize*count);
+
+  TIMER_EXIT_COLLECTIVE_EXCH_EVENT("MPI_Reduce_c",typesize*count,root,comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -6109,9 +6406,14 @@ int MPI_Ireduce_c(TAU_MPICH3_CONST void* sendbuf, void* recvbuf, MPI_Count count
 MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ireduce_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ireduce_c(sendbuf, recvbuf, count, datatype, op, root, comm, request);
+  if (datatype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_IREDUCEC_DATA(typesize*count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -6253,9 +6555,17 @@ int MPI_Reduce_scatter_c(TAU_MPICH3_CONST void* sendbuf, void* recvbuf, TAU_MPIC
 MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Reduce_scatter_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
   retvalue = PMPI_Reduce_scatter_c(sendbuf, recvbuf, recvcounts, datatype, op, comm);
+  if (datatype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_REDUCESCATTERC_DATA(typesize*(*recvcounts));
+
+  TIMER_EXIT_COLLECTIVE_EXCH_EVENT("MPI_Reduce_scatter_c",typesize*(*recvcounts),0,comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -6301,9 +6611,14 @@ int MPI_Ireduce_scatter_c(TAU_MPICH3_CONST void* sendbuf, void* recvbuf, TAU_MPI
 MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ireduce_scatter_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ireduce_scatter_c(sendbuf, recvbuf, recvcounts, datatype, op, comm, request);
+  if (datatype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_IREDUCESCATTERC_DATA(typesize*(*recvcounts));
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -6445,9 +6760,19 @@ int MPI_Reduce_scatter_block_c(TAU_MPICH3_CONST void* sendbuf, void* recvbuf, MP
 MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Reduce_scatter_block_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
+
   retvalue = PMPI_Reduce_scatter_block_c(sendbuf, recvbuf, recvcount, datatype, op, comm);
+
+  if (datatype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_REDUCESCATTER_BLOCKC_DATA(typesize*recvcount);
+
+  TIMER_EXIT_COLLECTIVE_EXCH_EVENT("MPI_Reduce_scatter_block_c",typesize*recvcount,0,comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -6493,9 +6818,14 @@ int MPI_Ireduce_scatter_block_c(TAU_MPICH3_CONST void* sendbuf, void* recvbuf, M
 MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ireduce_scatter_block_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ireduce_scatter_block_c(sendbuf, recvbuf, recvcount, datatype, op, comm, request);
+  if (datatype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_IREDUCESCATTER_BLOCKC_DATA(typesize*recvcount);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -6692,9 +7022,18 @@ MPI_Request * request, MPI_Fint * ierr)
 int MPI_Scan_c(TAU_MPICH3_CONST void* sendbuf, void* recvbuf, MPI_Count count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Scan_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
+
   retvalue = PMPI_Scan_c(sendbuf, recvbuf, count, datatype, op, comm);
+  if (datatype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_SCANC_DATA(typesize*count);
+
+  TIMER_EXIT_COLLECTIVE_EXCH_EVENT("MPI_Scan_c",typesize*count,0,comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -6740,9 +7079,14 @@ int MPI_Iscan_c(TAU_MPICH3_CONST void* sendbuf, void* recvbuf, MPI_Count count, 
 MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Iscan_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Iscan_c(sendbuf, recvbuf, count, datatype, op, comm, request);
+  if (datatype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_ISCANC_DATA(typesize*count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -6884,9 +7228,18 @@ int MPI_Scatter_c(TAU_MPICH3_CONST void* sendbuf, MPI_Count sendcount, MPI_Datat
 MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Scatter_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
+
   retvalue = PMPI_Scatter_c(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm);
+  if (sendtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( sendtype, &typesize );
+  }
+  TAU_SCATTERC_DATA(typesize*sendcount);
+
+  TIMER_EXIT_COLLECTIVE_EXCH_ALL_EVENT("MPI_Scatter_c",typesize*sendcount,typesize*recvcnt,root,comm);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -6932,9 +7285,14 @@ int MPI_Iscatter_c(TAU_MPICH3_CONST void* sendbuf, MPI_Count sendcount, MPI_Data
 MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Iscatter_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Iscatter_c(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, request);
+  if (sendtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( sendtype, &typesize );
+  }
+  TAU_ISCATTERC_DATA(typesize*sendcount);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -7087,9 +7445,12 @@ int MPI_Scatterv_c(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST MPI_Count *s
 void* recvbuf, MPI_Count recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Scatterv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
+  TAU_MPI_COLLECTIVE_SYNC(comm);
   retvalue = PMPI_Scatterv_c(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm);
+  track_vector(TAU_SCATTERVC_DATA, sendcounts, typesize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -7138,10 +7499,12 @@ int MPI_Iscatterv_c(TAU_MPICH3_CONST void* sendbuf, TAU_MPICH3_CONST MPI_Count *
 void* recvbuf, MPI_Count recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Iscatterv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Iscatterv_c(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm,
     request);
+  track_vector(TAU_ISCATTERVC_DATA, sendcounts, typesize);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -7295,9 +7658,14 @@ int MPI_Isend_c(TAU_MPICH3_CONST void* buf, MPI_Count count, MPI_Datatype dataty
 MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Isend_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Isend_c(buf, count, datatype, dest, tag, comm, request);
+  if (datatype != MPI_DATATYPE_NULL) {
+      PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_ISENDC_DATA(typesize*count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -7348,9 +7716,14 @@ int MPI_Issend_c(TAU_MPICH3_CONST void* buf, MPI_Count count, MPI_Datatype datat
 MPI_Request* request)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Issend_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Issend_c(buf, count, datatype, dest, tag, comm, request);
+  if (datatype != MPI_DATATYPE_NULL) {
+      PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_ISSENDC_DATA(typesize*count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -8109,9 +8482,14 @@ int MPI_Recv_c(void* buf, MPI_Count count, MPI_Datatype datatype, int source, in
 MPI_Status* status)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Recv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Recv_c(buf, count, datatype, source, tag, comm, status);
+  if (datatype != MPI_DATATYPE_NULL) {
+      PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_RECVC_DATA(typesize*count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -8420,9 +8798,14 @@ MPI_Request * request, MPI_Fint * ierr)
 int MPI_Send_c(TAU_MPICH3_CONST void* buf, MPI_Count count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Send_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Send_c(buf, count, datatype, dest, tag, comm);
+  if (datatype != MPI_DATATYPE_NULL) {
+      PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_SENDC_DATA(typesize*count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -8522,10 +8905,20 @@ void* recvbuf, MPI_Count recvcount, MPI_Datatype recvtype, int source, int recvt
 MPI_Status* status)
 {
   int retvalue;
+  int typesize = 0;
+  int typesize1 = 0;
   TAU_PROFILE_TIMER(t, "MPI_Sendrecv_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Sendrecv_c(sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source,
     recvtag, comm, status);
+  if (sendtype != MPI_DATATYPE_NULL) {
+      PMPI_Type_size( sendtype, &typesize );
+  }
+  if (recvtype != MPI_DATATYPE_NULL) {
+      PMPI_Type_size( recvtype, &typesize1 );
+  }
+  TAU_SENDRECVC_DATA((typesize*sendcount)+(typesize1*recvcount));
+  
   TAU_PROFILE_STOP(t);
   return retvalue;
 }
@@ -9116,9 +9509,14 @@ void mpi_session_set_errhandler__(MPI_Fint * session, MPI_Fint * errhandler, MPI
 int MPI_Ssend_c(TAU_MPICH3_CONST void* buf, MPI_Count count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
 {
   int retvalue;
+  int typesize = 0;
   TAU_PROFILE_TIMER(t, "MPI_Ssend_c()", "", TAU_MESSAGE);
   TAU_PROFILE_START(t);
   retvalue = PMPI_Ssend_c(buf, count, datatype, dest, tag, comm);
+  if (datatype != MPI_DATATYPE_NULL) {
+      PMPI_Type_size( datatype, &typesize );
+  }
+  TAU_SSENDC_DATA(typesize*count);
   TAU_PROFILE_STOP(t);
   return retvalue;
 }

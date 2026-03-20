@@ -7564,7 +7564,7 @@ int * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint
 /******************************************************
 ***      MPI_IALLGATHERV wrapper function 
 ******************************************************/
-void MPI_IALLTOALL(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint - recvbuf, MPI_Fint - recvcount,
+void MPI_IALLTOALL(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
 MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   if (sendbuf == *(mpi_predef_in_place())) {
@@ -7587,8 +7587,8 @@ MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_IALLTOALLV wrapper function 
 ******************************************************/
-void MPI_IALLTOALLV(MPI_Aint sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint sendtype, MPI_Aint recvbuf,
-MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint recvtype, MPI_Fint comm, MPI_Fint request, MPI_Fint * ierr)
+void MPI_IALLTOALLV(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtype, MPI_Aint * recvbuf,
+MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   if (sendbuf == *(mpi_predef_in_place())) {
     sendbuf = MPI_IN_PLACE;
@@ -7610,7 +7610,7 @@ MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint recvtype, MPI_Fint comm, MPI
 /******************************************************
 ***      MPI_IALLTOALLW wrapper function
 ******************************************************/
-void MPI_IALLTOALLW(MPI_Aint sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtypes,
+void MPI_IALLTOALLW(MPI_Aint * sendbuf, MPI_Fint * sendcounts, MPI_Fint * sdispls, MPI_Fint * sendtypes,
 MPI_Aint * recvbuf, MPI_Fint * recvcounts, MPI_Fint * rdispls, MPI_Fint * recvtypes, MPI_Fint * comm,
 MPI_Fint * request, MPI_Fint * ierr)
 {
@@ -7711,7 +7711,7 @@ MPI_Fint * comm, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_IREDUCE_SCATTER_BLOCK wrapper function
 ******************************************************/
-void MPI_IREDUCE_SCATTER_BLOCK(MPI_Aint sendbuf, MPI_Aint * recvbuf, MPI_Fint * recvcount, MPI_Fint * datatype, MPI_Fint * op,
+void MPI_IREDUCE_SCATTER_BLOCK(MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint * recvcount, MPI_Fint * datatype, MPI_Fint * op,
 MPI_Fint * comm, MPI_Fint * request, MPI_Fint * ierr)
 {
   if (sendbuf == *(mpi_predef_in_place())) {
@@ -7840,8 +7840,8 @@ MPI_Fint * displs, MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_NEIGHBOR_ALLTOALL wrapper function
 ******************************************************/
-void MPI_NEIGHBOR_ALLTOALL(MPI_Aint sendbuf, MPI_Fint sendcount, MPI_Fint sendtype, MPI_Aint recvbuf, MPI_Fint recvcount,
-MPI_Fint recvtype, MPI_Fint comm, MPI_Fint * ierr)
+void MPI_NEIGHBOR_ALLTOALL(MPI_Aint * sendbuf, MPI_Fint * sendcount, MPI_Fint * sendtype, MPI_Aint * recvbuf, MPI_Fint * recvcount,
+MPI_Fint * recvtype, MPI_Fint * comm, MPI_Fint * ierr)
 {
   if (sendbuf == *(mpi_predef_in_place())) {
     sendbuf = MPI_IN_PLACE;

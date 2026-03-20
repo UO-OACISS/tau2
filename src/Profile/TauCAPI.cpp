@@ -1853,6 +1853,8 @@ TAU_GEN_EVENT(TheGathervEvent,"Message size for gatherv")
 TAU_GEN_EVENT(TheAllgatherEvent,"Message size for all-gather")
 TAU_GEN_CONTEXT_EVENT(TheWaitEvent,"Message size received in wait")
 
+
+//MPI-3
 TAU_GEN_EVENT(TheIReduceEvent,"Message size for ireduce")
 TAU_GEN_EVENT(TheIbcastEvent,"Message size for ibroadcast")
 TAU_GEN_EVENT(TheIgatherEvent,"Message size for igather")
@@ -1865,7 +1867,7 @@ TAU_GEN_EVENT(TheIalltoallEvent,"Message size for iall-to-all")
 TAU_GEN_EVENT(TheIalltoallvEvent,"Message size for iall-to-allv")
 TAU_GEN_EVENT(TheIalltoallwEvent,"Message size for iall-to-allw")
 TAU_GEN_EVENT(TheIallreduceEvent,"Message size for iall-reduce")
-TAU_GEN_EVENT(TheIreducescatterEvent,"Message size for ireduces-catter")
+TAU_GEN_EVENT(TheIreducescatterEvent,"Message size for ireduce-scatter")
 TAU_GEN_EVENT(TheIscanEvent,"Message size for iscan")
 TAU_GEN_EVENT(TheIexscanEvent,"Message size for iexscan")
 TAU_GEN_EVENT(TheNallgatherEvent,"Message size for neighbor-all-gather")
@@ -1878,6 +1880,63 @@ TAU_GEN_EVENT(TheInallgathervEvent,"Message size for ineighbor-all-gatherv")
 TAU_GEN_EVENT(TheInalltoallEvent,"Message size for ineighbor-all-to-all")
 TAU_GEN_EVENT(TheInalltoallvEvent,"Message size for ineighbor-all-to-allv")
 TAU_GEN_EVENT(TheInalltoallwEvent,"Message size for ineighbor-all-to-allw")
+TAU_GEN_EVENT(TheReducescatterblockEvent,"Message size for reduce-scatter-block")
+TAU_GEN_EVENT(TheIreducescatterblockEvent,"Message size for ireduce-scatter-block")
+
+
+//MPI-4
+TAU_GEN_EVENT(TheIsendrecvEvent,"Message size for isendrecv")
+TAU_GEN_EVENT(TheIsendrecvrepEvent,"Message size for isendrecv_replace")
+TAU_GEN_EVENT(TheAllgathercEvent,"Message size for all-gatherc")
+TAU_GEN_EVENT(TheIallgathercEvent,"Message size for all-igatherc")
+TAU_GEN_EVENT(TheAllgathervcEvent,"Message size for all-gathervc")
+TAU_GEN_EVENT(TheIallgathervcEvent,"Message size for iall-gathervc")
+TAU_GEN_EVENT(TheAllreducecEvent,"Message size for all-reducec")
+TAU_GEN_EVENT(TheIallreducecEvent,"Message size for iall-reducec")
+TAU_GEN_EVENT(TheAlltoallcEvent,"Message size for all-to-allc")
+TAU_GEN_EVENT(TheIalltoallcEvent,"Message size for iall-to-allc")
+TAU_GEN_EVENT(TheAlltoallvcEvent,"Message size for all-to-allvc")
+TAU_GEN_EVENT(TheIalltoallvcEvent,"Message size for iall-to-allvc")
+TAU_GEN_EVENT(TheAlltoallwcEvent,"Message size for all-to-allwc")
+TAU_GEN_EVENT(TheIalltoallwcEvent,"Message size for iall-to-allwc")
+TAU_GEN_EVENT(TheBcastcEvent,"Message size for broadcastc")
+TAU_GEN_EVENT(TheIbcastcEvent,"Message size for ibroadcastc")
+TAU_GEN_EVENT(TheGathercEvent,"Message size for gatherc")
+TAU_GEN_EVENT(TheIgathercEvent,"Message size for igatherc")
+TAU_GEN_EVENT(TheGathervcEvent,"Message size for gathervc")
+TAU_GEN_EVENT(TheIgathervcEvent,"Message size for igathervc")
+TAU_GEN_EVENT(TheReducecEvent,"Message size for reducec")
+TAU_GEN_EVENT(TheIreducecEvent,"Message size for ireducec")
+TAU_GEN_EVENT(TheReducescattercEvent,"Message size for reduce-scatterc")
+TAU_GEN_EVENT(TheIreducescattercEvent,"Message size for ireduce-scatterc")
+TAU_GEN_EVENT(TheScancEvent,"Message size for scanc")
+TAU_GEN_EVENT(TheIscancEvent,"Message size for iscanc")
+TAU_GEN_EVENT(TheScattercEvent,"Message size for scatterc")
+TAU_GEN_EVENT(TheIscattercEvent,"Message size for iscatterc")
+TAU_GEN_EVENT(TheScattervcEvent,"Message size for scattervc")
+TAU_GEN_EVENT(TheIscattervcEvent,"Message size for iscattervc")
+TAU_GEN_EVENT(TheSendcEvent,"Message size for sendc")
+TAU_GEN_EVENT(TheIsendcEvent,"Message size for isendc")
+TAU_GEN_EVENT(TheRecvcEvent,"Message size for recvc")
+TAU_GEN_EVENT(TheIrecvcEvent,"Message size for irecvc")
+TAU_GEN_EVENT(TheSendrecvcEvent,"Message size for sendrecvc")
+TAU_GEN_EVENT(TheIsendrecvcEvent,"Message size for isendrecvc")
+TAU_GEN_EVENT(TheSsendcEvent,"Message size for ssendc")
+TAU_GEN_EVENT(TheIssendcEvent,"Message size for issendc")
+TAU_GEN_EVENT(TheReducescatterblockcEvent,"Message size for reduce-scatter-blockc")
+TAU_GEN_EVENT(TheIreducescatterblockcEvent,"Message size for ireduce-scatter-blockc")
+
+TAU_GEN_EVENT(TheNallgathercEvent,"Message size for neighbor--all-gatherc")
+TAU_GEN_EVENT(TheInallgathercEvent,"Message size for ineighbor-all-gatherc")
+TAU_GEN_EVENT(TheNallgathervcEvent,"Message size for neighbor-all-gathervc")
+TAU_GEN_EVENT(TheInallgathervcEvent,"Message size for ineighbor-all-gathervc")
+TAU_GEN_EVENT(TheNalltoallcEvent,"Message size for neighbor-all-to-allc")
+TAU_GEN_EVENT(TheInalltoallcEvent,"Message size for ineighbor-all-to-allc")
+TAU_GEN_EVENT(TheNalltoallvcEvent,"Message size for neighbor-all-to-allvc")
+TAU_GEN_EVENT(TheInalltoallvcEvent,"Message size for ineighbor-all-to-allvc")
+TAU_GEN_EVENT(TheNalltoallwcEvent,"Message size for neighbor-all-to-allwc")
+TAU_GEN_EVENT(TheInalltoallwcEvent,"Message size for ineighbor-all-to-allwc")
+
 
 TauContextUserEvent & TheMsgVolSendContextEvent(int tid) {
     static TauContextUserEvent ** sendEvents = NULL;
@@ -2118,6 +2177,8 @@ extern "C" void Tau_reducescatter_data(int data) {
   TAU_EVENT(TheReduceScatterEvent(), data);
 }
 
+
+//MPI-3
 extern "C" void Tau_ireduce_data(int data) {
   TAU_EVENT(TheIReduceEvent(), data);
 }
@@ -2217,6 +2278,223 @@ extern "C" void Tau_inalltoallv_data(int data) {
 extern "C" void Tau_inalltoallw_data(int data) {
   TAU_EVENT(TheInalltoallwEvent(), data);
 }
+
+extern "C" void Tau_reducescatterblock_data(int data) {
+  TAU_EVENT(TheReducescatterblockEvent(), data);
+}
+
+extern "C" void Tau_ireducescatterblock_data(int data) {
+  TAU_EVENT(TheIreducescatterblockEvent(), data);
+}
+
+//MPI-4
+extern "C" void Tau_isendrecv_data(int data) {
+  TAU_EVENT(TheIsendrecvEvent(), data);
+}
+
+extern "C" void Tau_isendrecv_rep_data(int data) {
+  TAU_EVENT(TheIsendrecvrepEvent(), data);
+}
+
+extern "C" void Tau_allgatherc_data(int data) {
+  TAU_EVENT(TheAllgathercEvent(), data);
+}
+
+extern "C" void Tau_iallgatherc_data(int data) {
+  TAU_EVENT(TheIallgathercEvent(), data);
+}
+
+extern "C" void Tau_allgathervc_data(int data) {
+  TAU_EVENT(TheAllgathervcEvent(), data);
+}
+
+extern "C" void Tau_iallgathervc_data(int data) {
+  TAU_EVENT(TheIallgathervcEvent(), data);
+}
+
+extern "C" void Tau_allreducec_data(int data) {
+  TAU_EVENT(TheAllreducecEvent(), data);
+}
+
+extern "C" void Tau_iallreducec_data(int data) {
+  TAU_EVENT(TheIallreducecEvent(), data);
+}
+
+extern "C" void Tau_alltoallc_data(int data) {
+  TAU_EVENT(TheAlltoallcEvent(), data);
+}
+
+extern "C" void Tau_ialltoallc_data(int data) {
+  TAU_EVENT(TheIalltoallcEvent(), data);
+}
+
+extern "C" void Tau_alltoallvc_data(int data) {
+  TAU_EVENT(TheAlltoallvcEvent(), data);
+}
+
+extern "C" void Tau_ialltoallvc_data(int data) {
+  TAU_EVENT(TheIalltoallvcEvent(), data);
+}
+
+extern "C" void Tau_alltoallwc_data(int data) {
+  TAU_EVENT(TheAlltoallwcEvent(), data);
+}
+
+extern "C" void Tau_ialltoallwc_data(int data) {
+  TAU_EVENT(TheIalltoallwcEvent(), data);
+}
+
+extern "C" void Tau_bcastc_data(int data) {
+  TAU_EVENT(TheBcastcEvent(), data);
+}
+
+extern "C" void Tau_ibcastc_data(int data) {
+  TAU_EVENT(TheIbcastcEvent(), data);
+}
+
+extern "C" void Tau_gatherc_data(int data) {
+  TAU_EVENT(TheGathercEvent(), data);
+}
+
+extern "C" void Tau_igatherc_data(int data) {
+  TAU_EVENT(TheIgathercEvent(), data);
+}
+
+extern "C" void Tau_gathervc_data(int data) {
+  TAU_EVENT(TheGathervcEvent(), data);
+}
+
+extern "C" void Tau_igathervc_data(int data) {
+  TAU_EVENT(TheIgathervcEvent(), data);
+}
+
+extern "C" void Tau_reducec_data(int data) {
+  TAU_EVENT(TheReducecEvent(), data);
+}
+
+extern "C" void Tau_ireducec_data(int data) {
+  TAU_EVENT(TheIreducecEvent(), data);
+}
+
+extern "C" void Tau_reducescatterc_data(int data) {
+  TAU_EVENT(TheReducescattercEvent(), data);
+}
+
+extern "C" void Tau_ireducescatterc_data(int data) {
+  TAU_EVENT(TheIreducescattercEvent(), data);
+}
+
+extern "C" void Tau_scanc_data(int data) {
+  TAU_EVENT(TheScancEvent(), data);
+}
+
+extern "C" void Tau_iscanc_data(int data) {
+  TAU_EVENT(TheIscancEvent(), data);
+}
+
+extern "C" void Tau_scatterc_data(int data) {
+  TAU_EVENT(TheScattercEvent(), data);
+}
+
+extern "C" void Tau_iscatterc_data(int data) {
+  TAU_EVENT(TheIscattercEvent(), data);
+}
+
+extern "C" void Tau_scattervc_data(int data) {
+  TAU_EVENT(TheScattervcEvent(), data);
+}
+
+extern "C" void Tau_iscattervc_data(int data) {
+  TAU_EVENT(TheIscattervcEvent(), data);
+}
+
+extern "C" void Tau_sendc_data(int data) {
+  TAU_EVENT(TheSendcEvent(), data);
+}
+
+extern "C" void Tau_isendc_data(int data) {
+  TAU_EVENT(TheIsendcEvent(), data);
+}
+
+extern "C" void Tau_recvc_data(int data) {
+  TAU_EVENT(TheRecvcEvent(), data);
+}
+
+extern "C" void Tau_irecvc_data(int data) {
+  TAU_EVENT(TheIrecvcEvent(), data);
+}
+
+extern "C" void Tau_sendrecvc_data(int data) {
+  TAU_EVENT(TheSendrecvcEvent(), data);
+}
+
+extern "C" void Tau_isendrecvc_data(int data) {
+  TAU_EVENT(TheIsendrecvcEvent(), data);
+}
+
+extern "C" void Tau_ssendc_data(int data) {
+  TAU_EVENT(TheSsendcEvent(), data);
+}
+
+extern "C" void Tau_issendc_data(int data) {
+  TAU_EVENT(TheIssendcEvent(), data);
+}
+
+extern "C" void Tau_reducescatterblockc_data(int data) {
+  TAU_EVENT(TheReducescatterblockcEvent(), data);
+}
+
+extern "C" void Tau_ireducescatterblockc_data(int data) {
+  TAU_EVENT(TheIreducescatterblockcEvent(), data);
+}
+
+
+
+
+
+
+//MPI-4 neighbor
+extern "C" void Tau_nallgatherc_data(int data) {
+  TAU_EVENT(TheNallgathercEvent(), data);
+}
+
+extern "C" void Tau_inallgatherc_data(int data) {
+  TAU_EVENT(TheInallgathercEvent(), data);
+}
+
+extern "C" void Tau_nallgathervc_data(int data) {
+  TAU_EVENT(TheNallgathervcEvent(), data);
+}
+
+extern "C" void Tau_inallgathervc_data(int data) {
+  TAU_EVENT(TheInallgathervcEvent(), data);
+}
+
+extern "C" void Tau_nalltoallc_data(int data) {
+  TAU_EVENT(TheNalltoallcEvent(), data);
+}
+
+extern "C" void Tau_inalltoallc_data(int data) {
+  TAU_EVENT(TheInalltoallcEvent(), data);
+}
+
+extern "C" void Tau_nalltoallvc_data(int data) {
+  TAU_EVENT(TheNalltoallvcEvent(), data);
+}
+
+extern "C" void Tau_inalltoallvc_data(int data) {
+  TAU_EVENT(TheInalltoallvcEvent(), data);
+}
+
+extern "C" void Tau_nalltoallwc_data(int data) {
+  TAU_EVENT(TheNalltoallwcEvent(), data);
+}
+
+extern "C" void Tau_inalltoallwc_data(int data) {
+  TAU_EVENT(TheInalltoallwcEvent(), data);
+}
+
+
 
 
 #else /* !(TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_GPI)*/
