@@ -11,13 +11,13 @@ function worker(id::Int, n::Int)
     return total
 end
 
-function main(f)
+function main()
     println("Running with $(nthreads()) thread(s)\n")
 
     num_workers = 100
     chunk_size  = 1_000_000
 
-    tasks = [@spawn(f(i, chunk_size)) for i in 1:num_workers]
+    tasks = [@spawn(worker(i, chunk_size)) for i in 1:num_workers]
 
     results = fetch.(tasks)
 
@@ -28,5 +28,5 @@ end
 
 tau_rewrite_exclude_module(Base)
 tau_rewrite_deferred_contexts(true)
-@tau_rewrite main(worker_inst)
+@tau_rewrite main()
 
