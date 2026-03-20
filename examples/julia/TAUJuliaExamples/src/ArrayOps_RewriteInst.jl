@@ -17,11 +17,9 @@ end
 function main()
     profile_test(1)
     profile_test(10)
-    profile_test(100)
-    profile_test(1000)
     println("Done")
 end
 
-set_rewrite_recursion_limit(Base, 1)
+tau_rewrite_set_recursion_limit(Base, 1)
 @tau_rewrite main()
 

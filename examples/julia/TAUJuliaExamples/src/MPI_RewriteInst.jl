@@ -32,5 +32,6 @@ function main()
 end
 
 MPI.Init()
+tau_rewrite_exclude_module(Base)
 @tau_rewrite main()
 MPI.Finalize()

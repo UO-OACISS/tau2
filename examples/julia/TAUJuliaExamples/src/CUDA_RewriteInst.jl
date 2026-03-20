@@ -9,5 +9,6 @@ function main()
     println("Done")
 end
 
+tau_rewrite_exclude_module(Base)
 @tau_rewrite main()
 

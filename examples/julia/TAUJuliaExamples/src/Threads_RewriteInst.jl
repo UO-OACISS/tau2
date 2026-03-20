@@ -26,8 +26,7 @@ function main(f)
     println("Sum:     $(round(sum(results); digits=4))")
 end
 
-rewrite_exclude_module(Base)
-worker_inst = @tau_prepare_rewrite worker(::Int, ::Int)
+tau_rewrite_exclude_module(Base)
+tau_rewrite_deferred_contexts(true)
 @tau_rewrite main(worker_inst)
-#main()
 

@@ -1,11 +1,19 @@
 module TAUProfile
 
-export tau_start, tau_stop, @tau, @tau_func, tau_rewrite, @tau_rewrite, @tau_prepare_rewrite,
-       set_rewrite_recursion_limit, set_rewrite_variant_limit, set_rewrite_ccall,
-       rewrite_exclude_function, rewrite_exclude_module, rewrite_reset_exclusions
+export tau_start, tau_stop, @tau, @tau_func, tau_rewrite_and_call, tau_rewrite, @tau_rewrite,
+       tau_rewrite_exclude_function, tau_rewrite_exclude_prefix, 
+       tau_rewrite_exclude_module, tau_rewrite_reset_exclusions,
+       tau_rewrite_set_recursion_limit, tau_rewrite_include_module_only,
+       tau_rewrite_deferred_contexts, tau_rewrite_set_min_complexity,
+       tau_rewrite_include_types
 
-using Core: SSAValue, ReturnNode, Argument, OpaqueClosure
-using Core.Compiler: IRCode, NewInstruction, insert_node!, compact!
+using Core: SSAValue, ReturnNode, CodeInstance, MethodInstance
+
+const CC = Core.Compiler
+
+###############################################################
+
+# Base TAU profiling functionality
 
 # Path to libTAU.so
 const libTAU = Ref{String}()
@@ -204,45 +212,12 @@ function _exit_hook(fname::String)
     tau_stop(fname)
 end
 
+# Blacklisting
 
-"""
-    LazyTraced(f)
-
-A mutable callable wrapper used to break circular dependencies during
-instrumentation of self-recursive or mutually-recursive functions.
-
-"""
-mutable struct LazyTraced
-    target::Any
-end
-(lt::LazyTraced)(args...) = lt.target(args...)
-
-"""
-    _wrap_with_hooks(oc, fname::String) -> callable
-
-Wrap an instrumented OpaqueClosure with entry/exit tracing.
-Calls `_entry_hook` before the OC and `_exit_hook` in a `finally` block,
-ensuring the exit hook runs on both normal return and exception paths.
-"""
-function _wrap_with_hooks(oc, fname::String)
-    return (args...) -> begin
-        _entry_hook(fname)
-        try
-            return oc(args...)
-        finally
-            _exit_hook(fname)
-        end
-    end
-end
-
-# Blacklist of functions to not instrument. Avoid printing functions
-# as we might print an error and can't println in a println.
-# Avoid arithmetic operations as instrumentation overhead is high.
 const BLACKLIST = Set{Symbol}([
-    # I/O functions
-    :println, :print, :string, :write, :error,
-    # Our own instrumentation hooks
-    :_entry_hook, :_exit_hook,
+    # I/O
+    :println, :print, :string, :write, :error, :throw,
+    :showerror, :show, :display, :repr,
     # Arithmetic and comparison operators
     Symbol("+"), Symbol("-"), Symbol("*"), Symbol("/"),
     Symbol("<"), Symbol(">"), Symbol("=="), Symbol("<="), Symbol(">="),
@@ -255,1074 +230,1259 @@ const BLACKLIST = Set{Symbol}([
     Symbol("\\="), Symbol("÷="), Symbol("%="), Symbol("^="),
     Symbol("&="), Symbol("|="), Symbol("⊻="), Symbol(">>>="),
     Symbol(">>="), Symbol("<<="),
-    :isequal, :isfinite, :isinf, :isnan,
     # Type conversion
-    :convert, :promote, :cconvert, :unsafe_convert,
+    :convert, :promote, :cconvert, :unsafe_convert, :oftype,
     # Array primitives
-    :arrayref, :arrayset, :arraysize,
-    # Accessors
-    :getproperty, :getindex, :setproperty!, :setindex!
+    :arrayref, :arrayset, :arraysize, :arraylen,
+    :getindex, :setindex!,
+    # Memory/pointer
+    :unsafe_load, :unsafe_store!, :pointer, :pointer_from_objref,
+    # Core operations that appear frequently
+    :iterate, :length, :size, :eltype, :similar,
+    :copy, :copyto!, :axes, :checkbounds,
+    # String operations (hooks use strings)
+    :sizeof, :codeunit, :ncodeunits, :isvalid,
+    # Hook functions themselves
+    :_entry_hook, :_exit_hook,
 ])
 
-"""User-specified function objects to exclude from tracing."""
+
 const USER_BLACKLIST_FUNCS = Set{Any}()
-
-"""User-specified function names (as Symbols) to exclude from tracing."""
 const USER_BLACKLIST_NAMES = Set{Symbol}()
+const USER_BLACKLIST_PREFIXES = Set{String}()
 
-"""User-specified modules to exclude from tracing."""
-const USER_BLACKLIST_MODULES = Set{Module}()
-
-"""User-specified module names (as Symbols) to exclude from tracing."""
-const USER_BLACKLIST_MODULE_NAMES = Set{Symbol}()
-
-"""Per-module recursion depth limits (by Module object). Value is (limit, exact)."""
-const _module_depth_limits = Dict{Module, Tuple{Int, Bool}}()
-
-"""Per-module recursion depth limits (by module name as Symbol). Value is (limit, exact)."""
-const _module_depth_name_limits = Dict{Symbol, Tuple{Int, Bool}}()
+# Module exclusions: (Module_or_Symbol, exact::Bool)
+const USER_BLACKLIST_MODULES = Dict{Module, Bool}()
+const USER_BLACKLIST_MODULE_NAMES = Dict{Symbol, Bool}()
 
 """
-    rewrite_exclude_function(f)
-    rewrite_exclude_function(name::Symbol)
-    rewrite_exclude_function(name::String)
+    tau_rewrite_exclude_function(f)
+    tau_rewrite_exclude_function(name::Symbol)
+    tau_rewrite_exclude_function(name::String)
+    tau_rewrite_exclude_function(items...)
 
-Exclude a function from being instrumented by `tau_rewrite`.
-Accepts a function object, a `Symbol` (e.g. `:add`), or a `String` (e.g. `"add"`).
+Exclude function(s) from tracing. Accepts function objects, Symbols, or Strings.
 """
-function rewrite_exclude_function(@nospecialize(f))
+function tau_rewrite_exclude_function(@nospecialize(f::Function))
     push!(USER_BLACKLIST_FUNCS, f)
-    return nothing
 end
-
-function rewrite_exclude_function(name::Symbol)
+function tau_rewrite_exclude_function(name::Symbol)
     push!(USER_BLACKLIST_NAMES, name)
-    return nothing
 end
-
-function rewrite_exclude_function(name::String)
+function tau_rewrite_exclude_function(name::String)
     push!(USER_BLACKLIST_NAMES, Symbol(name))
-    return nothing
 end
-
-"""
-    rewrite_exclude_module(m::Module)
-    rewrite_exclude_module(name::Symbol)
-    rewrite_exclude_module(name::String)
-
-Exclude all functions in a module from being instrumented by `tau_rewrite`.
-Accepts a `Module` object, a `Symbol` (e.g. `:Base`), or a `String` (e.g. `"Base"`).
-"""
-function rewrite_exclude_module(m::Module)
-    push!(USER_BLACKLIST_MODULES, m)
-    return nothing
-end
-
-function rewrite_exclude_module(name::Symbol)
-    push!(USER_BLACKLIST_MODULE_NAMES, name)
-    return nothing
-end
-
-function rewrite_exclude_module(name::String)
-    push!(USER_BLACKLIST_MODULE_NAMES, Symbol(name))
-    return nothing
-end
-
-"""
-    rewrite_reset_exclusions()
-
-Clear all user-specified exclusions set via `rewrite_exclude_function`, `rewrite_exclude_module`,
-`set_rewrite_recursion_limit`, and `set_rewrite_ccall`.
-"""
-function rewrite_reset_exclusions()
-    empty!(USER_BLACKLIST_FUNCS)
-    empty!(USER_BLACKLIST_NAMES)
-    empty!(USER_BLACKLIST_MODULES)
-    empty!(USER_BLACKLIST_MODULE_NAMES)
-    empty!(_module_depth_limits)
-    empty!(_module_depth_name_limits)
-    _rewrite_ccall_enabled[] = false
-    _max_multi_results[] = 16
-    return nothing
-end
-
-"""
-Check if a function should be rewritten based on the blacklist.
-"""
-function _should_rewrite(@nospecialize(f))
-    f isa Core.Builtin && return false
-    f isa Core.IntrinsicFunction && return false
-    f in USER_BLACKLIST_FUNCS && return false
-
-    fname = try nameof(f) catch; return false end
-    fname in BLACKLIST && return false
-    fname in USER_BLACKLIST_NAMES && return false
-
-    mod = try parentmodule(f) catch; return false end
-    mod === Core && return false
-    mod in USER_BLACKLIST_MODULES && return false
-    nameof(mod) in USER_BLACKLIST_MODULE_NAMES && return false
-
-    return true
-end
-
-"""
-    _replace_self_argument!(ir::IRCode, f) -> IRCode
-
-Replace all references to `Argument(1)` (the function/self slot) in the IR
-with the literal function value `f`. 
-
-"""
-function _replace_self_argument!(ir::IRCode, @nospecialize(f))
-    for i in 1:length(ir.stmts)
-        stmt = ir.stmts[i][:stmt]
-        if stmt isa Expr
-            for (j, arg) in enumerate(stmt.args)
-                if arg isa Argument && arg.n == 1
-                    stmt.args[j] = f
-                end
-            end
-        end
+function tau_rewrite_exclude_function(items...)
+    for item in items
+        tau_rewrite_exclude_function(item)
     end
-    return ir
 end
 
 """
-    _map_sparams_to_args(ir::IRCode, f, argtypes::Tuple) -> Vector{Union{Nothing, Tuple{Int,Int}}}
+    tau_rewrite_exclude_prefix(prefix::String)
+    tau_rewrite_exclude_prefix(prefix::Symbol)
+    tau_rewrite_exclude_prefix(prefixes...)
 
-Map each static parameter (TypeVar) to the (argument_index, type_parameter_index)
-where it first appears in the method signature. 
-
+Exclude all functions whose name starts with `prefix` from tracing.
 """
-function _map_sparams_to_args(ir::IRCode, @nospecialize(f), @nospecialize(argtypes::Tuple))
-    mi = ir.debuginfo.def
-    if mi isa Core.MethodInstance
-        meth = mi.def
-        if meth isa Method
-            sig = meth.sig
-        else
-            return nothing
-        end
-    else
-        # Fallback to methods() if no MethodInstance available
-        ms = try methods(f, Tuple{argtypes...}) catch; return nothing end
-        isempty(ms) && return nothing
-        sig = first(ms).sig
+function tau_rewrite_exclude_prefix(prefix::String)
+    push!(USER_BLACKLIST_PREFIXES, prefix)
+end
+function tau_rewrite_exclude_prefix(prefix::Symbol)
+    push!(USER_BLACKLIST_PREFIXES, String(prefix))
+end
+function tau_rewrite_exclude_prefix(prefixes...)
+    for p in prefixes
+        tau_rewrite_exclude_prefix(p)
     end
-
-    # Unwrap UnionAll layers to collect TypeVars and the body Tuple type
-    typevars = TypeVar[]
-    body = sig
-    while body isa UnionAll
-        push!(typevars, body.var)
-        body = body.body
-    end
-    isempty(typevars) && return nothing
-
-    # body.parameters[2:end] are the argument types
-    mapping = Vector{Union{Nothing, Tuple{Int,Int}}}(nothing, length(typevars))
-
-    for (arg_idx, param) in enumerate(body.parameters[2:end])
-        if param isa TypeVar
-            # Direct TypeVar argument: f(x::T) where T — typeof(x) gives T
-            for (tv_idx, tv) in enumerate(typevars)
-                if param === tv && mapping[tv_idx] === nothing
-                    mapping[tv_idx] = (arg_idx, 0)  # 0 = direct typeof
-                end
-            end
-        elseif param isa DataType && !isempty(param.parameters)
-            # Check for Type{T} pattern: f(::Type{T}) where T — arg IS T directly
-            is_type_param = param.name === Type.body.name
-            for (tp_idx, tp) in enumerate(param.parameters)
-                for (tv_idx, tv) in enumerate(typevars)
-                    if tp === tv && mapping[tv_idx] === nothing
-                        if is_type_param
-                            # Type{T}: the argument value IS the type T
-                            mapping[tv_idx] = (arg_idx, -1)  # -1 = arg is the type itself
-                        else
-                            # Parametric type: f(x::Foo{T}) where T — typeof(x).parameters[N]
-                            mapping[tv_idx] = (arg_idx, tp_idx)
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    return mapping
 end
 
 """
-    _insert_sparam_extraction!(ir::IRCode, mapping) -> Vector{Union{Nothing, SSAValue}}
+    tau_rewrite_exclude_module(m::Module; exact=false)
+    tau_rewrite_exclude_module(name::Symbol; exact=false)
+    tau_rewrite_exclude_module(name::String; exact=false)
 
-Insert IR instructions that extract type parameters from arguments at runtime.
+Exclude a module from tracing. By default, also excludes submodules.
+Pass `exact=true` to only exclude the exact module.
+"""
+function tau_rewrite_exclude_module(m::Module; exact::Bool=false)
+    USER_BLACKLIST_MODULES[m] = exact
+end
+function tau_rewrite_exclude_module(name::Symbol; exact::Bool=false)
+    USER_BLACKLIST_MODULE_NAMES[name] = exact
+end
+function tau_rewrite_exclude_module(name::String; exact::Bool=false)
+    USER_BLACKLIST_MODULE_NAMES[Symbol(name)] = exact
+end
+function tau_rewrite_exclude_module(items...; exact::Bool=false)
+    for item in items
+        tau_rewrite_exclude_module(item; exact)
+    end
+end
+
+# Module whitelist: when non-empty, ONLY whitelisted modules are traced
+# Module → exact_flag (same pattern as blacklist)
+const USER_WHITELIST_MODULES = Dict{Module, Bool}()
+const USER_WHITELIST_MODULE_NAMES = Dict{Symbol, Bool}()
 
 """
-function _insert_sparam_extraction!(ir::IRCode, mapping::Vector{Union{Nothing, Tuple{Int,Int}}})
-    ssa_values = Vector{Any}(nothing, length(mapping))
+    tau_rewrite_include_module_only(m::Module; exact=false)
+    tau_rewrite_include_module_only(name::Symbol; exact=false)
+    tau_rewrite_include_module_only(name::String; exact=false)
+    tau_rewrite_include_module_only(items...; exact=false)
 
-    # Cache: (arg_idx) → SSAValue for typeof(arg)
-    typeof_cache = Dict{Int, SSAValue}()
-    # Cache: (arg_idx) → SSAValue for typeof(arg).parameters
-    params_cache = Dict{Int, SSAValue}()
+Add module(s) to the whitelist. When the whitelist is non-empty, ONLY
+functions in whitelisted modules are instrumented — all other modules
+are skipped. The whitelist is checked after the built-in exclusions
+(Core, TAUProfile, BLACKLIST) so those still apply.
 
-    for (sp_idx, entry) in enumerate(mapping)
-        entry === nothing && continue
-        arg_idx, tp_idx = entry
+By default, whitelisting a module also whitelists all its submodules.
+Pass `exact=true` to whitelist only the exact module.
 
-        # Ensure we have typeof(arg) cached
-        if !haskey(typeof_cache, arg_idx)
-            typeof_inst = NewInstruction(
-                Expr(:call, GlobalRef(Core, :typeof), Argument(arg_idx + 1)),
-                DataType)
-            typeof_cache[arg_idx] = insert_node!(ir, 1, typeof_inst, false)
-        end
-
-        if tp_idx == -1
-            # Type{T} pattern: f(::Type{T}) where T — argument value IS the type
-            ssa_values[sp_idx] = Argument(arg_idx + 1)
-        elseif tp_idx == 0
-            # Direct TypeVar: f(x::T) where T — typeof(x) IS the type parameter
-            ssa_values[sp_idx] = typeof_cache[arg_idx]
-        else
-            # Parametric type: f(x::Foo{T}) where T — need typeof(x).parameters[N]
-            if !haskey(params_cache, arg_idx)
-                params_inst = NewInstruction(
-                    Expr(:call, GlobalRef(Core, :getfield), typeof_cache[arg_idx], QuoteNode(:parameters)),
-                    Core.SimpleVector)
-                params_cache[arg_idx] = insert_node!(ir, 1, params_inst, false)
-            end
-
-            extract_inst = NewInstruction(
-                Expr(:call, GlobalRef(Base, :getindex), params_cache[arg_idx], tp_idx),
-                Any)
-            ssa_values[sp_idx] = insert_node!(ir, 1, extract_inst, false)
-        end
+    tau_rewrite_include_module_only(MyModule)                  # MyModule + submodules
+    tau_rewrite_include_module_only(MyModule; exact=true)      # MyModule only
+    tau_rewrite_include_module_only(ModA, ModB)                 # both + submodules
+    tau_rewrite_include_module_only(:ModA, "ModB")              # by name
+"""
+function tau_rewrite_include_module_only(m::Module; exact::Bool=false)
+    USER_WHITELIST_MODULES[m] = exact
+end
+function tau_rewrite_include_module_only(name::Symbol; exact::Bool=false)
+    USER_WHITELIST_MODULE_NAMES[name] = exact
+end
+function tau_rewrite_include_module_only(name::String; exact::Bool=false)
+    tau_rewrite_include_module_only(Symbol(name); exact)
+end
+function tau_rewrite_include_module_only(items...; exact::Bool=false)
+    for item in items
+        tau_rewrite_include_module_only(item; exact)
     end
-
-    return ssa_values
 end
 
 """
-    _substitute_static_parameters!(ir::IRCode, f, argtypes::Tuple) -> Bool
+    _is_module_in_set(mod::Module, by_mod::Dict{Module,Bool}, by_name::Dict{Symbol,Bool}) -> Bool
 
-Resolve `Expr(:static_parameter, N)` nodes in the IR by looking up concrete
-sparam values from the MethodInstance. When concrete values are available,
-substitutes them directly. When sparams are abstract TypeVars, attempts runtime
-type parameter extraction by inserting IR that reads type parameters from
-arguments at runtime.
-
+Check if a module matches an entry in the given module/name dicts.
+For non-exact entries, also matches submodules by walking up the module hierarchy.
+Used by both `_is_module_whitelisted` and `_is_module_excluded`.
 """
-function _substitute_static_parameters!(ir::IRCode, @nospecialize(f), @nospecialize(argtypes::Tuple))
-    # Get concrete sparam values from the MethodInstance embedded in the IR.
-    mi = ir.debuginfo.def
-    !(mi isa Core.MethodInstance) && return true  # no MI available
-    sparam_vals = mi.sparam_vals
+function _is_module_in_set(mod::Module, by_mod::Dict{Module,Bool}, by_name::Dict{Symbol,Bool})
+    # Direct match (exact or not, the module itself always matches)
+    haskey(by_mod, mod) && return true
+    haskey(by_name, nameof(mod)) && return true
 
-    # Check whether any IR statements reference static parameters
-    has_sparam_nodes = any(i -> _has_static_parameter(ir.stmts[i][:stmt]), 1:length(ir.stmts))
-
-    if !has_sparam_nodes
-        # No :static_parameter nodes in IR
-        return true
-    end
-
-    # Check whether any sparams are abstract (TypeVar)
-    has_abstract_sparams = any(i -> sparam_vals[i] isa TypeVar, 1:length(sparam_vals))
-
-    if !has_abstract_sparams
-        # All sparams are concrete
-        for i in 1:length(ir.stmts)
-            if _has_static_parameter(ir.stmts[i][:stmt])
-                ir.stmts[i][:stmt] = _subst_sparams(ir.stmts[i][:stmt], sparam_vals)
-            end
+    # Walk parent modules for non-exact entries
+    current = mod
+    parent = parentmodule(current)
+    while parent !== current
+        if haskey(by_mod, parent)
+            !by_mod[parent] && return true
         end
-        return true
-    end
-
-    # Abstract sparams with :static_parameter nodes in IR — try runtime extraction.
-    mapping = _map_sparams_to_args(ir, f, argtypes)
-    mapping === nothing && return false
-
-    # Verify all sparams that are TypeVars AND referenced in IR can be mapped
-    for i in 1:length(sparam_vals)
-        if sparam_vals[i] isa TypeVar && mapping[i] === nothing
-            @debug "Cannot map sparam $i to argument type parameter"
-            return false
+        pname = nameof(parent)
+        if haskey(by_name, pname)
+            !by_name[pname] && return true
         end
-    end
-
-    # Insert runtime extraction IR
-    ssa_values = _insert_sparam_extraction!(ir, mapping)
-
-    # Rewrite statements to use substitute for sparam
-    for i in 1:length(ir.stmts)
-        if _has_static_parameter(ir.stmts[i][:stmt])
-            ir.stmts[i][:stmt] = _subst_sparams_mixed(ir.stmts[i][:stmt], sparam_vals, ssa_values)
-        end
-    end
-    return true
-end
-
-"""Check recursively whether an IR node contains any :static_parameter Expr."""
-function _has_static_parameter(@nospecialize(node))
-    if node isa Expr
-        node.head === :static_parameter && return true
-        for arg in node.args
-            _has_static_parameter(arg) && return true
-        end
+        current = parent
+        parent = parentmodule(current)
     end
     return false
 end
 
-"""Recursively substitute :static_parameter nodes with concrete values."""
-function _subst_sparams(@nospecialize(node), sparam_vals::Core.SimpleVector)
-    if node isa Expr
-        if node.head === :static_parameter
-            return sparam_vals[node.args[1]::Int]
-        end
-        for (j, arg) in enumerate(node.args)
-            node.args[j] = _subst_sparams(arg, sparam_vals)
-        end
-    end
-    return node
+_is_module_whitelisted(mod::Module) = _is_module_in_set(mod, USER_WHITELIST_MODULES, USER_WHITELIST_MODULE_NAMES)
+
+
+# Deferred-execution context tracing (Phase 2b): off by default
+const _trace_deferred = Ref(false)
+
+"""
+    tau_rewrite_deferred_contexts(enabled::Bool=true)
+
+Enable or disable tracing of deferred-execution contexts (`@spawn`, `@async`,
+callbacks). When enabled, Phase 2b discovers and source-patches user-module
+methods that weren't in the compiler's inference walk, so that functions
+called from spawned tasks also produce entry/exit hooks.
+
+Disabled by default. Reset to `false` by `tau_rewrite_reset_exclusions()`.
+
+    tau_rewrite_deferred_contexts()       # enable
+    tau_rewrite_deferred_contexts(true)   # enable
+    tau_rewrite_deferred_contexts(false)  # disable
+"""
+function tau_rewrite_deferred_contexts(enabled::Bool=true)
+    _trace_deferred[] = enabled
 end
 
-"""Recursively substitute :static_parameter nodes using a mix of concrete values and SSA values."""
-function _subst_sparams_mixed(@nospecialize(node), sparam_vals::Core.SimpleVector,
-                              ssa_values::Vector{Any})
-    if node isa Expr
-        if node.head === :static_parameter
-            idx = node.args[1]::Int
-            # Use concrete value if available, otherwise SSA value from runtime extraction
-            if !(sparam_vals[idx] isa TypeVar)
-                return sparam_vals[idx]
-            else
-                return ssa_values[idx]
+"""
+    tau_rewrite_reset_exclusions()
+
+Clear all user-defined exclusions, per-module depth limits, and deferred-context tracing.
+"""
+function tau_rewrite_reset_exclusions()
+    empty!(USER_BLACKLIST_FUNCS)
+    empty!(USER_BLACKLIST_NAMES)
+    empty!(USER_BLACKLIST_PREFIXES)
+    empty!(USER_BLACKLIST_MODULES)
+    empty!(USER_BLACKLIST_MODULE_NAMES)
+    empty!(USER_WHITELIST_MODULES)
+    empty!(USER_WHITELIST_MODULE_NAMES)
+    empty!(_module_depth_limits)
+    empty!(_module_depth_name_limits)
+    _max_depth[] = typemax(Int)
+    _trace_deferred[] = false
+    _min_complexity[] = 0
+    _complexity_skip_loops[] = true
+    _include_types[] = false
+end
+
+# Complexity filter
+
+# Minimum number of "interesting" IR statements for a function to be instrumented.
+# Functions below this threshold are skipped # unless they contain a loop.
+# The default value of 0 disables filtering.
+const _min_complexity = Ref{Int}(0)
+
+# When true (default), functions containing loops are always instrumented regardless
+# of the complexity threshold. When false, the complexity threshold applies uniformly.
+const _complexity_skip_loops = Ref{Bool}(true)
+
+"""
+    tau_rewrite_set_min_complexity(n::Int; skip_loops::Bool=true)
+
+Set the minimum number of "interesting" IR statements a function must have to be
+instrumented. Functions with fewer statements are skipped to reduce tracing overhead
+for trivial functions (simple getters, arithmetic wrappers, etc.).
+
+- `n = 0` disables the filter (default; all functions are instrumented).
+- `skip_loops = true` (default) means functions containing loops are always instrumented.
+
+    tau_rewrite_set_min_complexity(5)              # skip functions with < 5 interesting stmts
+    tau_rewrite_set_min_complexity(10; skip_loops=false)  # apply even to functions with loops
+    tau_rewrite_set_min_complexity(0)              # disable (default)
+"""
+function tau_rewrite_set_min_complexity(n::Int; skip_loops::Bool=true)
+    n < 0 && throw(ArgumentError("min complexity must be non-negative, got $n"))
+    _min_complexity[] = n
+    _complexity_skip_loops[] = skip_loops
+end
+
+"""
+    _count_complexity(stmts, n::Int) -> (interesting::Int, has_loop::Bool)
+
+Count "interesting" IR statements (calls, foreigncalls, invokes, allocations)
+and detect loops (backward branches).
+"""
+function _count_complexity(get_stmt, n::Int)
+    has_loop = false
+    interesting = 0
+    check_loops = _complexity_skip_loops[]
+
+    for i in 1:n
+        stmt = get_stmt(i)
+
+        if !has_loop && check_loops
+            if stmt isa Core.GotoNode
+                stmt.label <= i && (has_loop = true)
+            elseif stmt isa Core.GotoIfNot
+                stmt.dest <= i && (has_loop = true)
             end
         end
-        for (j, arg) in enumerate(node.args)
-            node.args[j] = _subst_sparams_mixed(arg, sparam_vals, ssa_values)
-        end
-    end
-    return node
-end
 
-"""Module prefix string for a function, e.g. `"Base."`. """
-_mod_prefix(@nospecialize(f)) = try string(parentmodule(f)) * "." catch; "" end
-
-"""
-    _function_label(f, argtypes::Tuple; ir=nothing) -> String
-
-Build a human-readable label for a function including its name, argument types,
-and source location. 
-"""
-function _function_label(@nospecialize(f), @nospecialize(argtypes::Tuple); ir::Union{IRCode,Nothing}=nothing)
-    # For kwcall, build a more readable label showing the target function
-    if f === Core.kwcall && length(argtypes) >= 2
-        target_type = argtypes[2]
-        if isconcretetype(target_type) && target_type <: Function && isdefined(target_type, :instance)
-            target_f = target_type.instance
-            pos_types = argtypes[3:end]
-            name = _mod_prefix(target_f) * string(target_f) * "(" * join(string.(pos_types), ", ") * ")"
-            file, line = _source_location(f, argtypes, ir)
-            return file !== nothing ? "$name [{$file} {$line}]" : name
-        end
-    end
-
-    mod_prefix = _mod_prefix(f)
-    fname_str = string(f)
-    # Transform `#fname#NNN` kwarg body names into `fname`
-    m_kw = match(r"^#(.+)#\d+$", fname_str)
-    if m_kw !== nothing
-        fname_str = m_kw.captures[1]
-    end
-    name = mod_prefix * fname_str * "(" * join(string.(argtypes), ", ") * ")"
-    file, line = _source_location(f, argtypes, ir)
-    return file !== nothing ? "$name [{$file} {$line}]" : name
-end
-
-"""
-    _source_location(f, argtypes, ir) -> (file, line) or (nothing, nothing)
-
-Get the source file and line for a function. 
-
-"""
-function _source_location(@nospecialize(f), @nospecialize(argtypes::Tuple), ir::Union{IRCode,Nothing})
-    if ir !== nothing
-        mi = ir.debuginfo.def
-        if mi isa Core.MethodInstance
-            meth = mi.def
-            if meth isa Method
-                return string(meth.file), meth.line
+        if stmt isa Expr
+            head = stmt.head
+            if head === :call || head === :invoke || head === :foreigncall || head === :new || head === :splatnew
+                interesting += 1
             end
         end
     end
-    ms = try methods(f, Tuple{argtypes...}) catch; return (nothing, nothing) end
-    if length(ms) == 1
-        m = only(ms)
-        return string(m.file), m.line
-    end
-    return nothing, nothing
+
+    return interesting, has_loop
 end
 
 """
-    _ir_arg_type(ir::IRCode, arg) -> Type
+    _is_complex_enough(ir::CC.IRCode) -> Bool
+    _is_complex_enough(src::Core.CodeInfo) -> Bool
 
-Extract the widened concrete type of an IR argument (Argument, SSAValue, or literal).
+Check whether IR has enough complexity to warrant instrumentation.
+Returns `true` if the function should be instrumented.
+"""
+function _is_complex_enough(ir::CC.IRCode)
+    min_c = _min_complexity[]
+    min_c == 0 && return true
+    interesting, has_loop = _count_complexity(i -> ir.stmts[i][:stmt], length(ir.stmts))
+    (has_loop && _complexity_skip_loops[]) && return true
+    return interesting >= min_c
+end
+
+function _is_complex_enough(src::Core.CodeInfo)
+    min_c = _min_complexity[]
+    min_c == 0 && return true
+    interesting, has_loop = _count_complexity(i -> src.code[i], length(src.code))
+    (has_loop && _complexity_skip_loops[]) && return true
+    return interesting >= min_c
+end
+
+# Label formatting options
+
+# When true, include argument types in labels.
+# When false (default), omit types.
+const _include_types = Ref(false)
 
 """
-function _ir_arg_type(ir::IRCode, @nospecialize(arg))
-    if arg isa Argument
-        return Core.Compiler.widenconst(ir.argtypes[arg.n])
-    elseif arg isa SSAValue
-        return Core.Compiler.widenconst(ir.stmts[arg.id][:type])
-    elseif arg isa QuoteNode
-        return typeof(arg.value)
-    elseif arg isa GlobalRef
-        return typeof(getfield(arg.mod, arg.name))
-    else
-        return typeof(arg)
-    end
+    tau_rewrite_include_types(enabled::Bool=true)
+
+Control whether argument types are included in trace labels.
+
+- `true`: labels show types, e.g. `Module.func(Int64, String) [{file} {line}]`
+- `false` (default): labels omit types, e.g. `Module.func [{file} {line}]`
+"""
+function tau_rewrite_include_types(enabled::Bool=true)
+    _include_types[] = enabled
+end
+
+# Per-module recursion depth limits
+
+# Global depth limit
+const _max_depth = Ref{Int}(typemax(Int))
+
+# Per-module limits
+const _module_depth_limits = Dict{Module, Tuple{Int, Bool}}()
+const _module_depth_name_limits = Dict{Symbol, Tuple{Int, Bool}}()
+
+function _normalize_limit(n::Int, name::String)
+    n < 0 && throw(ArgumentError("$name must be non-negative, got $n"))
+    return n == 0 ? typemax(Int) : n  # 0 means unlimited
 end
 
 """
-    _extract_call_matches(info) -> Union{Nothing, Vector{Any}}
+    tau_rewrite_set_recursion_limit(n::Int)
+    tau_rewrite_set_recursion_limit(mod::Module, n::Int; exact=false)
+    tau_rewrite_set_recursion_limit(name::Symbol, n::Int; exact=false)
+    tau_rewrite_set_recursion_limit(name::String, n::Int; exact=false)
 
-Extract `MethodMatch` array from compiler `CallInfo` subtypes stored in `ir.stmts[i][:info]`.
+Set recursion depth limits for tracing. The global limit controls the maximum
+depth from the root function. Per-module limits are relative to the module.
+A value of 0 disables the recursion limit.
 
+    tau_rewrite_set_recursion_limit(20)              # global limit
+    tau_rewrite_set_recursion_limit(Base, 1)         # trace top-level Base calls only
+    tau_rewrite_set_recursion_limit(:Base, 1)        # same, by name
+    tau_rewrite_set_recursion_limit(Base, 1; exact=true)  # only Base, not submodules of Base
 """
-function _extract_call_matches(@nospecialize(info))::Union{Nothing, Vector{Any}}
-    # Unwrap wrapper types
-    if isa(info, Core.Compiler.ConstCallInfo)
-        info = info.call
-    end
-    if isa(info, Core.Compiler.MethodResultPure)
-        info = info.info
-    end
-    # Extract matches
-    if isa(info, Core.Compiler.MethodMatchInfo)
-        return info.results.matches
-    elseif isa(info, Core.Compiler.UnionSplitInfo)
-        all = Any[]
-        for part in info.split
-            append!(all, part.results.matches)
-        end
-        return all
-    end
-    return nothing  # NoCallInfo or unrecognized
+function tau_rewrite_set_recursion_limit(n::Int)
+    _max_depth[] = _normalize_limit(n, "recursion limit")
+end
+function tau_rewrite_set_recursion_limit(mod::Module, n::Int; exact::Bool=false)
+    _module_depth_limits[mod] = (_normalize_limit(n, "recursion limit"), exact)
+end
+function tau_rewrite_set_recursion_limit(name::Symbol, n::Int; exact::Bool=false)
+    _module_depth_name_limits[name] = (_normalize_limit(n, "recursion limit"), exact)
+end
+function tau_rewrite_set_recursion_limit(name::String, n::Int; exact::Bool=false)
+    tau_rewrite_set_recursion_limit(Symbol(name), n; exact)
 end
 
 """
-    _argtypes_from_match(match) -> Union{Tuple, Nothing}
+    _is_base_or_core(mod::Module) -> Bool
 
-Extract user argtypes from a `MethodMatch.spec_types`.
-Returns `nothing` if `spec_types` contains unresolved type parameters (UnionAll or TypeVar).
-
+Check if a module is Base, Core, or a submodule of either.
 """
-function _argtypes_from_match(match)::Union{Tuple, Nothing}
-    spec = match.spec_types
-    # Unwrap UnionAll to get the DataType body
-    while spec isa UnionAll
-        spec = spec.body
-    end
-    spec isa DataType || return nothing
-    params = spec.parameters
-    length(params) >= 1 || return nothing
-    # Check that no parameter is still abstract (TypeVar or UnionAll)
-    for i in 2:length(params)
-        p = params[i]
-        (p isa TypeVar || p isa UnionAll) && return nothing
-    end
-    return tuple(params[2:end]...)
-end
-
-"""
-    _rewrite_matches(f, matches, depth, callee_max, cache) -> Vector{Tuple{Tuple, Any}}
-
-Trace each match from a `MethodMatch` array, returning `(argtypes, traced)` pairs.
-Skips matches with unresolvable argtypes (UnionAll/TypeVar).
-"""
-function _rewrite_matches(@nospecialize(f), matches, depth::Int, callee_max::Int, cache::Dict{Any,Any})
-    rewritten_pairs = Tuple{Tuple, Any}[]
-    for match in matches
-        match_argtypes = _argtypes_from_match(match)
-        match_argtypes === nothing && continue
-        traced = try
-            _tau_rewrite_recursive(f, match_argtypes, depth + 1, callee_max, cache)
-        catch ex
-            @warn "Could not trace $f with $match_argtypes: $ex"
-            nothing
-        end
-        traced !== nothing && push!(rewritten_pairs, (match_argtypes, traced))
-    end
-    return rewritten_pairs
-end
-
-"""
-    _build_dispatch_shim(f, rewritten_pairs::Vector{Tuple{Tuple, Any}}) -> callable
-
-Build a runtime dispatch closure that tries each traced version by type matching,
-with uninstrumented `f` as fallback. 
-
-"""
-function _build_dispatch_shim(@nospecialize(f), rewritten_pairs::Vector{Tuple{Tuple, Any}})
-    return (args...) -> begin
-        for (types, rewritten_f) in rewritten_pairs
-            length(args) == length(types) || continue
-            matched = true
-            for i in 1:length(types)
-                if !(args[i] isa types[i])
-                    matched = false
-                    break
-                end
-            end
-            matched && return rewritten_f(args...)
-        end
-        return f(args...)
+function _is_base_or_core(mod::Module)
+    current = mod
+    while true
+        (current === Base || current === Core) && return true
+        parent = parentmodule(current)
+        parent === current && return false
+        current = parent
     end
 end
 
 """
-    _resolve_callee(ir::IRCode, callee) -> Union{Function, Nothing}
-
-Try to resolve a call-site callee to a concrete function value.
-
+Check if a function name matches any user-defined blacklist prefix.
 """
-function _resolve_callee(ir::IRCode, @nospecialize(callee))
-    if callee isa GlobalRef
-        return try getfield(callee.mod, callee.name) catch; nothing end
+function _matches_blacklist_prefix(fname::Symbol)
+    isempty(USER_BLACKLIST_PREFIXES) && return false
+    fname_str = String(fname)
+    for prefix in USER_BLACKLIST_PREFIXES
+        startswith(fname_str, prefix) && return true
     end
-    # Literal function constant embedded in IR (e.g. module-qualified calls like
-    if callee isa Function
-        return callee
-    end
-    if callee isa Argument || callee isa SSAValue
-        T = _ir_arg_type(ir, callee)
-        # Singleton function types have exactly one instance
-        if isconcretetype(T) && T <: Function && isdefined(T, :instance)
-            return T.instance
-        end
-    end
-    return nothing
+    return false
 end
 
-"""
-    _detect_varargs(ir::IRCode, f, argtypes::Tuple) -> (is_varargs::Bool, n_fixed::Int)
+_is_module_excluded(mod::Module) = _is_module_in_set(mod, USER_BLACKLIST_MODULES, USER_BLACKLIST_MODULE_NAMES)
 
-Check whether the IR expects a packed varargs tuple as its last argument.
-Returns `(true, n_fixed)` if so, where `n_fixed` is the number of non-varargs parameters.
+# Filtering helper functions
 
 """
-function _detect_varargs(ir::IRCode, @nospecialize(f), @nospecialize(argtypes::Tuple))
-    n_ir_args = length(ir.argtypes) - 1
+    _within_depth_limit(mi::MethodInstance, depth::Int, mod_depth::Int) -> Bool
 
-    # Authoritative check: get the Method from the MethodInstance embedded in the IR
-    mi = ir.debuginfo.def
-    if mi isa Core.MethodInstance
-        meth = mi.def
-        if meth isa Method
-            return (meth.isva, n_ir_args - (meth.isva ? 1 : 0))
+Check whether a MethodInstance at the given depth should be instrumented
+based on global and per-module depth limits.
+"""
+function _within_depth_limit(mi::MethodInstance, depth::Int, mod_depth::Int)
+    global_max = _max_depth[]
+    # Check if no limits set
+    global_max == typemax(Int) && isempty(_module_depth_limits) && isempty(_module_depth_name_limits) && return true
+
+    # Check against global limit
+    depth >= global_max && return false
+
+    # Check against per-module limit
+    method = mi.def
+    isa(method, Method) || return true
+    mod = method.module
+
+    if !isempty(_module_depth_limits) || !isempty(_module_depth_name_limits)
+        mod_limit = _module_limit_for(mod)
+        if mod_limit !== nothing
+            return mod_depth < mod_limit
         end
     end
 
-    # Fallback heuristic for cases where no MethodInstance is available
-    caller_sig = Tuple{argtypes...}
-    oc_sig = Tuple{(Core.Compiler.widenconst.(ir.argtypes[2:end]))...}
-    last_oc_type = n_ir_args > 0 ? Core.Compiler.widenconst(ir.argtypes[end]) : Nothing
-    is_varargs = !(caller_sig <: oc_sig) && last_oc_type <: Tuple
-    return (is_varargs, n_ir_args - 1)
+    return true
 end
 
 """
-    _max_depth_for(f, depth::Int, global_max::Int) -> Int
+    _module_limit_for(mod::Module) -> Union{Int, Nothing}
 
-Resolve the effective max recursion depth for function `f` based on per-module limits.
-Per-module limits are relative.  Falls back to `global_max` if no per-module limit is set.
-
+Look up the per-module depth limit for `mod`, considering the limit
+for this module or any parent.
 """
-function _max_depth_for(@nospecialize(f), depth::Int, global_max::Int)
-    mod = try parentmodule(f) catch; return global_max end
+function _module_limit_for(mod::Module)
     current = mod
     while true
         if haskey(_module_depth_limits, current)
             limit, exact = _module_depth_limits[current]
             if current === mod || !exact
-                return min(depth + limit, global_max)
+                return limit
             end
         end
         if haskey(_module_depth_name_limits, nameof(current))
             limit, exact = _module_depth_name_limits[nameof(current)]
             if current === mod || !exact
-                return min(depth + limit, global_max)
+                return limit
             end
         end
         parent = parentmodule(current)
         parent === current && break
         current = parent
     end
-    return global_max
+    return nothing
 end
 
 """
-    _foreigncall_label(stmt::Expr) -> String
+    _passes_common_exclusions(mod::Module, fname::Symbol) -> Bool
 
-Extract a human-readable label from a :foreigncall expression.
-The function name is the first argument (a QuoteNode wrapping a Symbol or a tuple).
-
+Shared exclusion checks used by both `_should_instrument` and `_should_patch_method`.
 """
-function _foreigncall_label(stmt::Expr)
-    name = stmt.args[1]
-    if name isa QuoteNode
-        name = name.value
+function _passes_common_exclusions(mod::Module, fname::Symbol)
+    mod === Core && return false
+    mod === TAUProfile && return false
+    fname in BLACKLIST && return false
+    fname in USER_BLACKLIST_NAMES && return false
+    _matches_blacklist_prefix(fname) && return false
+    _is_module_excluded(mod) && return false
+    if !isempty(USER_WHITELIST_MODULES) || !isempty(USER_WHITELIST_MODULE_NAMES)
+        _is_module_whitelisted(mod) || return false
     end
-    return "@ccall $name"
-end
-
-# Special-case handlers for types of calls
-# not represented directly by :call in the IR
-
-"""
-    _handle_invoke!(ir, i, stmt, depth, max_depth, cache) -> Bool
-
-Handle `Core.invoke(f, Tuple{T...}, args...)` produced by `@invoke`.
-
-"""
-function _handle_invoke!(ir::IRCode, i::Int, stmt::Expr,
-                         depth::Int, max_depth::Int, cache::Dict{Any,Any})
-    length(stmt.args) >= 4 || return false
-    target_ref = stmt.args[2]
-    target_f = _resolve_callee(ir, target_ref)
-    target_f === nothing && return true
-    _should_rewrite(target_f) || return true
-
-    callee_max = _max_depth_for(target_f, depth, max_depth)
-    depth < callee_max || return true
-
-    # Try compiler call info for precise type resolution
-    invoke_info = ir.stmts[i][:info]
-    invoke_call_argtypes = nothing
-    if isa(invoke_info, Core.Compiler.InvokeCallInfo)
-        invoke_call_argtypes = _argtypes_from_match(invoke_info.match)
-    end
-    if invoke_call_argtypes === nothing
-        invoke_call_argtypes = tuple([_ir_arg_type(ir, a) for a in stmt.args[4:end]]...)
-    end
-    rewritten_target = try
-        _tau_rewrite_recursive(target_f, invoke_call_argtypes, depth + 1, callee_max, cache)
-    catch ex
-        @warn "Could not trace Core.invoke target $target_f: $ex"
-        return true
-    end
-    # Rewrite: Core.invoke(f, types, args...) --> rewritten_f(args...)
-    ir.stmts[i][:stmt] = Expr(:call, rewritten_target, stmt.args[4:end]...)
     return true
 end
 
 """
-    _handle_kwcall!(ir, i, stmt, depth, max_depth, cache) -> Bool
+    _should_instrument(mi::MethodInstance, depth::Int, mod_depth::Int) -> Bool
 
-Handle `Core.kwcall(kwargs::NamedTuple, f, args...)` produced by keyword
-argument calls. 
-
+Determine whether a MethodInstance should have tracing hooks inserted.
 """
-function _handle_kwcall!(ir::IRCode, i::Int, stmt::Expr,
-                         depth::Int, max_depth::Int, cache::Dict{Any,Any})
-    length(stmt.args) >= 3 || return false
+function _should_instrument(mi::MethodInstance, depth::Int=0, mod_depth::Int=0)
+    method = mi.def
+    isa(method, Method) || return false
 
-    # stmt.args = [Core.kwcall, kwargs, target_f, positional_args...]
-    # Check if the target function (args[3]) should be traced
-    target_ref = stmt.args[3]
-    target_f = _resolve_callee(ir, target_ref)
-    (target_f !== nothing && !_should_rewrite(target_f)) && return true
+    _passes_common_exclusions(method.module, method.name) || return false
 
-    # Use the target function's module depth limit (not Core.kwcall's)
-    callee_max = target_f !== nothing ? _max_depth_for(target_f, depth, max_depth) : max_depth
-    depth < callee_max || return true
+    try
+        f = _mi_function(mi)
+        if f !== nothing && f in USER_BLACKLIST_FUNCS
+            return false
+        end
+    catch
+    end
 
-    # Try compiler call info for precise type resolution
-    kwcall_argtypes = nothing
-    kw_matches = _extract_call_matches(ir.stmts[i][:info])
-    if kw_matches !== nothing && length(kw_matches) == 1
-        kwcall_argtypes = _argtypes_from_match(kw_matches[1])
-    end
-    if kwcall_argtypes === nothing
-        kwcall_argtypes = tuple([_ir_arg_type(ir, a) for a in stmt.args[2:end]]...)
-    end
-    rewritten_kwcall = try
-        _tau_rewrite_recursive(Core.kwcall, kwcall_argtypes, depth + 1, callee_max, cache)
-    catch ex
-        @warn "Could not trace Core.kwcall: $ex"
-        return true
-    end
-    stmt.args[1] = rewritten_kwcall
+    _within_depth_limit(mi, depth, mod_depth) || return false
+
     return true
 end
 
 """
-    _handle_apply_iterate!(ir, i, stmt, depth, max_depth, cache) -> Bool
+Extract the function object from a MethodInstance, if possible.
+"""
+function _mi_function(mi::MethodInstance)
+    ft = mi.specTypes.parameters[1]
+    if isdefined(ft, :instance)
+        return ft.instance
+    end
+    return nothing
+end
 
-Handle `Core._apply_iterate(iterate, f, args...)` produced by splatting.
+# Label building (TAU timer names)
 
 """
-function _handle_apply_iterate!(ir::IRCode, i::Int, stmt::Expr,
-                                depth::Int, max_depth::Int, cache::Dict{Any,Any})
-    length(stmt.args) >= 3 || return false
-    target_ref = stmt.args[3]
-    target_f = _resolve_callee(ir, target_ref)
-    target_f === nothing && return true
-    _should_rewrite(target_f) || return true
+    _clean_fname(name::Symbol) -> String
 
-    callee_max = _max_depth_for(target_f, depth, max_depth)
-    depth < callee_max || return true
-
-    # Try compiler call info 
-    apply_info = ir.stmts[i][:info]
-    if isa(apply_info, Core.Compiler.ApplyCallInfo)
-        inner_matches = _extract_call_matches(apply_info.call)
-        if inner_matches !== nothing && !isempty(inner_matches)
-            rewritten_pairs = _rewrite_matches(target_f, inner_matches, depth, callee_max, cache)
-            if length(rewritten_pairs) == 1 && length(inner_matches) == 1
-                stmt.args[3] = rewritten_pairs[1][2]
-                return true
-            elseif !isempty(rewritten_pairs)
-                stmt.args[3] = _build_dispatch_shim(target_f, rewritten_pairs)
-                return true
-            end
-        end
-    end
-
-    # Fallback: manually unpack tuple types from splatted containers
-    splat_arg_types = tuple([_ir_arg_type(ir, a) for a in stmt.args[4:end]]...)
-    unpacked_types = Type[]
-    for T in splat_arg_types
-        if T <: Tuple
-            for j in 1:fieldcount(T)
-                push!(unpacked_types, fieldtype(T, j))
-            end
-        else
-            return true
-        end
-    end
-    call_argtypes = tuple(unpacked_types...)
-
-    rewritten_target = try
-        _tau_rewrite_recursive(target_f, call_argtypes, depth + 1, callee_max, cache)
-    catch ex
-        @warn "Could not trace _apply_iterate target $target_f: $ex"
-        return true
-    end
-    stmt.args[3] = rewritten_target
-    return true
+Clean/demangle kwarg body names.
+"""
+function _clean_fname(name::Symbol)
+    s = string(name)
+    m_kw = match(r"^#(.+)#\d+$", s)
+    m_kw !== nothing ? m_kw.captures[1] : s
 end
 
 """
-    _handle_invokelatest!(ir, i, stmt, depth, max_depth, cache) -> Bool
+    _format_argtypes(argtypes; widen::Bool=false) -> String
 
-Handle `Core._call_latest(f, args...)` produced by `Base.invokelatest`.
-
+Format a list of type parameters as a comma-separated string.
 """
-function _handle_invokelatest!(ir::IRCode, i::Int, stmt::Expr,
-                               depth::Int, max_depth::Int, cache::Dict{Any,Any})
-    length(stmt.args) >= 2 || return false
-    target_ref = stmt.args[2]
-    target_f = _resolve_callee(ir, target_ref)
-    target_f === nothing && return true
-    _should_rewrite(target_f) || return true
-
-    callee_max = _max_depth_for(target_f, depth, max_depth)
-    depth < callee_max || return true
-
-    call_argtypes = tuple([_ir_arg_type(ir, a) for a in stmt.args[3:end]]...)
-    rewritten_target = try
-        _tau_rewrite_recursive(target_f, call_argtypes, depth + 1, callee_max, cache)
-    catch ex
-        @warn "Could not trace invokelatest target $target_f: $ex"
-        return true
-    end
-    stmt.args[2] = rewritten_target
-    return true
-end
-
-"""
-    _handle_invoke_in_world!(ir, i, stmt, depth, max_depth, cache) -> Bool
-
-Handle `Core.invoke_in_world(world, f, args...)` produced by `Base.invoke_in_world`. 
-
-"""
-function _handle_invoke_in_world!(ir::IRCode, i::Int, stmt::Expr,
-                                  depth::Int, max_depth::Int, cache::Dict{Any,Any})
-    length(stmt.args) >= 3 || return false
-    target_ref = stmt.args[3]
-    target_f = _resolve_callee(ir, target_ref)
-    target_f === nothing && return true
-    _should_rewrite(target_f) || return true
-
-    callee_max = _max_depth_for(target_f, depth, max_depth)
-    depth < callee_max || return true
-
-    call_argtypes = tuple([_ir_arg_type(ir, a) for a in stmt.args[4:end]]...)
-    rewritten_target = try
-        _tau_rewrite_recursive(target_f, call_argtypes, depth + 1, callee_max, cache)
-    catch ex
-        @warn "Could not trace invoke_in_world target $target_f: $ex"
-        return true
-    end
-    stmt.args[3] = rewritten_target
-    return true
-end
-
-"""
-    _instrument_single_ir(f, ir::IRCode, argtypes::Tuple, depth::Int, max_depth::Int, cache::Dict{Any,Any}) -> callable or nothing
-
-Instrument an IRCode: walk callees and rewrite call sites,
-create OpaqueClosure, wrap with entry/exit hooks.
-Returns the wrapped callable on success, or `nothing` on failure.
-
-"""
-function _instrument_single_ir(@nospecialize(f), ir::IRCode, @nospecialize(argtypes::Tuple),
-                                depth::Int, max_depth::Int, cache::Dict{Any,Any})
-    fname = _function_label(f, argtypes; ir=ir)
-
-    _replace_self_argument!(ir, f)
-
-    rewrite_ccall = _rewrite_ccall_enabled[]
-    foreigncall_positions = rewrite_ccall ? Int[] : nothing
-    for i in 1:length(ir.stmts)
-        stmt = ir.stmts[i][:stmt]
-        stmt isa Expr || continue
-
-        if stmt.head === :call
-            callee_ref = stmt.args[1]
-            callee_f = _resolve_callee(ir, callee_ref)
-            callee_f === nothing && continue
-
-            # Special-case handlers for alternate types of function dispatch
-            if callee_f === Core.invoke
-                _handle_invoke!(ir, i, stmt, depth, max_depth, cache) && continue
-            elseif callee_f === Core.kwcall
-                _handle_kwcall!(ir, i, stmt, depth, max_depth, cache) && continue
-            elseif callee_f === Core._apply_iterate
-                _handle_apply_iterate!(ir, i, stmt, depth, max_depth, cache) && continue
-            elseif callee_f === invokelatest
-                _handle_invokelatest!(ir, i, stmt, depth, max_depth, cache) && continue
-            elseif callee_f === Core.invoke_in_world
-                _handle_invoke_in_world!(ir, i, stmt, depth, max_depth, cache) && continue
-            end
-
-            # Standard case for :call directly in IR
-            _should_rewrite(callee_f) || continue
-
-            callee_max = _max_depth_for(callee_f, depth, max_depth)
-            depth < callee_max || continue
-
-            # Try compiler call info for precise method resolution
-            info = ir.stmts[i][:info]
-            matches = _extract_call_matches(info)
-
-            if matches !== nothing && !isempty(matches)
-                rewritten_pairs = _rewrite_matches(callee_f, matches, depth, callee_max, cache)
-                if length(rewritten_pairs) == 1 && length(matches) == 1
-                    # Single match and single result
-                    stmt.args[1] = rewritten_pairs[1][2]
-                    continue
-                elseif !isempty(rewritten_pairs)
-                    # Multiple matches or partial rewriting success
-                    stmt.args[1] = _build_dispatch_shim(callee_f, rewritten_pairs)
-                    continue
-                end
-            end
-
-            # Fallback: use _ir_arg_type approach
-            call_argtypes = tuple([_ir_arg_type(ir, a) for a in stmt.args[2:end]]...)
-            rewritten_callee = try
-                _tau_rewrite_recursive(callee_f, call_argtypes, depth + 1, callee_max, cache)
-            catch ex
-                @warn "Could not trace $callee_f: $ex"
-                continue
-            end
-            stmt.args[1] = rewritten_callee
-        elseif rewrite_ccall && stmt.head === :foreigncall
-            push!(foreigncall_positions, i)
-        end
-    end
-
-    # Insert entry/exit hooks around foreigncall sites
-    if foreigncall_positions !== nothing
-        for pos in reverse(foreigncall_positions)
-            label = _foreigncall_label(ir.stmts[pos][:stmt])
-            entry_call = Expr(:call, GlobalRef(TracingDemo, :_entry_hook), label)
-            exit_call = Expr(:call, GlobalRef(TracingDemo, :_exit_hook), label)
-            insert_node!(ir, pos, NewInstruction(entry_call, Nothing), false)
-            insert_node!(ir, pos, NewInstruction(exit_call, Nothing), true)
-        end
-    end
-
-    # Compact IR after callee rewriting
-    ir = compact!(ir)
-
-    # Fix argtypes[1] for OpaqueClosure
-    ir.argtypes[1] = Tuple{}
-
-    # Detect varargs
-    is_varargs, n_fixed = _detect_varargs(ir, f, argtypes)
-
-    # Substitute static_parameter references with concrete values from MethodInstance.
-    # (Need to replace to prevent segfaults during OpaqueClosure codegen.)
-    if !_substitute_static_parameters!(ir, f, argtypes)
-        # If failed, just wrap with hooks and don't recurse.
-        @debug "Wrapping $f with hooks only, can't recurse due to unsubstitutable sparams"
-        return _wrap_with_hooks(f, fname)
-    end
-
-    # Compact IR after sparam substitution
-    if !isempty(ir.new_nodes.stmts)
-        ir = compact!(ir)
-    end
-
-    oc = try
-        OpaqueClosure(ir)
-    catch ex
-        @warn "OpaqueClosure creation failed for $f: $ex"
-        return nothing
-    end
-    wrapped = _wrap_with_hooks(oc, fname)
-
-    if is_varargs
-        wrapped = let w = wrapped, nf = n_fixed
-            (args...) -> w(args[1:nf]..., args[nf+1:end])
-        end
-    end
-
-    return wrapped
-end
-
-# Maximum number of IR results to handle before bailing out
-const _max_multi_results = Ref{Int}(100)
-
-"""Validate and normalize a non-negative limit: 0 means unlimited. """
-function _normalize_limit(n::Int, name::String)
-    n < 0 && throw(ArgumentError("$name must be non-negative, got $n"))
-    return n == 0 ? typemax(Int) : n
-end
-
-"""
-    set_rewrite_variant_limit(n::Int)
-
-Set the maximum number of IR results (method specializations) to handle
-per function before falling back to the uninstrumented version.
-"""
-function set_rewrite_variant_limit(n::Int)
-    _max_multi_results[] = _normalize_limit(n, "variant limit")
-end
-
-"""
-    _rewrite_multi_result(f, argtypes::Tuple, results::Vector, depth::Int, max_depth::Int, cache::Dict{Any,Any}) -> LazyTraced
-
-Handle the case where `code_ircode` returns multiple results (one per matching
-method).  Builds a runtime dispatch shim when multiple results are successfully traced.
-
-"""
-function _rewrite_multi_result(@nospecialize(f), @nospecialize(argtypes::Tuple),
-                              results::Vector, depth::Int, max_depth::Int,
-                              cache::Dict{Any,Any})
-    key = (f, argtypes)
-
-    # Cache sentinel to prevent infinite recursion
-    lazy = LazyTraced(f)
-    cache[key] = lazy
-
-    if length(results) > _max_multi_results[]
-        @debug "Too many IR results ($(length(results))) for $f, skipping"
-        return lazy
-    end
-
-    rewritten_pairs = Tuple{Tuple, Any}[]
-
-    for (ir, rettype) in results
-        # code_ircode returns Method objects for builtins/generated functions
-        # which we can't instrument
-        ir isa IRCode || continue
-
-        concrete_argtypes = Tuple(Core.Compiler.widenconst.(ir.argtypes[2:end]))
-
-        # Skip if already rewritten
-        concrete_key = (f, concrete_argtypes)
-        if haskey(cache, concrete_key) && concrete_key != key
-            cached = cache[concrete_key]
-            push!(rewritten_pairs, (concrete_argtypes, cached))
+function _format_argtypes(argtypes; widen::Bool=false)
+    type_strs = String[]
+    for i in 1:length(argtypes)
+        if !isassigned(argtypes, i)
+            push!(type_strs, "?")
             continue
         end
+        t = argtypes[i]
+        if t isa Core.TypeofVararg
+            push!(type_strs, (isdefined(t, :T) ? string(t.T) : "Any") * "...")
+        elseif t isa TypeVar
+            push!(type_strs, string(t.ub))
+        else
+            s = try
+                string(widen ? CC.widenconst(t) : t)
+            catch
+                try; repr(t); catch; "?"; end
+            end
+            push!(type_strs, s)
+        end
+    end
+    return join(type_strs, ", ")
+end
 
-        wrapped = try
-            _instrument_single_ir(f, ir, concrete_argtypes, depth, max_depth, cache)
-        catch ex
-            @warn "Multi-result: could not instrument $f with $concrete_argtypes: $ex"
+"""
+    _build_label(method::Method, args_str::String) -> String
+
+Build TAU timer name from a Method and formatted arg string.
+"""
+function _build_label(method::Method, args_str::String)
+    mod_str = string(method.module)
+    fname_str = _clean_fname(method.name)
+    file = string(method.file)
+    line = method.line
+    if _include_types[]
+        return "$mod_str.$fname_str($args_str) [{$file} {$line}]"
+    else
+        return "$mod_str.$fname_str [{$file} {$line}]"
+    end
+end
+
+"""
+    _mi_label(mi::MethodInstance) -> String
+
+Build a TAU timer name from a MethodInstance.
+"""
+function _mi_label(mi::MethodInstance)
+    method = mi.def
+    isa(method, Method) || return string(mi)
+    spec = Base.unwrap_unionall(mi.specTypes)
+    nparams = length(spec.parameters)
+    if nparams >= 2
+        argtypes = spec.parameters[2:end]
+    elseif nparams == 1
+        # Vararg-only Tuple: the single parameter is the Vararg itself
+        argtypes = spec.parameters
+    else
+        argtypes = Core.svec()
+    end
+    return _build_label(method, _format_argtypes(argtypes; widen=true))
+end
+
+# IR rewriter
+
+struct TracingInterpreter <: CC.AbstractInterpreter
+    native::CC.NativeInterpreter
+    codegen::IdDict{CodeInstance, Core.CodeInfo}
+    instrumented::Set{MethodInstance}
+    depth_map::IdDict{MethodInstance, Int}
+    mod_depth_map::IdDict{MethodInstance, Int}
+end
+
+function TracingInterpreter(world::UInt = Base.get_world_counter())
+    native = CC.NativeInterpreter(world)
+    codegen = IdDict{CodeInstance, Core.CodeInfo}()
+    TracingInterpreter(native, codegen, Set{MethodInstance}(),
+                       IdDict{MethodInstance, Int}(), IdDict{MethodInstance, Int}())
+end
+
+
+# Delegate most operations to standard compiler
+CC.InferenceParams(interp::TracingInterpreter) = CC.InferenceParams(interp.native)
+CC.OptimizationParams(interp::TracingInterpreter) = CC.OptimizationParams(interp.native)
+CC.get_inference_world(interp::TracingInterpreter) = CC.get_inference_world(interp.native)
+CC.get_inference_cache(interp::TracingInterpreter) = CC.get_inference_cache(interp.native)
+
+# We own the code we touch.
+CC.cache_owner(interp::TracingInterpreter) = interp
+
+CC.codegen_cache(interp::TracingInterpreter) = interp.codegen
+CC.method_table(interp::TracingInterpreter) = CC.method_table(interp.native)
+CC.may_optimize(interp::TracingInterpreter) = true
+CC.may_compress(interp::TracingInterpreter) = false  # don't automatically compress, need uncompressed
+CC.may_discard_trees(interp::TracingInterpreter) = false  # keep trees for rewriting
+
+# Recursion limit infrastructure
+
+"""
+Override `typeinf_edge` to record the depth of each MethodInstance in the
+call graph.  This depth is later used in `optimize` to decide
+whether to insert hooks based on per-module depth limits.
+"""
+function CC.typeinf_edge(interp::TracingInterpreter, method::Method,
+                         @nospecialize(atype), sparams::Core.SimpleVector,
+                         caller::CC.AbsIntState, edgecycle::Bool, edgelimited::Bool)
+    # Determine caller depth from our map
+    caller_mi = CC.frame_instance(caller)
+    caller_depth = get(interp.depth_map, caller_mi, 0)
+
+    # Record callee depth
+    callee_mi = CC.specialize_method(method, atype, sparams)
+    if !haskey(interp.depth_map, callee_mi)
+        interp.depth_map[callee_mi] = caller_depth + 1
+
+        # Track module-relative depth
+        caller_mod = try
+            caller_def = caller_mi.def
+            caller_def isa Method ? caller_def.module : nothing
+        catch
             nothing
         end
-
-        if wrapped !== nothing
-            concrete_lazy = LazyTraced(wrapped)
-            cache[concrete_key] = concrete_lazy
-            push!(rewritten_pairs, (concrete_argtypes, concrete_lazy))
+        callee_mod = method.module
+        if caller_mod !== nothing && caller_mod === callee_mod
+            caller_mod_depth = get(interp.mod_depth_map, caller_mi, 0)
+            interp.mod_depth_map[callee_mi] = caller_mod_depth + 1
+        else
+            interp.mod_depth_map[callee_mi] = 0
         end
     end
 
-    if isempty(rewritten_pairs)
-        return lazy
+    # Delegate actual type inference to native compiler
+    return @invoke CC.typeinf_edge(interp::CC.AbstractInterpreter, method,
+                                   atype::Any, sparams::Core.SimpleVector,
+                                   caller::CC.AbsIntState, edgecycle::Bool,
+                                   edgelimited::Bool)
+end
+
+# IR Hook Insertion
+
+"""
+    _push_ir_stmt!(ir, stmt, type=Nothing)
+
+Append a statement to an IRCode's InstructionStream with default metadata.
+"""
+function _push_ir_stmt!(ir::CC.IRCode, @nospecialize(stmt), @nospecialize(type=Nothing))
+    push!(ir.stmts.stmt, stmt)
+    push!(ir.stmts.type, type)
+    push!(ir.stmts.info, CC.NoCallInfo())
+    append!(ir.stmts.line, Int32[0, 0, 0])
+    push!(ir.stmts.flag, UInt32(0))
+end
+
+"""
+    _insert_entry_exit_hooks!(ir::CC.IRCode, mi::MethodInstance) -> IRCode
+
+Inserts _entry_hook at beginning of function, _exit_hook before every return,
+and wraps entire function in try/catch where catch handles unhandled exceptions,
+calling _exit_hook and then rethrowing.
+"""
+function _insert_entry_exit_hooks!(ir::CC.IRCode, mi::MethodInstance)
+    label = _mi_label(mi)
+
+    # Instrument function entry
+    entry_stmt = Expr(:call, GlobalRef(TAUProfile, :_entry_hook), label)
+    CC.insert_node!(ir, SSAValue(1), CC.NewInstruction(entry_stmt, Nothing), false)
+
+    # Instrument normal returns
+    for i in length(ir.stmts):-1:1
+        stmt = ir.stmts[i][:stmt]
+        if stmt isa ReturnNode && isdefined(stmt, :val)
+            exit_stmt = Expr(:call, GlobalRef(TAUProfile, :_exit_hook), label)
+            CC.insert_node!(ir, SSAValue(i), CC.NewInstruction(exit_stmt, Nothing), false)
+        end
     end
 
-    lazy.target = _build_dispatch_shim(f, rewritten_pairs)
-    return lazy
+    ir = CC.compact!(ir)
+
+    # Wrap function body in try/catch
+
+    n_stmts = length(ir.stmts)
+
+    # Fake label for catch destination -- fix later after we know the actual number.
+    SENTINEL_CATCH_DEST = 999_999_999
+    enter_node = EnterNode(SENTINEL_CATCH_DEST)
+    # Insert :enter at function entry
+    CC.insert_node!(ir, SSAValue(1), CC.NewInstruction(enter_node, Any), true)
+
+    # Insert :leave before every return
+    for i in n_stmts:-1:1
+        stmt = ir.stmts[i][:stmt]
+        if stmt isa ReturnNode && isdefined(stmt, :val)
+            leave_stmt = Expr(:leave, SSAValue(SENTINEL_CATCH_DEST))
+            CC.insert_node!(ir, SSAValue(i), CC.NewInstruction(leave_stmt, Nothing), false)
+        end
+    end
+
+    ir = CC.compact!(ir)
+
+    # Now get an actual number for our catch destination
+    enter_ssa = nothing
+    n_stmts = length(ir.stmts)
+    for i in 1:n_stmts
+        stmt = ir.stmts[i][:stmt]
+        if stmt isa EnterNode && stmt.catch_dest == SENTINEL_CATCH_DEST
+            enter_ssa = SSAValue(i)
+            break
+        end
+    end
+
+    if enter_ssa === nothing
+        return ir
+    end
+
+    # Fix :leave to point to real catch destination
+    for i in 1:n_stmts
+        stmt = ir.stmts[i][:stmt]
+        if stmt isa Expr && stmt.head === :leave && length(stmt.args) == 1
+            arg = stmt.args[1]
+            if arg isa SSAValue && arg.id > n_stmts
+                ir.stmts[i][:stmt] = Expr(:leave, enter_ssa)
+            end
+        end
+    end
+
+    # Find which block the EnterNode is in
+    enter_pos = enter_ssa.id
+    enter_block = 0
+    for (bi, bb) in enumerate(ir.cfg.blocks)
+        if bb.stmts.start <= enter_pos <= bb.stmts.stop
+            enter_block = bi
+            break
+        end
+    end
+
+    # Append catch block
+    catch_start = n_stmts + 1
+    catch_block_idx = length(ir.cfg.blocks) + 1
+
+    # Fix EnterNode catch_dest to point to the new catch block
+    ir.stmts[enter_pos][:stmt] = EnterNode(catch_block_idx)
+
+    # Catch block body: :_exit_hook, :rethrow, and return
+    # (Return is unreachable but compiler crashes without it)
+    _push_ir_stmt!(ir, Expr(:call, GlobalRef(TAUProfile, :_exit_hook), label))
+    _push_ir_stmt!(ir, Expr(:call, GlobalRef(Base, :rethrow)), Union{})
+    _push_ir_stmt!(ir, ReturnNode(), Union{})
+
+    # Extend debuginfo -- generated code has no code location
+    append!(ir.debuginfo.codelocs, Int32[0, 0, 0, 0, 0, 0, 0, 0, 0])
+
+    # Add catch block to CFG
+    catch_bb = CC.BasicBlock(CC.StmtRange(catch_start, catch_start + 2),
+                             Int[enter_block], Int[])
+    push!(ir.cfg.blocks, catch_bb)
+    push!(ir.cfg.index, catch_start)
+
+    if enter_block > 0
+        push!(ir.cfg.blocks[enter_block].succs, catch_block_idx)
+    end
+
+    return ir
 end
 
-# Maximum recursion depth for tracing into callees.
-const _max_depth = Ref{Int}(20)
+# Optimize pass to insert hooks
 
-const _rewrite_ccall_enabled = Ref{Bool}(false)
+const _TRACE_DEBUG = Ref(false)
+
+function CC.optimize(interp::TracingInterpreter, opt::CC.OptimizationState, caller::CC.InferenceResult)
+    # Run the standard optimization pipeline
+    ir = CC.run_passes_ipo_safe(opt.src, opt)
+    CC.ipo_dataflow_analysis!(interp, opt, ir, caller)
+
+    # Instrument if this function should be traced
+    mi = opt.linfo
+    depth = get(interp.depth_map, mi, 0)
+    mod_depth = get(interp.mod_depth_map, mi, 0)
+    should = _should_instrument(mi, depth, mod_depth)
+    if should
+        should = _is_complex_enough(ir)
+    end
+    if _TRACE_DEBUG[]
+        method = mi.def
+        if isa(method, Method)
+            label = "$(method.module).$(method.name)"
+            println(stderr, "[DEBUG optimize] $label depth=$depth mod_depth=$mod_depth should_instrument=$should")
+        end
+    end
+    if should
+        try
+            ir = _insert_entry_exit_hooks!(ir, mi)
+            push!(interp.instrumented, mi)
+        catch ex
+            bt = catch_backtrace()
+            @warn "TAUProfile: Failed to instrument $(mi.def): $ex" exception=(ex, bt)
+        end
+    end
+
+    return CC.finish(interp, opt, ir, caller)
+end
+
+# Compile using hooks
 
 """
-    set_rewrite_recursion_limit(n::Int)
+    _trace_compile(f, tt::Type{<:Tuple}) -> CodeInstance
 
-Set the maximum recursion depth for tracing into callees.
+Compile function `f` with argument types `tt` through the TracingInterpreter.
+All callees are recursively instrumented by the compiler.
+Returns a CodeInstance that can be executed via `invoke(f, ci, args...)`.
 """
-function set_rewrite_recursion_limit(n::Int)
-    _max_depth[] = _normalize_limit(n, "recursion limit")
-end
+function _trace_compile(@nospecialize(f), @nospecialize(tt::Type))
+    world = Base.get_world_counter()
+    interp = TracingInterpreter(world)
 
-function set_rewrite_recursion_limit(m::Module, n::Int; exact::Bool=false)
-    _module_depth_limits[m] = (_normalize_limit(n, "recursion limit"), exact)
-end
+    # Get type signature of function
+    ft = f isa Type ? Type{f} : typeof(f)
+    sig = Tuple{ft, tt.parameters...}
 
-function set_rewrite_recursion_limit(name::Symbol, n::Int; exact::Bool=false)
-    _module_depth_name_limits[name] = (_normalize_limit(n, "recursion limit"), exact)
-end
+    # Get MethodInstance for function and type sig
+    matches = Base._methods_by_ftype(sig, -1, world)
+    if matches === nothing || isempty(matches)
+        error("No method found for $f with argument types $tt")
+    end
+    if length(matches) > 1
+        # Multiple matches — use the first (most specific).
+        @debug "Multiple methods match $f($tt), using most specific"
+    end
+    mi = CC.specialize_method(first(matches))
 
-function set_rewrite_recursion_limit(name::String, n::Int; exact::Bool=false)
-    set_rewrite_recursion_limit(Symbol(name), n; exact)
+    interp.depth_map[mi] = 0
+
+    # Run the compilation
+    ci = CC.typeinf_ext_toplevel(interp, mi, CC.SOURCE_MODE_ABI)
+
+    if !(ci isa CodeInstance)
+        error("Compilation failed for $f with argument types $tt (got $(typeof(ci)))")
+    end
+
+    # Patch method sources so that any NEW concrete specialization compiled
+    # at runtime via dynamic dispatch also includes entry/exit hooks.
+    patched = _patch_method_sources!(interp)
+
+    return ci, patched
 end
 
 """
-    set_rewrite_ccall(enabled::Bool)
+    _patch_codeinfo_with_hooks(src::Core.CodeInfo, label::String) -> Core.CodeInfo
 
-Enable or disable tracing of `@ccall` / `foreigncall` invocations.
+Insert entry/exit hook calls into a lowered CodeInfo.  Wraps the function
+body in try/finally so that `_exit_hook(label)` fires on both normal
+return and exception propagation.
+This instruments method sources used at runtime for dynamic dispatch.
+"""
+function _patch_codeinfo_with_hooks(src::Core.CodeInfo, label::String)
+    old_code = src.code
+    n = length(old_code)
+
+    # ssachangemap[i] = number of NEW statements inserted AT position i.
+    ssachangemap = zeros(Int, n)
+    labelchangemap = zeros(Int, n)
+
+    # We always add 2 new stmts before position 1, entry_hook and EnterNode
+    ssachangemap[1] += 2
+    labelchangemap[1] += 2
+
+    # We add 2 new stmts, _exit_hook and leave, before every return
+    n_returns = 0
+    for i in 1:n
+        if old_code[i] isa ReturnNode && isdefined(old_code[i], :val)
+            ssachangemap[i] += 2
+            labelchangemap[i] += 2
+            n_returns += 1
+        end
+    end
+
+    # Apply renumbering
+    new_body = copy(old_code) # need to copy because CC.renumber_ir_elements! is in-place
+    CC.renumber_ir_elements!(new_body, ssachangemap, labelchangemap)
+
+    enter_ssa = SSAValue(2)  # EnterNode is always at position 2
+    # Catch block starts at the bottom, after the number of original nodes plus all
+    # the ones we just inserted above.
+    catch_target = 2 + n + 2 * n_returns + 1
+
+    # Total statements including every we add
+    total_stmts = 2 + n + 2 * n_returns + 3
+
+    final_code = sizehint!(Any[], total_stmts)
+    final_flags = sizehint!(UInt32[], total_stmts)
+
+    emit!(stmt) = (push!(final_code, stmt); push!(final_flags, UInt32(0)))
+
+    # Build the instrumented code
+    #
+    # Entry hook
+    emit!(Expr(:call, GlobalRef(TAUProfile, :_entry_hook), label))
+
+    # enter catch block
+    emit!(EnterNode(catch_target))
+
+    # _exit_hook and :leave before every return
+    return_positions = Int[]
+    for i in 1:n
+        stmt = old_code[i]
+        if stmt isa ReturnNode && isdefined(stmt, :val)
+            emit!(Expr(:call, GlobalRef(TAUProfile, :_exit_hook), label))
+            emit!(Expr(:leave, enter_ssa))
+        end
+        emit!(new_body[i])
+        if stmt isa ReturnNode && isdefined(stmt, :val)
+            push!(return_positions, length(final_code))
+        end
+    end
+
+    # catch block: exit_hook, rethrow, return
+    emit!(Expr(:call, GlobalRef(TAUProfile, :_exit_hook), label))
+    emit!(Expr(:call, GlobalRef(Base, :rethrow)))
+    emit!(ReturnNode()) 
+
+    # Fix up gotos to point to new numbers, since we moved the
+    # locations of returns
+    return_set = Set(return_positions)
+    for i in 1:length(final_code)
+        stmt = final_code[i]
+        if stmt isa Core.GotoNode && stmt.label in return_set
+            final_code[i] = Core.GotoNode(stmt.label - 2)
+        elseif stmt isa Core.GotoIfNot && stmt.dest in return_set
+            final_code[i] = Core.GotoIfNot(stmt.cond, stmt.dest - 2)
+        end
+    end
+
+    new_src = copy(src)
+    new_src.code = final_code
+    new_src.ssaflags = final_flags
+    new_src.ssavaluetypes = length(final_code)
+    return new_src
+end
 
 """
-function set_rewrite_ccall(enabled::Bool)
-    _rewrite_ccall_enabled[] = enabled
-    return nothing
+    _method_label(method::Method) -> String
+
+Build a TAU timer name from a Method object
+"""
+function _method_label(method::Method)
+    sig = Base.unwrap_unionall(method.sig)
+    argtypes = sig.parameters[2:end]
+    return _build_label(method, _format_argtypes(argtypes))
+end
+
+"""
+    _should_patch_method(method::Method) -> Bool
+
+Check whether a Method should have its source patched.
+"""
+function _should_patch_method(method::Method)
+    _is_base_or_core(method.module) && return false
+    return _passes_common_exclusions(method.module, method.name)
+end
+
+"""
+    _discover_additional_methods(interp::TracingInterpreter) -> Set{Method}
+
+Discover user-module methods that weren't in the compiler's inference walk
+but could be called at runtime from spawned tasks, callbacks, or other
+deferred-execution contexts.
+"""
+function _discover_additional_methods(interp::TracingInterpreter)
+    extra_methods = Set{Method}()
+
+    # Check all modules that were involved in the compilation
+    user_modules = Set{Module}()
+    for mi in interp.instrumented
+        method = mi.def
+        isa(method, Method) || continue
+        mod = method.module
+        _is_base_or_core(mod) && continue
+        mod === TAUProfile && continue
+        _is_module_excluded(mod) && continue
+        push!(user_modules, mod)
+    end
+
+    # For each user module, get methods of named functions
+    for mod in user_modules
+        for name in names(mod, all=true, imported=false)
+            isdefined(mod, name) || continue
+            local val
+            try
+                val = getfield(mod, name)
+            catch
+                continue
+            end
+            val isa Function || continue
+            for m in methods(val)
+                m.module === mod || continue
+                _should_patch_method(m) || continue
+                push!(extra_methods, m)
+            end
+        end
+    end
+
+    # Scan closure constructions
+    world = CC.get_inference_world(interp)
+    for (ci, codeinfo) in interp.codegen
+        for stmt in codeinfo.code
+            if stmt isa Expr && stmt.head === :new && length(stmt.args) >= 1
+                typ = stmt.args[1]
+                if typ isa DataType
+                    typ_mod = typ.name.module
+                    (_is_base_or_core(typ_mod) || typ_mod === TAUProfile) && continue
+                    try
+                        sig = Tuple{typ, Vararg{Any}}
+                        matches = Base._methods_by_ftype(sig, -1, world)
+                        if matches !== nothing
+                            for match in matches
+                                m = match.method
+                                _should_patch_method(m) || continue
+                                push!(extra_methods, m)
+                            end
+                        end
+                    catch
+                    end
+                end
+            end
+        end
+    end
+
+    return extra_methods
+end
+
+"""
+    _collect_function_methods!(dest::Set{Method}, f::Function)
+
+Add all patchable methods of `f` to `dest`.
+"""
+function _collect_function_methods!(dest::Set{Method}, @nospecialize(f::Function))
+    for m in methods(f)
+        _should_patch_method(m) || continue
+        push!(dest, m)
+    end
+end
+
+"""
+    _collect_globalref_methods!(dest::Set{Method}, stmt)
+
+If `stmt` is or contains a GlobalRef that resolves to a Function, add its
+patchable methods to `dest`. 
+"""
+function _collect_globalref_methods!(dest::Set{Method}, @nospecialize(stmt))
+    if stmt isa GlobalRef
+        _try_collect_ref!(dest, stmt)
+    elseif stmt isa Expr
+        for arg in stmt.args
+            arg isa GlobalRef && _try_collect_ref!(dest, arg)
+        end
+    end
+end
+
+function _try_collect_ref!(dest::Set{Method}, ref::GlobalRef)
+    try
+        val = getfield(ref.mod, ref.name)
+        val isa Function && _collect_function_methods!(dest, val)
+    catch; end
+end
+
+"""
+    _discover_invokelatest_targets(interp::TracingInterpreter) -> Set{Method}
+
+Scan the codegen cache for calls to `invokelatest` and `Core.invoke_in_world`.
+We don't get `typeinf_edge` for these so we have to handle specially.
+"""
+function _discover_invokelatest_targets(interp::TracingInterpreter)
+    extra_methods = Set{Method}()
+    world = CC.get_inference_world(interp)
+
+    for (ci, codeinfo) in interp.codegen
+        for stmt in codeinfo.code
+            stmt isa Expr && stmt.head === :call || continue
+            length(stmt.args) >= 2 || continue
+
+            callee = stmt.args[1]
+            local target_arg
+
+            # invokelatest(target, args...)
+            if callee === invokelatest || (callee isa GlobalRef && callee.name === :invokelatest)
+                target_arg = stmt.args[2]
+            # Core.invoke_in_world(world, target, args...)
+            elseif callee === Core.invoke_in_world ||
+                   (callee isa GlobalRef && callee.name === :invoke_in_world)
+                length(stmt.args) >= 3 || continue
+                target_arg = stmt.args[3]
+            else
+                continue
+            end
+
+            # Get target function of invoke
+            local target_func
+            try
+                if target_arg isa GlobalRef
+                    target_func = getfield(target_arg.mod, target_arg.name)
+                elseif target_arg isa Function
+                    target_func = target_arg
+                else
+                    continue
+                end
+            catch
+                continue
+            end
+
+            _collect_function_methods!(extra_methods, target_func)
+
+            # find callees of discovered methods
+            for m in methods(target_func)
+                _should_patch_method(m) || continue
+                try
+                    src = Base.uncompressed_ir(m)
+                    for inner_stmt in src.code
+                        _collect_globalref_methods!(extra_methods, inner_stmt)
+                    end
+                catch
+                end
+            end
+        end
+    end
+
+    return extra_methods
+end
+
+"""
+    _patch_method_set!(methods, seen, patched, debug_tag)
+
+Patch Method sources with entry/exit hooks, skipping already-seen methods.
+"""
+function _patch_method_set!(methods, seen::Set{Method},
+                            patched::Vector{Tuple{Method, Any}}, debug_tag::String)
+    for method in methods
+        method in seen && continue
+        push!(seen, method)
+
+        _is_base_or_core(method.module) && continue
+        isdefined(method, :source) || continue
+        original_source = method.source
+        try
+            # need IR before compress
+            src = Base.uncompressed_ir(method)
+            _is_complex_enough(src) || continue
+
+            label = _method_label(method)
+            new_src = _patch_codeinfo_with_hooks(src, label)
+            # run compress ourselves once we're done patching
+            compressed = ccall(:jl_compress_ir, Any, (Any, Any), method, new_src)
+            method.source = compressed
+            push!(patched, (method, original_source))
+
+            if _TRACE_DEBUG[]
+                println(stderr, "[DEBUG patch $debug_tag] $(method.module).$(method.name) ($(length(src.code)) -> $(length(new_src.code)) stmts)")
+            end
+        catch ex
+            if _TRACE_DEBUG[]
+                println(stderr, "[DEBUG patch $debug_tag FAILED] $(method.module).$(method.name): $ex")
+            end
+        end
+    end
+end
+
+"""
+    _patch_method_sources!(interp::TracingInterpreter) -> Vector{Tuple{Method, Any}}
+
+For each instrumented Method, patch its source CodeInfo to include
+entry/exit hook calls. Returns a vector of (Method, original_source) pairs
+for later restoration.
+"""
+function _patch_method_sources!(interp::TracingInterpreter)
+    patched_methods = Vector{Tuple{Method, Any}}()
+    seen_methods = Set{Method}()
+
+    # Patch methods that were instrumented during compilation
+    phase2a_methods = (mi.def for mi in interp.instrumented if mi.def isa Method)
+    _patch_method_set!(phase2a_methods, seen_methods, patched_methods, "phase2a")
+
+    # Discover and patch targets of invokelatest/invoke_in_world.
+    invoke_targets = _discover_invokelatest_targets(interp)
+    _patch_method_set!(invoke_targets, seen_methods, patched_methods, "invokelatest target")
+
+    # Discover and patch additional user-module methods that weren't
+    # in the inference walk (e.g., functions called from @spawn).
+    if _trace_deferred[]
+        extra = _discover_additional_methods(interp)
+        _patch_method_set!(extra, seen_methods, patched_methods, "extra")
+    end
+
+    return patched_methods
+end
+
+"""
+    _restore_method_sources!(patched::Vector{Tuple{Method, Any}})
+
+Restore original method sources after traced execution.
+"""
+function _restore_method_sources!(patched::Vector{Tuple{Method, Any}})
+    for (method, original_source) in patched
+        method.source = original_source
+    end
+end
+
+# ============================================================================
+# Public API
+# ============================================================================
+
+"""
+    tau_rewrite_and_call(f, args...) -> result
+
+Compile `f` with tracing instrumentation for the given argument types,
+then execute it. All callees are automatically instrumented.
+
+    tau_rewrite_and_call(sin, 1.0)
+    tau_rewrite_and_call(sort, [3, 1, 2])
+"""
+function tau_rewrite_and_call(@nospecialize(f), args...)
+    tt = Tuple{map(typeof, args)...}
+    ci, patched = _trace_compile(f, tt)
+    try
+        return invoke(f, ci, args...)
+    finally
+        _restore_method_sources!(patched)
+    end
 end
 
 """
     tau_rewrite(f, argtypes::Tuple) -> callable
 
-Recursively instrument `f` AND all functions it calls.
-
+Compile `f` with tracing instrumentation and return a callable wrapper.
+    traced = tau_rewrite(my_func, (Float64, Float64))
+    traced(1.0, 2.0)
 """
-function tau_rewrite(@nospecialize(f), @nospecialize(argtypes::Tuple);
-                                   max_depth::Int = _max_depth[])
-    cache = Dict{Any, Any}()
-    return _tau_rewrite_recursive(f, argtypes, 0, max_depth, cache)
+function tau_rewrite(@nospecialize(f), @nospecialize(argtypes::Tuple))
+    tt = Tuple{argtypes...}
+    ci, patched = _trace_compile(f, tt)
+    return function(args...)
+        try
+            return invoke(f, ci, args...)
+        finally
+            _restore_method_sources!(patched)
+        end
+    end
 end
 
 """
@@ -1332,13 +1492,6 @@ Convenience macro: instruments `f` and all its callees with entry/exit
 tracing, then immediately calls the traced version with the given arguments.
 
     @tau_rewrite composite(5.0, -6.0)
-
-is equivalent to:
-
-    let args = (5.0, -6.0)
-        traced = tau_rewrite(composite, map(typeof, args))
-        traced(args...)
-    end
 """
 macro tau_rewrite(call_expr)
     Meta.isexpr(call_expr, :call) || error("@tau_rewrite expects a function call, got: $call_expr")
@@ -1346,91 +1499,15 @@ macro tau_rewrite(call_expr)
     args = call_expr.args[2:end]
     return quote
         let _args = ($(esc.(args)...),)
-            _rewritten = tau_rewrite($(esc(f)), map(typeof, _args))
-            _rewritten(_args...)
-        end
-    end
-end
-
-"""
-    @tau_prepare_rewrite f(args...)
-    @tau_prepare_rewrite f(::Type1, ::Type2, ...)
-
-Instruments `f` and all its callees with entry/exit tracing, but does **not**
-call the function. Returns the traced callable so it can be reused across
-multiple invocations.
-
-Arguments can be **values** (types inferred via `typeof`) or **type
-annotations** using `::` syntax (types used directly), following the same
-convention as Julia's `@code_typed`.
-
-    # Using values — types are inferred
-    traced = @tau_prepare_rewrite composite(5.0, -6.0)
-
-    # Using type annotations — no values needed
-    traced = @tau_prepare_rewrite composite(::Float64, ::Float64)
-
-    # Reuse without re-instrumentation
-    traced(5.0, -6.0)
-    traced(1.0, 2.0)
-"""
-macro tau_prepare_rewrite(call_expr)
-    Meta.isexpr(call_expr, :call) || error("@tau_prepare_rewrite expects a function call, got: $call_expr")
-    f = call_expr.args[1]
-    args = call_expr.args[2:end]
-
-    # Check if all arguments are type annotations (::T syntax)
-    all_typed = all(a -> Meta.isexpr(a, :(::)) && length(a.args) == 1, args)
-
-    if all_typed && !isempty(args)
-        # Type annotation form: @tau_prepare_rewrite f(::Int, ::Float64)
-        types = [a.args[1] for a in args]
-        return quote
-            tau_rewrite($(esc(f)), ($(esc.(types)...),))
-        end
-    else
-        # Value form: @tau_prepare_rewrite f(1, 2.0)
-        return quote
-            let _args = ($(esc.(args)...),)
-                tau_rewrite($(esc(f)), map(typeof, _args))
+            _tt = Tuple{map(typeof, _args)...}
+            _ci, _patched = $_trace_compile($(esc(f)), _tt)
+            try
+                invoke($(esc(f)), _ci, _args...)
+            finally
+                $_restore_method_sources!(_patched)
             end
         end
     end
-end
-
-function _tau_rewrite_recursive(@nospecialize(f), @nospecialize(argtypes::Tuple),
-                           depth::Int, max_depth::Int, cache::Dict{Any,Any})
-    key = (f, argtypes)
-    haskey(cache, key) && return cache[key]
-
-    # Get pre-inlining IR — calls are still visible as :call with GlobalRef
-    results = Base.code_ircode(f, argtypes; optimize_until="compact 1")
-    if length(results) != 1
-        return _rewrite_multi_result(f, argtypes, results, depth, max_depth, cache)
-    end
-    ir, rettype = results[1]
-
-    # Per the docs for code_ircode: 
-    #   "Return an array of pairs of `IRCode` and inferred return type
-    #   if type inference succeeds. The `Method` is included instead
-    #   of `IRCode` otherwise.
-    # We can't instrument without the IRCode, so if we got a Method,
-    # skip instrumenting.
-    if !(ir isa IRCode)
-        lazy = LazyTraced(f)
-        cache[key] = lazy
-        return lazy
-    end
-
-    lazy = LazyTraced(f)
-    cache[key] = lazy
-
-    wrapped = _instrument_single_ir(f, ir, argtypes, depth, max_depth, cache)
-    if wrapped !== nothing
-        lazy.target = wrapped
-    end
-
-    return lazy
 end
 
 end # module TAUProfile

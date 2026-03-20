@@ -21,7 +21,7 @@ function rewrite_example()
     println(s)
 end
 
-tau_exclude_module("Base")
+tau_rewrite_exclude_module(:Base)
 
 @tau_rewrite rewrite_example()
 
