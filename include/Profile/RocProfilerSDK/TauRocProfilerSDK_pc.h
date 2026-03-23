@@ -53,7 +53,7 @@ std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename)
         #define SAMPLING_SDKPC
     #elif (ROCPROFILER_VERSION_MAJOR >= 1)
         #define SAMPLING_SDKPC
-        
+	#define SAMPLING_SDKPC_1        
     #else
         #warning "This rocprofiler-sdk version is unable to use PC Sampling"
     #endif
