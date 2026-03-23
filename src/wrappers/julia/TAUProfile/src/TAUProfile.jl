@@ -212,39 +212,6 @@ function _exit_hook(fname::String)
     tau_stop(fname)
 end
 
-
-# Virtual source patching side table 
-# The InferenceState override for NativeInterpreter reads from this table
-# instead of Method.source so GPUCompiler.jl sees unmodified source
-const _patched_sources = IdDict{Method, Any}()
-
-function _decompress_patched(method::Method)
-    compressed = _patched_sources[method]
-    if compressed isa Core.CodeInfo
-        return compressed
-    else
-        return ccall(:jl_uncompress_ir, Ref{Core.CodeInfo}, (Any, Ptr{Cvoid}, Any), method, C_NULL, compressed)
-    end
-end
-
-function CC.InferenceState(
-    result::CC.InferenceResult,
-    cache_mode::UInt8,
-    interp::CC.NativeInterpreter
-)
-    world = CC.get_inference_world(interp)
-    mi = result.linfo
-    def = mi.def
-    if def isa Method && haskey(_patched_sources, def)
-        src = _decompress_patched(def)
-    else
-        src = CC.retrieve_code_info(mi, world)
-    end
-    src === nothing && return nothing
-    CC.maybe_validate_code(mi, src, "lowered")
-    return @invoke CC.InferenceState(result::CC.InferenceResult, src::Core.CodeInfo, cache_mode::UInt8, interp::CC.AbstractInterpreter)
-end
-
 # Blacklisting
 
 const BLACKLIST = Set{Symbol}([
@@ -293,7 +260,7 @@ const USER_BLACKLIST_MODULE_NAMES = Dict{Symbol, Bool}()
     tau_rewrite_exclude_function(name::String)
     tau_rewrite_exclude_function(items...)
 
-Exclude function(s) from tracing.
+Exclude function(s) from tracing. Accepts function objects, Symbols, or Strings.
 """
 function tau_rewrite_exclude_function(@nospecialize(f::Function))
     push!(USER_BLACKLIST_FUNCS, f)
@@ -365,8 +332,6 @@ const USER_WHITELIST_MODULE_NAMES = Dict{Symbol, Bool}()
 
 Add module(s) to the whitelist. When the whitelist is non-empty, ONLY
 functions in whitelisted modules are instrumented.
-By default, whitelisting a module also whitelists all its submodules.
-Pass `exact=true` to whitelist only the exact module.
 
     tau_rewrite_include_module_only(MyModule)                  # MyModule + submodules
     tau_rewrite_include_module_only(MyModule; exact=true)      # MyModule only
@@ -438,7 +403,7 @@ end
 """
     tau_rewrite_reset_exclusions()
 
-Reset all user-defined exclusions and limits to default values.
+Reset exclusions and limits to default values.
 """
 function tau_rewrite_reset_exclusions()
     empty!(USER_BLACKLIST_FUNCS)
@@ -455,15 +420,15 @@ function tau_rewrite_reset_exclusions()
     _min_complexity[] = 0
     _complexity_skip_loops[] = true
     _include_types[] = false
+    _gpu_exclude_static[] = true
+    _gpu_exclude_ci_owner[] = true
 end
 
 # Minimum complexity filter
 
 # Minimum number of "interesting" IR statements for a function to be instrumented.
-# 0 = disabled (instrument everything). Functions below this threshold are skipped
-# unless they contain a loop (which could make even a short function long-running).
+# 0 = disabled (instrument everything). 
 const _min_complexity = Ref{Int}(0)
-
 const _complexity_skip_loops = Ref{Bool}(true)
 
 """
@@ -471,11 +436,8 @@ const _complexity_skip_loops = Ref{Bool}(true)
 
 Set the minimum number of "interesting" IR statements a function must have to be
 instrumented. Functions with fewer statements are skipped to reduce tracing overhead
-for trivial functions (simple getters, arithmetic wrappers, etc.).
-
-- `n = 0` disables the filter (default; all functions are instrumented).
-- `skip_loops = true` (default) means functions containing loops are always
-  instrumented regardless of their statement count.
+for trivial functions. "Interesting" statements are calls, foreigncalls, invoke 
+expressions, and new allocations.
 
     tau_rewrite_set_min_complexity(5)              # skip functions with < 5 interesting stmts
     tau_rewrite_set_min_complexity(10; skip_loops=false)  # apply even to functions with loops
@@ -490,7 +452,7 @@ end
 """
     _count_complexity(stmts, n::Int) -> (interesting::Int, has_loop::Bool)
 
-Count "interesting" IR statements.
+Count "interesting" IR statements (calls, foreigncalls, invokes, allocations).
 """
 function _count_complexity(get_stmt, n::Int)
     has_loop = false
@@ -523,7 +485,7 @@ end
     _is_complex_enough(ir::CC.IRCode) -> Bool
     _is_complex_enough(src::Core.CodeInfo) -> Bool
 
-Counts "interesting" statements: calls, foreigncalls, invokes, and allocations.
+Check whether IR has enough complexity to warrant instrumentation.
 """
 function _is_complex_enough(ir::CC.IRCode)
     min_c = _min_complexity[]
@@ -559,14 +521,12 @@ function tau_rewrite_include_types(enabled::Bool=true)
     _include_types[] = enabled
 end
 
-# ============================================================================
 # Per-module recursion depth limits
-# ============================================================================
 
-# Global depth limit (typemax(Int) = unlimited)
+# Global depth limit
 const _max_depth = Ref{Int}(typemax(Int))
 
-# Per-module limits: Module → (limit, exact_flag)
+# Per-module limits
 const _module_depth_limits = Dict{Module, Tuple{Int, Bool}}()
 const _module_depth_name_limits = Dict{Symbol, Tuple{Int, Bool}}()
 
@@ -582,8 +542,8 @@ end
     tau_rewrite_set_recursion_limit(name::String, n::Int; exact=false)
 
 Set recursion depth limits for tracing. The global limit controls the maximum
-depth from the root function. Per-module limits are relative to the module entry.
-n=0 disables the limit.
+depth from the root function. Per-module limits are relative.
+Setting n=0 means unlimited. 
 
     tau_rewrite_set_recursion_limit(20)              # global limit
     tau_rewrite_set_recursion_limit(Base, 1)         # trace top-level Base calls only
@@ -632,20 +592,18 @@ end
 
 _is_module_excluded(mod::Module) = _is_module_in_set(mod, USER_BLACKLIST_MODULES, USER_BLACKLIST_MODULE_NAMES)
 
-# Filtering
+# ============================================================================
+# Filtering — which MethodInstances to instrument
+# ============================================================================
 
 """
     _within_depth_limit(mi::MethodInstance, depth::Int, mod_depth::Int) -> Bool
 
 Check whether a MethodInstance at the given depth should be instrumented
 based on global and per-module depth limits.
-
-- `depth`: absolute depth from the root function
-- `mod_depth`: depth within the current module's call chain
 """
 function _within_depth_limit(mi::MethodInstance, depth::Int, mod_depth::Int)
     global_max = _max_depth[]
-    # Skip check if no limits set
     global_max == typemax(Int) && isempty(_module_depth_limits) && isempty(_module_depth_name_limits) && return true
 
     # Check global limit
@@ -669,8 +627,7 @@ end
 """
     _module_limit_for(mod::Module) -> Union{Int, Nothing}
 
-Look up the per-module depth limit for `mod`, walking up the module hierarchy
-for non-exact limits. Returns `nothing` if no limit is set.
+Look up the per-module depth limit for `mod`.
 """
 function _module_limit_for(mod::Module)
     current = mod
@@ -716,8 +673,7 @@ end
 """
     _should_instrument(mi::MethodInstance, depth::Int, mod_depth::Int) -> Bool
 
-Determine whether a MethodInstance should have tracing hooks inserted,
-considering both exclusions and depth limits.
+Determine whether a MethodInstance should have tracing hooks inserted.
 """
 function _should_instrument(mi::MethodInstance, depth::Int=0, mod_depth::Int=0)
     method = mi.def
@@ -725,6 +681,7 @@ function _should_instrument(mi::MethodInstance, depth::Int=0, mod_depth::Int=0)
 
     _passes_common_exclusions(method.module, method.name) || return false
 
+    # Check user exclusions by function identity
     try
         f = _mi_function(mi)
         if f !== nothing && f in USER_BLACKLIST_FUNCS
@@ -749,7 +706,7 @@ function _mi_function(mi::MethodInstance)
     return nothing
 end
 
-# Label building
+# Label building for Methods and MethodInstances
 
 """
     _clean_fname(name::Symbol) -> String
@@ -780,6 +737,9 @@ function _format_argtypes(argtypes; widen::Bool=false)
         elseif t isa TypeVar
             push!(type_strs, string(t.ub))
         else
+            # string(Type) can throw for pathological types (e.g. NamedTuple
+            # with Vararg after unwrap_unionall leaves free TypeVars —
+            # Base.show_at_namedtuple assumes more parameters than exist)
             s = try
                 string(widen ? CC.widenconst(t) : t)
             catch
@@ -821,7 +781,6 @@ function _mi_label(mi::MethodInstance)
     if nparams >= 2
         argtypes = spec.parameters[2:end]
     elseif nparams == 1
-        # Vararg-only Tuple: the single parameter is the Vararg itself
         argtypes = spec.parameters
     else
         argtypes = Core.svec()
@@ -829,7 +788,7 @@ function _mi_label(mi::MethodInstance)
     return _build_label(method, _format_argtypes(argtypes; widen=true))
 end
 
-# TracingInterpreter
+# TracingInterpreter — custom AbstractInterpreter
 
 struct TracingInterpreter <: CC.AbstractInterpreter
     native::CC.NativeInterpreter
@@ -846,31 +805,27 @@ function TracingInterpreter(world::UInt = Base.get_world_counter())
                        IdDict{MethodInstance, Int}(), IdDict{MethodInstance, Int}())
 end
 
-# Delegate what we're not changing to the standard compiler
+# Delegate compilation to default compiler
 
 CC.InferenceParams(interp::TracingInterpreter) = CC.InferenceParams(interp.native)
 CC.OptimizationParams(interp::TracingInterpreter) = CC.OptimizationParams(interp.native)
 CC.get_inference_world(interp::TracingInterpreter) = CC.get_inference_world(interp.native)
 CC.get_inference_cache(interp::TracingInterpreter) = CC.get_inference_cache(interp.native)
 
-# We own the code we compile
+# We own our own code
 CC.cache_owner(interp::TracingInterpreter) = interp
 CC.codegen_cache(interp::TracingInterpreter) = interp.codegen
 
 CC.method_table(interp::TracingInterpreter) = CC.method_table(interp.native)
 CC.may_optimize(interp::TracingInterpreter) = true
-CC.may_compress(interp::TracingInterpreter) = false  # need uncompressed codeinfo to modify
-CC.may_discard_trees(interp::TracingInterpreter) = false  # need trees
+CC.may_compress(interp::TracingInterpreter) = false  # don't compress -— we need readable CodeInfo
+CC.may_discard_trees(interp::TracingInterpreter) = false  # keep trees for codegen
 
-# ============================================================================
 # Override typeinf_edge to track inference depth
-# ============================================================================
 
 """
 Override `typeinf_edge` to record the depth of each MethodInstance in the
-call graph. When the compiler infers a callee, we record its depth as
-`caller_depth + 1`. This depth is later used in `optimize` to decide
-whether to insert hooks based on per-module depth limits.
+call graph. 
 """
 function CC.typeinf_edge(interp::TracingInterpreter, method::Method,
                          @nospecialize(atype), sparams::Core.SimpleVector,
@@ -879,13 +834,12 @@ function CC.typeinf_edge(interp::TracingInterpreter, method::Method,
     caller_mi = CC.frame_instance(caller)
     caller_depth = get(interp.depth_map, caller_mi, 0)
 
-    # Record callee depth (first path wins = shortest depth)
+    # Record callee depth
     callee_mi = CC.specialize_method(method, atype, sparams)
     if !haskey(interp.depth_map, callee_mi)
         interp.depth_map[callee_mi] = caller_depth + 1
 
-        # Track module-relative depth: if caller and callee are in the same
-        # module, increment; if crossing module boundaries, reset to 0.
+        # Track module-relative depth
         caller_mod = try
             caller_def = caller_mi.def
             caller_def isa Method ? caller_def.module : nothing
@@ -903,7 +857,7 @@ function CC.typeinf_edge(interp::TracingInterpreter, method::Method,
         end
     end
 
-    # Delegate to the standard compiler
+    # Delegate to the standard AbstractInterpreter implementation
     return @invoke CC.typeinf_edge(interp::CC.AbstractInterpreter, method,
                                    atype::Any, sparams::Core.SimpleVector,
                                    caller::CC.AbsIntState, edgecycle::Bool,
@@ -930,16 +884,16 @@ end
 
 Wrap the function body in try/finally so that `_entry_hook(label)` fires at
 entry and `_exit_hook(label)` fires on both normal return and exception
-propagation.
+propagation. 
 """
 function _insert_entry_exit_hooks!(ir::CC.IRCode, mi::MethodInstance)
     label = _mi_label(mi)
 
-    # Instrument function entry with entry hook
+    # Insert entry hook at function start
     entry_stmt = Expr(:call, GlobalRef(TAUProfile, :_entry_hook), label)
     CC.insert_node!(ir, SSAValue(1), CC.NewInstruction(entry_stmt, Nothing), false)
 
-    # Instrument every return with exit hook
+    # Insert exit hook before every return
     for i in length(ir.stmts):-1:1
         stmt = ir.stmts[i][:stmt]
         if stmt isa ReturnNode && isdefined(stmt, :val)
@@ -951,16 +905,20 @@ function _insert_entry_exit_hooks!(ir::CC.IRCode, mi::MethodInstance)
     ir = CC.compact!(ir)
     n_stmts = length(ir.stmts)
 
-    # Fake catch destination -- will fix up after we know numbering
+    # Wrap function in try/catch
+
+    # Fake catch destination -- will be fixed up after we know the number
     SENTINEL_CATCH_DEST = 999_999_999
-    # Insert catch entry
+
+    # Insert catch enter after entry hook
     enter_node = EnterNode(SENTINEL_CATCH_DEST)
     CC.insert_node!(ir, SSAValue(1), CC.NewInstruction(enter_node, Any), true)
 
-    # Insert catch leave before every return
+    # Insert catch leave before every return 
     for i in n_stmts:-1:1
         stmt = ir.stmts[i][:stmt]
         if stmt isa ReturnNode && isdefined(stmt, :val)
+            # Use a sentinel SSAValue for the :leave arg — will fix after compact!
             leave_stmt = Expr(:leave, SSAValue(SENTINEL_CATCH_DEST))
             CC.insert_node!(ir, SSAValue(i), CC.NewInstruction(leave_stmt, Nothing), false)
         end
@@ -968,7 +926,7 @@ function _insert_entry_exit_hooks!(ir::CC.IRCode, mi::MethodInstance)
 
     ir = CC.compact!(ir)
 
-    # Renumber the catch destination
+    # Get number of our catch enter node
     enter_ssa = nothing
     n_stmts = length(ir.stmts)
     for i in 1:n_stmts
@@ -983,7 +941,7 @@ function _insert_entry_exit_hooks!(ir::CC.IRCode, mi::MethodInstance)
         return ir
     end
 
-    # Fix :leave to point to renumbered catch destination
+    # Fix destination of leaves
     for i in 1:n_stmts
         stmt = ir.stmts[i][:stmt]
         if stmt isa Expr && stmt.head === :leave && length(stmt.args) == 1
@@ -1004,10 +962,14 @@ function _insert_entry_exit_hooks!(ir::CC.IRCode, mi::MethodInstance)
         end
     end
 
-    # Append catch destination: exit_hook, rethrow, return
+    # Append catch block: exit_hook, rethrow, return
     catch_start = n_stmts + 1
     catch_block_idx = length(ir.cfg.blocks) + 1
+
+    # Fix EnterNode catch_dest to point to the new catch block
     ir.stmts[enter_pos][:stmt] = EnterNode(catch_block_idx)
+
+    # Add catch body
     _push_ir_stmt!(ir, Expr(:call, GlobalRef(TAUProfile, :_exit_hook), label))
     _push_ir_stmt!(ir, Expr(:call, GlobalRef(Base, :rethrow)), Union{})
     _push_ir_stmt!(ir, ReturnNode(), Union{})
@@ -1033,7 +995,7 @@ function CC.optimize(interp::TracingInterpreter, opt::CC.OptimizationState, call
     ir = CC.run_passes_ipo_safe(opt.src, opt)
     CC.ipo_dataflow_analysis!(interp, opt, ir, caller)
 
-    # Instrument if this function should be traced (with depth check)
+    # Then instrument if neccessary
     mi = opt.linfo
     depth = get(interp.depth_map, mi, 0)
     mod_depth = get(interp.mod_depth_map, mi, 0)
@@ -1050,7 +1012,6 @@ function CC.optimize(interp::TracingInterpreter, opt::CC.OptimizationState, call
     end
     if should
         try
-            # Actually do the instrumentation here
             ir = _insert_entry_exit_hooks!(ir, mi)
             push!(interp.instrumented, mi)
         catch ex
@@ -1089,29 +1050,29 @@ function _trace_compile(@nospecialize(f), @nospecialize(tt::Type))
     end
     mi = CC.specialize_method(first(matches))
 
-    # Set the depth for the entrypoint to 0
+    # Entrypoint has depth 0
     interp.depth_map[mi] = 0
 
-    # Compile through our custom interpreter
+    # Compile through our interpreter
     ci = CC.typeinf_ext_toplevel(interp, mi, CC.SOURCE_MODE_ABI)
 
     if !(ci isa CodeInstance)
         error("Compilation failed for $f with argument types $tt (got $(typeof(ci)))")
     end
 
-    # Populate virtual sources so that any NEW concrete specialization compiled
-    # at runtime via dynamic dispatch also includes entry/exit hooks.
-    _populate_virtual_sources!(interp)
+    # Patch method sources so that any NEW concrete specialization compiled
+    # at runtime (via dynamic dispatch) also includes entry/exit hooks.
+    patched = _patch_method_sources!(interp)
 
-    return ci
+    return ci, patched
 end
 
 """
     _patch_codeinfo_with_hooks(src::Core.CodeInfo, label::String) -> Core.CodeInfo
 
-Insert entry/exit hook calls into a lowered CodeInfo, renumbering
-all SSAValue references, branch targets (GotoNode, GotoIfNot),
-and PhiNode edges.
+Insert entry/exit hook calls into a lowered CodeInfo, correctly renumbering
+all SSAValue references, branch targets (GotoNode, GotoIfNot), and PhiNode
+edges using Julia's built-in `renumber_ir_elements!`.
 """
 function _patch_codeinfo_with_hooks(src::Core.CodeInfo, label::String)
     old_code = src.code
@@ -1121,7 +1082,7 @@ function _patch_codeinfo_with_hooks(src::Core.CodeInfo, label::String)
     ssachangemap = zeros(Int, n)
     labelchangemap = zeros(Int, n)
 
-    # Entry block: 2 new stmts before position 1 (entry_hook + EnterNode)
+    # 2 new stmts before position 1 (entry_hook + EnterNode)
     ssachangemap[1] += 2
     labelchangemap[1] += 2
 
@@ -1135,21 +1096,27 @@ function _patch_codeinfo_with_hooks(src::Core.CodeInfo, label::String)
         end
     end
 
-    # Figure out new statement numbering
+    # Apply renumbering
     new_body = copy(old_code)
     CC.renumber_ir_elements!(new_body, ssachangemap, labelchangemap)
-    enter_ssa = SSAValue(2)
+
+    # Build final code with try/finally wrapper
+    enter_ssa = SSAValue(2) 
+    # Catch block starts after: 2 (entry) + n (original) + 2*n_returns (exit/leave)
     catch_target = 2 + n + 2 * n_returns + 1
     total_stmts = 2 + n + 2 * n_returns + 3
     final_code = sizehint!(Any[], total_stmts)
     final_flags = sizehint!(UInt32[], total_stmts)
 
-    # Entry instrumentation
     emit!(stmt) = (push!(final_code, stmt); push!(final_flags, UInt32(0)))
+
+    # Entry hook
     emit!(Expr(:call, GlobalRef(TAUProfile, :_entry_hook), label))
+
+    # EnterNode (begin try scope)
     emit!(EnterNode(catch_target))
 
-    # Return instrumentation
+    # exit_hook + :leave before each ReturnNode
     return_positions = Int[]
     for i in 1:n
         stmt = old_code[i]
@@ -1166,10 +1133,9 @@ function _patch_codeinfo_with_hooks(src::Core.CodeInfo, label::String)
     # Catch block: exit_hook, rethrow, return
     emit!(Expr(:call, GlobalRef(TAUProfile, :_exit_hook), label))
     emit!(Expr(:call, GlobalRef(Base, :rethrow)))
-    emit!(ReturnNode())  # unreachable but compiler requires it
+    emit!(ReturnNode())  # unreachable, structurally required
 
-    # Fix up gotos that used to point to ReturnNode to point to the
-    # exit hook and leave instead.
+    # Rdirect gotos targeting a ReturnNode to the exit_hook before it
     return_set = Set(return_positions)
     for i in 1:length(final_code)
         stmt = final_code[i]
@@ -1190,12 +1156,141 @@ end
 """
     _method_label(method::Method) -> String
 
-Build a TAU timer name from a Method object.
+Build a TAU timer name from a Method object: "Module.name(types) [{file} {line}]"
 """
 function _method_label(method::Method)
     sig = Base.unwrap_unionall(method.sig)
     argtypes = sig.parameters[2:end]
     return _build_label(method, _format_argtypes(argtypes))
+end
+
+# GPU exclusion 
+
+const _gpu_exclude_static = Ref{Bool}(true)
+const _gpu_exclude_ci_owner = Ref{Bool}(true)
+
+"""
+    _is_gpu_device_type(@nospecialize(T)) -> Bool
+
+Check if a DataType is a known GPU device type. These types only appear in
+GPU kernel signatures and indicate a method may be compiled for GPU execution.
+"""
+function _is_gpu_device_type(@nospecialize(T))
+    T isa DataType || return false
+    name_str = String(T.name.name)
+    contains(name_str, "DeviceArray") && return true
+    T.name.name === :CompilerMetadata && return true
+    return false
+end
+
+"""
+    _has_gpu_device_types(@nospecialize(T)) -> Bool
+
+Recursively check if a type or any of its parameters contains a GPU device type.
+"""
+function _has_gpu_device_types(@nospecialize(T))
+    if T isa UnionAll
+        return _has_gpu_device_types(T.body)
+    end
+    if T isa Union
+        return _has_gpu_device_types(T.a) || _has_gpu_device_types(T.b)
+    end
+    T isa DataType || return false
+    _is_gpu_device_type(T) && return true
+    for p in T.parameters
+        p isa Type && _has_gpu_device_types(p) && return true
+    end
+    return false
+end
+
+"""
+    _is_gpu_method(method::Method) -> Bool
+
+Check if a method may be compiled for GPU execution by examining its signature
+for GPU device types (e.g. CuDeviceArray, CompilerMetadata). Methods with GPU
+device types should not have their source patched.
+"""
+function _is_gpu_method(method::Method)
+    return _has_gpu_device_types(method.sig)
+end
+
+"""
+    _root_module(mod::Module) -> Module
+
+Walk up the module hierarchy to find the top-level package module (stops at Main).
+"""
+function _root_module(mod::Module)
+    root = mod
+    while true
+        parent = parentmodule(root)
+        (parent === root || parent === Main) && return root
+        root = parent
+    end
+end
+
+# GPU infrastructure root packages.
+const _GPU_SEED_NAMES = Set{String}(["GPUCompiler", "KernelAbstractions", "GPUArraysCore"])
+
+"""
+    _build_gpu_ecosystem_packages() -> Set{Symbol}
+
+Detect the GPU compilation ecosystem by walking the package dependency graph
+using `Base.identify_package`. Returns the set of top-level package name
+
+Returns an empty set if no GPU seed packages are loaded.
+"""
+function _build_gpu_ecosystem_packages()
+    loaded_pkgs = Dict{String, Base.PkgId}()
+    for (pkgid, mod) in Base.loaded_modules
+        pkgid.name in ("Main", "Core", "Base") && continue
+        loaded_pkgs[pkgid.name] = pkgid
+    end
+
+    # If no GPU seeds are loaded, nothing to exclude
+    any(name -> haskey(loaded_pkgs, name), _GPU_SEED_NAMES) || return Set{Symbol}()
+
+    # Start with packages that are actually loaded
+    gpu_pkgs = Set{String}(filter(n -> haskey(loaded_pkgs, n), _GPU_SEED_NAMES))
+
+    # Get packages that GPUCompiler uses
+    compiler_seed = get(loaded_pkgs, "GPUCompiler", nothing)
+    if compiler_seed !== nothing
+        for (dep_name, _) in loaded_pkgs
+            dep_name in gpu_pkgs && continue
+            try
+                if Base.identify_package(compiler_seed, dep_name) !== nothing
+                    push!(gpu_pkgs, dep_name)
+                end
+            catch
+            end
+        end
+    end
+
+    # Get packages that use GPUCompiler
+    seed_set = Set{String}(filter(n -> haskey(loaded_pkgs, n), _GPU_SEED_NAMES))
+    changed = true
+    while changed
+        changed = false
+        for (pkg_name, pkgid) in loaded_pkgs
+            pkg_name in gpu_pkgs && continue
+            for seed_name in seed_set
+                try
+                    if Base.identify_package(pkgid, seed_name) !== nothing
+                        push!(gpu_pkgs, pkg_name)
+                        changed = true
+                        break  # already added
+                    end
+                catch
+                end
+            end
+        end
+    end
+
+    if _TRACE_DEBUG[]
+        println(stderr, "[DEBUG GPU ecosystem] detected packages: $(sort(collect(gpu_pkgs)))")
+    end
+
+    return Set{Symbol}(Symbol(n) for n in gpu_pkgs)
 end
 
 """
@@ -1205,6 +1300,7 @@ Check whether a Method should have its source patched.
 """
 function _should_patch_method(method::Method)
     _is_base_or_core(method.module) && return false
+    _is_gpu_method(method) && return false
     return _passes_common_exclusions(method.module, method.name)
 end
 
@@ -1369,7 +1465,7 @@ function _discover_invokelatest_targets(interp::TracingInterpreter)
             # Add all methods of the target function and discover its callees.
             _collect_function_methods!(extra_methods, target_func)
 
-            # Scan for callees in references
+            # Scan for GlobalRef nodes that resolve to functions.
             for m in methods(target_func)
                 _should_patch_method(m) || continue
                 try
@@ -1386,21 +1482,194 @@ function _discover_invokelatest_targets(interp::TracingInterpreter)
     return extra_methods
 end
 
-# Method source patching (Phase 2)
+"""
+    _discover_gpu_kernel_methods(candidate_methods) -> Set{Method}
+
+Scan candidate methods' lowered CodeInfo for GPU device intrinsic calls
+(threadIdx, blockIdx, blockDim, sync_threads, etc.) to identify GPU kernel
+functions. Then transitively discover their device-side callees (helper
+functions called from kernels). Returns a set of Methods to exclude.
+"""
+function _discover_gpu_kernel_methods(candidate_methods)
+    kernel_methods = Set{Method}()
+    callee_visited = Set{Method}()
+
+    for method in candidate_methods
+        # Skip methods that would never be patched anyway
+        _is_base_or_core(method.module) && continue
+        try
+            src = Base.uncompressed_ir(method)
+            if _calls_gpu_device_intrinsics(src)
+                push!(kernel_methods, method)
+                _collect_kernel_callees!(kernel_methods, src, callee_visited)
+            end
+        catch
+        end
+    end
+
+    return kernel_methods
+end
+
+# Known GPU device intrinsic names
+const _GPU_DEVICE_INTRINSIC_NAMES = Set{Symbol}([
+    # Thread/block indexing
+    :threadIdx, :blockIdx, :blockDim, :gridDim, :warpsize, :laneid,
+    # Synchronization
+    :sync_threads, :sync_warp, :sync_threads_count, :sync_threads_and, :sync_threads_or,
+    # Memory fences
+    :threadfence, :threadfence_block, :threadfence_system,
+    # Shared memory (macro expansions)
+    :CuStaticSharedArray, :CuDynamicSharedArray,
+    # Warp-level primitives
+    :shfl_sync, :shfl_up_sync, :shfl_down_sync, :shfl_xor_sync,
+    :vote_all_sync, :vote_any_sync, :vote_uni_sync, :vote_ballot_sync,
+    :active_mask,
+    # Timing
+    :clock, :nanosleep,
+])
 
 """
-    _patch_method_set!(methods, seen, phase_name)
+    _calls_gpu_device_intrinsics(src::Core.CodeInfo) -> Bool
 
-Patch Method sources with entry/exit hooks, skipping already-seen methods.
+Check if a method's lowered CodeInfo calls any GPU device intrinsics.
+"""
+function _calls_gpu_device_intrinsics(src::Core.CodeInfo)
+    found = Ref(false)
+    for stmt in src.code
+        _foreach_globalref(stmt) do ref
+            _is_gpu_intrinsic_ref(ref) && (found[] = true)
+        end
+        found[] && return true
+    end
+    return false
+end
+
+function _is_gpu_intrinsic_ref(ref::GlobalRef)
+    ref.name in _GPU_DEVICE_INTRINSIC_NAMES && return true
+    try
+        val = getfield(ref.mod, ref.name)
+        val isa Function || return false
+        return nameof(val) in _GPU_DEVICE_INTRINSIC_NAMES
+    catch
+        return false
+    end
+end
+
+"""
+    _collect_kernel_callees!(dest::Set{Method}, src::Core.CodeInfo, visited::Set{Method})
+
+Recursively scan a CodeInfo for GlobalRef calls to user-module functions and add
+their methods to `dest`. Used to discover device helper functions called from GPU.
+"""
+function _collect_kernel_callees!(dest::Set{Method}, src::Core.CodeInfo, visited::Set{Method})
+    for stmt in src.code
+        _foreach_globalref(ref -> _try_collect_kernel_ref!(dest, ref, visited), stmt)
+    end
+end
+
+function _try_collect_kernel_ref!(dest::Set{Method}, ref::GlobalRef, visited::Set{Method})
+    _is_base_or_core(ref.mod) && return
+    ref.mod === TAUProfile && return
+    try
+        val = getfield(ref.mod, ref.name)
+        val isa Function || return
+        # Only follow into user-module functions, not GPU package functions
+        pm = parentmodule(val)
+        _is_base_or_core(pm) && return
+        for m in methods(val)
+            m in visited && continue
+            push!(visited, m)
+            push!(dest, m)
+            # Recurse into this callee to find its callees
+            try
+                inner_src = Base.uncompressed_ir(m)
+                _collect_kernel_callees!(dest, inner_src, visited)
+            catch
+            end
+        end
+    catch
+    end
+end
+
+# CI-owner-based foreign interpreter detection
+
+"""
+    _has_foreign_ci(method::Method) -> Bool
+
+Check if any specialization of a Method has a CodeInstance owned by a foreign
+AbstractInterpreter (i.e., not `nothing` and not our TracingInterpreter).
+"""
+function _has_foreign_ci(method::Method)
+    for mi in Base.specializations(method)
+        mi === nothing && continue
+        _mi_has_foreign_ci(mi) && return true
+    end
+    return false
+end
+
+function _mi_has_foreign_ci(mi::MethodInstance)
+    isdefined(mi, :cache) || return false
+    ci = mi.cache
+    while true
+        if ci.owner !== nothing && !(ci.owner isa TracingInterpreter)
+            return true
+        end
+        isdefined(ci, :next) || return false
+        ci = ci.next
+    end
+end
+
+"""
+    _discover_foreign_ci_methods(candidate_methods) -> Set{Method}
+
+Scan candidate methods for any that have CodeInstances from foreign interpreters.
+Returns the set of methods that should be excluded from source patching.
+"""
+function _discover_foreign_ci_methods(candidate_methods)
+    foreign_methods = Set{Method}()
+    for method in candidate_methods
+        _is_base_or_core(method.module) && continue
+        try
+            if _has_foreign_ci(method)
+                push!(foreign_methods, method)
+            end
+        catch
+        end
+    end
+    return foreign_methods
+end
+
+"""
+    _patch_method_set!(methods, seen, patched, debug_tag, gpu_packages)
+
+Patch Method sources with entry/exit hooks.
 """
 function _patch_method_set!(methods, seen::Set{Method},
-                            phase_name::String)
+                            patched::Vector{Tuple{Method, Any}}, debug_tag::String,
+                            gpu_packages::Set{Symbol})
     for method in methods
         method in seen && continue
         push!(seen, method)
 
         _is_base_or_core(method.module) && continue
+        # Static GPU detection
+        if _gpu_exclude_static[]
+            _is_gpu_method(method) && continue
+            # Skip methods from GPU ecosystem packages (detected via dependency graph).
+            # These methods may be compiled for GPU or used by the GPU compilation
+            # toolchain (e.g. LLVM.jl), and patching their sources breaks GPU compilation.
+            if !isempty(gpu_packages)
+                root_name = nameof(_root_module(method.module))
+                if root_name in gpu_packages
+                    if _TRACE_DEBUG[]
+                        println(stderr, "[DEBUG patch $debug_tag SKIP GPU pkg] $(method.module).$(method.name) (package $root_name)")
+                    end
+                    continue
+                end
+            end
+        end
         isdefined(method, :source) || continue
+        original_source = method.source
         try
             src = Base.uncompressed_ir(method)
             _is_complex_enough(src) || continue
@@ -1408,60 +1677,90 @@ function _patch_method_set!(methods, seen::Set{Method},
             label = _method_label(method)
             new_src = _patch_codeinfo_with_hooks(src, label)
             compressed = ccall(:jl_compress_ir, Any, (Any, Any), method, new_src)
-            _patched_sources[method] = compressed
+            method.source = compressed
+            push!(patched, (method, original_source))
 
             if _TRACE_DEBUG[]
-                println(stderr, "[DEBUG patch $phase_name] $(method.module).$(method.name) ($(length(src.code)) → $(length(new_src.code)) stmts)")
+                println(stderr, "[DEBUG patch $debug_tag] $(method.module).$(method.name) ($(length(src.code)) → $(length(new_src.code)) stmts)")
             end
         catch ex
             if _TRACE_DEBUG[]
-                println(stderr, "[DEBUG patch $phase_name FAILED] $(method.module).$(method.name): $ex")
+                println(stderr, "[DEBUG patch $debug_tag FAILED] $(method.module).$(method.name): $ex")
             end
         end
     end
 end
 
 """
-    _populate_virtual_sources!(interp::TracingInterpreter)
+    _patch_method_sources!(interp::TracingInterpreter) -> Vector{Tuple{Method, Any}}
 
 For each instrumented Method, patch its source CodeInfo to include
-entry/exit hook calls and store to the _patched_sources side table.
-This ensures that ANY future specialization compiled from this method
-(regardless of concrete type parameters) will include the hooks.
+entry/exit hook calls. 
 """
-function _populate_virtual_sources!(interp::TracingInterpreter)
+function _patch_method_sources!(interp::TracingInterpreter)
+    patched_methods = Vector{Tuple{Method, Any}}()
     seen_methods = Set{Method}()
 
-    # Collect methods from all Phase 2 sub-phases
+    # Detect GPU ecosystem packages via dependency graph (static detection).
+    # Methods from these packages are skipped because their Method.source may be
+    # read by GPU compilers (GPUCompiler.jl) during kernel compilation, and our
+    # hooks (try/finally, ccall to write, rethrow) are invalid in GPU IR.
+    gpu_packages = _gpu_exclude_static[] ? _build_gpu_ecosystem_packages() : Set{Symbol}()
+
     phase2a_methods = Set{Method}(mi.def for mi in interp.instrumented if mi.def isa Method)
     invoke_targets = _discover_invokelatest_targets(interp)
     extra_methods = _trace_deferred[] ? _discover_additional_methods(interp) : Set{Method}()
 
-    # Phase 2a: Patch methods that were instrumented during compilation
-    _patch_method_set!(phase2a_methods, seen_methods, "phase2a")
+    all_candidates = union(phase2a_methods, invoke_targets, extra_methods)
 
-    # Phase 2b-invoke: Patch targets of invokelatest/invoke_in_world
-    _patch_method_set!(invoke_targets, seen_methods, "invokelatest target")
-
-    # Phase 2b-deferred: Patch additional user-module methods
-    if _trace_deferred[]
-        _patch_method_set!(extra_methods, seen_methods, "extra")
+    # CI-owner detection: check if another AbstractInterpreter (e.g. GPUCompiler)
+    # is the owner of this CI
+    if _gpu_exclude_ci_owner[]
+        foreign_ci_methods = _discover_foreign_ci_methods(all_candidates)
+        for m in foreign_ci_methods
+            push!(seen_methods, m)
+            if _TRACE_DEBUG[]
+                println(stderr, "[DEBUG GPU skip (foreign CI)] $(m.module).$(m.name)")
+            end
+        end
     end
 
-    # Change the world age so it sees the InferenceState override.
-    # This must be done AFTER populating the side table, not at module load time.
-    ccall(:jl_set_typeinf_func, Cvoid, (Any,), CC.typeinf_ext_toplevel)
+    # Scan CodeInfo for GPU device intrinsic calls.
+    if _gpu_exclude_static[]
+        gpu_kernel_methods = _discover_gpu_kernel_methods(all_candidates)
+        for m in gpu_kernel_methods
+            if !(m in seen_methods)
+                push!(seen_methods, m)
+                if _TRACE_DEBUG[]
+                    println(stderr, "[DEBUG GPU kernel skip (static)] $(m.module).$(m.name)")
+                end
+            end
+        end
+    end
+
+    # Patch methods that were instrumented during compilation
+    _patch_method_set!(phase2a_methods, seen_methods, patched_methods, "phase2a", gpu_packages)
+
+    # Patch targets of invokelatest/invoke_in_world
+    _patch_method_set!(invoke_targets, seen_methods, patched_methods, "invokelatest target", gpu_packages)
+
+    # Patch additional user-module methods
+    if _trace_deferred[]
+        _patch_method_set!(extra_methods, seen_methods, patched_methods, "extra", gpu_packages)
+    end
+
+    return patched_methods
 end
 
 """
-    _clear_virtual_sources!()
+    _restore_method_sources!(patched::Vector{Tuple{Method, Any}})
 
-Clear the patched sources side table after traced execution.
+Restore original method sources after traced execution.
 """
-function _clear_virtual_sources!()
-    empty!(_patched_sources)
-    # Change world age to invalidate instrumented methods.
-    ccall(:jl_set_typeinf_func, Cvoid, (Any,), CC.typeinf_ext_toplevel)
+function _restore_method_sources!(patched::Vector{Tuple{Method, Any}})
+    for (method, original_source) in patched
+        method.source = original_source
+    end
 end
 
 # Public API
@@ -1477,11 +1776,11 @@ then execute it. All callees are automatically instrumented.
 """
 function tau_rewrite_and_call(@nospecialize(f), args...)
     tt = Tuple{map(typeof, args)...}
-    ci = _trace_compile(f, tt)
+    ci, patched = _trace_compile(f, tt)
     try
         return invoke(f, ci, args...)
     finally
-        _clear_virtual_sources!()
+        _restore_method_sources!(patched)
     end
 end
 
@@ -1494,12 +1793,12 @@ Compile `f` with tracing instrumentation and return a callable wrapper.
 """
 function tau_rewrite(@nospecialize(f), @nospecialize(argtypes::Tuple))
     tt = Tuple{argtypes...}
-    ci = _trace_compile(f, tt)
+    ci, patched = _trace_compile(f, tt)
     return function(args...)
         try
             return invoke(f, ci, args...)
         finally
-            _clear_virtual_sources!()
+            _restore_method_sources!(patched)
         end
     end
 end
@@ -1519,11 +1818,11 @@ macro tau_rewrite(call_expr)
     return quote
         let _args = ($(esc.(args)...),)
             _tt = Tuple{map(typeof, _args)...}
-            _ci = $_trace_compile($(esc(f)), _tt)
+            _ci, _patched = $_trace_compile($(esc(f)), _tt)
             try
                 invoke($(esc(f)), _ci, _args...)
             finally
-                $_clear_virtual_sources!()
+                $_restore_method_sources!(_patched)
             end
         end
     end
