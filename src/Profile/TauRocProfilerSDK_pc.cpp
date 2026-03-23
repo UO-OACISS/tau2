@@ -639,6 +639,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
 
                 
             }
+#ifdef SAMPLING_SDKPC_1
             if(cur_header->kind == ROCPROFILER_PC_SAMPLING_RECORD_STOCHASTIC_V0_SAMPLE)
             {
 
@@ -755,7 +756,8 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 
                 TAU_process_sdk_sample_event(sample_event);
             }
-#endif
+#endif //SAMPLING_SDKPC_1
+#endif 
         }
         else
         {
