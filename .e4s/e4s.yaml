@@ -1,6 +1,6 @@
 - e4s_product: tau
   docs:  [README, Changes, LICENSE]
-  Area: "Development tools"
+  Area: "Development Tools"
   Description: "A performance analysis and tuning library."
   MemberProduct: False
   Accelerable: True
