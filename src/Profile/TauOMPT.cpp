@@ -18,7 +18,8 @@
     #else
         #warning "Found _OPENMP version less than 5.0"
         #if defined (__GNUC__) && defined (__GNUC_MINOR__)
-            #warning "Building OMPT support for GCC with LLVM library at runtime"
+            #warning "Building OMPT support for GCC with LLVM library at runtime
+	    #define USING_COMP_LLVM
         #else
             #if defined (TAU_USE_OMPT_5_0)
                 #undef TAU_USE_OMPT_5_0
@@ -863,7 +864,6 @@ on_ompt_callback_work(
     char timerName[10240];
     char resolved_address[1024];
     if(codeptr_ra) {
-
       void * codeptr_ra_copy = (void*) codeptr_ra;
       unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
       if(TauEnv_get_ompt_resolve_address_eagerly()) {
@@ -904,7 +904,7 @@ on_ompt_callback_work(
           snprintf(timerName, sizeof(timerName),  "OpenMP_Work_Other %s", resolved_address);
           break;
       }
-
+      //printf("Record %s  endpoint=%s \n",timerName, (endpoint==ompt_scope_begin)?"begin":"end" );
       switch(endpoint)
       {
         case ompt_scope_begin:
@@ -2100,7 +2100,9 @@ extern "C" int ompt_initialize(
 
   if(TauEnv_get_ompt_support_level() >= 1) { /* Only support this when "lowoverhead" mode is enabled. Turns on all required events + other low overhead */
 #ifndef __NVCOMPILER //NVIDIA does not provide endpoints for work callbacks as of 22.9
+#ifndef USING_COMP_LLVM // This callback also has issues with GCC, endpoints detected as end and no begin, with schedule clause
     Tau_register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
+#endif
 #endif
 #if _OPENMP < 202011 && defined(ompt_callback_master)
     Tau_register_callback(ompt_callback_master, cb_t(on_ompt_callback_master));
