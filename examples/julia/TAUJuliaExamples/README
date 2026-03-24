@@ -224,7 +224,7 @@ as well as all library functions called.
 
 -----------------------------------------------------
 
-Example 4: MPI.jl
+Example 5: MPI.jl
 
 TAU can be used to profile multi-rank applications which use MPI.jl.
 
@@ -285,30 +285,117 @@ included in the profile.
 
 -----------------------------------------------------
 
-Example 5: CUDA_Uninstrumented.jl
+Example 6: CUDA Uninstrumented
 
-TAU can be used to profile multi-rank applications which use MPI.jl.
+TAU can be used to profile Julia applications which use CUDA.jl.
 
 To do this:
 
-    - Ensure that MPI.jl is installed and is configured to run multi-rank
-    applications in your environment. Because TAU must be built with the same
-    MPI as MPI.jl, it is recommended to configure MPI.jl to use a system-provided MPI
-    following the instructions at https://juliaparallel.org/MPI.jl/stable/configuration/#using_system_mpi
+    - Ensure that CUDA.jl is installed and functional in your environment.
+      Because TAU must be built with the same version of CUDA as CUDA.jl,
+      it is recommended to configure CUDA.jl to use the system CUDA
+      rather than a downloaded binary.
+      Follow the instructions at https://cuda.juliagpu.org/stable/installation/overview/#Using-a-local-CUDA
+      to configure CUDA.jl to use the local CUDA install
 
-    - Build TAU with MPI support. 
-      
-      First, ensure that the same MPI that MPI.jl is configured to use is loaded into your environment
-      and then build TAU with:
+    - Build TAU with CUDA support:
 
           ./configure -bfd=download -dwarf=download -pthread -ittnotify -julia -cuda=/path/to/cuda
           make install
 
-The file MPI_Uninstrumented.jl contains a simple MPI.jl example.
+The file CUDA_Uninstrumented.jl contains a simple CUDA.jl example.
 
 The example can be run with:
 
     tau_julia -T serial,julia,ittnotify,pthread,cupti -cupti -ittnotify -- --project=. ./src/CUDA_Uninstrumented.jl
 
 This will collect profiles showing CUDA kernels collected through TAU's CUPTI support.
+
+-----------------------------------------------------
+
+Example 7: CUDA IR Rewriting
+
+The file CUDA_RewriteInst.jl demonstrates using the `@tau_rewrite` macro with
+CUDA.jl code. It creates a GPU array, performs an element-wise `sin` operation
+on the GPU, and transfers the result back to the CPU.
+
+Because the IR rewriter would otherwise recurse into GPU compiler internals,
+the `tau_rewrite_exclude_module` function is used to exclude the modules
+`:Base`, `:GPUArrays`, `:GPUCompiler`, and `:Cthulhu` from rewriting:
+
+    tau_rewrite_exclude_module(:Base, :GPUArrays, :GPUCompiler, :Cthulhu)
+    @tau_rewrite main()
+
+To use this example, TAU must be built with CUDA support:
+
+    ./configure -bfd=download -dwarf=download -pthread -ittnotify -julia -cuda=/path/to/cuda
+    make install
+
+The example can be run with:
+
+    tau_julia -T serial,julia,ittnotify,pthread,cupti -cupti -ittnotify -- --project=. ./src/CUDA_RewriteInst.jl
+
+-----------------------------------------------------
+
+Example 8: Selective Rewriting
+
+The file RewriteSelective.jl demonstrates using `tau_rewrite_exclude_module` to
+prevent the IR rewriter from recursing into functions defined in the `Base`
+module. This is useful when you want to profile only your own code and avoid
+the overhead and noise of instrumenting all of Julia's standard library.
+
+    tau_rewrite_exclude_module(:Base)
+    @tau_rewrite rewrite_example()
+
+The example contains user-defined functions (`fibonacci`, `recursive_example`,
+`my_sum`, `rewrite_example`) which will be instrumented, while calls into
+`Base` functions like `sum` and `collect` will not be rewritten.
+
+The example can be run with:
+
+    tau_julia -T serial,julia,ittnotify,pthread -- --project=. ./src/RewriteSelective.jl
+
+-----------------------------------------------------
+
+Example 9: Array Operations with IR Rewriting
+
+The file ArrayOps_RewriteInst.jl demonstrates using `@tau_rewrite` to profile
+code that performs array operations including random array generation,
+`maximum`, `mapslices`, slicing, sorting, and broadcasting. This example
+exercises Julia's array library more heavily than the basic RewriteInst.jl
+example.
+
+The recursion depth limit for rewriting can be configured using
+`tau_rewrite_set_recursion_limit`. A global limit and per-module limits
+can be set independently:
+
+    tau_rewrite_set_recursion_limit(4)
+    tau_rewrite_set_recursion_limit(Base, 2)
+    @tau_rewrite main()
+
+The example can be run with:
+
+    tau_julia -T serial,julia,ittnotify,pthread -- --project=. ./src/ArrayOps_RewriteInst.jl
+
+-----------------------------------------------------
+
+Example 10: Multi-threaded IR Rewriting
+
+The file Threads_RewriteInst.jl demonstrates using `@tau_rewrite` to profile
+multi-threaded Julia code that uses `Base.Threads.@spawn` to distribute work
+across threads. The example spawns 100 worker tasks, each performing a
+computation, distributed across all available Julia threads.
+
+Because threads may execute instrumented functions that have not yet been
+seen on that thread, the `tau_rewrite_deferred_contexts` function is called
+to enable deferred context creation for TAU timers:
+
+    tau_rewrite_exclude_module(Base)
+    tau_rewrite_deferred_contexts(true)
+    @tau_rewrite main()
+
+To run with multiple threads, set the `JULIA_NUM_THREADS` environment
+variable or pass the `-t` flag to Julia:
+
+    tau_julia -T serial,julia,ittnotify,pthread -- -t 4 --project=. ./src/Threads_RewriteInst.jl
 
