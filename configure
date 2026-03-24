@@ -10949,8 +10949,12 @@ if [ "x$download_tbb" = xyes ] ; then
 	mkdir build
 	mkdir install
 	cd build
+	tbb_cmake_flag=""
+	if [ "$(cmake --version | awk 'NR==1{v=$3; sub(/\..*/, "", v); print v}')" -ge 4 ]; then
+		tbb_cmake_flag="-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+	fi
 	#cmake is removing the runtime path, which generate issues when using tbb libraries, the two last flags fix this problem
-	CC=$compiler_for_dyninst CXX=$compilerxx_for_dyninst cmake .. -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_INSTALL_PREFIX=${dyninsttbbdir}/install -DTBB_TEST=OFF -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=True -DCMAKE_INSTALL_RPATH=${dyninsttbbdir}/install/lib
+	CC=$compiler_for_dyninst CXX=$compilerxx_for_dyninst cmake .. -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_INSTALL_PREFIX=${dyninsttbbdir}/install -DTBB_TEST=OFF -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=True -DCMAKE_INSTALL_RPATH=${dyninsttbbdir}/install/lib ${tbb_cmake_flag}
 	make -j4
 	make install
 	#compiler_for_dyninst=`grep "CMAKE_C_COMPILER" -rhw CMakeFiles/ | awk -F'"' '{print $2}'`
