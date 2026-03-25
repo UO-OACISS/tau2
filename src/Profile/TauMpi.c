@@ -493,6 +493,7 @@ MPI_Comm comm;
 {
   int  returnVal;
   int   typesize = 0;
+  int   typesize2 = 0;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Alltoall()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
@@ -504,7 +505,10 @@ MPI_Comm comm;
   if (sendtype != MPI_DATATYPE_NULL) {
     PMPI_Type_size( sendtype, &typesize );
   }
-  TAU_ALLTOALL_DATA(typesize*sendcount);
+  if (recvtype != MPI_DATATYPE_NULL) {
+    PMPI_Type_size( recvtype, &typesize2 );
+  }
+  TAU_ALLTOALL_DATA((typesize*recvcnt)+(typesize2*sendcount));
 
   TIMER_EXIT_COLLECTIVE_EXCH_ALL_EVENT("MPI_Alltoall",typesize*sendcount,typesize*recvcnt,0,comm);
   TAU_PROFILE_STOP(tautimer);
@@ -678,7 +682,7 @@ MPI_Comm comm;
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Gatherv( sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm );
 
-  track_vector(TAU_GATHER_DATA, recvcnts, recvtype);
+  track_vector(TAU_GATHERV_DATA, recvcnts, recvtype);
 
   if (TAU_DO_TIMER_EXIT) {
     double tmp_array[5] = {0.0};
@@ -860,7 +864,7 @@ MPI_Comm comm;
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Scatterv( sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm );
 
-  track_vector(TAU_SCATTER_DATA, sendcnts, typesize);
+  track_vector(TAU_SCATTERV_DATA, sendcnts, typesize);
 
   if (TAU_DO_TIMER_EXIT) {
     double tmp_array[5] = {0.0};

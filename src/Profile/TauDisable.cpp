@@ -639,7 +639,15 @@ void Tau_scatter_data(int data)
 {
 }
 
+void Tau_scatterv_data(int data)
+{
+}
+
 void Tau_gather_data(int data)
+{
+}
+
+void Tau_gatherv_data(int data)
 {
 }
 
@@ -658,6 +666,310 @@ void Tau_scan_data(int data)
 void Tau_reducescatter_data(int data)
 {
 }
+
+//MPI-3
+void Tau_ireduce_data(int data)
+{
+}
+
+void Tau_ibcast_data(int data)
+{
+}
+
+void Tau_igather_data(int data)
+{
+}
+
+void Tau_igatherv_data(int data)
+{
+}
+
+void Tau_iscatter_data(int data)
+{
+}
+
+void Tau_iscatterv_data(int data)
+{
+}
+
+void Tau_iallgather_data(int data)
+{
+}
+
+void Tau_iallgatherv_data(int data)
+{
+}
+
+void Tau_ialltoall_data(int data)
+{
+}
+
+void Tau_ialltoallw_data(int data)
+{
+}
+
+void Tau_iallreduce_data(int data)
+{
+}
+
+void Tau_ireducescatter_data(int data)
+{
+}
+
+void Tau_iscan_data(int data)
+{
+}
+
+void Tau_iexscan_data(int data)
+{
+}
+
+void Tau_nallgather_data(int data)
+{
+}
+
+void Tau_nallgatherv_data(int data)
+{
+}
+
+void Tau_nalltoall_data(int data)
+{
+}
+
+void Tau_nalltoallv_data(int data)
+{
+}
+
+void Tau_nalltoallw_data(int data)
+{
+}
+
+void Tau_inallgather_data(int data)
+{
+}
+
+void Tau_inallgatherv_data(int data)
+{
+}
+
+void Tau_inalltoall_data(int data)
+{
+}
+
+void Tau_inalltoallv_data(int data)
+{
+}
+
+void Tau_inalltoallw_data(int data)
+{
+}
+
+void Tau_reducescatterblock_data(int data)
+{
+}
+
+void Tau_ireducescatterblock_data(int data)
+{
+}
+
+//MPI-4
+
+void Tau_isendrecv_data(int data) 
+{
+}
+
+void Tau_isendrecv_rep_data(int data) 
+{
+}
+
+void Tau_allgatherc_data(int data) 
+{
+}
+
+void Tau_iallgatherc_data(int data) 
+{
+}
+
+void Tau_allgathervc_data(int data) 
+{
+}
+
+void Tau_allreducec_data(int data) 
+{
+}
+
+void Tau_iallreducec_data(int data) 
+{
+}
+
+void Tau_alltoallc_data(int data) 
+{
+}
+
+void Tau_ialltoallc_data(int data) 
+{
+}
+
+void Tau_alltoallvc_data(int data) 
+{
+}
+
+void Tau_ialltoallvc_data(int data) 
+{
+}
+
+void Tau_alltoallwc_data(int data) 
+{
+}
+
+void Tau_ialltoallwc_data(int data) 
+{
+}
+
+void Tau_bcastc_data(int data) 
+{
+}
+
+void Tau_ibcastc_data(int data) 
+{
+}
+
+void Tau_gatherc_data(int data) 
+{
+}
+
+void Tau_igatherc_data(int data) 
+{
+}
+
+void Tau_gathervc_data(int data) 
+{
+}
+
+void Tau_igathervc_data(int data) 
+{
+}
+
+void Tau_reducec_data(int data) 
+{
+}
+
+void Tau_ireducec_data(int data) 
+{
+}
+
+void Tau_reducescatterc_data(int data) 
+{
+}
+
+void Tau_ireducescatterc_data(int data) 
+{
+}
+
+void Tau_scanc_data(int data) 
+{
+}
+
+void Tau_iscanc_data(int data) 
+{
+}
+
+void Tau_scatterc_data(int data) 
+{
+}
+
+void Tau_iscatterc_data(int data) 
+{
+}
+
+void Tau_scattervc_data(int data) 
+{
+}
+
+void Tau_iscattervc_data(int data) 
+{
+}
+
+void Tau_recvc_data(int data) 
+{
+}
+
+void Tau_irecvc_data(int data) 
+{
+}
+
+void Tau_sendc_data(int data) 
+{
+}
+
+void Tau_isendc_data(int data) 
+{
+}
+
+void Tau_sendrecvc_data(int data) 
+{
+}
+
+void Tau_isendrecvc_data(int data) 
+{
+}
+
+void Tau_ssendc_data(int data) 
+{
+}
+
+void Tau_issendc_data(int data) 
+{
+}
+
+void Tau_reducescatterblockc_data(int data)
+{
+}
+
+void Tau_ireducescatterblockc_data(int data)
+{
+}
+
+//MPI-4 Neighbor
+void Tau_nallgatherc_data(int data) 
+{
+}
+
+void Tau_inallgatherc_data(int data) 
+{
+}
+
+void Tau_nallgathervc_data(int data) 
+{
+}
+
+void Tau_nalltoallc_data(int data) 
+{
+}
+
+void Tau_inalltoallc_data(int data) 
+{
+}
+
+void Tau_nalltoallvc_data(int data) 
+{
+}
+
+void Tau_inalltoallvc_data(int data) 
+{
+}
+
+void Tau_nalltoallwc_data(int data) 
+{
+}
+
+void Tau_inalltoallwc_data(int data) 
+{
+}
+
+
+
+
 
 /* alloc/dealloc */
 void TAU_ALLOC(void ** ptr, int* line, int *size, char *name, int slen)
