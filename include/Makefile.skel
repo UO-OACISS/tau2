@@ -51,6 +51,10 @@ TAU_CUDA_CXX=g++
 #PGI#TAU_CUDA_CXX=$(CONFIG_CXX)  #ENDIF#
 #USE_IBMXLC#TAU_CUDA_CXX=$(CONFIG_CXX)  #ENDIF#
 
+# Compiler for perfetto.cc. Defaults to $(TAU_CXX), but nvc++/pgc++ ICE on it,
+# so we detect the g++ matching their GCC toolchain via -drygccinc.
+_TAU_DRYGCC_PREFIX = $(shell $(CONFIG_CXX) -drygccinc 2>&1 | tr ':' '\n' | grep '/lib/gcc/' | head -1 | sed 's|/lib/gcc/.*||')
+TAU_PERFETTO_CXX = $(if $(wildcard $(_TAU_DRYGCC_PREFIX)/bin/g++),$(_TAU_DRYGCC_PREFIX)/bin/g++,$(TAU_CXX))
 
 # Name prefix for cross compiler. E.g. `arm-linux-gnueabi-'.
 CROSS_PREFIX=#FixMakefile#

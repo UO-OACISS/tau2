@@ -830,7 +830,7 @@ TracerPerfetto.o : TracerPerfetto.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE)  $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 #PERFETTO#Perfetto.o : $(TAUROOT)/utils/perfetto/perfetto.cc $(TAUROOT)/utils/perfetto/perfetto.h #ENDIF#
-#PERFETTO#	g++ -std=c++17 -fPIC -O2 -g -I$(TAUROOT)/utils/perfetto -c $< -o $@ #ENDIF#
+#PERFETTO#	$(TAU_PERFETTO_CXX) -std=c++17 -fPIC -O2 -g -I$(TAUROOT)/utils/perfetto -c $< -o $@ #ENDIF#
 
 TauMetrics.o   	: TauMetrics.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
