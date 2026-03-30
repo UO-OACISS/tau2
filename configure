@@ -3708,9 +3708,9 @@ EOF
 	fi
 	if [ -d $rocmcore_dir/include/rocm-core ]; then
 		if [ $c_compiler = default ]
-	        then
-        	    c_compiler=cc
-	        fi
+        then
+            c_compiler=cc
+        fi
 		if  $c_compiler $orig_useropt -c tau_rocm6_vtest.c -I$rocmcore_dir/include/rocm-core 1> /dev/null 2>&1
 		then
 			rm tau_rocm6_vtest.o
@@ -3842,10 +3842,38 @@ if [ "$rocmv6" = "no" ] ; then
 fi
 
 if [ -d ${nccl_lib} -a -d ${nccl_inc} ]; then
-    fixmakeargs="$fixmakeargs nccl_lib=$nccl_lib"
-    fixmakeargs="$fixmakeargs nccl_inc=$nccl_inc"
-    fixmakeargs="$fixmakeargs NCCL"
-    tauoptions="${tauoptions}-nccl"
+
+cat <<EOF > nccl_version_test.c
+#include <nccl.h>
+
+#if (NCCL_MAJOR < 2)
+#error "NCCL version is lower than 2"
+#endif
+#if (NCCL_MAJOR == 2)
+#if (NCCL_MINOR < 23)
+    #error "NCCL version is 2.x, but lower than 2.23"
+#endif
+#endif
+EOF
+
+    if [ $c_compiler = default ]
+    then
+        c_compiler=cc
+    fi
+    if  $c_compiler $orig_useropt -c nccl_version_test.c -I$nccl_inc 1> /dev/null 2>&1
+    then
+        fixmakeargs="$fixmakeargs nccl_lib=$nccl_lib"
+        fixmakeargs="$fixmakeargs nccl_inc=$nccl_inc"
+        fixmakeargs="$fixmakeargs NCCL"
+        tauoptions="${tauoptions}-nccl"
+        rm nccl_version_test.c
+    else
+        echo "Error configuring with -nccl, version not supported, must be NCCL 2.23 or newer."
+        rm nccl_version_test.c
+        exit
+    fi
+    
+
 fi
 
 if [ "x$use_opencl" = "xyes" -a "x$openclinclude" = "x" ]; then
