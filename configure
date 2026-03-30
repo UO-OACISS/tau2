@@ -811,7 +811,8 @@ usage() {
     echo "-llvm_cxx=<dir................. Compiler that was used to compile LLVM."
     echo "                            (necessary for the instrumentation plugin)."
     echo "-syscall ......................................  Build SYSCALL Wrapper."
-    echo ""
+    echo "-nccl_library=<dir> ........... Specify location of NICL lib directory."
+    echo "-nccl_include=<dir> ....... Specify location of NICL include directory."
     echo "-help ...................................... display this help message."
     echo "-fullhelp .............................. display the full help message."
     echo ""
@@ -1096,6 +1097,8 @@ for arg in "$@"; do
         echo "-tbb ......................................... Specify location of TBB."
         echo "-xlsmp ............................. Specify location of xlsmp library."
         echo "-syscall ....................................... Build SYSCALL Wrapper."
+        echo "-nccl_library=<dir> ........... Specify location of NICL lib directory."
+        echo "-nccl_include=<dir> ....... Specify location of NICL include directory."
         echo "-help ...................................... display this help message."
         echo "-fullhelp .............................. display the full help message."
         exit
@@ -1485,6 +1488,9 @@ phiprof=""
 syscall=no
 compiler_for_dyninst=""
 compilerxx_for_dyninst=""
+nccl=no
+nccl_lib=""
+nccl_inc=""
 restore_perfdmf_and_paraprof
 
 handle_python_option() {
@@ -3532,6 +3538,24 @@ for arg in "$@"; do
             syscall=yes
             shift
             ;;
+        
+        -nccl_library=*)
+            nccl_lib=`echo $arg | sed -e 's/-nccl_library=//' -e 's/ /#/g'`
+            if [ ! -d ${nccl_lib} ] ; then
+                echo "Error: Cannot access NCCL library directory ${nccl_lib}"
+                exit 1
+            fi
+            shift
+            ;;
+
+        -nccl_include=*)
+            nccl_inc=`echo $arg | sed -e 's/-nccl_include=//' -e 's/ /#/g'`
+            if [ ! -d ${nccl_inc} ] ; then
+                echo "Error: Cannot access NCCL include directory ${nccl_inc}"
+                exit 1
+            fi
+            shift
+            ;;
 
         default)
             echo "Fixing Makefiles"
@@ -3815,6 +3839,13 @@ if [ "$rocmv6" = "no" ] ; then
          fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
        fi
     fi
+fi
+
+if [ -d ${nccl_lib} -a -d ${nccl_inc} ]; then
+    fixmakeargs="$fixmakeargs nccl_lib=$nccl_lib"
+    fixmakeargs="$fixmakeargs nccl_inc=$nccl_inc"
+    fixmakeargs="$fixmakeargs NCCL"
+    tauoptions="${tauoptions}-nccl"
 fi
 
 if [ "x$use_opencl" = "xyes" -a "x$openclinclude" = "x" ]; then

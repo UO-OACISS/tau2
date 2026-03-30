@@ -109,7 +109,8 @@ usage()
   echo "        -memory_debug Enable memory debugger"
   echo "        -cuda         Track GPU events via CUDA"
   echo "        -cupti        Track GPU events via CUPTI (Also see env. variable TAU_CUPTI_API)"
-  echo "        -cupti_pc        Track GPU events via CUPTI and enables PC Sampling(Also see env. variable TAU_CUPTI_API)"
+  echo "        -cupti_pc     Track GPU events via CUPTI and enables PC Sampling(Also see env. variable TAU_CUPTI_API)"
+  echo "        -nccl         Track NCCL events."
   echo "        -opencl       Track GPU events via OpenCL"
   echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
   echo "        -rocm         Track ROCm events via rocprofiler "
@@ -424,6 +425,7 @@ processM=false
 python_launch_module=false
 python_m_arg=""
 track_syscall=false
+track_nccl=false
 
 # This saves the args to tau_exec so they can be reused later.
 # This is used for MPI_Comm_spawn support, in which TAU spawns the child
@@ -553,6 +555,11 @@ for arg in "$@" ; do
         ;;
       -cupti_pc)
         track_cupti_pc=true
+        save_arg $arg
+        shift
+        ;;
+      -nccl)
+        track_nccl=true
         save_arg $arg
         shift
         ;;
@@ -1091,10 +1098,18 @@ if [ ! "x$isTBB" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
-
 isPthread=`echo $theBinding | grep pthread`
 if [ ! "x$isPthread" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX ]; then
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+fi
+
+isNCCL=`echo $theBinding | grep nccl`
+if [ ! "x$isNCCL" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-NCCL-plugin$TAU_SHLIBX ]; then
+  echo "NCCL available"
+  export NCCL_PROFILE_EVENT_MASK=4095
+  export NCCL_PROFILER_SUMMARY=1
+  export NCCL_PROFILER_START=1
+  export NCCL_PROFILER_PLUGIN=$BASEDIR/lib/$theBinding/libTAU-NCCL-plugin$TAU_SHLIBX
 fi
 
 if [ $track_gomp = "true" -a -r $BASEDIR/lib/$theBinding/libTAU-gomp$TAU_SHLIBX ]; then
