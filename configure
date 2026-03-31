@@ -6568,6 +6568,52 @@ then
         full_cc_compiler=$c_compiler
     fi
 fi
+# Fail if the user explicitly specified compilers that differ from the compiler
+# backing mpicc/mpicxx. Using mismatched compilers (e.g. configuring with
+# -cc=nvc when mpicc wraps gcc) will cause instrumentation flags from the
+# configured compiler suite to be passed to the wrong compiler.
+if [ $c_compiler_specified = yes ]; then
+    resolved_c=`which $c_compiler 2>/dev/null`
+    canon_resolved_c=`readlink -f $resolved_c 2>/dev/null || echo $resolved_c`
+    canon_full_cc=`readlink -f $full_cc_compiler 2>/dev/null || echo $full_cc_compiler`
+    if [ "x$resolved_c" != "x" -a "x$full_cc_compiler" != "x" -a "x$canon_resolved_c" != "x$canon_full_cc" ]; then
+        echo ""
+        echo "ERROR: The C compiler specified (-cc=$c_compiler => $resolved_c)"
+        echo "       differs from the compiler backing the MPI wrapper ($full_cc_compiler)."
+        echo "       Compiler-based instrumentation flags are selected for $c_compiler but"
+        echo "       user code will be compiled with $full_cc_compiler. This will cause"
+        echo "       build failures (e.g. unrecognized flags like -Minstrument passed to gcc)."
+        echo ""
+        echo "       Possible fixes:"
+        echo "         1. Load the matching PrgEnv module so that mpicc wraps $c_compiler"
+        echo "            (e.g. module swap PrgEnv-cray PrgEnv-nvidia for NVHPC)"
+        echo "         2. Do not specify -cc/-c++, and let the Cray MPI wrappers supply"
+        echo "            the compiler after loading the correct PrgEnv module"
+        echo ""
+        exit 1
+    fi
+fi
+if [ $cxx_compiler_specified = yes ]; then
+    resolved_cxx=`which $cxx_compiler 2>/dev/null`
+    canon_resolved_cxx=`readlink -f $resolved_cxx 2>/dev/null || echo $resolved_cxx`
+    canon_full_cxx=`readlink -f $full_cxx_compiler 2>/dev/null || echo $full_cxx_compiler`
+    if [ "x$resolved_cxx" != "x" -a "x$full_cxx_compiler" != "x" -a "x$canon_resolved_cxx" != "x$canon_full_cxx" ]; then
+        echo ""
+        echo "ERROR: The C++ compiler specified (-c++=$cxx_compiler => $resolved_cxx)"
+        echo "       differs from the compiler backing the MPI wrapper ($full_cxx_compiler)."
+        echo "       Compiler-based instrumentation flags are selected for $cxx_compiler but"
+        echo "       user code will be compiled with $full_cxx_compiler. This will cause"
+        echo "       build failures (e.g. unrecognized flags like -Minstrument passed to gcc)."
+        echo ""
+        echo "       Possible fixes:"
+        echo "         1. Load the matching PrgEnv module so that mpicxx wraps $cxx_compiler"
+        echo "            (e.g. module swap PrgEnv-cray PrgEnv-nvidia for NVHPC)"
+        echo "         2. Do not specify -cc/-c++, and let the Cray MPI wrappers supply"
+        echo "            the compiler after loading the correct PrgEnv module"
+        echo ""
+        exit 1
+    fi
+fi
 # This takes care of mpc_cxx setting this above
 if [ $shmem = yes -a "x$cxx_compiler" = "xdefault" ]
 then
