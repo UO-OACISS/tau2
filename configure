@@ -5571,8 +5571,13 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
                 fixmakeargs="$fixmakeargs mpilibargs=$tmp_mpilibargs mpiflibargs=$tmp_mpiflibargs mpiincargs=$mpiinc"
                 mpilibargs_added_to_fixmakeargs=yes
             fi
-            full_cxx_compiler=`$mpicxx_exe -show | tail -n 1 | awk '{ print $1; }'`
-            full_cc_compiler=`$mpicc_exe -show | tail -n 1 | awk '{ print $1; }'`
+            if [ "$machine" = "craycnl" ]; then
+                full_cxx_compiler=CC
+                full_cc_compiler=cc
+            else
+                full_cxx_compiler=`$mpicxx_exe -show | tail -n 1 | awk '{ print $1; }'`
+                full_cc_compiler=`$mpicc_exe -show | tail -n 1 | awk '{ print $1; }'`
+            fi
             fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
             mpi=yes
         fi
