@@ -6573,6 +6573,10 @@ fi
 # -cc=nvc when mpicc wraps gcc) will cause instrumentation flags from the
 # configured compiler suite to be passed to the wrong compiler.
 if [ $c_compiler_specified = yes ]; then
+    # Skip the check for Cray PE driver wrappers: 'cc' IS the MPI compiler on
+    # Cray PE systems. mpicc -show reports the underlying compiler (e.g. craycc,
+    # nvc) rather than the wrapper path, so a path comparison is meaningless.
+    if [ "$c_compiler" != cc ]; then
     resolved_c=`which $c_compiler 2>/dev/null`
     canon_resolved_c=`readlink -f $resolved_c 2>/dev/null || echo $resolved_c`
     canon_full_cc=`readlink -f $full_cc_compiler 2>/dev/null || echo $full_cc_compiler`
@@ -6592,8 +6596,11 @@ if [ $c_compiler_specified = yes ]; then
         echo ""
         exit 1
     fi
+    fi  # end: c_compiler != Cray PE wrapper
 fi
 if [ $cxx_compiler_specified = yes ]; then
+    # Skip for Cray PE driver wrapper 'CC': same reasoning as for 'cc' above.
+    if [ "$cxx_compiler" != CC ]; then
     resolved_cxx=`which $cxx_compiler 2>/dev/null`
     canon_resolved_cxx=`readlink -f $resolved_cxx 2>/dev/null || echo $resolved_cxx`
     canon_full_cxx=`readlink -f $full_cxx_compiler 2>/dev/null || echo $full_cxx_compiler`
@@ -6613,6 +6620,7 @@ if [ $cxx_compiler_specified = yes ]; then
         echo ""
         exit 1
     fi
+    fi  # end: cxx_compiler != Cray PE wrapper
 fi
 # This takes care of mpc_cxx setting this above
 if [ $shmem = yes -a "x$cxx_compiler" = "xdefault" ]
