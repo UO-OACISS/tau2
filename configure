@@ -3545,6 +3545,7 @@ for arg in "$@"; do
                 echo "Error: Cannot access NCCL library directory ${nccl_lib}"
                 exit 1
             fi
+            pthread=yes
             shift
             ;;
 
@@ -3554,6 +3555,7 @@ for arg in "$@"; do
                 echo "Error: Cannot access NCCL include directory ${nccl_inc}"
                 exit 1
             fi
+            pthread=yes
             shift
             ;;
 
