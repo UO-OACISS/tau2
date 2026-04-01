@@ -9741,7 +9741,7 @@ if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" = "x" -a "x$CRAY_MPICH_PREFIX" !
   CRAY_MPICH_DIR=$CRAY_MPICH_PREFIX
 fi
 
-if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" != "x" -a -r $mpiinc/cray_version.h ]; then
+if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" != "x" -a -r $CRAY_MPICH_PREFIX/include/cray_version.h ]; then
   if [ -r $CRAY_MPICH_DIR/lib/libmpi_cray.a ]; then
     echo "Found libmpi_cray.a"
     fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPI_CRAY"
