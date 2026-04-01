@@ -4761,7 +4761,7 @@ case $machine in
             tauoptions="${tauoptions}-nvidia"
             cray_nvhpc=yes
             default_fortran=nvfortran
-            fixmakeargs="$fixmakeargs NV_FORTRAN"
+            fixmakeargs="$fixmakeargs NV_FORTRAN COMPINST_PGI PGI"
         elif [ "x$PE_ENV" = xAOCC ] ; then
             tauoptions="${tauoptions}-aocc"
             aocc=yes
