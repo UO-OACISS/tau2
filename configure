@@ -4855,7 +4855,7 @@ case $machine in
             if [ "x$CRAY_PE_USE_CLANG" = "x" ]; then
               fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
             else
-              if [ -r $mpiinc/cray_version.h ]; then
+              if [ -r $CRAY_MPICH_PREFIX/include/cray_version.h ]; then
                 fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
               fi
             fi
@@ -5638,10 +5638,7 @@ case $cxx_compiler in
 	  if [ $openmp = yes ]; then
             fixmakeargs="$fixmakeargs CLANG_OPENMP"
           fi
-	  #llvm=yes
-	  #build_llvm_plugin=yes
-	  #fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
-	  fixmakeargs="$fixmakeargs FLANG_NO_MX_OPTS" #COMPINST_LLVM"  #CLANG
+	  fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
 	fi
         ;;
     *llvm*|*clang* | hcc | hipcc | parascc )
