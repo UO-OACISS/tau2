@@ -2740,6 +2740,9 @@ case $1 in
      COMPINST_CRAYPE_CLANG)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     CRAYCC_CLANG_DRIVER)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      CRAYPE_CLANG_SLURM)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;

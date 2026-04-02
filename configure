@@ -4834,6 +4834,7 @@ case $machine in
             #         with -lmpichcxx which is static. -lmpichcxx_cray
             #         has to be used instead.
             if [ "x$PE_MVAPICH2_FIXED_PRGENV" = "x" ]; then
+              # Note: $mpiinc is not set until later (~line 5558); this check is currently a no-op.
               if [ -r $mpiinc/cray_version.h ]; then
                 fixmakeargs="$fixmakeargs CRAYCNL_CCE"
               fi
@@ -4855,7 +4856,8 @@ case $machine in
             if [ "x$CRAY_PE_USE_CLANG" = "x" ]; then
               fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
             else
-              if [ -r $CRAY_MPICH_PREFIX/include/cray_version.h ]; then
+              # Note: $mpiinc is not set until later (~line 5558); this check is currently a no-op.
+              if [ -r $mpiinc/cray_version.h ]; then
                 fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
               fi
             fi
@@ -5571,13 +5573,8 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
                 fixmakeargs="$fixmakeargs mpilibargs=$tmp_mpilibargs mpiflibargs=$tmp_mpiflibargs mpiincargs=$mpiinc"
                 mpilibargs_added_to_fixmakeargs=yes
             fi
-            if [ "$machine" = "craycnl" ]; then
-                full_cxx_compiler=CC
-                full_cc_compiler=cc
-            else
-                full_cxx_compiler=`$mpicxx_exe -show | tail -n 1 | awk '{ print $1; }'`
-                full_cc_compiler=`$mpicc_exe -show | tail -n 1 | awk '{ print $1; }'`
-            fi
+            full_cxx_compiler=`$mpicxx_exe -show | tail -n 1 | awk '{ print $1; }'`
+            full_cc_compiler=`$mpicc_exe -show | tail -n 1 | awk '{ print $1; }'`
             fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
             mpi=yes
         fi
@@ -5643,7 +5640,10 @@ case $cxx_compiler in
 	  if [ $openmp = yes ]; then
             fixmakeargs="$fixmakeargs CLANG_OPENMP"
           fi
-	  fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
+	  #llvm=yes
+	  #build_llvm_plugin=yes
+	  #fixmakeargs="$fixmakeargs COMPINST_CRAYPE_CLANG"
+	  fixmakeargs="$fixmakeargs FLANG_NO_MX_OPTS CRAYCC_CLANG_DRIVER"
 	fi
         ;;
     *llvm*|*clang* | hcc | hipcc | parascc )
@@ -9746,7 +9746,7 @@ if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" = "x" -a "x$CRAY_MPICH_PREFIX" !
   CRAY_MPICH_DIR=$CRAY_MPICH_PREFIX
 fi
 
-if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" != "x" -a -r $CRAY_MPICH_PREFIX/include/cray_version.h ]; then
+if [ "x$PE_ENV" = "xCRAY" -a "x$CRAY_MPICH_DIR" != "x" -a -r $mpiinc/cray_version.h ]; then
   if [ -r $CRAY_MPICH_DIR/lib/libmpi_cray.a ]; then
     echo "Found libmpi_cray.a"
     fixmakeargs="$fixmakeargs CRAY_MPICH_LIBMPI_CRAY"
