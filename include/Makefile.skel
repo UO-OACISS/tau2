@@ -886,6 +886,7 @@ TAU_PAPI_EXTRA_FLAGS	       = $(LEXTRA)
 #PAPI#TAU_LINKER_OPT1 = $(TAU_PAPI_RPATH) #ENDIF#
 
 #PTHREAD_AVAILABLE#LEXTRA1     = -lpthread -ldl	       #ENDIF#
+#PTHREAD_LINK_ONLY#LEXTRA1     = -lpthread -ldl	       #ENDIF#
 #PTHREAD_AVAILABLE#SHLEXTRA1     = -lTAU-pthread        #ENDIF#
 #TBB_AVAILABLE#SHLEXTRA1     = -lTAU        #ENDIF#
 #TULIPTHREADS#LEXTRA1     = -L$(TULIPDIR)/Tuliplib  -ltulip	       #ENDIF#

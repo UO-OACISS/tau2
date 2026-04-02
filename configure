@@ -11516,8 +11516,14 @@ if [ $tbb = yes ] ; then
     tauoptions="${tauoptions}-tbb"
 else
   if [ $pthread = yes ] ; then
+    if [ $openmp = yes ] ; then
+      echo "WARNING: pthread layer deactivated: it is not compatible with the OpenMP thread layer."
+      echo "         Switching to -lpthread only. OpenMP will handle thread tracking."
+      fixmakeargs="$fixmakeargs PTHREAD_LINK_ONLY"
+    else
       fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
       tauoptions="${tauoptions}-pthread"
+    fi
   fi
 fi
 
