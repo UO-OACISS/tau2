@@ -157,7 +157,12 @@ std::string get_nvtx_message(const nvtxEventAttributes_t * eventAttrib, nvtxDoma
 
 
 void tau_nvtxRangePush (const std::string name) {
-    TAU_START(name.c_str());
+    //There are issues with NVTX calls with NCCL (some NVTX calls are not closed)
+    // add them to the stack we use, as we would have issues with the Pop, as the Pop does not know
+    // the original call, but do not START/STOP them. Also, NCCL is not providing any useful information
+    // for us with the NVTX calls.
+    if(name.compare(0,4, "NCCL") != 0)
+        TAU_START(name.c_str());
 
     #ifdef NVTX_DEBUG_ENV
         std::cout << "TAU-NVTX " << "STACK content before push : " << get_range_stack() << std::endl;
@@ -176,7 +181,9 @@ void tau_nvtxRangePop () {
         #ifdef NVTX_DEBUG_ENV
             std::cout << "TAU-NVTX " << "nvtxRangePop  (" << timer << ")" << std::endl;
         #endif
-        TAU_STOP(timer.c_str());
+        //There are issues with NVTX calls with NCCL (some NVTX calls are not closed)
+        if(timer.compare(0,4, "NCCL") != 0)
+            TAU_STOP(timer.c_str());
         #ifdef NVTX_DEBUG_ENV
             std::cout << "TAU-NVTX " << "STACK content before pop: " << get_range_stack() << std::endl;
         #endif
