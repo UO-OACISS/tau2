@@ -447,7 +447,7 @@ __hidden ncclResult_t exampleProfilerStopEvent(void* eHandle) {
 }
 
 __hidden ncclResult_t exampleProfilerRecordEventState(void* eHandle, ncclProfilerEventState_t eState, ncclProfilerEventStateArgs_t* eStateArgs) {
-    printf("[ExampleProfiler] exampleProfilerRecordEventState tid=%ld\n", (long)syscall(SYS_gettid));
+    //printf("[ExampleProfiler] exampleProfilerRecordEventState tid=%ld\n", (long)syscall(SYS_gettid));
     // the event handle might be null if we run out of events
     if (eHandle == NULL) return ncclSuccess;
 
