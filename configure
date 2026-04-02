@@ -2357,7 +2357,6 @@ for arg in "$@"; do
 
 	-perfetto)
 		perfetto=yes
-		pthread=yes
 		fixmakeargs="$fixmakeargs PERFETTO"
 		shift
 		;;
