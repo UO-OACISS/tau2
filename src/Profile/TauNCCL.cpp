@@ -503,7 +503,7 @@ __hidden ncclResult_t tauNcclProfilerStartEvent(void* context, void** eHandle, n
     else if (eDescr->type == ncclProfileColl)
     {
         char type_name[1024];
-        snprintf(type_name, sizeof(type_name), "ncclProfileColl %s", eDescr->p2pApi.func);
+        snprintf(type_name, sizeof(type_name), "ncclProfileColl %s", eDescr->coll.func);
         tau_nccl_event* start_event = create_nccl_event( eDescr, CollPool, &index_c_pool, type_name, 
                                                          eDescr->coll.count, ncclStringDataToSize(eDescr->coll.datatype) );
         *eHandle = (void*)start_event;
