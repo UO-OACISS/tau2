@@ -3545,7 +3545,6 @@ for arg in "$@"; do
                 echo "Error: Cannot access NCCL library directory ${nccl_lib}"
                 exit 1
             fi
-            pthread=yes
             shift
             ;;
 
@@ -3555,7 +3554,6 @@ for arg in "$@"; do
                 echo "Error: Cannot access NCCL include directory ${nccl_inc}"
                 exit 1
             fi
-            pthread=yes
             shift
             ;;
 
@@ -3862,7 +3860,8 @@ EOF
     then
         c_compiler=cc
     fi
-    if  $c_compiler $orig_useropt -c nccl_version_test.c -I$nccl_inc 1> /dev/null 2>&1
+    #echo $c_compiler $orig_useropt -c nccl_version_test.c -I$nccl_inc -I$cudainclude
+    if  $c_compiler $orig_useropt -c nccl_version_test.c -I$nccl_inc -I$cudainclude 1> /dev/null 2>&1
     then
         fixmakeargs="$fixmakeargs nccl_lib=$nccl_lib"
         fixmakeargs="$fixmakeargs nccl_inc=$nccl_inc"
@@ -3871,6 +3870,10 @@ EOF
         rm nccl_version_test.c
     else
         echo "Error configuring with -nccl, version not supported, must be NCCL 2.23 or newer."
+        if [ "x$cudainclude" = "x" ]
+        then 
+            echo "Did you forget to use -cuda? You must configure cuda when using NCCL."
+        fi
         rm nccl_version_test.c
         exit
     fi

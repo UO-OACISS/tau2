@@ -374,6 +374,7 @@ static int env_taucuptiavail = 0;
 static int env_taucuptipc = 0;
 static int env_taucuptipc_hwsize = 0;
 static int env_taucuptipc_period = 0;
+static int env_taunccl_poolsize = 0;
 
 static int env_nodenegoneseen = 0;
 static int env_mic_offload = 0;
@@ -1331,6 +1332,10 @@ int TauEnv_get_tauCuptiPC_hwsize() {
 
 int TauEnv_get_tauCuptiPC_period() {
   return env_taucuptipc_period;
+}
+
+int TauEnv_get_tauNCCL_poolsize() {
+  return env_taunccl_poolsize;
 }
 
 void TauEnv_set_nodeNegOneSeen(int nthreads) {
@@ -2889,6 +2894,23 @@ void TauEnv_initialize()
         TAU_METADATA("TAU_CUPTI_PC_PERIOD", "default");
       }
     }
+
+    tmp = getconf("TAU_NCCL_POOLSIZE");
+    if(tmp)
+    {
+      env_taunccl_poolsize = atoi(tmp);
+      if(env_taunccl_poolsize<0)
+      {
+        env_taunccl_poolsize=0;
+      }
+      else
+      {
+          TAU_VERBOSE("TAU: NCCL pool size : %d\n", env_taucuptipc_period);
+          snprintf(tmpstr, sizeof(tmpstr),  "%d", env_taucuptipc_period);
+          TAU_METADATA("TAU_NCCL_POOLSIZE", tmpstr);
+      }
+    }
+
 
     env_cuda_device_name = getconf("TAU_CUDA_DEVICE_NAME");
     if (!env_cuda_device_name || 0 == strcasecmp(env_cuda_device_name, "")) {

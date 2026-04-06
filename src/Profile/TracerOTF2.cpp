@@ -1119,64 +1119,87 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
                 #endif
                 cputhreads++;
             }
-#ifdef TAU_ENABLE_ROCM
-        //snprintf(namebuf, 256, "Thread %d (ROCM GPU ID:%d, Queue ID:%d, Thread ID:%d)", thread_num, 1, 2, 3);
-        const char *name;
-        Tau_metadata_value_t * value;
-        char queue_id[256] = "";
-        char gpu_id[256] = "";
-        char tau_task_id[256] = "";
-        // We need to capture the thread name as "queue<2>/device<1> [31]".
- 		for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(thread_num).begin(); it != Tau_metadata_getMetaData(thread_num).end(); it++) {
-            name = it->first.name;
-            value = it->second;
-            if (strcmp(name, "ROCM_GPU_ID") == 0) {
-                        snprintf(gpu_id, sizeof(gpu_id),  "%s", value->data.cval);
-            }
-            if (strcmp(name, "ROCM_QUEUE_ID") == 0) {
-                snprintf(queue_id, sizeof(queue_id),  "%s", value->data.cval);
-            }
-                if (strcmp(name, "TAU_TASK_ID") == 0) {
-                snprintf(tau_task_id, sizeof(tau_task_id),  "%s", value->data.cval);
-            }
-        }
 
-        if (strlen(gpu_id) > 0) {
-            snprintf(namebuf, sizeof(namebuf),  "GPU%s Queue%s", gpu_id, queue_id);
-            TAU_VERBOSE("name = %s\n", namebuf);
-        }
+            //snprintf(namebuf, 256, "Thread %d (ROCM GPU ID:%d, Queue ID:%d, Thread ID:%d)", thread_num, 1, 2, 3);
+            const char *name;
+            Tau_metadata_value_t * value;
+            char nccl_rankid[256] = "";
+            char nccl_stream[256] = "";
+            // We need to capture the thread name as "NCCL rank %s stream %s".
+            for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(thread_num).begin(); it != Tau_metadata_getMetaData(thread_num).end(); it++) {
+                name = it->first.name;
+                value = it->second;
+                if (strcmp(name, "NCCL_RANK_ID") == 0) {
+                            snprintf(nccl_rankid, sizeof(nccl_rankid),  "%s", value->data.cval);
+                }
+                if (strcmp(name, "NCCL_STREAM_ID") == 0) {
+                    snprintf(nccl_stream, sizeof(nccl_stream),  "%s", value->data.cval);
+                }
+            }
+
+            if (strlen(nccl_rankid) > 0) {
+                snprintf(namebuf, sizeof(namebuf),  "NCCL rank %s stream %s", nccl_rankid, nccl_stream);
+                TAU_VERBOSE("name = %s\n", namebuf);
+            }
+
+#ifdef TAU_ENABLE_ROCM
+            //snprintf(namebuf, 256, "Thread %d (ROCM GPU ID:%d, Queue ID:%d, Thread ID:%d)", thread_num, 1, 2, 3);
+            const char *name;
+            Tau_metadata_value_t * value;
+            char queue_id[256] = "";
+            char gpu_id[256] = "";
+            char tau_task_id[256] = "";
+            // We need to capture the thread name as "queue<2>/device<1> [31]".
+            for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(thread_num).begin(); it != Tau_metadata_getMetaData(thread_num).end(); it++) {
+                name = it->first.name;
+                value = it->second;
+                if (strcmp(name, "ROCM_GPU_ID") == 0) {
+                            snprintf(gpu_id, sizeof(gpu_id),  "%s", value->data.cval);
+                }
+                if (strcmp(name, "ROCM_QUEUE_ID") == 0) {
+                    snprintf(queue_id, sizeof(queue_id),  "%s", value->data.cval);
+                }
+                    if (strcmp(name, "TAU_TASK_ID") == 0) {
+                    snprintf(tau_task_id, sizeof(tau_task_id),  "%s", value->data.cval);
+                }
+            }
+
+            if (strlen(gpu_id) > 0) {
+                snprintf(namebuf, sizeof(namebuf),  "GPU%s Queue%s", gpu_id, queue_id);
+                TAU_VERBOSE("name = %s\n", namebuf);
+            }
 
 #endif /* TAU_ROCM */
 
 #ifdef TAU_ENABLE_LEVEL_ZERO
-        const char *name;
-        Tau_metadata_value_t * value;
-        char queue_id[256] = "";
-        char vqueue_id[256] = "";
-        char gpu_id[256] = "";
-        char tau_task_id[256] = "";
-        // We need to capture the thread name as "queue<2>/device<1> [31]".
- 		for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(thread_num).begin(); it != Tau_metadata_getMetaData(thread_num).end(); it++) {
-            name = it->first.name;
-            value = it->second;
-            if (strcmp(name, "L0_GPU_ID") == 0) {
-                        snprintf(gpu_id, sizeof(gpu_id),  "%s", value->data.cval);
+            const char *name;
+            Tau_metadata_value_t * value;
+            char queue_id[256] = "";
+            char vqueue_id[256] = "";
+            char gpu_id[256] = "";
+            char tau_task_id[256] = "";
+            // We need to capture the thread name as "queue<2>/device<1> [31]".
+            for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(thread_num).begin(); it != Tau_metadata_getMetaData(thread_num).end(); it++) {
+                name = it->first.name;
+                value = it->second;
+                if (strcmp(name, "L0_GPU_ID") == 0) {
+                            snprintf(gpu_id, sizeof(gpu_id),  "%s", value->data.cval);
+                }
+                if (strcmp(name, "L0_QUEUE_ID") == 0) {
+                    snprintf(queue_id, sizeof(queue_id),  "%s", value->data.cval);
+                }
+                if (strcmp(name, "L0_VQUEUE_ID") == 0) {
+                    snprintf(vqueue_id, sizeof(vqueue_id),  "%s", value->data.cval);
+                }
+                if (strcmp(name, "TAU_TASK_ID") == 0) {
+                    snprintf(tau_task_id, sizeof(tau_task_id),  "%s", value->data.cval);
+                }
             }
-            if (strcmp(name, "L0_QUEUE_ID") == 0) {
-                snprintf(queue_id, sizeof(queue_id),  "%s", value->data.cval);
-            }
-            if (strcmp(name, "L0_VQUEUE_ID") == 0) {
-                snprintf(vqueue_id, sizeof(vqueue_id),  "%s", value->data.cval);
-            }
-            if (strcmp(name, "TAU_TASK_ID") == 0) {
-                snprintf(tau_task_id, sizeof(tau_task_id),  "%s", value->data.cval);
-            }
-        }
 
-        if (strlen(gpu_id) > 0) {
-            snprintf(namebuf, sizeof(namebuf),  "GPU%s Queue%s:%s", gpu_id, queue_id, vqueue_id);
-            TAU_VERBOSE("name = %s\n", namebuf);
-        }
+            if (strlen(gpu_id) > 0) {
+                snprintf(namebuf, sizeof(namebuf),  "GPU%s Queue%s:%s", gpu_id, queue_id, vqueue_id);
+                TAU_VERBOSE("name = %s\n", namebuf);
+            }
 
 #endif
             ++thread_num;
