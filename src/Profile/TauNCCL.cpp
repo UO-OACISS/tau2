@@ -246,9 +246,64 @@ void freeNCCLPools()
 }
 
 
+__hidden ncclResult_t tauNcclProfilerInit_v2(void** context, int* eActivationMask)
+{
+    
+    struct context_st* ctx = (struct context_st *)calloc(1, sizeof(*ctx));
+    ctx->commName = "";
+    ctx->commHash = -1;
+    //ctx->nNodes = nNodes;
+    ctx->nranks = -1;
+    ctx->rank = -1;
+    *context = ctx;
+    invalid_event.in_use = -1;                                       
+    initializeNCCLPools();
+    TAU_VERBOSE("[tauNcclProfiler v2] Init- tid=%ld\n", (long)syscall(SYS_gettid));
+    const char* em_str = getenv("NCCL_PROFILE_EVENT_MASK");
+    //printf("NCCL_PROFILE_EVENT_MASK %d\n", atoi(em_str));
+    *eActivationMask= (em_str!=NULL) ? atoi(em_str) : 0;
+    return ncclSuccess;
+}
+
+__hidden ncclResult_t tauNcclProfilerInit_v4(void** context, int* eActivationMask, 
+                                             const char* commName, uint64_t commHash, 
+                                             int nNodes, int nranks, int rank, ncclDebugLogger_t logfn)
+{
+    
+    struct context_st* ctx = (struct context_st *)calloc(1, sizeof(*ctx));
+    ctx->commName = commName;
+    ctx->commHash = commHash;
+    //ctx->nNodes = nNodes;
+    ctx->nranks = nranks;
+    ctx->rank = rank;
+    *context = ctx;
+    invalid_event.in_use = -1;                                       
+    pthread_mutex_lock(&rank_init_lock);
+    auto it = nccl_rank_init.find(rank);
+    if (it != nccl_rank_init.end()) {
+        
+        pthread_mutex_unlock(&rank_init_lock);
+        return ncclSuccess;
+    }
+
+    nccl_rank_init[rank]=1;
+    initializeNCCLPools();
+    pthread_mutex_unlock(&rank_init_lock);
+
+    TAU_VERBOSE("[tauNcclProfiler v4] Init- tid=%ld with rank %d of %d\n", (long)syscall(SYS_gettid), rank, nranks);
+    const char* em_str = getenv("NCCL_PROFILE_EVENT_MASK");
+    //printf("NCCL_PROFILE_EVENT_MASK %d\n", atoi(em_str));
+    *eActivationMask= (em_str!=NULL) ? atoi(em_str) : 0;
+
+    logFn = logfn;
+
+    return ncclSuccess;
+}
+
+
 
 // Init
-__hidden ncclResult_t tauNcclProfilerInit(void** context, uint64_t commId,
+__hidden ncclResult_t tauNcclProfilerInit_v5(void** context, uint64_t commId,
                                           int* eActivationMask,
                                           const char* commName, int nNodes,
                                           int nranks, int rank,
@@ -274,7 +329,7 @@ __hidden ncclResult_t tauNcclProfilerInit(void** context, uint64_t commId,
     initializeNCCLPools();
     pthread_mutex_unlock(&rank_init_lock);
 
-    TAU_VERBOSE("[tauNcclProfiler] Init- tid=%ld with rank %d of %d\n", (long)syscall(SYS_gettid), rank, nranks);
+    TAU_VERBOSE("[tauNcclProfiler v5] Init- tid=%ld with rank %d of %d\n", (long)syscall(SYS_gettid), rank, nranks);
     const char* em_str = getenv("NCCL_PROFILE_EVENT_MASK");
     //printf("NCCL_PROFILE_EVENT_MASK %d\n", atoi(em_str));
     *eActivationMask= (em_str!=NULL) ? atoi(em_str) : 0;
@@ -322,7 +377,7 @@ static uint8_t ncclStringDataToSize(const char* dt) {
 //There are some events that take way longer than others, check if all the available events are in use or not
 // if there are available events, assign one and fill the data. If not, show a message and use the invalid event,
 // which will be discarded.
-struct tau_nccl_event* create_nccl_event(ncclProfilerEventDescr_v5_t* eDescr, struct tau_nccl_event* e_pool, 
+struct tau_nccl_event* create_nccl_event(int cur_rank, struct tau_nccl_event* e_pool, 
     int* e_pool_indexer, char* type_name, size_t d_count, uint8_t datatype_size)
 {
     pthread_mutex_lock(&nccl_event_lock);
@@ -343,7 +398,7 @@ struct tau_nccl_event* create_nccl_event(ncclProfilerEventDescr_v5_t* eDescr, st
         in_use_counter++;
     }
     event->start_ts = (double)TauTraceGetTimeStamp(0);
-    event->rank = eDescr->rank;
+    event->rank = cur_rank;
     event->datatype_size = datatype_size;
     event->count = d_count;
     strncpy(event->type_name, type_name, sizeof(event->type_name));
@@ -422,10 +477,248 @@ void free_nccl_event( struct tau_nccl_event* event)
     pthread_mutex_unlock(&nccl_event_lock);
 }
 
+__hidden ncclResult_t tauNcclProfilerStartEvent_v2(void* context, void** eHandle, ncclProfilerEventDescr_v2_t* eDescr) {
+    //TAU_VERBOSE("[tauNcclProfiler] tauNcclProfilerStartEvent_v4 tid=%ld c_rank=%d rank=%d\n", (long)syscall(SYS_gettid), eDescr->rank, eDescr->rank);
+    *eHandle = NULL;
+    struct context_st* ctx = (struct context_st *)context;
+    if (ctx == NULL) {
+        //printf("ctx == NULL\n");
+        return ncclSuccess;
+    }
+    if (eDescr->type == ncclProfileGroup)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileGroupApi");
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, GroupApiPool, &index_gap_pool, type_name, 0 ,0 );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileGroupApi] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileColl)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileColl %s", eDescr->coll.func);
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, CollPool, &index_c_pool, type_name, 
+                                                         eDescr->coll.count, ncclStringDataToSize(eDescr->coll.datatype) );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileColl] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileP2p)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileP2p %s", eDescr->p2p.func);
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, P2pPool, &index_p2p_pool, type_name,
+                                                         eDescr->p2p.count, ncclStringDataToSize(eDescr->p2p.datatype) );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileP2p] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileProxyCtrl)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileProxyCtrl");
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, ProxyCtrlPool, &index_pc_pool, type_name, 0 ,0 );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileProxyCtrl] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileProxyOp)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileProxyOp");
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, ProxyOpPool, &index_po_pool, type_name, 0 ,0 );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileProxyOp] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileProxyStep)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileProxyStep");
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, ProxyStepPool, &index_ps_pool, type_name, 0 ,0 );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileProxyStep] %s\n", type_name);
+    }
+    return ncclSuccess;
+}
+
+__hidden ncclResult_t tauNcclProfilerStartEvent_v3(void* context, void** eHandle, ncclProfilerEventDescr_v3_t* eDescr) {
+    //TAU_VERBOSE("[tauNcclProfiler] tauNcclProfilerStartEvent_v4 tid=%ld c_rank=%d rank=%d\n", (long)syscall(SYS_gettid), eDescr->rank, eDescr->rank);
+    *eHandle = NULL;
+    struct context_st* ctx = (struct context_st *)context;
+    if (ctx == NULL) {
+        //printf("ctx == NULL\n");
+        return ncclSuccess;
+    }
+    if (eDescr->type == ncclProfileGroup)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileGroupApi");
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, GroupApiPool, &index_gap_pool, type_name, 0 ,0 );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileGroupApi] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileColl)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileColl %s", eDescr->coll.func);
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, CollPool, &index_c_pool, type_name, 
+                                                         eDescr->coll.count, ncclStringDataToSize(eDescr->coll.datatype) );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileColl] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileP2p)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileP2p %s", eDescr->p2p.func);
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, P2pPool, &index_p2p_pool, type_name,
+                                                         eDescr->p2p.count, ncclStringDataToSize(eDescr->p2p.datatype) );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileP2p] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileProxyCtrl)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileProxyCtrl");
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, ProxyCtrlPool, &index_pc_pool, type_name, 0 ,0 );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileProxyCtrl] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileProxyOp)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileProxyOp");
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, ProxyOpPool, &index_po_pool, type_name, 0 ,0 );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileProxyOp] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileProxyStep)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileProxyStep");
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, ProxyStepPool, &index_ps_pool, type_name, 0 ,0 );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileProxyStep] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileNetPlugin)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileNetPlugin");
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, NetPluginPool, &index_np_pool, type_name, 0 ,0 );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileNetPlugin] %s\n", type_name);
+    }
+    return ncclSuccess;
+}
+
+__hidden ncclResult_t tauNcclProfilerStartEvent_v4(void* context, void** eHandle, ncclProfilerEventDescr_v4_t* eDescr) {
+    //TAU_VERBOSE("[tauNcclProfiler] tauNcclProfilerStartEvent_v4 tid=%ld c_rank=%d rank=%d\n", (long)syscall(SYS_gettid), eDescr->rank, eDescr->rank);
+    *eHandle = NULL;
+    struct context_st* ctx = (struct context_st *)context;
+    if (ctx == NULL) {
+        //printf("ctx == NULL\n");
+        return ncclSuccess;
+    }
+    if (eDescr->type == ncclProfileGroup)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileGroupApi");
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, GroupApiPool, &index_gap_pool, type_name, 0 ,0 );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileGroupApi] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileColl)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileColl %s", eDescr->coll.func);
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, CollPool, &index_c_pool, type_name, 
+                                                         eDescr->coll.count, ncclStringDataToSize(eDescr->coll.datatype) );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileColl] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileP2p)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileP2p %s", eDescr->p2p.func);
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, P2pPool, &index_p2p_pool, type_name,
+                                                         eDescr->p2p.count, ncclStringDataToSize(eDescr->p2p.datatype) );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileP2p] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileProxyCtrl)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileProxyCtrl");
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, ProxyCtrlPool, &index_pc_pool, type_name, 0 ,0 );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileProxyCtrl] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileProxyOp)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileProxyOp");
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, ProxyOpPool, &index_po_pool, type_name, 0 ,0 );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileProxyOp] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileProxyStep)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileProxyStep");
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, ProxyStepPool, &index_ps_pool, type_name, 0 ,0 );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileProxyStep] %s\n", type_name);
+    }
+    else if (eDescr->type == ncclProfileNetPlugin)
+    {
+        char type_name[1024];
+        snprintf(type_name, sizeof(type_name), "ncclProfileNetPlugin");
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, NetPluginPool, &index_np_pool, type_name, 0 ,0 );
+        *eHandle = (void*)start_event;
+        if(start_event->in_use ==-1)
+            return ncclSuccess;
+        TAU_VERBOSE("[+ncclProfileNetPlugin] %s\n", type_name);
+    }
+    return ncclSuccess;
+}
 
 
 // StartEvent
-__hidden ncclResult_t tauNcclProfilerStartEvent(void* context, void** eHandle, ncclProfilerEventDescr_v5_t* eDescr) {
+__hidden ncclResult_t tauNcclProfilerStartEvent_v5(void* context, void** eHandle, ncclProfilerEventDescr_v5_t* eDescr) {
     //Rank here is the rank of the NCCL communicator
     
     //TAU_VERBOSE("[tauNcclProfiler] tauNcclProfilerStartEvent tid=%ld c_rank=%d rank=%d\n", (long)syscall(SYS_gettid), eDescr->rank, eDescr->rank);
@@ -440,7 +733,7 @@ __hidden ncclResult_t tauNcclProfilerStartEvent(void* context, void** eHandle, n
     {
         char type_name[1024];
         snprintf(type_name, sizeof(type_name), "ncclProfileGroupApi");
-        tau_nccl_event* start_event = create_nccl_event( eDescr, GroupApiPool, &index_gap_pool, type_name, 0 ,0 );
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, GroupApiPool, &index_gap_pool, type_name, 0 ,0 );
         *eHandle = (void*)start_event;
         if(start_event->in_use ==-1)
             return ncclSuccess;
@@ -451,7 +744,7 @@ __hidden ncclResult_t tauNcclProfilerStartEvent(void* context, void** eHandle, n
     {
         char type_name[1024];
         snprintf(type_name, sizeof(type_name), "ncclProfileCollApi %s", eDescr->collApi.func);
-        tau_nccl_event* start_event = create_nccl_event( eDescr, CollApiPool, &index_ca_pool, type_name, 
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, CollApiPool, &index_ca_pool, type_name, 
                                                          eDescr->collApi.count, ncclStringDataToSize(eDescr->p2p.datatype) );
         *eHandle = (void*)start_event;
         if(start_event->in_use ==-1)
@@ -464,7 +757,7 @@ __hidden ncclResult_t tauNcclProfilerStartEvent(void* context, void** eHandle, n
     {
         char type_name[1024];
         snprintf(type_name, sizeof(type_name), "ncclProfileP2pApi %s", eDescr->p2pApi.func);
-        tau_nccl_event* start_event = create_nccl_event( eDescr, P2pApiPool, &index_p2pa_pool, type_name,
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, P2pApiPool, &index_p2pa_pool, type_name,
                                                          eDescr->p2pApi.count, ncclStringDataToSize(eDescr->p2pApi.datatype) );
         *eHandle = (void*)start_event;
         if(start_event->in_use ==-1)
@@ -482,7 +775,7 @@ __hidden ncclResult_t tauNcclProfilerStartEvent(void* context, void** eHandle, n
     {
         char type_name[1024];
         snprintf(type_name, sizeof(type_name), "ncclProfileKernelLaunch");
-        tau_nccl_event* start_event = create_nccl_event( eDescr, KernelLaunchPool, &index_kl_pool, type_name );
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, KernelLaunchPool, &index_kl_pool, type_name );
         *eHandle = (void*)start_event;
         if(start_event->in_use ==-1)
             return ncclSuccess;
@@ -493,7 +786,7 @@ __hidden ncclResult_t tauNcclProfilerStartEvent(void* context, void** eHandle, n
     {
         char type_name[1024];
         snprintf(type_name, sizeof(type_name), "ncclProfileGroup");
-        tau_nccl_event* start_event = create_nccl_event( eDescr, GroupPool, &index_g_pool, type_name, 0 ,0 );
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, GroupPool, &index_g_pool, type_name, 0 ,0 );
         *eHandle = (void*)start_event;
         if(start_event->in_use ==-1)
             return ncclSuccess;
@@ -504,7 +797,7 @@ __hidden ncclResult_t tauNcclProfilerStartEvent(void* context, void** eHandle, n
     {
         char type_name[1024];
         snprintf(type_name, sizeof(type_name), "ncclProfileColl %s", eDescr->coll.func);
-        tau_nccl_event* start_event = create_nccl_event( eDescr, CollPool, &index_c_pool, type_name, 
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, CollPool, &index_c_pool, type_name, 
                                                          eDescr->coll.count, ncclStringDataToSize(eDescr->coll.datatype) );
         *eHandle = (void*)start_event;
         if(start_event->in_use ==-1)
@@ -519,7 +812,7 @@ __hidden ncclResult_t tauNcclProfilerStartEvent(void* context, void** eHandle, n
     {
         char type_name[1024];
         snprintf(type_name, sizeof(type_name), "ncclProfileP2p %s", eDescr->p2p.func);
-        tau_nccl_event* start_event = create_nccl_event( eDescr, P2pPool, &index_p2p_pool, type_name,
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, P2pPool, &index_p2p_pool, type_name,
                                                          eDescr->p2p.count, ncclStringDataToSize(eDescr->p2p.datatype) );
         *eHandle = (void*)start_event;
         if(start_event->in_use ==-1)
@@ -538,7 +831,7 @@ __hidden ncclResult_t tauNcclProfilerStartEvent(void* context, void** eHandle, n
     {
         char type_name[1024];
         snprintf(type_name, sizeof(type_name), "ncclProfileProxyOp");
-        tau_nccl_event* start_event = create_nccl_event( eDescr, ProxyOpPool, &index_po_pool, type_name, 0 ,0 );
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, ProxyOpPool, &index_po_pool, type_name, 0 ,0 );
         *eHandle = (void*)start_event;
         if(start_event->in_use ==-1)
             return ncclSuccess;
@@ -549,7 +842,7 @@ __hidden ncclResult_t tauNcclProfilerStartEvent(void* context, void** eHandle, n
     {
         char type_name[1024];
         snprintf(type_name, sizeof(type_name), "ncclProfileProxyStep");
-        tau_nccl_event* start_event = create_nccl_event( eDescr, ProxyStepPool, &index_ps_pool, type_name, 0 ,0 );
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, ProxyStepPool, &index_ps_pool, type_name, 0 ,0 );
         *eHandle = (void*)start_event;
         if(start_event->in_use ==-1)
             return ncclSuccess;
@@ -560,7 +853,7 @@ __hidden ncclResult_t tauNcclProfilerStartEvent(void* context, void** eHandle, n
     {
         char type_name[1024];
         snprintf(type_name, sizeof(type_name), "ncclProfileProxyCtrl");
-        tau_nccl_event* start_event = create_nccl_event( eDescr, ProxyCtrlPool, &index_pc_pool, type_name, 0 ,0 );
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, ProxyCtrlPool, &index_pc_pool, type_name, 0 ,0 );
         *eHandle = (void*)start_event;
         if(start_event->in_use ==-1)
             return ncclSuccess;
@@ -572,7 +865,7 @@ __hidden ncclResult_t tauNcclProfilerStartEvent(void* context, void** eHandle, n
     {
         char type_name[1024];
         snprintf(type_name, sizeof(type_name), "ncclProfileKernelCh");
-        tau_nccl_event* start_event = create_nccl_event( eDescr, KernelChPool, &index_kc_pool, type_name );
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, KernelChPool, &index_kc_pool, type_name );
         *eHandle = (void*)start_event;
         if(start_event->in_use ==-1)
             return ncclSuccess;
@@ -583,7 +876,7 @@ __hidden ncclResult_t tauNcclProfilerStartEvent(void* context, void** eHandle, n
     {
         char type_name[1024];
         snprintf(type_name, sizeof(type_name), "ncclProfileNetPlugin");
-        tau_nccl_event* start_event = create_nccl_event( eDescr, NetPluginPool, &index_np_pool, type_name, 0 ,0 );
+        tau_nccl_event* start_event = create_nccl_event( eDescr->rank, NetPluginPool, &index_np_pool, type_name, 0 ,0 );
         *eHandle = (void*)start_event;
         if(start_event->in_use ==-1)
             return ncclSuccess;
@@ -686,23 +979,43 @@ __hidden ncclResult_t tauNcclProfilerStopEvent(void* eHandle) {
     return ncclSuccess;
 }
 
-__hidden ncclResult_t tauNcclProfilerRecordEventState(void* eHandle, ncclProfilerEventState_t eState, ncclProfilerEventStateArgs_t* eStateArgs) {
+__hidden ncclResult_t tauNcclProfilerRecordEventState_v2(void* eHandle, ncclProfilerEventState_v2_t eState, ncclProfilerEventStateArgs_v2_t* eStateArgs) {
     //printf("[tauNcclProfiler] tauNcclProfilerRecordEventState tid=%ld\n", (long)syscall(SYS_gettid));
     // the event handle might be null if we run out of events
     if (eHandle == NULL) return ncclSuccess;
 
+    return ncclSuccess;
+}
 
+__hidden ncclResult_t tauNcclProfilerRecordEventState_v3(void* eHandle, ncclProfilerEventState_v3_t eState, ncclProfilerEventStateArgs_v3_t* eStateArgs) {
+    //printf("[tauNcclProfiler] tauNcclProfilerRecordEventState tid=%ld\n", (long)syscall(SYS_gettid));
+    // the event handle might be null if we run out of events
+    if (eHandle == NULL) return ncclSuccess;
+
+    return ncclSuccess;
+}
+
+__hidden ncclResult_t tauNcclProfilerRecordEventState_v4(void* eHandle, ncclProfilerEventState_v4_t eState, ncclProfilerEventStateArgs_v4_t* eStateArgs) {
+    //printf("[tauNcclProfiler] tauNcclProfilerRecordEventState tid=%ld\n", (long)syscall(SYS_gettid));
+    // the event handle might be null if we run out of events
+    if (eHandle == NULL) return ncclSuccess;
+
+    return ncclSuccess;
+}
+__hidden ncclResult_t tauNcclProfilerRecordEventState_v5(void* eHandle, ncclProfilerEventState_v5_t eState, ncclProfilerEventStateArgs_v5_t* eStateArgs) {
+    //printf("[tauNcclProfiler] tauNcclProfilerRecordEventState tid=%ld\n", (long)syscall(SYS_gettid));
+    // the event handle might be null if we run out of events
+    if (eHandle == NULL) return ncclSuccess;
 
     return ncclSuccess;
 }
 
 
-
-
+/*
 __hidden ncclResult_t tauNcclProfilerStartEvent_v6(void* context, void** eHandle, ncclProfilerEventDescr_v6_t* eDescr) 
 {
   struct context_st* ctx = (struct context_st *)context;
-  return tauNcclProfilerStartEvent(context, eHandle, (ncclProfilerEventDescr_v5_t*)eDescr);
+  return tauNcclProfilerStartEvent_v5(context, eHandle, (ncclProfilerEventDescr_v5_t*)eDescr);
 }
 
 __hidden ncclResult_t tauNcclProfilerStopEvent_v6(void* eHandle)
@@ -710,27 +1023,55 @@ __hidden ncclResult_t tauNcclProfilerStopEvent_v6(void* eHandle)
     if (!eHandle) return ncclSuccess;
     return tauNcclProfilerStopEvent(eHandle);
 }
+*/
 
-__hidden ncclResult_t tauNcclProfilerRecordEventState_v6(void* eHandle, ncclProfilerEventState_v6_t eState, ncclProfilerEventStateArgs_v6_t* eStateArgs) {
-  // CE events don't use recordEventState - poller handles all timing
-  // Just fall through to v5 for non-CE events
-  return tauNcclProfilerRecordEventState(eHandle, (ncclProfilerEventState_t)eState, (ncclProfilerEventStateArgs_t*)eStateArgs);
-}
+//To test if a profiler version works, just comment the newer ncclProfiler_v*
+//v1 and v6 do not have documentation, do not use them at this moment
+
+ncclProfiler_v2_t ncclProfiler_v2 = {
+  "TAU-NCCLProfiler-v2",
+  tauNcclProfilerInit_v2,
+  tauNcclProfilerStartEvent_v2,
+  tauNcclProfilerStopEvent,
+  tauNcclProfilerRecordEventState_v2,
+  tauNcclProfilerFinalize,
+};
+
+ncclProfiler_v3_t ncclProfiler_v3 = {
+  "TAU-NCCLProfiler-v3",
+  tauNcclProfilerInit_v2,
+  tauNcclProfilerStartEvent_v3,
+  tauNcclProfilerStopEvent,
+  tauNcclProfilerRecordEventState_v3,
+  tauNcclProfilerFinalize,
+};
+
+
+ncclProfiler_v4_t ncclProfiler_v4 = {
+  "TAU-NCCLProfiler-v4",
+  tauNcclProfilerInit_v4,
+  tauNcclProfilerStartEvent_v4,
+  tauNcclProfilerStopEvent,
+  tauNcclProfilerRecordEventState_v4,
+  tauNcclProfilerFinalize,
+};
+
 
 ncclProfiler_v5_t ncclProfiler_v5 = {
     "TAU-NCCLProfiler-v5",
-    tauNcclProfilerInit,
-    tauNcclProfilerStartEvent,
+    tauNcclProfilerInit_v5,
+    tauNcclProfilerStartEvent_v5,
     tauNcclProfilerStopEvent,
-    tauNcclProfilerRecordEventState,
+    tauNcclProfilerRecordEventState_v5,
     tauNcclProfilerFinalize
 };
-
+/*
 ncclProfiler_v6_t ncclProfiler_v6 = {
     "TAU-NCCLProfiler-v6",
-    tauNcclProfilerInit,
+    tauNcclProfilerInit_v5,
     tauNcclProfilerStartEvent_v6,
-    tauNcclProfilerStopEvent_v6,
-    tauNcclProfilerRecordEventState_v6,
+    tauNcclProfilerStopEvent,
+    tauNcclProfilerRecordEventState_v5,
     tauNcclProfilerFinalize
 };
+*/

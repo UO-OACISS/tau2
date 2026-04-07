@@ -3850,8 +3850,8 @@ cat <<EOF > nccl_version_test.c
 #error "NCCL version is lower than 2"
 #endif
 #if (NCCL_MAJOR == 2)
-#if (NCCL_MINOR < 23)
-    #error "NCCL version is 2.x, but lower than 2.23"
+#if (NCCL_MINOR < 25)
+    #error "NCCL version is 2.x, but lower than 2.25"
 #endif
 #endif
 EOF
@@ -3869,7 +3869,7 @@ EOF
         tauoptions="${tauoptions}-nccl"
         rm nccl_version_test.c
     else
-        echo "Error configuring with -nccl, version not supported, must be NCCL 2.23 or newer."
+        echo "Error configuring with -nccl, version not supported, must be NCCL 2.25 or newer."
         if [ "x$cudainclude" = "x" ]
         then 
             echo "Did you forget to use -cuda? You must configure cuda when using NCCL."
