@@ -1,0 +1,17 @@
+NCCL Example
+
+Configure TAU with CUDA and NCCL, example:
+./configure -bfd=download -nccl_library=/home/users/jalcaraz/nccl/nccl/build/lib -nccl_include=/home/users/jalcaraz/nccl/nccl/build/include -perfetto -otf=download -cuda=/packages/cuda/12.8.1/ -mpi
+
+The example has two variants, PTHREADS or MPI.
+
+Compile with PTHREADS:
+make clean
+make
+
+Compile with MPI:
+make clean
+make
+
+Execute with tau_exec -cupti -nccl. Example:
+tau_exec -nccl -cupti ./nccl_bcast 

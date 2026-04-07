@@ -1161,8 +1161,25 @@ case $1 in
         ;;
      opencllib=*)
         opencllib=`echo $1 | sed -e 's/^opencllib=//' -e 's/#/ /g'`
-		echo "s@^TAU_OPENCL_LIBRARY=\(.*\)@TAU_OPENCL_LIBRARY=$opencllib@g" >> $sedout
+	echo "s@^TAU_OPENCL_LIBRARY=\(.*\)@TAU_OPENCL_LIBRARY=$opencllib@g" >> $sedout
         ;;
+
+     nccl_lib=*)
+        nccl_lib=`echo $1 | sed -e 's/^nccl_lib=//' -e 's/#/ /g'`
+	echo "s@^TAU_NCCL_LIB=\(.*\)@TAU_NCCL_LIB=$nccl_lib@g" >> $sedout
+     ;;
+
+     nccl_inc=*)
+        nccl_inc=`echo $1 | sed -e 's/^nccl_inc=//' -e 's/#/ /g'`
+	echo "s@^TAU_NCCL_INC=\(.*\)@TAU_NCCL_INC=$nccl_inc@g" >> $sedout
+     ;;
+
+     NCCL)
+        echo NOTE: Using the NCCL Profiling Interface
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+     ;;
+
+
 ###############################################################
 # Set the TAU_GPU variables.
 ###############################################################
