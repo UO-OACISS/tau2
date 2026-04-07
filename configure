@@ -3841,7 +3841,7 @@ if [ "$rocmv6" = "no" ] ; then
     fi
 fi
 
-if [ -d ${nccl_lib} -a -d ${nccl_inc} ]; then
+if [[ -d "${nccl_lib}" && -d "${nccl_inc}" ]]; then
 
 cat <<EOF > nccl_version_test.c
 #include <nccl.h>
