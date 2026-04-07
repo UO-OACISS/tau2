@@ -50,6 +50,15 @@ ifeq ($(KOKKOS_HAVE_CUDA), yes)
     # Required for Kokkos lambda support in CUDA device code
     KOKKOS_CXXFLAGS += --expt-extended-lambda
 
+    # Older CUDA architectures (e.g. Volta/sm_70) are dropped from nvcc's default
+    # fat-binary range in newer toolchains. Read the arch from the installed Kokkos
+    # config header so the flag is set correctly.
+    CUDA_ARCH_SM := $(shell grep "^#define KOKKOS_ARCH_" $(KOKKOS_CONFIG_H) | grep -oE '[0-9]+$$' | head -n1)
+    ifneq ($(CUDA_ARCH_SM),)
+        $(info Target GPU Architecture: sm_$(CUDA_ARCH_SM))
+        KOKKOS_CXXFLAGS += -arch=sm_$(CUDA_ARCH_SM)
+    endif
+
     # Allow user to specify CUDA location, otherwise use a common default
     CUDA_HOME ?= /usr/local/cuda
     BACKEND_LDFLAGS := -L$(CUDA_HOME)/lib64 -lcudart
