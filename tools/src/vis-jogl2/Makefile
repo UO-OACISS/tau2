@@ -7,12 +7,28 @@ else
 TOOLS_SRC=$(TAUROOT)/tools/src
 endif
 
+# Java release target: default to 8 for HPC legacy compatibility.
+# Override with: make JAVA_RELEASE=17  (or 21, 25, etc.)
+# Set JAVA_RELEASE=none to skip release flags and compile at the JDK default.
+JAVA_RELEASE ?= 8
+
+# --release requires JDK 9+; JDK 8 and older use -source/-target instead.
+_JAVAC_MAJ := $(shell javac -version 2>&1 | sed 's/javac \([0-9]*\).*/\1/')
+ifneq ($(JAVA_RELEASE),none)
+  ifeq ($(_JAVAC_MAJ),1)
+    JAVAC_RELEASE_FLAGS := -source $(JAVA_RELEASE) -target $(JAVA_RELEASE)
+  else
+    JAVAC_RELEASE_FLAGS := --release $(JAVA_RELEASE)
+  endif
+else
+  JAVAC_RELEASE_FLAGS :=
+endif
 
 SOURCES = $(wildcard src/*.java)
 
 
-bin/vis.jar: $(SOURCES) classes
-	javac -target 1.8 -source 1.8 -d ./classes -classpath $(TOOLS_SRC)/contrib/jogl/jogl-all.jar:$(TOOLS_SRC)/contrib/jogl/gluegen-rt.jar:$(TOOLS_SRC)/common/bin/tau-common.jar $(SOURCES)
+bin/vis-jogl2.jar: $(SOURCES) classes
+	javac $(JAVAC_RELEASE_FLAGS) -d ./classes -classpath $(TOOLS_SRC)/contrib/jogl/jogl-all.jar:$(TOOLS_SRC)/contrib/jogl/gluegen-rt.jar:$(TOOLS_SRC)/common/bin/tau-common.jar $(SOURCES)
 	jar -cvf bin/vis-jogl2.jar -C ./classes edu
 	cp bin/vis-jogl2.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
 

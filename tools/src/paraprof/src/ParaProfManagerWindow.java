@@ -191,9 +191,9 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		Iterator<Database> dbs = databases.iterator();
 
 		DefaultMutableTreeNode treeNode;
-		Enumeration<DefaultMutableTreeNode> nodes = root.children();
+		Enumeration<?> nodes = root.children();
 		while (nodes.hasMoreElements() && dbs.hasNext()) {
-			treeNode = nodes.nextElement();
+			treeNode = (DefaultMutableTreeNode) nodes.nextElement();
 			if (treeNode.getUserObject() != "Standard Applications") {
 				Object obj = dbs.next();
 				treeNode.setUserObject(obj);
@@ -202,7 +202,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 
 		List<DefaultMutableTreeNode> toRemove = new ArrayList<DefaultMutableTreeNode>();
 		while (nodes.hasMoreElements()) {
-			treeNode = nodes.nextElement();
+			treeNode = (DefaultMutableTreeNode) nodes.nextElement();
 			toRemove.add(treeNode);
 		}
 

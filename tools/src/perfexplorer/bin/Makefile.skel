@@ -8,59 +8,88 @@ JAR_HOME = ${HOME}/.ParaProf
 ##########################
 
 JAVA_JVM_VERSION=1.8
+# Java release target: default to 8 for HPC legacy compatibility.
+# Override with: make JAVA_RELEASE=17  (or 21, 25, etc.)
+# Set JAVA_RELEASE=none to skip release flags and compile at the JDK default.
+JAVA_RELEASE ?= 8
+
+# --release requires JDK 9+; JDK 8 and older use -source/-target instead.
+# JAVAC_RELEASE_FLAGS may be passed in from the parent make (tools/src/Makefile);
+# if not, detect here so this file also works standalone.
+ifndef JAVAC_RELEASE_FLAGS
+  _JAVAC_MAJ := $(shell javac -version 2>&1 | sed 's/javac \([0-9]*\).*/\1/')
+  ifneq ($(JAVA_RELEASE),none)
+    ifeq ($(_JAVAC_MAJ),1)
+      JAVAC_RELEASE_FLAGS := -source $(JAVA_RELEASE) -target $(JAVA_RELEASE)
+    else
+      JAVAC_RELEASE_FLAGS := --release $(JAVA_RELEASE)
+    endif
+  else
+    JAVAC_RELEASE_FLAGS :=
+  endif
+endif
 NOW = $(shell date)
 
 CONFIGFILE = ${JAR_HOME}/perfdmf.cfg
 WEBSTART_DIR = /var/www/html/PerfExplorer/.
 
 CPP = cpp -P -CC
-JAVAC = javac -source 1.8 -target 1.8
-RMIC = rmic
+JAVAC = javac $(JAVAC_RELEASE_FLAGS)
+
 SED = sed
 JAVADOC = javadoc
 
 ##########################
 
-WEKA_JAR = ${JAR_HOME}/weka-3-6-1.jar
-PERFDMF_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/perfdmf.jar
-JARGS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
-JDBC_JAR = ${JAR_HOME}/postgresql.jar
-JOGL_JAR =${TAUROOT}/${CONFIG_ARCH}/lib/jogl.jar
-JARGS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
-JYTHON_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jython.jar
-VIS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/vis.jar
-JFREECHART_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jfreechart-1.0.12.jar
-JCOMMON_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jcommon-1.0.15.jar
-TAUCOMMON_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/tau-common.jar
-BATIK_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/batik-combined.jar
-XERCES_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/xerces.jar
-JUNIT_JAR = ${JAR_HOME}/junit-3.8.1.jar
+# TAU source-tree JARs: resolved relative to @TAUROOT@ (the actual TAU root).
+# When built via tools/src/Makefile these are overridden to the correct paths
+# for the standalone case where TAUROOT is set to tools/src/.
+CONTRIB_HOME ?= ${TAUROOT}/tools/src/contrib
+
+PERFDMF_JAR    = ${TAUROOT}/tools/src/perfdmf/bin/perfdmf.jar
+VIS_JAR        = ${TAUROOT}/tools/src/vis/bin/vis.jar
+TAUCOMMON_JAR  = ${TAUROOT}/tools/src/common/bin/tau-common.jar
+JARGS_JAR      = ${CONTRIB_HOME}/jargs.jar
+JOGL_JAR       = ${CONTRIB_HOME}/jogl/jogl.jar
+JYTHON_JAR     = ${CONTRIB_HOME}/jython.jar
+JFREECHART_JAR = ${CONTRIB_HOME}/jfreechart-1.0.12.jar
+JCOMMON_JAR    = ${CONTRIB_HOME}/jcommon-1.0.15.jar
+BATIK_JAR      = ${CONTRIB_HOME}/batik-combined.jar
+XERCES_JAR     = ${CONTRIB_HOME}/xerces.jar
+
+# External JARs: check contrib/ first (populated by 'make extdeps' in tools/src/
+# which extracts external_dependencies/PE2_jars.tgz and weka-3-6-1.zip).
+# Falls back to ${JAR_HOME} (~/.ParaProf) for existing installs that have already
+# run perfexplorer_configure.
+JDBC_JAR  = ${JAR_HOME}/postgresql.jar
+WEKA_JAR  = $(or $(wildcard ${CONTRIB_HOME}/weka-3-6-1.jar),${JAR_HOME}/weka-3-6-1.jar)
+JUNIT_JAR = $(or $(wildcard ${CONTRIB_HOME}/junit-3.8.1.jar),${JAR_HOME}/junit-3.8.1.jar)
 
 ##########################
 
 # JBoss Rules jars
 
 #core
-DROOLS_CORE_JAR = ${JAR_HOME}/drools-core-3.0.6.jar
+DROOLS_CORE_JAR = $(or $(wildcard ${CONTRIB_HOME}/drools-core-3.0.6.jar),${JAR_HOME}/drools-core-3.0.6.jar)
 
 #compiler
-DROOLS_COMIPLER_JAR = ${JAR_HOME}/drools-compiler-3.0.6.jar
-ANTLR3_JAR = ${JAR_HOME}/antlr-3.0ea8.jar
-COMMONS_JCI_CORE_JAR = ${JAR_HOME}/commons-jci-core-1.0-406301.jar
-COMMONS_JCI_ECLIPSE_JAR = ${JAR_HOME}/commons-jci-eclipse-3.2.0.666.jar
-CORE_JAR = ${JAR_HOME}/core-3.2.0.666.jar
-COMMONS_LOGGING_JAR = ${JAR_HOME}/commons-logging-api-1.0.4.jar
-COMMONS_LANG_JAR = ${JAR_HOME}/commons-lang-2.1.jar
-STRINGTEMPLATE_JAR = ${JAR_HOME}/stringtemplate-2.3b6.jar
-ANTLR2_JAR = ${JAR_HOME}/antlr-2.7.6.jar
+DROOLS_COMIPLER_JAR    = $(or $(wildcard ${CONTRIB_HOME}/drools-compiler-3.0.6.jar),${JAR_HOME}/drools-compiler-3.0.6.jar)
+ANTLR3_JAR             = $(or $(wildcard ${CONTRIB_HOME}/antlr-3.0ea8.jar),${JAR_HOME}/antlr-3.0ea8.jar)
+COMMONS_JCI_CORE_JAR   = $(or $(wildcard ${CONTRIB_HOME}/commons-jci-core-1.0-406301.jar),${JAR_HOME}/commons-jci-core-1.0-406301.jar)
+COMMONS_JCI_ECLIPSE_JAR = $(or $(wildcard ${CONTRIB_HOME}/commons-jci-eclipse-3.2.0.666.jar),${JAR_HOME}/commons-jci-eclipse-3.2.0.666.jar)
+CORE_JAR               = $(or $(wildcard ${CONTRIB_HOME}/core-3.2.0.666.jar),${JAR_HOME}/core-3.2.0.666.jar)
+COMMONS_LOGGING_JAR    = $(or $(wildcard ${CONTRIB_HOME}/commons-logging-api-1.0.4.jar),${JAR_HOME}/commons-logging-api-1.0.4.jar)
+COMMONS_LANG_JAR       = $(or $(wildcard ${CONTRIB_HOME}/commons-lang-2.1.jar),${JAR_HOME}/commons-lang-2.1.jar)
+STRINGTEMPLATE_JAR     = $(or $(wildcard ${CONTRIB_HOME}/stringtemplate-2.3b6.jar),${JAR_HOME}/stringtemplate-2.3b6.jar)
+ANTLR2_JAR             = $(or $(wildcard ${CONTRIB_HOME}/antlr-2.7.6.jar),${JAR_HOME}/antlr-2.7.6.jar)
 
 #JSR-94
-DROOLS_JSR94_JAR = ${JAR_HOME}/drools-jsr94-3.0.6.jar
-JSR_JAR = ${JAR_HOME}/jsr94-1.1.jar
+DROOLS_JSR94_JAR        = $(or $(wildcard ${CONTRIB_HOME}/drools-jsr94-3.0.6.jar),${JAR_HOME}/drools-jsr94-3.0.6.jar)
+JSR_JAR                 = $(or $(wildcard ${CONTRIB_HOME}/jsr94-1.1.jar),${JAR_HOME}/jsr94-1.1.jar)
 
 #decision tables
-DROOLS_DECISIONTABLES_JAR = ${JAR_HOME}/drools-decisiontables-3.0.6.jar
-JXL_JAR = ${JAR_HOME}/jxl-2.4.2.jar
+DROOLS_DECISIONTABLES_JAR = $(or $(wildcard ${CONTRIB_HOME}/drools-decisiontables-3.0.6.jar),${JAR_HOME}/drools-decisiontables-3.0.6.jar)
+JXL_JAR                   = $(or $(wildcard ${CONTRIB_HOME}/jxl-2.4.2.jar),${JAR_HOME}/jxl-2.4.2.jar)
 
 JBOSS_RULES_JARS = ${DROOLS_COMIPLER_JAR}:${DROOLS_CORE_JAR}:${DROOLS_DECISIONTABLES_JAR}:${DROOLS_JSR94_JAR}
 
@@ -70,7 +99,7 @@ BATCH_SCRIPT = ${JAR_HOME}/perfexplorer
 
 # DISTRIBUTION JARS
 
-DERBY_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/derby.jar
+DERBY_JAR = ${CONTRIB_HOME}/derby.jar
 MYSQL_JAR = ${JAR_HOME}/mysql.jar
 
 
@@ -115,7 +144,9 @@ GLUE_CLASSES = ${subst classes/edu/uoregon/tau/perfexplorer/rules/package-info.c
 
 CLIENT_CLASSES = ${subst src/, classes/edu/uoregon/tau/perfexplorer/, ${patsubst %.java, %.class, ${CLIENT_SOURCES}}} 
 CLASSES = ${COMMON_CLASSES} ${CQOS_CLASSES} ${SERVER_CLASSES} ${CLIENT_CLASSES} ${CLUSTERING_CLASSES}
-RMIC_CLASSES = classes/edu/uoregon/tau/perfexplorer/server/PerfExplorerServer_Stub.class
+# rmic and static stubs are not used: dynamic stubs (JDK 5+) are generated
+# automatically by the JRE at export time. rmic was deprecated in JDK 13 and
+# removed from the reference implementation in JDK 15.
 
 ##########################
 
@@ -142,11 +173,11 @@ clustering: ${CLUSTERING_CLASSES}
 
 glue: ${GLUE_CLASSES}
 
-server: ${SERVER_CLASSES} ${RMIC_CLASSES}
+server: ${SERVER_CLASSES}
 
 client: ${CLIENT_CLASSES}
 
-perfexplorer.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES} ${GLUE_CLASSES}
+perfexplorer.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${GLUE_CLASSES}
 	cp src/client/*.gif classes/edu/uoregon/tau/perfexplorer/client/.
 	cp rules/*.drl classes/edu/uoregon/tau/perfexplorer/rules/.
 	cp etc/*.drl classes/edu/uoregon/tau/perfexplorer/.
@@ -184,13 +215,10 @@ ${CLUSTERING_CLASSES}: Makefile ${CLUSTERING_SOURCES} ${CONSTANT_CLASSES} ${COMM
 ${SERVER_CLASSES}: Makefile ${SERVER_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES}
 	${JAVAC} -classpath ${SERVER_BUILD_CLASSPATH} -d classes ${SERVER_SOURCES}
 
-${RMIC_CLASSES}: Makefile ${SERVER_SOURCES} ${SERVER_CLASSES}
-	${RMIC} -classpath ${SERVER_BUILD_CLASSPATH} -d classes edu.uoregon.tau.perfexplorer.server.PerfExplorerServer
-
-${CLIENT_CLASSES}: Makefile ${CLIENT_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES}
+${CLIENT_CLASSES}: Makefile ${CLIENT_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES}
 	${JAVAC} -classpath ${CLIENT_BUILD_CLASSPATH} -d classes ${CLIENT_SOURCES}
 
-${GLUE_CLASSES}: Makefile ${GLUE_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES}
+${GLUE_CLASSES}: Makefile ${GLUE_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES}
 	${JAVAC} -classpath ${GLUE_BUILD_CLASSPATH} -d classes ${GLUE_SOURCES}
 
 ###
@@ -305,7 +333,7 @@ webstart_old: perfexplorer.jar
 	cp etc/java.policy ${WEBSTART_DIR}
 	chmod 755 ${WEBSTART_DIR}/*.jar
 
-perfexplorer2.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${GLUE_CLASSES} ${RMIC_CLASSES}
+perfexplorer2.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${GLUE_CLASSES}
 	bin/extract.sh ${PERFDMF_JAR}							# TAU
 	bin/extract.sh ${VIS_JAR}								# TAU
 	bin/extract.sh ${TAUCOMMON_JAR}							# TAU
@@ -411,7 +439,7 @@ webstart: perfexplorer.jar
 
 BOTTOM = '<font size="-1">****************************************************************************<br>Copyright 1997-2009<br> Department of Computer and Information Science, University of Oregon<br> Advanced Computing Laboratory, Los Alamos National Laboratory<br> Juelich Supercomputing Centre, Research Center Juelich, Germany<br><a href="http://tau.uoregon.edu" target="new">http://tau.uoregon.edu</a><br>****************************************************************************<br>Permission to use, copy, modify, and distribute this software and its documentation for any purpose and without fee is hereby granted, provided that the above copyright notice appear in all copies and that both that copyright notice and this permission notice appear in supporting documentation, and that the name of University of Oregon (UO) and Los Alamos National Laboratory (LANL) not be used in advertising or publicity pertaining to distribution of the software without specific, written prior permission.  The University of Oregon and LANL makes no representations about the suitability of this software for any purpose.  It is provided "as is" without express or implied warranty.<br><br>THE UNIVERSITY OF OREGON AND LANL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL THE UNIVERSITY OF OREGON OR LANL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.<font>'
 
-doccheck: Makefile src/overview.html ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${GLUE_CLASSES}
+doccheck: Makefile src/overview.html ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${GLUE_CLASSES}
 	rm -rf doccheckOut
 	mkdir doccheckOut
 	${JAVADOC} -sourcepath src \
@@ -421,7 +449,7 @@ doccheck: Makefile src/overview.html ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLU
 	-source 1.8 \
 	edu.uoregon.tau.perfexplorer.glue edu.uoregon.tau.perfexplorer.rules
 
-javadoc: Makefile src/overview.html ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${GLUE_CLASSES}
+javadoc: Makefile src/overview.html ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${GLUE_CLASSES}
 	rm -rf javadoc
 	rm -rf src/edu
 	mkdir javadoc
