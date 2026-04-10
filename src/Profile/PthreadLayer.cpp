@@ -456,13 +456,14 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
 #endif
 
 #ifdef TAU_MPI
-  // Ignore threads launched before/during MPI_Init().
-  // Some programs (NEMO, XIOS) when using npmd 
-  // which loads a shared library  which runs a constructor.
-  // This causes a deadlock because loading a
-  // shared library and initializing thread-local storage on a new thread
-  // acquire the same lock.
-  ignore_thread = ignore_thread || !Tau_get_usesMPI();
+  // Ignore threads launched before/during MPI_Init() to avoid a deadlock
+  // where loading a shared library (NEMO, XIOS via npmd) and initializing
+  // thread-local storage on a new thread both acquire the same lock.
+  // The guard includes myNode() < 0 so that non-MPI apps running against
+  // an MPI-configured TAU are not permanently excluded: once a node id has
+  // been established (either by MPI_Init or auto-assigned by TauTraceInit)
+  // thread tracking proceeds normally.
+  ignore_thread = ignore_thread || (!Tau_get_usesMPI() && RtsLayer::myNode() < 0);
 #endif
 
 

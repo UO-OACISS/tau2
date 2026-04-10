@@ -2386,14 +2386,21 @@ extern "C" void Tau_sampling_init_if_necessary(void)
   // problems where the sampling signal interferes with MPI startup.
 #ifdef TAU_MPI
   if(Tau_get_usesMPI() == 0) {
+    if (RtsLayer::myNode() < 0) {
+      // MPI-configured TAU, but MPI has not started and no node has been
+      // auto-assigned yet.  Defer to avoid signal conflicts during MPI init.
       Tau_sampling_defer_init();
       return;
-  }
-  int mpi_initialized = 0;
-  PMPI_Initialized(&mpi_initialized);
-  if(!mpi_initialized) {
-    Tau_sampling_defer_init();
-    return;
+    }
+    // Node was auto-assigned (non-MPI app running against MPI-configured TAU).
+    // Skip the MPI_Initialized check -- MPI will never be initialized.
+  } else {
+    int mpi_initialized = 0;
+    PMPI_Initialized(&mpi_initialized);
+    if(!mpi_initialized) {
+      Tau_sampling_defer_init();
+      return;
+    }
   }
 #endif
 

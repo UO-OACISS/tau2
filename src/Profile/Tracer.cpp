@@ -350,7 +350,9 @@ void TauTraceFlushBuffer(int tid)
   if (numEventsToBeFlushed != 0) {
 #ifdef TAU_MPI
 #ifndef TAU_SHMEM
-   if (Tau_get_usesMPI())
+   /* Allow the write when MPI is active OR when a valid node has been
+      assigned (non-MPI app whose node was defaulted to 0 by TauTraceInit). */
+   if (Tau_get_usesMPI() || RtsLayer::myNode() >= 0)
 #endif /* TAU_SHMEM */
    {
 #endif /* TAU_MPI */
@@ -366,8 +368,16 @@ void TauTraceFlushBuffer(int tid)
    }
 #ifndef TAU_SHMEM
    else {
-     // do nothing.
-     return;
+     /* This branch should be unreachable: TauTraceInit defaults the node
+        to 0 for non-MPI apps, so myNode() >= 0 by the time any flush
+        is attempted.  Emit a one-time diagnostic if it fires anyway. */
+     static bool flush_warned_once = false;
+     if (!flush_warned_once) {
+       flush_warned_once = true;
+       fprintf(stderr,
+         "TAU: Warning: trace buffer flush skipped (node not yet assigned "
+         "and MPI not active).  Trace output may be incomplete.\n");
+     }
    }
 #endif /* TAU_SHMEM */
 #endif /* TAU_MPI */
@@ -428,6 +438,27 @@ int TauTraceInit(int tid)
      }
      setTauBufferAllocated(tid, true);
    }
+
+  /* For non-MPI apps running against an MPI-configured TAU library,
+     myNode() stays -1 because no MPI env vars are present and the MPI
+     wrappers never fire.  TauTraceInit cannot complete while node is -1.
+     Auto-assign node 0 so the trace system can initialize normally.
+     setMyNode() recurses back into TauTraceInit; by the time it returns
+     the per-thread trace state is fully initialized and we return 0 to
+     tell the caller that no additional INIT records were created here. */
+  if (!getTauTraceInitialized(tid) && RtsLayer::myNode() == -1 && !Tau_get_usesMPI()) {
+    static bool warned_once = false;
+    if (!warned_once) {
+      warned_once = true;
+      fprintf(stderr,
+        "TAU: Warning: Tracing is enabled with an MPI-configured library, but no MPI "
+        "environment was detected.  Defaulting to node 0 for trace output.\n");
+    }
+    RtsLayer::setMyNode(0, tid);
+    /* setMyNode invoked TauTraceInit recursively; initialization is complete. */
+    return 0;
+  }
+
   int retvalue = 0;
   /* by default this is what is returned. No trace records were generated */
    
@@ -534,6 +565,11 @@ void TauTraceEventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int
 
   int i;
   int records_created = TauTraceInit(tid);
+  /* If node was -1 when the caller read myNode() (before TauTraceInit
+     auto-assigned node 0 for non-MPI apps), refresh node_id now. */
+  if (node_id < 0) {
+    node_id = RtsLayer::myNode();
+  }
   x_uint64 timestamp;
   TAU_EV *event = &getTraceBuffer(tid)[getTauCurrentEvent(tid)];
 
@@ -627,6 +663,7 @@ void TauTraceClose(int tid) {
       return;
   }
 #endif
+
   TauTraceEventSimple (TAU_EV_CLOSE, 0, tid, TAU_TRACE_EVENT_KIND_FUNC);
   TauTraceEventSimple (TAU_EV_WALL_CLOCK, time((time_t *)0), tid, TAU_TRACE_EVENT_KIND_FUNC);
   TauTraceDumpEDF(tid);
@@ -701,7 +738,7 @@ int TauTraceDumpEDF(int tid) {
 
 #ifdef TAU_MPI
 #ifndef TAU_SHMEM
-  if (Tau_get_usesMPI())
+  if (Tau_get_usesMPI() || RtsLayer::myNode() >= 0)
 #endif /* TAU_SHMEM */
   {
 #endif /* TAU_MPI */
