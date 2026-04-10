@@ -102,7 +102,7 @@ double Tau_metric_set_synchronized_gpu_timestamp(int tid, double value){
   }
   metric_set_gpu_timestamp(tid, offset_timestamp+value);
   //Tau_create_top_level_timer_if_necessary_task(tid);
-  TAU_VERBOSE("metric_set_gpu_timestamp = %llu + %f = %f\n", offset_timestamp, value, offset_timestamp+value);
+  //TAU_VERBOSE("metric_set_gpu_timestamp = %llu + %f = %f\n", offset_timestamp, value, offset_timestamp+value);
   return offset_timestamp+value;
 }
 
@@ -198,11 +198,11 @@ void TauPublishEvent(struct TauRocmEvent event) {
 
   metric_set_gpu_timestamp(event.taskid, timestamp_entry);
   TAU_START_TASK(event.name.c_str(), event.taskid);
-  TAU_VERBOSE("Started event %s on task %d timestamp = %lu \n", event.name.c_str(), event.taskid, timestamp_entry);
+  //TAU_VERBOSE("Started event %s on task %d timestamp = %lu \n", event.name.c_str(), event.taskid, timestamp_entry);
   
   metric_set_gpu_timestamp(event.taskid, timestamp_exit);
   TAU_STOP_TASK(event.name.c_str(), event.taskid);
-  TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", event.name.c_str(), event.taskid, timestamp_exit);
+  //TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", event.name.c_str(), event.taskid, timestamp_exit);
 }
 
 

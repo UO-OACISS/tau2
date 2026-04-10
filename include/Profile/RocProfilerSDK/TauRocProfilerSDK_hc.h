@@ -36,6 +36,7 @@ using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_
 struct Tau_SDK_hc_timestamp{
   rocprofiler_kernel_id_t id;
   rocprofiler_timestamp_t last_timestamp;
+  uint64_t queue_id;
 };
 
 #ifndef ROCPROFILER_CALL
@@ -57,15 +58,13 @@ struct Tau_SDK_hc_timestamp{
 #endif
 
 //Compatible Hardware Counter Profiling is only available at Rocprofiler 0.5 and newer versions
-#ifdef TAU_ENABLE_ROCPROFILERSDK_PC
-    #if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0)
-        #define PROFILE_SDKCOUNTERS
-    #elif (ROCPROFILER_VERSION_MAJOR >= 1)
-        #define PROFILE_SDKCOUNTERS
-        #define PROFILE_SDKCOUNTERS_v1
-    #else
-        #warning "This rocprofiler-sdk version is unable to profile hardware counters"
-    #endif
+#if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0)
+    #define PROFILE_SDKCOUNTERS
+#elif (ROCPROFILER_VERSION_MAJOR >= 1)
+    #define PROFILE_SDKCOUNTERS
+    #define PROFILE_SDKCOUNTERS_v1
+#else
+    #warning "This rocprofiler-sdk version is unable to profile hardware counters"
 #endif
 
 

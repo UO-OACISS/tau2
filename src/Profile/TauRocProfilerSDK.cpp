@@ -35,7 +35,7 @@ extern void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t recor
 extern void sdk_pc_sampling_flush();
 extern std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename);
 
-extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value, rocprofiler_timestamp_t* c_timestamp);
+extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, uint64_t* queueid, double* counter_value, rocprofiler_timestamp_t* c_timestamp);
 extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
 
 
@@ -97,6 +97,18 @@ std::mutex SDK_init_lock;
 
 std::map<int, rocprofiler_timestamp_t> tau_last_timestamp_published;
 std::mutex last_mtx;
+
+//thread id that generated the record, taskid
+std::map<rocprofiler_thread_id_t, int> hsa_taskids;
+std::map<rocprofiler_thread_id_t, int> hip_taskids;
+std::map<rocprofiler_thread_id_t, int> rccl_taskids;
+
+//Use the agent id for the memcpys, can be CPU or GPU
+std::map<uint64_t, int> memcpy_taskids;
+//Use device id and queue id instead of thread id
+std::map<struct TauSDK_dev_que, int> kernel_taskids;
+//static pthread_mutex_t queueid_lock = PTHREAD_MUTEX_INITIALIZER;
+
 //static rocprofiler_timestamp_t tau_last_timestamp_published = 0;
 
 //------------------------------------------------------------------------------------------------
@@ -147,7 +159,7 @@ static const auto supported_kinds = std::unordered_set<rocprofiler_buffer_tracin
     //ROCPROFILER_BUFFER_TRACING_PAGE_MIGRATION,      ///< Buffer page migration info
     //ROCPROFILER_BUFFER_TRACING_SCRATCH_MEMORY,      ///< Buffer scratch memory reclaimation info
     //ROCPROFILER_BUFFER_TRACING_CORRELATION_ID_RETIREMENT,  ///< Correlation ID in no longer in use
-    //ROCPROFILER_BUFFER_TRACING_RCCL_API,                   ///< RCCL tracing
+    ROCPROFILER_BUFFER_TRACING_RCCL_API,                   ///< RCCL tracing
     //ROCPROFILER_BUFFER_TRACING_OMPT,                       ///< @see ::rocprofiler_ompt_operation_t
     //ROCPROFILER_BUFFER_TRACING_MEMORY_ALLOCATION,          ///< @see
     //                                               ///< ::rocprofiler_memory_allocation_operation_t
@@ -262,7 +274,7 @@ get_gpu_device_agents()
     return gpu_agents;
 }
 
-std::string get_copy_direction(int direction, int* queueid, uint64_t source, uint64_t destination)
+std::string get_copy_direction(int direction, uint64_t source, uint64_t destination)
 {
   std::string mem_cpy_kind;
 
@@ -282,7 +294,6 @@ std::string get_copy_direction(int direction, int* queueid, uint64_t source, uin
       {
         tau_rocm_agent_id[destination] = tau_rocm_agent_id.size();
       }   
-      *queueid = 3 + tau_rocm_agent_id[destination];
       break;
     }
     case ROCPROFILER_MEMORY_COPY_DEVICE_TO_HOST:
@@ -293,7 +304,6 @@ std::string get_copy_direction(int direction, int* queueid, uint64_t source, uin
       {
         tau_rocm_agent_id[source] = tau_rocm_agent_id.size();
       }  
-      *queueid = 3 + tau_rocm_agent_id[source];
       break;
     }
     case ROCPROFILER_MEMORY_COPY_DEVICE_TO_DEVICE:
@@ -311,7 +321,6 @@ std::string get_copy_direction(int direction, int* queueid, uint64_t source, uin
       mem_cpy_kind = "MEMORY_COPY_DEVICE_TO_DEVICE";
       mem_cpy_kind += " destination id ";
       mem_cpy_kind += std::to_string(tau_rocm_agent_id[destination]);
-      *queueid = 3 + tau_rocm_agent_id[source];
       break;
     }
     case ROCPROFILER_MEMORY_COPY_LAST:
@@ -466,25 +475,23 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           // throw std::runtime_error{msg.str()};
         }
 
-        //Different types of events will appear as different threads in the profile
-        //This is to differenciate kernels, API calls and other events
-        int queueid = 0;
-        unsigned long long timestamp = 0L;
-        int taskid = Tau_get_initialized_queues(queueid);
-        if (taskid == -1) { // not initialized
+        int taskid;
+        auto it = hsa_taskids.find(record->thread_id);
+        if(it==hsa_taskids.end())
+        {
           TAU_CREATE_TASK(taskid);
-          Tau_set_initialized_queues(queueid, taskid);
+          hsa_taskids[record->thread_id] = taskid;
+          unsigned long long timestamp = 0L;
           timestamp = record->start_timestamp;
-          Tau_check_timestamps(last_timestamp, timestamp, "NEW QUEUE0", taskid);
-          last_timestamp = timestamp;
-          // Set the timestamp for TAUGPU_TIME:
-          Tau_metric_set_synchronized_gpu_timestamp(taskid,
-                                                    ((double)timestamp / 1e3));
+          Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp / 1e3));
           Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
           Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
           Tau_create_top_level_timer_if_necessary_task(taskid);
         }
-        
+        else
+        {
+          taskid = it->second;
+        }
         std::string task_name;
         task_name = client_name_info.operation_names[record->kind][record->operation];
         std::vector<TauSDKUserEvent> record_events;
@@ -506,21 +513,22 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           // throw std::runtime_error{msg.str()};
         }
 
-        int queueid = 1;
-        unsigned long long timestamp = 0L;
-        int taskid = Tau_get_initialized_queues(queueid);
-        if (taskid == -1) { // not initialized
+        int taskid;
+        auto it = hip_taskids.find(record->thread_id);
+        if(it==hip_taskids.end())
+        {
           TAU_CREATE_TASK(taskid);
-          Tau_set_initialized_queues(queueid, taskid);
+          hip_taskids[record->thread_id] = taskid;
+          unsigned long long timestamp = 0L;
           timestamp = record->start_timestamp;
-          Tau_check_timestamps(last_timestamp, timestamp, "NEW QUEUE1", taskid);
-          last_timestamp = timestamp;
-          // Set the timestamp for TAUGPU_TIME:
-          Tau_metric_set_synchronized_gpu_timestamp(taskid,
-                                                    ((double)timestamp / 1e3));
+          Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp / 1e3));
           Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
           Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
           Tau_create_top_level_timer_if_necessary_task(taskid);
+        }
+        else
+        {
+          taskid = it->second;
         }
         
         std::string task_name;
@@ -547,6 +555,28 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         {
           tau_rocm_agent_id[agent_id] = tau_rocm_agent_id.size();
         }
+
+        int taskid;
+        uint64_t cur_queue_id = record->dispatch_info.queue_id.handle;
+        TauSDK_dev_que cur_dev_que = {agent_id, cur_queue_id};
+        auto it = kernel_taskids.find(cur_dev_que);
+        if(it==kernel_taskids.end())
+        {
+          TAU_CREATE_TASK(taskid);
+          kernel_taskids[cur_dev_que] = taskid;
+          unsigned long long timestamp = 0L;
+          timestamp = record->start_timestamp;
+          Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp / 1e3));
+          Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
+          Tau_add_metadata_for_task("ROCM_GPU_ID", tau_rocm_agent_id[agent_id], taskid);
+          Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
+          Tau_add_metadata_for_task("ROCM_QUEUE_ID", cur_queue_id, taskid);
+          Tau_create_top_level_timer_if_necessary_task(taskid);
+        }
+        else
+        {
+          taskid = it->second;
+        }
    
         
         std::string task_name = demangle_kernel_rocprofsdk(
@@ -559,25 +589,6 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         if(task_name.compare(0, 13, "__amd_rocclr_") == 0)
         {
           return;
-        }
-
-        int queueid = 3 + tau_rocm_agent_id[agent_id];
-        unsigned long long timestamp = 0L;
-        int taskid = Tau_get_initialized_queues(queueid);
-        if (taskid == -1) { // not initialized
-          TAU_CREATE_TASK(taskid);
-          Tau_set_initialized_queues(queueid, taskid);
-          timestamp = record->start_timestamp;
-          Tau_check_timestamps(last_timestamp, timestamp, "NEW GPU QUEUE", taskid);
-          last_timestamp = timestamp;
-          // Set the timestamp for TAUGPU_TIME:
-          Tau_metric_set_synchronized_gpu_timestamp(taskid,
-                                                    ((double)timestamp / 1e3));
-          Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
-          Tau_add_metadata_for_task("ROCM_GPU_ID", tau_rocm_agent_id[agent_id], taskid);
-          Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
-          Tau_add_metadata_for_task("ROCM_QUEUE_ID", record->dispatch_info.queue_id.handle, taskid);
-          Tau_create_top_level_timer_if_necessary_task(taskid);
         }
 
         std::vector<TauSDKUserEvent> record_events;
@@ -643,31 +654,29 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         if(record->start_timestamp > record->end_timestamp)
           throw std::runtime_error("memory copy: start > end");
 
-        //We want to tie, if possible, the copy to a GPU
-        //Looking at the type of copy and the destination
-        //and source, we may be able to. If not, set it to
-        //a queue with no GPUs
-        std::string task_name;
-        int queueid = 2;
-        task_name = get_copy_direction(record->operation, &queueid, record->src_agent_id.handle, record->dst_agent_id.handle);        
-                          
-        unsigned long long timestamp = 0L;
-        int taskid = Tau_get_initialized_queues(queueid);
-        if (taskid == -1) { // not initialized
+
+        int taskid;
+        uint64_t agent_id = record->src_agent_id.handle;
+        auto it = memcpy_taskids.find(agent_id);
+        if(it==memcpy_taskids.end())
+        {
           TAU_CREATE_TASK(taskid);
-          Tau_set_initialized_queues(queueid, taskid);
+          memcpy_taskids[agent_id] = taskid;
+          unsigned long long timestamp = 0L;
           timestamp = record->start_timestamp;
-          Tau_check_timestamps(last_timestamp, timestamp, "NEW QUEUE3", taskid);
-          last_timestamp = timestamp;
-          // Set the timestamp for TAUGPU_TIME:
-          Tau_metric_set_synchronized_gpu_timestamp(taskid,
-                                                    ((double)timestamp / 1e3));
+          Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp / 1e3));
           Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
           Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
-          Tau_add_metadata_for_task("ROCM_GPU_ID", 3-taskid, taskid);
           Tau_create_top_level_timer_if_necessary_task(taskid);
         }
-        
+        else
+        {
+          taskid = it->second;
+        }
+
+        std::string task_name;
+        task_name = get_copy_direction(record->operation, record->src_agent_id.handle, record->dst_agent_id.handle);        
+
         std::stringstream ss;
   			std::string tmp;
         std::vector<TauSDKUserEvent> record_events;
@@ -682,19 +691,53 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         //("taskid: %d start_ts: %lf end_ts: %lf\n", e.taskid, (double)e.entry, (double)e.exit);
         TAU_process_sdk_event(e);
       }
-      /*else if(header->kind == ROCPROFILER_BUFFER_TRACING_RCCL_API)
+      else if(header->kind == ROCPROFILER_BUFFER_TRACING_RCCL_API)
       {
         auto* record = static_cast<rocprofiler_buffer_tracing_rccl_api_record_t*>(header->payload);
-        std::cout << "size: " << record->size
+        /*std::cout //<< "size: " << record->size
                   << ", kind: " << client_name_info.kind_names[record->kind]
                   << ", operation: " <<  client_name_info.operation_names[record->kind][record->operation]
-                  << ", cid=" << record->correlation_id.internal
-                  << ", extern_cid=" << record->correlation_id.external.value
+                  //<< ", cid=" << record->correlation_id.internal
+                  //<< ", extern_cid=" << record->correlation_id.external.value
                   << ", start_timestamp: " << record->start_timestamp
                   << ", end_timestamp: " << record->end_timestamp
                   << ", thread_id: " << record->thread_id
-                  << std::endl;
-      }*/
+                  << std::endl;*/
+        if(record->start_timestamp > record->end_timestamp)
+          throw std::runtime_error("nccl: start > end");
+        
+        int taskid;
+        auto it = rccl_taskids.find(record->thread_id);
+        if(it==rccl_taskids.end())
+        {
+          TAU_CREATE_TASK(taskid);
+          rccl_taskids[record->thread_id] = taskid;
+          unsigned long long timestamp = 0L;
+          timestamp = record->start_timestamp;
+          Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp / 1e3));
+          Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
+          Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
+          //Will need to modify this when we are able to get the rank id
+          // Also, we will need to use the map with ranks
+          Tau_add_metadata_for_task("ROCM_RCCL_ID", 0, taskid);
+          Tau_create_top_level_timer_if_necessary_task(taskid);
+        }
+        else
+        {
+          taskid = it->second;
+        }
+        
+
+        std::string task_name;
+        task_name = client_name_info.operation_names[record->kind][record->operation];
+        std::vector<TauSDKUserEvent> record_events;
+        struct TauSDKEvent e(task_name, record->start_timestamp, record->end_timestamp, taskid, record_events);
+        //TAU_VERBOSE("%s taskid: %d start_ts: %lu end_ts: %lu\n", task_name.c_str(), e.taskid, e.entry, e.exit);
+        //std::cout << task_name << e.taskid, e.entry, e.exit<< std::endl;
+        TAU_process_sdk_event(e);
+
+        
+      }
       /*else if(header->kind == ROCPROFILER_BUFFER_TRACING_MEMORY_ALLOCATION)
       {
         auto* record =
@@ -737,11 +780,15 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
       if(header->category == ROCPROFILER_BUFFER_CATEGORY_COUNTERS )
       {
         //printf("ROCPROFILER_BUFFER_CATEGORY_COUNTERS\n");
-        uint64_t agent_id = 0;
+        uint64_t agent_id;
+        uint64_t cur_queue_id;
         double counter_value;
         rocprofiler_timestamp_t c_timestamp;
-        std::string msg = read_hc_record(header->payload, header->kind, client_kernels, &agent_id, &counter_value, &c_timestamp);
-        if(agent_id == 0)
+        std::string msg = read_hc_record(header->payload, header->kind, client_kernels, &agent_id, &cur_queue_id, &counter_value, &c_timestamp);
+        //If the type is ROCPROFILER_COUNTER_RECORD_PROFILE_COUNTING_DISPATCH_HEADER
+        // it does not read the event, but sets some data needed to read future events,
+        // which is performed by read_hc_record()
+        if(header->kind == ROCPROFILER_COUNTER_RECORD_PROFILE_COUNTING_DISPATCH_HEADER)
           continue;        
   			//This should be related to the GPU id(agent_id.handle which is uint64_t)
         //int queueid = 1 + (int)record->dispatch_info.agent_id.handle;
@@ -749,9 +796,20 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         if(agent_id_elem == tau_rocm_agent_id.end())
         {
           tau_rocm_agent_id[agent_id] = tau_rocm_agent_id.size();
-        }        
-        int queueid = 3 + tau_rocm_agent_id[agent_id];
-        int taskid = Tau_get_initialized_queues(queueid);
+        }
+        
+        int taskid;
+        TauSDK_dev_que cur_dev_que = {agent_id, cur_queue_id};
+        auto it = kernel_taskids.find(cur_dev_que);
+        if(it==kernel_taskids.end())
+        {
+          //Should not happen, kernel data should have been read and generated the task
+          continue;
+        }
+        else
+        {
+          taskid = it->second;
+        }
         //void* ue = nullptr;
   			//ue = Tau_get_userevent(msg.c_str());
   			double value = (double)(counter_value);

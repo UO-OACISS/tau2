@@ -152,7 +152,7 @@ counter_dimensions(rocprofiler_counter_id_t counter)
 // provides information to correlate dispatch ID and kernel ID to identify the profiled kernel
 //ROCPROFILER_COUNTER_RECORD_VALUE
 // provides the counter value, as only one value is provided in each callback
-std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value, rocprofiler_timestamp_t* c_timestamp)
+std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, uint64_t* queueid, double* counter_value, rocprofiler_timestamp_t* c_timestamp)
 {
   std::stringstream ss;
   //Information about the kernel executed
@@ -163,6 +163,7 @@ std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t cli
     Tau_SDK_hc_timestamp e;
     e.id = record->dispatch_info.kernel_id;
     e.last_timestamp = record->end_timestamp;
+    e.queue_id = record->dispatch_info.queue_id.handle;
     dispatch_id_kernel_map.emplace(record->dispatch_info.dispatch_id, e);
     //printf("ROCPROFILER_COUNTER_RECORD %lu\n", record->end_timestamp);
   }
@@ -173,11 +174,11 @@ std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t cli
     auto* record = static_cast<rocprofiler_record_counter_t*>(payload);
     rocprofiler_counter_id_t counter_id = {.handle = 0};
     rocprofiler_query_record_counter_id(record->id, &counter_id);
-    
+    Tau_SDK_hc_timestamp cur_hc_event = dispatch_id_kernel_map[record->dispatch_id];
     std::string tmp;
     ss << "Counter: (" ;
     ss << used_counter_id_map[counter_id.handle] << ") [ROCm Kernel]";
-    ss << Tau_demangle_name(client_kernels.at(dispatch_id_kernel_map[record->dispatch_id].id).kernel_name);
+    ss << Tau_demangle_name(client_kernels.at(cur_hc_event.id).kernel_name);
     ss << " ["; 
     for(auto& dim : counter_dimensions(counter_id))
     {
@@ -188,7 +189,8 @@ std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t cli
     ss << "]";
     *counter_value = record->counter_value ;			
     *agentid = record->agent_id.handle; 
-    *c_timestamp = dispatch_id_kernel_map[record->dispatch_id].last_timestamp;
+    *queueid = cur_hc_event.queue_id;
+    *c_timestamp = cur_hc_event.last_timestamp;
   }
   
   return ss.str();
