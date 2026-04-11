@@ -689,7 +689,8 @@ int TauTracePerfettoInitTS(int tid, x_uint64 /*ts*/) {
     // Tau_get_usesMPI() here — that flag may be set too early.
     int mpi_initialized = 0;
     MPI_Initialized(&mpi_initialized);
-    if ((!mpi_initialized || !Tau_get_node_confirmed()) && TauEnv_get_set_node() <= -1) {
+    if ((!mpi_initialized || !Tau_get_node_confirmed()) && TauEnv_get_set_node() <= -1
+        && Tau_get_usesMPI() && RtsLayer::myNode() < 0) {
         if (TauEnv_get_perfetto_debug()) {
             static thread_local int defer_log_count = 0;
             if (defer_log_count++ < 3) {
