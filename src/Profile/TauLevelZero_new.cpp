@@ -707,9 +707,7 @@ void TauL0EnableProfiling()
     ze_collector_ = ZeCollector::Create(L0_collector_options);
     if(L0_collector_options.stall_sampling)
     {
-        std::string out_dir = "/home/users/jalcaraz/pti-gpu/samples/omp_gemm/build/test/";
-        std::string log_file = "log.txt";
-        metric_profiler = ZeMetricProfiler::Create(0, out_dir.c_str(), log_file, false, utils::GetEnv("UNITRACE_DevicesToSample"));;
+        metric_profiler = ZeMetricProfiler::Create();;
     }
 
     initialized = 1;
