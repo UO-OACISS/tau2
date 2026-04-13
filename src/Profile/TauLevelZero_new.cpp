@@ -8,6 +8,7 @@
 #include <vector>
 #include <cstdlib>
 #include <chrono>
+#include <sys/wait.h>
 
 #include <cstring>
 #include <fstream>
@@ -25,6 +26,7 @@
 #include "Profile/L0_new/level_zero/layers/zel_tracing_register_cb.h"
 #include "Profile/L0_new/common_header.h"
 #include "Profile/L0_new/unimemory.h"
+#include "Profile/L0_new/ze_metrics.h"
 
 //#define PTI_ASSERT(X) assert(X)
 
@@ -85,6 +87,7 @@ static std::map<ze_command_queue_handle_t, int> command_queue_map;
 static int comm_queue = 0;
 
 ZeCollector* ze_collector_ = nullptr;
+static ZeMetricProfiler* metric_profiler = nullptr;
 
 OnZeKernelFinishCallback L0_k_callback = nullptr;
 OnZeFunctionFinishCallback L0_a_callback = nullptr;
@@ -248,7 +251,7 @@ void TAU_L0_enter_event(const char* nameAPIcall)
     int current_thread = RtsLayer::myThread();
     uint64_t current_timestamp = TauTraceGetTimeStamp(0);
     L0_TAU_DEBUG_MSG("TAU_L0_enter_event " << nameAPIcall << " thread " << current_thread << " ts " <<  current_timestamp);
-    TAU_START(nameAPIcall);
+    //TAU_START(nameAPIcall);
 
     //Only Correlate when kernels are involved.
     static std::string launch_name = "zeCommandListAppendLaunchKernel";
@@ -299,7 +302,7 @@ void TAU_L0_exit_event(const char* nameAPIcall)
     int current_thread = RtsLayer::myThread();
     uint64_t current_timestamp = TauTraceGetTimeStamp(0);
     L0_TAU_DEBUG_MSG("TAU_L0_exit_event " << nameAPIcall << " thread " << current_thread << " ts " <<  current_timestamp);
-    TAU_STOP(nameAPIcall);
+    //TAU_STOP(nameAPIcall);
 }
 
 zet_metric_group_handle_t TAU_L0_get_metric_group(ze_device_handle_t curr_device_handle)
@@ -694,7 +697,7 @@ void TauL0EnableProfiling()
     {
         if(TauEnv_get_l0_metrics_enable())
         {
-            printf("Was  metrics_discovery_api.h found while configuring?\n");
+            printf("Was metrics_discovery_api.h found while configuring?\n");
 
         }
         printf("L0 failed to initialize\n");
@@ -702,6 +705,13 @@ void TauL0EnableProfiling()
     #endif
     assert(status == ZE_RESULT_SUCCESS);
     ze_collector_ = ZeCollector::Create(L0_collector_options);
+    if(L0_collector_options.stall_sampling)
+    {
+        std::string out_dir = "/home/users/jalcaraz/pti-gpu/samples/omp_gemm/build/test/";
+        std::string log_file = "log.txt";
+        metric_profiler = ZeMetricProfiler::Create(0, out_dir.c_str(), log_file, false, utils::GetEnv("UNITRACE_DevicesToSample"));;
+    }
+
     initialized = 1;
     TAU_VERBOSE("Initialized L0 Collector\n");
 }
@@ -711,12 +721,21 @@ void TauL0DisableProfiling()
 
     if(disabled || !initialized)
         return;
-    L0_TAU_DEBUG_MSG("Disabling Tau L0");
+    TAU_VERBOSE("Disabling Tau L0");
+    // wait for child process to complete
+    while (wait(nullptr) > 0);
 
+    TAU_VERBOSE("Disabling Tau L0-");
     ze_collector_->DisableTracing();
+    TAU_VERBOSE("Disabling Tau L0--");
     ze_collector_->Finalize();
+    //If not done after disabling L0, it deadlocks, may change later
+    if(metric_profiler != nullptr)
+        delete metric_profiler;
+    TAU_VERBOSE("Disabling Tau L0---");
     //ze_collector_->flush_initialized_queues(); //--TODO
     uint64_t cpu_end_ts = TauTraceGetTimeStamp(0);
     Tau_remove_initialized_queues(cpu_end_ts);
     disabled = 1;
+    TAU_VERBOSE("Disabled Tau L0");
 }

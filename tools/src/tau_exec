@@ -1058,6 +1058,10 @@ if [ $track_l0 = "true" ]; then
   if [ $track_l0_stall_sampling = "true" ]; then
     if [ ! -v L0_METRICGROUP ]; then
       $dryrun export L0_METRICGROUP="EuStallSampling"
+      #Need to check if needed
+      $dryrun export ZET_ENABLE_METRICS=1
+      #Make it so the user can choose the size
+      $dryrun export UNITRACE_SamplingInterval=10
     else
       #At this moment this is for testing, it doesn't work with our machines
       # as stall sampling (pc sampling) seems to have some driver/GPU issues,
