@@ -26,7 +26,6 @@
 #include "Profile/L0_new/level_zero/layers/zel_tracing_register_cb.h"
 #include "Profile/L0_new/common_header.h"
 #include "Profile/L0_new/unimemory.h"
-#include "Profile/L0_new/ze_metrics.h"
 
 //#define PTI_ASSERT(X) assert(X)
 
@@ -72,6 +71,7 @@ struct CollectorOptions {
 
 
 #include "Profile/L0_new/ze_collector.h"
+#include "Profile/L0_new/ze_metrics.h"
 
 static double L0_TAU_init_timestamp;
 static uint64_t L0_Driver_init_timestamp;
@@ -156,18 +156,36 @@ int Tau_get_initialized_queues(tuple<uintptr_t, int, size_t> dev_tile, ze_comman
   else
   {
 
-    ze_device_properties_t props = { ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES };
-    zeDeviceGetProperties(reinterpret_cast<ze_device_handle_t>(std::get<0>(dev_tile)), &props);
+    std::string cur_name;
+    uint32_t cur_devid;
+    //ze_device_properties_t props = { ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES };
+    //zeDeviceGetProperties(reinterpret_cast<ze_device_handle_t>(std::get<0>(dev_tile)), &props);
+    auto it = devices_->find(reinterpret_cast<ze_device_handle_t>(std::get<0>(dev_tile)));
+    if (it != devices_->end())
+    {
+        ZeDevice device_info = it->second;
+        cur_name = device_info.device_name_;
+        cur_devid = device_info.id_;
+    }
+    //Should not execute this part, GPUs should be registered.
+    else
+    {
+        ze_device_properties_t props = { ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES };
+        zeDeviceGetProperties(reinterpret_cast<ze_device_handle_t>(std::get<0>(dev_tile)), &props);
+        cur_devid = props.deviceId;
+        cur_name = props.name;
+    }
+
     //printf("Running on: %s , deviceId %d uuid %d\n", props.name, props.deviceId, props.uuid);
 
     TAU_CREATE_TASK(queue_id);
     // losing resolution from nanoseconds to microseconds.
     metric_set_gpu_timestamp(queue_id, first_ts);
     Tau_add_metadata_for_task("TAU_TASK_ID", queue_id, queue_id);
-    Tau_add_metadata_for_task("L0_GPU_ID", props.deviceId, queue_id);
+    Tau_add_metadata_for_task("L0_GPU_ID", cur_devid, queue_id);
     //Similar to streams
     //Tau_add_metadata_for_task("L0_GPU_TILE", std::get<1>(dev_tile), queue_id);
-    Tau_metadata_task("L0_GPU_NAME", props.name, queue_id);
+    Tau_metadata_task("L0_GPU_NAME", cur_name.c_str(), queue_id);
     
     auto it_comm_q = command_queue_map.find(comm_queue_id);
     int curr_comm_queue = comm_queue;
@@ -242,6 +260,11 @@ void Tau_remove_initialized_queues(uint64_t cpu_end_ts)
 //API calls
 void TAU_L0_enter_event(const char* nameAPIcall)
 {
+    //This function is called by profilers, we do not want to profile it,
+    // or we will have overlaps when using stall sampling
+    //may disable the callback
+    if(strcmp(nameAPIcall, "zeEventQueryStatus") == 0)
+        return;
     L0_TAU_DEBUG_MSG("TAU_L0_enter_event!!\n");
     if(!initialized || disabled)
     {
@@ -251,7 +274,7 @@ void TAU_L0_enter_event(const char* nameAPIcall)
     int current_thread = RtsLayer::myThread();
     uint64_t current_timestamp = TauTraceGetTimeStamp(0);
     L0_TAU_DEBUG_MSG("TAU_L0_enter_event " << nameAPIcall << " thread " << current_thread << " ts " <<  current_timestamp);
-    //TAU_START(nameAPIcall);
+    TAU_START(nameAPIcall);
 
     //Only Correlate when kernels are involved.
     static std::string launch_name = "zeCommandListAppendLaunchKernel";
@@ -293,6 +316,10 @@ void TAU_L0_enter_event(const char* nameAPIcall)
 //API calls
 void TAU_L0_exit_event(const char* nameAPIcall)
 {
+    //This function is called by profilers, we do not want to profile it,
+    // or we will have overlaps when using stall sampling
+    if(strcmp(nameAPIcall, "zeEventQueryStatus") == 0)
+        return;
     L0_TAU_DEBUG_MSG("TAU_L0_exit_event!!\n");
     if(!initialized || disabled)
     {
@@ -302,7 +329,7 @@ void TAU_L0_exit_event(const char* nameAPIcall)
     int current_thread = RtsLayer::myThread();
     uint64_t current_timestamp = TauTraceGetTimeStamp(0);
     L0_TAU_DEBUG_MSG("TAU_L0_exit_event " << nameAPIcall << " thread " << current_thread << " ts " <<  current_timestamp);
-    //TAU_STOP(nameAPIcall);
+    TAU_STOP(nameAPIcall);
 }
 
 zet_metric_group_handle_t TAU_L0_get_metric_group(ze_device_handle_t curr_device_handle)
@@ -659,6 +686,18 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
     kernel_command_properties_mutex_.unlock_shared();
 }
 
+void TauStallSamplingEvents( uint64_t address, const char *event_name, uint64_t event_value, ze_device_handle_t curr_device)
+{
+    
+    tuple<uintptr_t, int, size_t> dev_tile(reinterpret_cast<uintptr_t>(curr_device), 0, 0);
+    int taskid = Tau_get_initialized_queues(dev_tile, 0, 0);
+    std::stringstream ss;
+    ss << address << " " << event_name;
+    std::string tmp = ss.str();
+    void* ue = Tau_get_userevent(tmp.c_str());
+    printf("\n!! [%d] TauStallSamplingEvents %lu %s %lu, %s\n", taskid, address, event_name, event_value, tmp.c_str());
+    Tau_userevent_thread(ue, (double)event_value, taskid);
+}
 
 
 void TauL0EnableProfiling()
@@ -676,9 +715,6 @@ void TauL0EnableProfiling()
     }
 
     L0_collector_options = init_collector_options();
-
-
-    
     ze_result_t status = ZE_RESULT_SUCCESS;
     status = zeInit(ZE_INIT_FLAG_GPU_ONLY);
     #ifdef L0METRICS
@@ -719,21 +755,30 @@ void TauL0DisableProfiling()
 
     if(disabled || !initialized)
         return;
-    TAU_VERBOSE("Disabling Tau L0");
+    
+    
+    TAU_VERBOSE("Disabling Tau L0\n");
     // wait for child process to complete
     while (wait(nullptr) > 0);
 
-    TAU_VERBOSE("Disabling Tau L0-");
+    TAU_VERBOSE("Disabling Tau L0-\n");
     ze_collector_->DisableTracing();
-    TAU_VERBOSE("Disabling Tau L0--");
-    ze_collector_->Finalize();
+    disabled = 1;
+    for(auto& kernel_elem : *kernel_command_properties_)
+    {
+        printf("+ %s %lu %lu %u\n", kernel_elem.second.name_.c_str(), kernel_elem.second.base_addr_, kernel_elem.second.size_, kernel_elem.second.device_id_);
+    }
     //If not done after disabling L0, it deadlocks, may change later
+    TAU_START("TEST");
     if(metric_profiler != nullptr)
         delete metric_profiler;
-    TAU_VERBOSE("Disabling Tau L0---");
+    TAU_STOP("TEST");
+    TAU_VERBOSE("Disabling Tau L0--\n");
+    ze_collector_->Finalize();
+    TAU_VERBOSE("Disabling Tau L0---\n");
     //ze_collector_->flush_initialized_queues(); //--TODO
     uint64_t cpu_end_ts = TauTraceGetTimeStamp(0);
     Tau_remove_initialized_queues(cpu_end_ts);
-    disabled = 1;
-    TAU_VERBOSE("Disabled Tau L0");
+
+    TAU_VERBOSE("Disabled Tau L0\n");
 }

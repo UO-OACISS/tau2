@@ -33,8 +33,10 @@
 #include <inttypes.h>
 
 constexpr static uint32_t max_metric_samples = 32768;
-
+static std::vector<std::string> stall_names_list;
 #define MAX_METRIC_BUFFER  (8ULL * 1024ULL * 1024ULL)
+
+void TauStallSamplingEvents( uint64_t address, const char *event_name, uint64_t event_value, ze_device_handle_t device);
 
 inline std::string GetMetricUnits(const char* units) {
   PTI_ASSERT(units != nullptr);
@@ -69,23 +71,12 @@ enum ZeProfilerState {
 
 struct ZeDeviceDescriptor {
   ze_device_handle_t device_;
-  ze_device_handle_t parent_device_;
-  uint64_t device_timer_frequency_;
-  uint64_t device_timer_mask_;
-  uint64_t metric_timer_frequency_;
-  uint64_t metric_timer_mask_;
   ze_driver_handle_t driver_;
   ze_context_handle_t context_;
   int32_t device_id_;
-  int32_t subdevice_id_;
-  int32_t num_sub_devices_;
   zet_metric_group_handle_t metric_group_;
-  ze_pci_ext_properties_t pci_properties_;
   std::thread *profiling_thread_;
   std::atomic<ZeProfilerState> profiling_state_;
-  std::string metric_file_name_;
-  std::ofstream metric_file_stream_;
-  bool stall_sampling_;
 };
 
 class ZeMetricProfiler {
@@ -145,60 +136,45 @@ class ZeMetricProfiler {
         ZeDeviceDescriptor *desc = new ZeDeviceDescriptor;
         UniMemory::ExitIfOutOfMemory((void *)(desc));
 
-        desc->stall_sampling_ = true;
-
         desc->device_ = device;
         desc->device_id_ = global_dev_cnt;
-        desc->parent_device_ = nullptr;
-        desc->subdevice_id_ = -1;     // not a subdevice
-        desc->num_sub_devices_ = sub_devices.size();
+
+        printf("devices %lu subdevices %lu\n", devices.size(), sub_devices.size());
 
         ze_device_properties_t props{ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES_1_2, };
         ze_result_t status = ZE_FUNC(zeDeviceGetProperties)(device, &props);
         PTI_ASSERT(status == ZE_RESULT_SUCCESS);
         PTI_ASSERT(props.timerResolution != 0);
         PTI_ASSERT(props.kernelTimestampValidBits != 0);
-
-        desc->device_timer_frequency_ = props.timerResolution;
-        desc->device_timer_mask_ = (props.kernelTimestampValidBits == 64) ? (std::numeric_limits<uint64_t>::max)() : ((1ull << props.kernelTimestampValidBits) - 1ull);
+        printf("!! Device %p %s\n", desc->device_, props.name);
 
         ze_pci_ext_properties_t pci_device_properties;
         status = ZE_FUNC(zeDevicePciGetPropertiesExt)(device, &pci_device_properties);
         PTI_ASSERT(status == ZE_RESULT_SUCCESS);
-        desc->pci_properties_ = pci_device_properties;
 
         zet_metric_group_handle_t group = FindMetricGroup (device, metric_group, ZET_METRIC_GROUP_SAMPLING_TYPE_FLAG_TIME_BASED);
         if (group == nullptr) {
-          std::cerr << "[ERROR] Invalid metric group " << metric_group << std::endl;
+          std::cerr << "[ERROR] Stall sampling metrics not found, is EuStallSampling available? " << metric_group << std::endl;
           exit(-1);
         }
 
-        zet_metric_group_properties_t metric_group_prop;
-        metric_group_prop.stype = ZET_STRUCTURE_TYPE_METRIC_GROUP_PROPERTIES;
-        metric_group_prop.pNext = nullptr;
-
-        zet_metric_global_timestamps_resolution_exp_t metrics_ts_prop;
-        metrics_ts_prop.stype = ZET_STRUCTURE_TYPE_METRIC_GLOBAL_TIMESTAMPS_RESOLUTION_EXP;
-        metrics_ts_prop.pNext = nullptr;
-        metric_group_prop.pNext = &metrics_ts_prop;
-        status = ZE_FUNC(zetMetricGroupGetProperties)(group, &metric_group_prop);
-        PTI_ASSERT(status == ZE_RESULT_SUCCESS);
-        PTI_ASSERT(metrics_ts_prop.timerResolution != 0);
-        PTI_ASSERT(metrics_ts_prop.timestampValidBits != 0);
-
-        desc->metric_timer_frequency_ = metrics_ts_prop.timerResolution;
-        // specially handling certain older devices
-        uint32_t device_gen = (props.deviceId & 0xFF00);
-        if (device_gen == 0x0B00) {
-          if (desc->metric_timer_frequency_ > desc->device_timer_frequency_) {
-            desc->metric_timer_frequency_ = desc->device_timer_frequency_;
-          }
-
-          if (metrics_ts_prop.timestampValidBits == props.kernelTimestampValidBits) {
-            metrics_ts_prop.timestampValidBits = metrics_ts_prop.timestampValidBits - 1;
-          }
+        if(stall_names_list.size()==0)
+        {
+          stall_names_list = GetMetricList(group);
+          PTI_ASSERT(!stall_names_list.empty());
+          printf("!! metrics_list ");
+          for(auto metric : stall_names_list )
+            printf(", %s", metric.c_str());
+          printf("\n");
         }
-        desc->metric_timer_mask_ = (metrics_ts_prop.timestampValidBits == 64) ? (std::numeric_limits<uint64_t>::max)() : ((1ull << metrics_ts_prop.timestampValidBits) - 1ull);
+        //The metric named IP should always exist for stall sampling, if not,
+        // it used the wrong metric, or the name was changed and we need to update
+        // the names/references of this field
+        uint32_t ip_idx = GetMetricId(stall_names_list, "IP");
+        if (ip_idx >= stall_names_list.size()) {
+          printf("\n[TAU] Error, IP metric not found when enabling L0 stall sampling. If you see this error, contact TAU developers\n");
+          exit(-1);
+        }
 
         desc->driver_ = driver;
         desc->context_ = context;
@@ -209,75 +185,14 @@ class ZeMetricProfiler {
 
         device_descriptors_.insert({device, desc});
 
-        for (size_t j = 0; j < sub_devices.size(); j++) {
-          ZeDeviceDescriptor *sub_desc = new ZeDeviceDescriptor;
-          UniMemory::ExitIfOutOfMemory((void *)(sub_desc));
-
-          sub_desc->stall_sampling_ = true;
-
-          sub_desc->device_ = sub_devices[j];
-          sub_desc->device_id_ = global_dev_cnt;           // subdevice
-          sub_desc->parent_device_ = device;
-          sub_desc->subdevice_id_ = j;                     // a subdevice
-          sub_desc->num_sub_devices_ = 0;
-
-          sub_desc->driver_ = driver;
-          sub_desc->context_ = context;
-          sub_desc->metric_group_ = group;
-
-          sub_desc->device_timer_frequency_ = desc->device_timer_frequency_;
-          sub_desc->device_timer_mask_ = desc->device_timer_mask_;
-
-          sub_desc->metric_timer_frequency_ = desc->metric_timer_frequency_;
-          sub_desc->metric_timer_mask_ = desc->metric_timer_mask_;
-
-          ze_pci_ext_properties_t pci_device_properties;
-          ze_result_t status = ZE_FUNC(zeDevicePciGetPropertiesExt)(sub_devices[j], &pci_device_properties);
-          PTI_ASSERT(status == ZE_RESULT_SUCCESS);
-
-          sub_desc->pci_properties_ = pci_device_properties;
-
-          sub_desc->driver_ = driver;
-          sub_desc->context_ = context;
-          sub_desc->metric_group_ = group;
-
-          sub_desc->profiling_thread_ = nullptr;
-          sub_desc->profiling_state_.store(PROFILER_DISABLED, std::memory_order_release);
-
-          device_descriptors_.insert({sub_devices[j], sub_desc});
-        } // subdevices list
+  
       } // devices list
     } // drivers list
-  }
-
-  int GetDeviceId(ze_device_handle_t sub_device) const {
-    if (auto it = device_descriptors_.find(sub_device); it != device_descriptors_.end()) {
-      return it->second->device_id_;
-    }
-    return -1;
-  }
-
-  int GetSubDeviceId(ze_device_handle_t sub_device) const {
-    if (auto it = device_descriptors_.find(sub_device); it != device_descriptors_.end()) {
-      return it->second->subdevice_id_;
-    }
-    return -1;
-  }
-
-  ze_device_handle_t GetParentDevice(ze_device_handle_t sub_device) const {
-    if (auto it = device_descriptors_.find(sub_device); it != device_descriptors_.end()) {
-      return it->second->parent_device_;
-    }
-    return nullptr;
   }
 
   void StartProfilingMetrics(void) {
 
     for (auto [handle, device] : device_descriptors_) {
-      if (device->parent_device_ != nullptr) {
-        // subdevice
-        continue;
-      }
       device->profiling_thread_ = new std::thread(MetricProfilingThread, device);
       while (device->profiling_state_.load(std::memory_order_acquire) != PROFILER_ENABLED) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -287,81 +202,17 @@ class ZeMetricProfiler {
 
   void StopProfilingMetrics() {
     for (auto [handle, device] : device_descriptors_) {
-      if (device->parent_device_ != nullptr) {
-        // subdevice
-        continue;
-      }
       PTI_ASSERT(device->profiling_thread_ != nullptr);
       PTI_ASSERT(device->profiling_state_ == PROFILER_ENABLED);
       device->profiling_state_.store(PROFILER_DISABLED, std::memory_order_release);
       device->profiling_thread_->join();
       delete device->profiling_thread_;
       device->profiling_thread_ = nullptr;
-      device->metric_file_stream_.close();
     }
-  }
-
-  struct ZeKernelInfo {
-    int32_t subdevice_id;
-    uint64_t global_instance_id;
-    uint64_t metric_start;
-    uint64_t metric_end;
-    std::string kernel_name;
-  };
-
-  static bool CompareInterval(ZeKernelInfo& iv1, ZeKernelInfo& iv2) {
-    return (iv1.metric_start < iv2.metric_start);
-  }
-
-  static std::vector<std::string> GetMetricNames(zet_metric_group_handle_t group) {
-    PTI_ASSERT(group != nullptr);
-
-    uint32_t metric_count = GetMetricCount(group);
-    PTI_ASSERT(metric_count > 0);
-
-    std::vector<zet_metric_handle_t> metrics(metric_count);
-    ze_result_t status = ZE_FUNC(zetMetricGet)(group, &metric_count, metrics.data());
-    PTI_ASSERT(status == ZE_RESULT_SUCCESS);
-    PTI_ASSERT(metric_count == metrics.size());
-
-    std::vector<std::string> names;
-    for (auto metric : metrics) {
-      zet_metric_properties_t metric_props{
-          ZET_STRUCTURE_TYPE_METRIC_PROPERTIES, };
-      status = ZE_FUNC(zetMetricGetProperties)(metric, &metric_props);
-      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
-
-      std::string units = GetMetricUnits(metric_props.resultUnits);
-      std::string name = metric_props.name;
-      if (!units.empty()) {
-        name += "[" + units + "]";
-      }
-      names.push_back(std::move(name));
-    }
-
-    return names;
   }
 
  private:
 
-    static std::string PrintTypedValue(const zet_typed_value_t& typed_value) {
-    switch (typed_value.type) {
-      case ZET_VALUE_TYPE_UINT32:
-        return std::to_string(typed_value.value.ui32);
-      case ZET_VALUE_TYPE_UINT64:
-        return std::to_string(typed_value.value.ui64);
-      case ZET_VALUE_TYPE_FLOAT32:
-        return std::to_string(typed_value.value.fp32);
-      case ZET_VALUE_TYPE_FLOAT64:
-        return std::to_string(typed_value.value.fp64);
-      case ZET_VALUE_TYPE_BOOL8:
-        return std::to_string(static_cast<uint32_t>(typed_value.value.b8));
-      default:
-        PTI_ASSERT(0);
-        break;
-    }
-    return "";  // in case of error returns empty string.
-  }
 
   inline static std::string GetMetricUnits(const char* units) {
     PTI_ASSERT(units != nullptr);
@@ -414,6 +265,72 @@ class ZeMetricProfiler {
     }
 
     return name_list;
+  }
+
+  static bool dump_metrics (uint8_t *buffer, uint64_t size, zet_metric_group_handle_t group, ze_device_handle_t device)
+  {
+      PTI_ASSERT(!stall_names_list.empty());
+      constexpr uint32_t max_num_of_stall_types = 16;
+      uint32_t num_samples = 0;
+      uint32_t num_metrics = 0;
+      auto status = ZE_FUNC(zetMetricGroupCalculateMultipleMetricValuesExp)(
+              group, ZET_METRIC_GROUP_CALCULATION_TYPE_METRIC_VALUES,
+              size, buffer, &num_samples, &num_metrics,
+              nullptr, nullptr);
+      if ((status != ZE_RESULT_SUCCESS) || (num_samples == 0) || (num_metrics == 0)) {
+        std::cerr << "[WARNING size] Unable to calculate metrics (status = 0x" << std::hex << status << std::dec << ") num_samples = " << num_samples << " num_metrics = " << num_metrics << std::endl;
+        return false;
+      }
+
+      std::vector<uint32_t> samples(num_samples);
+      std::vector<zet_typed_value_t> metrics(num_metrics);
+
+      status = ZE_FUNC(zetMetricGroupCalculateMultipleMetricValuesExp)(
+        group, ZET_METRIC_GROUP_CALCULATION_TYPE_METRIC_VALUES,
+        size, buffer, &num_samples, &num_metrics,
+        samples.data(), metrics.data());
+
+      if ((status != ZE_RESULT_SUCCESS) && (status != ZE_RESULT_WARNING_DROPPED_DATA)) {
+        std::cerr << "[WARNING samples] Unable to calculate metrics (status = 0x" << std::hex << status << std::dec << ") num_samples = " << num_samples << " num_metrics = " << num_metrics << std::endl;
+        return false;
+      }
+      
+      const zet_typed_value_t *value = metrics.data();
+      for (uint32_t i = 0; i < num_samples; ++i) {
+        std::string str;
+
+        uint32_t size = samples[i];
+        for (uint32_t j = 0; j < size; j += stall_names_list.size()) {
+          uint64_t ip;
+          ip = (value[j].value.ui64 << 3);
+          if (ip == 0) {
+            continue;
+          }
+
+          /*char offset[32];
+          uint64_t off = ip;
+          snprintf(offset, sizeof(offset), "0x%" PRIx64, off);
+          printf("\n !! %s, ", offset);
+          std::cout << "\t\t["
+                  << "0x" << std::setw(5) << std::setfill('0') << std::hex << std::uppercase
+                  << ip << "] " << std::endl;
+          */
+          printf("\n !! %lu, ", ip);
+          //kernel_command_properties_ ZeKernelCommandProperties
+          // IP address is already processed. (metric_list.size() - 1) is the number of types of stall
+          for (uint32_t k = 0; k <  (stall_names_list.size() - 1); k++) {
+            printf(" %lu, ", value[j + k + 1].value.ui64);
+            uint64_t event_value = value[j + k + 1].value.ui64;
+            if(event_value != 0)
+              TauStallSamplingEvents(ip, stall_names_list[k+1].c_str(), event_value, device);
+          }
+          printf("\n");
+          
+
+        }
+        value += samples[i];
+      }
+      return true;
   }
 
   static uint64_t ReadMetrics(zet_metric_streamer_handle_t streamer, uint8_t* storage, size_t ssize) {
@@ -492,79 +409,8 @@ class ZeMetricProfiler {
       return;
     }
 
-    std::vector<std::string> metrics_list;
-    metrics_list = GetMetricList(group);
-    PTI_ASSERT(!metrics_list.empty());
-    printf("!! metrics_list ");
-    for(auto metric : metrics_list )
-      printf(" %s", metric.c_str());
-    printf("\n");
-
     auto *raw_metrics = static_cast<uint8_t*>(malloc(sizeof(uint8_t)*MAX_METRIC_BUFFER));
     UniMemory::ExitIfOutOfMemory((void *)raw_metrics);
-
-    auto dump_metrics = [](uint8_t *buffer, uint64_t size, std::ofstream *f, zet_metric_group_handle_t group) -> bool {
-
-      std::vector<std::string> metric_list;
-      metric_list = GetMetricList(group);
-      PTI_ASSERT(!metric_list.empty());
-
-      uint32_t ip_idx = GetMetricId(metric_list, "IP");
-      if (ip_idx >= metric_list.size()) {
-        // no IP metric
-        return false;
-      }
-
-      constexpr uint32_t max_num_of_stall_types = 16;
-      uint32_t num_samples = 0;
-      uint32_t num_metrics = 0;
-      auto status = ZE_FUNC(zetMetricGroupCalculateMultipleMetricValuesExp)(
-              group, ZET_METRIC_GROUP_CALCULATION_TYPE_METRIC_VALUES,
-              size, buffer, &num_samples, &num_metrics,
-              nullptr, nullptr);
-      if ((status != ZE_RESULT_SUCCESS) || (num_samples == 0) || (num_metrics == 0)) {
-        std::cerr << "[WARNING size] Unable to calculate metrics (status = 0x" << std::hex << status << std::dec << ") num_samples = " << num_samples << " num_metrics = " << num_metrics << std::endl;
-        return false;
-      }
-
-      std::vector<uint32_t> samples(num_samples);
-      std::vector<zet_typed_value_t> metrics(num_metrics);
-
-      status = ZE_FUNC(zetMetricGroupCalculateMultipleMetricValuesExp)(
-        group, ZET_METRIC_GROUP_CALCULATION_TYPE_METRIC_VALUES,
-        size, buffer, &num_samples, &num_metrics,
-        samples.data(), metrics.data());
-
-      if ((status != ZE_RESULT_SUCCESS) && (status != ZE_RESULT_WARNING_DROPPED_DATA)) {
-        std::cerr << "[WARNING samples] Unable to calculate metrics (status = 0x" << std::hex << status << std::dec << ") num_samples = " << num_samples << " num_metrics = " << num_metrics << std::endl;
-        return false;
-      }
-      
-      const zet_typed_value_t *value = metrics.data();
-      for (uint32_t i = 0; i < num_samples; ++i) {
-        std::string str;
-
-        uint32_t size = samples[i];
-        for (uint32_t j = 0; j < size; j += metric_list.size()) {
-          uint64_t ip;
-          ip = (value[j + 0].value.ui64 << 3);
-          if (ip == 0) {
-            continue;
-          }
-
-          std::array<uint64_t, max_num_of_stall_types> stall;
-          printf("\n !! %lu, ", ip);
-          // IP address is already processed. (metric_list.size() - 1) is the number of types of stall
-          for (uint32_t k = 0; k <  (metric_list.size() - 1); k++) {
-            //stall[k] = value[j + k + 1].value.ui64;
-            printf(" %lu, ", value[j + k + 1].value.ui64);
-          }
-          printf("\n");
-        }
-        value += samples[i];
-      }
-      return true;
-    };
 
     desc->profiling_state_.store(PROFILER_ENABLED, std::memory_order_release);
     while (desc->profiling_state_.load(std::memory_order_acquire) != PROFILER_DISABLED) {
@@ -572,8 +418,8 @@ class ZeMetricProfiler {
       if (size > 0) {
         printf("\n !! Read data of size %lu\n", size);
         // If we have data, dump it to the intermediate file
-        if (!dump_metrics (raw_metrics, size, &desc->metric_file_stream_, group)) {
-          std::cerr << "[ERROR] Failed to write to sampling metrics file " << desc->metric_file_name_ << std::endl;
+        if (!dump_metrics (raw_metrics, size, group, device)) {
+          std::cerr << "[ERROR] Failed to write to sampling metrics file " << std::endl;
           break;
         }
       }
@@ -583,8 +429,8 @@ class ZeMetricProfiler {
     auto size = ReadMetrics(streamer, raw_metrics, MAX_METRIC_BUFFER);
     while (size > 0) {
       printf("\n !! At the end: Read data of size %lu\n", size);
-      if (!dump_metrics (raw_metrics, size, &desc->metric_file_stream_, group)) {
-        std::cerr << "[ERROR] Failed to write to sampling metrics file " << desc->metric_file_name_ << std::endl;
+      if (!dump_metrics (raw_metrics, size, group, device)) {
+        std::cerr << "[ERROR] Failed to write to sampling metrics file " << std::endl;
         break;
       }
       if (size < MAX_METRIC_BUFFER)
