@@ -107,7 +107,7 @@ class ZeMetricProfiler {
   }
 
   void EnumerateDevices() {
-
+    
     std::string metric_group = "EuStallSampling";
 
     int32_t global_dev_cnt = -1;
@@ -121,6 +121,7 @@ class ZeMetricProfiler {
       metric_contexts_.push_back(context);
 
       auto devices = GetDeviceList(driver);
+
       for (auto device : devices) {
         global_dev_cnt++;
 
@@ -131,7 +132,6 @@ class ZeMetricProfiler {
           }
         }
 
-        auto sub_devices = GetSubDeviceList(device);
 
         ZeDeviceDescriptor *desc = new ZeDeviceDescriptor;
         UniMemory::ExitIfOutOfMemory((void *)(desc));
@@ -139,7 +139,7 @@ class ZeMetricProfiler {
         desc->device_ = device;
         desc->device_id_ = global_dev_cnt;
 
-        printf("devices %lu subdevices %lu\n", devices.size(), sub_devices.size());
+        printf("devices %lu\n", devices.size());
 
         ze_device_properties_t props{ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES_1_2, };
         ze_result_t status = ZE_FUNC(zeDeviceGetProperties)(device, &props);
@@ -147,10 +147,6 @@ class ZeMetricProfiler {
         PTI_ASSERT(props.timerResolution != 0);
         PTI_ASSERT(props.kernelTimestampValidBits != 0);
         printf("!! Device %p %s\n", desc->device_, props.name);
-
-        ze_pci_ext_properties_t pci_device_properties;
-        status = ZE_FUNC(zeDevicePciGetPropertiesExt)(device, &pci_device_properties);
-        PTI_ASSERT(status == ZE_RESULT_SUCCESS);
 
         zet_metric_group_handle_t group = FindMetricGroup (device, metric_group, ZET_METRIC_GROUP_SAMPLING_TYPE_FLAG_TIME_BASED);
         if (group == nullptr) {
@@ -315,16 +311,16 @@ class ZeMetricProfiler {
                   << "0x" << std::setw(5) << std::setfill('0') << std::hex << std::uppercase
                   << ip << "] " << std::endl;
           */
-          printf("\n !! %lu, ", ip);
+          //printf("\n !! %lu, ", ip);
           //kernel_command_properties_ ZeKernelCommandProperties
           // IP address is already processed. (metric_list.size() - 1) is the number of types of stall
           for (uint32_t k = 0; k <  (stall_names_list.size() - 1); k++) {
-            printf(" %lu, ", value[j + k + 1].value.ui64);
+            //printf(" %lu, ", value[j + k + 1].value.ui64);
             uint64_t event_value = value[j + k + 1].value.ui64;
             if(event_value != 0)
               TauStallSamplingEvents(ip, stall_names_list[k+1].c_str(), event_value, device);
           }
-          printf("\n");
+          //printf("\n");
           
 
         }

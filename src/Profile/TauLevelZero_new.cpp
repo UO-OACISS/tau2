@@ -409,6 +409,43 @@ size_t check_overlap(uintptr_t curr_device, int curr_tile, uint64_t kernel_start
     return 0;
 }
 
+std::string TAU_L0_demangle(std::string original_name)
+{
+    //OMP Offloaded function names appear as a string with
+    // multiple information fields, parse them
+    //May change if the string changes in the future
+    static std::string omp_off_string = "__omp_offloading";
+    std::string event_name = "[L0] GPU: ";
+
+    if( strncmp(original_name.c_str(), omp_off_string.c_str(), omp_off_string.length())==0)
+    {
+    /*
+        __omp_offloading_3d_2c4a55__Z14compute_target_l105
+        __omp_offloading      :  standard prefex
+        3d                   : DeviceID
+        2c4a55               : FileID
+        _Z14compute_target   : Mangled function name.  Use C++filt
+        L105                 :  line number in the file.  Line-105
+    */
+
+        int pos_key=omp_off_string.length();
+        for(int i =0; i<3; i++)
+        {
+            pos_key = original_name.find_first_of('_', pos_key + 1);
+        }
+        event_name = event_name + "OMP OFFLOADING ";
+        event_name = event_name + Tau_demangle_name(original_name.substr(pos_key,original_name.find_last_of("l")-pos_key-1).c_str());
+        event_name = event_name +" [{UNRESOLVED} {";
+        event_name = event_name + original_name.substr(original_name.find_last_of("l")+1);
+        event_name = event_name +" ,0}]";
+    }
+    else
+    {
+        event_name = event_name + Tau_demangle_name(original_name.c_str());
+    }
+    return event_name ;
+}
+
 //GPU events, needs a task per device and tile(concurrent kernels)
 // need a map with device and tile to task_id
 //Also, there are some things detected as Kernel which really aren't
@@ -442,43 +479,31 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         //printf("%d\n", it->second.type_);
         if((it->second.type_ == KERNEL_COMMAND_TYPE_COMMAND) || (it->second.type_ == KERNEL_COMMAND_TYPE_INVALID))
         {
+            #ifdef L0_TAU_DEBUG
+            std::string event_name = TAU_L0_demangle(it->second.name_.c_str());
+            L0_TAU_DEBUG_MSG("DISCARDED -- \n");
+            std::cout << "Thread: " << command->tid_ << std::endl;
+            std::cout << "Device: " << reinterpret_cast<uintptr_t>(command->device_) << std::endl;
+            std::cout << "CommandName: " << event_name << std::endl;
+            std::cout << "command->append_time_ " << command->append_time_ << std::endl;
+            std::cout << "command->submit_time_ " << command->submit_time_ << std::endl;
+            std::cout << "kernel_start " << kernel_start << std::endl;
+            std::cout << "kernel_end " << kernel_end << std::endl;
+            uint64_t kernel_dutarion = (kernel_end - kernel_start);
+            std::cout << "kernel_duration " << kernel_dutarion << std::endl;
+            std::cout << "Instance ID " << command->instance_id_  << std::endl;
+            std::cout << "tile " << tile  << std::endl;
+            std::cout << "queue_ " << command->queue_  << std::endl;
+            std::cout << "engine_ordinal_ " << command->engine_ordinal_  << std::endl;
+            std::cout << "engine_index_ " << command->engine_index_  << std::endl;
+            std::cout << "command_list_ " << command->command_list_  << std::endl;
+            #endif
             kernel_command_properties_mutex_.unlock_shared();
             return;
         }
 
-        //OMP Offloaded function names appear as a string with
-        // multiple information fields, parse them
-        //May change if the string changes in the future
-        std::string name = it->second.name_.c_str();
-        static std::string omp_off_string = "__omp_offloading";
-        std::string event_name = "[L0] GPU: ";
-
-        if( strncmp(name.c_str(), omp_off_string.c_str(), omp_off_string.length())==0)
-        {
-        /*
-            __omp_offloading_3d_2c4a55__Z14compute_target_l105
-            __omp_offloading      :  standard prefex
-            3d                   : DeviceID
-            2c4a55               : FileID
-            _Z14compute_target   : Mangled function name.  Use C++filt
-            L105                 :  line number in the file.  Line-105
-        */
-
-            int pos_key=omp_off_string.length();
-            for(int i =0; i<3; i++)
-            {
-                pos_key = name.find_first_of('_', pos_key + 1);
-            }
-            event_name = event_name + "OMP OFFLOADING ";
-            event_name = event_name + Tau_demangle_name(name.substr(pos_key,name.find_last_of("l")-pos_key-1).c_str());
-            event_name = event_name +" [{UNRESOLVED} {";
-            event_name = event_name + name.substr(name.find_last_of("l")+1);
-            event_name = event_name +" ,0}]";
-        }
-        else
-        {
-            event_name = event_name + Tau_demangle_name(name.c_str());
-        }
+        std::string event_name = TAU_L0_demangle(it->second.name_.c_str());
+        
 
         #ifdef L0_TAU_DEBUG  
             L0_TAU_DEBUG_MSG("TAU_L0_kernel_event -- \n");
@@ -529,6 +554,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
 
         if(it->second.type_ == KERNEL_COMMAND_TYPE_COMPUTE)
         {
+            L0_TAU_DEBUG_MSG("KERNEL_COMMAND_TYPE_COMPUTE!!\n");
             //std::cout  << "L0_TAU_init_timestamp   " << setprecision(numeric_limits<double>::max_digits10) << L0_TAU_init_timestamp << std::endl;
             //std::cout << "L0_Driver_init_timestamp " << L0_Driver_init_timestamp << std::endl;
             //std::cout << "kernel_start " << kernel_start << std::endl;
@@ -577,6 +603,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         }
         else if((it->second.type_ == KERNEL_COMMAND_TYPE_MEMORY) && (command->mem_size_ > 0))
         {
+            L0_TAU_DEBUG_MSG("KERNEL_COMMAND_TYPE_MEMORY!!\n");
             task_id = Tau_get_initialized_queues(dev_tile, command->queue_, translated_start);
             metric_set_gpu_timestamp(task_id, translated_start);
             TAU_START_TASK(event_name.c_str(), task_id);
@@ -611,8 +638,6 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         }
 
         #ifdef L0_TAU_DEBUG 
-        std::cout << "firstTauTraceGetTimeStamp " << firstTauTraceGetTimeStamp << std::endl;
-        std::cout << "firstkernel_end " << firstkernel_end << std::endl;
         std::cout << "time_shift " << time_shift << std::endl;
         std::cout << "translated_start " << translated_start << std::endl;
         std::cout << "translated_end " << translated_end << std::endl;
@@ -686,16 +711,52 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
     kernel_command_properties_mutex_.unlock_shared();
 }
 
-void TauStallSamplingEvents( uint64_t address, const char *event_name, uint64_t event_value, ze_device_handle_t curr_device)
+
+
+std::string GetStallKernelName(uint64_t addr)
 {
-    
+    std::string stall_kernel_name = "Unknown";
+    kernel_command_properties_mutex_.lock();
+
+    auto it = map_sampling_kernels.upper_bound(addr);
+
+    if (it != map_sampling_kernels.begin())
+    {
+        --it;
+
+        uint64_t start = it->first;
+        uint64_t end = start + it->second.size_;
+
+        if (addr >= start && addr < end)
+        {
+            stall_kernel_name = it->second.name_;
+        }
+    }
+    //There are times when the address may not belong to a kernel, discard them
+    // Enable this for debugging
+    /*
+    else
+    {
+        for(auto& kernel_elem : map_sampling_kernels)
+        {
+            printf("+[%lu] %s %lu %lu\n", addr, kernel_elem.second.name_.c_str(), kernel_elem.first, kernel_elem.second.size_);
+        }
+    }*/
+    kernel_command_properties_mutex_.unlock();
+    return TAU_L0_demangle(stall_kernel_name);
+}
+
+void TauStallSamplingEvents( uint64_t address, const char *event_name, uint64_t event_value, ze_device_handle_t curr_device)
+{    
     tuple<uintptr_t, int, size_t> dev_tile(reinterpret_cast<uintptr_t>(curr_device), 0, 0);
     int taskid = Tau_get_initialized_queues(dev_tile, 0, 0);
+    std::string kernel_name = GetStallKernelName(address);
+    if (kernel_name == "Unknown")
+        return;
     std::stringstream ss;
-    ss << address << " " << event_name;
+    ss << kernel_name << " ["<< address << "] " << event_name;
     std::string tmp = ss.str();
     void* ue = Tau_get_userevent(tmp.c_str());
-    printf("\n!! [%d] TauStallSamplingEvents %lu %s %lu, %s\n", taskid, address, event_name, event_value, tmp.c_str());
     Tau_userevent_thread(ue, (double)event_value, taskid);
 }
 
@@ -741,6 +802,7 @@ void TauL0EnableProfiling()
     #endif
     assert(status == ZE_RESULT_SUCCESS);
     ze_collector_ = ZeCollector::Create(L0_collector_options);
+    
     if(L0_collector_options.stall_sampling)
     {
         metric_profiler = ZeMetricProfiler::Create();;
@@ -764,14 +826,30 @@ void TauL0DisableProfiling()
     TAU_VERBOSE("Disabling Tau L0-\n");
     ze_collector_->DisableTracing();
     disabled = 1;
+    /*
     for(auto& kernel_elem : *kernel_command_properties_)
     {
         printf("+ %s %lu %lu %u\n", kernel_elem.second.name_.c_str(), kernel_elem.second.base_addr_, kernel_elem.second.size_, kernel_elem.second.device_id_);
     }
+    auto it = kernel_command_properties_->upper_bound( sizeof(device_command_names) / sizeof(device_command_names[0]));
+    for(; it != kernel_command_properties_->end(); ++it)
+    {
+        printf("++ %s %lu %lu %u\n", it->second.name_.c_str(), it->second.base_addr_, it->second.size_, it->second.device_id_);
+        std::cerr << "\t\t[" << "0x" << std::setw(5) << std::setfill('0') << std::hex << std::uppercase << it->second.base_addr_ << std::endl;
+    }
+    */
+    /*
+    for(auto& kernel_elem : map_sampling_kernels)
+    {
+        printf("+ %s %lu %lu\n", kernel_elem.second.name_.c_str(), kernel_elem.first, kernel_elem.second.size_);
+    }
+    */
+
+
     //If not done after disabling L0, it deadlocks, may change later
     TAU_START("TEST");
-    if(metric_profiler != nullptr)
-        delete metric_profiler;
+    //if(metric_profiler != nullptr)
+    //    delete metric_profiler;
     TAU_STOP("TEST");
     TAU_VERBOSE("Disabling Tau L0--\n");
     ze_collector_->Finalize();

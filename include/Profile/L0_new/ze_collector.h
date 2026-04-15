@@ -38,6 +38,18 @@
 
 #include "Profile/L0_new/common_header.h"
 
+//Kernel name and binary size
+// need binary size as some samples fall
+// outside the binaries size and are invalid
+// happens if we stop the sampling too late
+struct stall_samp_kernel{
+  std::string name_;
+  uint64_t size_;
+
+};
+
+//Map for stall_sampling, with lower bound address, address
+static std::map<uint64_t, stall_samp_kernel> map_sampling_kernels;
 
 class TAUL0CorrelationId{
   public:
@@ -4614,6 +4626,11 @@ typedef struct _zex_kernel_register_file_size_exp_t {
       if (collector->options_.stall_sampling && (ZexKernelGetBaseAddress != nullptr) && (ZexKernelGetBaseAddress(kernel, &base_addr) == ZE_RESULT_SUCCESS)) {
         base_addr &= 0xFFFFFFFF;
         binary_size = module_binary_size;	// store module binary size. only an upper bound is needed
+      }
+      if(collector->options_.stall_sampling)
+      {
+        struct stall_samp_kernel cur_stall_kernel = { desc.name_, binary_size};
+        map_sampling_kernels.insert({base_addr, std::move(cur_stall_kernel)});
       }
 
       desc.base_addr_ = base_addr;
