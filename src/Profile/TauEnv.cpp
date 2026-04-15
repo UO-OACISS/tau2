@@ -322,6 +322,7 @@ static int env_ebs_inclusive = 0;
 static int env_ompt_resolve_address_eagerly = 1;
 static int env_ompt_support_level = 0;
 static int env_ompt_force_finalize = 1;
+static int env_ompt_disable_offload = 0;
 static int env_openmp_runtime_enabled = 1;
 static int env_openmp_runtime_states_enabled = 0;
 static int env_openmp_runtime_events_enabled = 1;
@@ -1007,6 +1008,10 @@ int TauEnv_get_ompt_support_level() {
 
 int TauEnv_get_ompt_force_finalize() {
   return env_ompt_force_finalize;
+}
+
+int TauEnv_get_ompt_disable_offload() {
+  return env_ompt_disable_offload;
 }
 
 int TauEnv_get_track_mpi_t_pvars() {
@@ -1716,6 +1721,16 @@ void TauEnv_initialize()
       env_ompt_support_level = 2;
       TAU_VERBOSE("TAU: OMPT support will be full - all events will be supported\n");
       TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "full");
+    }
+
+    tmp = getconf("TAU_OMPT_DISABLE_OFFLOAD");
+    if (parse_bool(tmp, env_ompt_disable_offload)) {
+      env_ompt_disable_offload = 1;
+      TAU_VERBOSE("TAU: OMPT target-offload tracing disabled\n");
+      TAU_METADATA("TAU_OMPT_DISABLE_OFFLOAD", "on");
+    } else {
+      env_ompt_disable_offload = 0;
+      TAU_METADATA("TAU_OMPT_DISABLE_OFFLOAD", "off");
     }
 #endif /* defined (TAU_USE_OMPT_TR6) || defined (TAU_USE_OMPT_TR7) || defined (TAU_USE_OMPT_5_0) */
 
