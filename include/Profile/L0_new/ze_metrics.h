@@ -376,7 +376,7 @@ class ZeMetricProfiler {
     PTI_ASSERT(status == ZE_RESULT_SUCCESS);
 
     zet_metric_streamer_handle_t streamer = nullptr;
-    uint32_t interval = std::stoi(utils::GetEnv("UNITRACE_SamplingInterval")) * 1000;  // convert us to ns
+    uint32_t interval = std::stoi(utils::GetEnv("L0_SAMPLING_INTERVAL")) * 1000;  // convert us to ns
 
     zet_metric_streamer_desc_t streamer_desc = {ZET_STRUCTURE_TYPE_METRIC_STREAMER_DESC, nullptr, max_metric_samples, interval};
     status = ZE_FUNC(zetMetricStreamerOpen)(context, device, group, &streamer_desc, event, &streamer);

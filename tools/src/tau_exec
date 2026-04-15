@@ -1061,7 +1061,9 @@ if [ $track_l0 = "true" ]; then
       #Need to check if needed
       $dryrun export ZET_ENABLE_METRICS=1
       #Make it so the user can choose the size
-      $dryrun export UNITRACE_SamplingInterval=10
+      if [ ! -v L0_SAMPLING_INTERVAL ]; then
+        $dryrun export L0_SAMPLING_INTERVAL=10
+      fi
     else
       #At this moment this is for testing, it doesn't work with our machines
       # as stall sampling (pc sampling) seems to have some driver/GPU issues,
