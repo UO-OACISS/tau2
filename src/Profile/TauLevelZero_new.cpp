@@ -111,7 +111,6 @@ CollectorOptions init_collector_options()
     {
         if(strcmp("EuStallSampling", utils::GetEnv("L0_METRICGROUP").c_str())==0)
         {
-            printf("Stall sampling is not working at this moment.\n");
             //return init_options;
             init_options.stall_sampling = true;
             init_options.metric_stream = true;
@@ -751,10 +750,12 @@ void TauStallSamplingEvents( uint64_t address, const char *event_name, uint64_t 
     tuple<uintptr_t, int, size_t> dev_tile(reinterpret_cast<uintptr_t>(curr_device), 0, 0);
     int taskid = Tau_get_initialized_queues(dev_tile, 0, 0);
     std::string kernel_name = GetStallKernelName(address);
-    if (kernel_name == "Unknown")
+    if (kernel_name == "[L0] GPU: Unknown")
         return;
     std::stringstream ss;
-    ss << kernel_name << " ["<< address << "] " << event_name;
+    ss << kernel_name << " [Address: ";
+    ss << std::hex << address ;
+    ss << "] " << event_name;
     std::string tmp = ss.str();
     void* ue = Tau_get_userevent(tmp.c_str());
     Tau_userevent_thread(ue, (double)event_value, taskid);
@@ -802,7 +803,7 @@ void TauL0EnableProfiling()
     #endif
     assert(status == ZE_RESULT_SUCCESS);
     ze_collector_ = ZeCollector::Create(L0_collector_options);
-    
+
     if(L0_collector_options.stall_sampling)
     {
         metric_profiler = ZeMetricProfiler::Create();;
@@ -818,45 +819,20 @@ void TauL0DisableProfiling()
     if(disabled || !initialized)
         return;
     
-    
-    TAU_VERBOSE("Disabling Tau L0\n");
     // wait for child process to complete
     while (wait(nullptr) > 0);
 
-    TAU_VERBOSE("Disabling Tau L0-\n");
     ze_collector_->DisableTracing();
     disabled = 1;
-    /*
-    for(auto& kernel_elem : *kernel_command_properties_)
-    {
-        printf("+ %s %lu %lu %u\n", kernel_elem.second.name_.c_str(), kernel_elem.second.base_addr_, kernel_elem.second.size_, kernel_elem.second.device_id_);
-    }
-    auto it = kernel_command_properties_->upper_bound( sizeof(device_command_names) / sizeof(device_command_names[0]));
-    for(; it != kernel_command_properties_->end(); ++it)
-    {
-        printf("++ %s %lu %lu %u\n", it->second.name_.c_str(), it->second.base_addr_, it->second.size_, it->second.device_id_);
-        std::cerr << "\t\t[" << "0x" << std::setw(5) << std::setfill('0') << std::hex << std::uppercase << it->second.base_addr_ << std::endl;
-    }
-    */
-    /*
-    for(auto& kernel_elem : map_sampling_kernels)
-    {
-        printf("+ %s %lu %lu\n", kernel_elem.second.name_.c_str(), kernel_elem.first, kernel_elem.second.size_);
-    }
-    */
-
-
-    //If not done after disabling L0, it deadlocks, may change later
-    TAU_START("TEST");
-    //if(metric_profiler != nullptr)
-    //    delete metric_profiler;
-    TAU_STOP("TEST");
-    TAU_VERBOSE("Disabling Tau L0--\n");
+    if(metric_profiler != nullptr)
+        delete metric_profiler;
     ze_collector_->Finalize();
-    TAU_VERBOSE("Disabling Tau L0---\n");
     //ze_collector_->flush_initialized_queues(); //--TODO
     uint64_t cpu_end_ts = TauTraceGetTimeStamp(0);
     Tau_remove_initialized_queues(cpu_end_ts);
+}
 
-    TAU_VERBOSE("Disabled Tau L0\n");
+void Tau_L0new_flush()
+{
+    TauL0DisableProfiling();
 }

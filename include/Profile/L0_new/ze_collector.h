@@ -1607,7 +1607,6 @@ class ZeCollector {
             ze_result_t status = ZE_FUNC(zeDeviceGetProperties)(device, &props);
             PTI_ASSERT(status == ZE_RESULT_SUCCESS);
             PTI_ASSERT(props.timerResolution != 0);
-            printf("! Device %p %s\n ", desc.device_, props.name);
 
             desc.device_timer_frequency_ = props.timerResolution;
             desc.device_timer_mask_ = (props.kernelTimestampValidBits == 64) ? (std::numeric_limits<uint64_t>::max)() : ((1ull << props.kernelTimestampValidBits) - 1ull);

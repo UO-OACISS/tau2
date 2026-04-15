@@ -1324,6 +1324,10 @@ extern void Tau_rocprofsdk_flush(void);
 extern void Tau_ompt_flush_trace(void);
 #endif
 
+#ifdef TAU_LEVEL_ZERO_FLUSH
+extern void Tau_L0new_flush(void);
+#endif
+
 
 #ifdef TAU_ENABLE_ROCM
 extern void TauFlushRocmEventsIfNecessary(void);
@@ -1371,6 +1375,9 @@ extern "C" void Tau_flush_gpu_activity(void) {
 #endif /* TAU_ENABLE_ROCM */
 #ifdef TAU_USE_OMPT_5_0
    Tau_ompt_flush_trace();
+#endif
+#ifdef TAU_LEVEL_ZERO_FLUSH
+  Tau_L0new_flush();
 #endif
 }
 

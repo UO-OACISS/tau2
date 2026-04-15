@@ -91,7 +91,6 @@ class ZeMetricProfiler {
   }
 
   ~ZeMetricProfiler() {
-    printf("\n !! StopProfilingMetrics \n");
     StopProfilingMetrics();
   }
 
@@ -139,14 +138,11 @@ class ZeMetricProfiler {
         desc->device_ = device;
         desc->device_id_ = global_dev_cnt;
 
-        printf("devices %lu\n", devices.size());
-
         ze_device_properties_t props{ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES_1_2, };
         ze_result_t status = ZE_FUNC(zeDeviceGetProperties)(device, &props);
         PTI_ASSERT(status == ZE_RESULT_SUCCESS);
         PTI_ASSERT(props.timerResolution != 0);
         PTI_ASSERT(props.kernelTimestampValidBits != 0);
-        printf("!! Device %p %s\n", desc->device_, props.name);
 
         zet_metric_group_handle_t group = FindMetricGroup (device, metric_group, ZET_METRIC_GROUP_SAMPLING_TYPE_FLAG_TIME_BASED);
         if (group == nullptr) {
@@ -158,10 +154,6 @@ class ZeMetricProfiler {
         {
           stall_names_list = GetMetricList(group);
           PTI_ASSERT(!stall_names_list.empty());
-          printf("!! metrics_list ");
-          for(auto metric : stall_names_list )
-            printf(", %s", metric.c_str());
-          printf("\n");
         }
         //The metric named IP should always exist for stall sampling, if not,
         // it used the wrong metric, or the name was changed and we need to update
@@ -412,7 +404,6 @@ class ZeMetricProfiler {
     while (desc->profiling_state_.load(std::memory_order_acquire) != PROFILER_DISABLED) {
       auto size = EventBasedReadMetrics(event, streamer, raw_metrics, MAX_METRIC_BUFFER);
       if (size > 0) {
-        printf("\n !! Read data of size %lu\n", size);
         // If we have data, dump it to the intermediate file
         if (!dump_metrics (raw_metrics, size, group, device)) {
           std::cerr << "[ERROR] Failed to write to sampling metrics file " << std::endl;
@@ -424,7 +415,6 @@ class ZeMetricProfiler {
     // Flush the remaining metrics after the profiler has stopped
     auto size = ReadMetrics(streamer, raw_metrics, MAX_METRIC_BUFFER);
     while (size > 0) {
-      printf("\n !! At the end: Read data of size %lu\n", size);
       if (!dump_metrics (raw_metrics, size, group, device)) {
         std::cerr << "[ERROR] Failed to write to sampling metrics file " << std::endl;
         break;
@@ -435,16 +425,12 @@ class ZeMetricProfiler {
     }
     free (raw_metrics);
 
-    printf("\n !! zetMetricStreamerClose \n");
     status = ZE_FUNC(zetMetricStreamerClose)(streamer);
     PTI_ASSERT(status == ZE_RESULT_SUCCESS);
-    printf("\n !! zeEventDestroy \n");
     status = ZE_FUNC(zeEventDestroy)(event);
     PTI_ASSERT(status == ZE_RESULT_SUCCESS);
-    printf("\n !! zeEventPoolDestroy \n");
     status = ZE_FUNC(zeEventPoolDestroy)(event_pool);
     PTI_ASSERT(status == ZE_RESULT_SUCCESS);
-    printf("\n !! zetContextActivateMetricGroups \n");
     status = ZE_FUNC(zetContextActivateMetricGroups)(context, device, 0, &group);
     PTI_ASSERT(status == ZE_RESULT_SUCCESS);
   }
