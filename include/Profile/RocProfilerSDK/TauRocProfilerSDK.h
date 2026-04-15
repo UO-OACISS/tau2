@@ -111,6 +111,16 @@ struct TauSDKEvent {
   
 };
 
+struct TauSDK_dev_que {
+    uint64_t dev_id;
+    uint64_t queue;
+    bool operator<(const TauSDK_dev_que& second_dq) const {
+        if (dev_id != second_dq.dev_id)
+            return dev_id < second_dq.dev_id;
+        return queue < second_dq.queue;
+    }
+};
+
 #ifndef ROCPROFILER_CALL
 #define ROCPROFILER_CALL(result, msg)                                                              \
     {                                                                                              \

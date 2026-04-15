@@ -22,6 +22,9 @@
 #include "BPatch_basicBlockLoop.h"
 #include "BPatch_point.h"
 #include "BPatch_addressSpace.h"
+#ifdef TAU_DYNINSTAPI_12_PLUS
+#include "BPatch_statement.h"
+#endif
 #include <tauarch.h>
 
 //#include <iostream.h>
@@ -929,16 +932,46 @@ int tauRewriteLibrary(BPatch *bpatch, const char *mutateeName, char *outfile, ch
         dprintf("Skipping function %s\n", funcName);
         continue;
       }
-      dprintf("Instrumenting Function %s\n", funcName);
+      dprintf("Instrumenting Function %s as ", funcName);
+      char funcInfo[1024];
+      snprintf(funcInfo, sizeof(funcInfo), "%s [{%s},{unk}]", funcName, module_str.c_str());
+      dprintf(" %s\n", funcInfo);
+      //Could not get he getSourceLines to work with libraries, need more testing.
+      
+      /*#ifdef TAU_DYNINSTAPI_12_PLUS
+      Dyninst::Address funcStart, funcEnd;
+      if (curFunc->getAddressRange(funcStart, funcEnd))
+      {
+        dprintf("Looking for function information ... ");
+        BPatch_Vector< BPatch_statement > lines;
+        BPatch_module* module = nullptr;
+        char funcInfo[1024];
+        snprintf(funcInfo, sizeof(funcInfo), "%s", funcName);
+        if ((*moduleIter)->getSourceLines((unsigned long) funcStart, lines)) 
+        {     
+            snprintf(funcName, sizeof(funcName), "%s [{%s},{%u}]", funcInfo, lines[0].fileName(), lines[0].lineNumber());
+            dprintf("Found, Instrumenting Function as:  %s\n", funcName);
+        }
+        else
+        {
+          snprintf(funcName, sizeof(funcName), "%s [{%s},{unk}]", funcInfo, module_str.c_str());
+          dprintf("Not found, Instrumenting Function as: %s\n", funcName);
+        }            
+      }      
 
+      #endif*/
+      
 
       //Find the entry and exit points of each function
       BPatch_Vector<BPatch_point*>* funcEntry = curFunc->findPoint(BPatch_entry);
       BPatch_Vector<BPatch_point*>* funcExit = curFunc->findPoint(BPatch_exit);
+      
+
+      
 
       //TAU_START and TAU_STOP need the name of the function, pass it as an argument
       BPatch_Vector<BPatch_snippet *> regArgs;
-      BPatch_constExpr coverageFunc(funcName);
+      BPatch_constExpr coverageFunc(funcInfo);
       regArgs.push_back(&coverageFunc);
 
       //Create the function calls with the names of the functions as the input parameter

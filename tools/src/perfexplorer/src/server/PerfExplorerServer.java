@@ -8,7 +8,6 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.rmi.ConnectException;
 import java.rmi.Naming;
-import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.ServerError;
 import java.rmi.ServerException;
@@ -2281,10 +2280,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			System.err.println("Please enter a valid config file.");
 			System.err.println(USAGE);
 			System.exit(-1);
-		}
-
-		if (System.getSecurityManager() == null) {
-			System.setSecurityManager(new RMISecurityManager());
 		}
 
 		try {

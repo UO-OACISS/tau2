@@ -378,6 +378,16 @@ static std::string get_thread_name(int rank, int tid) {
                      l0_queue ? l0_queue : "?", l0_vqueue ? l0_vqueue : "?");
             return std::string(buf);
         }
+
+        // NCCL thread detection
+        const char* nccl_rank = Tau_metadata_get("NCCL_RANK_ID", tid);
+        if (nccl_rank && strcmp(nccl_rank, "") != 0) {
+            const char* nccl_stream = Tau_metadata_get("NCCL_STREAM_ID", tid);
+            char buf[256];
+            snprintf(buf, sizeof(buf), "NCCL rank %s stream %s", nccl_rank, 
+                     nccl_stream ? nccl_stream : "?");
+            return std::string(buf);
+        }
         
         // Generic GPU thread fallback
         return std::string("GPU thread ") + std::to_string(tid);
@@ -679,7 +689,8 @@ int TauTracePerfettoInitTS(int tid, x_uint64 /*ts*/) {
     // Tau_get_usesMPI() here — that flag may be set too early.
     int mpi_initialized = 0;
     MPI_Initialized(&mpi_initialized);
-    if ((!mpi_initialized || !Tau_get_node_confirmed()) && TauEnv_get_set_node() <= -1) {
+    if ((!mpi_initialized || !Tau_get_node_confirmed()) && TauEnv_get_set_node() <= -1
+        && Tau_get_usesMPI() && RtsLayer::myNode() < 0) {
         if (TauEnv_get_perfetto_debug()) {
             static thread_local int defer_log_count = 0;
             if (defer_log_count++ < 3) {

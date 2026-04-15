@@ -825,6 +825,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     MPI4)
+        echo "NOTE: Using TAU's MPI-4 extensions"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      LAMPI)
         echo "NOTE: Using LA-MPI MPI_Request_c2f workaround"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1156,8 +1161,25 @@ case $1 in
         ;;
      opencllib=*)
         opencllib=`echo $1 | sed -e 's/^opencllib=//' -e 's/#/ /g'`
-		echo "s@^TAU_OPENCL_LIBRARY=\(.*\)@TAU_OPENCL_LIBRARY=$opencllib@g" >> $sedout
+	echo "s@^TAU_OPENCL_LIBRARY=\(.*\)@TAU_OPENCL_LIBRARY=$opencllib@g" >> $sedout
         ;;
+
+     nccl_lib=*)
+        nccl_lib=`echo $1 | sed -e 's/^nccl_lib=//' -e 's/#/ /g'`
+	echo "s@^TAU_NCCL_LIB=\(.*\)@TAU_NCCL_LIB=$nccl_lib@g" >> $sedout
+     ;;
+
+     nccl_inc=*)
+        nccl_inc=`echo $1 | sed -e 's/^nccl_inc=//' -e 's/#/ /g'`
+	echo "s@^TAU_NCCL_INC=\(.*\)@TAU_NCCL_INC=$nccl_inc@g" >> $sedout
+     ;;
+
+     NCCL)
+        echo NOTE: Using the NCCL Profiling Interface
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+     ;;
+
+
 ###############################################################
 # Set the TAU_GPU variables.
 ###############################################################
@@ -1852,6 +1874,10 @@ case $1 in
 	;;
      PTHREAD_AVAILABLE)
         echo "NOTE: Using pthreads as the thread package. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     PTHREAD_LINK_ONLY)
+        echo "NOTE: Linking pthreads without activating the pthread thread layer. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      SUPPRESS_PTHREAD_CREATE_WRAPPER)
@@ -2733,6 +2759,9 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      COMPINST_CRAYPE_CLANG)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CRAYCC_CLANG_DRIVER)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYPE_CLANG_SLURM)

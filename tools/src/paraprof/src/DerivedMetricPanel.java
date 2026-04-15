@@ -300,7 +300,7 @@ private void collectTrials(DefaultMutableTreeNode sel, ArrayList<ParaProfTrial> 
          collectTrials.add((ParaProfTrial)(selected));
       }else if(selected instanceof ParaProfExperiment|| selected instanceof ParaProfApplication|| selected instanceof ParaProfView){
     	  paraProfManager.expand( sel);
-          Enumeration<DefaultMutableTreeNode> exps = sel.children();
+          Enumeration<?> exps = sel.children();
           while(exps.hasMoreElements()){
         	  DefaultMutableTreeNode node = (DefaultMutableTreeNode) exps.nextElement();
               paraProfManager.expand(node);

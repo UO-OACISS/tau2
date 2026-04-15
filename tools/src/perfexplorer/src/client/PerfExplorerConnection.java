@@ -1,7 +1,6 @@
 package edu.uoregon.tau.perfexplorer.client;
 
 import java.rmi.Naming;
-import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.ListIterator;
@@ -44,9 +43,6 @@ public class PerfExplorerConnection {
 		if (standalone) {
 			server = PerfExplorerServer.getServer(configFile, tauHome, tauArch);
 		} else {
-			if (System.getSecurityManager() == null) {
-				System.setSecurityManager(new RMISecurityManager());
-			}
 			try {
 				String hostname = System.getProperty("java.rmi.server.hostname");
 				String name = "PerfExplorerServer";

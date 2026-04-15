@@ -269,14 +269,14 @@ copy = !copy;
 
 	private void
 	uploadExperment(ParaProfApplication app, ParaProfExperiment exp,
-			Enumeration<DefaultMutableTreeNode> children)
+			Enumeration<? extends TreeNode> children)
 	throws FileNotFoundException, DataSourceException,
 	InterruptedException, IOException, SQLException {
 		ParaProfExperiment newExp = app.addExperiment();
 		newExp.setName(exp.getName());
 		if (children != null) {
 			while (children.hasMoreElements()) {
-				DefaultMutableTreeNode child = children.nextElement();
+				DefaultMutableTreeNode child = (DefaultMutableTreeNode) children.nextElement();
 				expand(child);
 				uploadTrial((ParaProfTrial) child.getUserObject(), newExp);
 			}
@@ -302,11 +302,11 @@ copy = !copy;
 		} else {
 			targetTree.expandPath(new TreePath(node.getPath()));
 		}
-		Enumeration<DefaultMutableTreeNode> children = node.children();
+		Enumeration<? extends TreeNode> children = node.children();
 
 		if (children != null) {
 			while (children.hasMoreElements()) {
-				DefaultMutableTreeNode child = children.nextElement();
+				DefaultMutableTreeNode child = (DefaultMutableTreeNode) children.nextElement();
 				expand(child);
 
 			}
@@ -315,7 +315,7 @@ copy = !copy;
 	}
 
 	private void uploadApplication(DatabaseAPI newDB, ParaProfApplication app,
-			Enumeration<DefaultMutableTreeNode> childern)
+			Enumeration<? extends TreeNode> childern)
 	throws DatabaseException, SQLException, InterruptedException,
 	FileNotFoundException, DataSourceException, IOException {
 		Application newApp = new Application(app);
@@ -327,7 +327,7 @@ copy = !copy;
 		application.setID(newDB.saveApplication(application));
 
 		for (; childern.hasMoreElements();) {
-			DefaultMutableTreeNode node = childern.nextElement();
+			DefaultMutableTreeNode node = (DefaultMutableTreeNode) childern.nextElement();
 			ParaProfExperiment ppExp = (ParaProfExperiment) node
 			.getUserObject();
 			uploadExperiment(application, ppExp, newDB, node.children());
@@ -374,7 +374,7 @@ copy = !copy;
 
 	private void uploadExperiment(ParaProfApplication app,
 			ParaProfExperiment exp, DatabaseAPI databaseAPI,
-			Enumeration<DefaultMutableTreeNode> childern)
+			Enumeration<? extends TreeNode> childern)
 	throws DatabaseException, SQLException, InterruptedException,
 	FileNotFoundException, DataSourceException, IOException {
 		Experiment newExp = new Experiment(exp);
@@ -387,7 +387,7 @@ copy = !copy;
 		experiment.setID(databaseAPI.saveExperiment(experiment));
 
 		for (; childern.hasMoreElements();) {
-			DefaultMutableTreeNode node = childern.nextElement();
+			DefaultMutableTreeNode node = (DefaultMutableTreeNode) childern.nextElement();
 			ParaProfTrial ppTrial = (ParaProfTrial) node.getUserObject();
 			DatabaseAPI newDB = ParaProf.paraProfManagerWindow
 			.getDatabaseAPI(experiment.getDatabase());
