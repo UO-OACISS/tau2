@@ -21,6 +21,16 @@ size_t interval = 0;
 
 using rocsdk_map_inst_key = std::pair<marker_id_t, uint64_t>;
 
+
+//We want to use the same IDs for the GPUs between the sampling and tracing.
+extern std::map< uint64_t, uint32_t> TAU_rocsdk_id_device_map;
+
+//With stochastic, the interval is clocks, so we need to convert the clocks to time
+//As each GPU can have different frequency, we use a map to now the interval for each device
+//We use the buffer identifier, as each buffer is associated with a GPU and the callbacks
+// provide the buffer identifier, should save time, but minimal
+std::map<uint64_t, double> rocsdk_interval_map;
+
 std::map<rocsdk_map_inst_key, rocsdk_instruction> code_object_map;
 
 //List of events, used  to sort events by timestamp
@@ -137,7 +147,8 @@ void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
     //Different types of events will appear as different threads in the profile
     //This is to differenciate kernels, API calls and other events
     //int queueid = sdk_sample_event.taskid;
-    int queueid = 0;
+    int queueid = sdk_sample_event.device_id;
+    //printf("sample dev id %d\n", queueid);
     unsigned long long timestamp = sdk_sample_event.entry+deltaTimestamp_ns;
     int taskid = Tau_get_initialized_queues_pc(queueid);
     if (taskid == -1) { // not initialized
@@ -359,7 +370,7 @@ std::string process_snapshot_sdk(rocprofiler_pc_sampling_snapshot_v0_t snapshot)
 pc_sampling_buffer_id_vec_t* pc_buffer_ids = nullptr;
 void
 rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
-                                 rocprofiler_buffer_id_t /*buffer_id*/,
+                                 rocprofiler_buffer_id_t buffer_id,
                                  rocprofiler_record_header_t** headers,
                                  size_t                        num_headers,
                                  void* /*data*/,
@@ -367,8 +378,8 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
 {
     if(pc_flushed == 1)
         return;
-    TAU_VERBOSE("rocprofiler_pc_sampling_callback\n");
     #ifdef ROCSDK_PC_DEBUG    
+    TAU_VERBOSE("rocprofiler_pc_sampling_callback\n");
     std::stringstream ss_debug;
     ss_debug << "The number of delivered samples is: " << num_headers << ", "
        << "while the number of dropped samples is: " << drop_count << std::endl;
@@ -409,6 +420,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 ss_debug << "(code_obj_id, offset): (" << pc_sample->pc.loaded_code_object_id
                     << ", 0x" << std::hex << pc_sample->pc.loaded_code_object_offset << "), "
                     << "timestamp: " << std::dec << pc_sample->timestamp << ", "
+                    << "timestamp+interval: "<< std::dec << pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle] << ", "
                     << "exec: " << std::hex << std::setw(16) << pc_sample->exec_mask << ", "
                     << "workgroup_id_(x=" << std::dec << std::setw(5)
                     << pc_sample->workgroup_id.x << ", "
@@ -418,6 +430,8 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     << static_cast<unsigned int>(pc_sample->wave_id) << ", "
                     << "chiplet: " << std::setw(2)
                     << static_cast<unsigned int>(pc_sample->chiplet) << ", "
+                    << "wave_id: " << std::setw(2)
+                       << static_cast<unsigned int>(pc_sample->hw_id.wave_id) << ", "
                     << "cu_id: " << pc_sample->hw_id << ", "
                     << "correlation: {internal=" << std::setw(7)
                     << pc_sample->correlation_id.internal << ", "
@@ -511,8 +525,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     ss_debug << ss.str() << "\n";
                     #endif
                 }
-
-                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp+interval, pc_sample->wave_id);
+                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], rocsdk_buffer_device_map[buffer_id.handle]);
                 
                 TAU_process_sdk_sample_event(sample_event);
             }
@@ -522,7 +535,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 //std::cout << "ROCPROFILER_PC_SAMPLING_RECORD_HOST_TRAP_V0_SAMPLE" << std::endl;
                 auto* pc_sample = static_cast<rocprofiler_pc_sampling_record_host_trap_v0_t*>(
                     cur_header->payload);
-
+                
                 //Ignore incorrectly generated sample
                 if(pc_sample->correlation_id.internal == ROCPROFILER_CORRELATION_ID_INTERNAL_NONE)
                 {
@@ -537,6 +550,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 ss_debug << "(code_obj_id, offset): (" << pc_sample->pc.code_object_id << ", 0x"
                        << std::hex << pc_sample->pc.code_object_offset << "), "
                        << "timestamp: " << std::dec << pc_sample->timestamp << ", "
+                       << "timestamp+interval: "<< std::dec << pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle] << ", "
                        << "exec_mask: " << std::hex << std::setw(16) << pc_sample->exec_mask << ", "
                        << "workgroup_id_(x=" << std::dec << std::setw(5)
                        << pc_sample->workgroup_id.x << ", "
@@ -546,6 +560,8 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                        << static_cast<unsigned int>(pc_sample->wave_in_group) << ", "
                        << "chiplet: " << std::setw(2)
                        << static_cast<unsigned int>(pc_sample->hw_id.chiplet) << ", "
+                       << "wave_id: " << std::setw(2)
+                       << static_cast<unsigned int>(pc_sample->hw_id.wave_id) << ", "
                        << "dispatch_id: " << std::setw(7) << pc_sample->dispatch_id << ","
                        << "correlation: {internal=" << std::setw(7)
                        << pc_sample->correlation_id.internal << ", "
@@ -632,8 +648,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     ss_debug << ss.str() << "\n";
                     #endif
                 }
-
-                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp+interval, pc_sample->wave_in_group);
+                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], rocsdk_buffer_device_map[buffer_id.handle]);
                 
                 TAU_process_sdk_sample_event(sample_event);
 
@@ -651,6 +666,30 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 if(pc_sample->correlation_id.internal == ROCPROFILER_CORRELATION_ID_INTERNAL_NONE)
                     continue;
                 
+                #ifdef ROCSDK_PC_DEBUG     
+                ss_debug << "ROCPROFILER_PC_SAMPLING_RECORD_HOST_TRAP_V0_SAMPLE" <<std::endl;
+                ss_debug << "(code_obj_id, offset): (" << pc_sample->pc.code_object_id << ", 0x"
+                       << std::hex << pc_sample->pc.code_object_offset << "), "
+                       << "timestamp: " << std::dec << pc_sample->timestamp << ", "
+                       << "timestamp+interval: "<< std::dec << pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle] << ", "
+                       << "exec_mask: " << std::hex << std::setw(16) << pc_sample->exec_mask << ", "
+                       << "workgroup_id_(x=" << std::dec << std::setw(5)
+                       << pc_sample->workgroup_id.x << ", "
+                       << "y=" << std::setw(5) << pc_sample->workgroup_id.y << ", "
+                       << "z=" << std::setw(5) << pc_sample->workgroup_id.z << "), "
+                       << "wave_in_group: " << std::setw(2)
+                       << static_cast<unsigned int>(pc_sample->wave_in_group) << ", "
+                       << "chiplet: " << std::setw(2)
+                       << static_cast<unsigned int>(pc_sample->hw_id.chiplet) << ", "
+                       << "wave_id: " << std::setw(2)
+                       << static_cast<unsigned int>(pc_sample->hw_id.wave_id) << ", "
+                       << "dispatch_id: " << std::setw(7) << pc_sample->dispatch_id << ","
+                       << "correlation: {internal=" << std::setw(7)
+                       << pc_sample->correlation_id.internal << ", "
+                       << "external=" << std::setw(5) << pc_sample->correlation_id.external.value
+                       << "}" << std::endl;
+                #endif
+
                 auto inst = translator.get(pc_sample->pc.code_object_id,
                     pc_sample->pc.code_object_offset);
 
@@ -751,8 +790,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 //Additional information, but not required, may be useful to debug
                 //rocprofiler_pc_sampling_snapshot_v0_t snapshot = pc_sample->snapshot;
                 //process_snapshot_sdk(snapshot);
-
-                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp+interval, pc_sample->wave_in_group);
+                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], rocsdk_buffer_device_map[buffer_id.handle]);
                 
                 TAU_process_sdk_sample_event(sample_event);
             }
@@ -986,7 +1024,7 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
     int    failures = MAX_FAILURES;
     auto   stochastic_picked = false;
     int pc_sampling_kind = TauEnv_get_rocsdk_pcs_kind();
-    printf("pc_sampling_kind %d\n", pc_sampling_kind);
+    //printf("pc_sampling_kind %d\n", pc_sampling_kind);
 
     do
     {
@@ -1058,12 +1096,19 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
         }
         else
         {
-            //This is nanoseconds when using ROCPROFILER_PC_SAMPLING_UNIT_TIME
-            // when using stochastic, if it is enabled again, try to set unit 
-            // to ROCPROFILER_PC_SAMPLING_UNIT_TIME instead of cycles
-            
             interval = stochastic_picked ? DEFAULT_SAMPLING_ST_INTERVAL_RSDK : DEFAULT_SAMPLING_INTERVAL_RSDK;
-            //printf("Setting interval to 10\n");
+        }
+
+        if(stochastic_picked)
+        {
+            uint32_t dev_id = TAU_rocsdk_id_device_map[agent_info->agent_id.handle];
+            //Frequency is in mhz, interval will be us, same as the time interval used 
+            // by ROCPROFILER_PC_SAMPLING_UNIT_TIME
+            rocsdk_interval_map[buffer_id.handle] =  static_cast<double>(interval) /  static_cast<double>(agent_info->max_engine_clk_fcompute);
+        }
+        else
+        {
+            rocsdk_interval_map[buffer_id.handle] = (double)interval;
         }
 
 
@@ -1085,11 +1130,23 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
 #endif
         if(status == ROCPROFILER_STATUS_SUCCESS)
         {
-            std::cout
-                << "[TAU] PC Sampling configured with " << (stochastic_picked ? "stochastic" : "Host-Trap")
-                << " PC sampling with the interval: " << interval << " "
-                << (stochastic_picked ? "clock-cycles" : "micro seconds")
-                << " on the agent: " << agent_info->agent->id.handle << std::endl;
+            if(stochastic_picked)
+            {
+                std::cout
+                    << "[TAU] PC Sampling configured with " << (stochastic_picked ? "stochastic" : "Host-Trap")
+                    << " PC sampling with the interval: " << interval << " clock-cycles ["
+                    << rocsdk_interval_map[buffer_id.handle] << "micro seconds]"
+                    << " on the agent: " << agent_info->agent->id.handle << " ID[" 
+                    << TAU_rocsdk_id_device_map[agent_info->agent->id.handle]<< "]" << std::endl;
+            }
+            else
+            {
+                std::cout
+                    << "[TAU] PC Sampling configured with " << (stochastic_picked ? "stochastic" : "Host-Trap")
+                    << " PC sampling with the interval: " << interval << " "
+                    << "micro seconds on the agent: " << agent_info->agent->id.handle << " ID[" 
+                    << TAU_rocsdk_id_device_map[agent_info->agent->id.handle]<< "]" << std::endl;
+            }
             return 1;
         }
         else if(status != ROCPROFILER_STATUS_ERROR_NOT_AVAILABLE)
@@ -1098,7 +1155,8 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
                 << "[TAU] PC Sampling configured with " << (stochastic_picked ? "stochastic" : "Host-Trap")
                 << " PC sampling with the interval: " << interval << " "
                 << (stochastic_picked ? "clock-cycles" : "micro seconds")
-                << " on the agent: " << agent_info->agent->id.handle << std::endl;
+                << " on the agent: " << agent_info->agent->id.handle << " ID[" 
+                << TAU_rocsdk_id_device_map[agent_info->agent->id.handle]<< "]" << std::endl;
             ROCPROFILER_CALL(status, " pc sampling not available, may be in use");
         }
         // status ==  ROCPROFILER_STATUS_ERROR_NOT_AVAILABLE
@@ -1146,6 +1204,8 @@ find_all_gpu_agents_supporting_pc_sampling_impl(rocprofiler_agent_version_t vers
       tool_gpu_agent->agent_id      = _agents[i]->id;
       tool_gpu_agent->avail_configs = std::make_unique<avail_configs_vec_t>();
       tool_gpu_agent->agent         = _agents[i];
+      tool_gpu_agent->node_id       = _agents[i]->node_id;
+      tool_gpu_agent->max_engine_clk_fcompute       = _agents[i]->max_engine_clk_fcompute;
       // Check if the GPU agent supports PC sampling. If so, add it to the
       // output list `_out_agents`.
       if(query_avail_configs_for_agent(tool_gpu_agent.get()))
@@ -1210,10 +1270,11 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
                             nullptr,
                             &buffer_id),
                 "buffer for agent in pc sampling");
+        
+        rocsdk_buffer_device_map[buffer_id.handle] = gpu_agent.get()->node_id;
 
         int status =  configure_pc_sampling_prefer_stochastic(
-            gpu_agent.get(), client_ctx, buffer_id);
-        
+            gpu_agent.get(), client_ctx, buffer_id);        
         if(!status)
             return 0;
 
@@ -1225,6 +1286,7 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
 
         ROCPROFILER_CALL(rocprofiler_assign_callback_thread(buffer_id, client_agent_thread),
                 "assign callback thread for pc sampling");
+
 
         pc_buffer_ids->emplace_back(buffer_id);
     }
