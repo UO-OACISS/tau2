@@ -157,6 +157,7 @@ int Tau_get_initialized_queues(tuple<uintptr_t, int, size_t> dev_tile, ze_comman
 
     std::string cur_name;
     uint32_t cur_devid;
+    uint32_t cur_rdevid;
     //ze_device_properties_t props = { ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES };
     //zeDeviceGetProperties(reinterpret_cast<ze_device_handle_t>(std::get<0>(dev_tile)), &props);
     auto it = devices_->find(reinterpret_cast<ze_device_handle_t>(std::get<0>(dev_tile)));
@@ -165,6 +166,7 @@ int Tau_get_initialized_queues(tuple<uintptr_t, int, size_t> dev_tile, ze_comman
         ZeDevice device_info = it->second;
         cur_name = device_info.device_name_;
         cur_devid = device_info.id_;
+        cur_rdevid = device_info.rid_;
     }
     //Should not execute this part, GPUs should be registered.
     else
@@ -182,6 +184,7 @@ int Tau_get_initialized_queues(tuple<uintptr_t, int, size_t> dev_tile, ze_comman
     metric_set_gpu_timestamp(queue_id, first_ts);
     Tau_add_metadata_for_task("TAU_TASK_ID", queue_id, queue_id);
     Tau_add_metadata_for_task("L0_GPU_ID", cur_devid, queue_id);
+    Tau_add_metadata_for_task("L0_GPU_RID", cur_rdevid, queue_id);
     //Similar to streams
     //Tau_add_metadata_for_task("L0_GPU_TILE", std::get<1>(dev_tile), queue_id);
     Tau_metadata_task("L0_GPU_NAME", cur_name.c_str(), queue_id);
