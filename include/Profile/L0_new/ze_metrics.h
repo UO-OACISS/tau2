@@ -74,7 +74,6 @@ struct ZeDeviceDescriptor {
   ze_driver_handle_t driver_;
   ze_context_handle_t context_;
   int32_t device_id_;
-  int32_t device_rid_;
   zet_metric_group_handle_t metric_group_;
   std::thread *profiling_thread_;
   std::atomic<ZeProfilerState> profiling_state_;
@@ -144,7 +143,6 @@ class ZeMetricProfiler {
         PTI_ASSERT(status == ZE_RESULT_SUCCESS);
         PTI_ASSERT(props.timerResolution != 0);
         PTI_ASSERT(props.kernelTimestampValidBits != 0);
-        desc->device_rid_ = props.deviceId;
         zet_metric_group_handle_t group = FindMetricGroup (device, metric_group, ZET_METRIC_GROUP_SAMPLING_TYPE_FLAG_TIME_BASED);
         if (group == nullptr) {
           std::cerr << "[ERROR] Stall sampling metrics not found, is EuStallSampling available? " << metric_group << std::endl;
@@ -355,12 +353,6 @@ class ZeMetricProfiler {
     return ReadMetrics(streamer, storage, ssize);
   }
 
-  static int print_prof_test(ZeDeviceDescriptor *desc)
-  {
-    printf("Device %u is reading metrics.\n", desc->device_rid_);
-    return 1;
-  }
-
   static void MetricProfilingThread(ZeDeviceDescriptor *desc) {
 
     ze_result_t status = ZE_RESULT_SUCCESS;
@@ -412,10 +404,9 @@ class ZeMetricProfiler {
 
       auto size = EventBasedReadMetrics(event, streamer, raw_metrics, MAX_METRIC_BUFFER);
       if (size > 0) {
-        static int call_once = print_prof_test(desc);
         // If we have data, dump it to the intermediate file
         if (!dump_metrics (raw_metrics, size, group, device)) {
-          printf("[Error] Failed to read metrics, disabling L0 sampling, device %u\n", desc->device_rid_);
+          TAU_VERBOSE("[Error] Failed to read metrics, disabling L0 sampling\n");
           break;
         }
       }
@@ -425,12 +416,7 @@ class ZeMetricProfiler {
     auto size = ReadMetrics(streamer, raw_metrics, MAX_METRIC_BUFFER);
     while (size > 0) {
       if (!dump_metrics (raw_metrics, size, group, device)) {
-        printf("[Warning] Failed to read metrics after disabling profiler, device: %u.\n", desc->device_rid_);
         break;
-      }
-      else
-      {
-        static int call_once = print_prof_test(desc);
       }
       if (size < MAX_METRIC_BUFFER)
         break;

@@ -1089,7 +1089,6 @@ struct ZeDevice {
   ze_context_handle_t context_;
   zet_metric_group_handle_t metric_group_;
   int32_t id_;
-  uint32_t rid_;		// real unique identidier
   int32_t parent_id_;
   int32_t subdevice_id_;
   int32_t num_subdevices_;
@@ -1613,7 +1612,6 @@ class ZeCollector {
             desc.device_timer_frequency_ = props.timerResolution;
             desc.device_timer_mask_ = (props.kernelTimestampValidBits == 64) ? (std::numeric_limits<uint64_t>::max)() : ((1ull << props.kernelTimestampValidBits) - 1ull);
             desc.device_ns_per_cycle_ = static_cast<double>(NSEC_IN_SEC) / static_cast<double>(props.timerResolution);
-            desc.rid_ = props.deviceId;
             ze_pci_ext_properties_t pci_device_properties;
             status = ZE_FUNC(zeDevicePciGetPropertiesExt)(device, &pci_device_properties);
             if (status != ZE_RESULT_SUCCESS) {
