@@ -1053,7 +1053,6 @@ struct ZeKernelCommandProperties {
   uint32_t regsize_;	// GRF size per thread
   bool aot_;		// AOT or JIT
   std::string name_;	// kernel or command name
-  bool skip_;  // skip this kernel in the trace
 };
 
 // these will not go away when ZeCollector is destructed
@@ -2827,16 +2826,6 @@ class ZeCollector {
         ze_instance_data.instrument_ = false;
         return;
       }
-      kernel_command_properties_mutex_.lock_shared();
-      auto kit = active_kernel_properties_->find(kernel);
-      if (kit != active_kernel_properties_->end()) {
-          if (kit->second.skip_) {
-            ze_instance_data.instrument_ = false;
-            kernel_command_properties_mutex_.unlock_shared();
-            return;
-          }
-      }
-      kernel_command_properties_mutex_.unlock_shared();
     }
 
     collector->command_lists_mutex_.lock_shared();
