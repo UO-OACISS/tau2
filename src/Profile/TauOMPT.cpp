@@ -1372,6 +1372,11 @@ static void on_ompt_callback_device_initialize (
 	 device_num, type, device, lookup, documentation);
      */
 
+  if (TauEnv_get_ompt_disable_offload()) {
+    TAU_VERBOSE("TAU: TAU_OMPT_DISABLE_OFFLOAD set, skipping target-offload trace setup on device %d\n", device_num);
+    return;
+  }
+
   if (!lookup) {
     printf("Trace collection disabled on device %d\n", device_num);
     return;

@@ -9,7 +9,9 @@
 #include <TAU.h>
 #include <Profile/TauBfd.h>  // for name demangling
 
-std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename)
+
+
+inline std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename)
 {
     std::string task_name;
     //__omp_offloading_36_523fe22f_compute_target_l105.kd
@@ -110,6 +112,10 @@ constexpr size_t BUFFER_SIZE_BYTES = 8192;
 constexpr size_t WATERMARK         = (BUFFER_SIZE_BYTES / 4);
 constexpr int    MAX_FAILURES      = 10;
 
+//We want to use the same IDs for the GPUs between the sampling and tracing.
+// We will compare the buffer id for the sample to obtain the ID
+static std::map< uint64_t, uint32_t> rocsdk_buffer_device_map;
+
 using avail_configs_vec_t         = std::vector<rocprofiler_pc_sampling_configuration_t>;
 
 struct tool_agent_info
@@ -117,6 +123,8 @@ struct tool_agent_info
     rocprofiler_agent_id_t               agent_id;
     std::unique_ptr<avail_configs_vec_t> avail_configs;
     const rocprofiler_agent_t*           agent;
+    uint32_t                             node_id;
+    uint32_t                             max_engine_clk_fcompute;
 };
 using tool_agent_info_vec_t       = std::vector<std::unique_ptr<tool_agent_info>>;
 using pc_sampling_buffer_id_vec_t = std::vector<rocprofiler_buffer_id_t>;
@@ -143,19 +151,19 @@ struct TauSDKSampleEvent {
     rocprofiler_timestamp_t entry;
     rocprofiler_timestamp_t exit;
     std::string name;
-    int taskid;
+    int device_id;
 
-    TauSDKSampleEvent(): taskid(0) {}
-    TauSDKSampleEvent(string event_name, rocprofiler_timestamp_t begin, rocprofiler_timestamp_t end, int t) : name(event_name), taskid(t)
+    TauSDKSampleEvent(): device_id(0) {}
+    TauSDKSampleEvent(string event_name, rocprofiler_timestamp_t begin, rocprofiler_timestamp_t end, int t) : name(event_name), device_id(t)
     {
         entry = begin;
         exit  = end;
     }
     void printEvent() {
-        std::cout <<name<<" Task: "<<taskid<<", \t\tEntry: "<<entry<<" , Exit = "<<exit;
+        std::cout <<name<<" Task: "<<device_id<<", \t\tEntry: "<<entry<<" , Exit = "<<exit;
     }
     bool appearsBefore(struct TauSDKSampleEvent other_event) {
-        if ((taskid == other_event.taskid) &&
+        if ((device_id == other_event.device_id) &&
             (entry < other_event.entry) &&
             (exit < other_event.entry))  {
             // both entry and exit of my event is before the entry of the other event.

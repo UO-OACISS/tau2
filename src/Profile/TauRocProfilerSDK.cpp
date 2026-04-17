@@ -30,13 +30,16 @@
 using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
 using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_symbol_data_t>;
 
+extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, uint64_t* queueid, double* counter_value, rocprofiler_timestamp_t* c_timestamp);
+extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
+
 extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
 extern void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
 extern void sdk_pc_sampling_flush();
 extern std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename);
 
-extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, uint64_t* queueid, double* counter_value, rocprofiler_timestamp_t* c_timestamp);
-extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
+//We want to use the same IDs for the GPUs between the sampling and tracing.
+std::map< uint64_t, uint32_t> TAU_rocsdk_id_device_map;
 
 
 //Flag to check if TAU called the flush function
@@ -79,8 +82,7 @@ std::map<roctx_range_id_t, const char*> roctx_start_stop = {};
 //Vector for ROCTX Push and Pop
 std::vector<const char*> roctx_push_pop = {};
 
-//Map to idenfity agent_id(GPU) with our own identifier
-std::map<uint64_t , int> tau_rocm_agent_id = {};
+
 //Map of all available agents, helps identify if agent is CPU or GPU
 //  ROCPROFILER_AGENT_TYPE_NONE = 0,  ///< Agent type is unknown
 //  ROCPROFILER_AGENT_TYPE_CPU,       ///< Agent type is a CPU
@@ -265,11 +267,11 @@ get_gpu_device_agents()
         "query available agents");
     for(const auto& agent : agents)
     {
-
       if(agent.type == ROCPROFILER_AGENT_TYPE_GPU) 
       {
         gpu_agents.push_back(agent);
       }
+      TAU_rocsdk_id_device_map[agent.id.handle] = agent.node_id;
     }
     return gpu_agents;
 }
@@ -289,38 +291,18 @@ std::string get_copy_direction(int direction, uint64_t source, uint64_t destinat
     case ROCPROFILER_MEMORY_COPY_HOST_TO_DEVICE:
     {
       mem_cpy_kind = "MEMORY_COPY_HOST_TO_DEVICE";
-      auto agent_id_elem = tau_rocm_agent_id.find(destination);
-      if(agent_id_elem == tau_rocm_agent_id.end())
-      {
-        tau_rocm_agent_id[destination] = tau_rocm_agent_id.size();
-      }   
       break;
     }
     case ROCPROFILER_MEMORY_COPY_DEVICE_TO_HOST:
     {
       mem_cpy_kind = "MEMORY_COPY_DEVICE_TO_HOST";
-      auto agent_id_elem = tau_rocm_agent_id.find(source);
-      if(agent_id_elem == tau_rocm_agent_id.end())
-      {
-        tau_rocm_agent_id[source] = tau_rocm_agent_id.size();
-      }  
       break;
     }
     case ROCPROFILER_MEMORY_COPY_DEVICE_TO_DEVICE:
     {
-      auto agent_id_elem = tau_rocm_agent_id.find(source);
-      if(agent_id_elem == tau_rocm_agent_id.end())
-      {
-        tau_rocm_agent_id[source] = tau_rocm_agent_id.size();
-      }
-      auto agent_id_elemd = tau_rocm_agent_id.find(destination);
-      if(agent_id_elemd == tau_rocm_agent_id.end())
-      {
-        tau_rocm_agent_id[destination] = tau_rocm_agent_id.size();
-      }  
       mem_cpy_kind = "MEMORY_COPY_DEVICE_TO_DEVICE";
       mem_cpy_kind += " destination id ";
-      mem_cpy_kind += std::to_string(tau_rocm_agent_id[destination]);
+      mem_cpy_kind += std::to_string(TAU_rocsdk_id_device_map[destination]);
       break;
     }
     case ROCPROFILER_MEMORY_COPY_LAST:
@@ -550,11 +532,6 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         //This should be related to the GPU id(agent_id.handle which is uint64_t)
         //int queueid = 1 + (int)record->dispatch_info.agent_id.handle;
         auto agent_id = record->dispatch_info.agent_id.handle;
-        auto agent_id_elem = tau_rocm_agent_id.find(agent_id);
-        if(agent_id_elem == tau_rocm_agent_id.end())
-        {
-          tau_rocm_agent_id[agent_id] = tau_rocm_agent_id.size();
-        }
 
         int taskid;
         uint64_t cur_queue_id = record->dispatch_info.queue_id.handle;
@@ -568,7 +545,7 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
           timestamp = record->start_timestamp;
           Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp / 1e3));
           Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
-          Tau_add_metadata_for_task("ROCM_GPU_ID", tau_rocm_agent_id[agent_id], taskid);
+          Tau_add_metadata_for_task("ROCM_GPU_ID", TAU_rocsdk_id_device_map[agent_id], taskid);
           Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
           Tau_add_metadata_for_task("ROCM_QUEUE_ID", cur_queue_id, taskid);
           Tau_create_top_level_timer_if_necessary_task(taskid);
@@ -790,13 +767,6 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         // which is performed by read_hc_record()
         if(header->kind == ROCPROFILER_COUNTER_RECORD_PROFILE_COUNTING_DISPATCH_HEADER)
           continue;        
-  			//This should be related to the GPU id(agent_id.handle which is uint64_t)
-        //int queueid = 1 + (int)record->dispatch_info.agent_id.handle;
-        auto agent_id_elem = tau_rocm_agent_id.find(agent_id);
-        if(agent_id_elem == tau_rocm_agent_id.end())
-        {
-          tau_rocm_agent_id[agent_id] = tau_rocm_agent_id.size();
-        }
         
         int taskid;
         TauSDK_dev_que cur_dev_que = {agent_id, cur_queue_id};
@@ -1103,7 +1073,6 @@ rocprofiler_configure_(uint32_t                 version,
     TAU_VERBOSE("Do not use rocprofiler-sdk\n");
     return nullptr;
   }
-
   rocsdk_version_check(version, runtime_version);
   
   char* client_tool_data = "";
