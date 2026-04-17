@@ -1,0 +1,16 @@
+Sampling with L0 does not need any additional configuration parameters, only level zero and intel compilers.
+
+As an example:
+./configure -bfd=download -pthread -level_zero -c++=icpx -cc=icx -fortran=ifx
+
+
+To execute the application, use -l0_sampling
+
+As an example:
+tau_exec -l0_sampling ./omp_gemm gpu 4096
+
+
+
+IMPORTANT: 
+According to Intel not all programs that can be profiled with level_zero may produce samples.
+ze_gemm and omp_gemm generate samples. However, complex_mult doesn't.
