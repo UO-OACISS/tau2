@@ -3626,16 +3626,15 @@ class ZeCollector {
       void* global_data, void** instance_data) {
     ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
     PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true, *(params->phKernel));
-
   }
 
-  static uint64_t OnExitCommandListAppendLaunchKernel(
+  static void OnExitCommandListAppendLaunchKernel(
     ze_command_list_append_launch_kernel_params_t* params,
     ze_result_t result, void* global_data, void** /* instance_data */, std::vector<uint64_t> *kids) {
 
     ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
     if (result == ZE_RESULT_SUCCESS && ze_instance_data.instrument_) {
-      return collector->AppendLaunchKernel(
+      collector->AppendLaunchKernel(
         *(params->phKernel),
         *(params->ppLaunchFuncArgs),
         *(params->phSignalEvent),
@@ -3647,61 +3646,60 @@ class ZeCollector {
       collector->query_pools_.PutQuery(ze_instance_data.query_);
       collector->event_cache_.ReleaseEvent(*(params->phSignalEvent));
     }
-    return 0;
   }
-//Need to update L0_mod_callbacks.h and level_zero files to enable WithArguments and WithParameters callbacks
 
-  // static void OnEnterCommandListAppendLaunchKernelWithArguments(
-  //     ze_command_list_append_launch_kernel_with_arguments_params_t* params,
-  //     void* global_data, void** instance_data) {
-  //     ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
-  //     PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true, *(params->phKernel));
-  // }
+  static void OnEnterCommandListAppendLaunchKernelWithArguments(
+      ze_command_list_append_launch_kernel_with_arguments_params_t* params,
+      void* global_data, void** instance_data) {
+      ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
+      PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true, *(params->phKernel));
+  }
 
-  // static void OnExitCommandListAppendLaunchKernelWithArguments(
-  //     ze_command_list_append_launch_kernel_with_arguments_params_t* params,
-  //     ze_result_t result, void* global_data, void** /* instance_data */, std::vector<uint64_t> *kids) {
-  //   ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
-  //   if ((result == ZE_RESULT_SUCCESS) && ze_instance_data.instrument_) {
-  //       collector->AppendLaunchKernel(
-  //         *(params->phKernel),
-  //         params->pgroupCounts,
-  //         *(params->phSignalEvent),
-  //         ze_instance_data.query_,
-  //         *(params->phCommandList),
-  //         kids);
-  //   }
-  //   else {
-  //     collector->query_pools_.PutQuery(ze_instance_data.query_);
-  //     collector->event_cache_.ReleaseEvent(*(params->phSignalEvent));
-  //   }
-  // }
+  static void OnExitCommandListAppendLaunchKernelWithArguments(
+      ze_command_list_append_launch_kernel_with_arguments_params_t* params,
+      ze_result_t result, void* global_data, void** /* instance_data */, std::vector<uint64_t> *kids) {
+    ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
+    if ((result == ZE_RESULT_SUCCESS) && ze_instance_data.instrument_) {
+        collector->AppendLaunchKernel(
+          *(params->phKernel),
+          params->pgroupCounts,
+          *(params->phSignalEvent),
+          ze_instance_data.query_,
+          *(params->phCommandList),
+          kids);
+    }
+    else {
+      collector->query_pools_.PutQuery(ze_instance_data.query_);
+      collector->event_cache_.ReleaseEvent(*(params->phSignalEvent));
+    }
+  }
 
-  // static void OnEnterCommandListAppendLaunchKernelWithParameters(
-  //     ze_command_list_append_launch_kernel_with_parameters_params_t* params,
-  //     void* global_data, void** instance_data) {
-  //     ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
-  //     PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true, *(params->phKernel));
-  // }
+  static void OnEnterCommandListAppendLaunchKernelWithParameters(
+      ze_command_list_append_launch_kernel_with_parameters_params_t* params,
+      void* global_data, void** instance_data) {
+      ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
+      PrepareToAppendKernelCommand(collector, *(params->phSignalEvent), *(params->phCommandList), true, *(params->phKernel));
+  }
 
-  // static void OnExitCommandListAppendLaunchKernelWithParameters(
-  //     ze_command_list_append_launch_kernel_with_parameters_params_t* params,
-  //     ze_result_t result, void* global_data, void** /* instance_data */, std::vector<uint64_t> *kids) {
-  //   ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
-  //   if ((result == ZE_RESULT_SUCCESS) && ze_instance_data.instrument_) {
-  //       collector->AppendLaunchKernel(
-  //         *(params->phKernel),
-  //         *(params->ppGroupCounts),
-  //         *(params->phSignalEvent),
-  //         ze_instance_data.query_,
-  //         *(params->phCommandList),
-  //         kids);
-  //   }
-  //   else {
-  //     collector->query_pools_.PutQuery(ze_instance_data.query_);
-  //     collector->event_cache_.ReleaseEvent(*(params->phSignalEvent));
-  //   }
-  // }
+  static void OnExitCommandListAppendLaunchKernelWithParameters(
+      ze_command_list_append_launch_kernel_with_parameters_params_t* params,
+      ze_result_t result, void* global_data, void** /* instance_data */, std::vector<uint64_t> *kids) {
+    ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
+    if ((result == ZE_RESULT_SUCCESS) && ze_instance_data.instrument_) {
+        collector->AppendLaunchKernel(
+          *(params->phKernel),
+          *(params->ppGroupCounts),
+          *(params->phSignalEvent),
+          ze_instance_data.query_,
+          *(params->phCommandList),
+          kids);
+    }
+    else {
+      collector->query_pools_.PutQuery(ze_instance_data.query_);
+      collector->event_cache_.ReleaseEvent(*(params->phSignalEvent));
+    }
+  }
+
 
   static void OnEnterCommandListAppendLaunchCooperativeKernel(
       ze_command_list_append_launch_cooperative_kernel_params_t* params,

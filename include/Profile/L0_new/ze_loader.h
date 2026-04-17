@@ -12,6 +12,7 @@
 #include "Profile/L0_new/library_loader.h"
 #include "Profile/L0_new/level_zero/layers/zel_tracing_register_cb.h"
 #include "Profile/L0_new/level_zero/ze_api.h"
+#include "Profile/L0_new/level_zero/zer_api.h"
 #include "Profile/L0_new/level_zero/zes_api.h"
 #include "Profile/L0_new/level_zero/zet_api.h"
 #include "Profile/L0_new/level_zero/layers/zel_tracing_api.h"

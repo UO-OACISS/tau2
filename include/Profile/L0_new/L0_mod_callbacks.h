@@ -1,6 +1,19 @@
 #include <string>
 #include <cstdio>
 #include <cstdint>
+
+typedef struct _ze_command_list_append_host_function_params_t {
+    ze_command_list_handle_t* phCommandList;
+    void** ppHostFunction;
+    void** ppUserData;
+    void** ppNext;
+    ze_event_handle_t* phSignalEvent;
+    uint32_t* pnumWaitEvents;
+    ze_event_handle_t** pphWaitEvents;
+} ze_command_list_append_host_function_params_t;
+
+
+
 #define TO_HEX_STRING(str, val) \
     {char buffer[32]; \
     std::sprintf(buffer, "0x%lx", (uintptr_t)(val)); \
@@ -91,6 +104,16 @@ static const char* GetResultString(unsigned result) {
       return "ZE_RESULT_WARNING_ACTION_REQUIRED";
     case ZE_RESULT_ERROR_INVALID_KERNEL_HANDLE:
       return "ZE_RESULT_ERROR_INVALID_KERNEL_HANDLE";
+    case ZE_RESULT_EXT_RTAS_BUILD_RETRY:
+      return "ZE_RESULT_EXT_RTAS_BUILD_RETRY";
+    case ZE_RESULT_EXT_RTAS_BUILD_DEFERRED:
+      return "ZE_RESULT_EXT_RTAS_BUILD_DEFERRED";
+    case ZE_RESULT_EXT_ERROR_OPERANDS_INCOMPATIBLE:
+      return "ZE_RESULT_EXT_ERROR_OPERANDS_INCOMPATIBLE";
+    case ZE_RESULT_ERROR_SURVIVABILITY_MODE_DETECTED:
+      return "ZE_RESULT_ERROR_SURVIVABILITY_MODE_DETECTED";
+    case ZE_RESULT_ERROR_ADDRESS_NOT_FOUND:
+      return "ZE_RESULT_ERROR_ADDRESS_NOT_FOUND";
     case ZE_RESULT_EXP_ERROR_DEVICE_IS_NOT_VERTEX:
       return "ZE_RESULT_EXP_ERROR_DEVICE_IS_NOT_VERTEX";
     case ZE_RESULT_EXP_ERROR_VERTEX_IS_NOT_DEVICE:
@@ -301,6 +324,30 @@ static const char* GetStructureTypeString(unsigned structure_type) {
       return "ZE_STRUCTURE_TYPE_EXTERNAL_SEMAPHORE_WAIT_PARAMS_EXT";
     case ZE_STRUCTURE_TYPE_DRIVER_DDI_HANDLES_EXT_PROPERTIES:
       return "ZE_STRUCTURE_TYPE_DRIVER_DDI_HANDLES_EXT_PROPERTIES";
+    case ZE_STRUCTURE_TYPE_DEVICE_CACHELINE_SIZE_EXT:
+      return "ZE_STRUCTURE_TYPE_DEVICE_CACHELINE_SIZE_EXT";
+    case ZE_STRUCTURE_TYPE_DEVICE_VECTOR_WIDTH_PROPERTIES_EXT:
+      return "ZE_STRUCTURE_TYPE_DEVICE_VECTOR_WIDTH_PROPERTIES_EXT";
+    case ZE_STRUCTURE_TYPE_RTAS_BUILDER_EXT_DESC:
+      return "ZE_STRUCTURE_TYPE_RTAS_BUILDER_EXT_DESC";
+    case ZE_STRUCTURE_TYPE_RTAS_BUILDER_BUILD_OP_EXT_DESC:
+      return "ZE_STRUCTURE_TYPE_RTAS_BUILDER_BUILD_OP_EXT_DESC";
+    case ZE_STRUCTURE_TYPE_RTAS_BUILDER_EXT_PROPERTIES:
+      return "ZE_STRUCTURE_TYPE_RTAS_BUILDER_EXT_PROPERTIES";
+    case ZE_STRUCTURE_TYPE_RTAS_PARALLEL_OPERATION_EXT_PROPERTIES:
+      return "ZE_STRUCTURE_TYPE_RTAS_PARALLEL_OPERATION_EXT_PROPERTIES";
+    case ZE_STRUCTURE_TYPE_RTAS_DEVICE_EXT_PROPERTIES:
+      return "ZE_STRUCTURE_TYPE_RTAS_DEVICE_EXT_PROPERTIES";
+    case ZE_STRUCTURE_TYPE_RTAS_GEOMETRY_AABBS_EXT_CB_PARAMS:
+      return "ZE_STRUCTURE_TYPE_RTAS_GEOMETRY_AABBS_EXT_CB_PARAMS";
+    case ZE_STRUCTURE_TYPE_COMMAND_LIST_APPEND_PARAM_COOPERATIVE_DESC:
+      return "ZE_STRUCTURE_TYPE_COMMAND_LIST_APPEND_PARAM_COOPERATIVE_DESC";
+    case ZE_STRUCTURE_TYPE_EXTERNAL_MEMMAP_SYSMEM_EXT_DESC:
+      return "ZE_STRUCTURE_TYPE_EXTERNAL_MEMMAP_SYSMEM_EXT_DESC";
+    case ZE_STRUCTURE_TYPE_PITCHED_ALLOC_2DIMAGE_LINEAR_PITCH_EXP_INFO:
+      return "ZE_STRUCTURE_TYPE_PITCHED_ALLOC_2DIMAGE_LINEAR_PITCH_EXP_INFO";
+    case ZE_STRUCTURE_TYPE_KERNEL_ALLOCATION_PROPERTIES:
+      return "ZE_STRUCTURE_TYPE_KERNEL_ALLOCATION_PROPERTIES";
     case ZE_STRUCTURE_TYPE_FORCE_UINT32:
       return "ZE_STRUCTURE_TYPE_FORCE_UINT32";
     default:
@@ -316,9 +363,7 @@ static void zeInitOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeInit" ;
   TAU_L0_enter_event( func_name );
@@ -331,8 +376,7 @@ static void zeInitOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeInit" ;
   TAU_L0_exit_event( func_name );
@@ -345,9 +389,7 @@ static void zeDriverGetOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverGet" ;
   TAU_L0_enter_event( func_name );
@@ -360,8 +402,7 @@ static void zeDriverGetOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverGet" ;
   TAU_L0_exit_event( func_name );
@@ -374,9 +415,7 @@ static void zeDriverGetApiVersionOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverGetApiVersion" ;
   TAU_L0_enter_event( func_name );
@@ -389,8 +428,7 @@ static void zeDriverGetApiVersionOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverGetApiVersion" ;
   TAU_L0_exit_event( func_name );
@@ -403,9 +441,7 @@ static void zeDriverGetPropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverGetProperties" ;
   TAU_L0_enter_event( func_name );
@@ -418,8 +454,7 @@ static void zeDriverGetPropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverGetProperties" ;
   TAU_L0_exit_event( func_name );
@@ -432,9 +467,7 @@ static void zeDriverGetIpcPropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverGetIpcProperties" ;
   TAU_L0_enter_event( func_name );
@@ -447,8 +480,7 @@ static void zeDriverGetIpcPropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverGetIpcProperties" ;
   TAU_L0_exit_event( func_name );
@@ -461,9 +493,7 @@ static void zeDriverGetExtensionPropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverGetExtensionProperties" ;
   TAU_L0_enter_event( func_name );
@@ -476,8 +506,7 @@ static void zeDriverGetExtensionPropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverGetExtensionProperties" ;
   TAU_L0_exit_event( func_name );
@@ -490,9 +519,7 @@ static void zeDeviceGetOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGet" ;
   TAU_L0_enter_event( func_name );
@@ -505,8 +532,7 @@ static void zeDeviceGetOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGet" ;
   TAU_L0_exit_event( func_name );
@@ -519,9 +545,7 @@ static void zeDeviceGetSubDevicesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetSubDevices" ;
   TAU_L0_enter_event( func_name );
@@ -534,8 +558,7 @@ static void zeDeviceGetSubDevicesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetSubDevices" ;
   TAU_L0_exit_event( func_name );
@@ -548,9 +571,7 @@ static void zeDeviceGetPropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetProperties" ;
   TAU_L0_enter_event( func_name );
@@ -563,8 +584,7 @@ static void zeDeviceGetPropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetProperties" ;
   TAU_L0_exit_event( func_name );
@@ -577,9 +597,7 @@ static void zeDeviceGetComputePropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetComputeProperties" ;
   TAU_L0_enter_event( func_name );
@@ -592,8 +610,7 @@ static void zeDeviceGetComputePropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetComputeProperties" ;
   TAU_L0_exit_event( func_name );
@@ -606,9 +623,7 @@ static void zeDeviceGetModulePropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetModuleProperties" ;
   TAU_L0_enter_event( func_name );
@@ -621,8 +636,7 @@ static void zeDeviceGetModulePropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetModuleProperties" ;
   TAU_L0_exit_event( func_name );
@@ -635,9 +649,7 @@ static void zeDeviceGetCommandQueueGroupPropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetCommandQueueGroupProperties" ;
   TAU_L0_enter_event( func_name );
@@ -650,8 +662,7 @@ static void zeDeviceGetCommandQueueGroupPropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetCommandQueueGroupProperties" ;
   TAU_L0_exit_event( func_name );
@@ -664,9 +675,7 @@ static void zeDeviceGetMemoryPropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetMemoryProperties" ;
   TAU_L0_enter_event( func_name );
@@ -679,8 +688,7 @@ static void zeDeviceGetMemoryPropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetMemoryProperties" ;
   TAU_L0_exit_event( func_name );
@@ -693,9 +701,7 @@ static void zeDeviceGetMemoryAccessPropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetMemoryAccessProperties" ;
   TAU_L0_enter_event( func_name );
@@ -708,8 +714,7 @@ static void zeDeviceGetMemoryAccessPropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetMemoryAccessProperties" ;
   TAU_L0_exit_event( func_name );
@@ -722,9 +727,7 @@ static void zeDeviceGetCachePropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetCacheProperties" ;
   TAU_L0_enter_event( func_name );
@@ -737,8 +740,7 @@ static void zeDeviceGetCachePropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetCacheProperties" ;
   TAU_L0_exit_event( func_name );
@@ -751,9 +753,7 @@ static void zeDeviceGetImagePropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetImageProperties" ;
   TAU_L0_enter_event( func_name );
@@ -766,8 +766,7 @@ static void zeDeviceGetImagePropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetImageProperties" ;
   TAU_L0_exit_event( func_name );
@@ -780,9 +779,7 @@ static void zeDeviceGetExternalMemoryPropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetExternalMemoryProperties" ;
   TAU_L0_enter_event( func_name );
@@ -795,8 +792,7 @@ static void zeDeviceGetExternalMemoryPropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetExternalMemoryProperties" ;
   TAU_L0_exit_event( func_name );
@@ -809,9 +805,7 @@ static void zeDeviceGetP2PPropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetP2PProperties" ;
   TAU_L0_enter_event( func_name );
@@ -824,8 +818,7 @@ static void zeDeviceGetP2PPropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetP2PProperties" ;
   TAU_L0_exit_event( func_name );
@@ -838,9 +831,7 @@ static void zeDeviceCanAccessPeerOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceCanAccessPeer" ;
   TAU_L0_enter_event( func_name );
@@ -853,8 +844,7 @@ static void zeDeviceCanAccessPeerOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceCanAccessPeer" ;
   TAU_L0_exit_event( func_name );
@@ -867,9 +857,7 @@ static void zeDeviceGetStatusOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetStatus" ;
   TAU_L0_enter_event( func_name );
@@ -882,8 +870,7 @@ static void zeDeviceGetStatusOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetStatus" ;
   TAU_L0_exit_event( func_name );
@@ -896,9 +883,7 @@ static void zeContextCreateOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextCreate" ;
   TAU_L0_enter_event( func_name );
@@ -911,8 +896,7 @@ static void zeContextCreateOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextCreate" ;
   TAU_L0_exit_event( func_name );
@@ -925,9 +909,7 @@ static void zeContextDestroyOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextDestroy" ;
   TAU_L0_enter_event( func_name );
@@ -940,11 +922,9 @@ static void zeContextDestroyOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   //Inserted call
     OnExitContextDestroy(params, result, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeContextDestroy" ;
   TAU_L0_exit_event( func_name );
@@ -957,9 +937,7 @@ static void zeContextGetStatusOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextGetStatus" ;
   TAU_L0_enter_event( func_name );
@@ -972,8 +950,7 @@ static void zeContextGetStatusOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextGetStatus" ;
   TAU_L0_exit_event( func_name );
@@ -986,9 +963,7 @@ static void zeContextSystemBarrierOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextSystemBarrier" ;
   TAU_L0_enter_event( func_name );
@@ -1001,8 +976,7 @@ static void zeContextSystemBarrierOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextSystemBarrier" ;
   TAU_L0_exit_event( func_name );
@@ -1015,9 +989,7 @@ static void zeContextMakeMemoryResidentOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextMakeMemoryResident" ;
   TAU_L0_enter_event( func_name );
@@ -1030,8 +1002,7 @@ static void zeContextMakeMemoryResidentOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextMakeMemoryResident" ;
   TAU_L0_exit_event( func_name );
@@ -1044,9 +1015,7 @@ static void zeContextEvictMemoryOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextEvictMemory" ;
   TAU_L0_enter_event( func_name );
@@ -1059,8 +1028,7 @@ static void zeContextEvictMemoryOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextEvictMemory" ;
   TAU_L0_exit_event( func_name );
@@ -1073,9 +1041,7 @@ static void zeContextMakeImageResidentOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextMakeImageResident" ;
   TAU_L0_enter_event( func_name );
@@ -1088,8 +1054,7 @@ static void zeContextMakeImageResidentOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextMakeImageResident" ;
   TAU_L0_exit_event( func_name );
@@ -1102,9 +1067,7 @@ static void zeContextEvictImageOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextEvictImage" ;
   TAU_L0_enter_event( func_name );
@@ -1117,8 +1080,7 @@ static void zeContextEvictImageOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextEvictImage" ;
   TAU_L0_exit_event( func_name );
@@ -1131,9 +1093,7 @@ static void zeCommandQueueCreateOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandQueueCreate" ;
   TAU_L0_enter_event( func_name );
@@ -1146,11 +1106,9 @@ static void zeCommandQueueCreateOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   //Inserted call
     OnExitCommandQueueCreate(params, result, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandQueueCreate" ;
   TAU_L0_exit_event( func_name );
@@ -1163,9 +1121,7 @@ static void zeCommandQueueDestroyOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandQueueDestroy" ;
   TAU_L0_enter_event( func_name );
@@ -1178,11 +1134,9 @@ static void zeCommandQueueDestroyOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   //Inserted call
     OnExitCommandQueueDestroy(params, result, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandQueueDestroy" ;
   TAU_L0_exit_event( func_name );
@@ -1195,12 +1149,10 @@ static void zeCommandQueueExecuteCommandListsOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandQueueExecuteCommandLists(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandQueueExecuteCommandLists" ;
   TAU_L0_enter_event( func_name );
@@ -1213,12 +1165,10 @@ static void zeCommandQueueExecuteCommandListsOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandQueueExecuteCommandLists(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandQueueExecuteCommandLists" ;
   TAU_L0_exit_event( func_name );
@@ -1231,9 +1181,7 @@ static void zeCommandQueueSynchronizeOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandQueueSynchronize" ;
   TAU_L0_enter_event( func_name );
@@ -1246,12 +1194,10 @@ static void zeCommandQueueSynchronizeOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandQueueSynchronize(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandQueueSynchronize" ;
   TAU_L0_exit_event( func_name );
@@ -1264,9 +1210,7 @@ static void zeCommandListCreateOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListCreate" ;
   TAU_L0_enter_event( func_name );
@@ -1279,11 +1223,9 @@ static void zeCommandListCreateOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   //Inserted call
     OnExitCommandListCreate(params, result, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListCreate" ;
   TAU_L0_exit_event( func_name );
@@ -1296,9 +1238,7 @@ static void zeCommandListCreateImmediateOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListCreateImmediate" ;
   TAU_L0_enter_event( func_name );
@@ -1311,11 +1251,9 @@ static void zeCommandListCreateImmediateOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   //Inserted call
     OnExitCommandListCreateImmediate(params, result, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListCreateImmediate" ;
   TAU_L0_exit_event( func_name );
@@ -1328,9 +1266,7 @@ static void zeCommandListDestroyOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListDestroy" ;
   TAU_L0_enter_event( func_name );
@@ -1343,11 +1279,9 @@ static void zeCommandListDestroyOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   //Inserted call
     OnExitCommandListDestroy(params, result, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListDestroy" ;
   TAU_L0_exit_event( func_name );
@@ -1360,12 +1294,10 @@ static void zeCommandListCloseOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListClose(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListClose" ;
   TAU_L0_enter_event( func_name );
@@ -1378,8 +1310,7 @@ static void zeCommandListCloseOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListClose" ;
   TAU_L0_exit_event( func_name );
@@ -1392,9 +1323,7 @@ static void zeCommandListResetOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListReset" ;
   TAU_L0_enter_event( func_name );
@@ -1407,11 +1336,9 @@ static void zeCommandListResetOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   //Inserted call
     OnExitCommandListReset(params, result, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListReset" ;
   TAU_L0_exit_event( func_name );
@@ -1424,9 +1351,7 @@ static void zeCommandListAppendWriteGlobalTimestampOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendWriteGlobalTimestamp" ;
   TAU_L0_enter_event( func_name );
@@ -1439,8 +1364,7 @@ static void zeCommandListAppendWriteGlobalTimestampOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendWriteGlobalTimestamp" ;
   TAU_L0_exit_event( func_name );
@@ -1453,12 +1377,10 @@ static void zeCommandListAppendBarrierOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListAppendBarrier(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListAppendBarrier" ;
   TAU_L0_enter_event( func_name );
@@ -1471,12 +1393,10 @@ static void zeCommandListAppendBarrierOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListAppendBarrier(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListAppendBarrier" ;
   TAU_L0_exit_event( func_name );
@@ -1489,12 +1409,10 @@ static void zeCommandListAppendMemoryRangesBarrierOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListAppendMemoryRangesBarrier(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListAppendMemoryRangesBarrier" ;
   TAU_L0_enter_event( func_name );
@@ -1507,12 +1425,10 @@ static void zeCommandListAppendMemoryRangesBarrierOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListAppendMemoryRangesBarrier(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListAppendMemoryRangesBarrier" ;
   TAU_L0_exit_event( func_name );
@@ -1525,12 +1441,10 @@ static void zeCommandListAppendMemoryCopyOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListAppendMemoryCopy(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListAppendMemoryCopy" ;
   TAU_L0_enter_event( func_name );
@@ -1543,12 +1457,10 @@ static void zeCommandListAppendMemoryCopyOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListAppendMemoryCopy(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListAppendMemoryCopy" ;
   TAU_L0_exit_event( func_name );
@@ -1561,12 +1473,10 @@ static void zeCommandListAppendMemoryFillOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListAppendMemoryFill(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListAppendMemoryFill" ;
   TAU_L0_enter_event( func_name );
@@ -1579,12 +1489,10 @@ static void zeCommandListAppendMemoryFillOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListAppendMemoryFill(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListAppendMemoryFill" ;
   TAU_L0_exit_event( func_name );
@@ -1597,12 +1505,10 @@ static void zeCommandListAppendMemoryCopyRegionOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListAppendMemoryCopyRegion(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListAppendMemoryCopyRegion" ;
   TAU_L0_enter_event( func_name );
@@ -1615,12 +1521,10 @@ static void zeCommandListAppendMemoryCopyRegionOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListAppendMemoryCopyRegion(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListAppendMemoryCopyRegion" ;
   TAU_L0_exit_event( func_name );
@@ -1633,12 +1537,10 @@ static void zeCommandListAppendMemoryCopyFromContextOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListAppendMemoryCopyFromContext(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListAppendMemoryCopyFromContext" ;
   TAU_L0_enter_event( func_name );
@@ -1651,12 +1553,10 @@ static void zeCommandListAppendMemoryCopyFromContextOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListAppendMemoryCopyFromContext(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListAppendMemoryCopyFromContext" ;
   TAU_L0_exit_event( func_name );
@@ -1669,12 +1569,10 @@ static void zeCommandListAppendImageCopyOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListAppendImageCopy(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListAppendImageCopy" ;
   TAU_L0_enter_event( func_name );
@@ -1687,12 +1585,10 @@ static void zeCommandListAppendImageCopyOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListAppendImageCopy(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListAppendImageCopy" ;
   TAU_L0_exit_event( func_name );
@@ -1705,12 +1601,10 @@ static void zeCommandListAppendImageCopyRegionOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListAppendImageCopyRegion(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListAppendImageCopyRegion" ;
   TAU_L0_enter_event( func_name );
@@ -1723,12 +1617,10 @@ static void zeCommandListAppendImageCopyRegionOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListAppendImageCopyRegion(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListAppendImageCopyRegion" ;
   TAU_L0_exit_event( func_name );
@@ -1741,12 +1633,10 @@ static void zeCommandListAppendImageCopyToMemoryOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListAppendImageCopyToMemory(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListAppendImageCopyToMemory" ;
   TAU_L0_enter_event( func_name );
@@ -1759,12 +1649,10 @@ static void zeCommandListAppendImageCopyToMemoryOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListAppendImageCopyToMemory(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListAppendImageCopyToMemory" ;
   TAU_L0_exit_event( func_name );
@@ -1777,12 +1665,10 @@ static void zeCommandListAppendImageCopyFromMemoryOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListAppendImageCopyFromMemory(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListAppendImageCopyFromMemory" ;
   TAU_L0_enter_event( func_name );
@@ -1795,12 +1681,10 @@ static void zeCommandListAppendImageCopyFromMemoryOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListAppendImageCopyFromMemory(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListAppendImageCopyFromMemory" ;
   TAU_L0_exit_event( func_name );
@@ -1813,9 +1697,7 @@ static void zeCommandListAppendMemoryPrefetchOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendMemoryPrefetch" ;
   TAU_L0_enter_event( func_name );
@@ -1828,8 +1710,7 @@ static void zeCommandListAppendMemoryPrefetchOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendMemoryPrefetch" ;
   TAU_L0_exit_event( func_name );
@@ -1842,9 +1723,7 @@ static void zeCommandListAppendMemAdviseOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendMemAdvise" ;
   TAU_L0_enter_event( func_name );
@@ -1857,8 +1736,7 @@ static void zeCommandListAppendMemAdviseOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendMemAdvise" ;
   TAU_L0_exit_event( func_name );
@@ -1871,9 +1749,7 @@ static void zeCommandListAppendSignalEventOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendSignalEvent" ;
   TAU_L0_enter_event( func_name );
@@ -1886,8 +1762,7 @@ static void zeCommandListAppendSignalEventOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendSignalEvent" ;
   TAU_L0_exit_event( func_name );
@@ -1900,9 +1775,7 @@ static void zeCommandListAppendWaitOnEventsOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendWaitOnEvents" ;
   TAU_L0_enter_event( func_name );
@@ -1915,8 +1788,7 @@ static void zeCommandListAppendWaitOnEventsOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendWaitOnEvents" ;
   TAU_L0_exit_event( func_name );
@@ -1929,12 +1801,10 @@ static void zeCommandListAppendEventResetOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListAppendEventReset(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListAppendEventReset" ;
   TAU_L0_enter_event( func_name );
@@ -1947,12 +1817,10 @@ static void zeCommandListAppendEventResetOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListAppendEventReset(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListAppendEventReset" ;
   TAU_L0_exit_event( func_name );
@@ -1965,9 +1833,7 @@ static void zeCommandListAppendQueryKernelTimestampsOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendQueryKernelTimestamps" ;
   TAU_L0_enter_event( func_name );
@@ -1980,8 +1846,7 @@ static void zeCommandListAppendQueryKernelTimestampsOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendQueryKernelTimestamps" ;
   TAU_L0_exit_event( func_name );
@@ -1994,12 +1859,10 @@ static void zeCommandListAppendLaunchKernelOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListAppendLaunchKernel(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListAppendLaunchKernel" ;
   TAU_L0_enter_event( func_name );
@@ -2012,12 +1875,10 @@ static void zeCommandListAppendLaunchKernelOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListAppendLaunchKernel(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListAppendLaunchKernel" ;
   TAU_L0_exit_event( func_name );
@@ -2030,12 +1891,10 @@ static void zeCommandListAppendLaunchCooperativeKernelOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListAppendLaunchCooperativeKernel(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListAppendLaunchCooperativeKernel" ;
   TAU_L0_enter_event( func_name );
@@ -2048,12 +1907,10 @@ static void zeCommandListAppendLaunchCooperativeKernelOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListAppendLaunchCooperativeKernel(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListAppendLaunchCooperativeKernel" ;
   TAU_L0_exit_event( func_name );
@@ -2066,12 +1923,10 @@ static void zeCommandListAppendLaunchKernelIndirectOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListAppendLaunchKernelIndirect(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListAppendLaunchKernelIndirect" ;
   TAU_L0_enter_event( func_name );
@@ -2084,12 +1939,10 @@ static void zeCommandListAppendLaunchKernelIndirectOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListAppendLaunchKernelIndirect(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListAppendLaunchKernelIndirect" ;
   TAU_L0_exit_event( func_name );
@@ -2102,9 +1955,7 @@ static void zeCommandListAppendLaunchMultipleKernelsIndirectOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendLaunchMultipleKernelsIndirect" ;
   TAU_L0_enter_event( func_name );
@@ -2117,8 +1968,7 @@ static void zeCommandListAppendLaunchMultipleKernelsIndirectOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendLaunchMultipleKernelsIndirect" ;
   TAU_L0_exit_event( func_name );
@@ -2131,9 +1981,7 @@ static void zeImageGetPropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeImageGetProperties" ;
   TAU_L0_enter_event( func_name );
@@ -2146,8 +1994,7 @@ static void zeImageGetPropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeImageGetProperties" ;
   TAU_L0_exit_event( func_name );
@@ -2160,9 +2007,7 @@ static void zeImageCreateOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeImageCreate" ;
   TAU_L0_enter_event( func_name );
@@ -2175,11 +2020,9 @@ static void zeImageCreateOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   //Inserted call
     OnExitImageCreate(params, result, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeImageCreate" ;
   TAU_L0_exit_event( func_name );
@@ -2192,9 +2035,7 @@ static void zeImageDestroyOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeImageDestroy" ;
   TAU_L0_enter_event( func_name );
@@ -2207,11 +2048,9 @@ static void zeImageDestroyOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   //Inserted call
     OnExitImageDestroy(params, result, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeImageDestroy" ;
   TAU_L0_exit_event( func_name );
@@ -2224,9 +2063,7 @@ static void zeMemAllocSharedOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemAllocShared" ;
   TAU_L0_enter_event( func_name );
@@ -2239,8 +2076,7 @@ static void zeMemAllocSharedOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemAllocShared" ;
   TAU_L0_exit_event( func_name );
@@ -2253,9 +2089,7 @@ static void zeMemAllocDeviceOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemAllocDevice" ;
   TAU_L0_enter_event( func_name );
@@ -2268,8 +2102,7 @@ static void zeMemAllocDeviceOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemAllocDevice" ;
   TAU_L0_exit_event( func_name );
@@ -2282,9 +2115,7 @@ static void zeMemAllocHostOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemAllocHost" ;
   TAU_L0_enter_event( func_name );
@@ -2297,8 +2128,7 @@ static void zeMemAllocHostOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemAllocHost" ;
   TAU_L0_exit_event( func_name );
@@ -2311,9 +2141,7 @@ static void zeMemFreeOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemFree" ;
   TAU_L0_enter_event( func_name );
@@ -2326,8 +2154,7 @@ static void zeMemFreeOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemFree" ;
   TAU_L0_exit_event( func_name );
@@ -2340,9 +2167,7 @@ static void zeMemGetAllocPropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemGetAllocProperties" ;
   TAU_L0_enter_event( func_name );
@@ -2355,8 +2180,7 @@ static void zeMemGetAllocPropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemGetAllocProperties" ;
   TAU_L0_exit_event( func_name );
@@ -2369,9 +2193,7 @@ static void zeMemGetAddressRangeOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemGetAddressRange" ;
   TAU_L0_enter_event( func_name );
@@ -2384,8 +2206,7 @@ static void zeMemGetAddressRangeOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemGetAddressRange" ;
   TAU_L0_exit_event( func_name );
@@ -2398,9 +2219,7 @@ static void zeMemGetIpcHandleOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemGetIpcHandle" ;
   TAU_L0_enter_event( func_name );
@@ -2413,8 +2232,7 @@ static void zeMemGetIpcHandleOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemGetIpcHandle" ;
   TAU_L0_exit_event( func_name );
@@ -2427,9 +2245,7 @@ static void zeMemOpenIpcHandleOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemOpenIpcHandle" ;
   TAU_L0_enter_event( func_name );
@@ -2442,8 +2258,7 @@ static void zeMemOpenIpcHandleOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemOpenIpcHandle" ;
   TAU_L0_exit_event( func_name );
@@ -2456,9 +2271,7 @@ static void zeMemCloseIpcHandleOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemCloseIpcHandle" ;
   TAU_L0_enter_event( func_name );
@@ -2471,8 +2284,7 @@ static void zeMemCloseIpcHandleOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemCloseIpcHandle" ;
   TAU_L0_exit_event( func_name );
@@ -2485,9 +2297,7 @@ static void zeFenceCreateOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFenceCreate" ;
   TAU_L0_enter_event( func_name );
@@ -2500,8 +2310,7 @@ static void zeFenceCreateOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFenceCreate" ;
   TAU_L0_exit_event( func_name );
@@ -2514,9 +2323,7 @@ static void zeFenceDestroyOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFenceDestroy" ;
   TAU_L0_enter_event( func_name );
@@ -2529,8 +2336,7 @@ static void zeFenceDestroyOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFenceDestroy" ;
   TAU_L0_exit_event( func_name );
@@ -2543,9 +2349,7 @@ static void zeFenceHostSynchronizeOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFenceHostSynchronize" ;
   TAU_L0_enter_event( func_name );
@@ -2558,12 +2362,10 @@ static void zeFenceHostSynchronizeOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitFenceHostSynchronize(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeFenceHostSynchronize" ;
   TAU_L0_exit_event( func_name );
@@ -2576,9 +2378,7 @@ static void zeFenceQueryStatusOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFenceQueryStatus" ;
   TAU_L0_enter_event( func_name );
@@ -2591,8 +2391,7 @@ static void zeFenceQueryStatusOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFenceQueryStatus" ;
   TAU_L0_exit_event( func_name );
@@ -2605,9 +2404,7 @@ static void zeFenceResetOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFenceReset" ;
   TAU_L0_enter_event( func_name );
@@ -2620,8 +2417,7 @@ static void zeFenceResetOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFenceReset" ;
   TAU_L0_exit_event( func_name );
@@ -2634,12 +2430,10 @@ static void zeEventPoolCreateOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterEventPoolCreate(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeEventPoolCreate" ;
   TAU_L0_enter_event( func_name );
@@ -2652,11 +2446,9 @@ static void zeEventPoolCreateOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   //Inserted call
     OnExitEventPoolCreate(params, result, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeEventPoolCreate" ;
   TAU_L0_exit_event( func_name );
@@ -2669,9 +2461,7 @@ static void zeEventPoolDestroyOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventPoolDestroy" ;
   TAU_L0_enter_event( func_name );
@@ -2684,8 +2474,7 @@ static void zeEventPoolDestroyOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventPoolDestroy" ;
   TAU_L0_exit_event( func_name );
@@ -2698,9 +2487,7 @@ static void zeEventPoolGetIpcHandleOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventPoolGetIpcHandle" ;
   TAU_L0_enter_event( func_name );
@@ -2713,8 +2500,7 @@ static void zeEventPoolGetIpcHandleOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventPoolGetIpcHandle" ;
   TAU_L0_exit_event( func_name );
@@ -2727,9 +2513,7 @@ static void zeEventPoolOpenIpcHandleOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventPoolOpenIpcHandle" ;
   TAU_L0_enter_event( func_name );
@@ -2742,8 +2526,7 @@ static void zeEventPoolOpenIpcHandleOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventPoolOpenIpcHandle" ;
   TAU_L0_exit_event( func_name );
@@ -2756,9 +2539,7 @@ static void zeEventPoolCloseIpcHandleOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventPoolCloseIpcHandle" ;
   TAU_L0_enter_event( func_name );
@@ -2771,8 +2552,7 @@ static void zeEventPoolCloseIpcHandleOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventPoolCloseIpcHandle" ;
   TAU_L0_exit_event( func_name );
@@ -2785,9 +2565,7 @@ static void zeEventCreateOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventCreate" ;
   TAU_L0_enter_event( func_name );
@@ -2800,8 +2578,7 @@ static void zeEventCreateOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventCreate" ;
   TAU_L0_exit_event( func_name );
@@ -2814,7 +2591,7 @@ static void zeEventDestroyOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
 
   //Inserted call
@@ -2839,7 +2616,7 @@ static void zeEventDestroyOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   if (ze_instance_data.kid != (uint64_t)(-1)) {
       kids.push_back(ze_instance_data.kid);
@@ -2857,9 +2634,7 @@ static void zeEventHostSignalOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventHostSignal" ;
   TAU_L0_enter_event( func_name );
@@ -2872,8 +2647,7 @@ static void zeEventHostSignalOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventHostSignal" ;
   TAU_L0_exit_event( func_name );
@@ -2886,9 +2660,7 @@ static void zeEventHostSynchronizeOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventHostSynchronize" ;
   TAU_L0_enter_event( func_name );
@@ -2901,12 +2673,10 @@ static void zeEventHostSynchronizeOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitEventHostSynchronize(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeEventHostSynchronize" ;
   TAU_L0_exit_event( func_name );
@@ -2919,9 +2689,7 @@ static void zeEventQueryStatusOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventQueryStatus" ;
   TAU_L0_enter_event( func_name );
@@ -2934,12 +2702,10 @@ static void zeEventQueryStatusOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitEventQueryStatus(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeEventQueryStatus" ;
   TAU_L0_exit_event( func_name );
@@ -2952,7 +2718,7 @@ static void zeEventHostResetOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
 
   //Inserted call
@@ -2977,7 +2743,7 @@ static void zeEventHostResetOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   if (ze_instance_data.kid != (uint64_t)(-1)) {
       kids.push_back(ze_instance_data.kid);
@@ -2995,9 +2761,7 @@ static void zeEventQueryKernelTimestampOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventQueryKernelTimestamp" ;
   TAU_L0_enter_event( func_name );
@@ -3010,8 +2774,7 @@ static void zeEventQueryKernelTimestampOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventQueryKernelTimestamp" ;
   TAU_L0_exit_event( func_name );
@@ -3024,9 +2787,7 @@ static void zeModuleCreateOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleCreate" ;
   TAU_L0_enter_event( func_name );
@@ -3039,11 +2800,9 @@ static void zeModuleCreateOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   //Inserted call
     OnExitModuleCreate(params, result, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeModuleCreate" ;
   TAU_L0_exit_event( func_name );
@@ -3056,12 +2815,10 @@ static void zeModuleDestroyOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterModuleDestroy(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeModuleDestroy" ;
   TAU_L0_enter_event( func_name );
@@ -3074,8 +2831,7 @@ static void zeModuleDestroyOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleDestroy" ;
   TAU_L0_exit_event( func_name );
@@ -3088,9 +2844,7 @@ static void zeModuleDynamicLinkOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleDynamicLink" ;
   TAU_L0_enter_event( func_name );
@@ -3103,8 +2857,7 @@ static void zeModuleDynamicLinkOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleDynamicLink" ;
   TAU_L0_exit_event( func_name );
@@ -3117,9 +2870,7 @@ static void zeModuleGetNativeBinaryOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleGetNativeBinary" ;
   TAU_L0_enter_event( func_name );
@@ -3132,8 +2883,7 @@ static void zeModuleGetNativeBinaryOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleGetNativeBinary" ;
   TAU_L0_exit_event( func_name );
@@ -3146,9 +2896,7 @@ static void zeModuleGetGlobalPointerOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleGetGlobalPointer" ;
   TAU_L0_enter_event( func_name );
@@ -3161,8 +2909,7 @@ static void zeModuleGetGlobalPointerOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleGetGlobalPointer" ;
   TAU_L0_exit_event( func_name );
@@ -3175,9 +2922,7 @@ static void zeModuleGetKernelNamesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleGetKernelNames" ;
   TAU_L0_enter_event( func_name );
@@ -3190,8 +2935,7 @@ static void zeModuleGetKernelNamesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleGetKernelNames" ;
   TAU_L0_exit_event( func_name );
@@ -3204,9 +2948,7 @@ static void zeModuleGetPropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleGetProperties" ;
   TAU_L0_enter_event( func_name );
@@ -3219,8 +2961,7 @@ static void zeModuleGetPropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleGetProperties" ;
   TAU_L0_exit_event( func_name );
@@ -3233,9 +2974,7 @@ static void zeModuleGetFunctionPointerOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleGetFunctionPointer" ;
   TAU_L0_enter_event( func_name );
@@ -3248,8 +2987,7 @@ static void zeModuleGetFunctionPointerOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleGetFunctionPointer" ;
   TAU_L0_exit_event( func_name );
@@ -3262,9 +3000,7 @@ static void zeModuleBuildLogDestroyOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleBuildLogDestroy" ;
   TAU_L0_enter_event( func_name );
@@ -3277,8 +3013,7 @@ static void zeModuleBuildLogDestroyOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleBuildLogDestroy" ;
   TAU_L0_exit_event( func_name );
@@ -3291,9 +3026,7 @@ static void zeModuleBuildLogGetStringOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleBuildLogGetString" ;
   TAU_L0_enter_event( func_name );
@@ -3306,8 +3039,7 @@ static void zeModuleBuildLogGetStringOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleBuildLogGetString" ;
   TAU_L0_exit_event( func_name );
@@ -3320,9 +3052,7 @@ static void zeKernelCreateOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelCreate" ;
   TAU_L0_enter_event( func_name );
@@ -3335,11 +3065,9 @@ static void zeKernelCreateOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   //Inserted call
     OnExitKernelCreate(params, result, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeKernelCreate" ;
   TAU_L0_exit_event( func_name );
@@ -3352,9 +3080,7 @@ static void zeKernelDestroyOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelDestroy" ;
   TAU_L0_enter_event( func_name );
@@ -3367,11 +3093,9 @@ static void zeKernelDestroyOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   //Inserted call
     OnExitKernelDestroy(params, result, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeKernelDestroy" ;
   TAU_L0_exit_event( func_name );
@@ -3384,9 +3108,7 @@ static void zeKernelSetCacheConfigOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSetCacheConfig" ;
   TAU_L0_enter_event( func_name );
@@ -3399,8 +3121,7 @@ static void zeKernelSetCacheConfigOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSetCacheConfig" ;
   TAU_L0_exit_event( func_name );
@@ -3413,9 +3134,7 @@ static void zeKernelSetGroupSizeOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSetGroupSize" ;
   TAU_L0_enter_event( func_name );
@@ -3428,11 +3147,9 @@ static void zeKernelSetGroupSizeOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   //Inserted call
     OnExitKernelSetGroupSize(params, result, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeKernelSetGroupSize" ;
   TAU_L0_exit_event( func_name );
@@ -3445,9 +3162,7 @@ static void zeKernelSuggestGroupSizeOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSuggestGroupSize" ;
   TAU_L0_enter_event( func_name );
@@ -3460,8 +3175,7 @@ static void zeKernelSuggestGroupSizeOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSuggestGroupSize" ;
   TAU_L0_exit_event( func_name );
@@ -3474,9 +3188,7 @@ static void zeKernelSuggestMaxCooperativeGroupCountOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSuggestMaxCooperativeGroupCount" ;
   TAU_L0_enter_event( func_name );
@@ -3489,8 +3201,7 @@ static void zeKernelSuggestMaxCooperativeGroupCountOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSuggestMaxCooperativeGroupCount" ;
   TAU_L0_exit_event( func_name );
@@ -3503,9 +3214,7 @@ static void zeKernelSetArgumentValueOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSetArgumentValue" ;
   TAU_L0_enter_event( func_name );
@@ -3518,8 +3227,7 @@ static void zeKernelSetArgumentValueOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSetArgumentValue" ;
   TAU_L0_exit_event( func_name );
@@ -3532,9 +3240,7 @@ static void zeKernelSetIndirectAccessOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSetIndirectAccess" ;
   TAU_L0_enter_event( func_name );
@@ -3547,8 +3253,7 @@ static void zeKernelSetIndirectAccessOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSetIndirectAccess" ;
   TAU_L0_exit_event( func_name );
@@ -3561,9 +3266,7 @@ static void zeKernelGetIndirectAccessOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelGetIndirectAccess" ;
   TAU_L0_enter_event( func_name );
@@ -3576,8 +3279,7 @@ static void zeKernelGetIndirectAccessOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelGetIndirectAccess" ;
   TAU_L0_exit_event( func_name );
@@ -3590,9 +3292,7 @@ static void zeKernelGetSourceAttributesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelGetSourceAttributes" ;
   TAU_L0_enter_event( func_name );
@@ -3605,8 +3305,7 @@ static void zeKernelGetSourceAttributesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelGetSourceAttributes" ;
   TAU_L0_exit_event( func_name );
@@ -3619,9 +3318,7 @@ static void zeKernelGetPropertiesOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelGetProperties" ;
   TAU_L0_enter_event( func_name );
@@ -3634,8 +3331,7 @@ static void zeKernelGetPropertiesOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelGetProperties" ;
   TAU_L0_exit_event( func_name );
@@ -3648,9 +3344,7 @@ static void zeKernelGetNameOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelGetName" ;
   TAU_L0_enter_event( func_name );
@@ -3663,8 +3357,7 @@ static void zeKernelGetNameOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelGetName" ;
   TAU_L0_exit_event( func_name );
@@ -3677,9 +3370,7 @@ static void zeSamplerCreateOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeSamplerCreate" ;
   TAU_L0_enter_event( func_name );
@@ -3692,8 +3383,7 @@ static void zeSamplerCreateOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeSamplerCreate" ;
   TAU_L0_exit_event( func_name );
@@ -3706,9 +3396,7 @@ static void zeSamplerDestroyOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeSamplerDestroy" ;
   TAU_L0_enter_event( func_name );
@@ -3721,8 +3409,7 @@ static void zeSamplerDestroyOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeSamplerDestroy" ;
   TAU_L0_exit_event( func_name );
@@ -3735,9 +3422,7 @@ static void zePhysicalMemCreateOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zePhysicalMemCreate" ;
   TAU_L0_enter_event( func_name );
@@ -3750,8 +3435,7 @@ static void zePhysicalMemCreateOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zePhysicalMemCreate" ;
   TAU_L0_exit_event( func_name );
@@ -3764,9 +3448,7 @@ static void zePhysicalMemDestroyOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zePhysicalMemDestroy" ;
   TAU_L0_enter_event( func_name );
@@ -3779,8 +3461,7 @@ static void zePhysicalMemDestroyOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zePhysicalMemDestroy" ;
   TAU_L0_exit_event( func_name );
@@ -3793,9 +3474,7 @@ static void zeVirtualMemReserveOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeVirtualMemReserve" ;
   TAU_L0_enter_event( func_name );
@@ -3808,8 +3487,7 @@ static void zeVirtualMemReserveOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeVirtualMemReserve" ;
   TAU_L0_exit_event( func_name );
@@ -3822,9 +3500,7 @@ static void zeVirtualMemFreeOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeVirtualMemFree" ;
   TAU_L0_enter_event( func_name );
@@ -3837,8 +3513,7 @@ static void zeVirtualMemFreeOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeVirtualMemFree" ;
   TAU_L0_exit_event( func_name );
@@ -3851,9 +3526,7 @@ static void zeVirtualMemQueryPageSizeOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeVirtualMemQueryPageSize" ;
   TAU_L0_enter_event( func_name );
@@ -3866,8 +3539,7 @@ static void zeVirtualMemQueryPageSizeOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeVirtualMemQueryPageSize" ;
   TAU_L0_exit_event( func_name );
@@ -3880,9 +3552,7 @@ static void zeVirtualMemMapOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeVirtualMemMap" ;
   TAU_L0_enter_event( func_name );
@@ -3895,8 +3565,7 @@ static void zeVirtualMemMapOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeVirtualMemMap" ;
   TAU_L0_exit_event( func_name );
@@ -3909,9 +3578,7 @@ static void zeVirtualMemUnmapOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeVirtualMemUnmap" ;
   TAU_L0_enter_event( func_name );
@@ -3924,8 +3591,7 @@ static void zeVirtualMemUnmapOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeVirtualMemUnmap" ;
   TAU_L0_exit_event( func_name );
@@ -3938,9 +3604,7 @@ static void zeVirtualMemSetAccessAttributeOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeVirtualMemSetAccessAttribute" ;
   TAU_L0_enter_event( func_name );
@@ -3953,8 +3617,7 @@ static void zeVirtualMemSetAccessAttributeOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeVirtualMemSetAccessAttribute" ;
   TAU_L0_exit_event( func_name );
@@ -3967,9 +3630,7 @@ static void zeVirtualMemGetAccessAttributeOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeVirtualMemGetAccessAttribute" ;
   TAU_L0_enter_event( func_name );
@@ -3982,8 +3643,7 @@ static void zeVirtualMemGetAccessAttributeOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeVirtualMemGetAccessAttribute" ;
   TAU_L0_exit_event( func_name );
@@ -3996,9 +3656,7 @@ static void zeInitDriversOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeInitDrivers" ;
   TAU_L0_enter_event( func_name );
@@ -4011,8 +3669,7 @@ static void zeInitDriversOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeInitDrivers" ;
   TAU_L0_exit_event( func_name );
@@ -4025,9 +3682,7 @@ static void zeRTASBuilderCreateExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASBuilderCreateExp" ;
   TAU_L0_enter_event( func_name );
@@ -4040,8 +3695,7 @@ static void zeRTASBuilderCreateExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASBuilderCreateExp" ;
   TAU_L0_exit_event( func_name );
@@ -4054,9 +3708,7 @@ static void zeRTASBuilderGetBuildPropertiesExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASBuilderGetBuildPropertiesExp" ;
   TAU_L0_enter_event( func_name );
@@ -4069,8 +3721,7 @@ static void zeRTASBuilderGetBuildPropertiesExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASBuilderGetBuildPropertiesExp" ;
   TAU_L0_exit_event( func_name );
@@ -4083,9 +3734,7 @@ static void zeRTASBuilderBuildExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASBuilderBuildExp" ;
   TAU_L0_enter_event( func_name );
@@ -4098,8 +3747,7 @@ static void zeRTASBuilderBuildExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASBuilderBuildExp" ;
   TAU_L0_exit_event( func_name );
@@ -4112,9 +3760,7 @@ static void zeRTASBuilderDestroyExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASBuilderDestroyExp" ;
   TAU_L0_enter_event( func_name );
@@ -4127,8 +3773,7 @@ static void zeRTASBuilderDestroyExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASBuilderDestroyExp" ;
   TAU_L0_exit_event( func_name );
@@ -4141,9 +3786,7 @@ static void zeRTASParallelOperationCreateExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASParallelOperationCreateExp" ;
   TAU_L0_enter_event( func_name );
@@ -4156,8 +3799,7 @@ static void zeRTASParallelOperationCreateExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASParallelOperationCreateExp" ;
   TAU_L0_exit_event( func_name );
@@ -4170,9 +3812,7 @@ static void zeRTASParallelOperationGetPropertiesExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASParallelOperationGetPropertiesExp" ;
   TAU_L0_enter_event( func_name );
@@ -4185,8 +3825,7 @@ static void zeRTASParallelOperationGetPropertiesExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASParallelOperationGetPropertiesExp" ;
   TAU_L0_exit_event( func_name );
@@ -4199,9 +3838,7 @@ static void zeRTASParallelOperationJoinExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASParallelOperationJoinExp" ;
   TAU_L0_enter_event( func_name );
@@ -4214,8 +3851,7 @@ static void zeRTASParallelOperationJoinExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASParallelOperationJoinExp" ;
   TAU_L0_exit_event( func_name );
@@ -4228,9 +3864,7 @@ static void zeRTASParallelOperationDestroyExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASParallelOperationDestroyExp" ;
   TAU_L0_enter_event( func_name );
@@ -4243,8 +3877,7 @@ static void zeRTASParallelOperationDestroyExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeRTASParallelOperationDestroyExp" ;
   TAU_L0_exit_event( func_name );
@@ -4257,9 +3890,7 @@ static void zeDriverGetExtensionFunctionAddressOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverGetExtensionFunctionAddress" ;
   TAU_L0_enter_event( func_name );
@@ -4272,8 +3903,7 @@ static void zeDriverGetExtensionFunctionAddressOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverGetExtensionFunctionAddress" ;
   TAU_L0_exit_event( func_name );
@@ -4286,9 +3916,7 @@ static void zeDriverGetLastErrorDescriptionOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverGetLastErrorDescription" ;
   TAU_L0_enter_event( func_name );
@@ -4301,8 +3929,7 @@ static void zeDriverGetLastErrorDescriptionOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverGetLastErrorDescription" ;
   TAU_L0_exit_event( func_name );
@@ -4315,9 +3942,7 @@ static void zeDriverRTASFormatCompatibilityCheckExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverRTASFormatCompatibilityCheckExp" ;
   TAU_L0_enter_event( func_name );
@@ -4330,8 +3955,7 @@ static void zeDriverRTASFormatCompatibilityCheckExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDriverRTASFormatCompatibilityCheckExp" ;
   TAU_L0_exit_event( func_name );
@@ -4344,9 +3968,7 @@ static void zeDeviceGetGlobalTimestampsOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetGlobalTimestamps" ;
   TAU_L0_enter_event( func_name );
@@ -4359,8 +3981,7 @@ static void zeDeviceGetGlobalTimestampsOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetGlobalTimestamps" ;
   TAU_L0_exit_event( func_name );
@@ -4373,9 +3994,7 @@ static void zeDeviceImportExternalSemaphoreExtOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceImportExternalSemaphoreExt" ;
   TAU_L0_enter_event( func_name );
@@ -4388,8 +4007,7 @@ static void zeDeviceImportExternalSemaphoreExtOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceImportExternalSemaphoreExt" ;
   TAU_L0_exit_event( func_name );
@@ -4402,9 +4020,7 @@ static void zeDeviceReleaseExternalSemaphoreExtOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceReleaseExternalSemaphoreExt" ;
   TAU_L0_enter_event( func_name );
@@ -4417,8 +4033,7 @@ static void zeDeviceReleaseExternalSemaphoreExtOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceReleaseExternalSemaphoreExt" ;
   TAU_L0_exit_event( func_name );
@@ -4431,9 +4046,7 @@ static void zeDeviceReserveCacheExtOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceReserveCacheExt" ;
   TAU_L0_enter_event( func_name );
@@ -4446,8 +4059,7 @@ static void zeDeviceReserveCacheExtOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceReserveCacheExt" ;
   TAU_L0_exit_event( func_name );
@@ -4460,9 +4072,7 @@ static void zeDeviceSetCacheAdviceExtOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceSetCacheAdviceExt" ;
   TAU_L0_enter_event( func_name );
@@ -4475,8 +4085,7 @@ static void zeDeviceSetCacheAdviceExtOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceSetCacheAdviceExt" ;
   TAU_L0_exit_event( func_name );
@@ -4489,9 +4098,7 @@ static void zeDevicePciGetPropertiesExtOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDevicePciGetPropertiesExt" ;
   TAU_L0_enter_event( func_name );
@@ -4504,8 +4111,7 @@ static void zeDevicePciGetPropertiesExtOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDevicePciGetPropertiesExt" ;
   TAU_L0_exit_event( func_name );
@@ -4518,9 +4124,7 @@ static void zeDeviceGetFabricVertexExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetFabricVertexExp" ;
   TAU_L0_enter_event( func_name );
@@ -4533,8 +4137,7 @@ static void zeDeviceGetFabricVertexExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetFabricVertexExp" ;
   TAU_L0_exit_event( func_name );
@@ -4547,9 +4150,7 @@ static void zeDeviceGetRootDeviceOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetRootDevice" ;
   TAU_L0_enter_event( func_name );
@@ -4562,8 +4163,7 @@ static void zeDeviceGetRootDeviceOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeDeviceGetRootDevice" ;
   TAU_L0_exit_event( func_name );
@@ -4576,9 +4176,7 @@ static void zeContextCreateExOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextCreateEx" ;
   TAU_L0_enter_event( func_name );
@@ -4591,8 +4189,7 @@ static void zeContextCreateExOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeContextCreateEx" ;
   TAU_L0_exit_event( func_name );
@@ -4605,9 +4202,7 @@ static void zeCommandQueueGetOrdinalOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandQueueGetOrdinal" ;
   TAU_L0_enter_event( func_name );
@@ -4620,8 +4215,7 @@ static void zeCommandQueueGetOrdinalOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandQueueGetOrdinal" ;
   TAU_L0_exit_event( func_name );
@@ -4634,9 +4228,7 @@ static void zeCommandQueueGetIndexOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandQueueGetIndex" ;
   TAU_L0_enter_event( func_name );
@@ -4649,8 +4241,7 @@ static void zeCommandQueueGetIndexOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandQueueGetIndex" ;
   TAU_L0_exit_event( func_name );
@@ -4663,9 +4254,7 @@ static void zeCommandListGetNextCommandIdWithKernelsExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListGetNextCommandIdWithKernelsExp" ;
   TAU_L0_enter_event( func_name );
@@ -4678,8 +4267,7 @@ static void zeCommandListGetNextCommandIdWithKernelsExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListGetNextCommandIdWithKernelsExp" ;
   TAU_L0_exit_event( func_name );
@@ -4692,9 +4280,7 @@ static void zeCommandListUpdateMutableCommandKernelsExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListUpdateMutableCommandKernelsExp" ;
   TAU_L0_enter_event( func_name );
@@ -4707,8 +4293,7 @@ static void zeCommandListUpdateMutableCommandKernelsExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListUpdateMutableCommandKernelsExp" ;
   TAU_L0_exit_event( func_name );
@@ -4721,9 +4306,7 @@ static void zeCommandListAppendSignalExternalSemaphoreExtOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendSignalExternalSemaphoreExt" ;
   TAU_L0_enter_event( func_name );
@@ -4736,8 +4319,7 @@ static void zeCommandListAppendSignalExternalSemaphoreExtOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendSignalExternalSemaphoreExt" ;
   TAU_L0_exit_event( func_name );
@@ -4750,9 +4332,7 @@ static void zeCommandListAppendWaitExternalSemaphoreExtOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendWaitExternalSemaphoreExt" ;
   TAU_L0_enter_event( func_name );
@@ -4765,8 +4345,7 @@ static void zeCommandListAppendWaitExternalSemaphoreExtOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendWaitExternalSemaphoreExt" ;
   TAU_L0_exit_event( func_name );
@@ -4779,9 +4358,7 @@ static void zeCommandListAppendImageCopyToMemoryExtOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendImageCopyToMemoryExt" ;
   TAU_L0_enter_event( func_name );
@@ -4794,8 +4371,7 @@ static void zeCommandListAppendImageCopyToMemoryExtOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendImageCopyToMemoryExt" ;
   TAU_L0_exit_event( func_name );
@@ -4808,9 +4384,7 @@ static void zeCommandListAppendImageCopyFromMemoryExtOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendImageCopyFromMemoryExt" ;
   TAU_L0_enter_event( func_name );
@@ -4823,8 +4397,7 @@ static void zeCommandListAppendImageCopyFromMemoryExtOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListAppendImageCopyFromMemoryExt" ;
   TAU_L0_exit_event( func_name );
@@ -4837,9 +4410,7 @@ static void zeCommandListHostSynchronizeOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListHostSynchronize" ;
   TAU_L0_enter_event( func_name );
@@ -4852,12 +4423,10 @@ static void zeCommandListHostSynchronizeOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListHostSynchronize(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListHostSynchronize" ;
   TAU_L0_exit_event( func_name );
@@ -4870,9 +4439,7 @@ static void zeCommandListCreateCloneExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListCreateCloneExp" ;
   TAU_L0_enter_event( func_name );
@@ -4885,8 +4452,7 @@ static void zeCommandListCreateCloneExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListCreateCloneExp" ;
   TAU_L0_exit_event( func_name );
@@ -4899,9 +4465,7 @@ static void zeCommandListGetDeviceHandleOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListGetDeviceHandle" ;
   TAU_L0_enter_event( func_name );
@@ -4914,8 +4478,7 @@ static void zeCommandListGetDeviceHandleOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListGetDeviceHandle" ;
   TAU_L0_exit_event( func_name );
@@ -4928,9 +4491,7 @@ static void zeCommandListGetContextHandleOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListGetContextHandle" ;
   TAU_L0_enter_event( func_name );
@@ -4943,8 +4504,7 @@ static void zeCommandListGetContextHandleOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListGetContextHandle" ;
   TAU_L0_exit_event( func_name );
@@ -4957,9 +4517,7 @@ static void zeCommandListGetOrdinalOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListGetOrdinal" ;
   TAU_L0_enter_event( func_name );
@@ -4972,8 +4530,7 @@ static void zeCommandListGetOrdinalOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListGetOrdinal" ;
   TAU_L0_exit_event( func_name );
@@ -4986,9 +4543,7 @@ static void zeCommandListImmediateGetIndexOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListImmediateGetIndex" ;
   TAU_L0_enter_event( func_name );
@@ -5001,8 +4556,7 @@ static void zeCommandListImmediateGetIndexOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListImmediateGetIndex" ;
   TAU_L0_exit_event( func_name );
@@ -5015,9 +4569,7 @@ static void zeCommandListIsImmediateOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListIsImmediate" ;
   TAU_L0_enter_event( func_name );
@@ -5030,8 +4582,7 @@ static void zeCommandListIsImmediateOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListIsImmediate" ;
   TAU_L0_exit_event( func_name );
@@ -5044,12 +4595,10 @@ static void zeCommandListImmediateAppendCommandListsExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   //Inserted call
     OnEnterCommandListImmediateAppendCommandListsExp(params, global_user_data, instance_user_data);
-
-
 
   const char* func_name = "zeCommandListImmediateAppendCommandListsExp" ;
   TAU_L0_enter_event( func_name );
@@ -5062,12 +4611,10 @@ static void zeCommandListImmediateAppendCommandListsExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
+  reinterpret_cast<ZeCollector*>(global_user_data);
   std::vector<uint64_t> kids;
   //Inserted call
     OnExitCommandListImmediateAppendCommandListsExp(params, result, global_user_data, instance_user_data, &kids);
-
-
 
   const char* func_name = "zeCommandListImmediateAppendCommandListsExp" ;
   TAU_L0_exit_event( func_name );
@@ -5080,9 +4627,7 @@ static void zeCommandListGetNextCommandIdExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListGetNextCommandIdExp" ;
   TAU_L0_enter_event( func_name );
@@ -5095,8 +4640,7 @@ static void zeCommandListGetNextCommandIdExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListGetNextCommandIdExp" ;
   TAU_L0_exit_event( func_name );
@@ -5109,9 +4653,7 @@ static void zeCommandListUpdateMutableCommandsExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListUpdateMutableCommandsExp" ;
   TAU_L0_enter_event( func_name );
@@ -5124,8 +4666,7 @@ static void zeCommandListUpdateMutableCommandsExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListUpdateMutableCommandsExp" ;
   TAU_L0_exit_event( func_name );
@@ -5138,9 +4679,7 @@ static void zeCommandListUpdateMutableCommandSignalEventExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListUpdateMutableCommandSignalEventExp" ;
   TAU_L0_enter_event( func_name );
@@ -5153,8 +4692,7 @@ static void zeCommandListUpdateMutableCommandSignalEventExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListUpdateMutableCommandSignalEventExp" ;
   TAU_L0_exit_event( func_name );
@@ -5167,9 +4705,7 @@ static void zeCommandListUpdateMutableCommandWaitEventsExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListUpdateMutableCommandWaitEventsExp" ;
   TAU_L0_enter_event( func_name );
@@ -5182,8 +4718,7 @@ static void zeCommandListUpdateMutableCommandWaitEventsExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeCommandListUpdateMutableCommandWaitEventsExp" ;
   TAU_L0_exit_event( func_name );
@@ -5196,9 +4731,7 @@ static void zeEventQueryTimestampsExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventQueryTimestampsExp" ;
   TAU_L0_enter_event( func_name );
@@ -5211,8 +4744,7 @@ static void zeEventQueryTimestampsExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventQueryTimestampsExp" ;
   TAU_L0_exit_event( func_name );
@@ -5225,9 +4757,7 @@ static void zeEventQueryKernelTimestampsExtOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventQueryKernelTimestampsExt" ;
   TAU_L0_enter_event( func_name );
@@ -5240,8 +4770,7 @@ static void zeEventQueryKernelTimestampsExtOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventQueryKernelTimestampsExt" ;
   TAU_L0_exit_event( func_name );
@@ -5254,9 +4783,7 @@ static void zeEventGetEventPoolOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventGetEventPool" ;
   TAU_L0_enter_event( func_name );
@@ -5269,8 +4796,7 @@ static void zeEventGetEventPoolOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventGetEventPool" ;
   TAU_L0_exit_event( func_name );
@@ -5283,9 +4809,7 @@ static void zeEventGetSignalScopeOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventGetSignalScope" ;
   TAU_L0_enter_event( func_name );
@@ -5298,8 +4822,7 @@ static void zeEventGetSignalScopeOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventGetSignalScope" ;
   TAU_L0_exit_event( func_name );
@@ -5312,9 +4835,7 @@ static void zeEventGetWaitScopeOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventGetWaitScope" ;
   TAU_L0_enter_event( func_name );
@@ -5327,8 +4848,7 @@ static void zeEventGetWaitScopeOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventGetWaitScope" ;
   TAU_L0_exit_event( func_name );
@@ -5341,9 +4861,7 @@ static void zeEventPoolPutIpcHandleOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventPoolPutIpcHandle" ;
   TAU_L0_enter_event( func_name );
@@ -5356,8 +4874,7 @@ static void zeEventPoolPutIpcHandleOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventPoolPutIpcHandle" ;
   TAU_L0_exit_event( func_name );
@@ -5370,9 +4887,7 @@ static void zeEventPoolGetContextHandleOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventPoolGetContextHandle" ;
   TAU_L0_enter_event( func_name );
@@ -5385,8 +4900,7 @@ static void zeEventPoolGetContextHandleOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventPoolGetContextHandle" ;
   TAU_L0_exit_event( func_name );
@@ -5399,9 +4913,7 @@ static void zeEventPoolGetFlagsOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventPoolGetFlags" ;
   TAU_L0_enter_event( func_name );
@@ -5414,8 +4926,7 @@ static void zeEventPoolGetFlagsOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeEventPoolGetFlags" ;
   TAU_L0_exit_event( func_name );
@@ -5428,9 +4939,7 @@ static void zeImageGetMemoryPropertiesExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeImageGetMemoryPropertiesExp" ;
   TAU_L0_enter_event( func_name );
@@ -5443,8 +4952,7 @@ static void zeImageGetMemoryPropertiesExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeImageGetMemoryPropertiesExp" ;
   TAU_L0_exit_event( func_name );
@@ -5457,9 +4965,7 @@ static void zeImageViewCreateExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeImageViewCreateExp" ;
   TAU_L0_enter_event( func_name );
@@ -5472,8 +4978,7 @@ static void zeImageViewCreateExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeImageViewCreateExp" ;
   TAU_L0_exit_event( func_name );
@@ -5486,9 +4991,7 @@ static void zeImageGetAllocPropertiesExtOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeImageGetAllocPropertiesExt" ;
   TAU_L0_enter_event( func_name );
@@ -5501,8 +5004,7 @@ static void zeImageGetAllocPropertiesExtOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeImageGetAllocPropertiesExt" ;
   TAU_L0_exit_event( func_name );
@@ -5515,9 +5017,7 @@ static void zeImageViewCreateExtOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeImageViewCreateExt" ;
   TAU_L0_enter_event( func_name );
@@ -5530,8 +5030,7 @@ static void zeImageViewCreateExtOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeImageViewCreateExt" ;
   TAU_L0_exit_event( func_name );
@@ -5544,9 +5043,7 @@ static void zeImageGetDeviceOffsetExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeImageGetDeviceOffsetExp" ;
   TAU_L0_enter_event( func_name );
@@ -5559,8 +5056,7 @@ static void zeImageGetDeviceOffsetExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeImageGetDeviceOffsetExp" ;
   TAU_L0_exit_event( func_name );
@@ -5573,9 +5069,7 @@ static void zeKernelSetGlobalOffsetExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSetGlobalOffsetExp" ;
   TAU_L0_enter_event( func_name );
@@ -5588,8 +5082,7 @@ static void zeKernelSetGlobalOffsetExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSetGlobalOffsetExp" ;
   TAU_L0_exit_event( func_name );
@@ -5602,9 +5095,7 @@ static void zeKernelGetBinaryExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelGetBinaryExp" ;
   TAU_L0_enter_event( func_name );
@@ -5617,8 +5108,7 @@ static void zeKernelGetBinaryExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelGetBinaryExp" ;
   TAU_L0_exit_event( func_name );
@@ -5631,9 +5121,7 @@ static void zeKernelSchedulingHintExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSchedulingHintExp" ;
   TAU_L0_enter_event( func_name );
@@ -5646,8 +5134,7 @@ static void zeKernelSchedulingHintExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeKernelSchedulingHintExp" ;
   TAU_L0_exit_event( func_name );
@@ -5660,9 +5147,7 @@ static void zeMemFreeExtOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemFreeExt" ;
   TAU_L0_enter_event( func_name );
@@ -5675,8 +5160,7 @@ static void zeMemFreeExtOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemFreeExt" ;
   TAU_L0_exit_event( func_name );
@@ -5689,9 +5173,7 @@ static void zeMemGetIpcHandleFromFileDescriptorExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemGetIpcHandleFromFileDescriptorExp" ;
   TAU_L0_enter_event( func_name );
@@ -5704,8 +5186,7 @@ static void zeMemGetIpcHandleFromFileDescriptorExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemGetIpcHandleFromFileDescriptorExp" ;
   TAU_L0_exit_event( func_name );
@@ -5718,9 +5199,7 @@ static void zeMemGetFileDescriptorFromIpcHandleExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemGetFileDescriptorFromIpcHandleExp" ;
   TAU_L0_enter_event( func_name );
@@ -5733,8 +5212,7 @@ static void zeMemGetFileDescriptorFromIpcHandleExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemGetFileDescriptorFromIpcHandleExp" ;
   TAU_L0_exit_event( func_name );
@@ -5747,9 +5225,7 @@ static void zeMemPutIpcHandleOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemPutIpcHandle" ;
   TAU_L0_enter_event( func_name );
@@ -5762,8 +5238,7 @@ static void zeMemPutIpcHandleOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemPutIpcHandle" ;
   TAU_L0_exit_event( func_name );
@@ -5776,9 +5251,7 @@ static void zeMemSetAtomicAccessAttributeExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemSetAtomicAccessAttributeExp" ;
   TAU_L0_enter_event( func_name );
@@ -5791,8 +5264,7 @@ static void zeMemSetAtomicAccessAttributeExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemSetAtomicAccessAttributeExp" ;
   TAU_L0_exit_event( func_name );
@@ -5805,9 +5277,7 @@ static void zeMemGetAtomicAccessAttributeExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemGetAtomicAccessAttributeExp" ;
   TAU_L0_enter_event( func_name );
@@ -5820,8 +5290,7 @@ static void zeMemGetAtomicAccessAttributeExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemGetAtomicAccessAttributeExp" ;
   TAU_L0_exit_event( func_name );
@@ -5834,9 +5303,7 @@ static void zeMemGetPitchFor2dImageOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemGetPitchFor2dImage" ;
   TAU_L0_enter_event( func_name );
@@ -5849,8 +5316,7 @@ static void zeMemGetPitchFor2dImageOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeMemGetPitchFor2dImage" ;
   TAU_L0_exit_event( func_name );
@@ -5863,9 +5329,7 @@ static void zeModuleInspectLinkageExtOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleInspectLinkageExt" ;
   TAU_L0_enter_event( func_name );
@@ -5878,8 +5342,7 @@ static void zeModuleInspectLinkageExtOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeModuleInspectLinkageExt" ;
   TAU_L0_exit_event( func_name );
@@ -5892,9 +5355,7 @@ static void zeFabricEdgeGetExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFabricEdgeGetExp" ;
   TAU_L0_enter_event( func_name );
@@ -5907,8 +5368,7 @@ static void zeFabricEdgeGetExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFabricEdgeGetExp" ;
   TAU_L0_exit_event( func_name );
@@ -5921,9 +5381,7 @@ static void zeFabricEdgeGetVerticesExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFabricEdgeGetVerticesExp" ;
   TAU_L0_enter_event( func_name );
@@ -5936,8 +5394,7 @@ static void zeFabricEdgeGetVerticesExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFabricEdgeGetVerticesExp" ;
   TAU_L0_exit_event( func_name );
@@ -5950,9 +5407,7 @@ static void zeFabricEdgeGetPropertiesExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFabricEdgeGetPropertiesExp" ;
   TAU_L0_enter_event( func_name );
@@ -5965,8 +5420,7 @@ static void zeFabricEdgeGetPropertiesExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFabricEdgeGetPropertiesExp" ;
   TAU_L0_exit_event( func_name );
@@ -5979,9 +5433,7 @@ static void zeFabricVertexGetExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFabricVertexGetExp" ;
   TAU_L0_enter_event( func_name );
@@ -5994,8 +5446,7 @@ static void zeFabricVertexGetExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFabricVertexGetExp" ;
   TAU_L0_exit_event( func_name );
@@ -6008,9 +5459,7 @@ static void zeFabricVertexGetSubVerticesExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFabricVertexGetSubVerticesExp" ;
   TAU_L0_enter_event( func_name );
@@ -6023,8 +5472,7 @@ static void zeFabricVertexGetSubVerticesExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFabricVertexGetSubVerticesExp" ;
   TAU_L0_exit_event( func_name );
@@ -6037,9 +5485,7 @@ static void zeFabricVertexGetPropertiesExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFabricVertexGetPropertiesExp" ;
   TAU_L0_enter_event( func_name );
@@ -6052,8 +5498,7 @@ static void zeFabricVertexGetPropertiesExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFabricVertexGetPropertiesExp" ;
   TAU_L0_exit_event( func_name );
@@ -6066,9 +5511,7 @@ static void zeFabricVertexGetDeviceExpOnEnter(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFabricVertexGetDeviceExp" ;
   TAU_L0_enter_event( func_name );
@@ -6081,12 +5524,544 @@ static void zeFabricVertexGetDeviceExpOnExit(
     void** instance_user_data) 
 {
   ZeCollector* collector =
-    reinterpret_cast<ZeCollector*>(global_user_data);
-
+  reinterpret_cast<ZeCollector*>(global_user_data);
 
   const char* func_name = "zeFabricVertexGetDeviceExp" ;
   TAU_L0_exit_event( func_name );
 }
+
+static void zeCommandListAppendLaunchKernelWithArgumentsOnEnter(
+    ze_command_list_append_launch_kernel_with_arguments_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  //Inserted call
+  OnEnterCommandListAppendLaunchKernelWithArguments(params, global_user_data, instance_user_data);
+
+  const char* func_name = "zeCommandListAppendLaunchKernelWithArguments" ;
+  TAU_L0_enter_event( func_name );
+}
+
+static void zeCommandListAppendLaunchKernelWithArgumentsOnExit(
+    ze_command_list_append_launch_kernel_with_arguments_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+  std::vector<uint64_t> kids;
+  //Inserted call
+  OnExitCommandListAppendLaunchKernelWithArguments(params, result, global_user_data, instance_user_data, &kids);
+
+  const char* func_name = "zeCommandListAppendLaunchKernelWithArguments" ;
+  TAU_L0_exit_event( func_name );
+}
+
+
+static void zeCommandListAppendLaunchKernelWithParametersOnEnter(
+    ze_command_list_append_launch_kernel_with_parameters_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  //Inserted call
+  OnEnterCommandListAppendLaunchKernelWithParameters(params, global_user_data, instance_user_data);
+
+  const char* func_name = "zeCommandListAppendLaunchKernelWithParameters" ;
+  TAU_L0_enter_event( func_name );
+}
+
+
+static void zeCommandListAppendLaunchKernelWithParametersOnExit(
+    ze_command_list_append_launch_kernel_with_parameters_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+  std::vector<uint64_t> kids;
+  //Inserted call
+  OnExitCommandListAppendLaunchKernelWithParameters(params, result, global_user_data, instance_user_data, &kids);
+
+  const char* func_name = "zeCommandListAppendLaunchKernelWithParameters" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zeDeviceGetVectorWidthPropertiesExtOnEnter(
+    ze_device_get_vector_width_properties_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeDeviceGetVectorWidthPropertiesExt" ;
+  TAU_L0_enter_event( func_name );
+}
+
+static void zeDeviceGetVectorWidthPropertiesExtOnExit(
+    ze_device_get_vector_width_properties_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeDeviceGetVectorWidthPropertiesExt" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zeDeviceSynchronizeOnEnter(
+    ze_device_synchronize_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeDeviceSynchronize" ;
+  TAU_L0_enter_event( func_name );
+}
+
+static void zeDeviceSynchronizeOnExit(
+    ze_device_synchronize_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeDeviceSynchronize" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zeDriverGetDefaultContextOnEnter(
+    ze_driver_get_default_context_params_t* params,
+    ze_context_handle_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeDriverGetDefaultContext" ;
+  TAU_L0_enter_event( func_name );
+}
+
+static void zeDriverGetDefaultContextOnExit(
+    ze_driver_get_default_context_params_t* params,
+    ze_context_handle_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeDriverGetDefaultContext" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zeDriverRTASFormatCompatibilityCheckExtOnEnter(
+    ze_driver_rtas_format_compatibility_check_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeDriverRTASFormatCompatibilityCheckExt" ;
+  TAU_L0_enter_event( func_name );
+}
+
+
+static void zeDriverRTASFormatCompatibilityCheckExtOnExit(
+    ze_driver_rtas_format_compatibility_check_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeDriverRTASFormatCompatibilityCheckExt" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zeRTASBuilderBuildExtOnEnter(
+    ze_rtas_builder_build_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASBuilderBuildExt" ;
+  TAU_L0_enter_event( func_name );
+}
+
+static void zeRTASBuilderBuildExtOnExit(
+    ze_rtas_builder_build_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASBuilderBuildExt" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zeRTASBuilderCommandListAppendCopyExtOnEnter(
+    ze_rtas_builder_command_list_append_copy_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASBuilderCommandListAppendCopyExt" ;
+  TAU_L0_enter_event( func_name ); 
+}
+
+static void zeRTASBuilderCommandListAppendCopyExtOnExit(
+    ze_rtas_builder_command_list_append_copy_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASBuilderCommandListAppendCopyExt" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zeRTASBuilderCreateExtOnEnter(
+    ze_rtas_builder_create_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASBuilderCreateExt" ;
+  TAU_L0_enter_event( func_name ); 
+}
+
+static void zeRTASBuilderCreateExtOnExit(
+    ze_rtas_builder_create_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASBuilderCreateExt" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zeRTASBuilderDestroyExtOnEnter(
+    ze_rtas_builder_destroy_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASBuilderDestroyExt" ;
+  TAU_L0_enter_event( func_name ); 
+}
+
+static void zeRTASBuilderDestroyExtOnExit(
+    ze_rtas_builder_destroy_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASBuilderDestroyExt" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zeRTASBuilderGetBuildPropertiesExtOnEnter(
+    ze_rtas_builder_get_build_properties_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASBuilderGetBuildPropertiesExt" ;
+  TAU_L0_enter_event( func_name ); 
+}
+
+static void zeRTASBuilderGetBuildPropertiesExtOnExit(
+    ze_rtas_builder_get_build_properties_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASBuilderGetBuildPropertiesExt" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zeRTASParallelOperationCreateExtOnEnter(
+    ze_rtas_parallel_operation_create_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASParallelOperationCreateExt" ;
+  TAU_L0_enter_event( func_name ); 
+}
+
+static void zeRTASParallelOperationCreateExtOnExit(
+    ze_rtas_parallel_operation_create_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASParallelOperationCreateExt" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zeRTASParallelOperationDestroyExtOnEnter(
+    ze_rtas_parallel_operation_destroy_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASParallelOperationDestroyExt" ;
+  TAU_L0_enter_event( func_name ); 
+}
+
+static void zeRTASParallelOperationDestroyExtOnExit(
+    ze_rtas_parallel_operation_destroy_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASParallelOperationDestroyExt" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zeRTASParallelOperationGetPropertiesExtOnEnter(
+    ze_rtas_parallel_operation_get_properties_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASParallelOperationGetPropertiesExt" ;
+  TAU_L0_enter_event( func_name ); 
+}
+
+static void zeRTASParallelOperationGetPropertiesExtOnExit(
+    ze_rtas_parallel_operation_get_properties_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASParallelOperationGetPropertiesExt" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zeRTASParallelOperationJoinExtOnEnter(
+    ze_rtas_parallel_operation_join_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASParallelOperationJoinExt" ;
+  TAU_L0_enter_event( func_name ); 
+}
+
+static void zeRTASParallelOperationJoinExtOnExit(
+    ze_rtas_parallel_operation_join_ext_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zeRTASParallelOperationJoinExt" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zerGetDefaultContextOnEnter(
+    zer_get_default_context_params_t* params,
+    ze_context_handle_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zerGetDefaultContext" ;
+  TAU_L0_enter_event( func_name ); 
+}
+
+static void zerGetDefaultContextOnExit(
+    zer_get_default_context_params_t* params,
+    ze_context_handle_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zerGetDefaultContext" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zerGetLastErrorDescriptionOnEnter(
+    zer_get_last_error_description_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zerGetLastErrorDescription" ;
+  TAU_L0_enter_event( func_name ); 
+}
+
+static void zerGetLastErrorDescriptionOnExit(
+    zer_get_last_error_description_params_t* params,
+    ze_result_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zerGetLastErrorDescription" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zerTranslateDeviceHandleToIdentifierOnEnter(
+    zer_translate_device_handle_to_identifier_params_t* params,
+    uint32_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zerTranslateDeviceHandleToIdentifier" ;
+  TAU_L0_enter_event( func_name ); 
+}
+
+static void zerTranslateDeviceHandleToIdentifierOnExit(
+    zer_translate_device_handle_to_identifier_params_t* params,
+    uint32_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zerTranslateDeviceHandleToIdentifier" ;
+  TAU_L0_exit_event( func_name );
+}
+
+static void zerTranslateIdentifierToDeviceHandleOnEnter(
+    zer_translate_identifier_to_device_handle_params_t* params,
+    ze_device_handle_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zerTranslateIdentifierToDeviceHandle" ;
+  TAU_L0_enter_event( func_name ); 
+}
+
+static void zerTranslateIdentifierToDeviceHandleOnExit(
+    zer_translate_identifier_to_device_handle_params_t* params,
+    ze_device_handle_t result,
+    void* global_user_data,
+    void** instance_user_data)
+{
+  ZeCollector* collector =
+  reinterpret_cast<ZeCollector*>(global_user_data);
+
+  const char* func_name = "zerTranslateIdentifierToDeviceHandle" ;
+  TAU_L0_exit_event( func_name );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void EnableTracing(zel_tracer_handle_t tracer) {
   ze_result_t status = ZE_RESULT_SUCCESS;
@@ -7242,6 +7217,123 @@ void EnableTracing(zel_tracer_handle_t tracer) {
       status = ZeLoader::get().zelTracerCommandListImmediateAppendCommandListsExpRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeCommandListImmediateAppendCommandListsExpOnExit);
       PTI_ASSERT(status == ZE_RESULT_SUCCESS);
     }
+    if (ZeLoader::get().zelTracerCommandListAppendLaunchKernelWithArgumentsRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerCommandListAppendLaunchKernelWithArgumentsRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeCommandListAppendLaunchKernelWithArgumentsOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerCommandListAppendLaunchKernelWithArgumentsRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeCommandListAppendLaunchKernelWithArgumentsOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+        if (ZeLoader::get().zelTracerCommandListAppendLaunchKernelWithParametersRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerCommandListAppendLaunchKernelWithParametersRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeCommandListAppendLaunchKernelWithParametersOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerCommandListAppendLaunchKernelWithParametersRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeCommandListAppendLaunchKernelWithParametersOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerDeviceGetVectorWidthPropertiesExtRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerDeviceGetVectorWidthPropertiesExtRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeDeviceGetVectorWidthPropertiesExtOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerDeviceGetVectorWidthPropertiesExtRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeDeviceGetVectorWidthPropertiesExtOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerDeviceSynchronizeRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerDeviceSynchronizeRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeDeviceSynchronizeOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerDeviceSynchronizeRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeDeviceSynchronizeOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerDriverGetDefaultContextRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerDriverGetDefaultContextRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeDriverGetDefaultContextOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerDriverGetDefaultContextRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeDriverGetDefaultContextOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    } 
+    if (ZeLoader::get().zelTracerDriverRTASFormatCompatibilityCheckExtRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerDriverRTASFormatCompatibilityCheckExtRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeDriverRTASFormatCompatibilityCheckExtOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerDriverRTASFormatCompatibilityCheckExtRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeDriverRTASFormatCompatibilityCheckExtOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerRTASBuilderBuildExtRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerRTASBuilderBuildExtRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeRTASBuilderBuildExtOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerRTASBuilderBuildExtRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeRTASBuilderBuildExtOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerRTASBuilderCommandListAppendCopyExtRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerRTASBuilderCommandListAppendCopyExtRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeRTASBuilderCommandListAppendCopyExtOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerRTASBuilderCommandListAppendCopyExtRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeRTASBuilderCommandListAppendCopyExtOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerRTASBuilderCreateExtRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerRTASBuilderCreateExtRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeRTASBuilderCreateExtOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerRTASBuilderCreateExtRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeRTASBuilderCreateExtOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerRTASBuilderDestroyExtRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerRTASBuilderDestroyExtRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeRTASBuilderDestroyExtOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerRTASBuilderDestroyExtRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeRTASBuilderDestroyExtOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerRTASBuilderGetBuildPropertiesExtRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerRTASBuilderGetBuildPropertiesExtRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeRTASBuilderGetBuildPropertiesExtOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerRTASBuilderGetBuildPropertiesExtRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeRTASBuilderGetBuildPropertiesExtOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerRTASParallelOperationCreateExtRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerRTASParallelOperationCreateExtRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeRTASParallelOperationCreateExtOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerRTASParallelOperationCreateExtRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeRTASParallelOperationCreateExtOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerRTASParallelOperationDestroyExtRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerRTASParallelOperationDestroyExtRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeRTASParallelOperationDestroyExtOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerRTASParallelOperationDestroyExtRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeRTASParallelOperationDestroyExtOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerRTASParallelOperationGetPropertiesExtRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerRTASParallelOperationGetPropertiesExtRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeRTASParallelOperationGetPropertiesExtOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerRTASParallelOperationGetPropertiesExtRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeRTASParallelOperationGetPropertiesExtOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }  
+    if (ZeLoader::get().zelTracerRTASParallelOperationJoinExtRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerRTASParallelOperationJoinExtRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zeRTASParallelOperationJoinExtOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerRTASParallelOperationJoinExtRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zeRTASParallelOperationJoinExtOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerGetDefaultContextRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerGetDefaultContextRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zerGetDefaultContextOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerGetDefaultContextRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zerGetDefaultContextOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerGetLastErrorDescriptionRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerGetLastErrorDescriptionRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zerGetLastErrorDescriptionOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerGetLastErrorDescriptionRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zerGetLastErrorDescriptionOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerTranslateDeviceHandleToIdentifierRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerTranslateDeviceHandleToIdentifierRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zerTranslateDeviceHandleToIdentifierOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerTranslateDeviceHandleToIdentifierRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zerTranslateDeviceHandleToIdentifierOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+    if (ZeLoader::get().zelTracerTranslateIdentifierToDeviceHandleRegisterCallback_ != nullptr) {
+      status = ZeLoader::get().zelTracerTranslateIdentifierToDeviceHandleRegisterCallback_(tracer, ZEL_REGISTER_PROLOGUE, zerTranslateIdentifierToDeviceHandleOnEnter);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      status = ZeLoader::get().zelTracerTranslateIdentifierToDeviceHandleRegisterCallback_(tracer, ZEL_REGISTER_EPILOGUE, zerTranslateIdentifierToDeviceHandleOnExit);
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+    }
+
+
+
 
   status = ZE_FUNC(zelTracerSetEnabled)(tracer, true);
   PTI_ASSERT(status == ZE_RESULT_SUCCESS);

@@ -241,6 +241,16 @@ public:
   decltype(&zeVirtualMemGetAccessAttribute) zeVirtualMemGetAccessAttribute_ = nullptr;
   decltype(&zelTracerInitDriversRegisterCallback) zelTracerInitDriversRegisterCallback_ = nullptr;
   decltype(&zeInitDrivers) zeInitDrivers_ = nullptr;
+  decltype(&zelTracerRTASBuilderCreateExtRegisterCallback) zelTracerRTASBuilderCreateExtRegisterCallback_ = nullptr;
+  decltype(&zeRTASBuilderCreateExt) zeRTASBuilderCreateExt_ = nullptr;
+  decltype(&zelTracerRTASBuilderGetBuildPropertiesExtRegisterCallback) zelTracerRTASBuilderGetBuildPropertiesExtRegisterCallback_ = nullptr;
+  decltype(&zeRTASBuilderGetBuildPropertiesExt) zeRTASBuilderGetBuildPropertiesExt_ = nullptr;
+  decltype(&zelTracerRTASBuilderBuildExtRegisterCallback) zelTracerRTASBuilderBuildExtRegisterCallback_ = nullptr;
+  decltype(&zeRTASBuilderBuildExt) zeRTASBuilderBuildExt_ = nullptr;
+  decltype(&zelTracerRTASBuilderCommandListAppendCopyExtRegisterCallback) zelTracerRTASBuilderCommandListAppendCopyExtRegisterCallback_ = nullptr;
+  decltype(&zeRTASBuilderCommandListAppendCopyExt) zeRTASBuilderCommandListAppendCopyExt_ = nullptr;
+  decltype(&zelTracerRTASBuilderDestroyExtRegisterCallback) zelTracerRTASBuilderDestroyExtRegisterCallback_ = nullptr;
+  decltype(&zeRTASBuilderDestroyExt) zeRTASBuilderDestroyExt_ = nullptr;
   decltype(&zelTracerRTASBuilderCreateExpRegisterCallback) zelTracerRTASBuilderCreateExpRegisterCallback_ = nullptr;
   decltype(&zeRTASBuilderCreateExp) zeRTASBuilderCreateExp_ = nullptr;
   decltype(&zelTracerRTASBuilderGetBuildPropertiesExpRegisterCallback) zelTracerRTASBuilderGetBuildPropertiesExpRegisterCallback_ = nullptr;
@@ -249,6 +259,14 @@ public:
   decltype(&zeRTASBuilderBuildExp) zeRTASBuilderBuildExp_ = nullptr;
   decltype(&zelTracerRTASBuilderDestroyExpRegisterCallback) zelTracerRTASBuilderDestroyExpRegisterCallback_ = nullptr;
   decltype(&zeRTASBuilderDestroyExp) zeRTASBuilderDestroyExp_ = nullptr;
+  decltype(&zelTracerRTASParallelOperationCreateExtRegisterCallback) zelTracerRTASParallelOperationCreateExtRegisterCallback_ = nullptr;
+  decltype(&zeRTASParallelOperationCreateExt) zeRTASParallelOperationCreateExt_ = nullptr;
+  decltype(&zelTracerRTASParallelOperationGetPropertiesExtRegisterCallback) zelTracerRTASParallelOperationGetPropertiesExtRegisterCallback_ = nullptr;
+  decltype(&zeRTASParallelOperationGetPropertiesExt) zeRTASParallelOperationGetPropertiesExt_ = nullptr;
+  decltype(&zelTracerRTASParallelOperationJoinExtRegisterCallback) zelTracerRTASParallelOperationJoinExtRegisterCallback_ = nullptr;
+  decltype(&zeRTASParallelOperationJoinExt) zeRTASParallelOperationJoinExt_ = nullptr;
+  decltype(&zelTracerRTASParallelOperationDestroyExtRegisterCallback) zelTracerRTASParallelOperationDestroyExtRegisterCallback_ = nullptr;
+  decltype(&zeRTASParallelOperationDestroyExt) zeRTASParallelOperationDestroyExt_ = nullptr;
   decltype(&zelTracerRTASParallelOperationCreateExpRegisterCallback) zelTracerRTASParallelOperationCreateExpRegisterCallback_ = nullptr;
   decltype(&zeRTASParallelOperationCreateExp) zeRTASParallelOperationCreateExp_ = nullptr;
   decltype(&zelTracerRTASParallelOperationGetPropertiesExpRegisterCallback) zelTracerRTASParallelOperationGetPropertiesExpRegisterCallback_ = nullptr;
@@ -259,6 +277,10 @@ public:
   decltype(&zeRTASParallelOperationDestroyExp) zeRTASParallelOperationDestroyExp_ = nullptr;
   decltype(&zelTracerDriverGetExtensionFunctionAddressRegisterCallback) zelTracerDriverGetExtensionFunctionAddressRegisterCallback_ = nullptr;
   decltype(&zeDriverGetExtensionFunctionAddress) zeDriverGetExtensionFunctionAddress_ = nullptr;
+  decltype(&zelTracerDriverRTASFormatCompatibilityCheckExtRegisterCallback) zelTracerDriverRTASFormatCompatibilityCheckExtRegisterCallback_ = nullptr;
+  decltype(&zeDriverRTASFormatCompatibilityCheckExt) zeDriverRTASFormatCompatibilityCheckExt_ = nullptr;
+  decltype(&zelTracerDriverGetDefaultContextRegisterCallback) zelTracerDriverGetDefaultContextRegisterCallback_ = nullptr;
+  decltype(&zeDriverGetDefaultContext) zeDriverGetDefaultContext_ = nullptr;
   decltype(&zelTracerDriverGetLastErrorDescriptionRegisterCallback) zelTracerDriverGetLastErrorDescriptionRegisterCallback_ = nullptr;
   decltype(&zeDriverGetLastErrorDescription) zeDriverGetLastErrorDescription_ = nullptr;
   decltype(&zelTracerDriverRTASFormatCompatibilityCheckExpRegisterCallback) zelTracerDriverRTASFormatCompatibilityCheckExpRegisterCallback_ = nullptr;
@@ -269,6 +291,10 @@ public:
   decltype(&zeDeviceImportExternalSemaphoreExt) zeDeviceImportExternalSemaphoreExt_ = nullptr;
   decltype(&zelTracerDeviceReleaseExternalSemaphoreExtRegisterCallback) zelTracerDeviceReleaseExternalSemaphoreExtRegisterCallback_ = nullptr;
   decltype(&zeDeviceReleaseExternalSemaphoreExt) zeDeviceReleaseExternalSemaphoreExt_ = nullptr;
+  decltype(&zelTracerDeviceGetVectorWidthPropertiesExtRegisterCallback) zelTracerDeviceGetVectorWidthPropertiesExtRegisterCallback_ = nullptr;
+  decltype(&zeDeviceGetVectorWidthPropertiesExt) zeDeviceGetVectorWidthPropertiesExt_ = nullptr;
+  decltype(&zelTracerDeviceSynchronizeRegisterCallback) zelTracerDeviceSynchronizeRegisterCallback_ = nullptr;
+  decltype(&zeDeviceSynchronize) zeDeviceSynchronize_ = nullptr;
   decltype(&zelTracerDeviceReserveCacheExtRegisterCallback) zelTracerDeviceReserveCacheExtRegisterCallback_ = nullptr;
   decltype(&zeDeviceReserveCacheExt) zeDeviceReserveCacheExt_ = nullptr;
   decltype(&zelTracerDeviceSetCacheAdviceExtRegisterCallback) zelTracerDeviceSetCacheAdviceExtRegisterCallback_ = nullptr;
@@ -293,6 +319,10 @@ public:
   decltype(&zeCommandListAppendSignalExternalSemaphoreExt) zeCommandListAppendSignalExternalSemaphoreExt_ = nullptr;
   decltype(&zelTracerCommandListAppendWaitExternalSemaphoreExtRegisterCallback) zelTracerCommandListAppendWaitExternalSemaphoreExtRegisterCallback_ = nullptr;
   decltype(&zeCommandListAppendWaitExternalSemaphoreExt) zeCommandListAppendWaitExternalSemaphoreExt_ = nullptr;
+  decltype(&zelTracerCommandListAppendLaunchKernelWithParametersRegisterCallback) zelTracerCommandListAppendLaunchKernelWithParametersRegisterCallback_ = nullptr;
+  decltype(&zeCommandListAppendLaunchKernelWithParameters) zeCommandListAppendLaunchKernelWithParameters_ = nullptr;
+  decltype(&zelTracerCommandListAppendLaunchKernelWithArgumentsRegisterCallback) zelTracerCommandListAppendLaunchKernelWithArgumentsRegisterCallback_ = nullptr;
+  decltype(&zeCommandListAppendLaunchKernelWithArguments) zeCommandListAppendLaunchKernelWithArguments_ = nullptr;
   decltype(&zelTracerCommandListAppendImageCopyToMemoryExtRegisterCallback) zelTracerCommandListAppendImageCopyToMemoryExtRegisterCallback_ = nullptr;
   decltype(&zeCommandListAppendImageCopyToMemoryExt) zeCommandListAppendImageCopyToMemoryExt_ = nullptr;
   decltype(&zelTracerCommandListAppendImageCopyFromMemoryExtRegisterCallback) zelTracerCommandListAppendImageCopyFromMemoryExtRegisterCallback_ = nullptr;
@@ -351,6 +381,8 @@ public:
   decltype(&zeKernelSetGlobalOffsetExp) zeKernelSetGlobalOffsetExp_ = nullptr;
   decltype(&zelTracerKernelGetBinaryExpRegisterCallback) zelTracerKernelGetBinaryExpRegisterCallback_ = nullptr;
   decltype(&zeKernelGetBinaryExp) zeKernelGetBinaryExp_ = nullptr;
+  decltype(&zelTracerKernelGetAllocationPropertiesExpRegisterCallback) zelTracerKernelGetAllocationPropertiesExpRegisterCallback_ = nullptr;
+  decltype(&zeKernelGetAllocationPropertiesExp) zeKernelGetAllocationPropertiesExp_ = nullptr;
   decltype(&zelTracerKernelSchedulingHintExpRegisterCallback) zelTracerKernelSchedulingHintExpRegisterCallback_ = nullptr;
   decltype(&zeKernelSchedulingHintExp) zeKernelSchedulingHintExp_ = nullptr;
   decltype(&zelTracerMemFreeExtRegisterCallback) zelTracerMemFreeExtRegisterCallback_ = nullptr;
@@ -383,6 +415,14 @@ public:
   decltype(&zeFabricVertexGetPropertiesExp) zeFabricVertexGetPropertiesExp_ = nullptr;
   decltype(&zelTracerFabricVertexGetDeviceExpRegisterCallback) zelTracerFabricVertexGetDeviceExpRegisterCallback_ = nullptr;
   decltype(&zeFabricVertexGetDeviceExp) zeFabricVertexGetDeviceExp_ = nullptr;
+  decltype(&zelTracerGetLastErrorDescriptionRegisterCallback) zelTracerGetLastErrorDescriptionRegisterCallback_ = nullptr;
+  decltype(&zerGetLastErrorDescription) zerGetLastErrorDescription_ = nullptr;
+  decltype(&zelTracerTranslateDeviceHandleToIdentifierRegisterCallback) zelTracerTranslateDeviceHandleToIdentifierRegisterCallback_ = nullptr;
+  decltype(&zerTranslateDeviceHandleToIdentifier) zerTranslateDeviceHandleToIdentifier_ = nullptr;
+  decltype(&zelTracerTranslateIdentifierToDeviceHandleRegisterCallback) zelTracerTranslateIdentifierToDeviceHandleRegisterCallback_ = nullptr;
+  decltype(&zerTranslateIdentifierToDeviceHandle) zerTranslateIdentifierToDeviceHandle_ = nullptr;
+  decltype(&zelTracerGetDefaultContextRegisterCallback) zelTracerGetDefaultContextRegisterCallback_ = nullptr;
+  decltype(&zerGetDefaultContext) zerGetDefaultContext_ = nullptr;
   decltype(&zetModuleGetDebugInfo) zetModuleGetDebugInfo_ = nullptr;
   decltype(&zetDeviceGetDebugProperties) zetDeviceGetDebugProperties_ = nullptr;
   decltype(&zetDebugAttach) zetDebugAttach_ = nullptr;
@@ -432,6 +472,9 @@ public:
   decltype(&zetMetricDecoderDestroyExp) zetMetricDecoderDestroyExp_ = nullptr;
   decltype(&zetMetricDecoderGetDecodableMetricsExp) zetMetricDecoderGetDecodableMetricsExp_ = nullptr;
   decltype(&zetMetricTracerDecodeExp) zetMetricTracerDecodeExp_ = nullptr;
+  decltype(&zetCommandListAppendMarkerExp) zetCommandListAppendMarkerExp_ = nullptr;
+  decltype(&zetDeviceEnableMetricsExp) zetDeviceEnableMetricsExp_ = nullptr;
+  decltype(&zetDeviceDisableMetricsExp) zetDeviceDisableMetricsExp_ = nullptr;
   decltype(&zetMetricGroupCalculateMultipleMetricValuesExp) zetMetricGroupCalculateMultipleMetricValuesExp_ = nullptr;
   decltype(&zetMetricGroupGetGlobalTimestampsExp) zetMetricGroupGetGlobalTimestampsExp_ = nullptr;
   decltype(&zetMetricGroupGetExportDataExp) zetMetricGroupGetExportDataExp_ = nullptr;
@@ -603,6 +646,7 @@ public:
   decltype(&zelTracerSetPrologues) zelTracerSetPrologues_ = nullptr;
   decltype(&zelTracerSetEpilogues) zelTracerSetEpilogues_ = nullptr;
   decltype(&zelTracerSetEnabled) zelTracerSetEnabled_ = nullptr;
+  
 private:
   void init() {
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerInitRegisterCallback);
@@ -847,6 +891,16 @@ private:
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeVirtualMemGetAccessAttribute);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerInitDriversRegisterCallback);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeInitDrivers);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerRTASBuilderCreateExtRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeRTASBuilderCreateExt);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerRTASBuilderGetBuildPropertiesExtRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeRTASBuilderGetBuildPropertiesExt);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerRTASBuilderBuildExtRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeRTASBuilderBuildExt);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerRTASBuilderCommandListAppendCopyExtRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeRTASBuilderCommandListAppendCopyExt);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerRTASBuilderDestroyExtRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeRTASBuilderDestroyExt);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerRTASBuilderCreateExpRegisterCallback);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeRTASBuilderCreateExp);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerRTASBuilderGetBuildPropertiesExpRegisterCallback);
@@ -855,6 +909,14 @@ private:
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeRTASBuilderBuildExp);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerRTASBuilderDestroyExpRegisterCallback);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeRTASBuilderDestroyExp);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerRTASParallelOperationCreateExtRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeRTASParallelOperationCreateExt);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerRTASParallelOperationGetPropertiesExtRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeRTASParallelOperationGetPropertiesExt);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerRTASParallelOperationJoinExtRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeRTASParallelOperationJoinExt);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerRTASParallelOperationDestroyExtRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeRTASParallelOperationDestroyExt);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerRTASParallelOperationCreateExpRegisterCallback);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeRTASParallelOperationCreateExp);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerRTASParallelOperationGetPropertiesExpRegisterCallback);
@@ -865,6 +927,10 @@ private:
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeRTASParallelOperationDestroyExp);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerDriverGetExtensionFunctionAddressRegisterCallback);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeDriverGetExtensionFunctionAddress);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerDriverRTASFormatCompatibilityCheckExtRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeDriverRTASFormatCompatibilityCheckExt);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerDriverGetDefaultContextRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeDriverGetDefaultContext);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerDriverGetLastErrorDescriptionRegisterCallback);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeDriverGetLastErrorDescription);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerDriverRTASFormatCompatibilityCheckExpRegisterCallback);
@@ -875,6 +941,10 @@ private:
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeDeviceImportExternalSemaphoreExt);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerDeviceReleaseExternalSemaphoreExtRegisterCallback);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeDeviceReleaseExternalSemaphoreExt);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerDeviceGetVectorWidthPropertiesExtRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeDeviceGetVectorWidthPropertiesExt);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerDeviceSynchronizeRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeDeviceSynchronize);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerDeviceReserveCacheExtRegisterCallback);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeDeviceReserveCacheExt);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerDeviceSetCacheAdviceExtRegisterCallback);
@@ -899,6 +969,10 @@ private:
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeCommandListAppendSignalExternalSemaphoreExt);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerCommandListAppendWaitExternalSemaphoreExtRegisterCallback);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeCommandListAppendWaitExternalSemaphoreExt);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerCommandListAppendLaunchKernelWithParametersRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeCommandListAppendLaunchKernelWithParameters);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerCommandListAppendLaunchKernelWithArgumentsRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeCommandListAppendLaunchKernelWithArguments);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerCommandListAppendImageCopyToMemoryExtRegisterCallback);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeCommandListAppendImageCopyToMemoryExt);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerCommandListAppendImageCopyFromMemoryExtRegisterCallback);
@@ -957,6 +1031,8 @@ private:
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeKernelSetGlobalOffsetExp);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerKernelGetBinaryExpRegisterCallback);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeKernelGetBinaryExp);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerKernelGetAllocationPropertiesExpRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zeKernelGetAllocationPropertiesExp);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerKernelSchedulingHintExpRegisterCallback);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeKernelSchedulingHintExp);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerMemFreeExtRegisterCallback);
@@ -989,6 +1065,14 @@ private:
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeFabricVertexGetPropertiesExp);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerFabricVertexGetDeviceExpRegisterCallback);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zeFabricVertexGetDeviceExp);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerGetLastErrorDescriptionRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zerGetLastErrorDescription);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerTranslateDeviceHandleToIdentifierRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zerTranslateDeviceHandleToIdentifier);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerTranslateIdentifierToDeviceHandleRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zerTranslateIdentifierToDeviceHandle);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerGetDefaultContextRegisterCallback);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zerGetDefaultContext);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zetModuleGetDebugInfo);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zetDeviceGetDebugProperties);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zetDebugAttach);
@@ -1038,6 +1122,9 @@ private:
   LEVEL_ZERO_LOADER_GET_SYMBOL(zetMetricDecoderDestroyExp);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zetMetricDecoderGetDecodableMetricsExp);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zetMetricTracerDecodeExp);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zetCommandListAppendMarkerExp);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zetDeviceEnableMetricsExp);
+  LEVEL_ZERO_LOADER_GET_SYMBOL(zetDeviceDisableMetricsExp);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zetMetricGroupCalculateMultipleMetricValuesExp);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zetMetricGroupGetGlobalTimestampsExp);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zetMetricGroupGetExportDataExp);
@@ -1210,3 +1297,4 @@ private:
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerSetEpilogues);
   LEVEL_ZERO_LOADER_GET_SYMBOL(zelTracerSetEnabled);
 }
+
