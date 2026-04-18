@@ -188,6 +188,7 @@ int tau_bgq_init(void) {
  * object library (-optShared). */
 
 std::mutex _map_mutex;
+static std::mutex _metadata_vector_mutex;
 // These come from Tau_metadata_register calls
 MetaDataRepo &Tau_metadata_getMetaData(int tid) {
 
@@ -196,12 +197,11 @@ MetaDataRepo &Tau_metadata_getMetaData(int tid) {
  * instability if the application isn't linked with the TAU shared
  * object library (-optShared). */
   static vector<MetaDataRepo*> metadata;
-  
-  while(metadata.size()<=tid){
-        RtsLayer::LockDB();
-		metadata.push_back(new MetaDataRepo);
-        RtsLayer::UnLockDB();
-	}
+
+  std::lock_guard<std::mutex> guard(_metadata_vector_mutex);
+  while (metadata.size() <= (size_t)tid) {
+    metadata.push_back(new MetaDataRepo);
+  }
   return *metadata[tid];
 }
 

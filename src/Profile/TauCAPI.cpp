@@ -571,7 +571,9 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
     //A deep copy is necessary here to keep the profiler pointers up to date
     Profiler *newStack = (Profiler *) calloc(newDepth, sizeof(Profiler));
-    memcpy(newStack, getTauThreadFlag(tid).Tau_global_stack, oldDepth*sizeof(Profiler));
+    if (oldDepth > 0) {
+      memcpy(newStack, getTauThreadFlag(tid).Tau_global_stack, oldDepth*sizeof(Profiler));
+    }
     TAU_VERBOSE("Growing stack: depth=%d, size=%ld\n", newDepth, newDepth*sizeof(Profiler));
 
     int tmpDepth=oldDepth;
