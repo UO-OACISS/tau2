@@ -27,7 +27,7 @@
         #endif
     #endif
 #endif
-
+//#define TAUOMPT_DEBUG
 #if defined (TAU_USE_OMPT_5_0)
 
 #include <omp-tools.h>
@@ -251,10 +251,10 @@ extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * re
 static void print_record_ompt(ompt_record_ompt_t *rec) {
     if (rec == NULL) return;
 
-    /*
+    #ifdef TAUOMPT_DEBUG
     printf("rec=%p type=%d time=%lu thread_id=%lu target_id=%lu\n",
             rec, rec->type, rec->time, rec->thread_id, rec->target_id);
-            */
+    #endif
     /* Save some data from the target region, because we don't have it when we
        process the target submit activity. */
     static int target_device_num = 0;
@@ -276,11 +276,11 @@ static void print_record_ompt(ompt_record_ompt_t *rec) {
         case ompt_callback_target_emi: {
             ompt_record_target_t target_rec = rec->record.target;
             make_timer = false;
-            /*
+            #ifdef TAUOMPT_DEBUG
             printf("\tRecord Target: kind=%d endpoint=%d device=%d task_id=%lu target_id=%lu codeptr=%p\n",
                     target_rec.kind, target_rec.endpoint, target_rec.device_num,
                     target_rec.task_id, target_rec.target_id, target_rec.codeptr_ra);
-                    */
+            #endif
             //printf("\tGPU Device: %d\n", target_rec.device_num);
             if (target_rec.endpoint == ompt_scope_begin) {
                 target_device_num = target_rec.device_num;
@@ -309,7 +309,7 @@ static void print_record_ompt(ompt_record_ompt_t *rec) {
         case ompt_callback_target_data_op:
         case ompt_callback_target_data_op_emi: {
              ompt_record_target_data_op_t target_data_op_rec = rec->record.target_data_op;
-             /*
+             #ifdef TAUOMPT_DEBUG
              printf("\t  Record DataOp: host_op_id=%lu optype=%d src_addr=%p src_device=%d "
                      "dest_addr=%p dest_device=%d bytes=%lu end_time=%lu duration=%lu ns codeptr=%p\n",
                      target_data_op_rec.host_op_id, target_data_op_rec.optype,
@@ -318,7 +318,7 @@ static void print_record_ompt(ompt_record_ompt_t *rec) {
                      target_data_op_rec.bytes, target_data_op_rec.end_time,
                      target_data_op_rec.end_time - rec->time,
                      target_data_op_rec.codeptr_ra);
-                     */
+            #endif
             void * tmp_codeptr_ra;
             if (codeptr_ra != nullptr) {
                 tmp_codeptr_ra = codeptr_ra;
@@ -399,13 +399,13 @@ static void print_record_ompt(ompt_record_ompt_t *rec) {
         case ompt_callback_target_submit:
         case ompt_callback_target_submit_emi: {
             ompt_record_target_kernel_t target_kernel_rec = rec->record.target_kernel;
-            /*
+            #ifdef TAUOMPT_DEBUG
             printf("\t  Record Submit: host_op_id=%lu requested_num_teams=%u granted_num_teams=%u "
                     "end_time=%lu duration=%lu ns\n",
                     target_kernel_rec.host_op_id, target_kernel_rec.requested_num_teams,
                     target_kernel_rec.granted_num_teams, target_kernel_rec.end_time,
                     target_kernel_rec.end_time - rec->time);
-                    */
+            #endif
 
             std::stringstream ss;
             ss << "GPU: OpenMP Target Submit " << resolved_address;
@@ -431,9 +431,9 @@ static void print_record_ompt(ompt_record_ompt_t *rec) {
 // free is used for corresponding malloc
 static void delete_buffer_ompt(ompt_buffer_t *buffer) {
   free(buffer);
-  /*
+  #ifdef TAUOMPT_DEBUG
   printf("Deallocated %p\n", buffer);
-  */
+  #endif  
 }
 
 // OMPT callbacks
@@ -448,10 +448,10 @@ static void on_ompt_callback_buffer_request (
   TauInternalFunctionGuard protects_this_function;
   *bytes = OMPT_BUFFER_REQUEST_SIZE;
   *buffer = malloc(*bytes);
-  /*
-    printf("%s\n", __func__);
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
   printf("Allocated %lu bytes at %p in buffer request callback\n", *bytes, *buffer);
-  */
+  #endif
 }
 
 // This function is called by an OpenMP runtime helper thread for
@@ -467,8 +467,9 @@ static void on_ompt_callback_buffer_complete (
   int buffer_owned
 ) {
   TauInternalFunctionGuard protects_this_function;
-
-    //printf("%s\n", __func__);
+    #ifdef TAUOMPT_DEBUG
+    printf("%s\n", __func__);
+    #endif
     //There are some issues with the flush, AMD is aware. 
     // INTEL and NVHPC has no trace at this moment
     //TAU_START("OMPT Activity handler");
@@ -491,7 +492,9 @@ static void on_ompt_callback_buffer_complete (
 
 // Utility routine to enable the desired tracing modes
 ompt_set_result_t Tau_ompt_set_trace(ompt_device_t *device) {
-    //printf("%s\n", __func__);
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   if (!ompt_set_trace_ompt) return ompt_set_error;
 
   ompt_set_trace_ompt(device, 1, ompt_callback_target);
@@ -506,7 +509,9 @@ ompt_set_result_t Tau_ompt_set_trace(ompt_device_t *device) {
 }
 
 int Tau_ompt_start_trace(ompt_device_t *device) {
-    //printf("%s\n", __func__);
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   if (!ompt_start_trace) return ompt_set_error;
   tau_ompt_tracing = true;
   return ompt_start_trace(device, &on_ompt_callback_buffer_request,
@@ -516,7 +521,9 @@ int Tau_ompt_start_trace(ompt_device_t *device) {
 #endif // TAU_OMPT_USE_TARGET_OFFLOAD
 
 int Tau_ompt_flush_trace(ompt_device_t *device) {
-    //printf("%s\n", __func__);
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   if (!ompt_flush_trace) return 0;
   if (!tau_ompt_tracing) return 0;
   return ompt_flush_trace(device);
@@ -535,7 +542,9 @@ int Tau_ompt_flush_trace() {
 }
 
 int Tau_ompt_stop_trace(ompt_device_t *device) {
-    //printf("%s\n", __func__);
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   tau_ompt_tracing = false;
   if (!ompt_stop_trace) return 0;
   return ompt_stop_trace(device);
@@ -576,6 +585,9 @@ on_ompt_callback_parallel_begin(
   int flags,
   const void *codeptr_ra)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_parallel_begin] && Tau_init_check_initialized()) {
     char timerName[10240];
@@ -637,6 +649,9 @@ on_ompt_callback_parallel_end(
   int flags,
   const void *codeptr_ra)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_parallel_end] && Tau_init_check_initialized()) {
     static int once = 1;
@@ -674,6 +689,9 @@ on_ompt_callback_task_create(
     int has_dependences,
     const void *codeptr_ra)               /* pointer to outlined function */
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_task_create] && Tau_init_check_initialized()) {
     char buffer[2048];
@@ -735,6 +753,9 @@ on_ompt_callback_task_schedule(
     ompt_task_status_t prior_task_status,
     ompt_data_t *next_task_data)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
     TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_task_schedule] && Tau_init_check_initialized()) {
     if(prior_task_data->ptr) {
@@ -773,6 +794,9 @@ on_ompt_callback_master(
   ompt_data_t *task_data,
   const void *codeptr_ra)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   TauInternalFunctionGuard protects_this_function;
   /* Per-thread timer stack for this region type.
      this is necessary because we can't rely on the runtime
@@ -854,6 +878,9 @@ on_ompt_callback_work(
   uint64_t count,
   const void *codeptr_ra)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   TauInternalFunctionGuard protects_this_function;
   /* Per-thread timer stack for this region type.
      this is necessary because we can't rely on the runtime
@@ -949,6 +976,9 @@ on_ompt_callback_thread_begin(
   ompt_thread_t thread_type,
   ompt_data_t *thread_data)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   TauInternalFunctionGuard protects_this_function;
   if (internal_thread) { return; }
   if(Tau_ompt_callbacks_enabled[ompt_callback_thread_begin] && Tau_init_check_initialized()) {
@@ -980,6 +1010,9 @@ static void
 on_ompt_callback_thread_end(
   ompt_data_t *thread_data)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   TauInternalFunctionGuard protects_this_function;
   if (internal_thread) { return; }
   // Prevent against callbacks after finalization
@@ -1012,6 +1045,9 @@ on_ompt_callback_implicit_task(
     unsigned int team_size,
     unsigned int thread_num)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   TauInternalFunctionGuard protects_this_function;
   /* Per-thread timer stack for this region type.
      this is necessary because we can't rely on the runtime
@@ -1077,6 +1113,9 @@ on_ompt_callback_sync_region(
     ompt_data_t *task_data,
     const void *codeptr_ra)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   TauInternalFunctionGuard protects_this_function;
   /* Per-thread timer stack for this region type.
      this is necessary because we can't rely on the runtime
@@ -1205,6 +1244,9 @@ on_ompt_callback_mutex_acquire(
     ompt_wait_id_t wait_id,
     const void *codeptr_ra)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_mutex_acquire] && Tau_init_check_initialized()) {
     char timerName[10240];
@@ -1272,6 +1314,9 @@ on_ompt_callback_mutex_acquired(
     ompt_wait_id_t wait_id,
     const void *codeptr_ra)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_mutex_acquired] && Tau_init_check_initialized()) {
     char acquiredtimerName[10240];
@@ -1339,6 +1384,9 @@ on_ompt_callback_mutex_released(
     ompt_wait_id_t wait_id,
     const void *codeptr_ra)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_mutex_released] && Tau_init_check_initialized()) {
     if(codeptr_ra) {
@@ -1367,10 +1415,10 @@ static void on_ompt_callback_device_initialize (
   const char *documentation
  ) {
     TauInternalFunctionGuard protects_this_function;
- /*
+  #ifdef TAUOMPT_DEBUG
   printf("Init: device_num=%d type=%s device=%p lookup=%p doc=%p\n",
 	 device_num, type, device, lookup, documentation);
-     */
+  #endif
 
   if (TauEnv_get_ompt_disable_offload()) {
     TAU_VERBOSE("TAU: TAU_OMPT_DISABLE_OFFLOAD set, skipping target-offload trace setup on device %d\n", device_num);
@@ -1378,9 +1426,20 @@ static void on_ompt_callback_device_initialize (
   }
 
   if (!lookup) {
-    printf("Trace collection disabled on device %d\n", device_num);
+    printf("OMPT Trace collection disabled on device %d\n", device_num);
     return;
   }
+  //Until recently, INTEL did not implement this part, but now it fails.
+  // There is either an issue with the callbacks or the way we detect it using the lookup
+  // But the callbacks work with ROCm. Need to look into this
+  #if (defined(__INTEL_COMPILER) || defined (__INTEL_LLVM_COMPILER))
+  //#warning "Intel compiler"
+  //#ifdef TAUOMPT_DEBUG
+  //printf("!! Disabled due to Intel Compiler\n");
+  //#endif
+  printf("OMPT Trace collection disabled on device %d\n", device_num);
+  return;
+  #endif
   getDeviceMap().insert(std::pair<int,ompt_device_t*>(device_num, device));
 
 #ifdef TAU_OMPT_USE_TARGET_OFFLOAD
@@ -1415,7 +1474,9 @@ static void on_ompt_callback_device_initialize (
 // Called at device finalize
 static void on_ompt_callback_device_finalize ( int device_num) {
     TauInternalFunctionGuard protects_this_function;
-  //printf("Callback Fini: device_num=%d\n", device_num);
+#ifdef TAUOMPT_DEBUG
+printf("Callback Fini: device_num=%d\n", device_num);
+#endif
 #ifdef TAU_OMPT_USE_TARGET_OFFLOAD
   Tau_ompt_flush_trace(getDeviceMap()[device_num]);
   Tau_ompt_stop_trace(getDeviceMap()[device_num]);
@@ -1435,10 +1496,11 @@ static void on_ompt_callback_device_load
      uint64_t module_id
      ) {
     TauInternalFunctionGuard protects_this_function;
-     /*
+  #ifdef TAUOMPT_DEBUG
   printf("Load: device_num:%d filename:%s host_adddr:%p device_addr:%p bytes:%lu\n",
 	 device_num, filename, host_addr, device_addr, bytes);
-     */
+  #endif
+     
 }
 
 static void on_ompt_callback_target(
@@ -1449,15 +1511,18 @@ static void on_ompt_callback_target(
     ompt_id_t target_id,
     const void *codeptr_ra)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   /* Per-thread timer stack for this region type.
      this is necessary because we can't rely on the runtime
      to not overwrite the task_data pointer :( */
     thread_local static std::stack<void*> timer_stack;
     assert(codeptr_ra != 0);
-    
-    /*printf("Callback Target: target_id=%lu kind=%d endpoint=%d device_num=%d code=%p\n",
-	    target_id, kind, endpoint, device_num, codeptr_ra);*/
-    
+    #ifdef TAUOMPT_DEBUG
+    printf("Callback Target: target_id=%lu kind=%d endpoint=%d device_num=%d code=%p\n",
+	    target_id, kind, endpoint, device_num, codeptr_ra);
+    #endif
     TauInternalFunctionGuard protects_this_function;
     void *handle = NULL;
     switch(endpoint) {
@@ -1532,14 +1597,18 @@ on_ompt_callback_target_data_op_emi(
   size_t bytes, 
   const void *codeptr_ra)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   TauInternalFunctionGuard protects_this_function;
 
-  //static std::map<int, const char*> endpoint_names = {{ompt_scope_begin,"begin"},{ompt_scope_end,"end"},{ompt_scope_beginend,"begin-end"}}; 
-  /*printf("  Callback Data Emi: endpoint= %d[%s] host_op_id %lu optype=%d src=%p src_device_num=%d "
+  #ifdef TAUOMPT_DEBUG
+  static std::map<int, const char*> endpoint_names = {{ompt_scope_begin,"begin"},{ompt_scope_end,"end"},{ompt_scope_beginend,"begin-end"}}; 
+  printf("  Callback Data Emi: endpoint= %d[%s] host_op_id %lu optype=%d src=%p src_device_num=%d "
 	    "dest=%p dest_device_num=%d bytes=%lu code=%p\n",
     endpoint, endpoint_names[endpoint], host_op_id, optype, src_addr, src_device_num,
-    dest_addr, dest_device_num, bytes, codeptr_ra);*/
-  
+    dest_addr, dest_device_num, bytes, codeptr_ra);
+  #endif
   static std::unordered_map<void*, double> emi_allocations;
   static std::mutex allocation_lock;
   void * ue = nullptr;
@@ -1550,7 +1619,9 @@ on_ompt_callback_target_data_op_emi(
  
   switch(optype){
     case ompt_target_data_alloc: {
-      //printf("ALLOC \n");
+      #ifdef TAUOMPT_DEBUG
+      printf("ALLOC \n");
+      #endif
       //Only the end has the destination value, needed to correlate the delete
       if(endpoint == ompt_scope_begin)
         break;
@@ -1564,7 +1635,9 @@ on_ompt_callback_target_data_op_emi(
       break;
     }
     case ompt_target_data_delete: {
-      //printf("DELETE \n");
+      #ifdef TAUOMPT_DEBUG
+      printf("DELETE \n");
+      #endif
       if(endpoint == ompt_scope_begin)
         break;
       if(bytes==0)
@@ -1583,7 +1656,9 @@ on_ompt_callback_target_data_op_emi(
 
     #ifndef TAU_OMPT_USE_v60 //These dissapear with v6.0
     case ompt_target_data_transfer_to_device: {
-      //printf("Xfr T D\n");
+      #ifdef TAUOMPT_DEBUG
+      printf("Xfr T D\n");
+      #endif
       if(endpoint == ompt_scope_begin)
         break;
       std::unique_lock<std::mutex> l(allocation_lock);
@@ -1595,7 +1670,9 @@ on_ompt_callback_target_data_op_emi(
       break;
     }
     case ompt_target_data_transfer_from_device: {
-      //printf("Xfr F D\n");
+      #ifdef TAUOMPT_DEBUG
+      printf("Xfr F D\n");
+      #endif
       if(endpoint == ompt_scope_begin)
         break;
       std::unique_lock<std::mutex> l(allocation_lock);
@@ -1607,7 +1684,9 @@ on_ompt_callback_target_data_op_emi(
       break;
     }
     case  ompt_target_data_transfer_to_device_async: {
-      //printf("Xfr T D A \n");
+      #ifdef TAUOMPT_DEBUG
+      printf("Xfr T D A \n");
+      #endif
       if(endpoint == ompt_scope_begin)
         break;
       std::unique_lock<std::mutex> l(allocation_lock);
@@ -1619,7 +1698,9 @@ on_ompt_callback_target_data_op_emi(
       break;
     }
     case ompt_target_data_transfer_from_device_async: {
-      //printf("Xfr F D A \n");
+      #ifdef TAUOMPT_DEBUG
+      printf("Xfr F D A \n");
+      #endif
       if(endpoint == ompt_scope_begin)
         break;
       std::unique_lock<std::mutex> l(allocation_lock);
@@ -1633,7 +1714,9 @@ on_ompt_callback_target_data_op_emi(
     #endif
 
     case ompt_target_data_associate: {
-      //printf("ASSOCIATE \n");
+      #ifdef TAUOMPT_DEBUG
+      printf("ASSOCIATE \n");
+      #endif
       if(endpoint == ompt_scope_begin)
         break;
       static const char * _name = "OpenMP Target Data Associate Pointer";
@@ -1643,7 +1726,9 @@ on_ompt_callback_target_data_op_emi(
       break;
     }
     case ompt_target_data_disassociate: {
-      //printf("DISASSOCIATE \n");
+      #ifdef TAUOMPT_DEBUG
+      printf("DISASSOCIATE \n");
+      #endif
       if(endpoint == ompt_scope_begin)
         break;
       static const char * _name = "OpenMP Target Data Disassociate Pointer";
@@ -1653,7 +1738,9 @@ on_ompt_callback_target_data_op_emi(
       break;
     }
     case ompt_target_data_alloc_async: {
-      //printf("ALLOC ASYNC \n");
+      #ifdef TAUOMPT_DEBUG
+      printf("ALLOC ASYNC \n");
+      #endif
       //Only the end has the destination value, needed to correlate the delete
       if(endpoint == ompt_scope_begin)
         break;
@@ -1669,7 +1756,9 @@ on_ompt_callback_target_data_op_emi(
       break;
     }
     case ompt_target_data_delete_async: {
+      #ifdef TAUOMPT_DEBUG
       printf("DELETE ASYNC \n");
+      #endif
       if(endpoint == ompt_scope_begin)
         break;
       if(bytes==0)
@@ -1732,13 +1821,17 @@ on_ompt_callback_target_data_op(
         size_t bytes,
         const void *codeptr_ra)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
     // Both src and dest must not be null
     assert(src_addr != 0 || dest_addr != 0);
-    
-    /*printf("  Callback DataOp: target_id=%lu host_op_id=%lu optype=%d src=%p src_device_num=%d "
+    #ifdef TAUOMPT_DEBUG
+    printf("  Callback DataOp: target_id=%lu host_op_id=%lu optype=%d src=%p src_device_num=%d "
 	    "dest=%p dest_device_num=%d bytes=%lu code=%p\n",
 	    target_id, host_op_id, optype, src_addr, src_device_num,
-	    dest_addr, dest_device_num, bytes, codeptr_ra);*/
+	    dest_addr, dest_device_num, bytes, codeptr_ra);
+    #endif
     
     TauInternalFunctionGuard protects_this_function;
     // printf("CPU Device: %d, %d\n", src_device_num, dest_device_num);
@@ -1897,10 +1990,15 @@ on_ompt_callback_target_submit(
         ompt_id_t host_op_id,
         unsigned int requested_num_teams)
 {
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   if(requested_num_teams>0)
   {
     TauInternalFunctionGuard protects_this_function;
-    //printf("requested_num_teams %u %u\n", requested_num_teams, UINT_MAX);
+    #ifdef TAUOMPT_DEBUG
+    printf("requested_num_teams %u %u\n", requested_num_teams, UINT_MAX);
+    #endif
     static void * ue = Tau_get_userevent("OpenMP Target Submit Num Teams");
     Tau_userevent(ue,(double)(requested_num_teams));
 
@@ -2138,7 +2236,9 @@ extern "C" int ompt_initialize(
 
 /* Register callbacks for plugins in the case that they are not already registered for TAU */
 void Tau_ompt_register_plugin_callbacks(Tau_plugin_callbacks_active_t *Tau_plugins_enabled) {
-  //printf("%s\n", __func__);
+  #ifdef TAUOMPT_DEBUG
+  printf("%s\n", __func__);
+  #endif
   if(!initialized)
   {
     TAU_VERBOSE("TAU: WARNING: Could not register OMPT plugin callbacks as OMPT was not initialized.\n");
@@ -2211,7 +2311,9 @@ void Tau_ompt_finalize_trigger() {
 /* This is called by the Tau_destructor_trigger() to prevent
  * callbacks from happening after TAU is shut down */
 void Tau_ompt_finalize(void) {
-  //printf("Callback %s\n", __func__);
+  #ifdef TAUOMPT_DEBUG
+  printf("Callback %s\n", __func__);
+  #endif
     if(Tau_ompt_finalized()) { return; }
     Tau_ompt_finalized(true);
 #ifdef TAU_OMPT_USE_TARGET_OFFLOAD
