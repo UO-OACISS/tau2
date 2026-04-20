@@ -1430,13 +1430,9 @@ static void on_ompt_callback_device_initialize (
     return;
   }
   //Until recently, INTEL did not implement this part, but now it fails.
-  // There is either an issue with the callbacks or the way we detect it using the lookup
-  // But the callbacks work with ROCm. Need to look into this
+  // INTEL requests buffers of size 0 that it later tries to use, better disable
+  // OMPT tracing for INTEL until this is solved.  
   #if (defined(__INTEL_COMPILER) || defined (__INTEL_LLVM_COMPILER))
-  //#warning "Intel compiler"
-  //#ifdef TAUOMPT_DEBUG
-  //printf("!! Disabled due to Intel Compiler\n");
-  //#endif
   printf("OMPT Trace collection disabled on device %d\n", device_num);
   return;
   #endif
