@@ -26,6 +26,39 @@
 #include "Profile/RocProfilerSDK/TauRocProfilerSDK.h"
 #include "Profile/TauMetrics.h"
 
+std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename)
+{
+    std::string task_name;
+    //__omp_offloading_36_523fe22f_compute_target_l105.kd
+    static std::string omp_off_string = "__omp_offloading";
+    //Each GPU implementation shows the name in a similar way,
+    // but some are demangled and anothers demangled,
+    // in the case of AMD, they seem to be demangled
+    if( strncmp(k_name.c_str(), omp_off_string.c_str(), omp_off_string.length())==0)
+    {
+        int pos_key=omp_off_string.length();
+        for(int i =0; i<2; i++)
+        {
+            pos_key = k_name.find_first_of('_', pos_key + 1);
+        }
+        int pos_ll = k_name.find_last_of("l");
+        task_name = "OMP OFFLOADING ";
+        task_name = task_name  + Tau_demangle_name(k_name.substr(pos_key+1,pos_ll-pos_key-2).c_str());
+        if(add_filename == 0)
+            return task_name;
+        std::string s_omp_line = k_name.substr(pos_ll+1,k_name.find_last_of(".")-pos_ll-1);
+        task_name = task_name +" [{UNRESOLVED} {";
+        task_name = task_name + s_omp_line;
+        task_name = task_name +" ,0}]";
+    }
+    else
+    {
+        task_name = Tau_demangle_name(k_name.c_str());
+    }
+    return task_name;
+}
+
+
 //Map to identify kernels and some of their information
 using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
 using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_symbol_data_t>;

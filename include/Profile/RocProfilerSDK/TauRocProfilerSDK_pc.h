@@ -9,42 +9,7 @@
 #include <TAU.h>
 #include <Profile/TauBfd.h>  // for name demangling
 
-
-
-inline std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename)
-{
-    std::string task_name;
-    //__omp_offloading_36_523fe22f_compute_target_l105.kd
-    static std::string omp_off_string = "__omp_offloading";
-    //Each GPU implementation shows the name in a similar way,
-    // but some are demangled and anothers demangled,
-    // in the case of AMD, they seem to be demangled
-    if( strncmp(k_name.c_str(), omp_off_string.c_str(), omp_off_string.length())==0)
-    {
-        int pos_key=omp_off_string.length();
-        for(int i =0; i<2; i++)
-        {
-            pos_key = k_name.find_first_of('_', pos_key + 1);
-        }
-        int pos_ll = k_name.find_last_of("l");
-        task_name = "OMP OFFLOADING ";
-        task_name = task_name  + Tau_demangle_name(k_name.substr(pos_key+1,pos_ll-pos_key-2).c_str());
-        if(add_filename == 0)
-            return task_name;
-        std::string s_omp_line = k_name.substr(pos_ll+1,k_name.find_last_of(".")-pos_ll-1);
-        task_name = task_name +" [{UNRESOLVED} {";
-        task_name = task_name + s_omp_line;
-        task_name = task_name +" ,0}]";
-    }
-    else
-    {
-        task_name = Tau_demangle_name(k_name.c_str());
-    }
-    return task_name;
-}
-
-
-
+extern std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename);
 
 //Due to some bugs, PC Sampling is available, but does not work in older versions
 // do not compile for 4.0 and older
@@ -129,8 +94,6 @@ struct tool_agent_info
 using tool_agent_info_vec_t       = std::vector<std::unique_ptr<tool_agent_info>>;
 using pc_sampling_buffer_id_vec_t = std::vector<rocprofiler_buffer_id_t>;
 
-
-
 struct rocsdk_instruction
 {
     rocsdk_instruction() = default;
@@ -152,18 +115,21 @@ struct TauSDKSampleEvent {
     rocprofiler_timestamp_t exit;
     std::string name;
     int device_id;
+    uint64_t cu_id;
 
     TauSDKSampleEvent(): device_id(0) {}
-    TauSDKSampleEvent(string event_name, rocprofiler_timestamp_t begin, rocprofiler_timestamp_t end, int t) : name(event_name), device_id(t)
+    TauSDKSampleEvent(string event_name, rocprofiler_timestamp_t begin, rocprofiler_timestamp_t end, int t, uint64_t in_cu_id) : name(event_name), device_id(t)
     {
         entry = begin;
         exit  = end;
+        cu_id = in_cu_id;
     }
     void printEvent() {
         std::cout <<name<<" Task: "<<device_id<<", \t\tEntry: "<<entry<<" , Exit = "<<exit;
     }
     bool appearsBefore(struct TauSDKSampleEvent other_event) {
         if ((device_id == other_event.device_id) &&
+            (cu_id == other_event.cu_id) &&
             (entry < other_event.entry) &&
             (exit < other_event.entry))  {
             // both entry and exit of my event is before the entry of the other event.

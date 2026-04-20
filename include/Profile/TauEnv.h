@@ -207,6 +207,7 @@ extern "C" {
   int TAUDECL TauEnv_get_rocsdk_enable();
   int TAUDECL TauEnv_get_rocsdk_pcs_enable();
   int TAUDECL TauEnv_get_rocsdk_pcs_kind();
+  int TAUDECL TauEnv_get_rocsdk_pcs_cus();
   int TAUDECL TauEnv_get_l0_enable();
   int TAUDECL TauEnv_get_l0_metrics_enable();
   int TAUDECL TauEnv_get_l0_stall_sampling_enable();

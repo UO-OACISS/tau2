@@ -38,7 +38,7 @@ std::list<struct TauSDKSampleEvent> TauRocmSampleSDKList;
 std::mutex sample_mtx;
 std::mutex sample_list_mtx;
 std::mutex codeobj_mtx;
-
+static bool sdk_sample_per_cu = false;
 std::map<int, rocprofiler_timestamp_t> tau_last_pc_timestamp_published;
 /* The delta timestamp is in nanoseconds. */
 int64_t deltaTimestamp_ns = 0;
@@ -83,88 +83,51 @@ bool run_once() {
     return true;
 }
 
-#ifndef TAU_MAX_ROCM_QUEUES
-#define TAU_MAX_ROCM_QUEUES 512
-#endif /* TAU_MAX_ROCM_QUEUES */
+//Queue map should have gpu id and computing unit as index
+// queue id as value
+static std::map<std::pair<uint32_t,uint64_t>, int> map_queue_rocsdk_pc;
 
-#ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
-static int tau_initialized_queues_pc[TAU_MAX_ROCM_QUEUES];
-#else
-static std::map<int, int, less<int> >& TheTauInitializedQueues_pc() {
-  static std::map<int, int, less<int> > initialized_queues;
-  return initialized_queues;
-}
-#endif /* TAU_ROCM_USE_MAP_FOR_INIT_QUEUES */
-//Different queue functions as I want the variables not to be shared with 
-// TauRocProfilerSDK, so the queues get different ids.
-int Tau_initialize_queues_pc(void) {
-    int i;
-    for (i=0; i < TAU_MAX_ROCM_QUEUES; i++) {
-      tau_initialized_queues_pc[i] = -1;
+int Tau_get_rocprofsdk_queue_pc(uint32_t dev_id, uint64_t cu_id)
+{
+    std::map<std::pair<uint32_t,uint64_t>, int>::iterator it;
+    it = map_queue_rocsdk_pc.find({dev_id, cu_id});
+    if(it == map_queue_rocsdk_pc.end())
+    {
+        return -1;    
     }
-    return 1;
+    else
+        return it->second;
 }
 
-int Tau_get_initialized_queues_pc(int queue_id) {
-    //TAU_VERBOSE("Tau_get_initialized_queues: queue_id = %d ", queue_id);
-  #ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
-    static int flag = Tau_initialize_queues_pc();
-    //TAU_VERBOSE("value = %d\n", tau_initialized_queues[queue_id]);
-    return tau_initialized_queues_pc[queue_id];
-  #else
-  
-    std::map<int, int, less<int> >::iterator it;
-    it = TheTauInitializedQueues_pc().find(queue_id);
-    if (it == TheTauInitializedQueues_pc().end()) { // not found!
-      TAU_VERBOSE("Tau_get_initialized_queues: queue_id = %d not found. Returning -1\n", queue_id);
-      TAU_VERBOSE("value = -1\n");
-      return -1;
-    } else {
-      TAU_VERBOSE("Tau_get_initialized_queues: queue_id = %d found. Returning %d\n", queue_id, it->second);
-      TAU_VERBOSE("value = %d\n", it->second);
-      return it->second;
-    }
-  #endif
-
-}
-
-void Tau_set_initialized_queues_pc(int queue_id, int value) {
-    TAU_VERBOSE("Tau_set_initialized_queues: queue_id = %d, value = %d\n", queue_id, value);
-  #ifndef TAU_ROCM_USE_MAP_FOR_INIT_QUEUES
-    tau_initialized_queues_pc[queue_id]=value;
-  #else
-    TheTauInitializedQueues_pc()[queue_id]=value;
-    TAU_VERBOSE("Tau_set_initialized_queues: queue_id = %d, value = %d\n", queue_id,  TheTauInitializedQueues()[queue_id]);
-  #endif /* TAU_ROCM_USE_MAP_FOR_INIT_QUEUES */
+void Tau_set_rocprofsdk_queue_pc(uint32_t dev_id, uint64_t cu_id, int value) {
+    map_queue_rocsdk_pc[{dev_id, cu_id}] = value;
     return;
 }
-
-  
+ 
 void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
 {
-    //TAU_VERBOSE("TAU_publish_sdk_sample_event\n");
 
-    //Different types of events will appear as different threads in the profile
-    //This is to differenciate kernels, API calls and other events
-    //int queueid = sdk_sample_event.taskid;
-    int queueid = sdk_sample_event.device_id;
+    //TAU_VERBOSE("TAU_publish_sdk_sample_event\n");
     //printf("sample dev id %d\n", queueid);
+    sample_mtx.lock();
     unsigned long long timestamp = sdk_sample_event.entry+deltaTimestamp_ns;
-    int taskid = Tau_get_initialized_queues_pc(queueid);
+    int taskid = Tau_get_rocprofsdk_queue_pc(sdk_sample_event.device_id, sdk_sample_event.cu_id);
+    //printf("%u , %lu, %d\n", sdk_sample_event.device_id, sdk_sample_event.cu_id, taskid);
     if (taskid == -1) { // not initialized
         TAU_CREATE_TASK(taskid);
-        Tau_set_initialized_queues_pc(queueid, taskid);
+        Tau_set_rocprofsdk_queue_pc(sdk_sample_event.device_id, sdk_sample_event.cu_id, taskid);
         // Set the timestamp for TAUGPU_TIME:
         metric_set_gpu_timestamp(taskid, (double)(sdk_sample_event.entry+deltaTimestamp_ns)/1e3);
 
         Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
-        Tau_add_metadata_for_task("ROCM_GPU_ID", taskid, taskid);
+        Tau_add_metadata_for_task("ROCM_GPU_ID", sdk_sample_event.device_id, taskid);
+        Tau_add_metadata_for_task("ROCM_CU_ID", sdk_sample_event.cu_id, taskid);
         Tau_create_top_level_timer_if_necessary_task(taskid);
         //std::cout << "queueid: " << queueid << " taskid: " << taskid << std::endl;
     }
 
 
-    sample_mtx.lock();
+    
     /*
     rocprofiler_timestamp_t last_timestamp;
     
@@ -207,8 +170,6 @@ void TAU_process_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
   //TAU_VERBOSE("TAU_process_sdk_sample_event\n");
 
   sample_list_mtx.lock();
-  //TauRocmSampleSDKList.push_back(sdk_sample_event);
-  //TauRocmSampleSDKList.sort();
   auto it = std::lower_bound(TauRocmSampleSDKList.begin(), TauRocmSampleSDKList.end(), sdk_sample_event);
   TauRocmSampleSDKList.insert(it, sdk_sample_event);
 
@@ -366,7 +327,6 @@ std::string process_snapshot_sdk(rocprofiler_pc_sampling_snapshot_v0_t snapshot)
     return "";
 }*/
 
-
 pc_sampling_buffer_id_vec_t* pc_buffer_ids = nullptr;
 void
 rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
@@ -376,6 +336,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                                  void* /*data*/,
                                  uint64_t drop_count)
 {
+    //printf("sdk_sample_per_cu %d\n", sdk_sample_per_cu);
     if(pc_flushed == 1)
         return;
     #ifdef ROCSDK_PC_DEBUG    
@@ -430,8 +391,6 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     << static_cast<unsigned int>(pc_sample->wave_id) << ", "
                     << "chiplet: " << std::setw(2)
                     << static_cast<unsigned int>(pc_sample->chiplet) << ", "
-                    << "wave_id: " << std::setw(2)
-                       << static_cast<unsigned int>(pc_sample->hw_id.wave_id) << ", "
                     << "cu_id: " << pc_sample->hw_id << ", "
                     << "correlation: {internal=" << std::setw(7)
                     << pc_sample->correlation_id.internal << ", "
@@ -525,7 +484,19 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     ss_debug << ss.str() << "\n";
                     #endif
                 }
-                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], rocsdk_buffer_device_map[buffer_id.handle]);
+                struct TauSDKSampleEvent sample_event;
+                if(sdk_sample_per_cu)
+                {
+                    sample_event = TauSDKSampleEvent(task_name, pc_sample->timestamp, 
+                        pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], 
+                        rocsdk_buffer_device_map[buffer_id.handle], pc_sample->hw_id);
+                }
+                else
+                {
+                    sample_event = TauSDKSampleEvent(task_name, pc_sample->timestamp, 
+                        pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], 
+                        rocsdk_buffer_device_map[buffer_id.handle], 0);
+                }
                 
                 TAU_process_sdk_sample_event(sample_event);
             }
@@ -563,6 +534,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                        << "wave_id: " << std::setw(2)
                        << static_cast<unsigned int>(pc_sample->hw_id.wave_id) << ", "
                        << "dispatch_id: " << std::setw(7) << pc_sample->dispatch_id << ","
+                       << "cu_or_wgp_id: " << pc_sample->hw_id.cu_or_wgp_id << ", "
                        << "correlation: {internal=" << std::setw(7)
                        << pc_sample->correlation_id.internal << ", "
                        << "external=" << std::setw(5) << pc_sample->correlation_id.external.value
@@ -648,7 +620,20 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     ss_debug << ss.str() << "\n";
                     #endif
                 }
-                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], rocsdk_buffer_device_map[buffer_id.handle]);
+
+                struct TauSDKSampleEvent sample_event;
+                if(sdk_sample_per_cu)
+                {
+                    sample_event = TauSDKSampleEvent(task_name, pc_sample->timestamp, 
+                        pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], 
+                        rocsdk_buffer_device_map[buffer_id.handle], pc_sample->hw_id.cu_or_wgp_id);
+                }
+                else
+                {
+                    sample_event = TauSDKSampleEvent(task_name, pc_sample->timestamp, 
+                        pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], 
+                        rocsdk_buffer_device_map[buffer_id.handle], 0);
+                }
                 
                 TAU_process_sdk_sample_event(sample_event);
 
@@ -684,6 +669,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                        << "wave_id: " << std::setw(2)
                        << static_cast<unsigned int>(pc_sample->hw_id.wave_id) << ", "
                        << "dispatch_id: " << std::setw(7) << pc_sample->dispatch_id << ","
+                       << "cu_or_wgp_id: " << pc_sample->hw_id.cu_or_wgp_id << ", "
                        << "correlation: {internal=" << std::setw(7)
                        << pc_sample->correlation_id.internal << ", "
                        << "external=" << std::setw(5) << pc_sample->correlation_id.external.value
@@ -786,12 +772,23 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 }
                 //std::cout << std::endl;
                 
-
                 //Additional information, but not required, may be useful to debug
                 //rocprofiler_pc_sampling_snapshot_v0_t snapshot = pc_sample->snapshot;
                 //process_snapshot_sdk(snapshot);
-                struct TauSDKSampleEvent sample_event(task_name, pc_sample->timestamp, pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], rocsdk_buffer_device_map[buffer_id.handle]);
-                
+                struct TauSDKSampleEvent sample_event;
+                if(sdk_sample_per_cu)
+                {
+                    sample_event = TauSDKSampleEvent(task_name, pc_sample->timestamp, 
+                        pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], 
+                        rocsdk_buffer_device_map[buffer_id.handle], pc_sample->hw_id.cu_or_wgp_id);
+                }
+                else
+                {
+                    sample_event = TauSDKSampleEvent(task_name, pc_sample->timestamp, 
+                        pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], 
+                        rocsdk_buffer_device_map[buffer_id.handle], 0);
+                }
+
                 TAU_process_sdk_sample_event(sample_event);
             }
 #endif //SAMPLING_SDKPC_1
@@ -1101,7 +1098,6 @@ configure_pc_sampling_prefer_stochastic(tool_agent_info*         agent_info,
 
         if(stochastic_picked)
         {
-            uint32_t dev_id = TAU_rocsdk_id_device_map[agent_info->agent_id.handle];
             //Frequency is in mhz, interval will be us, same as the time interval used 
             // by ROCPROFILER_PC_SAMPLING_UNIT_TIME
             rocsdk_interval_map[buffer_id.handle] =  static_cast<double>(interval) /  static_cast<double>(agent_info->max_engine_clk_fcompute);
@@ -1224,6 +1220,7 @@ find_all_gpu_agents_supporting_pc_sampling_impl(rocprofiler_agent_version_t vers
 
 int enable_pc_sampling ()
 {
+    sdk_sample_per_cu = TauEnv_get_rocsdk_pcs_cus();
 	return TauEnv_get_rocsdk_pcs_enable();
 }
 
@@ -1238,7 +1235,8 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
     return 1;
 
   TAU_VERBOSE("Enabling ROCm PC sampling...\n");
-  TAU_VERBOSE("To see filenames and line numbers compile with -g...\n");
+  TAU_VERBOSE("To see filenames and line numbers compile with -g.\n");
+  TAU_VERBOSE("If you see invalid timers within the sampling threads, use ROCPROFILER_PCS_CUS=1 , which will report results by computational unit\n");
   pc_buffer_ids = new pc_sampling_buffer_id_vec_t();
 
   tool_agent_info_vec_t pc_gpu_agents = {};

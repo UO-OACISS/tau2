@@ -250,6 +250,7 @@ using namespace std;
 #define TAU_USE_ROCSDK_SAMPLING_DEFAULT 0
 #define TAU_USE_ROCSDK_SAMPLING_HOST 0
 #define TAU_USE_ROCSDK_SAMPLING_STOC 0
+#define TAU_USE_ROCMPC_CUS_DEFAULT 0
 
 /* L0 related variables*/
 #define TAU_ENABLE_L0_DEFAULT 0
@@ -414,6 +415,7 @@ static int env_rocsdk_pcs_enable = 0;
 //1 : force  host trap
 //2 : force stochastic
 static int env_rocsdk_pcs_kind = 0;
+static int env_rocmpc_per_cu = 0;
 
 static int env_l0_enable = 0;
 static int env_l0_metrics_enable = 0;
@@ -1498,6 +1500,10 @@ int TauEnv_get_rocsdk_pcs_enable(){
 
 int TauEnv_get_rocsdk_pcs_kind(){
   return env_rocsdk_pcs_kind;
+}
+
+int TauEnv_get_rocsdk_pcs_cus(){
+  return env_rocmpc_per_cu;
 }
 
 
@@ -3105,6 +3111,8 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_ROCPROFILERSDK", "on");
 		}
 
+    
+
     if(env_rocsdk_enable)
     {
       tmp = getconf("ROCPROFILER_PC_SAMPLING_BETA_ENABLED");
@@ -3126,6 +3134,13 @@ void TauEnv_initialize()
         env_rocsdk_pcs_kind = 2;
         TAU_VERBOSE("TAU: Rocprofiler-SDK PC Sampling Stochastic Enabled\n");
         TAU_METADATA("TAU_ROCPROFILERSDK_PC_SAMPLING", "on");
+      }
+
+      tmp = getconf("ROCPROFILER_PCS_CUS");
+      if (parse_bool(tmp, TAU_USE_ROCMPC_CUS_DEFAULT)) {
+        env_rocmpc_per_cu = 1;
+        TAU_VERBOSE("TAU: Rocprofiler-SDK PC Sampling thread per CU Enabled\n");
+        TAU_METADATA("ROCPROFILER_PCS_CUS", "on");
       }
     }
 
