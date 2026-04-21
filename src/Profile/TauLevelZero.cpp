@@ -435,9 +435,9 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
     }
       event = event + "OMP OFFLOADING ";
       event = event + Tau_demangle_name(name.substr(pos_key,name.find_last_of("l")-pos_key-1).c_str());
-      event = event +" [{UNRESOLVED} {";
+      event = event + " [{UNRESOLVED} {";
       event = event + name.substr(name.find_last_of("l")+1);
-      event = event +" ,0}]";
+      event = event + ",0}]";
   }
   else
   {

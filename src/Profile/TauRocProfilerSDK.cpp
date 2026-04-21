@@ -47,9 +47,9 @@ std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename)
         if(add_filename == 0)
             return task_name;
         std::string s_omp_line = k_name.substr(pos_ll+1,k_name.find_last_of(".")-pos_ll-1);
-        task_name = task_name +" [{UNRESOLVED} {";
+        task_name = task_name + " [{UNRESOLVED} {";
         task_name = task_name + s_omp_line;
-        task_name = task_name +" ,0}]";
+        task_name = task_name + ",0}]";
     }
     else
     {

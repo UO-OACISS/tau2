@@ -432,9 +432,9 @@ std::string TAU_L0_demangle(std::string original_name)
         }
         event_name = event_name + "OMP OFFLOADING ";
         event_name = event_name + Tau_demangle_name(original_name.substr(pos_key,original_name.find_last_of("l")-pos_key-1).c_str());
-        event_name = event_name +" [{UNRESOLVED} {";
+        event_name = event_name + " [{UNRESOLVED} {";
         event_name = event_name + original_name.substr(original_name.find_last_of("l")+1);
-        event_name = event_name +" ,0}]";
+        event_name = event_name + ",0}]";
     }
     else
     {

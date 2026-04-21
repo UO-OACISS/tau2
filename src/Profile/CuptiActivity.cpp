@@ -1953,7 +1953,7 @@ void Tau_openacc_process_cupti_activity(CUpti_Activity *record);
                         std::string s_omp_line = name_aux.substr(pos_key+1,name_aux.find_last_of("_")-pos_key-1);
                         event = event +" [{UNRESOLVED} {";
                         event = event + s_omp_line;
-                        event = event +" ,0}]";
+                        event = event +",0}]";
                         dem_name_register = (char*)event.c_str();
                     }
                     else
