@@ -275,6 +275,10 @@ static int env_verbose = 0;
 static int env_verbose_file = 0;
 static int env_verbose_rank = -1;
 static int env_throttle = 0;
+/* One-way latch: set to 1 the first time any dynamic profiling-control API
+ * (enable/disable instrumentation, group mask changes, function exclusion) is
+ * invoked. Avoids slower function call. */
+extern "C" int tau_active_profiling = 0;
 static double env_evt_threshold = 0.0;
 static int env_interval = 0;
 static int env_disable_instrumentation = 0;
@@ -948,6 +952,10 @@ int TauEnv_get_throttle() {
 
 void TauEnv_set_throttle(int throttle) {
   env_throttle = throttle;
+}
+
+void TauEnv_set_active_profiling(int val) {
+  tau_active_profiling = val;
 }
 
 int TauEnv_get_disable_instrumentation() {

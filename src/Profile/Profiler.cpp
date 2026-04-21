@@ -380,6 +380,9 @@ void Profiler::Start(int tid)
   /*** Extras ***/
   /********************************************************************************/
 
+  // Hoist callsite getter (reduces PLT overhead).
+  const int do_callsite = TauEnv_get_callsite();
+
   /*** Profile Compensation ***/
   if (TauEnv_get_compensate()) {
     SetNumChildren(0); /* for instrumentation perturbation compensation */
@@ -388,7 +391,7 @@ void Profiler::Start(int tid)
   // An initialization of sorts. Call Paths (if any) will update this.
 #ifndef TAU_WINDOWS
 #ifndef _AIX
-  if (TauEnv_get_callsite() == 1) {
+  if (do_callsite == 1) {
     CallSiteAddPath(NULL, tid);
   }
 #endif /* _AIX */
@@ -396,7 +399,7 @@ void Profiler::Start(int tid)
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX
-  if (TauEnv_get_callsite() == 1) {
+  if (do_callsite == 1) {
     CallSiteStart(tid, TimeStamp);
   }
 #endif /* _AIX */
@@ -441,13 +444,14 @@ void Profiler::Start(int tid)
   /*** Tracing ***/
   /********************************************************************************/
 
-  // Inncrement the number of calls
-  ThisFunction->IncrNumCalls(tid);
+  // Increment NumCalls and check/set AlreadyOnStack in one getFunctionMetric call
+  // instead of three separate calls (IncrNumCalls, GetAlreadyOnStack, SetAlreadyOnStack).
+  bool alreadyOnStack = ThisFunction->IncrCallsAndCheckStack(tid);
 
   // Increment the parent's NumSubrs()
   if (ParentProfiler != 0) {
     ParentProfiler->ThisFunction->IncrNumSubrs(tid);
-    if (TauEnv_get_callsite()) {
+    if (do_callsite) {
       if (ParentProfiler->CallSiteFunction != NULL) {
         ParentProfiler->CallSiteFunction->IncrNumSubrs(tid);
       }
@@ -455,12 +459,10 @@ void Profiler::Start(int tid)
   }
 
   // If this function is not already on the call stack, put it
-  if (ThisFunction->GetAlreadyOnStack(tid) == false) {
+  if (!alreadyOnStack) {
     AddInclFlag = true;
     // We need to add Inclusive time when it gets over as
     // it is not already on callstack.
-
-    ThisFunction->SetAlreadyOnStack(true, tid);    // it is on callstack now
   } else {
     // the function is already on callstack, no need to add inclusive time
     AddInclFlag = false;
@@ -567,6 +569,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /* TAU_TRACK_IDLE_THREADS */
   //printf("In Stop: CurrentTime[0] = %f\n", CurrentTime[0]);
 
+  // Hoist init-time constant env vars once (reduces overhead).
+  const int do_compensate = TauEnv_get_compensate();
+  const int do_callsite   = TauEnv_get_callsite();
+  const int do_callpath   = TauEnv_get_callpath();
+
 #ifndef TAU_WINDOWS
 #ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
@@ -625,7 +632,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   /********************************************************************************/
 
   /*** Profile Compensation ***/
-  if (TauEnv_get_compensate()) {
+  if (do_compensate) {
     double *tover, *tnull;
     tover = TauGetTimerOverhead(TauFullTimerOverhead);
     tnull = TauGetTimerOverhead(TauNullTimerOverhead);
@@ -661,7 +668,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX
-  if (TauEnv_get_callsite()) {
+  if (do_callsite) {
     CallSiteStop(TotalTime, tid, TimeStamp);
   }
 #endif /* _AIX */
@@ -671,7 +678,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   /*** Tracing ***/
   /********************************************************************************/
 
-  if (TauEnv_get_callpath()) {
+  if (do_callpath) {
     CallPathStop(TotalTime, tid);
   }
 
@@ -707,15 +714,15 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /*KTAU_DEBUGPROF*/
 #endif /*TAUKTAU && TAUKTAU_MERGE*/
 
-  if (TauEnv_get_compensate()) {
+  if (do_compensate) {
     ThisFunction->ResetExclTimeIfNegative(tid);
 
-    if (TauEnv_get_callpath()) {
+    if (do_callpath) {
       if (ParentProfiler != NULL) {
         CallPathFunction->ResetExclTimeIfNegative(tid);
       }
     }
-    if (TauEnv_get_callsite()) {
+    if (do_callsite) {
       if (ParentProfiler != NULL) {
         if (CallSiteFunction != NULL) {
           CallSiteFunction->ResetExclTimeIfNegative(tid);
@@ -733,7 +740,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   if (ParentProfiler != NULL) {
     ParentProfiler->ThisFunction->ExcludeTime(TotalTime, tid);
 
-    if (TauEnv_get_compensate()) {
+    if (do_compensate) {
       ParentProfiler->AddNumChildren(GetNumChildren() + 1);
       /* Add 1 and my children to my parents total number of children */
     }
@@ -772,7 +779,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
     /*** Profile Compensation ***/
     // If I am still compensating, I do not expect a top level timer. Just pretend
     // this never happened.
-    if (TauEnv_get_compensate() && !TauCompensateInitialized()) return;
+    if (do_compensate && !TauCompensateInitialized()) return;
 
     /* Should we detect memory leaks here? */
     if (TheSafeToDumpData() && !RtsLayer::isCtorDtor(ThisFunction->GetName())) {

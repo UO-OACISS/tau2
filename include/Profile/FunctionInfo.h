@@ -67,6 +67,7 @@ extern int Tau_Global_numGPUCounters;
 
 #include <Profile/TauPathHash.h>
 #include "Profile/TauSampling.h"
+#include "Profile/TauEnv.h"
 
 #ifdef TAU_SS_ALLOC_SUPPORT
 #include <Profile/TauSsAllocator.h>
@@ -119,6 +120,10 @@ public:
   inline void IncrNumSubrs(int tid);
   inline bool GetAlreadyOnStack(int tid);
   inline void SetAlreadyOnStack(bool value, int tid);
+  // Combined hot-path helper: increments NumCalls and atomically checks/sets
+  // AlreadyOnStack in a single getFunctionMetric call.  Returns true if the
+  // function was *already* on the stack (i.e. AddInclFlag should be false).
+  inline bool IncrCallsAndCheckStack(int tid);
 
 #ifdef TAU_PROFILEMEMORY
   tau::TauUserEvent * MemoryEvent;
@@ -482,14 +487,21 @@ public:
   }
   
   bool IsThrottled() const {
-    if (!RtsLayer::TheEnableInstrumentation()) {
-        return true;
-    }
+    /* Fast path 1: per-function throttle.
+     * TAU_DISABLE == 0x00000000, so !MyProfileGroup_ means TAU's automatic
+     * throttle has permanently disabled this function. */
+    if (!MyProfileGroup_) return true;
 
-    if (!(MyProfileGroup_ & RtsLayer::TheProfileMask())) {
-        return true;
-    }
+    /* Fast path 2: global instrumentation kill-switch. tau_instrumentation_enabled 
+     * is a direct GOT symbol, not a PLT call. */
+    if (!tau_instrumentation_enabled) return true;
 
+    /* Fast path 3: if the dynamic profiling-control API (group masks,
+     * exclusion patterns, SIGUSR2 toggle) has never been invoked. */
+    if (!tau_active_profiling) return false;
+
+    /* Dynamic API checks (rarely reached). */
+    if (!(MyProfileGroup_ & RtsLayer::TheProfileMask())) return true;
     return this->IsExcluded();
 }
 
@@ -554,6 +566,15 @@ inline void FunctionInfo::SetAlreadyOnStack(bool value, int tid) {
 
 inline bool FunctionInfo::GetAlreadyOnStack(int tid) {
   return getFunctionMetric(tid)->AlreadyOnStack;
+}
+
+inline bool FunctionInfo::IncrCallsAndCheckStack(int tid) {
+  FunctionMetrics* fm = getFunctionMetric(tid);
+  if (fm == NULL) return false;
+  fm->NumCalls++;
+  if (fm->AlreadyOnStack) return true;
+  fm->AlreadyOnStack = true;
+  return false;
 }
 
 

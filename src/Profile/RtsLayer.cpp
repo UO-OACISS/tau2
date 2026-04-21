@@ -162,12 +162,15 @@ std::atomic<uint64_t>& RtsLayer::TheRankExclusionVersion() {
     return version;
 }
 
-/////////////////////////////////////////////////////////////////////////
-bool& RtsLayer::TheEnableInstrumentation(void) {
-  // to avoid initialization problems of non-local static variables
-  static bool EnableInstrumentation = true;
+/* Direct-access symbol for IsThrottled() hot path.
+ * int rather than bool so the declaration in TauEnv.h is valid C. */
+extern "C" {
+int tau_instrumentation_enabled = 1;
+}
 
-  return EnableInstrumentation;
+/////////////////////////////////////////////////////////////////////////
+int& RtsLayer::TheEnableInstrumentation(void) {
+  return tau_instrumentation_enabled;
 }
 
 extern "C" int Tau_RtsLayer_TheEnableInstrumentation(void) {

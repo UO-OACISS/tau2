@@ -84,7 +84,7 @@ struct TAULocks{
   static SpatialExclusionMode& TheRankExclusionMode(void);
   static std::atomic<uint64_t>& TheRankExclusionVersion();
   static void InvalidateRankCache()   { TheRankExclusionVersion().fetch_add(1, std::memory_order_relaxed); }
-  static bool& TheEnableInstrumentation(void);
+  static int& TheEnableInstrumentation(void);
   static bool& TheShutdown(void);
   static int& TheNode(void);
   static int& TheContext(void);

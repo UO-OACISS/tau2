@@ -346,6 +346,7 @@ static void tauToggleInstrumentationHandler(int sig)
   exit(0);
 #endif
   fprintf(stderr, "Caught SIGUSR2, toggling TAU instrumentation\n");
+  TauEnv_set_active_profiling(1);
   if (RtsLayer::TheEnableInstrumentation()) {
     RtsLayer::TheEnableInstrumentation() = false;
   } else {

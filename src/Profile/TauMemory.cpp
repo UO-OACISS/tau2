@@ -97,6 +97,9 @@ using namespace tau;
 bool wrapper_registered = false;
 wrapper_enable_handle_t wrapper_enable_handle = NULL;
 wrapper_disable_handle_t wrapper_disable_handle = NULL;
+/* One-way latch: set to 1 the first time Tau_memory_wrapper_register() is called.
+ * Avoids slower function call. */
+extern "C" int tau_memory_wrapper_active = 0;
 
 extern "C" int Tau_trigger_memory_rss_hwm(bool use_context, const char * prefix = nullptr);
 
@@ -973,6 +976,7 @@ void Tau_memory_wrapper_register(wrapper_enable_handle_t enable_handle, wrapper_
   wrapper_enable_handle = enable_handle;
   wrapper_disable_handle = disable_handle;
   wrapper_registered = true;
+  tau_memory_wrapper_active = 1;
 }
 
 //////////////////////////////////////////////////////////////////////

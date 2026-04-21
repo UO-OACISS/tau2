@@ -408,6 +408,13 @@ void * Tau_memcpy(void *, void const *, size_t, char const *, int);
 }
 #endif /* __cplusplus */
 
+/* Direct-access latch for memory-wrapper gating. Avoids a PLT call when tracking is off. */
+#ifdef __cplusplus
+extern "C" int tau_memory_wrapper_active;
+#else
+extern int tau_memory_wrapper_active;
+#endif
+
 #endif /* _TAU_MEMORY_H_ */
 
 /***************************************************************************

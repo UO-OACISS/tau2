@@ -64,6 +64,9 @@ extern "C" {
   int  TAUDECL TauEnv_get_verbose();
   int  TAUDECL TauEnv_get_throttle();
   void  TAUDECL TauEnv_set_throttle(int);
+  /* One-way latch: set to 1 when any dynamic profiling-control API is called.
+   * Read directly in IsThrottled() as an extern symbol (no PLT call overhead). */
+  void TAUDECL TauEnv_set_active_profiling(int val);
   int  TAUDECL TauEnv_get_profiling();
   int  TAUDECL TauEnv_get_tracing();
   int  TAUDECL TauEnv_get_thread_per_gpu_stream();
@@ -238,5 +241,20 @@ extern "C" {
 }
 #endif
 
+/* Direct-access latch for IsThrottled() hot path. Avoids a slower function call.
+ * Defined in TauEnv.cpp */
+#ifdef __cplusplus
+extern "C" int tau_active_profiling;
+#else
+extern int tau_active_profiling;
+#endif
+
+/* Global instrumentation kill-switch. Defined in RtsLayer.cpp.
+ *  Non-zero = instrumentation enabled (default). */
+#ifdef __cplusplus
+extern "C" int tau_instrumentation_enabled;
+#else
+extern int tau_instrumentation_enabled;
+#endif
 
 #endif /* _TAU_ENV_H_ */

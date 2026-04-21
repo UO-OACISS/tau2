@@ -130,6 +130,8 @@ int TauCalibrateNullTimer(void) {
   cerr <<"Calibrate: Tnull time "<< TheTauNullTimerOverhead() <<endl;
   cerr <<"Calibrate: Toverhead time = "<<TheTauFullTimerOverhead() <<endl;
 #endif /* DEBUG_PROF */
+fprintf(stderr, "TAU: null timer overhead: %.3f us/call, full timer overhead: %.3f us/call (%d iterations)\n",
+        TheTauNullTimerOverhead()[0], TheTauFullTimerOverhead()[0], iterations);
   return 0;
 }
 
