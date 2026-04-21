@@ -211,6 +211,7 @@ extern "C" {
   int TAUDECL TauEnv_get_l0_enable();
   int TAUDECL TauEnv_get_l0_metrics_enable();
   int TAUDECL TauEnv_get_l0_stall_sampling_enable();
+  uint32_t TAUDECL TauEnv_get_l0_sampling_interval();
   int TAUDECL TauEnv_get_perfetto_compress(void);
   int TAUDECL TauEnv_get_perfetto_merge(void);
   int TAUDECL TauEnv_get_perfetto_buffer_size(void);

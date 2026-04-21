@@ -1236,7 +1236,7 @@ int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
 
   TAU_VERBOSE("Enabling ROCm PC sampling...\n");
   TAU_VERBOSE("To see filenames and line numbers compile with -g.\n");
-  TAU_VERBOSE("If you see invalid timers within the sampling threads, use ROCPROFILER_PCS_CUS=1 , which will report results by computational unit\n");
+  TAU_VERBOSE("If you see invalid timers within the sampling threads, use TAU_ROCM_PCS_CUS=1 , which will report results by computational unit\n");
   pc_buffer_ids = new pc_sampling_buffer_id_vec_t();
 
   tool_agent_info_vec_t pc_gpu_agents = {};

@@ -505,7 +505,7 @@ for arg in "$@" ; do
         save_arg $arg
         shift
         ;;
-      -l0_sampling)
+      -l0_pc)
         track_l0_stall_sampling=true
         track_l0=true
         save_arg $arg
@@ -1060,10 +1060,6 @@ if [ $track_l0 = "true" ]; then
       $dryrun export L0_METRICGROUP="EuStallSampling"
       #Need to check if needed
       $dryrun export ZET_ENABLE_METRICS=1
-      #Make it so the user can choose the size
-      if [ ! -v L0_SAMPLING_INTERVAL ]; then
-        $dryrun export L0_SAMPLING_INTERVAL=10
-      fi
     else
       #At this moment this is for testing, it doesn't work with our machines
       # as stall sampling (pc sampling) seems to have some driver/GPU issues,

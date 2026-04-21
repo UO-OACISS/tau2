@@ -420,6 +420,7 @@ static int env_rocmpc_per_cu = 0;
 static int env_l0_enable = 0;
 static int env_l0_metrics_enable = 0;
 static int env_l0_stall_sampling_enable = 0;
+static uint32_t env_l0_sampling_interval = 0;
 
 #ifdef TAU_ANDROID
 static int env_alfred_port = 6113;
@@ -1519,6 +1520,11 @@ int TauEnv_get_l0_metrics_enable()
 int TauEnv_get_l0_stall_sampling_enable()
 {
   return env_l0_stall_sampling_enable;
+}
+
+uint32_t TauEnv_get_l0_sampling_interval()
+{
+  return env_l0_sampling_interval;
 }
 
 const char * TauEnv_get_tau_exec_args() {
@@ -3136,11 +3142,11 @@ void TauEnv_initialize()
         TAU_METADATA("TAU_ROCPROFILERSDK_PC_SAMPLING", "on");
       }
 
-      tmp = getconf("ROCPROFILER_PCS_CUS");
+      tmp = getconf("TAU_ROCM_PCS_CUS");
       if (parse_bool(tmp, TAU_USE_ROCMPC_CUS_DEFAULT)) {
         env_rocmpc_per_cu = 1;
         TAU_VERBOSE("TAU: Rocprofiler-SDK PC Sampling thread per CU Enabled\n");
-        TAU_METADATA("ROCPROFILER_PCS_CUS", "on");
+        TAU_METADATA("TAU_ROCM_PCS_CUS", "on");
       }
     }
 
@@ -3170,6 +3176,17 @@ void TauEnv_initialize()
       env_l0_stall_sampling_enable = 0;
       TAU_VERBOSE("TAU: L0 stall sampling Disabled\n");
     }
+
+    if(env_l0_stall_sampling_enable)
+    {
+      tmp = getconf("TAU_L0_SAMPLING_INTERVAL");
+      if (tmp) {
+        env_l0_sampling_interval = atoi(tmp);
+        if(env_l0_sampling_interval > 0)
+          TAU_VERBOSE("TAU: TAU_L0_SAMPLING_INTERVAL is %u\n", env_l0_sampling_interval);
+      }
+    }
+      
 
 
     initialized = 1;
