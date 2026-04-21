@@ -298,6 +298,120 @@ ITT_EXTERN_C void ITTAPI __itt_task_end(const __itt_domain *domain)
 #endif
 }
 
+// String constants for specific handle identification
+static constexpr const char *kSendSizeString = "send_size";
+static std::atomic<__itt_string_handle *> send_size_handle{nullptr};
+static constexpr const char *kCommIdString = "comm_id";
+static std::atomic<__itt_string_handle *> comm_id_handle{nullptr};
+
+/*
+// Remember to call free() after using get_metadata_elements()
+static char* get_metadata_elements(size_t size, __itt_metadata_type type, void* metadata)
+{
+    char* metadata_str = (char*)malloc(sizeof(char) * 1024);
+    *metadata_str = '\0';
+    uint16_t offset = 0;
+
+    switch (type)
+    {
+    case __itt_metadata_u64:
+        for (uint16_t i = 0; i < size; i++)
+            offset += sprintf(metadata_str + offset, "%lu;", ((uint64_t*)metadata)[i]);
+        break;
+    case __itt_metadata_s64:
+        for (uint16_t i = 0; i < size; i++)
+            offset += sprintf(metadata_str + offset, "%ld;", ((int64_t*)metadata)[i]);
+        break;
+    case __itt_metadata_u32:
+        for (uint16_t i = 0; i < size; i++)
+            offset += sprintf(metadata_str + offset, "%u;", ((uint32_t*)metadata)[i]);
+        break;
+    case __itt_metadata_s32:
+        for (uint16_t i = 0; i < size; i++)
+            offset += sprintf(metadata_str + offset, "%d;", ((int32_t*)metadata)[i]);
+        break;
+    case __itt_metadata_u16:
+        for (uint16_t i = 0; i < size; i++)
+            offset += sprintf(metadata_str + offset, "%u;", ((uint16_t*)metadata)[i]);
+        break;
+    case __itt_metadata_s16:
+        for (uint16_t i = 0; i < size; i++)
+            offset += sprintf(metadata_str + offset, "%d;", ((int16_t*)metadata)[i]);
+        break;
+    case __itt_metadata_float:
+        for (uint16_t i = 0; i < size; i++)
+            offset += sprintf(metadata_str + offset, "%f;", ((float*)metadata)[i]);
+        break;
+    case __itt_metadata_double:
+        for (uint16_t i = 0; i < size; i++)
+            offset += sprintf(metadata_str + offset, "%lf;", ((double*)metadata)[i]);
+        break;
+    default:
+        printf("ERROR: Unknown metadata type\n");
+        break;
+    }
+
+    return metadata_str;
+}*/
+
+static double get_metadata_element(__itt_metadata_type type, void* metadata)
+{
+    switch (type)
+    {
+        case __itt_metadata_u64:
+            return ((uint64_t*)metadata)[0];
+            break;
+        case __itt_metadata_s64:
+            return ((int64_t*)metadata)[0];
+            break;
+        case __itt_metadata_u32:
+            return ((uint32_t*)metadata)[0];
+            break;
+        case __itt_metadata_s32:
+            return ((int32_t*)metadata)[0];
+            break;
+        case __itt_metadata_u16:
+            return ((uint16_t*)metadata)[0];
+            break;
+        case __itt_metadata_s16:
+            return ((int16_t*)metadata)[0];
+            break;
+        case __itt_metadata_float:
+            return ((float*)metadata)[0];
+            break;
+        case __itt_metadata_double:
+            return ((double*)metadata)[0];
+            break;
+        default:
+            break;
+    }
+
+    return 0.0;
+}
+
+ITT_EXTERN_C void ITTAPI __itt_metadata_add(const __itt_domain *domain,
+                                                 [[maybe_unused]] __itt_id id,
+                                                 [[maybe_unused]] __itt_string_handle *key,
+                                                 __itt_metadata_type type, size_t count,
+                                                 void *data) {
+    //Only for oneCCL at this moment
+    if (domain == nullptr || type != __itt_metadata_u64 || count != 1)
+        return;
+    const char* domain_oneCCL_str = "oneCCL::API";
+    if (strcmp(domain_oneCCL_str, domain->nameA) != 0)
+        return;
+    const char* mess_size_str = "send_size";
+    if(strcmp(key->strA, mess_size_str) != 0)
+        return;
+    const std::string domainName{domain->nameA};
+    double metadata_value = get_metadata_element(type, data);
+    //printf("function args: domain=%s func %s metadata_size=%lu key %s metadata[]=%f\n",
+    //                        domain->nameA, itt_stack()[domainName].top().c_str(), count, key ? key->strA : "NULL", metadata_value);
+    TAU_REGISTER_CONTEXT_EVENT(event, "Message size");
+    TAU_CONTEXT_EVENT( event, metadata_value);
+}
+
+
 // Initialize JIT profiler
 ITT_EXTERN_C iJIT_IsProfilingActiveFlags JITAPI Initialize(void) {
 #ifdef TAU_DEBUG_ITTNOTIFY

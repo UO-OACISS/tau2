@@ -1159,6 +1159,8 @@ if [ $track_ittnotify = "true" ] ; then
   export INTEL_JIT_PROFILER64=$BASEDIR/lib/$theBinding/libTAU-ittnotify-collector$TAU_SHLIBX
   # Use v1 JIT events
   export INTEL_JIT_BACKWARD_COMPATIBILITY=1
+  #To automatically enable ITT for oneCCL
+  export CCL_ITT_LEVEL=1
 fi
 
 if [ $track_numa = "true" ]; then
