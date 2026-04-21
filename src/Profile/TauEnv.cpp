@@ -420,7 +420,7 @@ static int env_rocmpc_per_cu = 0;
 static int env_l0_enable = 0;
 static int env_l0_metrics_enable = 0;
 static int env_l0_stall_sampling_enable = 0;
-static uint32_t env_l0_sampling_interval = 0;
+static int env_l0_sampling_interval = 0;
 
 #ifdef TAU_ANDROID
 static int env_alfred_port = 6113;
@@ -3154,6 +3154,7 @@ void TauEnv_initialize()
     if (parse_bool(tmp, TAU_ENABLE_L0_DEFAULT)) {
       env_l0_enable = 1;
       TAU_VERBOSE("TAU: L0 profiling Enabled\n");
+      TAU_METADATA("TAU_L0_PROFILING", "on");
     } else {
       env_l0_enable = 0;
       TAU_VERBOSE("TAU: L0 profiling Disabled\n");
@@ -3166,12 +3167,14 @@ void TauEnv_initialize()
     } else {
       TAU_VERBOSE("TAU: L0_METRICGROUP is \"%s\"\n", unitrace_metrics);
       env_l0_metrics_enable = 1;
+      TAU_METADATA("L0_METRICGROUP", unitrace_metrics);
     }
 
     tmp = getconf("ZE_ENABLE_STALL_SAMPLING");
     if (parse_bool(tmp, TAU_ENABLE_L0_DEFAULT)) {
       env_l0_stall_sampling_enable = 1;
       TAU_VERBOSE("TAU: L0 stall sampling Enabled\n");
+      TAU_METADATA("L0_STALL_SAMPLING", "on");
     } else {
       env_l0_stall_sampling_enable = 0;
       TAU_VERBOSE("TAU: L0 stall sampling Disabled\n");
@@ -3183,7 +3186,11 @@ void TauEnv_initialize()
       if (tmp) {
         env_l0_sampling_interval = atoi(tmp);
         if(env_l0_sampling_interval > 0)
+        {
           TAU_VERBOSE("TAU: TAU_L0_SAMPLING_INTERVAL is %u\n", env_l0_sampling_interval);
+          snprintf(tmpstr, sizeof(tmpstr),  "%d", env_l0_sampling_interval);
+          TAU_METADATA("TAU_L0_SAMPLING_INTERVAL", tmpstr);
+        }
       }
     }
       
