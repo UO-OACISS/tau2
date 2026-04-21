@@ -117,6 +117,8 @@ usage()
   echo "        -rocm_pc      Track ROCm PC Sampling events"
   echo "        -rocm_pc_host Track ROCm PC Sampling events using host trap approach."
   echo "        -rocm_pc_stoc Track ROCm PC Sampling events using stochastic approach (detects issues instructions and stalls)."
+  echo "        -l0           Track Intel GPU  events via Level Zero profiler."
+  echo "        -l0_pc        Track Intel GPU PC Sampling events events via Level Zero profiler (detects stalls)."
   echo "        -ompt         Track OpenMP events via OMPT interface"
   echo "        -oneapi       Track Intel OneAPI Level Zero events"
   echo "        -power        Track power events via PAPI's perf RAPL interface"
