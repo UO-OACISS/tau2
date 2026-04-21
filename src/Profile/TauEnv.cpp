@@ -1522,7 +1522,7 @@ int TauEnv_get_l0_stall_sampling_enable()
   return env_l0_stall_sampling_enable;
 }
 
-uint32_t TauEnv_get_l0_sampling_interval()
+int TauEnv_get_l0_sampling_interval()
 {
   return env_l0_sampling_interval;
 }
