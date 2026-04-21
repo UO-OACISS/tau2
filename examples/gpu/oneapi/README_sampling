@@ -4,10 +4,10 @@ As an example:
 ./configure -bfd=download -pthread -level_zero -c++=icpx -cc=icx -fortran=ifx
 
 
-To execute the application, use -l0_sampling
+To execute the application, use -l0_pc
 
 As an example:
-tau_exec -l0_sampling ./omp_gemm gpu 4096
+tau_exec -l0_pc ./omp_gemm gpu 4096
 
 
 
