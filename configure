@@ -10032,7 +10032,7 @@ if [ $mpi = yes ] ; then
     if $mpicompiler tools/src/tests/mpiversion.c $mpiwarnings $orig_useropt $mpi_include -DMPI_4 -o test_mpi_version 1> /dev/null 2>&1 ; then
         echo "yes"
         fixmakeargs="$fixmakeargs MPI4"
-        mpi3=yes
+        mpi4=yes
     else
         echo "no"
     fi
