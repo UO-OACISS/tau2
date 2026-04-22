@@ -18,6 +18,38 @@ const CC = Core.Compiler
 # Path to libTAU.so
 const libTAU = Ref{String}()
 
+# Function-pointer cache for instrumentation hot path
+#
+# The IR rewriter patches method bodies with foreigncalls to 
+# pre-resolved pointers. That prevents issued related to world age
+# when instrumenting @generated functions.
+
+const TAU_START_FPTR       = Ref{Ptr{Cvoid}}(C_NULL)
+const TAU_STOP_FPTR        = Ref{Ptr{Cvoid}}(C_NULL)
+const JL_GET_PGCSTACK_FPTR = Ref{Ptr{Cvoid}}(C_NULL)
+
+# Sticky-bit writes target `jl_task_t.sticky` via the current task's pgcstack.
+# We avoid `jl_get_current_task` because Julia's codegen specially inlines that
+# symbol into an `addrspacecast ... to addrspace(10)` + `ptrtoint` sequence
+# that the LLVM GC invariant verifier rejects.
+const _STICKY_POINTERSET_INDEX_FROM_PGCSTACK = let
+    sticky_idx = findfirst(==(:sticky), fieldnames(Task))
+    sticky_idx === nothing && error(
+        "Task has no :sticky field found on this Julia ($(VERSION)); TAUProfile's " *
+        "instrumentation needs to be updated to match the Task layout.")
+    task = ccall(:jl_get_current_task, Any, ())::Task
+    task_addr = Int(UInt(pointer_from_objref(task)))
+    pgc_addr  = Int(UInt(ccall(:jl_get_pgcstack, Ptr{UInt8}, ())))
+    task_offset_from_pgcstack = task_addr - pgc_addr
+    sticky_offset_in_task     = Int(fieldoffset(Task, sticky_idx))
+    (task_offset_from_pgcstack + sticky_offset_in_task) + 1   # 1-based index
+end
+
+# Array to hold strings for timer names.
+# Keeping them here keeps the alive for the life of the program
+# so we can refer to them by address.
+const _HOOK_LABELS = String[]
+
 """
     __init__()
 
@@ -40,6 +72,12 @@ function __init__()
 
         # Create top-level timer
         ccall((:Tau_create_top_level_timer_if_necessary, libTAU[]), Cvoid, ())
+
+        # Pre-resolve the symbols referenced by patched IR so the hot path
+        # does no runtime symbol lookup and needs no Julia-side dispatch.
+        TAU_START_FPTR[]       = cglobal((:Tau_start, libTAU[]))
+        TAU_STOP_FPTR[]        = cglobal((:Tau_stop,  libTAU[]))
+        JL_GET_PGCSTACK_FPTR[] = cglobal(:jl_get_pgcstack)
     end
 end
 
@@ -190,27 +228,6 @@ end
 
 # IR Rewriter
 
-# Trace hooks:
-#   _entry_hook is called on function entry
-#   _exit_hook is called on function exit by normal return or exception
-
-"""
-    _entry_hook(fname::String)
-
-Called at function entry. 
-"""
-function _entry_hook(fname::String)
-    tau_start(fname)
-end
-
-"""
-    _exit_hook(fname::String)
-
-Called at normal function exit or exit via exception.
-"""
-function _exit_hook(fname::String)
-    tau_stop(fname)
-end
 
 # Blacklisting
 
@@ -242,8 +259,6 @@ const BLACKLIST = Set{Symbol}([
     :copy, :copyto!, :axes, :checkbounds,
     # String operations (hooks use strings)
     :sizeof, :codeunit, :ncodeunits, :isvalid,
-    # Hook functions themselves
-    :_entry_hook, :_exit_hook,
 ])
 
 
@@ -915,24 +930,112 @@ function _push_ir_stmt!(ir::CC.IRCode, @nospecialize(stmt), @nospecialize(type=N
 end
 
 """
+    _register_tau_label(label::String) -> Ptr{UInt8}
+
+Stash the label in `_HOOK_LABELS` so its bytes stay alive for the process
+lifetime, and return a raw pointer suitable for embedding in a `:foreigncall`.
+"""
+function _register_tau_label(label::String)
+    push!(_HOOK_LABELS, label)
+    return pointer(label)
+end
+
+"""
+    _emit_tau_entry_seq_phase1!(ir, label_ptr)
+
+Insert the entry sequence (force sticky + `Tau_start`) immediately before
+`SSAValue(1)` of `ir`. Forces thread to be sticky to avoid the task being
+migrated while a TAU timer is running.
+"""
+function _emit_tau_entry_seq_phase1!(ir::CC.IRCode, label_ptr::Ptr{UInt8})
+    pt = SSAValue(1)
+    pgc_ptr = CC.insert_node!(ir, pt,
+        CC.NewInstruction(
+            Expr(:foreigncall, JL_GET_PGCSTACK_FPTR[], Ptr{UInt8},
+                 Core.svec(), 0, QuoteNode(:ccall)),
+            Ptr{UInt8}),
+        false)
+    CC.insert_node!(ir, pt,
+        CC.NewInstruction(
+            Expr(:call, GlobalRef(Core.Intrinsics, :pointerset),
+                 pgc_ptr, UInt8(1), _STICKY_POINTERSET_INDEX_FROM_PGCSTACK, 1),
+            Ptr{UInt8}),
+        false)
+    CC.insert_node!(ir, pt,
+        CC.NewInstruction(
+            Expr(:foreigncall, TAU_START_FPTR[], Cvoid,
+                 Core.svec(Ptr{UInt8}), 0, QuoteNode(:ccall), label_ptr),
+            Cvoid),
+        false)
+    return nothing
+end
+
+"""
+    _emit_tau_exit_call_phase1!(ir, at, label_ptr)
+
+Insert a single `:foreigncall` to `Tau_stop(label)` immediately before
+SSA position `at`.
+"""
+function _emit_tau_exit_call_phase1!(ir::CC.IRCode, at::SSAValue, label_ptr::Ptr{UInt8})
+    CC.insert_node!(ir, at,
+        CC.NewInstruction(
+            Expr(:foreigncall, TAU_STOP_FPTR[], Cvoid,
+                 Core.svec(Ptr{UInt8}), 0, QuoteNode(:ccall), label_ptr),
+            Cvoid),
+        false)
+    return nothing
+end
+
+"""
+    _build_tau_entry_seq_phase2(label_ptr) -> Vector{Any}
+
+Return the entry sequence (force sticky + `Tau_start`)
+for direct splicing into a Phase 2 `CodeInfo.code` vector.
+"""
+function _build_tau_entry_seq_phase2(label_ptr::Ptr{UInt8})
+    return Any[
+        # %1 = ccall jl_get_pgcstack -> Ptr{UInt8}
+        Expr(:foreigncall, JL_GET_PGCSTACK_FPTR[], Ptr{UInt8},
+             Core.svec(), 0, QuoteNode(:ccall)),
+        # %2 = pointerset(%1, UInt8(1), STICKY_INDEX_FROM_PGCSTACK, 1)
+        #       — compiles to GEP + store at current_task().sticky
+        Expr(:call, GlobalRef(Core.Intrinsics, :pointerset),
+             SSAValue(1), UInt8(1), _STICKY_POINTERSET_INDEX_FROM_PGCSTACK, 1),
+        # %3 = ccall Tau_start(label_ptr) -> Cvoid
+        Expr(:foreigncall, TAU_START_FPTR[], Cvoid,
+             Core.svec(Ptr{UInt8}), 0, QuoteNode(:ccall), label_ptr),
+    ]
+end
+
+"""
+    _tau_exit_call_stmt(label_ptr) -> Expr
+
+Build the single `Tau_stop(label_ptr)` foreigncall used at every exit
+position.
+"""
+function _tau_exit_call_stmt(label_ptr::Ptr{UInt8})
+    return Expr(:foreigncall, TAU_STOP_FPTR[], Cvoid,
+                Core.svec(Ptr{UInt8}), 0, QuoteNode(:ccall), label_ptr)
+end
+
+"""
     _insert_entry_exit_hooks!(ir::CC.IRCode, mi::MethodInstance) -> IRCode
 
-Wrap the function body in try/finally so that `_entry_hook(label)` fires at
-entry and `_exit_hook(label)` fires on both normal return and exception
-propagation. 
+Wrap the function body in try/finally so that `Tau_start` foreigncall fires 
+and the `Tau_stop` foreigncall fires on both normal return and unhandled exception.
 """
 function _insert_entry_exit_hooks!(ir::CC.IRCode, mi::MethodInstance)
     label = _mi_label(mi)
+    label_ptr = _register_tau_label(label)
 
-    # insert_node! + compact! for entry/exit hooks
-    entry_stmt = Expr(:call, GlobalRef(TAUProfile, :_entry_hook), label)
-    CC.insert_node!(ir, SSAValue(1), CC.NewInstruction(entry_stmt, Nothing), false)
+    # Entry: force sticky + Tau_start
+    _emit_tau_entry_seq_phase1!(ir, label_ptr)
 
+    # Exit foreigncall before every return
     for i in length(ir.stmts):-1:1
         stmt = ir.stmts[i][:stmt]
         if stmt isa ReturnNode && isdefined(stmt, :val)
-            exit_stmt = Expr(:call, GlobalRef(TAUProfile, :_exit_hook), label)
-            CC.insert_node!(ir, SSAValue(i), CC.NewInstruction(exit_stmt, Nothing), false)
+            _emit_tau_exit_call_phase1!(ir, SSAValue(i), label_ptr)
         end
     end
 
@@ -942,10 +1045,12 @@ function _insert_entry_exit_hooks!(ir::CC.IRCode, mi::MethodInstance)
     # Fake destinaton label for catch block -- will fix later when we know
     # the actual number.
     SENTINEL_CATCH_DEST = 999_999_999
-    
-    # Insert try/catch enter after entry_hook
+
+    # Insert try/catch enter AFTER the entry prologue
+    PHASE1_ENTRY_PROLOGUE_LEN = 3
     enter_node = EnterNode(SENTINEL_CATCH_DEST)
-    CC.insert_node!(ir, SSAValue(1), CC.NewInstruction(enter_node, Any), true)
+    CC.insert_node!(ir, SSAValue(PHASE1_ENTRY_PROLOGUE_LEN),
+                    CC.NewInstruction(enter_node, Any), true)
 
     # Insert :leave before every return
     for i in n_stmts:-1:1
@@ -1000,8 +1105,8 @@ function _insert_entry_exit_hooks!(ir::CC.IRCode, mi::MethodInstance)
     # Fix EnterNode catch_dest to point to the new catch block
     ir.stmts[enter_pos][:stmt] = EnterNode(catch_block_idx)
 
-    # Append catch block: exit_hook, rethrow, return
-    _push_ir_stmt!(ir, Expr(:call, GlobalRef(TAUProfile, :_exit_hook), label))
+    # Append catch block: Tau_stop foreigncall, rethrow, unreachable return
+    _push_ir_stmt!(ir, _tau_exit_call_stmt(label_ptr), Cvoid)
     _push_ir_stmt!(ir, Expr(:call, GlobalRef(Base, :rethrow)), Union{})
     _push_ir_stmt!(ir, ReturnNode(), Union{})
 
@@ -1117,21 +1222,33 @@ Insert entry/exit hook calls into a lowered CodeInfo (SSA level)
 function _patch_codeinfo_with_hooks(src::Core.CodeInfo, label::String)
     old_code = src.code
     n = length(old_code)
+    label_ptr = _register_tau_label(label)
+
+    # Entry prologue is 4 stmts:
+    #   %1 = ccall jl_get_current_task            (returns Ptr{UInt8})
+    #   %2 = pointerset(%1, 1, STICKY_INDEX, 1)   (set task.sticky = 1)
+    #   %3 = ccall Tau_start(label_ptr)           (start the TAU timer)
+    #   %4 = EnterNode(catch_target)              (enter the try/catch)
+    # Exit prologue before each ReturnNode is 2 stmts:
+    #   ccall Tau_stop(label_ptr)                 (stop the TAU timer)
+    #   :leave                                    (exit the try/catch)
+    # Catch block is 3 stmts (Tau_stop, rethrow, unreachable return).
+    const_ENTRY_PROLOGUE = 4
+    const_EXIT_PROLOGUE  = 2
+    const_CATCH_STMTS    = 3
 
     # ssachangemap[i] = number of NEW statements inserted AT position i
     ssachangemap = zeros(Int, n)
     labelchangemap = zeros(Int, n)
 
-    # Entry block: 2 new stmts before position 1 (entry_hook + EnterNode)
-    ssachangemap[1] += 2
-    labelchangemap[1] += 2
+    ssachangemap[1]    += const_ENTRY_PROLOGUE
+    labelchangemap[1]  += const_ENTRY_PROLOGUE
 
-    # Exit hooks + :leave: 2 new stmts before each ReturnNode
     n_returns = 0
     for i in 1:n
         if old_code[i] isa ReturnNode && isdefined(old_code[i], :val)
-            ssachangemap[i] += 2
-            labelchangemap[i] += 2
+            ssachangemap[i]   += const_EXIT_PROLOGUE
+            labelchangemap[i] += const_EXIT_PROLOGUE
             n_returns += 1
         end
     end
@@ -1141,29 +1258,32 @@ function _patch_codeinfo_with_hooks(src::Core.CodeInfo, label::String)
     CC.renumber_ir_elements!(new_body, ssachangemap, labelchangemap)
 
     # Build final code with try/finally wrapper
-    enter_ssa = SSAValue(2)  # EnterNode is always at position 2
-    # Catch block starts after: 2 (entry) + n (original) + 2*n_returns (exit/leave)
-    catch_target = 2 + n + 2 * n_returns + 1
+    # EnterNode sits at position 7 (end of the entry prologue).
+    enter_ssa = SSAValue(const_ENTRY_PROLOGUE)
+    # Catch block starts after: prologue (7) + n (original) + 2*n_returns (exit/leave)
+    catch_target = const_ENTRY_PROLOGUE + n + const_EXIT_PROLOGUE * n_returns + 1
 
-    total_stmts = 2 + n + 2 * n_returns + 3
-    final_code = sizehint!(Any[], total_stmts)
+    total_stmts = const_ENTRY_PROLOGUE + n + const_EXIT_PROLOGUE * n_returns + const_CATCH_STMTS
+    final_code  = sizehint!(Any[], total_stmts)
     final_flags = sizehint!(UInt32[], total_stmts)
 
     emit!(stmt) = (push!(final_code, stmt); push!(final_flags, UInt32(0)))
 
-    # Entry hook
-    emit!(Expr(:call, GlobalRef(TAUProfile, :_entry_hook), label))
+    # Entry prologue: sticky-pin sequence + Tau_start (SSA positions 1..6).
+    for stmt in _build_tau_entry_seq_phase2(label_ptr)
+        emit!(stmt)
+    end
 
-    # EnterNode (begin try scope)
+    # EnterNode (begin try scope) at position 7.
     emit!(EnterNode(catch_target))
 
-    # Original code with exit_hook + :leave before each ReturnNode
+    # Original code with Tau_stop + :leave before each ReturnNode
     # Track which positions in final_code are ReturnNodes (for post-processing)
     return_positions = Int[]
     for i in 1:n
         stmt = old_code[i]
         if stmt isa ReturnNode && isdefined(stmt, :val)
-            emit!(Expr(:call, GlobalRef(TAUProfile, :_exit_hook), label))
+            emit!(_tau_exit_call_stmt(label_ptr))
             emit!(Expr(:leave, enter_ssa))
         end
         emit!(new_body[i])
@@ -1172,19 +1292,21 @@ function _patch_codeinfo_with_hooks(src::Core.CodeInfo, label::String)
         end
     end
 
-    # Catch block: exit_hook, rethrow, unreachable
-    emit!(Expr(:call, GlobalRef(TAUProfile, :_exit_hook), label))
+    # Catch block: Tau_stop foreigncall, rethrow, unreachable return
+    emit!(_tau_exit_call_stmt(label_ptr))
     emit!(Expr(:call, GlobalRef(Base, :rethrow)))
     emit!(ReturnNode())  # unreachable, structurally required
 
-    # Redirect gotos targeting a ReturnNode to the exit_hook
+    # Redirect gotos targeting a ReturnNode to the Tau_stop foreigncall before
+    # it, so the :leave always fires on the normal-return path. The offset is
+    # the exit prologue size (Tau_stop + :leave = 2 stmts).
     return_set = Set(return_positions)
     for i in 1:length(final_code)
         stmt = final_code[i]
         if stmt isa Core.GotoNode && stmt.label in return_set
-            final_code[i] = Core.GotoNode(stmt.label - 2)
+            final_code[i] = Core.GotoNode(stmt.label - const_EXIT_PROLOGUE)
         elseif stmt isa Core.GotoIfNot && stmt.dest in return_set
-            final_code[i] = Core.GotoIfNot(stmt.cond, stmt.dest - 2)
+            final_code[i] = Core.GotoIfNot(stmt.cond, stmt.dest - const_EXIT_PROLOGUE)
         end
     end
 
