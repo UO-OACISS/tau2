@@ -20,7 +20,7 @@
 #include <vector>
 
 struct LikwidThreadValue {
-  int ThreadID=0; 
+  int ThreadID=0;
   long long *CounterValues=0;
 };
 
@@ -34,6 +34,7 @@ public:
   static int numCounters;
   static int counterList[TAU_MAX_COUNTERS];
   static int* cpus;
+  static int* cpu_to_likwid_tid;  /* reverse map: Linux CPU# -> LIKWID thread index */
   static int gid;
   static int err;
   static bool likwidInitialized;

@@ -39,6 +39,8 @@ using namespace std;
 extern "C" {
 #include <likwid.h>
 }
+#include <sched.h>
+#include <unistd.h>
 
 #define dmesg(level, fmt, ...)
 
@@ -49,6 +51,7 @@ vector<LikwidThreadValue *> & LikwidLayer::TheThreadList() {
 }
 //string LikwidLayer::eventString;//[] = "L2_LINES_IN_ALL:PMC0,L2_TRANS_L2_WB:PMC1";
 int* LikwidLayer::cpus;
+int* LikwidLayer::cpu_to_likwid_tid = NULL;  /* reverse map: Linux CPU# -> LIKWID thread index */
 int num_cpus = 0;
 int LikwidLayer::gid;
 int LikwidLayer::err;
@@ -98,6 +101,19 @@ int LikwidLayer::initializeLikwidLayer() //Tau_initialize_likwid_library(void)
 
 	    LikwidLayer::err = perfmon_init(topo->activeHWThreads, LikwidLayer::cpus);
 	    num_cpus = topo->activeHWThreads; // Store the number of CPUs to use it later in LikwidLayer::getAllCounters
+
+	    // Build reverse map: Linux CPU number -> LIKWID thread index.
+	    // Find the max CPU id so we can size the array correctly.
+	    int max_cpu = 0;
+	    for (int i = 0; i < num_cpus; i++)
+		    if (LikwidLayer::cpus[i] > max_cpu) max_cpu = LikwidLayer::cpus[i];
+	    LikwidLayer::cpu_to_likwid_tid = (int*) malloc((max_cpu + 1) * sizeof(int));
+	    if (LikwidLayer::cpu_to_likwid_tid) {
+		    for (int i = 0; i <= max_cpu; i++)
+			    LikwidLayer::cpu_to_likwid_tid[i] = 0; // default to thread 0
+		    for (int i = 0; i < num_cpus; i++)
+			    LikwidLayer::cpu_to_likwid_tid[LikwidLayer::cpus[i]] = i;
+	    }
 	    LikwidLayer::likwidInitialized = true; // we initialized it, so set this to true
     }
     return 0;
@@ -196,27 +212,21 @@ long long *LikwidLayer::getAllCounters(int tid, int *numValues) {
 	}
 
 	*numValues = numCounters; //TODO: Warning. Likwid adds two additional counters to the specified counter list. This does not seem to matter but could cause unexpected issues in the future. Consider adjusting the value array to contain only the user specified counters.
-	//printf("About to read tid:%d, cpu:%d, gid:%d\n",tid,LikwidLayer::cpus[tid],LikwidLayer::gid);
-	int readres = perfmon_readCounters(); // GroupThread(LikwidLayer::gid,tid);
-	// If we know the CPU the application is running on, we could also use perfmon_readCountersCpu(int cpuid) to reduce overhead
-	//printf("Read returned %d\n",readres);
 
-    
+	//Read counters from a single cpu, using the map to find the corect id. This is faster and changes the behavior of the previous implementation which summed values from all threads.
+	int current_cpu = sched_getcpu();
+	int likwid_tid = 0;
+	if (current_cpu >= 0 && LikwidLayer::cpu_to_likwid_tid) {
+		likwid_tid = LikwidLayer::cpu_to_likwid_tid[current_cpu];
+	} else {
+		likwid_tid = (tid < num_cpus) ? tid : 0;
+	}
+
+	perfmon_readCountersCpu(LikwidLayer::cpus[likwid_tid]);
+
 	for (int comp = 0; comp < numCounters; comp++) {
-		//int comp=0;
-		// Sum up the results of all CPUs
-		double dblsum = 0;
-		for (int c = 0; c < num_cpus; c++) 
-        {
-            dblsum += perfmon_getLastResult(LikwidLayer::gid, comp, c);
-		}
-		//printf("Counter %d longsum %lld dblsum %f\n", comp, static_cast<long long>(dblsum), dblsum);
-        //tmpCounters[comp] += static_cast<long long>(s);
-		//for (int j=0; j<numCounters; j++) {
-		GetThreadList(tid)->CounterValues[comp] += static_cast<long long>(dblsum);
-		//printf("ThreadList[%d]->CounterValues[%d] = %lld\n", tid, comp, ThreadList[tid]->CounterValues[comp]);
-		//}
-
+		double dblval = perfmon_getLastResult(LikwidLayer::gid, comp, likwid_tid);
+		GetThreadList(tid)->CounterValues[comp] += static_cast<long long>(dblval);
 	}
 
 	return GetThreadList(tid)->CounterValues;
