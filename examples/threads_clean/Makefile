@@ -11,19 +11,11 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
  
-include ../../include/Makefile 
+TAU_MAKEFILE ?=../../include/Makefile
 
+CXX		= tau_cxx.sh
 
-
-CXX		= $(TAU_CXX)
-
-CC		= $(TAU_CC)
-
-CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS)
-
-LIBS            = $(TAU_LIBS) -lpthread
-
-LDFLAGS	      	= $(USER_OPT) $(TAU_DEFS)
+CC		= tau_cc.sh
 
 MAKEFILE      	= Makefile
 
