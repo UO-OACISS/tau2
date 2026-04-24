@@ -5628,6 +5628,14 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
                 mpilibrary=$_got_ldflags
                 get_ldflags $my_mpif90_exe $mpishow_option
                 mpiflibargs=`echo $_got_ldflags | sed  -e 's@-qthreaded@@g' -e 's@-fallow-argument-mismatch@@g'`
+                # Also capture Fortran-specific include paths from mpif90 (e.g. gfortran versioned
+                # module paths for mpi.mod on Ubuntu/Debian with newer gfortran), which mpicxx does
+                # not report. Use -I grep rather than get_cflags to avoid picking up Fortran-only
+                # compiler flags that are not valid for C/C++ compilation.
+                f90_incs=`$my_mpif90_exe $mpishow_option 2>/dev/null | tr ' ' '\n' | grep '^-I' | tr '\n' '#' | sed 's/#$//'`
+                if [ "x${f90_incs}" != "x" ] ; then
+                    mpiinc="${mpiinc}#${f90_incs}"
+                fi
                 echo "Found $mpicxx_exe cflags: $mpiinc"
                 echo "Found $mpicxx_exe ldflags: $mpilibargs"
                 echo "Found $mpif90_exe ldflags: $mpiflibargs"
@@ -12176,6 +12184,27 @@ if [ $opari1 = yes ] ; then
 fi
 
 if [ $opari = yes ] ; then
+    # Validate opari2 availability before proceeding
+    if [ "x${oparidir}" = "x" ] ; then
+        # Bundled opari2: source tree must be present
+        if [ ! -d "${tauroot}/utils/opari2" ] ; then
+            echo "ERROR: -opari requires the bundled opari2 source tree (utils/opari2/)."
+            echo "ERROR: It is missing from ${tauroot}/utils/opari2."
+            echo "ERROR: Please provide an external opari2 installation with -opari=<dir>."
+            exit 1
+        fi
+    else
+        # External opari2: directory and binary must be present
+        if [ ! -d "${oparidir}" ] ; then
+            echo "ERROR: -opari=${oparidir}: directory does not exist."
+            exit 1
+        fi
+        if [ ! -x "${oparidir}/bin/opari2" ] ; then
+            echo "ERROR: -opari=${oparidir}: opari2 binary not found at ${oparidir}/bin/opari2."
+            echo "ERROR: Please check your opari2 installation."
+            exit 1
+        fi
+    fi
     fixmakeargs="$fixmakeargs OPARI2 oparidir=$oparidir"
     if [ $oparicomp = no ] ; then
         if [ "x$fortran_compiler" = "xintel" ] ; then
