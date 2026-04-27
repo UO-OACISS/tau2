@@ -1057,13 +1057,9 @@ for arg in "$@" ; do
         	;;
 
 
-            -I)
-           echoIfDebug "-I without any argument specified"
-        	;;
-
-            -D|-U)
+            -I|-D|-U)
                 processingIncludeOrDefineArg=$arg
-                      processingIncludeOrDefine=true
+                processingIncludeOrDefine=true
         	;;
 
             -I*|-D*|-U*)
