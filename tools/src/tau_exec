@@ -1228,7 +1228,7 @@ if [ $track_cupti = "true" ] ; then
   if [ $? != 0 ] ; then
     #tell the user to add cupti to bindings list.
     echo "ERROR: CUPTI library not found. Please ensure that 'cupti' is on the list of bindings specified with the '-T' option."
-    exit
+    exit 1
   else
     # Add the wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUact$TAU_SHLIBX:$TAUEX_LD_PRELOAD
@@ -1280,7 +1280,7 @@ if [ $track_cupti_pc = "true" ] ; then
   if [ $? != 0 ] ; then
     #tell the user to add cupti to bindings list.
     echo "ERROR: CUPTI library not found. Please ensure that 'cupti' is on the list of bindings specified with the '-T' option."
-    exit
+    exit 1
   else
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX:$TAUEX_LD_PRELOAD
     export TAU_CUPTI_PC=1
@@ -1456,7 +1456,7 @@ if [ $qsub_mode = false ]; then
   if [ "$julia_wrapper" != "true" ] ; then
     if [ "$python_wrapper" != "true" -a ! -x "$prog" ] ; then
       echo "$scriptname: $1: command not found"
-      exit
+      exit 127
     fi
   fi
 
@@ -1464,7 +1464,7 @@ if [ $qsub_mode = false ]; then
     if [ ! x"$TAU_TRACE" == "x" ]; then
        if [ $TAU_TRACE == 1 ]; then
 	    echo "-syscall option can't be used with TAU_TRACE=1. Disable tracing when using -syscall."
-	    exit
+	    exit 1
        fi
     fi
     TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-ptrace-syscall$TAU_SHLIBX
