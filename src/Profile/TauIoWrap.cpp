@@ -96,13 +96,51 @@ static IOvector & TheIoWrapEvents()
   return iowrap_events;
 }
 
+/*Constructor ensures main thread identification before main() call
+  Used by checkPassThrough */
+static thread_local bool iowrap_is_main_thread=false;
+struct TagMainThread {
+    TagMainThread() {
+        iowrap_is_main_thread = true;
+    }
+};
+static TagMainThread tag_main_thread_instance;
 /*********************************************************************
  * return whether we should pass through and not track the IO
  ********************************************************************/
 extern "C"
 int Tau_iowrap_checkPassThrough()
 {
-  return lightsOut || Tau_init_initializingTAU() || !Tau_init_check_initialized() || (Tau_global_get_insideTAU() > 0);
+
+    /* Volitile checks. These must be evaluatd every time*/
+    if (lightsOut || (Tau_global_get_insideTAU() > 0)) {
+        return 1;
+    }
+
+    /* Latch for initialization checks. Once the thread is ready, we don't need to check again */
+    static thread_local bool iowrap_thread_ready = false;
+
+    if (!iowrap_thread_ready) {
+        //Global initialization checks
+        if (Tau_init_initializingTAU() || !Tau_init_check_initialized()) {
+            return 1;
+        }
+        
+        // MPI initialzied?
+        if (Tau_get_node() == -1) {
+            return 1;
+        }
+        
+        // Thread ready?
+        if (Tau_get_thread() == 0 && !iowrap_is_main_thread) {
+            return 1;
+        }
+        
+        // Valid thread confirmed
+        iowrap_thread_ready = true;
+    }
+
+    return 0;
 }
 
 /*********************************************************************
@@ -207,9 +245,17 @@ extern "C" void Tau_iowrap_checkInit()
     // don't re-register thread 0!
     if (!seen) {
         if (Tau_init_check_initialized() && !Tau_global_getLightsOut()) {
-            Tau_register_thread();
-            Tau_create_top_level_timer_if_necessary();
+            /* Set seen=true before calling functions that may trigger IO.  Without
+             * this guard, any IO intercepted during Tau_register_thread() (e.g.
+             * from the TAU_VERBOSE call inside it) would re-enter this function
+             * with seen=false, causing infinite recursion and a stack overflow.
+             * Also increment insideTAU so that any such IO passes straight through
+             * the wrapper without being tracked during thread registration. */
             seen = true;
+            Tau_global_incr_insideTAU();
+            Tau_register_thread();
+            Tau_global_decr_insideTAU();
+            Tau_create_top_level_timer_if_necessary();
         }
     }
     return;

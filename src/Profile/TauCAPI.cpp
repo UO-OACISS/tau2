@@ -1273,6 +1273,10 @@ extern "C" void Tau_set_thread(int threadId) {
 }
 
 /* Helper functions for fixing threading */
+
+/* Forward declaration */
+extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid);
+
 #if (!defined(TAU_WINDOWS))
 #ifdef __APPLE__
 /* SYS_gettid doesn't work on stupid OSX, so we'll fake it. All we really want
@@ -1296,7 +1300,9 @@ bool validate_thread() {
     if (tau_tid == 0 && pid != tid) {
         TAU_VERBOSE("Registering thread! %ld != %ld, so need new thread\n", pid, tid);
         Tau_register_thread();
-        Tau_create_top_level_timer_if_necessary();
+        /* Task variant takes tid directly and does not call 
+        Tau_get_thread(). Avoids recursive initialization loop. */
+        Tau_create_top_level_timer_if_necessary_task(RtsLayer::myThread());
     }
     return true;
 }
