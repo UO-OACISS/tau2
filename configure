@@ -13681,7 +13681,7 @@ EOF
         #echo "$cxx_compiler test_l0.c -lze_loader -I$l0dir/include -o test_l0"
         ./test_l0 1> /dev/null 2>&1
             result=$?
-        rm -f ./openacc_test openacc_test.c
+        rm -f ./test_l0 ./test_l0.c
 
         if [ $result = "0" ]; then
             fixmakeargs="$fixmakeargs LEVEL_ZERO"

@@ -739,6 +739,12 @@ std::string GetStallKernelName(uint64_t addr)
             printf("+[%lu] %s %lu %lu\n", addr, kernel_elem.second.name_.c_str(), kernel_elem.first, kernel_elem.second.size_);
         }
     }*/
+    /*
+    std::cout << "+[" << "0x" << std::setw(5) << std::setfill('0') << std::hex << std::uppercase
+              << addr << "] " << it->second.name_.c_str() 
+              << " " << it->first << " " << it->second.size_ << std::endl;
+    printf("+[%lu] %s %lu %lu\n", addr, it->second.name_.c_str(), it->first, it->second.size_);
+    */
     kernel_command_properties_mutex_.unlock();
     return TAU_L0_demangle(stall_kernel_name);
 }

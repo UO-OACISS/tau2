@@ -38,6 +38,10 @@
 
 #include "Profile/L0_new/common_header.h"
 
+#include "Profile/L0_new/gen_binary_decoder.h"
+#include "elf_parser.h"
+
+
 //Kernel name and binary size
 // need binary size as some samples fall
 // outside the binaries size and are invalid
@@ -4618,6 +4622,109 @@ typedef struct _zex_kernel_register_file_size_exp_t {
         struct stall_samp_kernel cur_stall_kernel = { desc.name_, binary_size};
         map_sampling_kernels.insert({base_addr, std::move(cur_stall_kernel)});
       }
+
+
+
+      //Trying to decode
+      //----
+      printf("!! Start\n");
+
+      bool could_parse = true;
+
+      size_t debug_info_size = 0;
+      status = zetModuleGetDebugInfo(mod, ZET_MODULE_DEBUG_INFO_FORMAT_ELF_DWARF, &debug_info_size,
+                                   nullptr);    
+                                   
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      if (debug_info_size == 0) {
+        std::cerr << "[WARNING] Unable to find kernel symbols" << std::endl;
+        return;
+      }
+
+      std::vector<uint8_t> debug_info(debug_info_size);
+      status = zetModuleGetDebugInfo(mod, ZET_MODULE_DEBUG_INFO_FORMAT_ELF_DWARF, &debug_info_size,
+                                   debug_info.data());
+      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+
+      pti_result res;
+
+    elf_parser_handle_t parserHandle = nullptr;
+    res = ptiElfParserCreate(debug_info.data(), static_cast<uint32_t>(debug_info.size()),
+                             &parserHandle);
+    if (res != PTI_SUCCESS || parserHandle == nullptr) {
+      std::cerr << "[WARNING] : Cannot create elf parser" << std::endl;
+      res = ptiElfParserDestroy(&parserHandle);
+      PTI_ASSERT(res == PTI_SUCCESS);
+      PTI_ASSERT(parserHandle == nullptr);
+      return;
+    }
+
+    bool is_valid = false;
+    res = ptiElfParserIsValid(parserHandle, &is_valid);
+    if (res != PTI_SUCCESS || !is_valid) {
+      std::cerr << "[WARNING] : Constructed Elf parser is not valid" << std::endl;
+      res = ptiElfParserDestroy(&parserHandle);
+      PTI_ASSERT(res == PTI_SUCCESS);
+      PTI_ASSERT(parserHandle == nullptr);
+      return;
+    }
+
+    uint32_t kernel_num = 0;
+    res = ptiElfParserGetKernelNames(parserHandle, 0, nullptr, &kernel_num);
+    if (res != PTI_SUCCESS) {
+      std::cerr << "Error: Failed to get kernel names" << std::endl;
+      res = ptiElfParserDestroy(&parserHandle);
+      PTI_ASSERT(res == PTI_SUCCESS);
+      PTI_ASSERT(parserHandle == nullptr);
+      return;
+    }
+
+    if (kernel_num == 0) {
+      std::cerr << "[WARNING] : No kernels found" << std::endl;
+      res = ptiElfParserDestroy(&parserHandle);
+      PTI_ASSERT(res == PTI_SUCCESS);
+      PTI_ASSERT(parserHandle == nullptr);
+      return;
+    }
+
+    std::vector<const char*> kernel_names(kernel_num);
+
+    res = ptiElfParserGetKernelNames(parserHandle, kernel_num, kernel_names.data(), nullptr);
+    if (res != PTI_SUCCESS) {
+      std::cerr << "Error: Failed to get kernel names" << std::endl;
+      res = ptiElfParserDestroy(&parserHandle);
+      PTI_ASSERT(res == PTI_SUCCESS);
+      PTI_ASSERT(parserHandle == nullptr);
+      return;
+    }
+
+    for (const char* name : kernel_names) {
+        if (name)
+            std::cout << name << std::endl;
+        else
+            std::cout << "null" << std::endl;
+    }
+
+    
+
+
+
+      
+
+      
+      
+
+
+      
+      
+      printf("!! End\n");
+      //----
+
+
+
+
+
+
 
       desc.base_addr_ = base_addr;
       desc.size_ = binary_size;

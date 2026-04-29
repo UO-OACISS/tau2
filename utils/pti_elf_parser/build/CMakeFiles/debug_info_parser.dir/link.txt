@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdebug_info_parser.a CMakeFiles/debug_info_parser.dir/src/elf_parser.cpp.o CMakeFiles/debug_info_parser.dir/src/section_debug_line.cpp.o CMakeFiles/debug_info_parser.dir/src/section_debug_info.cpp.o CMakeFiles/debug_info_parser.dir/src/section_debug_abbrev.cpp.o CMakeFiles/debug_info_parser.dir/src/dwarf_state_machine.cpp.o
+/usr/bin/ranlib libdebug_info_parser.a
