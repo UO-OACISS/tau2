@@ -44,7 +44,7 @@ matmult_initialize.o: matmult_initialize.c matmult_initialize.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 notau:
-	gcc $(CFLAGS) *.c -o $(TARGET)
+	$(TAU_CC_FE) $(CFLAGS) *.c -o $(TARGET)
 
 clean: 	
 	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o

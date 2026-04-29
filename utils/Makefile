@@ -136,10 +136,10 @@ tau_ompcheck.o: tau_ompcheck.cpp
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_ompcheck.cpp
 
 perf2tau: perf2tau.o $(PERFLIBDIR)/libperfpp.a 
-		gcc perf2tau.o -o perf2tau -L$(PERFLIBDIR) -lperfpp -lm
+		$(TAU_CC_FE) perf2tau.o -o perf2tau -L$(PERFLIBDIR) -lperfpp -lm
 
 perf2tau.o: perf2tau.c
-		gcc -c perf2tau.c -I$(PERFINCDIR)
+		$(TAU_CC_FE) -c perf2tau.c -I$(PERFINCDIR)
 
 
 $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a:

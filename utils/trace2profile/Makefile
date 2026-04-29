@@ -12,10 +12,11 @@
 #######################################################################
 
 include ../../include/Makefile
+include ../include/Makefile
 ########### Automatically modified by the configure script ############
 
-CC = $(TAU_CC) $(ABI) $(ISA)
-CXX = $(TAU_CXX) $(ABI) $(ISA)
+#CC = $(TAU_CC) $(ABI) $(ISA)
+#CXX = $(TAU_CXX) $(ABI) $(ISA)
 LIBS=$(TAU_TRACE_INPUT_LIB)
 INCLUDES=$(TAU_INCLUDE) -I.
 RM=/bin/rm -f
