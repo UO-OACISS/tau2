@@ -7,6 +7,7 @@ interval and atomic events.
 from __future__ import print_function
 import csv
 import glob
+import io
 import mmap
 import os
 import re
@@ -15,6 +16,42 @@ from sys import stderr
 
 import pandas
 import sys
+
+
+# Normalize whitespace-separated TAU profile rows so pandas' C engine can
+# parse them with sep='\t'. delim_whitespace=True was removed in pandas 3.0
+# and sep=r'\s+' forces a fallback to the much slower Python engine.
+_WHITESPACE_NORMALIZE_RE = re.compile(
+    rb'(?P<quoted>"[^"]*")|(?P<trailing>[ \t]+)(?=\n)|(?P<interior>[ \t]+)'
+)
+
+
+def _normalize_whitespace(buf):
+    def repl(m):
+        if m.lastgroup == 'quoted':
+            return m.group(0)
+        if m.lastgroup == 'trailing':
+            return b''
+        return b'\t'
+    return _WHITESPACE_NORMALIZE_RE.sub(repl, buf)
+
+
+def _pandas_supports_pyarrow_engine():
+    # pandas added engine='pyarrow' to read_csv in 1.4.0.
+    try:
+        parts = pandas.__version__.split('.')
+        major = int(parts[0])
+        minor = int(parts[1]) if len(parts) > 1 else 0
+    except (AttributeError, ValueError, IndexError):
+        return False
+    return (major, minor) >= (1, 4)
+
+
+try:
+    import pyarrow as _pyarrow  # noqa: F401
+    _CSV_ENGINE = 'pyarrow' if _pandas_supports_pyarrow_engine() else 'c'
+except ImportError:
+    _CSV_ENGINE = 'c'
 
 
 class TauProfileParser(object):
@@ -105,9 +142,9 @@ class TauProfileParser(object):
     @staticmethod
     def extract_from_timer_name(name):
         import re
-        tag_search = re.search('^\[(\w+)\]\s+(.*)', name)
+        tag_search = re.search(r'^\[(\w+)\]\s+(.*)', name)
         timer_type, rest = tag_search.groups() if tag_search else (None, name)
-        name_search = re.search('(.+)\[({.*)\]', rest)
+        name_search = re.search(r'(.+)\[({.*)\]', rest)
         func_name, location = name_search.groups() if name_search else (rest, None)
         return func_name, location, timer_type
 
@@ -148,7 +185,7 @@ class TauProfileParser(object):
             print("Error: No profile files found.")
             sys.exit(1)
         for filename in sorted(filenames,
-                               key=lambda s: [int(t) if t.isdigit() else t.lower() for t in re.split('(\d+)', s)]):
+                               key=lambda s: [int(t) if t.isdigit() else t.lower() for t in re.split(r'(\d+)', s)]):
             location = os.path.basename(filename).replace('profile.', '')
             node, context, thread = (int(x) for x in location.split('.'))
             file_path = os.path.join(dir_path, filename)
@@ -160,10 +197,20 @@ class TauProfileParser(object):
                 metadata = cls._parse_metadata(mm)
                 if not trial_data_metadata:
                     trial_data_metadata = metadata
-                interval = pandas.read_csv(mm, nrows=interval_count, delim_whitespace=True,
-                                             names=['Calls', 'Subcalls', 'Exclusive',
-                                                    'Inclusive', 'ProfileCalls', 'Group'],
-                                             engine='c')
+                interval_columns = ['Calls', 'Subcalls', 'Exclusive',
+                                    'Inclusive', 'ProfileCalls', 'Group']
+                if interval_count > 0:
+                    chunk_start = mm.tell()
+                    for _ in range(interval_count):
+                        mm.readline()
+                    chunk_end = mm.tell()
+                    norm = _normalize_whitespace(bytes(mm[chunk_start:chunk_end]))
+                    interval = pandas.read_csv(io.BytesIO(norm), sep='\t',
+                                               engine=_CSV_ENGINE, quotechar='"',
+                                               names=interval_columns,
+                                               index_col=0)
+                else:
+                    interval = pandas.DataFrame(columns=interval_columns)
                 split_index = interval.reset_index()['index'].apply(cls.extract_from_timer_name)
                 for n, col in enumerate(['Timer Name', 'Timer Location', 'Timer Type']):
                     interval[col] = split_index.apply(lambda l: l[n]).values
@@ -171,8 +218,16 @@ class TauProfileParser(object):
                 for i in range(0, interval_count + 2):
                     mm.readline()
                 cls._parse_atomic_header(mm)
-                atomic = pandas.read_csv(mm, names=['Count', 'Maximum', 'Minimum', 'Mean', 'SumSq'],
-                                           delim_whitespace=True, engine='c')
+                atomic_columns = ['Count', 'Maximum', 'Minimum', 'Mean', 'SumSq']
+                atomic_chunk = bytes(mm[mm.tell():])
+                if atomic_chunk.strip():
+                    norm_atomic = _normalize_whitespace(atomic_chunk)
+                    atomic = pandas.read_csv(io.BytesIO(norm_atomic), sep='\t',
+                                             engine=_CSV_ENGINE, quotechar='"',
+                                             names=atomic_columns,
+                                             index_col=0)
+                else:
+                    atomic = pandas.DataFrame(columns=atomic_columns)
                 mm.close()
                 intervals.append(interval)
                 atomics.append(atomic)
