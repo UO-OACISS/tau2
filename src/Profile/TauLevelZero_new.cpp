@@ -846,7 +846,6 @@ void TauStallSamplingEvents( uint64_t address, const char *event_name, uint64_t 
     Tau_userevent_thread(ue, (double)event_value, taskid);
 }
 
-
 void TauL0EnableProfiling()
 {
     //TAU_VERBOSE("To enable metrics: L0_METRICGROUP=ComputeBasic\n");
@@ -921,11 +920,27 @@ void Tau_L0new_flush()
 {
     TauL0DisableProfiling();
 }
-//Try do do the wrapper for
-/*
+
+#if 0
+//Try do do the wrapper for zeInit
+typedef ze_result_t (*real_zeInit_t)(ze_init_flags_t);
+
 ZE_APIEXPORT ze_result_t ZE_APICALL zeInit(ze_init_flags_t flags)
 {
-    printf("zeInit wrapper\n");
-    return zeInit(flags);
+    static real_zeInit_t real_zeInit = NULL;
+
+    if (real_zeInit == NULL) {
+        real_zeInit = (real_zeInit_t)dlsym(RTLD_NEXT, "zeInit");
+        if (!real_zeInit) {
+            fprintf(stderr, "Failed to find real zeInit\n");
+            return ZE_RESULT_ERROR_UNKNOWN;
+        }
+    }
+
+    if(!Tau_init_check_initialized())
+        Tau_init_initializeTAU();
+
+    return real_zeInit(flags);
 }
-*/
+
+#endif
