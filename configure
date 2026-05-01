@@ -13596,7 +13596,7 @@ fixmakeargs="$fixmakeargs extra_linker_args=$extra_linker_args"
 
 if [ "${level_zero}" = "yes" -a "${level_zero_legacy}" = "yes" ] ; then
     echo "Forcing legacy Level Zero"
-    fixmakeargs="$fixmakeargs LEVEL_ZERO_OLD"
+    fixmakeargs="$fixmakeargs LEVEL_ZERO_LEGACY"
     tauoptions="${tauoptions}-l0legacy"
     if [ "x${mdisc_dir}" = "x" ]; then
         if [ -r /usr/include/metrics_discovery_api.h ]; then
@@ -13686,7 +13686,7 @@ EOF
         if [ $result = "0" ]; then
             fixmakeargs="$fixmakeargs LEVEL_ZERO"
         else
-            fixmakeargs="$fixmakeargs LEVEL_ZERO_OLD"
+            fixmakeargs="$fixmakeargs LEVEL_ZERO_LEGACY"
         fi
 
     else
@@ -13696,7 +13696,7 @@ EOF
     fi
     
     #fixmakeargs="$fixmakeargs LEVEL_ZERO"
-    #fixmakeargs="$fixmakeargs LEVEL_ZERO_OLD"
+    #fixmakeargs="$fixmakeargs LEVEL_ZERO_LEGACY"
 
     if [ "x${mdisc_dir}" = "x" ]; then
         if [ -r /usr/include/metrics_discovery_api.h ]; then

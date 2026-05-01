@@ -1093,8 +1093,8 @@ case $1 in
 	      echo "s@^TAU_MDISC_DIR=\(.*\)@TAU_MDISC_DIR=$mdisc_dir@g" >> $sedout
         ;;
 
-     LEVEL_ZERO_OLD)
-        echo NOTE: Using the TAU Level Zero Old Profiling Interface
+     LEVEL_ZERO_LEGACY)
+        echo NOTE: Using the TAU Level Zero Legacy Profiling Interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
