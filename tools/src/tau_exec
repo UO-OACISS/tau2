@@ -1057,7 +1057,6 @@ if [ $track_l0 = "true" ]; then
   $dryrun export PTI_ENABLE=1
   $dryrun export ZE_ENABLE_TRACING_LAYER=1
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-zeinit$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-  echo $TAUEX_LD_PRELOAD
   if [ $track_l0_stall_sampling = "true" ]; then
     if [ ! -v L0_METRICGROUP ]; then
       $dryrun export L0_METRICGROUP="EuStallSampling"
