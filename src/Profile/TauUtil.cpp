@@ -126,11 +126,20 @@ static tau_bfd_handle_t & TheBfdUnitHandle()
 {
   static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
   if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    /* Increment insideTAU before acquiring the env lock so that any I/O
+     * calls made during BFD initialisation (e.g. fopen("/proc/self/maps"))
+     * are seen by the iowrap pass-through guard as internal TAU calls and
+     * are not profiled.  Without this, the iowrap would try to acquire
+     * get_pure_map_mutex while this thread already holds tauDBMutex (via
+     * LockEnv), creating an ABBA deadlock with threads that hold
+     * get_pure_map_mutex and are waiting for tauDBMutex. */
+    Tau_global_incr_insideTAU();
     RtsLayer::LockEnv();
     if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
       bfdUnitHandle = Tau_bfd_registerUnit();
     }
     RtsLayer::UnLockEnv();
+    Tau_global_decr_insideTAU();
   }
   return bfdUnitHandle;
 }
