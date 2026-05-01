@@ -199,6 +199,12 @@ extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_addr
  * For this feature to be active, TAU_OMPT_RESOLVE_ADDRESS_EAGERLY must be set.*/
 extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address) {
 
+      /* Set inside TAU for the duration of BFD resolution.
+       * BFD opens shared-library files internally (e.g. via fopen/fopen64) and
+       * performs allocations.  Without this guard those calls will be intercepted
+       * by the IO wrapper and memory tracker, potentially leading to deadlocks */
+      TauInternalFunctionGuard protects_this_function;
+
       #ifdef TAU_BFD
       HashNode * node;
       tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();

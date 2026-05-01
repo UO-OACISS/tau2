@@ -51,7 +51,12 @@ static int getBacktraceFromExecinfo(int trim, BacktraceFrame ** oframes)
 
   // Initialize BFD
   if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    /* The iowrap/memory wrapper can intercept the call and deadlock or
+     * cause unexpected re-entrancy when this function is called without an
+     * outer TauInternalFunctionGuard (e.g. from Tau_print_simple_backtrace). */
+    Tau_global_incr_insideTAU();
     bfdUnitHandle = Tau_bfd_registerUnit();
+    Tau_global_decr_insideTAU();
   }
 
   // Get the backtrace
