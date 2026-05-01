@@ -131,6 +131,7 @@ std::mutex TauAllocation::mtx;
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::DetectLeaks(void)
 {
+  std::lock_guard<std::mutex> lck(mtx);
 
   allocation_map_t const & alloc_map = AllocationMap();
   if (alloc_map.empty()) {
