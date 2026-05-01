@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <filesystem>
 
 #if !defined(_WIN32) && (defined(__gnu_linux__) || defined(__unix__))
 #include <dlfcn.h>
@@ -49,8 +50,51 @@
 struct stall_samp_kernel{
   std::string name_;
   uint64_t size_;
-
 };
+
+struct SourceLine {
+  uint32_t number;
+  std::string text;
+};
+
+struct SourceFileInfo {
+  uint32_t file_id;
+  std::string file_name;
+  std::vector<SourceLine> source_line_list;
+};
+
+
+struct tau_l0_inst_info {
+  std::string text;
+  uint64_t line_number;
+  //the parser returns the address starting with "8", but 
+  // the 
+  uint64_t original_address;
+  uint32_t file_id;
+};
+
+//We need two maps, one map for the kernel instructions, will have the line number of the source
+// and the text with the instruction information
+// And another for the information related to the source line (better than duplicating
+// this information inside the previous map)
+static std::map<uint64_t, tau_l0_inst_info> tau_map_l0_inst_info;
+static std::map<uint32_t, std::string> tau_map_l0_source_info;
+
+
+/*
+struct tau_l0_source_info {
+  std::string full_path;
+};
+
+
+
+//We need two maps, one map for the kernel instructions, will have the line number of the source
+// and the text with the instruction information
+// And another for the information related to the source line (better than duplicating
+// this information inside the previous map)
+static std::map<uint64_t, tau_l0_inst_info> tau_map_l0_inst_info;
+static std::map<uint32_t, tau_l0_source_info> tau_map_l0_source_info;
+*/
 
 //Map for stall_sampling, with lower bound address, address
 static std::map<uint64_t, stall_samp_kernel> map_sampling_kernels;
@@ -4523,6 +4567,34 @@ typedef struct _zex_kernel_register_file_size_exp_t {
 
 #endif /* !defined(ZEX_STRUCTURE_KERNEL_REGISTER_FILE_SIZE_EXP) */
 
+  static std::vector<SourceLine> ReadSourceFile(const std::string& file_path, std::string& out_abs_path) {
+    std::string abs_path = file_path;
+    std::filesystem::path p(file_path);
+    p = p.lexically_normal();
+    if (p.is_relative()) {
+      abs_path = (std::filesystem::path(utils::GetExecutablePath()) / p).string();
+    } else {
+        abs_path = p.string();
+    }
+    out_abs_path = abs_path;
+    std::ifstream file(abs_path);
+    if (!file.is_open()) {
+      return std::vector<SourceLine>();
+    }
+
+    std::vector<SourceLine> line_list;
+
+    uint32_t number = 1;
+    std::string text;
+    while (std::getline(file, text)) {
+      line_list.push_back({number, text});
+      ++number;
+    }
+
+    return line_list;
+  }
+
+
   static void OnExitKernelCreate(ze_kernel_create_params_t *params, ze_result_t result, void* global_data, void** /* instance_user_data */) {
     if (result == ZE_RESULT_SUCCESS) {
       ZeCollector* collector = reinterpret_cast<ZeCollector*>(global_data);
@@ -4623,12 +4695,6 @@ typedef struct _zex_kernel_register_file_size_exp_t {
         map_sampling_kernels.insert({base_addr, std::move(cur_stall_kernel)});
       }
 
-
-
-      //Trying to decode
-      //----
-      printf("!! Start\n");
-
       bool could_parse = true;
 
       size_t debug_info_size = 0;
@@ -4648,82 +4714,211 @@ typedef struct _zex_kernel_register_file_size_exp_t {
 
       pti_result res;
 
-    elf_parser_handle_t parserHandle = nullptr;
-    res = ptiElfParserCreate(debug_info.data(), static_cast<uint32_t>(debug_info.size()),
-                             &parserHandle);
-    if (res != PTI_SUCCESS || parserHandle == nullptr) {
-      std::cerr << "[WARNING] : Cannot create elf parser" << std::endl;
+      elf_parser_handle_t parserHandle = nullptr;
+      res = ptiElfParserCreate(debug_info.data(), static_cast<uint32_t>(debug_info.size()),
+                              &parserHandle);
+      if (res != PTI_SUCCESS || parserHandle == nullptr) {
+        std::cerr << "[WARNING] : Cannot create elf parser" << std::endl;
+        res = ptiElfParserDestroy(&parserHandle);
+        PTI_ASSERT(res == PTI_SUCCESS);
+        PTI_ASSERT(parserHandle == nullptr);
+        return;
+      }
+
+      bool is_valid = false;
+      res = ptiElfParserIsValid(parserHandle, &is_valid);
+      if (res != PTI_SUCCESS || !is_valid) {
+        std::cerr << "[WARNING] : Constructed Elf parser is not valid" << std::endl;
+        res = ptiElfParserDestroy(&parserHandle);
+        PTI_ASSERT(res == PTI_SUCCESS);
+        PTI_ASSERT(parserHandle == nullptr);
+        return;
+      }
+
+      uint32_t kernel_num = 0;
+      res = ptiElfParserGetKernelNames(parserHandle, 0, nullptr, &kernel_num);
+      if (res != PTI_SUCCESS) {
+        std::cerr << "Error: Failed to get kernel names" << std::endl;
+        res = ptiElfParserDestroy(&parserHandle);
+        PTI_ASSERT(res == PTI_SUCCESS);
+        PTI_ASSERT(parserHandle == nullptr);
+        return;
+      }
+
+      if (kernel_num == 0) {
+        std::cerr << "[WARNING] : No kernels found" << std::endl;
+        res = ptiElfParserDestroy(&parserHandle);
+        PTI_ASSERT(res == PTI_SUCCESS);
+        PTI_ASSERT(parserHandle == nullptr);
+        return;
+      }
+
+      std::vector<const char*> kernel_names(kernel_num);
+
+      res = ptiElfParserGetKernelNames(parserHandle, kernel_num, kernel_names.data(), nullptr);
+      if (res != PTI_SUCCESS) {
+        std::cerr << "Error: Failed to get kernel names" << std::endl;
+        res = ptiElfParserDestroy(&parserHandle);
+        PTI_ASSERT(res == PTI_SUCCESS);
+        PTI_ASSERT(parserHandle == nullptr);
+        return;
+      }
+
+      /*
+      for (const char* name : kernel_names) {
+          if (name)
+              std::cout << name << std::endl;
+          else
+              std::cout << "null" << std::endl;
+      }
+      */
+
+      //Intel_Symbol_Table_Void_Program cannot be found, happens with OpenMP, ignore
+      if(desc.name_.rfind("Intel_Symbol_Table", 0) != 0)
+      {
+        for (uint32_t kernel_idx = 0; kernel_idx < kernel_names.size(); kernel_idx++) {
+          if (desc.name_ != std::string(kernel_names[kernel_idx])) {
+            continue;
+          }
+
+          uint32_t binary_size = 0;
+          const uint8_t* binary = nullptr;
+          uint64_t kernel_address = 0;
+
+          res = ptiElfParserGetBinaryPtr(parserHandle, kernel_idx, &binary, &binary_size,
+                                        &kernel_address);
+          if (res != PTI_SUCCESS || binary_size == 0) {
+            std::cerr << "[WARNING] : Unable to get GEN binary for kernel: " << desc.name_
+                      << std::endl;
+            continue;
+          }
+          
+          uint32_t gfx_core = 0;
+          res = ptiElfParserGetGfxCore(parserHandle, &gfx_core);
+          if (res != PTI_SUCCESS || gfx_core == 0) {
+            std::cerr << "[WARNING] : Unable to get GEN binary version for kernel: " << desc.name_
+                      << std::endl;
+            continue;
+          }
+          
+          GenBinaryDecoder decoder(binary, binary_size, GenBinaryDecoder::GfxCoreToIgaGen(gfx_core));
+          if (!decoder.IsValid()) {
+            std::cerr << "[WARNING] : Unable to create decoder for kernel: " << desc.name_
+                      << std::endl;
+            continue;
+          }
+          
+          std::vector<Instruction> instruction_list = decoder.Disassemble();
+          if (instruction_list.size() == 0) {
+            std::cerr << "[WARNING] : Unable to decode kernel binary for kernel: " << desc.name_
+                      << std::endl;
+            continue;
+          }
+          /// Apply base addr to all instructions
+          for (auto& instruction : instruction_list) {
+            instruction.offset += kernel_address;
+          }
+          
+          uint32_t mapping_num = 0;
+          res = ptiElfParserGetSourceMapping(parserHandle, kernel_idx, 0, nullptr, &mapping_num);
+          if (res != PTI_SUCCESS) {
+            std::cerr << "[WARNING] : Failed to get source mapping for kernel ID: " << kernel_idx
+                      << std::endl;
+            continue;
+          }
+
+          std::vector<SourceMapping> line_info_list(mapping_num);
+          res = ptiElfParserGetSourceMapping(parserHandle, kernel_idx, mapping_num,
+                                            line_info_list.data(), nullptr);
+          if (res != PTI_SUCCESS) {
+            std::cerr << "[WARNING] : No source mapping found for kernel ID: " << kernel_idx
+                      << std::endl;
+            continue;
+          }
+
+          
+          std::unordered_map<uint32_t, SourceFileInfo> source_info_list;
+          for (const auto& line : line_info_list) {
+            if (source_info_list.find(line.file_id) != source_info_list.end()) {
+              continue;
+            }
+            std::filesystem::path fullpath =
+                std::filesystem::path(std::string(line.file_path)) / line.file_name;
+            std::string abs_path;
+            std::vector<SourceLine> line_list = ReadSourceFile(fullpath, abs_path);
+            if (line_list.size() == 0) {
+              std::cerr << "[WARNING] : Unable to find target source file for kernel: '" << desc.name_
+                        << "' : " << std::string(line.file_path) + line.file_name << std::endl;
+              continue;
+            }
+
+            PTI_ASSERT(line.file_id < (std::numeric_limits<uint32_t>::max)());
+            source_info_list[line.file_id] = {static_cast<uint32_t>(line.file_id), line.file_name,
+                                            line_list};
+            tau_map_l0_source_info[line.file_id] = abs_path;
+          }
+
+
+          uint64_t last_instruction_address = instruction_list.back().offset;
+          const std::vector<SourceMapping>& line_info = line_info_list;
+
+
+          //std::cerr << "++++ Kernel: " << desc.name_ << " ++++" << std::endl;
+          for (auto& source_info : source_info_list) 
+          {
+            //std::cerr << "=== File: " << source_info.second.file_name.c_str() << " ===" << std::endl;
+            const std::vector<SourceLine> line_list = source_info.second.source_line_list;
+            if(line_list.size() == 0)
+              continue;
+              
+            for (const auto& line : line_list) {
+              for (size_t l = 0; l < line_info.size(); ++l) {
+                if (line_info[l].line == line.number) {
+                  uint64_t start_address = line_info[l].address;
+                  uint64_t end_address =
+                      (l + 1 < line_info.size()) ? line_info[l + 1].address : last_instruction_address;
+
+                  for (auto instruction : instruction_list) {
+                    if (instruction.offset >= start_address && instruction.offset < end_address &&
+                        source_info.second.file_id == line_info[l].file_id) {
+                      /*std::cout << std::hex << std::uppercase
+                                << "Address " << instruction.offset
+                                << std::hex
+                                << "Address " << (instruction.offset - 0x800000000000ULL)
+                                << std::hex << std::uppercase
+                                << " Address " << instruction.offset - kernel_address
+                                << std::dec
+                                << " Text " << instruction.text
+                                << " Line number " << line.number
+                                << " File id " << line_info[l].file_id
+                                << " F_path " << tau_map_l0_source_info[line_info[l].file_id];
+                      std::cout << std::endl;*/
+                      //Need to remove the first 0x8 to work, unitrace adds it to the IP, but we will remove it from the
+                      // address to have it similar to the address provided by the counters used for stall sampling
+                      tau_map_l0_inst_info[(instruction.offset - 0x800000000000)] = {instruction.text, line.number, instruction.offset, line_info[l].file_id};
+
+                    }
+                  }
+                }
+              }
+            }
+          }
+        
+          //++++
+
+          if (source_info_list.size() == 0) {
+            std::cerr << "[WARNING] : Unable to find kernel source files for kernel: " << desc.name_ << std::endl;
+            res = ptiElfParserDestroy(&parserHandle);
+            PTI_ASSERT(res == PTI_SUCCESS);
+            PTI_ASSERT(parserHandle == nullptr);
+            continue;
+          }
+          break;
+        }
+        
+      }
+
       res = ptiElfParserDestroy(&parserHandle);
-      PTI_ASSERT(res == PTI_SUCCESS);
-      PTI_ASSERT(parserHandle == nullptr);
-      return;
-    }
-
-    bool is_valid = false;
-    res = ptiElfParserIsValid(parserHandle, &is_valid);
-    if (res != PTI_SUCCESS || !is_valid) {
-      std::cerr << "[WARNING] : Constructed Elf parser is not valid" << std::endl;
-      res = ptiElfParserDestroy(&parserHandle);
-      PTI_ASSERT(res == PTI_SUCCESS);
-      PTI_ASSERT(parserHandle == nullptr);
-      return;
-    }
-
-    uint32_t kernel_num = 0;
-    res = ptiElfParserGetKernelNames(parserHandle, 0, nullptr, &kernel_num);
-    if (res != PTI_SUCCESS) {
-      std::cerr << "Error: Failed to get kernel names" << std::endl;
-      res = ptiElfParserDestroy(&parserHandle);
-      PTI_ASSERT(res == PTI_SUCCESS);
-      PTI_ASSERT(parserHandle == nullptr);
-      return;
-    }
-
-    if (kernel_num == 0) {
-      std::cerr << "[WARNING] : No kernels found" << std::endl;
-      res = ptiElfParserDestroy(&parserHandle);
-      PTI_ASSERT(res == PTI_SUCCESS);
-      PTI_ASSERT(parserHandle == nullptr);
-      return;
-    }
-
-    std::vector<const char*> kernel_names(kernel_num);
-
-    res = ptiElfParserGetKernelNames(parserHandle, kernel_num, kernel_names.data(), nullptr);
-    if (res != PTI_SUCCESS) {
-      std::cerr << "Error: Failed to get kernel names" << std::endl;
-      res = ptiElfParserDestroy(&parserHandle);
-      PTI_ASSERT(res == PTI_SUCCESS);
-      PTI_ASSERT(parserHandle == nullptr);
-      return;
-    }
-
-    for (const char* name : kernel_names) {
-        if (name)
-            std::cout << name << std::endl;
-        else
-            std::cout << "null" << std::endl;
-    }
-
-    
-
-
-
-      
-
-      
-      
-
-
-      
-      
-      printf("!! End\n");
-      //----
-
-
-
-
-
 
 
       desc.base_addr_ = base_addr;

@@ -13690,6 +13690,7 @@ EOF
         fi
 
     else
+        rm test_l0.c
         echo "Error compiling L0 version check"
         exit 1
     fi
@@ -13707,7 +13708,6 @@ EOF
         fi
     fi
 
-    rm test_l0.c test_l0
 fi
 
 

@@ -443,6 +443,53 @@ std::string TAU_L0_demangle(std::string original_name)
     return event_name ;
 }
 
+std::string TAU_L0_demangle_sampling(std::string original_name, std::string file_name, uint64_t inst_line, std::string inst_text)
+{
+    //Use the line and file provided by tau_map_l0_source_info and tau_map_l0_inst_info
+    //OMP Offloaded function names appear as a string with
+    // multiple information fields, parse them
+    //May change if the string changes in the future
+    static std::string omp_off_string = "__omp_offloading";
+    std::string event_name = "[L0] GPU: ";
+
+    if( strncmp(original_name.c_str(), omp_off_string.c_str(), omp_off_string.length())==0)
+    {
+    /*
+        __omp_offloading_3d_2c4a55__Z14compute_target_l105
+        __omp_offloading      :  standard prefex
+        3d                   : DeviceID
+        2c4a55               : FileID
+        _Z14compute_target   : Mangled function name.  Use C++filt
+        L105                 :  line number in the file.  Line-105
+    */
+
+        int pos_key=omp_off_string.length();
+        for(int i =0; i<3; i++)
+        {
+            pos_key = original_name.find_first_of('_', pos_key + 1);
+        }
+        event_name = event_name + "OMP OFFLOADING ";
+        event_name = event_name + Tau_demangle_name(original_name.substr(pos_key,original_name.find_last_of("l")-pos_key-1).c_str());
+        event_name = event_name + " [{";
+        event_name = event_name + file_name;
+        event_name = event_name + "} {";
+        event_name += (inst_line == -1)? original_name.substr(original_name.find_last_of("l")+1) : std::to_string(inst_line);
+        event_name += ",0}] ";
+        event_name += "{" + inst_text + "} ";
+    }
+    else
+    {
+        event_name = event_name + Tau_demangle_name(original_name.c_str());
+        event_name = event_name + " [{";
+        event_name = event_name + file_name;
+        event_name = event_name + "} {";
+        event_name += (inst_line == -1)? std::to_string(0) : std::to_string(inst_line);
+        event_name += ",0}] ";
+        event_name += "{" + inst_text + "} ";
+    }
+    return event_name ;
+}
+
 //GPU events, needs a task per device and tile(concurrent kernels)
 // need a map with device and tile to task_id
 //Also, there are some things detected as Kernel which really aren't
@@ -745,8 +792,35 @@ std::string GetStallKernelName(uint64_t addr)
               << " " << it->first << " " << it->second.size_ << std::endl;
     printf("+[%lu] %s %lu %lu\n", addr, it->second.name_.c_str(), it->first, it->second.size_);
     */
+    std::string file_name = "UNRESOLVED";
+    uint64_t inst_line = -1;
+    std::string inst_text = "";
+    auto it2 = tau_map_l0_inst_info.find(addr);
+    //std::cout << "! ? Address: 0x" << std::hex << addr << std::endl;
+    if(it2 != tau_map_l0_inst_info.end())
+    {
+        //std::cout << "!! file_id: " << it2->second.file_id << std::endl;
+        file_name = tau_map_l0_source_info[it2->second.file_id];
+        inst_line = it2->second.line_number;
+        inst_text = it2->second.text;
+    }
+    /*
+    for (const auto& [key, value] : tau_map_l0_source_info) {
+        std::cout << "!! file_id: " << key
+              << " -> " << value
+              << std::endl;
+    }
+    for (const auto& [addr, info] : tau_map_l0_inst_info) {
+        std::cout << "! Address: 0x" << std::hex << addr << std::dec
+              << " | Text: " << info.text
+              << " | Line: " << info.line_number
+              << " | Original addr: 0x" << std::hex << info.original_address << std::dec
+              << " | File ID: " << info.file_id
+              << std::endl;
+    }*/
+    //std::cout << " !! " << file_name << std::endl;
     kernel_command_properties_mutex_.unlock();
-    return TAU_L0_demangle(stall_kernel_name);
+    return TAU_L0_demangle_sampling(stall_kernel_name, file_name, inst_line, inst_text);
 }
 
 void TauStallSamplingEvents( uint64_t address, const char *event_name, uint64_t event_value, ze_device_handle_t curr_device)
@@ -754,12 +828,19 @@ void TauStallSamplingEvents( uint64_t address, const char *event_name, uint64_t 
     tuple<uintptr_t, int, size_t> dev_tile(reinterpret_cast<uintptr_t>(curr_device), 0, 0);
     int taskid = Tau_get_initialized_queues(dev_tile, 0, 0);
     std::string kernel_name = GetStallKernelName(address);
-    if (kernel_name == "[L0] GPU: Unknown")
+    //With some codes, we get some sampling that are trash
+    std::string l0_unkn_string = "[L0] GPU: Unknown [{UNRESOLVED} {0,0}]";
+    if(kernel_name.size() >= l0_unkn_string.size() &&
+        kernel_name.compare(0, l0_unkn_string.size(), l0_unkn_string) == 0)
+    {
         return;
+    }
+
     std::stringstream ss;
-    ss << kernel_name << " [Address: ";
-    ss << std::hex << address ;
-    ss << "] " << event_name;
+    ss << kernel_name ;
+    //ss << " [Address: ";
+    //ss << std::hex << address << "] ";
+    ss << event_name;
     std::string tmp = ss.str();
     void* ue = Tau_get_userevent(tmp.c_str());
     Tau_userevent_thread(ue, (double)event_value, taskid);
@@ -840,3 +921,11 @@ void Tau_L0new_flush()
 {
     TauL0DisableProfiling();
 }
+//Try do do the wrapper for
+/*
+ZE_APIEXPORT ze_result_t ZE_APICALL zeInit(ze_init_flags_t flags)
+{
+    printf("zeInit wrapper\n");
+    return zeInit(flags);
+}
+*/

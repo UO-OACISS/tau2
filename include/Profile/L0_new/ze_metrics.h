@@ -296,7 +296,7 @@ class ZeMetricProfiler {
 
           // IP address is already processed. (metric_list.size() - 1) is the number of types of stall
           for (uint32_t k = 0; k <  (stall_names_list.size() - 1); k++) {
-            //printf(" %lu, ", value[j + k + 1].value.ui64);
+            //printf("\n.. %lu\n ", value[j + k + 1].value.ui64);
             uint64_t event_value = value[j + k + 1].value.ui64;
             if(event_value != 0)
               TauStallSamplingEvents(ip, stall_names_list[k+1].c_str(), event_value, device);
