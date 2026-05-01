@@ -1101,6 +1101,8 @@ struct ZeKernelCommandProperties {
   uint32_t regsize_;	// GRF size per thread
   bool aot_;		// AOT or JIT
   std::string name_;	// kernel or command name
+  uint64_t src_line=0;
+  std::string abs_path="";
 };
 
 // these will not go away when ZeCollector is destructed
@@ -4773,6 +4775,9 @@ typedef struct _zex_kernel_register_file_size_exp_t {
       }
       */
 
+      std::string kernel_abs_path = "UNRESOLVED" ;
+      uint64_t kernel_src_line = 0;
+      int found = 0;
       //Intel_Symbol_Table_Void_Program cannot be found, happens with OpenMP, ignore
       if(desc.name_.rfind("Intel_Symbol_Table", 0) != 0)
       {
@@ -4872,6 +4877,8 @@ typedef struct _zex_kernel_register_file_size_exp_t {
               continue;
               
             for (const auto& line : line_list) {
+              /*std::cerr << "[" << std::setw(5) << std::setfill(' ') << std::dec << line.number << "] "
+                        << line.text << std::endl;*/
               for (size_t l = 0; l < line_info.size(); ++l) {
                 if (line_info[l].line == line.number) {
                   uint64_t start_address = line_info[l].address;
@@ -4881,6 +4888,17 @@ typedef struct _zex_kernel_register_file_size_exp_t {
                   for (auto instruction : instruction_list) {
                     if (instruction.offset >= start_address && instruction.offset < end_address &&
                         source_info.second.file_id == line_info[l].file_id) {
+                      if(found == 0)
+                      {
+                        /*std::cout << std::dec << std::uppercase
+                                << " Line number " << line.number
+                                << " File id " << line_info[l].file_id
+                                << " F_path " << tau_map_l0_source_info[line_info[l].file_id];
+                        std::cout << std::endl;*/
+                        kernel_abs_path = tau_map_l0_source_info[line_info[l].file_id];
+                        kernel_src_line = line.number;
+                        found = 1;
+                      }
                       /*std::cout << std::hex << std::uppercase
                                 << "Address " << instruction.offset
                                 << std::hex
@@ -4923,6 +4941,8 @@ typedef struct _zex_kernel_register_file_size_exp_t {
 
       desc.base_addr_ = base_addr;
       desc.size_ = binary_size;
+      desc.abs_path = kernel_abs_path;
+      desc.src_line = kernel_src_line;
 
       ZeKernelCommandProperties desc2 = desc;
       active_kernel_properties_->insert({kernel, std::move(desc)});

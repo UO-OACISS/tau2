@@ -406,7 +406,7 @@ size_t check_overlap(uintptr_t curr_device, int curr_tile, uint64_t kernel_start
     return 0;
 }
 
-std::string TAU_L0_demangle(std::string original_name)
+std::string TAU_L0_demangle(std::string original_name, uint64_t src_line, std::string src_abs_path)
 {
     //OMP Offloaded function names appear as a string with
     // multiple information fields, parse them
@@ -432,13 +432,20 @@ std::string TAU_L0_demangle(std::string original_name)
         }
         event_name = event_name + "OMP OFFLOADING ";
         event_name = event_name + Tau_demangle_name(original_name.substr(pos_key,original_name.find_last_of("l")-pos_key-1).c_str());
-        event_name = event_name + " [{UNRESOLVED} {";
+        event_name = event_name + " [{";
+        event_name = event_name + src_abs_path;
+        event_name = event_name + "} {";
         event_name = event_name + original_name.substr(original_name.find_last_of("l")+1);
         event_name = event_name + ",0}]";
     }
     else
     {
         event_name = event_name + Tau_demangle_name(original_name.c_str());
+        event_name = event_name + " [{";
+        event_name = event_name + src_abs_path;
+        event_name = event_name + "} {";
+        event_name = event_name + std::to_string(src_line);
+        event_name = event_name + ",0}]";
     }
     return event_name ;
 }
@@ -462,7 +469,6 @@ std::string TAU_L0_demangle_sampling(std::string original_name, std::string file
         _Z14compute_target   : Mangled function name.  Use C++filt
         L105                 :  line number in the file.  Line-105
     */
-
         int pos_key=omp_off_string.length();
         for(int i =0; i<3; i++)
         {
@@ -528,7 +534,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             L0_TAU_DEBUG_MSG("DISCARDED -- \n");
             std::cout << "Thread: " << command->tid_ << std::endl;
             std::cout << "Device: " << reinterpret_cast<uintptr_t>(command->device_) << std::endl;
-            std::cout << "CommandName: " << event_name << std::endl;
+            std::cout << "CommandName: " << it->second.name_.c_str() << std::endl;
             std::cout << "command->append_time_ " << command->append_time_ << std::endl;
             std::cout << "command->submit_time_ " << command->submit_time_ << std::endl;
             std::cout << "kernel_start " << kernel_start << std::endl;
@@ -544,16 +550,13 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             #endif
             kernel_command_properties_mutex_.unlock_shared();
             return;
-        }
-
-        std::string event_name = TAU_L0_demangle(it->second.name_.c_str());
-        
+        }        
 
         #ifdef L0_TAU_DEBUG  
             L0_TAU_DEBUG_MSG("TAU_L0_kernel_event -- \n");
             std::cout << "Thread: " << command->tid_ << std::endl;
             std::cout << "Device: " << reinterpret_cast<uintptr_t>(command->device_) << std::endl;
-            std::cout << "CommandName: " << event_name << std::endl;
+            std::cout << "CommandName: " << it->second.name_.c_str() << std::endl;
             std::cout << "command->append_time_ " << command->append_time_ << std::endl;
             std::cout << "command->submit_time_ " << command->submit_time_ << std::endl;
             std::cout << "kernel_start " << kernel_start << std::endl;
@@ -599,6 +602,8 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         if(it->second.type_ == KERNEL_COMMAND_TYPE_COMPUTE)
         {
             L0_TAU_DEBUG_MSG("KERNEL_COMMAND_TYPE_COMPUTE!!\n");
+            std::string event_name = TAU_L0_demangle(it->second.name_.c_str(), it->second.src_line, it->second.abs_path);
+
             //std::cout  << "L0_TAU_init_timestamp   " << setprecision(numeric_limits<double>::max_digits10) << L0_TAU_init_timestamp << std::endl;
             //std::cout << "L0_Driver_init_timestamp " << L0_Driver_init_timestamp << std::endl;
             //std::cout << "kernel_start " << kernel_start << std::endl;
@@ -648,6 +653,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         else if((it->second.type_ == KERNEL_COMMAND_TYPE_MEMORY) && (command->mem_size_ > 0))
         {
             L0_TAU_DEBUG_MSG("KERNEL_COMMAND_TYPE_MEMORY!!\n");
+            std::string event_name = it->second.name_.c_str();
             task_id = Tau_get_initialized_queues(dev_tile, command->queue_, translated_start);
             metric_set_gpu_timestamp(task_id, translated_start);
             TAU_START_TASK(event_name.c_str(), task_id);
@@ -669,14 +675,14 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
                 pos = 0;
             else
                 pos = 19;
-            std::string event_name = "Memory Copy Size [" + it->second.name_.substr(pos) + "]";
-            Tau_get_context_userevent(&ue, event_name.c_str());
+            std::string c_event_name = "Memory Copy Size [" + it->second.name_.substr(pos) + "]";
+            Tau_get_context_userevent(&ue, c_event_name.c_str());
             TAU_CONTEXT_EVENT_THREAD_TS(ue, command->mem_size_, task_id, translated_end);
         }
 
         if(task_id == -1)
         {
-            printf("Error with task_id, skipping %s\n", event_name.c_str());
+            printf("Error with task_id, skipping %s\n", it->second.name_.c_str());
             kernel_command_properties_mutex_.unlock_shared();
             return;
         }
