@@ -310,7 +310,10 @@ static x_uint64 getTimeStamp()
 
 //////////////////////////////////////////////////////////////////////
 
-void Profiler::Start(int tid)
+void Profiler::Start(int tid)  { Start_impl(tid, false); }
+void Profiler::Resume(int tid) { Start_impl(tid, true);  }
+
+void Profiler::Start_impl(int tid, bool resume)
 {
 #ifdef DEBUG_PROF
   TAU_VERBOSE( "[%d:%d-%d] Profiler::Start for %s (%p), node %d\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction, RtsLayer::myNode());
@@ -446,26 +449,32 @@ void Profiler::Start(int tid)
 
   // Increment NumCalls and check/set AlreadyOnStack in one getFunctionMetric call
   // instead of three separate calls (IncrNumCalls, GetAlreadyOnStack, SetAlreadyOnStack).
-  bool alreadyOnStack = ThisFunction->IncrCallsAndCheckStack(tid);
+  // When resuming after task suspension we skip the call count increment — this is a
+  // continuation of an already-counted invocation, not a new call.
+  if (!resume) {
+    bool alreadyOnStack = ThisFunction->IncrCallsAndCheckStack(tid);
 
-  // Increment the parent's NumSubrs()
-  if (ParentProfiler != 0) {
-    ParentProfiler->ThisFunction->IncrNumSubrs(tid);
-    if (do_callsite) {
-      if (ParentProfiler->CallSiteFunction != NULL) {
-        ParentProfiler->CallSiteFunction->IncrNumSubrs(tid);
+    // Increment the parent's NumSubrs()
+    if (ParentProfiler != 0) {
+      ParentProfiler->ThisFunction->IncrNumSubrs(tid);
+      if (do_callsite) {
+        if (ParentProfiler->CallSiteFunction != NULL) {
+          ParentProfiler->CallSiteFunction->IncrNumSubrs(tid);
+        }
       }
     }
-  }
 
-  // If this function is not already on the call stack, put it
-  if (!alreadyOnStack) {
-    AddInclFlag = true;
-    // We need to add Inclusive time when it gets over as
-    // it is not already on callstack.
+    // If this function is not already on the call stack, put it
+    if (!alreadyOnStack) {
+      AddInclFlag = true;
+    } else {
+      AddInclFlag = false;
+    }
   } else {
-    // the function is already on callstack, no need to add inclusive time
-    AddInclFlag = false;
+    /* Resume after task suspension: mark as already-on-stack so Stop() clears
+     * it and correctly adds inclusive time for the resumed slice. */
+    ThisFunction->SetAlreadyOnStack(true, tid);
+    AddInclFlag = true;
   }
 
   /********************************************************************************/
