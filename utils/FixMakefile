@@ -1108,6 +1108,16 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     l0_iga_lib=*)
+        l0_iga_lib=`echo $1 | sed -e 's/^l0_iga_lib=//' -e 's/#/ /g'`
+	echo "s@^TAU_L0_LIGA_DIR=\(.*\)@TAU_L0_LIGA_DIR=$l0_iga_lib@g" >> $sedout
+        ;;
+
+     L0_IGA)
+        echo NOTE: Using the Intel Graphic Assembler
+	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;      
+
      rocmdir=*)
         rocmdir=`echo $1 | sed -e 's/^rocmdir=//' -e 's/#/ /g'`
 	echo "s@^TAU_ROCM_DIR=\(.*\)@TAU_ROCM_DIR=$rocmdir@g" >> $sedout

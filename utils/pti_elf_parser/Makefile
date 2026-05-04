@@ -3,7 +3,7 @@ include ../../include/Makefile
 PTISRC_DIR := $(TAUROOT)/utils/pti_elf_parser/src
 PTIINC_DIR := $(TAUROOT)/utils/pti_elf_parser/include
 
-CXXFLAGS := -I$(PTIINC_DIR) -I$(TAUROOT)/utils/pti_elf_parser/include -O3 -fPIC $(TAU_L0_LIB_DIR)/libiga64.so
+CXXFLAGS := -I$(PTIINC_DIR) -I$(TAUROOT)/utils/pti_elf_parser/include -O3 -fPIC -L/$(TAU_L0_LIGA_DIR)  -liga64 -Wl,rpath,$(TAU_L0_LIGA_DIR)
 
 TARGET := Pti_elf_parser.o
 

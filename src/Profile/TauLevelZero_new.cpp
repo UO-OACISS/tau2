@@ -406,7 +406,11 @@ size_t check_overlap(uintptr_t curr_device, int curr_tile, uint64_t kernel_start
     return 0;
 }
 
+#ifdef TAU_L0_IGA
 std::string TAU_L0_demangle(std::string original_name, uint64_t src_line, std::string src_abs_path)
+#else
+std::string TAU_L0_demangle(std::string original_name)
+#endif
 {
     //OMP Offloaded function names appear as a string with
     // multiple information fields, parse them
@@ -433,7 +437,11 @@ std::string TAU_L0_demangle(std::string original_name, uint64_t src_line, std::s
         event_name = event_name + "OMP OFFLOADING ";
         event_name = event_name + Tau_demangle_name(original_name.substr(pos_key,original_name.find_last_of("l")-pos_key-1).c_str());
         event_name = event_name + " [{";
+        #ifdef TAU_L0_IGA
         event_name = event_name + src_abs_path;
+        #else
+        event_name = event_name + "UNRESOLVED";
+        #endif
         event_name = event_name + "} {";
         event_name = event_name + original_name.substr(original_name.find_last_of("l")+1);
         event_name = event_name + ",0}]";
@@ -441,15 +449,18 @@ std::string TAU_L0_demangle(std::string original_name, uint64_t src_line, std::s
     else
     {
         event_name = event_name + Tau_demangle_name(original_name.c_str());
+        #ifdef TAU_L0_IGA
         event_name = event_name + " [{";
         event_name = event_name + src_abs_path;
         event_name = event_name + "} {";
         event_name = event_name + std::to_string(src_line);
         event_name = event_name + ",0}]";
+        #endif
     }
     return event_name ;
 }
 
+#ifdef TAU_L0_IGA
 std::string TAU_L0_demangle_sampling(std::string original_name, std::string file_name, uint64_t inst_line, std::string inst_text)
 {
     //Use the line and file provided by tau_map_l0_source_info and tau_map_l0_inst_info
@@ -492,9 +503,11 @@ std::string TAU_L0_demangle_sampling(std::string original_name, std::string file
         event_name += (inst_line == -1)? std::to_string(0) : std::to_string(inst_line);
         event_name += ",0}] ";
         event_name += "{" + inst_text + "} ";
+        
     }
     return event_name ;
 }
+#endif
 
 //GPU events, needs a task per device and tile(concurrent kernels)
 // need a map with device and tile to task_id
@@ -530,7 +543,6 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         if((it->second.type_ == KERNEL_COMMAND_TYPE_COMMAND) || (it->second.type_ == KERNEL_COMMAND_TYPE_INVALID))
         {
             #ifdef L0_TAU_DEBUG
-            std::string event_name = TAU_L0_demangle(it->second.name_.c_str());
             L0_TAU_DEBUG_MSG("DISCARDED -- \n");
             std::cout << "Thread: " << command->tid_ << std::endl;
             std::cout << "Device: " << reinterpret_cast<uintptr_t>(command->device_) << std::endl;
@@ -602,7 +614,11 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         if(it->second.type_ == KERNEL_COMMAND_TYPE_COMPUTE)
         {
             L0_TAU_DEBUG_MSG("KERNEL_COMMAND_TYPE_COMPUTE!!\n");
+            #ifdef TAU_L0_IGA
             std::string event_name = TAU_L0_demangle(it->second.name_.c_str(), it->second.src_line, it->second.abs_path);
+            #else
+            std::string event_name = TAU_L0_demangle(it->second.name_.c_str());
+            #endif
 
             //std::cout  << "L0_TAU_init_timestamp   " << setprecision(numeric_limits<double>::max_digits10) << L0_TAU_init_timestamp << std::endl;
             //std::cout << "L0_Driver_init_timestamp " << L0_Driver_init_timestamp << std::endl;
@@ -798,6 +814,7 @@ std::string GetStallKernelName(uint64_t addr)
               << " " << it->first << " " << it->second.size_ << std::endl;
     printf("+[%lu] %s %lu %lu\n", addr, it->second.name_.c_str(), it->first, it->second.size_);
     */
+    #ifdef TAU_L0_IGA
     std::string file_name = "UNRESOLVED";
     uint64_t inst_line = -1;
     std::string inst_text = "";
@@ -825,8 +842,13 @@ std::string GetStallKernelName(uint64_t addr)
               << std::endl;
     }*/
     //std::cout << " !! " << file_name << std::endl;
+    #endif
     kernel_command_properties_mutex_.unlock();
+    #ifdef TAU_L0_IGA
     return TAU_L0_demangle_sampling(stall_kernel_name, file_name, inst_line, inst_text);
+    #else
+    return TAU_L0_demangle(stall_kernel_name);
+    #endif
 }
 
 void TauStallSamplingEvents( uint64_t address, const char *event_name, uint64_t event_value, ze_device_handle_t curr_device)
@@ -835,8 +857,8 @@ void TauStallSamplingEvents( uint64_t address, const char *event_name, uint64_t 
     int taskid = Tau_get_initialized_queues(dev_tile, 0, 0);
     std::string kernel_name = GetStallKernelName(address);
     //With some codes, we get some sampling that are trash
-    std::string l0_unkn_string = "[L0] GPU: Unknown [{UNRESOLVED} {0,0}]";
-    if(kernel_name.size() >= l0_unkn_string.size() &&
+    std::string l0_unkn_string = "[L0] GPU: Unknown";
+    if (kernel_name.size() >= l0_unkn_string.size() &&
         kernel_name.compare(0, l0_unkn_string.size(), l0_unkn_string) == 0)
     {
         return;
@@ -844,8 +866,10 @@ void TauStallSamplingEvents( uint64_t address, const char *event_name, uint64_t 
 
     std::stringstream ss;
     ss << kernel_name ;
-    //ss << " [Address: ";
-    //ss << std::hex << address << "] ";
+    #ifndef TAU_L0_IGA
+    ss << " [Address: ";
+    ss << std::hex << address << "] ";
+    #endif
     ss << event_name;
     std::string tmp = ss.str();
     void* ue = Tau_get_userevent(tmp.c_str());

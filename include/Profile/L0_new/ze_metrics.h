@@ -344,6 +344,9 @@ class ZeMetricProfiler {
   }
 
   static void MetricProfilingThread(ZeDeviceDescriptor *desc) {
+    #ifndef TAU_L0_IGA
+    printf("TAU was not configured to use Intel Graphics Assembler. Configure TAU with -intel_iga_lib=[PATH/TO/IGA/LIB]\n");
+    #endif
 
     ze_result_t status = ZE_RESULT_SUCCESS;
 

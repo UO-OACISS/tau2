@@ -52,6 +52,7 @@ struct stall_samp_kernel{
   uint64_t size_;
 };
 
+#ifdef TAU_L0_IGA
 struct SourceLine {
   uint32_t number;
   std::string text;
@@ -80,6 +81,7 @@ struct tau_l0_inst_info {
 static std::map<uint64_t, tau_l0_inst_info> tau_map_l0_inst_info;
 static std::map<uint32_t, std::string> tau_map_l0_source_info;
 
+#endif //TAU_L0_IGA
 
 /*
 struct tau_l0_source_info {
@@ -1101,8 +1103,10 @@ struct ZeKernelCommandProperties {
   uint32_t regsize_;	// GRF size per thread
   bool aot_;		// AOT or JIT
   std::string name_;	// kernel or command name
+  #ifdef TAU_L0_IGA
   uint64_t src_line=0;
   std::string abs_path="";
+  #endif
 };
 
 // these will not go away when ZeCollector is destructed
@@ -4569,6 +4573,7 @@ typedef struct _zex_kernel_register_file_size_exp_t {
 
 #endif /* !defined(ZEX_STRUCTURE_KERNEL_REGISTER_FILE_SIZE_EXP) */
 
+#ifdef TAU_L0_IGA
   static std::vector<SourceLine> ReadSourceFile(const std::string& file_path, std::string& out_abs_path) {
     std::string abs_path = file_path;
     std::filesystem::path p(file_path);
@@ -4595,7 +4600,7 @@ typedef struct _zex_kernel_register_file_size_exp_t {
 
     return line_list;
   }
-
+#endif
 
   static void OnExitKernelCreate(ze_kernel_create_params_t *params, ze_result_t result, void* global_data, void** /* instance_user_data */) {
     if (result == ZE_RESULT_SUCCESS) {
@@ -4697,6 +4702,7 @@ typedef struct _zex_kernel_register_file_size_exp_t {
         map_sampling_kernels.insert({base_addr, std::move(cur_stall_kernel)});
       }
 
+      #ifdef TAU_L0_IGA
       bool could_parse = true;
 
       size_t debug_info_size = 0;
@@ -4937,12 +4943,15 @@ typedef struct _zex_kernel_register_file_size_exp_t {
       }
 
       res = ptiElfParserDestroy(&parserHandle);
+      #endif // TAU_L0_IGA
 
 
       desc.base_addr_ = base_addr;
       desc.size_ = binary_size;
+      #ifdef TAU_L0_IGA
       desc.abs_path = kernel_abs_path;
       desc.src_line = kernel_src_line;
+      #endif
 
       ZeKernelCommandProperties desc2 = desc;
       active_kernel_properties_->insert({kernel, std::move(desc)});

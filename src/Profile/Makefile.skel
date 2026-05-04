@@ -163,7 +163,8 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #ROCPROFILERSDK_PC#ROCPROFILERSDK_O += TauRocProfilerSDK_add_tr.o #ENDIF#
 #ROCM#ROCM_O = TauRocm.o #ENDIF#
 #LEVEL_ZERO_LEGACY#TAU_LEVEL_ZERO_O = TauLevelZero.o #ENDIF#
-#LEVEL_ZERO#TAU_LEVEL_ZERO_O = Pti_elf_parser.o TauLevelZero_new.o #ENDIF#
+#LEVEL_ZERO#TAU_LEVEL_ZERO_O = TauLevelZero_new.o #ENDIF#
+#L0_IGA#TAU_LEVEL_ZERO_O += Pti_elf_parser.o #ENDIF#
 #ROCTRACER#ROCTRACER_O = TauRocTracer.o #ENDIF#
 #ROCTRACERROCM6#ROCTRACER_O = TauRocTracer.o #ENDIF#
 
@@ -1018,7 +1019,7 @@ TauLevelZero.o : TauLevelZero.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauLevelZero_new.o : TauLevelZero_new.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp) -std=c++17 -I$(TAUROOT)/utils/pti_elf_parser/include/
+	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp) -std=c++17 -I$(TAUROOT)/utils/pti_elf_parser/include/ $(TAU_L0_FLAGS)
 
 Pti_elf_parser.o : 
 	$(MAKE) -f $(TAUROOT)/utils/pti_elf_parser/Makefile
