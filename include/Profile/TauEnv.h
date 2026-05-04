@@ -213,6 +213,11 @@ extern "C" {
   int TAUDECL TauEnv_get_rocsdk_pcs_cus();
   int TAUDECL TauEnv_get_l0_enable();
   int TAUDECL TauEnv_get_l0_metrics_enable();
+  #ifdef L0METRICS
+  void TAUDECL TauEnv_set_l0_metrics_enable();
+  void TAUDECL TauEnv_set_l0_metric(char* l0_metric_name);
+  const char* TAUDECL TauEnv_get_l0_metric();
+  #endif
   int TAUDECL TauEnv_get_l0_stall_sampling_enable();
   int TAUDECL TauEnv_get_l0_sampling_interval();
   int TAUDECL TauEnv_get_perfetto_compress(void);

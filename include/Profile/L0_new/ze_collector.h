@@ -1710,8 +1710,7 @@ class ZeCollector {
                     std::cerr << "[ERROR] Unable to get metric group properties" << std::endl;
                     exit(-1);
                   }
-                  
-                  if ((strcmp(group_props.name, utils::GetEnv("L0_METRICGROUP").c_str()) == 0) && (group_props.samplingType & ZET_METRIC_GROUP_SAMPLING_TYPE_FLAG_EVENT_BASED)) {
+                  if ((strcmp(group_props.name, TauEnv_get_l0_metric()) == 0) && (group_props.samplingType & ZET_METRIC_GROUP_SAMPLING_TYPE_FLAG_EVENT_BASED)) {
                     group = groups[k];
                     break;
                   }

@@ -97,9 +97,10 @@ CollectorOptions init_collector_options()
     CollectorOptions init_options;
     TAU_VERBOSE("Initializing collector options\n");
     #ifdef L0METRICS
+
     if(TauEnv_get_l0_metrics_enable() && !TauEnv_get_l0_stall_sampling_enable())
     {
-        if(strcmp("EuStallSampling", utils::GetEnv("L0_METRICGROUP").c_str())==0)
+        if(strcmp("EuStallSampling", TauEnv_get_l0_metric())==0)
         {
             printf("Error: EuStallSampling cannot be used as a metric\n");
             return init_options;
@@ -109,7 +110,7 @@ CollectorOptions init_collector_options()
     }
     else if(TauEnv_get_l0_metrics_enable() && TauEnv_get_l0_stall_sampling_enable())//EuStallSampling
     {
-        if(strcmp("EuStallSampling", utils::GetEnv("L0_METRICGROUP").c_str())==0)
+        if(strcmp("EuStallSampling", TauEnv_get_l0_metric())==0)
         {
             //return init_options;
             init_options.stall_sampling = true;

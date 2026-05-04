@@ -1074,6 +1074,11 @@ if [ $track_l0 = "true" ]; then
   if [ -v L0_METRICGROUP ]; then
     $dryrun export ZET_ENABLE_METRICS=1
   fi
+
+  if [ ! `echo $TAU_METRICS | grep -E "(^|[:,])L0_($|[:,])"` ]; then
+    $dryrun export ZET_ENABLE_METRICS=1
+  fi
+
 fi
 
 if [ $track_rocm = "true" ] ; then

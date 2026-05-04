@@ -1525,6 +1525,30 @@ int TauEnv_get_l0_metrics_enable()
   return env_l0_metrics_enable;
 }
 
+void TauEnv_set_l0_metrics_enable()
+{
+  env_l0_metrics_enable = 1;
+}
+
+#ifdef L0METRICS
+void TauEnv_set_l0_metric(char* l0_metric_name)
+{
+  if (unitrace_metrics != NULL ) {
+    printf("L0 metrics already set to %s\n", unitrace_metrics);
+    return;
+  }
+  const char* prefix = "L0_";
+  unitrace_metrics = strdup(l0_metric_name + 3);
+  TauEnv_set_l0_metrics_enable();
+}
+
+const char* TauEnv_get_l0_metric()
+{
+  return unitrace_metrics;
+}
+
+#endif
+
 int TauEnv_get_l0_stall_sampling_enable()
 {
   return env_l0_stall_sampling_enable;
@@ -3169,7 +3193,6 @@ void TauEnv_initialize()
     }
 
     if ((unitrace_metrics = getconf("L0_METRICGROUP")) == NULL) {
-      unitrace_metrics = "";
       env_l0_metrics_enable = 0;
       TAU_VERBOSE("TAU: L0_METRICGROUP is not set\n");
     } else {
