@@ -84,11 +84,11 @@ int get_ompt_tid(void) {
 /* Per-task wrapper for OMPT explicit task timers.
  *
  * With untied OpenMP tasks, a task can be suspended at a taskwait/yield point
- * while compiler-instrumented function timers are still active
+ * while instrumented function timers are still active
  * on the thread's call stack above the task timer.  When the OMPT task_schedule
  * callback fires to suspend the task it calls stop_correct_timer(), which
  * calls Tau_stop_timer().  Tau_stop_timer() walks the stack looking for the
- * task timer and, finding "fib" first, calls reportOverlap() -> abort().
+ * task timer and, finding the instrumented function first, calls reportOverlap() -> abort().
  *
  * The fix: save those "above-task" function timers into this struct at
  * suspension time, stop them top-down so the task timer reaches the top of the
@@ -187,13 +187,24 @@ static const char* ompt_thread_type_t_values[] = {
   "ompt_thread_other"
 };
 
+/* Indexed by ompt_task_status_t enum value (1-based; element 0 unused).
+ * OpenMP 5.0 defines values 1-7; 5.2 adds ompt_taskwait_complete (8). */
 static const char* ompt_task_status_t_values[] = {
-  NULL,
-  "ompt_task_complete",
-  "ompt_task_yield",
-  "ompt_task_cancel",
-  "ompt_task_others"
+  NULL,                      /* 0 – unused */
+  "ompt_task_complete",      /* 1 */
+  "ompt_task_yield",         /* 2 */
+  "ompt_task_cancel",        /* 3 */
+  "ompt_task_detach",        /* 4 */
+  "ompt_task_early_fulfill", /* 5 */
+  "ompt_task_late_fulfill",  /* 6 */
+  "ompt_task_switch",        /* 7 */
+#if defined(ompt_taskwait_complete)
+  "ompt_taskwait_complete",  /* 8 – OpenMP 5.2+ */
+#endif
 };
+#define TAU_OMPT_TASK_STATUS_NAME(s) \
+  ((s) > 0 && (size_t)(s) < sizeof(ompt_task_status_t_values)/sizeof(ompt_task_status_t_values[0]) \
+   && ompt_task_status_t_values[(s)] ? ompt_task_status_t_values[(s)] : "unknown")
 static const char* ompt_cancel_flag_t_values[] = {
   "ompt_cancel_parallel",
   "ompt_cancel_sections",
@@ -853,14 +864,22 @@ on_ompt_callback_task_schedule(
     ompt_data_t *next_task_data)
 {
   #ifdef TAUOMPT_DEBUG
-  printf("%s\n", __func__);
+  printf("%s prior_status=%s\n", __func__, TAU_OMPT_TASK_STATUS_NAME(prior_task_status));
   #endif
     TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_task_schedule] && Tau_init_check_initialized()) {
     if(prior_task_data->ptr) {
       TauOMPTTaskData *td = (TauOMPTTaskData *)prior_task_data->ptr;
       tau_ompt_stop_task_saving_context(td);
-      if (prior_task_status == ompt_task_complete) {
+      /* Free on statuses that guarantee the task will never be scheduled
+       * again.  */
+      if (prior_task_status == ompt_task_complete ||
+          prior_task_status == ompt_task_cancel   ||
+          prior_task_status == ompt_task_late_fulfill
+#if defined(ompt_taskwait_complete)   /* OpenMP 5.2+ */
+          || prior_task_status == ompt_taskwait_complete
+#endif
+         ) {
         delete td;
         prior_task_data->ptr = NULL;
       }
