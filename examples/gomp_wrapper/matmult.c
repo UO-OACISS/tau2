@@ -384,9 +384,12 @@ int test(int first, int last)
 #pragma omp for ordered
   for (i = first; i <= last; ++i) {
     // Do something here.
-    if (i % 2) 
-    {
+    /* The ordered region must be encountered by every iteration when
+     * 'omp for ordered' is used; a conditional ordered region causes
+     * threads to wait forever at the implicit barrier.  Print only for
+     * odd iterations but always enter the ordered section. */
 #pragma omp ordered 
+    if (i % 2) {
       printf("test() iteration %d, thread %d\n", i, omp_get_thread_num());
       fflush(stdout);
     }
@@ -404,12 +407,27 @@ void test2(int iter)
 int ordered( ) 
 {
   int i;
+  /* Restructured so both 'omp for ordered' directives are lexically
+   * within the parallel region, as required by the OpenMP spec.
+   * The original version called test() from inside the parallel block,
+   * placing the 'omp for' in a called function; this is undefined
+   * behaviour that GCC/LLVM tolerate but Cray CCE rejects. */
 #pragma omp parallel shared(i)
   {
-    i = test(1, 8);
+#pragma omp for ordered schedule(static)
+    for (i = 1; i <= 8; ++i) {
+#pragma omp ordered
+      if (i % 2) {
+        printf("test() iteration %d, thread %d\n", i, omp_get_thread_num());
+        fflush(stdout);
+      }
+    }
 #pragma omp for ordered schedule(dynamic)
-    for (i = 0 ; i < 5 ; i++)
-      test2(i);
+    for (i = 0 ; i < 5 ; i++) {
+#pragma omp ordered
+      printf("test2() iteration %d, thread %d\n", i, omp_get_thread_num());
+      fflush(stdout);
+    }
   }
   return i;
 }
