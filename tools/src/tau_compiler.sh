@@ -1990,7 +1990,7 @@ else
           	  fi
           	fi
               else
-                if [ $linkOnly == $FALSE ]; then
+                if [ $linkOnly == $FALSE -a \( $disableCompInst == $TRUE -o "x$optCompInstOption" = x \) ]; then
               	  echo ""
             	    echo "WARNING: Disabling instrumentation of source code."
             	    echo "         Please either configure with -pdt=<dir> option"
