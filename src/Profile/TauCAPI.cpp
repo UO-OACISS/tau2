@@ -2704,6 +2704,7 @@ extern "C" void Tau_get_context_userevent(void **ptr, const char *name) {
 }
 
 extern "C" void Tau_context_userevent(void *ue, double data) {
+  if (ue == NULL) return;
   TauInternalFunctionGuard protects_this_function;
   TauContextUserEvent *t = (TauContextUserEvent *) ue;
   t->TriggerEvent(data);

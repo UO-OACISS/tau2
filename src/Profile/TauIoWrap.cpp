@@ -268,6 +268,16 @@ extern "C" void Tau_iowrap_checkInit()
   global_bytes_written = 0;
   global_bytes_read = 0;
 
+  /* Block write() re-entrancy while the per-FD event vectors are being
+   * populated.  Tau_init_initializeTAU() may emit TAU_VERBOSE output (via
+   * fprintf/write) before registerEvents has run.  If TAU was already
+   * initialized (e.g. via static constructors before main()), both
+   * Tau_init_initializingTAU() and !Tau_init_check_initialized() are false,
+   * so checkPassThrough would allow those nested writes through.  They would
+   * then call getEvent() on an empty IOvector, causing undefined behaviour
+   * and a NULL dereference.  Holding insideTAU > 0 makes checkPassThrough
+   * return 1 (bypass) for the duration of the initialisation. */
+  Tau_global_incr_insideTAU();
   Tau_init_initializeTAU();
   Tau_iowrap_registerEvents(-1, "unknown");
   Tau_iowrap_registerEvents(0, "stdin");
@@ -277,6 +287,7 @@ extern "C" void Tau_iowrap_checkInit()
   Tau_get_context_userevent(&global_read_bandwidth, "Read Bandwidth (MB/s)");
   Tau_get_context_userevent(&global_bytes_written, "Bytes Written");
   Tau_get_context_userevent(&global_bytes_read, "Bytes Read");
+  Tau_global_decr_insideTAU();
   Tau_create_top_level_timer_if_necessary();
 }
 
@@ -291,6 +302,12 @@ extern "C" void *Tau_iowrap_getEvent(event_type type, unsigned int fid)
   if (fid >= iowrap_events[(int)type].size()) {
     dprintf("************** unknown fid! %d\n", fid - 1);
     fid = 0;    // use the "unknown" descriptor
+  }
+  /* Guard against the window between init=1 being set and registerEvents
+   * completing: if the vector is still empty, return NULL rather than
+   * invoking undefined behaviour on an empty std::vector. */
+  if (iowrap_events[(int)type].empty()) {
+    return NULL;
   }
   return iowrap_events[(int)type][fid];
 }
