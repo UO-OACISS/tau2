@@ -201,7 +201,7 @@ std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t cli
 //This is executed before TAU is initialized
 int get_set_metrics(const char* rocm_metrics, std::vector<rocprofiler_agent_v0_t> agents)
 {
-
+  //printf("!! %s\n", rocm_metrics);
 	const char *token;
 	char *ptr, *ptr2;
 	int len = strlen(rocm_metrics);
@@ -241,21 +241,36 @@ int get_set_metrics(const char* rocm_metrics, std::vector<rocprofiler_agent_v0_t
 	}
 
 	token = strtok(metrics, "^");
+  //printf("!! token %s\n", token);
 	while (token) {
   	counter_set.insert(token);
   	token = strtok(NULL, "^");
 	}
-
+  int num_agents = 0;
 	for(const auto& agent : agents)
 	{
+      num_agents++;
 		  // get_profile_cache() is a map that can be accessed by dispatch_callback
 		  // to select the profile config to use when a kernel dispatch is
 		  // recieved.
 		  get_profile_cache().emplace(
 		  agent.id.handle, build_profile_for_agent(agent.id, counter_set));
 	}
+  /*
+  printf("!! used_counter_id_map.size() != counter_set.size() %d %d %d\n", 
+          (used_counter_id_map.size() != counter_set.size()), 
+          used_counter_id_map.size(),
+          counter_set.size(),
+          num_agents );
+  */
+  /*
+  for (const auto& [id, name] : used_counter_id_map)
+    std::cout << id << " : " << name << '\n';
 
-	if(used_counter_id_map.size() != counter_set.size())
+  for (const auto& s : counter_set)
+    std::cout << s << '\n';
+  */
+	if(used_counter_id_map.size() != (counter_set.size()*num_agents))
 		return WRONG_NAME;
    
 	return PROFILE_METRICS;
