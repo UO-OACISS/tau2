@@ -9054,8 +9054,8 @@ fi
 
 if [ "x$download_ompt" = "xyes" ] ; then
   install_ompt=yes
-  if [ ! -f "${libomp_ossdir_shared}/lib${libomp_oss_name}.so" -o  "${libomp_ossdir_shared}/lib${libomp_oss_name}.so" -ot "${libomp_oss}"  ]; then
-    preomptdir=`pwd`
+  preomptdir=`pwd`
+  if [ ! -f "${libomp_oss}/build-${ompt_cxx_compiler}/lib/lib${libomp_oss_name}.so" ]; then
 
     #check Cmake exists
     check_cmake 2 8 "OMPT support"
@@ -9148,9 +9148,12 @@ if [ "x$download_ompt" = "xyes" ] ; then
                 exit 1;
       fi
     #fi
-  else #Still need to copy the header to be sure it's not from the wrong version
+  else #Reuse existing build for this compiler
+      echo "NOTE: Reusing existing LLVM-OpenMP build (${ompt_cxx_compiler}) at ${preomptdir}/${libomp_oss}/build-${ompt_cxx_compiler}/lib"
       echo cp $libomp_oss/build-${ompt_cxx_compiler}/include/*.h ${START_DIR}/include/.
       cp $libomp_oss/build-${ompt_cxx_compiler}/include/*.h ${START_DIR}/include/.
+      libomp_ossdir_shared=${preomptdir}/${libomp_oss}/build-${ompt_cxx_compiler}/lib
+      libomp_ossdir_static=${preomptdir}/${libomp_oss}/build-${ompt_cxx_compiler}/lib
   fi
   omptlib=${libomp_ossdir_shared}
   omptlibrary=-l${libomp_oss_name}
