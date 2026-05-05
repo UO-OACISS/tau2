@@ -147,6 +147,8 @@ void TauAllocation::DetectLeaks(void)
     size_t size = alloc->user_size;
     TauUserEvent * event = alloc->alloc_event;
 
+    if (event == nullptr) continue;
+
     leak_event_map_t::iterator jt = leak_map.find(event);
     if (jt == leak_map.end()) {
       std::string tmp("MEMORY LEAK! " + event->GetName());
