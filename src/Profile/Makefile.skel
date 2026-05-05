@@ -844,7 +844,27 @@ TracerPerfetto.o : TracerPerfetto.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE)  $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 ifneq ($(PERFETTO_O),)
-Perfetto.o : $(TAUROOT)/utils/perfetto/perfetto.cc $(TAUROOT)/utils/perfetto/perfetto.h
+# Cache Perfetto.o in utils/perfetto/.obj-cache/ keyed by compiler identity so
+# that 'make clean' + 'make' with the same compiler is a fast cp, not a full
+# recompile of the ~260K-line amalgam.  Cache is invalidated when:
+#   • TAU_PERFETTO_CXX changes (different cksum hash → new cache filename)
+#   • perfetto.cc or perfetto.h is updated (normal Make timestamp logic)
+# cksum is POSIX-standard and available on all HPC platforms (Linux, AIX,
+# macOS, Solaris, Cray, etc.) without any extra dependencies.
+# To force a full rebuild: rm -rf $(TAUROOT)/utils/perfetto/.obj-cache
+_PERFETTO_CACHE   = $(TAUROOT)/utils/perfetto/.obj-cache
+# Hash compiler path + version output so that bare 'g++' resolving to different
+# GCC versions (e.g., after 'module load gcc/14') correctly misses the cache.
+# -dumpversion is universal on all GCC versions and is fast (~3ms).
+_PERFETTO_HASH    = $(shell { printf '%s\n' "$(TAU_PERFETTO_CXX)"; $(TAU_PERFETTO_CXX) -dumpversion 2>/dev/null || true; } | cksum | awk '{print $$1}')
+PERFETTO_CACHED_O = $(_PERFETTO_CACHE)/Perfetto-$(_PERFETTO_HASH).o
+
+Perfetto.o : $(PERFETTO_CACHED_O)
+	cp $< $@
+
+$(PERFETTO_CACHED_O) : $(TAUROOT)/utils/perfetto/perfetto.cc \
+                       $(TAUROOT)/utils/perfetto/perfetto.h
+	$(MKDIR) $(_PERFETTO_CACHE)
 	$(TAU_PERFETTO_CXX) -std=c++17 -fPIC -O2 -I$(TAUROOT)/utils/perfetto -c $< -o $@
 endif
 
