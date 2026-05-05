@@ -444,7 +444,7 @@ public:
   inline bool IsExcluded() const {
 
     if (RtsLayer::TheRankExclusionMode() != RtsLayer::SpatialExclusionMode::UNSET) {
-        static thread_local uint64_t cached_rank_version = -1; // Start with invalid version
+        static thread_local uint64_t cached_rank_version = ~uint64_t(0); // Start with invalid version (UINT64_MAX)
         static thread_local bool is_this_rank_excluded = false;
 
         uint64_t current_rank_version = RtsLayer::TheRankExclusionVersion().load(std::memory_order_relaxed);
