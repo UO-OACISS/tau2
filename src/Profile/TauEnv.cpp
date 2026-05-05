@@ -441,6 +441,7 @@ static const char *env_tau_exec_args = NULL;
 static const char *env_tau_exec_path = NULL;
 
 static const char *unitrace_metrics = NULL;
+static char rocsdk_metrics[1024];
 
 } // extern "C"
 
@@ -1515,6 +1516,33 @@ int TauEnv_get_rocsdk_pcs_cus(){
   return env_rocmpc_per_cu;
 }
 
+void TauEnv_set_rocsdk_metric(char* rocsdk_metric_name)
+{
+  const char* new_metric = rocsdk_metric_name + 5;
+  static size_t len = 0;
+  size_t new_len = strlen(new_metric);
+  //+2 for the : and \0, no needed for the first metric, as metric names are not that long
+  if((len + new_len+2)> 1024)
+  {
+    printf("[TAU] metric %s will not be added, reduce the number of ROCm metrics\n", new_metric);
+    return;
+  }
+
+  if(len==0)
+  {
+    len = snprintf(rocsdk_metrics, sizeof(rocsdk_metrics), "%s", new_metric);
+  }
+  else
+  {
+    len += snprintf(rocsdk_metrics + len, sizeof(rocsdk_metrics) - len, ":%s", new_metric);
+  }
+}
+
+char* TauEnv_get_rocsdk_metrics()
+{
+  return rocsdk_metrics;
+}
+
 
 int TauEnv_get_l0_enable(){
   return env_l0_enable;
@@ -1537,7 +1565,6 @@ void TauEnv_set_l0_metric(char* l0_metric_name)
     printf("L0 metrics already set to %s\n", unitrace_metrics);
     return;
   }
-  const char* prefix = "L0_";
   unitrace_metrics = strdup(l0_metric_name + 3);
   TauEnv_set_l0_metrics_enable();
 }

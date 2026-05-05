@@ -491,7 +491,7 @@ static int is_cupti_metric(char const * const str)
 #endif //TAU_CUPTI
 
 /*********************************************************************
- * Query if a string is a PAPI metric
+ * Query if a string is a Level Zero metric
  ********************************************************************/
 static int is_l0_metric(char *str) {
 
@@ -500,6 +500,17 @@ static int is_l0_metric(char *str) {
             printf("TAU was not configured to use L0 Metrics\n");
             return 0;
         #endif
+        return 1;
+    }
+    return 0;
+}
+
+/*********************************************************************
+ * Query if a string is a ROCm metric
+ ********************************************************************/
+static int is_rocm_metric(char *str) {
+
+    if (strncmp("ROCM_", str, 5) == 0) {
         return 1;
     }
     return 0;
@@ -637,7 +648,16 @@ static void initialize_functionArray() {
             i--;
             found = 0;
             #endif //L0METRICS
-        } else if (strcasecmp(metricv[i], "TAUGPU_TIME") == 0) {
+        } else if (is_rocm_metric(metricv[i])){
+            TauEnv_set_rocsdk_metric(metricv[i]);
+            /* Delete the metric */
+            for (int j = i; j < nmetrics - 1; j++) {
+                metricv[j] = metricv[j + 1];
+            }
+            nmetrics--;
+            i--;
+            found = 0;
+        }else if (strcasecmp(metricv[i], "TAUGPU_TIME") == 0) {
             functionArray[pos++] = metric_read_cudatime;
         } else if (strcasecmp(metricv[i], "MEMORY_DELTA") == 0) {
             functionArray[pos++] = metric_read_memory;

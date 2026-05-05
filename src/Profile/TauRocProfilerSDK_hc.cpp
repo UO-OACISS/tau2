@@ -8,7 +8,6 @@
 #ifdef PROFILE_SDKCOUNTERS
 
 
-
 /**
  * Cache to store the profile configs for each agent. This is used to prevent
  * constructing the same profile config multiple times. Used by dispatch_callback
@@ -265,11 +264,21 @@ int get_set_metrics(const char* rocm_metrics, std::vector<rocprofiler_agent_v0_t
 
 int check_set_hc_requested(std::vector<rocprofiler_agent_v0_t> agents)
 {
-  std::string delimiter = ":";
   int return_value=NO_METRICS;
   const char* rocm_metrics=std::getenv("ROCM_METRICS");
   if( rocm_metrics )
+  {
     return_value=get_set_metrics(rocm_metrics, agents);
+  }
+  else
+  {
+    const char* rocsdk_metrics = TauEnv_get_rocsdk_metrics();
+    if (rocsdk_metrics[0] != '\0')
+    {
+      return_value=get_set_metrics(rocsdk_metrics, agents);
+    }
+
+  }
   
   return return_value;
 }
