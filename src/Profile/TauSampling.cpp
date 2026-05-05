@@ -2299,6 +2299,21 @@ int Tau_sampling_finalize(int tid)
     collectingSamples = 0;
   }
 
+#if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ) && !defined(TAU_FUJITSU)
+  /* Cancel the per-thread POSIX timer so it cannot fire after TLS teardown.
+   * We can only look up the kernel-TID keyed entry when called from the thread
+   * being finalized; external calls (e.g. tid==0 finalizing all threads) skip
+   * this because the target thread has already exited. */
+  if (tid == RtsLayer::myThread()) {
+    std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
+    auto it = TheThreadTimerMap().find(RtsLayer::getTid());
+    if (it != TheThreadTimerMap().end()) {
+      timer_delete(it->second);
+      TheThreadTimerMap().erase(it);
+    }
+  }
+#endif
+
   struct itimerval itval;
   int ret;
 

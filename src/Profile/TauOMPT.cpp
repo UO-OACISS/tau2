@@ -1145,6 +1145,13 @@ on_ompt_callback_thread_end(
     if (is_master) return; // master thread can't be a new worker.
     int tid = RtsLayer::myThread();
     Tau_stop_all_timers(tid);
+    /* Finalize event-based sampling for this thread before its TLS is torn down.
+     * Without this, the per-thread POSIX timer can fire during __nptl_deallocate_tsd
+     * (after thread_local destructors have run), causing a crash in getFunctionMetric
+     * when it accesses the already-freed MetricThreadCache vector. */
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_finalize_if_necessary(tid);
+    }
   }
 
   if(Tau_plugins_enabled.ompt_thread_end) {
