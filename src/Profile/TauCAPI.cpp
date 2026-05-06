@@ -2590,8 +2590,18 @@ private:
   int tid;
   static atomic<int> num_threads;
 public:
+  // Points to a trivial thread_local bool that outlives this object in TLS teardown.
+  // Set from outside (see Tau_find_context_userevent_internal) after first-call init.
+  bool* destroyed_flag = nullptr;
   pure_context_userevent_map_t() : tid(RtsLayer::myThread()) { num_threads++; }
   virtual ~pure_context_userevent_map_t() {
+    if (destroyed_flag) {
+      // Signal to the lookup function that this TLS map is gone.  clear() zeroes
+      // the bucket count before the base ~unordered_map frees the bucket array
+      // (which does not null internal pointers), preventing stale-size reads.
+      *destroyed_flag = true;
+      this->clear();
+    }
     if ((tid == 0 || --num_threads == 0) && RtsLayer::isMainThread()) {
         Tau_destructor_trigger();
     }
@@ -2604,19 +2614,28 @@ TauContextUserEvent * Tau_find_context_userevent_internal(const char* name)
 {
     static std::mutex mtx;
     static pure_context_userevent_map_t pureMap;
+    // Trivial TLS bool: no destructor, so its storage outlives my_pureMap's
+    // non-trivial TLS destructor. Set to true by ~pure_context_userevent_map_t.
+    static thread_local bool my_pureMapDestroyed = false;
     static thread_local pure_context_userevent_map_t my_pureMap;
+    // Runs once per thread on first call: links the destroyed flag into the map
+    // object so its destructor can set the flag. The comma-expression returns true;
+    // bool is trivially destructible so no destructor is registered for _initCtx.
+    [[maybe_unused]] static thread_local bool _initCtx =
+        (my_pureMap.destroyed_flag = &my_pureMapDestroyed, true);
     TauInternalFunctionGuard protects_this_function;
     TauContextUserEvent *ue = nullptr;
     std::string tmp{name};
-    /* First, check if this thread has seen this event before */
-    pure_context_userevent_map_t::iterator it = my_pureMap.find(tmp);
-    if (it != my_pureMap.end()) {
-        ue = (*it).second;
-        return ue;
+    if (!my_pureMapDestroyed) {
+        /* First, check if this thread has seen this event before */
+        pure_context_userevent_map_t::iterator it = my_pureMap.find(tmp);
+        if (it != my_pureMap.end()) {
+            return (*it).second;
+        }
     }
     /* if not, check the global map */
     std::lock_guard<std::mutex> lck (mtx);
-    it = pureMap.find(tmp);
+    pure_context_userevent_map_t::iterator it = pureMap.find(tmp);
     if (it == pureMap.end()) {
         ue = new TauContextUserEvent(name);
         /* Add it to the global map */
@@ -2624,8 +2643,10 @@ TauContextUserEvent * Tau_find_context_userevent_internal(const char* name)
     } else {
         ue = (*it).second;
     }
-    /* Add it to my local map */
-    my_pureMap[tmp] = ue;
+    /* Add it to my local map (only if still alive) */
+    if (!my_pureMapDestroyed) {
+        my_pureMap[tmp] = ue;
+    }
     return ue;
 }
 
@@ -2634,10 +2655,16 @@ private:
   int tid;
   static atomic<int> num_threads;
 public:
+  // See pure_context_userevent_map_t::destroyed_flag for the rationale.
+  bool* destroyed_flag = nullptr;
   pure_userevent_map_t() : tid(RtsLayer::myThread()) {
     num_threads++;
   }
   virtual ~pure_userevent_map_t() {
+    if (destroyed_flag) {
+      *destroyed_flag = true;
+      this->clear();
+    }
     if ((tid == 0 || --num_threads == 0) && RtsLayer::isMainThread()) {
         Tau_destructor_trigger();
     }
@@ -2649,19 +2676,24 @@ atomic<int> pure_userevent_map_t::num_threads{0};
 TauUserEvent * Tau_find_userevent_internal(const char* name) {
     static std::mutex mtx;
     static pure_userevent_map_t pureUserEventAtomicMap;
+    // Trivial TLS bool: outlives the non-trivial my_pureUserEventAtomicMap in teardown.
+    static thread_local bool my_pureUserEventMapDestroyed = false;
     static thread_local pure_userevent_map_t my_pureUserEventAtomicMap;
+    [[maybe_unused]] static thread_local bool _initUE =
+        (my_pureUserEventAtomicMap.destroyed_flag = &my_pureUserEventMapDestroyed, true);
     TauInternalFunctionGuard protects_this_function;
     TauUserEvent *ue = nullptr;
     std::string tmp{name};
-    /* First, check to see if it's in the thread's local map */
-    pure_userevent_map_t::iterator it = my_pureUserEventAtomicMap.find(tmp);
-    if (it != my_pureUserEventAtomicMap.end()) {
-        ue = (*it).second;
-        return ue;
+    if (!my_pureUserEventMapDestroyed) {
+        /* First, check to see if it's in the thread's local map */
+        pure_userevent_map_t::iterator it = my_pureUserEventAtomicMap.find(tmp);
+        if (it != my_pureUserEventAtomicMap.end()) {
+            return (*it).second;
+        }
     }
     /* Not in the local map, so check the global map */
     std::lock_guard<std::mutex> lck (mtx);
-    it = pureUserEventAtomicMap.find(tmp);
+    pure_userevent_map_t::iterator it = pureUserEventAtomicMap.find(tmp);
     if (it == pureUserEventAtomicMap.end()) {
         ue = new TauUserEvent(name);
         /* Add it to the global map */
@@ -2669,8 +2701,10 @@ TauUserEvent * Tau_find_userevent_internal(const char* name) {
     } else {
         ue = (*it).second;
     }
-    /* Add it to the local map */
-    my_pureUserEventAtomicMap[tmp] = ue;
+    /* Add it to the local map (only if still alive) */
+    if (!my_pureUserEventMapDestroyed) {
+        my_pureUserEventAtomicMap[tmp] = ue;
+    }
     return ue;
 }
 

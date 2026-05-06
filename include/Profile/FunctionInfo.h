@@ -219,7 +219,9 @@ static thread_local FMetricListVector_local  MetricThreadCache;    //vector<Func
 static thread_local bool MetricThreadCacheDestroyed;
 static std::atomic<uint64_t> next_id; // The next available ID; incremented when function_info_id is set.
 uint64_t function_info_id; // This is set in FunctionInfo::FunctionInfoInit()
-static bool use_metric_tls; // This is set to false to disable the thread-local cache during shutdown.
+// Written once (to false) during shutdown; read on every getFunctionMetric() call by all
+// threads. Must be atomic to avoid a data race under the C++ memory model.
+static std::atomic<bool> use_metric_tls;
 //static bool destructed;
 //static thread_local bool destructed_local;
 //bool& Tau_is_destroyed(void);
@@ -241,7 +243,7 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     // torn down and MetricThreadCache may have already been destructed.  The base class
     // ~vector<> frees the buffer without nulling _M_start/_M_finish, so size() can still
     // return a stale non-zero value and operator[] would read freed memory.
-    if(use_metric_tls && tid == local_tid && !MetricThreadCacheDestroyed){
+    if(use_metric_tls.load(std::memory_order_relaxed) && tid == local_tid && !MetricThreadCacheDestroyed){
         if(MetricThreadCache.size() > function_info_id) {
             MOut = MetricThreadCache.operator[](function_info_id);
             if(MOut != NULL) {
@@ -267,7 +269,7 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     // Use thread-local optimization if the current thread is requesting its own metrics.
     // Skip if MetricThreadCacheDestroyed: writing to a destructed vector is UB and unsafe
     // in a signal handler (push_back -> malloc is not async-signal-safe).
-    if(use_metric_tls && tid == local_tid && !MetricThreadCacheDestroyed) {
+    if(use_metric_tls.load(std::memory_order_relaxed) && tid == local_tid && !MetricThreadCacheDestroyed) {
         // Ensure the FMetricList vector is long enough to accomodate the new cached item.
         while(MetricThreadCache.size() <= function_info_id) {
             MetricThreadCache.push_back(NULL);
@@ -520,7 +522,7 @@ public:
 
 
   static void disable_metric_cache() {
-    use_metric_tls = false;
+    use_metric_tls.store(false);
   }
 
 private:
