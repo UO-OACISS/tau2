@@ -2903,12 +2903,16 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
     }
   }
 
-  if (initthread.size()<=tid || !initthread[tid]) {
+  if (initthread.size()<=tid || !initthread[tid] ||
+      (!TauInternal_CurrentProfiler(tid) && (initializing.size()<=tid || !initializing[tid]))) {
     std::lock_guard<std::mutex> lck (mtx);
     expandVector(&initializing,tid);
     expandVector(&initthread,tid);
     // if there is no top-level timer, create one - But only create one FunctionInfo object.
     // that should be handled by the Tau_pure_start_task call.
+    // Also re-enter if the thread had a timer before but no longer does (e.g. between
+    // OPARI parallel regions) and is not currently mid-initialization (to avoid
+    // re-acquiring the non-recursive mutex and deadlocking).
     if (!TauInternal_CurrentProfiler(tid)) {
 #if defined(PTHREADS) && defined(TAU_GPU)
       if (tid != 0 && RtsLayer::myNode() == -1) {
