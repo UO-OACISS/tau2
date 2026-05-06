@@ -228,13 +228,23 @@ static inline uint64_t get_rank() {
     return (uint64_t)r;
 }
 
-static void ensure_thread_vector(int tid) {
-    if ((int)g_perfetto.thread_data.size() <= tid) {
-        std::lock_guard<std::mutex> lk(g_perfetto.global_state_mutex);
-        while ((int)g_perfetto.thread_data.size() <= tid) {
-            g_perfetto.thread_data.push_back(new PerfettoThreadData());
-        }
-    }
+// Thread-local cache for PerfettoThreadData*, mirroring FunctionInfo::getFunctionMetric.
+// First call for a given tid takes the lock to expand thread_data and caches the result;
+// all subsequent calls return immediately with no lock and no vector access.
+// PerfettoThreadData* entries are never freed or moved, so cached pointers are stable.
+static thread_local PerfettoThreadData* tl_thread_data = nullptr;
+static thread_local int tl_thread_tid = -1;
+
+static PerfettoThreadData* get_thread_data(int tid) {
+    if (tl_thread_tid == tid && tl_thread_data != nullptr)
+        return tl_thread_data;
+    std::lock_guard<std::mutex> lk(g_perfetto.global_state_mutex);
+    while ((int)g_perfetto.thread_data.size() <= tid)
+        g_perfetto.thread_data.push_back(new PerfettoThreadData());
+    PerfettoThreadData* td = g_perfetto.thread_data[tid];
+    tl_thread_tid = tid;
+    tl_thread_data = td;
+    return td;
 }
 
 static inline uint64_t us_to_ns(x_uint64 us) { return (uint64_t)us * 1000ULL; }
@@ -587,8 +597,7 @@ static void perfetto_finalize_locked() {
 static void ensure_thread_metadata(int rank, int tid) {
     TauInternalFunctionGuard guard;
     (void)rank;
-    ensure_thread_vector(tid);
-    PerfettoThreadData* td = g_perfetto.thread_data[tid];
+    PerfettoThreadData* td = get_thread_data(tid);
     if (td->track_defined) return;
 
     if (Tau_is_thread_fake(tid)) {
@@ -609,8 +618,7 @@ static void ensure_thread_metadata(int rank, int tid) {
  * Replay buffered events
  * ------------------------------------------------------------------------- */
 static void write_temp_buffer(int tid, int node_id) {
-    ensure_thread_vector(tid);
-    PerfettoThreadData* td = g_perfetto.thread_data[tid];
+    PerfettoThreadData* td = get_thread_data(tid);
     td->buffers_written = true;
     if (!td->temp_buffers) return;
 
@@ -652,7 +660,7 @@ static void emit_aggregated_metadata_on_main_thread() {
     // Ensure main thread track exists
     int tid = 0;
     ensure_thread_metadata((int)get_rank(), tid);
-    PerfettoThreadData* td = g_perfetto.thread_data[tid];
+    PerfettoThreadData* td = get_thread_data(tid);
     auto track = perfetto::ThreadTrack::ForThread((uint64_t)td->os_tid);
 
     // Emit at end-of-run (current timestamp) for easy discovery at timeline end
@@ -837,13 +845,12 @@ void TauTracePerfettoMetadata(const char* name, const char* value, int tid) {
 static void emit_function(long func_id, bool is_enter, int rank, int tid,
                           uint64_t ts_ns) {
     ensure_thread_metadata(rank, tid);
-    ensure_thread_vector(tid);
 	
 	const CachedFuncInfo& info = get_cached_function_info(func_id);
 	if (info.is_tau_internal) {
         return;
     }
-	PerfettoThreadData* td = g_perfetto.thread_data[tid];
+	PerfettoThreadData* td = get_thread_data(tid);
 	auto track = perfetto::ThreadTrack::ForThread((uint64_t)td->os_tid);
     if (info.type[0] != '\0') {
         if (is_enter) {
@@ -903,8 +910,7 @@ static void emit_user_event(uint64_t event_id, x_int64 raw_value,
     if (ci.monotonic) {
         TRACE_COUNTER("tau_counter", perfetto::DynamicString{ci.name.c_str()}, ts_ns, (int64_t)raw_value);
     } else {
-        ensure_thread_vector(tid);
-        PerfettoThreadData* td = g_perfetto.thread_data[tid];
+        PerfettoThreadData* td = get_thread_data(tid);
         auto track = perfetto::ThreadTrack::ForThread((uint64_t)td->os_tid);
         TRACE_EVENT_INSTANT("tau", perfetto::DynamicString{ci.name.c_str()}, track, ts_ns,
                             "value", (int64_t)raw_value);
@@ -920,8 +926,7 @@ static void emit_mpi_message(bool is_send, uint64_t flow_id,
                              int rank, int tid,
                              uint64_t ts_ns) {
     ensure_thread_metadata(rank, tid);
-    ensure_thread_vector(tid);
-    PerfettoThreadData* td = g_perfetto.thread_data[tid];
+    PerfettoThreadData* td = get_thread_data(tid);
     auto track = perfetto::ThreadTrack::ForThread((uint64_t)td->os_tid);
 
     const char* name = is_send ? "MPI_Send" : "MPI_Recv";
@@ -957,8 +962,7 @@ void TauTracePerfettoEventWithNodeId(long int ev, x_int64 par, int tid,
         // If another thread is already initializing, buffer this event and
         // return immediately. This avoids blocking and preserves the event.
         if (RtsLayer::myNode() <= -1 || g_perfetto.initializing.load()) {
-            ensure_thread_vector(tid);
-            PerfettoThreadData* td = g_perfetto.thread_data[tid];
+            PerfettoThreadData* td = get_thread_data(tid);
             if (!td->temp_buffers) td->temp_buffers = new std::vector<temp_buffer_entry>();
             x_uint64 t_us = use_ts ? ts_us : TauTraceGetTimeStamp(tid);
             td->temp_buffers->emplace_back(ev, t_us, par, kind);
@@ -975,8 +979,7 @@ void TauTracePerfettoEventWithNodeId(long int ev, x_int64 par, int tid,
         // If initialization is still pending (e.g., MPI not yet initialized),
         // buffer the event instead of dropping it.
         if (!g_perfetto.initialized.load()) {
-            ensure_thread_vector(tid);
-            PerfettoThreadData* td = g_perfetto.thread_data[tid];
+            PerfettoThreadData* td = get_thread_data(tid);
             if (!td->temp_buffers) td->temp_buffers = new std::vector<temp_buffer_entry>();
             x_uint64 t_us = use_ts ? ts_us : TauTraceGetTimeStamp(tid);
             td->temp_buffers->emplace_back(ev, t_us, par, kind);
@@ -986,8 +989,8 @@ void TauTracePerfettoEventWithNodeId(long int ev, x_int64 par, int tid,
 
     // ---- Buffer Replay Logic ----
     // This ensures buffered startup events from all threads are replayed.
-    ensure_thread_vector(tid);
-    if (!g_perfetto.thread_data[tid]->buffers_written) {
+    PerfettoThreadData* td = get_thread_data(tid);
+    if (!td->buffers_written) {
         write_temp_buffer(tid, node_id);
     }
 
@@ -996,7 +999,6 @@ void TauTracePerfettoEventWithNodeId(long int ev, x_int64 par, int tid,
     uint64_t actual_ts_us = use_ts ? ts_us : TauTraceGetTimeStamp(tid);
     uint64_t ts_ns = us_to_ns(actual_ts_us);
 
-    PerfettoThreadData* td = g_perfetto.thread_data[tid];
     if (ts_ns <= td->last_ts_ns) {
         ts_ns = td->last_ts_ns+1;
     }
@@ -1068,7 +1070,7 @@ void TauTracePerfettoBarrierAllStart(int tag) {
     ensure_thread_metadata((int)get_rank(), tid);
     uint64_t ts_ns = current_ts_ns_for_thread(tid);
 
-    PerfettoThreadData* td = g_perfetto.thread_data[tid];
+    PerfettoThreadData* td = get_thread_data(tid);
     auto track = perfetto::ThreadTrack::ForThread((uint64_t)td->os_tid);
     TRACE_EVENT_BEGIN("tau_mpi", "MPI_Barrier", track, ts_ns, "tag", tag);
 }
@@ -1080,7 +1082,7 @@ void TauTracePerfettoBarrierAllEnd(int tag) {
     int tid = RtsLayer::myThread();
     uint64_t ts_ns = current_ts_ns_for_thread(tid);
 
-    PerfettoThreadData* td = g_perfetto.thread_data[tid];
+    PerfettoThreadData* td = get_thread_data(tid);
     auto track = perfetto::ThreadTrack::ForThread((uint64_t)td->os_tid);
     TRACE_EVENT_END("tau_mpi", track, ts_ns);
     (void)tag;
@@ -1105,7 +1107,7 @@ void TauTracePerfettoRMACollectiveBegin(int tag, int type, int start, int stride
     uint64_t ts_ns = current_ts_ns_for_thread(tid);
     const char* op = rma_collective_name(type);
 
-    PerfettoThreadData* td = g_perfetto.thread_data[tid];
+    PerfettoThreadData* td = get_thread_data(tid);
     auto track = perfetto::ThreadTrack::ForThread((uint64_t)td->os_tid);
     TRACE_EVENT_BEGIN("tau_mpi", perfetto::DynamicString{op}, track, ts_ns, "size", size);
     (void)tag;(void)start;(void)stride;(void)data_in;(void)data_out;(void)root;
@@ -1118,7 +1120,7 @@ void TauTracePerfettoRMACollectiveEnd(int tag, int type, int start, int stride,
     int tid = RtsLayer::myThread();
     uint64_t ts_ns = current_ts_ns_for_thread(tid);
 
-    PerfettoThreadData* td = g_perfetto.thread_data[tid];
+    PerfettoThreadData* td = get_thread_data(tid);
     auto track = perfetto::ThreadTrack::ForThread((uint64_t)td->os_tid);
     TRACE_EVENT_END("tau_mpi", track, ts_ns);
     (void)tag;(void)type;(void)start;(void)stride;(void)size;(void)data_in;(void)data_out;(void)root;
@@ -1142,9 +1144,14 @@ void TauTracePerfettoShutdownComms(int tid){
     TauInternalFunctionGuard guard;
     if (!g_perfetto.initialized || g_perfetto.finished) return;
 
-    int threadCount = (int)g_perfetto.thread_data.size();
+    int threadCount;
+    {
+        std::lock_guard<std::mutex> lk(g_perfetto.global_state_mutex);
+        threadCount = (int)g_perfetto.thread_data.size();
+    }
     for (int t = 0; t < threadCount; t++) {
-        if (g_perfetto.thread_data[t] && !g_perfetto.thread_data[t]->buffers_written) {
+        PerfettoThreadData* tdp = get_thread_data(t);
+        if (tdp && !tdp->buffers_written) {
             write_temp_buffer(t, RtsLayer::myNode());
         }
     }
@@ -2209,8 +2216,7 @@ void TauTracePerfettoClose(int tid){
     TauInternalFunctionGuard guard;
     if (!g_perfetto.initialized || g_perfetto.finished) return;
 
-    ensure_thread_vector(tid);
-    PerfettoThreadData* td = g_perfetto.thread_data[tid];
+    PerfettoThreadData* td = get_thread_data(tid);
 
     int64_t current_os_tid = get_os_tid_now();
     if (td && td->os_tid != 0 && current_os_tid == td->os_tid && !td->thread_closed) {
