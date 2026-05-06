@@ -4,6 +4,7 @@
 #define PROFILE_SDKCOUNTERS_H
 
 #include <Profile/TauBfd.h>  // for name demangling
+#include <Profile/TauEnv.h>
 
 //Enum to enable or disable metric profiling
 typedef enum profile_metrics {
@@ -83,7 +84,7 @@ extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprof
 typedef rocprofiler_profile_config_id_t rocprofiler_counter_config_id_t;
 #endif
 
-#else
+#else // No PROFILE_SDKCOUNTERS
 
 std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value, rocprofiler_timestamp_t* c_timestamp)
 {
@@ -94,6 +95,11 @@ int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_co
   const char* rocm_metrics=std::getenv("ROCM_METRICS");
   if( rocm_metrics )
     printf("[TAU] ROCM Metrics not available for this rocprofiler-sdk version.\n");
+  else{
+    const char* rocsdk_metrics = TauEnv_get_rocsdk_metrics();
+    if (rocsdk_metrics[0] != '\0')
+      printf("[TAU] ROCM Metrics not available for this rocprofiler-sdk version.\n");
+  }
   return NO_METRICS;
 }
 #endif //PROFILE_SDKCOUNTERS

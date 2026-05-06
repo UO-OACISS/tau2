@@ -491,6 +491,32 @@ static int is_cupti_metric(char const * const str)
 #endif //TAU_CUPTI
 
 /*********************************************************************
+ * Query if a string is a Level Zero metric
+ ********************************************************************/
+static int is_l0_metric(char *str) {
+
+    if (strncmp("L0_", str, 3) == 0) {
+        #ifndef L0METRICS   
+            printf("TAU was not configured to use L0 Metrics\n");
+            return 0;
+        #endif
+        return 1;
+    }
+    return 0;
+}
+
+/*********************************************************************
+ * Query if a string is a ROCm metric
+ ********************************************************************/
+static int is_rocm_metric(char *str) {
+
+    if (strncmp("ROCM_", str, 5) == 0) {
+        return 1;
+    }
+    return 0;
+}
+
+/*********************************************************************
  * Initialize the function array
  ********************************************************************/
 static void initialize_functionArray() {
@@ -606,7 +632,32 @@ static void initialize_functionArray() {
             usingPAPI = 1;
             functionArray[pos++] = metric_read_papivirtual;
 #endif /* TAU_PAPI */
-        } else if (strcasecmp(metricv[i], "TAUGPU_TIME") == 0) {
+        //We don't want l0 metrics to be treated as other metrics
+        // L0 hs the metric logic, we only want to detect the metric
+        // and provide it to the L0 API, which will be considered
+        //  as a group of user events, same with ROCm
+        } else if (is_l0_metric(metricv[i])){
+            #ifdef L0METRICS
+            TauEnv_set_l0_metric(metricv[i]);
+
+            /* Delete the metric */
+            for (int j = i; j < nmetrics - 1; j++) {
+                metricv[j] = metricv[j + 1];
+            }
+            nmetrics--;
+            i--;
+            found = 0;
+            #endif //L0METRICS
+        } else if (is_rocm_metric(metricv[i])){
+            TauEnv_set_rocsdk_metric(metricv[i]);
+            /* Delete the metric */
+            for (int j = i; j < nmetrics - 1; j++) {
+                metricv[j] = metricv[j + 1];
+            }
+            nmetrics--;
+            i--;
+            found = 0;
+        }else if (strcasecmp(metricv[i], "TAUGPU_TIME") == 0) {
             functionArray[pos++] = metric_read_cudatime;
         } else if (strcasecmp(metricv[i], "MEMORY_DELTA") == 0) {
             functionArray[pos++] = metric_read_memory;

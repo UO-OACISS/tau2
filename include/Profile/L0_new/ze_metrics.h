@@ -294,19 +294,9 @@ class ZeMetricProfiler {
             continue;
           }
 
-          /*char offset[32];
-          uint64_t off = ip;
-          snprintf(offset, sizeof(offset), "0x%" PRIx64, off);
-          printf("\n !! %s, ", offset);
-          std::cout << "\t\t["
-                  << "0x" << std::setw(5) << std::setfill('0') << std::hex << std::uppercase
-                  << ip << "] " << std::endl;
-          */
-          //printf("\n !! %lu, ", ip);
-          //kernel_command_properties_ ZeKernelCommandProperties
           // IP address is already processed. (metric_list.size() - 1) is the number of types of stall
           for (uint32_t k = 0; k <  (stall_names_list.size() - 1); k++) {
-            //printf(" %lu, ", value[j + k + 1].value.ui64);
+            //printf("\n.. %lu\n ", value[j + k + 1].value.ui64);
             uint64_t event_value = value[j + k + 1].value.ui64;
             if(event_value != 0)
               TauStallSamplingEvents(ip, stall_names_list[k+1].c_str(), event_value, device);
@@ -354,6 +344,9 @@ class ZeMetricProfiler {
   }
 
   static void MetricProfilingThread(ZeDeviceDescriptor *desc) {
+    #ifndef TAU_L0_IGA
+    printf("TAU was not configured to use Intel Graphics Assembler. Configure TAU with -intel_iga_lib=[PATH/TO/IGA/LIB]\n");
+    #endif
 
     ze_result_t status = ZE_RESULT_SUCCESS;
 

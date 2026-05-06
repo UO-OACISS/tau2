@@ -780,6 +780,7 @@ usage() {
 #   echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
     echo "-level_zero[=<dir>] ................. Specify path to Intel Level Zero."
     echo "-level_metrics[=<dir>]... Specify path to Level Zero Metrics Discovery."
+    echo "-intel_iga_lib[=<dir>]... Specify lib path to Intel Graphics Assembler."
     echo "-force_new_l0 .................... Force the use of the new L0 profiler"
     echo "-force_legacy_l0 ...............Force the use of the legacy L0 profiler"
     echo "-roctracer=<dir> .................. Specify location of ROCm roctracer."
@@ -981,6 +982,7 @@ for arg in "$@"; do
         echo "-hip=<dir> .................... Specify location of ROCm HIP directory."
         echo "-level_zero[=<dir>]  ................ Specify path to Intel Level Zero."
         echo "-level_metrics[=<dir>] .. Specify path to Level Zero Metrics Discovery."
+        echo "-intel_iga_lib[=<dir>]... Specify lib path to Intel Graphics Assembler."
 	    echo "-force_new_l0 .................... Force the use of the new L0 profiler"
 	    echo "-force_legacy_l0 ...............Force the use of the legacy L0 profiler"
         echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
@@ -1491,6 +1493,8 @@ compilerxx_for_dyninst=""
 nccl=no
 nccl_lib=""
 nccl_inc=""
+l0_lib_dir=""
+l0_iga_lib=""
 restore_perfdmf_and_paraprof
 
 handle_python_option() {
@@ -3239,6 +3243,18 @@ for arg in "$@"; do
 
       	shift
       	;;
+
+        -intel_iga_lib=*)
+           l0_iga_lib=`echo $arg | sed -e 's/-intel_iga_lib=//' -e 's/ /#/g'`
+           if [ -r ${l0_iga_lib}/libiga64.so ]; then
+              fixmakeargs="$fixmakeargs L0_IGA l0_iga_lib=$l0_iga_lib"
+              echo "No"
+           else
+             echo "TAU: libiga64.so not found. Install Intel Graphics Assembler or disable flag."
+             exit 1
+           fi
+        shift
+        ;;
 
         -force_new_l0)
             level_zero_new=yes
@@ -13625,7 +13641,7 @@ fixmakeargs="$fixmakeargs extra_linker_args=$extra_linker_args"
 
 if [ "${level_zero}" = "yes" -a "${level_zero_legacy}" = "yes" ] ; then
     echo "Forcing legacy Level Zero"
-    fixmakeargs="$fixmakeargs LEVEL_ZERO_OLD"
+    fixmakeargs="$fixmakeargs LEVEL_ZERO_LEGACY"
     tauoptions="${tauoptions}-l0legacy"
     if [ "x${mdisc_dir}" = "x" ]; then
         if [ -r /usr/include/metrics_discovery_api.h ]; then
@@ -13710,21 +13726,24 @@ EOF
         #echo "$cxx_compiler test_l0.c -lze_loader -I$l0dir/include -o test_l0"
         ./test_l0 1> /dev/null 2>&1
             result=$?
-        rm -f ./openacc_test openacc_test.c
+        rm -f ./test_l0 ./test_l0.c
 
         if [ $result = "0" ]; then
             fixmakeargs="$fixmakeargs LEVEL_ZERO"
+            level_zero_new=yes
         else
-            fixmakeargs="$fixmakeargs LEVEL_ZERO_OLD"
+            fixmakeargs="$fixmakeargs LEVEL_ZERO_LEGACY"
+            level_zero_legacy=yes
         fi
 
     else
+        rm test_l0.c
         echo "Error compiling L0 version check"
         exit 1
     fi
     
     #fixmakeargs="$fixmakeargs LEVEL_ZERO"
-    #fixmakeargs="$fixmakeargs LEVEL_ZERO_OLD"
+    #fixmakeargs="$fixmakeargs LEVEL_ZERO_LEGACY"
 
     if [ "x${mdisc_dir}" = "x" ]; then
         if [ -r /usr/include/metrics_discovery_api.h ]; then
@@ -13736,7 +13755,26 @@ EOF
         fi
     fi
 
-    rm test_l0.c test_l0
+fi
+
+if [ "${level_zero}" = "yes" -a "${level_zero_new}" = "yes"  -a "x${l0_iga_lib}" = "x" ] ; then
+    echo "Checking for Intel Graphics Assembler (libiga64.so) ..."
+    
+    ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
+    for d in $ld_lib_path
+    do
+        if [ -r ${d}/libiga64.so ]; then
+            l0_iga_lib=${d}
+            fixmakeargs="$fixmakeargs L0_IGA l0_iga_lib=${l0_iga_lib}"
+            echo "yes"
+            echo $l0_iga_lib
+            break;
+        fi
+    done
+    if [ "x${l0_iga_lib}" = "x" ] ; then
+        echo "no"
+        echo "Level Zero address decode disabled. -l0_pc will not show neither source information nor instructions"
+    fi
 fi
 
 

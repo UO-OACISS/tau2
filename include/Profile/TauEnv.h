@@ -54,6 +54,7 @@
 #define TAU_EBS_RESOLUTION_FUNCTION_LINE 3
 
 #ifdef __cplusplus
+#include <string>
 extern "C" {
 #endif
 
@@ -211,8 +212,15 @@ extern "C" {
   int TAUDECL TauEnv_get_rocsdk_pcs_enable();
   int TAUDECL TauEnv_get_rocsdk_pcs_kind();
   int TAUDECL TauEnv_get_rocsdk_pcs_cus();
+  void TAUDECL TauEnv_set_rocsdk_metric(char* rocsdk_metric_name);
+  char* TAUDECL  TauEnv_get_rocsdk_metrics();
   int TAUDECL TauEnv_get_l0_enable();
   int TAUDECL TauEnv_get_l0_metrics_enable();
+  #ifdef L0METRICS
+  void TAUDECL TauEnv_set_l0_metrics_enable();
+  void TAUDECL TauEnv_set_l0_metric(char* l0_metric_name);
+  const char* TAUDECL TauEnv_get_l0_metric();
+  #endif
   int TAUDECL TauEnv_get_l0_stall_sampling_enable();
   int TAUDECL TauEnv_get_l0_sampling_interval();
   int TAUDECL TauEnv_get_perfetto_compress(void);

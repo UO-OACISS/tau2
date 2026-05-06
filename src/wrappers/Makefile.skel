@@ -128,6 +128,12 @@ TAU_IOWRAP_SHARED=libTAU-iowrap$(TAU_SHLIBX)
 #SYSCALL#TAU_SYSCALL_SHARED=libTAU-ptrace-syscall$(TAU_SHLIBX) #ENDIF#
 #NOSHARED#TAU_SYSCALL_SHARED= #ENDIF#
 
+#============================ L0 zeInit =========================================
+
+#LEVEL_ZERO#TAU_ZEINIT_SHARED=libTAU-zeinit$(TAU_SHLIBX) #ENDIF#
+#LEVEL_ZERO_LEGACY#TAU_ZEINIT_SHARED=libTAU-zeinit$(TAU_SHLIBX) #ENDIF#
+#NOSHARED#TAU_SYSCALL_SHARED= #ENDIF#
+
 #============================ TAUPRELOAD ======================================
 
 #LD_AUDITOR_AVAILABLE#TAU_AUDITOR_SHARED=libTAU-dl-auditor$(TAU_SHLIBX) #ENDIF#

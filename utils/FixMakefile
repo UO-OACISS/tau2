@@ -1093,8 +1093,8 @@ case $1 in
 	      echo "s@^TAU_MDISC_DIR=\(.*\)@TAU_MDISC_DIR=$mdisc_dir@g" >> $sedout
         ;;
 
-     LEVEL_ZERO_OLD)
-        echo NOTE: Using the TAU Level Zero Old Profiling Interface
+     LEVEL_ZERO_LEGACY)
+        echo NOTE: Using the TAU Level Zero Legacy Profiling Interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -1107,6 +1107,16 @@ case $1 in
         echo NOTE: Using the TAU Level Zero Metrics Interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+
+     l0_iga_lib=*)
+        l0_iga_lib=`echo $1 | sed -e 's/^l0_iga_lib=//' -e 's/#/ /g'`
+	echo "s@^TAU_L0_LIGA_DIR=\(.*\)@TAU_L0_LIGA_DIR=$l0_iga_lib@g" >> $sedout
+        ;;
+
+     L0_IGA)
+        echo NOTE: Using the Intel Graphic Assembler
+	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;      
 
      rocmdir=*)
         rocmdir=`echo $1 | sed -e 's/^rocmdir=//' -e 's/#/ /g'`
