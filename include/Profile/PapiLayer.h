@@ -13,6 +13,8 @@
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
 ****************************************************************************/
 #include <vector>
+#include <mutex>
+#include <pthread.h>
 #ifndef _PAPI_LAYER_H_
 #define _PAPI_LAYER_H_
 
@@ -82,7 +84,11 @@ private:
   };
   
   static PapiThreadList & ThePapiThreadList();
-  static std::mutex papiVectorMutex; 
+  static std::mutex papiVectorMutex;
+  /* Reader-writer lock for PAPI operations: exclusive during
+   * initializeThread(), shared during getAllCounters() PAPI reads.
+   * Using pthread_rwlock_t for C++11 compatibility (std::shared_mutex is C++17). */
+  static pthread_rwlock_t papiRWLock;
   static inline void checkPAPIVector(int tid){
 	//RtsLayer::LockDB();
 	std::lock_guard<std::mutex> guard(papiVectorMutex);  

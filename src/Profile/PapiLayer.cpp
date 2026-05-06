@@ -28,9 +28,10 @@ using namespace std;
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <pthread.h>
 
 #ifdef TAU_AT_FORK
-#include <pthread.h>
+/* pthread_atfork used below */
 #endif /* TAU_AT_FORK */
 
 #ifdef TAU_BEACON
@@ -83,6 +84,13 @@ int PapiLayer::numCounters = 0;
 int PapiLayer::counterList[MAX_PAPI_COUNTERS];
 bool PapiLayer::destroyed=false;
 std::mutex PapiLayer::papiVectorMutex;
+/* Reader-writer lock serializing concurrent PAPI-level operations.
+ * initializeThread() acquires it exclusively; getAllCounters() acquires
+ * it shared.  This prevents PAPI's internal global EventSet table from
+ * being reallocated (by PAPI_create_eventset in a new thread) while
+ * another thread is doing an unlocked _papi_hwi_lookup_EventSet inside
+ * PAPI_read / PAPI_reset. */
+pthread_rwlock_t PapiLayer::papiRWLock = PTHREAD_RWLOCK_INITIALIZER;
 PapiLayer::PapiThreadList & PapiLayer::ThePapiThreadList() {
     static PapiLayer::PapiThreadList threadList;
     return threadList;
@@ -307,6 +315,19 @@ int PapiLayer::initializeThread(int tid)
   int rc;
 
   if (!getThreadValue(tid)){
+    /* Acquire exclusive PAPI access while we create and start a new
+     * EventSet.  PAPI's internal _papi_hwi_lookup_EventSet does not
+     * hold PAPI's own lock, so PAPI_create_eventset can reallocate
+     * the global EventSet pointer array while another thread is in
+     * the middle of PAPI_read/PAPI_reset.  The exclusive lock here
+     * (paired with the shared lock in getAllCounters) prevents that.
+     * Using pthread_rwlock_t for C++11 compatibility; RAII guard
+     * ensures unlock on every exit path. */
+    struct RWWriteLockGuard {
+      pthread_rwlock_t* rw;
+      RWWriteLockGuard(pthread_rwlock_t* r) : rw(r) { pthread_rwlock_wrlock(rw); }
+      ~RWWriteLockGuard() { pthread_rwlock_unlock(rw); }
+    } writerLock(&papiRWLock);
     RtsLayer::LockDB();
     if (!getThreadValue(tid)){
       dmesg(1, "TAU: PAPI: Initializing Thread Data for TID = %d\n", tid);
@@ -492,6 +513,15 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
   }
 #endif /* PTHREADS */
 
+  /* Shared (read) lock: multiple threads may read their own EventSets
+   * concurrently, but we must block if another thread is currently
+   * inside initializeThread() (exclusive lock) to prevent use-after-
+   * free on PAPI's reallocated global EventSet pointer array. */
+  struct RWReadLockGuard {
+    pthread_rwlock_t* rw;
+    RWReadLockGuard(pthread_rwlock_t* r) : rw(r) { pthread_rwlock_rdlock(rw); }
+    ~RWReadLockGuard() { pthread_rwlock_unlock(rw); }
+  } readerLock(&papiRWLock);
   for (int comp=0; comp<TAU_PAPI_MAX_COMPONENTS; comp++) {
     if (localThreadValue->NumEvents[comp] > 0) { // if there were active counters for this component
       // read eventset for this component and reset counters
