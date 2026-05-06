@@ -1140,7 +1140,18 @@ on_ompt_callback_thread_end(
   TauInternalFunctionGuard protects_this_function;
   if (internal_thread) { return; }
   // Prevent against callbacks after finalization
-  if (Tau_ompt_finalized()) { return; }
+  if (Tau_ompt_finalized()) {
+    /* Tau_destructor_trigger() calls Tau_ompt_finalize() (setting Tau_ompt_finalized=true)
+     * before all worker threads have fully exited.  Cancel the per-thread EBS sampling
+     * timer here so it cannot fire during glibc thread teardown (__rpc_thread_destroy /
+     * __libc_thread_freeres), after TLS (MetricThreadCache) has been freed.  We skip
+     * Tau_stop_all_timers because the destructor's Tau_profile_exit_all_threads handles
+     * that. We still need to disarm the timer to prevent potential SIGSEGV. */
+    if (!is_master && TauEnv_get_ebs_enabled()) {
+      Tau_sampling_finalize_if_necessary(RtsLayer::myThread());
+    }
+    return;
+  }
   if(Tau_ompt_callbacks_enabled[ompt_callback_thread_end] && Tau_init_check_initialized()) {
     if (is_master) return; // master thread can't be a new worker.
     int tid = RtsLayer::myThread();
