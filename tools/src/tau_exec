@@ -1644,6 +1644,23 @@ else
     exit 0;
   fi
 
+#HSA_TOOLS_LIB may already be set for use by other tools (e.g. PAPI)
+if [ -n "$TAU_HSA_TOOLS_LIB" ]; then
+    if [ -z "$HSA_TOOLS_LIB" ]; then
+        # Empty variable can be assigned safely.
+        $dryrun export HSA_TOOLS_LIB="$TAU_HSA_TOOLS_LIB"
+    elif [[ ":$HSA_TOOLS_LIB:" == *":$TAU_HSA_TOOLS_LIB:"* ]]; then
+        # Do nothing to avoid redundant entries.
+        : 
+    else
+        # HSA_TOOLS_LIB is set to something else. 
+        # Prepend and warn
+        echo "TAU: [Warning] HSA_TOOLS_LIB is already set to: $HSA_TOOLS_LIB"
+        echo "TAU: Prepending $TAU_HSA_TOOLS_LIB to the environment."
+        $dryrun export HSA_TOOLS_LIB="$TAU_HSA_TOOLS_LIB:$HSA_TOOLS_LIB"
+    fi
+fi
+
   if [ $apple = 1 ]; then
     ORIG_LIBRARY_PATH=$DYLD_LIBRARY_PATH
     ORIG_INSERT_LIBRARIES=$DYLD_INSERT_LIBRARIES
@@ -1651,14 +1668,12 @@ else
     $dryrun export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
     $dryrun export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD
     $dryrun export DYLD_FORCE_FLAT_NAMESPACE=1
-    $dryrun export HSA_TOOLS_LIB=$TAU_HSA_TOOLS_LIB
   else
     ORIG_LIBRARY_PATH=$LD_LIBRARY_PATH
     ORIG_AUDIT_AUDIT=$LD_AUDIT
     ORIG_LD_PRELOAD=$LD_PRELOAD
     $dryrun export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
     $dryrun export LD_AUDIT=$TAUEX_LD_AUDITOR
-    $dryrun export HSA_TOOLS_LIB=$TAU_HSA_TOOLS_LIB
     #$dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
     if [ $track_rocm = "true" ] ; then
       if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then

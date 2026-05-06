@@ -219,7 +219,14 @@ public:
   ~Profiler() {};
 
   void Start(int tid = RtsLayer::myThread());
+  /* Re-push after OMPT task suspension: same as Start but skips call-count increment. */
+  void Resume(int tid = RtsLayer::myThread());
   void Stop(int tid = RtsLayer::myThread(), bool useLastTimeStamp = false);
+
+private:
+  /* Shared implementation for Start and Resume. */
+  void Start_impl(int tid, bool resume);
+public:
   double *getStartValues();
 
   void CallPathStart(int tid);

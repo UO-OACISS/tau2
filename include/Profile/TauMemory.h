@@ -267,6 +267,7 @@ private:
 public:
 
   TauAllocation() :
+    alloc_event(nullptr),
     alloc_addr(NULL), alloc_size(0),
     user_addr(NULL), user_size(0),
     lguard_addr(NULL), lguard_size(0),

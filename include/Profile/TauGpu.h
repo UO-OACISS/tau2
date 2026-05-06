@@ -147,7 +147,7 @@ extern "C" void Tau_gpu_register_memcpy_event(GpuEvent *event, double startTime,
 
 /* Callback for a UnifMem event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
-extern "C" void Tau_gpu_register_unifmem_event(GpuEvent *event, double startTime, double endTime, int transferSize, int unifmemType, int direction);
+extern "C" void Tau_gpu_register_unifmem_event(GpuEvent *event, double startTime, double endTime, size_t transferSize, int unifmemType, int direction);
 
 extern "C" void Tau_gpu_register_envt_event(GpuEvent *event, double startTime, double endTime, int transferSize, int dataType);
 

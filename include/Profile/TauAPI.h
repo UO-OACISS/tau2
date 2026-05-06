@@ -727,6 +727,7 @@ void TAUDECL Tau_scan_data(int data);
 void TAUDECL Tau_set_node(int node);
 
 void TAUDECL Tau_start_timer(void *profiler, int phase, int tid);
+void TAUDECL Tau_resume_timer(void *profiler, int phase, int tid);
 void TAUDECL Tau_stop_timer(void *profiler, int tid);
 int TAUDECL Tau_invoke_plugin_phase_entry(void *profiler);
 int TAUDECL Tau_invoke_plugin_phase_exit(void *profiler);

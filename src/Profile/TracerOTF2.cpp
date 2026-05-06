@@ -52,12 +52,8 @@
 #include <cmath>
 
 #include <otf2/otf2.h>
-#ifdef TAU_OPENMP
-#include <otf2/OTF2_OpenMP_Locks.h>
-#else
-#ifdef PTHREADS
+#if defined(TAU_OPENMP) || defined(PTHREADS)
 #include <otf2/OTF2_Pthread_Locks.h>
-#endif
 #endif
 
 #ifdef TAU_INCLUDE_MPI_H_HEADER
@@ -617,15 +613,14 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
   OTF2_EC(OTF2_Archive_SetCollectiveCallbacks(otf2_archive, get_tau_collective_callbacks(), NULL, ( OTF2_CollectiveContext* )TauCollectives_Get_World(), NULL));
   OTF2_EC(OTF2_Archive_SetCreator(otf2_archive, "TAU"));
 
-#if defined(TAU_OPENMP)
-#ifdef TAU_OTF2_DEBUG
-  fprintf(stderr, "%u: Using OpenMP Locking Callbacks\n", my_node());
-#endif
-  OTF2_EC(OTF2_OpenMP_Archive_SetLockingCallbacks(otf2_archive));
-#elif defined(PTHREADS)
+#if defined(TAU_OPENMP) || defined(PTHREADS)
 #ifdef TAU_OTF2_DEBUG
   fprintf(stderr, "%u: Using Pthread Locking Callbacks\n", my_node());
 #endif
+  /* Use pthread locking even when OpenMP is available: the OpenMP runtime
+   * may finalize and destroy its lock state before TAU flushes the last
+   * OTF2 trace events during program exit, causing a crash in omp_set_lock.
+   * Pthread mutexes remain valid until explicitly destroyed, which is safe. */
   OTF2_EC(OTF2_Pthread_Archive_SetLockingCallbacks(otf2_archive, NULL));
 #endif
 

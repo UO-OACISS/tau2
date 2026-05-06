@@ -81,6 +81,103 @@ int get_ompt_tid(void) {
   return Tau_get_thread();
 }
 
+/* Per-task wrapper for OMPT explicit task timers.
+ *
+ * With untied OpenMP tasks, a task can be suspended at a taskwait/yield point
+ * while instrumented function timers are still active
+ * on the thread's call stack above the task timer.  When the OMPT task_schedule
+ * callback fires to suspend the task it calls stop_correct_timer(), which
+ * calls Tau_stop_timer().  Tau_stop_timer() walks the stack looking for the
+ * task timer and, finding the instrumented function first, calls reportOverlap() -> abort().
+ *
+ * The fix: save those "above-task" function timers into this struct at
+ * suspension time, stop them top-down so the task timer reaches the top of the
+ * stack, then stop the task timer normally.  At resumption, restart the task
+ * timer and then restart the saved function timers (bottom-up) so the stack
+ * order is restored.  The function timers' exit instrumentation will then find
+ * them on the stack and stop them correctly when the functions return.
+ *
+ * This correctly handles cross-thread migration of untied tasks: saved timers
+ * are always restarted on whichever thread resumes the task.
+ */
+struct TauOMPTTaskData {
+    void *timer_handle;           /* FunctionInfo* for the OpenMP_Task timer */
+    std::vector<void*> saved;     /* FunctionInfo* above task timer at last yield, top-down */
+    int saved_tid;                /* thread ID where the context was saved */
+    bool ever_started;            /* true after the first task_schedule start */
+    TauOMPTTaskData() : timer_handle(nullptr), saved_tid(-1), ever_started(false) {}
+};
+
+/* Stop any function-level timers sitting above the task timer on the current
+ * thread's call stack, saving them in td->saved (top-down order), then stop
+ * the task timer itself.  If the task timer is not found on the stack (e.g.,
+ * the task was completed on a different thread) the function is a no-op. */
+static void tau_ompt_stop_task_saving_context(TauOMPTTaskData *td) {
+    void *task_fi = td->timer_handle;
+    if (!task_fi) return;
+    int tid = Tau_get_thread();
+    td->saved.clear();
+    td->saved_tid = tid;
+
+    /* Scan the stack from top to find the task timer, collecting any
+     * function timers above it. */
+    Profiler *p = TauInternal_CurrentProfiler(tid);
+    while (p != nullptr && p->ThisFunction != (FunctionInfo*)task_fi) {
+        td->saved.push_back((void*)p->ThisFunction);
+        p = p->ParentProfiler;
+    }
+    if (p == nullptr) {
+        /* Task timer not on this thread's stack – nothing to do. */
+        td->saved.clear();
+        td->saved_tid = -1;
+        return;
+    }
+
+    /* Stop the function timers above the task timer, top-down.
+     * Each call to Tau_stop_timer expects the target at the top of the stack;
+     * after stopping td->saved[0] (the original top), td->saved[1] becomes
+     * the new top, and so on. */
+    for (void *fi : td->saved) {
+        Tau_stop_timer(fi, tid);
+    }
+    /* The task timer is now on top – stop it normally. */
+    Tau_stop_timer(task_fi, tid);
+}
+
+/* Start the task timer, then re-push any function timers that were saved at
+ * the last suspension point (in the original bottom-up order).  The function
+ * timers' exit instrumentation will find them on the stack and stop them
+ * when those functions return.
+ *
+ * For the initial scheduling of the task (ever_started == false), the task
+ * timer is started via Tau_start_timer so that its call count is recorded.
+ * For subsequent resume-after-yield events, Tau_resume_timer is used for
+ * both the task timer and the saved function timers so that call counts are
+ * NOT inflated (this is a continuation of the same logical invocation). */
+static void tau_ompt_start_task_restoring_context(TauOMPTTaskData *td) {
+    void *task_fi = td->timer_handle;
+    if (!task_fi) return;
+    int tid = Tau_get_thread();
+
+    if (!td->ever_started) {
+        /* First scheduling: count this as one call. */
+        Tau_start_timer(task_fi, 0, tid);
+        td->ever_started = true;
+    } else {
+        /* Resume after yield: don't increment call count. */
+        Tau_resume_timer(task_fi, 0, tid);
+    }
+
+    /* Restore saved function timers in reverse (bottom-up) order so the
+     * stack mirrors the original layout.  Always use Tau_resume_timer here
+     * since the compiler instrumentation already counted the original entry. */
+    for (int i = (int)td->saved.size() - 1; i >= 0; i--) {
+        Tau_resume_timer(td->saved[i], 0, tid);
+    }
+    td->saved.clear();
+    td->saved_tid = -1;
+}
+
 int Tau_set_tau_initialized() { tau_initialized = true; return 0;};
 
 static const char* ompt_thread_type_t_values[] = {
@@ -90,13 +187,24 @@ static const char* ompt_thread_type_t_values[] = {
   "ompt_thread_other"
 };
 
+/* Indexed by ompt_task_status_t enum value (1-based; element 0 unused).
+ * OpenMP 5.0 defines values 1-7; 5.2 adds ompt_taskwait_complete (8). */
 static const char* ompt_task_status_t_values[] = {
-  NULL,
-  "ompt_task_complete",
-  "ompt_task_yield",
-  "ompt_task_cancel",
-  "ompt_task_others"
+  NULL,                      /* 0 – unused */
+  "ompt_task_complete",      /* 1 */
+  "ompt_task_yield",         /* 2 */
+  "ompt_task_cancel",        /* 3 */
+  "ompt_task_detach",        /* 4 */
+  "ompt_task_early_fulfill", /* 5 */
+  "ompt_task_late_fulfill",  /* 6 */
+  "ompt_task_switch",        /* 7 */
+#if defined(ompt_taskwait_complete)
+  "ompt_taskwait_complete",  /* 8 – OpenMP 5.2+ */
+#endif
 };
+#define TAU_OMPT_TASK_STATUS_NAME(s) \
+  ((s) > 0 && (size_t)(s) < sizeof(ompt_task_status_t_values)/sizeof(ompt_task_status_t_values[0]) \
+   && ompt_task_status_t_values[(s)] ? ompt_task_status_t_values[(s)] : "unknown")
 static const char* ompt_cancel_flag_t_values[] = {
   "ompt_cancel_parallel",
   "ompt_cancel_sections",
@@ -726,7 +834,9 @@ on_ompt_callback_task_create(
 
       void *handle = NULL;
       TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
-      new_task_data->ptr = (void*)handle;
+      TauOMPTTaskData *ompt_td = new TauOMPTTaskData();
+      ompt_td->timer_handle = handle;
+      new_task_data->ptr = (void*)ompt_td;
     }
   }
 
@@ -754,16 +864,30 @@ on_ompt_callback_task_schedule(
     ompt_data_t *next_task_data)
 {
   #ifdef TAUOMPT_DEBUG
-  printf("%s\n", __func__);
+  printf("%s prior_status=%s\n", __func__, TAU_OMPT_TASK_STATUS_NAME(prior_task_status));
   #endif
     TauInternalFunctionGuard protects_this_function;
   if(Tau_ompt_callbacks_enabled[ompt_callback_task_schedule] && Tau_init_check_initialized()) {
     if(prior_task_data->ptr) {
-      stop_correct_timer(prior_task_data->ptr);
+      TauOMPTTaskData *td = (TauOMPTTaskData *)prior_task_data->ptr;
+      tau_ompt_stop_task_saving_context(td);
+      /* Free on statuses that guarantee the task will never be scheduled
+       * again.  */
+      if (prior_task_status == ompt_task_complete ||
+          prior_task_status == ompt_task_cancel   ||
+          prior_task_status == ompt_task_late_fulfill
+#if defined(ompt_taskwait_complete)   /* OpenMP 5.2+ */
+          || prior_task_status == ompt_taskwait_complete
+#endif
+         ) {
+        delete td;
+        prior_task_data->ptr = NULL;
+      }
     }
 
     if(next_task_data->ptr) {
-      TAU_PROFILER_START(next_task_data->ptr);
+      TauOMPTTaskData *td = (TauOMPTTaskData *)next_task_data->ptr;
+      tau_ompt_start_task_restoring_context(td);
     }
   }
 
@@ -1021,6 +1145,13 @@ on_ompt_callback_thread_end(
     if (is_master) return; // master thread can't be a new worker.
     int tid = RtsLayer::myThread();
     Tau_stop_all_timers(tid);
+    /* Finalize event-based sampling for this thread before its TLS is torn down.
+     * Without this, the per-thread POSIX timer can fire during __nptl_deallocate_tsd
+     * (after thread_local destructors have run), causing a crash in getFunctionMetric
+     * when it accesses the already-freed MetricThreadCache vector. */
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_finalize_if_necessary(tid);
+    }
   }
 
   if(Tau_plugins_enabled.ompt_thread_end) {

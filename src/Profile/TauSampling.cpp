@@ -375,11 +375,16 @@ static tau_bfd_handle_t & TheBfdUnitHandle()
 {
   static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
   if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    /* Opens /proc/self/maps via fopen. Without this guard iowrap can intercept
+     * that call while tauDBMutex is held, potentially deadlocking with threads
+     * that hold get_pure_map_mutex and wait for tauDBMutex. */
+    Tau_global_incr_insideTAU();
     RtsLayer::LockEnv();
     if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
       bfdUnitHandle = Tau_bfd_registerUnit();
     }
     RtsLayer::UnLockEnv();
+    Tau_global_decr_insideTAU();
   }
   return bfdUnitHandle;
 }
@@ -2293,6 +2298,21 @@ int Tau_sampling_finalize(int tid)
   if(tid == 0) {
     collectingSamples = 0;
   }
+
+#if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ) && !defined(TAU_FUJITSU)
+  /* Cancel the per-thread POSIX timer so it cannot fire after TLS teardown.
+   * We can only look up the kernel-TID keyed entry when called from the thread
+   * being finalized; external calls (e.g. tid==0 finalizing all threads) skip
+   * this because the target thread has already exited. */
+  if (tid == RtsLayer::myThread()) {
+    std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
+    auto it = TheThreadTimerMap().find(RtsLayer::getTid());
+    if (it != TheThreadTimerMap().end()) {
+      timer_delete(it->second);
+      TheThreadTimerMap().erase(it);
+    }
+  }
+#endif
 
   struct itimerval itval;
   int ret;

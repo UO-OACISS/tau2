@@ -447,6 +447,7 @@ int TauTraceInit(int tid)
      the per-thread trace state is fully initialized and we return 0 to
      tell the caller that no additional INIT records were created here. */
   if (!getTauTraceInitialized(tid) && RtsLayer::myNode() == -1 && !Tau_get_usesMPI()) {
+#if defined(TAU_MPI) || defined(TAU_SHMEM)
     static bool warned_once = false;
     if (!warned_once) {
       warned_once = true;
@@ -454,6 +455,7 @@ int TauTraceInit(int tid)
         "TAU: Warning: Tracing is enabled with an MPI-configured library, but no MPI "
         "environment was detected.  Defaulting to node 0 for trace output.\n");
     }
+#endif
     RtsLayer::setMyNode(0, tid);
     /* setMyNode invoked TauTraceInit recursively; initialization is complete. */
     return 0;

@@ -335,6 +335,9 @@ static tau_bfd_handle_t & OmpTheBfdUnitHandle()
 {
   static tau_bfd_handle_t OmpbfdUnitHandle = TAU_BFD_NULL_HANDLE;
   if (OmpbfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    /* Opens /proc/self/maps via fopen. Without this guard iowrap can intercept
+     * that call while tauDBMutex is held, potentially deadlocking. */
+    Tau_global_incr_insideTAU();
     RtsLayer::LockEnv();
     if (OmpbfdUnitHandle == TAU_BFD_NULL_HANDLE) {
 #if defined(TAU_BFD)
@@ -342,6 +345,7 @@ static tau_bfd_handle_t & OmpTheBfdUnitHandle()
 #endif
     }
     RtsLayer::UnLockEnv();
+    Tau_global_decr_insideTAU();
   }
   return OmpbfdUnitHandle;
 }

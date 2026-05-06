@@ -488,10 +488,12 @@ static void reportEntryExit (bool entry, FunctionInfo *caller, int tid) {
 #endif
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
+/* Shared implementation for Tau_start_timer and Tau_resume_timer.
+ * When resume=true the call count is NOT incremented (see Profiler::Start). */
+static void Tau_start_timer_impl(void *functionInfo, int phase, int tid, bool resume) {
   FunctionInfo *fi = (FunctionInfo *) functionInfo;
 #ifdef REPORT_ENTRY_EXIT
-  reportEntryExit(true, fi, tid);
+  if (!resume) reportEntryExit(true, fi, tid);
 #endif
 
   // Don't start throttled timers
@@ -504,7 +506,8 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   const int ebs_enabled = TauEnv_get_ebs_enabled();
 
 #ifdef TAU_UNWIND
-  if(TauEnv_get_region_addresses()) {
+  /* Only capture the start address on a genuine entry, not a resume. */
+  if (!resume && TauEnv_get_region_addresses()) {
     unsigned long unwound_addresses[TAU_SAMP_NUM_ADDRESSES];
     if(fi->StartAddr == 0) {
       int unwind_ret = Tau_unwind_unwindTauContext(tid, unwound_addresses);
@@ -518,21 +521,16 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #ifndef TAU_WINDOWS
 #ifndef _AIX
   if (ebs_enabled) {
-    // OK, this gets called WAY too much, just to make sure that TAU is initialized
-    // before timers start
-    //Tau_sampling_init_if_necessary();
     Tau_sampling_suspend(tid);
   }
 #endif /* _AIX */
 #endif
 
 #ifdef TAU_TRACK_IDLE_THREADS
-  /* If we are performing idle thread tracking, we start a top level timer */
-  if (tid != 0) {
+  if (!resume && tid != 0) {
     Tau_create_top_level_timer_if_necessary_task(tid);
   }
-#endif // TAU_TRACK_IDLE_THREADS
-
+#endif
 
 #ifdef TAU_EPILOG
   esd_enter(fi->GetFunctionId());
@@ -567,21 +565,14 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   SCOREP_Tau_EnterRegion(fi->GetFunctionId());
 #endif
 
-  // Cache the per-thread flags reference once; each getTauThreadFlag(tid) call
-  // on a .so resolves two TLS vars (__tls_get_addr) that the compiler cannot CSE.
   Tau_thread_status_flags& flags = getTauThreadFlag(tid);
 
-  // move the stack pointer
-  //printf("Incrementing stack pointer at 401 for tid:%d\n",tid);
   flags.Tau_global_stackpos++; /* push */
 
   if (flags.Tau_global_stackpos >= flags.Tau_global_stackdepth) {
     int oldDepth = flags.Tau_global_stackdepth;
     int newDepth = oldDepth + STACK_DEPTH_INCREMENT;
-    //printf("%d: NEW STACK DEPTH: %d\n", tid, newDepth);
-    //Profiler *newStack = (Profiler *) malloc(sizeof(Profiler)*newDepth);
 
-    //A deep copy is necessary here to keep the profiler pointers up to date
     Profiler *newStack = (Profiler *) calloc(newDepth, sizeof(Profiler));
     if (oldDepth > 0) {
       memcpy(newStack, flags.Tau_global_stack, oldDepth*sizeof(Profiler));
@@ -612,7 +603,6 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   p->RecordEvent = false; /* by default, we don't record this event */
 #endif /* TAU_MPITRACE */
 
-
 #ifdef TAU_PROFILEPHASE
   if (phase) {
     p->SetPhase(true);
@@ -636,11 +626,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   }
 #endif /* TAU_DEPTH_LIMIT */
 
-  p->Start(tid);
-
-  /********************************************************************************/
-  /*** Extras ***/
-  /********************************************************************************/
+  if (resume) p->Resume(tid); else p->Start(tid);
 
   /*** Memory Profiling ***/
   if (TauEnv_get_track_memory_heap()) {
@@ -662,21 +648,29 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   p->ThisFunction->GetHeadroomEvent()->TriggerEvent(Tau_estimate_free_memory());
 #endif /* TAU_PROFILEHEADROOM */
 
-  /********************************************************************************/
-  /*** Extras ***/
-  /********************************************************************************/
-
 #ifndef TAU_WINDOWS
 #ifndef _AIX
   if (ebs_enabled) {
     Tau_sampling_resume(tid);
-    // if the unwind depth should be "automatic", then get the stack for right now
     if (TauEnv_get_ebs_unwind_depth() == 0) {
       Tau_sampling_event_start(tid, p->address);
     }
   }
 #endif /* _AIX */
 #endif
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
+  Tau_start_timer_impl(functionInfo, phase, tid, false);
+}
+
+///////////////////////////////////////////////////////////////////////////
+/* Tau_resume_timer: like Tau_start_timer but does NOT increment the call
+ * count.  Used by the OMPT layer to re-push function timers onto the stack
+ * after an OpenMP task is resumed from suspension. */
+extern "C" void Tau_resume_timer(void *functionInfo, int phase, int tid) {
+  Tau_start_timer_impl(functionInfo, phase, tid, true);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2710,6 +2704,7 @@ extern "C" void Tau_get_context_userevent(void **ptr, const char *name) {
 }
 
 extern "C" void Tau_context_userevent(void *ue, double data) {
+  if (ue == NULL) return;
   TauInternalFunctionGuard protects_this_function;
   TauContextUserEvent *t = (TauContextUserEvent *) ue;
   t->TriggerEvent(data);

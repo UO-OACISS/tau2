@@ -28,6 +28,7 @@ TAGS
 .configure_env
 .active_stub
 .active_stubs
+utils/perfetto/.obj-cache/
 .nfs*
 # Ignore build files
 tools/src/android/dexInjector/*.jar

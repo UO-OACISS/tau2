@@ -400,6 +400,13 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
     pthread_t * threadp, const pthread_attr_t * attr,
     start_routine_p start_routine, void * arg)
 {
+  // If we are already inside a TAU function pass the call through
+  // without any wrapping.  Intercepting internal utility threads causes recursive static
+  // initialization and a __cxa_guard_acquire / recursive_init_error abort.
+  if (Tau_global_get_insideTAU() > 0) {
+    return pthread_create_call(threadp, attr, start_routine, arg);
+  }
+
   TauInternalFunctionGuard protects_this_function;
 
   bool * wrapped = (bool*)pthread_getspecific(wrapper_flags_key);
