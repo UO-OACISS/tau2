@@ -152,6 +152,9 @@ std::atomic<uint64_t> FunctionInfo::next_id{0};
 
 //thread_local FunctionInfo::FMetricListVector FunctionInfo::MetricThreadCache; //#Fixes opari bug, breaks pthreads
 thread_local FunctionInfo::FMetricListVector_local FunctionInfo::MetricThreadCache;     //vector<FunctionInfo::FunctionMetrics*>* FunctionInfo::MetricThreadCache=new vector<FunctionInfo::FunctionMetrics*>; // One entry per instance
+// Initialized false; set true by ~FMetricListVector_local during thread TLS teardown.
+// Trivial type: no destructor, storage valid for the entire thread lifetime.
+thread_local bool FunctionInfo::MetricThreadCacheDestroyed = false;
 bool FunctionInfo::use_metric_tls = true;
 //bool FunctionInfo::destructed = false;
 //thread_local bool FunctionInfo::destructed_local = false;

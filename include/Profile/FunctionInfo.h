@@ -192,8 +192,13 @@ struct FMetricListVector_local : vector<FunctionMetrics *>{
     }
 
     virtual ~FMetricListVector_local(){
-        //destructed_local=true;
-	//Tau_destructor_trigger();
+        // Mark the cache as destroyed BEFORE clearing it, so that any signal
+        // handler firing during teardown sees the flag and skips the cache.
+        // Also call clear() so that size() becomes 0 before the base class
+        // ~vector<> frees the buffer (without nulling _M_start/_M_finish),
+        // preventing stale non-zero size() reads from freed memory.
+        FunctionInfo::MetricThreadCacheDestroyed = true;
+        this->clear();
     }
 };
 
@@ -207,6 +212,11 @@ struct FMetricListVector_local : vector<FunctionMetrics *>{
 // This is used an an index into the static thread_local MetricThreadCache.
 static thread_local FMetricListVector_local  MetricThreadCache;    //vector<FunctionMetrics*>* MetricThreadCache; // One entry per instance
 //static thread_local FMetricListVector MetricThreadCache; // One entry per instance #Fixes opari bug, breaks pthreads
+// Set to true by ~FMetricListVector_local to signal that MetricThreadCache has been
+// destroyed. Trivial thread_local (no destructor) so its storage outlives the
+// non-trivial TLS destructors. Checked in getFunctionMetric() to avoid accessing
+// freed cache storage from a signal handler that fires during thread teardown.
+static thread_local bool MetricThreadCacheDestroyed;
 static std::atomic<uint64_t> next_id; // The next available ID; incremented when function_info_id is set.
 uint64_t function_info_id; // This is set in FunctionInfo::FunctionInfoInit()
 static bool use_metric_tls; // This is set to false to disable the thread-local cache during shutdown.
@@ -227,10 +237,11 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     // Use thread-local optimization if the current thread is requesting its own metrics.
     // After the first time a thread requests its own metrics, we no longer have to lock.
     // (If requesting a *different* thread's metrics, we have to use the slow path.)
-    // Also don't use the cache during shutdown -- it might have been destructed already,
-    // but we can't put a destructor trigger on MetricThreadCache because they are *also*
-    // destructed when a thread exits.
-    if(use_metric_tls && tid == local_tid){//&& tid!=0 && use_metric_tls && !destructed && !destructed_local) {
+    // Skip the cache if MetricThreadCacheDestroyed is true: this thread's TLS is being
+    // torn down and MetricThreadCache may have already been destructed.  The base class
+    // ~vector<> frees the buffer without nulling _M_start/_M_finish, so size() can still
+    // return a stale non-zero value and operator[] would read freed memory.
+    if(use_metric_tls && tid == local_tid && !MetricThreadCacheDestroyed){
         if(MetricThreadCache.size() > function_info_id) {
             MOut = MetricThreadCache.operator[](function_info_id);
             if(MOut != NULL) {
@@ -254,7 +265,9 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     MOut=FMetricList[tid];
 
     // Use thread-local optimization if the current thread is requesting its own metrics.
-    if(use_metric_tls && tid == local_tid) {//tid !=0 && use_metric_tls && 
+    // Skip if MetricThreadCacheDestroyed: writing to a destructed vector is UB and unsafe
+    // in a signal handler (push_back -> malloc is not async-signal-safe).
+    if(use_metric_tls && tid == local_tid && !MetricThreadCacheDestroyed) {
         // Ensure the FMetricList vector is long enough to accomodate the new cached item.
         while(MetricThreadCache.size() <= function_info_id) {
             MetricThreadCache.push_back(NULL);
