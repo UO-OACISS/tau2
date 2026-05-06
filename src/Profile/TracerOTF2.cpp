@@ -153,6 +153,7 @@ struct OTF2ThreadList : vector<otf2_thread_data *>{
     OTF2ThreadList& operator= (const OTF2ThreadList&) = delete;
     OTF2ThreadList(){
          //printf("Creating OTF2ThreadList at %p\n", this);
+         reserve(64); // performance hint; correctness is via TLS cache below
       }
      virtual ~OTF2ThreadList(){
          //printf("Destroying OTF2ThreadList at %p, with size %ld\n", this, this->size());
@@ -167,62 +168,72 @@ static OTF2ThreadList & Tau_otf2_getThreadData() {
   return otf2ThreadList;
 }
 
-static inline void checkOtf2ThreadDataVector(int tid){
-	if(Tau_otf2_getThreadData().size()<=tid){
-		 RtsLayer::LockDB();
-		while(Tau_otf2_getThreadData().size()<=tid){
-			Tau_otf2_getThreadData().push_back(new otf2_thread_data());
-		}
-		RtsLayer::UnLockDB();
-	}
+// Thread-local cache of the calling thread's otf2_thread_data pointer.
+// Mirrors the pattern from FunctionInfo::getFunctionMetric(): same-thread
+// access returns directly from the TLS cache without touching the shared
+// vector or taking a lock.  Cross-thread access (e.g. buffer flushing at
+// shutdown) falls through to the locked slow path.
+static thread_local otf2_thread_data* tls_otf2_data = nullptr;
+
+static otf2_thread_data* getOtf2ThreadData(int tid) {
+    static thread_local int local_tid = RtsLayer::myThread();
+    if (tid == local_tid && tls_otf2_data != nullptr) {
+        return tls_otf2_data;
+    }
+    // Slow path: lock, grow the vector if needed, then return the entry.
+    // The shared vector is never read without the lock held, so no
+    // reallocation race is possible regardless of vector capacity.
+    RtsLayer::LockDB();
+    OTF2ThreadList& v = Tau_otf2_getThreadData();
+    if ((int)v.size() <= tid) {
+        v.reserve((tid + 1) * 2);
+        while ((int)v.size() <= tid) {
+            v.push_back(new otf2_thread_data());
+        }
+    }
+    otf2_thread_data* data = v[tid];
+    RtsLayer::UnLockDB();
+    if (tid == local_tid) {
+        tls_otf2_data = data;
+    }
+    return data;
 }
 
 static inline int getPreviousType(int tid){
-    checkOtf2ThreadDataVector(tid);
-	return Tau_otf2_getThreadData()[tid]->previous_type;
+	return getOtf2ThreadData(tid)->previous_type;
 }
 static inline void setPreviousType(int tid, int value){
-    checkOtf2ThreadDataVector(tid);
-	Tau_otf2_getThreadData()[tid]->previous_type=value;
+	getOtf2ThreadData(tid)->previous_type = value;
 }
 static inline uint64_t getPreviousTS(int tid){
-    checkOtf2ThreadDataVector(tid);
-	return Tau_otf2_getThreadData()[tid]->previous_ts;
+	return getOtf2ThreadData(tid)->previous_ts;
 }
 static inline void setPreviousTS(int tid, uint64_t value){
-    checkOtf2ThreadDataVector(tid);
-	Tau_otf2_getThreadData()[tid]->previous_ts=value;
+	getOtf2ThreadData(tid)->previous_ts = value;
 }
 
 static inline bool getBuffersWritten(int tid){
-    checkOtf2ThreadDataVector(tid);
-	return Tau_otf2_getThreadData()[tid]->buffers_written;
+	return getOtf2ThreadData(tid)->buffers_written;
 }
 static inline void setBuffersWritten(int tid, bool value){
-    checkOtf2ThreadDataVector(tid);
-	Tau_otf2_getThreadData()[tid]->buffers_written=value;
+	getOtf2ThreadData(tid)->buffers_written = value;
 }
 
 static inline vector<temp_buffer_entry>*& getTempBuffer(int tid){
-    checkOtf2ThreadDataVector(tid);
-    return Tau_otf2_getThreadData()[tid]->temp_buffers;
+    return getOtf2ThreadData(tid)->temp_buffers;
 }
 
 static inline rma_win_map_t * getLocalRMAWinMaps(int tid){
-    checkOtf2ThreadDataVector(tid);
-	return Tau_otf2_getThreadData()[tid]->local_rma_win_maps;
+	return getOtf2ThreadData(tid)->local_rma_win_maps;
 }
-static inline void setLocalRMAWinMaps(int tid,rma_win_map_t * value){
-    checkOtf2ThreadDataVector(tid);
-	Tau_otf2_getThreadData()[tid]->local_rma_win_maps=value;
+static inline void setLocalRMAWinMaps(int tid, rma_win_map_t * value){
+	getOtf2ThreadData(tid)->local_rma_win_maps = value;
 }
 static inline uint64_t getNextRMAWin(int tid){
-    checkOtf2ThreadDataVector(tid);
-	return Tau_otf2_getThreadData()[tid]->next_rma_win;
+	return getOtf2ThreadData(tid)->next_rma_win;
 }
 static inline void setNextRMAWin(int tid, uint64_t value){
-    checkOtf2ThreadDataVector(tid);
-	Tau_otf2_getThreadData()[tid]->next_rma_win=value;
+	getOtf2ThreadData(tid)->next_rma_win = value;
 }
 
 // For unification data
