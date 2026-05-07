@@ -2905,8 +2905,31 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
   static vector<bool> initthread;//[TAU_MAX_THREADS] = { false }; //TODO: DYNATHREAD
 
   static std::mutex mtx;
+
+  /* Declared AFTER initializing/initthread/mtx so that it is destroyed FIRST
+   * (C++ static-local LIFO destruction order).  Its destructor fires
+   * Tau_sampling_disable_signal() which sets the signal action to SIG_IGN and
+   * cancels all outstanding per-thread POSIX timers.  This ensures no sampling
+   * signal can be delivered — and the handler cannot access the vectors above —
+   * after the vectors start to be destroyed.  The alive flag lets any
+   * concurrently executing signal handler bail out safely. */
+  struct TauTimerStaticsGuard {
+    std::atomic<bool> alive;
+    TauTimerStaticsGuard() : alive(true) {}
+    ~TauTimerStaticsGuard() {
+      alive.store(false, std::memory_order_seq_cst);
+      Tau_sampling_disable_signal();
+    }
+  };
+  static TauTimerStaticsGuard guard;
+
+  /* If the guard has been destroyed (program exit), the vectors below are
+   * either being destroyed or already gone — bail out. */
+  if (!guard.alive.load(std::memory_order_acquire)) return;
+
   if (!initialized && (initializing.size()<=tid || !initializing[tid])) {
     std::lock_guard<std::mutex> lck (mtx);
+    if (!guard.alive.load(std::memory_order_acquire)) return;
     expandVector(&initializing,tid);
     expandVector(&initthread,tid);
     if (!initialized) {
@@ -2940,6 +2963,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
   if (initthread.size()<=tid || !initthread[tid] ||
       (!TauInternal_CurrentProfiler(tid) && (initializing.size()<=tid || !initializing[tid]))) {
     std::lock_guard<std::mutex> lck (mtx);
+    if (!guard.alive.load(std::memory_order_acquire)) return;
     expandVector(&initializing,tid);
     expandVector(&initthread,tid);
     // if there is no top-level timer, create one - But only create one FunctionInfo object.

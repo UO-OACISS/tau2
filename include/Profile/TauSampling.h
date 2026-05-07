@@ -112,6 +112,10 @@ void Tau_sampling_defer_init(void);
 /* For TauMpi.c to invoke sampling finalization at MPI_Finalize */
 void Tau_sampling_finalize_if_necessary(int tid);
 void Tau_sampling_stop_sampling();
+/* Disable the sampling signal handler and cancel all outstanding timers.
+ * Must be called before TAU's static locals in
+ * Tau_create_top_level_timer_if_necessary_task are destroyed. */
+void Tau_sampling_disable_signal();
 
 /* Allows an external source to register address ranges for sample resolution */
 void Tau_sampling_register_external_range(uintptr_t start, uintptr_t end, char * funcname, char * filename, unsigned int line_number_size, unsigned int * line_number_table);

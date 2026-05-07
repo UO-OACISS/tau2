@@ -2318,10 +2318,10 @@ int Tau_sampling_finalize(int tid)
   int ret;
 
   if (tid == 0) {
-    // no timers to unset if on thread 0
+    // Cancel the interval timer (use TAU_ITIMER_TYPE, not ITIMER_REAL).
     itval.it_interval.tv_usec = itval.it_value.tv_usec = itval.it_interval.tv_sec = itval.it_value.tv_sec = 0;
 
-    ret = setitimer(ITIMER_REAL, &itval, 0);
+    ret = setitimer(TAU_ITIMER_TYPE, &itval, 0);
     if (ret != 0) {
       /* ERROR */
     }
@@ -2550,6 +2550,10 @@ void Tau_sampling_finalize_if_necessary(int tid)
       if (!finalized) {
         if(tid == 0) {
             collectingSamples = 0;
+            /* Disable the signal and cancel all timers now, before any static
+             * locals are destroyed.  Tau_sampling_finalize() below only cancels
+             * the calling thread's timer; worker-thread timers are handled here. */
+            Tau_sampling_disable_signal();
         }
         finalized = true;
       }
@@ -2578,8 +2582,38 @@ void Tau_sampling_finalize_if_necessary(int tid)
     }
 }
 
+/* Disable the sampling signal and cancel all outstanding timers.
+ * Called before TAU's static locals in Tau_create_top_level_timer_if_necessary_task
+ * are destroyed, so that in-flight or pending SIGPROF/SIGALRM signals cannot
+ * race against the destructors and cause use-after-free crashes. */
+void Tau_sampling_disable_signal() {
+    /* Reset the signal action to SIG_IGN.  Pending signals to any thread are
+     * discarded immediately; no future delivery will invoke the handler. */
+    struct sigaction ign;
+    memset(&ign, 0, sizeof(struct sigaction));
+    ign.sa_handler = SIG_IGN;
+    sigaction(TAU_ALARM_TYPE, &ign, NULL);
+
+#if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ) && !defined(TAU_FUJITSU)
+    /* Cancel all per-thread POSIX timers that were not already removed.
+     * Tau_sampling_finalize() only cancels the timer for the calling thread,
+     * so worker-thread timers remain live after finalization from thread 0. */
+    std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
+    for (auto& kv : TheThreadTimerMap()) {
+        timer_delete(kv.second);
+    }
+    TheThreadTimerMap().clear();
+#else
+    /* Cancel the process-wide interval timer. */
+    struct itimerval zero;
+    memset(&zero, 0, sizeof(struct itimerval));
+    setitimer(TAU_ITIMER_TYPE, &zero, NULL);
+#endif
+}
+
 void Tau_sampling_stop_sampling() {
     collectingSamples = 0;
+    Tau_sampling_disable_signal();
 }
 
 #endif //TAU_WINDOWS && TAU_ANDROID
