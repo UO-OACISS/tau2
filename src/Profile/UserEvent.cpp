@@ -501,6 +501,7 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
         FormulateContextComparisonArray(current, comparison);
         //printf("Searching: %lu, %lu or %p (should be %p)\n", comparison[0], comparison[1], comparison[1], current);
 
+        TauUserEvent * localContextEvent;
         RtsLayer::LockDB();
         ContextEventMap::const_iterator it = contextMap.find(comparison);
 #if 0
@@ -545,8 +546,11 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
           contextEvent = it->second;
           //printf("**** FOUND **** %s \n", contextEvent->GetName().c_str()); fflush(stdout);
         }
+        // Capture the pointer while still holding the lock so that a concurrent
+        // thread cannot overwrite this->contextEvent before we dereference it.
+        localContextEvent = contextEvent;
         RtsLayer::UnLockDB();
-        contextEvent->TriggerEvent(data, tid, timestamp, use_ts);
+        localContextEvent->TriggerEvent(data, tid, timestamp, use_ts);
       } else {
         // do nothing - there is no context.
       }
