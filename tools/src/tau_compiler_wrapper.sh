@@ -1,4 +1,15 @@
 #!/bin/sh
+# Ensure sibling helpers (tau-config, tau_compiler.sh, ...) resolve when
+# TAU's bin directory is not already on PATH -- e.g. in-tree installs on
+# macOS at <tau>/apple/bin. Distros installing under /usr/local pick this
+# up implicitly; everywhere else we bootstrap via $0's dirname.
+_tau_wrap_dir=$(cd "$(dirname "$0")" && pwd -P)
+case ":$PATH:" in
+    *":$_tau_wrap_dir:"*) ;;
+    *) PATH="$_tau_wrap_dir:$PATH"; export PATH ;;
+esac
+unset _tau_wrap_dir
+
 # tau_compiler_wrapper.sh
 #
 # Unified TAU compiler wrapper for C, C++, Fortran 90, and Fortran 77.
