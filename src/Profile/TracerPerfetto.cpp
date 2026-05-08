@@ -285,18 +285,23 @@ static const CachedFuncInfo* get_cached_function_info(long func_id) {
         }
     }
 
-    // Slow path: build the entry without holding any cache lock
-    // (TheFunctionDB scan can be slow; don't block readers).
+    // Slow path: build the entry without holding any Perfetto cache lock
+    // (TheFunctionDB scan can be slow; don't block Perfetto cache readers).
+    // TheFunctionDB() writes (push_back) are protected by RtsLayer::LockDB();
+    // hold the same lock while reading to prevent iterator invalidation from
+    // a concurrent push_back() / vector reallocation on another thread.
     CachedFuncInfo new_info;
     {
         TauInternalFunctionGuard guard;
         FunctionInfo* fi = nullptr;
+        RtsLayer::LockDB();
         for (auto fit = TheFunctionDB().begin(); fit != TheFunctionDB().end(); ++fit) {
             if ((*fit)->GetFunctionId() == func_id) {
                 fi = *fit;
                 break;
             }
         }
+        RtsLayer::UnLockDB();
         if (fi) {
             new_info.name = fi->GetName() ? fi->GetName() : "";
             new_info.type = fi->GetType() ? fi->GetType() : "";
