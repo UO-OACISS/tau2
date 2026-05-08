@@ -1,3 +1,9 @@
+/* Must precede <stdlib.h>: on macOS with Homebrew GCC, libstdc++ <cstdlib>
+ * unconditionally emits `using ::at_quick_exit;` but the SDK hides the
+ * declaration when _XOPEN_SOURCE is set.  The stub injects the declaration
+ * before stdlib.h is parsed.  See include/Profile/TauQuickExitStub.h. */
+#include <Profile/TauQuickExitStub.h>
+
 #ifdef __APPLE__
 #include <dlfcn.h>
 #define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
