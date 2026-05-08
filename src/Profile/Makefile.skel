@@ -1124,4 +1124,9 @@ test_java: all
 	LD_LIBRARY_PATH=`pwd` $(JDKDIR)/bin/java -agentlib:TAUsh-jdk=exclude=java/util/zip/ZipFile/init,java/util/jar/JarFile/init,sun/misc/URLClassPath*,java/net/URLClassLoader*,java/lang/ClassLoader* -Xbootclasspath/a:./TauJVMTI.jar Pi
 
 clean :
-	$(RM) *.ii *.ti ti_files cxx_repository ii_files rii_files *.a *.o *$(TAU_SHLIBX) $(TAU_GPU_LIB) $(TAU_GPU_DEP)
+	# Enumerate shared-library extensions explicitly. The previous
+	# `*$(TAU_SHLIBX)` form expands to a bare `*` if TAU_SHLIBX is
+	# empty (e.g. recursive make from the root that does not propagate
+	# TAUROOT, leaving the include of $(TAUROOT)/include/Makefile a
+	# no-op), causing `rm -rf *` to wipe the source directory.
+	$(RM) *.ii *.ti ti_files cxx_repository ii_files rii_files *.a *.o *.so *.dylib *.sl $(TAU_GPU_LIB) $(TAU_GPU_DEP)
