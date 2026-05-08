@@ -56,8 +56,6 @@ using std::getline;
 using std::transform;
 using std::sort;
 using std::min;
-#include <functional>
-using std::greater;
 #include <cstring>
 using std::strlen;
 using std::remove_if;
@@ -66,7 +64,7 @@ using std::remove_if;
 #include "opari2_parser_f.h"
 #include "opari2_directive_manager.h"
 
-struct fo_tolower : public std::unary_function<int, int>
+struct fo_tolower
 {
     int
     operator()( int x ) const
