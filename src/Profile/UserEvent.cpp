@@ -76,6 +76,12 @@ template TauUserEvent** uninitialized_copy(TauUserEvent**,TauUserEvent**,TauUser
 namespace tau
 {
 
+// Static member definitions for TauUserEvent's per-thread data cache.
+std::atomic<uint64_t> TauUserEvent::next_user_event_id{0};
+thread_local TauUserEvent::DataThreadCacheList TauUserEvent::DataThreadCache;
+thread_local bool TauUserEvent::DataThreadCacheDestroyed{false};
+std::atomic<bool> TauUserEvent::use_data_tls{true};
+
 // Orders callpaths by comparing arrays of profiler addresses stored as longs.
 // The first element of the array is the array length.
 struct ContextEventMapCompare

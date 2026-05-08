@@ -252,28 +252,30 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
         }
     }
     // Not in thread-local cache, or cache not searched.
-    // Create a new FunctionMetrics instance.
-    std::lock_guard<std::mutex> guard(fInfoVectorMutex);
-    while(FMetricList.size()<=tid){
-	FMetricList.push_back(new FunctionMetrics());
-#ifndef TAU_WINDOWS       
-        if(setPathHistograms){//TODO: DYNAPROF
-            int topThread=FMetricList.size()-1;
-            FMetricList[topThread]->pathHistogram=new TauPathHashTable<TauPathAccumulator>(topThread);
+    // Grow FMetricList under the mutex, then release before touching TLS
+    // (avoids malloc-under-lock and minimises lock hold time).
+    {
+        std::lock_guard<std::mutex> guard(fInfoVectorMutex);
+        while(FMetricList.size()<=tid){
+            FMetricList.push_back(new FunctionMetrics());
+#ifndef TAU_WINDOWS
+            if(setPathHistograms){//TODO: DYNAPROF
+                int topThread=FMetricList.size()-1;
+                FMetricList[topThread]->pathHistogram=new TauPathHashTable<TauPathAccumulator>(topThread);
+            }
+#endif
         }
-#endif        
-    }
-    
-    MOut=FMetricList[tid];
+        MOut=FMetricList[tid];
+    } // lock released here; MOut points to a stable heap object
 
-    // Use thread-local optimization if the current thread is requesting its own metrics.
+    // Populate TLS cache outside the lock.
     // Skip if MetricThreadCacheDestroyed: writing to a destructed vector is UB and unsafe
     // in a signal handler (push_back -> malloc is not async-signal-safe).
     if(use_metric_tls.load(std::memory_order_relaxed) && tid == local_tid && !MetricThreadCacheDestroyed) {
-        // Ensure the FMetricList vector is long enough to accomodate the new cached item.
+        // Ensure the MetricThreadCache vector is long enough to hold the new entry.
         while(MetricThreadCache.size() <= function_info_id) {
             MetricThreadCache.push_back(NULL);
-        }    
+        }
         // Store the FunctionMetrics pointer in the thread-local cache
         MetricThreadCache.operator[](function_info_id) = MOut;
     }

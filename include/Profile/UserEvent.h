@@ -21,6 +21,7 @@
 #include <vector>
 #include <map>
 #include <mutex>
+#include <atomic>
 #include <Profile/TauInit.h>
 #include <Profile/TauEnv.h>
 #include <Profile/TauMmapMemMgr.h>
@@ -66,6 +67,7 @@ public:
 public:
 
   TauUserEvent() :
+      user_event_id(next_user_event_id.fetch_add(1, std::memory_order_relaxed)),
       eventId(0), name("No Name"),
       minEnabled(true), maxEnabled(true), meanEnabled(true),
       stdDevEnabled(true), monoIncreasing(false), writeAsMetric(false)
@@ -75,6 +77,7 @@ public:
   }
 
   TauUserEvent(TauUserEvent const & e) :
+      user_event_id(next_user_event_id.fetch_add(1, std::memory_order_relaxed)),
       eventId(0), name(e.name),
       minEnabled(e.minEnabled), maxEnabled(e.maxEnabled),
       meanEnabled(e.meanEnabled), stdDevEnabled(e.stdDevEnabled),
@@ -86,6 +89,7 @@ public:
 
   //TauUserEvent(std::string const & name, bool increasing=false) :
   TauUserEvent(const char * name, bool increasing=false) :
+      user_event_id(next_user_event_id.fetch_add(1, std::memory_order_relaxed)),
       eventId(0), name(name), minEnabled(true), maxEnabled(true),
       meanEnabled(true), stdDevEnabled(true), monoIncreasing(increasing), writeAsMetric(false)
   {
@@ -232,50 +236,97 @@ public:
   }
   void TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts);
 
+  // Disable the TLS data cache globally (call during TAU shutdown, alongside
+  // FunctionInfo::disable_metric_cache()).
+  static void disable_data_cache() {
+    use_data_tls.store(false, std::memory_order_relaxed);
+  }
+
 private:
 
+  // Per-instance ID used to index into the per-thread DataThreadCache vector.
+  // Assigned once at construction from a global atomic counter; never changes.
+  static std::atomic<uint64_t> next_user_event_id;
+  uint64_t user_event_id;
+
+  // Guards uDataList growth in the ThreadData() slow path.
   std::mutex DataVectorMutex;
-  inline void checkDataVector(unsigned int tid){
-      std::lock_guard<std::mutex> guard(DataVectorMutex);
-      while (Tau_getUserData().size()<=tid){
-          Tau_getUserData().push_back(new Data());
-      }
-  }
+
+  // Thread-local cache: DataThreadCache[user_event_id] holds this thread's
+  // Data* for a TauUserEvent instance.  Eliminates DataVectorMutex contention
+  // after the first call per (thread × event) in the steady state.
+  struct DataThreadCacheList : vector<Data*> {
+    DataThreadCacheList() {}
+    virtual ~DataThreadCacheList() {
+      // Set flag BEFORE clearing so any signal handler or other code that
+      // fires during teardown skips the cache instead of reading freed memory.
+      TauUserEvent::DataThreadCacheDestroyed = true;
+      this->clear();
+    }
+  };
+  static thread_local DataThreadCacheList DataThreadCache;
+  // Trivial TLS (no destructor); its lifetime outlasts DataThreadCache so it
+  // remains readable after DataThreadCache's destructor runs.
+  static thread_local bool DataThreadCacheDestroyed;
+  // Global kill-switch: set to false during TAU shutdown to suppress all TLS
+  // cache accesses (mirrors FunctionInfo::use_metric_tls).
+  static std::atomic<bool> use_data_tls;
+
   Data & ThreadData() {
-    int tid=RtsLayer::myThread();
-    checkDataVector(tid);
-    return *Tau_getUserData()[tid];
+    int tid = RtsLayer::myThread();
+    return ThreadData(tid);
   }
 
   Data & ThreadData(int tid) {
-    checkDataVector(tid);
-    return *Tau_getUserData()[tid];
+    static thread_local const unsigned int local_tid = RtsLayer::myThread();
+    // Fast path: return cached Data* without any synchronization.
+    if (use_data_tls.load(std::memory_order_relaxed) &&
+        (unsigned int)tid == local_tid &&
+        !DataThreadCacheDestroyed) {
+      if (DataThreadCache.size() > user_event_id) {
+        Data* d = DataThreadCache[user_event_id];
+        if (d != nullptr) return *d;
+      }
+    }
+    // Slow path: grow uDataList under the per-instance mutex.
+    Data* d;
+    {
+      std::lock_guard<std::mutex> guard(DataVectorMutex);
+      while (uDataList.size() <= (unsigned int)tid) {
+        uDataList.push_back(new Data());
+      }
+      d = uDataList[tid];
+    } // lock released here
+
+    // Populate TLS cache outside the lock.  d points to a stable heap object
+    // that will not be moved or freed while this TauUserEvent is alive.
+    if (use_data_tls.load(std::memory_order_relaxed) &&
+        (unsigned int)tid == local_tid &&
+        !DataThreadCacheDestroyed) {
+      while (DataThreadCache.size() <= user_event_id) {
+        DataThreadCache.push_back(nullptr);
+      }
+      DataThreadCache[user_event_id] = d;
+    }
+    return *d;
   }
 
-  int ThreadDataSize(){
-	return Tau_getUserData().size();
+  int ThreadDataSize() {
+    std::lock_guard<std::mutex> guard(DataVectorMutex);
+    return (int)uDataList.size();
   }
 
   void AddEventToDB();
 
-  struct UDataList: vector<Data*>{
-    UDataList (const UDataList&) = delete;
-    UDataList& operator= (const UDataList&) = delete;
-    UDataList(){
-         //printf("Creating UDataList at %p\n", this);
-      }
-     virtual ~UDataList(){
-         //printf("Destroying UDataList at %p, with size %ld\n", this, this->size());
-         Tau_destructor_trigger();
-     }
+  struct UDataList : vector<Data*> {
+    UDataList(const UDataList&) = delete;
+    UDataList& operator=(const UDataList&) = delete;
+    UDataList() {}
+    virtual ~UDataList() {
+      Tau_destructor_trigger();
+    }
   };
-  // non-static holder provider for UserData
   UDataList uDataList;
-  UDataList & Tau_getUserData() {
-      //static UDataList uDataList;
-      return uDataList;
-  }
-  //vector<Data*> eventData;//[TAU_MAX_THREADS]; //TODO: DYNATHREAD
 
   x_uint64 eventId;
   std::string name;
