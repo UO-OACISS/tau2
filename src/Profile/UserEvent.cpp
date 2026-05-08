@@ -504,32 +504,18 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
         TauUserEvent * localContextEvent;
         RtsLayer::LockDB();
         ContextEventMap::const_iterator it = contextMap.find(comparison);
-#if 0
-	bool cuda_ctx_seen = true;
-	if (it != contextMap.end()) {
-	  FunctionInfo* fi;
-	  fi = current->ThisFunction;
-	  std::istringstream userEventPrevSS((std::string)(it->second->GetName().c_str()));
-	  std::string tok;
-	  vector<std::string> userEventPrevVec;
-	  while (std::getline(userEventPrevSS, tok, ':')) {
-	    userEventPrevVec.push_back(tok);
-	  }
-	  userEventPrevVec[0].erase(userEventPrevVec[0].length()-1, userEventPrevVec[0].length());
-	  userEventPrevVec[1].erase(0, 1);
-	  if (!((std::string)(userEvent->GetName().c_str())).compare(userEventPrevVec[0])) {
-	    if (((std::string)(fi->GetName())).compare(userEventPrevVec[1])) {
-	      cuda_ctx_seen = false;
-	    }
-	  }
-	}
-        if (it == contextMap.end() || !cuda_ctx_seen) {
-#else
         if (it == contextMap.end()) {
-#endif
-          contextEvent = new TauUserEvent(
-              FormulateContextNameString(current).c_str(),
+          // Release the lock before constructing the new TauUserEvent.
+          // TauUserEvent::AddEventToDB() also acquires LockDB(), so holding
+          // it here would re-enter a non-recursive mutex -> UB / SIGSEGV.
+          RtsLayer::UnLockDB();
+
+          // Build context name and allocate the new event outside the lock.
+          std::string contextName = FormulateContextNameString(current);
+          TauUserEvent *newEvent = new TauUserEvent(
+              contextName.c_str(),
               userEvent->IsMonotonicallyIncreasing());
+
           // need to make a heap copy of our comparison array. Otherwise it gets
           // corrupted, because right now this is a stack variable.
           // It needs to be a stack variable so that searching each time we have
@@ -541,7 +527,23 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
           for (i = 0 ; i <= depth ; i++) {
               ary[i] = comparison[i];
           }
-          contextMap[ary] = contextEvent;
+
+          // Re-acquire the lock and do a second lookup to handle any race
+          // where another thread created this context while we were unlocked.
+          RtsLayer::LockDB();
+          it = contextMap.find(comparison);
+          if (it == contextMap.end()) {
+            // We won the race; install our new event.
+            contextEvent = newEvent;
+            contextMap[ary] = contextEvent;
+          } else {
+            // Another thread already installed an event for this context.
+            // Use theirs. newEvent is already registered in TheEventDB() via
+            // AddEventToDB() so it cannot be safely deleted; accept the
+            // one-time minor memory leak for this rare race.
+            contextEvent = it->second;
+            free(ary);
+          }
         } else {
           contextEvent = it->second;
           //printf("**** FOUND **** %s \n", contextEvent->GetName().c_str()); fflush(stdout);
