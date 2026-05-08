@@ -13558,6 +13558,35 @@ EOF
     fi
 fi
 
+# Probe: does <stdlib.h> actually declare at_quick_exit/quick_exit when the
+# selected C++ compiler parses it? libstdc++'s <cstdlib> contains an
+# unconditional `using ::at_quick_exit;` (gated only by libstdc++'s own
+# _GLIBCXX_HAVE_AT_QUICK_EXIT macro, which is fixed at libstdc++ build time).
+# On platforms whose libc lacks the declarations -- notably macOS, whose SDK
+# has never declared these symbols even though Homebrew GCC's libstdc++
+# advertises support -- this causes any TU that includes <stdlib.h> to fail
+# to compile. Enable a small declarations-only stub when the probe fails.
+echo "Checking for at_quick_exit/quick_exit declarations in <stdlib.h>... ${nnl}"
+cat <<EOF > tau_quick_exit_check.cpp
+/* TAU code defines _XOPEN_SOURCE on Apple (see src/Profile/TauInit.cpp) which
+ * causes Apple's <sys/cdefs.h> to set __DARWIN_C_LEVEL = _POSIX_C_SOURCE,
+ * hiding at_quick_exit/quick_exit declarations in <_stdlib.h>. Replicate
+ * here so the probe matches what the actual TAU compile sees.
+ */
+#ifdef __APPLE__
+#define _XOPEN_SOURCE 700
+#endif
+#include <stdlib.h>
+int main() { return 0; }
+EOF
+if $cxx_compiler -std=c++11 -c tau_quick_exit_check.cpp -o tau_quick_exit_check.o 1> /dev/null 2>&1 ; then
+    echo "yes"
+else
+    echo "no -- enabling TAU_NEEDS_QUICK_EXIT_STUB"
+    fixmakeargs="$fixmakeargs QUICKEXITSTUB"
+fi
+/bin/rm -f tau_quick_exit_check.o tau_quick_exit_check.cpp
+
 if [ $plugins = no ] ; then
     fixmakeargs="$fixmakeargs NOPLUGINS"
 fi

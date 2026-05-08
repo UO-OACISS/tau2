@@ -2815,6 +2815,10 @@ case $1 in
         echo "NOTE: Using CoreSymbolication for address to line translation."
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     QUICKEXITSTUB)
+        echo "NOTE: Enabling at_quick_exit/quick_exit declaration stub (libstdc++/SDK mismatch)."
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      SYSCALL)
 	echo NOTE: Building PTRACE SYSCALL wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
