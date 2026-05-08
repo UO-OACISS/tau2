@@ -1202,7 +1202,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
                 }
             }
 
-            if (strlen(gpu_id) > 0) {
+            if (strlen(gpu_id_l0) > 0) {
                 snprintf(namebuf, sizeof(namebuf),  "GPU%s Queue%s:%s", gpu_id_l0, queue_id_l0, vqueue_id_l0);
                 TAU_VERBOSE("name = %s\n", namebuf);
             }
