@@ -60,7 +60,7 @@ struct CollectorOptions {
   bool need_pid = true;
   bool verbose = true;
   bool demangle = true;
-  bool kernels_per_tile = true;
+  bool kernels_per_tile = false;
   bool metric_query = false;
   bool metric_stream = false;
   bool stall_sampling = false;
