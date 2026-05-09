@@ -530,8 +530,10 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
           int size = sizeof(long)*(depth+2);
           long * ary = (long*)malloc(size);
           int i;
-          for (i = 0 ; i <= depth ; i++) {
-              ary[i] = comparison[i];
+          if (ary != NULL) {
+            for (i = 0 ; i <= depth ; i++) {
+                ary[i] = comparison[i];
+            }
           }
 
           // Re-acquire the lock and do a second lookup to handle any race
@@ -541,14 +543,19 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
           if (it == contextMap.end()) {
             // We won the race; install our new event.
             contextEvent = newEvent;
-            contextMap[ary] = contextEvent;
+            if (ary != NULL) {
+              // Only insert into the map when malloc succeeded.  A null key
+              // would corrupt ContextEventMapCompare::operator() on future
+              // find() traversals (null deref of l1[0]).
+              contextMap[ary] = contextEvent;
+            }
           } else {
             // Another thread already installed an event for this context.
             // Use theirs. newEvent is already registered in TheEventDB() via
             // AddEventToDB() so it cannot be safely deleted; accept the
             // one-time minor memory leak for this rare race.
             contextEvent = it->second;
-            free(ary);
+            free(ary);  // free(NULL) is safe per C standard
           }
         } else {
           contextEvent = it->second;
