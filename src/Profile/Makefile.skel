@@ -1039,7 +1039,7 @@ TauLevelZero.o : TauLevelZero.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauLevelZero_new.o : TauLevelZero_new.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp) -std=c++17 -I$(TAUROOT)/utils/pti_elf_parser/include/ $(TAU_L0_FLAGS)
+	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp) -std=c++17 $(TAU_L0_FLAGS)
 
 Pti_elf_parser.o : 
 	$(MAKE) -f $(TAUROOT)/utils/pti_elf_parser/Makefile
