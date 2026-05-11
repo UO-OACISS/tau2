@@ -131,10 +131,22 @@ std::mutex TauAllocation::mtx;
 // invoke the C++ allocator, which calls free/malloc through the wrapper and
 // re-enters TauAllocation::Find() while the caller already holds mtx,
 // causing a self-deadlock.  By disabling the wrapper we route those internal
-// allocations directly to the system allocator  
+// allocations directly to the system allocator.
+//
+// memory_wrapper_enable/disable are simple per-thread toggle flags (not
+// reference-counted).  The re-enable in the destructor is therefore only
+// safe to do when no outer TauInternalFunctionGuard is still active
+// (insideTAU == 0); if an outer guard exists it will re-enable the wrapper
+// itself when insideTAU drops to zero via Tau_global_decr_insideTAU().
 struct TauMemoryWrapperLocalDisable {
   TauMemoryWrapperLocalDisable()  { if (wrapper_disable_handle) wrapper_disable_handle(); }
-  ~TauMemoryWrapperLocalDisable() { if (wrapper_enable_handle)  wrapper_enable_handle();  }
+  ~TauMemoryWrapperLocalDisable() {
+    // Only re-enable the wrapper when no TauInternalFunctionGuard is still
+    // live on this thread.  If insideTAU > 0, Tau_global_decr_insideTAU()
+    // will call wrapper_enable_handle() when the counter reaches zero.
+    if (wrapper_enable_handle && Tau_global_get_insideTAU() == 0)
+      wrapper_enable_handle();
+  }
 };
 
 //////////////////////////////////////////////////////////////////////
