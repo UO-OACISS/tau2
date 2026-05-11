@@ -13762,18 +13762,28 @@ fi
 
 if [ "${level_zero}" = "yes" -a "${level_zero_new}" = "yes"  -a "x${l0_iga_lib}" = "x" ] ; then
     echo "Checking for Intel Graphics Assembler (libiga64.so) ..."
-    
-    ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
-    for d in $ld_lib_path
-    do
-        if [ -r ${d}/libiga64.so ]; then
-            l0_iga_lib=${d}
-            fixmakeargs="$fixmakeargs L0_IGA l0_iga_lib=${l0_iga_lib}"
+    compiler_path=$(dirname `which $cxx_compiler`)
+    compiler_debugger_lib=${compiler_path}/../../../debugger/latest/opt/debugger/lib/
+    if [ $cxx_compiler = icpx -o $cxx_compiler = mpiicpx ] ; then
+        if [ -r ${compiler_debugger_lib}/libiga64.so ] ; then
+            l0_iga_lib=${compiler_debugger_lib}
+            fixmakeargs="$fixmakeargs L0_IGA l0_iga_lib=${compiler_debugger_lib}"
             echo "yes"
-            echo $l0_iga_lib
-            break;
         fi
-    done
+    fi
+    if [ "x${l0_iga_lib}" = "x" ] ; then
+        ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
+        for d in $ld_lib_path
+        do
+            if [ -r ${d}/libiga64.so ]; then
+                l0_iga_lib=${d}
+                fixmakeargs="$fixmakeargs L0_IGA l0_iga_lib=${l0_iga_lib}"
+                echo "yes"
+                break;
+            fi
+        done
+
+    fi
     if [ "x${l0_iga_lib}" = "x" ] ; then
         echo "no"
         echo "Level Zero address decode disabled. -l0_pc will not show neither source information nor instructions"
