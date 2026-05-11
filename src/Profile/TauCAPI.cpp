@@ -3876,6 +3876,7 @@ void Tau_destructor_trigger() {
   once = true;
 
   FunctionInfo::disable_metric_cache(); //TODO: This may not be needed with fixes to object locking!
+  TauUserEvent::disable_data_cache();
   TAU_VERBOSE("Entering Tau_destructor_trigger...\n");
 
 #ifndef TAU_WINDOWS

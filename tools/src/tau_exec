@@ -3,6 +3,17 @@
 LANG="C"
 export LANG
 
+# Ensure sibling helpers (tau-config, tau_compiler.sh, ...) resolve when
+# TAU's bin directory is not already on PATH -- e.g. in-tree installs on
+# macOS at <tau>/apple/bin. Distros installing under /usr/local pick this
+# up implicitly; everywhere else we bootstrap via $0's dirname.
+_tau_exec_dir=$(cd "$(dirname "$0")" && pwd -P)
+case ":$PATH:" in
+    *":$_tau_exec_dir:"*) ;;
+    *) PATH="$_tau_exec_dir:$PATH"; export PATH ;;
+esac
+unset _tau_exec_dir
+
 darshan_module_loaded=`env | grep LOADEDMODULES | grep darshan | wc -l`
 if [ $darshan_module_loaded -gt 0 ] ; then
     echo "ERROR: Darshan is not compatible with TAU."
@@ -1035,7 +1046,7 @@ fi
 
 
 #Check if TAU_METRICS is set
-if [ -v TAU_METRICS ]; then
+if [ "${TAU_METRICS+set}" = set ]; then
   #only add TIME if not found at the start, or between : or comma, or 
   # at the ends preceded by one of the separators 
   if [ ! `echo $TAU_METRICS | grep -E "(^|[:,])TIME($|[:,])"` ]; then
@@ -1058,7 +1069,7 @@ if [ $track_l0 = "true" ]; then
   $dryrun export ZE_ENABLE_TRACING_LAYER=1
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-zeinit$TAU_SHLIBX:$TAUEX_LD_PRELOAD
   if [ $track_l0_stall_sampling = "true" ]; then
-    if [ ! -v L0_METRICGROUP ]; then
+    if [ "${L0_METRICGROUP+set}" != set ]; then
       $dryrun export L0_METRICGROUP="EuStallSampling"
       #Need to check if needed
       $dryrun export ZET_ENABLE_METRICS=1
@@ -1071,7 +1082,7 @@ if [ $track_l0 = "true" ]; then
     $dryrun export ZE_ENABLE_STALL_SAMPLING=1
   fi
 
-  if [ -v L0_METRICGROUP ]; then
+  if [ "${L0_METRICGROUP+set}" = set ]; then
     $dryrun export ZET_ENABLE_METRICS=1
   fi
 

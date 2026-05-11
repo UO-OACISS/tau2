@@ -11478,8 +11478,6 @@ void foo() {
   int rc;
   pthread_mutexattr_t   mta;
   pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-  pthread_spinlock_t spinlock;
-  pthread_barrier_t barrier;
   pthread_cond_t cond;
 
   rc = pthread_mutexattr_init(&mta);
@@ -11488,20 +11486,31 @@ void foo() {
   rc = pthread_mutex_unlock(&mutex);
   rc = pthread_mutex_destroy(&mutex);
 
-  rc = pthread_spin_init(&spinlock, PTHREAD_PROCESS_SHARED);
-  rc = pthread_spin_lock(&spinlock);
-  rc = pthread_spin_unlock(&spinlock);
-  rc = pthread_spin_destroy(&spinlock);
-
   rc = pthread_cond_init(&cond, NULL);
   rc = pthread_cond_broadcast(&cond);
   rc = pthread_cond_wait(&cond, &mutex);
   rc = pthread_cond_signal(&cond);
   rc = pthread_cond_destroy(&cond);
 
+#if !defined(__APPLE__)
+  /* macOS pthread.h omits the optional spinlock/barrier APIs (POSIX
+     1003.1-2001 marked them XSI-optional). The pthread wrapper itself
+     already gates barrier code behind !defined(__APPLE__); spinlock
+     is not used by the wrapper at all but the historical conftest
+     exercised both. Skip them on Apple so configure can still enable
+     TAU_PTHREAD_WRAP there. */
+  {
+    pthread_spinlock_t spinlock;
+    pthread_barrier_t barrier;
+    rc = pthread_spin_init(&spinlock, PTHREAD_PROCESS_SHARED);
+    rc = pthread_spin_lock(&spinlock);
+    rc = pthread_spin_unlock(&spinlock);
+    rc = pthread_spin_destroy(&spinlock);
 
-  rc = pthread_barrier_init(&barrier, NULL, 0);
-  rc = pthread_barrier_wait(&barrier);
+    rc = pthread_barrier_init(&barrier, NULL, 0);
+    rc = pthread_barrier_wait(&barrier);
+  }
+#endif
 }
 EOF
   $echo "Checking for pthread wrappable routines... ${nnl}"
@@ -13557,6 +13566,35 @@ EOF
         /bin/rm -f tau_apple_symbol.o tau_apple_symbol.cpp
     fi
 fi
+
+# Probe: does <stdlib.h> actually declare at_quick_exit/quick_exit when the
+# selected C++ compiler parses it? libstdc++'s <cstdlib> contains an
+# unconditional `using ::at_quick_exit;` (gated only by libstdc++'s own
+# _GLIBCXX_HAVE_AT_QUICK_EXIT macro, which is fixed at libstdc++ build time).
+# On platforms whose libc lacks the declarations -- notably macOS, whose SDK
+# has never declared these symbols even though Homebrew GCC's libstdc++
+# advertises support -- this causes any TU that includes <stdlib.h> to fail
+# to compile. Enable a small declarations-only stub when the probe fails.
+echo "Checking for at_quick_exit/quick_exit declarations in <stdlib.h>... ${nnl}"
+cat <<EOF > tau_quick_exit_check.cpp
+/* TAU code defines _XOPEN_SOURCE on Apple (see src/Profile/TauInit.cpp) which
+ * causes Apple's <sys/cdefs.h> to set __DARWIN_C_LEVEL = _POSIX_C_SOURCE,
+ * hiding at_quick_exit/quick_exit declarations in <_stdlib.h>. Replicate
+ * here so the probe matches what the actual TAU compile sees.
+ */
+#ifdef __APPLE__
+#define _XOPEN_SOURCE 700
+#endif
+#include <stdlib.h>
+int main() { return 0; }
+EOF
+if $cxx_compiler -std=c++11 -c tau_quick_exit_check.cpp -o tau_quick_exit_check.o 1> /dev/null 2>&1 ; then
+    echo "yes"
+else
+    echo "no -- enabling TAU_NEEDS_QUICK_EXIT_STUB"
+    fixmakeargs="$fixmakeargs QUICKEXITSTUB"
+fi
+/bin/rm -f tau_quick_exit_check.o tau_quick_exit_check.cpp
 
 if [ $plugins = no ] ; then
     fixmakeargs="$fixmakeargs NOPLUGINS"

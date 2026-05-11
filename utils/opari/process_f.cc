@@ -140,7 +140,7 @@ namespace {
     }
   }
 
-  struct fo_tolower : public std::unary_function<int,int> {
+  struct fo_tolower {
     int operator()(int x) const {
       return std::tolower(x);
     }

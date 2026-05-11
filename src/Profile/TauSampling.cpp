@@ -1543,6 +1543,9 @@ void Tau_sampling_finalizeProfile(int tid)
     // For Each Address
     //   1. Check and Create Leaf Entry
     //   2. Check and Create Path Entry (Requires Intermediate)
+    if (callStack == NULL) {
+      continue;
+    }
     vector<CallSiteInfo *> & sites = callStack->callSites;
     // *CWL* - we need the index, which is why the iterator is not used.
     for (unsigned int i = 0; i < sites.size(); i++) {
