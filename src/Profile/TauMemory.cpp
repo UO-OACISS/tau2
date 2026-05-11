@@ -126,12 +126,24 @@ static inline void BuildTimerName(char * buff, char const * funcname, char const
 // Declare static member vars
 std::mutex TauAllocation::mtx;
 
+// RAII guard: disables the per-thread memory wrapper flag for the duration of
+// TAU-internal map/allocator operations.  std::map::erase() and operator[]
+// invoke the C++ allocator, which calls free/malloc through the wrapper and
+// re-enters TauAllocation::Find() while the caller already holds mtx,
+// causing a self-deadlock.  By disabling the wrapper we route those internal
+// allocations directly to the system allocator  
+struct TauMemoryWrapperLocalDisable {
+  TauMemoryWrapperLocalDisable()  { if (wrapper_disable_handle) wrapper_disable_handle(); }
+  ~TauMemoryWrapperLocalDisable() { if (wrapper_enable_handle)  wrapper_enable_handle();  }
+};
+
 //////////////////////////////////////////////////////////////////////
 // Triggers leak detection
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::DetectLeaks(void)
 {
   std::lock_guard<std::mutex> lck(mtx);
+  TauMemoryWrapperLocalDisable wd;
 
   allocation_map_t const & alloc_map = AllocationMap();
   if (alloc_map.empty()) {
@@ -408,6 +420,7 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
 
   {
     std::lock_guard<std::mutex> lck (mtx);
+    TauMemoryWrapperLocalDisable wd;
     __bytes_allocated() += user_size;
     __bytes_overhead() += alloc_size - user_size;
     __allocation_map()[user_addr] = this;
@@ -494,6 +507,7 @@ void TauAllocation::Deallocate(const char * filename, int lineno)
 
   {
     std::lock_guard<std::mutex> lck (mtx);
+    TauMemoryWrapperLocalDisable wd;
     __bytes_deallocated() += user_size;
     if (protect_free) {
         __bytes_overhead() += user_size;
@@ -554,6 +568,7 @@ void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filena
     }
     {
         std::lock_guard<std::mutex> lck (mtx);
+        TauMemoryWrapperLocalDisable wd;
         __bytes_allocated() += user_size;
         __allocation_map()[user_addr] = this;
     }
@@ -576,6 +591,7 @@ void TauAllocation::TrackDeallocation(const char * filename, int lineno)
 
   {
     std::lock_guard<std::mutex> lck (mtx);
+    TauMemoryWrapperLocalDisable wd;
     __bytes_deallocated() += user_size;
     __allocation_map().erase(user_addr);
   }
@@ -614,6 +630,7 @@ void TauAllocation::TrackReallocation(void * ptr, size_t size, const char * file
         // Track deallocation of old memory without destroying this object
         {
             std::lock_guard<std::mutex> lck (mtx);
+            TauMemoryWrapperLocalDisable wd;
             __bytes_deallocated() += user_size;
             __allocation_map().erase(user_addr);
         }
@@ -762,6 +779,7 @@ void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, i
 
   {
     std::lock_guard<std::mutex> lck (mtx);
+    TauMemoryWrapperLocalDisable wd;
     event_map_t::iterator it = event_map.find(file_hash);
     if (it == event_map.end()) {
         if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
@@ -798,6 +816,7 @@ void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename,
 
   {
     std::lock_guard<std::mutex> lck (mtx);
+    TauMemoryWrapperLocalDisable wd;
     event_map_t::iterator it = event_map.find(file_hash);
     if (it == event_map.end()) {
         if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
@@ -833,6 +852,7 @@ void TauAllocation::TriggerErrorEvent(char const * descript, char const * filena
 
   {
     std::lock_guard<std::mutex> lck (mtx);
+    TauMemoryWrapperLocalDisable wd;
     event_map_t::iterator it = event_map.find(file_hash);
     if (it == event_map.end()) {
         char * name;
