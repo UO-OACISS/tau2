@@ -39,8 +39,10 @@
 
 #include "Profile/L0_new/common_header.h"
 
+#ifdef TAU_L0_IGA
 #include "Profile/L0_new/gen_binary_decoder.h"
 #include "elf_parser.h"
+#endif
 
 
 //Kernel name and binary size
