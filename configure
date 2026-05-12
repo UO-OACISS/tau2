@@ -6615,6 +6615,24 @@ case $fortran_compiler in
         then
             echo "Default Fortran compiler will be Intel efc"
             fixmakeargs="$fixmakeargs INTEL_FORTRAN"
+        elif [ $cxx_compiler = icpx -o "x$inteloneapi" = "xyes" ]
+        then
+            # oneAPI: prefer ifx over ifort; ifort is not part of oneAPI 2024+
+            intelifx=`which ifx 2>/dev/null`
+            if [ "y$intelifx" != "y" -a -x "$intelifx" ]
+            then
+                echo "Default Fortran compiler will be Intel ifx (oneAPI)"
+                fixmakeargs="$fixmakeargs INTEL_IFX"
+                extradir=`which ifx | sed -e 's/\/bin\/ifx$//'`
+            else
+                echo "WARNING: ifx not found for oneAPI build, falling back to ifort"
+                fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
+                intelifort=`which ifort 2>/dev/null`
+                if [ "y$intelifort" != "y" -a -x "$intelifort" ]
+                then
+                    extradir=`which ifort | sed -e 's/\/bin\/ifort$//'`
+                fi
+            fi
         else
             echo "Default Fortran compiler will be Intel ifort"
             fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
