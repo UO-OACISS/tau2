@@ -9239,7 +9239,10 @@ else # non-BGQ/BGP/BGL OMPT support
         if [ -n "$omptlib" ]; then
             omptlinking="-Wl,-rpath,$omptlib#$omptlibrary"
         else
-            omptlinking="$omptlibrary"
+            # Compiler natively supports OMPT; the OpenMP runtime is linked
+            # implicitly by the compiler driver via -fopenmp. Adding an explicit
+            # -lomp would load a second runtime instance and cause conflicts.
+            omptlinking=""
         fi
         echo "Using OMPT 5"
         fixmakeargs="$fixmakeargs TAU_OMPT_5_0 omptlib=$omptlinking TAU_USE_GPU"
