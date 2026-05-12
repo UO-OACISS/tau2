@@ -6619,19 +6619,20 @@ case $fortran_compiler in
         then
             # oneAPI: prefer ifx over ifort; ifort is not part of oneAPI 2024+
             intelifx=`which ifx 2>/dev/null`
+            intelifort=`which ifort 2>/dev/null`
             if [ "y$intelifx" != "y" -a -x "$intelifx" ]
             then
                 echo "Default Fortran compiler will be Intel ifx (oneAPI)"
                 fixmakeargs="$fixmakeargs INTEL_IFX"
                 extradir=`which ifx | sed -e 's/\/bin\/ifx$//'`
-            else
+            elif [ "y$intelifort" != "y" -a -x "$intelifort" ]
+            then
                 echo "WARNING: ifx not found for oneAPI build, falling back to ifort"
                 fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
-                intelifort=`which ifort 2>/dev/null`
-                if [ "y$intelifort" != "y" -a -x "$intelifort" ]
-                then
-                    extradir=`which ifort | sed -e 's/\/bin\/ifort$//'`
-                fi
+                extradir=`which ifort | sed -e 's/\/bin\/ifort$//'`
+            else
+                echo "ERROR: -fortran=intel requested but neither ifx nor ifort was found in PATH."
+                exit 1
             fi
         else
             echo "Default Fortran compiler will be Intel ifort"
@@ -8805,7 +8806,7 @@ if [ "x$download_unwind" = xyes ] ; then
           if [ "x$static_libunwind" = xyes ]; then
               ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler}  CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared > ${libunwind_log}  2>&1
           else
-              ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} > ${libunwind_log}  2>&1
+              ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} CFLAGS=-fPIC CXXFLAGS=-fPIC > ${libunwind_log}  2>&1
           fi
         fi
         configresult=$?
@@ -9233,9 +9234,13 @@ if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
             echo "bgxlc_r not found in the path. Cannot test for OMPT support."
         fi
     fi
-else # intel OMPT support
+else # non-BGQ/BGP/BGL OMPT support
     if [ $ompt = yes ]; then
-        omptlinking="-Wl,-rpath,$omptlib#$omptlibrary"
+        if [ -n "$omptlib" ]; then
+            omptlinking="-Wl,-rpath,$omptlib#$omptlibrary"
+        else
+            omptlinking="$omptlibrary"
+        fi
         echo "Using OMPT 5"
         fixmakeargs="$fixmakeargs TAU_OMPT_5_0 omptlib=$omptlinking TAU_USE_GPU"
     fi
@@ -11892,6 +11897,9 @@ if [ "x$unwinder" != "xnone" ] ; then
     if [ "x$static_libunwind" = "xyes" ]; then
       unwind_lib_flag="$unwind_lib/libunwind.a"
       echo "NOTE: Using unwind_lib_flag=$unwind_lib_flag"
+    elif [ "x$download_unwind" = "xyes" ] && [ "$c_compiler" = "clang" -o "$c_compiler" = "amdclang" ]; then
+      unwind_lib_flag="$unwind_lib/libunwind.a"
+      echo "NOTE: Using static libunwind for $c_compiler (avoids LLVM libunwind conflicts): unwind_lib_flag=$unwind_lib_flag"
     fi
     if [ "x$unwind_inc" != "x" ] ; then
       unwind_inc="-I${unwind_inc}"
