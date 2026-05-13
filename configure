@@ -10888,25 +10888,6 @@ if [ $bfd_worked = "yes" -a $machine = bgq ] ; then
     fixmakeargs="$fixmakeargs bfddir=$bfddir"
 fi
 
-# Check if liblzma is also needed (for binutils built with xz/lzma support).
-# Static libbfd.a may have undefined lzma_* symbols that become unresolved in
-# libTAU.so when using strict linkers like ld.lld (default with amdclang/clang).
-if [ $bfd_worked = "yes" ] && [ "$pin" != "yes" ] && ! echo "$BFDLIBS" | grep -q 'llzma'; then
-    bfd_lib_to_check=""
-    for bfdlibpath in "$bfddir/lib" "$bfddir/lib64"; do
-        if [ -f "$bfdlibpath/libbfd.a" ]; then
-            bfd_lib_to_check="$bfdlibpath/libbfd.a"
-            break
-        fi
-    done
-    if [ -n "$bfd_lib_to_check" ] && nm "$bfd_lib_to_check" 2>/dev/null | grep -q ' U lzma_'; then
-        if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS -llzma 1>/dev/null 2>&1; then
-            echo "NOTE: libbfd.a requires -llzma; adding to BFDLIBS for strict linkers (e.g., ld.lld)"
-            BFDLIBS="$BFDLIBS -llzma"
-        fi
-    fi
-fi
-
 if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
     BFDLIBS="$BFDLIBS -lpsapi"
 fi
@@ -11919,9 +11900,6 @@ if [ "x$unwinder" != "xnone" ] ; then
     if [ "x$static_libunwind" = "xyes" ]; then
       unwind_lib_flag="$unwind_lib/libunwind.a"
       echo "NOTE: Using unwind_lib_flag=$unwind_lib_flag"
-    elif [ "x$download_unwind" = "xyes" ] && [ "$c_compiler" = "clang" -o "$c_compiler" = "amdclang" ]; then
-      unwind_lib_flag="$unwind_lib/libunwind.a"
-      echo "NOTE: Using static libunwind for $c_compiler (avoids LLVM libunwind conflicts): unwind_lib_flag=$unwind_lib_flag"
     fi
     if [ "x$unwind_inc" != "x" ] ; then
       unwind_inc="-I${unwind_inc}"
