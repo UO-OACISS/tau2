@@ -179,6 +179,7 @@ fi
   echo "        -chapel       Track Cray Chapel network atomics library functions."
   echo "        -ittnotify    Track Intel ITTNotify tasks."
   echo "        -gptl         Track GPTL timers."
+  echo "        -zerosum      Load zerosum with TAU"
   echo ""
   echo "Notes:"
   echo "    Defaults if unspecified: -T $default_tags"
@@ -439,6 +440,7 @@ python_launch_module=false
 python_m_arg=""
 track_syscall=false
 track_nccl=false
+track_zerosum=false
 
 # This saves the args to tau_exec so they can be reused later.
 # This is used for MPI_Comm_spawn support, in which TAU spawns the child
@@ -870,6 +872,11 @@ for arg in "$@" ; do
         save_arg $arg
         shift
         ;;
+      -zerosum)
+        track_zerosum=true
+        save_arg $arg
+        shift
+        ;;
       --)
         save_arg $arg
         shift
@@ -1042,6 +1049,18 @@ fi
 if [ $track_ompt = "true" ]; then
   export OMP_TOOL_LIBRARIES=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
   export OMP_TOOL=enabled
+fi
+
+if [ $track_zerosum = "true" ]; then
+  echo $theBinding
+  ismpi=`echo $theBinding | grep mpi`
+  if [ ! "x$isTBB" == "x" ]; then
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/libzerosum.so:$TAUEX_LD_PRELOAD
+  else
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/libzerosum-mpi.so:$TAUEX_LD_PRELOAD
+  fi
+  #TAUEX_LD_PRELOAD=$BASEDIR/lib/libzerosum-mpi.so:$TAUEX_LD_PRELOAD
+  #TAUEX_LD_PRELOAD=$BASEDIR/lib/libzerosum.so:$TAUEX_LD_PRELOAD
 fi
 
 

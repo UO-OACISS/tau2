@@ -918,6 +918,7 @@ for arg in "$@"; do
         echo "-boost=<dir> ....................... Specify location of Boost package."
         echo "-apex ......................................... Build the APEX package."
         echo "-zerosum ................................... Build the ZeroSum package."
+        echo "-sycl=<dir> ..................................... Path to SYCL include."
         echo "-mochi ............................ Add MOCHI backend database support."
         echo "-dyninst=<dir> ................... Specify location of DynInst package."
         echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
@@ -1407,6 +1408,7 @@ sqlite3dir=
 #caliperdir=
 apex=no
 zerosum=no
+sycl_root_path=""
 dyninst=no
 dyninstinc=no
 dyninstlib=no
@@ -2383,6 +2385,21 @@ for arg in "$@"; do
 
         -zerosum)
             zerosum=yes
+            shift
+            ;;
+        
+        -sycl=*)
+            sycl_root_path=`echo $arg | sed -e 's/-sycl=//'`
+            if [ ! -d $sycl_root_path ]
+            then
+                echo "Error: Cannot access SYCL directory $sycl_root_path"
+                exit 1
+            fi
+            if [ ! -r ${sycl_root_path}/include/sycl/sycl.hpp ]
+            then
+                echo "Error: ${sycl_root_path}/include/sycl/sycl.hpp does not exist"
+                exit 1
+            fi
             shift
             ;;
 
@@ -12112,7 +12129,11 @@ build_zerosum() {
         echo "TAUHIP=-DZeroSum_WITH_HIP=TRUE" >> ${zerosum_include_file}
     fi
     if [ "${level_zero}" = "yes" ] ; then
-        echo "TAUSYCL=-DZeroSum_WITH_SYCL=TRUE" >> ${zerosum_include_file}
+        if [ x${sycl_root_path} = "x" ]; then
+            echo "INFO For SYCL support provide the path to include/sycl/sycl.h using -sycl=PATH"
+        else
+            echo "TAUSYCL=-DZeroSum_WITH_SYCL=TRUE -DSYCL_ROOT=${sycl_root_path}" >> ${zerosum_include_file}
+        fi
     fi
     if [ "${mpi}" = "yes" ] ; then
         echo "TAUMPI=-DZeroSum_WITH_MPI=TRUE" >> ${zerosum_include_file}
