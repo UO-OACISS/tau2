@@ -1054,7 +1054,7 @@ fi
 if [ $track_zerosum = "true" ]; then
   echo $theBinding
   ismpi=`echo $theBinding | grep mpi`
-  if [ ! "x$ismpi" == "x" ]; then
+  if [ "x$ismpi" == "x" ]; then
     TAUEX_LD_PRELOAD=$BASEDIR/lib/libzerosum.so:$TAUEX_LD_PRELOAD
   else
     TAUEX_LD_PRELOAD=$BASEDIR/lib/libzerosum-mpi.so:$TAUEX_LD_PRELOAD

@@ -12126,7 +12126,7 @@ build_zerosum() {
         echo "TAUCUDA=-DZeroSum_WITH_CUDA=TRUE -DCUDAToolkit_ROOT=${cudadir}" >> ${zerosum_include_file}
     fi
     if [ "${rocm}" = "yes" ] ; then
-        echo "TAUHIP=-DZeroSum_WITH_HIP=TRUE" >> ${zerosum_include_file}
+        echo "TAUHIP=-DZeroSum_WITH_HIP=TRUE -DROCM_PATH=${rocmdir} -DZeroSum_BUILD_EXAMPLES=OFF" >> ${zerosum_include_file}
     fi
     if [ "${level_zero}" = "yes" ] ; then
         if [ x${sycl_root_path} = "x" ]; then
