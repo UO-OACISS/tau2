@@ -11901,6 +11901,23 @@ if [ "x$unwinder" != "xnone" ] ; then
       unwind_lib_flag="$unwind_lib/libunwind.a"
       echo "NOTE: Using unwind_lib_flag=$unwind_lib_flag"
     fi
+    # For lld-based linkers (e.g. amdclang/ROCm), arch-specific libunwind symbols
+    # must be explicitly linked to satisfy --no-allow-shlib-undefined because
+    # --as-needed may drop the transitive dependency on libunwind-<arch>.so.
+    # Append -lunwind-<arch> when the arch-specific library exists alongside libunwind.
+    if [ "x$unwinder" = "xlibunwind" -a "x$static_libunwind" != "xyes" ] ; then
+        unwind_arch=`uname -m`
+        if [ "x$unwind_lib" != "x" ] ; then
+            unwind_lib_dir="${unwind_lib}"
+        else
+            unwind_lib_dir=""
+        fi
+        if [ -f "${unwind_lib_dir}/libunwind-${unwind_arch}.so" ] || \
+           [ -f "${unwind_lib_dir}/libunwind-${unwind_arch}.a" ] ; then
+            unwind_lib_flag="${unwind_lib_flag}#-lunwind-${unwind_arch}"
+            echo "NOTE: Found arch-specific libunwind, adding -lunwind-${unwind_arch}"
+        fi
+    fi
     if [ "x$unwind_inc" != "x" ] ; then
       unwind_inc="-I${unwind_inc}"
     fi
