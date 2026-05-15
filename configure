@@ -12123,7 +12123,7 @@ build_zerosum() {
         echo "TAUOMPT=-DZeroSum_WITH_OMPT=TRUE" >> ${zerosum_include_file}
     fi
     if [ "${cuda}" = "yes" ] ; then
-        echo "TAUCUDA=-DZeroSum_WITH_CUDA=TRUE -DCUDAToolkit_ROOT=${cudadir}" >> ${zerosum_include_file}
+        echo "TAUCUDA=-DZeroSum_WITH_CUDA=TRUE -DCUDAToolkit_ROOT=${cudadir} -DZeroSum_BUILD_EXAMPLES=OFF" >> ${zerosum_include_file}
     fi
     if [ "${rocm}" = "yes" ] ; then
         echo "TAUHIP=-DZeroSum_WITH_HIP=TRUE -DROCM_PATH=${rocmdir} -DZeroSum_BUILD_EXAMPLES=OFF" >> ${zerosum_include_file}
@@ -12132,7 +12132,7 @@ build_zerosum() {
         if [ x${sycl_root_path} = "x" ]; then
             echo "INFO For SYCL support provide the path to include/sycl/sycl.h using -sycl=PATH"
         else
-            echo "TAUSYCL=-DZeroSum_WITH_SYCL=TRUE -DSYCL_ROOT=${sycl_root_path}" >> ${zerosum_include_file}
+            echo "TAUSYCL=-DZeroSum_WITH_SYCL=TRUE -DSYCL_ROOT=${sycl_root_path} -DZeroSum_BUILD_EXAMPLES=OFF" >> ${zerosum_include_file}
         fi
     fi
     if [ "${mpi}" = "yes" ] ; then
