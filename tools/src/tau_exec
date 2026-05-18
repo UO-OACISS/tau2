@@ -103,6 +103,11 @@ echoIfVerbose () {
   fi
 }
 
+warn_missing_lib () {
+  # Usage: warn_missing_lib <library-description> <configure-option> <feature-description>
+  echo "WARNING: $scriptname: TAU $1 library not found. Reconfigure TAU with $2 to enable $3."
+}
+
 usage()
 {
   echo ""
@@ -1067,7 +1072,11 @@ if [ $track_l0 = "true" ]; then
   fi
   $dryrun export PTI_ENABLE=1
   $dryrun export ZE_ENABLE_TRACING_LAYER=1
-  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-zeinit$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  if [ -r $BASEDIR/lib/$theBinding/libTAU-zeinit$TAU_SHLIBX ] ; then
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-zeinit$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  else
+    warn_missing_lib "Level Zero init" "-level_zero" "Level Zero tracking"
+  fi
   if [ $track_l0_stall_sampling = "true" ]; then
     if [ "${L0_METRICGROUP+set}" != set ]; then
       $dryrun export L0_METRICGROUP="EuStallSampling"
@@ -1135,37 +1144,57 @@ if [ ! "x$isNCCL" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-NCCL-plugin$TAU_S
   export NCCL_PROFILER_PLUGIN=$BASEDIR/lib/$theBinding/libTAU-NCCL-plugin$TAU_SHLIBX
 fi
 
-if [ $track_gomp = "true" -a -r $BASEDIR/lib/$theBinding/libTAU-gomp$TAU_SHLIBX ]; then
-  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gomp$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+if [ $track_gomp = "true" ] ; then
+  if [ -r $BASEDIR/lib/$theBinding/libTAU-gomp$TAU_SHLIBX ] ; then
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gomp$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  else
+    warn_missing_lib "GOMP wrapper" "-gomp" "GOMP tracking"
+  fi
 fi
 
 if [ $track_io = "true" ] ; then
   # Add the io wrapper library to the LD_PRELOAD list
-  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-iowrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-  if [ $on_arm64l ];then
-     unset TAUEX_LD_AUDITOR
+  if [ -r $BASEDIR/lib/$theBinding/libTAU-iowrap$TAU_SHLIBX ] ; then
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-iowrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    if [ $on_arm64l ];then
+       unset TAUEX_LD_AUDITOR
+    else
+    #use the auditor
+    TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
+    fi
+    #Needed for the auditor... but DON'T SET IT NOW!
+    # Only needed by GDB and the auditor.
+    # export LD_BIND_NOW=1
   else
-  #use the auditor
-  TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
+    warn_missing_lib "I/O wrapper" "-iowrapper" "I/O tracking"
   fi
-  #Needed for the auditor... but DON'T SET IT NOW!
-  # Only needed by GDB and the auditor.
-  # export LD_BIND_NOW=1
 fi
 
 if [ $track_ugni = "true" ] ; then
   # Add the UGNI wrapper library to the LD_PRELOAD list
-  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gni-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  if [ -r $BASEDIR/lib/$theBinding/libTAU-gni-wrap$TAU_SHLIBX ] ; then
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gni-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  else
+    warn_missing_lib "UGNI wrapper" "-ugni" "UGNI tracking"
+  fi
 fi
 
 if [ $track_chapel = "true" ] ; then
   # Add the Chapel wrapper library to the LD_PRELOAD list
-  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-chapel-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  if [ -r $BASEDIR/lib/$theBinding/libTAU-chapel-wrap$TAU_SHLIBX ] ; then
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-chapel-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  else
+    warn_missing_lib "Chapel wrapper" "-chapel" "Chapel tracking"
+  fi
 fi
 
 if [ $track_gptl = "true" ] ; then
   # Add the GPTL wrapper library to the LD_PRELOAD list
-  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gptl-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  if [ -r $BASEDIR/lib/$theBinding/libTAU-gptl-wrap$TAU_SHLIBX ] ; then
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gptl-wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  else
+    warn_missing_lib "GPTL wrapper" "-gptl" "GPTL tracking"
+  fi
 fi
 
 if [ $track_ittnotify = "true" ] ; then
@@ -1206,20 +1235,24 @@ fi
 
 if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
   # Add the memory wrapper library to the LD_PRELOAD list
-  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-   if [ $on_arm64l ];then
-     unset TAUEX_LD_AUDITOR
+  if [ -r $BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX ] ; then
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+     if [ $on_arm64l ];then
+       unset TAUEX_LD_AUDITOR
+    else
+    #use the auditor
+    TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
+    fi
+    #Needed for the auditor... but DON'T SET IT NOW!
+    # Only needed by GDB and the auditor.
+    #export LD_BIND_NOW=1
+    # Track heap usage
+    export TAU_TRACK_HEAP=1
+    # Track memory leaks
+    export TAU_TRACK_MEMORY_LEAKS=1
   else
-  #use the auditor
-  TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
+    warn_missing_lib "memory wrapper" "-memory" "memory tracking"
   fi
-  #Needed for the auditor... but DON'T SET IT NOW!
-  # Only needed by GDB and the auditor.
-  #export LD_BIND_NOW=1
-  # Track heap usage
-  export TAU_TRACK_HEAP=1
-  # Track memory leaks
-  export TAU_TRACK_MEMORY_LEAKS=1
 fi
 if [ $track_cuda = "true" ] ; then
   cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX`
@@ -1229,8 +1262,12 @@ if [ $track_cuda = "true" ] ; then
   fi
   # Add the CUDA wrapper library to the LD_PRELOAD list
   #TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDArt$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  if [ -r $BASEDIR/lib/$theBinding/libTAU-CUDArt$TAU_SHLIBX ] ; then
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDArt$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  else
+    warn_missing_lib "CUDA wrapper" "-cuda=<dir>" "CUDA tracking"
+  fi
   if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
     if [ `echo $TAU_METRICS | grep "TIME"` ]; then
         export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
@@ -1312,8 +1349,12 @@ fi
 
 if [ $track_opencl = "true" ] ; then
   # Add the OpenCL wrapper library to the LD_PRELOAD list
-  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OCLci$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  if [ -r $BASEDIR/lib/$theBinding/libTAU-OpenCL$TAU_SHLIBX ] ; then
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OCLci$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  else
+    warn_missing_lib "OpenCL wrapper" "-opencl=<dir>" "OpenCL tracking"
+  fi
   if [ `echo $TAU_METRICS | grep -v "TAUGPU_TIME"` ]; then
     if [ `echo $TAU_METRICS | grep "TIME"` ]; then
       export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
@@ -1389,12 +1430,20 @@ fi
 
 if [ $track_armci = "true" ] ; then
   # Add the ARMCI wrapper library to the LD_PRELOAD list
-  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-armciwrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  if [ -r $BASEDIR/lib/$theBinding/libTAU-armciwrap$TAU_SHLIBX ] ; then
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-armciwrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  else
+    warn_missing_lib "ARMCI wrapper" "-armci" "ARMCI tracking"
+  fi
 fi
 
 if [ $track_shmem = "true" ] ; then
   # Add the SHMEM wrapper library to the LD_PRELOAD list
-  TAUEX_LD_PRELOAD=$BASEDIR/lib/libTAUsh_shmem_wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  if [ -r $BASEDIR/lib/libTAUsh_shmem_wrap$TAU_SHLIBX ] ; then
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/libTAUsh_shmem_wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  else
+    warn_missing_lib "SHMEM wrapper" "-shmem" "SHMEM tracking"
+  fi
 fi
 
 if [ $tau_use_ebs = "true" ] ; then
@@ -1446,6 +1495,8 @@ if [ $scorep = true ]; then
     else
       extraloadlibs=":$scoreplib:$extraloadlibs"
     fi
+  else
+    warn_missing_lib "Score-P adapter" "-scorep=<dir>" "Score-P integration"
   fi
 fi
 
