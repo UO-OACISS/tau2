@@ -37,8 +37,7 @@
 using namespace std;
 using namespace tau;
 
-// For BFD-based name resolution
-static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
+// BFD handle is shared via Tau_bfd_getDefaultUnit()
 
 typedef struct TauCallSitePathElement
 {
@@ -268,6 +267,7 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
 
   // Get the address map name
   char const * mapName = "UNKNOWN";
+  tau_bfd_handle_t bfdUnitHandle = Tau_bfd_getDefaultUnit();
   RtsLayer::LockDB();
   TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(bfdUnitHandle, addr);
   if (addressMap) {
@@ -898,11 +898,7 @@ extern "C" void finalizeCallSites_if_necessary()
 
   // First pass: Identify and resolve callsites into name strings.
 #ifdef TAU_BFD
-  RtsLayer::LockDB();
-  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-    bfdUnitHandle = Tau_bfd_registerUnit();
-  }
-  RtsLayer::UnLockDB();
+  tau_bfd_handle_t bfdUnitHandle = Tau_bfd_getDefaultUnit();
 #endif /* TAU_BFD */
 
   string delimiter = string(" --> ");

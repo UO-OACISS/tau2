@@ -371,24 +371,6 @@ static std::mutex & TheExternalRangeMapMutex() {
   return external_range_map_mutex;
 }
 
-static tau_bfd_handle_t & TheBfdUnitHandle()
-{
-  static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
-  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-    /* Opens /proc/self/maps via fopen. Without this guard iowrap can intercept
-     * that call while tauDBMutex is held, potentially deadlocking with threads
-     * that hold get_pure_map_mutex and wait for tauDBMutex. */
-    Tau_global_incr_insideTAU();
-    RtsLayer::LockEnv();
-    if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-      bfdUnitHandle = Tau_bfd_registerUnit();
-    }
-    RtsLayer::UnLockEnv();
-    Tau_global_decr_insideTAU();
-  }
-  return bfdUnitHandle;
-}
-
 /* This structure holds the per-thread data for managing sampling results */
 
 struct tau_sampling_flags {
@@ -1098,7 +1080,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
 #endif
 #else
       if (TauEnv_get_bfd_lookup()) {
-        node->resolved = Tau_bfd_resolveBfdInfo(TheBfdUnitHandle(), addr, node->info);
+        node->resolved = Tau_bfd_resolveBfdInfo(Tau_bfd_getDefaultUnit(), addr, node->info);
       } else {
         node->resolved = false;
       }
@@ -1167,7 +1149,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
                     strlen(lineno) + 32);
             sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
                 tag, childName, resolvedInfo.funcname,
-                resolvedInfo.filename, Tau_get_lineno_for_function(TheBfdUnitHandle(), resolvedInfo.funcname));
+                resolvedInfo.filename, Tau_get_lineno_for_function(Tau_bfd_getDefaultUnit(), resolvedInfo.funcname));
         } else { // Line resolution
             buff = (char*)malloc(strlen(tag) + strlen(childName) +
                     strlen(resolvedInfo.funcname) +
@@ -1200,7 +1182,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
                     strlen(resolvedInfo.filename) + 32);
             sprintf(buff, "[%s] %s [{%s} {%d}]",
                 tag, resolvedInfo.funcname,
-                resolvedInfo.filename, Tau_get_lineno_for_function(TheBfdUnitHandle(), resolvedInfo.funcname));
+                resolvedInfo.filename, Tau_get_lineno_for_function(Tau_bfd_getDefaultUnit(), resolvedInfo.funcname));
             *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + 2);
             sprintf(*newShortName, "%s", resolvedInfo.funcname);
         } else { // Line resolution
@@ -1218,7 +1200,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   } else {
     char const * mapName = "UNKNOWN";
     if (TauEnv_get_bfd_lookup()) {
-      TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(TheBfdUnitHandle(), addr);
+      TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(Tau_bfd_getDefaultUnit(), addr);
       if (addressMap) {
         mapName = addressMap->name;
       }

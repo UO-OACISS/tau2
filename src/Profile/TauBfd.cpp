@@ -408,6 +408,26 @@ tau_bfd_handle_t Tau_bfd_registerUnit()
   return ret;
 }
 
+// Returns the process-wide default BFD unit handle, initialising it on the
+// first call.  All TAU subsystems should use this instead of calling
+// Tau_bfd_registerUnit() directly, to avoid creating redundant units.
+// Increments insideTAU around the initialisation so that fopen("/proc/self/maps")
+// is not intercepted by the iowrap/memory wrapper.
+tau_bfd_handle_t Tau_bfd_getDefaultUnit()
+{
+  static tau_bfd_handle_t defaultHandle = TAU_BFD_NULL_HANDLE;
+  if (defaultHandle == TAU_BFD_NULL_HANDLE) {
+    Tau_global_incr_insideTAU();
+    RtsLayer::LockEnv();
+    if (defaultHandle == TAU_BFD_NULL_HANDLE) {
+      defaultHandle = Tau_bfd_registerUnit();
+    }
+    RtsLayer::UnLockEnv();
+    Tau_global_decr_insideTAU();
+  }
+  return defaultHandle;
+}
+
 bool Tau_bfd_checkHandle(tau_bfd_handle_t handle)
 {
   if (handle == TAU_BFD_NULL_HANDLE) {
