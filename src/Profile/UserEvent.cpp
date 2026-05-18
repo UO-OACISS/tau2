@@ -88,6 +88,33 @@ struct ContextEventMapCompare
 {
   bool operator()(long const * l1, long const * l2) const
   {
+    // A null key must never be inserted into this map; the `if (ary != NULL)`
+    // guard in TriggerEvent prevents it.  If we arrive here anyway  
+    // the impact is an orphaned context event
+    //
+    // In a debug build (-DDEBUG_ASSERT): abort with a backtrace so the
+    // insertion site can be identified.
+    // In production: warn once and treat null as the minimum element.
+    // The null entry is dead to find() on non-null keys, and the affected
+    // context will insert a fresh entry on its next call.
+    if (!l1 || !l2) {
+      TAU_ASSERT(l1 != NULL && l2 != NULL,
+                 "null key in context event map - rebuild with -DDEBUG_ASSERT"
+                 " for a backtrace from the insertion site");
+      // TAU_ASSERT is a no-op without -DDEBUG_ASSERT.  Warn once (the
+      // comparator may be visited on every find() traversal) and degrade
+      // gracefully rather than aborting over a single missing event.
+      static bool warned = false;
+      if (!warned) {
+        warned = true;
+        fprintf(stderr,
+                "TAU: WARNING: null key in context event map comparator"
+                " (%s:%d). Rebuild with -DDEBUG_ASSERT for a backtrace.\n",
+                __FILE__, __LINE__);
+        fflush(stderr);
+      }
+      return l1 < l2;
+    }
     int i = 0;
     for (i=0; (i<=l1[0] && i<=l2[0]) ; i++) {
         //printf("%d: %p, %p\t", i, l1[i], l2[i]);
@@ -529,11 +556,23 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
           int depth = comparison[0];
           int size = sizeof(long)*(depth+2);
           long * ary = (long*)malloc(size);
+          
+          //Check for rare NULL insertion
+          TAU_ASSERT(ary != NULL,
+                     "malloc failed for context event comparison array");
           int i;
           if (ary != NULL) {
             for (i = 0 ; i <= depth ; i++) {
                 ary[i] = comparison[i];
             }
+          } else {
+            // malloc failed.
+            fprintf(stderr,
+                    "TAU: WARNING: malloc(%d) returned NULL in TriggerEvent;"
+                    " this context event will not be inserted into the map"
+                    " (next call will retry).\n",
+                    size);
+            fflush(stderr);
           }
 
           // Re-acquire the lock and do a second lookup to handle any race
