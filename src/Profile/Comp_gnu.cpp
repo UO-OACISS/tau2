@@ -108,24 +108,6 @@ static TAU_HASH_MAP<unsigned long, HashNode*>& TheLocalHashTable(){
   return lhtab;
 }
 
-static tau_bfd_handle_t & TheBfdUnitHandle()
-{
-  static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
-  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-    /* Increment insideTAU before acquiring the env lock so that any I/O
-     * calls made during BFD initialisation are seen by the iowrap pass-through 
-     * guard as internal TAU calls. */
-    Tau_global_incr_insideTAU();
-    RtsLayer::LockEnv();
-    if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-      bfdUnitHandle = Tau_bfd_registerUnit();
-    }
-    RtsLayer::UnLockEnv();
-    Tau_global_decr_insideTAU();
-  }
-  return bfdUnitHandle;
-}
-
 /*
  * Get symbol table by using BFD
  */
@@ -311,7 +293,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
     TauInternalFunctionGuard protects_this_region;
 
     // Get BFD handle
-    tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
+    tau_bfd_handle_t bfdUnitHandle = Tau_bfd_getDefaultUnit();
 
     if (gnu_init) {
       gnu_init = false;
