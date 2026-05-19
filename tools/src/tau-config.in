@@ -11,6 +11,9 @@ my $PREFIX="no";
 my $DEFAULT_MAKEFILE="";
 my $DEFAULT_BINDING="";
 my $PYTHONINT="@PYTHONINTV@";
+my $APEX_LIB_DIR="@APEX_LIB_DIR@";
+my $ZEROSUM_LIB_DIR="@ZEROSUM_LIB_DIR@";
+
 
 my $TauOptions="";
 my $TauOptionsExclude="";
@@ -45,6 +48,8 @@ if (@ARGV == 0) {
     print "DEFAULT_MAKEFILE=$DEFAULT_MAKEFILE\n";
     print "DEFAULT_BINDING=\"$DEFAULT_BINDING\"\n";
     print "PYTHONINT=$PYTHONINT\n";
+    print "APEX_LIB_DIR=$APEX_LIB_DIR\n";
+    print "ZEROSUM_LIB_DIR=$ZEROSUM_LIB_DIR\n";
     exit 0
 }
 
