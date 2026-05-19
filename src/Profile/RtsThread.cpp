@@ -628,6 +628,7 @@ int RtsLayer::UnLockDB(void) {
 #else
   int tid=localThreadId();
 #endif
+  TAU_ASSERT(lockDBCount() > 0, "Thread is releasing DB lock it does not hold");
   lockDBCount()--;
   if (lockDBCount() == 0) {
     threadUnLockDB();
@@ -753,7 +754,7 @@ int RtsLayer::LockEnv(void)
     abort();
   }
 #endif
-  //TAU_ASSERT(lockDBCount() == 0, "Thread has DB lock, trying for Env lock");
+  TAU_ASSERT(lockDBCount() == 0, "Thread has DB lock, trying for Env lock");
 	if (lockEnvCount() == 0) {
     threadLockEnv();
   }
@@ -773,6 +774,7 @@ int RtsLayer::UnLockEnv(void)
   return UnLockDB();
 #else
   int tid=gettid();
+  TAU_ASSERT(lockEnvCount() > 0, "Thread is releasing Env lock it does not hold");
   lockEnvCount()--;
   if (lockEnvCount() == 0) {
     threadUnLockEnv();
