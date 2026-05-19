@@ -5037,6 +5037,10 @@ if [ "x$fortran_compiler" = "xarmflang" ]; then
    fixmakeargs="$fixmakeargs ARMFLANG"
 fi
 
+if [ "x$fortran_compiler" = "xamdflang" ]; then
+   fixmakeargs="$fixmakeargs AMDFLANG"
+fi
+
 if [ "x$fortran_compiler" = "xnvfortran" ]; then
    fixmakeargs="$fixmakeargs NV_FORTRAN"
 fi
@@ -5045,7 +5049,7 @@ if [ "x$fortran_compiler" = "xxlflang" ]; then
    fixmakeargs="$fixmakeargs XLFLANG"
 fi
 
-if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" -o "x$fortran_compiler" = "xmdflang" -o "-x$fortran_compiler" = "xflang-new" ]; then
+if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" -o "x$fortran_compiler" = "xflang-new" ]; then
    fixmakeargs="$fixmakeargs FLANG"
    touch foo_compinst.f
    test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
@@ -5575,7 +5579,10 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
             if [ "x$fortran_compiler" = "xarmflang" ]; then
                 fixmakeargs="$fixmakeargs ARMFLANG"
             fi
-            if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" -o "x$fortran_compiler" = "xmdflang" -o "x$fortran_compiler" = "xflang-new" ]; then
+            if [ "x$fortran_compiler" = "xamdflang" ]; then
+                fixmakeargs="$fixmakeargs AMDFLANG"
+            fi
+            if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" -o "x$fortran_compiler" = "xflang-new" ]; then
                 fixmakeargs="$fixmakeargs FLANG"
                 touch foo_compinst.f
                 test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
