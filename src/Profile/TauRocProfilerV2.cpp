@@ -403,6 +403,9 @@ int WriteBufferRecords(const rocprofiler_record_header_t *begin,
                        const rocprofiler_record_header_t *end,
                        rocprofiler_session_id_t session_id,
                        rocprofiler_buffer_id_t buffer_id) {
+  // This callback is invoked from an HSA/ROCm runtime thread that is not
+  // registered with TAU. Increment insideTAU.
+  Tau_global_incr_insideTAU();
   if (pthread_mutex_lock(&rocm_mutex) != 0) {
     perror("pthread_mutex_lock");
     abort();
@@ -445,6 +448,7 @@ int WriteBufferRecords(const rocprofiler_record_header_t *begin,
     perror("pthread_mutex_unlock");
     abort();
   }
+  Tau_global_decr_insideTAU();
 
   return 0;
 }
@@ -453,6 +457,9 @@ int WriteBufferRecords(const rocprofiler_record_header_t *begin,
 extern void Tau_roc_trace_sync_call_v2(rocprofiler_record_tracer_t tracer_record,
                                   rocprofiler_session_id_t session_id){
   TAU_VERBOSE("Tau_roc_trace_sync_call_v2\n");
+  // This callback is invoked from an HSA/ROCm runtime thread that is not
+  // registered with TAU. Increment insideTAU.
+  Tau_global_incr_insideTAU();
     if (pthread_mutex_lock(&rocm_mutex) != 0) {
       perror("pthread_mutex_lock");
       abort();
@@ -466,6 +473,7 @@ extern void Tau_roc_trace_sync_call_v2(rocprofiler_record_tracer_t tracer_record
       perror("pthread_mutex_unlock");
       abort();
     }
+  Tau_global_decr_insideTAU();
 
 
 }

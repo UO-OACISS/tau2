@@ -394,6 +394,11 @@ uint64_t get_lowest_timestamp(const char* begin, const char* end)
 // Activity tracing callback
 void Tau_roctracer_activity_callback(const char* begin, const char* end, void* arg) {
   TAU_VERBOSE("Tau_roctracer_activity_callback\n"); fflush(stdout);
+  // This callback is invoked from a ROCtracer worker thread that is not
+  // registered with TAU. Increment insideTAU so that TAU's LockDB assertion
+  // (which requires insideTAU > 0) does not fire when metric_set_gpu_timestamp
+  // calls checkTRMVector -> LockDB.
+  Tau_global_incr_insideTAU();
   //bool dummy = run_once();  // actually, run it every time we process the buffer
   int dispatch_task_id=-1;
   int copy_task_id = -1;
@@ -500,6 +505,7 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
         RtsLayer::UnLockDB();
         tmp = RtsLayer::getNumDBLocks();
     }
+  Tau_global_decr_insideTAU();
 }
 
 
