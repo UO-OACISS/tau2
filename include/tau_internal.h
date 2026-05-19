@@ -93,7 +93,7 @@
   void * callstack[128]; \
   int nid = RtsLayer::myNode(); \
   int tid = RtsLayer::unsafeThreadId(); \
-  fprintf(stderr, "TAU_ASSERT [%d:%d](%s:%d): " fmt "\n", nid, tid, __FILE__, __LINE__, #__VA_ARGS__); \
+  fprintf(stderr, "TAU_ASSERT [%d:%d](%s:%d): " fmt "\n", nid, tid, __FILE__, __LINE__); \
   fflush(stderr); \
   int frames = backtrace(callstack, 128); \
   char ** strs = backtrace_symbols(callstack, frames); \
@@ -106,7 +106,7 @@
 #define TAU_ASSERT(test, fmt, ...) if (!(test)) { \
   int nid = RtsLayer::myNode(); \
   int tid = RtsLayer::unsafeThreadId(); \
-  fprintf(stderr, "TAU_ASSERT [%d:%d](%s:%d): " fmt "\n", nid, tid, __FILE__, __LINE__, #__VA_ARGS__); \
+  fprintf(stderr, "TAU_ASSERT [%d:%d](%s:%d): " fmt "\n", nid, tid, __FILE__, __LINE__); \
   fflush(stderr); \
   abort(); \
 }
