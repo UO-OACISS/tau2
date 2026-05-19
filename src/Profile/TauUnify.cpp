@@ -791,6 +791,7 @@ struct RankList : vector<int>{ //TODO: DYNATHREAD Test this implementation with 
 };
 
 extern "C" int TauGetMpiRank(void) {
+  TauInternalFunctionGuard tau_internal_guard;
   //static int firsttime = 1;
   static RankList rank;//int *rank = NULL;
   int retval;

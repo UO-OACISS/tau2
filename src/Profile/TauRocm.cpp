@@ -262,6 +262,7 @@ void Tau_process_rocm_events(struct TauRocmEvent e) {
 
 
 extern void TauFlushRocmEventsIfNecessary() {
+  TauInternalFunctionGuard tau_internal_guard;
 
   //static bool reentrant_flag = false;
   /*if (reentrant_flag) {

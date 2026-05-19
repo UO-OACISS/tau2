@@ -545,6 +545,7 @@ void my_otf_cleanup()
 
 void tau_dyninst_init(int isMPI)
 {
+  TauInternalFunctionGuard tau_internal_guard;
   TAU_VERBOSE("Inside tau_dyninst_init \n");
   TAU_VERBOSE("isMPI = %d\n", isMPI);
   if (!isMPI)

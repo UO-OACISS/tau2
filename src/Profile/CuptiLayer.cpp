@@ -791,6 +791,7 @@ void Tau_CuptiLayer_register_string(char const * str, int metric_n)
 
 void Tau_CuptiLayer_set_event_name(int metric_n, int type)
 {
+    TauInternalFunctionGuard tau_internal_guard;
     RtsLayer::LockDB();
     counter_vec_t & added_counters = Tau_CuptiLayer_Added_counters();
     string counter_string = added_counters.at(metric_n)->tag;
