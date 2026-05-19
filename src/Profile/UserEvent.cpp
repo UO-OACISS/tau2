@@ -536,6 +536,20 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
 
         TauUserEvent * localContextEvent;
         RtsLayer::LockDB();
+#ifdef DEBUG_ASSERT
+        // Scan for NULL keys before the comparator-driven find() traversal.
+        // std::map forward iteration does NOT invoke ContextEventMapCompare,
+        // so this loop is safe even when a NULL key is already in the tree.
+        // It fires earlier and with a cleaner backtrace than the comparator
+        // assert that would fire during find() below.
+        for (auto const & kv : contextMap) {
+          TAU_ASSERT(kv.first != NULL,
+                     "NULL key in contextMap (pre-find scan); "
+                     "re-run with AddressSanitizer or Valgrind to find the "
+                     "corruption source (signal-handler race in "
+                     "TauSignalSafeAllocator or heap overflow suspected)");
+        }
+#endif
         ContextEventMap::const_iterator it = contextMap.find(comparison);
         if (it == contextMap.end()) {
           // Release the lock before constructing the new TauUserEvent.
@@ -587,6 +601,21 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
               // would corrupt ContextEventMapCompare::operator() on future
               // find() traversals (null deref of l1[0]).
               contextMap[ary] = contextEvent;
+#ifdef DEBUG_ASSERT
+              // Post-insert integrity check.  This scan runs once per unique
+              // callpath context (rare), not on every TriggerEvent call, so
+              // the O(N) cost is acceptable in a debug build.  If a NULL key
+              // is found here, the just-inserted callpath or a concurrent
+              // signal handler corrupted a TauSignalSafeAllocator map node
+              // (the memset inside Tau_MemMgr_malloc may have zeroed a live
+              // tree node when two allocations race for the same pool slot).
+              for (auto const & kv : contextMap) {
+                TAU_ASSERT(kv.first != NULL,
+                           "NULL key in contextMap (post-insert scan); "
+                           "TauSignalSafeAllocator signal-safety race or "
+                           "heap corruption suspected; see callpath above");
+              }
+#endif
             }
           } else {
             // Another thread already installed an event for this context.

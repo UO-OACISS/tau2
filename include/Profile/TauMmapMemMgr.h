@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <cstddef>
 #include <memory>
+#include <new>
 #include <typeinfo>
 #include <stdio.h>
 
@@ -51,6 +52,11 @@ public:
     pointer allocate(size_type n, typename std::allocator<void>::const_pointer = 0) {
         //printf("Allocating %d of type %s\n", n, typeid(T).name()); fflush(stdout);
         T *ptr = (T*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), n*sizeof(T));
+        // Tau_MemMgr_malloc returns NULL when the mmap pool is exhausted.
+        // The STL container will attempt a placement-new at that address,
+        // causing UB (null-pointer write) if we return NULL silently.
+        // Throw std::bad_alloc so the map operation fails cleanly instead.
+        if (!ptr) throw std::bad_alloc();
         return ptr;
     }
     // free method

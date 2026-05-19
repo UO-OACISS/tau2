@@ -1231,6 +1231,11 @@ extern void Tau_cupti_buffer_processed(void);
 
     void CUPTIAPI Tau_cupti_process_buffer(CUcontext context, uint32_t stream, uint8_t *activityBuffer, size_t size, size_t bufferSize)
     {
+        // Mark this thread as inside TAU for the duration of buffer processing.
+        // The CUPTI activity thread is not an application thread, so insideTAU
+        // starts at 0. LockDB (called via checkTRMVector when a new GPU virtual
+        // thread id is first encountered) asserts insideTAU > 0.
+        Tau_global_incr_insideTAU();
         static int counter = 0;
         int thisloop = counter++;
         //Since we do not control the synchronization points this is only place where
@@ -1359,6 +1364,7 @@ extern void Tau_cupti_buffer_processed(void);
             printf("TAU: CUPTI Unknown error cannot read from buffer.\n");
         }
         // printf("------------> done in %s, iteration %d, %d buffers\n", __func__, thisloop, num_buffers);
+        Tau_global_decr_insideTAU();
         Tau_cupti_buffer_processed();
     }
 
