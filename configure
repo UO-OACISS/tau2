@@ -1499,8 +1499,8 @@ nccl_lib=""
 nccl_inc=""
 l0_lib_dir=""
 l0_iga_lib=""
-zerosumlib="@ZEROSUM_LIB_DIR@"
-apexlib="@APEX_LIB_DIR@"
+zerosumlib=""
+apexlib=""
 restore_perfdmf_and_paraprof
 
 handle_python_option() {
