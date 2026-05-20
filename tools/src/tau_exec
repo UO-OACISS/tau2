@@ -184,6 +184,8 @@ fi
   echo "        -chapel       Track Cray Chapel network atomics library functions."
   echo "        -ittnotify    Track Intel ITTNotify tasks."
   echo "        -gptl         Track GPTL timers."
+  echo "        -zerosum      Load zerosum with TAU"
+  echo "        -apex      Load apex with TAU"
   echo ""
   echo "Notes:"
   echo "    Defaults if unspecified: -T $default_tags"
@@ -444,6 +446,8 @@ python_launch_module=false
 python_m_arg=""
 track_syscall=false
 track_nccl=false
+track_zerosum=false
+track_apex=false
 
 # This saves the args to tau_exec so they can be reused later.
 # This is used for MPI_Comm_spawn support, in which TAU spawns the child
@@ -875,6 +879,16 @@ for arg in "$@" ; do
         save_arg $arg
         shift
         ;;
+      -zerosum)
+        track_zerosum=true
+        save_arg $arg
+        shift
+        ;;
+      -apex)
+        track_apex=true
+        save_arg $arg
+        shift
+        ;;
       --)
         save_arg $arg
         shift
@@ -1048,6 +1062,27 @@ if [ $track_ompt = "true" ]; then
   export OMP_TOOL_LIBRARIES=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
   export OMP_TOOL=enabled
 fi
+
+zerosum_lib_dir=$(tau-config | grep "ZEROSUM_LIB_DIR" | sed 's/^ZEROSUM_LIB_DIR=//')
+echo $zerosum_lib_dir
+  if [ $track_zerosum = "true" ]; then
+    echo $theBinding
+    ismpi=`echo $theBinding | grep mpi`
+    if [ "x$ismpi" == "x" ]; then
+      TAUEX_LD_PRELOAD=$zerosum_lib_dir/libzerosum.so:$TAUEX_LD_PRELOAD
+    else
+      TAUEX_LD_PRELOAD=$zerosum_lib_dir/libzerosum-mpi.so:$TAUEX_LD_PRELOAD
+    fi
+    #TAUEX_LD_PRELOAD=$BASEDIR/lib/libzerosum-mpi.so:$TAUEX_LD_PRELOAD
+    #TAUEX_LD_PRELOAD=$BASEDIR/lib/libzerosum.so:$TAUEX_LD_PRELOAD
+  fi
+
+apex_lib_dir=$(tau-config | grep "APEX_LIB_DIR" | sed 's/^APEX_LIB_DIR=//')
+echo $apex_lib_dir
+  if [ $track_apex = "true" ]; then
+    $dryrun export APEX_TAU=1
+    TAUEX_LD_PRELOAD=$apex_lib_dir/libapex.so:$TAUEX_LD_PRELOAD
+  fi
 
 
 #Check if TAU_METRICS is set

@@ -917,7 +917,10 @@ for arg in "$@"; do
         echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
         echo "-boost=<dir> ....................... Specify location of Boost package."
         echo "-apex ......................................... Build the APEX package."
+        echo "-apex=<dir> ,,,...................... Specify location of APEX package."
         echo "-zerosum ................................... Build the ZeroSum package."
+        echo "-zerosum=<dir> ................... Specify location of ZeroSum package."
+        echo "-sycl=<dir> ..................................... Path to SYCL include."
         echo "-mochi ............................ Add MOCHI backend database support."
         echo "-dyninst=<dir> ................... Specify location of DynInst package."
         echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
@@ -1407,6 +1410,7 @@ sqlite3dir=
 #caliperdir=
 apex=no
 zerosum=no
+sycl_root_path=""
 dyninst=no
 dyninstinc=no
 dyninstlib=no
@@ -1495,6 +1499,8 @@ nccl_lib=""
 nccl_inc=""
 l0_lib_dir=""
 l0_iga_lib=""
+zerosumlib="@ZEROSUM_LIB_DIR@"
+apexlib="@APEX_LIB_DIR@"
 restore_perfdmf_and_paraprof
 
 handle_python_option() {
@@ -2380,9 +2386,46 @@ for arg in "$@"; do
             apex=yes
             shift
             ;;
+        
+        -apex=*)
+            apex_root_path=`echo $arg | sed -e 's/-apex=//'`
+            if [ ! -d ${apex_root_path}/lib ]
+            then
+                echo "Error: Cannot access APEX directory ${apex_root_path}/lib"
+                exit 1
+            fi
+            apexlib=${apex_root_path}/lib
+            shift
+            ;;
 
         -zerosum)
             zerosum=yes
+            shift
+            ;;
+        
+        -zerosum=*)
+            zerosum_root_path=`echo $arg | sed -e 's/-zerosum=//'`
+            if [ ! -d ${zerosum_root_path}/lib ]
+            then
+                echo "Error: Cannot access ZeroSum directory ${zerosum_root_path}/lib"
+                exit 1
+            fi
+            zerosumlib=${zerosum_root_path}/lib
+            shift
+            ;;
+        
+        -sycl=*)
+            sycl_root_path=`echo $arg | sed -e 's/-sycl=//'`
+            if [ ! -d $sycl_root_path ]
+            then
+                echo "Error: Cannot access SYCL directory $sycl_root_path"
+                exit 1
+            fi
+            if [ ! -r ${sycl_root_path}/include/sycl/sycl.hpp ]
+            then
+                echo "Error: ${sycl_root_path}/include/sycl/sycl.hpp does not exist"
+                exit 1
+            fi
             shift
             ;;
 
@@ -12126,9 +12169,12 @@ build_apex() {
     fi
     echo "TAUOPENCL=-DAPEX_WITH_OPENCL=TRUE" >> ${apex_include_file}
     cp etc/Makefile.apex apex/Makefile
-    fixmakeargs="$fixmakeargs APEX "
+    fixmakeargs="$fixmakeargs APEX"
     make -C apex clean
     make -C apex
+    apexlib=${targetdir}/${architecture}/lib/
+    sed -i "/@APEX_LIB_DIR@/ s,@APEX_LIB_DIR@,${apexlib},g" \
+        "${targetdir}/${architecture}/bin/tau-config"
 }
 
 build_zerosum() {
@@ -12155,13 +12201,17 @@ build_zerosum() {
         echo "TAUOMPT=-DZeroSum_WITH_OMPT=TRUE" >> ${zerosum_include_file}
     fi
     if [ "${cuda}" = "yes" ] ; then
-        echo "TAUCUDA=-DZeroSum_WITH_CUDA=TRUE -DCUDAToolkit_ROOT=${cudadir}" >> ${zerosum_include_file}
+        echo "TAUCUDA=-DZeroSum_WITH_CUDA=TRUE -DCUDAToolkit_ROOT=${cudadir} -DZeroSum_BUILD_EXAMPLES=OFF" >> ${zerosum_include_file}
     fi
     if [ "${rocm}" = "yes" ] ; then
-        echo "TAUHIP=-DZeroSum_WITH_HIP=TRUE" >> ${zerosum_include_file}
+        echo "TAUHIP=-DZeroSum_WITH_HIP=TRUE -DROCM_PATH=${rocmdir} -DZeroSum_BUILD_EXAMPLES=OFF" >> ${zerosum_include_file}
     fi
     if [ "${level_zero}" = "yes" ] ; then
-        echo "TAUSYCL=-DZeroSum_WITH_SYCL=TRUE" >> ${zerosum_include_file}
+        if [ x${sycl_root_path} = "x" ]; then
+            echo "INFO For SYCL support provide the path to include/sycl/sycl.h using -sycl=PATH"
+        else
+            echo "TAUSYCL=-DZeroSum_WITH_SYCL=TRUE -DSYCL_ROOT=${sycl_root_path} -DZeroSum_BUILD_EXAMPLES=OFF" >> ${zerosum_include_file}
+        fi
     fi
     if [ "${mpi}" = "yes" ] ; then
         echo "TAUMPI=-DZeroSum_WITH_MPI=TRUE" >> ${zerosum_include_file}
@@ -12169,9 +12219,13 @@ build_zerosum() {
         echo "TAUMPI=-DZeroSum_WITH_MPI=FALSE" >> ${zerosum_include_file}
     fi
     cp etc/Makefile.zerosum zerosum/Makefile
-    fixmakeargs="$fixmakeargs ZeroSum "
+    fixmakeargs="$fixmakeargs ZeroSum"
     make -C zerosum clean
     make -C zerosum
+    zerosumlib=${targetdir}/${architecture}/lib/
+    sed -i "/@ZEROSUM_LIB_DIR@/ s,@ZEROSUM_LIB_DIR@,${zerosumlib},g" \
+        "${targetdir}/${architecture}/bin/tau-config"
+         
 }
 
 build_perfstubs() {
@@ -14082,6 +14136,7 @@ cp ${tauroot}/tools/src/tau2slog2/bin/tau2slog2.jar ${targetdir}/${architecture}
 
 cat ${tauroot}/tools/src/tau-config.in |
 sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' -e 's,@PYTHONINTV@,'$pythonintv',' \
+    -e 's,@APEX_LIB_DIR@,'$apexlib','  -e 's,@ZEROSUM_LIB_DIR@,'$zerosumlib',' \
     > ${targetdir}/${architecture}/bin/tau-config
 chmod a+rx ${targetdir}/${architecture}/bin/tau-config
 
