@@ -2195,7 +2195,7 @@ int Tau_sampling_init(int tid, pid_t pid)
    }
 
    // If the thread no longer exists, we get EINVAL back from timer_create
-   if(ret == EINVAL && pid != 0) {
+   if(ret != 0 && errno == EINVAL && pid != 0) {
      TAU_VERBOSE("Invalid argument error while initializing sampling on deferred thread %d (pid=%jd). The thread may have exited already.\n", tid, (intmax_t)pid);
      return -1;
    } 
