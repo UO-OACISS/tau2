@@ -41,12 +41,12 @@ download()
   if [ -e $local ] ; then
     echo "Found $local, using it."
     cp $local $dst
-  elif which wget >/dev/null 2>&1 ; then
-    echo "wget: $src ==> $dst"
-    wget --no-check-certificate -O "$dst" "$src"
   elif which curl >/dev/null 2>&1 ; then
     echo "curl: $src ==> $dst"
     curl -L "$src" > "$dst"
+  elif which wget >/dev/null 2>&1 ; then
+    echo "wget: $src ==> $dst"
+    wget --no-check-certificate -O "$dst" "$src"
   else
     echo "ERROR: neither curl nor wget found in your path."
     exit 199
