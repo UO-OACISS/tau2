@@ -217,6 +217,18 @@ static thread_local FMetricListVector_local  MetricThreadCache;    //vector<Func
 // non-trivial TLS destructors. Checked in getFunctionMetric() to avoid accessing
 // freed cache storage from a signal handler that fires during thread teardown.
 static thread_local bool MetricThreadCacheDestroyed;
+// Set to true while MetricThreadCache is being mutated (push_back / operator[]=).
+// std::vector::push_back can reallocate, temporarily leaving internal pointers
+// (_M_start / _M_finish / _M_end_of_storage) in a partially-updated state.
+// A SIGPROF handler that calls getFunctionMetric() on the same thread during
+// this window would read a garbage FunctionMetrics* from the cache, leading to
+// a non-deterministic segfault in TauPathHashTable::get().
+// By skipping the TLS cache fast-path whenever this flag is set, the signal
+// handler falls through to the mutex-protected FMetricList slow-path instead.
+// The mutex is always released before MetricThreadCache is touched, so it is
+// safe to acquire at that point.  volatile ensures the compiler cannot hoist
+// or reorder the flag stores relative to the push_back calls.
+static thread_local volatile bool MetricThreadCacheBeingModified;
 static std::atomic<uint64_t> next_id; // The next available ID; incremented when function_info_id is set.
 uint64_t function_info_id; // This is set in FunctionInfo::FunctionInfoInit()
 // Written once (to false) during shutdown; read on every getFunctionMetric() call by all
@@ -243,7 +255,7 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     // torn down and MetricThreadCache may have already been destructed.  The base class
     // ~vector<> frees the buffer without nulling _M_start/_M_finish, so size() can still
     // return a stale non-zero value and operator[] would read freed memory.
-    if(use_metric_tls.load(std::memory_order_relaxed) && tid == local_tid && !MetricThreadCacheDestroyed){
+    if(use_metric_tls.load(std::memory_order_relaxed) && tid == local_tid && !MetricThreadCacheDestroyed && !MetricThreadCacheBeingModified){
         if(MetricThreadCache.size() > function_info_id) {
             MOut = MetricThreadCache.operator[](function_info_id);
             if(MOut != NULL) {
@@ -271,13 +283,18 @@ FunctionMetrics* getFunctionMetric(unsigned int tid){
     // Populate TLS cache outside the lock.
     // Skip if MetricThreadCacheDestroyed: writing to a destructed vector is UB and unsafe
     // in a signal handler (push_back -> malloc is not async-signal-safe).
-    if(use_metric_tls.load(std::memory_order_relaxed) && tid == local_tid && !MetricThreadCacheDestroyed) {
+    // Also skip if MetricThreadCacheBeingModified: a SIGPROF handler may have re-entered
+    // getFunctionMetric() while the outer call is mid-push_back; the outer call will
+    // finish the update once the signal handler returns.
+    if(use_metric_tls.load(std::memory_order_relaxed) && tid == local_tid && !MetricThreadCacheDestroyed && !MetricThreadCacheBeingModified) {
+        MetricThreadCacheBeingModified = true;
         // Ensure the MetricThreadCache vector is long enough to hold the new entry.
         while(MetricThreadCache.size() <= function_info_id) {
             MetricThreadCache.push_back(NULL);
         }
         // Store the FunctionMetrics pointer in the thread-local cache
         MetricThreadCache.operator[](function_info_id) = MOut;
+        MetricThreadCacheBeingModified = false;
     }
     if(MOut==NULL){
 	    fprintf(stderr,"TAU Warning: getFunctionMetric returning NULL!\n");
