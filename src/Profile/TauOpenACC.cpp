@@ -542,6 +542,9 @@ void CUPTIAPI bufferRequested(uint8_t **buffer, size_t *size, size_t *maxNumReco
 
 void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer, size_t size, size_t validSize)
 {
+    // CUPTI activity buffer callbacks run on a CUPTI-internal thread that is
+    // not registered with TAU.  Set insideTAU.
+    Tau_global_incr_insideTAU();
     CUptiResult status;
     CUpti_Activity *record = NULL;
 
@@ -567,6 +570,7 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
     }
 
     free(buffer);
+    Tau_global_decr_insideTAU();
 }
 #endif //TAU_CUPTI
 void finalize()

@@ -1159,6 +1159,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
     static thread_local bool recursive{false};
     if (recursive) { return; }
     recursive = true;
+    // Mark this thread as inside TAU for the duration of the callback.
+    Tau_global_incr_insideTAU();
     if (domain == CUPTI_CB_DOMAIN_RESOURCE) {
         const CUpti_ResourceData *handle = (CUpti_ResourceData *) params;
         Tau_handle_resource (ud, domain, id, handle);
@@ -1214,6 +1216,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain,
 #endif
         RtsLayer::UnLockDB();
     }
+    Tau_global_decr_insideTAU();
     recursive=false;
     return;
 }
