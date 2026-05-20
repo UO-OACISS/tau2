@@ -250,6 +250,72 @@ evalLLVMcompiler() {
     fi
 }
 
+# Set extraopt for Fortran compiler-based instrumentation.
+# Warns if TAU_NO_FORTRAN_COMPINST sentinel is present (compiler does not support compinst),
+# then sets extraopt to the provided value so the compiler fails naturally and TAU's
+# existing fallback/revert logic handles the error.
+# Usage: set_fortran_compinst_extraopt <extraopt_value>
+# Modifies globals: extraopt
+set_fortran_compinst_extraopt() {
+    if echo "$optCompInstFortranOption" | grep -q "TAU_NO_FORTRAN_COMPINST"; then
+        echo "Error: Compiler-based instrumentation is not supported for this Fortran compiler. Use PDT source instrumentation (-optPDT) instead."
+    fi
+    extraopt="$1"
+    echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
+}
+
+# Determine whether compiler-based instrumentation should be applied to a source file.
+# Sets useCompInst (yes/no) and updates instrumentedFileForCompilation and tempTauFileName.
+# If tauSelectFile is set but unreadable, prints an error and defaults to instrumenting
+# (useCompInst=yes), which is the conservative safe behavior.
+# Args:    $1 = full path to the (possibly preprocessed) tau source file
+# Modifies globals: useCompInst, instrumentedFileForCompilation, tempTauFileName
+determine_compinst_usage() {
+    tempTauFileName="$1"
+    instrumentedFileForCompilation=" $tempTauFileName"
+    useCompInst=yes
+    if [ $linkOnly == $TRUE ]; then
+        useCompInst=no
+    fi
+    if [ "x$tauSelectFile" != "x" ]; then
+        if [ ! -r "$tauSelectFile" ]; then
+            echo "Error: Unable to read $tauSelectFile"
+        else
+            selectfile=$(echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@')
+            useCompInst=$($selectfile $tauSelectFile $tempTauFileName)
+        fi
+    fi
+}
+
+# Create and compile the opari2 POMP2 regions init file (pompregions.c).
+# Locates the pomp2-parse-init-regions.awk script, runs the POMP2 region symbol
+# parser against the provided object files, and compiles the resulting pompregions.c.
+# Callers are responsible for updating linkCmd and objectFilesForLinking afterwards.
+# Args:    $1 = space-separated list of object files to scan for POMP2_Init_reg symbols
+# Modifies globals: OPARI_AWK_DIR
+compile_opari2_pompregions() {
+    local objects="$1"
+    local OPARI_AWK_DIR
+    evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
+    if [ -r ${optOpari2Dir}/libexec/pomp2-parse-init-regions.awk ]; then
+        OPARI_AWK_DIR=${optOpari2Dir}/libexec
+    else
+        OPARI_AWK_DIR=${TAU_BIN_DIR}
+    fi
+    if [ ! -d "$OPARI_AWK_DIR" ]; then
+        printError "$CMD" "OPARI_AWK_DIR ($OPARI_AWK_DIR) does not exist"
+        exit $errorStatus
+    fi
+    if [ ! -r "$OPARI_AWK_DIR/pomp2-parse-init-regions.awk" ]; then
+        printError "$CMD" "could not find pomp2-parse-init-regions.awk in OPARI_AWK_DIR ($OPARI_AWK_DIR)"
+        exit $errorStatus
+    fi
+    local cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${objects} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${OPARI_AWK_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
+    evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
+    local cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
+    evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
+}
+
 # Select the appropriate wrapper link_options.tau file and apply it to optLinking.
 # Uses globals: trackIO, optMemDbg, trackDMAPP, trackARMCI, trackPthread, trackGOMP,
 #               trackMPCThread, trackUPCR, tauWrapFile, optWrappersDir, optShared, upc,
@@ -1801,24 +1867,7 @@ if [ $numFiles == 0 ]; then
 
     #If this is the second pass, opari was already used, don't do it again`
     if [ $opari2 == $TRUE -a $passCount == 1 -a  $opari2init == $TRUE  ]; then
-        evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
-        if [ -r ${optOpari2Dir}/libexec/pomp2-parse-init-regions.awk ]; then
-          OPARI_AWK_DIR=${optOpari2Dir}/libexec
-        else
-          OPARI_AWK_DIR=${TAU_BIN_DIR}
-        fi
-        if [ ! -d "$OPARI_AWK_DIR" ]; then
-            printError "$CMD" "OPARI_AWK_DIR ($OPARI_AWK_DIR) does not exist"
-            exit $errorStatus
-        fi
-        if [ ! -r "$OPARI_AWK_DIR/pomp2-parse-init-regions.awk" ]; then
-            printError "$CMD" "could not find pomp2-parse-init-regions.awk in OPARI_AWK_DIR ($OPARI_AWK_DIR)"
-            exit $errorStatus
-        fi
-        cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${OPARI_AWK_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
-        evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
-        cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
-        evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
+        compile_opari2_pompregions "${listOfObjectFiles}"
         #linkCmd="$linkCmd pompregions.o"
     fi
 
@@ -2248,6 +2297,8 @@ else
       #e.g. see compliation of mpi.c. So do not attempt to modify it simply
       #by placing the output to "a.out".
 
+     # Compile-only: output file(s) are determined by the caller (-c flag present).
+     # Instrument and compile each file directly; no separate link step is needed.
      if [ $isForCompilation == $TRUE ]; then
           # The number of files could be more than one.  Check for creation of each .o file.
           tempCounter=0
@@ -2284,16 +2335,7 @@ else
               # Should we use compiler-based instrumentation on this file?
               extraopt=
            if [ $optCompInst == $TRUE ]; then
-          	  tempTauFileName=${arrTau[$tempCounter]}
-          	  instrumentedFileForCompilation=" $tempTauFileName"
-          	  useCompInst=yes
-          	if [ $linkOnly == $TRUE ]; then
-          	  useCompInst=no
-		fi
-          	if [ "x$tauSelectFile" != "x" ] ; then
-         	    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'`
-          	    useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
-          	fi
+          	  determine_compinst_usage "${arrTau[$tempCounter]}"
          	if [ "$useCompInst" = yes ]; then
                    if [ `echo $optCompInstOption | grep finstrument-functions | wc -l ` != 0 ]; then
                        echoIfDebug "Has GNU CompInst option"
@@ -2343,8 +2385,7 @@ else
                      if [ $groupType == $group_f_F ]; then
 # If we need to tweak the Fortran options, we should do it here
 # For e.g., if Nagware needs a -Wc,<opt>, or if we want to remove file-exclude.
-          	       extraopt="$optExcludeFuncs $optCompInstFortranOption"
-          	       echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
+                       set_fortran_compinst_extraopt "$optExcludeFuncs $optCompInstFortranOption"
                      fi
           	fi
               fi
@@ -2396,8 +2437,9 @@ else
               tempCounter=tempCounter+1
           done
 		
-      else #if [ $isForCompilation == $FALSE ]; compile each of the source file
-          	#with a -c option individually and with a .o file. In end link them together.
+      else
+          # Compile-and-link: TAU splits the command into per-file -c compilations,
+          # accumulates the resulting object files, then runs a final link step.
 
           tempCounter=0
           while [ $tempCounter -lt $numFiles ]; do
@@ -2414,27 +2456,11 @@ else
               # Should we use compiler-based instrumentation on this file?
               extraopt=
               if [ $optCompInst == $TRUE ]; then
-          	tempTauFileName=${arrTau[$tempCounter]}
-          	instrumentedFileForCompilation=" $tempTauFileName"
-          	useCompInst=yes
-          	if [ $linkOnly == $TRUE ]; then
-          	  useCompInst=no
-                  fi
-
-          	if [ "x$tauSelectFile" != "x" ] ; then
-          	    if [ -r "$tauSelectFile" ] ; then
-          		selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'`
-          		useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
-          	    else
-          		echo "Error: Unable to read $tauSelectFile"
-          		useCompInst=yes
-          	    fi
-          	fi
+          	determine_compinst_usage "${arrTau[$tempCounter]}"
           	if [ "x$useCompInst" = "xyes" ]; then
           	    extraopt=$optCompInstOption
                     if [ $groupType == $group_f_F  ] && [ "x$TAUCOMP" != "xclang" ]; then
-          		 extraopt=$optCompInstFortranOption
-          		 echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
+                         set_fortran_compinst_extraopt "$optCompInstFortranOption"
 		    else
 			 # Not working with fortran (yet)
 			 if [ "x$TAUCOMP" == "xclang" ]; then
@@ -2505,24 +2531,7 @@ else
           opari2init=$TRUE
       fi
           if [ $opari2 == $TRUE -a $opari2init == $TRUE ]; then
-              evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
-              if [ -r ${optOpari2Dir}/libexec/pomp2-parse-init-regions.awk ]; then
-                  OPARI_AWK_DIR=${optOpari2Dir}/libexec
-              else
-                  OPARI_AWK_DIR=${TAU_BIN_DIR}
-              fi
-              if [ ! -d "$OPARI_AWK_DIR" ]; then
-                  printError "$CMD" "OPARI_AWK_DIR ($OPARI_AWK_DIR) does not exist"
-                  exit $errorStatus
-              fi
-              if [ ! -r "$OPARI_AWK_DIR/pomp2-parse-init-regions.awk" ]; then
-                  printError "$CMD" "could not find pomp2-parse-init-regions.awk in OPARI_AWK_DIR ($OPARI_AWK_DIR)"
-                  exit $errorStatus
-              fi
-              cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${OPARI_AWK_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
-              evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
-              cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
-              evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
+              compile_opari2_pompregions "${objectFilesForLinking}"
               linkCmd="$linkCmd pompregions.o"
               objectFilesForLinking="pompregions.o $objectFilesForLinking"
           fi

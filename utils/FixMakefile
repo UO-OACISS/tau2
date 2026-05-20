@@ -2634,6 +2634,10 @@ case $1 in
         echo "NOTE: AMD amdflang compiler for Linux options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     AMDFLANG_NO_COMPINST)
+        echo "NOTE: AMD amdflang compiler does not support compiler-based instrumentation"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      FLANG)
         echo "NOTE: flang compiler for Linux options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
