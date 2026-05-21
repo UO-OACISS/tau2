@@ -1064,9 +1064,8 @@ if [ $track_ompt = "true" ]; then
 fi
 
 zerosum_lib_dir=$(tau-config | grep "ZEROSUM_LIB_DIR" | sed 's/^ZEROSUM_LIB_DIR=//')
-echo $zerosum_lib_dir
-  if [ $track_zerosum = "true" ]; then
-    echo $theBinding
+if [ $track_zerosum = "true" ]; then
+  if [ "x$zerosum_lib_dir" != "x" ]; then
     ismpi=`echo $theBinding | grep mpi`
     if [ "x$ismpi" == "x" ]; then
       TAUEX_LD_PRELOAD=$zerosum_lib_dir/libzerosum.so:$TAUEX_LD_PRELOAD
@@ -1075,14 +1074,19 @@ echo $zerosum_lib_dir
     fi
     #TAUEX_LD_PRELOAD=$BASEDIR/lib/libzerosum-mpi.so:$TAUEX_LD_PRELOAD
     #TAUEX_LD_PRELOAD=$BASEDIR/lib/libzerosum.so:$TAUEX_LD_PRELOAD
+  else
+    echo "ERROR: TAU doesn't have the path to ZeroSum, was TAU configured with ZeroSum?"
   fi
-
+fi
 apex_lib_dir=$(tau-config | grep "APEX_LIB_DIR" | sed 's/^APEX_LIB_DIR=//')
-echo $apex_lib_dir
-  if [ $track_apex = "true" ]; then
+if [ $track_apex = "true" ]; then
+  if [ "x$apex_lib_dir" != "x" ]; then
     $dryrun export APEX_TAU=1
     TAUEX_LD_PRELOAD=$apex_lib_dir/libapex.so:$TAUEX_LD_PRELOAD
+  else
+    echo "ERROR: TAU doesn't have the path to APEX, was TAU configured with APEX?"
   fi
+fi
 
 
 #Check if TAU_METRICS is set

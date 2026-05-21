@@ -12187,7 +12187,7 @@ build_apex() {
     make -C apex clean
     make -C apex
     apexlib=${targetdir}/${architecture}/lib/
-    sed -i "/@APEX_LIB_DIR@/ s,@APEX_LIB_DIR@,${apexlib},g" \
+    sed -i "s|^my \$APEX_LIB_DIR=.*|my \$APEX_LIB_DIR=\"${apexlib}\";|" \
         "${targetdir}/${architecture}/bin/tau-config"
 }
 
@@ -12237,7 +12237,7 @@ build_zerosum() {
     make -C zerosum clean
     make -C zerosum
     zerosumlib=${targetdir}/${architecture}/lib/
-    sed -i "/@ZEROSUM_LIB_DIR@/ s,@ZEROSUM_LIB_DIR@,${zerosumlib},g" \
+    sed -i "s|^my \$ZEROSUM_LIB_DIR=.*|my \$ZEROSUM_LIB_DIR=\"${zerosumlib}\";|" \
         "${targetdir}/${architecture}/bin/tau-config"
          
 }
