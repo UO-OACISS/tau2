@@ -264,6 +264,54 @@ set_fortran_compinst_extraopt() {
     echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
 }
 
+# Build the LLVM-plugin-based compiler instrumentation option and set extraopt.
+# When the plugin .so is missing (tau_llvm_plugin_missing=yes), falls back to
+# the configured -finstrument-functions option so compilation can succeed.
+# For Fortran, delegates to set_fortran_compinst_extraopt as usual.
+# Reads globals:  tau_llvm_plugin_missing, tauSelectFile, clang_version,
+#                 groupType, TAU_PLUGIN_DIR, TAU_LLVM_PLUGIN,
+#                 CLANG_LEGACY, CLANG_PLUGIN_OPTION,
+#                 optCompInstOption, optCompInstFortranOption
+# Modifies globals: extraopt, argsRemaining
+apply_llvm_plugin_compinst() {
+    if [ "$tau_llvm_plugin_missing" = "yes" ]; then
+        # Plugin .so not present; fall back to the configured compinst option
+        # (typically -finstrument-functions) for C/C++.
+        extraopt="$optCompInstOption"
+        if [ $groupType == $group_f_F ]; then
+            set_fortran_compinst_extraopt "$optCompInstFortranOption"
+        fi
+        return
+    fi
+
+    # Plugin is present: strip any -finstrument-functions flags so the plugin
+    # takes precedence, then build the appropriate -fpass-plugin/-fplugin option.
+    argsRemaining=`echo $argsRemaining | sed -e 's@-finstrument-functions-after-inlining@@g' | sed -e 's@-finstrument-functions@@g'`
+
+    if [ "x$tauSelectFile" != "x" ]; then
+        if [ "$clang_version" -ge "14" ]; then
+            # Only way to pass args to the LLVM plugin on the command line with
+            # clang >= 14; see https://github.com/llvm/llvm-project/issues/56137
+            extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
+            if [ $groupType != $group_f_F ]; then
+                extraopt="$extraopt -Xclang -load -Xclang ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -Xclang -mllvm -Xclang -tau-input-file=$tauSelectFile"
+            else
+                # TAU_COMPILER_SELECT_FILE is the fallback for flang (not yet supported via -Xclang)
+                export TAU_COMPILER_SELECT_FILE=$tauSelectFile
+            fi
+        else
+            extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
+        fi
+    else
+        # No select file: instrument every function
+        extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
+    fi
+
+    if [ $groupType == $group_f_F ]; then
+        set_fortran_compinst_extraopt "$optCompInstFortranOption"
+    fi
+}
+
 # Determine whether compiler-based instrumentation should be applied to a source file.
 # Sets useCompInst (yes/no) and updates instrumentedFileForCompilation and tempTauFileName.
 # If tauSelectFile is set but unreadable, prints an error and defaults to instrumenting
@@ -1550,6 +1598,10 @@ if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
     # Does it exist?
     if [ ! -f "${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}" ]; then
 	echo "Warning: the plugin supposed to be installed at ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} does not exist."
+        echo "Warning: Falling back to compiler-based instrumentation (-finstrument-functions) for C/C++."
+        tau_llvm_plugin_missing=yes
+    else
+        tau_llvm_plugin_missing=no
     fi
     # Which version of clang?
     clang_version=`$compilerSpecified --version | grep "clang version" | awk {'print $3'} | awk -F'.' {'print $1'}`
@@ -2356,39 +2408,10 @@ else
                      fi
 	
 		   if [ "x$TAUCOMP" == "xclang" ]; then
-		       optExcludeFuncs=""
-		       # We are going to use the LLVM plugin. Remove -finstrument-functions or -finstrument-functions-after-inlining from the options, in order for the LLVM plugin to take precedence
-		       argsRemaining=`echo $argsRemaining | sed -e 's@-finstrument-functions-after-inlining@@g' | sed -e 's@-finstrument-functions@@g'`
-		       if [ "x$tauSelectFile" != "x" ]; then
-			     if [ "$clang_version" -ge "14" ] ; then
-				 # For the moment, this is the only way to pass arguments to the LLVM plugin on the command line
-				 # see https://github.com/llvm/llvm-project/issues/56137#issuecomment-1200957606
-				 # The other way we can pass the select file is to use the TAU_COMPILER_SELECT_FILE environment variable.
-				 # ... and it is not supported (yet) by flang
-				 optCompInstOption="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
-				 if [ $groupType != $group_f_F  ]; then
-				     optCompInstOption=$optCompInstOption" -Xclang -load -Xclang ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -Xclang -mllvm -Xclang -tau-input-file=$tauSelectFile"
-				 else
-				     export TAU_COMPILER_SELECT_FILE=$tauSelectFile
-				 fi
-			     else
-				 # TODO check the plugin exists here (done above)
-				 optCompInstOption="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
-			     fi
-			 else
-			     # instrument every function -> do not pass any select file
-			     optCompInstOption="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
-#			     optCompInstOption="-finstrument-functions"
-			 fi
-		     fi
-          	     extraopt=$optCompInstOption
-                     if [ $groupType == $group_f_F ]; then
-# If we need to tweak the Fortran options, we should do it here
-# For e.g., if Nagware needs a -Wc,<opt>, or if we want to remove file-exclude.
-                       set_fortran_compinst_extraopt "$optExcludeFuncs $optCompInstFortranOption"
-                     fi
+		       apply_llvm_plugin_compinst
           	fi
               fi
+           fi
 
               # We cannot parse UPC files. Leave them alone. Do not change filename
               if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
@@ -2461,33 +2484,8 @@ else
           	    extraopt=$optCompInstOption
                     if [ $groupType == $group_f_F  ] && [ "x$TAUCOMP" != "xclang" ]; then
                          set_fortran_compinst_extraopt "$optCompInstFortranOption"
-		    else
-			 # Not working with fortran (yet)
-			 if [ "x$TAUCOMP" == "xclang" ]; then
-			     optExcludeFuncs=""
-			     # We are going to use the LLVM plugin. Remove -finstrument-functions or -finstrument-functions-after-inlining from the options, in order for the LLVM plugin to take precedence
-			     argsRemaining=`echo $argsRemaining | sed -e 's@-finstrument-functions-after-inlining@@g' | sed -e 's@-finstrument-functions@@g'`
-			     if [ "x$tauSelectFile" != "x" ]; then
-				 if [[ "$clang_version" -ge "14" ]]; then
-				     # For the moment, this is the only way to pass arguments to the LLVM plugin on the command line
-				     # see https://github.com/llvm/llvm-project/issues/56137#issuecomment-1200957606
-				     # The other way we can pass the select file is to use the TAU_COMPILER_SELECT_FILE environment variable.
-				     # ... and it is not supported (yet) by flang
-				     extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"				     
-				     if [ $groupType != $group_f_F  ]; then
-					 extraopt=$extraopt " -Xclang -load -Xclang ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -Xclang -mllvm -Xclang -tau-input-file=$tauSelectFile"
-				     else
-					 export TAU_COMPILER_SELECT_FILE=$tauSelectFile
-				     fi
-				 else
-				     # TODO check the plugin exists here (done above)
-				     extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
-				 fi
-			     else
-				 # instrument every function
-				 extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
-			     fi
-			 fi
+		    elif [ "x$TAUCOMP" == "xclang" ]; then
+			 apply_llvm_plugin_compinst
 		     fi
 
           	fi

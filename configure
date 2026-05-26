@@ -6458,7 +6458,6 @@ if [ $build_llvm_plugin = yes ]; then
   check_cmake 3 14 "LLVM plugin"
   result=$?
   if [ $result -eq 0 ]; then
-    fixmakeargs="$fixmakeargs tau_cmake=$cmake_cmd TAU_BUILD_LLVM_PLUGIN"
   # proceed with building the LLVM plugin. But check if the compiler or the LLVM source directories have been specified
     theclang=`command -v clang`
     theamdclang=`command -v clang`
@@ -6484,6 +6483,47 @@ if [ $build_llvm_plugin = yes ]; then
       echo "TAU: Using -llvm_cc=$llvm_cc as the compiler to build the TAU LLVM selective instrumentation plugin. "
       fixmakeargs="$fixmakeargs llvm_cxx=$llvm_cxx LLVM_CXX"
       fixmakeargs="$fixmakeargs llvm_cc=$llvm_cc LLVM_CC"
+    fi
+
+    # Check for clang C++ development headers required by the LLVM plugin
+    # (clang/Basic/SourceManager.h is in a separate package from the LLVM tools:
+    #  Debian/Ubuntu: libclang-<VERSION>-dev  e.g. sudo apt-get install libclang-20-dev
+    #  RHEL/Fedora:   clang-devel             e.g. sudo dnf install clang-devel
+    #  Spack:         llvm+clang              e.g. spack install llvm+clang        )
+    clang_headers_found=no
+    # First try llvm-config variants to get the canonical LLVM include path
+    for _lc in llvm-config llvm-config-20 llvm-config-19 llvm-config-18 llvm-config-17 llvm-config-16; do
+      if command -v "$_lc" >/dev/null 2>&1; then
+        _incdir=`$_lc --includedir 2>/dev/null`
+        if [ -f "${_incdir}/clang/Basic/SourceManager.h" ]; then
+          clang_headers_found=yes
+          break
+        fi
+      fi
+    done
+    # Fall back: check under the detected llvm_src_dir
+    if [ "$clang_headers_found" = "no" -a "x$llvm_src_dir" != "x" ]; then
+      if [ -f "${llvm_src_dir}/include/clang/Basic/SourceManager.h" ]; then
+        clang_headers_found=yes
+      fi
+      for _d in "${llvm_src_dir}"/lib/llvm-*/include; do
+        if [ -f "${_d}/clang/Basic/SourceManager.h" ]; then
+          clang_headers_found=yes
+          break
+        fi
+      done
+    fi
+
+    if [ "$clang_headers_found" = "yes" ]; then
+      fixmakeargs="$fixmakeargs tau_cmake=$cmake_cmd TAU_BUILD_LLVM_PLUGIN"
+    else
+      echo "TAU WARNING: Cannot find clang C++ development headers (clang/Basic/SourceManager.h)."
+      echo "TAU WARNING: The TAU LLVM selective instrumentation plugin will NOT be built."
+      echo "TAU WARNING: To enable it, install the clang development headers and re-run configure:"
+      echo "TAU WARNING:   Debian/Ubuntu: sudo apt-get install libclang-<VERSION>-dev  (e.g. libclang-20-dev)"
+      echo "TAU WARNING:   RHEL/Fedora:   sudo dnf install clang-devel"
+      echo "TAU WARNING:   Spack:         spack install llvm+clang"
+      build_llvm_plugin=no
     fi
   fi
 fi

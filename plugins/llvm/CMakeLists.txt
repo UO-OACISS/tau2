@@ -20,6 +20,28 @@ include( AddLLVM )
 add_definitions(${LLVM_DEFINITIONS} )
 include_directories(${LLVM_INCLUDE_DIRS} )
 
+# Verify that the clang C++ development headers are present.
+# clang/Basic/SourceManager.h is shipped separately from the LLVM tools:
+#   Debian/Ubuntu: sudo apt-get install libclang-${LLVM_VERSION_MAJOR}-dev
+#   RHEL/Fedora:   sudo dnf install clang-devel
+#   Spack:         spack install llvm+clang
+find_path(CLANG_INCLUDE_DIR
+  NAMES clang/Basic/SourceManager.h
+  HINTS ${LLVM_INCLUDE_DIRS}
+  NO_DEFAULT_PATH)
+if(NOT CLANG_INCLUDE_DIR)
+  message(WARNING
+    "clang/Basic/SourceManager.h not found in ${LLVM_INCLUDE_DIRS}. "
+    "The TAU LLVM plugin requires the clang C++ development headers. "
+    "Install the appropriate package and re-run cmake:\n"
+    "  Debian/Ubuntu: sudo apt-get install libclang-${LLVM_VERSION_MAJOR}-dev\n"
+    "  RHEL/Fedora:   sudo dnf install clang-devel\n"
+    "  Spack:         spack install llvm+clang\n"
+    "Skipping TAU LLVM plugin build.")
+  return()
+endif()
+
+
 if(NOT DEFINED CLANG_VERSION_MAJOR)
   set(CLANG_VERSION_MAJOR ${LLVM_VERSION_MAJOR} )
 endif()
