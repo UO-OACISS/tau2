@@ -1112,6 +1112,23 @@ if [ ! "x$isPthread" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SH
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
+# For Julia, preload Julia's BLAS before Julia gets a chance to dlopen it.
+# If Julia dlopens it, it will use RTLD_DEEPBIND, which prevents TAU's
+# pthread wrapper from applying to threads spawned by BLAS.
+if [ "$julia_wrapper" = "true" -a ! "x$isPthread" == "x" \
+     -a "${TAU_PRELOAD_BLAS:-1}" != "0" ]; then
+  julia_bin=`command -v julia 2>/dev/null`
+  if [ -n "$julia_bin" ]; then
+    julia_libdir=`dirname "$(readlink -f "$julia_bin")"`/../lib
+    for blas_so in "$julia_libdir/libopenblas64_.so" "$julia_libdir/libopenblas.so" ; do
+      if [ -r "$blas_so" ]; then
+        TAUEX_LD_PRELOAD="$blas_so:$TAUEX_LD_PRELOAD"
+        break
+      fi
+    done
+  fi
+fi
+
 isNCCL=`echo $theBinding | grep nccl`
 if [ ! "x$isNCCL" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-NCCL-plugin$TAU_SHLIBX ]; then
   echo "NCCL available"
