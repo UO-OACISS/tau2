@@ -72,6 +72,7 @@ declare -i revertForced=$FALSE
 declare -i optShared=$FALSE
 declare -i optSaltInst=$FALSE
 declare -i optCompInst=$FALSE
+declare -i optLLVMPluginInst=$FALSE
 declare -i optHeaderInst=$FALSE
 declare -i disableCompInst=$FALSE
 declare -i useNVCC=$FALSE
@@ -172,6 +173,7 @@ printUsage () {
     echo -e "  -optAppF90=\"<f90>\"\t\tSpecifies the fallback F90 compiler."
     echo -e "  -optShared\t\t\tUse shared library version of TAU."
     echo -e "  -optCompInst\t\t\tUse compiler-based instrumentation."
+    echo -e "  -optLLVMPluginInst\t\tUse LLVM plugin-based instrumentation (requires LLVM/clang); fails if plugin not found."
     echo -e "  -optPDTInst\t\t\tUse PDT-based instrumentation."
     echo -e "  -optSaltInst\t\t\tUse SALT-based instrumentation."
     echo -e "  -optHeaderInst\t\tEnable instrumentation of headers"
@@ -252,39 +254,56 @@ evalLLVMcompiler() {
 
 # Set extraopt for Fortran compiler-based instrumentation.
 # If TAU_NO_FORTRAN_COMPINST sentinel is present (compiler does not support compinst),
-# prints an error and clears extraopt so compilation can proceed without instrumentation
-# rather than passing the sentinel as a literal compiler argument.
+# prints an error and returns 1 so the caller can fall back to the LLVM plugin or
+# trigger the standard error/revert path rather than compiling without instrumentation.
 # Usage: set_fortran_compinst_extraopt <extraopt_value>
+# Returns: 0 on success, 1 when the sentinel indicates no support
 # Modifies globals: extraopt
 set_fortran_compinst_extraopt() {
     if echo "$optCompInstFortranOption" | grep -q "TAU_NO_FORTRAN_COMPINST"; then
         echo "Error: Compiler-based instrumentation is not supported for this Fortran compiler. Use PDT source instrumentation (-optPDT) instead."
         extraopt=""
         echoIfDebug "Cleared extraopt due to TAU_NO_FORTRAN_COMPINST sentinel"
-        return
+        return 1
     fi
     extraopt="$1"
     echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
+    return 0
 }
 
 # Build the LLVM-plugin-based compiler instrumentation option and set extraopt.
 # When the plugin .so is missing (tau_llvm_plugin_missing=yes), falls back to
-# the configured -finstrument-functions option so compilation can succeed.
-# For Fortran, delegates to set_fortran_compinst_extraopt as usual.
-# Reads globals:  tau_llvm_plugin_missing, tauSelectFile, clang_version,
-#                 groupType, TAU_PLUGIN_DIR, TAU_LLVM_PLUGIN,
+# the configured -finstrument-functions option for C/C++; for Fortran this path
+# fails (returns 1) because -finstrument-functions is not supported by flang.
+# When the plugin is present, sets the appropriate -fpass-plugin/-fplugin option
+# for all languages including Fortran (the TAU_NO_FORTRAN_COMPINST sentinel only
+# guards -finstrument-functions; the LLVM plugin is supported by flang-based
+# compilers via -fpass-plugin).
+# Returns: 0 on success, 1 when instrumentation cannot be applied
+# Reads globals:  tau_llvm_plugin_missing, optLLVMPluginInst, tauSelectFile,
+#                 clang_version, groupType, TAU_PLUGIN_DIR, TAU_LLVM_PLUGIN,
 #                 CLANG_LEGACY, CLANG_PLUGIN_OPTION,
 #                 optCompInstOption, optCompInstFortranOption
 # Modifies globals: extraopt, argsRemaining
 apply_llvm_plugin_compinst() {
     if [ "$tau_llvm_plugin_missing" = "yes" ]; then
-        # Plugin .so not present; fall back to the configured compinst option
-        # (typically -finstrument-functions) for C/C++.
-        extraopt="$optCompInstOption"
+        # Plugin .so not present.
+        if [ $optLLVMPluginInst == $TRUE ]; then
+            echo "Error: -optLLVMPluginInst was specified but the LLVM plugin is not available at ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
+            return 1
+        fi
+        # Fall back to the configured compinst option (-finstrument-functions) for C/C++.
+        # For Fortran, -finstrument-functions is typically not supported; signal failure
+        # so the caller can trigger the standard error/revert path.
         if [ $groupType == $group_f_F ]; then
             set_fortran_compinst_extraopt "$optCompInstFortranOption"
+            if [ $? -ne 0 ]; then
+                return 1
+            fi
+        else
+            extraopt="$optCompInstOption"
         fi
-        return
+        return 0
     fi
 
     # Plugin is present: strip any -finstrument-functions flags so the plugin
@@ -310,9 +329,10 @@ apply_llvm_plugin_compinst() {
         extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
     fi
 
-    if [ $groupType == $group_f_F ]; then
-        set_fortran_compinst_extraopt "$optCompInstFortranOption"
-    fi
+    # When the plugin is present, the extraopt above is correct for both C/C++ and Fortran.
+    # Do NOT call set_fortran_compinst_extraopt here: that sentinel only guards
+    # -finstrument-functions-style options, not -fpass-plugin/-fplugin.
+    return 0
 }
 
 # Determine whether compiler-based instrumentation should be applied to a source file.
@@ -1121,6 +1141,21 @@ for arg in "$@" ; do
       fi
         		echoIfDebug "\tUsing Compiler-based Instrumentation"
         		;;
+        	    -optLLVMPluginInst)
+        		optLLVMPluginInst=$TRUE
+        		optCompInst=$TRUE
+        		optSaltInst=$FALSE
+        		disablePdtStep=$TRUE
+        		# force the debug flag so we get symbolic information
+      if [ $upc == "berkeley" ] ;  then
+        optCompile="$optCompile -Wc,-g"
+        optLinking="$optLinking -Wc,-g"
+      else
+        optCompile="$optCompile -g"
+        optLinking="$optLinking -g"
+      fi
+        		echoIfDebug "\tUsing LLVM plugin-based instrumentation"
+        		;;
         	    -optPDTInst)
         		optCompInst=$FALSE
         		disablePdtStep=$FALSE
@@ -1600,6 +1635,10 @@ if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
     esac
     # Does it exist?
     if [ ! -f "${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}" ]; then
+        if [ $optLLVMPluginInst == $TRUE ]; then
+            echo "Error: -optLLVMPluginInst was specified but the LLVM plugin does not exist at ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
+            exit 1
+        fi
 	echo "Warning: the plugin supposed to be installed at ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} does not exist."
         echo "Warning: Falling back to compiler-based instrumentation (-finstrument-functions) for C/C++."
         tau_llvm_plugin_missing=yes
@@ -1613,13 +1652,11 @@ if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
       clang_version=`$compilerSpecified --version | grep "clang version" | awk {'print $4'} | awk -F'.' {'print $1'}`
     fi
     if [ "x$clang_version" = "x" ]; then
-      clang_version=`$compilerSpecified --version | grep "flang version" | awk {'print $3'} | awk -F'.' {'print $1'}`
-    fi
-    if [ "x$clang_version" = "x" ]; then
-      clang_version=`$compilerSpecified --version | grep "flang-classic version" | awk {'print $3'} | awk -F'.' {'print $1'}`
-    fi
-    if [ "x$clang_version" = "x" ]; then
-      clang_version=`$compilerSpecified --version | grep "flang-new version" | awk {'print $3'} | awk -F'.' {'print $1'}`
+      # Match "flang version", "flang-new version", "flang-classic version", and
+      # distro-prefixed variants such as "Ubuntu flang version X.Y.Z".
+      # Use sed to extract the major version number after the word "version" to
+      # avoid the field-position ambiguity that breaks awk on distro prefixes.
+      clang_version=`$compilerSpecified --version | grep -E "flang(-new|-classic)? version" | sed 's/.*version \([0-9][0-9]*\)\..*/\1/'`
     fi
     if [[ "$clang_version" -ge "14" ]] ; then    
        CLANG_PLUGIN_OPTION="-fpass-plugin"
@@ -2412,6 +2449,10 @@ else
 	
 		   if [ "x$TAUCOMP" == "xclang" ]; then
 		       apply_llvm_plugin_compinst
+		       if [ $? -ne 0 ]; then
+		           printError "$CMD" "Instrumentation unavailable: LLVM plugin missing and Fortran compiler does not support -finstrument-functions."
+		           break
+		       fi
           	fi
               fi
            fi
@@ -2487,8 +2528,16 @@ else
           	    extraopt=$optCompInstOption
                     if [ $groupType == $group_f_F  ] && [ "x$TAUCOMP" != "xclang" ]; then
                          set_fortran_compinst_extraopt "$optCompInstFortranOption"
+                         if [ $? -ne 0 ]; then
+                             printError "$CMD" "Compiler-based instrumentation is not supported for this Fortran compiler."
+                             break
+                         fi
 		    elif [ "x$TAUCOMP" == "xclang" ]; then
 			 apply_llvm_plugin_compinst
+			 if [ $? -ne 0 ]; then
+			     printError "$CMD" "Instrumentation unavailable: LLVM plugin missing and Fortran compiler does not support -finstrument-functions."
+			     break
+			 fi
 		     fi
 
           	fi
