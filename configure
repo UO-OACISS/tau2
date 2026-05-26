@@ -5083,9 +5083,9 @@ fi
 if [ "x$fortran_compiler" = "xamdflang" ]; then
    fixmakeargs="$fixmakeargs AMDFLANG"
    touch foo_compinst.f
-   $fortran_compiler -c foo_compinst.f -finstrument-functions 2>/dev/null
+   $fortran_compiler -c foo_compinst.f -Xclang -finstrument-functions 2>/dev/null
    if [ $? -ne 0 ]; then
-       echo "NOTE: $fortran_compiler does not support -finstrument-functions. Compiler-based instrumentation for Fortran is not available with this compiler."
+       echo "NOTE: $fortran_compiler does not support -Xclang -finstrument-functions. Compiler-based instrumentation for Fortran is not available with this compiler."
        fixmakeargs="$fixmakeargs AMDFLANG_NO_COMPINST"
    fi
    /bin/rm -f foo_compinst.f foo_compinst.o
@@ -5632,9 +5632,9 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
             if [ "x$fortran_compiler" = "xamdflang" ]; then
                 fixmakeargs="$fixmakeargs AMDFLANG"
                 touch foo_compinst.f
-                $fortran_compiler -c foo_compinst.f -finstrument-functions 2>/dev/null
+                $fortran_compiler -c foo_compinst.f -Xclang -finstrument-functions 2>/dev/null
                 if [ $? -ne 0 ]; then
-                    echo "NOTE: $fortran_compiler does not support -finstrument-functions. Compiler-based instrumentation for Fortran is not available with this compiler."
+                    echo "NOTE: $fortran_compiler does not support -Xclang -finstrument-functions. Compiler-based instrumentation for Fortran is not available with this compiler."
                     fixmakeargs="$fixmakeargs AMDFLANG_NO_COMPINST"
                 fi
                 /bin/rm -f foo_compinst.f foo_compinst.o

@@ -251,14 +251,17 @@ evalLLVMcompiler() {
 }
 
 # Set extraopt for Fortran compiler-based instrumentation.
-# Warns if TAU_NO_FORTRAN_COMPINST sentinel is present (compiler does not support compinst),
-# then sets extraopt to the provided value so the compiler fails naturally and TAU's
-# existing fallback/revert logic handles the error.
+# If TAU_NO_FORTRAN_COMPINST sentinel is present (compiler does not support compinst),
+# prints an error and clears extraopt so compilation can proceed without instrumentation
+# rather than passing the sentinel as a literal compiler argument.
 # Usage: set_fortran_compinst_extraopt <extraopt_value>
 # Modifies globals: extraopt
 set_fortran_compinst_extraopt() {
     if echo "$optCompInstFortranOption" | grep -q "TAU_NO_FORTRAN_COMPINST"; then
         echo "Error: Compiler-based instrumentation is not supported for this Fortran compiler. Use PDT source instrumentation (-optPDT) instead."
+        extraopt=""
+        echoIfDebug "Cleared extraopt due to TAU_NO_FORTRAN_COMPINST sentinel"
+        return
     fi
     extraopt="$1"
     echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
