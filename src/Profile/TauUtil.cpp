@@ -122,27 +122,6 @@ static HashTable & TheHashTable()
   return htab;
 }
 
-static tau_bfd_handle_t & TheBfdUnitHandle()
-{
-  static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
-  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-    /* Increment insideTAU before acquiring the env lock so that any I/O
-     * calls made during BFD initialisation (e.g. fopen("/proc/self/maps"))
-     * are seen by the iowrap pass-through guard as internal TAU calls and
-     * are not profiled.  Without this, the iowrap would try to acquire
-     * get_pure_map_mutex while this thread already holds tauDBMutex (via
-     * LockEnv), creating an ABBA deadlock with threads that hold
-     * get_pure_map_mutex and are waiting for tauDBMutex. */
-    Tau_global_incr_insideTAU();
-    RtsLayer::LockEnv();
-    if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-      bfdUnitHandle = Tau_bfd_registerUnit();
-    }
-    RtsLayer::UnLockEnv();
-    Tau_global_decr_insideTAU();
-  }
-  return bfdUnitHandle;
-}
 #endif /* TAU_BFD */
 
 /* Given the function info object, resolve and return the address
@@ -176,7 +155,7 @@ extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_addr
       }
 
       // resolve the string for output
-      tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
+      tau_bfd_handle_t bfdUnitHandle = Tau_bfd_getDefaultUnit();
       Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
 
       if(node && node->info.filename && node->info.funcname && node->info.lineno) {
@@ -207,9 +186,7 @@ extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * res
 
       #ifdef TAU_BFD
       HashNode * node;
-      tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
-
-      // my local map, to reduce contention
+      tau_bfd_handle_t bfdUnitHandle = Tau_bfd_getDefaultUnit();
       thread_local static TAU_HASH_MAP<unsigned long, HashNode*> local_map;
       node = local_map[addr];
       // not in my local map?  look in the global map

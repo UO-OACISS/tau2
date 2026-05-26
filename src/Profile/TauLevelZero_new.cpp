@@ -60,7 +60,7 @@ struct CollectorOptions {
   bool need_pid = true;
   bool verbose = true;
   bool demangle = true;
-  bool kernels_per_tile = true;
+  bool kernels_per_tile = false;
   bool metric_query = false;
   bool metric_stream = false;
   bool stall_sampling = false;
@@ -522,10 +522,14 @@ std::string TAU_L0_demangle_sampling(std::string original_name, std::string file
 // as they also appear as API calls, that are already measured. device_command_names
 void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64_t kernel_end, int tile)
 {
+    // This callback fires from the Level Zero tracing layer on the calling application thread
+    // (or a PTI worker thread) which is not registered with TAU. Increment insideTAU.
+    Tau_global_incr_insideTAU();
     L0_TAU_DEBUG_MSG("TAU_L0_kernel_event!!\n");
     if(!initialized || disabled)
     {
         L0_TAU_DEBUG_MSG("TAU_L0_kernel_event !initialized || disabled !!\n");
+        Tau_global_decr_insideTAU();
         return;
     }
 
@@ -562,6 +566,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
             std::cout << "command_list_ " << command->command_list_  << std::endl;
             #endif
             kernel_command_properties_mutex_.unlock_shared();
+            Tau_global_decr_insideTAU();
             return;
         }        
 
@@ -701,6 +706,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
         {
             printf("Error with task_id, skipping %s\n", it->second.name_.c_str());
             kernel_command_properties_mutex_.unlock_shared();
+            Tau_global_decr_insideTAU();
             return;
         }
 
@@ -776,6 +782,7 @@ void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64
 
     }
     kernel_command_properties_mutex_.unlock_shared();
+    Tau_global_decr_insideTAU();
 }
 
 

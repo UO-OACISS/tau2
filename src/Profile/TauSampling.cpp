@@ -371,24 +371,6 @@ static std::mutex & TheExternalRangeMapMutex() {
   return external_range_map_mutex;
 }
 
-static tau_bfd_handle_t & TheBfdUnitHandle()
-{
-  static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
-  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-    /* Opens /proc/self/maps via fopen. Without this guard iowrap can intercept
-     * that call while tauDBMutex is held, potentially deadlocking with threads
-     * that hold get_pure_map_mutex and wait for tauDBMutex. */
-    Tau_global_incr_insideTAU();
-    RtsLayer::LockEnv();
-    if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-      bfdUnitHandle = Tau_bfd_registerUnit();
-    }
-    RtsLayer::UnLockEnv();
-    Tau_global_decr_insideTAU();
-  }
-  return bfdUnitHandle;
-}
-
 /* This structure holds the per-thread data for managing sampling results */
 
 struct tau_sampling_flags {
@@ -1098,7 +1080,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
 #endif
 #else
       if (TauEnv_get_bfd_lookup()) {
-        node->resolved = Tau_bfd_resolveBfdInfo(TheBfdUnitHandle(), addr, node->info);
+        node->resolved = Tau_bfd_resolveBfdInfo(Tau_bfd_getDefaultUnit(), addr, node->info);
       } else {
         node->resolved = false;
       }
@@ -1167,7 +1149,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
                     strlen(lineno) + 32);
             sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
                 tag, childName, resolvedInfo.funcname,
-                resolvedInfo.filename, Tau_get_lineno_for_function(TheBfdUnitHandle(), resolvedInfo.funcname));
+                resolvedInfo.filename, Tau_get_lineno_for_function(Tau_bfd_getDefaultUnit(), resolvedInfo.funcname));
         } else { // Line resolution
             buff = (char*)malloc(strlen(tag) + strlen(childName) +
                     strlen(resolvedInfo.funcname) +
@@ -1200,7 +1182,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
                     strlen(resolvedInfo.filename) + 32);
             sprintf(buff, "[%s] %s [{%s} {%d}]",
                 tag, resolvedInfo.funcname,
-                resolvedInfo.filename, Tau_get_lineno_for_function(TheBfdUnitHandle(), resolvedInfo.funcname));
+                resolvedInfo.filename, Tau_get_lineno_for_function(Tau_bfd_getDefaultUnit(), resolvedInfo.funcname));
             *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + 2);
             sprintf(*newShortName, "%s", resolvedInfo.funcname);
         } else { // Line resolution
@@ -1218,7 +1200,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   } else {
     char const * mapName = "UNKNOWN";
     if (TauEnv_get_bfd_lookup()) {
-      TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(TheBfdUnitHandle(), addr);
+      TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(Tau_bfd_getDefaultUnit(), addr);
       if (addressMap) {
         mapName = addressMap->name;
       }
@@ -1543,6 +1525,9 @@ void Tau_sampling_finalizeProfile(int tid)
     // For Each Address
     //   1. Check and Create Leaf Entry
     //   2. Check and Create Path Entry (Requires Intermediate)
+    if (callStack == NULL) {
+      continue;
+    }
     vector<CallSiteInfo *> & sites = callStack->callSites;
     // *CWL* - we need the index, which is why the iterator is not used.
     for (unsigned int i = 0; i < sites.size(); i++) {
@@ -2210,7 +2195,7 @@ int Tau_sampling_init(int tid, pid_t pid)
    }
 
    // If the thread no longer exists, we get EINVAL back from timer_create
-   if(ret == EINVAL && pid != 0) {
+   if(ret != 0 && errno == EINVAL && pid != 0) {
      TAU_VERBOSE("Invalid argument error while initializing sampling on deferred thread %d (pid=%jd). The thread may have exited already.\n", tid, (intmax_t)pid);
      return -1;
    } 
@@ -2318,10 +2303,10 @@ int Tau_sampling_finalize(int tid)
   int ret;
 
   if (tid == 0) {
-    // no timers to unset if on thread 0
+    // Cancel the interval timer (use TAU_ITIMER_TYPE, not ITIMER_REAL).
     itval.it_interval.tv_usec = itval.it_value.tv_usec = itval.it_interval.tv_sec = itval.it_value.tv_sec = 0;
 
-    ret = setitimer(ITIMER_REAL, &itval, 0);
+    ret = setitimer(TAU_ITIMER_TYPE, &itval, 0);
     if (ret != 0) {
       /* ERROR */
     }
@@ -2550,6 +2535,10 @@ void Tau_sampling_finalize_if_necessary(int tid)
       if (!finalized) {
         if(tid == 0) {
             collectingSamples = 0;
+            /* Disable the signal and cancel all timers now, before any static
+             * locals are destroyed.  Tau_sampling_finalize() below only cancels
+             * the calling thread's timer; worker-thread timers are handled here. */
+            Tau_sampling_disable_signal();
         }
         finalized = true;
       }
@@ -2578,8 +2567,38 @@ void Tau_sampling_finalize_if_necessary(int tid)
     }
 }
 
+/* Disable the sampling signal and cancel all outstanding timers.
+ * Called before TAU's static locals in Tau_create_top_level_timer_if_necessary_task
+ * are destroyed, so that in-flight or pending SIGPROF/SIGALRM signals cannot
+ * race against the destructors and cause use-after-free crashes. */
+void Tau_sampling_disable_signal() {
+    /* Reset the signal action to SIG_IGN.  Pending signals to any thread are
+     * discarded immediately; no future delivery will invoke the handler. */
+    struct sigaction ign;
+    memset(&ign, 0, sizeof(struct sigaction));
+    ign.sa_handler = SIG_IGN;
+    sigaction(TAU_ALARM_TYPE, &ign, NULL);
+
+#if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ) && !defined(TAU_FUJITSU)
+    /* Cancel all per-thread POSIX timers that were not already removed.
+     * Tau_sampling_finalize() only cancels the timer for the calling thread,
+     * so worker-thread timers remain live after finalization from thread 0. */
+    std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
+    for (auto& kv : TheThreadTimerMap()) {
+        timer_delete(kv.second);
+    }
+    TheThreadTimerMap().clear();
+#else
+    /* Cancel the process-wide interval timer. */
+    struct itimerval zero;
+    memset(&zero, 0, sizeof(struct itimerval));
+    setitimer(TAU_ITIMER_TYPE, &zero, NULL);
+#endif
+}
+
 void Tau_sampling_stop_sampling() {
     collectingSamples = 0;
+    Tau_sampling_disable_signal();
 }
 
 #endif //TAU_WINDOWS && TAU_ANDROID

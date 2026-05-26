@@ -41,12 +41,12 @@ download()
   if [ -e $local ] ; then
     echo "Found $local, using it."
     cp $local $dst
-  elif which wget >/dev/null 2>&1 ; then
-    echo "wget: $src ==> $dst"
-    wget --no-check-certificate -O "$dst" "$src"
   elif which curl >/dev/null 2>&1 ; then
     echo "curl: $src ==> $dst"
     curl -L "$src" > "$dst"
+  elif which wget >/dev/null 2>&1 ; then
+    echo "wget: $src ==> $dst"
+    wget --no-check-certificate -O "$dst" "$src"
   else
     echo "ERROR: neither curl nor wget found in your path."
     exit 199
@@ -917,7 +917,10 @@ for arg in "$@"; do
         echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
         echo "-boost=<dir> ....................... Specify location of Boost package."
         echo "-apex ......................................... Build the APEX package."
+        echo "-apex=<dir> ,,,...................... Specify location of APEX package."
         echo "-zerosum ................................... Build the ZeroSum package."
+        echo "-zerosum=<dir> ................... Specify location of ZeroSum package."
+        echo "-sycl=<dir> ..................................... Path to SYCL include."
         echo "-mochi ............................ Add MOCHI backend database support."
         echo "-dyninst=<dir> ................... Specify location of DynInst package."
         echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
@@ -1407,6 +1410,7 @@ sqlite3dir=
 #caliperdir=
 apex=no
 zerosum=no
+sycl_root_path=""
 dyninst=no
 dyninstinc=no
 dyninstlib=no
@@ -1495,6 +1499,8 @@ nccl_lib=""
 nccl_inc=""
 l0_lib_dir=""
 l0_iga_lib=""
+zerosumlib=""
+apexlib=""
 restore_perfdmf_and_paraprof
 
 handle_python_option() {
@@ -2380,9 +2386,46 @@ for arg in "$@"; do
             apex=yes
             shift
             ;;
+        
+        -apex=*)
+            apex_root_path=`echo $arg | sed -e 's/-apex=//'`
+            if [ ! -d ${apex_root_path}/lib ]
+            then
+                echo "Error: Cannot access APEX directory ${apex_root_path}/lib"
+                exit 1
+            fi
+            apexlib=${apex_root_path}/lib
+            shift
+            ;;
 
         -zerosum)
             zerosum=yes
+            shift
+            ;;
+        
+        -zerosum=*)
+            zerosum_root_path=`echo $arg | sed -e 's/-zerosum=//'`
+            if [ ! -d ${zerosum_root_path}/lib ]
+            then
+                echo "Error: Cannot access ZeroSum directory ${zerosum_root_path}/lib"
+                exit 1
+            fi
+            zerosumlib=${zerosum_root_path}/lib
+            shift
+            ;;
+        
+        -sycl=*)
+            sycl_root_path=`echo $arg | sed -e 's/-sycl=//'`
+            if [ ! -d $sycl_root_path ]
+            then
+                echo "Error: Cannot access SYCL directory $sycl_root_path"
+                exit 1
+            fi
+            if [ ! -r ${sycl_root_path}/include/sycl/sycl.hpp ]
+            then
+                echo "Error: ${sycl_root_path}/include/sycl/sycl.hpp does not exist"
+                exit 1
+            fi
             shift
             ;;
 
@@ -5037,6 +5080,17 @@ if [ "x$fortran_compiler" = "xarmflang" ]; then
    fixmakeargs="$fixmakeargs ARMFLANG"
 fi
 
+if [ "x$fortran_compiler" = "xamdflang" ]; then
+   fixmakeargs="$fixmakeargs AMDFLANG"
+   touch foo_compinst.f
+   $fortran_compiler -c foo_compinst.f -Xclang -finstrument-functions 2>/dev/null
+   if [ $? -ne 0 ]; then
+       echo "NOTE: $fortran_compiler does not support -Xclang -finstrument-functions. Compiler-based instrumentation for Fortran is not available with this compiler."
+       fixmakeargs="$fixmakeargs AMDFLANG_NO_COMPINST"
+   fi
+   /bin/rm -f foo_compinst.f foo_compinst.o
+fi
+
 if [ "x$fortran_compiler" = "xnvfortran" ]; then
    fixmakeargs="$fixmakeargs NV_FORTRAN"
 fi
@@ -5045,7 +5099,7 @@ if [ "x$fortran_compiler" = "xxlflang" ]; then
    fixmakeargs="$fixmakeargs XLFLANG"
 fi
 
-if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" -o "x$fortran_compiler" = "xmdflang" -o "-x$fortran_compiler" = "xflang-new" ]; then
+if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" -o "x$fortran_compiler" = "xflang-new" ]; then
    fixmakeargs="$fixmakeargs FLANG"
    touch foo_compinst.f
    test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
@@ -5575,7 +5629,17 @@ if [ $mpi = yes -a "x$mpiinc" = "x" -a "x$mpi_wrapper_mpicxx_or_mpiicpc" = "xyes
             if [ "x$fortran_compiler" = "xarmflang" ]; then
                 fixmakeargs="$fixmakeargs ARMFLANG"
             fi
-            if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" -o "x$fortran_compiler" = "xmdflang" -o "x$fortran_compiler" = "xflang-new" ]; then
+            if [ "x$fortran_compiler" = "xamdflang" ]; then
+                fixmakeargs="$fixmakeargs AMDFLANG"
+                touch foo_compinst.f
+                $fortran_compiler -c foo_compinst.f -Xclang -finstrument-functions 2>/dev/null
+                if [ $? -ne 0 ]; then
+                    echo "NOTE: $fortran_compiler does not support -Xclang -finstrument-functions. Compiler-based instrumentation for Fortran is not available with this compiler."
+                    fixmakeargs="$fixmakeargs AMDFLANG_NO_COMPINST"
+                fi
+                /bin/rm -f foo_compinst.f foo_compinst.o
+            fi
+            if [ "x$fortran_compiler" = "xflang" -o "x$fortran_compiler" = "xf18" -o "x$fortran_compiler" = "xflang-new" ]; then
                 fixmakeargs="$fixmakeargs FLANG"
                 touch foo_compinst.f
                 test_mx_flang=`$fortran_compiler -c foo_compinst.f -Mx,129,0x800   2>/dev/null`
@@ -6394,7 +6458,6 @@ if [ $build_llvm_plugin = yes ]; then
   check_cmake 3 14 "LLVM plugin"
   result=$?
   if [ $result -eq 0 ]; then
-    fixmakeargs="$fixmakeargs tau_cmake=$cmake_cmd TAU_BUILD_LLVM_PLUGIN"
   # proceed with building the LLVM plugin. But check if the compiler or the LLVM source directories have been specified
     theclang=`command -v clang`
     theamdclang=`command -v clang`
@@ -6420,6 +6483,47 @@ if [ $build_llvm_plugin = yes ]; then
       echo "TAU: Using -llvm_cc=$llvm_cc as the compiler to build the TAU LLVM selective instrumentation plugin. "
       fixmakeargs="$fixmakeargs llvm_cxx=$llvm_cxx LLVM_CXX"
       fixmakeargs="$fixmakeargs llvm_cc=$llvm_cc LLVM_CC"
+    fi
+
+    # Check for clang C++ development headers required by the LLVM plugin
+    # (clang/Basic/SourceManager.h is in a separate package from the LLVM tools:
+    #  Debian/Ubuntu: libclang-<VERSION>-dev  e.g. sudo apt-get install libclang-20-dev
+    #  RHEL/Fedora:   clang-devel             e.g. sudo dnf install clang-devel
+    #  Spack:         llvm+clang              e.g. spack install llvm+clang        )
+    clang_headers_found=no
+    # First try llvm-config variants to get the canonical LLVM include path
+    for _lc in llvm-config llvm-config-20 llvm-config-19 llvm-config-18 llvm-config-17 llvm-config-16; do
+      if command -v "$_lc" >/dev/null 2>&1; then
+        _incdir=`$_lc --includedir 2>/dev/null`
+        if [ -f "${_incdir}/clang/Basic/SourceManager.h" ]; then
+          clang_headers_found=yes
+          break
+        fi
+      fi
+    done
+    # Fall back: check under the detected llvm_src_dir
+    if [ "$clang_headers_found" = "no" -a "x$llvm_src_dir" != "x" ]; then
+      if [ -f "${llvm_src_dir}/include/clang/Basic/SourceManager.h" ]; then
+        clang_headers_found=yes
+      fi
+      for _d in "${llvm_src_dir}"/lib/llvm-*/include; do
+        if [ -f "${_d}/clang/Basic/SourceManager.h" ]; then
+          clang_headers_found=yes
+          break
+        fi
+      done
+    fi
+
+    if [ "$clang_headers_found" = "yes" ]; then
+      fixmakeargs="$fixmakeargs tau_cmake=$cmake_cmd TAU_BUILD_LLVM_PLUGIN"
+    else
+      echo "TAU WARNING: Cannot find clang C++ development headers (clang/Basic/SourceManager.h)."
+      echo "TAU WARNING: The TAU LLVM selective instrumentation plugin will NOT be built."
+      echo "TAU WARNING: To enable it, install the clang development headers and re-run configure:"
+      echo "TAU WARNING:   Debian/Ubuntu: sudo apt-get install libclang-<VERSION>-dev  (e.g. libclang-20-dev)"
+      echo "TAU WARNING:   RHEL/Fedora:   sudo dnf install clang-devel"
+      echo "TAU WARNING:   Spack:         spack install llvm+clang"
+      build_llvm_plugin=no
     fi
   fi
 fi
@@ -6615,6 +6719,25 @@ case $fortran_compiler in
         then
             echo "Default Fortran compiler will be Intel efc"
             fixmakeargs="$fixmakeargs INTEL_FORTRAN"
+        elif [ $cxx_compiler = icpx -o "x$inteloneapi" = "xyes" ]
+        then
+            # oneAPI: prefer ifx over ifort; ifort is not part of oneAPI 2024+
+            intelifx=`which ifx 2>/dev/null`
+            intelifort=`which ifort 2>/dev/null`
+            if [ "y$intelifx" != "y" -a -x "$intelifx" ]
+            then
+                echo "Default Fortran compiler will be Intel ifx (oneAPI)"
+                fixmakeargs="$fixmakeargs INTEL_IFX"
+                extradir=`which ifx | sed -e 's/\/bin\/ifx$//'`
+            elif [ "y$intelifort" != "y" -a -x "$intelifort" ]
+            then
+                echo "WARNING: ifx not found for oneAPI build, falling back to ifort"
+                fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
+                extradir=`which ifort | sed -e 's/\/bin\/ifort$//'`
+            else
+                echo "ERROR: -fortran=intel requested but neither ifx nor ifort was found in PATH."
+                exit 1
+            fi
         else
             echo "Default Fortran compiler will be Intel ifort"
             fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
@@ -8787,7 +8910,7 @@ if [ "x$download_unwind" = xyes ] ; then
           if [ "x$static_libunwind" = xyes ]; then
               ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler}  CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared > ${libunwind_log}  2>&1
           else
-              ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} > ${libunwind_log}  2>&1
+              ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} CFLAGS=-fPIC CXXFLAGS=-fPIC > ${libunwind_log}  2>&1
           fi
         fi
         configresult=$?
@@ -9215,9 +9338,16 @@ if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
             echo "bgxlc_r not found in the path. Cannot test for OMPT support."
         fi
     fi
-else # intel OMPT support
+else # non-BGQ/BGP/BGL OMPT support
     if [ $ompt = yes ]; then
-        omptlinking="-Wl,-rpath,$omptlib#$omptlibrary"
+        if [ -n "$omptlib" ]; then
+            omptlinking="-Wl,-rpath,$omptlib#$omptlibrary"
+        else
+            # Compiler natively supports OMPT; the OpenMP runtime is linked
+            # implicitly by the compiler driver via -fopenmp. Adding an explicit
+            # -lomp would load a second runtime instance and cause conflicts.
+            omptlinking=""
+        fi
         echo "Using OMPT 5"
         fixmakeargs="$fixmakeargs TAU_OMPT_5_0 omptlib=$omptlinking TAU_USE_GPU"
     fi
@@ -11478,8 +11608,6 @@ void foo() {
   int rc;
   pthread_mutexattr_t   mta;
   pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-  pthread_spinlock_t spinlock;
-  pthread_barrier_t barrier;
   pthread_cond_t cond;
 
   rc = pthread_mutexattr_init(&mta);
@@ -11488,20 +11616,31 @@ void foo() {
   rc = pthread_mutex_unlock(&mutex);
   rc = pthread_mutex_destroy(&mutex);
 
-  rc = pthread_spin_init(&spinlock, PTHREAD_PROCESS_SHARED);
-  rc = pthread_spin_lock(&spinlock);
-  rc = pthread_spin_unlock(&spinlock);
-  rc = pthread_spin_destroy(&spinlock);
-
   rc = pthread_cond_init(&cond, NULL);
   rc = pthread_cond_broadcast(&cond);
   rc = pthread_cond_wait(&cond, &mutex);
   rc = pthread_cond_signal(&cond);
   rc = pthread_cond_destroy(&cond);
 
+#if !defined(__APPLE__)
+  /* macOS pthread.h omits the optional spinlock/barrier APIs (POSIX
+     1003.1-2001 marked them XSI-optional). The pthread wrapper itself
+     already gates barrier code behind !defined(__APPLE__); spinlock
+     is not used by the wrapper at all but the historical conftest
+     exercised both. Skip them on Apple so configure can still enable
+     TAU_PTHREAD_WRAP there. */
+  {
+    pthread_spinlock_t spinlock;
+    pthread_barrier_t barrier;
+    rc = pthread_spin_init(&spinlock, PTHREAD_PROCESS_SHARED);
+    rc = pthread_spin_lock(&spinlock);
+    rc = pthread_spin_unlock(&spinlock);
+    rc = pthread_spin_destroy(&spinlock);
 
-  rc = pthread_barrier_init(&barrier, NULL, 0);
-  rc = pthread_barrier_wait(&barrier);
+    rc = pthread_barrier_init(&barrier, NULL, 0);
+    rc = pthread_barrier_wait(&barrier);
+  }
+#endif
 }
 EOF
   $echo "Checking for pthread wrappable routines... ${nnl}"
@@ -11866,6 +12005,22 @@ if [ "x$unwinder" != "xnone" ] ; then
       unwind_lib_flag="$unwind_lib/libunwind.a"
       echo "NOTE: Using unwind_lib_flag=$unwind_lib_flag"
     fi
+    # For lld-based linkers (e.g. amdclang/ROCm), arch-specific libunwind symbols
+    # must be explicitly linked to satisfy --no-allow-shlib-undefined because
+    # --as-needed may drop the transitive dependency on libunwind-<arch>.so.
+    # Append libunwind-<arch> when the arch-specific library exists alongside libunwind.
+    # Use absolute paths to avoid LLVM unwinder confusion
+    if [ "x$unwinder" = "xlibunwind" -a "x$static_libunwind" != "xyes" ] ; then
+        unwind_arch=`uname -m`
+        if [ "x$unwind_lib" != "x" ] && [  -f "${unwind_lib}/libunwind.so" ] ; then
+		unwind_lib_flag="${unwind_lib}/libunwind.so"
+        
+          if [ -f "${unwind_lib}/libunwind-${unwind_arch}.so" ]  ; then
+	      unwind_lib_flag="${unwind_lib_flag}#${unwind_lib}/libunwind-${unwind_arch}.so"
+              echo "NOTE: Found arch-specific libunwind, adding liblunwind-${unwind_arch}.so"
+          fi
+      fi
+    fi
     if [ "x$unwind_inc" != "x" ] ; then
       unwind_inc="-I${unwind_inc}"
     fi
@@ -12068,9 +12223,12 @@ build_apex() {
     fi
     echo "TAUOPENCL=-DAPEX_WITH_OPENCL=TRUE" >> ${apex_include_file}
     cp etc/Makefile.apex apex/Makefile
-    fixmakeargs="$fixmakeargs APEX "
+    fixmakeargs="$fixmakeargs APEX"
     make -C apex clean
     make -C apex
+    apexlib=${targetdir}/${architecture}/lib/
+    sed -i "s|^my \$APEX_LIB_DIR=.*|my \$APEX_LIB_DIR=\"${apexlib}\";|" \
+        "${targetdir}/${architecture}/bin/tau-config"
 }
 
 build_zerosum() {
@@ -12097,13 +12255,17 @@ build_zerosum() {
         echo "TAUOMPT=-DZeroSum_WITH_OMPT=TRUE" >> ${zerosum_include_file}
     fi
     if [ "${cuda}" = "yes" ] ; then
-        echo "TAUCUDA=-DZeroSum_WITH_CUDA=TRUE -DCUDAToolkit_ROOT=${cudadir}" >> ${zerosum_include_file}
+        echo "TAUCUDA=-DZeroSum_WITH_CUDA=TRUE -DCUDAToolkit_ROOT=${cudadir} -DZeroSum_BUILD_EXAMPLES=OFF" >> ${zerosum_include_file}
     fi
     if [ "${rocm}" = "yes" ] ; then
-        echo "TAUHIP=-DZeroSum_WITH_HIP=TRUE" >> ${zerosum_include_file}
+        echo "TAUHIP=-DZeroSum_WITH_HIP=TRUE -DROCM_PATH=${rocmdir} -DZeroSum_BUILD_EXAMPLES=OFF" >> ${zerosum_include_file}
     fi
     if [ "${level_zero}" = "yes" ] ; then
-        echo "TAUSYCL=-DZeroSum_WITH_SYCL=TRUE" >> ${zerosum_include_file}
+        if [ x${sycl_root_path} = "x" ]; then
+            echo "INFO For SYCL support provide the path to include/sycl/sycl.h using -sycl=PATH"
+        else
+            echo "TAUSYCL=-DZeroSum_WITH_SYCL=TRUE -DSYCL_ROOT=${sycl_root_path} -DZeroSum_BUILD_EXAMPLES=OFF" >> ${zerosum_include_file}
+        fi
     fi
     if [ "${mpi}" = "yes" ] ; then
         echo "TAUMPI=-DZeroSum_WITH_MPI=TRUE" >> ${zerosum_include_file}
@@ -12111,9 +12273,13 @@ build_zerosum() {
         echo "TAUMPI=-DZeroSum_WITH_MPI=FALSE" >> ${zerosum_include_file}
     fi
     cp etc/Makefile.zerosum zerosum/Makefile
-    fixmakeargs="$fixmakeargs ZeroSum "
+    fixmakeargs="$fixmakeargs ZeroSum"
     make -C zerosum clean
     make -C zerosum
+    zerosumlib=${targetdir}/${architecture}/lib/
+    sed -i "s|^my \$ZEROSUM_LIB_DIR=.*|my \$ZEROSUM_LIB_DIR=\"${zerosumlib}\";|" \
+        "${targetdir}/${architecture}/bin/tau-config"
+         
 }
 
 build_perfstubs() {
@@ -13558,6 +13724,35 @@ EOF
     fi
 fi
 
+# Probe: does <stdlib.h> actually declare at_quick_exit/quick_exit when the
+# selected C++ compiler parses it? libstdc++'s <cstdlib> contains an
+# unconditional `using ::at_quick_exit;` (gated only by libstdc++'s own
+# _GLIBCXX_HAVE_AT_QUICK_EXIT macro, which is fixed at libstdc++ build time).
+# On platforms whose libc lacks the declarations -- notably macOS, whose SDK
+# has never declared these symbols even though Homebrew GCC's libstdc++
+# advertises support -- this causes any TU that includes <stdlib.h> to fail
+# to compile. Enable a small declarations-only stub when the probe fails.
+echo "Checking for at_quick_exit/quick_exit declarations in <stdlib.h>... ${nnl}"
+cat <<EOF > tau_quick_exit_check.cpp
+/* TAU code defines _XOPEN_SOURCE on Apple (see src/Profile/TauInit.cpp) which
+ * causes Apple's <sys/cdefs.h> to set __DARWIN_C_LEVEL = _POSIX_C_SOURCE,
+ * hiding at_quick_exit/quick_exit declarations in <_stdlib.h>. Replicate
+ * here so the probe matches what the actual TAU compile sees.
+ */
+#ifdef __APPLE__
+#define _XOPEN_SOURCE 700
+#endif
+#include <stdlib.h>
+int main() { return 0; }
+EOF
+if $cxx_compiler -std=c++11 -c tau_quick_exit_check.cpp -o tau_quick_exit_check.o 1> /dev/null 2>&1 ; then
+    echo "yes"
+else
+    echo "no -- enabling TAU_NEEDS_QUICK_EXIT_STUB"
+    fixmakeargs="$fixmakeargs QUICKEXITSTUB"
+fi
+/bin/rm -f tau_quick_exit_check.o tau_quick_exit_check.cpp
+
 if [ $plugins = no ] ; then
     fixmakeargs="$fixmakeargs NOPLUGINS"
 fi
@@ -13762,18 +13957,28 @@ fi
 
 if [ "${level_zero}" = "yes" -a "${level_zero_new}" = "yes"  -a "x${l0_iga_lib}" = "x" ] ; then
     echo "Checking for Intel Graphics Assembler (libiga64.so) ..."
-    
-    ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
-    for d in $ld_lib_path
-    do
-        if [ -r ${d}/libiga64.so ]; then
-            l0_iga_lib=${d}
-            fixmakeargs="$fixmakeargs L0_IGA l0_iga_lib=${l0_iga_lib}"
+    compiler_path=$(dirname `which $cxx_compiler`)
+    compiler_debugger_lib=${compiler_path}/../../../debugger/latest/opt/debugger/lib/
+    if [ $cxx_compiler = icpx -o $cxx_compiler = mpiicpx ] ; then
+        if [ -r ${compiler_debugger_lib}/libiga64.so ] ; then
+            l0_iga_lib=${compiler_debugger_lib}
+            fixmakeargs="$fixmakeargs L0_IGA l0_iga_lib=${compiler_debugger_lib}"
             echo "yes"
-            echo $l0_iga_lib
-            break;
         fi
-    done
+    fi
+    if [ "x${l0_iga_lib}" = "x" ] ; then
+        ld_lib_path=`echo $LD_LIBRARY_PATH | sed -e "s@:@ @g" `
+        for d in $ld_lib_path
+        do
+            if [ -r ${d}/libiga64.so ]; then
+                l0_iga_lib=${d}
+                fixmakeargs="$fixmakeargs L0_IGA l0_iga_lib=${l0_iga_lib}"
+                echo "yes"
+                break;
+            fi
+        done
+
+    fi
     if [ "x${l0_iga_lib}" = "x" ] ; then
         echo "no"
         echo "Level Zero address decode disabled. -l0_pc will not show neither source information nor instructions"
@@ -13985,6 +14190,7 @@ cp ${tauroot}/tools/src/tau2slog2/bin/tau2slog2.jar ${targetdir}/${architecture}
 
 cat ${tauroot}/tools/src/tau-config.in |
 sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' -e 's,@PYTHONINTV@,'$pythonintv',' \
+    -e 's,@APEX_LIB_DIR@,'$apexlib','  -e 's,@ZEROSUM_LIB_DIR@,'$zerosumlib',' \
     > ${targetdir}/${architecture}/bin/tau-config
 chmod a+rx ${targetdir}/${architecture}/bin/tau-config
 

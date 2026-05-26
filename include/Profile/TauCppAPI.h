@@ -16,6 +16,7 @@
 #ifndef _TAU_CPPAPI_H_
 #define _TAU_CPPAPI_H_
 
+#include "TauQuickExitStub.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -56,6 +56,12 @@ tau_bfd_handle_t Tau_bfd_registerUnit()
   return TAU_BFD_UNIMPLEMENTED_HANDLE;
 }
 
+tau_bfd_handle_t Tau_bfd_getDefaultUnit()
+{
+  Tau_bfd_internal_issueBfdWarningIfNecessary();
+  return TAU_BFD_UNIMPLEMENTED_HANDLE;
+}
+
 bool Tau_bfd_checkHandle(tau_bfd_handle_t handle)
 {
   Tau_bfd_internal_issueBfdWarningIfNecessary();

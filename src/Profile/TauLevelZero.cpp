@@ -301,6 +301,9 @@ uint64_t popKernel() {
 }
 
 void TAUOnAPIFinishCallback(void *data, const std::string& name, uint64_t started, uint64_t ended) {
+  // This callback is invoked from a PTI worker thread not registered with TAU.
+  // Increment insideTAU.
+  Tau_global_incr_insideTAU();
   std::lock_guard<std::mutex> guard(gpu_mutex); // Lock before we start touching task-specific state
   static bool first_ts = TAUSetFirstGPUAPITimestamp(started); 
 
@@ -333,6 +336,7 @@ void TAUOnAPIFinishCallback(void *data, const std::string& name, uint64_t starte
 
   metric_set_gpu_timestamp(taskid, ended_translated);
   TAU_STOP_TASK(name.c_str(), taskid);
+  Tau_global_decr_insideTAU();
 }
 
 //Only call inside functions that use lock_guard, not implemented lock inside to prevent deadlocks.
@@ -404,6 +408,9 @@ double TAUTranslateGPUtoCPUKernelTimestamp(int tid, uint64_t gpu_ts) {
 // this is how APEX processes the kernels.
 // Note: some kernels may overlap if using tracing and are in the same reporting group
 void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t started, uint64_t ended) {
+  // This callback is invoked from a PTI worker thread not registered with TAU.
+  // Increment insideTAU so that TAU's LockDB assertion (insideTAU > 0) does not fire.
+  Tau_global_incr_insideTAU();
   std::lock_guard<std::mutex> guard(gpu_mutex); // Lock before we start touching task-specific state
   static bool first_call = TAUSetFirstGPUKernelTimestamp(ended-started);
   int current_thread = RtsLayer::myThread();
@@ -461,6 +468,7 @@ void TAUOnKernelFinishCallback(void *data, const std::string& name, uint64_t sta
 
   metric_set_gpu_timestamp(taskid, ended_translated);
   TAU_STOP_TASK(demangled_name, taskid);
+  Tau_global_decr_insideTAU();
 
   return;
 }

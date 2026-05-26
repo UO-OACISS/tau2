@@ -641,8 +641,6 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
   OTF2_EC(OTF2_Archive_OpenEvtFiles(otf2_archive));
   OTF2_EC(OTF2_Archive_OpenDefFiles(otf2_archive));
 
-  TAU_ASSERT(evt_writer != NULL, "Failed to open new event writer");
-
   otf2_initialized = true;
   return 0;
 }
@@ -780,7 +778,6 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   }
 #endif
   int loc = my_real_location(node_id,tid);
-  TAU_ASSERT(evt_writer != NULL, "Failed to get event writer");
   x_uint64 my_ts = use_ts ? ts : TauTraceGetTimeStamp(tid);
   // Validate that the timestamp is non-zero.  Can happen during startup, before
   // the metrics are ready.
@@ -798,6 +795,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
 #endif
   if(kind == TAU_TRACE_EVENT_KIND_FUNC || kind == TAU_TRACE_EVENT_KIND_CALLSITE) {
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
+    TAU_ASSERT(evt_writer != NULL, "Failed to get event writer");
     if(par == 1) { // Enter
 #ifdef TAU_OTF2_DEBUG
       fprintf(stderr, "%u: writing Enter event=%ld on loc %d\n", my_node(), ev, loc);
@@ -1202,7 +1200,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
                 }
             }
 
-            if (strlen(gpu_id) > 0) {
+            if (strlen(gpu_id_l0) > 0) {
                 snprintf(namebuf, sizeof(namebuf),  "GPU%s Queue%s:%s", gpu_id_l0, queue_id_l0, vqueue_id_l0);
                 TAU_VERBOSE("name = %s\n", namebuf);
             }

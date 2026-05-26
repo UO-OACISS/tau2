@@ -162,6 +162,7 @@ static inline int& Tau_ignore_count(int tid){
 // called at the beginning of each profiled routine
 #pragma save_all_regs
 extern "C" void ___rouent2(struct s1 *p) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   int tid = Tau_get_local_tid();
   

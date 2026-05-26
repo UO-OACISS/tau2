@@ -17,6 +17,7 @@ std::map<std::string, int> timers_labels;
 std::map<int, std::string> timers_ids;
 
 int insertOrGet( const std::string &label ){
+    TauInternalFunctionGuard tau_internal_guard;
     int id;
     RtsLayer::LockEnv();
     auto it = timers_labels.find( label );

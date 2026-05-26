@@ -214,6 +214,7 @@ extern "C" int Tau_snapshot_writeMetaDataBlock() {
 
 
 static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
+  TauInternalFunctionGuard tau_internal_guard;
   int tid = RtsLayer::myThread();
   int i, c;
   Tau_util_outputDevice *out = Tau_snapshot_GetFile(tid);

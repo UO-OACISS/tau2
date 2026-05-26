@@ -155,6 +155,7 @@ thread_local FunctionInfo::FMetricListVector_local FunctionInfo::MetricThreadCac
 // Initialized false; set true by ~FMetricListVector_local during thread TLS teardown.
 // Trivial type: no destructor, storage valid for the entire thread lifetime.
 thread_local bool FunctionInfo::MetricThreadCacheDestroyed = false;
+thread_local volatile bool FunctionInfo::MetricThreadCacheBeingModified = false;
 std::atomic<bool> FunctionInfo::use_metric_tls{true};
 //bool FunctionInfo::destructed = false;
 //thread_local bool FunctionInfo::destructed_local = false;

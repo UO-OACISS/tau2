@@ -1,6 +1,6 @@
-CXX = dpcpp
+CXX = icpx 
 #CXX = clang++
-CXXFLAGS = -std=c++17 -g -o
+CXXFLAGS = -fsycl -std=c++17 -O2  -g -o
 LDFLAGS =
 
 

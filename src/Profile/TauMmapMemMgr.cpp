@@ -294,8 +294,15 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
     return NULL;
   }
 
-  void * addr = (void *)((getMemInfo(tid,myBlock).low + (TAU_MEMMGR_ALIGN-1)) & ~(TAU_MEMMGR_ALIGN-1));
-  getMemInfo(tid,myBlock).low += myRequest;
+  // Use an atomic fetch-add to bump `low` so that a concurrent call from the
+  // EBS SIGPROF signal handler (on the same thread) gets a distinct address
+  // range.  Without this, both callers would read the same `low` and
+  // memset() each other's live allocations, which is the root cause of the
+  // NULL-key corruption seen in contextMap.  On x86-64 this compiles to a
+  // single `lock xadd` instruction; overhead is negligible.
+  TauMemMgrInfo& block = getMemInfo(tid, myBlock);
+  unsigned long oldLow = __atomic_fetch_add(&block.low, myRequest, __ATOMIC_RELAXED);
+  void * addr = (void *)((oldLow + (TAU_MEMMGR_ALIGN-1)) & ~(TAU_MEMMGR_ALIGN-1));
 
   TAU_ASSERT(addr != NULL, "Tau_MemMgr_malloc unexpectedly returning NULL!");
 

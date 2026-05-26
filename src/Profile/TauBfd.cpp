@@ -90,6 +90,12 @@
 
 using namespace std;
 
+// Protects ThebfdUnits() from concurrent modification (push_back in
+// Tau_bfd_registerUnit) while it is being read by Tau_bfd_resolveBfdInfo and
+// helpers.  Both functions must hold this mutex, so they are fully serialised
+// with respect to each other and the vector is never reallocated under a reader.
+static std::mutex tau_bfd_unit_mutex;
+
 static char const * Tau_bfd_internal_getExecutablePath();
 
 struct TauBfdModule
@@ -388,6 +394,9 @@ void Tau_bfd_initializeBfd()
 
 tau_bfd_handle_t Tau_bfd_registerUnit()
 {
+  // Serialise with Tau_bfd_resolveBfdInfo: push_back may reallocate the vector
+  // buffer, which races with concurrent reads of ThebfdUnits()[handle] there.
+  std::lock_guard<std::mutex> lck(tau_bfd_unit_mutex);
   tau_bfd_handle_t ret = ThebfdUnits().size();
   ThebfdUnits().push_back(new TauBfdUnit);
 
@@ -397,6 +406,26 @@ tau_bfd_handle_t Tau_bfd_registerUnit()
   Tau_bfd_updateAddressMaps(ret);
 
   return ret;
+}
+
+// Returns the process-wide default BFD unit handle, initialising it on the
+// first call.  All TAU subsystems should use this instead of calling
+// Tau_bfd_registerUnit() directly, to avoid creating redundant units.
+// Increments insideTAU around the initialisation so that fopen("/proc/self/maps")
+// is not intercepted by the iowrap/memory wrapper.
+tau_bfd_handle_t Tau_bfd_getDefaultUnit()
+{
+  static tau_bfd_handle_t defaultHandle = TAU_BFD_NULL_HANDLE;
+  if (defaultHandle == TAU_BFD_NULL_HANDLE) {
+    Tau_global_incr_insideTAU();
+    RtsLayer::LockEnv();
+    if (defaultHandle == TAU_BFD_NULL_HANDLE) {
+      defaultHandle = Tau_bfd_registerUnit();
+    }
+    RtsLayer::UnLockEnv();
+    Tau_global_decr_insideTAU();
+  }
+  return defaultHandle;
 }
 
 bool Tau_bfd_checkHandle(tau_bfd_handle_t handle)
@@ -669,9 +698,9 @@ static unsigned long getProbeAddr(bfd * bfdImage, unsigned long pc) {
 bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, TauBfdInfo & info)
 {
   // BFD is not thread safe, and we call this function from lots of places.
-  static std::mutex mtx;
-  // a unique lock will unlock when it goes out of scope.
-  std::lock_guard<std::mutex> lck (mtx);
+  // tau_bfd_unit_mutex is module-level and also acquired by Tau_bfd_registerUnit,
+  // so readers and the push_back that may reallocate ThebfdUnits() are serialised.
+  std::lock_guard<std::mutex> lck (tau_bfd_unit_mutex);
 
   if (!TauEnv_get_bfd_lookup() || !Tau_bfd_checkHandle(handle)) {
     info.secure(probeAddr);

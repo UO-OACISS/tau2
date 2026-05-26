@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <mutex>
+#include <shared_mutex>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -138,8 +139,8 @@ struct PerfettoCounterInfo {
 };
 
 struct CachedFuncInfo {
-    const char* name = "";
-    const char* type = "";
+    std::string name;
+    std::string type;
     bool is_tau_internal = false;
 };
 
@@ -160,6 +161,7 @@ struct PerfettoGlobal {
     std::atomic<uint64_t> events_emitted{0}; // Counter for data-loss detection
 
     std::mutex global_state_mutex;
+    std::shared_mutex function_cache_mutex;  // shared_mutex: concurrent reads, exclusive writes
     std::vector<PerfettoThreadData*> thread_data;
     std::unordered_map<uint64_t, PerfettoCounterInfo> counter_map;
     std::unordered_map<long, CachedFuncInfo> function_cache;
@@ -269,53 +271,57 @@ static uint64_t compute_flow_id(int src, int dst, int tag, int comm) {
     return (s << 48) | (d << 32) | (t << 16) | c;
 }
 
-static inline bool contains_str(const char* hay, const char* needle) {
-    if (!hay || !needle) return false;
-    return strstr(hay, needle) != nullptr;
-}
-
-static const CachedFuncInfo& get_cached_function_info(long func_id) {
-	// Fast
-    auto it = g_perfetto.function_cache.find(func_id);
-    if (it != g_perfetto.function_cache.end()) {
-        return it->second;
-    }
-
-    // Slow: The function is not in the cache. We must acquire a lock to write.
-    std::lock_guard<std::mutex> lk(g_perfetto.global_state_mutex);
-
-    // Double-check: Another thread might have added the entry while we waited for the lock.
-    it = g_perfetto.function_cache.find(func_id);
-    if (it != g_perfetto.function_cache.end()) {
-        return it->second;
-    }
-
-    // This is the only thread that will compute and insert this func_id.
-    TauInternalFunctionGuard guard;
-    FunctionInfo* fi = nullptr;
-    for (auto fit = TheFunctionDB().begin(); fit != TheFunctionDB().end(); ++fit) {
-        if ((*fit)->GetFunctionId() == func_id) {
-            fi = *fit;
-            break;
+// Returns a stable pointer into the function cache.
+// Pointers are stable because unordered_map nodes are not moved after
+// insertion, and we never erase entries.  The returned pointer is valid
+// for the lifetime of g_perfetto.
+static const CachedFuncInfo* get_cached_function_info(long func_id) {
+    // Fast path: shared (read) lock — multiple threads proceed concurrently.
+    {
+        std::shared_lock<std::shared_mutex> rl(g_perfetto.function_cache_mutex);
+        auto it = g_perfetto.function_cache.find(func_id);
+        if (it != g_perfetto.function_cache.end()) {
+            return &it->second;  // pointer into map node — stable
         }
     }
 
+    // Slow path: build the entry without holding any Perfetto cache lock
+    // (TheFunctionDB scan can be slow; don't block Perfetto cache readers).
+    // TheFunctionDB() writes (push_back) are protected by RtsLayer::LockDB();
+    // hold the same lock while reading to prevent iterator invalidation from
+    // a concurrent push_back() / vector reallocation on another thread.
     CachedFuncInfo new_info;
-    if (fi) {
-        new_info.name = fi->GetName() ? fi->GetName() : "";
-        new_info.type = fi->GetType() ? fi->GetType() : "";
-        // Intentionally filter internal TAU events to keep the trace clean.
-        new_info.is_tau_internal = contains_str(new_info.name, "TauTraceClockOffset");
-    } else {
-        // Use a thread_local buffer for the fallback name to ensure thread safety.
-        static thread_local char fallback_buf[256];
-        snprintf(fallback_buf, sizeof(fallback_buf), "Function_%ld", func_id);
-        new_info.name = fallback_buf;
+    {
+        TauInternalFunctionGuard guard;
+        FunctionInfo* fi = nullptr;
+        RtsLayer::LockDB();
+        for (auto fit = TheFunctionDB().begin(); fit != TheFunctionDB().end(); ++fit) {
+            if ((*fit)->GetFunctionId() == func_id) {
+                fi = *fit;
+                break;
+            }
+        }
+        RtsLayer::UnLockDB();
+        if (fi) {
+            new_info.name = fi->GetName() ? fi->GetName() : "";
+            new_info.type = fi->GetType() ? fi->GetType() : "";
+            new_info.is_tau_internal =
+                (new_info.name.find("TauTraceClockOffset") != std::string::npos);
+        } else {
+            char fallback_buf[256];
+            snprintf(fallback_buf, sizeof(fallback_buf), "Function_%ld", func_id);
+            new_info.name = fallback_buf;
+        }
     }
 
-    // Insert the newly computed info into the cache and return a reference to it.
-    auto result = g_perfetto.function_cache.emplace(func_id, new_info);
-    return result.first->second;
+    // Exclusive (write) lock to insert; double-check first.
+    std::unique_lock<std::shared_mutex> wl(g_perfetto.function_cache_mutex);
+    auto it = g_perfetto.function_cache.find(func_id);
+    if (it != g_perfetto.function_cache.end()) {
+        return &it->second;  // another thread inserted while we were in slow path
+    }
+    auto result = g_perfetto.function_cache.emplace(func_id, std::move(new_info));
+    return &result.first->second;
 }
 
 /* ------------------------------------------------------------------------- *
@@ -845,22 +851,22 @@ void TauTracePerfettoMetadata(const char* name, const char* value, int tid) {
 static void emit_function(long func_id, bool is_enter, int rank, int tid,
                           uint64_t ts_ns) {
     ensure_thread_metadata(rank, tid);
-	
-	const CachedFuncInfo& info = get_cached_function_info(func_id);
-	if (info.is_tau_internal) {
+
+    const CachedFuncInfo* info = get_cached_function_info(func_id);
+    if (info->is_tau_internal) {
         return;
     }
-	PerfettoThreadData* td = get_thread_data(tid);
-	auto track = perfetto::ThreadTrack::ForThread((uint64_t)td->os_tid);
-    if (info.type[0] != '\0') {
+    PerfettoThreadData* td = get_thread_data(tid);
+    auto track = perfetto::ThreadTrack::ForThread((uint64_t)td->os_tid);
+    if (!info->type.empty()) {
         if (is_enter) {
-            TRACE_EVENT_BEGIN("tau", perfetto::DynamicString{info.name}, track, ts_ns, "type", info.type);
+            TRACE_EVENT_BEGIN("tau", perfetto::DynamicString{info->name.c_str()}, track, ts_ns, "type", info->type.c_str());
         } else {
             TRACE_EVENT_END("tau", track, ts_ns);
         }
     } else {
         if (is_enter) {
-            TRACE_EVENT_BEGIN("tau", perfetto::DynamicString{info.name}, track, ts_ns);
+            TRACE_EVENT_BEGIN("tau", perfetto::DynamicString{info->name.c_str()}, track, ts_ns);
         } else {
             TRACE_EVENT_END("tau", track, ts_ns);
         }

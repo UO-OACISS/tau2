@@ -72,6 +72,7 @@ declare -i revertForced=$FALSE
 declare -i optShared=$FALSE
 declare -i optSaltInst=$FALSE
 declare -i optCompInst=$FALSE
+declare -i optLLVMPluginInst=$FALSE
 declare -i optHeaderInst=$FALSE
 declare -i disableCompInst=$FALSE
 declare -i useNVCC=$FALSE
@@ -172,6 +173,7 @@ printUsage () {
     echo -e "  -optAppF90=\"<f90>\"\t\tSpecifies the fallback F90 compiler."
     echo -e "  -optShared\t\t\tUse shared library version of TAU."
     echo -e "  -optCompInst\t\t\tUse compiler-based instrumentation."
+    echo -e "  -optLLVMPluginInst\t\tUse LLVM plugin-based instrumentation (requires LLVM/clang); fails if plugin not found."
     echo -e "  -optPDTInst\t\t\tUse PDT-based instrumentation."
     echo -e "  -optSaltInst\t\t\tUse SALT-based instrumentation."
     echo -e "  -optHeaderInst\t\tEnable instrumentation of headers"
@@ -248,6 +250,141 @@ evalLLVMcompiler() {
         compilerSpecified=${conf_comp}
         CMD=${conf_comp}
     fi
+}
+
+# Set extraopt for Fortran compiler-based instrumentation.
+# If TAU_NO_FORTRAN_COMPINST sentinel is present (compiler does not support compinst),
+# prints an error and returns 1 so the caller can fall back to the LLVM plugin or
+# trigger the standard error/revert path rather than compiling without instrumentation.
+# Usage: set_fortran_compinst_extraopt <extraopt_value>
+# Returns: 0 on success, 1 when the sentinel indicates no support
+# Modifies globals: extraopt
+set_fortran_compinst_extraopt() {
+    if echo "$optCompInstFortranOption" | grep -q "TAU_NO_FORTRAN_COMPINST"; then
+        echo "Error: Compiler-based instrumentation is not supported for this Fortran compiler. Use PDT source instrumentation (-optPDT) instead."
+        extraopt=""
+        echoIfDebug "Cleared extraopt due to TAU_NO_FORTRAN_COMPINST sentinel"
+        return 1
+    fi
+    extraopt="$1"
+    echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
+    return 0
+}
+
+# Build the LLVM-plugin-based compiler instrumentation option and set extraopt.
+# When the plugin .so is missing (tau_llvm_plugin_missing=yes), falls back to
+# the configured -finstrument-functions option for C/C++; for Fortran this path
+# fails (returns 1) because -finstrument-functions is not supported by flang.
+# When the plugin is present, sets the appropriate -fpass-plugin/-fplugin option
+# for all languages including Fortran (the TAU_NO_FORTRAN_COMPINST sentinel only
+# guards -finstrument-functions; the LLVM plugin is supported by flang-based
+# compilers via -fpass-plugin).
+# Returns: 0 on success, 1 when instrumentation cannot be applied
+# Reads globals:  tau_llvm_plugin_missing, optLLVMPluginInst, tauSelectFile,
+#                 clang_version, groupType, TAU_PLUGIN_DIR, TAU_LLVM_PLUGIN,
+#                 CLANG_LEGACY, CLANG_PLUGIN_OPTION,
+#                 optCompInstOption, optCompInstFortranOption
+# Modifies globals: extraopt, argsRemaining
+apply_llvm_plugin_compinst() {
+    if [ "$tau_llvm_plugin_missing" = "yes" ]; then
+        # Plugin .so not present.
+        if [ $optLLVMPluginInst == $TRUE ]; then
+            echo "Error: -optLLVMPluginInst was specified but the LLVM plugin is not available at ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
+            return 1
+        fi
+        # Fall back to the configured compinst option (-finstrument-functions) for C/C++.
+        # For Fortran, -finstrument-functions is typically not supported; signal failure
+        # so the caller can trigger the standard error/revert path.
+        if [ $groupType == $group_f_F ]; then
+            set_fortran_compinst_extraopt "$optCompInstFortranOption"
+            if [ $? -ne 0 ]; then
+                return 1
+            fi
+        else
+            extraopt="$optCompInstOption"
+        fi
+        return 0
+    fi
+
+    # Plugin is present: strip any -finstrument-functions flags so the plugin
+    # takes precedence, then build the appropriate -fpass-plugin/-fplugin option.
+    argsRemaining=`echo $argsRemaining | sed -e 's@-finstrument-functions-after-inlining@@g' | sed -e 's@-finstrument-functions@@g'`
+
+    if [ "x$tauSelectFile" != "x" ]; then
+        if [ "$clang_version" -ge "14" ]; then
+            # Only way to pass args to the LLVM plugin on the command line with
+            # clang >= 14; see https://github.com/llvm/llvm-project/issues/56137
+            extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
+            if [ $groupType != $group_f_F ]; then
+                extraopt="$extraopt -Xclang -load -Xclang ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -Xclang -mllvm -Xclang -tau-input-file=$tauSelectFile"
+            else
+                # TAU_COMPILER_SELECT_FILE is the fallback for flang (not yet supported via -Xclang)
+                export TAU_COMPILER_SELECT_FILE=$tauSelectFile
+            fi
+        else
+            extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
+        fi
+    else
+        # No select file: instrument every function
+        extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
+    fi
+
+    # When the plugin is present, the extraopt above is correct for both C/C++ and Fortran.
+    # Do NOT call set_fortran_compinst_extraopt here: that sentinel only guards
+    # -finstrument-functions-style options, not -fpass-plugin/-fplugin.
+    return 0
+}
+
+# Determine whether compiler-based instrumentation should be applied to a source file.
+# Sets useCompInst (yes/no) and updates instrumentedFileForCompilation and tempTauFileName.
+# If tauSelectFile is set but unreadable, prints an error and defaults to instrumenting
+# (useCompInst=yes), which is the conservative safe behavior.
+# Args:    $1 = full path to the (possibly preprocessed) tau source file
+# Modifies globals: useCompInst, instrumentedFileForCompilation, tempTauFileName
+determine_compinst_usage() {
+    tempTauFileName="$1"
+    instrumentedFileForCompilation=" $tempTauFileName"
+    useCompInst=yes
+    if [ $linkOnly == $TRUE ]; then
+        useCompInst=no
+    fi
+    if [ "x$tauSelectFile" != "x" ]; then
+        if [ ! -r "$tauSelectFile" ]; then
+            echo "Error: Unable to read $tauSelectFile"
+        else
+            selectfile=$(echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@')
+            useCompInst=$($selectfile $tauSelectFile $tempTauFileName)
+        fi
+    fi
+}
+
+# Create and compile the opari2 POMP2 regions init file (pompregions.c).
+# Locates the pomp2-parse-init-regions.awk script, runs the POMP2 region symbol
+# parser against the provided object files, and compiles the resulting pompregions.c.
+# Callers are responsible for updating linkCmd and objectFilesForLinking afterwards.
+# Args:    $1 = space-separated list of object files to scan for POMP2_Init_reg symbols
+# Modifies globals: OPARI_AWK_DIR
+compile_opari2_pompregions() {
+    local objects="$1"
+    local OPARI_AWK_DIR
+    evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
+    if [ -r ${optOpari2Dir}/libexec/pomp2-parse-init-regions.awk ]; then
+        OPARI_AWK_DIR=${optOpari2Dir}/libexec
+    else
+        OPARI_AWK_DIR=${TAU_BIN_DIR}
+    fi
+    if [ ! -d "$OPARI_AWK_DIR" ]; then
+        printError "$CMD" "OPARI_AWK_DIR ($OPARI_AWK_DIR) does not exist"
+        exit $errorStatus
+    fi
+    if [ ! -r "$OPARI_AWK_DIR/pomp2-parse-init-regions.awk" ]; then
+        printError "$CMD" "could not find pomp2-parse-init-regions.awk in OPARI_AWK_DIR ($OPARI_AWK_DIR)"
+        exit $errorStatus
+    fi
+    local cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${objects} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${OPARI_AWK_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
+    evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
+    local cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
+    evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
 }
 
 # Select the appropriate wrapper link_options.tau file and apply it to optLinking.
@@ -1004,6 +1141,21 @@ for arg in "$@" ; do
       fi
         		echoIfDebug "\tUsing Compiler-based Instrumentation"
         		;;
+        	    -optLLVMPluginInst)
+        		optLLVMPluginInst=$TRUE
+        		optCompInst=$TRUE
+        		optSaltInst=$FALSE
+        		disablePdtStep=$TRUE
+        		# force the debug flag so we get symbolic information
+      if [ $upc == "berkeley" ] ;  then
+        optCompile="$optCompile -Wc,-g"
+        optLinking="$optLinking -Wc,-g"
+      else
+        optCompile="$optCompile -g"
+        optLinking="$optLinking -g"
+      fi
+        		echoIfDebug "\tUsing LLVM plugin-based instrumentation"
+        		;;
         	    -optPDTInst)
         		optCompInst=$FALSE
         		disablePdtStep=$FALSE
@@ -1483,7 +1635,15 @@ if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
     esac
     # Does it exist?
     if [ ! -f "${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}" ]; then
+        if [ $optLLVMPluginInst == $TRUE ]; then
+            echo "Error: -optLLVMPluginInst was specified but the LLVM plugin does not exist at ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
+            exit 1
+        fi
 	echo "Warning: the plugin supposed to be installed at ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} does not exist."
+        echo "Warning: Falling back to compiler-based instrumentation (-finstrument-functions) for C/C++."
+        tau_llvm_plugin_missing=yes
+    else
+        tau_llvm_plugin_missing=no
     fi
     # Which version of clang?
     clang_version=`$compilerSpecified --version | grep "clang version" | awk {'print $3'} | awk -F'.' {'print $1'}`
@@ -1492,13 +1652,11 @@ if [ $optCompInst == $TRUE -a "x$TAUCOMP" == "xclang" ] ; then
       clang_version=`$compilerSpecified --version | grep "clang version" | awk {'print $4'} | awk -F'.' {'print $1'}`
     fi
     if [ "x$clang_version" = "x" ]; then
-      clang_version=`$compilerSpecified --version | grep "flang version" | awk {'print $3'} | awk -F'.' {'print $1'}`
-    fi
-    if [ "x$clang_version" = "x" ]; then
-      clang_version=`$compilerSpecified --version | grep "flang-classic version" | awk {'print $3'} | awk -F'.' {'print $1'}`
-    fi
-    if [ "x$clang_version" = "x" ]; then
-      clang_version=`$compilerSpecified --version | grep "flang-new version" | awk {'print $3'} | awk -F'.' {'print $1'}`
+      # Match "flang version", "flang-new version", "flang-classic version", and
+      # distro-prefixed variants such as "Ubuntu flang version X.Y.Z".
+      # Use sed to extract the major version number after the word "version" to
+      # avoid the field-position ambiguity that breaks awk on distro prefixes.
+      clang_version=`$compilerSpecified --version | grep -E "flang(-new|-classic)? version" | sed 's/.*version \([0-9][0-9]*\)\..*/\1/'`
     fi
     if [[ "$clang_version" -ge "14" ]] ; then    
        CLANG_PLUGIN_OPTION="-fpass-plugin"
@@ -1801,24 +1959,7 @@ if [ $numFiles == 0 ]; then
 
     #If this is the second pass, opari was already used, don't do it again`
     if [ $opari2 == $TRUE -a $passCount == 1 -a  $opari2init == $TRUE  ]; then
-        evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
-        if [ -r ${optOpari2Dir}/libexec/pomp2-parse-init-regions.awk ]; then
-          OPARI_AWK_DIR=${optOpari2Dir}/libexec
-        else
-          OPARI_AWK_DIR=${TAU_BIN_DIR}
-        fi
-        if [ ! -d "$OPARI_AWK_DIR" ]; then
-            printError "$CMD" "OPARI_AWK_DIR ($OPARI_AWK_DIR) does not exist"
-            exit $errorStatus
-        fi
-        if [ ! -r "$OPARI_AWK_DIR/pomp2-parse-init-regions.awk" ]; then
-            printError "$CMD" "could not find pomp2-parse-init-regions.awk in OPARI_AWK_DIR ($OPARI_AWK_DIR)"
-            exit $errorStatus
-        fi
-        cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${OPARI_AWK_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
-        evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
-        cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
-        evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
+        compile_opari2_pompregions "${listOfObjectFiles}"
         #linkCmd="$linkCmd pompregions.o"
     fi
 
@@ -2248,6 +2389,8 @@ else
       #e.g. see compliation of mpi.c. So do not attempt to modify it simply
       #by placing the output to "a.out".
 
+     # Compile-only: output file(s) are determined by the caller (-c flag present).
+     # Instrument and compile each file directly; no separate link step is needed.
      if [ $isForCompilation == $TRUE ]; then
           # The number of files could be more than one.  Check for creation of each .o file.
           tempCounter=0
@@ -2284,16 +2427,7 @@ else
               # Should we use compiler-based instrumentation on this file?
               extraopt=
            if [ $optCompInst == $TRUE ]; then
-          	  tempTauFileName=${arrTau[$tempCounter]}
-          	  instrumentedFileForCompilation=" $tempTauFileName"
-          	  useCompInst=yes
-          	if [ $linkOnly == $TRUE ]; then
-          	  useCompInst=no
-		fi
-          	if [ "x$tauSelectFile" != "x" ] ; then
-         	    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'`
-          	    useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
-          	fi
+          	  determine_compinst_usage "${arrTau[$tempCounter]}"
          	if [ "$useCompInst" = yes ]; then
                    if [ `echo $optCompInstOption | grep finstrument-functions | wc -l ` != 0 ]; then
                        echoIfDebug "Has GNU CompInst option"
@@ -2314,40 +2448,19 @@ else
                      fi
 	
 		   if [ "x$TAUCOMP" == "xclang" ]; then
-		       optExcludeFuncs=""
-		       # We are going to use the LLVM plugin. Remove -finstrument-functions or -finstrument-functions-after-inlining from the options, in order for the LLVM plugin to take precedence
-		       argsRemaining=`echo $argsRemaining | sed -e 's@-finstrument-functions-after-inlining@@g' | sed -e 's@-finstrument-functions@@g'`
-		       if [ "x$tauSelectFile" != "x" ]; then
-			     if [ "$clang_version" -ge "14" ] ; then
-				 # For the moment, this is the only way to pass arguments to the LLVM plugin on the command line
-				 # see https://github.com/llvm/llvm-project/issues/56137#issuecomment-1200957606
-				 # The other way we can pass the select file is to use the TAU_COMPILER_SELECT_FILE environment variable.
-				 # ... and it is not supported (yet) by flang
-				 optCompInstOption="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
-				 if [ $groupType != $group_f_F  ]; then
-				     optCompInstOption=$optCompInstOption" -Xclang -load -Xclang ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -Xclang -mllvm -Xclang -tau-input-file=$tauSelectFile"
-				 else
-				     export TAU_COMPILER_SELECT_FILE=$tauSelectFile
-				 fi
-			     else
-				 # TODO check the plugin exists here (done above)
-				 optCompInstOption="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
-			     fi
-			 else
-			     # instrument every function -> do not pass any select file
-			     optCompInstOption="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
-#			     optCompInstOption="-finstrument-functions"
-			 fi
-		     fi
-          	     extraopt=$optCompInstOption
-                     if [ $groupType == $group_f_F ]; then
-# If we need to tweak the Fortran options, we should do it here
-# For e.g., if Nagware needs a -Wc,<opt>, or if we want to remove file-exclude.
-          	       extraopt="$optExcludeFuncs $optCompInstFortranOption"
-          	       echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
-                     fi
+		       apply_llvm_plugin_compinst
+		       if [ $? -ne 0 ]; then
+		           printError "$CMD" "Instrumentation unavailable: LLVM plugin missing and Fortran compiler does not support -finstrument-functions."
+		           break
+		       fi
+		   else
+		       extraopt=$optCompInstOption
+		       if [ $groupType == $group_f_F ]; then
+		           set_fortran_compinst_extraopt "$optCompInstFortranOption"
+		       fi
           	fi
               fi
+           fi
 
               # We cannot parse UPC files. Leave them alone. Do not change filename
               if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
@@ -2396,8 +2509,9 @@ else
               tempCounter=tempCounter+1
           done
 		
-      else #if [ $isForCompilation == $FALSE ]; compile each of the source file
-          	#with a -c option individually and with a .o file. In end link them together.
+      else
+          # Compile-and-link: TAU splits the command into per-file -c compilations,
+          # accumulates the resulting object files, then runs a final link step.
 
           tempCounter=0
           while [ $tempCounter -lt $numFiles ]; do
@@ -2414,53 +2528,20 @@ else
               # Should we use compiler-based instrumentation on this file?
               extraopt=
               if [ $optCompInst == $TRUE ]; then
-          	tempTauFileName=${arrTau[$tempCounter]}
-          	instrumentedFileForCompilation=" $tempTauFileName"
-          	useCompInst=yes
-          	if [ $linkOnly == $TRUE ]; then
-          	  useCompInst=no
-                  fi
-
-          	if [ "x$tauSelectFile" != "x" ] ; then
-          	    if [ -r "$tauSelectFile" ] ; then
-          		selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'`
-          		useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
-          	    else
-          		echo "Error: Unable to read $tauSelectFile"
-          		useCompInst=yes
-          	    fi
-          	fi
+          	determine_compinst_usage "${arrTau[$tempCounter]}"
           	if [ "x$useCompInst" = "xyes" ]; then
           	    extraopt=$optCompInstOption
                     if [ $groupType == $group_f_F  ] && [ "x$TAUCOMP" != "xclang" ]; then
-          		 extraopt=$optCompInstFortranOption
-          		 echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
-		    else
-			 # Not working with fortran (yet)
-			 if [ "x$TAUCOMP" == "xclang" ]; then
-			     optExcludeFuncs=""
-			     # We are going to use the LLVM plugin. Remove -finstrument-functions or -finstrument-functions-after-inlining from the options, in order for the LLVM plugin to take precedence
-			     argsRemaining=`echo $argsRemaining | sed -e 's@-finstrument-functions-after-inlining@@g' | sed -e 's@-finstrument-functions@@g'`
-			     if [ "x$tauSelectFile" != "x" ]; then
-				 if [[ "$clang_version" -ge "14" ]]; then
-				     # For the moment, this is the only way to pass arguments to the LLVM plugin on the command line
-				     # see https://github.com/llvm/llvm-project/issues/56137#issuecomment-1200957606
-				     # The other way we can pass the select file is to use the TAU_COMPILER_SELECT_FILE environment variable.
-				     # ... and it is not supported (yet) by flang
-				     extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"				     
-				     if [ $groupType != $group_f_F  ]; then
-					 extraopt=$extraopt " -Xclang -load -Xclang ${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -Xclang -mllvm -Xclang -tau-input-file=$tauSelectFile"
-				     else
-					 export TAU_COMPILER_SELECT_FILE=$tauSelectFile
-				     fi
-				 else
-				     # TODO check the plugin exists here (done above)
-				     extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN} -mllvm -tau-input-file=$tauSelectFile"
-				 fi
-			     else
-				 # instrument every function
-				 extraopt="-g ${CLANG_LEGACY} ${CLANG_PLUGIN_OPTION}=${TAU_PLUGIN_DIR}/${TAU_LLVM_PLUGIN}"
-			     fi
+                         set_fortran_compinst_extraopt "$optCompInstFortranOption"
+                         if [ $? -ne 0 ]; then
+                             printError "$CMD" "Compiler-based instrumentation is not supported for this Fortran compiler."
+                             break
+                         fi
+		    elif [ "x$TAUCOMP" == "xclang" ]; then
+			 apply_llvm_plugin_compinst
+			 if [ $? -ne 0 ]; then
+			     printError "$CMD" "Instrumentation unavailable: LLVM plugin missing and Fortran compiler does not support -finstrument-functions."
+			     break
 			 fi
 		     fi
 
@@ -2505,24 +2586,7 @@ else
           opari2init=$TRUE
       fi
           if [ $opari2 == $TRUE -a $opari2init == $TRUE ]; then
-              evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
-              if [ -r ${optOpari2Dir}/libexec/pomp2-parse-init-regions.awk ]; then
-                  OPARI_AWK_DIR=${optOpari2Dir}/libexec
-              else
-                  OPARI_AWK_DIR=${TAU_BIN_DIR}
-              fi
-              if [ ! -d "$OPARI_AWK_DIR" ]; then
-                  printError "$CMD" "OPARI_AWK_DIR ($OPARI_AWK_DIR) does not exist"
-                  exit $errorStatus
-              fi
-              if [ ! -r "$OPARI_AWK_DIR/pomp2-parse-init-regions.awk" ]; then
-                  printError "$CMD" "could not find pomp2-parse-init-regions.awk in OPARI_AWK_DIR ($OPARI_AWK_DIR)"
-                  exit $errorStatus
-              fi
-              cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${OPARI_AWK_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
-              evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
-              cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
-              evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
+              compile_opari2_pompregions "${objectFilesForLinking}"
               linkCmd="$linkCmd pompregions.o"
               objectFilesForLinking="pompregions.o $objectFilesForLinking"
           fi

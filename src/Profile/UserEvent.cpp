@@ -76,12 +76,45 @@ template TauUserEvent** uninitialized_copy(TauUserEvent**,TauUserEvent**,TauUser
 namespace tau
 {
 
+// Static member definitions for TauUserEvent's per-thread data cache.
+std::atomic<uint64_t> TauUserEvent::next_user_event_id{0};
+thread_local TauUserEvent::DataThreadCacheList TauUserEvent::DataThreadCache;
+thread_local bool TauUserEvent::DataThreadCacheDestroyed{false};
+std::atomic<bool> TauUserEvent::use_data_tls{true};
+
 // Orders callpaths by comparing arrays of profiler addresses stored as longs.
 // The first element of the array is the array length.
 struct ContextEventMapCompare
 {
   bool operator()(long const * l1, long const * l2) const
   {
+    // A null key must never be inserted into this map; the `if (ary != NULL)`
+    // guard in TriggerEvent prevents it.  If we arrive here anyway  
+    // the impact is an orphaned context event
+    //
+    // In a debug build (-DDEBUG_ASSERT): abort with a backtrace so the
+    // insertion site can be identified.
+    // In production: warn once and treat null as the minimum element.
+    // The null entry is dead to find() on non-null keys, and the affected
+    // context will insert a fresh entry on its next call.
+    if (!l1 || !l2) {
+      TAU_ASSERT(l1 != NULL && l2 != NULL,
+                 "null key in context event map - rebuild with -DDEBUG_ASSERT"
+                 " for a backtrace from the insertion site");
+      // TAU_ASSERT is a no-op without -DDEBUG_ASSERT.  Warn once (the
+      // comparator may be visited on every find() traversal) and degrade
+      // gracefully rather than aborting over a single missing event.
+      static bool warned = false;
+      if (!warned) {
+        warned = true;
+        fprintf(stderr,
+                "TAU: WARNING: null key in context event map comparator"
+                " (%s:%d). Rebuild with -DDEBUG_ASSERT for a backtrace.\n",
+                __FILE__, __LINE__);
+        fflush(stderr);
+      }
+      return l1 < l2;
+    }
     int i = 0;
     for (i=0; (i<=l1[0] && i<=l2[0]) ; i++) {
         //printf("%d: %p, %p\t", i, l1[i], l2[i]);
@@ -501,34 +534,35 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
         FormulateContextComparisonArray(current, comparison);
         //printf("Searching: %lu, %lu or %p (should be %p)\n", comparison[0], comparison[1], comparison[1], current);
 
+        TauUserEvent * localContextEvent;
         RtsLayer::LockDB();
-        ContextEventMap::const_iterator it = contextMap.find(comparison);
-#if 0
-	bool cuda_ctx_seen = true;
-	if (it != contextMap.end()) {
-	  FunctionInfo* fi;
-	  fi = current->ThisFunction;
-	  std::istringstream userEventPrevSS((std::string)(it->second->GetName().c_str()));
-	  std::string tok;
-	  vector<std::string> userEventPrevVec;
-	  while (std::getline(userEventPrevSS, tok, ':')) {
-	    userEventPrevVec.push_back(tok);
-	  }
-	  userEventPrevVec[0].erase(userEventPrevVec[0].length()-1, userEventPrevVec[0].length());
-	  userEventPrevVec[1].erase(0, 1);
-	  if (!((std::string)(userEvent->GetName().c_str())).compare(userEventPrevVec[0])) {
-	    if (((std::string)(fi->GetName())).compare(userEventPrevVec[1])) {
-	      cuda_ctx_seen = false;
-	    }
-	  }
-	}
-        if (it == contextMap.end() || !cuda_ctx_seen) {
-#else
-        if (it == contextMap.end()) {
+#ifdef DEBUG_ASSERT
+        // Scan for NULL keys before the comparator-driven find() traversal.
+        // std::map forward iteration does NOT invoke ContextEventMapCompare,
+        // so this loop is safe even when a NULL key is already in the tree.
+        // It fires earlier and with a cleaner backtrace than the comparator
+        // assert that would fire during find() below.
+        for (auto const & kv : contextMap) {
+          TAU_ASSERT(kv.first != NULL,
+                     "NULL key in contextMap (pre-find scan); "
+                     "re-run with AddressSanitizer or Valgrind to find the "
+                     "corruption source (signal-handler race in "
+                     "TauSignalSafeAllocator or heap overflow suspected)");
+        }
 #endif
-          contextEvent = new TauUserEvent(
-              FormulateContextNameString(current).c_str(),
+        ContextEventMap::const_iterator it = contextMap.find(comparison);
+        if (it == contextMap.end()) {
+          // Release the lock before constructing the new TauUserEvent.
+          // TauUserEvent::AddEventToDB() also acquires LockDB(), so holding
+          // it here would re-enter a non-recursive mutex -> UB / SIGSEGV.
+          RtsLayer::UnLockDB();
+
+          // Build context name and allocate the new event outside the lock.
+          std::string contextName = FormulateContextNameString(current);
+          TauUserEvent *newEvent = new TauUserEvent(
+              contextName.c_str(),
               userEvent->IsMonotonicallyIncreasing());
+
           // need to make a heap copy of our comparison array. Otherwise it gets
           // corrupted, because right now this is a stack variable.
           // It needs to be a stack variable so that searching each time we have
@@ -536,17 +570,70 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
           int depth = comparison[0];
           int size = sizeof(long)*(depth+2);
           long * ary = (long*)malloc(size);
+          
+          //Check for rare NULL insertion
+          TAU_ASSERT(ary != NULL,
+                     "malloc failed for context event comparison array");
           int i;
-          for (i = 0 ; i <= depth ; i++) {
-              ary[i] = comparison[i];
+          if (ary != NULL) {
+            for (i = 0 ; i <= depth ; i++) {
+                ary[i] = comparison[i];
+            }
+          } else {
+            // malloc failed.
+            fprintf(stderr,
+                    "TAU: WARNING: malloc(%d) returned NULL in TriggerEvent;"
+                    " this context event will not be inserted into the map"
+                    " (next call will retry).\n",
+                    size);
+            fflush(stderr);
           }
-          contextMap[ary] = contextEvent;
+
+          // Re-acquire the lock and do a second lookup to handle any race
+          // where another thread created this context while we were unlocked.
+          RtsLayer::LockDB();
+          it = contextMap.find(comparison);
+          if (it == contextMap.end()) {
+            // We won the race; install our new event.
+            contextEvent = newEvent;
+            if (ary != NULL) {
+              // Only insert into the map when malloc succeeded.  A null key
+              // would corrupt ContextEventMapCompare::operator() on future
+              // find() traversals (null deref of l1[0]).
+              contextMap[ary] = contextEvent;
+#ifdef DEBUG_ASSERT
+              // Post-insert integrity check.  This scan runs once per unique
+              // callpath context (rare), not on every TriggerEvent call, so
+              // the O(N) cost is acceptable in a debug build.  If a NULL key
+              // is found here, the just-inserted callpath or a concurrent
+              // signal handler corrupted a TauSignalSafeAllocator map node
+              // (the memset inside Tau_MemMgr_malloc may have zeroed a live
+              // tree node when two allocations race for the same pool slot).
+              for (auto const & kv : contextMap) {
+                TAU_ASSERT(kv.first != NULL,
+                           "NULL key in contextMap (post-insert scan); "
+                           "TauSignalSafeAllocator signal-safety race or "
+                           "heap corruption suspected; see callpath above");
+              }
+#endif
+            }
+          } else {
+            // Another thread already installed an event for this context.
+            // Use theirs. newEvent is already registered in TheEventDB() via
+            // AddEventToDB() so it cannot be safely deleted; accept the
+            // one-time minor memory leak for this rare race.
+            contextEvent = it->second;
+            free(ary);  // free(NULL) is safe per C standard
+          }
         } else {
           contextEvent = it->second;
           //printf("**** FOUND **** %s \n", contextEvent->GetName().c_str()); fflush(stdout);
         }
+        // Capture the pointer while still holding the lock so that a concurrent
+        // thread cannot overwrite this->contextEvent before we dereference it.
+        localContextEvent = contextEvent;
         RtsLayer::UnLockDB();
-        contextEvent->TriggerEvent(data, tid, timestamp, use_ts);
+        localContextEvent->TriggerEvent(data, tid, timestamp, use_ts);
       } else {
         // do nothing - there is no context.
       }

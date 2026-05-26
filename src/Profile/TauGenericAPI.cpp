@@ -151,6 +151,7 @@ void ps_tool_set_metadata(const char * name, const char * value) {
 
 void ps_tool_get_timer_data(ps_tool_timer_data_t *timer_data)
 {
+    TauInternalFunctionGuard tau_internal_guard;
     memset(timer_data, 0, sizeof(ps_tool_timer_data_t));
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
@@ -227,6 +228,7 @@ void ps_tool_get_timer_data(ps_tool_timer_data_t *timer_data)
 
 void ps_tool_get_counter_data(ps_tool_counter_data_t *counter_data)
 {
+    TauInternalFunctionGuard tau_internal_guard;
     memset(counter_data, 0, sizeof(ps_tool_counter_data_t));
     RtsLayer::LockDB();
     tau::AtomicEventDB tmpCounters(tau::TheEventDB());

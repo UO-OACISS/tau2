@@ -1568,13 +1568,14 @@ void TauEnv_set_l0_metric(char* l0_metric_name)
   unitrace_metrics = strdup(l0_metric_name + 3);
   TauEnv_set_l0_metrics_enable();
 }
+#endif
 
 const char* TauEnv_get_l0_metric()
 {
   return unitrace_metrics;
 }
 
-#endif
+
 
 int TauEnv_get_l0_stall_sampling_enable()
 {

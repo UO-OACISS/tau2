@@ -83,7 +83,7 @@ int ipow2(int i);
 
 enum benchmark_types {SP, BT, LU, MG, FT, IS, EP, CG};
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
   int nprocs, nprocs_old, type;
   char class, class_old;

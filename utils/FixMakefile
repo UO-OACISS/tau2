@@ -2630,6 +2630,14 @@ case $1 in
         echo "NOTE: ARM armflang compiler for Linux options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     AMDFLANG)
+        echo "NOTE: AMD amdflang compiler for Linux options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     AMDFLANG_NO_COMPINST)
+        echo "NOTE: AMD amdflang compiler does not support compiler-based instrumentation"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      FLANG)
         echo "NOTE: flang compiler for Linux options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -2813,6 +2821,10 @@ case $1 in
         ;;
      CORESYMBOLICATION)
         echo "NOTE: Using CoreSymbolication for address to line translation."
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     QUICKEXITSTUB)
+        echo "NOTE: Enabling at_quick_exit/quick_exit declaration stub (libstdc++/SDK mismatch)."
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      SYSCALL)

@@ -1,3 +1,9 @@
+/* Must precede <stdlib.h>: on macOS with Homebrew GCC, libstdc++ <cstdlib>
+ * unconditionally emits `using ::at_quick_exit;` but the SDK hides the
+ * declaration when _XOPEN_SOURCE is set.  The stub injects the declaration
+ * before stdlib.h is parsed.  See include/Profile/TauQuickExitStub.h. */
+#include <Profile/TauQuickExitStub.h>
+
 #ifdef __APPLE__
 #include <dlfcn.h>
 #define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
@@ -31,8 +37,7 @@
 using namespace std;
 using namespace tau;
 
-// For BFD-based name resolution
-static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
+// BFD handle is shared via Tau_bfd_getDefaultUnit()
 
 typedef struct TauCallSitePathElement
 {
@@ -262,6 +267,7 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
 
   // Get the address map name
   char const * mapName = "UNKNOWN";
+  tau_bfd_handle_t bfdUnitHandle = Tau_bfd_getDefaultUnit();
   RtsLayer::LockDB();
   TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(bfdUnitHandle, addr);
   if (addressMap) {
@@ -892,11 +898,7 @@ extern "C" void finalizeCallSites_if_necessary()
 
   // First pass: Identify and resolve callsites into name strings.
 #ifdef TAU_BFD
-  RtsLayer::LockDB();
-  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-    bfdUnitHandle = Tau_bfd_registerUnit();
-  }
-  RtsLayer::UnLockDB();
+  tau_bfd_handle_t bfdUnitHandle = Tau_bfd_getDefaultUnit();
 #endif /* TAU_BFD */
 
   string delimiter = string(" --> ");

@@ -52,6 +52,7 @@ extern "C" void Tau_trigger_userevent(const char *name, double data);
 int cali_tau_initialized = 0;
 
 extern "C" void cali_init() {
+  TauInternalFunctionGuard tau_internal_guard;
 
   TAU_VERBOSE("TAU: CALIPER init invoked.\n");
 
@@ -89,6 +90,7 @@ extern "C" void cali_init() {
  */
 /* TAU Wrapper: Create and start a timer provided  that the attribute with the given ID exists*/
 cali_err cali_begin(cali_id_t  attr) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -125,6 +127,7 @@ cali_err cali_begin(cali_id_t  attr) {
  */
 
 cali_err cali_begin_double(cali_id_t attr, double val) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -152,9 +155,6 @@ cali_err cali_begin_double(cali_id_t attr, double val) {
     return CALI_ETYPE;
   }
 
-  RtsLayer::LockEnv();
-
-
   TAU_VERBOSE("TAU: CALIPER create a TAU UserEvent named %s\n of double type\n", attr_name);
   Tau_trigger_userevent(attr_name, val);
 
@@ -169,6 +169,7 @@ cali_err cali_begin_double(cali_id_t attr, double val) {
 }
 
 cali_err cali_begin_int(cali_id_t attr, int val) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -195,8 +196,6 @@ cali_err cali_begin_int(cali_id_t attr, int val) {
     return CALI_ETYPE;
   }
 
-  RtsLayer::LockEnv();
-
   TAU_VERBOSE("TAU: CALIPER create a TAU UserEvent named %s\n of integer type\n", attr_name);
   Tau_trigger_userevent(attr_name, val);
 
@@ -211,6 +210,7 @@ cali_err cali_begin_int(cali_id_t attr, int val) {
 }
 
 cali_err cali_begin_string(cali_id_t attr, const char* val) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -255,6 +255,7 @@ cali_err cali_begin_string(cali_id_t attr, const char* val) {
  */
 
 cali_err cali_end(cali_id_t   attr) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -303,6 +304,7 @@ cali_err cali_end(cali_id_t   attr) {
  */
 
 cali_err cali_safe_end_string(cali_id_t attr, const char* val) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -355,6 +357,7 @@ cali_err cali_safe_end_string(cali_id_t attr, const char* val) {
 cali_err cali_set  (cali_id_t   attr, 
            const void* value,
            size_t      size) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -381,6 +384,7 @@ cali_err cali_set  (cali_id_t   attr,
 }
 
 cali_err cali_set_double(cali_id_t attr, double val) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -418,6 +422,7 @@ cali_err cali_set_double(cali_id_t attr, double val) {
 }
 
 cali_err cali_set_int(cali_id_t attr, int val) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -467,6 +472,7 @@ cali_err cali_set_string(cali_id_t attr, const char* val) {
  */
 
 cali_err cali_begin_double_byname(const char* attr_name, double val) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -502,6 +508,7 @@ cali_err cali_begin_double_byname(const char* attr_name, double val) {
 }
 
 cali_err cali_begin_int_byname(const char* attr_name, int val) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -537,6 +544,7 @@ cali_err cali_begin_int_byname(const char* attr_name, int val) {
 
 /* TAU Wrapper: Create and start a timer with a given name*/
 extern "C" cali_err cali_begin_byname(const char* attr_name) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -562,6 +570,7 @@ extern "C" cali_err cali_begin_byname(const char* attr_name) {
 
 /* TAU Wrapper: Start a nested timer with \a val name*/
 cali_err cali_begin_string_byname(const char* attr_name, const char* val) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -602,6 +611,7 @@ cali_err cali_begin_string_byname(const char* attr_name, const char* val) {
  * 3. String types: Operation currently not supported
  */
 cali_err cali_set_double_byname(const char* attr_name, double val) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -634,6 +644,7 @@ cali_err cali_set_double_byname(const char* attr_name, double val) {
 }
 
 cali_err cali_set_int_byname(const char* attr_name, int val) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -678,6 +689,7 @@ cali_err cali_set_string_byname(const char* attr_name, const char* val) {
  *              If stack is empty, stop the top level timer with name \a attr_name
  */
 cali_err cali_end_byname(const char* attr_name) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();
@@ -732,6 +744,7 @@ cali_err cali_end_byname(const char* attr_name) {
 cali_id_t cali_create_attribute(const char*     name,
                       cali_attr_type  type,
                       int             properties) {
+  TauInternalFunctionGuard tau_internal_guard;
 
   if(!cali_tau_initialized)
     cali_init();

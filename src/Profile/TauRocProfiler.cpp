@@ -283,6 +283,9 @@ bool Tau_rocm_context_handler(const rocprofiler_pool_entry_t* entry, void* arg) 
   context_entry_t* ctx_entry = reinterpret_cast<context_entry_t*>(entry->payload);
   handler_arg_t* handler_arg = reinterpret_cast<handler_arg_t*>(arg);
 
+  // This callback is invoked from an HSA/ROCm runtime thread that is not
+  // registered with TAU. Increment insideTAU.
+  Tau_global_incr_insideTAU();
   if (pthread_mutex_lock(&rocm_mutex) != 0) {
     perror("pthread_mutex_lock");
     abort();
@@ -294,6 +297,7 @@ bool Tau_rocm_context_handler(const rocprofiler_pool_entry_t* entry, void* arg) 
     perror("pthread_mutex_unlock");
     abort();
   }
+  Tau_global_decr_insideTAU();
 
   return false;
 }
