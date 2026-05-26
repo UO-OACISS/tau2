@@ -2453,6 +2453,11 @@ else
 		           printError "$CMD" "Instrumentation unavailable: LLVM plugin missing and Fortran compiler does not support -finstrument-functions."
 		           break
 		       fi
+		   else
+		       extraopt=$optCompInstOption
+		       if [ $groupType == $group_f_F ]; then
+		           set_fortran_compinst_extraopt "$optCompInstFortranOption"
+		       fi
           	fi
               fi
            fi
