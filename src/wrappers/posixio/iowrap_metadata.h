@@ -1,6 +1,7 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/TauAPI.h>
+#include <Profile/TauEnv.h>
 
 /* These functions are used in all three methods, so rather than copy the code
  * everywhere, put it in a header and include it. */
@@ -8,6 +9,12 @@
 /* Helper function for generating metadata for linking workflow components */
 void write_file_metadata(int tid, const char * parent_profiler, int flags,
         x_uint64 timestamp, const char * pathname) {
+  /* If metadata is disabled, skip all string formatting and bookkeeping work.
+   * This keeps TAU_DISABLE_METADATA effective as a runtime-overhead control. */
+  if (TauEnv_get_disable_metadata()) {
+    return;
+  }
+
   /* write a metadata event for linking workflow components! */
   static int index = 0;
   char metadata_name[128] = {0};
@@ -20,6 +27,9 @@ void write_file_metadata(int tid, const char * parent_profiler, int flags,
       snprintf(event_type, sizeof(event_type),  "input/output");
   } else { // O_RDONLY is 0, so it's our default.
       snprintf(event_type, sizeof(event_type),  "input");
+  }
+  if (pathname == NULL) {
+    pathname = "unknown";
   }
   char metadata_value[1024] = {0};
   snprintf(metadata_value, sizeof(metadata_value),  "{\"event-type\":\"%s\",\"name\":\"%s\",\"time\":\"%llu\",\"node-id\":\"%d\",\"thread-id\":\"%d\",\"filename\":\"%s\"}", event_type, parent_profiler, timestamp, Tau_get_node(), tid, pathname);
