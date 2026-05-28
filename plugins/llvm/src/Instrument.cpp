@@ -67,6 +67,7 @@
 #else
 //LLVM 23 moved some files
 #include "llvm/Plugins/PassPlugin.h"
+#endif
 
 #endif
 
