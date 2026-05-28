@@ -115,13 +115,86 @@ def calculate_diff(v1, v2):
         return -100.0  # Represents "Removed"
     return ((v2 - v1) / v1) * 100.0
 
-def compare_profiles(p1, p2, threshold, sort_by):
+# Pre-compiled patterns for TAU name normalization
+_LOCATION_RE = re.compile(r'\s*\[{[^}]*}\s+{[^}]*}(?:-{[^}]*})?\]\s*$')
+_LANG_TAG_RE = re.compile(r'\s+[A-Z][a-zA-Z+]*\s*$')
+_PARAMS_RE = re.compile(r'\s*\(.*\)\s*$')
+_SKIP_PREFIXES = ('.TAU', '[SAMPLE]', '[CONTEXT]', 'parallel ', 'for (', 'barrier ')
+
+def extract_bare_name(raw_name):
+    """
+    Extracts the canonical function name from a raw TAU profile entry name
+    (which includes surrounding quotes), for use in fuzzy cross-profile matching.
+
+    Works for both compiler-instrumented and PDT-instrumented name formats:
+      Comp:  '"funcname [{/abs/path/file.c} {line,col}]"'
+      PDT:   '"rettype funcname(params) LANG [{file.c} {start,col}-{end,col}]  "'
+
+    Returns the base function name string, or None if the entry cannot be
+    meaningfully reduced (OpenMP constructs, TAU internals, sampling/context
+    markers, or callpath entries).
+    """
+    s = raw_name.strip().strip('"').strip()
+    # Callpath entries are handled by normalize_entry_key
+    if ' => ' in s:
+        return None
+    # Non-normalizable entry types
+    if any(s.startswith(p) for p in _SKIP_PREFIXES):
+        return None
+    if s in ('taupreload_main',):
+        return None
+    # Strip file/line location annotation: [{...} {...}] or [{...} {...}-{...}]
+    s = _LOCATION_RE.sub('', s).strip()
+    # Strip trailing language tag (C, Fortran, C++, etc.)
+    s = _LANG_TAG_RE.sub('', s).strip()
+    # Strip parameter list
+    s = _PARAMS_RE.sub('', s).strip()
+    # Remaining is "funcname" or "rettype funcname" (possibly with pointer
+    # decorators like "double **funcname"). The function name is the last token.
+    parts = s.split()
+    if not parts:
+        return None
+    base = parts[-1].lstrip('*')
+    return base or None
+
+
+def normalize_entry_key(raw_name):
+    """
+    Normalizes a full TAU profile entry name (including surrounding quotes) to a
+    canonical key for cross-instrumentation matching.
+
+    For callpath entries (containing ' => '), each segment is normalized
+    independently. Segments that can be reduced to a base function name (user
+    functions) use that name; segments that cannot (OpenMP constructs, TAU
+    internals, samples) keep their literal text as the key, since they are
+    identical across instrumentation styles and act as reliable anchors.
+
+    Returns None only for non-callpath entries that cannot be meaningfully
+    reduced (i.e., extract_bare_name returns None for them).
+    """
+    s = raw_name.strip().strip('"').strip()
+    if ' => ' in s:
+        segments = s.split(' => ')
+        norm_segs = []
+        for seg in segments:
+            n = extract_bare_name('"' + seg.strip() + '"')
+            # Fall back to literal text for non-normalizable segments (OpenMP
+            # constructs, SAMPLE/CONTEXT markers, etc.) — they are identical
+            # across instrumentation styles and serve as callpath anchors.
+            norm_segs.append(n if n is not None else seg.strip())
+        return ' => '.join(norm_segs)
+    return extract_bare_name(raw_name)
+
+
+def compare_profiles(p1, p2, threshold, sort_by, normalize=False):
     """Compares two parsed TauProfile objects and returns structured results."""
     results = {
         'metadata': [],
         'functions': [],
         'user_events': [],
         'metric_mismatch': p1.metric_name != p2.metric_name,
+        'normalized_matches': [],      # (p1_name, p2_name, norm_key) triples
+        'ambiguous_norm_matches': [],  # dicts with norm_key, p1_names, p2_names
     }
 
     # Compare Metadata
@@ -135,34 +208,91 @@ def compare_profiles(p1, p2, threshold, sort_by):
     # Create a map of function name to its original order index in profile 1
     p1_order_map = {name: i for i, name in enumerate(p1.functions.keys())}
 
-    # Compare Functions
-    all_func_keys = set(p1.functions.keys()) | set(p2.functions.keys())
-    for key in all_func_keys:
-        f1 = p1.functions.get(key)
-        f2 = p2.functions.get(key)
-        
-        # Add original_index to the diff dictionary
-        original_index = p1_order_map.get(key, float('inf'))
-        diff = {'name': key, 'metrics': {}, 'max_abs_change': 0.0, 'sort_key': None, 'original_index': original_index}
-        
+    # Build normalized-name lookup tables when --normalize is active
+    p2_by_norm = {}   # norm_key -> [p2_exact_name, ...]
+    p1_by_norm = {}   # norm_key -> [p1_exact_name, ...]
+    if normalize:
+        for name in p2.functions:
+            nk = normalize_entry_key(name)
+            if nk:
+                p2_by_norm.setdefault(nk, []).append(name)
+        for name in p1.functions:
+            nk = normalize_entry_key(name)
+            if nk:
+                p1_by_norm.setdefault(nk, []).append(name)
+
+    # Build comparison pairs: (p1_name_or_None, p2_name_or_None, match_type)
+    pairs = []
+    p2_accounted = set()
+    reported_ambig_keys = set()
+
+    for p1_name in p1.functions:
+        if p1_name in p2.functions:
+            pairs.append((p1_name, p1_name, 'exact'))
+            p2_accounted.add(p1_name)
+        elif normalize:
+            nk = normalize_entry_key(p1_name)
+            if nk and nk in p2_by_norm:
+                p2_matches = p2_by_norm[nk]
+                p1_matches = p1_by_norm.get(nk, [p1_name])
+                if len(p2_matches) == 1 and len(p1_matches) == 1:
+                    p2_name = p2_matches[0]
+                    if p2_name not in p2_accounted:
+                        pairs.append((p1_name, p2_name, 'normalized'))
+                        p2_accounted.add(p2_name)
+                        results['normalized_matches'].append((p1_name, p2_name, nk))
+                        continue
+                elif nk not in reported_ambig_keys:
+                    # Multiple functions share this base name: cannot auto-resolve.
+                    # This is the fundamental overloaded-function limitation of
+                    # compiler instrumentation, which loses parameter type info.
+                    results['ambiguous_norm_matches'].append({
+                        'norm_key': nk,
+                        'p1_names': p1_matches,
+                        'p2_names': p2_matches,
+                    })
+                    reported_ambig_keys.add(nk)
+            pairs.append((p1_name, None, 'exact'))
+        else:
+            pairs.append((p1_name, None, 'exact'))
+
+    for p2_name in p2.functions:
+        if p2_name not in p2_accounted:
+            pairs.append((None, p2_name, 'exact'))
+
+    # Process pairs
+    for p1_name, p2_name, match_type in pairs:
+        f1 = p1.functions.get(p1_name) if p1_name else None
+        f2 = p2.functions.get(p2_name) if p2_name else None
         is_new = f1 is None
         is_removed = f2 is None
-        
-        metrics_to_check = f2.keys() if is_new else f1.keys()
 
+        display_name = p1_name if p1_name else p2_name
+        original_index = p1_order_map.get(p1_name, float('inf'))
+        diff = {
+            'name': display_name,
+            'metrics': {},
+            'max_abs_change': 0.0,
+            'sort_key': None,
+            'original_index': original_index,
+            'match_type': match_type,
+        }
+        if match_type == 'normalized' and p2_name != p1_name:
+            diff['name_p2'] = p2_name
+
+        metrics_to_check = f2.keys() if is_new else f1.keys()
         for metric in metrics_to_check:
             v1 = 0 if is_new else f1.get(metric, 0)
             v2 = 0 if is_removed else f2.get(metric, 0)
             p_change = calculate_diff(v1, v2)
             diff['metrics'][metric] = {'v1': v1, 'v2': v2, 'p_change': p_change}
             diff['max_abs_change'] = max(diff['max_abs_change'], abs(p_change))
-        
+
         if diff['max_abs_change'] > threshold:
-            # Set the key for metric-based sorting
             if sort_by in diff['metrics']:
                 diff['sort_key'] = diff['metrics'][sort_by]['p_change']
             results['functions'].append(diff)
-            
+
     # Compare User Events
     all_event_keys = set(p1.user_events.keys()) | set(p2.user_events.keys())
     for key in all_event_keys:
@@ -172,9 +302,8 @@ def compare_profiles(p1, p2, threshold, sort_by):
 
         is_new = e1 is None
         is_removed = e2 is None
-        
-        metrics_to_check = e2.keys() if is_new else e1.keys()
 
+        metrics_to_check = e2.keys() if is_new else e1.keys()
         for metric in metrics_to_check:
             v1 = 0 if is_new else e1.get(metric, 0)
             v2 = 0 if is_removed else e2.get(metric, 0)
@@ -190,7 +319,7 @@ def compare_profiles(p1, p2, threshold, sort_by):
         results['functions'].sort(key=lambda x: x['name'])
     elif sort_by == 'original':
         results['functions'].sort(key=lambda x: x['original_index'])
-    else: # Default numeric sort
+    else:  # Default numeric sort
         results['functions'].sort(key=lambda x: abs(x.get('sort_key') or 0), reverse=True)
 
     return results
@@ -218,7 +347,10 @@ def generate_report_string(p1, p2, results, threshold, sort_by):
         report.append(f"# Sorted by: {sort_by} order.")
     else:
         report.append(f"# Sorted by: Largest change in '{sort_by}' column.")
-    
+
+    if results.get('normalized_matches'):
+        report.append(f"# Note: {len(results['normalized_matches'])} function(s) matched via normalized name (--normalize mode).")
+
     report.append("#" + "-" * 70)
     
     # Metadata
@@ -246,6 +378,10 @@ def generate_report_string(p1, p2, results, threshold, sort_by):
             is_removed = any(m['p_change'] == -100.0 for m in func['metrics'].values())
             
             title = func['name']
+            if func.get('match_type') == 'normalized':
+                p2_name = func.get('name_p2', func['name'])
+                if p2_name != func['name']:
+                    title += f"\n#  ~~ normalized match (Profile 2): {p2_name}"
             if is_new: title += " (Unique to Profile 2)"
             if is_removed: title += " (Unique to Profile 1)"
             report.append(f"\n{title}")
@@ -267,6 +403,22 @@ def generate_report_string(p1, p2, results, threshold, sort_by):
                 v2_str = f"{data['v2']:.2f}" if isinstance(data['v2'], float) else str(data['v2'])
                 change_str = format_diff_value(data['p_change'])
                 report.append(f"    {metric+':':<10} [{v1_str} -> {v2_str}] {change_str}")
+
+    # Ambiguous Normalized Matches
+    if results.get('ambiguous_norm_matches'):
+        report.append("\n# AMBIGUOUS NORMALIZED MATCHES (skipped)")
+        report.append("# The following functions share the same base name in both profiles but")
+        report.append("# cannot be unambiguously paired. This is the fundamental limitation of")
+        report.append("# compiler instrumentation for overloaded functions: parameter type info")
+        report.append("# is lost, making it impossible to reliably match them to their PDT")
+        report.append("# counterparts. Use source-level disambiguation or PDT on both sides.")
+        report.append("#" + "-" * 70)
+        for ambig in results['ambiguous_norm_matches']:
+            report.append(f"\n#  Base name: '{ambig['norm_key']}'")
+            for n in ambig['p1_names']:
+                report.append(f"#    Profile 1: {n}")
+            for n in ambig['p2_names']:
+                report.append(f"#    Profile 2: {n}")
 
     report.append("\n#" + "-" * 70)
     return "\n".join(report)
@@ -298,6 +450,15 @@ def main():
         "--check", action="store_true",
         help="Check-only mode. Exits with 0 if no differences > threshold,\n1 otherwise. Suppresses all output files."
     )
+    parser.add_argument(
+        "--normalize", action="store_true",
+        help="Enable fuzzy name matching between compiler-instrumented and\n"
+             "PDT-instrumented profiles. Strips return types, parameter lists,\n"
+             "file paths, and line numbers to match functions by base name.\n"
+             "Unambiguous 1-to-1 matches are paired; ambiguous cases (e.g.,\n"
+             "overloaded functions) are reported but not force-matched, since\n"
+             "compiler instrumentation cannot distinguish them."
+    )
     args = parser.parse_args()
 
     if args.check and args.output:
@@ -315,7 +476,7 @@ def main():
     if args.check:
         p1 = TauProfile(path1)
         p2 = TauProfile(path2)
-        results = compare_profiles(p1, p2, args.threshold, args.sort_by)
+        results = compare_profiles(p1, p2, args.threshold, args.sort_by, normalize=args.normalize)
         if results['functions'] or results['user_events'] or results['metadata'] or results['metric_mismatch']:
             sys.exit(1) # Differences found
         else:
@@ -340,7 +501,7 @@ def main():
             if fname in files1 and fname in files2:
                 p1 = TauProfile(fpath1)
                 p2 = TauProfile(fpath2)
-                results = compare_profiles(p1, p2, args.threshold, args.sort_by)
+                results = compare_profiles(p1, p2, args.threshold, args.sort_by, normalize=args.normalize)
                 report = generate_report_string(p1, p2, results, args.threshold, args.sort_by)
                 with open(out_path, 'w') as f:
                     f.write(report)
@@ -355,7 +516,7 @@ def main():
         output_file = args.output or "profile.diff"
         p1 = TauProfile(path1)
         p2 = TauProfile(path2)
-        results = compare_profiles(p1, p2, args.threshold, args.sort_by)
+        results = compare_profiles(p1, p2, args.threshold, args.sort_by, normalize=args.normalize)
         report = generate_report_string(p1, p2, results, args.threshold, args.sort_by)
         
         with open(output_file, 'w') as f:
