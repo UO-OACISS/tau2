@@ -626,11 +626,28 @@ static void Tau_start_timer_impl(void *functionInfo, int phase, int tid, bool re
   }
 #endif /* TAU_DEPTH_LIMIT */
 
-  if (resume) p->Resume(tid); else p->Start(tid);
+  /* Read heap usage before starting the timer so memory bookkeeping overhead
+   * does not inflate user function timing and throttle decisions. */
+  const bool trackHeap = TauEnv_get_track_memory_heap();
+  double heapmem = 0.0;
+  if (trackHeap) {
+    heapmem = Tau_max_RSS();
+  }
 
-  /*** Memory Profiling ***/
-  if (TauEnv_get_track_memory_heap()) {
-    double heapmem = Tau_max_RSS();
+  /* Pre-set ParentProfiler so that the context-event calls below can correctly
+   * traverse the call-path chain.  TauContextUserEvent::FormulateContextComparisonArray
+   * walks current->ParentProfiler, which is not set until Profiler::Start_impl()
+   * runs.  We set it here to the identical value Start_impl assigns as its very
+   * first operation (TauInternal_ParentProfiler(tid) = &stack[stackpos-1]).
+   * Start_impl's own assignment is idempotent — it will overwrite with the same
+   * pointer.  The stack is not reallocated between this point and Start_impl's
+   * entry, so the pointer is stable. */
+  p->ParentProfiler = TauInternal_ParentProfiler(tid);
+
+  /* Memory Profiling — emit context events BEFORE starting the clock so that
+   * the mutex acquisition and map lookup inside TriggerEvent are not charged to
+   * the application function's measured runtime or throttle per-call average. */
+  if (trackHeap) {
     TAU_CONTEXT_EVENT(TheHeapMemoryEntryEvent(), heapmem);
     p->heapmem = heapmem;
   }
@@ -647,6 +664,8 @@ static void Tau_start_timer_impl(void *functionInfo, int phase, int tid, bool re
 #ifdef TAU_PROFILEHEADROOM
   p->ThisFunction->GetHeadroomEvent()->TriggerEvent(Tau_estimate_free_memory());
 #endif /* TAU_PROFILEHEADROOM */
+
+  if (resume) p->Resume(tid); else p->Start(tid);
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX
@@ -821,15 +840,10 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
 
   /*** Memory Profiling ***/
   enableHeapTracking = TauEnv_get_track_memory_heap();
-  if (enableHeapTracking) {
-    currentHeap = Tau_max_RSS();
-    TAU_CONTEXT_EVENT(TheHeapMemoryExitEvent(), currentHeap);
-  }
 
-  if (TauEnv_get_track_memory_headroom()) {
-    TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) at Exit");
-    TAU_CONTEXT_EVENT(memEvent, Tau_estimate_free_memory());
-  }
+  /* NOTE: The headroom-at-exit context event has been moved to AFTER
+   * profiler->Stop() (see below) so its Tau_estimate_free_memory() syscall and
+   * TriggerEvent mutex/map overhead are not charged to the measured function. */
 
   /********************************************************************************/
   /*** Extras ***/
@@ -927,18 +941,33 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
   }
 #endif /* TAU_DEPTH_LIMIT */
 
-  /* check memory */
-  if (enableHeapTracking && profiler->heapmem) {
-    double oldheap = profiler->heapmem;
-    double difference = currentHeap - oldheap;
-    if (difference > 0) {
-      TAU_CONTEXT_EVENT(TheHeapMemoryIncreaseEvent(), difference);
-    } else if (difference < 0) {
-      TAU_CONTEXT_EVENT(TheHeapMemoryDecreaseEvent(), -difference);
+  profiler->Stop(tid);
+
+  /* Perform heap sampling after stopping the timer so this bookkeeping is not
+   * charged to the application function's measured runtime. */
+  if (enableHeapTracking) {
+    currentHeap = Tau_max_RSS();
+    TAU_CONTEXT_EVENT(TheHeapMemoryExitEvent(), currentHeap);
+    if (profiler->heapmem) {
+      double oldheap = profiler->heapmem;
+      double difference = currentHeap - oldheap;
+      if (difference > 0) {
+        TAU_CONTEXT_EVENT(TheHeapMemoryIncreaseEvent(), difference);
+      } else if (difference < 0) {
+        TAU_CONTEXT_EVENT(TheHeapMemoryDecreaseEvent(), -difference);
+      }
     }
   }
 
-  profiler->Stop(tid);
+  /* Emit the headroom-at-exit context event after stopping the clock so its
+   * Tau_estimate_free_memory() syscall and TriggerEvent mutex/map overhead are
+   * not charged to the measured function.  The function is still on the profiler
+   * stack (stackpos has not been decremented yet), so context attribution is
+   * identical to the original placement before profiler->Stop(). */
+  if (TauEnv_get_track_memory_headroom()) {
+    TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) at Exit");
+    TAU_CONTEXT_EVENT(memEvent, Tau_estimate_free_memory());
+  }
 
   flags.Tau_global_stackpos--;
 

@@ -59,10 +59,15 @@
 #include "llvm/IR/LegacyPassManager.h"
 
 #else
-// new pass manager
 #include "llvm/IR/PassManager.h"
-#include "llvm/Passes/PassPlugin.h"
 #include "llvm/Passes/PassBuilder.h"
+#if LLVM_VERSION_MAJOR < 23
+// new pass manager
+#include "llvm/Passes/PassPlugin.h"
+#else
+//LLVM 23 moved some files
+#include "llvm/Plugins/PassPlugin.h"
+#endif
 
 #endif
 
