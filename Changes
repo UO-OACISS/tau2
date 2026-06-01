@@ -32,10 +32,13 @@ Version 2.35 changes (from 2.34):
 19. Improved interoperability between TAU and ZeroSum and APEX.  
 20. Added support for L0 metrics in TAU_METRICS (e.g.,TAU_METRICS=L0_ComputeBasic). 
 21. Added support for improved PC to source line number resolution for L0. 
-22. TAU supports sampling on all three GPUs (tau_exec -l0_pc -rocm_pc -cupti_pc). 
-23. TAU_METRICS supports L0, ROCm, and CUPTI metrics consistently. 
-24. Added TAU_OMPT_DISABLE_OFFLOAD=1 to not register OMPT callbacks for device-side offload events.
-25. Added initial support for NCCL and RCCL. 
+22. TAU supports sampling on all three GPUs (tau_exec -l0_pc -rocm_pc -cupti_pc).
+23. ROCm PC sampling supports both stochastic and host trap. 
+24. TAU_METRICS supports L0, ROCm, and CUPTI metrics consistently. 
+25. Added TAU_OMPT_DISABLE_OFFLOAD=1 to not register OMPT callbacks for device-side offload events.
+26. Added initial support for NCCL and RCCL.
+27. Added support for oneCCL with Ittnofity.
+
 Version 2.34 changes (from 2.33):
 1. Added support for new LLVM compilers (-c++=parascc).
 2. Updated support for ROCm 6.2.3. 
