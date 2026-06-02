@@ -18,6 +18,12 @@ const CC = Core.Compiler
 # Path to libTAU.so
 const libTAU = Ref{String}()
 
+# Path to libTAU-julia-blas.so (the L3 BLAS interception shim that hooks
+# libblastrampoline). Must be a const Ref because Julia's
+# `ccall((:sym, lib), …)` form requires the library expression to be a
+# constant, not a local.
+const _JULIA_BLAS_LIB = Ref{String}("")
+
 # Function-pointer cache for instrumentation hot path
 #
 # The IR rewriter patches method bodies with foreigncalls to 
@@ -78,6 +84,38 @@ function __init__()
         TAU_START_FPTR[]       = cglobal((:Tau_start, libTAU[]))
         TAU_STOP_FPTR[]        = cglobal((:Tau_stop,  libTAU[]))
         JL_GET_PGCSTACK_FPTR[] = cglobal(:jl_get_pgcstack)
+
+        _install_julia_blas_hook(tau_lib_path)
+    end
+end
+
+# Locate libTAU-julia-blas.so next to libTAU.so. The shim ships in the same
+# shared-config dir as the TAU library that __init__ already resolved, so
+# we look there first and fall back to TAU_JULIA_BLAS_LIB if set.
+function _install_julia_blas_hook(tau_lib_path::String)
+    if get(ENV, "TAU_BLAS_HOOK", "1") == "0"
+        return
+    end
+
+    blas_lib = get(ENV, "TAU_JULIA_BLAS_LIB", "")
+    if isempty(blas_lib)
+        blas_lib = joinpath(dirname(tau_lib_path), "libTAU-julia-blas.so")
+    end
+    if !isfile(blas_lib)
+        @debug "TAU julia_blas shim not found at $blas_lib; skipping BLAS hook."
+        return
+    end
+
+    _JULIA_BLAS_LIB[] = blas_lib
+    try
+        installed = ccall((:tau_lbt_install, _JULIA_BLAS_LIB[]), Cint, ())
+        if installed < 0
+            @warn "tau_lbt_install returned $installed; BLAS timers will not be captured."
+        else
+            @debug "Installed $installed BLAS interception slots via libblastrampoline."
+        end
+    catch err
+        @warn "Failed to install TAU julia_blas hook" exception=(err, catch_backtrace())
     end
 end
 

@@ -1188,6 +1188,13 @@ if [ "$julia_wrapper" = "true" -a ! "x$isPthread" == "x" \
   fi
 fi
 
+# When using Julia, preload the OpenBLAS server wrapper so that we can instrument
+# work on BLAS worker threads. 
+if [ "$julia_wrapper" = "true" -a "${TAU_BLAS_SERVER_HOOK:-1}" != "0" \
+     -a -r $BASEDIR/lib/$theBinding/libTAU-julia-blas-server$TAU_SHLIBX ]; then
+  TAUEX_LD_PRELOAD="$BASEDIR/lib/$theBinding/libTAU-julia-blas-server$TAU_SHLIBX:$TAUEX_LD_PRELOAD"
+fi
+
 isNCCL=`echo $theBinding | grep nccl`
 if [ ! "x$isNCCL" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-NCCL-plugin$TAU_SHLIBX ]; then
   echo "NCCL available"
