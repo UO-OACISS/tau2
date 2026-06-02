@@ -1134,10 +1134,20 @@ if [ $track_l0 = "true" ]; then
     $dryrun export ZET_ENABLE_METRICS=1
   fi
 
-  if [ ! `echo $TAU_METRICS | grep -E "(^|[:,])L0_($|[:,])"` ]; then
+  if [ `echo $TAU_METRICS | grep -E "(^|[:,])L0_"` ]; then
     $dryrun export ZET_ENABLE_METRICS=1
   fi
 
+fi
+
+if [ -v "$ZET_ENABLE_METRICS" ]; then
+  if [[ "$ZET_ENABLE_METRICS" != "0" ]]; then
+     isl0metrics=`echo $theBinding | grep l0metrics`
+     if [ "x$isl0metrics" == "x"  ]; then
+        echo "ERROR: TAU was not configured with support for L0 Metrics, reconfigure TAU or remove the profiling of L0 metrics"
+        exit 1
+     fi
+  fi
 fi
 
 if [ $track_rocm = "true" ] ; then

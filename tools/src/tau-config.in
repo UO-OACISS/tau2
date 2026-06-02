@@ -227,21 +227,6 @@ if ($#sorted < 0) {
 if ("$listmatching" eq "true" ) {
     print "@bindings\n";
 } else {
-    # When more than one binding matches the user's filter, the
-    # length-ascending tiebreak above silently picks the least
-    # specific match (e.g. shared-pthread over shared-clang-pthread
-    # for `--binding serial pthread` against an install that has
-    # both gcc-stack and clang-stack TAU). The wrong pick fragments
-    # global state on macOS (the static-linked TAU and the preloaded
-    # libTAU.dylib end up as separate dyld images). Warn so callers
-    # can disambiguate by adding more tokens to -T.
-    if (@sorted > 1) {
-        my $opts_trimmed = trim($TauOptions);
-        warn "tau-config: '$opts_trimmed' matches "
-            . scalar(@sorted) . " bindings: @sorted; "
-            . "picking '$sorted[0]'. Add a more specific token "
-            . "(e.g. clang) to -T to disambiguate.\n";
-    }
     print "$sorted[0]\n";
 }
 
