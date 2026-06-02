@@ -1553,12 +1553,13 @@ int TauEnv_get_l0_metrics_enable()
   return env_l0_metrics_enable;
 }
 
+
+#ifdef L0METRICS
 void TauEnv_set_l0_metrics_enable()
 {
   env_l0_metrics_enable = 1;
 }
 
-#ifdef L0METRICS
 void TauEnv_set_l0_metric(char* l0_metric_name)
 {
   if (unitrace_metrics != NULL ) {
