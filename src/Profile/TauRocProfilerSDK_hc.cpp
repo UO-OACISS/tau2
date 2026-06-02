@@ -256,13 +256,15 @@ int get_set_metrics(const char* rocm_metrics, std::vector<rocprofiler_agent_v0_t
 		  get_profile_cache().emplace(
 		  agent.id.handle, build_profile_for_agent(agent.id, counter_set));
 	}
+  
   /*
-  printf("!! used_counter_id_map.size() != counter_set.size() %d %d %d\n", 
+  printf("!! used_counter_id_map.size() != counter_set.size() %d %d %d agents %d\n", 
           (used_counter_id_map.size() != counter_set.size()), 
           used_counter_id_map.size(),
           counter_set.size(),
           num_agents );
   */
+  
   /*
   for (const auto& [id, name] : used_counter_id_map)
     std::cout << id << " : " << name << '\n';
@@ -270,7 +272,7 @@ int get_set_metrics(const char* rocm_metrics, std::vector<rocprofiler_agent_v0_t
   for (const auto& s : counter_set)
     std::cout << s << '\n';
   */
-	if(used_counter_id_map.size() != (counter_set.size()*num_agents))
+	if(used_counter_id_map.size() != (counter_set.size()))
 		return WRONG_NAME;
    
 	return PROFILE_METRICS;
@@ -304,9 +306,12 @@ int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_co
   
   if(flag_metrics_set == WRONG_NAME)
   {
-    std::cerr << "ERROR!!: THE NUMBER OF REQUESTED COUNTERS DOES NOT MATCH THE PROFILED COUNTERS\n" 
-			<< " CHECK THAT THE NAME OF THE HARDWARE COUNTERS IS CORRECT OR IS AVAILABLE\n"
-		  << " HARDWARE COUNTER PROFILING DISABLED TO AVOID PROFILING ERRORS" 
+    std::cerr << "[TAU] Error: Some counters were not found, are the names correct? " 
+			<< " Counters found : ";
+      for (const auto& entry : used_counter_id_map) {
+          std::cerr << entry.second << " ";
+      }
+		  std::cerr << "\n[TAU] HARDWARE COUNTER PROFILING DISABLED TO AVOID PROFILING ERRORS" 
       << std::endl;
   }
 
