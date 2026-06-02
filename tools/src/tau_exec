@@ -1186,15 +1186,24 @@ fi
 # pthread wrapper from applying to threads spawned by BLAS.
 if [ "$julia_wrapper" = "true" -a ! "x$isPthread" == "x" \
      -a "${TAU_PRELOAD_BLAS:-1}" != "0" ]; then
-  julia_bin=`command -v julia 2>/dev/null`
-  if [ -n "$julia_bin" ]; then
-    julia_libdir=`dirname "$(readlink -f "$julia_bin")"`/../lib
-    for blas_so in "$julia_libdir/libopenblas64_.so" "$julia_libdir/libopenblas.so" ; do
-      if [ -r "$blas_so" ]; then
-        TAUEX_LD_PRELOAD="$blas_so:$TAUEX_LD_PRELOAD"
-        break
-      fi
-    done
+  if [ -n "$TAU_PRELOAD_BLAS_LIB" -a -r "$TAU_PRELOAD_BLAS_LIB" ]; then
+    # User can specify the BLAS preload in $TAU_PRELOAD_BLAS_LIB
+    TAUEX_LD_PRELOAD="$TAU_PRELOAD_BLAS_LIB:$TAUEX_LD_PRELOAD"
+  else
+    julia_bin=`command -v julia 2>/dev/null`
+    if [ -n "$julia_bin" ]; then
+      julia_libdir=`dirname "$(readlink -f "$julia_bin")"`/../lib
+      # Official Julia binaries keep OpenBLAS in lib/julia/ but source builds and
+      # some distributions keep it directly in lib/, so check both.
+      for blas_so in \
+          "$julia_libdir/julia/libopenblas64_.so" "$julia_libdir/julia/libopenblas.so" \
+          "$julia_libdir/libopenblas64_.so" "$julia_libdir/libopenblas.so" ; do
+        if [ -r "$blas_so" ]; then
+          TAUEX_LD_PRELOAD="$blas_so:$TAUEX_LD_PRELOAD"
+          break
+        fi
+      done
+    fi
   fi
 fi
 
