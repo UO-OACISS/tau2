@@ -23,6 +23,8 @@ get_profile_cache()
 
 //Map to identify counters
 std::map<uint64_t, const char*> used_counter_id_map ;
+//Count the number of counters enabled in total, used to check that the counters were found
+static int total_counters_enabled = 0;
 
 //Map to identify kernels using dispatch id and kernel_id. Used for hardware counter profiling
 std::map<rocprofiler_dispatch_id_t, Tau_SDK_hc_timestamp> dispatch_id_kernel_map;
@@ -60,6 +62,8 @@ dispatch_callback(rocprofiler_dispatch_counting_service_data_t dispatch_data,
         exit(-1);
     }
 }
+
+static int counter_not_found = 0;
 
 /**
  * Construct a profile config for an agent. This function takes an agent (obtained from
@@ -106,6 +110,7 @@ build_profile_for_agent(rocprofiler_agent_id_t       agent,
     {
         collect_counters.push_back(counter);
         used_counter_id_map[counter.handle]=info.name;
+        total_counters_enabled++;
     }
   }
 
@@ -257,22 +262,22 @@ int get_set_metrics(const char* rocm_metrics, std::vector<rocprofiler_agent_v0_t
 		  agent.id.handle, build_profile_for_agent(agent.id, counter_set));
 	}
   
-  /*
-  printf("!! used_counter_id_map.size() != counter_set.size() %d %d %d agents %d\n", 
-          (used_counter_id_map.size() != counter_set.size()), 
-          used_counter_id_map.size(),
-          counter_set.size(),
-          num_agents );
-  */
   
-  /*
+  /*printf("!! used_counter_id_map %d counter_set.size %d total_counters_enabled  %d agents %d\n", 
+          used_counter_id_map.size(), counter_set.size(), 
+          total_counters_enabled,  num_agents );*/
+  
+  
+  
   for (const auto& [id, name] : used_counter_id_map)
     std::cout << id << " : " << name << '\n';
 
   for (const auto& s : counter_set)
     std::cout << s << '\n';
-  */
-	if(used_counter_id_map.size() != (counter_set.size()))
+
+  
+  
+	if(total_counters_enabled != (counter_set.size()*num_agents))
 		return WRONG_NAME;
    
 	return PROFILE_METRICS;
