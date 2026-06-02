@@ -268,13 +268,13 @@ int get_set_metrics(const char* rocm_metrics, std::vector<rocprofiler_agent_v0_t
           total_counters_enabled,  num_agents );*/
   
   
-  
+ /* 
   for (const auto& [id, name] : used_counter_id_map)
     std::cout << id << " : " << name << '\n';
 
   for (const auto& s : counter_set)
     std::cout << s << '\n';
-
+*/
   
   
 	if(total_counters_enabled != (counter_set.size()*num_agents))
