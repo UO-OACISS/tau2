@@ -50,7 +50,7 @@ TAU_CXX_FE=$(CONFIG_CXX)
 TAU_CUDA_CXX=g++
 #PGI#TAU_CUDA_CXX=$(CONFIG_CXX)  #ENDIF#
 #USE_IBMXLC#TAU_CUDA_CXX=$(CONFIG_CXX)  #ENDIF#
-#CRAYCNL#TAU_CUDE_CXX=$(CONFIG_CXX) #ENDIF#
+#CRAYCNL#TAU_CUDA_CXX=$(CONFIG_CXX) #ENDIF#
 
 # Compiler for perfetto.cc. Defaults to $(TAU_CXX), but nvc++/pgc++ ICE on it,
 # so we detect the g++ matching their GCC toolchain via -drygccinc.
