@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 // CUDA headers
 #include <cuda.h>
 
