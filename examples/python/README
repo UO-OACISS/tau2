@@ -1,0 +1,13 @@
+Configure TAU with -python to run these tests.
+
+auto.py and manual.py use the TAU Python source APIs. auto wraps an application's launch in tau.run and manual uses individual instrumentation calls. These can be run directly with python3 but you must put the TAU bindings directory (<tau2>/<arch>/lib/bindings-<tau config>) in your PYTHONPATH. 
+For example:
+export PYTHONPATH=/home/wspear/bin/tau2/x86_64/lib/bindings-papi-pthread-python-pdt/
+
+firstprime.py and cpi.py are not pre-instrumented but can be launched with tau_python instead of python3 which will insert instrumentation via perfstubs.
+
+For example:
+
+tau_python -T serial,python firstprime.py
+
+cpi.py requires numpy and mpi4py to run.

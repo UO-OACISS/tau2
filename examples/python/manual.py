@@ -5,7 +5,7 @@ from time import sleep
 
 x = pytau.profileTimer("A Sleep for excl 5 secs")
 y = pytau.profileTimer("B Sleep for excl 2 secs")
-pytau.setNode(1)
+#pytau.setNode(1)  #Not currently supported
 pytau.start(x)
 print("Sleeping for 5 secs ...")
 sleep(5)
