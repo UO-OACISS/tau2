@@ -2947,7 +2947,9 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
     TauTimerStaticsGuard() : alive(true) {}
     ~TauTimerStaticsGuard() {
       alive.store(false, std::memory_order_seq_cst);
+#ifndef TAU_WINDOWS
       Tau_sampling_disable_signal();
+#endif
     }
   };
   static TauTimerStaticsGuard guard;

@@ -13,13 +13,12 @@
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
 ****************************************************************************/
 #include <vector>
-#include <mutex>
-#include <pthread.h>
 #ifndef _PAPI_LAYER_H_
 #define _PAPI_LAYER_H_
 
 #ifdef TAU_PAPI
-
+#include <mutex>
+#include <pthread.h>
 // TODO Make this dynamically sized 
 #ifndef TAU_PAPI_MAX_COMPONENTS
 #define TAU_PAPI_MAX_COMPONENTS 16

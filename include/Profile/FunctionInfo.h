@@ -59,6 +59,8 @@ extern int Tau_Global_numGPUCounters;
 #include "Profile/RenciSTFF.h"
 #endif //RENCI_STFF
 
+#include "Profile/TauEnv.h"
+
 // For EBS Sampling Profiles with custom allocator support
 #ifndef TAU_WINDOWS
 #include <sys/types.h>
@@ -67,7 +69,6 @@ extern int Tau_Global_numGPUCounters;
 
 #include <Profile/TauPathHash.h>
 #include "Profile/TauSampling.h"
-#include "Profile/TauEnv.h"
 
 #ifdef TAU_SS_ALLOC_SUPPORT
 #include <Profile/TauSsAllocator.h>
