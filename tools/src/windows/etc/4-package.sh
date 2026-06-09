@@ -10,7 +10,7 @@ if [ $# -ne 1 ] ; then
 fi
 
 cd $ROOT
-
+mkdir -p zip
 # rm -rf zip
 # mkdir -p zip/tau-$1
 # cp -r $ROOT/tau-windows/* $ROOT/zip/tau-$1

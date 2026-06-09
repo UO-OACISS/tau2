@@ -36,6 +36,18 @@ mkdir -p $ROOT/tau-windows/tools/src/perfdmf/etc
 mkdir -p $ROOT/tau-windows/etc
 mkdir -p $ROOT/tau-windows/contrib
 cp tools/src/perfexplorer/etc/* $ROOT/tau-windows/etc
+
+if [ ! -f "$ROOT/weka.jar" ]; then
+    echo "Error: weka.jar not found in $ROOT."
+    echo "Please download and install the required dependencies using these commands:"
+    echo "------------------------------------------------------------------------"
+    echo "wget tau.uoregon.edu/ext.tgz"
+    echo "tar -xf ext.tgz"
+    echo "unzip external_dependencies/weka-3-6-1.zip -d external_dependencies/"
+    echo "cp external_dependencies/weka-3-6-1/weka.jar $ROOT/"
+    echo "------------------------------------------------------------------------"
+    exit 1
+fi
 cp $ROOT/weka.jar $ROOT/tau-windows/bin
 cp -r $ROOT/tau2/tools/src/perfdmf/etc $ROOT/tau-windows/tools/src/perfdmf
 cp win32/bin/*.* $ROOT/tau-windows/bin

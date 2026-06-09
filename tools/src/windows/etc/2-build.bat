@@ -1,6 +1,18 @@
 
 REM call "C:\Program Files\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat"
-call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\vsDevCmd.bat"
+REM call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\vsDevCmd.bat"
+rem call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat"
+
+if exist "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\vsDevCmd.bat" (
+    call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\vsDevCmd.bat"
+) else if exist "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" (
+    call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat"
+) else (
+    echo Error: Could not locate vsDevCmd.bat in any standard location.
+    pause
+    exit /b 1
+)
+
 set ROOT=C:\tau
 cd %ROOT%\tau2
 mkdir win32\lib
