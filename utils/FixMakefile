@@ -1934,6 +1934,10 @@ case $1 in
 	echo "NOTE: Using TAU Python bindings ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PSTUBS)
+	echo "NOTE: Using TAU Python bindings via pstubs (Python >= 3.12, no libpython link) ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PYCUDA)
 	echo "NOTE: Building TAU PyCUDA interface ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

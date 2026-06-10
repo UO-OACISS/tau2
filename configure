@@ -11820,29 +11820,52 @@ if [ $sproc = yes ] ; then
 fi
 
 if [ $python = yes ] ; then
-    if [ "x$pythonlibrary" = "x" ] ; then
-        echo "Checking for Python library name from interpreter ${pythonintv}... "
-        pythonlibrary=`${pythonintv} ./utils/python_get_paths.py libname | sed -e 's/ .*//g'`
+    # Detect Python version: Python >= 3.12 uses the pstubs path (sys.monitoring API),
+    # which does not require linking libpython into the TAU shared library.
+    python_major=`${pythonintv} -c "import sys; print(sys.version_info[0])" 2>/dev/null`
+    python_minor=`${pythonintv} -c "import sys; print(sys.version_info[1])" 2>/dev/null`
+    use_pstubs=no
+    if [ "x$python_major" = "x3" ] && [ "${python_minor:-0}" -ge 12 ] 2>/dev/null ; then
+        use_pstubs=yes
     fi
-    if [ "x$pythonlibrary" != "x" ] ; then
-	#If the python library directory exists but the library is not found we may be in a
-	#virtual environment. Query the library and include paths directly.
-        if [ ! -f $pythonlib/$pythonlibrary ] ; then
-		pythonlib=`${pythonintv} ./utils/python_get_paths.py libdir | sed -e 's/ .*//g'`
-		pythoninc=`${pythonintv} ./utils/python_get_paths.py inc | sed -e 's/ .*//g'`
-	fi
 
-	if [ ! -f $pythonlib/$pythonlibrary ] ; then
-                echo "ERROR: Python library $pythonlib/$pythonlibrary not found."
-                exit 1
+    # For Python < 3.12, try to find libpython shared library.
+    # If not found (e.g. only a static .a is present), fall back to pstubs.
+    if [ $use_pstubs = no ] ; then
+        if [ "x$pythonlibrary" = "x" ] ; then
+            echo "Checking for Python library name from interpreter ${pythonintv}... "
+            pythonlibrary=`${pythonintv} ./utils/python_get_paths.py libname | sed -e 's/ .*//g'`
         fi
-            fixmakeargs="$fixmakeargs pythonlibrary=$pythonlibrary"
+        if [ "x$pythonlibrary" != "x" ] ; then
+	    #If the python library directory exists but the library is not found we may be in a
+	    #virtual environment. Query the library and include paths directly.
+            if [ ! -f $pythonlib/$pythonlibrary ] ; then
+	        pythonlib=`${pythonintv} ./utils/python_get_paths.py libdir | sed -e 's/ .*//g'`
+	        pythoninc=`${pythonintv} ./utils/python_get_paths.py inc | sed -e 's/ .*//g'`
+	    fi
+
+	    if [ ! -f $pythonlib/$pythonlibrary ] ; then
+                echo "WARNING: Python library $pythonlib/$pythonlibrary not found."
+                echo "NOTE: Falling back to pstubs path (no libpython link required)."
+                use_pstubs=yes
+            fi
+        fi
+        if [ $use_pstubs = no -a $machine = rs6000 -a "x$pythonlib" = "x" ] ; then
+            echo "ERROR: For IBM systems, please specify the -pythonlib=<dir> flag where *.py files and the config directory are located!"
+            exit 1
+        fi
     fi
-    fixmakeargs="$fixmakeargs PYTHON pythoninc=$pythoninc pythonlib=$pythonlib"
-    tauoptions="${tauoptions}-python"
-    if [ $machine = rs6000 -a "x$pythonlib" = "x" ] ; then
-        echo "ERROR: For IBM systems, please specify the -pythonlib=<dir> flag where *.py files and the config directory are located!"
-        exit 1
+
+    if [ $use_pstubs = yes ] ; then
+        echo "Python ${python_major}.${python_minor}: using pstubs path (no libpython link required)."
+        fixmakeargs="$fixmakeargs PSTUBS"
+        tauoptions="${tauoptions}-python"
+    else
+        if [ "x$pythonlibrary" != "x" ] ; then
+            fixmakeargs="$fixmakeargs pythonlibrary=$pythonlibrary"
+        fi
+        fixmakeargs="$fixmakeargs PYTHON pythoninc=$pythoninc pythonlib=$pythonlib"
+        tauoptions="${tauoptions}-python"
     fi
 fi
 if [ $cuda = yes ] ; then
@@ -14314,7 +14337,7 @@ if [ $python3 = yes -o $python = yes ] ; then
     python_version=`${pythonintv} --version | awk '{print $NF}'`
     version_array=( ${python_version//./ } )
     if [ "${version_array[0]}" == 3 ] ; then
-        if [ "${version_array[1]}" -gt 11 ] ; then
+        if [ "${version_array[1]}" -gt 11 -o "${use_pstubs:-no}" = "yes" ] ; then
             Python3_VERSION_MINOR=${version_array[1]}
             build_perfstubs
         fi
