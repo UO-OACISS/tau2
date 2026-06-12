@@ -1997,7 +1997,7 @@ for arg in "$@"; do
 
         -tbb=*)
             tbbdir=`echo $arg | sed -e 's/-tbb=//'`
-	    fixmakeargs="$fixmakeargs useropt=-I${tbbdir}/include "
+	        fixmakeargs="$fixmakeargs useropt=-I${tbbdir}/include "
             shift
             ;;
 
@@ -11375,8 +11375,9 @@ if [ "x$download_dyninst" = xyes ] ; then
       old_CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH
       export CPATH=${dyninsttbbdir} # To prevent using wrong tbb/include when building
       export CMAKE_PREFIX_PATH="" # To prevent looking for tbb installation by bfd
-      ## Now we can make Dyninst
-      CC=$compiler_for_dyninst CXX=$compilerxx_for_dyninst cmake ${prebfddir}/${libdyninst} -DBoost_ROOT_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DLibIberty_ROOT_DIR=${libiberty_root_dir} -DLibIberty_LIBRARIES=${dyninstdir}/libiberty/lib/libiberty.a -DElfUtils_ROOT_DIR=${dyninstdir}/elfutils/ -DTBB_ROOT_DIR=${tbbdir}
+      # Now we can make Dyninst
+      # Force the library install path to always be lib, needed if we can version in the future
+      CC=$compiler_for_dyninst CXX=$compilerxx_for_dyninst cmake ${prebfddir}/${libdyninst} -DBoost_ROOT_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DCMAKE_INSTALL_LIBDIR=lib  -DLibIberty_ROOT_DIR=${libiberty_root_dir} -DLibIberty_LIBRARIES=${dyninstdir}/libiberty/lib/libiberty.a -DElfUtils_ROOT_DIR=${dyninstdir}/elfutils/ -DTBB_ROOT_DIR=${tbbdir}
       make -j8
       make install
       export CPATH=$old_CPATH
@@ -13124,6 +13125,12 @@ if [ $dyninst = yes ] ; then
     fi
     if [ $machine = arm64_linux ]; then
       fixmakeargs="$fixmakeargs DYN_ARMLINUX64"
+    fi
+    #TBB can be built with dyninst=download or included with -tbb=*
+    #For dyninst with suport for tbb@2023 and newer, we need to use -DDYNINST_TBB_HAS_VERSION_H
+    # due to a header from Dyninst is imported while building.
+    if [ -f ${tbbdir}/include/tbb/version.h ]; then
+        fixmakeargs="$fixmakeargs TBB_HAS_VERSION "
     fi
 fi
 

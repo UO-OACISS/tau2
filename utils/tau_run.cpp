@@ -12,7 +12,12 @@
  **              Profile/trace data is generated as the program executes **
  ****************************************************************************/
 
-
+//When using Dyninst compatible with new TBB versions, the headers need to use -DDYNINST_TBB_HAS_VERSION_H
+// However, we can include the version header ourselves, in case they change the name of the variable
+// or the location of the file changes in the future.
+#ifdef TBB_HAS_VERSION
+#include <tbb/version.h>
+#endif
 #include "BPatch.h"
 #include "BPatch_Vector.h"
 #include "BPatch_function.h"
