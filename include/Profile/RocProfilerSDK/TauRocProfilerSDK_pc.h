@@ -116,13 +116,15 @@ struct TauSDKSampleEvent {
     std::string name;
     int device_id;
     uint64_t cu_id;
+    uint32_t wave_count = 0;
 
     TauSDKSampleEvent(): device_id(0) {}
-    TauSDKSampleEvent(string event_name, rocprofiler_timestamp_t begin, rocprofiler_timestamp_t end, int t, uint64_t in_cu_id) : name(event_name), device_id(t)
+    TauSDKSampleEvent(string event_name, rocprofiler_timestamp_t begin, rocprofiler_timestamp_t end, int t, uint64_t in_cu_id, uint32_t in_wave_count) : name(event_name), device_id(t)
     {
         entry = begin;
         exit  = end;
         cu_id = in_cu_id;
+        wave_count = in_wave_count;
     }
     void printEvent() {
         std::cout <<name<<" Task: "<<device_id<<", \t\tEntry: "<<entry<<" , Exit = "<<exit;

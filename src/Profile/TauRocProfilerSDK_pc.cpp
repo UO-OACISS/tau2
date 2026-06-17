@@ -154,6 +154,16 @@ void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
     tau_last_pc_timestamp_published[taskid] = sdk_sample_event.exit;*/
     
     double timestamp_entry = (double)(sdk_sample_event.entry+deltaTimestamp_ns)/1e3; // convert to microseconds
+
+    if(sdk_sample_event.wave_count>0)
+    {
+        //static std::string wave_count_event = "Active waves"
+        void* ue = nullptr;
+        Tau_get_context_userevent(&ue, "Active waves");
+        TAU_CONTEXT_EVENT_THREAD_TS(ue, sdk_sample_event.wave_count, taskid, timestamp_entry);
+    }
+
+
     metric_set_gpu_timestamp(taskid, timestamp_entry);
     TAU_START_TASK(sdk_sample_event.name.c_str(), taskid);
 
@@ -489,13 +499,13 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 {
                     sample_event = TauSDKSampleEvent(task_name, pc_sample->timestamp, 
                         pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], 
-                        rocsdk_buffer_device_map[buffer_id.handle], pc_sample->hw_id);
+                        rocsdk_buffer_device_map[buffer_id.handle], pc_sample->hw_id, 0);
                 }
                 else
                 {
                     sample_event = TauSDKSampleEvent(task_name, pc_sample->timestamp, 
                         pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], 
-                        rocsdk_buffer_device_map[buffer_id.handle], 0);
+                        rocsdk_buffer_device_map[buffer_id.handle], 0, 0);
                 }
                 
                 TAU_process_sdk_sample_event(sample_event);
@@ -626,13 +636,13 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 {
                     sample_event = TauSDKSampleEvent(task_name, pc_sample->timestamp, 
                         pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], 
-                        rocsdk_buffer_device_map[buffer_id.handle], pc_sample->hw_id.cu_or_wgp_id);
+                        rocsdk_buffer_device_map[buffer_id.handle], pc_sample->hw_id.cu_or_wgp_id, 0);
                 }
                 else
                 {
                     sample_event = TauSDKSampleEvent(task_name, pc_sample->timestamp, 
                         pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], 
-                        rocsdk_buffer_device_map[buffer_id.handle], 0);
+                        rocsdk_buffer_device_map[buffer_id.handle], 0, 0);
                 }
                 
                 TAU_process_sdk_sample_event(sample_event);
@@ -673,7 +683,8 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                        << "correlation: {internal=" << std::setw(7)
                        << pc_sample->correlation_id.internal << ", "
                        << "external=" << std::setw(5) << pc_sample->correlation_id.external.value
-                       << "}" << std::endl;
+                       << "}" 
+                       << "wave_count= " << pc_sample->wave_count << std::endl;
                 #endif
 
                 auto inst = translator.get(pc_sample->pc.code_object_id,
@@ -775,18 +786,20 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 //Additional information, but not required, may be useful to debug
                 //rocprofiler_pc_sampling_snapshot_v0_t snapshot = pc_sample->snapshot;
                 //process_snapshot_sdk(snapshot);
+                uint32_t cur_wave_count = (pc_sample->wave_count > 0) ? pc_sample->wave_count : 0;
                 struct TauSDKSampleEvent sample_event;
                 if(sdk_sample_per_cu)
                 {
                     sample_event = TauSDKSampleEvent(task_name, pc_sample->timestamp, 
                         pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], 
-                        rocsdk_buffer_device_map[buffer_id.handle], pc_sample->hw_id.cu_or_wgp_id);
+                        rocsdk_buffer_device_map[buffer_id.handle], pc_sample->hw_id.cu_or_wgp_id,
+                        cur_wave_count);
                 }
                 else
                 {
                     sample_event = TauSDKSampleEvent(task_name, pc_sample->timestamp, 
                         pc_sample->timestamp + rocsdk_interval_map[buffer_id.handle], 
-                        rocsdk_buffer_device_map[buffer_id.handle], 0);
+                        rocsdk_buffer_device_map[buffer_id.handle], 0, cur_wave_count);
                 }
 
                 TAU_process_sdk_sample_event(sample_event);
