@@ -197,11 +197,12 @@ void TAU_process_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
 }
 
 
-/*
+
 std::string process_snapshot_sdk(rocprofiler_pc_sampling_snapshot_v0_t snapshot)
 {
     int issued=0;
     int stalled=0;
+    #ifdef ROCSDK_PC_DEBUG
     std::cout << "Dual? " << snapshot.dual_issue_valu;
     std::cout << " arbiter state: {pipe issued: ("
         << "VALU: " << static_cast<unsigned int>(snapshot.arb_state_issue_valu) << "\n, "
@@ -223,9 +224,10 @@ std::string process_snapshot_sdk(rocprofiler_pc_sampling_snapshot_v0_t snapshot)
         << "FLAT: " << static_cast<unsigned int>(snapshot.arb_state_stall_flat) << "\n, "
         << "EXPORT: " << static_cast<unsigned int>(snapshot.arb_state_stall_exp) << "\n, "
         << "MISC: " << static_cast<unsigned int>(snapshot.arb_state_stall_misc) << ")}\n";
- 
+    
+    #endif
     //Instructions issued
-    std::string snap_string = (snapshot.dual_issue_valu)? "Dual instruction [": "Single instruction [" ;
+    std::string snap_string = "Scheduler issued [" ;
     if(snapshot.arb_state_issue_brmsg)
     {
         snap_string += " Branch/Message,";
@@ -268,18 +270,21 @@ std::string process_snapshot_sdk(rocprofiler_pc_sampling_snapshot_v0_t snapshot)
     }
     if(snapshot.arb_state_issue_valu)
     {
-        snap_string += " VALU,";
+        if(snapshot.dual_issue_valu)
+            snap_string += " dual VALU,";
+        else
+            snap_string += " VALU,";
         issued++;
     }
     if(snapshot.arb_state_issue_vmem_tex)
     {
-        snap_string += " Texture,";
+        snap_string += "Texture,";
         issued++;
     }
-    snap_string+="]";
+    snap_string+="] ";
     snap_string = (issued==0)? "" : snap_string;
     //Stalls
-    std::string stall_string = "Stalled at [";
+    std::string stall_string = "Scheduler stalled [";
     if(snapshot.arb_state_stall_brmsg)
     {
         stall_string += " Branch/Message,";
@@ -330,12 +335,87 @@ std::string process_snapshot_sdk(rocprofiler_pc_sampling_snapshot_v0_t snapshot)
         stall_string += " Texture,";
         stalled++;
     }
-    stall_string+="]";
+    stall_string+="] ter an";
     stall_string = (stalled==0)? "" : stall_string;
 
-    std::cout << snap_string  << " " << stall_string << std::endl;
-    return "";
-}*/
+    //std::cout << snap_string  << " " << stall_string << std::endl;
+    std::string stall_snap_string = stall_string + snap_string;
+    return stall_snap_string;
+    /*
+    ss_debug << "!! SNAPSHOT " ;
+
+    if (pc_sample->snapshot.arb_state_issue_brmsg)
+        ss_debug << "arbiter issued a branch/message instruction, ";
+
+    if (pc_sample->snapshot.arb_state_issue_exp)
+        ss_debug << "arbiter issued a export instruction, ";
+
+    if (pc_sample->snapshot.arb_state_issue_flat)
+        ss_debug << "arbiter issued a FLAT instruction, ";
+
+    if (pc_sample->snapshot.arb_state_issue_lds)
+        ss_debug << "arbiter issued a LDS instruction, ";
+
+    if (pc_sample->snapshot.arb_state_issue_lds_direct)
+        ss_debug << "arbiter issued a LDS direct instruction, ";
+
+    if (pc_sample->snapshot.arb_state_issue_matrix)
+        ss_debug << "arbiter issued a matrix instruction, ";
+
+    if (pc_sample->snapshot.arb_state_issue_misc)
+        ss_debug << "arbiter issued a miscellaneous instruction, ";
+
+    if (pc_sample->snapshot.arb_state_issue_reserved)
+        ss_debug << "reserved for the future use, ";
+
+    if (pc_sample->snapshot.arb_state_issue_scalar)
+        ss_debug << "arbiter issued a scalar (SALU/SMEM) instruction, ";
+
+    if (pc_sample->snapshot.arb_state_issue_valu)
+        ss_debug << "arbiter issued a VALU instruction, ";
+
+    if (pc_sample->snapshot.arb_state_issue_vmem_tex)
+        ss_debug << "arbiter issued a texture instruction, ";
+
+    if (pc_sample->snapshot.arb_state_stall_brmsg)
+        ss_debug << "branch/message instruction was stalled, ";
+
+    if (pc_sample->snapshot.arb_state_stall_exp)
+        ss_debug << "export instruction was stalled, ";
+
+    if (pc_sample->snapshot.arb_state_stall_flat)
+        ss_debug << "flat instruction was stalled, ";
+
+    if (pc_sample->snapshot.arb_state_stall_lds)
+        ss_debug << "LDS instruction was stalled, ";
+
+    if (pc_sample->snapshot.arb_state_stall_lds_direct)
+        ss_debug << "LDS direct instruction was stalled, ";
+
+    if (pc_sample->snapshot.arb_state_stall_matrix)
+        ss_debug << "matrix instruction was stalled, ";
+
+    if (pc_sample->snapshot.arb_state_stall_misc)
+        ss_debug << "miscellaneous instruction was stalled, ";
+
+    if (pc_sample->snapshot.arb_state_stall_scalar)
+        ss_debug << "Scalar (SALU/SMEM) instruction was stalled, ";
+
+    if (pc_sample->snapshot.arb_state_stall_valu)
+        ss_debug << "VALU instruction was stalled when a sample was generated, ";
+
+    if (pc_sample->snapshot.arb_state_stall_vmem_tex)
+        ss_debug << "texture instruction was stalled, ";
+
+    if (pc_sample->snapshot.dual_issue_valu)
+        ss_debug << "Two VALU instructions were issued for coexecution (MI3xx specific), ";
+
+    if (pc_sample->snapshot.sampling_lock_error)
+        ss_debug << "At least one wave was locked out from taking a sample, due to the latency introduced by current sample read. Too many samples with this bit on indicates that the sampling frequency is too high ";
+
+    ss_debug << std::endl;
+    */
+}
 
 pc_sampling_buffer_id_vec_t* pc_buffer_ids = nullptr;
 void
@@ -685,6 +765,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                        << "external=" << std::setw(5) << pc_sample->correlation_id.external.value
                        << "}" 
                        << "wave_count= " << pc_sample->wave_count << std::endl;
+                
                 #endif
 
                 auto inst = translator.get(pc_sample->pc.code_object_id,
@@ -723,35 +804,41 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                 
                 if(pc_sample->wave_issued)
                 {
-
-                    
                     auto* inst_c_str = rocprofiler_get_pc_sampling_instruction_type_name(
                         static_cast<rocprofiler_pc_sampling_instruction_type_t>(pc_sample->inst_type));
                     assert(inst_c_str != nullptr);
                     std::string inst_c_str_ = inst_c_str;
-                    //std::cout << "wave issued " << std::string(inst_c_str) << " instruction, ";
+                    #ifdef ROCSDK_PC_DEBUG  
+                    ss_debug << "Sampling " << std::string(inst_c_str) << " instruction " << std::endl;
+                    #endif
                     static std::string itype_prefix = "ROCPROFILER_PC_SAMPLING_INSTRUCTION_TYPE_";
                     std::string str_inst = (inst_c_str_.compare(0, 41, itype_prefix)==0)? 
                                             inst_c_str_.erase(0,41) : inst_c_str_;
 
-                    task_name = "[rocm sample] Issued instruction [" + str_inst + "] ";
+                    task_name = "[rocm sample] Sampling instruction [" + str_inst + "] ";
                 }
                 else
                 {
 
-                    
                     auto* reason_c_str = rocprofiler_get_pc_sampling_instruction_not_issued_reason_name(
                         static_cast<rocprofiler_pc_sampling_instruction_not_issued_reason_t>(
                             pc_sample->snapshot.reason_not_issued));
                     assert(reason_c_str != nullptr);
                     std::string reason_c_str_ = reason_c_str;
-                    //std::cout << "wave is stalled due to: " << std::string(reason_c_str) << " reason, ";
+                    #ifdef ROCSDK_PC_DEBUG  
+                    ss_debug << "wave is stalled due to: " << std::string(reason_c_str) << std::endl;
+                    #endif
                     static std::string sreason_prefix = "ROCPROFILER_PC_SAMPLING_INSTRUCTION_NOT_ISSUED_REASON_";
                     std::string stall_reason = (reason_c_str_.compare(0, 54, sreason_prefix)==0)? 
                                             reason_c_str_.erase(0,54) : reason_c_str_;
 
                     task_name = "[rocm sample] Stall reason [" + stall_reason + "] ";
                 }
+
+                                
+                //Additional information, but not required, may be useful to debug
+                rocprofiler_pc_sampling_snapshot_v0_t snapshot = pc_sample->snapshot;
+                task_name += process_snapshot_sdk(snapshot).c_str();
 
                 if(elem->second.comment.empty())
                 {
@@ -782,10 +869,7 @@ rocprofiler_pc_sampling_callback(rocprofiler_context_id_t /*context_id*/,
                     #endif
                 }
                 //std::cout << std::endl;
-                
-                //Additional information, but not required, may be useful to debug
-                //rocprofiler_pc_sampling_snapshot_v0_t snapshot = pc_sample->snapshot;
-                //process_snapshot_sdk(snapshot);
+
                 uint32_t cur_wave_count = (pc_sample->wave_count > 0) ? pc_sample->wave_count : 0;
                 struct TauSDKSampleEvent sample_event;
                 if(sdk_sample_per_cu)
