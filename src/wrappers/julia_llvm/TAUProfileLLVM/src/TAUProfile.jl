@@ -46,7 +46,8 @@ export tau_rewrite_and_call, trace_code, @tau_rewrite,
        tau_rewrite_exclude_prefix, tau_rewrite_reset_exclusions,
        tau_rewrite_include_module_only,
        tau_rewrite_set_recursion_limit, tau_rewrite_include_types,
-       tau_rewrite_force_noinline,
+       tau_rewrite_force_noinline, tau_rewrite_time_phase1,
+       tau_rewrite_time_phase2,
        enable_tracing!, disable_tracing!, tracing_enabled,
        # Classic-parity public API (Phase 3) so the same script runs on either backend
        tau_start, tau_stop, @tau, @tau_func, tau_rewrite,
@@ -397,6 +398,37 @@ Force inlining to be turned off for all traced functions.
 """
 tau_rewrite_force_noinline(enabled::Bool=true) =
     (_disable_julia_inlining[] = enabled; nothing)
+
+# Whether to wrap Phase 1 rewriting in a timer
+const _time_phase1 = Ref{Bool}(true)
+
+"""
+    tau_rewrite_time_phase1(enabled::Bool=true)
+
+Toggle timing of the Phase 1 rewrite.
+"""
+tau_rewrite_time_phase1(enabled::Bool=true) = (_time_phase1[] = enabled; nothing)
+
+# Phase 2 rewrite timing mode.
+const _PHASE2_TIMING_MODES = (:off, :separate, :combined)
+const _phase2_timing_mode = Ref{Symbol}(:separate)
+
+"""
+    tau_rewrite_time_phase2(mode::Symbol=:separate)
+
+Select how the Phase 2 rewrite is timed:
+
+- `:separate` (default) — accumulate into a distinct `.TAU Julia Phase 2 Rewrite` timer.
+- `:combined` — accumulate into the same `.TAU Julia Rewrite` timer as Phase 1.
+- `:off` — do not time Phase 2.
+"""
+function tau_rewrite_time_phase2(mode::Symbol=:separate)
+    mode in _PHASE2_TIMING_MODES ||
+        throw(ArgumentError("mode must be one of " *
+                            "$(_PHASE2_TIMING_MODES), got :$mode"))
+    _phase2_timing_mode[] = mode
+    nothing
+end
 
 """Clear all exclusions, whitelists, depth limits, and type inclusion."""
 function tau_rewrite_reset_exclusions()
@@ -2099,6 +2131,10 @@ function _tracing_llvm_typeinf_toplevel(mi::Core.MethodInstance, world::UInt,
     _is_const_return(ci) && return ci
 
     _set_phase2_reentrant!(true)
+    # Time the Phase 2 rewrite (started after the reentrancy guard so compiling the
+    # timer helpers can't recurse into this pipeline). Excludes the standard
+    # compilation above, which happens regardless of instrumentation.
+    _p2_timer = _tau_start_phase2()
     try
         # Get source CodeInfo for the method.
         src = _phase2_lowered_src(mi, world)
@@ -2133,6 +2169,9 @@ function _tracing_llvm_typeinf_toplevel(mi::Core.MethodInstance, world::UInt,
     catch ex
         @warn "Phase 2 instrumentation failed" exception=(ex, catch_backtrace())
     finally
+        # Stop before clearing the guard so any compilation triggered by the stop
+        # can't recurse into the Phase 2 pipeline.
+        _tau_stop_phase2(_p2_timer)
         _set_phase2_reentrant!(false)
     end
     return ci
@@ -2208,6 +2247,10 @@ function _precompile_phase2!()
     # Existing functions used in pipeline
     precompile(_has_cfunction_closure, (Core.CodeInfo,))
 
+    # Phase 2 rewrite timing helpers (called from the typeinf hook post-freeze)
+    precompile(_tau_start_phase2, ())
+    precompile(_tau_stop_phase2, (Ptr{Cvoid},))
+
     _dry_run_phase2_pipeline!()
 
     nothing
@@ -2278,6 +2321,67 @@ function tau_rewrite(@nospecialize(f), @nospecialize(argtypes::Tuple))
     return (args...) -> tau_rewrite_and_call(f, args...)
 end
 
+# Label for the rewrite timer.
+const _PHASE1_TIMER_NAME = ".TAU Julia Rewrite"
+
+# Profile group for the rewrite timer.
+const _PHASE1_TIMER_GROUP = "TAU_UTILITY"
+
+# Cached FunctionInfo* for the Phase 1 rewrite timer
+const _PHASE1_TIMER_HANDLE = Ref{Ptr{Cvoid}}(C_NULL)
+
+# Get-or-create a TAU_UTILITY timer FunctionInfo for `name`.
+function _ensure_util_timer!(handleref::Ref{Ptr{Cvoid}}, name::String)
+    if handleref[] == C_NULL
+        grp = ccall((:Tau_get_profile_group, _libTAU[]), Culong, (Cstring,),
+                    _PHASE1_TIMER_GROUP)
+        ccall((:Tau_profile_c_timer, _libTAU[]), Cvoid,
+              (Ptr{Ptr{Cvoid}}, Cstring, Cstring, Culong, Cstring),
+              handleref, name, "", grp, _PHASE1_TIMER_GROUP)
+    end
+    return handleref[]
+end
+
+# Start a cached TAU_UTILITY timer on the (pinned) current thread.
+function _tau_start_util_timer(handleref::Ref{Ptr{Cvoid}}, name::String)
+    isempty(_libTAU[]) && return C_NULL
+    current_task().sticky = true
+    handle = _ensure_util_timer!(handleref, name)
+    handle == C_NULL && return C_NULL
+    tid = ccall((:Tau_get_thread, _libTAU[]), Cint, ())
+    ccall((:Tau_start_timer, _libTAU[]), Cvoid, (Ptr{Cvoid}, Cint, Cint), handle, 0, tid)
+    return handle
+end
+
+# Stop a TAU_UTILITY timer by handle on the current thread.
+function _tau_stop_util_timer(handle::Ptr{Cvoid})
+    (handle == C_NULL || isempty(_libTAU[])) && return
+    tid = ccall((:Tau_get_thread, _libTAU[]), Cint, ())
+    ccall((:Tau_stop_timer, _libTAU[]), Cvoid, (Ptr{Cvoid}, Cint), handle, tid)
+    nothing
+end
+
+# --- Phase 1 rewrite timer ---
+_tau_start_rewrite() = (_tau_start_util_timer(_PHASE1_TIMER_HANDLE, _PHASE1_TIMER_NAME); nothing)
+_tau_stop_rewrite()  = _tau_stop_util_timer(_PHASE1_TIMER_HANDLE[])
+
+# --- Phase 2 rewrite timer ---
+const _PHASE2_TIMER_NAME = ".TAU Julia Phase 2 Rewrite"
+
+# Cached FunctionInfo* for the :separate-mode Phase 2 timer.
+const _PHASE2_TIMER_HANDLE = Ref{Ptr{Cvoid}}(C_NULL)
+
+# Start the Phase 2 timer per _phase2_timing_mode.
+function _tau_start_phase2()::Ptr{Cvoid}
+    mode = _phase2_timing_mode[]
+    mode === :off && return C_NULL
+    return mode === :combined ?
+        _tau_start_util_timer(_PHASE1_TIMER_HANDLE, _PHASE1_TIMER_NAME) :
+        _tau_start_util_timer(_PHASE2_TIMER_HANDLE, _PHASE2_TIMER_NAME)
+end
+
+_tau_stop_phase2(handle::Ptr{Cvoid}) = _tau_stop_util_timer(handle)
+
 """
     tau_rewrite_and_call(f, args...) -> result
 
@@ -2285,44 +2389,57 @@ Compile `f` with LLVM-level instrumentation, JIT-compile the instrumented module
 and execute it.
 """
 function tau_rewrite_and_call(@nospecialize(f), args...)
-    tt = Tuple{map(typeof, args)...}
-    mi = GPUCompiler.methodinstance(typeof(f), tt, Base.get_world_counter())
-    target = GPUCompiler.NativeCompilerTarget(; jlruntime=true)
-    params = TracingPluginParams()
-    config = GPUCompiler.CompilerConfig(target, params; kernel=false, entry_abi=:func, validate=false)
-    job = GPUCompiler.CompilerJob(mi, config)
+    # Time the rewrite (compile + instrument + JIT) as its own TAU timer.
+    do_time = _time_phase1[]
+    rewrite_stopped = Ref(false)
+    stop_rewrite!() = (do_time && !rewrite_stopped[] &&
+                       (_tau_stop_rewrite(); rewrite_stopped[] = true); nothing)
 
-    GPUCompiler.JuliaContext() do ctx
-        ir, meta = GPUCompiler.compile(:llvm, job)
+    do_time && _tau_start_rewrite()
+    try
+        tt = Tuple{map(typeof, args)...}
+        mi = GPUCompiler.methodinstance(typeof(f), tt, Base.get_world_counter())
+        target = GPUCompiler.NativeCompilerTarget(; jlruntime=true)
+        params = TracingPluginParams()
+        config = GPUCompiler.CompilerConfig(target, params; kernel=false, entry_abi=:func, validate=false)
+        job = GPUCompiler.CompilerJob(mi, config)
 
-        entry_fn = meta.entry
-        func_name = LLVM.name(entry_fn)
-        LLVM.linkage!(entry_fn, LLVM.API.LLVMExternalLinkage)
+        return GPUCompiler.JuliaContext() do ctx
+            ir, meta = GPUCompiler.compile(:llvm, job)
 
-        @dispose jljit=LLVM.JuliaOJIT() begin
-            jd = LLVM.JITDylib(jljit)
-            prefix = LLVM.get_prefix(jljit)
-            dg = LLVM.CreateDynamicLibrarySearchGeneratorForProcess(prefix)
-            LLVM.add!(jd, dg)
+            entry_fn = meta.entry
+            func_name = LLVM.name(entry_fn)
+            LLVM.linkage!(entry_fn, LLVM.API.LLVMExternalLinkage)
 
-            tsm = LLVM.ThreadSafeModule(ir)
-            LLVM.add!(jljit, jd, tsm)
+            @dispose jljit=LLVM.JuliaOJIT() begin
+                jd = LLVM.JITDylib(jljit)
+                prefix = LLVM.get_prefix(jljit)
+                dg = LLVM.CreateDynamicLibrarySearchGeneratorForProcess(prefix)
+                LLVM.add!(jd, dg)
 
-            addr = LLVM.lookup(jljit, func_name)
-            fptr = pointer(addr)
+                tsm = LLVM.ThreadSafeModule(ir)
+                LLVM.add!(jljit, jd, tsm)
 
-            _install_phase2!()
-            try
-                args_array = Any[args...]
-                GC.@preserve args_array begin
-                    result = ccall(fptr, Any, (Any, Ptr{Any}, Int32),
-                                   f, args_array, Int32(length(args_array)))
+                addr = LLVM.lookup(jljit, func_name)
+                fptr = pointer(addr)
+
+                _install_phase2!()
+                # Phase 1 (rewrite + compile + JIT) is complete; stop its timer
+                stop_rewrite!()
+                try
+                    args_array = Any[args...]
+                    GC.@preserve args_array begin
+                        result = ccall(fptr, Any, (Any, Ptr{Any}, Int32),
+                                       f, args_array, Int32(length(args_array)))
+                    end
+                    return result
+                finally
+                    _uninstall_phase2!()
                 end
-                return result
-            finally
-                _uninstall_phase2!()
             end
         end
+    finally
+        stop_rewrite!()
     end
 end
 
