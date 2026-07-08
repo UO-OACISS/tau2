@@ -3488,7 +3488,9 @@ extern "C" void Tau_pure_start_task_group(const char * n, int tid, const char * 
    * this function. */
   static int do_this_once = Tau_init_initializeTAU();
   string name = n; // this is VERY bad if called from signalling! see above ^
-  FunctionInfo *fi = Tau_get_function_info_internal(name, "", TAU_USER, "TAU_USER");
+  const char * gr_name = group ? group : "TAU_USER";
+  TauGroup_t gr = RtsLayer::getProfileGroup(gr_name);
+  FunctionInfo *fi = Tau_get_function_info_internal(name, "", gr, gr_name);
   Tau_start_timer(fi, 0, tid);
 }
 

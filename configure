@@ -11834,30 +11834,65 @@ if [ $sproc = yes ] ; then
 fi
 
 if [ $python = yes ] ; then
+    python_major=`${pythonintv} -c "import sys; print(sys.version_info[0])" 2>/dev/null`
+    python_minor=`${pythonintv} -c "import sys; print(sys.version_info[1])" 2>/dev/null`
+
+    # pstubs (sys.monitoring) applies to Python >= 3.12, independent of libpython.
+    use_pstubs=no
+    if [ "x$python_major" = "x3" ] && [ "${python_minor:-0}" -ge 12 ] 2>/dev/null ; then
+        use_pstubs=yes
+    fi
+
+    # Classic Python support (ctau_impl, pytau, tau_callbacks.py) requires libpython.
+    # This check is independent of the Python version / pstubs decision above.
+    use_python_classic=no
     if [ "x$pythonlibrary" = "x" ] ; then
         echo "Checking for Python library name from interpreter ${pythonintv}... "
         pythonlibrary=`${pythonintv} ./utils/python_get_paths.py libname | sed -e 's/ .*//g'`
     fi
     if [ "x$pythonlibrary" != "x" ] ; then
-	#If the python library directory exists but the library is not found we may be in a
-	#virtual environment. Query the library and include paths directly.
+        #If the python library directory exists but the library is not found we may be in a
+        #virtual environment. Query the library and include paths directly.
         if [ ! -f $pythonlib/$pythonlibrary ] ; then
-		pythonlib=`${pythonintv} ./utils/python_get_paths.py libdir | sed -e 's/ .*//g'`
-		pythoninc=`${pythonintv} ./utils/python_get_paths.py inc | sed -e 's/ .*//g'`
-	fi
-
-	if [ ! -f $pythonlib/$pythonlibrary ] ; then
-                echo "ERROR: Python library $pythonlib/$pythonlibrary not found."
-                exit 1
+            pythonlib=`${pythonintv} ./utils/python_get_paths.py libdir | sed -e 's/ .*//g'`
+            pythoninc=`${pythonintv} ./utils/python_get_paths.py inc | sed -e 's/ .*//g'`
         fi
-            fixmakeargs="$fixmakeargs pythonlibrary=$pythonlibrary"
+        if [ -f $pythonlib/$pythonlibrary ] ; then
+            use_python_classic=yes
+        else
+            echo "WARNING: Python library $pythonlib/$pythonlibrary not found."
+            echo "NOTE: libpython based instrumentation (ctau_impl, pytau, tau_callbacks.py) will not be available."
+        fi
     fi
-    fixmakeargs="$fixmakeargs PYTHON pythoninc=$pythoninc pythonlib=$pythonlib"
-    tauoptions="${tauoptions}-python"
-    if [ $machine = rs6000 -a "x$pythonlib" = "x" ] ; then
+    if [ $use_python_classic = no -a $machine = rs6000 -a "x$pythonlib" = "x" ] ; then
         echo "ERROR: For IBM systems, please specify the -pythonlib=<dir> flag where *.py files and the config directory are located!"
         exit 1
     fi
+
+    # Require at least one Python support mode to be buildable.
+    if [ $use_python_classic = no -a $use_pstubs = no ] ; then
+        echo "ERROR: Python support was requested (-python) but cannot be built:"
+        echo "  - No shared libpython found (required for ctau_impl/pytau instrumentation)"
+        echo "  - Python ${python_major}.${python_minor} < 3.12 (pstubsrequires Python >= 3.12)"
+        echo "Please use a Python installation with a shared libpython, or upgrade to Python >= 3.12."
+        exit 1
+    fi
+
+    if [ $use_python_classic = yes ] ; then
+        if [ "x$pythonlibrary" != "x" ] ; then
+            fixmakeargs="$fixmakeargs pythonlibrary=$pythonlibrary"
+        fi
+        fixmakeargs="$fixmakeargs PYTHON pythoninc=$pythoninc pythonlib=$pythonlib"
+    fi
+    if [ $use_pstubs = yes ] ; then
+        if [ $use_python_classic = no ] ; then
+            echo "Python ${python_major}.${python_minor}: libpython not found; using pstubs-only Python support."
+        else
+            echo "Python ${python_major}.${python_minor}: building both libpython support and pstubs."
+        fi
+        fixmakeargs="$fixmakeargs PSTUBS"
+    fi
+    tauoptions="${tauoptions}-python"
 fi
 if [ $cuda = yes ] ; then
     if [ $disableshared = no ] ; then

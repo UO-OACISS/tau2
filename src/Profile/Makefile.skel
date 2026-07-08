@@ -252,6 +252,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 ##############################################
 
 #PYTHON#EXTRA_LIBS += $(MPI_WRAPPER) #ENDIF#
+#PSTUBS#EXTRA_LIBS += $(MPI_WRAPPER) #ENDIF#
 
 ##############################################
 # For building TauLinuxTimers with gcc
