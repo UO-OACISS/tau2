@@ -1015,8 +1015,8 @@ MPI_Comm * comm;
   //TAU_MPI_COLLECTIVE_SYNC(comm);
 
   MPI_Comm silly =  *comm;
-  returnVal = PMPI_Comm_free( &(silly) );
-  TIMER_EXIT_COMM_FREE_EVENT(*comm);
+  returnVal = PMPI_Comm_free( comm );
+  TIMER_EXIT_COMM_FREE_EVENT(silly);
 
   TAU_PROFILE_STOP(tautimer);
 
