@@ -62,6 +62,7 @@ std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename)
 //Map to identify kernels and some of their information
 using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
 using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_symbol_data_t>;
+extern extern void register_kernel_dispatch(rocprofiler_kernel_dispatch_info_t dispatch_info, rocprofiler_timestamp_t end_timestamp);
 
 extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, uint64_t* queueid, double* counter_value, rocprofiler_timestamp_t* c_timestamp);
 extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
@@ -542,15 +543,20 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
       }
       else if(header->kind == ROCPROFILER_BUFFER_TRACING_KERNEL_DISPATCH)
       {
+
+
         //printf("ROCPROFILER_BUFFER_TRACING_KERNEL_DISPATCH\n");
         auto* record = static_cast<rocprofiler_buffer_tracing_kernel_dispatch_record_t*>(header->payload);
+        //printf("ROCPROFILER_BUFFER_TRACING_KERNEL_DISPATCH kernel_id %lu  dispatch_id %lu\n", record->dispatch_info.kernel_id, record->dispatch_info.dispatch_id);
         if(record->start_timestamp > record->end_timestamp)
           throw std::runtime_error("kernel dispatch: start > end");
+
+        register_kernel_dispatch(record->dispatch_info, record->end_timestamp);
 
         //This should be related to the GPU id(agent_id.handle which is uint64_t)
         //int queueid = 1 + (int)record->dispatch_info.agent_id.handle;
         auto agent_id = record->dispatch_info.agent_id.handle;
-
+        
         int taskid;
         uint64_t cur_queue_id = record->dispatch_info.queue_id.handle;
         TauSDK_dev_que cur_dev_que = {agent_id, cur_queue_id};
@@ -792,7 +798,9 @@ tool_tracing_callback(rocprofiler_context_id_t      context,
         // it does not read the event, but sets some data needed to read future events,
         // which is performed by read_hc_record()
         if(header->kind == ROCPROFILER_COUNTER_RECORD_PROFILE_COUNTING_DISPATCH_HEADER)
-          continue;        
+          continue;
+        if(msg == "")        
+          continue;
         
         int taskid;
         TauSDK_dev_que cur_dev_que = {agent_id, cur_queue_id};
@@ -949,6 +957,8 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
     if(record.phase == ROCPROFILER_CALLBACK_PHASE_LOAD)
     {
       client_kernels.emplace(data->kernel_id, *data);
+      //Only enable if needed for DEBUG
+      //std::cout << data->kernel_id << " "<< data->kernel_name << std::endl;
     }
     /*else if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
     {
@@ -980,6 +990,8 @@ int tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
   ROCPROFILER_CALL(rocprofiler_create_context(&client_ctx), "context creation");
   auto code_object_ops = std::vector<rocprofiler_tracing_operation_t>{
         ROCPROFILER_CODE_OBJECT_DEVICE_KERNEL_SYMBOL_REGISTER};
+
+  
   ROCPROFILER_CALL(
                     rocprofiler_configure_callback_tracing_service(client_ctx,
                                                        ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT,
@@ -999,10 +1011,11 @@ int tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
                                                        nullptr),
                                                        "roctx marker tracing service configure");  
   
-                                                       
+                                             
   //Create buffer for buffered tracing
   constexpr auto buffer_size_bytes      = 4096;
-  constexpr auto buffer_watermark_bytes = buffer_size_bytes - (buffer_size_bytes / 8);
+  //When the buffer should be flushed
+  constexpr auto buffer_watermark_bytes = buffer_size_bytes - (buffer_size_bytes / 2);
   ROCPROFILER_CALL(rocprofiler_create_buffer(client_ctx,
                                                buffer_size_bytes,
                                                buffer_watermark_bytes,
@@ -1010,10 +1023,10 @@ int tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
                                                tool_tracing_callback,
                                                tool_data,
                                                &client_buffer),
-                                               "buffer creation");
+                                               "buffer creation failed");
   
-   //Configure rocprofiler-sdk to trace the services in supported_kinds
-   for(const auto& kind_id : supported_kinds)
+  //Configure rocprofiler-sdk to trace the services in supported_kinds
+  for(const auto& kind_id : supported_kinds)
   {
     std::string msg = "configuring buffer tracing for kind id: "+std::to_string(kind_id);
 

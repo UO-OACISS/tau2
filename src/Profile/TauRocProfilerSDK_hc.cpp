@@ -22,12 +22,12 @@ get_profile_cache()
 }
 
 //Map to identify counters
-std::map<uint64_t, const char*> used_counter_id_map ;
+static std::map<uint64_t, const char*> used_counter_id_map ;
 //Count the number of counters enabled in total, used to check that the counters were found
 static int total_counters_enabled = 0;
 
 //Map to identify kernels using dispatch id and kernel_id. Used for hardware counter profiling
-std::map<rocprofiler_dispatch_id_t, Tau_SDK_hc_timestamp> dispatch_id_kernel_map;
+static std::map<rocprofiler_dispatch_id_t, Tau_SDK_hc_timestamp> dispatch_id_kernel_map;
 
 /**
  * Callback from rocprofiler when an kernel dispatch is enqueued into the HSA queue.
@@ -117,9 +117,15 @@ build_profile_for_agent(rocprofiler_agent_id_t       agent,
   // Create and return the profile
   
   rocprofiler_counter_config_id_t profile = {.handle = 0};
+  #ifdef PROFILE_SDKCOUNTERS_v1
+  ROCPROFILER_CALL(rocprofiler_create_counter_config(
+                       agent, collect_counters.data(), collect_counters.size(), &profile),
+                   "Could not construct profile cfg");
+  #else
   ROCPROFILER_CALL(rocprofiler_create_profile_config(
                        agent, collect_counters.data(), collect_counters.size(), &profile),
                    "Could not construct profile cfg");
+  #endif
 
   return profile;
 }
@@ -151,6 +157,21 @@ counter_dimensions(rocprofiler_counter_id_t counter)
 }
 
 
+void register_kernel_dispatch(rocprofiler_kernel_dispatch_info_t dispatch_info, rocprofiler_timestamp_t end_timestamp)
+{
+  auto it = dispatch_id_kernel_map.find(dispatch_info.dispatch_id);
+  //Only create if it doesn't exist
+  if (it == dispatch_id_kernel_map.end()) {
+    Tau_SDK_hc_timestamp e;
+    e.id = dispatch_info.kernel_id;
+    e.last_timestamp = end_timestamp;
+    e.queue_id = dispatch_info.queue_id.handle;
+    dispatch_id_kernel_map.emplace(dispatch_info.dispatch_id, e);
+    //printf("ROCPROFILER_COUNTER_RECORD kernel_id %lu  dispatch_id %lu\n", dispatch_info.kernel_id, dispatch_info.dispatch_id);
+  }
+  
+}
+
 //Get the payload from the callback and reads the record, there are two types of payloads for the hardware counter
 //ROCPROFILER_COUNTER_RECORD_PROFILE_COUNTING_DISPATCH_HEADER
 // provides information to correlate dispatch ID and kernel ID to identify the profiled kernel
@@ -163,38 +184,50 @@ std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t cli
   if(kind == ROCPROFILER_COUNTER_RECORD_PROFILE_COUNTING_DISPATCH_HEADER)
   {
     auto* record = static_cast<rocprofiler_dispatch_counting_service_record_t*>(payload);
-
-    Tau_SDK_hc_timestamp e;
-    e.id = record->dispatch_info.kernel_id;
-    e.last_timestamp = record->end_timestamp;
-    e.queue_id = record->dispatch_info.queue_id.handle;
-    dispatch_id_kernel_map.emplace(record->dispatch_info.dispatch_id, e);
-    //printf("ROCPROFILER_COUNTER_RECORD %lu\n", record->end_timestamp);
+    register_kernel_dispatch(record->dispatch_info, record->end_timestamp);
   }
   //Hardware counter values
-  else if(kind == ROCPROFILER_COUNTER_RECORD_VALUE)
+  else
+  if(kind == ROCPROFILER_COUNTER_RECORD_VALUE)
   {
-    // Print the returned counter data.
-    auto* record = static_cast<rocprofiler_record_counter_t*>(payload);
-    rocprofiler_counter_id_t counter_id = {.handle = 0};
-    rocprofiler_query_record_counter_id(record->id, &counter_id);
-    Tau_SDK_hc_timestamp cur_hc_event = dispatch_id_kernel_map[record->dispatch_id];
-    std::string tmp;
-    ss << "Counter: (" ;
-    ss << used_counter_id_map[counter_id.handle] << ") [ROCm Kernel]";
-    ss << Tau_demangle_name(client_kernels.at(cur_hc_event.id).kernel_name);
-    ss << " ["; 
-    for(auto& dim : counter_dimensions(counter_id))
-    {
-    	size_t pos = 0;
-    	rocprofiler_query_record_dimension_position(record->id, dim.id, &pos);
-    	ss << " " << dim.name << ": " << pos ;
-    }
-    ss << "]";
-    *counter_value = record->counter_value ;			
-    *agentid = record->agent_id.handle; 
-    *queueid = cur_hc_event.queue_id;
-    *c_timestamp = cur_hc_event.last_timestamp;
+    #ifdef PROFILE_SDKCOUNTERS_v1
+      auto* record = static_cast<rocprofiler_counter_record_t*>(payload);
+    #else
+      auto* record = static_cast<rocprofiler_record_counter_t*>(payload);
+    #endif
+      rocprofiler_counter_id_t counter_id = {.handle = 0};
+      rocprofiler_query_record_counter_id(record->id, &counter_id);
+      Tau_SDK_hc_timestamp cur_hc_event;
+
+      auto it = dispatch_id_kernel_map.find(record->dispatch_id);
+      if (it != dispatch_id_kernel_map.end()) {
+        cur_hc_event = dispatch_id_kernel_map[record->dispatch_id];
+      }
+      else
+      {
+        //printf("!! record dispatch_id %lu not found at client_kernels\n", record->dispatch_id);
+        return "";
+      }
+
+      ss << "Counter: (" ;
+      ss << used_counter_id_map[counter_id.handle] << ") [ROCm Kernel]";
+      auto it1 = client_kernels.find(cur_hc_event.id);
+      if (it1 != client_kernels.end()) {
+          ss << it1->second.kernel_name;
+      }
+      else
+      {
+        //printf("!! cur_hc_event %lu dispatch_id %lu not found at client_kernels\n", cur_hc_event.id, record->dispatch_id);
+        return "";
+      }
+      ss << " ["; 
+
+      ss << "]";
+      *counter_value = record->counter_value ;			
+      *agentid = record->agent_id.handle; 
+      *queueid = cur_hc_event.queue_id;
+      *c_timestamp = cur_hc_event.last_timestamp;
+    
   }
   
   return ss.str();
