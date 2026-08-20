@@ -123,7 +123,7 @@ extern int GPTLreset_timer (const char *);
 extern int GPTLfinalize (void);
 
 #ifdef TAU_GPTL_E3SM
-extern int GPTLget_memusage (int *, int *, int *, int *, int *);
+extern int GPTLget_memusage (long long *, long long *, long long *, long long *, long long *);
 #else
 extern int GPTLget_memusage (float *);
 #endif
