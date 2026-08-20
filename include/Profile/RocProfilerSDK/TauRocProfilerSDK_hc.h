@@ -79,6 +79,8 @@ struct Tau_SDK_hc_timestamp{
 
 extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value, rocprofiler_timestamp_t* c_timestamp);
 extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
+extern void register_kernel_dispatch(rocprofiler_kernel_dispatch_info_t dispatch_info, rocprofiler_timestamp_t end_timestamp);
+
 
 #ifndef PROFILE_SDKCOUNTERS_v1
 typedef rocprofiler_profile_config_id_t rocprofiler_counter_config_id_t;
@@ -102,6 +104,8 @@ int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_co
   }
   return NO_METRICS;
 }
+void register_kernel_dispatch(register_kernel_dispatch(rocprofiler_kernel_dispatch_info_t dispatch_info, rocprofiler_timestamp_t end_timestamp))
+{}
 #endif //PROFILE_SDKCOUNTERS
 
 

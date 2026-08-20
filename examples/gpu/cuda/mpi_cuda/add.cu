@@ -129,7 +129,7 @@ extern "C" int nv_main(int argc, char *argv[])
  
     free(a);    // free CPU memory
  
-    cudaThreadExit();
+    cudaDeviceReset();
  
     return 0;
 }

@@ -511,7 +511,8 @@ $(INSTALLDEST)/$(TAU_TARGET): $(TAU_TARGET)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else $(MKDIR) $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
-		$(TAU_INSTALL) $(TAUROOT)/include/Makefile $(INSTALLDEST)/Makefile.tau$(TAU_CONFIG)
+		sed -e 's@^TAUROOT=.*@TAUROOT=$(TAU_PREFIX_INSTALL_DIR)@' \
+			$(TAUROOT)/include/Makefile > $(INSTALLDEST)/Makefile.tau$(TAU_CONFIG)
 
 $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE) $(TAU_DISABLE_SHARED)
 		@echo Installing $? in $(INSTALLDEST)
