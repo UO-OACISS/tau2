@@ -96,6 +96,7 @@ void * get_system_function_handle(char const * name, void * caller)
   return handle;
 }
 
+#ifndef TAU_SUPPRESS_PTHREAD_CREATE_WRAPPER
 int pthread_create(pthread_t* thread, const pthread_attr_t* attr,
     start_routine_p start_routine, void* arg)
 {
@@ -106,6 +107,7 @@ int pthread_create(pthread_t* thread, const pthread_attr_t* attr,
   }
   return tau_pthread_create_wrapper(_pthread_create, thread, attr, start_routine, arg);
 }
+#endif /* TAU_SUPPRESS_PTHREAD_CREATE_WRAPPER */
 
 int pthread_join(pthread_t thread, void ** retval)
 {
