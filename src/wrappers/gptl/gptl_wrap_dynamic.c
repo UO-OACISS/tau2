@@ -331,7 +331,7 @@ int GPTLfinalize (void) {
 }
 
 #ifdef TAU_GPTL_E3SM
-int GPTLget_memusage (int *size, int *rss, int *share, int *text, int *datastack) {
+int GPTLget_memusage (long long *size, long long *rss, long long *share, long long *text, long long *datastack) {
 #else
 int GPTLget_memusage (float *usage) {
 #endif
@@ -339,7 +339,7 @@ int GPTLget_memusage (float *usage) {
     int result = 0;
 
 #ifdef TAU_GPTL_E3SM
-    static int (*GPTLget_memusage_h)(int *size, int *rss, int *share, int *text, int *datastack) = NULL;
+    static int (*GPTLget_memusage_h)(long long *size, long long *rss, long long *share, long long *text, long long *datastack) = NULL;
 #else
     static int (*GPTLget_memusage_h)(float * usage) = NULL;
 #endif
