@@ -1301,6 +1301,19 @@ inline ze_pci_ext_properties_t *GetZeDevicePciPropertiesAndId(ze_device_handle_t
   
 }
 
+extern "C" int TauEnv_get_verbose();
+
+// Put source-mapping warnings behind TAU_VERBOSE because they can
+// come from system libraries over which the user has no control.
+// For example, on Aurora, the MPICH launches kernels with no available
+// debug information, triggering numerous warnings on every MPI job launch.
+#define TAU_L0_SRCMAP_MSG(msg)                                          \
+  do {                                                                  \
+    if (TauEnv_get_verbose()) {                                         \
+      std::cerr << "[WARNING] : " << msg << std::endl;                  \
+    }                                                                   \
+  } while (0)
+
 extern "C" void TAU_L0_enter_event(const char* nameAPIcall);
 extern "C" void TAU_L0_exit_event(const char* nameAPIcall);
 extern "C" void TAU_L0_kernel_event(const ZeCommand *command, uint64_t kernel_start, uint64_t kernel_end, int tile);
@@ -4712,7 +4725,7 @@ typedef struct _zex_kernel_register_file_size_exp_t {
                                    
       PTI_ASSERT(status == ZE_RESULT_SUCCESS);
       if (debug_info_size == 0) {
-        std::cerr << "[WARNING] Unable to find kernel symbols" << std::endl;
+        TAU_L0_SRCMAP_MSG("Unable to find kernel symbols; debug_info_size is zero");
         return;
       }
 
@@ -4723,14 +4736,30 @@ typedef struct _zex_kernel_register_file_size_exp_t {
 
       pti_result res;
 
+      if (debug_info.size() > 0xFFFFFFFFul) {
+        std::cerr << "[WARNING] : Module debug info too large to parse, "
+                  << debug_info.size() << " bytes" << std::endl;
+        return;
+      }
+
       elf_parser_handle_t parserHandle = nullptr;
       res = ptiElfParserCreate(debug_info.data(), static_cast<uint32_t>(debug_info.size()),
                               &parserHandle);
       if (res != PTI_SUCCESS || parserHandle == nullptr) {
-        std::cerr << "[WARNING] : Cannot create elf parser" << std::endl;
-        res = ptiElfParserDestroy(&parserHandle);
-        PTI_ASSERT(res == PTI_SUCCESS);
-        PTI_ASSERT(parserHandle == nullptr);
+        std::cerr << "[WARNING] : Cannot create elf parser"
+                  << " (rc=" << static_cast<int>(res)
+                  << ", debug_info_size=" << debug_info.size();
+        if (debug_info.size() >= 20) {
+          std::cerr << ", e_ident=" << std::hex << std::setfill('0');
+          for (int i = 0; i < 8; ++i) {
+            std::cerr << ' ' << std::setw(2) << static_cast<unsigned>(debug_info[i]);
+          }
+          const unsigned machine = static_cast<unsigned>(debug_info[18]) |
+                                   (static_cast<unsigned>(debug_info[19]) << 8);
+          std::cerr << ", e_machine=" << std::dec << machine << std::setfill(' ');
+        }
+        std::cerr << ")" << std::endl;
+        ptiElfParserDestroy(&parserHandle);
         return;
       }
 
@@ -4738,9 +4767,7 @@ typedef struct _zex_kernel_register_file_size_exp_t {
       res = ptiElfParserIsValid(parserHandle, &is_valid);
       if (res != PTI_SUCCESS || !is_valid) {
         std::cerr << "[WARNING] : Constructed Elf parser is not valid" << std::endl;
-        res = ptiElfParserDestroy(&parserHandle);
-        PTI_ASSERT(res == PTI_SUCCESS);
-        PTI_ASSERT(parserHandle == nullptr);
+        ptiElfParserDestroy(&parserHandle);
         return;
       }
 
@@ -4748,17 +4775,13 @@ typedef struct _zex_kernel_register_file_size_exp_t {
       res = ptiElfParserGetKernelNames(parserHandle, 0, nullptr, &kernel_num);
       if (res != PTI_SUCCESS) {
         std::cerr << "Error: Failed to get kernel names" << std::endl;
-        res = ptiElfParserDestroy(&parserHandle);
-        PTI_ASSERT(res == PTI_SUCCESS);
-        PTI_ASSERT(parserHandle == nullptr);
+        ptiElfParserDestroy(&parserHandle);
         return;
       }
 
       if (kernel_num == 0) {
-        std::cerr << "[WARNING] : No kernels found" << std::endl;
-        res = ptiElfParserDestroy(&parserHandle);
-        PTI_ASSERT(res == PTI_SUCCESS);
-        PTI_ASSERT(parserHandle == nullptr);
+        TAU_L0_SRCMAP_MSG("No kernels found in module debug info");
+        ptiElfParserDestroy(&parserHandle);
         return;
       }
 
@@ -4767,9 +4790,7 @@ typedef struct _zex_kernel_register_file_size_exp_t {
       res = ptiElfParserGetKernelNames(parserHandle, kernel_num, kernel_names.data(), nullptr);
       if (res != PTI_SUCCESS) {
         std::cerr << "Error: Failed to get kernel names" << std::endl;
-        res = ptiElfParserDestroy(&parserHandle);
-        PTI_ASSERT(res == PTI_SUCCESS);
-        PTI_ASSERT(parserHandle == nullptr);
+        ptiElfParserDestroy(&parserHandle);
         return;
       }
 
@@ -4784,7 +4805,9 @@ typedef struct _zex_kernel_register_file_size_exp_t {
 
       std::string kernel_abs_path = "UNRESOLVED" ;
       uint64_t kernel_src_line = 0;
-      int found = 0;
+      // Lowest instruction address seen so far for this kernel.  The reporte
+      // location is the one covering the kernel's entry point
+      uint64_t kernel_entry_offset = (std::numeric_limits<uint64_t>::max)();
       //Intel_Symbol_Table_Void_Program cannot be found, happens with OpenMP, ignore
       if(desc.name_.rfind("Intel_Symbol_Table", 0) != 0)
       {
@@ -4800,30 +4823,26 @@ typedef struct _zex_kernel_register_file_size_exp_t {
           res = ptiElfParserGetBinaryPtr(parserHandle, kernel_idx, &binary, &binary_size,
                                         &kernel_address);
           if (res != PTI_SUCCESS || binary_size == 0) {
-            std::cerr << "[WARNING] : Unable to get GEN binary for kernel: " << desc.name_
-                      << std::endl;
+            TAU_L0_SRCMAP_MSG("Unable to get GEN binary for kernel: " << desc.name_);
             continue;
           }
           
           uint32_t gfx_core = 0;
           res = ptiElfParserGetGfxCore(parserHandle, &gfx_core);
           if (res != PTI_SUCCESS || gfx_core == 0) {
-            std::cerr << "[WARNING] : Unable to get GEN binary version for kernel: " << desc.name_
-                      << std::endl;
+            TAU_L0_SRCMAP_MSG("Unable to get GEN binary version for kernel: " << desc.name_);
             continue;
           }
           
           GenBinaryDecoder decoder(binary, binary_size, GenBinaryDecoder::GfxCoreToIgaGen(gfx_core));
           if (!decoder.IsValid()) {
-            std::cerr << "[WARNING] : Unable to create decoder for kernel: " << desc.name_
-                      << std::endl;
+            TAU_L0_SRCMAP_MSG("Unable to create decoder for kernel: " << desc.name_);
             continue;
           }
           
           std::vector<Instruction> instruction_list = decoder.Disassemble();
           if (instruction_list.size() == 0) {
-            std::cerr << "[WARNING] : Unable to decode kernel binary for kernel: " << desc.name_
-                      << std::endl;
+            TAU_L0_SRCMAP_MSG("Unable to decode kernel binary for kernel: " << desc.name_);
             continue;
           }
           /// Apply base addr to all instructions
@@ -4834,8 +4853,8 @@ typedef struct _zex_kernel_register_file_size_exp_t {
           uint32_t mapping_num = 0;
           res = ptiElfParserGetSourceMapping(parserHandle, kernel_idx, 0, nullptr, &mapping_num);
           if (res != PTI_SUCCESS) {
-            std::cerr << "[WARNING] : Failed to get source mapping for kernel ID: " << kernel_idx
-                      << std::endl;
+            TAU_L0_SRCMAP_MSG("No source line mapping in module debug info for kernel ID "
+                              << kernel_idx << ": " << desc.name_);
             continue;
           }
 
@@ -4843,8 +4862,8 @@ typedef struct _zex_kernel_register_file_size_exp_t {
           res = ptiElfParserGetSourceMapping(parserHandle, kernel_idx, mapping_num,
                                             line_info_list.data(), nullptr);
           if (res != PTI_SUCCESS) {
-            std::cerr << "[WARNING] : No source mapping found for kernel ID: " << kernel_idx
-                      << std::endl;
+            TAU_L0_SRCMAP_MSG("Could not read source line mapping for kernel ID "
+                              << kernel_idx << ": " << desc.name_);
             continue;
           }
 
@@ -4859,8 +4878,8 @@ typedef struct _zex_kernel_register_file_size_exp_t {
             std::string abs_path;
             std::vector<SourceLine> line_list = ReadSourceFile(fullpath, abs_path);
             if (line_list.size() == 0) {
-              std::cerr << "[WARNING] : Unable to find target source file for kernel: '" << desc.name_
-                        << "' : " << std::string(line.file_path) + line.file_name << std::endl;
+              TAU_L0_SRCMAP_MSG("Unable to find target source file for kernel: '" << desc.name_
+                                << "' : " << std::string(line.file_path) + line.file_name);
               continue;
             }
 
@@ -4895,8 +4914,11 @@ typedef struct _zex_kernel_register_file_size_exp_t {
                   for (auto instruction : instruction_list) {
                     if (instruction.offset >= start_address && instruction.offset < end_address &&
                         source_info.second.file_id == line_info[l].file_id) {
-                      if(found == 0)
+                      // Report the location covering the kernel's lowest instruction
+                      // address, i.e. its entry point.
+                      if (instruction.offset < kernel_entry_offset)
                       {
+                        kernel_entry_offset = instruction.offset;
                         /*std::cout << std::dec << std::uppercase
                                 << " Line number " << line.number
                                 << " File id " << line_info[l].file_id
@@ -4904,7 +4926,6 @@ typedef struct _zex_kernel_register_file_size_exp_t {
                         std::cout << std::endl;*/
                         kernel_abs_path = tau_map_l0_source_info[line_info[l].file_id];
                         kernel_src_line = line.number;
-                        found = 1;
                       }
                       /*std::cout << std::hex << std::uppercase
                                 << "Address " << instruction.offset
@@ -4932,11 +4953,7 @@ typedef struct _zex_kernel_register_file_size_exp_t {
           //++++
 
           if (source_info_list.size() == 0) {
-            std::cerr << "[WARNING] : Unable to find kernel source files for kernel: " << desc.name_ << std::endl;
-            res = ptiElfParserDestroy(&parserHandle);
-            PTI_ASSERT(res == PTI_SUCCESS);
-            PTI_ASSERT(parserHandle == nullptr);
-            continue;
+            TAU_L0_SRCMAP_MSG("Unable to find kernel source files for kernel: " << desc.name_);
           }
           break;
         }
