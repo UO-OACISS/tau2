@@ -26,28 +26,31 @@
 using namespace elf_parser;
 
 pti_result ptiElfParserCreate(const uint8_t* data, uint32_t size, elf_parser_handle_t* parser) {
+  if (parser == nullptr) return PTI_ERROR_BAD_ARGUMENT;
+
+  *parser = nullptr;
+
   if (data == nullptr || size == 0) return PTI_ERROR_BAD_ARGUMENT;
 
   ElfParser* parser_ = new ElfParser(data, size);
 
   if (parser_ == nullptr) return PTI_ERROR_INTERNAL;
-  *parser = reinterpret_cast<elf_parser_handle_t*>(parser_);
 
-  if (!reinterpret_cast<ElfParser*>(*parser)->IsValid()) {
+  if (!parser_->IsValid()) {
     delete parser_;
     return PTI_ERROR_INTERNAL;
   }
+
+  *parser = reinterpret_cast<elf_parser_handle_t>(parser_);
   return PTI_SUCCESS;
 }
 
 pti_result ptiElfParserDestroy(elf_parser_handle_t* parser) {
   if (parser == nullptr) return PTI_ERROR_BAD_ARGUMENT;
 
-  ElfParser* parser_ = reinterpret_cast<ElfParser*>(*parser);
-  if (parser_->IsValid() == false) {
-    return PTI_ERROR_BAD_ARGUMENT;
-  }
-  delete parser_;
+  if (*parser == nullptr) return PTI_SUCCESS;
+
+  delete reinterpret_cast<ElfParser*>(*parser);
   *parser = nullptr;
   return PTI_SUCCESS;
 }
