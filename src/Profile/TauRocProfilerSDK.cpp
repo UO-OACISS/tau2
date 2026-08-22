@@ -62,7 +62,7 @@ std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename)
 //Map to identify kernels and some of their information
 using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
 using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_symbol_data_t>;
-extern extern void register_kernel_dispatch(rocprofiler_kernel_dispatch_info_t dispatch_info, rocprofiler_timestamp_t end_timestamp);
+extern void register_kernel_dispatch(rocprofiler_kernel_dispatch_info_t dispatch_info, rocprofiler_timestamp_t end_timestamp);
 
 extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, uint64_t* queueid, double* counter_value, rocprofiler_timestamp_t* c_timestamp);
 extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
