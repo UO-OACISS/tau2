@@ -2189,11 +2189,6 @@ int Tau_sampling_init(int tid, pid_t pid)
 #endif
    ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
 
-   {
-     std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
-     TheThreadTimerMap()[pid == 0 ? RtsLayer::getTid() : pid] = timerid;
-   }
-
    // If the thread no longer exists, we get EINVAL back from timer_create
    if(ret != 0 && errno == EINVAL && pid != 0) {
      TAU_VERBOSE("Invalid argument error while initializing sampling on deferred thread %d (pid=%jd). The thread may have exited already.\n", tid, (intmax_t)pid);
@@ -2203,6 +2198,14 @@ int Tau_sampling_init(int tid, pid_t pid)
    if (ret != 0) {
      fprintf(stderr, "TAU: (node=%d, myThread=%d, tid=%d) Sampling error 6: %d: %s\n", RtsLayer::myNode(), RtsLayer::myThread(), tid, ret, strerror(errno));
      return -1;
+   }
+
+   // Only record the timer after confirming timer_create succeeded; "timerid"
+   // is unspecified on failure, and a later timer_delete() on that handle
+   // (from Tau_sampling_disable_signal's cleanup pass) is undefined behavior.
+   {
+     std::lock_guard<std::mutex> guard(TheThreadTimerMapMutex());
+     TheThreadTimerMap()[pid == 0 ? RtsLayer::getTid() : pid] = timerid;
    }
 
    TAU_VERBOSE("Created sampling timer for TAU tid = %d, kernel TID = %jd, timer id = %jd\n", tid, (intmax_t)sev.sigev_notify_thread_id, (intmax_t)timerid);

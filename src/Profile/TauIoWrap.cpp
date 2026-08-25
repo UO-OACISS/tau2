@@ -242,16 +242,22 @@ extern "C" void Tau_iowrap_checkInit()
   static int init = 0;
   static thread_local bool seen{false};
   if (init) {
-    // don't re-register thread 0!
+    // Never explicitly register the main thread: it is implicitly TAU thread 0,
+    // and calling Tau_register_thread() on it here would hand it a different,
+    // non-zero thread id partway through execution (e.g. after a pthread created
+    // via the wrapped pthread_create() happened to perform I/O first and consumed
+    // this one-time initialization). That would desync any timers already pushed
+    // under the implicit id 0 from timers/stops looked up under the new id.
     if (!seen) {
-        if (Tau_init_check_initialized() && !Tau_global_getLightsOut()) {
+        seen = true;
+        if (!iowrap_is_main_thread &&
+            Tau_init_check_initialized() && !Tau_global_getLightsOut()) {
             /* Set seen=true before calling functions that may trigger IO.  Without
              * this guard, any IO intercepted during Tau_register_thread() (e.g.
              * from the TAU_VERBOSE call inside it) would re-enter this function
              * with seen=false, causing infinite recursion and a stack overflow.
              * Also increment insideTAU so that any such IO passes straight through
              * the wrapper without being tracked during thread registration. */
-            seen = true;
             Tau_global_incr_insideTAU();
             Tau_register_thread();
             Tau_global_decr_insideTAU();
