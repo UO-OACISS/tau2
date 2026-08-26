@@ -4643,7 +4643,9 @@ typedef struct _zex_kernel_register_file_size_exp_t {
         } 
         devices_mutex_.unlock_shared();
       }
-      kernel_command_properties_mutex_.lock();
+      // Scoped lock: released on every exit path, including the early returns
+      // inside the source-mapping lambda below.
+      std::unique_lock<std::shared_mutex> kernel_command_properties_lock(kernel_command_properties_mutex_);
 
       auto it = active_kernel_properties_->find(kernel);
       if (it != active_kernel_properties_->end()) {
@@ -4717,13 +4719,26 @@ typedef struct _zex_kernel_register_file_size_exp_t {
       }
 
       #ifdef TAU_L0_IGA
+      std::string kernel_abs_path = "UNRESOLVED" ;
+      uint64_t kernel_src_line = 0;
+      // Lowest instruction address seen so far for this kernel.  The reported
+      // location is the one covering the kernel's entry point
+      uint64_t kernel_entry_offset = (std::numeric_limits<uint64_t>::max)();
+      // The source mapping below runs inside a lambda so that its early
+      // returns give up only on the mapping; the kernel descriptor is still
+      // registered afterwards (OnExitKernelSetGroupSize asserts that it is).
+      [&]() {
       bool could_parse = true;
 
       size_t debug_info_size = 0;
       status = zetModuleGetDebugInfo(mod, ZET_MODULE_DEBUG_INFO_FORMAT_ELF_DWARF, &debug_info_size,
                                    nullptr);    
                                    
-      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      if (status != ZE_RESULT_SUCCESS) {
+        TAU_L0_SRCMAP_MSG("zetModuleGetDebugInfo failed (0x" << std::hex << status << std::dec
+                          << ") for kernel: " << desc.name_);
+        return;
+      }
       if (debug_info_size == 0) {
         TAU_L0_SRCMAP_MSG("Unable to find kernel symbols; debug_info_size is zero");
         return;
@@ -4732,7 +4747,11 @@ typedef struct _zex_kernel_register_file_size_exp_t {
       std::vector<uint8_t> debug_info(debug_info_size);
       status = zetModuleGetDebugInfo(mod, ZET_MODULE_DEBUG_INFO_FORMAT_ELF_DWARF, &debug_info_size,
                                    debug_info.data());
-      PTI_ASSERT(status == ZE_RESULT_SUCCESS);
+      if (status != ZE_RESULT_SUCCESS) {
+        TAU_L0_SRCMAP_MSG("zetModuleGetDebugInfo failed (0x" << std::hex << status << std::dec
+                          << ") for kernel: " << desc.name_);
+        return;
+      }
 
       pti_result res;
 
@@ -4803,16 +4822,11 @@ typedef struct _zex_kernel_register_file_size_exp_t {
       }
       */
 
-      std::string kernel_abs_path = "UNRESOLVED" ;
-      uint64_t kernel_src_line = 0;
-      // Lowest instruction address seen so far for this kernel.  The reporte
-      // location is the one covering the kernel's entry point
-      uint64_t kernel_entry_offset = (std::numeric_limits<uint64_t>::max)();
       //Intel_Symbol_Table_Void_Program cannot be found, happens with OpenMP, ignore
       if(desc.name_.rfind("Intel_Symbol_Table", 0) != 0)
       {
         for (uint32_t kernel_idx = 0; kernel_idx < kernel_names.size(); kernel_idx++) {
-          if (desc.name_ != std::string(kernel_names[kernel_idx])) {
+          if (kernel_names[kernel_idx] == nullptr || desc.name_ != std::string(kernel_names[kernel_idx])) {
             continue;
           }
 
@@ -4961,6 +4975,7 @@ typedef struct _zex_kernel_register_file_size_exp_t {
       }
 
       res = ptiElfParserDestroy(&parserHandle);
+      }();
       #endif // TAU_L0_IGA
 
 
@@ -4974,8 +4989,6 @@ typedef struct _zex_kernel_register_file_size_exp_t {
       ZeKernelCommandProperties desc2 = desc;
       active_kernel_properties_->insert({kernel, std::move(desc)});
       kernel_command_properties_->insert({desc2.id_, std::move(desc2)});
-
-      kernel_command_properties_mutex_.unlock();
     }
   }
 
