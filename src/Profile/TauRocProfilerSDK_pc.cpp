@@ -40,10 +40,8 @@ std::mutex sample_list_mtx;
 std::mutex codeobj_mtx;
 static bool sdk_sample_per_cu = false;
 std::map<int, rocprofiler_timestamp_t> tau_last_pc_timestamp_published;
-/* The delta timestamp is in nanoseconds. */
-int64_t deltaTimestamp_ns = 0;
 
-extern "C" void metric_set_gpu_timestamp(int tid, double value);
+extern double Tau_rocprofsdk_synchronized_gpu_timestamp(int tid, double value);
 extern void Tau_add_metadata_for_task(const char *key, int value, int taskid);
 extern "C" void Tau_metadata_task(const char *name, const char *value, int tid);
 /* TAU uses microsecond clock for timestamps, but the GPU provides the
@@ -91,17 +89,16 @@ void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
     //TAU_VERBOSE("TAU_publish_sdk_sample_event\n");
     //printf("sample dev id %d\n", queueid);
     sample_mtx.lock();
-    unsigned long long timestamp = sdk_sample_event.entry+deltaTimestamp_ns;
+    unsigned long long timestamp = sdk_sample_event.entry;
     int taskid = Tau_get_rocprofsdk_queue_pc(sdk_sample_event.device_id, sdk_sample_event.cu_id);
     //printf("%u , %lu, %d\n", sdk_sample_event.device_id, sdk_sample_event.cu_id, taskid);
     if (taskid == -1) { // not initialized
         TAU_CREATE_TASK(taskid);
         Tau_set_rocprofsdk_queue_pc(sdk_sample_event.device_id, sdk_sample_event.cu_id, taskid);
         // Set the timestamp for TAUGPU_TIME:
-        metric_set_gpu_timestamp(taskid, (double)(sdk_sample_event.entry+deltaTimestamp_ns)/1e3);
-
+        Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, (double)sdk_sample_event.entry/1e3);
         Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
-        Tau_add_metadata_for_task("ROCM_GPU_ID", sdk_sample_event.device_id, taskid);
+        Tau_add_metadata_for_task("ROCM_GPU_ID",  sdk_sample_event.device_id, taskid);
         Tau_add_metadata_for_task("ROCM_CU_ID", sdk_sample_event.cu_id, taskid);
         Tau_create_top_level_timer_if_necessary_task(taskid);
         //std::cout << "queueid: " << queueid << " taskid: " << taskid << std::endl;
@@ -109,7 +106,7 @@ void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
 
 
     
-    /*
+    
     rocprofiler_timestamp_t last_timestamp;
     
     std::map<int, rocprofiler_timestamp_t>::iterator it = tau_last_pc_timestamp_published.find(taskid);
@@ -127,31 +124,29 @@ void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
     {
       TAU_VERBOSE("ERROR: new event's timestamp is older than previous event timestamp, current look ahead window is %d\n", TAU_ROCMSDK_SAMPLE_LOOK_AHEAD);
       TAU_VERBOSE("ERROR: modify TAU_ROCMSDK_SAMPLE_LOOK_AHEAD with -useropt=-DTAU_ROCMSDK_LOOK_AHEAD=%d or bigger\n", TAU_ROCMSDK_SAMPLE_LOOK_AHEAD*2);
-      //TAU_VERBOSE("- Last: %lu Entry: %lu Exit: %lu %s task: %d\n", last_timestamp, sdk_sample_event.entry, sdk_sample_event.exit, sdk_sample_event.name.c_str(), taskid);
+      TAU_VERBOSE("- Last: %lu Entry: %lu Exit: %lu %s task: %d\n", last_timestamp, sdk_sample_event.entry, sdk_sample_event.exit, sdk_sample_event.name.c_str(), taskid);
       sample_mtx.unlock();
       return;
     }
   
-    tau_last_pc_timestamp_published[taskid] = sdk_sample_event.exit;*/
+    tau_last_pc_timestamp_published[taskid] = sdk_sample_event.exit;
     
-    double timestamp_entry = (double)(sdk_sample_event.entry+deltaTimestamp_ns)/1e3; // convert to microseconds
+    double timestamp_entry = (double)sdk_sample_event.entry/1e3; // convert to microseconds
+    double start_sync_ts = Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, timestamp_entry);
+    TAU_START_TASK(sdk_sample_event.name.c_str(), taskid);
+
+
+    double timestamp_exit = (double)sdk_sample_event.exit/1e3; // convert to microseconds
+    double end_sync_ts = Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, timestamp_exit);
+    TAU_STOP_TASK(sdk_sample_event.name.c_str(), taskid);
 
     if(sdk_sample_event.wave_count>0)
     {
         //static std::string wave_count_event = "Active waves"
         void* ue = nullptr;
         Tau_get_context_userevent(&ue, "Active waves");
-        TAU_CONTEXT_EVENT_THREAD_TS(ue, sdk_sample_event.wave_count, taskid, timestamp_entry);
+        TAU_CONTEXT_EVENT_THREAD_TS(ue, sdk_sample_event.wave_count, taskid, end_sync_ts);
     }
-
-
-    metric_set_gpu_timestamp(taskid, timestamp_entry);
-    TAU_START_TASK(sdk_sample_event.name.c_str(), taskid);
-
-
-    double timestamp_exit = (double)(sdk_sample_event.exit+deltaTimestamp_ns)/1e3; // convert to microseconds
-    metric_set_gpu_timestamp(taskid, timestamp_exit);
-    TAU_STOP_TASK(sdk_sample_event.name.c_str(), taskid);
     sample_mtx.unlock();
     //TAU_VERBOSE("TAU_publish_sdk_sample_event - End\n");
 }

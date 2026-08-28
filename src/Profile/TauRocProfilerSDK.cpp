@@ -231,8 +231,6 @@ bool stream_stack_empty()
 
 void tau_rocsdk_kernel_dispatch(rocprofiler_callback_tracing_record_t record)
 {
-
-
   auto* kernel_dispatch = static_cast<rocprofiler_callback_tracing_kernel_dispatch_data_t*>(record.payload);
   std::string task_name = demangle_kernel_rocprofsdk(
                             client_kernels.at(kernel_dispatch->dispatch_info.kernel_id).kernel_name, 1);
@@ -299,46 +297,46 @@ void tau_rocsdk_kernel_dispatch(rocprofiler_callback_tracing_record_t record)
   //printf("KERNEL_s taskid %d %lf\n", taskid, Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, start_ts));
   TAU_START_TASK( task_name.c_str(), taskid);
 
-  Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, end_ts);
+  double end_sync_ts = Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, end_ts);
   //printf("KERNEL_e taskid %d %lf\n", taskid, Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, end_ts));
   TAU_STOP_TASK( task_name.c_str(), taskid);
 
-  dispatch_kernel_time[kernel_dispatch->dispatch_info.dispatch_id] = {taskid, end_ts};
+  dispatch_kernel_time[kernel_dispatch->dispatch_info.dispatch_id] = {taskid, end_sync_ts};
 
   void* ue = nullptr;
   std::string event_name;
 
   event_name = "Private segment size : " + task_name;
   Tau_get_context_userevent(&ue, event_name.c_str());
-  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.private_segment_size, taskid, end_ts);
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.private_segment_size, taskid, end_sync_ts);
 
   event_name = "Group segment size : " + task_name;
   Tau_get_context_userevent(&ue, event_name.c_str());
-  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.group_segment_size, taskid, end_ts);
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.group_segment_size, taskid, end_sync_ts);
 
   event_name = "Workgroup size X: " + task_name;
   Tau_get_context_userevent(&ue, event_name.c_str());
-  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.workgroup_size.x, taskid, end_ts);
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.workgroup_size.x, taskid, end_sync_ts);
 
   event_name = "Workgroup size Y: " + task_name;
   Tau_get_context_userevent(&ue, event_name.c_str());
-  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.workgroup_size.y, taskid, end_ts);
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.workgroup_size.y, taskid, end_sync_ts);
 
   event_name = "Workgroup size Z: " + task_name;
   Tau_get_context_userevent(&ue, event_name.c_str());
-  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.workgroup_size.z, taskid, end_ts);
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.workgroup_size.z, taskid, end_sync_ts);
 
   event_name = "Grid size X: " + task_name;
   Tau_get_context_userevent(&ue, event_name.c_str());
-  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.grid_size.x, taskid, end_ts);
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.grid_size.x, taskid, end_sync_ts);
 
   event_name = "Grid size Y: " + task_name;
   Tau_get_context_userevent(&ue, event_name.c_str());
-  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.grid_size.y, taskid, end_ts);
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.grid_size.y, taskid, end_sync_ts);
 
   event_name = "Grid size Z: " + task_name;
   Tau_get_context_userevent(&ue, event_name.c_str());
-  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.grid_size.z, taskid, end_ts);
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kernel_dispatch->dispatch_info.grid_size.z, taskid, end_sync_ts);
 
   stream_queue_mtx.unlock();
     

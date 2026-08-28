@@ -377,10 +377,16 @@ static std::string get_thread_name(int rank, int tid) {
         // ROCm thread detection
         const char* rocm_gpu = Tau_metadata_get("ROCM_GPU_ID", tid);
         if (rocm_gpu && strcmp(rocm_gpu, "") != 0) {
-            const char* rocm_queue = Tau_metadata_get("ROCM_QUEUE_ID", tid);
+            const char* rocm_stream = Tau_metadata_get("ROCM_STREAM_ID", tid);
+            const char* rocm_cu = Tau_metadata_get("ROCM_CU_ID", tid);
             char buf[256];
-            snprintf(buf, sizeof(buf), "GPU%s Queue%s", rocm_gpu, 
-                     rocm_queue ? rocm_queue : "?");
+            if(rocm_stream != NULL)
+                snprintf(buf, sizeof(buf), "GPU%s Stream%s", rocm_gpu, rocm_stream );
+            else if(rocm_cu != NULL)
+                snprintf(buf, sizeof(buf), "GPU%s CU%s", rocm_gpu, rocm_cu );
+            else
+                snprintf(buf, sizeof(buf), "GPU%s ?", rocm_gpu );
+
             return std::string(buf);
         }
 
