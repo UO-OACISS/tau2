@@ -31,8 +31,11 @@
 
 
 
-//Initialization flag
+//Initialization flag, only to check if Tau_rocm_initialize_v3 was called
 static int initialized_v3 = 0;
+//Configuration flag, checks if it was configured or failed to configure
+static int configured_v3 = 0;
+
 static int pc_sampling = 0;
 static int hc_profiling = 0;
 
@@ -1157,7 +1160,7 @@ int tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
 
 
   ROCPROFILER_CALL(rocprofiler_start_context(client_ctx), "rocprofiler context start failed");
-
+  configured_v3 = 1;
   init_mutex.unlock();
   // no errors
   return 0;
@@ -1217,9 +1220,9 @@ rocprofiler_configure_(uint32_t                 version,
 //Flush ROCm buffer/s before TAU ends
 void Tau_rocprofsdk_flush(){
   SDKFlush_mtx.lock();
-  if(initialized_v3==0)
+  if(configured_v3==0)
   {
-    TAU_VERBOSE("Flag -rocm not set, rocm is not profiled\n");
+    TAU_VERBOSE("Flag -rocm not set or failed to configure, rocm is not profiled\n");
     SDKFlush_mtx.unlock();
     return;
   }
@@ -1233,9 +1236,6 @@ void Tau_rocprofsdk_flush(){
   {
     sdk_pc_sampling_flush();
   }
-  
-  
-
   flushed = 1;
   ROCPROFILER_CALL(rocprofiler_stop_context(client_ctx), "rocprofiler context stop");
   SDKFlush_mtx.unlock();
