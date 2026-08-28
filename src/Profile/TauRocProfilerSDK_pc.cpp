@@ -82,7 +82,8 @@ void Tau_set_rocprofsdk_queue_pc(uint32_t dev_id, uint64_t cu_id, int value) {
     map_queue_rocsdk_pc[{dev_id, cu_id}] = value;
     return;
 }
- 
+
+
 void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
 {
 
@@ -93,6 +94,7 @@ void TAU_publish_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
     int taskid = Tau_get_rocprofsdk_queue_pc(sdk_sample_event.device_id, sdk_sample_event.cu_id);
     //printf("%u , %lu, %d\n", sdk_sample_event.device_id, sdk_sample_event.cu_id, taskid);
     if (taskid == -1) { // not initialized
+        Tau_global_incr_insideTAU();
         TAU_CREATE_TASK(taskid);
         Tau_set_rocprofsdk_queue_pc(sdk_sample_event.device_id, sdk_sample_event.cu_id, taskid);
         // Set the timestamp for TAUGPU_TIME:

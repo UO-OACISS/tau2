@@ -27,7 +27,7 @@
 // https://github.com/ROCm/rocprofiler-sdk/blob/ccd1e54293768a756fb95c21bff51d95d5f6b20c/tests/pc_sampling/address_translation.cpp
 #include "Profile/RocProfilerSDK/TauRocProfilerSDK.h"
 #include "Profile/TauMetrics.h"
-#include <sys/syscall.h>
+
 
 
 
@@ -229,8 +229,10 @@ bool stream_stack_empty()
     return get_stream_stack()->empty();
 }
 
+
 void tau_rocsdk_kernel_dispatch(rocprofiler_callback_tracing_record_t record)
 {
+
   auto* kernel_dispatch = static_cast<rocprofiler_callback_tracing_kernel_dispatch_data_t*>(record.payload);
   std::string task_name = demangle_kernel_rocprofsdk(
                             client_kernels.at(kernel_dispatch->dispatch_info.kernel_id).kernel_name, 1);
