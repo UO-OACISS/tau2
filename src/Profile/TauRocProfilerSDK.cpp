@@ -280,7 +280,7 @@ void tau_rocsdk_kernel_dispatch(rocprofiler_callback_tracing_record_t record)
   }
   else
   {
-    
+    Tau_global_incr_insideTAU();
     TAU_CREATE_TASK(taskid);
     streamid_queueid_map[{cur_stream, cur_agent}] = taskid;
     Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, start_ts);
