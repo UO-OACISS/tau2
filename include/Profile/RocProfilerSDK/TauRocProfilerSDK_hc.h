@@ -4,14 +4,16 @@
 #define PROFILE_SDKCOUNTERS_H
 
 #include <Profile/TauBfd.h>  // for name demangling
+#include "Profile/Profiler.h"
 #include <Profile/TauEnv.h>
+
 
 //Enum to enable or disable metric profiling
 typedef enum profile_metrics {
 	NO_METRICS = 1,
 	WRONG_NAME = 2,
 	PROFILE_METRICS = 3
-};
+} profile_metrics;
 
 #include <vector>
 #include <cstdint>
@@ -34,11 +36,12 @@ typedef enum profile_metrics {
 using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
 using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_symbol_data_t>;
 
-struct Tau_SDK_hc_timestamp{
-  rocprofiler_kernel_id_t id;
-  rocprofiler_timestamp_t last_timestamp;
-  uint64_t queue_id;
-};
+//The callback for the hardware counters does not have timers, we want to tie the callback
+// to the ending timer of the kernel dispatch and also know the taskid we need to use
+std::map<rocprofiler_dispatch_id_t, std::pair<int, double>> dispatch_kernel_time;
+
+extern kernel_symbol_map_t           client_kernels;
+extern std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename);
 
 #ifndef ROCPROFILER_CALL
 #define ROCPROFILER_CALL(result, msg)                                                              \
@@ -70,14 +73,11 @@ struct Tau_SDK_hc_timestamp{
 
 
 #ifdef PROFILE_SDKCOUNTERS
-#include <rocprofiler-sdk/device_counting_service.h>
-#include <rocprofiler-sdk/dispatch_counting_service.h>
 #include <rocprofiler-sdk/agent.h>
 #include <rocprofiler-sdk/fwd.h>
 #include <rocprofiler-sdk/registration.h>
 #include <rocprofiler-sdk/callback_tracing.h>
 
-extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value, rocprofiler_timestamp_t* c_timestamp);
 extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
 extern void register_kernel_dispatch(rocprofiler_kernel_dispatch_info_t dispatch_info, rocprofiler_timestamp_t end_timestamp);
 
@@ -88,10 +88,6 @@ typedef rocprofiler_profile_config_id_t rocprofiler_counter_config_id_t;
 
 #else // No PROFILE_SDKCOUNTERS
 
-std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, double* counter_value, rocprofiler_timestamp_t* c_timestamp)
-{
-  return std::string();
-}
 int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer)
 { 
   const char* rocm_metrics=std::getenv("ROCM_METRICS");

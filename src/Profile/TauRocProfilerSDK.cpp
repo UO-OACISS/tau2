@@ -34,8 +34,16 @@
 //Initialization flag
 static int initialized_v3 = 0;
 static int pc_sampling = 0;
+static int hc_profiling = 0;
+
 //Initialization mutex
 std::mutex SDK_init_lock;
+//Flushing mutex
+std::mutex SDKFlush_mtx;
+
+//Flag to check if TAU called the flush function
+//we want to avoid flushing after TAU has written the profile files
+static int flushed = 0;
 
 //To identify buffer names of ROCm calls
 using buffer_kind_names_t = std::map<rocprofiler_buffer_tracing_kind_t, const char*>;
@@ -61,16 +69,14 @@ struct callback_name_info
 };
 callback_name_info              c_client_name_info = {};
 
-//Map to identify kernels and some of their information
-using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
-using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_symbol_data_t>;
-kernel_symbol_map_t           client_kernels   = {};
 
 
 
 //Buffer for rocprofiler data
 rocprofiler_buffer_id_t       client_buffer    = {};
 extern void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
+extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
+
 
 //Map to identify the queue id given a stream id and device id
 static std::map<std::pair<uint64_t, uint64_t>, uint64_t> streamid_queueid_map;
@@ -284,6 +290,7 @@ void tau_rocsdk_kernel_dispatch(rocprofiler_callback_tracing_record_t record)
     Tau_add_metadata_for_task("ROCM_STREAM_ID", cur_stream, taskid);
     Tau_create_top_level_timer_if_necessary_task(taskid);
   }
+  
 
   Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, start_ts);
   //printf("KERNEL_s taskid %d %lf\n", taskid, Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, start_ts));
@@ -292,6 +299,8 @@ void tau_rocsdk_kernel_dispatch(rocprofiler_callback_tracing_record_t record)
   Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, end_ts);
   //printf("KERNEL_e taskid %d %lf\n", taskid, Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, end_ts));
   TAU_STOP_TASK( task_name.c_str(), taskid);
+
+  dispatch_kernel_time[kernel_dispatch->dispatch_info.dispatch_id] = {taskid, end_ts};
 
   void* ue = nullptr;
   std::string event_name;
@@ -1004,17 +1013,6 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
      record.operation == ROCPROFILER_CODE_OBJECT_LOAD)
   {
     //printf("ROCPROFILER_CODE_OBJECT_LOAD\n");
-    if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
-    {
-      printf("FIX BUFFER \n");
-      /*
-      // flush the buffer to ensure that any lookups for the client kernel names for the code
-      // object are completed
-      auto flush_status = rocprofiler_flush_buffer(client_buffer);
-      if(flush_status != ROCPROFILER_STATUS_ERROR_BUFFER_BUSY)
-        ROCPROFILER_CALL(flush_status, "buffer flush");
-      */
-    }
     //Only execute if PC Sampling enabled
     if(pc_sampling == 1)
     {
@@ -1131,13 +1129,6 @@ int tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
                             nullptr),
                         "Could not configure external correlation id request service");
 
-
-
-
-
-
-
-
   int valid_ctx = 0;
   ROCPROFILER_CALL(rocprofiler_context_is_valid(client_ctx, &valid_ctx),
                     "failure checking context validity");
@@ -1149,6 +1140,21 @@ int tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
       init_mutex.unlock();
       return -1;
   }
+
+  hc_profiling = init_hc_profiling(agents, client_ctx, client_buffer);
+  if(hc_profiling == PROFILE_METRICS)
+    pc_sampling = init_pc_sampling(client_ctx, 1);
+  else
+    pc_sampling = init_pc_sampling(client_ctx, 0);
+
+  if( (hc_profiling == PROFILE_METRICS) && pc_sampling)
+  {
+    std::cerr << "[TAU] rocprofiler-sdk is unable to profile hardware counter and perform pc sampling at the same time \n Select only one" << std::endl;
+    pc_sampling = 0;
+    hc_profiling = NO_METRICS;
+    return -1;
+  }
+
 
   ROCPROFILER_CALL(rocprofiler_start_context(client_ctx), "rocprofiler context start failed");
 
@@ -1202,49 +1208,39 @@ rocprofiler_configure_(uint32_t                 version,
                                           &tool_init,
                                           &tool_fini,
                                           static_cast<void*>(client_tool_data)};
-  
-  initialized_v3 = 1;
+
   // return pointer to configure data
   return &cfg;
 }
 
-/*
+
 //Flush ROCm buffer/s before TAU ends
 void Tau_rocprofsdk_flush(){
-  if(rocprofsdk_initialized==0)
+  SDKFlush_mtx.lock();
+  if(initialized_v3==0)
   {
     TAU_VERBOSE("Flag -rocm not set, rocm is not profiled\n");
+    SDKFlush_mtx.unlock();
     return;
   }
   if(flushed==1)
+  {
+    SDKFlush_mtx.unlock();
     return;
-  TAU_VERBOSE("Tau_rocprofsdk_flush\n");
-  ROCPROFILER_CALL(rocprofiler_flush_buffer(client_buffer), "buffer flush");
+  }  
   
-  SDKList_mtx.lock();
-  for(auto& [taskif, TauRocmSDKList] : TauRocmSDKListMap)
-  {  
-    TauRocmSDKList.sort();
-    while(!TauRocmSDKList.empty())
-    {
-      TAU_publish_sdk_event(TauRocmSDKList.front());
-      TauRocmSDKList.pop_front();
-    }
-    if(pc_sampling == 1)
-    {
-      sdk_pc_sampling_flush();
-    }
+  if(pc_sampling == 1)
+  {
+    sdk_pc_sampling_flush();
   }
-  SDKList_mtx.unlock();
+  
   
 
   flushed = 1;
   ROCPROFILER_CALL(rocprofiler_stop_context(client_ctx), "rocprofiler context stop");
+  SDKFlush_mtx.unlock();
 }
-*/
-void Tau_rocprofsdk_flush(){
-  printf("!! flush not implemented\n");
-}
+
 
 
 

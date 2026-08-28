@@ -9,6 +9,7 @@
 #include <TAU.h>
 #include <Profile/TauBfd.h>  // for name demangling
 
+
 extern std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename);
 
 //Due to some bugs, PC Sampling is available, but does not work in older versions

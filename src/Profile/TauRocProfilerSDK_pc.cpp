@@ -64,25 +64,6 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid);
      return time_point_to_nanoseconds1(MYCLOCK::now());
  }
 
-bool run_once() {
-    // synchronize timestamps
-    // We'll take a CPU timestamp before and after taking a GPU timestmp, then
-    // take the average of those two, hoping that it's roughly at the same time
-    // as the GPU timestamp.
-    uint64_t startTimestampCPU = now_ns(); //TauTraceGetTimeStamp(); // TAU is in microseconds!
-    uint64_t startTimestampGPU;
-    rocprofiler_get_timestamp(&startTimestampGPU);
-    startTimestampCPU += now_ns(); //TauTraceGetTimeStamp(); // TAU is in microseconds!
-    startTimestampCPU = startTimestampCPU / 2;
-
-    // assume CPU timestamp is greater than GPU
-    TAU_VERBOSE("HIP timestamp: %lu\n", startTimestampGPU);
-    TAU_VERBOSE("CPU timestamp: %lu\n", startTimestampCPU);
-    deltaTimestamp_ns = (int64_t)(startTimestampCPU) - (int64_t)(startTimestampGPU);
-    TAU_VERBOSE("HIP delta timestamp: %ld\n", deltaTimestamp_ns);
-    return true;
-}
-
 //Queue map should have gpu id and computing unit as index
 // queue id as value
 static std::map<std::pair<uint32_t,uint64_t>, int> map_queue_rocsdk_pc;
@@ -920,7 +901,6 @@ codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record)
         return;
     TAU_VERBOSE("codeobj_tracing_callback\n");
     std::stringstream info;
-    static bool dummy = run_once();
     info << "-----------------------------\n";
     
     if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&

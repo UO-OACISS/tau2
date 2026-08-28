@@ -45,6 +45,14 @@
 #include <set>
 #include <unistd.h>
 
+
+
+//Map to identify kernels and some of their information
+using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
+using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_symbol_data_t>;
+kernel_symbol_map_t           client_kernels   = {};
+
+
 //May move to include/Profile/nccl/types.h
 // along with https://github.com/UO-OACISS/tau2/blob/7409bb076e38c065f4266a10005e43590e9ec135/src/Profile/TauNCCL.cpp#L356
 const char* ncclDataTypeName(ncclDataType_t datatype)
@@ -99,16 +107,15 @@ static double deltaTimestamp_ms = 0;
 extern "C" x_uint64 TauTraceGetTimeStamp();
 extern "C" void metric_set_gpu_timestamp(int tid, double value);
 extern "C" void Tau_metadata_task(const char *name, const char* value, int tid);
+extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
+extern void sdk_pc_sampling_flush();
+extern std::map<rocprofiler_dispatch_id_t, std::pair<int, double>> dispatch_kernel_time;
+
 
 //We want to use the same IDs for the GPUs between the sampling and tracing.
 // the device handle gives a number, but this map starts from 0
 std::map< uint64_t, uint32_t> TAU_rocsdk_id_device_map;
 
-// This is for the windows buffer, similar to the one in TauRocm.cpp
-//re-implemented here, as the SDK and Rocm will be separated in the future
-#ifndef TAU_ROCMSDK_LOOK_AHEAD
-#define TAU_ROCMSDK_LOOK_AHEAD 32
-#endif /* TAU_ROCMSDK_LOOK_AHEAD */
 
 //Enum to enable or disable metric profiling
 typedef enum profile_metrics {
@@ -116,67 +123,6 @@ typedef enum profile_metrics {
 	WRONG_NAME = 2,
 	PROFILE_METRICS = 3
 } profile_metrics;
-
-struct TauSDKUserEvent {
-    double value;
-    std::string ev_name;
-    TauSDKUserEvent(double value_i, std::string name_in)
-    {
-        value = value_i;
-        ev_name = name_in;
-    }
-};
-
-
-
-
-struct TauSDKEvent {
-
-    rocprofiler_timestamp_t entry;
-    rocprofiler_timestamp_t exit;
-    std::string name;
-    int taskid;
-    vector<TauSDKUserEvent> userevents;
-
-    TauSDKEvent(): taskid(0) {}
-    TauSDKEvent(string event_name, rocprofiler_timestamp_t begin, rocprofiler_timestamp_t end, int t, vector<TauSDKUserEvent> inevents) : name(event_name), taskid(t)
-    {
-        entry = begin;
-        exit  = end;
-        
-        userevents = inevents;
-    }
-    void printEvent() {
-        std::cout <<name<<" Task: "<<taskid<<", \t\tEntry: "<<entry<<" , Exit = "<<exit;
-    }
-    bool appearsBefore(struct TauSDKEvent other_event) {
-        if ((taskid == other_event.taskid) &&
-            (entry < other_event.entry) &&
-            (exit < other_event.entry))  {
-            // both entry and exit of my event is before the entry of the other event.
-            return true;
-        } else
-            return false;
-    }
-
-    bool operator < (struct TauSDKEvent two) {
-        if (entry < two.entry) 
-            return true;
-        else 
-            return false;
-    }
-  
-};
-
-struct TauSDK_dev_que {
-    uint64_t dev_id;
-    uint64_t queue;
-    bool operator<(const TauSDK_dev_que& second_dq) const {
-        if (dev_id != second_dq.dev_id)
-            return dev_id < second_dq.dev_id;
-        return queue < second_dq.queue;
-    }
-};
 
 #ifndef ROCPROFILER_CALL
 #define ROCPROFILER_CALL(result, msg)                                                              \
@@ -218,8 +164,7 @@ query_available_agents(rocprofiler_agent_version_t agents_ver,
 
 // Check if there are any GPU agents
 //We also can get the GPU properties, maybe should add as metadata
-std::vector<rocprofiler_agent_v0_t>
-get_gpu_device_agents()
+std::vector<rocprofiler_agent_v0_t> get_gpu_device_agents()
 {
     std::vector<rocprofiler_agent_v0_t> agents;
     std::vector<rocprofiler_agent_v0_t> gpu_agents;
@@ -316,7 +261,5 @@ std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename)
     }
     return task_name;
 }
-
-
 
 #endif // _TAU_ROCMSDK_H_
