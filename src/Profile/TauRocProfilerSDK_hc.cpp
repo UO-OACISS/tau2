@@ -140,7 +140,7 @@ build_profile_for_agent(rocprofiler_agent_id_t       agent,
 // works with both TAU_METRICS and ROCM_METRICS
 int get_set_metrics(const char* rocm_metrics, std::vector<rocprofiler_agent_v0_t> agents)
 {
-  printf("!! %s\n", rocm_metrics);
+  //printf("!! %s\n", rocm_metrics);
 	const char *token;
 	char *ptr, *ptr2;
 	int len = strlen(rocm_metrics);
@@ -182,7 +182,7 @@ int get_set_metrics(const char* rocm_metrics, std::vector<rocprofiler_agent_v0_t
 	token = strtok(metrics, "^");
 	while (token) {
   	counter_set.insert(token);
-    printf("!! token %s\n", token);
+    //printf("!! token %s\n", token);
   	token = strtok(NULL, "^");
 	}
 
@@ -198,14 +198,14 @@ int get_set_metrics(const char* rocm_metrics, std::vector<rocprofiler_agent_v0_t
 	}
   
 
-  std::cout << "Set a total of " << used_counter_id_map.size() << " counters for " << num_agents << " agents" << std::endl;
+  //std::cout << "Set a total of " << used_counter_id_map.size() << " counters for " << num_agents << " agents" << std::endl;
   
  
-  for (const auto& [id, name] : used_counter_id_map)
-    std::cout << id.second << " : " << name << '\n';
+  //for (const auto& [id, name] : used_counter_id_map)
+  //  std::cout << id.second << " : " << name << '\n';
 
-  for (const auto& s : counter_set)
-    std::cout << s << '\n';
+  //for (const auto& s : counter_set)
+  //  std::cout << s << '\n';
 
   
   
@@ -223,14 +223,14 @@ int check_set_hc_requested(std::vector<rocprofiler_agent_v0_t> agents)
   if( rocm_metrics )
   {
     *dimension_cache() = new std::unordered_map<uint64_t, std::vector<rocprofiler_counter_record_dimension_info_t>>();
-    printf("rocm_metrics val %s", rocm_metrics);
+    //printf("rocm_metrics val %s", rocm_metrics);
     return_value=get_set_metrics(rocm_metrics, agents);
   }
   else
   {
     *dimension_cache() = new std::unordered_map<uint64_t, std::vector<rocprofiler_counter_record_dimension_info_t>>();
     const char* rocsdk_metrics = TauEnv_get_rocsdk_metrics();
-    printf("rocm_metrics env %s\n", rocsdk_metrics);
+    //printf("rocm_metrics env %s\n", rocsdk_metrics);
     if (rocsdk_metrics[0] != '\0')
     {
       return_value=get_set_metrics(rocsdk_metrics, agents);
