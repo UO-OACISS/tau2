@@ -87,6 +87,9 @@ extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprof
 //Map to identify the queue id given a stream id and device id
 static std::map<std::pair<uint64_t, uint64_t>, uint64_t> streamid_queueid_map;
 
+//Map to identify fake timer overlaps
+static std::map<uint64_t, double> streamid_kernel_map;
+
 //Use a mutex to avoid accessing the map by more than one thread
 std::mutex stream_queue_mtx;
 
@@ -268,6 +271,7 @@ void tau_rocsdk_kernel_dispatch(rocprofiler_callback_tracing_record_t record)
           << std::endl;
   #endif //ROCSDK_DEBUG
 
+
   uint64_t cur_stream = record.correlation_id.external.value;
   uint64_t cur_agent = kernel_dispatch->dispatch_info.agent_id.handle;
   double start_ts = ((double)kernel_dispatch->start_timestamp)/1e3;
@@ -296,7 +300,28 @@ void tau_rocsdk_kernel_dispatch(rocprofiler_callback_tracing_record_t record)
     Tau_add_metadata_for_task("ROCM_STREAM_ID", cur_stream, taskid);
     Tau_create_top_level_timer_if_necessary_task(taskid);
   }
-  
+
+  //If there are multiple kernels in the same stream enqueued, the internal timer
+  // of the previous may be translated to a timestamp later than the current start,
+  // when it started after the previous ended,
+  // to prevent this issue, we check if this issue appears or not.
+  // If this issue appears, use the last timestamp end as the current start.
+  // According to AMD, this can happen with timers close to ~0.5 us from each other
+  auto cur_map_pos = streamid_kernel_map.find(taskid);
+  double last_ts = 0.0f;
+  if(cur_map_pos != streamid_kernel_map.end())
+    last_ts = cur_map_pos->second;
+
+  if(last_ts>start_ts)
+    start_ts=last_ts;
+
+  if(start_ts>end_ts)
+  {
+    printf("[TAU ERROR] One kernel was discarded, start_ts>end_ts");
+    return;
+  }
+
+  streamid_kernel_map[taskid] = end_ts;
 
   Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, start_ts);
   //printf("KERNEL_s taskid %d %lf\n", taskid, Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, start_ts));
