@@ -10,8 +10,6 @@
 #include <Profile/TauBfd.h>  // for name demangling
 
 
-extern std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename);
-
 //Due to some bugs, PC Sampling is available, but does not work in older versions
 // do not compile for 4.0 and older
 //Also, the implementation is not fully done, in future releases, we may
@@ -153,6 +151,7 @@ struct TauSDKSampleEvent {
 extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
 extern void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
 extern void sdk_pc_sampling_flush();
+extern std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename);
 #else
 extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc)
 {
@@ -174,6 +173,7 @@ void sdk_pc_sampling_flush()
 {
     return ;
 }
+
 
 #endif //VERSION OR ENABLED
     

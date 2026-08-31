@@ -28,7 +28,10 @@
 #include "Profile/RocProfilerSDK/TauRocProfilerSDK.h"
 #include "Profile/TauMetrics.h"
 
-
+//#define ROCSDK_DEBUG
+//#define ROCSDK_DEBUG_K
+#undef ROCSDK_DEBUG
+#undef ROCSDK_DEBUG_K
 
 
 //Initialization flag, only to check if Tau_rocm_initialize_v3 was called
@@ -120,10 +123,10 @@ void rocsdk_version_check(uint32_t                 version,
 // or still not supported
 static const auto c_supported_kinds = std::unordered_set<rocprofiler_callback_tracing_kind_t>{
     //ROCPROFILER_CALLBACK_TRACING_NONE = 0,
-    ROCPROFILER_CALLBACK_TRACING_HSA_CORE_API,       ///< @see ::rocprofiler_hsa_core_api_id_t
-    ROCPROFILER_CALLBACK_TRACING_HSA_AMD_EXT_API,    ///< @see ::rocprofiler_hsa_amd_ext_api_id_t
-    ROCPROFILER_CALLBACK_TRACING_HSA_IMAGE_EXT_API,  ///< @see ::rocprofiler_hsa_image_ext_api_id_t
-    ROCPROFILER_CALLBACK_TRACING_HSA_FINALIZE_EXT_API,  ///< @see ::rocprofiler_hsa_finalize_ext_api_id_t
+    //ROCPROFILER_CALLBACK_TRACING_HSA_CORE_API,       ///< @see ::rocprofiler_hsa_core_api_id_t
+    //ROCPROFILER_CALLBACK_TRACING_HSA_AMD_EXT_API,    ///< @see ::rocprofiler_hsa_amd_ext_api_id_t
+    //ROCPROFILER_CALLBACK_TRACING_HSA_IMAGE_EXT_API,  ///< @see ::rocprofiler_hsa_image_ext_api_id_t
+    //ROCPROFILER_CALLBACK_TRACING_HSA_FINALIZE_EXT_API,  ///< @see ::rocprofiler_hsa_finalize_ext_api_id_t
     ROCPROFILER_CALLBACK_TRACING_HIP_RUNTIME_API,       ///< @see ::rocprofiler_hip_runtime_api_id_t
     #if( ROCPROFILER_VERSION_MAJOR > 0)
     ROCPROFILER_CALLBACK_TRACING_HIP_STREAM,  ///< @see ::rocprofiler_hip_stream_operation_t
@@ -238,7 +241,7 @@ void tau_rocsdk_kernel_dispatch(rocprofiler_callback_tracing_record_t record)
                             client_kernels.at(kernel_dispatch->dispatch_info.kernel_id).kernel_name, 1);
 
 
-  #ifdef ROCSDK_DEBUG
+  #ifdef ROCSDK_DEBUG_K
   std::cout << c_client_name_info.kind_names[record.kind] << " "
           << c_client_name_info.operation_names[record.kind][record.operation]
           << " phase: " << record.phase
@@ -522,7 +525,7 @@ void tau_rccl_process(rocprofiler_callback_tracing_record_t record)
 
   if(record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER)
   {
-    #if ROCSDK_DEBUG
+    #ifdef ROCSDK_DEBUG
     std::cout << "ENTER "
           << c_client_name_info.kind_names[record.kind] << " "
           << c_client_name_info.operation_names[record.kind][record.operation]
@@ -540,7 +543,7 @@ void tau_rccl_process(rocprofiler_callback_tracing_record_t record)
   else if(record.phase == ROCPROFILER_CALLBACK_PHASE_EXIT)
   {
     std::string rccl_call_name = c_client_name_info.operation_names[record.kind][record.operation];
-    #if ROCSDK_DEBUG
+    #ifdef ROCSDK_DEBUG
     std::cout << "EXIT "
           << c_client_name_info.kind_names[record.kind] << " "
           << rccl_call_name
@@ -653,6 +656,16 @@ void tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
                       void*                                 callback_data)
 {
     assert(callback_data != nullptr);
+
+    //We do not want to profile the call that we make, the call will be done by the same thread that
+    // called the function hipKernelNameRefByPtr, used to get the name of a function
+    // when hipLaunchKernel is called
+    static thread_local int inside_hipKernelNameRefByPtr = 0;
+    if(inside_hipKernelNameRefByPtr && c_client_name_info.operation_names[record.kind][record.operation] == "hipKernelNameRefByPtr")
+    {
+      return;
+    }
+
     //Invalid trace
     if(record.kind < ROCPROFILER_CALLBACK_TRACING_NONE || record.kind >= ROCPROFILER_CALLBACK_TRACING_LAST)
       return;
@@ -723,6 +736,11 @@ void tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
       case ROCPROFILER_CALLBACK_TRACING_HSA_IMAGE_EXT_API:
       case ROCPROFILER_CALLBACK_TRACING_HSA_FINALIZE_EXT_API:
       {
+        if(record.thread_id != RtsLayer::getTid())
+        {
+          std::cout << "HSA  RtsLayer::getTid() " << RtsLayer::getTid() 
+                    << " record.thread_id " << record.thread_id << std::endl;
+        }
         if(record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER)
         {
           TAU_START(c_client_name_info.operation_names[record.kind][record.operation]);
@@ -733,12 +751,12 @@ void tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
           TAU_STOP(c_client_name_info.operation_names[record.kind][record.operation]);
         }
         #ifdef ROCSDK_DEBUG
-        /*std::cout << (record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER ? "ENTER ":"EXIT ")
+        std::cout << (record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER ? "ENTER ":"EXIT ")
                   << c_client_name_info.kind_names[record.kind] << " "
                   << c_client_name_info.operation_names[record.kind][record.operation]
                   << " tid: " << record.thread_id
                   << " cid: " << record.correlation_id.internal
-                  << std::endl;*/
+                  << std::endl;
         #endif //ROCSDK_DEBUG
         break;
       }
@@ -757,25 +775,51 @@ void tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
       }*/
       case ROCPROFILER_CALLBACK_TRACING_HIP_RUNTIME_API:
       {
+        if(record.thread_id != RtsLayer::getTid())
+        {
+          std::cout << "HIP  RtsLayer::getTid() " << RtsLayer::getTid() 
+                    << " record.thread_id " << record.thread_id << std::endl;
+        }
         #ifdef ROCSDK_DEBUG
         auto    info_data = std::stringstream{};
-        ROCPROFILER_CALL(rocprofiler_iterate_callback_tracing_kind_operation_args(
-                          record, info_data_cb_string, record.phase, static_cast<void*>(&info_data)),
-                      "Failure iterating trace operation args");
+        //ROCPROFILER_CALL(rocprofiler_iterate_callback_tracing_kind_operation_args(
+        //                  record, info_data_cb_string, record.phase, static_cast<void*>(&info_data)),
+        //              "Failure iterating trace operation args");
         std::cout << (record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER ? "ENTER ":"EXIT ")
+                  << record.phase << " "
                   << c_client_name_info.kind_names[record.kind] << " "
                   << c_client_name_info.operation_names[record.kind][record.operation]
                   << " tid: " << record.thread_id
                   << " cid: " << record.correlation_id.internal
-                   << " " << info_data.str() <<std::endl;
+                  << " " << info_data.str() <<std::endl;
         #endif //ROCSDK_DEBUG
         if(record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER)
         {
-          TAU_START(c_client_name_info.operation_names[record.kind][record.operation]);
+          std::string name_hipcall = c_client_name_info.operation_names[record.kind][record.operation];
+          /*if (name_hipcall == "hipLaunchKernel")
+          {
+            auto* run_data = static_cast<rocprofiler_callback_tracing_hip_api_data_t*>(record.payload);
+            const void* host_function = run_data->args.hipLaunchKernel.function_address;
+            //We do not want to profile the call that we make
+            inside_hipKernelNameRefByPtr = 1;
+            name_hipcall = name_hipcall + " " + demangle_kernel_rocprofsdk(hipKernelNameRefByPtr( host_function, nullptr), 1);
+            inside_hipKernelNameRefByPtr = 0;
+          }*/
+          TAU_START(name_hipcall.c_str());
         }
         if(record.phase == ROCPROFILER_CALLBACK_PHASE_EXIT)
         {
           std::string name_hipcall = c_client_name_info.operation_names[record.kind][record.operation];
+          /*if (name_hipcall == "hipLaunchKernel")
+          {
+            auto* run_data = static_cast<rocprofiler_callback_tracing_hip_api_data_t*>(record.payload);
+            const void* host_function = run_data->args.hipLaunchKernel_spt.function_address;
+            //We do not want to profile the call that we make
+            inside_hipKernelNameRefByPtr = 1;
+            name_hipcall = name_hipcall + " " + demangle_kernel_rocprofsdk(hipKernelNameRefByPtr( host_function, nullptr), 1);
+            inside_hipKernelNameRefByPtr = 0;
+
+          }*/
           TAU_STOP(name_hipcall.c_str());
           if (name_hipcall.compare(0, 9, "hipMemcpy") == 0)
           {
@@ -816,7 +860,7 @@ void tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
           {
             pop_stream_id();
           }
-          #ifdef ROCSDK_DEBUG          
+          #ifdef ROCSDK_DEBUG_K         
           std::cout << "!! "
                     << record.phase << " "
                     << c_client_name_info.kind_names[record.kind] << " "
@@ -841,7 +885,7 @@ void tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
           }
           else
           {
-            #ifdef ROCSDK_DEBUG
+            #ifdef ROCSDK_DEBUG_K
               auto* kernel_dispatch = static_cast<rocprofiler_callback_tracing_kernel_dispatch_data_t*>(record.payload);
               std::string task_name = demangle_kernel_rocprofsdk(
                                         client_kernels.at(kernel_dispatch->dispatch_info.kernel_id).kernel_name, 1);
@@ -926,6 +970,11 @@ void tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
       //case ROCPROFILER_CALLBACK_TRACING_MARKER_CORE_RANGE_API:
       case ROCPROFILER_CALLBACK_TRACING_MARKER_CORE_API:
       {
+        if(record.thread_id != RtsLayer::getTid())
+        {
+          std::cout << "MARKER  RtsLayer::getTid() " << RtsLayer::getTid() 
+                    << " record.thread_id " << record.thread_id << std::endl;
+        }
         auto* marker_data = static_cast<rocprofiler_callback_tracing_marker_api_data_t*>(record.payload);
         #ifdef ROCSDK_DEBUG
         std::cout << (record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER ? "ENTER ":"EXIT ")
@@ -954,6 +1003,11 @@ void tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
       }*/
       case ROCPROFILER_CALLBACK_TRACING_RCCL_API:
       {
+        if(record.thread_id != RtsLayer::getTid())
+        {
+          std::cout << "RCCL  RtsLayer::getTid() " << RtsLayer::getTid() 
+                    << " record.thread_id " << record.thread_id << std::endl;
+        }
         tau_rccl_process(record);
         break;
       }
@@ -1012,6 +1066,11 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
                           rocprofiler_user_data_t*              user_data,
                           void*                                 callback_data)
 {
+  static std::mutex tool_code_mtx;
+  tool_code_mtx.lock();
+  //std::cout << c_client_name_info.kind_names[record.kind] << " "
+  //          << c_client_name_info.operation_names[record.kind][record.operation] 
+  //          << std::endl;
   if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
      record.operation == ROCPROFILER_CODE_OBJECT_LOAD)
   {
@@ -1029,12 +1088,13 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
     auto* data = static_cast<kernel_symbol_data_t*>(record.payload);
     if(record.phase == ROCPROFILER_CALLBACK_PHASE_LOAD)
     {
+      //printf("ROCPROFILER_CALLBACK_PHASE_LOAD\n");
       client_kernels.emplace(data->kernel_id, *data);
       //Only enable if needed for DEBUG
       //std::cout << data->kernel_id << " "<< data->kernel_name << std::endl;
     }
-
   }
+  tool_code_mtx.unlock();
 }
 
 void

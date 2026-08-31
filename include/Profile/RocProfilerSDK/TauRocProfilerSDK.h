@@ -47,11 +47,17 @@
 
 
 
-//Map to identify kernels and some of their information
+//Map to identify kernels and some of their information, GPU side
 using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
 using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_symbol_data_t>;
 kernel_symbol_map_t           client_kernels   = {};
 
+
+//Map to identify kernels and some of their information, CPU side
+//using host_function_data_t =
+//    rocprofiler_callback_tracing_code_object_host_kernel_symbol_register_data_t;
+//using host_functions_map_t = std::unordered_map<uint64_t, host_function_data_t>;
+//kernel_symbol_map_t           cpu_client_kernels   = {};
 
 //May move to include/Profile/nccl/types.h
 // along with https://github.com/UO-OACISS/tau2/blob/7409bb076e38c065f4266a10005e43590e9ec135/src/Profile/TauNCCL.cpp#L356
