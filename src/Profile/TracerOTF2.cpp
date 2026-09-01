@@ -1124,7 +1124,6 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
                 cputhreads++;
             }
 
-            //snprintf(namebuf, 256, "Thread %d (ROCM GPU ID:%d, Queue ID:%d, Thread ID:%d)", thread_num, 1, 2, 3);
             const char *name;
             Tau_metadata_value_t * value;
             char nccl_rankid[256] = "";
@@ -1147,29 +1146,39 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
             }
 
 #ifdef TAU_ENABLE_ROCM
-            //snprintf(namebuf, 256, "Thread %d (ROCM GPU ID:%d, Queue ID:%d, Thread ID:%d)", thread_num, 1, 2, 3);
+            
             const char *name_rocm;
             Tau_metadata_value_t * value_rocm;
-            char queue_id_rocm[256] = "";
+            char stream_id_rocm[256] = "";
             char gpu_id_rocm[256] = "";
+            char cu_id_rocm[256] = "";
             char tau_task_id_rocm[256] = "";
-            // We need to capture the thread name as "queue<2>/device<1> [31]".
+            // We need to capture the thread name as "stream<2>/device<1> [31]".
             for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(thread_num).begin(); it != Tau_metadata_getMetaData(thread_num).end(); it++) {
                 name_rocm = it->first.name;
                 value_rocm = it->second;
                 if (strcmp(name_rocm, "ROCM_GPU_ID") == 0) {
                             snprintf(gpu_id_rocm, sizeof(gpu_id_rocm),  "%s", value_rocm->data.cval);
                 }
-                if (strcmp(name_rocm, "ROCM_QUEUE_ID") == 0) {
-                    snprintf(queue_id_rocm, sizeof(queue_id_rocm),  "%s", value_rocm->data.cval);
+                if (strcmp(name_rocm, "ROCM_STREAM_ID") == 0) {
+                    snprintf(stream_id_rocm, sizeof(stream_id_rocm),  "%s", value_rocm->data.cval);
                 }
-                    if (strcmp(name_rocm, "TAU_TASK_ID") == 0) {
+                /*
+                if (strcmp(name_rocm, "TAU_TASK_ID") == 0) {
                     snprintf(tau_task_id_rocm, sizeof(tau_task_id_rocm),  "%s", value_rocm->data.cval);
+                }
+                */
+                if (strcmp(name_rocm, "ROCM_CU_ID") == 0) {
+                    snprintf(cu_id_rocm, sizeof(cu_id_rocm),  "%s", value_rocm->data.cval);
                 }
             }
 
             if (strlen(gpu_id_rocm) > 0) {
-                snprintf(namebuf, sizeof(namebuf),  "GPU%s Queue%s", gpu_id_rocm, queue_id_rocm);
+                snprintf(namebuf, sizeof(namebuf),  "GPU%s Stream%s", gpu_id_rocm, stream_id_rocm);
+                TAU_VERBOSE("name = %s\n", namebuf);
+            }
+            if (strlen(cu_id_rocm) > 0) {
+                snprintf(namebuf, sizeof(namebuf),  "GPU%s CU%s", gpu_id_rocm, cu_id_rocm);
                 TAU_VERBOSE("name = %s\n", namebuf);
             }
 

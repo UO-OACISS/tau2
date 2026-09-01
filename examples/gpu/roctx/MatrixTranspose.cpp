@@ -24,9 +24,16 @@ THE SOFTWARE.
 
 // hip header file
 #include <hip/hip_runtime.h>
+
+#ifdef ROCPROF_LEGACY
 #include "roctracer_ext.h"
+#endif
+
+#ifdef ROCPROF_SDK
+#include <rocprofiler-sdk-roctx/roctx.h>
+#endif
 // roctx header file
-#include <roctx.h>
+//#include <roctx.h>
 
 
 #define WIDTH 1024
@@ -95,7 +102,10 @@ int main() {
     // Memory transfer from host to device
     hipMemcpy(gpuMatrix, Matrix, NUM * sizeof(float), hipMemcpyHostToDevice);
 
+    #ifdef ROCPROF_LEGACY
     roctracer_mark("before HIP LaunchKernel");
+    #endif
+    
     roctxMark("before hipLaunchKernel");
     int rangeId = roctxRangeStart("hipLaunchKernel range");
     roctxRangePush("hipLaunchKernel");
@@ -103,7 +113,11 @@ int main() {
     hipLaunchKernelGGL(matrixTranspose, dim3(WIDTH / THREADS_PER_BLOCK_X, WIDTH / THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0, gpuTransposeMatrix,
                     gpuMatrix, WIDTH);
+    
+    #ifdef ROCPROF_LEGACY                  
     roctracer_mark("after HIP LaunchKernel");
+    #endif
+    
     roctxMark("after hipLaunchKernel");
 
     // Memory transfer from device to host

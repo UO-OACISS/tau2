@@ -21,77 +21,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+//
+
 //This file is a modified version of
 // https://github.com/ROCm/rocprofiler-sdk/blob/ccd1e54293768a756fb95c21bff51d95d5f6b20c/tests/pc_sampling/address_translation.cpp
 #include "Profile/RocProfilerSDK/TauRocProfilerSDK.h"
 #include "Profile/TauMetrics.h"
 
-std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename)
-{
-    std::string task_name;
-    //__omp_offloading_36_523fe22f_compute_target_l105.kd
-    static std::string omp_off_string = "__omp_offloading";
-    //Each GPU implementation shows the name in a similar way,
-    // but some are demangled and anothers demangled,
-    // in the case of AMD, they seem to be demangled
-    if( strncmp(k_name.c_str(), omp_off_string.c_str(), omp_off_string.length())==0)
-    {
-        int pos_key=omp_off_string.length();
-        for(int i =0; i<2; i++)
-        {
-            pos_key = k_name.find_first_of('_', pos_key + 1);
-        }
-        int pos_ll = k_name.find_last_of("l");
-        task_name = "OMP OFFLOADING ";
-        task_name = task_name  + Tau_demangle_name(k_name.substr(pos_key+1,pos_ll-pos_key-2).c_str());
-        if(add_filename == 0)
-            return task_name;
-        std::string s_omp_line = k_name.substr(pos_ll+1,k_name.find_last_of(".")-pos_ll-1);
-        task_name = task_name + " [{UNRESOLVED} {";
-        task_name = task_name + s_omp_line;
-        task_name = task_name + ",0}]";
-    }
-    else
-    {
-        task_name = Tau_demangle_name(k_name.c_str());
-    }
-    return task_name;
-}
+//#define ROCSDK_DEBUG
+//#define ROCSDK_DEBUG_K
+//#define ROCSDK_DEBUG_K_0
+#undef ROCSDK_DEBUG
+#undef ROCSDK_DEBUG_K
+#undef ROCSDK_DEBUG_K_0
 
 
-//Map to identify kernels and some of their information
-using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
-using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_symbol_data_t>;
-extern void register_kernel_dispatch(rocprofiler_kernel_dispatch_info_t dispatch_info, rocprofiler_timestamp_t end_timestamp);
+//Initialization flag, only to check if Tau_rocm_initialize_v3 was called
+static int initialized_v3 = 0;
+//Configuration flag, checks if it was configured or failed to configure
+static int configured_v3 = 0;
 
-extern std::string read_hc_record(void* payload, uint32_t kind, kernel_symbol_map_t client_kernels, uint64_t* agentid, uint64_t* queueid, double* counter_value, rocprofiler_timestamp_t* c_timestamp);
-extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
+static int pc_sampling = 0;
+static int hc_profiling = 0;
 
-extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
-extern void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
-extern void sdk_pc_sampling_flush();
-extern std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename);
-
-//We want to use the same IDs for the GPUs between the sampling and tracing.
-std::map< uint64_t, uint32_t> TAU_rocsdk_id_device_map;
-
+//Initialization mutex
+std::mutex SDK_init_lock;
+//Flushing mutex
+std::mutex SDKFlush_mtx;
 
 //Flag to check if TAU called the flush function
 //we want to avoid flushing after TAU has written the profile files
-int volatile flushed = 0;
+static int flushed = 0;
 
-//Disable functions called by TAU if rocm profiling not initialized
-int volatile rocprofsdk_initialized = 0;
-
-//Buffer for rocprofiler data
-rocprofiler_buffer_id_t       client_buffer    = {};
-
-//Flag to enable/disable profiling
-int volatile hc_profiling = 0;
-int volatile pc_sampling = 0;
-static int initialized_v3 = 0;
-
-//Buffer to identify names of ROCm calls
+//To identify buffer names of ROCm calls
 using buffer_kind_names_t = std::map<rocprofiler_buffer_tracing_kind_t, const char*>;
 using buffer_kind_operation_names_t = std::map<rocprofiler_buffer_tracing_kind_t, 
                                                 std::map<rocprofiler_tracing_operation_t, const char*>>;
@@ -101,51 +63,38 @@ struct buffer_name_info
     buffer_kind_names_t           kind_names      = {};
     buffer_kind_operation_names_t operation_names = {};
 };
-buffer_name_info              client_name_info = {};
+buffer_name_info              b_client_name_info = {};
 
-//Map to identify kernels and some of their information
-using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
-using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_symbol_data_t>;
-kernel_symbol_map_t           client_kernels   = {};
+//To identify callback names of ROCm calls
+using callback_kind_names_t = std::map<rocprofiler_callback_tracing_kind_t, const char*>;
+using callback_kind_operation_names_t = std::map<rocprofiler_callback_tracing_kind_t, 
+                                                std::map<rocprofiler_tracing_operation_t, const char*>>;
+                                                
+struct callback_name_info
+{
+    callback_kind_names_t           kind_names      = {};
+    callback_kind_operation_names_t operation_names = {};
+};
+callback_name_info              c_client_name_info = {};
 
-rocprofiler_context_id_t      client_ctx       = {0};
-
-//Map for ROCTX Start and Stop correlation
-std::map<roctx_range_id_t, const char*> roctx_start_stop = {};
-
-//Vector for ROCTX Push and Pop
-std::vector<const char*> roctx_push_pop = {};
 
 
-//Map of all available agents, helps identify if agent is CPU or GPU
-//  ROCPROFILER_AGENT_TYPE_NONE = 0,  ///< Agent type is unknown
-//  ROCPROFILER_AGENT_TYPE_CPU,       ///< Agent type is a CPU
-//  ROCPROFILER_AGENT_TYPE_GPU,       ///< Agent type is a GPU
-//  ROCPROFILER_AGENT_TYPE_LAST,
 
-//std::map<uint64_t , rocprofiler_agent_type_t> tau_rocm_all_agent_id = {};
+//Buffer for rocprofiler data
+rocprofiler_buffer_id_t       client_buffer    = {};
+extern void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
+extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
 
-//Map of list of events, used  to sort events by timestamp, each taskid is a different list
-std::map<int, std::list<struct TauSDKEvent>> TauRocmSDKListMap;
-std::mutex SDKList_mtx;
 
-std::mutex SDK_init_lock;
+//Map to identify the queue id given a stream id and device id
+static std::map<std::pair<uint64_t, uint64_t>, uint64_t> streamid_queueid_map;
 
-std::map<int, rocprofiler_timestamp_t> tau_last_timestamp_published;
-std::mutex last_mtx;
+//Map to identify fake timer overlaps
+static std::map<uint64_t, double> streamid_kernel_map;
 
-//thread id that generated the record, taskid
-std::map<rocprofiler_thread_id_t, int> hsa_taskids;
-std::map<rocprofiler_thread_id_t, int> hip_taskids;
-std::map<rocprofiler_thread_id_t, int> rccl_taskids;
+//Use a mutex to avoid accessing the map by more than one thread
+std::mutex stream_queue_mtx;
 
-//Use the agent id for the memcpys, can be CPU or GPU
-std::map<uint64_t, int> memcpy_taskids;
-//Use device id and queue id instead of thread id
-std::map<struct TauSDK_dev_que, int> kernel_taskids;
-//static pthread_mutex_t queueid_lock = PTHREAD_MUTEX_INITIALIZER;
-
-//static rocprofiler_timestamp_t tau_last_timestamp_published = 0;
 
 //------------------------------------------------------------------------------------------------
 //Check if -rocm is set with env variable TAU_USE_ROCPROFILERSDK
@@ -163,8 +112,7 @@ int use_rocprofilersdk()
   return check_enable;
 }
 
-//When rocprofiler-sdk stops being experimental
-//this may be removed or hidden
+//Check rocsdk version, useful to debug when using non-system SDK
 void rocsdk_version_check(uint32_t                 version,
                       const char*              runtime_version)
 {
@@ -175,749 +123,1073 @@ void rocsdk_version_check(uint32_t                 version,
     TAU_VERBOSE("TAU is using rocprofiler-sdk v%u.%u.%u (%s)\n", major, minor, patch, runtime_version); 
 }
 
-//------------------------------------------------------------------------------------------------
 
-//https://rocm.docs.amd.com/projects/rocprofiler-sdk/en/docs-7.2.0/_doxygen/rocprofiler-sdk/html/group___b_a_s_i_c___d_a_t_a___t_y_p_e_s.html#gac2eecbf4d5542df3b35fc26837fac59b
-//Not all kinds are supported, look at the definitions in new rocprofiler-sdk versions and implement if supported
-static const auto supported_kinds = std::unordered_set<rocprofiler_buffer_tracing_kind_t>{
-    ROCPROFILER_BUFFER_TRACING_HSA_CORE_API,          ///< @see ::rocprofiler_hsa_core_api_id_t
-    ROCPROFILER_BUFFER_TRACING_HSA_AMD_EXT_API,       ///< @see ::rocprofiler_hsa_amd_ext_api_id_t
-    ROCPROFILER_BUFFER_TRACING_HSA_IMAGE_EXT_API,     ///< @see ::rocprofiler_hsa_image_ext_api_id_t
-    ROCPROFILER_BUFFER_TRACING_HSA_FINALIZE_EXT_API,  ///< @see ::rocprofiler_hsa_finalize_ext_api_id_t
-    ROCPROFILER_BUFFER_TRACING_HIP_RUNTIME_API,       ///< @see ::rocprofiler_hip_runtime_api_id_t
-    ROCPROFILER_BUFFER_TRACING_MARKER_CORE_API,       ///< @see ::rocprofiler_marker_core_api_id_t
-    ROCPROFILER_BUFFER_TRACING_MARKER_CONTROL_API,  ///< @see ::rocprofiler_marker_control_api_id_t
-    ROCPROFILER_BUFFER_TRACING_MARKER_NAME_API,     ///< @see ::rocprofiler_marker_name_api_id_t
-    ROCPROFILER_BUFFER_TRACING_MEMORY_COPY,         ///< @see ::rocprofiler_memory_copy_operation_t
-    ROCPROFILER_BUFFER_TRACING_KERNEL_DISPATCH,     ///< Buffer kernel dispatch info
-    ROCPROFILER_BUFFER_TRACING_RCCL_API,                   ///< RCCL tracing
+//Callbacks supported by the general callback, if disabled, may need individual callback,
+// or still not supported
+static const auto c_supported_kinds = std::unordered_set<rocprofiler_callback_tracing_kind_t>{
+    //ROCPROFILER_CALLBACK_TRACING_NONE = 0,
+    ROCPROFILER_CALLBACK_TRACING_HSA_CORE_API,       ///< @see ::rocprofiler_hsa_core_api_id_t
+    ROCPROFILER_CALLBACK_TRACING_HSA_AMD_EXT_API,    ///< @see ::rocprofiler_hsa_amd_ext_api_id_t
+    ROCPROFILER_CALLBACK_TRACING_HSA_IMAGE_EXT_API,  ///< @see ::rocprofiler_hsa_image_ext_api_id_t
+    ROCPROFILER_CALLBACK_TRACING_HSA_FINALIZE_EXT_API,  ///< @see ::rocprofiler_hsa_finalize_ext_api_id_t
+    ROCPROFILER_CALLBACK_TRACING_HIP_RUNTIME_API,       ///< @see ::rocprofiler_hip_runtime_api_id_t
+    #if( ROCPROFILER_VERSION_MAJOR > 0)
+    ROCPROFILER_CALLBACK_TRACING_HIP_STREAM,  ///< @see ::rocprofiler_hip_stream_operation_t
+    #endif // #if( ROCPROFILER_VERSION_MAJOR > 0)
+    ROCPROFILER_CALLBACK_TRACING_KERNEL_DISPATCH,    ///< Callbacks for kernel dispatches
+    ROCPROFILER_CALLBACK_TRACING_MARKER_CORE_API,     ///< @see ::rocprofiler_marker_core_api_id_t
+
+    ROCPROFILER_CALLBACK_TRACING_RCCL_API,           ///< RCCL tracing
+    
+    //ROCPROFILER_CALLBACK_TRACING_SCRATCH_MEMORY,  ///< @see ::rocprofiler_scratch_memory_operation_t
+    //ROCPROFILER_CALLBACK_TRACING_MARKER_NAME_API,     ///< @see ::rocprofiler_marker_name_api_id_t
+    //ROCPROFILER_CALLBACK_TRACING_MARKER_CORE_RANGE_API,  ///< @see
+    //ROCPROFILER_CALLBACK_TRACING_HIP_COMPILER_API,    ///< @see ::rocprofiler_hip_compiler_api_id_t
+    //ROCPROFILER_CALLBACK_TRACING_MEMORY_COPY,        ///< @see ::rocprofiler_memory_copy_operation_t
+    //ROCPROFILER_CALLBACK_TRACING_OMPT,               ///< @see ::rocprofiler_ompt_operation_t
+    ROCPROFILER_CALLBACK_TRACING_MEMORY_ALLOCATION,  ///< @see ::rocprofiler_memory_allocation_operation_t
+    //ROCPROFILER_CALLBACK_TRACING_RUNTIME_INITIALIZATION,  ///< Callback notifying that a runtime
+                                                          ///< library has been initialized
+    //ROCPROFILER_CALLBACK_TRACING_ROCDECODE_API,           ///< rocDecode API Tracing
+    //ROCPROFILER_CALLBACK_TRACING_ROCJPEG_API,             ///< rocJPEG API Tracing
+
+    //ROCPROFILER_CALLBACK_TRACING_MARKER_CONTROL_API,  ///< @see ::rocprofiler_marker_control_api_id_t                                                     ///< ::rocprofiler_marker_core_range_api_id_t
+    //ROCPROFILER_CALLBACK_TRACING_HIP_GRAPH,     ///< @see ::rocprofiler_hip_graph_operation_t
+    //ROCPROFILER_CALLBACK_TRACING_ROCSHMEM_API,  ///< rocSHMEM API tracing
+    //ROCPROFILER_CALLBACK_TRACING_HIPFILE_API,   ///< hipFILE API Tracing
+    //ROCPROFILER_CALLBACK_TRACING_LAST,
+    //Has its own callback
+    //ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT,     ///< @see ::rocprofiler_code_object_operation_t
 };
 
-//This is a bit different from the ROCm samples,
-//in this case we use maps, which changes the tool
-//a bit when using the callbacks
-inline buffer_name_info
-get_buffer_tracing_names()
+
+rocprofiler_context_id_t      client_ctx       = {0};
+
+inline callback_name_info
+get_callback_tracing_names()
 {
-
-
-    auto cb_name_info = buffer_name_info{};
+    auto cb_name_info = callback_name_info{};
     //
     // callback for each kind operation
     //
-    static auto tracing_kind_operation_cb = [](rocprofiler_buffer_tracing_kind_t kindv,
-                                               rocprofiler_tracing_operation_t   operation,
-                                               void*                             data_v) {
-        auto* name_info_v = static_cast<buffer_name_info*>(data_v);
+    static auto tracing_kind_operation_cb = [](rocprofiler_callback_tracing_kind_t kindv,
+                                               rocprofiler_tracing_operation_t     operation,
+                                               void*                               data_v) {
+        auto* name_info_v = static_cast<callback_name_info*>(data_v);
 
-        if(supported_kinds.count(kindv) > 0)
-        {
-            const char* name = nullptr;
-            ROCPROFILER_CALL(rocprofiler_query_buffer_tracing_kind_operation_name(
-                                 kindv, operation, &name, nullptr),
-                             "query buffer tracing kind operation name");
-            //EXPECT_TRUE(name != nullptr) << "kind=" << kindv << ", operation=" << operation;
-            if(name) name_info_v->operation_names[kindv][operation] = name;
-        }
+        const char* name   = nullptr;
+        auto        status = rocprofiler_query_callback_tracing_kind_operation_name(
+            kindv, operation, &name, nullptr);
+        if(status == ROCPROFILER_STATUS_SUCCESS && name) name_info_v->operation_names[kindv][operation] = name;
         return 0;
     };
 
     //
     //  callback for each buffer kind (i.e. domain)
     //
-    static auto tracing_kind_cb = [](rocprofiler_buffer_tracing_kind_t kind, void* data) {
-        //  store the buffer kind name
-        auto*       name_info_v = static_cast<buffer_name_info*>(data);
+    static auto tracing_kind_cb = [](rocprofiler_callback_tracing_kind_t kind, void* data) {
+        //  store the callback kind name
+        auto*       name_info_v = static_cast<callback_name_info*>(data);
         const char* name        = nullptr;
-        ROCPROFILER_CALL(rocprofiler_query_buffer_tracing_kind_name(kind, &name, nullptr),
-                         "query buffer tracing kind operation name");
-        //EXPECT_TRUE(name != nullptr) << "kind=" << kind;
-        if(name) name_info_v->kind_names[kind] = name;
+        auto        status = rocprofiler_query_callback_tracing_kind_name(kind, &name, nullptr);
+        if(status == ROCPROFILER_STATUS_SUCCESS && name) name_info_v->kind_names[kind] = name;
 
-        if(supported_kinds.count(kind) > 0)
-        {
-            ROCPROFILER_CALL(rocprofiler_iterate_buffer_tracing_kind_operations(
-                                 kind, tracing_kind_operation_cb, static_cast<void*>(data)),
-                             "iterating buffer tracing kind operations");
-        }
+        rocprofiler_iterate_callback_tracing_kind_operations(kind, tracing_kind_operation_cb, data);
         return 0;
     };
 
-    ROCPROFILER_CALL(rocprofiler_iterate_buffer_tracing_kinds(tracing_kind_cb,
-                                                              static_cast<void*>(&cb_name_info)),
-                     "iterating buffer tracing kinds");
+    rocprofiler_iterate_callback_tracing_kinds(tracing_kind_cb, &cb_name_info);
 
     return cb_name_info;
 }
 
-rocprofiler_status_t
-query_available_agents(rocprofiler_agent_version_t agents_ver,
-                       const void** agents_arr,
-                       size_t       num_agents,
-                       void*        udata)
+std::vector<uint64_t>*
+get_stream_stack()
 {
-    if(agents_ver != ROCPROFILER_AGENT_INFO_VERSION_0)
-            throw std::runtime_error{"unexpected rocprofiler agent version"};
-        auto* agents_v = static_cast<std::vector<rocprofiler_agent_v0_t>*>(udata);
-        for(size_t i = 0; i < num_agents; ++i)
-        {
-            const auto* agent = static_cast<const rocprofiler_agent_v0_t*>(agents_arr[i]);
-            agents_v->emplace_back(*agent);
-        }
-        return ROCPROFILER_STATUS_SUCCESS;
+    static thread_local std::vector<uint64_t> stream_stack;
+    return &stream_stack;
 }
 
-
-/**
- * Returns all GPU agents visible to rocprofiler on the system
- */
-std::vector<rocprofiler_agent_v0_t>
-get_gpu_device_agents()
+bool stream_stack_not_null()
 {
-    std::vector<rocprofiler_agent_v0_t> agents;
-    std::vector<rocprofiler_agent_v0_t> gpu_agents;
-    // Query the agents, only a single callback is made that contains a vector
-    // of all agents.
-    ROCPROFILER_CALL(
-        rocprofiler_query_available_agents(ROCPROFILER_AGENT_INFO_VERSION_0,
-                                           &query_available_agents,
-                                           sizeof(rocprofiler_agent_t),
-                                           const_cast<void*>(static_cast<const void*>(&agents))),
-        "query available agents");
-    for(const auto& agent : agents)
-    {
-      if(agent.type == ROCPROFILER_AGENT_TYPE_GPU) 
-      {
-        gpu_agents.push_back(agent);
-      }
-      TAU_rocsdk_id_device_map[agent.id.handle] = agent.node_id;
-    }
-    return gpu_agents;
+    return get_stream_stack() != nullptr;
 }
 
-std::string get_copy_direction(int direction, uint64_t source, uint64_t destination)
+void push_stream_id(uint64_t id)
 {
-  std::string mem_cpy_kind;
-
-  switch(direction)
-  {
-    case ROCPROFILER_MEMORY_COPY_NONE:
-      mem_cpy_kind = "MEMORY_COPY_NONE";
-      break;
-    case ROCPROFILER_MEMORY_COPY_HOST_TO_HOST:
-      mem_cpy_kind = "MEMORY_COPY_HOST_TO_HOST";
-      break;
-    case ROCPROFILER_MEMORY_COPY_HOST_TO_DEVICE:
-    {
-      mem_cpy_kind = "MEMORY_COPY_HOST_TO_DEVICE";
-      break;
-    }
-    case ROCPROFILER_MEMORY_COPY_DEVICE_TO_HOST:
-    {
-      mem_cpy_kind = "MEMORY_COPY_DEVICE_TO_HOST";
-      break;
-    }
-    case ROCPROFILER_MEMORY_COPY_DEVICE_TO_DEVICE:
-    {
-      mem_cpy_kind = "MEMORY_COPY_DEVICE_TO_DEVICE";
-      mem_cpy_kind += " destination id ";
-      mem_cpy_kind += std::to_string(TAU_rocsdk_id_device_map[destination]);
-      break;
-    }
-    case ROCPROFILER_MEMORY_COPY_LAST:
-      mem_cpy_kind = "MEMORY_COPY_LAST";
-      break;
-    default:
-      mem_cpy_kind = "MEMORY_COPY Unknown";
-      break;
-  }
-  return mem_cpy_kind;
+    get_stream_stack()->emplace_back(id);
 }
 
-//Publish event to TAU
-void TAU_publish_sdk_event(TauSDKEvent sdk_event)
+void pop_stream_id()
 {
-  //TAU_VERBOSE("TAU_publish_sdk_event \n");
-  last_mtx.lock();
-  rocprofiler_timestamp_t last_timestamp;
+    return get_stream_stack()->pop_back();
+}
+
+uint64_t get_stream_id()
+{
+    auto* stack = get_stream_stack();
+
+    return stack->empty() ? 0 : stack->back();
+}
+
+bool stream_stack_empty()
+{
+    return get_stream_stack()->empty();
+}
+
+void tau_rocsdk_kernel_process( uint64_t cur_stream, rocprofiler_callback_tracing_kernel_dispatch_data_t kd_data)
+{
+  std::string task_name = demangle_kernel_rocprofsdk(
+                            client_kernels.at(kd_data.dispatch_info.kernel_id).kernel_name, 1);
+
   
-  std::map<int, rocprofiler_timestamp_t>::iterator it = tau_last_timestamp_published.find(sdk_event.taskid);
-  if(it == tau_last_timestamp_published.end())
-  {
-    tau_last_timestamp_published[sdk_event.taskid] = 0;
-    last_timestamp = 0;
+  uint64_t cur_agent = kd_data.dispatch_info.agent_id.handle;
+  double start_ts = ((double)kd_data.start_timestamp)/1e3;
+  double end_ts = ((double)kd_data.end_timestamp)/1e3;
+
+  //We lock the access to the stream task map, and also locks the task START/STOP
+  stream_queue_mtx.lock();
+
+  //We want to obtain the taskid as we can't use TAU_START/STOP
+  int taskid;
+  auto it = streamid_queueid_map.find({cur_stream, cur_agent});
+  if (it != streamid_queueid_map.end()) {
+    taskid = it->second;
   }
   else
   {
-    last_timestamp = it->second;
+    Tau_global_incr_insideTAU();
+    TAU_CREATE_TASK(taskid);
+    streamid_queueid_map[{cur_stream, cur_agent}] = taskid;
+    Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, start_ts);
+    //printf("CREATE %lf\n", Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, start_ts));
+    Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
+    Tau_add_metadata_for_task("ROCM_GPU_ID", TAU_rocsdk_id_device_map[cur_agent], taskid);
+    //Tau_add_metadata_for_task("ROCM_THREAD_ID", record.thread_id, taskid);
+    Tau_add_metadata_for_task("ROCM_STREAM_ID", cur_stream, taskid);
+    Tau_create_top_level_timer_if_necessary_task(taskid);
   }
-  //TAU_VERBOSE("? Entry: %lu Exit: %lu %s task: %d\n", sdk_event.entry, sdk_event.exit, sdk_event.name.c_str(), sdk_event.taskid);
-  if( sdk_event.entry < last_timestamp )
+
+  #ifdef ROCSDK_DEBUG_K
+  std::cout << "KERNEL_DISPATCH "
+        << " stream : " << cur_stream
+        << " kernel_id: " << kd_data.dispatch_info.kernel_id
+        << " kernel_name: " << task_name
+        << " start: " << kd_data.start_timestamp 
+        << " end: " << kd_data.end_timestamp
+        << " agent: " << cur_agent
+        << " agent id: " << TAU_rocsdk_id_device_map[cur_agent]
+        << " d_id: " << kd_data.dispatch_info.dispatch_id
+        << " grid_size x: " << kd_data.dispatch_info.grid_size.x
+        << " grid_size y: " << kd_data.dispatch_info.grid_size.y
+        << " grid_size z: " << kd_data.dispatch_info.grid_size.z
+        << " group_segment_size: " << kd_data.dispatch_info.group_segment_size
+        << " private_segment_size: " << kd_data.dispatch_info.private_segment_size
+        << " queue_id: " << kd_data.dispatch_info.queue_id.handle
+        << " workgroup_size x: " << kd_data.dispatch_info.workgroup_size.x
+        << " workgroup_size y: " << kd_data.dispatch_info.workgroup_size.y
+        << " workgroup_size z: " << kd_data.dispatch_info.workgroup_size.z
+        << " taskid: " << taskid
+        << std::endl;
+  #endif //ROCSDK_DEBUG_K
+  //printf("start_ts %lf end_ts %lf total %lf\n", start_ts, end_ts, end_ts-start_ts);
+
+  //If there are multiple kernels in the same stream enqueued, the internal timer
+  // of the previous may be translated to a timestamp later than the current start,
+  // when it started after the previous ended,
+  // to prevent this issue, we check if this issue appears or not.
+  // If this issue appears, use the last timestamp end as the current start.
+  // According to AMD, this can happen with timers close to ~0.5 us from each other
+  
+  auto cur_map_pos = streamid_kernel_map.find(taskid);
+  double last_ts = 0.0f;
+  if(cur_map_pos != streamid_kernel_map.end())
+    last_ts = cur_map_pos->second;
+
+  if(last_ts>start_ts)
+    start_ts=last_ts;
+
+  if(start_ts>end_ts)
   {
-    TAU_VERBOSE("ERROR: new event's timestamp is older than previous event timestamp, current look ahead window is %d\n", TAU_ROCMSDK_LOOK_AHEAD);
-    TAU_VERBOSE("ERROR: modify TAU_ROCMSDK_LOOK_AHEAD with -useropt=-DTAU_ROCMSDK_LOOK_AHEAD=%d or bigger\n", TAU_ROCMSDK_LOOK_AHEAD*2);
-    TAU_VERBOSE("ERROR: if this is a hsa_* task [task: %s], some may overlap and this error should be ignored\n", sdk_event.name.c_str());
-    //TAU_VERBOSE("- Entry: %lu Exit: %lu %s task: %d\n", sdk_event.entry, sdk_event.exit, sdk_event.name.c_str(), sdk_event.taskid);
-    //TAU_VERBOSE("- last_timestamp: %lu \n", last_timestamp);
-    last_mtx.unlock();
+    TAU_VERBOSE("[TAU ERROR] One kernel was discarded, start_ts>end_ts\n");
+    stream_queue_mtx.unlock();
     return;
   }
+
+  streamid_kernel_map[taskid] = end_ts;
   
-  //TAU_VERBOSE("Add Entry: %u Exit: %u %s task: %d\n", sdk_event.entry, sdk_event.exit, sdk_event.name.c_str(), sdk_event.taskid);
 
-  tau_last_timestamp_published[sdk_event.taskid] = sdk_event.exit;
+  Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, start_ts);
+  //printf("KERNEL_s taskid %d %lf\n", taskid, Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, start_ts));
+  TAU_START_TASK( task_name.c_str(), taskid);
 
-  last_mtx.unlock();
-  
-  if(!sdk_event.name.empty())
-  {
-    double timestamp_entry = Tau_metric_set_synchronized_gpu_timestamp(sdk_event.taskid, ((double)sdk_event.entry/1e3)); // convert to microseconds
-    metric_set_gpu_timestamp(sdk_event.taskid, timestamp_entry);
-    TAU_START_TASK(sdk_event.name.c_str(), sdk_event.taskid);
+  double end_sync_ts = Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, end_ts);
+  //printf("KERNEL_e taskid %d %lf\n", taskid, Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, end_ts));
+  TAU_STOP_TASK( task_name.c_str(), taskid);
 
+  dispatch_kernel_time[kd_data.dispatch_info.dispatch_id] = {taskid, end_sync_ts};
 
-    double timestamp_exit = Tau_metric_set_synchronized_gpu_timestamp(sdk_event.taskid, ((double)sdk_event.exit/1e3)); // convert to microseconds
-    metric_set_gpu_timestamp(sdk_event.taskid, timestamp_exit);
-    TAU_STOP_TASK(sdk_event.name.c_str(), sdk_event.taskid);
-    Tau_set_last_timestamp_ns(timestamp_exit);
-    for(auto& sdk_u_event : sdk_event.userevents)
-    {
-      void* ue = nullptr;
-      Tau_get_context_userevent(&ue, sdk_u_event.ev_name.c_str());
-      TAU_CONTEXT_EVENT_THREAD_TS(ue, sdk_u_event.value, sdk_event.taskid, timestamp_exit);
-    }    
-  }
-  else
-  {
-    for(auto& sdk_u_event : sdk_event.userevents)
-    {
-      void* ue = nullptr;
-      double timestamp = Tau_metric_set_synchronized_gpu_timestamp(sdk_event.taskid, ((double)sdk_event.exit/1e3)); // convert to microseconds
-      Tau_get_context_userevent(&ue, sdk_u_event.ev_name.c_str());
-      TAU_CONTEXT_EVENT_THREAD_TS(ue, sdk_u_event.value, sdk_event.taskid, timestamp);
-    }  
-  }
-  
-  
-}
+  void* ue = nullptr;
+  std::string event_name;
 
-//Process event into the list, add to TAU if needed
-void TAU_process_sdk_event(TauSDKEvent sdk_event)
-{
-  //TAU_VERBOSE("TAU_process_sdk_event\n");
-  //TauRocmSDKListMap
-  SDKList_mtx.lock();
-  //We do not need to sort all the elements, we only want to insert an element
-  // into the correct position of the buffer list, the sort was wasting too much time
-  //TauRocmSDKListMap[sdk_event.taskid].push_back(sdk_event);
-  //TauRocmSDKListMap[sdk_event.taskid].sort();
-  auto it = std::lower_bound(TauRocmSDKListMap[sdk_event.taskid].begin(), TauRocmSDKListMap[sdk_event.taskid].end(), sdk_event);
-  TauRocmSDKListMap[sdk_event.taskid].insert(it, sdk_event);
+  event_name = "Private segment size : " + task_name;
+  Tau_get_context_userevent(&ue, event_name.c_str());
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kd_data.dispatch_info.private_segment_size, taskid, end_sync_ts);
 
-  if(TauRocmSDKListMap[sdk_event.taskid].size() < TAU_ROCMSDK_LOOK_AHEAD)
-  {
-    SDKList_mtx.unlock();
-    return;
-  }
-  else
-  {
-    TAU_publish_sdk_event(TauRocmSDKListMap[sdk_event.taskid].front());
-    TauRocmSDKListMap[sdk_event.taskid].pop_front();
-  }
-  SDKList_mtx.unlock();
-}
+  event_name = "Group segment size : " + task_name;
+  Tau_get_context_userevent(&ue, event_name.c_str());
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kd_data.dispatch_info.group_segment_size, taskid, end_sync_ts);
 
+  event_name = "Workgroup size X: " + task_name;
+  Tau_get_context_userevent(&ue, event_name.c_str());
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kd_data.dispatch_info.workgroup_size.x, taskid, end_sync_ts);
 
-//Buffered tracing callback
-void
-tool_tracing_callback(rocprofiler_context_id_t      context,
-                      rocprofiler_buffer_id_t       buffer_id,
-                      rocprofiler_record_header_t** headers,
-                      size_t                        num_headers,
-                      void*                         user_data,
-                      uint64_t                      drop_count)
-{
-  //If we have already flushed all the events, tau has ended, do not profile
-  if(flushed)
-    return;
+  event_name = "Workgroup size Y: " + task_name;
+  Tau_get_context_userevent(&ue, event_name.c_str());
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kd_data.dispatch_info.workgroup_size.y, taskid, end_sync_ts);
+
+  event_name = "Workgroup size Z: " + task_name;
+  Tau_get_context_userevent(&ue, event_name.c_str());
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kd_data.dispatch_info.workgroup_size.z, taskid, end_sync_ts);
+
+  event_name = "Grid size X: " + task_name;
+  Tau_get_context_userevent(&ue, event_name.c_str());
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kd_data.dispatch_info.grid_size.x, taskid, end_sync_ts);
+
+  event_name = "Grid size Y: " + task_name;
+  Tau_get_context_userevent(&ue, event_name.c_str());
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kd_data.dispatch_info.grid_size.y, taskid, end_sync_ts);
+
+  event_name = "Grid size Z: " + task_name;
+  Tau_get_context_userevent(&ue, event_name.c_str());
+  TAU_CONTEXT_EVENT_THREAD_TS(ue, kd_data.dispatch_info.grid_size.z, taskid, end_sync_ts);
+
+  stream_queue_mtx.unlock();
     
-  assert(user_data != nullptr);
-  assert(drop_count == 0 && "drop count should be zero for lossless policy");
-  
-  if(num_headers == 0)
-    throw std::runtime_error{
-         "rocprofiler invoked a buffer callback with no headers. this should never happen"};
-  else if(headers == nullptr)
-    throw std::runtime_error{"rocprofiler invoked a buffer callback with a null pointer to the "
-                             "array of headers. this should never happen"};
-  
-  static unsigned long long last_timestamp = Tau_get_last_timestamp_ns();
-  
-  //TAU_VERBOSE("tool_tracing_callback\n");
+}
 
-  for(size_t i = 0; i < num_headers; ++i)
+void tau_rocsdk_kmap_flush()
+{
+  kernel_dispatch_map_mutex.lock();
+
+  for (auto it = kernel_time_stream_map.begin();
+     it != kernel_time_stream_map.end();
+     ++it)
   {
-    auto* header = headers[i];
-    if(header->category == ROCPROFILER_BUFFER_CATEGORY_TRACING)
+    uint64_t cur_stream = it->first.second;
+    rocprofiler_callback_tracing_kernel_dispatch_data_t kd_data = it->second;
+    tau_rocsdk_kernel_process( cur_stream, kd_data);
+  }
+  kernel_time_stream_map.clear();
+  
+  kernel_dispatch_map_mutex.unlock();
+}
+
+//This call must be inside a mutex region, with kernel_dispatch_map_mutex
+void tau_rocsdk_kmap_process()
+{
+  if (kernel_time_stream_map.size() > DISPATCH_MAP_MAX_SIZE)
+  {
+    auto it = kernel_time_stream_map.begin();
+
+    uint64_t cur_stream = it->first.second;
+    rocprofiler_callback_tracing_kernel_dispatch_data_t kd_data = it->second;
+    tau_rocsdk_kernel_process( cur_stream, kd_data);
+
+    kernel_time_stream_map.erase(it);
+  }
+}
+
+void tau_rocsdk_kernel_dispatch(rocprofiler_callback_tracing_record_t record)
+{
+
+  auto* kernel_dispatch = static_cast<rocprofiler_callback_tracing_kernel_dispatch_data_t*>(record.payload);
+
+  #ifdef ROCSDK_DEBUG_K_0
+  std::string task_name = demangle_kernel_rocprofsdk(
+                            client_kernels.at(kernel_dispatch->dispatch_info.kernel_id).kernel_name, 1);
+  std::cout << c_client_name_info.kind_names[record.kind] << " "
+          << c_client_name_info.operation_names[record.kind][record.operation]
+          << " phase: " << record.phase
+          << " tid: " << record.thread_id
+          << " cid_i: " << record.correlation_id.internal
+          << " cid_e: " << record.correlation_id.external.value
+          << " kernel_id: " << kernel_dispatch->dispatch_info.kernel_id
+          << " kernel_name: " << task_name
+          << " start: " << kernel_dispatch->start_timestamp 
+          << " end: " << kernel_dispatch->end_timestamp
+          << " agent: " << kernel_dispatch->dispatch_info.agent_id.handle
+          << " d_id: " << kernel_dispatch->dispatch_info.dispatch_id
+          << " grid_size x: " << kernel_dispatch->dispatch_info.grid_size.x
+          << " grid_size y: " << kernel_dispatch->dispatch_info.grid_size.y
+          << " grid_size z: " << kernel_dispatch->dispatch_info.grid_size.z
+          << " group_segment_size: " << kernel_dispatch->dispatch_info.group_segment_size
+          << " private_segment_size: " << kernel_dispatch->dispatch_info.private_segment_size
+          << " queue_id: " << kernel_dispatch->dispatch_info.queue_id.handle
+          << " workgroup_size x: " << kernel_dispatch->dispatch_info.workgroup_size.x
+          << " workgroup_size y: " << kernel_dispatch->dispatch_info.workgroup_size.y
+          << " workgroup_size z: " << kernel_dispatch->dispatch_info.workgroup_size.z
+          << std::endl;
+  #endif //ROCSDK_DEBUG_K_0
+
+  kernel_dispatch_map_mutex.lock();
+  kernel_time_stream_map[{kernel_dispatch->start_timestamp, record.correlation_id.external.value}] = *kernel_dispatch;
+  tau_rocsdk_kmap_process();
+  kernel_dispatch_map_mutex.unlock();
+}
+
+//To use with rocprofiler_iterate_callback_tracing_kind_operation_args
+//Returns a string with all the information, only use for debug
+auto info_data_cb_string( rocprofiler_callback_tracing_kind_t,
+                            rocprofiler_tracing_operation_t,
+                            uint32_t          arg_num,
+                            const void* const arg_value_addr,
+                            int32_t           indirection_count,
+                            const char*       arg_type,
+                            const char*       arg_name,
+                            const char*       arg_value_str,
+                            int32_t           dereference_count,
+                            void*             cb_data)
+{
+  auto& dss = *static_cast<std::stringstream*>(cb_data);
+  dss << ((arg_num == 0) ? "(" : ", ");
+  dss << arg_num << ": " << arg_name << "=" << arg_value_str;
+  return 0;
+
+}
+
+//To use with rocprofiler_iterate_callback_tracing_kind_operation_args
+//Returns a vector, where each position is a std::pair of arg_name and value, 
+// useful if we want to extract values from hipMemcpy* or other functions
+auto info_data_cb_vec( rocprofiler_callback_tracing_kind_t,
+                            rocprofiler_tracing_operation_t,
+                            uint32_t          arg_num,
+                            const void* const arg_value_addr,
+                            int32_t           indirection_count,
+                            const char*       arg_type,
+                            const char*       arg_name,
+                            const char*       arg_value_str,
+                            int32_t           dereference_count,
+                            void*             cb_data)
+{
+  
+  
+  auto& dss = *static_cast<std::vector<std::pair<std::string, std::string>>*>(cb_data);
+  dss.emplace_back(arg_name, arg_value_str);
+  (void) arg_value_addr;
+  (void) arg_type;
+  (void) indirection_count;
+  (void) dereference_count;
+  return 0;
+  
+}
+
+void tau_roctx_process( rocprofiler_callback_tracing_marker_api_data_t* marker_data,  
+                        rocprofiler_tracing_operation_t operation , 
+                        rocprofiler_callback_phase_t phase )
+{
+  static thread_local std::vector<const char*> roctx_push_pop = {};
+  static std::map<roctx_range_id_t, const char*>  roctx_start_stop = {};
+
+  //Correlation ID is only valid to find the start and end of the same type of call,
+  // cannot be used to detect the push/pop pairs
+  // as an alternative, we use a stack for push/pop as pop has no parameters 
+  // and a map for start/stop as they use an id
+  if(operation == ROCPROFILER_MARKER_CORE_API_ID_roctxRangePushA)
+  {
+    if(phase == ROCPROFILER_CALLBACK_PHASE_ENTER)
     {
-      if(header->kind == ROCPROFILER_BUFFER_TRACING_HSA_CORE_API ||
-         header->kind == ROCPROFILER_BUFFER_TRACING_HSA_AMD_EXT_API ||
-         header->kind == ROCPROFILER_BUFFER_TRACING_HSA_IMAGE_EXT_API ||
-         header->kind == ROCPROFILER_BUFFER_TRACING_HSA_FINALIZE_EXT_API)
+      if(marker_data->args.roctxRangePushA.message)
       {
-        auto* record = static_cast<rocprofiler_buffer_tracing_hsa_api_record_t*>(header->payload);
-        if(record->start_timestamp > record->end_timestamp)
-        {
-          auto msg = std::stringstream{};
-          msg << "hsa api: start > end (" << record->start_timestamp << " > "
-              << record->end_timestamp
-              << "). diff = " << (record->start_timestamp - record->end_timestamp);
-          std::cerr << "threw an exception " << msg.str() << "\n" << std::flush;
-          // throw std::runtime_error{msg.str()};
-        }
-
-        int taskid;
-        auto it = hsa_taskids.find(record->thread_id);
-        if(it==hsa_taskids.end())
-        {
-          TAU_CREATE_TASK(taskid);
-          hsa_taskids[record->thread_id] = taskid;
-          unsigned long long timestamp = 0L;
-          timestamp = record->start_timestamp;
-          Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp / 1e3));
-          Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
-          Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
-          Tau_create_top_level_timer_if_necessary_task(taskid);
-        }
-        else
-        {
-          taskid = it->second;
-        }
-        std::string task_name;
-        task_name = client_name_info.operation_names[record->kind][record->operation];
-        std::vector<TauSDKUserEvent> record_events;
-        struct TauSDKEvent e(task_name, record->start_timestamp, record->end_timestamp, taskid, record_events);
-        //TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf\n", e.taskid, (double)e.entry, (double)e.exit);
-        TAU_process_sdk_event(e);
-          
-      }
-      else if(header->kind == ROCPROFILER_BUFFER_TRACING_HIP_RUNTIME_API)
-      {
-        auto* record = static_cast<rocprofiler_buffer_tracing_hip_api_record_t*>(header->payload);
-        if(record->start_timestamp > record->end_timestamp)
-        {
-          auto msg = std::stringstream{};
-          msg << "hip api: start > end (" << record->start_timestamp << " > "
-              << record->end_timestamp
-              << "). diff = " << (record->start_timestamp - record->end_timestamp);
-          std::cerr << "threw an exception " << msg.str() << "\n" << std::flush;
-          // throw std::runtime_error{msg.str()};
-        }
-
-        int taskid;
-        auto it = hip_taskids.find(record->thread_id);
-        if(it==hip_taskids.end())
-        {
-          TAU_CREATE_TASK(taskid);
-          hip_taskids[record->thread_id] = taskid;
-          unsigned long long timestamp = 0L;
-          timestamp = record->start_timestamp;
-          Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp / 1e3));
-          Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
-          Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
-          Tau_create_top_level_timer_if_necessary_task(taskid);
-        }
-        else
-        {
-          taskid = it->second;
-        }
-        
-        std::string task_name;
-        task_name = client_name_info.operation_names[record->kind][record->operation];
-        std::vector<TauSDKUserEvent> record_events;
-        struct TauSDKEvent e(task_name, record->start_timestamp, record->end_timestamp, taskid, record_events);
-        //TAU_VERBOSE("%s taskid: %d start_ts: %lu end_ts: %lu\n", task_name.c_str(), e.taskid, e.entry, e.exit);
-        //std::cout << task_name << e.taskid, e.entry, e.exit<< std::endl;
-        TAU_process_sdk_event(e);
-        
-      }
-      else if(header->kind == ROCPROFILER_BUFFER_TRACING_KERNEL_DISPATCH)
-      {
-
-
-        //printf("ROCPROFILER_BUFFER_TRACING_KERNEL_DISPATCH\n");
-        auto* record = static_cast<rocprofiler_buffer_tracing_kernel_dispatch_record_t*>(header->payload);
-        //printf("ROCPROFILER_BUFFER_TRACING_KERNEL_DISPATCH kernel_id %lu  dispatch_id %lu\n", record->dispatch_info.kernel_id, record->dispatch_info.dispatch_id);
-        if(record->start_timestamp > record->end_timestamp)
-          throw std::runtime_error("kernel dispatch: start > end");
-
-        register_kernel_dispatch(record->dispatch_info, record->end_timestamp);
-
-        //This should be related to the GPU id(agent_id.handle which is uint64_t)
-        //int queueid = 1 + (int)record->dispatch_info.agent_id.handle;
-        auto agent_id = record->dispatch_info.agent_id.handle;
-        
-        int taskid;
-        uint64_t cur_queue_id = record->dispatch_info.queue_id.handle;
-        TauSDK_dev_que cur_dev_que = {agent_id, cur_queue_id};
-        auto it = kernel_taskids.find(cur_dev_que);
-        if(it==kernel_taskids.end())
-        {
-          TAU_CREATE_TASK(taskid);
-          kernel_taskids[cur_dev_que] = taskid;
-          unsigned long long timestamp = 0L;
-          timestamp = record->start_timestamp;
-          Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp / 1e3));
-          Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
-          Tau_add_metadata_for_task("ROCM_GPU_ID", TAU_rocsdk_id_device_map[agent_id], taskid);
-          Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
-          Tau_add_metadata_for_task("ROCM_QUEUE_ID", cur_queue_id, taskid);
-          Tau_create_top_level_timer_if_necessary_task(taskid);
-        }
-        else
-        {
-          taskid = it->second;
-        }
-   
-        
-        std::string task_name = demangle_kernel_rocprofsdk(
-                                        client_kernels.at(
-                                          record->dispatch_info.kernel_id).kernel_name, 1);
-        
-        //Need to look into this type of kernels that ROCm inserts, some of them overlap, but
-        // are removed by the check before inserting, but may remove user kernels.
-        // Maybe use another virtual thread for them?
-        if(task_name.compare(0, 13, "__amd_rocclr_") == 0)
-        {
-          return;
-        }
-
-        std::vector<TauSDKUserEvent> record_events;
-
-        std::string event_name = "Private segment size : ";
-        event_name = event_name + task_name;
-        struct TauSDKUserEvent pr_seg_si( (double)record->dispatch_info.private_segment_size
-                                          , event_name);
-        record_events.push_back(pr_seg_si);
-
-        event_name = "Group segment size : ";
-        event_name = event_name + task_name;
-        struct TauSDKUserEvent gr_seg_si( (double)record->dispatch_info.group_segment_size
-                                          , event_name);
-        record_events.push_back(gr_seg_si);
-
-        event_name = "Workgroup size X: ";
-        event_name = event_name + task_name;
-        struct TauSDKUserEvent workx( (double)record->dispatch_info.workgroup_size.x
-                                          , event_name);
-        record_events.push_back(workx);
-
-        event_name = "Workgroup size Y: ";
-        event_name = event_name + task_name;
-        struct TauSDKUserEvent worky( (double)record->dispatch_info.workgroup_size.y
-                                          , event_name);
-        record_events.push_back(worky);
-        event_name = "Workgroup size Z: ";
-        event_name = event_name + task_name;
-        struct TauSDKUserEvent workz( (double)record->dispatch_info.workgroup_size.z
-                                          , event_name);
-        record_events.push_back(workz);
-
-        event_name = "Grid size X: ";
-        event_name = event_name + task_name;
-        struct TauSDKUserEvent gridx( (double)record->dispatch_info.grid_size.x
-                                          , event_name);
-        record_events.push_back(gridx);
-
-        event_name = "Grid size Y: ";
-        event_name = event_name + task_name;
-        struct TauSDKUserEvent gridy( (double)record->dispatch_info.grid_size.y
-                                          , event_name);
-        record_events.push_back(gridy);
-
-        event_name = "Grid size Z: ";
-        event_name = event_name + task_name;
-        struct TauSDKUserEvent gridz( (double)record->dispatch_info.grid_size.z
-                                          , event_name);
-        record_events.push_back(gridz);
-       
-        std::string kernel_name = "[ROCm Kernel] ";
-        kernel_name += task_name;
-        struct TauSDKEvent e(kernel_name, record->start_timestamp, record->end_timestamp, taskid, record_events);
-        //TAU_VERBOSE("taskid: %d start_ts: %lf end_ts: %lf tid: %u event: %s queueid: %lu agent: %lu\n", e.taskid, (double)e.entry, (double)e.exit, record->thread_id, kernel_name.c_str(), record->dispatch_info.queue_id, queueid);
-
-        TAU_process_sdk_event(e);
-        
-      }
-      else if(header->kind == ROCPROFILER_BUFFER_TRACING_MEMORY_COPY)
-      {
-        auto* record = static_cast<rocprofiler_buffer_tracing_memory_copy_record_t*>(header->payload);
-        if(record->start_timestamp > record->end_timestamp)
-          throw std::runtime_error("memory copy: start > end");
-
-
-        int taskid;
-        uint64_t agent_id = record->src_agent_id.handle;
-        auto it = memcpy_taskids.find(agent_id);
-        if(it==memcpy_taskids.end())
-        {
-          TAU_CREATE_TASK(taskid);
-          memcpy_taskids[agent_id] = taskid;
-          unsigned long long timestamp = 0L;
-          timestamp = record->start_timestamp;
-          Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp / 1e3));
-          Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
-          Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
-          Tau_create_top_level_timer_if_necessary_task(taskid);
-        }
-        else
-        {
-          taskid = it->second;
-        }
-
-        std::string task_name;
-        task_name = get_copy_direction(record->operation, record->src_agent_id.handle, record->dst_agent_id.handle);        
-
-        std::stringstream ss;
-  			std::string tmp;
-        std::vector<TauSDKUserEvent> record_events;
-
-        std::string event_name = "bytes copied : ";
-        event_name = event_name + task_name;
-        struct TauSDKUserEvent bcopy( (double)record->bytes
-                                          , event_name);
-        record_events.push_back(bcopy);
-
-        struct TauSDKEvent e(task_name, record->start_timestamp, record->end_timestamp, taskid, record_events);
-        //("taskid: %d start_ts: %lf end_ts: %lf\n", e.taskid, (double)e.entry, (double)e.exit);
-        TAU_process_sdk_event(e);
-      }
-      else if(header->kind == ROCPROFILER_BUFFER_TRACING_RCCL_API)
-      {
-        auto* record = static_cast<rocprofiler_buffer_tracing_rccl_api_record_t*>(header->payload);
-        //This kind of operation generated overlapping issues that make us discard
-        // more important operations. As AMD is planning to change the RCCL field in newer
-        // releases, discard it until the change is done, which will provide more information
-        // and may help to avoid discarding this call. If not, we would need to have a thread only for
-        // this call
-        if(strcmp(client_name_info.operation_names[record->kind][record->operation], "ncclCommGetAsyncError") == 0)
-        {
-          continue;
-        }
-        /*std::cout << ", kind: " << client_name_info.kind_names[record->kind]
-                  << ", operation: " <<  client_name_info.operation_names[record->kind][record->operation]
-                  << ", cid=" << record->correlation_id.internal
-                  //<< ", extern_cid=" << record->correlation_id.external.value
-                  //<< ", start_timestamp: " << record->start_timestamp
-                  //<< ", end_timestamp: " << record->end_timestamp
-                  << ", thread_id: " << record->thread_id
-                  << std::endl;*/
-        if(record->start_timestamp > record->end_timestamp)
-          throw std::runtime_error("nccl: start > end");
-        
-        int taskid;
-        auto it = rccl_taskids.find(record->thread_id);
-        if(it==rccl_taskids.end())
-        {
-          TAU_CREATE_TASK(taskid);
-          rccl_taskids[record->thread_id] = taskid;
-          unsigned long long timestamp = 0L;
-          timestamp = record->start_timestamp;
-          Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp / 1e3));
-          Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
-          Tau_add_metadata_for_task("ROCM_THREAD_ID", record->thread_id, taskid);
-          //Will need to modify this when we are able to get the rank id
-          // Also, we will need to use the map with ranks
-          Tau_add_metadata_for_task("ROCM_RCCL_ID", 0, taskid);
-          Tau_create_top_level_timer_if_necessary_task(taskid);
-        }
-        else
-        {
-          taskid = it->second;
-        }
-        
-
-        std::string task_name;
-        task_name = client_name_info.operation_names[record->kind][record->operation];
-        std::vector<TauSDKUserEvent> record_events;
-        struct TauSDKEvent e(task_name, record->start_timestamp, record->end_timestamp, taskid, record_events);
-        //TAU_VERBOSE("%s taskid: %d start_ts: %lu end_ts: %lu\n", task_name.c_str(), e.taskid, e.entry, e.exit);
-        //std::cout << task_name << e.taskid, e.entry, e.exit<< std::endl;
-        TAU_process_sdk_event(e);
-
-        
-      }
-      /*else if(header->kind == ROCPROFILER_BUFFER_TRACING_MEMORY_ALLOCATION)
-      {
-        auto* record =
-                    static_cast<rocprofiler_buffer_tracing_memory_allocation_record_t*>(header->payload);
-        
-        std::cout << "size: " << record->size
-                    << ", kind: " << client_name_info.kind_names[record->kind]
-                    << ", operation: " <<  client_name_info.operation_names[record->kind][record->operation]
-                    << ", cid=" << record->correlation_id.internal
-                    << ", extern_cid=" << record->correlation_id.external.value
-                    << ", start_timestamp: " << record->start_timestamp
-                    << ", end_timestamp: " << record->end_timestamp
-                    << ", thread_id: " << record->thread_id
-                    << ", agent_id: " << record->agent_id.handle
-                    << ", agent type: " << tau_rocm_all_agent_id[record->agent_id.handle]
-                    << ", address: " << record->address.handle
-                    << ", allocation_size: " << record->allocation_size
-                    << std::endl;
-      }*/
-      //Better to use TAU's OMPT implementation, as it also seems to conflict with it.
-      /*else if(header->kind == ROCPROFILER_BUFFER_TRACING_OMPT)
-      {
-        auto* record =
-                    static_cast<rocprofiler_buffer_tracing_ompt_record_t*>(header->payload);
-        std::cout << "size: " << record->size
-                  << ", kind: " << client_name_info.kind_names[record->kind]
-                  << ", operation: " <<  client_name_info.operation_names[record->kind][record->operation]
-                  << ", cid=" << record->correlation_id.internal
-                  << ", extern_cid=" << record->correlation_id.external.value
-                  << ", start_timestamp: " << record->start_timestamp
-                  << ", end_timestamp: " << record->end_timestamp
-                  << ", thread_id: " << record->thread_id
-                  << std::endl;
-
-      }*/
-    }
-    else
-    {
-      //Hardware Counter Profiling
-      if(header->category == ROCPROFILER_BUFFER_CATEGORY_COUNTERS )
-      {
-        //printf("ROCPROFILER_BUFFER_CATEGORY_COUNTERS\n");
-        uint64_t agent_id;
-        uint64_t cur_queue_id;
-        double counter_value;
-        rocprofiler_timestamp_t c_timestamp;
-        std::string msg = read_hc_record(header->payload, header->kind, client_kernels, &agent_id, &cur_queue_id, &counter_value, &c_timestamp);
-        //If the type is ROCPROFILER_COUNTER_RECORD_PROFILE_COUNTING_DISPATCH_HEADER
-        // it does not read the event, but sets some data needed to read future events,
-        // which is performed by read_hc_record()
-        if(header->kind == ROCPROFILER_COUNTER_RECORD_PROFILE_COUNTING_DISPATCH_HEADER)
-          continue;
-        if(msg == "")        
-          continue;
-        
-        int taskid;
-        TauSDK_dev_que cur_dev_que = {agent_id, cur_queue_id};
-        auto it = kernel_taskids.find(cur_dev_que);
-        if(it==kernel_taskids.end())
-        {
-          //Should not happen, kernel data should have been read and generated the task
-          continue;
-        }
-        else
-        {
-          taskid = it->second;
-        }
-        //void* ue = nullptr;
-  			//ue = Tau_get_userevent(msg.c_str());
-  			double value = (double)(counter_value);
-  			//Tau_userevent_thread(ue, value, taskid);
-        
-
-        
-        std::vector<TauSDKUserEvent> record_events;
-        struct TauSDKUserEvent bcopy( value, msg);
-        record_events.push_back(bcopy);
-
-        std::string task_name;
-        struct TauSDKEvent e(task_name, c_timestamp, c_timestamp, taskid, record_events);
-        //("taskid: %d start_ts: %lf end_ts: %lf\n", e.taskid, (double)e.entry, (double)e.exit);
-        TAU_process_sdk_event(e);
-
-
+        //std::cout << "TAU! roctxRangePush message: " << marker_data->args.roctxRangePushA.message << std::endl;
+        roctx_push_pop.emplace_back(marker_data->args.roctxRangePushA.message);
+        std::string event_name = "[roctx] ";
+        event_name += marker_data->args.roctxRangePushA.message;
+        TAU_START(event_name.c_str());
       }
     }
   }
-  //TAU_VERBOSE("tool_tracing_callback-end\n");
+  else if (operation == ROCPROFILER_MARKER_CORE_API_ID_roctxRangePop)
+  {
+    if(phase == ROCPROFILER_CALLBACK_PHASE_EXIT)
+    {
+      if(roctx_push_pop.empty())
+      {
+        std::cerr << "roctxRangePop was invoked more times than roctxRangePush" << std::endl;
+        return;
+      }
+      auto push_name = roctx_push_pop.back();
+      roctx_push_pop.pop_back();
+      //std::cout << "TAU! roctxRangePop message:" << push_name << std::endl;
+      std::string event_name = "[roctx] ";
+      event_name += push_name;
+      TAU_STOP(event_name.c_str());
+    }
+
+  }
+  //START AND STOP CAN BE CALLED BY DIFFERENT THREADS
+  //Use TAU_START/STOP at this moment, will need to be modified
+  else if (operation == ROCPROFILER_MARKER_CORE_API_ID_roctxRangeStartA)
+  {
+    if(phase == ROCPROFILER_CALLBACK_PHASE_EXIT && marker_data->args.roctxRangeStartA.message)
+    {
+      roctx_start_stop[marker_data->retval.roctx_range_id_t_retval] = marker_data->args.roctxRangeStartA.message;
+      std::string event_name = "[roctx] ";
+      event_name += marker_data->args.roctxRangeStartA.message;
+      TAU_START(event_name.c_str());
+    }
+  }
+  else if (operation == ROCPROFILER_MARKER_CORE_API_ID_roctxRangeStop)
+  {
+    if(phase == ROCPROFILER_CALLBACK_PHASE_ENTER)
+    {
+      auto req_id = marker_data->args.roctxRangeStop.id;
+      auto start_name = roctx_start_stop.find(req_id);
+      if(start_name == roctx_start_stop.end())
+      {
+        std::cerr << "Failed to find RangeStart with requested id\n" << std::endl;
+        return;
+      }
+      std::string event_name = "[roctx] ";
+      event_name += start_name->second;
+      TAU_STOP(event_name.c_str());
+      roctx_start_stop.erase(req_id);
+    }
+  }
+  else if (operation == ROCPROFILER_MARKER_CORE_API_ID_roctxMarkA)
+  {
+    if(phase == ROCPROFILER_CALLBACK_PHASE_ENTER)
+    {
+      std::string mark_str = "roctxMark ";
+      if(marker_data->args.roctxMarkA.message)
+      {
+        mark_str += marker_data->args.roctxMarkA.message;
+      }
+      void* ue = nullptr;
+      Tau_get_context_userevent(&ue, mark_str.c_str());
+      TAU_CONTEXT_EVENT(ue, 1);
+    }
+  }
+
 }
 
-//Callback for ROCTX marker events Push, Pop, Start and Stop
-void
-tool_roctx_callback(rocprofiler_callback_tracing_record_t record,
-                          rocprofiler_user_data_t*              user_data,
-                          void*                                 data)
+int
+print_args(rocprofiler_callback_tracing_kind_t domain_idx,
+           rocprofiler_tracing_operation_t     op_idx,
+           uint32_t                            arg_num,
+           const void* const                   arg_value_addr,
+           int32_t                             arg_indirection_count,
+           const char*                         arg_type,
+           const char*                         arg_name,
+           const char*                         arg_value_str,
+           int32_t                             arg_dereference_count,
+           void*                               data)
 {
-  if(flushed)
-    return;
-  static thread_local auto stacked_range =
-      std::vector<rocprofiler_buffer_tracing_marker_api_record_t>{};
 
-  if(record.kind == ROCPROFILER_CALLBACK_TRACING_MARKER_CORE_API)
-  {
-    auto* marker_data =
-        static_cast<rocprofiler_callback_tracing_marker_api_data_t*>(record.payload);
-    
-    //In the case of Push and Pop, the relation between both does not exist
-    //use the order in which both are called to relate them to each other
-    if(record.operation == ROCPROFILER_MARKER_CORE_API_ID_roctxRangePushA)
+    if(arg_num == 0)
     {
-      if(record.phase == ROCPROFILER_CALLBACK_PHASE_EXIT)
-      {
-        if(marker_data->args.roctxRangePushA.message)
-        {
-          //std::cout << "TAU! roctxRangePush message: " << marker_data->args.roctxRangePushA.message << std::endl;
-          roctx_push_pop.emplace_back(marker_data->args.roctxRangePushA.message);
-          std::string event_name = "[roctx] ";
-          event_name += marker_data->args.roctxRangePushA.message;
-          TAU_START(event_name.c_str());
-        }
-      }
+        const char* _kind      = nullptr;
+        const char* _operation = nullptr;
+
+        rocprofiler_query_callback_tracing_kind_name(domain_idx, &_kind, nullptr);
+        rocprofiler_query_callback_tracing_kind_operation_name(
+            domain_idx, op_idx, &_operation, nullptr);
+
+        printf("\n!! [%s] %s\n", _kind, _operation);
     }
-    else if(record.operation == ROCPROFILER_MARKER_CORE_API_ID_roctxRangePop)
+
+    printf("!!   %u: %-16s = %s\n", arg_num, arg_name, arg_value_str);
+
+    // unused in example
+    (void) arg_value_addr;
+    (void) arg_indirection_count;
+    (void) arg_dereference_count;
+    (void) data;
+
+    return 0;
+}
+
+void tau_rccl_process(rocprofiler_callback_tracing_record_t record)
+{
+
+  static std::unordered_map<ncclComm_t, int> comm_nranks;
+
+  if(record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER)
+  {
+    #ifdef ROCSDK_DEBUG
+    std::cout << "ENTER "
+          << c_client_name_info.kind_names[record.kind] << " "
+          << c_client_name_info.operation_names[record.kind][record.operation]
+          << " tid: " << record.thread_id
+          << " cid: " << record.correlation_id.internal
+          << std::endl;
+    #endif //ROCSDK_DEBUG
+    TAU_START(c_client_name_info.operation_names[record.kind][record.operation]);
+    if(record.operation == ROCPROFILER_RCCL_API_ID_ncclCommInitRank)
     {
+      auto rccl_data = static_cast<rocprofiler_callback_tracing_rccl_api_data_t*>(record.payload);
+      comm_nranks[*rccl_data->args.ncclCommInitRank.newcomm] = rccl_data->args.ncclCommInitRank.nranks;
+    }
+  }
+  else if(record.phase == ROCPROFILER_CALLBACK_PHASE_EXIT)
+  {
+    std::string rccl_call_name = c_client_name_info.operation_names[record.kind][record.operation];
+    #ifdef ROCSDK_DEBUG
+    std::cout << "EXIT "
+          << c_client_name_info.kind_names[record.kind] << " "
+          << rccl_call_name
+          << " tid: " << record.thread_id
+          << " cid: " << record.correlation_id.internal
+          << std::endl;
+    #endif //ROCSDK_DEBUG
+    TAU_STOP(rccl_call_name.c_str());
+    if(record.operation == ROCPROFILER_RCCL_API_ID_ncclAllReduce)
+    {
+      auto rccl_data = static_cast<rocprofiler_callback_tracing_rccl_api_data_t*>(record.payload);
+      void* ue = nullptr;
+      rccl_call_name += " Message size ";
+      Tau_get_context_userevent(&ue, rccl_call_name.c_str());
+      TAU_CONTEXT_EVENT(ue, rccl_data->args.ncclAllReduce.count*ncclDataTypeToSize(rccl_data->args.ncclAllReduce.datatype));
+    }
+    else if(record.operation == ROCPROFILER_RCCL_API_ID_ncclAllGather)
+    {
+      auto rccl_data = static_cast<rocprofiler_callback_tracing_rccl_api_data_t*>(record.payload);
+      void* ue = nullptr;
+      rccl_call_name += " Message size ";
+      Tau_get_context_userevent(&ue, rccl_call_name.c_str());
+      TAU_CONTEXT_EVENT(ue, rccl_data->args.ncclAllGather.sendcount*ncclDataTypeToSize(rccl_data->args.ncclAllGather.datatype));
+    }
+    else if(record.operation == ROCPROFILER_RCCL_API_ID_ncclAllToAll)
+    {
+      auto rccl_data = static_cast<rocprofiler_callback_tracing_rccl_api_data_t*>(record.payload);
+      void* ue = nullptr;
+      rccl_call_name += " Message size ";
+      Tau_get_context_userevent(&ue, rccl_call_name.c_str());
+      TAU_CONTEXT_EVENT(ue, rccl_data->args.ncclAllToAll.count*ncclDataTypeToSize(rccl_data->args.ncclAllToAll.datatype));
+    }
+    else if(record.operation == ROCPROFILER_RCCL_API_ID_ncclBroadcast)
+    {
+      auto rccl_data = static_cast<rocprofiler_callback_tracing_rccl_api_data_t*>(record.payload);
+      void* ue = nullptr;
+      rccl_call_name += " Message size ";
+      Tau_get_context_userevent(&ue, rccl_call_name.c_str());
+      TAU_CONTEXT_EVENT(ue, rccl_data->args.ncclBroadcast.count*ncclDataTypeToSize(rccl_data->args.ncclBroadcast.datatype));
+    }
+    else if(record.operation == ROCPROFILER_RCCL_API_ID_ncclGather)
+    {
+      auto rccl_data = static_cast<rocprofiler_callback_tracing_rccl_api_data_t*>(record.payload);
+      void* ue = nullptr;
+      rccl_call_name += " Message size ";
+      Tau_get_context_userevent(&ue, rccl_call_name.c_str());
+      TAU_CONTEXT_EVENT(ue, rccl_data->args.ncclGather.sendcount*ncclDataTypeToSize(rccl_data->args.ncclGather.datatype));
+    }
+    else if(record.operation == ROCPROFILER_RCCL_API_ID_ncclReduce)
+    {
+      auto rccl_data = static_cast<rocprofiler_callback_tracing_rccl_api_data_t*>(record.payload);
+      void* ue = nullptr;
+      rccl_call_name += " Message size ";
+      Tau_get_context_userevent(&ue, rccl_call_name.c_str());
+      TAU_CONTEXT_EVENT(ue, rccl_data->args.ncclReduce.count*ncclDataTypeToSize(rccl_data->args.ncclReduce.datatype));
+    }
+    else if(record.operation == ROCPROFILER_RCCL_API_ID_ncclReduceScatter)
+    {
+      auto rccl_data = static_cast<rocprofiler_callback_tracing_rccl_api_data_t*>(record.payload);
+      void* ue = nullptr;
+      rccl_call_name += " Message size ";
+      Tau_get_context_userevent(&ue, rccl_call_name.c_str());
+      TAU_CONTEXT_EVENT(ue, rccl_data->args.ncclReduceScatter.recvcount*ncclDataTypeToSize(rccl_data->args.ncclReduceScatter.datatype));
+    }
+    else if(record.operation == ROCPROFILER_RCCL_API_ID_ncclScatter)
+    {
+      auto rccl_data = static_cast<rocprofiler_callback_tracing_rccl_api_data_t*>(record.payload);
+      void* ue = nullptr;
+      rccl_call_name += " Message size ";
+      Tau_get_context_userevent(&ue, rccl_call_name.c_str());
+      TAU_CONTEXT_EVENT(ue, rccl_data->args.ncclScatter.recvcount*ncclDataTypeToSize(rccl_data->args.ncclScatter.datatype));
+    }
+    else if(record.operation == ROCPROFILER_RCCL_API_ID_ncclSend)
+    {
+      auto rccl_data = static_cast<rocprofiler_callback_tracing_rccl_api_data_t*>(record.payload);
+      void* ue = nullptr;
+      rccl_call_name += " Message size ";
+      Tau_get_context_userevent(&ue, rccl_call_name.c_str());
+      TAU_CONTEXT_EVENT(ue, rccl_data->args.ncclSend.count*ncclDataTypeToSize(rccl_data->args.ncclSend.datatype));
+    }
+    else if(record.operation == ROCPROFILER_RCCL_API_ID_ncclRecv)
+    {
+      auto rccl_data = static_cast<rocprofiler_callback_tracing_rccl_api_data_t*>(record.payload);
+      void* ue = nullptr;
+      rccl_call_name += " Message size ";
+      Tau_get_context_userevent(&ue, rccl_call_name.c_str());
+      TAU_CONTEXT_EVENT(ue, rccl_data->args.ncclRecv.count*ncclDataTypeToSize(rccl_data->args.ncclRecv.datatype));
+    }
+    //Special case with multiple different sizes
+    else if(record.operation == ROCPROFILER_RCCL_API_ID_ncclAllToAllv)
+    {
+      auto rccl_data = static_cast<rocprofiler_callback_tracing_rccl_api_data_t*>(record.payload);
+      void* ue = nullptr;
+      rccl_call_name += " Message size ";
+      Tau_get_context_userevent(&ue, rccl_call_name.c_str());
+      int nranks = comm_nranks[rccl_data->args.ncclAllToAllv.comm];
+      size_t total_size = 0;
+      for (int i = 0; i < nranks; ++i)
+      {
+          total_size += rccl_data->args.ncclAllToAllv.sendcounts[i];
+          total_size += rccl_data->args.ncclAllToAllv.recvcounts[i];
+      }
+      TAU_CONTEXT_EVENT(ue, total_size*ncclDataTypeToSize(rccl_data->args.ncclAllToAllv.datatype));
+    }
+  }
+}
+
+void tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
+                      rocprofiler_user_data_t*              user_data,
+                      void*                                 callback_data)
+{
+    assert(callback_data != nullptr);
+
+    //We do not want to profile the call that we make, the call will be done by the same thread that
+    // called the function hipKernelNameRefByPtr, used to get the name of a function
+    // when hipLaunchKernel is called
+    static thread_local int inside_hipKernelNameRefByPtr = 0;
+    if(inside_hipKernelNameRefByPtr && c_client_name_info.operation_names[record.kind][record.operation] == "hipKernelNameRefByPtr")
+    {
+      return;
+    }
+
+    //Invalid trace
+    if(record.kind < ROCPROFILER_CALLBACK_TRACING_NONE || record.kind >= ROCPROFILER_CALLBACK_TRACING_LAST)
+      return;
+    
+    /*
+    if(record.phase != ROCPROFILER_CALLBACK_PHASE_ENTER  && record.phase != ROCPROFILER_CALLBACK_PHASE_EXIT )
+    {
+      if(record.phase == ROCPROFILER_CALLBACK_PHASE_NONE)
+        std::cout << "!! Callback ROCPROFILER_CALLBACK_PHASE_NONE " 
+                  << c_client_name_info.kind_names[record.kind] 
+                  << " " << c_client_name_info.operation_names[record.kind][record.operation] << std::endl;
+      else if(record.phase == ROCPROFILER_CALLBACK_PHASE_LOAD )
+        std::cout << "!! Callback ROCPROFILER_CALLBACK_PHASE_LOAD " 
+                  << c_client_name_info.kind_names[record.kind] 
+                  << " " << c_client_name_info.operation_names[record.kind][record.operation] << std::endl;
+      else if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
+        std::cout << "!! Callback ROCPROFILER_CALLBACK_PHASE_UNLOAD " 
+                  << c_client_name_info.kind_names[record.kind] 
+                  << " " << c_client_name_info.operation_names[record.kind][record.operation] << std::endl;
+    }
+    */
+
+    //Check if supported, as we may not support OMPT or others with this profiler, as we already have
+    // and OMPT profiler
+    //We can use context id to check if we received the start or only the end phase
+    // or the user data with a flag
+    /*
+    pid_t tid1 = syscall(SYS_gettid);
+    if (tid1 != record.thread_id)
+    {
+         
+      auto     now = std::chrono::steady_clock::now().time_since_epoch().count();
+      uint64_t dt  = 0;
+      if(record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER)
+          user_data->value = now;
+      else
+          dt = (now - user_data->value);
+      auto info = std::stringstream{};
+      info << std::left << "tid=" << record.thread_id << ", cid=" << std::setw(3)
+          << record.correlation_id.internal << ", kind=" << c_client_name_info.kind_names[record.kind]
+          //   record.kind
+          << ", operation=" << c_client_name_info.operation_names[record.kind][record.operation]
+          //record.operation 
+          << ", phase=" << record.phase
+          << ", dt_nsec=" << dt;
+      
+      auto    info_data = std::stringstream{};
+      //ROCPROFILER_CALL(rocprofiler_iterate_callback_tracing_kind_operation_args(
+      //                    record, info_data_cb_string, record.phase, static_cast<void*>(&info_data)),
+      //                "Failure iterating trace operation args");
+      auto info_data_str = info_data.str();
+      if(!info_data_str.empty()) info << " " << info_data_str << ")";
+        std::cout << "!! cur_tid " << tid1 << " " << info.str()  << std::endl;
+    }
+    */
+    
+    
+    switch(record.kind)
+    {
+      //Invalid callbacks
+      case ROCPROFILER_CALLBACK_TRACING_NONE:
+      case ROCPROFILER_CALLBACK_TRACING_LAST:
+      {
+        break;
+      }
+      case ROCPROFILER_CALLBACK_TRACING_HSA_CORE_API:
+      case ROCPROFILER_CALLBACK_TRACING_HSA_AMD_EXT_API:
+      case ROCPROFILER_CALLBACK_TRACING_HSA_IMAGE_EXT_API:
+      case ROCPROFILER_CALLBACK_TRACING_HSA_FINALIZE_EXT_API:
+      {
+        //if(record.thread_id != RtsLayer::getTid())
+        //{
+        //  std::cout << "HSA  RtsLayer::getTid() " << RtsLayer::getTid() 
+        //            << " record.thread_id " << record.thread_id << std::endl;
+        //}
         if(record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER)
         {
-          if(roctx_push_pop.empty())
-          {
-            std::cerr << "roctxRangePop was invoked more times than roctxRangePush" << std::endl;
-            return;
-          }
-          auto push_name = roctx_push_pop.back();
-          roctx_push_pop.pop_back();
-          //std::cout << "TAU! roctxRangePop message:" << push_name << std::endl;
-          std::string event_name = "[roctx] ";
-          event_name += push_name;
-          TAU_STOP(event_name.c_str());
+          TAU_START(c_client_name_info.operation_names[record.kind][record.operation]);
         }
-    }
-    else if(record.operation == ROCPROFILER_MARKER_CORE_API_ID_roctxRangeStartA)
-    {
-        if(record.phase == ROCPROFILER_CALLBACK_PHASE_EXIT &&
-           marker_data->args.roctxRangeStartA.message)
+
+        if(record.phase == ROCPROFILER_CALLBACK_PHASE_EXIT)
         {
-          roctx_start_stop[marker_data->retval.roctx_range_id_t_retval] = marker_data->args.roctxRangeStartA.message;
-          std::string event_name = "[roctx] ";
-          event_name += marker_data->args.roctxRangeStartA.message;
-          TAU_START(event_name.c_str());
+          TAU_STOP(c_client_name_info.operation_names[record.kind][record.operation]);
         }
-    }
-    else if(record.operation == ROCPROFILER_MARKER_CORE_API_ID_roctxRangeStop)
-    {
-      if(record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER)
-      {
-        auto req_id = marker_data->args.roctxRangeStop.id;
-        auto start_name = roctx_start_stop.find(req_id);
-        if(start_name == roctx_start_stop.end())
-        {
-          std::cerr << "Failed to find RangeStart with requested id\n" << std::endl;
-          return;
-        }
-        std::string event_name = "[roctx] ";
-        event_name += start_name->second;
-        TAU_STOP(event_name.c_str());
-        roctx_start_stop.erase(req_id);
+        #ifdef ROCSDK_DEBUG
+        std::cout << (record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER ? "ENTER ":"EXIT ")
+                  << c_client_name_info.kind_names[record.kind] << " "
+                  << c_client_name_info.operation_names[record.kind][record.operation]
+                  << " tid: " << record.thread_id
+                  << " cid: " << record.correlation_id.internal
+                  << std::endl;
+        #endif //ROCSDK_DEBUG
+        break;
       }
+      /*case ROCPROFILER_CALLBACK_TRACING_HIP_COMPILER_API:
+      {
+        printf("HIP_COMPILER_API TODO !\n");
+        #ifdef ROCSDK_DEBUG
+        std::cout << (record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER ? "ENTER ":"EXIT ")
+                  << c_client_name_info.kind_names[record.kind] << " "
+                  << c_client_name_info.operation_names[record.kind][record.operation]
+                  << " tid: " << record.thread_id
+                  << " cid: " << record.correlation_id.internal
+                  << std::endl;
+        #endif //ROCSDK_DEBUG
+        break;
+      }*/
+      case ROCPROFILER_CALLBACK_TRACING_HIP_RUNTIME_API:
+      {
+        //if(record.thread_id != RtsLayer::getTid())
+        //{
+        //  std::cout << "HIP  RtsLayer::getTid() " << RtsLayer::getTid() 
+        //            << " record.thread_id " << record.thread_id << std::endl;
+        //}
+        #ifdef ROCSDK_DEBUG
+        auto    info_data = std::stringstream{};
+        //ROCPROFILER_CALL(rocprofiler_iterate_callback_tracing_kind_operation_args(
+        //                  record, info_data_cb_string, record.phase, static_cast<void*>(&info_data)),
+        //              "Failure iterating trace operation args");
+        std::cout << (record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER ? "ENTER ":"EXIT ")
+                  << record.phase << " "
+                  << c_client_name_info.kind_names[record.kind] << " "
+                  << c_client_name_info.operation_names[record.kind][record.operation]
+                  << " tid: " << record.thread_id
+                  << " cid: " << record.correlation_id.internal
+                  << " " << info_data.str() <<std::endl;
+        #endif //ROCSDK_DEBUG
+        if(record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER)
+        {
+          std::string name_hipcall = c_client_name_info.operation_names[record.kind][record.operation];
+          if (name_hipcall == "hipLaunchKernel")
+          {
+            auto* run_data = static_cast<rocprofiler_callback_tracing_hip_api_data_t*>(record.payload);
+            const void* host_function = run_data->args.hipLaunchKernel.function_address;
+            //We do not want to profile the call that we make
+            inside_hipKernelNameRefByPtr = 1;
+            name_hipcall = name_hipcall + " " + demangle_kernel_rocprofsdk(hipKernelNameRefByPtr( host_function, nullptr), 1);
+            inside_hipKernelNameRefByPtr = 0;
+          }
+          TAU_START(name_hipcall.c_str());
+        }
+        if(record.phase == ROCPROFILER_CALLBACK_PHASE_EXIT)
+        {
+          std::string name_hipcall = c_client_name_info.operation_names[record.kind][record.operation];
+          if (name_hipcall == "hipLaunchKernel")
+          {
+            auto* run_data = static_cast<rocprofiler_callback_tracing_hip_api_data_t*>(record.payload);
+            const void* host_function = run_data->args.hipLaunchKernel_spt.function_address;
+            //We do not want to profile the call that we make
+            inside_hipKernelNameRefByPtr = 1;
+            name_hipcall = name_hipcall + " " + demangle_kernel_rocprofsdk(hipKernelNameRefByPtr( host_function, nullptr), 1);
+            inside_hipKernelNameRefByPtr = 0;
+
+          }
+          TAU_STOP(name_hipcall.c_str());
+          if (name_hipcall.compare(0, 9, "hipMemcpy") == 0)
+          {
+            std::vector<std::pair<std::string, std::string>> info_data_v;
+            ROCPROFILER_CALL(rocprofiler_iterate_callback_tracing_kind_operation_args(
+                          record, info_data_cb_vec, record.phase, static_cast<void*>(&info_data_v)),
+                          "Failure iterating trace operation args");
+            size_t sizeBytes;
+            std::string kind = "Memory copy ";
+            for (const auto& [name, value] : info_data_v) {
+                if (name == "sizeBytes") {
+                    sizeBytes =std::stoull(value);
+                } else if (name == "kind") {
+                    kind += value;
+                }
+            }
+            void* ue = nullptr;
+            Tau_get_context_userevent(&ue, kind.c_str());
+            TAU_CONTEXT_EVENT(ue, (double) sizeBytes);
+            //std::cout << sizeBytes << " " << kind << std::endl;
+          }
+        }
+        
+        break;
+      }
+      #if( ROCPROFILER_VERSION_MAJOR > 0)
+      case ROCPROFILER_CALLBACK_TRACING_HIP_STREAM:
+      {
+        //Do not profile, only use to get the streams
+        if(record.operation == ROCPROFILER_HIP_STREAM_SET)
+        {
+          auto* stream_data = static_cast<rocprofiler_callback_tracing_hip_stream_data_t*>(record.payload);
+          if(record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER)
+          {
+            push_stream_id(stream_data->stream_id.handle);
+          }
+          if(record.phase == ROCPROFILER_CALLBACK_PHASE_EXIT)
+          {
+            pop_stream_id();
+          }
+          //#ifdef ROCSDK_DEBUG_K         
+          //std::cout << "!! "
+          //          << record.phase << " "
+          //          << c_client_name_info.kind_names[record.kind] << " "
+          //          << c_client_name_info.operation_names[record.kind][record.operation]
+          //          << " tid: " << record.thread_id
+          //          << " cid_i: " << record.correlation_id.internal
+          //          << " stream id: " << stream_data->stream_id.handle
+          //          << std::endl;
+          //#endif //ROCSDK_DEBUG
+        }
+        break;
+      }
+      #endif //( ROCPROFILER_VERSION_MAJOR > 0)
+      case ROCPROFILER_CALLBACK_TRACING_KERNEL_DISPATCH:
+      {
+        //There are multiple operations and phases for this callback, 
+        // we only want when the dispatch is complete and its phase is none.
+        //operation=KERNEL_DISPATCH_COMPLETE
+          if(record.operation == ROCPROFILER_KERNEL_DISPATCH_COMPLETE)
+          {
+            tau_rocsdk_kernel_dispatch(record);
+          }
+          else
+          {
+            // #ifdef ROCSDK_DEBUG_K
+            //   auto* kernel_dispatch = static_cast<rocprofiler_callback_tracing_kernel_dispatch_data_t*>(record.payload);
+            //   std::string task_name = demangle_kernel_rocprofsdk(
+            //                             client_kernels.at(kernel_dispatch->dispatch_info.kernel_id).kernel_name, 1);
+
+            //   std::cout << c_client_name_info.kind_names[record.kind] << " "
+            //           << c_client_name_info.operation_names[record.kind][record.operation]
+            //           << " phase: " << record.phase
+            //           << " tid: " << record.thread_id
+            //           << " cid_i: " << record.correlation_id.internal
+            //           << " cid_e: " << record.correlation_id.external.value
+            //           << " kernel_id: " << kernel_dispatch->dispatch_info.kernel_id
+            //           << " kernel_name: " << task_name
+            //           << " start: " << kernel_dispatch->start_timestamp 
+            //           << " end: " << kernel_dispatch->end_timestamp
+            //           << " agent: " << kernel_dispatch->dispatch_info.agent_id.handle
+            //           << " d_id: " << kernel_dispatch->dispatch_info.dispatch_id
+            //           << " grid_size x: " << kernel_dispatch->dispatch_info.grid_size.x
+            //           << " grid_size y: " << kernel_dispatch->dispatch_info.grid_size.y
+            //           << " grid_size z: " << kernel_dispatch->dispatch_info.grid_size.z
+            //           << " group_segment_size: " << kernel_dispatch->dispatch_info.group_segment_size
+            //           << " private_segment_size: " << kernel_dispatch->dispatch_info.private_segment_size
+            //           << " queue_id: " << kernel_dispatch->dispatch_info.queue_id.handle
+            //           << " workgroup_size x: " << kernel_dispatch->dispatch_info.workgroup_size.x
+            //           << " workgroup_size y: " << kernel_dispatch->dispatch_info.workgroup_size.y
+            //           << " workgroup_size z: " << kernel_dispatch->dispatch_info.workgroup_size.z
+            //           //<< " kernel: " << kernel_dispatch.dispatch_info.queue_id
+            //           //<< " stream: " << kernel_dispatch.dispatch_info.queue_id
+            //           << std::endl;
+            //   #endif //ROCSDK_DEBUG
+          }
+        break;
+      }
+      //The memory copies have some issues with timers, they look async, but are reported
+      // by the same thread, so overelaps occur or we discard them, as an alternative,
+      // Memcpy related hip calls can provide the size of the copies and if they are HostToDevice,
+      // HostToHost, etc.
+      /*case ROCPROFILER_CALLBACK_TRACING_MEMORY_COPY:
+      {
+        //Only the end has the timers
+        if(record.phase == ROCPROFILER_CALLBACK_PHASE_EXIT)
+        {
+          printf("MEMCPY TODO!!\n");
+          auto* mcpy_data = static_cast<rocprofiler_callback_tracing_memory_copy_data_t*>(record.payload);
+          //#ifdef ROCSDK_DEBUG
+          std::cout << record.phase << " "
+                    << c_client_name_info.kind_names[record.kind] << " "
+                    << c_client_name_info.operation_names[record.kind][record.operation]
+                    << " tid: " << record.thread_id
+                    << " cid: " << record.correlation_id.internal
+                    << " bytes: " << mcpy_data->bytes
+                    << " src_address: " << mcpy_data->src_address.ptr
+                    << " dst_address: " << mcpy_data->dst_address.ptr
+                    << " src_agent_id: " << mcpy_data->src_agent_id.handle
+                    << " src_agent_id: " << TAU_rocsdk_id_device_map[mcpy_data->src_agent_id.handle]
+                    << " dst_agent_id: " << mcpy_data->dst_agent_id.handle
+                    << " src_agent_id: " << TAU_rocsdk_id_device_map[mcpy_data->dst_agent_id.handle]
+                    << " start_timestamp: " << mcpy_data->start_timestamp
+                    << " end_timestamp: " << mcpy_data->end_timestamp
+                    << std::endl;
+          //#endif //ROCSDK_DEBUG
+        }
+        break;
+
+
+      }*/
+      case ROCPROFILER_CALLBACK_TRACING_MEMORY_ALLOCATION:
+      {
+        //printf("MEMALLOC TODO!!\n");
+        auto* memalloc_data = static_cast<rocprofiler_callback_tracing_memory_allocation_data_t*>(record.payload);
+        // std::cout << record.phase << " "
+        //             << c_client_name_info.kind_names[record.kind] << " "
+        //             << c_client_name_info.operation_names[record.kind][record.operation]
+        //             << " tid: " << record.thread_id
+        //             << " cid: " << record.correlation_id.internal
+        //             << " bytes: " << memalloc_data->allocation_size
+        //             << " src_address: " << memalloc_data->address.ptr
+        //             << " dst_address: " << memalloc_data->address.ptr
+        //             << " src_agent_id: " << memalloc_data->agent_id.handle
+        //             << " src_agent_id: " << TAU_rocsdk_id_device_map[memalloc_data->agent_id.handle]
+        //             << " start_timestamp: " << memalloc_data->start_timestamp
+        //             << " end_timestamp: " << memalloc_data->end_timestamp
+        //             << std::endl;
+        if(record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER)
+        {
+          std::string task_name = c_client_name_info.operation_names[record.kind][record.operation];
+          TAU_START(task_name.c_str());
+
+        }
+        else if(record.phase == ROCPROFILER_CALLBACK_PHASE_EXIT)
+        {
+          std::string task_name = c_client_name_info.operation_names[record.kind][record.operation];
+          TAU_STOP(task_name.c_str());
+          void* ue = nullptr;
+          task_name += " size";
+          Tau_get_context_userevent(&ue, task_name.c_str());
+          TAU_CONTEXT_EVENT(ue, (double) memalloc_data->size);
+        }
+        break;
+      }
+      //case ROCPROFILER_CALLBACK_TRACING_ROCSHMEM_API:
+      //{
+      //  printf("ROCPROFILER_CALLBACK_TRACING_ROCSHMEM_API\n");
+      //  break;
+      //}
+      //case ROCPROFILER_CALLBACK_TRACING_HIPFILE_API:
+      //{
+      //    break;
+      //}
+      //Will need to update this part, with 7.2.4 roctxThreadRangeA appears, which is not documented.
+      //case ROCPROFILER_CALLBACK_TRACING_MARKER_CORE_RANGE_API:
+      case ROCPROFILER_CALLBACK_TRACING_MARKER_CORE_API:
+      {
+        //if(record.thread_id != RtsLayer::getTid())
+        //{
+        //  std::cout << "MARKER  RtsLayer::getTid() " << RtsLayer::getTid() 
+        //            << " record.thread_id " << record.thread_id << std::endl;
+        //}
+        auto* marker_data = static_cast<rocprofiler_callback_tracing_marker_api_data_t*>(record.payload);
+        #ifdef ROCSDK_DEBUG
+        std::cout << (record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER ? "ENTER ":"EXIT ")
+                  << c_client_name_info.kind_names[record.kind] << " "
+                  << c_client_name_info.operation_names[record.kind][record.operation]
+                  << " tid: " << record.thread_id
+                  << " cid: " << record.correlation_id.internal
+                  << std::endl;
+        #endif //ROCSDK_DEBUG         
+        tau_roctx_process(marker_data, record.operation, record.phase);
+        break;
+      }
+      //I don't think we support this
+      //https://rocm.docs.amd.com/projects/rocprofiler-sdk/en/docs-7.2.1/api-reference/rocprofiler-sdk-roctx_api/roctx_modules/naming-utilities.html
+      /*
+      case ROCPROFILER_CALLBACK_TRACING_MARKER_NAME_API:
+      {
+        printf("MARKER NAME TODO!!\n");
+        std::cout << record.phase << " "
+                  << c_client_name_info.kind_names[record.kind] << " "
+                  << c_client_name_info.operation_names[record.kind][record.operation]
+                  << " tid: " << record.thread_id
+                  << " cid: " << record.correlation_id.internal
+                  << std::endl;
+        break;
+      }*/
+      case ROCPROFILER_CALLBACK_TRACING_RCCL_API:
+      {
+        //if(record.thread_id != RtsLayer::getTid())
+        //{
+        //  std::cout << "RCCL  RtsLayer::getTid() " << RtsLayer::getTid() 
+        //            << " record.thread_id " << record.thread_id << std::endl;
+        //}
+        tau_rccl_process(record);
+        break;
+      }
+      // case ROCPROFILER_CALLBACK_TRACING_RUNTIME_INITIALIZATION:
+      // {
+      //   printf("ROCPROFILER_CALLBACK_TRACING_RUNTIME_INITIALIZATION\n");
+      //   auto* run_data = static_cast<struct rocprofiler_callback_tracing_runtime_initialization_data_t*>(record.payload);
+      //   std::cout << record.phase << " "
+      //             << c_client_name_info.kind_names[record.kind] << " "
+      //             << c_client_name_info.operation_names[record.kind][record.operation]
+      //             << " tid: " << record.thread_id
+      //             << " cid: " << record.correlation_id.internal
+      //             << " instance: " << run_data->instance
+      //             << " version: " << run_data->version
+      //             << std::endl;
+      //   break;
+      // }
+      //case ROCPROFILER_CALLBACK_TRACING_SCRATCH_MEMORY:
+      //case ROCPROFILER_CALLBACK_TRACING_RUNTIME_INITIALIZATION:
+      //case ROCPROFILER_CALLBACK_TRACING_ROCJPEG_API:
+      //case ROCPROFILER_CALLBACK_TRACING_HIP_GRAPH:
+      //{
+      //  printf("OTHERS TODO!!\n");
+        /*std::cout << (record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER ? "ENTER ":"EXIT ")
+                  << c_client_name_info.kind_names[record.kind] << " "
+                  << c_client_name_info.operation_names[record.kind][record.operation]
+                  << " tid: " << record.thread_id
+                  << " cid: " << record.correlation_id.internal
+                  << std::endl;*/
+      //  break;
+      //}
+      default:
+        break;
     }
-  }
+
+    return;
+
+
+    
+
+
 }
 
+void
+tool_tracing_ctrl_callback(rocprofiler_callback_tracing_record_t record,
+                           rocprofiler_user_data_t*,
+                           void* client_data)
+{
+    auto* ctx = static_cast<rocprofiler_context_id_t*>(client_data);
 
+    if(record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER &&
+       record.kind == ROCPROFILER_CALLBACK_TRACING_MARKER_CONTROL_API &&
+       record.operation == ROCPROFILER_MARKER_CONTROL_API_ID_roctxProfilerPause)
+    {
+        ROCPROFILER_CALL(rocprofiler_stop_context(*ctx), "pausing client context");
+    }
+    else if(record.phase == ROCPROFILER_CALLBACK_PHASE_EXIT &&
+            record.kind == ROCPROFILER_CALLBACK_TRACING_MARKER_CONTROL_API &&
+            record.operation == ROCPROFILER_MARKER_CONTROL_API_ID_roctxProfilerResume)
+    {
+        ROCPROFILER_CALL(rocprofiler_start_context(*ctx), "resuming client context");
+    }
+}
 
 //Callback used to register kernels and obtain their information for buffered tracing
 //also flushes tracing information
@@ -926,28 +1198,20 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
                           rocprofiler_user_data_t*              user_data,
                           void*                                 callback_data)
 {
+  static std::mutex tool_code_mtx;
+  tool_code_mtx.lock();
+  //std::cout << c_client_name_info.kind_names[record.kind] << " "
+  //          << c_client_name_info.operation_names[record.kind][record.operation] 
+  //          << std::endl;
   if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
      record.operation == ROCPROFILER_CODE_OBJECT_LOAD)
   {
     //printf("ROCPROFILER_CODE_OBJECT_LOAD\n");
-    if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
-    {
-      // flush the buffer to ensure that any lookups for the client kernel names for the code
-      // object are completed
-      auto flush_status = rocprofiler_flush_buffer(client_buffer);
-      if(flush_status != ROCPROFILER_STATUS_ERROR_BUFFER_BUSY)
-        ROCPROFILER_CALL(flush_status, "buffer flush");
-    }
     //Only execute if PC Sampling enabled
     if(pc_sampling == 1)
     {
       //printf("codeobj_tracing_callback\n");
       codeobj_tracing_callback(record);
-    }
-    else
-    {
-
-      //printf("No codeobj_tracing_callback\n");
     }
   }
   else if(record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT &&
@@ -956,112 +1220,128 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
     auto* data = static_cast<kernel_symbol_data_t*>(record.payload);
     if(record.phase == ROCPROFILER_CALLBACK_PHASE_LOAD)
     {
+      //printf("ROCPROFILER_CALLBACK_PHASE_LOAD\n");
       client_kernels.emplace(data->kernel_id, *data);
       //Only enable if needed for DEBUG
       //std::cout << data->kernel_id << " "<< data->kernel_name << std::endl;
     }
-    /*else if(record.phase == ROCPROFILER_CALLBACK_PHASE_UNLOAD)
-    {
-      client_kernels.erase(data->kernel_id);
-    }*/
   }
+  tool_code_mtx.unlock();
 }
 
+void
+tool_control_init(rocprofiler_context_id_t& primary_ctx)
+{
+    // Create a specialized (throw-away) context for handling ROCTx profiler pause and resume.
+    // A separate context is used because if the context that is associated with roctxProfilerPause
+    // disabled that same context, a call to roctxProfilerResume would be ignored because the
+    // context that enables the callback for that API call is disabled.
+    auto cntrl_ctx = rocprofiler_context_id_t{0};
+    ROCPROFILER_CALL(rocprofiler_create_context(&cntrl_ctx), "control context creation failed");
 
+    // enable callback marker tracing with only the pause/resume operations
+    ROCPROFILER_CALL(rocprofiler_configure_callback_tracing_service(
+                         cntrl_ctx,
+                         ROCPROFILER_CALLBACK_TRACING_MARKER_CONTROL_API,
+                         nullptr,
+                         0,
+                         tool_tracing_ctrl_callback,
+                         &primary_ctx),
+                     "callback tracing service failed to configure");
 
-//Initialization of rocprofiler-sdk
+    // start the context so that it is always active
+    ROCPROFILER_CALL(rocprofiler_start_context(cntrl_ctx), "start of control context");
+}
+
+//In the tool it is called set_kernel_rename_and_stream_correlation_id
+// and also sets an struct with the pointer that externval correlation provides
+// as we only need one value, we use the value field
+int set_stream_correlation_id(rocprofiler_thread_id_t  thr_id,
+                                            rocprofiler_context_id_t ctx_id,
+                                            rocprofiler_external_correlation_id_request_kind_t kind,
+                                            rocprofiler_tracing_operation_t                    op,
+                                            uint64_t                 internal_corr_id,
+                                            rocprofiler_user_data_t* external_corr_id,
+                                            void*                    user_data)
+{
+
+    // Set the external correlation id service to point to struct
+    external_corr_id->value = get_stream_id();
+
+    return 0;
+}
+
 int tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
 {
-  //Check that tool_init was called correctly
   assert(tool_data != nullptr);
-  
-  //Check if there are any ROCm GPUs available
+
+  static std::mutex init_mutex;
+
+  init_mutex.lock();
+
+  //Check if there are any available agents, if not, do not initialize
   std::vector<rocprofiler_agent_v0_t> agents = get_gpu_device_agents();
-	if(agents.empty())
+  if(agents.empty())
   {
-    std::cerr << "No ROCm GPUs found" << std::endl;
-    rocprofsdk_initialized = 0;
+    printf("NO ROCm AGENTS FOUND\n");
+    init_mutex.unlock();
     return 1;
   }
-  
-  client_name_info = get_buffer_tracing_names();
-  
-  //Configure service to obtain callback names
-  ROCPROFILER_CALL(rocprofiler_create_context(&client_ctx), "context creation");
-  auto code_object_ops = std::vector<rocprofiler_tracing_operation_t>{
-        ROCPROFILER_CODE_OBJECT_DEVICE_KERNEL_SYMBOL_REGISTER};
 
-  
-  ROCPROFILER_CALL(
-                    rocprofiler_configure_callback_tracing_service(client_ctx,
-                                                       ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT,
-                                                       nullptr,
-                                                       0,
-                                                       tool_code_object_callback,
-                                                       nullptr),
-                                                       "code object tracing service configure");                                                   
-                                                       
-  //Configure service to obtain ROCTX information
-  ROCPROFILER_CALL(
-                    rocprofiler_configure_callback_tracing_service(client_ctx,
-                                                       ROCPROFILER_CALLBACK_TRACING_MARKER_CORE_API,
-                                                       nullptr,
-                                                       0,
-                                                       tool_roctx_callback,
-                                                       nullptr),
-                                                       "roctx marker tracing service configure");  
-  
-                                             
-  //Create buffer for buffered tracing
-  constexpr auto buffer_size_bytes      = 4096;
-  //When the buffer should be flushed
-  constexpr auto buffer_watermark_bytes = buffer_size_bytes - (buffer_size_bytes / 2);
-  ROCPROFILER_CALL(rocprofiler_create_buffer(client_ctx,
-                                               buffer_size_bytes,
-                                               buffer_watermark_bytes,
-                                               ROCPROFILER_BUFFER_POLICY_LOSSLESS,
-                                               tool_tracing_callback,
-                                               tool_data,
-                                               &client_buffer),
-                                               "buffer creation failed");
-  
-  //Configure rocprofiler-sdk to trace the services in supported_kinds
-  for(const auto& kind_id : supported_kinds)
+  static bool once = run_once();
+
+  c_client_name_info = get_callback_tracing_names();
+
+  ROCPROFILER_CALL(rocprofiler_create_context(&client_ctx), "context creation failed");
+
+  // enable the control
+  tool_control_init(client_ctx);
+
+  for(auto itr : c_supported_kinds)
   {
-    std::string msg = "configuring buffer tracing for kind id: "+std::to_string(kind_id);
-
-    ROCPROFILER_CALL(rocprofiler_configure_buffer_tracing_service(
-                     client_ctx, kind_id, nullptr, 0, client_buffer),
-                     msg.c_str());
+      ROCPROFILER_CALL(rocprofiler_configure_callback_tracing_service(
+                        client_ctx, itr, nullptr, 0, tool_tracing_callback, tool_data),
+                        "callback tracing service failed to configure");
   }
-  
-  //Buffered tracing (tool_tracing_callback) uses its own thread
-  //tool_code_object_callback uses the original thread
-  auto client_thread = rocprofiler_callback_thread_t{};
-  ROCPROFILER_CALL(rocprofiler_create_callback_thread(&client_thread),
-                   "creating callback thread");
 
-  ROCPROFILER_CALL(rocprofiler_assign_callback_thread(client_buffer, client_thread),
-                   "assignment of thread for buffer");
+  ROCPROFILER_CALL(rocprofiler_configure_callback_tracing_service(
+                        client_ctx, ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT,
+                        nullptr, 0, tool_code_object_callback, nullptr),
+                        "code object tracing service configure"); 
+
+
+  auto external_corr_id_request_kinds =  
+              std::array<rocprofiler_external_correlation_id_request_kind_t, 1>{
+              ROCPROFILER_EXTERNAL_CORRELATION_REQUEST_KERNEL_DISPATCH};//,
+              //ROCPROFILER_EXTERNAL_CORRELATION_REQUEST_MEMORY_COPY,
+              //ROCPROFILER_EXTERNAL_CORRELATION_REQUEST_MEMORY_ALLOCATION,
+              //ROCPROFILER_EXTERNAL_CORRELATION_REQUEST_HIP_RUNTIME_API*/};
+  ROCPROFILER_CALL(rocprofiler_configure_external_correlation_id_request_service(
+                            client_ctx,
+                            external_corr_id_request_kinds.data(),
+                            external_corr_id_request_kinds.size(),
+                            set_stream_correlation_id,
+                            nullptr),
+                        "Could not configure external correlation id request service");
 
   int valid_ctx = 0;
   ROCPROFILER_CALL(rocprofiler_context_is_valid(client_ctx, &valid_ctx),
-                   "context validity check");
+                    "failure checking context validity");
   if(valid_ctx == 0)
   {
       // notify rocprofiler that initialization failed
       // and all the contexts, buffers, etc. created
       // should be ignored
-      std::cerr<< "ROCm context not valid" << std::endl;
+      init_mutex.unlock();
       return -1;
   }
-  
+
   hc_profiling = init_hc_profiling(agents, client_ctx, client_buffer);
   if(hc_profiling == PROFILE_METRICS)
     pc_sampling = init_pc_sampling(client_ctx, 1);
   else
     pc_sampling = init_pc_sampling(client_ctx, 0);
-  
+
   if( (hc_profiling == PROFILE_METRICS) && pc_sampling)
   {
     std::cerr << "[TAU] rocprofiler-sdk is unable to profile hardware counter and perform pc sampling at the same time \n Select only one" << std::endl;
@@ -1070,11 +1350,13 @@ int tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
     return -1;
   }
 
-  ROCPROFILER_CALL(rocprofiler_start_context(client_ctx), "rocprofiler context start");
-  rocprofsdk_initialized = 1;
+
+  ROCPROFILER_CALL(rocprofiler_start_context(client_ctx), "rocprofiler context start failed");
+  configured_v3 = 1;
+  init_mutex.unlock();
+  // no errors
   return 0;
 }
-
 
 //End of rocprofiler-sdk
 void
@@ -1121,8 +1403,7 @@ rocprofiler_configure_(uint32_t                 version,
                                           &tool_init,
                                           &tool_fini,
                                           static_cast<void*>(client_tool_data)};
-  
-  initialized_v3 = 1;
+
   // return pointer to configure data
   return &cfg;
 }
@@ -1130,36 +1411,30 @@ rocprofiler_configure_(uint32_t                 version,
 
 //Flush ROCm buffer/s before TAU ends
 void Tau_rocprofsdk_flush(){
-  if(rocprofsdk_initialized==0)
+  SDKFlush_mtx.lock();
+  if(configured_v3==0)
   {
-    TAU_VERBOSE("Flag -rocm not set, rocm is not profiled\n");
+    TAU_VERBOSE("Flag -rocm not set or failed to configure, rocm is not profiled\n");
+    SDKFlush_mtx.unlock();
     return;
   }
   if(flushed==1)
+  {
+    SDKFlush_mtx.unlock();
     return;
-  TAU_VERBOSE("Tau_rocprofsdk_flush\n");
-  ROCPROFILER_CALL(rocprofiler_flush_buffer(client_buffer), "buffer flush");
+  }  
   
-  SDKList_mtx.lock();
-  for(auto& [taskif, TauRocmSDKList] : TauRocmSDKListMap)
-  {  
-    TauRocmSDKList.sort();
-    while(!TauRocmSDKList.empty())
-    {
-      TAU_publish_sdk_event(TauRocmSDKList.front());
-      TauRocmSDKList.pop_front();
-    }
-    if(pc_sampling == 1)
-    {
-      sdk_pc_sampling_flush();
-    }
+  tau_rocsdk_kmap_flush();
+  if(pc_sampling == 1)
+  {
+    sdk_pc_sampling_flush();
   }
-  SDKList_mtx.unlock();
-  
-
   flushed = 1;
   ROCPROFILER_CALL(rocprofiler_stop_context(client_ctx), "rocprofiler context stop");
+  SDKFlush_mtx.unlock();
 }
+
+
 
 
 void
@@ -1167,7 +1442,6 @@ Tau_rocm_initialize_v3()
 {
     if(use_rocprofilersdk() == 0)
      return;
-    int status = 0;
 
     SDK_init_lock.lock();
 
@@ -1180,3 +1454,4 @@ Tau_rocm_initialize_v3()
     SDK_init_lock.unlock();
 
 }
+
