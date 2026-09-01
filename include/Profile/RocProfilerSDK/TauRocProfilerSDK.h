@@ -45,8 +45,8 @@
 #include <set>
 #include <unistd.h>
 
-
-#define DISPATH_MAP_MAX_SIZE 128
+// Size after which the kernel map is processed
+#define DISPATCH_MAP_MAX_SIZE 128
 
 //Map to identify kernels and some of their information, GPU side
 using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;

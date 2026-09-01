@@ -30,8 +30,10 @@
 
 //#define ROCSDK_DEBUG
 //#define ROCSDK_DEBUG_K
+//#define ROCSDK_DEBUG_K_0
 #undef ROCSDK_DEBUG
 #undef ROCSDK_DEBUG_K
+#undef ROCSDK_DEBUG_K_0
 
 
 //Initialization flag, only to check if Tau_rocm_initialize_v3 was called
@@ -145,7 +147,7 @@ static const auto c_supported_kinds = std::unordered_set<rocprofiler_callback_tr
     //ROCPROFILER_CALLBACK_TRACING_HIP_COMPILER_API,    ///< @see ::rocprofiler_hip_compiler_api_id_t
     //ROCPROFILER_CALLBACK_TRACING_MEMORY_COPY,        ///< @see ::rocprofiler_memory_copy_operation_t
     //ROCPROFILER_CALLBACK_TRACING_OMPT,               ///< @see ::rocprofiler_ompt_operation_t
-    //ROCPROFILER_CALLBACK_TRACING_MEMORY_ALLOCATION,  ///< @see ::rocprofiler_memory_allocation_operation_t
+    ROCPROFILER_CALLBACK_TRACING_MEMORY_ALLOCATION,  ///< @see ::rocprofiler_memory_allocation_operation_t
     //ROCPROFILER_CALLBACK_TRACING_RUNTIME_INITIALIZATION,  ///< Callback notifying that a runtime
                                                           ///< library has been initialized
     //ROCPROFILER_CALLBACK_TRACING_ROCDECODE_API,           ///< rocDecode API Tracing
@@ -239,32 +241,11 @@ void tau_rocsdk_kernel_process( uint64_t cur_stream, rocprofiler_callback_tracin
 {
   std::string task_name = demangle_kernel_rocprofsdk(
                             client_kernels.at(kd_data.dispatch_info.kernel_id).kernel_name, 1);
-  #ifdef ROCSDK_DEBUG_K
-  std::cout << "KERNEL_DISPATCH "
-        << " stream : " << cur_stream
-        << " kernel_id: " << kd_data.dispatch_info.kernel_id
-        << " kernel_name: " << task_name
-        << " start: " << kd_data.start_timestamp 
-        << " end: " << kd_data.end_timestamp
-        << " agent: " << kd_data.dispatch_info.agent_id.handle
-        << " d_id: " << kd_data.dispatch_info.dispatch_id
-        << " grid_size x: " << kd_data.dispatch_info.grid_size.x
-        << " grid_size y: " << kd_data.dispatch_info.grid_size.y
-        << " grid_size z: " << kd_data.dispatch_info.grid_size.z
-        << " group_segment_size: " << kd_data.dispatch_info.group_segment_size
-        << " private_segment_size: " << kd_data.dispatch_info.private_segment_size
-        << " queue_id: " << kd_data.dispatch_info.queue_id.handle
-        << " workgroup_size x: " << kd_data.dispatch_info.workgroup_size.x
-        << " workgroup_size y: " << kd_data.dispatch_info.workgroup_size.y
-        << " workgroup_size z: " << kd_data.dispatch_info.workgroup_size.z
-        << std::endl;
-  #endif //ROCSDK_DEBUG_K
 
   
-  uint64_t cur_agent = kd_data.dispatch_info.dispatch_id;
+  uint64_t cur_agent = kd_data.dispatch_info.agent_id.handle;
   double start_ts = ((double)kd_data.start_timestamp)/1e3;
   double end_ts = ((double)kd_data.end_timestamp)/1e3;
-  //printf("start_ts %lf end_ts %lf total %lf\n", start_ts, end_ts, end_ts-start_ts);
 
   //We lock the access to the stream task map, and also locks the task START/STOP
   stream_queue_mtx.lock();
@@ -288,6 +269,30 @@ void tau_rocsdk_kernel_process( uint64_t cur_stream, rocprofiler_callback_tracin
     Tau_add_metadata_for_task("ROCM_STREAM_ID", cur_stream, taskid);
     Tau_create_top_level_timer_if_necessary_task(taskid);
   }
+
+  #ifdef ROCSDK_DEBUG_K
+  std::cout << "KERNEL_DISPATCH "
+        << " stream : " << cur_stream
+        << " kernel_id: " << kd_data.dispatch_info.kernel_id
+        << " kernel_name: " << task_name
+        << " start: " << kd_data.start_timestamp 
+        << " end: " << kd_data.end_timestamp
+        << " agent: " << cur_agent
+        << " agent id: " << TAU_rocsdk_id_device_map[cur_agent]
+        << " d_id: " << kd_data.dispatch_info.dispatch_id
+        << " grid_size x: " << kd_data.dispatch_info.grid_size.x
+        << " grid_size y: " << kd_data.dispatch_info.grid_size.y
+        << " grid_size z: " << kd_data.dispatch_info.grid_size.z
+        << " group_segment_size: " << kd_data.dispatch_info.group_segment_size
+        << " private_segment_size: " << kd_data.dispatch_info.private_segment_size
+        << " queue_id: " << kd_data.dispatch_info.queue_id.handle
+        << " workgroup_size x: " << kd_data.dispatch_info.workgroup_size.x
+        << " workgroup_size y: " << kd_data.dispatch_info.workgroup_size.y
+        << " workgroup_size z: " << kd_data.dispatch_info.workgroup_size.z
+        << " taskid: " << taskid
+        << std::endl;
+  #endif //ROCSDK_DEBUG_K
+  //printf("start_ts %lf end_ts %lf total %lf\n", start_ts, end_ts, end_ts-start_ts);
 
   //If there are multiple kernels in the same stream enqueued, the internal timer
   // of the previous may be translated to a timestamp later than the current start,
@@ -367,7 +372,6 @@ void tau_rocsdk_kmap_flush()
 {
   kernel_dispatch_map_mutex.lock();
 
-
   for (auto it = kernel_time_stream_map.begin();
      it != kernel_time_stream_map.end();
      ++it)
@@ -377,6 +381,7 @@ void tau_rocsdk_kmap_flush()
     tau_rocsdk_kernel_process( cur_stream, kd_data);
   }
   kernel_time_stream_map.clear();
+  
   kernel_dispatch_map_mutex.unlock();
 }
 
@@ -401,6 +406,8 @@ void tau_rocsdk_kernel_dispatch(rocprofiler_callback_tracing_record_t record)
   auto* kernel_dispatch = static_cast<rocprofiler_callback_tracing_kernel_dispatch_data_t*>(record.payload);
 
   #ifdef ROCSDK_DEBUG_K_0
+  std::string task_name = demangle_kernel_rocprofsdk(
+                            client_kernels.at(kernel_dispatch->dispatch_info.kernel_id).kernel_name, 1);
   std::cout << c_client_name_info.kind_names[record.kind] << " "
           << c_client_name_info.operation_names[record.kind][record.operation]
           << " phase: " << record.phase
@@ -1035,16 +1042,44 @@ void tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
 
 
       }*/
-      /*
       case ROCPROFILER_CALLBACK_TRACING_MEMORY_ALLOCATION:
       {
-        printf("MEMALLOC TODO!!\n");
+        //printf("MEMALLOC TODO!!\n");
+        auto* memalloc_data = static_cast<rocprofiler_callback_tracing_memory_allocation_data_t*>(record.payload);
+        // std::cout << record.phase << " "
+        //             << c_client_name_info.kind_names[record.kind] << " "
+        //             << c_client_name_info.operation_names[record.kind][record.operation]
+        //             << " tid: " << record.thread_id
+        //             << " cid: " << record.correlation_id.internal
+        //             << " bytes: " << memalloc_data->allocation_size
+        //             << " src_address: " << memalloc_data->address.ptr
+        //             << " dst_address: " << memalloc_data->address.ptr
+        //             << " src_agent_id: " << memalloc_data->agent_id.handle
+        //             << " src_agent_id: " << TAU_rocsdk_id_device_map[memalloc_data->agent_id.handle]
+        //             << " start_timestamp: " << memalloc_data->start_timestamp
+        //             << " end_timestamp: " << memalloc_data->end_timestamp
+        //             << std::endl;
+        if(record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER)
+        {
+          std::string task_name = c_client_name_info.operation_names[record.kind][record.operation];
+          TAU_START(task_name.c_str());
+
+        }
+        else if(record.phase == ROCPROFILER_CALLBACK_PHASE_EXIT)
+        {
+          std::string task_name = c_client_name_info.operation_names[record.kind][record.operation];
+          TAU_STOP(task_name.c_str());
+          void* ue = nullptr;
+          task_name += " size";
+          Tau_get_context_userevent(&ue, task_name.c_str());
+          TAU_CONTEXT_EVENT(ue, (double) memalloc_data->size);
+        }
         break;
       }
-      */
       //case ROCPROFILER_CALLBACK_TRACING_ROCSHMEM_API:
       //{
-      //    break;
+      //  printf("ROCPROFILER_CALLBACK_TRACING_ROCSHMEM_API\n");
+      //  break;
       //}
       //case ROCPROFILER_CALLBACK_TRACING_HIPFILE_API:
       //{
@@ -1095,7 +1130,20 @@ void tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
         tau_rccl_process(record);
         break;
       }
-
+      // case ROCPROFILER_CALLBACK_TRACING_RUNTIME_INITIALIZATION:
+      // {
+      //   printf("ROCPROFILER_CALLBACK_TRACING_RUNTIME_INITIALIZATION\n");
+      //   auto* run_data = static_cast<struct rocprofiler_callback_tracing_runtime_initialization_data_t*>(record.payload);
+      //   std::cout << record.phase << " "
+      //             << c_client_name_info.kind_names[record.kind] << " "
+      //             << c_client_name_info.operation_names[record.kind][record.operation]
+      //             << " tid: " << record.thread_id
+      //             << " cid: " << record.correlation_id.internal
+      //             << " instance: " << run_data->instance
+      //             << " version: " << run_data->version
+      //             << std::endl;
+      //   break;
+      // }
       //case ROCPROFILER_CALLBACK_TRACING_SCRATCH_MEMORY:
       //case ROCPROFILER_CALLBACK_TRACING_RUNTIME_INITIALIZATION:
       //case ROCPROFILER_CALLBACK_TRACING_ROCJPEG_API:
@@ -1394,7 +1442,6 @@ Tau_rocm_initialize_v3()
 {
     if(use_rocprofilersdk() == 0)
      return;
-    int status = 0;
 
     SDK_init_lock.lock();
 
@@ -1407,3 +1454,4 @@ Tau_rocm_initialize_v3()
     SDK_init_lock.unlock();
 
 }
+
