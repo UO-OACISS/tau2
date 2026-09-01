@@ -59,6 +59,7 @@ import Core.Compiler as CC
 include("runtime.jl")
 include("config.jl")
 include("metadata.jl")
+include("emit.jl")
 include("llvm_pass.jl")
 include("phase1.jl")
 include("phase2.jl")

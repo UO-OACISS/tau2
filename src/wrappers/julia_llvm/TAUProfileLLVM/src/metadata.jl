@@ -23,8 +23,41 @@ const _llvm_func_argtypes_map = Dict{String, String}()
 """Set of LLVM function names whose Julia source has @noinline annotation."""
 const _llvm_func_noinline_set = Set{String}()
 
-"""Fallback map from (funcname, basename_file, line) to (module_name, MethodInstance)."""
-const _mi_info_fallback_map = Dict{Tuple{String, String, Int}, Tuple{String, Core.MethodInstance}}()
+"""Fallback map from (funcname, basename_file, line) to MethodInstance."""
+const _mi_info_fallback_map = Dict{Tuple{String, String, Int}, Core.MethodInstance}()
+
+"""Clear every per-compile metadata map. Called at the start of each Phase 1 compile job."""
+function _reset_metadata!()
+    empty!(_llvm_func_module_map)
+    empty!(_llvm_func_depth_map)
+    empty!(_llvm_func_mi_map)
+    empty!(_llvm_func_argtypes_map)
+    empty!(_llvm_func_noinline_set)
+    empty!(_mi_info_fallback_map)
+    nothing
+end
+
+"""
+    _register_llvm_function!(llvm_name, mi; depth=(0, 0), noinline=false)
+
+Record `mi` as the Julia origin of LLVM function `llvm_name` in every metadata map.
+`depth` is the (depth, mod_depth) pair for depth-limit checks; Phase 2 has no call
+graph and leaves it at (0, 0).
+"""
+function _register_llvm_function!(llvm_name::String, mi::Core.MethodInstance;
+                                  depth::Tuple{Int, Int}=(0, 0), noinline::Bool=false)
+    method = mi.def
+    if isa(method, Method)
+        _llvm_func_module_map[llvm_name] = string(method.module)
+    end
+    _llvm_func_depth_map[llvm_name] = depth
+    _llvm_func_mi_map[llvm_name] = mi
+    if _include_types[]
+        _llvm_func_argtypes_map[llvm_name] = _format_argtypes(mi)
+    end
+    noinline && push!(_llvm_func_noinline_set, llvm_name)
+    nothing
+end
 
 # ============================================================================
 # Function label building from LLVM debug info

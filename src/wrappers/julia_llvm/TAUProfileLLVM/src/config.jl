@@ -154,54 +154,53 @@ function tau_rewrite_reset_exclusions()
     nothing
 end
 
+# ============================================================================
+# Module hierarchy checks for whitelist/exclusion/depth limits
+# ============================================================================
+
 """
-    _module_limit_for(mod_name::Symbol) -> Union{Int, Nothing}
+    _find_in_ancestors(f, mod::Module)
+
+Walk `mod` and its ancestors; return the first non-nothing result of `f(m, is_self)`,
+where `is_self` is true only for `mod` itself. Returns `nothing` if `f` never matches.
+"""
+function _find_in_ancestors(f, mod::Module)
+    current = mod
+    while true
+        r = f(current, current === mod)
+        r === nothing || return r
+        parent = parentmodule(current)
+        parent === current && return nothing
+        current = parent
+    end
+end
+
+"""
+    _module_limit_for(mod::Module) -> Union{Int, Nothing}
 
 Look up the per-module depth limit, walking up the module hierarchy for non-exact limits.
 """
 function _module_limit_for(mod::Module)
-    current = mod
-    while true
-        name = nameof(current)
-        if haskey(_module_depth_limits, name)
-            limit, exact = _module_depth_limits[name]
-            if current === mod || !exact
-                return limit
-            end
-        end
-        parent = parentmodule(current)
-        parent === current && break
-        current = parent
+    _find_in_ancestors(mod) do m, is_self
+        entry = get(_module_depth_limits, nameof(m), nothing)
+        entry === nothing && return nothing
+        limit, exact = entry
+        return (is_self || !exact) ? limit : nothing
     end
-    return nothing
 end
 
-# ============================================================================
-# Module hierarchy check for whitelist/exclusion
-# ============================================================================
-
 """
-    _is_module_in_set(mod::Module, modset, default_on_empty::Bool) -> Bool
+    _is_module_whitelisted(mod::Module) -> Bool
 
-Check if a module (or any of its ancestors) is in the given set.
-For whitelisting: returns true if module is whitelisted
+Check if a module (or any ancestor) is in the whitelist. An empty whitelist passes everything.
 """
 function _is_module_whitelisted(mod::Module)
     isempty(_whitelisted_modules) && return true  # no whitelist = everything passes
-    current = mod
-    while true
-        name = nameof(current)
-        if haskey(_whitelisted_modules, name)
-            exact = _whitelisted_modules[name]
-            if current === mod || !exact
-                return true
-            end
-        end
-        parent = parentmodule(current)
-        parent === current && break
-        current = parent
+    found = _find_in_ancestors(mod) do m, is_self
+        exact = get(_whitelisted_modules, nameof(m), nothing)
+        return (exact !== nothing && (is_self || !exact)) ? true : nothing
     end
-    return false
+    return found === true
 end
 
 """
@@ -211,18 +210,34 @@ Check if a module (or any ancestor) is in the exclusion set.
 """
 function _is_module_excluded(mod::Module)
     isempty(_excluded_modules) && return false
-    current = mod
-    while true
-        name = nameof(current)
-        if haskey(_excluded_modules, name)
-            exact = _excluded_modules[name]
-            if current === mod || !exact
-                return true
-            end
-        end
-        parent = parentmodule(current)
-        parent === current && break
-        current = parent
+    found = _find_in_ancestors(mod) do m, is_self
+        exact = get(_excluded_modules, nameof(m), nothing)
+        return (exact !== nothing && (is_self || !exact)) ? true : nothing
     end
-    return false
+    return found === true
+end
+
+"""
+    _passes_config_filter(funcname, mod) -> Bool
+
+Apply the user-configured filters shared by Phase 1 and Phase 2: tracing enabled,
+function name and prefix exclusions, module exclusion and module whitelist.
+Passing `nothing` for `funcname` or `mod` skips the checks that need it.
+"""
+function _passes_config_filter(funcname::Union{String, Nothing}, mod::Union{Module, Nothing})
+    _tracing_enabled[] || return false
+
+    if funcname !== nothing
+        Symbol(funcname) in _excluded_functions && return false
+        for prefix in _excluded_prefixes
+            startswith(funcname, prefix) && return false
+        end
+    end
+
+    if mod !== nothing
+        _is_module_excluded(mod) && return false
+        _is_module_whitelisted(mod) || return false
+    end
+
+    return true
 end

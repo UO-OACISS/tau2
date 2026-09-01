@@ -39,37 +39,18 @@ end
 Determine whether an LLVM function should be instrumented.
 """
 function _should_instrument(fn::LLVM.Function)
-    _tracing_enabled[] || return false
     LLVM.isdeclaration(fn) && return false
     LLVM.isintrinsic(fn) && return false
     fname = LLVM.name(fn)
     (startswith(fname, "julia_") || startswith(fname, "j_")) || return false
 
-    funcname = _get_function_name(fn)
-
-    # Function name exclusion
-    if funcname !== nothing
-        sym = Symbol(funcname)
-        sym in _excluded_functions && return false
-
-        # Prefix exclusion
-        if !isempty(_excluded_prefixes)
-            for prefix in _excluded_prefixes
-                startswith(funcname, prefix) && return false
-            end
-        end
-    end
-
-    # Module exclusion and whitelist
+    # Name, prefix, module exclusion and whitelist via the MethodInstance if mapped
     mi = get(_llvm_func_mi_map, fname, nothing)
-    if mi !== nothing
-        method = mi.def
-        if isa(method, Method)
-            mod = method.module
-            _is_module_excluded(mod) && return false
-            _is_module_whitelisted(mod) || return false
-        end
-    else
+    method = mi === nothing ? nothing : mi.def
+    mod = isa(method, Method) ? method.module : nothing
+    _passes_config_filter(_get_function_name(fn), mod) || return false
+
+    if mi === nothing
         # Fall back to module name string from the map
         mod_name = get(_llvm_func_module_map, fname, nothing)
         if mod_name !== nothing
@@ -260,7 +241,7 @@ function _wrap_with_exception_handler!(fn::LLVM.Function, mod::LLVM.Module,
     # Find pgcstack
     pgcstack = _find_pgcstack(entry_bb)
     if pgcstack === nothing
-        @warn "TracingLLVMPlugin: Could not find pgcstack in entry block, skipping exception wrapping"
+        @warn "TAUProfile: Could not find pgcstack in entry block, skipping exception wrapping"
         return false
     end
 
@@ -492,7 +473,7 @@ Run the instrumentation pass on all eligible functions in an LLVM module.
 function instrument_module!(mod::LLVM.Module)
     entry_ptr, exit_ptr, tau_mode = _active_hook_ptrs()
     if entry_ptr == C_NULL || exit_ptr == C_NULL
-        @warn "TracingLLVMPlugin: Hook pointers not initialized"
+        @warn "TAUProfile: Hook pointers not initialized"
         return 0
     end
 
@@ -504,7 +485,7 @@ function instrument_module!(mod::LLVM.Module)
             end
         catch ex
             fname = LLVM.name(fn)
-            @warn "TracingLLVMPlugin: Failed to instrument $fname" exception=(ex, catch_backtrace())
+            @warn "TAUProfile: Failed to instrument $fname" exception=(ex, catch_backtrace())
         end
     end
     return count

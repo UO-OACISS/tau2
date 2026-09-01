@@ -54,13 +54,8 @@ If the set is empty, all modules are allowed (returns true).
 """
 function _is_phase2_module(mod::Module)
     isempty(_phase2_modules) && return true
-    current = mod
-    while true
-        current in _phase2_modules && return true
-        parent = parentmodule(current)
-        parent === current && return false
-        current = parent
-    end
+    found = _find_in_ancestors((m, _) -> m in _phase2_modules ? true : nothing, mod)
+    return found === true
 end
 
 """
@@ -70,30 +65,19 @@ Check if a module is Base, Core, or a submodule thereof.
 This prevents infinite recursion when hook code calls Base functions.
 """
 function _is_base_or_core(mod::Module)
-    current = mod
-    while true
-        current === Base && return true
-        current === Core && return true
-        parent = parentmodule(current)
-        parent === current && return false
-        current = parent
-    end
+    found = _find_in_ancestors((m, _) -> (m === Base || m === Core) ? true : nothing, mod)
+    return found === true
 end
 
 """
     _is_own_module(mod::Module) -> Bool
 
-Detect if `mod` is TracingLLVMPlugin or a submodule thereof.
+Detect if `mod` is TAUProfile or a submodule thereof.
 Walks up the module hierarchy checking for this module.
 """
 function _is_own_module(mod::Module)
-    current = mod
-    while true
-        current === @__MODULE__() && return true
-        parent = parentmodule(current)
-        parent === current && return false
-        current = parent
-    end
+    found = _find_in_ancestors((m, _) -> m === @__MODULE__() ? true : nothing, mod)
+    return found === true
 end
 
 # ============================================================================
@@ -106,45 +90,26 @@ end
 Determine whether a MethodInstance should be instrumented in Phase 2.
 
 Checks in order:
-1. Tracing enabled
-2. Method extraction: mi.def must be a Method
-3. Module exclusions
-4. Module whitelist
-5. Function name exclusions
-6. Prefix exclusions
-7. Base/Core exclusion (prevents infinite recursion)
-8. Phase 2 module scoping (check against _phase2_modules set)
+1. Method extraction: mi.def must be a Method
+2. The shared config filter (`_passes_config_filter`): tracing enabled, module
+   exclusions, module whitelist, function name exclusions, prefix exclusions
+3. Base/Core exclusion (prevents infinite recursion)
+4. Self-exclusion
+5. Phase 2 module scoping (check against _phase2_modules set)
 """
 function _passes_phase2_filter(mi::Core.MethodInstance)
-    _tracing_enabled[] || return false
-
     # Extract method
     method = mi.def
     isa(method, Method) || return false
 
     mod = method.module
 
-    # Module exclusion
-    _is_module_excluded(mod) && return false
-
-    # Module whitelist
-    _is_module_whitelisted(mod) || return false
-
-    # Function name exclusion
-    sym = Symbol(method.name)
-    sym in _excluded_functions && return false
-
-    # Prefix exclusion
-    if !isempty(_excluded_prefixes)
-        for prefix in _excluded_prefixes
-            startswith(String(method.name), prefix) && return false
-        end
-    end
+    _passes_config_filter(String(method.name), mod) || return false
 
     # Base/Core exclusion
     _is_base_or_core(mod) && return false
 
-    # Self-exclusion: never instrument TracingLLVMPlugin itself.
+    # Self-exclusion: never instrument TAUProfile itself.
     _is_own_module(mod) && return false
 
     # Phase 2 module scoping
@@ -210,90 +175,23 @@ function _emit_single_function(ci::Core.CodeInstance, src::Core.CodeInfo)
         # Build single-item codeinfos vector
         codeinfos = Any[ci::Core.CodeInstance, src::Core.CodeInfo]
 
-        # Create ThreadSafeModule for emission
-        ts_mod = LLVM.ThreadSafeModule("phase2_emit")
+        emitted = _emit_native(codeinfos, params;
+                               name = "phase2_emit", triple = Sys.MACHINE,
+                               datalayout = nothing, dwarf_version = 4)
+        emitted === nothing && return nothing
 
-        GC.@preserve codeinfos begin
-            # Initialize module with basic properties
-            ts_mod() do mod
-                LLVM.triple!(mod, Sys.MACHINE)
-                LLVM.flags(mod)["Dwarf Version", LLVM.API.LLVMModuleFlagBehaviorWarning] =
-                    LLVM.Metadata(LLVM.ConstantInt(4))
-                LLVM.flags(mod)["Debug Info Version", LLVM.API.LLVMModuleFlagBehaviorWarning] =
-                    LLVM.Metadata(LLVM.ConstantInt(LLVM.DEBUG_METADATA_VERSION()))
-            end
+        # Look up the input CI in the compiled set
+        func_name, specfunc_name = _llvm_names_for_ci(emitted.native_code, ci)
 
-            # Emit native code via jl_emit_native
-            native_code = @ccall jl_emit_native(
-                codeinfos::Vector{Any},
-                ts_mod::LLVM.API.LLVMOrcThreadSafeModuleRef,
-                Ref(params)::Ptr{Base.CodegenParams},
-                false::Cint
-            )::Ptr{Cvoid}
-
-            native_code == C_NULL && return nothing
-
-            # Extract LLVM module
-            llvm_mod_ref = @ccall jl_get_llvm_module(
-                native_code::Ptr{Cvoid}
-            )::LLVM.API.LLVMOrcThreadSafeModuleRef
-
-            llvm_mod_ref == C_NULL && return nothing
-
-            llvm_ts_mod = LLVM.ThreadSafeModule(llvm_mod_ref)
-            local llvm_mod
-            llvm_ts_mod() do mod
-                llvm_mod = mod
-            end
-
-            # Extract function metadata via jl_get_function_id / jl_get_llvm_function
-            # Build array of compiled MIs first
-            method_instances = Any[]
-            num_mis = Ref{Csize_t}(0)
-            @ccall jl_get_llvm_mis(native_code::Ptr{Cvoid}, num_mis::Ptr{Csize_t},
-                                   C_NULL::Ptr{Cvoid})::Nothing
-            resize!(method_instances, num_mis[])
-            @ccall jl_get_llvm_mis(native_code::Ptr{Cvoid}, num_mis::Ptr{Csize_t},
-                                   method_instances::Ptr{Cvoid})::Nothing
-
-            # Look up the input CI in the compiled set
-            func_name = nothing
-            specfunc_name = nothing
-
-            for mi in method_instances
-                mi_ci = ci  # We're only looking for our input CI
-
-                llvm_func_idx = Ref{Int32}(-1)
-                llvm_specfunc_idx = Ref{Int32}(-1)
-                ccall(:jl_get_function_id, Nothing,
-                      (Ptr{Cvoid}, Any, Ptr{Int32}, Ptr{Int32}),
-                      native_code, mi_ci, llvm_func_idx, llvm_specfunc_idx)
-
-                if llvm_func_idx[] >= 1
-                    ref = ccall(:jl_get_llvm_function, LLVM.API.LLVMValueRef,
-                                (Ptr{Cvoid}, UInt32), native_code, llvm_func_idx[]-1)
-                    ref != C_NULL && (func_name = LLVM.name(LLVM.Function(ref)))
-                end
-
-                if llvm_specfunc_idx[] >= 1
-                    ref = ccall(:jl_get_llvm_function, LLVM.API.LLVMValueRef,
-                                (Ptr{Cvoid}, UInt32), native_code, llvm_specfunc_idx[]-1)
-                    ref != C_NULL && (specfunc_name = LLVM.name(LLVM.Function(ref)))
-                end
-
-                (func_name !== nothing || specfunc_name !== nothing) && break
-            end
-
-            # Return result tuple
-            # Caller must keep ts_mod alive while using mod
-            return (;
-                mod = llvm_mod,
-                ts_mod = llvm_ts_mod,
-                func_name = func_name,
-                specfunc_name = specfunc_name,
-                native_code = native_code,
-            )
-        end
+        # Return result tuple
+        # Caller must keep ts_mod alive while using mod
+        return (;
+            mod = emitted.mod,
+            ts_mod = emitted.ts_mod,
+            func_name = func_name,
+            specfunc_name = specfunc_name,
+            native_code = emitted.native_code,
+        )
     end
 
     if _has_active_llvm_context()
@@ -319,25 +217,10 @@ function _instrument_single_function!(emit_result, mi::Core.MethodInstance)
     method = mi.def
     isa(method, Method) || return 0
 
-    mod_name = string(method.module)
-
     # Populate metadata maps for both func_name and specfunc_name
     for llvm_name in (emit_result.func_name, emit_result.specfunc_name)
         llvm_name === nothing && continue
-
-        # Map LLVM name to module for label building
-        _llvm_func_module_map[llvm_name] = mod_name
-
-        # Map LLVM name to MI for exclusion checks
-        _llvm_func_mi_map[llvm_name] = mi
-
-        # Map LLVM name to argument types if enabled
-        if _include_types[]
-            _llvm_func_argtypes_map[llvm_name] = _format_argtypes(mi)
-        end
-
-        # No depth tracking for Phase 2
-        _llvm_func_depth_map[llvm_name] = (0, 0)
+        _register_llvm_function!(llvm_name, mi)
     end
 
     # Fill metadata gaps for any other functions in the module (ABI thunks, etc.)
@@ -345,12 +228,7 @@ function _instrument_single_function!(emit_result, mi::Core.MethodInstance)
         fn_name = LLVM.name(fn)
         haskey(_llvm_func_module_map, fn_name) && continue
         LLVM.isdeclaration(fn) && continue
-        _llvm_func_module_map[fn_name] = mod_name
-        _llvm_func_mi_map[fn_name] = mi
-        _llvm_func_depth_map[fn_name] = (0, 0)
-        if _include_types[]
-            _llvm_func_argtypes_map[fn_name] = _format_argtypes(mi)
-        end
+        _register_llvm_function!(fn_name, mi)
     end
 
     # Instrument the module using the standard pipeline
@@ -359,28 +237,19 @@ function _instrument_single_function!(emit_result, mi::Core.MethodInstance)
 end
 
 """
-    _jit_and_lookup(emit_result) -> Ptr{Cvoid}
+    _jit_and_lookup(ts_mod::LLVM.ThreadSafeModule, name::String) -> Ptr{Cvoid}
 
-Compile an instrumented LLVM module through JuliaOJIT and look up the function pointer.
+Add an instrumented LLVM module to Julia's global ORC JIT and look up `name`.
 
-Takes the output of `_emit_single_function` (which contains `ts_mod`, `func_name`,
-`specfunc_name`) and:
-
-1. Gets Julia's global ORC JIT using @dispose (matching tau_rewrite_and_call pattern)
+1. Gets Julia's global ORC JIT (`JuliaOJIT` wraps `jl_ExecutionEngine`, so the
+   returned pointer stays valid after the wrapper is disposed)
 2. Gets the main JITDylib
 3. Sets up process-wide symbol resolution (so callees resolve from Julia's existing
    compiled code)
 4. Adds the instrumented LLVM module to the JIT
-5. Looks up the compiled function pointer
-6. Returns the function pointer as `Ptr{Cvoid}`
+5. Looks up the compiled function pointer and returns it as `Ptr{Cvoid}`
 """
-function _jit_and_lookup(emit_result)
-    lookup_name = emit_result.func_name
-    if lookup_name === nothing
-        lookup_name = emit_result.specfunc_name
-    end
-    lookup_name === nothing && return nothing
-
+function _jit_and_lookup(ts_mod::LLVM.ThreadSafeModule, name::String)
     @dispose jljit=LLVM.JuliaOJIT() begin
         jd = LLVM.JITDylib(jljit)
         prefix = LLVM.get_prefix(jljit)
@@ -388,13 +257,28 @@ function _jit_and_lookup(emit_result)
         LLVM.add!(jd, dg)
 
         # Add the instrumented module to the JIT
-        LLVM.add!(jljit, jd, emit_result.ts_mod)
+        LLVM.add!(jljit, jd, ts_mod)
 
         # Lookup the function pointer
-        addr = LLVM.lookup(jljit, lookup_name)
+        addr = LLVM.lookup(jljit, name)
         fptr = pointer(addr)
         return fptr
     end
+end
+
+"""
+    _jit_and_lookup(emit_result) -> Union{Ptr{Cvoid}, Nothing}
+
+Phase 2 convenience form: takes the output of `_emit_single_function` and looks up
+`func_name`, falling back to `specfunc_name`. Returns `nothing` if neither is set.
+"""
+function _jit_and_lookup(emit_result)
+    lookup_name = emit_result.func_name
+    if lookup_name === nothing
+        lookup_name = emit_result.specfunc_name
+    end
+    lookup_name === nothing && return nothing
+    return _jit_and_lookup(emit_result.ts_mod, lookup_name)
 end
 
 """
@@ -670,6 +554,7 @@ function _precompile_phase2!()
     precompile(_instrument_single_function!, (NamedTuple, Core.MethodInstance))
     precompile(_lower_julia_intrinsics!, (LLVM.Module,))
     precompile(_jit_and_lookup, (NamedTuple,))
+    precompile(_jit_and_lookup, (LLVM.ThreadSafeModule, String))
     precompile(_replace_ci_fptr!, (Core.CodeInstance, Ptr{Cvoid}))
 
     # Existing functions used in pipeline

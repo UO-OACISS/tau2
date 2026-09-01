@@ -194,31 +194,20 @@ function tau_rewrite_and_call(@nospecialize(f), args...)
             func_name = LLVM.name(entry_fn)
             LLVM.linkage!(entry_fn, LLVM.API.LLVMExternalLinkage)
 
-            @dispose jljit=LLVM.JuliaOJIT() begin
-                jd = LLVM.JITDylib(jljit)
-                prefix = LLVM.get_prefix(jljit)
-                dg = LLVM.CreateDynamicLibrarySearchGeneratorForProcess(prefix)
-                LLVM.add!(jd, dg)
+            fptr = _jit_and_lookup(LLVM.ThreadSafeModule(ir), func_name)
 
-                tsm = LLVM.ThreadSafeModule(ir)
-                LLVM.add!(jljit, jd, tsm)
-
-                addr = LLVM.lookup(jljit, func_name)
-                fptr = pointer(addr)
-
-                _install_phase2!()
-                # Phase 1 (rewrite + compile + JIT) is complete; stop its timer
-                stop_rewrite!()
-                try
-                    args_array = Any[args...]
-                    GC.@preserve args_array begin
-                        result = ccall(fptr, Any, (Any, Ptr{Any}, Int32),
-                                       f, args_array, Int32(length(args_array)))
-                    end
-                    return result
-                finally
-                    _uninstall_phase2!()
+            _install_phase2!()
+            # Phase 1 (rewrite + compile + JIT) is complete; stop its timer
+            stop_rewrite!()
+            try
+                args_array = Any[args...]
+                GC.@preserve args_array begin
+                    result = ccall(fptr, Any, (Any, Ptr{Any}, Int32),
+                                   f, args_array, Int32(length(args_array)))
                 end
+                return result
+            finally
+                _uninstall_phase2!()
             end
         end
     finally

@@ -103,14 +103,6 @@ function GPUCompiler.compile_method_instance(@nospecialize(job::TracingPluginJob
     # Compute depth maps from call graph
     depth_map, mod_depth_map = _compute_depth_maps(populated, job.source)
 
-    # Lookup callback
-    method_instances = Any[]
-    function lookup_fun(mi, min_world, max_world)
-        push!(method_instances, mi)
-        GPUCompiler.ci_cache_lookup(cache, mi, min_world, max_world)
-    end
-    lookup_cb = @cfunction($lookup_fun, Any, (Any, UInt, UInt))
-
     debug_info_kind = GPUCompiler.llvm_debug_info(job)
     cgparams = (;
         track_allocations  = false,
@@ -124,215 +116,129 @@ function GPUCompiler.compile_method_instance(@nospecialize(job::TracingPluginJob
     )
     params = Base.CodegenParams(; cgparams...)
 
-    GC.@preserve lookup_cb begin
-        ts_mod = LLVM.ThreadSafeModule("start")
-        ts_mod() do mod
-            LLVM.triple!(mod, GPUCompiler.llvm_triple(job.config.target))
-            if GPUCompiler.julia_datalayout(job.config.target) !== nothing
-                LLVM.datalayout!(mod, GPUCompiler.julia_datalayout(job.config.target))
-            end
-            LLVM.flags(mod)["Dwarf Version", LLVM.API.LLVMModuleFlagBehaviorWarning] =
-                LLVM.Metadata(LLVM.ConstantInt(GPUCompiler.dwarf_version(job.config.target)))
-            LLVM.flags(mod)["Debug Info Version", LLVM.API.LLVMModuleFlagBehaviorWarning] =
-                LLVM.Metadata(LLVM.ConstantInt(LLVM.DEBUG_METADATA_VERSION()))
+    codeinfos = Any[]
+    for (ci, src) in populated
+        push!(codeinfos, ci::Core.CodeInstance)
+        push!(codeinfos, src::Core.CodeInfo)
+    end
+
+    emitted = _emit_native(codeinfos, params;
+                           name = "start",
+                           triple = GPUCompiler.llvm_triple(job.config.target),
+                           datalayout = GPUCompiler.julia_datalayout(job.config.target),
+                           dwarf_version = GPUCompiler.dwarf_version(job.config.target))
+    @assert emitted !== nothing "jl_emit_native produced no module for $(job.source)"
+    llvm_mod = emitted.mod
+    native_code = emitted.native_code
+
+    # Build gv_to_value map
+    gv_to_value = Dict{String, Ptr{Cvoid}}()
+    for gv in LLVM.globals(llvm_mod)
+        if !haskey(LLVM.metadata(gv), "julia.constgv")
+            continue
         end
-
-        codeinfos = Any[]
-        for (ci, src) in populated
-            push!(codeinfos, ci::Core.CodeInstance)
-            push!(codeinfos, src::Core.CodeInfo)
-        end
-
-        native_code = @ccall jl_emit_native(
-            codeinfos::Vector{Any},
-            ts_mod::LLVM.API.LLVMOrcThreadSafeModuleRef,
-            Ref(params)::Ptr{Base.CodegenParams},
-            false::Cint
-        )::Ptr{Cvoid}
-        @assert native_code != C_NULL
-
-        llvm_mod_ref = @ccall jl_get_llvm_module(
-            native_code::Ptr{Cvoid}
-        )::LLVM.API.LLVMOrcThreadSafeModuleRef
-        @assert llvm_mod_ref != C_NULL
-
-        llvm_ts_mod = LLVM.ThreadSafeModule(llvm_mod_ref)
-        local llvm_mod
-        llvm_ts_mod() do mod
-            llvm_mod = mod
-        end
-
-        # Build gv_to_value map
-        gv_to_value = Dict{String, Ptr{Cvoid}}()
-        for gv in LLVM.globals(llvm_mod)
-            if !haskey(LLVM.metadata(gv), "julia.constgv")
+        gv_to_value[LLVM.name(gv)] = C_NULL
+        val = LLVM.initializer(gv)
+        val === nothing && continue
+        while isa(val, LLVM.ConstantExpr)
+            op = LLVM.opcode(val)
+            if op in (LLVM.API.LLVMBitCast, LLVM.API.LLVMPtrToInt,
+                      LLVM.API.LLVMAddrSpaceCast, LLVM.API.LLVMIntToPtr)
+                val = LLVM.operands(val)[1]
                 continue
             end
-            gv_to_value[LLVM.name(gv)] = C_NULL
-            val = LLVM.initializer(gv)
-            val === nothing && continue
-            while isa(val, LLVM.ConstantExpr)
-                op = LLVM.opcode(val)
-                if op in (LLVM.API.LLVMBitCast, LLVM.API.LLVMPtrToInt,
-                          LLVM.API.LLVMAddrSpaceCast, LLVM.API.LLVMIntToPtr)
-                    val = LLVM.operands(val)[1]
-                    continue
-                end
-                break
-            end
-            if isa(val, LLVM.ConstantInt)
-                gv_to_value[LLVM.name(gv)] = reinterpret(Ptr{Cvoid}, convert(UInt, val))
-            end
+            break
         end
-
-        # Get compiled MIs via jl_get_llvm_mis
-        num_mis = Ref{Csize_t}(0)
-        @ccall jl_get_llvm_mis(native_code::Ptr{Cvoid}, num_mis::Ptr{Csize_t},
-                               C_NULL::Ptr{Cvoid})::Nothing
-        resize!(method_instances, num_mis[])
-        @ccall jl_get_llvm_mis(native_code::Ptr{Cvoid}, num_mis::Ptr{Csize_t},
-                               method_instances::Ptr{Cvoid})::Nothing
-
-        code_instances = Core.CodeInstance[]
-        for mi in method_instances
-            ci = GPUCompiler.ci_cache_lookup(cache, mi, job.world, job.world)
-            ci === nothing && continue
-            llvm_func_idx = Ref{Int32}(-1)
-            llvm_specfunc_idx = Ref{Int32}(-1)
-            ccall(:jl_get_function_id, Nothing,
-                  (Ptr{Cvoid}, Any, Ptr{Int32}, Ptr{Int32}),
-                  native_code, ci, llvm_func_idx, llvm_specfunc_idx)
-            llvm_func_idx[] == -1 && continue
-            push!(code_instances, ci)
+        if isa(val, LLVM.ConstantInt)
+            gv_to_value[LLVM.name(gv)] = reinterpret(Ptr{Cvoid}, convert(UInt, val))
         end
-        unique!(code_instances)
-
-        resize!(method_instances, length(code_instances))
-        for (i, ci) in enumerate(code_instances)
-            method_instances[i] = ci.def::Core.MethodInstance
-        end
-
-        compiled = Dict()
-        for (ci, mi) in zip(code_instances, method_instances)
-            llvm_func_idx = Ref{Int32}(-1)
-            llvm_specfunc_idx = Ref{Int32}(-1)
-            ccall(:jl_get_function_id, Nothing,
-                  (Ptr{Cvoid}, Any, Ptr{Int32}, Ptr{Int32}),
-                  native_code, ci, llvm_func_idx, llvm_specfunc_idx)
-            @assert llvm_func_idx[] != -1 || llvm_specfunc_idx[] != -1
-
-            llvm_func = if llvm_func_idx[] >= 1
-                ref = ccall(:jl_get_llvm_function, LLVM.API.LLVMValueRef,
-                            (Ptr{Cvoid}, UInt32), native_code, llvm_func_idx[]-1)
-                @assert ref != C_NULL
-                LLVM.name(LLVM.Function(ref))
-            else
-                nothing
-            end
-
-            llvm_specfunc = if llvm_specfunc_idx[] >= 1
-                ref = ccall(:jl_get_llvm_function, LLVM.API.LLVMValueRef,
-                            (Ptr{Cvoid}, UInt32), native_code, llvm_specfunc_idx[]-1)
-                @assert ref != C_NULL
-                LLVM.name(LLVM.Function(ref))
-            else
-                nothing
-            end
-
-            haskey(compiled, mi) && continue
-            compiled[mi] = (; ci, func=llvm_func, specfunc=llvm_specfunc)
-        end
-
-        @assert haskey(compiled, job.source) "Entry function $(job.source) not in compiled output"
-
-        # Populate LLVM function metadata maps for use during finish_module!
-        empty!(_llvm_func_module_map)
-        empty!(_llvm_func_depth_map)
-        empty!(_llvm_func_mi_map)
-        empty!(_llvm_func_argtypes_map)
-        empty!(_llvm_func_noinline_set)
-        empty!(_mi_info_fallback_map)
-
-        # Build fallback map from populated CIs
-        for (ci, _src) in populated
-            mi = ci.def
-            isa(mi, Core.MethodInstance) || continue
-            method = mi.def
-            isa(method, Method) || continue
-            key = (String(method.name), String(method.file), Int(method.line))
-            haskey(_mi_info_fallback_map, key) && continue
-            _mi_info_fallback_map[key] = (string(method.module), mi)
-        end
-
-        # Build MI -> noinline map from CodeInfo.inlining
-        noinline_mis = IdDict{Core.MethodInstance, Bool}()
-        for (ci, src) in populated
-            if isdefined(src, :inlining) && src.inlining == 0x02
-                noinline_mis[ci.def::Core.MethodInstance] = true
-            end
-        end
-
-        for (mi, info) in compiled
-            method = mi.def
-            depth = get(depth_map, mi, 0)
-            mod_depth = get(mod_depth_map, mi, 0)
-
-            mod_name = isa(method, Method) ? string(method.module) : nothing
-            argtypes_str = _include_types[] ? _format_argtypes(mi) : nothing
-            is_noinline = haskey(noinline_mis, mi)
-
-            # Add module to Phase 2 tracking set
-            if isa(method, Method)
-                push!(_phase2_modules, method.module)
-            end
-
-            for llvm_name in (info.func, info.specfunc)
-                llvm_name === nothing && continue
-                # Store under both raw and sanitized names.
-                sanitized = replace(llvm_name, r"[^A-Za-z0-9]"=>"_")
-                for key in (llvm_name, sanitized)
-                    if mod_name !== nothing
-                        _llvm_func_module_map[key] = mod_name
-                    end
-                    _llvm_func_depth_map[key] = (depth, mod_depth)
-                    _llvm_func_mi_map[key] = mi
-                    if argtypes_str !== nothing
-                        _llvm_func_argtypes_map[key] = argtypes_str
-                    end
-                    if is_noinline
-                        push!(_llvm_func_noinline_set, key)
-                    end
-                end
-            end
-        end
-
-        # Second pass: fill metadata gaps for LLVM functions not in `compiled`.
-        for fn in LLVM.functions(llvm_mod)
-            llvm_name = LLVM.name(fn)
-            haskey(_llvm_func_module_map, llvm_name) && continue
-            LLVM.isdeclaration(fn) && continue
-            sp = LLVM.subprogram(fn)
-            sp === nothing && continue
-            funcname = LLVM.name(sp)
-            (funcname === nothing || isempty(funcname)) && continue
-            di_file = LLVM.file(sp)
-            filename = LLVM.filename(di_file)
-            (filename === nothing || isempty(filename) || filename == "none") && continue
-            line_num = LLVM.line(sp)
-            key = (funcname, basename(filename), line_num)
-            info = get(_mi_info_fallback_map, key, nothing)
-            info === nothing && continue
-            mod_name, mi = info
-            _llvm_func_module_map[llvm_name] = mod_name
-            _llvm_func_mi_map[llvm_name] = mi
-            _llvm_func_depth_map[llvm_name] = (get(depth_map, mi, 0), get(mod_depth_map, mi, 0))
-            if _include_types[]
-                _llvm_func_argtypes_map[llvm_name] = _format_argtypes(mi)
-            end
-        end
-
-        return llvm_mod, compiled, gv_to_value
     end
+
+    # Map each compiled MI to its CI and LLVM function names. A CI with no
+    # generic-ABI entry (`func`) was not compiled into this module.
+    code_instances = Core.CodeInstance[]
+    for mi in emitted.method_instances
+        ci = GPUCompiler.ci_cache_lookup(cache, mi, job.world, job.world)
+        ci === nothing && continue
+        func, _ = _llvm_names_for_ci(native_code, ci)
+        func === nothing && continue
+        push!(code_instances, ci)
+    end
+    unique!(code_instances)
+
+    compiled = Dict()
+    for ci in code_instances
+        mi = ci.def::Core.MethodInstance
+        haskey(compiled, mi) && continue
+        func, specfunc = _llvm_names_for_ci(native_code, ci)
+        compiled[mi] = (; ci, func, specfunc)
+    end
+
+    @assert haskey(compiled, job.source) "Entry function $(job.source) not in compiled output"
+
+    # Populate LLVM function metadata maps for use during finish_module!
+    _reset_metadata!()
+
+    # Build fallback map from populated CIs
+    for (ci, _src) in populated
+        mi = ci.def
+        isa(mi, Core.MethodInstance) || continue
+        method = mi.def
+        isa(method, Method) || continue
+        key = (String(method.name), String(method.file), Int(method.line))
+        haskey(_mi_info_fallback_map, key) && continue
+        _mi_info_fallback_map[key] = mi
+    end
+
+    # Build MI -> noinline map from CodeInfo.inlining
+    noinline_mis = IdDict{Core.MethodInstance, Bool}()
+    for (ci, src) in populated
+        if isdefined(src, :inlining) && src.inlining == 0x02
+            noinline_mis[ci.def::Core.MethodInstance] = true
+        end
+    end
+
+    for (mi, info) in compiled
+        method = mi.def
+        depth = (get(depth_map, mi, 0), get(mod_depth_map, mi, 0))
+        is_noinline = haskey(noinline_mis, mi)
+
+        # Add module to Phase 2 tracking set
+        if isa(method, Method)
+            push!(_phase2_modules, method.module)
+        end
+
+        for llvm_name in (info.func, info.specfunc)
+            llvm_name === nothing && continue
+            # Store under both raw and sanitized names.
+            sanitized = replace(llvm_name, r"[^A-Za-z0-9]"=>"_")
+            for key in (llvm_name, sanitized)
+                _register_llvm_function!(key, mi; depth, noinline=is_noinline)
+            end
+        end
+    end
+
+    # Second pass: fill metadata gaps for LLVM functions not in `compiled`.
+    for fn in LLVM.functions(llvm_mod)
+        llvm_name = LLVM.name(fn)
+        haskey(_llvm_func_module_map, llvm_name) && continue
+        LLVM.isdeclaration(fn) && continue
+        sp = LLVM.subprogram(fn)
+        sp === nothing && continue
+        funcname = LLVM.name(sp)
+        (funcname === nothing || isempty(funcname)) && continue
+        di_file = LLVM.file(sp)
+        filename = LLVM.filename(di_file)
+        (filename === nothing || isempty(filename) || filename == "none") && continue
+        line_num = LLVM.line(sp)
+        key = (funcname, basename(filename), line_num)
+        mi = get(_mi_info_fallback_map, key, nothing)
+        mi === nothing && continue
+        _register_llvm_function!(llvm_name, mi;
+                                 depth=(get(depth_map, mi, 0), get(mod_depth_map, mi, 0)))
+    end
+
+    return llvm_mod, compiled, gv_to_value
 end
 
 # ============================================================================
