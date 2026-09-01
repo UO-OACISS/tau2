@@ -83,7 +83,10 @@ if [ "$scriptname" == "tau_julia" ] ; then
   default_tags="julia,MPI"
 fi
 
-julia_backend=classic
+# Julia instrumentation backend: "llvm" (default, TAUProfileLLVM) or
+# "legacy" (AbstractInterpreter rewriter, TAUProfile).
+julia_backend=llvm
+julia_backend_explicit=false
 
 if tau-config | grep -q 'TAUARCH=craycnl' 2>/dev/null ; then
   on_craycnl=true
@@ -174,6 +177,10 @@ if [ $python_wrapper = "true" ] ; then
 if [ $python_module_name = "pstubs" ] ; then
   echo "        -tau-python-filter=<\"filename\"> name of selective measurement JSON file"
 fi
+fi
+if [ $julia_wrapper = "true" ] ; then
+  echo "        -julia-llvm   Use the LLVM-plugin Julia instrumentation backend (default)"
+  echo "        -julia-legacy Use the legacy AbstractInterpreter Julia backend (requires a TAU build with -julia-legacy)"
 fi
   echo "        -adios2       Write output to ADIOS2 archive"
   echo "        -adios2_trace Write trace output to ADIOS2 archive"
@@ -480,9 +487,16 @@ for arg in "$@" ; do
   else
     case $arg in
       -julia-llvm)
-        # Select the LLVM backend. Consume the flag (no save_arg) so it is not
-        # forwarded to julia.
+        # Select the LLVM backend (the default). Consume the flag (no
+        # save_arg) so it is not forwarded to julia.
         julia_backend=llvm
+        julia_backend_explicit=true
+        shift
+        ;;
+      -julia-legacy|-julia-ai)
+        # Select the legacy AbstractInterpreter backend.
+        julia_backend=legacy
+        julia_backend_explicit=true
         shift
         ;;
       -vv)
@@ -1858,12 +1872,26 @@ fi
     fi
     retval=$?
   elif $julia_wrapper ; then
-      if [ "$julia_backend" = "llvm" ]; then julia_pkg=TAUProfileLLVM; else julia_pkg=TAUProfile; fi
-      backend_env="$BASEDIR/lib/$theBinding/$julia_pkg"
+      # The LLVM backend lives in TAUProfileLLVM/, the legacy backend in
+      # TAUProfile/. Both export a module named TAUProfile.
+      llvm_env="$BASEDIR/lib/$theBinding/TAUProfileLLVM"
+      legacy_env="$BASEDIR/lib/$theBinding/TAUProfile"
+      if [ "$julia_backend" = "llvm" -a ! -d "$llvm_env" -a -d "$legacy_env" \
+           -a "$julia_backend_explicit" = "false" ]; then
+          # Older -julia builds only installed the legacy backend.
+          echo "tau_julia: WARNING: LLVM backend not found at $llvm_env; falling back to the legacy backend." 1>&2
+          echo "  Rebuild TAU with -julia to install the LLVM backend." 1>&2
+          julia_backend=legacy
+      fi
+      if [ "$julia_backend" = "llvm" ]; then julia_pkg=TAUProfileLLVM; backend_env="$llvm_env"; else julia_pkg=TAUProfile; backend_env="$legacy_env"; fi
       tau_depot="$BASEDIR/lib/$theBinding/julia_depot"
       if [ ! -d "$backend_env" ]; then
           echo "tau_julia: ERROR: $julia_pkg not found at $backend_env." 1>&2
-          [ "$julia_backend" = "llvm" ] && echo "  Build TAU with -julia-llvm to enable the LLVM backend." 1>&2
+          if [ "$julia_backend" = "llvm" ]; then
+              echo "  Build TAU with -julia to install the LLVM backend." 1>&2
+          else
+              echo "  Build TAU with -julia_legacy to install the legacy AbstractInterpreter backend." 1>&2
+          fi
           exit 1
       fi
       $dryrun export JULIA_LOAD_PATH=":$backend_env${JULIA_LOAD_PATH:+:$JULIA_LOAD_PATH}"

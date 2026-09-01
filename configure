@@ -802,8 +802,8 @@ usage() {
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-pythonlibrary=<library> ......... Specify name of Python library file."
     echo "                                   e.g. libpython3.10.so"
-    echo "-julia ......................... Install Julia instrumentation library."
-    echo "-julia-llvm ............... Install Julia LLVM instrumentation library."
+    echo "-julia ..................... Install Julia LLVM instrumentation library."
+    echo "-julia_legacy ....................... Also install legacy Julia backend."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
     echo "-mpit ............................... Enable MPI-T profiling interface."
     echo "-starpu[=<dir>] ................................ Enable StarPU support."
@@ -1013,8 +1013,8 @@ for arg in "$@"; do
         echo "-pythoninc=<dir> ........ Specify location of Python include directory."
         echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
         echo "-pythonlibrary=<library> ......... Specify name of Python library file."
-        echo "-julia ......................... Install Julia instrumentation library."
-        echo "-julia-llvm ............... Install Julia LLVM instrumentation library."
+        echo "-julia .................... Install Julia LLVM instrumentation library."
+        echo "-julia_legacy ...................... Also install legacy Julia backend."
         echo "-starpu[=<dir>] ................................ Enable StarPU support."
         echo "-phiprof ................................... Activate Phiprof bindings."
         echo "-llvm_cc   Compiler to build TAU LLVM selective instrumentation plugin."
@@ -1239,7 +1239,7 @@ extradir=
 extrashlibopts=
 pthread=no
 julia=no
-julia_llvm=no
+julia_legacy=no
 suppress_pthread_create_wrapper=no
 tbb=no
 papithread=no
@@ -1743,13 +1743,14 @@ for arg in "$@"; do
             shift
             ;;
 
-        -julia)
+        -julia|-julia-llvm)
             julia=yes
             shift
             ;;
 
-        -julia-llvm)
-            julia_llvm=yes
+        -julia_legacy|-julia_ai)
+            # Additionally build the legacy AbstractInterpreter backend.
+            julia_legacy=yes
             julia=yes
             shift
             ;;
@@ -5339,9 +5340,9 @@ if [ $julia = yes ] ; then
     tauoptions="${tauoptions}-julia"
 fi
 
-if [ $julia_llvm = yes ] ; then
-    fixmakeargs="$fixmakeargs JULIALLVM"
-    tauoptions="${tauoptions}-juliallvm"
+if [ $julia_legacy = yes ] ; then
+    fixmakeargs="$fixmakeargs JULIALEGACY"
+    tauoptions="${tauoptions}-julialegacy"
 fi
 
 if [ $gptl = yes ] ; then

@@ -33,6 +33,28 @@ which should be used in place of the Julia interpreter. Using `tau_julia` will p
 TAUProfile.jl module in the $JULIA_LOAD path and enable Julia's use of Intel JIT events to support
 sampling.
 
+Instrumentation backends
+------------------------
+
+TAU provides two implementations of the TAUProfile module. Both expose the same
+API, so the examples below run unchanged on either one:
+
+    - LLVM plugin (default). Instruments Julia code at the LLVM IR level using
+      GPUCompiler.jl and LLVM.jl. It is faster to instrument and works with
+      CUDA.jl and other GPU packages. Built by `./configure -julia`.
+
+    - Legacy AbstractInterpreter rewriter. The original implementation, which
+      rewrites Julia IR through a custom AbstractInterpreter. It is not built
+      unless TAU is configured with `-julia_legacy`. It is slower to instrument
+      and is less compatible with GPU packages, but requires no dependencies.
+
+`tau_julia` uses the LLVM backend by default. To use the legacy backend, pass
+`-julia-legacy` before the `--` separator and include the `julialegacy` tag:
+
+    tau_julia -julia-legacy -T ittnotify,julia,julialegacy,pthread -- --project=. ./src/RewriteInst.jl
+
+`-julia-llvm` explicitly selects the default LLVM backend.
+
 -----------------------------------------------------
 
 Example 1: Manual Instrumentation

@@ -1484,11 +1484,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      JULIA)
-	echo NOTE: Building Julia wrapper
+	echo NOTE: Building Julia wrapper \(LLVM-plugin backend\)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
-     JULIALLVM)
-	echo NOTE: Building Julia LLVM wrapper
+     JULIALEGACY)
+	echo NOTE: Building legacy Julia AbstractInterpreter wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      GPTL)
