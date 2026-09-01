@@ -46,11 +46,17 @@
 #include <unistd.h>
 
 
+#define DISPATH_MAP_MAX_SIZE 128
 
 //Map to identify kernels and some of their information, GPU side
 using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
 using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_symbol_data_t>;
 kernel_symbol_map_t           client_kernels   = {};
+
+// Map to sort the kernel dispatches map[<time,stream>]=dispath_info
+// We also need a mutex for the map
+static std::map<std::pair<uint64_t, uint64_t>, rocprofiler_callback_tracing_kernel_dispatch_data_t> kernel_time_stream_map;
+static std::mutex kernel_dispatch_map_mutex;
 
 
 //Map to identify kernels and some of their information, CPU side
