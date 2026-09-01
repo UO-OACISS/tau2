@@ -11,9 +11,7 @@
 
 
 //Due to some bugs, PC Sampling is available, but does not work in older versions
-// do not compile for 4.0 and older
-//Also, the implementation is not fully done, in future releases, we may
-// be able to get stall reasons
+// do not compile for 0.4.0 and older
 #ifdef TAU_ENABLE_ROCPROFILERSDK_PC
     #if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0)
         #define SAMPLING_SDKPC

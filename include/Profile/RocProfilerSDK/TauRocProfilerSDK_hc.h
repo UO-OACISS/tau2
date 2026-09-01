@@ -30,6 +30,7 @@ typedef enum profile_metrics {
 
 
 #include <rocprofiler-sdk/version.h>
+#include <rocprofiler-sdk/registration.h>
 #include <rocprofiler-sdk/rocprofiler.h>
 
 //Map to identify kernels and some of their information
@@ -61,15 +62,12 @@ extern std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filena
     }
 #endif
 
-//Compatible Hardware Counter Profiling is only available at Rocprofiler 0.5 and newer versions
-#if (ROCPROFILER_VERSION_MINOR > 4) && (ROCPROFILER_VERSION_MAJOR == 0)
+//Compatible Hardware Counter Profiling is only available at Rocprofiler 1 and newer versions
+#if (ROCPROFILER_VERSION_MAJOR >= 1)
     #define PROFILE_SDKCOUNTERS
-#elif (ROCPROFILER_VERSION_MAJOR >= 1)
-    #define PROFILE_SDKCOUNTERS
-    #define PROFILE_SDKCOUNTERS_v1
 #else
-    #warning "This rocprofiler-sdk version is unable to profile hardware counters"
-#endif
+    #warning "This rocprofiler-sdk version is unable to profile hardware counters, minimum 1.0"
+#endif //(ROCPROFILER_VERSION_MAJOR >= 1)
 
 
 #ifdef PROFILE_SDKCOUNTERS
@@ -81,12 +79,9 @@ extern std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filena
 extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
 extern void register_kernel_dispatch(rocprofiler_kernel_dispatch_info_t dispatch_info, rocprofiler_timestamp_t end_timestamp);
 
-
-#ifndef PROFILE_SDKCOUNTERS_v1
-typedef rocprofiler_profile_config_id_t rocprofiler_counter_config_id_t;
-#endif
-
 #else // No PROFILE_SDKCOUNTERS
+typedef rocprofiler_profile_config_id_t rocprofiler_counter_config_id_t;
+
 
 int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer)
 { 
@@ -100,7 +95,7 @@ int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_co
   }
   return NO_METRICS;
 }
-void register_kernel_dispatch(register_kernel_dispatch(rocprofiler_kernel_dispatch_info_t dispatch_info, rocprofiler_timestamp_t end_timestamp))
+void register_kernel_dispatch(rocprofiler_counter_config_id_t dispatch_info, rocprofiler_timestamp_t end_timestamp)
 {}
 #endif //PROFILE_SDKCOUNTERS
 

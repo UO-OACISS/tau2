@@ -122,15 +122,9 @@ build_profile_for_agent(rocprofiler_agent_id_t       agent,
   // Create and return the profile
   
   rocprofiler_counter_config_id_t profile = {.handle = 0};
-  #ifdef PROFILE_SDKCOUNTERS_v1
   ROCPROFILER_CALL(rocprofiler_create_counter_config(
                        agent, collect_counters.data(), collect_counters.size(), &profile),
                    "Could not construct profile cfg");
-  #else
-  ROCPROFILER_CALL(rocprofiler_create_profile_config(
-                       agent, collect_counters.data(), collect_counters.size(), &profile),
-                   "Could not construct profile cfg");
-  #endif
 
   return profile;
 }
@@ -344,17 +338,6 @@ int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_co
   
   if( flag_metrics_set == PROFILE_METRICS )
 	{
-   
-    //#ifdef PROFILE_SDKCOUNTERS_v1
-    //  ROCPROFILER_CALL(rocprofiler_configure_buffer_dispatch_counting_service(
-    //                client_ctx, client_buffer, dispatch_callback, nullptr),
-    //                "Could not setup buffered service");
-    //#else
-		//  ROCPROFILER_CALL(rocprofiler_configure_buffered_dispatch_counting_service(
-    //                client_ctx, client_buffer, dispatch_callback, nullptr),
-    //                "Could not setup buffered service");
-    //#endif
-
       ROCPROFILER_CALL(rocprofiler_configure_callback_dispatch_counting_service(
                           client_ctx, dispatch_callback, nullptr, record_callback, nullptr),
                           "Could not setup counting service");

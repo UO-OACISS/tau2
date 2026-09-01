@@ -174,7 +174,7 @@ void TAU_process_sdk_sample_event(TauSDKSampleEvent sdk_sample_event)
   sample_list_mtx.unlock();
 }
 
-
+#ifdef SAMPLING_SDKPC_1
 
 std::string process_snapshot_sdk(rocprofiler_pc_sampling_snapshot_v0_t snapshot)
 {
@@ -394,6 +394,8 @@ std::string process_snapshot_sdk(rocprofiler_pc_sampling_snapshot_v0_t snapshot)
     ss_debug << std::endl;
     */
 }
+
+#endif //SAMPLING_SDKPC_1
 
 pc_sampling_buffer_id_vec_t* pc_buffer_ids = nullptr;
 void
