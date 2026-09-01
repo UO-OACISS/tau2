@@ -16,8 +16,7 @@ function tau_start(name::String)
         return  # Silently skip if library not loaded
     end
 
-    # TODO remove forcing task sticky when we can handle task migration ~nchaimov
-    current_task().sticky = true # workaround for lack of handling of task migration
+    _pin_task!()
     ccall((:Tau_start, _libTAU[]), Cvoid, (Cstring,), name)
 end
 
@@ -36,13 +35,19 @@ end
 
 """
     @tau(name::String, expr)
+    @tau(t::TauTimer, expr)
 
-Wrap an expression with a TAU timer named `name`, stopping it on normal and
-exceptional exit.
+Wrap an expression with a TAU timer, given by name or as a [`TauTimer`](@ref)
+handle, stopping it on normal and exceptional exit.
 
 # Example
 ```julia
 @tau "computation" begin
+    result = expensive_computation()
+end
+
+t = TauTimer("computation")
+@tau t begin
     result = expensive_computation()
 end
 ```

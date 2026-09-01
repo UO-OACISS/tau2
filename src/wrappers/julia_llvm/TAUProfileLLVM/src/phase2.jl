@@ -562,7 +562,7 @@ function _precompile_phase2!()
 
     # Phase 2 rewrite timing helpers (called from the typeinf hook post-freeze)
     precompile(_tau_start_phase2, ())
-    precompile(_tau_stop_phase2, (Ptr{Cvoid},))
+    precompile(_tau_stop_phase2, (TauTimer,))
 
     _dry_run_phase2_pipeline!()
 

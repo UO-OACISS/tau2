@@ -50,14 +50,20 @@ export tau_rewrite_and_call, trace_code, @tau_rewrite,
        tau_rewrite_time_phase2,
        enable_tracing!, disable_tracing!, tracing_enabled,
        tau_start, tau_stop, @tau, @tau_func, tau_rewrite,
-       tau_rewrite_deferred_contexts, tau_rewrite_set_min_complexity
+       tau_rewrite_deferred_contexts, tau_rewrite_set_min_complexity,
+       TauTimer, tau_get_calls, tau_get_child_calls,
+       tau_get_inclusive, tau_get_exclusive,
+       tau_counter_names, tau_function_names,
+       tau_set_name, tau_set_type, tau_set_group
 
 using LLVM
 using GPUCompiler
 import Core.Compiler as CC
 
 include("runtime.jl")
+include("tau_api.jl")
 include("config.jl")
+include("rewrite_timers.jl")
 include("metadata.jl")
 include("emit.jl")
 include("llvm_pass.jl")

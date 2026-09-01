@@ -1,5 +1,5 @@
 # ============================================================================
-# runtime.jl — libTAU binding, hook functions, task-layout offsets, utility timers
+# runtime.jl — libTAU binding, hook functions, task-layout offsets
 #
 # Part of the TAUProfile module (LLVM backend). Included from TAUProfile.jl;
 # see that file for the license and the include order.
@@ -127,64 +127,3 @@ function _init_runtime!()
         _install_julia_blas_hook(tau_lib)
     end
 end
-
-# Label for the rewrite timer.
-const _PHASE1_TIMER_NAME = ".TAU Julia Rewrite"
-
-# Profile group for the rewrite timer.
-const _PHASE1_TIMER_GROUP = "TAU_UTILITY"
-
-# Cached FunctionInfo* for the Phase 1 rewrite timer
-const _PHASE1_TIMER_HANDLE = Ref{Ptr{Cvoid}}(C_NULL)
-
-# Get-or-create a TAU_UTILITY timer FunctionInfo for `name`.
-function _ensure_util_timer!(handleref::Ref{Ptr{Cvoid}}, name::String)
-    if handleref[] == C_NULL
-        grp = ccall((:Tau_get_profile_group, _libTAU[]), Culong, (Cstring,),
-                    _PHASE1_TIMER_GROUP)
-        ccall((:Tau_profile_c_timer, _libTAU[]), Cvoid,
-              (Ptr{Ptr{Cvoid}}, Cstring, Cstring, Culong, Cstring),
-              handleref, name, "", grp, _PHASE1_TIMER_GROUP)
-    end
-    return handleref[]
-end
-
-# Start a cached TAU_UTILITY timer on the (pinned) current thread.
-function _tau_start_util_timer(handleref::Ref{Ptr{Cvoid}}, name::String)
-    isempty(_libTAU[]) && return C_NULL
-    current_task().sticky = true
-    handle = _ensure_util_timer!(handleref, name)
-    handle == C_NULL && return C_NULL
-    tid = ccall((:Tau_get_thread, _libTAU[]), Cint, ())
-    ccall((:Tau_start_timer, _libTAU[]), Cvoid, (Ptr{Cvoid}, Cint, Cint), handle, 0, tid)
-    return handle
-end
-
-# Stop a TAU_UTILITY timer by handle on the current thread.
-function _tau_stop_util_timer(handle::Ptr{Cvoid})
-    (handle == C_NULL || isempty(_libTAU[])) && return
-    tid = ccall((:Tau_get_thread, _libTAU[]), Cint, ())
-    ccall((:Tau_stop_timer, _libTAU[]), Cvoid, (Ptr{Cvoid}, Cint), handle, tid)
-    nothing
-end
-
-# --- Phase 1 rewrite timer ---
-_tau_start_rewrite() = (_tau_start_util_timer(_PHASE1_TIMER_HANDLE, _PHASE1_TIMER_NAME); nothing)
-_tau_stop_rewrite()  = _tau_stop_util_timer(_PHASE1_TIMER_HANDLE[])
-
-# --- Phase 2 rewrite timer ---
-const _PHASE2_TIMER_NAME = ".TAU Julia Phase 2 Rewrite"
-
-# Cached FunctionInfo* for the :separate-mode Phase 2 timer.
-const _PHASE2_TIMER_HANDLE = Ref{Ptr{Cvoid}}(C_NULL)
-
-# Start the Phase 2 timer per _phase2_timing_mode.
-function _tau_start_phase2()::Ptr{Cvoid}
-    mode = _phase2_timing_mode[]
-    mode === :off && return C_NULL
-    return mode === :combined ?
-        _tau_start_util_timer(_PHASE1_TIMER_HANDLE, _PHASE1_TIMER_NAME) :
-        _tau_start_util_timer(_PHASE2_TIMER_HANDLE, _PHASE2_TIMER_NAME)
-end
-
-_tau_stop_phase2(handle::Ptr{Cvoid}) = _tau_stop_util_timer(handle)
