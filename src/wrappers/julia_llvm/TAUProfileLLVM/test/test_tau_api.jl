@@ -1,6 +1,7 @@
 #=
 test_tau_api.jl — direct TAU API bindings (tau_api.jl): handle-based timers,
-profile readback, user events, metadata, dynamic timers.
+profile readback, user events, metadata, dynamic timers, runtime control,
+mid-run dumps and snapshots.
 
 The tests can run with or without TAU_JULIA_LIB. Without it, every call is
 a no-op; with it, actual TAU calls are made and the readback functions let us 
@@ -23,11 +24,16 @@ const _API_SYMBOLS = (
     :TauEvent, :tau_event, :tau_context_event,
     :tau_metadata, :tau_context_metadata,
     :tau_dynamic_start, :tau_dynamic_stop,
+    :tau_enable_instrumentation, :tau_disable_instrumentation,
+    :tau_enable_group, :tau_disable_group,
+    :tau_enable_all_groups, :tau_disable_all_groups,
+    :tau_dump, :tau_snapshot, :tau_exit,
 )
 
 # Run `body` (Julia source) in a fresh process with cwd = a temp dir. Return
-# the concatenated contents of the profile.* files TAU wrote at exit and
-# everything the process printed to stderr.
+# the concatenated contents of the profile.* files TAU wrote at exit,
+# everything the process printed to stderr, and the contents of any other
+# file the run left in the directory (mid-run dumps, snapshots), by name.
 function _run_of(body::String)
     mktempdir() do dir
         script = joinpath(dir, "run.jl")
@@ -36,10 +42,13 @@ function _run_of(body::String)
         errbuf = IOBuffer()
         run(pipeline(Cmd(`$(Base.julia_cmd()) --startup-file=no --project=$projdir $script`; dir=dir);
                      stderr=errbuf))
-        profs = filter(f -> startswith(f, "profile."), readdir(dir))
+        files = readdir(dir)
+        profs = filter(f -> startswith(f, "profile."), files)
         @test !isempty(profs)
         content = join(read(joinpath(dir, p), String) for p in profs)
-        (content, String(take!(errbuf)))
+        others = Dict(f => read(joinpath(dir, f), String)
+                      for f in files if !(f in profs) && f != "run.jl")
+        (content, String(take!(errbuf)), others)
     end
 end
 
@@ -77,6 +86,13 @@ _profile_of(body::String) = first(_run_of(body))
         @test_throws ArgumentError tau_dynamic_stop(" ")
     end
 
+    @testset "group toggles, dump and snapshot reject empty names in both modes" begin
+        @test_throws ArgumentError tau_enable_group("")
+        @test_throws ArgumentError tau_disable_group(" ")
+        @test_throws ArgumentError tau_dump("")
+        @test_throws ArgumentError tau_snapshot(" ")
+    end
+
     if !_TAU_OK
         @testset "no-op sentinels without libTAU" begin
             t = TauTimer("jtapi_noop")
@@ -103,6 +119,18 @@ _profile_of(body::String) = first(_run_of(body))
             @test tau_context_metadata("jtapi_noop_meta", "v") === nothing
             @test tau_dynamic_start("jtapi_noop_dyn") === nothing
             @test tau_dynamic_stop("jtapi_noop_dyn") === nothing
+            @test tau_disable_instrumentation() === nothing
+            @test tau_enable_instrumentation() === nothing
+            @test tau_disable_group("TAU_USER") === nothing
+            @test tau_enable_group("TAU_USER") === nothing
+            @test tau_disable_all_groups() === nothing
+            @test tau_enable_all_groups() === nothing
+            @test tau_dump() === nothing
+            @test tau_dump("jtapi_noop_dump") === nothing
+            @test tau_snapshot("jtapi_noop_snap") === nothing
+            @test tau_exit("jtapi_noop_exit") === nothing
+            # Nothing was written: no libTAU, no files.
+            @test !any(f -> startswith(f, "jtapi_noop_dump."), readdir())
         end
     else
         @testset "start/stop on a handle counts calls" begin
@@ -313,6 +341,137 @@ _profile_of(body::String) = first(_run_of(body))
                 """)
             @test occursin(".TAU Julia Rewrite", content)
             @test occursin(r"\"\.TAU Julia Rewrite\"[^\n]*GROUP=\"TAU_UTILITY\"", content)
+        end
+
+        @testset "timers inside a disabled-instrumentation window are not counted" begin
+            t = TauTimer("jtapi_disabled_handle")
+            try
+                @test tau_disable_instrumentation() === nothing
+                tau_start(t); tau_stop(t)
+                tau_start("jtapi_disabled_name"); tau_stop("jtapi_disabled_name")
+            finally
+                @test tau_enable_instrumentation() === nothing
+            end
+            @test tau_get_calls(t) == 0
+            @test tau_get_calls(TauTimer("jtapi_disabled_name")) == 0
+            tau_start(t); tau_stop(t)
+            @test tau_get_calls(t) == 1
+        end
+
+        @testset "disabled-window timers are absent from the profile" begin
+            content = _profile_of("""
+                tau_disable_instrumentation()
+                @tau "jtapi_warm_only" begin 1 + 1 end
+                tau_enable_instrumentation()
+                @tau "jtapi_measured" begin 1 + 1 end
+                """)
+            @test !occursin("jtapi_warm_only", content)
+            @test occursin("\"jtapi_measured\" 1 0 ", content)
+        end
+
+        @testset "disabling instrumentation around the compiling call drops the warmup" begin
+            content = _profile_of("""
+                @noinline _jtapi_warm(x) = x * 2 + 1
+                tau_disable_instrumentation()
+                tau_rewrite_and_call(_jtapi_warm, 1.0)
+                tau_enable_instrumentation()
+                tau_rewrite_and_call(_jtapi_warm, 2.0)
+                """)
+            # The callee ran twice but only the second, measured, call counts.
+            @test occursin(r"\"Main\._jtapi_warm \[[^\]]*\]\" 1 0 ", content)
+        end
+
+        @testset "group toggles by name suppress and restore timers" begin
+            t = TauTimer("jtapi_grouped"; group="JTAPI_GROUP")
+            named = TauTimer("jtapi_grouped_user")   # default group TAU_USER
+            try
+                @test tau_disable_group("JTAPI_GROUP") === nothing
+                tau_start(t); tau_stop(t)
+                # Other groups keep running.
+                tau_start(named); tau_stop(named)
+                tau_start("jtapi_grouped_by_name"); tau_stop("jtapi_grouped_by_name")
+            finally
+                @test tau_enable_group("JTAPI_GROUP") === nothing
+            end
+            @test tau_get_calls(t) == 0
+            @test tau_get_calls(named) == 1
+            @test tau_get_calls(TauTimer("jtapi_grouped_by_name")) == 1
+            tau_start(t); tau_stop(t)
+            @test tau_get_calls(t) == 1
+
+            # Name-based timers (tau_start(name), @tau "name") live in TAU_USER
+            # too, so disabling that group covers them as well as handles.
+            try
+                tau_disable_group("TAU_USER")
+                tau_start(named); tau_stop(named)
+                tau_start("jtapi_grouped_by_name"); tau_stop("jtapi_grouped_by_name")
+            finally
+                tau_enable_group("TAU_USER")
+            end
+            @test tau_get_calls(named) == 1
+            @test tau_get_calls(TauTimer("jtapi_grouped_by_name")) == 1
+        end
+
+        @testset "all-groups toggles" begin
+            t = TauTimer("jtapi_all_groups")
+            u = TauTimer("jtapi_all_groups_util"; group="TAU_UTILITY")
+            try
+                @test tau_disable_all_groups() === nothing
+                tau_start(t); tau_stop(t)
+                tau_start(u); tau_stop(u)
+            finally
+                @test tau_enable_all_groups() === nothing
+            end
+            @test tau_get_calls(t) == 0
+            @test tau_get_calls(u) == 0
+            tau_start(t); tau_stop(t)
+            tau_start(u); tau_stop(u)
+            @test tau_get_calls(t) == 1
+            @test tau_get_calls(u) == 1
+        end
+
+        @testset "tau_dump writes files mid-run" begin
+            _, _, others = _run_of("""
+                t = TauTimer("jtapi_before_dump")
+                tau_start(t); tau_stop(t)
+                tau_dump()
+                tau_dump("jtapi_pre")
+                u = TauTimer("jtapi_after_dump")
+                tau_start(u); tau_stop(u)
+                """)
+            dumps = filter(f -> startswith(f, "dump."), collect(keys(others)))
+            pres  = filter(f -> startswith(f, "jtapi_pre."), collect(keys(others)))
+            @test length(dumps) == 1
+            @test length(pres) == 1
+            for f in vcat(dumps, pres)
+                # The dump is a complete profile, in the usual format, of what
+                # had run at the time it was taken.
+                @test startswith(others[f], r"\d+ templated_functions_MULTI_TIME\n")
+                @test occursin("\"jtapi_before_dump\" 1 0 ", others[f])
+                @test !occursin("jtapi_after_dump", others[f])
+            end
+        end
+
+        @testset "tau_snapshot records a named snapshot" begin
+            _, _, others = _run_of("""
+                t = TauTimer("jtapi_snapped")
+                tau_start(t); tau_stop(t)
+                tau_snapshot("jtapi_snap")
+                """)
+            snaps = filter(f -> startswith(f, "snapshot."), collect(keys(others)))
+            @test length(snaps) == 1
+            @test occursin("<name>jtapi_snap</name>", others[first(snaps)])
+            @test occursin("jtapi_snapped", others[first(snaps)])
+        end
+
+        @testset "tau_exit flushes the profile before exit()" begin
+            content = _profile_of("""
+                t = TauTimer("jtapi_exit_timer")
+                tau_start(t); tau_stop(t)
+                tau_exit("jtapi done")
+                exit(0)
+                """)
+            @test occursin("\"jtapi_exit_timer\" 1 0 ", content)
         end
     end
 end

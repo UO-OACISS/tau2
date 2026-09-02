@@ -389,3 +389,150 @@ function tau_dynamic_stop(name::AbstractString)
     ccall((:Tau_dynamic_stop, _libTAU[]), Cvoid, (Cstring, Cint), name, 0)
     nothing
 end
+
+# ============================================================================
+# Runtime control
+# ============================================================================
+
+"""
+    tau_enable_instrumentation()
+    tau_disable_instrumentation()
+
+Turn all TAU timers on or off at runtime. While instrumentation is disabled,
+timer starts and stops -- from `tau_start`, `TauTimer` handles, dynamic timers
+and the hooks inserted by `tau_rewrite_and_call` alike -- are ignored, so a
+region run in that window is not reflected in the profile. Equivalent to
+`TAU_ENABLE_INSTRUMENTATION` and `TAU_DISABLE_INSTRUMENTATION` in C.
+
+A timer started while instrumentation is enabled must also be stopped while
+it is enabled, or TAU will report an overlapping timer error.
+
+# Example
+```julia
+tau_disable_instrumentation()
+tau_rewrite_and_call(solve, n)      # not measured
+tau_enable_instrumentation()
+tau_rewrite_and_call(solve, n)      # measured
+```
+"""
+function tau_enable_instrumentation()
+    _tau_active() || return nothing
+    ccall((:Tau_enable_instrumentation, _libTAU[]), Cvoid, ())
+    nothing
+end
+
+@doc (@doc tau_enable_instrumentation)
+function tau_disable_instrumentation()
+    _tau_active() || return nothing
+    ccall((:Tau_disable_instrumentation, _libTAU[]), Cvoid, ())
+    nothing
+end
+
+"""
+    tau_enable_group(group)
+    tau_disable_group(group)
+
+Enable or disable every timer in the profile group named `group`.
+Starts and stops of a timer in a disabled group are ignored. Equivalent to
+`TAU_ENABLE_GROUP_NAME` and `TAU_DISABLE_GROUP_NAME` in C.
+"""
+function tau_enable_group(group::AbstractString)
+    isempty(strip(group)) && throw(ArgumentError("group name must not be empty"))
+    _tau_active() || return nothing
+    ccall((:Tau_enable_group_name, _libTAU[]), Culong, (Cstring,), group)
+    nothing
+end
+
+@doc (@doc tau_enable_group)
+function tau_disable_group(group::AbstractString)
+    isempty(strip(group)) && throw(ArgumentError("group name must not be empty"))
+    _tau_active() || return nothing
+    ccall((:Tau_disable_group_name, _libTAU[]), Culong, (Cstring,), group)
+    nothing
+end
+
+"""
+    tau_enable_all_groups()
+    tau_disable_all_groups()
+
+Enable or disable every profile group at once. Equivalent to
+`TAU_ENABLE_ALL_GROUPS` and `TAU_DISABLE_ALL_GROUPS` in C.
+"""
+function tau_enable_all_groups()
+    _tau_active() || return nothing
+    ccall((:Tau_enable_all_groups, _libTAU[]), Culong, ())
+    nothing
+end
+
+@doc (@doc tau_enable_all_groups)
+function tau_disable_all_groups()
+    _tau_active() || return nothing
+    ccall((:Tau_disable_all_groups, _libTAU[]), Culong, ())
+    nothing
+end
+
+# ============================================================================
+# Output
+# ============================================================================
+
+"""
+    tau_dump()
+    tau_dump(prefix)
+
+Write the profile collected so far without waiting for the program to end.
+`tau_dump()` writes the current thread's data to `dump.<node>.<context>.<thread>`
+in the profile directory; `tau_dump(prefix)` writes every thread's data to
+`<prefix>.<node>.<context>.<thread>`. The files have the same format as the
+`profile.*` files written at exit, which are still written. Equivalent to
+`TAU_DB_DUMP` and `TAU_DB_DUMP_PREFIX` in C.
+"""
+function tau_dump()
+    _tau_active() || return nothing
+    _pin_task!()
+    ccall((:Tau_dump, _libTAU[]), Cint, ())
+    nothing
+end
+
+function tau_dump(prefix::AbstractString)
+    isempty(strip(prefix)) && throw(ArgumentError("dump prefix must not be empty"))
+    _tau_active() || return nothing
+    ccall((:Tau_dump_prefix, _libTAU[]), Cint, (Cstring,), prefix)
+    nothing
+end
+
+"""
+    tau_snapshot(name)
+
+Record a snapshot of the profile under `name`. Snapshots are written to
+`snapshot.<node>.<context>.<thread>` in the profile directory and can be
+compared against one another in ParaProf. Equivalent to
+`TAU_PROFILE_SNAPSHOT` in C.
+"""
+function tau_snapshot(name::AbstractString)
+    isempty(strip(name)) && throw(ArgumentError("snapshot name must not be empty"))
+    _tau_active() || return nothing
+    _pin_task!()
+    ccall((:Tau_profile_snapshot, _libTAU[]), Cvoid, (Cstring,), name)
+    nothing
+end
+
+"""
+    tau_exit(msg="Julia exit")
+
+Alert TAU to an exit call. Call it before a script ends with `exit()` or an
+error exit, so that any profiles or event traces are written to disk before
+quitting. Equivalent to `TAU_PROFILE_EXIT` in C.
+
+# Example
+```julia
+if !isfile(input)
+    tau_exit("input file missing")
+    exit(1)
+end
+```
+"""
+function tau_exit(msg::AbstractString="Julia exit")
+    _tau_active() || return nothing
+    ccall((:Tau_exit, _libTAU[]), Cvoid, (Cstring,), msg)
+    nothing
+end
