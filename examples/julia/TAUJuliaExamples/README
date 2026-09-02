@@ -90,7 +90,66 @@ tau_start() in the code.
 
 -----------------------------------------------------
 
-Example 2: Instrumentation Macros
+Example 2: Direct TAU API
+
+Beyond `tau_start` and `tau_stop`, TAUProfile.jl exposes a fruther subset of 
+TAU's C API as Julia functions, including functions for creation of  timer handles, 
+user events, metadata, dynamic timers, runtime enable/disable, profile dumps, and
+introspection functions that read timer data back while the script runs. 
+
+The file `APIExample.jl` runs a small Jacobi relaxation on a 2-D grid and
+instruments it by hand.
+
+Run it with:
+
+    tau_julia -T serial,julia,ittnotify,pthread -- --project=. ./src/APIExample.jl
+
+The script prints the readback before it exits:
+
+    jacobi_sweep! ran 10 times
+      inclusive TIME: 1311.0
+    open timer at top level: taupreload_main
+    checksum: 1198.7892246246338
+
+`pprof` then shows the handle timer with its type string,
+one entry per timestep, and the events:
+
+    pprof
+
+    NODE 0;CONTEXT 0;THREAD 0:
+    ---------------------------------------------------------------------------------------
+    %Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+                  msec   total msec                          usec/call
+    ---------------------------------------------------------------------------------------
+    100.0        0.735          949           1           1     949541 .TAU application
+     99.9          943          948           1           4     948806 taupreload_main
+      0.4            3            3           2           0       1671 pthread_create
+      0.2        0.363            1           1          10       1693 solve
+      0.1            1            1          10           0        131 jacobi_sweep! Float64 (Matrix, Matrix)
+      0.0        0.455        0.455           1           0        455 pthread_barrier_wait
+      0.0        0.006        0.146           1           1        146 step[0]
+      0.0        0.001        0.133           1           1        133 step[2]
+      0.0        0.001        0.133           1           1        133 step[3]
+
+    [...]
+
+    USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 0
+    ---------------------------------------------------------------------------------------
+    NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+    ---------------------------------------------------------------------------------------
+             2  4.095E+05  4.054E+05  4.074E+05       2054  Memory Footprint (VmRSS) (KB)
+             2  4.095E+05  4.054E+05  4.074E+05       2054  Memory Footprint (VmRSS) (KB) : taupreload_main
+
+    [...]
+
+             1    0.02403    0.02403    0.02403  4.657E-10  final residual
+             1    0.02403    0.02403    0.02403  4.657E-10  final residual : taupreload_main => solve
+            10       0.25    0.02403    0.07114    0.06624  residual
+    ---------------------------------------------------------------------------------------
+
+-----------------------------------------------------
+
+Example 3: Instrumentation Macros
 
 It is inconvenient to have to manually instrument the entry and every exit from functions.
 Julia itself provides profiling macros (albeit ones that use sampling rather than direct
@@ -136,7 +195,7 @@ This will generate a profile.0.0.0 file which you can view with `pprof`:
 
 -----------------------------------------------------
 
-Example 3: Sampling of Uninstrumented Code
+Example 4: Sampling of Uninstrumented Code
 
 Sampling can be used to profile unmodified code. Because Julia uses just-in-time
 compilation, compiling functions at runtime upon invocation once the argument
@@ -169,7 +228,7 @@ Run `pprof -a` to view the profile.
 
 -----------------------------------------------------
 
-Example 4: IR Rewriting
+Example 5: IR Rewriting
 
 For Python, TAU features a `tau_python` tool which allows for automatic
 profiling of all functions invoked by the Python interpreter using a profiling
@@ -246,7 +305,7 @@ as well as all library functions called.
 
 -----------------------------------------------------
 
-Example 5: MPI.jl
+Example 6: MPI.jl
 
 TAU can be used to profile multi-rank applications which use MPI.jl.
 
@@ -307,7 +366,7 @@ included in the profile.
 
 -----------------------------------------------------
 
-Example 6: CUDA Uninstrumented
+Example 7: CUDA Uninstrumented
 
 TAU can be used to profile Julia applications which use CUDA.jl.
 
@@ -335,7 +394,7 @@ This will collect profiles showing CUDA kernels collected through TAU's CUPTI su
 
 -----------------------------------------------------
 
-Example 7: CUDA IR Rewriting
+Example 8: CUDA IR Rewriting
 
 The file CUDA_RewriteInst.jl demonstrates using the `@tau_rewrite` macro with
 CUDA.jl code. It creates a GPU array, performs an element-wise `sin` operation
@@ -359,7 +418,7 @@ The example can be run with:
 
 -----------------------------------------------------
 
-Example 8: Selective Rewriting
+Example 9: Selective Rewriting
 
 The file RewriteSelective.jl demonstrates using `tau_rewrite_exclude_module` to
 prevent the IR rewriter from recursing into functions defined in the `Base`
@@ -379,7 +438,7 @@ The example can be run with:
 
 -----------------------------------------------------
 
-Example 9: Array Operations with IR Rewriting
+Example 10: Array Operations with IR Rewriting
 
 The file ArrayOps_RewriteInst.jl demonstrates using `@tau_rewrite` to profile
 code that performs array operations including random array generation,
@@ -401,7 +460,7 @@ The example can be run with:
 
 -----------------------------------------------------
 
-Example 10: Multi-threaded IR Rewriting
+Example 11: Multi-threaded IR Rewriting
 
 The file Threads_RewriteInst.jl demonstrates using `@tau_rewrite` to profile
 multi-threaded Julia code that uses `Base.Threads.@spawn` to distribute work

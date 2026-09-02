@@ -667,9 +667,9 @@ end
     tau_current_timer_name() -> Union{String, Nothing}
 
 Name of the innermost timer open on the calling thread. At the top level of
-a script this is TAU's `.TAU application` timer. Returns `nothing` when no
-timer is open or libTAU is not loaded. Equivalent to
-`TAU_QUERY_GET_CURRENT_EVENT` followed by `TAU_QUERY_GET_EVENT_NAME` in C.
+a script this is TAU's `.TAU application` timer, or `taupreload_main` under
+`tau_julia`. Returns `nothing` when no timer is open or libTAU is not loaded.
+Equivalent to `TAU_QUERY_GET_CURRENT_EVENT` followed by `TAU_QUERY_GET_EVENT_NAME` in C.
 """
 function tau_current_timer_name()
     _tau_active() || return nothing
@@ -681,10 +681,9 @@ end
     tau_parent_timer_name() -> Union{String, Nothing}
 
 Name of the timer enclosing the innermost one open on the calling thread.
-Returns `nothing` when the current timer is the outermost one (at the top
-level of a script, `.TAU application`), when no timer is open, or when libTAU
-is not loaded. Equivalent to `TAU_QUERY_GET_PARENT_EVENT` followed by
-`TAU_QUERY_GET_EVENT_NAME` in C.
+Returns `nothing` when the current timer is the outermost one
+(`.TAU application`), when no timer is open, or when libTAU is not loaded.
+Equivalent to `TAU_QUERY_GET_PARENT_EVENT` followed by `TAU_QUERY_GET_EVENT_NAME` in C.
 """
 function tau_parent_timer_name()
     _tau_active() || return nothing
