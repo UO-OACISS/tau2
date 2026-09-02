@@ -246,3 +246,104 @@ function tau_set_group(t::TauTimer, group::AbstractString)
     ccall((:Tau_profile_set_group_name, _libTAU[]), Cvoid, (Ptr{Cvoid}, Cstring), t.ptr, group)
     nothing
 end
+
+# ============================================================================
+# User events
+# ============================================================================
+
+"""
+    TauEvent(name)
+
+Handle to a TAU user event: an immutable wrapper around the `TauUserEvent`
+that TAU keeps for `name`. Equivalent to `TAU_REGISTER_EVENT(e, name)` in C.
+Use it with [`tau_event`](@ref) when the same event is triggered many times,
+to skip the name lookup on each trigger.
+
+TAU looks events up by name, so a second `TauEvent` with the same name refers
+to the same event.
+"""
+struct TauEvent
+    ptr::Ptr{Cvoid}   # TauUserEvent*
+end
+
+function TauEvent(name::AbstractString)
+    isempty(strip(name)) && throw(ArgumentError("event name must not be empty"))
+    _tau_active() || return TauEvent(C_NULL)
+    ptr = ccall((:Tau_get_userevent, _libTAU[]), Ptr{Cvoid}, (Cstring,), name)
+    return TauEvent(ptr)
+end
+
+_live(e::TauEvent) = _tau_active() && e.ptr != C_NULL
+
+"""
+    tau_event(name, value)
+    tau_event(e::TauEvent, value)
+
+Trigger the user event given by `name` or by handle `e` with `value`. TAU
+records the count, minimum, maximum, mean and standard deviation of the
+values an event is triggered with. Equivalent to `TAU_TRIGGER_EVENT` and
+`TAU_EVENT` in C.
+"""
+function tau_event(name::AbstractString, value::Real)
+    isempty(strip(name)) && throw(ArgumentError("event name must not be empty"))
+    _tau_active() || return nothing
+    _pin_task!()
+    ccall((:Tau_trigger_userevent, _libTAU[]), Cvoid, (Cstring, Cdouble), name, value)
+    nothing
+end
+
+function tau_event(e::TauEvent, value::Real)
+    _live(e) || return nothing
+    _pin_task!()
+    ccall((:Tau_userevent, _libTAU[]), Cvoid, (Ptr{Cvoid}, Cdouble), e.ptr, value)
+    nothing
+end
+
+"""
+    tau_context_event(name, value)
+
+Trigger the context event given by `name` with `value`. A context event is a
+user event whose recorded name is suffixed with the call path of the timers
+open when it is triggered, so the same event is reported separately for each
+context. Equivalent to `TAU_TRIGGER_CONTEXT_EVENT` in C.
+"""
+function tau_context_event(name::AbstractString, value::Real)
+    isempty(strip(name)) && throw(ArgumentError("event name must not be empty"))
+    _tau_active() || return nothing
+    _pin_task!()
+    ccall((:Tau_trigger_context_event, _libTAU[]), Cvoid, (Cstring, Cdouble), name, value)
+    nothing
+end
+
+# ============================================================================
+# Metadata
+# ============================================================================
+
+"""
+    tau_metadata(name, value)
+
+Record `value` under `name` in the profile's metadata block. Any `value` is
+accepted and stored as `string(value)`. Equivalent to `TAU_METADATA` in C.
+"""
+function tau_metadata(name::AbstractString, value)
+    isempty(strip(name)) && throw(ArgumentError("metadata name must not be empty"))
+    _tau_active() || return nothing
+    ccall((:Tau_metadata, _libTAU[]), Cvoid, (Cstring, Cstring), name, string(value))
+    nothing
+end
+
+"""
+    tau_context_metadata(name, value)
+
+Record `value` under `name`, attached to the timer that is open when the call
+is made, so the profile reports which timer instance it belongs to. Any
+`value` is accepted and stored as `string(value)`. Equivalent to
+`TAU_CONTEXT_METADATA` in C.
+"""
+function tau_context_metadata(name::AbstractString, value)
+    isempty(strip(name)) && throw(ArgumentError("metadata name must not be empty"))
+    _tau_active() || return nothing
+    _pin_task!()
+    ccall((:Tau_context_metadata, _libTAU[]), Cvoid, (Cstring, Cstring), name, string(value))
+    nothing
+end

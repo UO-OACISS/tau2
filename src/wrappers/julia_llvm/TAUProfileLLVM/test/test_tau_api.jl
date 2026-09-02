@@ -1,9 +1,10 @@
 #=
 test_tau_api.jl — direct TAU API bindings (tau_api.jl).
 
-Phase 1: handle-based timers and profile readback. Runs in both modes: without
-TAU_JULIA_LIB every call is a no-op returning its sentinel; with it the
-readback functions let us assert on TAU state in-process.
+Phase 1: handle-based timers and profile readback. Phase 2: user events and
+metadata. Runs in both modes: without TAU_JULIA_LIB every call is a no-op
+returning its sentinel; with it the readback functions let us assert on TAU
+state in-process, and exit-time profiles from a subprocess cover the rest.
 =#
 
 using TAUProfile
@@ -18,6 +19,8 @@ const _API_SYMBOLS = (
     :tau_get_inclusive, :tau_get_exclusive,
     :tau_counter_names, :tau_function_names,
     :tau_set_name, :tau_set_type, :tau_set_group,
+    :TauEvent, :tau_event, :tau_context_event,
+    :tau_metadata, :tau_context_metadata,
 )
 
 # Run `body` (Julia source) in a fresh process with cwd = a temp dir and
@@ -48,8 +51,17 @@ end
         @test_throws ArgumentError TauTimer("   ")
     end
 
-    @testset "TauTimer is a plain isbits handle" begin
+    @testset "TauTimer and TauEvent are plain isbits handles" begin
         @test isbitstype(TauTimer)
+        @test isbitstype(TauEvent)
+    end
+
+    @testset "events and metadata reject empty names in both modes" begin
+        @test_throws ArgumentError TauEvent("")
+        @test_throws ArgumentError tau_event("", 1.0)
+        @test_throws ArgumentError tau_context_event(" ", 1.0)
+        @test_throws ArgumentError tau_metadata("", "v")
+        @test_throws ArgumentError tau_context_metadata("", "v")
     end
 
     if !_TAU_OK
@@ -69,6 +81,13 @@ end
             @test tau_set_group(t, "TAU_IO") === nothing
             r = @tau t begin 1 + 1 end
             @test r == 2
+            e = TauEvent("jtapi_noop_evt")
+            @test e.ptr == C_NULL
+            @test tau_event(e, 1.0) === nothing
+            @test tau_event("jtapi_noop_evt", 1) === nothing
+            @test tau_context_event("jtapi_noop_evt", 1.0) === nothing
+            @test tau_metadata("jtapi_noop_meta", 42) === nothing
+            @test tau_context_metadata("jtapi_noop_meta", "v") === nothing
         end
     else
         @testset "start/stop on a handle counts calls (AC1.1, AC2.1)" begin
@@ -174,6 +193,55 @@ end
             @test occursin("\"jtapi_typed Float64 (Int)\"", content)
             @test occursin(r"\"jtapi_typed Float64 \(Int\)\"[^\n]*GROUP=\"TAU_UTILITY\"", content)
             @test occursin(r"\"jtapi_regrouped\"[^\n]*GROUP=\"TAU_IO\"", content)
+        end
+
+        @testset "user events by name and by handle (AC3.1, AC3.3)" begin
+            content = _profile_of("""
+                for v in (1.0, 3.0, 2.0)
+                    tau_event("jtapi_evt_name", v)
+                end
+                e = TauEvent("jtapi_evt_handle")
+                for v in (1, 3, 2)          # Integer values are accepted
+                    tau_event(e, v)
+                end
+                e2 = TauEvent("jtapi_evt_handle")
+                tau_event(e2, 2)             # same name -> same event
+                """)
+            # "name" numevents max min mean sumsqr
+            @test occursin("\"jtapi_evt_name\" 3 3 1 2 14\n", content)
+            @test occursin("\"jtapi_evt_handle\" 4 3 1 2 18\n", content)
+        end
+
+        @testset "context events carry the enclosing timer (AC3.2)" begin
+            content = _profile_of("""
+                t = TauTimer("jtapi_ctx_timer")
+                @tau t begin
+                    tau_context_event("jtapi_ctx_evt", 5.0)
+                end
+                tau_context_event("jtapi_ctx_evt_top", 1.0)
+                """)
+            @test occursin(r"\"jtapi_ctx_evt : [^\"\n]*jtapi_ctx_timer\" 1 5 5 5 25\n", content)
+            # At top level the context is the top-level timer.
+            @test occursin(r"\"jtapi_ctx_evt_top : \.TAU application\" 1 1 1 1 1\n", content)
+        end
+
+        @testset "metadata and context metadata (AC3.4, AC3.5)" begin
+            content = _profile_of("""
+                tau_metadata("jtapi_meta_str", "hello world")
+                tau_metadata("jtapi_meta_int", 42)
+                tau_metadata("jtapi_meta_float", 2.5)
+                t = TauTimer("jtapi_meta_timer")
+                @tau t begin
+                    tau_context_metadata("jtapi_ctx_meta", 7)
+                end
+                """)
+            @test occursin(r"<name>jtapi_meta_str</name>\s*<value>hello world</value>", content)
+            @test occursin(r"<name>jtapi_meta_int</name>\s*<value>42</value>", content)
+            @test occursin(r"<name>jtapi_meta_float</name>\s*<value>2\.5</value>", content)
+            # TAU writes the context as "name type"; with an empty type that
+            # leaves a trailing space inside the element.
+            @test occursin(r"<name>jtapi_ctx_meta</name>\s*<timer_context>jtapi_meta_timer\s*</timer_context>", content)
+            @test occursin(r"<name>jtapi_ctx_meta</name>[^\n]*?<value>7</value>", content)
         end
 
         @testset "rewrite timers still appear after moving onto TauTimer" begin
