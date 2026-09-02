@@ -3410,8 +3410,13 @@ static std::vector<FunctionInfo*> find_functions_by_substring(const std::string&
 }
 
 
-map<string, vector<int> *>& TheIterationMap() {
-  static map<string, vector<int> *> iterationMap;
+/* Per-thread iteration counters for dynamic timers, keyed by timer name. */
+struct IterationMap : public map<string, vector<int> *> {
+  std::mutex lock;
+  ~IterationMap() { Tau_destructor_trigger(); }
+};
+static IterationMap& TheIterationMap() {
+  static IterationMap iterationMap;
   return iterationMap;
 }
 
@@ -3679,17 +3684,26 @@ extern "C" void Tau_static_phase_stop(char const * name)
   Tau_stop_timer(fi, Tau_get_thread());
 }
 
-static vector<int> *getIterationList(char const * name) {
-  static std::mutex mtx;
-  //static map<string, int *> iterationMap;???
+/* Get the current iteration of dynamic timer `name` on thread `tid`, creating the
+ * counter at 0 on first use. If `advance` is set, the stored counter is
+ * incremented after being read. */
+static int getIterationCount(char const * name, int tid, bool advance) {
+  IterationMap& iterationMap = TheIterationMap();
+  std::lock_guard<std::mutex> lck(iterationMap.lock);
   string searchName(name);
-  map<string, vector<int> *>::iterator iit = TheIterationMap().find(searchName);
-  if (iit == TheIterationMap().end()) {
-    std::lock_guard<std::mutex> lck (mtx);
-    vector<int> *iterationList = new vector<int>;
-    TheIterationMap()[searchName] = iterationList;
+  IterationMap::iterator iit = iterationMap.find(searchName);
+  if (iit == iterationMap.end()) {
+    iit = iterationMap.insert(make_pair(searchName, new vector<int>)).first;
   }
-  return TheIterationMap()[searchName];
+  vector<int>& iterationList = *iit->second;
+  if (iterationList.size() <= (size_t)tid) {
+    iterationList.resize(tid + 1, 0);
+  }
+  int itcount = iterationList[tid];
+  if (advance) {
+    iterationList[tid]++;
+  }
+  return itcount;
 }
 
 /* isPhase argument is 1 for phase and 0 for timer */
@@ -3704,12 +3718,7 @@ extern "C" void Tau_dynamic_start(char const * name, int isPhase)
 #ifndef TAU_PROFILEPHASE
   isPhase = 0;
 #endif
-  vector<int> *iterationList = getIterationList(name);
-  int tid = RtsLayer::myThread();
-  while(iterationList->size()<=tid){
-     iterationList->push_back(0);
-  }
-  int itcount = (*iterationList)[tid];
+  int itcount = getIterationCount(name, RtsLayer::myThread(), false);
   const char * newName = Tau_append_iteration_to_name(itcount, name, strlen(name));
   string n(newName);
   free((void*)newName);
@@ -3728,13 +3737,7 @@ extern "C" void Tau_dynamic_stop(char const * name, int isPhase)
    * potentially construct a top level timer, which will recursively enter
    * this function. */
   static int do_this_once = Tau_init_initializeTAU();
-  vector<int> *iterationList = getIterationList(name);
-
-  int tid = RtsLayer::myThread();
-  int itcount = (*iterationList)[tid];
-
-  // increment the counter
-  (*iterationList)[tid]++;
+  int itcount = getIterationCount(name, RtsLayer::myThread(), true);
 
   char const * newName = Tau_append_iteration_to_name(itcount, name, strlen(name));
   string n(newName);
