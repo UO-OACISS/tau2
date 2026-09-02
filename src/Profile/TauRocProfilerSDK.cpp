@@ -82,9 +82,10 @@ callback_name_info              c_client_name_info = {};
 
 //Buffer for rocprofiler data
 rocprofiler_buffer_id_t       client_buffer    = {};
+
 extern void codeobj_tracing_callback(rocprofiler_callback_tracing_record_t record);
 extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
-
+extern void get_rocsdk_counters(rocprofiler_dispatch_id_t dispatch_id, int taskid, double curr_ts);
 
 //Map to identify the queue id given a stream id and device id
 static std::map<std::pair<uint64_t, uint64_t>, uint64_t> streamid_queueid_map;
@@ -93,7 +94,7 @@ static std::map<std::pair<uint64_t, uint64_t>, uint64_t> streamid_queueid_map;
 static std::map<uint64_t, double> streamid_kernel_map;
 
 //Use a mutex to avoid accessing the map by more than one thread
-std::mutex stream_queue_mtx;
+static std::mutex stream_queue_mtx;
 
 
 //------------------------------------------------------------------------------------------------
@@ -318,6 +319,7 @@ void tau_rocsdk_kernel_process( uint64_t cur_stream, rocprofiler_callback_tracin
 
   streamid_kernel_map[taskid] = end_ts;
   
+  task_name = "[ROCm kernel] " + task_name;
 
   Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, start_ts);
   //printf("KERNEL_s taskid %d %lf\n", taskid, Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, start_ts));
@@ -327,7 +329,7 @@ void tau_rocsdk_kernel_process( uint64_t cur_stream, rocprofiler_callback_tracin
   //printf("KERNEL_e taskid %d %lf\n", taskid, Tau_rocprofsdk_synchronized_gpu_timestamp(taskid, end_ts));
   TAU_STOP_TASK( task_name.c_str(), taskid);
 
-  dispatch_kernel_time[kd_data.dispatch_info.dispatch_id] = {taskid, end_sync_ts};
+  //dispatch_kernel_time[kd_data.dispatch_info.dispatch_id] = {taskid, end_sync_ts};
 
   void* ue = nullptr;
   std::string event_name;
@@ -363,6 +365,8 @@ void tau_rocsdk_kernel_process( uint64_t cur_stream, rocprofiler_callback_tracin
   event_name = "Grid size Z: " + task_name;
   Tau_get_context_userevent(&ue, event_name.c_str());
   TAU_CONTEXT_EVENT_THREAD_TS(ue, kd_data.dispatch_info.grid_size.z, taskid, end_sync_ts);
+
+  get_rocsdk_counters( kd_data.dispatch_info.dispatch_id, taskid, end_sync_ts);
 
   stream_queue_mtx.unlock();
     

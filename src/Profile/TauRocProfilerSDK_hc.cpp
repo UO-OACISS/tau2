@@ -8,11 +8,20 @@
 #ifdef PROFILE_SDKCOUNTERS
 
 
+
+struct tau_rocsdk_counter_event
+{
+  std::string counter_name;
+  double      counter_value;
+};
+
+static std::mutex counter_map_mtx;
+
 //Map to identify counters, there are times when an agent may have different id for a counter
 // so we use agent and counter ids as index
 static std::map<std::pair<uint64_t,uint64_t>, const char*> used_counter_id_map ;
 
-
+static std::map<rocprofiler_dispatch_id_t, std::vector<tau_rocsdk_counter_event>> counter_map_event;
 
 
 std::unordered_map<uint64_t, std::vector<rocprofiler_counter_record_dimension_info_t>>**
@@ -241,24 +250,25 @@ void record_callback(rocprofiler_dispatch_counting_service_data_t dispatch_data,
                 rocprofiler_user_data_t /* user_data */,
                 void* callback_data_args)
 {
-  std::string c_kernel_name = demangle_kernel_rocprofsdk(
+  counter_map_mtx.lock();
+  std::string c_kernel_name = "[ROCM kernel] " +demangle_kernel_rocprofsdk(
                             client_kernels.at(dispatch_data.dispatch_info.kernel_id).kernel_name, 1);
   
-  auto [taskid, end_ts]= dispatch_kernel_time[dispatch_data.dispatch_info.dispatch_id];
-  dispatch_kernel_time.erase(dispatch_data.dispatch_info.dispatch_id);
+  //auto [taskid, end_ts]= dispatch_kernel_time[dispatch_data.dispatch_info.dispatch_id];
+  //dispatch_kernel_time.erase(dispatch_data.dispatch_info.dispatch_id);
 
-  //std::stringstream ss;
-  //std::cout << "Dispatch_Id= " << dispatch_data.dispatch_info.dispatch_id
+  // std::cout << "Dispatch_Id= " << dispatch_data.dispatch_info.dispatch_id
   // << ", Kernel_id= " << dispatch_data.dispatch_info.kernel_id
-  // << ", Kernel name= " << kernel_name
+  // << ", Kernel name= " << c_kernel_name
   // << ", Corr_Id= " << dispatch_data.correlation_id.internal 
   // << ", Task Id= " << taskid
   // << ", Timestamp= " << end_ts
   // << ", Records: " << record_count << ": " << std::endl;
 
+  std::vector<tau_rocsdk_counter_event> cur_event_vector;
   for(size_t i = 0; i < record_count; ++i)
   {
-    std::stringstream task_name;
+    std::string task_name;
   
     //ss << "\n\n";
     auto record = record_data[i];
@@ -268,31 +278,54 @@ void record_callback(rocprofiler_dispatch_counting_service_data_t dispatch_data,
     //ss << "  (Counter_Id: " << counter_id.handle
     //    << " Counter name: " << used_counter_id_map[{dispatch_data.dispatch_info.agent_id.handle, counter_id.handle}]
     //    << " Dimensions: [";
-    task_name << used_counter_id_map[{dispatch_data.dispatch_info.agent_id.handle, counter_id.handle}];
-    task_name << " " << c_kernel_name;
+    task_name += used_counter_id_map[{dispatch_data.dispatch_info.agent_id.handle, counter_id.handle}];
+    task_name += " " + c_kernel_name;
     int dim_num = 0;
     for(auto& dim : counter_dimensions(counter_id))
     {
       size_t pos = 0;
       rocprofiler_query_record_dimension_position(record.id, dim.id, &pos);
       if(dim_num == 0)
-        task_name <<  "[";
+        task_name +=  "[";
       else
-        task_name <<  ", ";
-      task_name << dim.name << " " << pos;
+        task_name +=  ", ";
+      task_name += dim.name;
+      task_name += " ";
+      task_name += std::to_string(pos);
       dim_num++;
       //ss << "{" << dim.name << ": " << pos << "},";
     }
-    task_name <<  "]";
+    task_name +=  "]";
     //ss << "] Value [D]: " << record.counter_value << "),";
-    void* ue = nullptr;
-    Tau_get_context_userevent(&ue, task_name.str().c_str());
-    TAU_CONTEXT_EVENT_THREAD_TS(ue, record.counter_value, taskid, end_ts);
-
+    //void* ue = nullptr;
+    //std::cout << task_name << " " << record.counter_value << std::endl;
+    //Tau_get_context_userevent(&ue, task_name.str().c_str());
+    //TAU_CONTEXT_EVENT_THREAD_TS(ue, record.counter_value, taskid, end_ts);
+    tau_rocsdk_counter_event cur_event = { .counter_name = task_name, .counter_value = record.counter_value};
+    cur_event_vector.push_back(cur_event);
   }
-
+  counter_map_event[dispatch_data.dispatch_info.dispatch_id] = cur_event_vector;
   //std::cout << "\n[" << __FUNCTION__ << "] " << ss.str() << "\n\n";
+  counter_map_mtx.unlock();
+}
 
+void get_rocsdk_counters(rocprofiler_dispatch_id_t dispatch_id, int taskid, double curr_ts)
+{
+  counter_map_mtx.lock();
+  auto it = counter_map_event.find(dispatch_id);
+  if (it != counter_map_event.end()) 
+  {
+    for (const auto& value : it->second) {
+      void* ue = nullptr;
+      //std::cout << value.counter_name << std::endl;
+      Tau_get_context_userevent(&ue, value.counter_name.c_str());
+      TAU_CONTEXT_EVENT_THREAD_TS(ue, value.counter_value, taskid, curr_ts);
+
+    }
+
+    counter_map_event.erase(it);
+  }
+  counter_map_mtx.unlock();
 }
 
 void dispatch_callback(rocprofiler_dispatch_counting_service_data_t dispatch_data,
