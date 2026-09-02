@@ -1,5 +1,5 @@
 #=
-test_api_parity.jl — Phase 3 unified public-API tests.
+test_api_parity.jl — public-API parity with the classic backend.
 
 Verifies the LLVM backend exposes the same public surface as the classic
 TAUProfile so an identical user script runs on either backend.
@@ -18,7 +18,7 @@ const _PARITY_SYMBOLS = (
 const _TAU_LIB = get(ENV, "TAU_JULIA_LIB", "")
 const _TAU_OK  = !isempty(_TAU_LIB) && isfile(_TAU_LIB) && TAUProfile._tau_active()
 
-@testset "Phase 3 API parity" begin
+@testset "API parity with the classic backend" begin
     @testset "C.3 symbols defined and exported" begin
         exported = Set(names(TAUProfile))
         for s in _PARITY_SYMBOLS

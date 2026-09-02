@@ -1,10 +1,11 @@
 #=
-test_tau_api.jl — direct TAU API bindings (tau_api.jl).
+test_tau_api.jl — direct TAU API bindings (tau_api.jl): handle-based timers,
+profile readback, user events, metadata, dynamic timers.
 
-Phase 1: handle-based timers and profile readback. Phase 2: user events and
-metadata. Runs in both modes: without TAU_JULIA_LIB every call is a no-op
-returning its sentinel; with it the readback functions let us assert on TAU
-state in-process, and exit-time profiles from a subprocess cover the rest.
+The tests can run with or without TAU_JULIA_LIB. Without it, every call is
+a no-op; with it, actual TAU calls are made and the readback functions let us 
+make assertions on TAU state in-process, and exit-time profiles from a
+subprocess cover the rest.
 =#
 
 using TAUProfile
@@ -21,23 +22,30 @@ const _API_SYMBOLS = (
     :tau_set_name, :tau_set_type, :tau_set_group,
     :TauEvent, :tau_event, :tau_context_event,
     :tau_metadata, :tau_context_metadata,
+    :tau_dynamic_start, :tau_dynamic_stop,
 )
 
-# Run `body` (Julia source) in a fresh process with cwd = a temp dir and
-# return the concatenated contents of the profile.* files TAU wrote at exit.
-function _profile_of(body::String)
+# Run `body` (Julia source) in a fresh process with cwd = a temp dir. Return
+# the concatenated contents of the profile.* files TAU wrote at exit and
+# everything the process printed to stderr.
+function _run_of(body::String)
     mktempdir() do dir
         script = joinpath(dir, "run.jl")
         write(script, "using TAUProfile\n" * body)
         projdir = dirname(dirname(pathof(TAUProfile)))
-        run(Cmd(`$(Base.julia_cmd()) --startup-file=no --project=$projdir $script`; dir=dir))
+        errbuf = IOBuffer()
+        run(pipeline(Cmd(`$(Base.julia_cmd()) --startup-file=no --project=$projdir $script`; dir=dir);
+                     stderr=errbuf))
         profs = filter(f -> startswith(f, "profile."), readdir(dir))
         @test !isempty(profs)
-        join(read(joinpath(dir, p), String) for p in profs)
+        content = join(read(joinpath(dir, p), String) for p in profs)
+        (content, String(take!(errbuf)))
     end
 end
 
-@testset "TAU API bindings: handle timers and readback" begin
+_profile_of(body::String) = first(_run_of(body))
+
+@testset "TAU API bindings" begin
     @testset "symbols defined and exported" begin
         exported = Set(names(TAUProfile))
         for s in _API_SYMBOLS
@@ -64,6 +72,11 @@ end
         @test_throws ArgumentError tau_context_metadata("", "v")
     end
 
+    @testset "dynamic timers reject an empty name in both modes" begin
+        @test_throws ArgumentError tau_dynamic_start("")
+        @test_throws ArgumentError tau_dynamic_stop(" ")
+    end
+
     if !_TAU_OK
         @testset "no-op sentinels without libTAU" begin
             t = TauTimer("jtapi_noop")
@@ -88,9 +101,11 @@ end
             @test tau_context_event("jtapi_noop_evt", 1.0) === nothing
             @test tau_metadata("jtapi_noop_meta", 42) === nothing
             @test tau_context_metadata("jtapi_noop_meta", "v") === nothing
+            @test tau_dynamic_start("jtapi_noop_dyn") === nothing
+            @test tau_dynamic_stop("jtapi_noop_dyn") === nothing
         end
     else
-        @testset "start/stop on a handle counts calls (AC1.1, AC2.1)" begin
+        @testset "start/stop on a handle counts calls" begin
             t = TauTimer("jtapi_handle_timer")
             @test t.ptr != C_NULL
             n0 = tau_get_calls(t)
@@ -102,7 +117,7 @@ end
             @test tau_get_calls(t) == n0 + 3
         end
 
-        @testset "same name resolves to the same FunctionInfo (AC1.4)" begin
+        @testset "same name resolves to the same FunctionInfo" begin
             a = TauTimer("jtapi_dup")
             b = TauTimer("jtapi_dup")
             @test a.ptr == b.ptr
@@ -112,7 +127,7 @@ end
             @test tau_get_calls(b) == 2
         end
 
-        @testset "@tau accepts a handle and stops it on exceptional exit (AC1.3)" begin
+        @testset "@tau accepts a handle and stops it on exceptional exit" begin
             t = TauTimer("jtapi_macro")
             r = @tau t begin 40 + 2 end
             @test r == 42
@@ -130,7 +145,7 @@ end
             @test tau_get_child_calls(t) == 1
         end
 
-        @testset "child calls count nested timers (AC2.1)" begin
+        @testset "child calls count nested timers" begin
             outer = TauTimer("jtapi_outer")
             inner = TauTimer("jtapi_inner")
             tau_start(outer)
@@ -142,7 +157,7 @@ end
             @test tau_get_child_calls(inner) == 0
         end
 
-        @testset "inclusive and exclusive values, one per counter (AC2.2)" begin
+        @testset "inclusive and exclusive values, one per counter" begin
             counters = tau_counter_names()
             @test !isempty(counters)
             @test all(!isempty, counters)
@@ -182,7 +197,7 @@ end
             @test tau_set_group(t, "TAU_UTILITY") === nothing
         end
 
-        @testset "type and group land in the profile (AC1.2)" begin
+        @testset "type and group land in the profile" begin
             content = _profile_of("""
                 t = TauTimer("jtapi_typed"; type="Float64 (Int)", group="TAU_UTILITY")
                 tau_start(t); tau_stop(t)
@@ -195,7 +210,7 @@ end
             @test occursin(r"\"jtapi_regrouped\"[^\n]*GROUP=\"TAU_IO\"", content)
         end
 
-        @testset "user events by name and by handle (AC3.1, AC3.3)" begin
+        @testset "user events by name and by handle" begin
             content = _profile_of("""
                 for v in (1.0, 3.0, 2.0)
                     tau_event("jtapi_evt_name", v)
@@ -212,7 +227,7 @@ end
             @test occursin("\"jtapi_evt_handle\" 4 3 1 2 18\n", content)
         end
 
-        @testset "context events carry the enclosing timer (AC3.2)" begin
+        @testset "context events carry the enclosing timer" begin
             content = _profile_of("""
                 t = TauTimer("jtapi_ctx_timer")
                 @tau t begin
@@ -225,7 +240,7 @@ end
             @test occursin(r"\"jtapi_ctx_evt_top : \.TAU application\" 1 1 1 1 1\n", content)
         end
 
-        @testset "metadata and context metadata (AC3.4, AC3.5)" begin
+        @testset "metadata and context metadata" begin
             content = _profile_of("""
                 tau_metadata("jtapi_meta_str", "hello world")
                 tau_metadata("jtapi_meta_int", 42)
@@ -242,6 +257,52 @@ end
             # leaves a trailing space inside the element.
             @test occursin(r"<name>jtapi_ctx_meta</name>\s*<timer_context>jtapi_meta_timer\s*</timer_context>", content)
             @test occursin(r"<name>jtapi_ctx_meta</name>[^\n]*?<value>7</value>", content)
+        end
+
+        @testset "dynamic timers get one entry per iteration" begin
+            K = 3
+            for _ in 1:K
+                @test tau_dynamic_start("jtapi_dyn") === nothing
+                @test tau_dynamic_stop("jtapi_dyn") === nothing
+            end
+            fnames = tau_function_names()
+            for i in 0:K-1
+                @test "jtapi_dyn[$i]" in fnames
+                # A handle looked up by the suffixed name is the iteration's
+                # own timer, and it ran exactly once.
+                @test tau_get_calls(TauTimer("jtapi_dyn[$i]")) == 1
+            end
+            @test !("jtapi_dyn[$K]" in fnames)
+            @test !("jtapi_dyn" in fnames)
+        end
+
+        @testset "dynamic timers nest and land in the profile" begin
+            content = _profile_of("""
+                for _ in 1:2
+                    tau_dynamic_start("jtapi_dyn_outer")
+                    tau_dynamic_start("jtapi_dyn_inner")
+                    tau_dynamic_stop("jtapi_dyn_inner")
+                    tau_dynamic_stop("jtapi_dyn_outer")
+                end
+                """)
+            # "name" calls subrs excl incl profilecalls GROUP="..."; TAU
+            # writes dynamic timers with an empty group name.
+            for i in 0:1
+                @test occursin("\"jtapi_dyn_outer[$i]\" 1 1 ", content)
+                @test occursin("\"jtapi_dyn_inner[$i]\" 1 0 ", content)
+            end
+        end
+
+        @testset "unmatched dynamic stop reports TAU's message, no Julia error" begin
+            content, err = _run_of("""
+                tau_dynamic_stop("jtapi_dyn_never_started")
+                tau_dynamic_start("jtapi_dyn_after")
+                tau_dynamic_stop("jtapi_dyn_after")
+                """)
+            @test occursin("Routine \"jtapi_dyn_never_started\" does not exist", err)
+            @test !occursin("jtapi_dyn_never_started[", content)
+            # The process kept going and wrote a normal profile.
+            @test occursin("\"jtapi_dyn_after[0]\" 1 0 ", content)
         end
 
         @testset "rewrite timers still appear after moving onto TauTimer" begin

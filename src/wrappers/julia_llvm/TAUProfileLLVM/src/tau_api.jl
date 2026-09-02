@@ -347,3 +347,45 @@ function tau_context_metadata(name::AbstractString, value)
     ccall((:Tau_context_metadata, _libTAU[]), Cvoid, (Cstring, Cstring), name, string(value))
     nothing
 end
+
+# ============================================================================
+# Dynamic timers
+# ============================================================================
+
+"""
+    tau_dynamic_start(name)
+
+Start a new dynamic timer -- a timer whose name is `name` with the iteration
+count appended, so that each start/stop pair is reported as its own entry
+(`name[0]`, `name[1]`, ...). Equivalent to `TAU_DYNAMIC_TIMER_START` in C.
+
+# Example
+```julia
+for step in 1:nsteps
+    tau_dynamic_start("timestep")
+    advance!(state)
+    tau_dynamic_stop("timestep")
+end
+```
+"""
+function tau_dynamic_start(name::AbstractString)
+    isempty(strip(name)) && throw(ArgumentError("timer name must not be empty"))
+    _tau_active() || return nothing
+    _pin_task!()
+    ccall((:Tau_dynamic_start, _libTAU[]), Cvoid, (Cstring, Cint), name, 0)
+    nothing
+end
+
+"""
+    tau_dynamic_stop(name)
+
+Stop the dynamic timer for the current iteration of `name` and advance the
+iteration count. Equivalent to `TAU_DYNAMIC_TIMER_STOP` in C.
+"""
+function tau_dynamic_stop(name::AbstractString)
+    isempty(strip(name)) && throw(ArgumentError("timer name must not be empty"))
+    _tau_active() || return nothing
+    _pin_task!()
+    ccall((:Tau_dynamic_stop, _libTAU[]), Cvoid, (Cstring, Cint), name, 0)
+    nothing
+end

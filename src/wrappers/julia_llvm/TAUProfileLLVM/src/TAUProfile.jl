@@ -56,7 +56,8 @@ export tau_rewrite_and_call, trace_code, @tau_rewrite,
        tau_counter_names, tau_function_names,
        tau_set_name, tau_set_type, tau_set_group,
        TauEvent, tau_event, tau_context_event,
-       tau_metadata, tau_context_metadata
+       tau_metadata, tau_context_metadata,
+       tau_dynamic_start, tau_dynamic_stop
 
 using LLVM
 using GPUCompiler
