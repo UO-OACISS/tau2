@@ -1,0 +1,6 @@
+[deps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+GPUCompiler = "61eb1bfa-7361-4325-ad38-22787b887f55"
+LLVM = "929cbde3-209d-540e-8aea-75f648917ca0"
+TAUProfile = "33839dc5-b46e-4b71-8209-33fe77383070"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
