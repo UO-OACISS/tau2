@@ -1,7 +1,8 @@
 #=
 test_tau_api.jl — direct TAU API bindings (tau_api.jl): handle-based timers,
 profile readback, user events, metadata, dynamic timers, runtime control,
-mid-run dumps and snapshots.
+mid-run dumps and snapshots, node/thread identity, memory tracking, and
+current/parent timer queries.
 
 The tests can run with or without TAU_JULIA_LIB. Without it, every call is
 a no-op; with it, actual TAU calls are made and the readback functions let us 
@@ -28,12 +29,18 @@ const _API_SYMBOLS = (
     :tau_enable_group, :tau_disable_group,
     :tau_enable_all_groups, :tau_disable_all_groups,
     :tau_dump, :tau_snapshot, :tau_exit,
+    :tau_set_node, :tau_get_node, :tau_get_thread,
+    :tau_track_memory_here, :tau_track_memory_footprint_here,
+    :tau_track_memory_headroom_here,
+    :tau_enable_tracking_memory, :tau_disable_tracking_memory,
+    :tau_current_timer_name, :tau_parent_timer_name,
 )
 
 # Run `body` (Julia source) in a fresh process with cwd = a temp dir. Return
 # the concatenated contents of the profile.* files TAU wrote at exit,
-# everything the process printed to stderr, and the contents of any other
-# file the run left in the directory (mid-run dumps, snapshots), by name.
+# everything the process printed to stderr, the contents of any other file
+# the run left in the directory (mid-run dumps, snapshots), by name, and the
+# names of the profile.* files themselves.
 function _run_of(body::String)
     mktempdir() do dir
         script = joinpath(dir, "run.jl")
@@ -48,7 +55,7 @@ function _run_of(body::String)
         content = join(read(joinpath(dir, p), String) for p in profs)
         others = Dict(f => read(joinpath(dir, f), String)
                       for f in files if !(f in profs) && f != "run.jl")
-        (content, String(take!(errbuf)), others)
+        (content, String(take!(errbuf)), others, profs)
     end
 end
 
@@ -93,6 +100,10 @@ _profile_of(body::String) = first(_run_of(body))
         @test_throws ArgumentError tau_snapshot(" ")
     end
 
+    @testset "tau_set_node rejects a negative node in both modes" begin
+        @test_throws ArgumentError tau_set_node(-1)
+    end
+
     if !_TAU_OK
         @testset "no-op sentinels without libTAU" begin
             t = TauTimer("jtapi_noop")
@@ -129,8 +140,21 @@ _profile_of(body::String) = first(_run_of(body))
             @test tau_dump("jtapi_noop_dump") === nothing
             @test tau_snapshot("jtapi_noop_snap") === nothing
             @test tau_exit("jtapi_noop_exit") === nothing
-            # Nothing was written: no libTAU, no files.
             @test !any(f -> startswith(f, "jtapi_noop_dump."), readdir())
+            @test tau_set_node(0) === nothing
+            @test tau_get_node() == -1
+            @test tau_get_thread() == -1
+            @test tau_track_memory_here() === nothing
+            @test tau_track_memory_footprint_here() === nothing
+            @test tau_track_memory_headroom_here() === nothing
+            @test tau_enable_tracking_memory() === nothing
+            @test tau_disable_tracking_memory() === nothing
+            @test tau_current_timer_name() === nothing
+            @test tau_parent_timer_name() === nothing
+            @tau t begin
+                @test tau_current_timer_name() === nothing
+                @test tau_parent_timer_name() === nothing
+            end
         end
     else
         @testset "start/stop on a handle counts calls" begin
@@ -472,6 +496,73 @@ _profile_of(body::String) = first(_run_of(body))
                 exit(0)
                 """)
             @test occursin("\"jtapi_exit_timer\" 1 0 ", content)
+        end
+
+        @testset "node and thread ids match TAU's view" begin
+            # The test process never sets a node, so TAU reports -1 for it.
+            @test tau_get_node() == -1
+            tid = tau_get_thread()
+            @test tid isa Int
+            @test tid >= 0
+        end
+
+        @testset "tau_set_node names the profile files" begin
+            _, _, _, profs = _run_of("""
+                tau_set_node(7)
+                t = TauTimer("jtapi_node_timer")
+                tau_start(t); tau_stop(t)
+                @assert tau_get_node() == 7
+                """)
+            @test profs == ["profile.7.0.0"]
+        end
+
+        @testset "current and parent timer names" begin
+            @test tau_current_timer_name() == ".TAU application"
+            @test tau_parent_timer_name() === nothing
+            @tau "jtapi_q_outer" begin
+                @test tau_current_timer_name() == "jtapi_q_outer"
+                @test tau_parent_timer_name() == ".TAU application"
+                @tau "jtapi_q_inner" begin
+                    @test tau_current_timer_name() == "jtapi_q_inner"
+                    @test tau_parent_timer_name() == "jtapi_q_outer"
+                end
+                @test tau_current_timer_name() == "jtapi_q_outer"
+            end
+            h = TauTimer("jtapi_q_handle")
+            @tau h begin
+                @test tau_current_timer_name() == "jtapi_q_handle"
+            end
+            @test tau_current_timer_name() == ".TAU application"
+        end
+
+        @testset "memory samples become TAU user events" begin
+            content = _profile_of("""
+                tau_track_memory_here()
+                tau_track_memory_footprint_here()
+                tau_track_memory_headroom_here()
+                t = TauTimer("jtapi_mem_timer")
+                @tau t begin
+                    tau_track_memory_footprint_here()
+                end
+                """)
+            @test occursin(r"\"Heap Memory Used \(KB\)\" 1 ", content)
+            @test occursin(r"\"Memory Footprint \(VmRSS\) \(KB\)\" 2 ", content)
+            @test occursin(r"\"Peak Memory Usage Resident Set Size \(VmHWM\) \(KB\)\" 2 ", content)
+            @test occursin(r"\"Memory Headroom Left \(MB\)\" 1 ", content)
+            # The footprint sample is a context event, so the one taken inside
+            # the timer is also reported against it.
+            @test occursin(r"\"Memory Footprint \(VmRSS\) \(KB\) : [^\"\n]*jtapi_mem_timer\" 1 ", content)
+        end
+
+        @testset "disabling memory tracking suppresses samples" begin
+            content = _profile_of("""
+                tau_track_memory_here()
+                tau_disable_tracking_memory()
+                tau_track_memory_here()
+                tau_enable_tracking_memory()
+                tau_track_memory_here()
+                """)
+            @test occursin(r"\"Heap Memory Used \(KB\)\" 2 ", content)
         end
     end
 end

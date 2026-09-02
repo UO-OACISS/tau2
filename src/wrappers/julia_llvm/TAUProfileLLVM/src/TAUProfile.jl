@@ -61,7 +61,12 @@ export tau_rewrite_and_call, trace_code, @tau_rewrite,
        tau_enable_instrumentation, tau_disable_instrumentation,
        tau_enable_group, tau_disable_group,
        tau_enable_all_groups, tau_disable_all_groups,
-       tau_dump, tau_snapshot, tau_exit
+       tau_dump, tau_snapshot, tau_exit,
+       tau_set_node, tau_get_node, tau_get_thread,
+       tau_track_memory_here, tau_track_memory_footprint_here,
+       tau_track_memory_headroom_here,
+       tau_enable_tracking_memory, tau_disable_tracking_memory,
+       tau_current_timer_name, tau_parent_timer_name
 
 using LLVM
 using GPUCompiler

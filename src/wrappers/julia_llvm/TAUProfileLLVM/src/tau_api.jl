@@ -536,3 +536,161 @@ function tau_exit(msg::AbstractString="Julia exit")
     ccall((:Tau_exit, _libTAU[]), Cvoid, (Cstring,), msg)
     nothing
 end
+
+# ============================================================================
+# Node and thread identity
+# ============================================================================
+
+"""
+    tau_set_node(node)
+
+Set the node id of the executing process for profiling and tracing. Tasks
+are identified by node, context and thread ids, with profile files being
+named `profile.<node>.<context>.<thread>` accordingly. TAU sets the node
+itself under MPI. Equivalent to `TAU_PROFILE_SET_NODE` in C.
+"""
+function tau_set_node(node::Integer)
+    node < 0 && throw(ArgumentError("node id must not be negative"))
+    _tau_active() || return nothing
+    ccall((:Tau_set_node, _libTAU[]), Cvoid, (Cint,), node)
+    nothing
+end
+
+"""
+    tau_get_node() -> Int
+
+Node id of the executing process, as set by [`tau_set_node`](@ref) or by
+TAU's MPI support; `-1` when no node has been set or libTAU is not loaded.
+Equivalent to `TAU_PROFILE_GET_NODE` in C.
+"""
+function tau_get_node()
+    _tau_active() || return -1
+    return Int(ccall((:Tau_get_node, _libTAU[]), Cint, ()))
+end
+
+"""
+    tau_get_thread() -> Int
+
+TAU's id for the calling OS thread; `-1` when libTAU is not loaded.
+Equivalent to `TAU_PROFILE_GET_THREAD` in C.
+"""
+function tau_get_thread()
+    _tau_active() || return -1
+    _pin_task!()
+    return Int(_tau_thread())
+end
+
+# ============================================================================
+# Memory tracking
+# ============================================================================
+
+"""
+    tau_track_memory_here()
+
+Record the heap memory in use at this point as the user event
+`Heap Memory Used (KB)`. Equivalent to `TAU_TRACK_MEMORY_HERE` in C.
+"""
+function tau_track_memory_here()
+    _tau_active() || return nothing
+    _pin_task!()
+    ccall((:Tau_track_memory_here, _libTAU[]), Cvoid, ())
+    nothing
+end
+
+"""
+    tau_track_memory_footprint_here()
+
+Record the process's resident set size and its peak, together with its
+thread count and context switches, as the context events
+`Memory Footprint (VmRSS) (KB)`, `Peak Memory Usage Resident Set Size (VmHWM) (KB)`,
+`Threads`, `Voluntary Context Switches` and `Non-voluntary Context Switches`.
+Equivalent to `TAU_TRACK_MEMORY_FOOTPRINT_HERE` in C.
+"""
+function tau_track_memory_footprint_here()
+    _tau_active() || return nothing
+    _pin_task!()
+    ccall((:Tau_track_memory_rss_and_hwm_here, _libTAU[]), Cvoid, ())
+    nothing
+end
+
+"""
+    tau_track_memory_headroom_here()
+
+Record how much more memory the process could allocate at this point as the
+context event `Memory Headroom Left (MB)`. Equivalent to
+`TAU_TRACK_MEMORY_HEADROOM_HERE` in C.
+"""
+function tau_track_memory_headroom_here()
+    _tau_active() || return nothing
+    _pin_task!()
+    ccall((:Tau_track_memory_headroom_here, _libTAU[]), Cvoid, ())
+    nothing
+end
+
+"""
+    tau_enable_tracking_memory()
+    tau_disable_tracking_memory()
+
+Turn heap memory tracking on or off. While it is off,
+[`tau_track_memory_here`](@ref) records nothing. It is on by default.
+Equivalent to `TAU_ENABLE_TRACKING_MEMORY` and `TAU_DISABLE_TRACKING_MEMORY`
+in C.
+"""
+function tau_enable_tracking_memory()
+    _tau_active() || return nothing
+    ccall((:Tau_enable_tracking_memory, _libTAU[]), Cvoid, ())
+    nothing
+end
+
+@doc (@doc tau_enable_tracking_memory)
+function tau_disable_tracking_memory()
+    _tau_active() || return nothing
+    ccall((:Tau_disable_tracking_memory, _libTAU[]), Cvoid, ())
+    nothing
+end
+
+# ============================================================================
+# Timer stack queries
+# ============================================================================
+
+# Innermost open timer on the calling thread; C_NULL when no timer is open.
+_current_event() = ccall((:Tau_query_current_event, _libTAU[]), Ptr{Cvoid}, ())
+
+# Name of the timer behind an event handle; `nothing` for C_NULL.
+function _event_name(event::Ptr{Cvoid})
+    event == C_NULL && return nothing
+    s = ccall((:Tau_query_event_name, _libTAU[]), Ptr{Cchar}, (Ptr{Cvoid},), event)
+    return s == C_NULL ? nothing : unsafe_string(s)
+end
+
+"""
+    tau_current_timer_name() -> Union{String, Nothing}
+
+Name of the innermost timer open on the calling thread. At the top level of
+a script this is TAU's `.TAU application` timer. Returns `nothing` when no
+timer is open or libTAU is not loaded. Equivalent to
+`TAU_QUERY_GET_CURRENT_EVENT` followed by `TAU_QUERY_GET_EVENT_NAME` in C.
+"""
+function tau_current_timer_name()
+    _tau_active() || return nothing
+    _pin_task!()
+    return _event_name(_current_event())
+end
+
+"""
+    tau_parent_timer_name() -> Union{String, Nothing}
+
+Name of the timer enclosing the innermost one open on the calling thread.
+Returns `nothing` when the current timer is the outermost one (at the top
+level of a script, `.TAU application`), when no timer is open, or when libTAU
+is not loaded. Equivalent to `TAU_QUERY_GET_PARENT_EVENT` followed by
+`TAU_QUERY_GET_EVENT_NAME` in C.
+"""
+function tau_parent_timer_name()
+    _tau_active() || return nothing
+    _pin_task!()
+    cur = _current_event()
+    cur == C_NULL && return nothing
+    parent = ccall((:Tau_query_parent_event, _libTAU[]), Ptr{Cvoid}, (Ptr{Cvoid},), cur)
+    return _event_name(parent)
+end
