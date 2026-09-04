@@ -48,6 +48,7 @@
 // Size after which the kernel map is processed
 #define DISPATCH_MAP_MAX_SIZE 128
 
+
 //Map to identify kernels and some of their information, GPU side
 using kernel_symbol_data_t = rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t;
 using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_symbol_data_t>;
@@ -121,7 +122,7 @@ extern "C" void metric_set_gpu_timestamp(int tid, double value);
 extern "C" void Tau_metadata_task(const char *name, const char* value, int tid);
 extern int init_pc_sampling(rocprofiler_context_id_t client_ctx, int enabled_hc);
 extern void sdk_pc_sampling_flush();
-extern std::map<rocprofiler_dispatch_id_t, std::pair<int, double>> dispatch_kernel_time;
+//extern std::map<rocprofiler_dispatch_id_t, std::pair<int, double>> dispatch_kernel_time;
 
 
 //We want to use the same IDs for the GPUs between the sampling and tracing.

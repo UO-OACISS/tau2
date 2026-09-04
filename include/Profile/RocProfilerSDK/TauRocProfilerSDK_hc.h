@@ -39,7 +39,7 @@ using kernel_symbol_map_t  = std::unordered_map<rocprofiler_kernel_id_t, kernel_
 
 //The callback for the hardware counters does not have timers, we want to tie the callback
 // to the ending timer of the kernel dispatch and also know the taskid we need to use
-std::map<rocprofiler_dispatch_id_t, std::pair<int, double>> dispatch_kernel_time;
+//std::map<rocprofiler_dispatch_id_t, std::pair<int, double>> dispatch_kernel_time;
 
 extern kernel_symbol_map_t           client_kernels;
 extern std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filename);
@@ -78,6 +78,7 @@ extern std::string demangle_kernel_rocprofsdk(std::string k_name, int add_filena
 
 extern int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_context_id_t client_ctx, rocprofiler_buffer_id_t client_buffer);
 extern void register_kernel_dispatch(rocprofiler_kernel_dispatch_info_t dispatch_info, rocprofiler_timestamp_t end_timestamp);
+void get_rocsdk_counters(rocprofiler_dispatch_id_t dispatch_id, int taskid, double curr_ts);
 
 #else // No PROFILE_SDKCOUNTERS
 typedef rocprofiler_profile_config_id_t rocprofiler_counter_config_id_t;
@@ -95,8 +96,13 @@ int init_hc_profiling(std::vector<rocprofiler_agent_v0_t> agents, rocprofiler_co
   }
   return NO_METRICS;
 }
+
 void register_kernel_dispatch(rocprofiler_counter_config_id_t dispatch_info, rocprofiler_timestamp_t end_timestamp)
 {}
+
+void get_rocsdk_counters(rocprofiler_dispatch_id_t dispatch_id, int taskid, double curr_ts)
+{}
+
 #endif //PROFILE_SDKCOUNTERS
 
 
