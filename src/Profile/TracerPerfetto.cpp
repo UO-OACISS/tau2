@@ -488,6 +488,11 @@ static void perfetto_do_init() {
     // same period as flush_ms (default 100ms) so the ring buffer never
     // accumulates more than ~100ms of data.
     cfg.set_file_write_period_ms(flush_ms);
+    // Re-emit interned data periodically. Without this, previous_packet_dropped
+    // invalidates the sequence's incremental state permanently.
+    // With a periodic CLEARED marker the loss is bounded to one period.
+    cfg.mutable_incremental_state_config()->set_clear_period_ms(
+        flush_ms > 0 ? flush_ms * 5 : 500);
     g_perfetto.events_emitted.store(0);
 
     // The SDK emits clock snapshots for clock-domain calibration.

@@ -371,6 +371,7 @@ static const char* env_sass_type = TAU_SASS_TYPE_DEFAULT;
 static int env_output_cuda_csv = TAU_OUTPUT_CUDA_CSV_DEFAULT;
 static const char *env_binaryexe = NULL;
 static int env_track_cuda_env = TAU_TRACK_CUDA_ENV_DEFAULT;
+static int env_track_cuda_synchronization = 0;
 static int env_current_timer_exit_params = 0;
 
 static int env_node_set = -1;
@@ -1323,6 +1324,10 @@ const char* TauEnv_get_cuda_binary_exe(){
 
 int TauEnv_get_cuda_track_env(){
   return env_track_cuda_env;
+}
+
+int TauEnv_get_cuda_track_synchronization(){
+  return env_track_cuda_synchronization;
 }
 
 void TauEnv_set_cudaTotalThreads(int nthreads) {
@@ -3080,6 +3085,16 @@ void TauEnv_initialize()
     } else {
       TAU_VERBOSE("TAU: tracking CUDA Environment Disabled\n");
       TAU_METADATA("TAU_TRACK_CUDA_ENV", "off");
+    }
+    tmp = getconf("TAU_TRACK_CUDA_SYNCHRONIZATION");
+    if (parse_bool(tmp, 0)) {
+      env_track_cuda_synchronization = 1;
+      TAU_VERBOSE("TAU: tracking CUDA synchronization activity Enabled\n");
+      TAU_METADATA("TAU_TRACK_CUDA_SYNCHRONIZATION", "on");
+    } else {
+      env_track_cuda_synchronization = 0;
+      TAU_VERBOSE("TAU: tracking CUDA synchronization activity Disabled\n");
+      TAU_METADATA("TAU_TRACK_CUDA_SYNCHRONIZATION", "off");
     }
     tmp = getconf("TAU_MIC_OFFLOAD");
     if (parse_bool(tmp, TAU_MIC_OFFLOAD_DEFAULT)) {

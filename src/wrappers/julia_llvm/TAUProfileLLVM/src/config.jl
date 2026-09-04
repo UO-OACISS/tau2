@@ -24,6 +24,7 @@ tracing_enabled() = _tracing_enabled[]
 # ============================================================================
 
 const _excluded_functions = Set{Symbol}()
+const _included_function_substrs = Set{String}()  # non-empty => name must match one
 const _excluded_modules = Dict{Symbol, Bool}()  # module name => exact?
 const _excluded_prefixes = Set{String}()
 const _whitelisted_modules = Dict{Symbol, Bool}()  # module name => exact?
@@ -59,6 +60,21 @@ tau_rewrite_include_module_only(m::Module; exact::Bool=false) = (_whitelisted_mo
 tau_rewrite_include_module_only(s::Symbol; exact::Bool=false) = (_whitelisted_modules[s] = exact; nothing)
 tau_rewrite_include_module_only(s::String; exact::Bool=false) = (_whitelisted_modules[Symbol(s)] = exact; nothing)
 tau_rewrite_include_module_only(items...; exact::Bool=false) = (for it in items; tau_rewrite_include_module_only(it; exact); end; nothing)
+
+"""
+    tau_rewrite_include_function_substr(patterns::AbstractString...)
+
+Restrict instrumentation to functions whose name contains one of the given
+substrings. When the set is non-empty, a function must BOTH pass the module
+whitelist/exclusions AND match one of these substrings to be instrumented.
+Cleared by `tau_rewrite_reset_exclusions()`.
+
+Example — instrument only allocation-related functions in GPU-related modules:
+    tau_rewrite_include_module_only("CUDACore", "GPUArrays", "AMDGPU")
+    tau_rewrite_include_function_substr("alloc", "free", "retry", "reclaim")
+"""
+tau_rewrite_include_function_substr(patterns::AbstractString...) =
+    (for p in patterns; push!(_included_function_substrs, String(p)); end; nothing)
 
 # ============================================================================
 # Depth limit API
@@ -143,6 +159,7 @@ end
 """Clear all exclusions, whitelists, depth limits, and type inclusion."""
 function tau_rewrite_reset_exclusions()
     empty!(_excluded_functions)
+    empty!(_included_function_substrs)
     empty!(_excluded_modules)
     empty!(_excluded_prefixes)
     empty!(_whitelisted_modules)
@@ -221,8 +238,10 @@ end
     _passes_config_filter(funcname, mod) -> Bool
 
 Apply the user-configured filters shared by Phase 1 and Phase 2: tracing enabled,
-function name and prefix exclusions, module exclusion and module whitelist.
-Passing `nothing` for `funcname` or `mod` skips the checks that need it.
+function name and prefix exclusions, function name substring inclusion, module
+exclusion and module whitelist.
+Passing `nothing` for `funcname` or `mod` skips the checks that need it, except
+that an unknown name fails the substring inclusion when one is configured.
 """
 function _passes_config_filter(funcname::Union{String, Nothing}, mod::Union{Module, Nothing})
     _tracing_enabled[] || return false
@@ -232,6 +251,12 @@ function _passes_config_filter(funcname::Union{String, Nothing}, mod::Union{Modu
         for prefix in _excluded_prefixes
             startswith(funcname, prefix) && return false
         end
+    end
+
+    # Function-name include filter
+    if !isempty(_included_function_substrs)
+        funcname === nothing && return false
+        any(p -> occursin(p, funcname), _included_function_substrs) || return false
     end
 
     if mod !== nothing

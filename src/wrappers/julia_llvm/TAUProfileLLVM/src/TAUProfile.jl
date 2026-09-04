@@ -44,7 +44,7 @@ module TAUProfile
 export tau_rewrite_and_call, trace_code, @tau_rewrite,
        tau_rewrite_exclude_function, tau_rewrite_exclude_module,
        tau_rewrite_exclude_prefix, tau_rewrite_reset_exclusions,
-       tau_rewrite_include_module_only,
+       tau_rewrite_include_module_only, tau_rewrite_include_function_substr,
        tau_rewrite_set_recursion_limit, tau_rewrite_include_types,
        tau_rewrite_force_noinline, tau_rewrite_time_phase1,
        tau_rewrite_time_phase2,

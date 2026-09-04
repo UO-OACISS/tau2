@@ -156,6 +156,7 @@ extern "C" {
   const char* TAUDECL TauEnv_get_cuda_sass_type();
   int TAUDECL TauEnv_get_cuda_csv_output();
   int TAUDECL TauEnv_get_cuda_track_env();
+  int TAUDECL TauEnv_get_cuda_track_synchronization();
   const char* TAUDECL TauEnv_get_cuda_binary_exe();
   int  TAUDECL TauEnv_get_cudaTotalThreads();
   void  TAUDECL TauEnv_set_cudaTotalThreads(int value);

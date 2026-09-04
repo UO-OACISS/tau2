@@ -669,7 +669,9 @@ void Tau_cupti_enable_domains()
         CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_BRANCH)");
     }
     /* When tracing (with TAU, OTF2 or a plugin) don't create too many streams! */
-    if (!TauEnv_get_thread_per_gpu_stream()) {
+    /* Allow disabling CUPTI_ACTIVITY_KIND_SYNCHRONIZATION because enabling it seems
+     * to sometimes cause deadlocks inside CUPTI. */
+    if (TauEnv_get_cuda_track_synchronization() && !TauEnv_get_thread_per_gpu_stream()) {
         cuptiErr = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SYNCHRONIZATION);
         CUPTI_CHECK_ERROR(cuptiErr, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_SYNCHRONIZATION)");
     }
