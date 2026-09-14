@@ -6,9 +6,10 @@ INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 install: TAUProfileLLVM
 	mkdir -p $(INSTALLDEST)/wrappers/julia_llvm
 	$(TAU_SHARED_INSTALL_DIR_CMD)
-	JULIA_DEPOT_PATH=$(TAU_SHAREDDIR)/julia_depot \
-	  $(JULIA_BIN) --project=$(TAU_SHAREDDIR)/TAUProfileLLVM \
-	        -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
+	rm -f $(TAU_SHAREDDIR)/TAUProfileLLVM/Manifest.toml
+	JULIA_DEPOT_PATH="$(TAU_SHAREDDIR)/julia_depot:$$($(JULIA_BIN) --startup-file=no -e 'print(join([abspath(Sys.BINDIR, "..", "local", "share", "julia"), abspath(Sys.BINDIR, "..", "share", "julia")], ":"))')" \
+	  $(JULIA_BIN) --startup-file=no \
+	        -e 'using Pkg; Pkg.activate("$(TAU_SHAREDDIR)/TAUProfileLLVM"); Pkg.instantiate(); Pkg.precompile()'
 	mkdir -p $(TAU_SHAREDDIR)/julia_depot
 	$(JULIA_BIN) -e 'open(joinpath("$(TAU_SHAREDDIR)","julia_depot",".tau_julia_version"),"w") do io; print(io, string(VERSION)); end'
 

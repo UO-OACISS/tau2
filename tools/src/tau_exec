@@ -1947,7 +1947,8 @@ fi
           fi
       fi
       if [ ! -d "$tau_depot/packages" ]; then
-          $dryrun env JULIA_DEPOT_PATH="$tau_depot" "$julia_interpreter" --project="$backend_env" -e 'using Pkg; Pkg.instantiate()' || true
+          # Trailing ':' appends Julia's default depots
+          $dryrun env JULIA_DEPOT_PATH="$tau_depot:" "$julia_interpreter" --startup-file=no -e "using Pkg; Pkg.activate(\"$backend_env\"); Pkg.instantiate()" || true
       fi
       $dryrun "$julia_interpreter" "$@"
   elif $use_ptts ; then
