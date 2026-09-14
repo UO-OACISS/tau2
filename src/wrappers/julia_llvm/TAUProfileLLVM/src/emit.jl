@@ -62,6 +62,13 @@ end
 # separately by `jl_get_llvm_gvs` (the managed globals) and `jl_get_llvm_gv_inits`
 const _JULIA_INITIALIZES_CONSTGV = VERSION < v"1.13.0-DEV.623"
 
+# Julia 1.13 (JuliaLang/julia#57010) emits `@atomic` modify on unboxed integer
+# fields as the pseudo-intrinsic `julia.atomicmodify.iN.pAS` and expands it
+# to `atomicrmw` with its ExpandAtomicModify pass.
+# We perform the expansion ourselves.
+const _EXPAND_ATOMIC_MODIFY = VERSION >= v"1.13.0-DEV.321"
+_ExpandAtomicModifyPass() = "ExpandAtomicModify"
+
 """
     _resolve_constant_globals!(mod, native_code) -> Dict{String, Ptr{Cvoid}}
 

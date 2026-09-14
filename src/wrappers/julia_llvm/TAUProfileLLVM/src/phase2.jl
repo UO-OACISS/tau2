@@ -311,6 +311,9 @@ function _lower_julia_intrinsics!(mod::LLVM.Module)
                 if VERSION >= v"1.11.0-DEV.208"
                     LLVM.add!(fpm, GPUCompiler.FinalLowerGCPass())
                 end
+                if _EXPAND_ATOMIC_MODIFY
+                    LLVM.add!(fpm, _ExpandAtomicModifyPass())
+                end
             end
 
             LLVM.add!(mpm, GPUCompiler.LowerPTLSPass())

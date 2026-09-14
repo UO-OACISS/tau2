@@ -50,6 +50,9 @@ end
 # Test functions for Phase 2 CI replacement tests
 @noinline p2_const_user(x::Int) = x > 0 ? error("constgv") : x
 
+mutable struct P2Counter; @atomic n::Int; end
+@noinline p2_atomic_bump(c::P2Counter) = (@atomic c.n += 1)
+
 @noinline function p2_replace_add(x::Float64, y::Float64)
     x + y
 end
@@ -224,6 +227,28 @@ end
         @test length(emitted.gv_to_value) == nconst
         @test all(p -> p != C_NULL, values(emitted.gv_to_value))
     end
+end
+
+@testset "atomic modify intrinsic is expanded in both phases" begin
+    # Julia 1.13 emits `@atomic` modify as the julia.atomicmodify.iN.pAS
+    # pseudo-intrinsic and expands it with its ExpandAtomicModify pass; an
+    # unexpanded call is an unresolvable symbol in the JIT.
+    c = P2Counter(0)
+    p2_atomic_bump(c)
+    # Phase 2 lowering
+    mi = GPUCompiler.methodinstance(typeof(p2_atomic_bump), Tuple{P2Counter}, Base.get_world_counter())
+    ci = _get_ci_for_mi(mi)
+    @test ci !== nothing
+    GPUCompiler.JuliaContext() do ctx
+        r = _emit_single_function(ci, Base.uncompressed_ir(mi.def))
+        @test r !== nothing
+        _lower_julia_intrinsics!(r.mod)
+        @test !occursin("julia.atomicmodify", string(r.mod))
+    end
+    # Phase 1 pipeline
+    ir = trace_code(p2_atomic_bump, c)
+    @test occursin("atomicrmw", ir) || occursin("cmpxchg", ir)
+    @test !occursin("julia.atomicmodify", ir)
 end
 
 @testset "_emit_native reports the CodeInstances it was given" begin

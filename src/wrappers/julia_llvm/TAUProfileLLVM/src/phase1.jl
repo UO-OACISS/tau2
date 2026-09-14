@@ -79,6 +79,23 @@ end
 
 # Custom compile_method_instance with CI filtering and depth computation
 #
+# Runs after GPUCompiler's optimization pipeline and before its
+# final DeadArgumentElimination.
+function GPUCompiler.optimize_module!(@nospecialize(job::TracingPluginJob), mod::LLVM.Module)
+    _EXPAND_ATOMIC_MODIFY || return
+    tm = GPUCompiler.llvm_machine(job.config.target)
+    @dispose pb=LLVM.NewPMPassBuilder() begin
+        LLVM.add!(pb, LLVM.NewPMModulePassManager()) do mpm
+            LLVM.add!(mpm, LLVM.NewPMFunctionPassManager()) do fpm
+                LLVM.add!(fpm, _ExpandAtomicModifyPass())
+            end
+            LLVM.add!(mpm, LLVM.GlobalDCEPass())
+        end
+        LLVM.run!(pb, mod, tm)
+    end
+    return
+end
+
 # Overrides GPUCompiler's compile_method_instance for TracingPluginJob.
 # After ci_cache_populate collects all reachable CIs, we:
 # 1. Filter out CIs containing @cfunction closures
