@@ -903,6 +903,10 @@ end
             tau_rewrite_reset_exclusions()
             ir = trace_code(simple_add, 1.0, 2.0)
             @test contains(ir, "ijl_enter_handler")
+            # Verify that the exception enter sequence is fully lowered.
+            # (Julia 1.13 removed the julia.except_enter pseudo-intrinsic)
+            @test !contains(ir, "julia.except_enter")
+            @test contains(ir, "sigsetjmp")
             @test contains(ir, "ijl_pop_handler_noexcept")
             @test contains(ir, "ijl_rethrow")
             @test contains(ir, "catch")

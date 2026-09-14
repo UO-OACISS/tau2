@@ -176,6 +176,21 @@ no_trace(trace::String, name::String) = !has_entry(trace, name)
 # Test suite
 # ============================================================================
 
+@testset "exception-handler lowering probe" begin
+    # On Julia >= 1.13 the pass emits the handler entry itself
+    if TAUProfile._EMIT_LOWERED_HANDLER
+        lowering = GPUCompiler.JuliaContext() do ctx
+            TAUProfile._probe_handler_lowering()
+        end
+        @test occursin("setjmp", lowering.setjmp_name)
+        @test lowering.setjmp_nargs in (1, 2)
+        @test lowering.buf_bytes == 264   # sizeof(jl_handler_t), x86_64 glibc
+        @test TAUProfile._probe_handler_lowering() === lowering   # cached
+    else
+        @test !TAUProfile._EMIT_LOWERED_HANDLER
+    end
+end
+
 @testset "_emit_native reports the CodeInstances it was given" begin
     # jl_emit_native keys its function table by the CodeInstances in the
     # worklist it is handed, so the driver reads them back from its own input

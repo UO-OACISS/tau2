@@ -221,6 +221,65 @@ function _fix_phi_incoming_blocks!(fn::LLVM.Function, entry_bb::LLVM.BasicBlock,
     end
 end
 
+# Julia 1.13 (JuliaLang/julia#57308) emits the handler entry sequence in
+# codegen and removed both the julia.except_enter pseudo-intrinsic and the
+# LowerExcHandlers pass. If the version is >= that listed below,
+# we instead emit the entry sequence ourselves instead of relying on the
+# a pass to do it for us.
+const _EMIT_LOWERED_HANDLER = VERSION >= v"1.13.0-DEV.36"
+
+# Handler entry sequence: 
+#   - setjmp symbol
+#   - setjmp arity, its arity, and the handler buffer size in bytes.
+#   - handler buffer size in bytes
+# Determine these by examining IR of small generated example.
+const _HandlerLowering = NamedTuple{(:setjmp_name, :setjmp_nargs, :buf_bytes), Tuple{String, Int, Int}}
+const _handler_lowering = Ref{Union{Nothing, _HandlerLowering}}(nothing)
+
+@noinline _probe_may_throw(x::Int) = x < 0 ? error("negative") : x
+_probe_try(x::Int) = try; _probe_may_throw(x); catch; -1; end
+
+function _probe_handler_lowering()
+    cached = _handler_lowering[]
+    cached === nothing || return cached
+    _probe_try(1)  # ensure a native CodeInstance exists
+    mi = GPUCompiler.methodinstance(typeof(_probe_try), Tuple{Int}, Base.get_world_counter())
+    ci = _get_ci_for_mi(mi)
+    ci === nothing && error("TAUProfile: no CodeInstance for the exception-handler probe")
+    emitted = _emit_single_function(ci, Base.uncompressed_ir(mi.def))
+    emitted === nothing && error("TAUProfile: could not emit the exception-handler probe")
+    found = nothing
+    GC.@preserve emitted begin
+        dl = LLVM.datalayout(emitted.mod)
+        for f in LLVM.functions(emitted.mod), bb in LLVM.blocks(f)
+            enter = nothing
+            for inst in LLVM.instructions(bb)
+                inst isa LLVM.CallInst || continue
+                callee = LLVM.called_operand(inst)
+                callee isa LLVM.Function || continue
+                cname = LLVM.name(callee)
+                if cname == "ijl_enter_handler"
+                    enter = inst
+                elseif enter !== nothing && occursin("setjmp", cname)
+                    buf = LLVM.operands(enter)[2]
+                    buf isa LLVM.AllocaInst ||
+                        error("TAUProfile: handler probe: ijl_enter_handler buffer is not an alloca")
+                    ty = LLVM.LLVMType(LLVM.API.LLVMGetAllocatedType(buf))
+                    found = (; setjmp_name = cname,
+                               setjmp_nargs = length(LLVM.operands(inst)) - 1,
+                               buf_bytes = Int(LLVM.storage_size(dl, ty)))
+                    break
+                end
+            end
+            found === nothing || break
+        end
+    end
+    found === nothing && error("TAUProfile: handler probe found no ijl_enter_handler/setjmp pair in Julia's IR")
+    found.buf_bytes > 0 || error("TAUProfile: handler probe read a zero-sized handler buffer")
+    _handler_lowering[] = found
+    return found
+end
+
 """
     _wrap_with_exception_handler!(fn, mod, entry_bb, entry_hook_call, name_gv, exit_ptr_val, hook_ft)
 
@@ -283,9 +342,21 @@ function _wrap_with_exception_handler!(fn::LLVM.Function, mod::LLVM.Module,
     _fix_phi_incoming_blocks!(fn, entry_bb, try_body_bb)
 
     # --- Declare runtime functions ---
-    except_enter_ret_type = LLVM.StructType([i32_type, ptr_type])
-    except_enter_ft = LLVM.FunctionType(except_enter_ret_type, [ptr_type])
-    except_enter_fn = _get_or_declare_fn!(mod, "julia.except_enter", except_enter_ft)
+    local except_enter_ft, except_enter_fn, enter_handler_ft, enter_handler_fn,
+          setjmp_ft, setjmp_fn, lowering
+    if _EMIT_LOWERED_HANDLER
+        lowering = _probe_handler_lowering()
+        enter_handler_ft = LLVM.FunctionType(LLVM.VoidType(), [ptr_type, ptr_type])
+        enter_handler_fn = _get_or_declare_fn!(mod, "ijl_enter_handler", enter_handler_ft)
+        setjmp_argtypes = lowering.setjmp_nargs == 2 ? [ptr_type, i32_type] : [ptr_type]
+        setjmp_ft = LLVM.FunctionType(i32_type, setjmp_argtypes)
+        setjmp_fn = _get_or_declare_fn!(mod, lowering.setjmp_name, setjmp_ft)
+        push!(LLVM.function_attributes(setjmp_fn), LLVM.EnumAttribute("returns_twice", 0))
+    else
+        except_enter_ret_type = LLVM.StructType([i32_type, ptr_type])
+        except_enter_ft = LLVM.FunctionType(except_enter_ret_type, [ptr_type])
+        except_enter_fn = _get_or_declare_fn!(mod, "julia.except_enter", except_enter_ft)
+    end
 
     pop_handler_noexcept_ft = LLVM.FunctionType(LLVM.VoidType(), [ptr_type, i32_type])
     pop_handler_noexcept_fn = _get_or_declare_fn!(mod, "ijl_pop_handler_noexcept", pop_handler_noexcept_ft)
@@ -305,15 +376,34 @@ function _wrap_with_exception_handler!(fn::LLVM.Function, mod::LLVM.Module,
         current_task = LLVM.gep!(builder, i8_type, pgcstack,
             [LLVM.ConstantInt(LLVM.IntType(64), _TASK_OFFSET_FROM_PGCSTACK[])], "current_task")
 
-        # except = call {i32, ptr} @julia.except_enter(ptr %current_task)
-        except_call = LLVM.call!(builder, except_enter_ft, except_enter_fn, [current_task], "except")
-        push!(LLVM.function_attributes(except_call), LLVM.EnumAttribute("returns_twice", 0))
+        local setjmp_result, handler_buf
+        if _EMIT_LOWERED_HANDLER
+            # Julia 1.13 enter sequence:
+            #   %handler_buf = alloca [N x i8], align 16
+            #   call void @ijl_enter_handler(ptr %current_task, ptr %handler_buf)
+            #   %setjmp_result = call i32 @__sigsetjmp(ptr %handler_buf, i32 0)
+            handler_buf = @dispose ab=LLVM.IRBuilder() begin
+                LLVM.position!(ab, first(collect(LLVM.instructions(entry_bb))))
+                a = LLVM.alloca!(ab, LLVM.ArrayType(i8_type, lowering.buf_bytes), "handler_buf")
+                LLVM.alignment!(a, 16)
+                a
+            end
+            LLVM.call!(builder, enter_handler_ft, enter_handler_fn, [current_task, handler_buf])
+            setjmp_args = lowering.setjmp_nargs == 2 ?
+                [handler_buf, LLVM.ConstantInt(i32_type, 0)] : [handler_buf]
+            setjmp_result = LLVM.call!(builder, setjmp_ft, setjmp_fn, setjmp_args, "setjmp_result")
+            push!(LLVM.function_attributes(setjmp_result), LLVM.EnumAttribute("returns_twice", 0))
+        else
+            # except = call {i32, ptr} @julia.except_enter(ptr %current_task)
+            except_call = LLVM.call!(builder, except_enter_ft, except_enter_fn, [current_task], "except")
+            push!(LLVM.function_attributes(except_call), LLVM.EnumAttribute("returns_twice", 0))
 
-        # setjmp_result = extractvalue {i32, ptr} %except, 0
-        setjmp_result = LLVM.extract_value!(builder, except_call, 0, "setjmp_result")
+            # setjmp_result = extractvalue {i32, ptr} %except, 0
+            setjmp_result = LLVM.extract_value!(builder, except_call, 0, "setjmp_result")
 
-        # handler_buf = extractvalue {i32, ptr} %except, 1
-        handler_buf = LLVM.extract_value!(builder, except_call, 1, "handler_buf")
+            # handler_buf = extractvalue {i32, ptr} %except, 1
+            handler_buf = LLVM.extract_value!(builder, except_call, 1, "handler_buf")
+        end
 
         # eh_field = gep i8, pgcstack, 32  (ct->eh is at pgcstack + 32)
         eh_field = LLVM.gep!(builder, i8_type, pgcstack,
